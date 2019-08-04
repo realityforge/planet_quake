@@ -39,6 +39,34 @@ extern void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat
 extern void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 extern void (APIENTRYP qglUnlockArraysEXT) (void);
 
+#ifdef RAYTRACED
+
+#ifndef GL_RGBA32F_ARB
+#define GL_RGBA32F_ARB 0x8814
+#endif
+
+#ifndef GL_PIXEL_UNPACK_BUFFER_ARB
+#define GL_PIXEL_UNPACK_BUFFER_ARB 0x88EC
+#endif
+
+#ifndef GL_DYNAMIC_DRAW_ARB
+#define GL_DYNAMIC_DRAW_ARB 0x88E8
+#endif
+
+#ifndef GL_WRITE_ONLY_ARB
+#define GL_WRITE_ONLY_ARB 0x88B9
+#endif
+
+// typedef ptrdiff_t GLsizeiptrARB;
+
+extern void (APIENTRYP qglGenBuffersARB) (GLsizei n, GLuint* buffers);
+extern void (APIENTRYP qglDeleteBuffersARB) (GLsizei n, const GLuint* buffers);
+extern void (APIENTRYP qglBindBufferARB) (GLenum target, GLuint buffer);
+extern void (APIENTRYP qglBufferDataARB) (GLenum target, GLsizeiptrARB size, const GLvoid* data, GLenum usage);
+extern GLvoid * (APIENTRYP qglMapBufferARB) (GLenum target, GLenum access);
+extern GLboolean (APIENTRYP qglUnmapBufferARB) (GLenum target);
+
+#endif // RAYTRACED
 
 //===========================================================================
 

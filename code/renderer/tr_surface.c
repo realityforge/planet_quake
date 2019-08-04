@@ -63,7 +63,11 @@ void RB_CheckOverflow( int verts, int indexes ) {
 		ri.Error(ERR_DROP, "RB_CheckOverflow: indices > MAX (%d > %d)", indexes, SHADER_MAX_INDEXES );
 	}
 
+#ifdef RAYTRACED
+	RB_BeginSurface(tess.shader, tess.fogNum, qfalse );
+#else
 	RB_BeginSurface(tess.shader, tess.fogNum );
+#endif
 }
 
 
@@ -1056,7 +1060,11 @@ void RB_SurfaceGrid( srfGridMesh_t *cv ) {
 			// if we don't have enough space for at least one strip, flush the buffer
 			if ( vrows < 2 || irows < 1 ) {
 				RB_EndSurface();
+#ifdef RAYTRACED
+				RB_BeginSurface(tess.shader, tess.fogNum, qfalse );
+#else
 				RB_BeginSurface(tess.shader, tess.fogNum );
+#endif
 			} else {
 				break;
 			}

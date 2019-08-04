@@ -86,6 +86,15 @@ void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat t);
 void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 void (APIENTRYP qglUnlockArraysEXT) (void);
 
+#ifdef RAYTRACED
+void (APIENTRYP qglGenBuffersARB) (GLsizei n, GLuint* buffers);
+void (APIENTRYP qglDeleteBuffersARB) (GLsizei n, const GLuint* buffers);
+void (APIENTRYP qglBindBufferARB) (GLenum target, GLuint buffer);
+void (APIENTRYP qglBufferDataARB) (GLenum target, GLsizeiptrARB size, const GLvoid* data, GLenum usage);
+GLvoid * (APIENTRYP qglMapBufferARB) (GLenum target, GLenum access);
+GLboolean (APIENTRYP qglUnmapBufferARB) (GLenum target);
+#endif
+
 /*
 ===============
 GLimp_Shutdown
@@ -574,6 +583,15 @@ static void GLimp_InitExtensions( void )
 	{
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
 	}
+
+#ifdef RAYTRACED
+	qglGenBuffersARB 	= SDL_GL_GetProcAddress("glGenBuffersARB");
+	qglDeleteBuffersARB	= SDL_GL_GetProcAddress("glDeleteBuffersARB");
+	qglBindBufferARB	= SDL_GL_GetProcAddress("glBindBufferARB");
+	qglBufferDataARB	= SDL_GL_GetProcAddress("glBufferDataARB");
+	qglMapBufferARB		= SDL_GL_GetProcAddress("glMapBufferARB");
+	qglUnmapBufferARB	= SDL_GL_GetProcAddress("glUnmapBufferARB");
+#endif
 }
 
 #define R_MODE_FALLBACK 3 // 640 * 480

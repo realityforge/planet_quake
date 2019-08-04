@@ -153,6 +153,11 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
+#ifdef RAYTRACED
+cvar_t 	*rt_mode;
+cvar_t 	*rt_pixeldoubling;
+#endif
+
 static void AssertCvarRange( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral )
 {
 	if ( shouldBeIntegral )
@@ -1022,6 +1027,11 @@ void R_Register( void )
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
 
+#ifdef RAYTRACED
+	rt_mode = ri.Cvar_Get( "rt_mode", "-1", CVAR_ARCHIVE );
+	rt_pixeldoubling = ri.Cvar_Get( "rt_pixeldoubling", "0", CVAR_ARCHIVE );
+#endif  
+
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
 	ri.Cmd_AddCommand( "imagelist", R_ImageList_f );
@@ -1135,6 +1145,10 @@ void R_Init( void ) {
 	if ( err != GL_NO_ERROR )
 		ri.Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
 
+#ifdef RAYTRACED
+	RT_InitRaytracer();
+#endif
+
 	ri.Printf( PRINT_ALL, "----- finished R_Init -----\n" );
 }
 
@@ -1163,6 +1177,10 @@ void RE_Shutdown( qboolean destroyWindow ) {
 		R_ShutdownCommandBuffers();
 		R_DeleteTextures();
 	}
+
+#ifdef RAYTRACED
+	RT_ShutdownRaytracer();
+#endif
 
 	R_DoneFreeType();
 

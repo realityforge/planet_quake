@@ -1861,5 +1861,9 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.world = &s_worldData;
 
     ri.FS_FreeFile( buffer );
+
+#ifdef RAYTRACED
+	RT_LoadWorldMap();
+#endif
 }
 

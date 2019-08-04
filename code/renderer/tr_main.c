@@ -822,7 +822,11 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	R_RotateForViewer();
 
 	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted );
+#ifdef RAYTRACED
+	RB_BeginSurface( shader, fogNum, qfalse );
+#else
 	RB_BeginSurface( shader, fogNum );
+#endif
 	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 
 	assert( tess.numVertexes < 128 );
@@ -1242,6 +1246,11 @@ R_GenerateDrawSurfs
 ====================
 */
 void R_GenerateDrawSurfs( void ) {
+#ifdef RAYTRACED
+	if(tr.raytracing)
+		{} //TODO RT_EnableWorldMap();
+	else
+#endif
 	R_AddWorldSurfaces ();
 
 	R_AddPolygonSurfaces();

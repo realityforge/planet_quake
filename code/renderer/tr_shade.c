@@ -314,7 +314,12 @@ because a surface may be forced to perform a RB_End due
 to overflow.
 ==============
 */
+#ifdef RAYTRACED
+void RB_BeginSurface( shader_t *shader, int fogNum, qboolean geometry ) {
+	tr.pendingGeometry = geometry;
+#else
 void RB_BeginSurface( shader_t *shader, int fogNum ) {
+#endif
 
 	shader_t *state = (shader->remappedShader) ? shader->remappedShader : shader;
 
@@ -1440,6 +1445,11 @@ void RB_EndSurface( void ) {
 	backEnd.pc.c_indexes += tess.numIndexes;
 	backEnd.pc.c_totalIndexes += tess.numIndexes * tess.numPasses;
 
+#ifdef RAYTRACED
+	if(tr.raytracing && tr.pendingGeometry)
+		RT_SurfaceReady();
+	else
+#endif
 	//
 	// call off to shader specific tess end function
 	//

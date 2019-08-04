@@ -2027,6 +2027,9 @@ static shader_t *GeneratePermanentShader( void ) {
 	newShader->next = hashTable[hash];
 	hashTable[hash] = newShader;
 
+#ifdef RAYTRACED
+	RT_LoadShader(newShader);
+#endif
 	return newShader;
 }
 

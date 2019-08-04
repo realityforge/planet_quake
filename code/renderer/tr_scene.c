@@ -151,6 +151,20 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 
+#ifdef RAYTRACED
+		{
+			vec4_t plane; int i; float offset;
+			PlaneFromPoints(plane, poly->verts[0].xyz, poly->verts[1].xyz, poly->verts[2].xyz);
+			offset = (float)(4.0 * (double)random() / (double)0x7fffffff);
+			for(i = 0; i < numVerts; ++i)
+			{
+				poly->verts[i].xyz[0] += plane[0] * offset;
+				poly->verts[i].xyz[1] += plane[1] * offset;
+				poly->verts[i].xyz[2] += plane[2] * offset;
+			}
+		}
+#endif
+
 		if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
 			poly->verts->modulate[0] = 255;
 			poly->verts->modulate[1] = 255;
@@ -397,6 +411,34 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	VectorCopy( fd->vieworg, parms.pvsOrigin );
 
+#ifdef RAYTRACED
+	static int oldMode = -1;
+	if(oldMode != rt_mode->integer)
+	{
+		switch(rt_mode->integer)
+		{
+		default: Com_Printf("Rasterization: Standard rendering ...\n"); break;
+		case 0: Com_Printf("Raytracing: Displaying ids of hit triangles ...\n"); break;
+		case 1: Com_Printf("Raytracing: Displaying visited nodes (max=128) ...\n"); break;
+		case 2: Com_Printf("Raytracing: Displaying intersected triangles (max=16) ...\n"); break;
+		case 3: Com_Printf("Raytracing: Displaying normal vectors ...\n"); break;
+		case 4: Com_Printf("Raytracing: Displaying texture coordinates ...\n"); break;
+		case 5: Com_Printf("Raytracing: Displaying shaders ...\n"); break;
+		case 6: Com_Printf("Raytracing: Full rendering ...\n"); break;
+		}
+		oldMode = rt_mode->integer;
+	}
+
+	tr.raytracing = (rt_mode->integer >= 0 && rt_mode->integer <= 6) ? qtrue : qfalse;
+	tr.raytracing &= (tr.refdef.width == glConfig.vidWidth && tr.refdef.height == glConfig.vidHeight) ? qtrue : qfalse; // NOTE: only trace the main view for now
+
+	if(tr.raytracing)
+	{
+		RT_ClearScene();
+		RT_RenderScene( &parms );
+	}
+	else
+#endif
 	R_RenderView( &parms );
 
 	// the next scene rendered in this frame will tack on after this one

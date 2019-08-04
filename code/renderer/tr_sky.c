@@ -725,7 +725,11 @@ void RB_DrawSun( void ) {
 	qglDepthRange( 1.0, 1.0 );
 
 	// FIXME: use quad stamp
+#ifdef RAYTRACED
+	RB_BeginSurface( tr.sunShader, tess.fogNum, qfalse );
+#else
 	RB_BeginSurface( tr.sunShader, tess.fogNum );
+#endif
 		VectorCopy( origin, temp );
 		VectorSubtract( temp, vec1, temp );
 		VectorSubtract( temp, vec2, temp );

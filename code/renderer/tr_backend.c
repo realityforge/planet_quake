@@ -563,7 +563,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			if (oldShader != NULL) {
 				RB_EndSurface();
 			}
+#ifdef RAYTRACED
+			RB_BeginSurface( shader, fogNum, qtrue );
+#else
 			RB_BeginSurface( shader, fogNum );
+#endif
 			oldShader = shader;
 			oldFogNum = fogNum;
 			oldDlighted = dlighted;
@@ -827,7 +831,11 @@ const void *RB_StretchPic ( const void *data ) {
 			RB_EndSurface();
 		}
 		backEnd.currentEntity = &backEnd.entity2D;
+#ifdef RAYTRACED
+		RB_BeginSurface( shader, 0, qfalse );
+#else
 		RB_BeginSurface( shader, 0 );
+#endif
 	}
 
 	RB_CHECKOVERFLOW( 4, 6 );

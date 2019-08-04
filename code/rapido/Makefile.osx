@@ -1,0 +1,34 @@
+INCLUDES      = -I.
+RELEASECFLAGS = -DNDEBUG $(INCLUDES) -g -O3 -msse -msse2 -mfpmath=387,sse -ffast-math
+PROFILECFLAGS = $(RELEASECFLAGS) -p
+DEBUGCFLAGS   = -DDEBUG $(INCLUDES) -g -O0
+CFLAGS        = $(RELEASECFLAGS) -Wall
+CPPC          = g++
+CC            = gcc
+ASM           = gcc
+ARADD         = ar rs
+RM            = /bin/rm -f
+LIBRARY       = librapido.a
+CPPTARGETS    = statickdtree.cpp statickdtreebuilder.cpp
+CTARGETS      = 
+ASMTARGETS    = 
+
+$(LIBRARY): $(CPPTARGETS:.cpp=.o) $(CTARGETS:.c=.o) $(ASMTARGETS:.S=.o)
+	$(ARADD) $(LIBRARY) $(CPPTARGETS:.cpp=.o) $(CTARGETS:.c=.o) $(ASMTARGETS:.S=.o)
+
+%.o: %.cpp
+	$(CPPC) $(CFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.S
+	$(ASM) -c $< -o $@
+
+force: clean $(LIBRARY)
+
+assembly:
+	$(CPPC) $(CFLAGS) -c statickdtree.cpp -S -fsource-asm -fverbose-asm -o statickdtree.txt
+
+clean:
+	$(RM) $(LIBRARY) $(CPPTARGETS:.cpp=.o) $(CTARGETS:.c=.o) $(ASMTARGETS:.S=.o)

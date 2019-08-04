@@ -38,10 +38,14 @@ endif
 ifndef BUILD_GAME_QVM
   BUILD_GAME_QVM   =
 endif
-
-ifneq ($(PLATFORM),darwin)
-  BUILD_CLIENT_SMP = 0
+ifndef BUILD_RAYTRACE
+  BUILD_RAYTRACE   =
 endif
+
+# REITER: don't need smp version
+#ifneq ($(PLATFORM),darwin)
+  BUILD_CLIENT_SMP = 0
+#endif
 
 #############################################################################
 #
@@ -121,6 +125,12 @@ endif
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
+
+ifndef BUILD_RAYTRACED
+BUILD_RAYTRACED=1
+endif
+
+LLVM_CONFIG=llvm-config
 
 #############################################################################
 
@@ -304,8 +314,15 @@ ifeq ($(PLATFORM),darwin)
     OPTIMIZE += -march=prescott -mfpmath=sse
     # x86 vm will crash without -mstackrealign since MMX instructions will be
     # used no matter what and they corrupt the frame pointer in VM calls
-    BASE_CFLAGS += -mstackrealign
+    # REITER BASE_CFLAGS += -mstackrealign
   endif
+
+  # REITER
+  BUILD_GAME_SO=1
+  HAVE_VM_COMPILED = false
+  BASE_CFLAGS += -I/usr/local/include
+  CLIENT_LDFLAGS += -L/usr/local/lib
+  LLVM_CONFIG=/usr/local/bin/llvm-config
 
   BASE_CFLAGS += -fno-strict-aliasing -DMACOS_X -fno-common -pipe
 
@@ -755,6 +772,11 @@ endif
 
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS
+endif
+
+ifeq ($(BUILD_RAYTRACED),1)
+  BASE_CFLAGS += -DRAYTRACED -I$(MOUNT_DIR)/rapido
+  CLIENT_LDFLAGS += -L$(MOUNT_DIR)/rapido -lrapido -lboost_thread-mt -fopenmp -rdynamic -dc -dp `$(LLVM_CONFIG) --cppflags --ldflags --libs core jit native`
 endif
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
@@ -1285,6 +1307,15 @@ ifeq ($(ARCH),x86)
     $(B)/client/snapvectora.o
 endif
 
+LINKER=$(CC)
+ifeq ($(BUILD_RAYTRACED),1)
+  LINKER=$(CXX)
+  Q3OBJ += \
+    $(B)/client/tr_raytracer.o \
+    $(B)/client/tr_rtshaders.o \
+    $(B)/client/tr_rttextures.o
+endif
+
 ifeq ($(HAVE_VM_COMPILED),true)
   ifeq ($(ARCH),i386)
     Q3OBJ += $(B)/client/vm_x86.o
@@ -1317,12 +1348,12 @@ Q3POBJ_SMP += \
 
 $(B)/ioquake3.$(ARCH)$(BINEXT): $(Q3OBJ) $(Q3POBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(Q3POBJ) $(CLIENT_LDFLAGS) \
+	$(Q)$(LINKER) -o $@ $(Q3OBJ) $(Q3POBJ) $(CLIENT_LDFLAGS) \
 		$(LDFLAGS) $(LIBSDLMAIN)
 
 $(B)/ioquake3-smp.$(ARCH)$(BINEXT): $(Q3OBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(Q3POBJ_SMP) $(CLIENT_LDFLAGS) \
+	$(Q)$(LINKER) -o $@ $(Q3OBJ) $(Q3POBJ_SMP) $(CLIENT_LDFLAGS) \
 		$(THREAD_LDFLAGS) $(LDFLAGS) $(LIBSDLMAIN)
 
 ifneq ($(strip $(LIBSDLMAIN)),)
@@ -1760,6 +1791,9 @@ $(B)/client/%.o: $(JPDIR)/%.c
 
 $(B)/client/%.o: $(RDIR)/%.c
 	$(DO_CC)
+
+$(B)/client/%.o: $(RDIR)/%.cpp
+	$(DO_CC) -fno-operator-names
 
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)

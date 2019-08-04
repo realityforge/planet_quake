@@ -413,6 +413,10 @@ typedef struct shader_s {
 
   int shaderStates[MAX_STATES_PER_SHADER];          // index to valid shader states
 
+#ifdef RAYTRACED
+	void *shaderClass;
+#endif
+
 	struct	shader_s	*next;
 } shader_t;
 
@@ -963,6 +967,12 @@ typedef struct {
 	float					sawToothTable[FUNCTABLE_SIZE];
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
+
+#ifdef RAYTRACED
+	qboolean raytracing;
+	qboolean pendingGeometry;
+#endif
+
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
@@ -1103,6 +1113,11 @@ extern	cvar_t	*r_printShaders;
 extern	cvar_t	*r_saveFontData;
 
 extern	cvar_t	*r_GLlibCoolDownMsec;
+
+#ifdef RAYTRACED
+extern cvar_t 	*rt_mode;
+extern cvar_t 	*rt_pixeldoubling;
+#endif
 
 //====================================================================
 
@@ -1316,7 +1331,11 @@ typedef struct shaderCommands_s
 
 extern	shaderCommands_t	tess;
 
+#ifdef RAYTRACED
+void RB_BeginSurface(shader_t *shader, int fogNum, qboolean geometry );
+#else
 void RB_BeginSurface(shader_t *shader, int fogNum );
+#endif
 void RB_EndSurface(void);
 void RB_CheckOverflow( int verts, int indexes );
 #define RB_CHECKOVERFLOW(v,i) if (tess.numVertexes + (v) >= SHADER_MAX_VERTEXES || tess.numIndexes + (i) >= SHADER_MAX_INDEXES ) {RB_CheckOverflow(v,i);}
@@ -1682,5 +1701,19 @@ void R_InitFreeType( void );
 void R_DoneFreeType( void );
 void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font);
 
+#ifdef RAYTRACED
+// Raytracer
+void RT_InitRaytracer(void);
+void RT_ShutdownRaytracer(void);
+void RT_RenderScene(viewParms_t *parms);
+
+void RT_LoadWorldMap(void);
+void RT_ClearScene(void);
+void RT_SurfaceReady(void); // adds the current surface to the scene
+
+void RT_LoadShader(shader_t *shader); // loads raytracing specific data for a shader
+void RT_UpdateShaders(void);
+void RT_DestroyAllShaders(void);
+#endif // RAYTRACED
 
 #endif //TR_LOCAL_H

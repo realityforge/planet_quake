@@ -1,0 +1,2 @@
+Please note that this is an early version of the Rapido raytracing library and several features haven't been implemented yet or were stripped prior to this release, because they're not required for raytracing funcitonality in the ioquake3 engine.
+Rapido was tested on Mac OS X and on Linux, a known bug causes a crash when compiling KdTrees on the Mac. Windows support hasn't been maintained in a while, so expect missing code or crashes at runtime.
