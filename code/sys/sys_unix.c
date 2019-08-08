@@ -39,8 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <fenv.h>
 #include <sys/wait.h>
 
-qboolean stdinIsATTY;
-
 // Used to determine where to store user-specific files
 static char homePath[ MAX_OSPATH ] = { 0 };
 
@@ -503,7 +501,7 @@ void Sys_Sleep( int msec )
 	if( msec == 0 )
 		return;
 
-	if( stdinIsATTY )
+	if( CON_IsTTY() )
 	{
 		fd_set fdset;
 
@@ -775,34 +773,34 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 	else if( !Q_stricmp( session, "kde" ) )
 		preferredCommandType = KDIALOG;
 
-	for( i = NONE + 1; i < NUM_DIALOG_PROGRAMS; i++ )
-	{
-		if( preferredCommandType != NONE && preferredCommandType != i )
-			continue;
-
-		if( !tried[ i ] )
+		for( i = NONE + 1; i < NUM_DIALOG_PROGRAMS; i++ )
 		{
-			int exitCode;
+			if( preferredCommandType != NONE && preferredCommandType != i )
+				continue;
 
-			commands[ i ]( type, message, title );
-			exitCode = Sys_Exec( );
-
-			if( exitCode >= 0 )
+			if( !tried[ i ] )
 			{
-				switch( type )
+				int exitCode;
+
+				commands[ i ]( type, message, title );
+				exitCode = Sys_Exec( );
+
+				if( exitCode >= 0 )
 				{
-					case DT_YES_NO:    return exitCode ? DR_NO : DR_YES;
-					case DT_OK_CANCEL: return exitCode ? DR_CANCEL : DR_OK;
-					default:           return DR_OK;
+					switch( type )
+					{
+						case DT_YES_NO:    return exitCode ? DR_NO : DR_YES;
+						case DT_OK_CANCEL: return exitCode ? DR_CANCEL : DR_OK;
+						default:           return DR_OK;
+					}
 				}
-			}
 
-			tried[ i ] = qtrue;
+				tried[ i ] = qtrue;
 
-			// The preference failed, so start again in order
-			if( preferredCommandType != NONE )
-			{
-				preferredCommandType = NONE;
+				// The preference failed, so start again in order
+				if( preferredCommandType != NONE )
+				{
+					preferredCommandType = NONE;
 				i = NONE + 1;
 			}
 		}
@@ -862,8 +860,8 @@ void Sys_PlatformInit( void )
 
 	Sys_SetFloatEnv();
 
-	stdinIsATTY = isatty( STDIN_FILENO ) &&
-		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) );
+	CON_SetIsTTY( isatty( STDIN_FILENO ) &&
+		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) ) );
 }
 
 /*

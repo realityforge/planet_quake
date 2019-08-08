@@ -419,7 +419,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	RB_UpdateTessVao(ATTR_POSITION | ATTR_TEXCOORD);
 /*
 	{
-		shaderProgram_t *sp = &tr.textureColorShader;
+		shaderProgram_t *sp = &trs.textureColorShader;
 
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD);
 		GLSL_BindProgram(sp);
@@ -434,7 +434,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	}
 */
 	{
-		shaderProgram_t *sp = &tr.lightallShader[0];
+		shaderProgram_t *sp = &trs.lightallShader[0];
 		vec4_t vector;
 
 		GLSL_BindProgram(sp);
@@ -818,7 +818,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	VectorScale( vec2, size, vec2 );
 
 	// farthest depth range
-	qglDepthRange( 1.0, 1.0 );
+	glDepthRange( 1.0, 1.0 );
 
 	RB_BeginSurface( shader, 0, 0 );
 
@@ -827,7 +827,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	RB_EndSurface();
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	glDepthRange( 0.0, 1.0 );
 }
 
 
@@ -856,9 +856,9 @@ void RB_StageIteratorSky( void ) {
 	// front of everything to allow developers to see how
 	// much sky is getting sucked in
 	if ( r_showsky->integer ) {
-		qglDepthRange( 0.0, 0.0 );
+		glDepthRange( 0.0, 0.0 );
 	} else {
-		qglDepthRange( 1.0, 1.0 );
+		glDepthRange( 1.0, 1.0 );
 	}
 
 	// draw the outer skybox
@@ -895,7 +895,7 @@ void RB_StageIteratorSky( void ) {
 
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	glDepthRange( 0.0, 1.0 );
 
 	// note that sky was drawn so we will draw a sun later
 	backEnd.skyRenderedThisView = qtrue;

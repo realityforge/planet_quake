@@ -32,7 +32,7 @@ R_CheckFBO
 */
 qboolean R_CheckFBO(const FBO_t * fbo)
 {
-	GLenum code = qglCheckNamedFramebufferStatusEXT(fbo->frameBuffer, GL_FRAMEBUFFER);
+	GLenum code = GLDSA_CheckNamedFramebufferStatusEXT(fbo->frameBuffer, GL_FRAMEBUFFER);
 
 	if(code == GL_FRAMEBUFFER_COMPLETE)
 		return qtrue;
@@ -265,7 +265,7 @@ void FBO_Init(void)
 		hdrFormat = GL_RGBA16F_ARB;
 
 	if (glRefConfig.framebufferMultisample)
-		qglGetIntegerv(GL_MAX_SAMPLES, &multisample);
+		glGetIntegerv(GL_MAX_SAMPLES, &multisample);
 
 	if (r_ext_framebuffer_multisample->integer < multisample)
 		multisample = r_ext_framebuffer_multisample->integer;
@@ -303,7 +303,7 @@ void FBO_Init(void)
 	if (tr.renderFbo)
 	{
 		GL_BindFramebuffer(GL_FRAMEBUFFER, tr.renderFbo->frameBuffer);
-		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	}
 
 	if (tr.screenScratchImage)
@@ -551,13 +551,13 @@ void FBO_BlitFromTexture(struct image_s *src, vec4_t inSrcTexCorners, vec2_t inS
 
 	if (!shaderProgram)
 	{
-		shaderProgram = &tr.textureColorShader;
+		shaderProgram = &trs.textureColorShader;
 	}
 
 	FBO_Bind(dst);
 
-	qglViewport( 0, 0, width, height );
-	qglScissor( 0, 0, width, height );
+	glViewport( 0, 0, width, height );
+	glScissor( 0, 0, width, height );
 
 	Mat4Ortho(0, width, height, 0, 0, 1, projection);
 

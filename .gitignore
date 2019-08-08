@@ -39,3 +39,10 @@ profile
 *.sdf
 *.opensdf
 *.suo
+
+# emscripten
+####################
+misc/quakejs/lib/emsdk/node_modules/
+misc/quakejs/node_modules
+.resources
+misc/quakejs/assets

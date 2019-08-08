@@ -217,9 +217,9 @@ void RB_ShadowTessEnd( void ) {
 
 	// don't write to the color buffer
 	qglGetBooleanv(GL_COLOR_WRITEMASK, rgba);
-	qglColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+	glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
 
-	qglEnable( GL_STENCIL_TEST );
+	glEnable( GL_STENCIL_TEST );
 	qglStencilFunc( GL_ALWAYS, 1, 255 );
 
 	GL_Cull( CT_BACK_SIDED );
@@ -234,7 +234,7 @@ void RB_ShadowTessEnd( void ) {
 
 
 	// reenable writing to the color buffer
-	qglColorMask(rgba[0], rgba[1], rgba[2], rgba[3]);
+	glColorMask(rgba[0], rgba[1], rgba[2], rgba[3]);
 #endif
 }
 
@@ -258,7 +258,7 @@ void RB_ShadowFinish( void ) {
 	if ( glConfig.stencilBits < 4 ) {
 		return;
 	}
-	qglEnable( GL_STENCIL_TEST );
+	glEnable( GL_STENCIL_TEST );
 	qglStencilFunc( GL_NOTEQUAL, 0, 255 );
 
 	GL_Cull( CT_TWO_SIDED );
@@ -281,7 +281,7 @@ void RB_ShadowFinish( void ) {
 	qglEnd ();
 
 	qglColor4f(1,1,1,1);
-	qglDisable( GL_STENCIL_TEST );
+	glDisable( GL_STENCIL_TEST );
 #endif
 }
 

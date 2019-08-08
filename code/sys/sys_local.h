@@ -41,6 +41,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 // Console
+qboolean CON_IsTTY( void );
+void CON_SetIsTTY( qboolean isTTY );
 void CON_Shutdown( void );
 void CON_Init( void );
 char *CON_Input( void );

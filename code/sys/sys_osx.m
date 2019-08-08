@@ -34,6 +34,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
+// Used to determine where to store user-specific files
+static char homePath[ MAX_OSPATH ] = { 0 };
+
+// Used to store the Steam Quake 3 installation path
+static char steamPath[ MAX_OSPATH ] = { 0 };
+
+// Used to store the GOG Quake 3 installation path
+static char gogPath[ MAX_OSPATH ] = { 0 };
+
 /*
 ==============
 Sys_Dialog

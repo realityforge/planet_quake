@@ -225,10 +225,10 @@ void RB_InstantQuad(vec4_t quadVerts[4])
 	VectorSet2(texCoords[2], 1.0f, 1.0f);
 	VectorSet2(texCoords[3], 0.0f, 1.0f);
 
-	GLSL_BindProgram(&tr.textureColorShader);
+	GLSL_BindProgram(&trs.textureColorShader);
 	
-	GLSL_SetUniformMat4(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
+	GLSL_SetUniformMat4(&trs.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformVec4(&trs.textureColorShader, UNIFORM_COLOR, colorWhite);
 
 	RB_InstantQuad2(quadVerts, texCoords);
 }
@@ -426,7 +426,7 @@ static qboolean RB_SurfaceVaoCached(int numVerts, srfVert_t *verts, int numIndex
 	{
 		RB_EndSurface();
 		RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);
-	}
+			}
 
 	if (recycleVertexBuffer)
 		VaoCache_RecycleVertexBuffer();
@@ -439,7 +439,7 @@ static qboolean RB_SurfaceVaoCached(int numVerts, srfVert_t *verts, int numIndex
 
 	VaoCache_AddSurface(verts, numVerts, indexes, numIndexes);
 
-	tess.numIndexes += numIndexes;
+	tess.numIndexes  += numIndexes;
 	tess.numVertexes += numVerts;
 	tess.useInternalVao = qfalse;
 	tess.useCacheVao = qtrue;
@@ -475,7 +475,7 @@ static void RB_SurfaceBeam( void )
 {
 #define NUM_BEAM_SEGS 6
 	refEntity_t *e;
-	shaderProgram_t *sp = &tr.textureColorShader;
+	shaderProgram_t *sp = &trs.textureColorShader;
 	int	i;
 	vec3_t perpvec;
 	vec3_t direction, normalized_direction;
@@ -773,7 +773,7 @@ static void RB_SurfaceLightningBolt( void ) {
 
 
 static void LerpMeshVertexes(mdvSurface_t *surf, float backlerp)
-{
+		{
 	float *outXyz;
 	int16_t *outNormal, *outTangent;
 	mdvVertex_t *newVerts;
@@ -781,7 +781,7 @@ static void LerpMeshVertexes(mdvSurface_t *surf, float backlerp)
 
 	newVerts = surf->verts + backEnd.currentEntity->e.frame * surf->numVerts;
 
-	outXyz =     tess.xyz[tess.numVertexes];
+	outXyz =    tess.xyz[tess.numVertexes];
 	outNormal =  tess.normal[tess.numVertexes];
 	outTangent = tess.tangent[tess.numVertexes];
 
@@ -1249,9 +1249,9 @@ void RB_SurfaceVaoMdvMesh(srfVaoMdvMesh_t * surface)
 		glState.vertexAnimation = qtrue;
 
 		if (glRefConfig.vertexArrayObject)
-		{
+	{
 			qglBindBuffer(GL_ARRAY_BUFFER, surface->vao->vertexesVBO);
-		}
+	}
 
 		frameOffset    = refEnt->frame * surface->vao->frameSize;
 
@@ -1283,7 +1283,7 @@ void RB_SurfaceVaoMdvMesh(srfVaoMdvMesh_t * surface)
 
 
 		if (!glRefConfig.vertexArrayObject)
-		{
+	{
 			attribIndex = ATTR_INDEX_TEXCOORD;
 			vAtb = &surface->vao->attribs[attribIndex];
 			qglVertexAttribPointer(attribIndex, vAtb->count, vAtb->type, vAtb->normalized, vAtb->stride, BUFFER_OFFSET(vAtb->offset));

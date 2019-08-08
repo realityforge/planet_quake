@@ -33,6 +33,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qcommon.h"
 #include "unzip.h"
 
+#if EMSCRIPTEN
+extern void Sys_FS_Startup(cb_context_t *after);
+extern void Sys_FS_Shutdown(cb_context_t *after);
+#endif
+
 /*
 =============================================================================
 
@@ -255,6 +260,12 @@ static  cvar_t          *fs_apppath;
 static	cvar_t		*fs_steampath;
 static	cvar_t		*fs_gogpath;
 
+#if EMSCRIPTEN
+static	cvar_t		*fs_cdn;
+static	cvar_t		*fs_manifest;
+static	cvar_t		*fs_completeManifest;
+#endif
+
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_gamedirvar;
@@ -283,6 +294,7 @@ typedef struct {
 	int			zipFilePos;
 	int			zipFileLen;
 	qboolean	zipFile;
+	qboolean	streamed;
 	char		name[MAX_ZPATH];
 } fileHandleData_t;
 
@@ -354,6 +366,31 @@ qboolean FS_PakIsPure( pack_t *pack ) {
 	return qtrue;
 }
 
+#if EMSCRIPTEN
+/*
+=================
+FS_PakIsInManifest
+
+quake's internal fs will limit the paks it loads to these paks. we
+do this to keep quake's pure serve code in check, otherwise, often
+the server and client will have paks for maps other than the current
+that are out of sync and therefor throw off pure checksums
+=================
+*/
+qboolean FS_PakIsInManifest(pack_t *pack) {
+	char relative[MAX_OSPATH];
+
+	Com_sprintf(relative, sizeof(relative), "%s/%s", pack->pakGamename, pack->pakBasename);
+
+	if (FS_idPak(relative, BASEGAME, NUM_ID_PAKS)) {
+		return qtrue;
+	}
+
+	Q_strcat(relative, sizeof(relative), ".pk3");
+
+	return strstr(Com_GetManifest(), relative) != NULL;
+}
+#endif
 
 /*
 =================
@@ -539,7 +576,7 @@ qboolean FS_CreatePath (char *OSPath) {
 	// Skip creation of the root directory as it will always be there
 	ofs = strchr( path, PATH_SEP );
 	if ( ofs != NULL ) {
-		ofs++;
+	ofs++;
 	}
 
 	for (; ofs != NULL && *ofs ; ofs++) {
@@ -709,6 +746,8 @@ in that order
 */
 long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 {
+	Com_Printf( "Reading server file: %s\n", filename );
+
 	char *ospath;
 	fileHandle_t	f = 0;
 
@@ -747,36 +786,6 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			if ( fs_debug->integer )
 			{
 				Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath );
-			}
-
-			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
-			fsh[f].handleSync = qfalse;
-		}
-
-		// Check fs_steampath
-		if (!fsh[f].handleFiles.file.o && fs_steampath->string[0])
-		{
-			ospath = FS_BuildOSPath( fs_steampath->string, filename, "" );
-			ospath[strlen(ospath)-1] = '\0';
-
-			if ( fs_debug->integer )
-			{
-				Com_Printf( "FS_SV_FOpenFileRead (fs_steampath): %s\n", ospath );
-			}
-
-			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
-			fsh[f].handleSync = qfalse;
-		}
-
-		// Check fs_gogpath
-		if (!fsh[f].handleFiles.file.o && fs_gogpath->string[0])
-		{
-			ospath = FS_BuildOSPath( fs_gogpath->string, filename, "" );
-			ospath[strlen(ospath)-1] = '\0';
-
-			if ( fs_debug->integer )
-			{
-				Com_Printf( "FS_SV_FOpenFileRead (fs_gogpath): %s\n", ospath );
 			}
 
 			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
@@ -1241,6 +1250,13 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 				return -1;
 			}
 
+#if EMSCRIPTEN
+			if (!FS_PakIsInManifest(search->pack)) {
+				*file = 0;
+				return -1;
+			}
+#endif
+
 			// look through all the pak file elements
 			pak = search->pack;
 			pakFile = pak->hashTable[hash];
@@ -1379,6 +1395,8 @@ separate file or a ZIP file.
 */
 long FS_FOpenFileRead(const char *filename, fileHandle_t *file, qboolean uniqueFILE)
 {
+	Com_Printf("Reading file %s\n", filename);
+
 	searchpath_t *search;
 	long len;
 	qboolean isLocalConfig;
@@ -1784,6 +1802,12 @@ int	FS_FileIsInPAK(const char *filename, int *pChecksum ) {
 			if ( !FS_PakIsPure(search->pack) ) {
 				continue;
 			}
+
+#if EMSCRIPTEN
+			if (!FS_PakIsInManifest(search->pack)) {
+				continue;
+			}
+#endif
 
 			// look through all the pak file elements
 			pak = search->pack;
@@ -2269,6 +2293,12 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 				continue;
 			}
 
+#if EMSCRIPTEN
+			if (!FS_PakIsInManifest(search->pack)) {
+				continue;
+			}
+#endif
+
 			// look through all the pak file elements
 			pak = search->pack;
 			buildBuffer = pak->buildBuffer;
@@ -2545,14 +2575,14 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 
 	nPotential = Sys_CountFileList(pFiles);
 
-	for (i = 0; i < nPotential; i++) {
+	for ( i = 0 ; i < nPotential ; i++ ) {
 		name = pFiles[i];
 		// NOTE: cleaner would involve more changes
 		// ignore duplicate mod directories
-		if (i != 0) {
+		if (i!=0) {
 			bDrop = qfalse;
 			for (j = 0; j < i; j++) {
-				if (Q_stricmp(pFiles[j], name) == 0) {
+				if (Q_stricmp(pFiles[j],name)==0) {
 					// this one can be dropped
 					bDrop = qtrue;
 					break;
@@ -2565,12 +2595,12 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 		}
 
 		// in order to be a valid mod the directory must contain at least one .pk3 or .pk3dir
-		// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
+			// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
 		// so we will try each of them here
 		for (j = 0; j < ARRAY_LEN(paths); j++) {
 			path = FS_BuildOSPath(paths[j], name, "");
 			nPaks = nDirs = nPakDirs = 0;
-			pPaks = Sys_ListFiles(path, ".pk3", NULL, &nPaks, qfalse);
+			pPaks = Sys_ListFiles(path, ".pk3", NULL, &nPaks, qfalse); 
 			pDirs = Sys_ListFiles(path, "/", NULL, &nDirs, qfalse);
 			for (k = 0; k < nDirs; k++) {
 				// we only want to count directories ending with ".pk3dir"
@@ -2585,27 +2615,27 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 			if (nPaks > 0 || nPakDirs > 0) {
 				break;
 			}
-		}
+			}
 
 		if (nPaks > 0 || nPakDirs > 0) {
-			nLen = strlen(name) + 1;
-			// nLen is the length of the mod path
-			// we need to see if there is a description available
+				nLen = strlen(name) + 1;
+				// nLen is the length of the mod path
+				// we need to see if there is a description available
 			FS_GetModDescription(name, description, sizeof(description));
 			nDescLen = strlen(description) + 1;
 
-			if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
-				strcpy(listbuf, name);
-				listbuf += nLen;
+				if (nTotal + nLen + 1 + nDescLen + 1 < bufsize) {
+					strcpy(listbuf, name);
+					listbuf += nLen;
 				strcpy(listbuf, description);
-				listbuf += nDescLen;
-				nTotal += nLen + nDescLen;
-				nMods++;
+					listbuf += nDescLen;
+					nTotal += nLen + nDescLen;
+					nMods++;
 			} else {
-				break;
+					break;
+				}
 			}
 		}
-	}
 	Sys_FreeFileList( pFiles );
 
 	return nMods;
@@ -2787,6 +2817,13 @@ void FS_Path_f( void ) {
 					Com_Printf( "    on the pure list\n" );
 				}
 			}
+#if EMSCRIPTEN
+			if (FS_PakIsInManifest(s->pack)) {
+				Com_Printf("    in the manifest\n");
+			} else {
+				Com_Printf("    not in the manifest\n");
+			}
+#endif
 		} else {
 			Com_Printf ("%s%c%s\n", s->dir->path, PATH_SEP, s->dir->gamedir );
 		}
@@ -3040,10 +3077,13 @@ FS_idPak
 */
 qboolean FS_idPak(char *pak, char *base, int numPaks)
 {
+	char temp[MAX_OSPATH];
 	int i;
 
 	for (i = 0; i < NUM_ID_PAKS; i++) {
-		if ( !FS_FilenameCompare(pak, va("%s/pak%d", base, i)) ) {
+		Com_sprintf(temp, sizeof(temp), "%s/pak%d", base, i);
+
+		if ( !FS_FilenameCompare(pak, temp) ) {
 			break;
 		}
 	}
@@ -3222,7 +3262,24 @@ FS_Shutdown
 Frees all resources.
 ================
 */
-void FS_Shutdown( qboolean closemfp ) {
+typedef struct shutdown_data_s {
+	cb_context_t *after;
+} shutdown_data_t;
+
+void FS_Shutdown_after_Sys_FS_Shutdown( cb_context_t *context, int status ) {
+	shutdown_data_t *data;
+	cb_context_t *after;
+
+	data = (shutdown_data_t*)context->data;
+	after = data->after;
+	cb_free_context(context);
+
+	cb_run(after, 0);
+}
+
+void FS_Shutdown( qboolean closemfp, cb_context_t *after ) {
+	cb_context_t *context;
+	shutdown_data_t *data;
 	searchpath_t	*p, *next;
 	int	i;
 
@@ -3258,6 +3315,16 @@ void FS_Shutdown( qboolean closemfp ) {
 	if (closemfp) {
 		fclose(missingFiles);
 	}
+#endif
+
+	context = cb_create_context(FS_Shutdown_after_Sys_FS_Shutdown, shutdown_data_t);
+	data = (shutdown_data_t*)context->data;
+	data->after = after;
+
+#if EMSCRIPTEN
+	Sys_FS_Shutdown(context);
+#else
+	cb_run(context, 0);
 #endif
 }
 
@@ -3311,54 +3378,21 @@ static void FS_ReorderPurePaks( void )
 FS_Startup
 ================
 */
-static void FS_Startup( const char *gameName )
-{
-	const char *homePath;
+typedef struct startup_data_s {
+	char gameName[MAX_OSPATH];
+	cb_context_t *after;
+} startup_data_t;
 
-	Com_Printf( "----- FS_Startup -----\n" );
+static void FS_Startup_after_Sys_FS_Startup( cb_context_t *context, int status ) {
+	startup_data_t *data;
+	char gameName[MAX_OSPATH];
+	cb_context_t *after;
 
-	fs_packFiles = 0;
+	data = (startup_data_t*)context->data;
+	Q_strncpyz(gameName, data->gameName, MAX_OSPATH);
+	after = data->after;
+	cb_free_context(context);
 
-	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
-	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
-	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
-	homePath = Sys_DefaultHomePath();
-	if (!homePath || !homePath[0]) {
-		homePath = fs_basepath->string;
-	}
-	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
-	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
-
-	if (!gameName[0]) {
-		Cvar_ForceReset( "com_basegame" );
-	}
-
-	if (!FS_FilenameCompare(fs_gamedirvar->string, gameName)) {
-		// This is the standard base game. Servers and clients should
-		// use "" and not the standard basegame name because this messes
-		// up pak file negotiation and lots of other stuff
-		Cvar_ForceReset( "fs_game" );
-	}
-
-	if (FS_InvalidGameDir(gameName)) {
-		Com_Error( ERR_DROP, "Invalid com_basegame '%s'", gameName );
-	}
-	if (FS_InvalidGameDir(fs_basegame->string)) {
-		Com_Error( ERR_DROP, "Invalid fs_basegame '%s'", fs_basegame->string );
-	}
-	if (FS_InvalidGameDir(fs_gamedirvar->string)) {
-		Com_Error( ERR_DROP, "Invalid fs_game '%s'", fs_gamedirvar->string );
-	}
-
-	// add search path elements in reverse priority order
-	fs_gogpath = Cvar_Get ("fs_gogpath", Sys_GogPath(), CVAR_INIT|CVAR_PROTECTED );
-	if (fs_gogpath->string[0]) {
-		FS_AddGameDirectory( fs_gogpath->string, gameName );
-	}
-	fs_steampath = Cvar_Get ("fs_steampath", Sys_SteamPath(), CVAR_INIT|CVAR_PROTECTED );
-	if (fs_steampath->string[0]) {
-		FS_AddGameDirectory( fs_steampath->string, gameName );
-	}
 	if (fs_basepath->string[0]) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
@@ -3442,9 +3476,51 @@ static void FS_Startup( const char *gameName )
 	}
 #endif
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
+
+	cb_run(after, 0);
 }
 
-#ifndef STANDALONE
+static void FS_Startup( const char *gameName, cb_context_t *after )
+{
+	const char *homePath;
+	cb_context_t *context;
+	startup_data_t *data;
+
+	Com_Printf( "----- FS_Startup -----\n" );
+
+	fs_packFiles = 0;
+
+	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+
+#if EMSCRIPTEN
+	fs_cdn = Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
+	fs_manifest = Cvar_Get("fs_manifest", "", CVAR_ROM | CVAR_SERVERINFO);
+	fs_completeManifest = Cvar_Get("fs_completeManifest", "", CVAR_ROM);
+#endif
+
+	fs_basepath = Cvar_Get ("fs_basepath", Sys_DefaultInstallPath(), CVAR_INIT|CVAR_PROTECTED );
+	fs_basegame = Cvar_Get ("fs_basegame", "", CVAR_INIT );
+	homePath = Sys_DefaultHomePath();
+	if (!homePath || !homePath[0]) {
+		homePath = fs_basepath->string;
+	}
+	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
+	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
+
+	// Setup callback.
+	context = cb_create_context(FS_Startup_after_Sys_FS_Startup, startup_data_t);
+	data = (startup_data_t*)context->data;
+	Q_strncpyz(data->gameName, gameName, MAX_OSPATH);
+	data->after = after;
+
+#if EMSCRIPTEN
+	Sys_FS_Startup(context);
+#else
+	cb_run(context, 0);
+#endif
+}
+
+#if !defined STANDALONE && !EMSCRIPTEN
 /*
 ===================
 FS_CheckPak0
@@ -3464,6 +3540,7 @@ static void FS_CheckPak0( void )
 	const char	*pakBasename;
 	qboolean founddemo = qfalse;
 	unsigned int foundPak = 0, foundTA = 0;
+	unsigned int checksum = 0;
 
 	for( path = fs_searchpaths; path; path = path->next )
 	{
@@ -3484,7 +3561,14 @@ static void FS_CheckPak0( void )
 				&& strlen(pakBasename) == 4 && !Q_stricmpn( pakBasename, "pak", 3 )
 				&& pakBasename[3] >= '0' && pakBasename[3] <= '0' + NUM_ID_PAKS - 1)
 		{
-			if( curpack->checksum != pak_checksums[pakBasename[3]-'0'] )
+			checksum = pak_checksums[pakBasename[3]-'0'];
+#if EMSCRIPTEN
+			// Emscripten build uses demo pak0
+			if (pakBasename[3] == '0') {
+				checksum = DEMO_PAK0_CHECKSUM;
+			}
+#endif
+			if( curpack->checksum != checksum )
 			{
 				if(pakBasename[3] == '0')
 				{
@@ -3881,17 +3965,22 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
 	if (fs_numServerPaks) {
 		Com_DPrintf( "Connected to a pure server.\n" );
 	}
-	else
-	{
-		if (fs_reordered)
-		{
-			// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
-			// force a restart to make sure the search order will be correct
-			Com_DPrintf( "FS search reorder is required\n" );
-			FS_Restart(fs_checksumFeed);
-			return;
-		}
-	}
+
+	// FIXME instead of invoking an async restart here, we should be able
+	// to synchronously desort the paks back to their original state.
+	// asynchronously restarting here would require a large amount of
+	// refactoring
+	// else
+	// {
+	// 	if (fs_reordered)
+	// 	{
+	// 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=540
+	// 		// force a restart to make sure the search order will be correct
+	// 		Com_DPrintf( "FS search reorder is required\n" );
+	// 		FS_Restart(fs_checksumFeed);
+	// 		return;
+	// 	}
+	// }
 
 	for ( i = 0 ; i < c ; i++ ) {
 		if (fs_serverPakNames[i]) {
@@ -3972,7 +4061,42 @@ Called only at initial startup, not when the filesystem
 is resetting due to a game change
 ================
 */
-void FS_InitFilesystem( void ) {
+typedef struct init_filesystem_data_s {
+	cb_context_t *after;
+} init_filesystem_data_t;
+
+void FS_InitFilesystem_after_FS_Startup( cb_context_t *context, int status ) {
+	init_filesystem_data_t *data;
+	cb_context_t *after;
+
+	data = (init_filesystem_data_t*)context->data;
+	after = data->after;
+	cb_free_context(context);
+
+#if !defined STANDALONE && !EMSCRIPTEN
+	FS_CheckPak0( );
+#endif
+
+	Com_Printf("Loading default config \n");
+	// if we can't find default.cfg, assume that the paths are
+	// busted and error out now, rather than getting an unreadable
+	// graphics screen when the font fails to load
+	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
+		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
+	}
+
+	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
+	Q_strncpyz(lastValidComBaseGame, com_basegame->string, sizeof(lastValidComBaseGame));
+	Q_strncpyz(lastValidFsBaseGame, fs_basegame->string, sizeof(lastValidFsBaseGame));
+	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
+
+	cb_run(after, 0);
+}
+
+void FS_InitFilesystem( cb_context_t *after ) {
+	cb_context_t *context;
+	init_filesystem_data_t *data;
+
 	// allow command line parms to override our defaults
 	// we have to specially handle this, because normal command
 	// line variable sets don't happen until after the filesystem
@@ -3985,47 +4109,39 @@ void FS_InitFilesystem( void ) {
 		Cvar_Set("fs_game", "");
 
 	// try to start up normally
-	FS_Startup(com_basegame->string);
+	context = cb_create_context(FS_InitFilesystem_after_FS_Startup, init_filesystem_data_t);
+	data = (init_filesystem_data_t*)context->data;
+	data->after = after;
 
-#ifndef STANDALONE
-	FS_CheckPak0( );
-#endif
-
-	// if we can't find default.cfg, assume that the paths are
-	// busted and error out now, rather than getting an unreadable
-	// graphics screen when the font fails to load
-	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
-		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
-	}
-
-	Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
-	Q_strncpyz(lastValidComBaseGame, com_basegame->string, sizeof(lastValidComBaseGame));
-	Q_strncpyz(lastValidFsBaseGame, fs_basegame->string, sizeof(lastValidFsBaseGame));
-	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
+	FS_Startup(com_basegame->string, context);
 }
-
 
 /*
 ================
 FS_Restart
 ================
 */
-void FS_Restart( int checksumFeed ) {
+typedef struct restart_data_s {
+	int checksumFeed;
+	cb_context_t *after;
+} restart_data_t;
+
+static void FS_Restart_after_game_restart( cb_context_t *context, int status ) {
+	cb_free_context(context);
+
+	Com_Error( ERR_DROP, "Invalid game folder" );
+}
+
+static void FS_Restart_after_FS_Startup( cb_context_t *context, int status ) {
 	const char *lastGameDir;
+	restart_data_t *data;
+	cb_context_t *after;
 
-	// free anything we currently have loaded
-	FS_Shutdown(qfalse);
+	data = (restart_data_t*)context->data;
+	after = data->after;
+	cb_free_context(context);
 
-	// set the checksum feed
-	fs_checksumFeed = checksumFeed;
-
-	// clear pak references
-	FS_ClearPakReferences(0);
-
-	// try to start up normally
-	FS_Startup(com_basegame->string);
-
-#ifndef STANDALONE
+#if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
 
@@ -4045,8 +4161,11 @@ void FS_Restart( int checksumFeed ) {
 			lastValidComBaseGame[0] = '\0';
 			lastValidFsBaseGame[0] = '\0';
 			lastValidGame[0] = '\0';
-			FS_Restart(checksumFeed);
-			Com_Error( ERR_DROP, "Invalid game folder" );
+			
+			// Re-use the current context.
+			context->cb = FS_Restart_after_game_restart;
+
+			FS_Restart(fs_checksumFeed, context);
 			return;
 		}
 		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
@@ -4069,6 +4188,38 @@ void FS_Restart( int checksumFeed ) {
 	Q_strncpyz(lastValidFsBaseGame, fs_basegame->string, sizeof(lastValidFsBaseGame));
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
 
+	cb_run(after, 0);
+}
+
+static void FS_Restart_after_FS_Shutdown( cb_context_t *context, int status ) {
+	restart_data_t *data;
+
+	data = (restart_data_t*)context->data;
+
+	// set the checksum feed
+	fs_checksumFeed = data->checksumFeed;
+
+	// clear pak references
+	FS_ClearPakReferences(0);
+
+	// reuse the same context
+	context->cb = FS_Restart_after_FS_Startup;
+
+	// try to start up normally
+	FS_Startup(com_basegame->string, context);
+}
+
+void FS_Restart( int checksumFeed, cb_context_t *after ) {
+	cb_context_t *context;
+	restart_data_t *data;
+
+	context = cb_create_context(FS_Restart_after_FS_Shutdown, restart_data_t);
+	data = (restart_data_t*)context->data;
+	data->checksumFeed = checksumFeed;
+	data->after = after;
+
+	// free anything we currently have loaded
+	FS_Shutdown(qfalse, context);
 }
 
 /*
@@ -4079,27 +4230,60 @@ Restart if necessary
 Return qtrue if restarting due to game directory changed, qfalse otherwise
 =================
 */
-qboolean FS_ConditionalRestart(int checksumFeed, qboolean disconnect)
+typedef struct conditional_restart_data_s {
+	qboolean result;
+	cb_context_t *after;
+} conditional_restart_data_t;
+
+static void FS_ConditionalRestart_after_restart( cb_context_t *context, int status ) {
+	conditional_restart_data_t *data;
+	cb_context_t *after;
+	int result;
+
+	data = (conditional_restart_data_t*)context->data;
+	after = data->after;
+	result = data->result;
+	cb_free_context(context);
+
+	cb_run(after, result);
+}
+
+void FS_ConditionalRestart(int checksumFeed, qboolean disconnect, cb_context_t *after)
 {
+	cb_context_t *context;
+	conditional_restart_data_t *data;
+
+	context = cb_create_context(FS_ConditionalRestart_after_restart, conditional_restart_data_t);
+	data = (conditional_restart_data_t*)context->data;
+	data->after = after;
+
 	if(fs_gamedirvar->modified)
 	{
 		if(FS_FilenameCompare(lastValidGame, fs_gamedirvar->string) &&
 				(*lastValidGame || FS_FilenameCompare(fs_gamedirvar->string, com_basegame->string)) &&
 				(*fs_gamedirvar->string || FS_FilenameCompare(lastValidGame, com_basegame->string)))
 		{
-			Com_GameRestart(checksumFeed, disconnect);
-			return qtrue;
+			data->result = qtrue;
+			Com_GameRestart(checksumFeed, disconnect, context);
+			return;
 		}
 		else
 			fs_gamedirvar->modified = qfalse;
 	}
 
+	data->result = qfalse;
 	if(checksumFeed != fs_checksumFeed)
-		FS_Restart(checksumFeed);
+	{
+		FS_Restart(checksumFeed, context);
+		return;
+	}
 	else if(fs_numServerPaks && !fs_reordered)
+	{
 		FS_ReorderPurePaks();
+	}
 
-	return qfalse;
+	// Else, run immediately.
+	cb_run(context, 0);
 }
 
 /*

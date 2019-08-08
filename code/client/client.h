@@ -194,6 +194,11 @@ typedef struct {
 	int			lastExecutedServerCommand;		// last server command grabbed or executed with CL_GetServerCommand
 	char		serverCommands[MAX_RELIABLE_COMMANDS][MAX_STRING_CHARS];
 
+#if EMSCRIPTEN
+	char fs_cdn[MAX_OSPATH];
+	char fs_manifest[BIG_INFO_STRING];
+#endif
+
 	// file transfer from server
 	fileHandle_t download;
 	char		downloadTempName[MAX_OSPATH];
@@ -307,6 +312,23 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
+#if EMSCRIPTEN
+
+#define MAX_PATCHES  8
+
+typedef enum {
+	PATCH_NONE,
+	PATCH_XSCALE,
+	PATCH_YSCALE,
+	PATCH_BIAS
+} patch_type_t;
+
+typedef struct patch_s {
+	patch_type_t type;
+	void *addr;
+} patch_t;
+
+#endif
 typedef struct {
 	qboolean	cddialog;			// bring up the cd needed dialog next frame
 
@@ -351,12 +373,27 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+
+#if EMSCRIPTEN
+	glconfig_t *uiGlConfig;
+
+	patch_t uiPatches[MAX_PATCHES];
+	unsigned numUiPatches;
+
+	// the cgame scales are normally stuffed somewhere inbetween
+	// cgameGlConfig and cgameFirstCvar
+	glconfig_t *cgameGlConfig;
+	vmCvar_t *cgameFirstCvar;
+
+	patch_t cgamePatches[MAX_PATCHES];
+	unsigned numCgamePatches;
+#endif
 } clientStatic_t;
 
 extern	clientStatic_t		cls;
 
-extern	char		cl_oldGame[MAX_QPATH];
-extern	qboolean	cl_oldGameSet;
+// extern	char		cl_oldGame[MAX_QPATH];
+// extern	qboolean	cl_oldGameSet;
 
 //=============================================================================
 
@@ -470,6 +507,7 @@ void CL_Snd_Restart_f (void);
 void CL_StartDemoLoop( void );
 void CL_NextDemo( void );
 void CL_ReadDemoMessage( void );
+void CL_ReadDemoConnectionMessages( void );
 void CL_StopRecord_f(void);
 
 void CL_InitDownloads(void);
@@ -504,6 +542,7 @@ void CL_SendCmd (void);
 void CL_ClearState (void);
 void CL_ReadPackets (void);
 
+void CL_SendPureChecksums(void);
 void CL_WritePacket( void );
 void IN_CenterView (void);
 
@@ -602,6 +641,7 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 void CL_InitCGame( void );
+void CL_InitCGameFinished( void );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );

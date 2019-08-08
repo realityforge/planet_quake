@@ -18,9 +18,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ===========================================================================
 */
 
-#include "tr_local.h"
 
+#ifdef USE_LOCAL_HEADERS
+#	include "SDL.h"
+#else
+#	include <SDL.h>
+#endif
+#include "tr_local.h"
 #include "tr_dsa.h"
+
+		// set DSA fallbacks
+#define GLE(ret, name, ...) name##proc *gl##name;
+	QGL_2_0_PROCS;
+	QGL_EXT_direct_state_access_PROCS;
+#undef GLE
 
 static struct
 {
@@ -51,12 +62,12 @@ void GL_BindNullTextures(void)
 	{
 		for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 		{
-			qglActiveTexture(GL_TEXTURE0 + i);
-			qglBindTexture(GL_TEXTURE_2D, 0);
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, 0);
 			glDsaState.textures[i] = 0;
 		}
 
-		qglActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
 		glDsaState.texunit = GL_TEXTURE0;
 	}
 }
@@ -80,51 +91,56 @@ GLvoid APIENTRY GLDSA_BindMultiTextureEXT(GLenum texunit, GLenum target, GLuint 
 {
 	if (glDsaState.texunit != texunit)
 	{
-		qglActiveTexture(texunit);
+		glActiveTexture(texunit);
 		glDsaState.texunit = texunit;
 	}
 
-	qglBindTexture(target, texture);
+	glBindTexture(target, texture);
+}
+
+GLuint APIENTRY GLDSA_CreateProgramObjectARB (void)
+{
+	return qglCreateProgram();
 }
 
 GLvoid APIENTRY GLDSA_TextureParameterfEXT(GLuint texture, GLenum target, GLenum pname, GLfloat param)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglTexParameterf(target, pname, param);
+	glTexParameterf(target, pname, param);
 }
 
 GLvoid APIENTRY GLDSA_TextureParameteriEXT(GLuint texture, GLenum target, GLenum pname, GLint param)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglTexParameteri(target, pname, param);
+	glTexParameteri(target, pname, param);
 }
 
 GLvoid APIENTRY GLDSA_TextureImage2DEXT(GLuint texture, GLenum target, GLint level, GLint internalformat,
 	GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+	glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
 GLvoid APIENTRY GLDSA_TextureSubImage2DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset,
 	GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+	glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 
 GLvoid APIENTRY GLDSA_CopyTextureSubImage2DEXT(GLuint texture, GLenum target, GLint level, GLint xoffset, GLint yoffset,
 	GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+	glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
 }
 
 GLvoid APIENTRY  GLDSA_CompressedTextureImage2DEXT(GLuint texture, GLenum target, GLint level, GLenum internalformat,
 	GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+	glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
 }
 
 GLvoid APIENTRY GLDSA_CompressedTextureSubImage2DEXT(GLuint texture, GLenum target, GLint level,
@@ -132,7 +148,7 @@ GLvoid APIENTRY GLDSA_CompressedTextureSubImage2DEXT(GLuint texture, GLenum targ
 	GLsizei imageSize, const GLvoid *data)
 {
 	GL_BindMultiTexture(glDsaState.texunit, target, texture);
-	qglCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+	glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
 }
 
 GLvoid APIENTRY GLDSA_GenerateTextureMipmapEXT(GLuint texture, GLenum target)
@@ -143,8 +159,7 @@ GLvoid APIENTRY GLDSA_GenerateTextureMipmapEXT(GLuint texture, GLenum target)
 
 void GL_BindNullProgram(void)
 {
-	qglUseProgram(0);
-	glDsaState.program = 0;
+	GL_UseProgram(0);
 }
 
 int GL_UseProgram(GLuint program)
@@ -152,7 +167,9 @@ int GL_UseProgram(GLuint program)
 	if (glDsaState.program == program)
 		return 0;
 
-	qglUseProgram(program);
+	if(qglUseProgram) {
+		qglUseProgram(program);
+	}
 	glDsaState.program = program;
 	return 1;
 }

@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_local.h"
 #include "../sys/sys_loadlib.h"
 
+#if EMSCRIPTEN
+#include "../ui/ui_shared.h"
+#endif
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -128,8 +132,8 @@ clientStatic_t		cls;
 vm_t				*cgvm;
 
 char				cl_reconnectArgs[MAX_OSPATH];
-char				cl_oldGame[MAX_QPATH];
-qboolean			cl_oldGameSet;
+// char				cl_oldGame[MAX_QPATH];
+// qboolean			cl_oldGameSet;
 
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
@@ -1061,6 +1065,35 @@ static void CL_CompleteDemoName( char *args, int argNum )
 
 /*
 ====================
+CL_ReadDemoConnectionMessages
+
+This function is called at the end of CL_PlayDemo_f, and after
+any potentially asynchronous operation (CL_InitCGame).
+====================
+*/
+void CL_ReadDemoConnectionMessages( void ) {
+	if (!clc.demoplaying || clc.state >= CA_PRIMED) {
+		return;
+	}
+
+	// read demo messages until connected
+	while (clc.state < CA_LOADING) {
+		CL_ReadDemoMessage();
+
+		// an async function was called, stop reading, once the function
+		// completes it'll call back in here
+		if (cb_num_pending()) {
+			return;
+		}
+	}
+
+	// don't get the first snapshot this frame, to prevent the long
+	// time from the gamestate load from messing causing a time skip
+	clc.firstDemoFrameSkipped = qfalse;
+}
+
+/*
+====================
 CL_PlayDemo_f
 
 demo <demoname>
@@ -1147,15 +1180,8 @@ void CL_PlayDemo_f( void ) {
 		clc.compat = qfalse;
 #endif
 
-	// read demo messages until connected
-	while ( clc.state >= CA_CONNECTED && clc.state < CA_PRIMED ) {
-		CL_ReadDemoMessage();
-	}
-	// don't get the first snapshot this frame, to prevent the long
-	// time from the gamestate load from messing causing a time skip
-	clc.firstDemoFrameSkipped = qfalse;
+	CL_ReadDemoConnectionMessages();
 }
-
 
 /*
 ====================
@@ -1355,16 +1381,16 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 			prefix, prefix_len ) );
 }
 
-static void CL_OldGame(void)
-{
-	if(cl_oldGameSet)
-	{
-		// change back to previous fs_game
-		cl_oldGameSet = qfalse;
-		Cvar_Set2("fs_game", cl_oldGame, qtrue);
-		FS_ConditionalRestart(clc.checksumFeed, qfalse);
-	}
-}
+// static void CL_OldGame(void)
+// {
+// 	if(cl_oldGameSet)
+// 	{
+// 		// change back to previous fs_game
+// 		cl_oldGameSet = qfalse;
+// 		Cvar_Set2("fs_game", cl_oldGame, qtrue);
+// 		FS_ConditionalRestart(clc.checksumFeed, qfalse);
+// 	}
+// }
 
 /*
 =====================
@@ -1475,10 +1501,10 @@ void CL_Disconnect( qboolean showMainMenu ) {
 
 	CL_UpdateGUID( NULL, 0 );
 
-	if(!noGameRestart)
-		CL_OldGame();
-	else
-		noGameRestart = qfalse;
+	// if(!noGameRestart)
+	// 	CL_OldGame();
+	// else
+	// 	noGameRestart = qfalse;
 }
 
 
@@ -1927,7 +1953,264 @@ we also have to reload the UI and CGame because the renderer
 doesn't know what graphics to reload
 =================
 */
+void CL_Vid_Restart_f_after_FS_ConditionalRestart(cb_context_t *context, int gameDirChanged) {
+	cb_free_context(context);
+
+	if (gameDirChanged) {
+		return;
+	}
+
+	// if not running a server clear the whole hunk
+	if(com_sv_running->integer)
+	{
+		// clear all the client data on the hunk
+		Hunk_ClearToMark();
+	}
+	else
+	{
+		// clear the whole hunk
+		Hunk_Clear();
+	}
+
+	// shutdown the UI
+	CL_ShutdownUI();
+	// shutdown the CGame
+	CL_ShutdownCGame();
+	// shutdown the renderer and clear the renderer interface
+	CL_ShutdownRef();
+	// client is no longer pure until new checksums are sent
+	CL_ResetPureClientAtServer();
+	// clear pak references
+	FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
+	// reinitialize the filesystem if the game directory or checksum has changed
+
+	cls.rendererStarted = qfalse;
+	cls.uiStarted = qfalse;
+	cls.cgameStarted = qfalse;
+	cls.soundRegistered = qfalse;
+
+	// unpause so the cgame definitely gets a snapshot and renders a frame
+	Cvar_Set("cl_paused", "0");
+
+	// initialize the renderer interface
+	CL_InitRef();
+
+	// startup all the client stuff
+	CL_StartHunkUsers(qfalse);
+
+	// start the cgame if connected
+	if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
+	{
+		cls.cgameStarted = qtrue;
+		CL_InitCGame();
+	}
+}
+
 void CL_Vid_Restart_f( void ) {
+#if EMSCRIPTEN
+	const float MATCH_EPSILON = 0.001f;
+	const char *arg = Cmd_Argv(1);
+
+	if (!strcmp(arg, "fast")) {
+		// WARNING this is absolutely terrible
+		//
+		// we unfortunately can't update the the cgame / ui modules, so instead
+		// we're reaching in and brute force scanning their address space to update
+		// known values on resize to make the world a better place
+
+		// NOTE while we could reference exact offsets (derived from cg_local.h /
+		// ui_local.h), mods may have changed the layout slightly so we're scanning
+		// a reasonable range to uh.. be safe
+
+		re.UpdateMode(&cls.glconfig);
+
+		if (cls.uiGlConfig) {
+			glconfig_t old = *cls.uiGlConfig;
+
+			*cls.uiGlConfig = cls.glconfig;
+
+			float oldXScale = old.vidWidth * (1.0 / 640.0);
+			float oldYScale = old.vidHeight * (1.0 / 480.0);
+			float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
+
+			float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
+			float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
+			float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
+
+			if (!cls.numUiPatches) {
+				// having tested a few mods and UI configurations, these
+				// scale values are often layed out different in memory.
+				// we're scanning a large range here to catch both old UI
+				// and new UI values
+				void *current = (void *)cls.uiGlConfig - sizeof(cachedAssets_t) - 128;
+				void *stop = (void *)cls.uiGlConfig + sizeof(glconfig_t) + 128;
+				qboolean valid = qfalse;
+				float *xScale = NULL;
+				float *yScale = NULL;
+				float *bias = NULL;
+
+				patch_type_t layouts[][3] = {
+					{ PATCH_XSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+					{ PATCH_YSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+					{ PATCH_YSCALE, PATCH_XSCALE, PATCH_BIAS },  // new UI
+					{ PATCH_YSCALE, PATCH_BIAS,   PATCH_NONE }   // CPMA
+				};
+
+				do {
+					for (int i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
+						patch_type_t *layout = layouts[i];
+
+						valid = qtrue;
+						xScale = NULL;
+						yScale = NULL;
+						bias = NULL;
+
+						for (int j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
+							patch_type_t type = layout[j];
+
+							switch (type) {
+								case PATCH_NONE:
+								break;
+
+								case PATCH_XSCALE:
+									xScale = ((float*)current)+j;
+									if (fabs(*xScale - oldXScale) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+
+								case PATCH_YSCALE:
+									yScale = ((float*)current)+j;
+									if (fabs(*yScale - oldYScale) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+
+								case PATCH_BIAS:
+									bias = ((float*)current)+j;
+									if (fabs(*bias - oldBias) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+							}
+						}
+					}
+				} while (++current != stop && !valid);
+
+				if (valid) {
+					if (xScale) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_XSCALE;
+						cls.uiPatches[cls.numUiPatches].addr = xScale;
+						cls.numUiPatches++;
+						Com_Printf("Found ui xscale offset at 0x%08x\n", (int)xScale);
+					}
+
+					if (yScale) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_YSCALE;
+						cls.uiPatches[cls.numUiPatches].addr = yScale;
+						cls.numUiPatches++;
+						Com_Printf("Found ui yscale offset at 0x%08x\n", (int)yScale);
+					}
+
+					if (bias) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_BIAS;
+						cls.uiPatches[cls.numUiPatches].addr = bias;
+						cls.numUiPatches++;
+						Com_Printf("Found ui bias offset at 0x%08x\n", (int)bias);
+					}
+				}
+			}
+
+			if (cls.numUiPatches) {
+				for (int i = 0; i < cls.numUiPatches; i++) {
+					patch_t *p = &cls.uiPatches[i];
+
+					switch (p->type) {
+						case PATCH_XSCALE:
+							*(float*)p->addr = newXScale;
+						break;
+
+						case PATCH_YSCALE:
+							*(float*)p->addr = newYScale;
+						break;
+
+						case PATCH_BIAS:
+							*(float*)p->addr = newBias;
+						break;
+
+						default:
+							Com_Error(ERR_FATAL, "bad ui patch type");
+						break;
+					}
+				}
+			} else {
+				Com_Printf(S_COLOR_RED "ERROR: Failed to patch ui resolution\n");
+			}
+		}
+
+		if (cls.cgameGlConfig) {
+			glconfig_t old = *cls.cgameGlConfig;
+
+			*cls.cgameGlConfig = cls.glconfig;
+
+			float oldXScale = old.vidWidth / 640.0;
+			float oldYScale = old.vidHeight / 480.0;
+
+			float newXScale = cls.glconfig.vidWidth / 640.0;
+			float newYScale = cls.glconfig.vidHeight / 480.0;
+
+			// as if this hack couldn't get worse, CPMA decided to store the
+			// scale values additionally in a second internal structure (and
+			// uses both). due to this, we're now scanning between
+			// cgs.glconfig <-> first vmCvar registered
+			if (!cls.numCgamePatches) {
+				void *current = (void *)cls.cgameGlConfig + sizeof(glconfig_t);
+				void *stop = current + 128;
+				if (stop < (void *)cls.cgameFirstCvar) {
+					stop = cls.cgameFirstCvar;
+				}
+
+				do {
+					float *xScale = (float*)current;
+					float *yScale = ((float*)current)+1;
+
+					if (fabs(*xScale - oldXScale) < MATCH_EPSILON && fabs(*yScale - oldYScale) < MATCH_EPSILON) {
+						cls.cgamePatches[cls.numCgamePatches].type = PATCH_YSCALE;
+						cls.cgamePatches[cls.numCgamePatches].addr = yScale;
+						cls.numCgamePatches++;
+						Com_Printf("Found cgame yscale offset at 0x%08x\n", (int)yScale);
+
+						current += 3;
+					}
+				} while (++current != stop);
+			}
+
+			if (cls.numCgamePatches) {
+				for (int i = 0; i < cls.numCgamePatches; i++) {
+					patch_t *p = &cls.cgamePatches[i];
+
+					switch (p->type) {
+						case PATCH_XSCALE:
+							*(float*)(p->addr) = newXScale;
+						break;
+
+						case PATCH_YSCALE:
+							*(float*)(p->addr) = newYScale;
+						break;
+
+						default:
+							Com_Error(ERR_FATAL, "bad cgame patch type");
+						break;
+					}
+				}
+			} else {
+				Com_Printf(S_COLOR_RED "ERROR: Failed to patch cgame resolution\n");
+			}
+		}
+
+		return;
+	}
+#endif
 
 	// Settings may have changed so stop recording now
 	if( CL_VideoRecording( ) ) {
@@ -1940,55 +2223,7 @@ void CL_Vid_Restart_f( void ) {
 	// don't let them loop during the restart
 	S_StopAllSounds();
 
-	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
-	{
-		// if not running a server clear the whole hunk
-		if(com_sv_running->integer)
-		{
-			// clear all the client data on the hunk
-			Hunk_ClearToMark();
-		}
-		else
-		{
-			// clear the whole hunk
-			Hunk_Clear();
-		}
-	
-		// shutdown the UI
-		CL_ShutdownUI();
-		// shutdown the CGame
-		CL_ShutdownCGame();
-		// shutdown the renderer and clear the renderer interface
-		CL_ShutdownRef();
-		// client is no longer pure until new checksums are sent
-		CL_ResetPureClientAtServer();
-		// clear pak references
-		FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
-		// reinitialize the filesystem if the game directory or checksum has changed
-
-		cls.rendererStarted = qfalse;
-		cls.uiStarted = qfalse;
-		cls.cgameStarted = qfalse;
-		cls.soundRegistered = qfalse;
-
-		// unpause so the cgame definitely gets a snapshot and renders a frame
-		Cvar_Set("cl_paused", "0");
-
-		// initialize the renderer interface
-		CL_InitRef();
-
-		// startup all the client stuff
-		CL_StartHunkUsers(qfalse);
-
-		// start the cgame if connected
-		if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
-		{
-			cls.cgameStarted = qtrue;
-			CL_InitCGame();
-			// send pure checksums
-			CL_SendPureChecksums();
-		}
-	}
+	FS_ConditionalRestart(clc.checksumFeed, qtrue, cb_create_context_no_data(CL_Vid_Restart_f_after_FS_ConditionalRestart));
 }
 
 /*
@@ -2079,15 +2314,37 @@ void CL_Clientinfo_f( void ) {
 
 //====================================================================
 
+
 /*
 =================
 CL_DownloadsComplete
 
-Called when all downloading has been completed
+Called when all downloading has been completed.
+IMPORTANT NOTE: It's assumed that nothing expects this function to be
+synchronous.
 =================
 */
-void CL_DownloadsComplete( void ) {
 
+void CL_DownloadsComplete_after_FS_Restart( cb_context_t *context, int status ) {
+	cb_free_context(context);
+
+#ifdef USE_CURL
+	if( clc.cURLDisconnected ) {
+		clc.cURLDisconnected = qfalse;
+		CL_Reconnect_f();
+	}
+	else
+#endif
+	{
+		// inform the server so we get new gamestate info
+		CL_AddReliableCommand("donedl", qfalse);
+
+		// by sending the donedl command we request a new gamestate
+		// so we don't want to load stuff yet
+	}
+}
+
+void CL_DownloadsComplete( void ) {
 #ifdef USE_CURL
 	// if we downloaded with cURL
 	if(clc.cURLUsed) { 
@@ -2095,11 +2352,9 @@ void CL_DownloadsComplete( void ) {
 		CL_cURL_Shutdown();
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
-				FS_Restart(clc.checksumFeed);
 				clc.downloadRestart = qfalse;
+				FS_Restart(clc.checksumFeed, cb_create_context_no_data(CL_DownloadsComplete_after_FS_Restart));
 			}
-			clc.cURLDisconnected = qfalse;
-			CL_Reconnect_f();
 			return;
 		}
 	}
@@ -2109,13 +2364,8 @@ void CL_DownloadsComplete( void ) {
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
 
-		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
-		// inform the server so we get new gamestate info
-		CL_AddReliableCommand("donedl", qfalse);
-
-		// by sending the donedl command we request a new gamestate
-		// so we don't want to load stuff yet
+		// We possibly downloaded a pak, restart the file system to load it
+		FS_Restart(clc.checksumFeed, cb_create_context_no_data(CL_DownloadsComplete_after_FS_Restart));
 		return;
 	}
 
@@ -2143,13 +2393,6 @@ void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
-
-	// set pure checksums
-	CL_SendPureChecksums();
-
-	CL_WritePacket();
-	CL_WritePacket();
-	CL_WritePacket();
 }
 
 /*
@@ -2294,6 +2537,7 @@ and determine if we need to download them
 void CL_InitDownloads(void) {
   char missingfiles[1024];
 
+#if !EMSCRIPTEN
   if ( !(cl_allowDownload->integer & DLF_ENABLE) )
   {
     // autodownload is disabled on the client
@@ -2323,7 +2567,8 @@ void CL_InitDownloads(void) {
 		}
 
 	}
-		
+#endif
+
 	CL_DownloadsComplete();
 }
 
@@ -2752,7 +2997,7 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	if ( !Q_stricmp(c, "echo") ) {
 		// NOTE: we may have to add exceptions for auth and update servers
 		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareAdr( from, cls.rconAddress ) ) {
-			NET_OutOfBandPrint( NS_CLIENT, from, "%s", Cmd_Argv(1) );
+		NET_OutOfBandPrint( NS_CLIENT, from, "%s", Cmd_Argv(1) );
 		}
 		return;
 	}
@@ -2770,13 +3015,13 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	}
 
 	// echo request from server
-	if ( !Q_stricmp(c, "print") ) {
+	if(!Q_stricmp(c, "print")){
 		// NOTE: we may have to add exceptions for auth and update servers
 		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareAdr( from, cls.rconAddress ) ) {
-			s = MSG_ReadString( msg );
-
-			Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
-			Com_Printf( "%s", s );
+		s = MSG_ReadString( msg );
+		
+		Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
+		Com_Printf( "%s", s );
 		}
 		return;
 	}
@@ -2929,10 +3174,35 @@ CL_Frame
 ==================
 */
 void CL_Frame ( int msec ) {
-
 	if ( !com_cl_running->integer ) {
 		return;
 	}
+
+#if EMSCRIPTEN
+	// quake3's loading process is entirely synchronous. throughout this
+	// process it will call trap_UpdateScreen to force an immediate buffer
+	// swap. however, in WebGL we can't force an immediate buffer swap,
+	// it only occurs once we've yielded to the event loop. due to the
+	// synchronous design however, the event loop is blocked and the
+	// loading screen is therefor never rendered
+	//
+	// to get around this, the JS VM code has a special case for trap_UpdateScreen
+	// that suspends the execution of the VM after it has been invoked,
+	// enabling the event loop to breath. we're checking here if it has
+	// been suspended, and resuming it if so now that we've successfully
+	// swapped buffers
+	if (cgvm && VM_IsSuspended(cgvm)) {
+		unsigned result = VM_Resume(cgvm);
+
+		if (result == 0xDEADBEEF) {
+			return;
+		}
+
+		if (clc.state == CA_LOADING) {
+			CL_InitCGameFinished();
+		}
+	}
+#endif
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {
@@ -3405,7 +3675,7 @@ test to see if a valid QKEY_FILE exists.  If one does not, try to generate
 it by filling it with 2048 bytes of random data.
 ===============
 */
-static void CL_GenerateQKey(void)
+void CL_GenerateQKey(void)
 {
 	int len = 0;
 	unsigned char buff[ QKEY_SIZE ];
@@ -3502,7 +3772,7 @@ void CL_Init( void ) {
 	{
 		CL_ClearState();
 		clc.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
-		cl_oldGameSet = qfalse;
+		// cl_oldGameSet = qfalse;
 	}
 
 	cls.realtime = 0;
@@ -3961,8 +4231,8 @@ serverStatus_t *CL_GetServerStatus( netadr_t from ) {
 			oldestTime = cl_serverStatusList[i].startTime;
 		}
 	}
-	return &cl_serverStatusList[oldest];
-}
+		return &cl_serverStatusList[oldest];
+	}
 
 /*
 ===================
@@ -4204,7 +4474,7 @@ void CL_GlobalServers_f( void ) {
 		if ( !numAddress ) {
 			Com_Printf( "CL_GlobalServers_f: Error: No master server addresses.\n");
 		}
-		return;
+		return;	
 	}
 
 	sprintf(command, "sv_master%d", masterNum);

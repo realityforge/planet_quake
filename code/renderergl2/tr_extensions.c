@@ -22,9 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_extensions.c - extensions needed by the renderer not in sdl_glimp.c
 
 #ifdef USE_LOCAL_HEADERS
-#	include "SDL.h"
+#include "SDL.h"
 #else
-#	include <SDL.h>
+#include <SDL.h>
 #endif
 
 #include "tr_local.h"
@@ -33,12 +33,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 void GLimp_InitExtraExtensions(void)
 {
 	char *extension;
-	const char* result[3] = { "...ignoring %s\n", "...using %s\n", "...%s not found\n" };
+	const char *result[3] = {"...ignoring %s\n", "...using %s\n", "...%s not found\n"};
 	qboolean q_gl_version_at_least_3_0;
 	qboolean q_gl_version_at_least_3_2;
 
-	q_gl_version_at_least_3_0 = QGL_VERSION_ATLEAST( 3, 0 );
-	q_gl_version_at_least_3_2 = QGL_VERSION_ATLEAST( 3, 2 );
+	q_gl_version_at_least_3_0 = QGL_VERSION_ATLEAST(3, 0);
+	q_gl_version_at_least_3_2 = QGL_VERSION_ATLEAST(3, 2);
 
 	// Check if we need Intel graphics specific fixes.
 	glRefConfig.intelGraphics = qfalse;
@@ -51,8 +51,9 @@ void GLimp_InitExtraExtensions(void)
 #undef GLE
 
 	// GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
-#define GLE(ret, name, ...) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name);
+#define GLE(ret, name, ...) qgl##name = (name##proc *)SDL_GL_GetProcAddress("gl" #name);
 
+	// emscripten's GL library emulates this, but it's much slower than just drawing the entire VBO
 	// OpenGL 1.5 - GL_ARB_occlusion_query
 	glRefConfig.occlusionQuery = qtrue;
 	QGL_ARB_occlusion_query_PROCS;
@@ -60,58 +61,22 @@ void GLimp_InitExtraExtensions(void)
 	// OpenGL 3.0 - GL_ARB_framebuffer_object
 	extension = "GL_ARB_framebuffer_object";
 	glRefConfig.framebufferObject = qfalse;
-	glRefConfig.framebufferBlit = qfalse;
-	glRefConfig.framebufferMultisample = qfalse;
-	if (q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported(extension))
-	{
-		glRefConfig.framebufferObject = !!r_ext_framebuffer_object->integer;
-		glRefConfig.framebufferBlit = qtrue;
-		glRefConfig.framebufferMultisample = qtrue;
-
-		qglGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &glRefConfig.maxRenderbufferSize);
-		qglGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &glRefConfig.maxColorAttachments);
-
-		QGL_ARB_framebuffer_object_PROCS;
-
-		ri.Printf(PRINT_ALL, result[glRefConfig.framebufferObject], extension);
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, result[2], extension);
-	}
+	ri.Printf(PRINT_ALL, result[2], extension);
 
 	// OpenGL 3.0 - GL_ARB_vertex_array_object
 	extension = "GL_ARB_vertex_array_object";
-	glRefConfig.vertexArrayObject = qfalse;
-	if (q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported(extension))
-	{
-		if (q_gl_version_at_least_3_0)
-		{
-			// force VAO, core context requires it
-			glRefConfig.vertexArrayObject = qtrue;
-		}
-		else
-		{
-			glRefConfig.vertexArrayObject = !!r_arb_vertex_array_object->integer;
-		}
-
-		QGL_ARB_vertex_array_object_PROCS;
-
-		ri.Printf(PRINT_ALL, result[glRefConfig.vertexArrayObject], extension);
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, result[2], extension);
-	}
+	glRefConfig.vertexArrayObject = qtrue;
+	QGL_ARB_vertex_array_object_PROCS;
+	ri.Printf(PRINT_ALL, result[glRefConfig.vertexArrayObject], extension);
 
 	// OpenGL 3.0 - GL_ARB_texture_float
 	extension = "GL_ARB_texture_float";
 	glRefConfig.textureFloat = qfalse;
 	if (q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported(extension))
 	{
-		glRefConfig.textureFloat = !!r_ext_texture_float->integer;
+	glRefConfig.textureFloat = !!r_ext_texture_float->integer;
 
-		ri.Printf(PRINT_ALL, result[glRefConfig.textureFloat], extension);
+	ri.Printf(PRINT_ALL, result[glRefConfig.textureFloat], extension);
 	}
 	else
 	{
@@ -151,7 +116,7 @@ void GLimp_InitExtraExtensions(void)
 	{
 		char version[256];
 
-		Q_strncpyz(version, (char *)qglGetString(GL_SHADING_LANGUAGE_VERSION), sizeof(version));
+		Q_strncpyz(version, (char *)glGetString(GL_SHADING_LANGUAGE_VERSION), sizeof(version));
 
 		sscanf(version, "%d.%d", &glRefConfig.glslMajorVersion, &glRefConfig.glslMinorVersion);
 
@@ -162,7 +127,7 @@ void GLimp_InitExtraExtensions(void)
 
 	// GL_NVX_gpu_memory_info
 	extension = "GL_NVX_gpu_memory_info";
-	if( SDL_GL_ExtensionSupported( extension ) )
+	if (SDL_GL_ExtensionSupported(extension))
 	{
 		glRefConfig.memInfo = MI_NVX;
 
@@ -175,7 +140,7 @@ void GLimp_InitExtraExtensions(void)
 
 	// GL_ATI_meminfo
 	extension = "GL_ATI_meminfo";
-	if( SDL_GL_ExtensionSupported( extension ) )
+	if (SDL_GL_ExtensionSupported(extension))
 	{
 		if (glRefConfig.memInfo == MI_NONE)
 		{
@@ -250,4 +215,5 @@ void GLimp_InitExtraExtensions(void)
 	}
 
 #undef GLE
+	return;
 }

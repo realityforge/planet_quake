@@ -40,7 +40,7 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 
 			VectorSet4(dstBox, 0, 0, size, size);
 
-			FBO_Blit(hdrFbo, hdrBox, NULL, tr.textureScratchFbo[0], dstBox, &tr.calclevels4xShader[0], NULL, 0);
+			FBO_Blit(hdrFbo, hdrBox, NULL, tr.textureScratchFbo[0], dstBox, &trs.calclevels4xShader[0], NULL, 0);
 
 			srcFbo = tr.textureScratchFbo[0];
 			dstFbo = tr.textureScratchFbo[1];
@@ -56,7 +56,7 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 				if (size == 1)
 					dstFbo = tr.targetLevelsFbo;
 
-				//FBO_Blit(targetFbo, srcBox, NULL, tr.textureScratchFbo[nextScratch], dstBox, &tr.calclevels4xShader[1], NULL, 0);
+				//FBO_Blit(targetFbo, srcBox, NULL, tr.textureScratchFbo[nextScratch], dstBox, &trs.calclevels4xShader[1], NULL, 0);
 				FBO_FastBlit(srcFbo, srcBox, dstFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 				tmp = srcFbo;
@@ -90,7 +90,7 @@ void RB_ToneMap(FBO_t *hdrFbo, ivec4_t hdrBox, FBO_t *ldrFbo, ivec4_t ldrBox, in
 	else
 		GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.tonemapShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &trs.tonemapShader, color, 0);
 }
 
 /*
@@ -178,9 +178,9 @@ void RB_BokehBlur(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, float 
 				color[3] = 1.0f;
 
 				if (i != 0)
-					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
+					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &trs.bokehShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
 				else
-					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, 0);
+					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &trs.bokehShader, color, 0);
 			}
 
 			FBO_Blit(tr.textureScratchFbo[1], NULL, NULL, dst, dstBox, NULL, NULL, 0);
@@ -466,9 +466,9 @@ void RB_GaussianBlur(float blur)
 		FBO_FastBlit(tr.quarterFbo[0], NULL, tr.textureScratchFbo[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 		// set the alpha channel
-		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
 		FBO_BlitFromTexture(tr.whiteImage, NULL, NULL, tr.textureScratchFbo[0], NULL, NULL, color, GLS_DEPTHTEST_DISABLE);
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 		// blur the tiny buffer horizontally and vertically
 		RB_HBlur(tr.textureScratchFbo[0], tr.textureScratchFbo[1], factor);

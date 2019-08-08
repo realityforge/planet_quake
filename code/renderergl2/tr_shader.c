@@ -150,19 +150,19 @@ static qboolean ParseVector( char **text, int count, float *v ) {
 NameToAFunc
 ===============
 */
-static unsigned NameToAFunc( const char *funcname )
+static alphaTest_t NameToAFunc( const char *funcname )
 {	
 	if ( !Q_stricmp( funcname, "GT0" ) )
 	{
-		return GLS_ATEST_GT_0;
+		return ATEST_GT_0;
 	}
 	else if ( !Q_stricmp( funcname, "LT128" ) )
 	{
-		return GLS_ATEST_LT_80;
+		return ATEST_LT_80;
 	}
 	else if ( !Q_stricmp( funcname, "GE128" ) )
 	{
-		return GLS_ATEST_GE_80;
+		return ATEST_GE_80;
 	}
 
 	ri.Printf( PRINT_WARNING, "WARNING: invalid alphaFunc name '%s' in shader '%s'\n", funcname, shader.name );
@@ -601,7 +601,7 @@ ParseStage
 static qboolean ParseStage( shaderStage_t *stage, char **text )
 {
 	char *token;
-	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
+	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, depthFuncBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 
 	stage->active = qtrue;
@@ -816,7 +816,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 				return qfalse;
 			}
 
-			atestBits = NameToAFunc( token );
+			stage->alphaTest = NameToAFunc( token );
 		}
 		//
 		// depthFunc <func>
@@ -977,7 +977,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 				stage->specularScale[0] = 1.0f - powf(2.0f / (exponent + 2.0), 0.25);
 			else
 			{
-				// Change shininess to gloss
+			// Change shininess to gloss
 				// Assumes max exponent of 8190 and min of 0, must change here if altered in lightall_fp.glsl
 				exponent = CLAMP(exponent, 0.0f, 8190.0f);
 				stage->specularScale[3] = (log2f(exponent + 2.0f) - 1.0f) / 12.0f;
@@ -1394,10 +1394,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 	//
 	// compute state bits
 	//
-	stage->stateBits = depthMaskBits | 
-		               blendSrcBits | blendDstBits | 
-					   atestBits | 
-					   depthFuncBits;
+	stage->stateBits = depthMaskBits | blendSrcBits | blendDstBits | depthFuncBits;
 
 	return qtrue;
 }
@@ -1843,7 +1840,7 @@ static qboolean ParseShader( char **text )
 				// parse twice, since older shaders may include mapLightScale before sunShadowScale
 				token = COM_ParseExt( text, qfalse );
 				if (token[0])
-					tr.sunShadowScale = atof(token);
+				tr.sunShadowScale = atof(token);
 			}
 
 			SkipRestOfLine( text );
@@ -2065,7 +2062,7 @@ static void ComputeVertexAttribs(void)
 	int i, stage;
 
 	// dlights always need ATTR_NORMAL
-	shader.vertexAttribs = ATTR_POSITION | ATTR_NORMAL;
+	shader.vertexAttribs = ATTR_POSITION | ATTR_NORMAL | ATTR_COLOR;
 
 	// portals always need normals, for SurfIsOffscreen()
 	if (shader.isPortal)
@@ -2127,7 +2124,7 @@ static void ComputeVertexAttribs(void)
 			break;
 		}
 
-		if (pStage->glslShaderGroup == tr.lightallShader)
+		if (pStage->glslShaderGroup == trs.lightallShader)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 
@@ -2272,7 +2269,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			{
 				// try a normal image ("_n" suffix)
 				normalName[strlen(normalName) - 1] = '\0';
-				normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+			normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 			}
 
 			if (normalImg)
@@ -2327,7 +2324,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	//ri.Printf(PRINT_ALL, ".\n");
 
-	diffuse->glslShaderGroup = tr.lightallShader;
+	diffuse->glslShaderGroup = trs.lightallShader;
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -2378,7 +2375,7 @@ static int CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
-			if (pStage->adjustColorsForFog)
+			if (pStage->adjustColorsForFog || pStage->alphaTest)
 			{
 				skip = qtrue;
 				break;
@@ -2488,8 +2485,8 @@ static int CollapseStagesToGLSL(void)
 							// otherwise it will cause the shader to be darkened by the lightmap multiple times.
 							if (!usedLightmap || (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
 								&& blendBits != (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_DST_COLOR)))
-							{
-								lightmap = pStage2;
+						{
+							lightmap = pStage2;
 								usedLightmap = qtrue;
 							}
 						}
@@ -2596,7 +2593,7 @@ static int CollapseStagesToGLSL(void)
 
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen == TCGEN_LIGHTMAP)
 			{
-				pStage->glslShaderGroup = tr.lightallShader;
+				pStage->glslShaderGroup = trs.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
 				pStage->bundle[TB_DIFFUSEMAP].image[0] = tr.whiteImage;
@@ -2621,7 +2618,7 @@ static int CollapseStagesToGLSL(void)
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE)
 			{
-				pStage->glslShaderGroup = tr.lightallShader;
+				pStage->glslShaderGroup = trs.lightallShader;
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHT_VECTOR;
 
 				if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)

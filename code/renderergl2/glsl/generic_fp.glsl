@@ -30,4 +30,13 @@ void main()
 	
 	gl_FragColor.rgb = color.rgb * var_Color.rgb;
 	gl_FragColor.a = alpha;
+
+#if defined(USE_RGBAGEN)
+	if ((u_AlphaTest == ATEST_GT_0 && gl_FragColor.a <= 0.0) ||
+	    (u_AlphaTest == ATEST_LT_80 && gl_FragColor.a >= 0.5) ||
+	    (u_AlphaTest == ATEST_GE_80 && gl_FragColor.a < 0.5))
+	{
+		discard;
+	}
+#endif
 }

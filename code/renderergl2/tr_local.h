@@ -39,6 +39,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GLE(ret, name, ...) extern name##proc * qgl##name;
 QGL_1_1_PROCS;
 QGL_DESKTOP_1_1_PROCS;
+QGL_ES_1_1_PROCS;
 QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
@@ -245,6 +246,13 @@ typedef enum {
 } alphaGen_t;
 
 typedef enum {
+	ATEST_NONE,
+	ATEST_GT_0,
+	ATEST_LT_80,
+	ATEST_GE_80
+} alphaTest_t;
+
+typedef enum {
 	CGEN_BAD,
 	CGEN_IDENTITY_LIGHTING,	// tr.identityLight
 	CGEN_IDENTITY,			// always (1,1,1,1)
@@ -395,6 +403,7 @@ typedef struct {
 
 	waveForm_t		alphaWave;
 	alphaGen_t		alphaGen;
+	alphaTest_t		alphaTest;
 
 	byte			constantColor[4];			// for CGEN_CONST and AGEN_CONST
 
@@ -937,7 +946,7 @@ typedef struct srfBspSurface_s
 	// vertexes
 	int             numVerts;
 	srfVert_t      *verts;
-	
+
 	// SF_GRID specific variables after here
 
 	// lod information, which may be different
@@ -1399,6 +1408,7 @@ typedef enum {
 typedef struct {
 	qboolean    intelGraphics;
 
+	qboolean    standardDerivatives;
 	qboolean	occlusionQuery;
 
 	int glslMajorVersion;
@@ -1576,25 +1586,6 @@ typedef struct {
 	int						shiftedEntityNum;	// currentEntityNum << QSORT_REFENTITYNUM_SHIFT
 	model_t					*currentModel;
 
-	//
-	// GPU shader programs
-	//
-	shaderProgram_t genericShader[GENERICDEF_COUNT];
-	shaderProgram_t textureColorShader;
-	shaderProgram_t fogShader[FOGDEF_COUNT];
-	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
-	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
-	shaderProgram_t shadowmapShader[SHADOWMAPDEF_COUNT];
-	shaderProgram_t pshadowShader;
-	shaderProgram_t down4xShader;
-	shaderProgram_t bokehShader;
-	shaderProgram_t tonemapShader;
-	shaderProgram_t calclevels4xShader[2];
-	shaderProgram_t shadowmaskShader;
-	shaderProgram_t ssaoShader;
-	shaderProgram_t depthBlurShader[4];
-	shaderProgram_t testcubeShader;
-
 
 	// -----------------------------------------
 
@@ -1659,8 +1650,30 @@ typedef struct {
 	float					fogTable[FOG_TABLE_SIZE];
 } trGlobals_t;
 
+// data not cleared between renderer restarts
+// only when the window context is destroyed
+typedef struct {
+	qboolean shadersInitialized;
+	shaderProgram_t genericShader[GENERICDEF_COUNT];
+	shaderProgram_t textureColorShader;
+	shaderProgram_t fogShader[FOGDEF_COUNT];
+	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
+	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
+	shaderProgram_t shadowmapShader[SHADOWMAPDEF_COUNT];
+	shaderProgram_t pshadowShader;
+	shaderProgram_t down4xShader;
+	shaderProgram_t bokehShader;
+	shaderProgram_t tonemapShader;
+	shaderProgram_t calclevels4xShader[2];
+	shaderProgram_t shadowmaskShader;
+	shaderProgram_t ssaoShader;
+	shaderProgram_t depthBlurShader[2];
+	shaderProgram_t testcubeShader;
+} trStatic_t;
+
 extern backEndState_t	backEnd;
 extern trGlobals_t	tr;
+extern trStatic_t	trs;
 extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during ref re-init
 extern glRefConfig_t glRefConfig;
 
@@ -1938,11 +1951,6 @@ void	GL_Cull( int cullType );
 #define GLS_DEPTHFUNC_EQUAL						0x00020000
 #define GLS_DEPTHFUNC_GREATER                   0x00040000
 #define GLS_DEPTHFUNC_BITS                      0x00060000
-
-#define GLS_ATEST_GT_0							0x10000000
-#define GLS_ATEST_LT_80							0x20000000
-#define GLS_ATEST_GE_80							0x40000000
-#define		GLS_ATEST_BITS						0x70000000
 
 #define GLS_DEFAULT			GLS_DEPTHMASK_TRUE
 
@@ -2494,6 +2502,10 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+
+#if EMSCRIPEN
+void RE_UpdateMode(glconfig_t *glconfigOut);
+#endif
 
 
 #endif //TR_LOCAL_H

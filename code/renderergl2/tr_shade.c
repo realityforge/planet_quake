@@ -40,7 +40,7 @@ R_DrawElements
 
 void R_DrawElements( int numIndexes, int firstIndex )
 {
-	qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
+		qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 }
 
 
@@ -106,10 +106,10 @@ static void DrawTris (shaderCommands_t *input) {
 	GL_BindToTMU( tr.whiteImage, TB_COLORMAP );
 
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
-	qglDepthRange( 0, 0 );
+	glDepthRange( 0, 0 );
 
 	{
-		shaderProgram_t *sp = &tr.textureColorShader;
+		shaderProgram_t *sp = &trs.textureColorShader;
 		vec4_t color;
 
 		GLSL_BindProgram(sp);
@@ -122,7 +122,7 @@ static void DrawTris (shaderCommands_t *input) {
 		R_DrawElements(input->numIndexes, input->firstIndex);
 	}
 
-	qglDepthRange( 0, 1 );
+	glDepthRange( 0, 1 );
 }
 
 
@@ -346,7 +346,7 @@ static void ProjectDlightTexture( void ) {
 		radius = dl->radius;
 		scale = 1.0f / radius;
 
-		sp = &tr.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
+		sp = &trs.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
 
 		backEnd.pc.c_dlightDraws++;
 
@@ -380,10 +380,10 @@ static void ProjectDlightTexture( void ) {
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
 		if ( dl->additive ) {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 		}
 		else {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 		}
 
 		GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, 1);
@@ -445,14 +445,14 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			break;
 		case CGEN_VERTEX:
 		case CGEN_VERTEX_LIT:
-			baseColor[0] =
+			baseColor[0] = 
 			baseColor[1] =
-			baseColor[2] =
+			baseColor[2] = 
 			baseColor[3] = 0.0f;
 
 			vertColor[0] =
 			vertColor[1] =
-			vertColor[2] =
+			vertColor[2] = 
 			vertColor[3] = 1.0f;
 			break;
 		case CGEN_ONE_MINUS_VERTEX:
@@ -465,12 +465,12 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			vertColor[2] = -1.0f;
 			break;
 		case CGEN_FOG:
-			fog = tr.world->fogs + tess.fogNum;
+				fog = tr.world->fogs + tess.fogNum;
 
-			baseColor[0] = ((unsigned char *)(&fog->colorInt))[0] / 255.0f;
-			baseColor[1] = ((unsigned char *)(&fog->colorInt))[1] / 255.0f;
-			baseColor[2] = ((unsigned char *)(&fog->colorInt))[2] / 255.0f;
-			baseColor[3] = ((unsigned char *)(&fog->colorInt))[3] / 255.0f;
+				baseColor[0] = ((unsigned char *)(&fog->colorInt))[0] / 255.0f;
+				baseColor[1] = ((unsigned char *)(&fog->colorInt))[1] / 255.0f;
+				baseColor[2] = ((unsigned char *)(&fog->colorInt))[2] / 255.0f;
+				baseColor[3] = ((unsigned char *)(&fog->colorInt))[3] / 255.0f;
 			break;
 		case CGEN_WAVEFORM:
 			baseColor[0] = 
@@ -677,14 +677,14 @@ static void ForwardDlight( void ) {
 		radius = dl->radius;
 		//scale = 1.0f / radius;
 
-		//if (pStage->glslShaderGroup == tr.lightallShader)
+		//if (pStage->glslShaderGroup == trs.lightallShader)
 		{
 			int index = pStage->glslShaderIndex;
 
 			index &= ~LIGHTDEF_LIGHTTYPE_MASK;
 			index |= LIGHTDEF_USE_LIGHT_VECTOR;
 
-			sp = &tr.lightallShader[index];
+			sp = &trs.lightallShader[index];
 		}
 
 		backEnd.pc.c_lightallDraws++;
@@ -733,6 +733,7 @@ static void ForwardDlight( void ) {
 
 		GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, pStage->rgbGen);
 		GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, pStage->alphaGen);
+		GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, pStage->alphaTest);
 
 		GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, dl->color);
 
@@ -840,7 +841,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		VectorCopy( ps->lightOrigin, origin );
 		radius = ps->lightRadius;
 
-		sp = &tr.pshadowShader;
+		sp = &trs.pshadowShader;
 
 		GLSL_BindProgram(sp);
 
@@ -911,7 +912,7 @@ static void RB_FogPass( void ) {
 		else if (glState.boneAnimation)
 			index |= FOGDEF_USE_BONE_ANIMATION;
 		
-		sp = &tr.fogShader[index];
+		sp = &trs.fogShader[index];
 	}
 
 	backEnd.pc.c_fogDraws++;
@@ -923,7 +924,7 @@ static void RB_FogPass( void ) {
 	GLSL_SetUniformMat4(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
+	
 	if (glState.boneAnimation)
 	{
 		GLSL_SetUniformMat4BoneMatrix(sp, UNIFORM_BONEMATRIX, glState.boneMatrix, glState.boneAnimation);
@@ -1006,7 +1007,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (backEnd.depthFill)
 		{
-			if (pStage->glslShaderGroup == tr.lightallShader)
+			if (pStage->glslShaderGroup == trs.lightallShader)
 			{
 				int index = 0;
 
@@ -1022,7 +1023,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 
-				if (pStage->stateBits & GLS_ATEST_BITS)
+				if (pStage->alphaTest)
 				{
 					index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 				}
@@ -1047,15 +1048,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					shaderAttribs |= GENERICDEF_USE_BONE_ANIMATION;
 				}
 
-				if (pStage->stateBits & GLS_ATEST_BITS)
+				if (pStage->alphaTest)
 				{
 					shaderAttribs |= GENERICDEF_USE_TCGEN_AND_TCMOD;
+					shaderAttribs |= GENERICDEF_USE_RGBAGEN;
 				}
 
-				sp = &tr.genericShader[shaderAttribs];
+				sp = &trs.genericShader[shaderAttribs];
 			}
 		}
-		else if (pStage->glslShaderGroup == tr.lightallShader)
+		else if (pStage->glslShaderGroup == trs.lightallShader)
 		{
 			int index = pStage->glslShaderIndex;
 
@@ -1099,7 +1101,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.or.viewOrigin);
 
 		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
+		
 		if (glState.boneAnimation)
 		{
 			GLSL_SetUniformMat4BoneMatrix(sp, UNIFORM_BONEMATRIX, glState.boneMatrix, glState.boneAnimation);
@@ -1119,15 +1121,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 
 		GL_State( pStage->stateBits );
-		if ((pStage->stateBits & GLS_ATEST_BITS) == GLS_ATEST_GT_0)
+		if (pStage->alphaTest == ATEST_GT_0)
 		{
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, 1);
 		}
-		else if ((pStage->stateBits & GLS_ATEST_BITS) == GLS_ATEST_LT_80)
+		else if (pStage->alphaTest == ATEST_LT_80)
 		{
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, 2);
 		}
-		else if ((pStage->stateBits & GLS_ATEST_BITS) == GLS_ATEST_GE_80)
+		else if (pStage->alphaTest == ATEST_GE_80)
 		{
 			GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, 3);
 		}
@@ -1172,6 +1174,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, pStage->rgbGen);
 		GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, pStage->alphaGen);
+		GLSL_SetUniformInt(sp, UNIFORM_ALPHATEST, pStage->alphaTest);
 
 		if ( input->fogNum )
 		{
@@ -1194,20 +1197,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			ComputeTexMods(pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb);
-			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
-			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
+		ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb );
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
+		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
 
-			GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
-			if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
-			{
-				vec3_t vec;
+		GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
+		if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
+		{
+			vec3_t vec;
 
-				VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
-				VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
-				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
-			}
+			VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
+			GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
+			VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
+			GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
+		}
 		}
 
 		GLSL_SetUniformMat4(sp, UNIFORM_MODELMATRIX, backEnd.or.transformMatrix);
@@ -1235,12 +1238,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		if ( backEnd.depthFill )
 		{
-			if (!(pStage->stateBits & GLS_ATEST_BITS))
+			if (!pStage->alphaTest)
 				GL_BindToTMU( tr.whiteImage, TB_COLORMAP );
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( pStage->glslShaderGroup == tr.lightallShader )
+		else if ( pStage->glslShaderGroup == trs.lightallShader )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -1249,7 +1252,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				// FIXME: screenShadowImage is NULL if no framebuffers
 				if (tr.screenShadowImage)
-					GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+				GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 				if (r_pbr->integer)
 				{
@@ -1262,7 +1265,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				else
 				{
-					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR, backEnd.refdef.sunCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 				}
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 			}
@@ -1398,15 +1401,15 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 	ComputeDeformValues(&deformGen, deformParams);
 
 	{
-		shaderProgram_t *sp = &tr.shadowmapShader[0];
+		shaderProgram_t *sp = &trs.shadowmapShader[0];
 
 		if (glState.vertexAnimation)
 		{
-			sp = &tr.shadowmapShader[SHADOWMAPDEF_USE_VERTEX_ANIMATION];
+			sp = &trs.shadowmapShader[SHADOWMAPDEF_USE_VERTEX_ANIMATION];
 		}
 		else if (glState.boneAnimation)
 		{
-			sp = &tr.shadowmapShader[SHADOWMAPDEF_USE_BONE_ANIMATION];
+			sp = &trs.shadowmapShader[SHADOWMAPDEF_USE_BONE_ANIMATION];
 		}
 
 		vec4_t vector;
@@ -1501,9 +1504,9 @@ void RB_StageIteratorGeneric( void )
 	//
 	if (input->shader->cullType == CT_TWO_SIDED)
 	{
-		GL_Cull( CT_TWO_SIDED );
+			GL_Cull( CT_TWO_SIDED );
 	}
-	else
+		else
 	{
 		qboolean cullFront = (input->shader->cullType == CT_FRONT_SIDED);
 
@@ -1525,7 +1528,7 @@ void RB_StageIteratorGeneric( void )
 	// set polygon offset if necessary
 	if ( input->shader->polygonOffset )
 	{
-		qglEnable( GL_POLYGON_OFFSET_FILL );
+		glEnable( GL_POLYGON_OFFSET_FILL );
 	}
 
 	//
@@ -1540,7 +1543,7 @@ void RB_StageIteratorGeneric( void )
 		//
 		if ( input->shader->polygonOffset )
 		{
-			qglDisable( GL_POLYGON_OFFSET_FILL );
+			glDisable( GL_POLYGON_OFFSET_FILL );
 		}
 
 		return;
@@ -1560,7 +1563,7 @@ void RB_StageIteratorGeneric( void )
 		//
 		if ( input->shader->polygonOffset )
 		{
-			qglDisable( GL_POLYGON_OFFSET_FILL );
+			glDisable( GL_POLYGON_OFFSET_FILL );
 		}
 
 		return;
@@ -1586,7 +1589,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	if ( tess.dlightBits && tess.shader->sort <= SS_OPAQUE && r_lightmap->integer == 0
 		&& !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY) ) ) {
-		if (tess.shader->numUnfoggedPasses == 1 && tess.xstages[0]->glslShaderGroup == tr.lightallShader
+		if (tess.shader->numUnfoggedPasses == 1 && tess.xstages[0]->glslShaderGroup == trs.lightallShader
 			&& (tess.xstages[0]->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && r_dlightMode->integer)
 		{
 			ForwardDlight();
@@ -1609,7 +1612,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	if ( input->shader->polygonOffset )
 	{
-		qglDisable( GL_POLYGON_OFFSET_FILL );
+		glDisable( GL_POLYGON_OFFSET_FILL );
 	}
 }
 
