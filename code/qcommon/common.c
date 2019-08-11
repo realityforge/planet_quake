@@ -47,6 +47,8 @@ int		com_argc;
 char	*com_argv[MAX_NUM_ARGVS+1];
 
 jmp_buf abortframe;		// an ERR_DROP occurred, exit the entire frame
+#define ABORT_ERROR -1
+#define ABORT_IGNORE -2
 
 
 FILE *debuglogfile;
@@ -124,6 +126,24 @@ char	com_errorMessage[MAXPRINTMSG];
 
 void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
+
+//============================================================================
+
+unsigned cb_pending = 0;
+
+cb_context_t *_cb_create_context(result_cb cb, int data_size) {
+	cb_context_t *context = calloc(1, sizeof(cb_context_t));
+
+	context->cb = cb;
+
+	if (data_size) {
+		context->data = calloc(data_size, 1);
+	}
+
+	cb_pending++;
+
+	return context;
+}
 
 //============================================================================
 
@@ -318,7 +338,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		// make sure we can get at our local stuff
 		FS_PureServerSetLoadedPaks("", "");
 		com_errorEntered = qfalse;
-		longjmp (abortframe, -1);
+		longjmp (abortframe, ABORT_ERROR);
 	} else if (code == ERR_DROP) {
 		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
 		VM_Forced_Unload_Start();
@@ -331,7 +351,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		VM_Forced_Unload_Done();
 		FS_PureServerSetLoadedPaks("", "");
 		com_errorEntered = qfalse;
-		longjmp (abortframe, -1);
+		longjmp (abortframe, ABORT_ERROR);
 	} else if ( code == ERR_NEED_CD ) {
 		VM_Forced_Unload_Start();
 		SV_Shutdown( "Server didn't have CD" );
@@ -351,7 +371,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks("", "");
 
 		com_errorEntered = qfalse;
-		longjmp (abortframe, -1);
+		longjmp (abortframe, ABORT_ERROR);
 	} else {
 		VM_Forced_Unload_Start();
 		CL_Shutdown(va("Client fatal crashed: %s", com_errorMessage), qtrue, qtrue);
@@ -366,6 +386,28 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 
 
 /*
+===================
+Com_ProxyCallback
+
+If a callback function is passed to our JS layer and its invocation
+is deferred (e.g. it's called as the result of a setTimeout), there
+will be no stack to unwind to if a longjmp is called. For this reason,
+callbacks passed to the JS layer should be proxied through this when
+invoked.
+===================
+*/
+void Com_ProxyCallback(cb_context_t *context) {
+	int jmpval;
+
+	jmpval = setjmp(abortframe);
+	if (jmpval) {
+		return;
+	}
+
+	cb_run(context, 0);
+}
+
+/*
 =============
 Com_Quit_f
 
@@ -373,6 +415,12 @@ Both client and server can use this, and it will
 do the appropriate things.
 =============
 */
+static void Com_Quit_f_after_FS_Shutdown( cb_context_t *context, int status ) {
+	cb_free_context(context);
+
+	Sys_Quit();
+}
+
 void Com_Quit_f( void ) {
 	// don't try to shutdown if we are in a recursive error
 	char *p = Cmd_Args( );
@@ -386,9 +434,10 @@ void Com_Quit_f( void ) {
 		CL_Shutdown(p[0] ? p : "Client quit", qtrue, qtrue);
 		VM_Forced_Unload_Done();
 		Com_Shutdown ();
-		FS_Shutdown(qtrue);
+		FS_Shutdown(qtrue, cb_create_context_no_data(Com_Quit_f_after_FS_Shutdown));
+	} else {
+		Sys_Quit ();
 	}
-	Sys_Quit ();
 }
 
 
@@ -411,6 +460,7 @@ quake3 set test blah + map test
 */
 
 #define	MAX_CONSOLE_LINES	32
+char	com_commandLine[MAX_STRING_CHARS];
 int		com_numConsoleLines;
 char	*com_consoleLines[MAX_CONSOLE_LINES];
 
@@ -423,6 +473,10 @@ Break it up into multiple console lines
 */
 void Com_ParseCommandLine( char *commandLine ) {
     int inq = 0;
+
+    Q_strncpyz( com_commandLine, commandLine, MAX_STRING_CHARS );
+    commandLine = com_commandLine;
+
     com_consoleLines[0] = commandLine;
     com_numConsoleLines = 1;
 
@@ -2197,11 +2251,11 @@ int Com_EventLoop( void ) {
 		// if no more events are available
 		if ( ev.evType == SE_NONE ) {
 			// manually send packet events for the loopback channel
-			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
+			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) && !cb_num_pending() ) {
 				CL_PacketEvent( evFrom, &buf );
 			}
 
-			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
+			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) && !cb_num_pending() ) {
 				// if the server just shut down, flush the events
 				if ( com_sv_running->integer ) {
 					Com_RunAndTimeServerPacket( &evFrom, &buf );
@@ -2384,49 +2438,83 @@ Change to a new mod properly with cleaning up cvars before switching.
 ==================
 */
 
-void Com_GameRestart(int checksumFeed, qboolean disconnect)
-{
-	// make sure no recursion can be triggered
-	if(!com_gameRestarting && com_fullyInitialized)
+typedef struct gamerestart_data_s {
+	qboolean disconnect;
+	int clWasRunning;
+	cb_context_t *after;
+} gamerestart_data_t;
+
+static void Com_GameRestart_after_FS_Restart( cb_context_t *context, int status ) {
+	gamerestart_data_t *data;
+	cb_context_t *after;
+	qboolean disconnect;
+	int clWasRunning;
+
+	data = (gamerestart_data_t*)context->data;
+	after = data->after;
+	disconnect = data->disconnect;
+	clWasRunning = data->clWasRunning;
+
+	cb_free_context(context);
+
+	// Clean out any user and VM created cvars
+	Cvar_Restart(qtrue);
+	Com_ExecuteCfg();
+
+	if(disconnect)
 	{
-		com_gameRestarting = qtrue;
-		com_gameClientRestarting = com_cl_running->integer;
-
-		// Kill server if we have one
-		if(com_sv_running->integer)
-			SV_Shutdown("Game directory changed");
-
-		if(com_gameClientRestarting)
-		{
-			if(disconnect)
-				CL_Disconnect(qfalse);
-				
-			CL_Shutdown("Game directory changed", disconnect, qfalse);
-		}
-
-		FS_Restart(checksumFeed);
-	
-		// Clean out any user and VM created cvars
-		Cvar_Restart(qtrue);
-		Com_ExecuteCfg();
-
-		if(disconnect)
-		{
-			// We don't want to change any network settings if gamedir
-			// change was triggered by a connect to server because the
-			// new network settings might make the connection fail.
-			NET_Restart_f();
-		}
-
-		if(com_gameClientRestarting)
-		{
-			CL_Init();
-			CL_StartHunkUsers(qfalse);
-		}
-		
-		com_gameRestarting = qfalse;
-		com_gameClientRestarting = qfalse;
+		// We don't want to change any network settings if gamedir
+		// change was triggered by a connect to server because the
+		// new network settings might make the connection fail.
+		NET_Restart_f();
 	}
+
+		if(com_gameClientRestarting)
+	{
+		CL_Init();
+		CL_StartHunkUsers(qfalse);
+	}
+	
+	com_gameRestarting = qfalse;
+		com_gameClientRestarting = qfalse;
+
+	if (after) {
+		cb_run(after, 0);
+	}
+}
+
+void Com_GameRestart(int checksumFeed, qboolean disconnect, cb_context_t *after)
+{
+	cb_context_t       *context;
+	gamerestart_data_t *data;
+
+	// make sure no recursion can be triggered
+	if(com_gameRestarting || !com_fullyInitialized)
+	{
+		return;
+	}
+
+	context = cb_create_context(Com_GameRestart_after_FS_Restart, sizeof(gamerestart_data_t));
+	data = (gamerestart_data_t*)context->data;
+	data->disconnect = disconnect;
+	data->clWasRunning = com_cl_running->integer;
+	data->after = after;
+
+	com_gameRestarting = qtrue;
+	
+	// Kill server if we have one
+	if(com_sv_running->integer)
+		SV_Shutdown("Game directory changed");
+
+	if(data->clWasRunning)
+	{
+		if(disconnect)
+			CL_Disconnect(qfalse);
+			
+		CL_Shutdown("Game directory changed", disconnect, qfalse);
+	}
+
+	FS_Restart(checksumFeed, context);
 }
 
 /*
@@ -2439,9 +2527,9 @@ Expose possibility to change current running mod to the user
 
 void Com_GameRestart_f(void)
 {
-	Cvar_Set("fs_game", Cmd_Argv(1));
+		Cvar_Set("fs_game", Cmd_Argv(1));
 
-	Com_GameRestart(0, qtrue);
+	Com_GameRestart(0, qtrue, NULL);
 }
 
 #ifndef STANDALONE
@@ -2652,54 +2740,21 @@ static void Com_InitRand(void)
 Com_Init
 =================
 */
-void Com_Init( char *commandLine ) {
-	char	*s;
-	int	qport;
 
-	Com_Printf( "%s %s %s\n", Q3_VERSION, PLATFORM_STRING, PRODUCT_DATE );
+typedef struct init_data_s {
+	cb_context_t *after;
+} init_data_t;
 
-	if ( setjmp (abortframe) ) {
-		Sys_Error ("Error during initialization");
-	}
+static void Com_Init_after_FS_InitFilesystem( cb_context_t *context, int status ) {
+	char *s;
+	int qport;
+	init_data_t *data;
+	cb_context_t *after;
 
-	// Clear queues
-	Com_Memset( &eventQueue[ 0 ], 0, MAX_QUEUED_EVENTS * sizeof( sysEvent_t ) );
+	data = (init_data_t*)context->data;
+	after = data->after;
 
-	// initialize the weak pseudo-random number generator for use later.
-	Com_InitRand();
-
-	// do this before anything else decides to push events
-	Com_InitPushEvent();
-
-	Com_InitSmallZoneMemory();
-	Cvar_Init ();
-
-	// prepare enough of the subsystems to handle
-	// cvar and command buffer management
-	Com_ParseCommandLine( commandLine );
-
-//	Swap_Init ();
-	Cbuf_Init ();
-
-	Com_DetectSSE();
-
-	// override anything from the config files with command line args
-	Com_StartupVariable( NULL );
-
-	Com_InitZoneMemory();
-	Cmd_Init ();
-
-	// get the developer cvar set as early as possible
-	com_developer = Cvar_Get("developer", "0", CVAR_TEMP);
-
-	// done early so bind command exists
-	CL_InitKeyCommands();
-
-	com_standalone = Cvar_Get("com_standalone", "0", CVAR_ROM);
-	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
-	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT|CVAR_PROTECTED);
-
-	FS_InitFilesystem ();
+	cb_free_context(context);
 
 	Com_InitJournaling();
 
@@ -2832,12 +2887,14 @@ void Com_Init( char *commandLine ) {
 	// start in full screen ui mode
 	Cvar_Set("r_uiFullScreen", "1");
 
+	com_fullyInitialized = qtrue;
+
+	cb_run(after, 0);
+	
 	CL_StartHunkUsers( qfalse );
 
 	// make sure single player is off by default
 	Cvar_Set("ui_singlePlayerActive", "0");
-
-	com_fullyInitialized = qtrue;
 
 	// always set the cvar, but only print the info if it makes sense.
 	Com_DetectAltivec();
@@ -2852,6 +2909,69 @@ void Com_Init( char *commandLine ) {
 	}
 
 	Com_Printf ("--- Common Initialization Complete ---\n");
+
+}
+
+void Com_Init( char *commandLine, cb_context_t *after ) {
+	int          jmpval;
+	cb_context_t *context;
+	init_data_t  *data;
+
+	Com_Printf( "%s %s %s\n", Q3_VERSION, PLATFORM_STRING, __DATE__ );
+
+	jmpval = setjmp( abortframe );
+	if ( jmpval ) {
+		if ( jmpval == ABORT_IGNORE ) {
+			return;
+		}
+		Sys_Error ("Error during initialization");
+	}
+
+	// Clear queues
+	Com_Memset( &eventQueue[ 0 ], 0, MAX_QUEUED_EVENTS * sizeof( sysEvent_t ) );
+
+	// initialize the weak pseudo-random number generator for use later.
+	Com_InitRand();
+
+	// do this before anything else decides to push events
+	Com_InitPushEvent();
+
+	Com_InitSmallZoneMemory();
+	Cvar_Init ();
+
+	// prepare enough of the subsystems to handle
+	// cvar and command buffer management
+	Com_ParseCommandLine( commandLine );
+
+//	Swap_Init ();
+	Cbuf_Init ();
+
+	Com_DetectSSE();
+
+	// override anything from the config files with command line args
+	Com_StartupVariable( NULL );
+
+	Com_InitZoneMemory();
+	Cmd_Init ();
+
+	// get the developer cvar set as early as possible
+	com_developer = Cvar_Get("developer", "0", CVAR_TEMP);
+
+	// done early so bind command exists
+	CL_InitKeyCommands();
+
+	com_standalone = Cvar_Get("com_standalone", "0", CVAR_ROM);
+	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);
+	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT);
+	
+	if(!com_basegame->string[0])
+		Cvar_ForceReset("com_basegame");
+
+	context = cb_create_context(Com_Init_after_FS_InitFilesystem, sizeof(init_data_t));
+	data = (init_data_t*)context->data;
+	data->after = after;
+
+	FS_InitFilesystem(context);
 }
 
 /*
@@ -3065,7 +3185,6 @@ Com_Frame
 =================
 */
 void Com_Frame( void ) {
-
 	int		msec, minMsec;
 	int		timeVal, timeValSV;
 	static int	lastTime = 0, bias = 0;
@@ -3075,7 +3194,7 @@ void Com_Frame( void ) {
 	int		timeBeforeEvents;
 	int		timeBeforeClient;
 	int		timeAfter;
-  
+	unsigned pending = cb_num_pending();
 
 	if ( setjmp (abortframe) ) {
 		return;			// an ERR_DROP was thrown
@@ -3155,6 +3274,10 @@ void Com_Frame( void ) {
 	msec = com_frameTime - lastTime;
 
 	Cbuf_Execute ();
+	if (cb_num_pending() != pending) {
+		// ran an async command
+		return;
+	}
 
 	if (com_altivec->modified)
 	{
@@ -3201,6 +3324,10 @@ void Com_Frame( void ) {
 	}
 	Com_EventLoop();
 	Cbuf_Execute ();
+	if (cb_num_pending() != pending) {
+		// ran an async command
+		return;
+	}
 
 
 	//
@@ -3607,6 +3734,43 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 
 	return qfalse;
 }
+
+#if EMSCRIPTEN
+/*
+==================
+Com_GetCDN
+==================
+ */
+const char *Com_GetCDN(void) {
+#ifndef DEDICATED
+	const char *cdn = CL_GetCDN();
+
+	if (strlen(cdn)) {
+		return cdn;
+	}
+	
+#endif
+
+	return Cvar_VariableString("fs_cdn");
+}
+
+/*
+==================
+Com_GetManifest
+==================
+*/
+const char *Com_GetManifest(void) {
+#ifndef DEDICATED
+	const char *manifest = CL_GetManifest();
+
+	if (strlen(manifest)) {
+		return manifest;
+	}
+#endif
+
+	return Cvar_VariableString("fs_manifest");
+}
+#endif
 
 /*
 ===============

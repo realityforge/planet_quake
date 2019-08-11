@@ -39,8 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <fenv.h>
 #include <sys/wait.h>
 
-qboolean stdinIsATTY;
-
 // Used to determine where to store user-specific files
 static char homePath[ MAX_OSPATH ] = { 0 };
 
@@ -503,7 +501,7 @@ void Sys_Sleep( int msec )
 	if( msec == 0 )
 		return;
 
-	if( stdinIsATTY )
+	if( CON_IsTTY() )
 	{
 		fd_set fdset;
 
@@ -862,8 +860,8 @@ void Sys_PlatformInit( void )
 
 	Sys_SetFloatEnv();
 
-	stdinIsATTY = isatty( STDIN_FILENO ) &&
-		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) );
+	CON_SetIsTTY( isatty( STDIN_FILENO ) &&
+		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) ) );
 }
 
 /*

@@ -30,6 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#define SDL_HasMMXExt SDL_HasMMX
+#define SDL_Has3DNowExt SDL_Has3DNow
+#endif
 
 #ifndef DEDICATED
 #ifdef USE_LOCAL_HEADERS
@@ -579,7 +584,7 @@ Used to load a development dll instead of a virtual machine
 =================
 */
 void *Sys_LoadGameDll(const char *name,
-	intptr_t (QDECL **entryPoint)(int, ...),
+	intptr_t (QDECL **entryPoint)(int, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11),
 	intptr_t (*systemcalls)(intptr_t, ...))
 {
 	void *libHandle;
@@ -643,7 +648,9 @@ void Sys_ParseArgs( int argc, char **argv )
 }
 
 #ifndef DEFAULT_BASEDIR
-#	ifdef __APPLE__
+#	ifdef EMSCRIPTEN
+#		define DEFAULT_BASEDIR "/base"
+#	elif defined __APPLE__
 #		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
 #	else
 #		define DEFAULT_BASEDIR Sys_BinaryPath()
@@ -683,9 +690,54 @@ void Sys_SigHandler( int signal )
 
 /*
 =================
+Sys_Frame
+=================
+*/
+void Sys_Frame() {
+	if (cb_num_pending()) {
+		return;
+	}
+
+	IN_Frame();
+	Com_Frame();
+}
+
+/*
+=================
 main
 =================
 */
+static void main_after_Com_Init( cb_context_t *context, int status ) {
+	cb_free_context(context);
+
+	NET_Init( );
+
+	CON_Init( );
+
+	signal( SIGILL, Sys_SigHandler );
+	signal( SIGFPE, Sys_SigHandler );
+	signal( SIGSEGV, Sys_SigHandler );
+	signal( SIGTERM, Sys_SigHandler );
+	signal( SIGINT, Sys_SigHandler );
+
+#ifdef EMSCRIPTEN
+	int fps = 0;
+#ifdef DEDICATED
+	// HACK for now to prevent Browser lib from calling
+	// requestAnimationFrame on dedicated builds.
+	fps = 30;
+#endif
+
+	emscripten_set_main_loop(Sys_Frame, fps, 0);
+	
+#else	
+	while( 1 )
+	{
+		Sys_Frame();
+	}
+#endif
+}
+
 int main( int argc, char **argv )
 {
 	int   i;
@@ -752,21 +804,13 @@ int main( int argc, char **argv )
 		Q_strcat( commandLine, sizeof( commandLine ), " " );
 	}
 
-	CON_Init( );
-	Com_Init( commandLine );
-	NET_Init( );
+	Com_Printf( "Starting game with options %s\n", commandLine );
 
-	signal( SIGILL, Sys_SigHandler );
-	signal( SIGFPE, Sys_SigHandler );
-	signal( SIGSEGV, Sys_SigHandler );
-	signal( SIGTERM, Sys_SigHandler );
-	signal( SIGINT, Sys_SigHandler );
+	Com_Init( commandLine, cb_create_context_no_data(main_after_Com_Init) );
 
-	while( 1 )
-	{
-		Com_Frame( );
-	}
+#if EMSCRIPTEN
+	emscripten_exit_with_live_runtime();
+#endif
 
 	return 0;
 }
-

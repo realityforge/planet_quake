@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_local.h"
 #include "../sys/sys_loadlib.h"
 
+#if EMSCRIPTEN
+#include "../ui/ui_shared.h"
+#endif
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -1362,7 +1366,7 @@ static void CL_OldGame(void)
 		// change back to previous fs_game
 		cl_oldGameSet = qfalse;
 		Cvar_Set2("fs_game", cl_oldGame, qtrue);
-		FS_ConditionalRestart(clc.checksumFeed, qfalse);
+		FS_ConditionalRestart(clc.checksumFeed, qfalse, 0);
 	}
 }
 
@@ -1917,30 +1921,10 @@ void CL_ResetPureClientAtServer( void ) {
 	CL_AddReliableCommand("vdr", qfalse);
 }
 
-/*
-=================
-CL_Vid_Restart_f
+static void CL_Vid_Restart_f_after_FS_ConditionalRestart(cb_context_t *context, int gameDirChanged) {
+	cb_free_context(context);
 
-Restart the video subsystem
-
-we also have to reload the UI and CGame because the renderer
-doesn't know what graphics to reload
-=================
-*/
-void CL_Vid_Restart_f( void ) {
-
-	// Settings may have changed so stop recording now
-	if( CL_VideoRecording( ) ) {
-		CL_CloseAVI( );
-	}
-
-	if(clc.demorecording)
-		CL_StopRecord_f();
-
-	// don't let them loop during the restart
-	S_StopAllSounds();
-
-	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
+	if(!gameDirChanged)
 	{
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
@@ -1985,10 +1969,34 @@ void CL_Vid_Restart_f( void ) {
 		{
 			cls.cgameStarted = qtrue;
 			CL_InitCGame();
-			// send pure checksums
-			CL_SendPureChecksums();
 		}
 	}
+}
+
+/*
+=================
+CL_Vid_Restart_f
+
+Restart the video subsystem
+
+we also have to reload the UI and CGame because the renderer
+doesn't know what graphics to reload
+=================
+*/
+void CL_Vid_Restart_f( void ) {
+
+	// Settings may have changed so stop recording now
+	if( CL_VideoRecording( ) ) {
+		CL_CloseAVI( );
+	}
+
+	if(clc.demorecording)
+		CL_StopRecord_f();
+
+	// don't let them loop during the restart
+	S_StopAllSounds();
+	
+	FS_ConditionalRestart(clc.checksumFeed, qtrue, cb_create_context_no_data(CL_Vid_Restart_f_after_FS_ConditionalRestart));
 }
 
 /*
@@ -2079,15 +2087,37 @@ void CL_Clientinfo_f( void ) {
 
 //====================================================================
 
+
 /*
 =================
 CL_DownloadsComplete
 
-Called when all downloading has been completed
+Called when all downloading has been completed.
+IMPORTANT NOTE: It's assumed that nothing expects this function to be
+synchronous.
 =================
 */
-void CL_DownloadsComplete( void ) {
 
+void CL_DownloadsComplete_after_FS_Restart( cb_context_t *context, int status ) {
+	cb_free_context(context);
+
+#ifdef USE_CURL
+	if( clc.cURLDisconnected ) {
+		clc.cURLDisconnected = qfalse;
+		CL_Reconnect_f();
+	}
+	else
+#endif
+	{
+		// inform the server so we get new gamestate info
+		CL_AddReliableCommand("donedl", qfalse);
+
+		// by sending the donedl command we request a new gamestate
+		// so we don't want to load stuff yet
+	}
+}
+
+void CL_DownloadsComplete( void ) {
 #ifdef USE_CURL
 	// if we downloaded with cURL
 	if(clc.cURLUsed) { 
@@ -2095,11 +2125,9 @@ void CL_DownloadsComplete( void ) {
 		CL_cURL_Shutdown();
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
-				FS_Restart(clc.checksumFeed);
 				clc.downloadRestart = qfalse;
+				FS_Restart(clc.checksumFeed, cb_create_context_no_data(CL_DownloadsComplete_after_FS_Restart));
 			}
-			clc.cURLDisconnected = qfalse;
-			CL_Reconnect_f();
 			return;
 		}
 	}
@@ -2109,13 +2137,8 @@ void CL_DownloadsComplete( void ) {
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
 
-		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
-		// inform the server so we get new gamestate info
-		CL_AddReliableCommand("donedl", qfalse);
-
-		// by sending the donedl command we request a new gamestate
-		// so we don't want to load stuff yet
+		// We possibly downloaded a pak, restart the file system to load it
+		FS_Restart(clc.checksumFeed, cb_create_context_no_data(CL_DownloadsComplete_after_FS_Restart));
 		return;
 	}
 
@@ -2143,13 +2166,6 @@ void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
-
-	// set pure checksums
-	CL_SendPureChecksums();
-
-	CL_WritePacket();
-	CL_WritePacket();
-	CL_WritePacket();
 }
 
 /*
@@ -2294,6 +2310,7 @@ and determine if we need to download them
 void CL_InitDownloads(void) {
   char missingfiles[1024];
 
+#if !EMSCRIPTEN
   if ( !(cl_allowDownload->integer & DLF_ENABLE) )
   {
     // autodownload is disabled on the client
@@ -2323,7 +2340,8 @@ void CL_InitDownloads(void) {
 		}
 
 	}
-		
+#endif
+
 	CL_DownloadsComplete();
 }
 
@@ -2752,7 +2770,7 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	if ( !Q_stricmp(c, "echo") ) {
 		// NOTE: we may have to add exceptions for auth and update servers
 		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareAdr( from, cls.rconAddress ) ) {
-			NET_OutOfBandPrint( NS_CLIENT, from, "%s", Cmd_Argv(1) );
+		NET_OutOfBandPrint( NS_CLIENT, from, "%s", Cmd_Argv(1) );
 		}
 		return;
 	}
@@ -2770,13 +2788,13 @@ void CL_ConnectionlessPacket( netadr_t from, msg_t *msg ) {
 	}
 
 	// echo request from server
-	if ( !Q_stricmp(c, "print") ) {
+	if(!Q_stricmp(c, "print")){
 		// NOTE: we may have to add exceptions for auth and update servers
 		if ( NET_CompareAdr( from, clc.serverAddress ) || NET_CompareAdr( from, cls.rconAddress ) ) {
-			s = MSG_ReadString( msg );
-
-			Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
-			Com_Printf( "%s", s );
+		s = MSG_ReadString( msg );
+		
+		Q_strncpyz( clc.serverMessage, s, sizeof( clc.serverMessage ) );
+		Com_Printf( "%s", s );
 		}
 		return;
 	}
@@ -2933,6 +2951,32 @@ void CL_Frame ( int msec ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
+
+#if EMSCRIPTEN
+	// quake3's loading process is entirely synchronous. throughout this
+	// process it will call trap_UpdateScreen to force an immediate buffer
+	// swap. however, in WebGL we can't force an immediate buffer swap,
+	// it only occurs once we've yielded to the event loop. due to the
+	// synchronous design however, the event loop is blocked and the
+	// loading screen is therefor never rendered
+	//
+	// to get around this, the JS VM code has a special case for trap_UpdateScreen
+	// that suspends the execution of the VM after it has been invoked,
+	// enabling the event loop to breath. we're checking here if it has
+	// been suspended, and resuming it if so now that we've successfully
+	// swapped buffers
+	if (cgvm && VM_IsSuspended(cgvm)) {
+		unsigned result = VM_Resume(cgvm);
+
+		if (result == 0xDEADBEEF) {
+			return;
+		}
+
+		if (clc.state == CA_LOADING) {
+			CL_InitCGameFinished();
+		}
+	}
+#endif
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {
@@ -3961,8 +4005,8 @@ serverStatus_t *CL_GetServerStatus( netadr_t from ) {
 			oldestTime = cl_serverStatusList[i].startTime;
 		}
 	}
-	return &cl_serverStatusList[oldest];
-}
+		return &cl_serverStatusList[oldest];
+	}
 
 /*
 ===================
@@ -4204,7 +4248,7 @@ void CL_GlobalServers_f( void ) {
 		if ( !numAddress ) {
 			Com_Printf( "CL_GlobalServers_f: Error: No master server addresses.\n");
 		}
-		return;
+		return;	
 	}
 
 	sprintf(command, "sv_master%d", masterNum);

@@ -1,0 +1,20 @@
+{
+    "files.associations": {
+        "*.inc": "php",
+        "*.info": "ini",
+        "*.module": "php",
+        "stdarg.h": "c",
+        "sdl_gamecontroller.h": "c",
+        "sdl.h": "c",
+        "tr_local.h": "c",
+        "typeinfo": "c",
+        "tr_dsa.h": "c",
+        "qgl.h": "c",
+        "sdl_opengl.h": "c",
+        "sdl_opengles.h": "c",
+        "sdl_config.h": "c",
+        "sdl_config_winrt.h": "c",
+        "sdl_config_macosx.h": "c",
+        "sdl_opengl_glext.h": "c"
+    }
+}
