@@ -344,6 +344,14 @@ void Sys_Init(void)
 	Cvar_Set( "username", Sys_GetCurrentUser( ) );
 }
 
+qboolean Sys_Open(char *command) {
+#ifndef DEDICATED
+	IN_DeactivateMouse(qfalse);
+#endif
+	system(va("open \"%s\"", command));
+	return qtrue;
+}
+
 /*
 =================
 Sys_AnsiColorPrint

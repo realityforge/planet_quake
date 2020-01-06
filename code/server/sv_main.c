@@ -200,6 +200,7 @@ void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
 	}
 
 	if ( cl != NULL ) {
+		Com_Printf ("client %ld: %s\n", cl-svs.clients, SV_ExpandNewlines((char *)message) );
 		SV_AddServerCommand( cl, (char *)message );
 		return;
 	}

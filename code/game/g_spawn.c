@@ -152,6 +152,7 @@ void SP_target_kill (gentity_t *ent);
 void SP_target_position (gentity_t *ent);
 void SP_target_location (gentity_t *ent);
 void SP_target_push (gentity_t *ent);
+void SP_target_open (gentity_t *self);
 
 void SP_light (gentity_t *self);
 void SP_info_null (gentity_t *self);
@@ -227,6 +228,7 @@ spawn_t	spawns[] = {
 	{"target_kill", SP_target_kill},
 	{"target_position", SP_target_position},
 	{"target_location", SP_target_location},
+	{"target_open", SP_target_open},
 	{"target_push", SP_target_push},
 
 	{"light", SP_light},

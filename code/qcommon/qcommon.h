@@ -1064,6 +1064,7 @@ qboolean UI_usesUniqueCDKey(void);
 //
 void IN_Init( void *windowData );
 void IN_Frame( void );
+void IN_DeactivateMouse( qboolean isFullScreen );
 void IN_Shutdown( void );
 void IN_Restart( void );
 
@@ -1078,6 +1079,7 @@ NON-PORTABLE SYSTEM SERVICES
 #define MAX_JOYSTICK_AXIS 16
 
 void	Sys_Init (void);
+qboolean	Sys_Open (char* command);
 
 // general development dll loading for virtual machine testing
 void	* QDECL Sys_LoadGameDll( const char *name, intptr_t (QDECL **entryPoint)(int, ...),

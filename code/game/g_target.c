@@ -465,3 +465,23 @@ void SP_target_location( gentity_t *self ){
 	G_SetOrigin( self, self->s.origin );
 }
 
+
+char target_execs[10][16384]; // max of 10 commands per level?
+int num_target_execs=0;
+
+void target_use_open( gentity_t *self, gentity_t *other, gentity_t *activator ) {
+	char *nx= target_execs[self->health];
+	//G_Printf("Opening: %s\n", nx);
+	trap_SendServerCommand(activator-g_entities, va("open \"%s\"", nx));
+}
+
+void SP_target_open( gentity_t *self ) {
+	char *buf;
+	char *nx=target_execs[num_target_execs];
+
+	self->health=num_target_execs; // TODO set to message instead?
+	G_SpawnString( "message", "print no command", &buf);
+	Com_sprintf(nx, sizeof(target_execs[0]), "%s", buf);
+	self->use = target_use_open;
+	num_target_execs++;
+}

@@ -1626,6 +1626,7 @@ qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 // qfalse can be returned if the client system handled the command
 // argc() / argv() can be used to examine the parameters of the command
 qboolean	trap_GetServerCommand( int serverCommandNumber );
+qboolean	trap_Open( char* command );
 
 // returns the most recent command number that can be passed to GetUserCmd
 // this will always be at least one higher than the number in the current

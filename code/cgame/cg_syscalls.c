@@ -324,6 +324,10 @@ qboolean	trap_GetServerCommand( int serverCommandNumber ) {
 	return syscall( CG_GETSERVERCOMMAND, serverCommandNumber );
 }
 
+qboolean	trap_Open( char *command ) {
+	return syscall( CG_OPEN, command );
+}
+
 int			trap_GetCurrentCmdNumber( void ) {
 	return syscall( CG_GETCURRENTCMDNUMBER );
 }

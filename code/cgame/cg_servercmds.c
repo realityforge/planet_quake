@@ -1101,6 +1101,14 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
+	if ( !strcmp( cmd, "open" ) ) {
+		char command[16384];
+		Q_strncpyz(command, CG_Argv(1), sizeof(command));
+		CG_Printf( "Opening: %s\n", command );
+		trap_Open( command );
+		return;
+	}
+
 	CG_Printf( "Unknown client game command: %s\n", cmd );
 }
 
