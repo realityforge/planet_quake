@@ -520,9 +520,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivm, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
-			break;
+			//VM_Call( uivm, UI_REFRESH, cls.realtime );
+			//VM_Call( uivm, UI_DRAW_CONNECT_SCREEN, qtrue );
+			//break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			CL_CGameRendering(stereoFrame);
@@ -591,4 +591,3 @@ void SCR_UpdateScreen( void ) {
 	
 	recursive = 0;
 }
-

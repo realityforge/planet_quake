@@ -1981,7 +1981,7 @@ void CL_Vid_Restart_f( void ) {
 		CL_StartHunkUsers(qfalse);
 
 		// start the cgame if connected
-		if(clc.state > CA_CONNECTED && clc.state != CA_CINEMATIC)
+		if(clc.state > CA_CONNECTING && clc.state != CA_CINEMATIC)
 		{
 			cls.cgameStarted = qtrue;
 			CL_InitCGame();

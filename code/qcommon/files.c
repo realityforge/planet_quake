@@ -3459,6 +3459,7 @@ STANDALONE in q_shared.h
 */
 static void FS_CheckPak0( void )
 {
+	return;
 	searchpath_t	*path;
 	pack_t		*curpack;
 	const char	*pakBasename;
