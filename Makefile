@@ -958,8 +958,8 @@ ifeq ($(PLATFORM),js)
   DEBUG=0
   EMCC_DEBUG=0
 # debug optimize flags: --closure 0 --minify 0 -g -g4
-#  OPTIMIZEVM += -O3 -Oz --llvm-lto 1
-	OPTIMIZEVM += -O3 --closure 0 --minify 0 -g -g4
+# OPTIMIZEVM += -O3 -Oz --llvm-lto 1
+	OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g4 --source-map-base / 
   OPTIMIZE = $(OPTIMIZEVM)
 
 	SHLIBEXT=js
@@ -994,6 +994,7 @@ ifeq ($(PLATFORM),js)
     --js-library $(LIBSYSBROWSER) \
     --js-library $(LIBVMJS) \
 		-lidbfs.js \
+		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=0 \
     -s NO_EXIT_RUNTIME=0 \

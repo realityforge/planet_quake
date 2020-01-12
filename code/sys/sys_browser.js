@@ -69,24 +69,6 @@ var LibrarySys = {
 				if(frac > 1) frac = 1;
 				bar.style.width = (frac*100) + '%';
 			}
-		},
-		PromptEULA: function (callback) {
-			var agree = document.getElementById('agree');
-			var dontAgree = document.getElementById('dont-agree');
-
-			SYS.eula.style.display = 'block';
-
-			agree.onclick = function () {
-				SYS.eula.style.display = 'none';
-				agree.onclick = null;
-				return callback();
-			};
-
-			dontAgree.onclick = function () {
-				SYS.eula.style.display = 'none';
-				dontAgree.onclick = null;
-				return callback(new Error('You must agree to the EULA to continue'));
-			};
 		}
 	},
 	Sys_PlatformInit: function () {
@@ -142,7 +124,7 @@ var LibrarySys = {
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
 			var canvas = document.createElement('canvas');
-			canvas.id = 'viewport';
+			canvas.id = 'canvas';
 			canvas.width = viewport.offsetWidth;
 			canvas.height = viewport.offsetHeight;
 

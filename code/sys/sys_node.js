@@ -52,41 +52,6 @@ var LibrarySys = {
 		},
 		LoadingProgress: function (frac) {
 			console.log('loaded ' + (frac*100).toFixed(2) + '%');
-		},
-		PromptEULA: function (callback) {
-			var readline = require('readline');
-			var lines = SYSC.eula.split('\n');
-
-			console.log('In order to continue, the official Quake3 demo will need to be installed.');
-			console.log('Please read through the demo\'s EULA and type \'y\' if you agree to it and would like to continue.\n');
-
-			console.log(lines.pop());
-
-			var rl = readline.createInterface(process.stdin, process.stdout);
-			rl.prompt();
-
-			rl.on('line', function (line) {
-				line = line.trim();
-
-				if (lines.length) {
-					console.log(lines.pop());
-					return;
-				}
-
-				if (!line) {
-					rl.setPrompt('Agree? (y/n): ');
-					rl.prompt();
-					return;
-				}
-
-				rl.close();
-
-				if (line !== 'y' && line !== 'yes') {
-					return callback(new Error('You must agree to the EULA to continue'));
-				}
-
-				return callback();
-			});
 		}
 	},
 	Sys_PlatformInit: function () {
