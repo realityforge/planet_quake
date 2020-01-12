@@ -96,6 +96,7 @@ var LibrarySys = {
 	},
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$SYSC'],
 	Sys_FS_Startup: function (cb) {
+		var fs = require('fs');
 		// mount a persistable fs into base if not already mounted
 		var name = allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK);
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
@@ -119,7 +120,7 @@ var LibrarySys = {
 					stat = fs.statSync(p);
 				}
 				catch (e) {
-					SYSC.Error('fatal', e.message);
+					SYSC.Error('fatal', e.message || e);
 					return;
 				}
 
@@ -136,7 +137,7 @@ var LibrarySys = {
 			dir = FS.mkdir(fs_homepath, 0777);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-				SYSC.Error('fatal', e.message);
+				SYSC.Error('fatal', e.message || e);
 			}
 		}
 
@@ -144,7 +145,7 @@ var LibrarySys = {
 			FS.mount(NODEFS, { root: localPath }, fs_homepath);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EBUSY) {
-				SYSC.Error('fatal', e.message);
+				SYSC.Error('fatal', e.message || e);
 			}
 		}
 

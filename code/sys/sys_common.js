@@ -78,32 +78,14 @@ var LibrarySysCommon = {
 				throw e;
 			}
 		},
-		GetCDN: function () {
-			return UTF8ToString(_Com_GetCDN());
-		},
-		GetManifest: function () {
-			var manifest = UTF8ToString(_Com_GetManifest());
-
-			if (!manifest) {
-				return [];
-			}
-
-			return manifest.split(' ').map(function (entry) {
-				var split = entry.split('@');
-
-				return {
-					name: split[0],
-					checksum: parseInt(split[1], 10),
-					compressed: parseInt(split[2], 10)
-				};
-			});
-		},
 		DownloadAsset: function (asset, onprogress, onload) {
-			var fs_cdn = SYSC.GetCDN();
+			var sv_dlURL = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('sv_dlURL'), 'i8', ALLOC_STACK)));
 			var name = asset.name; //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
-			var url = (fs_cdn.includes('://')
-				? fs_cdn
-				: (window.location.protocol + '//' + fs_cdn)) + '/assets/' + name;
+			var url = sv_dlURL.includes('://')
+				? sv_dlURL
+				: (window
+					? (window.location.protocol + '//' + sv_dlURL)
+					: ('https://' + sv_dlURL)) + '/assets/' + name;
 
 			SYS.DoXHR(url, {
 				dataType: 'arraybuffer',
@@ -145,35 +127,6 @@ var LibrarySysCommon = {
 			}
 
 			nextDownload();
-		},
-		UpdateManifest: function (callback) {
-			var fs_cdn = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_cdn'), 'i8', ALLOC_STACK)));
-			var url = (fs_cdn.includes('://')
-				? fs_cdn
-				: (window.location.protocol + '//' + fs_cdn)) + '/assets/manifest.json';
-
-			function formatManifestString(manifest) {
-				return manifest.map(function (entry) {
-					return entry.name + '@' + entry.checksum + '@' + entry.compressed;
-				}).join(' ');
-			}
-
-			SYS.DoXHR(url, {
-				dataType: 'json',
-				onload: function (err, manifest) {
-					if (err) return callback(new Error('Failed to download and parse manifest, ' + err.message));
-
-					var fs_manifestName = allocate(intArrayFromString('fs_manifest'), 'i8', ALLOC_STACK);
-					var fs_manifest = allocate(intArrayFromString(formatManifestString(manifest)), 'i8', ALLOC_STACK);
-					_Cvar_Set(fs_manifestName, fs_manifest);
-
-					var fs_completeManifestName = allocate(intArrayFromString('fs_completeManifest'), 'i8', ALLOC_STACK);
-					var fs_completeManifest = allocate(intArrayFromString(formatManifestString(manifest)), 'i8', ALLOC_STACK);
-					_Cvar_Set(fs_completeManifestName, fs_completeManifest);
-
-					return callback();
-				}
-			});
 		},
 		SavePak: function (name, buffer, callback) {
 			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
@@ -270,12 +223,8 @@ var LibrarySysCommon = {
 			return true;
 			//return crc === asset.checksum;
 		},
-		DirtyPaks: function () {
-			return SYSC.GetManifest().filter(function (asset) {
-				return asset.name.indexOf('.pk3') !== -1 && !SYSC.ValidatePak(asset);
-			});
-		},
 		SyncPaks: function (callback) {
+			debugger;
 			var downloads = SYSC.DirtyPaks();
 
 			SYSC.DownloadAssets(downloads, function (asset) {
@@ -293,15 +242,15 @@ var LibrarySysCommon = {
 			});
 		},
 		FS_Startup: function (callback) {
-			SYSC.UpdateManifest(function (err) {
+			Browser.safeCallback(callback)();
+			// do something?
+			/*
+			SYSC.SyncDependencies(function (err) {
 				if (err) return callback(err);
 
-				SYSC.SyncDependencies(function (err) {
-					if (err) return callback(err);
-
-					SYSC.SyncPaks(Browser.safeCallback(callback));
-				});
+				SYSC.SyncPaks();
 			});
+			*/
 		},
 		FS_Shutdown: function (callback) {
 			callback(null);

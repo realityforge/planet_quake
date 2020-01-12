@@ -6,7 +6,7 @@
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
-EMSCRIPTEN=$$HOME/emsdk/fastcomp/emscripten
+EMSCRIPTEN=./misc/quakejs/lib/emsdk/upstream/emscripten
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
@@ -958,10 +958,12 @@ ifeq ($(PLATFORM),js)
   DEBUG=0
   EMCC_DEBUG=0
 # debug optimize flags: --closure 0 --minify 0 -g -g4
-  OPTIMIZEVM += -O3 -Oz --llvm-lto 1
+#  OPTIMIZEVM += -O3 -Oz --llvm-lto 1
+	OPTIMIZEVM += -O3 --closure 0 --minify 0 -g -g4
   OPTIMIZE = $(OPTIMIZEVM)
 
-  HAVE_VM_COMPILED=true
+	SHLIBEXT=js
+  HAVE_VM_COMPILED=false
   BUILD_GAME_QVM=0
   BUILD_STANDALONE=0
   BUILD_RENDERER_OPENGL2=1
@@ -991,14 +993,14 @@ ifeq ($(PLATFORM),js)
   CLIENT_LDFLAGS += --js-library $(LIBSYSCOMMON) \
     --js-library $(LIBSYSBROWSER) \
     --js-library $(LIBVMJS) \
+		-lidbfs.js \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
-    -s WASM=0 \
     -s INVOKE_RUN=0 \
     -s NO_EXIT_RUNTIME=0 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Com_GetCDN', '_Com_GetManifest', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
@@ -1018,11 +1020,12 @@ ifeq ($(PLATFORM),js)
   SERVER_LDFLAGS += --js-library $(LIBSYSCOMMON) \
     --js-library $(LIBSYSNODE) \
     --js-library $(LIBVMJS) \
+		-lnodefs.js \
     -s USE_SDL=2 \
     -s INVOKE_RUN=1 \
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['addFunction', 'stackSave', 'stackRestore']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Com_GetCDN', '_Com_GetManifest', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_CON_SetIsTTY', '_VM_GetCurrent', '_VM_SetCurrent']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_CON_SetIsTTY', '_VM_GetCurrent', '_VM_SetCurrent']" \
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=1 \

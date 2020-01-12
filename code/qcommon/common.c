@@ -3673,43 +3673,6 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 	return qfalse;
 }
 
-#if EMSCRIPTEN
-/*
-==================
-Com_GetCDN
-==================
- */
-const char *Com_GetCDN(void) {
-#ifndef DEDICATED
-	const char *cdn = CL_GetCDN();
-
-	if (strlen(cdn)) {
-		return cdn;
-	}
-	
-#endif
-
-	return Cvar_VariableString("fs_cdn");
-}
-
-/*
-==================
-Com_GetManifest
-==================
-*/
-const char *Com_GetManifest(void) {
-#ifndef DEDICATED
-	const char *manifest = CL_GetManifest();
-
-	if (strlen(manifest)) {
-		return manifest;
-	}
-#endif
-
-	return Cvar_VariableString("fs_manifest");
-}
-#endif
-
 /*
 ===============
 Field_CompletePlayerName

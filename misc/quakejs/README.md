@@ -127,7 +127,7 @@ node bin/content.js
 
 Note: `./assets` is assumed to be the default asset directory. If you'd like to change that, you'll need to modify the JSON configuration used by the content server.
 
-Once the content server is available, you can use it by launching your local or dedicated server with `+set fs_cdn <server_address>`.
+Once the content server is available, you can use it by launching your local or dedicated server with `+set sv_dlURL <server_address>`.
 
 ## License
 

@@ -257,9 +257,6 @@ static	cvar_t		*fs_gogpath;
 
 #if EMSCRIPTEN
 #include <emscripten.h>
-static	cvar_t		*fs_cdn;
-static	cvar_t		*fs_manifest;
-static	cvar_t		*fs_completeManifest;
 static void (*CB_After_Restart)( void ) = NULL;
 #endif
 
@@ -3339,9 +3336,6 @@ static void FS_Startup( const char *gameName )
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
 	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
 #if EMSCRIPTEN
-	fs_cdn = Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
-	fs_manifest = Cvar_Get("fs_manifest", "", CVAR_ROM | CVAR_SERVERINFO);
-	fs_completeManifest = Cvar_Get("fs_completeManifest", "", CVAR_ROM);
 }
 
 void FS_Startup_After_Async( const char *gameName )
