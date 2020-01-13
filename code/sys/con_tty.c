@@ -45,7 +45,7 @@ called before and after a stdout or stderr output
 =============================================================
 */
 
-static qboolean stdinIsATTY;
+extern qboolean stdinIsATTY;
 static qboolean stdin_active;
 // general flag to tell about tty console mode
 static qboolean ttycon_on = qfalse;
@@ -73,24 +73,6 @@ static int hist_current = -1, hist_count = 0;
 #else
 #define TTY_CONSOLE_PROMPT "]"
 #endif
-
-/*
-==================
-CON_IsTTY
-==================
-*/
-qboolean CON_IsTTY() {
-	return stdinIsATTY;
-}
-
-/*
-==================
-CON_SetIsTTY
-==================
-*/
-void CON_SetIsTTY(qboolean isTTY) {
-	stdinIsATTY = isTTY;
-}
 
 /*
 ==================
@@ -307,7 +289,7 @@ void CON_Init( void )
 	// Make stdin reads non-blocking
 	fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK );
 
-	if (!CON_IsTTY())
+	if (!stdinIsATTY)
 	{
 		Com_Printf("tty console mode disabled\n");
 		ttycon_on = qfalse;
@@ -395,7 +377,7 @@ char *CON_Input( void )
 						Q_strncpyz(text, TTY_con.buffer + 1, sizeof(text));
 					} else if (TTY_con.cursor) {
 						if (con_autochat->integer) {
-						Com_sprintf(text, sizeof(text), "cmd say %s", TTY_con.buffer);
+						  Com_sprintf(text, sizeof(text), "cmd say %s", TTY_con.buffer);
 						} else {
 							Q_strncpyz(text, TTY_con.buffer, sizeof(text));
 						}

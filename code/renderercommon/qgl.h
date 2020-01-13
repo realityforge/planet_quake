@@ -26,18 +26,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __QGL_H__
 #define __QGL_H__
 
-#ifdef USE_LOCAL_HEADERS
-#include "SDL_opengl.h"
-#include "SDL_opengl_glext.h"
-#include "SDL_opengles2.h"
-#include "SDL_opengles2_gl2.h"
-#include "SDL_opengles2_gl2ext.h"
-#else
+#ifdef EMSCRIPTEN
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
 #include <SDL_opengles2.h>
 #include <SDL_opengles2_gl2.h>
 #include <SDL_opengles2_gl2ext.h>
+#else
+#ifdef USE_LOCAL_HEADERS
+#include "SDL_opengl.h"
+#else
+#include <SDL_opengl.h>
+#endif
 #endif
 
 extern void (APIENTRYP qglActiveTextureARB) (GLenum texture);
@@ -88,6 +88,7 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 	GLE(void, TexParameterf, GLenum target, GLenum pname, GLfloat param) \
 	GLE(void, TexParameteri, GLenum target, GLenum pname, GLint param) \
 	GLE(void, TexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) \
+	GLE(void, Translatef, GLfloat x, GLfloat y, GLfloat z) \
 	GLE(void, Viewport, GLint x, GLint y, GLsizei width, GLsizei height) \
 
 // OpenGL 1.0/1.1 and OpenGL ES 1.x but not OpenGL 3.2 core profile

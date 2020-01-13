@@ -107,7 +107,8 @@ var LibrarySys = {
 		},
 	},
 	Sys_PlatformInit: function () {
-		_CON_SetIsTTY(process.stdin.isTTY);
+		debugger;
+		{{{ makeSetValue('stdinIsATTY', '0', process.stdin.isTTY ? 1 : 0, 'i32') }}};
 	},
 	Sys_PlatformExit: function () {
 	},

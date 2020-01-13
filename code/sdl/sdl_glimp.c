@@ -241,11 +241,10 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	qboolean success = qtrue;
 	const char *version;
 
-#ifdef __SDL_NOGETPROCADDR__
+#if defined(__SDL_NOGETPROCADDR__) || defined(EMSCRIPTEN)
 #define GLE( ret, name, ... ) qgl##name = gl#name;
 #else
-#define GLE( ret, name, ... ) \
-	qgl##name = (void *)gl##name; \
+#define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \
 		ri.Printf( PRINT_ALL, "ERROR: Missing OpenGL function %s\n", "gl" #name ); \
 		success = qfalse; \
@@ -277,21 +276,63 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 		sscanf( version, "%d.%d", &qglMajorVersion, &qglMinorVersion );
 	}
 
-QGL_1_1_PROCS;
-//QGL_1_1_FIXED_FUNCTION_PROCS;
-QGL_DESKTOP_1_1_PROCS;
-//QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
-QGL_ES_1_1_PROCS;
-//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
-QGL_1_3_PROCS;
-QGL_1_5_PROCS;
-QGL_2_0_PROCS;
-//QGL_3_0_PROCS;
-//QGL_ARB_occlusion_query_PROCS;
-//QGL_ARB_framebuffer_object_PROCS;
-//QGL_ARB_vertex_array_object_PROCS;
-//QGL_EXT_direct_state_access_PROCS;
+#ifdef EMSCRIPTEN
+	QGL_1_1_PROCS;
+	//QGL_1_1_FIXED_FUNCTION_PROCS;
+	QGL_DESKTOP_1_1_PROCS;
+	//QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
+	QGL_ES_1_1_PROCS;
+	//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
+	QGL_1_3_PROCS;
+	QGL_1_5_PROCS;
+	QGL_2_0_PROCS;
+	//QGL_3_0_PROCS;
+	//QGL_ARB_occlusion_query_PROCS;
+	//QGL_ARB_framebuffer_object_PROCS;
+	//QGL_ARB_vertex_array_object_PROCS;
+	//QGL_EXT_direct_state_access_PROCS;
+#else
+	if ( fixedFunction ) {
+		if ( QGL_VERSION_ATLEAST( 1, 1 ) ) {
+			QGL_1_1_PROCS;
+			QGL_1_1_FIXED_FUNCTION_PROCS;
+			QGL_DESKTOP_1_1_PROCS;
+			QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
+		} else if ( qglesMajorVersion == 1 && qglesMinorVersion >= 1 ) {
+			// OpenGL ES 1.1 (2.0 is not backward compatible)
+			QGL_1_1_PROCS;
+			QGL_1_1_FIXED_FUNCTION_PROCS;
+			QGL_ES_1_1_PROCS;
+			QGL_ES_1_1_FIXED_FUNCTION_PROCS;
+			// error so this doesn't segfault due to NULL desktop GL functions being used
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
+		} else {
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 1.1 is required", version );
+		}
+	} else {
+		if ( QGL_VERSION_ATLEAST( 2, 0 ) ) {
+			QGL_1_1_PROCS;
+			QGL_DESKTOP_1_1_PROCS;
+			QGL_1_3_PROCS;
+			QGL_1_5_PROCS;
+			QGL_2_0_PROCS;
+		} else if ( QGLES_VERSION_ATLEAST( 2, 0 ) ) {
+			QGL_1_1_PROCS;
+			QGL_ES_1_1_PROCS;
+			QGL_1_3_PROCS;
+			QGL_1_5_PROCS;
+			QGL_2_0_PROCS;
+			// error so this doesn't segfault due to NULL desktop GL functions being used
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
+		} else {
+			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 2.0 is required", version );
+		}
+	}
 
+	if ( QGL_VERSION_ATLEAST( 3, 0 ) || QGLES_VERSION_ATLEAST( 3, 0 ) ) {
+		QGL_3_0_PROCS;
+	}
+#endif
  
 #undef GLE
 
@@ -306,7 +347,7 @@ Clear addresses for OpenGL functions.
 ===============
 */
 static void GLimp_ClearProcAddresses( void ) {
-#define GLE(ret, name, ...) qgl##name = NULL;
+#define GLE( ret, name, ... ) qgl##name = NULL;
 
 	qglMajorVersion = 0;
 	qglMinorVersion = 0;

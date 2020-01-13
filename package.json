@@ -29,6 +29,7 @@
     "module": "^1.2.5",
     "quakejs-files": "0.0.3",
     "send": "^0.16.2",
+    "source-map-support": "^0.5.16",
     "temp": "~0.5.1",
     "underscore": "^1.5.2",
     "winston": "2.4.0",

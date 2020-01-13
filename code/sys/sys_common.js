@@ -364,6 +364,9 @@ var LibrarySysCommon = {
 			ospath = UTF8ToString(ospath)
 				.replace(/^\/*base\//ig, '/')
 				.replace(/\/\//ig, '/')
+			if(ospath.includes('server.cfg')) {
+				debugger;
+			}
 			handle = FS.open(ospath,
 						     UTF8ToString(mode).replace('b', ''));
 		} catch (e) {
