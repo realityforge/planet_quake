@@ -10,6 +10,7 @@ const server = http.createServer(function(req, res) {
 
 var wss = new WebSocketServer({server});
 
+// TODO: rewrite this to use node dns
 var SERVER_IP = '35.208.205.189'
 var SERVER_PORT = 27960
  

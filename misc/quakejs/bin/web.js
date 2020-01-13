@@ -1,65 +1,21 @@
-var _ = require('underscore');
 var express = require('express');
-var http = require('http');
-var logger = require('winston');
-var opt = require('optimist');
 var path = require('path');
-var cors = require('cors');
+var liveServer = require("live-server");
+ 
+var params = {
+    port: 8080, // Set the server port. Defaults to 8080.
+    host: "0.0.0.0", // Set the address to bind to. Defaults to 0.0.0.0 or process.env.IP.
+    root: "./", // Set root directory that's being served. Defaults to cwd.
+//    open: false, // When false, it won't load your browser by default.
+    ignore: 'scss,my/templates', // comma-separated string for paths to ignore
+    file: "./misc/quakejs/bin/index.html", // When set, serve this file (server root relative) for every 404 (useful for single-page applications)
+    wait: 1000, // Waits for all changes, before reloading. Defaults to 0 sec.
+//    mount: [['/components', './node_modules']], // Mount a directory to a route.
+    logLevel: 2, // 0 = errors only, 1 = some, 2 = lots
+    middleware: [
+			express.static(path.join(__dirname, './index.html'), { extensions: ['html'] }),
+			express.static(path.join(__dirname, '../../../build/release-js-js'), { extensions: ['wasm'] })
+		] // Takes an array of Connect-compatible middleware that are injected into the server middleware stack
+};
 
-express.static.mime.types['wasm'] = 'application/wasm'
-
-var argv = require('optimist')
-	.describe('config', 'Location of the configuration file')
-	.default('config', './config.json')
-	.argv;
-
-if (argv.h || argv.help) {
-	opt.showHelp();
-	return;
-}
-
-logger.cli();
-logger.level = 'debug';
-
-var config = loadConfig(argv.config);
-
-function loadConfig(configPath) {
-	var config = {
-		port: 8080,
-		content: 'https://quake.games'
-	};
-
-	try {
-		logger.info('loading config file from ' + configPath + '..');
-		var data = require(configPath);
-		_.extend(config, data);
-	} catch (e) {
-		logger.warn('failed to load config', e);
-	}
-
-	return config;
-}
-
-(function main() {
-	var app = express();
-	app.use(cors({origin: 'https://quake.games'}));
-
-	app.set('views', __dirname);
-	app.set('view engine', 'ejs');
-	
-	app.use(express.static(__dirname));
-	app.use(express.static(path.join(__dirname, '..')));
-	app.use(express.static(path.join(__dirname, '../../../build/release-js-js')));
-
-	app.use(function (req, res, next) {
-		res.locals.content = config.content;
-		res.render('index');
-	});
-
-	var server = http.createServer(app);
-	server.listen(config.port, function () {
-		logger.info('web server is now listening on ' +  server.address().address + ":" + server.address().port);
-	});
-
-	return server;
-})();
+liveServer.start(params);

@@ -958,8 +958,8 @@ ifeq ($(PLATFORM),js)
   DEBUG=0
   EMCC_DEBUG=0
 # debug optimize flags: --closure 0 --minify 0 -g -g4
-# OPTIMIZEVM += -O3 -Oz --llvm-lto 1
-	OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g4 --source-map-base / 
+ OPTIMIZEVM += -O3 -Oz --llvm-lto 1
+# OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g4 --source-map-base / 
   OPTIMIZE = $(OPTIMIZEVM)
 
 	SHLIBEXT=js
