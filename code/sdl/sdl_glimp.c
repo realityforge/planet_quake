@@ -242,7 +242,7 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	const char *version;
 
 #if defined(__SDL_NOGETPROCADDR__) || defined(EMSCRIPTEN)
-#define GLE( ret, name, ... ) qgl##name = gl#name;
+#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \
