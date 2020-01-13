@@ -958,14 +958,20 @@ ifeq ($(PLATFORM),js)
   DEBUG=0
   EMCC_DEBUG=0
 # debug optimize flags: --closure 0 --minify 0 -g -g4
- OPTIMIZEVM += -O3 -Oz --llvm-lto 1
-# OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g4 --source-map-base / 
+  OPTIMIZEVM += -O3 -Oz --llvm-lto 1 \
+	  -s WASM=1 \
+		-s WASM_OBJECT_FILES=1 \
+		-fPIC
+#  OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g4 \
+	  --source-map-base / \
+		-fPIC \
+	  -s WASM=1 \
+	  -s WASM_OBJECT_FILES=1
   OPTIMIZE = $(OPTIMIZEVM)
 
-	SHLIBEXT=js
-  HAVE_VM_COMPILED=false
+  HAVE_VM_COMPILED=true
   BUILD_GAME_QVM=0
-  BUILD_STANDALONE=0
+  BUILD_STANDALONE=1
   BUILD_RENDERER_OPENGL2=1
   BUILD_FREETYPE=1
 
@@ -1015,7 +1021,7 @@ ifeq ($(PLATFORM),js)
     -s USE_WEBGL2=1 \
     -s DEMANGLE_SUPPORT=0 \
     -s EXPORT_NAME=\"ioq3\" \
-    -s SAFE_HEAP=0 \
+    -s SAFE_HEAP=1 \
     $(OPTIMIZE)
 
   SERVER_LDFLAGS += --js-library $(LIBSYSCOMMON) \
@@ -1036,12 +1042,12 @@ ifeq ($(PLATFORM),js)
     -s SAFE_HEAP=1 \
     $(OPTIMIZE)
 
-#  SHLIBEXT=js
-#  SHLIBNAME=.$(SHLIBEXT)
-#  SHLIBLDFLAGS=$(LDFLAGS) \
-    -s WASM=1 \
+  SHLIBEXT=wasm
+  SHLIBNAME=.$(SHLIBEXT)
+  SHLIBLDFLAGS=$(LDFLAGS) \
     -s INVOKE_RUN=0 \
     -s EXPORTED_FUNCTIONS="['_vmMain', '_dllEntry']" \
+		-s DLOPEN_SUPPORT=1 \
     -s SIDE_MODULE=1 \
     $(OPTIMIZE)
 
