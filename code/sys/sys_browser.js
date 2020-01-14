@@ -45,31 +45,6 @@ var LibrarySys = {
 			};
 			req.send(null);
 		},
-		LoadingDescription: function (desc) {
-			var progress = document.getElementById('loading-progress');
-			if(!progress) {
-				console.log(desc);
-				return;
-			}
-			var description = progress.querySelector('.description');
-
-			if (!desc) {
-				SYS.loading.style.display = 'none';
-				SYS.LoadingProgress(0);
-			} else {
-				SYS.loading.style.display = 'block';
-			}
-
-			description.innerHTML = desc;
-		},
-		LoadingProgress: function (frac) {
-			var progress = document.getElementById('loading-progress');
-			if(progress) {
-				var bar = progress.querySelector('.bar');
-				if(frac > 1) frac = 1;
-				bar.style.width = (frac*100) + '%';
-			}
-		}
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading');

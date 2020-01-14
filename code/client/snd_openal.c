@@ -2738,4 +2738,3 @@ qboolean S_AL_Init( soundInterface_t *si )
 	return qfalse;
 #endif
 }
-

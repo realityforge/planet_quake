@@ -358,17 +358,15 @@ var LibrarySysCommon = {
 
 		_Z_Free(list);
 	},
+	Sys_FOpen__deps: ['$FS'],
 	Sys_FOpen: function (ospath, mode) {
 		var handle;
 		try {
-			ospath = UTF8ToString(ospath)
+			ospath = allocate(intArrayFromString(UTF8ToString(ospath)
 				.replace(/^\/*base\//ig, '/')
-				.replace(/\/\//ig, '/')
-			if(ospath.includes('server.cfg')) {
-				debugger;
-			}
-			handle = FS.open(ospath,
-						     UTF8ToString(mode).replace('b', ''));
+				.replace(/\/\//ig, '/')), 'i8', ALLOC_STACK);
+			mode = allocate(intArrayFromString(UTF8ToString(mode).replace('b', '')), 'i8', ALLOC_STACK);
+			handle = _fopen(ospath, mode);
 		} catch (e) {
 			// short for fstat check in sys_unix.c!!!
 			if(e.code === 'ENOENT') {

@@ -958,18 +958,15 @@ ifeq ($(PLATFORM),js)
   DEBUG=0
   EMCC_DEBUG=0
 # debug optimize flags: --closure 0 --minify 0 -g -g4
-  OPTIMIZEVM += -O3 -Oz --llvm-lto 3 \
+#  OPTIMIZEVM += -O3 -Oz --llvm-lto 3 \
 	  -s WASM=1 \
+		-s WASM_BACKEND=1 \
 		-s WASM_OBJECT_FILES=1 \
 		-s SAFE_HEAP=1 \
 		-s DEMANGLE_SUPPORT=0 \
 		-fPIC
-#  OPTIMIZEVM += -O0 --closure 0 --minify 0 -g -g4 \
-	  -s CYBERDWARF=1 \
+  OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g3 \
 		-s SAFE_HEAP=0 \
-		-s WASM=0 \
-		-s WASM_BACKEND=0 \
-		-s WASM_OBJECT_FILES=0 \
 		-s DEMANGLE_SUPPORT=1 \
 		--source-map-base http://localhost:8080/ \
 		-frtti \
@@ -1013,8 +1010,8 @@ ifeq ($(PLATFORM),js)
     -s NO_EXIT_RUNTIME=0 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
@@ -1026,6 +1023,7 @@ ifeq ($(PLATFORM),js)
     -s FULL_ES3=0 \
     -s USE_SDL=2 \
     -s USE_WEBGL2=1 \
+		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3\" \
     $(OPTIMIZE)
 
@@ -1036,13 +1034,14 @@ ifeq ($(PLATFORM),js)
     -s USE_SDL=2 \
     -s INVOKE_RUN=1 \
 		-s NO_EXIT_RUNTIME=1 \
-    -s EXIT_RUNTIME=0 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
+    -s EXIT_RUNTIME=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s ASSERTIONS=1 \
+		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3ded\" \
     $(OPTIMIZE)
 

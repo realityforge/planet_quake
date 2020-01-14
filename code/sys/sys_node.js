@@ -133,9 +133,11 @@ var LibrarySys = {
 		}));
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$SYSC'],
-	Sys_FS_Shutdown: function (gameName, closemfp) {
+	Sys_FS_Shutdown: function (cb) {
 		var name = allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK);
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
+		
+		FS.unmount(fs_homepath);
 
 		SYSC.FS_Shutdown(Browser.safeCallback(function (err) {
 			if (err) {
