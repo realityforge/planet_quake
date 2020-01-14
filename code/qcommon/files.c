@@ -1350,7 +1350,6 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 
 		netpath = FS_BuildOSPath(dir->path, dir->gamedir, filename);
 		filep = Sys_FOpen(netpath, "rb");
-		Com_Printf("FS_FOpenFileRead: %s\n", netpath);
 
 		if (filep == NULL)
 		{
@@ -1895,8 +1894,6 @@ long FS_ReadFileDir(const char *qpath, void *searchPath, qboolean unpure, void *
 		// look for it in a specific search path only
 		len = FS_FOpenFileReadDir(qpath, search, &h, qfalse, unpure);
 	}
-	
-	Com_DPrintf("File length %li\n", len);
 
 	if ( h == 0 ) {
 		if ( buffer ) {
