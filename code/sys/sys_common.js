@@ -21,23 +21,6 @@ var LibrarySysCommon = {
 			progress: 0,
 		},
 		eula: '',
-		dependencies: [
-			'baseq3/pak100.pk3',
-			'baseq3/pak101.pk3',
-			'baseq3/pak102.pk3',
-			'baseq3/pak103.pk3',
-			'baseq3/pak104.pk3',
-			'baseq3/pak105.pk3',
-			'baseq3/pak106.pk3',
-			'baseq3/pak107.pk3',
-			'baseq3/pak108.pk3',
-			/*
-			'demoq3/pak100.pk3',
-			'demoq3/pak101.pk3',
-			*/
-			'baseq3/q3key',
-			'qkey'
-		],
 		manifest: null,
 		Print: function (str) {
 			str = allocate(intArrayFromString(str + '\n'), 'i8', ALLOC_STACK);
@@ -93,41 +76,6 @@ var LibrarySysCommon = {
 				onload: onload
 			});
 		},
-		DownloadAssets: function (assets, onstartasset, onprogress, onendasset, callback) {
-			var progress = [];
-
-			function downloadedBytes() {
-				return progress.reduce(function (a, b) { return a + b; });
-			}
-
-			function nextDownload() {
-				nextDownload.pos = nextDownload.pos == undefined ? 0 : nextDownload.pos + 1;
-
-				if (nextDownload.pos >= assets.length) {
-					return callback();
-				}
-
-				var asset = assets[nextDownload.pos];
-
-				onstartasset(asset);
-
-				SYSC.DownloadAsset(asset, function (loaded, total) {
-					progress[nextDownload.pos] = loaded;
-
-					onprogress(downloadedBytes(), total);
-				}, function (err, data) {
-					if (err) return callback(err);
-					SYSC.Print('Downloaded ' + asset.name);
-					onendasset(asset, data, function (err) {
-						if (err) return callback(err);
-
-						setTimeout(nextDownload);
-					});
-				});
-			}
-
-			nextDownload();
-		},
 		SavePak: function (name, buffer, callback) {
 			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
 			var localPath = PATH.join(fs_homepath, name);
@@ -149,97 +97,12 @@ var LibrarySysCommon = {
 			
 			FS.syncfs(callback);
 		},
-		ValidateDependency: function (dependency) {
-			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
-			var localPath = PATH.join(fs_homepath, dependency.dest);
-			//var crc = SYSC.CRC32File(localPath);
-
-			//if (crc !== dependency.checksum) {
-			//	return false;
-			//}
-			return true;
-		},
-		DirtyInstallers: function (callback) {
-			var dependencies = [];
-			var assets = SYSC.GetManifest();
-			console.log(assets);
-
-			for (var j = 0; j < assets.length; j++) {
-				if (SYSC.dependencies.includes(assets[j].name)) {
-					dependencies.push(assets[j]);
-				}
-			}
-
-			return dependencies;
-		},
-		ExtractInstaller: function (data, entry, callback) {
-			var gunzip = new Zlib.Gunzip(data);
-			var buffer = gunzip.decompress();
-			var tar = new Tar(buffer);
-			var buffer = tar.getContent(entry.src);
-
-			// TODO validate buffer checksum
-			SYSC.SavePak(entry.dest, buffer, function (err) {
-				if (err) return callback(err);
-
-				callback();
-			});
-		},
-		SyncDependencies: function (callback) {
-			var downloads = SYSC.DirtyInstallers(callback);
-
-			if (!downloads.length) {
-				return callback();
-			}
-
-			function isZipped(name) {
-				var name = name.toLowerCase();
-				return name.includes('.gz') || name.includes('.tar')
-					|| name.includes('.zip') || name.includes('.run');
-			}
-
-			SYSC.DownloadAssets(downloads, function (asset) {
-				SYS.LoadingDescription('loading ' + asset.name);
-			}, function (loaded, total) {
-				SYS.LoadingProgress(loaded / total);
-			}, function (asset, data, next) {
-				if(isZipped(asset.name)) {
-					SYSC.ExtractInstaller(new Uint8Array(data, asset.offset), asset, next);
-				} else {
-					SYSC.SavePak(asset.name, data, next)
-				}
-			}, function (err) {
-				SYS.LoadingDescription(null);
-
-				setTimeout(function () {
-					callback(err);
-				});
-			});
-		},
 		ValidatePak: function (asset) {
 			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
 			var localPath = PATH.join(fs_homepath, asset.name);
 			//var crc = SYSC.CRC32File(localPath);
 			return true;
 			//return crc === asset.checksum;
-		},
-		SyncPaks: function (callback) {
-			debugger;
-			var downloads = SYSC.DirtyPaks();
-
-			SYSC.DownloadAssets(downloads, function (asset) {
-				SYS.LoadingDescription('loading ' + asset.name);
-			}, function (loaded, total) {
-				SYS.LoadingProgress(loaded / total);
-			}, function (asset, data, next) {
-				SYSC.SavePak(asset.name, data, next);
-			}, function (err) {
-				SYS.LoadingDescription(null);
-
-				setTimeout(function () {
-					callback(err);
-				});
-			});
 		},
 		FS_Startup: function (callback) {
 			Browser.safeCallback(callback)();
@@ -248,7 +111,7 @@ var LibrarySysCommon = {
 			SYSC.SyncDependencies(function (err) {
 				if (err) return callback(err);
 
-				SYSC.SyncPaks();
+				SYSC.SyncPaks(Browser.safeCallback(callback));
 			});
 			*/
 		},
@@ -358,7 +221,7 @@ var LibrarySysCommon = {
 
 		_Z_Free(list);
 	},
-	Sys_FOpen__deps: ['$FS'],
+	Sys_FOpen__deps: ['$FS', 'fopen'],
 	Sys_FOpen: function (ospath, mode) {
 		var handle;
 		try {

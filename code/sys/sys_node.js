@@ -45,14 +45,6 @@ var LibrarySys = {
 				});
 			});
 		},
-		LoadingDescription: function (desc) {
-			if (desc) {
-				console.log(desc);
-			}
-		},
-		LoadingProgress: function (frac) {
-			console.log('loaded ' + (frac*100).toFixed(2) + '%');
-		},
 		mount: function (fs_homepath) {
 			var path = require('path');
 			var localPath = path.resolve(fs_homepath);
@@ -121,7 +113,7 @@ var LibrarySys = {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
 		SYS.mount(fs_homepath);
 		
-
+		// TODO: remove this
 		SYSC.FS_Startup(Browser.safeCallback(function (err) {
 			if (err) {
 				// FIXME cb_free_context(cb)

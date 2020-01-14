@@ -71,13 +71,6 @@ var LibrarySys = {
 			}
 			return;
 		}
-
-		// we want to leave around an error dialog if one exists
-		// SYS.style.remove();
-		// SYS.style = null;
-
-		// SYS.dialog.remove();
-		// SYS.dialog = null;
 		window.removeEventListener('resize', resizeViewport);
 		if(SYS.loading) {
 			SYS.loading.remove();
@@ -141,6 +134,7 @@ var LibrarySys = {
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds');
 
+			// TODO: remove this in favor of new remote FS code
 			SYSC.FS_Startup(Browser.safeCallback(function (err) {
 				if (err) {
 					SYSC.Error('fatal', err);

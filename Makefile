@@ -964,10 +964,12 @@ ifeq ($(PLATFORM),js)
 		-s WASM_OBJECT_FILES=1 \
 		-s SAFE_HEAP=1 \
 		-s DEMANGLE_SUPPORT=0 \
+		-s ASSERTIONS=0 \
 		-fPIC
   OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g3 \
 		-s SAFE_HEAP=0 \
 		-s DEMANGLE_SUPPORT=1 \
+		-s ASSERTIONS=0 \
 		--source-map-base http://localhost:8080/ \
 		-frtti \
 		-fPIC
@@ -1015,8 +1017,7 @@ ifeq ($(PLATFORM),js)
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
-    -s ALLOW_MEMORY_GROWTH=0 \
-    -s ASSERTIONS=1 \
+    -s ALLOW_MEMORY_GROWTH=1 \
     -s LEGACY_GL_EMULATION=1 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
     -s FULL_ES2=0 \
@@ -1040,7 +1041,6 @@ ifeq ($(PLATFORM),js)
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s ASSERTIONS=1 \
 		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3ded\" \
     $(OPTIMIZE)
