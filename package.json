@@ -9,7 +9,8 @@
   "bin": {
     "quakejs-content": "bin/content.js",
     "quakejs-master": "bin/master.js",
-    "quakejs-repak": "bin/repak.js"
+    "quakejs-repak": "bin/repak.js",
+    "quakejs-proxy": "bin/proxy.js"
   },
   "repository": {
     "type": "git",
