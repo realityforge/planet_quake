@@ -6,11 +6,7 @@ var {ufs} = require('unionfs')
 var {serveCompressed, compressFile} = require('./compress.js')
 
 // check the process args for a directory to serve as the baseq3 folders
-var vol = Volume.fromJSON({
-	'/': {},
-	'/base': {},
-	'/assets': {}
-})
+var vol = Volume.fromJSON({})
 ufs.use(fs).use(vol)
 var mountPoint
 var mountPoints = []
@@ -56,10 +52,9 @@ function pathToAbsolute(path) {
 function readMultiDir(fullpath) {
 	var dir = []
 	for(var i = 0; i < mountPoints.length; i++) {
-		fullpath = fullpath.replace(mountPoints[i][0], mountPoints[i][1])
-		if(ufs.existsSync(fullpath)) {
-			var files = ufs.readdirSync(fullpath)
-				.map(f => path.join(fullpath, f))
+		const realpath = fullpath.replace(mountPoints[i][0], mountPoints[i][1])
+		if(ufs.existsSync(realpath)) {
+			var files = ufs.readdirSync(realpath).map(f => path.join(realpath, f))
 			dir.push.apply(dir, files)
 		}
 	}

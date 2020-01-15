@@ -63,10 +63,10 @@ var LibrarySysCommon = {
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
 			var sv_dlURL = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('sv_dlURL'), 'i8', ALLOC_STACK)));
-			var name = asset.name; //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
-			var url = sv_dlURL.includes('://')
+			var name = asset.replace(/^\//, ''); //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
+			var url = (sv_dlURL.includes('://')
 				? sv_dlURL
-				: (window
+				: window
 					? (window.location.protocol + '//' + sv_dlURL)
 					: ('https://' + sv_dlURL)) + '/assets/' + name;
 
@@ -161,6 +161,7 @@ var LibrarySysCommon = {
 		}
 
 		// TODO support filter
+		debugger;
 		
 		var contents;
 		try {

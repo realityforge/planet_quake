@@ -1017,7 +1017,7 @@ ifeq ($(PLATFORM),js)
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
-    -s ALLOW_MEMORY_GROWTH=1 \
+    -s ALLOW_MEMORY_GROWTH=0 \
     -s LEGACY_GL_EMULATION=1 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
     -s FULL_ES2=0 \
@@ -1040,7 +1040,7 @@ ifeq ($(PLATFORM),js)
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
-    -s ALLOW_MEMORY_GROWTH=1 \
+    -s ALLOW_MEMORY_GROWTH=0 \
 		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3ded\" \
     $(OPTIMIZE)

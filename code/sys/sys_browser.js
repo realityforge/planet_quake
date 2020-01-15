@@ -101,10 +101,12 @@ var LibrarySys = {
 	},
 	Sys_GLimpSafeInit: function () {
 	},
-	Sys_FS_Startup__deps: ['$Browser', '$FS', '$IDBFS', '$SYSC'],
+	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
 	Sys_FS_Startup: function () {
 		var name = allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK);
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
+		name = allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK);
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(name));
 
 		// mount a persistable filesystem into base
 		var dir;
@@ -128,21 +130,35 @@ var LibrarySys = {
 
 		FS.syncfs(true, function (err) {
 			if (err) {
-				SYSC.Print(err.message)
+				SYSC.Print(err.message);
 				return SYSC.Error('fatal', err.message);
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds');
 
 			// TODO: remove this in favor of new remote FS code
-			SYSC.FS_Startup(Browser.safeCallback(function (err) {
-				if (err) {
-					SYSC.Error('fatal', err);
-					return;
-				}
-
-				SYSC.ProxyCallback();
-			}));
+			SYSC.DownloadAsset('/index.json', () => {}, (err, data) => {
+				debugger;
+				var json = JSON.parse((new TextDecoder("utf-8")).decode(data));
+				// create virtual file entries for everything in the directory list
+				Object.keys(json).forEach(k => {
+					FS.writeFile(PATH.join('/', fs_basepath, json[k].name), new Uint8Array([]), {
+						encoding: 'binary', flags: 'w', canOwn: true })
+				});
+				
+				// TODO: create an icon for the favicon so we know we did it right
+				/*
+				var buf = FS.readFile('/foo/bar');
+		    var blob = new Blob([buf],  {"type" : "application/octet-stream" });
+		    var url = URL.createObjectURL(blob);
+				var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+		    link.type = 'image/x-icon';
+		    link.rel = 'shortcut icon';
+		    link.href = url;
+		    document.getElementsByTagName('head')[0].appendChild(link);
+				*/
+				Browser.safeCallback(SYSC.ProxyCallback)();
+			});
 		});
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
@@ -154,7 +170,7 @@ var LibrarySys = {
 					SYSC.Error('fatal', err);
 					return;
 				}
-
+				
 				SYSC.ProxyCallback();
 			}));
 		});
