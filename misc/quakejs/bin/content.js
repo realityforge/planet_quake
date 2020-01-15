@@ -1,48 +1,35 @@
-
-// TODO: move this to content.js, add convert.js for pk3, and compress.js for compression
 var fs = require('fs')
 var path = require('path')
+var {URL} = require('url')
 var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
-var {link} = require('linkfs')
-var {URL} = require('url')
 var {serveCompressed, compressFile} = require('./compress.js')
 
 // check the process args for a directory to serve as the baseq3 folders
-var vol = Volume.fromJSON({'/': {}}, '/app')
-ufs.use(vol)
-try {
-	vol.mkdirSync('/base')
-	vol.mkdirSync('/assets')
-} catch (e) {
-	if(e.code !== 'EXIST') throw e
-}
+var vol = Volume.fromJSON({
+	'/': {},
+	'/base': {},
+	'/assets': {}
+})
+ufs.use(fs).use(vol)
 var mountPoint
+var mountPoints = []
 Array.from(process.argv).forEach((a) => {
   if(fs.existsSync(a)) {
 		if(a.match(/\/node$/ig)) return true
 		if(a.match(/\/web\.js$/ig)) return true
 		console.log('linking ' + a)
-    const lfs = link(fs, ['/base', a])
-    ufs.use(lfs)
+		mountPoints.push(['/base', a])
     // create a link for user specified directory that doesn't exist
     if(mountPoint) {
-      const lfs = link(fs, [mountPoint, a])
-      ufs.use(lfs)
+			mountPoints.push([mountPoint, a])
     } else {
-      // create a link for assets directory just incase we can't reorganize
-      const lfs = link(fs, ['/assets', a])
-      ufs.use(lfs)
+			mountPoints.push(['/assets', a])
     }
   // use an absolute path as a mount point if it doesn't exist
   } else if (a.match(/^\//i)) {
 		console.log('mounting ' + a)
     mountPoint = a
-		try {
-			vol.mkdirSync(mountPoint)
-		} catch (e) {
-			if(e.code !== 'EXIST') throw e
-		}
   }
 })
 
@@ -57,39 +44,75 @@ function sendFile(file, res) {
   })
 }
 
+function pathToAbsolute(path) {
+	for(var i = 0; i < mountPoints.length; i++) {
+		var fullpath = path.replace(mountPoints[i][0], mountPoints[i][1])
+		if(fullpath.localeCompare(path) !== 0) {
+			return fullpath
+		}
+	}
+}
+
+function readMultiDir(fullpath) {
+	var dir = []
+	for(var i = 0; i < mountPoints.length; i++) {
+		fullpath = fullpath.replace(mountPoints[i][0], mountPoints[i][1])
+		if(ufs.existsSync(fullpath)) {
+			var files = ufs.readdirSync(fullpath)
+				.map(f => path.join(fullpath, f))
+			dir.push.apply(dir, files)
+		}
+	}
+	return dir
+}
+
 async function serveIndexJson(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
+	const absolute = pathToAbsolute(parsed.pathname)
   // return index.json for directories or return a file out of baseq3
-  if(ufs.existsSync(parsed.pathname)
-	  && ufs.statSync(parsed.pathname).isDirectory
-    || parsed.pathname.match(/\/index\.json$/ig)) {
-			
-    var filename = path.join(path.dirname(parsed.pathname), 'index.json')
-    // if there is no index.json, generate one
-    if(!ufs.existsSync(filename)) {
-			var files = ufs.readdirSync(path.dirname(filename))
-			var manifest = {}
-			await files.forEach(async function(f) {
-				var file = await new Promise(resolve => resolve({
-					name: f
-				})) //compressFile(f, resolve))
-				manifest[f] = file
-			})
-      vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    
-    }
-    sendFile(filename, res)
+	var filename
+  if(absolute
+	  && ufs.existsSync(absolute)
+	  && ufs.statSync(absolute).isDirectory()) {
+		filename = path.join(parsed.pathname, 'index.json')
+	} else if (absolute
+	  && ufs.existsSync(path.dirname(absolute))
+		&& ufs.statSync(path.dirname(absolute)).isDirectory()
+		&& parsed.pathname.match(/\/index\.json$/ig)) {
+		filename = parsed.pathname
+	} else {
+		return next()
+	}
+	
+  // if there is no index.json, generate one
+  if(!ufs.existsSync(filename)) {
+		var files = readMultiDir(path.dirname(filename))
+		var manifest = {}
+		for(var i = 0; i < files.length; i++) {
+			var fullpath = files[i]
+			if(!ufs.existsSync(fullpath)) return true
+			var file = {}
+			if(ufs.statSync(fullpath).isFile()) {
+				file = await new Promise((resolve, reject) => {
+					compressFile(ufs.createReadStream(fullpath), resolve, reject)
+				})
+			}
+			manifest[fullpath] = Object.assign({name: path.basename(fullpath)}, file)
+		}
+		vol.mkdirpSync(path.dirname(filename))
+    vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    
   }
-  
-  next()
+  sendFile(filename, res)
 }
 
 function serveBaseQ3(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
-  if (ufs.existsSync(parsed.pathname)) {
-    sendFile(parsed.pathname, res)
-  }
-
-  next()
+	const absolute = pathToAbsolute(parsed.pathname)
+  if (absolute) {
+    sendFile(absolute, res)
+  } else {
+		next()
+	}
 }
 
 module.exports = {
