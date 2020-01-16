@@ -5,6 +5,12 @@ var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
 var {serveCompressed, compressFile} = require('./compress.js')
 
+// TODO: Add some command line options here
+// --recursive -R, adds all directory files below current directory
+// --pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
+// --write -w, write all JSON files in every directory for CDN use
+// --repack -rp, repack on the fly as pk3/media/images/sound files are accessed
+
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
 ufs.use(fs).use(vol)
