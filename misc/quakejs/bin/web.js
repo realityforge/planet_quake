@@ -1,11 +1,14 @@
 var express = require('express')
 var path = require('path')
-var liveServer = require("live-server")
+//var liveServer = require("live-server")
 var {serveBaseQ3, serveIndexJson} = require('./content.js')
 var {serveCompressed, compressFile} = require('./compress.js')
+var express = require('express')
+var app = express()
 
 express.static.mime.types['wasm'] = 'application/wasm'
 
+/*
 var params = {
     port: 8080, // Set the server port. Defaults to 8080.
     host: "0.0.0.0", // Set the address to bind to. Defaults to 0.0.0.0 or process.env.IP.
@@ -27,3 +30,11 @@ var params = {
 }
 
 liveServer.start(params)
+*/
+app.use('/', express.static(path.join(__dirname), { extensions: ['html'] }))
+app.use('/', express.static(path.join(__dirname, '../../../build/release-js-js'), { extensions: ['wasm'] }))
+app.use(serveIndexJson)
+app.use(serveBaseQ3)
+app.use(serveCompressed)
+
+app.listen(8080)

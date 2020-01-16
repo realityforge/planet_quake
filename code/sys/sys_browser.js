@@ -5,6 +5,34 @@ var LibrarySys = {
 		timeBase: null,
 		style: null,
 		loading: null,
+		args: [
+			'+set', 'sv_dlURL', '"http://localhost:8080"',
+			'+set', 'fs_basegame', 'baseq3',
+			'+set', 'fs_game', 'baseq3',
+			'+set', 'net_noudp', '1',
+			'+set', 'net_enabled', '0',
+			'+set', 'developer', '0',
+			'+set', 'fs_debug', '0',
+			'+set', 'r_mode', '-2',
+			'+set', 'r_customPixelAspect', '1',
+			'+set', 'sv_pure', '0',
+			// these settings were set by the emscripten build
+			//'+connect', 'proxy.quake.games:443',
+			/*
+			'+set', 'r_normalMapping', '0',
+			'+set', 'r_specularMapping', '0',
+			'+set', 'r_deluxeMapping', '0',
+			'+set', 'r_hdr', '0',
+			'+set', 'r_picmip', '0',
+			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
+			'+set', 'g_spSkill', '5',
+			'+set', 'g_spScores5', '\\l21\\5\\l14\\5\\l22\\5\\l25\\5\\l5\\5\\l3\\5\\l2\\5\\l20\\2\\l19\\1\\l1\\5\\l0\\5\\l24\\1',
+			'+iamacheater',
+			'+iamamonkey',
+			'+exec', 'client.cfg',
+			//	'+map', 'Q3DM17'
+			*/
+		],
 		DoXHR: function (url, opts) {
 			if (!url) {
 				return opts.onload(new Error('Must provide a URL'));
@@ -45,6 +73,27 @@ var LibrarySys = {
 			};
 			req.send(null);
 		},
+		getQueryCommands: function () {
+			var search = /([^&=]+)/g;
+			var query  = window.location.search.substring(1);
+
+			var args = [];
+
+			var match;
+			while (match = search.exec(query)) {
+				var val = decodeURIComponent(match[1]);
+				val = val.split(' ');
+				val[0] = '+' + val[0];
+				args.push.apply(args, val);
+			}
+			args.push.apply(args, [
+				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
+				'+set', 'r_customHeight', '' + window.innerHeight,
+				'+set', 'r_customWidth', '' + window.innerWidth,
+			]);
+
+			return args;
+		}
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading');
@@ -103,15 +152,16 @@ var LibrarySys = {
 	},
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
 	Sys_FS_Startup: function () {
-		var name = allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK);
-		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
-		name = allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK);
-		var fs_basepath = UTF8ToString(_Cvar_VariableString(name));
-
+		var fs_homepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)));
+		var fs_basegame = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)));
 		// mount a persistable filesystem into base
-		var dir;
 		try {
-			dir = FS.mkdir(fs_homepath);
+			FS.mkdir(fs_homepath);
+			FS.mkdir(fs_basepath);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
 				SYSC.Error('fatal', e.message);
@@ -120,6 +170,7 @@ var LibrarySys = {
 
 		try {
 			FS.mount(IDBFS, {}, fs_homepath);
+			FS.mount(IDBFS, {}, fs_basepath);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EBUSY) {
 				SYSC.Error('fatal', e.message);
@@ -135,14 +186,21 @@ var LibrarySys = {
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds');
-
+			
+			try {
+				FS.mkdir(PATH.join(fs_basepath, fs_basegame));
+			} catch (e) {
+				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+					SYSC.Error('fatal', e.message);
+				}
+			}
 			// TODO: remove this in favor of new remote FS code
 			SYSC.DownloadAsset('/index.json', () => {}, (err, data) => {
-				debugger;
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data));
 				// create virtual file entries for everything in the directory list
 				Object.keys(json).forEach(k => {
-					FS.writeFile(PATH.join('/', fs_basepath, json[k].name), new Uint8Array([]), {
+					const blankFile = new Uint8Array(4);
+					FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
 						encoding: 'binary', flags: 'w', canOwn: true })
 				});
 				
@@ -216,6 +274,21 @@ var LibrarySys = {
 
 			SYS.dialog.style.display = 'block';
 		}
+	},
+	Sys_CmdArgs__deps: ['stackAlloc'],
+	Sys_CmdArgs: function () {
+		var argv = ['ioq3'].concat(SYS.args).concat(SYS.getQueryCommands());
+		var argc = argv.length;
+		// merge default args with query string args
+		var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}});
+		for (var i = 0; i < argv.length; i++) {
+			HEAP32[(list >> 2) + i] = allocateUTF8OnStack(argv[i]);
+		}
+		HEAP32[(list >> 2) + argc] = 0;
+		return list;
+	},
+	Sys_CmdArgsC: function () {
+		return SYS.args.length + SYS.getQueryCommands().length + 1;
 	}
 };
 

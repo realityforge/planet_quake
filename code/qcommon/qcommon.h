@@ -37,6 +37,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //============================================================================
 
 #if EMSCRIPTEN
+#ifndef DEDICATED
+extern char **Sys_CmdArgs( void );
+extern int Sys_CmdArgsC( void );
+#endif
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 void FS_Startup_After_Async( const char *gameName );

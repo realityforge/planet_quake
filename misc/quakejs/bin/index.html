@@ -64,36 +64,19 @@
 	
 
 <script>
-	var ioq3;
 
-		function getQueryCommands() {
-			var search = /([^&=]+)/g;
-			var query  = window.location.search.substring(1);
-
-			var args = [];
-
-			var match;
-			while (match = search.exec(query)) {
-				var val = decodeURIComponent(match[1]);
-				val = val.split(' ');
-				val[0] = '+' + val[0];
-				args.push.apply(args, val);
-			}
-
-			return args;
-		}
 	function updateVideoCmd() {
 		var update = 'set r_fullscreen %fs; set r_mode -2; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
 			.replace('%fs', window.fullscreen ? '1' : '0')
-			.replace('%w', ioq3.viewport.offsetWidth)
-			.replace('%h', ioq3.viewport.offsetHeight)
-		ioq3._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
-		ioq3._Cbuf_Execute();
+			.replace('%w', Module['viewport'].offsetWidth)
+			.replace('%h', Module['viewport'].offsetHeight)
+		Module._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
+		Module._Cbuf_Execute();
 	}
 
 	var resizeDelay;
 	function resizeViewport() {
-		if (!ioq3.canvas) {
+		if (!Module['canvas']) {
 			// ignore if the canvas hasn't yet initialized
 			return;
 		}
@@ -117,51 +100,15 @@
 				e.preventDefault();
 			};
 		};
+		//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
 		Module['onRuntimeInitialized'] = () => {
-			ioq3 = Module;
-			Module.websocket.url = window.location.search.includes('https://')
+			Module['viewport'] = document.getElementById('viewport-frame');
+			Module['websocket'].url = window.location.search.includes('https://')
 				? 'wss://'
 				: 'ws://';
-			//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
-
-			ioq3.viewport = document.getElementById('viewport-frame');
-			ioq3.elementPointerLock = true;
+			Module['elementPointerLock'] = true;
 			window.addEventListener('resize', resizeViewport);
-
-			// merge default args with query string args
-			var args = [
-				'+set', 'sv_dlURL', '"http://localhost:8080"',
-				'+set', 'fs_game', 'baseq3',
-				'+set', 'net_noudp', '1',
-				'+set', 'net_enabled', '0',
-				'+set', 'developer', '0',
-				'+set', 'fs_debug', '0',
-				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
-				'+set', 'r_mode', '-2',
-				'+set', 'r_customPixelAspect', '1',
-				'+set', 'r_customHeight', '' + window.innerHeight,
-				'+set', 'r_customWidth', '' + window.innerWidth,
-				'+set', 'sv_pure', '0',
-				// these settings were set by the emscripten build
-				//'+connect', 'proxy.quake.games:443',
-				/*
-				'+set', 'r_normalMapping', '0',
-				'+set', 'r_specularMapping', '0',
-				'+set', 'r_deluxeMapping', '0',
-				'+set', 'r_hdr', '0',
-				'+set', 'r_picmip', '0',
-				'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
-				'+set', 'g_spSkill', '5',
-				'+set', 'g_spScores5', '\\l21\\5\\l14\\5\\l22\\5\\l25\\5\\l5\\5\\l3\\5\\l2\\5\\l20\\2\\l19\\1\\l1\\5\\l0\\5\\l24\\1',
-				'+iamacheater',
-				'+iamamonkey',
-				'+exec', 'client.cfg',
-				//	'+map', 'Q3DM17'
-				*/
-			];
-			args.push.apply(args, getQueryCommands());
-			ioq3.callMain(args);
-		}
+		};
 	};
 </script>
 <script type="text/javascript" src="/ioquake3.js"></script>

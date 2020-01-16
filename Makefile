@@ -1008,8 +1008,8 @@ ifeq ($(PLATFORM),js)
 		-lidbfs.js \
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
-    -s INVOKE_RUN=0 \
-    -s NO_EXIT_RUNTIME=0 \
+    -s INVOKE_RUN=1 \
+    -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
