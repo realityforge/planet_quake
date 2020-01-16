@@ -200,8 +200,18 @@ var LibrarySys = {
 				// create virtual file entries for everything in the directory list
 				Object.keys(json).forEach(k => {
 					const blankFile = new Uint8Array(4);
-					FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
-						encoding: 'binary', flags: 'w', canOwn: true })
+					if(!json[k].checksum) { // create a directory
+						try {
+							FS.mkdir(PATH.join(fs_basepath, fs_basegame, json[k].name));
+						} catch (e) {
+							if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+								SYSC.Error('fatal', e.message);
+							}
+						}
+					} else {
+						FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
+							encoding: 'binary', flags: 'w', canOwn: true });
+					}
 				});
 				
 				// TODO: create an icon for the favicon so we know we did it right
