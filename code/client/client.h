@@ -504,6 +504,7 @@ void CL_SendCmd (void);
 void CL_ClearState (void);
 void CL_ReadPackets (void);
 
+void CL_SendPureChecksums(void);
 void CL_WritePacket( void );
 void IN_CenterView (void);
 
@@ -602,6 +603,7 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 void CL_InitCGame( void );
+void CL_InitCGameFinished( void );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
@@ -640,4 +642,3 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
-

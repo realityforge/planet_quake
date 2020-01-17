@@ -465,8 +465,9 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 	// get a new checksum feed and restart the file system
 	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
+#ifndef EMSCRIPTEN
 	FS_Restart( sv.checksumFeed );
-
+#endif
 	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 
 	// set serverinfo visible name

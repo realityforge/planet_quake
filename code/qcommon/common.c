@@ -30,6 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #else
 #include <winsock.h>
 #endif
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+static void (*CB_Frame_Proxy)( void ) = NULL;
+static void (*CB_Frame_After)( void ) = NULL;
+#endif
 
 int demo_protocols[] =
 { 67, 66, 0 };
@@ -388,7 +393,11 @@ void Com_Quit_f( void ) {
 		Com_Shutdown ();
 		FS_Shutdown(qtrue);
 	}
+#ifndef EMSCRIPTEN
 	Sys_Quit ();
+#else
+	Com_Frame_Callback(Sys_FS_Shutdown, Sys_Quit);
+#endif
 }
 
 
@@ -2406,6 +2415,16 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 
 		FS_Restart(checksumFeed);
 	
+#ifdef EMSCRIPTEN
+	}
+	FS_RestartCallback(Com_GameRestart_After_Restart);
+}
+
+void Com_GameRestart_After_Restart( void )
+{
+	qboolean disconnect = qfalse;
+	{
+#endif
 		// Clean out any user and VM created cvars
 		Cvar_Restart(qtrue);
 		Com_ExecuteCfg();
@@ -2700,6 +2719,13 @@ void Com_Init( char *commandLine ) {
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT|CVAR_PROTECTED);
 
 	FS_InitFilesystem ();
+#ifdef EMSCRIPTEN
+}
+
+void Com_Init_After_Filesystem( void ) {
+	char	*s;
+	int	qport;
+#endif
 
 	Com_InitJournaling();
 
@@ -3059,6 +3085,31 @@ int Com_TimeVal(int minMsec)
 	return timeVal;
 }
 
+#ifdef EMSCRIPTEN
+void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	if(!CB_Frame_Proxy) {
+		CB_Frame_Proxy = cb;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling a frame proxy." );
+	}
+	if(!CB_Frame_After) {
+		CB_Frame_After = af;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling back to frame." );
+	}
+}
+
+void Com_Frame_Proxy( void ) {
+	if(CB_Frame_After) {
+		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
+		void (*cb)( void ) = CB_Frame_After;
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
+		CB_Frame_After = NULL; // start frame runner again
+	}
+}
+#endif
+
 /*
 =================
 Com_Frame
@@ -3075,7 +3126,21 @@ void Com_Frame( void ) {
 	int		timeBeforeEvents;
 	int		timeBeforeClient;
 	int		timeAfter;
-  
+
+#ifdef EMSCRIPTEN
+	if(CB_Frame_Proxy) {
+		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
+		void (*cb)( void ) = CB_Frame_Proxy;
+		CB_Frame_Proxy = NULL;
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
+		return;
+	}
+	
+	if(CB_Frame_After) {
+		return;
+	}
+#endif
 
 	if ( setjmp (abortframe) ) {
 		return;			// an ERR_DROP was thrown

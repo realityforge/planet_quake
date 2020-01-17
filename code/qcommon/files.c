@@ -255,6 +255,11 @@ static  cvar_t          *fs_apppath;
 static	cvar_t		*fs_steampath;
 static	cvar_t		*fs_gogpath;
 
+#if EMSCRIPTEN
+#include <emscripten.h>
+static void (*CB_After_Restart)( void ) = NULL;
+#endif
+
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_gamedirvar;
@@ -733,7 +738,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 		Com_Printf( "FS_SV_FOpenFileRead (fs_homepath): %s\n", ospath );
 	}
 
-	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
+	fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "r" );
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o)
 	{
@@ -753,6 +758,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			fsh[f].handleSync = qfalse;
 		}
 
+#ifndef EMSCRIPTEN
 		// Check fs_steampath
 		if (!fsh[f].handleFiles.file.o && fs_steampath->string[0])
 		{
@@ -782,6 +788,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 			fsh[f].handleSync = qfalse;
 		}
+#endif
 
 		if ( !fsh[f].handleFiles.file.o )
 		{
@@ -2313,6 +2320,19 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 				}
 			}
 		} else if (search->dir) { // scan for files in the filesystem
+/*
+#ifdef EMSCRIPTEN
+// search directories asyncrhonously so we don't need a full manifest, maybe reduced startup time?
+		}
+	}
+	FS_ListFilteredFiles_DirectoriesAsync(fs_searchpaths[0], list, nfiles);
+}
+
+void FS_ListFilteredFiles_DirectoriesAsync(searchpath_t	*search, char *list, int nfiles) {
+	{ // this is where the for loop was, but we use a search pointer instead
+		if(search->dir) {
+#endif;
+*/
 			char	*netpath;
 			int		numSysFiles;
 			char	**sysFiles;
@@ -2333,6 +2353,9 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 			}
 		}
 	}
+	
+#ifdef EMSCRIPTEN
+#endif
 
 	// return a copy of the list
 	*numfiles = nfiles;
@@ -3328,6 +3351,13 @@ static void FS_Startup( const char *gameName )
 	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
 	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
+	Com_Printf( "----- FS_GAME (%s) -----\n", fs_basegame->string );
+#if EMSCRIPTEN
+}
+
+void FS_Startup_After_Async( const char *gameName )
+{
+#endif
 
 	if (!gameName[0]) {
 		Cvar_ForceReset( "com_basegame" );
@@ -3351,6 +3381,7 @@ static void FS_Startup( const char *gameName )
 	}
 
 	// add search path elements in reverse priority order
+#ifndef EMSCRIPTEN
 	fs_gogpath = Cvar_Get ("fs_gogpath", Sys_GogPath(), CVAR_INIT|CVAR_PROTECTED );
 	if (fs_gogpath->string[0]) {
 		FS_AddGameDirectory( fs_gogpath->string, gameName );
@@ -3359,6 +3390,7 @@ static void FS_Startup( const char *gameName )
 	if (fs_steampath->string[0]) {
 		FS_AddGameDirectory( fs_steampath->string, gameName );
 	}
+#endif
 	if (fs_basepath->string[0]) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
@@ -3379,12 +3411,14 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional base game so mods can be based upon other mods
 	if ( fs_basegame->string[0] && Q_stricmp( fs_basegame->string, gameName ) ) {
+#ifndef EMSCRIPTEN
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_basegame->string);
 		}
 		if (fs_steampath->string[0]) {
 			FS_AddGameDirectory(fs_steampath->string, fs_basegame->string);
 		}
+#endif
 		if (fs_basepath->string[0]) {
 			FS_AddGameDirectory(fs_basepath->string, fs_basegame->string);
 		}
@@ -3395,12 +3429,14 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, gameName ) ) {
+#ifndef EMSCRIPTEN
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_gamedirvar->string);
 		}
 		if (fs_steampath->string[0]) {
 			FS_AddGameDirectory(fs_steampath->string, fs_gamedirvar->string);
 		}
+#endif
 		if (fs_basepath->string[0]) {
 			FS_AddGameDirectory(fs_basepath->string, fs_gamedirvar->string);
 		}
@@ -3444,7 +3480,7 @@ static void FS_Startup( const char *gameName )
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
 }
 
-#ifndef STANDALONE
+#if !defined STANDALONE && !EMSCRIPTEN
 /*
 ===================
 FS_CheckPak0
@@ -3464,6 +3500,7 @@ static void FS_CheckPak0( void )
 	const char	*pakBasename;
 	qboolean founddemo = qfalse;
 	unsigned int foundPak = 0, foundTA = 0;
+	unsigned int checksum = 0;
 
 	for( path = fs_searchpaths; path; path = path->next )
 	{
@@ -3987,7 +4024,16 @@ void FS_InitFilesystem( void ) {
 	// try to start up normally
 	FS_Startup(com_basegame->string);
 
-#ifndef STANDALONE
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(Sys_FS_Startup, FS_InitFilesystem_After_Async);
+}
+
+void FS_InitFilesystem_After_Async( void ) {
+	FS_Startup_After_Async(com_basegame->string);
+	Com_Init_After_Filesystem();
+#endif
+
+#if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
 
@@ -4022,10 +4068,26 @@ void FS_Restart( int checksumFeed ) {
 	// clear pak references
 	FS_ClearPakReferences(0);
 
+#ifndef EMSCRIPTEN
 	// try to start up normally
 	FS_Startup(com_basegame->string);
+#else
+	Com_Frame_Callback(Sys_FS_Shutdown, FS_Restart_After_Async);
+}
 
-#ifndef STANDALONE
+void FS_RestartCallback(void (*cb)( void )) {
+	if(!CB_After_Restart) {
+		CB_After_Restart = cb;
+	} else {
+		Com_Error( ERR_FATAL, "Already returning after restart." );
+	}
+}
+
+void FS_Restart_After_Async( void ) {
+	const char *lastGameDir;
+#endif
+
+#if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
 
@@ -4045,7 +4107,7 @@ void FS_Restart( int checksumFeed ) {
 			lastValidComBaseGame[0] = '\0';
 			lastValidFsBaseGame[0] = '\0';
 			lastValidGame[0] = '\0';
-			FS_Restart(checksumFeed);
+			FS_Restart(fs_checksumFeed);
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
@@ -4069,6 +4131,15 @@ void FS_Restart( int checksumFeed ) {
 	Q_strncpyz(lastValidFsBaseGame, fs_basegame->string, sizeof(lastValidFsBaseGame));
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
 
+#ifdef EMSCRIPTEN
+	if(CB_After_Restart) {
+		Com_Printf( "--------- Callback after restart (%p) --------\n", &CB_After_Restart);
+		void (*cb)( void ) = CB_After_Restart;
+		CB_After_Restart = NULL;
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
+	}
+#endif
 }
 
 /*

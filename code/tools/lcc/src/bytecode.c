@@ -252,7 +252,7 @@ static void LoadSourceFile( const char *filename ) {
 	FILE	*f;
 	int		length;
 
-	f = fopen( filename, "r" );
+	f = Sys_FOpen( filename, "r" );
 	if ( !f ) {
 		print( ";couldn't open %s\n", filename );
 		sourceFile = NULL;

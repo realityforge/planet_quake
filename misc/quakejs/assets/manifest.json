@@ -1,0 +1,277 @@
+[
+  {
+    "name": "linuxq3ademo-1.11-6.x86.gz.sh",
+    "compressed": 49292197,
+    "checksum": 857908472
+  },
+  {
+    "name": "linuxq3apoint-1.32b-3.x86.run",
+    "compressed": 30914987,
+    "checksum": 296843703
+  },
+  {
+    "name": "qkey",
+    "compressed": 2071,
+    "checksum": 2882948774
+  },
+  {
+    "name": "baseq3/pak100.pk3",
+    "compressed": 16436858,
+    "checksum": 1422809009
+  },
+  {
+    "name": "baseq3/pak101.pk3",
+    "compressed": 16047334,
+    "checksum": 3618280122
+  },
+  {
+    "name": "baseq3/pak102.pk3",
+    "compressed": 16477160,
+    "checksum": 520910228
+  },
+  {
+    "name": "baseq3/pak103.pk3",
+    "compressed": 16325518,
+    "checksum": 3346752425
+  },
+  {
+    "name": "baseq3/pak104.pk3",
+    "compressed": 16264852,
+    "checksum": 2109652244
+  },
+  {
+    "name": "baseq3/pak105.pk3",
+    "compressed": 16737041,
+    "checksum": 947785743
+  },
+  {
+    "name": "baseq3/pak106.pk3",
+    "compressed": 16586047,
+    "checksum": 2433885720
+  },
+  {
+    "name": "baseq3/pak107.pk3",
+    "compressed": 16715675,
+    "checksum": 2684787458
+  },
+  {
+    "name": "baseq3/pak108.pk3",
+    "compressed": 16205162,
+    "checksum": 3754684888
+  },
+  {
+    "name": "baseq3/pro-q3dm13.pk3",
+    "compressed": 2341624,
+    "checksum": 1922905346
+  },
+  {
+    "name": "baseq3/pro-q3dm6.pk3",
+    "compressed": 2622914,
+    "checksum": 2687622512
+  },
+  {
+    "name": "baseq3/pro-q3tourney2.pk3",
+    "compressed": 2902087,
+    "checksum": 1894394281
+  },
+  {
+    "name": "baseq3/pro-q3tourney4.pk3",
+    "compressed": 1768751,
+    "checksum": 1070681968
+  },
+  {
+    "name": "baseq3/q3ctf1.pk3",
+    "compressed": 6471194,
+    "checksum": 4141753379
+  },
+  {
+    "name": "baseq3/q3ctf2.pk3",
+    "compressed": 5350269,
+    "checksum": 938368609
+  },
+  {
+    "name": "baseq3/q3ctf3.pk3",
+    "compressed": 3924630,
+    "checksum": 1329023665
+  },
+  {
+    "name": "baseq3/q3ctf4.pk3",
+    "compressed": 1276589,
+    "checksum": 2989424973
+  },
+  {
+    "name": "baseq3/q3dm0.pk3",
+    "compressed": 2572473,
+    "checksum": 3182825952
+  },
+  {
+    "name": "baseq3/q3dm1.pk3",
+    "compressed": 2379222,
+    "checksum": 1725071255
+  },
+  {
+    "name": "baseq3/q3dm10.pk3",
+    "compressed": 2307581,
+    "checksum": 4162235131
+  },
+  {
+    "name": "baseq3/q3dm11.pk3",
+    "compressed": 4007101,
+    "checksum": 3905668011
+  },
+  {
+    "name": "baseq3/q3dm12.pk3",
+    "compressed": 4562293,
+    "checksum": 2248517087
+  },
+  {
+    "name": "baseq3/q3dm13.pk3",
+    "compressed": 2469491,
+    "checksum": 4183130922
+  },
+  {
+    "name": "baseq3/q3dm14.pk3",
+    "compressed": 5606879,
+    "checksum": 2338954289
+  },
+  {
+    "name": "baseq3/q3dm15.pk3",
+    "compressed": 3723508,
+    "checksum": 2031093301
+  },
+  {
+    "name": "baseq3/q3dm16.pk3",
+    "compressed": 2373837,
+    "checksum": 1544542058
+  },
+  {
+    "name": "baseq3/q3dm17.pk3",
+    "compressed": 1231113,
+    "checksum": 3987363450
+  },
+  {
+    "name": "baseq3/q3dm18.pk3",
+    "compressed": 2271730,
+    "checksum": 2453009461
+  },
+  {
+    "name": "baseq3/q3dm19.pk3",
+    "compressed": 2133561,
+    "checksum": 2137074746
+  },
+  {
+    "name": "baseq3/q3dm2.pk3",
+    "compressed": 2934737,
+    "checksum": 3063027535
+  },
+  {
+    "name": "baseq3/q3dm3.pk3",
+    "compressed": 988383,
+    "checksum": 4092175825
+  },
+  {
+    "name": "baseq3/q3dm4.pk3",
+    "compressed": 2001514,
+    "checksum": 1031284489
+  },
+  {
+    "name": "baseq3/q3dm5.pk3",
+    "compressed": 1552329,
+    "checksum": 2365884963
+  },
+  {
+    "name": "baseq3/q3dm6.pk3",
+    "compressed": 2783970,
+    "checksum": 939179841
+  },
+  {
+    "name": "baseq3/q3dm7.pk3",
+    "compressed": 3197058,
+    "checksum": 1526350220
+  },
+  {
+    "name": "baseq3/q3dm8.pk3",
+    "compressed": 2501066,
+    "checksum": 2774532192
+  },
+  {
+    "name": "baseq3/q3dm9.pk3",
+    "compressed": 4385389,
+    "checksum": 3379204596
+  },
+  {
+    "name": "baseq3/q3key",
+    "compressed": 149,
+    "checksum": 3075996907
+  },
+  {
+    "name": "baseq3/q3tourney1.pk3",
+    "compressed": 1553240,
+    "checksum": 2661956644
+  },
+  {
+    "name": "baseq3/q3tourney2.pk3",
+    "compressed": 2617186,
+    "checksum": 1352506025
+  },
+  {
+    "name": "baseq3/q3tourney3.pk3",
+    "compressed": 2958091,
+    "checksum": 287870573
+  },
+  {
+    "name": "baseq3/q3tourney4.pk3",
+    "compressed": 1938694,
+    "checksum": 1376898871
+  },
+  {
+    "name": "baseq3/q3tourney5.pk3",
+    "compressed": 647969,
+    "checksum": 4140214576
+  },
+  {
+    "name": "baseq3/q3tourney6.pk3",
+    "compressed": 2790029,
+    "checksum": 453875369
+  },
+  {
+    "name": "baseq3/q3tourney6_ctf.pk3",
+    "compressed": 4009917,
+    "checksum": 4208944263
+  },
+  {
+    "name": "baseq3/test_bigbox.pk3",
+    "compressed": 35557,
+    "checksum": 2097140466
+  },
+  {
+    "name": "demoq3/pak100.pk3",
+    "compressed": 16286351,
+    "checksum": 1783214229
+  },
+  {
+    "name": "demoq3/pak101.pk3",
+    "compressed": 15630669,
+    "checksum": 665460121
+  },
+  {
+    "name": "demoq3/q3dm1.pk3",
+    "compressed": 4525534,
+    "checksum": 2753662778
+  },
+  {
+    "name": "demoq3/q3dm17.pk3",
+    "compressed": 2734884,
+    "checksum": 3067379874
+  },
+  {
+    "name": "demoq3/q3dm7.pk3",
+    "compressed": 5396153,
+    "checksum": 4228364540
+  },
+  {
+    "name": "demoq3/q3tourney2.pk3",
+    "compressed": 4138816,
+    "checksum": 2204733346
+  }
+]

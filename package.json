@@ -1,0 +1,36 @@
+{
+  "name": "quakejs",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node ./misc/quakejs/bin/web.js",
+    "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
+    "build:assets": "node bin/repak.js --src ../../data --dest ./assets"
+  },
+  "bin": {
+    "quakejs-content": "bin/content.js",
+    "quakejs-master": "bin/master.js",
+    "quakejs-repak": "bin/repak.js",
+    "quakejs-proxy": "bin/proxy.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inolen/quakejs.git"
+  },
+  "author": "Anthony Pesch",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "brotli": "^1.3.2",
+    "buffer-crc32": "~0.2.1",
+    "cors": "^2.8.5",
+    "dgram": "^1.0.1",
+    "express": "^4.17.1",
+    "memfs": "^3.0.3",
+    "mock-fs": "^4.10.4",
+    "quakejs-files": "0.0.3",
+    "source-map-support": "^0.5.16",
+    "underscore": "^1.9.2",
+    "unionfs": "^4.2.1",
+    "zlib": "^1.0.5"
+  }
+}
