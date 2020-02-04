@@ -3162,7 +3162,7 @@ static opus_uint32 op_rand(opus_uint32 _seed){
 
 # define OP_GAIN (32753.0F)
 
-# define OP_PRNG_GAIN (1.0F/4294967295.0F)
+# define OP_PRNG_GAIN (1.0F/0xFFFFFFFF)
 
 /*48 kHz noise shaping filter, sd=2.34.*/
 
@@ -3193,12 +3193,9 @@ static int op_float2short_filter(OggOpusFile *_of,void *_dst,int _dst_sz,
     }
   }
   else{
-    union {
-      opus_uint32   u;
-      float         f;
-    } seed;
+    opus_uint32 seed;
     int         mute;
-    seed.u=_of->dither_seed;
+    seed=_of->dither_seed;
     mute=_of->dither_mute;
     if(_of->state_channel_count!=_nchannels)mute=65;
     /*In order to avoid replacing digital silence with quiet dither noise, we
@@ -3208,10 +3205,7 @@ static int op_float2short_filter(OggOpusFile *_of,void *_dst,int _dst_sz,
       int silent;
       silent=1;
       for(ci=0;ci<_nchannels;ci++){
-        union {
-          opus_uint32  u;
-          float        f;
-        } r;
+        float r;
         float s;
         float err;
         int   si;
@@ -3228,16 +3222,16 @@ static int op_float2short_filter(OggOpusFile *_of,void *_dst,int _dst_sz,
         for(j=3;j-->0;)_of->dither_b[ci*4+j+1]=_of->dither_b[ci*4+j];
         _of->dither_a[ci*4]=err;
         s-=err;
-        if(mute>16)r.u=0;
+        if(mute>16)r=0;
         else{
-          seed.u=op_rand(seed.u);
-          r.f=seed.f*OP_PRNG_GAIN;
-          seed.u=op_rand(seed.u);
-          r.f-=seed.f*OP_PRNG_GAIN;
+          seed=op_rand(seed);
+          r=seed*OP_PRNG_GAIN;
+          seed=op_rand(seed);
+          r-=seed*OP_PRNG_GAIN;
         }
         /*Clamp in float out of paranoia that the input will be > 96 dBFS and
            wrap if the integer is clamped.*/
-        si=op_float2int(OP_CLAMP(-32768,s+r.u,32767));
+        si=op_float2int(OP_CLAMP(-32768,s+r,32767));
         dst[_nchannels*i+ci]=(opus_int16)si;
         /*Including clipping in the noise shaping is generally disastrous: the
            futile effort to restore the clipped energy results in more clipping.
@@ -3251,7 +3245,7 @@ static int op_float2short_filter(OggOpusFile *_of,void *_dst,int _dst_sz,
       if(!silent)mute=0;
     }
     _of->dither_mute=OP_MIN(mute,65);
-    _of->dither_seed=seed.u;
+    _of->dither_seed=seed;
   }
   _of->state_channel_count=_nchannels;
   return _nsamples;

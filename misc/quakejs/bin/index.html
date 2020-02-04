@@ -66,7 +66,7 @@
 <script>
 
 	function updateVideoCmd() {
-		var update = 'set r_fullscreen %fs; set r_mode -2; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+		var update = 'set r_fullscreen %fs; set r_mode -1; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
 			.replace('%fs', window.fullscreen ? '1' : '0')
 			.replace('%w', Module['viewport'].offsetWidth)
 			.replace('%h', Module['viewport'].offsetHeight)
@@ -83,6 +83,16 @@
 
 		if (resizeDelay) clearTimeout(resizeDelay);
 		resizeDelay = setTimeout(updateVideoCmd, 100);
+	}
+
+	function quitGameOnUnload(e) {
+		if(Module['viewport']) {
+			Module._Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
+			Module._Cbuf_Execute();
+			Module['viewport'].remove()
+			Module['viewport'] = null
+		}
+		return false
 	}
 
 	window.onload = function () {
