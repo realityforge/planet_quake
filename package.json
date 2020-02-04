@@ -27,6 +27,7 @@
     "express": "^4.17.1",
     "memfs": "^3.0.3",
     "mock-fs": "^4.10.4",
+    "nipplejs": "^0.8.5",
     "quakejs-files": "0.0.3",
     "source-map-support": "^0.5.16",
     "underscore": "^1.9.2",

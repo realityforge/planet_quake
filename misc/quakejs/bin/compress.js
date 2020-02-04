@@ -1,6 +1,6 @@
 var crc32 = require('buffer-crc32')
 var zlib = require('zlib')
-var brot = require('brotli')
+//var brot = require('brotli')
 
 // stream each file in, generating a hash for it's original
 // contents, and gzip'ing the buffer to determine the compressed

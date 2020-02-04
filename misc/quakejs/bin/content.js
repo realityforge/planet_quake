@@ -5,21 +5,29 @@ var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
 var {serveCompressed, compressFile} = require('./compress.js')
 
+var recursive = false
+var writeOut = false
+var repackFiles = false
+var pk3dir = false
 // TODO: Add some command line options here
 // --recursive -R, adds all directory files below current directory
 // --pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
+//   opposite of repack
 // --write -w, write all JSON files in every directory for CDN use
 // --repack -rp, repack on the fly as pk3/media/images/sound files are accessed
+//   opposit of pk3dir
 
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
 ufs.use(fs).use(vol)
 var mountPoint
 var mountPoints = []
-Array.from(process.argv).forEach((a) => {
+console.log(process.argv.length)
+for(var i = 0; i < process.argv.length; i++) {
+  var a = process.argv[i]
   if(fs.existsSync(a)) {
-		if(a.match(/\/node$/ig)) return true
-		if(a.match(/\/web\.js$/ig)) return true
+		if(a.match(/\/node$/ig)) continue
+		if(a.match(/\/web\.js$/ig)) continue
 		console.log('linking ' + a)
 		mountPoints.push(['/base', a])
     // create a link for user specified directory that doesn't exist
@@ -29,11 +37,25 @@ Array.from(process.argv).forEach((a) => {
 			mountPoints.push(['/assets', a])
     }
   // use an absolute path as a mount point if it doesn't exist
+  } else if(a == '--recursive' || a == '-R') {
+    console.log('Recursive')
+    recursive = true
+  } else if(a == '--pk3dir' || a == '-pk') {
+    console.log('Virtual pk3dirs')
+    pk3dir = true
+  } else if(a == '--write' || a == '-w') {
+    console.log('Writing manifest.json')
+    writeOut = true
+  } else if(a == '--repack' || a == '-rp') {
+    console.log('Live repacking')
+    repackFiles = true
   } else if (a.match(/^\//i)) {
 		console.log('mounting ' + a)
     mountPoint = a
+  } else {
+    console.log(`ERROR: Unrecognized option "${a}"`)
   }
-})
+}
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
 }
@@ -65,6 +87,14 @@ function readMultiDir(fullpath) {
 		if(ufs.existsSync(realpath)) {
 			var files = ufs.readdirSync(realpath).map(f => path.join(realpath, f))
 			dir.push.apply(dir, files)
+      if(recursive) {
+        for(var j = 0; j < files.length; j++) {
+          if(ufs.statSync(files[j]).isDirectory()) {
+            var moreFiles = readMultiDir(files[j])
+            dir.push.apply(dir, moreFiles)
+          }
+        }
+      }
 		}
 	}
 	return dir
@@ -101,7 +131,7 @@ async function serveIndexJson(req, res, next) {
 					compressFile(ufs.createReadStream(fullpath), resolve, reject)
 				})
 			}
-			manifest[fullpath] = Object.assign({name: path.basename(fullpath)}, file)
+			manifest[fullpath] = Object.assign({name: fullpath.replace(absolute, parsed.pathname)}, file)
 		}
 		vol.mkdirpSync(path.dirname(filename))
     vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    

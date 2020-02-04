@@ -161,7 +161,6 @@ var LibrarySysCommon = {
 		}
 
 		// TODO support filter
-		debugger;
 		
 		var contents;
 		try {

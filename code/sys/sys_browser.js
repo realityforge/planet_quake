@@ -158,6 +158,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)));
 		var fs_basegame = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)));
+		var sv_pure = UTF8ToString(_Cvar_VariableIntegerValue(
+				allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK)));
 		// mount a persistable filesystem into base
 		try {
 			FS.mkdir(fs_homepath);
@@ -213,7 +215,7 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(PATH.extname(json[k].name) === '.pk3') {
+						if(PATH.extname(json[k].name) === '.pk3' || !sv_pure) {
 							downloads.push(json[k].name);
 						} else {
 							FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
@@ -230,11 +232,11 @@ var LibrarySys = {
 							// TODO: update in game download status
 						}, (err, data) => {
 							if(err) return resolve(err);
-							FS.writeFile(PATH.join(fs_basepath, fs_basegame, file), data, {
+							FS.writeFile(PATH.join(fs_basepath, fs_basegame, file), new Uint8Array(data), {
 								encoding: 'binary', flags: 'w', canOwn: true });
 							resolve(file);
 						});
-					})).then(Browser.safeCallback(SYSC.ProxyCallback));
+					}))).then(Browser.safeCallback(SYSC.ProxyCallback));
 				}
 				
 				// TODO: create an icon for the favicon so we know we did it right
