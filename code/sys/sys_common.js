@@ -226,9 +226,9 @@ var LibrarySysCommon = {
 		var handle;
 		try {
 			ospath = allocate(intArrayFromString(UTF8ToString(ospath)
-				.replace(/^\/*base\//ig, '/')
 				.replace(/\/\//ig, '/')), 'i8', ALLOC_STACK);
-			mode = allocate(intArrayFromString(UTF8ToString(mode).replace('b', '')), 'i8', ALLOC_STACK);
+			mode = allocate(intArrayFromString(UTF8ToString(mode)
+				.replace('b', '')), 'i8', ALLOC_STACK);
 			handle = _fopen(ospath, mode);
 		} catch (e) {
 			// short for fstat check in sys_unix.c!!!

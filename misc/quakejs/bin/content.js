@@ -20,22 +20,16 @@ var pk3dir = false
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
 ufs.use(fs).use(vol)
-var mountPoint
+var mountPoint = '/assets'
 var mountPoints = []
-console.log(process.argv.length)
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(fs.existsSync(a)) {
 		if(a.match(/\/node$/ig)) continue
 		if(a.match(/\/web\.js$/ig)) continue
-		console.log('linking ' + a)
-		mountPoints.push(['/base', a])
+		console.log(`linking ${mountPoint} to ${a}`)
     // create a link for user specified directory that doesn't exist
-    if(mountPoint) {
-			mountPoints.push([mountPoint, a])
-    } else {
-			mountPoints.push(['/assets', a])
-    }
+    mountPoints.push([mountPoint, a])
   // use an absolute path as a mount point if it doesn't exist
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
@@ -131,7 +125,10 @@ async function serveIndexJson(req, res, next) {
 					compressFile(ufs.createReadStream(fullpath), resolve, reject)
 				})
 			}
-			manifest[fullpath] = Object.assign({name: fullpath.replace(absolute, parsed.pathname)}, file)
+      
+			manifest[fullpath] = Object.assign({
+        name: fullpath.replace(path.dirname(absolute), '')
+      }, file)
 		}
 		vol.mkdirpSync(path.dirname(filename))
     vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    
@@ -142,9 +139,10 @@ async function serveIndexJson(req, res, next) {
 function serveBaseQ3(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
 	const absolute = pathToAbsolute(parsed.pathname)
-  if (absolute) {
+  if (absolute && fs.existsSync(absolute)) {
     sendFile(absolute, res)
   } else {
+    console.log(`Couldn't find file "${parsed.pathname}" "${absolute}".`)
 		next()
 	}
 }
