@@ -975,6 +975,7 @@ ifeq ($(PLATFORM),js)
 		-fPIC
   OPTIMIZE = $(OPTIMIZEVM)
 
+# TODO: fix this, need to build QVM.js but not VM because WASM is an x86 VM
   HAVE_VM_COMPILED=true
   BUILD_GAME_QVM=0
   BUILD_STANDALONE=0

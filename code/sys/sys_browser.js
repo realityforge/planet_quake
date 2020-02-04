@@ -195,6 +195,7 @@ var LibrarySys = {
 				}
 			}
 			// TODO: remove this in favor of new remote FS code
+			var downloads = []
 			SYSC.DownloadAsset('/index.json', () => {}, (err, data) => {
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data));
 				// create virtual file entries for everything in the directory list
@@ -209,10 +210,32 @@ var LibrarySys = {
 							}
 						}
 					} else {
-						FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
-							encoding: 'binary', flags: 'w', canOwn: true });
+						// temporary FIX
+						// TODO: remove this with when Async file system loading works,
+						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
+						if(PATH.extname(json[k].name) === '.pk3') {
+							downloads.push(json[k].name);
+						} else {
+							FS.writeFile(PATH.join(fs_basepath, fs_basegame, json[k].name), blankFile, {
+								encoding: 'binary', flags: 'w', canOwn: true });
+						}
 					}
 				});
+				
+				if(downloads.length === 0) {
+					Browser.safeCallback(SYSC.ProxyCallback)();
+				} else {
+					Promise.all(downloads.map(file => new Promise(resolve => {
+						SYSC.DownloadAsset(file, () => {
+							// TODO: update in game download status
+						}, (err, data) => {
+							if(err) return resolve(err);
+							FS.writeFile(PATH.join(fs_basepath, fs_basegame, file), data, {
+								encoding: 'binary', flags: 'w', canOwn: true });
+							resolve(file);
+						});
+					})).then(Browser.safeCallback(SYSC.ProxyCallback));
+				}
 				
 				// TODO: create an icon for the favicon so we know we did it right
 				/*
@@ -225,7 +248,6 @@ var LibrarySys = {
 		    link.href = url;
 		    document.getElementsByTagName('head')[0].appendChild(link);
 				*/
-				Browser.safeCallback(SYSC.ProxyCallback)();
 			});
 		});
 	},

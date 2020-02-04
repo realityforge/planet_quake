@@ -34,6 +34,9 @@ Array.from(process.argv).forEach((a) => {
     mountPoint = a
   }
 })
+if(mountPoints.length === 0) {
+  console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
+}
 
 function sendFile(file, res) {
   // return file from baseq3 or index.json
