@@ -2417,7 +2417,6 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 	
 #ifdef EMSCRIPTEN
 	}
-	FS_RestartCallback(Com_GameRestart_After_Restart);
 }
 
 void Com_GameRestart_After_Restart( void )

@@ -114,7 +114,7 @@ var LibrarySys = {
 		SYS.mount(fs_homepath);
 		
 		// TODO: remove this
-		SYSC.FS_Startup(Browser.safeCallback(function (err) {
+		SYSC.FS_Startup(function (err) {
 			if (err) {
 				// FIXME cb_free_context(cb)
 				SYSC.Error('fatal', err);
@@ -122,7 +122,7 @@ var LibrarySys = {
 			}
 
 			SYSC.ProxyCallback(cb);
-		}));
+		});
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
@@ -131,14 +131,14 @@ var LibrarySys = {
 		
 		FS.unmount(fs_homepath);
 
-		SYSC.FS_Shutdown(Browser.safeCallback(function (err) {
+		SYSC.FS_Shutdown(function (err) {
 			if (err) {
 				SYSC.Error('fatal', err);
 				return;
 			}
 
 			SYSC.ProxyCallback(cb);
-		}));
+		});
 	},
 	Sys_Milliseconds: function () {
 		var time = process.hrtime();

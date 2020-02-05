@@ -4059,14 +4059,6 @@ void FS_Restart( int checksumFeed ) {
 	Com_Frame_Callback(Sys_FS_Shutdown, FS_Restart_After_Async);
 }
 
-void FS_RestartCallback(void (*cb)( void )) {
-	if(!CB_After_Restart) {
-		CB_After_Restart = cb;
-	} else {
-		Com_Error( ERR_FATAL, "Already returning after restart." );
-	}
-}
-
 void FS_Restart_After_Async( void ) {
 	const char *lastGameDir;
 #endif
@@ -4116,13 +4108,7 @@ void FS_Restart_After_Async( void ) {
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
 
 #ifdef EMSCRIPTEN
-	if(CB_After_Restart) {
-		Com_Printf( "--------- Callback after restart (%p) --------\n", &CB_After_Restart);
-		void (*cb)( void ) = CB_After_Restart;
-		CB_After_Restart = NULL;
-		// used by cl_parsegamestate/cl_initcgame
-		(*cb)();
-	}
+	Com_GameRestart_After_Restart();
 #endif
 }
 

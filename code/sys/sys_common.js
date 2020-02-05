@@ -48,18 +48,20 @@ var LibrarySysCommon = {
 			_Com_Error(level, err);
 		},
 		ProxyCallback: function () {
-			try {
-				_Com_Frame_Proxy();
-			} catch (e) {
-				if (e instanceof ExitStatus) {
-					return;
+			Browser.safeCallback(() => {
+				try {
+					_Com_Frame_Proxy();
+				} catch (e) {
+					if (e instanceof ExitStatus) {
+						return;
+					}
+					// TODO should we try and call back in using __Error?
+					var message = _S_Malloc(e.message.length + 1);
+					stringToUTF8(e.message, message, e.message.length+1);
+					_Sys_ErrorDialog(message);
+					throw e;
 				}
-				// TODO should we try and call back in using __Error?
-				var message = _S_Malloc(e.message.length + 1);
-				stringToUTF8(e.message, message, e.message.length+1);
-				_Sys_ErrorDialog(message);
-				throw e;
-			}
+			})()
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
 			var sv_dlURL = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('sv_dlURL'), 'i8', ALLOC_STACK)));
@@ -105,18 +107,10 @@ var LibrarySysCommon = {
 			//return crc === asset.checksum;
 		},
 		FS_Startup: function (callback) {
-			Browser.safeCallback(callback)();
-			// do something?
-			/*
-			SYSC.SyncDependencies(function (err) {
-				if (err) return callback(err);
-
-				SYSC.SyncPaks(Browser.safeCallback(callback));
-			});
-			*/
+			callback();
 		},
 		FS_Shutdown: function (callback) {
-			callback(null);
+			callback();
 		},
 	},
 	Sys_DefaultHomePath: function () {

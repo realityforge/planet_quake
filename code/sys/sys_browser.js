@@ -225,7 +225,7 @@ var LibrarySys = {
 				});
 				
 				if(downloads.length === 0) {
-					Browser.safeCallback(SYSC.ProxyCallback)();
+					SYSC.ProxyCallback();
 				} else {
 					Promise.all(downloads.map(file => new Promise(resolve => {
 						SYSC.DownloadAsset(file, () => {
@@ -236,7 +236,7 @@ var LibrarySys = {
 								encoding: 'binary', flags: 'w', canOwn: true });
 							resolve(file);
 						});
-					}))).then(Browser.safeCallback(SYSC.ProxyCallback));
+					}))).then(SYSC.ProxyCallback);
 				}
 				
 				// TODO: create an icon for the favicon so we know we did it right
@@ -254,17 +254,17 @@ var LibrarySys = {
 		});
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
-	Sys_FS_Shutdown: function () {
+	Sys_FS_Shutdown: function (cb) {
 		FS.syncfs(function (err) {
-			SYSC.FS_Shutdown(Browser.safeCallback(function (err) {
+			SYSC.FS_Shutdown(function (err) {
 				if (err) {
 					// FIXME cb_free_context(context)
 					SYSC.Error('fatal', err);
 					return;
 				}
 				
-				SYSC.ProxyCallback();
-			}));
+				SYSC.ProxyCallback(cb);
+			});
 		});
 	},
 	Sys_Milliseconds: function () {

@@ -11,7 +11,7 @@ const server = http.createServer(function(req, res) {
 var wss = new WebSocketServer({server});
 
 // TODO: rewrite this to use node dns
-var SERVER_IP = '35.208.205.189'
+var SERVER_IP = '127.0.0.1'
 var SERVER_PORT = 27960
  
 wss.on('error', function(error) {
@@ -21,7 +21,7 @@ wss.on('error', function(error) {
 wss.on('connection', function(ws) {
 	try {
 	
-		console.log("on connection....", ws);
+		console.log('on connection....');
 		//Create a udp socket for this websocket connection
 		var udpClient = dgram.createSocket('udp4');
 		
@@ -43,7 +43,13 @@ wss.on('connection', function(ws) {
 			var msgBuff = new Buffer.from(message);
 			try {
 				// TODO: sniff websocket connection to figure out how to intercept the server address
-				console.log(msgBuff.toString('utf-8'))
+				// emscripten qcommon/huffman.c and decode the message
+				// add cl_main.c getchallenge/connect net_ip to control this proxy server
+				// this will allow clients to control the proxy server to connect
+				//   to any server they want from the browser
+				//if(msgBuff.toString('utf-8').includes('connect ')) {
+				//	debugger;
+				//}
 				udpClient.send(msgBuff, 0, msgBuff.length, SERVER_PORT, SERVER_IP);
 			} catch(e) {
 				console.log("udpClient.send")
