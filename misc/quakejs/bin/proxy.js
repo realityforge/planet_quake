@@ -32,7 +32,9 @@ wss.on('connection', function(ws) {
 			//console.log("udp -> ws", msg);
 			try {
 				ws.send(msg);
-			} catch(e) { console.log(`ws.send(${e})`) }
+			} catch(e) {
+				console.log(`ws.send(${e})`)
+			}
 			//ws.send("test");
 		});
 	 
@@ -40,8 +42,12 @@ wss.on('connection', function(ws) {
 		ws.on('message', function(message) {
 			var msgBuff = new Buffer.from(message);
 			try {
+				// TODO: sniff websocket connection to figure out how to intercept the server address
+				console.log(msgBuff.toString('utf-8'))
 				udpClient.send(msgBuff, 0, msgBuff.length, SERVER_PORT, SERVER_IP);
-			} catch(e) { console.log("udpClient.send") }
+			} catch(e) {
+				console.log("udpClient.send")
+			}
 			//console.log("ws -> udp", message);
 		});
 	} catch (e) {

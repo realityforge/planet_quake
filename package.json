@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "node ./misc/quakejs/bin/web.js",
+    "proxy": "node ./misc/quakejs/bin/proxy.js",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
     "build:assets": "node bin/repak.js --src ../../data --dest ./assets"
   },
@@ -32,6 +33,7 @@
     "source-map-support": "^0.5.16",
     "underscore": "^1.9.2",
     "unionfs": "^4.2.1",
+    "ws": "^7.2.1",
     "zlib": "^1.0.5"
   }
 }

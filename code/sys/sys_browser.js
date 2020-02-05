@@ -10,7 +10,7 @@ var LibrarySys = {
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
-			'+set', 'net_enabled', '0',
+			'+set', 'net_enabled', '1',
 			'+set', 'developer', '0',
 			'+set', 'fs_debug', '0',
 			'+set', 'r_mode', '-1',
