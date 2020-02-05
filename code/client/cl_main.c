@@ -1944,9 +1944,7 @@ void CL_Vid_Restart_f( void ) {
 	// don't let them loop during the restart
 	S_StopAllSounds();
 
-#ifndef EMSCRIPTEN
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
-#endif
 	{
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)

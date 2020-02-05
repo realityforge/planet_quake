@@ -43,13 +43,23 @@ extern int Sys_CmdArgsC( void );
 #endif
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
+void FS_Startup( const char *gameName );
 void FS_Startup_After_Async( const char *gameName );
 void FS_InitFilesystem_After_Async( void );
 void Com_Init_After_Filesystem( void );
 void FS_Restart_After_Async( void );
 void CL_ParseGamestate_After_Restart( void );
-void FS_RestartCallback(void (*cb)( void ));
 void Com_GameRestart_After_Restart( void );
+
+void Com_GameRestart_User_After_Shutdown( void );
+void Com_GameRestart_User_After_Startup( void );
+void SV_SpawnServer_After_Shutdown( void );
+void SV_SpawnServer_After_Startup( void );
+void CL_ParseGamestate_Game_After_Shutdown( void );
+void CL_ParseGamestate_Game_After_Startup( void );
+void CL_ParseGamestate_After_Shutdown( void );
+void CL_ParseGamestate_After_Startup( void );
+
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
 void Com_Frame_Proxy( void );
 static void (*CB_After_Restart)( void );

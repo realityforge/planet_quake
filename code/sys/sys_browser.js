@@ -7,6 +7,7 @@ var LibrarySys = {
 		loading: null,
 		args: [
 			'+set', 'sv_dlURL', '"http://localhost:8080"',
+			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
@@ -151,7 +152,7 @@ var LibrarySys = {
 	Sys_GLimpSafeInit: function () {
 	},
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
-	Sys_FS_Startup: function () {
+	Sys_FS_Startup: function (cb) {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
 		var fs_basepath = UTF8ToString(_Cvar_VariableString(
@@ -225,7 +226,7 @@ var LibrarySys = {
 				});
 				
 				if(downloads.length === 0) {
-					SYSC.ProxyCallback();
+					SYSC.ProxyCallback(cb);
 				} else {
 					Promise.all(downloads.map(file => new Promise(resolve => {
 						SYSC.DownloadAsset(file, () => {
@@ -236,7 +237,7 @@ var LibrarySys = {
 								encoding: 'binary', flags: 'w', canOwn: true });
 							resolve(file);
 						});
-					}))).then(SYSC.ProxyCallback);
+					}))).then(() => SYSC.ProxyCallback(cb));
 				}
 				
 				// TODO: create an icon for the favicon so we know we did it right
@@ -255,6 +256,7 @@ var LibrarySys = {
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
+		debugger
 		FS.syncfs(function (err) {
 			SYSC.FS_Shutdown(function (err) {
 				if (err) {

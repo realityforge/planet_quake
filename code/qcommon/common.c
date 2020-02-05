@@ -2415,7 +2415,7 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 
 		FS_Restart(checksumFeed);
 	
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
 	}
 }
 
@@ -2460,6 +2460,22 @@ void Com_GameRestart_f(void)
 	Cvar_Set("fs_game", Cmd_Argv(1));
 
 	Com_GameRestart(0, qtrue);
+	
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
+}
+
+void Com_GameRestart_User_After_Shutdown( void )
+{
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, Com_GameRestart_User_After_Startup);
+}
+
+void Com_GameRestart_User_After_Startup( void ) {
+	FS_Startup_After_Async(com_basegame->string);
+	FS_Restart_After_Async();
+	Com_GameRestart_After_Restart();
+#endif
 }
 
 #ifndef STANDALONE
@@ -2718,12 +2734,19 @@ void Com_Init( char *commandLine ) {
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT|CVAR_PROTECTED);
 
 	FS_InitFilesystem ();
-#ifdef EMSCRIPTEN
+	
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+
+Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
 }
 
 void Com_Init_After_Filesystem( void ) {
 	char	*s;
 	int	qport;
+	// TODO: starting to see a pattern, split up every function in the tree to make asynchronous
+	//   Then call the leafs from the top function in the same order
+	FS_Startup_After_Async(com_basegame->string);
+	FS_InitFilesystem_After_Async();
 #endif
 
 	Com_InitJournaling();
@@ -3102,9 +3125,9 @@ void Com_Frame_Proxy( void ) {
 	if(CB_Frame_After) {
 		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
 		void (*cb)( void ) = CB_Frame_After;
+		CB_Frame_After = NULL; // start frame runner again
 		// used by cl_parsegamestate/cl_initcgame
 		(*cb)();
-		CB_Frame_After = NULL; // start frame runner again
 	}
 }
 #endif

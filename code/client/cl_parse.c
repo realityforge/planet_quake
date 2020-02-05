@@ -544,11 +544,42 @@ void CL_ParseGamestate( msg_t *msg ) {
 
 #ifndef EMSCRIPTEN
 	FS_ConditionalRestart(clc.checksumFeed, qfalse);
-#endif
+	
+#else
 
-#ifdef EMSCRIPTEN
+	if(FS_ConditionalRestart(clc.checksumFeed, qfalse)) {
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_Game_After_Shutdown);
+		}
+	} else {
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_After_Shutdown);
+		}
+	}
+	// always assume restart fs? should be low cost with a web-worker and new content server
+}
+
+void CL_ParseGamestate_Game_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_Game_After_Startup);
+}
+
+void CL_ParseGamestate_Game_After_Startup( void ) {
+	FS_Startup_After_Async(com_basegame->string);
+	FS_Restart_After_Async();
+	Com_GameRestart_After_Restart();
 	CL_ParseGamestate_After_Restart();
-	//FS_RestartCallback(CL_ParseGamestate_After_Restart);
+}
+
+void CL_ParseGamestate_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_After_Startup);
+}
+
+void CL_ParseGamestate_After_Startup( void ) {
+	FS_Startup_After_Async(com_basegame->string);
+	FS_Restart_After_Async();
+	CL_ParseGamestate_After_Restart();
 }
 
 void CL_ParseGamestate_After_Restart( void ) {

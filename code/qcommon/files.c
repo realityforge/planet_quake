@@ -3318,7 +3318,7 @@ static void FS_ReorderPurePaks( void )
 FS_Startup
 ================
 */
-static void FS_Startup( const char *gameName )
+void FS_Startup( const char *gameName )
 {
 	const char *homePath;
 
@@ -3335,13 +3335,13 @@ static void FS_Startup( const char *gameName )
 	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
 	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
-	Com_Printf( "----- FS_GAME (%s) -----\n", fs_basegame->string );
 #if EMSCRIPTEN
 }
 
 void FS_Startup_After_Async( const char *gameName )
 {
 #endif
+	Com_Printf( "----- FS_GAME (%s) -----\n", fs_basegame->string );
 
 	if (!gameName[0]) {
 		Cvar_ForceReset( "com_basegame" );
@@ -4007,14 +4007,12 @@ void FS_InitFilesystem( void ) {
 
 	// try to start up normally
 	FS_Startup(com_basegame->string);
-
+	
 #ifdef EMSCRIPTEN
-	Com_Frame_Callback(Sys_FS_Startup, FS_InitFilesystem_After_Async);
 }
 
 void FS_InitFilesystem_After_Async( void ) {
-	FS_Startup_After_Async(com_basegame->string);
-	Com_Init_After_Filesystem();
+	
 #endif
 
 #if !defined STANDALONE && !EMSCRIPTEN
@@ -4052,17 +4050,17 @@ void FS_Restart( int checksumFeed ) {
 	// clear pak references
 	FS_ClearPakReferences(0);
 
-#ifndef EMSCRIPTEN
+#if !defined(EMSCRIPTEN) || defined(DEDICATED)
 	// try to start up normally
 	FS_Startup(com_basegame->string);
 #else
-	Com_Frame_Callback(Sys_FS_Shutdown, FS_Restart_After_Async);
 }
 
 void FS_Restart_After_Async( void ) {
 	const char *lastGameDir;
 #endif
 
+// TODO: remove this restriction when new paks are sorted out
 #if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
@@ -4106,10 +4104,6 @@ void FS_Restart_After_Async( void ) {
 	Q_strncpyz(lastValidComBaseGame, com_basegame->string, sizeof(lastValidComBaseGame));
 	Q_strncpyz(lastValidFsBaseGame, fs_basegame->string, sizeof(lastValidFsBaseGame));
 	Q_strncpyz(lastValidGame, fs_gamedirvar->string, sizeof(lastValidGame));
-
-#ifdef EMSCRIPTEN
-	Com_GameRestart_After_Restart();
-#endif
 }
 
 /*
