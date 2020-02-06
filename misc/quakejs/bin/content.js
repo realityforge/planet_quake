@@ -20,7 +20,7 @@ var pk3dir = false
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
 ufs.use(fs).use(vol)
-var mountPoint = '/assets'
+var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]

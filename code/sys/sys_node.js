@@ -50,43 +50,7 @@ var LibrarySys = {
 			var localPath = path.resolve(fs_homepath);
 
 			// make sure the local path exists
-			var mkdirp = function (p) {
-				try {
-					FS.mkdir(p, 0777);
-				} catch (e) {
-					// make the subdirectory and then retry
-					if (e.code === 'ENOENT') {
-						mkdirp(PATH.dirname(p));
-						mkdirp(p);
-						return;
-					}
-
-					// if we got any other error, let's see if the directory already exists
-					var stat;
-					try {
-						stat = FS.stat(p);
-					}
-					catch (e) {
-						SYSC.Error('fatal', e.message || e);
-						return;
-					}
-
-					if (!stat.isDirectory()) {
-						SYSC.Error('fatal', e.message);
-					}
-				}
-			};
-			mkdirp(localPath);
-
-			// mount up the local filesystem in emscripten
-			var dir;
-			try {
-				dir = FS.mkdir(fs_homepath, 0777);
-			} catch (e) {
-				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-					SYSC.Error('fatal', e.message || e);
-				}
-			}
+			SYSC.mkdirp(localPath);
 
 			try {
 				FS.mount(NODEFS, { root: localPath }, fs_homepath);

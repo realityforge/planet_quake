@@ -6,14 +6,14 @@ var LibrarySys = {
 		style: null,
 		loading: null,
 		args: [
-			'+set', 'sv_dlURL', '"http://localhost:8080"',
+			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
 			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
 			'+set', 'net_enabled', '1',
-			'+set', 'developer', '1',
-			'+set', 'fs_debug', '1',
+			'+set', 'developer', '0',
+			'+set', 'fs_debug', '0',
 			'+set', 'r_mode', '-1',
 			'+set', 'r_customPixelAspect', '1',
 			'+set', 'sv_pure', '0',
@@ -154,13 +154,7 @@ var LibrarySys = {
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		
-		try {
-			FS.mkdir(PATH.join(fs_basepath, fs_game))
-		} catch (e) {
-			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-				SYSC.Error('fatal', e.message)
-			}
-		}
+		SYSC.mkdirp(PATH.join(fs_basepath, fs_game))
 		
 		SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
 			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadSize'), 'i8', ALLOC_STACK), total );
@@ -172,7 +166,7 @@ var LibrarySys = {
 				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })
 			}
-			SYSC.ProxyCallback(cb)
+			FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 		})
 	},
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
@@ -187,25 +181,23 @@ var LibrarySys = {
 				allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK)))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
-		// mount a persistable filesystem into base
-		try {
-			FS.mkdir(fs_homepath)
-			FS.mkdir(fs_basepath)
-		} catch (e) {
-			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-				SYSC.Error('fatal', e.message)
-			}
+		
+		var fsMountPath = fs_basegame
+		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
+			fsMountPath =  fs_game
 		}
+		
+		// mount a persistable filesystem into base
+		SYSC.mkdirp(fs_basepath)
 
 		try {
-			FS.mount(IDBFS, {}, fs_homepath)
 			FS.mount(IDBFS, {}, fs_basepath)
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EBUSY) {
 				SYSC.Error('fatal', e.message)
 			}
 		}
-
+		
 		var start = Date.now()
 		FS.syncfs(true, function (err) {
 			if (err) {
@@ -214,20 +206,11 @@ var LibrarySys = {
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
-			try {
-				FS.mkdir(PATH.join(fs_basepath, fs_basegame))
-			} catch (e) {
-				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-					SYSC.Error('fatal', e.message)
-				}
-			}
+			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
+
 			// TODO: remove this in favor of new remote FS code
 			var downloads = []
-			var index = '/index.json'
-			if(fs_game.localeCompare(fs_basegame) !== 0) {
-				index = '/' + fs_game + '/index.json'
-			}
-			SYSC.DownloadAsset(index, () => {}, (err, data) => {
+			SYSC.DownloadAsset(fsMountPath + '/index.json', () => {}, (err, data) => {
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(json)
@@ -235,19 +218,13 @@ var LibrarySys = {
 					var file = json[keys[i]]
 					const blankFile = new Uint8Array(4)
 					if(!file.checksum) { // create a directory
-						try {
-							FS.mkdir(PATH.join(fs_basepath, fs_basegame, file.name))
-						} catch (e) {
-							if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-								SYSC.Error('fatal', e.message)
-							}
-						}
+						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
 					} else {
 						// TODO: remove this check when webworker is installed
 						//   because it will check ETag and replace files
 						// only download again if the file does not exist
 						try {
-							var handle = FS.open(file.name, 'r')
+							var handle = FS.open(PATH.join(fs_basepath, fsMountPath, file.name), 'r')
 							FS.close(handle)
 							continue
 						} catch (e) {
@@ -259,10 +236,10 @@ var LibrarySys = {
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
 						if(PATH.extname(file.name) === '.pk3' || !sv_pure) {
-							downloads.push(file.name)
+							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {
-								FS.writeFile(PATH.join(fs_basepath, fs_basegame, file.name), blankFile, {
+								FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
 									encoding: 'binary', flags: 'w', canOwn: true })
 							} catch (e) {
 								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
@@ -282,7 +259,7 @@ var LibrarySys = {
 						}, (err, data) => {
 							if(err) return resolve(err)
 							try {
-								FS.writeFile(PATH.join(fs_basepath, fs_basegame, file), new Uint8Array(data), {
+								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
 									encoding: 'binary', flags: 'w', canOwn: true })
 							} catch (e) {
 								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
@@ -291,7 +268,7 @@ var LibrarySys = {
 							}
 							resolve(file)
 						})
-					}))).then(() => SYSC.ProxyCallback(cb))
+					}))).then(() => FS.syncfs(false, () => SYSC.ProxyCallback(cb)))
 				}
 				
 				// TODO: create an icon for the favicon so we know we did it right

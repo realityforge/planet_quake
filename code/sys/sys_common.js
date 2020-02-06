@@ -50,7 +50,7 @@ var LibrarySysCommon = {
 				? sv_dlURL
 				: window
 					? (window.location.protocol + '//' + sv_dlURL)
-					: ('https://' + sv_dlURL)) + '/assets/' + name;
+					: ('https://' + sv_dlURL)) + '/' + name;
 
 			SYS.DoXHR(url, {
 				dataType: 'arraybuffer',
@@ -63,6 +63,32 @@ var LibrarySysCommon = {
 		},
 		FS_Shutdown: function (callback) {
 			callback();
+		},
+		mkdirp: function (p) {
+			try {
+				FS.mkdir(p, 0777);
+			} catch (e) {
+				// make the subdirectory and then retry
+				if ((e instanceof FS.ErrnoError) && e.errno === ERRNO_CODES.ENOENT) {
+					SYSC.mkdirp(PATH.dirname(p));
+					SYSC.mkdirp(p);
+					return;
+				}
+
+				// if we got any other error, let's see if the directory already exists
+				var stat;
+				try {
+					stat = FS.stat(p);
+				}
+				catch (e) {
+					SYSC.Error('fatal', e.message || e);
+					return;
+				}
+
+				if (!FS.isDir(stat.mode)) {
+					SYSC.Error('fatal', e.message);
+				}
+			}
 		},
 	},
 	Sys_DefaultHomePath: function () {
