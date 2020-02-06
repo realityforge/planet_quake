@@ -153,7 +153,15 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
-				
+		
+		try {
+			FS.mkdir(PATH.join(fs_basepath, fs_game))
+		} catch (e) {
+			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+				SYSC.Error('fatal', e.message)
+			}
+		}
+		
 		SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
 			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadSize'), 'i8', ALLOC_STACK), total );
 			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadCount'), 'i8', ALLOC_STACK), loaded );
@@ -161,7 +169,7 @@ var LibrarySys = {
 			if(err) {
 				SYSC.Error('fatal', 'Download Error: ' + err.message)
 			} else {
-				FS.writeFile(PATH.join(fs_basepath, fs_game, cl_downloadName), new Uint8Array(data), {
+				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })
 			}
 			SYSC.ProxyCallback(cb)
