@@ -3109,7 +3109,9 @@ int Com_TimeVal(int minMsec)
 }
 
 #ifdef EMSCRIPTEN
+qboolean invokeFrameAfter = qfalse;
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	invokeFrameAfter = qfalse;
 	if(!CB_Frame_Proxy) {
 		CB_Frame_Proxy = cb;
 	} else {
@@ -3124,11 +3126,7 @@ void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 
 void Com_Frame_Proxy( void ) {
 	if(CB_Frame_After) {
-		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
-		void (*cb)( void ) = CB_Frame_After;
-		CB_Frame_After = NULL; // start frame runner again
-		// used by cl_parsegamestate/cl_initcgame
-		(*cb)();
+		invokeFrameAfter = qtrue;
 	}
 }
 
@@ -3172,6 +3170,15 @@ void Com_Frame( void ) {
 	}
 	
 	if(CB_Frame_After) {
+		if(!invokeFrameAfter) {
+			return;			
+		}
+		invokeFrameAfter = qfalse;
+		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
+		void (*cb)( void ) = CB_Frame_After;
+		CB_Frame_After = NULL; // start frame runner again
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
 		return;
 	}
 #endif

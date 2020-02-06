@@ -12,8 +12,8 @@ var LibrarySys = {
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
 			'+set', 'net_enabled', '1',
-			'+set', 'developer', '0',
-			'+set', 'fs_debug', '0',
+			'+set', 'developer', '1',
+			'+set', 'fs_debug', '1',
 			'+set', 'r_mode', '-1',
 			'+set', 'r_customPixelAspect', '1',
 			'+set', 'sv_pure', '0',
@@ -146,7 +146,7 @@ var LibrarySys = {
 	Sys_GLimpSafeInit: function () {
 	},
 	Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
-	Sys_BeginDownload: function (cb) {
+	Sys_BeginDownload: function () {
 		var cl_downloadName = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('cl_downloadName'), 'i8', ALLOC_STACK)))
 		var fs_basepath = UTF8ToString(_Cvar_VariableString(
@@ -166,7 +166,7 @@ var LibrarySys = {
 				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })
 			}
-			FS.syncfs(false, () => SYSC.ProxyCallback(cb))
+			FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
 		})
 	},
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
@@ -184,7 +184,7 @@ var LibrarySys = {
 		
 		var fsMountPath = fs_basegame
 		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
-			fsMountPath =  fs_game
+		//	fsMountPath =  fs_game
 		}
 		
 		// mount a persistable filesystem into base

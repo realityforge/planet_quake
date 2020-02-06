@@ -2267,7 +2267,7 @@ void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadCount = 0;
 
 #ifdef EMSCRIPTEN
-	Com_Frame_Callback(Sys_BeginDownload, CL_NextDownload);
+	Sys_BeginDownload();
 	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
 		!clc.dlDisconnect) {
 

@@ -143,6 +143,11 @@ async function serveIndexJson(req, res, next) {
 function serveBaseQ3(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
 	const absolute = pathToAbsolute(parsed.pathname)
+  if(absolute.includes('.pk3')) {
+    setTimeout(() => sendFile(absolute, res), 4000)
+    return
+  }
+
   if (absolute && fs.existsSync(absolute)) {
     sendFile(absolute, res)
   } else {
