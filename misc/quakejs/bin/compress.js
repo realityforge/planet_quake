@@ -72,9 +72,9 @@ async function compressFile(stream, writeStream) {
 }
 
 function sendCompressed(file, res, compress) {
-  res.append('content-encoding', 'gzip')
   // if compressed version already exists, send it directly
   if(ufs.existsSync(file + '.gz') && compress) {
+    res.append('content-encoding', 'gzip')
     file += '.gz'
   }
   if(file.includes('.gz') || !compress) {
@@ -91,6 +91,7 @@ function sendCompressed(file, res, compress) {
   // return file from baseq3 or index.json
   var readStream = ufs.createReadStream(file)
   var gzip = zlib.createGzip()
+  res.append('content-encoding', 'gzip')
   // TODO: res.append('Content-Length', file);
   readStream.on('open', function () {
     readStream.pipe(gzip).pipe(res)
