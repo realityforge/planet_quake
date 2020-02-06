@@ -167,7 +167,7 @@ var LibrarySys = {
 			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadCount'), 'i8', ALLOC_STACK), loaded );
 		}, (err, data) => {
 			if(err) {
-				SYSC.Error('fatal', 'Download Error: ' + err.message)
+				SYSC.Error('drop', 'Download Error: ' + err.message)
 			} else {
 				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })
@@ -221,7 +221,11 @@ var LibrarySys = {
 			}
 			// TODO: remove this in favor of new remote FS code
 			var downloads = []
-			SYSC.DownloadAsset('/index.json', () => {}, (err, data) => {
+			var index = '/index.json'
+			if(fs_game.localeCompare(fs_basegame) !== 0) {
+				index = '/' + fs_game + '/index.json'
+			}
+			SYSC.DownloadAsset(index, () => {}, (err, data) => {
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(json)

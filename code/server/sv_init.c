@@ -491,6 +491,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	FS_Restart_After_Async();
 
 #endif
+;
 
 	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 

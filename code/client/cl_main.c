@@ -928,7 +928,26 @@ void CL_DemoCompleted( void )
 	}
 
 	CL_Disconnect( qtrue );
+#ifndef EMSCRIPTEN
 	CL_NextDemo();
+
+#else
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
+	} else {
+		CL_NextDemo();
+	}
+}
+
+void CL_DemoCompleted_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_NextDemo();
+}
+
+void CL_DemoCompleted_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DemoCompleted_After_Startup);	
+#endif
 }
 
 /*
@@ -1740,6 +1759,7 @@ void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 	noGameRestart = qtrue;
+	// don't need to asyncify because noGameRestart is true
 	CL_Disconnect( qtrue );
 	Con_Close();
 
@@ -1946,6 +1966,31 @@ void CL_Vid_Restart_f( void ) {
 
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
 	{
+#ifdef EMSCRIPTEN
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
+		} else {
+			CL_Vid_Restart_After_Restart();
+		}
+	}
+}
+
+void CL_Vid_Restart_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
+}
+
+void CL_Vid_Restart_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_Vid_Restart_After_Restart();
+}
+
+void CL_Vid_Restart_After_Restart( void ) {
+	
+	{	/* if conditional */
+#endif
+;
+
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
 		{

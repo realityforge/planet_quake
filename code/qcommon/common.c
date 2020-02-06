@@ -2408,6 +2408,7 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 		if(com_gameClientRestarting)
 		{
 			if(disconnect)
+				// don't need to asyncify because restart already happens below
 				CL_Disconnect(qfalse);
 				
 			CL_Shutdown("Game directory changed", disconnect, qfalse);
