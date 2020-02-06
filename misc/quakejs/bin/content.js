@@ -3,7 +3,7 @@ var path = require('path')
 var {URL} = require('url')
 var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
-var {serveCompressed, compressFile} = require('./compress.js')
+var {sendCompressed, compressFile} = require('./compress.js')
 
 var recursive = false
 var writeOut = false
@@ -58,7 +58,7 @@ mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' 
 function sendFile(file, res) {
   // return file from baseq3 or index.json
   var readStream = ufs.createReadStream(file)
-// TODO: res.append('Content-Length', file);
+  res.append('content-length', fs.statSync(file).size);
   readStream.on('open', function () {
     readStream.pipe(res)
   })
@@ -137,19 +137,22 @@ async function serveIndexJson(req, res, next) {
 		vol.mkdirpSync(path.dirname(filename))
     vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    
   }
-  sendFile(filename, res)
+  if(req.headers['accept-encoding'].includes('gzip')) {
+    sendCompressed(filename, res)
+  } else {
+    sendFile(filename, res)      
+  }
 }
 
 function serveBaseQ3(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
 	const absolute = pathToAbsolute(parsed.pathname)
-  if(absolute.includes('.pk3')) {
-    setTimeout(() => sendFile(absolute, res), 4000)
-    return
-  }
-
   if (absolute && fs.existsSync(absolute)) {
-    sendFile(absolute, res)
+    if(req.headers['accept-encoding'].includes('gzip')) {
+      sendCompressed(absolute, res)
+    } else {
+      sendFile(absolute, res)      
+    }
   } else {
     console.log(`Couldn't find file "${parsed.pathname}" "${absolute}".`)
 		next()

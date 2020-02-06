@@ -24,7 +24,7 @@ var LibrarySysCommon = {
 			err = allocate(intArrayFromString(err + '\n'), 'i8', ALLOC_STACK);
 			if(!err) err = UTF8ToString(err);
 
-			_Com_Error(level, err);
+			Browser.safeCallback(() => _Com_Error(level, err))();
 		},
 		ProxyCallback: function () {
 			Browser.safeCallback(() => {

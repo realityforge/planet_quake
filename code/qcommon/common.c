@@ -3159,6 +3159,24 @@ void Com_Frame( void ) {
 	int		timeBeforeClient;
 	int		timeAfter;
 
+	if ( setjmp (abortframe) ) {
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+		CB_Frame_Proxy = NULL;
+		CB_Frame_After = NULL;
+		invokeFrameAfter = qfalse;
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+		}
+#endif
+		return;			// an ERR_DROP was thrown
+	}
+
+	timeBeforeFirstEvents =0;
+	timeBeforeServer =0;
+	timeBeforeEvents =0;
+	timeBeforeClient = 0;
+	timeAfter = 0;
+
 #ifdef EMSCRIPTEN
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
@@ -3182,21 +3200,6 @@ void Com_Frame( void ) {
 		return;
 	}
 #endif
-
-	if ( setjmp (abortframe) ) {
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
-		}
-#endif
-		return;			// an ERR_DROP was thrown
-	}
-
-	timeBeforeFirstEvents =0;
-	timeBeforeServer =0;
-	timeBeforeEvents =0;
-	timeBeforeClient = 0;
-	timeAfter = 0;
 
 	// write config file if anything changed
 	Com_WriteConfiguration(); 

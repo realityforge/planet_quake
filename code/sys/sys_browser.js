@@ -162,6 +162,7 @@ var LibrarySys = {
 		}, (err, data) => {
 			if(err) {
 				SYSC.Error('drop', 'Download Error: ' + err.message)
+				return
 			} else {
 				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })

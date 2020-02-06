@@ -35,6 +35,5 @@ app.use('/', express.static(path.join(__dirname), { extensions: ['html'] }))
 app.use('/', express.static(path.join(__dirname, '../../../build/release-js-js'), { extensions: ['wasm'] }))
 app.use(serveIndexJson)
 app.use(serveBaseQ3)
-app.use(serveCompressed)
 
 app.listen(8080)

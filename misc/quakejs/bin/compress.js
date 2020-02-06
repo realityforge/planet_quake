@@ -1,5 +1,6 @@
 var crc32 = require('buffer-crc32')
 var zlib = require('zlib')
+var {ufs} = require('unionfs')
 //var brot = require('brotli')
 
 // stream each file in, generating a hash for it's original
@@ -37,11 +38,21 @@ function compressFile(stream, resolve, reject) {
   })
 }
 
-function serveCompressed(req, res, next) {
-  next()
+function sendCompressed(file, res) {
+  // return file from baseq3 or index.json
+  var readStream = ufs.createReadStream(file)
+  var gzip = zlib.createGzip()
+  res.append('content-encoding', 'gzip')
+  // TODO: res.append('Content-Length', file);
+  readStream.on('open', function () {
+    readStream.pipe(gzip).pipe(res)
+  })
+  readStream.on('error', function(err) {
+    res.end(err)
+  })
 }
 
 module.exports = {
   compressFile,
-  serveCompressed
+  sendCompressed
 }
