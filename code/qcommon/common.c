@@ -3134,6 +3134,7 @@ void Com_Frame_Proxy( void ) {
 
 void Com_Frame_After_Startup() {
 	FS_Restart_After_Async();
+	Com_GameRestart_After_Restart();
 }
 
 void Com_Frame_After_Shutdown() {
