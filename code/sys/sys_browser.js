@@ -155,8 +155,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 				
 		SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
-			_Cvar_SetValue( "cl_downloadSize", total );
-			_Cvar_SetValue( "cl_downloadCount", loaded );
+			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadSize'), 'i8', ALLOC_STACK), total );
+			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadCount'), 'i8', ALLOC_STACK), loaded );
 		}, (err, data) => {
 			if(err) {
 				SYSC.Error('fatal', 'Download Error: ' + err.message)
