@@ -3,12 +3,15 @@ var path = require('path')
 var {URL} = require('url')
 var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
-var {sendCompressed, compressFile} = require('./compress.js')
+var { Readable } = require('stream')
+var {compressFile, compressDirectory} = require('./compress.js')
 
 var recursive = false
 var writeOut = false
 var repackFiles = false
 var pk3dir = false
+var runContentGeneration = false
+var includeHidden = false
 // TODO: Add some command line options here
 // --recursive -R, adds all directory files below current directory
 // --pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
@@ -16,6 +19,7 @@ var pk3dir = false
 // --write -w, write all JSON files in every directory for CDN use
 // --repack -rp, repack on the fly as pk3/media/images/sound files are accessed
 //   opposit of pk3dir
+// --hidden -h, include hidden files (uncommon)
 
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
@@ -27,6 +31,10 @@ for(var i = 0; i < process.argv.length; i++) {
   if(fs.existsSync(a)) {
 		if(a.match(/\/node$/ig)) continue
 		if(a.match(/\/web\.js$/ig)) continue
+    if(a.match(/\/content\.js$/ig)) {
+      runContentGeneration = true
+      continue
+    }
 		console.log(`linking ${mountPoint} to ${a}`)
     // create a link for user specified directory that doesn't exist
     mountPoints.push([mountPoint, a])
@@ -34,6 +42,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
     recursive = true
+  } else if(a == '--hidden' || a == '-h') {
+    console.log('Hidden files')
+    includeHidden = true
   } else if(a == '--pk3dir' || a == '-pk') {
     console.log('Virtual pk3dirs')
     pk3dir = true
@@ -55,18 +66,6 @@ if(mountPoints.length === 0) {
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
-function sendFile(file, res) {
-  // return file from baseq3 or index.json
-  var readStream = ufs.createReadStream(file)
-  res.append('content-length', fs.statSync(file).size);
-  readStream.on('open', function () {
-    readStream.pipe(res)
-  })
-  readStream.on('error', function(err) {
-    res.end(err)
-  })
-}
-
 function pathToAbsolute(virtualPath) {
   var result
 	for(var i = 0; i < mountPoints.length; i++) {
@@ -77,90 +76,73 @@ function pathToAbsolute(virtualPath) {
   return result
 }
 
-function readMultiDir(fullpath) {
+function readMultiDir(fullpath, forceRecursive) {
 	var dir = []
-	for(var i = 0; i < mountPoints.length; i++) {
-		const realpath = fullpath.replace(mountPoints[i][0], mountPoints[i][1])
-		if(ufs.existsSync(realpath)) {
-			var files = ufs.readdirSync(realpath).map(f => path.join(realpath, f))
-			dir.push.apply(dir, files)
-      if(recursive) {
-        for(var j = 0; j < files.length; j++) {
-          if(ufs.statSync(files[j]).isDirectory()) {
-            var moreFiles = readMultiDir(files[j])
-            dir.push.apply(dir, moreFiles)
-          }
+  // skip pk3dirs in repack mode because they will be zipped by indexer
+  if(repackFiles && !forceRecursive
+    && fullpath.includes('.pk3dir')
+    && ufs.statSync(fullpath).isDirectory()) {
+    return dir
+  }
+  if(ufs.existsSync(fullpath)) {
+    var files = ufs.readdirSync(fullpath)
+      .map(f => path.join(fullpath, f))
+      .filter(f => includeHidden || path.basename(f)[0] != '.')
+    dir.push.apply(dir, files)
+    if(recursive || forceRecursive) {
+      for(var j = 0; j < files.length; j++) {
+        if(ufs.statSync(files[j]).isDirectory()) {
+          var moreFiles = readMultiDir(files[j], forceRecursive)
+          dir.push.apply(dir, moreFiles)
         }
       }
-		}
-	}
+    }
+  } else {
+    throw new Error(`Cannot find directory ${fullpath}`)
+  }
 	return dir
 }
 
-async function serveIndexJson(req, res, next) {
-  const parsed = new URL(`https://local${req.url}`)
-	var absolute = pathToAbsolute(parsed.pathname)
-  // return index.json for directories or return a file out of baseq3
-	var filename
-  if(absolute
-	  && ufs.existsSync(absolute)
-	  && ufs.statSync(absolute).isDirectory()) {
-		filename = path.join(parsed.pathname, 'index.json')
-    absolute = pathToAbsolute(filename)
-	} else if (absolute
-	  && ufs.existsSync(path.dirname(absolute))
-		&& ufs.statSync(path.dirname(absolute)).isDirectory()
-		&& parsed.pathname.match(/\/index\.json$/ig)) {
-		filename = parsed.pathname
-	} else {
-		return next()
-	}
-	
+async function makeIndexJson(filename, absolute) {
   // if there is no index.json, generate one
-  if(!ufs.existsSync(filename)) {
-		var files = readMultiDir(path.dirname(filename))
+  if(filename && !ufs.existsSync(absolute)) {
+		var files = readMultiDir(path.dirname(absolute))
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]
-			if(!ufs.existsSync(fullpath)) return true
+			if(!ufs.existsSync(fullpath)) continue
+      vol.mkdirpSync(path.dirname(fullpath))
 			var file = {}
 			if(ufs.statSync(fullpath).isFile()) {
-				file = await new Promise((resolve, reject) => {
-					compressFile(ufs.createReadStream(fullpath), resolve, reject)
-				})
-			}
+				file = await compressFile(
+          ufs.createReadStream(fullpath),
+          vol.createWriteStream(fullpath + '.gz')
+        )
+			} else if(repackFiles && fullpath.includes('.pk3dir')) {
+        var newPk3 = fullpath.replace('.pk3dir', '.pk3')
+        await compressDirectory(
+          readMultiDir(fullpath, true),
+          vol.createWriteStream(newPk3),
+          fullpath
+        )
+        file = await compressFile(
+          ufs.createReadStream(newPk3),
+          vol.createWriteStream(newPk3 + '.gz')
+        )
+        fullpath = newPk3
+      }
       
 			manifest[fullpath] = Object.assign({
         name: fullpath.replace(path.dirname(absolute), '')
       }, file)
 		}
-		vol.mkdirpSync(path.dirname(filename))
-    vol.writeFileSync(filename, JSON.stringify(manifest, null, 2))    
+    console.log(`writing directory index ${absolute}`)
+		vol.mkdirpSync(path.dirname(absolute))
+    vol.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
   }
-  if(req.headers['accept-encoding'].includes('gzip')) {
-    sendCompressed(filename, res)
-  } else {
-    sendFile(filename, res)      
-  }
-}
-
-function serveBaseQ3(req, res, next) {
-  const parsed = new URL(`https://local${req.url}`)
-	const absolute = pathToAbsolute(parsed.pathname)
-  if (absolute && fs.existsSync(absolute)) {
-    if(req.headers['accept-encoding'].includes('gzip')) {
-      sendCompressed(absolute, res)
-    } else {
-      sendFile(absolute, res)      
-    }
-  } else {
-    console.log(`Couldn't find file "${parsed.pathname}" "${absolute}".`)
-		next()
-	}
 }
 
 module.exports = {
-	serveBaseQ3,
-	serveIndexJson,
-	sendFile
+	makeIndexJson,
+	pathToAbsolute,
 }
