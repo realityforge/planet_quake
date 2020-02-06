@@ -185,7 +185,7 @@ var LibrarySys = {
 		
 		var fsMountPath = fs_basegame
 		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
-		//	fsMountPath =  fs_game
+			fsMountPath = fs_game // TODO: comment this out to test server induced downloading
 		}
 		
 		// mount a persistable filesystem into base
