@@ -488,7 +488,6 @@ void SV_SpawnServer_After_Startup( void ) {
 	qboolean	isBot;
 	char		systemInfo[16384];
 	const char	*p;
-	FS_Startup_After_Async(com_basegame->string);
 	FS_Restart_After_Async();
 
 #endif

@@ -43,6 +43,7 @@ extern int Sys_CmdArgsC( void );
 #endif
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
+extern void Sys_BeginDownload( void );
 void FS_Startup( const char *gameName );
 void FS_Startup_After_Async( const char *gameName );
 void FS_InitFilesystem_After_Async( void );

@@ -550,13 +550,16 @@ void CL_ParseGamestate( msg_t *msg ) {
 	if(FS_ConditionalRestart(clc.checksumFeed, qfalse)) {
 		if(!FS_Initialized()) {
 			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_Game_After_Shutdown);
+			return;
 		}
 	} else {
 		if(!FS_Initialized()) {
 			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_After_Shutdown);
+			return;
 		}
 	}
 	// always assume restart fs? should be low cost with a web-worker and new content server
+	CL_ParseGamestate_After_Restart();
 }
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
@@ -565,7 +568,6 @@ void CL_ParseGamestate_Game_After_Shutdown( void ) {
 }
 
 void CL_ParseGamestate_Game_After_Startup( void ) {
-	FS_Startup_After_Async(com_basegame->string);
 	FS_Restart_After_Async();
 	Com_GameRestart_After_Restart();
 	CL_ParseGamestate_After_Restart();
@@ -577,7 +579,6 @@ void CL_ParseGamestate_After_Shutdown( void ) {
 }
 
 void CL_ParseGamestate_After_Startup( void ) {
-	FS_Startup_After_Async(com_basegame->string);
 	FS_Restart_After_Async();
 	CL_ParseGamestate_After_Restart();
 }

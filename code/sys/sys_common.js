@@ -1,27 +1,6 @@
 var LibrarySysCommon = {
 	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Error'],
 	$SYSC: {
-		cb_context_t: {
-			__size__: 8,
-			data: 0,
-			cb: 4
-		},
-		startup_data_t: {
-			__size__: 4100,
-			gameName: 0,
-			after: 4096
-		},
-		download_progress_data_t: {
-			__size__: 8,
-			loaded: 0,
-			total: 4
-		},
-		download_complete_data_t: {
-			__size__: 4,
-			progress: 0,
-		},
-		eula: '',
-		manifest: null,
 		Print: function (str) {
 			str = allocate(intArrayFromString(str + '\n'), 'i8', ALLOC_STACK);
 
@@ -64,7 +43,8 @@ var LibrarySysCommon = {
 			})()
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
-			var sv_dlURL = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('sv_dlURL'), 'i8', ALLOC_STACK)));
+			var sv_dlURL = UTF8ToString(_Cvar_VariableString(
+				allocate(intArrayFromString('sv_dlURL'), 'i8', ALLOC_STACK)));
 			var name = asset.replace(/^\//, ''); //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
 			var url = (sv_dlURL.includes('://')
 				? sv_dlURL
@@ -77,34 +57,6 @@ var LibrarySysCommon = {
 				onprogress: onprogress,
 				onload: onload
 			});
-		},
-		SavePak: function (name, buffer, callback) {
-			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
-			var localPath = PATH.join(fs_homepath, name);
-
-			try {
-				FS.mkdir(PATH.dirname(localPath), 0777);
-			} catch (e) {
-				if (e.errno !== ERRNO_CODES.EEXIST) {
-					return callback(e);
-				}
-			}
-
-			try {
-				FS.writeFile(localPath, new Uint8Array(buffer), {
-					encoding: 'binary', flags: 'w', canOwn: true });
-			} catch (e) {
-				throw e;
-			}
-			
-			FS.syncfs(callback);
-		},
-		ValidatePak: function (asset) {
-			var fs_homepath = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
-			var localPath = PATH.join(fs_homepath, asset.name);
-			//var crc = SYSC.CRC32File(localPath);
-			return true;
-			//return crc === asset.checksum;
 		},
 		FS_Startup: function (callback) {
 			callback();
@@ -226,7 +178,7 @@ var LibrarySysCommon = {
 			handle = _fopen(ospath, mode);
 		} catch (e) {
 			// short for fstat check in sys_unix.c!!!
-			if(e.code === 'ENOENT') {
+			if(e.code == 'ENOENT') {
 				return 0;
 			}
 			throw e;

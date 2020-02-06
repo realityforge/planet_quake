@@ -4058,6 +4058,7 @@ void FS_Restart( int checksumFeed ) {
 
 void FS_Restart_After_Async( void ) {
 	const char *lastGameDir;
+	FS_Startup_After_Async(com_basegame->string);
 #endif
 
 // TODO: remove this restriction when new paks are sorted out

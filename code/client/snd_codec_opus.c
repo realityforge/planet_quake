@@ -243,7 +243,6 @@ snd_stream_t *S_OggOpus_CodecOpenStream(const char *filename)
 	if (!of)
 	{
 		S_CodecUtilClose(&stream);
-
 		return NULL;
 	}
 

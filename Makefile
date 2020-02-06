@@ -1010,7 +1010,7 @@ ifeq ($(PLATFORM),js)
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
-    -s NO_EXIT_RUNTIME=1 \
+    -s NO_EXIT_RUNTIME=0 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
@@ -1034,8 +1034,8 @@ ifeq ($(PLATFORM),js)
     --js-library $(LIBVMJS) \
 		-lnodefs.js \
     -s USE_SDL=2 \
+		-s NO_EXIT_RUNTIME=0 \
     -s INVOKE_RUN=1 \
-		-s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \

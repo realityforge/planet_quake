@@ -2080,6 +2080,30 @@ void CL_Clientinfo_f( void ) {
 	Com_Printf( "--------------------------------------\n" );
 }
 
+#ifdef EMSCRIPTEN
+
+void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
+	FS_Restart_After_Async();
+	clc.dlDisconnect = qfalse;
+	CL_Reconnect_f();
+}
+
+void CL_DownloadsComplete_Disconnected_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_Disconnected_After_Startup);
+}
+
+void CL_DownloadsComplete_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_AddReliableCommand("donedl", qfalse);
+}
+
+void CL_DownloadsComplete_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_After_Startup);
+}
+
+#endif
 
 //====================================================================
 
@@ -2091,6 +2115,17 @@ Called when all downloading has been completed
 =================
 */
 void CL_DownloadsComplete( void ) {
+
+#ifdef EMSCRIPTEN
+if(clc.dlDisconnect) {
+	if(clc.downloadRestart) {
+		FS_Restart(clc.checksumFeed);
+		clc.downloadRestart = qfalse;
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+	}
+	return;
+}
+#endif
 
 #ifdef USE_CURL
 	// if we downloaded with cURL
@@ -2114,7 +2149,10 @@ void CL_DownloadsComplete( void ) {
 		clc.downloadRestart = qfalse;
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
+#ifdef EMSCRIPTEN
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_After_Shutdown);
+		return;
+#endif
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand("donedl", qfalse);
 
@@ -2183,7 +2221,20 @@ void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
 
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(Sys_BeginDownload, CL_NextDownload);
+	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
+		!clc.dlDisconnect) {
+
+		CL_AddReliableCommand("disconnect", qtrue);
+		CL_WritePacket();
+		CL_WritePacket();
+		CL_WritePacket();
+		clc.dlDisconnect = qtrue;
+	}
+#else
 	CL_AddReliableCommand(va("download %s", remoteName), qfalse);
+#endif
 }
 
 /*
@@ -2264,6 +2315,31 @@ void CL_NextDownload(void)
 				cl_allowDownload->integer);
 		}
 #endif /* USE_CURL */
+#ifdef EMSCRIPTEN
+		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
+			if(clc.sv_allowDownload & DLF_NO_REDIRECT) {
+				Com_Printf("WARNING: server does not "
+					"allow download redirection "
+					"(sv_allowDownload is %d)\n",
+					clc.sv_allowDownload);
+			}
+			else if(!*clc.sv_dlURL) {
+				Com_Printf("WARNING: server allows "
+					"download redirection, but does not "
+					"have sv_dlURL set\n");
+			}
+			else {
+				CL_BeginDownload( localName, remoteName );
+				useCURL = qtrue;
+			}
+		}
+		else if(!(clc.sv_allowDownload & DLF_NO_REDIRECT)) {
+			Com_Printf("WARNING: server allows download "
+				"redirection, but it disabled by client "
+				"configuration (cl_allowDownload is %d)\n",
+				cl_allowDownload->integer);
+		}
+#endif /* EMSCRIPTEN */
 		if(!useCURL) {
 			if((cl_allowDownload->integer & DLF_NO_UDP)) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
@@ -2298,7 +2374,6 @@ and determine if we need to download them
 void CL_InitDownloads(void) {
   char missingfiles[1024];
 
-#ifndef EMSCRIPTEN
   if ( !(cl_allowDownload->integer & DLF_ENABLE) )
   {
     // autodownload is disabled on the client
@@ -2328,7 +2403,6 @@ void CL_InitDownloads(void) {
 		}
 
 	}
-#endif
 
 	CL_DownloadsComplete();
 }

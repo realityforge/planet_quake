@@ -2472,7 +2472,6 @@ void Com_GameRestart_User_After_Shutdown( void )
 }
 
 void Com_GameRestart_User_After_Startup( void ) {
-	FS_Startup_After_Async(com_basegame->string);
 	FS_Restart_After_Async();
 	Com_GameRestart_After_Restart();
 #endif
@@ -2747,6 +2746,7 @@ void Com_Init_After_Filesystem( void ) {
 	//   Then call the leafs from the top function in the same order
 	FS_Startup_After_Async(com_basegame->string);
 	FS_InitFilesystem_After_Async();
+	
 #endif
 
 	Com_InitJournaling();
