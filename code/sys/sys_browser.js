@@ -185,6 +185,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)))
 		var sv_pure = UTF8ToString(_Cvar_VariableIntegerValue(
 				allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK)))
+		var fs_game = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		// mount a persistable filesystem into base
 		try {
 			FS.mkdir(fs_homepath)

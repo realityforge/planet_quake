@@ -3131,6 +3131,16 @@ void Com_Frame_Proxy( void ) {
 		(*cb)();
 	}
 }
+
+void Com_Frame_After_Startup() {
+	FS_Restart_After_Async();
+}
+
+void Com_Frame_After_Shutdown() {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, Com_Frame_After_Startup);
+}
+
 #endif
 
 /*
@@ -3166,6 +3176,11 @@ void Com_Frame( void ) {
 #endif
 
 	if ( setjmp (abortframe) ) {
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+		}
+#endif
 		return;			// an ERR_DROP was thrown
 	}
 
