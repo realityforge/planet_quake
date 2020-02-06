@@ -53,10 +53,12 @@ for(var i = 0; i < process.argv.length; i++) {
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
 }
+mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
 function sendFile(file, res) {
   // return file from baseq3 or index.json
   var readStream = ufs.createReadStream(file)
+// TODO: res.append('Content-Length', file);
   readStream.on('open', function () {
     readStream.pipe(res)
   })
@@ -65,13 +67,14 @@ function sendFile(file, res) {
   })
 }
 
-function pathToAbsolute(path) {
+function pathToAbsolute(virtualPath) {
+  var result
 	for(var i = 0; i < mountPoints.length; i++) {
-		var fullpath = path.replace(mountPoints[i][0], mountPoints[i][1])
-		if(fullpath.localeCompare(path) !== 0) {
-			return fullpath
+		if(virtualPath.includes(mountPoints[i][0])) {
+			result = path.join(mountPoints[i][1], virtualPath.replace(mountPoints[i][0], ''))
 		}
 	}
+  return result
 }
 
 function readMultiDir(fullpath) {
@@ -96,13 +99,14 @@ function readMultiDir(fullpath) {
 
 async function serveIndexJson(req, res, next) {
   const parsed = new URL(`https://local${req.url}`)
-	const absolute = pathToAbsolute(parsed.pathname)
+	var absolute = pathToAbsolute(parsed.pathname)
   // return index.json for directories or return a file out of baseq3
 	var filename
   if(absolute
 	  && ufs.existsSync(absolute)
 	  && ufs.statSync(absolute).isDirectory()) {
 		filename = path.join(parsed.pathname, 'index.json')
+    absolute = pathToAbsolute(filename)
 	} else if (absolute
 	  && ufs.existsSync(path.dirname(absolute))
 		&& ufs.statSync(path.dirname(absolute)).isDirectory()

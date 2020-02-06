@@ -149,6 +149,8 @@ var LibrarySys = {
 	Sys_BeginDownload: function (cb) {
 		var cl_downloadName = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('cl_downloadName'), 'i8', ALLOC_STACK)))
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 				
