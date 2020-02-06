@@ -157,7 +157,7 @@ var LibrarySys = {
 			_Cvar_SetValue( "cl_downloadCount", loaded );
 		}, (err, data) => {
 			if(err) {
-				SYSC.Error('fatal', 'Download Error: ' + e.message)
+				SYSC.Error('fatal', 'Download Error: ' + err.message)
 			} else {
 				FS.writeFile(PATH.join(fs_basepath, fs_game, cl_downloadName), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })

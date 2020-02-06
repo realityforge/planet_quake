@@ -2316,6 +2316,7 @@ void CL_NextDownload(void)
 		}
 #endif /* USE_CURL */
 #ifdef EMSCRIPTEN
+// TODO: add check for HTTP only using strcmp
 		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
 			if(clc.sv_allowDownload & DLF_NO_REDIRECT) {
 				Com_Printf("WARNING: server does not "
