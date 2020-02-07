@@ -33,7 +33,7 @@ async function serveUnionFs(req, res, next) {
     await makeIndexJson(filename, absolute)
   }
   if (absolute && ufs.existsSync(absolute)) {
-    sendCompressed(absolute, res, false) //req.headers['accept-encoding'].includes('gzip'))
+    sendCompressed(absolute, res, req.headers['accept-encoding'])
   } else {
     console.log(`Couldn't find file "${req.url}" "${absolute}".`)
 		next()

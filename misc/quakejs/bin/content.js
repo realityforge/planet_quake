@@ -12,14 +12,16 @@ var repackFiles = false
 var pk3dir = false
 var runContentGeneration = false
 var includeHidden = false
+var watchChanges = false
 // TODO: Add some command line options here
 // --recursive -R, adds all directory files below current directory
 // --pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
 //   opposite of repack
-// --write -w, write all JSON files in every directory for CDN use
+// --write -wr, write all JSON files in every directory for CDN use
 // --repack -rp, repack on the fly as pk3/media/images/sound files are accessed
 //   opposit of pk3dir
 // --hidden -h, include hidden files (uncommon)
+// --watch, watch files for changes
 
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
@@ -48,9 +50,12 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--pk3dir' || a == '-pk') {
     console.log('Virtual pk3dirs')
     pk3dir = true
-  } else if(a == '--write' || a == '-w') {
+  } else if(a == '--write' || a == '-wr') {
     console.log('Writing manifest.json')
     writeOut = true
+  } else if(a == '--watch') {
+    console.log('Watching for changes')
+    watchChanges = true
   } else if(a == '--repack' || a == '-rp') {
     console.log('Live repacking')
     repackFiles = true
@@ -116,10 +121,13 @@ async function makeIndexJson(filename, absolute) {
 			if(ufs.statSync(fullpath).isFile()) {
 				file = await compressFile(
           ufs.createReadStream(fullpath),
-          vol.createWriteStream(fullpath + '.gz')
+          vol.createWriteStream(fullpath + '.br'),
+          vol.createWriteStream(fullpath + '.gz'),
+          vol.createWriteStream(fullpath + '.df')
         )
 			} else if(repackFiles && fullpath.includes('.pk3dir')) {
         var newPk3 = fullpath.replace('.pk3dir', '.pk3')
+        console.log(`archiving ${newPk3}`)
         await compressDirectory(
           readMultiDir(fullpath, true),
           vol.createWriteStream(newPk3),
@@ -127,7 +135,9 @@ async function makeIndexJson(filename, absolute) {
         )
         file = await compressFile(
           ufs.createReadStream(newPk3),
-          vol.createWriteStream(newPk3 + '.gz')
+          vol.createWriteStream(newPk3 + '.br'),
+          vol.createWriteStream(newPk3 + '.gz'),
+          vol.createWriteStream(newPk3 + '.df')
         )
         fullpath = newPk3
       }
