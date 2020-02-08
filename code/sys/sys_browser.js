@@ -17,6 +17,7 @@ var LibrarySys = {
 			'+set', 'r_mode', '-1',
 			'+set', 'r_customPixelAspect', '1',
 			'+set', 'sv_pure', '0',
+			'+set', 'cg_simpleItems', '1',
 			// these settings were set by the emscripten build
 			//'+connect', 'proxy.quake.games:443',
 			/*
@@ -208,6 +209,12 @@ var LibrarySys = {
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
+
+			// TODO: is this right? exit early without downloading anything so the server can force it instead
+			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
+				return
+			}
 
 			// TODO: remove this in favor of new remote FS code
 			var downloads = []

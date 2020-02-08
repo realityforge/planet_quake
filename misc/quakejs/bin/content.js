@@ -33,6 +33,8 @@ for(var i = 0; i < process.argv.length; i++) {
   if(fs.existsSync(a)) {
 		if(a.match(/\/node$/ig)) continue
 		if(a.match(/\/web\.js$/ig)) continue
+    // if running content script directly, automatically call each mount point 
+    //   so the json files and zipped files can be generated
     if(a.match(/\/content\.js$/ig)) {
       runContentGeneration = true
       continue
