@@ -472,7 +472,7 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
 	FS_Restart( sv.checksumFeed );
 	
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
 
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }

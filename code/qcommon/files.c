@@ -4050,7 +4050,7 @@ void FS_Restart( int checksumFeed ) {
 	// clear pak references
 	FS_ClearPakReferences(0);
 
-#if !defined(EMSCRIPTEN) || defined(DEDICATED)
+#ifndef EMSCRIPTEN
 	// try to start up normally
 	FS_Startup(com_basegame->string);
 #else

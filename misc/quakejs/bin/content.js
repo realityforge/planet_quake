@@ -39,7 +39,7 @@ for(var i = 0; i < process.argv.length; i++) {
       runContentGeneration = true
       continue
     }
-		console.log(`linking ${mountPoint} to ${a}`)
+		console.log(`Linking ${mountPoint} -> ${a}`)
     // create a link for user specified directory that doesn't exist
     mountPoints.push([mountPoint, a])
   // use an absolute path as a mount point if it doesn't exist
@@ -53,16 +53,18 @@ for(var i = 0; i < process.argv.length; i++) {
     console.log('Virtual pk3dirs')
     pk3dir = true
   } else if(a == '--write' || a == '-wr') {
-    console.log('Writing manifest.json')
+    console.log('Writing manifest.json, not watching')
     writeOut = true
+    watchChanges = false
   } else if(a == '--watch') {
-    console.log('Watching for changes')
+    console.log('Watching for changes, not writing')
     watchChanges = true
+    writeOut = false
   } else if(a == '--repack' || a == '-rp') {
     console.log('Live repacking')
     repackFiles = true
   } else if (a.match(/^\//i)) {
-		console.log('mounting ' + a)
+		console.log('Using mount point ' + a)
     mountPoint = a
   } else {
     console.log(`ERROR: Unrecognized option "${a}"`)
@@ -73,11 +75,52 @@ if(mountPoints.length === 0) {
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
+function watchForChanges() {
+  var chokidar = require('chokidar');
+  var watcher = chokidar.watch(mountPoints.map(m => m[1] + '/**'), {
+    interval: 1000,
+    atomic: 1000,
+    awaitWriteFinish: true
+  })
+  var doing = false
+  watcher.on('change', function(changePath) {
+    if(doing) return
+    doing = true
+    // remove all cache files from the directory tree
+    var keys = Object.keys(vol.toJSON())
+    for(var i = 0; i < mountPoints.length; i++) {
+      if(changePath.includes(mountPoints[i][1])) {
+        // remove all files in the affected mount point
+        console.log(`Changes detected in ${mountPoints[i][1]}, unlinking...`)
+        for(var j = 0; j < keys.length; j++) {
+          if(keys[j].includes(mountPoints[i][1])) {
+            try {
+              // remove memfs cache of files
+              vol.unlinkSync(keys[j])
+            } catch (e) {
+              // already removed?
+              if(!e.code == 'ENOENT') throw e
+            }
+          }
+        }
+      }
+    }
+    doing = false
+  })
+}
+if(watchChanges) {
+  watchForChanges()
+}
+
 function pathToAbsolute(virtualPath) {
   var result
 	for(var i = 0; i < mountPoints.length; i++) {
 		if(virtualPath.includes(mountPoints[i][0])) {
-			result = path.join(mountPoints[i][1], virtualPath.replace(mountPoints[i][0], ''))
+      result = path.join(mountPoints[i][1],
+        virtualPath.replace(mountPoints[i][0], ''))
+      if(ufs.existsSync(result)) {
+        return result
+      }
 		}
 	}
   return result
@@ -110,6 +153,35 @@ function readMultiDir(fullpath, forceRecursive) {
 	return dir
 }
 
+async function repackPk3Dir(fullpath) {
+  if(!ufs.statSync(fullpath).isDirectory()) {
+    throw new Error(`Provided path ${fullpath} is not a directory.`)
+  }
+  var newPk3 = fullpath.replace('.pk3dir', '.pk3')
+  console.log(`archiving ${newPk3}`)
+  await compressDirectory(
+    readMultiDir(fullpath, true),
+    vol.createWriteStream(newPk3),
+    fullpath
+  )
+  file = await compressFile(
+    vol.createReadStream(newPk3),
+    vol.createWriteStream(newPk3 + '.br'),
+    vol.createWriteStream(newPk3 + '.gz'),
+    vol.createWriteStream(newPk3 + '.df')
+  )
+  return file
+}
+
+async function cacheFile(fullpath) {
+  return await compressFile(
+    ufs.createReadStream(fullpath),
+    vol.createWriteStream(fullpath + '.br'),
+    vol.createWriteStream(fullpath + '.gz'),
+    vol.createWriteStream(fullpath + '.df')
+  )
+}
+
 async function makeIndexJson(filename, absolute) {
   // if there is no index.json, generate one
   if(filename && !ufs.existsSync(absolute)) {
@@ -121,32 +193,16 @@ async function makeIndexJson(filename, absolute) {
       vol.mkdirpSync(path.dirname(fullpath))
 			var file = {}
 			if(ufs.statSync(fullpath).isFile()) {
-				file = await compressFile(
-          ufs.createReadStream(fullpath),
-          vol.createWriteStream(fullpath + '.br'),
-          vol.createWriteStream(fullpath + '.gz'),
-          vol.createWriteStream(fullpath + '.df')
-        )
-			} else if(repackFiles && fullpath.includes('.pk3dir')) {
-        var newPk3 = fullpath.replace('.pk3dir', '.pk3')
-        console.log(`archiving ${newPk3}`)
-        await compressDirectory(
-          readMultiDir(fullpath, true),
-          vol.createWriteStream(newPk3),
-          fullpath
-        )
-        file = await compressFile(
-          ufs.createReadStream(newPk3),
-          vol.createWriteStream(newPk3 + '.br'),
-          vol.createWriteStream(newPk3 + '.gz'),
-          vol.createWriteStream(newPk3 + '.df')
-        )
-        fullpath = newPk3
+				file = await cacheFile(fullpath)
+			} else if(repackFiles && fullpath.includes('.pk3dir')
+        && ufs.statSync(fullpath).isDirectory()) {
+        file = await repackPk3Dir(fullpath)
+        fullpath = fullpath.replace('.pk3dir', '.pk3')
       }
-      
-			manifest[fullpath] = Object.assign({
+
+			manifest[fullpath] = Object.assign(file, {
         name: fullpath.replace(path.dirname(absolute), '')
-      }, file)
+      })
 		}
     console.log(`writing directory index ${absolute}`)
 		vol.mkdirpSync(path.dirname(absolute))
@@ -157,4 +213,5 @@ async function makeIndexJson(filename, absolute) {
 module.exports = {
 	makeIndexJson,
 	pathToAbsolute,
+  repackPk3Dir,
 }

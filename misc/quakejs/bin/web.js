@@ -17,7 +17,7 @@ function pathToDirectoryIndex(url) {
     && ufs.existsSync(absolute)
     && ufs.statSync(absolute).isDirectory()) {
     filename = path.join(parsed.pathname, 'index.json')
-    absolute = pathToAbsolute(filename)
+    absolute = path.join(absolute, 'index.json')
   } else if (absolute
     && ufs.existsSync(path.dirname(absolute))
     && ufs.statSync(path.dirname(absolute)).isDirectory()

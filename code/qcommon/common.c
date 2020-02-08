@@ -2416,7 +2416,7 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 
 		FS_Restart(checksumFeed);
 	
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
 	}
 }
 
@@ -2462,7 +2462,7 @@ void Com_GameRestart_f(void)
 
 	Com_GameRestart(0, qtrue);
 	
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
 	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
 }
 
@@ -2735,7 +2735,7 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem ();
 	
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
 
 Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
 }
@@ -3160,7 +3160,7 @@ void Com_Frame( void ) {
 	int		timeAfter;
 
 	if ( setjmp (abortframe) ) {
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
 		CB_Frame_Proxy = NULL;
 		CB_Frame_After = NULL;
 		invokeFrameAfter = qfalse;

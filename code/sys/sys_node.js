@@ -70,11 +70,11 @@ var LibrarySys = {
 	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$SYSC'],
 	Sys_FS_Startup: function (cb) {
 		// mount a persistable fs into base if not already mounted
-		var name = allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK);
-		var fs_basepath = UTF8ToString(_Cvar_VariableString(name));
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)));
 		SYS.mount(fs_basepath);
-		name = allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK);
-		var fs_homepath = UTF8ToString(_Cvar_VariableString(name));
+		var fs_homepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)));
 		SYS.mount(fs_homepath);
 		
 		// TODO: remove this
