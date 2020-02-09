@@ -6229,7 +6229,7 @@ struct libwebrtc_context* libwebrtc_create_context( lwrtc_callback_function call
 		var ctx = $0;
 		libwebrtc.connections = new Map();
 		libwebrtc.channels = new Map();
-		libwebrtc.on_event = _libwebrtc_helper;
+		libwebrtc.on_event = Browser.safeCallback(_libwebrtc_helper);
 		libwebrtc.options = {};
 
 		libwebrtc.create = function() {
@@ -6423,7 +6423,7 @@ void libwebrtc_set_stun_servers( struct libwebrtc_context* ctx, const char** ser
 	for( int i = 0; i < count; ++i ) {
 		EM_ASM_INT({
 			var server = {};
-			server.urls = "stun:" + Pointer_stringify($0);
+			server.urls = "stun:" + UTF8ToString($0);
 			Module.__libwebrtc.options.iceServers.push( server );
 		}, *servers);
 		servers++;
@@ -6481,7 +6481,7 @@ int libwebrtc_set_offer( struct libwebrtc_connection* connection, const char* sd
 
 		var offer = {};
 		offer.type = 'offer';
-		offer.sdp = Pointer_stringify( $1 );
+		offer.sdp = UTF8ToString( $1 );
 
 		connection.setRemoteDescription( new Module.__libwebrtc.RTCSessionDescription( offer ) )
 			.then(function() {
@@ -6511,7 +6511,7 @@ int libwebrtc_set_answer( struct libwebrtc_connection* connection, const char* s
 
 		var offer = {};
 		offer.type = 'answer';
-		offer.sdp = Pointer_stringify( $1 );
+		offer.sdp = UTF8ToString( $1 );
 
 		connection.setRemoteDescription( new Module.__libwebrtc.RTCSessionDescription( offer ) )
 			.then( function() {
@@ -6530,7 +6530,7 @@ int libwebrtc_add_ice_candidate( struct libwebrtc_connection* connection, const 
 			return 0;
 
 		var options = {};
-		options.candidate = Pointer_stringify($1);
+		options.candidate = UTF8ToString($1);
 
 		if( connection.iceConnectionState == 'checking' || connection.iceConnectionState == 'connected'
 		   // FF workaround
@@ -6555,7 +6555,7 @@ struct libwebrtc_data_channel* libwebrtc_create_channel( struct libwebrtc_connec
 			channel = connection.default_channel;
 			connection.default_channel = 0;
 		}else
-			channel = Module.__libwebrtc.create_channel( connection, Pointer_stringify($1) );
+			channel = Module.__libwebrtc.create_channel( connection, UTF8ToString($1) );
 
 		return channel._id;
 
@@ -6781,7 +6781,7 @@ struct libwebsocket_context* libwebsocket_create_context_extended( struct lws_co
 		var ctx = $0;
 
 		libwebsocket.sockets = new Map();
-		libwebsocket.on_event = _libwebsocket_helper;
+		libwebsocket.on_event = Browser.safeCallback(_libwebsocket_helper);
 		libwebsocket.connect = function( url, protocol, user_data ) {
 			try {
 				var socket = new WebSocket(url,protocol);
@@ -6858,7 +6858,7 @@ void libwebsocket_context_destroy(struct libwebsocket_context* ctx ) {
 struct libwebsocket* libwebsocket_client_connect_extended(struct libwebsocket_context* ctx , const char* url, const char* protocol, void* user_data ) {
 
 	struct libwebsocket* s =  (struct libwebsocket*)EM_ASM_INT({
-		var socket = Module.__libwebsocket.connect( Pointer_stringify($0), Pointer_stringify($1), $2);
+		var socket = Module.__libwebsocket.connect( UTF8ToString($0), UTF8ToString($1), $2);
 		if( ! socket )
 			return 0;
 
