@@ -107,16 +107,7 @@ void GLimp_InitExtraExtensions(void)
 	// OpenGL 3.0 - GL_ARB_texture_float
 	extension = "GL_ARB_texture_float";
 	glRefConfig.textureFloat = qfalse;
-	if (q_gl_version_at_least_3_0 || SDL_GL_ExtensionSupported(extension))
-	{
-		glRefConfig.textureFloat = !!r_ext_texture_float->integer;
-
-		ri.Printf(PRINT_ALL, result[glRefConfig.textureFloat], extension);
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, result[2], extension);
-	}
+	ri.Printf(PRINT_ALL, result[2], extension);
 
 	// OpenGL 3.2 - GL_ARB_depth_clamp
 	extension = "GL_ARB_depth_clamp";

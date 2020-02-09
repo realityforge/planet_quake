@@ -830,6 +830,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+#ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -842,7 +843,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
-
+#endif
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;
 		address.sin_addr.s_addr = INADDR_ANY;
@@ -1416,6 +1417,7 @@ NET_GetCvars
 ====================
 */
 static qboolean NET_GetCvars( void ) {
+	int port;
 	int modified;
 
 #ifdef DEDICATED
@@ -1436,12 +1438,18 @@ static qboolean NET_GetCvars( void ) {
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
-	
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH );
+
+#if EMSCRIPTEN && DEDICATED
+	Com_RandomBytes((byte*)&port, sizeof(int));
+	port &= 0xffff;
+#else
+	port = PORT_SERVER;
+#endif
+	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
-	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 

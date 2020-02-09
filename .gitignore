@@ -2,6 +2,7 @@ build
 Makefile.local
 *.swp
 *tags
+*.tags*
 *~
 
 # OS X
@@ -39,3 +40,14 @@ profile
 *.sdf
 *.opensdf
 *.suo
+
+# emscripten
+####################
+base
+misc/quakejs/lib/emsdk/node_modules/
+misc/quakejs/node_modules
+node_modules
+.resources
+misc/quakejs/assets/baseq3/*
+misc/quakejs/assets/in
+data

@@ -30,6 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #else
 #include <winsock.h>
 #endif
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+static void (*CB_Frame_Proxy)( void ) = NULL;
+static void (*CB_Frame_After)( void ) = NULL;
+#endif
 
 int demo_protocols[] =
 { 67, 66, 0 };
@@ -388,7 +393,11 @@ void Com_Quit_f( void ) {
 		Com_Shutdown ();
 		FS_Shutdown(qtrue);
 	}
+#ifndef EMSCRIPTEN
 	Sys_Quit ();
+#else
+	Com_Frame_Callback(Sys_FS_Shutdown, Sys_Quit);
+#endif
 }
 
 
@@ -2399,6 +2408,7 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 		if(com_gameClientRestarting)
 		{
 			if(disconnect)
+				// don't need to asyncify because restart already happens below
 				CL_Disconnect(qfalse);
 				
 			CL_Shutdown("Game directory changed", disconnect, qfalse);
@@ -2406,6 +2416,15 @@ void Com_GameRestart(int checksumFeed, qboolean disconnect)
 
 		FS_Restart(checksumFeed);
 	
+#ifdef EMSCRIPTEN
+	}
+}
+
+void Com_GameRestart_After_Restart( void )
+{
+	qboolean disconnect = qfalse;
+	{
+#endif
 		// Clean out any user and VM created cvars
 		Cvar_Restart(qtrue);
 		Com_ExecuteCfg();
@@ -2442,6 +2461,21 @@ void Com_GameRestart_f(void)
 	Cvar_Set("fs_game", Cmd_Argv(1));
 
 	Com_GameRestart(0, qtrue);
+	
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
+}
+
+void Com_GameRestart_User_After_Shutdown( void )
+{
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, Com_GameRestart_User_After_Startup);
+}
+
+void Com_GameRestart_User_After_Startup( void ) {
+	FS_Restart_After_Async();
+	Com_GameRestart_After_Restart();
+#endif
 }
 
 #ifndef STANDALONE
@@ -2700,6 +2734,21 @@ void Com_Init( char *commandLine ) {
 	com_homepath = Cvar_Get("com_homepath", "", CVAR_INIT|CVAR_PROTECTED);
 
 	FS_InitFilesystem ();
+	
+#ifdef EMSCRIPTEN
+
+Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
+}
+
+void Com_Init_After_Filesystem( void ) {
+	char	*s;
+	int	qport;
+	// TODO: starting to see a pattern, split up every function in the tree to make asynchronous
+	//   Then call the leafs from the top function in the same order
+	FS_Startup_After_Async(com_basegame->string);
+	FS_InitFilesystem_After_Async();
+	
+#endif
 
 	Com_InitJournaling();
 
@@ -3059,6 +3108,40 @@ int Com_TimeVal(int minMsec)
 	return timeVal;
 }
 
+#ifdef EMSCRIPTEN
+qboolean invokeFrameAfter = qfalse;
+void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	invokeFrameAfter = qfalse;
+	if(!CB_Frame_Proxy) {
+		CB_Frame_Proxy = cb;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling a frame proxy." );
+	}
+	if(!CB_Frame_After) {
+		CB_Frame_After = af;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling back to frame." );
+	}
+}
+
+void Com_Frame_Proxy( void ) {
+	if(CB_Frame_After) {
+		invokeFrameAfter = qtrue;
+	}
+}
+
+void Com_Frame_After_Startup() {
+	FS_Restart_After_Async();
+	Com_GameRestart_After_Restart();
+}
+
+void Com_Frame_After_Shutdown() {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, Com_Frame_After_Startup);
+}
+
+#endif
+
 /*
 =================
 Com_Frame
@@ -3078,6 +3161,14 @@ void Com_Frame( void ) {
   
 
 	if ( setjmp (abortframe) ) {
+#ifdef EMSCRIPTEN
+		CB_Frame_Proxy = NULL;
+		CB_Frame_After = NULL;
+		invokeFrameAfter = qfalse;
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+		}
+#endif
 		return;			// an ERR_DROP was thrown
 	}
 
@@ -3086,6 +3177,30 @@ void Com_Frame( void ) {
 	timeBeforeEvents =0;
 	timeBeforeClient = 0;
 	timeAfter = 0;
+
+#ifdef EMSCRIPTEN
+	if(CB_Frame_Proxy) {
+		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
+		void (*cb)( void ) = CB_Frame_Proxy;
+		CB_Frame_Proxy = NULL;
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
+		return;
+	}
+	
+	if(CB_Frame_After) {
+		if(!invokeFrameAfter) {
+			return;			
+		}
+		invokeFrameAfter = qfalse;
+		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
+		void (*cb)( void ) = CB_Frame_After;
+		CB_Frame_After = NULL; // start frame runner again
+		// used by cl_parsegamestate/cl_initcgame
+		(*cb)();
+		return;
+	}
+#endif
 
 	// write config file if anything changed
 	Com_WriteConfiguration(); 

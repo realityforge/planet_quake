@@ -63,6 +63,13 @@ For Mac OS X, building a Universal Binary
   4. Copy the resulting ioquake3.app in /build/release-darwin-ub to your
      /Applications/ioquake3 folder.
 
+For Javascript
+  1. Make sure node and emscripten is installed
+  2. Run ```npm install```
+  3. Run ```make PLATFORM=js EMSCRIPTEN=<path_to_emscripten>```
+  4. Start the content server ```node misc/quakejs/bin/content.js```
+  5. Start the web server ```node misc/quakejs/bin/web.js --config misc/quakejs/bin/web.json```
+
 Installation, for *nix
   1. Set the COPYDIR variable in the shell to be where you installed Quake 3
      to. By default it will be /usr/local/games/quake3 if you haven't set it.
@@ -546,5 +553,6 @@ Significant contributions from
   * Vincent S. Cojot <vincent at cojot dot name>
   * optical <alex@rigbo.se>
   * Aaron Gyes <floam@aaron.gy>
+  * Brian J. Cullinan <megamindbrian@gmail.com> with support from @klaussilveira, @inolen, @NTT123 (JS build mode)
 
 

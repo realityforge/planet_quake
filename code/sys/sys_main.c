@@ -30,6 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#define SDL_HasMMXExt SDL_HasMMX
+#define SDL_Has3DNowExt SDL_Has3DNow
+#endif
 
 #ifndef DEDICATED
 #ifdef USE_LOCAL_HEADERS
@@ -298,6 +303,10 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 
 	Sys_PlatformExit( );
 
+#ifdef EMSCRIPTEN
+	emscripten_cancel_main_loop();	
+	emscripten_force_exit( exitCode );
+#endif
 	exit( exitCode );
 }
 
@@ -579,7 +588,7 @@ Used to load a development dll instead of a virtual machine
 =================
 */
 void *Sys_LoadGameDll(const char *name,
-	intptr_t (QDECL **entryPoint)(int, ...),
+	intptr_t (QDECL **entryPoint)(int, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11),
 	intptr_t (*systemcalls)(intptr_t, ...))
 {
 	void *libHandle;
@@ -643,7 +652,9 @@ void Sys_ParseArgs( int argc, char **argv )
 }
 
 #ifndef DEFAULT_BASEDIR
-#	ifdef __APPLE__
+#	ifdef EMSCRIPTEN
+#		define DEFAULT_BASEDIR "/base"
+#	elif __APPLE__
 #		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
 #	else
 #		define DEFAULT_BASEDIR Sys_BinaryPath()
@@ -736,6 +747,14 @@ int main( int argc, char **argv )
 	Sys_ParseArgs( argc, argv );
 	Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
 	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
+	
+#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+// bullshit because onRuntimeInitialized does execute consistently
+//   held up by some sort of WarningHandler race condition
+	argc = Sys_CmdArgsC();
+	Com_Printf("Getting args %i", argc);
+	argv = Sys_CmdArgs();
+#endif
 
 	// Concatenate the command line for passing to Com_Init
 	for( i = 1; i < argc; i++ )
@@ -762,11 +781,24 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
+#ifdef EMSCRIPTEN
+	#ifdef DEDICATED
+	// HACK for now to prevent Browser lib from calling
+	// requestAnimationFrame on dedicated builds.
+	emscripten_set_main_loop(Com_Frame, 25, 0);
+	#else
+	emscripten_set_main_loop(Com_Frame, 25, 0);
+	#endif
+#else
 	while( 1 )
 	{
 		Com_Frame( );
 	}
+#endif
+
+#if EMSCRIPTEN
+	emscripten_exit_with_live_runtime();
+#endif
 
 	return 0;
 }
-

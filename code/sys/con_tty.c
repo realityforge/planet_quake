@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <signal.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <sys/select.h>
 #include <sys/time.h>
 
 /*
@@ -44,7 +45,14 @@ called before and after a stdout or stderr output
 =============================================================
 */
 
+#ifdef EMSCRIPTEN
+static qboolean stdinIsATTY;
+void CON_SetIsTTY(qboolean isTTY) {
+	stdinIsATTY = isTTY;
+}
+#else
 extern qboolean stdinIsATTY;
+#endif
 static qboolean stdin_active;
 // general flag to tell about tty console mode
 static qboolean ttycon_on = qfalse;

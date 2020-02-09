@@ -1576,6 +1576,7 @@ typedef struct {
 	int						shiftedEntityNum;	// currentEntityNum << QSORT_REFENTITYNUM_SHIFT
 	model_t					*currentModel;
 
+	qboolean shadersInitialized;
 	//
 	// GPU shader programs
 	//

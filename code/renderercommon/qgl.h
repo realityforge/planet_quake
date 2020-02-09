@@ -26,10 +26,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __QGL_H__
 #define __QGL_H__
 
-#ifdef USE_LOCAL_HEADERS
-#	include "SDL_opengl.h"
+#ifdef EMSCRIPTEN
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
+#include <SDL_opengles2.h>
+#include <SDL_opengles2_gl2.h>
+#include <SDL_opengles2_gl2ext.h>
 #else
-#	include <SDL_opengl.h>
+#ifdef USE_LOCAL_HEADERS
+#include "SDL_opengl.h"
+#else
+#include <SDL_opengl.h>
+#endif
 #endif
 
 extern void (APIENTRYP qglActiveTextureARB) (GLenum texture);
