@@ -2,10 +2,11 @@ var express = require('express')
 var path = require('path')
 var {ufs} = require('unionfs')
 var express = require('express')
-var {pathToAbsolute, makeIndexJson} = require('./content.js')
+var {pathToAbsolute, makeIndexJson, repackPk3Dir} = require('./content.js')
 var {sendCompressed} = require('./compress.js')
 
 var app = express()
+app.enable('etag')
 express.static.mime.types['wasm'] = 'application/wasm'
 
 function pathToDirectoryIndex(url) {
@@ -31,6 +32,9 @@ async function serveUnionFs(req, res, next) {
   var {filename, absolute} = pathToDirectoryIndex(req.url)
   if(filename) {
     await makeIndexJson(filename, absolute)
+  }
+  if ((absolute + 'dir').includes('.pk3dir')) {
+    await repackPk3Dir(absolute + 'dir')
   }
   if (absolute && ufs.existsSync(absolute)) {
     sendCompressed(absolute, res, req.headers['accept-encoding'])

@@ -154,32 +154,29 @@ function readMultiDir(fullpath, forceRecursive) {
 }
 
 async function repackPk3Dir(fullpath) {
+  if(!repackFiles) {
+    return
+  }
   if(!ufs.statSync(fullpath).isDirectory()) {
     throw new Error(`Provided path ${fullpath} is not a directory.`)
   }
   var newPk3 = fullpath.replace('.pk3dir', '.pk3')
-  console.log(`archiving ${newPk3}`)
-  await compressDirectory(
-    readMultiDir(fullpath, true),
-    vol.createWriteStream(newPk3),
-    fullpath
-  )
-  file = await compressFile(
-    vol.createReadStream(newPk3),
-    vol.createWriteStream(newPk3 + '.br'),
-    vol.createWriteStream(newPk3 + '.gz'),
-    vol.createWriteStream(newPk3 + '.df')
-  )
-  return file
+  vol.mkdirpSync(path.dirname(fullpath))
+  if(!ufs.existsSync(fullpath.replace('.pk3dir', '.pk3'))
+    || writeOut) {
+    console.log(`archiving ${newPk3}`)
+    await compressDirectory(
+      readMultiDir(fullpath, true),
+      vol.createWriteStream(newPk3),
+      fullpath
+    )
+  }
+  return await compressFile(newPk3, vol)
 }
 
 async function cacheFile(fullpath) {
-  return await compressFile(
-    ufs.createReadStream(fullpath),
-    vol.createWriteStream(fullpath + '.br'),
-    vol.createWriteStream(fullpath + '.gz'),
-    vol.createWriteStream(fullpath + '.df')
-  )
+  vol.mkdirpSync(path.dirname(fullpath))
+  return await compressFile(fullpath, vol)
 }
 
 async function makeIndexJson(filename, absolute) {
@@ -190,12 +187,13 @@ async function makeIndexJson(filename, absolute) {
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]
 			if(!ufs.existsSync(fullpath)) continue
-      vol.mkdirpSync(path.dirname(fullpath))
 			var file = {}
 			if(ufs.statSync(fullpath).isFile()) {
 				file = await cacheFile(fullpath)
-			} else if(repackFiles && fullpath.includes('.pk3dir')
+			} else if(repackFiles
+        && fullpath.includes('.pk3dir')
         && ufs.statSync(fullpath).isDirectory()) {
+        // only make the pk3 if we are intentionally writing or it doesn't already exist
         file = await repackPk3Dir(fullpath)
         fullpath = fullpath.replace('.pk3dir', '.pk3')
       }

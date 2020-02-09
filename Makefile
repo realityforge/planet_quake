@@ -1003,6 +1003,10 @@ ifeq ($(PLATFORM),js)
 
   CLIENT_CFLAGS += -I$(SDLHDIR)/include
 
+#   -s USE_WEBGL2=1
+#		-s MIN_WEBGL_VERSION=2
+#	  -s MAX_WEBGL_VERSION=2
+
   CLIENT_LDFLAGS += --js-library $(LIBSYSCOMMON) \
     --js-library $(LIBSYSBROWSER) \
     --js-library $(LIBVMJS) \
@@ -1024,7 +1028,6 @@ ifeq ($(PLATFORM),js)
     -s FULL_ES2=0 \
     -s FULL_ES3=0 \
     -s USE_SDL=2 \
-    -s USE_WEBGL2=1 \
 		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3\" \
     $(OPTIMIZE)
@@ -1051,6 +1054,7 @@ ifeq ($(PLATFORM),js)
   SHLIBLDFLAGS=$(LDFLAGS) \
     -s INVOKE_RUN=0 \
     -s EXPORTED_FUNCTIONS="['_vmMain', '_dllEntry']" \
+		-s DLOPEN_SUPPORT=1 \
     -s SIDE_MODULE=1 \
     $(OPTIMIZE)
 

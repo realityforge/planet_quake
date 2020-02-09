@@ -33,53 +33,38 @@ async function compressDirectory(fullpath, outputStream, absolute) {
 // stream each file in, generating a hash for it's original
 // contents, and gzip'ing the buffer to determine the compressed
 // length for the client so it can present accurate progress info
-async function compressFile(stream, brWrite, gzWrite, dfWrite) {
-  return new Promise((resolve, reject) => {
-    var crc = crc32.unsigned('')
-    var compressed = 0
-    var brCompressed = 0
-    var dfCompressed = 0
-    var size = 0
-
-    brZip = zlib.createBrotliCompress()
-    gZip = zlib.createGzip()
-    dfZip = zlib.createDeflate()
-
-    stream.on('error', function (err) {
-      reject(err)
-    })
-    stream.on('data', function (data) {
-      crc = crc32.unsigned(data, crc)
-      size += data.length
-    })
-    brZip.on('data', function (data) {
-      brCompressed += data.length
-    })
-    gZip.on('data', function (data) {
-      compressed += data.length
-    })
-    dfZip.on('data', function (data) {
-      dfCompressed += data.length
-    })
-    stream.on('end', function () {
-      resolve({
-        compressed: compressed,
-        brCompressed: brCompressed,
-        dfCompressed: dfCompressed,
-        checksum: crc,
-        size: size
-      })
-    })
-    
-    stream.pipe(brZip).pipe(brWrite)
-    stream.pipe(gZip).pipe(gzWrite)
-    stream.pipe(dfZip).pipe(dfWrite)
+async function compressFile(fullpath, vol) {
+  var crc = crc32.unsigned('')
+  var stream = vol.createReadStream(fullpath)
+  stream.on('error', function (err) {
+    reject(err)
   })
+  stream.on('data', function (data) {
+    crc = crc32.unsigned(data, crc)
+  })
+  await Promise.all([
+    stream.pipe(zlib.createBrotliCompress())
+      .pipe(vol.createWriteStream(fullpath + '.br')),
+    stream.pipe(zlib.createGzip())
+      .pipe(vol.createWriteStream(fullpath + '.gz')),
+    stream.pipe(zlib.createDeflate())
+      .pipe(vol.createWriteStream(fullpath + '.df'))
+  ].map(stream => new Promise((resolve, reject) => {
+    stream.on('finish', resolve).on('error', reject)
+  })))
+  return {
+    compressed: vol.statSync(fullpath + '.gz').size,
+    brCompressed: vol.statSync(fullpath + '.br').size,
+    dfCompressed: vol.statSync(fullpath + '.df').size,
+    checksum: crc,
+    size: vol.statSync(fullpath).size
+  }
 }
 
 function sendCompressed(file, res, acceptEncoding) {
   var readStream = ufs.createReadStream(file)
   var compressionExists = false
+  res.set('cache-control', 'public, max-age=31557600');
   // if compressed version already exists, send it directly
   if(acceptEncoding.includes('br')) {
     res.append('content-encoding', 'br')
