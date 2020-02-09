@@ -229,6 +229,10 @@ ifndef USE_RENDERER_DLOPEN
 USE_RENDERER_DLOPEN=1
 endif
 
+ifndef USE_HUMBLENET
+USE_HUMBLENET=1
+endif
+
 ifndef USE_YACC
 USE_YACC=0
 endif
@@ -266,6 +270,7 @@ VORBISDIR=$(MOUNT_DIR)/libvorbis-1.3.6
 OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 ZDIR=$(MOUNT_DIR)/zlib
+HDIR=$(MOUNT_DIR)/humblenet
 Q3ASMDIR=$(MOUNT_DIR)/tools/asm
 LBURGDIR=$(MOUNT_DIR)/tools/lcc/lburg
 Q3CPPDIR=$(MOUNT_DIR)/tools/lcc/cpp
@@ -545,6 +550,13 @@ ifeq ($(PLATFORM),darwin)
   SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) -Wl,-U,_com_altivec
 
   NOTSHLIBCFLAGS=-mdynamic-no-pic
+	
+ifeq ($(USE_HUMBLENET),1)
+  LIBS += $(LIBSDIR)/macosx/libhumblenet.dylib
+  EXTRA_FILES += $(LIBSDIR)/macosx/libhumblenet.dylib
+  BASE_CFLAGS += -DUSE_HUMBLENET
+  LDFLAGS += -rpath @executable_path/
+endif
 
 else # ifeq darwin
 
@@ -1000,6 +1012,10 @@ ifeq ($(PLATFORM),js)
   LIBSYSBROWSER=$(SYSDIR)/sys_browser.js
   LIBSYSNODE=$(SYSDIR)/sys_node.js
   LIBVMJS=$(CMDIR)/vm_js.js
+	
+ifeq ($(USE_HUMBLENET),1)
+  BASE_CFLAGS += -DUSE_HUMBLENET
+endif
 
   CLIENT_CFLAGS += -I$(SDLHDIR)/include
 
@@ -1017,7 +1033,7 @@ ifeq ($(PLATFORM),js)
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS', 'Pointer_stringify', 'cwrap']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
@@ -2298,6 +2314,13 @@ ifeq ($(PLATFORM),darwin)
     $(B)/client/sys_osx.o
 endif
 
+ifeq ($(PLATFORM),js)
+ifeq ($(USE_HUMBLENET),1)
+  Q3OBJ += \
+    $(B)/client/humblenet_asmjs_amalgam.o
+endif
+endif
+
 ifeq ($(USE_MUMBLE),1)
   Q3OBJ += \
     $(B)/client/libmumblelink.o
@@ -2477,6 +2500,13 @@ endif
 ifeq ($(PLATFORM),darwin)
   Q3DOBJ += \
     $(B)/ded/sys_osx.o
+endif
+
+ifeq ($(PLATFORM),js)
+ifeq ($(USE_HUMBLENET),1)
+  Q3DOBJ += \
+    $(B)/ded/humblenet_asmjs_amalgam.o
+endif
 endif
 
 $(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ) $(LIBSYSCOMMON) $(LIBSYSNODE) $(LIBVMJS)
@@ -2791,6 +2821,9 @@ $(B)/client/%.o: $(CDIR)/%.c
 $(B)/client/%.o: $(SDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/%.o: $(HDIR)/%.cpp
+	$(DO_CC) -std=c++11 -fno-exceptions -fno-rtti -O1
+
 $(B)/client/%.o: $(CMDIR)/%.c
 	$(DO_CC)
 
@@ -2874,6 +2907,9 @@ $(B)/ded/%.o: $(ASMDIR)/%.c
 
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(HDIR)/%.cpp
+	$(DO_DED_CC) -std=c++11 -fno-exceptions -fno-rtti
 
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)

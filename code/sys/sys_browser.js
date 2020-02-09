@@ -11,7 +11,7 @@ var LibrarySys = {
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
-			'+set', 'net_enabled', '1',
+			'+set', 'net_enabled', '16',
 			'+set', 'developer', '1',
 			'+set', 'fs_debug', '1',
 			'+set', 'r_mode', '-1',
