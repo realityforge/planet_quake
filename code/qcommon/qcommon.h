@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef DEDICATED
 extern char **Sys_CmdArgs( void );
 extern int Sys_CmdArgsC( void );
+extern void Sys_SocksOpen( int port );
 #endif
 
 extern void Sys_FS_Startup( void );

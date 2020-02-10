@@ -1,64 +1,59 @@
-var Buffer = require('buffer').Buffer;
-var dgram = require('dgram');
-var WebSocketServer = require('ws').Server;
-const http = require('http');
+var Buffer = require('buffer').Buffer
+var dgram = require('dgram')
+var WebSocketServer = require('ws').Server
+var Huffman = require('../lib/huffman.js')
+var {Server} = require('../lib/socks.server.js')
+
+// redirect http attempts to loading page
+const http = require('http')
 const server = http.createServer(function(req, res) {
-	res.writeHead(200, {'Location': 'https://quake.games' + req.url});
+	res.writeHead(200, {'Location': 'https://quake.games' + req.url})
 	res.write('It works!')
-	res.end();
-});
+	res.end()
+})
 
-var wss = new WebSocketServer({server});
+var wss = new WebSocketServer({server})
+var socks = new Server() // TODO: add password authentication
 
-// TODO: rewrite this to use node dns
-var SERVER_IP = '127.0.0.1'
-var SERVER_PORT = 27960
- 
 wss.on('error', function(error) {
-	console.log("error", error);
-});
+	console.log("error", error)
+})
  
 wss.on('connection', function(ws) {
 	try {
-	
-		console.log('on connection....');
-		//Create a udp socket for this websocket connection
-		var udpClient = dgram.createSocket('udp4');
-		
-		//ws.send("HAIIII");
-		
-		//When a message is received from udp server send it to the ws client
+		console.log('on connection....')
+		socks._onConnection(ws._socket)
+
+		/*
+		var udpClient = dgram.createSocket('udp4')
 		udpClient.on('message', function(msg, rinfo) {
-			//console.log("udp -> ws", msg);
 			try {
-				ws.send(msg);
+				ws.send(msg)
 			} catch(e) {
 				console.log(`ws.send(${e})`)
 			}
-			//ws.send("test");
-		});
-	 
-		//When a message is received from ws client send it to udp server.
+		})
 		ws.on('message', function(message) {
-			var msgBuff = new Buffer.from(message);
+			var msgBuff = Buffer.from(message)
 			try {
+				console.log(msgBuff.toString('utf-8'))
 				// TODO: sniff websocket connection to figure out how to intercept the server address
 				// emscripten qcommon/huffman.c and decode the message
 				// add cl_main.c getchallenge/connect net_ip to control this proxy server
 				// this will allow clients to control the proxy server to connect
 				//   to any server they want from the browser
 				//if(msgBuff.toString('utf-8').includes('connect ')) {
-				//	debugger;
+				//	debugger
 				//}
-				udpClient.send(msgBuff, 0, msgBuff.length, SERVER_PORT, SERVER_IP);
+				udpClient.send(msgBuff, 0, msgBuff.length, SERVER_PORT, SERVER_IP)
 			} catch(e) {
-				console.log("udpClient.send")
+				console.log(`udpClient.send(${e})`)
 			}
-			//console.log("ws -> udp", message);
-		});
+		})
+*/
 	} catch (e) {
-		console.log(e);
+		console.log(e)
 	}
-});
+})
 
-server.listen(27960, () => console.log(`Server running at http://0.0.0.0:27960`));
+server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))

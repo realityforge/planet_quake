@@ -12,8 +12,8 @@ var LibrarySys = {
 			'+set', 'fs_game', 'baseq3',
 			'+set', 'net_noudp', '1',
 			'+set', 'net_enabled', '1',
-			'+set', 'developer', '1',
-			'+set', 'fs_debug', '1',
+			'+set', 'developer', '0',
+			'+set', 'fs_debug', '0',
 			'+set', 'r_mode', '-1',
 			'+set', 'r_customPixelAspect', '1',
 			'+set', 'sv_pure', '0',
@@ -306,6 +306,11 @@ var LibrarySys = {
 				SYSC.ProxyCallback(cb)
 			})
 		})
+	},
+	Sys_SocksOpen: function (port) {
+		Module['websocket'].on('open', Browser.safeCallback(() => {
+			_NET_OpenSocks_After_Open(port)
+		}))
 	},
 	Sys_Milliseconds: function () {
 		if (!SYS.timeBase) {

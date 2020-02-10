@@ -663,6 +663,7 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
 	if( usingSocks && to.type == NA_IP ) {
+    Com_Printf( "Sys_SendPacket: Sending through proxy\n" );
 		socksBuf[0] = 0;	// reserved
 		socksBuf[1] = 0;
 		socksBuf[2] = 0;	// fragment (not fragmented)
@@ -670,7 +671,7 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
 		*(short *)&socksBuf[8] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[10], data, length );
-		ret = sendto( ip_socket, socksBuf, length+10, 0, &socksRelayAddr, sizeof(socksRelayAddr) );
+		ret = send( socks_socket, socksBuf, length+10, 0 );
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -1095,8 +1096,24 @@ void NET_OpenSocks( int port ) {
 	address.sin_port = htons( (short)net_socksPort->integer );
 
 	if ( connect( socks_socket, (struct sockaddr *)&address, sizeof( address ) ) == SOCKET_ERROR ) {
-		Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
-		return;
+#ifndef EMSCRIPTEN
+    Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+    return;
+#elif !defined(DEDICATED)
+    if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
+      Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+      return;
+    }
+  }
+  Sys_SocksOpen(port);
+}
+
+void NET_OpenSocks_After_Open( int port ) {
+  int					len;
+	qboolean			rfc1929;
+	unsigned char		buf[64];
+  {
+#endif
 	}
 
 	// send socks authentication handshake
@@ -1713,5 +1730,6 @@ NET_Restart_f
 */
 void NET_Restart_f(void)
 {
+  networkingEnabled = qfalse;
 	NET_Config(qtrue);
 }
