@@ -37,11 +37,13 @@ function Server() {
 
   var self = this;
 
+  this._debug = true
+  this._auths = []
   this._connections = 0;
   this.maxConnections = Infinity;
 }
 
-Server.prototype._onConnection = function(ws) {
+Server.prototype._onConnection = function(socket) {
   ++this._connections
   var self = this,
       parser = new Parser(socket);
@@ -52,30 +54,14 @@ Server.prototype._onConnection = function(ws) {
   }).on('methods', function(methods) {
     console.log(`Checking methods ${methods}`)
     var auths = self._auths;
-    for (var a = 0, alen = auths.length; a < alen; ++a) {
-      for (var m = 0, mlen = methods.length; m < mlen; ++m) {
-        if (methods[m] === auths[a].METHOD) {
-          auths[a].server(socket, function(result) {
-            if (result === true) {
-              parser.authed = true;
-              parser.start();
-            } else {
-              if (util.isError(result))
-                self._debug && self._debug('Error: ' + result.message);
-              socket.end();
-            }
-          });
-          socket.write(Buffer.from([0x05, auths[a].METHOD]));
-          socket.resume();
-          return;
-        }
-      }
-    }
-    socket.end(BUF_AUTH_NO_ACCEPT);
+    parser.authed = true;
+    parser.start();
+    socket.send(Buffer.from([0x05, 0x00]));
+    //socket.send(BUF_AUTH_NO_ACCEPT);
   }).on('request', function(reqInfo) {
-    console.log(`Making request ${regInfo}`)
+    console.log('Making request', reqInfo)
     if (reqInfo.cmd !== 'connect')
-      return socket.end(BUF_REP_CMDUNSUPP);
+      return socket.send(BUF_REP_CMDUNSUPP);
 
     reqInfo.srcAddr = socket.remoteAddress;
     reqInfo.srcPort = socket.remotePort;
@@ -103,7 +89,7 @@ Server.prototype._onConnection = function(ws) {
         return;
       handled = true;
       if (socket.writable)
-        socket.end(BUF_REP_DISALLOW);
+        socket.send(BUF_REP_DISALLOW);
     }
 
     proxySocket(socket, reqInfo);
@@ -112,12 +98,11 @@ Server.prototype._onConnection = function(ws) {
   function onClose() {
     console.log(`Closing socket`)
     if (socket.dstSock && socket.dstSock.writable)
-      socket.dstSock.end();
+      socket.dstSock.send();
     socket.dstSock = undefined;
   }
 
   socket.on('error', onErrorNoop)
-        .on('end', onClose)
         .on('close', onClose);
 };
 
@@ -197,11 +182,10 @@ function proxySocket(socket, req) {
                 bufrep[p] = localbytes[i];
               bufrep.writeUInt16BE(dstSock.localPort, p, true);
 
-              socket.write(bufrep);
+              socket.send(bufrep);
               socket.pipe(dstSock).pipe(socket);
-              socket.resume();
              } else if (dstSock.writable)
-              dstSock.end();
+              dstSock.send();
            })
            .connect(req.dstPort, dstIP);
     socket.dstSock = dstSock;
@@ -227,6 +211,6 @@ function handleProxyError(socket, err) {
         break;
       }
     }
-    socket.end(errbuf);
+    socket.write(errbuf);
   }
 }

@@ -22,7 +22,7 @@ wss.on('error', function(error) {
 wss.on('connection', function(ws) {
 	try {
 		console.log('on connection....')
-		socks._onConnection(ws._socket)
+		socks._onConnection(ws)
 
 		/*
 		var udpClient = dgram.createSocket('udp4')

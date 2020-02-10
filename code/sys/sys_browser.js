@@ -307,9 +307,14 @@ var LibrarySys = {
 			})
 		})
 	},
-	Sys_SocksOpen: function (port) {
+	Sys_SocksConnect: function (port) {
 		Module['websocket'].on('open', Browser.safeCallback(() => {
-			_NET_OpenSocks_After_Open(port)
+			_NET_OpenSocks_After_Connect(port)
+		}))
+	},
+	Sys_SocksMethod: function (port) {
+		Module['websocket'].on('message', Browser.safeCallback(() => {
+			_NET_OpenSocks_After_Method(port)
 		}))
 	},
 	Sys_Milliseconds: function () {

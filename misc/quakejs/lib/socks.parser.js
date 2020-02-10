@@ -52,7 +52,7 @@ Parser.prototype._onData = function(message) {
       left,
       chunkLeft,
       minLen;
-
+  console.log(chunk)
   while (i < len) {
     switch (state) {
       /*
@@ -83,7 +83,7 @@ Parser.prototype._onData = function(message) {
         }
         ++i;
         ++state;
-        this._methods = Buffer.from(nmethods);
+        this._methods = Buffer.alloc(nmethods);
         this._methodsp = 0;
       break;
       case STATE_METHODS:
@@ -97,7 +97,6 @@ Parser.prototype._onData = function(message) {
         this._methodsp += minLen;
         i += minLen;
         if (this._methodsp === this._methods.length) {
-          this.stop();
           this._state = STATE_VERSION;
           var methods = this._methods;
           this._methods = undefined;
@@ -181,7 +180,7 @@ Parser.prototype._onData = function(message) {
           state = STATE_REQ_DSTPORT;
       break;
       case STATE_REQ_DSTADDR_VARLEN:
-        this._dstaddr = Buffer.from(chunk[i]);
+        this._dstaddr = Buffer.alloc(chunk[i]);
         state = STATE_REQ_DSTADDR;
         ++i;
       break;
@@ -192,8 +191,6 @@ Parser.prototype._onData = function(message) {
           this._dstport <<= 8;
           this._dstport += chunk[i];
           ++i;
-
-          this.stop();
 
           if (this._atyp === ATYP.IPv4)
             this._dstaddr = Array.prototype.join.call(this._dstaddr, '.');
@@ -231,14 +228,14 @@ Parser.prototype.start = function() {
   if (this._listening)
     return;
   this._listening = true;
-  this._ws.on('message', this._onData);
+  this._ws.on('message', this._onData.bind(this));
 };
 
 Parser.prototype.stop = function() {
   if (!this._listening)
     return;
   this._listening = false;
-  this._ws.removeListener('message', this._onData);
+  this._ws.off('message', this._onData.bind(this));
   this._ws.close();
 };
 

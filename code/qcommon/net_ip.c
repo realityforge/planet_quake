@@ -23,6 +23,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#ifdef EMSCRIPTEN
+#ifndef DEDICATED
+extern void Sys_SocksConnect( int port );
+extern void Sys_SocksMethod( int port );
+#endif
+#endif
+
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <ws2tcpip.h>
@@ -1105,10 +1112,10 @@ void NET_OpenSocks( int port ) {
       return;
     }
   }
-  Sys_SocksOpen(port);
+  Sys_SocksConnect(port);
 }
 
-void NET_OpenSocks_After_Open( int port ) {
+void NET_OpenSocks_After_Connect( int port ) {
   int					len;
 	qboolean			rfc1929;
 	unsigned char		buf[64];
@@ -1142,6 +1149,18 @@ void NET_OpenSocks_After_Open( int port ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
 		return;
 	}
+
+#ifdef EMSCRIPTEN
+  Sys_SocksMethod( port );
+}
+
+void NET_OpenSocks_After_Method( int port ) {
+  int					len;
+  qboolean			rfc1929;
+  unsigned char		buf[64];
+  
+#endif
+;
 
 	// get the response
 	len = recv( socks_socket, (void *)buf, 64, 0 );
