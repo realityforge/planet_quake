@@ -10,7 +10,6 @@ var LibrarySys = {
 			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
-			'+set', 'net_noudp', '1',
 			'+set', 'net_enabled', '1',
 			'+set', 'developer', '0',
 			'+set', 'fs_debug', '0',
@@ -219,6 +218,10 @@ var LibrarySys = {
 			// TODO: remove this in favor of new remote FS code
 			var downloads = []
 			SYSC.DownloadAsset(fsMountPath + '/index.json', () => {}, (err, data) => {
+				if(err) {
+					SYSC.ProxyCallback(cb)
+					return
+				}
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(json)
@@ -307,15 +310,17 @@ var LibrarySys = {
 			})
 		})
 	},
-	Sys_SocksConnect: function (port) {
+	Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
+	Sys_SocksConnect: function () {
 		Module['websocket'].on('open', Browser.safeCallback(() => {
-			_NET_OpenSocks_After_Connect(port)
+			_SOCKS_Frame_Proxy()
+		}))
+		Module['websocket'].on('message', Browser.safeCallback(() => {
+			_SOCKS_Frame_Proxy()
 		}))
 	},
-	Sys_SocksMethod: function (port) {
-		Module['websocket'].on('message', Browser.safeCallback(() => {
-			_NET_OpenSocks_After_Method(port)
-		}))
+	Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
+	Sys_SocksMessage: function () {
 	},
 	Sys_Milliseconds: function () {
 		if (!SYS.timeBase) {

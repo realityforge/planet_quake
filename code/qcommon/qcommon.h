@@ -37,6 +37,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //============================================================================
 
 #ifdef EMSCRIPTEN
+#include <emscripten.h>
+void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void Com_Frame_Proxy( void );
+static void (*CB_Frame_Proxy)( void ) = NULL;
+static void (*CB_Frame_After)( void ) = NULL;
+
 #ifndef DEDICATED
 extern char **Sys_CmdArgs( void );
 extern int Sys_CmdArgsC( void );
@@ -69,11 +75,6 @@ void CL_Vid_Restart_After_Startup( void );
 void CL_DemoCompleted_After_Startup( void );
 void CL_DemoCompleted_After_Shutdown( void );
 
-
-void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void Com_Frame_Proxy( void );
-static void (*CB_Frame_Proxy)( void );
-static void (*CB_Frame_After)( void );
 #endif
 
 //

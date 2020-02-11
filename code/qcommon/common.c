@@ -30,11 +30,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #else
 #include <winsock.h>
 #endif
-#ifdef EMSCRIPTEN
-#include <emscripten.h>
-static void (*CB_Frame_Proxy)( void ) = NULL;
-static void (*CB_Frame_After)( void ) = NULL;
-#endif
 
 int demo_protocols[] =
 { 67, 66, 0 };
