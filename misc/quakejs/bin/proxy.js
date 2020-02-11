@@ -10,7 +10,6 @@ var socks = new Server() // TODO: add password authentication
 // redirect http attempts to loading page
 const server = createServer(function(socket) {
 	try {
-		console.log('Net socket connection....')
 		socks._onConnection(socket)
 	} catch (e) {
 		console.log(e)
@@ -26,13 +25,8 @@ const httpServer = http.createServer(function(req, res) {
 
 var wss = new WebSocketServer({server: httpServer})
 
-wss.on('error', function(error) {
-	console.log('error', error)
-})
- 
 wss.on('connection', function(ws) {
 	try {
-		console.log('Websocket connection....')
 		socks._onConnection(ws)
 	} catch (e) {
 		console.log(e)

@@ -24,8 +24,6 @@ var STATE_VERSION = 0,
     STATE_REQ_DSTPORT = 8
 
 function Parser(ws) {
-  var self = this
-
   this._ws = ws
   this._listening = false
   
@@ -50,8 +48,22 @@ Parser.prototype._onData = function(message) {
       left,
       chunkLeft,
       minLen
-  console.log(chunk)
+  //console.log(chunk)
   while (i < len) {
+    // emscripten overdoing it a little
+    if(chunk[i] === 0xFF && chunk[i+1] === 0xFF
+      && chunk[i+2] === 0xFF && chunk[i+3] === 0xFF
+      && chunk[i+4] === 'p'.charCodeAt(0)
+      && chunk[i+5] === 'o'.charCodeAt(0)
+      && chunk[i+6] === 'r'.charCodeAt(0)
+      && chunk[i+7] === 't'.charCodeAt(0)) {
+      // then we know we are in UDP mode, thanks a lot
+      this._dstport = chunk[i+8]
+      this._dstport <<= 8
+      this._dstport += chunk[i+9]
+      this.emit('udp', this._dstport)
+      return
+    }
     switch (state) {
       /*
         +----+----------+----------+
@@ -139,6 +151,7 @@ Parser.prototype._onData = function(message) {
           this.emit('error', new Error('Invalid request command: ' + cmd))
           return
         }
+        this._dstport = void 0
         ++i
         ++state
       break
@@ -174,6 +187,7 @@ Parser.prototype._onData = function(message) {
       break
       case STATE_REQ_DSTADDR_VARLEN:
         this._dstaddr = Buffer.alloc(chunk[i])
+        this._dstaddrp = 0
         state = STATE_REQ_DSTADDR
         ++i
       break

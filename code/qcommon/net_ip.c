@@ -125,7 +125,7 @@ static cvar_t	*net_mcast6iface;
 
 static cvar_t	*net_dropsim;
 
-static struct sockaddr	socksRelayAddr;
+static struct sockaddr_in	socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -558,21 +558,28 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
-			if ( usingSocks && memcmp( &from, &socksRelayAddr, fromlen ) == 0 ) {
-				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 || net_message->data[3] != 1 ) {
+			if ( usingSocks && memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
+				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
 					return qfalse;
 				}
 				net_from->type = NA_IP;
-				net_from->ip[0] = net_message->data[4];
-				net_from->ip[1] = net_message->data[5];
-				net_from->ip[2] = net_message->data[6];
-				net_from->ip[3] = net_message->data[7];
-				net_from->port = *(short *)&net_message->data[8];
-				net_message->readcount = 10;
+        net_message->readcount = 4; // including type below
+        if(net_message->data[3] == 1) {
+  				net_from->ip[0] = net_message->data[4];
+  				net_from->ip[1] = net_message->data[5];
+  				net_from->ip[2] = net_message->data[6];
+  				net_from->ip[3] = net_message->data[7];
+          net_message->readcount = 10;
+        } else if (net_message->data[3] == 3) {
+          Q_strncpyz(net_from->name, (char *)&net_message->data[5], net_message->data[4]);
+          NET_StringToAdr(net_from->name, net_from, net_from->type);
+          net_message->readcount = 5 + net_message->data[4] + 2;
+        }
+				net_from->port = *(short *)&net_message->data[net_message->readcount - 2];
 			}
 			else {
-				SockadrToNetadr( (struct sockaddr *) &from, net_from );
-				net_message->readcount = 0;
+        SockadrToNetadr( (struct sockaddr *) &from, net_from );
+        net_message->readcount = 0;
 			}
 		
 			if( ret >= net_message->maxsize ) {
@@ -677,15 +684,20 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
 	if( usingSocks && to.type == NA_IP ) {
-    Com_Printf( "Sys_SendPacket: Sending through proxy\n" );
-		socksBuf[0] = 0;	// reserved
-		socksBuf[1] = 0;
+    char addrbuf[NET_ADDRSTRMAXLEN];
+    Sys_SockaddrToString(addrbuf, sizeof(addrbuf), (struct sockaddr *) &socksRelayAddr);
+    Com_Printf( "Sys_SendPacket: Sending through proxy %s (%s:%u)\n", to.name, addrbuf, ((struct sockaddr_in *)&socksRelayAddr)->sin_port );
+		socksBuf[0] = 5;	// reserved
+		socksBuf[1] = 1;
 		socksBuf[2] = 0;	// fragment (not fragmented)
-		socksBuf[3] = 1;	// address type: IPV4
-		*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
-		*(short *)&socksBuf[8] = ((struct sockaddr_in *)&addr)->sin_port;
-		memcpy( &socksBuf[10], data, length );
-    ret = sendto( ip_socket, socksBuf, length+10, 0, &socksRelayAddr, sizeof(socksRelayAddr) );
+		socksBuf[3] = 3;	// address type: IPV4
+    // let socks server do the translation
+    socksBuf[4] = strlen(to.name) + 1;
+    Q_strncpyz( &socksBuf[5], to.name, socksBuf[4] );
+		//*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
+		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
+		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
+    ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 		//ret = send( socks_socket, socksBuf, length+10, 0 );
 	}
 	else {
@@ -1704,7 +1716,13 @@ void NET_Event(fd_set *fdr)
 				if(rand() < (int) (((double) RAND_MAX) / 100.0 * (double) net_dropsim->value))
 					continue;          // drop this packet
 			}
-
+      
+      if(netmsg.readcount > 0) {
+        memcpy(netmsg.data, &bufData[netmsg.readcount], netmsg.cursize - netmsg.readcount);
+        netmsg.cursize -= netmsg.readcount;
+        netmsg.readcount = 0;
+      }
+      
 			if(com_sv_running->integer)
 				Com_RunAndTimeServerPacket(&from, &netmsg);
 			else

@@ -6,36 +6,6 @@ var Parser = require('./socks.parser')
 var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
 var ipv6 = require('ipv6').v6
-function ipbytes(str) {
-  var type = isIP(str),
-      nums,
-      bytes,
-      i;
-
-  if (type === 4) {
-    nums = str.split('.', 4);
-    bytes = new Array(4);
-    for (i = 0; i < 4; ++i) {
-      if (isNaN(bytes[i] = +nums[i]))
-        throw new Error('Error parsing IP: ' + str);
-    }
-  } else if (type === 6) {
-    var addr = new ipv6.Address(str),
-        b = 0,
-        group;
-    if (!addr.valid)
-      throw new Error('Error parsing IP: ' + str);
-    nums = addr.parsedAddress;
-    bytes = new Array(16);
-    for (i = 0; i < 8; ++i, b += 2) {
-      group = parseInt(nums[i], 16);
-      bytes[b] = group >>> 8;
-      bytes[b + 1] = group & 0xFF;
-    }
-  }
-
-  return bytes;
-}
 
 var ATYP = {
   IPv4: 0x01,
@@ -68,76 +38,190 @@ function Server() {
   if (!(this instanceof Server))
     return new Server()
 
-  var self = this
-
+  this._listeners = {}
+  this._dnsLookup = {}
   this._debug = true
   this._auths = []
   this._connections = 0
   this.maxConnections = Infinity
 }
 
+Server.prototype._onClose = function (socket, onData) {
+  console.log('Closing ', socket._socket.remoteAddress)
+  socket.off('data', onData)
+  socket.off('message', onData)
+  if (socket.dstSock) {
+    if(typeof socket.dstSock.end == 'function')
+      socket.dstSock.end()
+    else if(typeof socket.dstSock.close == 'function')
+      socket.dstSock.close()
+  }
+  socket.dstSock = undefined
+  if(socket._socket.writable) {
+    socket.on('data', onData)
+    socket.on('message', onData)
+  }
+}
+
+Server.prototype._onParseError = function(onData, err) {
+  console.log('Parse error ', err)
+  socket.off('data', onData)
+  socket.off('message', onData)
+  socket.close()
+}
+
+Server.prototype._onMethods = function(parser, socket, onData, methods) {
+  var auths = this._auths
+  parser.authed = true
+  socket.off('data', onData)
+  socket.off('message', onData)
+  socket._socket.pause()
+  socket.send(Buffer.from([0x05, 0x00]))
+  socket.on('data', onData)
+  socket.on('message', onData)
+  socket._socket.resume()
+  //socket.send(BUF_AUTH_NO_ACCEPT)
+}
+
+Server.prototype._onRequest = async function(socket, onData, reqInfo) {
+  reqInfo.srcAddr = socket._socket.remoteAddress
+  reqInfo.srcPort = socket._socket.remotePort
+  socket.off('data', onData)
+  socket.off('message', onData)
+  socket._socket.pause()
+  var intercept = false // TODO: use this for something cool
+  if (intercept && !reqInfo.dstAddr.includes('0.0.0.0')) {
+    socket.send(BUF_REP_INTR_SUCCESS);
+    socket.removeListener('error', onErrorNoop);
+    process.nextTick(function() {
+      socket.resume();
+      var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date());
+      socket.send([
+        'HTTP/1.1 200 OK',
+        'Connection: close',
+        'Content-Type: text/plain',
+        'Content-Length: ' + Buffer.byteLength(body),
+        '',
+        body
+      ].join('\r\n'));
+    });
+    return socket;
+  } else {
+    console.log('Requesting', reqInfo.dstAddr, ':', reqInfo.dstPort)
+    await this.proxySocket.apply(this, [socket, reqInfo])
+  }
+}
+
+Server.prototype.lookupDNS = async function (address) {
+  var self = this
+  if(typeof this._dnsLookup[address] != 'undefined')
+    return this._dnsLookup[address]
+  return new Promise((resolve, reject) => dns.lookup(address, function(err, dstIP) {
+    if(err) {
+      return reject(err)
+    }
+    self._dnsLookup[address] = dstIP
+    return resolve(dstIP)
+  }))
+}
+
+Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
+  var self = this
+  var udpSocket = this._listeners[udpLookupPort]
+  console.log('Switching to UDP listener', udpLookupPort)
+  //socket.dstSock = udpSocket
+  socket.off('data', onData)
+  socket.off('message', onData)
+  socket._socket.pause()
+  // connection and version number are implied from now on
+  onData = ((message) => {
+    var chunk = Buffer.from(message)
+    if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
+      chunk[0] = 5
+      chunk[1] = 1
+      chunk[2] = 0
+      parser._onData(chunk)
+    }
+  })
+  socket.on('message', onData)
+  parser.authed = true
+  parser.off('request', onRequest)
+  // TODO: break this out into isn't method?
+  udpSocket.on('message', (message, rinfo) => {
+    // is this valid SOCKS5 for UDP?
+    var returnIP = false
+    var ipv6 = ip6addr.parse(rinfo.address)
+    var localbytes = ipv6.toBuffer()
+    if(ipv6.kind() == 'ipv4') {
+      localbytes = localbytes.slice(12)
+    }
+    var domain = Object.keys(this._dnsLookup)
+      .filter(n => this._dnsLookup[n] == rinfo.address)[0]
+    var bufrep = returnIP || !domain
+      ? Buffer.alloc(4 + localbytes.length + 2)
+      : Buffer.alloc(5 + domain.length + 2)
+    bufrep[0] = 0x00
+    bufrep[1] = 0x00
+    bufrep[2] = 0x00
+    if(returnIP || !domain) {
+      bufrep[3] = 0x01
+      for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
+        bufrep[p] = localbytes[i]
+    } else {
+      var domainBuf = Buffer.from(domain)
+      bufrep[3] = 0x03
+      bufrep[4] = domain.length
+      domainBuf.copy(bufrep, 5)
+      p = 5 + bufrep[4]
+    }
+    bufrep.writeUInt16BE(rinfo.port, p, true)
+    socket.send(Buffer.concat([bufrep, message]))
+  })
+  
+  parser.on('request', async (reqInfo) => {
+    try {
+      var dstIP = await this.lookupDNS(reqInfo.dstAddr)
+      console.log('Requesting', reqInfo.dstAddr, ':', reqInfo.dstPort)
+      udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
+    } catch (err) {
+      self._onProxyError(socket, err)
+    }
+  })
+  socket._socket.resume()
+}
+
 Server.prototype._onConnection = function(socket) {
   ++this._connections
-  var self = this,
-      parser = new Parser(socket)
-      onData = parser._onData.bind(parser)
-  
+  var parser = new Parser(socket)
+      onData = parser._onData.bind(parser),
+      onError = this._onParseError.bind(this, onData), // data for unbinding, err passed in
+      onMethods = this._onMethods.bind(this, parser, socket, onData),
+      onRequest = this._onRequest.bind(this, socket, onData), // reqInfo passed in
+      onClose = this._onClose.bind(this, socket, onData),
+      onUdp = this._onUdp.bind(this, parser, socket, onRequest, onData)
+      
   if(socket instanceof WebSocket) {
+    console.log(`Websocket connection ${socket._socket.remoteAddress}....`)
     socket.on('message', onData)
   } else if (socket instanceof Socket) {
+    console.log(`Net socket connection ${socket.remoteAddress}....`)
     socket.on('data', onData)
     socket.send = socket.write
     socket._socket = socket
     socket.close = socket.end
+  } else {
+    console.log('Socket type unknown!')
+    socket.close()
+    return
   }
   
-  parser.on('error', function(err) {
-    socket.off('data', onData)
-    socket.close()
-  }).on('methods', function(methods) {
-    var auths = self._auths
-    parser.authed = true
-    socket.off('data', onData)
-    socket._socket.pause()
-    socket.send(Buffer.from([0x05, 0x00]))
-    socket.on('data', onData)
-    socket._socket.resume()
-    //socket.send(BUF_AUTH_NO_ACCEPT)
-  }).on('request', function(reqInfo) {
-    console.log('Requesting', reqInfo.dstAddr)
-    reqInfo.srcAddr = socket._socket.remoteAddress
-    reqInfo.srcPort = socket._socket.remotePort
-    socket.off('data', onData)
-    var intercept = false // TODO: use this for something cool
-    if (intercept) {
-      socket.write(BUF_REP_INTR_SUCCESS);
-      socket.removeListener('error', onErrorNoop);
-      process.nextTick(function() {
-        socket.resume();
-        var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date());
-        socket.send([
-          'HTTP/1.1 200 OK',
-          'Connection: close',
-          'Content-Type: text/plain',
-          'Content-Length: ' + Buffer.byteLength(body),
-          '',
-          body
-        ].join('\r\n'));
-      });
-      return socket;
-    } else {
-      proxySocket(socket, reqInfo)
-    }
-  })
+  parser
+    .on('error', onError)
+    .on('methods', onMethods)
+    .on('request', onRequest)
+    .once('udp', onUdp)
 
-  function onClose() {
-    socket.off('data', onData)
-    if (socket.dstSock)
-      socket.dstSock.end()
-    socket.dstSock = undefined
-  }
-
-  socket.on('error', onErrorNoop)
+  socket.on('error', this._onErrorNoop)
         .on('close', onClose)
 }
 
@@ -154,80 +238,40 @@ Server.prototype.useAuth = function(auth) {
   return this
 }
 
-exports.Server = Server
-
-function onErrorNoop(err) {console.log(err)}
-
-function proxySocket(socket, req) {
-  dns.lookup(req.dstAddr, function(err, dstIP) {
-    if (err) {
-      handleProxyError(socket, err)
-      return
-    }
-
-    function onError(err) {
-      handleProxyError(socket, err)
-    }
-    
-    function onConnect() {
-      if(!socket._socket.writable) return
-      var portLeft = Math.round(Math.random() * 50) * 1000 + 5000
-      var port = socket.dstSock.localPort || socket._socket.localPort // portLeft + req.dstPort
-      var localAddress = socket.dstSock.localAddress || socket._socket.localAddress
-      var localbytes = ip6addr.parse(localAddress).toBuffer()
-      var kind = ip6addr.parse(localAddress).kind()
-      if(kind == 'ipv4') {
-        localbytes = localbytes.slice(12)
-      }
-      var bufrep = Buffer.alloc(6 + localbytes.length)
-      bufrep[0] = 0x05
-      bufrep[1] = REP.SUCCESS
-      bufrep[2] = 0x00
-      bufrep[3] = (kind == 'ipv4' ? ATYP.IPv4 : ATYP.IPv6)
-      for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
-        bufrep[p] = localbytes[i]
-      bufrep.writeUInt16BE(port, p, true)
-      socket.send(bufrep)
-      //socket._socket.on('data', socket.dstSock.write)
-      //socket.dstSock.on('data', socket._socket.write)
-      if(typeof socket.pipe == 'function') {
-        socket.pipe(socket.dstSock).pipe(socket)
-      } else {
-        socket.dstSock.on('message', socket.send)
-        socket.on('message', socket.dstSock.send)
-      }
-      //if(req.data.length) {
-      //  socket.destSock.write(req.data)
-      //}
-    }
-    
-    if (req.cmd == 'udp') {
-      const listener = dgram.createSocket('udp4')
-      socket.dstSock = listener
-      listener.on('listening', onConnect)
-              .on('error', onError)
-              .bind(req.dstPort, req.dstAddr)
-    } else if(req.cmd == 'bind') {
-      const listener = createServer()
-      socket.dstSock = listener
-      listener.on('connection', onConnect)
-              .on('error', onError)
-              .listen(req.dstPort, req.dstAddr)
-    } else if(req.cmd == 'connect') {
-      var dstSock = new Socket()
-      socket.dstSock = dstSock
-      dstSock.setKeepAlive(false)
-      dstSock.on('error', onError)
-             .on('connect', onConnect)
-             .connect(req.dstPort, dstIP)
-    } else {
-      socket.send(BUF_REP_CMDUNSUPP)
-      socket.close()
-    }
-  })
+Server.prototype._onErrorNoop = function(err) {
+  console.log(err)
 }
 
-function handleProxyError(socket, err) {
+Server.prototype._onSocketConnect = function(socket, reqInfo) {
+  if(!socket._socket.writable) return
+  var ipv6 = ip6addr.parse(socket._socket.localAddress)
+  var localbytes = ipv6.toBuffer()
+  if(ipv6.kind() == 'ipv4') {
+    localbytes = localbytes.slice(12)
+  }
+  var bufrep = Buffer.alloc(6 + localbytes.length)
+  bufrep[0] = 0x05
+  bufrep[1] = REP.SUCCESS
+  bufrep[2] = 0x00
+  bufrep[3] = (ipv6.kind() == 'ipv4' ? ATYP.IPv4 : ATYP.IPv6)
+  for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
+    bufrep[p] = localbytes[i]
+  bufrep.writeUInt16BE(socket._socket.localPort, p, true)
+  socket.send(bufrep)
+
+  // do some new piping for the socket
+  if(typeof socket.dstSock.pipe == 'function') {
+    console.log('Starting pipe')
+    socket._socket.pipe(socket.dstSock)
+    socket.dstSock.pipe(socket._socket)
+  } else {
+    console.log('Starting messages')
+  }
+  socket._socket.resume()
+}
+
+Server.prototype._onProxyError = function(socket, err) {
+  console.log(err)
   if(!socket._socket.writable) return
   var errbuf = Buffer.from([0x05, REP.GENFAIL])
   if (err.code) {
@@ -249,3 +293,43 @@ function handleProxyError(socket, err) {
   socket.send(errbuf)
   socket.close()
 }
+
+Server.prototype.proxySocket = async function(socket, reqInfo) {
+  var self = this
+  var onConnect = this._onSocketConnect.bind(this, socket, reqInfo)
+  var onError = this._onProxyError.bind(this, socket) // err is passed in
+  
+  try {
+    var dstIP = await this.lookupDNS(reqInfo.dstAddr)
+    if (reqInfo.cmd == 'udp') {
+      var portLeft = Math.round(Math.random() * 50) * 1000 + 5000
+      var portRight = reqInfo.dstPort & 0xfff
+      const listener = dgram.createSocket('udp4')
+      self._listeners[reqInfo.dstPort] = socket.dstSock = listener
+      console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight)
+      listener.on('listening', onConnect)
+              .on('connection', self._onConnection)
+              .bind(portLeft + portRight, reqInfo.dstAddr)
+    } else if(reqInfo.cmd == 'bind') {
+      const listener = createServer()
+      socket.dstSock = listener
+      listener.on('connection', onConnect)
+              .on('error', onError)
+              .listen(reqInfo.dstPort, reqInfo.dstAddr)
+    } else if(reqInfo.cmd == 'connect') {
+      var dstSock = new Socket()
+      socket.dstSock = dstSock
+      dstSock.setKeepAlive(false)
+      dstSock.on('error', onError)
+             .on('connect', onConnect)
+             .connect(reqInfo.dstPort, dstIP)
+    } else {
+      socket.send(BUF_REP_CMDUNSUPP)
+      socket.close()
+    }
+  } catch (err) {
+    self._onProxyError(socket, err)
+  }
+}
+
+exports.Server = Server

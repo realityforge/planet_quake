@@ -119,10 +119,14 @@
 		Module['viewport'] = document.getElementById('viewport-frame');
 		Module['elementPointerLock'] = true;
 		window.addEventListener('resize', resizeViewport);
-		Module['onRuntimeInitialized'] = () => {
-			Module['websocket'].url = window.location.search.includes('https://')
+		Object.assign(Module, {
+			websocket: Object.assign(Module.websocket || {}, {
+				url: window.location.search.includes('https://')
 				? 'wss://'
-				: 'ws://';
+				: 'ws://'
+			})
+		})
+		Module['onRuntimeInitialized'] = () => {
 		};
 	};
 </script>
