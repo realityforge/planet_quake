@@ -63,7 +63,7 @@ Server.prototype._onClose = function (socket, onData) {
   }
 }
 
-Server.prototype._onParseError = function(onData, err) {
+Server.prototype._onParseError = function(socket, onData, err) {
   console.log('Parse error ', err)
   socket.off('data', onData)
   socket.off('message', onData)
@@ -181,7 +181,6 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   parser.on('request', async (reqInfo) => {
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
-      console.log('Requesting', reqInfo.dstAddr, ':', reqInfo.dstPort)
       udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
     } catch (err) {
       self._onProxyError(socket, err)
@@ -194,7 +193,7 @@ Server.prototype._onConnection = function(socket) {
   ++this._connections
   var parser = new Parser(socket)
       onData = parser._onData.bind(parser),
-      onError = this._onParseError.bind(this, onData), // data for unbinding, err passed in
+      onError = this._onParseError.bind(this, socket, onData), // data for unbinding, err passed in
       onMethods = this._onMethods.bind(this, parser, socket, onData),
       onRequest = this._onRequest.bind(this, socket, onData), // reqInfo passed in
       onClose = this._onClose.bind(this, socket, onData),
@@ -260,12 +259,13 @@ Server.prototype._onSocketConnect = function(socket, reqInfo) {
   socket.send(bufrep)
 
   // do some new piping for the socket
-  if(typeof socket.dstSock.pipe == 'function') {
+  if(typeof socket.dstSock == 'function') {
     console.log('Starting pipe')
     socket._socket.pipe(socket.dstSock)
     socket.dstSock.pipe(socket._socket)
   } else {
     console.log('Starting messages')
+    socket.send(bufrep)
   }
   socket._socket.resume()
 }
@@ -305,7 +305,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       var portLeft = Math.round(Math.random() * 50) * 1000 + 5000
       var portRight = reqInfo.dstPort & 0xfff
       const listener = dgram.createSocket('udp4')
-      self._listeners[reqInfo.dstPort] = socket.dstSock = listener
+      self._listeners[reqInfo.dstPort] = listener
       console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight)
       listener.on('listening', onConnect)
               .on('connection', self._onConnection)

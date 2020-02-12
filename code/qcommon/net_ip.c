@@ -684,9 +684,6 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
 	if( usingSocks && to.type == NA_IP ) {
-    char addrbuf[NET_ADDRSTRMAXLEN];
-    Sys_SockaddrToString(addrbuf, sizeof(addrbuf), (struct sockaddr *) &socksRelayAddr);
-    Com_Printf( "Sys_SendPacket: Sending through proxy %s (%s:%u)\n", to.name, addrbuf, ((struct sockaddr_in *)&socksRelayAddr)->sin_port );
 		socksBuf[0] = 5;	// reserved
 		socksBuf[1] = 1;
 		socksBuf[2] = 0;	// fragment (not fragmented)
