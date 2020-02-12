@@ -23,20 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
-#ifdef EMSCRIPTEN
-#ifndef DEDICATED
-extern void Sys_SocksConnect( void );
-extern void Sys_SocksMessage( void );
-void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void SOCKS_Frame_Proxy( void );
-static void (*SOCKS_Proxy)( void ) = NULL;
-static void (*SOCKS_After)( void ) = NULL;
-void NET_OpenSocks_After_Connect( void );
-void NET_OpenSocks_After_Method( void );
-void NET_OpenSocks_After_Listen( void );
-#endif
-#endif
-
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <ws2tcpip.h>
@@ -103,6 +89,19 @@ typedef int SOCKET;
 typedef int	ioctlarg_t;
 #	define socketError			errno
 
+#endif
+
+#ifdef EMSCRIPTEN
+// stuff for async SOCKS set up, during Net_Init recv is used synchronously
+extern void Sys_SocksConnect( void );
+extern void Sys_SocksMessage( void );
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void SOCKS_Frame_Proxy( void );
+static void (*SOCKS_Proxy)( void ) = NULL;
+static void (*SOCKS_After)( void ) = NULL;
+void NET_OpenSocks_After_Connect( void );
+void NET_OpenSocks_After_Method( void );
+void NET_OpenSocks_After_Listen( void );
 #endif
 
 static qboolean usingSocks = qfalse;
@@ -687,7 +686,7 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		socksBuf[0] = 5;	// reserved
 		socksBuf[1] = 1;
 		socksBuf[2] = 0;	// fragment (not fragmented)
-		socksBuf[3] = 3;	// address type: IPV4
+		socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
     // let socks server do the translation
     socksBuf[4] = strlen(to.name) + 1;
     Q_strncpyz( &socksBuf[5], to.name, socksBuf[4] );
@@ -1124,7 +1123,7 @@ void NET_OpenSocks( int port ) {
 #ifndef EMSCRIPTEN
     Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
     return;
-#elif !defined(DEDICATED)
+#else
     if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
       Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
       return;
@@ -1142,6 +1141,7 @@ void NET_OpenSocks_After_Connect( void ) {
 	qboolean			rfc1929;
 	unsigned char		buf[64];
   {
+    Cvar_Set("net_enabled", "0");
     port = porto;
 #endif
 	}
@@ -1183,7 +1183,7 @@ void NET_OpenSocks_After_Method( void ) {
   int					len;
   unsigned char		buf[64];
   port = porto;
-
+  Cvar_Set("net_enabled", "0");
 #endif
 ;
 
@@ -1267,7 +1267,7 @@ void NET_OpenSocks_After_Method( void ) {
 void NET_OpenSocks_After_Listen( void ) {
   int					len;
   unsigned char		buf[64];
-
+  Cvar_Set("net_enabled", "0");
 #endif
 ;
 
@@ -1296,6 +1296,9 @@ void NET_OpenSocks_After_Listen( void ) {
 	memset( ((struct sockaddr_in *)&socksRelayAddr)->sin_zero, 0, 8 );
 
 	usingSocks = qtrue;
+  #ifdef EMSCRIPTEN
+    Cvar_Set("net_enabled", "1");
+  #endif
 }
 
 

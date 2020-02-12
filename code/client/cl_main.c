@@ -2464,7 +2464,7 @@ void CL_CheckForResend( void ) {
 	int		port;
 	char	info[MAX_INFO_STRING];
 	char	data[MAX_INFO_STRING + 10];
-
+	
 	// don't send anything if playing back a demo
 	if ( clc.demoplaying ) {
 		return;
@@ -3087,6 +3087,7 @@ void CL_Frame ( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
+
 #endif
 
 #ifdef USE_CURL

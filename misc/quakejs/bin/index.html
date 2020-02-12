@@ -69,37 +69,6 @@
 	
 
 <script>
-
-	function updateVideoCmd() {
-		var update = 'set r_fullscreen %fs; set r_mode -1; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
-			.replace('%fs', window.fullscreen ? '1' : '0')
-			.replace('%w', Module['viewport'].offsetWidth)
-			.replace('%h', Module['viewport'].offsetHeight)
-		Module._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
-		Module._Cbuf_Execute();
-	}
-
-	var resizeDelay;
-	function resizeViewport() {
-		if (!Module['canvas']) {
-			// ignore if the canvas hasn't yet initialized
-			return;
-		}
-
-		if (resizeDelay) clearTimeout(resizeDelay);
-		resizeDelay = setTimeout(updateVideoCmd, 100);
-	}
-
-	function quitGameOnUnload(e) {
-		if(Module['viewport']) {
-			Module._Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
-			Module._Cbuf_Execute();
-			Module['viewport'].remove()
-			Module['viewport'] = null
-		}
-		return false
-	}
-
 	window.onload = function () {
 		IDBFS.loadRemoteEntry = function (store, path, callback) {
 			var req = store.get(path);
@@ -118,14 +87,6 @@
 		//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
 		Module['viewport'] = document.getElementById('viewport-frame');
 		Module['elementPointerLock'] = true;
-		window.addEventListener('resize', resizeViewport);
-		Object.assign(Module, {
-			websocket: Object.assign(Module.websocket || {}, {
-				url: window.location.search.includes('https://')
-				? 'wss://'
-				: 'ws://'
-			})
-		})
 		Module['onRuntimeInitialized'] = () => {
 		};
 	};

@@ -323,6 +323,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       dstSock.on('error', onError)
              .on('connect', onConnect)
              .connect(reqInfo.dstPort, dstIP)
+    // TODO: add websocket piping for quakejs servers
     } else {
       socket.send(BUF_REP_CMDUNSUPP)
       socket.close()

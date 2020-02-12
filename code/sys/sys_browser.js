@@ -90,7 +90,34 @@ var LibrarySys = {
 				'+set', 'r_customWidth', '' + window.innerWidth,
 			])
 			return args
-		}
+		},
+		updateVideoCmd: function () {
+			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+				.replace('%fs', window.fullscreen ? '1' : '0')
+				.replace('%w', Module['viewport'].offsetWidth)
+				.replace('%h', Module['viewport'].offsetHeight)
+			Module._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
+			Module._Cbuf_Execute();
+		},
+		resizeDelay: null,
+		resizeViewport: function () {
+			if (!Module['canvas']) {
+				// ignore if the canvas hasn't yet initialized
+				return;
+			}
+
+			if (SYS.resizeDelay) clearTimeout(SYS.resizeDelay);
+			SYS.resizeDelay = setTimeout(SYS.updateVideoCmd, 100);
+		},
+		quitGameOnUnload: function (e) {
+			if(Module['viewport']) {
+				Module._Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
+				Module._Cbuf_Execute();
+				Module['viewport'].remove()
+				Module['viewport'] = null
+			}
+			return false
+		},
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading')
@@ -109,6 +136,15 @@ var LibrarySys = {
 				'</div>'
 			SYS.eula = Module['viewport'].appendChild(eula)
 		}
+		Object.assign(Module, {
+			websocket: Object.assign(Module.websocket || {}, {
+				url: window.location.search.includes('https://')
+				? 'wss://'
+				: 'ws://'
+			})
+		})
+		window.addEventListener('resize', SYS.resizeViewport)
+		
 	},
 	Sys_PlatformExit: function () {
 		var handler = Module['exitHandler']
@@ -118,7 +154,7 @@ var LibrarySys = {
 			}
 			return
 		}
-		window.removeEventListener('resize', resizeViewport)
+		window.removeEventListener('resize', SYS.resizeViewport)
 		if(SYS.loading) {
 			SYS.loading.remove()
 			SYS.loading = null

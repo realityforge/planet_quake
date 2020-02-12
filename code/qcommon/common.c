@@ -3174,11 +3174,11 @@ void Com_Frame( void ) {
 	timeAfter = 0;
 
 #ifdef EMSCRIPTEN
+	// used by cl_parsegamestate/cl_initcgame
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
 		void (*cb)( void ) = CB_Frame_Proxy;
 		CB_Frame_Proxy = NULL;
-		// used by cl_parsegamestate/cl_initcgame
 		(*cb)();
 		return;
 	}
@@ -3191,10 +3191,10 @@ void Com_Frame( void ) {
 		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
 		void (*cb)( void ) = CB_Frame_After;
 		CB_Frame_After = NULL; // start frame runner again
-		// used by cl_parsegamestate/cl_initcgame
 		(*cb)();
 		return;
 	}
+	
 #endif
 
 	// write config file if anything changed
