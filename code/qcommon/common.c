@@ -3105,9 +3105,10 @@ int Com_TimeVal(int minMsec)
 
 #ifdef EMSCRIPTEN
 qboolean invokeFrameAfter = qfalse;
-void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+void Com_Frame_Callback_Arg1(void (*cb)( int *a ), int *a, void (*af)( int *b )) {
 	invokeFrameAfter = qfalse;
 	if(!CB_Frame_Proxy) {
+		CB_Frame_Proxy_Arg1 = a;
 		CB_Frame_Proxy = cb;
 	} else {
 		Com_Error( ERR_FATAL, "Already calling a frame proxy." );
@@ -3119,10 +3120,19 @@ void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 	}
 }
 
-void Com_Frame_Proxy( void ) {
+void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	Com_Frame_Callback_Arg1(cb, NULL, af);
+}
+
+void Com_Frame_Proxy_Arg1( int *b ) {
 	if(CB_Frame_After) {
+		CB_Frame_After_Arg1 = b;
 		invokeFrameAfter = qtrue;
 	}
+}
+
+void Com_Frame_Proxy( void ) {
+	Com_Frame_Proxy_Arg1(NULL);
 }
 
 void Com_Frame_After_Startup() {
@@ -3177,9 +3187,14 @@ void Com_Frame( void ) {
 	// used by cl_parsegamestate/cl_initcgame
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
-		void (*cb)( void ) = CB_Frame_Proxy;
 		CB_Frame_Proxy = NULL;
-		(*cb)();
+		if(CB_Frame_Proxy_Arg1 != NULL) {
+			void (*cb)( int *a ) = CB_Frame_Proxy;
+			(*cb)(CB_Frame_Proxy_Arg1);
+		} else {
+			void (*cb)( void ) = CB_Frame_Proxy;
+			(*cb)();
+		}
 		return;
 	}
 	
@@ -3189,12 +3204,16 @@ void Com_Frame( void ) {
 		}
 		invokeFrameAfter = qfalse;
 		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
-		void (*cb)( void ) = CB_Frame_After;
 		CB_Frame_After = NULL; // start frame runner again
-		(*cb)();
+		if(CB_Frame_After_Arg1 != NULL) {
+			void (*cb)( int * ) = CB_Frame_After;
+			(*cb)(CB_Frame_After_Arg1);
+		} else {
+			void (*cb)( void ) = CB_Frame_After;
+			(*cb)();
+		}
 		return;
 	}
-	
 #endif
 
 	// write config file if anything changed

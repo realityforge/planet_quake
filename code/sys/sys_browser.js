@@ -10,21 +10,26 @@ var LibrarySys = {
 			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3',
 			'+set', 'fs_game', 'baseq3',
-			'+set', 'net_enabled', '1',
 			'+set', 'developer', '0',
 			'+set', 'fs_debug', '0',
 			'+set', 'r_mode', '-1',
 			'+set', 'r_customPixelAspect', '1',
 			'+set', 'sv_pure', '0',
 			'+set', 'cg_simpleItems', '1',
+			// these control the proxy server
+			'+set', 'net_enabled', '1', // 1 for IPv4
+			'+set', 'net_socksServer', '127.0.0.1',
+			'+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
+			'+set', 'net_socksEnabled', '1',
 			// these settings were set by the emscripten build
-			//'+connect', 'proxy.quake.games:443',
-			/*
 			'+set', 'r_normalMapping', '0',
 			'+set', 'r_specularMapping', '0',
 			'+set', 'r_deluxeMapping', '0',
 			'+set', 'r_hdr', '0',
 			'+set', 'r_picmip', '0',
+			'+set', 'cg_drawfps', '1',
+			//'+connect', 'proxy.quake.games:443',
+			/*
 			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
 			'+set', 'g_spSkill', '5',
 			'+set', 'g_spScores5', '\\l21\\5\\l14\\5\\l22\\5\\l25\\5\\l5\\5\\l3\\5\\l2\\5\\l20\\2\\l19\\1\\l1\\5\\l0\\5\\l24\\1',
@@ -282,7 +287,10 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(PATH.extname(file.name) === '.pk3' || !sv_pure) {
+						if(PATH.extname(file.name) === '.pk3'
+						  || PATH.extname(file.name) === '.wasm'
+							|| PATH.extname(file.name) === '.qvm'
+							|| !sv_pure) {
 							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {

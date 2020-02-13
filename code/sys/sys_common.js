@@ -26,10 +26,14 @@ var LibrarySysCommon = {
 
 			Browser.safeCallback(() => _Com_Error(level, err))();
 		},
-		ProxyCallback: function () {
+		ProxyCallback: function (arg1) {
 			Browser.safeCallback(() => {
 				try {
-					_Com_Frame_Proxy();
+					if(typeof arg1 != 'undefined') {
+						_Com_Frame_Proxy_Arg1(arg1);
+					} else {
+						_Com_Frame_Proxy();
+					}
 				} catch (e) {
 					if (e instanceof ExitStatus) {
 						return;
@@ -110,8 +114,10 @@ var LibrarySysCommon = {
 		var basename = allocate(intArrayFromString(path), 'i8', ALLOC_STACK);
 		return basename;
 	},
-	Sys_DllExtension: function () {
-		return false;
+	Sys_DllExtension__deps: ['$PATH'],
+	Sys_DllExtension: function (path) {
+		path = UTF8ToString(path);
+		return PATH.extname(path) == '.wasm';
 	},
 	Sys_Dirname__deps: ['$PATH'],
 	Sys_Dirname: function (path) {
@@ -238,6 +244,11 @@ var LibrarySysCommon = {
 	},
 	Sys_PIDIsRunning: function (pid) {
 		return 1;
+	},
+	Sys_LoadLibrary__deps: ['$LDSO'],
+	Sys_LoadLibrary: function (name) {
+		return loadDynamicLibrary(name) // passing memory address
+			.then(handle => SYSC.proxyCallback(handle))
 	}
 };
 

@@ -603,8 +603,16 @@ void *Sys_LoadGameDll(const char *name,
 	}
 
 	Com_Printf( "Loading DLL file: %s\n", name);
+#ifndef EMSCRIPTEN
 	libHandle = Sys_LoadLibrary(name);
+#else
+	return NULL;
+}
 
+void *Sys_LoadGameDll_After_Load(void *handle) {
+	void *libHandle = handle;
+#endif
+	
 	if(!libHandle)
 	{
 		Com_Printf("Sys_LoadGameDll(%s) failed:\n\"%s\"\n", name, Sys_LibraryError());

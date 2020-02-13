@@ -975,9 +975,8 @@ ifeq ($(PLATFORM),js)
 		-fPIC
   OPTIMIZE = $(OPTIMIZEVM)
 
-# TODO: fix this, need to build QVM.js but not VM because WASM is an x86 VM
   HAVE_VM_COMPILED=true
-  BUILD_GAME_QVM=0
+  BUILD_GAME_QVM=1
   BUILD_STANDALONE=0
   BUILD_RENDERER_OPENGL2=1
   BUILD_FREETYPE=1
@@ -987,7 +986,7 @@ ifeq ($(PLATFORM),js)
   USE_CODEC_OPUS=1
   USE_MUMBLE=0
   USE_VOIP=0
-  SDL_LOADSO_DLOPEN=0
+  SDL_LOADSO_DLOPEN=1
   USE_CURL_DLOPEN=0
   USE_OPENAL_DLOPEN=0
   USE_RENDERER_DLOPEN=0
@@ -1001,7 +1000,7 @@ ifeq ($(PLATFORM),js)
   LIBSYSNODE=$(SYSDIR)/sys_node.js
   LIBVMJS=$(CMDIR)/vm_js.js
 
-  CLIENT_CFLAGS += -I$(SDLHDIR)/include
+  CLIENT_CFLAGS += -I$(SDLHDIR)/include -I$(EMSCRIPTEN)/system/include -I$(EMSCRIPTEN)/system/lib
 
 #   -s USE_WEBGL2=1
 #		-s MIN_WEBGL_VERSION=2
@@ -1011,21 +1010,28 @@ ifeq ($(PLATFORM),js)
     --js-library $(LIBSYSBROWSER) \
     --js-library $(LIBVMJS) \
 		-lidbfs.js \
+		-lsdl.js \
+		-legl.js \
+		-lwebgl.js \
+		-lwebgl2.js \
+		-lglemu.js \
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
+		-s MAIN_MODULE=2 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
-    -s GL_UNSAFE_OPTS=0 \
+    -s GL_UNSAFE_OPTS=1 \
 		-s WEBSOCKET_DEBUG=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['loadDynamicLibrary', 'callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'emscripten_GetProcAddress']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=0 \
-    -s LEGACY_GL_EMULATION=1 \
-    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s LEGACY_GL_EMULATION=1 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+    -s USE_WEBGL2=1 \
     -s FULL_ES2=0 \
     -s FULL_ES3=0 \
     -s USE_SDL=2 \
@@ -1041,8 +1047,8 @@ ifeq ($(PLATFORM),js)
 		-s NO_EXIT_RUNTIME=1 \
     -s INVOKE_RUN=1 \
     -s EXIT_RUNTIME=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="[loadDynamicLibrary', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=0 \
@@ -1051,11 +1057,12 @@ ifeq ($(PLATFORM),js)
     $(OPTIMIZE)
 
   SHLIBEXT=wasm
-  SHLIBNAME=.$(SHLIBEXT)
+  SHLIBNAME=$(ARCH).$(SHLIBEXT)
   SHLIBLDFLAGS=$(LDFLAGS) \
     -s INVOKE_RUN=0 \
+		-s LINKABLE=1 \
     -s EXPORTED_FUNCTIONS="['_vmMain', '_dllEntry']" \
-    -s SIDE_MODULE=1 \
+    -s SIDE_MODULE=2 \
     $(OPTIMIZE)
 
 else # ifeq js
@@ -1090,7 +1097,9 @@ endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
+ifneq ($(PLATFORM),js)
   BUILD_GAME_QVM=0
+endif
 endif
 
 TARGETS =

@@ -557,7 +557,7 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
-			if ( usingSocks && memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
+			if ( usingSocks ) { //&& memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
 				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
 					return qfalse;
 				}
@@ -568,7 +568,7 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
   				net_from->ip[1] = net_message->data[5];
   				net_from->ip[2] = net_message->data[6];
   				net_from->ip[3] = net_message->data[7];
-          net_message->readcount = 10;
+          net_message->readcount = 4 + 4 + 2;
         } else if (net_message->data[3] == 3) {
           Q_strncpyz(net_from->name, (char *)&net_message->data[5], net_message->data[4]);
           NET_StringToAdr(net_from->name, net_from, net_from->type);
@@ -1297,6 +1297,7 @@ void NET_OpenSocks_After_Listen( void ) {
 
 	usingSocks = qtrue;
   #ifdef EMSCRIPTEN
+// TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
     Cvar_Set("net_enabled", "1");
   #endif
 }
@@ -1719,7 +1720,7 @@ void NET_Event(fd_set *fdr)
       
       if(netmsg.readcount > 0) {
         memcpy(netmsg.data, &bufData[netmsg.readcount], netmsg.cursize - netmsg.readcount);
-        netmsg.cursize -= netmsg.readcount;
+        netmsg.cursize = netmsg.cursize - netmsg.readcount;
         netmsg.readcount = 0;
       }
       

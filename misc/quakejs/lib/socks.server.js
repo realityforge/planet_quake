@@ -5,7 +5,6 @@ var util = require('util')
 var Parser = require('./socks.parser')
 var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
-var ipv6 = require('ipv6').v6
 
 var ATYP = {
   IPv4: 0x01,

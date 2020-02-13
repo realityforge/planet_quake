@@ -35,9 +35,9 @@ async function compressDirectory(fullpath, outputStream, absolute) {
 // length for the client so it can present accurate progress info
 async function compressFile(fullpath, vol) {
   var crc = crc32.unsigned('')
-  var stream = vol.createReadStream(fullpath)
+  var stream = ufs.createReadStream(fullpath)
   stream.on('error', function (err) {
-    reject(err)
+    throw err
   })
   stream.on('data', function (data) {
     crc = crc32.unsigned(data, crc)
@@ -57,7 +57,7 @@ async function compressFile(fullpath, vol) {
     brCompressed: vol.statSync(fullpath + '.br').size,
     dfCompressed: vol.statSync(fullpath + '.df').size,
     checksum: crc,
-    size: vol.statSync(fullpath).size
+    size: ufs.statSync(fullpath).size
   }
 }
 

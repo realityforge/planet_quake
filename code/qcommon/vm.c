@@ -619,7 +619,8 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 			Com_Printf("Try loading dll file %s\n", filename);
 
 			vm->dllHandle = Sys_LoadGameDll(filename, &vm->entryPoint, VM_DllSyscall);
-			
+			Com_Frame_Proxy_Arg1(Sys_LoadLibrary, name, )
+
 			if(vm->dllHandle)
 			{
 				vm->systemCall = systemCalls;
@@ -1009,7 +1010,7 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 	Com_Memcpy(currentVM->dataBase + dest, currentVM->dataBase + src, n);
 }
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 qboolean VM_IsSuspended(vm_t * vm) {
 #ifndef NO_VM_COMPILED
 		if (vm->compiled) {

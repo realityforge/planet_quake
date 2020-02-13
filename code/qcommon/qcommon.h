@@ -38,10 +38,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
+void Com_Frame_Callback_Arg1(void (*cb)( int *a ), int *a, void (*af)( int *b ));
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void Com_Frame_Proxy_Arg1( int *b );
 void Com_Frame_Proxy( void );
-static void (*CB_Frame_Proxy)( void ) = NULL;
-static void (*CB_Frame_After)( void ) = NULL;
+
+static void (*CB_Frame_Proxy)( int *a ) = NULL;
+static int *CB_Frame_Proxy_Arg1 = NULL;
+static void (*CB_Frame_After)( int *b ) = NULL;
+static int *CB_Frame_After_Arg1 = NULL;
 
 #ifndef DEDICATED
 extern char **Sys_CmdArgs( void );

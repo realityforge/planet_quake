@@ -20,11 +20,51 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#ifdef USE_LOCAL_HEADERS
-#	include "SDL.h"
+//#ifdef USE_LOCAL_HEADERS
+#include <SDL.h>
+#include <SDL_opengl.h>
+
+/*
+#include <emscripten.h>
+#include <GL/gl.h>
+#include <SDL.h>
+#include <SDL_egl.h>
+#	include <SDL_opengl.h>
+#	include <SDL_opengl_glext.h>
+#include <gl/webgl1.h>
+#include <gl/webgl2.h>
+#include <emscripten.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <GLES3/gl2ext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl31.h>
+#include <GLES3/gl32.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <gl/webgl1.h>
+#include <gl/webgl2.h>
+#	include "SDL_opengl.h"
+#	include "SDL_opengl_glext.h"
+#	include "SDL_opengles.h"
+#	include "SDL_opengles2.h"
+#	include "SDL_opengles2_gl2.h"
+#	include "SDL_opengles2_gl2ext.h"
+#	include "SDL_egl.h"
 #else
+# include "GL/gl.h"
 #	include <SDL.h>
+#	include <SDL_opengl.h>
+#	include <SDL_opengl_glext.h>
+#	include <SDL_opengles.h>
+#	include <SDL_opengles2.h>
+#	include <SDL_opengles2_gl2.h>
+#	include <SDL_opengles2_gl2ext.h>
+#	include <SDL_egl.h>
 #endif
+*/
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -241,8 +281,10 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	qboolean success = qtrue;
 	const char *version;
 
-#if defined(__SDL_NOGETPROCADDR__) || defined(EMSCRIPTEN)
+#ifdef EMSCRIPTEN
 #define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
+#elif __SDL_NOGETPROCADDR__
+#define GLE( ret, name, ... ) qgl##name = (void *)gl#name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \

@@ -42,7 +42,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #		include <SDL.h>
 #		include <SDL_loadso.h>
 #	endif
+#ifdef EMSCRIPTEN
+extern void *Sys_LoadLibrary(const char *f);
+#else
 #	define Sys_LoadLibrary(f) SDL_LoadObject(f)
+#endif
 #	define Sys_UnloadLibrary(h) SDL_UnloadObject(h)
 #	define Sys_LoadFunction(h,fn) SDL_LoadFunction(h,fn)
 #	define Sys_LibraryError() SDL_GetError()

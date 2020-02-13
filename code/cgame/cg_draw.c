@@ -1200,9 +1200,9 @@ static float CG_DrawPowerups( float y ) {
 
 		// ZOID--don't draw if the power up has unlimited time
 		// This is true of the CTF flags
-		if ( ps->powerups[ i ] == INT_MAX ) {
-			continue;
-		}
+		//if ( ps->powerups[ i ] == INT_MAX ) {
+		//	continue;
+		//}
 
 		t = ps->powerups[ i ] - cg.time;
 		if ( t <= 0 ) {
@@ -2653,6 +2653,3 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	// draw status bar and other floating elements
  	CG_Draw2D(stereoView);
 }
-
-
-
