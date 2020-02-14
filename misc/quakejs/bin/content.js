@@ -189,7 +189,11 @@ async function makeIndexJson(filename, absolute) {
 			if(!ufs.existsSync(fullpath)) continue
 			var file = {}
 			if(ufs.statSync(fullpath).isFile()) {
-				file = await cacheFile(fullpath)
+        if(writeOut) {
+          file = await cacheFile(fullpath)
+        } else {
+          file = {size: ufs.statSync(fullpath).size}
+        }
 			} else if(repackFiles
         && fullpath.includes('.pk3dir')
         && ufs.statSync(fullpath).isDirectory()) {

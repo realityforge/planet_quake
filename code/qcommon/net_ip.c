@@ -1267,7 +1267,8 @@ void NET_OpenSocks_After_Method( void ) {
 void NET_OpenSocks_After_Listen( void ) {
   int					len;
   unsigned char		buf[64];
-  Cvar_Set("net_enabled", "0");
+  // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
+  Cvar_Set("net_enabled", "1");
 #endif
 ;
 
@@ -1296,10 +1297,6 @@ void NET_OpenSocks_After_Listen( void ) {
 	memset( ((struct sockaddr_in *)&socksRelayAddr)->sin_zero, 0, 8 );
 
 	usingSocks = qtrue;
-  #ifdef EMSCRIPTEN
-// TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
-    Cvar_Set("net_enabled", "1");
-  #endif
 }
 
 

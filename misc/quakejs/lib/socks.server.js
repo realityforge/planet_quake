@@ -306,7 +306,7 @@ Server.prototype.tryBindPort = function(reqInfo, onConnect) {
               .bind(portLeft + portRight, reqInfo.dstAddr)
       return listener
     } catch (e) {
-      if(e.code != 'EADDRINUSE') throw e
+      if(!e.message.includes('EADDRINUSE')) throw e
     }
   }
 }
