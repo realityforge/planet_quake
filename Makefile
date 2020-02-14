@@ -35,8 +35,14 @@ endif
 ifndef BUILD_MISSIONPACK
   BUILD_MISSIONPACK=
 endif
+ifndef BUILD_RENDERER_OPENGL
+  BUILD_RENDERER_OPENGL=
+endif
 ifndef BUILD_RENDERER_OPENGL2
   BUILD_RENDERER_OPENGL2=
+endif
+ifndef BUILD_RENDERER_OPENGLES
+  BUILD_RENDERER_OPENGLES=
 endif
 ifndef BUILD_AUTOUPDATER  # DON'T build unless you mean to!
   BUILD_AUTOUPDATER=0
@@ -251,6 +257,7 @@ SDIR=$(MOUNT_DIR)/server
 RCOMMONDIR=$(MOUNT_DIR)/renderercommon
 RGL1DIR=$(MOUNT_DIR)/renderergl1
 RGL2DIR=$(MOUNT_DIR)/renderergl2
+RGLESDIR=$(MOUNT_DIR)/renderergles1
 CMDIR=$(MOUNT_DIR)/qcommon
 SDLDIR=$(MOUNT_DIR)/sdl
 ASMDIR=$(MOUNT_DIR)/asm
@@ -979,7 +986,9 @@ ifeq ($(PLATFORM),js)
   HAVE_VM_COMPILED=true
   BUILD_GAME_QVM=1
   BUILD_STANDALONE=0
-  BUILD_RENDERER_OPENGL2=1
+	BUILD_RENDERER_OPENGL=0
+	BUILD_RENDERER_OPENGL2=0
+  BUILD_RENDERER_OPENGLES=1
   BUILD_FREETYPE=1
 
   USE_CURL=0
@@ -1027,11 +1036,11 @@ ifeq ($(PLATFORM),js)
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=0 \
-		-s LEGACY_GL_EMULATION=1 \
-		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s LEGACY_GL_EMULATION=0 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=0 \
     -s USE_WEBGL2=1 \
-    -s FULL_ES2=0 \
-    -s FULL_ES3=0 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
     -s USE_SDL=2 \
 		-s USE_SDL_IMAGE=2 \
 		-s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
@@ -1553,6 +1562,7 @@ makedirs:
 	@$(MKDIR) $(B)/renderergl1
 	@$(MKDIR) $(B)/renderergl2
 	@$(MKDIR) $(B)/renderergl2/glsl
+	@$(MKDIR) $(B)/renderergles1
 	@$(MKDIR) $(B)/ded
 	@$(MKDIR) $(B)/$(BASEGAME)/cgame
 	@$(MKDIR) $(B)/$(BASEGAME)/game
@@ -1937,8 +1947,8 @@ Q3R2OBJ = \
   $(B)/renderergl2/tr_vbo.o \
   $(B)/renderergl2/tr_world.o \
   \
-  $(B)/renderergl1/sdl_gamma.o \
-  $(B)/renderergl1/sdl_glimp.o
+  $(B)/renderergl2/sdl_gamma.o \
+  $(B)/renderergl2/sdl_glimp.o
 
 Q3R2STRINGOBJ = \
   $(B)/renderergl2/glsl/bokeh_fp.o \
@@ -1969,6 +1979,40 @@ Q3R2STRINGOBJ = \
   $(B)/renderergl2/glsl/texturecolor_vp.o \
   $(B)/renderergl2/glsl/tonemap_fp.o \
   $(B)/renderergl2/glsl/tonemap_vp.o
+
+Q3RESOBJ = \
+  $(B)/renderergles1/tr_animation.o \
+  $(B)/renderergles1/tr_backend.o \
+  $(B)/renderergles1/tr_bsp.o \
+  $(B)/renderergles1/tr_cmds.o \
+  $(B)/renderergles1/tr_curve.o \
+  $(B)/renderergles1/tr_flares.o \
+  $(B)/renderergles1/tr_font.o \
+  $(B)/renderergles1/tr_image.o \
+  $(B)/renderergles1/tr_image_bmp.o \
+  $(B)/renderergles1/tr_image_jpg.o \
+  $(B)/renderergles1/tr_image_pcx.o \
+  $(B)/renderergles1/tr_image_png.o \
+  $(B)/renderergles1/tr_image_tga.o \
+  $(B)/renderergles1/tr_init.o \
+  $(B)/renderergles1/tr_light.o \
+  $(B)/renderergles1/tr_main.o \
+  $(B)/renderergles1/tr_marks.o \
+  $(B)/renderergles1/tr_mesh.o \
+  $(B)/renderergles1/tr_model.o \
+  $(B)/renderergles1/tr_model_iqm.o \
+  $(B)/renderergles1/tr_noise.o \
+  $(B)/renderergles1/tr_scene.o \
+  $(B)/renderergles1/tr_shade.o \
+  $(B)/renderergles1/tr_shade_calc.o \
+  $(B)/renderergles1/tr_shader.o \
+  $(B)/renderergles1/tr_shadows.o \
+  $(B)/renderergles1/tr_sky.o \
+  $(B)/renderergles1/tr_surface.o \
+  $(B)/renderergles1/tr_world.o \
+  \
+  $(B)/renderergles1/sdl_gamma.o \
+  $(B)/renderergles1/sdl_glimp.o
 
 Q3ROBJ = \
   $(B)/renderergl1/tr_altivec.o \
@@ -2017,6 +2061,12 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/renderergl1/puff.o \
     $(B)/renderergl1/q_math.o \
     $(B)/renderergl1/tr_subs.o
+
+	Q3RESOBJ += \
+		$(B)/renderergles1/q_shared.o \
+		$(B)/renderergles1/puff.o \
+		$(B)/renderergles1/q_math.o \
+		$(B)/renderergles1/tr_subs.o
 endif
 
 ifneq ($(USE_INTERNAL_JPEG),0)
@@ -2320,6 +2370,11 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
+$(B)/renderer_opengles1_$(SHLIBNAME): $(Q3RESOBJ) $(JPGOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3RESOBJ) $(JPGOBJ) \
+		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
+
 $(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(JPGOBJ) \
@@ -2330,8 +2385,14 @@ $(B)/renderer_opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ)
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 else
-
-ifeq ($(BUILD_RENDERER_OPENGL2), 0)
+ifeq ($(BUILD_RENDERER_OPENGLES), 1)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3RESOBJ) $(JPGOBJ) $(LIBSDLMAIN)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
+		-o $@ $(Q3OBJ) $(Q3RESOBJ) $(JPGOBJ) \
+		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+else
+ifneq ($(BUILD_RENDERER_OPENGL), 0)
 $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(LIBSDLMAIN) $(LIBSYSCOMMON) $(LIBSYSBROWSER) $(LIBVMJS)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
@@ -2343,6 +2404,7 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+endif
 endif
 endif
 
@@ -2862,6 +2924,21 @@ $(B)/renderergl1/%.o: $(RGL1DIR)/%.c
 $(B)/renderergl1/tr_altivec.o: $(RGL1DIR)/tr_altivec.c
 	$(DO_REF_CC_ALTIVEC)
 
+$(B)/renderergles1/%.o: $(CMDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(SDLDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(JPDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(RCOMMONDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(RGLESDIR)/%.c
+	$(DO_REF_CC)
+
 $(B)/renderergl2/glsl/%.c: $(RGL2DIR)/glsl/%.glsl
 	$(DO_REF_STR)
 
@@ -3019,13 +3096,21 @@ endif
 ifneq ($(BUILD_CLIENT),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)$(FULLBINEXT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
+		ifneq ($(BUILD_RENDERER_OPENGL),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
+		endif
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl2_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl2_$(SHLIBNAME)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl2_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl2_$(SHLIBNAME)
     endif
+		ifneq ($(BUILD_RENDERER_OPENGLES),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengles1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengles1_$(SHLIBNAME)
+		endif
   else
+		ifneq ($(BUILD_RENDERER_OPENGLES),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengles1$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengles1$(FULLBINEXT)
+		endif
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengl2$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengl2$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
     endif
   endif
 endif
