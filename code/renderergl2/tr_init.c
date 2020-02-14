@@ -1206,8 +1206,8 @@ void R_Register( void )
 	r_mode = ri.Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE );
 	r_noborder = ri.Cvar_Get("r_noborder", "0", CVAR_ARCHIVE | CVAR_LATCH);
-	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
-	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
+	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE );
+	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE );
 	r_customPixelAspect = ri.Cvar_Get( "r_customPixelAspect", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_simpleMipMaps = ri.Cvar_Get( "r_simpleMipMaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_vertexLight = ri.Cvar_Get( "r_vertexLight", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1577,6 +1577,30 @@ void RE_EndRegistration( void ) {
 	}
 }
 
+#ifdef EMSCRIPTEN
+/*
+=============
+RE_UpdateMode
+=============
+*/
+void RE_UpdateMode(glconfig_t *glconfigOut) {
+	R_IssuePendingRenderCommands();
+	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE );
+	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE );
+	glConfig.vidHeight = r_customheight->integer;
+	glConfig.vidWidth = r_customwidth->integer;
+
+	GLimp_SetVideoMode();
+	//glConfig.vidWidth = 0;
+	//InitOpenGL();
+	
+	GL_SetDefaultState();
+
+	GL_CheckErrors();
+
+	*glconfigOut = glConfig;
+}
+#endif
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -1641,6 +1665,10 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.inPVS = R_inPVS;
 
 	re.TakeVideoFrame = RE_TakeVideoFrame;
+	
+#ifdef EMSCRIPTEN
+	re.UpdateMode = RE_UpdateMode;
+#endif
 
 	return &re;
 }

@@ -293,22 +293,32 @@ Server.prototype._onProxyError = function(socket, err) {
   socket.close()
 }
 
-Server.prototype.proxySocket = async function(socket, reqInfo) {
+Server.prototype.tryBindPort = function(reqInfo, onConnect) {
   var self = this
-  var onConnect = this._onSocketConnect.bind(this, socket, reqInfo)
-  var onError = this._onProxyError.bind(this, socket) // err is passed in
-  
-  try {
-    var dstIP = await this.lookupDNS(reqInfo.dstAddr)
-    if (reqInfo.cmd == 'udp') {
+  for(var i = 0; i < 10; i++) {
+    try {
       var portLeft = Math.round(Math.random() * 50) * 1000 + 5000
       var portRight = reqInfo.dstPort & 0xfff
       const listener = dgram.createSocket('udp4')
-      self._listeners[reqInfo.dstPort] = listener
       console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight)
       listener.on('listening', onConnect)
               .on('connection', self._onConnection)
               .bind(portLeft + portRight, reqInfo.dstAddr)
+      return listener
+    } catch (e) {
+      if(e.code != 'EADDRINUSE') throw e
+    }
+  }
+}
+
+Server.prototype.proxySocket = async function(socket, reqInfo) {
+  var self = this
+  var onConnect = this._onSocketConnect.bind(this, socket, reqInfo)
+  var onError = this._onProxyError.bind(this, socket) // err is passed in
+  try {
+    var dstIP = await this.lookupDNS(reqInfo.dstAddr)
+    if (reqInfo.cmd == 'udp') {
+      self._listeners[reqInfo.dstPort] = self.tryBindPort(reqInfo, onConnect)
     } else if(reqInfo.cmd == 'bind') {
       const listener = createServer()
       socket.dstSock = listener

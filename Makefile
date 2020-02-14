@@ -7,6 +7,7 @@ COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' |
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
 EMSCRIPTEN=./misc/quakejs/lib/emsdk/upstream/emscripten
+EMSCRIPTEN_CACHE=/Users/briancullinan/.emscripten_cache/wasm-obj/include
 
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
@@ -967,9 +968,9 @@ ifeq ($(PLATFORM),js)
 		-s ASSERTIONS=0 \
 		-fPIC
   OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g3 \
-		-s SAFE_HEAP=1 \
+		-s SAFE_HEAP=0 \
 		-s DEMANGLE_SUPPORT=1 \
-		-s ASSERTIONS=0 \
+		-s ASSERTIONS=1 \
 		--source-map-base http://localhost:8080/ \
 		-frtti \
 		-fPIC
@@ -991,6 +992,7 @@ ifeq ($(PLATFORM),js)
   USE_OPENAL_DLOPEN=0
   USE_RENDERER_DLOPEN=0
   USE_LOCAL_HEADERS=0
+	USE_INTERNAL_LIBS=1
   GL_EXT_direct_state_access=1
   GL_ARB_ES2_compatibility=1
   GL_GLEXT_PROTOTYPES=1
@@ -1000,7 +1002,7 @@ ifeq ($(PLATFORM),js)
   LIBSYSNODE=$(SYSDIR)/sys_node.js
   LIBVMJS=$(CMDIR)/vm_js.js
 
-  CLIENT_CFLAGS += -I$(SDLHDIR)/include -I$(EMSCRIPTEN)/system/include -I$(EMSCRIPTEN)/system/lib
+  CLIENT_CFLAGS += -I$(EMSCRIPTEN_CACHE)/SDL2 -I$(EMSCRIPTEN)/system/include -I$(EMSCRIPTEN)/system/lib
 
 #   -s USE_WEBGL2=1
 #		-s MIN_WEBGL_VERSION=2
@@ -1011,10 +1013,6 @@ ifeq ($(PLATFORM),js)
     --js-library $(LIBVMJS) \
 		-lidbfs.js \
 		-lsdl.js \
-		-legl.js \
-		-lwebgl.js \
-		-lwebgl2.js \
-		-lglemu.js \
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
@@ -1023,7 +1021,7 @@ ifeq ($(PLATFORM),js)
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
 		-s WEBSOCKET_DEBUG=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['loadDynamicLibrary', 'callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'emscripten_GetProcAddress']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['loadDynamicLibrary', 'callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s RESERVED_FUNCTION_POINTERS=10 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
@@ -1035,6 +1033,8 @@ ifeq ($(PLATFORM),js)
     -s FULL_ES2=0 \
     -s FULL_ES3=0 \
     -s USE_SDL=2 \
+		-s USE_SDL_IMAGE=2 \
+		-s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
 		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3\" \
     $(OPTIMIZE)

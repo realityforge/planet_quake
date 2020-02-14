@@ -166,6 +166,9 @@ void		GLimp_Minimize(void);
 void		GLimp_SetGamma( unsigned char red[256],
 		unsigned char green[256],
 		unsigned char blue[256] );
-
+		
+#ifdef EMSCRIPTEN
+void GLimp_SetVideoMode();
+#endif
 
 #endif

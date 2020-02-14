@@ -24,48 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <SDL.h>
 #include <SDL_opengl.h>
 
-/*
-#include <emscripten.h>
-#include <GL/gl.h>
-#include <SDL.h>
-#include <SDL_egl.h>
-#	include <SDL_opengl.h>
-#	include <SDL_opengl_glext.h>
-#include <gl/webgl1.h>
-#include <gl/webgl2.h>
-#include <emscripten.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl2ext.h>
-#include <GLES3/gl3.h>
-#include <GLES3/gl31.h>
-#include <GLES3/gl32.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <gl/webgl1.h>
-#include <gl/webgl2.h>
-#	include "SDL_opengl.h"
-#	include "SDL_opengl_glext.h"
-#	include "SDL_opengles.h"
-#	include "SDL_opengles2.h"
-#	include "SDL_opengles2_gl2.h"
-#	include "SDL_opengles2_gl2ext.h"
-#	include "SDL_egl.h"
-#else
-# include "GL/gl.h"
-#	include <SDL.h>
-#	include <SDL_opengl.h>
-#	include <SDL_opengl_glext.h>
-#	include <SDL_opengles.h>
-#	include <SDL_opengles2.h>
-#	include <SDL_opengles2_gl2.h>
-#	include <SDL_opengles2_gl2ext.h>
-#	include <SDL_egl.h>
-#endif
-*/
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -827,6 +785,32 @@ skipversion:
 	return RSERR_OK;
 }
 
+#ifdef EMSCRIPTEN
+void GLimp_SetVideoMode() {
+	SDL_DisplayMode mode;
+	Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+	
+	if ( !R_GetModeInfo( &glConfig.vidWidth, &glConfig.vidHeight, &glConfig.windowAspect, -1 ) )
+	{
+		ri.Printf( PRINT_ALL, " invalid mode\n" );
+		return;
+	}
+	
+	mode.format = SDL_PIXELFORMAT_RGB24;
+	mode.w = glConfig.vidWidth;
+	mode.h = glConfig.vidHeight;
+	mode.refresh_rate = glConfig.displayFrequency;
+	mode.driverdata = NULL;
+
+	if( SDL_SetWindowDisplayMode( SDL_window, &mode ) < 0 )
+	{
+		ri.Printf( PRINT_DEVELOPER, "SDL_SetWindowDisplayMode failed: %s\n", SDL_GetError( ) );
+	}
+	
+	ri.IN_Init( SDL_window );
+}
+#endif
+
 /*
 ===============
 GLimp_StartDriverAndSetMode
@@ -1074,7 +1058,7 @@ void GLimp_Init( qboolean fixedFunction )
 
 	r_allowSoftwareGL = ri.Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
 	r_sdlDriver = ri.Cvar_Get( "r_sdlDriver", "", CVAR_ROM );
-	r_allowResize = ri.Cvar_Get( "r_allowResize", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_allowResize = ri.Cvar_Get( "r_allowResize", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_centerWindow = ri.Cvar_Get( "r_centerWindow", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
@@ -1207,7 +1191,7 @@ void GLimp_EndFrame( void )
 
 			// SDL_WM_ToggleFullScreen didn't work, so do it the slow way
 			if( !sdlToggled )
-				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart\n");
+				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart fast\n");
 
 			ri.IN_Restart( );
 		}

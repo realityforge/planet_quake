@@ -97,7 +97,7 @@ var LibrarySys = {
 			return args
 		},
 		updateVideoCmd: function () {
-			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customPixelAspect 1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
 				.replace('%fs', window.fullscreen ? '1' : '0')
 				.replace('%w', Module['viewport'].offsetWidth)
 				.replace('%h', Module['viewport'].offsetHeight)

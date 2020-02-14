@@ -3187,12 +3187,13 @@ void Com_Frame( void ) {
 	// used by cl_parsegamestate/cl_initcgame
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
-		CB_Frame_Proxy = NULL;
 		if(CB_Frame_Proxy_Arg1 != NULL) {
 			void (*cb)( int *a ) = CB_Frame_Proxy;
+			CB_Frame_Proxy = NULL;
 			(*cb)(CB_Frame_Proxy_Arg1);
 		} else {
 			void (*cb)( void ) = CB_Frame_Proxy;
+			CB_Frame_Proxy = NULL;
 			(*cb)();
 		}
 		return;
@@ -3204,12 +3205,13 @@ void Com_Frame( void ) {
 		}
 		invokeFrameAfter = qfalse;
 		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
-		CB_Frame_After = NULL; // start frame runner again
 		if(CB_Frame_After_Arg1 != NULL) {
 			void (*cb)( int * ) = CB_Frame_After;
+			CB_Frame_After = NULL; // start frame runner again
 			(*cb)(CB_Frame_After_Arg1);
 		} else {
 			void (*cb)( void ) = CB_Frame_After;
+			CB_Frame_After = NULL; // start frame runner again
 			(*cb)();
 		}
 		return;

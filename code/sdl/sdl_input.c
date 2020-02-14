@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #	include "SDL.h"
 #else
 #	include <SDL.h>
+#	include <SDL_gamecontroller.h>
 #endif
 
 #include <stdarg.h>

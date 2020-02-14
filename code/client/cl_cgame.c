@@ -401,6 +401,12 @@ void CL_ShutdownCGame( void ) {
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
+	
+#if EMSCRIPTEN
+	cls.cgameGlConfig = NULL;
+	cls.cgameFirstCvar = NULL;
+	cls.numCgamePatches = 0;
+#endif
 }
 
 static int	FloatAsInt( float f ) {
@@ -427,6 +433,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_MILLISECONDS:
 		return Sys_Milliseconds();
 	case CG_CVAR_REGISTER:
+#ifdef EMSCRIPTEN
+	{
+		vmCvar_t *cvar;
+		cvar = (vmCvar_t *)VMA(1);
+		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
+			cls.cgameFirstCvar = cvar;
+		}
+	}
+#endif
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
 		return 0;
 	case CG_CVAR_UPDATE:
@@ -586,6 +601,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
+#if EMSCRIPTEN
+		cls.cgameGlConfig = VMA(1);
+#endif
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 	case CG_GETGAMESTATE:
@@ -1112,6 +1130,3 @@ void CL_SetCGameTime( void ) {
 	}
 
 }
-
-
-
