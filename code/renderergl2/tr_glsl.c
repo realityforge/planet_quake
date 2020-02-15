@@ -240,8 +240,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 
 	dest[0] = '\0';
 
-	// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
-	if(glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
+#if !EMSCRIPTEN
+	if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
 	{
 		if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 50))
 			Q_strcat(dest, size, "#version 150\n");
@@ -269,6 +269,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 		Q_strcat(dest, size, "#version 120\n");
 		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
+#endif
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	//Q_strcat(dest, size,
@@ -278,8 +279,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	//Q_strcat(dest, size,
 	//       va("#ifndef r_NormalScale\n#define r_NormalScale %f\n#endif\n", r_normalScale->value));
 
-
-	Q_strcat(dest, size, "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
+	Q_strcat(dest, size, "precision mediump float;\n#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 
 	//Q_strcat(dest, size, va("#ifndef MAX_SHADOWMAPS\n#define MAX_SHADOWMAPS %i\n#endif\n", MAX_SHADOWMAPS));
 
@@ -483,6 +483,14 @@ static void GLSL_ShowProgramUniforms(GLuint program)
 	int             i, count, size;
 	GLenum			type;
 	char            uniformName[1000];
+#ifdef EMSCRIPTEN
+// This function is rather expensive in WebGL, let's completely
+// avoid it if not a developer.
+	if(!Cvar_VariableIntegerValue("developer"))
+	{
+		return;
+	}
+#endif
 
 	// query the number of active uniforms
 	qglGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
@@ -913,15 +921,58 @@ void GLSL_DeleteGPUShader(shaderProgram_t *program)
 	}
 }
 
+// these cvars directly effect shader generation,
+// we'll need to rebuild shaders if they've changed
+static cvar_t **shaderInfo[] = {
+	&r_cubeMapping,
+	&r_deluxeMapping,
+	&r_deluxeSpecular,
+	&r_dlightMode,
+	&r_floatLightmap,
+	&r_hdr,
+	&r_normalMapping,
+	&r_parallaxMapping,
+	&r_pbr,
+	&r_specularMapping,
+	&r_shadowCascadeZFar,
+	&r_shadowFilter,
+	&r_shadowMapSize,
+	&r_sunlightMode};
+
 void GLSL_InitGPUShaders(void)
 {
-	int             startTime, endTime;
-	int i;
+	int startTime, endTime;
+	int i, l;
 	char extradefines[1024];
 	int attribs;
 	int numGenShaders = 0, numLightShaders = 0, numEtcShaders = 0;
+	qboolean dirty = qfalse;
 
 	ri.Printf(PRINT_ALL, "------- GLSL_InitGPUShaders -------\n");
+
+	// check if any cvars that control shader generation have changed
+	for (i = 0, l = sizeof(shaderInfo) / sizeof(cvar_t **); i < l; i++)
+	{
+		cvar_t *cvar = *shaderInfo[i];
+		if (cvar->modified)
+		{
+			dirty = qtrue;
+			cvar->modified = qfalse;
+		}
+	}
+
+	if (tr.shadersInitialized)
+	{
+		ri.Printf(PRINT_ALL, "shaders already initialized, restarting\n");
+		if (!dirty)
+		{
+			ri.Printf(PRINT_ALL, "(using cache)\n");
+			return;
+		}
+
+		// cleanup old shaders if we need to rebuild
+		GLSL_ShutdownGPUShaders();
+	}
 
 	R_IssuePendingRenderCommands();
 
@@ -1065,6 +1116,11 @@ void GLSL_InitGPUShaders(void)
 		// skip impossible combos
 		if ((i & LIGHTDEF_USE_PARALLAXMAP) && !r_parallaxMapping->integer)
 			continue;
+
+#if EMSCRIPTEN
+		if ((i & LIGHTDEF_USE_SHADOWMAP) && !r_sunlightMode->integer)
+			continue;
+#endif
 
 		if ((i & LIGHTDEF_USE_SHADOWMAP) && (!lightType || !r_sunlightMode->integer))
 			continue;
@@ -1212,6 +1268,8 @@ void GLSL_InitGPUShaders(void)
 
 		numLightShaders++;
 	}
+
+#if !EMSCRIPTEN
 
 	for (i = 0; i < SHADOWMAPDEF_COUNT; i++)
 	{
@@ -1421,6 +1479,7 @@ void GLSL_InitGPUShaders(void)
 
 		numEtcShaders++;
 	}
+#endif
 
 #if 0
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
@@ -1446,6 +1505,7 @@ void GLSL_InitGPUShaders(void)
 	ri.Printf(PRINT_ALL, "loaded %i GLSL shaders (%i gen %i light %i etc) in %5.2f seconds\n", 
 		numGenShaders + numLightShaders + numEtcShaders, numGenShaders, numLightShaders, 
 		numEtcShaders, (endTime - startTime) / 1000.0);
+	tr.shadersInitialized = qtrue;
 }
 
 void GLSL_ShutdownGPUShaders(void)

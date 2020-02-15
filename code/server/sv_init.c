@@ -395,12 +395,17 @@ clients along with it.
 This is NOT called for map_restart
 ================
 */
-void SV_SpawnServer( char *server, qboolean killBots ) {
+char *server;
+qboolean killBots;
+
+void SV_SpawnServer( char *svr, qboolean kB ) {
 	int			i;
 	int			checksum;
 	qboolean	isBot;
 	char		systemInfo[16384];
 	const char	*p;
+	server = svr;
+	killBots = kB;
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
@@ -466,6 +471,27 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// get a new checksum feed and restart the file system
 	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
 	FS_Restart( sv.checksumFeed );
+
+#ifdef EMSCRIPTEN
+
+	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
+}
+
+void SV_SpawnServer_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, SV_SpawnServer_After_Startup);
+}
+
+void SV_SpawnServer_After_Startup( void ) {
+	int			i;
+	int			checksum;
+	qboolean	isBot;
+	char		systemInfo[16384];
+	const char	*p;
+	FS_Restart_After_Async();
+
+#endif
+;
 
 	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 
@@ -780,4 +806,3 @@ void SV_Shutdown( char *finalmsg ) {
 	if( sv_killserver->integer != 2 )
 		CL_Disconnect( qfalse );
 }
-

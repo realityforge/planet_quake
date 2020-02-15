@@ -1,0 +1,425 @@
+var LibrarySys = {
+	$SYS__deps: ['$SYSC'],
+	$SYS: {
+		exited: false,
+		timeBase: null,
+		style: null,
+		loading: null,
+		args: [
+			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
+			'+set', 'cl_allowDownload', '1',
+			'+set', 'fs_basegame', 'baseq3',
+			'+set', 'fs_game', 'baseq3',
+			'+set', 'developer', '0',
+			'+set', 'fs_debug', '0',
+			'+set', 'r_mode', '-1',
+			'+set', 'r_customPixelAspect', '1',
+			'+set', 'sv_pure', '0',
+			'+set', 'cg_simpleItems', '1',
+			// these control the proxy server
+			'+set', 'net_enabled', '1', // 1 for IPv4
+			'+set', 'net_socksServer', '127.0.0.1',
+			'+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
+			'+set', 'net_socksEnabled', '1',
+			// these settings were set by the emscripten build
+			'+set', 'r_normalMapping', '0',
+			'+set', 'r_specularMapping', '0',
+			'+set', 'r_deluxeMapping', '0',
+			'+set', 'r_hdr', '0',
+			'+set', 'r_picmip', '0',
+			'+set', 'cg_drawfps', '1',
+			//'+connect', 'proxy.quake.games:443',
+			/*
+			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
+			'+set', 'g_spSkill', '5',
+			'+set', 'g_spScores5', '\\l21\\5\\l14\\5\\l22\\5\\l25\\5\\l5\\5\\l3\\5\\l2\\5\\l20\\2\\l19\\1\\l1\\5\\l0\\5\\l24\\1',
+			'+iamacheater',
+			'+iamamonkey',
+			'+exec', 'client.cfg',
+			//	'+map', 'Q3DM17'
+			*/
+		],
+		DoXHR: function (url, opts) {
+			if (!url) {
+				return opts.onload(new Error('Must provide a URL'))
+			}
+
+			var req = new XMLHttpRequest()
+			req.open('GET', url, true)
+			if (opts.dataType &&
+				// responseType json not implemented in webkit, we'll do it manually later on
+				opts.dataType !== 'json') {
+				req.responseType = opts.dataType
+			}
+			req.onprogress = function (ev) {
+				if (opts.onprogress) {
+					opts.onprogress(ev.loaded, ev.total)
+				}
+			}
+			req.onload = function () {
+				var err = null
+				var data = req.response
+				if (!(req.status >= 200 && req.status < 300 || req.status === 304)) {
+					err = new Error('Couldn\'t load ' + url + '. Status: ' + req.statusCode)
+				} else {
+					// manually parse out a request expecting a JSON response
+					if (opts.dataType === 'json') {
+						try {
+							data = JSON.parse(data)
+						} catch (e) {
+							err = e
+						}
+					}
+				}
+
+				if (opts.onload) {
+					opts.onload(err, data)
+				}
+			}
+			req.send(null)
+		},
+		getQueryCommands: function () {
+			var search = /([^&=]+)/g
+			var query  = window.location.search.substring(1)
+			var args = []
+			var match
+			while (match = search.exec(query)) {
+				var val = decodeURIComponent(match[1])
+				val = val.split(' ')
+				val[0] = '+' + val[0]
+				args.push.apply(args, val)
+			}
+			args.push.apply(args, [
+				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
+				'+set', 'r_customHeight', '' + window.innerHeight,
+				'+set', 'r_customWidth', '' + window.innerWidth,
+			])
+			return args
+		},
+		updateVideoCmd: function () {
+			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+				.replace('%fs', window.fullscreen ? '1' : '0')
+				.replace('%w', Module['viewport'].offsetWidth)
+				.replace('%h', Module['viewport'].offsetHeight)
+			Module._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
+			Module._Cbuf_Execute();
+		},
+		resizeDelay: null,
+		resizeViewport: function () {
+			if (!Module['canvas']) {
+				// ignore if the canvas hasn't yet initialized
+				return;
+			}
+
+			if (SYS.resizeDelay) clearTimeout(SYS.resizeDelay);
+			SYS.resizeDelay = setTimeout(SYS.updateVideoCmd, 100);
+		},
+		quitGameOnUnload: function (e) {
+			if(Module['viewport']) {
+				Module._Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
+				Module._Cbuf_Execute();
+				Module['viewport'].remove()
+				Module['viewport'] = null
+			}
+			return false
+		},
+	},
+	Sys_PlatformInit: function () {
+		SYS.loading = document.getElementById('loading')
+		SYS.dialog = document.getElementById('dialog')
+		// TODO: load this the same way demo does
+		if(SYSC.eula) {
+			// add eula frame to viewport
+			var eula = document.createElement('div')
+			eula.id = 'eula-frame'
+			eula.innerHTML = '<div id="eula-frame-inner">' +
+				'<p>In order to continue, the official Quake3 demo will need to be installed into the browser\'s persistent storage.</p>' +
+				'<p>Please read through the demo\'s EULA and click "I Agree" if you agree to it and would like to continue.</p>' +
+				'<pre id="eula">' + SYSC.eula + '</pre>' +
+				'<button id="agree" class="btn btn-success">I Agree</button>' +
+				'<button id="dont-agree" class="btn btn-success">I Don\'t Agree</button>' +
+				'</div>'
+			SYS.eula = Module['viewport'].appendChild(eula)
+		}
+		Object.assign(Module, {
+			websocket: Object.assign(Module.websocket || {}, {
+				url: window.location.search.includes('https://')
+				? 'wss://'
+				: 'ws://'
+			})
+		})
+		window.addEventListener('resize', SYS.resizeViewport)
+		
+	},
+	Sys_PlatformExit: function () {
+		var handler = Module['exitHandler']
+		if (handler) {
+			if (!SYS.exited) {
+				handler()
+			}
+			return
+		}
+		window.removeEventListener('resize', SYS.resizeViewport)
+		if(SYS.loading) {
+			SYS.loading.remove()
+			SYS.loading = null
+			if(SYS.eula) {
+				SYS.eula.remove()
+				SYS.eula = null
+			}
+		}
+
+		if (Module['canvas']) {
+			Module['canvas'].remove()
+		}
+	},
+	Sys_GLimpInit: function () {
+		var viewport = Module['viewport']
+		// create a canvas element at this point if one doesnt' already exist
+		if (!Module['canvas']) {
+			var canvas = document.createElement('canvas')
+			canvas.id = 'canvas'
+			canvas.width = viewport.offsetWidth
+			canvas.height = viewport.offsetHeight
+			Module['canvas'] = viewport.appendChild(canvas)
+		}
+	},
+	Sys_GLimpSafeInit: function () {
+	},
+	Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
+	Sys_BeginDownload: function () {
+		var cl_downloadName = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('cl_downloadName'), 'i8', ALLOC_STACK)))
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
+		var fs_game = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		
+		SYSC.mkdirp(PATH.join(fs_basepath, fs_game))
+		
+		SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
+			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadSize'), 'i8', ALLOC_STACK), total );
+			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadCount'), 'i8', ALLOC_STACK), loaded );
+		}, (err, data) => {
+			if(err) {
+				SYSC.Error('drop', 'Download Error: ' + err.message)
+				return
+			} else {
+				FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+					encoding: 'binary', flags: 'w', canOwn: true })
+			}
+			FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+		})
+	},
+	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
+	Sys_FS_Startup: function (cb) {
+		var fs_homepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)))
+		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
+		var fs_basegame = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)))
+		var sv_pure = UTF8ToString(_Cvar_VariableIntegerValue(
+				allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK)))
+		var fs_game = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		
+		var fsMountPath = fs_basegame
+		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
+			fsMountPath = fs_game // TODO: comment this out to test server induced downloading
+		}
+		
+		// mount a persistable filesystem into base
+		SYSC.mkdirp(fs_basepath)
+
+		try {
+			FS.mount(IDBFS, {}, fs_basepath)
+		} catch (e) {
+			if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EBUSY) {
+				SYSC.Error('fatal', e.message)
+			}
+		}
+		
+		var start = Date.now()
+		FS.syncfs(true, function (err) {
+			if (err) {
+				SYSC.Print(err.message)
+				return SYSC.Error('fatal', err.message)
+			}
+
+			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
+			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
+
+			// TODO: is this right? exit early without downloading anything so the server can force it instead
+			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
+				return
+			}
+
+			// TODO: remove this in favor of new remote FS code
+			var downloads = []
+			SYSC.DownloadAsset(fsMountPath + '/index.json', () => {}, (err, data) => {
+				if(err) {
+					SYSC.ProxyCallback(cb)
+					return
+				}
+				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
+				// create virtual file entries for everything in the directory list
+				var keys = Object.keys(json)
+				for(var i = 0; i < keys.length; i++) {
+					var file = json[keys[i]]
+					const blankFile = new Uint8Array(4)
+					if(!file.size) { // create a directory
+						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
+					} else {
+						// TODO: remove this check when webworker is installed
+						//   because it will check ETag and replace files
+						// only download again if the file does not exist
+						try {
+							var handle = FS.open(PATH.join(fs_basepath, fsMountPath, file.name), 'r')
+							FS.close(handle)
+							continue
+						} catch (e) {
+							if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+								SYSC.Error('fatal', e.message)
+							}
+						}
+						// temporary FIX
+						// TODO: remove this with when Async file system loading works,
+						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
+						if(PATH.extname(file.name) === '.pk3'
+						  || PATH.extname(file.name) === '.wasm'
+							|| PATH.extname(file.name) === '.qvm'
+							|| !sv_pure) {
+							downloads.push(PATH.join(fsMountPath, file.name))
+						} else {
+							try {
+								FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
+									encoding: 'binary', flags: 'w', canOwn: true })
+							} catch (e) {
+								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+									SYSC.Error('fatal', e.message)
+								}
+							}
+						}
+					}
+				}
+				
+				if(downloads.length === 0) {
+					SYSC.ProxyCallback(cb)
+				} else {
+					Promise.all(downloads.map(file => new Promise(resolve => {
+						SYSC.DownloadAsset(file, () => {
+							// TODO: update in game download status
+						}, (err, data) => {
+							if(err) return resolve(err)
+							try {
+								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
+									encoding: 'binary', flags: 'w', canOwn: true })
+							} catch (e) {
+								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+									SYSC.Error('fatal', e.message)
+								}
+							}
+							resolve(file)
+						})
+					}))).then(() => FS.syncfs(false, () => SYSC.ProxyCallback(cb)))
+				}
+				
+				// TODO: create an icon for the favicon so we know we did it right
+				/*
+				var buf = FS.readFile('/foo/bar')
+		    var blob = new Blob([buf],  {"type" : "application/octet-stream" })
+		    var url = URL.createObjectURL(blob)
+				var link = document.querySelector("link[rel*='icon']") || document.createElement('link')
+		    link.type = 'image/x-icon'
+		    link.rel = 'shortcut icon'
+		    link.href = url
+		    document.getElementsByTagName('head')[0].appendChild(link)
+				*/
+			})
+		})
+	},
+	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
+	Sys_FS_Shutdown: function (cb) {
+		FS.syncfs(function (err) {
+			SYSC.FS_Shutdown(function (err) {
+				if (err) {
+					// FIXME cb_free_context(context)
+					SYSC.Error('fatal', err)
+					return
+				}
+				
+				SYSC.ProxyCallback(cb)
+			})
+		})
+	},
+	Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
+	Sys_SocksConnect: function () {
+		Module['websocket'].on('open', Browser.safeCallback(() => {
+			_SOCKS_Frame_Proxy()
+		}))
+		Module['websocket'].on('message', Browser.safeCallback(() => {
+			_SOCKS_Frame_Proxy()
+		}))
+	},
+	Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
+	Sys_SocksMessage: function () {
+	},
+	Sys_Milliseconds: function () {
+		if (!SYS.timeBase) {
+			SYS.timeBase = Date.now()
+		}
+
+		if (window.performance.now) {
+			return parseInt(window.performance.now(), 10)
+		} else if (window.performance.webkitNow) {
+			return parseInt(window.performance.webkitNow(), 10)
+		} else {
+			return Date.now() - SYS.timeBase()
+		}
+	},
+	Sys_GetCurrentUser: function () {
+		var stack = stackSave()
+		var ret = allocate(intArrayFromString('player'), 'i8', ALLOC_STACK)
+		stackRestore(stack)
+		return ret
+	},
+	Sys_Dialog: function (type, message, title) {
+		SYSC.Error('SYS_Dialog not implemented')
+	},
+	Sys_ErrorDialog: function (error) {
+		var errorStr = UTF8ToString(error)
+		if (typeof Module.exitHandler !== 'undefined') {
+			SYS.exited = true
+			Module.exitHandler(errorStr)
+			return
+		}
+
+		var title = SYS.dialog.querySelector('.title')
+		if(title) {
+			title.className = 'title error'
+			title.innerHTML = 'Error'
+			var description = SYS.dialog.querySelector('.description')
+			description.innerHTML = errorStr
+			SYS.dialog.style.display = 'block'
+		}
+	},
+	Sys_CmdArgs__deps: ['stackAlloc'],
+	Sys_CmdArgs: function () {
+		var argv = ['ioq3'].concat(SYS.args).concat(SYS.getQueryCommands())
+		var argc = argv.length
+		// merge default args with query string args
+		var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}})
+		for (var i = 0; i < argv.length; i++) {
+			HEAP32[(list >> 2) + i] = allocateUTF8OnStack(argv[i])
+		}
+		HEAP32[(list >> 2) + argc] = 0
+		return list
+	},
+	Sys_CmdArgsC: function () {
+		return SYS.args.length + SYS.getQueryCommands().length + 1
+	}
+}
+autoAddDeps(LibrarySys, '$SYS')
+mergeInto(LibraryManager.library, LibrarySys);

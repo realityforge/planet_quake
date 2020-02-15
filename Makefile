@@ -6,6 +6,9 @@
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
+EMSCRIPTEN=./misc/quakejs/lib/emsdk/upstream/emscripten
+EMSCRIPTEN_CACHE=/Users/briancullinan/.emscripten_cache/wasm-obj/include
+
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
   COMPILE_ARCH=$(shell uname -p | sed -e 's/i.86/x86/')
@@ -18,7 +21,7 @@ ifndef BUILD_CLIENT
   BUILD_CLIENT     =
 endif
 ifndef BUILD_SERVER
-  BUILD_SERVER     =
+  BUILD_SERVER     = 0
 endif
 ifndef BUILD_GAME_SO
   BUILD_GAME_SO    =
@@ -32,8 +35,14 @@ endif
 ifndef BUILD_MISSIONPACK
   BUILD_MISSIONPACK=
 endif
+ifndef BUILD_RENDERER_OPENGL
+  BUILD_RENDERER_OPENGL=0
+endif
 ifndef BUILD_RENDERER_OPENGL2
-  BUILD_RENDERER_OPENGL2=
+  BUILD_RENDERER_OPENGL2=0
+endif
+ifndef BUILD_RENDERER_OPENGLES
+  BUILD_RENDERER_OPENGLES=1
 endif
 ifndef BUILD_AUTOUPDATER  # DON'T build unless you mean to!
   BUILD_AUTOUPDATER=0
@@ -248,6 +257,7 @@ SDIR=$(MOUNT_DIR)/server
 RCOMMONDIR=$(MOUNT_DIR)/renderercommon
 RGL1DIR=$(MOUNT_DIR)/renderergl1
 RGL2DIR=$(MOUNT_DIR)/renderergl2
+RGLESDIR=$(MOUNT_DIR)/renderergles1
 CMDIR=$(MOUNT_DIR)/qcommon
 SDLDIR=$(MOUNT_DIR)/sdl
 ASMDIR=$(MOUNT_DIR)/asm
@@ -311,12 +321,12 @@ else
 endif
 
 # Use sdl2-config if all else fails
-ifeq ($(SDL_CFLAGS),)
-  ifneq ($(call bin_path, sdl2-config),)
-    SDL_CFLAGS = $(shell sdl2-config --cflags)
-    SDL_LIBS = $(shell sdl2-config --libs)
+  ifeq ($(SDL_CFLAGS),)
+    ifneq ($(call bin_path, sdl2-config),)
+      SDL_CFLAGS=$(shell sdl2-config --cflags)
+      SDL_LIBS=$(shell sdl2-config --libs)
+    endif
   endif
-endif
 
 # Add git version info
 USE_GIT=
@@ -340,7 +350,7 @@ CLIENT_EXTRA_FILES=
 
 ifneq (,$(findstring "$(COMPILE_PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu"))
   TOOLS_CFLAGS += -DARCH_STRING=\"$(COMPILE_ARCH)\"
-endif
+  endif
 
 ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu"))
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
@@ -518,15 +528,15 @@ ifeq ($(PLATFORM),darwin)
   ifeq ($(USE_LOCAL_HEADERS),1)
     # libSDL2-2.0.0.dylib for PPC is SDL 2.0.1 + changes to compile
     ifneq ($(findstring $(ARCH),ppc ppc64),)
-      BASE_CFLAGS += -I$(SDLHDIR)/include-macppc
+      CLIENT_CFLAGS += -I$(SDLHDIR)/include-macppc
     else
-      BASE_CFLAGS += -I$(SDLHDIR)/include
-    endif
+    CLIENT_CFLAGS += -I$(SDLHDIR)/include
+  endif
 
-    # We copy sdlmain before ranlib'ing it so that subversion doesn't think
-    #  the file has been modified by each build.
-    LIBSDLMAIN=$(B)/libSDL2main.a
-    LIBSDLMAINSRC=$(LIBSDIR)/macosx/libSDL2main.a
+  # We copy sdlmain before ranlib'ing it so that subversion doesn't think
+  #  the file has been modified by each build.
+  LIBSDLMAIN=$(B)/libSDL2main.a
+  LIBSDLMAINSRC=$(LIBSDIR)/macosx/libSDL2main.a
     CLIENT_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
     RENDERER_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
     CLIENT_EXTRA_FILES += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
@@ -587,9 +597,9 @@ ifdef MINGW
   endif
 
   # using generic windres if specific one is not present
-  ifndef WINDRES
-    WINDRES=windres
-  endif
+    ifndef WINDRES
+      WINDRES=windres
+    endif
 
   ifeq ($(CC),)
     $(error Cannot find a suitable cross compiler for $(PLATFORM))
@@ -641,7 +651,7 @@ ifdef MINGW
 
   # clang 3.4 doesn't support this
   ifneq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
-    CLIENT_LDFLAGS += -mwindows
+  CLIENT_LDFLAGS += -mwindows
   endif
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -static-libgcc
@@ -944,6 +954,129 @@ ifeq ($(PLATFORM),sunos)
 else # ifeq sunos
 
 #############################################################################
+# SETUP AND BUILD -- JS
+#############################################################################
+
+ifeq ($(PLATFORM),js)
+  CC=$(EMSCRIPTEN)/emcc
+  RANLIB=$(EMSCRIPTEN)/emranlib
+  ARCH=js
+
+
+  DEBUG=0
+  EMCC_DEBUG=0
+# debug optimize flags: --closure 0 --minify 0 -g -g4
+#  OPTIMIZEVM += -O3 -Oz --llvm-lto 3 \
+	  -s WASM=1 \
+		-s WASM_BACKEND=1 \
+		-s WASM_OBJECT_FILES=1 \
+		-s SAFE_HEAP=1 \
+		-s DEMANGLE_SUPPORT=0 \
+		-s ASSERTIONS=0 \
+		-fPIC
+  OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g3 \
+		-s SAFE_HEAP=0 \
+		-s DEMANGLE_SUPPORT=1 \
+		-s ASSERTIONS=1 \
+		--source-map-base http://localhost:8080/ \
+		-frtti \
+		-fPIC
+  OPTIMIZE = $(OPTIMIZEVM)
+
+  HAVE_VM_COMPILED=true
+  BUILD_GAME_QVM=1
+  BUILD_STANDALONE=0
+	BUILD_RENDERER_OPENGL=0
+	BUILD_RENDERER_OPENGL2=0
+  BUILD_RENDERER_OPENGLES=1
+  BUILD_FREETYPE=1
+
+  USE_CURL=0
+  USE_CODEC_VORBIS=0
+  USE_CODEC_OPUS=1
+  USE_MUMBLE=0
+  USE_VOIP=0
+  SDL_LOADSO_DLOPEN=1
+  USE_CURL_DLOPEN=0
+  USE_OPENAL_DLOPEN=0
+  USE_RENDERER_DLOPEN=0
+  USE_LOCAL_HEADERS=0
+	USE_INTERNAL_LIBS=1
+  GL_EXT_direct_state_access=1
+  GL_ARB_ES2_compatibility=1
+  GL_GLEXT_PROTOTYPES=1
+
+  LIBSYSCOMMON=$(SYSDIR)/sys_common.js
+  LIBSYSBROWSER=$(SYSDIR)/sys_browser.js
+  LIBSYSNODE=$(SYSDIR)/sys_node.js
+  LIBVMJS=$(CMDIR)/vm_js.js
+
+  CLIENT_CFLAGS += -I$(EMSCRIPTEN_CACHE)/SDL2 -I$(EMSCRIPTEN)/system/include -I$(EMSCRIPTEN)/system/lib
+
+#   -s USE_WEBGL2=1
+#		-s MIN_WEBGL_VERSION=2
+#	  -s MAX_WEBGL_VERSION=2
+
+  CLIENT_LDFLAGS += --js-library $(LIBSYSCOMMON) \
+    --js-library $(LIBSYSBROWSER) \
+    --js-library $(LIBVMJS) \
+		-lidbfs.js \
+		-lsdl.js \
+		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+    -s INVOKE_RUN=1 \
+		-s MAIN_MODULE=2 \
+    -s NO_EXIT_RUNTIME=1 \
+    -s EXIT_RUNTIME=1 \
+    -s GL_UNSAFE_OPTS=0 \
+		-s WEBSOCKET_DEBUG=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['loadDynamicLibrary', 'callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s RESERVED_FUNCTION_POINTERS=10 \
+    -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
+    -s TOTAL_MEMORY=320MB \
+    -s ALLOW_MEMORY_GROWTH=0 \
+		-s LEGACY_GL_EMULATION=0 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=0 \
+    -s USE_WEBGL2=0 \
+    -s FULL_ES2=0 \
+    -s FULL_ES3=0 \
+    -s USE_SDL=2 \
+		-s USE_SDL_IMAGE=2 \
+		-s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
+		-s FORCE_FILESYSTEM=1 \
+    -s EXPORT_NAME=\"ioq3\" \
+    $(OPTIMIZE)
+
+  SERVER_LDFLAGS += --js-library $(LIBSYSCOMMON) \
+    --js-library $(LIBSYSNODE) \
+    --js-library $(LIBVMJS) \
+		-lnodefs.js \
+    -s USE_SDL=2 \
+		-s NO_EXIT_RUNTIME=1 \
+    -s INVOKE_RUN=1 \
+    -s EXIT_RUNTIME=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="[loadDynamicLibrary', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
+    -s RESERVED_FUNCTION_POINTERS=1 \
+    -s TOTAL_MEMORY=320MB \
+    -s ALLOW_MEMORY_GROWTH=0 \
+		-s FORCE_FILESYSTEM=1 \
+    -s EXPORT_NAME=\"ioq3ded\" \
+    $(OPTIMIZE)
+
+  SHLIBEXT=wasm
+  SHLIBNAME=$(ARCH).$(SHLIBEXT)
+  SHLIBLDFLAGS=$(LDFLAGS) \
+    -s INVOKE_RUN=0 \
+		-s LINKABLE=1 \
+    -s EXPORTED_FUNCTIONS="['_vmMain', '_dllEntry']" \
+    -s SIDE_MODULE=2 \
+    $(OPTIMIZE)
+
+else # ifeq js
+
+#############################################################################
 # SETUP AND BUILD -- GENERIC
 #############################################################################
   BASE_CFLAGS=
@@ -961,6 +1094,7 @@ endif #OpenBSD
 endif #NetBSD
 endif #IRIX
 endif #SunOS
+endif #js
 
 ifndef CC
   CC=gcc
@@ -972,7 +1106,9 @@ endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
+ifneq ($(PLATFORM),js)
   BUILD_GAME_QVM=0
+endif
 endif
 
 TARGETS =
@@ -992,14 +1128,10 @@ endif
 ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
-    ifneq ($(BUILD_RENDERER_OPENGL2),0)
-      TARGETS += $(B)/renderer_opengl2_$(SHLIBNAME)
-    endif
+		TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl2_$(SHLIBNAME)
+		TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengles1_$(SHLIBNAME)
   else
     TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
-    ifneq ($(BUILD_RENDERER_OPENGL2),0)
-      TARGETS += $(B)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
-    endif
   endif
 endif
 
@@ -1388,6 +1520,12 @@ endif
 	@echo "  LDFLAGS:"
 	$(call print_wrapped, $(LDFLAGS))
 	@echo ""
+	@echo "  CLIENT_LDFLAGS:"
+	$(call print_wrapped, $(CLIENT_LDFLAGS))
+	@echo ""
+	@echo "  SERVER_LDFLAGS:"
+	$(call print_wrapped, $(SERVER_LDFLAGS))
+	@echo ""
 	@echo "  LIBS:"
 	$(call print_wrapped, $(LIBS))
 	@echo ""
@@ -1426,6 +1564,7 @@ makedirs:
 	@$(MKDIR) $(B)/renderergl1
 	@$(MKDIR) $(B)/renderergl2
 	@$(MKDIR) $(B)/renderergl2/glsl
+	@$(MKDIR) $(B)/renderergles1
 	@$(MKDIR) $(B)/ded
 	@$(MKDIR) $(B)/$(BASEGAME)/cgame
 	@$(MKDIR) $(B)/$(BASEGAME)/game
@@ -1763,7 +1902,7 @@ Q3OBJ = \
   $(B)/client/sys_autoupdater.o \
   $(B)/client/sys_main.o
 
-ifdef MINGW
+ifneq (,$(findstring "$(PLATFORM)", "mingw32" "js"))
   Q3OBJ += \
     $(B)/client/con_passive.o
 else
@@ -1843,6 +1982,40 @@ Q3R2STRINGOBJ = \
   $(B)/renderergl2/glsl/tonemap_fp.o \
   $(B)/renderergl2/glsl/tonemap_vp.o
 
+Q3RESOBJ = \
+  $(B)/renderergles1/tr_animation.o \
+  $(B)/renderergles1/tr_backend.o \
+  $(B)/renderergles1/tr_bsp.o \
+  $(B)/renderergles1/tr_cmds.o \
+  $(B)/renderergles1/tr_curve.o \
+  $(B)/renderergles1/tr_flares.o \
+  $(B)/renderergles1/tr_font.o \
+  $(B)/renderergles1/tr_image.o \
+  $(B)/renderergles1/tr_image_bmp.o \
+  $(B)/renderergles1/tr_image_jpg.o \
+  $(B)/renderergles1/tr_image_pcx.o \
+  $(B)/renderergles1/tr_image_png.o \
+  $(B)/renderergles1/tr_image_tga.o \
+  $(B)/renderergles1/tr_init.o \
+  $(B)/renderergles1/tr_light.o \
+  $(B)/renderergles1/tr_main.o \
+  $(B)/renderergles1/tr_marks.o \
+  $(B)/renderergles1/tr_mesh.o \
+  $(B)/renderergles1/tr_model.o \
+  $(B)/renderergles1/tr_model_iqm.o \
+  $(B)/renderergles1/tr_noise.o \
+  $(B)/renderergles1/tr_scene.o \
+  $(B)/renderergles1/tr_shade.o \
+  $(B)/renderergles1/tr_shade_calc.o \
+  $(B)/renderergles1/tr_shader.o \
+  $(B)/renderergles1/tr_shadows.o \
+  $(B)/renderergles1/tr_sky.o \
+  $(B)/renderergles1/tr_surface.o \
+  $(B)/renderergles1/tr_world.o \
+  \
+  $(B)/renderergl1/sdl_gamma.o \
+  $(B)/renderergl1/sdl_glimp.o
+
 Q3ROBJ = \
   $(B)/renderergl1/tr_altivec.o \
   $(B)/renderergl1/tr_animation.o \
@@ -1890,6 +2063,12 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/renderergl1/puff.o \
     $(B)/renderergl1/q_math.o \
     $(B)/renderergl1/tr_subs.o
+
+	Q3RESOBJ += \
+		$(B)/renderergles1/q_shared.o \
+		$(B)/renderergles1/puff.o \
+		$(B)/renderergles1/q_math.o \
+		$(B)/renderergles1/tr_subs.o
 endif
 
 ifneq ($(USE_INTERNAL_JPEG),0)
@@ -2170,8 +2349,10 @@ ifdef MINGW
     $(B)/client/win_resource.o \
     $(B)/client/sys_win32.o
 else
+ifneq ($(PLATFORM),js)
   Q3OBJ += \
     $(B)/client/sys_unix.o
+endif
 endif
 
 ifeq ($(PLATFORM),darwin)
@@ -2191,6 +2372,11 @@ $(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 		-o $@ $(Q3OBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
+$(B)/renderer_opengles1_$(SHLIBNAME): $(Q3RESOBJ) $(JPGOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3RESOBJ) $(JPGOBJ) \
+		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
+
 $(B)/renderer_opengl1_$(SHLIBNAME): $(Q3ROBJ) $(JPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(JPGOBJ) \
@@ -2201,17 +2387,27 @@ $(B)/renderer_opengl2_$(SHLIBNAME): $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ)
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 else
-$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(LIBSDLMAIN)
+ifneq ($(BUILD_RENDERER_OPENGLES), 0)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3RESOBJ) $(JPGOBJ) $(LIBSDLMAIN)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
+		-o $@ $(Q3OBJ) $(Q3RESOBJ) $(JPGOBJ) \
+		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+else
+ifneq ($(BUILD_RENDERER_OPENGL), 0)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) $(LIBSDLMAIN) $(LIBSYSCOMMON) $(LIBSYSBROWSER) $(LIBVMJS)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3ROBJ) $(JPGOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
-
-$(B)/$(CLIENTBIN)_opengl2$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(LIBSDLMAIN)
+else
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) $(LIBSDLMAIN) $(LIBSYSCOMMON) $(LIBSYSBROWSER) $(LIBVMJS)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3R2OBJ) $(Q3R2STRINGOBJ) $(JPGOBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
+endif
+endif
 endif
 
 ifneq ($(strip $(LIBSDLMAIN)),)
@@ -2249,6 +2445,7 @@ Q3DOBJ = \
   $(B)/ded/cvar.o \
   $(B)/ded/files.o \
   $(B)/ded/md4.o \
+  $(B)/ded/md5.o \
   $(B)/ded/msg.o \
   $(B)/ded/net_chan.o \
   $(B)/ded/net_ip.o \
@@ -2297,7 +2494,7 @@ Q3DOBJ = \
   \
   $(B)/ded/con_log.o \
   $(B)/ded/sys_autoupdater.o \
-  $(B)/ded/sys_main.o
+  $(B)/ded/sys_main.o \
 
 ifeq ($(ARCH),x86)
   Q3DOBJ += \
@@ -2344,8 +2541,11 @@ ifdef MINGW
     $(B)/ded/con_win32.o
 else
   Q3DOBJ += \
-    $(B)/ded/sys_unix.o \
     $(B)/ded/con_tty.o
+ifneq ($(PLATFORM),js)
+  Q3DOBJ += \
+    $(B)/ded/sys_unix.o
+endif
 endif
 
 ifeq ($(PLATFORM),darwin)
@@ -2353,10 +2553,9 @@ ifeq ($(PLATFORM),darwin)
     $(B)/ded/sys_osx.o
 endif
 
-$(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
+$(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ) $(LIBSYSCOMMON) $(LIBSYSNODE) $(LIBVMJS)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) $(NOTSHLIBLDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
-
+	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) $(SERVER_LDFLAGS) -o $@ $(Q3DOBJ) -v $(LIBS)
 
 
 #############################################################################
@@ -2394,7 +2593,7 @@ Q3CGOBJ_ = \
 Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 
@@ -2439,7 +2638,7 @@ MPCGOBJ_ = \
 MPCGOBJ = $(MPCGOBJ_) $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o
 MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ)
+$(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
 
@@ -2489,10 +2688,12 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/qcommon/q_math.o \
   $(B)/$(BASEGAME)/qcommon/q_shared.o
 
+
+
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
@@ -2543,7 +2744,7 @@ MPGOBJ_ = \
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
@@ -2606,7 +2807,7 @@ Q3UIOBJ_ = \
 Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ)
+$(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
 
@@ -2634,7 +2835,7 @@ MPUIOBJ_ = \
 MPUIOBJ = $(MPUIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 MPUIVMOBJ = $(MPUIOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ)
+$(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPUIOBJ)
 
@@ -2724,6 +2925,21 @@ $(B)/renderergl1/%.o: $(RGL1DIR)/%.c
 
 $(B)/renderergl1/tr_altivec.o: $(RGL1DIR)/tr_altivec.c
 	$(DO_REF_CC_ALTIVEC)
+
+$(B)/renderergles1/%.o: $(CMDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(SDLDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(JPDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(RCOMMONDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderergles1/%.o: $(RGLESDIR)/%.c
+	$(DO_REF_CC)
 
 $(B)/renderergl2/glsl/%.c: $(RGL2DIR)/glsl/%.glsl
 	$(DO_REF_STR)
@@ -2855,7 +3071,7 @@ $(B)/$(MISSIONPACK)/qcommon/%.o: $(CMDIR)/%.c
 
 $(B)/$(MISSIONPACK)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 	$(DO_Q3LCC_MISSIONPACK)
-
+	
 
 #############################################################################
 # MISC
@@ -2882,13 +3098,21 @@ endif
 ifneq ($(BUILD_CLIENT),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)$(FULLBINEXT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
+		ifneq ($(BUILD_RENDERER_OPENGL),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
+		endif
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl2_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl2_$(SHLIBNAME)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl2_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl2_$(SHLIBNAME)
     endif
+		ifneq ($(BUILD_RENDERER_OPENGLES),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengles1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengles1_$(SHLIBNAME)
+		endif
   else
+		ifneq ($(BUILD_RENDERER_OPENGLES),0)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengles1$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengles1$(FULLBINEXT)
+		endif
     ifneq ($(BUILD_RENDERER_OPENGL2),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengl2$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)_opengl2$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)_opengl2$(FULLBINEXT)
     endif
   endif
 endif

@@ -213,6 +213,9 @@ typedef struct {
 	int			downloadCount;	// how many bytes we got
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[MAX_INFO_STRING]; // list of paks we need to download
+#ifdef EMSCRIPTEN
+	qboolean  dlDisconnect;
+#endif
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
 
 	// demo information
@@ -307,6 +310,23 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
+#ifdef EMSCRIPTEN
+#define MAX_PATCHES  8
+
+typedef enum {
+	PATCH_NONE,
+	PATCH_XSCALE,
+	PATCH_YSCALE,
+	PATCH_BIAS
+} patch_type_t;
+
+typedef struct patch_s {
+	patch_type_t type;
+	void *addr;
+} patch_t;
+
+#endif
+
 typedef struct {
 	qboolean	cddialog;			// bring up the cd needed dialog next frame
 
@@ -351,6 +371,21 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+	
+#ifdef EMSCRIPTEN
+	glconfig_t *uiGlConfig;
+	glconfig_t *cgameGlConfig;
+
+	patch_t uiPatches[MAX_PATCHES];
+	patch_t cgamePatches[MAX_PATCHES];
+	unsigned numUiPatches;
+	unsigned numCgamePatches;
+
+	// the cgame scales are normally stuffed somewhere inbetween
+	// cgameGlConfig and cgameFirstCvar
+	vmCvar_t *cgameFirstCvar;
+
+#endif
 } clientStatic_t;
 
 extern	clientStatic_t		cls;
@@ -504,6 +539,7 @@ void CL_SendCmd (void);
 void CL_ClearState (void);
 void CL_ReadPackets (void);
 
+void CL_SendPureChecksums(void);
 void CL_WritePacket( void );
 void IN_CenterView (void);
 
@@ -602,6 +638,7 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 void CL_InitCGame( void );
+void CL_InitCGameFinished( void );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
@@ -640,4 +677,3 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
-

@@ -2065,7 +2065,7 @@ static void ComputeVertexAttribs(void)
 	int i, stage;
 
 	// dlights always need ATTR_NORMAL
-	shader.vertexAttribs = ATTR_POSITION | ATTR_NORMAL;
+	shader.vertexAttribs = ATTR_POSITION | ATTR_NORMAL | ATTR_COLOR;
 
 	// portals always need normals, for SurfIsOffscreen()
 	if (shader.isPortal)

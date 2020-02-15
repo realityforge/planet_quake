@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #	include "SDL.h"
 #else
 #	include <SDL.h>
+#	include <SDL_gamecontroller.h>
 #endif
 
 #include <stdarg.h>
@@ -34,6 +35,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_local.h"
 
 static cvar_t *in_keyboardDebug     = NULL;
+#if EMSCRIPTEN
+#define SDL_GetKeyState SDL_GetKeyboardState
+#define SDLK_WORLD_0 0xA0
+#define SDLK_WORLD_95 0xFF
+#endif
 
 static SDL_GameController *gamepad = NULL;
 static SDL_Joystick *stick = NULL;

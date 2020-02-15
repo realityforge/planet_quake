@@ -91,6 +91,19 @@ typedef int	ioctlarg_t;
 
 #endif
 
+#ifdef EMSCRIPTEN
+// stuff for async SOCKS set up, during Net_Init recv is used synchronously
+extern void Sys_SocksConnect( void );
+extern void Sys_SocksMessage( void );
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void SOCKS_Frame_Proxy( void );
+static void (*SOCKS_Proxy)( void ) = NULL;
+static void (*SOCKS_After)( void ) = NULL;
+void NET_OpenSocks_After_Connect( void );
+void NET_OpenSocks_After_Method( void );
+void NET_OpenSocks_After_Listen( void );
+#endif
+
 static qboolean usingSocks = qfalse;
 static int networkingEnabled = 0;
 
@@ -111,7 +124,7 @@ static cvar_t	*net_mcast6iface;
 
 static cvar_t	*net_dropsim;
 
-static struct sockaddr	socksRelayAddr;
+static struct sockaddr_in	socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -544,21 +557,28 @@ qboolean NET_GetPacket(netadr_t *net_from, msg_t *net_message, fd_set *fdr)
 
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
-			if ( usingSocks && memcmp( &from, &socksRelayAddr, fromlen ) == 0 ) {
-				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 || net_message->data[3] != 1 ) {
+			if ( usingSocks ) { //&& memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
+				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
 					return qfalse;
 				}
 				net_from->type = NA_IP;
-				net_from->ip[0] = net_message->data[4];
-				net_from->ip[1] = net_message->data[5];
-				net_from->ip[2] = net_message->data[6];
-				net_from->ip[3] = net_message->data[7];
-				net_from->port = *(short *)&net_message->data[8];
-				net_message->readcount = 10;
+        net_message->readcount = 4; // including type below
+        if(net_message->data[3] == 1) {
+  				net_from->ip[0] = net_message->data[4];
+  				net_from->ip[1] = net_message->data[5];
+  				net_from->ip[2] = net_message->data[6];
+  				net_from->ip[3] = net_message->data[7];
+          net_message->readcount = 4 + 4 + 2;
+        } else if (net_message->data[3] == 3) {
+          Q_strncpyz(net_from->name, (char *)&net_message->data[5], net_message->data[4]);
+          NET_StringToAdr(net_from->name, net_from, net_from->type);
+          net_message->readcount = 5 + net_message->data[4] + 2;
+        }
+				net_from->port = *(short *)&net_message->data[net_message->readcount - 2];
 			}
 			else {
-				SockadrToNetadr( (struct sockaddr *) &from, net_from );
-				net_message->readcount = 0;
+        SockadrToNetadr( (struct sockaddr *) &from, net_from );
+        net_message->readcount = 0;
 			}
 		
 			if( ret >= net_message->maxsize ) {
@@ -663,14 +683,18 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
 	if( usingSocks && to.type == NA_IP ) {
-		socksBuf[0] = 0;	// reserved
-		socksBuf[1] = 0;
+		socksBuf[0] = 5;	// reserved
+		socksBuf[1] = 1;
 		socksBuf[2] = 0;	// fragment (not fragmented)
-		socksBuf[3] = 1;	// address type: IPV4
-		*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
-		*(short *)&socksBuf[8] = ((struct sockaddr_in *)&addr)->sin_port;
-		memcpy( &socksBuf[10], data, length );
-		ret = sendto( ip_socket, socksBuf, length+10, 0, &socksRelayAddr, sizeof(socksRelayAddr) );
+		socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
+    // let socks server do the translation
+    socksBuf[4] = strlen(to.name) + 1;
+    Q_strncpyz( &socksBuf[5], to.name, socksBuf[4] );
+		//*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
+		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
+		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
+    ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
+		//ret = send( socks_socket, socksBuf, length+10, 0 );
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -830,6 +854,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+#ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -842,7 +867,7 @@ SOCKET NET_IPSocket( char *net_interface, int port, int *err ) {
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
-
+#endif
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;
 		address.sin_addr.s_addr = INADDR_ANY;
@@ -1064,6 +1089,7 @@ void NET_LeaveMulticast6()
 NET_OpenSocks
 ====================
 */
+int porto;
 void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
 	struct hostent		*h;
@@ -1074,7 +1100,7 @@ void NET_OpenSocks( int port ) {
 	usingSocks = qfalse;
 
 	Com_Printf( "Opening connection to SOCKS server.\n" );
-
+//PF_INET, SOCK_DGRAM, IPPROTO_UDP
 	if ( ( socks_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP ) ) == INVALID_SOCKET ) {
 		Com_Printf( "WARNING: NET_OpenSocks: socket: %s\n", NET_ErrorString() );
 		return;
@@ -1094,8 +1120,30 @@ void NET_OpenSocks( int port ) {
 	address.sin_port = htons( (short)net_socksPort->integer );
 
 	if ( connect( socks_socket, (struct sockaddr *)&address, sizeof( address ) ) == SOCKET_ERROR ) {
-		Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
-		return;
+#ifndef EMSCRIPTEN
+    Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+    return;
+#else
+    if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
+      Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+      return;
+    }
+  }
+  porto = port;
+  Sys_SocksConnect();
+  SOCKS_After = NET_OpenSocks_After_Connect;
+  //SOCKS_Frame_Callback(Sys_SocksConnect, NET_OpenSocks_After_Connect);
+}
+
+void NET_OpenSocks_After_Connect( void ) {
+  int					port;
+  int					len;
+	qboolean			rfc1929;
+	unsigned char		buf[64];
+  {
+    Cvar_Set("net_enabled", "0");
+    port = porto;
+#endif
 	}
 
 	// send socks authentication handshake
@@ -1124,6 +1172,20 @@ void NET_OpenSocks( int port ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
 		return;
 	}
+
+#ifdef EMSCRIPTEN
+  porto = port;
+  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Method);
+}
+
+void NET_OpenSocks_After_Method( void ) {
+  int 			  port;
+  int					len;
+  unsigned char		buf[64];
+  port = porto;
+  Cvar_Set("net_enabled", "0");
+#endif
+;
 
 	// get the response
 	len = recv( socks_socket, (void *)buf, 64, 0 );
@@ -1197,6 +1259,18 @@ void NET_OpenSocks( int port ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
 		return;
 	}
+
+#ifdef EMSCRIPTEN
+  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Listen);
+}
+
+void NET_OpenSocks_After_Listen( void ) {
+  int					len;
+  unsigned char		buf[64];
+  // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
+  Cvar_Set("net_enabled", "1");
+#endif
+;
 
 	// get the response
 	len = recv( socks_socket, (void *)buf, 64, 0 );
@@ -1416,6 +1490,7 @@ NET_GetCvars
 ====================
 */
 static qboolean NET_GetCvars( void ) {
+	int port;
 	int modified;
 
 #ifdef DEDICATED
@@ -1436,12 +1511,18 @@ static qboolean NET_GetCvars( void ) {
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
-	
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH );
+
+//#if EMSCRIPTEN && DEDICATED
+//	Com_RandomBytes((byte*)&port, sizeof(int));
+//	port &= 0xffff;
+//#else
+	port = PORT_SERVER;
+//#endif
+	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
-	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 
@@ -1483,7 +1564,6 @@ static qboolean NET_GetCvars( void ) {
 	return modified ? qtrue : qfalse;
 }
 
-
 /*
 ====================
 NET_Config
@@ -1500,7 +1580,7 @@ void NET_Config( qboolean enableNetworking ) {
 	if( !net_enabled->integer ) {
 		enableNetworking = 0;
 	}
-
+  
 	// if enable state is the same and no cvars were modified, we have nothing to do
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
@@ -1634,7 +1714,13 @@ void NET_Event(fd_set *fdr)
 				if(rand() < (int) (((double) RAND_MAX) / 100.0 * (double) net_dropsim->value))
 					continue;          // drop this packet
 			}
-
+      
+      if(netmsg.readcount > 0) {
+        memcpy(netmsg.data, &bufData[netmsg.readcount], netmsg.cursize - netmsg.readcount);
+        netmsg.cursize = netmsg.cursize - netmsg.readcount;
+        netmsg.readcount = 0;
+      }
+      
 			if(com_sv_running->integer)
 				Com_RunAndTimeServerPacket(&from, &netmsg);
 			else
@@ -1644,6 +1730,30 @@ void NET_Event(fd_set *fdr)
 			break;
 	}
 }
+
+#ifdef EMSCRIPTEN
+qboolean invokeSOCKSAfter = qfalse;
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	invokeSOCKSAfter = qfalse;
+	if(!SOCKS_Proxy) {
+		SOCKS_Proxy = cb;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling a frame SOCKS proxy." );
+	}
+	if(!SOCKS_After) {
+		SOCKS_After = af;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling back to SOCKS frame." );
+	}
+}
+
+void SOCKS_Frame_Proxy( void ) {
+	if(SOCKS_After) {
+		invokeSOCKSAfter = qtrue;
+	}
+}
+#endif
+
 
 /*
 ====================
@@ -1678,6 +1788,27 @@ void NET_Sleep(int msec)
 			highestfd = ip6_socket;
 	}
 
+#ifdef EMSCRIPTEN
+  if(SOCKS_Proxy) {
+    Com_Printf( "--------- SOCKS Callback (%p) --------\n", &SOCKS_Proxy);
+    void (*cb)( void ) = SOCKS_Proxy;
+    SOCKS_Proxy = NULL;
+    (*cb)();
+    return;
+  }
+
+  if(SOCKS_After) {
+    if(invokeSOCKSAfter) {
+      invokeSOCKSAfter = qfalse;
+      Com_Printf( "--------- SOCKS After (%p) --------\n", &SOCKS_After);
+      void (*cb)( void ) = SOCKS_After;
+      SOCKS_After = NULL; // start frame runner again
+      (*cb)();
+      return;
+    }
+  }
+#endif
+
 #ifdef _WIN32
 	if(highestfd == INVALID_SOCKET)
 	{
@@ -1705,5 +1836,6 @@ NET_Restart_f
 */
 void NET_Restart_f(void)
 {
+  networkingEnabled = qfalse;
 	NET_Config(qtrue);
 }

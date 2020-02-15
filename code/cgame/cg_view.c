@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // for a 3D rendering
 #include "cg_local.h"
 
-
 /*
 =============================================================================
 
@@ -702,17 +701,19 @@ CG_PowerupTimerSounds
 static void CG_PowerupTimerSounds( void ) {
 	int		i;
 	int		t;
+	int 	ot;
 
 	// powerup timers going away
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		t = cg.snap->ps.powerups[i];
-		if ( t <= cg.time ) {
+		t = floor((cg.snap->ps.powerups[i] - cg.time) / POWERUP_BLINK_TIME);
+		if ( t <= 0 ) {
 			continue;
 		}
-		if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
+		if ( t > POWERUP_BLINKS) {
 			continue;
 		}
-		if ( ( t - cg.time ) / POWERUP_BLINK_TIME != ( t - cg.oldTime ) / POWERUP_BLINK_TIME ) {
+		ot = floor(( cg.snap->ps.powerups[i] - cg.oldTime ) / POWERUP_BLINK_TIME);
+		if ( t != ot ) {
 			trap_S_StartSound( NULL, cg.snap->ps.clientNum, CHAN_ITEM, cgs.media.wearOffSound );
 		}
 	}
@@ -876,4 +877,3 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 
 }
-

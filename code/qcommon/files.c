@@ -255,6 +255,10 @@ static  cvar_t          *fs_apppath;
 static	cvar_t		*fs_steampath;
 static	cvar_t		*fs_gogpath;
 
+#if EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_gamedirvar;
@@ -753,6 +757,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			fsh[f].handleSync = qfalse;
 		}
 
+#ifndef EMSCRIPTEN
 		// Check fs_steampath
 		if (!fsh[f].handleFiles.file.o && fs_steampath->string[0])
 		{
@@ -782,6 +787,7 @@ long FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp)
 			fsh[f].handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 			fsh[f].handleSync = qfalse;
 		}
+#endif
 
 		if ( !fsh[f].handleFiles.file.o )
 		{
@@ -3311,7 +3317,7 @@ static void FS_ReorderPurePaks( void )
 FS_Startup
 ================
 */
-static void FS_Startup( const char *gameName )
+void FS_Startup( const char *gameName )
 {
 	const char *homePath;
 
@@ -3328,6 +3334,13 @@ static void FS_Startup( const char *gameName )
 	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
 	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_INIT|CVAR_SYSTEMINFO );
+#if EMSCRIPTEN
+}
+
+void FS_Startup_After_Async( const char *gameName )
+{
+#endif
+	Com_Printf( "----- FS_GAME (%s) -----\n", fs_basegame->string );
 
 	if (!gameName[0]) {
 		Cvar_ForceReset( "com_basegame" );
@@ -3351,6 +3364,7 @@ static void FS_Startup( const char *gameName )
 	}
 
 	// add search path elements in reverse priority order
+#ifndef EMSCRIPTEN
 	fs_gogpath = Cvar_Get ("fs_gogpath", Sys_GogPath(), CVAR_INIT|CVAR_PROTECTED );
 	if (fs_gogpath->string[0]) {
 		FS_AddGameDirectory( fs_gogpath->string, gameName );
@@ -3359,6 +3373,7 @@ static void FS_Startup( const char *gameName )
 	if (fs_steampath->string[0]) {
 		FS_AddGameDirectory( fs_steampath->string, gameName );
 	}
+#endif
 	if (fs_basepath->string[0]) {
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
@@ -3379,12 +3394,14 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional base game so mods can be based upon other mods
 	if ( fs_basegame->string[0] && Q_stricmp( fs_basegame->string, gameName ) ) {
+#ifndef EMSCRIPTEN
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_basegame->string);
 		}
 		if (fs_steampath->string[0]) {
 			FS_AddGameDirectory(fs_steampath->string, fs_basegame->string);
 		}
+#endif
 		if (fs_basepath->string[0]) {
 			FS_AddGameDirectory(fs_basepath->string, fs_basegame->string);
 		}
@@ -3395,12 +3412,14 @@ static void FS_Startup( const char *gameName )
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, gameName ) ) {
+#ifndef EMSCRIPTEN
 		if (fs_gogpath->string[0]) {
 			FS_AddGameDirectory(fs_gogpath->string, fs_gamedirvar->string);
 		}
 		if (fs_steampath->string[0]) {
 			FS_AddGameDirectory(fs_steampath->string, fs_gamedirvar->string);
 		}
+#endif
 		if (fs_basepath->string[0]) {
 			FS_AddGameDirectory(fs_basepath->string, fs_gamedirvar->string);
 		}
@@ -3444,7 +3463,7 @@ static void FS_Startup( const char *gameName )
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
 }
 
-#ifndef STANDALONE
+#if !defined STANDALONE && !EMSCRIPTEN
 /*
 ===================
 FS_CheckPak0
@@ -3986,8 +4005,15 @@ void FS_InitFilesystem( void ) {
 
 	// try to start up normally
 	FS_Startup(com_basegame->string);
+	
+#ifdef EMSCRIPTEN
+}
 
-#ifndef STANDALONE
+void FS_InitFilesystem_After_Async( void ) {
+	
+#endif
+
+#if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
 
@@ -4022,10 +4048,19 @@ void FS_Restart( int checksumFeed ) {
 	// clear pak references
 	FS_ClearPakReferences(0);
 
+#ifndef EMSCRIPTEN
 	// try to start up normally
 	FS_Startup(com_basegame->string);
+#else
+}
 
-#ifndef STANDALONE
+void FS_Restart_After_Async( void ) {
+	const char *lastGameDir;
+	FS_Startup_After_Async(com_basegame->string);
+#endif
+
+// TODO: remove this restriction when new paks are sorted out
+#if !defined STANDALONE && !EMSCRIPTEN
 	FS_CheckPak0( );
 #endif
 
@@ -4045,7 +4080,7 @@ void FS_Restart( int checksumFeed ) {
 			lastValidComBaseGame[0] = '\0';
 			lastValidFsBaseGame[0] = '\0';
 			lastValidGame[0] = '\0';
-			FS_Restart(checksumFeed);
+			FS_Restart(fs_checksumFeed);
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}

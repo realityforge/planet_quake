@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_local.h"
 #include "../sys/sys_loadlib.h"
 
+#ifdef EMSCRIPTEN
+#include "../ui/ui_shared.h"
+#endif
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -924,7 +928,26 @@ void CL_DemoCompleted( void )
 	}
 
 	CL_Disconnect( qtrue );
+#ifndef EMSCRIPTEN
 	CL_NextDemo();
+
+#else
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
+	} else {
+		CL_NextDemo();
+	}
+}
+
+void CL_DemoCompleted_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_NextDemo();
+}
+
+void CL_DemoCompleted_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DemoCompleted_After_Startup);	
+#endif
 }
 
 /*
@@ -1736,6 +1759,7 @@ void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 	noGameRestart = qtrue;
+	// don't need to asyncify because noGameRestart is true
 	CL_Disconnect( qtrue );
 	Con_Close();
 
@@ -1928,6 +1952,217 @@ doesn't know what graphics to reload
 =================
 */
 void CL_Vid_Restart_f( void ) {
+#ifdef EMSCRIPTEN
+	const float MATCH_EPSILON = 0.001f;
+	const char *arg = Cmd_Argv(1);
+
+	if (!strcmp(arg, "fast")) {
+		// WARNING this is absolutely terrible
+		//
+		// we unfortunately can't update the the cgame / ui modules, so instead
+		// we're reaching in and brute force scanning their address space to update
+		// known values on resize to make the world a better place
+
+		// NOTE while we could reference exact offsets (derived from cg_local.h /
+		// ui_local.h), mods may have changed the layout slightly so we're scanning
+		// a reasonable range to uh.. be safe
+
+		re.UpdateMode(&cls.glconfig);
+
+		if (cls.uiGlConfig) {
+			glconfig_t old = *cls.uiGlConfig;
+
+			*cls.uiGlConfig = cls.glconfig;
+
+			float oldXScale = old.vidWidth * (1.0 / 640.0);
+			float oldYScale = old.vidHeight * (1.0 / 480.0);
+			float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
+
+			float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
+			float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
+			float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
+
+			Com_Printf("%i %i != %i %i\n", old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
+
+			if (!cls.numUiPatches) {
+				// having tested a few mods and UI configurations, these
+				// scale values are often layed out different in memory.
+				// we're scanning a large range here to catch both old UI
+				// and new UI values
+				void *current = (void *)cls.uiGlConfig - sizeof(cachedAssets_t) - 128;
+				void *stop = (void *)cls.uiGlConfig + sizeof(glconfig_t) + 128;
+				qboolean valid = qfalse;
+				float *xScale = NULL;
+				float *yScale = NULL;
+				float *bias = NULL;
+
+				patch_type_t layouts[][3] = {
+					{ PATCH_XSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+					{ PATCH_YSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+					{ PATCH_YSCALE, PATCH_XSCALE, PATCH_BIAS },  // new UI
+					{ PATCH_YSCALE, PATCH_BIAS,   PATCH_NONE }   // CPMA
+				};
+
+				do {
+					for (int i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
+						patch_type_t *layout = layouts[i];
+
+						valid = qtrue;
+						xScale = NULL;
+						yScale = NULL;
+						bias = NULL;
+
+						for (int j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
+							patch_type_t type = layout[j];
+
+							switch (type) {
+								case PATCH_NONE:
+								break;
+
+								case PATCH_XSCALE:
+									xScale = ((float*)current)+j;
+									if (fabs(*xScale - oldXScale) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+
+								case PATCH_YSCALE:
+									yScale = ((float*)current)+j;
+									if (fabs(*yScale - oldYScale) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+
+								case PATCH_BIAS:
+									bias = ((float*)current)+j;
+									if (fabs(*bias - oldBias) >= MATCH_EPSILON) {
+										valid = qfalse;
+									}
+								break;
+							}
+						}
+					}
+				} while (++current != stop && !valid);
+
+				if (valid) {
+					if (xScale) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_XSCALE;
+						cls.uiPatches[cls.numUiPatches].addr = xScale;
+						cls.numUiPatches++;
+						Com_Printf("Found ui xscale offset at 0x%08x\n", (int)xScale);
+					}
+
+					if (yScale) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_YSCALE;
+						cls.uiPatches[cls.numUiPatches].addr = yScale;
+						cls.numUiPatches++;
+						Com_Printf("Found ui yscale offset at 0x%08x\n", (int)yScale);
+					}
+
+					if (bias) {
+						cls.uiPatches[cls.numUiPatches].type = PATCH_BIAS;
+						cls.uiPatches[cls.numUiPatches].addr = bias;
+						cls.numUiPatches++;
+						Com_Printf("Found ui bias offset at 0x%08x\n", (int)bias);
+					}
+				}
+			}
+
+			if (cls.numUiPatches) {
+				for (int i = 0; i < cls.numUiPatches; i++) {
+					patch_t *p = &cls.uiPatches[i];
+
+					switch (p->type) {
+						case PATCH_XSCALE:
+							*(float*)p->addr = newXScale;
+						break;
+
+						case PATCH_YSCALE:
+							*(float*)p->addr = newYScale;
+						break;
+
+						case PATCH_BIAS:
+							*(float*)p->addr = newBias;
+						break;
+
+						default:
+							Com_Error(ERR_FATAL, "bad ui patch type");
+						break;
+					}
+				}
+			} else {
+				Com_Printf(S_COLOR_RED "ERROR: Failed to patch ui resolution\n");
+			}
+		}
+
+		if (cls.cgameGlConfig) {
+			glconfig_t old = *cls.cgameGlConfig;
+
+			*cls.cgameGlConfig = cls.glconfig;
+
+			float oldXScale = old.vidWidth / 640.0;
+			float oldYScale = old.vidHeight / 480.0;
+
+			float newXScale = cls.glconfig.vidWidth / 640.0;
+			float newYScale = cls.glconfig.vidHeight / 480.0;
+
+			// as if this hack couldn't get worse, CPMA decided to store the
+			// scale values additionally in a second internal structure (and
+			// uses both). due to this, we're now scanning between
+			// cgs.glconfig <-> first vmCvar registered
+			if (!cls.numCgamePatches) {
+				void *current = (void *)cls.cgameGlConfig + sizeof(glconfig_t);
+				void *stop = current + 128;
+				if (stop < (void *)cls.cgameFirstCvar) {
+					stop = cls.cgameFirstCvar;
+				}
+
+				do {
+					float *xScale = (float*)current;
+					float *yScale = ((float*)current)+1;
+
+					if (fabs(*xScale - oldXScale) < MATCH_EPSILON && fabs(*yScale - oldYScale) < MATCH_EPSILON) {
+						cls.cgamePatches[cls.numCgamePatches].type = PATCH_XSCALE;
+						cls.cgamePatches[cls.numCgamePatches].addr = xScale;
+						cls.numCgamePatches++;
+						Com_Printf("Found cgame xscale offset at 0x%08x\n", (int)xScale);
+
+						cls.cgamePatches[cls.numCgamePatches].type = PATCH_YSCALE;
+						cls.cgamePatches[cls.numCgamePatches].addr = yScale;
+						cls.numCgamePatches++;
+						Com_Printf("Found cgame yscale offset at 0x%08x\n", (int)yScale);
+
+						current += 3;
+					}
+				} while (++current != stop);
+			}
+
+			if (cls.numCgamePatches) {
+				for (int i = 0; i < cls.numCgamePatches; i++) {
+					patch_t *p = &cls.cgamePatches[i];
+
+					switch (p->type) {
+						case PATCH_XSCALE:
+							*(float*)(p->addr) = newXScale;
+						break;
+
+						case PATCH_YSCALE:
+							*(float*)(p->addr) = newYScale;
+						break;
+
+						default:
+							Com_Error(ERR_FATAL, "bad cgame patch type");
+						break;
+					}
+				}
+			} else {
+				Com_Printf(S_COLOR_RED "ERROR: Failed to patch cgame resolution\n");
+			}
+		}
+
+		return;
+	}
+#endif
 
 	// Settings may have changed so stop recording now
 	if( CL_VideoRecording( ) ) {
@@ -1942,6 +2177,31 @@ void CL_Vid_Restart_f( void ) {
 
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
 	{
+#ifdef EMSCRIPTEN
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
+		} else {
+			CL_Vid_Restart_After_Restart();
+		}
+	}
+}
+
+void CL_Vid_Restart_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
+}
+
+void CL_Vid_Restart_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_Vid_Restart_After_Restart();
+}
+
+void CL_Vid_Restart_After_Restart( void ) {
+	
+	{	/* if conditional */
+#endif
+;
+
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
 		{
@@ -2076,6 +2336,30 @@ void CL_Clientinfo_f( void ) {
 	Com_Printf( "--------------------------------------\n" );
 }
 
+#ifdef EMSCRIPTEN
+
+void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
+	FS_Restart_After_Async();
+	clc.dlDisconnect = qfalse;
+	CL_Reconnect_f();
+}
+
+void CL_DownloadsComplete_Disconnected_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_Disconnected_After_Startup);
+}
+
+void CL_DownloadsComplete_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_AddReliableCommand("donedl", qfalse);
+}
+
+void CL_DownloadsComplete_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_After_Startup);
+}
+
+#endif
 
 //====================================================================
 
@@ -2087,6 +2371,17 @@ Called when all downloading has been completed
 =================
 */
 void CL_DownloadsComplete( void ) {
+
+#ifdef EMSCRIPTEN
+if(clc.dlDisconnect) {
+	if(clc.downloadRestart) {
+		FS_Restart(clc.checksumFeed);
+		clc.downloadRestart = qfalse;
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+	}
+	return;
+}
+#endif
 
 #ifdef USE_CURL
 	// if we downloaded with cURL
@@ -2110,7 +2405,10 @@ void CL_DownloadsComplete( void ) {
 		clc.downloadRestart = qfalse;
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
+#ifdef EMSCRIPTEN
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_After_Shutdown);
+		return;
+#endif
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand("donedl", qfalse);
 
@@ -2179,7 +2477,20 @@ void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
 
+#ifdef EMSCRIPTEN
+	Sys_BeginDownload();
+	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
+		!clc.dlDisconnect) {
+
+		CL_AddReliableCommand("disconnect", qtrue);
+		CL_WritePacket();
+		CL_WritePacket();
+		CL_WritePacket();
+		clc.dlDisconnect = qtrue;
+	}
+#else
 	CL_AddReliableCommand(va("download %s", remoteName), qfalse);
+#endif
 }
 
 /*
@@ -2260,6 +2571,32 @@ void CL_NextDownload(void)
 				cl_allowDownload->integer);
 		}
 #endif /* USE_CURL */
+#ifdef EMSCRIPTEN
+// TODO: add check for HTTP only using strcmp
+		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
+			if(clc.sv_allowDownload & DLF_NO_REDIRECT) {
+				Com_Printf("WARNING: server does not "
+					"allow download redirection "
+					"(sv_allowDownload is %d)\n",
+					clc.sv_allowDownload);
+			}
+			else if(!*clc.sv_dlURL) {
+				Com_Printf("WARNING: server allows "
+					"download redirection, but does not "
+					"have sv_dlURL set\n");
+			}
+			else {
+				CL_BeginDownload( localName, remoteName );
+				useCURL = qtrue;
+			}
+		}
+		else if(!(clc.sv_allowDownload & DLF_NO_REDIRECT)) {
+			Com_Printf("WARNING: server allows download "
+				"redirection, but it disabled by client "
+				"configuration (cl_allowDownload is %d)\n",
+				cl_allowDownload->integer);
+		}
+#endif /* EMSCRIPTEN */
 		if(!useCURL) {
 			if((cl_allowDownload->integer & DLF_NO_UDP)) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
@@ -2338,7 +2675,7 @@ void CL_CheckForResend( void ) {
 	int		port;
 	char	info[MAX_INFO_STRING];
 	char	data[MAX_INFO_STRING + 10];
-
+	
 	// don't send anything if playing back a demo
 	if ( clc.demoplaying ) {
 		return;
@@ -2392,6 +2729,10 @@ void CL_CheckForResend( void ) {
 		Info_SetValueForKey( info, "challenge", va("%i", clc.challenge ) );
 		
 		Com_sprintf( data, sizeof(data), "connect \"%s\"", info );
+		// TODO: add net_ip here to control proxy server connection
+		// Info_SetValueForKey( info, "net_ip", va("%i", Cvar_VariableValue ("net_ip") ) );
+		// Com_Printf("Challenge: %s\n", data);
+		
 		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) data, strlen ( data ) );
 		// the most current userinfo has been sent, so watch for any
 		// newer changes to userinfo variables
@@ -2933,6 +3274,33 @@ void CL_Frame ( int msec ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
+
+#if EMSCRIPTEN
+	// quake3's loading process is entirely synchronous. throughout this
+	// process it will call trap_UpdateScreen to force an immediate buffer
+	// swap. however, in WebGL we can't force an immediate buffer swap,
+	// it only occurs once we've yielded to the event loop. due to the
+	// synchronous design however, the event loop is blocked and the
+	// loading screen is therefor never rendered
+	//
+	// to get around this, the JS VM code has a special case for trap_UpdateScreen
+	// that suspends the execution of the VM after it has been invoked,
+	// enabling the event loop to breath. we're checking here if it has
+	// been suspended, and resuming it if so now that we've successfully
+	// swapped buffers
+	if (cgvm && VM_IsSuspended(cgvm)) {
+		unsigned result = VM_Resume(cgvm);
+
+		if (result == 0xDEADBEEF) {
+			return;
+		}
+
+		if (clc.state == CA_LOADING) {
+			CL_InitCGameFinished();
+		}
+	}
+
+#endif
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {

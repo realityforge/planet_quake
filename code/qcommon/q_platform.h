@@ -298,6 +298,22 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #endif
 
+//================================================================== Q3JS ===
+
+#ifdef EMSCRIPTEN
+
+#define OS_STRING "emscripten"
+#define ID_INLINE
+#define PATH_SEP '/'
+
+#define ARCH_STRING "js"
+
+#define DLL_EXT ".wasm"
+
+#define Q3_LITTLE_ENDIAN
+
+#endif
+
 //===========================================================================
 
 //catch missing defines in above blocks

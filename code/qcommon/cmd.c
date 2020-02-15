@@ -176,6 +176,7 @@ void Cbuf_Execute (void)
 	char	line[MAX_CMD_LINE];
 	int		quotes;
 
+
 	// This will keep // style comments all on one line by not breaking on
 	// a semicolon.  It will keep /* ... */ style comments all on one line by not
 	// breaking it for semicolon or newline.
@@ -233,6 +234,14 @@ void Cbuf_Execute (void)
 // delete the text from the command buffer and move remaining commands down
 // this is necessary because commands (exec) can insert data at the
 // beginning of the text buffer
+
+#ifdef EMSCRIPTEN	
+// wait until after SOCKS to exec connect commands
+if(Cvar_Get("net_enabled", "0", CVAR_LATCH)->integer == 0
+  && Cvar_Get("net_socksEnabled", "0", CVAR_LATCH)->integer == 1) {
+	return;
+}
+#endif
 
 		if (i == cmd_text.cursize)
 			cmd_text.cursize = 0;
@@ -868,4 +877,3 @@ void Cmd_Init (void) {
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
 }
-
