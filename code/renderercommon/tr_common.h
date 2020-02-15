@@ -80,7 +80,6 @@ extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared duri
 extern qboolean  textureFilterAnisotropic;
 extern int       maxAnisotropy;
 extern float     displayAspect;
-extern qboolean  haveClampToEdge;
 
 //
 // cvars

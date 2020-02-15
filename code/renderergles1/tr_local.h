@@ -50,6 +50,7 @@ QGL_ES_1_1_FIXED_FUNCTION_PROCS;
 #ifdef USE_LOCAL_HEADERS
 #	include "SDL_opengles.h"
 #else
+# include <GLES2/gl2.h>
 #	include <SDL_opengles.h>
 #endif
 #define GL_RGBA4				0x8056

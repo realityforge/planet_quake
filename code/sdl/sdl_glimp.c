@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //#ifdef USE_LOCAL_HEADERS
 #include <SDL.h>
-#include <SDL_opengl.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -241,7 +240,8 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 
 #ifdef EMSCRIPTEN
 #define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
-#elif __SDL_NOGETPROCADDR__
+#else
+#if __SDL_NOGETPROCADDR__
 #define GLE( ret, name, ... ) qgl##name = (void *)gl#name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
@@ -249,6 +249,7 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 		ri.Printf( PRINT_ALL, "ERROR: Missing OpenGL function %s\n", "gl" #name ); \
 		success = qfalse; \
 	}
+#endif
 #endif
 
 	// OpenGL 1.0 and OpenGL ES 1.0
@@ -277,20 +278,11 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	}
 
 #ifdef EMSCRIPTEN
-	QGL_1_1_PROCS;
-	//QGL_1_1_FIXED_FUNCTION_PROCS;
-	QGL_DESKTOP_1_1_PROCS;
-	//QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
-	QGL_ES_1_1_PROCS;
-	//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
-	QGL_1_3_PROCS;
-	QGL_1_5_PROCS;
-	QGL_2_0_PROCS;
-	//QGL_3_0_PROCS;
-	//QGL_ARB_occlusion_query_PROCS;
-	//QGL_ARB_framebuffer_object_PROCS;
-	//QGL_ARB_vertex_array_object_PROCS;
-	//QGL_EXT_direct_state_access_PROCS;
+QGL_1_1_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+QGL_1_3_PROCS;
+//QGL_1_5_PROCS;
+//QGL_2_0_PROCS;
 #else
 	if ( fixedFunction ) {
 		if ( QGL_VERSION_ATLEAST( 1, 1 ) ) {
@@ -1030,11 +1022,9 @@ static void GLimp_InitExtensions( qboolean fixedFunction )
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
 	}
 
-	haveClampToEdge = qfalse;
 	if ( QGL_VERSION_ATLEAST( 1, 2 ) || QGLES_VERSION_ATLEAST( 1, 0 ) || SDL_GL_ExtensionSupported( "GL_SGIS_texture_edge_clamp" ) )
 	{
 		ri.Printf( PRINT_ALL, "...using GL_SGIS_texture_edge_clamp\n" );
-		haveClampToEdge = qtrue;
 	}
 	else
 	{
