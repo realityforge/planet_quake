@@ -127,6 +127,10 @@ Server.prototype.lookupDNS = async function (address) {
 Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
+  if(!udpSocket) {
+    console.log('No socket found.')
+    return
+  }
   console.log('Switching to UDP listener', udpLookupPort)
   //socket.dstSock = udpSocket
   socket.off('data', onData)

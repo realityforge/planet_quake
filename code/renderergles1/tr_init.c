@@ -211,7 +211,7 @@ static void InitOpenGL( void )
 	}
 
 	// set default state
-	GL_SetDefaultState();
+	//GL_SetDefaultState();
 }
 
 /*

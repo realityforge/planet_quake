@@ -28,6 +28,7 @@ var LibrarySys = {
 			'+set', 'r_hdr', '0',
 			'+set', 'r_picmip', '0',
 			'+set', 'cg_drawfps', '1',
+			'+set', 'r_postProcess', '0',
 			//'+connect', 'proxy.quake.games:443',
 			/*
 			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',

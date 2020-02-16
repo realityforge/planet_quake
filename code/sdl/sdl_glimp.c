@@ -276,20 +276,15 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	}
 
 #ifdef EMSCRIPTEN
-	QGL_1_1_PROCS;
-	QGL_1_1_FIXED_FUNCTION_PROCS;
-	QGL_DESKTOP_1_1_PROCS;
-	QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
-	//QGL_ES_1_1_PROCS;
-	//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
-	QGL_1_3_PROCS;
-	//QGL_1_5_PROCS;
-	//QGL_2_0_PROCS;
-	//QGL_3_0_PROCS;
-	//QGL_ARB_occlusion_query_PROCS;
-	//QGL_ARB_framebuffer_object_PROCS;
-	//QGL_ARB_vertex_array_object_PROCS;
-	//QGL_EXT_direct_state_access_PROCS;
+QGL_1_1_PROCS;
+//QGL_1_1_FIXED_FUNCTION_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+//QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
+//QGL_ES_1_1_PROCS;
+//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
+QGL_1_3_PROCS;
+QGL_1_5_PROCS;
+QGL_2_0_PROCS;
 #else
 	if ( fixedFunction ) {
 		if ( QGL_VERSION_ATLEAST( 1, 1 ) ) {
@@ -304,7 +299,9 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 			QGL_ES_1_1_PROCS;
 			QGL_ES_1_1_FIXED_FUNCTION_PROCS;
 			// error so this doesn't segfault due to NULL desktop GL functions being used
+#ifndef BUILD_RENDERER_OPENGLES
 			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
+#endif
 		} else {
 			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 1.1 is required", version );
 		}
