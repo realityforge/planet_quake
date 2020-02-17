@@ -77,6 +77,7 @@ var SORT = {
 };
 
 var surfaceParams = {
+	'nomipmaps':     { surface: 0, 											contents: SURF.CONTENTS.NOMIPMAPS },
 	// server relevant contents
 	'water':         { surface: 0,                      contents: SURF.CONTENTS.WATER },
 	'slime':         { surface: 0,                      contents: SURF.CONTENTS.SLIME },         // mildly damaging
@@ -190,7 +191,6 @@ function load(buffer) {
   var result = {}
   while((match = balanced('{', '}', current))) {
     var name = match.pre.trim()
-    console.log('found shader ' + name)
     result[name] = loadShader(match.body)
 		result[name].name = name
     current = match.post

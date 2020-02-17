@@ -15,7 +15,7 @@ var audioTypes = [
   '.mp3',
 ]
 
-var sourceFiles = [
+var sourceTypes = [
   '.map',
   '.scc',
 ]
@@ -39,28 +39,28 @@ var fileTypes = [
 ]
 
 var knownDirs = [
-  'scripts/',
-  'botfiles/',
-  'fonts/',
-  'gfx/',
-  'hud/',
-  'icons/',
-  'include/',
-  'menu/',
-  'models/',
-  'music/',
-  'powerups/',  // powerup shaders
-  'sprites/',
-  'sound/',
-  'ui/',
-  'maps/',
-  'textures/',
+  'scripts',
+  'botfiles',
+  'fonts',
+  'gfx',
+  'hud',
+  'icons',
+  'include',
+  'menu',
+  'models',
+  'music',
+  'powerups',  // powerup shaders
+  'sprites',
+  'sound',
+  'ui',
+  'maps',
+  'textures',
 ]
 
 module.exports = {
   knownDirs,
   fileTypes,
-  sourceFiles,
+  sourceTypes,
   audioTypes,
   imageTypes,
 }
