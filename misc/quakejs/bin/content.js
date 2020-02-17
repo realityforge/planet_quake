@@ -182,7 +182,7 @@ async function cacheFile(fullpath) {
 async function makeIndexJson(filename, absolute) {
   // if there is no index.json, generate one
   if(filename && !ufs.existsSync(absolute)) {
-		var files = readMultiDir(path.dirname(absolute))
+		var files = readMultiDir(path.dirname(absolute), recursive)
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]

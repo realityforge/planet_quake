@@ -238,16 +238,16 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	qboolean success = qtrue;
 	const char *version;
 
-#ifdef EMSCRIPTEN
-#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
-#elif __SDL_NOGETPROCADDR__
+//#ifdef EMSCRIPTEN
+//#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
+#if __SDL_NOGETPROCADDR__
 #define GLE( ret, name, ... ) qgl##name = (void *)gl#name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \
 		ri.Printf( PRINT_ALL, "ERROR: Missing OpenGL function %s\n", "gl" #name ); \
-		success = qfalse; \
-	}
+	} \
+	qgl##name = (void *)gl##name;
 #endif
 
 	// OpenGL 1.0 and OpenGL ES 1.0
@@ -475,8 +475,8 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	// Center window
 	if( r_centerWindow->integer && !fullscreen )
 	{
-		x = ( desktopMode.w / 2 ) - ( glConfig.vidWidth / 2 );
-		y = ( desktopMode.h / 2 ) - ( glConfig.vidHeight / 2 );
+		x = 0; //( desktopMode.w / 2 ) - ( glConfig.vidWidth / 2 );
+		y = 0; //( desktopMode.h / 2 ) - ( glConfig.vidHeight / 2 );
 	}
 
 	// Destroy existing state if it exists
@@ -1160,6 +1160,7 @@ void GLimp_EndFrame( void )
 		SDL_GL_SwapWindow( SDL_window );
 	}
 
+/*
 	if( r_fullscreen->modified )
 	{
 		int         fullscreen;
@@ -1192,4 +1193,5 @@ void GLimp_EndFrame( void )
 
 		r_fullscreen->modified = qfalse;
 	}
+*/
 }

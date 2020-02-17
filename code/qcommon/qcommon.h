@@ -43,6 +43,11 @@ void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
 void Com_Frame_Proxy_Arg1( int *b );
 void Com_Frame_Proxy( void );
 
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void SOCKS_Frame_Proxy( void );
+static void (*SOCKS_Proxy)( void ) = NULL;
+static void (*SOCKS_After)( void ) = NULL;
+
 static void (*CB_Frame_Proxy)( int *a ) = NULL;
 static int *CB_Frame_Proxy_Arg1 = NULL;
 static void (*CB_Frame_After)( int *b ) = NULL;

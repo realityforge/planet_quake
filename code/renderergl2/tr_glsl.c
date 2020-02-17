@@ -1515,8 +1515,8 @@ void GLSL_ShutdownGPUShaders(void)
 
 	ri.Printf(PRINT_ALL, "------- GLSL_ShutdownGPUShaders -------\n");
 
-	for (i = 0; i < ATTR_INDEX_COUNT; i++)
-		qglDisableVertexAttribArray(i);
+	//for (i = 0; i < ATTR_INDEX_COUNT; i++)
+	//	qglDisableVertexAttribArray(i);
 
 	GL_BindNullProgram();
 

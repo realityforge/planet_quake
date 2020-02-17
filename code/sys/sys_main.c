@@ -759,12 +759,14 @@ int main( int argc, char **argv )
 	Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
 	Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 	
-#if defined(EMSCRIPTEN) && !defined(DEDICATED)
+#ifdef EMSCRIPTEN
+#ifndef DEDICATED
 // bullshit because onRuntimeInitialized does execute consistently
 //   held up by some sort of WarningHandler race condition
 	argc = Sys_CmdArgsC();
 	Com_Printf("Getting args %i", argc);
 	argv = Sys_CmdArgs();
+#endif
 #endif
 
 	// Concatenate the command line for passing to Com_Init
@@ -784,8 +786,11 @@ int main( int argc, char **argv )
 
 	CON_Init( );
 	Com_Init( commandLine );
-	NET_Init( );
 
+#ifndef EMSCRIPTEN
+	NET_Init( );
+#endif
+	
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
 	signal( SIGSEGV, Sys_SigHandler );
@@ -793,23 +798,16 @@ int main( int argc, char **argv )
 	signal( SIGINT, Sys_SigHandler );
 
 #ifdef EMSCRIPTEN
-	#ifdef DEDICATED
 	// HACK for now to prevent Browser lib from calling
 	// requestAnimationFrame on dedicated builds.
 	emscripten_set_main_loop(Com_Frame, 25, 0);
-	#else
-	emscripten_set_main_loop(Com_Frame, 25, 0);
-	#endif
+	emscripten_exit_with_live_runtime();
+	return 0;
 #else
 	while( 1 )
 	{
 		Com_Frame( );
 	}
+	return 0;	
 #endif
-
-#if EMSCRIPTEN
-	emscripten_exit_with_live_runtime();
-#endif
-
-	return 0;
 }

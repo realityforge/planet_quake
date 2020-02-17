@@ -95,10 +95,6 @@ typedef int	ioctlarg_t;
 // stuff for async SOCKS set up, during Net_Init recv is used synchronously
 extern void Sys_SocksConnect( void );
 extern void Sys_SocksMessage( void );
-void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void SOCKS_Frame_Proxy( void );
-static void (*SOCKS_Proxy)( void ) = NULL;
-static void (*SOCKS_After)( void ) = NULL;
 void NET_OpenSocks_After_Connect( void );
 void NET_OpenSocks_After_Method( void );
 void NET_OpenSocks_After_Listen( void );
@@ -1130,9 +1126,8 @@ void NET_OpenSocks( int port ) {
     }
   }
   porto = port;
-  Sys_SocksConnect();
-  SOCKS_After = NET_OpenSocks_After_Connect;
-  //SOCKS_Frame_Callback(Sys_SocksConnect, NET_OpenSocks_After_Connect);
+  Cvar_Set("net_socksLoading", "1");
+  SOCKS_Frame_Callback(Sys_SocksConnect, NET_OpenSocks_After_Connect);
 }
 
 void NET_OpenSocks_After_Connect( void ) {
@@ -1141,7 +1136,6 @@ void NET_OpenSocks_After_Connect( void ) {
 	qboolean			rfc1929;
 	unsigned char		buf[64];
   {
-    Cvar_Set("net_enabled", "0");
     port = porto;
 #endif
 	}
@@ -1183,7 +1177,6 @@ void NET_OpenSocks_After_Method( void ) {
   int					len;
   unsigned char		buf[64];
   port = porto;
-  Cvar_Set("net_enabled", "0");
 #endif
 ;
 
@@ -1268,7 +1261,6 @@ void NET_OpenSocks_After_Listen( void ) {
   int					len;
   unsigned char		buf[64];
   // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
-  Cvar_Set("net_enabled", "1");
 #endif
 ;
 
@@ -1296,6 +1288,10 @@ void NET_OpenSocks_After_Listen( void ) {
 	((struct sockaddr_in *)&socksRelayAddr)->sin_port = *(short *)&buf[8];
 	memset( ((struct sockaddr_in *)&socksRelayAddr)->sin_zero, 0, 8 );
 
+#ifdef EMSCRIPTEN
+  Com_Printf( "NET_OpenSocks: SOCKS relay configured.\n" );
+  Cvar_Set("net_socksLoading", "0");
+#endif
 	usingSocks = qtrue;
 }
 
@@ -1465,6 +1461,8 @@ void NET_OpenIP( void ) {
 
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
+        else
+          Cvar_Set("net_socksLoading", "0");
 
 				break;
 			}

@@ -484,7 +484,7 @@ void S_Init( void )
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "0", CVAR_ARCHIVE );
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "0", CVAR_ARCHIVE );
 
-	cv = Cvar_Get( "s_initsound", "1", 0 );
+	cv = Cvar_Get( "s_initsound", "0", 0 );
 	if( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {
@@ -547,4 +547,3 @@ void S_Shutdown( void )
 
 	S_CodecShutdown( );
 }
-

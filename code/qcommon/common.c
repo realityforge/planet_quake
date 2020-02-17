@@ -2896,6 +2896,9 @@ void Com_Init_After_Filesystem( void ) {
 	}
 
 	Com_Printf ("--- Common Initialization Complete ---\n");
+#ifdef EMSCRIPTEN
+	NET_Init();
+#endif
 }
 
 /*
@@ -3163,7 +3166,6 @@ void Com_Frame( void ) {
 	int		timeBeforeEvents;
 	int		timeBeforeClient;
 	int		timeAfter;
-  
 
 	if ( setjmp (abortframe) ) {
 #ifdef EMSCRIPTEN
@@ -3277,6 +3279,12 @@ void Com_Frame( void ) {
 		else
 			NET_Sleep(timeVal - 1);
 	} while(Com_TimeVal(minMsec));
+	
+#ifdef EMSCRIPTEN
+	if(Cvar_Get("net_socksLoading", "1", CVAR_ROM)->integer) {
+		return;
+	}
+#endif
 	
 	IN_Frame();
 

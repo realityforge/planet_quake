@@ -1582,6 +1582,7 @@ RE_UpdateMode
 =============
 */
 void RE_UpdateMode(glconfig_t *glconfigOut) {
+	/*
 	R_IssuePendingRenderCommands();
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE );
 	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE );
@@ -1597,6 +1598,7 @@ void RE_UpdateMode(glconfig_t *glconfigOut) {
 	GL_CheckErrors();
 
 	*glconfigOut = glConfig;
+	*/
 }
 #endif
 

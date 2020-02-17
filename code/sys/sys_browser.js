@@ -90,18 +90,18 @@ var LibrarySys = {
 				val[0] = '+' + val[0]
 				args.push.apply(args, val)
 			}
-			args.push.apply(args, [
+			args.push.apply([
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 				'+set', 'r_customHeight', '' + window.innerHeight,
 				'+set', 'r_customWidth', '' + window.innerWidth,
-			])
+			], args)
 			return args
 		},
 		updateVideoCmd: function () {
 			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
 				.replace('%fs', window.fullscreen ? '1' : '0')
-				.replace('%w', Module['viewport'].offsetWidth)
-				.replace('%h', Module['viewport'].offsetHeight)
+				.replace('%w', window.innerWidth)
+				.replace('%h', window.innerHeight)
 			Module._Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
 			Module._Cbuf_Execute();
 		},
@@ -116,11 +116,11 @@ var LibrarySys = {
 			SYS.resizeDelay = setTimeout(SYS.updateVideoCmd, 100);
 		},
 		quitGameOnUnload: function (e) {
-			if(Module['viewport']) {
+			if(Module['canvas']) {
 				Module._Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
 				Module._Cbuf_Execute();
-				Module['viewport'].remove()
-				Module['viewport'] = null
+				Module['canvas'].remove()
+				Module['canvas'] = null
 			}
 			return false
 		},
@@ -153,6 +153,7 @@ var LibrarySys = {
 		
 	},
 	Sys_PlatformExit: function () {
+		/*
 		var handler = Module['exitHandler']
 		if (handler) {
 			if (!SYS.exited) {
@@ -160,6 +161,7 @@ var LibrarySys = {
 			}
 			return
 		}
+		*/
 		window.removeEventListener('resize', SYS.resizeViewport)
 		if(SYS.loading) {
 			SYS.loading.remove()
@@ -175,7 +177,7 @@ var LibrarySys = {
 		}
 	},
 	Sys_GLimpInit: function () {
-		var viewport = Module['viewport']
+		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
 			var canvas = document.createElement('canvas')
@@ -242,8 +244,10 @@ var LibrarySys = {
 		}
 		
 		var start = Date.now()
+		// read from drive
 		FS.syncfs(true, function (err) {
 			if (err) {
+				debugger
 				SYSC.Print(err.message)
 				return SYSC.Error('fatal', err.message)
 			}
@@ -253,6 +257,7 @@ var LibrarySys = {
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+				debugger
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
 			}
@@ -261,6 +266,7 @@ var LibrarySys = {
 			var downloads = []
 			SYSC.DownloadAsset(fsMountPath + '/index.json', () => {}, (err, data) => {
 				if(err) {
+					debugger
 					SYSC.ProxyCallback(cb)
 					return
 				}
@@ -324,6 +330,7 @@ var LibrarySys = {
 							}
 							resolve(file)
 						})
+						// save to drive
 					}))).then(() => FS.syncfs(false, () => SYSC.ProxyCallback(cb)))
 				}
 				
@@ -343,6 +350,7 @@ var LibrarySys = {
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
+		// save to drive
 		FS.syncfs(function (err) {
 			SYSC.FS_Shutdown(function (err) {
 				if (err) {
@@ -391,6 +399,7 @@ var LibrarySys = {
 	},
 	Sys_ErrorDialog: function (error) {
 		var errorStr = UTF8ToString(error)
+		console.log(errorStr)
 		if (typeof Module.exitHandler !== 'undefined') {
 			SYS.exited = true
 			Module.exitHandler(errorStr)
