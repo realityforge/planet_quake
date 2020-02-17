@@ -484,7 +484,7 @@ void S_Init( void )
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "0", CVAR_ARCHIVE );
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "0", CVAR_ARCHIVE );
 
-	cv = Cvar_Get( "s_initsound", "0", 0 );
+	cv = Cvar_Get( "s_initsound", "1", 0 );
 	if( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {
@@ -498,12 +498,14 @@ void S_Init( void )
 		Cmd_AddCommand( "s_stop", S_StopAllSounds );
 		Cmd_AddCommand( "s_info", S_SoundInfo );
 
+#ifndef EMSCRIPTEN
 		cv = Cvar_Get( "s_useOpenAL", "1", CVAR_ARCHIVE | CVAR_LATCH );
 		if( cv->integer ) {
 			//OpenAL
 			started = S_AL_Init( &si );
 			Cvar_Set( "s_backend", "OpenAL" );
 		}
+#endif
 
 		if( !started ) {
 			started = S_Base_Init( &si );

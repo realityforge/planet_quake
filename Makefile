@@ -1022,6 +1022,7 @@ ifeq ($(PLATFORM),js)
     --js-library $(LIBVMJS) \
 		-lidbfs.js \
 		-lsdl.js \
+		-lopenal.js \
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \

@@ -304,8 +304,7 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode )
 	Sys_PlatformExit( );
 
 #ifdef EMSCRIPTEN
-	emscripten_cancel_main_loop();	
-	emscripten_force_exit( exitCode );
+	emscripten_cancel_main_loop();
 #endif
 	exit( exitCode );
 }
@@ -800,7 +799,7 @@ int main( int argc, char **argv )
 #ifdef EMSCRIPTEN
 	// HACK for now to prevent Browser lib from calling
 	// requestAnimationFrame on dedicated builds.
-	emscripten_set_main_loop(Com_Frame, 25, 0);
+	emscripten_set_main_loop(Com_Frame, 0, 0);
 	emscripten_exit_with_live_runtime();
 	return 0;
 #else

@@ -473,11 +473,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	ri.Printf( PRINT_ALL, " %d %d\n", glConfig.vidWidth, glConfig.vidHeight);
 
 	// Center window
-	if( r_centerWindow->integer && !fullscreen )
-	{
+	//if( r_centerWindow->integer && !fullscreen )
+	//{
 		x = 0; //( desktopMode.w / 2 ) - ( glConfig.vidWidth / 2 );
 		y = 0; //( desktopMode.h / 2 ) - ( glConfig.vidHeight / 2 );
-	}
+	//}
 
 	// Destroy existing state if it exists
 	if( SDL_glContext != NULL )
@@ -495,6 +495,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		SDL_window = NULL;
 	}
 
+/*
 	if( fullscreen )
 	{
 		flags |= SDL_WINDOW_FULLSCREEN;
@@ -507,6 +508,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 
 		glConfig.isFullscreen = qfalse;
 	}
+*/
 
 	colorBits = r_colorbits->value;
 	if ((!colorBits) || (colorBits >= 32))
@@ -627,6 +629,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 			continue;
 		}
 
+#ifndef EMSCRIPTEN
 		if( fullscreen )
 		{
 			SDL_DisplayMode mode;
@@ -650,7 +653,6 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 			}
 		}
 
-#ifndef EMSCRIPTEN
 		SDL_SetWindowIcon( SDL_window, icon );
 #endif
 
