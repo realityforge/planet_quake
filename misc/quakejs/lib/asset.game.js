@@ -85,23 +85,27 @@ function graphShaders(project) {
     .map(f => path.join(project, f))
   for(var i = 0; i < shaders.length; i++) {
     var buffer = fs.readFileSync(shaders[i])
-    var shader = shaderLoader.load(buffer)
-    var textures = []
-    for (var s = 0; s < shader.stages.length; s++) {
-      for (var sh = 0; sh < shader.stages[s].maps.length; sh++) {
-        textures.push(shader.stages[s].maps[sh])
+    var script = shaderLoader.load(buffer)
+    var keys = Object.keys(script)
+    for(var j = 0; j < keys.length; j++) {
+      var shader = script[keys[j]]
+      var textures = []
+      for (var s = 0; s < shader.stages.length; s++) {
+        for (var sh = 0; sh < shader.stages[s].maps.length; sh++) {
+          textures.push(shader.stages[s].maps[sh])
+        }
       }
+      for (var s = 0; s < shader.innerBox.length; s++) {
+        textures.push(shader.innerBox[s])
+      }
+      for (var s = 0; s < shader.outerBox.length; s++) {
+        textures.push(shader.outerBox[s])
+      }
+      result.push({
+        name: shader.name,
+        textures: textures
+      })
     }
-    for (var s = 0; s < shader.innerBox.length; s++) {
-      textures.push(shader.innerBox[s])
-    }
-    for (var s = 0; s < shader.outerBox.length; s++) {
-      textures.push(shader.outerBox[s])
-    }
-    result.push({
-      name: shaders[i],
-      textures: textures
-    })
   }
   return result
 }

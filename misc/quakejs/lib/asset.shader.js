@@ -198,7 +198,7 @@ function load(buffer) {
   return result
 }
 
-function loadShader(text, lightmapIndex) {
+function loadShader(text) {
 	var script = new Shader();
 	var match
   var current = text
@@ -208,60 +208,42 @@ function loadShader(text, lightmapIndex) {
     current = match.post
   }
 	script.notStage += current
-	return script
+	var words = script.notStage.split(/[\s]+/ig).map(w => w.toLowerCase())
+
+	for(var i = 0; i < script.stages.length; i++) {
+		script.stages[i] = parseStage(script.stages[i], script)
+	}
 	
-	while (!tokens.EOF()) {
-		var token = tokens.next().toLowerCase();
-
-		if (token == '}') break;
-
-		switch (token) {
-			case '{':
-				parseStage(tokens, script, lightmapIndex);
-				break;
-
-			case 'sort':
-				parseSort(tokens, script);
-				break;
-
-			case 'cull':
-				script.cull = tokens.next();
-				break;
-
-			case 'deformvertexes':
-				parseDeform(tokens, script);
-				break;
-
-			case 'surfaceparm':
-				parseSurfaceparm(tokens, script);
-				continue;
-
-			case 'polygonoffset':
-				script.polygonOffset = true;
-				break;
-
-			// entityMergable, allowing sprite surfaces from multiple entities
-			// to be merged into one batch.  This is a savings for smoke
-			// puffs and blood, but can't be used for anything where the
-			// shader calcs (not the surface function) reference the entity color or scroll
-			case 'entitymergable':
-				script.entityMergable = true;
-				break;
-
-			case 'portal':
-				script.sort = SORT.PORTAL;
-				break;
-
+	for(var w = 0; w < words.length; w++) {
+		switch(words[w]) {
+			case 'cull': script.cull = words[w+1]
+			break
+			case 'polygonoffset': script.polygonOffset = true
+			break
+			case 'entitymergable': script.entityMergable = true
+			break
+			case 'portal': script.sort = SORT.PORTAL
+			break
 			case 'fogparms':
-				script.fog = true;
-				script.sort = SORT.FOG;
-				break;
-
-			case 'skyparms':
-				parseSkyparms(tokens, script);
-				break;
-
-			default: break;
+				script.fog = true
+				script.sort = SORT.FOG
+			break
+			case 'sort': script.sort = parseSort(words[w+1])
+			break
+			case 'deformvertexes': 
+				script.vertexDeforms.push(parseDeform(words.slice(w+1)))
+			break
+			case 'surfaceparm':
+				if(surfaceParams[words[w+1]]) {
+					script.surfaceFlags |= surfaceParams[words[w+1]].surface
+					script.contentFlags |= surfaceParams[words[w+1]].contents
+				} else {
+					console.log(`Unknown surface parm ${words[w+1]}`)
+				}
+			break
+			case 'skyparms': 
+				parseSkyparms(words.slice(w+1), script)
+			break
 		}
 	}
 
@@ -301,56 +283,41 @@ function loadShader(text, lightmapIndex) {
 	return script;
 }
 
-function parseDeform(tokens, script) {
+function parseDeform(words) {
 	var deform = new Deform();
 
-	deform.type = tokens.next().toLowerCase();
+	deform.type = words[0].toLowerCase();
 
 	switch (deform.type) {
 		case 'wave':
-			deform.spread = 1.0 / parseFloat(tokens.next());
-			deform.wave = parseWaveForm(tokens);
-			script.vertexDeforms.push(deform);
+			deform.spread = 1.0 / parseFloat(words[1]);
+			deform.wave = parseWaveForm(words.slice(2));
 			break;
 	}
+	return deform
 }
 
-function parseSort(tokens, script) {
-	var val = tokens.next().toLowerCase();
-
+function parseSort(val) {
 	switch (val) {
-		case 'portal':     script.sort = SORT.PORTAL;         break;
-		case 'sky':        script.sort = SORT.ENVIRONMENT;    break;
-		case 'opaque':     script.sort = SORT.OPAQUE;         break;
-		case 'decal':      script.sort = SORT.DECAL;          break;
-		case 'seeThrough': script.sort = SORT.SEE_THROUGH;    break;
-		case 'banner':     script.sort = SORT.BANNER;         break;
-		case 'additive':   script.sort = SORT.BLEND1;         break;
-		case 'nearest':    script.sort = SORT.NEAREST;        break;
-		case 'underwater': script.sort = SORT.UNDERWATER;     break;
-		default:           script.sort = parseInt(val, 10); break;
+		case 'portal':     return SORT.PORTAL;         break;
+		case 'sky':        return SORT.ENVIRONMENT;    break;
+		case 'opaque':     return SORT.OPAQUE;         break;
+		case 'decal':      return SORT.DECAL;          break;
+		case 'seeThrough': return SORT.SEE_THROUGH;    break;
+		case 'banner':     return SORT.BANNER;         break;
+		case 'additive':   return SORT.BLEND1;         break;
+		case 'nearest':    return SORT.NEAREST;        break;
+		case 'underwater': return SORT.UNDERWATER;     break;
+		default:           return parseInt(val, 10); 	 break;
 	}
 }
 
-function parseSurfaceparm(tokens, script) {
-	var val = tokens.next().toLowerCase();
-
-	var parm = surfaceParams[val];
-
-	if (!parm) {
-		return;
-	}
-
-	script.surfaceFlags |= parm.surface;
-	script.contentFlags |= parm.contents;
-}
-
-function parseSkyparms(tokens, script) {
+function parseSkyparms(words, script) {
 	var suffixes = ['rt', 'bk', 'lf', 'ft', 'up', 'dn'];
 
-	var innerBox = tokens.next().toLowerCase();
-	var cloudSize = parseInt(tokens.next(), 10);
-	var outerBox = tokens.next().toLowerCase();
+	var innerBox = words[0].toLowerCase();
+	var cloudSize = parseInt(words[1], 10);
+	var outerBox = words[2].toLowerCase();
 
 	script.sky = true;
 	script.innerBox = innerBox === '-' ? [] : suffixes.map(function (suf) {
@@ -363,76 +330,71 @@ function parseSkyparms(tokens, script) {
 	script.sort = SORT.ENVIRONMENT;
 }
 
-function parseStage(tokens, script, lightmapIndex) {
+function parseStage(text, script) {
 	var stage = new ShaderStage();
-
-	while (!tokens.EOF()) {
-		var token = tokens.next();
-		if (token == '}') {
-			break;
-		}
-
-		switch (token.toLowerCase()) {
+	var words = text.split(/[\s]+/ig).map(w => w.toLowerCase())
+	for(var w = 0; w < words.length; w++) {
+		switch (words[w]) {
 			case 'clampmap':
 				stage.clamp = true;
 			case 'map':
-				var map = tokens.next();
+				var map = words[w+1]
 				if (!map) {
-					throw new Exception('WARNING: missing parameter for \'map\' keyword in script \'' + script.name + '\'');
+					throw new Exception('WARNING: missing parameter for \'map\'');
 				}
 				if (map === '$whiteimage') {
 					map = '*white';
 				} else if (map == '$lightmap') {
 					stage.isLightmap = true;
-					if (lightmapIndex < 0) {
-						map = '*white';
-					} else {
+					//if (lightmapIndex < 0) {
+					//	map = '*white';
+					//} else {
 						map = '*lightmap';
-					}
+					//}
 				}
 				stage.maps.push(map);
 				break;
 
 			case 'animmap':
-				stage.animFreq = parseFloat(tokens.next());
-				var nextMap = tokens.next();
+				stage.animFreq = parseFloat(words[++w]);
+				var nextMap = words[++w];
 				while (nextMap.match(/\.[^\/.]+$/)) {
 					stage.maps.push(nextMap);
-					nextMap = tokens.next();
+					nextMap = words[++w];
 				}
-				tokens.prev();
+				--w
 				break;
 
 			case 'rgbgen':
-				stage.rgbGen = tokens.next().toLowerCase();
+				stage.rgbGen = words[w+1].toLowerCase();
 				switch (stage.rgbGen) {
 					case 'wave':
-						stage.rgbWave = parseWaveForm(tokens);
+						stage.rgbWave = parseWaveForm(words.slice(w+2));
 						if (!stage.rgbWave) { stage.rgbGen = 'identity'; }
 						break;
 				}
 				break;
 
 			case 'alphagen':
-				stage.alphaGen = tokens.next().toLowerCase();
+				stage.alphaGen = words[w+1].toLowerCase();
 				switch (stage.alphaGen) {
 					case 'wave':
-						stage.alphaWave = parseWaveForm(tokens);
+						stage.alphaWave = parseWaveForm(words.slice(w+2));
 						if (!stage.alphaWave) { stage.alphaGen = '1.0'; }
 						break;
 					case 'portal':
-						script.portalRange = parseFloat(tokens.next().toLowerCase());
+						script.portalRange = parseFloat(words[w+1].toLowerCase());
 						break;
 					default: break;
 				}
 				break;
 
 			case 'alphafunc':
-				stage.alphaFunc = tokens.next().toUpperCase();
+				stage.alphaFunc = words[w+1].toUpperCase();
 				break;
 
 			case 'blendfunc':
-				stage.blendSrc = tokens.next().toUpperCase();
+				stage.blendSrc = words[w+1].toUpperCase();
 				stage.hasBlendFunc = true;
 				if (!stage.depthWriteOverride) {
 					stage.depthWrite = false;
@@ -454,13 +416,13 @@ function parseStage(tokens, script, lightmapIndex) {
 						break;
 
 					default:
-						stage.blendDest = tokens.next().toUpperCase();
+						stage.blendDest = words[w+2].toUpperCase();
 						break;
 				}
 				break;
 
 			case 'depthfunc':
-				stage.depthFunc = tokens.next().toLowerCase();
+				stage.depthFunc = words[w+1].toLowerCase();
 				break;
 
 			case 'depthwrite':
@@ -469,17 +431,17 @@ function parseStage(tokens, script, lightmapIndex) {
 				break;
 
 			case 'tcmod':
-				parseTexMod(tokens, stage);
+				stage.tcMods.push(parseTexMod(words.slice(w+1)))
 				break;
 
 			case 'tcgen':
-				stage.tcGen = tokens.next();
+				stage.tcGen = words[w+1];
 				break;
 
 			default: break;
 		}
 	}
-
+	
 	if (stage.blendSrc == 'GL_ONE' && stage.blendDest == 'GL_ZERO') {
 		stage.hasBlendFunc = false;
 		stage.depthWrite = true;
@@ -492,61 +454,56 @@ function parseStage(tokens, script, lightmapIndex) {
 		stage.blendSrc = 'GL_DST_COLOR';
 		stage.blendDest = 'GL_ZERO';
 	}
-
-	script.stages.push(stage);
+	return stage
 }
 
-function parseTexMod(tokens, stage) {
+function parseTexMod(words) {
 	var tcMod = {
-		type: tokens.next().toLowerCase()
+		type: words[0].toLowerCase()
 	};
 
 	switch (tcMod.type) {
 		case 'rotate':
-			tcMod.angle = parseFloat(tokens.next()) * (3.1415/180);
+			tcMod.angle = parseFloat(words[1]) * (3.1415/180);
 			break;
 
 		case 'scale':
-			tcMod.scaleX = parseFloat(tokens.next());
-			tcMod.scaleY = parseFloat(tokens.next());
+			tcMod.scaleX = parseFloat(words[1]);
+			tcMod.scaleY = parseFloat(words[2]);
 			break;
 
 		case 'scroll':
-			tcMod.sSpeed = parseFloat(tokens.next());
-			tcMod.tSpeed = parseFloat(tokens.next());
+			tcMod.sSpeed = parseFloat(words[1]);
+			tcMod.tSpeed = parseFloat(words[2]);
 			break;
 
 		case 'stretch':
-			tcMod.wave = parseWaveForm(tokens);
+			tcMod.wave = parseWaveForm(words.slice(1));
 			if (!tcMod.wave) { tcMod.type = null; }
 			break;
 
 		case 'turb':
 			tcMod.turbulance = new Waveform();
-			tcMod.turbulance.base = parseFloat(tokens.next());
-			tcMod.turbulance.amp = parseFloat(tokens.next());
-			tcMod.turbulance.phase = parseFloat(tokens.next());
-			tcMod.turbulance.freq = parseFloat(tokens.next());
+			tcMod.turbulance.base = parseFloat(words[1]);
+			tcMod.turbulance.amp = parseFloat(words[2]);
+			tcMod.turbulance.phase = parseFloat(words[3]);
+			tcMod.turbulance.freq = parseFloat(words[4]);
 			break;
 
 		default:
 			tcMod.type = null;
 			break;
 	}
-
-	if (tcMod.type) {
-		stage.tcMods.push(tcMod);
-	}
 }
 
-function parseWaveForm(tokens) {
+function parseWaveForm(words) {
 	var wave = new Waveform();
 
-	wave.funcName = tokens.next().toLowerCase();
-	wave.base = parseFloat(tokens.next());
-	wave.amp = parseFloat(tokens.next());
-	wave.phase = parseFloat(tokens.next());
-	wave.freq = parseFloat(tokens.next());
+	wave.funcName = words[0].toLowerCase();
+	wave.base = parseFloat(words[1]);
+	wave.amp = parseFloat(words[2]);
+	wave.phase = parseFloat(words[3]);
+	wave.freq = parseFloat(words[4]);
 
 	return wave;
 }
