@@ -22,14 +22,17 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "dependencies": {
+    "bit-buffer": "^0.2.4",
     "cors": "^2.8.5",
     "dgram": "^1.0.1",
     "express": "^4.17.1",
+    "glob": "^7.1.6",
     "ip6addr": "^0.2.3",
     "nipplejs": "^0.8.5",
     "ws": "^7.2.1"
   },
   "devDependencies": {
+    "balanced-match": "^1.0.0",
     "archiver": "^3.1.1",
     "buffer-crc32": "~0.2.1",
     "chokidar": "^3.3.1",

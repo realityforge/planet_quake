@@ -1,3 +1,4 @@
+var balanced = require('balanced-match')
 var SURF = {
 	FLAGS: {
 		NODAMAGE:    0x1,                                      // never give falling damage
@@ -135,6 +136,7 @@ var Shader = function () {
 	this.portalRange    = 0;
 	this.vertexDeforms  = [];
 	this.stages         = [];
+	this.notStage 			= '';
 };
 
 var ShaderStage = function () {
@@ -181,42 +183,33 @@ var Waveform = function () {
 	this.freq     = 0.0;
 };
 
-function loadScript(text) {
-	var tokens = new Tokenizer(text);
-	var bodies = {};
-
-	while (!tokens.EOF()) {
-		var name = tokens.next().toLowerCase();
-
-		var depth = 0;
-		var buffer = name + ' ';
-		do {
-			var token = tokens.next();
-
-			if (token === '{') {
-				depth++;
-			} else if (token === '}') {
-				depth--;
-			}
-
-			buffer += token + ' ';
-		} while (depth && !tokens.EOF());
-
-		bodies[name] = buffer;
-	}
-
-	return bodies;
+function load(buffer) {
+	var file = buffer.toString('utf-8').replace(/\/\/.*/ig, '')
+  var match
+  var current = file
+  var result = {}
+  while((match = balanced('{', '}', current))) {
+    var name = match.pre.trim()
+    console.log('found shader ' + name)
+    result[name] = loadShader(match.body)
+		result[name].name = name
+    current = match.post
+  }
+  return result
 }
 
 function loadShader(text, lightmapIndex) {
-	var tokens = new Tokenizer(text);
-
 	var script = new Shader();
-	script.name = tokens.next();
-
-	// Sanity check.
-	if (tokens.next() !== '{') return null;
-
+	var match
+  var current = text
+  while((match = balanced('{', '}', current))) {
+		script.notStage += match.pre
+    script.stages.push(match.body)
+    current = match.post
+  }
+	script.notStage += current
+	return script
+	
 	while (!tokens.EOF()) {
 		var token = tokens.next().toLowerCase();
 
@@ -567,6 +560,5 @@ module.exports = {
 	TexMod:      TexMod,
 	Waveform:    Waveform,
 
-	loadScript:  loadScript,
-	loadShader:  loadShader
+	load:  load,
 };

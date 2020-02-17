@@ -1,9 +1,18 @@
+var fs = require('fs')
+var path = require('path')
+var glob = require('glob')
+
+var md3 = require('../lib/asset.md3.js')
+var bsp = require('../lib/asset.bsp.js')
+var shaderLoader = require('../lib/asset.shader.js')
+var skinLoader = require('../lib/asset.skin.js')
 /*
 Planned options:
---edges - number of connected edges to deserve it's own pk3, default is 2
+--edges - number of connected edges to deserve it's own pk3, default is 3
 --roots - insert yourself anywhere in the graph, show top connections from that asset
 --info -i - only print info, don't actually do any converting
-
+--convert - options to pass to image magick, make sure to put these last
+--transcode - options to pass to opus/ogg vorbis, make sure to put these last
 
 Basic steps:
 
@@ -12,18 +21,13 @@ Graph
 Convert
 Repack
 
-
 */
-var fs = require('fs')
-var path = require('path')
-var glob = require('glob')
-
-var md3 = require('../lib/asset.md3.js')
-var bsp = require('../lib/asset.bsp.js')
+var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
+var mountPoints = []
 
 function graphMaps(project) { 
   if(!project) {
-    project = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
+    project = PROJECT
   }
   var result = []
   var maps = glob.sync('**/*.bsp', {cwd: project})
@@ -64,7 +68,7 @@ function graphMaps(project) {
 
 function graphModels(project) {
   if(!project) {
-    project = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
+    project = PROJECT
   }
   var result = []
   var models = glob.sync('**/*+(.md5|.md3)', {cwd: project})
@@ -89,34 +93,55 @@ function graphModels(project) {
 }
 
 function graphShaders(project) {
-  name = sanitize(name)
-
-	var self = this
-	var shaderV = this._addAsset(name, game, ASSET.SHADER)
-	var shader = qkfiles.shader.loadShader(buffer)
-
-	shader.stages.forEach(function (stage) {
-		stage.maps.forEach(function (map) {
-			// ignore special textures (e.g. *white)
-			if (map.charAt(0) === '*') {
-				return
-			}
-
-			var stageV = self._getOrAddAsset(map, game, ASSET.TEXTURE)
-			self._addReference(shaderV, stageV)
-		})
-	})
-
-	// add inner / outer box maps for sky shaders
-	shader.innerBox.forEach(function (map) {
-		var mapV = self._getOrAddAsset(map, game, ASSET.TEXTURE)
-		self._addReference(shaderV, mapV)
-	})
-
-	shader.outerBox.forEach(function (map) {
-		var mapV = self._getOrAddAsset(map, game, ASSET.TEXTURE)
-		self._addReference(shaderV, mapV)
-	})
+  if(!project) {
+    project = PROJECT
+  }
+  var result = []
+  var shaders = glob.sync('**/*.shader', {cwd: project})
+    .map(f => path.join(project, f))
+  for(var i = 0; i < shaders.length; i++) {
+    var buffer = fs.readFileSync(shaders[i])
+    var shader = shaderLoader.load(buffer)
+    var textures = []
+    for (var s = 0; s < shader.stages.length; s++) {
+      for (var sh = 0; sh < shader.stages[s].maps.length; sh++) {
+        textures.push(shader.stages[s].maps[sh])
+      }
+    }
+    for (var s = 0; s < shader.innerBox.length; s++) {
+      textures.push(shader.innerBox[s])
+    }
+    for (var s = 0; s < shader.outerBox.length; s++) {
+      textures.push(shader.outerBox[s])
+    }
+    result.push({
+      name: shaders[i],
+      textures: textures
+    })
+  }
+  return result
 }
 
-console.log(graphModels())
+function graphSkins(project) {
+  if(!project) {
+    project = PROJECT
+  }
+  var result = []
+  var skins = glob.sync('**/*.skin', {cwd: project})
+    .map(f => path.join(project, f))
+  for(var i = 0; i < skins.length; i++) {
+    var buffer = fs.readFileSync(skins[i]).toString('utf-8')
+    var skin = skinLoader.load(buffer)
+    var shaders = []
+    for (var s = 0; s < skin.surfaces.length; s++) {
+      shaders.push(skin.surfaces[s].shaderName)
+    }
+    result.push({
+      name: skins[i],
+      shaders: shaders
+    })
+  }
+  return result
+}
+
+console.log(graphSkins())

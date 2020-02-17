@@ -1,5 +1,4 @@
 var Skin = function () {
-	this.name     = null;
 	this.surfaces = [];
 };
 
@@ -11,7 +10,6 @@ var SkinSurface = function () {
 
 function load(data) {
 	var skin = new Skin();
-	skin.name = name;
 
 	var steps = [];
 
