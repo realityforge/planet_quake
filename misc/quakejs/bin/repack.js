@@ -39,6 +39,7 @@ function gameInfo(project) {
   console.log(`Cgame files: ${game.uiqvm.length}/${game.everything.length
     } - ${percent(game.uiqvm.length, game.everything.length)}%`)
   
+  console.log(`Not found: ${game.notfound.length}`)
   // largest matches, more than 5 edges?
   
   
@@ -55,5 +56,5 @@ function gameInfo(project) {
   return game
 }
 
-console.log(graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted'))
-//gameInfo()
+//graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
+gameInfo()

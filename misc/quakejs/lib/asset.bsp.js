@@ -1,4 +1,4 @@
-var BitStream = require('bit-buffer').BitStream;
+var BitStream = require('./bit-buffer').BitStream;
 
 var MAX_QPATH = 64;
 

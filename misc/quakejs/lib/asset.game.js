@@ -62,17 +62,10 @@ function graphModels(project) {
     project = PROJECT
   }
   var result = []
-  var models = findTypes(['.md5', 'grenade1.md3'], project)
+  var models = findTypes(['.md5', '.md3'], project)
   for(var i = 0; i < models.length; i++) {
     var buffer = fs.readFileSync(models[i])
-    var model
-    try {
-      console.log(buffer[4])
-      model = md3.load(buffer)
-    } catch (e) {
-      console.log('Problem loading model ' + models[i], e)
-      continue
-    }
+    var model = md3.load(buffer)
     var shaders = []
     for (var s = 0; s < model.surfaces.length; s++) {
   		for (var sh = 0; sh < model.surfaces[s].shaders.length; sh++) {
@@ -86,7 +79,8 @@ function graphModels(project) {
       shaders: shaders
     })
   }
-  console.log(`Found ${result.length} models`)
+  var withSkins = result.filter(m => m.skins.length > 0)
+  console.log(`Found ${result.length} models, ${withSkins.length} with skins`)
   return result
 }
 
@@ -255,11 +249,36 @@ function graphGames(project) {
     }
   }
   
-  for(var i = 0; i < game.maps.length; i++) {
+  for(var i = 0; i < game.models.length; i++) {
+    var v = graph.getVertex(game.models[i].name)
+    for(var j = 0; j < game.models[i].shaders.length; j++) {
+      var s = addEdgeMinimatch(v, game.models[i].shaders[j], shadersPlusEverything, graph)
+      if(s) graph.addEdge(v, s)
+      else notfound.push(game.models[i].shaders[j])
+    }
+  }
+  
+  for(var i = 0; i < game.skins.length; i++) {
+    var v = graph.getVertex(game.skins[i].name)
+    for(var j = 0; j < game.skins[i].shaders.length; j++) {
+      var s = addEdgeMinimatch(v, game.skins[i].shaders[j], shadersPlusEverything, graph)
+      if(s) graph.addEdge(v, s)
+      else notfound.push(game.skins[i].shaders[j])
+    }
+  }
+  
+  for(var i = 0; i < game.shaders.length; i++) {
+    var v = graph.getVertex(game.shaders[i].name)
+    for(var j = 0; j < game.shaders[i].textures.length; j++) {
+      var s = addEdgeMinimatch(v, game.shaders[i].textures[j], shadersPlusEverything, graph)
+      if(s) graph.addEdge(v, s)
+      else notfound.push(game.shaders[i].textures[j])
+    }
   }
   
   // TODO: group by parent directories
   game.graph = graph
+  game.notfound = notfound
   
   return [game]
 }
