@@ -95,7 +95,9 @@ function load(data) {
 	// Load the md3's header.
 	var header = new Md3Header();
 	header.ident = bb.readInt32();
-	header.version = bb.readInt32();
+	console.log(data)
+	bb._index = 0
+	header.version = bb.readInt8();
 
 	if (header.version !== MD3_VERSION) {
 		throw new Error('LoadMd3: Wrong version (' + header.version + ' should be ' + MD3_VERSION + ')');

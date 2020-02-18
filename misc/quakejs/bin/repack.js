@@ -1,5 +1,5 @@
 var fs = require('fs')
-var {graphGames} = gameLoader = require('../lib/asset.game.js')
+var {graphGames, graphModels} = gameLoader = require('../lib/asset.game.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 
@@ -22,7 +22,7 @@ Repack
 var mountPoints = []
 
 function percent(a, b) {
-  return Math.round(a/b*100, 1)
+  return Math.round(a/b*1000) / 10
 }
 
 function gameInfo(project) {
@@ -32,7 +32,7 @@ function gameInfo(project) {
     } - ${percent(game.directories.length, game.everything.length)}%`)
   
   // how many files a part of menu system?
-  console.log(`Known files: ${game.menu.length}/${game.everything.length
+  console.log(`Menu files: ${game.menu.length}/${game.everything.length
     } - ${game.menu.map(f => fs.statSync(f).size).reduce((sum, i) => sum + i, 0)} bytes`)
   
   // how many files are graphed versus unmatched or unknown?
@@ -55,5 +55,5 @@ function gameInfo(project) {
   return game
 }
 
-
-gameInfo()
+console.log(graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted'))
+//gameInfo()

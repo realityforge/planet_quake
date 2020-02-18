@@ -9,6 +9,7 @@ var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
 var skinLoader = require('../lib/asset.skin.js')
 var whitelist = require('../bin/repack-whitelist.js')
+var DirectedGraph = require('../lib/asset.graph.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 
@@ -31,15 +32,16 @@ function graphMaps(project) {
       if(map.entities[e].classname.includes('weapon_'))
         weapons.push(map.entities[e].classname)
       if(map.entities[e].music)
-        ents.push(map.entities[e].music)
+        ents.push(map.entities[e].music.toLowerCase())
       if(map.entities[e].noise && map.entities[e].noise.charAt(0) != '*')
-        ents.push(map.entities[e].noise)
+        ents.push(map.entities[e].noise.toLowerCase())
       if(map.entities[e].model2 && map.entities[e].model2.charAt(0) != '*')
-        ents.push(map.entities[e].model2)
+        ents.push(map.entities[e].model2.toLowerCase())
     }
     var shaders = []
     for(var e = 0; e < map.shaders.length; e++) {
-      if(map.shaders[e].shaderName && map.shaders[e].shaderName.charAt(0) != '*')
+      if(map.shaders[e].shaderName && map.shaders[e].shaderName.charAt(0) != '*'
+        && map.shaders[e].shaderName != 'noshader')
         shaders.push(map.shaders[e].shaderName)
     }
     result.push({
@@ -60,10 +62,17 @@ function graphModels(project) {
     project = PROJECT
   }
   var result = []
-  var models = findTypes(['.md5', '.md3'], project)
+  var models = findTypes(['.md5', 'grenade1.md3'], project)
   for(var i = 0; i < models.length; i++) {
     var buffer = fs.readFileSync(models[i])
-    var model = md3.load(buffer)
+    var model
+    try {
+      console.log(buffer[4])
+      model = md3.load(buffer)
+    } catch (e) {
+      console.log('Problem loading model ' + models[i], e)
+      continue
+    }
     var shaders = []
     for (var s = 0; s < model.surfaces.length; s++) {
   		for (var sh = 0; sh < model.surfaces[s].shaders.length; sh++) {
@@ -141,10 +150,11 @@ function graphSkins(project) {
 
 function findTypes(types, project) {
   return glob.sync(`**/*+(${types.join('|')})`, {cwd: project})
-    .map(f => path.join(project, f))
+    .map(f => path.join(project, f).toLowerCase())
 }
 
 function loadQVM(qvm, project) {
+  console.log('Looking for QVM strings')
   var cgame = path.join(project, glob.sync(qvm, {cwd: project})[0])
   var disassembler = path.resolve(path.join(__dirname, '../lib/qvmdisas/'))
   var result
@@ -158,20 +168,24 @@ function loadQVM(qvm, project) {
   var buffer = fs.readFileSync(cgame)
   var gameStrings = buffer.slice(start + length)
     .toString('utf-8').split('\0')
+  console.log(`Found ${gameStrings.length} QVM strings`)
   return gameStrings
 }
 
 function minimatchWild(everything, qvmstrings) {
+  console.log('Looking for matching files from QVM strings')
   var wildcards = qvmstrings
-    .filter(f => f.includes('/'))
-    .map(f => f.replace('%s', '*').replace('%c', '*'))
-  return everything.reduce((arr, f) => {
+    .filter(f => f.includes('/') && f.length > 5)
+    .map(f => f.replace(/%[0-9sdci\-\.]+/ig, '*'))
+  var result = everything.reduce((arr, f) => {
     if(!arr.includes(f)) {
-      if(wildcards.filter(w => minimatch(f, '**/*' + w + '*')).length > 0)
+      if(wildcards.filter(w => minimatch(f, '**/' + w + '*')).length > 0)
         arr.push(f)
     }
     return arr
   }, [])
+  console.log(`Found ${result.length} matching files from QVM strings`)
+  return result
 }
 
 function graphGames(project) {
@@ -179,12 +193,12 @@ function graphGames(project) {
     project = PROJECT
   }
   var everything = glob.sync('**/*', {cwd: project})
-    .map(f => path.join(project, f))
+    .map(f => path.join(project, f).toLowerCase())
   var menu = glob.sync('**/+(scripts|menu|gfx|sound|levelshots)/**', {cwd: project})
-    .map(f => path.join(project, f))
+    .map(f => path.join(project, f).toLowerCase())
   var uiwildcards = loadQVM('**/ui.qvm', project)
   var uiqvm = minimatchWild(everything, uiwildcards)
-  var result = [{
+  var game = {
     maps: graphMaps(project),
     models: graphModels(project),
     shaders: graphShaders(project),
@@ -197,14 +211,67 @@ function graphGames(project) {
     everything: everything,
     menu: menu,
     uiqvm: uiqvm,
-  }]
+  }
   
+  // add all vertices
+  var graph = new DirectedGraph()
+  for(var i = 0; i < game.maps.length; i++) {
+    graph.addVertex(game.maps[i].name, game.maps[i])
+  }
+  for(var i = 0; i < game.models.length; i++) {
+    graph.addVertex(game.models[i].name, game.models[i])
+  }
+  for(var i = 0; i < game.shaders.length; i++) {
+    graph.addVertex(game.shaders[i].name, game.shaders[i])
+  }
+  for(var i = 0; i < game.skins.length; i++) {
+    graph.addVertex(game.skins[i].name, {name: game.skins[i]})
+  }
+  for(var i = 0; i < game.images.length; i++) {
+    graph.addVertex(game.images[i], {name: game.images[i]})
+  }
+  for(var i = 0; i < game.audio.length; i++) {
+    graph.addVertex(game.audio[i], {name: game.audio[i]})
+  }
+  for(var i = 0; i < game.files.length; i++) {
+    graph.addVertex(game.files[i], {name: game.files[i]})
+  }
   
+  // add all edges to the graph
+  var notfound = []
+  var shadersPlusEverything = game.shaders.map(s => s.name).concat(everything)
+  
+  for(var i = 0; i < game.maps.length; i++) {
+    var v = graph.getVertex(game.maps[i].name)
+    for(var j = 0; j < game.maps[i].ents.length; j++) {
+      var s = addEdgeMinimatch(v, game.maps[i].ents[j], everything, graph)
+      if(s) graph.addEdge(v, s)
+      else notfound.push(game.maps[i].ents[j])
+    }
+    for(var j = 0; j < game.maps[i].shaders.length; j++) {
+      var s = addEdgeMinimatch(v, game.maps[i].shaders[j], shadersPlusEverything, graph)
+      if(s) graph.addEdge(v, s)
+      else notfound.push(game.maps[i].shaders[j])
+    }
+  }
+  
+  for(var i = 0; i < game.maps.length; i++) {
+  }
   
   // TODO: group by parent directories
+  game.graph = graph
   
-  
-  return result
+  return [game]
+}
+
+function addEdgeMinimatch(fromVertex, search, everything, graph) {
+  var notfound = []
+  var name = everything.filter(minimatch.filter('**/' + search + '*'))[0]
+  if(!name) {
+    console.error('Resource not found ' + search)
+    return null
+  }
+  return graph.getVertex(name)
 }
 
 module.exports = {
