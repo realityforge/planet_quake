@@ -218,7 +218,12 @@ function loadEntities(bsp, buffer, lump) {
 	var bb = new BitStream(buffer);
 	bb.byteIndex = lump.fileofs;
 
-	var entityStr = bb.readASCIIString(lump.filelen);
+	var entityStr = ''
+	var len = Math.ceil(lump.filelen / 1000)
+	for(var i = 0; i < len; i++) {
+		var max = i == len - 1 ? (lump.filelen % 1000) : 1000
+		entityStr += bb.readASCIIString(max);
+	}
 
 	var entities = bsp.entities = [];
 

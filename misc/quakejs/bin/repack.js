@@ -1,8 +1,9 @@
 var fs = require('fs')
-var {graphGames, graphModels} = gameLoader = require('../lib/asset.game.js')
+var {graphGames, graphModels, graphMaps} = gameLoader = require('../lib/asset.game.js')
 
-var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
+var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
 
+var edges = 3
 /*
 Planned options:
 --edges - number of connected edges to deserve it's own pk3, default is 3
@@ -26,9 +27,11 @@ function percent(a, b) {
 }
 
 function gameInfo(project) {
-  var game = graphGames()[0]
+  var game = graphGames(project)[0]
   // how many files are matched versus unknown?
-  console.log(`Known files: ${game.directories.length}/${game.everything.length
+  console.log(`Known files: ${game.files.length}/${game.everything.length
+    } - ${percent(game.files.length, game.everything.length)}%`)
+  console.log(`Known directories: ${game.directories.length}/${game.everything.length
     } - ${percent(game.directories.length, game.everything.length)}%`)
   
   // how many files a part of menu system?
@@ -40,10 +43,35 @@ function gameInfo(project) {
     } - ${percent(game.uiqvm.length, game.everything.length)}%`)
   
   console.log(`Not found: ${game.notfound.length}`)
-  // largest matches, more than 5 edges?
   
+  console.log(`Files in baseq3: ${game.baseq3.length}`)
+  
+  // largest matches, more than 5 edges?
+  var vertices = game.graph.getVertices()
+  vertices.sort((a, b) => b.inEdges.length - a.inEdges.length)
+  console.log('Most used assets:', vertices.slice(0, 100).map(v => v.inEdges.length + ' - ' + v.id))
+  
+  vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
+  console.log('Least used assets:', vertices
+    .filter(v => v.inEdges.length > 0) // && v.inEdges[0].inVertex.id != v.id)
+    .slice(0, 100)
+    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
+
+  var unused = vertices
+    .filter(v => v.inEdges.length == 0 && !v.id.includes('.bsp') && !v.id.includes('.md3'))
+    
+  console.log('Unused assets:', unused.length, unused.slice(0, 100).map(v => v.id))
   
   // how many packs to create?
+  var filesOverLimit = vertices
+    .filter(v => v.inEdges.length > edges)
+    .map(v => v.id)
+  
+  // for each md3, bsp, group by parent directory
+  var roots = vertices
+    .filter(v => v.id.includes('.bsp') || v.id.includes('.md3'))
+    .filter(v => !filesOverLimit.includes(v.id))
+  
   
   // 1 - ui.qvm, menu system to get the game running, all scripts
   // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
@@ -57,4 +85,5 @@ function gameInfo(project) {
 }
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
-gameInfo()
+//graphMaps(PROJECT)
+gameInfo(PROJECT)

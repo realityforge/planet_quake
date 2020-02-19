@@ -12,6 +12,11 @@ var whitelist = require('../bin/repack-whitelist.js')
 var DirectedGraph = require('../lib/asset.graph.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
+var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
+
+var baseq3 = glob.sync('**/*', {cwd: BASEQ3})
+  .map(f => path.join(BASEQ3, f).toLowerCase())
+fs.writeFileSync(path.join(__dirname, './baseq3-filelist.json'), JSON.stringify(baseq3, null, 2))
 
 function graphMaps(project) {
   console.log('Looking for maps')
@@ -100,7 +105,9 @@ function graphShaders(project) {
       var textures = []
       for (var s = 0; s < shader.stages.length; s++) {
         for (var sh = 0; sh < shader.stages[s].maps.length; sh++) {
-          textures.push(shader.stages[s].maps[sh])
+          if(shader.stages[s].maps[sh].charAt(0) != '*') {
+            textures.push(shader.stages[s].maps[sh])
+          }
         }
       }
       for (var s = 0; s < shader.innerBox.length; s++) {
@@ -166,7 +173,7 @@ function loadQVM(qvm, project) {
   return gameStrings
 }
 
-function minimatchWild(everything, qvmstrings) {
+function minimatchWildCards(everything, qvmstrings) {
   console.log('Looking for matching files from QVM strings')
   var wildcards = qvmstrings
     .filter(f => f.includes('/') && f.length > 5)
@@ -191,7 +198,7 @@ function graphGames(project) {
   var menu = glob.sync('**/+(scripts|menu|gfx|sound|levelshots)/**', {cwd: project})
     .map(f => path.join(project, f).toLowerCase())
   var uiwildcards = loadQVM('**/ui.qvm', project)
-  var uiqvm = minimatchWild(everything, uiwildcards)
+  var uiqvm = minimatchWildCards(everything, uiwildcards)
   var game = {
     maps: graphMaps(project),
     models: graphModels(project),
@@ -233,18 +240,23 @@ function graphGames(project) {
   
   // add all edges to the graph
   var notfound = []
-  var shadersPlusEverything = game.shaders.map(s => s.name).concat(everything)
+  var inbaseq3 = []
+  var shadersPlusEverything = game.shaders.map(s => s.name)
+    .concat(everything)
+    .concat(baseq3)
   
   for(var i = 0; i < game.maps.length; i++) {
     var v = graph.getVertex(game.maps[i].name)
     for(var j = 0; j < game.maps[i].ents.length; j++) {
       var s = addEdgeMinimatch(v, game.maps[i].ents[j], everything, graph)
-      if(s) graph.addEdge(v, s)
+      if(s == -1) inbaseq3.push(game.maps[i].ents[j])
+      else if(s) graph.addEdge(v, s)
       else notfound.push(game.maps[i].ents[j])
     }
     for(var j = 0; j < game.maps[i].shaders.length; j++) {
       var s = addEdgeMinimatch(v, game.maps[i].shaders[j], shadersPlusEverything, graph)
-      if(s) graph.addEdge(v, s)
+      if(s == -1) inbaseq3.push(game.maps[i].shaders[j])
+      else if(s) graph.addEdge(v, s)
       else notfound.push(game.maps[i].shaders[j])
     }
   }
@@ -253,7 +265,8 @@ function graphGames(project) {
     var v = graph.getVertex(game.models[i].name)
     for(var j = 0; j < game.models[i].shaders.length; j++) {
       var s = addEdgeMinimatch(v, game.models[i].shaders[j], shadersPlusEverything, graph)
-      if(s) graph.addEdge(v, s)
+      if(s == -1) inbaseq3.push(game.models[i].shaders[j])
+      else if(s) graph.addEdge(v, s)
       else notfound.push(game.models[i].shaders[j])
     }
   }
@@ -262,7 +275,8 @@ function graphGames(project) {
     var v = graph.getVertex(game.skins[i].name)
     for(var j = 0; j < game.skins[i].shaders.length; j++) {
       var s = addEdgeMinimatch(v, game.skins[i].shaders[j], shadersPlusEverything, graph)
-      if(s) graph.addEdge(v, s)
+      if(s == -1) inbaseq3.push(game.skins[i].shaders[j])
+      else if(s) graph.addEdge(v, s)
       else notfound.push(game.skins[i].shaders[j])
     }
   }
@@ -270,23 +284,28 @@ function graphGames(project) {
   for(var i = 0; i < game.shaders.length; i++) {
     var v = graph.getVertex(game.shaders[i].name)
     for(var j = 0; j < game.shaders[i].textures.length; j++) {
-      var s = addEdgeMinimatch(v, game.shaders[i].textures[j], shadersPlusEverything, graph)
-      if(s) graph.addEdge(v, s)
+      var s = addEdgeMinimatch(v, game.shaders[i].textures[j], everything, graph)
+      if(s == -1) inbaseq3.push(game.shaders[i].textures[j])
+      else if (s) graph.addEdge(v, s)
       else notfound.push(game.shaders[i].textures[j])
     }
   }
   
   // TODO: group by parent directories
   game.graph = graph
-  game.notfound = notfound
+  game.notfound = notfound.filter((a, i, arr) => arr.indexOf(a) == i)
+  game.baseq3 = inbaseq3.filter((a, i, arr) => arr.indexOf(a) == i)
   
   return [game]
 }
 
 function addEdgeMinimatch(fromVertex, search, everything, graph) {
-  var notfound = []
-  var name = everything.filter(minimatch.filter('**/' + search + '*'))[0]
+  search = search.replace(/\..*/, '')
+  var name = everything.filter(f => f.includes(search))[0] //minimatch.filter('**/' + search + '*'))[0]
   if(!name) {
+    if(baseq3.filter(f => f.includes(search))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
+      return -1
+    }
     console.error('Resource not found ' + search)
     return null
   }
