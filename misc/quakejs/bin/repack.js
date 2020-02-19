@@ -84,53 +84,93 @@ function gameInfo(project) {
     grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
   }
   
-  // TODO: make sure we have everything
-  
-  
-  var playerCount = 0, powerupCount = 0, modelCount = 0, 
-    weaponCount = 0, mapModelCount = 0, mapCount = 0,
-    itemCount = 0, otherCount = 0
-  var paks = Object.keys(grouped).map(parent => {
-    // 1 - ui.qvm, menu system to get the game running, all scripts
-    // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
-    // 12-19 - menu pk3s, hud, sprites
-    // 20-29 - player models
-    // 30-39 - powerups
-    // 50-59 - weapons 1-9
-    // 80-89 - map models
-    // 90-99 - map textures
-    var pre = '0'
-    if(parent.includes('maps')) {
-      mapCount++
-      pre = getSequenceNumeral(9, mapCount)
-    } else if(parent.includes('player')) {
-      playerCount++
-      pre = getSequenceNumeral(2, playerCount)
-    } else if(parent.includes('powerup')) {
-      powerupCount++
-      pre = getSequenceNumeral(3, powerupCount)
-    } else if(parent.includes('weapon')) {
-      weaponCount++
-      pre = getSequenceNumeral(5, weaponCount)
-    } else if(parent.includes('mapobject')) {
-      mapModelCount++
-      pre = getSequenceNumeral(8, mapModelCount)
-    } else if(parent.includes('item')) {
-      itemCount++
-      pre = getSequenceNumeral(4, itemCount)
-    } else if(parent.includes('model')) {
-      modelCount++
-      pre = getSequenceNumeral(6, modelCount)
-    } else {
-      otherCount++
-      pre = getSequenceNumeral(7, otherCount)
+  var groupedFlat = Object.values(grouped).flat(1)
+  var linked = game.everything.filter(e => groupedFlat.includes(e))
+  console.log(`Linked assets: ${linked.length}/${game.everything.length
+    } - ${percent(linked.length, game.everything.length)}%`)
+    
+  // make sure we have everything
+  for(var i = 0; i < game.everything.length; i++) {
+    if(linked.includes(game.everything[i])) continue
+    var parent = path.dirname(game.everything[i])
+    if(parent.includes('/menu') 
+      || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()) {
+      parent = 'menu'
     }
-    return 'pak' + pre + path.basename(parent).replace(/\..*/, '')
-  })
-  
-  paks.sort()
+    if(typeof grouped[parent] == 'undefined') {
+      grouped[parent] = []
+    }
+    grouped[parent].push(game.everything[i])
+  }
 
-  console.log('Proposed layout:', paks)
+  // TODO: add weapon sounds using lists of data from bg_misc, but some mods
+  //   like weapons factory load this config from a file we can use instead
+  // in order of confidence, most to least
+  
+  var numericMap = [
+    ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
+                 // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
+                 // 12-19 - menu pk3s, hud, sprites
+    ['maps', 9], // 90-99 - map textures
+    ['weapon', 5], // 50-59 - weapons 1-9
+    ['mapobject', 7],
+    ['powerup', 3], // 30-39 - powerups
+    ['player', 2], // 20-29 - player models
+    ['item', 4],
+    ['model', 6],
+    ['other', /.*/, 8], // 80-89 - map models
+  ]
+  var groupedKeys = Object.keys(grouped)
+  var condensed = {}
+  for(var i = 0; i < groupedKeys.length; i++) {
+    var parent = groupedKeys[i]
+    // combine with parent basenames that match
+    var newParent = null
+    for(var m = 0; m < numericMap.length; m++) {
+      if(newParent) break
+      for(var j = 0; j < numericMap[m].length - 1; j++) {
+        if(parent.match(new RegExp(numericMap[m][j]))) {
+          newParent = numericMap[m][0] + path.basename(parent)
+          break
+        }
+      }
+    }
+    if(typeof condensed[newParent] == 'undefined') {
+      condensed[newParent] = []
+    }
+    condensed[newParent].push.apply(condensed[newParent], grouped[groupedKeys[i]])
+  }
+  
+  var assetCount = {}
+  var condensedKeys = Object.keys(condensed)  
+  for(var i = 0; i < condensedKeys.length; i++) {
+    var parent = condensedKeys[i]
+    var pakName = null
+    for(var m = 0; m < numericMap.length; m++) {
+      var type = numericMap[m][0]
+      var numeral = numericMap[m][numericMap[m].length - 1]
+      if(parent.includes(type)) {
+        if(typeof assetCount[type] == 'undefined') {
+          assetCount[type] = 1
+        } else {
+          assetCount[type]++
+        }
+        // replace names with numeric counts
+        pakName = 'pak' + parent
+          .replace(type, getSequenceNumeral(numeral, assetCount[type]))
+        break
+      }
+    }
+    if(!pakName) {
+      throw new Error('Something went wrong with naming paks')
+    }
+    condensed[pakName] = condensed[parent]
+    delete condensed[parent]
+  }
+  
+  condensedKeys = Object.keys(condensed)
+  condensedKeys.sort()
+  console.log('Proposed layout:', condensedKeys)
   
   return game
 }
