@@ -71,40 +71,10 @@ function gameInfo(project) {
   // for each md3, bsp, group by parent directory
   var roots = vertices.filter(v => v.id.includes('.md3') || v.id.includes('.bsp'))
   var grouped = {}
-  var playerCount = 0, powerupCount = 0, modelCount = 0, weaponCount = 0, mapModelCount = 0, mapCount = 0
   for(var i = 0; i < roots.length; i++) {
     var parent = roots[i].id.includes('.bsp')
       ? roots[i].id
       : path.dirname(roots[i].id)
-      
-    // 1 - ui.qvm, menu system to get the game running, all scripts
-    // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
-    // 12-19 - menu pk3s, hud, sprites
-    // 20-29 - player models
-    // 30-39 - powerups
-    // 50-59 - weapons 1-9
-    // 80-89 - map models
-    // 90-99 - map textures
-    if(parent.includes('player')) {
-      parent = 'pak2' + (10 ^ Math.ceil(playerCount / 10)) * playerCount % 10 + path.basename(parent)
-      playerCount++
-    } else if(parent.includes('powerup')) {
-      parent = 'pak3' + (10 ^ Math.ceil(powerupCount / 10)) * powerupCount % 10 + path.basename(parent)
-      powerupCount++
-    } else if(parent.includes('weapon')) {
-      parent = 'pak5' + (10 ^ Math.ceil(weaponCount / 10)) * weaponCount % 10 + path.basename(parent)
-      weaponCount++
-    } else if(parent.includes('mapobject')) {
-      parent = 'pak8' + (10 ^ Math.ceil(mapModelCount / 10)) * mapModelCount % 10 + path.basename(parent)
-      mapModelCount++
-    } else if(parent.includes('model')) {
-      parent = 'pak6' + (10 ^ Math.ceil(modelCount / 10)) * modelCount % 10 + path.basename(parent)
-      modelCount++
-    } else if(parent.includes('maps')) {
-      parent = 'pak9' + (10 ^ Math.ceil(mapCount / 10)) * mapCount % 10 + path.basename(parent)
-      mapCount++
-    }
-    
     if(typeof grouped[parent] == 'undefined') {
       grouped[parent] = []
     }
@@ -115,9 +85,63 @@ function gameInfo(project) {
   }
   
   // TODO: make sure we have everything
-  console.log(grouped)
+  
+  
+  var playerCount = 0, powerupCount = 0, modelCount = 0, 
+    weaponCount = 0, mapModelCount = 0, mapCount = 0,
+    itemCount = 0, otherCount = 0
+  var paks = Object.keys(grouped).map(parent => {
+    // 1 - ui.qvm, menu system to get the game running, all scripts
+    // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
+    // 12-19 - menu pk3s, hud, sprites
+    // 20-29 - player models
+    // 30-39 - powerups
+    // 50-59 - weapons 1-9
+    // 80-89 - map models
+    // 90-99 - map textures
+    var pre = '0'
+    if(parent.includes('maps')) {
+      mapCount++
+      pre = getSequenceNumeral(9, mapCount)
+    } else if(parent.includes('player')) {
+      playerCount++
+      pre = getSequenceNumeral(2, playerCount)
+    } else if(parent.includes('powerup')) {
+      powerupCount++
+      pre = getSequenceNumeral(3, powerupCount)
+    } else if(parent.includes('weapon')) {
+      weaponCount++
+      pre = getSequenceNumeral(5, weaponCount)
+    } else if(parent.includes('mapobject')) {
+      mapModelCount++
+      pre = getSequenceNumeral(8, mapModelCount)
+    } else if(parent.includes('item')) {
+      itemCount++
+      pre = getSequenceNumeral(4, itemCount)
+    } else if(parent.includes('model')) {
+      modelCount++
+      pre = getSequenceNumeral(6, modelCount)
+    } else {
+      otherCount++
+      pre = getSequenceNumeral(7, otherCount)
+    }
+    return 'pak' + pre + path.basename(parent).replace(/\..*/, '')
+  })
+  
+  paks.sort()
+
+  console.log('Proposed layout:', paks)
   
   return game
+}
+
+function getSequenceNumeral(pre, count) {
+  var digitCount = Math.ceil(count / 10) + 1
+  var result = 0
+  for(var i = 1; i < digitCount; i++) {
+    result += pre * Math.pow(10, i)
+  }
+  return result + (count % 10)
 }
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
