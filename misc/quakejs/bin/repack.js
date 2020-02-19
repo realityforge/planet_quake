@@ -1,4 +1,5 @@
 var fs = require('fs')
+var path = require('path')
 var {graphGames, graphModels, graphMaps} = gameLoader = require('../lib/asset.game.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
@@ -68,19 +69,54 @@ function gameInfo(project) {
     .map(v => v.id)
   
   // for each md3, bsp, group by parent directory
-  var roots = vertices
-    .filter(v => v.id.includes('.bsp') || v.id.includes('.md3'))
-    .filter(v => !filesOverLimit.includes(v.id))
+  var roots = vertices.filter(v => v.id.includes('.md3') || v.id.includes('.bsp'))
+  var grouped = {}
+  var playerCount = 0, powerupCount = 0, modelCount = 0, weaponCount = 0, mapModelCount = 0, mapCount = 0
+  for(var i = 0; i < roots.length; i++) {
+    var parent = roots[i].id.includes('.bsp')
+      ? roots[i].id
+      : path.dirname(roots[i].id)
+      
+    // 1 - ui.qvm, menu system to get the game running, all scripts
+    // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
+    // 12-19 - menu pk3s, hud, sprites
+    // 20-29 - player models
+    // 30-39 - powerups
+    // 50-59 - weapons 1-9
+    // 80-89 - map models
+    // 90-99 - map textures
+    if(parent.includes('player')) {
+      parent = 'pak2' + (10 ^ Math.ceil(playerCount / 10)) * playerCount % 10 + path.basename(parent)
+      playerCount++
+    } else if(parent.includes('powerup')) {
+      parent = 'pak3' + (10 ^ Math.ceil(powerupCount / 10)) * powerupCount % 10 + path.basename(parent)
+      powerupCount++
+    } else if(parent.includes('weapon')) {
+      parent = 'pak5' + (10 ^ Math.ceil(weaponCount / 10)) * weaponCount % 10 + path.basename(parent)
+      weaponCount++
+    } else if(parent.includes('mapobject')) {
+      parent = 'pak8' + (10 ^ Math.ceil(mapModelCount / 10)) * mapModelCount % 10 + path.basename(parent)
+      mapModelCount++
+    } else if(parent.includes('model')) {
+      parent = 'pak6' + (10 ^ Math.ceil(modelCount / 10)) * modelCount % 10 + path.basename(parent)
+      modelCount++
+    } else if(parent.includes('maps')) {
+      parent = 'pak9' + (10 ^ Math.ceil(mapCount / 10)) * mapCount % 10 + path.basename(parent)
+      mapCount++
+    }
+    
+    if(typeof grouped[parent] == 'undefined') {
+      grouped[parent] = []
+    }
+    grouped[parent].push(roots[i].id)
+    grouped[parent].push.apply(grouped[parent], roots[i].outEdges.map(e => e.inVertex.id))
+    var textures = roots[i].outEdges.map(e => e.inVertex.outEdges.map(e => e.inVertex.id))
+    grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
+  }
   
+  // TODO: make sure we have everything
+  console.log(grouped)
   
-  // 1 - ui.qvm, menu system to get the game running, all scripts
-  // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
-  // 12-19 - menu pk3s, hud, sprites
-  // 20-29 - player models
-  // 30-39 - powerups
-  // 50-59 - weapons 1-9
-  // 80-89 - map models
-  // 90-99 - map textures
   return game
 }
 
