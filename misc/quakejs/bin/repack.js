@@ -1,8 +1,14 @@
 var fs = require('fs')
 var path = require('path')
-var {graphGames, graphModels, graphMaps} = gameLoader = require('../lib/asset.game.js')
+var glob = require('glob')
+var {graphQVM} = require('../lib/asset.qvm.js')
+var {graphGames, graphModels, graphMaps} = require('../lib/asset.game.js')
+var {compressDirectory} = require('./compress.js')
+var {ufs} = require('unionfs')
+ufs.use(fs)
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
+var TEMP_NAME = path.join(__dirname, 'previous-graph.json')
 
 var edges = 3
 /*
@@ -28,6 +34,9 @@ function percent(a, b) {
 }
 
 function gameInfo(project) {
+  if(!project) {
+    project = PROJECT
+  }
   var game = graphGames(project)[0]
   // how many files are matched versus unknown?
   console.log(`Known files: ${game.files.length}/${game.everything.length
@@ -36,13 +45,24 @@ function gameInfo(project) {
     } - ${percent(game.directories.length, game.everything.length)}%`)
   
   // how many files a part of menu system?
-  console.log(`Menu files: ${game.menu.length}/${game.everything.length
-    } - ${game.menu.map(f => fs.statSync(f).size).reduce((sum, i) => sum + i, 0)} bytes`)
+  console.log(`Menu files: ${game.menu.length}/${game.everything.length} - ${
+    percent(game.menu.length, game.everything.length)}% - ${
+    game.menu.map(f => fs.statSync(f).size).reduce((sum, i) => sum + i, 0)} bytes`)
   
   // how many files are graphed versus unmatched or unknown?
-  console.log(`Cgame files: ${game.uiqvm.length}/${game.everything.length
-    } - ${percent(game.uiqvm.length, game.everything.length)}%`)
-  
+  var uiUnique = game.uiqvm.filter(f => !game.cgame.includes(f) && !game.qagame.includes(f))
+  console.log(`UI files: ${uiUnique.length}/${game.everything.length
+    } - ${percent(uiUnique.length, game.everything.length)}%`)
+  var cgameUnique = game.cgame.filter(f => !game.uiqvm.includes(f) && !game.qagame.includes(f))
+  console.log(`Cgame files: ${cgameUnique.length}/${game.everything.length
+    } - ${percent(cgameUnique.length, game.everything.length)}%`)
+  console.log(`QAgame files: ${game.qagame.length}/${game.everything.length
+    } - ${percent(game.qagame.length, game.everything.length)}%`)
+    
+  var qvmFiles = game.everything.filter(f => game.uiqvm.includes(f) || game.cgame.includes(f) || game.qagame.includes(f))
+  console.log(`Total QVM files: ${qvmFiles.length}/${game.everything.length
+    } - ${percent(qvmFiles.length, game.everything.length)}%`)
+    
   console.log(`Not found: ${game.notfound.length}`)
   
   console.log(`Files in baseq3: ${game.baseq3.length}`)
@@ -74,7 +94,7 @@ function gameInfo(project) {
   
   // for each md3, bsp, group by parent directory
   var roots = vertices.filter(v => v.id.includes('.md3') || v.id.includes('.bsp'))
-  var grouped = {}
+  var grouped = {'menu': [], 'menu/game': []}
   for(var i = 0; i < roots.length; i++) {
     var parent = roots[i].id.includes('.bsp')
       ? roots[i].id.replace('.bsp', '')
@@ -83,6 +103,10 @@ function gameInfo(project) {
       grouped[parent] = []
     }
     grouped[parent].push(roots[i].id)
+    if(roots[i].id.includes('.bsp')
+      && game.everything.includes(roots[i].id.replace('.bsp', '.aas'))) {
+      grouped[parent].push(roots[i].id.replace('.bsp', '.aas'))
+    }
     grouped[parent].push.apply(grouped[parent], roots[i].outEdges.map(e => e.inVertex.id))
     var textures = roots[i].outEdges.map(e => e.inVertex.outEdges.map(e => e.inVertex.id))
     grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
@@ -99,9 +123,18 @@ function gameInfo(project) {
     // put shared assets in a directory of their own
       && !filesOverLimit.includes(game.everything[i])) continue
     var parent = path.dirname(game.everything[i])
-    if(parent.includes('/menu') 
-      || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()) {
+    if(parent.includes('/menu')
+      || parent.includes('/scripts')
+      || parent.includes('/gfx')
+      || parent.includes('/scripts')
+      || parent.includes('/misc')
+      || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()
+      || uiUnique.includes(game.everything[i])
+      || game.everything[i].includes('ui.qvm')) {
       parent = 'menu'
+    } else if (cgameUnique.filter(f => !f.includes('player')).includes(game.everything[i])
+      || game.everything[i].includes('cgame.qvm')) {
+      parent = 'menu/game'
     }
     if(typeof grouped[parent] == 'undefined') {
       grouped[parent] = []
@@ -126,7 +159,7 @@ function gameInfo(project) {
     ['model', 6],
     ['other', /.*/, 8], // 80-89 - map models
   ]
-  var groupedKeys = Object.keys(grouped)
+  var groupedKeys = ['menu', 'menu/game'].concat(Object.keys(grouped))
   var condensed = {}
   for(var i = 0; i < groupedKeys.length; i++) {
     var parent = groupedKeys[i]
@@ -149,7 +182,7 @@ function gameInfo(project) {
   
   var totalAssets = []
   var assetCount = {}
-  var condensedKeys = Object.keys(condensed)
+  var condensedKeys = ['menumenu', 'menugame'].concat(Object.keys(condensed))
   for(var i = 0; i < condensedKeys.length; i++) {
     var parent = condensedKeys[i]
     var pakName = null
@@ -172,6 +205,7 @@ function gameInfo(project) {
       throw new Error('Something went wrong with naming paks')
     }
     var uniqueAssets = []
+    if(typeof condensed[parent] == 'undefined') continue
     for(var j = 0; j < condensed[parent].length; j++) {
       var f = condensed[parent][j]
       if(game.everything.includes(f) && !totalAssets.includes(f)) {
@@ -182,9 +216,6 @@ function gameInfo(project) {
     if(uniqueAssets.length > edges) {
       condensed[pakName] = uniqueAssets
     } else {
-      if(typeof condensed['pak12game'] == 'undefined') {
-        condensed['pak12game'] = []
-      }
       condensed['pak12game'].push.apply(condensed['pak12game'], uniqueAssets)
     }
     delete condensed[parent]
@@ -195,7 +226,8 @@ function gameInfo(project) {
   console.log('Proposed layout:', condensedKeys.map(k => k + ' - ' + condensed[k].length))
   console.log(`Assets accounted for: ${totalAssets.length}/${game.everything.length
     } - ${percent(totalAssets.length, game.everything.length)}%`)
-  
+  game.condensed = condensed
+  fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
   return game
 }
 
@@ -356,9 +388,33 @@ Proposed layout: [
   'pak93pro-q3tourney2 - 60',
   ... 27 more items
 ]
+Assets accounted for: 3777/3777 - 100%
 
 */
 
+async function repack(condensed, project) {
+  if(!project) {
+    project = PROJECT
+  }
+  var outputProject = path.join(path.dirname(project), path.basename(project) + '-repacked')
+  if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
+  var everything = glob.sync('**/*', {cwd: project})
+    .map(f => path.join(project, f))
+  var everythingLower = everything.map(f => f.toLowerCase())
+  var condensedKeys = Object.keys(condensed)
+  for(var i = 0; i < condensedKeys.length; i++) {
+    var pak = condensed[condensedKeys[i]]
+    var real = pak
+      .map(f => everything[everythingLower.indexOf(f)])
+      .filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
+    var output = fs.createWriteStream(path.join(outputProject, condensedKeys[i] + '.pk3'))
+    await compressDirectory(real, output, project)
+  }
+}
+
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-gameInfo(PROJECT)
+//gameInfo(PROJECT)
+//repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
+var strings = graphQVM('**/ui.qvm', PROJECT)
+console.log(strings.filter(s => s.includes('model')))

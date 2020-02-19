@@ -157,7 +157,7 @@ async function repackPk3Dir(fullpath) {
   if(!repackFiles) {
     return
   }
-  if(!ufs.statSync(fullpath).isDirectory()) {
+  if(!ufs.existsSync(fullpath) || !ufs.statSync(fullpath).isDirectory()) {
     throw new Error(`Provided path ${fullpath} is not a directory.`)
   }
   var newPk3 = fullpath.replace('.pk3dir', '.pk3')

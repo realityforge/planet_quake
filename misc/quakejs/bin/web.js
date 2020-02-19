@@ -33,7 +33,8 @@ async function serveUnionFs(req, res, next) {
   if(filename) {
     await makeIndexJson(filename, absolute)
   }
-  if ((absolute + 'dir').includes('.pk3dir')) {
+  if ((absolute + 'dir').includes('.pk3dir')
+    && ufs.existsSync(absolute + 'dir')) {
     await repackPk3Dir(absolute + 'dir')
   }
   if (absolute && ufs.existsSync(absolute)) {

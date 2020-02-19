@@ -1,9 +1,9 @@
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
-var exec = require('child_process').execSync;
 var minimatch = require("minimatch")
 
+var {graphQVM} = require('../lib/asset.qvm.js')
 var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
@@ -154,25 +154,6 @@ function findTypes(types, project) {
     .map(f => path.join(project, f).toLowerCase())
 }
 
-function loadQVM(qvm, project) {
-  console.log('Looking for QVM strings')
-  var cgame = path.join(project, glob.sync(qvm, {cwd: project})[0])
-  var disassembler = path.resolve(path.join(__dirname, '../lib/qvmdisas/'))
-  var result
-  try {
-    exec(`echo "header" | ./QVMDisas "${cgame}"`, {cwd: disassembler})
-  } catch (e) {
-    result = e.stdout.toString()
-  }
-  var start = parseInt((/Data Offset: (0x.*)/i).exec(result)[1])
-  var length = parseInt((/Data Length: (0x.*)/i).exec(result)[1])
-  var buffer = fs.readFileSync(cgame)
-  var gameStrings = buffer.slice(start + length)
-    .toString('utf-8').split('\0')
-  console.log(`Found ${gameStrings.length} QVM strings`)
-  return gameStrings
-}
-
 function minimatchWildCards(everything, qvmstrings) {
   console.log('Looking for matching files from QVM strings')
   var wildcards = qvmstrings
@@ -193,12 +174,18 @@ function graphGames(project) {
   if(!project) {
     project = PROJECT
   }
-  var everything = glob.sync('**/*', {cwd: project})
+  var everything = glob.sync('**/*', {cwd: project, nodir: true})
     .map(f => path.join(project, f).toLowerCase())
   var menu = glob.sync('**/+(scripts|menu|gfx|sound|levelshots)/**', {cwd: project})
     .map(f => path.join(project, f).toLowerCase())
-  var uiwildcards = loadQVM('**/ui.qvm', project)
-  var uiqvm = minimatchWildCards(everything, uiwildcards)
+    
+  var uiWildcards = loadQVM('**/ui.qvm', project)
+  var uiqvm = minimatchWildCards(everything, uiWildcards)
+  var cgameWildcards = loadQVM('**/cgame.qvm', project)
+  var cgame = minimatchWildCards(everything, cgameWildcards)
+  var qaWildcards = loadQVM('**/qagame.qvm', project)
+  var qagame = minimatchWildCards(everything, qaWildcards)
+  
   var game = {
     maps: graphMaps(project),
     models: graphModels(project),
@@ -211,7 +198,9 @@ function graphGames(project) {
     directories: glob.sync(`**/+(${whitelist.knownDirs.join('|')})/**`, {cwd: project}),
     everything: everything,
     menu: menu,
+    cgame: cgame,
     uiqvm: uiqvm,
+    qagame: qagame,
   }
   
   // add all vertices

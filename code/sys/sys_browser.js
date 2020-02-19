@@ -222,8 +222,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
 		var fs_basegame = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)))
-		var sv_pure = UTF8ToString(_Cvar_VariableIntegerValue(
-				allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK)))
+		var sv_pure = _Cvar_VariableIntegerValue(
+			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		
@@ -256,6 +256,7 @@ var LibrarySys = {
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
+			// server will tell us what pk3s we need
 			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
 				debugger
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
