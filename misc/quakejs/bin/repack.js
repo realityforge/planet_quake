@@ -1,7 +1,7 @@
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
-var {graphQVM} = require('../lib/asset.qvm.js')
+var {graphQVM, loadQVM, loadQVMData} = require('../lib/asset.qvm.js')
 var {graphGames, graphModels, graphMaps} = require('../lib/asset.game.js')
 var {compressDirectory} = require('./compress.js')
 var {ufs} = require('unionfs')
@@ -53,6 +53,7 @@ function gameInfo(project) {
   var uiUnique = game.uiqvm.filter(f => !game.cgame.includes(f) && !game.qagame.includes(f))
   console.log(`UI files: ${uiUnique.length}/${game.everything.length
     } - ${percent(uiUnique.length, game.everything.length)}%`)
+  console.log('UI models: ', uiUnique.filter(f => f.includes('banner')))
   var cgameUnique = game.cgame.filter(f => !game.uiqvm.includes(f) && !game.qagame.includes(f))
   console.log(`Cgame files: ${cgameUnique.length}/${game.everything.length
     } - ${percent(cgameUnique.length, game.everything.length)}%`)
@@ -119,15 +120,13 @@ function gameInfo(project) {
     
   // make sure we have everything
   for(var i = 0; i < game.everything.length; i++) {
-    if(linked.includes(game.everything[i])
-    // put shared assets in a directory of their own
-      && !filesOverLimit.includes(game.everything[i])) continue
     var parent = path.dirname(game.everything[i])
     if(parent.includes('/menu')
       || parent.includes('/scripts')
       || parent.includes('/gfx')
-      || parent.includes('/scripts')
       || parent.includes('/misc')
+      || parent.includes('/sfx')
+      || parent.includes('/feedback')
       || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()
       || uiUnique.includes(game.everything[i])
       || game.everything[i].includes('ui.qvm')) {
@@ -135,13 +134,25 @@ function gameInfo(project) {
     } else if (cgameUnique.filter(f => !f.includes('player')).includes(game.everything[i])
       || game.everything[i].includes('cgame.qvm')) {
       parent = 'menu/game'
+    } else if(linked.includes(game.everything[i])
+      // put shared assets in a directory of their own
+      && !filesOverLimit.includes(game.everything[i])) {
+      continue
     }
     if(typeof grouped[parent] == 'undefined') {
       grouped[parent] = []
     }
     grouped[parent].push(game.everything[i])
+    var dependencies = vertices
+      .filter(v => v.id == game.everything[i])
+      .map(v => v.outEdges.map(e => e.inVertex.id)
+        .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))
+          .flat(1)))
+      .flat(1)
+    grouped[parent].push.apply(grouped[parent], dependencies)
   }
 
+  console.log('Grouped menu: ', grouped['menu'].filter(f => f.includes('banner')))
   // TODO: add weapon/powerup sounds using lists of data from bg_misc, but some mods
   //   like weapons factory load this config from a file we can use instead
   
@@ -396,6 +407,9 @@ async function repack(condensed, project) {
   if(!project) {
     project = PROJECT
   }
+  if(!condensed) {
+    condensed = gameInfo(PROJECT).condensed
+  }
   var outputProject = path.join(path.dirname(project), path.basename(project) + '-repacked')
   if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
   var everything = glob.sync('**/*', {cwd: project})
@@ -404,6 +418,7 @@ async function repack(condensed, project) {
   var condensedKeys = Object.keys(condensed)
   for(var i = 0; i < condensedKeys.length; i++) {
     var pak = condensed[condensedKeys[i]]
+    console.log('Packing ' + pak)
     var real = pak
       .map(f => everything[everythingLower.indexOf(f)])
       .filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
@@ -416,5 +431,11 @@ async function repack(condensed, project) {
 //graphMaps(PROJECT)
 //gameInfo(PROJECT)
 //repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
-var strings = graphQVM('**/ui.qvm', PROJECT)
-console.log(strings.filter(s => s.includes('model')))
+//repack()
+//var strings = loadQVM('**/cgame.qvm', PROJECT)
+
+var strings = loadQVMData(0x00104578, '**/cgame.qvm', PROJECT)
+//var index = strings.indexOf('sound/weapons/vulcan/wvulwind.wav')
+//console.log(strings.slice(0, index).join('\0').length - 0x47fc8)
+console.log(strings)
+// 0x12721444

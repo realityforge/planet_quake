@@ -178,12 +178,22 @@ function graphGames(project) {
     .map(f => path.join(project, f).toLowerCase())
   var menu = glob.sync('**/+(scripts|menu|gfx|sound|levelshots)/**', {cwd: project})
     .map(f => path.join(project, f).toLowerCase())
-    
-  var uiWildcards = loadQVM('**/ui.qvm', project)
+
+  var uiWildcards
+  var cgameWildcards
+  var qaWildcards
+  if(fs.existsSync(path.join(__dirname, 'previous_qvm.json'))) {
+    var loadedQVM = JSON.parse(fs.readFileSync(path.join(__dirname, 'previous_qvm.json')).toString('utf-8'))
+    uiWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('ui.qvm'))[0]]['strings']
+    cgameWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('cgame.qvm'))[0]]['strings']
+    qaWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('qagame.qvm'))[0]]['strings']
+  } else {
+    uiWildcards = graphQVM('**/ui.qvm', project)
+    cgameWildcards = graphQVM('**/cgame.qvm', project)
+    qaWildcards = graphQVM('**/qagame.qvm', project)
+  }
   var uiqvm = minimatchWildCards(everything, uiWildcards)
-  var cgameWildcards = loadQVM('**/cgame.qvm', project)
   var cgame = minimatchWildCards(everything, cgameWildcards)
-  var qaWildcards = loadQVM('**/qagame.qvm', project)
   var qagame = minimatchWildCards(everything, qaWildcards)
   
   var game = {
@@ -289,7 +299,7 @@ function graphGames(project) {
 }
 
 function addEdgeMinimatch(fromVertex, search, everything, graph) {
-  search = search.replace(/\..*/, '')
+  search = search.replace(/\..*/, '') // remove extension
   var name = everything.filter(f => f.includes(search))[0] //minimatch.filter('**/' + search + '*'))[0]
   if(!name) {
     if(baseq3.filter(f => f.includes(search))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {

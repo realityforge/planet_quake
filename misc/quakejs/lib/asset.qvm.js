@@ -6,6 +6,7 @@ var exec = require('child_process').execSync;
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 var disassembler = path.resolve(path.join(__dirname, '../lib/qvmdisas/'))
 var MATCH_CONST = /CONST.*String:\s+"(.*?)"/
+var QVM_CONSCIOUS = {}
 
 function loadQVM(qvm, project) {
   if(!project) {
@@ -26,6 +27,17 @@ function loadQVM(qvm, project) {
   return gameStrings
 }
 
+function loadQVMData(offset, qvm, project) {
+  if(!project) {
+    project = PROJECT
+  }
+  var cgame = path.join(project, glob.sync(qvm, {cwd: project})[0])
+  var buffer = fs.readFileSync(cgame)
+  var gameStrings = buffer.slice(buffer.length - offset)
+    .toString('utf-8').split('\0')
+  return gameStrings[0]
+}
+
 function loadQVMFunction(name, qvm, project) {
   if(!project) {
     project = PROJECT
@@ -38,6 +50,10 @@ function loadQVMFunction(name, qvm, project) {
   } catch (e) {
     result = e.stdout.toString()
   }
+  if(typeof QVM_CONSCIOUS[cgame] == 'undefined') {
+    QVM_CONSCIOUS[cgame] = {searches: {}, functions: {}, strings: []}
+  }
+  QVM_CONSCIOUS[cgame]['functions'][name] = result.replace('qvmd> EOF', '').replace('qvmd> ', '')
   var constStrings = result.split('\n')
     .filter(line => line.match(MATCH_CONST))
     .map(line => MATCH_CONST.exec(line)[1])
@@ -61,21 +77,32 @@ function graphQVM(qvm, project) {
       result = e.stdout.toString()
     }
     // search for all references to assets
-    subroutines.push.apply(subroutines, result.split('\n')
-      .filter(line => line.match(/^sub_/)))
+    var subs = result.split('\n').filter(line => line.match(/^sub_/))
+    if(typeof QVM_CONSCIOUS[cgame] == 'undefined') {
+      QVM_CONSCIOUS[cgame] = {searches: {}, functions: {}, strings: []}
+    }
+    QVM_CONSCIOUS[cgame]['searches'][topdirs[i]] = subs
+    subroutines.push.apply(subroutines, subs)
   }
   subroutines = subroutines.filter((a, i, arr) => arr.indexOf(a) === i)
   for(var j = 0; j < subroutines.length; j++) {
     var funcStrings = loadQVMFunction(subroutines[j].trim(), qvm, project)
     resultStrings.push.apply(resultStrings, funcStrings)
   }
+  if(typeof QVM_CONSCIOUS[cgame] == 'undefined') {
+    QVM_CONSCIOUS[cgame] = {searches: {}, functions: {}, strings: []}
+  }
   resultStrings = resultStrings
     .filter(s => topdirs.filter(d => s.includes(d)).length > 0)
+  QVM_CONSCIOUS[cgame]['strings'] = resultStrings
+  fs.writeFileSync(path.join(__dirname, 'previous_qvm.json'), JSON.stringify(QVM_CONSCIOUS, null, 2))
   console.log(`Found ${resultStrings.length} QVM strings`)
   return resultStrings
 }
 
 module.exports = {
+  loadQVMData: loadQVMData,
+  loadQVMFunction: loadQVMFunction,
   loadQVM: loadQVM,
   graphQVM: graphQVM,
 }

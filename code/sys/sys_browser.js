@@ -90,11 +90,11 @@ var LibrarySys = {
 				val[0] = '+' + val[0]
 				args.push.apply(args, val)
 			}
-			args.push.apply([
+			args.push.apply(args, [
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 				'+set', 'r_customHeight', '' + window.innerHeight,
 				'+set', 'r_customWidth', '' + window.innerWidth,
-			], args)
+			])
 			return args
 		},
 		updateVideoCmd: function () {

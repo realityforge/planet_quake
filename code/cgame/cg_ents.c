@@ -1093,4 +1093,3 @@ void CG_AddPacketEntities( void ) {
 		CG_AddCEntity( cent );
 	}
 }
-
