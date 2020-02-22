@@ -418,7 +418,7 @@ async function repack(condensed, project) {
   var condensedKeys = Object.keys(condensed)
   for(var i = 0; i < condensedKeys.length; i++) {
     var pak = condensed[condensedKeys[i]]
-    console.log('Packing ' + pak)
+    console.log('Packing ' + condensedKeys[i])
     var real = pak
       .map(f => everything[everythingLower.indexOf(f)])
       .filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
@@ -430,12 +430,6 @@ async function repack(condensed, project) {
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
 //gameInfo(PROJECT)
-//repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
+repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack()
 //var strings = loadQVM('**/cgame.qvm', PROJECT)
-
-var strings = loadQVMData(0x00104578, '**/cgame.qvm', PROJECT)
-//var index = strings.indexOf('sound/weapons/vulcan/wvulwind.wav')
-//console.log(strings.slice(0, index).join('\0').length - 0x47fc8)
-console.log(strings)
-// 0x12721444

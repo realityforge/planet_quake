@@ -100,6 +100,23 @@ function graphQVM(qvm, project) {
   return resultStrings
 }
 
+function minimatchWildCards(everything, qvmstrings) {
+  console.log('Looking for matching files from QVM strings')
+  var wildcards = qvmstrings
+    .filter(f => f.includes('/') && f.length > 5)
+    .map(f => f.replace(/%[0-9sdi\-\.]+/ig, '*')
+               .replace(/%[c]/ig, '/')) // assuming a single character is the path seperator, TODO: could be a number or something, derive from QVM
+  var result = everything.reduce((arr, f) => {
+    if(!arr.includes(f)) {
+      if(wildcards.filter(w => minimatch(f, '**/' + w + '*')).length > 0)
+        arr.push(f)
+    }
+    return arr
+  }, [])
+  console.log(`Found ${result.length} matching files from QVM strings`)
+  return result
+}
+
 module.exports = {
   loadQVMData: loadQVMData,
   loadQVMFunction: loadQVMFunction,

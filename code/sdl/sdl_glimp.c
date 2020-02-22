@@ -238,16 +238,17 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	qboolean success = qtrue;
 	const char *version;
 
-//#ifdef EMSCRIPTEN
-//#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
+#ifdef EMSCRIPTEN
+#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
+#else
 #if __SDL_NOGETPROCADDR__
 #define GLE( ret, name, ... ) qgl##name = (void *)gl#name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \
 		ri.Printf( PRINT_ALL, "ERROR: Missing OpenGL function %s\n", "gl" #name ); \
-	} \
-	qgl##name = (void *)gl##name;
+	}
+#endif
 #endif
 
 	// OpenGL 1.0 and OpenGL ES 1.0
