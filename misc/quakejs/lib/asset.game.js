@@ -91,15 +91,13 @@ function graphModels(project) {
 
 function graphShaders(project) {
   console.log('Looking for shaders')
-  if(!project) {
-    project = PROJECT
-  }
-  var result = []
-  var shaders = findTypes(['.shader'], project)
+  var result = {}
+  var shaders = findTypes(['.shader'], project || PROJECT)
   for(var i = 0; i < shaders.length; i++) {
     var buffer = fs.readFileSync(shaders[i])
     var script = shaderLoader.load(buffer)
-    var keys = Object.keys(script)
+    result[shaders[i]] = script
+    /*
     for(var j = 0; j < keys.length; j++) {
       var shader = script[keys[j]]
       var textures = []
@@ -121,6 +119,7 @@ function graphShaders(project) {
         textures: textures
       })
     }
+    */
   }
   console.log(`Found ${result.length} shaders`)
   return result
@@ -150,6 +149,7 @@ function graphSkins(project) {
 }
 
 function findTypes(types, project) {
+  if(!Array.isArray(types)) types = [types]
   return glob.sync(`**/*+(${types.join('|')})`, {cwd: project})
     .map(f => path.join(project, f).toLowerCase())
 }

@@ -4,7 +4,6 @@ var LibrarySys = {
 		exited: false,
 		timeBase: null,
 		style: null,
-		loading: null,
 		args: [
 			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
 			'+set', 'cl_allowDownload', '1',
@@ -124,10 +123,31 @@ var LibrarySys = {
 			}
 			return false
 		},
+		LoadingDescription: function (desc) {
+			var flipper = document.getElementById('flipper')
+			var progress = document.getElementById('loading-progress')
+			var description = progress.querySelector('.description')
+			if (!desc) {
+				progress.style.display = 'none'
+				flipper.style.display = 'none'
+				SYS.LoadingProgress(0)
+			} else {
+				progress.style.display = 'block'
+				flipper.style.display = 'block'
+			}
+			description.innerHTML = desc
+		},
+		LoadingProgress: function (progress, total) {
+			var frac = progress / total
+			var progress = document.getElementById('loading-progress')
+			var bar = progress.querySelector('.bar')
+			bar.style.width = (frac*100) + '%'
+		},
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading')
 		SYS.dialog = document.getElementById('dialog')
+		
 		// TODO: load this the same way demo does
 		if(SYSC.eula) {
 			// add eula frame to viewport
@@ -150,7 +170,6 @@ var LibrarySys = {
 			})
 		})
 		window.addEventListener('resize', SYS.resizeViewport)
-		
 	},
 	Sys_PlatformExit: function () {
 		/*
@@ -163,14 +182,6 @@ var LibrarySys = {
 		}
 		*/
 		window.removeEventListener('resize', SYS.resizeViewport)
-		if(SYS.loading) {
-			SYS.loading.remove()
-			SYS.loading = null
-			if(SYS.eula) {
-				SYS.eula.remove()
-				SYS.eula = null
-			}
-		}
 
 		if (Module['canvas']) {
 			Module['canvas'].remove()
@@ -227,6 +238,7 @@ var LibrarySys = {
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		
+		SYS.LoadingDescription('Manifest')
 		var fsMountPath = fs_basegame
 		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
 			fsMountPath = fs_game // TODO: comment this out to test server induced downloading
@@ -265,7 +277,7 @@ var LibrarySys = {
 
 			// TODO: remove this in favor of new remote FS code
 			var downloads = []
-			SYSC.DownloadAsset(fsMountPath + '/index.json', () => {}, (err, data) => {
+			SYSC.DownloadAsset(fsMountPath + '/index.json', SYS.LoadingProgress, (err, data) => {
 				if(err) {
 					debugger
 					SYSC.ProxyCallback(cb)
@@ -313,12 +325,20 @@ var LibrarySys = {
 					}
 				}
 				
+				var totals = []
+				var progresses = []
 				if(downloads.length === 0) {
+					SYS.LoadingDescription('')
 					SYSC.ProxyCallback(cb)
 				} else {
-					Promise.all(downloads.map(file => new Promise(resolve => {
-						SYSC.DownloadAsset(file, () => {
-							// TODO: update in game download status
+					Promise.all(downloads.map((file, i) => new Promise(resolve => {
+						totals[i] = 0
+						progresses[i] = 0
+						SYS.LoadingDescription(file)
+						SYSC.DownloadAsset(file, (progress, total) => {
+							totals[i] = total
+							progresses[i] = progress
+							SYS.LoadingProgress(Math.sum.apply(0, progresses), Math.sum.apply(0, totals))
 						}, (err, data) => {
 							if(err) return resolve(err)
 							try {
@@ -332,7 +352,10 @@ var LibrarySys = {
 							resolve(file)
 						})
 						// save to drive
-					}))).then(() => FS.syncfs(false, () => SYSC.ProxyCallback(cb)))
+					}))).then(() => {
+						SYS.LoadingDescription('')
+						FS.syncfs(false, () => SYSC.ProxyCallback(cb))
+					})
 				}
 				
 				// TODO: create an icon for the favicon so we know we did it right

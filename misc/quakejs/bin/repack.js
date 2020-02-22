@@ -430,6 +430,7 @@ async function repack(condensed, project) {
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
 //gameInfo(PROJECT)
-repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
+//repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack()
+graphQVM('**/pak8.pk3dir/**/*.qvm')
 //var strings = loadQVM('**/cgame.qvm', PROJECT)
