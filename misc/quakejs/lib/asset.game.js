@@ -77,7 +77,7 @@ function graphSkins(project) {
   return result
 }
 
-function graphGames(project) {
+function loadGame(project) {
   if(!project) {
     project = PROJECT
   }
@@ -125,10 +125,8 @@ function graphGames(project) {
   var modelShaders = Object.keys(game.models)
     .reduce((obj, k) => {
       obj[k] = game.models[k].surfaces
-        .reduce((arr, s) => {
-          arr.push(s.shaders)
-          return arr
-        }, [])
+        .map(s => s.shaders).flat(1)
+        .filter(s => s)
       return obj
     }, {})
   var scriptShaders = Object.keys(game.shaders)
@@ -144,7 +142,7 @@ function graphGames(project) {
             obj[k] = []
           }
           if(game.shaders[s][k].stages) {
-            obj[k].push(game.shaders[s][k].stages.map(stage => stage.maps).flat(1))
+            obj[k].push.apply(obj[k], game.shaders[s][k].stages.map(stage => stage.maps).flat(1))
           }
           if(game.shaders[s][k].outerBox) {
             obj[k].push.apply(obj[k], game.shaders[s][k].outerBox)
@@ -162,7 +160,7 @@ function graphGames(project) {
       return obj
     }, {})
   
-  fs.writeFileSync(TEMP_NAME, JSON.stringify({
+  var gameState = {
     entities: entityRefs,
     maps: mapShaders,
     models: modelShaders,
@@ -171,17 +169,33 @@ function graphGames(project) {
     skins: skinShaders,
     qvms: game.qvms,
     everything: everything,
-  }, null, 2))
-  /*
+  }
+  fs.writeFileSync(TEMP_NAME, JSON.stringify(gameState, null, 2))
+  
+  return Object.assign(game, gameState)
+}
+
+function graphGame(gs, project) {
   var graph = new DirectedGraph()
   
   // add all edges to the graph
   var notfound = []
   var inbaseq3 = []
-  var shadersPlusEverything = game.shaders.map(s => s.name)
-    .concat(everything)
-    .concat(baseq3)
   
+  // add all the vertices which are the keys of the variables above
+  var vertices = Object.values(gs.entities).flat(1)
+    .concat(Object.keys(gs.qvms))
+    .concat(Object.keys(gs.maps))
+    .concat(Object.keys(gs.scripts))
+    .concat(Object.keys(gs.models))
+    .concat(Object.keys(gs.skins))
+    .concat(Object.values(gs.shaders).flat(1))
+    .filter((v, i, arr) => arr.indexOf(v) == i)
+    
+  
+  console.log(vertices)
+    
+  var edges = mapShaders.concat(skinShaders).concat(modelShaders)
   for(var i = 0; i < game.shaders.length; i++) {
     var v = graph.getVertex(game.shaders[i].name)
     for(var j = 0; j < game.shaders[i].textures.length; j++) {
@@ -196,7 +210,6 @@ function graphGames(project) {
   game.graph = graph
   game.notfound = notfound.filter((a, i, arr) => arr.indexOf(a) == i)
   game.baseq3 = inbaseq3.filter((a, i, arr) => arr.indexOf(a) == i)
-  */
   
   return [game]
 }

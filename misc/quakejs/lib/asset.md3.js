@@ -198,10 +198,9 @@ function load(data) {
 
 		// Register all the shaders.
 		bb.byteIndex = meshOffset + surfheader.ofsShaders;
-
 		for (var j = 0; j < surfheader.numShaders; j++) {
-			// Strip extension.
-			var name = bb.readASCIIString(MAX_QPATH).replace(/\.[^\/.]+$/, '');
+			bb.byteIndex = meshOffset + surfheader.ofsShaders + (MAX_QPATH + 4) * j
+			var name = bb.readASCIIString(MAX_QPATH);
 			surf.shaders[j] = name;
 		}
 
