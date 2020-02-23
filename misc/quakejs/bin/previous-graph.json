@@ -7764,7 +7764,7 @@
     ],
     "textures/base_wall/bluemetal1light": [
       "*lightmap",
-      "textures",
+      "textures//base_wall/bluemetal1light.tga",
       "textures/base_wall/bluemetal1light_bl.tga"
     ],
     "textures/base_wall/green_contrim_noisey": [

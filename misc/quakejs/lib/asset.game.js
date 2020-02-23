@@ -54,7 +54,7 @@ function graphModels(project) {
 function graphShaders(project) {
   console.log('Looking for shaders')
   var result = {}
-  var shaders = findTypes(['.shader'], project || PROJECT)
+  var shaders = findTypes(['base_wall.shader'], project || PROJECT)
   for(var i = 0; i < shaders.length; i++) {
     var buffer = fs.readFileSync(shaders[i])
     var script = shaderLoader.load(buffer)
@@ -234,7 +234,7 @@ function graphGames(gs, project) {
     */
   }
   //console.log(cacheMap)
-  //console.log(notfound)
+  console.log(notfound)
   //console.log(inbaseq3)
   
   // TODO: group by parent directories
@@ -247,6 +247,7 @@ function graphGames(gs, project) {
 
 function searchMinimatch(search, everything) {
   var lookup = search
+    .replace(/\/\//ig, '/')
     .replace(/\\/g, '/')
     .replace(/\..*/, '') // remove extension
     .toLowerCase()
@@ -255,15 +256,15 @@ function searchMinimatch(search, everything) {
     if(baseq3.filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
       return -1
     }
-    console.error('Resource not found ' + search)
     return null
   } else if (name.length > 1) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
     if(!type) throw new Error('File type not found '  + search)
-    
-    //console.error('Duplicate files found ' + search)
-    return null
+    name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
+    if(name.length == 0 || name.length > 1) {
+      return null
+    }
   }
   return everything.indexOf(name[0])
 }

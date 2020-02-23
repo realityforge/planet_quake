@@ -185,21 +185,21 @@ var Waveform = function () {
 };
 
 function load(buffer) {
-	var file = buffer.toString('utf-8').replace(/\/\/.*/ig, '')
+	var file = buffer.toString('utf-8').replace(/^\s*\/\/.*/ig, '')
   var match
   var current = file
   var result = {}
   while((match = balanced('{', '}', current))) {
-    var name = match.pre.trim()
-    result[name] = loadShader(match.body)
+		var name = match.pre.trim()
+		result[name] = new Shader();
 		result[name].name = name
+    loadShader(match.body, result[name])
     current = match.post
   }
   return result
 }
 
-function loadShader(text) {
-	var script = new Shader();
+function loadShader(text, script) {
 	var match
   var current = text
   while((match = balanced('{', '}', current))) {
