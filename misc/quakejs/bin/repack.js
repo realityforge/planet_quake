@@ -37,7 +37,7 @@ function gameInfo(project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGames(project)[0]
+  var game = graphGames(0, project)[0]
   // how many files are matched versus unknown?
   console.log(`Known files: ${game.files.length}/${game.everything.length
     } - ${percent(game.files.length, game.everything.length)}%`)
@@ -420,7 +420,8 @@ async function repack(condensed, project) {
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-gameInfo(PROJECT)
+//gameInfo(PROJECT)
+graphGames(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack()
 //graphQVM('**/pak8.pk3dir/**/*.qvm')

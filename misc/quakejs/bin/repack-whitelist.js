@@ -62,7 +62,7 @@ var knownDirs = [
 function findTypes(types, project) {
   if(Array.isArray(types)) types = `**/*+(${types.join('|')})`
   return glob.sync(types, {cwd: project})
-    .map(f => path.join(project, f).toLowerCase())
+    .map(f => path.join(project, f))
 }
 
 module.exports = {

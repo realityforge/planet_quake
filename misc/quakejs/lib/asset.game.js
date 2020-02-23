@@ -84,11 +84,11 @@ function loadGame(project) {
   var everything = glob.sync('**/*', {
     cwd: project,
     nodir: true
-  }).map(f => path.join(project, f).toLowerCase())
+  }).map(f => path.join(project, f))
   var known = glob.sync(`**/+(${knownDirs.join('|')})/**`, {
     cwd: project,
     nodir: true
-  }).map(f => path.join(project, f).toLowerCase())
+  }).map(f => path.join(project, f))
   
   var game = {
     maps: graphMaps(project),
@@ -175,12 +175,19 @@ function loadGame(project) {
   return Object.assign(game, gameState)
 }
 
-function graphGame(gs, project) {
+function graphGames(gs, project) {
+  if(!project) {
+    project = PROJECT
+  }
+  if(!gs) {
+    gs = loadGame(project)
+  }
   var graph = new DirectedGraph()
   
   // add all edges to the graph
   var notfound = []
   var inbaseq3 = []
+  var everything = gs.everything.map(f => f.toLowerCase())
   
   // add all the vertices which are the keys of the variables above
   var vertices = Object.values(gs.entities).flat(1)
@@ -191,12 +198,31 @@ function graphGame(gs, project) {
     .concat(Object.keys(gs.skins))
     .concat(Object.values(gs.shaders).flat(1))
     .filter((v, i, arr) => arr.indexOf(v) == i)
-    
   
-  console.log(vertices)
+  var cacheMap = {}
+  for(var i = 0; i < vertices.length; i++) {
+    // everything in vertices should match a file
+    if(!fs.existsSync(vertices[i])) {
+      var search = vertices[i]
+        .replace(/\\/ig, '/') // minimatch only supports fordward slash
+        .replace('\..*', '') // remove extension
+        .toLowerCase()
+      var s = searchMinimatch(, everything)
+      if(s == -1) inbaseq3.push(vertices[i])
+      else if (s) {
+        cacheMap[vertices[i]] = s
+        graph.addVertex(s, {
+          name: s
+        })
+      }
+      else notfound.push(vertices[i])
+    } else {
+      graph.addVertex(s, {
+        name: s
+      })
+    }
     
-  var edges = mapShaders.concat(skinShaders).concat(modelShaders)
-  for(var i = 0; i < game.shaders.length; i++) {
+    /*
     var v = graph.getVertex(game.shaders[i].name)
     for(var j = 0; j < game.shaders[i].textures.length; j++) {
       var s = addEdgeMinimatch(v, game.shaders[i].textures[j], everything, graph)
@@ -204,27 +230,34 @@ function graphGame(gs, project) {
       else if (s) graph.addEdge(v, s)
       else notfound.push(game.shaders[i].textures[j])
     }
+    */
   }
+  console.log(cacheMap)
+  console.log(notfound)
+  console.log(inbaseq3)
   
   // TODO: group by parent directories
-  game.graph = graph
-  game.notfound = notfound.filter((a, i, arr) => arr.indexOf(a) == i)
-  game.baseq3 = inbaseq3.filter((a, i, arr) => arr.indexOf(a) == i)
+  gs.graph = graph
+  gs.notfound = notfound
+  gs.baseq3 = inbaseq3
   
   return [game]
 }
 
-function addEdgeMinimatch(fromVertex, search, everything, graph) {
+function searchMinimatch(search, everything) {
   search = search.replace(/\..*/, '') // remove extension
-  var name = everything.filter(f => f.includes(search))[0] //minimatch.filter('**/' + search + '*'))[0]
-  if(!name) {
+  var name = everything.filter(f => f.includes(search)) //minimatch.filter('**/' + search + '*'))[0]
+  if(!name[0]) {
     if(baseq3.filter(f => f.includes(search))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
       return -1
     }
     console.error('Resource not found ' + search)
     return null
+  } else if (name.length > 1) {
+    console.error('Duplicate files found ' + search)
+    return null
   }
-  return graph.getVertex(name)
+  return name[0]
 }
 
 module.exports = {
