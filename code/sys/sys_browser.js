@@ -270,7 +270,6 @@ var LibrarySys = {
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need
 			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
-				debugger
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
 			}
@@ -279,7 +278,6 @@ var LibrarySys = {
 			var downloads = []
 			SYSC.DownloadAsset(fsMountPath + '/index.json', SYS.LoadingProgress, (err, data) => {
 				if(err) {
-					debugger
 					SYSC.ProxyCallback(cb)
 					return
 				}
@@ -336,10 +334,14 @@ var LibrarySys = {
 						progresses[i] = 0
 						SYS.LoadingDescription(file)
 						SYSC.DownloadAsset(file, (progress, total) => {
-							totals[i] = total
+							totals[i] = Math.max(progress, total || 10*1024*1024) // assume its somewhere around 10 MB per pak
 							progresses[i] = progress
-							SYS.LoadingProgress(Math.sum.apply(0, progresses), Math.sum.apply(0, totals))
+							SYS.LoadingProgress(
+								progresses.reduce((s, p) => s + p, 0),
+								totals.reduce((s, p) => s + p, 0))
 						}, (err, data) => {
+							totals[i] = 0
+							progresses[i] = 0
 							if(err) return resolve(err)
 							try {
 								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
