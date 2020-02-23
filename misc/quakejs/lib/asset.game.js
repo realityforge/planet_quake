@@ -188,7 +188,11 @@ function graphGames(gs, project) {
   var notfound = []
   var inbaseq3 = []
   var everything = gs.everything.map(f => f.toLowerCase())
-  
+  var allTypes = [imageTypes, audioTypes, sourceTypes, fileTypes].flat(1)
+  var unknownTypes = gs.everything.map(f => path.extname(f).toLowerCase())
+    .filter((t, i, arr) => arr.indexOf(t) === i)
+    .filter(t => !allTypes.includes(t))
+
   // add all the vertices which are the keys of the variables above
   var vertices = Object.values(gs.entities).flat(1)
     .concat(Object.keys(gs.qvms))
@@ -204,21 +208,18 @@ function graphGames(gs, project) {
     // everything in vertices should match a file
     if(!fs.existsSync(vertices[i])) {
       var search = vertices[i]
-        .replace(/\\/ig, '/') // minimatch only supports fordward slash
-        .replace('\..*', '') // remove extension
-        .toLowerCase()
-      var s = searchMinimatch(, everything)
-      if(s == -1) inbaseq3.push(vertices[i])
-      else if (s) {
-        cacheMap[vertices[i]] = s
-        graph.addVertex(s, {
-          name: s
+      var index = searchMinimatch(search, everything)
+      if(index == -1) inbaseq3.push(vertices[i])
+      else if (index) {
+        cacheMap[vertices[i]] = gs.everything[index]
+        graph.addVertex(gs.everything[index], {
+          name: gs.everything[index]
         })
       }
       else notfound.push(vertices[i])
     } else {
-      graph.addVertex(s, {
-        name: s
+      graph.addVertex(vertices[i], {
+        name: vertices[i]
       })
     }
     
@@ -232,32 +233,39 @@ function graphGames(gs, project) {
     }
     */
   }
-  console.log(cacheMap)
-  console.log(notfound)
-  console.log(inbaseq3)
+  //console.log(cacheMap)
+  //console.log(notfound)
+  //console.log(inbaseq3)
   
   // TODO: group by parent directories
   gs.graph = graph
   gs.notfound = notfound
   gs.baseq3 = inbaseq3
   
-  return [game]
+  return [gs]
 }
 
 function searchMinimatch(search, everything) {
-  search = search.replace(/\..*/, '') // remove extension
-  var name = everything.filter(f => f.includes(search)) //minimatch.filter('**/' + search + '*'))[0]
+  var lookup = search
+    .replace(/\\/g, '/')
+    .replace(/\..*/, '') // remove extension
+    .toLowerCase()
+  var name = everything.filter(f => f.includes(lookup)) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
-    if(baseq3.filter(f => f.includes(search))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
+    if(baseq3.filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
       return -1
     }
     console.error('Resource not found ' + search)
     return null
   } else if (name.length > 1) {
-    console.error('Duplicate files found ' + search)
+    var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
+      .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
+    if(!type) throw new Error('File type not found '  + search)
+    
+    //console.error('Duplicate files found ' + search)
     return null
   }
-  return name[0]
+  return everything.indexOf(name[0])
 }
 
 module.exports = {

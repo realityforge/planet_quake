@@ -20,6 +20,7 @@ var audioTypes = [
 var sourceTypes = [
   '.map',
   '.scc',
+  '.dis',
 ]
 
 var fileTypes = [
