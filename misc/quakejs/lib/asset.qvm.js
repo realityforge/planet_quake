@@ -2,6 +2,7 @@ var path = require('path');
 var fs = require('fs');
 var glob = require('glob')
 var exec = require('child_process').execSync;
+var {whitelist} = require('../bin/repack-whitelist.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 
@@ -109,18 +110,42 @@ GOAL: analize a ui.qvm and try to end up with something like this list
 
 */
 
-function findTypes(types, project) {
-  if(Array.isArray(types)) types = `**/*+(${types.join('|')})`
-  return glob.sync(types, {cwd: project})
-    .map(f => path.join(project, f).toLowerCase())
-}
-
 function loadQVMEntities() {
   // TODO: try to make sense of the jump list that is defined by bg_misc.c
   //   by tracing the addresses from the strings back to the entity array
 }
 
-function loadQVMStrings(qvm, project) {
+function loadQVMStrings(buffer, topdirs) {
+  var qvmstrings = buffer
+    .toString('utf-8').split('\n')
+    .map(line => (/['""'](.*?)['""']/ig).exec(line))
+    .filter(string => string)
+    .map(match => match[1])
+    // now for some filtering fun
+    .filter(file => 
+      // the shortest strings match from the file system is probably
+      //   greater than 5 characters, because even vm is actually vm%c%s
+      file.length > 5
+      // should include a slash or a %c
+      && (file.includes('%') || file.includes('/'))
+      // colons aren't allowed in filenames
+      && !file.includes(':')
+    )
+    // assuming a single character is the path seperator,
+    //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
+    //   TODO: might need something for %i matching lightmaps names or animation frames
+    .map(f => f.replace(/%[0-9\-\.]*[sdi]/ig, '*')
+               .replace(/%[c]/ig, '/'))
+    // make sure there is only one occurrence
+    .filter((a, i, arr) => arr.indexOf(a) === i)
+    // it also has to include one of the top directories
+    //   shaders in QUAKED skip the textures folder
+    //   this will be faster than minimatch lookups
+    .filter(file => topdirs.filter(dir => file.includes(dir)).length > 0)
+  return qvmstrings
+}
+
+function graphQVM(qvm, project) {
   console.log('Looking for QVMs')
   var result = {}
   var qvms = findTypes(qvm || ['.qvm'], project || PROJECT)
@@ -130,45 +155,11 @@ function loadQVMStrings(qvm, project) {
     .map(dir => path.basename(dir))
   for(var i = 0; i < qvms.length; i++) {
     var buffer = fs.readFileSync(qvms[i])
-    var qvmstrings = buffer
-      .toString('utf-8').split('\n')
-      .map(line => (/['""'](.*?)['""']/ig).exec(line))
-      .filter(string => string)
-      .map(match => match[1])
-      // now for some filtering fun
-      .filter(file => 
-        // the shortest strings match from the file system is probably
-        //   greater than 5 characters, because even vm is actually vm%c%s
-        file.length > 5
-        // should include a slash or a %c
-        && (file.includes('%') || file.includes('/'))
-        // colons aren't allowed in filenames
-        && !file.includes(':')
-      )
-      // assuming a single character is the path seperator,
-      //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
-      //   TODO: might need something for %i matching lightmaps names or animation frames
-      .map(f => f.replace(/%[0-9\-\.]*[sdi]/ig, '*')
-                 .replace(/%[c]/ig, '/'))
-      // make sure there is only one occurrence
-      .filter((a, i, arr) => arr.indexOf(a) === i)
-      // it also has to include one of the top directories
-      //   shaders in QUAKED skip the textures folder
-      //   this will be faster than minimatch lookups
-      .filter(file => topdirs.filter(dir => file.includes(dir)).length > 0)
+    var qvmstrings = loadQVMStrings(buffer, topdirs)
     result[qvms[i]] = qvmstrings
   }
+  console.log(`Found ${qvms.length} QVMs and ${Object.values(result).reduce((t, o) => t += o.length, 0)} strings`)
   return result
-}
-
-function graphQVM(qvm, shaders, everything, project) {
-  // load shaders again if they are not passed in
-  var vms = loadQVMStrings(qvm, project)
-  // TODO: compare the result strings to the list of shaders and files
-  var ui = Object.keys(vms).filter(vm => vm.match(/ui.dis/i))[0]
-  if(ui) {
-    console.log(vms[ui])
-  }
 }
 
 module.exports = {

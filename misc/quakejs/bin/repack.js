@@ -104,10 +104,6 @@ function gameInfo(project) {
       grouped[parent] = []
     }
     grouped[parent].push(roots[i].id)
-    if(roots[i].id.includes('.bsp')
-      && game.everything.includes(roots[i].id.replace('.bsp', '.aas'))) {
-      grouped[parent].push(roots[i].id.replace('.bsp', '.aas'))
-    }
     grouped[parent].push.apply(grouped[parent], roots[i].outEdges.map(e => e.inVertex.id))
     var textures = roots[i].outEdges.map(e => e.inVertex.outEdges.map(e => e.inVertex.id))
     grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
@@ -122,11 +118,6 @@ function gameInfo(project) {
   for(var i = 0; i < game.everything.length; i++) {
     var parent = path.dirname(game.everything[i])
     if(parent.includes('/menu')
-      || parent.includes('/scripts')
-      || parent.includes('/gfx')
-      || parent.includes('/misc')
-      || parent.includes('/sfx')
-      || parent.includes('/feedback')
       || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()
       || uiUnique.includes(game.everything[i])
       || game.everything[i].includes('ui.qvm')) {

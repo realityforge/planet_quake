@@ -8,54 +8,29 @@ var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
 var skinLoader = require('../lib/asset.skin.js')
-var whitelist = require('../bin/repack-whitelist.js')
+var {
+  findTypes, knownDirs, fileTypes, sourceTypes,
+  audioTypes, imageTypes, findTypes,
+} = require('../bin/repack-whitelist.js')
 var DirectedGraph = require('../lib/asset.graph.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 
-var baseq3 = glob.sync('**/*', {cwd: BASEQ3})
-  .map(f => path.join(BASEQ3, f).toLowerCase())
-fs.writeFileSync(path.join(__dirname, './baseq3-filelist.json'), JSON.stringify(baseq3, null, 2))
+if(fs.existsSync(BASEQ3)) {
+  var baseq3 = glob.sync('**/*', {cwd: BASEQ3})
+    .map(f => path.join(BASEQ3, f).toLowerCase())
+  fs.writeFileSync(path.join(__dirname, './baseq3-filelist.json'), JSON.stringify(baseq3, null, 2))
+}
 
 function graphMaps(project) {
   console.log('Looking for maps')
-  if(!project) {
-    project = PROJECT
-  }
-  var result = []
-  var maps = findTypes(['.bsp'], project)
+  var result = {}
+  var maps = findTypes(['.bsp'], project || PROJECT)
   for(var i = 0; i < maps.length; i++) {
     var buffer = fs.readFileSync(maps[i])
     var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
-    var weapons = []
-    var items = []
-    var ents = []
-    for(var e = 0; e < map.entities.length; e++) {
-      if(map.entities[e].classname.includes('item_'))
-        items.push(map.entities[e].classname)
-      if(map.entities[e].classname.includes('weapon_'))
-        weapons.push(map.entities[e].classname)
-      if(map.entities[e].music)
-        ents.push(map.entities[e].music.toLowerCase())
-      if(map.entities[e].noise && map.entities[e].noise.charAt(0) != '*')
-        ents.push(map.entities[e].noise.toLowerCase())
-      if(map.entities[e].model2 && map.entities[e].model2.charAt(0) != '*')
-        ents.push(map.entities[e].model2.toLowerCase())
-    }
-    var shaders = []
-    for(var e = 0; e < map.shaders.length; e++) {
-      if(map.shaders[e].shaderName && map.shaders[e].shaderName.charAt(0) != '*'
-        && map.shaders[e].shaderName != 'noshader')
-        shaders.push(map.shaders[e].shaderName)
-    }
-    result.push({
-      name: maps[i],
-      items: items,
-      weapons: weapons,
-      ents: ents,
-      shaders: shaders
-    })
+    result[maps[i]] = map
   }
   console.log(`Found ${result.length} maps`)
   return result
@@ -63,26 +38,12 @@ function graphMaps(project) {
 
 function graphModels(project) {
   console.log('Looking for models')
-  if(!project) {
-    project = PROJECT
-  }
-  var result = []
-  var models = findTypes(['.md5', '.md3'], project)
+  var result = {}
+  var models = findTypes(['.md5', '.md3'], project || PROJECT)
   for(var i = 0; i < models.length; i++) {
     var buffer = fs.readFileSync(models[i])
     var model = md3.load(buffer)
-    var shaders = []
-    for (var s = 0; s < model.surfaces.length; s++) {
-  		for (var sh = 0; sh < model.surfaces[s].shaders.length; sh++) {
-        if(model.surfaces[s].shaders[sh])
-          shaders.push(model.surfaces[s].shaders[sh])
-      }
-    }
-    result.push({
-      name: models[i],
-      skins: model.skins,
-      shaders: shaders
-    })
+    result[models[i]] = model
   }
   var withSkins = result.filter(m => m.skins.length > 0)
   console.log(`Found ${result.length} models, ${withSkins.length} with skins`)
@@ -97,29 +58,6 @@ function graphShaders(project) {
     var buffer = fs.readFileSync(shaders[i])
     var script = shaderLoader.load(buffer)
     result[shaders[i]] = script
-    /*
-    for(var j = 0; j < keys.length; j++) {
-      var shader = script[keys[j]]
-      var textures = []
-      for (var s = 0; s < shader.stages.length; s++) {
-        for (var sh = 0; sh < shader.stages[s].maps.length; sh++) {
-          if(shader.stages[s].maps[sh].charAt(0) != '*') {
-            textures.push(shader.stages[s].maps[sh])
-          }
-        }
-      }
-      for (var s = 0; s < shader.innerBox.length; s++) {
-        textures.push(shader.innerBox[s])
-      }
-      for (var s = 0; s < shader.outerBox.length; s++) {
-        textures.push(shader.outerBox[s])
-      }
-      result.push({
-        name: shader.name,
-        textures: textures
-      })
-    }
-    */
   }
   console.log(`Found ${result.length} shaders`)
   return result
@@ -127,31 +65,15 @@ function graphShaders(project) {
 
 function graphSkins(project) {
   console.log('Looking for skins')
-  if(!project) {
-    project = PROJECT
-  }
-  var result = []
-  var skins = findTypes(['.skin'], project)
+  var result = {}
+  var skins = findTypes(['.skin'], project || PROJECT)
   for(var i = 0; i < skins.length; i++) {
     var buffer = fs.readFileSync(skins[i]).toString('utf-8')
     var skin = skinLoader.load(buffer)
-    var shaders = []
-    for (var s = 0; s < skin.surfaces.length; s++) {
-      shaders.push(skin.surfaces[s].shaderName)
-    }
-    result.push({
-      name: skins[i],
-      shaders: shaders
-    })
+    result[skins[i]] = skin
   }
   console.log(`Found ${result.length} skins`)
   return result
-}
-
-function findTypes(types, project) {
-  if(!Array.isArray(types)) types = [types]
-  return glob.sync(`**/*+(${types.join('|')})`, {cwd: project})
-    .map(f => path.join(project, f).toLowerCase())
 }
 
 function graphGames(project) {
@@ -160,66 +82,45 @@ function graphGames(project) {
   }
   var everything = glob.sync('**/*', {cwd: project, nodir: true})
     .map(f => path.join(project, f).toLowerCase())
-  var menu = glob.sync('**/+(scripts|menu|gfx|sound|levelshots)/**', {cwd: project})
-    .map(f => path.join(project, f).toLowerCase())
-
-  var uiWildcards
-  var cgameWildcards
-  var qaWildcards
-  if(fs.existsSync(path.join(__dirname, 'previous_qvm.json'))) {
-    var loadedQVM = JSON.parse(fs.readFileSync(path.join(__dirname, 'previous_qvm.json')).toString('utf-8'))
-    uiWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('ui.qvm'))[0]]['strings']
-    cgameWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('cgame.qvm'))[0]]['strings']
-    qaWildcards = loadedQVM[Object.keys(loadedQVM).filter(k => k.includes('qagame.qvm'))[0]]['strings']
-  } else {
-    uiWildcards = graphQVM('**/ui.qvm', project)
-    cgameWildcards = graphQVM('**/cgame.qvm', project)
-    qaWildcards = graphQVM('**/qagame.qvm', project)
-  }
-  var uiqvm = minimatchWildCards(everything, uiWildcards)
-  var cgame = minimatchWildCards(everything, cgameWildcards)
-  var qagame = minimatchWildCards(everything, qaWildcards)
-  
+  var known = glob.sync(`**/+(${knownDirs.join('|')})/**`, {cwd: project})
   var game = {
     maps: graphMaps(project),
     models: graphModels(project),
     shaders: graphShaders(project),
     skins: graphSkins(project),
-    images: findTypes(whitelist.imageTypes, project),
-    audio: findTypes(whitelist.audioTypes, project),
-    sources: findTypes(whitelist.sourceTypes, project),
-    files: findTypes(whitelist.fileTypes, project),
-    directories: glob.sync(`**/+(${whitelist.knownDirs.join('|')})/**`, {cwd: project}),
+    images: findTypes(imageTypes, project),
+    audio: findTypes(audioTypes, project),
+    sources: findTypes(sourceTypes, project),
+    files: findTypes(fileTypes, project),
+    qvms: graphQVM(0, project),
+    directories: known,
     everything: everything,
-    menu: menu,
-    cgame: cgame,
-    uiqvm: uiqvm,
-    qagame: qagame,
   }
   
   // add all vertices
+  var entityRefs = Object.keys(game.maps)
+    .reduce((obj, k) => game.maps[k].entities
+    .reduce((arr, e) => arr.push.apply(arr, e.noise, e.music, e.model2), [])
+    .filter(e => e && e.charAt(0) != '*')
+    .concat([k.replace('.bsp', '.aas')]), {})
+  var mapShaders = Object.keys(game.maps)
+    .reduce((obj, k) => game.maps[k].shaders
+    .map(s => s.shaderName), {})
+  var modelShaders = Object.keys(game.models)
+    .reduce((obj, k) => game.models[k].surfaces
+    .reduce((arr, s) => arr.push.apply(arr, s.shaders), []), {})
+  var scriptTextures = Object.keys(game.shaders)
+    .reduce((obj, k) => game.shaders[k].stages
+    .reduce((arr, s) => arr.push.apply(arr, s.maps), [])
+    .concat(game.shaders[k].outerBox)
+    .concat(game.shaders[k].innerBox), {})
+  var skinShaders = Object.keys(game.skins)
+    .reduce((obj, k) => game.skins[k].surfaces
+    .map(s => s.shaderName), {})
+  
+  
+  /*
   var graph = new DirectedGraph()
-  for(var i = 0; i < game.maps.length; i++) {
-    graph.addVertex(game.maps[i].name, game.maps[i])
-  }
-  for(var i = 0; i < game.models.length; i++) {
-    graph.addVertex(game.models[i].name, game.models[i])
-  }
-  for(var i = 0; i < game.shaders.length; i++) {
-    graph.addVertex(game.shaders[i].name, game.shaders[i])
-  }
-  for(var i = 0; i < game.skins.length; i++) {
-    graph.addVertex(game.skins[i].name, {name: game.skins[i]})
-  }
-  for(var i = 0; i < game.images.length; i++) {
-    graph.addVertex(game.images[i], {name: game.images[i]})
-  }
-  for(var i = 0; i < game.audio.length; i++) {
-    graph.addVertex(game.audio[i], {name: game.audio[i]})
-  }
-  for(var i = 0; i < game.files.length; i++) {
-    graph.addVertex(game.files[i], {name: game.files[i]})
-  }
   
   // add all edges to the graph
   var notfound = []
@@ -227,42 +128,6 @@ function graphGames(project) {
   var shadersPlusEverything = game.shaders.map(s => s.name)
     .concat(everything)
     .concat(baseq3)
-  
-  for(var i = 0; i < game.maps.length; i++) {
-    var v = graph.getVertex(game.maps[i].name)
-    for(var j = 0; j < game.maps[i].ents.length; j++) {
-      var s = addEdgeMinimatch(v, game.maps[i].ents[j], everything, graph)
-      if(s == -1) inbaseq3.push(game.maps[i].ents[j])
-      else if(s) graph.addEdge(v, s)
-      else notfound.push(game.maps[i].ents[j])
-    }
-    for(var j = 0; j < game.maps[i].shaders.length; j++) {
-      var s = addEdgeMinimatch(v, game.maps[i].shaders[j], shadersPlusEverything, graph)
-      if(s == -1) inbaseq3.push(game.maps[i].shaders[j])
-      else if(s) graph.addEdge(v, s)
-      else notfound.push(game.maps[i].shaders[j])
-    }
-  }
-  
-  for(var i = 0; i < game.models.length; i++) {
-    var v = graph.getVertex(game.models[i].name)
-    for(var j = 0; j < game.models[i].shaders.length; j++) {
-      var s = addEdgeMinimatch(v, game.models[i].shaders[j], shadersPlusEverything, graph)
-      if(s == -1) inbaseq3.push(game.models[i].shaders[j])
-      else if(s) graph.addEdge(v, s)
-      else notfound.push(game.models[i].shaders[j])
-    }
-  }
-  
-  for(var i = 0; i < game.skins.length; i++) {
-    var v = graph.getVertex(game.skins[i].name)
-    for(var j = 0; j < game.skins[i].shaders.length; j++) {
-      var s = addEdgeMinimatch(v, game.skins[i].shaders[j], shadersPlusEverything, graph)
-      if(s == -1) inbaseq3.push(game.skins[i].shaders[j])
-      else if(s) graph.addEdge(v, s)
-      else notfound.push(game.skins[i].shaders[j])
-    }
-  }
   
   for(var i = 0; i < game.shaders.length; i++) {
     var v = graph.getVertex(game.shaders[i].name)
@@ -278,6 +143,7 @@ function graphGames(project) {
   game.graph = graph
   game.notfound = notfound.filter((a, i, arr) => arr.indexOf(a) == i)
   game.baseq3 = inbaseq3.filter((a, i, arr) => arr.indexOf(a) == i)
+  */
   
   return [game]
 }

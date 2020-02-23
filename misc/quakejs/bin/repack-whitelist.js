@@ -1,3 +1,4 @@
+var glob = require('glob')
 
 var imageTypes = [
   '.png',
@@ -57,10 +58,17 @@ var knownDirs = [
   'textures',
 ]
 
+function findTypes(types, project) {
+  if(Array.isArray(types)) types = `**/*+(${types.join('|')})`
+  return glob.sync(types, {cwd: project})
+    .map(f => path.join(project, f).toLowerCase())
+}
+
 module.exports = {
   knownDirs,
   fileTypes,
   sourceTypes,
   audioTypes,
   imageTypes,
+  findTypes,
 }
