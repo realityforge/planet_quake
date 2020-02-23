@@ -2,7 +2,7 @@ var path = require('path');
 var fs = require('fs');
 var glob = require('glob')
 var exec = require('child_process').execSync;
-var {whitelist} = require('../bin/repack-whitelist.js')
+var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 

@@ -16,6 +16,7 @@ var DirectedGraph = require('../lib/asset.graph.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
+var TEMP_NAME = path.join(__dirname, '../bin/previous-graph.json')
 
 if(fs.existsSync(BASEQ3)) {
   var baseq3 = glob.sync('**/*', {cwd: BASEQ3})
@@ -32,7 +33,7 @@ function graphMaps(project) {
     var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
     result[maps[i]] = map
   }
-  console.log(`Found ${result.length} maps`)
+  console.log(`Found ${Object.keys(result).length} maps`)
   return result
 }
 
@@ -45,8 +46,8 @@ function graphModels(project) {
     var model = md3.load(buffer)
     result[models[i]] = model
   }
-  var withSkins = result.filter(m => m.skins.length > 0)
-  console.log(`Found ${result.length} models, ${withSkins.length} with skins`)
+  var withSkins = Object.keys(result).filter(m => result[m].skins.length > 0)
+  console.log(`Found ${Object.keys(result).length} models, ${withSkins.length} with skins`)
   return result
 }
 
@@ -59,7 +60,7 @@ function graphShaders(project) {
     var script = shaderLoader.load(buffer)
     result[shaders[i]] = script
   }
-  console.log(`Found ${result.length} shaders`)
+  console.log(`Found ${Object.keys(result).length} shaders`)
   return result
 }
 
@@ -72,7 +73,7 @@ function graphSkins(project) {
     var skin = skinLoader.load(buffer)
     result[skins[i]] = skin
   }
-  console.log(`Found ${result.length} skins`)
+  console.log(`Found ${Object.keys(result).length} skins`)
   return result
 }
 
@@ -80,9 +81,15 @@ function graphGames(project) {
   if(!project) {
     project = PROJECT
   }
-  var everything = glob.sync('**/*', {cwd: project, nodir: true})
-    .map(f => path.join(project, f).toLowerCase())
-  var known = glob.sync(`**/+(${knownDirs.join('|')})/**`, {cwd: project})
+  var everything = glob.sync('**/*', {
+    cwd: project,
+    nodir: true
+  }).map(f => path.join(project, f).toLowerCase())
+  var known = glob.sync(`**/+(${knownDirs.join('|')})/**`, {
+    cwd: project,
+    nodir: true
+  }).map(f => path.join(project, f).toLowerCase())
+  
   var game = {
     maps: graphMaps(project),
     models: graphModels(project),
@@ -99,26 +106,72 @@ function graphGames(project) {
   
   // add all vertices
   var entityRefs = Object.keys(game.maps)
-    .reduce((obj, k) => game.maps[k].entities
-    .reduce((arr, e) => arr.push.apply(arr, e.noise, e.music, e.model2), [])
-    .filter(e => e && e.charAt(0) != '*')
-    .concat([k.replace('.bsp', '.aas')]), {})
+    .reduce((obj, k) => {
+      obj[k] = game.maps[k].entities
+        .reduce((arr, e) => {
+          arr.push(e.noise, e.music, e.model2)
+          return arr
+        }, [])
+        .filter(e => e && e.charAt(0) != '*')
+        .concat([k.replace('.bsp', '.aas')])
+      return obj
+    }, {})
   var mapShaders = Object.keys(game.maps)
-    .reduce((obj, k) => game.maps[k].shaders
-    .map(s => s.shaderName), {})
+    .reduce((obj, k) => {
+      obj[k] = game.maps[k].shaders
+        .map(s => s.shaderName)
+      return obj
+    }, {})
   var modelShaders = Object.keys(game.models)
-    .reduce((obj, k) => game.models[k].surfaces
-    .reduce((arr, s) => arr.push.apply(arr, s.shaders), []), {})
+    .reduce((obj, k) => {
+      obj[k] = game.models[k].surfaces
+        .reduce((arr, s) => {
+          arr.push(s.shaders)
+          return arr
+        }, [])
+      return obj
+    }, {})
+  var scriptShaders = Object.keys(game.shaders)
+    .reduce((obj, k) => {
+      obj[k] = Object.keys(game.shaders[k])
+      return obj
+    }, {})
   var scriptTextures = Object.keys(game.shaders)
-    .reduce((obj, k) => game.shaders[k].stages
-    .reduce((arr, s) => arr.push.apply(arr, s.maps), [])
-    .concat(game.shaders[k].outerBox)
-    .concat(game.shaders[k].innerBox), {})
+    .reduce((obj, s) => {
+      var keys = Object.keys(game.shaders[s])
+        .forEach(k => {
+          if(typeof obj[k] === 'undefined') {
+            obj[k] = []
+          }
+          if(game.shaders[s][k].stages) {
+            obj[k].push(game.shaders[s][k].stages.map(stage => stage.maps).flat(1))
+          }
+          if(game.shaders[s][k].outerBox) {
+            obj[k].push.apply(obj[k], game.shaders[s][k].outerBox)
+          }
+          if(game.shaders[s][k].innerBox) {
+            obj[k].push.apply(obj[k], game.shaders[s][k].innerBox)
+          }
+        })
+      return obj
+    }, {})
   var skinShaders = Object.keys(game.skins)
-    .reduce((obj, k) => game.skins[k].surfaces
-    .map(s => s.shaderName), {})
+    .reduce((obj, k) => {
+      obj[k] = game.skins[k].surfaces
+        .map(s => s.shaderName)
+      return obj
+    }, {})
   
-  
+  fs.writeFileSync(TEMP_NAME, JSON.stringify({
+    entities: entityRefs,
+    maps: mapShaders,
+    models: modelShaders,
+    scripts: scriptShaders,
+    shaders: scriptTextures,
+    skins: skinShaders,
+    qvms: game.qvms,
+    everything: everything,
+  }, null, 2))
   /*
   var graph = new DirectedGraph()
   
