@@ -57,19 +57,19 @@ function gameInfo(gs, project) {
   percent('Unrecognized files', unrecognized.length, game.everything.length)
   console.log(unrecognized.slice(0, 10))
   
-  // how many files a part of menu system?
+  // how many files a part of menu system?  
   var uiqvm = game.graph.getVertices()
-    .filter(v => v.id.match(/ui\.qvm/i))[0]
+    .filter(v => v.id.match(/ui\.dis/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('UI files', uiqvm.length, game.everything.length)
   var cgame = game.graph.getVertices()
-    .filter(v => v.id.match(/cgame\.qvm/i))[0]
+    .filter(v => v.id.match(/cgame\.dis/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('Cgame files', cgame.length, game.everything.length)
   var qagame = game.graph.getVertices()
-    .filter(v => v.id.match(/qagame\.qvm/i))[0]
+    .filter(v => v.id.match(/qagame\.dis/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('QAgame files', qagame.length, game.everything.length)

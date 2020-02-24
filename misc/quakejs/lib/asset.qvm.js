@@ -149,13 +149,13 @@ function graphQVM(qvm, project) {
   console.log('Looking for QVMs')
   var result = {}
   var qvms = findTypes(qvm || ['.qvm'], project || PROJECT)
-    .map(qvm => qvm.replace(/\.qvm/i, '.dis'))
-    .filter(disassembly => fs.existsSync(disassembly))
   var topdirs = glob.sync('**/', {cwd: project || PROJECT})
     .map(dir => path.basename(dir))
   for(var i = 0; i < qvms.length; i++) {
+    var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
+    if(!fs.existsSync(disassembly)) continue
     var buffer = fs.readFileSync(qvms[i])
-    var qvmstrings = loadQVMStrings(buffer, topdirs)
+    var qvmstrings = loadQVMStrings(buffer, topdirs).concat([qvms[i]])
     result[qvms[i]] = qvmstrings
   }
   console.log(`Found ${qvms.length} QVMs and ${Object.values(result).reduce((t, o) => t += o.length, 0)} strings`)
