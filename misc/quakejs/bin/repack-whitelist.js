@@ -1,5 +1,7 @@
 var glob = require('glob')
 var path = require('path')
+var fs = require('fs')
+var minimatch = require("minimatch")
 
 var imageTypes = [
   '.png',
@@ -65,8 +67,14 @@ var knownDirs = [
 
 function findTypes(types, project) {
   if(Array.isArray(types)) types = `**/*+(${types.join('|')})`
-  return glob.sync(types, {cwd: project})
-    .map(f => path.join(project, f))
+  if(fs.existsSync(project)) {
+    return glob.sync(types, {cwd: project})
+      .map(f => path.join(project, f))
+  } else if(Array.isArray(project)) {
+    return project.filter(minimatch.filter(types))
+  } else {
+    throw new Error(`Don't know what to do with ${project}`)
+  }
 }
 
 module.exports = {

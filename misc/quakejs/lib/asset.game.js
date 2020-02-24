@@ -9,7 +9,7 @@ var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
 var skinLoader = require('../lib/asset.skin.js')
 var {
-  findTypes, knownDirs, fileTypes, sourceTypes,
+  findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
 } = require('../bin/repack-whitelist.js')
 var DirectedGraph = require('../lib/asset.graph.js')
@@ -85,22 +85,13 @@ function loadGame(project) {
     cwd: project,
     nodir: true
   }).map(f => path.join(project, f))
-  var known = glob.sync(`**/+(${knownDirs.join('|')})/**`, {
-    cwd: project,
-    nodir: true
-  }).map(f => path.join(project, f))
   
   var game = {
     maps: graphMaps(project),
     models: graphModels(project),
     shaders: graphShaders(project),
     skins: graphSkins(project),
-    images: findTypes(imageTypes, project),
-    audio: findTypes(audioTypes, project),
-    sources: findTypes(sourceTypes, project),
-    files: findTypes(fileTypes, project),
     qvms: graphQVM(0, project),
-    directories: known,
     everything: everything,
   }
   
@@ -333,6 +324,6 @@ module.exports = {
   graphModels,
   graphShaders,
   graphSkins,
-  graphGames,
-  load: graphGames
+  graphGame,
+  load: graphGame
 }

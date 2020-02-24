@@ -3,7 +3,11 @@ var path = require('path')
 var glob = require('glob')
 var {graphQVM, loadQVM, loadQVMData} = require('../lib/asset.qvm.js')
 var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
-var {compressDirectory} = require('./compress.js')
+var {compressDirectory} = require('../bin/compress.js')
+var {
+  findTypes, fileTypes, sourceTypes,
+  audioTypes, imageTypes, findTypes,
+} = require('../bin/repack-whitelist.js')
 var {ufs} = require('unionfs')
 ufs.use(fs)
 
@@ -33,14 +37,26 @@ function percent(l, a, b) {
   console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
 }
 
-function gameInfo(project) {
+function gameInfo(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGame(0, project)[0]
+  var game = graphGame(gs, project)
   // how many files are matched versus unknown?
+  game.files = game.files || findTypes(fileTypes, game.everything)
+  game.images = game.images || findTypes(imageTypes, game.everything)
+  game.audio = game.audio || findTypes(audioTypes, game.everything)
+  game.sources = game.sources || findTypes(sourceTypes, game.everything)
+  game.known = game.known || findTypes([imageTypes, audioTypes, sourceTypes, fileTypes].flat(1), game.everything)
+  percent('Image files', game.images.length, game.everything.length)
+  percent('Audio files', game.audio.length, game.everything.length)
+  percent('Source files', game.sources.length, game.everything.length)
   percent('Known files', game.files.length, game.everything.length)
-  percent('Known directories', game.directories.length, game.everything.length)
+  percent('Recognized files', game.known.length, game.everything.length)
+  var unrecognized = game.everything.filter(f => !game.known.includes(f))
+  percent('Unrecognized files', unrecognized.length, game.everything.length)
+  console.log(unrecognized.slice(0, 10))
+  
   // how many files a part of menu system?
   percent('Menu files', game.menu.length, game.everything.length)
   
@@ -90,7 +106,9 @@ function gameInfo(project) {
     .filter(v => v.inEdges.length == 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
     
   console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
-  
+}
+
+function pakAssets(gs) {
   // for each md3, bsp, group by parent directory
   var roots = vertices.filter(v => v.id.match(/(\.bsp|\.md3|\.qvm)/i))
   var grouped = {'menu': [], 'menu/game': []}
@@ -139,8 +157,6 @@ function gameInfo(project) {
       .flat(1)
     grouped[parent].push.apply(grouped[parent], dependencies)
   }
-
-  console.log('Grouped menu: ', grouped['menu'].filter(f => f.includes('banner')))
   // TODO: add weapon/powerup sounds using lists of data from bg_misc, but some mods
   //   like weapons factory load this config from a file we can use instead
   
@@ -417,10 +433,10 @@ async function repack(condensed, project) {
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-//gameInfo(PROJECT)
+gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)
 //graphGame(0, PROJECT)
-var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
+//var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack()
 //graphQVM('**/pak8.pk3dir/**/*.qvm')
