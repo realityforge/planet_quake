@@ -195,77 +195,97 @@ function graphGames(gs, project) {
 
   // add all the vertices which are the keys of the variables above
   var vertices = []
-    .concat(Object.values(gs.entities))
+    .concat(Object.values(gs.entities).flat(1))
     .concat(Object.keys(gs.qvms))
     .concat(Object.keys(gs.maps))
     .concat(Object.keys(gs.scripts))
     .concat(Object.keys(gs.models))
     .concat(Object.keys(gs.skins))
-    .concat(Object.values(gs.shaders))
+    .concat(Object.values(gs.shaders).flat(1))
     .concat(Object.keys(gs.qvms))
-    .concat(Object.values(gs.qvms))
+    .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => arr.indexOf(v) == i)
   
   var fileLookups = {}
   for(var i = 0; i < vertices.length; i++) {
     // everything in vertices should match a file
     if(!fs.existsSync(vertices[i])) {
-      var search = vertices[i]
-      var index = searchMinimatch(search, everything)
+      var index = searchMinimatch(vertices[i], everything)
       if(index == -1) inbaseq3.push(vertices[i])
-      else if (index) {
-        fileLookups[vertices[i]] = gs.everything[index]
-        graph.addVertex(gs.everything[index], {
+      else if (index !== null) {
+        fileLookups[vertices[i]] = graph.addVertex(gs.everything[index], {
           name: gs.everything[index]
         })
       }
       else notfound.push(vertices[i])
     } else {
-      graph.addVertex(vertices[i], {
+      fileLookups[vertices[i]] = graph.addVertex(vertices[i], {
         name: vertices[i]
       })
     }
-    
-    /*
-    var v = graph.getVertex(game.shaders[i].name)
-    for(var j = 0; j < game.shaders[i].textures.length; j++) {
-      var s = addEdgeMinimatch(v, game.shaders[i].textures[j], everything, graph)
-      if(s == -1) inbaseq3.push(game.shaders[i].textures[j])
-      else if (s) graph.addEdge(v, s)
-      else notfound.push(game.shaders[i].textures[j])
-    }
-    */
   }
   
   // lookup all shaders
-  var allShaders = Object.values(gs.maps)
-    .concat(Object.values(gs.models))
-    .concat(Object.values(gs.shaders)) // obviously all these should match
-    .concat(Object.values(gs.skins))
-    .concat(Object.values(gs.qvms))
+  var everyShaderName = Object.values(gs.scripts)
+    .flat(1)
+    .filter((s, i, arr) => arr.indexOf(s) === i)
+  var allShaders = []
+    .concat(Object.values(gs.maps).flat(1))
+    .concat(Object.values(gs.models).flat(1))
+    .concat(Object.values(gs.shaders).flat(1)) // obviously all these should match
+    .concat(Object.values(gs.skins).flat(1))
+    .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
+    .filter((v, i, arr) => arr.indexOf(v) == i)
   var shaderLookups = {}
-  maps: mapShaders,
-  models: modelShaders,
-  scripts: scriptShaders,
-  shaders: scriptTextures,
-  skins: skinShaders,
+  for(var i = 0; i < allShaders.length; i++) {
+    // matches without extension
+    //   which is what we want because mods override shaders
+    var index = searchMinimatch(allShaders[i], everyShaderName)
+    if(index !== null) {
+      shaderLookups[allShaders[i]] = graph.addVertex(everyShaderName[index], {
+        name: everyShaderName[index]
+      })
+    } else {
+      // try to match a filename directly
+      index = searchMinimatch(allShaders[i], everything)
+      if(index == -1) inbaseq3.push(allShaders[i])
+      else if(index !== null) {
+        shaderLookups[allShaders[i]] = graph.addVertex(everything[index], {
+          name: everything[index]
+        })
+      }
+      else notfound.push(vertices[i])
+    }
+  }
+  
   // link all the vertices and follow all shaders through to their files
   Object.keys(gs.entities).forEach(k => {
     gs.entities[k].forEach(e => {
-      graph.addEdge(graph.getVertex(k), graph.getVertex(fileLookups[e] || e))
+      graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
   })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
-      graph.addEdge(graph.getVertex(k), graph.getVertex(shaderLookups[e] || e))
+      graph.addEdge(graph.getVertex(k), shaderLookups[e])
     })
   })
+  Object.keys(gs.models).forEach(k => {
+    gs.models[k].forEach(e => {
+      graph.addEdge(graph.getVertex(k), shaderLookups[e])
+    })
+  })
+  Object.keys(gs.skins).forEach(k => {
+    gs.skins[k].forEach(e => {
+      graph.addEdge(graph.getVertex(k), shaderLookups[e])
+    })
+  })
+  Object.keys(gs.qvms).forEach(k => {
+    gs.qvms[k].forEach(e => {
+      graph.addEdge(graph.getVertex(k), fileLookups[e] || shaderLookups[e])
+    })
+  })
+  // TODO: add arenas, configs, bot scripts, defi
   
-  //console.log(cacheMap)
-  console.log(graph)
-  //console.log(inbaseq3)
-  
-  // TODO: group by parent directories
   gs.graph = graph
   gs.notfound = notfound
   gs.baseq3 = inbaseq3
@@ -288,7 +308,8 @@ function searchMinimatch(search, everything) {
   } else if (name.length > 1) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
-    if(!type) throw new Error('File type not found '  + search)
+    if(path.extname(search) && !type) throw new Error('File type not found '  + search)
+    else type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
     if(name.length == 0 || name.length > 1) {
       return null
