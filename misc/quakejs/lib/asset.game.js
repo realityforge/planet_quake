@@ -219,7 +219,7 @@ function graphGame(gs, project) {
       })
     }
   }
-  
+
   // lookup all shaders
   var everyShaderName = Object.values(gs.scripts)
     .flat(1)
@@ -236,7 +236,8 @@ function graphGame(gs, project) {
     // matches without extension
     //   which is what we want because mods override shaders
     var index = searchMinimatch(allShaders[i], everyShaderName)
-    if(index !== null) {
+    if(index == -1) inbaseq3.push(allShaders[i])
+    else if(index !== null) {
       shaderLookups[allShaders[i]] = graph.addVertex(everyShaderName[index], {
         name: everyShaderName[index]
       })
