@@ -58,21 +58,18 @@ function gameInfo(gs, project) {
   console.log(unrecognized.slice(0, 10))
   
   // how many files a part of menu system?
-  percent('Menu files', game.menu.length, game.everything.length)
-  
-  // how many files are graphed versus unmatched or unknown?
   var uiqvm = game.graph.getVertices()
-    .filter(v => v.name.match(/ui\.qvm/i))[0]
+    .filter(v => v.id.match(/ui\.qvm/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('UI files', uiqvm.length, game.everything.length)
   var cgame = game.graph.getVertices()
-    .filter(v => v.name.match(/cgame\.qvm/i))[0]
+    .filter(v => v.id.match(/cgame\.qvm/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('Cgame files', cgame.length, game.everything.length)
   var qagame = game.graph.getVertices()
-    .filter(v => v.name.match(/qagame\.qvm/i))[0]
+    .filter(v => v.id.match(/qagame\.qvm/i))[0]
     .outEdges
     .filter(e => game.everything.includes(e.outVertex))
   percent('QAgame files', qagame.length, game.everything.length)
@@ -96,6 +93,7 @@ function gameInfo(gs, project) {
     .filter(f => game.everything.includes(f))
   percent('Shared files', filesOverLimit.length, game.everything.length)
     
+  // how many files are graphed versus unmatched or unknown?
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   console.log('Least used assets:', vertices
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
