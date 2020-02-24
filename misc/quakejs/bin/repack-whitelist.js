@@ -18,6 +18,8 @@ var audioTypes = [
 ]
 
 var sourceTypes = [
+  '.c', // these can be compiled in game to run bot AI
+  '.h',
   '.map',
   '.scc',
   '.dis',
@@ -35,10 +37,10 @@ var fileTypes = [
   '.shader',
   '.skin',
   '.pk3',
-  '.c', // these can be compiled in game to run bot AI
-  '.h',
   '.config',
-  '.menu'
+  '.menu',
+  '.defi', // CPMA game mode definition
+  '.arena', // map based game mode definition
 ]
 
 var knownDirs = [

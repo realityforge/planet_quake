@@ -194,16 +194,19 @@ function graphGames(gs, project) {
     .filter(t => !allTypes.includes(t))
 
   // add all the vertices which are the keys of the variables above
-  var vertices = Object.values(gs.entities).flat(1)
+  var vertices = []
+    .concat(Object.values(gs.entities))
     .concat(Object.keys(gs.qvms))
     .concat(Object.keys(gs.maps))
     .concat(Object.keys(gs.scripts))
     .concat(Object.keys(gs.models))
     .concat(Object.keys(gs.skins))
-    .concat(Object.values(gs.shaders).flat(1))
+    .concat(Object.values(gs.shaders))
+    .concat(Object.keys(gs.qvms))
+    .concat(Object.values(gs.qvms))
     .filter((v, i, arr) => arr.indexOf(v) == i)
   
-  var cacheMap = {}
+  var fileLookups = {}
   for(var i = 0; i < vertices.length; i++) {
     // everything in vertices should match a file
     if(!fs.existsSync(vertices[i])) {
@@ -211,7 +214,7 @@ function graphGames(gs, project) {
       var index = searchMinimatch(search, everything)
       if(index == -1) inbaseq3.push(vertices[i])
       else if (index) {
-        cacheMap[vertices[i]] = gs.everything[index]
+        fileLookups[vertices[i]] = gs.everything[index]
         graph.addVertex(gs.everything[index], {
           name: gs.everything[index]
         })
@@ -233,8 +236,33 @@ function graphGames(gs, project) {
     }
     */
   }
+  
+  // lookup all shaders
+  var allShaders = Object.values(gs.maps)
+    .concat(Object.values(gs.models))
+    .concat(Object.values(gs.shaders)) // obviously all these should match
+    .concat(Object.values(gs.skins))
+    .concat(Object.values(gs.qvms))
+  var shaderLookups = {}
+  maps: mapShaders,
+  models: modelShaders,
+  scripts: scriptShaders,
+  shaders: scriptTextures,
+  skins: skinShaders,
+  // link all the vertices and follow all shaders through to their files
+  Object.keys(gs.entities).forEach(k => {
+    gs.entities[k].forEach(e => {
+      graph.addEdge(graph.getVertex(k), graph.getVertex(fileLookups[e] || e))
+    })
+  })
+  Object.keys(gs.maps).forEach(k => {
+    gs.maps[k].forEach(e => {
+      graph.addEdge(graph.getVertex(k), graph.getVertex(shaderLookups[e] || e))
+    })
+  })
+  
   //console.log(cacheMap)
-  console.log(notfound)
+  console.log(graph)
   //console.log(inbaseq3)
   
   // TODO: group by parent directories
