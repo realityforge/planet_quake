@@ -29,8 +29,8 @@ Repack
 */
 var mountPoints = []
 
-function percent(a, b) {
-  return Math.round(a/b*1000) / 10
+function percent(l, a, b) {
+  console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
 }
 
 function gameInfo(project) {
@@ -39,33 +39,32 @@ function gameInfo(project) {
   }
   var game = graphGame(0, project)[0]
   // how many files are matched versus unknown?
-  console.log(`Known files: ${game.files.length}/${game.everything.length
-    } - ${percent(game.files.length, game.everything.length)}%`)
-  console.log(`Known directories: ${game.directories.length}/${game.everything.length
-    } - ${percent(game.directories.length, game.everything.length)}%`)
-  
+  percent('Known files', game.files.length, game.everything.length)
+  percent('Known directories', game.directories.length, game.everything.length)
   // how many files a part of menu system?
-  console.log(`Menu files: ${game.menu.length}/${game.everything.length} - ${
-    percent(game.menu.length, game.everything.length)}% - ${
-    game.menu.map(f => fs.statSync(f).size).reduce((sum, i) => sum + i, 0)} bytes`)
+  percent('Menu files', game.menu.length, game.everything.length)
   
   // how many files are graphed versus unmatched or unknown?
-  var uiUnique = game.uiqvm.filter(f => !game.cgame.includes(f) && !game.qagame.includes(f))
-  console.log(`UI files: ${uiUnique.length}/${game.everything.length
-    } - ${percent(uiUnique.length, game.everything.length)}%`)
-  console.log('UI models: ', uiUnique.filter(f => f.includes('banner')))
-  var cgameUnique = game.cgame.filter(f => !game.uiqvm.includes(f) && !game.qagame.includes(f))
-  console.log(`Cgame files: ${cgameUnique.length}/${game.everything.length
-    } - ${percent(cgameUnique.length, game.everything.length)}%`)
-  console.log(`QAgame files: ${game.qagame.length}/${game.everything.length
-    } - ${percent(game.qagame.length, game.everything.length)}%`)
+  var uiqvm = game.graph.getVertices()
+    .filter(v => v.name.match(/ui\.qvm/i))[0]
+    .outEdges
+    .filter(e => game.everything.includes(e.outVertex))
+  percent('UI files', uiqvm.length, game.everything.length)
+  var cgame = game.graph.getVertices()
+    .filter(v => v.name.match(/cgame\.qvm/i))[0]
+    .outEdges
+    .filter(e => game.everything.includes(e.outVertex))
+  percent('Cgame files', cgame.length, game.everything.length)
+  var qagame = game.graph.getVertices()
+    .filter(v => v.name.match(/qagame\.qvm/i))[0]
+    .outEdges
+    .filter(e => game.everything.includes(e.outVertex))
+  percent('QAgame files', qagame.length, game.everything.length)
     
-  var qvmFiles = game.everything.filter(f => game.uiqvm.includes(f) || game.cgame.includes(f) || game.qagame.includes(f))
-  console.log(`Total QVM files: ${qvmFiles.length}/${game.everything.length
-    } - ${percent(qvmFiles.length, game.everything.length)}%`)
-    
+  var qvmFiles = game.everything
+    .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
+  percent('Total QVM files', qvmFiles.length, game.everything.length)
   console.log(`Not found: ${game.notfound.length}`)
-  
   console.log(`Files in baseq3: ${game.baseq3.length}`)
   
   // largest matches, more than 5 edges?
@@ -79,22 +78,21 @@ function gameInfo(project) {
     .map(v => [v.id].concat(v.outEdges.map(e => e.inVertex.id)))
     .flat(1)
     .filter(f => game.everything.includes(f))
-  console.log(`Shared files: ${filesOverLimit.length}/${game.everything.length
-    } - ${percent(filesOverLimit.length, game.everything.length)}%`)
+  percent('Shared files', filesOverLimit.length, game.everything.length)
     
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   console.log('Least used assets:', vertices
-    .filter(v => v.inEdges.length > 0 && !v.id.includes('.bsp')) // && v.inEdges[0].inVertex.id != v.id)
+    .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
     .slice(0, 10)
-    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
+    .map(v => v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
 
   var unused = vertices
-    .filter(v => v.inEdges.length == 0 && !v.id.includes('.bsp') && !v.id.includes('.md3'))
+    .filter(v => v.inEdges.length == 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
     
   console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
   
   // for each md3, bsp, group by parent directory
-  var roots = vertices.filter(v => v.id.includes('.md3') || v.id.includes('.bsp'))
+  var roots = vertices.filter(v => v.id.match(/(\.bsp|\.md3|\.qvm)/i))
   var grouped = {'menu': [], 'menu/game': []}
   for(var i = 0; i < roots.length; i++) {
     var parent = roots[i].id.includes('.bsp')
@@ -111,8 +109,7 @@ function gameInfo(project) {
   
   var groupedFlat = Object.values(grouped).flat(1)
   var linked = game.everything.filter(e => groupedFlat.includes(e))
-  console.log(`Linked assets: ${linked.length}/${game.everything.length
-    } - ${percent(linked.length, game.everything.length)}%`)
+  percent('Linked assets', linked.length, game.everything.length)
     
   // make sure we have everything
   for(var i = 0; i < game.everything.length; i++) {
