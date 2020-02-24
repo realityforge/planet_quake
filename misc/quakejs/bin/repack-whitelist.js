@@ -15,6 +15,7 @@ var audioTypes = [
   '.opus',
   '.wav',
   '.mp3',
+  '.ogg',
 ]
 
 var sourceTypes = [

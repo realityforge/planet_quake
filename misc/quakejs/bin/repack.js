@@ -2,7 +2,7 @@ var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
 var {graphQVM, loadQVM, loadQVMData} = require('../lib/asset.qvm.js')
-var {graphGames, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
+var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
 var {compressDirectory} = require('./compress.js')
 var {ufs} = require('unionfs')
 ufs.use(fs)
@@ -37,7 +37,7 @@ function gameInfo(project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGames(0, project)[0]
+  var game = graphGame(0, project)[0]
   // how many files are matched versus unknown?
   console.log(`Known files: ${game.files.length}/${game.everything.length
     } - ${percent(game.files.length, game.everything.length)}%`)
@@ -422,7 +422,8 @@ async function repack(condensed, project) {
 //graphMaps(PROJECT)
 //gameInfo(PROJECT)
 //graphShaders(PROJECT)
-graphGames(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
+//graphGame(0, PROJECT)
+var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
 //repack()
 //graphQVM('**/pak8.pk3dir/**/*.qvm')

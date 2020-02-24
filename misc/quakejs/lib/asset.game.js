@@ -109,7 +109,11 @@ function loadGame(project) {
     .reduce((obj, k) => {
       obj[k] = game.maps[k].entities
         .reduce((arr, e) => {
-          arr.push(e.noise, e.music, e.model2)
+          arr.push.apply(arr, [
+            e.noise,
+            (e.music || '').split(/.wav\s*/ig).filter(m => m).map(m => m + '.wav'),
+            e.model2
+          ].flat(1))
           return arr
         }, [])
         .filter(e => e && e.charAt(0) != '*')
@@ -175,7 +179,7 @@ function loadGame(project) {
   return Object.assign(game, gameState)
 }
 
-function graphGames(gs, project) {
+function graphGame(gs, project) {
   if(!project) {
     project = PROJECT
   }
@@ -261,26 +265,32 @@ function graphGames(gs, project) {
   // link all the vertices and follow all shaders through to their files
   Object.keys(gs.entities).forEach(k => {
     gs.entities[k].forEach(e => {
+      if(typeof fileLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
   })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
+      if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
     })
   })
   Object.keys(gs.models).forEach(k => {
     gs.models[k].forEach(e => {
+      if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
     })
   })
   Object.keys(gs.skins).forEach(k => {
     gs.skins[k].forEach(e => {
+      if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
     })
   })
   Object.keys(gs.qvms).forEach(k => {
     gs.qvms[k].forEach(e => {
+      if(typeof fileLookups[e] == 'undefined'
+        && typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), fileLookups[e] || shaderLookups[e])
     })
   })
@@ -290,14 +300,14 @@ function graphGames(gs, project) {
   gs.notfound = notfound
   gs.baseq3 = inbaseq3
   
-  return [gs]
+  return gs
 }
 
 function searchMinimatch(search, everything) {
   var lookup = search
     .replace(/\/\//ig, '/')
     .replace(/\\/g, '/')
-    .replace(/\..*/, '') // remove extension
+    .replace(/\.[^\.]*$/, '') // remove extension
     .toLowerCase()
   var name = everything.filter(f => f.includes(lookup)) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
@@ -309,7 +319,7 @@ function searchMinimatch(search, everything) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
     if(path.extname(search) && !type) throw new Error('File type not found '  + search)
-    else type = imageTypes // assuming its a shading looking for an image
+    else if (!type) type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
     if(name.length == 0 || name.length > 1) {
       return null
