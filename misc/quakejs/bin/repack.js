@@ -59,24 +59,28 @@ function gameInfo(gs, project) {
   
   // how many files a part of menu system?  
   var uiqvm = game.graph.getVertices()
-    .filter(v => v.id.match(/ui\.dis/i))[0]
+    .filter(v => v.id.match(/ui\.qvm/i))[0]
     .outEdges
-    .filter(e => game.everything.includes(e.outVertex))
+    .map(e => e.inVertex.id)
+    .filter(e => game.everything.includes(e))
   percent('UI files', uiqvm.length, game.everything.length)
   var cgame = game.graph.getVertices()
-    .filter(v => v.id.match(/cgame\.dis/i))[0]
+    .filter(v => v.id.match(/cgame\.qvm/i))[0]
     .outEdges
-    .filter(e => game.everything.includes(e.outVertex))
+    .map(e => e.inVertex.id)
+    .filter(e => game.everything.includes(e))
   percent('Cgame files', cgame.length, game.everything.length)
   var qagame = game.graph.getVertices()
-    .filter(v => v.id.match(/qagame\.dis/i))[0]
+    .filter(v => v.id.match(/qagame\.qvm/i))[0]
     .outEdges
-    .filter(e => game.everything.includes(e.outVertex))
+    .map(e => e.inVertex.id)
+    .filter(e => game.everything.includes(e))
   percent('QAgame files', qagame.length, game.everything.length)
-    
+
   var qvmFiles = game.everything
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
   percent('Total QVM files', qvmFiles.length, game.everything.length)
+  
   console.log(`Not found: ${game.notfound.length}`, game.notfound.slice(0, 10))
   console.log(`Files in baseq3: ${game.baseq3.length}`, game.baseq3.slice(0, 10))
   
@@ -96,7 +100,7 @@ function gameInfo(gs, project) {
   // how many files are graphed versus unmatched or unknown?
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   console.log('Least used assets:', vertices
-    .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
+    .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm|\.aas)/i))
     .slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
 
@@ -106,6 +110,15 @@ function gameInfo(gs, project) {
       && !v.id.match(/(\.bsp|\.md3|\.qvm|\.shader)/i)
       && !allShaders.includes(v.id))
   console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
+  
+  var allVertices = vertices.map(v => v.id)
+  var graphed = game.everything.filter(e => allVertices.includes(e))
+  percent('All graphed', graphed.length, game.everything.length)
+  var ungraphed = game.everything.filter(e => !allVertices.includes(e))
+  percent('Ungraphed', ungraphed.length, game.everything.length)
+  console.log(ungraphed.slice(0, 10))
+  
+  return gs
 }
 
 function pakAssets(gs) {
