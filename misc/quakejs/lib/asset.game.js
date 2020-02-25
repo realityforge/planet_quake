@@ -54,7 +54,7 @@ function graphModels(project) {
 function graphShaders(project) {
   console.log('Looking for shaders')
   var result = {}
-  var shaders = findTypes(['base_wall.shader'], project || PROJECT)
+  var shaders = findTypes(['.shader'], project || PROJECT)
   for(var i = 0; i < shaders.length; i++) {
     var buffer = fs.readFileSync(shaders[i])
     var script = shaderLoader.load(buffer)
@@ -109,12 +109,14 @@ function loadGame(project) {
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
+      obj[k].sort()
       return obj
     }, {})
   var mapShaders = Object.keys(game.maps)
     .reduce((obj, k) => {
       obj[k] = game.maps[k].shaders
         .map(s => s.shaderName)
+      obj[k].sort()
       return obj
     }, {})
   var modelShaders = Object.keys(game.models)
@@ -122,11 +124,13 @@ function loadGame(project) {
       obj[k] = game.models[k].surfaces
         .map(s => s.shaders).flat(1)
         .filter(s => s)
+      obj[k].sort()
       return obj
     }, {})
   var scriptShaders = Object.keys(game.shaders)
     .reduce((obj, k) => {
       obj[k] = Object.keys(game.shaders[k])
+      obj[k].sort()
       return obj
     }, {})
   var scriptTextures = Object.keys(game.shaders)
@@ -145,6 +149,7 @@ function loadGame(project) {
           if(game.shaders[s][k].innerBox) {
             obj[k].push.apply(obj[k], game.shaders[s][k].innerBox)
           }
+          obj[k].sort()
         })
       return obj
     }, {})
@@ -152,6 +157,7 @@ function loadGame(project) {
     .reduce((obj, k) => {
       obj[k] = game.skins[k].surfaces
         .map(s => s.shaderName)
+      obj[k].sort()
       return obj
     }, {})
   var qvmFiles = Object.keys(game.qvms)
@@ -163,6 +169,7 @@ function loadGame(project) {
         .map(w => everything.filter(minimatch.filter('**/' + w)))
         .flat(1)
       obj[k] = game.qvms[k].concat(qvmFiles)
+      obj[k].sort()
       return obj
     }, {})
   
@@ -238,7 +245,7 @@ function graphGame(gs, project) {
   var allShaders = []
     .concat(Object.values(gs.maps).flat(1))
     .concat(Object.values(gs.models).flat(1))
-    .concat(Object.values(gs.shaders).flat(1)) // obviously all these should match
+    .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match
     .concat(Object.values(gs.skins).flat(1))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => arr.indexOf(v) == i)
@@ -246,20 +253,21 @@ function graphGame(gs, project) {
   for(var i = 0; i < allShaders.length; i++) {
     // matches without extension
     //   which is what we want because mods override shaders
-    var index = searchMinimatch(allShaders[i], everyShaderName)
-    if(index == -1) inbaseq3.push(allShaders[i])
-    else if(index !== null) {
-      shaderLookups[allShaders[i]] = graph.addVertex(everyShaderName[index], {
-        name: everyShaderName[index]
-      })
+    var index = everyShaderName.indexOf(allShaders[i])
+    if(index > -1) {
+      shaderLookups[allShaders[i]] = graph.getVertex(everyShaderName[index])
+        || graph.addVertex(everyShaderName[index], {
+          name: everyShaderName[index]
+        })
     } else {
       // try to match a filename directly
       index = searchMinimatch(allShaders[i], everything)
       if(index == -1) inbaseq3.push(allShaders[i])
       else if(index !== null) {
-        shaderLookups[allShaders[i]] = graph.addVertex(everything[index], {
-          name: everything[index]
-        })
+        shaderLookups[allShaders[i]] = graph.getVertex(gs.everything[index])
+          || graph.addVertex(gs.everything[index], {
+            name: gs.everything[index]
+          })
       }
       else notfound.push(vertices[i])
     }
@@ -272,13 +280,16 @@ function graphGame(gs, project) {
       graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
   })
+  Object.keys(gs.shaders).forEach(k => {
+    gs.shaders[k].forEach(e => {
+      if(typeof fileLookups[e] == 'undefined') return
+      graph.addEdge(graph.getVertex(k), fileLookups[e])
+    })
+  })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      if(e.includes('bluemetalsupport2eye')) {
-        console.log(graph.getVertex('textures/base_wall/bluemetalsupport2eye'))
-      }
     })
   })
   Object.keys(gs.models).forEach(k => {

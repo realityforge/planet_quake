@@ -77,8 +77,8 @@ function gameInfo(gs, project) {
   var qvmFiles = game.everything
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
   percent('Total QVM files', qvmFiles.length, game.everything.length)
-  console.log(`Not found: ${game.notfound.length}`)
-  console.log(`Files in baseq3: ${game.baseq3.length}`)
+  console.log(`Not found: ${game.notfound.length}`, game.notfound.slice(0, 10))
+  console.log(`Files in baseq3: ${game.baseq3.length}`, game.baseq3.slice(0, 10))
   
   // largest matches, more than 5 edges?
   var vertices = game.graph.getVertices()
@@ -100,9 +100,11 @@ function gameInfo(gs, project) {
     .slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
 
-  console.log(vertices.filter(v => v.id.includes('bluemetalsupport2eye')))
+  var allShaders = Object.values(game.scripts).flat(1)
   var unused = vertices
-    .filter(v => v.inEdges.length == 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
+    .filter(v => v.inEdges.length == 0
+      && !v.id.match(/(\.bsp|\.md3|\.qvm|\.shader)/i)
+      && !allShaders.includes(v.id))
   console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
 }
 
