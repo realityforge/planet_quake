@@ -98,7 +98,7 @@ function gameInfo(gs, project) {
   console.log('Least used assets:', vertices
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
     .slice(0, 10)
-    .map(v => v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
+    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
 
   var unused = vertices
     .filter(v => v.inEdges.length == 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
@@ -114,6 +114,7 @@ function pakAssets(gs) {
     var parent = roots[i].id.includes('.bsp')
       ? roots[i].id.replace('.bsp', '')
       : path.dirname(roots[i].id)
+    
     if(typeof grouped[parent] == 'undefined') {
       grouped[parent] = []
     }

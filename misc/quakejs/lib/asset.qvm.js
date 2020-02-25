@@ -154,8 +154,8 @@ function graphQVM(qvm, project) {
   for(var i = 0; i < qvms.length; i++) {
     var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
     if(!fs.existsSync(disassembly)) continue
-    var buffer = fs.readFileSync(qvms[i])
-    var qvmstrings = loadQVMStrings(buffer, topdirs).concat([qvms[i]])
+    var buffer = fs.readFileSync(disassembly)
+    var qvmstrings = loadQVMStrings(buffer, topdirs).concat([disassembly])
     result[qvms[i]] = qvmstrings
   }
   console.log(`Found ${qvms.length} QVMs and ${Object.values(result).reduce((t, o) => t += o.length, 0)} strings`)

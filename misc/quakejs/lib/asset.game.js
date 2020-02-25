@@ -154,6 +154,17 @@ function loadGame(project) {
         .map(s => s.shaderName)
       return obj
     }, {})
+  var qvmFiles = Object.keys(game.qvms)
+    .reduce((obj, k) => {
+      console.log(`Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`)
+      var wildcards = game.qvms[k].filter(s => s.includes('*'))
+      var qvmFiles = wildcards
+        .map(w => w.replace(/\\/ig, '/'))
+        .map(w => everything.filter(minimatch.filter('**/' + w)))
+        .flat(1)
+      obj[k] = game.qvms[k].concat(qvmFiles)
+      return obj
+    }, {})
   
   var gameState = {
     entities: entityRefs,
@@ -162,7 +173,7 @@ function loadGame(project) {
     scripts: scriptShaders,
     shaders: scriptTextures,
     skins: skinShaders,
-    qvms: game.qvms,
+    qvms: qvmFiles,
     everything: everything,
   }
   fs.writeFileSync(TEMP_NAME, JSON.stringify(gameState, null, 2))
