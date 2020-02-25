@@ -276,6 +276,9 @@ function graphGame(gs, project) {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      if(e.includes('bluemetalsupport2eye')) {
+        console.log(graph.getVertex('textures/base_wall/bluemetalsupport2eye'))
+      }
     })
   })
   Object.keys(gs.models).forEach(k => {

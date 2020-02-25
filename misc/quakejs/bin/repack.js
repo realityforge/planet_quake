@@ -92,7 +92,7 @@ function gameInfo(gs, project) {
     .flat(1)
     .filter(f => game.everything.includes(f))
   percent('Shared files', filesOverLimit.length, game.everything.length)
-    
+  
   // how many files are graphed versus unmatched or unknown?
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   console.log('Least used assets:', vertices
@@ -100,9 +100,9 @@ function gameInfo(gs, project) {
     .slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
 
+  console.log(vertices.filter(v => v.id.includes('bluemetalsupport2eye')))
   var unused = vertices
     .filter(v => v.inEdges.length == 0 && !v.id.match(/(\.bsp|\.md3|\.qvm)/i))
-    
   console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
 }
 
