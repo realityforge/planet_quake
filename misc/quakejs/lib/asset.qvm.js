@@ -6,6 +6,10 @@ var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 
+var MATCH_JMPLIST = /^((0x[0-9a-f]{8})\s+[0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2}\s+(0x[0-9a-f]{1,8}))\s*$/i
+var MATCH_ENTS = /^((0x[0-9a-f]{8})\s+"((ammo_|item_|team_|weapon_|holdable_).*?)"\s*$)/i
+var SIZEOF_GITEM = 13*4
+
 /*
 GOAL: analize a ui.qvm and try to end up with something like this list
 
@@ -163,7 +167,33 @@ function graphQVM(qvm, project) {
   return result
 }
 
+function getGameAssets(disassembly) {
+  var lines = fs.readFileSync(disassembly).toString('utf-8').split('\n')
+  var entMatches = lines
+    .map(l => MATCH_ENTS.exec(l))
+    .filter(l => l)
+  // now map the entity strings use to read a .map to the jumplist for bg_misc.c bg_itemlist[]
+  var entityJmplist = lines
+    .map(l => MATCH_JMPLIST.exec(l))
+    .filter(j => j)
+  // get the earliest/latest parts of the list matching the entities above
+  var bg_itemlist = entMatches
+    .reduce((obj, l) => {
+      var itemoffset = entityJmplist
+        .filter(j => parseInt(j[3], 16) === parseInt(l[2], 16))[0]
+      if(!itemoffset) return obj
+      var itemstart = parseInt(itemoffset[2], 16)
+      var itemstrings = entityJmplist
+        .filter(j => parseInt(j[2], 16) > itemstart && parseInt(j[2], 16) < itemstart + SIZEOF_GITEM)
+        .map(j => j[3])
+      obj[l[3]] = itemstrings
+      return obj
+    }, {})
+  return bg_itemlist
+}
+
 module.exports = {
+  getGameAssets: getGameAssets,
   loadQVMEntities: loadQVMEntities,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,

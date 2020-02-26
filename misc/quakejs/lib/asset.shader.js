@@ -185,7 +185,7 @@ var Waveform = function () {
 };
 
 function load(buffer) {
-	var file = buffer.toString('utf-8').replace(/^\s*\/\/.*/ig, '')
+	var file = buffer.toString('utf-8').replace(/(^|\r\n)\s*\/\/.*/ig, '')
   var match
   var current = file
   var result = {}

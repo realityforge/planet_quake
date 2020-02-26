@@ -1,7 +1,7 @@
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
-var {graphQVM, loadQVM, loadQVMData} = require('../lib/asset.qvm.js')
+var {graphQVM, loadQVM, loadQVMData, getGameAssets} = require('../lib/asset.qvm.js')
 var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
 var {compressDirectory} = require('../bin/compress.js')
 var {
@@ -22,6 +22,7 @@ Planned options:
 --info -i - only print info, don't actually do any converting
 --convert - options to pass to image magick, make sure to put these last
 --transcode - options to pass to opus/ogg vorbis, make sure to put these last
+--entities - entities definition to group models and sounds
 
 Basic steps:
 
@@ -103,7 +104,11 @@ function gameInfo(gs, project) {
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm|\.aas)/i))
     .slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
-
+  console.log('Least used models:', vertices
+    .filter(v => v.inEdges.length > 0 && v.id.match(/(\.md3)/i) && !v.id.match(/(players)/i))
+    .slice(0, 10)
+    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
+  
   var allShaders = Object.values(game.scripts).flat(1)
   var unused = vertices
     .filter(v => v.inEdges.length == 0
@@ -121,7 +126,29 @@ function gameInfo(gs, project) {
   return gs
 }
 
-function pakAssets(gs) {
+function groupAssets(gs, project) {
+  if(!project) {
+    project = PROJECT
+  }
+  var game = graphGame(gs, project)
+  // TODO: accept an entities definition to match with QVM
+  // use some known things about QVMs to group files together first
+  var cgame = game.graph.getVertices()
+    .filter(v => v.id.match(/cgame\.dis/i))[0]
+  var bg_itemlist = getGameAssets(cgame.id)
+  // map the jump list on to 13bytes of gitem_s
+  
+  
+  //var entities = 
+  console.log(bg_itemlist)
+  //'player/*/**' && (model||sound)
+  
+  
+  return
+  // subtract those pregrouped files from what is left
+  // make a map of maps to entities needed to save bandwidth
+  
+  
   // for each md3, bsp, group by parent directory
   var roots = vertices.filter(v => v.id.match(/(\.bsp|\.md3|\.qvm)/i))
   var grouped = {'menu': [], 'menu/game': []}
@@ -447,7 +474,8 @@ async function repack(condensed, project) {
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+//gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)
 //graphGame(0, PROJECT)
 //var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
