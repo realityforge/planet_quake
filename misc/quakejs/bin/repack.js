@@ -131,16 +131,8 @@ function groupAssets(gs, project) {
     project = PROJECT
   }
   var game = graphGame(gs, project)
-  // TODO: accept an entities definition to match with QVM
-  // use some known things about QVMs to group files together first
-  var cgame = game.graph.getVertices()
-    .filter(v => v.id.match(/cgame\.dis/i))[0]
-  var bg_itemlist = getGameAssets(cgame.id)
-  // map the jump list on to 13bytes of gitem_s
   
   
-  //var entities = 
-  console.log(bg_itemlist)
   //'player/*/**' && (model||sound)
   
   
@@ -475,7 +467,8 @@ async function repack(condensed, project) {
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
 //gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
-groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+gameInfo(0, PROJECT)
+//groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)
 //graphGame(0, PROJECT)
 //var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))

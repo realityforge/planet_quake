@@ -3,7 +3,7 @@ var path = require('path')
 var glob = require('glob')
 var minimatch = require("minimatch")
 
-var {graphQVM} = require('../lib/asset.qvm.js')
+var {graphQVM, getGameAssets} = require('../lib/asset.qvm.js')
 var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
@@ -94,6 +94,11 @@ function loadGame(project) {
     qvms: graphQVM(0, project),
     everything: everything,
   }
+  // TODO: accept an entities definition to match with QVM
+  // use some known things about QVMs to group files together first
+  var cgame = Object.values(game.qvms).flat(1)
+    .filter(k => k.match(/cgame\.dis/i))[0]
+  var entities = getGameAssets(cgame)
   
   // add all vertices
   var entityRefs = Object.keys(game.maps)
@@ -102,13 +107,14 @@ function loadGame(project) {
         .reduce((arr, e) => {
           arr.push.apply(arr, [
             e.noise,
-            (e.music || '').split(/.wav\s*/ig).filter(m => m).map(m => m + '.wav'),
+            (e.music || '').replace(/\.wav\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig),
             e.model2
           ].flat(1))
           return arr
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
+        .concat(game.maps[k].entities.map(e => e.classname).filter((e, i, arr) => arr.indexOf(e) === i))
       obj[k].sort()
       return obj
     }, {})
@@ -172,9 +178,10 @@ function loadGame(project) {
       obj[k].sort()
       return obj
     }, {})
-  
+
   var gameState = {
-    entities: entityRefs,
+    entities: entities,
+    mapEntities: entityRefs,
     maps: mapShaders,
     models: modelShaders,
     scripts: scriptShaders,
@@ -208,7 +215,7 @@ function graphGame(gs, project) {
 
   // add all the vertices which are the keys of the variables above
   var vertices = []
-    .concat(Object.values(gs.entities).flat(1))
+    .concat(Object.values(gs.mapEntities).flat(1))
     .concat(Object.keys(gs.qvms))
     .concat(Object.keys(gs.maps))
     .concat(Object.keys(gs.scripts))
@@ -243,9 +250,10 @@ function graphGame(gs, project) {
     .flat(1)
     .filter((s, i, arr) => arr.indexOf(s) === i)
   var allShaders = []
+    .concat(Object.values(gs.entities).flat(1)) // match with shaders or files so icons match up
     .concat(Object.values(gs.maps).flat(1))
     .concat(Object.values(gs.models).flat(1))
-    .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match
+    .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match the list above
     .concat(Object.values(gs.skins).flat(1))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => arr.indexOf(v) == i)
@@ -274,8 +282,8 @@ function graphGame(gs, project) {
   }
   
   // link all the vertices and follow all shaders through to their files
-  Object.keys(gs.entities).forEach(k => {
-    gs.entities[k].forEach(e => {
+  Object.keys(gs.mapEntities).forEach(k => {
+    gs.mapEntities[k].forEach(e => {
       if(typeof fileLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
@@ -311,6 +319,16 @@ function graphGame(gs, project) {
       graph.addEdge(graph.getVertex(k), fileLookups[e] || shaderLookups[e])
     })
   })
+  Object.keys(gs.entities).forEach(k => {
+    var entityEdges = gs.entities[k]
+      .filter(e => typeof fileLookups[e] != 'undefined'
+        || typeof shaderLookups[e] != 'undefined')
+    if(entityEdges.length > 0) {
+      var entityVertex = graph.addVertex(k, {name: k})
+      entityEdges.forEach(e => graph.addEdge(entityVertex, fileLookups[e] || shaderLookups[e]))
+    }
+  })
+  
   // TODO: add arenas, configs, bot scripts, defi
   
   gs.graph = graph

@@ -1,8 +1,429 @@
 {
   "entities": {
+    "EV_GLOBAL_TEAM_SOUND": [
+      "EV_GLOBAL_TEAM_SOUND",
+      "EV_BULLET_HIT_FLESH",
+      "EV_BULLET_HIT_WALL",
+      "EV_MISSILE_HIT",
+      "EV_MISSILE_MISS",
+      "EV_MISSILE_MISS_METAL",
+      "EV_RAILTRAIL",
+      "EV_SHOTGUN",
+      "EV_BULLET",
+      "EV_PAIN",
+      "EV_DEATH1",
+      "EV_DEATH2",
+      "EV_DEATH3"
+    ],
+    "EV_ITEM_POP": [
+      "EV_ITEM_POP",
+      "EV_PLAYER_TELEPORT_IN",
+      "EV_PLAYER_TELEPORT_OUT",
+      "EV_GRENADE_BOUNCE",
+      "EV_GENERAL_SOUND",
+      "EV_GLOBAL_SOUND",
+      "EV_GLOBAL_TEAM_SOUND",
+      "EV_BULLET_HIT_FLESH",
+      "EV_BULLET_HIT_WALL",
+      "EV_MISSILE_HIT",
+      "EV_MISSILE_MISS",
+      "EV_MISSILE_MISS_METAL",
+      "EV_RAILTRAIL"
+    ],
+    "EV_ITEM_RESPAWN": [
+      "EV_ITEM_RESPAWN",
+      "EV_ITEM_POP",
+      "EV_PLAYER_TELEPORT_IN",
+      "EV_PLAYER_TELEPORT_OUT",
+      "EV_GRENADE_BOUNCE",
+      "EV_GENERAL_SOUND",
+      "EV_GLOBAL_SOUND",
+      "EV_GLOBAL_TEAM_SOUND",
+      "EV_BULLET_HIT_FLESH",
+      "EV_BULLET_HIT_WALL",
+      "EV_MISSILE_HIT",
+      "EV_MISSILE_MISS",
+      "EV_MISSILE_MISS_METAL"
+    ],
+    "EV_GLOBAL_ITEM_PICKUP": [
+      "EV_GLOBAL_ITEM_PICKUP",
+      "EV_NOAMMO",
+      "EV_CHANGE_WEAPON",
+      "EV_FIRE_WEAPON",
+      "EV_USE_ITEM0",
+      "EV_USE_ITEM1",
+      "EV_USE_ITEM2",
+      "EV_USE_ITEM3",
+      "EV_USE_ITEM4",
+      "EV_USE_ITEM5",
+      "EV_USE_ITEM6",
+      "EV_USE_ITEM7",
+      "EV_USE_ITEM8"
+    ],
+    "EV_ITEM_PICKUP": [
+      "EV_ITEM_PICKUP",
+      "EV_GLOBAL_ITEM_PICKUP",
+      "EV_NOAMMO",
+      "EV_CHANGE_WEAPON",
+      "EV_FIRE_WEAPON",
+      "EV_USE_ITEM0",
+      "EV_USE_ITEM1",
+      "EV_USE_ITEM2",
+      "EV_USE_ITEM3",
+      "EV_USE_ITEM4",
+      "EV_USE_ITEM5",
+      "EV_USE_ITEM6",
+      "EV_USE_ITEM7"
+    ],
+    "team_CTF_blueflag": [
+      "team_CTF_blueflag",
+      "models/flags/b_flag.md3",
+      "icons/iconf_blu1",
+      "Blue Flag",
+      "",
+      ""
+    ],
+    "team_CTF_redflag": [
+      "team_CTF_redflag",
+      "models/flags/r_flag.md3",
+      "icons/iconf_red1",
+      "Red Flag",
+      "",
+      ""
+    ],
+    "item_flight": [
+      "item_flight",
+      "sound/items/flight.wav",
+      "models/powerups/instant/flight.md3",
+      "models/powerups/instant/flight_ring.md3",
+      "icons/flight",
+      "Flight",
+      "",
+      "sound/items/flight.wav"
+    ],
+    "item_regen": [
+      "item_regen",
+      "sound/items/regeneration.wav",
+      "models/powerups/instant/regen.md3",
+      "models/powerups/instant/regen_ring.md3",
+      "icons/regen",
+      "Regeneration",
+      "",
+      "sound/items/regen.wav"
+    ],
+    "item_invis": [
+      "item_invis",
+      "sound/items/invisibility.wav",
+      "models/powerups/instant/invis.md3",
+      "models/powerups/instant/invis_ring.md3",
+      "icons/invis",
+      "Invisibility",
+      "",
+      ""
+    ],
+    "item_haste": [
+      "item_haste",
+      "sound/items/haste.wav",
+      "models/powerups/instant/haste.md3",
+      "models/powerups/instant/haste_ring.md3",
+      "icons/haste",
+      "Speed",
+      "",
+      ""
+    ],
+    "item_enviro": [
+      "item_enviro",
+      "sound/items/protect.wav",
+      "models/powerups/instant/enviro.md3",
+      "models/powerups/instant/enviro_ring.md3",
+      "icons/envirosuit",
+      "Battle Suit",
+      "",
+      "sound/items/airout$1",
+      "sound/items/protect3.wav"
+    ],
+    "item_quad": [
+      "item_quad",
+      "sound/items/quaddamage.wav",
+      "models/powerups/instant/quad.md3",
+      "models/powerups/instant/quad_ring.md3",
+      "icons/quad",
+      "Quad Damage",
+      "",
+      "sound/items/damage2$1",
+      "sound/items/damage3.wav"
+    ],
+    "holdable_medkit": [
+      "holdable_medkit",
+      "sound/items/holdable.wav",
+      "models/powerups/holdable/medkit.md3",
+      "models/powerups/holdable/medkit_sphere.md3",
+      "icons/medkit",
+      "Medkit",
+      "",
+      "sound/items/use_medkit.wav"
+    ],
+    "holdable_teleporter": [
+      "holdable_teleporter",
+      "sound/items/holdable.wav",
+      "models/powerups/holdable/teleporter.md3",
+      "icons/teleporter",
+      "Personal Teleporter",
+      "",
+      ""
+    ],
+    "ammo_bfg": [
+      "ammo_bfg",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/bfgam.md3",
+      "icons/icona_bfg",
+      "Bfg Ammo",
+      "",
+      ""
+    ],
+    "ammo_slugs": [
+      "ammo_slugs",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/railgunam.md3",
+      "icons/icona_railgun",
+      "Slugs",
+      "",
+      ""
+    ],
+    "ammo_rockets": [
+      "ammo_rockets",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/rocketam.md3",
+      "icons/icona_rocket",
+      "Rockets",
+      "",
+      ""
+    ],
+    "ammo_lightning": [
+      "ammo_lightning",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/lightningam.md3",
+      "icons/icona_lightning",
+      "Lightning",
+      "",
+      ""
+    ],
+    "ammo_cells": [
+      "ammo_cells",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/plasmaam.md3",
+      "icons/icona_plasma",
+      "Cells",
+      "",
+      ""
+    ],
+    "ammo_grenades": [
+      "ammo_grenades",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/grenadeam.md3",
+      "icons/icona_grenade",
+      "Grenades",
+      "",
+      ""
+    ],
+    "ammo_bullets": [
+      "ammo_bullets",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/machinegunam.md3",
+      "icons/icona_machinegun",
+      "Bullets",
+      "",
+      ""
+    ],
+    "ammo_shells": [
+      "ammo_shells",
+      "sound/misc/am_pkup.wav",
+      "models/powerups/ammo/shotgunam.md3",
+      "icons/icona_shotgun",
+      "Shells",
+      "",
+      ""
+    ],
+    "weapon_grapplinghook": [
+      "weapon_grapplinghook",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/grapple/grapple.md3",
+      "icons/iconw_grapple",
+      "Grappling Hook",
+      "",
+      ""
+    ],
+    "weapon_bfg": [
+      "weapon_bfg",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/bfg/bfg.md3",
+      "icons/iconw_bfg",
+      "BFG10K",
+      "",
+      ""
+    ],
+    "weapon_plasmagun": [
+      "weapon_plasmagun",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/plasma/plasma.md3",
+      "icons/iconw_plasma",
+      "Plasma Gun",
+      "",
+      ""
+    ],
+    "weapon_railgun": [
+      "weapon_railgun",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/railgun/railgun.md3",
+      "icons/iconw_railgun",
+      "Railgun",
+      "",
+      ""
+    ],
+    "weapon_lightning": [
+      "weapon_lightning",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/lightning/lightning.md3",
+      "icons/iconw_lightning",
+      "Lightning Gun",
+      "",
+      ""
+    ],
+    "weapon_rocketlauncher": [
+      "weapon_rocketlauncher",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/rocketl/rocketl.md3",
+      "icons/iconw_rocket",
+      "Rocket Launcher",
+      "",
+      ""
+    ],
+    "weapon_grenadelauncher": [
+      "weapon_grenadelauncher",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/grenadel/grenadel.md3",
+      "icons/iconw_grenade",
+      "Grenade Launcher",
+      "",
+      "sound/weapons/grenade/hgrenb1a$1",
+      "sound/weapons/grenade/hgrenb2a.wav"
+    ],
+    "weapon_machinegun": [
+      "weapon_machinegun",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/machinegun/machinegun.md3",
+      "icons/iconw_machinegun",
+      "Machinegun",
+      "",
+      ""
+    ],
+    "weapon_shotgun": [
+      "weapon_shotgun",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/shotgun/shotgun.md3",
+      "icons/iconw_shotgun",
+      "Shotgun",
+      "",
+      ""
+    ],
+    "weapon_gauntlet": [
+      "weapon_gauntlet",
+      "sound/misc/w_pkup.wav",
+      "models/weapons2/gauntlet/gauntlet.md3",
+      "icons/iconw_gauntlet",
+      "Gauntlet",
+      "",
+      ""
+    ],
+    "item_health_mega": [
+      "item_health_mega",
+      "sound/items/m_health.wav",
+      "models/powerups/health/mega_cross.md3",
+      "models/powerups/health/mega_sphere.md3",
+      "icons/iconh_mega",
+      "Mega Health",
+      "",
+      ""
+    ],
+    "item_health_large": [
+      "item_health_large",
+      "sound/items/l_health.wav",
+      "models/powerups/health/large_cross.md3",
+      "models/powerups/health/large_sphere.md3",
+      "icons/iconh_red",
+      "50 Health",
+      "",
+      ""
+    ],
+    "item_health": [
+      "item_health",
+      "sound/items/n_health.wav",
+      "models/powerups/health/medium_cross.md3",
+      "models/powerups/health/medium_sphere.md3",
+      "icons/iconh_yellow",
+      "25 Health",
+      "",
+      ""
+    ],
+    "item_health_small": [
+      "item_health_small",
+      "sound/items/s_health.wav",
+      "models/powerups/health/small_cross.md3",
+      "models/powerups/health/small_sphere.md3",
+      "icons/iconh_green",
+      "5 Health",
+      "",
+      ""
+    ],
+    "item_armor_body": [
+      "item_armor_body",
+      "sound/misc/ar2_pkup.wav",
+      "models/powerups/armor/armor_red.md3",
+      "icons/iconr_red",
+      "Heavy Armor",
+      "",
+      ""
+    ],
+    "item_armor_combat": [
+      "item_armor_combat",
+      "sound/misc/ar2_pkup.wav",
+      "models/powerups/armor/armor_yel.md3",
+      "icons/iconr_yellow",
+      "Armor",
+      "",
+      ""
+    ],
+    "item_armor_shard": [
+      "item_armor_shard",
+      "sound/misc/ar1_pkup.wav",
+      "models/powerups/armor/shard.md3",
+      "models/powerups/armor/shard_sphere.md3",
+      "icons/iconr_shard",
+      "Armor Shard",
+      "",
+      ""
+    ]
+  },
+  "mapEntities": {
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3dm13.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3dm13.aas",
-      "music/fla22k_04_intro.wav",
+      "ammo_bullets",
+      "ammo_grenades",
+      "ammo_lightning",
+      "ammo_rockets",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "music/fla22k_04_intro$1",
       "music/fla22k_04_loop.wav",
       "sound/world/fireloud.wav",
       "sound/world/firesoft.wav",
@@ -27,14 +448,69 @@
       "sound/world/lava_short.wav",
       "sound/world/portal01.wav",
       "sound/world/wind1.wav",
-      "sound/world/wind1.wav"
+      "sound/world/wind1.wav",
+      "target_position",
+      "target_speaker",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_grenadelauncher",
+      "weapon_lightning",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3dm6.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3dm6.aas",
-      "music/fla22k_02.wav"
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "info_camp",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "light",
+      "misc_model",
+      "music/fla22k_02.wav",
+      "target_location",
+      "target_position",
+      "trigger_push",
+      "weapon_grenadelauncher",
+      "weapon_lightning",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3tourney2.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3tourney2.aas",
+      "ammo_bullets",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "misc_teleporter_dest",
       "music/sonic5.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -64,10 +540,41 @@
       "sound/world/xforce2.wav",
       "sound/world/xforce2.wav",
       "sound/world/xforce2.wav",
-      "sound/world/xforce2.wav"
+      "sound/world/xforce2.wav",
+      "target_delay",
+      "target_relay",
+      "target_speaker",
+      "trigger_always",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_lightning",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3tourney4.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3tourney4.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_door",
+      "func_timer",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "misc_teleporter_dest",
       "music\\fla22k_06.wav",
       "sound/world/tim_elect.wav",
       "sound/world/tim_elect.wav",
@@ -75,10 +582,34 @@
       "sound/world/tim_weird1.wav",
       "sound/world/tim_weird2.wav",
       "sound/world/tim_zap.wav",
-      "sound/world/tim_zap.wav"
+      "sound/world/tim_zap.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf1.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf1.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_door",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\fla22k_02.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -109,10 +640,48 @@
       "sound/world/firesoft.wav",
       "sound/world/firesoft.wav",
       "sound/world/firesoft.wav",
-      "sound/world/firesoft.wav"
+      "sound/world/firesoft.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "team_CTF_blueflag",
+      "team_CTF_blueplayer",
+      "team_CTF_bluespawn",
+      "team_CTF_redflag",
+      "team_CTF_redplayer",
+      "team_CTF_redspawn",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf2.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf2.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_door",
+      "func_static",
+      "func_timer",
+      "holdable_medkit",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "misc_portal_surface",
       "music/sonic5.wav",
       "sound/world/curnt2.wav",
       "sound/world/curnt2.wav",
@@ -159,10 +728,43 @@
       "sound/world/xchoir2.wav",
       "sound/world/xchoir2.wav",
       "sound/world/xchoir2.wav",
-      "sound/world/xchoir2.wav"
+      "sound/world/xchoir2.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "team_CTF_blueflag",
+      "team_CTF_blueplayer",
+      "team_CTF_bluespawn",
+      "team_CTF_redflag",
+      "team_CTF_redplayer",
+      "team_CTF_redspawn",
+      "trigger_push",
+      "weapon_grenadelauncher",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf3.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf3.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_small",
+      "item_invis",
+      "item_quad",
+      "item_regen",
+      "light",
+      "misc_model",
       "music/fla22k_06.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -243,14 +845,78 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fire1.wav"
+      "sound/world/fire1.wav",
+      "target_give",
+      "target_location",
+      "target_remove_powerups",
+      "target_speaker",
+      "team_CTF_blueflag",
+      "team_CTF_blueplayer",
+      "team_CTF_bluespawn",
+      "team_CTF_redflag",
+      "team_CTF_redplayer",
+      "team_CTF_redspawn",
+      "trigger_hurt",
+      "trigger_multiple",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf4.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3ctf4.aas",
-      "music\\fla22k_05.wav"
+      "ammo_bullets",
+      "ammo_shells",
+      "func_bobbing",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_health_large",
+      "item_health_mega",
+      "light",
+      "misc_model",
+      "music\\fla22k_05.wav",
+      "target_give",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "team_CTF_blueflag",
+      "team_CTF_blueplayer",
+      "team_CTF_bluespawn",
+      "team_CTF_redflag",
+      "team_CTF_redplayer",
+      "team_CTF_redspawn",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_bfg",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm0.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm0.aas",
+      "ammo_cells",
+      "ammo_shells",
+      "func_door",
+      "func_rotating",
+      "func_timer",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "misc_portal_camera",
+      "misc_portal_surface",
+      "misc_teleporter_dest",
       "models/mapobjects/bitch/fembotbig.md3",
       "models/mapobjects/skel/xray.md3",
       "sound/feedback/intro_01.wav",
@@ -271,10 +937,30 @@
       "sound/world/tim_weird1.wav",
       "sound/world/tim_weird1.wav",
       "sound/world/tim_weird2.wav",
-      "sound/world/tim_zap.wav"
+      "sound/world/tim_zap.wav",
+      "target_delay",
+      "target_position",
+      "target_speaker",
+      "trigger_multiple",
+      "trigger_teleport",
+      "weapon_plasmagun",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm1.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm1.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_shells",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\sonic5.wav",
       "sound/world/ambient/x_ominous.wav",
       "sound/world/fire1.wav",
@@ -284,10 +970,39 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fire1.wav"
+      "sound/world/fire1.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm10.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm10.aas",
+      "ammo_cells",
+      "ammo_lightning",
+      "ammo_rockets",
+      "func_static",
+      "info_camp",
+      "info_firstplace",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_secondplace",
+      "info_thirdplace",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_small",
+      "item_invis",
+      "item_quad",
+      "item_regen",
+      "light",
+      "misc_model",
       "music/fla22k_03.wav",
       "sound/items/armourfield.wav",
       "sound/world/ambient/x_ancientsdrone.wav",
@@ -301,13 +1016,54 @@
       "sound/world/lava1.wav",
       "sound/world/lava1.wav",
       "sound/world/lava1.wav",
-      "sound/world/lava1.wav"
+      "sound/world/lava1.wav",
+      "target_delay",
+      "target_give",
+      "target_position",
+      "target_relay",
+      "target_speaker",
+      "trigger_always",
+      "trigger_multiple",
+      "weapon_lightning",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm11.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm11.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "func_button",
+      "func_door",
+      "func_rotating",
+      "func_static",
+      "holdable_medkit",
+      "info_camp",
+      "info_notnull",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_enviro",
+      "item_haste",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_portal_camera",
+      "misc_portal_surface",
       "models/mapobjects/skel/xraybig.md3",
       "models/mapobjects/skel/xraybig.md3",
       "music\\fla22k_03.wav",
+      "shooter_grenade",
       "sound/world/buzzer.wav",
       "sound/world/buzzer.wav",
       "sound/world/buzzer.wav",
@@ -327,10 +1083,51 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/klaxon1.wav",
-      "sound/world/klaxon2.wav"
+      "sound/world/klaxon2.wav",
+      "target_delay",
+      "target_location",
+      "target_position",
+      "target_print",
+      "target_relay",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_grenadelauncher",
+      "weapon_lightning",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm12.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm12.aas",
+      "ammo_bfg",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "func_door",
+      "func_static",
+      "func_timer",
+      "holdable_teleporter",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "item_regen",
+      "light",
+      "misc_model",
       "music\\fla22k_06.wav",
       "sound/world/underwater02.wav",
       "sound/world/underwater02.wav",
@@ -346,11 +1143,46 @@
       "sound/world/water1.wav",
       "sound/world/water1.wav",
       "sound/world/water1.wav",
-      "sound/world/water1.wav"
+      "sound/world/water1.wav",
+      "target_location",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_bfg",
+      "weapon_grenadelauncher",
+      "weapon_lightning",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm13.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm13.aas",
-      "music/fla22k_04_intro.wav",
+      "ammo_bullets",
+      "ammo_grenades",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "func_timer",
+      "holdable_medkit",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "item_quad",
+      "light",
+      "misc_model",
+      "music/fla22k_04_intro$1",
       "music/fla22k_04_loop.wav",
       "sound/world/fireloud.wav",
       "sound/world/firesoft.wav",
@@ -370,10 +1202,41 @@
       "sound/world/lava_short.wav",
       "sound/world/portal01.wav",
       "sound/world/wind1.wav",
-      "sound/world/wind1.wav"
+      "sound/world/wind1.wav",
+      "target_position",
+      "target_speaker",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_grenadelauncher",
+      "weapon_lightning",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm14.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm14.aas",
+      "ammo_bfg",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_bobbing",
+      "func_door",
+      "func_timer",
+      "holdable_teleporter",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "light",
+      "misc_model",
       "music\\sonic6.wav",
       "sound/world/1shot_greg_01.wav",
       "sound/world/ambient/x_ancientsdrone.wav",
@@ -394,10 +1257,44 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fireloud.wav"
+      "sound/world/fireloud.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_bfg",
+      "weapon_lightning",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm15.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm15.aas",
+      "ammo_bfg",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_slugs",
+      "func_pendulum",
+      "func_timer",
+      "holdable_teleporter",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_enviro",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_teleporter_dest",
       "music\\fla22k_03.wav",
       "sound/world/1shot_femdrone_01.wav",
       "sound/world/fire1.wav",
@@ -407,11 +1304,42 @@
       "sound/world/lava_short.wav",
       "sound/world/lava_short.wav",
       "sound/world/screech1.wav",
-      "sound/world/screech5.wav"
+      "sound/world/screech5.wav",
+      "target_location",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_bfg",
+      "weapon_grenadelauncher",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm16.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm16.aas",
-      "music/fla22k_01_intro.wav",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "info_camp",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
+      "music/fla22k_01_intro$1",
       "music/fla22k_01_loop.wav",
       "sound/world/ambience03.wav",
       "sound/world/ambience03.wav",
@@ -430,10 +1358,36 @@
       "sound/world/ambience03.wav",
       "sound/world/ambience03.wav",
       "sound/world/ambience03.wav",
-      "sound/world/ambience03.wav"
+      "sound/world/ambience03.wav",
+      "target_relay",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm17.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm17.aas",
+      "ammo_bullets",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_teleporter_dest",
       "music/sonic5.wav",
       "sound/world/drone6.wav",
       "sound/world/drone6.wav",
@@ -448,10 +1402,39 @@
       "sound/world/growl3.wav",
       "sound/world/portal01.wav",
       "sound/world/portal01.wav",
-      "sound/world/portal01.wav"
+      "sound/world/portal01.wav",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm18.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm18.aas",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "holdable_teleporter",
+      "info_firstplace",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_secondplace",
+      "info_thirdplace",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_health",
+      "item_health_large",
+      "item_health_small",
+      "item_quad",
+      "light",
+      "misc_model",
       "music/fla22k_06.wav",
       "sound/world/ambience03.wav",
       "sound/world/ambience03.wav",
@@ -466,10 +1449,40 @@
       "sound/world/ambience03.wav",
       "sound/world/ambient/x_ancientsdrone.wav",
       "sound/world/ambient/x_forbidden.wav",
-      "sound/world/ambient/x_rumbledrone.wav"
+      "sound/world/ambient/x_rumbledrone.wav",
+      "target_delay",
+      "target_position",
+      "target_relay",
+      "target_speaker",
+      "trigger_always",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm19.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm19.aas",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_bobbing",
+      "holdable_teleporter",
+      "info_camp",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_flight",
+      "item_health",
+      "item_health_large",
+      "item_quad",
+      "light",
+      "misc_model",
       "models/mapobjects/jets/jets01.md3",
       "models/mapobjects/jets/jets01.md3",
       "models/mapobjects/jets/jets01.md3",
@@ -482,10 +1495,37 @@
       "sound/world/x_bobber.wav",
       "sound/world/x_bobber.wav",
       "sound/world/x_bobber.wav",
-      "sound/world/x_bobber.wav"
+      "sound/world/x_bobber.wav",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm2.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm2.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "func_door",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_haste",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\fla22k_03.wav",
       "sound/world/1shot_greg_03.wav",
       "sound/world/fire1.wav",
@@ -494,10 +1534,29 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/wind1.wav",
-      "sound/world/wind1.wav"
+      "sound/world/wind1.wav",
+      "target_position",
+      "target_speaker",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm3.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm3.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_shells",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_spectator_start",
+      "item_armor_body",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\sonic2.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -506,10 +1565,36 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/suck1.wav",
-      "sound/world/wind2.wav"
+      "sound/world/wind2.wav",
+      "target_position",
+      "target_speaker",
+      "weapon_grenadelauncher",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm4.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm4.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_firstplace",
+      "info_notnull",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_secondplace",
+      "info_thirdplace",
+      "item_armor_body",
+      "item_health",
+      "item_health_large",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_portal_camera",
+      "misc_teleporter_dest",
       "music/sonic5.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -555,23 +1640,111 @@
       "sound/world/xforce1.wav",
       "sound/world/xforce1.wav",
       "sound/world/xforce1.wav",
-      "sound/world/xforce1.wav"
+      "sound/world/xforce1.wav",
+      "target_delay",
+      "target_relay",
+      "target_speaker",
+      "trigger_always",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_teleport",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm5.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm5.aas",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_rockets",
+      "ammo_shells",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_spectator_start",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\sonic2.wav",
       "sound/world/monitor_02.wav",
       "sound/world/monitor_02.wav",
       "sound/world/tim_elect.wav",
       "sound/world/tim_machine.wav",
-      "sound/world/tim_weird1.wav"
+      "sound/world/tim_weird1.wav",
+      "target_position",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_push",
+      "weapon_grenadelauncher",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm6.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm6.aas",
-      "music/fla22k_02.wav"
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "holdable_teleporter",
+      "info_camp",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "item_quad",
+      "light",
+      "misc_model",
+      "music/fla22k_02.wav",
+      "target_location",
+      "target_position",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm7.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm7.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_button",
+      "func_door",
+      "holdable_teleporter",
+      "info_camp",
+      "info_firstplace",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "info_secondplace",
+      "info_thirdplace",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_portal_camera",
+      "misc_portal_surface",
       "music\\sonic5.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -592,10 +1765,46 @@
       "sound/world/firesoft.wav",
       "sound/world/firesoft.wav",
       "sound/world/firesoft.wav",
-      "sound/world/firesoft.wav"
+      "sound/world/firesoft.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm8.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm8.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_grenades",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_door",
+      "func_static",
+      "func_timer",
+      "info_camp",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "item_invis",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_portal_surface",
       "music/fla22k_06.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -621,11 +1830,40 @@
       "sound/world/wind2.wav",
       "sound/world/wind2.wav",
       "sound/world/xchoir2.wav",
-      "sound/world/xchoir2.wav"
+      "sound/world/xchoir2.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "team_CTF_bluespawn",
+      "trigger_push",
+      "weapon_grenadelauncher",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm9.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm9.aas",
-      "music/fla22k_01_intro.wav",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_timer",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "music/fla22k_01_intro$1",
       "music/fla22k_01_loop.wav",
       "sound/world/ambient/x_rumbledrone.wav",
       "sound/world/ambient/x_rumbledrone.wav",
@@ -637,11 +1875,36 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fireloud.wav"
+      "sound/world/fireloud.wav",
+      "target_location",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney1.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney1.aas",
-      "music/fla22k_04_intro.wav",
+      "ammo_bullets",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_health",
+      "item_health_large",
+      "item_quad",
+      "item_regen",
+      "light",
+      "misc_model",
+      "music/fla22k_04_intro$1",
       "music/fla22k_04_loop.wav",
       "sound/world/demonwind01.wav",
       "sound/world/demonwind01.wav",
@@ -702,10 +1965,28 @@
       "sound/world/wind2.wav",
       "sound/world/wind2.wav",
       "sound/world/xforce1.wav",
-      "sound/world/xforce1.wav"
+      "sound/world/xforce1.wav",
+      "target_speaker",
+      "trigger_hurt",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney2.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney2.aas",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_notnull",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
+      "misc_teleporter_dest",
       "music/sonic5.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
@@ -731,20 +2012,75 @@
       "sound/world/xforce2.wav",
       "sound/world/xforce2.wav",
       "sound/world/xforce2.wav",
-      "sound/world/xforce2.wav"
+      "sound/world/xforce2.wav",
+      "target_delay",
+      "target_relay",
+      "target_speaker",
+      "trigger_always",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_lightning",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney3.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney3.aas",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_slugs",
+      "func_static",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_enviro",
+      "item_health",
+      "item_health_large",
+      "light",
+      "misc_model",
       "music\\sonic2.wav",
       "sound/world/1shot_greg_03.wav",
       "sound/world/ambient/x_rumbledrone.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fire1.wav"
+      "sound/world/fire1.wav",
+      "target_give",
+      "target_position",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney4.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney4.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "ammo_slugs",
+      "func_door",
+      "func_timer",
+      "info_null",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_armor_shard",
+      "item_health",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
       "music\\fla22k_06.wav",
       "sound/world/tim_elect.wav",
       "sound/world/tim_elect.wav",
@@ -752,10 +2088,31 @@
       "sound/world/tim_weird1.wav",
       "sound/world/tim_weird2.wav",
       "sound/world/tim_zap.wav",
-      "sound/world/tim_zap.wav"
+      "sound/world/tim_zap.wav",
+      "target_location",
+      "target_position",
+      "target_speaker",
+      "trigger_push",
+      "weapon_plasmagun",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney5.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney5.aas",
+      "ammo_bullets",
+      "ammo_cells",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health_large",
+      "item_quad",
+      "light",
+      "misc_model",
       "music\\fla22k_05.wav",
       "sound/world/1shot_droneboys_01.wav",
       "sound/world/fire1.wav",
@@ -764,10 +2121,36 @@
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
       "sound/world/fire1.wav",
-      "sound/world/fire1.wav"
+      "sound/world/fire1.wav",
+      "target_delay",
+      "target_give",
+      "target_position",
+      "target_speaker",
+      "trigger_multiple",
+      "weapon_plasmagun",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney6_ctf.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney6_ctf.aas",
+      "ammo_bullets",
+      "ammo_rockets",
+      "func_bobbing",
+      "func_button",
+      "func_door",
+      "func_static",
+      "func_timer",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_health",
+      "item_health_large",
+      "item_quad",
+      "light",
+      "misc_model",
+      "misc_portal_surface",
+      "misc_teleporter_dest",
       "models/mapobjects/pipe/pipe02.md3",
       "models/mapobjects/pipe/pipe02b.md3",
       "music\\sonic1.wav",
@@ -778,10 +2161,48 @@
       "sound/world/tim_pump.wav",
       "sound/world/tim_pump.wav",
       "sound/world/tim_weird1.wav",
-      "sound/world/tim_weird2.wav"
+      "sound/world/tim_weird2.wav",
+      "target_location",
+      "target_position",
+      "target_relay",
+      "target_remove_powerups",
+      "target_speaker",
+      "team_CTF_blueflag",
+      "team_CTF_blueplayer",
+      "team_CTF_bluespawn",
+      "team_CTF_redflag",
+      "team_CTF_redplayer",
+      "team_CTF_redspawn",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_bfg",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney6.bsp": [
       "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3tourney6.aas",
+      "ammo_bfg",
+      "ammo_bullets",
+      "ammo_rockets",
+      "func_bobbing",
+      "func_button",
+      "func_door",
+      "func_static",
+      "func_timer",
+      "holdable_teleporter",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_body",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "light",
+      "misc_model",
+      "misc_portal_surface",
+      "misc_teleporter_dest",
       "models/mapobjects/pipe/pipe02.md3",
       "models/mapobjects/pipe/pipe02b.md3",
       "music\\sonic1.wav",
@@ -793,10 +2214,27 @@
       "sound/world/tim_pump.wav",
       "sound/world/tim_pump.wav",
       "sound/world/tim_weird1.wav",
-      "sound/world/tim_weird2.wav"
+      "sound/world/tim_weird2.wav",
+      "target_delay",
+      "target_position",
+      "target_relay",
+      "target_remove_powerups",
+      "target_speaker",
+      "trigger_always",
+      "trigger_hurt",
+      "trigger_multiple",
+      "trigger_push",
+      "trigger_teleport",
+      "weapon_bfg",
+      "weapon_railgun",
+      "weapon_rocketlauncher",
+      "worldspawn"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/test_bigbox.bsp": [
-      "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/test_bigbox.aas"
+      "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/test_bigbox.aas",
+      "info_player_start",
+      "light",
+      "worldspawn"
     ]
   },
   "maps": {
@@ -4809,8 +6247,6 @@
       "textures/base_light/btactmach0"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/base_floor.shader": [
-      "//\r\n//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  smeary, dirty overlay to the diamond metal floor texture\r\n//***************************************************************\r\ntextures/base_floor/diamond_dirty",
-      "/////////////////////////////\r\n//     Shiny Skylight      //\r\n/////////////////////////////\r\n \r\ntextures/base_floor/skylight_spec",
       "textures/base_floor/clang_floor3blava",
       "textures/base_floor/clang_floor_ow",
       "textures/base_floor/clang_floor_ow3",
@@ -4830,6 +6266,7 @@
       "textures/base_floor/cybergrate3",
       "textures/base_floor/diamond2c_ow",
       "textures/base_floor/diamond2cspot",
+      "textures/base_floor/diamond_dirty",
       "textures/base_floor/diamond_noisy",
       "textures/base_floor/floor3_3dark_ow",
       "textures/base_floor/glowfloor2",
@@ -4856,6 +6293,7 @@
       "textures/base_floor/rusty_baphograte",
       "textures/base_floor/rusty_pentagrate",
       "textures/base_floor/skylight1",
+      "textures/base_floor/skylight_spec",
       "textures/base_floor/techfloor",
       "textures/base_floor/techfloor2",
       "textures/base_floor/tile5_plain",
@@ -4990,7 +6428,7 @@
       "textures/base_support/cable_trans",
       "textures/base_support/grate1_3",
       "textures/base_support/metal1_5",
-      "textures/base_support/pj_metal14_1\r\n//Paul Jaquays uses this on the tops of metal frameworks",
+      "textures/base_support/pj_metal14_1",
       "textures/base_support/shinysupport1",
       "textures/base_support/shinysupport2",
       "textures/base_support/support1rust",
@@ -5003,7 +6441,6 @@
       "textures/base_support/z_support"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/base_trim.shader": [
-      "//**********************************************************\r\n//*    Electric wires with blue electical pattern dancing  *\r\n//*    upon it giving off blue light\t\t\t   *\r\n//*    Created: 4/12/98 by Paul Jaquays                    *\r\n//**********************************************************\r\ntextures/base_trim/electric_blue",
       "textures/base_trim/border11_250",
       "textures/base_trim/border11light",
       "textures/base_trim/border12b",
@@ -5013,6 +6450,7 @@
       "textures/base_trim/dark_tin2_trans",
       "textures/base_trim/deeprust_trans",
       "textures/base_trim/drag_glass1",
+      "textures/base_trim/electric_blue",
       "textures/base_trim/electricwall",
       "textures/base_trim/panel_glo",
       "textures/base_trim/panel_shiny",
@@ -5087,7 +6525,7 @@
       "textures/base_wall/glass01",
       "textures/base_wall/glass_frame",
       "textures/base_wall/green_con04",
-      "textures/base_wall/green_contrim_noisey\r\n//Paul Jaquays uses this on the tops of metal frameworks",
+      "textures/base_wall/green_contrim_noisey",
       "textures/base_wall/grill",
       "textures/base_wall/grill2",
       "textures/base_wall/kcgrate1",
@@ -5129,12 +6567,12 @@
       "textures/base/redgoal"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/common.shader": [
-      "//*****************************************\r\n//**   I've reduced the transparency on most editor-only brushes here.\r\n//**   If the transparent textures are still too pale for\r\n//**   things like clip, hint, trigger, etc.,\r\n//**   Please make an editorimage to suit your needs.\r\n//******************************************\r\n\r\ntextures/common/cushion",
-      "//bot specific \"do not enter\" brush\r\ntextures/common/donotenter",
-      "//bot specific cluster portal\r\ntextures/common/clusterportal",
       "textures/common/areaportal",
       "textures/common/caulk",
       "textures/common/clip",
+      "textures/common/clusterportal",
+      "textures/common/cushion",
+      "textures/common/donotenter",
       "textures/common/energypad",
       "textures/common/full_clip",
       "textures/common/hint",
@@ -5263,40 +6701,19 @@
       "explode19"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/gfx.shader": [
-      "//\r\n// CTF icons\r\n//\r\nicons/iconf_red",
-      "//\r\n// ammo icons\r\n//\r\nicons/icona_machinegun",
-      "//\r\n// armor icons\r\n//\r\nicons/iconr_shard",
-      "//\r\n// health icons\r\n//\r\nicons/iconh_green",
-      "//\r\n// powerup icons\r\n//\r\nicons/envirosuit",
-      "//\r\n// special effects as seen on players\r\n//\r\npowerups/battleSuit",
-      "//\r\n// wall marks\r\n// use blendFunc GL_ZERO GL_ONE_MINUS_SRC_COLOR so that\r\n// their \"contribution\" can be damped down in fog volumes\r\n// with distance\r\nbloodMark",
-      "//\r\n// weapon hits\r\n// All of these will be put on entities with a shaderTime offset, so they\r\n// can be expected to start at time 0 for each separate explosion\r\n//\r\n// Many of these are use smoothly morphed animating textures by pairing\r\n// sawtooth and iverse sawtooth rgbGens\r\nplasmaExplosion",
-      "//\r\n// weapon icons\r\n//\r\nicons/iconw_gauntlet",
-      "// \r\n// this file contains shaders that are used by the programmers to\r\n// generate special effects not attached to specific geometry.  This\r\n// also has 2D shaders such as fonts, etc.\r\n//\r\n\r\n// the REGION shader is generated by the map editor on temporary\r\n// brushes around a selected area for testing parts of maps\r\ntextures/REGION",
-      "// blinked on top of lagometer when connection is interrupted\r\ndisconnected",
-      "// markShadow is the very cheap blurry blob underneat the player\r\nmarkShadow",
-      "// projectionShadow is used for cheap squashed model shadows\r\nprojectionShadow",
-      "// reward medals used in the game floating over client's heads\r\nmedal_impressive",
-      "// shader used on the occasional machinegun bullet tracers\r\ngfx/misc/tracer",
-      "// the background for the netgraph\r\nlagometer",
-      "// this is an example of a crossfaded animation cycle\r\ntextures/animationTest",
-      "// viewBloodBlend gives the blended directional cue when you get hit\r\nviewBloodBlend",
-      "// wake is the mark on water surfaces for paddling players\r\nwake",
-      "//=========================\r\n\r\n//\r\n// holdable item icons\r\n//\r\nicons/teleporter",
-      "//===================================================\r\n\r\ngfx/2d/menuinfo",
-      "//===============================================================\r\n\r\n// scoreboard header tabs\r\n\r\nscoreboardName",
-      "//===============================================================\r\n\r\ngfx/2d/crosshair",
-      "//==========================================================================\r\n\r\n\r\nsprites/balloon3",
       "bfgExplosion",
       "bloodExplosion\t\t// spurt of blood at point of impact",
+      "bloodMark",
       "bloodTrail",
       "bulletExplosion",
       "console",
+      "disconnected",
       "flareShader",
       "gfx/2d/armor1h",
       "gfx/2d/assault1d",
       "gfx/2d/bigchars",
       "gfx/2d/blank",
+      "gfx/2d/crosshair",
       "gfx/2d/crosshairb",
       "gfx/2d/crosshairc",
       "gfx/2d/crosshaird",
@@ -5309,6 +6726,7 @@
       "gfx/2d/crosshairk",
       "gfx/2d/cursor",
       "gfx/2d/health",
+      "gfx/2d/menuinfo",
       "gfx/2d/menuinfo2",
       "gfx/2d/numbers/eight_32b",
       "gfx/2d/numbers/five_32b",
@@ -5327,24 +6745,31 @@
       "gfx/damage/burn_med_mrk",
       "gfx/damage/hole_lg_mrk",
       "gfx/damage/plasma_mrk",
+      "gfx/misc/tracer",
       "grenadeExplosion",
       "hasteSmokePuff\t\t\t// drops behind player's feet when speeded",
+      "icons/envirosuit",
       "icons/flight",
       "icons/haste",
       "icons/icona_bfg",
       "icons/icona_grenade",
       "icons/icona_lightning",
+      "icons/icona_machinegun",
       "icons/icona_plasma",
       "icons/icona_railgun",
       "icons/icona_rocket",
       "icons/icona_shotgun",
       "icons/iconf_blu",
+      "icons/iconf_red",
+      "icons/iconh_green",
       "icons/iconh_mega",
       "icons/iconh_red",
       "icons/iconh_yellow",
       "icons/iconr_red",
+      "icons/iconr_shard",
       "icons/iconr_yellow",
       "icons/iconw_bfg",
+      "icons/iconw_gauntlet",
       "icons/iconw_grapple",
       "icons/iconw_grenade",
       "icons/iconw_lightning",
@@ -5357,45 +6782,57 @@
       "icons/medkit",
       "icons/quad",
       "icons/regen",
-      "levelShotDetail\r\n// used to break up the blur on levelshots",
+      "icons/teleporter",
+      "lagometer",
+      "levelShotDetail",
       "lightningBolt",
       "lightningExplosion",
+      "markShadow",
       "medal_assist",
       "medal_capture",
       "medal_defend",
       "medal_excellent",
       "medal_gauntlet",
+      "medal_impressive",
       "menuback",
       "menubackRagePro\t// blends turn to shit on rage pro, so skip it",
       "menubacknologo",
+      "plasmaExplosion",
+      "powerups/battleSuit",
       "powerups/battleWeapon",
       "powerups/invisibility",
       "powerups/quad",
       "powerups/quadWeapon",
       "powerups/regen",
+      "projectionShadow",
       "railCore",
       "railDisc",
       "railExplosion",
       "rocketExplosion",
+      "scoreboardName",
       "scoreboardPing",
       "scoreboardScore",
       "scoreboardTime",
       "shotgunSmokePuff",
       "smokePuff",
       "smokePuffRagePro",
+      "sprites/balloon3",
       "sun",
       "teleportEffect",
+      "textures/REGION",
+      "textures/animationTest",
+      "viewBloodBlend",
+      "wake",
       "waterBubble",
       "white"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/gothic_block.shader": [
-      "//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  grainy overlay to the blocks15 texture\r\n//***************************************************************\r\ntextures/gothic_block/blocks15_sandy",
-      "//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  grainy overlay to the blocks17 texture\r\n//***************************************************************\r\ntextures/gothic_block/blocks17_sandy",
-      "//textures/gothic_block/blocks11ct\r\n//",
       "textures/gothic_block/blocks11ct",
       "textures/gothic_block/blocks15_ow",
+      "textures/gothic_block/blocks15_sandy",
       "textures/gothic_block/blocks15cgeomtrn",
       "textures/gothic_block/blocks17_ow",
+      "textures/gothic_block/blocks17_sandy",
       "textures/gothic_block/blocks17bloody",
       "textures/gothic_block/blocks17g_ow",
       "textures/gothic_block/blocks17gwater",
@@ -5438,10 +6875,10 @@
       "textures/gothic_floor/xstepborder3_shiney"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/gothic_light.shader": [
-      "// -----------\r\n// Xian: Note to self, q3map_backsplash 0 0 is used to turn off light backsplash\r\n// ---\r\n\r\n//****************************************\r\n//*   Border combining border7 and ceil39\r\n//*   Created 5/1/99 by Paul Jaquays\r\n//****************************************\r\ntextures/gothic_light/border7_ceil39b_10k",
-      "//****************************************\r\n//*   Border combining border7 and ceil39\r\n//*   Created 5/5/99 by Paul Jaquays\r\n//****************************************\r\ntextures/gothic_light/border7_ceil39_6k",
       "textures/gothic_light/border7_ceil22a",
       "textures/gothic_light/border7_ceil30",
+      "textures/gothic_light/border7_ceil39_6k",
+      "textures/gothic_light/border7_ceil39b_10k",
       "textures/gothic_light/crosslt1",
       "textures/gothic_light/goth_lt2_lrg2k",
       "textures/gothic_light/gothic_light2_1k",
@@ -5510,14 +6947,13 @@
       "textures/gothic_light/pentagram_light1_5K"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/gothic_trim.shader": [
-      "//\r\n\r\ntextures/gothic_trim/column2c_trans",
-      "//textures/gothic_trim/metalbase09_b_blocks15\r\n//",
       "textures/gothic_block/killtrim_trans",
       "textures/gothic_button/timbutton",
       "textures/gothic_trim/barbedwire",
       "textures/gothic_trim/baseboard09_p_shiny",
       "textures/gothic_trim/border6_trans",
       "textures/gothic_trim/chrome_rivet",
+      "textures/gothic_trim/column2c_trans",
       "textures/gothic_trim/gothgrate2",
       "textures/gothic_trim/gothgrate3",
       "textures/gothic_trim/km_arena1tower4_shiny",
@@ -5602,11 +7038,11 @@
       "textures/liquids/calm_pool2",
       "textures/liquids/calm_pool_bgtess",
       "textures/liquids/calm_poollight",
-      "textures/liquids/clear_calm1\r\n\r\n//\t*********************************************************\r\n//\t*      Medium clear calm water. Created September 9\t*\r\n//\t*********************************************************",
-      "textures/liquids/clear_ripple1\r\n\r\n//\t*********************************************************\r\n//\t*      Large clear ripple water. Created September 9\t*\r\n//\t*********************************************************",
-      "textures/liquids/clear_ripple1_q3dm1\r\n\r\n//\t*********************************************************\r\n//\t*      Large clear ripple water. Created September 9\t*\r\n//\t*********************************************************",
-      "textures/liquids/clear_ripple2\r\n\r\n//\t*********************************************************\r\n//\t*      Small clear ripple water. Created September 9\t*\r\n//\t*********************************************************",
-      "textures/liquids/clear_ripple3\r\n\r\n//\t*********************************************************\r\n//\t*      Medium clear ripple water. Created September 9\t*\r\n//\t*********************************************************",
+      "textures/liquids/clear_calm1",
+      "textures/liquids/clear_ripple1",
+      "textures/liquids/clear_ripple1_q3dm1",
+      "textures/liquids/clear_ripple2",
+      "textures/liquids/clear_ripple3",
       "textures/liquids/flatlavahell_1500",
       "textures/liquids/flatripplewater_1500",
       "textures/liquids/jello",
@@ -5634,38 +7070,12 @@
       "textures/liquids/slime1",
       "textures/liquids/slime1_2000",
       "textures/liquids/slime2",
-      "textures/liquids/watertest\r\n\r\n//\t************************************************************\r\n//\t*      Water test with environmentmap. Created September 21*\r\n//\t************************************************************",
+      "textures/liquids/watertest",
       "textures/liquids/xctf_painwater",
       "textures/liquids/xripplewater2"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/menu.shader": [],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/models.shader": [
-      "//\r\n//\r\n// instant: as seen on the powerups themselves\r\n//\r\n\r\nmodels/powerups/instant/scan",
-      "//\r\n// health\r\n//\r\nmodels/powerups/health/yellow",
-      "//\r\n// holdable powerups\r\n//\r\n\r\nmodels/powerups/holdable/medkit_base",
-      "//\r\n// mapobjects\r\n//\r\nmodels/powerups/armor/energy_red1",
-      "//\r\n// players\r\n//\r\nmodels/players/tankjr/tankjr",
-      "//\r\n// powerups\r\n//\r\n//\r\n// ammo\r\n//\r\n//models/powerups/ammo/ammo_rail1\r\n//",
-      "//\r\n// weapons\r\n//\r\n\r\nmodels/weapons2/plasma/plasma_glass",
-      "//\r\n// weapons\r\n//\r\nmodels/weapons2/machinegun/f_machinegun",
-      "// this file contains shaders attached models\r\n//\r\n\r\nmodels/mapobjects/console/under",
-      "// this one can go away eventually\r\nmodels/weapons2/rocketl/rocketl14",
-      "///////////////\r\n// End Podium\r\n//////////////\r\n\r\n//models/players/ranger/wrack\r\n//",
-      "///////////////\r\n// begin Podium\r\n////////////// \r\n\r\nmodels/mapobjects/podium/podium",
-      "////////////////////////////\r\n/// Lightning gun Shader ///\r\n////////////////////////////\r\nmodels/weapons2/lightning/ball",
-      "///////////////////////////////////\r\n/// Start of Floating Skull Bot  //\r\n///////////////////////////////////\r\n\r\nmodels/mapobjects/lamps/bot_flare",
-      "//models/mapobjects/baph/bapho_lamp\r\n//",
-      "//models/mapobjects/flag/banner_eg1\r\n//",
-      "//models/mapobjects/wallhead/femhead\r\n//",
-      "//models/mapobjects/wallhead/tongue\r\n//",
-      "//models/players/visor/visortorso2\r\n//",
-      "//models/players/visorhead\r\n//",
-      "//models/powerups/ammo/ammo_rail2\r\n//",
-      "//models/powerups/ammo/bounammo1\r\n//",
-      "//models/powerups/ammo/bounammo2\r\n//",
-      "//models/powerups/ammo/flamammo1\r\n//",
-      "//models/powerups/ammo/flamammo2\r\n//",
-      "//models/weapons2/chainsaw/f_chainsaw\r\n//",
       "models/ammo/grenade",
       "models/ammo/rocket/rockflar",
       "models/ammo/rocket/rockfls1",
@@ -5706,6 +7116,7 @@
       "models/mapobjects/console/scrolltext",
       "models/mapobjects/console/sphere",
       "models/mapobjects/console/sphere2",
+      "models/mapobjects/console/under",
       "models/mapobjects/corpse/chain",
       "models/mapobjects/corpse/corpse",
       "models/mapobjects/corpse/intestine",
@@ -5731,6 +7142,7 @@
       "models/mapobjects/lamplight_y",
       "models/mapobjects/lamplight_ys",
       "models/mapobjects/lamps/beam",
+      "models/mapobjects/lamps/bot_flare",
       "models/mapobjects/lamps/bot_flare2",
       "models/mapobjects/lamps/bot_lamp",
       "models/mapobjects/lamps/bot_lamp2",
@@ -5748,6 +7160,7 @@
       "models/mapobjects/pipe/pipe02x",
       "models/mapobjects/pitted_rust_ps",
       "models/mapobjects/pj_light",
+      "models/mapobjects/podium/podium",
       "models/mapobjects/podium/podiumfx1",
       "models/mapobjects/podium/podiumfx2",
       "models/mapobjects/podium/podiumfx3",
@@ -5832,6 +7245,7 @@
       "models/players/slash/yuriko",
       "models/players/slash/yuriko_h",
       "models/players/slash/yurikoskate",
+      "models/players/tankjr/tankjr",
       "models/players/uriel/blue_w",
       "models/players/uriel/null",
       "models/players/uriel/red_w",
@@ -5869,6 +7283,7 @@
       "models/powerups/ammo/shotammo1",
       "models/powerups/ammo/shotammo2",
       "models/powerups/armor/energy_grn1",
+      "models/powerups/armor/energy_red1",
       "models/powerups/armor/energy_yel1",
       "models/powerups/armor/newred",
       "models/powerups/armor/newyellow",
@@ -5881,7 +7296,9 @@
       "models/powerups/health/mega2",
       "models/powerups/health/red",
       "models/powerups/health/red_sphere",
+      "models/powerups/health/yellow",
       "models/powerups/health/yellow_sphere",
+      "models/powerups/holdable/medkit_base",
       "models/powerups/holdable/medkit_fluid",
       "models/powerups/holdable/medkit_sphere",
       "models/powerups/holdable/teleport_base",
@@ -5893,6 +7310,7 @@
       "models/powerups/instant/invis",
       "models/powerups/instant/quad",
       "models/powerups/instant/regen",
+      "models/powerups/instant/scan",
       "models/weaphits/bfg01",
       "models/weaphits/bfg02",
       "models/weaphits/electric",
@@ -5909,6 +7327,7 @@
       "models/weapons2/grapple/grapple_j",
       "models/weapons2/grenadel/f_grenadel",
       "models/weapons2/grenadel/ring",
+      "models/weapons2/lightning/ball",
       "models/weapons2/lightning/ball1",
       "models/weapons2/lightning/button",
       "models/weapons2/lightning/crackle1",
@@ -5917,13 +7336,16 @@
       "models/weapons2/lightning/trail",
       "models/weapons2/lightning/trail1",
       "models/weapons2/lightning/trail2",
+      "models/weapons2/machinegun/f_machinegun",
       "models/weapons2/plasma/f_plasma",
+      "models/weapons2/plasma/plasma_glass",
       "models/weapons2/plasma/plasma_glo",
       "models/weapons2/railgun/f_railgun2",
       "models/weapons2/railgun/railgun2",
       "models/weapons2/railgun/railgun3",
       "models/weapons2/railgun/railgun4",
       "models/weapons2/rocketl/f_rocketl",
+      "models/weapons2/rocketl/rocketl14",
       "models/weapons2/shotgun/f_shotgun",
       "models/weapons2/shotgun/shotgun_laser",
       "sprites/plasma1",
@@ -5937,17 +7359,6 @@
       "menu/art/unknownmap"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/sfx.shader": [
-      "// Tim's goofy experiment\r\ntextures/sfx/grid",
-      "//Paul's fog for map pj_dm4\r\ntextures/sfx/fog_pjdm1",
-      "//Paul's gray fog for q3dm10\r\ntextures/sfx/fog_q3dm10",
-      "//Proto_hellfog\r\ntextures/sfx/proto_hellfog",
-      "//Tim's fog for map tim_ctf1\r\ntextures/sfx/fog_timctf1",
-      "//Tim's fog for map tim_dm1\r\ntextures/sfx/fog_timdm1",
-      "//Tim's fog for map tim_dm2\r\ntextures/sfx/fog_timdm2",
-      "//Tim's fog for map tim_dm8\r\ntextures/sfx/fog_timdm8",
-      "//Tim's fog for q3test1\r\ntextures/sfx/fog_intel",
-      "//fog for map mkc_dm4\r\ntextures/sfx/fog_mkcdm4",
-      "//textures/sfx/pj_dm9_fog2\r\n//  created 6_23_99\r\n//",
       "models/mapobjects/portal_2/portal_3",
       "textures/base_wall/c_met5_2_trans",
       "textures/gothic_block/killblock_i4b",
@@ -6016,7 +7427,7 @@
       "textures/sfx/fan3bladeb",
       "textures/sfx/fan_grate",
       "textures/sfx/fan_grate2",
-      "textures/sfx/fanfx\r\n// fan shadow",
+      "textures/sfx/fanfx",
       "textures/sfx/firetest2",
       "textures/sfx/firetestnolight",
       "textures/sfx/firewall",
@@ -6036,6 +7447,14 @@
       "textures/sfx/flameanim_red_nolight",
       "textures/sfx/flameanim_red_pj",
       "textures/sfx/flametest",
+      "textures/sfx/fog_intel",
+      "textures/sfx/fog_mkcdm4",
+      "textures/sfx/fog_pjdm1",
+      "textures/sfx/fog_q3dm10",
+      "textures/sfx/fog_timctf1",
+      "textures/sfx/fog_timdm1",
+      "textures/sfx/fog_timdm2",
+      "textures/sfx/fog_timdm8",
       "textures/sfx/gimmickdiamondarrow",
       "textures/sfx/glass",
       "textures/sfx/goopq1metal7_98d_pent_256",
@@ -6044,15 +7463,16 @@
       "textures/sfx/goopq1metal7_98dnodamage",
       "textures/sfx/goopq1metal7_98dstripe",
       "textures/sfx/gothgrate1",
+      "textures/sfx/grid",
       "textures/sfx/healthfloor",
-      "textures/sfx/hellfog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/hellfog_1k\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/hellfog_mini_dm10\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//Change:  EXTREMELY SHALLOW FOG\r\n//**************************************",
-      "textures/sfx/hellfog_pj_dm10\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/hellfog_tim_dm14\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/hellfogdense\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
+      "textures/sfx/hellfog",
+      "textures/sfx/hellfog_1k",
+      "textures/sfx/hellfog_mini_dm10",
+      "textures/sfx/hellfog_pj_dm10",
+      "textures/sfx/hellfog_tim_dm14",
+      "textures/sfx/hellfogdense",
       "textures/sfx/jacobs_x",
-      "textures/sfx/kc_hellfog_1k\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
+      "textures/sfx/kc_hellfog_1k",
       "textures/sfx/largerblock3_pent",
       "textures/sfx/largerblock3b3_pent",
       "textures/sfx/largerblock3b3x128_pent",
@@ -6091,18 +7511,19 @@
       "textures/sfx/pitted_rust3arrowbase",
       "textures/sfx/pitted_rust3arrowblocks",
       "textures/sfx/pittedrust3stripes",
-      "textures/sfx/pj_a1_fog1\r\n//  created 7_06_99",
+      "textures/sfx/pj_a1_fog1",
       "textures/sfx/portal_sfx_ring",
       "textures/sfx/powerupshit",
+      "textures/sfx/proto_hellfog",
       "textures/sfx/proto_zzztblu3",
       "textures/sfx/pureblack",
       "textures/sfx/q1met_redpad",
       "textures/sfx/q1metal7_98d_pent_256",
       "textures/sfx/q1metal7_98dstripe",
       "textures/sfx/q1teleporter",
-      "textures/sfx/q3dm14fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/q3dm9fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
-      "textures/sfx/q3tourney3fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************",
+      "textures/sfx/q3dm14fog",
+      "textures/sfx/q3dm9fog",
+      "textures/sfx/q3tourney3fog",
       "textures/sfx/rain",
       "textures/sfx/redgoal",
       "textures/sfx/redpadblocks17",
@@ -6184,23 +7605,6 @@
       "textures/skin/tongue_trans"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/sky.shader": [
-      "//",
-      "//\r\n\t//",
-      "// color will be normalized, so it doesn't matter what range you use\r\n// intensity falls off with angle but not distance 100 is a fairly bright sun\r\n// degree of 0 = from the east, 90 = north, etc.  altitude of 0 = sunrise/set, 90 = noon\r\n\r\n// skyparms work like this: \r\n\r\ntextures/skies/xtoxicsky_q3ctf3",
-      "//*******************************************************\r\n//*              Jaquays/steed  environment test 1\r\n//*******************************************************\r\n//textures/skies/red_enviro1\r\n//",
-      "//*******************************************************\r\n//*              Jaquays/steed  environment test 2\r\n//*******************************************************\r\n//textures/skies/blue_enviro2\r\n//",
-      "//*******************************************************\r\n//*              Kevin Cloud's kc_dm10 sky\r\n//*******************************************************\r\ntextures/skies/kc_dm10sky",
-      "//*******************************************************\r\n//*              Kevin's pj_arena1 sky with more light\r\n//*******************************************************\r\ntextures/skies/kcbasesky_arena1_sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_arena1 sky\r\n//*******************************************************\r\ntextures/skies/pjbasesky_arena1_sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_arena2 sky\r\n//*******************************************************\r\ntextures/skies/pj_arena2sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_arena4 sky\r\n//*******************************************************\r\ntextures/skies/pj_arena4_sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_ctf1 sky /june 30, 199\r\n//*******************************************************\r\ntextures/skies/pj_ctf1sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_ctf2 sky\r\n//*******************************************************\r\ntextures/skies/pj_ctf2_sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_dm10 sky\r\n//*******************************************************\r\ntextures/skies/pj_dm10sky",
-      "//*******************************************************\r\n//*              Paul Jaquays' pj_dm9 sky\r\n//*******************************************************\r\ntextures/skies/pj_dm9sky",
-      "//*******************************************************\r\n//*              Protoskyboxattempt  \r\n//*******************************************************\r\ntextures/skies/skybox",
-      "//Old sky, should be replaced with toxicsky\r\ntextures/skies/hellsky2",
-      "//}\r\n\r\n\r\n\r\n\r\ntextures/skies/toxicskydim\r\n//used in tim_dm1",
       "textures/castle/sky_castle1",
       "textures/common/nightsky",
       "textures/common/nightsky2",
@@ -6218,12 +7622,15 @@
       "textures/skies/blacksky",
       "textures/skies/hellredclouds",
       "textures/skies/hellsky",
+      "textures/skies/hellsky2",
       "textures/skies/hellsky2bright",
       "textures/skies/hellskybright",
       "textures/skies/hellskyteam",
+      "textures/skies/kc_dm10sky",
+      "textures/skies/kcbasesky_arena1_sky",
       "textures/skies/killsky",
-      "textures/skies/mkc_ctf5sky\r\n//used in mkc_ctf5",
-      "textures/skies/mkc_dm4sky\r\n//used in mkc_dm4",
+      "textures/skies/mkc_ctf5sky",
+      "textures/skies/mkc_dm4sky",
       "textures/skies/nightsky_nocloud",
       "textures/skies/nightsky_nocloud_100",
       "textures/skies/nightsky_nocloud_1000",
@@ -6236,25 +7643,34 @@
       "textures/skies/nightsky_xian_dm2",
       "textures/skies/nightsky_xian_dm3",
       "textures/skies/nightsky_xian_dm4",
+      "textures/skies/pj_arena2sky",
+      "textures/skies/pj_arena4_sky",
+      "textures/skies/pj_ctf1sky",
+      "textures/skies/pj_ctf2_sky",
+      "textures/skies/pj_dm10sky",
+      "textures/skies/pj_dm9sky",
+      "textures/skies/pjbasesky_arena1_sky",
       "textures/skies/proto_sky",
-      "textures/skies/q3dm0\r\n//used in q3dm0",
+      "textures/skies/q3dm0",
+      "textures/skies/skybox",
       "textures/skies/space_holder",
       "textures/skies/stars_arena7",
       "textures/skies/tim_dm14",
-      "textures/skies/tim_dm14red\r\n// test sky for q3dm15b",
+      "textures/skies/tim_dm14red",
       "textures/skies/tim_dm3_red",
       "textures/skies/tim_hell",
       "textures/skies/tim_km2",
       "textures/skies/toxicsky",
-      "textures/skies/toxicskytim_blue\r\n//used in tim_ctf1 blue",
-      "textures/skies/toxicskytim_ctf1\r\n//used in tim_ctf1",
-      "textures/skies/toxicskytim_dm2\r\n//used in tim_dm2",
-      "textures/skies/toxicskytim_dm3\r\n//used in tim_dm3",
-      "textures/skies/toxicskytim_dm4\r\n//used in tim_dm4",
-      "textures/skies/toxicskytim_dm5\r\n//used in tim_dm5",
-      "textures/skies/toxicskytim_dm7\r\n//used in tim_dm7",
-      "textures/skies/toxicskytim_dm8\r\n//used in tim_dm8",
-      "textures/skies/toxicskytim_dm9\r\n//used in tim_dm9",
+      "textures/skies/toxicskydim",
+      "textures/skies/toxicskytim_blue",
+      "textures/skies/toxicskytim_ctf1",
+      "textures/skies/toxicskytim_dm2",
+      "textures/skies/toxicskytim_dm3",
+      "textures/skies/toxicskytim_dm4",
+      "textures/skies/toxicskytim_dm5",
+      "textures/skies/toxicskytim_dm7",
+      "textures/skies/toxicskytim_dm8",
+      "textures/skies/toxicskytim_dm9",
       "textures/skies/xblacksky",
       "textures/skies/xblacksky_dm7",
       "textures/skies/xnightsky",
@@ -6265,12 +7681,11 @@
       "textures/skies/xtoxicsky_dm3",
       "textures/skies/xtoxicsky_dm4",
       "textures/skies/xtoxicsky_dm9",
+      "textures/skies/xtoxicsky_q3ctf3",
       "textures/skies/xtoxicsky_tourney",
-      "textures/skies/xtoxicskytim_q3dm5\r\n//used in tim_dm2"
+      "textures/skies/xtoxicskytim_q3dm5"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/test.shader": [
-      "//\t* \t\tTEST SHADERS\t\t\t*\r\n//\t*        DO NOT USE IN PROJECT MAPS\t\t*\r\n//\t*************************************************\r\n\r\ntextures/vector\r\n// testing tcgen vector",
-      "// Rogues sorting trimmed glass//\r\n\r\ntextures/test/rnd_ledm1",
       "textures/base/bluemet1",
       "textures/bwhtest/crackedearth",
       "textures/bwhtest/lightning",
@@ -6306,11 +7721,13 @@
       "textures/test/lavacrustshader",
       "textures/test/lavatest",
       "textures/test/river",
+      "textures/test/rnd_ledm1",
       "textures/test/slimeshader",
       "textures/test/water_trans",
       "textures/test/waterfall",
       "textures/test/watertile",
-      "textures/test/wispy"
+      "textures/test/wispy",
+      "textures/vector"
     ],
     "/Users/briancullinan/planet_quake_data/baseq3-combined-converted/scripts/tim.shader": [
       "textures/tim/blue_flagbase",
@@ -6435,7 +7852,6 @@
     "textures/base_floor/clangspot": [
       "*lightmap",
       "textures/base_floor/clangspot.tga",
-      "textures/base_floor/clangspot.tga",
       "textures/effects/tinfx3.tga",
       "textures/liquids/proto_grueldark.tga"
     ],
@@ -6447,7 +7863,6 @@
     ],
     "textures/base_floor/clangdarkspot": [
       "*lightmap",
-      "textures/base_floor/clangdarkspot.tga",
       "textures/base_floor/clangdarkspot.tga",
       "textures/effects/tinfx3.tga",
       "textures/liquids/proto_grueldark.tga"
@@ -6501,11 +7916,11 @@
       "textures/base_floor/skylight1_lm.tga",
       "textures/base_floor/skylight1_lm.tga"
     ],
-    "/////////////////////////////\r\n//     Shiny Skylight      //\r\n/////////////////////////////\r\n \r\ntextures/base_floor/skylight_spec": [
+    "textures/base_floor/skylight_spec": [
       "*lightmap",
       "textures/base_floor/skylight_spec.tga"
     ],
-    "//\r\n//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  smeary, dirty overlay to the diamond metal floor texture\r\n//***************************************************************\r\ntextures/base_floor/diamond_dirty": [
+    "textures/base_floor/diamond_dirty": [
       "*lightmap",
       "textures/base_floor/diamond2.tga",
       "textures/base_floor/grunge2.tga"
@@ -6793,7 +8208,6 @@
       "textures/base_light/xlight5.tga"
     ],
     "textures/base_light/light5_5k": [
-      "textures/base_light/light5.blend.tga",
       "textures/base_light/light5.tga"
     ],
     "textures/base_light/light5_10k": [
@@ -7213,7 +8627,7 @@
       "textures/base_support/x_support2.tga"
     ],
     "textures/base_support/metal1_5": [],
-    "textures/base_support/pj_metal14_1\r\n//Paul Jaquays uses this on the tops of metal frameworks": [
+    "textures/base_support/pj_metal14_1": [
       "*lightmap",
       "textures/base_support/metal14_1.tga"
     ],
@@ -7379,7 +8793,7 @@
       "textures/organics/wire02a_f.tga",
       "textures/sfx/electric2.blend.tga"
     ],
-    "//**********************************************************\r\n//*    Electric wires with blue electical pattern dancing  *\r\n//*    upon it giving off blue light\t\t\t   *\r\n//*    Created: 4/12/98 by Paul Jaquays                    *\r\n//**********************************************************\r\ntextures/base_trim/electric_blue": [
+    "textures/base_trim/electric_blue": [
       "*lightmap",
       "textures/base_trim/electricwall_blue.tga",
       "textures/base_trim/electricwall_blue.tga",
@@ -7415,8 +8829,6 @@
     ],
     "textures/base_wall/green_con04": [
       "*lightmap",
-      "*lightmap",
-      "textures/base_wall/green_con04.tga",
       "textures/base_wall/green_con04.tga",
       "textures/sfx/specular.tga"
     ],
@@ -7798,7 +9210,7 @@
       "textures//base_wall/bluemetal1light.tga",
       "textures/base_wall/bluemetal1light_bl.tga"
     ],
-    "textures/base_wall/green_contrim_noisey\r\n//Paul Jaquays uses this on the tops of metal frameworks": [
+    "textures/base_wall/green_contrim_noisey": [
       "*lightmap",
       "textures/base_wall/green_contrim.tga"
     ],
@@ -7853,15 +9265,15 @@
     "textures/common/clip": [],
     "textures/common/full_clip": [],
     "textures/common/missileclip": [],
-    "//*****************************************\r\n//**   I've reduced the transparency on most editor-only brushes here.\r\n//**   If the transparent textures are still too pale for\r\n//**   things like clip, hint, trigger, etc.,\r\n//**   Please make an editorimage to suit your needs.\r\n//******************************************\r\n\r\ntextures/common/cushion": [],
+    "textures/common/cushion": [],
     "textures/common/hint": [],
     "textures/common/skip": [],
     "textures/common/slick": [],
     "textures/common/origin": [],
     "textures/common/noimpact": [],
     "textures/common/areaportal": [],
-    "//bot specific cluster portal\r\ntextures/common/clusterportal": [],
-    "//bot specific \"do not enter\" brush\r\ntextures/common/donotenter": [],
+    "textures/common/clusterportal": [],
+    "textures/common/donotenter": [],
     "textures/common/trigger": [],
     "textures/common/caulk": [],
     "textures/common/nodraw": [],
@@ -7876,8 +9288,7 @@
       "textures/common/bluegoal.tga"
     ],
     "textures/common/portal": [
-      "textures/common/mirror1.tga",
-      "textures/common/portal.tga"
+      "textures/common/mirror1.tga"
     ],
     "textures/common/timportal": [
       "textures/common/portal.tga"
@@ -8115,7 +9526,6 @@
     "textures/eerie/tesla_cable": [
       "*lightmap",
       "textures/eerie/electricslime.tga",
-      "textures/eerie/electricslime.tga",
       "textures/eerie/tesla_cable.tga"
     ],
     "textures/eerie/jesus": [
@@ -8125,7 +9535,6 @@
     ],
     "textures/eerie/xq1metalbig_jumppad": [
       "*lightmap",
-      "textures/eerie/jumppad.tga",
       "textures/eerie/q1metal7_98d_256x256.tga",
       "textures/eerie/surface6jumppad.blend.tga"
     ],
@@ -8299,11 +9708,11 @@
     "explode123": [
       "sprites/explode1/fs2-0022.tga"
     ],
-    "// \r\n// this file contains shaders that are used by the programmers to\r\n// generate special effects not attached to specific geometry.  This\r\n// also has 2D shaders such as fonts, etc.\r\n//\r\n\r\n// the REGION shader is generated by the map editor on temporary\r\n// brushes around a selected area for testing parts of maps\r\ntextures/REGION": [],
-    "// the background for the netgraph\r\nlagometer": [
+    "textures/REGION": [],
+    "lagometer": [
       "gfx/2d/lag.tga"
     ],
-    "// blinked on top of lagometer when connection is interrupted\r\ndisconnected": [
+    "disconnected": [
       "gfx/2d/net.tga"
     ],
     "white": [
@@ -8314,10 +9723,7 @@
       "gfx/misc/console02.tga"
     ],
     "menuback": [
-      "textures/sfx/logo512.tga",
-      "textures/sfx/logo512.tga",
-      "textures/sfx/proto_zzzdrk.tga",
-      "textures/sfx/specular.tga"
+      "textures/sfx/logo512.tga"
     ],
     "menubacknologo": [
       "gfx/colors/black.tga"
@@ -8325,10 +9731,10 @@
     "menubackRagePro\t// blends turn to shit on rage pro, so skip it": [
       "textures/sfx/logo512.tga"
     ],
-    "levelShotDetail\r\n// used to break up the blur on levelshots": [
+    "levelShotDetail": [
       "textures/sfx/detail.tga"
     ],
-    "//\r\n// special effects as seen on players\r\n//\r\npowerups/battleSuit": [
+    "powerups/battleSuit": [
       "textures/effects/envmapgold2.tga"
     ],
     "powerups/battleWeapon": [
@@ -8346,13 +9752,13 @@
     "powerups/regen": [
       "textures/effects/regenmap2.tga"
     ],
-    "//=========================\r\n\r\n//\r\n// holdable item icons\r\n//\r\nicons/teleporter": [
+    "icons/teleporter": [
       "icons/teleporter.tga"
     ],
     "icons/medkit": [
       "icons/medkit.tga"
     ],
-    "//\r\n// powerup icons\r\n//\r\nicons/envirosuit": [
+    "icons/envirosuit": [
       "icons/envirosuit.tga"
     ],
     "icons/quad": [
@@ -8370,7 +9776,7 @@
     "icons/flight": [
       "icons/flight.tga"
     ],
-    "// reward medals used in the game floating over client's heads\r\nmedal_impressive": [
+    "medal_impressive": [
       "menu/medals/medal_impressive.tga"
     ],
     "medal_excellent": [
@@ -8388,7 +9794,7 @@
     "medal_capture": [
       "menu/medals/medal_capture.tga"
     ],
-    "//\r\n// weapon icons\r\n//\r\nicons/iconw_gauntlet": [
+    "icons/iconw_gauntlet": [
       "icons/iconw_gauntlet.tga"
     ],
     "icons/iconw_machinegun": [
@@ -8418,7 +9824,7 @@
     "icons/iconw_grapple": [
       "icons/iconw_grapple.tga"
     ],
-    "//\r\n// ammo icons\r\n//\r\nicons/icona_machinegun": [
+    "icons/icona_machinegun": [
       "icons/icona_machinegun.tga"
     ],
     "icons/icona_rocket": [
@@ -8442,7 +9848,7 @@
     "icons/icona_bfg": [
       "icons/icona_bfg.tga"
     ],
-    "//\r\n// armor icons\r\n//\r\nicons/iconr_shard": [
+    "icons/iconr_shard": [
       "icons/iconr_shard.tga"
     ],
     "icons/iconr_yellow": [
@@ -8451,26 +9857,25 @@
     "icons/iconr_red": [
       "icons/iconr_red.tga"
     ],
-    "//\r\n// health icons\r\n//\r\nicons/iconh_green": [
+    "icons/iconh_green": [
       "icons/iconh_green.tga"
     ],
     "icons/iconh_yellow": [
       "icons/iconh_yellow.tga"
     ],
     "icons/iconh_red": [
-      "icons/iconh_red.tga",
-      "icons/iconh_red2.tga"
+      "icons/iconh_red.tga"
     ],
     "icons/iconh_mega": [
       "icons/iconh_mega.tga"
     ],
-    "//\r\n// CTF icons\r\n//\r\nicons/iconf_red": [
+    "icons/iconf_red": [
       "icons/iconf_red.tga"
     ],
     "icons/iconf_blu": [
       "icons/iconf_blu.tga"
     ],
-    "//===================================================\r\n\r\ngfx/2d/menuinfo": [
+    "gfx/2d/menuinfo": [
       "gfx/2d/menuinfo.tga"
     ],
     "gfx/2d/menuinfo2": [
@@ -8482,10 +9887,10 @@
     "gfx/2d/cursor": [
       "gfx/2d/cursor.tga"
     ],
-    "//==========================================================================\r\n\r\n\r\nsprites/balloon3": [
+    "sprites/balloon3": [
       "sprites/balloon4.tga"
     ],
-    "// this is an example of a crossfaded animation cycle\r\ntextures/animationTest": [
+    "textures/animationTest": [
       "*lightmap",
       "textures/liquids/bloodwater1.tga",
       "textures/liquids/bloodwater1.tga",
@@ -8497,17 +9902,17 @@
     "teleportEffect": [
       "gfx/misc/teleporteffect2.tga"
     ],
-    "// markShadow is the very cheap blurry blob underneat the player\r\nmarkShadow": [
+    "markShadow": [
       "gfx/damage/shadow.tga"
     ],
-    "// projectionShadow is used for cheap squashed model shadows\r\nprojectionShadow": [
+    "projectionShadow": [
       "*white"
     ],
-    "// wake is the mark on water surfaces for paddling players\r\nwake": [
+    "wake": [
       "sprites/splash.tga",
       "sprites/splash.tga"
     ],
-    "// viewBloodBlend gives the blended directional cue when you get hit\r\nviewBloodBlend": [
+    "viewBloodBlend": [
       "gfx/damage/blood_screen.tga"
     ],
     "waterBubble": [
@@ -8541,10 +9946,10 @@
       "gfx/misc/lightning3.tga",
       "gfx/misc/lightning3.tga"
     ],
-    "// shader used on the occasional machinegun bullet tracers\r\ngfx/misc/tracer": [
+    "gfx/misc/tracer": [
       "gfx/misc/tracer2.tga"
     ],
-    "//\r\n// wall marks\r\n// use blendFunc GL_ZERO GL_ONE_MINUS_SRC_COLOR so that\r\n// their \"contribution\" can be damped down in fog volumes\r\n// with distance\r\nbloodMark": [
+    "bloodMark": [
       "gfx/damage/blood_stain.tga"
     ],
     "bloodTrail": [
@@ -8562,7 +9967,7 @@
     "gfx/damage/plasma_mrk": [
       "gfx/damage/plasma_mrk.tga"
     ],
-    "//===============================================================\r\n\r\n// scoreboard header tabs\r\n\r\nscoreboardName": [
+    "scoreboardName": [
       "menu/tab/name.tga"
     ],
     "scoreboardScore": [
@@ -8574,7 +9979,7 @@
     "scoreboardPing": [
       "menu/tab/ping.tga"
     ],
-    "//===============================================================\r\n\r\ngfx/2d/crosshair": [
+    "gfx/2d/crosshair": [
       "gfx/2d/crosshair.tga"
     ],
     "gfx/2d/crosshairb": [
@@ -8658,7 +10063,7 @@
     "gfx/2d/numbers/minus_32b": [
       "gfx/2d/numbers/minus_32b.tga"
     ],
-    "//\r\n// weapon hits\r\n// All of these will be put on entities with a shaderTime offset, so they\r\n// can be expected to start at time 0 for each separate explosion\r\n//\r\n// Many of these are use smoothly morphed animating textures by pairing\r\n// sawtooth and iverse sawtooth rgbGens\r\nplasmaExplosion": [
+    "plasmaExplosion": [
       "models/weaphits/plasmaboom.tga"
     ],
     "railExplosion": [
@@ -8815,7 +10220,7 @@
       "*lightmap",
       "textures/gothic_block/xblocks17i_alpha.tga"
     ],
-    "//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  grainy overlay to the blocks17 texture\r\n//***************************************************************\r\ntextures/gothic_block/blocks17_sandy": [
+    "textures/gothic_block/blocks17_sandy": [
       "*lightmap",
       "textures/gothic_block/blocks17.tga",
       "textures/gothic_block/sand2.tga"
@@ -8826,7 +10231,7 @@
       "textures/gothic_block/wetwall.tga",
       "textures/gothic_block/wetwallfx.tga"
     ],
-    "//***************************************************************\r\n//  This texture has a detail layer that is used to apply a \r\n//  grainy overlay to the blocks15 texture\r\n//***************************************************************\r\ntextures/gothic_block/blocks15_sandy": [
+    "textures/gothic_block/blocks15_sandy": [
       "*lightmap",
       "textures/gothic_block/blocks15.tga",
       "textures/gothic_block/sand2.tga"
@@ -8866,9 +10271,6 @@
     "textures/gothic_block/blocks11ct": [
       "*lightmap",
       "textures/gothic_block/blocks11c.tga"
-    ],
-    "//textures/gothic_block/blocks11ct\r\n//": [
-      "textures/hell/blocks11ct.tga"
     ],
     "textures/gothic_block/gkcspinemove": [
       "*lightmap",
@@ -8968,12 +10370,12 @@
       "textures/gothic_floor/pent_glow.tga",
       "textures/gothic_floor/pent_metalbridge06b.tga"
     ],
-    "// -----------\r\n// Xian: Note to self, q3map_backsplash 0 0 is used to turn off light backsplash\r\n// ---\r\n\r\n//****************************************\r\n//*   Border combining border7 and ceil39\r\n//*   Created 5/1/99 by Paul Jaquays\r\n//****************************************\r\ntextures/gothic_light/border7_ceil39b_10k": [
+    "textures/gothic_light/border7_ceil39b_10k": [
       "*lightmap",
       "textures/gothic_light/border7_ceil39b.blend.tga",
       "textures/gothic_light/border7_ceil39b.tga"
     ],
-    "//****************************************\r\n//*   Border combining border7 and ceil39\r\n//*   Created 5/5/99 by Paul Jaquays\r\n//****************************************\r\ntextures/gothic_light/border7_ceil39_6k": [
+    "textures/gothic_light/border7_ceil39_6k": [
       "*lightmap",
       "textures/gothic_light/border7_ceil39.tga",
       "textures/gothic_light/border_ceil39.blend.tga"
@@ -9344,11 +10746,7 @@
       "textures/effects/tinfx.tga",
       "textures/gothic_trim/km_arena1towerblue.tga"
     ],
-    "//textures/gothic_trim/metalbase09_b_blocks15\r\n//": [
-      "*lightmap",
-      "textures/gothic_trim/metalbase09_b_blocks15.tga"
-    ],
-    "//\r\n\r\ntextures/gothic_trim/column2c_trans": [
+    "textures/gothic_trim/column2c_trans": [
       "*lightmap",
       "textures/gothic_trim/column2c_test.tga"
     ],
@@ -9378,8 +10776,6 @@
     ],
     "textures/gothic_trim/baseboard09_p_shiny": [
       "*lightmap",
-      "*lightmap",
-      "textures/base_wall/chrome_env.tga",
       "textures/gothic_trim/baseboard09_p_shiny.tga"
     ],
     "textures/gothic_trim/km_arena1tower4_shiny": [
@@ -9658,7 +11054,7 @@
       "textures/liquids/slime7e.tga",
       "textures/liquids/slime7e4.tga"
     ],
-    "textures/liquids/watertest\r\n\r\n//\t************************************************************\r\n//\t*      Water test with environmentmap. Created September 21*\r\n//\t************************************************************": [
+    "textures/liquids/watertest": [
       "textures/liquids/pool3d_3f.tga"
     ],
     "textures/liquids/flatripplewater_1500": [
@@ -9669,30 +11065,30 @@
       "textures/liquids/pool3.tga",
       "textures/sfx/bolts.tga"
     ],
-    "textures/liquids/clear_calm1\r\n\r\n//\t*********************************************************\r\n//\t*      Medium clear calm water. Created September 9\t*\r\n//\t*********************************************************": [
+    "textures/liquids/clear_calm1": [
       "*lightmap",
       "textures/liquids/pool3d_3e.tga",
       "textures/liquids/pool3d_5e.tga"
     ],
-    "textures/liquids/clear_ripple3\r\n\r\n//\t*********************************************************\r\n//\t*      Medium clear ripple water. Created September 9\t*\r\n//\t*********************************************************": [
+    "textures/liquids/clear_ripple3": [
       "*lightmap",
       "textures/liquids/pool3d_3c.tga",
       "textures/liquids/pool3d_5c.tga",
       "textures/liquids/pool3d_6c.tga"
     ],
-    "textures/liquids/clear_ripple2\r\n\r\n//\t*********************************************************\r\n//\t*      Small clear ripple water. Created September 9\t*\r\n//\t*********************************************************": [
+    "textures/liquids/clear_ripple2": [
       "*lightmap",
       "textures/liquids/pool3d_3b.tga",
       "textures/liquids/pool3d_5b.tga",
       "textures/liquids/pool3d_6b.tga"
     ],
-    "textures/liquids/clear_ripple1\r\n\r\n//\t*********************************************************\r\n//\t*      Large clear ripple water. Created September 9\t*\r\n//\t*********************************************************": [
+    "textures/liquids/clear_ripple1": [
       "*lightmap",
       "textures/liquids/pool3d_3.tga",
       "textures/liquids/pool3d_5.tga",
       "textures/liquids/pool3d_6.tga"
     ],
-    "textures/liquids/clear_ripple1_q3dm1\r\n\r\n//\t*********************************************************\r\n//\t*      Large clear ripple water. Created September 9\t*\r\n//\t*********************************************************": [
+    "textures/liquids/clear_ripple1_q3dm1": [
       "*lightmap",
       "textures/liquids/pool3d_3.tga",
       "textures/liquids/pool3d_5.tga",
@@ -9708,8 +11104,6 @@
       "*lightmap",
       "*lightmap",
       "textures/liquids/proto_gruel2.tga",
-      "textures/liquids/proto_gruel2.tga",
-      "textures/liquids/proto_spec.tga",
       "textures/liquids/proto_spec.tga"
     ],
     "textures/liquids/lavahell": [
@@ -9787,7 +11181,6 @@
       "*lightmap",
       "textures/liquids/proto_gruel2.tga",
       "textures/liquids/proto_poolpass.tga",
-      "textures/liquids/proto_poolpass2.tga",
       "textures/sfx/bolts.tga"
     ],
     "textures/liquids/jello": [
@@ -9803,8 +11196,7 @@
     "textures/liquids/proto_gruel": [
       "*lightmap",
       "textures/liquids/proto_gruel.tga",
-      "textures/liquids/proto_gruel.tga",
-      "textures/liquids/proto_poolpass.tga"
+      "textures/liquids/proto_gruel.tga"
     ],
     "textures/liquids/xripplewater2": [
       "textures/liquids/ripplewater.tga",
@@ -9848,7 +11240,7 @@
       "textures/hell/lava2d.tga",
       "textures/hell/lava2d.tga"
     ],
-    "// this file contains shaders attached models\r\n//\r\n\r\nmodels/mapobjects/console/under": [
+    "models/mapobjects/console/under": [
       "models/mapobjects/console/under.tga"
     ],
     "models/mapobjects/console/rotate": [
@@ -9868,7 +11260,6 @@
       "models/mapobjects/console/spherex2.tga"
     ],
     "models/mapobjects/console/sphere2": [
-      "models/mapobjects/console/sphere2.tga",
       "models/mapobjects/console/sphere2.tga",
       "models/mapobjects/console/sphere3.tga",
       "models/mapobjects/console/sphere4.tga"
@@ -10011,7 +11402,6 @@
       "models/mapobjects/spotlamp/spotlamp.tga"
     ],
     "models/mapobjects/spotlamp/beam": [
-      "models/mapobjects/spotlamp/beam.tga",
       "models/mapobjects/spotlamp/beam.tga"
     ],
     "models/mapobjects/spotlamp/spotlamp_l": [
@@ -10031,10 +11421,6 @@
     ],
     "models/mapobjects/grenadel/grenadelx": [
       "models/mapobjects/grenadel/grenadelx.tga"
-    ],
-    "//models/mapobjects/baph/bapho_lamp\r\n//": [
-      "models/mapobjects/baph/bapho_lamp.tga",
-      "textures/sfx/specular3b.tga"
     ],
     "models/mapobjects/baph/wrist": [
       "models/mapobjects/baph/wrist.tga",
@@ -10129,7 +11515,7 @@
       "models/weapons2/gauntlet/gauntlet2.tga",
       "textures/sfx/specular.tga"
     ],
-    "///////////////\r\n// begin Podium\r\n////////////// \r\n\r\nmodels/mapobjects/podium/podium": [
+    "models/mapobjects/podium/podium": [
       "models/mapobjects/podium/podium.tga",
       "models/mapobjects/podium/podium.tga",
       "models/mapobjects/podium/podiumglo.tga",
@@ -10156,18 +11542,13 @@
       "models/mapobjects/podium/podiumfx1b.tga",
       "models/mapobjects/podium/podiumfx1b.tga"
     ],
-    "///////////////\r\n// End Podium\r\n//////////////\r\n\r\n//models/players/ranger/wrack\r\n//": [
-      "*white",
-      "models/players/ranger/wrack.tga"
-    ],
     "models/players/ranger/wrack": [
       "*white",
       "models/players/ranger/wrack.tga"
     ],
     "models/players/visor/gorre": [
       "models/players/visor/gorre.tga",
-      "textures/sfx/firegorre.tga",
-      "textures/sfx/firewallb.tga"
+      "textures/sfx/firegorre.tga"
     ],
     "models/powerups/armor/newred": [
       "models/powerups/armor/newred.tga",
@@ -10183,8 +11564,7 @@
     ],
     "models/players/doom/phobos": [
       "models/players/doom/phobos.tga",
-      "models/players/doom/phobos_fx.tga",
-      "textures/effects/tinfx2.tga"
+      "models/players/doom/phobos_fx.tga"
     ],
     "models/mapobjects/bat/bat": [
       "models/mapobjects/bat/bat.tga"
@@ -10194,7 +11574,6 @@
     ],
     "models/mapobjects/corpse/torso": [
       "models/mapobjects/corpse/torso.tga",
-      "textures/liquids/proto_grueldark.tga",
       "textures/liquids/proto_grueldark.tga"
     ],
     "models/mapobjects/corpse/chain": [
@@ -10230,7 +11609,7 @@
       "models/mapobjects/lamps/beam.tga",
       "models/mapobjects/lamps/beam.tga"
     ],
-    "///////////////////////////////////\r\n/// Start of Floating Skull Bot  //\r\n///////////////////////////////////\r\n\r\nmodels/mapobjects/lamps/bot_flare": [
+    "models/mapobjects/lamps/bot_flare": [
       "models/mapobjects/lamps/bot_flare.tga"
     ],
     "models/mapobjects/lamps/bot_flare2": [
@@ -10312,14 +11691,6 @@
     ],
     "models/mapobjects/wallhead/wallhead": [
       "models/mapobjects/wallhead/wallhead.tga"
-    ],
-    "//models/mapobjects/wallhead/femhead\r\n//": [
-      "models/mapobjects/wallhead/femhead.tga",
-      "models/mapobjects/wallhead/femhead2.tga"
-    ],
-    "//models/mapobjects/wallhead/tongue\r\n//": [
-      "*white",
-      "models/mapobjects/wallhead/tongue.tga"
     ],
     "models/players/mynx/mynx_shiny": [
       "models/players/mynx/mynx_shiny.tga",
@@ -10549,9 +11920,6 @@
     "models/mapobjects/skull/ribcage": [
       "models/mapobjects/skull/ribcage.tga"
     ],
-    "//models/mapobjects/flag/banner_eg1\r\n//": [
-      "models/mapobjects/flag/banner_eg1.tga"
-    ],
     "models/mapobjects/flag/banner_strgg": [
       "models/mapobjects/flag/banner_strgg.tga"
     ],
@@ -10587,20 +11955,9 @@
     "models/mapobjects/lamps/flare03": [
       "models/mapobjects/lamps/flare03.tga"
     ],
-    "//models/weapons2/chainsaw/f_chainsaw\r\n//": [
-      "models/weapons2/chainsaw/f_chainsaw.tga"
-    ],
     "models/players/sarge/cigar": [
       "models/players/sarge/cigar.glow.tga",
       "models/players/sarge/cigar.tga"
-    ],
-    "//\r\n// powerups\r\n//\r\n//\r\n// ammo\r\n//\r\n//models/powerups/ammo/ammo_rail1\r\n//": [
-      "models/powerups/ammo/ammo_rail1.glow.tga",
-      "models/powerups/ammo/ammo_rail1.tga"
-    ],
-    "//models/powerups/ammo/ammo_rail2\r\n//": [
-      "models/powerups/ammo/ammo_rail2.glow.tga",
-      "models/powerups/ammo/ammo_rail2.tga"
     ],
     "models/powerups/ammo/bfgammo": [
       "models/powerups/ammo/bfgammo.tga",
@@ -10612,20 +11969,6 @@
     ],
     "models/powerups/ammo/bfgammo2": [
       "models/powerups/ammo/bfgammo2.tga"
-    ],
-    "//models/powerups/ammo/bounammo1\r\n//": [
-      "models/powerups/ammo/bounammo1.tga"
-    ],
-    "//models/powerups/ammo/bounammo2\r\n//": [
-      "models/powerups/ammo/bounammo2.glow.tga",
-      "models/powerups/ammo/bounammo2.tga"
-    ],
-    "//models/powerups/ammo/flamammo1\r\n//": [
-      "models/powerups/ammo/flamammo1.tga"
-    ],
-    "//models/powerups/ammo/flamammo2\r\n//": [
-      "models/powerups/ammo/flamammo2.glow.tga",
-      "models/powerups/ammo/flamammo2.tga"
     ],
     "models/powerups/ammo/grenammo": [
       "models/powerups/ammo/grenammo.tga",
@@ -10702,7 +12045,7 @@
     "models/powerups/ammo/shotammo2": [
       "models/powerups/ammo/shotammo2.tga"
     ],
-    "//\r\n// health\r\n//\r\nmodels/powerups/health/yellow": [
+    "models/powerups/health/yellow": [
       "textures/effects/envmapyel.tga"
     ],
     "models/powerups/health/yellow_sphere": [
@@ -10734,7 +12077,7 @@
     "models/powerups/health/blue_sphere": [
       "textures/effects/tinfx2b.tga"
     ],
-    "//\r\n// mapobjects\r\n//\r\nmodels/powerups/armor/energy_red1": [
+    "models/powerups/armor/energy_red1": [
       "models/powerups/armor/energy_red1.tga"
     ],
     "models/powerups/armor/energy_yel1": [
@@ -10756,7 +12099,7 @@
     "models/mapobjects/arenalogo": [
       "textures/effects/quadmap.tga"
     ],
-    "//\r\n// weapons\r\n//\r\nmodels/weapons2/machinegun/f_machinegun": [
+    "models/weapons2/machinegun/f_machinegun": [
       "models/weapons2/machinegun/f_machinegun.tga"
     ],
     "models/weapons2/railgun/f_railgun2": [
@@ -10830,23 +12173,14 @@
     ],
     "models/weapons2/gauntlet/gauntlet3": [
       "models/weapons2/gauntlet/gauntlet3.tga",
-      "models/weapons2/gauntlet/gauntlet3.tga",
       "models/weapons2/gauntlet/gauntlet4.tga"
     ],
-    "// this one can go away eventually\r\nmodels/weapons2/rocketl/rocketl14": [
+    "models/weapons2/rocketl/rocketl14": [
       "models/weapons2/rocketl/f_rocketl.tga"
     ],
-    "//\r\n// players\r\n//\r\nmodels/players/tankjr/tankjr": [
+    "models/players/tankjr/tankjr": [
       "*white",
       "models/players/tankjr/tankjr.tga"
-    ],
-    "//models/players/visorhead\r\n//": [
-      "*white",
-      "models/players/visor/visorhead.tga"
-    ],
-    "//models/players/visor/visortorso2\r\n//": [
-      "*white",
-      "models/players/visor/visortorso2.tga"
     ],
     "models/players/doom/f_doom": [
       "models/players/doom/f_doom.tga",
@@ -10869,27 +12203,25 @@
       "models/players/light/brandon/branhat.glow.tga",
       "models/players/light/brandon/branhat.tga"
     ],
-    "//\r\n// weapons\r\n//\r\n\r\nmodels/weapons2/plasma/plasma_glass": [
+    "models/weapons2/plasma/plasma_glass": [
       "textures/effects/tinfxb.tga"
     ],
     "models/weapons2/plasma/plasma_glo": [
       "models/weapons2/plasma/plasma_glo.tga",
       "textures/effects/tinfxb.tga"
     ],
-    "////////////////////////////\r\n/// Lightning gun Shader ///\r\n////////////////////////////\r\nmodels/weapons2/lightning/ball": [
+    "models/weapons2/lightning/ball": [
       "models/weapons2/lightning/ball.tga",
       "models/weapons2/lightning/ball.tga"
     ],
-    "//\r\n//\r\n// instant: as seen on the powerups themselves\r\n//\r\n\r\nmodels/powerups/instant/scan": [
+    "models/powerups/instant/scan": [
       "models/powerups/instant/scan.tga",
       "textures/effects/envmapdim.tga"
     ],
     "models/powerups/instant/quad": [
-      "gfx/colors/darkblue.tga",
       "textures/effects/envmapblue.tga"
     ],
     "models/powerups/instant/enviro": [
-      "models/powerups/instant/enviro.tga",
       "textures/effects/envmapgold.tga"
     ],
     "models/powerups/instant/flight": [
@@ -10904,7 +12236,7 @@
     "models/powerups/instant/regen": [
       "textures/effects/envmapred.tga"
     ],
-    "//\r\n// holdable powerups\r\n//\r\n\r\nmodels/powerups/holdable/medkit_base": [
+    "models/powerups/holdable/medkit_base": [
       "textures/effects/envmap.tga"
     ],
     "models/powerups/holdable/medkit_sphere": [
@@ -11025,11 +12357,11 @@
     "textures/sfx/lightmap": [
       "*lightmap"
     ],
-    "textures/sfx/hellfog_pj_dm10\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/hellfog_pj_dm10": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/hellfog_mini_dm10\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//Change:  EXTREMELY SHALLOW FOG\r\n//**************************************": [
+    "textures/sfx/hellfog_mini_dm10": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
@@ -11050,13 +12382,10 @@
     "textures/sfx/xredfog": [],
     "textures/sfx/xbluefogx128": [],
     "textures/sfx/beam": [
-      "textures/sfx/beam.tga",
       "textures/sfx/beam.tga"
     ],
     "textures/sfx/beam_dusty2": [
-      "textures/sfx/beam_1.tga",
-      "textures/sfx/beam_mask.tga",
-      "textures/sfx/beamdust.tga"
+      "textures/sfx/beam_1.tga"
     ],
     "textures/sfx/beam_red": [
       "textures/sfx/beam_red.tga"
@@ -11111,7 +12440,7 @@
       "*lightmap",
       "textures/sfx/fan_grate2.tga"
     ],
-    "textures/sfx/fanfx\r\n// fan shadow": [
+    "textures/sfx/fanfx": [
       "textures/sfx/fanfx.tga"
     ],
     "textures/sfx/metalfloor_wall_5_glow": [
@@ -11166,19 +12495,15 @@
       "textures/sfx/x_conduit.tga",
       "textures/sfx/x_conduit2.tga",
       "textures/sfx/x_conduit2.tga",
-      "textures/sfx/x_conduit2.tga",
-      "textures/sfx/x_conduit3.tga",
       "textures/sfx/x_conduit3.tga",
       "textures/sfx/x_conduit3.tga"
     ],
     "textures/sfx/swirl_r1": [
       "textures/sfx/swirl_r1.tga",
-      "textures/sfx/swirl_r2.tga",
       "textures/sfx/swirl_r2.tga"
     ],
     "textures/sfx/swirl_b1": [
       "textures/sfx/swirl_b1.tga",
-      "textures/sfx/swirl_b2.tga",
       "textures/sfx/swirl_b2.tga"
     ],
     "textures/sfx/steam_01": [
@@ -11343,12 +12668,11 @@
       "textures/sfx/flame8.tga",
       "textures/sfx/flameball.tga"
     ],
-    "// Tim's goofy experiment\r\ntextures/sfx/grid": [
+    "textures/sfx/grid": [
       "textures/sfx/grid.tga"
     ],
     "textures/sfx/launchpad_diamond": [
       "*lightmap",
-      "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
@@ -11359,7 +12683,6 @@
     "textures/sfx/launchpad_blocks18d": [
       "*lightmap",
       "textures/sfx/launchpad_arrow.tga",
-      "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
@@ -11369,7 +12692,6 @@
     "textures/sfx/launchpad_blocks17": [
       "*lightmap",
       "textures/sfx/launchpad_arrow.tga",
-      "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
@@ -11378,7 +12700,6 @@
     ],
     "textures/sfx/launchpad_metalbridge04d": [
       "*lightmap",
-      "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow.tga",
       "textures/sfx/launchpad_arrow2.tga",
       "textures/sfx/launchpad_arrow2.tga",
@@ -11767,14 +13088,6 @@
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
-      "textures/sfx/compscreen/rotate0001.tga",
-      "textures/sfx/compscreen/rotate0002.tga",
-      "textures/sfx/compscreen/rotate0003.tga",
-      "textures/sfx/compscreen/rotate0004.tga",
-      "textures/sfx/compscreen/rotate0005.tga",
-      "textures/sfx/compscreen/rotate0006.tga",
-      "textures/sfx/compscreen/rotate0007.tga",
-      "textures/sfx/compscreen/rotate0008.tga",
       "textures/sfx/computerblocks11b.tga"
     ],
     "textures/sfx/blocks18ccomputer": [
@@ -11786,15 +13099,7 @@
       "textures/sfx/compscreen/letters4.tga",
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
-      "textures/sfx/compscreen/letters5.tga",
-      "textures/sfx/compscreen/rotate0001.tga",
-      "textures/sfx/compscreen/rotate0002.tga",
-      "textures/sfx/compscreen/rotate0003.tga",
-      "textures/sfx/compscreen/rotate0004.tga",
-      "textures/sfx/compscreen/rotate0005.tga",
-      "textures/sfx/compscreen/rotate0006.tga",
-      "textures/sfx/compscreen/rotate0007.tga",
-      "textures/sfx/compscreen/rotate0008.tga"
+      "textures/sfx/compscreen/letters5.tga"
     ],
     "textures/sfx/computerblocks15": [
       "*lightmap",
@@ -11805,14 +13110,6 @@
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
-      "textures/sfx/compscreen/rotate0001.tga",
-      "textures/sfx/compscreen/rotate0002.tga",
-      "textures/sfx/compscreen/rotate0003.tga",
-      "textures/sfx/compscreen/rotate0004.tga",
-      "textures/sfx/compscreen/rotate0005.tga",
-      "textures/sfx/compscreen/rotate0006.tga",
-      "textures/sfx/compscreen/rotate0007.tga",
-      "textures/sfx/compscreen/rotate0008.tga",
       "textures/sfx/computerblocks15.tga"
     ],
     "textures/sfx/computer_blocks17": [
@@ -11835,14 +13132,6 @@
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
       "textures/sfx/compscreen/letters5.tga",
-      "textures/sfx/compscreen/rotate0001.tga",
-      "textures/sfx/compscreen/rotate0002.tga",
-      "textures/sfx/compscreen/rotate0003.tga",
-      "textures/sfx/compscreen/rotate0004.tga",
-      "textures/sfx/compscreen/rotate0005.tga",
-      "textures/sfx/compscreen/rotate0006.tga",
-      "textures/sfx/compscreen/rotate0007.tga",
-      "textures/sfx/compscreen/rotate0008.tga",
       "textures/sfx/computerpurptileb.tga"
     ],
     "textures/sfx/diamond2cjumppad": [
@@ -11965,9 +13254,7 @@
       "textures/sfx/9.tga"
     ],
     "textures/sfx/goopq1metal7_98d_pent_256": [
-      "*lightmap",
       "textures/gothic_floor/goopq1metal7_98d.tga",
-      "textures/sfx/pentfloor.glow.tga",
       "textures/sfx/pentfloor_256.tga"
     ],
     "textures/sfx/pentagramfloor_red": [
@@ -12009,7 +13296,6 @@
     "textures/sfx/pentagramfloor_rotating": [
       "*lightmap",
       "textures/gothic_floor/xhugefloor2.tga",
-      "textures/sfx/pentagramfloor.red.blend.tga",
       "textures/sfx/pentagramfloor.red.tga"
     ],
     "textures/sfx/pentagramfloor_rotating2": [
@@ -12132,55 +13418,54 @@
       "textures/sfx/pentagramfloor_256x256.tga",
       "textures/sfx/q1metal7_98d_pent_256.tga"
     ],
-    "//Tim's fog for map tim_dm1\r\ntextures/sfx/fog_timdm1": [],
-    "//Tim's fog for map tim_dm8\r\ntextures/sfx/fog_timdm8": [],
-    "//Tim's fog for map tim_dm2\r\ntextures/sfx/fog_timdm2": [],
-    "//Tim's fog for map tim_ctf1\r\ntextures/sfx/fog_timctf1": [],
-    "//Paul's fog for map pj_dm4\r\ntextures/sfx/fog_pjdm1": [],
-    "//Proto_hellfog\r\ntextures/sfx/proto_hellfog": [],
-    "//Tim's fog for q3test1\r\ntextures/sfx/fog_intel": [],
-    "//Paul's gray fog for q3dm10\r\ntextures/sfx/fog_q3dm10": [],
+    "textures/sfx/fog_timdm1": [],
+    "textures/sfx/fog_timdm8": [],
+    "textures/sfx/fog_timdm2": [],
+    "textures/sfx/fog_timctf1": [],
+    "textures/sfx/fog_pjdm1": [],
+    "textures/sfx/proto_hellfog": [],
+    "textures/sfx/fog_intel": [],
+    "textures/sfx/fog_q3dm10": [],
     "textures/sfx/diamondredpad": [
       "*lightmap",
       "textures/base_floor/diamond2c.tga",
       "textures/sfx/redpad.blend.tga"
     ],
-    "textures/sfx/hellfog_tim_dm14\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/hellfog_tim_dm14": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/kc_hellfog_1k\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/kc_hellfog_1k": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/hellfog_1k\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/hellfog_1k": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/hellfog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/hellfog": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
     "textures/sfx/constfog": [],
     "textures/sfx/testconstantfog": [],
-    "textures/sfx/q3tourney3fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/q3tourney3fog": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/q3dm14fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/q3dm14fog": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/q3dm9fog\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/q3dm9fog": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "textures/sfx/hellfogdense\r\n//**************************************\r\n//New death fog that must be in all maps with death fog\r\n//**************************************": [
+    "textures/sfx/hellfogdense": [
       "textures/liquids/kc_fogcloud3.tga",
       "textures/liquids/kc_fogcloud3.tga"
     ],
-    "//textures/sfx/pj_dm9_fog2\r\n//  created 6_23_99\r\n//": [],
-    "textures/sfx/pj_a1_fog1\r\n//  created 7_06_99": [],
+    "textures/sfx/pj_a1_fog1": [],
     "textures/sfx/pitted_rust3arrowbase": [
       "*lightmap",
       "textures/sfx/pitted_rust3arrow.blend.tga",
@@ -12194,7 +13479,7 @@
     "textures/sfx/q1teleporter": [
       "textures/sfx/q1teleporter.tga"
     ],
-    "//fog for map mkc_dm4\r\ntextures/sfx/fog_mkcdm4": [],
+    "textures/sfx/fog_mkcdm4": [],
     "textures/sfx/mkc_bigflame": [
       "textures/sfx/flame1.tga",
       "textures/sfx/flame1.tga",
@@ -12330,11 +13615,11 @@
       "*lightmap",
       "textures/skin/pjwal2f.tga"
     ],
-    "// color will be normalized, so it doesn't matter what range you use\r\n// intensity falls off with angle but not distance 100 is a fairly bright sun\r\n// degree of 0 = from the east, 90 = north, etc.  altitude of 0 = sunrise/set, 90 = noon\r\n\r\n// skyparms work like this: \r\n\r\ntextures/skies/xtoxicsky_q3ctf3": [
+    "textures/skies/xtoxicsky_q3ctf3": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "//*******************************************************\r\n//*              Protoskyboxattempt  \r\n//*******************************************************\r\ntextures/skies/skybox": [
+    "textures/skies/skybox": [
       "env/space1_bk.tga",
       "env/space1_dn.tga",
       "env/space1_ft.tga",
@@ -12343,13 +13628,7 @@
       "env/space1_up.tga",
       "textures/skies/killsky_2.tga"
     ],
-    "textures/skies/xtoxicskytim_q3dm5\r\n//used in tim_dm2": [
-      "full_bk.tga",
-      "full_dn.tga",
-      "full_ft.tga",
-      "full_lf.tga",
-      "full_rt.tga",
-      "full_up.tga",
+    "textures/skies/xtoxicskytim_q3dm5": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
@@ -12388,7 +13667,7 @@
       "textures/skies/killsky_1.tga",
       "textures/skies/killsky_2.tga"
     ],
-    "textures/skies/tim_dm14red\r\n// test sky for q3dm15b": [
+    "textures/skies/tim_dm14red": [
       "textures/skies/killsky_1.tga",
       "textures/skies/killsky_2.tga"
     ],
@@ -12463,7 +13742,7 @@
       "textures/skies/dimclouds.tga",
       "textures/skies/redclouds.tga"
     ],
-    "//Old sky, should be replaced with toxicsky\r\ntextures/skies/hellsky2": [
+    "textures/skies/hellsky2": [
       "textures/skies/dimclouds.tga",
       "textures/skies/dimclouds.tga"
     ],
@@ -12475,26 +13754,23 @@
       "env/redclouds.tga",
       "env/redcloudsa.tga"
     ],
-    "//*******************************************************\r\n//*              Jaquays/steed  environment test 1\r\n//*******************************************************\r\n//textures/skies/red_enviro1\r\n//": [],
-    "//*******************************************************\r\n//*              Jaquays/steed  environment test 2\r\n//*******************************************************\r\n//textures/skies/blue_enviro2\r\n//": [],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_dm10 sky\r\n//*******************************************************\r\ntextures/skies/pj_dm10sky": [
+    "textures/skies/pj_dm10sky": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "//*******************************************************\r\n//*              Kevin Cloud's kc_dm10 sky\r\n//*******************************************************\r\ntextures/skies/kc_dm10sky": [
-      "textures/liquids/electric_fog.tga",
+    "textures/skies/kc_dm10sky": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "//*******************************************************\r\n//*              Kevin's pj_arena1 sky with more light\r\n//*******************************************************\r\ntextures/skies/kcbasesky_arena1_sky": [
+    "textures/skies/kcbasesky_arena1_sky": [
       "textures/skies/dimclouds.tga",
       "textures/skies/pjbasesky.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_arena1 sky\r\n//*******************************************************\r\ntextures/skies/pjbasesky_arena1_sky": [
+    "textures/skies/pjbasesky_arena1_sky": [
       "textures/skies/dimclouds.tga",
       "textures/skies/pjbasesky.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_ctf2 sky\r\n//*******************************************************\r\ntextures/skies/pj_ctf2_sky": [
+    "textures/skies/pj_ctf2_sky": [
       "full_bk.tga",
       "full_dn.tga",
       "full_ft.tga",
@@ -12504,7 +13780,7 @@
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_arena4 sky\r\n//*******************************************************\r\ntextures/skies/pj_arena4_sky": [
+    "textures/skies/pj_arena4_sky": [
       "full_bk.tga",
       "full_dn.tga",
       "full_ft.tga",
@@ -12514,7 +13790,7 @@
       "textures/skies/dimclouds.tga",
       "textures/skies/pjbasesky.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_ctf1 sky /june 30, 199\r\n//*******************************************************\r\ntextures/skies/pj_ctf1sky": [
+    "textures/skies/pj_ctf1sky": [
       "full_bk.tga",
       "full_dn.tga",
       "full_ft.tga",
@@ -12524,7 +13800,7 @@
       "textures/skies/dimclouds.tga",
       "textures/skies/pjbasesky.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_arena2 sky\r\n//*******************************************************\r\ntextures/skies/pj_arena2sky": [
+    "textures/skies/pj_arena2sky": [
       "full_bk.tga",
       "full_dn.tga",
       "full_ft.tga",
@@ -12534,7 +13810,7 @@
       "textures/skies/dimclouds.tga",
       "textures/skies/pjbasesky.tga"
     ],
-    "//*******************************************************\r\n//*              Paul Jaquays' pj_dm9 sky\r\n//*******************************************************\r\ntextures/skies/pj_dm9sky": [
+    "textures/skies/pj_dm9sky": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
@@ -12565,49 +13841,47 @@
       "textures/skies/dimclouds.tga",
       "textures/skies/redcloudsa.tga"
     ],
-    "//": [],
-    "//\r\n\t//": [],
-    "//}\r\n\r\n\r\n\r\n\r\ntextures/skies/toxicskydim\r\n//used in tim_dm1": [
+    "textures/skies/toxicskydim": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm4\r\n//used in tim_dm4": [
+    "textures/skies/toxicskytim_dm4": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_ctf1\r\n//used in tim_ctf1": [
+    "textures/skies/toxicskytim_ctf1": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_blue\r\n//used in tim_ctf1 blue": [
+    "textures/skies/toxicskytim_blue": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm5\r\n//used in tim_dm5": [
+    "textures/skies/toxicskytim_dm5": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm3\r\n//used in tim_dm3": [
+    "textures/skies/toxicskytim_dm3": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm8\r\n//used in tim_dm8": [
+    "textures/skies/toxicskytim_dm8": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm9\r\n//used in tim_dm9": [
+    "textures/skies/toxicskytim_dm9": [
       "textures/skies/inteldimclouds.tga",
       "textures/skies/intelredclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm2\r\n//used in tim_dm2": [
+    "textures/skies/toxicskytim_dm2": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "textures/skies/q3dm0\r\n//used in q3dm0": [
+    "textures/skies/q3dm0": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
-    "textures/skies/toxicskytim_dm7\r\n//used in tim_dm7": [
+    "textures/skies/toxicskytim_dm7": [
       "textures/skies/bluedimclouds.tga",
       "textures/skies/topclouds.tga"
     ],
@@ -12628,11 +13902,11 @@
     "textures/common/sky_space": [],
     "textures/common/sky_u2": [],
     "textures/common/sky1": [],
-    "textures/skies/mkc_dm4sky\r\n//used in mkc_dm4": [
+    "textures/skies/mkc_dm4sky": [
       "textures/skies/nightsky.tga",
       "textures/skies/redclouds.tga"
     ],
-    "textures/skies/mkc_ctf5sky\r\n//used in mkc_ctf5": [
+    "textures/skies/mkc_ctf5sky": [
       "textures/skies/nightsky.tga",
       "textures/skies/nightsky_nocloud.tga"
     ],
@@ -12640,14 +13914,14 @@
       "textures/skies/proto_sky.tga",
       "textures/skies/proto_sky2.tga"
     ],
-    "//\t* \t\tTEST SHADERS\t\t\t*\r\n//\t*        DO NOT USE IN PROJECT MAPS\t\t*\r\n//\t*************************************************\r\n\r\ntextures/vector\r\n// testing tcgen vector": [
+    "textures/vector": [
       "textures/gothic_block/blocks10.tga"
     ],
     "textures/sfx/kenelectric": [
       "textures/effects/tinfx2.tga",
       "textures/sfx/kenelectric.tga"
     ],
-    "// Rogues sorting trimmed glass//\r\n\r\ntextures/test/rnd_ledm1": [
+    "textures/test/rnd_ledm1": [
       "textures/test/rnd_ledm1.tga",
       "textures/test/rnd_ledm2.tga"
     ],

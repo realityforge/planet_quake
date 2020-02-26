@@ -1,13 +1,14 @@
 var path = require('path');
 var fs = require('fs');
 var glob = require('glob')
-var exec = require('child_process').execSync;
+var minimatch = require('minimatch')
 var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 
 var MATCH_JMPLIST = /^((0x[0-9a-f]{8})\s+[0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2}\s+(0x[0-9a-f]{1,8}))\s*$/i
-var MATCH_ENTS = /^((0x[0-9a-f]{8})\s+"((ammo_|item_|team_|weapon_|holdable_).*?)"\s*$)/i
+var MATCH_STRINGS = /^((0x[0-9a-f]{8})\s+"(.*?)"\s*$)/i
+var MATCH_ENTS = /(ammo_|item_|team_|weapon_|holdable_)/i
 var SIZEOF_GITEM = 13*4
 
 /*
@@ -168,9 +169,10 @@ function graphQVM(qvm, project) {
 }
 
 function getGameAssets(disassembly) {
+  console.log('Looking for game entities')
   var lines = fs.readFileSync(disassembly).toString('utf-8').split('\n')
   var entMatches = lines
-    .map(l => MATCH_ENTS.exec(l))
+    .map(l => MATCH_STRINGS.exec(l))
     .filter(l => l)
   // now map the entity strings use to read a .map to the jumplist for bg_misc.c bg_itemlist[]
   var entityJmplist = lines
@@ -178,17 +180,23 @@ function getGameAssets(disassembly) {
     .filter(j => j)
   // get the earliest/latest parts of the list matching the entities above
   var bg_itemlist = entMatches
+    .filter(l => l[3].match(MATCH_ENTS))
     .reduce((obj, l) => {
       var itemoffset = entityJmplist
         .filter(j => parseInt(j[3], 16) === parseInt(l[2], 16))[0]
       if(!itemoffset) return obj
       var itemstart = parseInt(itemoffset[2], 16)
+      // map the jump list on to 13bytes of gitem_s
       var itemstrings = entityJmplist
-        .filter(j => parseInt(j[2], 16) > itemstart && parseInt(j[2], 16) < itemstart + SIZEOF_GITEM)
-        .map(j => j[3])
+        .filter(j => parseInt(j[2], 16) >= itemstart && parseInt(j[2], 16) < itemstart + SIZEOF_GITEM)
+        .map(j => entMatches.filter(s => parseInt(s[2], 16) === parseInt(j[3], 16))[0])
+        .filter(s => s)
+        .map(s => s[3].replace(/\.wav\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig))
+        .flat(1)
       obj[l[3]] = itemstrings
       return obj
     }, {})
+  console.log(`Found ${Object.keys(bg_itemlist).length} game entities`)
   return bg_itemlist
 }
 
