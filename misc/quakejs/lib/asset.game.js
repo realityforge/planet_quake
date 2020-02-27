@@ -107,14 +107,16 @@ function loadGame(project) {
         .reduce((arr, e) => {
           arr.push.apply(arr, [
             e.noise,
-            (e.music || '').replace(/\.wav\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig),
+            (e.music || '').replace(/(\.wav)\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig),
+            e.model,
             e.model2
           ].flat(1))
           return arr
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
-        .concat(game.maps[k].entities.map(e => e.classname).filter((e, i, arr) => arr.indexOf(e) === i))
+        .concat(game.maps[k].entities.map(e => e.classname))
+        .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()
       return obj
     }, {})
@@ -170,11 +172,12 @@ function loadGame(project) {
     .reduce((obj, k) => {
       console.log(`Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`)
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
-      var qvmFiles = wildcards
+      obj[k] = wildcards
         .map(w => w.replace(/\\/ig, '/'))
         .map(w => everything.filter(minimatch.filter('**/' + w)))
         .flat(1)
-      obj[k] = game.qvms[k].concat(qvmFiles)
+        .concat(game.qvms[k])
+        .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()
       return obj
     }, {})
@@ -224,7 +227,9 @@ function graphGame(gs, project) {
     .concat(Object.values(gs.shaders).flat(1))
     .concat(Object.keys(gs.qvms))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
-    .filter((v, i, arr) => arr.indexOf(v) == i)
+    .filter((v, i, arr) => v && arr.indexOf(v) == i)
+    
+  console.log(`Graphing ${vertices.length} vertices`)
   
   var fileLookups = {}
   for(var i = 0; i < vertices.length; i++) {
@@ -233,13 +238,15 @@ function graphGame(gs, project) {
       var index = searchMinimatch(vertices[i], everything)
       if(index == -1) inbaseq3.push(vertices[i])
       else if (index !== null) {
-        fileLookups[vertices[i]] = graph.addVertex(gs.everything[index], {
+        fileLookups[vertices[i]] = graph.getVertex(gs.everything[index])
+          || graph.addVertex(gs.everything[index], {
           name: gs.everything[index]
         })
       }
       else notfound.push(vertices[i])
     } else {
-      fileLookups[vertices[i]] = graph.addVertex(vertices[i], {
+      fileLookups[vertices[i]] = graph.getVertex(vertices[i])
+        || graph.addVertex(vertices[i], {
         name: vertices[i]
       })
     }
@@ -256,7 +263,10 @@ function graphGame(gs, project) {
     .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match the list above
     .concat(Object.values(gs.skins).flat(1))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
-    .filter((v, i, arr) => arr.indexOf(v) == i)
+    .filter((v, i, arr) => v && arr.indexOf(v) == i)
+    
+  console.log(`Graphing ${allShaders.length} shaders`)
+    
   var shaderLookups = {}
   for(var i = 0; i < allShaders.length; i++) {
     // matches without extension
@@ -277,11 +287,20 @@ function graphGame(gs, project) {
             name: gs.everything[index]
           })
       }
-      else notfound.push(vertices[i])
+      else notfound.push(allShaders[i])
     }
   }
   
   // link all the vertices and follow all shaders through to their files
+  Object.keys(gs.entities).forEach(k => {
+    var entityEdges = gs.entities[k]
+      .filter(e => typeof fileLookups[e] != 'undefined'
+        || typeof shaderLookups[e] != 'undefined')
+    if(entityEdges.length > 0) {
+      fileLookups[k] = graph.addVertex(k, {name: k})
+      entityEdges.forEach(e => graph.addEdge(fileLookups[k], fileLookups[e] || shaderLookups[e]))
+    }
+  })
   Object.keys(gs.mapEntities).forEach(k => {
     gs.mapEntities[k].forEach(e => {
       if(typeof fileLookups[e] == 'undefined') return
@@ -318,15 +337,6 @@ function graphGame(gs, project) {
         && typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), fileLookups[e] || shaderLookups[e])
     })
-  })
-  Object.keys(gs.entities).forEach(k => {
-    var entityEdges = gs.entities[k]
-      .filter(e => typeof fileLookups[e] != 'undefined'
-        || typeof shaderLookups[e] != 'undefined')
-    if(entityEdges.length > 0) {
-      var entityVertex = graph.addVertex(k, {name: k})
-      entityEdges.forEach(e => graph.addEdge(entityVertex, fileLookups[e] || shaderLookups[e]))
-    }
   })
   
   // TODO: add arenas, configs, bot scripts, defi

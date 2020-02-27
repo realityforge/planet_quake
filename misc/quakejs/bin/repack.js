@@ -1,7 +1,8 @@
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
-var {graphQVM, loadQVM, loadQVMData, getGameAssets} = require('../lib/asset.qvm.js')
+var minimatch = require('minimatch')
+var {graphQVM, loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
 var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
 var {compressDirectory} = require('../bin/compress.js')
 var {
@@ -13,6 +14,21 @@ ufs.use(fs)
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
 var TEMP_NAME = path.join(__dirname, 'previous-graph.json')
+
+// in order of confidence, most to least
+var numericMap = [
+  ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
+               // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
+               // 12-19 - menu pk3s, hud, sprites
+  ['maps', 9], // 90-99 - map textures
+  ['weapon', 5], // 50-59 - weapons 1-9
+  ['mapobject', 7],
+  ['powerup', 3], // 30-39 - powerups
+  ['player', 2], // 20-29 - player models
+  ['item', 4],
+  ['model', 6],
+  ['other', /.*/, 8], // 80-89 - map models
+]
 
 var edges = 3
 /*
@@ -82,7 +98,12 @@ function gameInfo(gs, project) {
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
   percent('Total QVM files', qvmFiles.length, game.everything.length)
   
-  console.log(`Not found: ${game.notfound.length}`, game.notfound.slice(0, 10))
+  console.log(`Missing/not found: ${game.notfound.length}`, game.notfound.slice(0, 10))
+  var mapFiles = Object.values(game.maps).flat(1)
+    .concat(Object.values(game.mapEntities).flat(1))
+    .concat(Object.values(game.shaders).flat(1))
+  var exludingMap = game.notfound.filter(n => !mapFiles.includes(n))
+  console.log(`Missing/not found excluding map/shaders: ${exludingMap.length}`, exludingMap.slice(0, 10))
   console.log(`Files in baseq3: ${game.baseq3.length}`, game.baseq3.slice(0, 10))
   
   // largest matches, more than 5 edges?
@@ -131,10 +152,78 @@ function groupAssets(gs, project) {
     project = PROJECT
   }
   var game = graphGame(gs, project)
+  var vertices = game.graph.getVertices()
+  var grouped = {'menu': [], 'menu/game': []}
+  
+  // group all entities
+  Object.keys(game.entities).forEach(ent => {
+    var v = game.graph.getVertex(ent)
+    if(!v) return true
+    var entFiles = v.outEdges
+      .map(e => e.inVertex.id)
+    grouped[ent.replace('_', '/')] = entFiles
+  })
+  
+  // group players with sounds
+  // TODO: use graph for player models instead,
+  //   incase they are not all in the correctly named folders
+  game.everything.filter(minimatch.filter('**/+(player|players)/**'))
+    .forEach(f => {
+      var player = path.basename(path.dirname(f))
+      //model and sound matched
+      if(typeof grouped['player/' + player] === 'undefined') {
+        grouped['player/' + player] = []
+      }
+      grouped['player/' + player].push(f)
+    })
+
+  // all current assets that shouldn't be included in menu/cgame by default
+  var externalAssets = Object.values(grouped).flat(1)
+  
+  // group shared textures and sounds by folder name
+  var filesOverLimit = vertices
+    .filter(v => v.inEdges.length > edges)
+    .map(v => [v.id].concat(v.outEdges.map(e => e.inVertex.id)))
+    .flat(1)
+    .filter((f, i, arr) => arr.indexOf(f) === i
+      && game.everything.includes(f) && !externalAssets.includes(f))
+  filesOverLimit.forEach(f => {
+    var parent = path.basename(path.dirname(f))
+    var pakClass = numericMap
+      .filter(map => map.filter((m, i) => 
+        i < map.length - 1 && f.match(new RegExp(m))).length > 0)[0][0]
+    if(typeof grouped[pakClass + '/' + parent] == 'undefined') {
+      grouped[pakClass + '/' + parent] = []
+    }
+    grouped[pakClass + '/' + parent].push(f)
+  })
+  
+  var externalAndShared = Object.values(grouped).flat(1)
+  
+  // group all map models and textures by map name
+  Object.keys(game.maps)
+    .map(m => game.graph.getVertex(m))
+    .forEach(v => {
+      var map = path.basename(v.id).replace(/\.bsp/i, '')
+      var mapAssets = v.outEdges.map(e => e.inVertex)
+        .filter(f => !externalAndShared.includes(f))
+      if(mapAssets.length > 0) {
+        grouped['map/' + map] = mapAssets
+      }
+    })
+    
+  var groupedFlat = Object.values(grouped).flat(1)
+  var linked = game.everything.filter(e => groupedFlat.includes(e))
+  percent('Linked assets', linked.length, game.everything.length)
   
   
-  //'player/*/**' && (model||sound)
+  //console.log(grouped)
+
+  // regroup groups with only a few files
   
+  // regroup by numeric classification
+  
+  // generate a manifest.json the server can use for pk3 sorting
   
   return
   // subtract those pregrouped files from what is left
@@ -143,7 +232,7 @@ function groupAssets(gs, project) {
   
   // for each md3, bsp, group by parent directory
   var roots = vertices.filter(v => v.id.match(/(\.bsp|\.md3|\.qvm)/i))
-  var grouped = {'menu': [], 'menu/game': []}
+  
   for(var i = 0; i < roots.length; i++) {
     var parent = roots[i].id.includes('.bsp')
       ? roots[i].id.replace('.bsp', '')
@@ -157,10 +246,6 @@ function groupAssets(gs, project) {
     var textures = roots[i].outEdges.map(e => e.inVertex.outEdges.map(e => e.inVertex.id))
     grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
   }
-  
-  var groupedFlat = Object.values(grouped).flat(1)
-  var linked = game.everything.filter(e => groupedFlat.includes(e))
-  percent('Linked assets', linked.length, game.everything.length)
     
   // make sure we have everything
   for(var i = 0; i < game.everything.length; i++) {
@@ -189,43 +274,6 @@ function groupAssets(gs, project) {
           .flat(1)))
       .flat(1)
     grouped[parent].push.apply(grouped[parent], dependencies)
-  }
-  // TODO: add weapon/powerup sounds using lists of data from bg_misc, but some mods
-  //   like weapons factory load this config from a file we can use instead
-  
-  // in order of confidence, most to least
-  var numericMap = [
-    ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
-                 // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
-                 // 12-19 - menu pk3s, hud, sprites
-    ['maps', 9], // 90-99 - map textures
-    ['weapon', 5], // 50-59 - weapons 1-9
-    ['mapobject', 7],
-    ['powerup', 3], // 30-39 - powerups
-    ['player', 2], // 20-29 - player models
-    ['item', 4],
-    ['model', 6],
-    ['other', /.*/, 8], // 80-89 - map models
-  ]
-  var groupedKeys = ['menu', 'menu/game'].concat(Object.keys(grouped))
-  var condensed = {}
-  for(var i = 0; i < groupedKeys.length; i++) {
-    var parent = groupedKeys[i]
-    // combine with parent basenames that match
-    var newParent = null
-    for(var m = 0; m < numericMap.length; m++) {
-      if(newParent) break
-      for(var j = 0; j < numericMap[m].length - 1; j++) {
-        if(parent.match(new RegExp(numericMap[m][j]))) {
-          newParent = numericMap[m][0] + path.basename(parent)
-          break
-        }
-      }
-    }
-    if(typeof condensed[newParent] == 'undefined') {
-      condensed[newParent] = []
-    }
-    condensed[newParent].push.apply(condensed[newParent], grouped[groupedKeys[i]])
   }
   
   var totalAssets = []
@@ -288,158 +336,6 @@ function getSequenceNumeral(pre, count) {
   return result + (count % 10)
 }
 
-/* Expected output
-Known files: 1041/3777 - 27.6%
-Known directories: 3666/3777 - 97.1%
-Menu files: 877/3777 - 5810202 bytes
-Cgame files: 1142/3777 - 30.2%
-Not found: 623
-Files in baseq3: 1
-Most used assets: [
-  '209 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/sound/world/fire1.opus',
-  '75 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/sound/world/firesoft.opus',
-  '43 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/sound/world/wind1.opus',
-  '42 - textures/common/nodrawnonsolid',
-  '36 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/textures/base_light/ceil1_39.blend.jpg',
-  '35 - textures/common/clip',
-  '35 - textures/common/caulk',
-  '34 - textures/gothic_floor/metalbridge06brokeb',
-  '33 - flareShader',
-  '32 - textures/common/trigger'
-]
-Shared files: 654/3777 - 17.3%
-Least used assets: [
-  '1 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/models/flags/b_flag.md3 - models/flags/b_flag',
-  '1 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/models/flags/r_flag.md3 - models/flags/r_flag',
-  '1 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/models/mapobjects/bitch/fembotbig.md3 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm0.bsp',
-  '1 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/models/weapons2/bfg/bfg_1.md3 - models/weapons2/bfg/bfg',
-  '1 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/models/weapons2/grapple/grapple_hand.md3 - models/weapons2/grapple/grapple_h',
-  '1 - textures/base_button/shootme2 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm11.bsp',
-  '1 - textures/base_floor/cybergrate2 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm12.bsp',
-  '1 - textures/base_floor/diamond2cspot - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm0.bsp',
-  '1 - textures/base_floor/clangspot2 - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/q3dm12.bsp',
-  '1 - textures/base_floor/clangdarkspot - /users/briancullinan/planet_quake_data/baseq3-combined-converted/maps/pro-q3dm6.bsp'
-]
-Unused assets: 2440 [
-  'textures/base_light/btactmach0',
-  'textures/base_floor/techfloor',
-  'textures/base_floor/clang_floor_ow',
-  'textures/base_floor/cybergrate',
-  'textures/base_floor/pool_side2',
-  'textures/base_floor/pool_side3',
-  'textures/base_floor/pool_floor2',
-  'textures/base_floor/pool_floor3',
-  'textures/base_floor/clangspot',
-  'textures/base_floor/tilefloor5'
-]
-Linked assets: 1600/3777 - 42.4%
-Proposed layout: [
-  'pak11menu - 169',
-  'pak12game - 74',
-  'pak20grunt - 47',
-  'pak21anarki - 45',
-  'pak220razor - 55',
-  'pak221hunter - 47',
-  'pak2220players - 31',
-  'pak2221sarge - 56',
-  'pak22223player - 37',
-  'pak22224announce - 65',
-  'pak22225footsteps - 28',
-  'pak2222slash - 55',
-  'pak2223sorlag - 41',
-  'pak2224tankjr - 38',
-  'pak2225tim - 18',
-  'pak2226uriel - 50',
-  'pak2227visor - 43',
-  'pak2228xaero - 43',
-  'pak2229xian - 13',
-  'pak222keel - 41',
-  'pak223klesk - 48',
-  'pak224lucy - 47',
-  'pak225major - 47',
-  'pak226mynx - 41',
-  'pak227orbb - 45',
-  'pak228paulj - 12',
-  'pak229ranger - 46',
-  'pak22biker - 65',
-  'pak23bitterman - 40',
-  'pak24bones - 40',
-  'pak25brandon - 17',
-  'pak26carmack - 15',
-  'pak27cash - 12',
-  'pak28crash - 43',
-  'pak29doom - 47',
-  'pak31ammo - 37',
-  'pak32armor - 14',
-  'pak33health - 20',
-  'pak34holdable - 8',
-  'pak35instant - 26',
-  'pak36powerups - 5',
-  'pak41items - 21',
-  'pak50shells - 5',
-  'pak51bfg - 12',
-  'pak52gauntlet - 8',
-  'pak53grapple - 15',
-  'pak54grenadel - 7',
-  'pak551shotgun - 9',
-  'pak552weapons2 - 11',
-  'pak553weapons - 11',
-  'pak55lightning - 15',
-  'pak56machinegun - 18',
-  'pak57plasma - 11',
-  'pak58railgun - 11',
-  'pak59rocketl - 8',
-  'pak60rlboom - 8',
-  'pak61ammo - 5',
-  'pak62rocket - 6',
-  'pak63gibs - 11',
-  'pak65weaphits - 27',
-  'pak66flags - 8',
-  'pak67models - 9',
-  'pak72podium - 7',
-  'pak77mapobjects - 30',
-  'pak80levelshots - 39',
-  'pak81botfiles - 20',
-  'pak82bots - 174',
-  'pak83gfx - 4',
-  'pak842d - 18',
-  'pak85numbers - 11',
-  'pak87damage - 8',
-  'pak881music - 9',
-  'pak882scripts - 32',
-  'pak883sound - 8',
-  'pak884feedback - 32',
-  'pak8882sprites - 6',
-  'pak8883explode1 - 23',
-  'pak8884textures - 29',
-  'pak8886base_door - 5',
-  'pak8887base_floor - 14',
-  'pak88880gothic_floor - 9',
-  'pak88881base_trim - 12',
-  'pak88882base_wall - 22',
-  'pak88884ctf - 5',
-  'pak88885effects - 5',
-  'pak88886gothic_block - 9',
-  'pak88887gothic_cath - 11',
-  'pak888881gothic_light - 4',
-  'pak888882gothic_trim - 16',
-  'pak888883gothic_wall - 8',
-  'pak888886sfx - 17',
-  'pak8888base_light - 23',
-  'pak888teamplay - 26',
-  'pak889world - 6',
-  'pak88misc - 24',
-  'pak89icons - 42',
-  'pak90q3dm1 - 53',
-  'pak91pro-q3dm13 - 97',
-  'pak92pro-q3dm6 - 68',
-  'pak93pro-q3tourney2 - 60',
-  ... 27 more items
-]
-Assets accounted for: 3777/3777 - 100%
-
-*/
-
 async function repack(condensed, project) {
   if(!project) {
     project = PROJECT
@@ -467,8 +363,8 @@ async function repack(condensed, project) {
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
 //gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
-gameInfo(0, PROJECT)
-//groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+//gameInfo(0, PROJECT)
+groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)
 //graphGame(0, PROJECT)
 //var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))

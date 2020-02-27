@@ -191,7 +191,7 @@ function getGameAssets(disassembly) {
         .filter(j => parseInt(j[2], 16) >= itemstart && parseInt(j[2], 16) < itemstart + SIZEOF_GITEM)
         .map(j => entMatches.filter(s => parseInt(s[2], 16) === parseInt(j[3], 16))[0])
         .filter(s => s)
-        .map(s => s[3].replace(/\.wav\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig))
+        .map(s => s[3].replace(/(\.wav)\s+/ig, '$1{SPLIT}').split(/\{SPLIT\}/ig))
         .flat(1)
       obj[l[3]] = itemstrings
       return obj
@@ -205,4 +205,5 @@ module.exports = {
   loadQVMEntities: loadQVMEntities,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,
+  MATCH_ENTS: MATCH_ENTS
 }
