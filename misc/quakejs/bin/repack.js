@@ -212,6 +212,11 @@ function groupAssets(gs, project) {
       }
     })
     
+  // map menu and cgame files
+  Object.keys(game.qvms).forEach(qvm => {
+    var pakName = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
+  })
+    
   var groupedFlat = Object.values(grouped).flat(1)
   var linked = game.everything.filter(e => groupedFlat.includes(e))
   percent('Linked assets', linked.length, game.everything.length)
@@ -222,100 +227,13 @@ function groupAssets(gs, project) {
   // regroup groups with only a few files
   
   // regroup by numeric classification
-  
+  //pakName = 'pak' + parent
+  //  .replace(type, getSequenceNumeral(numeral, assetCount[type]))
+
   // generate a manifest.json the server can use for pk3 sorting
   
   return
-  // subtract those pregrouped files from what is left
-  // make a map of maps to entities needed to save bandwidth
   
-  
-  // for each md3, bsp, group by parent directory
-  var roots = vertices.filter(v => v.id.match(/(\.bsp|\.md3|\.qvm)/i))
-  
-  for(var i = 0; i < roots.length; i++) {
-    var parent = roots[i].id.includes('.bsp')
-      ? roots[i].id.replace('.bsp', '')
-      : path.dirname(roots[i].id)
-    
-    if(typeof grouped[parent] == 'undefined') {
-      grouped[parent] = []
-    }
-    grouped[parent].push(roots[i].id)
-    grouped[parent].push.apply(grouped[parent], roots[i].outEdges.map(e => e.inVertex.id))
-    var textures = roots[i].outEdges.map(e => e.inVertex.outEdges.map(e => e.inVertex.id))
-    grouped[parent].push.apply(grouped[parent], [].concat.apply([], textures))
-  }
-    
-  // make sure we have everything
-  for(var i = 0; i < game.everything.length; i++) {
-    var parent = path.dirname(game.everything[i])
-    if(parent.includes('/menu')
-      || path.resolve(parent).toLowerCase() == path.resolve(project).toLowerCase()
-      || uiUnique.includes(game.everything[i])
-      || game.everything[i].includes('ui.qvm')) {
-      parent = 'menu'
-    } else if (cgameUnique.filter(f => !f.includes('player')).includes(game.everything[i])
-      || game.everything[i].includes('cgame.qvm')) {
-      parent = 'menu/game'
-    } else if(linked.includes(game.everything[i])
-      // put shared assets in a directory of their own
-      && !filesOverLimit.includes(game.everything[i])) {
-      continue
-    }
-    if(typeof grouped[parent] == 'undefined') {
-      grouped[parent] = []
-    }
-    grouped[parent].push(game.everything[i])
-    var dependencies = vertices
-      .filter(v => v.id == game.everything[i])
-      .map(v => v.outEdges.map(e => e.inVertex.id)
-        .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))
-          .flat(1)))
-      .flat(1)
-    grouped[parent].push.apply(grouped[parent], dependencies)
-  }
-  
-  var totalAssets = []
-  var assetCount = {}
-  var condensedKeys = ['menumenu', 'menugame'].concat(Object.keys(condensed))
-  for(var i = 0; i < condensedKeys.length; i++) {
-    var parent = condensedKeys[i]
-    var pakName = null
-    for(var m = 0; m < numericMap.length; m++) {
-      var type = numericMap[m][0]
-      var numeral = numericMap[m][numericMap[m].length - 1]
-      if(parent.includes(type)) {
-        if(typeof assetCount[type] == 'undefined') {
-          assetCount[type] = 1
-        } else {
-          assetCount[type]++
-        }
-        // replace names with numeric counts
-        pakName = 'pak' + parent
-          .replace(type, getSequenceNumeral(numeral, assetCount[type]))
-        break
-      }
-    }
-    if(!pakName) {
-      throw new Error('Something went wrong with naming paks')
-    }
-    var uniqueAssets = []
-    if(typeof condensed[parent] == 'undefined') continue
-    for(var j = 0; j < condensed[parent].length; j++) {
-      var f = condensed[parent][j]
-      if(game.everything.includes(f) && !totalAssets.includes(f)) {
-          uniqueAssets.push(f)
-          totalAssets.push(f)
-        }
-    }
-    if(uniqueAssets.length > edges) {
-      condensed[pakName] = uniqueAssets
-    } else {
-      condensed['pak12game'].push.apply(condensed['pak12game'], uniqueAssets)
-    }
-    delete condensed[parent]
-  }
   
   condensedKeys = Object.keys(condensed)
   condensedKeys.sort()
