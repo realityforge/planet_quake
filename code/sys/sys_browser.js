@@ -209,7 +209,7 @@ var LibrarySys = {
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		
-		SYSC.mkdirp(PATH.join(fs_basepath, fs_game))
+		SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
 		
 		SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
 			_Cvar_SetValue(allocate(intArrayFromString('cl_downloadSize'), 'i8', ALLOC_STACK), total );
@@ -270,6 +270,7 @@ var LibrarySys = {
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need
 			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+				SYS.LoadingDescription('')
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
 			}

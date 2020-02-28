@@ -1,6 +1,7 @@
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
+var assert = require('assert')
 var minimatch = require('minimatch')
 var {graphQVM, loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
 var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
@@ -159,8 +160,8 @@ function groupAssets(gs, project) {
   Object.keys(game.entities).forEach(ent => {
     var v = game.graph.getVertex(ent)
     if(!v) return true
-    var entFiles = v.outEdges
-      .map(e => e.inVertex.id)
+    var entFiles = v.outEdges.map(e => e.inVertex.id)
+      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
     grouped[ent.replace('_', '/')] = entFiles
   })
   
@@ -183,8 +184,10 @@ function groupAssets(gs, project) {
   // group shared textures and sounds by folder name
   var filesOverLimit = vertices
     .filter(v => v.inEdges.length > edges)
-    .map(v => [v.id].concat(v.outEdges.map(e => e.inVertex.id)))
-    .flat(1)
+    .map(v => [v.id]
+      .concat(v.outEdges.map(e => e.inVertex.id))
+      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))))
+    .flat(2)
     .filter((f, i, arr) => arr.indexOf(f) === i
       && game.everything.includes(f) && !externalAssets.includes(f))
   filesOverLimit.forEach(f => {
@@ -205,8 +208,11 @@ function groupAssets(gs, project) {
     .map(m => game.graph.getVertex(m))
     .forEach(v => {
       var map = path.basename(v.id).replace(/\.bsp/i, '')
-      var mapAssets = v.outEdges.map(e => e.inVertex)
+      var mapAssets = v.outEdges.map(e => e.inVertex.id)
         .filter(f => !externalAndShared.includes(f))
+        // map through shaders
+        .concat(v.outEdges.map(e => e.inVertex.outEdges.map(v => v.inVertex.id)).flat(1))
+        .filter(f => game.everything.includes(f))
       if(mapAssets.length > 0) {
         grouped['map/' + map] = mapAssets
       }
@@ -215,33 +221,79 @@ function groupAssets(gs, project) {
   // map menu and cgame files
   Object.keys(game.qvms).forEach(qvm => {
     var pakName = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
+    var gameAssets = [qvm]
+      .concat(game.graph.getVertex(qvm)
+      .outEdges.map(e => e.inVertex.id)
+      .concat(game.graph.getVertex(qvm)
+      .outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
+      .filter(f => game.everything.includes(f) && !externalAndShared.includes(f)))
+    gameAssets.forEach(f => {
+      var parent = path.basename(path.dirname(f))
+      if(typeof grouped[pakName + '/' + parent] == 'undefined') {
+        grouped[pakName + '/' + parent] = []
+      }
+      grouped[pakName + '/' + parent].push(f)
+    })
   })
-    
+  
+  // make sure lots of items are linked
   var groupedFlat = Object.values(grouped).flat(1)
   var linked = game.everything.filter(e => groupedFlat.includes(e))
+  var unlinked = game.everything.filter(e => !groupedFlat.includes(e))
   percent('Linked assets', linked.length, game.everything.length)
+  percent('Unlinked assets', unlinked.length, game.everything.length)
+  console.log(unlinked.slice(0, 10))
   
-  
-  //console.log(grouped)
-
   // regroup groups with only a few files
+  var condensed = Object.keys(grouped).reduce((obj, k) => {
+    var newKey = k.split('/')[0]
+    if(grouped[k].length < edges) {
+      if(typeof obj[newKey] == 'undefined') {
+        obj[newKey] = []
+      }
+      obj[newKey].push.apply(obj[newKey], grouped[k])
+    } else {
+      obj[k] = grouped[k]
+    }
+    return obj
+  }, {})
+  
+  // make sure condensing worked properly
+  var condensedFlat = Object.values(condensed).flat(1)
+  var condensedLinked = game.everything.filter(e => condensedFlat.includes(e))
+  assert(condensedLinked.length === linked.length, 'Regrouped length doesn\'t match linked length')
   
   // regroup by numeric classification
-  //pakName = 'pak' + parent
-  //  .replace(type, getSequenceNumeral(numeral, assetCount[type]))
-
-  // generate a manifest.json the server can use for pk3 sorting
+  var numeralCounts = {}
+  var renamed = Object.keys(condensed).reduce((obj, k) => {
+    var pakClass = numericMap
+      .filter(map => map.filter((m, i) => 
+        i < map.length - 1 && k.match(new RegExp(m))).length > 0)[0]
+    var numeral = pakClass[pakClass.length - 1]
+    if(typeof numeralCounts[numeral] == 'undefined') numeralCounts[numeral] = 1
+    else numeralCounts[numeral]++
+    var pakNumeral = getSequenceNumeral(numeral, numeralCounts[numeral])
+    var pakName = k.split('/').length === 1
+      ? (pakNumeral + k)
+      : (pakNumeral + k.split('/')[1])
+    obj[ 'pak' + pakName] = condensed[k]
+    return obj
+  }, {})
   
-  return
+  // make sure renaming worked properly
+  var renamedFlat = Object.values(renamed).flat(1)
+  var renamedLinked = game.everything.filter(e => renamedFlat.includes(e))
+  assert(renamedLinked.length === linked.length, 'Renamed length doesn\'t match linked length')
+  
+  // make sure there are no duplicates
   
   
-  condensedKeys = Object.keys(condensed)
-  condensedKeys.sort()
-  console.log('Proposed layout:', condensedKeys.map(k => k + ' - ' + condensed[k].length))
-  console.log(`Assets accounted for: ${totalAssets.length}/${game.everything.length
-    } - ${percent(totalAssets.length, game.everything.length)}%`)
-  game.condensed = condensed
-  fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
+  renamedKeys = Object.keys(renamed)
+  renamedKeys.sort()
+  console.log('Proposed layout:', renamedKeys.map(k => k + ' - ' + renamed[k].length))
+  
+  // generate a manifest.json the server can use for pk3 sorting based on map/game type
+  //fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
   return game
 }
 
