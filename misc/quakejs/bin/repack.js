@@ -15,18 +15,18 @@ ufs.use(fs)
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
 var TEMP_NAME = path.join(__dirname, 'previous-graph.json')
+var PAK_NAME = path.join(__dirname, 'previous-pak.json')
 
 // in order of confidence, most to least
 var numericMap = [
   ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
-               // 11 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
                // 12-19 - menu pk3s, hud, sprites
+  ['game', 2], // 2 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
   ['maps', 9], // 90-99 - map textures
   ['weapon', 5], // 50-59 - weapons 1-9
-  ['mapobject', 7],
+  ['mapobject', 7], // misc_models
   ['powerup', 3], // 30-39 - powerups
-  ['player', 2], // 20-29 - player models
-  ['item', 4],
+  ['player', 4], // 40-49 - player models
   ['model', 6],
   ['other', /.*/, 8], // 80-89 - map models
 ]
@@ -162,7 +162,16 @@ function groupAssets(gs, project) {
     if(!v) return true
     var entFiles = v.outEdges.map(e => e.inVertex.id)
       .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
-    grouped[ent.replace('_', '/')] = entFiles
+    var model = entFiles.filter(f => f.match(/.\.md3/i))[0]
+      || entFiles[0]
+    var pakClass = numericMap
+      .filter(map => map.filter((m, i) => 
+        i < map.length - 1 && model.match(new RegExp(m))).length > 0)[0][0]
+    var pakKey = pakClass + '/' + ent.split('_')[1]
+    if(typeof grouped[pakKey] == 'undefined') {
+      grouped[pakKey] = []
+    }
+    grouped[pakKey].push.apply(grouped[pakKey], entFiles)
   })
   
   // group players with sounds
@@ -192,6 +201,9 @@ function groupAssets(gs, project) {
       && game.everything.includes(f) && !externalAssets.includes(f))
   filesOverLimit.forEach(f => {
     var parent = path.basename(path.dirname(f))
+    //if(parent == path.basename(project)) {
+    //  parent = 'game'
+    //}
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => 
         i < map.length - 1 && f.match(new RegExp(m))).length > 0)[0][0]
@@ -212,9 +224,9 @@ function groupAssets(gs, project) {
         .filter(f => !externalAndShared.includes(f))
         // map through shaders
         .concat(v.outEdges.map(e => e.inVertex.outEdges.map(v => v.inVertex.id)).flat(1))
-        .filter(f => game.everything.includes(f))
+        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
       if(mapAssets.length > 0) {
-        grouped['map/' + map] = mapAssets
+        grouped['maps/' + map] = mapAssets
       }
     })
     
@@ -225,10 +237,13 @@ function groupAssets(gs, project) {
       .concat(game.graph.getVertex(qvm)
       .outEdges.map(e => e.inVertex.id)
       .concat(game.graph.getVertex(qvm)
-      .outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
+        .outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
       .filter(f => game.everything.includes(f) && !externalAndShared.includes(f)))
     gameAssets.forEach(f => {
       var parent = path.basename(path.dirname(f))
+      if(parent == path.basename(project)) {
+        parent = pakName
+      }
       if(typeof grouped[pakName + '/' + parent] == 'undefined') {
         grouped[pakName + '/' + parent] = []
       }
@@ -286,12 +301,22 @@ function groupAssets(gs, project) {
   assert(renamedLinked.length === linked.length, 'Renamed length doesn\'t match linked length')
   
   // make sure there are no duplicates
+  var duplicates = Object.values(renamed).flat(1).filter((f, i, arr) => arr.indexOf(f) !== i)
+  console.log(duplicates.slice(0, 10))
   
-  
-  renamedKeys = Object.keys(renamed)
+  var renamedKeys = Object.keys(renamed)
   renamedKeys.sort()
-  console.log('Proposed layout:', renamedKeys.map(k => k + ' - ' + renamed[k].length))
+  var ordered = renamedKeys.reduce((obj, k) => {
+    obj[k] = renamed[k]
+    obj[k].sort()
+    return obj
+  }, {})
+  console.log('Proposed layout:',
+    renamedKeys.map(k => k + ' - ' + renamed[k].length),
+    renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
+  fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
+  assert(duplicates.length === 0, 'Duplicates found: ' + duplicates.length)
   // generate a manifest.json the server can use for pk3 sorting based on map/game type
   //fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
   return game
