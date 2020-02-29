@@ -37,7 +37,7 @@ if(fs.existsSync(BASEQ3)) {
 }
 
 function graphMaps(project) {
-  console.log('Looking for maps')
+  console.log(STEPS['maps'])
   var result = {}
   var maps = findTypes(['.bsp'], project || PROJECT)
   for(var i = 0; i < maps.length; i++) {
@@ -395,5 +395,6 @@ module.exports = {
   graphShaders,
   graphSkins,
   graphGame,
-  load: graphGame
+  load: graphGame,
+  TEMP_NAME: TEMP_NAME
 }

@@ -6,6 +6,18 @@ var {ufs} = require('unionfs')
 var { Readable } = require('stream')
 var {compressFile, compressDirectory} = require('./compress.js')
 
+var help = `
+--recursive -R, adds all directory files below current directory
+--pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
+  opposite of repack
+--write -wr, write all JSON files in every directory for CDN use
+--repack -rp, repack on the fly as pk3/media/images/sound files are accessed
+  opposit of pk3dir
+--hidden -H, include hidden files (uncommon)
+--watch, watch files for changes
+--help -h, print this help message and exit
+`
+
 var recursive = false
 var writeOut = false
 var repackFiles = false
@@ -13,15 +25,6 @@ var pk3dir = false
 var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
-// TODO: Add some command line options here
-// --recursive -R, adds all directory files below current directory
-// --pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
-//   opposite of repack
-// --write -wr, write all JSON files in every directory for CDN use
-// --repack -rp, repack on the fly as pk3/media/images/sound files are accessed
-//   opposit of pk3dir
-// --hidden -h, include hidden files (uncommon)
-// --watch, watch files for changes
 
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
@@ -46,7 +49,7 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
     recursive = true
-  } else if(a == '--hidden' || a == '-h') {
+  } else if(a == '--hidden' || a == '-H') {
     console.log('Hidden files')
     includeHidden = true
   } else if(a == '--pk3dir' || a == '-pk') {
@@ -66,6 +69,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a.match(/^\//i)) {
 		console.log('Using mount point ' + a)
     mountPoint = a
+  } else if (a == '--help' || a == '-h') {
+    console.log(help)
+    process.exit(0)
   } else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }

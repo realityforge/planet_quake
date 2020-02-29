@@ -13,17 +13,6 @@ var {
 var {ufs} = require('unionfs')
 ufs.use(fs)
 
-/*
-Planned options:
---edges - number of connected edges to deserve it's own pk3, default is 3
---roots - insert yourself anywhere in the graph, show top connections from that asset
---info -i - only print info, don't actually do any converting
---convert - options to pass to image magick, make sure to put these last
---transcode - options to pass to opus/ogg vorbis, make sure to put these last
---entities - entities definition to group models and sounds
-
-*/
-
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
 var INFO_NAME = path.join(__dirname, 'previous-info.json')
@@ -33,6 +22,75 @@ var STEPS = {
   'info': 'Print info about the game data',
   'convert': 'Convert game data to web format',
   'repack': 'Zip converted files in to new paks',
+}
+
+var help = `
+--edges - number of connected edges to deserve it's own pk3, default is 3
+--roots - insert yourself anywhere in the graph, show top connections from that asset
+--info -i - only print info, don't actually do any converting
+--convert - options to pass to image magick, make sure to put these last
+--transcode - options to pass to opus/ogg vorbis, make sure to put these last
+--entities - entities definition to group models and sounds
+--no-progress - turn off the progress bars for some sort of admining
+--previous -p - try to load information from the previous graph so we don't have to do step 1
+--help -h, print this help message and exit
+`
+
+var edges = 3
+var noProgress = false
+var convert = ''
+var transcode = ''
+var entities = ''
+var mountPoints = []
+var usePrevious = false
+
+var isConvertParams = false
+var isTranscodeParams = false
+for(var i = 0; i < process.argv.length; i++) {
+  var a = process.argv[i]
+  if(a == '--edges') {
+    edges = parseInt(process.argv[i+1])
+    i++
+  } else if (a == '--info' || a == '-i') {
+    delete STEPS['convert']
+    delete STEPS['repack']
+  } else if (a == '--no-progress') {
+    noProgress = true
+  } else if (a == '--convert') {
+    isConvertParams = true
+  } else if (a == '--entities') {
+    if(fs.existsSync(process.argv[i+1])) {
+      entities = fs.readFileSync(process.argv[i+1).toString('utf-8')
+      // TODO: need some basic parsing to get the part before _ of every entity name
+      i++
+    } else {
+      console.log(`ERROR: entities def ${process.argv[i+1]} not found`
+    }
+  } else if (a == '--previous' || a == '-p') {
+    if(fs.existsSync(process.argv[i+1])) {
+      usePrevious = process.argv[i+1]
+      i++
+    } else {
+      usePrevious = true
+    }
+  } else if (a == '--help' || a == '-h') {
+    console.log(help)
+    process.exit(0)
+  } else if(isConvertParams) {
+    convert += ' ' + a
+    continue
+  } else if(isTranscodeParams) {
+    transcode += ' ' + a
+    continue
+  } else {
+    console.log(`ERROR: Unrecognized option "${a}"`)
+  }
+  isConvertParams = false
+  isTranscodeParams = false
+}
+if(mountPoints.length == 0) {
+  console.log('ERROR: No mount points, e.g. run `npm run repack /Applications/ioquake3/baseq3`')
+  mountPoints.push(PROJECT)
 }
 
 // in order of confidence, most to least
@@ -48,10 +106,6 @@ var numericMap = [
   ['model', 6],
   ['other', /.*/, 8], // 80-89 - map models
 ]
-
-var edges = 3
-
-var mountPoints = []
 
 function percent(l, a, b) {
   console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
