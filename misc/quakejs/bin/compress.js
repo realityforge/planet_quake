@@ -94,7 +94,6 @@ function sendCompressed(file, res, acceptEncoding) {
     res.append('content-length', ufs.statSync(file).size);
   }
   
-  res.append('vary', 'accept-encoding')
   readStream.pipe(res)
 }
 

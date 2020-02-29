@@ -8,6 +8,7 @@ var {sendCompressed} = require('./compress.js')
 var app = express()
 app.enable('etag')
 express.static.mime.types['wasm'] = 'application/wasm'
+express.static.mime.types['pk3'] = 'application/octet-stream'
 
 function pathToDirectoryIndex(url) {
   const parsed = new URL(`https://local${url}`)

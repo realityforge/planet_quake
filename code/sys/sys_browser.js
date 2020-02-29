@@ -172,20 +172,15 @@ var LibrarySys = {
 		window.addEventListener('resize', SYS.resizeViewport)
 	},
 	Sys_PlatformExit: function () {
-		/*
-		var handler = Module['exitHandler']
-		if (handler) {
-			if (!SYS.exited) {
-				handler()
-			}
-			return
-		}
-		*/
+		flipper.style.display = 'block'
+		flipper.style.animation = 'none'
+		SYS.exited = true
 		window.removeEventListener('resize', SYS.resizeViewport)
 
 		if (Module['canvas']) {
 			Module['canvas'].remove()
 		}
+		Module.exitHandler()
 	},
 	Sys_GLimpInit: function () {
 		var viewport = document.getElementById('viewport-frame')

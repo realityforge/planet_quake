@@ -118,26 +118,40 @@ for(var i = 0; i < mountPoints.length; i++) {
   console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(tempDir, name)}`)
 }
 if(!noProgress && require.resolve('cli-progress')) {
-  const cliProgress = require('cli-progress');
-   
-  // create new container
-  const multibar = new cliProgress.MultiBar({
-      clearOnComplete: false,
+  var cliProgress = require('cli-progress');
+  var multibar = new cliProgress.MultiBar({
+      clearOnComplete: true,
       hideCursor: true
-   
   }, cliProgress.Presets.shades_grey);
-   
-  // add bars
-  const b1 = multibar.create(200, 0);
-  const b2 = multibar.create(1000, 0);
-   
-  // control bars
-  b1.increment();
-  b2.update(20, {filename: "helloworld.txt"});
-   
-  // stop all bars
-  multibar.stop();
 }
+
+var globalBars = []
+
+function percent(l, a, b) {
+  console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
+}
+
+function progress(bars) {
+  //e.g. [[1, 0, 10, 'Removing temporary files']]
+  for(var i = 0; i < bars.length; i++) {
+    if(!multibar) {
+      percent(bars[i][3], bars[i][2], bars[i][1])
+      continue
+    }
+    if(typeof globalBars[bars[i][0]] == 'undefined') {
+      globalBars[bars[i][0]] = multibar.create(0, bars[i][2], {
+        format: '{percentage}% || {value}/{total} || {message}'
+      })
+    }
+    globalBars[bars[i][0]].update(bars[i][1], {
+      percentage: Math.round(bars[i][1]/bars[i][2]*1000) / 10,
+      value: bars[i][1],
+      total: bars[i][2],
+      message: bars[i][3]
+    })
+  }
+}
+
 // in order of confidence, most to least
 var numericMap = [
   ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
@@ -151,10 +165,6 @@ var numericMap = [
   ['model', 6],
   ['other', /.*/, 8], // 80-89 - map models
 ]
-
-function percent(l, a, b) {
-  console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
-}
 
 function gameInfo(gs, project) {
   if(!project) {
@@ -487,11 +497,12 @@ async function repack(condensed, project) {
 
 // do the actual work specified in arguments
 for(var i = 0; i < mountPoints.length; i++) {
+  progress(0, 0, 1, STEPS['source'])
   
 }
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+//gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //gameInfo(0, PROJECT)
 //groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)

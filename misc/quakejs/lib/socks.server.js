@@ -126,7 +126,7 @@ Server.prototype.lookupDNS = async function (address) {
   }))
 }
 
-function udpMessage(socket, message, rinfo) {
+Server.prototype._onUDPMessage = function (socket, message, rinfo) {
   // is this valid SOCKS5 for UDP?
   var returnIP = false
   var ipv6 = ip6addr.parse(rinfo.address)
@@ -160,7 +160,7 @@ function udpMessage(socket, message, rinfo) {
 Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
-  var onMessage = udpMessage.bind(self, socket)
+  var onUDPMessage = this._onUDPMessage.bind(self, socket)
   if(!udpSocket) {
     console.log('No socket found.')
     return
@@ -170,8 +170,10 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   socket.off('data', onData)
   socket.off('message', onData)
   socket._socket.pause()
+  parser.authed = true
+  parser.off('request', onRequest)
   // connection and version number are implied from now on
-  onData = ((message) => {
+  var newOnData = ((message) => {
     var chunk = Buffer.from(message)
     if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
       chunk[0] = 5
@@ -180,20 +182,28 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
       parser._onData(chunk)
     }
   })
-  socket.on('message', onData)
-  parser.authed = true
-  parser.off('request', onRequest)
-  udpSocket.on('message', onMessage)
-  parser.on('request', async (reqInfo) => {
+  var newOnRequest = async (reqInfo) => {
     clearTimeout(self._timeouts[udpLookupPort])
-    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close())
+    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
       udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
     } catch (err) {
       self._onProxyError(socket, err)
     }
+  }
+  socket.on('message', newOnData)
+  udpSocket.on('message', onUDPMessage)
+  udpSocket.on('close', () => {
+    socket.off('data', newOnData)
+    socket.off('message', newOnData)
+    parser.off('request', newOnRequest)
+    // switch back to regular messaging?
+    socket.on('data', onData)
+    socket.on('message', onData)
+    parser.on('request', onRequest)
   })
+  parser.on('request', newOnRequest)
   socket._socket.resume()
 }
 
@@ -314,6 +324,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
       await new Promise((resolve, reject) => listener
         .on('listening', resolve)
         .on('connection', self._onConnection)
+        .on('close', () => clearTimeout(self._timeouts[reqInfo.dstPort]))
         .on('error', reject)
         .bind(portLeft + portRight, reqInfo.dstAddr))
       // TODO: fix this, port will be the same for every client
