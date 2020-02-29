@@ -14,6 +14,18 @@ var {
 } = require('../bin/repack-whitelist.js')
 var DirectedGraph = require('../lib/asset.graph.js')
 
+var STEPS = {
+  'maps': 'Looking for maps',
+  'models': 'Looking for models',
+  'shaders': 'Looking for shaders',
+  'skins': 'Looking for skins',
+  'qvms': 'Looking for QVMs',
+  'entities': 'Looking for game entities',
+  'files': 'Searching for QVM files',
+  'vertices': 'Graphing vertices',
+  'shaders': 'Graphing shaders',
+}
+
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 var TEMP_NAME = path.join(__dirname, '../bin/previous-graph.json')
@@ -193,6 +205,7 @@ function loadGame(project) {
     qvms: qvmFiles,
     everything: everything,
   }
+  console.log(`Game graph written to "${TEMP_NAME}"`)
   fs.writeFileSync(TEMP_NAME, JSON.stringify(gameState, null, 2))
   
   return Object.assign(game, gameState)

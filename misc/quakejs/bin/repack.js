@@ -4,7 +4,7 @@ var glob = require('glob')
 var assert = require('assert')
 var minimatch = require('minimatch')
 var {graphQVM, loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
-var {graphGame, graphModels, graphMaps, graphShaders} = require('../lib/asset.game.js')
+var {graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME} = require('../lib/asset.game.js')
 var {compressDirectory} = require('../bin/compress.js')
 var {
   findTypes, fileTypes, sourceTypes,
@@ -13,9 +13,27 @@ var {
 var {ufs} = require('unionfs')
 ufs.use(fs)
 
+/*
+Planned options:
+--edges - number of connected edges to deserve it's own pk3, default is 3
+--roots - insert yourself anywhere in the graph, show top connections from that asset
+--info -i - only print info, don't actually do any converting
+--convert - options to pass to image magick, make sure to put these last
+--transcode - options to pass to opus/ogg vorbis, make sure to put these last
+--entities - entities definition to group models and sounds
+
+*/
+
 var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
-var TEMP_NAME = path.join(__dirname, 'previous-graph.json')
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
+var INFO_NAME = path.join(__dirname, 'previous-info.json')
+var STEPS = {
+  'source': 'Load pk3 from source directory',
+  'graph': 'Create a graph of game files',
+  'info': 'Print info about the game data',
+  'convert': 'Convert game data to web format',
+  'repack': 'Zip converted files in to new paks',
+}
 
 // in order of confidence, most to least
 var numericMap = [
@@ -32,23 +50,7 @@ var numericMap = [
 ]
 
 var edges = 3
-/*
-Planned options:
---edges - number of connected edges to deserve it's own pk3, default is 3
---roots - insert yourself anywhere in the graph, show top connections from that asset
---info -i - only print info, don't actually do any converting
---convert - options to pass to image magick, make sure to put these last
---transcode - options to pass to opus/ogg vorbis, make sure to put these last
---entities - entities definition to group models and sounds
 
-Basic steps:
-
-Unpack
-Graph
-Convert
-Repack
-
-*/
 var mountPoints = []
 
 function percent(l, a, b) {
