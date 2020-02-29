@@ -117,12 +117,21 @@ for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
   console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(tempDir, name)}`)
 }
-if(!noProgress && require.resolve('cli-progress')) {
-  var cliProgress = require('cli-progress');
+try {
+  require.resolve('cli-progress');
+} catch (err) {
+  noProgress = true
+}
+if(!noProgress) {
+  var cliProgress = require('cli-progress')
   var multibar = new cliProgress.MultiBar({
-      clearOnComplete: true,
-      hideCursor: true
-  }, cliProgress.Presets.shades_grey);
+      clearOnComplete: false,
+      hideCursor: true,
+      format: `[\u001b[34m{bar}\u001b[0m] {percentage}% | {value}/{total} | {message}`,
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2588',
+      barGlue: '\u001b[33m'
+  })
 }
 
 var globalBars = []
@@ -132,23 +141,34 @@ function percent(l, a, b) {
 }
 
 function progress(bars) {
+  if(bars === false) {
+    for(var i = 0; i < globalBars.length; i++) {
+      globalBars[i].stop()
+    }
+    multibar.stop()
+  }
   //e.g. [[1, 0, 10, 'Removing temporary files']]
   for(var i = 0; i < bars.length; i++) {
     if(!multibar) {
       percent(bars[i][3], bars[i][2], bars[i][1])
       continue
     }
-    if(typeof globalBars[bars[i][0]] == 'undefined') {
-      globalBars[bars[i][0]] = multibar.create(0, bars[i][2], {
-        format: '{percentage}% || {value}/{total} || {message}'
-      })
+    if(bars[i][1] === false) {
+      globalBars[bars[i][0]].stop()
+      globalBars[bars[i][0]].remove()
     }
-    globalBars[bars[i][0]].update(bars[i][1], {
+    var info = {
       percentage: Math.round(bars[i][1]/bars[i][2]*1000) / 10,
       value: bars[i][1],
       total: bars[i][2],
       message: bars[i][3]
-    })
+    }
+    if(typeof globalBars[bars[i][0]] == 'undefined') {
+      globalBars[bars[i][0]] = multibar.create()
+      globalBars[bars[i][0]].start(bars[i][2], bars[i][1], info)
+    } else {
+      globalBars[bars[i][0]].update(bars[i][1], info)
+    }
   }
 }
 
@@ -497,7 +517,7 @@ async function repack(condensed, project) {
 
 // do the actual work specified in arguments
 for(var i = 0; i < mountPoints.length; i++) {
-  progress(0, 0, 1, STEPS['source'])
+  progress([[0, 0, STEPS.length, STEPS['source']]])
   
 }
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
@@ -512,3 +532,4 @@ for(var i = 0; i < mountPoints.length; i++) {
 //repack()
 //graphQVM('**/pak8.pk3dir/**/*.qvm')
 //var strings = loadQVM('**/cgame.qvm', PROJECT)
+progress(false)
