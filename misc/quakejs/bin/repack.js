@@ -220,8 +220,47 @@ function groupAssets(gs, project) {
     }
     grouped[pakClass + '/' + parent].push(f)
   })
+
+  var externalAndShared;
+    
+  // map menu and cgame files
+  var qvms = Object.keys(game.qvms).filter(qvm => qvm.match(/ui.qvm/i))
+    .concat(Object.keys(game.qvms).filter(qvm => !qvm.match(/ui.qvm/i)))
+  qvms.forEach(qvm => {
+    // update shared items so menu is downloaded followed by cgame
+    externalAndShared = Object.values(grouped).flat(1)
+    
+    var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
+    var gameAssets = [qvm]
+      .concat(game.graph.getVertex(qvm).outEdges.map(e => e.inVertex.id))
+      .concat(game.graph.getVertex(qvm).outEdges.map(e => {
+        var result = e.inVertex.outEdges.map(e2 => e2.inVertex.id)
+        if(result.filter(e => e.includes('base_floor')).length > 0) {
+          console.log(e)
+        }
+        return result
+      }))
+      .flat(2)
+      .filter((f, i, arr) => arr.indexOf(f) === i
+        && !f.match(/\.dis/i) // don't include disassembly in new pak
+        && !f.match(/\.bsp/i) // don't include maps obviously because they are listed below
+        && !f.match(/\.shader/i)
+        && game.everything.includes(f)
+        && !externalAndShared.includes(f))
+    
+    gameAssets.forEach(f => {
+      var pakName = path.basename(path.dirname(f))
+      if(pakName == path.basename(project)) {
+        pakName = className
+      }
+      if(typeof grouped[className + '/' + pakName] == 'undefined') {
+        grouped[className + '/' + pakName] = []
+      }
+      grouped[className + '/' + pakName].push(f)
+    })
+  })
   
-  var externalAndShared = Object.values(grouped).flat(1)
+  externalAndShared = Object.values(grouped).flat(1)
   
   // group all map models and textures by map name
   Object.keys(game.maps)
@@ -237,28 +276,7 @@ function groupAssets(gs, project) {
         grouped['maps/' + map] = mapAssets
       }
     })
-    
-  // map menu and cgame files
-  Object.keys(game.qvms).forEach(qvm => {
-    var pakName = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
-    var gameAssets = [qvm]
-      .concat(game.graph.getVertex(qvm)
-      .outEdges.map(e => e.inVertex.id)
-      .concat(game.graph.getVertex(qvm)
-        .outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
-      .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f) && !externalAndShared.includes(f)))
-    gameAssets.forEach(f => {
-      var parent = path.basename(path.dirname(f))
-      if(parent == path.basename(project)) {
-        parent = pakName
-      }
-      if(typeof grouped[pakName + '/' + parent] == 'undefined') {
-        grouped[pakName + '/' + parent] = []
-      }
-      grouped[pakName + '/' + parent].push(f)
-    })
-  })
-  
+
   // make sure lots of items are linked
   var groupedFlat = Object.values(grouped).flat(1)
   var linked = game.everything.filter(e => groupedFlat.includes(e))
