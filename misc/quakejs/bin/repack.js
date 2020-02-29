@@ -103,6 +103,7 @@ function gameInfo(gs, project) {
   var mapFiles = Object.values(game.maps).flat(1)
     .concat(Object.values(game.mapEntities).flat(1))
     .concat(Object.values(game.shaders).flat(1))
+    .concat(Object.values(game.qvms).flat(1))
   var exludingMap = game.notfound.filter(n => !mapFiles.includes(n))
   console.log(`Missing/not found excluding map/shaders: ${exludingMap.length}`, exludingMap.slice(0, 10))
   console.log(`Files in baseq3: ${game.baseq3.length}`, game.baseq3.slice(0, 10))
@@ -115,9 +116,11 @@ function gameInfo(gs, project) {
   // how many packs to create?
   var filesOverLimit = vertices
     .filter(v => v.inEdges.length > edges)
-    .map(v => [v.id].concat(v.outEdges.map(e => e.inVertex.id)))
-    .flat(1)
-    .filter(f => game.everything.includes(f))
+    .map(v => [v.id]
+      .concat(v.outEdges.map(e => e.inVertex.id))
+      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))))
+    .flat(2)
+    .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f))
   percent('Shared files', filesOverLimit.length, game.everything.length)
   
   // how many files are graphed versus unmatched or unknown?
@@ -154,7 +157,7 @@ function groupAssets(gs, project) {
   }
   var game = graphGame(gs, project)
   var vertices = game.graph.getVertices()
-  var grouped = {'menu': [], 'menu/game': []}
+  var grouped = {'menu/menu': [], 'game/game': []}
   
   // group all entities
   var entityDuplicates = Object.keys(game.entities)
@@ -231,20 +234,17 @@ function groupAssets(gs, project) {
     externalAndShared = Object.values(grouped).flat(1)
     
     var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
+    // don't include disassembly in new pak
+    // don't include maps obviously because they are listed below
+    var gameVertices = game.graph.getVertex(qvm).outEdges.map(e => e.inVertex)
+      .filter(v => !v.id.match(/\.dis|\.bsp/i))
     var gameAssets = [qvm]
-      .concat(game.graph.getVertex(qvm).outEdges.map(e => e.inVertex.id))
-      .concat(game.graph.getVertex(qvm).outEdges.map(e => {
-        var result = e.inVertex.outEdges.map(e2 => e2.inVertex.id)
-        if(result.filter(e => e.includes('base_floor')).length > 0) {
-          console.log(e)
-        }
-        return result
-      }))
+      .concat(gameVertices.map(v => v.id))
+      .concat(gameVertices
+        .filter(v => !v.id.match(/\.shader/i))
+        .map(v => v.outEdges.map(e2 => e2.inVertex.id)))
       .flat(2)
       .filter((f, i, arr) => arr.indexOf(f) === i
-        && !f.match(/\.dis/i) // don't include disassembly in new pak
-        && !f.match(/\.bsp/i) // don't include maps obviously because they are listed below
-        && !f.match(/\.shader/i)
         && game.everything.includes(f)
         && !externalAndShared.includes(f))
     
@@ -288,7 +288,7 @@ function groupAssets(gs, project) {
   // regroup groups with only a few files
   var condensed = Object.keys(grouped).reduce((obj, k) => {
     var newKey = k.split('/')[0]
-    if(grouped[k].length < edges) {
+    if(grouped[k].length <= edges || k.split('/')[1] == newKey) {
       if(typeof obj[newKey] == 'undefined') {
         obj[newKey] = []
       }
@@ -330,6 +330,7 @@ function groupAssets(gs, project) {
   var duplicates = Object.values(renamed).flat(1).filter((f, i, arr) => arr.indexOf(f) !== i)
   console.log('Duplicates found: ' + duplicates.length, duplicates.slice(0, 10))
   
+  // sort the renamed keys for printing output
   var renamedKeys = Object.keys(renamed)
   renamedKeys.sort()
   var ordered = renamedKeys.reduce((obj, k) => {
@@ -342,8 +343,10 @@ function groupAssets(gs, project) {
     renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
   fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
+  // generate a index.json the server can use for pk3 sorting based on map/game type
+  
+  
   //assert(duplicates.length === 0, 'Duplicates found: ' + duplicates.length)
-  // generate a manifest.json the server can use for pk3 sorting based on map/game type
   //fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
   return game
 }
@@ -383,9 +386,9 @@ async function repack(condensed, project) {
 
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
-//gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //gameInfo(0, PROJECT)
-groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
+//groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
 //graphShaders(PROJECT)
 //graphGame(0, PROJECT)
 //var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))

@@ -354,6 +354,7 @@ function searchMinimatch(search, everything) {
     .replace(/\\/g, '/')
     .replace(/\.[^\.]*$/, '') // remove extension
     .toLowerCase()
+  if(lookup.length === 0) return null
   var name = everything.filter(f => f.includes(lookup)) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
     if(baseq3.filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
@@ -363,7 +364,9 @@ function searchMinimatch(search, everything) {
   } else if (name.length > 1) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
-    if(path.extname(search) && !type) throw new Error('File type not found '  + search)
+    if(path.extname(search) && !type) {
+      throw new Error('File type not found '  + search)
+    }
     else if (!type) type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
     if(name.length == 0 || name.length > 1) {
