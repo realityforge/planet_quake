@@ -15,6 +15,7 @@ var {
 var DirectedGraph = require('../lib/asset.graph.js')
 
 var STEPS = {
+  'files': 'Scanning all files',
   'maps': 'Looking for maps',
   'models': 'Looking for models',
   'shaders': 'Looking for shaders',
@@ -50,7 +51,7 @@ function graphMaps(project) {
 }
 
 function graphModels(project) {
-  console.log('Looking for models')
+  console.log(STEPS['models'])
   var result = {}
   var models = findTypes(['.md5', '.md3'], project || PROJECT)
   for(var i = 0; i < models.length; i++) {
@@ -64,7 +65,7 @@ function graphModels(project) {
 }
 
 function graphShaders(project) {
-  console.log('Looking for shaders')
+  console.log(STEPS['shaders'])
   var result = {}
   var shaders = findTypes(['.shader'], project || PROJECT)
   for(var i = 0; i < shaders.length; i++) {
@@ -77,7 +78,7 @@ function graphShaders(project) {
 }
 
 function graphSkins(project) {
-  console.log('Looking for skins')
+  console.log(STEPS['skins'])
   var result = {}
   var skins = findTypes(['.skin'], project || PROJECT)
   for(var i = 0; i < skins.length; i++) {
@@ -93,6 +94,7 @@ function loadGame(project) {
   if(!project) {
     project = PROJECT
   }
+  console.log(STEPS['files'])
   var everything = glob.sync('**/*', {
     cwd: project,
     nodir: true
@@ -103,11 +105,13 @@ function loadGame(project) {
     models: graphModels(project),
     shaders: graphShaders(project),
     skins: graphSkins(project),
-    qvms: graphQVM(0, project),
     everything: everything,
   }
+  console.log(STEPS['qvms'])
+  game.qvms = graphQVM(0, project)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
+  console.log(STEPS['entities'])
   var cgame = Object.values(game.qvms).flat(1)
     .filter(k => k.match(/cgame\.dis/i))[0]
   var entities = getGameAssets(cgame)

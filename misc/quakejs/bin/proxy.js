@@ -6,7 +6,9 @@ var {Server} = require('../lib/socks.server.js')
 var {createServer} = require('net')
 
 var help = `
---max - Max number of connections for this process
+npm run proxy [options]
+--help -h - print this help message and exit
+--max {number} - Max number of connections for this process
 --master - Designated master server, force redirection after connection
 --slave - is implied from lack of --master, don't need this option
 If max is set, the following number is the number of connections,
@@ -18,10 +20,13 @@ TODO:
 Add a command to check the number of connections so it can be used as health check
 Either using the socket or event using process signals to communicate across process threads
 Add websocket piping back in for quakejs servers
+e.g. npm run proxy --max 10
 `
 
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
+  if(a.match(/\/node$/ig)) continue
+  if(a.match(/\/proxy\.js$/ig)) continue
   if(a == '--help' || a == '-h') {
 		console.log(help)
     process.exit(0)

@@ -51,7 +51,6 @@ function loadQVMStrings(buffer, topdirs) {
 }
 
 function graphQVM(qvm, project) {
-  console.log('Looking for QVMs')
   var result = {}
   var qvms = findTypes(qvm || ['.qvm'], project || PROJECT)
   var topdirs = glob.sync('**/', {cwd: project || PROJECT})
@@ -69,7 +68,6 @@ function graphQVM(qvm, project) {
 }
 
 function getGameAssets(disassembly) {
-  console.log('Looking for game entities')
   var lines = fs.readFileSync(disassembly).toString('utf-8').split('\n')
   var entMatches = lines
     .map(l => MATCH_STRINGS.exec(l))

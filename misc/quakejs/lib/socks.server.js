@@ -6,6 +6,7 @@ var Parser = require('./socks.parser')
 var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
 
+var UDP_TIMEOUT = 30 * 1000 // clear stale listeners so we don't run out of ports
 var ATYP = {
   IPv4: 0x01,
   NAME: 0x03,
@@ -38,6 +39,7 @@ function Server() {
     return new Server()
 
   this._listeners = {}
+  this._timeouts = {}
   this._dnsLookup = {}
   this._debug = true
   this._auths = []
@@ -124,9 +126,41 @@ Server.prototype.lookupDNS = async function (address) {
   }))
 }
 
+function udpMessage(socket, message, rinfo) {
+  // is this valid SOCKS5 for UDP?
+  var returnIP = false
+  var ipv6 = ip6addr.parse(rinfo.address)
+  var localbytes = ipv6.toBuffer()
+  if(ipv6.kind() == 'ipv4') {
+    localbytes = localbytes.slice(12)
+  }
+  var domain = Object.keys(this._dnsLookup)
+    .filter(n => this._dnsLookup[n] == rinfo.address)[0]
+  var bufrep = returnIP || !domain
+    ? Buffer.alloc(4 + localbytes.length + 2)
+    : Buffer.alloc(5 + domain.length + 2)
+  bufrep[0] = 0x00
+  bufrep[1] = 0x00
+  bufrep[2] = 0x00
+  if(returnIP || !domain) {
+    bufrep[3] = 0x01
+    for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
+      bufrep[p] = localbytes[i]
+  } else {
+    var domainBuf = Buffer.from(domain)
+    bufrep[3] = 0x03
+    bufrep[4] = domain.length
+    domainBuf.copy(bufrep, 5)
+    p = 5 + bufrep[4]
+  }
+  bufrep.writeUInt16BE(rinfo.port, p, true)
+  socket.send(Buffer.concat([bufrep, message]))
+}
+
 Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
+  var onMessage = udpMessage.bind(self, socket)
   if(!udpSocket) {
     console.log('No socket found.')
     return
@@ -149,39 +183,10 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   socket.on('message', onData)
   parser.authed = true
   parser.off('request', onRequest)
-  // TODO: break this out into isn't method?
-  udpSocket.on('message', (message, rinfo) => {
-    // is this valid SOCKS5 for UDP?
-    var returnIP = false
-    var ipv6 = ip6addr.parse(rinfo.address)
-    var localbytes = ipv6.toBuffer()
-    if(ipv6.kind() == 'ipv4') {
-      localbytes = localbytes.slice(12)
-    }
-    var domain = Object.keys(this._dnsLookup)
-      .filter(n => this._dnsLookup[n] == rinfo.address)[0]
-    var bufrep = returnIP || !domain
-      ? Buffer.alloc(4 + localbytes.length + 2)
-      : Buffer.alloc(5 + domain.length + 2)
-    bufrep[0] = 0x00
-    bufrep[1] = 0x00
-    bufrep[2] = 0x00
-    if(returnIP || !domain) {
-      bufrep[3] = 0x01
-      for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
-        bufrep[p] = localbytes[i]
-    } else {
-      var domainBuf = Buffer.from(domain)
-      bufrep[3] = 0x03
-      bufrep[4] = domain.length
-      domainBuf.copy(bufrep, 5)
-      p = 5 + bufrep[4]
-    }
-    bufrep.writeUInt16BE(rinfo.port, p, true)
-    socket.send(Buffer.concat([bufrep, message]))
-  })
-  
+  udpSocket.on('message', onMessage)
   parser.on('request', async (reqInfo) => {
+    clearTimeout(self._timeouts[udpLookupPort])
+    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close())
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
       udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
@@ -311,7 +316,10 @@ Server.prototype.tryBindPort = async function(reqInfo) {
         .on('connection', self._onConnection)
         .on('error', reject)
         .bind(portLeft + portRight, reqInfo.dstAddr))
+      // TODO: fix this, port will be the same for every client
+      //   client needs to request the random port we assign
       self._listeners[reqInfo.dstPort] = listener
+      self._timeouts[reqInfo.dstPort] = setTimeout(() => listener.close(), UDP_TIMEOUT)
       return
     } catch(e) {
       if(!e.code.includes('EADDRINUSE')) throw e

@@ -7,15 +7,18 @@ var { Readable } = require('stream')
 var {compressFile, compressDirectory} = require('./compress.js')
 
 var help = `
---recursive -R, adds all directory files below current directory
---pk3dir -pk, create virtual pk3dir out of pk3 and exclude pk3 files
+npm run start [options] [virtual path] [filesystem path]
+NOTE: ./biuld/release-js-js is implied
+--recursive -R - adds all directory files below current directory
+--pk3dir -pk - create virtual pk3dir out of pk3 and exclude pk3 files
   opposite of repack
---write -wr, write all JSON files in every directory for CDN use
---repack -rp, repack on the fly as pk3/media/images/sound files are accessed
+--write -wr - write all JSON files in every directory for CDN use
+--repack -rp - repack on the fly as pk3/media/images/sound files are accessed
   opposit of pk3dir
---hidden -H, include hidden files (uncommon)
---watch, watch files for changes
---help -h, print this help message and exit
+--hidden -H - include hidden files (uncommon)
+--watch - watch files for changes
+--help -h - print this help message and exit
+e.g. npm run start -- -R -rp /assets/baseq3 /Applications/ioquake3/baseq3
 `
 
 var recursive = false
@@ -33,9 +36,9 @@ var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
+  if(a.match(/\/node$/ig)) continue
+  if(a.match(/\/web\.js$/ig)) continue
   if(fs.existsSync(a)) {
-		if(a.match(/\/node$/ig)) continue
-		if(a.match(/\/web\.js$/ig)) continue
     // if running content script directly, automatically call each mount point 
     //   so the json files and zipped files can be generated
     if(a.match(/\/content\.js$/ig)) {
