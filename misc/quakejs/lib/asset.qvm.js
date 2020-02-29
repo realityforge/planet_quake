@@ -161,7 +161,7 @@ function graphQVM(qvm, project) {
     if(!fs.existsSync(disassembly)) continue
     var buffer = fs.readFileSync(disassembly)
     var qvmstrings = loadQVMStrings(buffer, topdirs)
-      .concat(['botfiles/**', '*.cfg', disassembly])
+      .concat(['botfiles/**', '*.cfg'])
     result[qvms[i]] = qvmstrings
   }
   console.log(`Found ${qvms.length} QVMs and ${Object.values(result).reduce((t, o) => t += o.length, 0)} strings`)

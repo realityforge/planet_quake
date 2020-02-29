@@ -157,11 +157,21 @@ function groupAssets(gs, project) {
   var grouped = {'menu': [], 'menu/game': []}
   
   // group all entities
+  var entityDuplicates = Object.keys(game.entities)
+    .map(ent => game.graph.getVertex(ent))
+    .filter((v, i, arr) => v)
+    .map(v => [v]
+      .concat(v.outEdges.map(e => e.inVertex.id))
+      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
+      .filter((f, i, arr) => arr.indexOf(f) === i))
+    .flat(1)
+    .filter((f, i, arr) => arr.indexOf(f) !== i)
   Object.keys(game.entities).forEach(ent => {
     var v = game.graph.getVertex(ent)
     if(!v) return true
     var entFiles = v.outEdges.map(e => e.inVertex.id)
       .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
+      .filter((f, i, arr) => arr.indexOf(f) === i && !entityDuplicates.includes(f))
     var model = entFiles.filter(f => f.match(/.\.md3/i))[0]
       || entFiles[0]
     var pakClass = numericMap
@@ -197,13 +207,11 @@ function groupAssets(gs, project) {
       .concat(v.outEdges.map(e => e.inVertex.id))
       .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))))
     .flat(2)
+    .concat(entityDuplicates)
     .filter((f, i, arr) => arr.indexOf(f) === i
       && game.everything.includes(f) && !externalAssets.includes(f))
   filesOverLimit.forEach(f => {
     var parent = path.basename(path.dirname(f))
-    //if(parent == path.basename(project)) {
-    //  parent = 'game'
-    //}
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => 
         i < map.length - 1 && f.match(new RegExp(m))).length > 0)[0][0]
@@ -224,7 +232,7 @@ function groupAssets(gs, project) {
         .filter(f => !externalAndShared.includes(f))
         // map through shaders
         .concat(v.outEdges.map(e => e.inVertex.outEdges.map(v => v.inVertex.id)).flat(1))
-        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
+        .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f) && !externalAndShared.includes(f))
       if(mapAssets.length > 0) {
         grouped['maps/' + map] = mapAssets
       }
@@ -238,7 +246,7 @@ function groupAssets(gs, project) {
       .outEdges.map(e => e.inVertex.id)
       .concat(game.graph.getVertex(qvm)
         .outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
-      .filter(f => game.everything.includes(f) && !externalAndShared.includes(f)))
+      .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f) && !externalAndShared.includes(f)))
     gameAssets.forEach(f => {
       var parent = path.basename(path.dirname(f))
       if(parent == path.basename(project)) {
@@ -302,7 +310,7 @@ function groupAssets(gs, project) {
   
   // make sure there are no duplicates
   var duplicates = Object.values(renamed).flat(1).filter((f, i, arr) => arr.indexOf(f) !== i)
-  console.log(duplicates.slice(0, 10))
+  console.log('Duplicates found: ' + duplicates.length, duplicates.slice(0, 10))
   
   var renamedKeys = Object.keys(renamed)
   renamedKeys.sort()
@@ -316,7 +324,7 @@ function groupAssets(gs, project) {
     renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
   fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
-  assert(duplicates.length === 0, 'Duplicates found: ' + duplicates.length)
+  //assert(duplicates.length === 0, 'Duplicates found: ' + duplicates.length)
   // generate a manifest.json the server can use for pk3 sorting based on map/game type
   //fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
   return game
