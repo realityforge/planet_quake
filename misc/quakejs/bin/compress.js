@@ -1,7 +1,9 @@
+var path = require('path')
 var crc32 = require('buffer-crc32')
 var zlib = require('zlib')
 var {ufs} = require('unionfs')
 var archiver = require('archiver')
+var StreamZip = require('node-stream-zip')
 
 /*
 // because cloud storage doesn't necissarily support it?
@@ -14,6 +16,61 @@ function createVirtualGZip(mountPoint) {
     resolve, reject)
 }
 */
+
+function mkdirpSync(p) {
+  try {
+    ufs.mkdirSync(p)
+  } catch (e) {
+    if(e.code == 'EEXIST') {
+      return
+    }
+    if(e.code == 'ENOENT') {
+      var parent = path.dirname(p)
+      if(parent == p) throw e
+      mkdirpSync(parent)
+      ufs.mkdirSync(p)
+    } else {
+      throw e
+    }
+  }
+}
+
+async function readPak(zipFile, cb, outdir) {
+  const zip = new StreamZip({
+      file: zipFile,
+      storeEntries: true
+  });
+
+  var header = await new Promise(resolve => {
+    zip.on('ready', async () => {
+      console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(zipFile))
+      var index = Object.values(zip.entries())
+      if(!outdir) {
+        resolve(index)
+      }
+      for(var i = 0; i < index.length; i++) {
+        var entry = index[i]
+        if(entry.isDirectory) continue
+        var levelPath = path.join(outdir, entry.name)
+        mkdirpSync(path.dirname(levelPath))
+        if(cb) {
+          cb(i, index.length, entry.name)
+        }
+        await new Promise(resolve => {
+          zip.extract(entry.name, levelPath, err => {
+              console.log((err ? ('Extract error ' + err) : 'Extracted ') + entry.name);
+              resolve();
+          })
+        })
+      }
+      resolve()
+    })
+    
+    zip.on('error', resolve)
+  })
+  
+  return header
+}
 
 async function compressDirectory(fullpath, outputStream, absolute) {
   var archive = archiver('zip', {
@@ -100,5 +157,6 @@ function sendCompressed(file, res, acceptEncoding) {
 module.exports = {
   compressFile,
   sendCompressed,
-  compressDirectory
+  compressDirectory,
+  readPak
 }

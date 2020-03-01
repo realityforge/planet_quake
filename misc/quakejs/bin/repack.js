@@ -4,17 +4,17 @@ var path = require('path')
 var glob = require('glob')
 var assert = require('assert')
 var minimatch = require('minimatch')
+var {ufs} = require('unionfs')
+ufs.use(fs)
 var {graphQVM, loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
 var {graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME} = require('../lib/asset.game.js')
-var {compressDirectory} = require('../bin/compress.js')
+var {compressDirectory, readPak} = require('../bin/compress.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
 } = require('../bin/repack-whitelist.js')
-var {ufs} = require('unionfs')
-ufs.use(fs)
 
-var PROJECT = '/Users/briancullinan/planet_quake_data/baseq3-combined-converted'
+var PROJECT = '/Applications/ioquake3/baseq3'
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
 var INFO_NAME = path.join(__dirname, 'previous-info.json')
 var STEPS = {
@@ -23,6 +23,7 @@ var STEPS = {
   'info': 'Print info about the game data',
   'convert': 'Convert game data to web format',
   'repack': 'Zip converted files in to new paks',
+  'clean': 'Cleaning up'
 }
 
 var help = `
@@ -75,9 +76,10 @@ for(var i = 0; i < process.argv.length; i++) {
       // TODO: need some basic parsing to get the part before _ of every entity name
       i++
     } else {
-      console.log(`ERROR: entities def ${process.argv[i+1]} not found`)
+      console.error(`ERROR: entities def ${process.argv[i+1]} not found`)
     }
   } else if (a == '--previous' || a == '-p') {
+    delete STEPS['source']
     if(fs.existsSync(process.argv[i+1])) {
       usePrevious = process.argv[i+1]
       i++
@@ -101,13 +103,13 @@ for(var i = 0; i < process.argv.length; i++) {
     transcode += ' ' + a
     continue
   } else {
-    console.log(`ERROR: Unrecognized option "${a}"`)
+    console.error(`ERROR: Unrecognized option "${a}"`)
   }
   isConvertParams = false
   isTranscodeParams = false
 }
 if(mountPoints.length == 0) {
-  console.log('ERROR: No mount points, e.g. run `npm run repack /Applications/ioquake3/baseq3`')
+  console.error('ERROR: No mount points, e.g. run `npm run repack /Applications/ioquake3/baseq3`')
   if(fs.existsSync(PROJECT))
     mountPoints.push(PROJECT)
 } else {
@@ -125,13 +127,27 @@ try {
 if(!noProgress) {
   var cliProgress = require('cli-progress')
   var multibar = new cliProgress.MultiBar({
-      clearOnComplete: false,
+      clearOnComplete: true,
       hideCursor: true,
       format: `[\u001b[34m{bar}\u001b[0m] {percentage}% | {value}/{total} | {message}`,
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2588',
-      barGlue: '\u001b[33m'
+      barGlue: '\u001b[33m',
+      forceRedraw: true
   })
+  var oldConsole = console
+  function resetRedraw(out) {
+    var args = Array.from(arguments).slice(1)
+    multibar.terminal.cursorRelativeReset()
+    multibar.terminal.clearBottom()
+    oldConsole[out].apply(oldConsole, args)
+    multibar.update()
+  }
+  console = {
+    log: resetRedraw.bind(null, 'log'),
+    error: resetRedraw.bind(null, 'error'),
+    info: resetRedraw.bind(null, 'info'),
+  }
 }
 
 var globalBars = []
@@ -143,6 +159,7 @@ function percent(l, a, b) {
 function progress(bars) {
   if(bars === false) {
     for(var i = 0; i < globalBars.length; i++) {
+      if(!globalBars[i]) continue
       globalBars[i].stop()
     }
     multibar.stop()
@@ -150,12 +167,15 @@ function progress(bars) {
   //e.g. [[1, 0, 10, 'Removing temporary files']]
   for(var i = 0; i < bars.length; i++) {
     if(!multibar) {
+      if(bars[i][1] === false) continue
       percent(bars[i][3], bars[i][2], bars[i][1])
       continue
     }
     if(bars[i][1] === false) {
       globalBars[bars[i][0]].stop()
-      globalBars[bars[i][0]].remove()
+      multibar.remove(globalBars[bars[i][0]])
+      globalBars[bars[i][0]] = void 0
+      continue
     }
     var info = {
       percentage: Math.round(bars[i][1]/bars[i][2]*1000) / 10,
@@ -167,6 +187,7 @@ function progress(bars) {
       globalBars[bars[i][0]] = multibar.create()
       globalBars[bars[i][0]].start(bars[i][2], bars[i][1], info)
     } else {
+      globalBars[bars[i][0]].setTotal(bars[i][2])
       globalBars[bars[i][0]].update(bars[i][1], info)
     }
   }
@@ -516,10 +537,25 @@ async function repack(condensed, project) {
 }
 
 // do the actual work specified in arguments
-for(var i = 0; i < mountPoints.length; i++) {
-  progress([[0, 0, STEPS.length, STEPS['source']]])
-  
+async function repackGames() {
+  for(var i = 0; i < mountPoints.length; i++) {
+    progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
+    progress([[1, 0, 2, 'Sourcing files']])
+    var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
+    pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+    for(var j = 0; j < pk3s.length; j++) {
+      progress([[1, j + 1, pk3s.length + 2, `Unpacking ${pk3s[j]}`]])
+      await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
+        progress([[2, index, total, `Extracting ${n}`]])
+      }, path.join(tempDir, name))
+      progress([[2, false]])
+    }
+    progress([[1, false]])
+    progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
+  }
+  progress(false)
 }
+repackGames()
 //graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
 //graphMaps(PROJECT)
 //gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
@@ -532,4 +568,3 @@ for(var i = 0; i < mountPoints.length; i++) {
 //repack()
 //graphQVM('**/pak8.pk3dir/**/*.qvm')
 //var strings = loadQVM('**/cgame.qvm', PROJECT)
-progress(false)
