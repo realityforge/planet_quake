@@ -22,7 +22,6 @@ var STEPS = {
   'skins': 'Looking for skins',
   'qvms': 'Looking for QVMs',
   'entities': 'Looking for game entities',
-  'files': 'Searching for QVM files',
   'vertices': 'Graphing vertices',
   'shaders': 'Graphing shaders',
 }
@@ -38,7 +37,6 @@ if(fs.existsSync(BASEQ3)) {
 }
 
 function graphMaps(project) {
-  console.log(STEPS['maps'])
   var result = {}
   var maps = findTypes(['.bsp'], project || PROJECT)
   for(var i = 0; i < maps.length; i++) {
@@ -51,7 +49,6 @@ function graphMaps(project) {
 }
 
 function graphModels(project) {
-  console.log(STEPS['models'])
   var result = {}
   var models = findTypes(['.md5', '.md3'], project || PROJECT)
   for(var i = 0; i < models.length; i++) {
@@ -65,7 +62,6 @@ function graphModels(project) {
 }
 
 function graphShaders(project) {
-  console.log(STEPS['shaders'])
   var result = {}
   var shaders = findTypes(['.shader'], project || PROJECT)
   for(var i = 0; i < shaders.length; i++) {
@@ -78,7 +74,6 @@ function graphShaders(project) {
 }
 
 function graphSkins(project) {
-  console.log(STEPS['skins'])
   var result = {}
   var skins = findTypes(['.skin'], project || PROJECT)
   for(var i = 0; i < skins.length; i++) {
@@ -90,28 +85,30 @@ function graphSkins(project) {
   return result
 }
 
-function loadGame(project) {
+function loadGame(project, progress) {
   if(!project) {
     project = PROJECT
   }
-  console.log(STEPS['files'])
+  progress([[1, 0, Object.keys(STEPS).length, STEPS['files']]])
   var everything = glob.sync('**/*', {
     cwd: project,
     nodir: true
   }).map(f => path.join(project, f))
   
-  var game = {
-    maps: graphMaps(project),
-    models: graphModels(project),
-    shaders: graphShaders(project),
-    skins: graphSkins(project),
-    everything: everything,
-  }
-  console.log(STEPS['qvms'])
+  var game = {}
+  progress([[1, 1, Object.keys(STEPS).length, STEPS['maps']]])
+  game.maps = graphMaps(project)
+  progress([[1, 2, Object.keys(STEPS).length, STEPS['models']]])
+  game.models = graphModels(project)
+  progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
+  game.shaders = graphShaders(project)
+  progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
+  game.skins = graphSkins(project)
+  progress([[1, 5, Object.keys(STEPS).length, STEPS['qvms']]])
   game.qvms = graphQVM(0, project)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
-  console.log(STEPS['entities'])
+  progress([[1, 6, Object.keys(STEPS).length, STEPS['entities']]])
   var cgame = Object.values(game.qvms).flat(1)
     .filter(k => k.match(/cgame\.dis/i))[0]
   var entities = getGameAssets(cgame)
@@ -185,8 +182,9 @@ function loadGame(project) {
       return obj
     }, {})
   var qvmFiles = Object.keys(game.qvms)
-    .reduce((obj, k) => {
-      console.log(`Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`)
+    .reduce((obj, k, i) => {
+      progress([[1, 7 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
+        `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]])
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
         .map(w => w.replace(/\\/ig, '/'))
@@ -215,12 +213,12 @@ function loadGame(project) {
   return Object.assign(game, gameState)
 }
 
-function graphGame(gs, project) {
+function graphGame(gs, project, progress) {
   if(!project) {
     project = PROJECT
   }
   if(!gs) {
-    gs = loadGame(project)
+    gs = loadGame(project, progress)
   }
   var graph = new DirectedGraph()
   
@@ -246,7 +244,9 @@ function graphGame(gs, project) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  console.log(`Graphing ${vertices.length} vertices`)
+  progress([[1, 7 + Object.keys(game.qvms).length,
+    Object.keys(STEPS).length + Object.keys(game.qvms).length,
+    `Graphing ${vertices.length} vertices`]])
   
   var fileLookups = {}
   for(var i = 0; i < vertices.length; i++) {
@@ -282,7 +282,9 @@ function graphGame(gs, project) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  console.log(`Graphing ${allShaders.length} shaders`)
+  progress([[1, 7 + Object.keys(game.qvms).length + 1,
+    Object.keys(STEPS).length + Object.keys(game.qvms).length,
+    `Graphing ${allShaders.length} shaders`]])
     
   var shaderLookups = {}
   for(var i = 0; i < allShaders.length; i++) {

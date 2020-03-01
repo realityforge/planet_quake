@@ -108,6 +108,9 @@ for(var i = 0; i < process.argv.length; i++) {
   isConvertParams = false
   isTranscodeParams = false
 }
+if(typeof STEPS['convert'] != 'undefined') {
+  delete STEPS['info']
+}
 if(mountPoints.length == 0) {
   console.error('ERROR: No mount points, e.g. run `npm run repack /Applications/ioquake3/baseq3`')
   if(fs.existsSync(PROJECT))
@@ -117,7 +120,7 @@ if(mountPoints.length == 0) {
 }
 for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
-  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(tempDir, name)}`)
+  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(tempDir, name + '-combined-converted-repacked')}`)
 }
 try {
   require.resolve('cli-progress');
@@ -152,8 +155,12 @@ if(!noProgress) {
 
 var globalBars = []
 
+function getPercent(l, a, b) {
+  return `${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`
+}
+
 function percent(l, a, b) {
-  console.log(`${l}: ${a}/${b} - ${Math.round(a/b*1000) / 10}%`)
+  console.log(getPercent(l, a, b))
 }
 
 function progress(bars) {
@@ -211,7 +218,7 @@ function gameInfo(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGame(gs, project)
+  var game = graphGame(gs, project, progress)
   // how many files are matched versus unknown?
   game.files = game.files || findTypes(fileTypes, game.everything)
   game.images = game.images || findTypes(imageTypes, game.everything)
@@ -223,6 +230,7 @@ function gameInfo(gs, project) {
   percent('Source files', game.sources.length, game.everything.length)
   percent('Known files', game.files.length, game.everything.length)
   percent('Recognized files', game.known.length, game.everything.length)
+  
   var unrecognized = game.everything.filter(f => !game.known.includes(f))
   percent('Unrecognized files', unrecognized.length, game.everything.length)
   console.log(unrecognized.slice(0, 10))
@@ -234,12 +242,14 @@ function gameInfo(gs, project) {
     .map(e => e.inVertex.id)
     .filter(e => game.everything.includes(e))
   percent('UI files', uiqvm.length, game.everything.length)
+  
   var cgame = game.graph.getVertices()
     .filter(v => v.id.match(/cgame\.qvm/i))[0]
     .outEdges
     .map(e => e.inVertex.id)
     .filter(e => game.everything.includes(e))
   percent('Cgame files', cgame.length, game.everything.length)
+  
   var qagame = game.graph.getVertices()
     .filter(v => v.id.match(/qagame\.qvm/i))[0]
     .outEdges
@@ -277,13 +287,14 @@ function gameInfo(gs, project) {
   
   // how many files are graphed versus unmatched or unknown?
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
-  console.log('Least used assets:', vertices
+  var leastUsed = vertices
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm|\.aas)/i))
-    .slice(0, 10)
+  console.log('Least used assets:', leastUsed.slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
-  console.log('Least used models:', vertices
+  
+  var leastUsedExcept = vertices
     .filter(v => v.inEdges.length > 0 && v.id.match(/(\.md3)/i) && !v.id.match(/(players)/i))
-    .slice(0, 10)
+  console.log('Least used models:', leastUsedExcept.slice(0, 10)
     .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
   
   var allShaders = Object.values(game.scripts).flat(1)
@@ -296,9 +307,61 @@ function gameInfo(gs, project) {
   var allVertices = vertices.map(v => v.id)
   var graphed = game.everything.filter(e => allVertices.includes(e))
   percent('All graphed', graphed.length, game.everything.length)
+  
   var ungraphed = game.everything.filter(e => !allVertices.includes(e))
   percent('Ungraphed', ungraphed.length, game.everything.length)
   console.log(ungraphed.slice(0, 10))
+  
+  fs.writeFileSync(INFO_NAME, JSON.stringify({
+    summary: {
+      images: getPercent('Image files', game.images.length, game.everything.length),
+      audio: getPercent('Audio files', game.audio.length, game.everything.length),
+      sources: getPercent('Source files', game.sources.length, game.everything.length),
+      files: getPercent('Known files', game.files.length, game.everything.length),
+      known: getPercent('Recognized files', game.known.length, game.everything.length),
+      unrecognized: getPercent('Unrecognized files', unrecognized.length, game.everything.length),
+      uiqvm: getPercent('UI files', uiqvm.length, game.everything.length),
+      cgame: getPercent('CGame files', cgame.length, game.everything.length),
+      qagame: getPercent('QAGame files', qagame.length, game.everything.length),
+      qvmFiles: percent('Total QVM files', qvmFiles.length, game.everything.length),
+      notfound: `Missing/not found: ${game.notfound.length}`,
+      excludingMap: `Missing/not found excluding map/shaders: ${exludingMap.length}`,
+      baseq3: `Files in baseq3: ${game.baseq3.length}`,
+      vertices: 'Most used assets: ' + vertices.slice(0, 10).map(v => v.inEdges.length + ' - ' + v.id),
+      filesOverLimit: getPercent('Shared files', filesOverLimit.length, game.everything.length),
+      leastUsed: 'Least used assets: ' + leastUsed.slice(0, 10)
+        .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', '))
+        .join('\n'),
+      leastUsedExcept: 'Least used models: ' + leastUsedExcept.slice(0, 10)
+        .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', '))
+        .join('\n'),
+      unused: 'Unused assets:' + unused.length + unused.slice(0, 10).map(v => v.id),
+      graphed: getPercent('All graphed', graphed.length, game.everything.length),
+      ungraphed: getPercent('Ungraphed', ungraphed.length, game.everything.length) + ungraphed.slice(0, 10)
+    },
+    images: game.images,
+    audio: game.audio,
+    sources: game.sources,
+    files: game.files,
+    known: game.known,
+    unrecognized: unrecognized,
+    uiqvm: uiqvm,
+    cgame: cgame,
+    qagame: qagame,
+    qvmFiles: qvmFiles,
+    notfound: game.notfound,
+    exludingMap: exludingMap,
+    baseq3: game.baseq3,
+    vertices: vertices.map(v => v.inEdges.length + ' - ' + v.id),
+    filesOverLimit: filesOverLimit,
+    leastUsed: leastUsed
+      .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
+    leastUsedExcept: leastUsedExcept
+      .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
+    unused: unused,
+    graphed: graphed,
+    ungraphed: ungraphed,
+  }, null, 2))
   
   return gs
 }
@@ -307,7 +370,7 @@ function groupAssets(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGame(gs, project)
+  var game = graphGame(gs, project, progress)
   var vertices = game.graph.getVertices()
   var grouped = {'menu/menu': [], 'game/game': []}
   
@@ -495,11 +558,9 @@ function groupAssets(gs, project) {
     renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
   fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
-  // generate a index.json the server can use for pk3 sorting based on map/game type
-  
-  
-  //assert(duplicates.length === 0, 'Duplicates found: ' + duplicates.length)
-  //fs.writeFileSync(TEMP_NAME, JSON.stringify(condensed, null, 2))
+  game.ordered = ordered
+  game.renamed = renamed
+  game.condensed = condensed
   return game
 }
 
@@ -512,59 +573,84 @@ function getSequenceNumeral(pre, count) {
   return result + (count % 10)
 }
 
-async function repack(condensed, project) {
+async function repack(game, project) {
   if(!project) {
     project = PROJECT
   }
-  if(!condensed) {
-    condensed = gameInfo(PROJECT).condensed
+  if(!game) {
+    game = groupAssets(0, project)
   }
   var outputProject = path.join(path.dirname(project), path.basename(project) + '-repacked')
   if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
   var everything = glob.sync('**/*', {cwd: project})
     .map(f => path.join(project, f))
   var everythingLower = everything.map(f => f.toLowerCase())
-  var condensedKeys = Object.keys(condensed)
-  for(var i = 0; i < condensedKeys.length; i++) {
-    var pak = condensed[condensedKeys[i]]
-    console.log('Packing ' + condensedKeys[i])
+  var orderedKeys = Object.keys(game.ordered)
+  for(var i = 0; i < orderedKeys.length; i++) {
+    var pak = game.ordered[orderedKeys[i]]
+    console.log('Packing ' + orderedKeys[i])
     var real = pak
       .map(f => everything[everythingLower.indexOf(f)])
       .filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
-    var output = fs.createWriteStream(path.join(outputProject, condensedKeys[i] + '.pk3'))
+    var output = fs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
     await compressDirectory(real, output, project)
   }
+  
+  // generate a index.json the server can use for pk3 sorting based on map/game type
+  
 }
 
 // do the actual work specified in arguments
 async function repackGames() {
   for(var i = 0; i < mountPoints.length; i++) {
-    progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
-    progress([[1, 0, 2, 'Sourcing files']])
-    var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
-    pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
-    for(var j = 0; j < pk3s.length; j++) {
-      progress([[1, j + 1, pk3s.length + 2, `Unpacking ${pk3s[j]}`]])
-      await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
-        progress([[2, index, total, `Extracting ${n}`]])
-      }, path.join(tempDir, name))
-      progress([[2, false]])
+    var gs
+    if(typeof STEPS['source'] != 'undefined') {
+      progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
+      progress([[1, 0, 2, 'Sourcing files']])
+      var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
+      pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+      for(var j = 0; j < pk3s.length; j++) {
+        progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
+        await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
+          progress([[2, index, total, `Extracting ${n}`]])
+        }, path.join(tempDir, name + '-combined'))
+        progress([[2, false]])
+      }
+      progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
+      gs = graphGame(0, mountPoints[i], progress)
+    } else {
+      progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
+      gs = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8'),
+      mountPoints[i], progress)      
     }
-    progress([[1, false]])
-    progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
+    if(typeof STEPS['info'] != 'undefined') {
+      progress([
+        [1, false],
+        [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['info']],
+      ])
+      gameInfo(gs, mountPoints[i])
+    } else {
+      progress([
+        [1, false],
+        [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
+      ])
+      // TODO: transcoding and graphics magick
+      
+      // repacking
+      
+    }
+    
   }
   progress(false)
 }
+
 repackGames()
-//graphModels('/Users/briancullinan/planet_quake_data/baseq3-combined-converted')
-//graphMaps(PROJECT)
-//gameInfo(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
-//gameInfo(0, PROJECT)
-//groupAssets(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')), PROJECT)
-//graphShaders(PROJECT)
-//graphGame(0, PROJECT)
-//var game = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
-//repack(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')))
-//repack()
-//graphQVM('**/pak8.pk3dir/**/*.qvm')
-//var strings = loadQVM('**/cgame.qvm', PROJECT)
+
+module.exports = {
+  repackGames,
+  repack,
+  gameInfo,
+  PAK_NAME,
+  INFO_NAME,
+  STEPS,
+}
