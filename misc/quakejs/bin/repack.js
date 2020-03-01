@@ -234,7 +234,13 @@ async function gameInfo(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = await graphGame(gs, project, progress)
+  var game
+  if(!gs.graph) {
+    game = await graphGame(gs, project, progress)
+  } else {
+    game = gs
+  }
+
   // how many files are matched versus unknown?
   game.files = game.files || findTypes(fileTypes, game.everything)
   game.images = game.images || findTypes(imageTypes, game.everything)
@@ -387,7 +393,12 @@ async function groupAssets(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = await graphGame(gs, project, progress)
+  var game
+  if(!gs.graph) {
+    game = await graphGame(gs, project, progress)
+  } else {
+    game = gs
+  }
   var vertices = game.graph.getVertices()
   var grouped = {'menu/menu': [], 'game/game': []}
   
@@ -573,6 +584,7 @@ async function groupAssets(gs, project) {
   console.log('Proposed layout:',
     renamedKeys.map(k => k + ' - ' + renamed[k].length),
     renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
+  console.log(`Pak layout written to "${PAK_NAME}"`)
   fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
   game.ordered = ordered
@@ -590,25 +602,25 @@ function getSequenceNumeral(pre, count) {
   return result + (count % 10)
 }
 
-async function repack(game, project) {
+async function repack(gs, project, outputProject) {
   if(!project) {
     project = PROJECT
   }
-  if(!game) {
-    game = await groupAssets(0, project)
+  var game
+  if(!gs.graph) {
+    game = await graphGame(gs, project, progress)
+  } else {
+    game = gs
   }
-  var outputProject = path.join(path.dirname(project), path.basename(project) + '-repacked')
+  if(!game || !game.ordered) {
+    game = await groupAssets(gs, project)
+  }
   if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
-  var everything = glob.sync('**/*', {cwd: project})
-    .map(f => path.join(project, f))
-  var everythingLower = everything.map(f => f.toLowerCase())
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
     var pak = game.ordered[orderedKeys[i]]
-    console.log('Packing ' + orderedKeys[i])
-    var real = pak
-      .map(f => everything[everythingLower.indexOf(f)])
-      .filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
+    await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]])
+    var real = pak.filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
     var output = fs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
     await compressDirectory(real, output, project)
   }
@@ -643,16 +655,25 @@ async function repackGames() {
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['info']],
         ])
         await gameInfo(gs, outCombined)
-      } else {
+      }
+      
+      await groupAssets(gs, outCombined)
+      
+      // transcoding and graphics magick
+      if(typeof STEPS['convert'] != 'undefined') {
         await progress([
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
         ])
-        // TODO: transcoding and graphics magick
-        
-        
+        convertGameFiles(mountPoints[i], outConverted, progress)
+      }
+      if(typeof STEPS['repack'] != 'undefined') {    
         // repacking
-        
+        await progress([
+          [1, false],
+          [0, typeof STEPS['source'] != 'undefined' ? 3 : 2, Object.keys(STEPS).length, STEPS['convert']],
+        ])
+        await repack(gs, mountPoints[i], outRepacked)
       }
     } catch (e) {
       console.log(e)
