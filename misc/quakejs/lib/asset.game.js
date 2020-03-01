@@ -21,6 +21,7 @@ var STEPS = {
   'shaders': 'Looking for shaders',
   'skins': 'Looking for skins',
   'qvms': 'Looking for QVMs',
+  'disassemble': 'Disassembling QVMs'
   'entities': 'Looking for game entities',
   'vertices': 'Graphing vertices',
   'shaders': 'Graphing shaders',
@@ -108,10 +109,10 @@ function loadGame(project, progress) {
   game.qvms = graphQVM(0, project)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
-  progress([[1, 6, Object.keys(STEPS).length, STEPS['entities']]])
+  progress([[1, 7, Object.keys(STEPS).length, STEPS['entities']]])
   var cgame = Object.values(game.qvms).flat(1)
     .filter(k => k.match(/cgame\.dis/i))[0]
-  var entities = getGameAssets(cgame)
+  var entities = cgame ? getGameAssets(cgame) : []
   
   // add all vertices
   var entityRefs = Object.keys(game.maps)
@@ -183,7 +184,7 @@ function loadGame(project, progress) {
     }, {})
   var qvmFiles = Object.keys(game.qvms)
     .reduce((obj, k, i) => {
-      progress([[1, 7 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
+      progress([[1, 8 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
         `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]])
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
@@ -244,7 +245,7 @@ function graphGame(gs, project, progress) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  progress([[1, 7 + Object.keys(game.qvms).length,
+  progress([[1, 8 + Object.keys(game.qvms).length,
     Object.keys(STEPS).length + Object.keys(game.qvms).length,
     `Graphing ${vertices.length} vertices`]])
   
@@ -282,7 +283,7 @@ function graphGame(gs, project, progress) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  progress([[1, 7 + Object.keys(game.qvms).length + 1,
+  progress([[1, 8 + Object.keys(game.qvms).length + 1,
     Object.keys(STEPS).length + Object.keys(game.qvms).length,
     `Graphing ${allShaders.length} shaders`]])
     

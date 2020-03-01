@@ -158,5 +158,6 @@ module.exports = {
   compressFile,
   sendCompressed,
   compressDirectory,
-  readPak
+  readPak,
+  mkdirpSync
 }

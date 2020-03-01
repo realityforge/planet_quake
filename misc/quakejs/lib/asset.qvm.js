@@ -59,6 +59,7 @@ function graphQVM(qvm, project) {
     var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
     if(!fs.existsSync(disassembly)) continue
     var buffer = fs.readFileSync(disassembly)
+    // TODO: add arenas, configs, bot scripts, defi
     var qvmstrings = loadQVMStrings(buffer, topdirs)
       .concat(['botfiles/**', '*.cfg', '*.shader', disassembly])
     result[qvms[i]] = qvmstrings

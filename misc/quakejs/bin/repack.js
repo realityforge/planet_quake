@@ -603,43 +603,49 @@ async function repack(game, project) {
 // do the actual work specified in arguments
 async function repackGames() {
   for(var i = 0; i < mountPoints.length; i++) {
-    var gs
-    if(typeof STEPS['source'] != 'undefined') {
-      progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
-      progress([[1, 0, 2, 'Sourcing files']])
-      var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
-      pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
-      for(var j = 0; j < pk3s.length; j++) {
-        progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
-        await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
-          progress([[2, index, total, `Extracting ${n}`]])
-        }, path.join(tempDir, name + '-combined'))
-        progress([[2, false]])
+    try {
+      var gs
+      if(typeof STEPS['source'] != 'undefined') {
+        progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
+        progress([[1, 0, 2, 'Sourcing files']])
+        var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
+        pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+        for(var j = 0; j < pk3s.length; j++) {
+          progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
+          await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
+            if(!noProgress) {
+              progress([[2, index, total, `Extracting ${n}`]])
+            }
+          }, path.join(tempDir, name + '-combined'))
+          progress([[2, false]])
+        }
+        progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
+        gs = graphGame(0, path.join(tempDir, name + '-combined'), progress)
+      } else {
+        progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
+        gs = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')),
+          path.join(tempDir, name + '-combined'), progress)
       }
-      progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
-      gs = graphGame(0, mountPoints[i], progress)
-    } else {
-      progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
-      gs = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8'),
-      mountPoints[i], progress)      
+      if(typeof STEPS['info'] != 'undefined') {
+        progress([
+          [1, false],
+          [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['info']],
+        ])
+        gameInfo(gs, path.join(tempDir, name + '-combined'))
+      } else {
+        progress([
+          [1, false],
+          [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
+        ])
+        // TODO: transcoding and graphics magick
+        
+        
+        // repacking
+        
+      }
+    } catch (e) {
+      console.log(e)
     }
-    if(typeof STEPS['info'] != 'undefined') {
-      progress([
-        [1, false],
-        [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['info']],
-      ])
-      gameInfo(gs, mountPoints[i])
-    } else {
-      progress([
-        [1, false],
-        [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
-      ])
-      // TODO: transcoding and graphics magick
-      
-      // repacking
-      
-    }
-    
   }
   progress(false)
 }
