@@ -11,11 +11,11 @@ var PROJECT = '/Applications/ioquake3/baseq3'
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
 var INFO_NAME = path.join(__dirname, 'previous-info.json')
 var STEPS = {
-  'source': 'Load pk3 from source directory',
-  'graph': 'Create a graph of game files',
-  'info': 'Print info about the game data',
-  'convert': 'Convert game data to web format',
-  'repack': 'Zip converted files in to new paks',
+  'source': 'Load Pk3 sources',
+  'graph': 'Create a graph',
+  'info': 'Print game info',
+  'convert': 'Convert web format',
+  'repack': 'Zip new paks',
   'clean': 'Cleaning up'
 }
 
@@ -130,13 +130,14 @@ if(!noProgress) {
   var multibar = new cliProgress.MultiBar({
       fps: 120,
       clearOnComplete: true,
-      hideCursor: true,
+      hideCursor: false,
       format: `[\u001b[34m{bar}\u001b[0m] {percentage}% | {value}/{total} | {message}`,
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2588',
       barGlue: '\u001b[33m',
       forceRedraw: true,
       linewrap: null,
+      barsize: 30,
   })
   var oldConsole = console
   function resetRedraw(out) {
@@ -161,6 +162,7 @@ var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
 } = require('../bin/repack-whitelist.js')
+var {convertGameFiles, convertNonAlpha, convertAudio} = require('../bin/convert.js')
 var globalBars = []
 
 function getPercent(l, a, b) {
@@ -184,12 +186,14 @@ async function progress(bars, forceVerbose) {
   for(var i = 0; i < bars.length; i++) {
     if(!multibar) {
       if(bars[i][1] === false) continue
-      percent(bars[i][3], bars[i][2], bars[i][1])
+      percent(bars[i][3], bars[i][1], bars[i][2])
       continue
     }
     if(bars[i][1] === false) {
-      globalBars[bars[i][0]].stop()
-      multibar.remove(globalBars[bars[i][0]])
+      if(typeof globalBars[bars[i][0]] != 'undefined') {
+        globalBars[bars[i][0]].stop()
+        multibar.remove(globalBars[bars[i][0]])
+      }
       globalBars[bars[i][0]] = void 0
       await new Promise(resolve => setTimeout(resolve, 10))
       continue
@@ -618,8 +622,8 @@ async function repack(gs, project, outputProject) {
   if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
-    var pak = game.ordered[orderedKeys[i]]
     await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]])
+    var pak = game.ordered[orderedKeys[i]]
     var real = pak.filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
     var output = fs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
     await compressDirectory(real, output, project)
@@ -665,13 +669,13 @@ async function repackGames() {
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
         ])
-        convertGameFiles(mountPoints[i], outConverted, progress)
+        await convertGameFiles(gs, outCombined, outConverted, progress)
       }
       if(typeof STEPS['repack'] != 'undefined') {    
         // repacking
         await progress([
           [1, false],
-          [0, typeof STEPS['source'] != 'undefined' ? 3 : 2, Object.keys(STEPS).length, STEPS['convert']],
+          [0, typeof STEPS['source'] != 'undefined' ? 3 : 2, Object.keys(STEPS).length, STEPS['repack']],
         ])
         await repack(gs, mountPoints[i], outRepacked)
       }

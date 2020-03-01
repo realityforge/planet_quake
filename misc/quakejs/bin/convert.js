@@ -1,7 +1,11 @@
-var fs = require('fs')
+var {ufs} = require('unionfs')
 var path = require('path')
-var {mkdirpSync} = require('./compress.js')
+var {mkdirpSync} = require('../bin/compress.js')
 var {execSync} = require('child_process');
+var {
+  findTypes, fileTypes, sourceTypes,
+  audioTypes, imageTypes, findTypes,
+} = require('../bin/repack-whitelist.js')
 
 function chext(file, ext) {
   return file.replace(new RegExp('\\' + path.extname(file) + '$'), ext)
@@ -18,9 +22,9 @@ async function convertNonAlpha(inFile, project, output) {
   var outFile
   var alphaCmd;
   try {
-    alphaCmd = execSync(`identify -format '%[opaque]' '${inFile}'`)
+    alphaCmd = execSync(`identify -format '%[opaque]' '${inFile}'`, {stdio : 'pipe'}).toString('utf-8')
   } catch (e) {
-    console.log(e)
+    console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }
   // if it is alpha
   if(alphaCmd.localeCompare('False') === 0) {
@@ -28,7 +32,7 @@ async function convertNonAlpha(inFile, project, output) {
     outFile = chroot(chext(inFile, '.png'), project, output)
   } else {
     // if a jpg already exists, use that file for convert
-    if(fs.existsSync(chext(inFile, '.jpg'))) {
+    if(ufs.existsSync(chext(inFile, '.jpg'))) {
         inFile = chext(inFile, '.jpg')
     }
     // transfer low quality jpeg instead
@@ -36,38 +40,67 @@ async function convertNonAlpha(inFile, project, output) {
   }
   mkdirpSync(path.dirname(outFile))
   // convert, baseq3 already includes jpg
-  execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 50% "${inFile}" "${outFile}"`)
+  try {
+    execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 50% "${inFile}" "${outFile}"`, {stdio : 'pipe'})
+  } catch (e) {
+    console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+  }
+  return outFile
 }
 
 async function convertAudio(inFile, project, output) {
-  var outFile, inFile = files[i]
+  var outFile
   outFile = chroot(chext(inFile, '.opus'), project, output)
   mkdirpSync(path.dirname(outFile))
-  execSync(`opusenc --quiet --bitrate 24 --vbr "${inFile}" "${outFile}"`)
+  try {
+    execSync(`opusenc --quiet --ignorelength --bitrate 24 --vbr "${inFile}" "${outFile}"`, {stdio : 'pipe'})
+  } catch (e) {
+    console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+  }
+  return outFile
 }
 
-async function convertGameFiles(project, outConverted, progress) {
-  await progress([[1, 0, 3, `Converting images`]])
+async function convertGameFiles(gs, project, outConverted, progress) {
   var orderedEverything = Object.values(gs.ordered)
+    .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) === i)
+  
+  await progress([
+    [2, false],
+    [1, 0, 3, `Converting images`]
+  ])  
   var images = findTypes(imageTypes, orderedEverything)
   for(var j = 0; j < images.length; j++) {
-    await progress([[2, j, images.length, `Converting image ${images[j]}`]])
-    await convertNonAlpha(images[j], project, outConverted)
+    await progress([[2, j, images.length, `Converting image ${chroot(images[j], project, '')}`]])
+    var newFile = await convertNonAlpha(images[j], project, outConverted)
   }
-  await progress([[1, 1, 3, `Converting audio`]])
+  
+  await progress([
+    [2, false],
+    [1, 1, 3, `Converting audio`]
+  ])
   var audio = findTypes(audioTypes, orderedEverything)
   for(var j = 0; j < audio.length; j++) {
-    await progress([[2, j, audio.length, `Converting audio ${audio[j]}`]])
-    await convertAudio(audio[j], project, outConverted)
+    await progress([[2, j, audio.length, `Converting audio ${chroot(audio[j], project, '')}`]])
+    var newFile = await convertAudio(audio[j], project, outConverted)
   }
-  await progress([[1, 1, 3, `Copying known files`]])
+  
+  await progress([
+    [2, false],
+    [1, 2, 3, `Copying known files`]
+  ])
   var known = orderedEverything
     .filter(f => !images.includes(f) && !audio.includes(f))
   for(var j = 0; j < known.length; j++) {
-    await progress([[2, j, known.length, `Copying files ${known[j]}`]])
-    ufs.copyFileSync(chroot(known[j], project, outConverted))
+    var outFile = chroot(known[j], project, outConverted)
+    await progress([[2, j, known.length, `Copying files ${chroot(known[j], project, '')}`]])
+    mkdirpSync(path.dirname(outFile))
+    ufs.copyFileSync(known[j], outFile)
   }
+  
+  // TODO: rename files in gs.ordered
+  
+  
   await progress([[2, false]])
 }
 
