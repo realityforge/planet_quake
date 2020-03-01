@@ -3,6 +3,7 @@ var fs = require('fs');
 var glob = require('glob')
 var minimatch = require('minimatch')
 var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
+var {execSync} = require('child_process');
 
 var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 
@@ -11,14 +12,24 @@ var MATCH_STRINGS = /^((0x[0-9a-f]{8})\s+"(.*?)"\s*$)/i
 var MATCH_ENTS = /(ammo_|item_|team_|weapon_|holdable_)/i
 var SIZEOF_GITEM = 13*4
 
-function loadQVMEntities() {
+function disassembleQVM(inputQVM, output) {
   // TODO: try to make sense of the jump list that is defined by bg_misc.c
   //   by tracing the addresses from the strings back to the entity array
+  try {
+    var disassembler = path.join(__dirname, '../lib/q3vm')
+    var type = inputQVM.match(/cgame/) ? 'cgame' : inputQVM.match(/qagame/) ? 'game' : inputQVM.match(/ui/) ? 'ui' : ''
+    var cmd = `./qvmdis "${inputQVM}" ${type} > "${output}"`
+    console.log('Executing ' + cmd)
+    execSync(cmd, {cwd: disassembler})
+  } catch (e) {
+    console.log(e.message, e.stdout.toString().substr(0, 1000))
+  }
 }
 
 function loadQVMStrings(buffer, topdirs) {
   var qvmstrings = buffer
-    .toString('utf-8').split('\n')
+    .toString('utf-8')
+    .split('\n')
     .map(line => (/['""'](.*?)['""']/ig).exec(line))
     .filter(string => string)
     // assuming a single character is the path seperator,
@@ -50,15 +61,24 @@ function loadQVMStrings(buffer, topdirs) {
   return filteredstrings
 }
 
-function graphQVM(qvm, project) {
+function graphQVM(project) {
   var result = {}
-  var qvms = findTypes(qvm || ['.qvm'], project || PROJECT)
+  var qvms = findTypes(['.qvm'], project || PROJECT)
   var topdirs = glob.sync('**/', {cwd: project || PROJECT})
     .map(dir => path.basename(dir))
   for(var i = 0; i < qvms.length; i++) {
     var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
-    if(!fs.existsSync(disassembly)) continue
-    var buffer = fs.readFileSync(disassembly)
+    var buffer
+    if(fs.existsSync(disassembly)) {
+      buffer = fs.readFileSync(disassembly)
+    } else {
+      buffer = fs.readFileSync(qvms[i])
+        .toString('utf-8')
+        .split('\0')
+        .filter(s => s.match(/[a-z0-9]/) && s.length < 4096)
+        .map(s => `"${s}"\n`)
+        .join('')
+    }
     // TODO: add arenas, configs, bot scripts, defi
     var qvmstrings = loadQVMStrings(buffer, topdirs)
       .concat(['botfiles/**', '*.cfg', '*.shader', disassembly])
@@ -103,8 +123,8 @@ function getGameAssets(disassembly) {
 
 module.exports = {
   getGameAssets: getGameAssets,
-  loadQVMEntities: loadQVMEntities,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,
+  disassembleQVM: disassembleQVM,
   MATCH_ENTS: MATCH_ENTS
 }

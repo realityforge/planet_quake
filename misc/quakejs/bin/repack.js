@@ -6,13 +6,6 @@ var assert = require('assert')
 var minimatch = require('minimatch')
 var {ufs} = require('unionfs')
 ufs.use(fs)
-var {graphQVM, loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
-var {graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME} = require('../lib/asset.game.js')
-var {compressDirectory, readPak} = require('../bin/compress.js')
-var {
-  findTypes, fileTypes, sourceTypes,
-  audioTypes, imageTypes, findTypes,
-} = require('../bin/repack-whitelist.js')
 
 var PROJECT = '/Applications/ioquake3/baseq3'
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
@@ -38,8 +31,10 @@ npm run repack [options] [mod directory]
 --previous {optional file or previous-graph.js} -p - try to load information
   from the previous graph so we don't have to do step 1
 --temp {directory}
+--verbose -v - print all percentage status updates in case there is an error
 --help -h - print this help message and exit
-e.g. npm run repack /Applications/ioquake3/baseq3
+e.g. npm run repack -- /Applications/ioquake3/baseq3
+npm run repack -- --info
 `
 
 var edges = 3
@@ -49,7 +44,8 @@ var transcode = ''
 var entities = ''
 var mountPoints = []
 var usePrevious = false
-var tempDir = os.tmpdir()
+var TEMP_DIR = os.tmpdir()
+var verbose = false
 
 var isConvertParams = false
 var isTranscodeParams = false
@@ -88,11 +84,13 @@ for(var i = 0; i < process.argv.length; i++) {
     }
   } else if (a == '--temp') {
     if(fs.existsSync(process.argv[i+1]) && fs.statSync(process.argv[i+1].isDirectory())) {
-      tempDir = process.argv[i+1]
+      TEMP_DIR = process.argv[i+1]
       i++
     } else {
       throw new Error(`Temp directory ${process.argv[i+1]} not found or not a directory`)
     }
+  } else if (a == '--verbose' || a == '-v') {
+    verbose = true
   } else if (a == '--help' || a == '-h') {
     console.log(help)
     process.exit(0)
@@ -120,7 +118,7 @@ if(mountPoints.length == 0) {
 }
 for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
-  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(tempDir, name + '-combined-converted-repacked')}`)
+  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-combined-converted-repacked')}`)
 }
 try {
   require.resolve('cli-progress');
@@ -130,13 +128,15 @@ try {
 if(!noProgress) {
   var cliProgress = require('cli-progress')
   var multibar = new cliProgress.MultiBar({
+      fps: 120,
       clearOnComplete: true,
       hideCursor: true,
       format: `[\u001b[34m{bar}\u001b[0m] {percentage}% | {value}/{total} | {message}`,
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2588',
       barGlue: '\u001b[33m',
-      forceRedraw: true
+      forceRedraw: true,
+      linewrap: null,
   })
   var oldConsole = console
   function resetRedraw(out) {
@@ -153,6 +153,14 @@ if(!noProgress) {
   }
 }
 
+// load these modules down here to the console is overridden
+var {loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
+var {graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME} = require('../lib/asset.game.js')
+var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
+var {
+  findTypes, fileTypes, sourceTypes,
+  audioTypes, imageTypes, findTypes,
+} = require('../bin/repack-whitelist.js')
 var globalBars = []
 
 function getPercent(l, a, b) {
@@ -163,13 +171,14 @@ function percent(l, a, b) {
   console.log(getPercent(l, a, b))
 }
 
-function progress(bars) {
+async function progress(bars, forceVerbose) {
   if(bars === false) {
     for(var i = 0; i < globalBars.length; i++) {
       if(!globalBars[i]) continue
       globalBars[i].stop()
     }
     multibar.stop()
+    await new Promise(resolve => setTimeout(resolve, 10))
   }
   //e.g. [[1, 0, 10, 'Removing temporary files']]
   for(var i = 0; i < bars.length; i++) {
@@ -182,7 +191,12 @@ function progress(bars) {
       globalBars[bars[i][0]].stop()
       multibar.remove(globalBars[bars[i][0]])
       globalBars[bars[i][0]] = void 0
+      await new Promise(resolve => setTimeout(resolve, 10))
       continue
+    }
+    if(verbose || forceVerbose) {
+      // print it out so we can see a record too
+      percent(bars[i][3], bars[i][1], bars[i][2])
     }
     var info = {
       percentage: Math.round(bars[i][1]/bars[i][2]*1000) / 10,
@@ -193,10 +207,12 @@ function progress(bars) {
     if(typeof globalBars[bars[i][0]] == 'undefined') {
       globalBars[bars[i][0]] = multibar.create()
       globalBars[bars[i][0]].start(bars[i][2], bars[i][1], info)
+      await new Promise(resolve => setTimeout(resolve, 10))
     } else {
       globalBars[bars[i][0]].setTotal(bars[i][2])
       globalBars[bars[i][0]].update(bars[i][1], info)
     }
+    await new Promise(resolve => setTimeout(resolve, 1))
   }
 }
 
@@ -214,11 +230,11 @@ var numericMap = [
   ['other', /.*/, 8], // 80-89 - map models
 ]
 
-function gameInfo(gs, project) {
+async function gameInfo(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGame(gs, project, progress)
+  var game = await graphGame(gs, project, progress)
   // how many files are matched versus unknown?
   game.files = game.files || findTypes(fileTypes, game.everything)
   game.images = game.images || findTypes(imageTypes, game.everything)
@@ -312,6 +328,7 @@ function gameInfo(gs, project) {
   percent('Ungraphed', ungraphed.length, game.everything.length)
   console.log(ungraphed.slice(0, 10))
   
+  console.log(`Info report written to "${INFO_NAME}"`)
   fs.writeFileSync(INFO_NAME, JSON.stringify({
     summary: {
       images: getPercent('Image files', game.images.length, game.everything.length),
@@ -323,7 +340,7 @@ function gameInfo(gs, project) {
       uiqvm: getPercent('UI files', uiqvm.length, game.everything.length),
       cgame: getPercent('CGame files', cgame.length, game.everything.length),
       qagame: getPercent('QAGame files', qagame.length, game.everything.length),
-      qvmFiles: percent('Total QVM files', qvmFiles.length, game.everything.length),
+      qvmFiles: getPercent('Total QVM files', qvmFiles.length, game.everything.length),
       notfound: `Missing/not found: ${game.notfound.length}`,
       excludingMap: `Missing/not found excluding map/shaders: ${exludingMap.length}`,
       baseq3: `Files in baseq3: ${game.baseq3.length}`,
@@ -366,11 +383,11 @@ function gameInfo(gs, project) {
   return gs
 }
 
-function groupAssets(gs, project) {
+async function groupAssets(gs, project) {
   if(!project) {
     project = PROJECT
   }
-  var game = graphGame(gs, project, progress)
+  var game = await graphGame(gs, project, progress)
   var vertices = game.graph.getVertices()
   var grouped = {'menu/menu': [], 'game/game': []}
   
@@ -578,7 +595,7 @@ async function repack(game, project) {
     project = PROJECT
   }
   if(!game) {
-    game = groupAssets(0, project)
+    game = await groupAssets(0, project)
   }
   var outputProject = path.join(path.dirname(project), path.basename(project) + '-repacked')
   if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
@@ -604,36 +621,30 @@ async function repack(game, project) {
 async function repackGames() {
   for(var i = 0; i < mountPoints.length; i++) {
     try {
+      var outCombined = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined')
+      var outConverted = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined-converted')
+      var outRepacked = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined-converted-repacked')
       var gs
       if(typeof STEPS['source'] != 'undefined') {
-        progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
-        progress([[1, 0, 2, 'Sourcing files']])
-        var pk3s = glob.sync('**/*.pk3', {cwd: mountPoints[i]})
-        pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
-        for(var j = 0; j < pk3s.length; j++) {
-          progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
-          await readPak(path.join(mountPoints[i], pk3s[j]), (index, total, n) => {
-            if(!noProgress) {
-              progress([[2, index, total, `Extracting ${n}`]])
-            }
-          }, path.join(tempDir, name + '-combined'))
-          progress([[2, false]])
-        }
-        progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
-        gs = graphGame(0, path.join(tempDir, name + '-combined'), progress)
+        await progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
+        await progress([[1, 0, 2, 'Sourcing files']])
+        await unpackPk3s(mountPoints[i], outCombined, progress)
+        await progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
+        await new Promise(resolve => setTimeout(resolve, 10))
+        gs = await graphGame(0, outCombined, progress)
       } else {
-        progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
-        gs = graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')),
-          path.join(tempDir, name + '-combined'), progress)
+        await progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
+        gs = await graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')),
+          outCombined, progress)
       }
       if(typeof STEPS['info'] != 'undefined') {
-        progress([
+        await progress([
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['info']],
         ])
-        gameInfo(gs, path.join(tempDir, name + '-combined'))
+        await gameInfo(gs, outCombined)
       } else {
-        progress([
+        await progress([
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
         ])
@@ -647,10 +658,10 @@ async function repackGames() {
       console.log(e)
     }
   }
-  progress(false)
+  await progress(false)
 }
 
-repackGames()
+repackGames().then(() => progress(false))
 
 module.exports = {
   repackGames,

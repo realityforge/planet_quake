@@ -3,6 +3,7 @@ var crc32 = require('buffer-crc32')
 var zlib = require('zlib')
 var {ufs} = require('unionfs')
 var archiver = require('archiver')
+var glob = require('glob')
 var StreamZip = require('node-stream-zip')
 
 /*
@@ -54,12 +55,12 @@ async function readPak(zipFile, cb, outdir) {
         var levelPath = path.join(outdir, entry.name)
         mkdirpSync(path.dirname(levelPath))
         if(cb) {
-          cb(i, index.length, entry.name)
+          await cb(i, index.length, entry.name)
         }
         await new Promise(resolve => {
           zip.extract(entry.name, levelPath, err => {
-              console.log((err ? ('Extract error ' + err) : 'Extracted ') + entry.name);
-              resolve();
+            if(err) console.log('Extract error ' + err)
+            resolve();
           })
         })
       }
@@ -70,6 +71,26 @@ async function readPak(zipFile, cb, outdir) {
   })
   
   return header
+}
+
+async function unpackPk3s(project, outCombined, progress) {
+  // TODO: copy non-pk3 files first, in case of unpure modes
+  var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3'})
+  for(var j = 0; j < notpk3s.length; j++) {
+    await progress([[1, j, notpk3s.length, `Copying ${notpk3s[j]}`]])
+    var newFile = path.join(outCombined, notpk3s[j])
+    mkdirpSync(path.dirname(newFile))
+    ufs.copyFileSync(path.join(project, notpk3s[j]), newFile)
+  }
+  var pk3s = glob.sync('**/*.pk3', {nodir: true, cwd: project})
+  pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+  for(var j = 0; j < pk3s.length; j++) {
+    await progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
+    await readPak(path.join(project, pk3s[j]), async (index, total, n) => {
+      await progress([[2, index, total, `Extracting ${n}`]])
+    }, outCombined)
+    await progress([[2, false]])
+  }
 }
 
 async function compressDirectory(fullpath, outputStream, absolute) {
@@ -159,5 +180,6 @@ module.exports = {
   sendCompressed,
   compressDirectory,
   readPak,
-  mkdirpSync
+  mkdirpSync,
+  unpackPk3s,
 }

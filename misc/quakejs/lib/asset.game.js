@@ -3,7 +3,7 @@ var path = require('path')
 var glob = require('glob')
 var minimatch = require("minimatch")
 
-var {graphQVM, getGameAssets} = require('../lib/asset.qvm.js')
+var {disassembleQVM, graphQVM, getGameAssets} = require('../lib/asset.qvm.js')
 var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
@@ -20,8 +20,8 @@ var STEPS = {
   'models': 'Looking for models',
   'shaders': 'Looking for shaders',
   'skins': 'Looking for skins',
+  'disassemble': 'Disassembling QVMs',
   'qvms': 'Looking for QVMs',
-  'disassemble': 'Disassembling QVMs'
   'entities': 'Looking for game entities',
   'vertices': 'Graphing vertices',
   'shaders': 'Graphing shaders',
@@ -86,30 +86,39 @@ function graphSkins(project) {
   return result
 }
 
-function loadGame(project, progress) {
+async function loadGame(project, progress) {
   if(!project) {
     project = PROJECT
   }
-  progress([[1, 0, Object.keys(STEPS).length, STEPS['files']]])
+  await progress([[1, 0, Object.keys(STEPS).length, STEPS['files']]])
   var everything = glob.sync('**/*', {
     cwd: project,
     nodir: true
   }).map(f => path.join(project, f))
   
   var game = {}
-  progress([[1, 1, Object.keys(STEPS).length, STEPS['maps']]])
+  await progress([[1, 1, Object.keys(STEPS).length, STEPS['maps']]])
   game.maps = graphMaps(project)
-  progress([[1, 2, Object.keys(STEPS).length, STEPS['models']]])
+  await progress([[1, 2, Object.keys(STEPS).length, STEPS['models']]])
   game.models = graphModels(project)
-  progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
+  await progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
   game.shaders = graphShaders(project)
-  progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
+  await progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
   game.skins = graphSkins(project)
-  progress([[1, 5, Object.keys(STEPS).length, STEPS['qvms']]])
-  game.qvms = graphQVM(0, project)
+  var qvms = findTypes(['.qvm'], project || PROJECT)
+  await progress([[1, 5, Object.keys(STEPS).length, STEPS['qvms']]])
+  for(var i = 0; i < qvms.length; i++) {
+    var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
+    if(!fs.existsSync(disassembly)) {
+      await progress([[1, 5, Object.keys(STEPS).length, STEPS['disassemble']]])
+      disassembleQVM(qvms[i], disassembly)
+    }
+  }
+  await progress([[1, 6, Object.keys(STEPS).length, STEPS['qvms']]])
+  game.qvms = graphQVM(project)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
-  progress([[1, 7, Object.keys(STEPS).length, STEPS['entities']]])
+  await progress([[1, 7, Object.keys(STEPS).length, STEPS['entities']]])
   var cgame = Object.values(game.qvms).flat(1)
     .filter(k => k.match(/cgame\.dis/i))[0]
   var entities = cgame ? getGameAssets(cgame) : []
@@ -182,10 +191,11 @@ function loadGame(project, progress) {
       obj[k].sort()
       return obj
     }, {})
-  var qvmFiles = Object.keys(game.qvms)
-    .reduce((obj, k, i) => {
-      progress([[1, 8 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
-        `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]])
+  var qvmFiles = await Object.keys(game.qvms)
+    .reduce(async (objPromise, k, i) => {
+      var obj = await objPromise
+      await progress([[1, 8 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
+        `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]], true)
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
         .map(w => w.replace(/\\/ig, '/'))
@@ -195,7 +205,7 @@ function loadGame(project, progress) {
         .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()
       return obj
-    }, {})
+    }, Promise.resolve({}))
 
   var gameState = {
     entities: entities,
@@ -214,12 +224,12 @@ function loadGame(project, progress) {
   return Object.assign(game, gameState)
 }
 
-function graphGame(gs, project, progress) {
+async function graphGame(gs, project, progress) {
   if(!project) {
     project = PROJECT
   }
   if(!gs) {
-    gs = loadGame(project, progress)
+    gs = await loadGame(project, progress)
   }
   var graph = new DirectedGraph()
   
@@ -245,8 +255,8 @@ function graphGame(gs, project, progress) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  progress([[1, 8 + Object.keys(game.qvms).length,
-    Object.keys(STEPS).length + Object.keys(game.qvms).length,
+  await progress([[1, 8 + Object.keys(gs.qvms).length,
+    Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${vertices.length} vertices`]])
   
   var fileLookups = {}
@@ -283,8 +293,8 @@ function graphGame(gs, project, progress) {
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  progress([[1, 8 + Object.keys(game.qvms).length + 1,
-    Object.keys(STEPS).length + Object.keys(game.qvms).length,
+  await progress([[1, 8 + Object.keys(gs.qvms).length + 1,
+    Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${allShaders.length} shaders`]])
     
   var shaderLookups = {}

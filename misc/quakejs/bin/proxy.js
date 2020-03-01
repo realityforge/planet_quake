@@ -20,7 +20,7 @@ TODO:
 Add a command to check the number of connections so it can be used as health check
 Either using the socket or event using process signals to communicate across process threads
 Add websocket piping back in for quakejs servers
-e.g. npm run proxy --max 10
+e.g. npm run proxy -- --max 10
 `
 
 for(var i = 0; i < process.argv.length; i++) {
