@@ -10,6 +10,7 @@ ufs.use(fs)
 var PROJECT = '/Applications/ioquake3/baseq3'
 var PAK_NAME = path.join(__dirname, 'previous-pak.json')
 var INFO_NAME = path.join(__dirname, 'previous-info.json')
+var INDEX_NAME = path.join(__dirname, 'previous-index.json')
 var STEPS = {
   'source': 'Load Pk3 sources',
   'graph': 'Create a graph',
@@ -157,15 +158,21 @@ if(!noProgress) {
 }
 
 // load these modules down here to the console is overridden
-var {loadQVM, loadQVMData, getGameAssets, MATCH_ENTS} = require('../lib/asset.qvm.js')
-var {graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME} = require('../lib/asset.game.js')
+var {
+  loadQVM, loadQVMData, getGameAssets, mapGameAssets, MATCH_ENTS
+} = require('../lib/asset.qvm.js')
+var {
+  graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME
+} = require('../lib/asset.game.js')
 var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
   allTypes
 } = require('../bin/repack-whitelist.js')
-var {convertGameFiles, convertNonAlpha, convertAudio} = require('../bin/convert.js')
+var {
+  convertGameFiles, convertNonAlpha, convertAudio
+} = require('../bin/convert.js')
 var globalBars = []
 
 function getPercent(l, a, b) {
@@ -261,98 +268,59 @@ async function gameInfo(gs, project) {
   }
 
   // how many files are matched versus unknown?
-  game.files = game.files || findTypes(fileTypes, game.everything)
   game.images = game.images || findTypes(imageTypes, game.everything)
   game.audio = game.audio || findTypes(audioTypes, game.everything)
   game.sources = game.sources || findTypes(sourceTypes, game.everything)
+  game.files = game.files || findTypes(fileTypes, game.everything)
   game.known = game.known || findTypes(allTypes, game.everything)
-  percent('Image files', game.images.length, game.everything.length)
-  percent('Audio files', game.audio.length, game.everything.length)
-  percent('Source files', game.sources.length, game.everything.length)
-  percent('Known files', game.files.length, game.everything.length)
-  percent('Recognized files', game.known.length, game.everything.length)
-  
   var unrecognized = game.everything.filter(f => !game.known.includes(f))
-  percent('Unrecognized files', unrecognized.length, game.everything.length)
-  console.log(unrecognized.slice(0, 10))
   
   // how many files a part of menu system?  
-  var uiqvm = game.graph.getVertices()
-    .filter(v => v.id.match(/ui\.qvm/i))[0]
-    .outEdges
-    .map(e => e.inVertex.id)
+  var uiqvm = getLeaves(game.graph.getVertices()
+    .filter(v => v.id.match(/ui\.qvm/i)))
     .filter(e => game.everything.includes(e))
-  percent('UI files', uiqvm.length, game.everything.length)
-  
-  var cgame = game.graph.getVertices()
-    .filter(v => v.id.match(/cgame\.qvm/i))[0]
-    .outEdges
-    .map(e => e.inVertex.id)
+  var cgame = getLeaves(game.graph.getVertices()
+    .filter(v => v.id.match(/cgame\.qvm/i)))
     .filter(e => game.everything.includes(e))
-  percent('Cgame files', cgame.length, game.everything.length)
-  
-  var qagame = game.graph.getVertices()
-    .filter(v => v.id.match(/qagame\.qvm/i))[0]
-    .outEdges
-    .map(e => e.inVertex.id)
+  var qagame = getLeaves(game.graph.getVertices()
+    .filter(v => v.id.match(/qagame\.qvm/i)))
     .filter(e => game.everything.includes(e))
-  percent('QAgame files', qagame.length, game.everything.length)
-
   var qvmFiles = game.everything
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
-  percent('Total QVM files', qvmFiles.length, game.everything.length)
   
-  console.log(`Missing/not found: ${game.notfound.length}`, game.notfound.slice(0, 10))
   var mapFiles = Object.values(game.maps).flat(1)
     .concat(Object.values(game.mapEntities).flat(1))
     .concat(Object.values(game.shaders).flat(1))
     .concat(Object.values(game.qvms).flat(1))
   var exludingMap = game.notfound.filter(n => !mapFiles.includes(n))
-  console.log(`Missing/not found excluding map/shaders: ${exludingMap.length}`, exludingMap.slice(0, 10))
-  console.log(`Files in baseq3: ${game.baseq3.length}`, game.baseq3.slice(0, 10))
-  
+
   // largest matches, more than 5 edges?
   var vertices = game.graph.getVertices()
   vertices.sort((a, b) => b.inEdges.length - a.inEdges.length)
-  console.log('Most used assets:', vertices.slice(0, 10).map(v => v.inEdges.length + ' - ' + v.id))
   
   // how many packs to create?
-  var filesOverLimit = vertices
-    .filter(v => v.inEdges.length > edges)
-    .map(v => getLeaves(v))
-    .flat(1)
+  var filesOverLimit = getLeaves(vertices
+    .filter(v => v.inEdges.length > edges))
     .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f))
-  percent('Shared files', filesOverLimit.length, game.everything.length)
   
   // how many files are graphed versus unmatched or unknown?
   vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   var leastUsed = vertices
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm|\.aas)/i))
-  console.log('Least used assets:', leastUsed.slice(0, 10)
-    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
-  
   var leastUsedExcept = vertices
     .filter(v => v.inEdges.length > 0 && v.id.match(/(\.md3)/i) && !v.id.match(/(players)/i))
-  console.log('Least used models:', leastUsedExcept.slice(0, 10)
-    .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')))
   
   var allShaders = Object.values(game.scripts).flat(1)
   var unused = vertices
     .filter(v => v.inEdges.length == 0
       && !v.id.match(/(\.bsp|\.md3|\.qvm|\.shader)/i)
       && !allShaders.includes(v.id))
-  console.log('Unused assets:', unused.length, unused.slice(0, 10).map(v => v.id))
   
   var allVertices = vertices.map(v => v.id)
   var graphed = game.everything.filter(e => allVertices.includes(e))
-  percent('All graphed', graphed.length, game.everything.length)
-  
   var ungraphed = game.everything.filter(e => !allVertices.includes(e))
-  percent('Ungraphed', ungraphed.length, game.everything.length)
-  console.log(ungraphed.slice(0, 10))
   
-  console.log(`Info report written to "${INFO_NAME}"`)
-  ufs.writeFileSync(INFO_NAME, JSON.stringify({
+  var report = {
     summary: {
       images: getPercent('Image files', game.images.length, game.everything.length),
       audio: getPercent('Audio files', game.audio.length, game.everything.length),
@@ -367,17 +335,13 @@ async function gameInfo(gs, project) {
       notfound: `Missing/not found: ${game.notfound.length}`,
       excludingMap: `Missing/not found excluding map/shaders: ${exludingMap.length}`,
       baseq3: `Files in baseq3: ${game.baseq3.length}`,
-      vertices: 'Most used assets: ' + vertices.slice(0, 10).map(v => v.inEdges.length + ' - ' + v.id),
+      vertices: 'Most used assets: ' + vertices.length,
       filesOverLimit: getPercent('Shared files', filesOverLimit.length, game.everything.length),
-      leastUsed: 'Least used assets: ' + leastUsed.slice(0, 10)
-        .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', '))
-        .join('\n'),
-      leastUsedExcept: 'Least used models: ' + leastUsedExcept.slice(0, 10)
-        .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', '))
-        .join('\n'),
-      unused: 'Unused assets:' + unused.length + unused.slice(0, 10).map(v => v.id),
+      leastUsed: 'Least used assets: ' + leastUsed.length,
+      leastUsedExcept: 'Least used models: ' + leastUsedExcept.length,
+      unused: 'Unused assets:' + unused.length,
       graphed: getPercent('All graphed', graphed.length, game.everything.length),
-      ungraphed: getPercent('Ungraphed', ungraphed.length, game.everything.length) + ungraphed.slice(0, 10)
+      ungraphed: getPercent('Ungraphed', ungraphed.length, game.everything.length),
     },
     images: game.images,
     audio: game.audio,
@@ -390,7 +354,7 @@ async function gameInfo(gs, project) {
     qagame: qagame,
     qvmFiles: qvmFiles,
     notfound: game.notfound,
-    exludingMap: exludingMap,
+    excludingMap: exludingMap,
     baseq3: game.baseq3,
     vertices: vertices.map(v => v.inEdges.length + ' - ' + v.id),
     filesOverLimit: filesOverLimit,
@@ -401,7 +365,31 @@ async function gameInfo(gs, project) {
     unused: unused,
     graphed: graphed,
     ungraphed: ungraphed,
-  }, null, 2))
+  }
+  
+  var keys = [
+    'images', 'audio', 'sources', 'files', 'known',
+    ['unrecognized', 10],
+    'uiqvm', 'cgame', 'qagame', 'qvmFiles',
+    ['notfound', 10],
+    ['excludingMap', 10],
+    ['baseq3', 10],
+    ['vertices', 10],
+    'filesOverLimit',
+    ['leastUsed', 10], ['leastUsedExcept', 10],
+    ['unused', 10],
+    'graphed',
+    ['ungraphed', 10],
+  ]
+  keys.forEach(k => {
+    console.log(report.summary[Array.isArray(k) ? k[0] : k])
+    if(Array.isArray(k) && k[1] && k[1] > 0) {
+      console.log(report[k[0]].slice(0, k[1]))
+    }
+  })
+  
+  console.log(`Info report written to "${INFO_NAME}"`)
+  ufs.writeFileSync(INFO_NAME, JSON.stringify(report, null, 2))
   
   return gs
 }
@@ -422,7 +410,7 @@ async function groupAssets(gs, project) {
   // group all entities
   var entityDuplicates = Object.keys(game.entities)
     .map(ent => game.graph.getVertex(ent))
-    .filter((v, i, arr) => v)
+    .filter(v => v)
     .map(v => getLeaves(v))
     .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) !== i)
@@ -482,26 +470,13 @@ async function groupAssets(gs, project) {
     .concat(Object.keys(game.qvms)
     .filter(qvm => !qvm.match(/ui.qvm/i)))
   qvms.forEach(qvm => {
-    // update shared items so menu is downloaded followed by cgame
+    // update shared items so menu is downloaded followed by cgame, and not redownloadin menu assets
     externalAndShared = Object.values(grouped).flat(1)
-    
     var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
-    // don't include disassembly in new pak
-    // don't include maps obviously because they are listed below
-    var gameVertices = game.graph.getVertex(qvm)
-      .outEdges
-      .map(e => e.inVertex)
-      .filter(v => !v.id.match(/\.dis|\.bsp/i))
-    var gameAssets = [qvm]
-      .concat(gameVertices.map(v => v.id))
-      .concat(gameVertices
-        .filter(v => !v.id.match(/\.shader/i))
-        .map(v => v.outEdges.map(e2 => e2.inVertex.id)))
-      .flat(2)
-      .filter((f, i, arr) => arr.indexOf(f) === i
-        && game.everything.includes(f)
+    var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
+      .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
-    
+
     gameAssets.forEach(f => {
       var pakName = path.basename(path.dirname(f))
       if(pakName == path.basename(project)) {
@@ -517,16 +492,14 @@ async function groupAssets(gs, project) {
   externalAndShared = Object.values(grouped).flat(1)
   
   // group all map models and textures by map name
-  Object.keys(game.maps)
-    .map(m => game.graph.getVertex(m))
-    .forEach(v => {
-      var map = path.basename(v.id).replace(/\.bsp/i, '')
-      var mapAssets = getLeaves(v)
-        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
-      if(mapAssets.length > 0) {
-        grouped['maps/' + map] = mapAssets
-      }
-    })
+  Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
+    var map = path.basename(v.id).replace(/\.bsp/i, '')
+    var mapAssets = getLeaves(v)
+      .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
+    if(mapAssets.length > 0) {
+      grouped['maps/' + map] = mapAssets
+    }
+  })
 
   // make sure lots of items are linked
   var groupedFlat = Object.values(grouped).flat(1)
@@ -610,6 +583,73 @@ function getSequenceNumeral(pre, count) {
   return result + (count % 10)
 }
 
+function repackIndexJson(game, outputProject) {
+  // generate a index.json the server can use for pk3 sorting based on map/game type
+  var indexJson, help
+  if(outputProject) {
+    var indexJson = path.join(outputProject, './index.json')
+    var help = `, you should run
+  npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
+  and
+  open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}
+  WARNING: this path might be too long, and cause
+   an error "BIG Info string length exceeded"
+   so it should probably be moved and renamed 
+   to something much shorter like /${path.basename(outputProject).split('-').map(p => p[0]).join('')}/`
+  } else {
+    indexJson = INDEX_NAME
+    help = ''
+  }
+  
+  var remapped = {}
+  var filesOverLimit = getLeaves(game.graph.getVertices()
+    .filter(v => v.inEdges.length > edges))
+  var entityAssets = getLeaves(Object.keys(game.entities)
+    .map(ent => game.graph.getVertex(ent))
+    .filter(v => v))
+  var externalAndShared = entityAssets
+    .concat(game.everything.filter(minimatch.filter('**/+(player|players)/**')))
+  var qvms = Object.keys(game.qvms)
+    .filter(qvm => qvm.match(/ui.qvm/i))
+    .concat(Object.keys(game.qvms)
+    .filter(qvm => !qvm.match(/ui.qvm/i)))
+  qvms.forEach(qvm => {
+    // update shared items so menu is downloaded followed by cgame
+    var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
+      .filter(f => game.everything.includes(f)
+        && !externalAndShared.includes(f))
+    externalAndShared = externalAndShared.concat(gameAssets)
+    gameAssets.forEach(f => {
+      var matchPak = Object.keys(game.ordered)
+        .filter(k => game.ordered[k].includes(f))[0]
+      var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
+      if(typeof remapped[newName] == 'undefined') {
+        remapped[newName] = {
+          name: matchPak + '.pk3'
+        }
+      }
+    })
+  })
+  Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
+    var map = path.basename(v.id).replace(/\.bsp/i, '')
+    var mapAssets = getLeaves(v)
+      .filter(f => game.everything.includes(f) 
+        && (!externalAndShared.includes(f) || entityAssets.includes(f)))
+    mapAssets.forEach(f => {
+      var matchPak = Object.keys(game.ordered)
+        .filter(k => game.ordered[k].includes(f))[0]
+      var newName = 'maps/' + map + '/' + matchPak
+      if(typeof remapped[newName] == 'undefined') {
+        remapped[newName] = {
+          name: matchPak + '.pk3'
+        }
+      }
+    })
+  })
+  console.log(`Writing index.json "${indexJson}"`, help)
+  ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
+}
+
 async function repack(gs, project, outputProject) {
   if(!project) {
     project = PROJECT
@@ -633,15 +673,7 @@ async function repack(gs, project, outputProject) {
     await compressDirectory(real, output, project)
   }
   
-  // generate a index.json the server can use for pk3 sorting based on map/game type
-  var indexJson = path.join(outputProject, './index.json')
-  console.log(`Writing index.json "${indexJson}", you should run
-npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
-and
-open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}`)
-  var remapped = {}
-  
-  ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
+  repackIndexJson(game)
 }
 
 // do the actual work specified in arguments
@@ -691,6 +723,12 @@ async function repackGames() {
           [0, typeof STEPS['source'] != 'undefined' ? 3 : 2, Object.keys(STEPS).length, STEPS['repack']],
         ])
         await repack(gs, mountPoints[i], outRepacked)
+      } else {
+        await progress([
+          [1, false],
+          [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['repack']],
+        ])
+        repackIndexJson(gs)
       }
     } catch (e) {
       console.log(e)

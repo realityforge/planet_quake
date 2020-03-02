@@ -119,10 +119,28 @@ function getGameAssets(disassembly) {
   return bg_itemlist
 }
 
+function mapGameAssets(qvmVertex) {
+  // don't include disassembly in new pak
+  // don't include maps obviously because they are listed below
+  var gameVertices = qvmVertex
+    .outEdges
+    .map(e => e.inVertex)
+    .filter(v => !v.id.match(/\.dis|\.bsp/i))
+  var gameAssets = [qvmVertex.id]
+    .concat(gameVertices.map(v => v.id))
+    // include shader scripts, but do not include the assets they point to
+    .concat(gameVertices
+      .filter(v => !v.id.match(/\.shader/i))
+      .map(v => v.outEdges.map(e2 => e2.inVertex.id)))
+    .flat(2)
+    .filter((f, i, arr) => arr.indexOf(f) === i)
+  return gameAssets
+}
 module.exports = {
   getGameAssets: getGameAssets,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,
   disassembleQVM: disassembleQVM,
-  MATCH_ENTS: MATCH_ENTS
+  mapGameAssets: mapGameAssets,
+  MATCH_ENTS: MATCH_ENTS,
 }
