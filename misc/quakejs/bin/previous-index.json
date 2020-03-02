@@ -206,9 +206,6 @@
   "maps/HMTfinal/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/HMTfinal/pak91drasticcity": {
-    "name": "pak91drasticcity.pk3"
-  },
   "maps/HMTfinal/pak8885misc": {
     "name": "pak8885misc.pk3"
   },
@@ -322,9 +319,6 @@
   },
   "maps/obiwanshouse/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/obiwanshouse/pak91drasticcity": {
-    "name": "pak91drasticcity.pk3"
   },
   "maps/obiwanshouse/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -815,23 +809,8 @@
   "maps/q3ctf1/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3ctf1/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3ctf1/pak880ctf": {
     "name": "pak880ctf.pk3"
-  },
-  "maps/q3ctf1/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
-  },
-  "maps/q3ctf1/pak999990q3wcp2": {
-    "name": "pak999990q3wcp2.pk3"
-  },
-  "maps/q3ctf1/pak999993q3wcp12": {
-    "name": "pak999993q3wcp12.pk3"
-  },
-  "maps/q3ctf1/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3ctf1/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -842,23 +821,8 @@
   "maps/q3ctf1/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3ctf1/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
-  "maps/q3ctf1/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3ctf1/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3ctf1/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
-  },
-  "maps/q3ctf1/pak99999994q3wxs2": {
-    "name": "pak99999994q3wxs2.pk3"
-  },
-  "maps/q3ctf1/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
   },
   "maps/q3ctf1/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -1064,14 +1028,8 @@
   "maps/q3ctf3/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3ctf3/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
-  },
   "maps/q3ctf3/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3ctf3/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3ctf3/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -1247,20 +1205,11 @@
   "maps/q3ctf555/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3ctf555/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
-  "maps/q3ctf555/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
-  },
   "maps/q3ctf555/pak880ctf": {
     "name": "pak880ctf.pk3"
   },
   "maps/q3ctf555/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3ctf555/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3ctf555/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
@@ -1373,9 +1322,6 @@
   "maps/q3dm0/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm0/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3"
-  },
   "maps/q3dm0/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
@@ -1421,9 +1367,6 @@
   "maps/q3dm0/pak74lamps": {
     "name": "pak74lamps.pk3"
   },
-  "maps/q3dm0/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3dm0/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
@@ -1435,9 +1378,6 @@
   },
   "maps/q3dm0/pak888organics": {
     "name": "pak888organics.pk3"
-  },
-  "maps/q3dm0/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
   },
   "maps/q3dm0/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
@@ -1520,12 +1460,6 @@
   "maps/q3dm1/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3dm1/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
-  },
-  "maps/q3dm1/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
   "maps/q3dm1/pak882effects": {
     "name": "pak882effects.pk3"
   },
@@ -1553,12 +1487,6 @@
   "maps/q3dm10/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3dm10/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
-  "maps/q3dm10/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
   "maps/q3dm10/pak83other": {
     "name": "pak83other.pk3"
   },
@@ -1577,9 +1505,6 @@
   "maps/q3dm10/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3dm10/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3dm10/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
@@ -1588,9 +1513,6 @@
   },
   "maps/q3dm10/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
-  },
-  "maps/q3dm10/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
   },
   "maps/q3dm10/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
@@ -1649,9 +1571,6 @@
   "maps/q3dm10/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3dm10/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3dm10/pak884env": {
     "name": "pak884env.pk3"
   },
@@ -1669,9 +1588,6 @@
   },
   "maps/q3dm11/pak82music": {
     "name": "pak82music.pk3"
-  },
-  "maps/q3dm11/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
   },
   "maps/q3dm11/pak81world": {
     "name": "pak81world.pk3"
@@ -1697,17 +1613,8 @@
   "maps/q3dm11/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3dm11/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3"
-  },
-  "maps/q3dm11/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
   "maps/q3dm11/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm11/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3dm11/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -1757,9 +1664,6 @@
   "maps/q3dm11/pak36quad": {
     "name": "pak36quad.pk3"
   },
-  "maps/q3dm11/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3dm11/pak57grenadelauncher": {
     "name": "pak57grenadelauncher.pk3"
   },
@@ -1778,20 +1682,11 @@
   "maps/q3dm11/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3dm11/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
-  "maps/q3dm11/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3dm11/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
   "maps/q3dm11/pak88base_light": {
     "name": "pak88base_light.pk3"
-  },
-  "maps/q3dm11/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
   },
   "maps/q3dm11/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
@@ -1801,9 +1696,6 @@
   },
   "maps/q3dm11/pak89liquids": {
     "name": "pak89liquids.pk3"
-  },
-  "maps/q3dm11/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
   },
   "maps/q3dm11/pak87skies": {
     "name": "pak87skies.pk3"
@@ -1826,17 +1718,11 @@
   "maps/q3dm12/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm12/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
   "maps/q3dm12/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
   "maps/q3dm12/pak83other": {
     "name": "pak83other.pk3"
-  },
-  "maps/q3dm12/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3"
   },
   "maps/q3dm12/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -1849,9 +1735,6 @@
   },
   "maps/q3dm12/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3dm12/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
   },
   "maps/q3dm12/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -1931,20 +1814,11 @@
   "maps/q3dm12/pak74lamps": {
     "name": "pak74lamps.pk3"
   },
-  "maps/q3dm12/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
-  },
-  "maps/q3dm12/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3dm12/pak89liquids": {
     "name": "pak89liquids.pk3"
   },
   "maps/q3dm12/pak88base_light": {
     "name": "pak88base_light.pk3"
-  },
-  "maps/q3dm12/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
   },
   "maps/q3dm12/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
@@ -2084,9 +1958,6 @@
   "maps/q3dm14/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3dm14/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
   "maps/q3dm14/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
@@ -2198,29 +2069,17 @@
   "maps/q3dm15/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm15/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
   "maps/q3dm15/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
   "maps/q3dm15/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
-  "maps/q3dm15/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3dm15/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3dm15/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3dm15/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
-  },
-  "maps/q3dm15/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
   },
   "maps/q3dm15/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
@@ -2233,9 +2092,6 @@
   },
   "maps/q3dm15/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm15/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
   },
   "maps/q3dm15/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -2309,9 +2165,6 @@
   "maps/q3dm15/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3dm15/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
   "maps/q3dm15/pak87skies": {
     "name": "pak87skies.pk3"
   },
@@ -2333,9 +2186,6 @@
   "maps/q3dm16/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
-  "maps/q3dm16/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3dm16/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
@@ -2347,12 +2197,6 @@
   },
   "maps/q3dm16/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
-  },
-  "maps/q3dm16/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
-  "maps/q3dm16/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
   },
   "maps/q3dm16/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
@@ -2399,9 +2243,6 @@
   "maps/q3dm16/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3dm16/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3"
-  },
   "maps/q3dm16/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
   },
@@ -2435,20 +2276,8 @@
   "maps/q3dm17/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
-  "maps/q3dm17/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3dm17/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3dm17/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
-  "maps/q3dm17/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
-  "maps/q3dm17/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3dm17/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -2513,20 +2342,11 @@
   "maps/q3dm18/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm18/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
-  "maps/q3dm18/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
-  },
   "maps/q3dm18/pak83other": {
     "name": "pak83other.pk3"
   },
   "maps/q3dm18/pak72mapobject": {
     "name": "pak72mapobject.pk3"
-  },
-  "maps/q3dm18/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3dm18/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -2540,14 +2360,8 @@
   "maps/q3dm18/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3dm18/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3dm18/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
-  },
-  "maps/q3dm18/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
   },
   "maps/q3dm18/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
@@ -2603,12 +2417,6 @@
   "maps/q3dm19/pak9995q3dm19": {
     "name": "pak9995q3dm19.pk3"
   },
-  "maps/q3dm19/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
-  "maps/q3dm19/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
-  },
   "maps/q3dm19/pak886base_floor": {
     "name": "pak886base_floor.pk3"
   },
@@ -2617,12 +2425,6 @@
   },
   "maps/q3dm19/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3dm19/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
-  "maps/q3dm19/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3dm19/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -2684,9 +2486,6 @@
   "maps/q3dm19/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3dm19/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
   "maps/q3dm19/pak551weapon": {
     "name": "pak551weapon.pk3"
   },
@@ -2714,14 +2513,8 @@
   "maps/q3dm2/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3dm2/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3dm2/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm2/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3dm2/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -2804,23 +2597,14 @@
   "maps/q3dm3/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
-  "maps/q3dm3/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
   "maps/q3dm3/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
-  },
-  "maps/q3dm3/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
   },
   "maps/q3dm3/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
   "maps/q3dm3/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm3/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
   },
   "maps/q3dm3/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -2894,23 +2678,14 @@
   "maps/q3dm4/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm4/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
-  },
   "maps/q3dm4/pak84base_trim": {
     "name": "pak84base_trim.pk3"
-  },
-  "maps/q3dm4/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
   },
   "maps/q3dm4/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
   "maps/q3dm4/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3dm4/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
   },
   "maps/q3dm4/pak83other": {
     "name": "pak83other.pk3"
@@ -2920,9 +2695,6 @@
   },
   "maps/q3dm4/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm4/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
   },
   "maps/q3dm4/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -2987,9 +2759,6 @@
   "maps/q3dm5/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm5/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3dm5/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
@@ -3002,14 +2771,8 @@
   "maps/q3dm5/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
-  "maps/q3dm5/pak99994q3tourney1": {
-    "name": "pak99994q3tourney1.pk3"
-  },
   "maps/q3dm5/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3dm5/pak999999q3wcp19": {
-    "name": "pak999999q3wcp19.pk3"
   },
   "maps/q3dm5/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -3020,29 +2783,11 @@
   "maps/q3dm5/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3dm5/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3dm5/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3dm5/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
-  },
-  "maps/q3dm5/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
   "maps/q3dm5/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
-  },
-  "maps/q3dm5/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
-  "maps/q3dm5/pak9999990q3wcp7": {
-    "name": "pak9999990q3wcp7.pk3"
-  },
-  "maps/q3dm5/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
   },
   "maps/q3dm5/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -3080,14 +2825,8 @@
   "maps/q3dm5/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3dm5/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3dm5/pak88base_light": {
     "name": "pak88base_light.pk3"
-  },
-  "maps/q3dm5/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
   },
   "maps/q3dm5/pak86sfx": {
     "name": "pak86sfx.pk3"
@@ -3212,14 +2951,8 @@
   "maps/q3dm7/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm7/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3dm7/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3dm7/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3dm7/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
@@ -3227,35 +2960,17 @@
   "maps/q3dm7/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
-  "maps/q3dm7/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3dm7/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
   },
   "maps/q3dm7/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3dm7/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3"
-  },
   "maps/q3dm7/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
   },
   "maps/q3dm7/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm7/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
-  "maps/q3dm7/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
-  "maps/q3dm7/pak92maps": {
-    "name": "pak92maps.pk3"
-  },
-  "maps/q3dm7/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
   },
   "maps/q3dm7/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -3314,9 +3029,6 @@
   "maps/q3dm7/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3dm7/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3dm7/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
@@ -3344,15 +3056,6 @@
   "maps/q3dm8/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm8/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
-  "maps/q3dm8/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
-  "maps/q3dm8/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3"
-  },
   "maps/q3dm8/pak886base_floor": {
     "name": "pak886base_floor.pk3"
   },
@@ -3367,15 +3070,6 @@
   },
   "maps/q3dm8/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3dm8/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
-  },
-  "maps/q3dm8/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
-  "maps/q3dm8/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
   },
   "maps/q3dm8/pak8882stone": {
     "name": "pak8882stone.pk3"
@@ -3440,9 +3134,6 @@
   "maps/q3dm8/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
-  "maps/q3dm8/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
-  },
   "maps/q3dm8/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
@@ -3467,47 +3158,20 @@
   "maps/q3dm9/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3dm9/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
-  },
   "maps/q3dm9/pak83other": {
     "name": "pak83other.pk3"
   },
   "maps/q3dm9/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3dm9/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
-  },
-  "maps/q3dm9/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
   "maps/q3dm9/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3dm9/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
-  "maps/q3dm9/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
-  "maps/q3dm9/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
-  "maps/q3dm9/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
   },
   "maps/q3dm9/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
-  "maps/q3dm9/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3dm9/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
-  },
-  "maps/q3dm9/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
   },
   "maps/q3dm9/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
@@ -3551,14 +3215,8 @@
   "maps/q3dm9/pak59shotgun": {
     "name": "pak59shotgun.pk3"
   },
-  "maps/q3dm9/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
   "maps/q3dm9/pak84base_trim": {
     "name": "pak84base_trim.pk3"
-  },
-  "maps/q3dm9/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3"
   },
   "maps/q3dm9/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
@@ -3581,14 +3239,8 @@
   "maps/q3tourney1/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3tourney1/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
   "maps/q3tourney1/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3tourney1/pak9998q3dm4": {
-    "name": "pak9998q3dm4.pk3"
   },
   "maps/q3tourney1/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
@@ -3611,14 +3263,8 @@
   "maps/q3tourney1/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
-  "maps/q3tourney1/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
   "maps/q3tourney1/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
-  },
-  "maps/q3tourney1/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
   },
   "maps/q3tourney1/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
@@ -3655,12 +3301,6 @@
   },
   "maps/q3tourney1/pak59shotgun": {
     "name": "pak59shotgun.pk3"
-  },
-  "maps/q3tourney1/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
-  "maps/q3tourney1/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
   },
   "maps/q3tourney1/pak88base_light": {
     "name": "pak88base_light.pk3"
@@ -3773,12 +3413,6 @@
   "maps/q3tourney3/pak99996q3tourney3": {
     "name": "pak99996q3tourney3.pk3"
   },
-  "maps/q3tourney3/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
-  "maps/q3tourney3/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
   "maps/q3tourney3/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
@@ -3806,14 +3440,8 @@
   "maps/q3tourney3/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3tourney3/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
-  },
   "maps/q3tourney3/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
-  },
-  "maps/q3tourney3/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
   },
   "maps/q3tourney3/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -3959,9 +3587,6 @@
   "maps/q3tourney5/pak99998q3tourney5": {
     "name": "pak99998q3tourney5.pk3"
   },
-  "maps/q3tourney5/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3tourney5/pak81world": {
     "name": "pak81world.pk3"
   },
@@ -3974,23 +3599,11 @@
   "maps/q3tourney5/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3tourney5/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
-  "maps/q3tourney5/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3tourney5/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
   },
-  "maps/q3tourney5/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
   "maps/q3tourney5/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
-  },
-  "maps/q3tourney5/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
   },
   "maps/q3tourney5/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
@@ -4043,26 +3656,14 @@
   "maps/q3tourney6_ctf/pak99999q3tourney6_ctf": {
     "name": "pak99999q3tourney6_ctf.pk3"
   },
-  "maps/q3tourney6_ctf/pak9995q3dm19": {
-    "name": "pak9995q3dm19.pk3"
-  },
-  "maps/q3tourney6_ctf/pak99990q3tourney6": {
-    "name": "pak99990q3tourney6.pk3"
-  },
   "maps/q3tourney6_ctf/pak71teleporter": {
     "name": "pak71teleporter.pk3"
   },
   "maps/q3tourney6_ctf/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3tourney6_ctf/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3tourney6_ctf/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3tourney6_ctf/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
   },
   "maps/q3tourney6_ctf/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -4124,9 +3725,6 @@
   "maps/q3tourney6_ctf/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3tourney6_ctf/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3"
-  },
   "maps/q3tourney6_ctf/pak83other": {
     "name": "pak83other.pk3"
   },
@@ -4139,17 +3737,11 @@
   "maps/q3tourney6_ctf/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3tourney6_ctf/pak9993q3dm17": {
-    "name": "pak9993q3dm17.pk3"
-  },
   "maps/q3tourney6_ctf/pak62model": {
     "name": "pak62model.pk3"
   },
   "maps/q3tourney6/pak99990q3tourney6": {
     "name": "pak99990q3tourney6.pk3"
-  },
-  "maps/q3tourney6/pak9995q3dm19": {
-    "name": "pak9995q3dm19.pk3"
   },
   "maps/q3tourney6/pak71teleporter": {
     "name": "pak71teleporter.pk3"
@@ -4157,14 +3749,8 @@
   "maps/q3tourney6/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3tourney6/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3tourney6/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3tourney6/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
   },
   "maps/q3tourney6/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -4229,9 +3815,6 @@
   "maps/q3tourney6/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3tourney6/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3"
-  },
   "maps/q3tourney6/pak83other": {
     "name": "pak83other.pk3"
   },
@@ -4240,9 +3823,6 @@
   },
   "maps/q3tourney6/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3tourney6/pak9993q3dm17": {
-    "name": "pak9993q3dm17.pk3"
   },
   "maps/q3wcp1/undefined": {
     "name": "undefined.pk3"
@@ -4370,11 +3950,8 @@
   "maps/q3wcp10/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3wcp10/pak99998q3tourney5": {
-    "name": "pak99998q3tourney5.pk3"
-  },
-  "maps/q3wcp10/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
+  "maps/q3wcp10/pak999991q3wcp10": {
+    "name": "pak999991q3wcp10.pk3"
   },
   "maps/q3wcp10/pak81world": {
     "name": "pak81world.pk3"
@@ -4391,20 +3968,11 @@
   "maps/q3wcp10/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3wcp10/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
-  },
   "maps/q3wcp10/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
   },
   "maps/q3wcp10/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
-  },
-  "maps/q3wcp10/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3"
-  },
-  "maps/q3wcp10/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
   },
   "maps/q3wcp10/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
@@ -4475,9 +4043,6 @@
   "maps/q3wcp10/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3wcp10/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
   "maps/q3wcp10/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
   },
@@ -4502,8 +4067,8 @@
   "maps/q3wcp11/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3wcp11/pak9995q3dm19": {
-    "name": "pak9995q3dm19.pk3"
+  "maps/q3wcp11/pak999992q3wcp11": {
+    "name": "pak999992q3wcp11.pk3"
   },
   "maps/q3wcp11/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -4513,9 +4078,6 @@
   },
   "maps/q3wcp11/pak84base_trim": {
     "name": "pak84base_trim.pk3"
-  },
-  "maps/q3wcp11/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
   },
   "maps/q3wcp11/pak885base_wall": {
     "name": "pak885base_wall.pk3"
@@ -4637,12 +4199,6 @@
   "maps/q3wcp12/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3wcp12/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
-  },
-  "maps/q3wcp12/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
   "maps/q3wcp12/pak8885misc": {
     "name": "pak8885misc.pk3"
   },
@@ -4739,17 +4295,14 @@
   "maps/q3wcp13/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3wcp13/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
+  "maps/q3wcp13/pak999994q3wcp13": {
+    "name": "pak999994q3wcp13.pk3"
   },
   "maps/q3wcp13/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
   "maps/q3wcp13/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3wcp13/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
   },
   "maps/q3wcp13/pak8882stone": {
     "name": "pak8882stone.pk3"
@@ -4829,9 +4382,6 @@
   "maps/q3wcp13/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
   },
-  "maps/q3wcp13/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
   "maps/q3wcp13/pak884env": {
     "name": "pak884env.pk3"
   },
@@ -4856,8 +4406,8 @@
   "maps/q3wcp14/pak886base_floor": {
     "name": "pak886base_floor.pk3"
   },
-  "maps/q3wcp14/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
+  "maps/q3wcp14/pak999995q3wcp14": {
+    "name": "pak999995q3wcp14.pk3"
   },
   "maps/q3wcp14/pak887base_support": {
     "name": "pak887base_support.pk3"
@@ -4867,12 +4417,6 @@
   },
   "maps/q3wcp14/pak885base_wall": {
     "name": "pak885base_wall.pk3"
-  },
-  "maps/q3wcp14/pak9993q3dm17": {
-    "name": "pak9993q3dm17.pk3"
-  },
-  "maps/q3wcp14/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
   },
   "maps/q3wcp14/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -5060,17 +4604,14 @@
   "maps/q3wcp16/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3wcp16/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3"
+  "maps/q3wcp16/pak999996q3wcp16": {
+    "name": "pak999996q3wcp16.pk3"
   },
   "maps/q3wcp16/pak888organics": {
     "name": "pak888organics.pk3"
   },
   "maps/q3wcp16/pak8882stone": {
     "name": "pak8882stone.pk3"
-  },
-  "maps/q3wcp16/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3"
   },
   "maps/q3wcp16/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -5137,9 +4678,6 @@
   },
   "maps/q3wcp16/pak59shotgun": {
     "name": "pak59shotgun.pk3"
-  },
-  "maps/q3wcp16/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
   },
   "maps/q3wcp16/pak89liquids": {
     "name": "pak89liquids.pk3"
@@ -5234,9 +4772,6 @@
   "maps/q3wcp17/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3wcp17/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3wcp17/pak880ctf": {
     "name": "pak880ctf.pk3"
   },
@@ -5260,9 +4795,6 @@
   },
   "maps/q3wcp18/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3wcp18/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
   },
   "maps/q3wcp18/pak72mapobject": {
     "name": "pak72mapobject.pk3"
@@ -5336,9 +4868,6 @@
   "maps/q3wcp18/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
-  "maps/q3wcp18/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3wcp18/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
@@ -5360,9 +4889,6 @@
   "maps/q3wcp19/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3wcp19/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3wcp19/pak81world": {
     "name": "pak81world.pk3"
   },
@@ -5375,14 +4901,8 @@
   "maps/q3wcp19/pak887base_support": {
     "name": "pak887base_support.pk3"
   },
-  "maps/q3wcp19/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
-  },
   "maps/q3wcp19/pak84base_trim": {
     "name": "pak84base_trim.pk3"
-  },
-  "maps/q3wcp19/pak99994q3tourney1": {
-    "name": "pak99994q3tourney1.pk3"
   },
   "maps/q3wcp19/pak885base_wall": {
     "name": "pak885base_wall.pk3"
@@ -5390,14 +4910,8 @@
   "maps/q3wcp19/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3wcp19/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
   "maps/q3wcp19/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
-  },
-  "maps/q3wcp19/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
   },
   "maps/q3wcp19/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -5459,9 +4973,6 @@
   "maps/q3wcp19/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3wcp19/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3"
-  },
   "maps/q3wcp19/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
@@ -5473,12 +4984,6 @@
   },
   "maps/q3wcp19/pak882effects": {
     "name": "pak882effects.pk3"
-  },
-  "maps/q3wcp19/pak999998q3wcp18": {
-    "name": "pak999998q3wcp18.pk3"
-  },
-  "maps/q3wcp19/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
   },
   "maps/q3wcp19/pak62model": {
     "name": "pak62model.pk3"
@@ -5492,17 +4997,11 @@
   "maps/q3wcp2/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3wcp2/pak99990q3tourney6": {
-    "name": "pak99990q3tourney6.pk3"
-  },
   "maps/q3wcp2/pak81world": {
     "name": "pak81world.pk3"
   },
   "maps/q3wcp2/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
-  },
-  "maps/q3wcp2/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
   },
   "maps/q3wcp2/pak880ctf": {
     "name": "pak880ctf.pk3"
@@ -5510,32 +5009,17 @@
   "maps/q3wcp2/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3wcp2/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3wcp2/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
-  "maps/q3wcp2/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
-  },
-  "maps/q3wcp2/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3wcp2/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
-  },
-  "maps/q3wcp2/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
   },
   "maps/q3wcp2/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
   "maps/q3wcp2/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
-  },
-  "maps/q3wcp2/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3wcp2/pak83other": {
     "name": "pak83other.pk3"
@@ -5627,26 +5111,17 @@
   "maps/q3wcp20/pak82music": {
     "name": "pak82music.pk3"
   },
-  "maps/q3wcp20/pak9993q3dm17": {
-    "name": "pak9993q3dm17.pk3"
-  },
   "maps/q3wcp20/pak81world": {
     "name": "pak81world.pk3"
   },
   "maps/q3wcp20/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3wcp20/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3wcp20/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
   "maps/q3wcp20/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3wcp20/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3"
   },
   "maps/q3wcp20/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
@@ -5726,9 +5201,6 @@
   "maps/q3wcp20/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3wcp20/pak92maps": {
-    "name": "pak92maps.pk3"
-  },
   "maps/q3wcp20/pak886base_floor": {
     "name": "pak886base_floor.pk3"
   },
@@ -5743,24 +5215,6 @@
   },
   "maps/q3wcp20/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
-  },
-  "maps/q3wcp20/pak93HMTfinal": {
-    "name": "pak93HMTfinal.pk3"
-  },
-  "maps/q3wcp20/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3"
-  },
-  "maps/q3wcp20/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
-  "maps/q3wcp20/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
-  "maps/q3wcp20/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
-  "maps/q3wcp20/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
   },
   "maps/q3wcp20/pak884env": {
     "name": "pak884env.pk3"
@@ -5930,9 +5384,6 @@
   "maps/q3wcp22/pak87skies": {
     "name": "pak87skies.pk3"
   },
-  "maps/q3wcp22/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3wcp22/pak62model": {
     "name": "pak62model.pk3"
   },
@@ -5947,9 +5398,6 @@
   },
   "maps/q3wcp23/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3wcp23/pak999997q3wcp17": {
-    "name": "pak999997q3wcp17.pk3"
   },
   "maps/q3wcp23/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -6002,9 +5450,6 @@
   "maps/q3wcp23/pak882effects": {
     "name": "pak882effects.pk3"
   },
-  "maps/q3wcp23/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3"
-  },
   "maps/q3wcp23/pak880ctf": {
     "name": "pak880ctf.pk3"
   },
@@ -6034,12 +5479,6 @@
   },
   "maps/q3wcp24/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
-  },
-  "maps/q3wcp24/pak99998q3tourney5": {
-    "name": "pak99998q3tourney5.pk3"
-  },
-  "maps/q3wcp24/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
   },
   "maps/q3wcp24/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
@@ -6137,9 +5576,6 @@
   "maps/q3wcp3/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3wcp3/pak99994q3tourney1": {
-    "name": "pak99994q3tourney1.pk3"
-  },
   "maps/q3wcp3/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
@@ -6148,12 +5584,6 @@
   },
   "maps/q3wcp3/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3wcp3/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3"
-  },
-  "maps/q3wcp3/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
   },
   "maps/q3wcp3/pak8887gothic_door": {
     "name": "pak8887gothic_door.pk3"
@@ -6167,32 +5597,8 @@
   "maps/q3wcp3/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3wcp3/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
-  "maps/q3wcp3/pak999990q3wcp2": {
-    "name": "pak999990q3wcp2.pk3"
-  },
-  "maps/q3wcp3/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3"
-  },
-  "maps/q3wcp3/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
-  "maps/q3wcp3/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
   "maps/q3wcp3/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
-  },
-  "maps/q3wcp3/pak99996q3tourney3": {
-    "name": "pak99996q3tourney3.pk3"
-  },
-  "maps/q3wcp3/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3"
-  },
-  "maps/q3wcp3/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
   },
   "maps/q3wcp3/pak8885misc": {
     "name": "pak8885misc.pk3"
@@ -6242,17 +5648,11 @@
   "maps/q3wcp3/pak59shotgun": {
     "name": "pak59shotgun.pk3"
   },
-  "maps/q3wcp3/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3wcp3/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
   "maps/q3wcp3/pak85ctf_q3w": {
     "name": "pak85ctf_q3w.pk3"
-  },
-  "maps/q3wcp3/pak9999991q3wcp20": {
-    "name": "pak9999991q3wcp20.pk3"
   },
   "maps/q3wcp3/pak83other": {
     "name": "pak83other.pk3"
@@ -6277,12 +5677,6 @@
   },
   "maps/q3wcp4/pak81world": {
     "name": "pak81world.pk3"
-  },
-  "maps/q3wcp4/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
-  "maps/q3wcp4/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
   },
   "maps/q3wcp4/pak887base_support": {
     "name": "pak887base_support.pk3"
@@ -6374,9 +5768,6 @@
   "maps/q3wcp5/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3wcp5/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3wcp5/pak84base_trim": {
     "name": "pak84base_trim.pk3"
   },
@@ -6440,9 +5831,6 @@
   "maps/q3wcp5/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
-  "maps/q3wcp5/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3"
-  },
   "maps/q3wcp5/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
@@ -6451,9 +5839,6 @@
   },
   "maps/q3wcp5/pak83other": {
     "name": "pak83other.pk3"
-  },
-  "maps/q3wcp5/pak9999991q3wcp20": {
-    "name": "pak9999991q3wcp20.pk3"
   },
   "maps/q3wcp5/pak87skies": {
     "name": "pak87skies.pk3"
@@ -6470,9 +5855,6 @@
   "maps/q3wcp6/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3wcp6/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3"
-  },
   "maps/q3wcp6/pak71teleporter": {
     "name": "pak71teleporter.pk3"
   },
@@ -6485,14 +5867,8 @@
   "maps/q3wcp6/pak73gratelamp": {
     "name": "pak73gratelamp.pk3"
   },
-  "maps/q3wcp6/pak9999998q3wcp5": {
-    "name": "pak9999998q3wcp5.pk3"
-  },
   "maps/q3wcp6/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3wcp6/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3"
   },
   "maps/q3wcp6/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
@@ -6503,14 +5879,8 @@
   "maps/q3wcp6/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
   },
-  "maps/q3wcp6/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3"
-  },
   "maps/q3wcp6/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
-  },
-  "maps/q3wcp6/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
   },
   "maps/q3wcp6/pak888organics": {
     "name": "pak888organics.pk3"
@@ -6581,9 +5951,6 @@
   "maps/q3wcp6/pak59shotgun": {
     "name": "pak59shotgun.pk3"
   },
-  "maps/q3wcp6/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3"
-  },
   "maps/q3wcp6/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
@@ -6601,12 +5968,6 @@
   },
   "maps/q3wcp6/pak89liquids": {
     "name": "pak89liquids.pk3"
-  },
-  "maps/q3wcp6/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3"
-  },
-  "maps/q3wcp6/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
   },
   "maps/q3wcp6/pak87skies": {
     "name": "pak87skies.pk3"
@@ -6632,12 +5993,6 @@
   "maps/q3wcp7/pak81world": {
     "name": "pak81world.pk3"
   },
-  "maps/q3wcp7/pak99994q3tourney1": {
-    "name": "pak99994q3tourney1.pk3"
-  },
-  "maps/q3wcp7/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3"
-  },
   "maps/q3wcp7/pak886base_floor": {
     "name": "pak886base_floor.pk3"
   },
@@ -6653,17 +6008,8 @@
   "maps/q3wcp7/pak880ctf": {
     "name": "pak880ctf.pk3"
   },
-  "maps/q3wcp7/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3"
-  },
-  "maps/q3wcp7/pak999990q3wcp2": {
-    "name": "pak999990q3wcp2.pk3"
-  },
   "maps/q3wcp7/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
-  },
-  "maps/q3wcp7/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3"
   },
   "maps/q3wcp7/pak8886gothic_ceiling": {
     "name": "pak8886gothic_ceiling.pk3"
@@ -6676,9 +6022,6 @@
   },
   "maps/q3wcp7/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3wcp7/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3"
   },
   "maps/q3wcp7/pak888organics": {
     "name": "pak888organics.pk3"
@@ -6734,12 +6077,6 @@
   "maps/q3wcp7/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
-  "maps/q3wcp7/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
-  "maps/q3wcp7/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3wcp7/pak882effects": {
     "name": "pak882effects.pk3"
   },
@@ -6748,9 +6085,6 @@
   },
   "maps/q3wcp7/pak889gothic_light": {
     "name": "pak889gothic_light.pk3"
-  },
-  "maps/q3wcp7/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3"
   },
   "maps/q3wcp7/pak8883compscreen": {
     "name": "pak8883compscreen.pk3"
@@ -6770,9 +6104,6 @@
   "maps/q3wcp8/pak72mapobject": {
     "name": "pak72mapobject.pk3"
   },
-  "maps/q3wcp8/pak99990q3tourney6": {
-    "name": "pak99990q3tourney6.pk3"
-  },
   "maps/q3wcp8/pak81world": {
     "name": "pak81world.pk3"
   },
@@ -6785,12 +6116,6 @@
   "maps/q3wcp8/pak885base_wall": {
     "name": "pak885base_wall.pk3"
   },
-  "maps/q3wcp8/pak9999990q3wcp7": {
-    "name": "pak9999990q3wcp7.pk3"
-  },
-  "maps/q3wcp8/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
-  },
   "maps/q3wcp8/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
@@ -6802,9 +6127,6 @@
   },
   "maps/q3wcp8/pak888organics": {
     "name": "pak888organics.pk3"
-  },
-  "maps/q3wcp8/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3"
   },
   "maps/q3wcp8/pak8882stone": {
     "name": "pak8882stone.pk3"
@@ -6890,9 +6212,6 @@
   "maps/q3wcp8/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3wcp8/pak999990q3wcp2": {
-    "name": "pak999990q3wcp2.pk3"
-  },
   "maps/q3wcp8/pak87skies": {
     "name": "pak87skies.pk3"
   },
@@ -6914,8 +6233,8 @@
   "maps/q3wcp9/pak887base_support": {
     "name": "pak887base_support.pk3"
   },
-  "maps/q3wcp9/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3"
+  "maps/q3wcp9/pak99999992q3wcp9": {
+    "name": "pak99999992q3wcp9.pk3"
   },
   "maps/q3wcp9/pak84base_trim": {
     "name": "pak84base_trim.pk3"
@@ -6998,9 +6317,6 @@
   "maps/q3wcp9/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
-  "maps/q3wcp9/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3"
-  },
   "maps/q3wcp9/pak882effects": {
     "name": "pak882effects.pk3"
   },
@@ -7021,9 +6337,6 @@
   },
   "maps/q3wxs1/pak82music": {
     "name": "pak82music.pk3"
-  },
-  "maps/q3wxs1/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3"
   },
   "maps/q3wxs1/pak886base_floor": {
     "name": "pak886base_floor.pk3"
@@ -7061,9 +6374,6 @@
   "maps/q3wxs1/pak88base_light": {
     "name": "pak88base_light.pk3"
   },
-  "maps/q3wxs1/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3"
-  },
   "maps/q3wxs1/pak882effects": {
     "name": "pak882effects.pk3"
   },
@@ -7091,20 +6401,14 @@
   "maps/q3wxs2/pak881gothic_block": {
     "name": "pak881gothic_block.pk3"
   },
-  "maps/q3wxs2/pak99993q3dm9": {
-    "name": "pak99993q3dm9.pk3"
+  "maps/q3wxs2/pak99999994q3wxs2": {
+    "name": "pak99999994q3wxs2.pk3"
   },
   "maps/q3wxs2/pak80gothic_floor": {
     "name": "pak80gothic_floor.pk3"
   },
   "maps/q3wxs2/pak883gothic_trim": {
     "name": "pak883gothic_trim.pk3"
-  },
-  "maps/q3wxs2/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3"
-  },
-  "maps/q3wxs2/pak99999994q3wxs2": {
-    "name": "pak99999994q3wxs2.pk3"
   },
   "maps/q3wxs2/pak8881gothic_wall": {
     "name": "pak8881gothic_wall.pk3"
@@ -7145,9 +6449,6 @@
   "maps/q3wxs2/pak86sfx": {
     "name": "pak86sfx.pk3"
   },
-  "maps/q3wxs2/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3"
-  },
   "maps/q3wxs2/pak89liquids": {
     "name": "pak89liquids.pk3"
   },
@@ -7165,23 +6466,5 @@
   },
   "maps/test/pak92maps": {
     "name": "pak92maps.pk3"
-  },
-  "maps/q3wcp10/pak999991q3wcp10": {
-    "name": "pak999991q3wcp10.pk3"
-  },
-  "maps/q3wcp11/pak999992q3wcp11": {
-    "name": "pak999992q3wcp11.pk3"
-  },
-  "maps/q3wcp13/pak999994q3wcp13": {
-    "name": "pak999994q3wcp13.pk3"
-  },
-  "maps/q3wcp14/pak999995q3wcp14": {
-    "name": "pak999995q3wcp14.pk3"
-  },
-  "maps/q3wcp16/pak999996q3wcp16": {
-    "name": "pak999996q3wcp16.pk3"
-  },
-  "maps/q3wcp9/pak99999992q3wcp9": {
-    "name": "pak99999992q3wcp9.pk3"
   }
 }

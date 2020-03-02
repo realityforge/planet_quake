@@ -584,18 +584,20 @@ function getSequenceNumeral(pre, count) {
 }
 
 function repackIndexJson(game, outputProject) {
+  //TODO: replace game.ordered without extensions because the graph
+  //  does not match the converted paths at this point
   // generate a index.json the server can use for pk3 sorting based on map/game type
   var indexJson, help
   if(outputProject) {
     var indexJson = path.join(outputProject, './index.json')
-    var help = `, you should run
-  npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
-  and
-  open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}
-  WARNING: this path might be too long, and cause
-   an error "BIG Info string length exceeded"
-   so it should probably be moved and renamed 
-   to something much shorter like /${path.basename(outputProject).split('-').map(p => p[0]).join('')}/`
+    var help = `, you should run:
+npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
+and
+open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}
+WARNING: this path might be too long, and cause
+ an error "BIG Info string length exceeded"
+ so it should probably be moved and renamed 
+ to something much shorter like /${path.basename(outputProject).split('-').map(p => p[0]).join('')}/`
   } else {
     indexJson = INDEX_NAME
     help = ''
@@ -632,11 +634,13 @@ function repackIndexJson(game, outputProject) {
   })
   Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
     var map = path.basename(v.id).replace(/\.bsp/i, '')
+    var mapPak = Object.keys(game.ordered).filter(k => k.includes(map))
     var mapAssets = getLeaves(v)
       .filter(f => game.everything.includes(f) 
         && (!externalAndShared.includes(f) || entityAssets.includes(f)))
     mapAssets.forEach(f => {
-      var matchPak = Object.keys(game.ordered)
+      var matchPak = mapPak // always check the map pak first
+        .concat(Object.keys(game.ordered))
         .filter(k => game.ordered[k].includes(f))[0]
       var newName = 'maps/' + map + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
