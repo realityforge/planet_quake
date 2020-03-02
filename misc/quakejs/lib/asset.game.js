@@ -11,6 +11,7 @@ var skinLoader = require('../lib/asset.skin.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
+  allTypes
 } = require('../bin/repack-whitelist.js')
 var DirectedGraph = require('../lib/asset.graph.js')
 
@@ -237,7 +238,6 @@ async function graphGame(gs, project, progress) {
   var notfound = []
   var inbaseq3 = []
   var everything = gs.everything.map(f => f.toLowerCase())
-  var allTypes = [imageTypes, audioTypes, sourceTypes, fileTypes].flat(1)
   var unknownTypes = gs.everything.map(f => path.extname(f).toLowerCase())
     .filter((t, i, arr) => arr.indexOf(t) === i)
     .filter(t => !allTypes.includes(t))

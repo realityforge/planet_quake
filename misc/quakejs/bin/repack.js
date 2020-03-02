@@ -35,6 +35,8 @@ npm run repack [options] [mod directory]
 --help -h - print this help message and exit
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
+TODO:
+--collisions - skip unzipping and repacking, just list files that interfere with each other
 `
 
 var edges = 3
@@ -53,7 +55,7 @@ for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(a.match(/\/node$/ig)) continue
   if(a.match(/\/repack\.js$/ig)) continue
-  if(fs.existsSync(a) && fs.statSync(a).isDirectory(a)) {
+  if(ufs.existsSync(a) && ufs.statSync(a).isDirectory(a)) {
     mountPoints.push(a)
   }
   if(a == '--edges') {
@@ -67,8 +69,8 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--convert') {
     isConvertParams = true
   } else if (a == '--entities') {
-    if(fs.existsSync(process.argv[i+1])) {
-      entities = fs.readFileSync(process.argv[i+1]).toString('utf-8')
+    if(ufs.existsSync(process.argv[i+1])) {
+      entities = ufs.readFileSync(process.argv[i+1]).toString('utf-8')
       // TODO: need some basic parsing to get the part before _ of every entity name
       i++
     } else {
@@ -76,14 +78,14 @@ for(var i = 0; i < process.argv.length; i++) {
     }
   } else if (a == '--previous' || a == '-p') {
     delete STEPS['source']
-    if(fs.existsSync(process.argv[i+1])) {
+    if(ufs.existsSync(process.argv[i+1])) {
       usePrevious = process.argv[i+1]
       i++
     } else {
       usePrevious = true
     }
   } else if (a == '--temp') {
-    if(fs.existsSync(process.argv[i+1]) && fs.statSync(process.argv[i+1].isDirectory())) {
+    if(ufs.existsSync(process.argv[i+1]) && ufs.statSync(process.argv[i+1].isDirectory())) {
       TEMP_DIR = process.argv[i+1]
       i++
     } else {
@@ -111,7 +113,7 @@ if(typeof STEPS['convert'] != 'undefined') {
 }
 if(mountPoints.length == 0) {
   console.error('ERROR: No mount points, e.g. run `npm run repack /Applications/ioquake3/baseq3`')
-  if(fs.existsSync(PROJECT))
+  if(ufs.existsSync(PROJECT))
     mountPoints.push(PROJECT)
 } else {
   mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
@@ -161,6 +163,7 @@ var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
+  allTypes
 } = require('../bin/repack-whitelist.js')
 var {convertGameFiles, convertNonAlpha, convertAudio} = require('../bin/convert.js')
 var globalBars = []
@@ -234,6 +237,18 @@ var numericMap = [
   ['other', /.*/, 8], // 80-89 - map models
 ]
 
+function getLeaves(v, depth) {
+  var result = Array.isArray(v) ? v : [v]
+  do {
+    level = result
+      .map(v => v.outEdges.map(e => e.inVertex))
+      .flat(1)
+      .filter((v) => !result.includes(v))
+    result.push.apply(result, level)
+  } while(!depth && depth !== 0 && level.length > 0 || --depth > 0)
+  return result.map(v => v.id)
+}
+
 async function gameInfo(gs, project) {
   if(!project) {
     project = PROJECT
@@ -250,7 +265,7 @@ async function gameInfo(gs, project) {
   game.images = game.images || findTypes(imageTypes, game.everything)
   game.audio = game.audio || findTypes(audioTypes, game.everything)
   game.sources = game.sources || findTypes(sourceTypes, game.everything)
-  game.known = game.known || findTypes([imageTypes, audioTypes, sourceTypes, fileTypes].flat(1), game.everything)
+  game.known = game.known || findTypes(allTypes, game.everything)
   percent('Image files', game.images.length, game.everything.length)
   percent('Audio files', game.audio.length, game.everything.length)
   percent('Source files', game.sources.length, game.everything.length)
@@ -304,10 +319,8 @@ async function gameInfo(gs, project) {
   // how many packs to create?
   var filesOverLimit = vertices
     .filter(v => v.inEdges.length > edges)
-    .map(v => [v.id]
-      .concat(v.outEdges.map(e => e.inVertex.id))
-      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))))
-    .flat(2)
+    .map(v => getLeaves(v))
+    .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f))
   percent('Shared files', filesOverLimit.length, game.everything.length)
   
@@ -339,7 +352,7 @@ async function gameInfo(gs, project) {
   console.log(ungraphed.slice(0, 10))
   
   console.log(`Info report written to "${INFO_NAME}"`)
-  fs.writeFileSync(INFO_NAME, JSON.stringify({
+  ufs.writeFileSync(INFO_NAME, JSON.stringify({
     summary: {
       images: getPercent('Image files', game.images.length, game.everything.length),
       audio: getPercent('Audio files', game.audio.length, game.everything.length),
@@ -410,20 +423,15 @@ async function groupAssets(gs, project) {
   var entityDuplicates = Object.keys(game.entities)
     .map(ent => game.graph.getVertex(ent))
     .filter((v, i, arr) => v)
-    .map(v => [v]
-      .concat(v.outEdges.map(e => e.inVertex.id))
-      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
-      .filter((f, i, arr) => arr.indexOf(f) === i))
+    .map(v => getLeaves(v))
     .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) !== i)
+  
   Object.keys(game.entities).forEach(ent => {
     var v = game.graph.getVertex(ent)
     if(!v) return true
-    var entFiles = v.outEdges.map(e => e.inVertex.id)
-      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id)).flat(1))
-      .filter((f, i, arr) => arr.indexOf(f) === i && !entityDuplicates.includes(f))
-    var model = entFiles.filter(f => f.match(/.\.md3/i))[0]
-      || entFiles[0]
+    var entFiles = getLeaves(v).filter(f => !entityDuplicates.includes(f))
+    var model = entFiles.filter(f => f.match(/.\.md3/i))[0] || entFiles[0]
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => 
         i < map.length - 1 && model.match(new RegExp(m))).length > 0)[0][0]
@@ -451,12 +459,7 @@ async function groupAssets(gs, project) {
   var externalAssets = Object.values(grouped).flat(1)
   
   // group shared textures and sounds by folder name
-  var filesOverLimit = vertices
-    .filter(v => v.inEdges.length > edges)
-    .map(v => [v.id]
-      .concat(v.outEdges.map(e => e.inVertex.id))
-      .concat(v.outEdges.map(e => e.inVertex.outEdges.map(e2 => e2.inVertex.id))))
-    .flat(2)
+  var filesOverLimit = getLeaves(vertices.filter(v => v.inEdges.length > edges))
     .concat(entityDuplicates)
     .filter((f, i, arr) => arr.indexOf(f) === i
       && game.everything.includes(f) && !externalAssets.includes(f))
@@ -474,8 +477,10 @@ async function groupAssets(gs, project) {
   var externalAndShared;
     
   // map menu and cgame files
-  var qvms = Object.keys(game.qvms).filter(qvm => qvm.match(/ui.qvm/i))
-    .concat(Object.keys(game.qvms).filter(qvm => !qvm.match(/ui.qvm/i)))
+  var qvms = Object.keys(game.qvms)
+    .filter(qvm => qvm.match(/ui.qvm/i))
+    .concat(Object.keys(game.qvms)
+    .filter(qvm => !qvm.match(/ui.qvm/i)))
   qvms.forEach(qvm => {
     // update shared items so menu is downloaded followed by cgame
     externalAndShared = Object.values(grouped).flat(1)
@@ -483,7 +488,9 @@ async function groupAssets(gs, project) {
     var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
     // don't include disassembly in new pak
     // don't include maps obviously because they are listed below
-    var gameVertices = game.graph.getVertex(qvm).outEdges.map(e => e.inVertex)
+    var gameVertices = game.graph.getVertex(qvm)
+      .outEdges
+      .map(e => e.inVertex)
       .filter(v => !v.id.match(/\.dis|\.bsp/i))
     var gameAssets = [qvm]
       .concat(gameVertices.map(v => v.id))
@@ -514,11 +521,8 @@ async function groupAssets(gs, project) {
     .map(m => game.graph.getVertex(m))
     .forEach(v => {
       var map = path.basename(v.id).replace(/\.bsp/i, '')
-      var mapAssets = v.outEdges.map(e => e.inVertex.id)
-        .filter(f => !externalAndShared.includes(f))
-        // map through shaders
-        .concat(v.outEdges.map(e => e.inVertex.outEdges.map(v => v.inVertex.id)).flat(1))
-        .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f) && !externalAndShared.includes(f))
+      var mapAssets = getLeaves(v)
+        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
       if(mapAssets.length > 0) {
         grouped['maps/' + map] = mapAssets
       }
@@ -589,7 +593,7 @@ async function groupAssets(gs, project) {
     renamedKeys.map(k => k + ' - ' + renamed[k].length),
     renamedKeys.map(k => k + ' - ' + renamed[k].length).slice(100))
   console.log(`Pak layout written to "${PAK_NAME}"`)
-  fs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
+  ufs.writeFileSync(PAK_NAME, JSON.stringify(ordered, null, 2))
   
   game.ordered = ordered
   game.renamed = renamed
@@ -619,18 +623,25 @@ async function repack(gs, project, outputProject) {
   if(!game || !game.ordered) {
     game = await groupAssets(gs, project)
   }
-  if(!fs.existsSync(outputProject)) fs.mkdirSync(outputProject)
+  if(!ufs.existsSync(outputProject)) ufs.mkdirSync(outputProject)
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
     await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]])
     var pak = game.ordered[orderedKeys[i]]
-    var real = pak.filter(f => fs.existsSync(f) && !fs.statSync(f).isDirectory())
-    var output = fs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
+    var real = pak.filter(f => ufs.existsSync(f) && !ufs.statSync(f).isDirectory())
+    var output = ufs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
     await compressDirectory(real, output, project)
   }
   
   // generate a index.json the server can use for pk3 sorting based on map/game type
+  var indexJson = path.join(outputProject, './index.json')
+  console.log(`Writing index.json "${indexJson}", you should run
+npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
+and
+open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}`)
+  var remapped = {}
   
+  ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
 }
 
 // do the actual work specified in arguments
@@ -650,7 +661,7 @@ async function repackGames() {
         gs = await graphGame(0, outCombined, progress)
       } else {
         await progress([[0, 0, Object.keys(STEPS).length, STEPS['graph']]])
-        gs = await graphGame(JSON.parse(fs.readFileSync(TEMP_NAME).toString('utf-8')),
+        gs = await graphGame(JSON.parse(ufs.readFileSync(TEMP_NAME).toString('utf-8')),
           outCombined, progress)
       }
       if(typeof STEPS['info'] != 'undefined') {
@@ -670,6 +681,8 @@ async function repackGames() {
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
         ])
         await convertGameFiles(gs, outCombined, outConverted, progress)
+        console.log(`Updating Pak layout written to "${PAK_NAME}"`)
+        ufs.writeFileSync(PAK_NAME, JSON.stringify(gs.ordered, null, 2))
       }
       if(typeof STEPS['repack'] != 'undefined') {    
         // repacking

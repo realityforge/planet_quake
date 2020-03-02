@@ -73,6 +73,10 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   for(var j = 0; j < images.length; j++) {
     await progress([[2, j, images.length, `Converting image ${chroot(images[j], project, '')}`]])
     var newFile = await convertNonAlpha(images[j], project, outConverted)
+    Object.keys(gs.ordered).forEach(k => {
+      var index = gs.ordered[k].indexOf(images[j])
+      if(index) gs.ordered[k][index] = newFile
+    })
   }
   
   await progress([
@@ -83,6 +87,10 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   for(var j = 0; j < audio.length; j++) {
     await progress([[2, j, audio.length, `Converting audio ${chroot(audio[j], project, '')}`]])
     var newFile = await convertAudio(audio[j], project, outConverted)
+    Object.keys(gs.ordered).forEach(k => {
+      var index = gs.ordered[k].indexOf(audio[j])
+      if(index) gs.ordered[k][index] = newFile
+    })
   }
   
   await progress([
@@ -92,14 +100,15 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   var known = orderedEverything
     .filter(f => !images.includes(f) && !audio.includes(f))
   for(var j = 0; j < known.length; j++) {
-    var outFile = chroot(known[j], project, outConverted)
+    var newFile = chroot(known[j], project, outConverted)
     await progress([[2, j, known.length, `Copying files ${chroot(known[j], project, '')}`]])
-    mkdirpSync(path.dirname(outFile))
-    ufs.copyFileSync(known[j], outFile)
+    mkdirpSync(path.dirname(newFile))
+    ufs.copyFileSync(known[j], newFile)
+    Object.keys(gs.ordered).forEach(k => {
+      var index = gs.ordered[k].indexOf(known[j])
+      if(index) gs.ordered[k][index] = newFile
+    })
   }
-  
-  // TODO: rename files in gs.ordered
-  
   
   await progress([[2, false]])
 }

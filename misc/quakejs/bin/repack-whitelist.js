@@ -84,4 +84,5 @@ module.exports = {
   audioTypes,
   imageTypes,
   findTypes,
+  allTypes: [imageTypes, audioTypes, sourceTypes, fileTypes].flat(1)
 }
