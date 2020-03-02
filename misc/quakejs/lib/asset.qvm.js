@@ -5,8 +5,6 @@ var minimatch = require('minimatch')
 var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
 var {execSync} = require('child_process');
 
-var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
-
 var MATCH_JMPLIST = /^((0x[0-9a-f]{8})\s+[0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2}\s+(0x[0-9a-f]{1,8}))\s*$/i
 var MATCH_STRINGS = /^((0x[0-9a-f]{8})\s+"(.*?)"\s*$)/i
 var MATCH_ENTS = /(ammo_|item_|team_|weapon_|holdable_)/i
@@ -61,8 +59,8 @@ function loadQVMStrings(buffer, topdirs) {
 
 function graphQVM(project) {
   var result = {}
-  var qvms = findTypes(['.qvm'], project || PROJECT)
-  var topdirs = glob.sync('**/', {cwd: project || PROJECT})
+  var qvms = findTypes(['.qvm'], project)
+  var topdirs = glob.sync('**/', {cwd: project})
     .map(dir => path.basename(dir))
   for(var i = 0; i < qvms.length; i++) {
     var disassembly = qvms[i].replace(/\.qvm/i, '.dis')

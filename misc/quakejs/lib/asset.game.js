@@ -28,7 +28,6 @@ var STEPS = {
   'shaders': 'Graphing shaders',
 }
 
-var PROJECT = '/Users/briancullinan/planet_quake_data/quake3-defrag-combined'
 var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
 var TEMP_NAME = path.join(__dirname, '../bin/previous-graph.json')
 
@@ -40,7 +39,7 @@ if(fs.existsSync(BASEQ3)) {
 
 function graphMaps(project) {
   var result = {}
-  var maps = findTypes(['.bsp'], project || PROJECT)
+  var maps = findTypes(['.bsp'], project)
   for(var i = 0; i < maps.length; i++) {
     var buffer = fs.readFileSync(maps[i])
     var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
@@ -52,7 +51,7 @@ function graphMaps(project) {
 
 function graphModels(project) {
   var result = {}
-  var models = findTypes(['.md5', '.md3'], project || PROJECT)
+  var models = findTypes(['.md5', '.md3'], project)
   for(var i = 0; i < models.length; i++) {
     var buffer = fs.readFileSync(models[i])
     var model = md3.load(buffer)
@@ -65,7 +64,7 @@ function graphModels(project) {
 
 function graphShaders(project) {
   var result = {}
-  var shaders = findTypes(['.shader'], project || PROJECT)
+  var shaders = findTypes(['.shader'], project)
   for(var i = 0; i < shaders.length; i++) {
     var buffer = fs.readFileSync(shaders[i])
     var script = shaderLoader.load(buffer)
@@ -77,7 +76,7 @@ function graphShaders(project) {
 
 function graphSkins(project) {
   var result = {}
-  var skins = findTypes(['.skin'], project || PROJECT)
+  var skins = findTypes(['.skin'], project)
   for(var i = 0; i < skins.length; i++) {
     var buffer = fs.readFileSync(skins[i]).toString('utf-8')
     var skin = skinLoader.load(buffer)
@@ -88,9 +87,6 @@ function graphSkins(project) {
 }
 
 async function loadGame(project, progress) {
-  if(!project) {
-    project = PROJECT
-  }
   await progress([[1, 0, Object.keys(STEPS).length, STEPS['files']]])
   var everything = glob.sync('**/*', {
     cwd: project,
@@ -106,7 +102,7 @@ async function loadGame(project, progress) {
   game.shaders = graphShaders(project)
   await progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
   game.skins = graphSkins(project)
-  var qvms = findTypes(['.qvm'], project || PROJECT)
+  var qvms = findTypes(['.qvm'], project)
   await progress([[1, 5, Object.keys(STEPS).length, STEPS['qvms']]])
   for(var i = 0; i < qvms.length; i++) {
     var disassembly = qvms[i].replace(/\.qvm/i, '.dis')
@@ -226,9 +222,6 @@ async function loadGame(project, progress) {
 }
 
 async function graphGame(gs, project, progress) {
-  if(!project) {
-    project = PROJECT
-  }
   if(!gs) {
     gs = await loadGame(project, progress)
   }

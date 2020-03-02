@@ -34,6 +34,7 @@ npm run repack [options] [mod directory]
 --temp {directory}
 --verbose -v - print all percentage status updates in case there is an error
 --help -h - print this help message and exit
+--no-overwrite - don't overwrite files during conversion, TODO: during unzipping either
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
@@ -47,6 +48,7 @@ var transcode = ''
 var entities = ''
 var mountPoints = []
 var usePrevious = false
+var noOverwrite = false
 var TEMP_DIR = os.tmpdir()
 var verbose = false
 
@@ -62,6 +64,8 @@ for(var i = 0; i < process.argv.length; i++) {
   if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
     i++
+  } else if (a == '--no-overwrite') {
+    noOverwrite = true
   } else if (a == '--info' || a == '-i') {
     delete STEPS['convert']
     delete STEPS['repack']
@@ -133,7 +137,7 @@ if(!noProgress) {
   var multibar = new cliProgress.MultiBar({
       fps: 120,
       clearOnComplete: true,
-      hideCursor: false,
+      hideCursor: true,
       format: `[\u001b[34m{bar}\u001b[0m] {percentage}% | {value}/{total} | {message}`,
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2588',
@@ -257,16 +261,12 @@ function getLeaves(v, depth) {
 }
 
 async function gameInfo(gs, project) {
-  if(!project) {
-    project = PROJECT
-  }
   var game
   if(!gs.graph) {
     game = await graphGame(gs, project, progress)
   } else {
     game = gs
   }
-
   // how many files are matched versus unknown?
   game.images = game.images || findTypes(imageTypes, game.everything)
   game.audio = game.audio || findTypes(audioTypes, game.everything)
@@ -395,9 +395,6 @@ async function gameInfo(gs, project) {
 }
 
 async function groupAssets(gs, project) {
-  if(!project) {
-    project = PROJECT
-  }
   var game
   if(!gs.graph) {
     game = await graphGame(gs, project, progress)
@@ -418,11 +415,12 @@ async function groupAssets(gs, project) {
   Object.keys(game.entities).forEach(ent => {
     var v = game.graph.getVertex(ent)
     if(!v) return true
-    var entFiles = getLeaves(v).filter(f => !entityDuplicates.includes(f))
+    var entFiles = getLeaves(v).filter(f => game.everything.includes(f)
+      && !entityDuplicates.includes(f))
     var model = entFiles.filter(f => f.match(/.\.md3/i))[0] || entFiles[0]
     var pakClass = numericMap
-      .filter(map => map.filter((m, i) => 
-        i < map.length - 1 && model.match(new RegExp(m))).length > 0)[0][0]
+      .filter(map => map.filter((m, i) => i < map.length - 1
+        && model.match(new RegExp(m))).length > 0)[0][0]
     var pakKey = pakClass + '/' + ent.split('_')[1]
     if(typeof grouped[pakKey] == 'undefined') {
       grouped[pakKey] = []
@@ -454,8 +452,8 @@ async function groupAssets(gs, project) {
   filesOverLimit.forEach(f => {
     var parent = path.basename(path.dirname(f))
     var pakClass = numericMap
-      .filter(map => map.filter((m, i) => 
-        i < map.length - 1 && f.match(new RegExp(m))).length > 0)[0][0]
+      .filter(map => map.filter((m, i) => i < map.length - 1
+        && f.match(new RegExp(m))).length > 0)[0][0]
     if(typeof grouped[pakClass + '/' + parent] == 'undefined') {
       grouped[pakClass + '/' + parent] = []
     }
@@ -532,8 +530,8 @@ async function groupAssets(gs, project) {
   var numeralCounts = {}
   var renamed = Object.keys(condensed).reduce((obj, k) => {
     var pakClass = numericMap
-      .filter(map => map.filter((m, i) => 
-        i < map.length - 1 && k.match(new RegExp(m))).length > 0)[0]
+      .filter(map => map.filter((m, i) => i < map.length - 1
+        && k.match(new RegExp(m))).length > 0)[0]
     var numeral = pakClass[pakClass.length - 1]
     if(typeof numeralCounts[numeral] == 'undefined') numeralCounts[numeral] = 1
     else numeralCounts[numeral]++
@@ -583,10 +581,14 @@ function getSequenceNumeral(pre, count) {
   return result + (count % 10)
 }
 
-function repackIndexJson(game, outputProject) {
-  //TODO: replace game.ordered without extensions because the graph
-  //  does not match the converted paths at this point
-  // generate a index.json the server can use for pk3 sorting based on map/game type
+function repackIndexJson(game, outCombined, outConverted, outputProject) {
+  // replace game.ordered without extensions because the graph
+  //   does not match the converted paths at this point
+  var orderedNoExt = Object.keys(game.ordered)
+    .reduce((obj, k) => {
+      obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(path.extname(f), ''))
+      return obj
+    }, {})
   var indexJson, help
   if(outputProject) {
     var indexJson = path.join(outputProject, './index.json')
@@ -597,12 +599,13 @@ open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}
 WARNING: this path might be too long, and cause
  an error "BIG Info string length exceeded"
  so it should probably be moved and renamed 
- to something much shorter like /${path.basename(outputProject).split('-').map(p => p[0]).join('')}/`
+ to something much shorter like /${path.basename(outputProject).split(/[^a-z0-9]/ig).map(p => p[0]).join('')}/`
   } else {
     indexJson = INDEX_NAME
     help = ''
   }
   
+  // generate a index.json the server can use for pk3 sorting based on map/game type
   var remapped = {}
   var filesOverLimit = getLeaves(game.graph.getVertices()
     .filter(v => v.inEdges.length > edges))
@@ -622,8 +625,12 @@ WARNING: this path might be too long, and cause
         && !externalAndShared.includes(f))
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
-      var matchPak = Object.keys(game.ordered)
-        .filter(k => game.ordered[k].includes(f))[0]
+      var matchPak = Object.keys(orderedNoExt)
+        .filter(k => orderedNoExt[k].includes(f.replace(outCombined, '').replace(path.extname(f), '')))[0]
+      if(typeof matchPak === 'undefined') {
+        console.log(orderedNoExt)
+        throw new Error('Couldn\'t find file in packs ' + f)
+      }
       var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
@@ -634,14 +641,14 @@ WARNING: this path might be too long, and cause
   })
   Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
     var map = path.basename(v.id).replace(/\.bsp/i, '')
-    var mapPak = Object.keys(game.ordered).filter(k => k.includes(map))
+    var mapPak = Object.keys(orderedNoExt).filter(k => k.includes(map))
     var mapAssets = getLeaves(v)
       .filter(f => game.everything.includes(f) 
         && (!externalAndShared.includes(f) || entityAssets.includes(f)))
     mapAssets.forEach(f => {
       var matchPak = mapPak // always check the map pak first
-        .concat(Object.keys(game.ordered))
-        .filter(k => game.ordered[k].includes(f))[0]
+        .concat(Object.keys(orderedNoExt))
+        .filter(k => orderedNoExt[k].includes(f.replace(outCombined, '').replace(path.extname(f), '')))[0]
       var newName = 'maps/' + map + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
@@ -654,39 +661,34 @@ WARNING: this path might be too long, and cause
   ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
 }
 
-async function repack(gs, project, outputProject) {
-  if(!project) {
-    project = PROJECT
-  }
+async function repack(gs, outConverted, outputProject) {
   var game
-  if(!gs.graph) {
-    game = await graphGame(gs, project, progress)
+  if(!gs || !gs.ordered) {
+    game = await groupAssets(gs, outConverted)
   } else {
     game = gs
-  }
-  if(!game || !game.ordered) {
-    game = await groupAssets(gs, project)
   }
   if(!ufs.existsSync(outputProject)) ufs.mkdirSync(outputProject)
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
-    await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]])
+    await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]], true)
     var pak = game.ordered[orderedKeys[i]]
     var real = pak.filter(f => ufs.existsSync(f) && !ufs.statSync(f).isDirectory())
-    var output = ufs.createWriteStream(path.join(outputProject, orderedKeys[i] + '.pk3'))
-    await compressDirectory(real, output, project)
+    var outFile = path.join(outputProject, orderedKeys[i] + '.pk3')
+    if(noOverwrite && ufs.existsSync(outFile)) continue
+    ufs.closeSync(ufs.openSync(outFile, 'w'))
+    var output = ufs.createWriteStream(outFile)
+    await compressDirectory(real, output, outConverted)
   }
-  
-  repackIndexJson(game)
 }
 
 // do the actual work specified in arguments
 async function repackGames() {
   for(var i = 0; i < mountPoints.length; i++) {
     try {
-      var outCombined = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined')
-      var outConverted = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined-converted')
-      var outRepacked = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-combined-converted-repacked')
+      var outCombined = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-c')
+      var outConverted = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-cc')
+      var outRepacked = path.join(TEMP_DIR, path.basename(mountPoints[i]) + '-ccr')
       var gs
       if(typeof STEPS['source'] != 'undefined') {
         await progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
@@ -716,7 +718,7 @@ async function repackGames() {
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['convert']],
         ])
-        await convertGameFiles(gs, outCombined, outConverted, progress)
+        await convertGameFiles(gs, outCombined, outConverted, noOverwrite, progress)
         console.log(`Updating Pak layout written to "${PAK_NAME}"`)
         ufs.writeFileSync(PAK_NAME, JSON.stringify(gs.ordered, null, 2))
       }
@@ -726,13 +728,14 @@ async function repackGames() {
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 3 : 2, Object.keys(STEPS).length, STEPS['repack']],
         ])
-        await repack(gs, mountPoints[i], outRepacked)
+        await repack(gs, outConverted, outRepacked)
+        repackIndexJson(gs, outCombined, outConverted, outRepacked)
       } else {
         await progress([
           [1, false],
           [0, typeof STEPS['source'] != 'undefined' ? 2 : 1, Object.keys(STEPS).length, STEPS['repack']],
         ])
-        repackIndexJson(gs)
+        repackIndexJson(gs, outCombined, outConverted)
       }
     } catch (e) {
       console.log(e)

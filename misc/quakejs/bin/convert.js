@@ -18,9 +18,13 @@ function chroot(file, root, output) {
   return path.join(output, file.substr(root.length))
 }
 
-async function convertNonAlpha(inFile, project, output) {
+async function convertNonAlpha(inFile, project, output, noOverwrite) {
   var outFile
   var alphaCmd;
+  outFile = chroot(chext(inFile, '.png'), project, output)
+  if(noOverwrite && ufs.existsSync(outFile)) return outFile
+  outFile = chroot(chext(inFile, '.jpg'), project, output)
+  if(noOverwrite && ufs.existsSync(outFile)) return outFile
   try {
     alphaCmd = execSync(`identify -format '%[opaque]' '${inFile}'`, {stdio : 'pipe'}).toString('utf-8')
   } catch (e) {
@@ -39,6 +43,7 @@ async function convertNonAlpha(inFile, project, output) {
     outFile = chroot(chext(inFile, '.jpg'), project, output)
   }
   mkdirpSync(path.dirname(outFile))
+  if(noOverwrite && ufs.existsSync(outFile)) return outFile
   // convert, baseq3 already includes jpg
   try {
     execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 50% "${inFile}" "${outFile}"`, {stdio : 'pipe'})
@@ -48,10 +53,10 @@ async function convertNonAlpha(inFile, project, output) {
   return outFile
 }
 
-async function convertAudio(inFile, project, output) {
-  var outFile
-  outFile = chroot(chext(inFile, '.opus'), project, output)
+async function convertAudio(inFile, project, output, noOverwrite) {
+  var outFile = chroot(chext(inFile, '.opus'), project, output)
   mkdirpSync(path.dirname(outFile))
+  if(noOverwrite && ufs.existsSync(outFile)) return outFile
   try {
     execSync(`opusenc --quiet --ignorelength --bitrate 24 --vbr "${inFile}" "${outFile}"`, {stdio : 'pipe'})
   } catch (e) {
@@ -60,7 +65,7 @@ async function convertAudio(inFile, project, output) {
   return outFile
 }
 
-async function convertGameFiles(gs, project, outConverted, progress) {
+async function convertGameFiles(gs, project, outConverted, noOverwrite, progress) {
   var orderedEverything = Object.values(gs.ordered)
     .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) === i)
@@ -71,11 +76,11 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   ])  
   var images = findTypes(imageTypes, orderedEverything)
   for(var j = 0; j < images.length; j++) {
-    await progress([[2, j, images.length, `Converting image ${chroot(images[j], project, '')}`]])
-    var newFile = await convertNonAlpha(images[j], project, outConverted)
+    await progress([[2, j, images.length, chroot(images[j], project, '')]])
+    var newFile = await convertNonAlpha(images[j], project, outConverted, noOverwrite)
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(images[j])
-      if(index) gs.ordered[k][index] = newFile
+      if(index > -1) gs.ordered[k][index] = newFile
     })
   }
   
@@ -85,11 +90,11 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   ])
   var audio = findTypes(audioTypes, orderedEverything)
   for(var j = 0; j < audio.length; j++) {
-    await progress([[2, j, audio.length, `Converting audio ${chroot(audio[j], project, '')}`]])
-    var newFile = await convertAudio(audio[j], project, outConverted)
+    await progress([[2, j, audio.length, chroot(audio[j], project, '')]])
+    var newFile = await convertAudio(audio[j], project, outConverted, noOverwrite)
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(audio[j])
-      if(index) gs.ordered[k][index] = newFile
+      if(index > -1) gs.ordered[k][index] = newFile
     })
   }
   
@@ -100,13 +105,15 @@ async function convertGameFiles(gs, project, outConverted, progress) {
   var known = orderedEverything
     .filter(f => !images.includes(f) && !audio.includes(f))
   for(var j = 0; j < known.length; j++) {
+    await progress([[2, j, known.length, chroot(known[j], project, '')]])
     var newFile = chroot(known[j], project, outConverted)
-    await progress([[2, j, known.length, `Copying files ${chroot(known[j], project, '')}`]])
     mkdirpSync(path.dirname(newFile))
-    ufs.copyFileSync(known[j], newFile)
+    if(!noOverwrite || !ufs.existsSync(newFile)) {
+      ufs.copyFileSync(known[j], newFile)
+    }
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(known[j])
-      if(index) gs.ordered[k][index] = newFile
+      if(index > -1) gs.ordered[k][index] = newFile
     })
   }
   

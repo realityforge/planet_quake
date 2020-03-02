@@ -11,7 +11,7 @@
                                         
 This project derives from https://github.com/ioquake/ioq3 and https://github.com/inolen/quakejs.
 It is not the intention of this project to add features that are not compatible with
-either of those two forks on the original Quake 3 source code release by id Software.
+either of those two forks or the original Quake 3 source code release by id Software.
 The intention of this project is to give developers the tools needed to run Quake 3
 in a modern web browser, including Android Mobile Chrome.
 
