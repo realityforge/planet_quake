@@ -4,6 +4,7 @@ var glob = require('glob')
 var minimatch = require('minimatch')
 var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
 var {execSync} = require('child_process');
+var {getLeaves} = require('../lib/asset.graph.js')
 
 var MATCH_JMPLIST = /^((0x[0-9a-f]{8})\s+[0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2}\s+(0x[0-9a-f]{1,8}))\s*$/i
 var MATCH_STRINGS = /^((0x[0-9a-f]{8})\s+"(.*?)"\s*$)/i
@@ -31,9 +32,9 @@ function loadQVMStrings(buffer, topdirs) {
     // assuming a single character is the path seperator,
     //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
     //   TODO: might need something for %i matching lightmaps names or animation frames
-    .map(f => [f[1].replace(/%[0-9\-\.]*[sdi]/ig, '*')
+    .map(f => [f[1].replace(/%[0-9\-\.]*[sdif]/ig, '*')
                    .replace(/%[c]/ig, '/'),
-               f[1].replace(/%[0-9\-\.]*[sdic]/ig, '*')])
+               f[1].replace(/%[0-9\-\.]*[sdicf]/ig, '*')])
     .flat(1)
 
   // now for some filtering fun
@@ -123,17 +124,18 @@ function mapGameAssets(qvmVertex) {
   var gameVertices = qvmVertex
     .outEdges
     .map(e => e.inVertex)
-    .filter(v => !v.id.match(/\.dis|\.bsp/i))
+    .filter(v => !v.id.match(/\.dis|\.bsp|\.aas/i))
   var gameAssets = [qvmVertex.id]
     .concat(gameVertices.map(v => v.id))
     // include shader scripts, but do not include the assets they point to
     .concat(gameVertices
       .filter(v => !v.id.match(/\.shader/i))
-      .map(v => v.outEdges.map(e2 => e2.inVertex.id)))
+      .map(v => getLeaves(v)))
     .flat(2)
-    .filter((f, i, arr) => arr.indexOf(f) === i)
+    .filter((f, i, arr) => arr.indexOf(f) === i && !f.match(/\.bsp|\.aas/i))
   return gameAssets
 }
+
 module.exports = {
   getGameAssets: getGameAssets,
   loadQVMStrings: loadQVMStrings,

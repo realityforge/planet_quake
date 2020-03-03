@@ -177,6 +177,8 @@ var {
 var {
   convertGameFiles, convertNonAlpha, convertAudio
 } = require('../bin/convert.js')
+var {getLeaves} = require('../lib/asset.graph.js')
+
 var globalBars = []
 
 function getPercent(l, a, b) {
@@ -247,18 +249,6 @@ var numericMap = [
   ['model', 6],
   ['other', /.*/, 8], // 80-89 - map models
 ]
-
-function getLeaves(v, depth) {
-  var result = Array.isArray(v) ? v : [v]
-  do {
-    level = result
-      .map(v => v.outEdges.map(e => e.inVertex))
-      .flat(1)
-      .filter((v) => !result.includes(v))
-    result.push.apply(result, level)
-  } while(!depth && depth !== 0 && level.length > 0 || --depth > 0)
-  return result.map(v => v.id)
-}
 
 async function gameInfo(gs, project) {
   var game
@@ -586,7 +576,7 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
   //   does not match the converted paths at this point
   var orderedNoExt = Object.keys(game.ordered)
     .reduce((obj, k) => {
-      obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(path.extname(f), ''))
+      obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), ''))
       return obj
     }, {})
   var indexJson, help
@@ -626,7 +616,7 @@ WARNING: this path might be too long, and cause
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
       var matchPak = Object.keys(orderedNoExt)
-        .filter(k => orderedNoExt[k].includes(f.replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
       if(typeof matchPak === 'undefined') {
         console.log(orderedNoExt)
         throw new Error('Couldn\'t find file in packs ' + f)
@@ -634,7 +624,10 @@ WARNING: this path might be too long, and cause
       var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
-          name: matchPak + '.pk3'
+          name: matchPak + '.pk3',
+          size: outputProject
+            ? ufs.statSync(path.join(outputProject, matchPak + '.pk3')).size
+            : 0
         }
       }
     })
@@ -648,11 +641,18 @@ WARNING: this path might be too long, and cause
     mapAssets.forEach(f => {
       var matchPak = mapPak // always check the map pak first
         .concat(Object.keys(orderedNoExt))
-        .filter(k => orderedNoExt[k].includes(f.replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+      if(typeof matchPak === 'undefined') {
+        console.log(orderedNoExt)
+        throw new Error('Couldn\'t find file in packs ' + f)
+      }
       var newName = 'maps/' + map + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
-          name: matchPak + '.pk3'
+          name: matchPak + '.pk3',
+          size: outputProject
+            ? ufs.statSync(path.join(outputProject, matchPak + '.pk3')).size
+            : 0
         }
       }
     })
@@ -696,7 +696,7 @@ async function repackGames() {
       if(typeof STEPS['source'] != 'undefined') {
         await progress([[0, 0, Object.keys(STEPS).length, STEPS['source']]])
         await progress([[1, 0, 2, 'Sourcing files']])
-        await unpackPk3s(mountPoints[i], outCombined, progress)
+        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite)
         await progress([[0, 1, Object.keys(STEPS).length, STEPS['graph']]])
         await new Promise(resolve => setTimeout(resolve, 10))
         gs = await graphGame(0, outCombined, progress)

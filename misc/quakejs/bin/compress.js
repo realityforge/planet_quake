@@ -36,7 +36,7 @@ function mkdirpSync(p) {
   }
 }
 
-async function readPak(zipFile, cb, outdir) {
+async function readPak(zipFile, progress, outdir, noOverwrite) {
   const zip = new StreamZip({
       file: zipFile,
       storeEntries: true
@@ -54,9 +54,8 @@ async function readPak(zipFile, cb, outdir) {
         if(entry.isDirectory) continue
         var levelPath = path.join(outdir, entry.name)
         mkdirpSync(path.dirname(levelPath))
-        if(cb) {
-          await cb(i, index.length, entry.name)
-        }
+        await progress([[2, i, index.length, entry.name]])
+        if(noOverwrite && ufs.existsSync(levelPath)) continue
         await new Promise(resolve => {
           zip.extract(entry.name, levelPath, err => {
             if(err) console.log('Extract error ' + err)
@@ -73,7 +72,7 @@ async function readPak(zipFile, cb, outdir) {
   return header
 }
 
-async function unpackPk3s(project, outCombined, progress) {
+async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   // TODO: copy non-pk3 files first, in case of unpure modes
   var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3'})
   for(var j = 0; j < notpk3s.length; j++) {
@@ -86,9 +85,7 @@ async function unpackPk3s(project, outCombined, progress) {
   pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
   for(var j = 0; j < pk3s.length; j++) {
     await progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
-    await readPak(path.join(project, pk3s[j]), async (index, total, n) => {
-      await progress([[2, index, total, `Extracting ${n}`]])
-    }, outCombined)
+    await readPak(path.join(project, pk3s[j]), progress, outCombined, noOverwrite)
     await progress([[2, false]])
   }
 }

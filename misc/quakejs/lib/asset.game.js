@@ -13,7 +13,7 @@ var {
   audioTypes, imageTypes, findTypes,
   allTypes
 } = require('../bin/repack-whitelist.js')
-var DirectedGraph = require('../lib/asset.graph.js')
+var {DirectedGraph} = require('../lib/asset.graph.js')
 
 var STEPS = {
   'files': 'Scanning all files',
@@ -321,7 +321,7 @@ async function graphGame(gs, project, progress) {
         || typeof shaderLookups[e] != 'undefined')
     if(entityEdges.length > 0) {
       fileLookups[k] = graph.addVertex(k, {name: k})
-      entityEdges.forEach(e => graph.addEdge(fileLookups[k], fileLookups[e] || shaderLookups[e]))
+      entityEdges.forEach(e => graph.addEdge(fileLookups[k], shaderLookups[e] || fileLookups[e]))
     }
   })
   Object.keys(gs.mapEntities).forEach(k => {
@@ -358,7 +358,7 @@ async function graphGame(gs, project, progress) {
     gs.qvms[k].forEach(e => {
       if(typeof fileLookups[e] == 'undefined'
         && typeof shaderLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), fileLookups[e] || shaderLookups[e])
+      graph.addEdge(graph.getVertex(k), shaderLookups[e] || fileLookups[e])
     })
   })
   

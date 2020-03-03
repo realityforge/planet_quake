@@ -180,7 +180,9 @@ var LibrarySys = {
 		if (Module['canvas']) {
 			Module['canvas'].remove()
 		}
-		Module.exitHandler()
+		if(typeof Module.exitHandler != 'undefined') {
+			Module.exitHandler()
+		}
 	},
 	Sys_GLimpInit: function () {
 		var viewport = document.getElementById('viewport-frame')
@@ -234,6 +236,7 @@ var LibrarySys = {
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
 		var cl_running = _Cvar_VariableIntegerValue(
 			allocate(intArrayFromString('cl_running'), 'i8', ALLOC_STACK))
+		const blankFile = new Uint8Array(4)
 		
 		SYS.LoadingDescription('Manifest')
 		var fsMountPath = fs_basegame
@@ -279,13 +282,17 @@ var LibrarySys = {
 					SYSC.ProxyCallback(cb)
 					return
 				}
+				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
+					encoding: 'binary', flags: 'w', canOwn: true })				
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(json)
-				var 
+				var menu = keys.filter(k => k.includes('menu/'))
+				var game = keys.filter(k => k.includes('game/'))
+				if(cl_running && game.length) keys = game;
+				if(!cl_running && menu.length) keys = menu;
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
-					const blankFile = new Uint8Array(4)
 					if(!file.size) { // create a directory
 						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
 					} else {

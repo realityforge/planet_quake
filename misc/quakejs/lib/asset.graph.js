@@ -71,10 +71,31 @@ Vertex.prototype.getInVertices = function () {
 	});
 };
 
+function getLeaves(v, depth) {
+  var result = Array.isArray(v) ? v : [v]
+  do {
+    level = result
+      .map(v => v.outEdges.map(e => e.inVertex))
+      .flat(1)
+      .filter((v) => !result.includes(v))
+    result.push.apply(result, level)
+  } while(!depth && depth !== 0 && level.length > 0 || --depth > 0)
+  return result.map(v => v.id)
+}
+
+Vertex.prototype.getLeaves = function (depth) {
+	return getLeaves(this, depth)
+}
+
 function Edge(id, outVertex, inVertex) {
 	this.id = id;
 	this.outVertex = outVertex;
 	this.inVertex = inVertex;
 }
 
-module.exports = DirectedGraph;
+DirectedGraph.prototype.getLeaves = getLeaves
+
+module.exports = {
+	DirectedGraph,
+	getLeaves
+}
