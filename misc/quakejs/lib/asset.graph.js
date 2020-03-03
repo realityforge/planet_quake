@@ -81,6 +81,7 @@ function getLeaves(v, depth) {
     result.push.apply(result, level)
   } while(!depth && depth !== 0 && level.length > 0 || --depth > 0)
   return result.map(v => v.id)
+		.filter((f, i, arr) => arr.indexOf(f) === i)
 }
 
 Vertex.prototype.getLeaves = function (depth) {

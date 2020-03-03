@@ -1470,6 +1470,15 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	// Remove pure paks
 	FS_PureServerSetLoadedPaks("", "");
 	FS_PureServerSetReferencedPaks( "", "" );
+#ifdef EMSCRIPTEN
+	if(FS_Initialized()) {
+		CL_Disconnect_After_Restart();
+	}
+}
+
+void CL_Disconnect_After_Restart() {
+#endif
+;
 	
 	CL_ClearState ();
 
@@ -1713,6 +1722,12 @@ CL_Connect_f
 
 ================
 */
+#ifdef EMSCRIPTEN
+char	servero[MAX_OSPATH];
+const char	*serverStringo;
+netadrtype_t familyo = NA_UNSPEC;
+#endif
+
 void CL_Connect_f( void ) {
 	char	server[MAX_OSPATH];
 	const char	*serverString;
@@ -1761,6 +1776,38 @@ void CL_Connect_f( void ) {
 	noGameRestart = qtrue;
 	// don't need to asyncify because noGameRestart is true
 	CL_Disconnect( qtrue );
+#ifdef EMSCRIPTEN
+	familyo = family;
+	Q_strncpyz( servero, server, sizeof( server ) );
+	serverStringo = serverString;
+	
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_Connect_After_Shutdown);
+	} else {
+		CL_Connect_After_Restart();
+	}
+}
+
+void CL_Connect_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_Connect_After_Startup);
+}
+
+void CL_Connect_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_Disconnect_After_Restart();
+	CL_Connect_After_Restart();
+}
+
+void CL_Connect_After_Restart( void ) {
+	char	server[MAX_OSPATH];
+	const char	*serverString;
+	netadrtype_t family = NA_UNSPEC;
+	family = familyo;
+	Q_strncpyz( server, servero, sizeof( server ) );
+	serverString = serverStringo;
+#endif
+;
 	Con_Close();
 
 	Q_strncpyz( clc.servername, server, sizeof(clc.servername) );
@@ -2693,7 +2740,6 @@ void CL_CheckForResend( void ) {
 	clc.connectTime = cls.realtime;	// for retransmit requests
 	clc.connectPacketCount++;
 
-
 	switch ( clc.state ) {
 	case CA_CONNECTING:
 		// requesting a challenge .. IPv6 users always get in as authorize server supports no ipv6.
@@ -2711,6 +2757,7 @@ void CL_CheckForResend( void ) {
 		break;
 		
 	case CA_CHALLENGING:
+	Com_Printf ("Client state %i\n", clc.state);
 		// sending back the challenge
 		port = Cvar_VariableValue ("net_qport");
 

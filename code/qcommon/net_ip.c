@@ -1127,7 +1127,8 @@ void NET_OpenSocks( int port ) {
   }
   porto = port;
   Cvar_Set("net_socksLoading", "1");
-  SOCKS_Frame_Callback(Sys_SocksConnect, NET_OpenSocks_After_Connect);
+  Sys_SocksConnect(); // don't wait until next frame to attach to websocket events
+  SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Connect);
 }
 
 void NET_OpenSocks_After_Connect( void ) {

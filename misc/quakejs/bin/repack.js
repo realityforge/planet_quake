@@ -269,15 +269,12 @@ async function gameInfo(gs, project) {
   var uiqvm = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/ui\.qvm/i)))
     .filter(e => game.everything.includes(e))
-    .filter((e, i, arr) => arr.indexOf(e) === i)
   var cgame = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/cgame\.qvm/i)))
     .filter(e => game.everything.includes(e))
-    .filter((e, i, arr) => arr.indexOf(e) === i)
   var qagame = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/qagame\.qvm/i)))
     .filter(e => game.everything.includes(e))
-    .filter((e, i, arr) => arr.indexOf(e) === i)
   var qvmFiles = game.everything
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
   
@@ -294,7 +291,7 @@ async function gameInfo(gs, project) {
   // how many packs to create?
   var filesOverLimit = getLeaves(vertices
     .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
-    .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f))
+    .filter(f => game.everything.includes(f))
   
   // how many files are graphed versus unmatched or unknown?
   var leastUsed = vertices
@@ -405,7 +402,6 @@ async function groupAssets(gs, project) {
     .map(v => getLeaves(v))
     .flat(1)
     .filter((f, i, arr) => arr.indexOf(f) !== i)
-  
   Object.keys(game.entities).forEach(ent => {
     var v = game.graph.getVertex(ent)
     if(!v) return true
@@ -450,7 +446,7 @@ async function groupAssets(gs, project) {
       .filter(map => map.filter((m, i) => i < map.length - 1
         && f.match(new RegExp(m))).length > 0)[0][0]
     if(pakName == path.basename(project)) {
-      pakName = className
+      pakName = pakClass
     }
     if(typeof grouped[pakClass + '/' + pakName] == 'undefined') {
       grouped[pakClass + '/' + pakName] = []
@@ -620,15 +616,19 @@ WARNING: this path might be too long, and cause
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
+      // add sarge, TODO: make this a command line option
+      .concat(qvm.match(/game.qvm/i)
+        ? externalAndShared.filter(f => f.includes('sarge'))
+        : [])
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
       var matchPak = Object.keys(orderedNoExt)
         .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+      var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof matchPak === 'undefined') {
         console.log(orderedNoExt)
         throw new Error('Couldn\'t find file in packs ' + f)
       }
-      var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
           name: matchPak + '.pk3',

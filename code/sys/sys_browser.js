@@ -269,7 +269,7 @@ var LibrarySys = {
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need
-			if(sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+			if(!cl_running && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
 				SYS.LoadingDescription('')
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
@@ -346,8 +346,10 @@ var LibrarySys = {
 								progresses.reduce((s, p) => s + p, 0),
 								totals.reduce((s, p) => s + p, 0))
 						}, (err, data) => {
-							totals[i] = 0
-							progresses[i] = 0
+							progresses[i] = data.byteLength
+							SYS.LoadingProgress(
+								progresses.reduce((s, p) => s + p, 0),
+								totals.reduce((s, p) => s + p, 0))
 							if(err) return resolve(err)
 							try {
 								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {

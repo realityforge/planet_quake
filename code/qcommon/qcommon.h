@@ -70,6 +70,10 @@ void FS_Restart_After_Async( void );
 void CL_ParseGamestate_After_Restart( void );
 void Com_GameRestart_After_Restart( void );
 void CL_Vid_Restart_After_Restart( void );
+void CL_Connect_After_Shutdown( void );
+void CL_Connect_After_Restart( void );
+void CL_Connect_After_Startup( void );
+void CL_Disconnect_After_Restart( void );
 
 void Com_GameRestart_User_After_Shutdown( void );
 void Com_GameRestart_User_After_Startup( void );
