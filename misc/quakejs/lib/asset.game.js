@@ -195,7 +195,6 @@ async function loadGame(project, progress) {
         `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]], true)
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
-        .map(w => w.replace(/\\/ig, '/'))
         .map(w => everything.filter(minimatch.filter('**/' + w)))
         .flat(1)
         .concat(game.qvms[k])
@@ -321,7 +320,18 @@ async function graphGame(gs, project, progress) {
         || typeof shaderLookups[e] != 'undefined')
     if(entityEdges.length > 0) {
       fileLookups[k] = graph.addVertex(k, {name: k})
-      entityEdges.forEach(e => graph.addEdge(fileLookups[k], shaderLookups[e] || fileLookups[e]))
+      entityEdges.forEach(e => {
+        if(typeof fileLookups[e] != 'undefined')
+          graph.addEdge(fileLookups[k], fileLookups[e])
+        if(typeof shaderLookups[e] != 'undefined') {
+          graph.addEdge(fileLookups[k], shaderLookups[e])
+          shaderLookups[e].inEdges.forEach(e2 => {
+            if(e.includes(e2.outVertex.id)) {
+              graph.addEdge(fileLookups[k], e2.outVertex)
+            }
+          })
+        }
+      })
     }
   })
   Object.keys(gs.mapEntities).forEach(k => {
@@ -340,25 +350,48 @@ async function graphGame(gs, project, progress) {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      shaderLookups[e].inEdges.forEach(e2 => {
+        if(e.includes(e2.outVertex.id)) {
+          graph.addEdge(graph.getVertex(k), e2.outVertex)
+        }
+      })
     })
   })
   Object.keys(gs.models).forEach(k => {
     gs.models[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      shaderLookups[e].inEdges.forEach(e2 => {
+        if(e.includes(e2.outVertex.id)) {
+          graph.addEdge(graph.getVertex(k), e2.outVertex)
+        }
+      })
     })
   })
   Object.keys(gs.skins).forEach(k => {
     gs.skins[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      shaderLookups[e].inEdges.forEach(e2 => {
+        if(e.includes(e2.outVertex.id)) {
+          graph.addEdge(graph.getVertex(k), e2.outVertex)
+        }
+      })
     })
   })
   Object.keys(gs.qvms).forEach(k => {
     gs.qvms[k].forEach(e => {
-      if(typeof fileLookups[e] == 'undefined'
-        && typeof shaderLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), shaderLookups[e] || fileLookups[e])
+      if(typeof fileLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), fileLookups[e])
+      }
+      if(typeof shaderLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), shaderLookups[e])
+        shaderLookups[e].inEdges.forEach(e2 => {
+          if(e.includes(e2.outVertex.id)) {
+            graph.addEdge(graph.getVertex(k), e2.outVertex)
+          }
+        })
+      }
     })
   })
   

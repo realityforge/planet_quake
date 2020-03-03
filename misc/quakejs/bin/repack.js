@@ -41,6 +41,20 @@ TODO:
 --collisions - skip unzipping and repacking, just list files that interfere with each other
 `
 
+// in order of confidence, most to least
+var numericMap = [
+  ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
+               // 12-19 - menu pk3s, hud, sprites
+  ['game', 2], // 2 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
+  ['maps', 9], // 90-99 - map textures
+  ['weapon', 5], // 50-59 - weapons 1-9
+  ['mapobject', 7], // misc_models
+  ['powerup', 3], // 30-39 - powerups
+  ['player', 4], // 40-49 - player models
+  ['model', 6],
+  ['other', /.*/, 8], // 80-89 - map models
+]
+
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -236,20 +250,6 @@ async function progress(bars, forceVerbose) {
   }
 }
 
-// in order of confidence, most to least
-var numericMap = [
-  ['menu', 1], // 1 - ui.qvm, menu system to get the game running, all scripts
-               // 12-19 - menu pk3s, hud, sprites
-  ['game', 2], // 2 - cgame.qvm, qagame.qvm, in game feedback sounds not in menu
-  ['maps', 9], // 90-99 - map textures
-  ['weapon', 5], // 50-59 - weapons 1-9
-  ['mapobject', 7], // misc_models
-  ['powerup', 3], // 30-39 - powerups
-  ['player', 4], // 40-49 - player models
-  ['model', 6],
-  ['other', /.*/, 8], // 80-89 - map models
-]
-
 async function gameInfo(gs, project) {
   var game
   if(!gs.graph) {
@@ -269,12 +269,15 @@ async function gameInfo(gs, project) {
   var uiqvm = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/ui\.qvm/i)))
     .filter(e => game.everything.includes(e))
+    .filter((e, i, arr) => arr.indexOf(e) === i)
   var cgame = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/cgame\.qvm/i)))
     .filter(e => game.everything.includes(e))
+    .filter((e, i, arr) => arr.indexOf(e) === i)
   var qagame = getLeaves(game.graph.getVertices()
     .filter(v => v.id.match(/qagame\.qvm/i)))
     .filter(e => game.everything.includes(e))
+    .filter((e, i, arr) => arr.indexOf(e) === i)
   var qvmFiles = game.everything
     .filter(f => uiqvm.includes(f) || cgame.includes(f) || qagame.includes(f))
   
@@ -290,15 +293,16 @@ async function gameInfo(gs, project) {
   
   // how many packs to create?
   var filesOverLimit = getLeaves(vertices
-    .filter(v => v.inEdges.length > edges))
+    .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
     .filter((f, i, arr) => arr.indexOf(f) === i && game.everything.includes(f))
   
   // how many files are graphed versus unmatched or unknown?
-  vertices.sort((a, b) => a.inEdges.length - b.inEdges.length)
   var leastUsed = vertices
     .filter(v => v.inEdges.length > 0 && !v.id.match(/(\.bsp|\.md3|\.qvm|\.aas)/i))
+  leastUsed.sort((a, b) => a.inEdges.length - b.inEdges.length)
   var leastUsedExcept = vertices
     .filter(v => v.inEdges.length > 0 && v.id.match(/(\.md3)/i) && !v.id.match(/(players)/i))
+  leastUsedExcept.sort((a, b) => a.inEdges.length - b.inEdges.length)
   
   var allShaders = Object.values(game.scripts).flat(1)
   var unused = vertices
@@ -346,7 +350,7 @@ async function gameInfo(gs, project) {
     notfound: game.notfound,
     excludingMap: exludingMap,
     baseq3: game.baseq3,
-    vertices: vertices.map(v => v.inEdges.length + ' - ' + v.id),
+    vertices: vertices.map(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length + ' - ' + v.id),
     filesOverLimit: filesOverLimit,
     leastUsed: leastUsed
       .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
@@ -435,19 +439,23 @@ async function groupAssets(gs, project) {
   var externalAssets = Object.values(grouped).flat(1)
   
   // group shared textures and sounds by folder name
-  var filesOverLimit = getLeaves(vertices.filter(v => v.inEdges.length > edges))
+  var filesOverLimit = getLeaves(vertices
+    .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
     .concat(entityDuplicates)
     .filter((f, i, arr) => arr.indexOf(f) === i
       && game.everything.includes(f) && !externalAssets.includes(f))
   filesOverLimit.forEach(f => {
-    var parent = path.basename(path.dirname(f))
+    var pakName = path.basename(path.dirname(f))
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => i < map.length - 1
         && f.match(new RegExp(m))).length > 0)[0][0]
-    if(typeof grouped[pakClass + '/' + parent] == 'undefined') {
-      grouped[pakClass + '/' + parent] = []
+    if(pakName == path.basename(project)) {
+      pakName = className
     }
-    grouped[pakClass + '/' + parent].push(f)
+    if(typeof grouped[pakClass + '/' + pakName] == 'undefined') {
+      grouped[pakClass + '/' + pakName] = []
+    }
+    grouped[pakClass + '/' + pakName].push(f)
   })
 
   var externalAndShared;
@@ -464,7 +472,6 @@ async function groupAssets(gs, project) {
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
-
     gameAssets.forEach(f => {
       var pakName = path.basename(path.dirname(f))
       if(pakName == path.basename(project)) {
@@ -598,7 +605,7 @@ WARNING: this path might be too long, and cause
   // generate a index.json the server can use for pk3 sorting based on map/game type
   var remapped = {}
   var filesOverLimit = getLeaves(game.graph.getVertices()
-    .filter(v => v.inEdges.length > edges))
+    .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
   var entityAssets = getLeaves(Object.keys(game.entities)
     .map(ent => game.graph.getVertex(ent))
     .filter(v => v))

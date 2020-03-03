@@ -36,6 +36,7 @@ function loadQVMStrings(buffer, topdirs) {
                    .replace(/%[c]/ig, '/'),
                f[1].replace(/%[0-9\-\.]*[sdicf]/ig, '*')])
     .flat(1)
+    .map(w => w.includes('*') ? w.replace(/\\/ig, '/') : w)
 
   // now for some filtering fun
   var filteredstrings = qvmstrings.filter((file, i, arr) =>
@@ -78,7 +79,10 @@ function graphQVM(project) {
     }
     // TODO: add arenas, configs, bot scripts, defi
     var qvmstrings = loadQVMStrings(buffer, topdirs)
-      .concat(['botfiles/**', '*.cfg', '*.shader', disassembly])
+      .concat([
+        'console', 'white', 'gfx/2d/bigchars',
+        'botfiles/**', '*.cfg', '*.shader', disassembly
+      ])
     result[qvms[i]] = qvmstrings
   }
   console.log(`Found ${qvms.length} QVMs and ${Object.values(result).reduce((t, o) => t += o.length, 0)} strings`)
