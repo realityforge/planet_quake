@@ -584,6 +584,8 @@ void SV_SpawnServer_After_Startup( void ) {
 	SV_BotFrame (sv.time);
 	sv.time += 100;
 	svs.time += 100;
+	
+	FS_SetMapIndex(server);
 
 	if ( sv_pure->integer ) {
 		// the server sends these to the clients so they will only

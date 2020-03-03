@@ -232,6 +232,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		var cl_running = _Cvar_VariableIntegerValue(
+			allocate(intArrayFromString('cl_running'), 'i8', ALLOC_STACK))
 		
 		SYS.LoadingDescription('Manifest')
 		var fsMountPath = fs_basegame
@@ -280,6 +282,7 @@ var LibrarySys = {
 				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(json)
+				var 
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
 					const blankFile = new Uint8Array(4)

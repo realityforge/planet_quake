@@ -239,7 +239,7 @@ typedef struct {
 
 typedef struct searchpath_s {
 	struct searchpath_s *next;
-
+	qboolean  indexed;
 	pack_t		*pack;		// only one of pack / dir will be non NULL
 	directory_t	*dir;
 } searchpath_t;
@@ -304,8 +304,11 @@ static char		*fs_serverPakNames[MAX_SEARCH_PATHS];			// pk3 names
 // only used for autodownload, to make sure the client has at least
 // all the pk3 files that are referenced at the server side
 static int		fs_numServerReferencedPaks;
+static int		fs_numIndexedPakNames;
 static int		fs_serverReferencedPaks[MAX_SEARCH_PATHS];			// checksums
 static char		*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
+static char		*fs_indexedPakNames[MAX_SEARCH_PATHS];		// pk3 names
+
 
 // last valid game folder used
 char lastValidBase[MAX_OSPATH];
@@ -3662,6 +3665,63 @@ static void FS_CheckPak0( void )
 }
 #endif
 
+void FS_SetMapIndex(char *mapname) {
+	searchpath_t	*search;
+	int len, r, i, ki = 0, pi = 0, level = 0;
+	fileHandle_t indexfile;
+	char buf[MAX_OSPATH], key[MAX_OSPATH], pak[MAX_OSPATH];
+	qboolean isKey = qfalse, isPak = qfalse;
+	char *mapsMatch = va("maps/%s", mapname);
+
+	FS_FOpenFileRead("index.json", &indexfile, qtrue);
+	
+	if(indexfile)
+	{
+		do {
+			r = FS_Read(buf, MAX_OSPATH, indexfile);
+			// Do simple JSON parse to find just the paks required for the map
+			for(i = 0; i < r; i++) {
+				if(buf[i] == '{') {
+					level++;
+				} else if(buf[i] == '}') {
+					level--;
+				} else if(buf[i] == '"' && level == 1 && !isKey && !isPak) {
+					isKey = qtrue;
+				} else if(buf[i] == '"' && level == 1 && isKey && !isPak) {
+					isKey = qfalse;
+					key[ki] = 0;
+					ki = 0;
+					if(Q_stristr(key, mapsMatch) != NULL) {
+						fs_indexedPakNames[pi] = CopyString( &key[strlen(mapsMatch) + 1] );
+						pi++;
+					}
+				} else if(isKey) {
+					key[ki] = buf[i];
+					ki++;
+				}
+			}
+		} while(r > 0);
+		fs_numIndexedPakNames = pi;
+		FS_FCloseFile( indexfile );
+	}
+	
+	if(fs_numIndexedPakNames) {
+		for ( search = fs_searchpaths ; search ; search = search->next ) {
+			// is the element a pak file? 
+			if ( !search->pack ) {
+				continue;
+			}
+			
+			search->indexed = qfalse;
+			for(i = 0; i < fs_numIndexedPakNames; i++) {
+				if(Q_stristr(search->pack->pakBasename, fs_indexedPakNames[i]) != NULL) {
+					search->indexed = qtrue;
+				}
+			}
+		}
+	}
+}
+
 /*
 =====================
 FS_LoadedPakChecksums
@@ -3678,7 +3738,7 @@ const char *FS_LoadedPakChecksums( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file? 
-		if ( !search->pack ) {
+		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
 			continue;
 		}
 
@@ -3704,7 +3764,7 @@ const char *FS_LoadedPakNames( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
-		if ( !search->pack ) {
+		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
 			continue;
 		}
 
@@ -3734,7 +3794,7 @@ const char *FS_LoadedPakPureChecksums( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file? 
-		if ( !search->pack ) {
+		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
 			continue;
 		}
 
@@ -3760,6 +3820,10 @@ const char *FS_ReferencedPakChecksums( void ) {
 
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if ( fs_numIndexedPakNames && !search->indexed ) {
+			continue;
+		}
+		
 		// is the element a pak file?
 		if ( search->pack ) {
 			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {
@@ -3800,6 +3864,9 @@ const char *FS_ReferencedPakPureChecksums( void ) {
 			info[strlen(info)] = ' ';
 		}
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
+			if ( fs_numIndexedPakNames && !search->indexed ) {
+				continue;
+			}
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
 				Q_strcat( info, sizeof( info ), va("%i ", search->pack->pure_checksum ) );
@@ -3835,6 +3902,9 @@ const char *FS_ReferencedPakNames( void ) {
 	// we want to return ALL pk3's from the fs_game path
 	// and referenced one's from baseq3
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if ( fs_numIndexedPakNames && !search->indexed ) {
+			continue;
+		}
 		// is the element a pak file?
 		if ( search->pack ) {
 			if (search->pack->referenced || Q_stricmpn(search->pack->pakGamename, com_basegame->string, strlen(com_basegame->string))) {

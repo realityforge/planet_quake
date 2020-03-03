@@ -595,7 +595,7 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
     var help = `, you should run:
 npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
 and
-open ./build/release-*/ioq3ded +set fs_game ${path.basename(outputProject)}
+open ./build/release-*/ioq3ded +set fs_basepath ${path.dirname(path.dirname(outputProject))} +set fs_game ${path.basename(outputProject)}
 WARNING: this path might be too long, and cause
  an error "BIG Info string length exceeded"
  so it should probably be moved and renamed 
@@ -658,7 +658,10 @@ WARNING: this path might be too long, and cause
     })
   })
   console.log(`Writing index.json "${indexJson}"`, help)
-  ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
+  if(outputProject) {
+    ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
+  }
+  ufs.writeFileSync(INDEX_NAME, JSON.stringify(remapped, null, 2))
 }
 
 async function repack(gs, outConverted, outputProject) {
