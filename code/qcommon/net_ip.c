@@ -660,7 +660,6 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
 
-  Com_Printf( "Sys_SendPacket: %u %u \n", usingSocks, to.type );
 	if( to.type != NA_BROADCAST && to.type != NA_IP && to.type != NA_IP6 && to.type != NA_MULTICAST6)
 	{
 		Com_Error( ERR_FATAL, "Sys_SendPacket: bad address type" );
@@ -685,13 +684,11 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 		socksBuf[2] = 0;	// fragment (not fragmented)
 		socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
     // let socks server do the translation
-    Com_Printf( "Sys_SendPacket: %s \n", to.name );
     socksBuf[4] = strlen(to.name) + 1;
     Q_strncpyz( &socksBuf[5], to.name, socksBuf[4] );
 		//*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
-    Com_Printf( "Sys_SendPacket: %s %i \n", socksBuf, length );
     ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 		//ret = send( socks_socket, socksBuf, length+10, 0 );
 	}

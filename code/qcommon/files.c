@@ -1147,6 +1147,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 	char		*netpath;
 	FILE		*filep;
 	int			len;
+	char altFilename[MAX_QPATH];
+	Q_strncpyz(altFilename, filename, sizeof(altFilename));
+	altFilename[strlen(altFilename)-strlen(strrchr(altFilename, '.'))+1] = '\0';
 
 	if(filename == NULL)
 		Com_Error(ERR_FATAL, "FS_FOpenFileRead: NULL 'filename' parameter passed");
@@ -1196,7 +1199,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 				do
 				{
 					// case and separator insensitive comparisons
-					if(!FS_FilenameCompare(pakFile->name, filename))
+					if(!FS_FilenameCompare(pakFile->name, filename)
+						|| (FS_IsExt(filename, ".tga", strlen(filename)) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "jpg")))
+						|| (FS_IsExt(filename, ".tga", strlen(filename)) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "png"))))
 					{
 						// found it!
 						if(pakFile->len)
