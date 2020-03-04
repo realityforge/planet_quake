@@ -474,6 +474,8 @@ static void PlayerModel_SetMenuItems( void )
 		Q_strcat(s_playermodel.modelskin, 64, "/default");
 	}
 	
+	Com_Printf("Num models %i\n", s_playermodel.nummodels);
+	
 	// find model in our list
 	for (i=0; i<s_playermodel.nummodels; i++)
 	{
@@ -732,5 +734,3 @@ void UI_PlayerModelMenu(void)
 
 	Menu_SetCursorToItem( &s_playermodel.menu, &s_playermodel.pics[s_playermodel.selectedmodel % MAX_MODELSPERPAGE] );
 }
-
-

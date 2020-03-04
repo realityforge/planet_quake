@@ -660,6 +660,7 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
 
+  Com_Printf( "Sys_SendPacket: %u %u \n", usingSocks, to.type );
 	if( to.type != NA_BROADCAST && to.type != NA_IP && to.type != NA_IP6 && to.type != NA_MULTICAST6)
 	{
 		Com_Error( ERR_FATAL, "Sys_SendPacket: bad address type" );
@@ -679,16 +680,18 @@ void Sys_SendPacket( int length, const void *data, netadr_t to ) {
 	NetadrToSockadr( &to, (struct sockaddr *) &addr );
 
 	if( usingSocks && to.type == NA_IP ) {
-		socksBuf[0] = 5;	// reserved
-		socksBuf[1] = 1;
+		socksBuf[0] = 0;	// reserved
+		socksBuf[1] = 0;
 		socksBuf[2] = 0;	// fragment (not fragmented)
 		socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
     // let socks server do the translation
+    Com_Printf( "Sys_SendPacket: %s \n", to.name );
     socksBuf[4] = strlen(to.name) + 1;
     Q_strncpyz( &socksBuf[5], to.name, socksBuf[4] );
 		//*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
+    Com_Printf( "Sys_SendPacket: %s %i \n", socksBuf, length );
     ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 		//ret = send( socks_socket, socksBuf, length+10, 0 );
 	}
@@ -1164,6 +1167,7 @@ void NET_OpenSocks_After_Connect( void ) {
 		buf[2] = 2;		// method #2 - method id #02: username/password
 	}
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
 		return;
 	}
@@ -1184,10 +1188,12 @@ void NET_OpenSocks_After_Method( void ) {
 	// get the response
 	len = recv( socks_socket, (void *)buf, 64, 0 );
 	if ( len == SOCKET_ERROR ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
 		return;
 	}
 	if ( len != 2 || buf[0] != 5 ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: bad response\n" );
 		return;
 	}
@@ -1197,6 +1203,7 @@ void NET_OpenSocks_After_Method( void ) {
 	case 2: // username/password authentication
 		break;
 	default:
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: request denied\n" );
 		return;
 	}
@@ -1222,6 +1229,7 @@ void NET_OpenSocks_After_Method( void ) {
 
 		// send it
 		if ( send( socks_socket, (void *)buf, 3 + ulen + plen, 0 ) == SOCKET_ERROR ) {
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
 			return;
 		}
@@ -1229,14 +1237,17 @@ void NET_OpenSocks_After_Method( void ) {
 		// get the response
 		len = recv( socks_socket, (void *)buf, 64, 0 );
 		if ( len == SOCKET_ERROR ) {
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
 			return;
 		}
 		if ( len != 2 || buf[0] != 1 ) {
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "NET_OpenSocks: bad response\n" );
 			return;
 		}
 		if ( buf[1] != 0 ) {
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "NET_OpenSocks: authentication failed\n" );
 			return;
 		}
@@ -1268,19 +1279,23 @@ void NET_OpenSocks_After_Listen( void ) {
 	// get the response
 	len = recv( socks_socket, (void *)buf, 64, 0 );
 	if( len == SOCKET_ERROR ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
 		return;
 	}
 	if( len < 2 || buf[0] != 5 ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: bad response\n" );
 		return;
 	}
 	// check completion code
 	if( buf[1] != 0 ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: request denied: %i\n", buf[1] );
 		return;
 	}
 	if( buf[3] != 1 ) {
+    Cvar_Set("net_socksLoading", "0");
 		Com_Printf( "NET_OpenSocks: relay address is not IPV4: %i\n", buf[3] );
 		return;
 	}

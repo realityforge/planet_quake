@@ -607,6 +607,7 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	}
 
 	if ( !ci->modelIcon ) {
+		Com_Printf( "Failed to load icon file %s\n", filename );
 		return qfalse;
 	}
 
@@ -2632,4 +2633,3 @@ void CG_ResetPlayerEntity( centity_t *cent ) {
 		CG_Printf("%i ResetPlayerEntity yaw=%f\n", cent->currentState.number, cent->pe.torso.yawAngle );
 	}
 }
-

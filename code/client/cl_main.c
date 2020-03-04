@@ -1292,6 +1292,9 @@ Also called by Com_Error
 void CL_FlushMemory(void)
 {
 	CL_ClearMemory(qfalse);
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized()) return;
+#endif
 	CL_StartHunkUsers(qfalse);
 }
 
@@ -2757,7 +2760,6 @@ void CL_CheckForResend( void ) {
 		break;
 		
 	case CA_CHALLENGING:
-	Com_Printf ("Client state %i\n", clc.state);
 		// sending back the challenge
 		port = Cvar_VariableValue ("net_qport");
 

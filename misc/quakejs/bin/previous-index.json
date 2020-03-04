@@ -1,7 +1,7 @@
 {
   "menu/pak11menu": {
     "name": "pak11menu.pk3",
-    "size": 2939343
+    "size": 2946814
   },
   "menu/pak83other": {
     "name": "pak83other.pk3",
@@ -191,9 +191,17 @@
     "name": "pak220rlboom.pk3",
     "size": 8252
   },
+  "game/pak445major": {
+    "name": "pak445major.pk3",
+    "size": 1594052
+  },
   "game/pak4442sarge": {
     "name": "pak4442sarge.pk3",
     "size": 1695026
+  },
+  "game/pak4440announce": {
+    "name": "pak4440announce.pk3",
+    "size": 267877
   },
   "game/pak8886bots": {
     "name": "pak8886bots.pk3",
@@ -297,7 +305,7 @@
   },
   "maps/glass/pak91maps": {
     "name": "pak91maps.pk3",
-    "size": 2694963
+    "size": 3085343
   },
   "maps/glass/pak61CTF": {
     "name": "pak61CTF.pk3",
@@ -589,7 +597,7 @@
   },
   "maps/pirate/pak91maps": {
     "name": "pak91maps.pk3",
-    "size": 2694963
+    "size": 3085343
   },
   "maps/pro-q3dm13/pak95pro-q3dm13": {
     "name": "pak95pro-q3dm13.pk3",
@@ -1097,7 +1105,7 @@
   },
   "maps/q3ctf1/pak99q3ctf1": {
     "name": "pak99q3ctf1.pk3",
-    "size": 5884640
+    "size": 5887753
   },
   "maps/q3ctf1/pak82music": {
     "name": "pak82music.pk3",
@@ -8389,7 +8397,7 @@
   },
   "maps/test_bigbox/pak91maps": {
     "name": "pak91maps.pk3",
-    "size": 2694963
+    "size": 3085343
   },
   "maps/test_bigbox/pak880gothic_floor": {
     "name": "pak880gothic_floor.pk3",
@@ -8397,6 +8405,6 @@
   },
   "maps/test/pak91maps": {
     "name": "pak91maps.pk3",
-    "size": 2694963
+    "size": 3085343
   }
 }

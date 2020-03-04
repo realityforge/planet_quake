@@ -405,6 +405,9 @@ var LibrarySys = {
 		Module['websocket'].on('message', Browser.safeCallback(() => {
 			_SOCKS_Frame_Proxy()
 		}))
+		Module['websocket'].on('error', Browser.safeCallback(() => {
+			_SOCKS_Frame_Proxy()
+		}))
 	},
 	Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
 	Sys_SocksMessage: function () {
@@ -434,12 +437,6 @@ var LibrarySys = {
 	Sys_ErrorDialog: function (error) {
 		var errorStr = UTF8ToString(error)
 		console.log(errorStr)
-		if (typeof Module.exitHandler !== 'undefined') {
-			SYS.exited = true
-			Module.exitHandler(errorStr)
-			return
-		}
-
 		var title = SYS.dialog.querySelector('.title')
 		if(title) {
 			title.className = 'title error'
@@ -447,6 +444,11 @@ var LibrarySys = {
 			var description = SYS.dialog.querySelector('.description')
 			description.innerHTML = errorStr
 			SYS.dialog.style.display = 'block'
+		}
+		if (typeof Module.exitHandler != 'undefined') {
+			SYS.exited = true
+			Module.exitHandler(errorStr)
+			return
 		}
 	},
 	Sys_CmdArgs__deps: ['stackAlloc'],

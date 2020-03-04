@@ -270,8 +270,13 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	int			currentTime;
 	qboolean	restartClient;
 
-	if(com_errorEntered)
+	if(com_errorEntered) {
+		char	another_errorMessage[MAXPRINTMSG];
+		va_start (argptr,fmt);
+		Q_vsnprintf (another_errorMessage, sizeof(another_errorMessage),fmt,argptr);
+		va_end (argptr);
 		Sys_Error("recursive error after: %s", com_errorMessage);
+	}
 
 	com_errorEntered = qtrue;
 
@@ -2896,9 +2901,6 @@ void Com_Init_After_Filesystem( void ) {
 	}
 
 	Com_Printf ("--- Common Initialization Complete ---\n");
-#ifdef EMSCRIPTEN
-	NET_Init();
-#endif
 }
 
 /*
@@ -3140,7 +3142,8 @@ void Com_Frame_Proxy( void ) {
 
 void Com_Frame_After_Startup() {
 	FS_Restart_After_Async();
-	Com_GameRestart_After_Restart();
+	CL_StartHunkUsers(qfalse);
+//	Com_GameRestart_After_Restart();
 }
 
 void Com_Frame_After_Shutdown() {

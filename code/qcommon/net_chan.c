@@ -520,7 +520,6 @@ void NET_FlushPacketQueue(void)
 {
 	packetQueue_t *last;
 	int now;
-
 	while(packetQueue) {
 		now = Sys_Milliseconds();
 		if(packetQueue->release >= now)
@@ -538,7 +537,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, netadr_t to ) 
 
 	// sequenced packets are shown in netchan, so just show oob
 	if ( showpackets->integer && *(int *)data == -1 )	{
-		Com_Printf ("send packet %4i\n", length);
+		Com_Printf ("send packet %4i %i\n", length, to.type);
 	}
 
 	if ( to.type == NA_LOOPBACK ) {

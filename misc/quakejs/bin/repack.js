@@ -618,7 +618,7 @@ WARNING: this path might be too long, and cause
         && !externalAndShared.includes(f))
       // add sarge, TODO: make this a command line option
       .concat(qvm.match(/game.qvm/i)
-        ? externalAndShared.filter(f => f.includes('sarge'))
+        ? externalAndShared.filter(f => f.includes('sarge') || f.includes('major'))
         : [])
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {

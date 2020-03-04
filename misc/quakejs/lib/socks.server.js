@@ -187,7 +187,6 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
     self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
-      console.log(reqInfo.data)
       udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
     } catch (err) {
       self._onProxyError(socket, err)

@@ -786,9 +786,7 @@ int main( int argc, char **argv )
 	CON_Init( );
 	Com_Init( commandLine );
 
-#ifndef EMSCRIPTEN
 	NET_Init( );
-#endif
 	
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
