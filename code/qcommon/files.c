@@ -3680,7 +3680,7 @@ static void FS_CheckPak0( void )
 }
 #endif
 
-void FS_SetMapIndex(char *mapname) {
+void FS_SetMapIndex(const char *mapname) {
 	searchpath_t	*search;
 	int len, r, i, ki = 0, pi = 0, level = 0, mgi = 0;
 	fileHandle_t indexfile;
@@ -3796,7 +3796,7 @@ const char *FS_LoadedPakChecksums( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file? 
-		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
+		if ( !search->pack && (!fs_numIndexedPakNames || !search->indexed) ) {
 			continue;
 		}
 
@@ -3822,7 +3822,7 @@ const char *FS_LoadedPakNames( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file?
-		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
+		if ( !search->pack && (!fs_numIndexedPakNames || !search->indexed) ) {
 			continue;
 		}
 
@@ -3852,7 +3852,7 @@ const char *FS_LoadedPakPureChecksums( void ) {
 
 	for ( search = fs_searchpaths ; search ; search = search->next ) {
 		// is the element a pak file? 
-		if ( !search->pack || (fs_numIndexedPakNames && !search->indexed) ) {
+		if ( !search->pack && (!fs_numIndexedPakNames || !search->indexed) ) {
 			continue;
 		}
 
@@ -3922,7 +3922,7 @@ const char *FS_ReferencedPakPureChecksums( void ) {
 			info[strlen(info)] = ' ';
 		}
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
-			if ( fs_numIndexedPakNames && !search->indexed ) {
+			if ( !fs_numIndexedPakNames || !search->indexed ) {
 				continue;
 			}
 			// is the element a pak file and has it been referenced based on flag?

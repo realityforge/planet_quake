@@ -752,6 +752,8 @@ void CL_InitCGame( void ) {
 	mapname = Info_ValueForKey( info, "mapname" );
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
+	FS_SetMapIndex( mapname );
+
 	// load the dll or bytecode
 	interpret = Cvar_VariableValue("vm_cgame");
 	if(cl_connectedToPureServer)
