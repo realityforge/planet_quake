@@ -1227,6 +1227,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	const char *pPaks, *pArg;
 	qboolean bGood = qtrue;
 
+	Com_Printf("SV_VerifyPaks_f: Comparing pure checksums: %s", FS_LoadedPakPureChecksums());
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
 	// ui and cgame that we think should be loaded based on the pure setting

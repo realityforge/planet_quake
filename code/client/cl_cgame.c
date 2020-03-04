@@ -389,9 +389,24 @@ void CL_ShutdownCGame( void ) {
 	if ( !cgvm ) {
 		return;
 	}
+
+#if EMSCRIPTEN
+	// if we're still starting up, we need to finish before
+	// we can shutdown
+	while (VM_IsSuspended(cgvm)) {
+		VM_Resume(cgvm);
+	}
+#endif
+
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
+	
+#if EMSCRIPTEN
+	cls.cgameGlConfig = NULL;
+	cls.cgameFirstCvar = NULL;
+	cls.numCgamePatches = 0;
+#endif
 }
 
 static int	FloatAsInt( float f ) {
@@ -418,6 +433,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_MILLISECONDS:
 		return Sys_Milliseconds();
 	case CG_CVAR_REGISTER:
+#ifdef EMSCRIPTEN
+	{
+		vmCvar_t *cvar;
+		cvar = (vmCvar_t *)VMA(1);
+		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
+			cls.cgameFirstCvar = cvar;
+		}
+	}
+#endif
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
 		return 0;
 	case CG_CVAR_UPDATE:
@@ -577,6 +601,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
+#if EMSCRIPTEN
+		cls.cgameGlConfig = VMA(1);
+#endif
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 	case CG_GETGAMESTATE:
@@ -708,10 +735,11 @@ CL_InitCGame
 Should only be called by CL_StartHunkUsers
 ====================
 */
+static int t1, t2;
+
 void CL_InitCGame( void ) {
 	const char			*info;
 	const char			*mapname;
-	int					t1, t2;
 	vmInterpret_t		interpret;
 
 	t1 = Sys_Milliseconds();
@@ -723,6 +751,8 @@ void CL_InitCGame( void ) {
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	mapname = Info_ValueForKey( info, "mapname" );
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
+
+	FS_SetMapIndex( mapname );
 
 	// load the dll or bytecode
 	interpret = Cvar_VariableValue("vm_cgame");
@@ -742,7 +772,24 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	unsigned result = VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+
+#ifdef EMSCRIPTEN
+	// if the VM was suspended during initialization, we'll finish initialization later
+	if (result == 0xDEADBEEF) {
+		return;
+	}
+
+	CL_InitCGameFinished();
+}
+
+/*
+====================
+CL_InitCGameFinished
+====================
+*/
+void CL_InitCGameFinished() {
+#endif
 
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )
@@ -781,6 +828,14 @@ qboolean CL_GameCommand( void ) {
 	if ( !cgvm ) {
 		return qfalse;
 	}
+
+#if EMSCRIPTEN
+		// it's possible (and happened in Q3F) that the game executes a console command
+		// before the frame has resumed the vm
+		if (VM_IsSuspended(cgvm)) {
+			return qfalse;
+		}
+#endif
 
 	return VM_Call( cgvm, CG_CONSOLE_COMMAND );
 }
@@ -1077,6 +1132,3 @@ void CL_SetCGameTime( void ) {
 	}
 
 }
-
-
-

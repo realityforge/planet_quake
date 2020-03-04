@@ -247,8 +247,8 @@ S_AL_BufferUseDefault
 */
 static void S_AL_BufferUseDefault(sfxHandle_t sfx)
 {
-	if(sfx == default_sfx)
-		Com_Error(ERR_FATAL, "Can't load default sound effect %s", knownSfx[sfx].filename);
+	//if(sfx == default_sfx)
+	//	Com_Error(ERR_FATAL, "Can't load default sound effect %s", knownSfx[sfx].filename);
 
 	Com_Printf( S_COLOR_YELLOW "WARNING: Using default sound for %s\n", knownSfx[sfx].filename);
 	knownSfx[sfx].isDefault = qtrue;
@@ -481,7 +481,12 @@ qboolean S_AL_BufferInit( void )
 	numSfx = 0;
 
 	// Load the default sound, and lock it
+#if EMSCRIPTEN
+	// We have way too many missing sounds to use hit.wav
+	default_sfx = S_AL_BufferFind("sound/misc/silence.wav");
+#else
 	default_sfx = S_AL_BufferFind("sound/feedback/hit.wav");
+#endif
 	S_AL_BufferUse(default_sfx);
 	knownSfx[default_sfx].isLocked = qtrue;
 
@@ -2179,6 +2184,7 @@ void S_AL_MusicUpdate( void )
 		qalSourceQueueBuffers(musicSource, 1, &b);
 	}
 
+#ifndef EMSCRIPTEN
 	// Hitches can cause OpenAL to be starved of buffers when streaming.
 	// If this happens, it will stop playback. This restarts the source if
 	// it is no longer playing, and if there are buffers available
@@ -2189,6 +2195,7 @@ void S_AL_MusicUpdate( void )
 		Com_DPrintf( S_COLOR_YELLOW "Restarted OpenAL music\n" );
 		qalSourcePlay(musicSource);
 	}
+#endif
 
 	// Set the gain property
 	S_AL_Gain(musicSource, s_alGain->value * s_musicVolume->value);
@@ -2239,11 +2246,18 @@ void S_AL_StopAllSounds( void )
 S_AL_Respatialize
 =================
 */
+int prevTime;
 static
 void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater )
 {
 	float		orientation[6];
 	vec3_t	sorigin;
+	int 		newTime = Sys_Milliseconds();
+
+	if(newTime - prevTime < 35) {
+		return;
+	}
+	prevTime = Sys_Milliseconds();
 
 	VectorCopy( origin, sorigin );
 	S_AL_SanitiseVector( sorigin );

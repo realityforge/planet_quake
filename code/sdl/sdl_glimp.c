@@ -241,14 +241,17 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	qboolean success = qtrue;
 	const char *version;
 
-#ifdef __SDL_NOGETPROCADDR__
-#define GLE( ret, name, ... ) qgl##name = gl#name;
+#ifdef EMSCRIPTEN
+#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
+#else
+#if __SDL_NOGETPROCADDR__
+#define GLE( ret, name, ... ) qgl##name = (void *)gl#name;
 #else
 #define GLE( ret, name, ... ) qgl##name = (name##proc *) SDL_GL_GetProcAddress("gl" #name); \
 	if ( qgl##name == NULL ) { \
 		ri.Printf( PRINT_ALL, "ERROR: Missing OpenGL function %s\n", "gl" #name ); \
-		success = qfalse; \
 	}
+#endif
 #endif
 
 	// OpenGL 1.0 and OpenGL ES 1.0
@@ -276,6 +279,17 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 		sscanf( version, "%d.%d", &qglMajorVersion, &qglMinorVersion );
 	}
 
+#ifdef EMSCRIPTEN
+QGL_1_1_PROCS;
+//QGL_1_1_FIXED_FUNCTION_PROCS;
+QGL_DESKTOP_1_1_PROCS;
+//QGL_DESKTOP_1_1_FIXED_FUNCTION_PROCS;
+//QGL_ES_1_1_PROCS;
+//QGL_ES_1_1_FIXED_FUNCTION_PROCS;
+QGL_1_3_PROCS;
+QGL_1_5_PROCS;
+QGL_2_0_PROCS;
+#else
 	if ( fixedFunction ) {
 		if ( QGL_VERSION_ATLEAST( 1, 1 ) ) {
 			QGL_1_1_PROCS;
@@ -289,7 +303,9 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 			QGL_ES_1_1_PROCS;
 			QGL_ES_1_1_FIXED_FUNCTION_PROCS;
 			// error so this doesn't segfault due to NULL desktop GL functions being used
+#ifndef BUILD_RENDERER_OPENGLES
 			Com_Error( ERR_FATAL, "Unsupported OpenGL Version: %s", version );
+#endif
 		} else {
 			Com_Error( ERR_FATAL, "Unsupported OpenGL Version (%s), OpenGL 1.1 is required", version );
 		}
@@ -316,6 +332,7 @@ static qboolean GLimp_GetProcAddresses( qboolean fixedFunction ) {
 	if ( QGL_VERSION_ATLEAST( 3, 0 ) || QGLES_VERSION_ATLEAST( 3, 0 ) ) {
 		QGL_3_0_PROCS;
 	}
+#endif
 
 #undef GLE
 
@@ -374,7 +391,9 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	int colorBits, depthBits, stencilBits;
 	int samples;
 	int i = 0;
+#ifndef EMSCRIPTEN
 	SDL_Surface *icon = NULL;
+#endif
 	Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
 	SDL_DisplayMode desktopMode;
 	int display = 0;
@@ -384,6 +403,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 
 	if ( r_allowResize->integer )
 		flags |= SDL_WINDOW_RESIZABLE;
+
+	
+#ifndef EMSCRIPTEN
+// TODO: pass the BMP to javascript and base64 encode and set to window/icon
+// TODO: or figure out where this file comes from and set it to that on the content server
 
 #ifdef USE_ICON
 	icon = SDL_CreateRGBSurfaceFrom(
@@ -398,6 +422,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 			0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF
 #endif
 			);
+#endif
 #endif
 
 	// If a window exists, note its display index
@@ -452,11 +477,11 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 	ri.Printf( PRINT_ALL, " %d %d\n", glConfig.vidWidth, glConfig.vidHeight);
 
 	// Center window
-	if( r_centerWindow->integer && !fullscreen )
-	{
-		x = ( desktopMode.w / 2 ) - ( glConfig.vidWidth / 2 );
-		y = ( desktopMode.h / 2 ) - ( glConfig.vidHeight / 2 );
-	}
+	//if( r_centerWindow->integer && !fullscreen )
+	//{
+		x = 0; //( desktopMode.w / 2 ) - ( glConfig.vidWidth / 2 );
+		y = 0; //( desktopMode.h / 2 ) - ( glConfig.vidHeight / 2 );
+	//}
 
 	// Destroy existing state if it exists
 	if( SDL_glContext != NULL )
@@ -474,6 +499,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		SDL_window = NULL;
 	}
 
+/*
 	if( fullscreen )
 	{
 		flags |= SDL_WINDOW_FULLSCREEN;
@@ -486,6 +512,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 
 		glConfig.isFullscreen = qfalse;
 	}
+*/
 
 	colorBits = r_colorbits->value;
 	if ((!colorBits) || (colorBits >= 32))
@@ -606,6 +633,7 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 			continue;
 		}
 
+#ifndef EMSCRIPTEN
 		if( fullscreen )
 		{
 			SDL_DisplayMode mode;
@@ -630,22 +658,21 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		}
 
 		SDL_SetWindowIcon( SDL_window, icon );
+#endif
 
 		if (!fixedFunction)
 		{
-			int profileMask, majorVersion, minorVersion;
-			SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profileMask);
-			SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
-			SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
-
+			int profileMask = 0, majorVersion = 3, minorVersion = 0;
+goto getversion;
+returnversion:
 			ri.Printf(PRINT_ALL, "Trying to get an OpenGL 3.2 core context\n");
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 			if ((SDL_glContext = SDL_GL_CreateContext(SDL_window)) == NULL)
 			{
 				ri.Printf(PRINT_ALL, "SDL_GL_CreateContext failed: %s\n", SDL_GetError());
-				ri.Printf(PRINT_ALL, "Reverting to default context\n");
+				ri.Printf(PRINT_ALL, "Reverting to default context %i.%i\n", majorVersion, minorVersion);
 
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profileMask);
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, majorVersion);
@@ -681,6 +708,15 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minorVersion);
 				}
 			}
+
+goto skipversion;
+getversion:
+			SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profileMask);
+			SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorVersion);
+			SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorVersion);
+goto returnversion;
+skipversion:
+			NULL;
 		}
 		else
 		{
@@ -711,12 +747,14 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 
 		qglClearColor( 0, 0, 0, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT );
+#ifndef EMSCRIPTEN
 		SDL_GL_SwapWindow( SDL_window );
 
 		if( SDL_GL_SetSwapInterval( r_swapInterval->integer ) == -1 )
 		{
 			ri.Printf( PRINT_DEVELOPER, "SDL_GL_SetSwapInterval failed: %s\n", SDL_GetError( ) );
 		}
+#endif
 
 		SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &realColorBits[0] );
 		SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &realColorBits[1] );
@@ -731,7 +769,9 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 		break;
 	}
 
+#ifndef EMSCRIPTEN
 	SDL_FreeSurface( icon );
+#endif
 
 	if( !SDL_window )
 	{
@@ -746,6 +786,32 @@ static int GLimp_SetMode(int mode, qboolean fullscreen, qboolean noborder, qbool
 
 	return RSERR_OK;
 }
+
+#ifdef EMSCRIPTEN
+void GLimp_SetVideoMode() {
+	SDL_DisplayMode mode;
+	Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+	
+	if ( !R_GetModeInfo( &glConfig.vidWidth, &glConfig.vidHeight, &glConfig.windowAspect, -1 ) )
+	{
+		ri.Printf( PRINT_ALL, " invalid mode\n" );
+		return;
+	}
+	
+	mode.format = SDL_PIXELFORMAT_RGB24;
+	mode.w = glConfig.vidWidth;
+	mode.h = glConfig.vidHeight;
+	mode.refresh_rate = glConfig.displayFrequency;
+	mode.driverdata = NULL;
+
+	if( SDL_SetWindowDisplayMode( SDL_window, &mode ) < 0 )
+	{
+		ri.Printf( PRINT_DEVELOPER, "SDL_SetWindowDisplayMode failed: %s\n", SDL_GetError( ) );
+	}
+	
+	ri.IN_Init( SDL_window );
+}
+#endif
 
 /*
 ===============
@@ -966,11 +1032,9 @@ static void GLimp_InitExtensions( qboolean fixedFunction )
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
 	}
 
-	haveClampToEdge = qfalse;
 	if ( QGL_VERSION_ATLEAST( 1, 2 ) || QGLES_VERSION_ATLEAST( 1, 0 ) || SDL_GL_ExtensionSupported( "GL_SGIS_texture_edge_clamp" ) )
 	{
 		ri.Printf( PRINT_ALL, "...using GL_SGIS_texture_edge_clamp\n" );
-		haveClampToEdge = qtrue;
 	}
 	else
 	{
@@ -994,7 +1058,7 @@ void GLimp_Init( qboolean fixedFunction )
 
 	r_allowSoftwareGL = ri.Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
 	r_sdlDriver = ri.Cvar_Get( "r_sdlDriver", "", CVAR_ROM );
-	r_allowResize = ri.Cvar_Get( "r_allowResize", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_allowResize = ri.Cvar_Get( "r_allowResize", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_centerWindow = ri.Cvar_Get( "r_centerWindow", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	if( ri.Cvar_VariableIntegerValue( "com_abnormalExit" ) )
@@ -1102,6 +1166,7 @@ void GLimp_EndFrame( void )
 		SDL_GL_SwapWindow( SDL_window );
 	}
 
+/*
 	if( r_fullscreen->modified )
 	{
 		int         fullscreen;
@@ -1127,11 +1192,12 @@ void GLimp_EndFrame( void )
 
 			// SDL_WM_ToggleFullScreen didn't work, so do it the slow way
 			if( !sdlToggled )
-				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart\n");
+				ri.Cmd_ExecuteText(EXEC_APPEND, "vid_restart fast\n");
 
 			ri.IN_Restart( );
 		}
 
 		r_fullscreen->modified = qfalse;
 	}
+*/
 }

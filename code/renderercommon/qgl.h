@@ -26,10 +26,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __QGL_H__
 #define __QGL_H__
 
-#ifdef USE_LOCAL_HEADERS
-#	include "SDL_opengl.h"
+#ifdef EMSCRIPTEN
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
+#include <SDL_opengles2.h>
+#include <SDL_opengles2_gl2.h>
+#include <SDL_opengles2_gl2ext.h>
 #else
+#ifdef BUILD_RENDERER_OPENGLES
 #	include <SDL_opengl.h>
+#	include <SDL_opengles.h>
+#	include <SDL_egl.h>
+#else
+#ifdef USE_LOCAL_HEADERS
+#include "SDL_opengl.h"
+#else
+#include <SDL_opengl.h>
+#endif
+#endif
+#endif
+
+#ifndef APIENTRYP
+#define APIENTRYP APIENTRY *
 #endif
 
 extern void (APIENTRYP qglActiveTextureARB) (GLenum texture);
@@ -69,6 +87,7 @@ extern void (APIENTRYP qglUnlockArraysEXT) (void);
 	GLE(GLenum, GetError, void) \
 	GLE(void, GetIntegerv, GLenum pname, GLint *params) \
 	GLE(const GLubyte *, GetString, GLenum name) \
+	GLE(GLboolean, IsEnabled, GLenum cap) \
 	GLE(void, LineWidth, GLfloat width) \
 	GLE(void, PolygonOffset, GLfloat factor, GLfloat units) \
 	GLE(void, ReadPixels, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) \

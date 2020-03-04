@@ -452,7 +452,7 @@ typedef struct shader_s {
 										// still keep a name allocated for it, so if
 										// something calls RE_RegisterShader again with
 										// the same name, we don't try looking for it again
-
+  qboolean	noVertexLightingCollapse;
 	qboolean	explicitlyDefined;		// found in a .shader file
 
 	int			surfaceFlags;			// if explicitlyDefined, this will have SURF_* flags
@@ -1576,6 +1576,7 @@ typedef struct {
 	int						shiftedEntityNum;	// currentEntityNum << QSORT_REFENTITYNUM_SHIFT
 	model_t					*currentModel;
 
+	qboolean shadersInitialized;
 	//
 	// GPU shader programs
 	//
@@ -2495,5 +2496,8 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
+#ifdef EMSCRIPEN
+void RE_UpdateMode(glconfig_t *glconfigOut);
+#endif
 
 #endif //TR_LOCAL_H
