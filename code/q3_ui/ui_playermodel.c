@@ -407,6 +407,9 @@ static void PlayerModel_BuildList( void )
 
 	// iterate directory of all player models
 	numdirs = trap_FS_GetFileList("models/players", "/", dirlist, 2048 );
+	
+	Com_Printf("Num models dirs %i\n", numdirs);
+
 	dirptr  = dirlist;
 	for (i=0; i<numdirs && s_playermodel.nummodels < MAX_PLAYERMODELS; i++,dirptr+=dirlen+1)
 	{

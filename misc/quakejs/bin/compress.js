@@ -40,8 +40,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
   const zip = new StreamZip({
       file: zipFile,
       storeEntries: true
-  });
-
+  })
   var header = await new Promise(resolve => {
     zip.on('ready', async () => {
       console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(zipFile))
@@ -59,7 +58,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
         await new Promise(resolve => {
           zip.extract(entry.name, levelPath, err => {
             if(err) console.log('Extract error ' + err)
-            resolve();
+            resolve()
           })
         })
       }
@@ -94,15 +93,28 @@ async function compressDirectory(fullpath, outputStream, absolute) {
   var archive = archiver('zip', {
     zlib: { level: 9 } // Sets the compression level.
   })
-  archive.pipe(outputStream);
-  if(!Array.isArray(fullpath)) fullpath = [fullpath];
+  var dirs = []
+  archive.pipe(outputStream)
+  if(!Array.isArray(fullpath)) fullpath = [fullpath]
   for(var i = 0; i < fullpath.length; i++) {
-    if(ufs.statSync(fullpath[i]).isDirectory()) continue
+    if(ufs.statSync(fullpath[i]).isDirectory()) {
+      var newName = fullpath[i].replace(absolute, '') + '/'
+      if(newName.length <= 1) continue
+      archive.append(null, {name: newName})
+      dirs.push(fullpath[i])
+      continue
+    }
+    if(!dirs.includes(path.dirname(fullpath[i]))) {
+      var newName = path.dirname(fullpath[i]).replace(absolute, '') + '/'
+      if(newName.length <= 1) continue
+      archive.append(null, {name: newName})
+      dirs.push(path.dirname(fullpath[i]))
+    }
     archive.append(ufs.createReadStream(fullpath[i]), {
       name: fullpath[i].replace(absolute, '')
-    });
+    })
   }
-  await archive.finalize();
+  await archive.finalize()
 }
 
 // stream each file in, generating a hash for it's original
@@ -139,12 +151,12 @@ async function compressFile(fullpath, vol) {
 function sendCompressed(file, res, acceptEncoding) {
   var readStream = ufs.createReadStream(file)
   var compressionExists = false
-  res.set('cache-control', 'public, max-age=31557600');
+  res.set('cache-control', 'public, max-age=31557600')
   // if compressed version already exists, send it directly
   if(acceptEncoding.includes('br')) {
     res.append('content-encoding', 'br')
     if(ufs.existsSync(file + '.br')) {
-      res.append('content-length', ufs.statSync(file + '.br').size);
+      res.append('content-length', ufs.statSync(file + '.br').size)
       readStream = ufs.createReadStream(file + '.br')
     } else {
       readStream = readStream.pipe(zlib.createBrotliCompress())
@@ -152,7 +164,7 @@ function sendCompressed(file, res, acceptEncoding) {
   } else if(acceptEncoding.includes('gzip')) {
     res.append('content-encoding', 'gzip')
     if(ufs.existsSync(file + '.gz')) {
-      res.append('content-length', ufs.statSync(file + '.gz').size);
+      res.append('content-length', ufs.statSync(file + '.gz').size)
       readStream = ufs.createReadStream(file + '.gz')
     } else {
       readStream = readStream.pipe(zlib.createGzip())
@@ -160,13 +172,13 @@ function sendCompressed(file, res, acceptEncoding) {
   } else if(acceptEncoding.includes('deflate')) {
     res.append('content-encoding', 'deflate')
     if(ufs.existsSync(file + '.df')) {
-      res.append('content-length', ufs.statSync(file + '.df').size);
+      res.append('content-length', ufs.statSync(file + '.df').size)
       readStream = ufs.createReadStream(file + '.df')
     } else {
       readStream = readStream.pipe(zlib.createDeflate())
     }
   } else {
-    res.append('content-length', ufs.statSync(file).size);
+    res.append('content-length', ufs.statSync(file).size)
   }
   
   readStream.pipe(res)

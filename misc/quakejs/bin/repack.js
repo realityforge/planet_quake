@@ -77,13 +77,17 @@ for(var i = 0; i < process.argv.length; i++) {
   }
   if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
+    console.log(`Grouped edges by ${edges}`)
     i++
   } else if (a == '--no-overwrite') {
+    console.log('No over-writing existing files')
     noOverwrite = true
   } else if (a == '--info' || a == '-i') {
+    console.log('Displaying pak info')
     delete STEPS['convert']
     delete STEPS['repack']
   } else if (a == '--no-progress') {
+    console.log('No progress bars')
     noProgress = true
   } else if (a == '--convert') {
     isConvertParams = true
@@ -96,6 +100,7 @@ for(var i = 0; i < process.argv.length; i++) {
       console.error(`ERROR: entities def ${process.argv[i+1]} not found`)
     }
   } else if (a == '--previous' || a == '-p') {
+    console.log('Using previous graph')
     delete STEPS['source']
     if(ufs.existsSync(process.argv[i+1])) {
       usePrevious = process.argv[i+1]
@@ -106,6 +111,7 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--temp') {
     if(ufs.existsSync(process.argv[i+1]) && ufs.statSync(process.argv[i+1].isDirectory())) {
       TEMP_DIR = process.argv[i+1]
+      console.log(`Temporary directory set to ${TEMP_DIR}`)
       i++
     } else {
       throw new Error(`Temp directory ${process.argv[i+1]} not found or not a directory`)

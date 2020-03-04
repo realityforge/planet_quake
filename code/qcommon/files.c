@@ -2313,7 +2313,10 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, char *filt
 						continue;
 					}
 
-					if ( Q_stricmp( name + length - extensionLength, extension ) ) {
+					if ( Q_stricmp( name + length - extensionLength, extension )
+						// check image formats for stupid hard coded UI_VM icons
+				 		&& (Q_stricmp(extension, "tga") || Q_stricmp( name + length - 3, "png" ))
+						&& (Q_stricmp(extension, "tga") || Q_stricmp( name + length - 3, "jpg" ))) {
 						continue;
 					}
 					// unique the match

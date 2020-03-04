@@ -293,7 +293,7 @@ var LibrarySys = {
 				if(!cl_running && menu.length) keys = menu;
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
-					if(!file.size) { // create a directory
+					if(typeof file.size == 'undefined') { // create a directory
 						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
 					} else {
 						// TODO: remove this check when webworker is installed

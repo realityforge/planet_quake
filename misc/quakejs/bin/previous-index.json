@@ -1,7 +1,7 @@
 {
   "menu/pak11menu": {
     "name": "pak11menu.pk3",
-    "size": 2946814
+    "size": 2946840
   },
   "menu/pak83other": {
     "name": "pak83other.pk3",
@@ -17,7 +17,7 @@
   },
   "menu/pak21game": {
     "name": "pak21game.pk3",
-    "size": 339158
+    "size": 344958
   },
   "menu/pak15botfiles": {
     "name": "pak15botfiles.pk3",
@@ -89,7 +89,7 @@
   },
   "game/pak21game": {
     "name": "pak21game.pk3",
-    "size": 339158
+    "size": 344958
   },
   "game/pak83other": {
     "name": "pak83other.pk3",
@@ -193,11 +193,11 @@
   },
   "game/pak445major": {
     "name": "pak445major.pk3",
-    "size": 1594052
+    "size": 1594284
   },
   "game/pak4442sarge": {
     "name": "pak4442sarge.pk3",
-    "size": 1695026
+    "size": 1695258
   },
   "game/pak4440announce": {
     "name": "pak4440announce.pk3",
