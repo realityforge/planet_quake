@@ -35,6 +35,8 @@ npm run repack [options] [mod directory]
 --verbose -v - print all percentage status updates in case there is an error
 --help -h - print this help message and exit
 --no-overwrite - don't overwrite files during conversion, TODO: during unzipping either
+--whitelist - TODO: force include matching files with menu/game like sarge/major/footsteps,
+  and anything else found with in the logs matching "R_FindImageFile could not find|Warning: Failed to load sound"
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
@@ -509,7 +511,10 @@ async function groupAssets(gs, project) {
   // regroup groups with only a few files
   var condensed = Object.keys(grouped).reduce((obj, k) => {
     var newKey = k.split('/')[0]
-    if(grouped[k].length <= edges || k.split('/')[1] == newKey) {
+    if((grouped[k].length <= edges || k.split('/')[1] == newKey)
+      // do not merge map indexes for the sake of FS_InMapIndex lookup
+      // all BSPs and players must be downloaded seperately
+      && grouped[k].filter(f => f.match(/\.bsp|players|player/i)).length === 0) {
       if(typeof obj[newKey] == 'undefined') {
         obj[newKey] = []
       }
