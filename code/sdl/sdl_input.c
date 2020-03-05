@@ -1159,7 +1159,18 @@ static void IN_ProcessEvents( void )
 					case SDL_WINDOWEVENT_FOCUS_GAINED: Cvar_SetValue( "com_unfocused", 0 ); break;
 				}
 				break;
-
+			
+			case SDL_FINGERDOWN:
+			case SDL_FINGERUP:
+					if (Key_GetCatcher( ) & KEYCATCH_UI) {
+						int balldx = 0;
+						int balldy = 0;
+						SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
+						Com_QueueEvent( in_eventTime, SE_MOUSE, balldx, balldy, 0, NULL );
+						Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1,
+                            ( e.type == SDL_FINGERDOWN ? qtrue : qfalse ), 0, NULL );
+					}
+				break;
 			default:
 				break;
 		}

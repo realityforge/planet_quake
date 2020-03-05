@@ -4,10 +4,12 @@ var LibrarySys = {
 		exited: false,
 		timeBase: null,
 		style: null,
+		joystick: null,
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
 		mods: [
+			['baseq3-ccr', 			'Quake III Arena'],
 			['missionpack-ccr', '0 Choice: Team Arena'],
 			['defrag-ccr',      '1 Choice: Defrag'],
 			['q3rally-ccr',     '2 Choice: Q3Rally'],
@@ -130,6 +132,15 @@ var LibrarySys = {
 				'+set', 'r_customHeight', '' + window.innerHeight,
 				'+set', 'r_customWidth', '' + window.innerWidth,
 			])
+			if(navigator && navigator.userAgent
+				&& navigator.userAgent.match(/mobile/i)
+				&& !args.includes('in_joystick')) {
+				args.push.apply(args, [
+					'+set', 'in_joystick', '1',
+					'+set', 'in_nograb', '1',
+					'+set', 'in_mouse', '0',
+				])
+			}
 			return args
 		},
 		updateVideoCmd: function () {
@@ -179,6 +190,13 @@ var LibrarySys = {
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
+		InitNippleJoysticks: function() {
+			SYS.joystick = nipplejs.create({
+				zone: document.body,
+				multitouch: true,
+				mode: 'dynamic',
+			})
+		}
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading')
@@ -220,7 +238,10 @@ var LibrarySys = {
 			Module.exitHandler()
 		}
 	},
+	Sys_GLimpInit__deps: ['$SYS'],
 	Sys_GLimpInit: function () {
+		var in_joystick = _Cvar_VariableIntegerValue(
+			allocate(intArrayFromString('in_joystick'), 'i8', ALLOC_STACK))
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
@@ -229,6 +250,9 @@ var LibrarySys = {
 			canvas.width = viewport.offsetWidth
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
+		}
+		if(in_joystick) {
+			SYS.InitNippleJoysticks()
 		}
 	},
 	Sys_GLimpSafeInit: function () {
@@ -258,7 +282,7 @@ var LibrarySys = {
 			FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
 		})
 	},
-	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
+	Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
 	Sys_FS_Startup: function (cb) {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)))
@@ -273,7 +297,7 @@ var LibrarySys = {
 		var clcState = _CL_GetClientState()
 		const blankFile = new Uint8Array(4)
 		
-		SYS.LoadingDescription('Manifest')
+		SYS.LoadingDescription('Loading Game UI...')
 		var fsMountPath = fs_basegame
 		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
 			fsMountPath = fs_game // TODO: comment this out to test server induced downloading
@@ -294,13 +318,20 @@ var LibrarySys = {
 		// read from drive
 		FS.syncfs(true, function (err) {
 			if (err) {
-				debugger
 				SYSC.Print(err.message)
 				return SYSC.Error('fatal', err.message)
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
+			
+			for(var i = 0; i < (SYS.mods || []).length; i++) {
+				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], 'placeholder.pk3dir')
+				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
+				SYSC.mkdirp(modDir)
+				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
+					encoding: 'binary', flags: 'w', canOwn: true })
+			}
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need

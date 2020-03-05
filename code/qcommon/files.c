@@ -2636,7 +2636,8 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 		}
 	}
 	
-	// alphabetize the mod names, safely, without overwriting the entries
+	// TODO: alphabetize the mod names, safely, without overwriting the entries
+	/*
 	for (i = 0; i < n; ++i) {
     for (j = i + 1; j < n; ++j) {
       if (number[i] > number[j]) {
@@ -2646,6 +2647,7 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
       }
     }
   }
+	*/
 	
 	Sys_FreeFileList( pFiles );
 
