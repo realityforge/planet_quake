@@ -106,9 +106,10 @@ async function compressDirectory(fullpath, outputStream, absolute) {
     }
     if(!dirs.includes(path.dirname(fullpath[i]))) {
       var newName = path.dirname(fullpath[i]).replace(absolute, '') + '/'
-      if(newName.length <= 1) continue
-      archive.append(null, {name: newName})
-      dirs.push(path.dirname(fullpath[i]))
+      if(newName.length > 1) {
+        archive.append(null, {name: newName})
+        dirs.push(path.dirname(fullpath[i]))
+      }
     }
     archive.append(ufs.createReadStream(fullpath[i]), {
       name: fullpath[i].replace(absolute, '')

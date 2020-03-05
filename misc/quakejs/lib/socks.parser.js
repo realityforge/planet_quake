@@ -73,7 +73,7 @@ Parser.prototype._onData = function(message) {
         +----+----------+----------+
       */
       case STATE_VERSION:
-        if (chunk[i] !== 0x05) {
+        if (chunk[i] !== 0x05 && (!this.authed || chunk[i] !== 0x00)) {
           this.emit('error',
                     new Error('Incompatible SOCKS protocol version: '
                               + chunk[i]))
@@ -140,7 +140,7 @@ Parser.prototype._onData = function(message) {
       */
       case STATE_REQ_CMD:
         var cmd = chunk[i]
-        if (cmd === CMD.CONNECT)
+        if (cmd === CMD.CONNECT || cmd === 0x00)
           this._cmd = 'connect'
         else if (cmd === CMD.BIND)
           this._cmd = 'bind'

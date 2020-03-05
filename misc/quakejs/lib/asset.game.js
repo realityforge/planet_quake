@@ -293,7 +293,7 @@ async function graphGame(gs, project, progress) {
   for(var i = 0; i < allShaders.length; i++) {
     // matches without extension
     //   which is what we want because mods override shaders
-    var index = everyShaderName.indexOf(allShaders[i])
+    var index = everyShaderName.indexOf(allShaders[i].replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
     if(index > -1) {
       shaderLookups[allShaders[i]] = graph.getVertex(everyShaderName[index])
         || graph.addVertex(everyShaderName[index], {
@@ -314,6 +314,12 @@ async function graphGame(gs, project, progress) {
   }
   
   // link all the vertices and follow all shaders through to their files
+  Object.keys(gs.shaders).forEach(k => {
+    gs.shaders[k].forEach(e => {
+      if(typeof fileLookups[e] == 'undefined') return
+      graph.addEdge(graph.getVertex(k), fileLookups[e])
+    })
+  })
   Object.keys(gs.entities).forEach(k => {
     var entityEdges = gs.entities[k]
       .filter(e => typeof fileLookups[e] != 'undefined'
@@ -321,15 +327,11 @@ async function graphGame(gs, project, progress) {
     if(entityEdges.length > 0) {
       fileLookups[k] = graph.addVertex(k, {name: k})
       entityEdges.forEach(e => {
-        if(typeof fileLookups[e] != 'undefined')
+        if(typeof fileLookups[e] != 'undefined') {
           graph.addEdge(fileLookups[k], fileLookups[e])
+        }
         if(typeof shaderLookups[e] != 'undefined') {
           graph.addEdge(fileLookups[k], shaderLookups[e])
-          shaderLookups[e].inEdges.forEach(e2 => {
-            if(e.includes(e2.outVertex.id)) {
-              graph.addEdge(fileLookups[k], e2.outVertex)
-            }
-          })
         }
       })
     }
@@ -340,43 +342,22 @@ async function graphGame(gs, project, progress) {
       graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
   })
-  Object.keys(gs.shaders).forEach(k => {
-    gs.shaders[k].forEach(e => {
-      if(typeof fileLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), fileLookups[e])
-    })
-  })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.models).forEach(k => {
     gs.models[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.skins).forEach(k => {
     gs.skins[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.qvms).forEach(k => {
@@ -386,11 +367,6 @@ async function graphGame(gs, project, progress) {
       }
       if(typeof shaderLookups[e] != 'undefined') {
         graph.addEdge(graph.getVertex(k), shaderLookups[e])
-        shaderLookups[e].inEdges.forEach(e2 => {
-          if(e.includes(e2.outVertex.id)) {
-            graph.addEdge(graph.getVertex(k), e2.outVertex)
-          }
-        })
       }
     })
   })

@@ -192,6 +192,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rocket.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rocket.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rocketfn.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rockflar.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rockfls1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rockfls2.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/rocket/rockfly.opus",
@@ -233,19 +234,19 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sounds/obiwanshouse/camper.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sprites/foe2.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sprites/plasmaa.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/invismap.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/quadmap2.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/regenmap2.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/detail.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/vm/cgame.qvm",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/vm/qagame.qvm"
   ],
-  "pak220rlboom": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_1.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_3.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_4.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_5.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_6.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_7.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_8.jpg"
+  "pak220podium": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podium4.md3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podiumfx1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podiumglo.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podskull.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podskullfx.jpg"
   ],
   "pak221gibs": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/gibs/abdomen.md3",
@@ -258,12 +259,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/gibs/intestine.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/gibs/leg.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/gibs/skull.md3"
-  ],
-  "pak2221podium": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podium4.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podiumglo.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podskull.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podskullfx.jpg"
   ],
   "pak222d": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/gfx/2d/backtile.jpg",
@@ -365,11 +360,15 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/machinegun/ric2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/machinegun/ric3.opus"
   ],
-  "pak229effects": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapgold2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/invismap.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/quadmap2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/regenmap2.jpg"
+  "pak229rlboom": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_2.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_3.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_4.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_5.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_6.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_7.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weaphits/rlboom/rlboom_8.jpg"
   ],
   "pak23numbers": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/gfx/2d/numbers/eight_32b.png",
@@ -435,21 +434,22 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/icona_railgun.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/railammo.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/railammo2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/railgunam.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmaprail.jpg"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/railgunam.md3"
   ],
   "pak31flight": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/flight.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/instant/flight.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/instant/flight_ring.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/flight.opus"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/flight.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmappurp.jpg"
   ],
   "pak32regen": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/regen.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/instant/regen.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/instant/regen_ring.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/regen.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/regeneration.opus"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/regeneration.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapred.jpg"
   ],
   "pak331rockets": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/icona_rocket.png",
@@ -505,7 +505,9 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/l_health.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/m_health.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/n_health.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/s_health.opus"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/items/s_health.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapblue2.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapgold2.jpg"
   ],
   "pak338armor": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconr_red.png",
@@ -514,6 +516,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/armor_red.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/armor_yel.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/energy_red1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/energy_yel3.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/newred.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/newyellow.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/armor/shard.md3",
@@ -566,7 +569,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/bfgam.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/bfgammo.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/powerups/ammo/bfgammo2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapbfg.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx2.jpg"
   ],
   "pak40grunt": [
@@ -1904,19 +1906,11 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/grapple/grapple09.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/grapple/grapple10.jpg"
   ],
-  "pak52weapon": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/weapons.c",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/djweaponx.cfg",
+  "pak52bfg": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_bfg.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_gauntlet.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_machinegun.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/bfg/bfg.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/bfg/bfg.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/gauntlet/gauntlet.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/gauntlet/gauntlet1.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/machinegun/machinegun.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/machinegun/machinegun.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/change.opus"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx.jpg"
   ],
   "pak53plasmagun": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_plasma.png",
@@ -1941,8 +1935,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/lightning/lightning.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/lightning/lightning2.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/lightning/trail2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/lightning/lg_hit2.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapdim.jpg"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/lightning/lg_hit2.opus"
   ],
   "pak56rocketlauncher": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_rocket.png",
@@ -1957,7 +1950,18 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/grenade/hgrenb1a.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/grenade/hgrenb2a.opus"
   ],
-  "pak58shotgun": [
+  "pak58weapon": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/weapons.c",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/djweaponx.cfg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_gauntlet.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_machinegun.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/gauntlet/gauntlet.md3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/gauntlet/gauntlet1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/machinegun/machinegun.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/machinegun/machinegun.md3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/weapons/change.opus"
+  ],
+  "pak59shotgun": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconw_shotgun.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/shotgun/shotgun.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/weapons2/shotgun/shotgun.md3",
@@ -1974,7 +1978,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/flags/red_fx.jpg"
   ],
   "pak62model": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/ammo/rocket/rockflar.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/flags/flagbits.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/flags/skull.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/gibs/gibs.jpg",
@@ -1998,11 +2001,9 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/console/console.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/corpse/corpse.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/eagleban.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/elglight2/elglight2.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/flag/banner_strgg.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/kmlamp1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podium.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podiumfx1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/podium/podiumfx1b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/skel/skel.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/slamp/slamp.jpg",
@@ -2356,6 +2357,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/r_flame8.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/r_flameball.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/shadow.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/snow.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/specular.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/specular5.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/tesla1.jpg",
@@ -2370,11 +2372,16 @@
   ],
   "pak87effects": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/blueflagmap.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmap.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapbfg.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapblue.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapdim.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapdimb.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapgold.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmaprail.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmaproc.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/envmapyel.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/redflagmap.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx2b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx2c.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/effects/tinfx2d.jpg",
@@ -2394,7 +2401,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/metalbridge06b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/metalbridge06broke.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/pent_glow.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/q1metal7_97.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/q1metal7_99.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/q1metal7_99stair.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/q1metal7_99stair2.jpg",
@@ -3014,13 +3020,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/mirrorkc.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/stone/pjrock6.jpg"
   ],
-  "pak91maps": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/glass.bsp",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/pirate.bsp",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/test.bsp",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/test_bigbox.bsp"
-  ],
-  "pak92drasticcity": [
+  "pak91drasticcity": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/env/mwheeler_bk.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/env/mwheeler_dn.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/env/mwheeler_ft.jpg",
@@ -3084,6 +3084,14 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/mwheeler/windows9.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/mwheeler/wood.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/mwheeler/wood2.jpg"
+  ],
+  "pak92maps": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/glass.bsp",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/pirate.bsp",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/test.bsp",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/test_bigbox.bsp",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/elglight2/elglight2.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/q1metal7_97.jpg"
   ],
   "pak93HMTfinal": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps/HMTfinal.aas",
@@ -4208,6 +4216,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/base_wall/symbol_bluelt1_mask.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/xstepborder3_alpha.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/bullseye.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/electricslime_old.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/mirror.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/pentfloor_diamond2c.jpg"
   ],
@@ -4991,6 +5000,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/CASE03/case03_wj1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/CASE03/case03_wp1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/crow/crow.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/elglight2/elglight2.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/gargoyle.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/impaled_skel/impaled_skel.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/o3-coffin/coffin.jpg",
@@ -5588,6 +5598,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/base_wall/symbol_bluelt1_mask.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/gothic_floor/xstepborder3_alpha.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/bullseye.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/electricslime_old.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/metalfloor_wall_14b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/metalfloor_wall_9b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/mirror.jpg",
