@@ -764,6 +764,7 @@ int		FS_Seek( fileHandle_t f, long offset, int origin );
 
 qboolean FS_FilenameCompare( const char *s1, const char *s2 );
 
+qboolean FS_InMapIndex( const char *filename );
 void FS_SetMapIndex( const char *mapname );
 const char *FS_LoadedPakNames( void );
 const char *FS_LoadedPakChecksums( void );

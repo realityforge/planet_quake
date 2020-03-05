@@ -3298,6 +3298,12 @@ void Com_Frame( void ) {
 	msec = com_frameTime - lastTime;
 
 	Cbuf_Execute ();
+#ifdef EMSCRIPTEN
+	// if an execution invoked a callback event, run the rest next frame
+	if(CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
+#endif
 
 	if (com_altivec->modified)
 	{

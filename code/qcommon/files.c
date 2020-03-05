@@ -3813,8 +3813,8 @@ void FS_SetMapIndex(const char *mapname) {
 	}
 }
 
-qboolean FS_InMapIndex(char *filename) {
-	int			len, extpos;
+qboolean FS_InMapIndex(const char *filename) {
+	int			i, len, extpos;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
 	Q_strncpyz(mapname, filename, sizeof(mapname));

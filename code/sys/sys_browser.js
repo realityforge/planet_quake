@@ -435,7 +435,12 @@ var LibrarySys = {
 	},
 	Sys_ErrorDialog: function (error) {
 		var errorStr = UTF8ToString(error)
-		console.log(errorStr)
+		// print call stack so we know where the error came from
+		try {
+			throw new Error(errorStr)
+		} catch (e) {
+			console.log(e)
+		}
 		var title = SYS.dialog.querySelector('.title')
 		if(title) {
 			title.className = 'title error'
