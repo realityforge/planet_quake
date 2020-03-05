@@ -21,13 +21,13 @@ var LibrarySys = {
 			'+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
 			'+set', 'net_socksEnabled', '1',
 			// these settings were set by the emscripten build
-			'+set', 'r_normalMapping', '0',
-			'+set', 'r_specularMapping', '0',
-			'+set', 'r_deluxeMapping', '0',
-			'+set', 'r_hdr', '0',
-			'+set', 'r_picmip', '0',
+			//'+set', 'r_normalMapping', '0',
+			//'+set', 'r_specularMapping', '0',
+			//'+set', 'r_deluxeMapping', '0',
+			//'+set', 'r_hdr', '0',
+			//'+set', 'r_picmip', '0',
+			//'+set', 'r_postProcess', '0',
 			'+set', 'cg_drawfps', '1',
-			'+set', 'r_postProcess', '0',
 			//'+connect', 'proxy.quake.games:443',
 			/*
 			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
