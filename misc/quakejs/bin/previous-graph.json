@@ -11126,7 +11126,7 @@
     ],
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-c/scripts/gfx.shader": [
       "bfgExplosion",
-      "bloodExplosion\t\t// spurt of blood at point of impact",
+      "bloodExplosion",
       "bloodMark",
       "bloodTrail",
       "bulletExplosion",
@@ -11171,7 +11171,7 @@
       "gfx/damage/plasma_mrk",
       "gfx/misc/tracer",
       "grenadeExplosion",
-      "hasteSmokePuff\t\t\t// drops behind player's feet when speeded",
+      "hasteSmokePuff",
       "icons/envirosuit",
       "icons/flight",
       "icons/haste",
@@ -11219,7 +11219,7 @@
       "medal_gauntlet",
       "medal_impressive",
       "menuback",
-      "menubackRagePro\t// blends turn to shit on rage pro, so skip it",
+      "menubackRagePro",
       "menubacknologo",
       "plasmaExplosion",
       "powerups/battleSuit",
@@ -15600,7 +15600,7 @@
     "menubacknologo": [
       "gfx/colors/black.tga"
     ],
-    "menubackRagePro\t// blends turn to shit on rage pro, so skip it": [
+    "menubackRagePro": [
       "textures/sfx/logo512.tga"
     ],
     "levelShotDetail": [
@@ -15793,7 +15793,7 @@
     "smokePuff": [
       "gfx/misc/smokepuff3.tga"
     ],
-    "hasteSmokePuff\t\t\t// drops behind player's feet when speeded": [
+    "hasteSmokePuff": [
       "gfx/misc/smokepuff3.tga"
     ],
     "smokePuffRagePro": [
@@ -16004,7 +16004,7 @@
       "models/weaphits/bfgboom/bfgboom_3.tga",
       "models/weaphits/bfgboom/bfgboom_3.tga"
     ],
-    "bloodExplosion\t\t// spurt of blood at point of impact": [
+    "bloodExplosion": [
       "models/weaphits/blood201.tga",
       "models/weaphits/blood202.tga",
       "models/weaphits/blood203.tga",

@@ -145,7 +145,7 @@
   },
   "game/pak222weaphits": {
     "name": "pak222weaphits.pk3",
-    "size": 59651
+    "size": 98677
   },
   "game/pak223shells": {
     "name": "pak223shells.pk3",
@@ -195,17 +195,13 @@
     "name": "pak4442sarge.pk3",
     "size": 1695258
   },
-  "game/pak4440announce": {
-    "name": "pak4440announce.pk3",
-    "size": 267997
+  "game/pak44442player": {
+    "name": "pak44442player.pk3",
+    "size": 24453
   },
   "game/pak44441footsteps": {
     "name": "pak44441footsteps.pk3",
     "size": 57394
-  },
-  "game/pak8886bots": {
-    "name": "pak8886bots.pk3",
-    "size": 225191
   },
   "game/pak220podium": {
     "name": "pak220podium.pk3",
@@ -303,9 +299,9 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/glass/pak92maps": {
-    "name": "pak92maps.pk3",
-    "size": 3491059
+  "maps/glass/pak92glass": {
+    "name": "pak92glass.pk3",
+    "size": 3094706
   },
   "maps/glass/pak61CTF": {
     "name": "pak61CTF.pk3",
@@ -595,12 +591,12 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/pirate/pak92maps": {
-    "name": "pak92maps.pk3",
-    "size": 3491059
+  "maps/pirate/pak95pirate": {
+    "name": "pak95pirate.pk3",
+    "size": 301890
   },
-  "maps/pro-q3dm13/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3",
+  "maps/pro-q3dm13/pak96pro-q3dm13": {
+    "name": "pak96pro-q3dm13.pk3",
     "size": 2433015
   },
   "maps/pro-q3dm13/pak71teleporter": {
@@ -719,8 +715,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/pro-q3dm6/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3",
+  "maps/pro-q3dm6/pak97pro-q3dm6": {
+    "name": "pak97pro-q3dm6.pk3",
     "size": 2128800
   },
   "maps/pro-q3dm6/pak72mapobject": {
@@ -855,8 +851,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/pro-q3tourney2/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3",
+  "maps/pro-q3tourney2/pak98pro-q3tourney2": {
+    "name": "pak98pro-q3tourney2.pk3",
     "size": 2102269
   },
   "maps/pro-q3tourney2/pak72mapobject": {
@@ -983,8 +979,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/pro-q3tourney4/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3",
+  "maps/pro-q3tourney4/pak99pro-q3tourney4": {
+    "name": "pak99pro-q3tourney4.pk3",
     "size": 2817803
   },
   "maps/pro-q3tourney4/pak72mapobject": {
@@ -1111,8 +1107,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3ctf1/pak99q3ctf1": {
-    "name": "pak99q3ctf1.pk3",
+  "maps/q3ctf1/pak90q3ctf1": {
+    "name": "pak90q3ctf1.pk3",
     "size": 5888519
   },
   "maps/q3ctf1/pak82music": {
@@ -1219,8 +1215,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3ctf2/pak90q3ctf2": {
-    "name": "pak90q3ctf2.pk3",
+  "maps/q3ctf2/pak991q3ctf2": {
+    "name": "pak991q3ctf2.pk3",
     "size": 4517311
   },
   "maps/q3ctf2/pak82music": {
@@ -1367,8 +1363,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3ctf3/pak991q3ctf3": {
-    "name": "pak991q3ctf3.pk3",
+  "maps/q3ctf3/pak992q3ctf3": {
+    "name": "pak992q3ctf3.pk3",
     "size": 3011142
   },
   "maps/q3ctf3/pak82music": {
@@ -1511,8 +1507,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3ctf4/pak992q3ctf4": {
-    "name": "pak992q3ctf4.pk3",
+  "maps/q3ctf4/pak993q3ctf4": {
+    "name": "pak993q3ctf4.pk3",
     "size": 1479613
   },
   "maps/q3ctf4/pak85base_floor": {
@@ -1599,8 +1595,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3ctf555/pak993q3ctf555": {
-    "name": "pak993q3ctf555.pk3",
+  "maps/q3ctf555/pak994q3ctf555": {
+    "name": "pak994q3ctf555.pk3",
     "size": 5304811
   },
   "maps/q3ctf555/pak72mapobject": {
@@ -1771,8 +1767,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3dm0/pak994q3dm0": {
-    "name": "pak994q3dm0.pk3",
+  "maps/q3dm0/pak995q3dm0": {
+    "name": "pak995q3dm0.pk3",
     "size": 3401739
   },
   "maps/q3dm0/pak72mapobject": {
@@ -1875,8 +1871,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm1/pak995q3dm1": {
-    "name": "pak995q3dm1.pk3",
+  "maps/q3dm1/pak996q3dm1": {
+    "name": "pak996q3dm1.pk3",
     "size": 2381289
   },
   "maps/q3dm1/pak72mapobject": {
@@ -1983,12 +1979,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm1/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3",
-    "size": 2795785
-  },
-  "maps/q3dm10/pak996q3dm10": {
-    "name": "pak996q3dm10.pk3",
+  "maps/q3dm10/pak997q3dm10": {
+    "name": "pak997q3dm10.pk3",
     "size": 1921769
   },
   "maps/q3dm10/pak82music": {
@@ -2115,8 +2107,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm11/pak997q3dm11": {
-    "name": "pak997q3dm11.pk3",
+  "maps/q3dm11/pak998q3dm11": {
+    "name": "pak998q3dm11.pk3",
     "size": 3336358
   },
   "maps/q3dm11/pak71teleporter": {
@@ -2275,8 +2267,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm12/pak998q3dm12": {
-    "name": "pak998q3dm12.pk3",
+  "maps/q3dm12/pak999q3dm12": {
+    "name": "pak999q3dm12.pk3",
     "size": 4232164
   },
   "maps/q3dm12/pak72mapobject": {
@@ -2435,8 +2427,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm13/pak999q3dm13": {
-    "name": "pak999q3dm13.pk3",
+  "maps/q3dm13/pak990q3dm13": {
+    "name": "pak990q3dm13.pk3",
     "size": 1856098
   },
   "maps/q3dm13/pak72mapobject": {
@@ -2447,8 +2439,8 @@
     "name": "pak71teleporter.pk3",
     "size": 10312
   },
-  "maps/q3dm13/pak95pro-q3dm13": {
-    "name": "pak95pro-q3dm13.pk3",
+  "maps/q3dm13/pak96pro-q3dm13": {
+    "name": "pak96pro-q3dm13.pk3",
     "size": 2433015
   },
   "maps/q3dm13/pak81world": {
@@ -2571,8 +2563,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm14/pak990q3dm14": {
-    "name": "pak990q3dm14.pk3",
+  "maps/q3dm14/pak9991q3dm14": {
+    "name": "pak9991q3dm14.pk3",
     "size": 2795785
   },
   "maps/q3dm14/pak72mapobject": {
@@ -2719,8 +2711,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm15/pak9991q3dm15": {
-    "name": "pak9991q3dm15.pk3",
+  "maps/q3dm15/pak9992q3dm15": {
+    "name": "pak9992q3dm15.pk3",
     "size": 3131356
   },
   "maps/q3dm15/pak72mapobject": {
@@ -2867,8 +2859,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm16/pak9992q3dm16": {
-    "name": "pak9992q3dm16.pk3",
+  "maps/q3dm16/pak9993q3dm16": {
+    "name": "pak9993q3dm16.pk3",
     "size": 1900729
   },
   "maps/q3dm16/pak81world": {
@@ -2975,8 +2967,8 @@
     "name": "pak86sfx.pk3",
     "size": 649931
   },
-  "maps/q3dm17/pak9993q3dm17": {
-    "name": "pak9993q3dm17.pk3",
+  "maps/q3dm17/pak9994q3dm17": {
+    "name": "pak9994q3dm17.pk3",
     "size": 1312790
   },
   "maps/q3dm17/pak72mapobject": {
@@ -3091,8 +3083,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm18/pak9994q3dm18": {
-    "name": "pak9994q3dm18.pk3",
+  "maps/q3dm18/pak9995q3dm18": {
+    "name": "pak9995q3dm18.pk3",
     "size": 2275913
   },
   "maps/q3dm18/pak82music": {
@@ -3195,8 +3187,8 @@
     "name": "pak8881gothic_trim.pk3",
     "size": 463899
   },
-  "maps/q3dm19/pak9995q3dm19": {
-    "name": "pak9995q3dm19.pk3",
+  "maps/q3dm19/pak9996q3dm19": {
+    "name": "pak9996q3dm19.pk3",
     "size": 2591827
   },
   "maps/q3dm19/pak85base_floor": {
@@ -3291,8 +3283,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm2/pak9996q3dm2": {
-    "name": "pak9996q3dm2.pk3",
+  "maps/q3dm2/pak9997q3dm2": {
+    "name": "pak9997q3dm2.pk3",
     "size": 1598162
   },
   "maps/q3dm2/pak72mapobject": {
@@ -3403,8 +3395,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm3/pak9997q3dm3": {
-    "name": "pak9997q3dm3.pk3",
+  "maps/q3dm3/pak9998q3dm3": {
+    "name": "pak9998q3dm3.pk3",
     "size": 661676
   },
   "maps/q3dm3/pak82music": {
@@ -3519,8 +3511,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm4/pak9998q3dm4": {
-    "name": "pak9998q3dm4.pk3",
+  "maps/q3dm4/pak9999q3dm4": {
+    "name": "pak9999q3dm4.pk3",
     "size": 1510486
   },
   "maps/q3dm4/pak72mapobject": {
@@ -3631,8 +3623,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm5/pak9999q3dm5": {
-    "name": "pak9999q3dm5.pk3",
+  "maps/q3dm5/pak9990q3dm5": {
+    "name": "pak9990q3dm5.pk3",
     "size": 1152433
   },
   "maps/q3dm5/pak82music": {
@@ -3747,8 +3739,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm6/pak9990q3dm6": {
-    "name": "pak9990q3dm6.pk3",
+  "maps/q3dm6/pak99991q3dm6": {
+    "name": "pak99991q3dm6.pk3",
     "size": 1607843
   },
   "maps/q3dm6/pak72mapobject": {
@@ -3771,8 +3763,8 @@
     "name": "pak886gothic_block.pk3",
     "size": 693211
   },
-  "maps/q3dm6/pak96pro-q3dm6": {
-    "name": "pak96pro-q3dm6.pk3",
+  "maps/q3dm6/pak97pro-q3dm6": {
+    "name": "pak97pro-q3dm6.pk3",
     "size": 2128800
   },
   "maps/q3dm6/pak83other": {
@@ -3875,8 +3867,8 @@
     "name": "pak883skies.pk3",
     "size": 20570
   },
-  "maps/q3dm7/pak99991q3dm7": {
-    "name": "pak99991q3dm7.pk3",
+  "maps/q3dm7/pak99992q3dm7": {
+    "name": "pak99992q3dm7.pk3",
     "size": 2230005
   },
   "maps/q3dm7/pak72mapobject": {
@@ -4007,8 +3999,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm8/pak99992q3dm8": {
-    "name": "pak99992q3dm8.pk3",
+  "maps/q3dm8/pak99993q3dm8": {
+    "name": "pak99993q3dm8.pk3",
     "size": 1790790
   },
   "maps/q3dm8/pak72mapobject": {
@@ -4143,8 +4135,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3dm9/pak99993q3dm9": {
-    "name": "pak99993q3dm9.pk3",
+  "maps/q3dm9/pak99994q3dm9": {
+    "name": "pak99994q3dm9.pk3",
     "size": 3296270
   },
   "maps/q3dm9/pak72mapobject": {
@@ -4251,8 +4243,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney1/pak99994q3tourney1": {
-    "name": "pak99994q3tourney1.pk3",
+  "maps/q3tourney1/pak99995q3tourney1": {
+    "name": "pak99995q3tourney1.pk3",
     "size": 1382804
   },
   "maps/q3tourney1/pak72mapobject": {
@@ -4367,8 +4359,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney2/pak99995q3tourney2": {
-    "name": "pak99995q3tourney2.pk3",
+  "maps/q3tourney2/pak99996q3tourney2": {
+    "name": "pak99996q3tourney2.pk3",
     "size": 1221967
   },
   "maps/q3tourney2/pak72mapobject": {
@@ -4387,8 +4379,8 @@
     "name": "pak81world.pk3",
     "size": 320011
   },
-  "maps/q3tourney2/pak97pro-q3tourney2": {
-    "name": "pak97pro-q3tourney2.pk3",
+  "maps/q3tourney2/pak98pro-q3tourney2": {
+    "name": "pak98pro-q3tourney2.pk3",
     "size": 2102269
   },
   "maps/q3tourney2/pak882base_support": {
@@ -4491,8 +4483,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney3/pak99996q3tourney3": {
-    "name": "pak99996q3tourney3.pk3",
+  "maps/q3tourney3/pak99997q3tourney3": {
+    "name": "pak99997q3tourney3.pk3",
     "size": 2030651
   },
   "maps/q3tourney3/pak72mapobject": {
@@ -4595,17 +4587,13 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney4/pak99997q3tourney4": {
-    "name": "pak99997q3tourney4.pk3",
+  "maps/q3tourney4/pak99998q3tourney4": {
+    "name": "pak99998q3tourney4.pk3",
     "size": 2455848
   },
   "maps/q3tourney4/pak72mapobject": {
     "name": "pak72mapobject.pk3",
     "size": 809039
-  },
-  "maps/q3tourney4/pak98pro-q3tourney4": {
-    "name": "pak98pro-q3tourney4.pk3",
-    "size": 2817803
   },
   "maps/q3tourney4/pak82music": {
     "name": "pak82music.pk3",
@@ -4723,8 +4711,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney5/pak99998q3tourney5": {
-    "name": "pak99998q3tourney5.pk3",
+  "maps/q3tourney5/pak99999q3tourney5": {
+    "name": "pak99999q3tourney5.pk3",
     "size": 823728
   },
   "maps/q3tourney5/pak81world": {
@@ -4815,8 +4803,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3tourney6_ctf/pak99999q3tourney6_ctf": {
-    "name": "pak99999q3tourney6_ctf.pk3",
+  "maps/q3tourney6_ctf/pak99990q3tourney6_ctf": {
+    "name": "pak99990q3tourney6_ctf.pk3",
     "size": 2503470
   },
   "maps/q3tourney6_ctf/pak71teleporter": {
@@ -4927,9 +4915,13 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3tourney6/pak99990q3tourney6": {
-    "name": "pak99990q3tourney6.pk3",
+  "maps/q3tourney6/pak999991q3tourney6": {
+    "name": "pak999991q3tourney6.pk3",
     "size": 1449431
+  },
+  "maps/q3tourney6/pak99990q3tourney6_ctf": {
+    "name": "pak99990q3tourney6_ctf.pk3",
+    "size": 2503470
   },
   "maps/q3tourney6/pak71teleporter": {
     "name": "pak71teleporter.pk3",
@@ -5031,8 +5023,8 @@
     "name": "pak87effects.pk3",
     "size": 32035
   },
-  "maps/q3wcp1/pak999991q3wcp1": {
-    "name": "pak999991q3wcp1.pk3",
+  "maps/q3wcp1/pak999992q3wcp1": {
+    "name": "pak999992q3wcp1.pk3",
     "size": 2769649
   },
   "maps/q3wcp1/pak82music": {
@@ -5179,8 +5171,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp10/pak999992q3wcp10": {
-    "name": "pak999992q3wcp10.pk3",
+  "maps/q3wcp10/pak999993q3wcp10": {
+    "name": "pak999993q3wcp10.pk3",
     "size": 3217756
   },
   "maps/q3wcp10/pak82music": {
@@ -5331,8 +5323,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp11/pak999993q3wcp11": {
-    "name": "pak999993q3wcp11.pk3",
+  "maps/q3wcp11/pak999994q3wcp11": {
+    "name": "pak999994q3wcp11.pk3",
     "size": 3683358
   },
   "maps/q3wcp11/pak82music": {
@@ -5471,8 +5463,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp12/pak999994q3wcp12": {
-    "name": "pak999994q3wcp12.pk3",
+  "maps/q3wcp12/pak999995q3wcp12": {
+    "name": "pak999995q3wcp12.pk3",
     "size": 2491486
   },
   "maps/q3wcp12/pak72mapobject": {
@@ -5607,8 +5599,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp13/pak999995q3wcp13": {
-    "name": "pak999995q3wcp13.pk3",
+  "maps/q3wcp13/pak999996q3wcp13": {
+    "name": "pak999996q3wcp13.pk3",
     "size": 3791825
   },
   "maps/q3wcp13/pak82music": {
@@ -5759,8 +5751,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp14/pak999996q3wcp14": {
-    "name": "pak999996q3wcp14.pk3",
+  "maps/q3wcp14/pak999997q3wcp14": {
+    "name": "pak999997q3wcp14.pk3",
     "size": 2518217
   },
   "maps/q3wcp14/pak82music": {
@@ -5903,8 +5895,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp15/pak999997q3wcp15": {
-    "name": "pak999997q3wcp15.pk3",
+  "maps/q3wcp15/pak999998q3wcp15": {
+    "name": "pak999998q3wcp15.pk3",
     "size": 3436786
   },
   "maps/q3wcp15/pak81world": {
@@ -6035,8 +6027,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp16/pak999998q3wcp16": {
-    "name": "pak999998q3wcp16.pk3",
+  "maps/q3wcp16/pak999999q3wcp16": {
+    "name": "pak999999q3wcp16.pk3",
     "size": 1719319
   },
   "maps/q3wcp16/pak72mapobject": {
@@ -6147,8 +6139,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp17/pak999999q3wcp17": {
-    "name": "pak999999q3wcp17.pk3",
+  "maps/q3wcp17/pak999990q3wcp17": {
+    "name": "pak999990q3wcp17.pk3",
     "size": 3050218
   },
   "maps/q3wcp17/pak82music": {
@@ -6279,8 +6271,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp18/pak999990q3wcp18": {
-    "name": "pak999990q3wcp18.pk3",
+  "maps/q3wcp18/pak9999991q3wcp18": {
+    "name": "pak9999991q3wcp18.pk3",
     "size": 2616004
   },
   "maps/q3wcp18/pak82music": {
@@ -6415,8 +6407,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp19/pak9999991q3wcp19": {
-    "name": "pak9999991q3wcp19.pk3",
+  "maps/q3wcp19/pak9999992q3wcp19": {
+    "name": "pak9999992q3wcp19.pk3",
     "size": 3822829
   },
   "maps/q3wcp19/pak82music": {
@@ -6559,8 +6551,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp2/pak9999992q3wcp2": {
-    "name": "pak9999992q3wcp2.pk3",
+  "maps/q3wcp2/pak9999993q3wcp2": {
+    "name": "pak9999993q3wcp2.pk3",
     "size": 3234656
   },
   "maps/q3wcp2/pak82music": {
@@ -6711,8 +6703,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp20/pak9999993q3wcp20": {
-    "name": "pak9999993q3wcp20.pk3",
+  "maps/q3wcp20/pak9999994q3wcp20": {
+    "name": "pak9999994q3wcp20.pk3",
     "size": 5515058
   },
   "maps/q3wcp20/pak82music": {
@@ -6867,8 +6859,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp21/pak9999994q3wcp21": {
-    "name": "pak9999994q3wcp21.pk3",
+  "maps/q3wcp21/pak9999995q3wcp21": {
+    "name": "pak9999995q3wcp21.pk3",
     "size": 4755580
   },
   "maps/q3wcp21/pak81world": {
@@ -6967,8 +6959,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp22/pak9999995q3wcp22": {
-    "name": "pak9999995q3wcp22.pk3",
+  "maps/q3wcp22/pak9999996q3wcp22": {
+    "name": "pak9999996q3wcp22.pk3",
     "size": 4527203
   },
   "maps/q3wcp22/pak73gratelamp": {
@@ -7083,8 +7075,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp23/pak9999996q3wcp23": {
-    "name": "pak9999996q3wcp23.pk3",
+  "maps/q3wcp23/pak9999997q3wcp23": {
+    "name": "pak9999997q3wcp23.pk3",
     "size": 2234236
   },
   "maps/q3wcp23/pak82music": {
@@ -7179,8 +7171,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp24/pak9999997q3wcp24": {
-    "name": "pak9999997q3wcp24.pk3",
+  "maps/q3wcp24/pak9999998q3wcp24": {
+    "name": "pak9999998q3wcp24.pk3",
     "size": 1917503
   },
   "maps/q3wcp24/pak81world": {
@@ -7323,8 +7315,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp3/pak9999998q3wcp3": {
-    "name": "pak9999998q3wcp3.pk3",
+  "maps/q3wcp3/pak9999999q3wcp3": {
+    "name": "pak9999999q3wcp3.pk3",
     "size": 2150701
   },
   "maps/q3wcp3/pak82music": {
@@ -7455,8 +7447,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp4/pak9999999q3wcp4": {
-    "name": "pak9999999q3wcp4.pk3",
+  "maps/q3wcp4/pak9999990q3wcp4": {
+    "name": "pak9999990q3wcp4.pk3",
     "size": 2338449
   },
   "maps/q3wcp4/pak82music": {
@@ -7579,8 +7571,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp5/pak9999990q3wcp5": {
-    "name": "pak9999990q3wcp5.pk3",
+  "maps/q3wcp5/pak99999991q3wcp5": {
+    "name": "pak99999991q3wcp5.pk3",
     "size": 2305062
   },
   "maps/q3wcp5/pak81world": {
@@ -7695,8 +7687,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp6/pak99999991q3wcp6": {
-    "name": "pak99999991q3wcp6.pk3",
+  "maps/q3wcp6/pak99999992q3wcp6": {
+    "name": "pak99999992q3wcp6.pk3",
     "size": 3865856
   },
   "maps/q3wcp6/pak72mapobject": {
@@ -7871,8 +7863,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp7/pak99999992q3wcp7": {
-    "name": "pak99999992q3wcp7.pk3",
+  "maps/q3wcp7/pak99999993q3wcp7": {
+    "name": "pak99999993q3wcp7.pk3",
     "size": 2124031
   },
   "maps/q3wcp7/pak82music": {
@@ -8027,8 +8019,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp8/pak99999993q3wcp8": {
-    "name": "pak99999993q3wcp8.pk3",
+  "maps/q3wcp8/pak99999994q3wcp8": {
+    "name": "pak99999994q3wcp8.pk3",
     "size": 2230035
   },
   "maps/q3wcp8/pak72mapobject": {
@@ -8183,8 +8175,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wcp9/pak99999994q3wcp9": {
-    "name": "pak99999994q3wcp9.pk3",
+  "maps/q3wcp9/pak99999995q3wcp9": {
+    "name": "pak99999995q3wcp9.pk3",
     "size": 2052345
   },
   "maps/q3wcp9/pak82music": {
@@ -8323,8 +8315,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wxs1/pak99999995q3wxs1": {
-    "name": "pak99999995q3wxs1.pk3",
+  "maps/q3wxs1/pak99999996q3wxs1": {
+    "name": "pak99999996q3wxs1.pk3",
     "size": 654402
   },
   "maps/q3wxs1/pak82music": {
@@ -8403,8 +8395,8 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/q3wxs2/pak99999996q3wxs2": {
-    "name": "pak99999996q3wxs2.pk3",
+  "maps/q3wxs2/pak99999997q3wxs2": {
+    "name": "pak99999997q3wxs2.pk3",
     "size": 942613
   },
   "maps/q3wxs2/pak82music": {
@@ -8503,12 +8495,12 @@
     "name": "pak62model.pk3",
     "size": 61929
   },
-  "maps/test_bigbox/pak92maps": {
-    "name": "pak92maps.pk3",
-    "size": 3491059
+  "maps/test_bigbox/pak99999998test_bigbox": {
+    "name": "pak99999998test_bigbox.pk3",
+    "size": 11778
   },
-  "maps/test/pak92maps": {
-    "name": "pak92maps.pk3",
-    "size": 3491059
+  "maps/test/pak99999999test": {
+    "name": "pak99999999test.pk3",
+    "size": 83009
   }
 }

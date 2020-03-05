@@ -70,7 +70,7 @@ function graphShaders(project) {
     var script = shaderLoader.load(buffer)
     result[shaders[i]] = script
   }
-  console.log(`Found ${Object.keys(result).length} shaders`)
+  console.log(`Found ${Object.keys(result).length} shader scripts, with ${Object.values(result).flat(1).length} shaders`)
   return result
 }
 

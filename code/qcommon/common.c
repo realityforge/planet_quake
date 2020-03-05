@@ -3142,8 +3142,14 @@ void Com_Frame_Proxy( void ) {
 
 void Com_Frame_After_Startup() {
 	FS_Restart_After_Async();
-	CL_StartHunkUsers(qfalse);
-//	Com_GameRestart_After_Restart();
+	CL_Disconnect_After_Restart();
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
+	} else {
+		CL_FlushMemory();
+		Com_GameRestart_After_Restart();
+	}
+	//CL_StartHunkUsers(qfalse);
 }
 
 void Com_Frame_After_Shutdown() {

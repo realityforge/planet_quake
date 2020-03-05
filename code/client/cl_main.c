@@ -1291,10 +1291,10 @@ Also called by Com_Error
 */
 void CL_FlushMemory(void)
 {
+	#ifdef EMSCRIPTEN
+		if(!FS_Initialized()) return;
+	#endif
 	CL_ClearMemory(qfalse);
-#ifdef EMSCRIPTEN
-	if(!FS_Initialized()) return;
-#endif
 	CL_StartHunkUsers(qfalse);
 }
 

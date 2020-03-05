@@ -57,6 +57,16 @@ var numericMap = [
   ['other', /.*/, 8], // 80-89 - map models
 ]
 
+// minimatch/globs
+var whitelist = {
+  'baseq3': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weaphits/**',
+  ]
+}
+
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -623,13 +633,25 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
     .filter(qvm => !qvm.match(/ui.qvm/i)))
   qvms.forEach(qvm => {
     // update shared items so menu is downloaded followed by cgame
+    var gameAdditions
+    if(qvm.match(/game.qvm/i)) {
+      gameAdditions = whitelist[path.basename(outConverted)]
+        || Object.keys(whitelist)
+        .filter(k => !(k.split('-')[0] + '-cc').localeCompare(path.basename(outConverted, 'en', { sensitivity: 'base' })))
+        .map(k => whitelist[k])
+        .flat(1)
+      if(!Array.isArray(gameAdditions)) gameAdditions = [gameAdditions]
+      gameAdditions = gameAdditions.map(m => {
+        return externalAndShared.filter(minimatch.filter(m))
+      }).flat(1)
+    } else {
+      gameAdditions = []
+    }
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
-      // add sarge, TODO: make this a command line option, this becomes the "whitelist"
-      .concat(qvm.match(/game.qvm/i)
-        ? externalAndShared.filter(f => f.includes('sarge') || f.includes('major') || f.includes('footsteps'))
-        : [])
+      // add extra game assets the parser missed like default models/player sounds
+      .concat(gameAdditions)
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
       var matchPak = Object.keys(orderedNoExt)
