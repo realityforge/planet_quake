@@ -783,6 +783,12 @@ void CL_InitCGame( void ) {
 	CL_InitCGameFinished();
 }
 
+#ifdef EMSCRIPTEN
+int CL_GetClientState( void ) {
+	return clc.state;
+}
+#endif
+
 /*
 ====================
 CL_InitCGameFinished
@@ -829,7 +835,7 @@ qboolean CL_GameCommand( void ) {
 		return qfalse;
 	}
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command
 		// before the frame has resumed the vm
 		if (VM_IsSuspended(cgvm)) {

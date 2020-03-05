@@ -621,9 +621,9 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
-      // add sarge, TODO: make this a command line option
+      // add sarge, TODO: make this a command line option, this becomes the "whitelist"
       .concat(qvm.match(/game.qvm/i)
-        ? externalAndShared.filter(f => f.includes('sarge') || f.includes('major'))
+        ? externalAndShared.filter(f => f.includes('sarge') || f.includes('major') || f.includes('footsteps'))
         : [])
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {

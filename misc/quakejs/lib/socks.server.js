@@ -198,6 +198,7 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
     socket.off('data', newOnData)
     socket.off('message', newOnData)
     parser.off('request', newOnRequest)
+    delete this._listeners[udpLookupPort]
     // switch back to regular messaging?
     socket.on('data', onData)
     socket.on('message', onData)

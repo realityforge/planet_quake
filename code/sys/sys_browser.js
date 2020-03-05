@@ -234,8 +234,7 @@ var LibrarySys = {
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
-		var cl_running = _Cvar_VariableIntegerValue(
-			allocate(intArrayFromString('cl_running'), 'i8', ALLOC_STACK))
+		var clcState = _CL_GetClientState()
 		const blankFile = new Uint8Array(4)
 		
 		SYS.LoadingDescription('Manifest')
@@ -269,7 +268,7 @@ var LibrarySys = {
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need
-			if(!cl_running && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+			if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
 				SYS.LoadingDescription('')
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
@@ -289,8 +288,8 @@ var LibrarySys = {
 				var keys = Object.keys(json)
 				var menu = keys.filter(k => k.includes('menu/'))
 				var game = keys.filter(k => k.includes('game/'))
-				if(cl_running && game.length) keys = game;
-				if(!cl_running && menu.length) keys = menu;
+				if(clcState >= 4 && game.length) keys = game;
+				if(clcState < 4 && menu.length) keys = menu;
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory

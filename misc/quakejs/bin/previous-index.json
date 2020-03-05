@@ -199,6 +199,10 @@
     "name": "pak4440announce.pk3",
     "size": 267997
   },
+  "game/pak44441footsteps": {
+    "name": "pak44441footsteps.pk3",
+    "size": 57394
+  },
   "game/pak8886bots": {
     "name": "pak8886bots.pk3",
     "size": 225191
@@ -1109,7 +1113,7 @@
   },
   "maps/q3ctf1/pak99q3ctf1": {
     "name": "pak99q3ctf1.pk3",
-    "size": 5884967
+    "size": 5888519
   },
   "maps/q3ctf1/pak82music": {
     "name": "pak82music.pk3",
