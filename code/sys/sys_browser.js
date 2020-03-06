@@ -1,5 +1,5 @@
 var LibrarySys = {
-	$SYS__deps: ['$SYSC'],
+	$SYS__deps: ['$SYSC', '$SDL'],
 	$SYS: {
 		exited: false,
 		timeBase: null,
@@ -196,6 +196,30 @@ var LibrarySys = {
 				multitouch: true,
 				mode: 'dynamic',
 			})
+			// tap into native event handlers because SDL events are too slow
+			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
+			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
+			SYS.joystick.on('start end', function(evt, data) {
+				var touches = [{
+					identifier: 0,
+					screenX: Math.round(data.position.x),
+					screenY: Math.round(data.position.y),
+					clientX: Math.round(data.position.x),
+					clientY: Math.round(data.position.y),
+					pageX: Math.round(data.position.x),
+					pageY: Math.round(data.position.y),
+				}]
+				var touchevent = {
+					type: 'touch' + evt.type,
+					identifier: data.id,
+					touches: touches,
+					preventDefault: () => {},
+					changedTouches: touches,
+					targetTouches: touches,
+				}
+				if(evt.type == 'start') start.handlerFunc(touchevent)
+				else if (evt.type == 'end') end.handlerFunc(touchevent)
+			})
 		}
 	},
 	Sys_PlatformInit: function () {
@@ -238,7 +262,7 @@ var LibrarySys = {
 			Module.exitHandler()
 		}
 	},
-	Sys_GLimpInit__deps: ['$SYS'],
+	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
 		var in_joystick = _Cvar_VariableIntegerValue(
 			allocate(intArrayFromString('in_joystick'), 'i8', ALLOC_STACK))
@@ -252,7 +276,7 @@ var LibrarySys = {
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
 		if(in_joystick) {
-			SYS.InitNippleJoysticks()
+			setTimeout(SYS.InitNippleJoysticks, 100)
 		}
 	},
 	Sys_GLimpSafeInit: function () {

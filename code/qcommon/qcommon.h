@@ -441,7 +441,16 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
+
+typedef struct {
+	int					frametime;
+	int					realtime;
+	int					cursorx;
+	int					cursory;
+} ui_hack;
+
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker);
 qboolean VM_IsSuspended(vm_t *vm);
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp);
 int VM_Resume(vm_t *vm);
@@ -867,6 +876,7 @@ typedef enum {
 	SE_KEY,			// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,		// evValue is an ascii char
 	SE_MOUSE,		// evValue and evValue2 are relative signed x / y moves
+	SE_MOUSE_ABS,
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE		// evPtr is a char*
 } sysEventType_t;
@@ -1061,7 +1071,7 @@ void CL_KeyEvent (int key, qboolean down, unsigned time);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
-void CL_MouseEvent( int dx, int dy, int time );
+void CL_MouseEvent( int dx, int dy, int time, qboolean absolute );
 
 void CL_JoystickEvent( int axis, int value, int time );
 

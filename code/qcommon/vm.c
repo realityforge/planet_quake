@@ -1010,6 +1010,68 @@ void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n)
 }
 
 #ifdef EMSCRIPTEN
+int GetIntFromByte(byte *offset) {
+	return (offset[3] << 24) | (offset[2] << 16)
+		| (offset[1] << 8) | offset[0];
+}
+
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker) {
+	int i, j;
+	int diff = realtimeMarker ^ 0x7FFFFFFF;
+	int frame = diff - realtimeMarker;
+	byte *ret = 0;
+	struct vmSymbol_s *sym;
+	Com_Printf("Searching for UI cursorx at %i %i was %i\n", diff, frame, realtimeMarker);
+	
+	//VM_Call( vm, mouseCmd, 1, 1 );
+	VM_Call( vm, refreshCmd, diff);
+
+	for(i = vm->dataAlloc - 32; i >= 0; i--) {
+		int frameTime = GetIntFromByte(&vm->dataBase[i]);
+		int realTime = GetIntFromByte(&vm->dataBase[i-4]);
+		if(realTime == diff) { // && ) {
+			//VM_Call( vm, refreshCmd, realtimeMarker);
+			Com_Printf("Found UI cursorx at %p %i %i\n", &vm->dataBase[i], frameTime, realTime);
+			ret = &vm->dataBase[i-8];
+		}
+	}
+	/*
+		for(i = vm->codeLength - 4; i >= 0; i--) {
+			int frameTime = GetIntFromByte(&vm->codeBase[i]);
+			int realTime = GetIntFromByte(&vm->codeBase[i-4]);
+			if(realTime == diff) { // && frameTime == frame) {
+				//VM_Call( vm, refreshCmd, realtimeMarker);
+				Com_Printf("Found UI cursorx at %p %i %i\n", &vm->codeBase[i], frameTime, realTime);
+				Com_Printf("Before cursorx %i %i %i %i\n",
+					GetIntFromByte(&vm->codeBase[i-8]),
+					GetIntFromByte(&vm->codeBase[i-16]),
+					GetIntFromByte(&vm->codeBase[i-24]),
+					GetIntFromByte(&vm->codeBase[i-32]));
+				Com_Printf("After cursorx %i %i %i %i\n",
+					GetIntFromByte(&vm->codeBase[i+8]),
+					GetIntFromByte(&vm->codeBase[i+16]),
+					GetIntFromByte(&vm->codeBase[i+24]),
+					GetIntFromByte(&vm->codeBase[i+32]));
+				ret = &vm->codeBase[-16];
+			}
+		}
+	*/
+	//if(frameTime == frame) {
+		Com_Printf("After cursorx %i %i %i %i %i %i %i %i\n",
+		GetIntFromByte(&ret[0]),
+		GetIntFromByte(&ret[4]),
+		GetIntFromByte(&ret[8]),
+		GetIntFromByte(&ret[12]),
+		GetIntFromByte(&ret[16]),
+		GetIntFromByte(&ret[20]),
+		GetIntFromByte(&ret[24]),
+		GetIntFromByte(&ret[28]));
+	//}
+	return ret;
+	Com_Error(ERR_FATAL, "Couldn't locate UI cursor %i\n", diff);
+}
+
+
 qboolean VM_IsSuspended(vm_t * vm) {
 #ifndef NO_VM_COMPILED
 		if (vm->compiled) {

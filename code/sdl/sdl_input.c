@@ -989,7 +989,7 @@ static void IN_ProcessEvents( void )
 	SDL_Event e;
 	keyNum_t key = 0;
 	static keyNum_t lastKeyDown = 0;
-
+	
 	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
 
@@ -1162,14 +1162,29 @@ static void IN_ProcessEvents( void )
 			
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
-					if (Key_GetCatcher( ) & KEYCATCH_UI) {
-						int balldx = 0;
-						int balldy = 0;
-						SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
-						Com_QueueEvent( in_eventTime, SE_MOUSE, balldx, balldy, 0, NULL );
-						Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1,
-                            ( e.type == SDL_FINGERDOWN ? qtrue : qfalse ), 0, NULL );
+				if (Key_GetCatcher( ) & KEYCATCH_UI) {
+					float ratio43 = 640.0f / 480.0f;
+					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
+
+					// If we're not on a 4:3 screen, do the math to figure out how to
+					// translate coordinates to a 4:3 equivalent
+					if (ratio43 != ratio) {
+						float width43 = 480 * ratio;
+						float gap = 0.5 * (width43 - (480.0f*(640.0f/480.0f)));
+						float finger = (e.tfinger.x * width43);
+						float fingerMinusGap = (e.tfinger.x * width43) - gap;
+
+						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
+					} else {
+						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.tfinger.x * 640, e.tfinger.y * 480, 0, NULL );
 					}
+
+				//	int balldx = 0;
+				//	int balldy = 0;
+				//	SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1,
+                          ( e.type == SDL_FINGERDOWN ? qtrue : qfalse ), 0, NULL );
+				}
 				break;
 			default:
 				break;
