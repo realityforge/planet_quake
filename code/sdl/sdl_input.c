@@ -1159,7 +1159,27 @@ static void IN_ProcessEvents( void )
 					case SDL_WINDOWEVENT_FOCUS_GAINED: Cvar_SetValue( "com_unfocused", 0 ); break;
 				}
 				break;
-			
+			case SDL_FINGERMOTION:
+				{
+					float ratio43 = 640.0f / 480.0f;
+					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
+
+					// If we're not on a 4:3 screen, do the math to figure out how to
+					// translate coordinates to a 4:3 equivalent
+					if (ratio43 != ratio) {
+						float width43 = 480 * ratio;
+						float gap = 0.5 * (width43 - (480.0f*(640.0f/480.0f)));
+						float finger = (e.mgesture.x * width43);
+						float fingerMinusGap = (e.mgesture.x * width43) - gap;
+
+						Com_Printf("Touch move: %f, %f, %f", e.mgesture.dDist, fingerMinusGap, e.mgesture.y * 480);
+						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.mgesture.y * 480, 0, NULL );
+					} else {
+						Com_Printf("Touch move: %f, %f, %f", e.mgesture.dDist, e.mgesture.x * 640, e.mgesture.y * 480);
+						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.mgesture.x * 640, e.mgesture.y * 480, 0, NULL );
+					}
+				}
+				break;
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
 				if (Key_GetCatcher( ) & KEYCATCH_UI) {

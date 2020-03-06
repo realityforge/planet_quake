@@ -1021,7 +1021,7 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 	int frame = diff - realtimeMarker;
 	byte *ret = 0;
 	struct vmSymbol_s *sym;
-	Com_Printf("Searching for UI cursorx at %i %i was %i\n", diff, frame, realtimeMarker);
+	//Com_Printf("Searching for UI cursorx at %i %i was %i\n", diff, frame, realtimeMarker);
 	
 	//VM_Call( vm, mouseCmd, 1, 1 );
 	VM_Call( vm, refreshCmd, diff);
@@ -1030,45 +1030,15 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 		int frameTime = GetIntFromByte(&vm->dataBase[i]);
 		int realTime = GetIntFromByte(&vm->dataBase[i-4]);
 		if(realTime == diff) { // && ) {
+			//Com_Printf("Found UI cursorx at %p %i %i\n", &vm->dataBase[i], frameTime, realTime);
 			//VM_Call( vm, refreshCmd, realtimeMarker);
-			Com_Printf("Found UI cursorx at %p %i %i\n", &vm->dataBase[i], frameTime, realTime);
 			ret = &vm->dataBase[i-8];
 		}
 	}
-	/*
-		for(i = vm->codeLength - 4; i >= 0; i--) {
-			int frameTime = GetIntFromByte(&vm->codeBase[i]);
-			int realTime = GetIntFromByte(&vm->codeBase[i-4]);
-			if(realTime == diff) { // && frameTime == frame) {
-				//VM_Call( vm, refreshCmd, realtimeMarker);
-				Com_Printf("Found UI cursorx at %p %i %i\n", &vm->codeBase[i], frameTime, realTime);
-				Com_Printf("Before cursorx %i %i %i %i\n",
-					GetIntFromByte(&vm->codeBase[i-8]),
-					GetIntFromByte(&vm->codeBase[i-16]),
-					GetIntFromByte(&vm->codeBase[i-24]),
-					GetIntFromByte(&vm->codeBase[i-32]));
-				Com_Printf("After cursorx %i %i %i %i\n",
-					GetIntFromByte(&vm->codeBase[i+8]),
-					GetIntFromByte(&vm->codeBase[i+16]),
-					GetIntFromByte(&vm->codeBase[i+24]),
-					GetIntFromByte(&vm->codeBase[i+32]));
-				ret = &vm->codeBase[-16];
-			}
-		}
-	*/
-	//if(frameTime == frame) {
-		Com_Printf("After cursorx %i %i %i %i %i %i %i %i\n",
-		GetIntFromByte(&ret[0]),
-		GetIntFromByte(&ret[4]),
-		GetIntFromByte(&ret[8]),
-		GetIntFromByte(&ret[12]),
-		GetIntFromByte(&ret[16]),
-		GetIntFromByte(&ret[20]),
-		GetIntFromByte(&ret[24]),
-		GetIntFromByte(&ret[28]));
-	//}
+	if(!ret) {
+		Com_Error(ERR_FATAL, "Couldn't locate UI cursor %i\n", diff);
+	}
 	return ret;
-	Com_Error(ERR_FATAL, "Couldn't locate UI cursor %i\n", diff);
 }
 
 

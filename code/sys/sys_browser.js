@@ -199,7 +199,8 @@ var LibrarySys = {
 			// tap into native event handlers because SDL events are too slow
 			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
 			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
-			SYS.joystick.on('start end', function(evt, data) {
+			var move = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchmove')[0]
+			SYS.joystick.on('start end move', function(evt, data) {
 				var touches = [{
 					identifier: 0,
 					screenX: Math.round(data.position.x),
@@ -208,9 +209,11 @@ var LibrarySys = {
 					clientY: Math.round(data.position.y),
 					pageX: Math.round(data.position.x),
 					pageY: Math.round(data.position.y),
+					movementX: data.angle ? Math.cos(data.angle.radian) * data.distance : 0,
+					movementY: data.angle ? Math.sin(data.angle.radian) * data.distance : 0,
 				}]
 				var touchevent = {
-					type: 'touch' + evt.type,
+					type: evt.type == 'touch' + evt.type,
 					identifier: data.id,
 					touches: touches,
 					preventDefault: () => {},
@@ -219,6 +222,7 @@ var LibrarySys = {
 				}
 				if(evt.type == 'start') start.handlerFunc(touchevent)
 				else if (evt.type == 'end') end.handlerFunc(touchevent)
+				else if (evt.type == 'move') move.handlerFunc(touchevent)
 			})
 		}
 	},
@@ -489,15 +493,9 @@ var LibrarySys = {
 	},
 	Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
 	Sys_SocksConnect: function () {
-		Module['websocket'].on('open', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
-		Module['websocket'].on('message', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
-		Module['websocket'].on('error', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
+		Module['websocket'].on('open', Browser.safeCallback(_SOCKS_Frame_Proxy))
+		Module['websocket'].on('message', Browser.safeCallback(_SOCKS_Frame_Proxy))
+		Module['websocket'].on('error', Browser.safeCallback(_SOCKS_Frame_Proxy))
 	},
 	Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
 	Sys_SocksMessage: function () {
