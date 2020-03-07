@@ -360,7 +360,6 @@ CL_MouseEvent
 =================
 */
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
-	Com_Printf( "Setting mouse absolute %i %i %i\n", absolute, dx, dy );
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if(absolute) {			
 			cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);

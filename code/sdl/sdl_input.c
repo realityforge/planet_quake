@@ -979,6 +979,7 @@ static void IN_JoyMove( void )
 	stick_state.oldaxes = axes;
 }
 
+float touchhats[5][2] = {};
 /*
 ===============
 IN_ProcessEvents
@@ -986,6 +987,7 @@ IN_ProcessEvents
 */
 static void IN_ProcessEvents( void )
 {
+	int i;
 	SDL_Event e;
 	keyNum_t key = 0;
 	static keyNum_t lastKeyDown = 0;
@@ -1091,8 +1093,10 @@ static void IN_ProcessEvents( void )
 						case SDL_BUTTON_X2:     b = K_MOUSE5;     break;
 						default:                b = K_AUX1 + ( e.button.button - SDL_BUTTON_X2 + 1 ) % 16; break;
 					}
-					Com_QueueEvent( in_eventTime, SE_KEY, b,
-						( e.type == SDL_MOUSEBUTTONDOWN ? qtrue : qfalse ), 0, NULL );
+					if(!in_joystick->integer) {
+						Com_QueueEvent( in_eventTime, SE_KEY, b,
+							( e.type == SDL_MOUSEBUTTONDOWN ? qtrue : qfalse ), 0, NULL );
+					}
 				}
 				break;
 
@@ -1162,15 +1166,17 @@ static void IN_ProcessEvents( void )
 			case SDL_FINGERMOTION:
 				{
 					if(e.tfinger.fingerId > 0) {
-						Com_Printf("IN_ProcessEvents: Finger move %lld %f %f\n", e.tfinger.fingerId, e.tfinger.x * 20, e.tfinger.y * 20);
 						//Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
-						Com_QueueEvent( in_eventTime, SE_MOUSE, e.tfinger.x * 20, e.tfinger.y * 20, 0, NULL );
+						float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
+						touchhats[e.tfinger.fingerId][0] = (e.tfinger.x * ratio) * 20;
+						touchhats[e.tfinger.fingerId][1] = e.tfinger.y * 20;
 					}
 				}
 				break;
 			case SDL_FINGERDOWN:
-			//case SDL_FINGERUP:
-				if (Key_GetCatcher( ) & KEYCATCH_UI) {
+			case SDL_FINGERUP:
+				if (e.type == SDL_FINGERDOWN && Key_GetCatcher( ) & KEYCATCH_UI) {
+					// Source: https://github.com/tomkidd/Quake3-iOS/blob/master/Quake3/sdl/sdl_input.c#L1162
 					float ratio43 = 640.0f / 480.0f;
 					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
 
@@ -1186,19 +1192,25 @@ static void IN_ProcessEvents( void )
 					} else {
 						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.tfinger.x * 640, e.tfinger.y * 480, 0, NULL );
 					}
-
-					//	int balldx = 0;
-					//	int balldy = 0;
-					//	SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
 				}
 				if(e.type == SDL_FINGERDOWN) {
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
+					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
 				} else {
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
+					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
+					touchhats[e.tfinger.fingerId][0] = 0;
+					touchhats[e.tfinger.fingerId][1] = 0;
 				}
 				break;
 			default:
 				break;
+		}
+	}
+	
+	for(i = 1; i <= 4; i++) {
+		if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
+			if(Key_GetCatcher( ) & KEYCATCH_UI || i == 2) {
+				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], touchhats[i][1], 0, NULL );
+			}
 		}
 	}
 }

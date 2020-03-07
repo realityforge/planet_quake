@@ -201,13 +201,45 @@ var LibrarySys = {
 			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
 			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
 			var move = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchmove')[0]
+			var keydown = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keydown')[0]
+			var keyup = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keyup')[0]
 			SYS.joystick.on('start end move', function(evt, data) {
 				var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
 				var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
 				var x = data.angle ? dx : Math.round(data.position.x)
 				var y = data.angle ? dy : Math.round(data.position.y)
+				var id = SYS.joystick.ids.indexOf(data.identifier) + 1
+				if(id == 1 && data.angle && (x > 0 || y > 0)) {
+					console.log('Touch key: ', x, y)
+					if (Math.round(y / 100) > 0) {
+						keydown.handlerFunc({keyCode: 87, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 87, preventDefault: () => {}});
+					}
+					if (Math.round(y / 100) < 0) {
+						keydown.handlerFunc({keyCode: 83, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 83, preventDefault: () => {}});
+					}
+					if (Math.round(x / 100) < 0) {
+						keydown.handlerFunc({keyCode: 65, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 65, preventDefault: () => {}});
+					}
+					if (Math.round(x / 100) > 0) {
+						keydown.handlerFunc({keyCode: 68, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 68, preventDefault: () => {}});
+					}
+				} else {
+					keyup.handlerFunc({keyCode: 87, preventDefault: () => {}});
+					keyup.handlerFunc({keyCode: 83, preventDefault: () => {}});
+					keyup.handlerFunc({keyCode: 65, preventDefault: () => {}});
+					keyup.handlerFunc({keyCode: 68, preventDefault: () => {}});
+				}
+				
 				var touches = [{
-					identifier: data.identifier + 1,
+					identifier: id,
 					screenX: x,
 					screenY: y,
 					clientX: x,
@@ -217,12 +249,9 @@ var LibrarySys = {
 					movementX: dx,
 					movementY: dy,
 				}]
-				if(evt.type == 'move') {
-					console.log(' Browser move:', touches[0].movementX, touches[0].movementY)
-				}
 				var touchevent = {
 					type: 'touch' + evt.type,
-					identifier: data.identifier + 1,
+					identifier: id,
 					touches: touches,
 					preventDefault: () => {},
 					changedTouches: touches,
