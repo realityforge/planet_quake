@@ -489,7 +489,6 @@ void SV_SpawnServer_After_Startup( void ) {
 	char		systemInfo[16384];
 	const char	*p;
 	FS_Restart_After_Async();
-
 #endif
 ;
 

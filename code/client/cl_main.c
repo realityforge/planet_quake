@@ -1291,9 +1291,9 @@ Also called by Com_Error
 */
 void CL_FlushMemory(void)
 {
-	#ifdef EMSCRIPTEN
-		if(!FS_Initialized()) return;
-	#endif
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized()) return;
+#endif
 	CL_ClearMemory(qfalse);
 	CL_StartHunkUsers(qfalse);
 }
@@ -4153,9 +4153,11 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 	if(disconnect)
 		CL_Disconnect(qtrue);
-	
+
 	CL_ClearMemory(qtrue);
+#ifdef EMSCRIPTEN
 	CL_Snd_Shutdown();
+#endif
 
 	Cmd_RemoveCommand ("cmd");
 	Cmd_RemoveCommand ("configstrings");

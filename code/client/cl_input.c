@@ -360,10 +360,9 @@ CL_MouseEvent
 =================
 */
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
+	Com_Printf( "Setting mouse absolute %i %i %i\n", absolute, dx, dy );
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if(absolute) {
-			Com_Printf( "Setting mouse absolute %i %i\n", dx, dy );
-			
+		if(absolute) {			
 			cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);
 			cls.menuUIhack[11] = (dx >> 24) & 0xFF;
 			cls.menuUIhack[10] = (dx >> 16) & 0xFF;
@@ -378,10 +377,14 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 			VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 		}
 	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
-		VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
+		if(!absolute) {
+			VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
+		}
 	} else {
-		cl.mouseDx[cl.mouseIndex] += dx;
-		cl.mouseDy[cl.mouseIndex] += dy;
+		if(!absolute) {
+			cl.mouseDx[cl.mouseIndex] += dx;
+			cl.mouseDy[cl.mouseIndex] += dy;
+		}
 	}
 }
 

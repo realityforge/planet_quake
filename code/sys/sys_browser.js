@@ -201,25 +201,33 @@ var LibrarySys = {
 			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
 			var move = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchmove')[0]
 			SYS.joystick.on('start end move', function(evt, data) {
+				var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
+				var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
+				var x = data.angle ? dx : data.position.x
+				var y = data.angle ? dy : data.position.y
 				var touches = [{
 					identifier: 0,
-					screenX: Math.round(data.position.x),
-					screenY: Math.round(data.position.y),
-					clientX: Math.round(data.position.x),
-					clientY: Math.round(data.position.y),
-					pageX: Math.round(data.position.x),
-					pageY: Math.round(data.position.y),
-					movementX: data.angle ? Math.cos(data.angle.radian) * data.distance : 0,
-					movementY: data.angle ? Math.sin(data.angle.radian) * data.distance : 0,
+					screenX: x,
+					screenY: y,
+					clientX: x,
+					clientY: y,
+					pageX: x,
+					pageY: y,
+					movementX: dx,
+					movementY: dy,
 				}]
+				if(evt.type == 'move') {
+					console.log(' Browser move:', touches[0].movementX, touches[0].movementY)
+				}
 				var touchevent = {
-					type: evt.type == 'touch' + evt.type,
+					type: 'touch' + evt.type,
 					identifier: data.id,
 					touches: touches,
 					preventDefault: () => {},
 					changedTouches: touches,
 					targetTouches: touches,
 				}
+				Object.assign(touchevent, touches[0])
 				if(evt.type == 'start') start.handlerFunc(touchevent)
 				else if (evt.type == 'end') end.handlerFunc(touchevent)
 				else if (evt.type == 'move') move.handlerFunc(touchevent)
@@ -373,6 +381,7 @@ var LibrarySys = {
 			var downloads = []
 			SYSC.DownloadAsset(fsMountPath + '/index.json', SYS.LoadingProgress, (err, data) => {
 				if(err) {
+					SYS.LoadingDescription('')
 					SYSC.ProxyCallback(cb)
 					return
 				}

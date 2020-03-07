@@ -1070,7 +1070,7 @@ static void IN_ProcessEvents( void )
 				break;
 
 			case SDL_MOUSEMOTION:
-				if( mouseActive )
+				if( mouseActive && !in_joystick->integer )
 				{
 					if( !e.motion.xrel && !e.motion.yrel )
 						break;
@@ -1166,22 +1166,20 @@ static void IN_ProcessEvents( void )
 
 					// If we're not on a 4:3 screen, do the math to figure out how to
 					// translate coordinates to a 4:3 equivalent
+					
 					if (ratio43 != ratio) {
-						float width43 = 480 * ratio;
-						float gap = 0.5 * (width43 - (480.0f*(640.0f/480.0f)));
-						float finger = (e.mgesture.x * width43);
-						float fingerMinusGap = (e.mgesture.x * width43) - gap;
-
-						Com_Printf("Touch move: %f, %f, %f", e.mgesture.dDist, fingerMinusGap, e.mgesture.y * 480);
-						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.mgesture.y * 480, 0, NULL );
+						float width43 = 48 * ratio;
+						float gap = 0.5 * (width43 - (48.0f*(64.0f/48.0f)));
+						float finger = (e.tfinger.x * width43);
+						float fingerMinusGap = (e.tfinger.x * width43) - gap;
+						Com_QueueEvent( in_eventTime, SE_MOUSE, fingerMinusGap, e.tfinger.y * 48, 0, NULL );
 					} else {
-						Com_Printf("Touch move: %f, %f, %f", e.mgesture.dDist, e.mgesture.x * 640, e.mgesture.y * 480);
-						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.mgesture.x * 640, e.mgesture.y * 480, 0, NULL );
+						Com_QueueEvent( in_eventTime, SE_MOUSE, e.tfinger.x * 64, e.tfinger.y * 48, 0, NULL );
 					}
 				}
 				break;
 			case SDL_FINGERDOWN:
-			case SDL_FINGERUP:
+			//case SDL_FINGERUP:
 				if (Key_GetCatcher( ) & KEYCATCH_UI) {
 					float ratio43 = 640.0f / 480.0f;
 					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
@@ -1199,11 +1197,15 @@ static void IN_ProcessEvents( void )
 						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.tfinger.x * 640, e.tfinger.y * 480, 0, NULL );
 					}
 
-				//	int balldx = 0;
-				//	int balldy = 0;
-				//	SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1,
-                          ( e.type == SDL_FINGERDOWN ? qtrue : qfalse ), 0, NULL );
+					//	int balldx = 0;
+					//	int balldy = 0;
+					//	SDL_JoystickGetBall(stick, 0, &balldx, &balldy);
+				}
+				Com_Printf("Touch down/up: %f, %i, %i\n", e.mgesture.dDist, e.motion.xrel * 2, e.motion.yrel * 2);
+				if(e.type == SDL_FINGERDOWN) {
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
+				} else {
+					Com_QueueEvent( in_eventTime, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
 				}
 				break;
 			default:
