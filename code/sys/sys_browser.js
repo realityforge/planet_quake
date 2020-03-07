@@ -4,7 +4,7 @@ var LibrarySys = {
 		exited: false,
 		timeBase: null,
 		style: null,
-		joystick: null,
+		joysticks: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -190,52 +190,40 @@ var LibrarySys = {
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
-		InitNippleJoysticks: function() {
-			SYS.joystick = nipplejs.create({
-				zone: document.body,
-				multitouch: true,
-				mode: 'dynamic',
-				size: 200,
-			})
+		InitJoystick: function (joystick, id) {
 			// tap into native event handlers because SDL events are too slow
 			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
 			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
 			var move = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchmove')[0]
 			var keydown = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keydown')[0]
 			var keyup = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keyup')[0]
-			SYS.joystick.on('start end move', function(evt, data) {
+			joystick.on('start end move', function(evt, data) {
 				var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
 				var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
 				var x = data.angle ? dx : Math.round(data.position.x)
 				var y = data.angle ? dy : Math.round(data.position.y)
-				var id = SYS.joystick.ids.indexOf(data.identifier) + 1
-				if(id == 1 && data.angle && (x > 0 || y > 0)) {
-					console.log('Touch key: ', x, y)
-					if (Math.round(y / 100) > 0) {
-						keydown.handlerFunc({keyCode: 87, preventDefault: () => {}});
+				//var id = joystick.ids.indexOf(data.identifier) + 1
+				if(id == 1) {
+					if (data.angle && Math.round(y / 40) > 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 87, preventDefault: () => {}});
 					} else {
 						keyup.handlerFunc({keyCode: 87, preventDefault: () => {}});
 					}
-					if (Math.round(y / 100) < 0) {
-						keydown.handlerFunc({keyCode: 83, preventDefault: () => {}});
+					if (data.angle && Math.round(y / 40) < 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 83, preventDefault: () => {}});
 					} else {
 						keyup.handlerFunc({keyCode: 83, preventDefault: () => {}});
 					}
-					if (Math.round(x / 100) < 0) {
-						keydown.handlerFunc({keyCode: 65, preventDefault: () => {}});
+					if (data.angle && Math.round(x / 40) < 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 65, preventDefault: () => {}});
 					} else {
 						keyup.handlerFunc({keyCode: 65, preventDefault: () => {}});
 					}
-					if (Math.round(x / 100) > 0) {
-						keydown.handlerFunc({keyCode: 68, preventDefault: () => {}});
+					if (data.angle && Math.round(x / 40) > 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 68, preventDefault: () => {}});
 					} else {
 						keyup.handlerFunc({keyCode: 68, preventDefault: () => {}});
 					}
-				} else {
-					keyup.handlerFunc({keyCode: 87, preventDefault: () => {}});
-					keyup.handlerFunc({keyCode: 83, preventDefault: () => {}});
-					keyup.handlerFunc({keyCode: 65, preventDefault: () => {}});
-					keyup.handlerFunc({keyCode: 68, preventDefault: () => {}});
 				}
 				
 				var touches = [{
@@ -262,6 +250,39 @@ var LibrarySys = {
 				else if (evt.type == 'end') end.handlerFunc(touchevent)
 				else if (evt.type == 'move') move.handlerFunc(touchevent)
 			})
+		},
+		InitNippleJoysticks: function() {
+			if(SYS.joysticks.length > 2) return
+			SYS.joysticks[0] = nipplejs.create({
+				zone: document.getElementById('left-joystick'),
+				multitouch: false,
+				mode: 'semi',
+				size: 100,
+				catchDistance: 100,
+				maxNumberOfNipples: 1,
+				position: {bottom: '50px', left: '50px'},
+			})
+			SYS.joysticks[1] = nipplejs.create({
+				zone: document.getElementById('right-joystick'),
+				multitouch: false,
+				mode: 'semi',
+				size: 100,
+				catchDistance: 100,
+				maxNumberOfNipples: 1,
+				position: {bottom: '50px', right: '50px'},
+			})
+			SYS.joysticks[2] = nipplejs.create({
+				dataOnly: true,
+				zone: document.body,
+				multitouch: false,
+				mode: 'dynamic',
+				size: 100,
+				catchDistance: 100,
+				maxNumberOfNipples: 1,
+			})
+			SYS.InitJoystick(SYS.joysticks[0], 1)
+			SYS.InitJoystick(SYS.joysticks[1], 2)
+			SYS.InitJoystick(SYS.joysticks[2], 3)
 		}
 	},
 	Sys_PlatformInit: function () {
@@ -318,6 +339,7 @@ var LibrarySys = {
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
 		if(in_joystick) {
+			document.body.classList.add('joysticks')
 			setTimeout(SYS.InitNippleJoysticks, 100)
 		}
 	},

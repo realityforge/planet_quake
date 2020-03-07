@@ -1168,8 +1168,8 @@ static void IN_ProcessEvents( void )
 					if(e.tfinger.fingerId > 0) {
 						//Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
 						float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
-						touchhats[e.tfinger.fingerId][0] = (e.tfinger.x * ratio) * 20;
-						touchhats[e.tfinger.fingerId][1] = e.tfinger.y * 20;
+						touchhats[e.tfinger.fingerId][0] = (e.tfinger.x * ratio) * 50;
+						touchhats[e.tfinger.fingerId][1] = e.tfinger.y * 50;
 					}
 				}
 				break;
@@ -1192,10 +1192,11 @@ static void IN_ProcessEvents( void )
 					} else {
 						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.tfinger.x * 640, e.tfinger.y * 480, 0, NULL );
 					}
+					if(e.type == SDL_FINGERDOWN) {
+						Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
+					}
 				}
-				if(e.type == SDL_FINGERDOWN) {
-					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
-				} else {
+				if(e.type == SDL_FINGERUP) {
 					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
 					touchhats[e.tfinger.fingerId][0] = 0;
 					touchhats[e.tfinger.fingerId][1] = 0;
