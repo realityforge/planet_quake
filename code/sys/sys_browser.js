@@ -195,6 +195,7 @@ var LibrarySys = {
 				zone: document.body,
 				multitouch: true,
 				mode: 'dynamic',
+				size: 200,
 			})
 			// tap into native event handlers because SDL events are too slow
 			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
@@ -203,10 +204,10 @@ var LibrarySys = {
 			SYS.joystick.on('start end move', function(evt, data) {
 				var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
 				var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
-				var x = data.angle ? dx : data.position.x
-				var y = data.angle ? dy : data.position.y
+				var x = data.angle ? dx : Math.round(data.position.x)
+				var y = data.angle ? dy : Math.round(data.position.y)
 				var touches = [{
-					identifier: 0,
+					identifier: data.identifier + 1,
 					screenX: x,
 					screenY: y,
 					clientX: x,
@@ -221,7 +222,7 @@ var LibrarySys = {
 				}
 				var touchevent = {
 					type: 'touch' + evt.type,
-					identifier: data.id,
+					identifier: data.identifier + 1,
 					touches: touches,
 					preventDefault: () => {},
 					changedTouches: touches,

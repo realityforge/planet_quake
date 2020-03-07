@@ -372,7 +372,7 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 			cls.menuUIhack[14] = (dy >> 16) & 0xFF;
 			cls.menuUIhack[13] = (dy >> 8) & 0xFF;
 			cls.menuUIhack[12] = dy & 0xFF;
-			VM_Call( uivm, UI_MOUSE_EVENT, 1, 1 );
+			VM_Call( uivm, UI_MOUSE_EVENT, 0, 0 );
 		} else {
 			VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 		}
