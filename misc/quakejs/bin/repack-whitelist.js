@@ -11,6 +11,7 @@ var imageTypes = [
   '.gif',
   '.pcx',
   '.webp',
+  '.hdr',
 ]
 
 var audioTypes = [
@@ -37,6 +38,7 @@ var fileTypes = [
   '.aas',
   '.md3',
   '.md5',
+  '.log',
   '.shader',
   '.skin',
   '.pk3',

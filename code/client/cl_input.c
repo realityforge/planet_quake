@@ -361,8 +361,10 @@ CL_MouseEvent
 */
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if(absolute) {			
-			cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);
+		if(absolute) {
+			if(!cls.menuUIhack) {
+				cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);
+			}
 			cls.menuUIhack[11] = (dx >> 24) & 0xFF;
 			cls.menuUIhack[10] = (dx >> 16) & 0xFF;
 			cls.menuUIhack[9] = (dx >> 8) & 0xFF;

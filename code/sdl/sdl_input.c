@@ -1175,7 +1175,8 @@ static void IN_ProcessEvents( void )
 				break;
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
-				if (e.type == SDL_FINGERDOWN && Key_GetCatcher( ) & KEYCATCH_UI) {
+				if (e.type == SDL_FINGERDOWN && Key_GetCatcher( ) & KEYCATCH_UI
+					&& e.tfinger.fingerId == 3) {
 					// Source: https://github.com/tomkidd/Quake3-iOS/blob/master/Quake3/sdl/sdl_input.c#L1162
 					float ratio43 = 640.0f / 480.0f;
 					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;

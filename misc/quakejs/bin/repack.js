@@ -64,6 +64,17 @@ var whitelist = {
     '**/player/*',
     '**/player/footsteps/*',
     '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'baseq3r': [
+    '**/+(player|players)/sidepipe/**',
+    '**/+(player|players)/heads/doom*',
+    '**/+(player|players)/plates/*usa*',
+    '**/+(player|players)/wheels/*cobra*',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
   ]
 }
 
@@ -603,10 +614,10 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
       obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), ''))
       return obj
     }, {})
-  var indexJson, help
+  var indexJson, help2
   if(outputProject) {
     var indexJson = path.join(outputProject, './index.json')
-    var help = `, you should run:
+    help2 = `, you should run:
 npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
 and
 open ./build/release-*/ioq3ded +set fs_basepath ${path.dirname(path.dirname(outputProject))} +set fs_basegame ${path.basename(outputProject)} +set fs_game ${path.basename(outputProject)}
@@ -615,7 +626,7 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
 `
   } else {
     indexJson = INDEX_NAME
-    help = ''
+    help2 = ''
   }
   
   // generate a index.json the server can use for pk3 sorting based on map/game type
@@ -658,7 +669,6 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
         .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
       var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof matchPak === 'undefined') {
-        console.log(orderedNoExt)
         throw new Error('Couldn\'t find file in packs ' + f)
       }
       if(typeof remapped[newName] == 'undefined') {
@@ -696,7 +706,7 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
       }
     })
   })
-  console.log(`Writing index.json "${indexJson}"`, help)
+  console.log(`Writing index.json "${indexJson}"`, help2)
   if(outputProject) {
     ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
   }

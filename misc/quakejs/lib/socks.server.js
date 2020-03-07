@@ -174,6 +174,8 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   parser.off('request', onRequest)
   // connection and version number are implied from now on
   var newOnData = ((message) => {
+    clearTimeout(self._timeouts[udpLookupPort])
+    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
     var chunk = Buffer.from(message)
     if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
       chunk[0] = 5
@@ -283,7 +285,7 @@ Server.prototype._onSocketConnect = function(socket, reqInfo) {
     socket._socket.pipe(socket.dstSock)
     socket.dstSock.pipe(socket._socket)
   } else {
-    console.log('Starting messages')
+    console.log('Starting messages ' + ipv6.kind())
     socket.send(bufrep)
   }
   socket._socket.resume()

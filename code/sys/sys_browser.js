@@ -128,6 +128,8 @@ var LibrarySys = {
 				args.push.apply(args, val)
 			}
 			args.push.apply(args, [
+				'+set', 'net_socksServer', window.location.hostname,
+				'+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 				'+set', 'r_customHeight', '' + window.innerHeight,
 				'+set', 'r_customWidth', '' + window.innerWidth,
@@ -159,7 +161,7 @@ var LibrarySys = {
 			}
 
 			if (SYS.resizeDelay) clearTimeout(SYS.resizeDelay);
-			SYS.resizeDelay = setTimeout(SYS.updateVideoCmd, 100);
+			SYS.resizeDelay = setTimeout(Browser.safeCallback(SYS.updateVideoCmd), 100);
 		},
 		quitGameOnUnload: function (e) {
 			if(Module['canvas']) {

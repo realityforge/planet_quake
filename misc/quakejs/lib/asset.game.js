@@ -49,13 +49,18 @@ function graphMaps(project) {
   return result
 }
 
-function graphModels(project) {
+function graphModels(project, progress) {
   var result = {}
   var models = findTypes(['.md5', '.md3'], project)
   for(var i = 0; i < models.length; i++) {
+    progress([[2, i, models.length, models[i]]])
     var buffer = fs.readFileSync(models[i])
-    var model = md3.load(buffer)
-    result[models[i]] = model
+    try {
+      var model = md3.load(buffer)
+      result[models[i]] = model
+    } catch (e) {
+      console.error(`Error loading model ${models[i]}: ${e.message}`, e)
+    }
   }
   var withSkins = Object.keys(result).filter(m => result[m].skins.length > 0)
   console.log(`Found ${Object.keys(result).length} models, ${withSkins.length} with skins`)
@@ -96,8 +101,11 @@ async function loadGame(project, progress) {
   var game = {}
   await progress([[1, 1, Object.keys(STEPS).length, STEPS['maps']]])
   game.maps = graphMaps(project)
-  await progress([[1, 2, Object.keys(STEPS).length, STEPS['models']]])
-  game.models = graphModels(project)
+  await progress([
+    [2, false],
+    [1, 2, Object.keys(STEPS).length, STEPS['models']]
+  ])
+  game.models = graphModels(project, progress)
   await progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
   game.shaders = graphShaders(project)
   await progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
@@ -135,6 +143,7 @@ async function loadGame(project, progress) {
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
+        .concat(everything.filter(minimatch.filter('**/maps/' + path.basename(k.replace('.bsp', '/**')))))
         .concat(game.maps[k].entities.map(e => e.classname))
         .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()
@@ -275,6 +284,7 @@ async function graphGame(gs, project, progress) {
   // lookup all shaders
   var everyShaderName = Object.values(gs.scripts)
     .flat(1)
+    .map(s => s.replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
     .filter((s, i, arr) => arr.indexOf(s) === i)
   var allShaders = []
     .concat(Object.values(gs.entities).flat(1)) // match with shaders or files so icons match up
@@ -293,7 +303,8 @@ async function graphGame(gs, project, progress) {
   for(var i = 0; i < allShaders.length; i++) {
     // matches without extension
     //   which is what we want because mods override shaders
-    var index = everyShaderName.indexOf(allShaders[i].replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
+    var nameNoExt = allShaders[i].replace(new RegExp(imageTypes.join('|'), 'ig'), '')
+    var index = everyShaderName.indexOf(nameNoExt)
     if(index > -1) {
       shaderLookups[allShaders[i]] = graph.getVertex(everyShaderName[index])
         || graph.addVertex(everyShaderName[index], {
@@ -317,7 +328,7 @@ async function graphGame(gs, project, progress) {
   Object.keys(gs.shaders).forEach(k => {
     gs.shaders[k].forEach(e => {
       if(typeof fileLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), fileLookups[e])
+      graph.addEdge(graph.getVertex(k.replace(new RegExp(imageTypes.join('|'), 'ig'), '')), fileLookups[e])
     })
   })
   Object.keys(gs.entities).forEach(k => {
@@ -397,7 +408,8 @@ function searchMinimatch(search, everything) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
     if(path.extname(search) && !type) {
-      throw new Error('File type not found '  + search)
+      console.error('File type not found '  + search)
+      return null
     }
     else if (!type) type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
