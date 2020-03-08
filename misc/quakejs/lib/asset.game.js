@@ -53,7 +53,7 @@ function graphModels(project, progress) {
   var result = {}
   var models = findTypes(['.md5', '.md3'], project)
   for(var i = 0; i < models.length; i++) {
-    progress([[2, i, models.length, models[i]]])
+    progress([[2, i, models.length, models[i].replace(project, '')]])
     var buffer = fs.readFileSync(models[i])
     try {
       var model = md3.load(buffer)
@@ -106,7 +106,10 @@ async function loadGame(project, progress) {
     [1, 2, Object.keys(STEPS).length, STEPS['models']]
   ])
   game.models = graphModels(project, progress)
-  await progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
+  await progress([
+    [2, false],
+    [1, 3, Object.keys(STEPS).length, STEPS['shaders']]
+  ])
   game.shaders = graphShaders(project)
   await progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
   game.skins = graphSkins(project)
@@ -143,7 +146,7 @@ async function loadGame(project, progress) {
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
-        .concat(everything.filter(minimatch.filter('**/maps/' + path.basename(k.replace('.bsp', '/**')))))
+        .concat(everything.filter(minimatch.filter('**/maps/' + path.basename(k.replace('.bsp', '')) + '/**')))
         .concat(game.maps[k].entities.map(e => e.classname))
         .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()

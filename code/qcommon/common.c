@@ -3149,10 +3149,12 @@ void Com_Frame_After_Startup() {
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
 	} else {
+		VM_Forced_Unload_Start();
 		CL_FlushMemory();
+		VM_Forced_Unload_Done();
 		Com_GameRestart_After_Restart();
 	}
-	//CL_StartHunkUsers(qfalse);
+	//
 }
 
 void Com_Frame_After_Shutdown() {

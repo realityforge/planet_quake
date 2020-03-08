@@ -114,7 +114,13 @@ var LibrarySys = {
 					opts.onload(err, data)
 				}
 			}
-			req.send(null)
+			req.onerror = function (req) {
+				err = new Error('Couldn\'t load ' + url + '. Status: ' + req.type)
+				opts.onload(err, req)
+			}
+			try {
+				req.send(null)
+			} catch(e) {console.log(e)}
 		},
 		getQueryCommands: function () {
 			var search = /([^&=]+)/g
@@ -135,8 +141,7 @@ var LibrarySys = {
 				'+set', 'r_customWidth', '' + window.innerWidth,
 			])
 			if(navigator && navigator.userAgent
-				&& navigator.userAgent.match(/mobile/i)
-				&& !args.includes('in_joystick')) {
+				&& navigator.userAgent.match(/mobile/i)) {
 				args.push.apply(args, [
 					'+set', 'in_joystick', '1',
 					'+set', 'in_nograb', '1',
@@ -384,6 +389,8 @@ var LibrarySys = {
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		var mapname = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('mapname'), 'i8', ALLOC_STACK)))
 		var clcState = _CL_GetClientState()
 		const blankFile = new Uint8Array(4)
 		
@@ -416,11 +423,12 @@ var LibrarySys = {
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
-				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], 'placeholder.pk3dir')
-				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
+				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], '000000000000000placeholder.pk3dir')
+				var desc = PATH.join(modDir, 'description.txt')
 				SYSC.mkdirp(modDir)
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })
+				
 			}
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
@@ -446,8 +454,23 @@ var LibrarySys = {
 				var keys = Object.keys(json)
 				var menu = keys.filter(k => k.includes('menu/'))
 				var game = keys.filter(k => k.includes('game/'))
+				var maps = keys.filter(k => k.includes('maps/'))
+					.map(m => PATH.basename(PATH.dirname(m)))
+					.filter((m, i, arr) => arr.indexOf(m) === i) // unique
+				for(var i = 0; i < maps.length; i++) {
+					var mapsDir = PATH.join(fs_basepath, fsMountPath, '000000000000000placeholder.pk3dir/maps')
+					var map = PATH.join(mapsDir, maps[i] + '.bsp')
+					var aas = PATH.join(mapsDir, maps[i] + '.aas')
+					SYSC.mkdirp(mapsDir)
+					FS.writeFile(map, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
+					FS.writeFile(aas, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
+				}
+				/*
 				if(clcState >= 4 && game.length) keys = game;
 				if(clcState < 4 && menu.length) keys = menu;
+				// servers need some map and model info for hitboxes up front
+				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(json).filter(k => k.includes(`maps\/${mapname}\/`)))
+				*/
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
@@ -496,28 +519,31 @@ var LibrarySys = {
 						totals[i] = 0
 						progresses[i] = 0
 						SYS.LoadingDescription(file)
-						SYSC.DownloadAsset(file, (progress, total) => {
-							totals[i] = Math.max(progress, total || 10*1024*1024) // assume its somewhere around 10 MB per pak
-							progresses[i] = progress
-							SYS.LoadingProgress(
-								progresses.reduce((s, p) => s + p, 0),
-								totals.reduce((s, p) => s + p, 0))
-						}, (err, data) => {
-							progresses[i] = data.byteLength
-							SYS.LoadingProgress(
-								progresses.reduce((s, p) => s + p, 0),
-								totals.reduce((s, p) => s + p, 0))
-							if(err) return resolve(err)
-							try {
-								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
-									encoding: 'binary', flags: 'w', canOwn: true })
-							} catch (e) {
-								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-									SYSC.Error('fatal', e.message)
+						try {
+							SYSC.DownloadAsset(file, (progress, total) => {
+								// assume its somewhere around 10 MB per pak
+								totals[i] = Math.max(progress, total || 10*1024*1024) 
+								progresses[i] = progress
+								SYS.LoadingProgress(
+									progresses.reduce((s, p) => s + p, 0),
+									totals.reduce((s, p) => s + p, 0))
+							}, (err, data) => {
+								progresses[i] = data.byteLength
+								SYS.LoadingProgress(
+									progresses.reduce((s, p) => s + p, 0),
+									totals.reduce((s, p) => s + p, 0))
+								if(err) return resolve(err)
+								try {
+									FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
+										encoding: 'binary', flags: 'w', canOwn: true })
+								} catch (e) {
+									if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+										SYSC.Error('fatal', e.message)
+									}
 								}
-							}
-							resolve(file)
-						})
+								resolve(file)
+							})
+						} catch (e) {resolve(e)}
 						// save to drive
 					}))).then(() => {
 						SYS.LoadingDescription('')

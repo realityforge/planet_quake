@@ -69,7 +69,7 @@ var whitelist = {
   'baseq3r': [
     '**/+(player|players)/sidepipe/**',
     '**/+(player|players)/heads/doom*',
-    '**/+(player|players)/plates/*usa*',
+    '**/+(player|players)/plates/**',
     '**/+(player|players)/wheels/*cobra*',
     '**/player/*',
     '**/player/footsteps/*',
@@ -168,7 +168,7 @@ if(mountPoints.length == 0) {
 }
 for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
-  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-combined-converted-repacked')}`)
+  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-ccr')}`)
 }
 try {
   require.resolve('cli-progress');
@@ -535,7 +535,7 @@ async function groupAssets(gs, project) {
     if((grouped[k].length <= edges || k.split('/')[1] == newKey)
       // do not merge map indexes for the sake of FS_InMapIndex lookup
       // all BSPs and players must be downloaded seperately
-      && grouped[k].filter(f => f.match(/\.bsp|players|player/i)).length === 0) {
+      && grouped[k].filter(f => f.match(/maps|players|player/i)).length === 0) {
       if(typeof obj[newKey] == 'undefined') {
         obj[newKey] = []
       }
@@ -723,7 +723,7 @@ async function repack(gs, outConverted, outputProject) {
   if(!ufs.existsSync(outputProject)) ufs.mkdirSync(outputProject)
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
-    await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]], true)
+    await progress([[1, i, orderedKeys.length, orderedKeys[i]]], true)
     var pak = game.ordered[orderedKeys[i]]
     var real = pak.filter(f => ufs.existsSync(f) && !ufs.statSync(f).isDirectory())
     var outFile = path.join(outputProject, orderedKeys[i] + '.pk3')

@@ -245,8 +245,9 @@ var LibrarySysCommon = {
 	Sys_PIDIsRunning: function (pid) {
 		return 1;
 	},
-	Sys_LoadLibrary__deps: ['$LDSO'],
+	Sys_LoadLibrary__deps: [],
 	Sys_LoadLibrary: function (name) {
+		return 0;
 		return loadDynamicLibrary(name) // passing memory address
 			.then(handle => SYSC.proxyCallback(handle))
 	}

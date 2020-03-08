@@ -472,6 +472,9 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
 	FS_Restart( sv.checksumFeed );
 
+	// set serverinfo visible name
+	Cvar_Set( "mapname", server );
+
 #ifdef EMSCRIPTEN
 
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
@@ -492,12 +495,9 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 ;
 
-	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
-
-	// set serverinfo visible name
-	Cvar_Set( "mapname", server );
-	
 	FS_SetMapIndex(server);
+
+	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 
 	Cvar_Set( "sv_mapChecksum", va("%i",checksum) );
 

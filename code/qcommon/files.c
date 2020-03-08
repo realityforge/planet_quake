@@ -3486,6 +3486,8 @@ void FS_Startup_After_Async( const char *gameName )
 	// reorder the pure pk3 files according to server order
 	FS_ReorderPurePaks();
 
+	FS_SetMapIndex( "" );
+
 	// print the current search paths
 	FS_Path_f();
 
@@ -3831,7 +3833,8 @@ qboolean FS_InMapIndex(const char *filename) {
 	int			i, len, extpos;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
-	Q_strncpyz(mapname, filename, sizeof(mapname));
+	Com_Printf("%s", filename);
+	Q_strncpyz(mapname, &filename[5], sizeof(mapname));
 	extpos = strlen(strrchr(mapname, '.'));
 	if(len-extpos+1 < 0) extpos = 0;
 	mapname[len-extpos+1] = '\0';

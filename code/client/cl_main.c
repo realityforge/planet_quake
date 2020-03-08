@@ -3324,7 +3324,7 @@ void CL_Frame ( int msec ) {
 		return;
 	}
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 	// quake3's loading process is entirely synchronous. throughout this
 	// process it will call trap_UpdateScreen to force an immediate buffer
 	// swap. however, in WebGL we can't force an immediate buffer swap,
@@ -3348,8 +3348,8 @@ void CL_Frame ( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
-
 #endif
+
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {
