@@ -13,7 +13,7 @@ var LibrarySys = {
 			['missionpack-ccr', '0 Choice: Team Arena'],
 			['defrag-ccr',      '1 Choice: Defrag'],
 			['baseq3r-ccr',     '2 Choice: Q3Rally'],
-			['baseoq-ccr', 			'3 Choice: Open Arena'],
+			['baseoa-ccr', 			'3 Choice: Open Arena'],
 			['generations-ccr', '4 Choice: Generations Arena'],
 			['q3f2-ccr', 				'5 Choice: Q3 Fortress 2'],
 			['cpma-ccr', 				'6 Choice: Challenge ProMode'],
@@ -26,6 +26,7 @@ var LibrarySys = {
 			['edawn-ccr', 			'eDawn'],
 			['geoball-ccr', 		'Geoball'],
 			['neverball-ccr', 	'Neverball'],
+			['omissionpack-ccr','OpenArena Mission Pack'],
 			['platformer-ccr', 	'Platformer'],
 			['legoc-ccr', 			'Lego Carnage'],
 			['osp-ccr', 				'Orange Smoothie Productions'],
@@ -134,7 +135,6 @@ var LibrarySys = {
 				args.push.apply(args, val)
 			}
 			args.unshift.apply(args, [
-				'+set', 'net_socksServer', window.location.hostname,
 				'+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 				'+set', 'r_customHeight', '' + window.innerHeight,
@@ -146,6 +146,16 @@ var LibrarySys = {
 					'+set', 'in_joystick', '1',
 					'+set', 'in_nograb', '1',
 					'+set', 'in_mouse', '0',
+				])
+			}
+			if(window.location.hostname.match(/quake\.games/i)) {
+				args.unshift.apply(args, [
+					'+set', 'net_socksServer', 'proxy.quake.games',
+					'+set', 'net_socksPort', '443',
+				])
+			} else {
+				args.unshift.apply(args, [
+					'+set', 'net_socksServer', window.location.hostname,
 				])
 			}
 			return args
@@ -246,7 +256,6 @@ var LibrarySys = {
 				}]
 				var touchevent = {
 					type: 'touch' + evt.type,
-					identifier: id,
 					touches: touches,
 					preventDefault: () => {},
 					changedTouches: touches,
@@ -265,7 +274,7 @@ var LibrarySys = {
 				multitouch: false,
 				mode: 'semi',
 				size: 100,
-				catchDistance: 100,
+				catchDistance: 50,
 				maxNumberOfNipples: 1,
 				position: {bottom: '50px', left: '50px'},
 			})
@@ -274,7 +283,7 @@ var LibrarySys = {
 				multitouch: false,
 				mode: 'semi',
 				size: 100,
-				catchDistance: 100,
+				catchDistance: 50,
 				maxNumberOfNipples: 1,
 				position: {bottom: '50px', right: '50px'},
 			})
@@ -283,8 +292,8 @@ var LibrarySys = {
 				zone: document.body,
 				multitouch: false,
 				mode: 'dynamic',
-				size: 100,
-				catchDistance: 100,
+				size: 2,
+				catchDistance: 2,
 				maxNumberOfNipples: 1,
 			})
 			SYS.InitJoystick(SYS.joysticks[0], 1)
@@ -312,7 +321,7 @@ var LibrarySys = {
 		}
 		Object.assign(Module, {
 			websocket: Object.assign(Module.websocket || {}, {
-				url: window.location.search.includes('https://')
+				url: window.location.search.includes('https://') || window.location.protocol.includes('https')
 				? 'wss://'
 				: 'ws://'
 			})

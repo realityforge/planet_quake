@@ -1166,12 +1166,10 @@ static void IN_ProcessEvents( void )
 #ifdef EMSCRIPTEN
 			case SDL_FINGERMOTION:
 				{
-					if(e.tfinger.fingerId > 0) {
-						//Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
-						float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
-						touchhats[e.tfinger.fingerId][0] = (e.tfinger.x * ratio) * 50;
-						touchhats[e.tfinger.fingerId][1] = e.tfinger.y * 50;
-					}
+					//Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
+					float ratio = (float)cls.glconfig.vidWidth / (float)cls.glconfig.vidHeight;
+					touchhats[e.tfinger.fingerId][0] = (e.tfinger.x * ratio) * 50;
+					touchhats[e.tfinger.fingerId][1] = e.tfinger.y * 50;
 				}
 				break;
 
@@ -1211,9 +1209,9 @@ static void IN_ProcessEvents( void )
 		}
 	}
 	
-	for(i = 1; i <= 4; i++) {
-		if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
-			if(Key_GetCatcher( ) & KEYCATCH_UI || i == 2) {
+	for(i = 1; i < 4; i++) {
+		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
 				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], touchhats[i][1], 0, NULL );
 			}
 		}

@@ -67,6 +67,22 @@ var whitelist = {
     '**/weaphits/**',
     '**/scripts/*.shader',
   ],
+  'missionpack': [
+    '**/+(james|janet)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'baseoa': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
   'baseq3r': [
     '**/+(player|players)/sidepipe/**',
     '**/+(player|players)/heads/doom*',
@@ -195,6 +211,7 @@ if(!noProgress) {
     var args = Array.from(arguments).slice(1)
     multibar.terminal.cursorRelativeReset()
     multibar.terminal.clearBottom()
+    multibar.terminal.lineWrapping(true)
     oldConsole[out].apply(oldConsole, args)
     multibar.update()
   }
@@ -438,7 +455,7 @@ async function groupAssets(gs, project) {
     if(!v) return true
     var entFiles = getLeaves(v).filter(f => game.everything.includes(f)
       && !entityDuplicates.includes(f))
-    var model = entFiles.filter(f => f.match(/\.md3/i))[0] || entFiles[0]
+    var model = entFiles.filter(f => f.match(/\.md3/i))[0] || entFiles[0] || ent
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => i < map.length - 1
         && model.match(new RegExp(m))).length > 0)[0][0]
@@ -623,7 +640,11 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
   //   does not match the converted paths at this point
   var orderedNoExt = Object.keys(game.ordered)
     .reduce((obj, k) => {
-      obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), ''))
+      obj[k] = game.ordered[k].map(f => f
+        .replace(outConverted, '')
+        .replace(outCombined, '')
+        .replace(path.extname(f), '')
+        .replace(/^\/|\/$/ig, ''))
       return obj
     }, {})
   var indexJson, help2
@@ -678,10 +699,16 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
       var matchPak = Object.keys(orderedNoExt)
-        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f
+          .replace(outConverted, '')
+          .replace(outCombined, '')
+          .replace(path.extname(f), '')
+          .replace(/^\/|\/$/ig, '')))[0]
       var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof matchPak === 'undefined') {
-        throw new Error('Couldn\'t find file in packs ' + f)
+        console.log(Object.values(orderedNoExt).flat(1).filter(f2 => f2.includes(path.basename(f))))
+        console.error('Couldn\'t find file in packs ' + f)
+        return true
       }
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
@@ -702,7 +729,11 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
     mapAssets.forEach(f => {
       var matchPak = mapPak // always check the map pak first
         .concat(Object.keys(orderedNoExt))
-        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f
+          .replace(outConverted, '')
+          .replace(outCombined, '')
+          .replace(path.extname(f), '')
+          .replace(/^\/|\/$/ig, '')))[0]
       if(typeof matchPak === 'undefined') {
         throw new Error('Couldn\'t find file in packs ' + f)
       }

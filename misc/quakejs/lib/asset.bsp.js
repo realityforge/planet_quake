@@ -183,7 +183,7 @@ function load(data, opts) {
 		header.lumps[i].filelen = bb.readInt32();
 	}
 
-	if (header.ident !== 'IBSP' && header.version !== 46) {
+	if (header.ident !== 'IBSP' && header.version !== 46 && header.version !== 47) {
 		throw new Error('Invalid BSP version: ' + header.version);
 	}
 

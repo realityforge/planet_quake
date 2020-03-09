@@ -42,8 +42,12 @@ function graphMaps(project) {
   var maps = findTypes(['.bsp'], project)
   for(var i = 0; i < maps.length; i++) {
     var buffer = fs.readFileSync(maps[i])
-    var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
-    result[maps[i]] = map
+    try {
+      var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
+      result[maps[i]] = map
+    } catch (e) {
+      console.error(`Error loading map ${maps[i]}: ${e.message}`, e)
+    }
   }
   console.log(`Found ${Object.keys(result).length} maps`)
   return result

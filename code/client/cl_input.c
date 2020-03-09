@@ -381,8 +381,8 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 		} else {
 			VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 		}
+		return;
 	}
-	else
 #endif
 ;
 	if( Key_GetCatcher( ) & KEYCATCH_UI ) {
