@@ -1071,7 +1071,11 @@ void CL_KeyEvent (int key, qboolean down, unsigned time);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
+#ifdef EMSCRIPTEN
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute );
+#else
+void CL_MouseEvent( int dx, int dy, int time );
+#endif
 
 void CL_JoystickEvent( int axis, int value, int time );
 

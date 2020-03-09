@@ -535,7 +535,7 @@ async function groupAssets(gs, project) {
     if((grouped[k].length <= edges || k.split('/')[1] == newKey)
       // do not merge map indexes for the sake of FS_InMapIndex lookup
       // all BSPs and players must be downloaded seperately
-      && grouped[k].filter(f => f.match(/maps|players|player/i)).length === 0) {
+      && grouped[k].filter(f => f.match(/maps\/|players\/|player\//i)).length === 0) {
       if(typeof obj[newKey] == 'undefined') {
         obj[newKey] = []
       }

@@ -1163,6 +1163,7 @@ static void IN_ProcessEvents( void )
 					case SDL_WINDOWEVENT_FOCUS_GAINED: Cvar_SetValue( "com_unfocused", 0 ); break;
 				}
 				break;
+#ifdef EMSCRIPTEN
 			case SDL_FINGERMOTION:
 				{
 					if(e.tfinger.fingerId > 0) {
@@ -1173,6 +1174,7 @@ static void IN_ProcessEvents( void )
 					}
 				}
 				break;
+
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
 				if (e.type == SDL_FINGERDOWN && Key_GetCatcher( ) & KEYCATCH_UI
@@ -1203,6 +1205,7 @@ static void IN_ProcessEvents( void )
 					touchhats[e.tfinger.fingerId][1] = 0;
 				}
 				break;
+#endif
 			default:
 				break;
 		}

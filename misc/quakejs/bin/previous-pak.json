@@ -1,6 +1,18 @@
 {
   "pak11menu": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps.cfg"
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconf_blu1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconf_red1.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/maps.cfg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/banner5.md3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/q3banner02.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/q3banner02x.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/music/loss.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/music/win.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/teamplay/voc_base_attack.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sprites/balloon4.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/logo512.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/video/idlogo.RoQ",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/vm/ui.qvm"
   ],
   "pak12scripts": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/scripts/bastir.shader",
@@ -103,27 +115,13 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/menu/medals/medal_impressive.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/menu/medals/medal_victory.png"
   ],
-  "pak15menu": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconf_blu1.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/icons/iconf_red1.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/banner5.md3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/q3banner02.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/models/mapobjects/banner/q3banner02x.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/music/loss.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/music/win.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/teamplay/voc_base_attack.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sprites/balloon4.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/textures/sfx/logo512.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/video/idlogo.RoQ",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/vm/ui.qvm"
-  ],
-  "pak16botfiles": [
+  "pak15botfiles": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/match.c",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/match.h",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/syn.c",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/botfiles/syn.h"
   ],
-  "pak17levelshots": [
+  "pak16levelshots": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/levelshots/HMTfinal.JPG",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/levelshots/Q3CTF1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/levelshots/Q3CTF2.jpg",
@@ -174,13 +172,13 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/levelshots/q3wcp23.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/levelshots/q3wcp24.jpg"
   ],
-  "pak18feedback": [
+  "pak17feedback": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/feedback/accuracy.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/feedback/excellent_a.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/feedback/frags.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/feedback/impressive_a.opus"
   ],
-  "pak19misc": [
+  "pak18misc": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/gfx/misc/console01.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/gfx/misc/console02.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/baseq3-cc/sound/misc/menu1.opus",

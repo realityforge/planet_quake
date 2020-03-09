@@ -1,7 +1,7 @@
 {
-  "menu/pak15menu": {
-    "name": "pak15menu.pk3",
-    "size": 2948770
+  "menu/pak11menu": {
+    "name": "pak11menu.pk3",
+    "size": 2948969
   },
   "menu/pak83other": {
     "name": "pak83other.pk3",
@@ -17,10 +17,10 @@
   },
   "menu/pak21game": {
     "name": "pak21game.pk3",
-    "size": 291664
+    "size": 349256
   },
-  "menu/pak16botfiles": {
-    "name": "pak16botfiles.pk3",
+  "menu/pak15botfiles": {
+    "name": "pak15botfiles.pk3",
     "size": 8055
   },
   "menu/pak58weapon": {
@@ -31,17 +31,13 @@
     "name": "pak8892d.pk3",
     "size": 23082
   },
-  "menu/pak17levelshots": {
-    "name": "pak17levelshots.pk3",
+  "menu/pak16levelshots": {
+    "name": "pak16levelshots.pk3",
     "size": 568450
   },
   "menu/pak8888levelshots": {
     "name": "pak8888levelshots.pk3",
     "size": 60908
-  },
-  "menu/pak11menu": {
-    "name": "pak11menu.pk3",
-    "size": 220
   },
   "menu/pak84scripts": {
     "name": "pak84scripts.pk3",
@@ -71,12 +67,12 @@
     "name": "pak14medals.pk3",
     "size": 29217
   },
-  "menu/pak18feedback": {
-    "name": "pak18feedback.pk3",
+  "menu/pak17feedback": {
+    "name": "pak17feedback.pk3",
     "size": 13771
   },
-  "menu/pak19misc": {
-    "name": "pak19misc.pk3",
+  "menu/pak18misc": {
+    "name": "pak18misc.pk3",
     "size": 65241
   },
   "menu/pak86sfx": {
@@ -93,7 +89,7 @@
   },
   "game/pak21game": {
     "name": "pak21game.pk3",
-    "size": 291664
+    "size": 349256
   },
   "game/pak83other": {
     "name": "pak83other.pk3",
@@ -961,7 +957,7 @@
   },
   "maps/pro-q3tourney4/pak99pro-q3tourney4": {
     "name": "pak99pro-q3tourney4.pk3",
-    "size": 2815645
+    "size": 2817804
   },
   "maps/pro-q3tourney4/pak72mapobject": {
     "name": "pak72mapobject.pk3",

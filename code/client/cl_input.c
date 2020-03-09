@@ -359,7 +359,11 @@ void CL_KeyMove( usercmd_t *cmd ) {
 CL_MouseEvent
 =================
 */
+#ifndef EMSCRIPTEN
+void CL_MouseEvent( int dx, int dy, int time ) {
+#else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
+
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if(absolute) {
 			if(!cls.menuUIhack) {
@@ -377,15 +381,17 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 		} else {
 			VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 		}
+	}
+	else
+#endif
+;
+	if( Key_GetCatcher( ) & KEYCATCH_UI ) {
+		VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
 	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
-		if(!absolute) {
-			VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
-		}
+		VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
 	} else {
-		if(!absolute) {
-			cl.mouseDx[cl.mouseIndex] += dx;
-			cl.mouseDy[cl.mouseIndex] += dy;
-		}
+		cl.mouseDx[cl.mouseIndex] += dx;
+		cl.mouseDy[cl.mouseIndex] += dy;
 	}
 }
 

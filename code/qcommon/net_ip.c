@@ -98,6 +98,7 @@ extern void Sys_SocksMessage( void );
 void NET_OpenSocks_After_Connect( void );
 void NET_OpenSocks_After_Method( void );
 void NET_OpenSocks_After_Listen( void );
+void NET_OpenIP( void );
 #endif
 
 static qboolean usingSocks = qfalse;
@@ -1095,6 +1096,15 @@ void NET_OpenSocks( int port ) {
 	unsigned char		buf[64];
 
 	usingSocks = qfalse;
+#ifdef EMSCRIPTEN
+  if(!Cvar_VariableIntegerValue("net_socksLoading")
+    && strcmp(Cmd_Argv(0), "net_restart")) {
+    Cvar_Set("net_socksLoading", "1");
+    SOCKS_Frame_Callback(NULL, NET_OpenIP);
+    return;
+  }
+  SOCKS_After = NULL;
+#endif
 
 	Com_Printf( "Opening connection to SOCKS server.\n" );
 

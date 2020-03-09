@@ -133,7 +133,7 @@ var LibrarySys = {
 				val[0] = '+' + val[0]
 				args.push.apply(args, val)
 			}
-			args.push.apply(args, [
+			args.unshift.apply(args, [
 				'+set', 'net_socksServer', window.location.hostname,
 				'+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
@@ -142,7 +142,7 @@ var LibrarySys = {
 			])
 			if(navigator && navigator.userAgent
 				&& navigator.userAgent.match(/mobile/i)) {
-				args.push.apply(args, [
+				args.unshift.apply(args, [
 					'+set', 'in_joystick', '1',
 					'+set', 'in_nograb', '1',
 					'+set', 'in_mouse', '0',
@@ -465,12 +465,10 @@ var LibrarySys = {
 					FS.writeFile(map, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
 					FS.writeFile(aas, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
 				}
-				/*
 				if(clcState >= 4 && game.length) keys = game;
 				if(clcState < 4 && menu.length) keys = menu;
 				// servers need some map and model info for hitboxes up front
 				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(json).filter(k => k.includes(`maps\/${mapname}\/`)))
-				*/
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
