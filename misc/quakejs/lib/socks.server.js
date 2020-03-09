@@ -34,10 +34,11 @@ var BUF_AUTH_NO_ACCEPT = Buffer.from([0x05, 0xFF]),
     BUF_REP_DISALLOW = Buffer.from([0x05, REP.DISALLOW]),
     BUF_REP_CMDUNSUPP = Buffer.from([0x05, REP.CMDUNSUPP])
 
-function Server() {
+function Server(opts) {
   if (!(this instanceof Server))
     return new Server()
 
+  this._slaves = (opts || {}).slaves || []
   this._listeners = {}
   this._timeouts = {}
   this._dnsLookup = {}
@@ -264,7 +265,7 @@ Server.prototype._onErrorNoop = function(err) {
 
 Server.prototype._onSocketConnect = function(socket, reqInfo) {
   if(!socket._socket.writable) return
-  var ipv6 = ip6addr.parse(socket._socket.localAddress)
+  var ipv6 = ip6addr.parse(this._slaves[0] || socket._socket.localAddress)
   var localbytes = ipv6.toBuffer()
   if(ipv6.kind() == 'ipv4') {
     localbytes = localbytes.slice(12)

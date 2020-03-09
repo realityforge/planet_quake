@@ -63,6 +63,7 @@ var whitelist = {
     '**/+(sarge|major)/**',
     '**/player/*',
     '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
     '**/weaphits/**',
     '**/scripts/*.shader',
   ],
@@ -97,8 +98,8 @@ for(var i = 0; i < process.argv.length; i++) {
   if(a.match(/\/repack\.js$/ig)) continue
   if(ufs.existsSync(a) && ufs.statSync(a).isDirectory(a)) {
     mountPoints.push(a)
-  }
-  if(a == '--edges') {
+    continue
+  } else if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
     console.log(`Grouped edges by ${edges}`)
     i++
@@ -376,13 +377,14 @@ async function gameInfo(gs, project) {
     notfound: game.notfound,
     excludingMap: exludingMap,
     baseq3: game.baseq3,
-    vertices: vertices.map(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length + ' - ' + v.id),
+    vertices: vertices
+      .map(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length + ' - ' + v.id),
     filesOverLimit: filesOverLimit,
     leastUsed: leastUsed
       .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
     leastUsedExcept: leastUsedExcept
       .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
-    unused: unused,
+    unused: unused.map(v => v.id),
     graphed: graphed,
     ungraphed: ungraphed,
   }
@@ -436,7 +438,7 @@ async function groupAssets(gs, project) {
     if(!v) return true
     var entFiles = getLeaves(v).filter(f => game.everything.includes(f)
       && !entityDuplicates.includes(f))
-    var model = entFiles.filter(f => f.match(/.\.md3/i))[0] || entFiles[0]
+    var model = entFiles.filter(f => f.match(/\.md3/i))[0] || entFiles[0]
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => i < map.length - 1
         && model.match(new RegExp(m))).length > 0)[0][0]
@@ -468,7 +470,8 @@ async function groupAssets(gs, project) {
     .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
     .concat(entityDuplicates)
     .filter((f, i, arr) => arr.indexOf(f) === i
-      && game.everything.includes(f) && !externalAssets.includes(f))
+      && game.everything.includes(f) && !externalAssets.includes(f)
+      && !f.match(/maps\//i))
   filesOverLimit.forEach(f => {
     var pakName = path.basename(path.dirname(f))
     var pakClass = numericMap
@@ -496,7 +499,7 @@ async function groupAssets(gs, project) {
     var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
-        && !externalAndShared.includes(f))
+        && !externalAndShared.includes(f) && !f.match(/maps\//i))
     gameAssets.forEach(f => {
       var pakName = path.basename(path.dirname(f))
       if(pakName == path.basename(project)) {
@@ -512,14 +515,20 @@ async function groupAssets(gs, project) {
   externalAndShared = Object.values(grouped).flat(1)
   
   // group all map models and textures by map name
-  Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
-    var map = path.basename(v.id).replace(/\.bsp/i, '')
-    var mapAssets = getLeaves(v)
-      .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
-    if(mapAssets.length > 0) {
-      grouped['maps/' + map] = mapAssets
-    }
-  })
+  Object.keys(game.maps)
+    .map(m => game.graph.getVertex(m))
+    .forEach(v => {
+      var map = path.basename(v.id).replace(/\.bsp/i, '')
+      var mapAssets = getLeaves(v)
+        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
+      if(map.includes('nightcity')) {
+        console.log(mapAssets)
+        console.log(externalAndShared.filter(f => f.includes('nightcity')))
+      }
+      if(mapAssets.length > 0) {
+        grouped['maps/' + map] = mapAssets
+      }
+    })
 
   // make sure lots of items are linked
   var groupedFlat = Object.values(grouped).flat(1)
@@ -541,7 +550,10 @@ async function groupAssets(gs, project) {
       }
       obj[newKey].push.apply(obj[newKey], grouped[k])
     } else {
-      obj[k] = grouped[k]
+      if(typeof obj[k] == 'undefined') {
+        obj[k] = []
+      }
+      obj[k].push.apply(obj[k], grouped[k])
     }
     return obj
   }, {})
@@ -692,7 +704,6 @@ npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
         .concat(Object.keys(orderedNoExt))
         .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
       if(typeof matchPak === 'undefined') {
-        console.log(orderedNoExt)
         throw new Error('Couldn\'t find file in packs ' + f)
       }
       var newName = 'maps/' + map + '/' + matchPak

@@ -12,7 +12,7 @@ var LibrarySys = {
 			['baseq3-ccr', 			'Quake III Arena'],
 			['missionpack-ccr', '0 Choice: Team Arena'],
 			['defrag-ccr',      '1 Choice: Defrag'],
-			['q3rally-ccr',     '2 Choice: Q3Rally'],
+			['baseq3r-ccr',     '2 Choice: Q3Rally'],
 			['baseoq-ccr', 			'3 Choice: Open Arena'],
 			['generations-ccr', '4 Choice: Generations Arena'],
 			['q3f2-ccr', 				'5 Choice: Q3 Fortress 2'],
@@ -424,7 +424,7 @@ var LibrarySys = {
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
 				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], '000000000000000placeholder.pk3dir')
-				var desc = PATH.join(modDir, 'description.txt')
+				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
 				SYSC.mkdirp(modDir)
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })

@@ -2228,30 +2228,6 @@ void CL_Vid_Restart_f( void ) {
 
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
 	{
-#ifdef EMSCRIPTEN
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
-		} else {
-			CL_Vid_Restart_After_Restart();
-		}
-	}
-}
-
-void CL_Vid_Restart_After_Shutdown( void ) {
-	FS_Startup(com_basegame->string);
-	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
-}
-
-void CL_Vid_Restart_After_Startup( void ) {
-	FS_Restart_After_Async();
-	CL_Vid_Restart_After_Restart();
-}
-
-void CL_Vid_Restart_After_Restart( void ) {
-	
-	{	/* if conditional */
-#endif
-;
 
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
@@ -2284,6 +2260,33 @@ void CL_Vid_Restart_After_Restart( void ) {
 
 		// unpause so the cgame definitely gets a snapshot and renders a frame
 		Cvar_Set("cl_paused", "0");
+
+#ifdef EMSCRIPTEN
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
+		} else {
+			CL_Vid_Restart_After_Restart();
+		}
+	} else {
+		Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
+	}
+}
+
+void CL_Vid_Restart_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
+}
+
+void CL_Vid_Restart_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_Vid_Restart_After_Restart();
+}
+
+void CL_Vid_Restart_After_Restart( void ) {
+	
+	{	/* if conditional */
+#endif
+;
 
 		// initialize the renderer interface
 		CL_InitRef();

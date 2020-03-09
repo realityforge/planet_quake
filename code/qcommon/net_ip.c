@@ -1280,6 +1280,7 @@ void NET_OpenSocks_After_Method( void ) {
 void NET_OpenSocks_After_Listen( void ) {
   int					len;
   unsigned char		buf[64];
+  struct hostent		*h;
   // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
 #endif
 ;
@@ -1307,9 +1308,16 @@ void NET_OpenSocks_After_Listen( void ) {
 		Com_Printf( "NET_OpenSocks: relay address is not IPV4: %i\n", buf[3] );
 		return;
 	}
+
 	((struct sockaddr_in *)&socksRelayAddr)->sin_family = AF_INET;
+#ifdef EMSCRIPTEN
+  h = gethostbyname( net_socksServer->string );
+  ((struct sockaddr_in *)&socksRelayAddr)->sin_addr.s_addr = *(int *)h->h_addr_list[0];
+  ((struct sockaddr_in *)&socksRelayAddr)->sin_port = htons( (short)net_socksPort->integer );
+#else
 	((struct sockaddr_in *)&socksRelayAddr)->sin_addr.s_addr = *(int *)&buf[4];
 	((struct sockaddr_in *)&socksRelayAddr)->sin_port = *(short *)&buf[8];
+#endif
 	memset( ((struct sockaddr_in *)&socksRelayAddr)->sin_zero, 0, 8 );
 
 #ifdef EMSCRIPTEN
@@ -1605,9 +1613,11 @@ void NET_Config( qboolean enableNetworking ) {
 	}
   
 	// if enable state is the same and no cvars were modified, we have nothing to do
+#ifndef EMSCRIPTEN
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
 	}
+#endif
 
 	if( enableNetworking == networkingEnabled ) {
 		if( enableNetworking ) {
@@ -1859,6 +1869,5 @@ NET_Restart_f
 */
 void NET_Restart_f(void)
 {
-  networkingEnabled = qfalse;
 	NET_Config(qtrue);
 }
