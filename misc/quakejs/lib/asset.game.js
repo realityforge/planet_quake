@@ -137,9 +137,11 @@ async function loadGame(project, progress) {
     [2, false],
     [1, 8, Object.keys(STEPS).length, STEPS['entities']]
   ])
-  var cgame = Object.values(game.qvms).flat(1)
-    .filter(k => k.match(/cgame\.dis/i))[0]
-  var entities = cgame ? getGameAssets(cgame) : []
+  var entities = Object.values(game.qvms)
+    .flat(1)
+    .filter(k => k.match(/\.dis/i))
+    .map(k => getGameAssets(k))
+    .reduce((obj, o) => Object.assign(obj, o), {})
   
   // add all vertices
   var entityRefs = Object.keys(game.maps)
@@ -441,13 +443,16 @@ function searchMinimatch(search, everything) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
     if(path.extname(search) && !type) {
-      console.error('File type not found '  + search)
+      console.error('File type not found ' + search)
       return null
     }
     else if (!type) type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
-    if(name.length == 0 || name.length > 1) {
+    if(name.length == 0) {
       return null
+    } else if(name.length > 1) {
+      // TODO: error or something here? Duplicate files like where jpg is already included with the same name
+    //  console.error('Duplicates found ' + search)
     }
   }
   return everything.indexOf(name[0])
