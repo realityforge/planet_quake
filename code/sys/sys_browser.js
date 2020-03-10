@@ -268,7 +268,11 @@ var LibrarySys = {
 			})
 		},
 		InitNippleJoysticks: function() {
-			if(SYS.joysticks.length > 2) return
+			if(SYS.joysticks.length > 0) {
+				for(var i = 0; i < SYS.joysticks.length; i++) {
+					SYS.joysticks[i].destroy()
+				}
+			}
 			SYS.joysticks[0] = nipplejs.create({
 				zone: document.getElementById('left-joystick'),
 				multitouch: false,

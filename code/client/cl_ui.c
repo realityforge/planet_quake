@@ -1099,6 +1099,7 @@ void CL_ShutdownUI( void ) {
 	uivm = NULL;
 	
 #ifdef EMSCRIPTEN
+	cls.menuUIhack = 0;
 	cls.uiGlConfig = NULL;
 	cls.numUiPatches = 0;
 #endif
