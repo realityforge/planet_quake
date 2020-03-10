@@ -27,17 +27,17 @@ function loadQVMStrings(buffer, topdirs) {
   var qvmstrings = buffer
     .toString('utf-8')
     .split('\n')
-    .map(line => ((/background\s+.*?(\s|$)/ig).exec(line) || [])[0]
-      || (/['""'](.*?)['""']/ig).exec(line))
+    .map(line => ((/background\s+([^"].*?)(\s|$)/ig).exec(line) || [])[1]
+        || ((/['""'](.*?)['""']/ig).exec(line) || [])[1])
     .filter(string => string)
     // assuming a single character is the path seperator,
     //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
     //   TODO: might need something for %i matching lightmaps names or animation frames
-    .map(f => [f[1].replace(/%[0-9\-\.]*[sdif]/ig, '*')
-                   .replace(/%[c]/ig, '/'),
-               f[1].replace(/%[0-9\-\.]*[sdicf]/ig, '*')]
-              .concat(f[1].match(new RegExp(allTypes.join('|').replace(/\./g, '\\.')))
-                ? ['*' + f[1]] : []))
+    .map(f => [f.replace(/%[0-9\-\.]*[sdif]/ig, '*')
+                .replace(/%[c]/ig, '/'),
+               f.replace(/%[0-9\-\.]*[sdicf]/ig, '*')]
+              .concat(f.match(new RegExp(allTypes.join('|').replace(/\./g, '\\.')))
+                ? ['*' + f] : []))
     .flat(1)
     .map(w => w.includes('*') ? w.replace(/\\/ig, '/') : w)
 
@@ -136,10 +136,10 @@ async function graphMenus(project, progress) {
       var menu = loadQVMStrings(buffer)
       result[menus[i]] = menu
     } catch (e) {
-      console.error(`Error loading map ${menus[i]}: ${e.message}`, e)
+      console.error(`Error loading menu ${menus[i]}: ${e.message}`, e)
     }
   }
-  console.log(`Found ${Object.keys(result).length} maps`)
+  console.log(`Found ${Object.keys(result).length} menus with ${Object.values(result).flat(1).length} strings`)
   return result
 }
 
