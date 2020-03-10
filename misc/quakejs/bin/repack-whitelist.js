@@ -30,6 +30,7 @@ var sourceTypes = [
 ]
 
 var fileTypes = [
+  '.roq',
   '.cfg',
   '.qvm',
   '.bot',
@@ -64,6 +65,7 @@ var knownDirs = [
   'sound',
   'ui',
   'maps',
+  'videos',
   'textures',
 ]
 

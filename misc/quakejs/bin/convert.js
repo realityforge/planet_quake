@@ -77,6 +77,7 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
   var images = findTypes(imageTypes, orderedEverything)
   for(var j = 0; j < images.length; j++) {
     await progress([[2, j, images.length, chroot(images[j], project, '')]])
+    if(!ufs.existsSync(images[j])) continue
     var newFile = await convertNonAlpha(images[j], project, outConverted, noOverwrite)
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(images[j])
@@ -91,6 +92,7 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
   var audio = findTypes(audioTypes, orderedEverything)
   for(var j = 0; j < audio.length; j++) {
     await progress([[2, j, audio.length, chroot(audio[j], project, '')]])
+    if(!ufs.existsSync(audio[j])) continue
     var newFile = await convertAudio(audio[j], project, outConverted, noOverwrite)
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(audio[j])
@@ -107,6 +109,7 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
   for(var j = 0; j < known.length; j++) {
     await progress([[2, j, known.length, chroot(known[j], project, '')]])
     var newFile = chroot(known[j], project, outConverted)
+    if(!ufs.existsSync(known[j])) continue
     mkdirpSync(path.dirname(newFile))
     if(!noOverwrite || !ufs.existsSync(newFile)) {
       ufs.copyFileSync(known[j], newFile)

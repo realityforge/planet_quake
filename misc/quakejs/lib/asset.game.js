@@ -3,7 +3,7 @@ var path = require('path')
 var glob = require('glob')
 var minimatch = require("minimatch")
 
-var {disassembleQVM, graphQVM, getGameAssets} = require('../lib/asset.qvm.js')
+var {disassembleQVM, graphQVM, getGameAssets, graphMenus} = require('../lib/asset.qvm.js')
 var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
@@ -23,6 +23,7 @@ var STEPS = {
   'skins': 'Looking for skins',
   'disassemble': 'Disassembling QVMs',
   'qvms': 'Looking for QVMs',
+  'menus': 'Looking for menus',
   'entities': 'Looking for game entities',
   'vertices': 'Graphing vertices',
   'shaders': 'Graphing shaders',
@@ -128,9 +129,14 @@ async function loadGame(project, progress) {
   }
   await progress([[1, 6, Object.keys(STEPS).length, STEPS['qvms']]])
   game.qvms = graphQVM(project)
+  await progress([[1, 7, Object.keys(STEPS).length, STEPS['menus']]])
+  game.menus = await graphMenus(project, progress)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
-  await progress([[1, 7, Object.keys(STEPS).length, STEPS['entities']]])
+  await progress([
+    [2, false],
+    [1, 8, Object.keys(STEPS).length, STEPS['entities']]
+  ])
   var cgame = Object.values(game.qvms).flat(1)
     .filter(k => k.match(/cgame\.dis/i))[0]
   var entities = cgame ? getGameAssets(cgame) : []
@@ -207,7 +213,7 @@ async function loadGame(project, progress) {
   var qvmFiles = await Object.keys(game.qvms)
     .reduce(async (objPromise, k, i) => {
       var obj = await objPromise
-      await progress([[1, 8 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
+      await progress([[1, 9 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
         `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]], true)
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
@@ -218,7 +224,14 @@ async function loadGame(project, progress) {
       obj[k].sort()
       return obj
     }, Promise.resolve({}))
-
+  var menuFiles = await Object.keys(game.menus)
+    .reduce(async (objPromise, k, i) => {
+      var obj = await objPromise
+      obj[k] = game.menus[k]
+        .filter((e, i, arr) => arr.indexOf(e) === i)
+      obj[k].sort()
+      return obj
+    }, Promise.resolve({}))
   var gameState = {
     entities: entities,
     mapEntities: entityRefs,
@@ -228,6 +241,7 @@ async function loadGame(project, progress) {
     shaders: scriptTextures,
     skins: skinShaders,
     qvms: qvmFiles,
+    menus: menuFiles,
     everything: everything,
   }
   console.log(`Game graph written to "${TEMP_NAME}"`)
@@ -261,9 +275,11 @@ async function graphGame(gs, project, progress) {
     .concat(Object.values(gs.shaders).flat(1))
     .concat(Object.keys(gs.qvms))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
+    .concat(Object.keys(gs.menus))
+    .concat(Object.values(gs.menus).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  await progress([[1, 8 + Object.keys(gs.qvms).length,
+  await progress([[1, 10 + Object.keys(gs.qvms).length,
     Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${vertices.length} vertices`]])
   
@@ -300,9 +316,10 @@ async function graphGame(gs, project, progress) {
     .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match the list above
     .concat(Object.values(gs.skins).flat(1))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
+    .concat(Object.values(gs.menus).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  await progress([[1, 8 + Object.keys(gs.qvms).length + 1,
+  await progress([[1, 10 + Object.keys(gs.qvms).length + 1,
     Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${allShaders.length} shaders`]])
     
@@ -388,7 +405,16 @@ async function graphGame(gs, project, progress) {
       }
     })
   })
-  
+  Object.keys(gs.menus).forEach(k => {
+    gs.menus[k].forEach(e => {
+      if(typeof fileLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), fileLookups[e])
+      }
+      if(typeof shaderLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      }
+    })
+  })
   // TODO: add arenas, configs, bot scripts, defi
   
   gs.graph = graph

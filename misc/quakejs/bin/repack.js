@@ -68,12 +68,13 @@ var whitelist = {
     '**/scripts/*.shader',
   ],
   'missionpack': [
-    '**/+(james|janet)/**',
+    '**/+(james|janet|sarge)/**',
     '**/player/*',
     '**/player/footsteps/*',
     '**/weapons2/+(machinegun|gauntlet)/**',
     '**/weaphits/**',
     '**/scripts/*.shader',
+    '**/ui/assets/**',
   ],
   'baseoa': [
     '**/+(sarge|major)/**',
@@ -484,8 +485,11 @@ async function groupAssets(gs, project) {
   
   // group shared textures and sounds by folder name
   var filesOverLimit = getLeaves(vertices
-    .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
+    .filter(v => v.inEdges.filter((e, i, arr) => 
+      arr.indexOf(e) === i).length > edges
+      || v.id.match(/\.menu/i)))
     .concat(entityDuplicates)
+    .concat(Object.values(game.menus).flat(1))
     .filter((f, i, arr) => arr.indexOf(f) === i
       && game.everything.includes(f) && !externalAssets.includes(f)
       && !f.match(/maps\//i))
@@ -538,8 +542,8 @@ async function groupAssets(gs, project) {
       var map = path.basename(v.id).replace(/\.bsp/i, '')
       var mapAssets = getLeaves(v)
         .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
-      if(map.includes('nightcity')) {
-        console.log(mapAssets)
+      if(map.includes('mpterra2')) {
+        console.log(getLeaves(v).filter(f => f.includes('pjrock12b_2')))
         console.log(externalAndShared.filter(f => f.includes('nightcity')))
       }
       if(mapAssets.length > 0) {

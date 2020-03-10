@@ -27,7 +27,8 @@ function loadQVMStrings(buffer, topdirs) {
   var qvmstrings = buffer
     .toString('utf-8')
     .split('\n')
-    .map(line => (/['""'](.*?)['""']/ig).exec(line))
+    .map(line => ((/background\s+.*?(\s|$)/ig).exec(line) || [])[0]
+      || (/['""'](.*?)['""']/ig).exec(line))
     .filter(string => string)
     // assuming a single character is the path seperator,
     //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
@@ -83,7 +84,8 @@ function graphQVM(project) {
     var qvmstrings = loadQVMStrings(buffer, topdirs)
       .concat([
         'console', 'white', 'gfx/2d/bigchars',
-        'botfiles/**', '*.cfg', '*.shader', disassembly
+        'botfiles/**', '*.cfg', '*.shader', '*.menu',
+        'ui/*.txt', disassembly
       ])
     result[qvms[i]] = qvmstrings
   }
@@ -124,6 +126,23 @@ function getGameAssets(disassembly) {
   return bg_itemlist
 }
 
+async function graphMenus(project, progress) {
+  var result = {}
+  var menus = findTypes(['.menu', '.txt'], project)
+  for(var i = 0; i < menus.length; i++) {
+    progress([[2, i, menus.length, menus[i].replace(project, '')]])
+    var buffer = fs.readFileSync(menus[i])
+    try {
+      var menu = loadQVMStrings(buffer)
+      result[menus[i]] = menu
+    } catch (e) {
+      console.error(`Error loading map ${menus[i]}: ${e.message}`, e)
+    }
+  }
+  console.log(`Found ${Object.keys(result).length} maps`)
+  return result
+}
+
 function mapGameAssets(qvmVertex) {
   // don't include disassembly in new pak
   // don't include maps obviously because they are listed below
@@ -146,6 +165,7 @@ module.exports = {
   getGameAssets: getGameAssets,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,
+  graphMenus: graphMenus,
   disassembleQVM: disassembleQVM,
   mapGameAssets: mapGameAssets,
   MATCH_ENTS: MATCH_ENTS,
