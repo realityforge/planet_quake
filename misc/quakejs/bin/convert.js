@@ -26,7 +26,7 @@ async function convertNonAlpha(inFile, project, output, noOverwrite) {
   outFile = chroot(chext(inFile, '.jpg'), project, output)
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   try {
-    alphaCmd = execSync(`identify -format '%[opaque]' '${inFile}'`, {stdio : 'pipe'}).toString('utf-8')
+    alphaCmd = execSync(`identify -format '%[opaque]' "${inFile}"`, {stdio : 'pipe'}).toString('utf-8')
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }

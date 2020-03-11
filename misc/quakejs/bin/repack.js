@@ -93,6 +93,14 @@ var whitelist = {
     '**/player/footsteps/*',
     '**/weaphits/**',
     '**/scripts/*.shader',
+  ],
+  'q3ut4': [
+    '**/+(athena)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
   ]
 }
 
@@ -508,7 +516,7 @@ async function groupAssets(gs, project) {
   })
 
   var externalAndShared;
-    
+  
   // map menu and cgame files
   var qvms = Object.keys(game.qvms)
     .filter(qvm => qvm.match(/ui.qvm/i))

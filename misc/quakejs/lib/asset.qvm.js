@@ -85,7 +85,7 @@ function graphQVM(project) {
       .concat([
         'console', 'white', 'gfx/2d/bigchars',
         'botfiles/**', '*.cfg', '*.shader', '*.menu',
-        'ui/*.txt', disassembly
+        'ui/*.txt', '*.h', disassembly
       ])
     result[qvms[i]] = qvmstrings
   }
@@ -149,14 +149,11 @@ function mapGameAssets(qvmVertex) {
   var gameVertices = qvmVertex
     .outEdges
     .map(e => e.inVertex)
-    .filter(v => !v.id.match(/\.dis|\.bsp|\.aas|maps\//i))
+    .filter(v => !v.id.match(/\.dis|\.bsp|\.aas|maps\/|\.qvm/i))
   var gameAssets = [qvmVertex.id]
     .concat(gameVertices.map(v => v.id))
     // include shader scripts, but do not include the assets they point to
-    .concat(gameVertices
-      .filter(v => !v.id.match(/\.shader|maps\//i))
-      .map(v => getLeaves(v)))
-    .flat(2)
+    .concat(gameVertices.filter(v => !v.id.match(/\.shader/i)).map(v => getLeaves(v)).flat(2))
     .filter((f, i, arr) => arr.indexOf(f) === i && !f.match(/\.bsp|\.aas|maps\//i))
   return gameAssets
 }

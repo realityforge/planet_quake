@@ -54,11 +54,12 @@ function graphMaps(project) {
   return result
 }
 
-function graphModels(project, progress) {
+async function graphModels(project, progress) {
   var result = {}
   var models = findTypes(['.md5', '.md3'], project)
+  console.log(`Found ${models.length} models`)
   for(var i = 0; i < models.length; i++) {
-    progress([[2, i, models.length, models[i].replace(project, '')]])
+    await progress([[2, i, models.length, models[i].replace(project, '')]])
     var buffer = fs.readFileSync(models[i])
     try {
       var model = md3.load(buffer)
@@ -68,7 +69,7 @@ function graphModels(project, progress) {
     }
   }
   var withSkins = Object.keys(result).filter(m => result[m].skins.length > 0)
-  console.log(`Found ${Object.keys(result).length} models, ${withSkins.length} with skins`)
+  console.log(`Loaded ${Object.keys(result).length} models, ${withSkins.length} with skins`)
   return result
 }
 
@@ -110,7 +111,7 @@ async function loadGame(project, progress) {
     [2, false],
     [1, 2, Object.keys(STEPS).length, STEPS['models']]
   ])
-  game.models = graphModels(project, progress)
+  game.models = await graphModels(project, progress)
   await progress([
     [2, false],
     [1, 3, Object.keys(STEPS).length, STEPS['shaders']]
