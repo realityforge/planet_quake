@@ -85,7 +85,7 @@ function graphQVM(project) {
       .concat([
         'console', 'white', 'gfx/2d/bigchars',
         'botfiles/**', '*.cfg', '*.shader', '*.menu',
-        'ui/*.txt', '*.h', disassembly
+        'ui/*.txt', '*.h', 'ui/assets/**', 'fonts/**', disassembly
       ])
     result[qvms[i]] = qvmstrings
   }

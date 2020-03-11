@@ -31,6 +31,7 @@ var LibrarySys = {
 			['legoc-ccr', 			'Lego Carnage'],
 			['osp-ccr', 				'Orange Smoothie Productions'],
 			['quake2arena-ccr', 'Quake 2 Arena'],
+			['smokin-ccr', 			'Smokin\' Guns']
 			['wfa-ccr', 				'Weapons Factory Arena'],
 			['uberarena-ccr', 	'Uber Arena'],
 			['demoq3-ccr', 			'Quake III Demo'],

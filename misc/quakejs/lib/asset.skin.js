@@ -19,8 +19,8 @@ function load(data) {
 	for (var i = 0; i < lines.length; i++) {
 		var line = lines[i];
 		var split = line.split(/,/);
-		var surfaceName = split[0].toLowerCase();
-		var shaderName = split[1];
+		var surfaceName = split[0].toLowerCase().trim();
+		var shaderName = (split[1] || '').trim();
 
 		if (surfaceName.indexOf('tag_') !== -1) {
 			continue;

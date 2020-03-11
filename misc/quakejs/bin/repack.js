@@ -98,7 +98,7 @@ var whitelist = {
     '**/+(athena)/**',
     '**/player/*',
     '**/player/footsteps/*',
-    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weapons2/+(handskins)/**',
     '**/weaphits/**',
     '**/scripts/*.shader',
   ]

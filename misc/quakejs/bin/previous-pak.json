@@ -91,14 +91,21 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/scripts/ut4_paris.shader",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/scripts/ut4_suburbs.shader"
   ],
-  "pak20misc": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/bright.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/frag.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuff2b.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuff3.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuffragepro.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/tracer2.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/viewsmokepuff.jpg"
+  "pak20damage": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_screen.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_spurt.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain2.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain3.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain4.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/bullet_mrk_glass.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/burn_med_mrk.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/hole.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/mark.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool1.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool2.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool3.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/shadow.jpg"
   ],
   "pak21game": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/botfiles/game.h",
@@ -139,13 +146,28 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/riches_signs/r_privateproperty1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/sweetnutz/sn_coinbird.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/urban_terror2/metal.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg2_tr.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg_options_tr.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg_tr.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/vm/cgame.qvm",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/vm/qagame.qvm"
   ],
-  "pak220m4": [
+  "pak220hk69": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_butt.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_cock.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_grenade.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_safety.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_shell.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_trigger.MD3"
+  ],
+  "pak221misc": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/bright.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/frag.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuff2b.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuff3.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/smokepuffragepro.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/tracer2.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/misc/viewsmokepuff.jpg"
+  ],
+  "pak2221m4": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/m4/m4_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/m4/m4_view_ejector.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/m4/m4_view_flap.MD3",
@@ -153,15 +175,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/m4/m4_view_mode.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/m4/m4_view_trigger.MD3"
   ],
-  "pak221particles": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/chunk.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/glass.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/grass.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/metal.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/stone.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/wood.jpg"
-  ],
-  "pak2221mp5k": [
+  "pak2222mp5k": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/mp5k/mp5k_view_bolt.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/mp5k/mp5k_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/mp5k/mp5k_view_cliprel.MD3",
@@ -170,7 +184,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/mp5k/mp5k_view_mode.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/mp5k/mp5k_view_trigger.MD3"
   ],
-  "pak2222psg1": [
+  "pak2223psg1": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/psg1/psg1_view_bolt.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/psg1/psg1_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/psg1/psg1_view_ejector.MD3",
@@ -178,7 +192,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/psg1/psg1_view_mode.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/psg1/psg1_view_trigger.MD3"
   ],
-  "pak2223sr8": [
+  "pak2224sr8": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/sr8/sr8_view_bolt.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/sr8/sr8_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/sr8/sr8_view_ejector.MD3",
@@ -186,7 +200,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/sr8/sr8_view_mode.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/sr8/sr8_view_trigger.MD3"
   ],
-  "pak2224tod50": [
+  "pak2225tod50": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/tod50/tod50_view_bolt.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/tod50/tod50_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/tod50/tod50_view_ejector.MD3",
@@ -194,14 +208,14 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/tod50/tod50_view_mode.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/tod50/tod50_view_trigger.MD3"
   ],
-  "pak2225ump45": [
+  "pak2226ump45": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ump45/ump45_view_bolt.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ump45/ump45_view_clip.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ump45/ump45_view_ejector.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ump45/ump45_view_main.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ump45/ump45_view_trigger.MD3"
   ],
-  "pak2226marks": [
+  "pak2227marks": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/marks/concrete.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/marks/dirt.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/marks/grass.png",
@@ -212,7 +226,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/marks/snow.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/marks/wood.png"
   ],
-  "pak2227sparks": [
+  "pak2228sparks": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weaphits/sparks/hit1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weaphits/sparks/hit2.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weaphits/sparks/hit3.jpg",
@@ -222,13 +236,85 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weaphits/sparks/hit7.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weaphits/sparks/hit8.jpg"
   ],
-  "pak2228nvg": [
+  "pak2229nvg": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/nvg/bright3.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/nvg/bright4.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/nvg/nvgpreblend.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/nvg/scope2.jpg"
   ],
-  "pak222d": [
+  "pak222particles": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/chunk.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/glass.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/grass.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/metal.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/stone.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/particles/wood.jpg"
+  ],
+  "pak223sprites": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/arrow.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/bomber.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/defuser.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/medic1.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/minimap_bomb.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sprites/bubble.png"
+  ],
+  "pak224ak103": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_clip.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_ejector.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_mode.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_trigger.MD3"
+  ],
+  "pak225beretta": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_clip.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_cock.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_safety.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_slide.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_sliderel.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_trigger.MD3"
+  ],
+  "pak226bombbag": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_button.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_clip1.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_clip2.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_knob1.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_knob2.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_safety.MD3"
+  ],
+  "pak227deserteagle": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_clip.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_cock.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_safety.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_slide.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_sliderel.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_trigger.MD3"
+  ],
+  "pak228frf1": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_bolt.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_clip.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_ejector.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_mode.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_trigger.MD3"
+  ],
+  "pak229g36": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_clip.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_cliprel.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_ejector.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_main.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_mode.MD3",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_trigger.MD3"
+  ],
+  "pak22assets": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg2_tr.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg3.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg_options_tr.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ingame_bg_tr.png"
+  ],
+  "pak232d": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/backtile.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/flawless.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/key_backward.png",
@@ -253,80 +339,13 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/stripes.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/stripes.png"
   ],
-  "pak222sprites": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/arrow.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/bomber.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/defuser.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/medic1.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/sprites/minimap_bomb.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sprites/bubble.png"
-  ],
-  "pak223ak103": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_clip.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_ejector.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_mode.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/ak103/ak103_view_trigger.MD3"
-  ],
-  "pak224beretta": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_clip.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_cock.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_safety.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_slide.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_sliderel.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/beretta/beretta_view_trigger.MD3"
-  ],
-  "pak225bombbag": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_button.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_clip1.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_clip2.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_knob1.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_knob2.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/bombbag/bombbag_view_safety.MD3"
-  ],
-  "pak226deserteagle": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_clip.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_cock.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_safety.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_slide.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_sliderel.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/deserteagle/deagle_view_trigger.MD3"
-  ],
-  "pak227frf1": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_bolt.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_clip.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_ejector.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_mode.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/frf1/frf1_view_trigger.MD3"
-  ],
-  "pak228g36": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_clip.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_cliprel.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_ejector.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_mode.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/g36/g36_view_trigger.MD3"
-  ],
-  "pak229hk69": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_butt.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_cock.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_grenade.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_main.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_safety.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_shell.MD3",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/hk69/hk69_view_trigger.MD3"
-  ],
-  "pak23icons": [
+  "pak24icons": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/hotpotato.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/hotpotato.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/timer.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/timer.png"
   ],
-  "pak24female": [
+  "pak25female": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/female/female11.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/female/female12.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/female/female13.opus",
@@ -413,7 +432,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/female/femalelol2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/female/femalelol3.opus"
   ],
-  "pak25male": [
+  "pak26male": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/male/male11.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/male/male12.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/male/male13.opus",
@@ -499,19 +518,19 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/male/malelol2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/radio/male/malelol3.opus"
   ],
-  "pak26footsteps": [
+  "pak27footsteps": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/splash1.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/splash2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/splash3.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/splash4.opus"
   ],
-  "pak27grenade": [
+  "pak28grenade": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/grenade/grenade_flash.skin",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/grenade/grenade_view_flap.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/grenade/grenade_view_main.MD3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/weapons2/grenade/grenade_view_ring.MD3"
   ],
-  "pak28numbers": [
+  "pak29numbers": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/eight_32b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/five_32b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/four_32b.jpg",
@@ -523,22 +542,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/three_32b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/two_32b.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/2d/numbers/zero_32b.jpg"
-  ],
-  "pak29damage": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_screen.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_spurt.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain2.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain3.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/blood_stain4.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/bullet_mrk_glass.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/burn_med_mrk.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/hole.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/mark.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool1.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool2.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/pool3.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/shadow.jpg"
   ],
   "pak40male": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/player/male/bleeding1.opus",
@@ -2209,6 +2212,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/flags/red_wing.png"
   ],
   "pak62model": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/animdef.h",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/breakable/metal/metal1.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/breakable/metal/metal2.md3",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/models/breakable/metal/metal3.md3",
@@ -2336,6 +2340,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/items_mono/helmet.png"
   ],
   "pak82other": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/QIIIA_Game_Source_License.doc",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/autoexec_example.cfg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/botfiles/bots/lollipop_fuzzy/fw_items.c",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/botfiles/bots/lollipop_fuzzy/fw_weap.c",
@@ -2401,6 +2406,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_subway/sublight04.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_subway/sublight04_glow.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_swim/sauna_puff.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tub_noticeboard.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/wetwired/fs_rain2.TGA",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/wetwired/lampcover.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/wetwired/ww-fence01.png"
@@ -2786,15 +2792,15 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/sfx/flameball.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/sfx/shadow.jpg"
   ],
-  "pak8880climb": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder2.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder3.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder4.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide2.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide3.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide4.opus"
+  "pak8880breakable": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/ceramic1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/ceramic2.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/glass1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/glass2.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/metal_breaks.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/stone_breaks.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/wood1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/wood2.opus"
   ],
   "pak8881damage": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/damage/bullethole_metal1.TGA",
@@ -2946,7 +2952,31 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/botfiles/syn.c",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/botfiles/teamplay.h"
   ],
-  "pak8884hud": [
+  "pak8884fonts": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/ROBOTO_LICENSE.txt",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_12.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_16.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_20.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_30.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_40.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_50.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_12.dat",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_16.dat",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_1_20.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_1_30.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_1_40.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_1_50.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_20.dat",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_2_40.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_2_50.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_30.dat",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_3_40.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_3_50.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_40.dat",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_4_50.png",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_50.dat"
+  ],
+  "pak8885hud": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/hud/outline.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/hud/outline_o.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/hud/stamina1.png",
@@ -2968,7 +2998,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/hud/stamina9.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/gfx/hud/stamina9_o.png"
   ],
-  "pak8885icons": [
+  "pak8886icons": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/best_time.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/running_time.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/wave_black.png",
@@ -2986,7 +3016,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/wave_red.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/wave_white.png"
   ],
-  "pak8886levelshots": [
+  "pak8887levelshots": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/levelshots/ut4_abbey.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/levelshots/ut4_algiers.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/levelshots/ut4_austria.jpg",
@@ -3022,24 +3052,23 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/levelshots/ut4_turnpike.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/levelshots/ut4_uptown.jpg"
   ],
-  "pak8887sound": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bandage.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/body_impact.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/headshot.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/helmethit.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/kick1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/smokegren.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/stomp.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/vesthit.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/zoom.opus"
+  "pak88881climb": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder2.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder3.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/ladder4.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide2.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide3.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/climb/wallslide4.opus"
   ],
-  "pak88881ctf": [
+  "pak88882ctf": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/ctf/capture-blue.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/ctf/capture-red.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/ctf/return.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/ctf/stolen.opus"
   ],
-  "pak88882items": [
+  "pak88883items": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/icons/items/flashlight.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/items/flashlight.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/items/laseronoff.opus",
@@ -3047,7 +3076,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/items/nvgon.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/items/use_medkit.opus"
   ],
-  "pak88883bullets": [
+  "pak88884bullets": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/bullets/concrete1.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/bullets/concrete2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/bullets/concrete3.opus",
@@ -3063,7 +3092,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/bullets/wood2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/bullets/wood3.opus"
   ],
-  "pak88884footsteps": [
+  "pak88885footsteps": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/boot1.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/boot2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/boot3.opus",
@@ -3093,13 +3122,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/wood3.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/surfaces/footsteps/wood4.opus"
   ],
-  "pak88885fonts": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_20.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_0_30.png",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_30.dat",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_40.dat",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/fonts/fontImage_50.dat"
-  ],
   "pak88886box365": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/env/box365/box365_bk.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/env/box365/box365_dn.jpg",
@@ -3108,7 +3130,18 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/env/box365/box365_rt.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/env/box365/box365_up.jpg"
   ],
-  "pak8888bomb": [
+  "pak8888sound": [
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bandage.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/body_impact.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/headshot.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/helmethit.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/kick1.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/smokegren.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/stomp.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/vesthit.opus",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/zoom.opus"
+  ],
+  "pak8889bomb": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/Bomb_disarm.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/Explo_1.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/Explode01.opus",
@@ -3117,16 +3150,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/bomb_hit_floor_1.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/bomb_hit_floor_2.opus",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/bomb/bombexplode.opus"
-  ],
-  "pak8889breakable": [
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/ceramic1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/ceramic2.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/glass1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/glass2.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/metal_breaks.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/stone_breaks.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/wood1.opus",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/sound/breakable/wood2.opus"
   ],
   "pak888sweetnutz": [
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/sweetnutz/sn_wall1.jpg",
@@ -3212,6 +3235,7 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/tab_tr.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ui_lines1.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/ui_lines2.jpg",
+    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/unknownmap.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/utlogo.png",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/white_f_0.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/ui/assets/white_f_1.jpg",
@@ -7896,7 +7920,6 @@
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/telepole.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tp_carpet5.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/trucktire.jpg",
-    "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tub_noticeboard.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tub_pewter_new.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tub_stainless_steel.jpg",
     "/var/folders/gk/xqv2x4jn6l3ffpf3m3y4x2xh0000gn/T/q3ut4-cc/textures/ut_turnpike/tub_uplight1.blend.jpg",
