@@ -102,7 +102,7 @@ typedef struct {
 	
 #ifdef EMSCRIPTEN
 	void (*UpdateMode)(glconfig_t *glconfigOut);
-	void (*UpdateShader)(int numExecLazyStrings);
+	void (*UpdateShader)(char *shaderName);
 #endif
 } refexport_t;
 

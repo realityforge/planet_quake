@@ -61,7 +61,7 @@ extern int Sys_CmdArgsC( void );
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
-extern int Sys_UpdateShader( void );
+extern char *Sys_UpdateShader( void );
 extern char *Sys_UpdateSound( void );
 extern char *Sys_UpdateModel( void );
 

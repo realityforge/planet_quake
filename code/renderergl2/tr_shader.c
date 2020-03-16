@@ -3308,17 +3308,17 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
   
-  if(!mapShaders && numLazyStrings + 1024 < sizeof(lazyStrings)) { // && !Q_stristr(strippedName, "texture")) {
+  if(numLazyStrings + 1024 < sizeof(lazyStrings)) { // && !Q_stristr(strippedName, "texture")) {
     //int len = strlen(strippedName);
     //Q_strncpyz(&strippedName[0], "lazy_", 6);
     //Q_strncpyz(&strippedName[5], name, len + 1);
     Q_strncpyz(&lazyStrings[numLazyStrings], name, strlen(name)+1);
-    ri.Cvar_Set( "r_loadingShader", va("%i", numLazyStrings) );
+    ri.Cvar_Set( "r_loadingShader", name );
     numLazyStrings+=strlen(name)+1;
   }
 
 	InitShader( strippedName, lightmapIndex );
-
+  ri.Printf(PRINT_ALL, "Map shader hit: %s\n", strippedName);
 	//
 	// attempt to define shader from an explicit parameter file
 	//
@@ -3921,11 +3921,9 @@ static void CreateExternalShaders( void ) {
 }
 
 #ifdef EMSCRIPTEN
-void RE_UpdateShader(int numExecLazyStrings) {
-  if(numExecLazyStrings < numLazyStrings) {
-  	char *ls = &lazyStrings[numExecLazyStrings];
-    R_RemapShader(ls, ls, "9999");
-  }
+void RE_UpdateShader(char *shaderName) {
+  ri.Printf(PRINT_ALL, "ReMap shader hit: %s\n", shaderName);
+  R_RemapShader(shaderName, shaderName, "9999");
 }
 #endif
 

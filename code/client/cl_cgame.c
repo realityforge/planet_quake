@@ -786,9 +786,9 @@ int CL_GetClientState( void ) {
 }
 
 void CL_UpdateShader( void ) {
-	int numLazyStrings = Sys_UpdateShader();
-	if(numLazyStrings == 0) return;
-	re.UpdateShader(numLazyStrings);
+	char *lazyShader = Sys_UpdateShader();
+	if(strlen(lazyShader) == 0) return;
+	re.UpdateShader(lazyShader);
 }
 
 

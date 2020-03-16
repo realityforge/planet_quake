@@ -598,9 +598,12 @@ var LibrarySys = {
 			handle = _fopen(ospath, mode)
 			if(handle === 0) {
 				var filenameRelative = filename.replace(SYS.fs_basepath, '')
+				if(filenameRelative.includes('q3banner02x')) {
+					debugger
+				}
 				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
-					var loadingShader = _Cvar_VariableIntegerValue(
-						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK))
+					var loadingShader = UTF8ToString(_Cvar_VariableString(
+						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
 					_Cvar_Set(allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK), 0)
 					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
 						if(!err) {
@@ -629,7 +632,9 @@ var LibrarySys = {
 	Sys_UpdateShader: function () {
 		var nextFile = SYS.shaderCallback.pop()
 		if(!nextFile) return 0;
-		return nextFile
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
 	},
 	Sys_UpdateSound: function () {
 		var nextFile = SYS.soundCallback.pop()
