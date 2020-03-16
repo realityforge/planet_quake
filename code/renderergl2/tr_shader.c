@@ -95,7 +95,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 	sh2 = R_FindShaderByName( newShaderName );
 	if (sh2 == NULL || sh2 == tr.defaultShader || sh2->defaultShader || sh2->remappedShader == tr.defaultShader) {
-		h = RE_RegisterShaderLightMap(newShaderName, 0);
+		h = RE_RegisterShaderNoMip(newShaderName);
 		sh2 = R_GetShaderByHandle(h);
 	}
 
@@ -3301,9 +3301,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapIndex == lightmapIndex || sh->defaultShader) &&
-		     !Q_stricmp(sh->name, strippedName)
-         && (!mapShaders || !sh->defaultShader)) {
+		if ( (sh->lightmapIndex == lightmapIndex || sh->defaultShader)
+      && !Q_stricmp(sh->name, strippedName)
+      && (!mapShaders || !sh->defaultShader)) {
 			// match found
 			return sh;
 		}
