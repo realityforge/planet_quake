@@ -3,6 +3,7 @@ var LibrarySys = {
 	$SYS: {
 		index: null,
 		fs_basepath: '/base',
+		fs_game: 'baseq3-ccr',
 		exited: false,
 		timeBase: null,
 		style: null,
@@ -410,6 +411,7 @@ var LibrarySys = {
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		SYS.fs_game = fs_game;
 		var mapname = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('mapname'), 'i8', ALLOC_STACK)))
 		var clcState = _CL_GetClientState()
@@ -608,9 +610,9 @@ var LibrarySys = {
 						if(loadingShader) {
 							SYS.shaderCallback.push(loadingShader)
 						} else if(filename.match(/\.opus|\.wav|\.ogg/i)) {
-							SYS.soundCallback.push(ospath)
-						} else if(filename.match(/\.md3|\.iqm/i)) {
-							SYS.modelCallback.push(ospath)
+							SYS.soundCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+						} else if(filename.match(/\.md3|\.iqm|\.mdr/i)) {
+							SYS.modelCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
 						}
 					})
 				}
@@ -625,13 +627,23 @@ var LibrarySys = {
 		return handle
 	},
 	Sys_UpdateShader: function () {
-		return SYS.shaderCallback.pop()
+		var nextFile = SYS.shaderCallback.pop()
+		if(!nextFile) return 0;
+		return nextFile
 	},
 	Sys_UpdateSound: function () {
-		return SYS.soundCallback.pop()
+		var nextFile = SYS.soundCallback.pop()
+		if(!nextFile) return 0;
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
 	},
 	Sys_UpdateModel: function () {
-		return SYS.modelCallback.pop()
+		var nextFile = SYS.modelCallback.pop()
+		if(!nextFile) return 0;
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
