@@ -9,6 +9,7 @@ var LibrarySys = {
 		joysticks: [],
 		shaderCallback: [],
 		soundCallback: [],
+		modelCallback: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -606,8 +607,10 @@ var LibrarySys = {
 						}
 						if(loadingShader) {
 							SYS.shaderCallback.push(loadingShader)
-						} else if(filename.includes('.opus')) {
+						} else if(filename.match(/\.opus|\.wav|\.ogg/i)) {
 							SYS.soundCallback.push(ospath)
+						} else if(filename.match(/\.md3|\.iqm/i)) {
+							SYS.modelCallback.push(ospath)
 						}
 					})
 				}
@@ -626,6 +629,9 @@ var LibrarySys = {
 	},
 	Sys_UpdateSound: function () {
 		return SYS.soundCallback.pop()
+	},
+	Sys_UpdateModel: function () {
+		return SYS.modelCallback.pop()
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
