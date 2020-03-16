@@ -75,6 +75,7 @@ static long generateHashValue( const char *fname, const int size ) {
 void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset) {
 	char		strippedName[MAX_QPATH];
 	int			hash;
+  int     index;
 	shader_t	*sh, *sh2;
 	qhandle_t	h;
   int t = atof(timeOffset);
@@ -89,13 +90,14 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 		return;
 	}
   
-  if(t == 9999) {
+  if(t >= 9999 - 4) {
+    index = t - 9999;
     mapShaders = qtrue;
   }
 
 	sh2 = R_FindShaderByName( newShaderName );
 	if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
-		h = RE_RegisterShaderNoMip(newShaderName);
+		h = RE_RegisterShaderLightMap(newShaderName, index);
 		sh2 = R_GetShaderByHandle(h);
 	}
 
@@ -3345,7 +3347,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     //Q_strncpyz(&strippedName[0], "lazy_", 6);
     //Q_strncpyz(&strippedName[5], name, len + 1);
     Q_strncpyz(&lazyStrings[numLazyStrings], name, strlen(name)+1);
-    ri.Cvar_Set( "r_loadingShader", name );
+    ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
     numLazyStrings+=strlen(name)+1;
   }
 
@@ -3953,9 +3955,9 @@ static void CreateExternalShaders( void ) {
 }
 
 #ifdef EMSCRIPTEN
-void RE_UpdateShader(char *shaderName) {
-  ri.Printf(PRINT_ALL, "ReMap shader hit: %s\n", shaderName);
-  R_RemapShader(shaderName, shaderName, "9999");
+void RE_UpdateShader(char *shaderName, int lightmapIndex) {
+  ri.Printf(PRINT_ALL, "ReMap shader hit: %s, %i\n", shaderName, lightmapIndex);
+  R_RemapShader(shaderName, shaderName, va("%i", 9999 + lightmapIndex));
 }
 #endif
 

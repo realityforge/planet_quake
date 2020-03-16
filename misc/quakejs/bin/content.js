@@ -222,8 +222,14 @@ async function makeIndexJson(filename, absolute) {
         file = await repackPk3Dir(fullpath)
         fullpath = fullpath.replace('.pk3dir', '.pk3')
       }
-
-			manifest[fullpath.replace(path.dirname(absolute), '/base/' + path.basename(path.dirname(absolute)))] = Object.assign({
+      
+      var key = fullpath.replace(
+        path.dirname(absolute),
+        '/base/' + path.basename(path.dirname(absolute)))
+      if(typeof file.size == 'undefined') {
+        key += '/'
+      }
+			manifest[key] = Object.assign({
         name: fullpath.replace(path.dirname(absolute), '')
       }, file)
 		}

@@ -502,7 +502,7 @@ var LibrarySys = {
 						// only download again if the file does not exist
 						try {
 							var handle = FS.stat(PATH.join(fs_basepath, fsMountPath, file.name))
-							if(handle.size !== 4 || !file.name.match(/\.bsp/i)) {
+							if(handle.size !== 4 || (!file.name.match(/\.bsp/i) && !file.name.match(/\.aas/i))) {
 								continue
 							}
 						} catch (e) {
@@ -516,7 +516,8 @@ var LibrarySys = {
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
 							|| file.name.match(/levelshots\/|players\/.*\/icon_|botfiles\//i)
 							|| file.name.match(/players\/sarge|player\/sarge|\.shader|weapons2\/machinegun/i)
-							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))) {
+							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
+							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {
@@ -646,6 +647,65 @@ var LibrarySys = {
 		var filename = _S_Malloc(nextFile.length + 1);
 		stringToUTF8(nextFile, filename, nextFile.length+1);
 		return filename
+	},
+	Sys_ListFiles__deps: ['$PATH', 'Z_Malloc', 'S_Malloc'],
+	Sys_ListFiles: function (directory, ext, filter, numfiles, dironly) {
+		directory = UTF8ToString(directory);
+		ext = UTF8ToString(ext);
+		if (ext === '/') {
+			ext = null;
+			dironly = true;
+		}
+
+		// TODO support filter
+		
+		var contents;
+		try {
+			contents = FS.readdir(directory)
+				.filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f))))
+			contents = contents.concat(Object.keys(SYS.index)
+				.filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
+					&& (!dironly || typeof SYS.index[k].size == 'undefined'))
+				.map(k => PATH.basename(k)))
+				.filter((f, i, arr) => f && arr.indexOf(f) === i)
+			if(contents.length > 5000) {
+				debugger
+			}
+		} catch (e) {
+			{{{ makeSetValue('numfiles', '0', '0', 'i32') }}};
+			return null;
+		}
+
+		var matches = [];
+		for (var i = 0; i < contents.length; i++) {
+			if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
+				matches.push(name);
+			}
+		}
+
+		{{{ makeSetValue('numfiles', '0', 'matches.length', 'i32') }}};
+
+		if (!matches.length) {
+			return null;
+		}
+
+		// return a copy of the match list
+		var list = _Z_Malloc((matches.length + 1) * 4);
+
+		var i;
+		for (i = 0; i < matches.length; i++) {
+			var filename = _S_Malloc(matches[i].length + 1);
+
+			stringToUTF8(matches[i], filename, matches[i].length+1);
+
+			// write the string's pointer back to the main array
+			{{{ makeSetValue('list', 'i*4', 'filename', 'i32') }}};
+		}
+
+		// add a NULL terminator to the list
+		{{{ makeSetValue('list', 'i*4', '0', 'i32') }}};
+
+		return list;
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
