@@ -1,15 +1,12 @@
 <?xml version="1.0"?>
-<q3map_feedback><message level="1">Q3Map         - v1.0r (c) 1999 Id Software Inc.
-</message><message level="1">Q3Map (ydnar) - v2.5.17
-</message><message level="1">GtkRadiant    - v1.6.5 Feb  1 2018 11:46:28
-</message><message level="1">We're still here
-</message><message level="1">VFS Init: /Users/briancullinan/.q3a/baseq3/
-</message><message level="1">VFS Init: /Users/briancullinan/.q3a/unpacked//baseq3/
+<q3map_feedback><message level="1">threads: 8
+</message><message level="1">Q3Map         - v1.0r (c) 1999 Id Software Inc.
+</message><message level="1">Q3Map (ydnar) - v2.5.17n-git-bc74e426
+</message><message level="1">NetRadiant    - v1.5.0 Aug 22 2019 20:25:10
+</message><message level="1">Your map saw the pretty lights from q3map2's BFG
+</message><message level="1">VFS Init: /Users/briancullinan/Library/Application Support/q3a/baseq3/
+</message><message level="1">VFS Init: /Users/briancullinan/netradiant/baseq3/
 </message><message level="1">
-</message><message level="1">--- Vis ---
-</message><message level="1">Loading /Users/briancullinan/.q3a/unpacked/baseq3/maps/lobby.bsp
-</message><message level="1">Loading /Users/briancullinan/.q3a/unpacked/baseq3/maps/lobby.prt
 </message><message level="3">************ ERROR ************
-LoadPortals: couldn't read /Users/briancullinan/.q3a/unpacked/baseq3/maps/lobby.prt
-
+Usage: /Users/briancullinan/netradiant/build/q3map2 [general options] [options] mapfile
 </message></q3map_feedback>

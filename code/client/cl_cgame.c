@@ -357,7 +357,6 @@ rescan:
 		return qtrue;
 	}
 
-	// we may want to put a "connect to other server" command here
 
 	// cgame can now act on the command
 	return qtrue;
@@ -489,6 +488,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 // We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 // if there is a map change while we are downloading at pk3.
 // ZOID
+
 		SCR_UpdateScreen();
 		return 0;
 	case CG_CM_LOADMAP:
@@ -598,7 +598,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 		cls.cgameGlConfig = VMA(1);
 #endif
 		CL_GetGlconfig( VMA(1) );
@@ -783,6 +783,12 @@ void CL_InitCGame( void ) {
 #ifdef EMSCRIPTEN
 int CL_GetClientState( void ) {
 	return clc.state;
+}
+
+void CL_UpdateShader( void ) {
+	int numLazyStrings = Sys_UpdateShader();
+	if(numLazyStrings == 0) return;
+	re.UpdateShader(numLazyStrings);
 }
 #endif
 

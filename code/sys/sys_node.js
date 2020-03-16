@@ -126,7 +126,25 @@ var LibrarySys = {
 		error = UTF8ToString(error);
 		console.error(error);
 		process.exit();
-	}
+	},
+	Sys_FOpen__deps: ['$FS', 'fopen'],
+	Sys_FOpen: function (ospath, mode) {
+		var handle;
+		try {
+			ospath = allocate(intArrayFromString(UTF8ToString(ospath)
+				.replace(/\/\//ig, '/')), 'i8', ALLOC_STACK);
+			mode = allocate(intArrayFromString(UTF8ToString(mode)
+				.replace('b', '')), 'i8', ALLOC_STACK);
+			handle = _fopen(ospath, mode);
+		} catch (e) {
+			// short for fstat check in sys_unix.c!!!
+			if(e.code == 'ENOENT') {
+				return 0;
+			}
+			throw e;
+		}
+		return handle;
+	},
 };
 
 autoAddDeps(LibrarySys, '$SYS');

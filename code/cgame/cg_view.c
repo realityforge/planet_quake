@@ -771,10 +771,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// if we are only updating the screen as a loading
 	// pacifier, don't even try to read snapshots
-	if ( cg.infoScreenText[0] != 0 ) {
-		CG_DrawInformation();
-		return;
-	}
+	//if ( cg.infoScreenText[0] != 0 ) {
+	//	CG_DrawInformation();
+	//	return;
+	//}
 
 	// any looped sounds will be respecified as entities
 	// are added to the render list
@@ -878,4 +878,3 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 
 }
-

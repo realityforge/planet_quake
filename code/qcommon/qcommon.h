@@ -61,6 +61,7 @@ extern int Sys_CmdArgsC( void );
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
+extern int Sys_UpdateShader( void );
 
 void FS_Startup( const char *gameName );
 void FS_Startup_After_Async( const char *gameName );

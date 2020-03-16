@@ -1903,7 +1903,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	String_Init();
 #endif
 
-	cg.loading = qtrue;		// force players to load instead of defer
+	cg.loading = qfalse;		// force players to load instead of defer
 
 	CG_LoadingString( "sounds" );
 
@@ -1981,4 +1981,3 @@ void CG_KeyEvent(int key, qboolean down) {
 void CG_MouseEvent(int x, int y) {
 }
 #endif
-

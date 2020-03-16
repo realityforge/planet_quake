@@ -8,10 +8,9 @@ var {compressFile, compressDirectory} = require('./compress.js')
 
 var help = `
 npm run start [options] [virtual path] [filesystem path]
-NOTE: ./biuld/release-js-js is implied
+NOTE: ./build/release-js-js is implied
 --recursive -R - adds all directory files below current directory
---pk3dir -pk - create virtual pk3dir out of pk3 and exclude pk3 files
-  opposite of repack
+--virtual -V - TODO: create virtual pk3dir out of pk3 and exclude pk3 files, opposite of repack
 --write -wr - write all JSON files in every directory for CDN use
 --repack -rp - repack on the fly as pk3/media/images/sound files are accessed
   opposit of pk3dir
@@ -24,7 +23,7 @@ e.g. npm run start -- -R -rp /assets/baseq3 /Applications/ioquake3/baseq3
 var recursive = false
 var writeOut = false
 var repackFiles = false
-var pk3dir = false
+var virtualPk3dir = false
 var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
@@ -55,9 +54,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--hidden' || a == '-H') {
     console.log('Hidden files')
     includeHidden = true
-  } else if(a == '--pk3dir' || a == '-pk') {
+  } else if(a == '--virtual' || a == '-V') {
     console.log('Virtual pk3dirs')
-    pk3dir = true
+    virtualPk3dir = true
   } else if(a == '--write' || a == '-wr') {
     console.log('Writing manifest.json, not watching')
     writeOut = true
@@ -197,7 +196,20 @@ async function makeIndexJson(filename, absolute) {
 			var fullpath = files[i]
 			if(!ufs.existsSync(fullpath)) continue
 			var file = {}
-			if(ufs.statSync(fullpath).isFile()) {
+      if(virtualPk3dir
+        && fullpath.includes('.pk3')
+        && ufs.statSync(fullpath).isFile()) {
+        var filesInZip = await readPak(fullpath, progress)
+        filesInZip.forEach(entry => {
+          manifest[path.join(fullpath, entry.name)] = {
+            compressed: entry.compressedSize,
+            name: path.join(path.basename(fullpath), entry.name),
+            size: entry.size,
+            offset: entry.offset
+          }
+        })
+        file = {name: fullpath.replace('.pk3', '.pk3dir')}
+      } else if(ufs.statSync(fullpath).isFile()) {
         if(writeOut) {
           file = await cacheFile(fullpath)
         } else {
@@ -211,9 +223,9 @@ async function makeIndexJson(filename, absolute) {
         fullpath = fullpath.replace('.pk3dir', '.pk3')
       }
 
-			manifest[fullpath] = Object.assign(file, {
+			manifest[fullpath.replace(path.dirname(absolute), '/base/' + path.basename(path.dirname(absolute)))] = Object.assign({
         name: fullpath.replace(path.dirname(absolute), '')
-      })
+      }, file)
 		}
     console.log(`writing directory index ${absolute}`)
 		vol.mkdirpSync(path.dirname(absolute))

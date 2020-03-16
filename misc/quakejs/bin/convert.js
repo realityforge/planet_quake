@@ -65,16 +65,12 @@ async function convertAudio(inFile, project, output, noOverwrite) {
   return outFile
 }
 
-async function convertGameFiles(gs, project, outConverted, noOverwrite, progress) {
-  var orderedEverything = Object.values(gs.ordered)
-    .flat(1)
-    .filter((f, i, arr) => arr.indexOf(f) === i)
-  
+async function convertGameFiles(gs, project, outConverted, noOverwrite, progress) {  
   await progress([
     [2, false],
     [1, 0, 3, `Converting images`]
   ])  
-  var images = findTypes(imageTypes, orderedEverything)
+  var images = findTypes(imageTypes, gs.everything)
   for(var j = 0; j < images.length; j++) {
     await progress([[2, j, images.length, chroot(images[j], project, '')]])
     if(!ufs.existsSync(images[j])) continue
@@ -89,7 +85,7 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
     [2, false],
     [1, 1, 3, `Converting audio`]
   ])
-  var audio = findTypes(audioTypes, orderedEverything)
+  var audio = findTypes(audioTypes, gs.everything)
   for(var j = 0; j < audio.length; j++) {
     await progress([[2, j, audio.length, chroot(audio[j], project, '')]])
     if(!ufs.existsSync(audio[j])) continue
@@ -100,11 +96,13 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
     })
   }
   
+  // TODO: convert videos to different qualities like YouTubes
+  
   await progress([
     [2, false],
     [1, 2, 3, `Copying known files`]
   ])
-  var known = orderedEverything
+  var known = gs.everything
     .filter(f => !images.includes(f) && !audio.includes(f))
   for(var j = 0; j < known.length; j++) {
     await progress([[2, j, known.length, chroot(known[j], project, '')]])

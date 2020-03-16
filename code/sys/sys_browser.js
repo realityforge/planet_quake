@@ -1,10 +1,13 @@
 var LibrarySys = {
 	$SYS__deps: ['$SYSC', '$SDL'],
 	$SYS: {
+		index: null,
+		fs_basepath: '/base',
 		exited: false,
 		timeBase: null,
 		style: null,
 		joysticks: [],
+		shaderCallback: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -45,6 +48,7 @@ var LibrarySys = {
 			['iortcw-ccr',      'Coming Soon: Return to Castle Wolfenstien'],
 		],
 		args: [
+			'+set', 'fs_basepath', '/base',
 			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
 			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3-ccr',
@@ -395,8 +399,9 @@ var LibrarySys = {
 	Sys_FS_Startup: function (cb) {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)))
-		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+		fs_basepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
+		SYS.fs_basepath = fs_basepath;
 		var fs_basegame = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)))
 		var sv_pure = _Cvar_VariableIntegerValue(
@@ -437,9 +442,8 @@ var LibrarySys = {
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
-				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], '000000000000000placeholder.pk3dir')
-				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
-				SYSC.mkdirp(modDir)
+				var desc = PATH.join(fs_basepath, SYS.mods[i][0], 'description.txt')
+				SYSC.mkdirp(PATH.dirname(desc))
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })
 				
@@ -463,16 +467,18 @@ var LibrarySys = {
 				}
 				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
-				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
+				SYS.index = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
-				var keys = Object.keys(json)
-				var menu = keys.filter(k => k.includes('menu/'))
+				var keys = Object.keys(SYS.index)
+				var menu = keys.filter(k => k.match(/^menu\//i))
 				var game = keys.filter(k => k.includes('game/'))
-				var maps = keys.filter(k => k.includes('maps/'))
+				var maps = keys.filter(k => k.match(/maps\/.*\.bsp/i))
 					.map(m => PATH.basename(PATH.dirname(m)))
+					// add non-pure maps in directories
+					.concat(keys.filter(k => k.match(/\.bsp/i)).map(k => PATH.basename(k).replace(/\.bsp/i, '')))
 					.filter((m, i, arr) => arr.indexOf(m) === i) // unique
 				for(var i = 0; i < maps.length; i++) {
-					var mapsDir = PATH.join(fs_basepath, fsMountPath, '000000000000000placeholder.pk3dir/maps')
+					var mapsDir = PATH.join(fs_basepath, fsMountPath, 'maps')
 					var map = PATH.join(mapsDir, maps[i] + '.bsp')
 					var aas = PATH.join(mapsDir, maps[i] + '.aas')
 					SYSC.mkdirp(mapsDir)
@@ -482,9 +488,9 @@ var LibrarySys = {
 				if(clcState >= 4 && game.length) keys = game;
 				if(clcState < 4 && menu.length) keys = menu;
 				// servers need some map and model info for hitboxes up front
-				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(json).filter(k => k.includes(`maps\/${mapname}\/`)))
+				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}\/`, 'i'))))
 				for(var i = 0; i < keys.length; i++) {
-					var file = json[keys[i]]
+					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
 						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
 					} else {
@@ -492,9 +498,10 @@ var LibrarySys = {
 						//   because it will check ETag and replace files
 						// only download again if the file does not exist
 						try {
-							var handle = FS.open(PATH.join(fs_basepath, fsMountPath, file.name), 'r')
-							FS.close(handle)
-							continue
+							var handle = FS.stat(PATH.join(fs_basepath, fsMountPath, file.name))
+							if(handle.size !== 4 || !file.name.match(/\.bsp/i)) {
+								continue
+							}
 						} catch (e) {
 							if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
 								SYSC.Error('fatal', e.message)
@@ -503,15 +510,14 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(PATH.extname(file.name) === '.pk3'
-						  || PATH.extname(file.name) === '.wasm'
-							|| PATH.extname(file.name) === '.qvm'
-							|| !sv_pure) {
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
+							|| file.name.match(/levelshots\/|player\/icon_|botfiles\//i)
+							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {
-								FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
-									encoding: 'binary', flags: 'w', canOwn: true })
+							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
+							//		encoding: 'binary', flags: 'w', canOwn: true })
 							} catch (e) {
 								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
 									SYSC.Error('fatal', e.message)
@@ -576,6 +582,44 @@ var LibrarySys = {
 				*/
 			})
 		})
+	},
+	Sys_FOpen__deps: ['$SYS', '$FS', 'fopen'],
+	Sys_FOpen: function (ospath, mode) {
+		var handle
+		try {
+			var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
+			ospath = allocate(intArrayFromString(filename), 'i8', ALLOC_STACK)
+			mode = allocate(intArrayFromString(UTF8ToString(mode)
+				.replace('b', '')), 'i8', ALLOC_STACK);
+			handle = _fopen(ospath, mode)
+			if(handle === 0) {
+				var filenameRelative = filename.replace(SYS.fs_basepath, '')
+				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
+					var loadingShader = _Cvar_VariableIntegerValue(
+						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK))
+					_Cvar_Set(allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK), 0)
+					if(loadingShader) {
+						SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
+							if(!err) {
+								FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
+									encoding: 'binary', flags: 'w', canOwn: true })
+							}
+							SYS.shaderCallback.push(loadingShader)
+						})
+					}
+				}
+			}
+		} catch (e) {
+			// short for fstat check in sys_unix.c!!!
+			if(e.code == 'ENOENT') {
+				return 0
+			}
+			throw e
+		}
+		return handle
+	},
+	Sys_UpdateShader: function () {
+		return SYS.shaderCallback.pop()
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {

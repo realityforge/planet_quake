@@ -3351,6 +3351,8 @@ void CL_Frame ( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
+	
+	CL_UpdateShader();
 #endif
 
 
