@@ -8,6 +8,7 @@ var LibrarySys = {
 		style: null,
 		joysticks: [],
 		shaderCallback: [],
+		soundCallback: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -443,10 +444,9 @@ var LibrarySys = {
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
 				var desc = PATH.join(fs_basepath, SYS.mods[i][0], 'description.txt')
-				SYSC.mkdirp(PATH.dirname(desc))
+				SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000000000000000placeholder.pk3dir'))
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })
-				
 			}
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
@@ -511,7 +511,8 @@ var LibrarySys = {
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
-							|| file.name.match(/levelshots\/|player\/icon_|botfiles\/|\.shader/i)
+							|| file.name.match(/levelshots\/|players\/.*\/icon_|botfiles\//i)
+							|| file.name.match(/players\/sarge|player\/sarge|\.shader|weapons2\/machinegun/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
@@ -598,15 +599,17 @@ var LibrarySys = {
 					var loadingShader = _Cvar_VariableIntegerValue(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK))
 					_Cvar_Set(allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK), 0)
-					if(loadingShader) {
-						SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
-							if(!err) {
-								FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
-									encoding: 'binary', flags: 'w', canOwn: true })
-							}
+					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
+						if(!err) {
+							FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
+								encoding: 'binary', flags: 'w', canOwn: true })
+						}
+						if(loadingShader) {
 							SYS.shaderCallback.push(loadingShader)
-						})
-					}
+						} else if(filename.includes('.opus')) {
+							SYS.soundCallback.push(ospath)
+						}
+					})
 				}
 			}
 		} catch (e) {
@@ -620,6 +623,9 @@ var LibrarySys = {
 	},
 	Sys_UpdateShader: function () {
 		return SYS.shaderCallback.pop()
+	},
+	Sys_UpdateSound: function () {
+		return SYS.soundCallback.pop()
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {

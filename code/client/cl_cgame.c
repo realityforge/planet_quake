@@ -790,6 +790,13 @@ void CL_UpdateShader( void ) {
 	if(numLazyStrings == 0) return;
 	re.UpdateShader(numLazyStrings);
 }
+
+
+void CL_UpdateSound( void ) {
+	char *lazySound = Sys_UpdateSound();
+	if(strlen(lazySound) > 0) return;
+	S_RegisterSound(lazySound, qtrue);
+}
 #endif
 
 /*

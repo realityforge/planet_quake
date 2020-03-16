@@ -1610,7 +1610,7 @@ int	Hunk_MemoryRemaining( void ) {
 	low = hunk_low.permanent > hunk_low.temp ? hunk_low.permanent : hunk_low.temp;
 	high = hunk_high.permanent > hunk_high.temp ? hunk_high.permanent : hunk_high.temp;
 
-	return 3999999; //s_hunkTotal - ( low + high );
+	return s_hunkTotal - ( low + high );
 }
 
 /*

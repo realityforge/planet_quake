@@ -94,7 +94,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
   }
 
 	sh2 = R_FindShaderByName( newShaderName );
-	if (sh2 == NULL || sh2 == tr.defaultShader || sh2->defaultShader || sh2->remappedShader == tr.defaultShader) {
+	if (sh2 == NULL || sh2 == tr.defaultShader || sh->defaultShader || sh->remappedShader == tr.defaultShader) {
 		h = RE_RegisterShaderNoMip(newShaderName);
 		sh2 = R_GetShaderByHandle(h);
 	}
@@ -113,7 +113,6 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0) {
 			if (sh != sh2) {
-        Com_Printf("Remap hit %s\n", sh->name);
 				sh->remappedShader = sh2;
 			} else {
 				sh->remappedShader = NULL;
@@ -3313,7 +3312,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     //int len = strlen(strippedName);
     //Q_strncpyz(&strippedName[0], "lazy_", 6);
     //Q_strncpyz(&strippedName[5], name, len + 1);
-    ri.Printf(PRINT_ALL, "remap shader: %s\n", strippedName);
     Q_strncpyz(&lazyStrings[numLazyStrings], name, strlen(name)+1);
     ri.Cvar_Set( "r_loadingShader", va("%i", numLazyStrings) );
     numLazyStrings+=strlen(name)+1;
