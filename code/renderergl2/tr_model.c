@@ -534,12 +534,13 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
 			if(sh->defaultShader)
 			{
-				*shaderIndex = 0;
+				sh->remappedShader = tr.defaultShader;
+			//	*shaderIndex = 0;
 			}
-			else
-			{
+			//else
+			//{
 				*shaderIndex = sh->index;
-			}
+			//}
 		}
 
 		// swap all the triangles
@@ -1038,10 +1039,11 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
-				surf->shaderIndex = 0;
-			} else {
+				sh->remappedShader = tr.defaultShader;
+			//	surf->shaderIndex = 0;
+		} // else {
 				surf->shaderIndex = sh->index;
-			}
+			//}
 			
 			// now copy the vertexes.
 			v = (mdrVertex_t *) (surf + 1);

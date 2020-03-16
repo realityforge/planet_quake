@@ -79,7 +79,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 	qhandle_t	h;
   int t = atof(timeOffset);
 
-	sh = R_FindShaderByName( shaderName );
+	sh = R_FindDefaultShaderByName( shaderName );
 	if (sh == NULL || sh == tr.defaultShader) {
 		h = RE_RegisterShaderLightMap(shaderName, 0);
 		sh = R_GetShaderByHandle(h);
@@ -94,7 +94,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
   }
 
 	sh2 = R_FindShaderByName( newShaderName );
-	if (sh2 == NULL || sh2 == tr.defaultShader || sh->defaultShader || sh->remappedShader == tr.defaultShader) {
+	if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
 		h = RE_RegisterShaderNoMip(newShaderName);
 		sh2 = R_GetShaderByHandle(h);
 	}
@@ -2821,6 +2821,9 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	hash = generateHashValue(newShader->name, FILE_HASH_SIZE);
 	newShader->next = hashTable[hash];
+  if(hashTable[hash]) {
+    
+  }
 	hashTable[hash] = newShader;
 
 	return newShader;
@@ -3238,6 +3241,35 @@ shader_t *R_FindShaderByName( const char *name ) {
 	return tr.defaultShader;
 }
 
+shader_t *R_FindDefaultShaderByName( const char *name ) {
+	char		strippedName[MAX_QPATH];
+	int			hash;
+	shader_t	*sh;
+
+	if ( (name==NULL) || (name[0] == 0) ) {
+		return tr.defaultShader;
+	}
+
+	COM_StripExtension(name, strippedName, sizeof(strippedName));
+
+	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
+
+	//
+	// see if the shader is already loaded
+	//
+	for (sh=hashTable[hash]; sh; sh=sh->next) {
+		// NOTE: if there was no shader or image available with the name strippedName
+		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
+		// have to check all default shaders otherwise for every call to R_FindShader
+		// with that same strippedName a new default shader is created.
+		if (Q_stricmp(sh->name, strippedName) == 0 && sh->defaultShader) {
+			// match found
+			return sh;
+		}
+	}
+
+	return tr.defaultShader;
+}
 
 /*
 ===============

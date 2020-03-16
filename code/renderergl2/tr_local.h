@@ -1992,6 +1992,7 @@ const void *RB_TakeVideoFrameCmd( const void *data );
 shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
+shader_t *R_FindDefaultShaderByName( const char *name );
 shader_t *R_FindShaderByName( const char *name );
 void 		RE_UpdateShader( char *shaderName );
 void		R_InitShaders( void );

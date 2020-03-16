@@ -598,9 +598,6 @@ var LibrarySys = {
 			handle = _fopen(ospath, mode)
 			if(handle === 0) {
 				var filenameRelative = filename.replace(SYS.fs_basepath, '')
-				if(filenameRelative.includes('q3banner02x')) {
-					debugger
-				}
 				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
 					var loadingShader = UTF8ToString(_Cvar_VariableString(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
