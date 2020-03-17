@@ -126,7 +126,82 @@ var LibrarySys = {
 		error = UTF8ToString(error);
 		console.error(error);
 		process.exit();
-	}
+	},
+	Sys_FOpen__deps: ['$FS', 'fopen'],
+	Sys_FOpen: function (ospath, mode) {
+		var handle;
+		try {
+			ospath = allocate(intArrayFromString(UTF8ToString(ospath)
+				.replace(/\/\//ig, '/')), 'i8', ALLOC_STACK);
+			mode = allocate(intArrayFromString(UTF8ToString(mode)
+				.replace('b', '')), 'i8', ALLOC_STACK);
+			handle = _fopen(ospath, mode);
+		} catch (e) {
+			// short for fstat check in sys_unix.c!!!
+			if(e.code == 'ENOENT') {
+				return 0;
+			}
+			throw e;
+		}
+		return handle;
+	},
+	Sys_ListFiles__deps: ['$PATH', 'Z_Malloc', 'S_Malloc'],
+	Sys_ListFiles: function (directory, ext, filter, numfiles, dironly) {
+		directory = UTF8ToString(directory);
+		ext = UTF8ToString(ext);
+		if (ext === '/') {
+			ext = null;
+			dironly = true;
+		}
+
+		// TODO support filter
+		
+		var contents;
+		try {
+			contents = FS.readdir(directory);
+		} catch (e) {
+			{{{ makeSetValue('numfiles', '0', '0', 'i32') }}};
+			return null;
+		}
+
+		var matches = [];
+		for (var i = 0; i < contents.length; i++) {
+			var name = contents[i];
+			var stat = FS.stat(PATH.join(directory, name));
+
+			if (dironly && !FS.isDir(stat.mode)) {
+				continue;
+			}
+
+			if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
+				matches.push(name);
+			}
+		}
+
+		{{{ makeSetValue('numfiles', '0', 'matches.length', 'i32') }}};
+
+		if (!matches.length) {
+			return null;
+		}
+
+		// return a copy of the match list
+		var list = _Z_Malloc((matches.length + 1) * 4);
+
+		var i;
+		for (i = 0; i < matches.length; i++) {
+			var filename = _S_Malloc(matches[i].length + 1);
+
+			stringToUTF8(matches[i], filename, matches[i].length+1);
+
+			// write the string's pointer back to the main array
+			{{{ makeSetValue('list', 'i*4', 'filename', 'i32') }}};
+		}
+
+		// add a NULL terminator to the list
+		{{{ makeSetValue('list', 'i*4', '0', 'i32') }}};
+
+		return list;
+	},
 };
 
 autoAddDeps(LibrarySys, '$SYS');

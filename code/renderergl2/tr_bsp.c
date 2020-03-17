@@ -620,7 +620,7 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
-		return tr.defaultShader;
+		shader->remappedShader = tr.defaultShader;
 	}
 
 	return shader;

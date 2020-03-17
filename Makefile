@@ -992,12 +992,11 @@ ifeq ($(PLATFORM),js)
 	BUILD_RENDERER_OPENGL=0
 	BUILD_RENDERER_OPENGL2=1
   BUILD_RENDERER_OPENGLES=0
-  BUILD_FREETYPE=1
 
   USE_CURL=0
   USE_CODEC_VORBIS=0
   USE_CODEC_OPUS=1
-	USE_FREETYPE=1
+	USE_FREETYPE=0
   USE_MUMBLE=0
   USE_VOIP=0
   SDL_LOADSO_DLOPEN=0
@@ -1035,7 +1034,7 @@ ifeq ($(PLATFORM),js)
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
     -s ALLOW_TABLE_GROWTH=1 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=256MB \
@@ -1059,7 +1058,7 @@ ifeq ($(PLATFORM),js)
     -s INVOKE_RUN=1 \
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="[loadDynamicLibrary', 'addFunction', 'stackSave', 'stackRestore', 'dynCall', 'FS']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_UpdateShader', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_CON_SetIsTTY', '_Cvar_Set', '_Cvar_VariableString', '_VM_GetCurrent', '_VM_SetCurrent']" \
     -s RESERVED_FUNCTION_POINTERS=1 \
     -s TOTAL_MEMORY=320MB \
     -s ALLOW_MEMORY_GROWTH=0 \

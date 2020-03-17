@@ -14,9 +14,31 @@
 				margin: 0;
 				background: #000;
 			}
-			
 			#dialog {
 				display: none;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				margin-top: -5em;
+				margin-left: -12em;
+				width: 24em;
+				background: #2a2a2a;
+				z-index: 1000;
+			}
+			#dialog .title {
+				margin: 0;
+				padding: 0.2em 0.5em;
+				background: #333;
+				color: #fff;
+				font-family: "Open Sans";
+				font-weight: bold;
+				text-transform: uppercase;
+			}
+			#dialog .description {
+				margin: 0;
+				padding: 0.5em;
+				color: #fff;
+				font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 			}
 
 			#viewport-frame {
@@ -120,6 +142,7 @@
 				position: absolute;
 				top:0;
 				left:0;
+				z-index: 0;
 			}
 
 			.front, .back {

@@ -47,7 +47,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
       console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(zipFile))
       var index = Object.values(zip.entries())
       if(!outdir) {
-        resolve(index)
+        return resolve(index)
       }
       for(var i = 0; i < index.length; i++) {
         var entry = index[i]

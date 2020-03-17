@@ -251,7 +251,6 @@ asked for again.
 ====================
 */
 qhandle_t RE_RegisterModel( const char *name ) {
-	model_t		*mod;
 	qhandle_t	hModel;
 	qboolean	orgNameFailed = qfalse;
 	int			orgLoader = -1;
@@ -259,6 +258,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	char		localName[ MAX_QPATH ];
 	const char	*ext;
 	char		altName[ MAX_QPATH ];
+	model_t		*mod = NULL;
 
 	if ( !name || !name[0] ) {
 		ri.Printf( PRINT_ALL, "RE_RegisterModel: NULL name\n" );
@@ -274,18 +274,19 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	// search the currently loaded models
 	//
 	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
-		mod = tr.models[hModel];
-		if ( !strcmp( mod->name, name ) ) {
-			if( mod->type == MOD_BAD ) {
-				return 0;
+		if ( !strcmp( tr.models[hModel]->name, name ) ) {
+			mod = tr.models[hModel];
+			if( mod->type != MOD_BAD ) {
+				return hModel;
+			} else {
+				break;
 			}
-			return hModel;
 		}
 	}
 
 	// allocate a new model_t
 
-	if ( ( mod = R_AllocModel() ) == NULL ) {
+	if ( !mod && ( mod = R_AllocModel() ) == NULL ) {
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
@@ -361,8 +362,10 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			break;
 		}
 	}
-
+	
 	return hModel;
+
+	return mod->index;
 }
 
 /*
@@ -535,12 +538,13 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
 			if(sh->defaultShader)
 			{
-				*shaderIndex = 0;
+				sh->remappedShader = tr.defaultShader;
+			//	*shaderIndex = 0;
 			}
-			else
-			{
+			//else
+			//{
 				*shaderIndex = sh->index;
-			}
+			//}
 		}
 
 		// swap all the triangles
@@ -1039,10 +1043,11 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
-				surf->shaderIndex = 0;
-			} else {
+				sh->remappedShader = tr.defaultShader;
+			//	surf->shaderIndex = 0;
+		} // else {
 				surf->shaderIndex = sh->index;
-			}
+			//}
 			
 			// now copy the vertexes.
 			v = (mdrVertex_t *) (surf + 1);

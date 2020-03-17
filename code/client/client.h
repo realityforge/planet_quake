@@ -638,7 +638,11 @@ void CIN_CloseAllVideos(void);
 
 //
 // cl_cgame.c
-//
+#ifdef EMSCRIPTEN
+void CL_UpdateShader( void );
+void CL_UpdateSound( void );
+void CL_UpdateModel( void );
+#endif
 void CL_InitCGame( void );
 void CL_InitCGameFinished( void );
 void CL_ShutdownCGame( void );

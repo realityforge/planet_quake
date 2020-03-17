@@ -1668,6 +1668,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	
 #ifdef EMSCRIPTEN
 	re.UpdateMode = RE_UpdateMode;
+	re.UpdateShader = RE_UpdateShader;
 #endif
 
 	return &re;

@@ -662,9 +662,7 @@ void Sys_ParseArgs( int argc, char **argv )
 }
 
 #ifndef DEFAULT_BASEDIR
-#	ifdef EMSCRIPTEN
-#		define DEFAULT_BASEDIR "/base"
-#	elif __APPLE__
+#	if __APPLE__
 #		define DEFAULT_BASEDIR Sys_StripAppBundle(Sys_BinaryPath())
 #	else
 #		define DEFAULT_BASEDIR Sys_BinaryPath()

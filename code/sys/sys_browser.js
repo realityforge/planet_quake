@@ -1,10 +1,16 @@
 var LibrarySys = {
 	$SYS__deps: ['$SYSC', '$SDL'],
 	$SYS: {
+		index: null,
+		fs_basepath: '/base',
+		fs_game: 'baseq3-ccr',
 		exited: false,
 		timeBase: null,
 		style: null,
 		joysticks: [],
+		shaderCallback: [],
+		soundCallback: [],
+		modelCallback: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -45,6 +51,7 @@ var LibrarySys = {
 			['iortcw-ccr',      'Coming Soon: Return to Castle Wolfenstien'],
 		],
 		args: [
+			'+set', 'fs_basepath', '/base',
 			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
 			'+set', 'cl_allowDownload', '1',
 			'+set', 'fs_basegame', 'baseq3-ccr',
@@ -395,14 +402,16 @@ var LibrarySys = {
 	Sys_FS_Startup: function (cb) {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)))
-		var fs_basepath = UTF8ToString(_Cvar_VariableString(
+		fs_basepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basepath'), 'i8', ALLOC_STACK)))
+		SYS.fs_basepath = fs_basepath;
 		var fs_basegame = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_basegame'), 'i8', ALLOC_STACK)))
 		var sv_pure = _Cvar_VariableIntegerValue(
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
+		SYS.fs_game = fs_game;
 		var mapname = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('mapname'), 'i8', ALLOC_STACK)))
 		var clcState = _CL_GetClientState()
@@ -437,12 +446,10 @@ var LibrarySys = {
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
-				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], '000000000000000placeholder.pk3dir')
-				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
-				SYSC.mkdirp(modDir)
+				var desc = PATH.join(fs_basepath, SYS.mods[i][0], 'description.txt')
+				SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000000000000000placeholder.pk3dir'))
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })
-				
 			}
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
@@ -463,28 +470,13 @@ var LibrarySys = {
 				}
 				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
-				var json = JSON.parse((new TextDecoder("utf-8")).decode(data))
+				SYS.index = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
-				var keys = Object.keys(json)
-				var menu = keys.filter(k => k.includes('menu/'))
-				var game = keys.filter(k => k.includes('game/'))
-				var maps = keys.filter(k => k.includes('maps/'))
-					.map(m => PATH.basename(PATH.dirname(m)))
-					.filter((m, i, arr) => arr.indexOf(m) === i) // unique
-				for(var i = 0; i < maps.length; i++) {
-					var mapsDir = PATH.join(fs_basepath, fsMountPath, '000000000000000placeholder.pk3dir/maps')
-					var map = PATH.join(mapsDir, maps[i] + '.bsp')
-					var aas = PATH.join(mapsDir, maps[i] + '.aas')
-					SYSC.mkdirp(mapsDir)
-					FS.writeFile(map, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
-					FS.writeFile(aas, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
-				}
-				if(clcState >= 4 && game.length) keys = game;
-				if(clcState < 4 && menu.length) keys = menu;
+				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
-				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(json).filter(k => k.includes(`maps\/${mapname}\/`)))
+				if(mapname != '') keys = Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}\/`, 'i')))
 				for(var i = 0; i < keys.length; i++) {
-					var file = json[keys[i]]
+					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
 						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
 					} else {
@@ -492,9 +484,10 @@ var LibrarySys = {
 						//   because it will check ETag and replace files
 						// only download again if the file does not exist
 						try {
-							var handle = FS.open(PATH.join(fs_basepath, fsMountPath, file.name), 'r')
-							FS.close(handle)
-							continue
+							var handle = FS.stat(PATH.join(fs_basepath, fsMountPath, file.name))
+							if(handle) {
+								continue
+							}
 						} catch (e) {
 							if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
 								SYSC.Error('fatal', e.message)
@@ -503,15 +496,16 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(PATH.extname(file.name) === '.pk3'
-						  || PATH.extname(file.name) === '.wasm'
-							|| PATH.extname(file.name) === '.qvm'
-							|| !sv_pure) {
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
+							|| file.name.match(/players\/sarge\/|\.shader|botfiles\//i)
+							|| file.name.match(/q3dm0\.|levelshots/i)
+							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
+							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {
-								FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
-									encoding: 'binary', flags: 'w', canOwn: true })
+							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
+							//		encoding: 'binary', flags: 'w', canOwn: true })
 							} catch (e) {
 								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
 									SYSC.Error('fatal', e.message)
@@ -576,6 +570,126 @@ var LibrarySys = {
 				*/
 			})
 		})
+	},
+	Sys_FOpen__deps: ['$SYS', '$FS', 'fopen'],
+	Sys_FOpen: function (ospath, mode) {
+		var handle
+		try {
+			var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
+			ospath = allocate(intArrayFromString(filename), 'i8', ALLOC_STACK)
+			mode = allocate(intArrayFromString(UTF8ToString(mode)
+				.replace('b', '')), 'i8', ALLOC_STACK);
+			handle = _fopen(ospath, mode)
+			if(handle === 0) {
+				var filenameRelative = filename.replace(SYS.fs_basepath, '')
+				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
+					var loadingShader = UTF8ToString(_Cvar_VariableString(
+						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
+					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
+						if(!err) {
+							FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
+								encoding: 'binary', flags: 'w', canOwn: true })
+						}
+						
+						if(filename.match(/\.opus|\.wav|\.ogg/i)) {
+							SYS.soundCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+						} else if(filename.match(/\.md3|\.iqm|\.mdr/i)) {
+							SYS.modelCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+						} else if(loadingShader) {
+							SYS.shaderCallback.push(loadingShader)
+						}
+					})
+				}
+			}
+		} catch (e) {
+			// short for fstat check in sys_unix.c!!!
+			if(e.code == 'ENOENT') {
+				return 0
+			}
+			throw e
+		}
+		return handle
+	},
+	Sys_UpdateShader: function () {
+		var nextFile = SYS.shaderCallback.pop()
+		if(!nextFile) return 0;
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
+	},
+	Sys_UpdateSound: function () {
+		var nextFile = SYS.soundCallback.pop()
+		if(!nextFile) return 0;
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
+	},
+	Sys_UpdateModel: function () {
+		var nextFile = SYS.modelCallback.pop()
+		if(!nextFile) return 0;
+		var filename = _S_Malloc(nextFile.length + 1);
+		stringToUTF8(nextFile, filename, nextFile.length+1);
+		return filename
+	},
+	Sys_ListFiles__deps: ['$PATH', 'Z_Malloc', 'S_Malloc'],
+	Sys_ListFiles: function (directory, ext, filter, numfiles, dironly) {
+		directory = UTF8ToString(directory);
+		ext = UTF8ToString(ext);
+		if (ext === '/') {
+			ext = null;
+			dironly = true;
+		}
+
+		// TODO support filter
+		
+		var contents;
+		try {
+			contents = FS.readdir(directory)
+				.filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f))))
+			contents = contents.concat(Object.keys(SYS.index)
+				.filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
+					&& (!dironly || typeof SYS.index[k].size == 'undefined'))
+				.map(k => PATH.basename(k)))
+				.filter((f, i, arr) => f && arr.indexOf(f) === i)
+			if(contents.length > 5000) {
+				debugger
+			}
+		} catch (e) {
+			{{{ makeSetValue('numfiles', '0', '0', 'i32') }}};
+			return null;
+		}
+
+		var matches = [];
+		for (var i = 0; i < contents.length; i++) {
+			var name = contents[i];
+			if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
+				matches.push(name);
+			}
+		}
+
+		{{{ makeSetValue('numfiles', '0', 'matches.length', 'i32') }}};
+
+		if (!matches.length) {
+			return null;
+		}
+
+		// return a copy of the match list
+		var list = _Z_Malloc((matches.length + 1) * 4);
+
+		var i;
+		for (i = 0; i < matches.length; i++) {
+			var filename = _S_Malloc(matches[i].length + 1);
+
+			stringToUTF8(matches[i], filename, matches[i].length+1);
+
+			// write the string's pointer back to the main array
+			{{{ makeSetValue('list', 'i*4', 'filename', 'i32') }}};
+		}
+
+		// add a NULL terminator to the list
+		{{{ makeSetValue('list', 'i*4', '0', 'i32') }}};
+
+		return list;
 	},
 	Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
 	Sys_FS_Shutdown: function (cb) {
