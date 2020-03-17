@@ -2967,6 +2967,8 @@ static shader_t *FinishShader( void ) {
 	int stage;
 	qboolean		hasLightmapStage;
 	qboolean		vertexLightmap;
+  
+  Cvar_Set("r_loadingShader", "");
 
 	hasLightmapStage = qfalse;
 	vertexLightmap = qfalse;

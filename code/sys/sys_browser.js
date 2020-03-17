@@ -473,25 +473,8 @@ var LibrarySys = {
 				SYS.index = JSON.parse((new TextDecoder("utf-8")).decode(data))
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
-				var menu = keys.filter(k => k.match(/^menu\//i))
-				var game = keys.filter(k => k.includes('game/'))
-				var maps = keys.filter(k => k.match(/maps\/.*\.bsp/i))
-					.map(m => PATH.basename(PATH.dirname(m)))
-					// add non-pure maps in directories
-					.concat(keys.filter(k => k.match(/\.bsp/i)).map(k => PATH.basename(k).replace(/\.bsp/i, '')))
-					.filter((m, i, arr) => arr.indexOf(m) === i) // unique
-				for(var i = 0; i < maps.length; i++) {
-					var mapsDir = PATH.join(fs_basepath, fsMountPath, 'maps')
-					var map = PATH.join(mapsDir, maps[i] + '.bsp')
-					var aas = PATH.join(mapsDir, maps[i] + '.aas')
-					SYSC.mkdirp(mapsDir)
-					FS.writeFile(map, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
-					FS.writeFile(aas, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
-				}
-				if(clcState >= 4 && game.length) keys = game;
-				if(clcState < 4 && menu.length) keys = menu;
 				// servers need some map and model info for hitboxes up front
-				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}\/`, 'i'))))
+				if(mapname != '') keys = Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}\/`, 'i')))
 				for(var i = 0; i < keys.length; i++) {
 					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
@@ -502,7 +485,7 @@ var LibrarySys = {
 						// only download again if the file does not exist
 						try {
 							var handle = FS.stat(PATH.join(fs_basepath, fsMountPath, file.name))
-							if(handle.size !== 4 || (!file.name.match(/\.bsp/i) && !file.name.match(/\.aas/i))) {
+							if(handle) {
 								continue
 							}
 						} catch (e) {
@@ -513,8 +496,9 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt|botfiles\//i)
-							|| file.name.match(/players\/sarge\/.*\.skin|players\/sarge\/.*\.cfg|\.shader/i)
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
+							|| file.name.match(/players\/sarge\/|\.shader|botfiles\//i)
+							|| file.name.match(/q3dm0\.|levelshots/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
@@ -601,18 +585,18 @@ var LibrarySys = {
 				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
 					var loadingShader = UTF8ToString(_Cvar_VariableString(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
-					_Cvar_Set(allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK), 0)
 					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
 						if(!err) {
 							FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
 								encoding: 'binary', flags: 'w', canOwn: true })
 						}
-						if(loadingShader) {
-							SYS.shaderCallback.push(loadingShader)
-						} else if(filename.match(/\.opus|\.wav|\.ogg/i)) {
+						
+						if(filename.match(/\.opus|\.wav|\.ogg/i)) {
 							SYS.soundCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
 						} else if(filename.match(/\.md3|\.iqm|\.mdr/i)) {
 							SYS.modelCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+						} else if(loadingShader) {
+							SYS.shaderCallback.push(loadingShader)
 						}
 					})
 				}
