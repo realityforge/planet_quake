@@ -711,7 +711,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 				if ( !stage->bundle[0].image[0] )
 				{
 					ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-				//	return qfalse;
+					return qfalse;
 				}
 			}
 		}
@@ -756,7 +756,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 			if ( !stage->bundle[0].image[0] )
 			{
 				ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-			//	return qfalse;
+				return qfalse;
 			}
 		}
 		//
@@ -798,7 +798,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text )
 					if ( !stage->bundle[0].image[num] )
 					{
 						ri.Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-					//	return qfalse;
+						return qfalse;
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -2998,7 +2998,7 @@ static shader_t *FinishShader( void ) {
     // check for a missing texture
 		if ( !pStage->bundle[0].image[0] ) {
 			ri.Printf( PRINT_WARNING, "Shader %s has a stage with no image\n", shader.name );
-		//	pStage->active = qfalse;
+			pStage->active = qfalse;
 			stage++;
 			continue;
 		}
