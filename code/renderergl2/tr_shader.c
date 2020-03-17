@@ -97,6 +97,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 	sh2 = R_FindShaderByName( newShaderName );
 	if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
+    ri.Printf(PRINT_ALL, "ReMap shader hit: %s, %i\n", newShaderName, index);
 		h = RE_RegisterShaderLightMap(newShaderName, index);
 		sh2 = R_GetShaderByHandle(h);
 	}
@@ -3956,7 +3957,6 @@ static void CreateExternalShaders( void ) {
 
 #ifdef EMSCRIPTEN
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
-  ri.Printf(PRINT_ALL, "ReMap shader hit: %s, %i\n", shaderName, lightmapIndex);
   R_RemapShader(shaderName, shaderName, va("%i", 9999 + lightmapIndex));
 }
 #endif

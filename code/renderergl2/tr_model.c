@@ -360,6 +360,11 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			break;
 		}
 	}
+	
+	if(!hModel && !Q_stristr(name, "sarge/head_1.md3")) {
+		ri.Printf(PRINT_WARNING, "Using default model for %s\n", name);
+		hModel = RE_RegisterModel("models/players/sarge/head_1.md3");
+	}
 
 	return hModel;
 }

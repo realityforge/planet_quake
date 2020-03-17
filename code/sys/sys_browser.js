@@ -514,8 +514,7 @@ var LibrarySys = {
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
-							|| file.name.match(/levelshots\/|players\/.*\/icon_|botfiles\//i)
-							|| file.name.match(/players\/sarge|player\/sarge|\.shader|weapons2\/machinegun/i)
+							|| file.name.match(/players\/sarge\/.*\.skin|players\/sarge\/.*\.cfg|\.shader/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
