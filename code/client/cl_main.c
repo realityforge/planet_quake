@@ -3351,6 +3351,10 @@ void CL_Frame ( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
+	
+	CL_UpdateShader();
+	CL_UpdateSound();
+	CL_UpdateModel();
 #endif
 
 

@@ -1203,6 +1203,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					extpos = strlen(strrchr(altFilename, '.'));
 					if(len-extpos+1 < 0) extpos = 0;
 					altFilename[len-extpos+1] = '\0';
+					// TODO: use COM_StripExtension
 					// case and separator insensitive comparisons
 					if(!FS_FilenameCompare(pakFile->name, filename)
 						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "jpg")))

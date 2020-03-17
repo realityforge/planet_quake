@@ -2799,7 +2799,7 @@ void Com_Init_After_Filesystem( void ) {
 	// init commands and vars
 	//
 	com_altivec = Cvar_Get ("com_altivec", "1", CVAR_ARCHIVE);
-	com_maxfps = Cvar_Get ("com_maxfps", "85", CVAR_ARCHIVE);
+	com_maxfps = Cvar_Get ("com_maxfps", "120", CVAR_ARCHIVE);
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE);
 
 	com_logfile = Cvar_Get ("logfile", "0", CVAR_TEMP );
@@ -2821,9 +2821,9 @@ void Com_Init_After_Filesystem( void ) {
 	com_ansiColor = Cvar_Get( "com_ansiColor", "0", CVAR_ARCHIVE );
 
 	com_unfocused = Cvar_Get( "com_unfocused", "0", CVAR_ROM );
-	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "0", CVAR_ARCHIVE );
+	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "10", CVAR_ARCHIVE );
 	com_minimized = Cvar_Get( "com_minimized", "0", CVAR_ROM );
-	com_maxfpsMinimized = Cvar_Get( "com_maxfpsMinimized", "0", CVAR_ARCHIVE );
+	com_maxfpsMinimized = Cvar_Get( "com_maxfpsMinimized", "10", CVAR_ARCHIVE );
 	com_abnormalExit = Cvar_Get( "com_abnormalExit", "0", CVAR_ROM );
 	com_busyWait = Cvar_Get("com_busyWait", "0", CVAR_ARCHIVE);
 	Cvar_Get("com_errorMessage", "", CVAR_ROM | CVAR_NORESTART);
@@ -3118,7 +3118,9 @@ int Com_TimeVal(int minMsec)
 		timeVal = 0;
 	else
 		timeVal = minMsec - timeVal;
-
+#ifdef EMSCRIPTEN
+	return 0;
+#endif
 	return timeVal;
 }
 
@@ -3304,9 +3306,13 @@ void Com_Frame( void ) {
 			NET_Sleep(0);
 		else
 			NET_Sleep(timeVal - 1);
+#ifndef EMSCRIPTEN
 	} while(Com_TimeVal(minMsec));
 	
-#ifdef EMSCRIPTEN
+#else
+;
+	} while(0);
+
 	if(Cvar_Get("net_socksLoading", "1", CVAR_ROM)->integer) {
 		return;
 	}

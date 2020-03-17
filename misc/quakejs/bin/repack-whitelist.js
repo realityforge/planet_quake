@@ -39,6 +39,8 @@ var fileTypes = [
   '.aas',
   '.md3',
   '.md5',
+  '.iqm',
+  '.mdr',
   '.log',
   '.shader',
   '.skin',

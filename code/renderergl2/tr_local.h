@@ -1992,7 +1992,9 @@ const void *RB_TakeVideoFrameCmd( const void *data );
 shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
+shader_t *R_FindDefaultShaderByName( const char *name );
 shader_t *R_FindShaderByName( const char *name );
+void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
@@ -2498,6 +2500,7 @@ void RE_TakeVideoFrame( int width, int height,
 
 #ifdef EMSCRIPEN
 void RE_UpdateMode(glconfig_t *glconfigOut);
+void RE_UpdateShader(char *shaderName);
 #endif
 
 #endif //TR_LOCAL_H

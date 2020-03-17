@@ -598,7 +598,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 		cls.cgameGlConfig = VMA(1);
 #endif
 		CL_GetGlconfig( VMA(1) );
@@ -783,6 +783,27 @@ void CL_InitCGame( void ) {
 #ifdef EMSCRIPTEN
 int CL_GetClientState( void ) {
 	return clc.state;
+}
+
+void CL_UpdateShader( void ) {
+	char *lazyShader = Sys_UpdateShader();
+	if(strlen(lazyShader) == 0) return;
+	lazyShader[12] = '\0';
+	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
+}
+
+
+void CL_UpdateSound( void ) {
+	char *lazySound = Sys_UpdateSound();
+	if(strlen(lazySound) == 0) return;
+	S_RegisterSound(lazySound, qtrue);
+}
+
+
+void CL_UpdateModel( void ) {
+	char *lazyModel = Sys_UpdateModel();
+	if(strlen(lazyModel) == 0) return;
+	re.RegisterModel(lazyModel);
 }
 #endif
 
