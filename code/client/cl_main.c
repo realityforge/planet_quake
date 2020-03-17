@@ -1291,10 +1291,10 @@ Also called by Com_Error
 */
 void CL_FlushMemory(void)
 {
-	CL_ClearMemory(qfalse);
 #ifdef EMSCRIPTEN
 	if(!FS_Initialized()) return;
 #endif
+	CL_ClearMemory(qfalse);
 	CL_StartHunkUsers(qfalse);
 }
 
@@ -2228,30 +2228,6 @@ void CL_Vid_Restart_f( void ) {
 
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
 	{
-#ifdef EMSCRIPTEN
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
-		} else {
-			CL_Vid_Restart_After_Restart();
-		}
-	}
-}
-
-void CL_Vid_Restart_After_Shutdown( void ) {
-	FS_Startup(com_basegame->string);
-	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
-}
-
-void CL_Vid_Restart_After_Startup( void ) {
-	FS_Restart_After_Async();
-	CL_Vid_Restart_After_Restart();
-}
-
-void CL_Vid_Restart_After_Restart( void ) {
-	
-	{	/* if conditional */
-#endif
-;
 
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
@@ -2284,6 +2260,33 @@ void CL_Vid_Restart_After_Restart( void ) {
 
 		// unpause so the cgame definitely gets a snapshot and renders a frame
 		Cvar_Set("cl_paused", "0");
+
+#ifdef EMSCRIPTEN
+		if(!FS_Initialized()) {
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
+		} else {
+			CL_Vid_Restart_After_Restart();
+		}
+	} else {
+		Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
+	}
+}
+
+void CL_Vid_Restart_After_Shutdown( void ) {
+	FS_Startup(com_basegame->string);
+	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
+}
+
+void CL_Vid_Restart_After_Startup( void ) {
+	FS_Restart_After_Async();
+	CL_Vid_Restart_After_Restart();
+}
+
+void CL_Vid_Restart_After_Restart( void ) {
+	
+	{	/* if conditional */
+#endif
+;
 
 		// initialize the renderer interface
 		CL_InitRef();
@@ -3324,7 +3327,7 @@ void CL_Frame ( int msec ) {
 		return;
 	}
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 	// quake3's loading process is entirely synchronous. throughout this
 	// process it will call trap_UpdateScreen to force an immediate buffer
 	// swap. however, in WebGL we can't force an immediate buffer swap,
@@ -3348,8 +3351,8 @@ void CL_Frame ( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
-
 #endif
+
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {
@@ -4153,9 +4156,11 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 
 	if(disconnect)
 		CL_Disconnect(qtrue);
-	
+
 	CL_ClearMemory(qtrue);
+#ifdef EMSCRIPTEN
 	CL_Snd_Shutdown();
+#endif
 
 	Cmd_RemoveCommand ("cmd");
 	Cmd_RemoveCommand ("configstrings");

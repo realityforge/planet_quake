@@ -11,6 +11,7 @@ var imageTypes = [
   '.gif',
   '.pcx',
   '.webp',
+  '.hdr',
 ]
 
 var audioTypes = [
@@ -29,6 +30,7 @@ var sourceTypes = [
 ]
 
 var fileTypes = [
+  '.roq',
   '.cfg',
   '.qvm',
   '.bot',
@@ -37,6 +39,7 @@ var fileTypes = [
   '.aas',
   '.md3',
   '.md5',
+  '.log',
   '.shader',
   '.skin',
   '.pk3',
@@ -62,6 +65,7 @@ var knownDirs = [
   'sound',
   'ui',
   'maps',
+  'videos',
   'textures',
 ]
 

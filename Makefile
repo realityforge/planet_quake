@@ -965,7 +965,7 @@ ifeq ($(PLATFORM),js)
 
   DEBUG=0
   EMCC_DEBUG=0
-# debug optimize flags: --closure 0 --minify 0 -g -g4
+# debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
 #  OPTIMIZEVM += -O3 -Oz --llvm-lto 3 \
 	  -s WASM=1 \
 		-s WASM_BACKEND=1 \
@@ -975,9 +975,10 @@ ifeq ($(PLATFORM),js)
 		-s ASSERTIONS=0 \
 		-fPIC
   OPTIMIZEVM += -O1 --closure 0 --minify 0 -g -g3 \
-		-s SAFE_HEAP=0 \
-		-s DEMANGLE_SUPPORT=1 \
-		-s ASSERTIONS=1 \
+		-s SAFE_HEAP=0
+		-s DEMANGLE_SUPPORT=0 \
+		-s ASSERTIONS=0 \
+		-s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
 		--source-map-base http://localhost:8080/ \
 		-frtti \
 		-fPIC
@@ -986,6 +987,7 @@ ifeq ($(PLATFORM),js)
   HAVE_VM_COMPILED=true
 	BUILD_SERVER=0
   BUILD_GAME_QVM=1
+	BUILD_GAME_SO=0
   BUILD_STANDALONE=0
 	BUILD_RENDERER_OPENGL=0
 	BUILD_RENDERER_OPENGL2=1
@@ -995,9 +997,10 @@ ifeq ($(PLATFORM),js)
   USE_CURL=0
   USE_CODEC_VORBIS=0
   USE_CODEC_OPUS=1
+	USE_FREETYPE=1
   USE_MUMBLE=0
   USE_VOIP=0
-  SDL_LOADSO_DLOPEN=1
+  SDL_LOADSO_DLOPEN=0
   USE_CURL_DLOPEN=0
   USE_OPENAL_DLOPEN=0
   USE_RENDERER_DLOPEN=0
@@ -1017,6 +1020,8 @@ ifeq ($(PLATFORM),js)
 #   -s USE_WEBGL2=1
 #		-s MIN_WEBGL_VERSION=2
 #	  -s MAX_WEBGL_VERSION=2
+#   -s USE_SDL_IMAGE=2 \
+#   -s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
 
   CLIENT_LDFLAGS += --js-library $(LIBSYSCOMMON) \
     --js-library $(LIBSYSBROWSER) \
@@ -1026,16 +1031,14 @@ ifeq ($(PLATFORM),js)
 		-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
-		-s MAIN_MODULE=2 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
-		-s WEBSOCKET_DEBUG=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['loadDynamicLibrary', 'callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
-    -s RESERVED_FUNCTION_POINTERS=10 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain', 'addFunction', 'stackSave', 'stackRestore', 'dynCall']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy_Arg1', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_VM_GetCurrent', '_VM_SetCurrent', '_Sys_GLimpInit', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Com_ExecuteCfg']" \
+    -s ALLOW_TABLE_GROWTH=1 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
-    -s TOTAL_MEMORY=320MB \
+    -s TOTAL_MEMORY=256MB \
     -s ALLOW_MEMORY_GROWTH=1 \
 		-s LEGACY_GL_EMULATION=1 \
 		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=0 \
@@ -1043,8 +1046,6 @@ ifeq ($(PLATFORM),js)
     -s FULL_ES2=0 \
     -s FULL_ES3=0 \
     -s USE_SDL=2 \
-		-s USE_SDL_IMAGE=2 \
-		-s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
 		-s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"ioq3\" \
     $(OPTIMIZE)
@@ -2595,9 +2596,11 @@ Q3CGOBJ_ = \
 Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
+endif
 
 $(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2640,9 +2643,11 @@ MPCGOBJ_ = \
 MPCGOBJ = $(MPCGOBJ_) $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o
 MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
+endif
 
 $(B)/$(MISSIONPACK)/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2693,9 +2698,11 @@ Q3GOBJ_ = \
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
+endif
 
 $(B)/$(BASEGAME)/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2744,9 +2751,11 @@ MPGOBJ_ = \
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
+endif
 
 $(B)/$(MISSIONPACK)/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2807,9 +2816,11 @@ Q3UIOBJ_ = \
 Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
+endif
 
 $(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
@@ -2835,9 +2846,11 @@ MPUIOBJ_ = \
 MPUIOBJ = $(MPUIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 MPUIVMOBJ = $(MPUIOBJ_:%.o=%.asm)
 
+ifneq ($(USE_RENDERER_DLOPEN),0)
 $(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ) $(LIBVM)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPUIOBJ)
+endif
 
 $(B)/$(MISSIONPACK)/vm/ui.qvm: $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"

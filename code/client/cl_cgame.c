@@ -390,7 +390,10 @@ void CL_ShutdownCGame( void ) {
 		return;
 	}
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
+	cls.cgameGlConfig = NULL;
+	cls.cgameFirstCvar = NULL;
+	cls.numCgamePatches = 0;
 	// if we're still starting up, we need to finish before
 	// we can shutdown
 	while (VM_IsSuspended(cgvm)) {
@@ -401,12 +404,6 @@ void CL_ShutdownCGame( void ) {
 	VM_Call( cgvm, CG_SHUTDOWN );
 	VM_Free( cgvm );
 	cgvm = NULL;
-	
-#if EMSCRIPTEN
-	cls.cgameGlConfig = NULL;
-	cls.cgameFirstCvar = NULL;
-	cls.numCgamePatches = 0;
-#endif
 }
 
 static int	FloatAsInt( float f ) {
@@ -783,6 +780,12 @@ void CL_InitCGame( void ) {
 	CL_InitCGameFinished();
 }
 
+#ifdef EMSCRIPTEN
+int CL_GetClientState( void ) {
+	return clc.state;
+}
+#endif
+
 /*
 ====================
 CL_InitCGameFinished
@@ -829,7 +832,7 @@ qboolean CL_GameCommand( void ) {
 		return qfalse;
 	}
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command
 		// before the frame has resumed the vm
 		if (VM_IsSuspended(cgvm)) {

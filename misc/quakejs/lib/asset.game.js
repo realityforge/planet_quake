@@ -3,7 +3,7 @@ var path = require('path')
 var glob = require('glob')
 var minimatch = require("minimatch")
 
-var {disassembleQVM, graphQVM, getGameAssets} = require('../lib/asset.qvm.js')
+var {disassembleQVM, graphQVM, getGameAssets, graphMenus} = require('../lib/asset.qvm.js')
 var md3 = require('../lib/asset.md3.js')
 var bsp = require('../lib/asset.bsp.js')
 var shaderLoader = require('../lib/asset.shader.js')
@@ -23,6 +23,7 @@ var STEPS = {
   'skins': 'Looking for skins',
   'disassemble': 'Disassembling QVMs',
   'qvms': 'Looking for QVMs',
+  'menus': 'Looking for menus',
   'entities': 'Looking for game entities',
   'vertices': 'Graphing vertices',
   'shaders': 'Graphing shaders',
@@ -42,23 +43,33 @@ function graphMaps(project) {
   var maps = findTypes(['.bsp'], project)
   for(var i = 0; i < maps.length; i++) {
     var buffer = fs.readFileSync(maps[i])
-    var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
-    result[maps[i]] = map
+    try {
+      var map = bsp.load(buffer, { lumps: [bsp.LUMP.ENTITIES, bsp.LUMP.SHADERS] })
+      result[maps[i]] = map
+    } catch (e) {
+      console.error(`Error loading map ${maps[i]}: ${e.message}`, e)
+    }
   }
   console.log(`Found ${Object.keys(result).length} maps`)
   return result
 }
 
-function graphModels(project) {
+async function graphModels(project, progress) {
   var result = {}
   var models = findTypes(['.md5', '.md3'], project)
+  console.log(`Found ${models.length} models`)
   for(var i = 0; i < models.length; i++) {
+    await progress([[2, i, models.length, models[i].replace(project, '')]])
     var buffer = fs.readFileSync(models[i])
-    var model = md3.load(buffer)
-    result[models[i]] = model
+    try {
+      var model = md3.load(buffer)
+      result[models[i]] = model
+    } catch (e) {
+      console.error(`Error loading model ${models[i]}: ${e.message}`, e)
+    }
   }
   var withSkins = Object.keys(result).filter(m => result[m].skins.length > 0)
-  console.log(`Found ${Object.keys(result).length} models, ${withSkins.length} with skins`)
+  console.log(`Loaded ${Object.keys(result).length} models, ${withSkins.length} with skins`)
   return result
 }
 
@@ -70,7 +81,7 @@ function graphShaders(project) {
     var script = shaderLoader.load(buffer)
     result[shaders[i]] = script
   }
-  console.log(`Found ${Object.keys(result).length} shaders`)
+  console.log(`Found ${Object.keys(result).length} shader scripts, with ${Object.values(result).flat(1).length} shaders`)
   return result
 }
 
@@ -96,9 +107,15 @@ async function loadGame(project, progress) {
   var game = {}
   await progress([[1, 1, Object.keys(STEPS).length, STEPS['maps']]])
   game.maps = graphMaps(project)
-  await progress([[1, 2, Object.keys(STEPS).length, STEPS['models']]])
-  game.models = graphModels(project)
-  await progress([[1, 3, Object.keys(STEPS).length, STEPS['shaders']]])
+  await progress([
+    [2, false],
+    [1, 2, Object.keys(STEPS).length, STEPS['models']]
+  ])
+  game.models = await graphModels(project, progress)
+  await progress([
+    [2, false],
+    [1, 3, Object.keys(STEPS).length, STEPS['shaders']]
+  ])
   game.shaders = graphShaders(project)
   await progress([[1, 4, Object.keys(STEPS).length, STEPS['skins']]])
   game.skins = graphSkins(project)
@@ -113,12 +130,19 @@ async function loadGame(project, progress) {
   }
   await progress([[1, 6, Object.keys(STEPS).length, STEPS['qvms']]])
   game.qvms = graphQVM(project)
+  await progress([[1, 7, Object.keys(STEPS).length, STEPS['menus']]])
+  game.menus = await graphMenus(project, progress)
   // TODO: accept an entities definition to match with QVM
   // use some known things about QVMs to group files together first
-  await progress([[1, 7, Object.keys(STEPS).length, STEPS['entities']]])
-  var cgame = Object.values(game.qvms).flat(1)
-    .filter(k => k.match(/cgame\.dis/i))[0]
-  var entities = cgame ? getGameAssets(cgame) : []
+  await progress([
+    [2, false],
+    [1, 8, Object.keys(STEPS).length, STEPS['entities']]
+  ])
+  var entities = Object.values(game.qvms)
+    .flat(1)
+    .filter(k => k.match(/\.dis/i))
+    .map(k => getGameAssets(k))
+    .reduce((obj, o) => Object.assign(obj, o), {})
   
   // add all vertices
   var entityRefs = Object.keys(game.maps)
@@ -135,6 +159,7 @@ async function loadGame(project, progress) {
         }, [])
         .filter(e => e && e.charAt(0) != '*')
         .concat([k.replace('.bsp', '.aas')])
+        .concat(everything.filter(minimatch.filter('**/maps/' + path.basename(k.replace('.bsp', '')) + '/**')))
         .concat(game.maps[k].entities.map(e => e.classname))
         .filter((e, i, arr) => arr.indexOf(e) === i)
       obj[k].sort()
@@ -191,7 +216,7 @@ async function loadGame(project, progress) {
   var qvmFiles = await Object.keys(game.qvms)
     .reduce(async (objPromise, k, i) => {
       var obj = await objPromise
-      await progress([[1, 8 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
+      await progress([[1, 9 + i, Object.keys(STEPS).length + Object.keys(game.qvms).length,
         `Searching for QVM files ${path.basename(k)} from ${game.qvms[k].length} strings`]], true)
       var wildcards = game.qvms[k].filter(s => s.includes('*'))
       obj[k] = wildcards
@@ -202,7 +227,14 @@ async function loadGame(project, progress) {
       obj[k].sort()
       return obj
     }, Promise.resolve({}))
-
+  var menuFiles = await Object.keys(game.menus)
+    .reduce(async (objPromise, k, i) => {
+      var obj = await objPromise
+      obj[k] = game.menus[k]
+        .filter((e, i, arr) => arr.indexOf(e) === i)
+      obj[k].sort()
+      return obj
+    }, Promise.resolve({}))
   var gameState = {
     entities: entities,
     mapEntities: entityRefs,
@@ -212,6 +244,7 @@ async function loadGame(project, progress) {
     shaders: scriptTextures,
     skins: skinShaders,
     qvms: qvmFiles,
+    menus: menuFiles,
     everything: everything,
   }
   console.log(`Game graph written to "${TEMP_NAME}"`)
@@ -245,9 +278,11 @@ async function graphGame(gs, project, progress) {
     .concat(Object.values(gs.shaders).flat(1))
     .concat(Object.keys(gs.qvms))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
+    .concat(Object.keys(gs.menus))
+    .concat(Object.values(gs.menus).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  await progress([[1, 8 + Object.keys(gs.qvms).length,
+  await progress([[1, 10 + Object.keys(gs.qvms).length,
     Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${vertices.length} vertices`]])
   
@@ -275,6 +310,7 @@ async function graphGame(gs, project, progress) {
   // lookup all shaders
   var everyShaderName = Object.values(gs.scripts)
     .flat(1)
+    .map(s => s.replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
     .filter((s, i, arr) => arr.indexOf(s) === i)
   var allShaders = []
     .concat(Object.values(gs.entities).flat(1)) // match with shaders or files so icons match up
@@ -283,9 +319,10 @@ async function graphGame(gs, project, progress) {
     .concat(Object.values(gs.scripts).flat(1)) // obviously all these should match the list above
     .concat(Object.values(gs.skins).flat(1))
     .concat(Object.values(gs.qvms).flat(1)) // can be filename or shaders
+    .concat(Object.values(gs.menus).flat(1)) // can be filename or shaders
     .filter((v, i, arr) => v && arr.indexOf(v) == i)
     
-  await progress([[1, 8 + Object.keys(gs.qvms).length + 1,
+  await progress([[1, 10 + Object.keys(gs.qvms).length + 1,
     Object.keys(STEPS).length + Object.keys(gs.qvms).length,
     `Graphing ${allShaders.length} shaders`]])
     
@@ -293,7 +330,8 @@ async function graphGame(gs, project, progress) {
   for(var i = 0; i < allShaders.length; i++) {
     // matches without extension
     //   which is what we want because mods override shaders
-    var index = everyShaderName.indexOf(allShaders[i])
+    var nameNoExt = allShaders[i].replace(new RegExp(imageTypes.join('|'), 'ig'), '')
+    var index = everyShaderName.indexOf(nameNoExt)
     if(index > -1) {
       shaderLookups[allShaders[i]] = graph.getVertex(everyShaderName[index])
         || graph.addVertex(everyShaderName[index], {
@@ -314,6 +352,12 @@ async function graphGame(gs, project, progress) {
   }
   
   // link all the vertices and follow all shaders through to their files
+  Object.keys(gs.shaders).forEach(k => {
+    gs.shaders[k].forEach(e => {
+      if(typeof fileLookups[e] == 'undefined') return
+      graph.addEdge(graph.getVertex(k.replace(new RegExp(imageTypes.join('|'), 'ig'), '')), fileLookups[e])
+    })
+  })
   Object.keys(gs.entities).forEach(k => {
     var entityEdges = gs.entities[k]
       .filter(e => typeof fileLookups[e] != 'undefined'
@@ -321,15 +365,11 @@ async function graphGame(gs, project, progress) {
     if(entityEdges.length > 0) {
       fileLookups[k] = graph.addVertex(k, {name: k})
       entityEdges.forEach(e => {
-        if(typeof fileLookups[e] != 'undefined')
+        if(typeof fileLookups[e] != 'undefined') {
           graph.addEdge(fileLookups[k], fileLookups[e])
+        }
         if(typeof shaderLookups[e] != 'undefined') {
           graph.addEdge(fileLookups[k], shaderLookups[e])
-          shaderLookups[e].inEdges.forEach(e2 => {
-            if(e.includes(e2.outVertex.id)) {
-              graph.addEdge(fileLookups[k], e2.outVertex)
-            }
-          })
         }
       })
     }
@@ -340,43 +380,22 @@ async function graphGame(gs, project, progress) {
       graph.addEdge(graph.getVertex(k), fileLookups[e])
     })
   })
-  Object.keys(gs.shaders).forEach(k => {
-    gs.shaders[k].forEach(e => {
-      if(typeof fileLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), fileLookups[e])
-    })
-  })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.models).forEach(k => {
     gs.models[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.skins).forEach(k => {
     gs.skins[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
       graph.addEdge(graph.getVertex(k), shaderLookups[e])
-      shaderLookups[e].inEdges.forEach(e2 => {
-        if(e.includes(e2.outVertex.id)) {
-          graph.addEdge(graph.getVertex(k), e2.outVertex)
-        }
-      })
     })
   })
   Object.keys(gs.qvms).forEach(k => {
@@ -386,15 +405,19 @@ async function graphGame(gs, project, progress) {
       }
       if(typeof shaderLookups[e] != 'undefined') {
         graph.addEdge(graph.getVertex(k), shaderLookups[e])
-        shaderLookups[e].inEdges.forEach(e2 => {
-          if(e.includes(e2.outVertex.id)) {
-            graph.addEdge(graph.getVertex(k), e2.outVertex)
-          }
-        })
       }
     })
   })
-  
+  Object.keys(gs.menus).forEach(k => {
+    gs.menus[k].forEach(e => {
+      if(typeof fileLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), fileLookups[e])
+      }
+      if(typeof shaderLookups[e] != 'undefined') {
+        graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      }
+    })
+  })
   // TODO: add arenas, configs, bot scripts, defi
   
   gs.graph = graph
@@ -421,12 +444,16 @@ function searchMinimatch(search, everything) {
     var type = [imageTypes, audioTypes, sourceTypes, fileTypes]
       .filter(type => type.includes(path.extname(search).toLowerCase()))[0]
     if(path.extname(search) && !type) {
-      throw new Error('File type not found '  + search)
+      console.error('File type not found ' + search)
+      return null
     }
     else if (!type) type = imageTypes // assuming its a shading looking for an image
     name = everything.filter(f => type.filter(t => f.includes(lookup + t)).length > 0)
-    if(name.length == 0 || name.length > 1) {
+    if(name.length == 0) {
       return null
+    } else if(name.length > 1) {
+      // TODO: error or something here? Duplicate files like where jpg is already included with the same name
+    //  console.error('Duplicates found ' + search)
     }
   }
   return everything.indexOf(name[0])

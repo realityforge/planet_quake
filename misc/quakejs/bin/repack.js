@@ -35,6 +35,8 @@ npm run repack [options] [mod directory]
 --verbose -v - print all percentage status updates in case there is an error
 --help -h - print this help message and exit
 --no-overwrite - don't overwrite files during conversion, TODO: during unzipping either
+--whitelist - TODO: force include matching files with menu/game like sarge/major/footsteps,
+  and anything else found with in the logs matching "R_FindImageFile could not find|Warning: Failed to load sound"
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
@@ -55,6 +57,53 @@ var numericMap = [
   ['other', /.*/, 8], // 80-89 - map models
 ]
 
+// minimatch/globs
+var whitelist = {
+  'baseq3': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'missionpack': [
+    '**/+(james|janet|sarge)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+    '**/ui/assets/**',
+  ],
+  'baseoa': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'baseq3r': [
+    '**/+(player|players)/sidepipe/**',
+    '**/+(player|players)/heads/doom*',
+    '**/+(player|players)/plates/**',
+    '**/+(player|players)/wheels/*cobra*',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'q3ut4': [
+    '**/+(athena)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(handskins)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ]
+}
+
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -74,8 +123,8 @@ for(var i = 0; i < process.argv.length; i++) {
   if(a.match(/\/repack\.js$/ig)) continue
   if(ufs.existsSync(a) && ufs.statSync(a).isDirectory(a)) {
     mountPoints.push(a)
-  }
-  if(a == '--edges') {
+    continue
+  } else if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
     console.log(`Grouped edges by ${edges}`)
     i++
@@ -145,7 +194,7 @@ if(mountPoints.length == 0) {
 }
 for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
-  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-combined-converted-repacked')}`)
+  console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-ccr')}`)
 }
 try {
   require.resolve('cli-progress');
@@ -171,6 +220,7 @@ if(!noProgress) {
     var args = Array.from(arguments).slice(1)
     multibar.terminal.cursorRelativeReset()
     multibar.terminal.clearBottom()
+    multibar.terminal.lineWrapping(true)
     oldConsole[out].apply(oldConsole, args)
     multibar.update()
   }
@@ -353,13 +403,14 @@ async function gameInfo(gs, project) {
     notfound: game.notfound,
     excludingMap: exludingMap,
     baseq3: game.baseq3,
-    vertices: vertices.map(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length + ' - ' + v.id),
+    vertices: vertices
+      .map(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length + ' - ' + v.id),
     filesOverLimit: filesOverLimit,
     leastUsed: leastUsed
       .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
     leastUsedExcept: leastUsedExcept
       .map(v => v.inEdges.length + ' - ' + v.id + ' - ' + v.inEdges.map(e => e.outVertex.id).join(', ')),
-    unused: unused,
+    unused: unused.map(v => v.id),
     graphed: graphed,
     ungraphed: ungraphed,
   }
@@ -413,7 +464,7 @@ async function groupAssets(gs, project) {
     if(!v) return true
     var entFiles = getLeaves(v).filter(f => game.everything.includes(f)
       && !entityDuplicates.includes(f))
-    var model = entFiles.filter(f => f.match(/.\.md3/i))[0] || entFiles[0]
+    var model = entFiles.filter(f => f.match(/\.md3/i))[0] || entFiles[0] || ent
     var pakClass = numericMap
       .filter(map => map.filter((m, i) => i < map.length - 1
         && model.match(new RegExp(m))).length > 0)[0][0]
@@ -442,10 +493,14 @@ async function groupAssets(gs, project) {
   
   // group shared textures and sounds by folder name
   var filesOverLimit = getLeaves(vertices
-    .filter(v => v.inEdges.filter((e, i, arr) => arr.indexOf(e) === i).length > edges))
+    .filter(v => v.inEdges.filter((e, i, arr) => 
+      arr.indexOf(e) === i).length > edges
+      || v.id.match(/\.menu/i)))
     .concat(entityDuplicates)
+    .concat(Object.values(game.menus).flat(1))
     .filter((f, i, arr) => arr.indexOf(f) === i
-      && game.everything.includes(f) && !externalAssets.includes(f))
+      && game.everything.includes(f) && !externalAssets.includes(f)
+      && !f.match(/maps\//i))
   filesOverLimit.forEach(f => {
     var pakName = path.basename(path.dirname(f))
     var pakClass = numericMap
@@ -461,7 +516,7 @@ async function groupAssets(gs, project) {
   })
 
   var externalAndShared;
-    
+  
   // map menu and cgame files
   var qvms = Object.keys(game.qvms)
     .filter(qvm => qvm.match(/ui.qvm/i))
@@ -473,7 +528,7 @@ async function groupAssets(gs, project) {
     var className = qvm.match(/ui.qvm/i) ? 'menu' : 'game'
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
-        && !externalAndShared.includes(f))
+        && !externalAndShared.includes(f) && !f.match(/maps\//i))
     gameAssets.forEach(f => {
       var pakName = path.basename(path.dirname(f))
       if(pakName == path.basename(project)) {
@@ -489,14 +544,20 @@ async function groupAssets(gs, project) {
   externalAndShared = Object.values(grouped).flat(1)
   
   // group all map models and textures by map name
-  Object.keys(game.maps).map(m => game.graph.getVertex(m)).forEach(v => {
-    var map = path.basename(v.id).replace(/\.bsp/i, '')
-    var mapAssets = getLeaves(v)
-      .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
-    if(mapAssets.length > 0) {
-      grouped['maps/' + map] = mapAssets
-    }
-  })
+  Object.keys(game.maps)
+    .map(m => game.graph.getVertex(m))
+    .forEach(v => {
+      var map = path.basename(v.id).replace(/\.bsp/i, '')
+      var mapAssets = getLeaves(v)
+        .filter(f => game.everything.includes(f) && !externalAndShared.includes(f))
+      if(map.includes('mpterra2')) {
+        console.log(getLeaves(v).filter(f => f.includes('pjrock12b_2')))
+        console.log(externalAndShared.filter(f => f.includes('nightcity')))
+      }
+      if(mapAssets.length > 0) {
+        grouped['maps/' + map] = mapAssets
+      }
+    })
 
   // make sure lots of items are linked
   var groupedFlat = Object.values(grouped).flat(1)
@@ -509,13 +570,19 @@ async function groupAssets(gs, project) {
   // regroup groups with only a few files
   var condensed = Object.keys(grouped).reduce((obj, k) => {
     var newKey = k.split('/')[0]
-    if(grouped[k].length <= edges || k.split('/')[1] == newKey) {
+    if((grouped[k].length <= edges || k.split('/')[1] == newKey)
+      // do not merge map indexes for the sake of FS_InMapIndex lookup
+      // all BSPs and players must be downloaded seperately
+      && grouped[k].filter(f => f.match(/maps\/|players\/|player\//i)).length === 0) {
       if(typeof obj[newKey] == 'undefined') {
         obj[newKey] = []
       }
       obj[newKey].push.apply(obj[newKey], grouped[k])
     } else {
-      obj[k] = grouped[k]
+      if(typeof obj[k] == 'undefined') {
+        obj[k] = []
+      }
+      obj[k].push.apply(obj[k], grouped[k])
     }
     return obj
   }, {})
@@ -585,23 +652,26 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
   //   does not match the converted paths at this point
   var orderedNoExt = Object.keys(game.ordered)
     .reduce((obj, k) => {
-      obj[k] = game.ordered[k].map(f => f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), ''))
+      obj[k] = game.ordered[k].map(f => f
+        .replace(outConverted, '')
+        .replace(outCombined, '')
+        .replace(path.extname(f), '')
+        .replace(/^\/|\/$/ig, ''))
       return obj
     }, {})
-  var indexJson, help
+  var indexJson, help2
   if(outputProject) {
     var indexJson = path.join(outputProject, './index.json')
-    var help = `, you should run:
+    help2 = `, you should run:
 npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
 and
-open ./build/release-*/ioq3ded +set fs_basepath ${path.dirname(path.dirname(outputProject))} +set fs_game ${path.basename(outputProject)}
-WARNING: this path might be too long, and cause
- an error "BIG Info string length exceeded"
- so it should probably be moved and renamed 
- to something much shorter like /${path.basename(outputProject).split(/[^a-z0-9]/ig).map(p => p[0]).join('')}/`
+open ./build/release-*/ioq3ded +set fs_basepath ${path.dirname(path.dirname(outputProject))} +set fs_basegame ${path.basename(outputProject)} +set fs_game ${path.basename(outputProject)}
+and
+npm run start -- /assets/${path.basename(outputProject)} ${outputProject}
+`
   } else {
     indexJson = INDEX_NAME
-    help = ''
+    help2 = ''
   }
   
   // generate a index.json the server can use for pk3 sorting based on map/game type
@@ -619,21 +689,38 @@ WARNING: this path might be too long, and cause
     .filter(qvm => !qvm.match(/ui.qvm/i)))
   qvms.forEach(qvm => {
     // update shared items so menu is downloaded followed by cgame
+    var gameAdditions
+    if(qvm.match(/game.qvm/i)) {
+      gameAdditions = whitelist[path.basename(outConverted)]
+        || Object.keys(whitelist)
+        .filter(k => !(k.split('-')[0] + '-cc').localeCompare(path.basename(outConverted, 'en', { sensitivity: 'base' })))
+        .map(k => whitelist[k])
+        .flat(1)
+      if(!Array.isArray(gameAdditions)) gameAdditions = [gameAdditions]
+      gameAdditions = gameAdditions.map(m => {
+        return externalAndShared.filter(minimatch.filter(m))
+      }).flat(1)
+    } else {
+      gameAdditions = []
+    }
     var gameAssets = mapGameAssets(game.graph.getVertex(qvm))
       .filter(f => game.everything.includes(f)
         && !externalAndShared.includes(f))
-      // add sarge, TODO: make this a command line option
-      .concat(qvm.match(/game.qvm/i)
-        ? externalAndShared.filter(f => f.includes('sarge') || f.includes('major'))
-        : [])
+      // add extra game assets the parser missed like default models/player sounds
+      .concat(gameAdditions)
     externalAndShared = externalAndShared.concat(gameAssets)
     gameAssets.forEach(f => {
       var matchPak = Object.keys(orderedNoExt)
-        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f
+          .replace(outConverted, '')
+          .replace(outCombined, '')
+          .replace(path.extname(f), '')
+          .replace(/^\/|\/$/ig, '')))[0]
       var newName = (qvm.match(/ui.qvm/i) ? 'menu' : 'game') + '/' + matchPak
       if(typeof matchPak === 'undefined') {
-        console.log(orderedNoExt)
-        throw new Error('Couldn\'t find file in packs ' + f)
+        console.log(Object.values(orderedNoExt).flat(1).filter(f2 => f2.includes(path.basename(f))))
+        console.error('Couldn\'t find file in packs ' + f)
+        return true
       }
       if(typeof remapped[newName] == 'undefined') {
         remapped[newName] = {
@@ -654,9 +741,12 @@ WARNING: this path might be too long, and cause
     mapAssets.forEach(f => {
       var matchPak = mapPak // always check the map pak first
         .concat(Object.keys(orderedNoExt))
-        .filter(k => orderedNoExt[k].includes(f.replace(outConverted, '').replace(outCombined, '').replace(path.extname(f), '')))[0]
+        .filter(k => orderedNoExt[k].includes(f
+          .replace(outConverted, '')
+          .replace(outCombined, '')
+          .replace(path.extname(f), '')
+          .replace(/^\/|\/$/ig, '')))[0]
       if(typeof matchPak === 'undefined') {
-        console.log(orderedNoExt)
         throw new Error('Couldn\'t find file in packs ' + f)
       }
       var newName = 'maps/' + map + '/' + matchPak
@@ -670,7 +760,7 @@ WARNING: this path might be too long, and cause
       }
     })
   })
-  console.log(`Writing index.json "${indexJson}"`, help)
+  console.log(`Writing index.json "${indexJson}"`, help2)
   if(outputProject) {
     ufs.writeFileSync(indexJson, JSON.stringify(remapped, null, 2))
   }
@@ -687,7 +777,7 @@ async function repack(gs, outConverted, outputProject) {
   if(!ufs.existsSync(outputProject)) ufs.mkdirSync(outputProject)
   var orderedKeys = Object.keys(game.ordered)
   for(var i = 0; i < orderedKeys.length; i++) {
-    await progress([[1, i, orderedKeys.length, 'Packing ' + orderedKeys[i]]], true)
+    await progress([[1, i, orderedKeys.length, orderedKeys[i]]], true)
     var pak = game.ordered[orderedKeys[i]]
     var real = pak.filter(f => ufs.existsSync(f) && !ufs.statSync(f).isDirectory())
     var outFile = path.join(outputProject, orderedKeys[i] + '.pk3')

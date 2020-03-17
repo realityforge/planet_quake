@@ -2,7 +2,7 @@ var path = require('path');
 var fs = require('fs');
 var glob = require('glob')
 var minimatch = require('minimatch')
-var {whitelist, findTypes} = require('../bin/repack-whitelist.js')
+var {whitelist, findTypes, allTypes} = require('../bin/repack-whitelist.js')
 var {execSync} = require('child_process');
 var {getLeaves} = require('../lib/asset.graph.js')
 
@@ -27,14 +27,17 @@ function loadQVMStrings(buffer, topdirs) {
   var qvmstrings = buffer
     .toString('utf-8')
     .split('\n')
-    .map(line => (/['""'](.*?)['""']/ig).exec(line))
+    .map(line => ((/background\s+([^"].*?)(\s|$)/ig).exec(line) || [])[1]
+        || ((/['""'](.*?)['""']/ig).exec(line) || [])[1])
     .filter(string => string)
     // assuming a single character is the path seperator,
     //   TODO: could be a number or something, derive from QVM function call with ascii character nearby?
     //   TODO: might need something for %i matching lightmaps names or animation frames
-    .map(f => [f[1].replace(/%[0-9\-\.]*[sdif]/ig, '*')
-                   .replace(/%[c]/ig, '/'),
-               f[1].replace(/%[0-9\-\.]*[sdicf]/ig, '*')])
+    .map(f => [f.replace(/%[0-9\-\.]*[sdif]/ig, '*')
+                .replace(/%[c]/ig, '/'),
+               f.replace(/%[0-9\-\.]*[sdicf]/ig, '*')]
+              .concat(f.match(new RegExp(allTypes.join('|').replace(/\./g, '\\.')))
+                ? ['*' + f] : []))
     .flat(1)
     .map(w => w.includes('*') ? w.replace(/\\/ig, '/') : w)
 
@@ -81,7 +84,8 @@ function graphQVM(project) {
     var qvmstrings = loadQVMStrings(buffer, topdirs)
       .concat([
         'console', 'white', 'gfx/2d/bigchars',
-        'botfiles/**', '*.cfg', '*.shader', disassembly
+        'botfiles/**', '*.cfg', '*.shader', '*.menu',
+        'ui/*.txt', '*.h', 'ui/assets/**', 'fonts/**', disassembly
       ])
     result[qvms[i]] = qvmstrings
   }
@@ -122,21 +126,35 @@ function getGameAssets(disassembly) {
   return bg_itemlist
 }
 
+async function graphMenus(project, progress) {
+  var result = {}
+  var menus = findTypes(['.menu', '.txt'], project)
+  for(var i = 0; i < menus.length; i++) {
+    progress([[2, i, menus.length, menus[i].replace(project, '')]])
+    var buffer = fs.readFileSync(menus[i])
+    try {
+      var menu = loadQVMStrings(buffer)
+      result[menus[i]] = menu
+    } catch (e) {
+      console.error(`Error loading menu ${menus[i]}: ${e.message}`, e)
+    }
+  }
+  console.log(`Found ${Object.keys(result).length} menus with ${Object.values(result).flat(1).length} strings`)
+  return result
+}
+
 function mapGameAssets(qvmVertex) {
   // don't include disassembly in new pak
   // don't include maps obviously because they are listed below
   var gameVertices = qvmVertex
     .outEdges
     .map(e => e.inVertex)
-    .filter(v => !v.id.match(/\.dis|\.bsp|\.aas/i))
+    .filter(v => !v.id.match(/\.dis|\.bsp|\.aas|maps\/|\.qvm/i))
   var gameAssets = [qvmVertex.id]
     .concat(gameVertices.map(v => v.id))
     // include shader scripts, but do not include the assets they point to
-    .concat(gameVertices
-      .filter(v => !v.id.match(/\.shader/i))
-      .map(v => getLeaves(v)))
-    .flat(2)
-    .filter((f, i, arr) => arr.indexOf(f) === i && !f.match(/\.bsp|\.aas/i))
+    .concat(gameVertices.filter(v => !v.id.match(/\.shader/i)).map(v => getLeaves(v)).flat(2))
+    .filter((f, i, arr) => arr.indexOf(f) === i && !f.match(/\.bsp|\.aas|maps\//i))
   return gameAssets
 }
 
@@ -144,6 +162,7 @@ module.exports = {
   getGameAssets: getGameAssets,
   loadQVMStrings: loadQVMStrings,
   graphQVM: graphQVM,
+  graphMenus: graphMenus,
   disassembleQVM: disassembleQVM,
   mapGameAssets: mapGameAssets,
   MATCH_ENTS: MATCH_ENTS,

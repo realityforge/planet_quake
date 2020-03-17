@@ -538,6 +538,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
 		VM_Call( uivm, UI_REFRESH, cls.realtime );
 	}
+	//if (!cls.menuUIhack) {
+	//	cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);
+	//}
 
 	// console draws next
 	Con_DrawConsole ();
@@ -591,4 +594,3 @@ void SCR_UpdateScreen( void ) {
 	
 	recursive = 0;
 }
-

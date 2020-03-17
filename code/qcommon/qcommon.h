@@ -75,6 +75,8 @@ void CL_Connect_After_Restart( void );
 void CL_Connect_After_Startup( void );
 void CL_Disconnect_After_Restart( void );
 
+void Com_Frame_After_Startup( void );
+void Com_Frame_After_Shutdown( void );
 void Com_GameRestart_User_After_Shutdown( void );
 void Com_GameRestart_User_After_Startup( void );
 void SV_SpawnServer_After_Shutdown( void );
@@ -439,7 +441,16 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
+
+typedef struct {
+	int					frametime;
+	int					realtime;
+	int					cursorx;
+	int					cursory;
+} ui_hack;
+
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker);
 qboolean VM_IsSuspended(vm_t *vm);
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp);
 int VM_Resume(vm_t *vm);
@@ -764,6 +775,7 @@ int		FS_Seek( fileHandle_t f, long offset, int origin );
 
 qboolean FS_FilenameCompare( const char *s1, const char *s2 );
 
+qboolean FS_InMapIndex( const char *filename );
 void FS_SetMapIndex( const char *mapname );
 const char *FS_LoadedPakNames( void );
 const char *FS_LoadedPakChecksums( void );
@@ -864,6 +876,7 @@ typedef enum {
 	SE_KEY,			// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,		// evValue is an ascii char
 	SE_MOUSE,		// evValue and evValue2 are relative signed x / y moves
+	SE_MOUSE_ABS,
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE		// evPtr is a char*
 } sysEventType_t;
@@ -1058,7 +1071,11 @@ void CL_KeyEvent (int key, qboolean down, unsigned time);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
+#ifdef EMSCRIPTEN
+void CL_MouseEvent( int dx, int dy, int time, qboolean absolute );
+#else
 void CL_MouseEvent( int dx, int dy, int time );
+#endif
 
 void CL_JoystickEvent( int axis, int value, int time );
 

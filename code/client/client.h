@@ -373,6 +373,8 @@ typedef struct {
 	qhandle_t	consoleShader;
 	
 #ifdef EMSCRIPTEN
+	byte		 *menuUIhack;
+	byte	 	 *gameUIhack;
 	glconfig_t *uiGlConfig;
 	glconfig_t *cgameGlConfig;
 
@@ -677,4 +679,3 @@ qboolean CL_VideoRecording( void );
 // cl_main.c
 //
 void CL_WriteDemoMessage ( msg_t *msg, int headerBytes );
-

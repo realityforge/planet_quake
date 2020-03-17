@@ -1,14 +1,54 @@
 var LibrarySys = {
-	$SYS__deps: ['$SYSC'],
+	$SYS__deps: ['$SYSC', '$SDL'],
 	$SYS: {
 		exited: false,
 		timeBase: null,
 		style: null,
+		joysticks: [],
+		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
+		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
+		// We use a list here because Object keys have no guarantee of order
+		mods: [
+			['baseq3-ccr', 			'Quake III Arena'],
+			['missionpack-ccr', '0 Choice: Team Arena'],
+			['defrag-ccr',      '1 Choice: Defrag'],
+			['baseq3r-ccr',     '2 Choice: Q3Rally'],
+			['baseoa-ccr', 			'3 Choice: Open Arena'],
+			['generations-ccr', '4 Choice: Generations Arena'],
+			['q3f2-ccr', 				'5 Choice: Q3 Fortress 2'],
+			['cpma-ccr', 				'6 Choice: Challenge ProMode'],
+			['q3ut4-ccr', 			'7 Choice: Urban Terror 4'],
+			['freezetag-ccr', 	'8 Choice: Freeze Tag'],
+			['corkscrew-ccr', 	'9 Choice: Corkscrew'],
+			['bfpq3-ccr', 			'Bid For Power'],
+			['excessive-ccr', 	'Excessive+'],
+			['q3ut3-ccr', 			'Urban Terror 3'],
+			['edawn-ccr', 			'eDawn'],
+			['geoball-ccr', 		'Geoball'],
+			['neverball-ccr', 	'Neverball'],
+			['omissionpack-ccr','OpenArena Mission Pack'],
+			['platformer-ccr', 	'Platformer'],
+			['legoc-ccr', 			'Lego Carnage'],
+			['osp-ccr', 				'Orange Smoothie Productions'],
+			['quake2arena-ccr', 'Quake 2 Arena'],
+			['smokin-ccr', 			'Smokin\' Guns'],
+			['wfa-ccr', 				'Weapons Factory Arena'],
+			['uberarena-ccr', 	'Uber Arena'],
+			['demoq3-ccr', 			'Quake III Demo'],
+			['mfdata-ccr', 			'Military Forces'],
+			['conjunction-ccr', 'Dark Conjunction'],
+			['chili-ccr', 			'Chili Quake XXL'],
+			['hqq-ccr', 				'High Quality Quake'],
+			['rocketarena-ccr', 'Coming Soon: Rocket Arena'],
+			['gpp-ccr',         'Coming Soon: Tremulous'],
+			['gppl-ccr',        'Coming Soon: Unvanquished'],
+			['iortcw-ccr',      'Coming Soon: Return to Castle Wolfenstien'],
+		],
 		args: [
 			'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
 			'+set', 'cl_allowDownload', '1',
-			'+set', 'fs_basegame', 'baseq3',
-			'+set', 'fs_game', 'baseq3',
+			'+set', 'fs_basegame', 'baseq3-ccr',
+			'+set', 'fs_game', 'baseq3-ccr',
 			'+set', 'developer', '0',
 			'+set', 'fs_debug', '0',
 			'+set', 'r_mode', '-1',
@@ -21,13 +61,13 @@ var LibrarySys = {
 			'+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
 			'+set', 'net_socksEnabled', '1',
 			// these settings were set by the emscripten build
-			'+set', 'r_normalMapping', '0',
-			'+set', 'r_specularMapping', '0',
-			'+set', 'r_deluxeMapping', '0',
-			'+set', 'r_hdr', '0',
-			'+set', 'r_picmip', '0',
+			//'+set', 'r_normalMapping', '0',
+			//'+set', 'r_specularMapping', '0',
+			//'+set', 'r_deluxeMapping', '0',
+			//'+set', 'r_hdr', '0',
+			//'+set', 'r_picmip', '0',
+			//'+set', 'r_postProcess', '0',
 			'+set', 'cg_drawfps', '1',
-			'+set', 'r_postProcess', '0',
 			//'+connect', 'proxy.quake.games:443',
 			/*
 			'+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
@@ -76,7 +116,13 @@ var LibrarySys = {
 					opts.onload(err, data)
 				}
 			}
-			req.send(null)
+			req.onerror = function (req) {
+				err = new Error('Couldn\'t load ' + url + '. Status: ' + req.type)
+				opts.onload(err, req)
+			}
+			try {
+				req.send(null)
+			} catch(e) {console.log(e)}
 		},
 		getQueryCommands: function () {
 			var search = /([^&=]+)/g
@@ -89,11 +135,30 @@ var LibrarySys = {
 				val[0] = '+' + val[0]
 				args.push.apply(args, val)
 			}
-			args.push.apply(args, [
+			args.unshift.apply(args, [
+				'+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
 				'+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
 				'+set', 'r_customHeight', '' + window.innerHeight,
 				'+set', 'r_customWidth', '' + window.innerWidth,
 			])
+			if(navigator && navigator.userAgent
+				&& navigator.userAgent.match(/mobile/i)) {
+				args.unshift.apply(args, [
+					'+set', 'in_joystick', '1',
+					'+set', 'in_nograb', '1',
+					'+set', 'in_mouse', '0',
+				])
+			}
+			if(window.location.hostname.match(/quake\.games/i)) {
+				args.unshift.apply(args, [
+					'+set', 'net_socksServer', 'proxy.quake.games',
+					'+set', 'net_socksPort', '443',
+				])
+			} else {
+				args.unshift.apply(args, [
+					'+set', 'net_socksServer', window.location.hostname,
+				])
+			}
 			return args
 		},
 		updateVideoCmd: function () {
@@ -112,7 +177,7 @@ var LibrarySys = {
 			}
 
 			if (SYS.resizeDelay) clearTimeout(SYS.resizeDelay);
-			SYS.resizeDelay = setTimeout(SYS.updateVideoCmd, 100);
+			SYS.resizeDelay = setTimeout(Browser.safeCallback(SYS.updateVideoCmd), 100);
 		},
 		quitGameOnUnload: function (e) {
 			if(Module['canvas']) {
@@ -143,6 +208,103 @@ var LibrarySys = {
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
+		InitJoystick: function (joystick, id) {
+			// tap into native event handlers because SDL events are too slow
+			var start = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchstart')[0]
+			var end = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchend')[0]
+			var move = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'touchmove')[0]
+			var keydown = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keydown')[0]
+			var keyup = JSEvents.eventHandlers.filter(e => e.eventTypeString == 'keyup')[0]
+			joystick.on('start end move', function(evt, data) {
+				var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
+				var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
+				var x = data.angle ? dx : Math.round(data.position.x)
+				var y = data.angle ? dy : Math.round(data.position.y)
+				//var id = joystick.ids.indexOf(data.identifier) + 1
+				if(id == 1) {
+					if (data.angle && Math.round(y / 40) > 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 87, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 87, preventDefault: () => {}});
+					}
+					if (data.angle && Math.round(y / 40) < 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 83, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 83, preventDefault: () => {}});
+					}
+					if (data.angle && Math.round(x / 40) < 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 65, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 65, preventDefault: () => {}});
+					}
+					if (data.angle && Math.round(x / 40) > 0) {
+						keydown.handlerFunc({repeat: true, keyCode: 68, preventDefault: () => {}});
+					} else {
+						keyup.handlerFunc({keyCode: 68, preventDefault: () => {}});
+					}
+				}
+				
+				var touches = [{
+					identifier: id,
+					screenX: x,
+					screenY: y,
+					clientX: x,
+					clientY: y,
+					pageX: x,
+					pageY: y,
+					movementX: dx,
+					movementY: dy,
+				}]
+				var touchevent = {
+					type: 'touch' + evt.type,
+					touches: touches,
+					preventDefault: () => {},
+					changedTouches: touches,
+					targetTouches: touches,
+				}
+				Object.assign(touchevent, touches[0])
+				if(evt.type == 'start') start.handlerFunc(touchevent)
+				else if (evt.type == 'end') end.handlerFunc(touchevent)
+				else if (evt.type == 'move') move.handlerFunc(touchevent)
+			})
+		},
+		InitNippleJoysticks: function() {
+			if(SYS.joysticks.length > 0) {
+				for(var i = 0; i < SYS.joysticks.length; i++) {
+					SYS.joysticks[i].destroy()
+				}
+			}
+			SYS.joysticks[0] = nipplejs.create({
+				zone: document.getElementById('left-joystick'),
+				multitouch: false,
+				mode: 'semi',
+				size: 100,
+				catchDistance: 50,
+				maxNumberOfNipples: 1,
+				position: {bottom: '50px', left: '50px'},
+			})
+			SYS.joysticks[1] = nipplejs.create({
+				zone: document.getElementById('right-joystick'),
+				multitouch: false,
+				mode: 'semi',
+				size: 100,
+				catchDistance: 50,
+				maxNumberOfNipples: 1,
+				position: {bottom: '50px', right: '50px'},
+			})
+			SYS.joysticks[2] = nipplejs.create({
+				dataOnly: true,
+				zone: document.body,
+				multitouch: false,
+				mode: 'dynamic',
+				size: 2,
+				catchDistance: 2,
+				maxNumberOfNipples: 1,
+			})
+			SYS.InitJoystick(SYS.joysticks[0], 1)
+			SYS.InitJoystick(SYS.joysticks[1], 2)
+			SYS.InitJoystick(SYS.joysticks[2], 3)
+		}
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading')
@@ -164,7 +326,7 @@ var LibrarySys = {
 		}
 		Object.assign(Module, {
 			websocket: Object.assign(Module.websocket || {}, {
-				url: window.location.search.includes('https://')
+				url: window.location.search.includes('https://') || window.location.protocol.includes('https')
 				? 'wss://'
 				: 'ws://'
 			})
@@ -184,7 +346,10 @@ var LibrarySys = {
 			Module.exitHandler()
 		}
 	},
+	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
+		var in_joystick = _Cvar_VariableIntegerValue(
+			allocate(intArrayFromString('in_joystick'), 'i8', ALLOC_STACK))
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
@@ -193,6 +358,10 @@ var LibrarySys = {
 			canvas.width = viewport.offsetWidth
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
+		}
+		if(in_joystick) {
+			document.body.classList.add('joysticks')
+			setTimeout(SYS.InitNippleJoysticks, 100)
 		}
 	},
 	Sys_GLimpSafeInit: function () {
@@ -222,7 +391,7 @@ var LibrarySys = {
 			FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
 		})
 	},
-	Sys_FS_Startup__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
+	Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
 	Sys_FS_Startup: function (cb) {
 		var fs_homepath = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_homepath'), 'i8', ALLOC_STACK)))
@@ -234,11 +403,12 @@ var LibrarySys = {
 			allocate(intArrayFromString('sv_pure'), 'i8', ALLOC_STACK))
 		var fs_game = UTF8ToString(_Cvar_VariableString(
 			allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)))
-		var cl_running = _Cvar_VariableIntegerValue(
-			allocate(intArrayFromString('cl_running'), 'i8', ALLOC_STACK))
+		var mapname = UTF8ToString(_Cvar_VariableString(
+			allocate(intArrayFromString('mapname'), 'i8', ALLOC_STACK)))
+		var clcState = _CL_GetClientState()
 		const blankFile = new Uint8Array(4)
 		
-		SYS.LoadingDescription('Manifest')
+		SYS.LoadingDescription('Loading Game UI...')
 		var fsMountPath = fs_basegame
 		if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
 			fsMountPath = fs_game // TODO: comment this out to test server induced downloading
@@ -259,17 +429,25 @@ var LibrarySys = {
 		// read from drive
 		FS.syncfs(true, function (err) {
 			if (err) {
-				debugger
 				SYSC.Print(err.message)
 				return SYSC.Error('fatal', err.message)
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
+			
+			for(var i = 0; i < (SYS.mods || []).length; i++) {
+				var modDir = PATH.join(fs_basepath, SYS.mods[i][0], '000000000000000placeholder.pk3dir')
+				var desc = PATH.join(PATH.dirname(modDir), 'description.txt')
+				SYSC.mkdirp(modDir)
+				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
+					encoding: 'binary', flags: 'w', canOwn: true })
+				
+			}
 
 			// TODO: is this right? exit early without downloading anything so the server can force it instead
 			// server will tell us what pk3s we need
-			if(!cl_running && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
+			if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
 				SYS.LoadingDescription('')
 				FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 				return
@@ -279,6 +457,7 @@ var LibrarySys = {
 			var downloads = []
 			SYSC.DownloadAsset(fsMountPath + '/index.json', SYS.LoadingProgress, (err, data) => {
 				if(err) {
+					SYS.LoadingDescription('')
 					SYSC.ProxyCallback(cb)
 					return
 				}
@@ -289,8 +468,21 @@ var LibrarySys = {
 				var keys = Object.keys(json)
 				var menu = keys.filter(k => k.includes('menu/'))
 				var game = keys.filter(k => k.includes('game/'))
-				if(cl_running && game.length) keys = game;
-				if(!cl_running && menu.length) keys = menu;
+				var maps = keys.filter(k => k.includes('maps/'))
+					.map(m => PATH.basename(PATH.dirname(m)))
+					.filter((m, i, arr) => arr.indexOf(m) === i) // unique
+				for(var i = 0; i < maps.length; i++) {
+					var mapsDir = PATH.join(fs_basepath, fsMountPath, '000000000000000placeholder.pk3dir/maps')
+					var map = PATH.join(mapsDir, maps[i] + '.bsp')
+					var aas = PATH.join(mapsDir, maps[i] + '.aas')
+					SYSC.mkdirp(mapsDir)
+					FS.writeFile(map, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
+					FS.writeFile(aas, blankFile, {encoding: 'binary', flags: 'w', canOwn: true })
+				}
+				if(clcState >= 4 && game.length) keys = game;
+				if(clcState < 4 && menu.length) keys = menu;
+				// servers need some map and model info for hitboxes up front
+				if(mapname != '' && maps.length) keys = keys.concat(Object.keys(json).filter(k => k.includes(`maps\/${mapname}\/`)))
 				for(var i = 0; i < keys.length; i++) {
 					var file = json[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
@@ -339,28 +531,31 @@ var LibrarySys = {
 						totals[i] = 0
 						progresses[i] = 0
 						SYS.LoadingDescription(file)
-						SYSC.DownloadAsset(file, (progress, total) => {
-							totals[i] = Math.max(progress, total || 10*1024*1024) // assume its somewhere around 10 MB per pak
-							progresses[i] = progress
-							SYS.LoadingProgress(
-								progresses.reduce((s, p) => s + p, 0),
-								totals.reduce((s, p) => s + p, 0))
-						}, (err, data) => {
-							progresses[i] = data.byteLength
-							SYS.LoadingProgress(
-								progresses.reduce((s, p) => s + p, 0),
-								totals.reduce((s, p) => s + p, 0))
-							if(err) return resolve(err)
-							try {
-								FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
-									encoding: 'binary', flags: 'w', canOwn: true })
-							} catch (e) {
-								if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-									SYSC.Error('fatal', e.message)
+						try {
+							SYSC.DownloadAsset(file, (progress, total) => {
+								// assume its somewhere around 10 MB per pak
+								totals[i] = Math.max(progress, total || 10*1024*1024) 
+								progresses[i] = progress
+								SYS.LoadingProgress(
+									progresses.reduce((s, p) => s + p, 0),
+									totals.reduce((s, p) => s + p, 0))
+							}, (err, data) => {
+								progresses[i] = data.byteLength
+								SYS.LoadingProgress(
+									progresses.reduce((s, p) => s + p, 0),
+									totals.reduce((s, p) => s + p, 0))
+								if(err) return resolve(err)
+								try {
+									FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
+										encoding: 'binary', flags: 'w', canOwn: true })
+								} catch (e) {
+									if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+										SYSC.Error('fatal', e.message)
+									}
 								}
-							}
-							resolve(file)
-						})
+								resolve(file)
+							})
+						} catch (e) {resolve(e)}
 						// save to drive
 					}))).then(() => {
 						SYS.LoadingDescription('')
@@ -399,15 +594,9 @@ var LibrarySys = {
 	},
 	Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
 	Sys_SocksConnect: function () {
-		Module['websocket'].on('open', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
-		Module['websocket'].on('message', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
-		Module['websocket'].on('error', Browser.safeCallback(() => {
-			_SOCKS_Frame_Proxy()
-		}))
+		Module['websocket'].on('open', Browser.safeCallback(_SOCKS_Frame_Proxy))
+		Module['websocket'].on('message', Browser.safeCallback(_SOCKS_Frame_Proxy))
+		Module['websocket'].on('error', Browser.safeCallback(_SOCKS_Frame_Proxy))
 	},
 	Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
 	Sys_SocksMessage: function () {
@@ -436,7 +625,12 @@ var LibrarySys = {
 	},
 	Sys_ErrorDialog: function (error) {
 		var errorStr = UTF8ToString(error)
-		console.log(errorStr)
+		// print call stack so we know where the error came from
+		try {
+			throw new Error(errorStr)
+		} catch (e) {
+			console.log(e)
+		}
 		var title = SYS.dialog.querySelector('.title')
 		if(title) {
 			title.className = 'title error'

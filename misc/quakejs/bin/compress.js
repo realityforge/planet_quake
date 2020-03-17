@@ -42,6 +42,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
       storeEntries: true
   })
   var header = await new Promise(resolve => {
+    var skipped = 0
     zip.on('ready', async () => {
       console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(zipFile))
       var index = Object.values(zip.entries())
@@ -54,7 +55,10 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
         var levelPath = path.join(outdir, entry.name)
         mkdirpSync(path.dirname(levelPath))
         await progress([[2, i, index.length, entry.name]])
-        if(noOverwrite && ufs.existsSync(levelPath)) continue
+        if(noOverwrite && ufs.existsSync(levelPath)) {
+          skipped++
+          continue
+        }
         await new Promise(resolve => {
           zip.extract(entry.name, levelPath, err => {
             if(err) console.log('Extract error ' + err)
@@ -62,7 +66,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
           })
         })
       }
-      resolve()
+      resolve(skipped)
     })
     
     zip.on('error', resolve)
@@ -74,18 +78,26 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
 async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   // TODO: copy non-pk3 files first, in case of unpure modes
   var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3'})
+  var skipped = 0
   for(var j = 0; j < notpk3s.length; j++) {
     await progress([[1, j, notpk3s.length, `Copying ${notpk3s[j]}`]])
     var newFile = path.join(outCombined, notpk3s[j])
     mkdirpSync(path.dirname(newFile))
-    ufs.copyFileSync(path.join(project, notpk3s[j]), newFile)
+    if(!noOverwrite || !ufs.existsSync(newFile)) {
+      ufs.copyFileSync(path.join(project, notpk3s[j]), newFile)
+    } else {
+      skipped++
+    }
   }
   var pk3s = glob.sync('**/*.pk3', {nodir: true, cwd: project})
   pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
   for(var j = 0; j < pk3s.length; j++) {
     await progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
-    await readPak(path.join(project, pk3s[j]), progress, outCombined, noOverwrite)
+    skipped += await readPak(path.join(project, pk3s[j]), progress, outCombined, noOverwrite)
     await progress([[2, false]])
+  }
+  if(noOverwrite) {
+    console.log(`Skipped ${skipped}`)
   }
 }
 
@@ -106,9 +118,10 @@ async function compressDirectory(fullpath, outputStream, absolute) {
     }
     if(!dirs.includes(path.dirname(fullpath[i]))) {
       var newName = path.dirname(fullpath[i]).replace(absolute, '') + '/'
-      if(newName.length <= 1) continue
-      archive.append(null, {name: newName})
-      dirs.push(path.dirname(fullpath[i]))
+      if(newName.length > 1) {
+        archive.append(null, {name: newName})
+        dirs.push(path.dirname(fullpath[i]))
+      }
     }
     archive.append(ufs.createReadStream(fullpath[i]), {
       name: fullpath[i].replace(absolute, '')

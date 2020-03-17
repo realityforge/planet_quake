@@ -2230,8 +2230,17 @@ int Com_EventLoop( void ) {
 				CL_CharEvent( ev.evValue );
 			break;
 			case SE_MOUSE:
+#ifdef EMSCRIPTEN
+				CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime, qfalse );
+#else
 				CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime );
+#endif
 			break;
+#ifdef EMSCRIPTEN
+			case SE_MOUSE_ABS:
+				CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime, qtrue );
+			break;
+#endif
 			case SE_JOYSTICK_AXIS:
 				CL_JoystickEvent( ev.evValue, ev.evValue2, ev.evTime );
 			break;
@@ -2901,6 +2910,11 @@ void Com_Init_After_Filesystem( void ) {
 	}
 
 	Com_Printf ("--- Common Initialization Complete ---\n");
+#ifdef EMSCRIPTEN
+	if(Cvar_VariableIntegerValue("net_socksLoading")) {
+		NET_Config( qtrue );
+	}
+#endif
 }
 
 /*
@@ -3142,8 +3156,16 @@ void Com_Frame_Proxy( void ) {
 
 void Com_Frame_After_Startup() {
 	FS_Restart_After_Async();
-	CL_StartHunkUsers(qfalse);
-//	Com_GameRestart_After_Restart();
+	CL_Disconnect_After_Restart();
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
+	} else {
+		VM_Forced_Unload_Start();
+		CL_FlushMemory();
+		VM_Forced_Unload_Done();
+		Com_GameRestart_After_Restart();
+	}
+	//
 }
 
 void Com_Frame_After_Shutdown() {
@@ -3298,6 +3320,12 @@ void Com_Frame( void ) {
 	msec = com_frameTime - lastTime;
 
 	Cbuf_Execute ();
+#ifdef EMSCRIPTEN
+	// if an execution invoked a callback event, run the rest next frame
+	if(CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
+#endif
 
 	if (com_altivec->modified)
 	{

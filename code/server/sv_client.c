@@ -359,6 +359,15 @@ void SV_DirectConnect( netadr_t from ) {
 	{
 		if(version != com_protocol->integer)
 		{
+			/*
+			TODO: support:
+			1.16 -> 43
+			1.17 -> 45
+			1.2x -> 48
+			1.30 -> 66
+			1.31 -> 67
+			1.32 -> 68
+			*/
 			NET_OutOfBandPrint(NS_SERVER, from, "print\nServer uses protocol version %i "
 					   "(yours is %i).\n", com_protocol->integer, version);
 			Com_DPrintf("    rejected connect from version %i\n", version);

@@ -307,10 +307,12 @@ static char		*fs_serverPakNames[MAX_SEARCH_PATHS];			// pk3 names
 static int		fs_numServerReferencedPaks;
 static int		fs_numIndexedPakNames;
 static int		fs_numMenuGamePakNames;
+static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_SEARCH_PATHS];			// checksums
 static char		*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
 static char		*fs_indexedPakNames[MAX_SEARCH_PATHS];		// pk3 names
 static char		*fs_menuGamePakNames[MAX_SEARCH_PATHS];		// pk3 names
+static char		*fs_mapPakNames[MAX_SEARCH_PATHS];		// pk3 names
 
 
 // last valid game folder used
@@ -1204,7 +1206,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					// case and separator insensitive comparisons
 					if(!FS_FilenameCompare(pakFile->name, filename)
 						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "jpg")))
-						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "png"))))
+						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "png")))
+						|| (FS_IsExt(filename, ".bsp", len) && FS_InMapIndex(filename))
+					)
 					{
 						// found it!
 						if(pakFile->len)
@@ -2631,6 +2635,20 @@ int	FS_GetModList( char *listbuf, int bufsize ) {
 			}
 		}
 	}
+	
+	// TODO: alphabetize the mod names, safely, without overwriting the entries
+	/*
+	for (i = 0; i < n; ++i) {
+    for (j = i + 1; j < n; ++j) {
+      if (number[i] > number[j]) {
+          a =  number[i];
+          number[i] = number[j];
+          number[j] = a;
+      }
+    }
+  }
+	*/
+	
 	Sys_FreeFileList( pFiles );
 
 	return nMods;
@@ -3468,7 +3486,7 @@ void FS_Startup_After_Async( const char *gameName )
 	// reorder the pure pk3 files according to server order
 	FS_ReorderPurePaks();
 
-	//FS_SetMapIndex( "" );
+	FS_SetMapIndex( "" );
 
 	// print the current search paths
 	FS_Path_f();
@@ -3686,7 +3704,7 @@ static void FS_CheckPak0( void )
 
 void FS_SetMapIndex(const char *mapname) {
 	searchpath_t	*search;
-	int len, r, i, ki = 0, pi = 0, level = 0, mgi = 0;
+	int len, r, i, ki = 0, pi = 0, level = 0, mgi = 0, mpi = 0;
 	fileHandle_t indexfile;
 	char buf[MAX_OSPATH], key[MAX_OSPATH], pak[MAX_OSPATH];
 	qboolean isKey = qfalse, isPak = qfalse;
@@ -3719,6 +3737,15 @@ void FS_SetMapIndex(const char *mapname) {
 			Z_Free(fs_menuGamePakNames[i]);
 
 		fs_menuGamePakNames[i] = NULL;
+	}
+
+	fs_numMapPakNames = 0;
+	for (i = 0 ; i < ARRAY_LEN(fs_mapPakNames); i++)
+	{
+		if(fs_mapPakNames[i])
+			Z_Free(fs_mapPakNames[i]);
+
+		fs_mapPakNames[i] = NULL;
 	}
 
 	if(indexfile)
@@ -3754,6 +3781,13 @@ void FS_SetMapIndex(const char *mapname) {
 							Com_Printf( "FS_SetMapIndex: Game pak in index %s\n", key );
 						}
 					}
+					if(Q_stristr(key, "maps/") != NULL && Q_stristr(key, "pak9") != NULL) {
+						fs_mapPakNames[mpi] = CopyString( &key[5] );
+						mpi++;
+						if ( fs_debug->integer ) {
+							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
+						}
+					}
 				} else if(isKey) {
 					key[ki] = buf[i];
 					ki++;
@@ -3765,6 +3799,7 @@ void FS_SetMapIndex(const char *mapname) {
 			fs_numIndexedPakNames = pi;
 		}
 		fs_numMenuGamePakNames = mgi;
+		fs_numMapPakNames = mpi;
 		FS_FCloseFile( indexfile );
 	}
 	
@@ -3792,6 +3827,23 @@ void FS_SetMapIndex(const char *mapname) {
 			}
 		}
 	}
+}
+
+qboolean FS_InMapIndex(const char *filename) {
+	int			i, len, extpos;
+	char mapname[MAX_QPATH];
+	len = strlen(filename);
+	Com_Printf("%s", filename);
+	Q_strncpyz(mapname, &filename[5], sizeof(mapname));
+	extpos = strlen(strrchr(mapname, '.'));
+	if(len-extpos+1 < 0) extpos = 0;
+	mapname[len-extpos+1] = '\0';
+	for(i = 0; i < fs_numMapPakNames; i++) {
+		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
+			return qtrue;
+		}
+	}
+	return qfalse;
 }
 
 /*

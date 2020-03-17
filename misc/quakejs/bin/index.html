@@ -84,7 +84,7 @@
 				padding: 0.4em;
 				width: 24em;
 				background: rgba(0, 0, 0, 0.7);
-				z-index: 1000;
+				z-index: 9999;
 			}
 			
 			#loading-progress .description {
@@ -143,9 +143,34 @@
 				transform: rotateY(180deg);
 			}
 			
+			.nipple {
+				pointer-events: none;
+			}
+			
 			@-webkit-keyframes rotatequake {
 			  0%   { transform: rotateY(0deg); }
 				100% { transform: rotateY(180deg); }
+			}
+			
+			#right-joystick, #left-joystick {
+				position:absolute;
+				top:0;
+				left:0;
+				bottom:0;
+				right:0;
+				max-width:50%;
+				height:100%;
+				width:100%;
+				display:none;
+				z-index:1000;
+			}
+			
+			#right-joystick {
+				left:50%;
+			}
+			
+			.joysticks #right-joystick, .joysticks #left-joystick {
+				display:block;
 			}
 		</style>
 <body>
@@ -162,6 +187,7 @@
 	<div id="loading-progress"><div class="description"></div>
 		<div class="bar-wrapper"><div class="bar">&nbsp;</div></div>
 	</div>
+	<div id="left-joystick"></div><div id="right-joystick"></div>
 </div>
 	
 
@@ -188,6 +214,7 @@
 		};
 	};
 </script>
+<script type="text/javascript" src="/nipplejs.js"></script>
 <script type="text/javascript" src="/ioquake3.js"></script>
 
 </html>

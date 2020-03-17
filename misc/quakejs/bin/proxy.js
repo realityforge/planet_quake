@@ -4,6 +4,8 @@ var WebSocketServer = require('ws').Server
 var Huffman = require('../lib/huffman.js')
 var {Server} = require('../lib/socks.server.js')
 var {createServer} = require('net')
+var http = require('http')
+var ip6addr = require('ip6addr')
 
 var help = `
 npm run proxy [options]
@@ -23,19 +25,26 @@ Add websocket piping back in for quakejs servers
 e.g. npm run proxy -- --max 10
 `
 
+var slaves = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(a.match(/\/node$/ig)) continue
   if(a.match(/\/proxy\.js$/ig)) continue
+
   if(a == '--help' || a == '-h') {
 		console.log(help)
     process.exit(0)
 	} else {
-		console.log(`ERROR: Unrecognized option "${a}"`)
+    try {
+      var ipv6 = ip6addr.parse(a)
+      slaves.push(a)
+    } catch (e) {
+      console.log(`ERROR: Unrecognized option "${a}"`, e)
+    }
 	}
 }
 
-var socks = new Server() // TODO: add password authentication
+var socks = new Server({slaves}) // TODO: add password authentication
 
 // redirect http attempts to loading page
 const server = createServer(function(socket) {
@@ -46,22 +55,24 @@ const server = createServer(function(socket) {
 	}
 })
 
-const http = require('http')
-const httpServer = http.createServer(function(req, res) {
-	res.writeHead(200, {'Location': 'https://quake.games' + req.url})
-	res.write('It works!')
-	res.end()
+const ports = [1081, 80]
+ports.forEach((p, i, ports) => {
+  var httpServer = http.createServer(function(req, res) {
+  	res.writeHead(200, {'Location': 'https://quake.games' + req.url})
+  	res.write('It works!')
+  	res.end()
+  })
+
+  var wss = new WebSocketServer({server: httpServer})
+
+  wss.on('connection', function(ws) {
+  	try {
+  		socks._onConnection(ws)
+  	} catch (e) {
+  		console.log(e)
+  	}
+  })
+
+  httpServer.listen(ports[i],  () => console.log(`Http running at http://0.0.0.0:${ports[i]}`))
 })
-
-var wss = new WebSocketServer({server: httpServer})
-
-wss.on('connection', function(ws) {
-	try {
-		socks._onConnection(ws)
-	} catch (e) {
-		console.log(e)
-	}
-})
-
-httpServer.listen(1081,  () => console.log(`Http running at http://0.0.0.0:1081`))
 server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))

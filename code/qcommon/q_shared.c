@@ -1099,7 +1099,7 @@ char *Info_ValueForKey( const char *s, const char *key ) {
 	}
 
 	if ( strlen( s ) >= BIG_INFO_STRING ) {
-		Com_Error( ERR_DROP, "Info_ValueForKey: oversize infostring" );
+		Com_Error( ERR_DROP, "Info_ValueForKey: oversize infostring (%s)\n", key );
 	}
 
 	valueindex ^= 1;

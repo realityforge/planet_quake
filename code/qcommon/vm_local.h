@@ -202,7 +202,7 @@ void VM_LogSyscalls( int *args );
 
 void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n);
 
-#if EMSCRIPTEN
+#ifdef EMSCRIPTEN
 qboolean VM_IsSuspendedCompiled(vm_t *vm);
 
 void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);

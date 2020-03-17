@@ -472,6 +472,9 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
 	FS_Restart( sv.checksumFeed );
 
+	// set serverinfo visible name
+	Cvar_Set( "mapname", server );
+
 #ifdef EMSCRIPTEN
 
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
@@ -489,14 +492,12 @@ void SV_SpawnServer_After_Startup( void ) {
 	char		systemInfo[16384];
 	const char	*p;
 	FS_Restart_After_Async();
-
 #endif
 ;
 
-	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
+	FS_SetMapIndex(server);
 
-	// set serverinfo visible name
-	Cvar_Set( "mapname", server );
+	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
 
 	Cvar_Set( "sv_mapChecksum", va("%i",checksum) );
 
@@ -585,8 +586,6 @@ void SV_SpawnServer_After_Startup( void ) {
 	sv.time += 100;
 	svs.time += 100;
 	
-	FS_SetMapIndex(server);
-
 	if ( sv_pure->integer ) {
 		// the server sends these to the clients so they will only
 		// load pk3s also loaded at the server
@@ -808,4 +807,3 @@ void SV_Shutdown( char *finalmsg ) {
 	if( sv_killserver->integer != 2 )
 		CL_Disconnect( qfalse );
 }
-

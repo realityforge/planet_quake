@@ -34,10 +34,11 @@ var BUF_AUTH_NO_ACCEPT = Buffer.from([0x05, 0xFF]),
     BUF_REP_DISALLOW = Buffer.from([0x05, REP.DISALLOW]),
     BUF_REP_CMDUNSUPP = Buffer.from([0x05, REP.CMDUNSUPP])
 
-function Server() {
+function Server(opts) {
   if (!(this instanceof Server))
     return new Server()
 
+  this._slaves = (opts || {}).slaves || []
   this._listeners = {}
   this._timeouts = {}
   this._dnsLookup = {}
@@ -174,6 +175,8 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   parser.off('request', onRequest)
   // connection and version number are implied from now on
   var newOnData = ((message) => {
+    clearTimeout(self._timeouts[udpLookupPort])
+    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
     var chunk = Buffer.from(message)
     if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
       chunk[0] = 5
@@ -198,6 +201,7 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
     socket.off('data', newOnData)
     socket.off('message', newOnData)
     parser.off('request', newOnRequest)
+    delete this._listeners[udpLookupPort]
     // switch back to regular messaging?
     socket.on('data', onData)
     socket.on('message', onData)
@@ -261,7 +265,7 @@ Server.prototype._onErrorNoop = function(err) {
 
 Server.prototype._onSocketConnect = function(socket, reqInfo) {
   if(!socket._socket.writable) return
-  var ipv6 = ip6addr.parse(socket._socket.localAddress)
+  var ipv6 = ip6addr.parse(this._slaves[0] || socket._socket.localAddress)
   var localbytes = ipv6.toBuffer()
   if(ipv6.kind() == 'ipv4') {
     localbytes = localbytes.slice(12)
@@ -282,7 +286,7 @@ Server.prototype._onSocketConnect = function(socket, reqInfo) {
     socket._socket.pipe(socket.dstSock)
     socket.dstSock.pipe(socket._socket)
   } else {
-    console.log('Starting messages')
+    console.log('Starting messages ' + ipv6.kind())
     socket.send(bufrep)
   }
   socket._socket.resume()
