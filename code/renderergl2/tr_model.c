@@ -362,8 +362,6 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			break;
 		}
 	}
-	
-	return hModel;
 
 	return mod->index;
 }

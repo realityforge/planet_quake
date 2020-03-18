@@ -1961,6 +1961,9 @@ long FS_ReadFileDir(const char *qpath, void *searchPath, qboolean unpure, void *
 		if(FS_IsExt(qpath, ".bsp", len) && FS_InMapIndex(qpath)) {
 			return 1;
 		}
+		if(FS_IsExt(qpath, ".md3", len) && Q_stristr(qpath, "players")) {
+			return 1;
+		}
 		return -1;
 	}
 
