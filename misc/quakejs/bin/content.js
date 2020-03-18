@@ -226,6 +226,7 @@ async function makeIndexJson(filename, absolute) {
       var key = fullpath.replace(
         path.dirname(absolute),
         '/base/' + path.basename(path.dirname(absolute)))
+        .toLowerCase()
       if(typeof file.size == 'undefined') {
         key += '/'
       }

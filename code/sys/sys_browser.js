@@ -471,7 +471,11 @@ var LibrarySys = {
 				}
 				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
-				SYS.index = JSON.parse((new TextDecoder("utf-8")).decode(data))
+				SYS.index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
+				SYS.index = Object.keys(SYS.index).reduce((obj, k) => {
+					obj[k.toLowerCase()] = SYS.index[k]
+					return obj
+				}, {})
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
@@ -582,8 +586,17 @@ var LibrarySys = {
 				.replace('b', '')), 'i8', ALLOC_STACK);
 			handle = _fopen(ospath, mode)
 			if(handle === 0) {
-				var filenameRelative = filename.replace(SYS.fs_basepath, '')
-				if(Object.keys(SYS.index).filter(k => k.includes(filenameRelative)).length > 0) {
+				// use the index to make a case insensitive lookup
+				var filenameRelative = filename.replace(SYS.fs_basepath, '').toLowerCase()
+				var indexFilename = Object.keys(SYS.index)
+					.filter(k => k.includes(filenameRelative))
+				if(indexFilename.length > 0) {
+					var altName = filename.substr(0, filename.length - SYS.index[indexFilename].name.length) 
+						+ SYS.index[indexFilename].name
+					handle = _fopen(allocate(intArrayFromString(altName), 'i8', ALLOC_STACK), mode)
+					if(handle > 0) {
+						return handle
+					}
 					var loadingShader = UTF8ToString(_Cvar_VariableString(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
 					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
@@ -642,6 +655,9 @@ var LibrarySys = {
 		}
 
 		// TODO support filter
+		if(directory.includes('levelshots')) {
+			debugger
+		}
 		
 		var contents;
 		try {
@@ -650,7 +666,7 @@ var LibrarySys = {
 			contents = contents.concat(Object.keys(SYS.index)
 				.filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
 					&& (!dironly || typeof SYS.index[k].size == 'undefined'))
-				.map(k => PATH.basename(k)))
+				.map(k => PATH.basename(SYS.index[k].name)))
 				.filter((f, i, arr) => f && arr.indexOf(f) === i)
 			if(contents.length > 5000) {
 				debugger
