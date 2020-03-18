@@ -3877,12 +3877,23 @@ void FS_SetMapIndex(const char *mapname) {
 }
 
 qboolean FS_InMapIndex(const char *filename) {
-	int			i, len, extpos;
+	int			i, len, extpos, start;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
+	if(len < 1) {
+		return qfalse;
+	}
+	Com_Printf( "FS_SetMapIndex: Map NOT in index %s\n", filename );
 	extpos = strlen(strrchr(filename, '.'));
 	len -= extpos;
-	Q_strncpyz(mapname, &filename[5], len - 5);
+	start = 0;
+	if(Q_stristr(filename, "maps/")) {
+		start = 5;
+	}
+	if(len - start < 1) {
+		return qfalse;
+	}
+	Q_strncpyz(mapname, &filename[start], len - start);
 	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
 		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {

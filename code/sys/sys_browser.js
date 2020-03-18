@@ -12,6 +12,7 @@ var LibrarySys = {
 		soundCallback: [],
 		modelCallback: [],
 		downloadLazy: [],
+		downloadCount: 0,
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -313,6 +314,34 @@ var LibrarySys = {
 			SYS.InitJoystick(SYS.joysticks[0], 1)
 			SYS.InitJoystick(SYS.joysticks[1], 2)
 			SYS.InitJoystick(SYS.joysticks[2], 3)
+		},
+		DownloadLazy: function () {
+			if(SYS.downloadCount >= SYS.downloadLazy.length) return
+			var file = SYS.downloadLazy[SYS.downloadCount]
+			if(!file) return
+			if(typeof file == 'string') {
+				file = [0, file]
+				if(SYS.downloadLazy.indexOf(file[1]) != SYS.downloadCount) {
+					SYS.downloadCount++
+					return
+				}
+			}
+			SYS.downloadCount++
+			SYS.downloadLazy.push(file[1])
+			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
+				if(!err) {
+					FS.writeFile(PATH.join(SYS.fs_basepath, file[1]), new Uint8Array(data), {
+						encoding: 'binary', flags: 'w', canOwn: true })
+				}
+				
+				if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
+					SYS.soundCallback.unshift(file[1].replace('/' + SYS.fs_game + '/', ''))
+				} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
+					SYS.modelCallback.unshift(file[1].replace('/' + SYS.fs_game + '/', ''))
+				} else if(file[0]) {
+					SYS.shaderCallback.unshift(file[0])
+				}
+			})
 		}
 	},
 	Sys_PlatformInit: function () {
@@ -341,6 +370,7 @@ var LibrarySys = {
 			})
 		})
 		window.addEventListener('resize', SYS.resizeViewport)
+		setInterval(SYS.DownloadLazy, 20)
 	},
 	Sys_PlatformExit: function () {
 		flipper.style.display = 'block'
@@ -502,13 +532,14 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|eula\.txt/i)
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.skin|\.arena/i)
+							|| file.name.match(/\.shader|menu|\/sarge\/icon_|arenas|botfiles|icons/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
-						} else if (file.name.match(/players\/sarge\/|\.shader|botfiles\/|\.arena/i)
-							|| file.name.match(/levelshots|arenas|icons|\/icon_|\.skin|menu|gfx|sfx/i)) {
-							SYS.downloadLazy.push(file.name)
+						} else if (file.name.match(/players\/sarge\//i)
+							|| file.name.match(/levelshots|\/icon_|\.skin|2d|menu|gfx|sfx/i)) {
+							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {
 							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
@@ -541,7 +572,7 @@ var LibrarySys = {
 									progresses.reduce((s, p) => s + p, 0),
 									totals.reduce((s, p) => s + p, 0))
 							}, (err, data) => {
-								progresses[i] = data.byteLength
+								progresses[i] = totals[i]
 								SYS.LoadingProgress(
 									progresses.reduce((s, p) => s + p, 0),
 									totals.reduce((s, p) => s + p, 0))
@@ -578,7 +609,7 @@ var LibrarySys = {
 			})
 		})
 	},
-	Sys_FOpen__deps: ['$SYS', '$FS', 'fopen'],
+	Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
 	Sys_FOpen: function (ospath, mode) {
 		var handle = 0
 		try {
@@ -589,9 +620,9 @@ var LibrarySys = {
 			handle = _fopen(ospath, mode)
 			if(handle === 0) {
 				// use the index to make a case insensitive lookup
-				var filenameRelative = filename.replace(SYS.fs_basepath, '').toLowerCase()
+				var filenameRelative = filename.replace(SYS.fs_basepath, '')
 				var indexFilename = Object.keys(SYS.index)
-					.filter(k => k.includes(filenameRelative))
+					.filter(k => k.includes(filenameRelative.toLowerCase()))
 				if(indexFilename.length > 0) {
 					var altName = filename.substr(0, filename.length - SYS.index[indexFilename].name.length) 
 						+ SYS.index[indexFilename].name
@@ -601,20 +632,7 @@ var LibrarySys = {
 					}
 					var loadingShader = UTF8ToString(_Cvar_VariableString(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
-					SYSC.DownloadAsset(filenameRelative, () => {}, (err, data) => {
-						if(!err) {
-							FS.writeFile(PATH.join(fs_basepath, filenameRelative), new Uint8Array(data), {
-								encoding: 'binary', flags: 'w', canOwn: true })
-						}
-						
-						if(filename.match(/\.opus|\.wav|\.ogg/i)) {
-							SYS.soundCallback.unshift(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
-						} else if(filename.match(/\.md3|\.iqm|\.mdr/i)) {
-							SYS.modelCallback.unshift(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
-						} else if(loadingShader) {
-							SYS.shaderCallback.unshift(loadingShader)
-						}
-					})
+					SYS.downloadLazy.push([loadingShader, filenameRelative])
 				}
 			}
 		} catch (e) {

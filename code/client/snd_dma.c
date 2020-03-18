@@ -360,13 +360,13 @@ sfxHandle_t	S_Base_RegisterSound( const char *name, qboolean compressed ) {
 
 	sfx = S_FindName( name );
 	if ( !sfx ) {
-		return 0;
+	//	return 0;
 	}
 
 	if ( sfx->soundData ) {
 		if ( sfx->defaultSound ) {
 			Com_DPrintf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
-			return 0;
+	//		return 0;
 		}
 		return sfx - s_knownSfx;
 	}
@@ -378,7 +378,7 @@ sfxHandle_t	S_Base_RegisterSound( const char *name, qboolean compressed ) {
 
 	if ( sfx->defaultSound ) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
-		return 0;
+	//	return 0;
 	}
 
 	return sfx - s_knownSfx;
@@ -556,6 +556,9 @@ static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, s
 
 	time = Com_Milliseconds();
 
+	if( !sfx->soundLength || !sfx->inMemory || sfx->defaultSound ) {
+		return;
+	}
 //	Com_Printf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
@@ -784,7 +787,9 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+	//	Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+		sfx->inMemory = qfalse;
+		return;
 	}
 
 	VectorCopy( origin, loopSounds[entityNum].origin );
@@ -847,7 +852,9 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+	//	Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+		sfx->inMemory = qfalse;
+		return;
 	}
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );
