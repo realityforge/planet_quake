@@ -11,6 +11,7 @@ var LibrarySys = {
 		shaderCallback: [],
 		soundCallback: [],
 		modelCallback: [],
+		downloadLazy: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -502,11 +503,12 @@ var LibrarySys = {
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|eula\.txt/i)
-							|| file.name.match(/players\/sarge\/|\.shader|botfiles\/|\.arena/i)
-							|| file.name.match(/levelshots|arenas|icons|\/icon_|\.skin|gfx|menu/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
+						} else if (file.name.match(/players\/sarge\/|\.shader|botfiles\/|\.arena/i)
+							|| file.name.match(/levelshots|arenas|icons|\/icon_|\.skin|menu|gfx|sfx/i)) {
+							SYS.downloadLazy.push(file.name)
 						} else {
 							try {
 							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
@@ -606,11 +608,11 @@ var LibrarySys = {
 						}
 						
 						if(filename.match(/\.opus|\.wav|\.ogg/i)) {
-							SYS.soundCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+							SYS.soundCallback.unshift(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
 						} else if(filename.match(/\.md3|\.iqm|\.mdr/i)) {
-							SYS.modelCallback.push(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
+							SYS.modelCallback.unshift(filenameRelative.replace('/' + SYS.fs_game + '/', ''))
 						} else if(loadingShader) {
-							SYS.shaderCallback.push(loadingShader)
+							SYS.shaderCallback.unshift(loadingShader)
 						}
 					})
 				}
