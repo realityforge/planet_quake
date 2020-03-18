@@ -9,6 +9,7 @@ var app = express()
 app.enable('etag')
 express.static.mime.types['wasm'] = 'application/wasm'
 express.static.mime.types['pk3'] = 'application/octet-stream'
+express.static.mime.types['bsp'] = 'application/octet-stream'
 
 function pathToDirectoryIndex(url) {
   const parsed = new URL(`https://local${url}`)
@@ -39,7 +40,7 @@ async function serveUnionFs(req, res, next) {
     await repackPk3Dir(absolute + 'dir')
   }
   if (absolute && ufs.existsSync(absolute)) {
-    sendCompressed(absolute, res, req.headers['accept-encoding'])
+    sendCompressed(absolute, res, '') //req.headers['accept-encoding'])
   } else {
     console.log(`Couldn't find file "${req.url}" "${absolute}".`)
 		next()

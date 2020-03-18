@@ -20,7 +20,7 @@ function chroot(file, root, output) {
 
 async function convertNonAlpha(inFile, project, output, noOverwrite) {
   var outFile
-  var alphaCmd;
+  var alphaCmd = '';
   outFile = chroot(chext(inFile, '.png'), project, output)
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   outFile = chroot(chext(inFile, '.jpg'), project, output)

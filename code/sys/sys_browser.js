@@ -67,6 +67,7 @@ var LibrarySys = {
 			'+set', 'net_socksServer', '127.0.0.1',
 			'+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
 			'+set', 'net_socksEnabled', '1',
+			'+set', 'com_hunkMegs', '256',
 			// these settings were set by the emscripten build
 			//'+set', 'r_normalMapping', '0',
 			//'+set', 'r_specularMapping', '0',
@@ -447,7 +448,7 @@ var LibrarySys = {
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
 				var desc = PATH.join(fs_basepath, SYS.mods[i][0], 'description.txt')
-				SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000000000000000placeholder.pk3dir'))
+				SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir'))
 				FS.writeFile(desc, Uint8Array.from(SYS.mods[i][1].split('').map(c => c.charCodeAt(0))), {
 					encoding: 'binary', flags: 'w', canOwn: true })
 			}
@@ -474,7 +475,7 @@ var LibrarySys = {
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
-				if(mapname != '') keys = Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}\/`, 'i')))
+				if(mapname != '') keys = Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}`, 'i')))
 				for(var i = 0; i < keys.length; i++) {
 					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
@@ -496,9 +497,9 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt/i)
-							|| file.name.match(/players\/sarge\/|\.shader|botfiles\//i)
-							|| file.name.match(/q3dm0\.|levelshots/i)
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|default\.cfg|eula\.txt|q3key/i)
+							|| file.name.match(/players\/sarge\/|\.shader|botfiles\/|\.arena/i)
+							|| file.name.match(/levelshots|arenas|icons|\/icon_|\.skin|gfx|menu/i)
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
@@ -573,7 +574,7 @@ var LibrarySys = {
 	},
 	Sys_FOpen__deps: ['$SYS', '$FS', 'fopen'],
 	Sys_FOpen: function (ospath, mode) {
-		var handle
+		var handle = 0
 		try {
 			var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
 			ospath = allocate(intArrayFromString(filename), 'i8', ALLOC_STACK)
@@ -645,7 +646,7 @@ var LibrarySys = {
 		var contents;
 		try {
 			contents = FS.readdir(directory)
-				.filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f))))
+				.filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
 			contents = contents.concat(Object.keys(SYS.index)
 				.filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
 					&& (!dironly || typeof SYS.index[k].size == 'undefined'))
@@ -661,9 +662,12 @@ var LibrarySys = {
 
 		var matches = [];
 		for (var i = 0; i < contents.length; i++) {
-			var name = contents[i];
-			if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)) {
-				matches.push(name);
+			var name = contents[i].toLowerCase();
+			if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)
+				|| (ext.match(/tga/i) && name.lastIndexOf('png') === (name.length - ext.length))
+				|| (ext.match(/tga/i) && name.lastIndexOf('jpg') === (name.length - ext.length))
+			) {
+				matches.push(contents[i]);
 			}
 		}
 

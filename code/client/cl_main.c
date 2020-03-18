@@ -3321,6 +3321,7 @@ CL_Frame
 
 ==================
 */
+int secondTimer = 0;
 void CL_Frame ( int msec ) {
 
 	if ( !com_cl_running->integer ) {
@@ -3352,9 +3353,14 @@ void CL_Frame ( int msec ) {
 		}
 	}
 	
-	CL_UpdateShader();
-	CL_UpdateSound();
-	CL_UpdateModel();
+	if(secondTimer > 100) {
+		secondTimer = 0;
+		CL_UpdateShader();
+//		CL_UpdateSound();
+		CL_UpdateModel();
+	} else {
+		secondTimer += msec;
+	}
 #endif
 
 

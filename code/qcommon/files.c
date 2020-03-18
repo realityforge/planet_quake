@@ -1208,7 +1208,6 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					if(!FS_FilenameCompare(pakFile->name, filename)
 						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "jpg")))
 						|| (FS_IsExt(filename, ".tga", len) && !FS_FilenameCompare(pakFile->name, va("%s%s", altFilename, "png")))
-						|| (FS_IsExt(filename, ".bsp", len) && FS_InMapIndex(filename))
 					)
 					{
 						// found it!
@@ -1243,6 +1242,38 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					return len;
 				else
 					return 1;
+			} else {
+				len = strlen(filename);
+				if (FS_IsExt(filename, ".tga", len)) {
+					Q_strncpyz(altFilename, filename, sizeof(altFilename));
+					extpos = strlen(strrchr(altFilename, '.'));
+					if(len-extpos+1 < 0) extpos = 0;
+					altFilename[len-extpos+1] = '\0';
+					
+					netpath = FS_BuildOSPath(dir->path, dir->gamedir, va("%s%s", altFilename, "jpg"));
+					filep = Sys_FOpen(netpath, "rb");
+					if(filep)
+					{
+						len = FS_fplength(filep);
+						fclose(filep);
+						if(len)
+							return len;
+						else
+							return 1;
+					}
+					
+					netpath = FS_BuildOSPath(dir->path, dir->gamedir, va("%s%s", altFilename, "png"));
+					filep = Sys_FOpen(netpath, "rb");
+					if(filep)
+					{
+						len = FS_fplength(filep);
+						fclose(filep);
+						if(len)
+							return len;
+						else
+							return 1;
+					}
+				}
 			}
 		}
 
@@ -1924,6 +1955,11 @@ long FS_ReadFileDir(const char *qpath, void *searchPath, qboolean unpure, void *
 			len = 0;
 			FS_Write( &len, sizeof( len ), com_journalDataFile );
 			FS_Flush( com_journalDataFile );
+		}
+		
+		len = strlen(qpath);
+		if(FS_IsExt(qpath, ".bsp", len) && FS_InMapIndex(qpath)) {
+			return 1;
 		}
 		return -1;
 	}
@@ -3769,6 +3805,7 @@ void FS_SetMapIndex(const char *mapname) {
 					if(mapname[0] != '\0') {
 						if(Q_stristr(key, mapsMatch) != NULL) {
 							fs_indexedPakNames[pi] = CopyString( &key[strlen(mapsMatch) + 1] );
+							Q_strlwr(fs_indexedPakNames[pi]);
 							pi++;
 							if ( fs_debug->integer ) {
 								Com_Printf( "FS_SetMapIndex: Map pak in index %s\n", key );
@@ -3777,16 +3814,22 @@ void FS_SetMapIndex(const char *mapname) {
 					}
 					if(Q_stristr(key, menuMatch) != NULL || Q_stristr(key, gameMatch) != NULL) {
 						fs_menuGamePakNames[mgi] = CopyString( &key[5] );
+						Q_strlwr(fs_menuGamePakNames[mgi]);
 						mgi++;
 						if ( fs_debug->integer ) {
 							Com_Printf( "FS_SetMapIndex: Game pak in index %s\n", key );
 						}
 					}
-					if(Q_stristr(key, "maps/") != NULL && Q_stristr(key, "pak9") != NULL) {
-						fs_mapPakNames[mpi] = CopyString( &key[5] );
+					if(Q_stristr(key, "maps/") != NULL && (Q_stristr(key, "pak9") != NULL || Q_stristr(key, ".bsp") != NULL)) {
+						const char *bspext = Q_stristr(key, ".bsp");
+						if(bspext) {
+							key[strlen(key) - 4] = '\0';
+						}
+						fs_mapPakNames[mpi] = CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
+						Q_strlwr(fs_mapPakNames[mpi]);
 						mpi++;
 						if ( fs_debug->integer ) {
-							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
+							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi-1] );
 						}
 					}
 				} else if(isKey) {
@@ -3834,15 +3877,20 @@ qboolean FS_InMapIndex(const char *filename) {
 	int			i, len, extpos;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
-	Com_Printf("%s", filename);
-	Q_strncpyz(mapname, &filename[5], sizeof(mapname));
-	extpos = strlen(strrchr(mapname, '.'));
-	if(len-extpos+1 < 0) extpos = 0;
-	mapname[len-extpos+1] = '\0';
+	extpos = strlen(strrchr(filename, '.'));
+	len -= extpos;
+	Q_strncpyz(mapname, &filename[5], len - 5);
+	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
 		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
+			if ( fs_debug->integer ) {
+				Com_Printf( "FS_SetMapIndex: Map in index %s\n", mapname );
+			}
 			return qtrue;
 		}
+	}
+	if ( fs_debug->integer ) {
+		Com_Printf( "FS_SetMapIndex: Map NOT in index %s\n", mapname );
 	}
 	return qfalse;
 }
