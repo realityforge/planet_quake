@@ -328,6 +328,7 @@ var LibrarySys = {
 			}
 			SYS.downloadCount++
 			SYS.downloadLazy.push(file[1])
+			SYSC.mkdirp(PATH.join(SYS.fs_basepath, PATH.dirname(file[1])))
 			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
 				if(!err) {
 					FS.writeFile(PATH.join(SYS.fs_basepath, file[1]), new Uint8Array(data), {
@@ -502,11 +503,11 @@ var LibrarySys = {
 				}
 				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
-				SYS.index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
-				SYS.index = Object.keys(SYS.index).reduce((obj, k) => {
-					obj[k.toLowerCase()] = SYS.index[k]
+				var index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
+				SYS.index = Object.keys(index).reduce((obj, k) => {
+					obj[k.toLowerCase()] = index[k]
 					return obj
-				}, {})
+				}, SYS.index || {})
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
@@ -532,13 +533,25 @@ var LibrarySys = {
 						// temporary FIX
 						// TODO: remove this with when Async file system loading works,
 						//   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.skin|\.arena/i)
-							|| file.name.match(/\.shader|menu|\/sarge\/icon_|arenas|botfiles|icons/i)
+						// always download these files beforehand
+						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader/i)
+						// download files for menu system
+							|| file.name.match(/\.menu|menus.txt|ingame.txt|arenas.txt/i)
+							|| file.name.match(/ui\/.*\.h/i)
+						// download required model and bot
+							|| file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles/i)
+						// download the current map if it is referred to
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
-						} else if (file.name.match(/players\/sarge\//i)
-							|| file.name.match(/levelshots|\/icon_|\.skin|2d|menu|gfx|sfx/i)) {
+						} else if (
+							// these files can be streamed in
+							file.name.match(/(players|player)\/(sarge|major|sidepipe)\//i)
+							// download levelshots and common graphics
+							|| file.name.match(/levelshots|ui|2d|common|icons|menu|gfx|sfx/i)
+							// stream player icons so they show up in menu
+							|| file.name.match(/\/icon_|\.skin/i)
+						) {
 							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
 						} else {
 							try {

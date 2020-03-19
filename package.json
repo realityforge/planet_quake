@@ -7,7 +7,6 @@
     "proxy": "node ./misc/quakejs/bin/proxy.js",
     "repack": "node --max_old_space_size=4096 ./misc/quakejs/bin/repack.js",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
-    "build:assets": "node bin/repak.js --src ../../data --dest ./assets",
     "install:emsdk": "./misc/quakejs/lib/emsdk/emsdk install latest-upstream"
   },
   "bin": {

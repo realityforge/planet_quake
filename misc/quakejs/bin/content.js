@@ -41,6 +41,7 @@ for(var i = 0; i < process.argv.length; i++) {
     // if running content script directly, automatically call each mount point 
     //   so the json files and zipped files can be generated
     if(a.match(/\/content\.js$/ig)) {
+      console.log('Running content script')
       runContentGeneration = true
       continue
     }
@@ -170,8 +171,7 @@ async function repackPk3Dir(fullpath) {
   }
   var newPk3 = fullpath.replace('.pk3dir', '.pk3')
   vol.mkdirpSync(path.dirname(fullpath))
-  if(!ufs.existsSync(fullpath.replace('.pk3dir', '.pk3'))
-    || writeOut) {
+  if(!ufs.existsSync(fullpath.replace('.pk3dir', '.pk3')) || writeOut) {
     console.log(`archiving ${newPk3}`)
     await compressDirectory(
       readMultiDir(fullpath, true),
@@ -190,6 +190,7 @@ async function cacheFile(fullpath) {
 async function makeIndexJson(filename, absolute) {
   // if there is no index.json, generate one
   if(filename && !ufs.existsSync(absolute)) {
+    console.log(`Creating directory index ${absolute}`)
 		var files = readMultiDir(path.dirname(absolute), recursive && !repackFiles)
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
@@ -210,11 +211,11 @@ async function makeIndexJson(filename, absolute) {
         })
         file = {name: fullpath.replace('.pk3', '.pk3dir')}
       } else if(ufs.statSync(fullpath).isFile()) {
-        if(writeOut) {
-          file = await cacheFile(fullpath)
-        } else {
+        //if(writeOut) {
+        //  file = await cacheFile(fullpath)
+        //} else {
           file = {size: ufs.statSync(fullpath).size}
-        }
+        //}
 			} else if(repackFiles
         && fullpath.includes('.pk3dir')
         && ufs.statSync(fullpath).isDirectory()) {
@@ -234,11 +235,23 @@ async function makeIndexJson(filename, absolute) {
         name: fullpath.replace(path.dirname(absolute), '')
       }, file)
 		}
-    console.log(`writing directory index ${absolute}`)
+    console.log(`Writing directory index ${absolute}`)
+    var writefs = writeOut ? fs : vol
 		vol.mkdirpSync(path.dirname(absolute))
-    vol.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
+    writefs.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
   }
 }
+
+async function runContent() {
+  if(runContentGeneration) {
+    for(var i = 0; i < mountPoints.length; i++) {
+      var absolute = pathToAbsolute(mountPoints[i][0])
+      await makeIndexJson(mountPoints[i][0], absolute + '/index.json')
+    }
+  }
+}
+
+runContent().catch(e => console.log(e))
 
 module.exports = {
 	makeIndexJson,
