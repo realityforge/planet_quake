@@ -13,7 +13,7 @@ express.static.mime.types['bsp'] = 'application/octet-stream'
 
 function pathToDirectoryIndex(url) {
   const parsed = new URL(`https://local${url}`)
-  var absolute = pathToAbsolute(parsed.pathname)
+  var absolute = pathToAbsolute(decodeURIComponent(parsed.pathname))
   // return index.json for directories or return a file out of baseq3
   var filename
   if(absolute
@@ -25,7 +25,7 @@ function pathToDirectoryIndex(url) {
     && ufs.existsSync(path.dirname(absolute))
     && ufs.statSync(path.dirname(absolute)).isDirectory()
     && parsed.pathname.match(/\/index\.json$/ig)) {
-    filename = parsed.pathname
+    filename = decodeURIComponent(parsed.pathname)
   }
   return {filename, absolute}
 }

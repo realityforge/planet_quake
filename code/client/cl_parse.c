@@ -377,7 +377,6 @@ void CL_SystemInfoChanged( void ) {
 	}
 	
 	FS_SetMapIndex( "" );
-	Com_Printf( "Is this running?\n" );
 
 	// check pure server string
 	s = Info_ValueForKey( systemInfo, "sv_paks" );

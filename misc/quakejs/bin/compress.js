@@ -80,7 +80,7 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3'})
   var skipped = 0
   for(var j = 0; j < notpk3s.length; j++) {
-    await progress([[1, j, notpk3s.length, `Copying ${notpk3s[j]}`]])
+    await progress([[1, j, notpk3s.length, `${notpk3s[j]}`]])
     var newFile = path.join(outCombined, notpk3s[j])
     mkdirpSync(path.dirname(newFile))
     if(!noOverwrite || !ufs.existsSync(newFile)) {
@@ -92,7 +92,7 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   var pk3s = glob.sync('**/*.pk3', {nodir: true, cwd: project})
   pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
   for(var j = 0; j < pk3s.length; j++) {
-    await progress([[1, j, pk3s.length, `Unpacking ${pk3s[j]}`]])
+    await progress([[1, j, pk3s.length, `${pk3s[j]}`]])
     skipped += await readPak(path.join(project, pk3s[j]), progress, outCombined, noOverwrite)
     await progress([[2, false]])
   }

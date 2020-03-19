@@ -43,6 +43,7 @@ var fileTypes = [
   '.mdr',
   '.log',
   '.shader',
+  '.crosshair',
   '.skin',
   '.pk3',
   '.config',

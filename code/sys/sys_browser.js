@@ -530,10 +530,10 @@ var LibrarySys = {
 						// always download these files beforehand
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader/i)
 						// download files for menu system
-							|| file.name.match(/\.menu|menus.txt|ingame.txt|arenas.txt/i)
-							|| file.name.match(/ui\/.*\.h/i)
+							|| file.name.match(/\.menu|menus\.txt|ingame\.txt|arenas\.txt/i)
+							|| file.name.match(/ui\/.*\.h|\.crosshair/i)
 						// download required model and bot
-							|| file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles/i)
+							|| file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt/i)
 						// download the current map if it is referred to
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
@@ -541,7 +541,7 @@ var LibrarySys = {
 							SYS.index[keys[i]].downloading = true
 						} else if (
 							// these files can be streamed in
-							file.name.match(/(players|player)\/(sarge|major|sidepipe)\//i)
+							file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
 							// download levelshots and common graphics
 							|| file.name.match(/levelshots|ui|2d|common|icons|menu|gfx|sfx/i)
 							// stream player icons so they show up in menu
@@ -688,9 +688,6 @@ var LibrarySys = {
 		}
 
 		// TODO support filter
-		if(directory.includes('levelshots')) {
-			debugger
-		}
 		
 		var contents;
 		try {
