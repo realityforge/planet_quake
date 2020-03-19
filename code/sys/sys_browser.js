@@ -321,13 +321,8 @@ var LibrarySys = {
 			if(!file) return
 			if(typeof file == 'string') {
 				file = [0, file]
-				if(SYS.downloadLazy.indexOf(file[1]) != SYS.downloadCount) {
-					SYS.downloadCount++
-					return
-				}
 			}
 			SYS.downloadCount++
-			SYS.downloadLazy.push(file[1])
 			SYSC.mkdirp(PATH.join(SYS.fs_basepath, PATH.dirname(file[1])))
 			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
 				if(!err) {
@@ -371,7 +366,7 @@ var LibrarySys = {
 			})
 		})
 		window.addEventListener('resize', SYS.resizeViewport)
-		setInterval(SYS.DownloadLazy, 20)
+		setInterval(SYS.DownloadLazy, 10)
 	},
 	Sys_PlatformExit: function () {
 		flipper.style.display = 'block'
@@ -511,7 +506,6 @@ var LibrarySys = {
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
-				if(mapname != '') keys = Object.keys(SYS.index).filter(k => k.match(new RegExp(`maps\/${mapname}`, 'i')))
 				for(var i = 0; i < keys.length; i++) {
 					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
@@ -544,6 +538,7 @@ var LibrarySys = {
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							downloads.push(PATH.join(fsMountPath, file.name))
+							SYS.index[keys[i]].downloading = true
 						} else if (
 							// these files can be streamed in
 							file.name.match(/(players|player)\/(sarge|major|sidepipe)\//i)
@@ -553,7 +548,9 @@ var LibrarySys = {
 							|| file.name.match(/\/icon_|\.skin/i)
 						) {
 							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
+							SYS.index[keys[i]].downloading = true
 						} else {
+							SYS.index[keys[i]].downloading = false
 							try {
 							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
 							//		encoding: 'binary', flags: 'w', canOwn: true })
@@ -645,7 +642,10 @@ var LibrarySys = {
 					}
 					var loadingShader = UTF8ToString(_Cvar_VariableString(
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
-					SYS.downloadLazy.push([loadingShader, filenameRelative])
+					if(!SYS.index[indexFilename].downloading) {
+						SYS.downloadLazy.push([loadingShader, filenameRelative])
+						SYS.index[indexFilename].downloading = true
+					}
 				}
 			}
 		} catch (e) {
