@@ -77,7 +77,7 @@ async function readPak(zipFile, progress, outdir, noOverwrite) {
 
 async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   // TODO: copy non-pk3 files first, in case of unpure modes
-  var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3'})
+  var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3', nocase: true})
   var skipped = 0
   for(var j = 0; j < notpk3s.length; j++) {
     await progress([[1, j, notpk3s.length, `${notpk3s[j]}`]])

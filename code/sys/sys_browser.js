@@ -323,22 +323,45 @@ var LibrarySys = {
 				file = [0, file]
 			}
 			SYS.downloadCount++
+			var indexFilename = PATH.join(SYS.fs_basepath, file[1]).toLowerCase()
 			SYSC.mkdirp(PATH.join(SYS.fs_basepath, PATH.dirname(file[1])))
 			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
 				if(!err) {
 					FS.writeFile(PATH.join(SYS.fs_basepath, file[1]), new Uint8Array(data), {
 						encoding: 'binary', flags: 'w', canOwn: true })
 				}
-				
+				SYS.index[indexFilename].downloading = false
 				if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
 					SYS.soundCallback.unshift(file[1].replace('/' + SYS.fs_game + '/', ''))
 				} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 					SYS.modelCallback.unshift(file[1].replace('/' + SYS.fs_game + '/', ''))
 				} else if(file[0]) {
 					SYS.shaderCallback.unshift(file[0])
+				} else if(SYS.index[indexFilename].shaders.length > 0) {
+					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYS.index[indexFilename].shaders)
 				}
 			})
-		}
+		},
+		DownloadIndex: function (index, cb) {
+			SYSC.DownloadAsset(index + '/index.json', SYS.LoadingProgress, (err, data) => {
+				if(err) {
+					SYS.LoadingDescription('')
+					SYSC.ProxyCallback(cb)
+					return
+				}
+				FS.writeFile(PATH.join(fs_basepath, index, "index.json"), new Uint8Array(data), {
+					encoding: 'binary', flags: 'w', canOwn: true })				
+				var index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
+				SYS.index = Object.keys(index).reduce((obj, k) => {
+					obj[k.toLowerCase()] = index[k]
+					obj[k.toLowerCase()].downloading = false
+					obj[k.toLowerCase()].shaders = []
+					return obj
+				}, SYS.index || {})
+				
+				cb()
+			})
+		},
 	},
 	Sys_PlatformInit: function () {
 		SYS.loading = document.getElementById('loading')
@@ -488,21 +511,8 @@ var LibrarySys = {
 				return
 			}
 
-			// TODO: remove this in favor of new remote FS code
 			var downloads = []
-			SYSC.DownloadAsset(fsMountPath + '/index.json', SYS.LoadingProgress, (err, data) => {
-				if(err) {
-					SYS.LoadingDescription('')
-					SYSC.ProxyCallback(cb)
-					return
-				}
-				FS.writeFile(PATH.join(fs_basepath, fsMountPath, "index.json"), new Uint8Array(data), {
-					encoding: 'binary', flags: 'w', canOwn: true })				
-				var index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
-				SYS.index = Object.keys(index).reduce((obj, k) => {
-					obj[k.toLowerCase()] = index[k]
-					return obj
-				}, SYS.index || {})
+			function downloadCurrentIndex() {
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
 				// servers need some map and model info for hitboxes up front
@@ -537,8 +547,8 @@ var LibrarySys = {
 						// download the current map if it is referred to
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
-							downloads.push(PATH.join(fsMountPath, file.name))
 							SYS.index[keys[i]].downloading = true
+							downloads.push(PATH.join(fsMountPath, file.name))
 						} else if (
 							// these files can be streamed in
 							file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
@@ -547,10 +557,9 @@ var LibrarySys = {
 							// stream player icons so they show up in menu
 							|| file.name.match(/\/icon_|\.skin/i)
 						) {
-							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
 							SYS.index[keys[i]].downloading = true
+							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
 						} else {
-							SYS.index[keys[i]].downloading = false
 							try {
 							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
 							//		encoding: 'binary', flags: 'w', canOwn: true })
@@ -616,7 +625,15 @@ var LibrarySys = {
 		    link.href = url
 		    document.getElementsByTagName('head')[0].appendChild(link)
 				*/
-			})
+			}
+			
+			if(fsMountPath != fs_basegame) {
+				SYS.DownloadIndex(fs_basegame, () => {
+					SYS.DownloadIndex(fsMountPath, downloadCurrentIndex)
+				})
+			} else {
+				SYS.DownloadIndex(fsMountPath, downloadCurrentIndex)
+			}
 		})
 	},
 	Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
@@ -632,8 +649,8 @@ var LibrarySys = {
 				// use the index to make a case insensitive lookup
 				var filenameRelative = filename.replace(SYS.fs_basepath, '')
 				var indexFilename = Object.keys(SYS.index)
-					.filter(k => k.includes(filenameRelative.toLowerCase()))
-				if(indexFilename.length > 0) {
+					.filter(k => k.includes(filenameRelative.toLowerCase()))[0]
+				if(indexFilename) {
 					var altName = filename.substr(0, filename.length - SYS.index[indexFilename].name.length) 
 						+ SYS.index[indexFilename].name
 					handle = _fopen(allocate(intArrayFromString(altName), 'i8', ALLOC_STACK), mode)
@@ -645,6 +662,8 @@ var LibrarySys = {
 					if(!SYS.index[indexFilename].downloading) {
 						SYS.downloadLazy.push([loadingShader, filenameRelative])
 						SYS.index[indexFilename].downloading = true
+					} else if (!SYS.index[indexFilename].shaders.includes(loadingShader)) {
+						SYS.index[indexFilename].shaders.push(loadingShader)
 					}
 				}
 			}

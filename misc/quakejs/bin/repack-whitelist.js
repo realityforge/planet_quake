@@ -26,7 +26,6 @@ var sourceTypes = [
   '.h',
   '.map',
   '.scc',
-  '.dis',
 ]
 
 var fileTypes = [
