@@ -13,6 +13,7 @@ var LibrarySys = {
 		modelCallback: [],
 		downloadLazy: [],
 		downloadCount: 0,
+		downloads: [],
 		// Lets make a list of supported mods, 'dirname-ccr' (-ccr means combined converted repacked)
 		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
 		// We use a list here because Object keys have no guarantee of order
@@ -316,13 +317,12 @@ var LibrarySys = {
 			SYS.InitJoystick(SYS.joysticks[2], 3)
 		},
 		DownloadLazy: function () {
-			if(SYS.downloadCount >= SYS.downloadLazy.length) return
-			var file = SYS.downloadLazy[SYS.downloadCount]
+			if(SYS.downloadLazy.length == 0 || SYS.downloads.length > 0) return
+			var file = SYS.downloadLazy.pop()
 			if(!file) return
 			if(typeof file == 'string') {
 				file = [0, file]
 			}
-			SYS.downloadCount++
 			var indexFilename = PATH.join(SYS.fs_basepath, file[1]).toLowerCase()
 			SYSC.mkdirp(PATH.join(SYS.fs_basepath, PATH.dirname(file[1])))
 			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
@@ -336,7 +336,7 @@ var LibrarySys = {
 				} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 					SYS.modelCallback.unshift(file[1].replace('/' + SYS.fs_game + '/', ''))
 				} else if(file[0]) {
-					SYS.shaderCallback.unshift(file[0])
+					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [file[0]].concat(SYS.index[indexFilename].shaders))
 				} else if(SYS.index[indexFilename].shaders.length > 0) {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYS.index[indexFilename].shaders)
 				}
@@ -351,9 +351,9 @@ var LibrarySys = {
 				}
 				FS.writeFile(PATH.join(fs_basepath, index, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
-				var index = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
-				SYS.index = Object.keys(index).reduce((obj, k) => {
-					obj[k.toLowerCase()] = index[k]
+				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
+				SYS.index = Object.keys(moreIndex).reduce((obj, k) => {
+					obj[k.toLowerCase()] = moreIndex[k]
 					obj[k.toLowerCase()].downloading = false
 					obj[k.toLowerCase()].shaders = []
 					return obj
@@ -511,7 +511,7 @@ var LibrarySys = {
 				return
 			}
 
-			var downloads = []
+			SYS.downloads = []
 			function downloadCurrentIndex() {
 				// create virtual file entries for everything in the directory list
 				var keys = Object.keys(SYS.index)
@@ -541,14 +541,14 @@ var LibrarySys = {
 						if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader/i)
 						// download files for menu system
 							|| file.name.match(/\.menu|menus\.txt|ingame\.txt|arenas\.txt/i)
-							|| file.name.match(/ui\/.*\.h|\.crosshair/i)
+							|| file.name.match(/ui\/.*\.h|\.crosshair|logo512/i)
 						// download required model and bot
 							|| file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt/i)
 						// download the current map if it is referred to
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							SYS.index[keys[i]].downloading = true
-							downloads.push(PATH.join(fsMountPath, file.name))
+							SYS.downloads.push(PATH.join(fsMountPath, file.name))
 						} else if (
 							// these files can be streamed in
 							file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
@@ -574,11 +574,11 @@ var LibrarySys = {
 				
 				var totals = []
 				var progresses = []
-				if(downloads.length === 0) {
+				if(SYS.downloads.length === 0) {
 					SYS.LoadingDescription('')
 					SYSC.ProxyCallback(cb)
 				} else {
-					Promise.all(downloads.map((file, i) => new Promise(resolve => {
+					Promise.all(SYS.downloads.map((file, i) => new Promise(resolve => {
 						totals[i] = 0
 						progresses[i] = 0
 						SYS.LoadingDescription(file)
@@ -609,6 +609,7 @@ var LibrarySys = {
 						} catch (e) {resolve(e)}
 						// save to drive
 					}))).then(() => {
+						SYS.downloads = []
 						SYS.LoadingDescription('')
 						FS.syncfs(false, () => SYSC.ProxyCallback(cb))
 					})
@@ -661,6 +662,7 @@ var LibrarySys = {
 						allocate(intArrayFromString('r_loadingShader'), 'i8', ALLOC_STACK)))
 					if(!SYS.index[indexFilename].downloading) {
 						SYS.downloadLazy.push([loadingShader, filenameRelative])
+						SYS.index[indexFilename].shaders.push(loadingShader)
 						SYS.index[indexFilename].downloading = true
 					} else if (!SYS.index[indexFilename].shaders.includes(loadingShader)) {
 						SYS.index[indexFilename].shaders.push(loadingShader)

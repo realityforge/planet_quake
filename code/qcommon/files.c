@@ -3883,7 +3883,6 @@ qboolean FS_InMapIndex(const char *filename) {
 	if(len < 1) {
 		return qfalse;
 	}
-	Com_Printf( "FS_SetMapIndex: Map NOT in index %s\n", filename );
 	extpos = strlen(strrchr(filename, '.'));
 	len -= extpos;
 	start = 0;
@@ -3893,8 +3892,9 @@ qboolean FS_InMapIndex(const char *filename) {
 	if(len - start < 1) {
 		return qfalse;
 	}
-	Q_strncpyz(mapname, &filename[start], len - start);
+	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
+	Com_Printf( "FS_SetMapIndex: Map index %i\n", fs_numMapPakNames );
 	for(i = 0; i < fs_numMapPakNames; i++) {
 		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
 			if ( fs_debug->integer ) {
