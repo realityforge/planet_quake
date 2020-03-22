@@ -349,11 +349,12 @@ var LibrarySys = {
 					SYSC.ProxyCallback(cb)
 					return
 				}
-				FS.writeFile(PATH.join(fs_basepath, index, "index.json"), new Uint8Array(data), {
+				FS.writeFile(PATH.join(SYS.fs_basepath, index, "index.json"), new Uint8Array(data), {
 					encoding: 'binary', flags: 'w', canOwn: true })				
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYS.index = Object.keys(moreIndex).reduce((obj, k) => {
 					obj[k.toLowerCase()] = moreIndex[k]
+					obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
 					obj[k.toLowerCase()].downloading = false
 					obj[k.toLowerCase()].shaders = []
 					return obj
@@ -494,6 +495,7 @@ var LibrarySys = {
 			}
 
 			SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
+			SYSC.mkdirp(PATH.join(fs_basepath, fs_basegame))
 			SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 			
 			for(var i = 0; i < (SYS.mods || []).length; i++) {
@@ -519,13 +521,13 @@ var LibrarySys = {
 				for(var i = 0; i < keys.length; i++) {
 					var file = SYS.index[keys[i]]
 					if(typeof file.size == 'undefined') { // create a directory
-						SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath, file.name))
+						SYSC.mkdirp(PATH.join(fs_basepath, file.name))
 					} else {
 						// TODO: remove this check when webworker is installed
 						//   because it will check ETag and replace files
 						// only download again if the file does not exist
 						try {
-							var handle = FS.stat(PATH.join(fs_basepath, fsMountPath, file.name))
+							var handle = FS.stat(PATH.join(fs_basepath, file.name))
 							if(handle) {
 								continue
 							}
@@ -548,7 +550,7 @@ var LibrarySys = {
 							|| file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
 							|| file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
 							SYS.index[keys[i]].downloading = true
-							SYS.downloads.push(PATH.join(fsMountPath, file.name))
+							SYS.downloads.push(file.name)
 						} else if (
 							// these files can be streamed in
 							file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
@@ -558,7 +560,7 @@ var LibrarySys = {
 							|| file.name.match(/\/icon_|\.skin/i)
 						) {
 							SYS.index[keys[i]].downloading = true
-							SYS.downloadLazy.push(PATH.join(fsMountPath, file.name))
+							SYS.downloadLazy.push(file.name)
 						} else {
 							try {
 							//	FS.writeFile(PATH.join(fs_basepath, fsMountPath, file.name), blankFile, {
@@ -629,8 +631,8 @@ var LibrarySys = {
 			}
 			
 			if(fsMountPath != fs_basegame) {
-				SYS.DownloadIndex(fs_basegame, () => {
-					SYS.DownloadIndex(fsMountPath, downloadCurrentIndex)
+				SYS.DownloadIndex(fsMountPath, () => {
+					SYS.DownloadIndex(fs_basegame, downloadCurrentIndex)
 				})
 			} else {
 				SYS.DownloadIndex(fsMountPath, downloadCurrentIndex)

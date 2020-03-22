@@ -45,6 +45,7 @@ var fileTypes = [
   '.crosshair',
   '.skin',
   '.pk3',
+  '.font',
   '.config',
   '.menu',
   '.defi', // CPMA game mode definition

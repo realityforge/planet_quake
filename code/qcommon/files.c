@@ -3832,7 +3832,7 @@ void FS_SetMapIndex(const char *mapname) {
 						Q_strlwr(fs_mapPakNames[mpi]);
 						mpi++;
 						if ( fs_debug->integer ) {
-							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi-1] );
+							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
 						}
 					}
 				} else if(isKey) {
@@ -3894,7 +3894,6 @@ qboolean FS_InMapIndex(const char *filename) {
 	}
 	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
-	Com_Printf( "FS_SetMapIndex: Map index %i\n", fs_numMapPakNames );
 	for(i = 0; i < fs_numMapPakNames; i++) {
 		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
 			if ( fs_debug->integer ) {
