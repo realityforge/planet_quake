@@ -6,9 +6,6 @@
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
-EMSCRIPTEN=./misc/quakejs/lib/emsdk/upstream/emscripten
-EMSCRIPTEN_CACHE=/Users/briancullinan/.emscripten_cache/wasm-obj/include
-
 ifeq ($(COMPILE_PLATFORM),sunos)
   # Solaris uname and GNU uname differ
   COMPILE_ARCH=$(shell uname -p | sed -e 's/i.86/x86/')
@@ -954,6 +951,8 @@ else # ifeq sunos
 #############################################################################
 
 ifeq ($(PLATFORM),js)
+  EMSCRIPTEN=./misc/quakejs/lib/emsdk/upstream/emscripten
+  EMSCRIPTEN_CACHE=/Users/briancullinan/.emscripten_cache/wasm-obj/include
   CC=$(EMSCRIPTEN)/emcc
   RANLIB=$(EMSCRIPTEN)/emranlib
   ARCH=js
@@ -964,8 +963,6 @@ ifeq ($(PLATFORM),js)
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
 #  OPTIMIZEVM += -O3 -Oz --llvm-lto 3 \
 	  -s WASM=1 \
-		-s WASM_BACKEND=1 \
-		-s WASM_OBJECT_FILES=1 \
 		-s SAFE_HEAP=1 \
 		-s DEMANGLE_SUPPORT=0 \
 		-s ASSERTIONS=0 \

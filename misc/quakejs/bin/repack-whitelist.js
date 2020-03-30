@@ -10,6 +10,7 @@ var imageTypes = [
   '.tga',
   '.gif',
   '.pcx',
+  '.pct',
   '.webp',
   '.hdr',
 ]
@@ -36,6 +37,7 @@ var fileTypes = [
   '.txt',
   '.bsp',
   '.aas',
+  '.ase',
   '.md3',
   '.md5',
   '.iqm',

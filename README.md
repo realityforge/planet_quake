@@ -23,6 +23,7 @@ Some of the major features currently implemented are:
 
   * A working repack script to convert game assets to be more web compatible
   * Deferred (lazy) loading of all game content, entities, models, textures, etc
+  * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
   * A content server (NodeJS + express) to repack and live-reload the game as you develop
   * A SOCKS5 server to convert web-socket connections to UDP and connect to any standard Quake 3 server
   * Various mod disassemblies for associating hard-coded shaders with files even if the mod isn't open source
@@ -31,7 +32,6 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
-  * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
   * Repacking-as-a-service, uploader for repacking game content
   * Procedurally generated game content and maps
