@@ -27,6 +27,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../sys/sys_local.h"
 #include "../sys/sys_loadlib.h"
 
+#if EMSCRIPTEN
+#include "../ui/ui_shared.h"
+#endif
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -1721,7 +1725,7 @@ void CL_Connect_f( void ) {
 	Cvar_Set("ui_singlePlayerActive", "0");
 
 	// fire a message off to the motd server
-	CL_RequestMotd();
+	//CL_RequestMotd();
 
 	// clear any previous "server full" type messages
 	clc.serverMessage[0] = 0;
@@ -1940,7 +1944,9 @@ void CL_Vid_Restart_f( void ) {
 	// don't let them loop during the restart
 	S_StopAllSounds();
 
+#ifndef EMSCRIPTEN
 	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
+#endif
 	{
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
@@ -2294,6 +2300,7 @@ and determine if we need to download them
 void CL_InitDownloads(void) {
   char missingfiles[1024];
 
+#ifndef EMSCRIPTEN
   if ( !(cl_allowDownload->integer & DLF_ENABLE) )
   {
     // autodownload is disabled on the client
@@ -2323,7 +2330,8 @@ void CL_InitDownloads(void) {
 		}
 
 	}
-		
+#endif
+
 	CL_DownloadsComplete();
 }
 
@@ -2360,7 +2368,7 @@ void CL_CheckForResend( void ) {
 	switch ( clc.state ) {
 	case CA_CONNECTING:
 		// requesting a challenge .. IPv6 users always get in as authorize server supports no ipv6.
-#ifndef STANDALONE
+#if !defined STANDALONE && !EMSCRIPTEN
 		if (!com_standalone->integer && clc.serverAddress.type == NA_IP && !Sys_IsLANAddress( clc.serverAddress ) )
 			CL_RequestAuthorization();
 #endif
@@ -2933,6 +2941,32 @@ void CL_Frame ( int msec ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
+
+#if EMSCRIPTEN
+	// quake3's loading process is entirely synchronous. throughout this
+	// process it will call trap_UpdateScreen to force an immediate buffer
+	// swap. however, in WebGL we can't force an immediate buffer swap,
+	// it only occurs once we've yielded to the event loop. due to the
+	// synchronous design however, the event loop is blocked and the
+	// loading screen is therefor never rendered
+	//
+	// to get around this, the JS VM code has a special case for trap_UpdateScreen
+	// that suspends the execution of the VM after it has been invoked,
+	// enabling the event loop to breath. we're checking here if it has
+	// been suspended, and resuming it if so now that we've successfully
+	// swapped buffers
+	if (cgvm && VM_IsSuspended(cgvm)) {
+		unsigned result = VM_Resume(cgvm);
+
+		if (result == 0xDEADBEEF) {
+			return;
+		}
+
+		if (clc.state == CA_LOADING) {
+			CL_InitCGameFinished();
+		}
+	}
+#endif
 
 #ifdef USE_CURL
 	if(clc.downloadCURLM) {

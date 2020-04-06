@@ -1539,13 +1539,14 @@ void RE_Shutdown( qboolean destroyWindow ) {
 			FBO_Shutdown();
 		R_DeleteTextures();
 		R_ShutdownVaos();
-		GLSL_ShutdownGPUShaders();
 	}
 
 	R_DoneFreeType();
 
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
+		GLSL_ShutdownGPUShaders();
+
 		GLimp_Shutdown();
 
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );

@@ -542,8 +542,17 @@ void CL_ParseGamestate( msg_t *msg ) {
 		Q_strncpyz(cl_oldGame, oldGame, sizeof(cl_oldGame));
 	}
 
+#ifndef EMSCRIPTEN
 	FS_ConditionalRestart(clc.checksumFeed, qfalse);
+#endif
 
+#ifdef EMSCRIPTEN
+	CL_ParseGamestate_After_Restart();
+	//FS_RestartCallback(CL_ParseGamestate_After_Restart);
+}
+
+void CL_ParseGamestate_After_Restart( void ) {
+#endif
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
 	// cgame
 	CL_InitDownloads();
@@ -929,5 +938,3 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		}
 	}
 }
-
-

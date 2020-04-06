@@ -862,8 +862,8 @@ void Sys_PlatformInit( void )
 
 	Sys_SetFloatEnv();
 
-	stdinIsATTY = isatty( STDIN_FILENO ) &&
-		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) );
+	stdinIsATTY = ( isatty( STDIN_FILENO ) &&
+		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) ) );
 }
 
 /*
