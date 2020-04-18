@@ -127,7 +127,7 @@ var LibraryVM = {
 
 			return labels;
 		},
-		CompileModule: function (name, instructionCount, codeBase, dataBase) {
+		CompileModule: function (vmp, name, instructionCount, codeBase, dataBase) {
 			var fs_game = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)));
 
 			var state = {
@@ -618,9 +618,9 @@ var LibraryVM = {
 			EmitStatement('function syscall(callnum) {');
 			EmitStatement('\tcallnum = ~callnum;');
 			EmitStatement('\t// save the current vm');
-			EmitStatement('\tvar savedVM = _VM_GetCurrent();');
+			//EmitStatement('\tvar savedVM = _VM_GetCurrent();');
 			EmitStatement('\tvar stackOnEntry = STACKTOP;');
-			EmitStatement('\tvar image = {{{ makeGetValue("savedVM", "VM.vm_t.dataBase", "i32") }}};');
+			EmitStatement('\tvar image = {{{ makeGetValue("vmp", "VM.vm_t.dataBase", "i32") }}};');
 			EmitStatement('\t// store the callnum in the return address space');
 			EmitStatement('\tvar returnAddr = {{{ makeGetValue("image", "stackOnEntry + 4", "i32") }}};');
 			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry + 4", "callnum", "i32") }}};');
@@ -640,16 +640,16 @@ var LibraryVM = {
 			}
 			EmitStatement('\t// modify VM stack pointer for recursive VM entry');
 			EmitStatement('\tSTACKTOP -= 4;')
-			EmitStatement('\t{{{ makeSetValue("savedVM", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
+			EmitStatement('\t{{{ makeSetValue("vmp", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
 			EmitStatement('\t// call into the client');
-			EmitStatement('\tvar systemCall = {{{ makeGetValue("savedVM", "VM.vm_t.systemCall", "i32*") }}};');
+			EmitStatement('\tvar systemCall = {{{ makeGetValue("vmp", "VM.vm_t.systemCall", "i32*") }}};');
 			EmitStatement('\tvar ret = dynCall("ii", systemCall, [image + stackOnEntry + 4]);');
 			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry + 4", "returnAddr", "i32") }}};');
 			EmitStatement('\t// leave the return value on the stack');
 			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry - 4", "ret", "i32") }}};');
 			EmitStatement('\tSTACKTOP = stackOnEntry;');
-			EmitStatement('\t{{{ makeSetValue("savedVM", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
-			EmitStatement('\t_VM_SetCurrent(savedVM);');
+			EmitStatement('\t{{{ makeSetValue("vmp", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
+			//EmitStatement('\t_VM_SetCurrent(savedVM);');
 			// intercept trap_UpdateScreen calls coming from cgame and suspend the VM
 			if (name === 'cgame') {
 				EmitStatement('\tif (callnum === 17 /* trap_UpdateScreen */) {');
@@ -952,7 +952,7 @@ var LibraryVM = {
 	VM_Compile__sig: 'vii',
 	VM_Compile__deps: ['$SYSC', '$VM', 'VM_Destroy'],
 	VM_Compile: function (vmp, headerp) {
-		var current = _VM_GetCurrent();
+		//var current = _VM_GetCurrent();
 		var name = UTF8ToString(vmp + VM.vm_t.name);
 		var dataBase = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i8*') }}};
 		var codeOffset = {{{ makeGetValue('headerp', 'VM.vmHeader_t.codeOffset', 'i32') }}};
@@ -962,7 +962,7 @@ var LibraryVM = {
 		try {
 			var start = Date.now();
 
-			var module = VM.CompileModule(name, instructionCount, headerp + codeOffset, dataBase);
+			var module = VM.CompileModule(vmp, name, instructionCount, headerp + codeOffset, dataBase);
 			vm = eval(module)();
 
 			SYSC.Print('VM file ' + name + ' compiled in ' + (Date.now() - start) + ' milliseconds');
@@ -989,7 +989,7 @@ var LibraryVM = {
 		delete VM.vms[handle];
 	},
 	VM_CallCompiled__sig: 'iii',
-	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_GetCurrent', 'VM_SetCurrent', 'VM_SuspendCompiled'],
+	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_SuspendCompiled'],
 	VM_CallCompiled: function (vmp, args) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
 		var vm = VM.vms[handle];
@@ -1000,8 +1000,8 @@ var LibraryVM = {
 		}
 
 		// set the current vm
-		var savedVM = _VM_GetCurrent();
-		_VM_SetCurrent(vmp);
+		//var savedVM = _VM_GetCurrent();
+		//_VM_SetCurrent(vmp);
 
 		// save off the stack pointer
 		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
@@ -1051,7 +1051,7 @@ var LibraryVM = {
 		}
 
 		// restore the current vm
-		_VM_SetCurrent(savedVM);
+		//_VM_SetCurrent(savedVM);
 
 		// return value is at the top of the stack still
 		return result;
@@ -1091,8 +1091,8 @@ var LibraryVM = {
 			return;
 		}
 
-		var savedVM = _VM_GetCurrent();
-		_VM_SetCurrent(vmp);
+		//var savedVM = _VM_GetCurrent();
+		//_VM_SetCurrent(vmp);
 
 		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
 		var stackOnEntry = vm.stackOnEntry;
@@ -1140,7 +1140,7 @@ var LibraryVM = {
 		}
 
 		// restore the current vm
-		_VM_SetCurrent(savedVM);
+		//_VM_SetCurrent(savedVM);
 
 		return result;
 	}

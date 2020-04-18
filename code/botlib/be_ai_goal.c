@@ -227,7 +227,7 @@ void BotInterbreedGoalFuzzyLogic(int parent1, int parent2, int child)
 	p2 = BotGoalStateFromHandle(parent2);
 	c = BotGoalStateFromHandle(child);
 
-	if (!p1 || !p2 || !c)
+	if ( !p1 || !p2 || !c )
 		return;
 
 	InterbreedWeightConfigs(p1->itemweightconfig, p2->itemweightconfig,
@@ -244,7 +244,8 @@ void BotSaveGoalFuzzyLogic(int goalstate, char *filename)
 	//bot_goalstate_t *gs;
 
 	//gs = BotGoalStateFromHandle(goalstate);
-	//if (!gs) return;
+
+	// if ( !gs ) return;
 	//WriteWeightConfig(filename, gs->itemweightconfig);
 } //end of the function BotSaveGoalFuzzyLogic
 //===========================================================================
@@ -258,7 +259,8 @@ void BotMutateGoalFuzzyLogic(int goalstate, float range)
 	bot_goalstate_t *gs;
 
 	gs = BotGoalStateFromHandle(goalstate);
-	if (!gs) return;
+
+	if ( !gs ) return;
 	EvolveWeightConfig(gs->itemweightconfig);
 } //end of the function BotMutateGoalFuzzyLogic
 //===========================================================================
@@ -267,11 +269,11 @@ void BotMutateGoalFuzzyLogic(int goalstate, float range)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-itemconfig_t *LoadItemConfig(char *filename)
+itemconfig_t *LoadItemConfig( const char *filename )
 {
 	int max_iteminfo;
 	token_t token;
-	char path[MAX_QPATH];
+	char path[MAX_PATH];
 	source_t *source;
 	itemconfig_t *ic;
 	iteminfo_t *ii;
@@ -284,7 +286,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 		LibVarSet( "max_iteminfo", "256" );
 	}
 
-	Q_strncpyz(path, filename, sizeof(path));
+	Q_strncpyz( path, filename, sizeof( path ) );
 	PC_SetBaseFolder(BOTFILESBASEFOLDER);
 	source = LoadSourceFile( path );
 	if( !source ) {
@@ -317,7 +319,7 @@ itemconfig_t *LoadItemConfig(char *filename)
 				return NULL;
 			} //end if
 			StripDoubleQuotes(token.string);
-			Q_strncpyz(ii->classname, token.string, sizeof(ii->classname));
+			Q_strncpyz( ii->classname, token.string, sizeof( ii->classname ) );
 			if (!ReadStructure(source, &iteminfo_struct, (char *) ii))
 			{
 				FreeMemory(ic);
@@ -566,7 +568,7 @@ void BotInitLevelItems(void)
 	{
 		if (!ic->iteminfo[i].modelindex)
 		{
-			Log_Write("item %s has modelindex 0", ic->iteminfo[i].classname);
+			Log_Write("item %s has modelindex 0\n", ic->iteminfo[i].classname);
 		} //end if
 	} //end for
 
@@ -688,7 +690,7 @@ void BotGoalName(int number, char *name, int size)
 	{
 		if (li->number == number)
 		{
-			Q_strncpyz(name, itemconfig->iteminfo[li->iteminfo].name, size);
+			Q_strncpyz( name, itemconfig->iteminfo[li->iteminfo].name, size );
 			return;
 		} //end for
 	} //end for
@@ -1780,7 +1782,7 @@ void BotFreeGoalState(int handle)
 //===========================================================================
 int BotSetupGoalAI(void)
 {
-	char *filename;
+	const char *filename;
 
 	//check if teamplay is on
 	g_gametype = LibVarValue("g_gametype", "0");

@@ -1208,10 +1208,17 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 					{
 						dist1 = y3 - y1;
 						dist2 = y4 - y2;
+#if 1	// msvc.2005.x86_64 compiler crash fix
+						memcpy( p1area1, v1, sizeof( v1 ) );
+						memcpy( p2area1, v2, sizeof( v2 ) );
+						memcpy( p1area2, v3, sizeof( v3 ) );
+						memcpy( p2area2, v4, sizeof( v4 ) );
+#else	
 						VectorCopy(v1, p1area1);
 						VectorCopy(v2, p2area1);
 						VectorCopy(v3, p1area2);
 						VectorCopy(v4, p2area2);
+#endif
 					} //end if
 					else
 					{
@@ -2108,7 +2115,7 @@ int AAS_Reachability_Jump(int area1num, int area2num)
 	int stopevent, areas[10], numareas;
 	float phys_jumpvel, maxjumpdistance, maxjumpheight, height, bestdist, speed;
 	vec_t *v1, *v2, *v3, *v4;
-	vec3_t beststart = {0}, beststart2 = {0}, bestend = {0}, bestend2 = {0};
+	vec3_t beststart, beststart2 = { 0 }, bestend, bestend2 = { 0 };
 	vec3_t teststart, testend, dir, velocity, cmdmove, up = {0, 0, 1}, sidewards;
 	aas_area_t *area1, *area2;
 	aas_face_t *face1, *face2;
@@ -2465,8 +2472,8 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
 		VectorMA(area1point, -32, dir, area1point);
 		VectorMA(area2point, 32, dir, area2point);
 		//
-		ladderface1vertical = fabsf(DotProduct(plane1->normal, up)) < 0.1;
-		ladderface2vertical = fabsf(DotProduct(plane2->normal, up)) < 0.1;
+		ladderface1vertical = fabs(DotProduct(plane1->normal, up)) < 0.1;
+		ladderface2vertical = fabs(DotProduct(plane2->normal, up)) < 0.1;
 		//there's only reachability between vertical ladder faces
 		if (!ladderface1vertical && !ladderface2vertical) return qfalse;
 		//if both vertical ladder faces
@@ -2474,7 +2481,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
 					//and the ladder faces do not make a sharp corner
 					&& DotProduct(plane1->normal, plane2->normal) > 0.7
 					//and the shared edge is not too vertical
-					&& fabsf(DotProduct(sharededgevec, up)) < 0.7)
+					&& fabs(DotProduct(sharededgevec, up)) < 0.7)
 		{
 			//create a new reachability link
 			lreach = AAS_AllocReachability();
@@ -2599,7 +2606,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
 				if (face2->faceflags & FACE_LADDER)
 				{
 					plane2 = &aasworld.planes[face2->planenum];
-					if (fabsf(DotProduct(plane2->normal, up)) < 0.1) break;
+					if (fabs(DotProduct(plane2->normal, up)) < 0.1) break;
 				} //end if
 			} //end for
 			//if from another area without vertical ladder faces
@@ -3054,7 +3061,7 @@ void AAS_Reachability_Elevator(void)
 					bottomorg[2] += 24;
 				} //end else
 				//look at adjacent areas around the top of the plat
-				//make larger steps to outside the plat every time
+				//make larger steps to outside the plat everytime
 				for (n = 0; n < 3; n++)
 				{
 					for (k = 0; k < 3; k++)
@@ -3152,7 +3159,7 @@ aas_lreachability_t *AAS_FindFaceReachabilities(vec3_t *facepoints, int numpoint
 	int facenum, edgenum, bestfacenum;
 	float *v1, *v2, *v3, *v4;
 	float bestdist, speed, hordist, dist;
-	vec3_t beststart = {0}, beststart2 = {0}, bestend = {0}, bestend2 = {0}, tmp, hordir, testpoint;
+	vec3_t beststart, beststart2 = { 0 }, bestend, bestend2 = { 0 }, tmp, hordir, testpoint;
 	aas_lreachability_t *lreach, *lreachabilities;
 	aas_area_t *area;
 	aas_face_t *face;

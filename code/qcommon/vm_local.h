@@ -19,31 +19,29 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
+#ifndef VM_LOCAL_H
+#define VM_LOCAL_H
+
 #include "q_shared.h"
 #include "qcommon.h"
 
-// Max number of arguments to pass from engine to vm's vmMain function.
-// command number + 12 arguments
-#define MAX_VMMAIN_ARGS 13
+#define	MAX_OPSTACK_SIZE	512
+#define	PROC_OPSTACK_SIZE	30
 
-// Max number of arguments to pass from a vm to engine's syscall handler function for the vm.
-// syscall number + 15 arguments
-#define MAX_VMSYSCALL_ARGS 16
-
-// don't change, this is hardcoded into x86 VMs, opStack protection relies
-// on this
-#define	OPSTACK_SIZE	1024
-#define	OPSTACK_MASK	(OPSTACK_SIZE-1)
+// we don't need more than 4 arguments (counting callnum) for vmMain, at least in Quake3
+#define MAX_VMMAIN_CALL_ARGS 4
 
 // don't change
-// Hardcoded in q3asm a reserved at end of bss
+// Hardcoded in q3asm an reserved at end of bss
 #define	PROGRAM_STACK_SIZE	0x10000
-#define	PROGRAM_STACK_MASK	(PROGRAM_STACK_SIZE-1)
+
+// for some buggy mods
+#define	PROGRAM_STACK_EXTRA	(32*1024)
 
 typedef enum {
-	OP_UNDEF, 
+	OP_UNDEF,
 
-	OP_IGNORE, 
+	OP_IGNORE,
 
 	OP_BREAK,
 
@@ -124,12 +122,18 @@ typedef enum {
 	OP_MULF,
 
 	OP_CVIF,
-	OP_CVFI
+	OP_CVFI,
+
+	OP_MAX
 } opcode_t;
 
-
-
-typedef int	vmptr_t;
+typedef struct {
+	int		value;	// 32
+	byte	op;		// 8
+	byte	opStack;	// 8
+	unsigned jused:1;
+	unsigned swtch:1;
+} instruction_t;
 
 typedef struct vmSymbol_s {
 	struct vmSymbol_s	*next;
@@ -138,73 +142,110 @@ typedef struct vmSymbol_s {
 	char	symName[1];		// variable sized
 } vmSymbol_t;
 
-#define	VM_OFFSET_PROGRAM_STACK		0
-#define	VM_OFFSET_SYSTEM_CALL		4
+//typedef void(*vmfunc_t)(void);
+
+typedef union vmFunc_u {
+	byte		*ptr;
+	void (*func)(void);
+} vmFunc_t;
 
 struct vm_s {
-    // DO NOT MOVE OR CHANGE THESE WITHOUT CHANGING THE VM_OFFSET_* DEFINES
-    // USED BY THE ASM CODE
-    int			programStack;		// the vm may be recursively entered
-    intptr_t			(*systemCall)( intptr_t *parms );
+
+	syscall_t	systemCall;
+	byte		*dataBase;
+	int			*opStack;			// pointer to local function stack
+	int			*opStackTop;
+
+	unsigned int programStack;		// the vm may be recursively entered
+	unsigned int stackBottom;		// if programStack < stackBottom, error
 
 	//------------------------------------
-   
-	char		name[MAX_QPATH];
-	void	*searchPath;				// hint for FS_ReadFileDir()
+
+	const char	*name;
+	vmIndex_t	index;
 
 	// for dynamic linked modules
 	void		*dllHandle;
-	intptr_t			(QDECL *entryPoint)( int callNum, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11 );
+	dllSyscall_t entryPoint;
+	dllSyscall_t dllSyscall;
 	void (*destroy)(vm_t* self);
 
 	// for interpreted modules
-	qboolean	currentlyInterpreting;
+	//qboolean	currentlyInterpreting;
 
 	qboolean	compiled;
-	byte		*codeBase;
-	int			entryOfs;
-	int			codeLength;
 
-	intptr_t	*instructionPointers;
+	vmFunc_t	codeBase;
+	unsigned int codeSize;			// code + jump targets, needed for proper munmap()
+	unsigned int codeLength;		// just for information
+
 	int			instructionCount;
+	intptr_t	*instructionPointers;
 
-	byte		*dataBase;
-	int			dataMask;
-	int			dataAlloc;			// actually allocated
-
-	int			stackBottom;		// if programStack < stackBottom, error
+	unsigned int dataMask;
+	unsigned int dataLength;			// data segment length
+	unsigned int exactDataLength;	// from qvm header
+	unsigned int dataAlloc;			// actually allocated
 
 	int			numSymbols;
-	struct vmSymbol_s	*symbols;
+	vmSymbol_t	*symbols;
 
-	int			callLevel;		// counts recursive VM_Call
+	int			callLevel;			// counts recursive VM_Call
 	int			breakFunction;		// increment breakCount on function entry to this
 	int			breakCount;
 
 	byte		*jumpTableTargets;
 	int			numJumpTableTargets;
+
+	uint32_t	crc32sum;
+
+	qboolean	forceDataMask;
+
+	int			privateFlag;
 };
 
+extern	vm_t			*gvm;				// game virtual machine
+extern	vm_t			*cgvm;	// interface to cgame dll or vm
+extern	vm_t			*uivm;	// interface to ui dll or vm
 
-extern	vm_t	*currentVM;
-extern	int		vm_debugLevel;
+qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
+int	VM_CallCompiled( vm_t *vm, int nargs, int *args );
 
-void VM_Compile( vm_t *vm, vmHeader_t *header );
-int	VM_CallCompiled( vm_t *vm, int *args );
-
-void VM_PrepareInterpreter( vm_t *vm, vmHeader_t *header );
-int	VM_CallInterpreted( vm_t *vm, int *args );
+qboolean VM_PrepareInterpreter2( vm_t *vm, vmHeader_t *header );
+int	VM_CallInterpreted2( vm_t *vm, int nargs, int *args );
 
 vmSymbol_t *VM_ValueToFunctionSymbol( vm_t *vm, int value );
 int VM_SymbolToValue( vm_t *vm, const char *symbol );
 const char *VM_ValueToSymbol( vm_t *vm, int value );
 void VM_LogSyscalls( int *args );
 
-void VM_BlockCopy(unsigned int dest, unsigned int src, size_t n);
+const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instructionCount, instruction_t *buf );
+const char *VM_CheckInstructions( instruction_t *buf, int instructionCount, 
+								 const byte *jumpTableTargets, 
+								 int numJumpTableTargets, 
+								 int dataLength );
+
+void VM_IgnoreInstructions( instruction_t *buf, int count );
+void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf );
+
+#define JUMP	(1<<0)
+
+typedef struct opcode_info_s 
+{
+	int   size; 
+	int	  stack;
+	int   nargs;
+	int   flags;
+} opcode_info_t ;
+
+#ifndef EMSCRIPTEN
+opcode_info_t ops[ OP_MAX ];
+#endif
+
+#endif // VM_LOCAL_H
 
 #ifdef EMSCRIPTEN
 qboolean VM_IsSuspendedCompiled(vm_t *vm);
-
 void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
 int VM_ResumeCompiled(vm_t *vm);
 #endif

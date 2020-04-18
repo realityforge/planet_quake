@@ -9,7 +9,7 @@
                 |                                             |
                 '----------- https://quake.games -------------'
                                         
-This project derives from https://github.com/ioquake/ioq3 and https://github.com/inolen/quakejs.
+This project derives from https://github.com/ec-/Quake3e and https://github.com/inolen/quakejs.
 It is not the intention of this project to add features that are not compatible with
 either of those two forks or the original Quake 3 source code release by id Software.
 The intention of this project is to give developers the tools needed to run Quake 3
@@ -29,6 +29,7 @@ Some of the major features currently implemented are:
   * Various mod disassemblies for associating hard-coded shaders with files even if the mod isn't open source
   * Various graphs of mods, including file names for repacked content
   * PNG support
+  * Docker support
   * Many, many bug fixes
 
 Coming soon!
@@ -37,6 +38,7 @@ Coming soon!
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
+  * Remove SDL usage because EMSCRIPTEN uses SDL1, but the engine expects SDL2
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you
@@ -56,8 +58,9 @@ git submodule update --init
 ```
 then
 ```
-./misc/quakejs/lib/emsdk/emsdk install latest-upstream
-./misc/quakejs/lib/emsdk/emsdk activate latest
+./code/xquakejs/lib/emsdk/emsdk install latest-upstream
+./code/xquakejs/lib/emsdk/emsdk activate latest
+
 make PLATFORM=js
 ```
 
@@ -72,6 +75,22 @@ See the console commands from ioq3 https://github.com/ioquake/ioq3#console
 
 Some client variables have been set by default for compatibility, those are listed here:
 https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_browser.js
+
+# Docker
+
+Build the image from this repository:
+
+`docker build -t quake3e .`
+
+Grab latest from dockerhub
+
+`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 1081:1081 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
+
+After the image is built and running, you can skip repeating the conversion process:
+
+`docker commit quake3e quake3e`
+
+`docker start -i quake3e`
 
 # Running content server and repacking
 

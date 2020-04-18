@@ -160,7 +160,9 @@ punctuation_t default_punctuations[] =
 	{NULL, 0}
 };
 
-#ifdef BOTLIB
+#ifdef BSPC
+char basefolder[MAX_PATH];
+#else
 char basefolder[MAX_QPATH];
 #endif
 
@@ -226,15 +228,15 @@ char *PunctuationFromNum(script_t *script, int num)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void QDECL ScriptError(script_t *script, char *str, ...)
+void QDECL ScriptError(script_t *script, const char *fmt, ...)
 {
 	char text[1024];
 	va_list ap;
 
 	if (script->flags & SCFL_NOERRORS) return;
 
-	va_start(ap, str);
-	Q_vsnprintf(text, sizeof(text), str, ap);
+	va_start(ap, fmt);
+	Q_vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 #ifdef BOTLIB
 	botimport.Print(PRT_ERROR, "file %s, line %d: %s\n", script->filename, script->line, text);
@@ -252,15 +254,15 @@ void QDECL ScriptError(script_t *script, char *str, ...)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void QDECL ScriptWarning(script_t *script, char *str, ...)
+void QDECL ScriptWarning(script_t *script, const char *fmt, ...)
 {
 	char text[1024];
 	va_list ap;
 
 	if (script->flags & SCFL_NOWARNINGS) return;
 
-	va_start(ap, str);
-	Q_vsnprintf(text, sizeof(text), str, ap);
+	va_start(ap, fmt);
+	Q_vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 #ifdef BOTLIB
 	botimport.Print(PRT_WARNING, "file %s, line %d: %s\n", script->filename, script->line, text);
@@ -643,7 +645,7 @@ int PS_ReadNumber(script_t *script, token_t *token)
 		//hexadecimal
 		while((c >= '0' && c <= '9') ||
 					(c >= 'a' && c <= 'f') ||
-					(c >= 'A' && c <= 'A'))
+					(c >= 'A' && c <= 'F'))
 		{
 			token->string[len++] = *script->script_p++;
 			if (len >= MAX_TOKEN)
@@ -802,7 +804,7 @@ int PS_ReadPunctuation(script_t *script, token_t *token)
 			//if the script contains the punctuation
 			if (!strncmp(script->script_p, p, len))
 			{
-				Q_strncpyz(token->string, p, MAX_TOKEN);
+				Q_strncpyz( token->string, p, sizeof( token->string ) );
 				script->script_p += len;
 				token->type = TT_PUNCTUATION;
 				//sub type is the number of the punctuation
@@ -836,7 +838,7 @@ int PS_ReadPrimitive(script_t *script, token_t *token)
 	token->string[len] = 0;
 	//copy the token into the script structure
 	Com_Memcpy(&script->token, token, sizeof(token_t));
-	//primitive reading successful
+	//primitive reading successfull
 	return 1;
 } //end of the function PS_ReadPrimitive
 //============================================================================
@@ -919,7 +921,7 @@ int PS_ReadToken(script_t *script, token_t *token)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PS_ExpectTokenString(script_t *script, char *string)
+int PS_ExpectTokenString(script_t *script, const char *string)
 {
 	token_t token;
 
@@ -1020,7 +1022,7 @@ int PS_ExpectAnyToken(script_t *script, token_t *token)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PS_CheckTokenString(script_t *script, char *string)
+int PS_CheckTokenString(script_t *script, const char *string)
 {
 	token_t tok;
 
@@ -1059,7 +1061,7 @@ int PS_CheckTokenType(script_t *script, int type, int subtype, token_t *token)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PS_SkipUntilString(script_t *script, char *string)
+int PS_SkipUntilString(script_t *script, const char *string)
 {
 	token_t token;
 
@@ -1341,7 +1343,7 @@ script_t *LoadScriptFile(const char *filename)
 	length = botimport.FS_FOpenFile( pathname, &fp, FS_READ );
 	if (!fp) return NULL;
 #else
-	fp = fopen(filename, "rb");
+	fp = Sys_FOpen(filename, "rb");
 	if (!fp) return NULL;
 
 	length = FileLength(fp);
@@ -1388,7 +1390,7 @@ script_t *LoadScriptFile(const char *filename)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
-script_t *LoadScriptMemory(char *ptr, int length, char *name)
+script_t *LoadScriptMemory(const char *ptr, int length, const char *name)
 {
 	void *buffer;
 	script_t *script;
@@ -1437,9 +1439,11 @@ void FreeScript(script_t *script)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void PS_SetBaseFolder(char *path)
+void PS_SetBaseFolder(const char *path)
 {
-#ifdef BOTLIB
-	Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
+#ifdef BSPC
+	sprintf(basefolder, path);
+#else
+	Q_strncpyz( basefolder, path, sizeof( basefolder ) );
 #endif
 } //end of the function PS_SetBaseFolder

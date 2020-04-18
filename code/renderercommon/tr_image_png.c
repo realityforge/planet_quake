@@ -19,8 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ===========================================================================
 */
 
-#include "tr_common.h"
-
+#include "../qcommon/q_shared.h"
+#include "../renderercommon/tr_public.h"
 #include "../qcommon/puff.h"
 
 // we could limit the png size to a lower value here
@@ -532,7 +532,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 
 	if(!(BF && Buffer))
 	{
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	/*
@@ -540,6 +540,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 	 */
 
 	DecompressedData = NULL;
+	DecompressedDataLength = 0;
 	*Buffer = DecompressedData;
 
 	CompressedData = NULL;
@@ -553,7 +554,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 
 	if(!FindChunk(BF, PNG_ChunkType_IDAT))
 	{
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	/*
@@ -571,12 +572,12 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 		{
 			/*
 			 *  Rewind to the start of this adventure
-			 *  and return unsuccessful
+			 *  and return unsuccessfull
 			 */
 
 			BufferedFileRewind(BF, BytesToRewind);
 
-			return(-1);
+			return((unsigned)-1);
 		}
 
 		/*
@@ -613,7 +614,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 			{
 				BufferedFileRewind(BF, BytesToRewind);
 
-				return(-1);
+				return((unsigned)-1);
 			}
 
 			BytesToRewind += Length + PNG_ChunkCRC_Size;
@@ -626,7 +627,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 	CompressedData = ri.Malloc(CompressedDataLength);
 	if(!CompressedData)
 	{
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	CompressedDataPtr = CompressedData;
@@ -646,7 +647,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 		{
 			ri.Free(CompressedData); 
 
-			return(-1);
+			return((unsigned)-1);
 		}
 
 		/*
@@ -680,14 +681,14 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 			{
 				ri.Free(CompressedData); 
 
-				return(-1);
+				return((unsigned)-1);
 			}
 
 			if(!BufferedFileSkip(BF, PNG_ChunkCRC_Size))
 			{
 				ri.Free(CompressedData); 
 
-				return(-1);
+				return((unsigned)-1);
 			}
 
 			memcpy(CompressedDataPtr, OrigCompressedData, Length);
@@ -718,7 +719,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 	{
 		ri.Free(CompressedData);
 
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	/*
@@ -730,7 +731,7 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 	{
 		ri.Free(CompressedData);
 
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	/*
@@ -754,14 +755,14 @@ static uint32_t DecompressIDATs(struct BufferedFile *BF, uint8_t **Buffer)
 	ri.Free(CompressedData);
 
 	/*
-	 *  Check if the last puff() was successful.
+	 *  Check if the last puff() was successfull.
 	 */
 
 	if(!((puffResult == 0) && (puffDestLen > 0)))
 	{
 		ri.Free(DecompressedData);
 
-		return(-1);
+		return((unsigned)-1);
 	}
 
 	/*
@@ -2274,7 +2275,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 		{
 			case PNG_ColourType_Grey :
 			{
-				if(ChunkHeaderLength != 2)
+				if( ChunkHeaderLength != 2 )
 				{
 					CloseBufferedFile(ThePNG);
 
@@ -2296,7 +2297,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 
 			case PNG_ColourType_True :
 			{
-				if(ChunkHeaderLength != 6)
+				if( ChunkHeaderLength != 6 )
 				{
 					CloseBufferedFile(ThePNG);
 
@@ -2364,7 +2365,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	 *  Rewind to the start of the file.
 	 */
 
-	if(!BufferedFileRewind(ThePNG, -1))
+	if(!BufferedFileRewind(ThePNG,(unsigned)-1))
 	{
 		CloseBufferedFile(ThePNG);
 
@@ -2387,10 +2388,12 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	 */
 
 	DecompressedDataLength = DecompressIDATs(ThePNG, &DecompressedData);
-	if(!(DecompressedDataLength && DecompressedData))
+	if ( DecompressedDataLength == (unsigned)-1 )
+		DecompressedDataLength = 0;
+
+	if( !DecompressedDataLength || !DecompressedData )
 	{
 		CloseBufferedFile(ThePNG);
-
 		return;
 	}
 

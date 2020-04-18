@@ -57,7 +57,7 @@ static void SV_SendConfigstring(client_t *client, int index)
 			Q_strncpyz( buf, &sv.configstrings[index][sent],
 				maxChunkSize );
 
-			SV_SendServerCommand( client, "%s %i \"%s\"\n", cmd,
+			SV_SendServerCommand( client, "%s %i \"%s\"", cmd,
 				index, buf );
 
 			sent += (maxChunkSize - 1);
@@ -65,7 +65,7 @@ static void SV_SendConfigstring(client_t *client, int index)
 		}
 	} else {
 		// standard cs, just send it
-		SV_SendServerCommand( client, "cs %i \"%s\"\n", index,
+		SV_SendServerCommand( client, "cs %i \"%s\"", index,
 			sv.configstrings[index] );
 	}
 }
@@ -88,10 +88,10 @@ void SV_UpdateConfigstrings(client_t *client)
 			continue;
 
 		// do not always send server info to all clients
-		if ( index == CS_SERVERINFO && client->gentity &&
-			(client->gentity->r.svFlags & SVF_NOSERVERINFO) ) {
+		if ( index == CS_SERVERINFO && ( SV_GentityNum( client - svs.clients )->r.svFlags & SVF_NOSERVERINFO ) ) {
 			continue;
 		}
+
 		SV_SendConfigstring(client, index);
 		client->csUpdated[index] = qfalse;
 	}
@@ -128,7 +128,7 @@ void SV_SetConfigstring (int index, const char *val) {
 	// spawning a new server
 	if ( sv.state == SS_GAME || sv.restarting ) {
 
-		// send the data to all relevant clients
+		// send the data to all relevent clients
 		for (i = 0, client = svs.clients; i < sv_maxclients->integer ; i++, client++) {
 			if ( client->state < CS_ACTIVE ) {
 				if ( client->state == CS_PRIMED )
@@ -136,7 +136,7 @@ void SV_SetConfigstring (int index, const char *val) {
 				continue;
 			}
 			// do not always send server info to all clients
-			if ( index == CS_SERVERINFO && client->gentity && (client->gentity->r.svFlags & SVF_NOSERVERINFO) ) {
+			if ( index == CS_SERVERINFO && ( SV_GentityNum( i )->r.svFlags & SVF_NOSERVERINFO ) ) {
 				continue;
 			}
 		
@@ -145,10 +145,10 @@ void SV_SetConfigstring (int index, const char *val) {
 	}
 }
 
+
 /*
 ===============
 SV_GetConfigstring
-
 ===============
 */
 void SV_GetConfigstring( int index, char *buffer, int bufferSize ) {
@@ -159,7 +159,7 @@ void SV_GetConfigstring( int index, char *buffer, int bufferSize ) {
 		Com_Error (ERR_DROP, "SV_GetConfigstring: bad index %i", index);
 	}
 	if ( !sv.configstrings[index] ) {
-		buffer[0] = 0;
+		buffer[0] = '\0';
 		return;
 	}
 
@@ -215,20 +215,21 @@ baseline will be transmitted
 ================
 */
 static void SV_CreateBaseline( void ) {
-	sharedEntity_t *svent;
+	sharedEntity_t *ent;
 	int				entnum;	
 
-	for ( entnum = 1; entnum < sv.num_entities ; entnum++ ) {
-		svent = SV_GentityNum(entnum);
-		if (!svent->r.linked) {
+	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
+		ent = SV_GentityNum( entnum );
+		if ( !ent->r.linked ) {
 			continue;
 		}
-		svent->s.number = entnum;
+		ent->s.number = entnum;
 
 		//
 		// take current state as baseline
 		//
-		sv.svEntities[entnum].baseline = svent->s;
+		sv.svEntities[ entnum ].baseline = ent->s;
+		sv.baselineUsed[ entnum ] = 1;
 	}
 }
 
@@ -236,7 +237,6 @@ static void SV_CreateBaseline( void ) {
 /*
 ===============
 SV_BoundMaxClients
-
 ===============
 */
 static void SV_BoundMaxClients( int minimum ) {
@@ -247,9 +247,19 @@ static void SV_BoundMaxClients( int minimum ) {
 
 	if ( sv_maxclients->integer < minimum ) {
 		Cvar_Set( "sv_maxclients", va("%i", minimum) );
-	} else if ( sv_maxclients->integer > MAX_CLIENTS ) {
-		Cvar_Set( "sv_maxclients", va("%i", MAX_CLIENTS) );
 	}
+}
+
+
+/*
+===============
+SV_SetSnapshotParams
+===============
+*/
+static void SV_SetSnapshotParams( void ) 
+{
+	// PACKET_BACKUP frames is just about 6.67MB so use that even on listen servers
+	svs.numSnapshotEntities = PACKET_BACKUP * MAX_GENTITIES;
 }
 
 
@@ -269,13 +279,9 @@ static void SV_Startup( void ) {
 	}
 	SV_BoundMaxClients( 1 );
 
-	svs.clients = Z_Malloc (sizeof(client_t) * sv_maxclients->integer );
-	if ( com_dedicated->integer ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
-	} else {
-		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
-	}
+	svs.clients = Z_TagMalloc( sv_maxclients->integer * sizeof( client_t ), TAG_CLIENTS );
+	Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof( client_t ) );
+	SV_SetSnapshotParams();
 	svs.initialized = qtrue;
 
 	// Don't respect sv_killserver unless a server is actually running
@@ -334,7 +340,7 @@ void SV_ChangeMaxClients( void ) {
 	Z_Free( svs.clients );
 
 	// allocate new clients
-	svs.clients = Z_Malloc ( sv_maxclients->integer * sizeof(client_t) );
+	svs.clients = Z_TagMalloc( sv_maxclients->integer * sizeof(client_t), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
 
 	// copy the clients over
@@ -347,21 +353,16 @@ void SV_ChangeMaxClients( void ) {
 	// free the old clients on the hunk
 	Hunk_FreeTempMemory( oldClients );
 	
-	// allocate new snapshot entities
-	if ( com_dedicated->integer ) {
-		svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES;
-	} else {
-		// we don't need nearly as many when playing locally
-		svs.numSnapshotEntities = sv_maxclients->integer * 4 * MAX_SNAPSHOT_ENTITIES;
-	}
+	SV_SetSnapshotParams();
 }
+
 
 /*
 ================
 SV_ClearServer
 ================
 */
-static void SV_ClearServer(void) {
+static void SV_ClearServer( void ) {
 	int i;
 
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
@@ -369,22 +370,16 @@ static void SV_ClearServer(void) {
 			Z_Free( sv.configstrings[i] );
 		}
 	}
-	Com_Memset (&sv, 0, sizeof(sv));
-}
 
-/*
-================
-SV_TouchFile
-================
-*/
-static void SV_TouchFile( const char *filename ) {
-	fileHandle_t	f;
-
-	FS_FOpenFileRead( filename, &f, qfalse );
-	if ( f ) {
-		FS_FCloseFile( f );
+	if ( !sv_levelTimeReset->integer ) {
+		i = sv.time; 
+		Com_Memset( &sv, 0, sizeof( sv ) );
+		sv.time = i;
+	} else {
+		Com_Memset( &sv, 0, sizeof( sv ) );
 	}
 }
+
 
 /*
 ================
@@ -395,30 +390,34 @@ clients along with it.
 This is NOT called for map_restart
 ================
 */
-char *server;
 qboolean killBots;
 
-void SV_SpawnServer( char *svr, qboolean kB ) {
+void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
+#ifndef EMSCRIPTEN
 	int			checksum;
 	qboolean	isBot;
-	char		systemInfo[16384];
 	const char	*p;
-	server = svr;
-	killBots = kB;
+#endif
+
+	killBots = kb;
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
 
-	Com_Printf ("------ Server Initialization ------\n");
-	Com_Printf ("Server: %s\n",server);
+	Com_Printf( "------ Server Initialization ------\n" );
+	Com_Printf( "Server: %s\n", mapname );
 
+	Sys_SetStatus( "Initializing server..." );
+
+#ifndef DEDICATED
 	// if not running a dedicated server CL_MapLoading will connect the client to the server
 	// also print some status stuff
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
-	CL_ShutdownAll(qfalse);
+	CL_ShutdownAll();
+#endif
 
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
@@ -426,8 +425,14 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 	// clear collision map data
 	CM_ClearMap();
 
+	// timescale can be updated before SV_Frame() and cause division-by-zero in SV_RateMsec()
+	Cvar_CheckRange( com_timescale, "0.001", NULL, CV_FLOAT );
+
+	// Restart renderer?
+	// CL_StartHunkUsers( );
+
 	// init client structures and svs.numSnapshotEntities 
-	if ( !Cvar_VariableValue("sv_running") ) {
+	if ( !Cvar_VariableIntegerValue( "sv_running" ) ) {
 		SV_Startup();
 	} else {
 		// check for maxclients change
@@ -436,12 +441,20 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 		}
 	}
 
+#ifndef DEDICATED
+	// remove pure paks that may left from client-side
+	FS_PureServerSetLoadedPaks( "", "" );
+	FS_PureServerSetReferencedPaks( "", "" );
+#endif
+
 	// clear pak references
-	FS_ClearPakReferences(0);
+	FS_ClearPakReferences( 0 );
 
 	// allocate the snapshot entities on the hunk
 	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
-	svs.nextSnapshotEntities = 0;
+
+	// initialize snapshot storage
+	SV_InitSnapshotStorage();
 
 	// toggle the server bit so clients can detect that a
 	// server has changed
@@ -449,13 +462,26 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 
 	// set nextmap to the same map, but it may be overriden
 	// by the game startup or another console command
-	Cvar_Set( "nextmap", "map_restart 0");
+	Cvar_Set( "nextmap", "map_restart 0" );
 //	Cvar_Set( "nextmap", va("map %s", server) );
 
-	for (i=0 ; i<sv_maxclients->integer ; i++) {
+	// try to reset level time if server is empty
+	if ( !sv_levelTimeReset->integer && !sv.restartTime ) {
+		for ( i = 0; i < sv_maxclients->integer; i++ ) {
+			if ( svs.clients[ i ].state != CS_FREE )
+				break;
+		}
+		if ( i == sv_maxclients->integer ) {
+			sv.time = 0;
+		}
+	}
+
+	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// save when the server started for each client already connected
-		if (svs.clients[i].state >= CS_CONNECTED) {
+		if ( svs.clients[i].state >= CS_CONNECTED && sv_levelTimeReset->integer ) {
 			svs.clients[i].oldServerTime = sv.time;
+		} else {
+			svs.clients[i].oldServerTime = 0;
 		}
 	}
 
@@ -466,14 +492,20 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 	}
 
 	// make sure we are not paused
-	Cvar_Set("cl_paused", "0");
+#ifndef DEDICATED
+	Cvar_Set( "cl_paused", "0" );
+#endif
+
+	// get latched value
+	Cvar_Get( "sv_pure", "1", 0 );
 
 	// get a new checksum feed and restart the file system
-	sv.checksumFeed = ( ((unsigned int)rand() << 16) ^ (unsigned int)rand() ) ^ Com_Milliseconds();
+	srand( Com_Milliseconds() );
+	Com_RandomBytes( (byte*)&sv.checksumFeed, sizeof( sv.checksumFeed ) );
 	FS_Restart( sv.checksumFeed );
 
 	// set serverinfo visible name
-	Cvar_Set( "mapname", server );
+	Cvar_Set( "mapname", mapname );
 
 #ifdef EMSCRIPTEN
 
@@ -481,7 +513,7 @@ void SV_SpawnServer( char *svr, qboolean kB ) {
 }
 
 void SV_SpawnServer_After_Shutdown( void ) {
-	FS_Startup(com_basegame->string);
+	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, SV_SpawnServer_After_Startup);
 }
 
@@ -489,31 +521,33 @@ void SV_SpawnServer_After_Startup( void ) {
 	int			i;
 	int			checksum;
 	qboolean	isBot;
-	char		systemInfo[16384];
 	const char	*p;
+	const char *mapname = Cvar_VariableString("mapname");
 	FS_Restart_After_Async();
 #endif
 ;
 
-	FS_SetMapIndex(server);
+	Sys_SetStatus( "Loading map %s", mapname );
+	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
-	CM_LoadMap( va("maps/%s.bsp", server), qfalse, &checksum );
-
-	Cvar_Set( "sv_mapChecksum", va("%i",checksum) );
+	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
 	sv.restartedServerId = sv.serverId; // I suppose the init here is just to be safe
 	sv.checksumFeedServerId = sv.serverId;
-	Cvar_Set( "sv_serverid", va("%i", sv.serverId ) );
+	Cvar_Set( "sv_serverid", va( "%i", sv.serverId ) );
 
 	// clear physics interaction links
-	SV_ClearWorld ();
+	SV_ClearWorld();
 	
 	// media configstring setting should be done during
 	// the loading stage, so connected clients don't have
 	// to load during actual gameplay
 	sv.state = SS_LOADING;
+
+	// make sure that level time is not zero
+	sv.time = sv.time ? sv.time : 8;
 
 	// load and spawn all other entities
 	SV_InitGameProgs();
@@ -521,26 +555,27 @@ void SV_SpawnServer_After_Startup( void ) {
 	// don't allow a map_restart if game is modified
 	sv_gametype->modified = qfalse;
 
+	sv_pure->modified = qfalse;
+
 	// run a few frames to allow everything to settle
-	for (i = 0;i < 3; i++)
+	for ( i = 0; i < 3; i++ )
 	{
-		VM_Call (gvm, GAME_RUN_FRAME, sv.time);
-		SV_BotFrame (sv.time);
 		sv.time += 100;
-		svs.time += 100;
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		SV_BotFrame( sv.time );
 	}
 
 	// create a baseline for more efficient communications
-	SV_CreateBaseline ();
+	SV_CreateBaseline();
 
-	for (i=0 ; i<sv_maxclients->integer ; i++) {
+	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
-		if (svs.clients[i].state >= CS_CONNECTED) {
-			char	*denied;
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
+			const char *denied;
 
 			if ( svs.clients[i].netchan.remoteAddress.type == NA_BOT ) {
 				if ( killBots ) {
-					SV_DropClient( &svs.clients[i], "" );
+					SV_DropClient( &svs.clients[i], "was kicked" );
 					continue;
 				}
 				isBot = qtrue;
@@ -550,7 +585,7 @@ void SV_SpawnServer_After_Startup( void ) {
 			}
 
 			// connect the client again
-			denied = VM_ExplicitArgPtr( gvm, VM_Call( gvm, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
+			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
 			if ( denied ) {
 				// this generally shouldn't happen, because the client
 				// was connected before the level change
@@ -572,54 +607,79 @@ void SV_SpawnServer_After_Startup( void ) {
 					client->gentity = ent;
 
 					client->deltaMessage = -1;
-					client->lastSnapshotTime = 0;	// generate a snapshot immediately
+					client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
-					VM_Call( gvm, GAME_CLIENT_BEGIN, i );
+					VM_Call( gvm, 1, GAME_CLIENT_BEGIN, i );
 				}
 			}
 		}
 	}	
 
 	// run another frame to allow things to look at all the players
-	VM_Call (gvm, GAME_RUN_FRAME, sv.time);
-	SV_BotFrame (sv.time);
 	sv.time += 100;
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	SV_BotFrame( sv.time );
 	svs.time += 100;
 
-	if ( sv_pure->integer ) {
-		// the server sends these to the clients so they will only
-		// load pk3s also loaded at the server
-		p = FS_LoadedPakChecksums();
-		Cvar_Set( "sv_paks", p );
-		if (strlen(p) == 0) {
-			Com_Printf( "WARNING: sv_pure set but no PK3 files loaded\n" );
-		}
-		p = FS_LoadedPakNames();
-		Cvar_Set( "sv_pakNames", p );
+	// we need to touch the cgame and ui qvm because they could be in
+	// separate pk3 files and the client will need to download the pk3
+	// files with the latest cgame and ui qvm to pass the pure check
+	FS_TouchFileInPak( "vm/cgame.qvm" );
+	FS_TouchFileInPak( "vm/ui.qvm" );
 
-		// we need to touch the cgame and ui qvm because they could be in
-		// separate pk3 files and the client will need to download the pk3
-		// files with the latest cgame and ui qvm to pass the pure check
-		SV_TouchFile( "vm/cgame.qvm" );
-		SV_TouchFile( "vm/ui.qvm" );
-	}
-	else {
-		Cvar_Set( "sv_paks", "" );
-		Cvar_Set( "sv_pakNames", "" );
-	}
 	// the server sends these to the clients so they can figure
 	// out which pk3s should be auto-downloaded
-	p = FS_ReferencedPakChecksums();
-	Cvar_Set( "sv_referencedPaks", p );
 	p = FS_ReferencedPakNames();
+	if ( FS_ExcludeReference() ) {
+		// \fs_excludeReference may mask our current ui/cgame qvms
+		FS_TouchFileInPak( "vm/cgame.qvm" );
+		FS_TouchFileInPak( "vm/ui.qvm" );
+		// rebuild referenced paks list
+		p = FS_ReferencedPakNames();
+	}
 	Cvar_Set( "sv_referencedPakNames", p );
 
-	// save systeminfo and serverinfo strings
-	Q_strncpyz( systemInfo, Cvar_InfoString_Big( CVAR_SYSTEMINFO ), sizeof( systemInfo ) );
-	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
-	SV_SetConfigstring( CS_SYSTEMINFO, systemInfo );
+	p = FS_ReferencedPakChecksums();
+	Cvar_Set( "sv_referencedPaks", p );
 
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO ) );
+	Cvar_Set( "sv_paks", "" );
+	Cvar_Set( "sv_pakNames", "" ); // not used on client-side
+
+	if ( sv_pure->integer ) {
+		int freespace, pakslen, infolen;
+		qboolean overflowed = qfalse;
+		qboolean infoTruncated = qfalse;
+
+		p = FS_LoadedPakChecksums( &overflowed );
+
+		pakslen = strlen( p ) + 9; // + strlen( "\\sv_paks\\" )
+		freespace = SV_RemainingGameState();
+		infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated ) );
+
+		if ( infoTruncated ) {
+			Com_Printf( S_COLOR_YELLOW "WARNING: truncated systeminfo!\n" );
+		}
+
+		if ( pakslen > freespace || infolen + pakslen >= BIG_INFO_STRING || overflowed ) {
+			// switch to degraded pure mode
+			// this could *potentially* lead to a false "unpure client" detection
+			// which is better than guaranteed drop
+			Com_DPrintf( S_COLOR_YELLOW "WARNING: skipping sv_paks setup to avoid gamestate overflow\n" );
+		} else {
+			// the server sends these to the clients so they will only
+			// load pk3s also loaded at the server
+			Cvar_Set( "sv_paks", p );
+			if ( *p == '\0' ) {
+				Com_Printf( S_COLOR_YELLOW "WARNING: sv_pure set but no PK3 files loaded\n" );
+			}
+		}
+	}
+
+	// save systeminfo and serverinfo strings
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
 	cvar_modifiedFlags &= ~CVAR_SERVERINFO;
 
 	// any media configstring setting now should issue a warning
@@ -631,17 +691,16 @@ void SV_SpawnServer_After_Startup( void ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
-
-#ifndef DEDICATED
-	if ( com_dedicated->integer ) {
-		// restart renderer in order to show console for dedicated servers
-		// launched through the regular binary
-		CL_StartHunkUsers( qtrue );
-	}
+	
+#ifdef EMSCRIPTEN
+	//CL_StartHunkUsers( );
 #endif
 
 	Com_Printf ("-----------------------------------\n");
+
+	Sys_SetStatus( "Running map %s", mapname );
 }
+
 
 /*
 ===============
@@ -650,11 +709,14 @@ SV_Init
 Only called at main exe startup, not for each game
 ===============
 */
-void SV_Init (void)
+void SV_Init( void )
 {
 	int index;
 
-	SV_AddOperatorCommands ();
+	SV_AddOperatorCommands();
+
+	if ( com_dedicated->integer )
+		SV_AddDedicatedCommands();
 
 	// serverinfo vars
 	Cvar_Get ("dmflags", "0", CVAR_SERVERINFO);
@@ -662,67 +724,95 @@ void SV_Init (void)
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
+	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
-	sv_privateClients = Cvar_Get ("sv_privateClients", "0", CVAR_SERVERINFO);
+	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
+	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
+	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
 
-	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
+	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
+	Cvar_CheckRange( sv_maxclientsPerIP, "1", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address." );
+
+	sv_clientTLD = Cvar_Get( "sv_clientTLD", "0", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( sv_clientTLD, NULL, NULL, CV_INTEGER );
+
+	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
+	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
 	sv_dlRate = Cvar_Get("sv_dlRate", "100", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	sv_minPing = Cvar_Get ("sv_minPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	sv_maxPing = Cvar_Get ("sv_maxPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_floodProtect = Cvar_Get ("sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
 
 	// systeminfo
-	Cvar_Get ("sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_serverid = Cvar_Get ("sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_pure = Cvar_Get ("sv_pure", "1", CVAR_SYSTEMINFO );
-#ifdef USE_VOIP
-	sv_voip = Cvar_Get("sv_voip", "1", CVAR_LATCH);
-	Cvar_CheckRange(sv_voip, 0, 1, qtrue);
-	sv_voipProtocol = Cvar_Get("sv_voipProtocol", sv_voip->integer ? "opus" : "", CVAR_SYSTEMINFO | CVAR_ROM );
-#endif
-	Cvar_Get ("sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get ("sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get ("sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get ("sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	Cvar_Get( "sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
+	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
+	sv_pure = Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
+	Cvar_Get( "sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	Cvar_Get( "sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	Cvar_Get( "sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
 	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP );
-	sv_timeout = Cvar_Get ("sv_timeout", "200", CVAR_TEMP );
-	sv_zombietime = Cvar_Get ("sv_zombietime", "2", CVAR_TEMP );
+	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
+	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
+	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect" );
+	sv_zombietime = Cvar_Get( "sv_zombietime", "2", CVAR_TEMP );
+	Cvar_CheckRange( sv_zombietime, "1", NULL, CV_INTEGER );
+	Cvar_SetDescription( sv_zombietime, "Seconds to sink messages after disconnect" );
 	Cvar_Get ("nextmap", "", CVAR_TEMP );
 
-	sv_allowDownload = Cvar_Get ("sv_allowDownload", "0", CVAR_SERVERINFO);
+	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
-	
-	sv_master[0] = Cvar_Get("sv_master1", MASTER_SERVER_NAME, 0);
-	sv_master[1] = Cvar_Get("sv_master2", "master.ioquake3.org", 0);
-	for(index = 2; index < MAX_MASTER_SERVERS; index++)
+
+	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT );
+	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
+	sv_master[2] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
+
+	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[index] = Cvar_Get(va("sv_master%d", index + 1), "", CVAR_ARCHIVE);
 
-	sv_reconnectlimit = Cvar_Get ("sv_reconnectlimit", "3", 0);
-	sv_showloss = Cvar_Get ("sv_showloss", "0", 0);
+	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
+	Cvar_CheckRange( sv_reconnectlimit, "0", "12", CV_INTEGER );
+
 	sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
 	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
 	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
-	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE );
-#ifndef STANDALONE
-	sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
-#endif
+	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
+
+#ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
+#endif
+
+	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
+
+	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
 
 	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();
-	
+
+#ifdef USE_BANS	
 	// Load saved bans
 	Cbuf_AddText("rehashbans\n");
+#endif
+
+	// track group cvar changes
+	Cvar_SetGroup( sv_lanForceRate, CVG_SERVER );
+	Cvar_SetGroup( sv_minRate, CVG_SERVER );
+	Cvar_SetGroup( sv_maxRate, CVG_SERVER );
+	Cvar_SetGroup( sv_fps, CVG_SERVER );
+
+	// force initial check
+	SV_TrackCvarChanges();
+
+	SV_InitChallenger();
 }
 
 
@@ -736,21 +826,22 @@ not just stuck on the outgoing message list, because the server is going
 to totally exit after returning from this function.
 ==================
 */
-void SV_FinalMessage( char *message ) {
+void SV_FinalMessage( const char *message ) {
 	int			i, j;
 	client_t	*cl;
 	
 	// send it twice, ignoring rate
 	for ( j = 0 ; j < 2 ; j++ ) {
 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
-			if (cl->state >= CS_CONNECTED) {
+			if (cl->state >= CS_CONNECTED ) {
 				// don't send a disconnect to a local client
 				if ( cl->netchan.remoteAddress.type != NA_LOOPBACK ) {
 					SV_SendServerCommand( cl, "print \"%s\n\"\n", message );
 					SV_SendServerCommand( cl, "disconnect \"%s\"", message );
 				}
 				// force a snapshot to be sent
-				cl->lastSnapshotTime = 0;
+				cl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+				cl->state = CS_ZOMBIE; // skip delta generation
 				SV_SendClientSnapshot( cl );
 			}
 		}
@@ -766,7 +857,7 @@ Called when each game quits,
 before Sys_Quit or Sys_Error
 ================
 */
-void SV_Shutdown( char *finalmsg ) {
+void SV_Shutdown( const char *finalmsg ) {
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
@@ -782,29 +873,47 @@ void SV_Shutdown( char *finalmsg ) {
 	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
 	SV_ShutdownGameProgs();
+	SV_InitChallenger();
 
 	// free current level
 	SV_ClearServer();
 
+	SV_FreeIP4DB();
+
 	// free server static data
-	if(svs.clients)
-	{
+	if ( svs.clients ) {
 		int index;
+
+		for ( index = 0; index < sv_maxclients->integer; index++ )
+			SV_FreeClient( &svs.clients[ index ] );
 		
-		for(index = 0; index < sv_maxclients->integer; index++)
-			SV_FreeClient(&svs.clients[index]);
-		
-		Z_Free(svs.clients);
+		Z_Free( svs.clients );
 	}
 	Com_Memset( &svs, 0, sizeof( svs ) );
+	sv.time = 0;
 
 	Cvar_Set( "sv_running", "0" );
-	Cvar_Set("ui_singlePlayerActive", "0");
+
+	// allow setting timescale 0 for demo playback
+	Cvar_CheckRange( com_timescale, "0", NULL, CV_FLOAT );
+
+#ifndef DEDICATED
+	Cvar_Set( "ui_singlePlayerActive", "0" );
+#endif
 
 	Com_Printf( "---------------------------\n" );
 
+#ifndef DEDICATED
 	// disconnect any local clients
-	if( sv_killserver->integer != 2 )
+	if ( sv_killserver->integer != 2 )
 		CL_Disconnect( qfalse );
-}
+#endif
 
+	// clean some server cvars
+	Cvar_Set( "sv_referencedPaks", "" );
+	Cvar_Set( "sv_referencedPakNames", "" );
+	Cvar_Set( "sv_mapChecksum", "" );
+	Cvar_Set( "sv_serverid", "0" );
+
+	Sys_SetStatus( "Server is not running" );
+}

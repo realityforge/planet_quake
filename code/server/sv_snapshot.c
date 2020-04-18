@@ -52,7 +52,7 @@ SV_EmitPacketEntities
 Writes a delta update of an entityState_t list to the message.
 =============
 */
-static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to, msg_t *msg ) {
+static void SV_EmitPacketEntities( const clientSnapshot_t *from, const clientSnapshot_t *to, msg_t *msg ) {
 	entityState_t	*oldent, *newent;
 	int		oldindex, newindex;
 	int		oldnum, newnum;
@@ -71,23 +71,23 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 	oldindex = 0;
 	while ( newindex < to->num_entities || oldindex < from_num_entities ) {
 		if ( newindex >= to->num_entities ) {
-			newnum = 9999;
+			newnum = MAX_GENTITIES+1;
 		} else {
-			newent = &svs.snapshotEntities[(to->first_entity+newindex) % svs.numSnapshotEntities];
+			newent = to->ents[ newindex ];
 			newnum = newent->number;
 		}
 
 		if ( oldindex >= from_num_entities ) {
-			oldnum = 9999;
+			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldent = &svs.snapshotEntities[(from->first_entity+oldindex) % svs.numSnapshotEntities];
+			oldent = from->ents[ oldindex ];
 			oldnum = oldent->number;
 		}
 
 		if ( newnum == oldnum ) {
 			// delta update from old position
 			// because the force parm is qfalse, this will not result
-			// in any bytes being emitted if the entity has not changed at all
+			// in any bytes being emited if the entity has not changed at all
 			MSG_WriteDeltaEntity (msg, oldent, newent, qfalse );
 			oldindex++;
 			newindex++;
@@ -113,14 +113,14 @@ static void SV_EmitPacketEntities( clientSnapshot_t *from, clientSnapshot_t *to,
 }
 
 
-
 /*
 ==================
 SV_WriteSnapshotToClient
 ==================
 */
-static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
-	clientSnapshot_t	*frame, *oldframe;
+static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
+	const clientSnapshot_t	*oldframe;
+	const clientSnapshot_t	*frame;
 	int					lastframe;
 	int					i;
 	int					snapFlags;
@@ -136,17 +136,16 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	} else if ( client->netchan.outgoingSequence - client->deltaMessage 
 		>= (PACKET_BACKUP - 3) ) {
 		// client hasn't gotten a good message through in a long time
-		Com_DPrintf ("%s: Delta request from out of date packet.\n", client->name);
+		Com_DPrintf( "%s: Delta request from out of date packet.\n", client->name );
 		oldframe = NULL;
 		lastframe = 0;
 	} else {
 		// we have a valid snapshot to delta from
 		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
-
-		// the snapshot's entities may still have rolled off the buffer, though
-		if ( oldframe->first_entity <= svs.nextSnapshotEntities - svs.numSnapshotEntities ) {
-			Com_DPrintf ("%s: Delta request from out of date entities.\n", client->name);
+		// we may refer on outdated frame
+		if ( svs.lastValidFrame > oldframe->frameNum ) {
+			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
 		}
@@ -188,6 +187,16 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	// send over the areabits
 	MSG_WriteByte (msg, frame->areabytes);
 	MSG_WriteData (msg, frame->areabits, frame->areabytes);
+
+	// don't send any changes to zombies
+	if ( client->state <= CS_ZOMBIE ) {
+		// playerstate
+		MSG_WriteByte( msg, 0 ); // # of changes
+		MSG_WriteBits( msg, 0, 1 ); // no array changes
+		// packet entities
+		MSG_WriteBits( msg, (MAX_GENTITIES-1), GENTITYNUM_BITS );
+		return;
+	}
 
 	// delta encode the playerstate
 	if ( oldframe ) {
@@ -235,65 +244,73 @@ Build a client snapshot structure
 =============================================================================
 */
 
+
+typedef int entityNum_t;
 typedef struct {
 	int		numSnapshotEntities;
-	int		snapshotEntities[MAX_SNAPSHOT_ENTITIES];	
+	entityNum_t	snapshotEntities[ MAX_SNAPSHOT_ENTITIES ];
+	qboolean unordered;
 } snapshotEntityNumbers_t;
 
+
 /*
-=======================
-SV_QsortEntityNumbers
-=======================
+=============
+SV_SortEntityNumbers
+
+Insertion sort is about 10 times faster than quicksort for our task
+=============
 */
-static int QDECL SV_QsortEntityNumbers( const void *a, const void *b ) {
-	int	*ea, *eb;
-
-	ea = (int *)a;
-	eb = (int *)b;
-
-	if ( *ea == *eb ) {
-		Com_Error( ERR_DROP, "SV_QsortEntityStates: duplicated entity" );
+static void SV_SortEntityNumbers( entityNum_t *num, const int size ) {
+	entityNum_t tmp;
+	int i, d;
+	for ( i = 1 ; i < size; i++ ) {
+		d = i;
+		while ( d > 0 && num[d] < num[d-1] ) {
+			tmp = num[d];
+			num[d] = num[d-1];
+			num[d-1] = tmp;
+			d--;
+		}
 	}
-
-	if ( *ea < *eb ) {
-		return -1;
+	// consistency check for delta encoding
+	for ( i = 1 ; i < size; i++ ) {
+		if ( num[i-1] >= num[i] ) {
+			Com_Error( ERR_DROP, "%s: invalid entity number %i", __func__, num[ i ] );
+		}
 	}
-
-	return 1;
 }
 
 
 /*
 ===============
-SV_AddEntToSnapshot
+SV_AddIndexToSnapshot
 ===============
 */
-static void SV_AddEntToSnapshot( svEntity_t *svEnt, sharedEntity_t *gEnt, snapshotEntityNumbers_t *eNums ) {
-	// if we have already added this entity to this snapshot, don't add again
-	if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
-		return;
-	}
+static void SV_AddIndexToSnapshot( svEntity_t *svEnt, int index, snapshotEntityNumbers_t *eNums ) {
+
 	svEnt->snapshotCounter = sv.snapshotCounter;
 
 	// if we are full, silently discard entities
-	if ( eNums->numSnapshotEntities == MAX_SNAPSHOT_ENTITIES ) {
+	if ( eNums->numSnapshotEntities >= MAX_SNAPSHOT_ENTITIES ) {
 		return;
 	}
 
-	eNums->snapshotEntities[ eNums->numSnapshotEntities ] = gEnt->s.number;
+	eNums->snapshotEntities[ eNums->numSnapshotEntities ] = index;
 	eNums->numSnapshotEntities++;
 }
+
 
 /*
 ===============
 SV_AddEntitiesVisibleFromPoint
 ===============
 */
-static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *frame, 
+static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_t *frame,
 									snapshotEntityNumbers_t *eNums, qboolean portal ) {
 	int		e, i;
 	sharedEntity_t *ent;
 	svEntity_t	*svEnt;
+	entityState_t  *es;
 	int		l;
 	int		clientarea, clientcluster;
 	int		leafnum;
@@ -303,7 +320,7 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 	// during an error shutdown message we may need to transmit
 	// the shutdown message after the server has shutdown, so
 	// specfically check for it
-	if ( !sv.state ) {
+	if ( sv.state == SS_DEAD ) {
 		return;
 	}
 
@@ -316,23 +333,9 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 
 	clientpvs = CM_ClusterPVS (clientcluster);
 
-	for ( e = 0 ; e < sv.num_entities ; e++ ) {
-		ent = SV_GentityNum(e);
-
-		// never send entities that aren't linked in
-		if ( !ent->r.linked ) {
-			continue;
-		}
-
-		if (ent->s.number != e) {
-			Com_DPrintf ("FIXING ENT->S.NUMBER!!!\n");
-			ent->s.number = e;
-		}
-
-		// entities can be flagged to explicitly not be sent to the client
-		if ( ent->r.svFlags & SVF_NOCLIENT ) {
-			continue;
-		}
+	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
+		es = svs.currFrame->ents[ e ];
+		ent = SV_GentityNum( es->number );
 
 		// entities can be flagged to be sent to only one client
 		if ( ent->r.svFlags & SVF_SINGLECLIENT ) {
@@ -354,7 +357,7 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 				continue;
 		}
 
-		svEnt = SV_SvEntityForGentity( ent );
+		svEnt = &sv.svEntities[ es->number ];
 
 		// don't double add an entity through portals
 		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
@@ -363,7 +366,7 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 
 		// broadcast entities are always sent
 		if ( ent->r.svFlags & SVF_BROADCAST ) {
-			SV_AddEntToSnapshot( svEnt, ent, eNums );
+			SV_AddIndexToSnapshot( svEnt, e, eNums );
 			continue;
 		}
 
@@ -409,10 +412,10 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 		}
 
 		// add it
-		SV_AddEntToSnapshot( svEnt, ent, eNums );
+		SV_AddIndexToSnapshot( svEnt, e, eNums );
 
 		// if it's a portal entity, add everything visible from its camera position
-		if ( ent->r.svFlags & SVF_PORTAL ) {
+		if ( ent->r.svFlags & SVF_PORTAL && !portal ) {
 			if ( ent->s.generic1 ) {
 				vec3_t dir;
 				VectorSubtract(ent->s.origin, origin, dir);
@@ -420,11 +423,151 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 					continue;
 				}
 			}
-			SV_AddEntitiesVisibleFromPoint( ent->s.origin2, frame, eNums, qtrue );
+			eNums->unordered = qtrue;
+			SV_AddEntitiesVisibleFromPoint( ent->s.origin2, frame, eNums, portal );
 		}
+	}
 
+	ent = SV_GentityNum( frame->ps.clientNum );
+	// merge second PVS at ent->r.s.origin2
+	if ( ent->r.svFlags & SVF_SELF_PORTAL2 && !portal ) {
+		SV_AddEntitiesVisibleFromPoint( ent->r.s.origin2, frame, eNums, qtrue );
+		eNums->unordered = qtrue;
 	}
 }
+
+
+/*
+===============
+SV_InitSnapshotStorage
+===============
+*/
+void SV_InitSnapshotStorage( void ) 
+{
+	// initialize snapshot storage
+	Com_Memset( svs.snapFrames, 0, sizeof( svs.snapFrames ) );
+	svs.freeStorageEntities = svs.numSnapshotEntities;
+	svs.currentStoragePosition = 0;
+
+	svs.snapshotFrame = 0;
+	svs.currentSnapshotFrame = 0;
+	svs.lastValidFrame = 0;
+
+	svs.currFrame = NULL;
+}
+
+
+/*
+===============
+SV_IssueNewSnapshot
+
+This should be called before any new client snaphot built
+===============
+*/
+void SV_IssueNewSnapshot( void ) 
+{
+	svs.currFrame = NULL;
+	
+	// value that clients can use even for their empty frames
+	// as it will not increment on new snapshot built
+	svs.currentSnapshotFrame = svs.snapshotFrame;
+}
+
+
+/*
+===============
+SV_BuildCommonSnapshot
+
+This always allocates new common snapshot frame
+===============
+*/
+static void SV_BuildCommonSnapshot( void ) 
+{
+	sharedEntity_t	*list[ MAX_GENTITIES ];
+	sharedEntity_t	*ent;
+	
+	snapshotFrame_t	*tmp;
+	snapshotFrame_t	*sf;
+
+	int count;
+	int index;
+	int	num;
+	int i;
+
+	count = 0;
+
+	// gather all linked entities
+	if ( sv.state != SS_DEAD ) {
+		for ( num = 0 ; num < sv.num_entities ; num++ ) {
+			ent = SV_GentityNum( num );
+
+			// never send entities that aren't linked in
+			if ( !ent->r.linked ) {
+				continue;
+			}
+	
+			if ( ent->s.number != num ) {
+				Com_DPrintf( "FIXING ENT->S.NUMBER %i => %i\n", ent->s.number, num );
+				ent->s.number = num;
+			}
+
+			// entities can be flagged to explicitly not be sent to the client
+			if ( ent->r.svFlags & SVF_NOCLIENT ) {
+				continue;
+			}
+
+			list[ count++ ] = ent;
+			sv.svEntities[ num ].snapshotCounter = -1;
+		}
+	}
+
+	sv.snapshotCounter = -1;
+
+	sf = &svs.snapFrames[ svs.snapshotFrame % NUM_SNAPSHOT_FRAMES ];
+	
+	// track last valid frame
+	if ( svs.snapshotFrame - svs.lastValidFrame > (NUM_SNAPSHOT_FRAMES-1) ) {
+		svs.lastValidFrame = svs.snapshotFrame - (NUM_SNAPSHOT_FRAMES-1);
+		// release storage
+		svs.freeStorageEntities += sf->count;
+		sf->count = 0;
+	}
+
+	// release more frames if needed
+	while ( svs.freeStorageEntities < count && svs.lastValidFrame != svs.snapshotFrame ) {
+		tmp = &svs.snapFrames[ svs.lastValidFrame % NUM_SNAPSHOT_FRAMES ];
+		svs.lastValidFrame++;
+		// release storage
+		svs.freeStorageEntities += tmp->count;
+		tmp->count = 0;
+	}
+
+	// should never happen but anyway
+	if ( svs.freeStorageEntities < count ) {
+		Com_Error( ERR_DROP, "Not enough snapshot storage: %i < %i", svs.freeStorageEntities, count );
+	}
+
+	// allocate storage
+	sf->count = count;
+	svs.freeStorageEntities -= count;
+
+	sf->start = svs.currentStoragePosition; 
+	svs.currentStoragePosition = ( svs.currentStoragePosition + count ) % svs.numSnapshotEntities;
+
+	sf->frameNum = svs.snapshotFrame;
+	svs.snapshotFrame++;
+
+	svs.currFrame = sf; // clients can refer to this
+
+	// setup start index
+	index = sf->start;
+	for ( i = 0 ; i < count ; i++, index = (index+1) % svs.numSnapshotEntities ) {
+		//index %= svs.numSnapshotEntities;
+		svs.snapshotEntities[ index ] = list[ i ]->s;
+		sf->ents[ i ] = &svs.snapshotEntities[ index ];
+	}
+}
+
 
 /*
 =============
@@ -443,44 +586,58 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	vec3_t						org;
 	clientSnapshot_t			*frame;
 	snapshotEntityNumbers_t		entityNumbers;
-	int							i;
-	sharedEntity_t				*ent;
-	entityState_t				*state;
+	int							i, cl;
 	svEntity_t					*svEnt;
-	sharedEntity_t				*clent;
 	int							clientNum;
 	playerState_t				*ps;
 
-	// bump the counter used to prevent double adding
-	sv.snapshotCounter++;
-
 	// this is the frame we are creating
 	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+	cl = client - svs.clients;
 
 	// clear everything in this snapshot
-	entityNumbers.numSnapshotEntities = 0;
 	Com_Memset( frame->areabits, 0, sizeof( frame->areabits ) );
+	frame->areabytes = 0;
 
-  // https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=62
+	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=62
 	frame->num_entities = 0;
+	frame->frameNum = svs.currentSnapshotFrame;
 	
-	clent = client->gentity;
-	if ( !clent || client->state == CS_ZOMBIE ) {
+	if ( client->state == CS_ZOMBIE )
 		return;
-	}
 
 	// grab the current playerState_t
-	ps = SV_GameClientNum( client - svs.clients );
+	ps = SV_GameClientNum( cl );
 	frame->ps = *ps;
 
-	// never send client's own entity, because it can
-	// be regenerated from the playerstate
 	clientNum = frame->ps.clientNum;
 	if ( clientNum < 0 || clientNum >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
 	}
-	svEnt = &sv.svEntities[ clientNum ];
 
+	// we set client->gentity only after sending gamestate
+	// so don't send any packetentities changes until CS_PRIMED
+	// because new gamestate will invalidate them anyway
+	if ( !client->gentity ) {
+		return;
+	}
+
+	if ( svs.currFrame == NULL ) {
+		// this will always success and setup current frame
+		SV_BuildCommonSnapshot();
+	}
+
+	// bump the counter used to prevent double adding
+	sv.snapshotCounter++;
+
+	// empty entities before visibility check
+	entityNumbers.numSnapshotEntities = 0;
+
+	frame->frameNum = svs.currFrame->frameNum;
+
+	// never send client's own entity, because it can
+	// be regenerated from the playerstate
+	svEnt = &sv.svEntities[ clientNum ];
 	svEnt->snapshotCounter = sv.snapshotCounter;
 
 	// find the client's viewpoint
@@ -489,14 +646,17 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 	// add all the entities directly visible to the eye, which
 	// may include portal entities that merge other viewpoints
+	entityNumbers.unordered = qfalse;
 	SV_AddEntitiesVisibleFromPoint( org, frame, &entityNumbers, qfalse );
 
 	// if there were portals visible, there may be out of order entities
 	// in the list which will need to be resorted for the delta compression
 	// to work correctly.  This also catches the error condition
 	// of an entity being included twice.
-	qsort( entityNumbers.snapshotEntities, entityNumbers.numSnapshotEntities, 
-		sizeof( entityNumbers.snapshotEntities[0] ), SV_QsortEntityNumbers );
+	if ( entityNumbers.unordered ) {
+		SV_SortEntityNumbers( &entityNumbers.snapshotEntities[0], 
+			entityNumbers.numSnapshotEntities );
+	}
 
 	// now that all viewpoint's areabits have been OR'd together, invert
 	// all of them to make it a mask vector, which is what the renderer wants
@@ -504,68 +664,13 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		((int *)frame->areabits)[i] = ((int *)frame->areabits)[i] ^ -1;
 	}
 
-	// copy the entity states out
-	frame->num_entities = 0;
-	frame->first_entity = svs.nextSnapshotEntities;
-	for ( i = 0 ; i < entityNumbers.numSnapshotEntities ; i++ ) {
-		ent = SV_GentityNum(entityNumbers.snapshotEntities[i]);
-		state = &svs.snapshotEntities[svs.nextSnapshotEntities % svs.numSnapshotEntities];
-		*state = ent->s;
-		svs.nextSnapshotEntities++;
-		// this should never hit, map should always be restarted first in SV_Frame
-		if ( svs.nextSnapshotEntities >= 0x7FFFFFFE ) {
-			Com_Error(ERR_FATAL, "svs.nextSnapshotEntities wrapped");
-		}
-		frame->num_entities++;
+	frame->num_entities = entityNumbers.numSnapshotEntities;
+	// get pointers from common snapshot
+	for ( i = 0 ; i < entityNumbers.numSnapshotEntities ; i++ )	{
+		frame->ents[ i ] = svs.currFrame->ents[ entityNumbers.snapshotEntities[ i ] ];
 	}
 }
 
-#ifdef USE_VOIP
-/*
-==================
-SV_WriteVoipToClient
-
-Check to see if there is any VoIP queued for a client, and send if there is.
-==================
-*/
-static void SV_WriteVoipToClient(client_t *cl, msg_t *msg)
-{
-	int totalbytes = 0;
-	int i;
-	voipServerPacket_t *packet;
-
-	if(cl->queuedVoipPackets)
-	{
-		// Write as many VoIP packets as we reasonably can...
-		for(i = 0; i < cl->queuedVoipPackets; i++)
-		{
-			packet = cl->voipPacket[(i + cl->queuedVoipIndex) % ARRAY_LEN(cl->voipPacket)];
-
-			if(!*cl->downloadName)
-			{
-        			totalbytes += packet->len;
-	        		if (totalbytes > (msg->maxsize - msg->cursize) / 2)
-		        		break;
-
-        			MSG_WriteByte(msg, svc_voipOpus);
-        			MSG_WriteShort(msg, packet->sender);
-	        		MSG_WriteByte(msg, (byte) packet->generation);
-		        	MSG_WriteLong(msg, packet->sequence);
-		        	MSG_WriteByte(msg, packet->frames);
-        			MSG_WriteShort(msg, packet->len);
-        			MSG_WriteBits(msg, packet->flags, VOIP_FLAGCNT);
-	        		MSG_WriteData(msg, packet->data, packet->len);
-                        }
-
-			Z_Free(packet);
-		}
-
-		cl->queuedVoipPackets -= i;
-		cl->queuedVoipIndex += i;
-		cl->queuedVoipIndex %= ARRAY_LEN(cl->voipPacket);
-	}
-}
-#endif
 
 /*
 =======================
@@ -574,15 +679,15 @@ SV_SendMessageToClient
 Called by SV_SendClientSnapshot and SV_SendClientGameState
 =======================
 */
-void SV_SendMessageToClient(msg_t *msg, client_t *client)
+void SV_SendMessageToClient( msg_t *msg, client_t *client )
 {
 	// record information about the message
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
 
 	// send the datagram
-	SV_Netchan_Transmit(client, msg);
+	SV_Netchan_Transmit( client, msg );
 }
 
 
@@ -595,7 +700,7 @@ Also called by SV_FinalMessage
 =======================
 */
 void SV_SendClientSnapshot( client_t *client ) {
-	byte		msg_buf[MAX_MSGLEN];
+	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
 
 	// build the snapshot
@@ -603,11 +708,11 @@ void SV_SendClientSnapshot( client_t *client ) {
 
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
-	if ( client->gentity && client->gentity->r.svFlags & SVF_BOT ) {
+	if ( client->netchan.remoteAddress.type == NA_BOT ) {
 		return;
 	}
 
-	MSG_Init (&msg, msg_buf, sizeof(msg_buf));
+	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
 	msg.allowoverflow = qtrue;
 
 	// NOTE, MRE: all server->client messages now acknowledge
@@ -621,14 +726,10 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
 
-#ifdef USE_VOIP
-	SV_WriteVoipToClient( client, &msg );
-#endif
-
 	// check for overflow
 	if ( msg.overflowed ) {
-		Com_Printf ("WARNING: msg overflowed for %s\n", client->name);
-		MSG_Clear (&msg);
+		Com_Printf( "WARNING: msg overflowed for %s\n", client->name );
+		MSG_Clear( &msg );
 	}
 
 	SV_SendMessageToClient( &msg, client );
@@ -640,45 +741,45 @@ void SV_SendClientSnapshot( client_t *client ) {
 SV_SendClientMessages
 =======================
 */
-void SV_SendClientMessages(void)
+void SV_SendClientMessages( void )
 {
 	int		i;
 	client_t	*c;
 
+	svs.msgTime = Sys_Milliseconds();
+
 	// send a message to each connected client
-	for(i=0; i < sv_maxclients->integer; i++)
+	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
-		c = &svs.clients[i];
+		c = &svs.clients[ i ];
 		
-		if(!c->state)
+		if ( c->state == CS_FREE )
 			continue;		// not connected
 
-		if(svs.time - c->lastSnapshotTime < c->snapshotMsec * com_timescale->value)
-			continue;		// It's not time yet
-
-		if(*c->downloadName)
+		if ( *c->downloadName )
 			continue;		// Client is downloading, don't send snapshots
 
-		if(c->netchan.unsentFragments || c->netchan_start_queue)
+		// 1. Local clients get snapshots every server frame
+		// 2. Remote clients get snapshots depending from rate and requested number of updates
+
+		if ( svs.time - c->lastSnapshotTime < c->snapshotMsec * com_timescale->value )
+			continue;		// It's not time yet
+
+		if ( c->netchan.unsentFragments || c->netchan_start_queue )
 		{
 			c->rateDelayed = qtrue;
 			continue;		// Drop this snapshot if the packet queue is still full or delta compression will break
 		}
-
-		if(!(c->netchan.remoteAddress.type == NA_LOOPBACK ||
-		     (sv_lanForceRate->integer && Sys_IsLANAddress(c->netchan.remoteAddress))))
+	
+		if ( SV_RateMsec( c ) > 0 )
 		{
-			// rate control for clients not on LAN 
-			if(SV_RateMsec(c) > 0)
-			{
-				// Not enough time since last packet passed through the line
-				c->rateDelayed = qtrue;
-				continue;
-			}
+			// Not enough time since last packet passed through the line
+			c->rateDelayed = qtrue;
+			continue;
 		}
 
 		// generate and send a new message
-		SV_SendClientSnapshot(c);
+		SV_SendClientSnapshot( c );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}

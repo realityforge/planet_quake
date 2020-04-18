@@ -47,17 +47,67 @@ vec4_t		colorLtGrey	= {0.75, 0.75, 0.75, 1};
 vec4_t		colorMdGrey	= {0.5, 0.5, 0.5, 1};
 vec4_t		colorDkGrey	= {0.25, 0.25, 0.25, 1};
 
-vec4_t	g_color_table[8] =
-	{
-	{0.0, 0.0, 0.0, 1.0},
-	{1.0, 0.0, 0.0, 1.0},
-	{0.0, 1.0, 0.0, 1.0},
-	{1.0, 1.0, 0.0, 1.0},
-	{0.0, 0.0, 1.0, 1.0},
-	{0.0, 1.0, 1.0, 1.0},
-	{1.0, 0.0, 1.0, 1.0},
-	{1.0, 1.0, 1.0, 1.0},
-	};
+// actually there is 35 colors but we want to use bitmask safely
+const vec4_t g_color_table[ 64 ] = {
+
+	{0.0f, 0.0f, 0.0f, 1.0f},
+	{1.0f, 0.0f, 0.0f, 1.0f},
+	{0.0f, 1.0f, 0.0f, 1.0f},
+	{1.0f, 1.0f, 0.0f, 1.0f},
+	{0.2f, 0.2f, 1.0f, 1.0f}, //{0.0, 0.0, 1.0, 1.0},
+	{0.0f, 1.0f, 1.0f, 1.0f},
+	{1.0f, 0.0f, 1.0f, 1.0f},
+	{1.0f, 1.0f, 1.0f, 1.0f},
+
+	// extended color codes from CPMA/CNQ3:
+	{ 1.00000f, 0.50000f, 0.00000f, 1.00000f },	// 8
+	{ 0.60000f, 0.60000f, 1.00000f, 1.00000f },	// 9
+
+	// CPMA's alphabet rainbow
+	{ 1.00000f, 0.00000f, 0.00000f, 1.00000f },	// a
+	{ 1.00000f, 0.26795f, 0.00000f, 1.00000f },	// b
+	{ 1.00000f, 0.50000f, 0.00000f, 1.00000f },	// c
+	{ 1.00000f, 0.73205f, 0.00000f, 1.00000f },	// d
+	{ 1.00000f, 1.00000f, 0.00000f, 1.00000f },	// e
+	{ 0.73205f, 1.00000f, 0.00000f, 1.00000f },	// f
+	{ 0.50000f, 1.00000f, 0.00000f, 1.00000f },	// g
+	{ 0.26795f, 1.00000f, 0.00000f, 1.00000f },	// h
+	{ 0.00000f, 1.00000f, 0.00000f, 1.00000f },	// i
+	{ 0.00000f, 1.00000f, 0.26795f, 1.00000f },	// j
+	{ 0.00000f, 1.00000f, 0.50000f, 1.00000f },	// k
+	{ 0.00000f, 1.00000f, 0.73205f, 1.00000f },	// l
+	{ 0.00000f, 1.00000f, 1.00000f, 1.00000f },	// m
+	{ 0.00000f, 0.73205f, 1.00000f, 1.00000f },	// n
+	{ 0.00000f, 0.50000f, 1.00000f, 1.00000f },	// o
+	{ 0.00000f, 0.26795f, 1.00000f, 1.00000f },	// p
+	{ 0.00000f, 0.00000f, 1.00000f, 1.00000f },	// q
+	{ 0.26795f, 0.00000f, 1.00000f, 1.00000f },	// r
+	{ 0.50000f, 0.00000f, 1.00000f, 1.00000f },	// s
+	{ 0.73205f, 0.00000f, 1.00000f, 1.00000f },	// t
+	{ 1.00000f, 0.00000f, 1.00000f, 1.00000f },	// u
+	{ 1.00000f, 0.00000f, 0.73205f, 1.00000f },	// v
+	{ 1.00000f, 0.00000f, 0.50000f, 1.00000f },	// w
+	{ 1.00000f, 0.00000f, 0.26795f, 1.00000f },	// x
+	{ 1.0, 1.0, 1.0, 1.0 }, // y, white, duped so all colors can be expressed with this palette
+	{ 0.5, 0.5, 0.5, 1.0 }, // z, grey
+};
+
+
+int ColorIndexFromChar( char ccode )
+{
+	if ( ccode >= '0' && ccode <= '9' ) {
+		return ( ccode - '0' );
+	}
+	else if ( ccode >= 'a' && ccode <= 'z' ) {
+		return ( ccode - 'a' + 10 );
+	}
+	else if ( ccode >= 'A' && ccode <= 'Z' ) {
+		return ( ccode - 'A' + 10 );
+	}
+	else {
+		return  ColorIndex( COLOR_WHITE );
+	}
+}
 
 
 vec3_t	bytedirs[NUMVERTEXNORMALS] =
@@ -148,7 +198,7 @@ vec3_t	bytedirs[NUMVERTEXNORMALS] =
 //==============================================================
 
 int		Q_rand( int *seed ) {
-	*seed = (69069U * *seed + 1U);
+	*seed = (69069 * *seed + 1);
 	return *seed;
 }
 
@@ -165,6 +215,16 @@ float	Q_crandom( int *seed ) {
 signed char ClampChar( int i ) {
 	if ( i < -128 ) {
 		return -128;
+	}
+	if ( i > 127 ) {
+		return 127;
+	}
+	return i;
+}
+
+signed char ClampCharMove( int i ) {
+	if ( i < -127 ) {
+		return -127;
 	}
 	if ( i > 127 ) {
 		return 127;
@@ -495,7 +555,6 @@ void VectorRotate( vec3_t in, vec3_t matrix[3], vec3_t out )
 
 //============================================================================
 
-#if !idppc
 /*
 ** float q_rsqrt( float number )
 */
@@ -515,13 +574,14 @@ float Q_rsqrt( float number )
 	return y;
 }
 
+
 float Q_fabs( float f ) {
 	floatint_t fi;
 	fi.f = f;
 	fi.i &= 0x7FFFFFFF;
 	return fi.f;
 }
-#endif
+
 
 //============================================================
 
@@ -1006,12 +1066,35 @@ int Q_isnan( float x )
 	floatint_t fi;
 
 	fi.f = x;
-	fi.ui &= 0x7FFFFFFF;
-	fi.ui = 0x7F800000 - fi.ui;
+	fi.u &= 0x7FFFFFFF;
+	fi.u = 0x7F800000 - fi.u;
 
-	return (int)( (unsigned int)fi.ui >> 31 );
+	return (int)( fi.u >> 31 );
 }
 //------------------------------------------------------------------------
+
+
+/*
+================
+Q_log2f
+================
+*/
+float Q_log2f( float f )
+{
+	return logf( f ) / M_LN2;
+}
+
+
+/*
+================
+Q_exp2f
+================
+*/
+float Q_exp2f( float f )
+{
+	return powf( 2.0f, f );
+}
+
 
 #ifndef Q3_VM
 /*

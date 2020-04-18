@@ -2,12 +2,12 @@
   "name": "quakejs",
   "version": "0.0.1",
   "scripts": {
-    "start": "node ./misc/quakejs/bin/web.js",
-    "content": "node ./misc/quakejs/bin/content.js",
-    "proxy": "node ./misc/quakejs/bin/proxy.js",
-    "repack": "node --max_old_space_size=4096 ./misc/quakejs/bin/repack.js",
+    "start": "node ./code/xquakejs/bin/web.js",
+    "content": "node ./code/xquakejs/bin/content.js",
+    "proxy": "node ./code/xquakejs/bin/proxy.js",
+    "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
-    "install:emsdk": "./misc/quakejs/lib/emsdk/emsdk install latest-upstream"
+    "install:emsdk": "./code/xquakejs/lib/emsdk/emsdk install latest-upstream"
   },
   "bin": {
     "quakejs-content": "bin/content.js",
