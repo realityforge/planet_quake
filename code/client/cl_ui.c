@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern	botlib_export_t	*botlib_export;
 
-vm_t *uivm;
+vm_t *uivm = NULL;
 
 /*
 ====================
@@ -35,12 +35,13 @@ GetClientState
 */
 static void GetClientState( uiClientState_t *state ) {
 	state->connectPacketCount = clc.connectPacketCount;
-	state->connState = clc.state;
-	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
+	state->connState = cls.state;
+	Q_strncpyz( state->servername, cls.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
 	state->clientNum = cl.snap.ps.clientNum;
 }
+
 
 /*
 ====================
@@ -48,24 +49,35 @@ LAN_LoadCachedServers
 ====================
 */
 void LAN_LoadCachedServers( void ) {
-	int size;
 	fileHandle_t fileIn;
+	int size, file_size;
+
 	cls.numglobalservers = cls.numfavoriteservers = 0;
 	cls.numGlobalServerAddresses = 0;
-	if (FS_SV_FOpenFileRead("servercache.dat", &fileIn)) {
-		FS_Read(&cls.numglobalservers, sizeof(int), fileIn);
-		FS_Read(&cls.numfavoriteservers, sizeof(int), fileIn);
-		FS_Read(&size, sizeof(int), fileIn);
-		if (size == sizeof(cls.globalServers) + sizeof(cls.favoriteServers)) {
-			FS_Read(&cls.globalServers, sizeof(cls.globalServers), fileIn);
-			FS_Read(&cls.favoriteServers, sizeof(cls.favoriteServers), fileIn);
-		} else {
-			cls.numglobalservers = cls.numfavoriteservers = 0;
-			cls.numGlobalServerAddresses = 0;
+
+	file_size = FS_Home_FOpenFileRead( "servercache.dat", &fileIn );
+	if ( file_size < (3*sizeof(int)) ) {
+		if ( fileIn != FS_INVALID_HANDLE ) {
+			FS_FCloseFile( fileIn );
 		}
-		FS_FCloseFile(fileIn);
+		return;
+	} 
+
+	FS_Read( &cls.numglobalservers, sizeof(int), fileIn );
+	FS_Read( &cls.numfavoriteservers, sizeof(int), fileIn );
+	FS_Read( &size, sizeof(int), fileIn );
+
+	if ( size == sizeof(cls.globalServers) + sizeof(cls.favoriteServers) ) {
+		FS_Read( &cls.globalServers, sizeof(cls.globalServers), fileIn );
+		FS_Read( &cls.favoriteServers, sizeof(cls.favoriteServers), fileIn );
+	} else {
+		cls.numglobalservers = cls.numfavoriteservers = 0;
+		cls.numGlobalServerAddresses = 0;
 	}
+
+	FS_FCloseFile( fileIn );
 }
+
 
 /*
 ====================
@@ -73,14 +85,21 @@ LAN_SaveServersToCache
 ====================
 */
 void LAN_SaveServersToCache( void ) {
+	
+	fileHandle_t fileOut;
 	int size;
-	fileHandle_t fileOut = FS_SV_FOpenFileWrite("servercache.dat");
+
+	fileOut = FS_FOpenFileWrite( "servercache.dat" );
+	if ( fileOut == FS_INVALID_HANDLE )
+		return;
+
 	FS_Write(&cls.numglobalservers, sizeof(int), fileOut);
 	FS_Write(&cls.numfavoriteservers, sizeof(int), fileOut);
 	size = sizeof(cls.globalServers) + sizeof(cls.favoriteServers);
 	FS_Write(&size, sizeof(int), fileOut);
 	FS_Write(&cls.globalServers, sizeof(cls.globalServers), fileOut);
 	FS_Write(&cls.favoriteServers, sizeof(cls.favoriteServers), fileOut);
+
 	FS_FCloseFile(fileOut);
 }
 
@@ -117,6 +136,7 @@ static void LAN_ResetPings(int source) {
 	}
 }
 
+
 /*
 ====================
 LAN_AddServer
@@ -148,7 +168,7 @@ static int LAN_AddServer(int source, const char *name, const char *address) {
 	if (servers && *count < max) {
 		NET_StringToAdr( address, &adr, NA_UNSPEC );
 		for ( i = 0; i < *count; i++ ) {
-			if (NET_CompareAdr(servers[i].adr, adr)) {
+			if (NET_CompareAdr(&servers[i].adr, &adr)) {
 				break;
 			}
 		}
@@ -163,6 +183,7 @@ static int LAN_AddServer(int source, const char *name, const char *address) {
 	}
 	return -1;
 }
+
 
 /*
 ====================
@@ -192,7 +213,7 @@ static void LAN_RemoveServer(int source, const char *addr) {
 		netadr_t comp;
 		NET_StringToAdr( addr, &comp, NA_UNSPEC );
 		for (i = 0; i < *count; i++) {
-			if (NET_CompareAdr( comp, servers[i].adr)) {
+			if (NET_CompareAdr( &comp, &servers[i].adr)) {
 				int j = i;
 				while (j < *count - 1) {
 					Com_Memcpy(&servers[j], &servers[j+1], sizeof(servers[j]));
@@ -227,6 +248,7 @@ static int LAN_GetServerCount( int source ) {
 	return 0;
 }
 
+
 /*
 ====================
 LAN_GetLocalServerAddressString
@@ -236,26 +258,27 @@ static void LAN_GetServerAddressString( int source, int n, char *buf, int buflen
 	switch (source) {
 		case AS_LOCAL :
 			if (n >= 0 && n < MAX_OTHER_SERVERS) {
-				Q_strncpyz(buf, NET_AdrToStringwPort( cls.localServers[n].adr) , buflen );
+				Q_strncpyz(buf, NET_AdrToStringwPort( &cls.localServers[n].adr) , buflen );
 				return;
 			}
 			break;
 		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
-				Q_strncpyz(buf, NET_AdrToStringwPort( cls.globalServers[n].adr) , buflen );
+				Q_strncpyz(buf, NET_AdrToStringwPort( &cls.globalServers[n].adr) , buflen );
 				return;
 			}
 			break;
 		case AS_FAVORITES :
 			if (n >= 0 && n < MAX_OTHER_SERVERS) {
-				Q_strncpyz(buf, NET_AdrToStringwPort( cls.favoriteServers[n].adr) , buflen );
+				Q_strncpyz(buf, NET_AdrToStringwPort( &cls.favoriteServers[n].adr) , buflen );
 				return;
 			}
 			break;
 	}
 	buf[0] = '\0';
 }
+
 
 /*
 ====================
@@ -296,7 +319,7 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 		Info_SetValueForKey( info, "game", server->game);
 		Info_SetValueForKey( info, "gametype", va("%i",server->gameType));
 		Info_SetValueForKey( info, "nettype", va("%i",server->netType));
-		Info_SetValueForKey( info, "addr", NET_AdrToStringwPort(server->adr));
+		Info_SetValueForKey( info, "addr", NET_AdrToStringwPort(&server->adr));
 		Info_SetValueForKey( info, "punkbuster", va("%i", server->punkbuster));
 		Info_SetValueForKey( info, "g_needpass", va("%i", server->g_needpass));
 		Info_SetValueForKey( info, "g_humanplayers", va("%i", server->g_humanplayers));
@@ -307,6 +330,7 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 		}
 	}
 }
+
 
 /*
 ====================
@@ -366,6 +390,7 @@ static serverInfo_t *LAN_GetServerPtr( int source, int n ) {
 	return NULL;
 }
 
+
 /*
 ====================
 LAN_CompareServers
@@ -374,7 +399,6 @@ LAN_CompareServers
 static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int s2 ) {
 	int res;
 	serverInfo_t *server1, *server2;
-	int clients1, clients2;
 
 	server1 = LAN_GetServerPtr(source, s1);
 	server2 = LAN_GetServerPtr(source, s2);
@@ -392,19 +416,10 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 			res = Q_stricmp( server1->mapName, server2->mapName );
 			break;
 		case SORT_CLIENTS:
-			// sub sort by max clients
-			if ( server1->clients == server2->clients ) {
-				clients1 = server1->maxClients;
-				clients2 = server2->maxClients;
-			} else {
-				clients1 = server1->clients;
-				clients2 = server2->clients;
-			}
-
-			if (clients1 < clients2) {
+			if (server1->clients < server2->clients) {
 				res = -1;
 			}
-			else if (clients1 > clients2) {
+			else if (server1->clients > server2->clients) {
 				res = 1;
 			}
 			else {
@@ -445,6 +460,7 @@ static int LAN_CompareServers( int source, int sortKey, int sortDir, int s1, int
 	return res;
 }
 
+
 /*
 ====================
 LAN_GetPingQueueCount
@@ -453,6 +469,7 @@ LAN_GetPingQueueCount
 static int LAN_GetPingQueueCount( void ) {
 	return (CL_GetPingQueueCount());
 }
+
 
 /*
 ====================
@@ -463,6 +480,7 @@ static void LAN_ClearPing( int n ) {
 	CL_ClearPing( n );
 }
 
+
 /*
 ====================
 LAN_GetPing
@@ -472,6 +490,7 @@ static void LAN_GetPing( int n, char *buf, int buflen, int *pingtime ) {
 	CL_GetPing( n, buf, buflen, pingtime );
 }
 
+
 /*
 ====================
 LAN_GetPingInfo
@@ -480,6 +499,7 @@ LAN_GetPingInfo
 static void LAN_GetPingInfo( int n, char *buf, int buflen ) {
 	CL_GetPingInfo( n, buf, buflen );
 }
+
 
 /*
 ====================
@@ -559,6 +579,7 @@ static int LAN_ServerIsVisible(int source, int n ) {
 	return qfalse;
 }
 
+
 /*
 =======================
 LAN_UpdateVisiblePings
@@ -568,14 +589,16 @@ qboolean LAN_UpdateVisiblePings(int source ) {
 	return CL_UpdateVisiblePings_f(source);
 }
 
+
 /*
 ====================
 LAN_GetServerStatus
 ====================
 */
-int LAN_GetServerStatus( char *serverAddress, char *serverStatus, int maxLen ) {
+static int LAN_GetServerStatus( const char *serverAddress, char *serverStatus, int maxLen ) {
 	return CL_ServerStatus( serverAddress, serverStatus, maxLen );
 }
+
 
 /*
 ====================
@@ -583,8 +606,9 @@ CL_GetGlConfig
 ====================
 */
 static void CL_GetGlconfig( glconfig_t *config ) {
-	*config = cls.glconfig;
+	*config = *re.GetConfig();
 }
+
 
 /*
 ====================
@@ -597,7 +621,7 @@ static void CL_GetClipboardData( char *buf, int buflen ) {
 	cbd = Sys_GetClipboardData();
 
 	if ( !cbd ) {
-		*buf = 0;
+		*buf = '\0';
 		return;
 	}
 
@@ -605,6 +629,7 @@ static void CL_GetClipboardData( char *buf, int buflen ) {
 
 	Z_Free( cbd );
 }
+
 
 /*
 ====================
@@ -615,22 +640,24 @@ static void Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {
 	Q_strncpyz( buf, Key_KeynumToString( keynum ), buflen );
 }
 
+
 /*
 ====================
 Key_GetBindingBuf
 ====================
 */
 static void Key_GetBindingBuf( int keynum, char *buf, int buflen ) {
-	char	*value;
+	const char *value;
 
 	value = Key_GetBinding( keynum );
 	if ( value ) {
 		Q_strncpyz( buf, value, buflen );
 	}
 	else {
-		*buf = 0;
+		*buf = '\0';
 	}
 }
+
 
 /*
 ====================
@@ -641,15 +668,15 @@ static void CLUI_GetCDKey( char *buf, int buflen ) {
 #ifndef STANDALONE
 	const char *gamedir;
 	gamedir = Cvar_VariableString( "fs_game" );
-	if (UI_usesUniqueCDKey() && gamedir[0] != 0) {
-		Com_Memcpy( buf, &cl_cdkey[16], 16);
-		buf[16] = 0;
+	if ( UI_usesUniqueCDKey() && gamedir[0] != '\0' ) {
+		Com_Memcpy( buf, &cl_cdkey[16], 16 );
+		buf[16] = '\0';
 	} else {
-		Com_Memcpy( buf, cl_cdkey, 16);
-		buf[16] = 0;
+		Com_Memcpy( buf, cl_cdkey, 16 );
+		buf[16] = '\0';
 	}
 #else
-	*buf = 0;
+	*buf = '\0';
 #endif
 }
 
@@ -663,9 +690,9 @@ CLUI_SetCDKey
 static void CLUI_SetCDKey( char *buf ) {
 	const char *gamedir;
 	gamedir = Cvar_VariableString( "fs_game" );
-	if (UI_usesUniqueCDKey() && gamedir[0] != 0) {
+	if ( UI_usesUniqueCDKey() && gamedir[0] != '\0' ) {
 		Com_Memcpy( &cl_cdkey[16], buf, 16 );
-		cl_cdkey[32] = 0;
+		cl_cdkey[32] = '\0';
 		// set the flag so the fle will be written at the next opportunity
 		cvar_modifiedFlags |= CVAR_ARCHIVE;
 	} else {
@@ -675,6 +702,7 @@ static void CLUI_SetCDKey( char *buf ) {
 	}
 }
 #endif
+
 
 /*
 ====================
@@ -701,6 +729,7 @@ static int GetConfigString(int index, char *buf, int size)
 	return qtrue;
 }
 
+
 /*
 ====================
 FloatAsInt
@@ -712,6 +741,40 @@ static int FloatAsInt( float f ) {
 	return fi.i;
 }
 
+
+/*
+====================
+VM_ArgPtr
+====================
+*/
+static void *VM_ArgPtr( intptr_t intValue ) {
+
+	if ( !intValue || uivm == NULL )
+	  return NULL;
+
+	if ( uivm->entryPoint )
+		return (void *)(intValue);
+	else
+		return (void *)(uivm->dataBase + (intValue & uivm->dataMask));
+}
+
+
+static qboolean UI_GetValue( char* value, int valueSize, const char* key ) {
+
+	if ( !Q_stricmp( key, "trap_R_AddRefEntityToScene2" ) ) {
+		Com_sprintf( value, valueSize, "%i", UI_R_ADDREFENTITYTOSCENE2 );
+		return qtrue;
+	}
+
+	if ( !Q_stricmp( key, "trap_R_AddLinearLightToScene_Q3E" ) && re.AddLinearLightToScene ) {
+		Com_sprintf( value, valueSize, "%i", UI_R_ADDLINEARLIGHTTOSCENE );
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+
 /*
 ====================
 CL_UISystemCalls
@@ -719,7 +782,7 @@ CL_UISystemCalls
 The ui module is making a system call
 ====================
 */
-intptr_t CL_UISystemCalls( intptr_t *args ) {
+static intptr_t CL_UISystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
 	case UI_ERROR:
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
@@ -748,7 +811,8 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return FloatAsInt( Cvar_VariableValue( VMA(1) ) );
 
 	case UI_CVAR_VARIABLESTRINGBUFFER:
-		Cvar_VariableStringBuffer( VMA(1), VMA(2), args[3] );
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
+		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], CVAR_PRIVATE );
 		return 0;
 
 	case UI_CVAR_SETVALUE:
@@ -764,6 +828,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_CVAR_INFOSTRINGBUFFER:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
 		return 0;
 
@@ -771,6 +836,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Cmd_Argc();
 
 	case UI_ARGV:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 
@@ -778,6 +844,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		if(args[1] == EXEC_NOW
 		&& (!strncmp(VMA(2), "snd_restart", 11)
 		|| !strncmp(VMA(2), "vid_restart", 11)
+		|| !strncmp(VMA(2), "disconnect", 10)
 		|| !strncmp(VMA(2), "quit", 5)))
 		{
 			Com_Printf (S_COLOR_YELLOW "turning EXEC_NOW '%.11s' into EXEC_INSERT\n", (const char*)VMA(2));
@@ -787,26 +854,29 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_FS_FOPENFILE:
-		return FS_FOpenFileByMode( VMA(1), VMA(2), args[3] );
+		return FS_VM_OpenFile( VMA(1), VMA(2), args[3], H_Q3UI );
 
 	case UI_FS_READ:
-		FS_Read( VMA(1), args[2], args[3] );
+		VM_CHECKBOUNDS( uivm, args[1], args[2] );
+		FS_VM_ReadFile( VMA(1), args[2], args[3], H_Q3UI );
 		return 0;
 
 	case UI_FS_WRITE:
-		FS_Write( VMA(1), args[2], args[3] );
+		VM_CHECKBOUNDS( uivm, args[1], args[2] );
+		FS_VM_WriteFile( VMA(1), args[2], args[3], H_Q3UI );
 		return 0;
 
 	case UI_FS_FCLOSEFILE:
-		FS_FCloseFile( args[1] );
+		FS_VM_CloseFile( args[1], H_Q3UI );
 		return 0;
 
+	case UI_FS_SEEK:
+		return FS_VM_SeekFile( args[1], args[2], args[3], H_Q3UI );
+
 	case UI_FS_GETFILELIST:
+		VM_CHECKBOUNDS( uivm, args[3], args[4] );
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
-	case UI_FS_SEEK:
-		return FS_Seek( args[1], args[2], args[3] );
-	
 	case UI_R_REGISTERMODEL:
 		return re.RegisterModel( VMA(1) );
 
@@ -821,7 +891,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_R_ADDREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1) );
+		re.AddRefEntityToScene( VMA(1), qfalse );
 		return 0;
 
 	case UI_R_ADDPOLYTOSCENE:
@@ -844,7 +914,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
 		return 0;
 
-  case UI_R_MODELBOUNDS:
+	case UI_R_MODELBOUNDS:
 		re.ModelBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 
@@ -864,10 +934,12 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_KEY_KEYNUMTOSTRINGBUF:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		Key_KeynumToStringBuf( args[1], VMA(2), args[3] );
 		return 0;
 
 	case UI_KEY_GETBINDINGBUF:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		Key_GetBindingBuf( args[1], VMA(2), args[3] );
 		return 0;
 
@@ -898,21 +970,22 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_GETCLIPBOARDDATA:
+		VM_CHECKBOUNDS( uivm, args[1], args[2] );
 		CL_GetClipboardData( VMA(1), args[2] );
 		return 0;
 
 	case UI_GETCLIENTSTATE:
+		VM_CHECKBOUNDS( uivm, args[1], sizeof( uiClientState_t ) );
 		GetClientState( VMA(1) );
 		return 0;		
 
 	case UI_GETGLCONFIG:
-#ifdef EMSCRIPTEN
-		cls.uiGlConfig = VMA(1);
-#endif
+		VM_CHECKBOUNDS( uivm, args[1], sizeof( glconfig_t ) );
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 
 	case UI_GETCONFIGSTRING:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		return GetConfigString( args[1], VMA(2), args[3] );
 
 	case UI_LAN_LOADCACHEDSERVERS:
@@ -938,10 +1011,12 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_LAN_GETPING:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		LAN_GetPing( args[1], VMA(2), args[3], VMA(4) );
 		return 0;
 
 	case UI_LAN_GETPINGINFO:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		LAN_GetPingInfo( args[1], VMA(2), args[3] );
 		return 0;
 
@@ -949,10 +1024,12 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return LAN_GetServerCount(args[1]);
 
 	case UI_LAN_GETSERVERADDRESSSTRING:
+		VM_CHECKBOUNDS( uivm, args[3], args[4] );
 		LAN_GetServerAddressString( args[1], args[2], VMA(3), args[4] );
 		return 0;
 
 	case UI_LAN_GETSERVERINFO:
+		VM_CHECKBOUNDS( uivm, args[3], args[4] );
 		LAN_GetServerInfo( args[1], args[2], VMA(3), args[4] );
 		return 0;
 
@@ -974,6 +1051,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_LAN_SERVERSTATUS:
+		VM_CHECKBOUNDS( uivm, args[2], args[3] );
 		return LAN_GetServerStatus( VMA(1), VMA(2), args[3] );
 
 	case UI_LAN_COMPARESERVERS:
@@ -983,6 +1061,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Hunk_MemoryRemaining();
 
 	case UI_GET_CDKEY:
+		VM_CHECKBOUNDS( uivm, args[1], args[2] );
 		CLUI_GetCDKey( VMA(1), args[2] );
 		return 0;
 
@@ -993,34 +1072,39 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 	
 	case UI_SET_PBCLSTATUS:
-		return 0;	
+		return 0;
 
 	case UI_R_REGISTERFONT:
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
 
-	case UI_MEMSET:
+	// shared syscalls
+
+	case TRAP_MEMSET:
+		VM_CHECKBOUNDS( uivm, args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
-		return 0;
+		return args[1];
 
-	case UI_MEMCPY:
+	case TRAP_MEMCPY:
+		VM_CHECKBOUNDS2( uivm, args[1], args[2], args[3] );
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
-		return 0;
+		return args[1];
 
-	case UI_STRNCPY:
+	case TRAP_STRNCPY:
+		VM_CHECKBOUNDS( uivm, args[1], args[3] );
 		strncpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 
-	case UI_SIN:
+	case TRAP_SIN:
 		return FloatAsInt( sin( VMF(1) ) );
 
-	case UI_COS:
+	case TRAP_COS:
 		return FloatAsInt( cos( VMF(1) ) );
 
-	case UI_ATAN2:
+	case TRAP_ATAN2:
 		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
 
-	case UI_SQRT:
+	case TRAP_SQRT:
 		return FloatAsInt( sqrt( VMF(1) ) );
 
 	case UI_FLOOR:
@@ -1051,29 +1135,43 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Com_RealTime( VMA(1) );
 
 	case UI_CIN_PLAYCINEMATIC:
-	  Com_DPrintf("UI_CIN_PlayCinematic\n");
-	  return CIN_PlayCinematic(VMA(1), args[2], args[3], args[4], args[5], args[6]);
+		Com_DPrintf("UI_CIN_PlayCinematic\n");
+		return CIN_PlayCinematic(VMA(1), args[2], args[3], args[4], args[5], args[6]);
 
 	case UI_CIN_STOPCINEMATIC:
-	  return CIN_StopCinematic(args[1]);
+		return CIN_StopCinematic(args[1]);
 
 	case UI_CIN_RUNCINEMATIC:
-	  return CIN_RunCinematic(args[1]);
+		return CIN_RunCinematic(args[1]);
 
 	case UI_CIN_DRAWCINEMATIC:
-	  CIN_DrawCinematic(args[1]);
-	  return 0;
+		CIN_DrawCinematic(args[1]);
+		return 0;
 
 	case UI_CIN_SETEXTENTS:
-	  CIN_SetExtents(args[1], args[2], args[3], args[4], args[5]);
-	  return 0;
+		CIN_SetExtents(args[1], args[2], args[3], args[4], args[5]);
+		return 0;
 
 	case UI_R_REMAP_SHADER:
 		re.RemapShader( VMA(1), VMA(2), VMA(3) );
 		return 0;
 
 	case UI_VERIFY_CDKEY:
-		return CL_CDKeyValidate(VMA(1), VMA(2));
+		return Com_CDKeyValidate(VMA(1), VMA(2));
+
+	// engine extensions
+	case UI_R_ADDREFENTITYTOSCENE2:
+		re.AddRefEntityToScene( VMA(1), qtrue );
+		return 0;
+
+	// engine extensions
+	case UI_R_ADDLINEARLIGHTTOSCENE:
+		re.AddLinearLightToScene( VMA(1), VMA(2), VMF(3), VMF(4), VMF(5), VMF(6) );
+		return 0;
+
+	case UI_TRAP_GETVALUE:
+		VM_CHECKBOUNDS( uivm, args[1], args[2] );
+		return UI_GetValue( VMA(1), args[2], VMA(3) );
 		
 	default:
 		Com_Error( ERR_DROP, "Bad UI system trap: %ld", (long int) args[0] );
@@ -1083,27 +1181,52 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	return 0;
 }
 
+
+/*
+====================
+UI_DllSyscall
+====================
+*/
+static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
+#if !id386 || defined __clang__
+	intptr_t	args[10]; // max.count for UI
+	va_list	ap;
+	int i;
+
+	args[0] = arg;
+	va_start( ap, arg );
+	for (i = 1; i < ARRAY_LEN( args ); i++ )
+		args[ i ] = va_arg( ap, intptr_t );
+	va_end( ap );
+
+	return CL_UISystemCalls( args );
+#else
+	return CL_UISystemCalls( &arg );
+#endif
+}
+
+
 /*
 ====================
 CL_ShutdownUI
 ====================
 */
 void CL_ShutdownUI( void ) {
-	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_UI );
+	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_UI );
 	cls.uiStarted = qfalse;
 	if ( !uivm ) {
 		return;
 	}
-	VM_Call( uivm, UI_SHUTDOWN );
+	VM_Call( uivm, 0, UI_SHUTDOWN );
 	VM_Free( uivm );
 	uivm = NULL;
-	
+	FS_VM_CloseFiles( H_Q3UI );
 #ifdef EMSCRIPTEN
-	cls.menuUIhack = 0;
-	cls.uiGlConfig = NULL;
-	cls.numUiPatches = 0;
+	cls.cursorx = 0;
+	cls.cursory = 0;
 #endif
 }
+
 
 /*
 ====================
@@ -1116,26 +1239,42 @@ void CL_InitUI( void ) {
 	int		v;
 	vmInterpret_t		interpret;
 
+	// disallow vl.collapse for UI elements
+	re.VertexLighting( qfalse );
+
 	// load the dll or bytecode
-	interpret = Cvar_VariableValue("vm_ui");
-	if(cl_connectedToPureServer)
+	interpret = Cvar_VariableIntegerValue( "vm_ui" );
+	if ( cl_connectedToPureServer )
 	{
 		// if sv_pure is set we only allow qvms to be loaded
-		if(interpret != VMI_COMPILED && interpret != VMI_BYTECODE)
+		if ( interpret != VMI_COMPILED && interpret != VMI_BYTECODE )
 			interpret = VMI_COMPILED;
 	}
 
-	uivm = VM_Create( "ui", CL_UISystemCalls, interpret );
+	uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 	if ( !uivm ) {
-		Com_Error( ERR_FATAL, "VM_Create on UI failed" );
+		if ( cl_connectedToPureServer && CL_GameSwitch() ) {
+			// server-side modificaton may require and reference only single custom ui.qvm
+			// so allow referencing everything until we download all files
+			// new gamestate will be requested after downloads complete
+			// which will correct filesystem permissions
+			fs_reordered = qfalse;
+			FS_PureServerSetLoadedPaks( "", "" );
+			uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
+			if ( !uivm ) {
+				Com_Error( ERR_DROP, "VM_Create on UI failed" );
+			}
+		} else {
+			Com_Error( ERR_DROP, "VM_Create on UI failed" );
+		}
 	}
 
 	// sanity check
-	v = VM_Call( uivm, UI_GETAPIVERSION );
+	v = VM_Call( uivm, 0, UI_GETAPIVERSION );
 	if (v == UI_OLD_API_VERSION) {
 //		Com_Printf(S_COLOR_YELLOW "WARNING: loading old Quake III Arena User Interface version %d\n", v );
 		// init for this gamestate
-		VM_Call( uivm, UI_INIT, (clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE));
+		VM_Call( uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 	else if (v != UI_API_VERSION) {
 		// Free uivm now, so UI_SHUTDOWN doesn't get called later.
@@ -1147,19 +1286,21 @@ void CL_InitUI( void ) {
 	}
 	else {
 		// init for this gamestate
-		VM_Call( uivm, UI_INIT, (clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE) );
+		VM_Call( uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 }
+
 
 #ifndef STANDALONE
 qboolean UI_usesUniqueCDKey( void ) {
 	if (uivm) {
-		return (VM_Call( uivm, UI_HASUNIQUECDKEY) == qtrue);
+		return (VM_Call( uivm, 0, UI_HASUNIQUECDKEY ) != 0);
 	} else {
 		return qfalse;
 	}
 }
 #endif
+
 
 /*
 ====================
@@ -1173,5 +1314,5 @@ qboolean UI_GameCommand( void ) {
 		return qfalse;
 	}
 
-	return VM_Call( uivm, UI_CONSOLE_COMMAND, cls.realtime );
+	return VM_Call( uivm, 1, UI_CONSOLE_COMMAND, cls.realtime );
 }

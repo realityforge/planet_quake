@@ -125,13 +125,13 @@ define_t *globaldefines;
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void QDECL SourceError(source_t *source, char *str, ...)
+void QDECL SourceError(source_t *source, const char *fmt, ...)
 {
 	char text[1024];
 	va_list ap;
 
-	va_start(ap, str);
-	Q_vsnprintf(text, sizeof(text), str, ap);
+	va_start(ap, fmt);
+	Q_vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 #ifdef BOTLIB
 	botimport.Print(PRT_ERROR, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
@@ -149,13 +149,13 @@ void QDECL SourceError(source_t *source, char *str, ...)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void QDECL SourceWarning(source_t *source, char *str, ...)
+void QDECL SourceWarning(source_t *source, const char *fmt, ...)
 {
 	char text[1024];
 	va_list ap;
 
-	va_start(ap, str);
-	Q_vsnprintf(text, sizeof(text), str, ap);
+	va_start(ap, fmt);
+	Q_vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 #ifdef BOTLIB
 	botimport.Print(PRT_WARNING, "file %s, line %d: %s\n", source->scriptstack->filename, source->scriptstack->line, text);
@@ -451,28 +451,38 @@ int PC_ReadDefineParms(source_t *source, define_t *define, token_t **parms, int 
 	} //end for
 	return qtrue;
 } //end of the function PC_ReadDefineParms
+
+
 //============================================================================
 //
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_StringizeTokens(token_t *tokens, token_t *token)
+int PC_StringizeTokens( const token_t *tokens, token_t *token )
 {
-	token_t *t;
+	const token_t *t;
+	int len, total;
 
 	token->type = TT_STRING;
 	token->whitespace_p = NULL;
 	token->endwhitespace_p = NULL;
-	token->string[0] = '\0';
-	strcat(token->string, "\"");
+	token->string[0] = '"';
+	total = 1;
 	for (t = tokens; t; t = t->next)
 	{
-		strncat(token->string, t->string, MAX_TOKEN - strlen(token->string) - 1);
-	} //end for
-	strncat(token->string, "\"", MAX_TOKEN - strlen(token->string) - 1);
+		len = (int)strlen( t->string );
+		if ( len + total >= sizeof( token->string ) - 1 ) // reserve space for '"' and '\0'
+			return qfalse;
+		strcpy( token->string + total, t->string );
+		total += len;
+	}
+	strcpy( token->string + total, "\"" );
+
 	return qtrue;
-} //end of the function PC_StringizeTokens
+}
+
+
 //============================================================================
 //
 // Parameter:				-
@@ -484,21 +494,29 @@ int PC_MergeTokens(token_t *t1, token_t *t2)
 	//merging of a name with a name or number
 	if (t1->type == TT_NAME && (t2->type == TT_NAME || t2->type == TT_NUMBER))
 	{
-		strcat(t1->string, t2->string);
+		if ( strlen( t1->string ) + strlen( t2->string ) >= sizeof( t1->string ) )
+			return qfalse;
+		strcat( t1->string, t2->string );
 		return qtrue;
-	} //end if
+	}
+
 	//merging of two strings
 	if (t1->type == TT_STRING && t2->type == TT_STRING)
 	{
+		int len1 = (int)strlen( t1->string );
+		if ( strlen( t1->string ) + strlen( t2->string ) - 2 >= sizeof( t1->string ) )
+			return qfalse;
 		//remove trailing double quote
-		t1->string[strlen(t1->string)-1] = '\0';
+		t1->string[len1-1] = '\0';
 		//concat without leading double quote
 		strcat(t1->string, &t2->string[1]);
 		return qtrue;
-	} //end if
+	}
 	//FIXME: merging of two number of the same sub type
 	return qfalse;
-} //end of the function PC_MergeTokens
+}
+
+
 //============================================================================
 //
 // Parameter:				-
@@ -742,7 +760,6 @@ int PC_ExpandBuiltinDefine(source_t *source, token_t *deftoken, define_t *define
 			strncat(token->string, curtime+4, 7);
 			strncat(token->string+7, curtime+20, 4);
 			strcat(token->string, "\"");
-			free(curtime);
 			token->type = TT_NAME;
 			token->subtype = strlen(token->string);
 			*firsttoken = token;
@@ -756,7 +773,6 @@ int PC_ExpandBuiltinDefine(source_t *source, token_t *deftoken, define_t *define
 			strcpy(token->string, "\"");
 			strncat(token->string, curtime+11, 8);
 			strcat(token->string, "\"");
-			free(curtime);
 			token->type = TT_NAME;
 			token->subtype = strlen(token->string);
 			*firsttoken = token;
@@ -971,7 +987,7 @@ int PC_Directive_include(source_t *source)
 {
 	script_t *script;
 	token_t token;
-	char path[MAX_QPATH];
+	char path[MAX_PATH];
 #ifdef QUAKE
 	foundfile_t file;
 #endif //QUAKE
@@ -1310,7 +1326,7 @@ int PC_Directive_define(source_t *source)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-define_t *PC_DefineFromString(char *string)
+define_t *PC_DefineFromString(const char *string)
 {
 	script_t *script;
 	source_t src;
@@ -1323,7 +1339,7 @@ define_t *PC_DefineFromString(char *string)
 	script = LoadScriptMemory(string, strlen(string), "*extern");
 	//create a new source
 	Com_Memset(&src, 0, sizeof(source_t));
-	Q_strncpyz(src.filename, "*extern", sizeof(src.filename));
+	Q_strncpyz( src.filename, "*extern", sizeof( src.filename ) );
 	src.scriptstack = script;
 #if DEFINEHASHING
 	src.definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
@@ -1389,7 +1405,7 @@ int PC_AddDefine(source_t *source, char *string)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_AddGlobalDefine(char *string)
+int PC_AddGlobalDefine(const char *string)
 {
 	define_t *define;
 
@@ -1677,8 +1693,7 @@ int PC_OperatorPriority(int op)
 		op = &operator_heap[numoperators++];
 #define FreeOperator(op)
 
-int PC_EvaluateTokens(source_t *source, token_t *tokens, signed long int *intvalue,
-																	float *floatvalue, int integer)
+static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, float *floatvalue, int integer)
 {
 	operator_t *o, *firstoperator, *lastoperator;
 	value_t *v, *firstvalue, *lastvalue, *v1, *v2;
@@ -2130,8 +2145,7 @@ int PC_EvaluateTokens(source_t *source, token_t *tokens, signed long int *intval
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_Evaluate(source_t *source, signed long int *intvalue,
-												float *floatvalue, int integer)
+static int PC_Evaluate(source_t *source, int *intvalue, float *floatvalue, int integer)
 {
 	token_t token, *firsttoken, *lasttoken;
 	token_t *t, *nexttoken;
@@ -2229,8 +2243,7 @@ int PC_Evaluate(source_t *source, signed long int *intvalue,
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-int PC_DollarEvaluate(source_t *source, signed long int *intvalue,
-												float *floatvalue, int integer)
+static int PC_DollarEvaluate(source_t *source, int *intvalue, float *floatvalue, int integer)
 {
 	int indent, defined = qfalse;
 	token_t token, *firsttoken, *lasttoken;
@@ -2339,7 +2352,7 @@ int PC_DollarEvaluate(source_t *source, signed long int *intvalue,
 //============================================================================
 int PC_Directive_elif(source_t *source)
 {
-	signed long int value;
+	int value;
 	int type, skip;
 
 	PC_PopIndent(source, &type, &skip);
@@ -2361,7 +2374,7 @@ int PC_Directive_elif(source_t *source)
 //============================================================================
 int PC_Directive_if(source_t *source)
 {
-	signed long int value;
+	int value;
 	int skip;
 
 	if (!PC_Evaluate(source, &value, NULL, qtrue)) return qfalse;
@@ -2436,7 +2449,7 @@ void UnreadSignToken(source_t *source)
 //============================================================================
 int PC_Directive_eval(source_t *source)
 {
-	signed long int value;
+	int value;
 	token_t token;
 
 	if (!PC_Evaluate(source, &value, NULL, qtrue)) return qfalse;
@@ -2445,7 +2458,7 @@ int PC_Directive_eval(source_t *source)
 	token.whitespace_p = source->scriptstack->script_p;
 	token.endwhitespace_p = source->scriptstack->script_p;
 	token.linescrossed = 0;
-	sprintf(token.string, "%ld", labs(value));
+	sprintf(token.string, "%d", abs(value));
 	token.type = TT_NUMBER;
 	token.subtype = TT_INTEGER|TT_LONG|TT_DECIMAL;
 	PC_UnreadSourceToken(source, &token);
@@ -2541,7 +2554,7 @@ int PC_ReadDirective(source_t *source)
 //============================================================================
 int PC_DollarDirective_evalint(source_t *source)
 {
-	signed long int value;
+	int value;
 	token_t token;
 
 	if (!PC_DollarEvaluate(source, &value, NULL, qtrue)) return qfalse;
@@ -2550,12 +2563,12 @@ int PC_DollarDirective_evalint(source_t *source)
 	token.whitespace_p = source->scriptstack->script_p;
 	token.endwhitespace_p = source->scriptstack->script_p;
 	token.linescrossed = 0;
-	sprintf(token.string, "%ld", labs(value));
+	sprintf(token.string, "%d", abs(value));
 	token.type = TT_NUMBER;
 	token.subtype = TT_INTEGER|TT_LONG|TT_DECIMAL;
 
 #ifdef NUMBERVALUE
-	token.intvalue = labs(value);
+	token.intvalue = abs(value);
 	token.floatvalue = token.intvalue;
 #endif //NUMBERVALUE
 
@@ -2956,11 +2969,11 @@ void PC_UnreadToken(source_t *source, token_t *token)
 // Returns:					-
 // Changes Globals:		-
 //============================================================================
-void PC_SetIncludePath(source_t *source, char *path)
+void PC_SetIncludePath(source_t *source, const char *path)
 {
 	size_t len;
 
-	Q_strncpyz(source->includepath, path, sizeof(source->includepath)-1);
+	Q_strncpyz( source->includepath, path, sizeof(source->includepath)-1 );
 
 	len = strlen(source->includepath);
 	//add trailing path seperator
@@ -3208,7 +3221,7 @@ int PC_SourceFileAndLine(int handle, char *filename, int *line)
 // Returns:				-
 // Changes Globals:		-
 //============================================================================
-void PC_SetBaseFolder(char *path)
+void PC_SetBaseFolder(const char *path)
 {
 	PS_SetBaseFolder(path);
 } //end of the function PC_SetBaseFolder
@@ -3232,4 +3245,3 @@ void PC_CheckOpenSourceHandles(void)
 		} //end if
 	} //end for
 } //end of the function PC_CheckOpenSourceHandles
-

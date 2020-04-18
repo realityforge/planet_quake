@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __TR_PUBLIC_H
 
 #include "tr_types.h"
+#include "vulkan/vulkan.h"
 
 #define	REF_API_VERSION		8
 
@@ -33,7 +34,7 @@ typedef struct {
 	// called before the library is unloaded
 	// if the system is just reconfiguring, pass destroyWindow = qfalse,
 	// which will keep the screen from flashing to the desktop.
-	void	(*Shutdown)( qboolean destroyWindow );
+	void	(*Shutdown)( int destroyWindow );
 
 	// All data that will be used in a level should be
 	// registered before rendering any frames to prevent disk hits,
@@ -62,11 +63,12 @@ typedef struct {
 	// a scene is built up by calls to R_ClearScene and the various R_Add functions.
 	// Nothing is drawn until R_RenderScene is called.
 	void	(*ClearScene)( void );
-	void	(*AddRefEntityToScene)( const refEntity_t *re );
+	void	(*AddRefEntityToScene)( const refEntity_t *re, qboolean intShaderTime );
 	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
 	void	(*AddAdditiveLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
+	void	(*AddLinearLightToScene)( const vec3_t start, const vec3_t end, float intensity, float r, float g, float b );
 	void	(*RenderScene)( const refdef_t *fd );
 
 	void	(*SetColor)( const float *rgba );	// NULL = 1,1,1,1
@@ -74,8 +76,8 @@ typedef struct {
 		float s1, float t1, float s2, float t2, qhandle_t hShader );	// 0 = white
 
 	// Draw images for cinematic rendering, pass as 32 bit rgba
-	void	(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
-	void	(*UploadCinematic) (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
+	void	(*DrawStretchRaw)( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
+	void	(*UploadCinematic)( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
 
 	void	(*BeginFrame)( stereoFrame_t stereoFrame );
 
@@ -98,12 +100,24 @@ typedef struct {
 	qboolean (*GetEntityToken)( char *buffer, int size );
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );
 
-	void (*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
-	
-#ifdef EMSCRIPTEN
+	void	(*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+
+	void	(*ThrottleBackend)( void );
+	void	(*FinishBloom)( void );
+
+	void	(*SetColorMappings)( void );
+
+	qboolean (*CanMinimize)( void ); // == fbo enabled
+
+	const glconfig_t *(*GetConfig)( void );
+
+	void	(*VertexLighting)( qboolean allowed );
+	void	(*SyncRender)( void );
+
 	void (*UpdateMode)(glconfig_t *glconfigOut);
+	void (*UpdateModel)(char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
-#endif
+
 } refexport_t;
 
 //
@@ -111,14 +125,16 @@ typedef struct {
 //
 typedef struct {
 	// print message on the local console
-	void	(QDECL *Printf)( int printLevel, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
+	void	(QDECL *Printf)( printParm_t printLevel, const char *fmt, ... ) __attribute__ ((format (printf, 2, 3)));
 
 	// abort the game
-	void	(QDECL *Error)( int errorLevel, const char *fmt, ...) __attribute__ ((noreturn, format (printf, 2, 3)));
+	void	(QDECL *Error)( errorParm_t errorLevel, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
 
 	// milliseconds should only be used for profiling, never
 	// for anything game related.  Get time from the refdef
 	int		(*Milliseconds)( void );
+
+	int64_t	(*Microseconds)( void );
 
 	// stack based memory allocation for per-level things that
 	// won't be freed
@@ -137,10 +153,16 @@ typedef struct {
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
 	void	(*Cvar_Set)( const char *name, const char *value );
 	void	(*Cvar_SetValue) (const char *name, float value);
-	void	(*Cvar_CheckRange)( cvar_t *cv, float minVal, float maxVal, qboolean shouldBeIntegral );
+	void	(*Cvar_CheckRange)( cvar_t *cv, const char *minVal, const char *maxVal, cvarValidator_t type );
 	void	(*Cvar_SetDescription)( cvar_t *cv, const char *description );
 
-	int		(*Cvar_VariableIntegerValue) (const char *var_name);
+	void	(*Cvar_SetGroup)( cvar_t *var, cvarGroup_t group );
+	int		(*Cvar_CheckGroup)( cvarGroup_t group );
+	void	(*Cvar_ResetGroup)( cvarGroup_t group, qboolean resetModifiedFlags );
+
+	void	(*Cvar_VariableStringBuffer)( const char *var_name, char *buffer, int bufsize );
+	const char *(*Cvar_VariableString)( const char *var_name );
+	int		(*Cvar_VariableIntegerValue)( const char *var_name );
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
@@ -148,17 +170,18 @@ typedef struct {
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
 
-	void	(*Cmd_ExecuteText) (int exec_when, const char *text);
+	void	(*Cmd_ExecuteText)( cbufExec_t exec_when, const char *text );
 
 	byte	*(*CM_ClusterPVS)(int cluster);
 
 	// visualization for debugging collision detection
 	void	(*CM_DrawDebugSurface)( void (*drawPoly)(int color, int numPoints, float *points) );
 
-	// a -1 return means the file does not exist
-	// NULL can be passed for buf to just determine existence
-	int		(*FS_FileIsInPAK)( const char *name, int *pCheckSum );
-	long		(*FS_ReadFile)( const char *name, void **buf );
+	// a qfalse return means the file does not exist
+	// NULL can be passed for buf to just determine existance
+	//int		(*FS_FileIsInPAK)( const char *name, int *pCheckSum );
+	int		(*FS_ReadFile)( const char *name, void **buf );
+	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 	void	(*FS_FreeFile)( void *buf );
 	char **	(*FS_ListFiles)( const char *name, const char *extension, int *numfilesfound );
 	void	(*FS_FreeFileList)( char **filelist );
@@ -166,27 +189,43 @@ typedef struct {
 	qboolean (*FS_FileExists)( const char *file );
 
 	// cinematic stuff
-	void	(*CIN_UploadCinematic)(int handle);
-	int		(*CIN_PlayCinematic)( const char *arg0, int xpos, int ypos, int width, int height, int bits);
-	e_status (*CIN_RunCinematic) (int handle);
+	void	(*CIN_UploadCinematic)( int handle );
+	int		(*CIN_PlayCinematic)( const char *arg0, int xpos, int ypos, int width, int height, int bits );
+	e_status (*CIN_RunCinematic)( int handle );
 
 	void	(*CL_WriteAVIVideoFrame)( const byte *buffer, int size );
+	
+	size_t	(*CL_SaveJPGToBuffer)( byte *buffer, size_t bufSize, int quality, int image_width, int image_height, byte *image_buffer, int padding );
+	void	(*CL_SaveJPG)( const char *filename, int quality, int image_width, int image_height, byte *image_buffer, int padding );
+	void	(*CL_LoadJPG)( const char *filename, unsigned char **pic, int *width, int *height );
 
-	// input event handling
-	void	(*IN_Init)( void *windowData );
-	void	(*IN_Shutdown)( void );
-	void	(*IN_Restart)( void );
+	qboolean (*CL_IsMinimized)( void );
+	void	(*CL_SetScaling)( float factor, int captureWidth, int captureHeight );
 
-	// math
-	long    (*ftol)(float f);
+	void	(*Sys_SetClipboardBitmap)( const byte *bitmap, int size );
+	qboolean(*Sys_LowPhysicalMemory)( void );
 
-	// system stuff
-	void	(*Sys_SetEnv)( const char *name, const char *value );
-	void	(*Sys_GLimpSafeInit)( void );
-	void	(*Sys_GLimpInit)( void );
-	qboolean (*Sys_LowPhysicalMemory)( void );
+	int		(*Com_RealTime)( qtime_t *qtime );
+
+	// platform-dependent functions
+	void	(*GLimp_Init)( glconfig_t *config );
+	void	(*GLimp_Shutdown)( qboolean unloadDLL );
+	void	(*GLimp_EndFrame)( void );
+	void	(*GLimp_InitGamma)( glconfig_t *config );
+	void	(*GLimp_SetGamma)( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
+
+	void*	(*GL_GetProcAddress)( const char *name );
+
+	// Vulkan
+	void	(*VKimp_Init)( glconfig_t *config );
+	void	(*VKimp_Shutdown)( qboolean unloadDLL );
+	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
+	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
+
+	void (*Spy_CursorPosition)(float x, float y);
 } refimport_t;
 
+extern	refimport_t	ri;
 
 // this is the only function actually exported at the linker level
 // If the module can't init to a valid rendering state, NULL will be

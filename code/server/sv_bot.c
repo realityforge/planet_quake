@@ -44,7 +44,7 @@ int	bot_enable;
 SV_BotAllocateClient
 ==================
 */
-int SV_BotAllocateClient(void) {
+int SV_BotAllocateClient( void ) {
 	int			i;
 	client_t	*cl;
 
@@ -63,11 +63,16 @@ int SV_BotAllocateClient(void) {
 	cl->gentity->s.number = i;
 	cl->state = CS_ACTIVE;
 	cl->lastPacketTime = svs.time;
+	cl->snapshotMsec = 1000 / sv_fps->integer;
 	cl->netchan.remoteAddress.type = NA_BOT;
-	cl->rate = 16384;
+	cl->rate = 0;
+
+	cl->tld[0] = '\0';
+	cl->country = "BOT";
 
 	return i;
 }
+
 
 /*
 ==================
@@ -80,13 +85,15 @@ void SV_BotFreeClient( int clientNum ) {
 	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
 		Com_Error( ERR_DROP, "SV_BotFreeClient: bad clientNum: %i", clientNum );
 	}
+
 	cl = &svs.clients[clientNum];
 	cl->state = CS_FREE;
-	cl->name[0] = 0;
+	cl->name[0] = '\0';
 	if ( cl->gentity ) {
 		cl->gentity->r.svFlags &= ~SVF_BOT;
 	}
 }
+
 
 /*
 ==================
@@ -133,7 +140,7 @@ void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *poin
 BotImport_Print
 ==================
 */
-static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int type, char *fmt, ...)
+static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int type, const char *fmt, ...)
 {
 	char str[2048];
 	va_list ap;
@@ -422,8 +429,8 @@ static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int colo
 SV_BotClientCommand
 ==================
 */
-static void BotClientCommand( int client, char *command ) {
-	SV_ExecuteClientCommand( &svs.clients[client], command, qtrue );
+static void BotClientCommand( int client, const char *command ) {
+	SV_ExecuteClientCommand( &svs.clients[client], command );
 }
 
 /*
@@ -435,7 +442,7 @@ void SV_BotFrame( int time ) {
 	if (!bot_enable) return;
 	//NOTE: maybe the game is already shutdown
 	if (!gvm) return;
-	VM_Call( gvm, BOTAI_START_FRAME, time );
+	VM_Call( gvm, 1, BOTAI_START_FRAME, time );
 }
 
 /*
@@ -452,8 +459,6 @@ int SV_BotLibSetup( void ) {
 		Com_Printf( S_COLOR_RED "Error: SV_BotLibSetup without SV_BotInitBotLib\n" );
 		return -1;
 	}
-
-	botlib_export->BotLibVarSet( "basegame", com_basegame->string );
 
 	return botlib_export->BotLibSetup();
 }
@@ -494,7 +499,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_forcewrite", "0", 0);					//force writing aas file
 	Cvar_Get("bot_aasoptimize", "0", 0);				//no aas file optimisation
 	Cvar_Get("bot_saveroutingcache", "0", 0);			//save routing cache
-	Cvar_Get("bot_thinktime", "100", CVAR_CHEAT);		//msec the bots thinks
+	Cvar_Get("bot_thinktime", "100", 0);				//msec the bots thinks
 	Cvar_Get("bot_reloadcharacters", "0", 0);			//reload the bot characters each time
 	Cvar_Get("bot_testichat", "0", 0);					//test ichats
 	Cvar_Get("bot_testrchat", "0", 0);					//test rchats
@@ -557,6 +562,8 @@ void SV_BotInitBotLib(void) {
 	botlib_import.DebugPolygonCreate = BotImport_DebugPolygonCreate;
 	botlib_import.DebugPolygonDelete = BotImport_DebugPolygonDelete;
 
+	botlib_import.Sys_Milliseconds = Sys_Milliseconds;
+
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
 }
@@ -594,6 +601,7 @@ int SV_BotGetConsoleMessage( int client, char *buf, int size )
 	return qtrue;
 }
 
+
 #if 0
 /*
 ==================
@@ -630,6 +638,5 @@ int SV_BotGetSnapshotEntity( int client, int sequence ) {
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;
 	}
-	return svs.snapshotEntities[(frame->first_entity + sequence) % svs.numSnapshotEntities].number;
+	return frame->ents[ sequence ]->number;
 }
-

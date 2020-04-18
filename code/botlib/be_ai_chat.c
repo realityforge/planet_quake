@@ -342,7 +342,7 @@ void BotQueueConsoleMessage(int chatstate, int type, char *message)
 	m->handle = cs->handle;
 	m->time = AAS_Time();
 	m->type = type;
-	Q_strncpyz(m->message, message, MAX_MESSAGE_SIZE);
+	Q_strncpyz( m->message, message, sizeof( m->message) );
 	m->next = NULL;
 	if (cs->lastmessage)
 	{
@@ -371,7 +371,7 @@ int BotNextConsoleMessage(int chatstate, bot_consolemessage_t *cm)
 
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return 0;
-	if ((firstmsg = cs->firstmessage))
+	if ( (firstmsg = cs->firstmessage) != NULL )
 	{
 		cm->handle = firstmsg->handle;
 		cm->time = firstmsg->time;
@@ -492,7 +492,7 @@ int StringContains(char *str1, char *str2, int casesensitive)
 			} //end if
 			else
 			{
-				if (toupper(str1[j]) != toupper(str2[j])) break;
+				if (locase[(byte)str1[j]] != locase[(byte)str2[j]]) break;
 			} //end else
 		} //end for
 		if (!str2[j]) return index;
@@ -529,7 +529,7 @@ char *StringContainsWord(char *str1, char *str2, int casesensitive)
 			} //end if
 			else
 			{
-				if (toupper(str1[j]) != toupper(str2[j])) break;
+				if (locase[(byte)str1[j]] != locase[(byte)str2[j]]) break;
 			} //end else
 		} //end for
 		//if there was a word match
@@ -605,7 +605,7 @@ void BotDumpSynonymList(bot_synonymlist_t *synlist)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-bot_synonymlist_t *BotLoadSynonyms(char *filename)
+bot_synonymlist_t *BotLoadSynonyms( const char *filename )
 {
 	int pass, size, contextlevel, numsynonyms;
 	unsigned long int context, contextstack[32];
@@ -696,14 +696,14 @@ bot_synonymlist_t *BotLoadSynonyms(char *filename)
 							return NULL;
 						} //end if
 						StripDoubleQuotes(token.string);
-						if (strlen(token.string) <= 0)
+						len = (int)strlen(token.string);
+						if (len==0)
 						{
 							SourceError(source, "empty string");
 							FreeSource(source);
 							return NULL;
 						} //end if
-						len = strlen(token.string) + 1;
-						len = PAD(len, sizeof(long));
+						len = PAD(len+1, sizeof(long));
 						size += sizeof(bot_synonym_t) + len;
 						if (pass && ptr)
 						{
@@ -880,7 +880,7 @@ int BotLoadChatMessage(source_t *source, char *chatmessagestring)
 	token_t token;
 
 	ptr = chatmessagestring;
-	*ptr = 0;
+	*ptr = '\0';
 	//
 	while(1)
 	{
@@ -958,7 +958,7 @@ void BotDumpRandomStringList(bot_randomlist_t *randomlist)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-bot_randomlist_t *BotLoadRandomStrings(char *filename)
+bot_randomlist_t *BotLoadRandomStrings( const char *filename )
 {
 	int pass, size;
 	char *ptr = NULL, chatmessagestring[MAX_MESSAGE_SIZE];
@@ -966,6 +966,7 @@ bot_randomlist_t *BotLoadRandomStrings(char *filename)
 	token_t token;
 	bot_randomlist_t *randomlist, *lastrandom, *random;
 	bot_randomstring_t *randomstring;
+	size_t len;
 
 #ifdef DEBUG
 	int starttime = Sys_MilliSeconds();
@@ -993,7 +994,6 @@ bot_randomlist_t *BotLoadRandomStrings(char *filename)
 		//
 		while(PC_ReadToken(source, &token))
 		{
-			size_t len;
 			if (token.type != TT_NAME)
 			{
 				SourceError(source, "unknown random %s", token.string);
@@ -1275,7 +1275,7 @@ void BotFreeMatchTemplates(bot_matchtemplate_t *mt)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-bot_matchtemplate_t *BotLoadMatchTemplates(char *matchfile)
+bot_matchtemplate_t *BotLoadMatchTemplates( const char *matchfile )
 {
 	source_t *source;
 	token_t token;
@@ -1456,7 +1456,7 @@ int BotFindMatch(char *str, bot_match_t *match, unsigned long int context)
 	int i;
 	bot_matchtemplate_t *ms;
 
-	Q_strncpyz(match->string, str, MAX_MESSAGE_SIZE);
+	Q_strncpyz( match->string, str, sizeof( match->string ) );
 	//remove any trailing enters
 	while(strlen(match->string) &&
 			match->string[strlen(match->string)-1] == '\n')
@@ -1499,8 +1499,7 @@ void BotMatchVariable(bot_match_t *match, int variable, char *buf, int size)
 		if (match->variables[variable].length < size)
 			size = match->variables[variable].length+1;
 		assert( match->variables[variable].offset >= 0 );
-		strncpy(buf, &match->string[ (int) match->variables[variable].offset], size-1);
-		buf[size-1] = '\0';
+		Q_strncpyz( buf, &match->string[ (int) match->variables[variable].offset], size );
 	} //end if
 	else
 	{
@@ -1844,7 +1843,7 @@ void BotCheckValidReplyChatKeySet(source_t *source, bot_replychatkey_t *keys)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-bot_replychat_t *BotLoadReplyChat(char *filename)
+bot_replychat_t *BotLoadReplyChat( const char *filename )
 {
 	char chatmessagestring[MAX_MESSAGE_SIZE];
 	char namebuffer[MAX_MESSAGE_SIZE];
@@ -2114,7 +2113,7 @@ bot_chat_t *BotLoadInitialChat(char *chatfile, char *chatname)
 						if (pass && ptr)
 						{
 							chattype = (bot_chattype_t *) ptr;
-							Q_strncpyz(chattype->name, token.string, MAX_CHATTYPE_NAME);
+							Q_strncpyz( chattype->name, token.string, sizeof( chattype->name ) );
 							chattype->firstchatmessage = NULL;
 							//add the chat type to the chat
 							chattype->next = chat->types;
@@ -2306,7 +2305,7 @@ int BotExpandChatMessage(char *outmessage, char *message, unsigned long mcontext
 					} //end while
 					//step over the trailing escape char
 					if (*msgptr) msgptr++;
-					if (num > MAX_MATCHVARIABLES)
+					if (num >= MAX_MATCHVARIABLES)
 					{
 						botimport.Print(PRT_ERROR, "BotConstructChat: message %s variable %d out of range\n", message, num);
 						return qfalse;
@@ -2846,10 +2845,9 @@ void BotGetChatMessage(int chatstate, char *buf, int size)
 	if (!cs) return;
 
 	BotRemoveTildes(cs->chatmessage);
-	strncpy(buf, cs->chatmessage, size-1);
-	buf[size-1] = '\0';
+	Q_strncpyz( buf, cs->chatmessage, size );
 	//clear the chat message from the state
-	strcpy(cs->chatmessage, "");
+	strcpy( cs->chatmessage, "" );
 } //end of the function BotGetChatMessage
 //===========================================================================
 //
@@ -2883,9 +2881,7 @@ void BotSetChatName(int chatstate, char *name, int client)
 	cs = BotChatStateFromHandle(chatstate);
 	if (!cs) return;
 	cs->client = client;
-	Com_Memset(cs->name, 0, sizeof(cs->name));
-	strncpy(cs->name, name, sizeof(cs->name)-1);
-	cs->name[sizeof(cs->name)-1] = '\0';
+	Q_strncpyz( cs->name, name, sizeof( cs->name ) );
 } //end of the function BotSetChatName
 //===========================================================================
 //
@@ -2968,7 +2964,7 @@ void BotFreeChatState(int handle)
 //===========================================================================
 int BotSetupChatAI(void)
 {
-	char *file;
+	const char *file;
 
 #ifdef DEBUG
 	int starttime = Sys_MilliSeconds();

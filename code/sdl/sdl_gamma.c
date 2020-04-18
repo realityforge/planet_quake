@@ -26,10 +26,23 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #	include <SDL.h>
 #endif
 
-#include "../renderercommon/tr_common.h"
-#include "../qcommon/qcommon.h"
+#include "../client/client.h"
+#include "sdl_glw.h"
 
-extern SDL_Window *SDL_window;
+static Uint16 r[256];
+static Uint16 g[256];
+static Uint16 b[256];
+
+void GLimp_InitGamma( glconfig_t *config )
+{
+	config->deviceSupportsGamma = qfalse;
+
+	if ( SDL_GetWindowGammaRamp( SDL_window, r, g, b ) == 0 )
+	{
+		config->deviceSupportsGamma = SDL_SetWindowBrightness( SDL_window, 1.0f ) >= 0 ? qtrue : qfalse;
+	}
+}
+
 
 /*
 =================
@@ -41,10 +54,10 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 	Uint16 table[3][256];
 	int i, j;
 
-	if( !glConfig.deviceSupportsGamma || r_ignorehwgamma->integer > 0 )
+	if ( !glw_state.config->deviceSupportsGamma || r_ignorehwgamma->integer > 0 )
 		return;
 
-	for (i = 0; i < 256; i++)
+	for ( i = 0; i < 256; i++ )
 	{
 		table[0][i] = ( ( ( Uint16 ) red[i] ) << 8 ) | red[i];
 		table[1][i] = ( ( ( Uint16 ) green[i] ) << 8 ) | green[i];
@@ -56,30 +69,39 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 
 	// Win2K and newer put this odd restriction on gamma ramps...
 	{
-		OSVERSIONINFO	vinfo;
-
-		vinfo.dwOSVersionInfoSize = sizeof( vinfo );
-		GetVersionEx( &vinfo );
-		if( vinfo.dwMajorVersion >= 5 && vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT )
+		//OSVERSIONINFO	vinfo;
+		//vinfo.dwOSVersionInfoSize = sizeof( vinfo );
+		//GetVersionEx( &vinfo );
+		//if( vinfo.dwMajorVersion >= 5 && vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT )
 		{
-			ri.Printf( PRINT_DEVELOPER, "performing gamma clamp.\n" );
+			qboolean clamped = qfalse;
 			for( j = 0 ; j < 3 ; j++ )
 			{
 				for( i = 0 ; i < 128 ; i++ )
 				{
 					if( table[ j ] [ i] > ( ( 128 + i ) << 8 ) )
+					{
 						table[ j ][ i ] = ( 128 + i ) << 8;
+						clamped = qtrue;
+					}
 				}
 
 				if( table[ j ] [127 ] > 254 << 8 )
+				{
 					table[ j ][ 127 ] = 254 << 8;
+					clamped = qtrue;
+				}
+			}
+			if ( clamped )
+			{
+				Com_DPrintf( "performing gamma clamp.\n" );
 			}
 		}
 	}
 #endif
 
 	// enforce constantly increasing
-	for (j = 0; j < 3; j++)
+	for ( j = 0; j < 3; j++ )
 	{
 		for (i = 1; i < 256; i++)
 		{
@@ -88,9 +110,17 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 		}
 	}
 
-	if (SDL_SetWindowGammaRamp(SDL_window, table[0], table[1], table[2]) < 0)
+	if ( SDL_SetWindowGammaRamp( SDL_window, table[0], table[1], table[2] ) < 0 )
 	{
-		ri.Printf( PRINT_DEVELOPER, "SDL_SetWindowGammaRamp() failed: %s\n", SDL_GetError() );
+		Com_DPrintf( "SDL_SetWindowGammaRamp() failed: %s\n", SDL_GetError() );
 	}
 }
 
+
+/*
+** GLW_RestoreGamma
+*/
+void GLW_RestoreGamma( void )
+{
+	// automatically handled by SDL?
+}

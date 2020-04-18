@@ -606,8 +606,8 @@ local int32_t dynamic(struct state *s)
     int16_t lengths[MAXCODES];            /* descriptor code lengths */
     int16_t lencnt[MAXBITS+1], lensym[MAXLCODES];         /* lencode memory */
     int16_t distcnt[MAXBITS+1], distsym[MAXDCODES];       /* distcode memory */
-    struct huffman lencode = {lencnt, lensym};          /* length code */
-    struct huffman distcode = {distcnt, distsym};       /* distance code */
+    struct huffman lencode;				/* length code */
+    struct huffman distcode;			/* distance code */
     static const int16_t order[19] =      /* permutation of code length codes */
         {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
 
@@ -615,6 +615,12 @@ local int32_t dynamic(struct state *s)
     nlen = bits(s, 5) + 257;
     ndist = bits(s, 5) + 1;
     ncode = bits(s, 4) + 4;
+
+	lencode.count = lencnt;
+	lencode.symbol = lensym;
+	distcode.count = distcnt;
+	distcode.symbol = distsym;
+
     if (nlen > MAXLCODES || ndist > MAXDCODES)
         return -3;                      /* bad counts */
 

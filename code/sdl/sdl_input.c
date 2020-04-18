@@ -24,43 +24,46 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #	include "SDL.h"
 #else
 #	include <SDL.h>
-#	include <SDL_gamecontroller.h>
 #endif
-
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "../client/client.h"
-#include "../sys/sys_local.h"
+#include "sdl_glw.h"
 
-static cvar_t *in_keyboardDebug     = NULL;
-#if EMSCRIPTEN
-#define SDL_GetKeyState SDL_GetKeyboardState
-#define SDLK_WORLD_0 0xA0
-#define SDLK_WORLD_95 0xFF
-#endif
+static cvar_t *in_keyboardDebug;
 
-static SDL_GameController *gamepad = NULL;
+#ifdef USE_JOYSTICK
+static SDL_GameController *gamepad;
 static SDL_Joystick *stick = NULL;
+#endif
 
 static qboolean mouseAvailable = qfalse;
 static qboolean mouseActive = qfalse;
-static qboolean altEsc = qfalse;
 
-static cvar_t *in_mouse             = NULL;
-static cvar_t *in_nograb;
+static cvar_t *in_mouse;
 
-static cvar_t *in_joystick          = NULL;
-static cvar_t *in_joystickThreshold = NULL;
-static cvar_t *in_joystickNo        = NULL;
-static cvar_t *in_joystickUseAnalog = NULL;
+static cvar_t *in_joystick;
+static cvar_t *in_joystickThreshold;
+#ifdef USE_JOYSTICK
+static cvar_t *in_joystickNo;
+static cvar_t *in_joystickUseAnalog;
 
-static int vidRestartTime = 0;
+static cvar_t *j_pitch;
+static cvar_t *j_yaw;
+static cvar_t *j_forward;
+static cvar_t *j_side;
+static cvar_t *j_up;
+static cvar_t *j_pitch_axis;
+static cvar_t *j_yaw_axis;
+static cvar_t *j_forward_axis;
+static cvar_t *j_side_axis;
+static cvar_t *j_up_axis;
+#endif
+
+#define Com_QueueEvent Sys_QueEvent
+
+static cvar_t *cl_consoleKeys;
 
 static int in_eventTime = 0;
-
-static SDL_Window *SDL_window = NULL;
 
 #define CTRL(a) ((a)-'a'+1)
 
@@ -96,6 +99,7 @@ static void IN_PrintKey( const SDL_Keysym *keysym, keyNum_t key, qboolean down )
 	Com_Printf( " Q:0x%02x(%s)\n", key, Key_KeynumToString( key ) );
 }
 
+
 #define MAX_CONSOLE_KEYS 16
 
 /*
@@ -128,9 +132,9 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 	int i;
 
 	// Only parse the variable when it changes
-	if( cl_consoleKeys->modified )
+	if ( cl_consoleKeys->modified )
 	{
-		char *text_p, *token;
+		const char *text_p, *token;
 
 		cl_consoleKeys->modified = qfalse;
 		text_p = cl_consoleKeys->string;
@@ -158,7 +162,7 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 				c->u.key = Key_StringToKeynum( token );
 
 				// 0 isn't a key
-				if( c->u.key <= 0 )
+				if ( c->u.key <= 0 )
 					continue;
 			}
 
@@ -167,14 +171,14 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 	}
 
 	// If the character is the same as the key, prefer the character
-	if( key == character )
+	if ( key == character )
 		key = 0;
 
-	for( i = 0; i < numConsoleKeys; i++ )
+	for ( i = 0; i < numConsoleKeys; i++ )
 	{
 		consoleKey_t *c = &consoleKeys[ i ];
 
-		switch( c->type )
+		switch ( c->type )
 		{
 			case QUAKE_KEY:
 				if( key && c->u.key == key )
@@ -191,6 +195,7 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 	return qfalse;
 }
 
+
 /*
 ===============
 IN_TranslateSDLToQ3Key
@@ -200,7 +205,7 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 {
 	keyNum_t key = 0;
 
-	if( keysym->scancode >= SDL_SCANCODE_1 && keysym->scancode <= SDL_SCANCODE_0 )
+	if ( keysym->scancode >= SDL_SCANCODE_1 && keysym->scancode <= SDL_SCANCODE_0 )
 	{
 		// Always map the number keys as such even if they actually map
 		// to other characters (eg, "1" is "&" on an AZERTY keyboard).
@@ -299,6 +304,9 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_CAPSLOCK:     key = K_CAPSLOCK;      break;
 
 			default:
+#if 1
+				key = 0;
+#else
 				if( !( keysym->sym & SDLK_SCANCODE_MASK ) && keysym->scancode <= 95 )
 				{
 					// Map Unicode characters to 95 world keys using the key's scan code.
@@ -308,6 +316,7 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 					// to SDL 1.2.
 					key = K_WORLD_0 + (int)keysym->scancode;
 				}
+#endif
 				break;
 		}
 	}
@@ -319,18 +328,11 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 	{
 		// Console keys can't be bound or generate characters
 		key = K_CONSOLE;
-#ifdef EMSCRIPTEN
-		if(altEsc) {
-			key = K_ESCAPE;
-		}
-		if(down) {
-			altEsc = !altEsc;
-		}
-#endif
 	}
 
 	return key;
 }
+
 
 /*
 ===============
@@ -351,6 +353,7 @@ static void IN_GobbleMotionEvents( void )
 		Com_Printf( "IN_GobbleMotionEvents failed: %s\n", SDL_GetError( ) );
 }
 
+
 /*
 ===============
 IN_ActivateMouse
@@ -358,27 +361,27 @@ IN_ActivateMouse
 */
 static void IN_ActivateMouse( qboolean isFullscreen )
 {
-	if (!mouseAvailable || !SDL_WasInit( SDL_INIT_VIDEO ) )
+	if ( !mouseAvailable || !SDL_WasInit( SDL_INIT_VIDEO ) )
 		return;
 
-	if( !mouseActive )
+	if ( !mouseActive )
 	{
-		SDL_SetRelativeMouseMode( SDL_TRUE );
+		SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
 		SDL_SetWindowGrab( SDL_window, SDL_TRUE );
 
-		IN_GobbleMotionEvents( );
+		IN_GobbleMotionEvents();
 	}
 
 	// in_nograb makes no sense in fullscreen mode
-	if( !isFullscreen )
+	if ( !isFullscreen )
 	{
-		if( in_nograb->modified || !mouseActive )
+		if ( in_nograb->modified || !mouseActive )
 		{
-			if( in_nograb->integer ) {
+			if ( in_nograb->integer ) {
 				SDL_SetRelativeMouseMode( SDL_FALSE );
 				SDL_SetWindowGrab( SDL_window, SDL_FALSE );
 			} else {
-				SDL_SetRelativeMouseMode( SDL_TRUE );
+				SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
 				SDL_SetWindowGrab( SDL_window, SDL_TRUE );
 			}
 
@@ -389,6 +392,7 @@ static void IN_ActivateMouse( qboolean isFullscreen )
 	mouseActive = qtrue;
 }
 
+
 /*
 ===============
 IN_DeactivateMouse
@@ -396,32 +400,34 @@ IN_DeactivateMouse
 */
 static void IN_DeactivateMouse( qboolean isFullscreen )
 {
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
+	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 		return;
 
 	// Always show the cursor when the mouse is disabled,
 	// but not when fullscreen
-	if( !isFullscreen )
+	if ( !isFullscreen )
 		SDL_ShowCursor( SDL_TRUE );
 
-	if( !mouseAvailable )
+	if ( !mouseAvailable )
 		return;
 
-	if( mouseActive )
+	if ( mouseActive )
 	{
-		IN_GobbleMotionEvents( );
+		IN_GobbleMotionEvents();
 
 		SDL_SetWindowGrab( SDL_window, SDL_FALSE );
 		SDL_SetRelativeMouseMode( SDL_FALSE );
 
 		// Don't warp the mouse unless the cursor is within the window
-		if( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_MOUSE_FOCUS )
-			SDL_WarpMouseInWindow( SDL_window, cls.glconfig.vidWidth / 2, cls.glconfig.vidHeight / 2 );
+		if ( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_MOUSE_FOCUS )
+			SDL_WarpMouseInWindow( SDL_window, glw_state.window_width / 2, glw_state.window_height / 2 );
 
 		mouseActive = qfalse;
 	}
 }
 
+
+#ifdef USE_JOYSTICK
 // We translate axes movement into keypresses
 static int joy_keys[16] = {
 	K_LEFTARROW, K_RIGHTARROW,
@@ -551,6 +557,7 @@ static void IN_InitJoystick( void )
 	SDL_GameControllerEventState(SDL_QUERY);
 }
 
+
 /*
 ===============
 IN_ShutdownJoystick
@@ -583,7 +590,7 @@ static void IN_ShutdownJoystick( void )
 
 static qboolean KeyToAxisAndSign(int keynum, int *outAxis, int *outSign)
 {
-	char *bind;
+	const char *bind;
 
 	if (!keynum)
 		return qfalse;
@@ -648,6 +655,7 @@ static qboolean KeyToAxisAndSign(int keynum, int *outAxis, int *outSign)
 
 	return *outSign != 0;
 }
+
 
 /*
 ===============
@@ -987,38 +995,52 @@ static void IN_JoyMove( void )
 	/* Save for future generations. */
 	stick_state.oldaxes = axes;
 }
+#endif  // USE_JOYSTICK
 
-float touchhats[5][2] = {};
+
 /*
 ===============
-IN_ProcessEvents
+HandleEvents
 ===============
 */
-static void IN_ProcessEvents( void )
+float touchhats[5][2] = {};
+//static void IN_ProcessEvents( void )
+void HandleEvents( void )
 {
 	int i;
 	SDL_Event e;
 	keyNum_t key = 0;
 	static keyNum_t lastKeyDown = 0;
-	
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
+
+	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
 
-	while( SDL_PollEvent( &e ) )
+	in_eventTime = Sys_Milliseconds();
+
+	while ( SDL_PollEvent( &e ) )
 	{
 		switch( e.type )
 		{
 			case SDL_KEYDOWN:
-				if ( e.key.repeat && Key_GetCatcher( ) == 0 )
+				if ( e.key.repeat && Key_GetCatcher() == 0 )
 					break;
+				key = IN_TranslateSDLToQ3Key( &e.key.keysym, qtrue );
 
-				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qtrue ) ) )
+				if ( key == K_ENTER && keys[K_ALT].down ) {
+					Cvar_SetIntegerValue( "r_fullscreen", glw_state.isFullscreen ? 0 : 1 );
+					Cbuf_AddText( "vid_restart\n" );
+					break;
+				}
+
+				if ( key ) {
 					Com_QueueEvent( in_eventTime, SE_KEY, key, qtrue, 0, NULL );
 
-				if( key == K_BACKSPACE )
-					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL('h'), 0, 0, NULL );
-				else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
-					Com_QueueEvent( in_eventTime, SE_CHAR, CTRL(key), 0, 0, NULL );
+					if ( key == K_BACKSPACE )
+						Com_QueueEvent( in_eventTime, SE_CHAR, CTRL('h'), 0, 0, NULL );
+
+					else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
+						Com_QueueEvent( in_eventTime, SE_CHAR, CTRL(key), 0, 0, NULL );
+				}
 
 				lastKeyDown = key;
 				break;
@@ -1036,7 +1058,7 @@ static void IN_ProcessEvents( void )
 					char *c = e.text.text;
 
 					// Quick and dirty UTF-8 to UTF-32 conversion
-					while( *c )
+					while ( *c )
 					{
 						int utf32 = 0;
 
@@ -1068,7 +1090,7 @@ static void IN_ProcessEvents( void )
 
 						if( utf32 != 0 )
 						{
-							if( IN_IsConsoleKey( 0, utf32 ) )
+							if ( IN_IsConsoleKey( 0, utf32 ) )
 							{
 								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
 								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
@@ -1076,14 +1098,14 @@ static void IN_ProcessEvents( void )
 							else
 								Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
 						}
-          }
-        }
+					}
+				}
 				break;
 
 			case SDL_MOUSEMOTION:
-				if( mouseActive && !in_joystick->integer )
+				if( mouseActive )
 				{
-					if( !e.motion.xrel && !e.motion.yrel )
+					if( !e.motion.xrel && !e.motion.yrel && !in_joystick->integer )
 						break;
 					Com_QueueEvent( in_eventTime, SE_MOUSE, e.motion.xrel, e.motion.yrel, 0, NULL );
 				}
@@ -1122,54 +1144,33 @@ static void IN_ProcessEvents( void )
 				}
 				break;
 
+#ifdef USE_JOYSTICK
 			case SDL_CONTROLLERDEVICEADDED:
 			case SDL_CONTROLLERDEVICEREMOVED:
-				if (in_joystick->integer)
+				if ( in_joystick->integer )
 					IN_InitJoystick();
 				break;
+#endif
 
 			case SDL_QUIT:
-				Cbuf_ExecuteText(EXEC_NOW, "quit Closed window\n");
+				Cbuf_ExecuteText( EXEC_NOW, "quit Closed window\n" );
 				break;
 
 			case SDL_WINDOWEVENT:
 				switch( e.window.event )
 				{
-					case SDL_WINDOWEVENT_RESIZED:
-						{
-							int width, height;
-
-							width = e.window.data1;
-							height = e.window.data2;
-
-							// ignore this event on fullscreen
-							if( cls.glconfig.isFullscreen )
-							{
-								break;
-							}
-
-							// check if size actually changed
-							if( cls.glconfig.vidWidth == width && cls.glconfig.vidHeight == height )
-							{
-								break;
-							}
-
-							//Cvar_SetValue( "r_customwidth", width );
-							//Cvar_SetValue( "r_customheight", height );
-							//Cvar_Set( "r_mode", "-1" );
-
-							// Wait until user stops dragging for 1 second, so
-							// we aren't constantly recreating the GL context while
-							// he tries to drag...
-							//vidRestartTime = Sys_Milliseconds( ) + 1000;
+					case SDL_WINDOWEVENT_MOVED:
+						if ( gw_active && !glw_state.isFullscreen ) {
+							Cvar_SetIntegerValue( "vid_xpos", e.window.data1 );
+							Cvar_SetIntegerValue( "vid_ypos", e.window.data2 );
 						}
 						break;
-
-					case SDL_WINDOWEVENT_MINIMIZED:    Cvar_SetValue( "com_minimized", 1 ); break;
+					case SDL_WINDOWEVENT_MINIMIZED:		re.SyncRender();
+														gw_active = qfalse; gw_minimized = qtrue; break;
 					case SDL_WINDOWEVENT_RESTORED:
-					case SDL_WINDOWEVENT_MAXIMIZED:    Cvar_SetValue( "com_minimized", 0 ); break;
-					case SDL_WINDOWEVENT_FOCUS_LOST:   Cvar_SetValue( "com_unfocused", 1 ); break;
-					case SDL_WINDOWEVENT_FOCUS_GAINED: Cvar_SetValue( "com_unfocused", 0 ); break;
+					case SDL_WINDOWEVENT_MAXIMIZED:		gw_active = qtrue;  gw_minimized = qfalse; break;
+					case SDL_WINDOWEVENT_FOCUS_LOST:	gw_active = qfalse; break;
+					case SDL_WINDOWEVENT_FOCUS_GAINED:	gw_active = qtrue;  gw_minimized = qfalse; break;
 				}
 				break;
 #ifdef EMSCRIPTEN
@@ -1184,6 +1185,7 @@ static void IN_ProcessEvents( void )
 
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
+				Com_Printf("Mouse event %s, %i\n", e.type == SDL_FINGERDOWN ? "down": "up", e.motion.which);
 				if (e.type == SDL_FINGERDOWN && Key_GetCatcher( ) & KEYCATCH_UI
 					&& e.tfinger.fingerId == 3) {
 					// Source: https://github.com/tomkidd/Quake3-iOS/blob/master/Quake3/sdl/sdl_input.c#L1162
@@ -1195,16 +1197,13 @@ static void IN_ProcessEvents( void )
 					if (ratio43 != ratio) {
 						float width43 = 480 * ratio;
 						float gap = 0.5 * (width43 - (480.0f*(640.0f/480.0f)));
-						float finger = (e.tfinger.x * width43);
 						float fingerMinusGap = (e.tfinger.x * width43) - gap;
 
 						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, fingerMinusGap, e.tfinger.y * 480, 0, NULL );
 					} else {
 						Com_QueueEvent( in_eventTime, SE_MOUSE_ABS, e.tfinger.x * 640, e.tfinger.y * 480, 0, NULL );
 					}
-					if(e.type == SDL_FINGERDOWN) {
-						Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
-					}
+					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qtrue, 0, NULL );
 				}
 				if(e.type == SDL_FINGERUP) {
 					Com_QueueEvent( in_eventTime+1, SE_KEY, K_MOUSE1, qfalse, 0, NULL );
@@ -1217,15 +1216,37 @@ static void IN_ProcessEvents( void )
 				break;
 		}
 	}
-	
+		
 	for(i = 1; i < 4; i++) {
+		/*
 		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
 			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
 				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], touchhats[i][1], 0, NULL );
 			}
 		}
+		*/
+		// TODO: make config options for this?
+		if(i == 1 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
+				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
+			}
+		}
 	}
 }
+
+
+/*
+===============
+IN_Minimize
+
+Minimize the game so that user is back at the desktop
+===============
+*/
+static void IN_Minimize( void )
+{
+	SDL_MinimizeWindow( SDL_window );
+}
+
 
 /*
 ===============
@@ -1235,62 +1256,55 @@ IN_Frame
 void IN_Frame( void )
 {
 	qboolean loading;
+	qboolean fullscreen;
 
-	IN_JoyMove( );
+#ifdef USE_JOYSTICK
+	IN_JoyMove();
+#endif
 
 	// If not DISCONNECTED (main menu) or ACTIVE (in game), we're loading
-	loading = ( clc.state != CA_DISCONNECTED && clc.state != CA_ACTIVE );
+	loading = ( cls.state != CA_DISCONNECTED && cls.state != CA_ACTIVE );
 
-	// update isFullscreen since it might of changed since the last vid_restart
-	cls.glconfig.isFullscreen = Cvar_VariableIntegerValue( "r_fullscreen" ) != 0;
+	fullscreen = glw_state.isFullscreen;
 
-	if( !cls.glconfig.isFullscreen && ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) )
+	if ( !fullscreen && ( Key_GetCatcher() & KEYCATCH_CONSOLE ) )
 	{
 		// Console is down in windowed mode
-		IN_DeactivateMouse( cls.glconfig.isFullscreen );
+		IN_DeactivateMouse( fullscreen );
 	}
-	else if( !cls.glconfig.isFullscreen && loading )
+	else if( !fullscreen && loading )
 	{
 		// Loading in windowed mode
-		IN_DeactivateMouse( cls.glconfig.isFullscreen );
+		IN_DeactivateMouse( fullscreen );
 	}
-	else if( !( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_INPUT_FOCUS ) )
+	else if ( !( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_INPUT_FOCUS ) )
 	{
 		// Window not got focus
-		IN_DeactivateMouse( cls.glconfig.isFullscreen );
+		IN_DeactivateMouse( fullscreen );
 	}
 	else
-		IN_ActivateMouse( cls.glconfig.isFullscreen );
+		IN_ActivateMouse( fullscreen );
 
-	IN_ProcessEvents( );
+	//IN_ProcessEvents();
+	//HandleEvents();
 
 	// Set event time for next frame to earliest possible time an event could happen
-	in_eventTime = Sys_Milliseconds( );
-
-	// In case we had to delay actual restart of video system
-	if( ( vidRestartTime != 0 ) && ( vidRestartTime < Sys_Milliseconds( ) ) )
-	{
-		vidRestartTime = 0;
-		Cbuf_AddText( "vid_restart\n" );
-	}
+	//in_eventTime = Sys_Milliseconds();
 }
+
 
 /*
 ===============
 IN_Init
 ===============
 */
-void IN_Init( void *windowData )
+void IN_Init( void )
 {
-	int appState;
-
-	if( !SDL_WasInit( SDL_INIT_VIDEO ) )
+	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 	{
 		Com_Error( ERR_FATAL, "IN_Init called before SDL_Init( SDL_INIT_VIDEO )" );
 		return;
 	}
-
-	SDL_window = (SDL_Window *)windowData;
 
 	Com_DPrintf( "\n------- Input Initialization -------\n" );
 
@@ -1298,23 +1312,50 @@ void IN_Init( void *windowData )
 
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
-	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
+	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
 
 	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE|CVAR_LATCH );
 	in_joystickThreshold = Cvar_Get( "joy_threshold", "0.15", CVAR_ARCHIVE );
+#ifdef USE_JOYSTICK
+	j_pitch =        Cvar_Get( "j_pitch",        "0.022", CVAR_ARCHIVE_ND );
+	j_yaw =          Cvar_Get( "j_yaw",          "-0.022", CVAR_ARCHIVE_ND );
+	j_forward =      Cvar_Get( "j_forward",      "-0.25", CVAR_ARCHIVE_ND );
+	j_side =         Cvar_Get( "j_side",         "0.25", CVAR_ARCHIVE_ND );
+	j_up =           Cvar_Get( "j_up",           "0", CVAR_ARCHIVE_ND );
 
-	SDL_StartTextInput( );
+	j_pitch_axis =   Cvar_Get( "j_pitch_axis",   "3", CVAR_ARCHIVE_ND );
+	j_yaw_axis =     Cvar_Get( "j_yaw_axis",     "2", CVAR_ARCHIVE_ND );
+	j_forward_axis = Cvar_Get( "j_forward_axis", "1", CVAR_ARCHIVE_ND );
+	j_side_axis =    Cvar_Get( "j_side_axis",    "0", CVAR_ARCHIVE_ND );
+	j_up_axis =      Cvar_Get( "j_up_axis",      "4", CVAR_ARCHIVE_ND );
 
-	mouseAvailable = ( in_mouse->value != 0 );
-	IN_DeactivateMouse( Cvar_VariableIntegerValue( "r_fullscreen" ) != 0 );
+	Cvar_CheckRange( j_pitch_axis,   "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_yaw_axis,     "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_forward_axis, "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_side_axis,    "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+	Cvar_CheckRange( j_up_axis,      "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
+#endif
 
-	appState = SDL_GetWindowFlags( SDL_window );
-	Cvar_SetValue( "com_unfocused",	!( appState & SDL_WINDOW_INPUT_FOCUS ) );
-	Cvar_SetValue( "com_minimized", appState & SDL_WINDOW_MINIMIZED );
+	// ~ and `, as keys and characters
+	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE );
 
+#ifndef EMSCRIPTEN
+	SDL_StartTextInput();
+#endif
+
+	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
+
+	IN_DeactivateMouse( glw_state.isFullscreen );
+
+#ifdef USE_JOYSTICK
 	IN_InitJoystick( );
+#endif
+
+	Cmd_AddCommand( "minimize", IN_Minimize );
+
 	Com_DPrintf( "------------------------------------\n" );
 }
+
 
 /*
 ===============
@@ -1323,15 +1364,17 @@ IN_Shutdown
 */
 void IN_Shutdown( void )
 {
-	SDL_StopTextInput( );
+	SDL_StopTextInput();
 
-	IN_DeactivateMouse( Cvar_VariableIntegerValue( "r_fullscreen" ) != 0 );
+	IN_DeactivateMouse( glw_state.isFullscreen );
+
 	mouseAvailable = qfalse;
 
-	IN_ShutdownJoystick( );
-
-	SDL_window = NULL;
+#ifdef USE_JOYSTICK
+	IN_ShutdownJoystick();
+#endif
 }
+
 
 /*
 ===============
@@ -1340,6 +1383,8 @@ IN_Restart
 */
 void IN_Restart( void )
 {
-	IN_ShutdownJoystick( );
-	IN_Init( SDL_window );
+#ifdef USE_JOYSTICK
+	IN_ShutdownJoystick();
+#endif
+	IN_Init();
 }

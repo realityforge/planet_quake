@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 #include "client.h"
 
-#ifdef LEGACY_PROTOCOL
 /*
 ==============
 CL_Netchan_Encode
@@ -38,28 +37,29 @@ CL_Netchan_Encode
 */
 static void CL_Netchan_Encode( msg_t *msg ) {
 	int serverId, messageAcknowledge, reliableAcknowledge;
-	int i, index, srdc, sbit, soob;
+	int i, index, srdc, sbit;
 	byte key, *string;
+	qboolean soob;
 
 	if ( msg->cursize <= CL_ENCODE_START ) {
 		return;
 	}
 
-        srdc = msg->readcount;
-        sbit = msg->bit;
-        soob = msg->oob;
-        
-        msg->bit = 0;
-        msg->readcount = 0;
-        msg->oob = 0;
-        
-        serverId = MSG_ReadLong(msg);
+	srdc = msg->readcount;
+	sbit = msg->bit;
+	soob = msg->oob;
+
+	msg->bit = 0;
+	msg->readcount = 0;
+	msg->oob = qfalse;
+
+	serverId = MSG_ReadLong(msg);
 	messageAcknowledge = MSG_ReadLong(msg);
 	reliableAcknowledge = MSG_ReadLong(msg);
 
-        msg->oob = soob;
-        msg->bit = sbit;
-        msg->readcount = srdc;
+	msg->oob = soob;
+	msg->bit = sbit;
+	msg->readcount = srdc;
         
 	string = (byte *)clc.serverCommands[ reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ];
 	index = 0;
@@ -81,6 +81,7 @@ static void CL_Netchan_Encode( msg_t *msg ) {
 	}
 }
 
+
 /*
 ==============
 CL_Netchan_Decode
@@ -93,19 +94,20 @@ CL_Netchan_Decode
 static void CL_Netchan_Decode( msg_t *msg ) {
 	long reliableAcknowledge, i, index;
 	byte key, *string;
-        int	srdc, sbit, soob;
+	int	srdc, sbit;
+	qboolean soob;
 
-        srdc = msg->readcount;
-        sbit = msg->bit;
-        soob = msg->oob;
-        
-        msg->oob = 0;
-        
-	reliableAcknowledge = MSG_ReadLong(msg);
+	srdc = msg->readcount;
+	sbit = msg->bit;
+	soob = msg->oob;
 
-        msg->oob = soob;
-        msg->bit = sbit;
-        msg->readcount = srdc;
+	msg->oob = qfalse;
+
+	reliableAcknowledge = MSG_ReadLong( msg );
+
+	msg->oob = soob;
+	msg->bit = sbit;
+	msg->readcount = srdc;
 
 	string = (byte *) clc.reliableCommands[ reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ];
 	index = 0;
@@ -126,23 +128,24 @@ static void CL_Netchan_Decode( msg_t *msg ) {
 		*(msg->data + i) = *(msg->data + i) ^ key;
 	}
 }
-#endif
+
 
 /*
 =================
 CL_Netchan_TransmitNextFragment
 =================
 */
-qboolean CL_Netchan_TransmitNextFragment(netchan_t *chan)
+static qboolean CL_Netchan_TransmitNextFragment( netchan_t *chan )
 {
-	if(chan->unsentFragments)
+	if ( chan->unsentFragments )
 	{
-		Netchan_TransmitNextFragment(chan);
+		Netchan_TransmitNextFragment( chan );
 		return qtrue;
 	}
 	
 	return qfalse;
 }
+
 
 /*
 ===============
@@ -152,19 +155,25 @@ CL_Netchan_Transmit
 void CL_Netchan_Transmit( netchan_t *chan, msg_t* msg ) {
 	MSG_WriteByte( msg, clc_EOF );
 
-#ifdef LEGACY_PROTOCOL
-	if(chan->compat)
-		CL_Netchan_Encode(msg);
-#endif
+	if ( msg->overflowed ) {
+		if ( cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC ) {
+			cls.state = CA_CONNECTING; // to avoid recursive error
+		}
+		Com_Error( ERR_DROP, "%s: message overflowed", __func__ );
+	}
 
-	Netchan_Transmit(chan, msg->cursize, msg->data);
+	if ( chan->compat )
+		CL_Netchan_Encode( msg );
+
+	Netchan_Transmit( chan, msg->cursize, msg->data );
 	
 	// Transmit all fragments without delay
-	while(CL_Netchan_TransmitNextFragment(chan))
-	{
-		Com_DPrintf("WARNING: #462 unsent fragments (not supposed to happen!)\n");
+	while ( CL_Netchan_TransmitNextFragment( chan ) ) {
+		// might happen if server die silently but client continue adding/sending commands
+		Com_DPrintf( S_COLOR_YELLOW "%s: unsent fragments\n", __func__ );
 	}
 }
+
 
 /*
 =================
@@ -172,16 +181,14 @@ CL_Netchan_Process
 =================
 */
 qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg ) {
-	int ret;
+	qboolean ret;
 
 	ret = Netchan_Process( chan, msg );
-	if (!ret)
+	if ( !ret )
 		return qfalse;
 
-#ifdef LEGACY_PROTOCOL
-	if(chan->compat)
-		CL_Netchan_Decode(msg);
-#endif
+	if ( chan->compat )
+		CL_Netchan_Decode( msg );
 
 	return qtrue;
 }

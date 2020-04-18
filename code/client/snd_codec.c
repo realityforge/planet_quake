@@ -26,6 +26,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 static snd_codec_t *codecs;
 
+qboolean updateSound = qfalse;
+void S_UpdateSound(char *name, qboolean compressed)
+{
+	updateSound = qtrue;
+	
+	S_RegisterSound(name, compressed);
+	
+	updateSound = qfalse;
+}
+
+
 /*
 =================
 S_CodecGetSound
@@ -44,7 +55,7 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 	char		altName[ MAX_QPATH ];
 	void		*rtn = NULL;
 
-	Q_strncpyz(localName, filename, MAX_QPATH);
+	Q_strncpyz( localName, filename, sizeof( localName ) );
 
 	ext = COM_GetExtension(localName);
 
@@ -56,10 +67,16 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 			if( !Q_stricmp( ext, codec->ext ) )
 			{
 				// Load
-				if( info )
-					rtn = codec->load(localName, info);
-				else
-					rtn = codec->open(localName);
+				if(!updateSound) {
+					if(FS_FOpenFileRead(localName, NULL, qfalse) > -1) {
+						return NULL;
+					}
+				} else {
+					if( info )
+						rtn = codec->load(localName, info);
+					else
+						rtn = codec->open(localName);
+				}
 				break;
 			}
 		}
@@ -86,17 +103,23 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 	// Try and find a suitable match using all
 	// the sound codecs supported
 	for( codec = codecs; codec; codec = codec->next )
-	{
+	{		
 		if( codec == orgCodec )
 			continue;
 
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, codec->ext );
 
 		// Load
-		if( info )
-			rtn = codec->load(altName, info);
-		else
-			rtn = codec->open(altName);
+		if(!updateSound) {
+			if(FS_FOpenFileRead(altName, NULL, qfalse) > -1) {
+				return NULL;
+			}
+		} else {
+			if( info )
+				rtn = codec->load(altName, info);
+			else
+				rtn = codec->open(altName);
+		}
 
 		if( rtn )
 		{
@@ -110,7 +133,7 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		}
 	}
 
-	Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
+	//Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
 
 	return NULL;
 }
@@ -123,16 +146,10 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
-
-#ifdef USE_CODEC_OPUS
-	S_CodecRegister(&opus_codec);
-#endif
-
-#ifdef USE_CODEC_VORBIS
+#if USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif
-
-// Register wav codec last so that it is always tried first when a file extension was not found
+	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
 }
 
@@ -202,8 +219,8 @@ snd_stream_t *S_CodecUtilOpen(const char *filename, snd_codec_t *codec)
 	int length;
 
 	// Try to open the file
-	length = FS_FOpenFileRead(filename, &hnd, qtrue);
-	if(!hnd)
+	length = FS_FOpenFileRead( filename, &hnd, qtrue );
+	if ( hnd == FS_INVALID_HANDLE )
 	{
 		Com_DPrintf("Can't read sound file %s\n", filename);
 		return NULL;
@@ -211,9 +228,9 @@ snd_stream_t *S_CodecUtilOpen(const char *filename, snd_codec_t *codec)
 
 	// Allocate a stream
 	stream = Z_Malloc(sizeof(snd_stream_t));
-	if(!stream)
+	if ( !stream )
 	{
-		FS_FCloseFile(hnd);
+		FS_FCloseFile( hnd );
 		return NULL;
 	}
 

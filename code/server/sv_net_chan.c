@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 #include "server.h"
 
-#ifdef LEGACY_PROTOCOL
 /*
 ==============
 SV_Netchan_Encode
@@ -129,8 +128,6 @@ static void SV_Netchan_Decode( client_t *client, msg_t *msg ) {
 		*(msg->data + i) = *(msg->data + i) ^ key;
 	}
 }
-#endif
-
 
 
 /*
@@ -164,10 +161,8 @@ void SV_Netchan_TransmitNextInQueue(client_t *client)
 	Com_DPrintf("#462 Netchan_TransmitNextFragment: popping a queued message for transmit\n");
 	netbuf = client->netchan_start_queue;
 
-#ifdef LEGACY_PROTOCOL
-	if(client->compat)
+	if( client->compat )
 		SV_Netchan_Encode(client, &netbuf->msg, netbuf->clientCommandString);
-#endif
 
 	Netchan_Transmit(&client->netchan, netbuf->msg.cursize, netbuf->msg.data);
 
@@ -232,13 +227,11 @@ void SV_Netchan_Transmit( client_t *client, msg_t *msg)
 		netbuf = (netchan_buffer_t *) Z_Malloc(sizeof(netchan_buffer_t));
 		// store the msg, we can't store it encoded, as the encoding depends on stuff we still have to finish sending
 		MSG_Copy(&netbuf->msg, netbuf->msgBuffer, sizeof( netbuf->msgBuffer ), msg);
-#ifdef LEGACY_PROTOCOL
-		if(client->compat)
+		if ( client->compat ) 
 		{
 			Q_strncpyz(netbuf->clientCommandString, client->lastClientCommandString,
-				   sizeof(netbuf->clientCommandString));
+				sizeof(netbuf->clientCommandString));
 		}
-#endif
 		netbuf->next = NULL;
 		// insert it in the queue, the message will be encoded and sent later
 		*client->netchan_end_queue = netbuf;
@@ -246,10 +239,8 @@ void SV_Netchan_Transmit( client_t *client, msg_t *msg)
 	}
 	else
 	{
-#ifdef LEGACY_PROTOCOL
-		if(client->compat)
+		if ( client->compat )
 			SV_Netchan_Encode(client, msg, client->lastClientCommandString);
-#endif
 		Netchan_Transmit( &client->netchan, msg->cursize, msg->data );
 	}
 }
@@ -260,16 +251,14 @@ Netchan_SV_Process
 =================
 */
 qboolean SV_Netchan_Process( client_t *client, msg_t *msg ) {
-	int ret;
+	qboolean ret;
+	
 	ret = Netchan_Process( &client->netchan, msg );
-	if (!ret)
+	if ( !ret )
 		return qfalse;
 
-#ifdef LEGACY_PROTOCOL
-	if(client->compat)
-		SV_Netchan_Decode(client, msg);
-#endif
+	if ( client->compat )
+		SV_Netchan_Decode( client, msg );
 
 	return qtrue;
 }
-

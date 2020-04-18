@@ -168,8 +168,9 @@ void AAS_InitTravelFlagFromType(void)
 //===========================================================================
 static ID_INLINE int AAS_TravelFlagForType_inline(int traveltype)
 {
-	int tfl = 0;
+	int tfl;
 
+	tfl = 0;
 	if (traveltype & TRAVELFLAG_NOTTEAM1)
 		tfl |= TFL_NOTTEAM1;
 	if (traveltype & TRAVELFLAG_NOTTEAM2)
@@ -442,7 +443,7 @@ void AAS_CreateReversedReachability(void)
 		//settings of the area
 		settings = &aasworld.areasettings[i];
 		//
-		if (settings->numreachableareas >= 128)
+		if (settings->numreachableareas > 128)
 			botimport.Print(PRT_WARNING, "area %d has more than 128 reachabilities\n", i);
 		//create reversed links for the reachabilities
 		for (n = 0; n < settings->numreachableareas && n < 128; n++)
@@ -1296,8 +1297,8 @@ void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache)
 	unsigned short int t, startareatraveltimes[128]; //NOTE: not more than 128 reachabilities per area allowed
 	aas_routingupdate_t *updateliststart, *updatelistend, *curupdate, *nextupdate;
 	aas_reachability_t *reach;
-	aas_reversedreachability_t *revreach;
-	aas_reversedlink_t *revlink;
+	const aas_reversedreachability_t *revreach;
+	const aas_reversedlink_t *revlink;
 
 #ifdef ROUTING_DEBUG
 	numareacacheupdates++;
@@ -1624,10 +1625,14 @@ int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, int tra
 	{
 		return qfalse;
 	} //end if
+
 	// make sure the routing cache doesn't grow to large
-	while(AvailableMemory() < 1 * 1024 * 1024) {
-		if (!AAS_FreeOldestCache()) break;
+	while ( routingcachesize > 2 * 1024 * 1024 ) {
+		if ( !AAS_FreeOldestCache() ) {
+			break;
+		}
 	}
+
 	//
 	if (AAS_AreaDoNotEnter(areanum) || AAS_AreaDoNotEnter(goalareanum))
 	{

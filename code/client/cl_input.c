@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 
-unsigned	frame_msec;
-int			old_com_frameTime;
+static unsigned frame_msec;
+static int old_com_frameTime;
 
 /*
 ===============================================================================
@@ -46,36 +46,68 @@ at the same time.
 ===============================================================================
 */
 
+typedef struct {
+	int			down[2];		// key nums holding it down
+	unsigned	downtime;		// msec timestamp
+	unsigned	msec;			// msec down this frame if both a down and up happened
+	qboolean	active;			// current state
+	qboolean	wasPressed;		// set when down, not cleared when up
+} kbutton_t;
 
-kbutton_t	in_left, in_right, in_forward, in_back;
-kbutton_t	in_lookup, in_lookdown, in_moveleft, in_moveright;
-kbutton_t	in_strafe, in_speed;
-kbutton_t	in_up, in_down;
+static kbutton_t in_left, in_right, in_forward, in_back;
+static kbutton_t in_lookup, in_lookdown, in_moveleft, in_moveright;
+static kbutton_t in_strafe, in_speed;
+static kbutton_t in_up, in_down;
+static kbutton_t in_buttons[16];
 
-#ifdef USE_VOIP
-kbutton_t	in_voiprecord;
-#endif
+static cvar_t *cl_nodelta;
 
-kbutton_t	in_buttons[16];
+static cvar_t *cl_showSend;
 
+static cvar_t *cl_sensitivity;
+static cvar_t *cl_mouseAccel;
+static cvar_t *cl_mouseAccelOffset;
+static cvar_t *cl_mouseAccelStyle;
+static cvar_t *cl_showMouseRate;
 
-qboolean	in_mlooking;
+static cvar_t *cl_run;
+static cvar_t *cl_freelook;
 
+static cvar_t *cl_yawspeed;
+static cvar_t *cl_pitchspeed;
+static cvar_t *cl_anglespeedkey;
 
-void IN_MLookDown( void ) {
+static cvar_t *cl_maxpackets;
+static cvar_t *cl_packetdup;
+
+static cvar_t *m_pitch;
+static cvar_t *m_yaw;
+static cvar_t *m_forward;
+static cvar_t *m_side;
+static cvar_t *m_filter;
+
+static qboolean in_mlooking;
+
+static void IN_CenterView( void ) {
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
+}
+
+static void IN_MLookDown( void ) {
 	in_mlooking = qtrue;
 }
 
-void IN_MLookUp( void ) {
+
+static void IN_MLookUp( void ) {
 	in_mlooking = qfalse;
 	if ( !cl_freelook->integer ) {
 		IN_CenterView ();
 	}
 }
 
-void IN_KeyDown( kbutton_t *b ) {
-	int		k;
-	char	*c;
+
+static void IN_KeyDown( kbutton_t *b ) {
+	const char *c;
+	int	k;
 	
 	c = Cmd_Argv(1);
 	if ( c[0] ) {
@@ -109,10 +141,11 @@ void IN_KeyDown( kbutton_t *b ) {
 	b->wasPressed = qtrue;
 }
 
-void IN_KeyUp( kbutton_t *b ) {
+
+static void IN_KeyUp( kbutton_t *b ) {
+	unsigned uptime;
+	const char *c;
 	int		k;
-	char	*c;
-	unsigned	uptime;
 
 	c = Cmd_Argv(1);
 	if ( c[0] ) {
@@ -150,7 +183,6 @@ void IN_KeyUp( kbutton_t *b ) {
 }
 
 
-
 /*
 ===============
 CL_KeyState
@@ -158,7 +190,7 @@ CL_KeyState
 Returns the fraction of the frame that the key was down
 ===============
 */
-float CL_KeyState( kbutton_t *key ) {
+static float CL_KeyState( kbutton_t *key ) {
 	float		val;
 	int			msec;
 
@@ -193,93 +225,67 @@ float CL_KeyState( kbutton_t *key ) {
 }
 
 
+static void IN_UpDown(void) {IN_KeyDown(&in_up);}
+static void IN_UpUp(void) {IN_KeyUp(&in_up);}
+static void IN_DownDown(void) {IN_KeyDown(&in_down);}
+static void IN_DownUp(void) {IN_KeyUp(&in_down);}
+static void IN_LeftDown(void) {IN_KeyDown(&in_left);}
+static void IN_LeftUp(void) {IN_KeyUp(&in_left);}
+static void IN_RightDown(void) {IN_KeyDown(&in_right);}
+static void IN_RightUp(void) {IN_KeyUp(&in_right);}
+static void IN_ForwardDown(void) {IN_KeyDown(&in_forward);}
+static void IN_ForwardUp(void) {IN_KeyUp(&in_forward);}
+static void IN_BackDown(void) {IN_KeyDown(&in_back);}
+static void IN_BackUp(void) {IN_KeyUp(&in_back);}
+static void IN_LookupDown(void) {IN_KeyDown(&in_lookup);}
+static void IN_LookupUp(void) {IN_KeyUp(&in_lookup);}
+static void IN_LookdownDown(void) {IN_KeyDown(&in_lookdown);}
+static void IN_LookdownUp(void) {IN_KeyUp(&in_lookdown);}
+static void IN_MoveleftDown(void) {IN_KeyDown(&in_moveleft);}
+static void IN_MoveleftUp(void) {IN_KeyUp(&in_moveleft);}
+static void IN_MoverightDown(void) {IN_KeyDown(&in_moveright);}
+static void IN_MoverightUp(void) {IN_KeyUp(&in_moveright);}
 
-void IN_UpDown(void) {IN_KeyDown(&in_up);}
-void IN_UpUp(void) {IN_KeyUp(&in_up);}
-void IN_DownDown(void) {IN_KeyDown(&in_down);}
-void IN_DownUp(void) {IN_KeyUp(&in_down);}
-void IN_LeftDown(void) {IN_KeyDown(&in_left);}
-void IN_LeftUp(void) {IN_KeyUp(&in_left);}
-void IN_RightDown(void) {IN_KeyDown(&in_right);}
-void IN_RightUp(void) {IN_KeyUp(&in_right);}
-void IN_ForwardDown(void) {IN_KeyDown(&in_forward);}
-void IN_ForwardUp(void) {IN_KeyUp(&in_forward);}
-void IN_BackDown(void) {IN_KeyDown(&in_back);}
-void IN_BackUp(void) {IN_KeyUp(&in_back);}
-void IN_LookupDown(void) {IN_KeyDown(&in_lookup);}
-void IN_LookupUp(void) {IN_KeyUp(&in_lookup);}
-void IN_LookdownDown(void) {IN_KeyDown(&in_lookdown);}
-void IN_LookdownUp(void) {IN_KeyUp(&in_lookdown);}
-void IN_MoveleftDown(void) {IN_KeyDown(&in_moveleft);}
-void IN_MoveleftUp(void) {IN_KeyUp(&in_moveleft);}
-void IN_MoverightDown(void) {IN_KeyDown(&in_moveright);}
-void IN_MoverightUp(void) {IN_KeyUp(&in_moveright);}
+static void IN_SpeedDown(void) {IN_KeyDown(&in_speed);}
+static void IN_SpeedUp(void) {IN_KeyUp(&in_speed);}
+static void IN_StrafeDown(void) {IN_KeyDown(&in_strafe);}
+static void IN_StrafeUp(void) {IN_KeyUp(&in_strafe);}
 
-void IN_SpeedDown(void) {IN_KeyDown(&in_speed);}
-void IN_SpeedUp(void) {IN_KeyUp(&in_speed);}
-void IN_StrafeDown(void) {IN_KeyDown(&in_strafe);}
-void IN_StrafeUp(void) {IN_KeyUp(&in_strafe);}
-
-#ifdef USE_VOIP
-void IN_VoipRecordDown(void)
-{
-	IN_KeyDown(&in_voiprecord);
-	Cvar_Set("cl_voipSend", "1");
-}
-
-void IN_VoipRecordUp(void)
-{
-	IN_KeyUp(&in_voiprecord);
-	Cvar_Set("cl_voipSend", "0");
-}
-#endif
-
-void IN_Button0Down(void) {IN_KeyDown(&in_buttons[0]);}
-void IN_Button0Up(void) {IN_KeyUp(&in_buttons[0]);}
-void IN_Button1Down(void) {IN_KeyDown(&in_buttons[1]);}
-void IN_Button1Up(void) {IN_KeyUp(&in_buttons[1]);}
-void IN_Button2Down(void) {IN_KeyDown(&in_buttons[2]);}
-void IN_Button2Up(void) {IN_KeyUp(&in_buttons[2]);}
-void IN_Button3Down(void) {IN_KeyDown(&in_buttons[3]);}
-void IN_Button3Up(void) {IN_KeyUp(&in_buttons[3]);}
-void IN_Button4Down(void) {IN_KeyDown(&in_buttons[4]);}
-void IN_Button4Up(void) {IN_KeyUp(&in_buttons[4]);}
-void IN_Button5Down(void) {IN_KeyDown(&in_buttons[5]);}
-void IN_Button5Up(void) {IN_KeyUp(&in_buttons[5]);}
-void IN_Button6Down(void) {IN_KeyDown(&in_buttons[6]);}
-void IN_Button6Up(void) {IN_KeyUp(&in_buttons[6]);}
-void IN_Button7Down(void) {IN_KeyDown(&in_buttons[7]);}
-void IN_Button7Up(void) {IN_KeyUp(&in_buttons[7]);}
-void IN_Button8Down(void) {IN_KeyDown(&in_buttons[8]);}
-void IN_Button8Up(void) {IN_KeyUp(&in_buttons[8]);}
-void IN_Button9Down(void) {IN_KeyDown(&in_buttons[9]);}
-void IN_Button9Up(void) {IN_KeyUp(&in_buttons[9]);}
-void IN_Button10Down(void) {IN_KeyDown(&in_buttons[10]);}
-void IN_Button10Up(void) {IN_KeyUp(&in_buttons[10]);}
-void IN_Button11Down(void) {IN_KeyDown(&in_buttons[11]);}
-void IN_Button11Up(void) {IN_KeyUp(&in_buttons[11]);}
-void IN_Button12Down(void) {IN_KeyDown(&in_buttons[12]);}
-void IN_Button12Up(void) {IN_KeyUp(&in_buttons[12]);}
-void IN_Button13Down(void) {IN_KeyDown(&in_buttons[13]);}
-void IN_Button13Up(void) {IN_KeyUp(&in_buttons[13]);}
-void IN_Button14Down(void) {IN_KeyDown(&in_buttons[14]);}
-void IN_Button14Up(void) {IN_KeyUp(&in_buttons[14]);}
-void IN_Button15Down(void) {IN_KeyDown(&in_buttons[15]);}
-void IN_Button15Up(void) {IN_KeyUp(&in_buttons[15]);}
-
-void IN_CenterView (void) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
-}
+static void IN_Button0Down(void) {IN_KeyDown(&in_buttons[0]);}
+static void IN_Button0Up(void) {IN_KeyUp(&in_buttons[0]);}
+static void IN_Button1Down(void) {IN_KeyDown(&in_buttons[1]);}
+static void IN_Button1Up(void) {IN_KeyUp(&in_buttons[1]);}
+static void IN_Button2Down(void) {IN_KeyDown(&in_buttons[2]);}
+static void IN_Button2Up(void) {IN_KeyUp(&in_buttons[2]);}
+static void IN_Button3Down(void) {IN_KeyDown(&in_buttons[3]);}
+static void IN_Button3Up(void) {IN_KeyUp(&in_buttons[3]);}
+static void IN_Button4Down(void) {IN_KeyDown(&in_buttons[4]);}
+static void IN_Button4Up(void) {IN_KeyUp(&in_buttons[4]);}
+static void IN_Button5Down(void) {IN_KeyDown(&in_buttons[5]);}
+static void IN_Button5Up(void) {IN_KeyUp(&in_buttons[5]);}
+static void IN_Button6Down(void) {IN_KeyDown(&in_buttons[6]);}
+static void IN_Button6Up(void) {IN_KeyUp(&in_buttons[6]);}
+static void IN_Button7Down(void) {IN_KeyDown(&in_buttons[7]);}
+static void IN_Button7Up(void) {IN_KeyUp(&in_buttons[7]);}
+static void IN_Button8Down(void) {IN_KeyDown(&in_buttons[8]);}
+static void IN_Button8Up(void) {IN_KeyUp(&in_buttons[8]);}
+static void IN_Button9Down(void) {IN_KeyDown(&in_buttons[9]);}
+static void IN_Button9Up(void) {IN_KeyUp(&in_buttons[9]);}
+static void IN_Button10Down(void) {IN_KeyDown(&in_buttons[10]);}
+static void IN_Button10Up(void) {IN_KeyUp(&in_buttons[10]);}
+static void IN_Button11Down(void) {IN_KeyDown(&in_buttons[11]);}
+static void IN_Button11Up(void) {IN_KeyUp(&in_buttons[11]);}
+static void IN_Button12Down(void) {IN_KeyDown(&in_buttons[12]);}
+static void IN_Button12Up(void) {IN_KeyUp(&in_buttons[12]);}
+static void IN_Button13Down(void) {IN_KeyDown(&in_buttons[13]);}
+static void IN_Button13Up(void) {IN_KeyUp(&in_buttons[13]);}
+static void IN_Button14Down(void) {IN_KeyDown(&in_buttons[14]);}
+static void IN_Button14Up(void) {IN_KeyUp(&in_buttons[14]);}
+static void IN_Button15Down(void) {IN_KeyDown(&in_buttons[15]);}
+static void IN_Button15Up(void) {IN_KeyUp(&in_buttons[15]);}
 
 
 //==========================================================================
-
-cvar_t	*cl_yawspeed;
-cvar_t	*cl_pitchspeed;
-
-cvar_t	*cl_run;
-
-cvar_t	*cl_anglespeedkey;
 
 
 /*
@@ -289,7 +295,7 @@ CL_AdjustAngles
 Moves the local angle positions
 ================
 */
-void CL_AdjustAngles( void ) {
+static void CL_AdjustAngles( void ) {
 	float	speed;
 	
 	if ( in_speed.active ) {
@@ -307,6 +313,7 @@ void CL_AdjustAngles( void ) {
 	cl.viewangles[PITCH] += speed*cl_pitchspeed->value * CL_KeyState (&in_lookdown);
 }
 
+
 /*
 ================
 CL_KeyMove
@@ -314,13 +321,13 @@ CL_KeyMove
 Sets the usercmd_t based on key states
 ================
 */
-void CL_KeyMove( usercmd_t *cmd ) {
+static void CL_KeyMove( usercmd_t *cmd ) {
 	int		movespeed;
 	int		forward, side, up;
 
 	//
 	// adjust for speed key / running
-	// the walking flag is to keep animations consistent
+	// the walking flag is to keep animations consistant
 	// even during acceleration and develeration
 	//
 	if ( in_speed.active ^ cl_run->integer ) {
@@ -349,11 +356,16 @@ void CL_KeyMove( usercmd_t *cmd ) {
 	forward += movespeed * CL_KeyState (&in_forward);
 	forward -= movespeed * CL_KeyState (&in_back);
 
-	cmd->forwardmove = ClampChar( forward );
-	cmd->rightmove = ClampChar( side );
-	cmd->upmove = ClampChar( up );
+	cmd->forwardmove = ClampCharMove( forward );
+	cmd->rightmove = ClampCharMove( side );
+	cmd->upmove = ClampCharMove( up );
 }
 
+
+void Spy_CursorPosition(float x, float y) {
+	cls.cursorx = x;
+	cls.cursory = y;
+}
 /*
 =================
 CL_MouseEvent
@@ -363,37 +375,26 @@ CL_MouseEvent
 void CL_MouseEvent( int dx, int dy, int time ) {
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
-
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if(absolute) {
-			if(!cls.menuUIhack) {
-				cls.menuUIhack = VM_GetStaticAtoms(uivm, UI_REFRESH, UI_MOUSE_EVENT, cls.realtime);
-			}
-			cls.menuUIhack[11] = (dx >> 24) & 0xFF;
-			cls.menuUIhack[10] = (dx >> 16) & 0xFF;
-			cls.menuUIhack[9] = (dx >> 8) & 0xFF;
-			cls.menuUIhack[8] = dx & 0xFF;
-			cls.menuUIhack[15] = (dy >> 24) & 0xFF;
-			cls.menuUIhack[14] = (dy >> 16) & 0xFF;
-			cls.menuUIhack[13] = (dy >> 8) & 0xFF;
-			cls.menuUIhack[12] = dy & 0xFF;
-			VM_Call( uivm, UI_MOUSE_EVENT, 0, 0 );
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
 		} else {
-			VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 		}
 		return;
 	}
 #endif
 ;
-	if( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		VM_Call( uivm, UI_MOUSE_EVENT, dx, dy );
-	} else if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
-		VM_Call (cgvm, CG_MOUSE_EVENT, dx, dy);
+	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
+		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
+	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
+		VM_Call( cgvm, 2, CG_MOUSE_EVENT, dx, dy );
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
 }
+
 
 /*
 =================
@@ -409,21 +410,20 @@ void CL_JoystickEvent( int axis, int value, int time ) {
 	cl.joystickAxis[axis] = value;
 }
 
+
 /*
 =================
 CL_JoystickMove
 =================
 */
-void CL_JoystickMove( usercmd_t *cmd ) {
+static void CL_JoystickMove( usercmd_t *cmd ) {
+	//int		movespeed;
 	float	anglespeed;
 
-	float yaw     = j_yaw->value     * cl.joystickAxis[j_yaw_axis->integer];
-	float right   = j_side->value    * cl.joystickAxis[j_side_axis->integer];
-	float forward = j_forward->value * cl.joystickAxis[j_forward_axis->integer];
-	float pitch   = j_pitch->value   * cl.joystickAxis[j_pitch_axis->integer];
-	float up      = j_up->value      * cl.joystickAxis[j_up_axis->integer];
-
-	if ( !(in_speed.active ^ cl_run->integer) ) {
+	if ( in_speed.active ^ cl_run->integer ) {
+		//movespeed = 2;
+	} else {
+		//movespeed = 1;
 		cmd->buttons |= BUTTON_WALKING;
 	}
 
@@ -434,22 +434,18 @@ void CL_JoystickMove( usercmd_t *cmd ) {
 	}
 
 	if ( !in_strafe.active ) {
-		cl.viewangles[YAW] += anglespeed * yaw;
-		cmd->rightmove = ClampChar( cmd->rightmove + (int)right );
+		cl.viewangles[YAW] += anglespeed * cl_yawspeed->value * cl.joystickAxis[AXIS_SIDE];
 	} else {
-		cl.viewangles[YAW] += anglespeed * right;
-		cmd->rightmove = ClampChar( cmd->rightmove + (int)yaw );
+		cmd->rightmove = ClampCharMove( cmd->rightmove + cl.joystickAxis[AXIS_SIDE] );
 	}
 
 	if ( in_mlooking ) {
-		cl.viewangles[PITCH] += anglespeed * forward;
-		cmd->forwardmove = ClampChar( cmd->forwardmove + (int)pitch );
+		cl.viewangles[PITCH] += anglespeed * cl_pitchspeed->value * cl.joystickAxis[AXIS_FORWARD];
 	} else {
-		cl.viewangles[PITCH] += anglespeed * pitch;
-		cmd->forwardmove = ClampChar( cmd->forwardmove + (int)forward );
+		cmd->forwardmove = ClampCharMove( cmd->forwardmove + cl.joystickAxis[AXIS_FORWARD] );
 	}
 
-	cmd->upmove = ClampChar( cmd->upmove + (int)up );
+	cmd->upmove = ClampCharMove( cmd->upmove + cl.joystickAxis[AXIS_UP] );
 }
 
 /*
@@ -457,8 +453,7 @@ void CL_JoystickMove( usercmd_t *cmd ) {
 CL_MouseMove
 =================
 */
-
-void CL_MouseMove(usercmd_t *cmd)
+static void CL_MouseMove( usercmd_t *cmd )
 {
 	float mx, my;
 
@@ -501,6 +496,13 @@ void CL_MouseMove(usercmd_t *cmd)
 		{
 			float rate[2];
 			float power[2];
+			float offset = cl_mouseAccelOffset->value;
+
+			// clip at a small positive number to avoid division
+			// by zero (or indeed going backwards!)
+			if (offset < 0.001) {
+				offset = 0.001f;
+			}
 
 			// sensitivity remains pretty much unchanged at low speeds
 			// cl_mouseAccel is a power value to how the acceleration is shaped
@@ -509,11 +511,11 @@ void CL_MouseMove(usercmd_t *cmd)
 
 			rate[0] = fabs(mx) / (float) frame_msec;
 			rate[1] = fabs(my) / (float) frame_msec;
-			power[0] = powf(rate[0] / cl_mouseAccelOffset->value, cl_mouseAccel->value);
-			power[1] = powf(rate[1] / cl_mouseAccelOffset->value, cl_mouseAccel->value);
+			power[0] = powf( rate[0] / offset, cl_mouseAccel->value );
+			power[1] = powf( rate[1] / offset, cl_mouseAccel->value );
 
-			mx = cl_sensitivity->value * (mx + ((mx < 0) ? -power[0] : power[0]) * cl_mouseAccelOffset->value);
-			my = cl_sensitivity->value * (my + ((my < 0) ? -power[1] : power[1]) * cl_mouseAccelOffset->value);
+			mx = cl_sensitivity->value * (mx + ((mx < 0) ? -power[0] : power[0]) * offset);
+			my = cl_sensitivity->value * (my + ((my < 0) ? -power[1] : power[1]) * offset);
 
 			if(cl_showMouseRate->integer)
 				Com_Printf("ratex: %f, ratey: %f, powx: %f, powy: %f\n", rate[0], rate[1], power[0], power[1]);
@@ -530,15 +532,15 @@ void CL_MouseMove(usercmd_t *cmd)
 	my *= cl.cgameSensitivity;
 
 	// add mouse X/Y movement to cmd
-	if(in_strafe.active)
-		cmd->rightmove = ClampChar(cmd->rightmove + m_side->value * mx);
+	if ( in_strafe.active )
+		cmd->rightmove = ClampCharMove( cmd->rightmove + m_side->value * mx );
 	else
 		cl.viewangles[YAW] -= m_yaw->value * mx;
 
-	if ((in_mlooking || cl_freelook->integer) && !in_strafe.active)
+	if ( (in_mlooking || cl_freelook->integer) && !in_strafe.active )
 		cl.viewangles[PITCH] += m_pitch->value * my;
 	else
-		cmd->forwardmove = ClampChar(cmd->forwardmove - m_forward->value * my);
+		cmd->forwardmove = ClampCharMove( cmd->forwardmove - m_forward->value * my );
 }
 
 
@@ -547,7 +549,7 @@ void CL_MouseMove(usercmd_t *cmd)
 CL_CmdButtons
 ==============
 */
-void CL_CmdButtons( usercmd_t *cmd ) {
+static void CL_CmdButtons( usercmd_t *cmd ) {
 	int		i;
 
 	//
@@ -555,20 +557,20 @@ void CL_CmdButtons( usercmd_t *cmd ) {
 	// send a button bit even if the key was pressed and released in
 	// less than a frame
 	//	
-	for (i = 0 ; i < 15 ; i++) {
+	for ( i = 0 ; i < ARRAY_LEN( in_buttons ); i++ ) {
 		if ( in_buttons[i].active || in_buttons[i].wasPressed ) {
 			cmd->buttons |= 1 << i;
 		}
 		in_buttons[i].wasPressed = qfalse;
 	}
 
-	if ( Key_GetCatcher( ) ) {
+	if ( Key_GetCatcher() ) {
 		cmd->buttons |= BUTTON_TALK;
 	}
 
 	// allow the game to know if any key at all is
 	// currently pressed, even if it isn't bound to anything
-	if ( anykeydown && Key_GetCatcher( ) == 0 ) {
+	if ( anykeydown && Key_GetCatcher() == 0 ) {
 		cmd->buttons |= BUTTON_ANY;
 	}
 }
@@ -579,7 +581,7 @@ void CL_CmdButtons( usercmd_t *cmd ) {
 CL_FinishMove
 ==============
 */
-void CL_FinishMove( usercmd_t *cmd ) {
+static void CL_FinishMove( usercmd_t *cmd ) {
 	int		i;
 
 	// copy the state that the cgame is currently sending
@@ -600,7 +602,7 @@ void CL_FinishMove( usercmd_t *cmd ) {
 CL_CreateCmd
 =================
 */
-usercmd_t CL_CreateCmd( void ) {
+static usercmd_t CL_CreateCmd( void ) {
 	usercmd_t	cmd;
 	vec3_t		oldAngles;
 
@@ -657,7 +659,7 @@ void CL_CreateNewCommands( void ) {
 	int			cmdNum;
 
 	// no need to create usercmds until we have a gamestate
-	if ( clc.state < CA_PRIMED ) {
+	if ( cls.state < CA_PRIMED ) {
 		return;
 	}
 
@@ -680,8 +682,9 @@ void CL_CreateNewCommands( void ) {
 	// generate a command for this frame
 	cl.cmdNumber++;
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[cmdNum] = CL_CreateCmd ();
+	cl.cmds[cmdNum] = CL_CreateCmd();
 }
+
 
 /*
 =================
@@ -694,12 +697,12 @@ delivered in the next packet, but saving a header and
 getting more delta compression will reduce total bandwidth.
 =================
 */
-qboolean CL_ReadyToSendPacket( void ) {
+static qboolean CL_ReadyToSendPacket( void ) {
 	int		oldPacketNum;
 	int		delta;
 
 	// don't send anything if playing back a demo
-	if ( clc.demoplaying || clc.state == CA_CINEMATIC ) {
+	if ( clc.demoplaying || cls.state == CA_CINEMATIC ) {
 		return qfalse;
 	}
 
@@ -711,8 +714,8 @@ qboolean CL_ReadyToSendPacket( void ) {
 
 	// if we don't have a valid gamestate yet, only send
 	// one packet a second
-	if ( clc.state != CA_ACTIVE && 
-		clc.state != CA_PRIMED && 
+	if ( cls.state != CA_ACTIVE && 
+		cls.state != CA_PRIMED && 
 		!*clc.downloadTempName &&
 		cls.realtime - clc.lastPacketSentTime < 1000 ) {
 		return qfalse;
@@ -724,16 +727,10 @@ qboolean CL_ReadyToSendPacket( void ) {
 	}
 
 	// send every frame for LAN
-	if ( cl_lanForcePackets->integer && Sys_IsLANAddress( clc.netchan.remoteAddress ) ) {
+	if ( cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
 		return qtrue;
 	}
 
-	// check for exceeding cl_maxpackets
-	if ( cl_maxpackets->integer < 15 ) {
-		Cvar_Set( "cl_maxpackets", "15" );
-	} else if ( cl_maxpackets->integer > 125 ) {
-		Cvar_Set( "cl_maxpackets", "125" );
-	}
 	oldPacketNum = (clc.netchan.outgoingSequence - 1) & PACKET_MASK;
 	delta = cls.realtime -  cl.outPackets[ oldPacketNum ].p_realtime;
 	if ( delta < 1000 / cl_maxpackets->integer ) {
@@ -743,6 +740,7 @@ qboolean CL_ReadyToSendPacket( void ) {
 
 	return qtrue;
 }
+
 
 /*
 ===================
@@ -767,7 +765,7 @@ During normal gameplay, a client packet will contain something like:
 */
 void CL_WritePacket( void ) {
 	msg_t		buf;
-	byte		data[MAX_MSGLEN];
+	byte		data[ MAX_MSGLEN_BUF ];
 	int			i, j;
 	usercmd_t	*cmd, *oldcmd;
 	usercmd_t	nullcmd;
@@ -776,14 +774,14 @@ void CL_WritePacket( void ) {
 	int			count, key;
 
 	// don't send anything if playing back a demo
-	if ( clc.demoplaying || clc.state == CA_CINEMATIC ) {
+	if ( clc.demoplaying || cls.state == CA_CINEMATIC ) {
 		return;
 	}
 
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 	oldcmd = &nullcmd;
 
-	MSG_Init( &buf, data, sizeof(data) );
+	MSG_Init( &buf, data, MAX_MSGLEN );
 
 	MSG_Bitstream( &buf );
 	// write the current serverId so the server
@@ -808,69 +806,13 @@ void CL_WritePacket( void ) {
 	// we want to send all the usercmds that were generated in the last
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
-	if ( cl_packetdup->integer < 0 ) {
-		Cvar_Set( "cl_packetdup", "0" );
-	} else if ( cl_packetdup->integer > 5 ) {
-		Cvar_Set( "cl_packetdup", "5" );
-	}
+
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
 		Com_Printf("MAX_PACKET_USERCMDS\n");
 	}
-
-#ifdef USE_VOIP
-	if (clc.voipOutgoingDataSize > 0)
-	{
-		if((clc.voipFlags & VOIP_SPATIAL) || Com_IsVoipTarget(clc.voipTargets, sizeof(clc.voipTargets), -1))
-		{
-			MSG_WriteByte (&buf, clc_voipOpus);
-			MSG_WriteByte (&buf, clc.voipOutgoingGeneration);
-			MSG_WriteLong (&buf, clc.voipOutgoingSequence);
-			MSG_WriteByte (&buf, clc.voipOutgoingDataFrames);
-			MSG_WriteData (&buf, clc.voipTargets, sizeof(clc.voipTargets));
-			MSG_WriteByte(&buf, clc.voipFlags);
-			MSG_WriteShort (&buf, clc.voipOutgoingDataSize);
-			MSG_WriteData (&buf, clc.voipOutgoingData, clc.voipOutgoingDataSize);
-
-			// If we're recording a demo, we have to fake a server packet with
-			//  this VoIP data so it gets to disk; the server doesn't send it
-			//  back to us, and we might as well eliminate concerns about dropped
-			//  and misordered packets here.
-			if(clc.demorecording && !clc.demowaiting)
-			{
-				const int voipSize = clc.voipOutgoingDataSize;
-				msg_t fakemsg;
-				byte fakedata[MAX_MSGLEN];
-				MSG_Init (&fakemsg, fakedata, sizeof (fakedata));
-				MSG_Bitstream (&fakemsg);
-				MSG_WriteLong (&fakemsg, clc.reliableAcknowledge);
-				MSG_WriteByte (&fakemsg, svc_voipOpus);
-				MSG_WriteShort (&fakemsg, clc.clientNum);
-				MSG_WriteByte (&fakemsg, clc.voipOutgoingGeneration);
-				MSG_WriteLong (&fakemsg, clc.voipOutgoingSequence);
-				MSG_WriteByte (&fakemsg, clc.voipOutgoingDataFrames);
-				MSG_WriteShort (&fakemsg, clc.voipOutgoingDataSize );
-				MSG_WriteBits (&fakemsg, clc.voipFlags, VOIP_FLAGCNT);
-				MSG_WriteData (&fakemsg, clc.voipOutgoingData, voipSize);
-				MSG_WriteByte (&fakemsg, svc_EOF);
-				CL_WriteDemoMessage (&fakemsg, 0);
-			}
-
-			clc.voipOutgoingSequence += clc.voipOutgoingDataFrames;
-			clc.voipOutgoingDataSize = 0;
-			clc.voipOutgoingDataFrames = 0;
-		}
-		else
-		{
-			// We have data, but no targets. Silently discard all data
-			clc.voipOutgoingDataSize = 0;
-			clc.voipOutgoingDataFrames = 0;
-		}
-	}
-#endif
-
 	if ( count >= 1 ) {
 		if ( cl_showSend->integer ) {
 			Com_Printf( "(%i)", count );
@@ -916,8 +858,9 @@ void CL_WritePacket( void ) {
 		Com_Printf( "%i ", buf.cursize );
 	}
 
-	CL_Netchan_Transmit (&clc.netchan, &buf);	
+	CL_Netchan_Transmit( &clc.netchan, &buf );
 }
+
 
 /*
 =================
@@ -928,7 +871,7 @@ Called every frame to builds and sends a command packet to the server.
 */
 void CL_SendCmd( void ) {
 	// don't send any message if not connected
-	if ( clc.state < CA_CONNECTED ) {
+	if ( cls.state < CA_CONNECTED ) {
 		return;
 	}
 
@@ -950,6 +893,7 @@ void CL_SendCmd( void ) {
 
 	CL_WritePacket();
 }
+
 
 /*
 ============
@@ -1015,88 +959,119 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-button13", IN_Button13Up);
 	Cmd_AddCommand ("+button14", IN_Button14Down);
 	Cmd_AddCommand ("-button14", IN_Button14Up);
+	Cmd_AddCommand ("+button15", IN_Button15Down);
+	Cmd_AddCommand ("-button15", IN_Button15Up);
 	Cmd_AddCommand ("+mlook", IN_MLookDown);
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
-#ifdef USE_VOIP
-	Cmd_AddCommand ("+voiprecord", IN_VoipRecordDown);
-	Cmd_AddCommand ("-voiprecord", IN_VoipRecordUp);
-#endif
+	cl_nodelta = Cvar_Get( "cl_nodelta", "0", 0 );
+	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
 
-	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0);
-	cl_debugMove = Cvar_Get ("cl_debugMove", "0", 0);
+	cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
+
+	cl_yawspeed = Cvar_Get( "cl_yawspeed", "140", CVAR_ARCHIVE_ND );
+	cl_pitchspeed = Cvar_Get( "cl_pitchspeed", "140", CVAR_ARCHIVE_ND );
+	cl_anglespeedkey = Cvar_Get( "cl_anglespeedkey", "1.5", 0 );
+
+	cl_maxpackets = Cvar_Get ("cl_maxpackets", "60", CVAR_ARCHIVE );
+	Cvar_CheckRange( cl_maxpackets, "15", "125", CV_INTEGER );
+	cl_packetdup = Cvar_Get( "cl_packetdup", "1", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( cl_packetdup, "0", "5", CV_INTEGER );
+
+	cl_run = Cvar_Get( "cl_run", "1", CVAR_ARCHIVE_ND );
+	cl_sensitivity = Cvar_Get( "sensitivity", "5", CVAR_ARCHIVE );
+	cl_mouseAccel = Cvar_Get( "cl_mouseAccel", "0", CVAR_ARCHIVE_ND );
+	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE_ND );
+
+	// 0: legacy mouse acceleration
+	// 1: new implementation
+	cl_mouseAccelStyle = Cvar_Get( "cl_mouseAccelStyle", "0", CVAR_ARCHIVE_ND );
+	// offset for the power function (for style 1, ignored otherwise)
+	// this should be set to the max rate value
+	cl_mouseAccelOffset = Cvar_Get( "cl_mouseAccelOffset", "5", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( cl_mouseAccelOffset, "0.001", "50000", CV_FLOAT );
+
+	cl_showMouseRate = Cvar_Get ("cl_showmouserate", "0", 0);
+
+	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE_ND );
+	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE_ND );
+	m_forward = Cvar_Get( "m_forward", "0.25", CVAR_ARCHIVE_ND );
+	m_side = Cvar_Get( "m_side", "0.25", CVAR_ARCHIVE_ND );
+#ifdef MACOS_X
+	// Input is jittery on OS X w/o this
+	m_filter = Cvar_Get( "m_filter", "1", CVAR_ARCHIVE_ND );
+#else
+	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE_ND );
+#endif
 }
+
 
 /*
 ============
-CL_ShutdownInput
+CL_InitInput
 ============
 */
-void CL_ShutdownInput(void)
-{
-	Cmd_RemoveCommand("centerview");
+void CL_ClearInput( void ) {
+	Cmd_RemoveCommand ("centerview");
 
-	Cmd_RemoveCommand("+moveup");
-	Cmd_RemoveCommand("-moveup");
-	Cmd_RemoveCommand("+movedown");
-	Cmd_RemoveCommand("-movedown");
-	Cmd_RemoveCommand("+left");
-	Cmd_RemoveCommand("-left");
-	Cmd_RemoveCommand("+right");
-	Cmd_RemoveCommand("-right");
-	Cmd_RemoveCommand("+forward");
-	Cmd_RemoveCommand("-forward");
-	Cmd_RemoveCommand("+back");
-	Cmd_RemoveCommand("-back");
-	Cmd_RemoveCommand("+lookup");
-	Cmd_RemoveCommand("-lookup");
-	Cmd_RemoveCommand("+lookdown");
-	Cmd_RemoveCommand("-lookdown");
-	Cmd_RemoveCommand("+strafe");
-	Cmd_RemoveCommand("-strafe");
-	Cmd_RemoveCommand("+moveleft");
-	Cmd_RemoveCommand("-moveleft");
-	Cmd_RemoveCommand("+moveright");
-	Cmd_RemoveCommand("-moveright");
-	Cmd_RemoveCommand("+speed");
-	Cmd_RemoveCommand("-speed");
-	Cmd_RemoveCommand("+attack");
-	Cmd_RemoveCommand("-attack");
-	Cmd_RemoveCommand("+button0");
-	Cmd_RemoveCommand("-button0");
-	Cmd_RemoveCommand("+button1");
-	Cmd_RemoveCommand("-button1");
-	Cmd_RemoveCommand("+button2");
-	Cmd_RemoveCommand("-button2");
-	Cmd_RemoveCommand("+button3");
-	Cmd_RemoveCommand("-button3");
-	Cmd_RemoveCommand("+button4");
-	Cmd_RemoveCommand("-button4");
-	Cmd_RemoveCommand("+button5");
-	Cmd_RemoveCommand("-button5");
-	Cmd_RemoveCommand("+button6");
-	Cmd_RemoveCommand("-button6");
-	Cmd_RemoveCommand("+button7");
-	Cmd_RemoveCommand("-button7");
-	Cmd_RemoveCommand("+button8");
-	Cmd_RemoveCommand("-button8");
-	Cmd_RemoveCommand("+button9");
-	Cmd_RemoveCommand("-button9");
-	Cmd_RemoveCommand("+button10");
-	Cmd_RemoveCommand("-button10");
-	Cmd_RemoveCommand("+button11");
-	Cmd_RemoveCommand("-button11");
-	Cmd_RemoveCommand("+button12");
-	Cmd_RemoveCommand("-button12");
-	Cmd_RemoveCommand("+button13");
-	Cmd_RemoveCommand("-button13");
-	Cmd_RemoveCommand("+button14");
-	Cmd_RemoveCommand("-button14");
-	Cmd_RemoveCommand("+mlook");
-	Cmd_RemoveCommand("-mlook");
-
-#ifdef USE_VOIP
-	Cmd_RemoveCommand("+voiprecord");
-	Cmd_RemoveCommand("-voiprecord");
-#endif
+	Cmd_RemoveCommand ("+moveup");
+	Cmd_RemoveCommand ("-moveup");
+	Cmd_RemoveCommand ("+movedown");
+	Cmd_RemoveCommand ("-movedown");
+	Cmd_RemoveCommand ("+left");
+	Cmd_RemoveCommand ("-left");
+	Cmd_RemoveCommand ("+right");
+	Cmd_RemoveCommand ("-right");
+	Cmd_RemoveCommand ("+forward");
+	Cmd_RemoveCommand ("-forward");
+	Cmd_RemoveCommand ("+back");
+	Cmd_RemoveCommand ("-back");
+	Cmd_RemoveCommand ("+lookup");
+	Cmd_RemoveCommand ("-lookup");
+	Cmd_RemoveCommand ("+lookdown");
+	Cmd_RemoveCommand ("-lookdown");
+	Cmd_RemoveCommand ("+strafe");
+	Cmd_RemoveCommand ("-strafe");
+	Cmd_RemoveCommand ("+moveleft");
+	Cmd_RemoveCommand ("-moveleft");
+	Cmd_RemoveCommand ("+moveright");
+	Cmd_RemoveCommand ("-moveright");
+	Cmd_RemoveCommand ("+speed");
+	Cmd_RemoveCommand ("-speed");
+	Cmd_RemoveCommand ("+attack");
+	Cmd_RemoveCommand ("-attack");
+	Cmd_RemoveCommand ("+button0");
+	Cmd_RemoveCommand ("-button0");
+	Cmd_RemoveCommand ("+button1");
+	Cmd_RemoveCommand ("-button1");
+	Cmd_RemoveCommand ("+button2");
+	Cmd_RemoveCommand ("-button2");
+	Cmd_RemoveCommand ("+button3");
+	Cmd_RemoveCommand ("-button3");
+	Cmd_RemoveCommand ("+button4");
+	Cmd_RemoveCommand ("-button4");
+	Cmd_RemoveCommand ("+button5");
+	Cmd_RemoveCommand ("-button5");
+	Cmd_RemoveCommand ("+button6");
+	Cmd_RemoveCommand ("-button6");
+	Cmd_RemoveCommand ("+button7");
+	Cmd_RemoveCommand ("-button7");
+	Cmd_RemoveCommand ("+button8");
+	Cmd_RemoveCommand ("-button8");
+	Cmd_RemoveCommand ("+button9");
+	Cmd_RemoveCommand ("-button9");
+	Cmd_RemoveCommand ("+button10");
+	Cmd_RemoveCommand ("-button10");
+	Cmd_RemoveCommand ("+button11");
+	Cmd_RemoveCommand ("-button11");
+	Cmd_RemoveCommand ("+button12");
+	Cmd_RemoveCommand ("-button12");
+	Cmd_RemoveCommand ("+button13");
+	Cmd_RemoveCommand ("-button13");
+	Cmd_RemoveCommand ("+button14");
+	Cmd_RemoveCommand ("-button14");
+	Cmd_RemoveCommand ("+button15");
+	Cmd_RemoveCommand ("-button15");
+	Cmd_RemoveCommand ("+mlook");
+	Cmd_RemoveCommand ("-mlook");
 }
