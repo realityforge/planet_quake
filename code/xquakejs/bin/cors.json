@@ -1,0 +1,20 @@
+[
+    {
+      "origin": ["https://netherlands.quake.games"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
+      "origin": ["https://quake.games"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
+      "origin": ["*"],
+      "responseHeader": ["*"],
+      "method": ["*"],
+      "maxAgeSeconds": 3600
+    }
+]

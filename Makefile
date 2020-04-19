@@ -575,7 +575,7 @@ endef
     -fPIC
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
-    -O3 -Oz --llvm-lto 3 \
+    -O3 -Oz \
     -s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=0 \
@@ -583,6 +583,7 @@ endef
     -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
     -fPIC
 
+#  --llvm-lto 3
 #   -s USE_WEBGL2=1
 #   -s MIN_WEBGL_VERSION=2
 #   -s MAX_WEBGL_VERSION=2
