@@ -153,7 +153,7 @@ var LibrarySysFiles = {
               // these files can be streamed in
               file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
               // download levelshots and common graphics
-              || file.name.match(/levelshots|^ui\/|\/2d\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
+              || file.name.match(/description\.txt|levelshots|^ui\/|\/2d\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
               // stream player icons so they show up in menu
               || file.name.match(/\/icon_|\.skin/i)
             ) {
