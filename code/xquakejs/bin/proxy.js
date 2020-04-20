@@ -74,7 +74,7 @@ ports.forEach((p, i, ports) => {
     if(index || fs.existsSync(indexPath)) {
       if(!index) {
         index = fs.readFileSync(indexPath).toString('utf-8')
-        index.replace(/src="\//ig, 'src="https://quake.games/')
+          .replace(/src="\//ig, 'src="https://quake.games/')
           .replace(/url\('\//ig, 'url(https://quake.games/')
           .replace(/href="\//ig, 'href="https://quake.games/')
       }
