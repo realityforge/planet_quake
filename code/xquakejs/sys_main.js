@@ -89,6 +89,20 @@ var LibrarySysMain = {
           '+set', 'net_socksServer', 'proxy.quake.games',
           '+set', 'net_socksPort', '443',
         ])
+        var match
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname)) {
+          if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
+            args.unshift.apply(args, [
+              '+set', 'fs_basegame', match[1],
+              '+set', 'fs_game', match[1],
+            ])
+          } else if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', window.location.hostname
+            ])
+          }
+        }
       } else {
         args.unshift.apply(args, [
           '+set', 'net_socksServer', window.location.hostname,
