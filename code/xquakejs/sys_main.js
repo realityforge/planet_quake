@@ -90,7 +90,7 @@ var LibrarySysMain = {
           '+set', 'net_socksPort', '443',
         ])
         var match
-        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname)) {
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
