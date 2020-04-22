@@ -104,15 +104,16 @@ var LibrarySysMain = {
               '+connect', window.location.hostname
             ])
           }
-        } else if (!args.includes('sv_dlURL') {
-          args.unshift.apply(args, [
-            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
-          ])
         }
       } else {
         args.unshift.apply(args, [
           '+set', 'net_socksServer', window.location.hostname,
         ])
+        if (!args.includes('sv_dlURL')) {
+          args.unshift.apply(args, [
+            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
+          ])
+        }
       }
       return args
     },

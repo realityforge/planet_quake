@@ -152,7 +152,7 @@ var LibrarySysNet = {
 			SYSC.DownloadAsset(index + '/index.json', SYSN.LoadingProgress, (err, data) => {
 				if(err) {
 					SYSN.LoadingDescription('')
-					SYSC.ProxyCallback(cb)
+					cb()
 					return
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])

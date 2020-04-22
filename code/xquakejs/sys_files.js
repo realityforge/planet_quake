@@ -246,8 +246,10 @@ var LibrarySysFiles = {
       try { exists = FS.lookupPath(filename) } catch (e) { exists = false }
       if(exists) {
         intArrayFromString(filename).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
+        HEAP8[(SYSF.pathname+filename.length)] = 0
         intArrayFromString(UTF8ToString(mode)
           .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
+        HEAP8[(SYSF.modeStr+2)] = 0
         handle = _fopen(SYSF.pathname, SYSF.modeStr)
       }
       //if(handle === 0) {
@@ -260,6 +262,7 @@ var LibrarySysFiles = {
           try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
           if(handle === 0 && altName != filename && exists) {
             intArrayFromString(altName).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
+            HEAP8[(SYSF.pathname+altName.length)] = 0
             handle = _fopen(SYSF.pathname, SYSF.modeStr)
             //if(handle > 0) {
             //	return handle

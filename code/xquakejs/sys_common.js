@@ -4,14 +4,17 @@ var LibrarySysCommon = {
 		varStr: 0,
 		Cvar_VariableString: function (str) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return UTF8ToString(_Cvar_VariableString(SYSC.varStr))
 		},
 		Cvar_VariableIntegerValue: function (str) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_VariableIntegerValue(SYSC.varStr)
 		},
 		Cvar_SetValue: function (str, value) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_SetValue(SYSC.varStr, value)
 		},
 		Print: function (str) {

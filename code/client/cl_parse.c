@@ -611,7 +611,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	cls.gameSwitch = qfalse;
 #else
-	Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
 
 	if(FS_ConditionalRestart(clc.checksumFeed, qfalse)) {
 		cls.gameSwitch = qfalse;
@@ -630,6 +629,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 }
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
+	Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
+	if(*clc.sv_dlURL) {
+		Cvar_Set( "sv_dlURL", clc.sv_dlURL );
+	}
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_Game_After_Startup);
 }
