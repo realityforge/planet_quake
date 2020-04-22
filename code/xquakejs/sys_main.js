@@ -58,7 +58,6 @@ var LibrarySysMain = {
         args.push.apply(args, val)
       }
       args.unshift.apply(args, [
-        '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
         '+set', 'r_customHeight', '' + window.innerHeight,
         '+set', 'r_customWidth', '' + window.innerWidth,
@@ -91,6 +90,9 @@ var LibrarySysMain = {
         ])
         var match
         if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          args.unshift.apply(args, [
+            '+set', 'sv_dlURL', '"https://quake.games/assets"',
+          ])
           if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
@@ -102,6 +104,10 @@ var LibrarySysMain = {
               '+connect', window.location.hostname
             ])
           }
+        } else if (!args.includes('sv_dlURL') {
+          args.unshift.apply(args, [
+            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
+          ])
         }
       } else {
         args.unshift.apply(args, [
