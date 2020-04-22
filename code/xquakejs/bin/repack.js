@@ -270,6 +270,7 @@ var {
   convertGameFiles, convertNonAlpha, convertAudio
 } = require('../bin/convert.js')
 var {getLeaves} = require('../lib/asset.graph.js')
+var {makeIndexJson} = require('../bin/content.js')
 
 var globalBars = []
 
@@ -889,6 +890,8 @@ async function repackGames() {
         await convertGameFiles(gs, outCombined, outConverted, noOverwrite, progress)
         console.log(`Updating Pak layout written to "${PAK_NAME}"`)
         ufs.writeFileSync(PAK_NAME, JSON.stringify(gs.ordered, null, 2))
+        await makeIndexJson('/' + path.basename(outConverted) + '/index.json',
+          outConverted + '/index.json', true)
         stepCounter++
       }
       

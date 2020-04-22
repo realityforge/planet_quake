@@ -27,6 +27,7 @@ var virtualPk3dir = false
 var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
+var scanOptions = false
 
 // check the process args for a directory to serve as the baseq3 folders
 var vol = Volume.fromJSON({})
@@ -36,12 +37,16 @@ var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(a.match(/\/node$/ig)) continue
-  if(a.match(/\/web\.js$/ig)) continue
+  if(a.match(/\/web\.js$/ig)) {
+    scanOptions = true
+    continue
+  }
   if(fs.existsSync(a)) {
     // if running content script directly, automatically call each mount point 
     //   so the json files and zipped files can be generated
     if(a.match(/\/content\.js$/ig)) {
       console.log('Running content script')
+      scanOptions = true
       runContentGeneration = true
       continue
     }
@@ -49,6 +54,8 @@ for(var i = 0; i < process.argv.length; i++) {
     // create a link for user specified directory that doesn't exist
     mountPoints.push([mountPoint, a])
   // use an absolute path as a mount point if it doesn't exist
+  } else if (!scanOptions) {
+    continue
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
     recursive = true
@@ -187,11 +194,11 @@ async function cacheFile(fullpath) {
   return await compressFile(fullpath, vol)
 }
 
-async function makeIndexJson(filename, absolute) {
+async function makeIndexJson(filename, absolute, forceWrite) {
   // if there is no index.json, generate one
-  if(filename && !ufs.existsSync(absolute)) {
+  if(filename && (!ufs.existsSync(absolute) || forceWrite)) {
     console.log(`Creating directory index ${absolute}`)
-		var files = readMultiDir(path.dirname(absolute), recursive && !repackFiles)
+		var files = readMultiDir(path.dirname(absolute), forceWrite || (recursive && !repackFiles))
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]
@@ -236,7 +243,7 @@ async function makeIndexJson(filename, absolute) {
       }, file)
 		}
     console.log(`Writing directory index ${absolute}`)
-    var writefs = writeOut ? fs : vol
+    var writefs = writeOut || forceWrite ? fs : vol
 		vol.mkdirpSync(path.dirname(absolute))
     writefs.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
   }

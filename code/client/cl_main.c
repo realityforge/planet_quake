@@ -2232,6 +2232,11 @@ void CL_NextDownload( void )
 	char *s;
 	char *remoteName, *localName;
 	qboolean useCURL = qfalse;
+#ifdef EMSCRIPTEN
+	if(*clc.sv_dlURL) {
+		Cvar_Set( "sv_dlURL", clc.sv_dlURL );
+	}
+#endif
 
  	// A download has finished, check whether this matches a referenced checksum
  	if(*clc.downloadName)
