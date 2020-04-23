@@ -84,36 +84,38 @@ var LibrarySysMain = {
         ])
       }
       if(window.location.hostname.match(/quake\.games/i)) {
-        args.unshift.apply(args, [
-          '+set', 'net_socksServer', 'proxy.quake.games',
-          '+set', 'net_socksPort', '443',
-        ])
         var match
+        args.unshift.apply(args, [
+          '+set', 'sv_dlURL', '"https://quake.games/assets"',
+        ])
         if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           args.unshift.apply(args, [
-            '+set', 'sv_dlURL', '"https://quake.games/assets"',
+            '+set', 'net_socksServer', window.location.hostname,
+            '+set', 'net_socksPort', '443',
           ])
           if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
               '+set', 'fs_game', match[1],
             ])
-          } else if (!args.includes('+map') && !args.includes('+spmap')
+          }
+          if (!args.includes('+map') && !args.includes('+spmap')
             && !args.includes('+devmap') && !args.includes('+connect')) {
             args.push.apply(args, [
               '+connect', window.location.hostname
             ])
           }
+        } else {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', 'proxy.quake.games',
+            '+set', 'net_socksPort', '443',
+          ])
         }
       } else {
         args.unshift.apply(args, [
           '+set', 'net_socksServer', window.location.hostname,
+          '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         ])
-        if (!args.includes('sv_dlURL')) {
-          args.unshift.apply(args, [
-            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
-          ])
-        }
       }
       return args
     },

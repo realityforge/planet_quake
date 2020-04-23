@@ -21,7 +21,7 @@ e.g. npm run start -- -R -rp /assets/baseq3 /Applications/ioquake3/baseq3
 `
 
 var recursive = false
-var writeOut = false
+var writeOut = true
 var repackFiles = false
 var virtualPk3dir = false
 var runContentGeneration = false
@@ -30,8 +30,6 @@ var watchChanges = false
 var scanOptions = false
 
 // check the process args for a directory to serve as the baseq3 folders
-var vol = Volume.fromJSON({})
-ufs.use(fs).use(vol)
 var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
@@ -39,6 +37,7 @@ for(var i = 0; i < process.argv.length; i++) {
   if(a.match(/\/node$/ig)) continue
   if(a.match(/\/web\.js$/ig)) {
     scanOptions = true
+    writeOut = false
     continue
   }
   if(fs.existsSync(a)) {
@@ -47,6 +46,7 @@ for(var i = 0; i < process.argv.length; i++) {
     if(a.match(/\/content\.js$/ig)) {
       console.log('Running content script')
       scanOptions = true
+      writeOut = false
       runContentGeneration = true
       continue
     }
@@ -85,6 +85,11 @@ for(var i = 0; i < process.argv.length; i++) {
   } else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
+}
+ufs.use(fs)
+var vol = Volume.fromJSON({})
+if(!writeOut) {
+  ufs.use(vol)
 }
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')

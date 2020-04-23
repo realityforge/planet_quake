@@ -100,11 +100,13 @@ var LibrarySysFiles = {
 
       // TODO: is this right? exit early without downloading anything so the server can force it instead
       // server will tell us what pk3s we need
+      /*
       if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
         SYSN.LoadingDescription('')
         FS.syncfs(false, () => SYSC.ProxyCallback(cb))
         return
       }
+      */
 
       SYSN.downloads = []
       function downloadCurrentIndex() {
@@ -241,15 +243,16 @@ var LibrarySysFiles = {
   Sys_FOpen: function (ospath, mode) {
     var handle = 0
     try {
+      intArrayFromString(UTF8ToString(mode)
+        .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
+      HEAP8[(SYSF.modeStr+2)] = 0
       var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
       var exists = false
-      try { exists = FS.lookupPath(filename) } catch (e) { exists = false }
+      try { exists = HEAP8[(SYSF.modeStr+0)] === 'w'.charCodeAt(0)
+        || FS.lookupPath(filename) } catch (e) { exists = false }
       if(exists) {
         intArrayFromString(filename).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
         HEAP8[(SYSF.pathname+filename.length)] = 0
-        intArrayFromString(UTF8ToString(mode)
-          .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
-        HEAP8[(SYSF.modeStr+2)] = 0
         handle = _fopen(SYSF.pathname, SYSF.modeStr)
       }
       //if(handle === 0) {
