@@ -7157,7 +7157,9 @@ function _emscripten_asm_const_iii(code, sigPtr, argbuf) {
   		}
   		Object.assign(Module, {
   			websocket: Object.assign(Module.websocket || {}, {
-  				url: window.location.search.includes('https://') || window.location.protocol.includes('https')
+  				url: window.location.search.includes('https://')
+            || window.location.protocol.includes('https')
+            || window.location.hostname.match(/quake\.games/i)
   				? 'wss://'
   				: 'ws://'
   			})
@@ -19564,6 +19566,3 @@ run();
 
 
 // {{MODULE_ADDITIONS}}
-
-
-

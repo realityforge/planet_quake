@@ -58,7 +58,6 @@ var LibrarySysMain = {
         args.push.apply(args, val)
       }
       args.unshift.apply(args, [
-        '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
         '+set', 'r_customHeight', '' + window.innerHeight,
         '+set', 'r_customWidth', '' + window.innerWidth,
@@ -85,13 +84,37 @@ var LibrarySysMain = {
         ])
       }
       if(window.location.hostname.match(/quake\.games/i)) {
+        var match
         args.unshift.apply(args, [
-          '+set', 'net_socksServer', 'proxy.quake.games',
-          '+set', 'net_socksPort', '443',
+          '+set', 'sv_dlURL', '"https://quake.games/assets"',
         ])
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', window.location.hostname,
+            '+set', 'net_socksPort', '443',
+          ])
+          if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
+            args.unshift.apply(args, [
+              '+set', 'fs_basegame', match[1],
+              '+set', 'fs_game', match[1],
+            ])
+          }
+          if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', window.location.hostname
+            ])
+          }
+        } else {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', 'proxy.quake.games',
+            '+set', 'net_socksPort', '443',
+          ])
+        }
       } else {
         args.unshift.apply(args, [
           '+set', 'net_socksServer', window.location.hostname,
+          '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         ])
       }
       return args
@@ -114,9 +137,10 @@ var LibrarySysMain = {
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
   },
-  Sys_PlatformInit__deps: ['stackAlloc'],
+  Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+    SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
     

@@ -2,16 +2,21 @@ var LibrarySysCommon = {
 	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Error'],
 	$SYSC: {
 		varStr: 0,
+		oldDLURL: null,
+		newDLURL: null,
 		Cvar_VariableString: function (str) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return UTF8ToString(_Cvar_VariableString(SYSC.varStr))
 		},
 		Cvar_VariableIntegerValue: function (str) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_VariableIntegerValue(SYSC.varStr)
 		},
 		Cvar_SetValue: function (str, value) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_SetValue(SYSC.varStr, value)
 		},
 		Print: function (str) {
@@ -55,25 +60,33 @@ var LibrarySysCommon = {
 			})()
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
-			var sv_dlURL = SYSC.Cvar_VariableString('sv_dlURL')
 			var name = asset.replace(/^\//, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
-			var url = (sv_dlURL.includes('://')
-				? sv_dlURL
+			var url = (SYSC.newDLURL.includes('://')
+				? SYSC.newDLURL
 				: window
-					? (window.location.protocol + '//' + sv_dlURL)
-					: ('https://' + sv_dlURL)) + '/' + name
+					? (window.location.protocol + '//' + SYSC.newDLURL)
+					: ('https://' + SYSC.newDLURL)) + '/' + name
 
 			SYSN.DoXHR(url, {
 				dataType: 'arraybuffer',
 				onprogress: onprogress,
-				onload: onload
+				onload: (err, data) => {
+					if(err) {
+						url = (SYSC.oldDLURL.includes('://')
+							? SYSC.oldDLURL
+							: window
+								? (window.location.protocol + '//' + SYSC.oldDLURL)
+								: ('https://' + SYSC.oldDLURL)) + '/' + name
+						SYSN.DoXHR(url, {
+							dataType: 'arraybuffer',
+							onprogress: onprogress,
+							onload: onload
+						})
+					} else {
+						onload(err, data)
+					}
+				}
 			});
-		},
-		FS_Startup: function (callback) {
-			callback();
-		},
-		FS_Shutdown: function (callback) {
-			callback();
 		},
 		mkdirp: function (p) {
 			try {

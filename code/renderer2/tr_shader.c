@@ -38,9 +38,6 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
 qboolean mapShaders = qfalse;
-int start = 0;
-qboolean skipShader = qfalse;
-qboolean hasFile = qfalse;
 
 /*
 ================

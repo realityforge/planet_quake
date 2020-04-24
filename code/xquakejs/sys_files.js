@@ -49,6 +49,7 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function (cb) {
+    SYSC.newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
@@ -100,11 +101,13 @@ var LibrarySysFiles = {
 
       // TODO: is this right? exit early without downloading anything so the server can force it instead
       // server will tell us what pk3s we need
+      /*
       if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
         SYSN.LoadingDescription('')
         FS.syncfs(false, () => SYSC.ProxyCallback(cb))
         return
       }
+      */
 
       SYSN.downloads = []
       function downloadCurrentIndex() {
@@ -153,7 +156,7 @@ var LibrarySysFiles = {
               // these files can be streamed in
               file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
               // download levelshots and common graphics
-              || file.name.match(/levelshots|^ui\/|\/2d\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
+              || file.name.match(/description\.txt|levelshots|^ui\/|\/2d\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
               // stream player icons so they show up in menu
               || file.name.match(/\/icon_|\.skin/i)
             ) {
@@ -241,13 +244,16 @@ var LibrarySysFiles = {
   Sys_FOpen: function (ospath, mode) {
     var handle = 0
     try {
+      intArrayFromString(UTF8ToString(mode)
+        .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
+      HEAP8[(SYSF.modeStr+2)] = 0
       var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
       var exists = false
-      try { exists = FS.lookupPath(filename) } catch (e) { exists = false }
+      try { exists = HEAP8[(SYSF.modeStr+0)] === 'w'.charCodeAt(0)
+        || FS.lookupPath(filename) } catch (e) { exists = false }
       if(exists) {
         intArrayFromString(filename).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
-        intArrayFromString(UTF8ToString(mode)
-          .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
+        HEAP8[(SYSF.pathname+filename.length)] = 0
         handle = _fopen(SYSF.pathname, SYSF.modeStr)
       }
       //if(handle === 0) {
@@ -260,6 +266,7 @@ var LibrarySysFiles = {
           try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
           if(handle === 0 && altName != filename && exists) {
             intArrayFromString(altName).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
+            HEAP8[(SYSF.pathname+altName.length)] = 0
             handle = _fopen(SYSF.pathname, SYSF.modeStr)
             //if(handle > 0) {
             //	return handle
@@ -367,15 +374,13 @@ var LibrarySysFiles = {
     */
     // save to drive
     FS.syncfs(function (err) {
-      SYSC.FS_Shutdown(function (err) {
-        if (err) {
-          // FIXME cb_free_context(context)
-          SYSC.Error('fatal', err)
-          return
-        }
-        
-        SYSC.ProxyCallback(cb)
-      })
+      if (err) {
+        // FIXME cb_free_context(context)
+        SYSC.Error('fatal', err)
+        return
+      }
+      
+      SYSC.ProxyCallback(cb)
     })
   },
   Sys_DefaultBasePath: function () {

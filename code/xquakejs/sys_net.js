@@ -32,6 +32,7 @@ var LibrarySysNet = {
       }
 
       var req = new XMLHttpRequest()
+      //req.withCredentials = true
       req.open('GET', url, true)
       if (opts.dataType &&
         // responseType json not implemented in webkit, we'll do it manually later on
@@ -151,7 +152,7 @@ var LibrarySysNet = {
 			SYSC.DownloadAsset(index + '/index.json', SYSN.LoadingProgress, (err, data) => {
 				if(err) {
 					SYSN.LoadingDescription('')
-					SYSC.ProxyCallback(cb)
+					cb()
 					return
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
@@ -199,7 +200,7 @@ var LibrarySysNet = {
     var timer = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
     var callback = () => {
       clearTimeout(timer)
-      Browser.safeCallback(_SOCKS_Frame_Proxy)
+      Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }
     Module['websocket'].on('open', callback)
     Module['websocket'].on('message', callback)
