@@ -1034,6 +1034,7 @@ CL_ClearMemory
 =================
 */
 void CL_ClearMemory( void ) {
+	Com_Printf( "CL_ClearMemory:\n");
 	// if not running a server clear the whole hunk
 	if ( !com_sv_running->integer ) {
 		// clear the whole hunk
@@ -1061,6 +1062,7 @@ void CL_FlushMemory( void ) {
 	if(!FS_Initialized()) return;
 #endif
 
+Com_Printf("CL_FlushMemory\n");
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
@@ -1856,9 +1858,10 @@ static void CL_Vid_Restart( void ) {
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 
+#ifndef EMSCRIPTEN
 	CL_ClearMemory();
 
-#ifdef EMSCRIPTEN
+#else
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
 	} else {
@@ -2156,7 +2159,9 @@ if(clc.dlDisconnect) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
+#ifndef EMSCRIPTEN
 	CL_FlushMemory();
+#endif
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;

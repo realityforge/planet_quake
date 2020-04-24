@@ -416,11 +416,15 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
+#ifndef EMSCRIPTEN
 	CL_ShutdownAll();
 #endif
+#endif
 
+#ifndef EMSCRIPTEN
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
+#endif
 
 	// clear collision map data
 	CM_ClearMap();

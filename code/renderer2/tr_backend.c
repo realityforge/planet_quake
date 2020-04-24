@@ -1235,7 +1235,10 @@ void RB_ShowImages( void ) {
 
 	for ( i=0 ; i<tr.numImages ; i++ ) {
 		image = tr.images[i];
-
+		if(!image->imgName) {
+			continue;
+		}
+ri.Printf(PRINT_ALL, "RB_ShowImages: %s\n", image->imgName);
 		w = glConfig.vidWidth / 20;
 		h = glConfig.vidHeight / 15;
 		x = i % 20 * w;
