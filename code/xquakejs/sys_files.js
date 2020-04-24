@@ -49,6 +49,7 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function (cb) {
+    SYSC.newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
@@ -373,15 +374,13 @@ var LibrarySysFiles = {
     */
     // save to drive
     FS.syncfs(function (err) {
-      SYSC.FS_Shutdown(function (err) {
-        if (err) {
-          // FIXME cb_free_context(context)
-          SYSC.Error('fatal', err)
-          return
-        }
-        
-        SYSC.ProxyCallback(cb)
-      })
+      if (err) {
+        // FIXME cb_free_context(context)
+        SYSC.Error('fatal', err)
+        return
+      }
+      
+      SYSC.ProxyCallback(cb)
     })
   },
   Sys_DefaultBasePath: function () {

@@ -137,9 +137,10 @@ var LibrarySysMain = {
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
   },
-  Sys_PlatformInit__deps: ['stackAlloc'],
+  Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+    SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
     

@@ -12,6 +12,12 @@
       "maxAgeSeconds": 3600
     },
     {
+      "origin": ["https://freon.quake.games"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
       "origin": ["*"],
       "responseHeader": ["*"],
       "method": ["*"],
