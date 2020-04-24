@@ -1238,7 +1238,6 @@ void RB_ShowImages( void ) {
 		if(!image->imgName) {
 			continue;
 		}
-ri.Printf(PRINT_ALL, "RB_ShowImages: %s\n", image->imgName);
 		w = glConfig.vidWidth / 20;
 		h = glConfig.vidHeight / 15;
 		x = i % 20 * w;
