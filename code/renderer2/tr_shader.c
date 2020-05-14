@@ -38,6 +38,7 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
 qboolean mapShaders = qfalse;
+qboolean mapShaders2 = qfalse;
 
 /*
 ================
@@ -70,7 +71,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	}
 
 	sh2 = R_FindShaderByName( newShaderName );
-  if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
+  if (sh2 == NULL || sh2 == tr.defaultShader || sh2->defaultShader || mapShaders) {
 		h = RE_RegisterShaderLightMap(newShaderName, index);
 		sh2 = R_GetShaderByHandle(h);
 	}
@@ -3037,6 +3038,10 @@ static shader_t *GeneratePermanentShader( void ) {
 		ri.Printf( PRINT_WARNING, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
 		return tr.defaultShader;
 	}
+  
+  //if(shader.index > 0) {
+  //  return &shader;
+  //}
 
 	newShader = ri.Hunk_Alloc( sizeof( shader_t ), h_low );
 
@@ -3579,7 +3584,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) &&	!Q_stricmp(sh->name, strippedName) && (!mapShaders || !sh->defaultShader)) {
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
+      &&	!Q_stricmp(sh->name, strippedName)
+      && (!mapShaders || !sh->defaultShader)) {
 			// match found
 			return sh;
 		}
@@ -3636,8 +3643,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
       int len = 0;
       R_LoadImage( name, &pic, &len, &len, &len, &len, qtrue );
       image = NULL;
-      shader.defaultShader = qtrue;
-			return FinishShader();
     } else {
 		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
     }
@@ -3809,7 +3814,11 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
 		return 0;
 	}
 
-	sh = R_FindShader( name, lightmapIndex, qtrue );
+  if(lightmapIndex == LIGHTMAP_2D) {
+    sh = R_FindShader( name, lightmapIndex, qfalse );
+  } else {
+    sh = R_FindShader( name, lightmapIndex, qtrue );
+  }
 
 	// we want to return 0 if the shader failed to
 	// load for some reason, but R_FindShader should
@@ -4262,10 +4271,13 @@ static void CreateExternalShaders( void ) {
 
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
+  mapShaders2 = qtrue;
 
+  //if(Q_stristr(shaderName, "rocketExplosion"))
   R_RemapShaderInternal(shaderName, shaderName, va("%i", ri.Milliseconds()), lightmapIndex);
   
   mapShaders = qfalse;
+  mapShaders2 = qfalse;
 }
 
 /*
