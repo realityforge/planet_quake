@@ -13,7 +13,6 @@ NOTE: ./build/release-js-js is implied
 --virtual -V - create virtual pk3dir out of pk3 and exclude pk3 files, opposite of repack
 --write -wr - write all JSON files in every directory for CDN use
 --repack -rp - repack on the fly as pk3/media/images/sound files are accessed
-  opposit of pk3dir
 --hidden -H - include hidden files (uncommon)
 --watch - watch files for changes
 --help -h - print this help message and exit

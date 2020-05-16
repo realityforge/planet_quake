@@ -1034,7 +1034,6 @@ CL_ClearMemory
 =================
 */
 void CL_ClearMemory( void ) {
-	Com_Printf( "CL_ClearMemory:\n");
 	// if not running a server clear the whole hunk
 	if ( !com_sv_running->integer ) {
 		// clear the whole hunk
@@ -1062,7 +1061,6 @@ void CL_FlushMemory( void ) {
 	if(!FS_Initialized()) return;
 #endif
 
-Com_Printf("CL_FlushMemory\n");
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 

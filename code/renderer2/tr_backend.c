@@ -55,7 +55,8 @@ void GL_BindToTMU( image_t *image, int tmu )
 	}
 	else
 	{
-		ri.Printf(PRINT_WARNING, "GL_BindToTMU: NULL image\n");
+		return;
+		//ri.Printf(PRINT_WARNING, "GL_BindToTMU: NULL image\n");
 	}
 
 	GL_BindMultiTexture(GL_TEXTURE0_ARB + tmu, target, texture);
@@ -1235,9 +1236,7 @@ void RB_ShowImages( void ) {
 
 	for ( i=0 ; i<tr.numImages ; i++ ) {
 		image = tr.images[i];
-		if(!image->imgName) {
-			continue;
-		}
+
 		w = glConfig.vidWidth / 20;
 		h = glConfig.vidHeight / 15;
 		x = i % 20 * w;

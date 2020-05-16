@@ -94,7 +94,7 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
   for(var j = 0; j < pk3s.length; j++) {
     await progress([[1, j, pk3s.length, `${pk3s[j]}`]])
-    var outDirectory = path.join(outCombined, path.basename(pk3s[j]) + 'dir')
+    var outDirectory = outCombined //TODO: make optional? path.join(outCombined, path.basename(pk3s[j]) + 'dir')
     skipped += await readPak(path.join(project, pk3s[j]), progress, outDirectory, noOverwrite)
     await progress([[2, false]])
   }
