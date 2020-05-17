@@ -814,6 +814,7 @@ async function repack(gs, outConverted, outputProject) {
     if(noOverwrite && ufs.existsSync(outFile)) continue
     ufs.closeSync(ufs.openSync(outFile, 'w'))
     var output = ufs.createWriteStream(outFile)
+    if(real.length == 0) continue
     // remove absolute path from zip file, make it relative
     await compressDirectory(real, output, real[0].includes(orderedKeys[i] + '.pk3dir')
       ? path.join(outConverted, orderedKeys[i] + '.pk3dir')

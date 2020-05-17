@@ -314,7 +314,8 @@ typedef struct {
 		// little-endian "IBSP"
 
 #define BSP_VERSION			46
-
+#define BSP_VERSION_QLIVE 47
+#define BSP_VERSION_OPENJK 1
 
 // there shouldn't be any problem with increasing these values at the
 // expense of more memory allocation in the utilities
@@ -382,6 +383,7 @@ typedef struct {
 #define	LUMP_LIGHTGRID		15
 #define	LUMP_VISIBILITY		16
 #define	HEADER_LUMPS		17
+#define	HEADER_LUMPS_OPENJK		18
 
 typedef struct {
 	int			ident;
@@ -389,6 +391,13 @@ typedef struct {
 
 	lump_t		lumps[HEADER_LUMPS];
 } dheader_t;
+
+typedef struct {
+	int			ident;
+	int			version;
+
+	lump_t		lumps[HEADER_LUMPS_OPENJK];
+} dheader_OpenJK_t;
 
 typedef struct {
 	float		mins[3], maxs[3];

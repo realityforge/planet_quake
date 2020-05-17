@@ -313,7 +313,7 @@ BotImport_HunkAlloc
 */
 static void *BotImport_HunkAlloc( int size ) {
 	if( Hunk_CheckMark() ) {
-		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+	//	Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
 	}
 	return Hunk_Alloc( size, h_high );
 }
