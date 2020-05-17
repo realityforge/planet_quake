@@ -4262,6 +4262,12 @@ void Com_Frame( void ) {
 		}
 		Com_EventLoop();
 		Cbuf_Execute();
+#ifdef EMSCRIPTEN
+		// if filesystem was restarted as a part of a command
+		if(!FS_Initialized()) {
+			return;
+		}
+#endif
 
 		//
 		// client side

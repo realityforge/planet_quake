@@ -391,6 +391,7 @@ This is NOT called for map_restart
 ================
 */
 qboolean killBots;
+static qboolean startingServer = qfalse;
 
 void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
@@ -399,7 +400,10 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	qboolean	isBot;
 	const char	*p;
 #endif
-
+	if(startingServer) {
+		return;
+	}
+	startingServer = qtrue;
 	killBots = kb;
 
 	// shut down the existing game if it is running
@@ -703,6 +707,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	Com_Printf ("-----------------------------------\n");
 
 	Sys_SetStatus( "Running map %s", mapname );
+	startingServer = qfalse;
 }
 
 

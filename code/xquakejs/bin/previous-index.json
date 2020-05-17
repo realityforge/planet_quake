@@ -1,242 +1,194 @@
 {
   "menu/pak11menu": {
     "name": "pak11menu.pk3",
-    "size": 133933
+    "size": 139659
   },
-  "menu/pak85bots": {
-    "name": "pak85bots.pk3",
+  "menu/pak84bots": {
+    "name": "pak84bots.pk3",
     "size": 14800
   },
-  "menu/pak86botfiles": {
-    "name": "pak86botfiles.pk3",
-    "size": 111521
+  "menu/pak85botfiles": {
+    "name": "pak85botfiles.pk3",
+    "size": 106667
   },
   "menu/pak21game": {
     "name": "pak21game.pk3",
-    "size": 511505
+    "size": 29484346
   },
   "menu/pak51weapon": {
     "name": "pak51weapon.pk3",
-    "size": 4380
+    "size": 7660
   },
-  "menu/pak87conf": {
-    "name": "pak87conf.pk3",
-    "size": 7501
+  "menu/pak86conf": {
+    "name": "pak86conf.pk3",
+    "size": 11948
   },
-  "menu/pak88fonts": {
-    "name": "pak88fonts.pk3",
-    "size": 220038
+  "menu/pak87Modes": {
+    "name": "pak87Modes.pk3",
+    "size": 11174
+  },
+  "menu/pak88items": {
+    "name": "pak88items.pk3",
+    "size": 3951
+  },
+  "menu/pak89ctfrota": {
+    "name": "pak89ctfrota.pk3",
+    "size": 3517
+  },
+  "menu/pak91maps": {
+    "name": "pak91maps.pk3",
+    "size": 1212
+  },
+  "menu/pak80backup": {
+    "name": "pak80backup.pk3",
+    "size": 21502
+  },
+  "menu/pak881freon": {
+    "name": "pak881freon.pk3",
+    "size": 14711
+  },
+  "menu/pak882rotation": {
+    "name": "pak882rotation.pk3",
+    "size": 5123
   },
   "menu/pak81other": {
     "name": "pak81other.pk3",
-    "size": 179697
+    "size": 175764
   },
-  "menu/pak842d": {
-    "name": "pak842d.pk3",
-    "size": 42349
+  "menu/pak52weapon conf backup": {
+    "name": "pak52weapon conf backup.pk3",
+    "size": 76814
   },
-  "menu/pak89hud": {
-    "name": "pak89hud.pk3",
+  "menu/pak53N": {
+    "name": "pak53N.pk3",
+    "size": 9691
+  },
+  "menu/pak883fonts": {
+    "name": "pak883fonts.pk3",
+    "size": 257151
+  },
+  "menu/pak832d": {
+    "name": "pak832d.pk3",
+    "size": 46035
+  },
+  "menu/pak884hud": {
+    "name": "pak884hud.pk3",
     "size": 10247
   },
   "menu/pak12levelshots": {
     "name": "pak12levelshots.pk3",
-    "size": 8393615
+    "size": 3493034
   },
-  "menu/pak883levelshots": {
-    "name": "pak883levelshots.pk3",
-    "size": 527664
+  "menu/pak885levelshots": {
+    "name": "pak885levelshots.pk3",
+    "size": 298518
   },
-  "menu/pak83scripts": {
-    "name": "pak83scripts.pk3",
-    "size": 11582
-  },
-  "menu/pak4444player": {
-    "name": "pak4444player.pk3",
-    "size": 1126
+  "menu/pak82scripts": {
+    "name": "pak82scripts.pk3",
+    "size": 10526
   },
   "menu/pak62model": {
     "name": "pak62model.pk3",
-    "size": 19570
+    "size": 20533
   },
   "menu/pak13sprites": {
     "name": "pak13sprites.pk3",
-    "size": 10777
+    "size": 7313
   },
   "game/pak21game": {
     "name": "pak21game.pk3",
-    "size": 511505
+    "size": 29484346
   },
   "game/pak22flags": {
     "name": "pak22flags.pk3",
-    "size": 580473
+    "size": 589911
   },
   "game/pak81other": {
     "name": "pak81other.pk3",
-    "size": 179697
-  },
-  "game/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
+    "size": 175764
   },
   "game/pak62model": {
     "name": "pak62model.pk3",
-    "size": 19570
+    "size": 20533
   },
   "game/pak23flag2": {
     "name": "pak23flag2.pk3",
-    "size": 54520
+    "size": 60594
   },
   "game/pak71flagbase": {
     "name": "pak71flagbase.pk3",
-    "size": 15962
+    "size": 12654
   },
   "game/pak32powerup": {
     "name": "pak32powerup.pk3",
-    "size": 3946
+    "size": 5748
   },
   "game/pak51weapon": {
     "name": "pak51weapon.pk3",
-    "size": 4380
+    "size": 7660
   },
-  "game/pak881feedback": {
-    "name": "pak881feedback.pk3",
-    "size": 24845
+  "game/pak886feedback": {
+    "name": "pak886feedback.pk3",
+    "size": 87280
   },
   "game/pak24demon": {
     "name": "pak24demon.pk3",
-    "size": 233367
+    "size": 510320
   },
   "game/pak25female": {
     "name": "pak25female.pk3",
-    "size": 151039
+    "size": 354928
   },
   "game/pak26male": {
     "name": "pak26male.pk3",
-    "size": 176212
+    "size": 389911
   },
-  "game/pak882teamplay": {
-    "name": "pak882teamplay.pk3",
-    "size": 193054
+  "game/pak887teamplay": {
+    "name": "pak887teamplay.pk3",
+    "size": 368561
   },
   "game/pak27voices": {
     "name": "pak27voices.pk3",
-    "size": 291451
+    "size": 713686
   },
   "game/pak28grapple": {
     "name": "pak28grapple.pk3",
-    "size": 9135
+    "size": 31263
   },
   "game/pak11menu": {
     "name": "pak11menu.pk3",
-    "size": 133933
+    "size": 139659
   },
   "game/pak29atmosphere": {
     "name": "pak29atmosphere.pk3",
-    "size": 12929
+    "size": 13041
   },
   "game/pak20damage": {
     "name": "pak20damage.pk3",
-    "size": 7969
+    "size": 7407
   },
   "game/pak221icons": {
     "name": "pak221icons.pk3",
-    "size": 12292
+    "size": 3106
   },
   "game/pak222misc": {
     "name": "pak222misc.pk3",
-    "size": 3613
+    "size": 67013
   },
-  "maps/octagon/pak91octagon": {
-    "name": "pak91octagon.pk3",
-    "size": 703886
+  "game/pak80backup": {
+    "name": "pak80backup.pk3",
+    "size": 21502
   },
-  "maps/octagon/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
+  "game/pak881freon": {
+    "name": "pak881freon.pk3",
+    "size": 14711
   },
-  "maps/octagon/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
-  },
-  "maps/octagon/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 28143
-  },
-  "maps/platypus/pak92platypus": {
-    "name": "pak92platypus.pk3",
-    "size": 1241359
-  },
-  "maps/platypus/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
-  },
-  "maps/platypus/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
-  },
-  "maps/platypus/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 28143
-  },
-  "maps/ragequit/pak93ragequit": {
-    "name": "pak93ragequit.pk3",
-    "size": 1497582
-  },
-  "maps/ragequit/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
-  },
-  "maps/ragequit/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
-  },
-  "maps/ragequit/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 28143
-  },
-  "maps/seamsandbolts/pak94seamsandbolts": {
-    "name": "pak94seamsandbolts.pk3",
-    "size": 1333872
-  },
-  "maps/seamsandbolts/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
-  },
-  "maps/seamsandbolts/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
-  },
-  "maps/seamsandbolts/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 28143
-  },
-  "maps/test_smallbox/pak95test_smallbox": {
-    "name": "pak95test_smallbox.pk3",
-    "size": 8249
-  },
-  "maps/test_smallbox/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
+  "maps/test_smallbox/pak92test_smallbox": {
+    "name": "pak92test_smallbox.pk3",
+    "size": 8024
   },
   "maps/test_smallbox/pak61CTF": {
     "name": "pak61CTF.pk3",
-    "size": 104284
-  },
-  "maps/ztn3tourney1/pak96ztn3tourney1": {
-    "name": "pak96ztn3tourney1.pk3",
-    "size": 821487
-  },
-  "maps/ztn3tourney1/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 179697
-  },
-  "maps/ztn3tourney1/pak80icons": {
-    "name": "pak80icons.pk3",
-    "size": 10316
-  },
-  "maps/ztn3tourney1/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 28143
+    "size": 98735
   }
 }

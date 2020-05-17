@@ -140,10 +140,10 @@ var LibrarySysFiles = {
               // create the directory to make sure it makes it in to Q3s search paths
               SYSC.mkdirp(PATH.dirname(PATH.join(fs_basepath, file.name)))
             }
-            if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader/i)
+            if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
             // download files for menu system
               || file.name.match(/\.menu|menus\.txt|ingame\.txt|arenas\.txt/i)
-              || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\./i)
+              || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
             // download required model and bot
               || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt/i)
             // download the current map if it is referred to
@@ -156,7 +156,7 @@ var LibrarySysFiles = {
               // these files can be streamed in
               file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
               // download levelshots and common graphics
-              || file.name.match(/description\.txt|levelshots|^ui\/|\/2d\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
+              || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
               // stream player icons so they show up in menu
               || file.name.match(/\/icon_|\.skin/i)
             ) {

@@ -30,6 +30,8 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
+  * Removed SDL inputs, touch support on mobile works
+  * New cl_lazyLoad, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Many, many bug fixes
 
 Coming soon!
@@ -38,13 +40,14 @@ Coming soon!
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
-  * Remove SDL usage because EMSCRIPTEN uses SDL1, but the engine expects SDL2
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you
 use a modern copy from http://icculus.org/gtkradiant/.
 
 # Compilation and installation
+See [QuakeJS README](https://github.com/briancullinan/planet_quake/tree/master/code/xquakejs#quakejs) for more build instructions.
+
 As a prerequisite, you will need to install the dependencies specific to your
  operating system from ioq3 https://github.com/ioquake/ioq3#compilation-and-installation
 
