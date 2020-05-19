@@ -385,7 +385,7 @@ static int GLSL_CompileGPUShader(GLuint program, GLuint *prevShader, const GLcha
 	{
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_SOURCE, qfalse);
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_INFO, qfalse);
-		ri.Error(ERR_DROP, "Couldn't compile shader");
+		ri.Printf(PRINT_WARNING, "Couldn't compile shader");
 		return 0;
 	}
 

@@ -62,13 +62,16 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( qboolean unloadDLL )
 {
+#ifdef EMSCRIPTEN
+	return;
+#endif
 	IN_Shutdown();
 
 	SDL_DestroyWindow( SDL_window );
 	SDL_window = NULL;
 
-	//if ( unloadDLL )
-	//	SDL_QuitSubSystem( SDL_INIT_VIDEO );
+	if ( unloadDLL )
+		SDL_QuitSubSystem( SDL_INIT_VIDEO );
 }
 
 
@@ -549,6 +552,12 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
+
+#ifdef EMSCRIPTEN
+	if(SDL_window) {
+		return qtrue;
+	}
+#endif
 
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
 

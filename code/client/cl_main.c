@@ -1825,7 +1825,6 @@ doesn't know what graphics to reload
 =================
 */
 static void CL_Vid_Restart( void ) {
-
 	// Settings may have changed so stop recording now
 	if ( CL_VideoRecording() )
 		CL_CloseAVI();
@@ -1840,7 +1839,9 @@ static void CL_Vid_Restart( void ) {
 	// shutdown sound system
 	S_Shutdown();
 	// shutdown the renderer and clear the renderer interface
+#ifndef EMSCRIPTEN
 	CL_ShutdownRef( qfalse );
+#endif
 	// client is no longer pure untill new checksums are sent
 	CL_ResetPureClientAtServer();
 	// clear pak references
@@ -1849,7 +1850,6 @@ static void CL_Vid_Restart( void ) {
 	if ( !clc.demoplaying ) // -EC-
 		FS_ConditionalRestart( clc.checksumFeed, qfalse );
 
-	cls.rendererStarted = qfalse;
 	cls.uiStarted = qfalse;
 	cls.cgameStarted = qfalse;
 	cls.soundRegistered = qfalse;
@@ -1859,7 +1859,11 @@ static void CL_Vid_Restart( void ) {
 	Cvar_Set( "cl_paused", "0" );
 
 #ifndef EMSCRIPTEN
+	cls.rendererStarted = qfalse;
 	CL_ClearMemory();
+
+	// initialize the renderer interface
+	CL_InitRef();
 
 #else
 	if(!FS_Initialized()) {
@@ -1882,9 +1886,6 @@ void CL_Vid_Restart_After_Startup( void ) {
 void CL_Vid_Restart_After_Restart( void ) {
 #endif
 ;
-
-	// initialize the renderer interface
-	CL_InitRef();
 
 	// startup all the client stuff
 	CL_StartHunkUsers();

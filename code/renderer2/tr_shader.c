@@ -37,8 +37,7 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
-qboolean mapShaders = qfalse;
-qboolean mapShaders2 = qfalse;
+qboolean mapShaders;
 
 /*
 ================
@@ -3264,6 +3263,7 @@ InitShader
 */
 static void InitShader( const char *name, int lightmapIndex ) {
 	int i;
+  mapShaders = r_lazyLoad->integer < 2;
 
 	// clear the global shader
 	Com_Memset( &shader, 0, sizeof( shader ) );
@@ -4328,13 +4328,11 @@ static void CreateExternalShaders( void ) {
 
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
-  mapShaders2 = qtrue;
 
   //if(Q_stristr(shaderName, "rocketExplosion"))
   R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex);
   
-  mapShaders = qfalse;
-  mapShaders2 = qfalse;
+  mapShaders = r_lazyLoad->integer < 2;
 }
 
 /*

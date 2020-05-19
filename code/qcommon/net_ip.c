@@ -1141,6 +1141,7 @@ static void NET_OpenSocks( int port ) {
 #ifdef EMSCRIPTEN
   if(!Cvar_VariableIntegerValue("net_socksLoading")
     && strcmp(Cmd_Argv(0), "net_restart")) {
+    Cvar_Set("net_socksLoading", "0");
     Cvar_Set("net_socksLoading", "1");
     SOCKS_Frame_Callback(NULL, NET_OpenIP);
     return;

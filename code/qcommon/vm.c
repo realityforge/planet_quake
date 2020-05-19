@@ -1334,10 +1334,6 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		// excessive plus checking if it is installed correctly
 		if ( vm->crc32sum == 0x9e8dc0c1 && vm->instructionCount == 306441 && vm->exactDataLength == 7998664 ) {
 			ip = buf + 2768 - 2;
-			//Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
-			//Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
-			//Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
-			//Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
 			if ( ip[2].op == OP_JUMP && ip[2].value == 0xca1 ) {
 			//	ip[0].op = OP_JUMP;
 				VM_IgnoreInstructions( &ip[1], 2 );
@@ -1365,15 +1361,16 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			}
 		}
 		
-		Com_Printf("crc32sum: 0x%08x, instructionCount: %i, exactDataLength: %i\n", vm->crc32sum, vm->instructionCount, vm->exactDataLength);
+		// skip auth check in urban terror, TODO: skip name check
+		// Com_Printf("crc32sum: 0x%08x, instructionCount: %i, exactDataLength: %i\n", vm->crc32sum, vm->instructionCount, vm->exactDataLength);
 		if ( vm->crc32sum == 0xe771cdf9 && vm->instructionCount == 101585 && vm->exactDataLength == 9162280 ) {
 			ip = buf + 0x149b - 2;
  			VM_IgnoreInstructions( &ip[2], 3 );
 			ip = buf + 0xb27 - 2;
-			Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
-			Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
-			Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
-			Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
 			ip[2].op = OP_JUMP;
 			//VM_IgnoreInstructions( &ip[2], 1 );
 		}

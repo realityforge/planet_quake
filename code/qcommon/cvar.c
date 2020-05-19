@@ -662,7 +662,7 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
 	cvar_modifiedFlags |= var->flags;
 
-	if (!force)
+	if (qfalse && !force)
 	{
 		if (var->flags & CVAR_ROM)
 		{
