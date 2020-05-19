@@ -3046,10 +3046,9 @@ Com_GameRestart
 Change to a new mod properly with cleaning up cvars before switching.
 ==================
 */
+static qboolean com_gameRestarting = qfalse;
 void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 {
-	static qboolean com_gameRestarting = qfalse;
-
 	// make sure no recursion can be triggered
 	if ( !com_gameRestarting && com_fullyInitialized )
 	{
@@ -3085,13 +3084,14 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #endif
 
 		FS_Restart( checksumFeed );
+		
+		com_gameRestarting = qfalse;
 #ifdef EMSCRIPTEN
 	}
 }
 
 void Com_GameRestart_After_Restart( void )
 {
-	static qboolean com_gameRestarting = qtrue;
 	qboolean clientRestart = qtrue;
 	{
 #endif
@@ -3104,8 +3104,6 @@ void Com_GameRestart_After_Restart( void )
 		if ( clientRestart )
 			CL_StartHunkUsers();
 #endif
-		
-		com_gameRestarting = qfalse;
 	}
 }
 

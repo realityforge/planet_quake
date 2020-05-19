@@ -1838,9 +1838,9 @@ static void CL_Vid_Restart( void ) {
 	CL_ShutdownVMs();
 
 #ifndef EMSCRIPTEN
-// shutdown sound system
-S_Shutdown();
-// shutdown the renderer and clear the renderer interface
+	// shutdown sound system
+	S_Shutdown();
+	// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( qfalse );
 #endif
 
