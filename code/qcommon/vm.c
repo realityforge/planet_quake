@@ -1364,6 +1364,19 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 				VM_IgnoreInstructions( ip, 6 );
 			}
 		}
+		
+		Com_Printf("crc32sum: 0x%08x, instructionCount: %i, exactDataLength: %i\n", vm->crc32sum, vm->instructionCount, vm->exactDataLength);
+		if ( vm->crc32sum == 0xe771cdf9 && vm->instructionCount == 101585 && vm->exactDataLength == 9162280 ) {
+			ip = buf + 0x149b - 2;
+ 			VM_IgnoreInstructions( &ip[2], 3 );
+			ip = buf + 0xb27 - 2;
+			Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
+			Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
+			Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
+			Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
+			ip[2].op = OP_JUMP;
+			//VM_IgnoreInstructions( &ip[2], 1 );
+		}
 	}
 }
 

@@ -67,8 +67,8 @@ void GLimp_Shutdown( qboolean unloadDLL )
 	SDL_DestroyWindow( SDL_window );
 	SDL_window = NULL;
 
-	if ( unloadDLL )
-		SDL_QuitSubSystem( SDL_INIT_VIDEO );
+	//if ( unloadDLL )
+	//	SDL_QuitSubSystem( SDL_INIT_VIDEO );
 }
 
 
