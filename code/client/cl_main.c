@@ -1836,12 +1836,14 @@ static void CL_Vid_Restart( void ) {
 	S_StopAllSounds();
 	// shutdown VMs
 	CL_ShutdownVMs();
-	// shutdown sound system
-	S_Shutdown();
-	// shutdown the renderer and clear the renderer interface
+
 #ifndef EMSCRIPTEN
+// shutdown sound system
+S_Shutdown();
+// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( qfalse );
 #endif
+
 	// client is no longer pure untill new checksums are sent
 	CL_ResetPureClientAtServer();
 	// clear pak references
