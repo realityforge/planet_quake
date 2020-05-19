@@ -54,7 +54,10 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function (cb) {
-    SYSC.newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    if(newDLURL.length > 0) {
+      SYSC.newDLURL = newDLURL
+    }
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
