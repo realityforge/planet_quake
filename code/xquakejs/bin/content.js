@@ -65,7 +65,7 @@ for(var i = 0; i < process.argv.length; i++) {
     console.log('Virtual pk3dirs')
     virtualPk3dir = true
   } else if(a == '--write' || a == '-wr') {
-    console.log('Writing manifest.json, not watching')
+    console.log('Writing index.json, not watching')
     writeOut = true
     watchChanges = false
   } else if(a == '--watch') {

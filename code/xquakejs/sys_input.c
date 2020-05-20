@@ -660,7 +660,7 @@ void IN_Init( void )
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
 	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
 
-	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE|CVAR_LATCH );
+	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE );
 	in_joystickThreshold = Cvar_Get( "joy_threshold", "0.15", CVAR_ARCHIVE );
 #ifdef USE_JOYSTICK
 	j_pitch =        Cvar_Get( "j_pitch",        "0.022", CVAR_ARCHIVE_ND );
