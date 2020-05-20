@@ -3037,14 +3037,14 @@ static void CL_CheckTimeout( void ) {
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
-			Com_Printf( "\nServer connection timed out.\n" );
+			Com_Error( ERR_DROP, "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
 			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			}
+			//if ( uivm ) {
+			//	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			//}
 			return;
 		}
 	} else {
