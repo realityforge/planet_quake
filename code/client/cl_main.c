@@ -1836,10 +1836,8 @@ static void CL_Vid_Restart( void ) {
 	S_StopAllSounds();
 	// shutdown VMs
 	CL_ShutdownVMs();
-#ifdef EMSCRIPTEN
 	// shutdown sound system
 	S_Shutdown();
-#endif
 	// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( qfalse );
 	// client is no longer pure untill new checksums are sent
