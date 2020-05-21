@@ -1836,14 +1836,12 @@ static void CL_Vid_Restart( void ) {
 	S_StopAllSounds();
 	// shutdown VMs
 	CL_ShutdownVMs();
-
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
 	// shutdown sound system
 	S_Shutdown();
+#endif
 	// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( qfalse );
-#endif
-
 	// client is no longer pure untill new checksums are sent
 	CL_ResetPureClientAtServer();
 	// clear pak references
@@ -1852,6 +1850,7 @@ static void CL_Vid_Restart( void ) {
 	if ( !clc.demoplaying ) // -EC-
 		FS_ConditionalRestart( clc.checksumFeed, qfalse );
 
+	cls.rendererStarted = qfalse;
 	cls.uiStarted = qfalse;
 	cls.cgameStarted = qfalse;
 	cls.soundRegistered = qfalse;
@@ -1860,14 +1859,9 @@ static void CL_Vid_Restart( void ) {
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 
-#ifndef EMSCRIPTEN
-	cls.rendererStarted = qfalse;
 	CL_ClearMemory();
 
-	// initialize the renderer interface
-	CL_InitRef();
-
-#else
+#ifdef EMSCRIPTEN
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
 	} else {
@@ -1888,6 +1882,8 @@ void CL_Vid_Restart_After_Startup( void ) {
 void CL_Vid_Restart_After_Restart( void ) {
 #endif
 ;
+	// initialize the renderer interface
+	CL_InitRef();
 
 	// startup all the client stuff
 	CL_StartHunkUsers();

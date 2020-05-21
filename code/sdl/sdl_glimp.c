@@ -555,6 +555,20 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 
 #ifdef EMSCRIPTEN
 	if(SDL_window) {
+		SDL_DisplayMode desktopMode;
+		int display = SDL_GetWindowDisplayIndex( SDL_window );
+		if ( SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = desktopMode.w;
+			glw_state.config->vidHeight = glw_state.desktop_height = desktopMode.h;
+		}
+		else
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = 640;
+			glw_state.config->vidHeight = glw_state.desktop_height = 480;
+		}
+		SDL_GL_GetDrawableSize( SDL_window, &glw_state.config->vidWidth, &glw_state.config->vidHeight );
+		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
 		return qtrue;
 	}
 #endif
