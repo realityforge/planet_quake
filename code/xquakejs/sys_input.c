@@ -315,6 +315,10 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 		// Console keys can't be bound or generate characters
 		key = K_CONSOLE;
 	}
+	
+	if(Key_KeynumToString( key )[0] == 'x' && keys[K_ALT].down) {
+		key = K_ESCAPE;
+	}
 
 	return key;
 }

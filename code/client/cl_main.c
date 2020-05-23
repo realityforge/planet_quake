@@ -1006,6 +1006,10 @@ void CL_ShutdownAll( void ) {
 	// clear sounds
 	S_DisableSounds();
 
+#ifdef EMSCRIPTEN
+	return;
+#endif
+
 	// shutdown VMs
 	CL_ShutdownVMs();
 
