@@ -185,6 +185,14 @@ var LibrarySysMain = {
     flipper.style.animation = 'none'
     SYSM.exited = true
     window.removeEventListener('resize', SYSM.resizeViewport)
+    window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
+    window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
+    window.removeEventListener('keypress', SYSI.InputPushTextEvent)
+    
+    //Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
 
     if (Module['canvas']) {
       Module['canvas'].remove()

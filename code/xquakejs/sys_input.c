@@ -173,6 +173,10 @@ static qboolean IN_IsConsoleKey( keyNum_t key, int character )
 				break;
 		}
 	}
+	
+	if(Key_KeynumToString( key )[0] == 'c' && keys[K_CTRL].down) {
+		return qtrue;
+	}
 
 	return qfalse;
 }

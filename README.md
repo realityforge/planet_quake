@@ -36,7 +36,10 @@ Some of the major features currently implemented are:
 
 Coming soon!
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Repacking-as-a-service, uploader for repacking game content
+  * .cfg file uploads/local imports
+  * Synchronized server/AI for offline and connection interruptions
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies

@@ -372,8 +372,10 @@ void SNDDMA_Shutdown( void )
 	}
 #endif
 
+#ifndef EMSCRIPTEN
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	free(dma.buffer);
+#endif
 	dma.buffer = NULL;
 	dmapos = dmasize = 0;
 	snd_inited = qfalse;
