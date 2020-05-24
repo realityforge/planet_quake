@@ -26,30 +26,18 @@ var LibrarySysNet = {
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
-    DoXHR: function (url, opts) {
+    DoXHR: async function (url, opts) {
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
 
-      var req = new XMLHttpRequest()
-      //req.withCredentials = true
-      req.open('GET', url, true)
-      if (opts.dataType &&
-        // responseType json not implemented in webkit, we'll do it manually later on
-        opts.dataType !== 'json') {
-        req.responseType = opts.dataType
-      }
-      req.onprogress = function (ev) {
-        if (opts.onprogress) {
-          opts.onprogress(ev.loaded, ev.total)
-        }
-      }
-      var xhrError = null
-      req.onload = function () {
-        var data = req.response
-        if (!(req.status >= 200 && req.status < 300 || req.status === 304)) {
-          xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + req.statusCode)
+      try {
+        var response = await fetch(url, {credentials: 'include'})
+        var data, xhrError
+        if (!(response.status >= 200 && response.status < 300 || response.status === 304)) {
+          xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + response.statusCode)
         } else {
+          data = await response.arrayBuffer()
           // manually parse out a request expecting a JSON response
           if (opts.dataType === 'json') {
             try {
@@ -63,13 +51,6 @@ var LibrarySysNet = {
         if (opts.onload) {
           opts.onload(xhrError, data)
         }
-      }
-      req.onerror = function (req) {
-        xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + req.type)
-        opts.onload(xhrError, req)
-      }
-      try {
-        req.send(null)
       } catch(e) {console.log(e)}
     },
     DownloadLazyFinish: function (indexFilename, file) {
@@ -143,8 +124,14 @@ var LibrarySysNet = {
 				if(err) {
 					return
 				}
-				FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
-					encoding: 'binary', flags: 'w', canOwn: true })
+        try {
+          FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
+  					encoding: 'binary', flags: 'w', canOwn: true })
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+            SYSC.Error('fatal', e.message)
+          }
+        }
 				SYSN.DownloadLazyFinish(indexFilename, file)
 			})
 		},
@@ -158,7 +145,8 @@ var LibrarySysNet = {
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
 					obj[k.toLowerCase()] = moreIndex[k]
-					obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+          if(typeof obj[k.toLowerCase()].downloading == 'undefined')
+					     obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
 					obj[k.toLowerCase()].downloading = false
 					obj[k.toLowerCase()].shaders = []
 					return obj
@@ -167,7 +155,7 @@ var LibrarySysNet = {
 					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
 					+ '}')
 				FS.writeFile(PATH.join(SYSF.fs_basepath, index, "index.json"),
-				 	Uint8Array.from(bits),
+				 	Uint8Array.from(bits.slice(0, bits.length-1)),
 					{encoding: 'binary', flags: 'w', canOwn: true })
 				cb()
 			})
@@ -189,8 +177,8 @@ var LibrarySysNet = {
         SYSC.Error('drop', 'Download Error: ' + err.message)
         return
       } else {
-        FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
-          encoding: 'binary', flags: 'w', canOwn: true })
+        //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+        //  encoding: 'binary', flags: 'w', canOwn: true })
       }
       FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
     })

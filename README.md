@@ -32,6 +32,7 @@ Some of the major features currently implemented are:
   * Docker support
   * Removed SDL inputs, touch support on mobile works
   * New cl_lazyLoad, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
+  * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Many, many bug fixes
 
 Coming soon!

@@ -1006,10 +1006,6 @@ void CL_ShutdownAll( void ) {
 	// clear sounds
 	S_DisableSounds();
 
-#ifdef EMSCRIPTEN
-	return;
-#endif
-
 	// shutdown VMs
 	CL_ShutdownVMs();
 
@@ -1061,14 +1057,14 @@ Also called by Com_Error
 =================
 */
 void CL_FlushMemory( void ) {
-#ifdef EMSCRIPTEN
-	if(!FS_Initialized()) return;
-#endif
-
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
 	CL_ClearMemory();
+
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized()) return;
+#endif
 
 	CL_StartHunkUsers();
 }

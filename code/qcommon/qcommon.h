@@ -1204,6 +1204,7 @@ void CL_CDDialog( void );
 // bring up the "need a cd to play" dialog
 
 void CL_ShutdownAll( void );
+void S_DisableSounds( void );
 // shutdown all the client stuff
 
 void CL_ClearMemory( void );

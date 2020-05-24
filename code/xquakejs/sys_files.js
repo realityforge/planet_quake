@@ -103,7 +103,7 @@ var LibrarySysFiles = {
       for(var i = 0; i < (SYSF.mods || []).length; i++) {
         var desc = PATH.join(fs_basepath, SYSF.mods[i][0], 'description.txt')
         SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir'))
-        FS.writeFile(desc, Uint8Array.from(intArrayFromString(SYSF.mods[i][1])), {
+        FS.writeFile(desc, Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length-1)), {
           encoding: 'binary', flags: 'w', canOwn: true })
       }
 
@@ -190,34 +190,22 @@ var LibrarySysFiles = {
           SYSC.ProxyCallback(cb)
         } else {
           Promise.all(SYSN.downloads.map((file, i) => new Promise(resolve => {
-            totals[i] = 0
+            total = 0
             progresses[i] = 0
-            SYSN.LoadingDescription(file)
-            try {
-              SYSC.DownloadAsset(file, (progress, total) => {
-                // assume its somewhere around 10 MB per pak
-                totals[i] = Math.max(progress, total || 10*1024*1024) 
-                progresses[i] = progress
-                SYSN.LoadingProgress(
-                  progresses.reduce((s, p) => s + p, 0),
-                  totals.reduce((s, p) => s + p, 0))
-              }, (err, data) => {
-                progresses[i] = totals[i]
-                SYSN.LoadingProgress(
-                  progresses.reduce((s, p) => s + p, 0),
-                  totals.reduce((s, p) => s + p, 0))
-                if(err) return resolve(err)
-                try {
-                  FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
-                    encoding: 'binary', flags: 'w', canOwn: true })
-                } catch (e) {
-                  if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-                    SYSC.Error('fatal', e.message)
-                  }
+            SYSC.DownloadAsset(file, null, (err, data) => {
+              progresses[i] = totals[i]
+              SYSN.LoadingProgress(++total, SYSN.downloads.length)
+              if(err) return resolve(err)
+              try {
+                FS.writeFile(PATH.join(fs_basepath, file), new Uint8Array(data), {
+                  encoding: 'binary', flags: 'w', canOwn: true })
+              } catch (e) {
+                if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+                  SYSC.Error('fatal', e.message)
                 }
-                resolve(file)
-              })
-            } catch (e) {resolve(e)}
+              }
+              resolve(file)
+            })
             // save to drive
           }))).then(() => {
             SYSN.downloads = []
@@ -269,7 +257,7 @@ var LibrarySysFiles = {
         var indexFilename = filename.toLowerCase()
         if(SYSF.index && typeof SYSF.index[indexFilename] != 'undefined') {
           var altName = filename.substr(0, filename.length
-            - SYSF.index[indexFilename].name.length) 
+            - SYSF.index[indexFilename].name.length)
             + SYSF.index[indexFilename].name
           try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
           if(handle === 0 && altName != filename && exists) {

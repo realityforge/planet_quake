@@ -420,7 +420,11 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
+#ifndef EMSCRIPTEN
 	CL_ShutdownAll();
+#else
+	S_DisableSounds();
+#endif
 #endif
 
 #ifndef EMSCRIPTEN
