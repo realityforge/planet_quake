@@ -371,7 +371,12 @@ static void S_Base_BeginRegistration( void ) {
 
 
 void S_memoryLoad( sfx_t *sfx ) {
+	int time = Com_Milliseconds();
+	if(sfx->inMemory || time - sfx->lastTimeUsed < 1000) {
+		return;
+	}
 	ri.Cvar_Set( "snd_loadingSound", sfx->soundName );	
+	sfx->lastTimeUsed = time;
 
 	// load the sound file
 	if ( !S_LoadSound ( sfx ) ) {
