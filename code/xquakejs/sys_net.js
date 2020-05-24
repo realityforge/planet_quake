@@ -27,30 +27,34 @@ var LibrarySysNet = {
 			bar.style.width = (frac*100) + '%'
 		},
     DoXHR: function (url, opts) {
+      var xhrError = null
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-
       fetch(url, {credentials: 'include'})
         .catch(e => console.log(e))
         .then(response => {
-            var xhrError
-            if (!(response.status >= 200 && response.status < 300 || response.status === 304)) {
-              xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + response.statusCode)
+            if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
+              xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
+              if (opts.onload) {
+                opts.onload(xhrError, null)
+              }
+              return
             }
-            return response.arrayBuffer()
-              .then(data => {
-                if (opts.dataType === 'json') {
-                  try {
-                    data = JSON.parse(data)
-                  } catch (e) {
-                    xhrError = e
+            if(!xhrError)
+              return response.arrayBuffer()
+                .then(data => {
+                  if (opts.dataType === 'json') {
+                    try {
+                      data = JSON.parse(data)
+                    } catch (e) {
+                      xhrError = e
+                    }
                   }
-                }
-                if (opts.onload) {
-                  opts.onload(xhrError, data)
-                }
-              })
+                  if (opts.onload) {
+                    opts.onload(xhrError, data)
+                  }
+                })
         })
     },
     DownloadLazyFinish: function (indexFilename, file) {

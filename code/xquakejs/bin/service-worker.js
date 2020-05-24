@@ -158,6 +158,22 @@ async function writeStore(value, key) {
   })
 }
 
+async function mkdirp(path) {
+  var segments = path.split(/\/|\\/gi)
+  for(var i = 3; i < segments.length; i++)
+  {
+    var dir = segments.slice(0, i).join('/')
+    var obj = {
+      timestamp: new Date(),
+      mode: 16895
+    }
+    try {
+      await writeStore(obj, dir)
+    } catch (e) {
+    }
+  }
+}
+
 async function fetchAsset(key) {
   var response = await fetch(key, {credentials: 'include'})
   if (!response.ok) {
@@ -171,12 +187,16 @@ async function fetchAsset(key) {
       precacheConfig.push(k.toLowerCase().replace(/^\/base\//ig, 'assets/'))
     })
   }
+  await mkdirp('/base/' + key.replace(/^\/?assets\/|^\/|\/[^\/]*$/i, ''))
   var obj = {
     timestamp: new Date(),
     mode: 33206,
     contents: new Uint8Array(content)
   }
-  await writeStore(obj, '/base/' + key.replace(/^\/?assets\/|^\//i, ''))
+  try {
+    await writeStore(obj, '/base/' + key.replace(/^\/?assets\/|^\//i, ''))
+  } catch (e) {
+  }
   return obj
 }
 
@@ -258,7 +278,9 @@ self.addEventListener('fetch', function(event) {
                       ? 'image/jpg'
                       : event.request.url.includes('.js')
                         ? 'application/javascript'
-                        : 'application/octet-stream'
+                        : event.request.url.includes('.wasm')
+                          ? 'application/wasm'
+                          : 'application/octet-stream'
             }
           }
           if(files && files.contents) {

@@ -615,10 +615,10 @@ static void R_SetFarClip( void )
 
 	// if not rendering the world (icons, menus, etc)
 	// set a 2k far clip plane
-	//if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
+	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		tr.viewParms.zFar = 4096;
 		return;
-	//}
+	}
 
 	//
 	// set far clipping planes dynamically
