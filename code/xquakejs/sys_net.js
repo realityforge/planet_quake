@@ -26,32 +26,32 @@ var LibrarySysNet = {
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
-    DoXHR: async function (url, opts) {
+    DoXHR: function (url, opts) {
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
 
-      try {
-        var response = await fetch(url, {credentials: 'include'})
-        var data, xhrError
-        if (!(response.status >= 200 && response.status < 300 || response.status === 304)) {
-          xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + response.statusCode)
-        } else {
-          data = await response.arrayBuffer()
-          // manually parse out a request expecting a JSON response
-          if (opts.dataType === 'json') {
-            try {
-              data = JSON.parse(data)
-            } catch (e) {
-              xhrError = e
+      fetch(url, {credentials: 'include'})
+        .catch(e => console.log(e))
+        .then(response => {
+            var xhrError
+            if (!(response.status >= 200 && response.status < 300 || response.status === 304)) {
+              xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + response.statusCode)
             }
-          }
-        }
-
-        if (opts.onload) {
-          opts.onload(xhrError, data)
-        }
-      } catch(e) {console.log(e)}
+            return response.arrayBuffer()
+              .then(data => {
+                if (opts.dataType === 'json') {
+                  try {
+                    data = JSON.parse(data)
+                  } catch (e) {
+                    xhrError = e
+                  }
+                }
+                if (opts.onload) {
+                  opts.onload(xhrError, data)
+                }
+              })
+        })
     },
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false

@@ -249,6 +249,7 @@ void S_DisableSounds( void )
 	if( si.DisableSounds ) {
 		si.DisableSounds();
 	}
+	cls.firstClick = qtrue;
 }
 
 
@@ -475,4 +476,5 @@ void S_Shutdown( void )
 	Cmd_RemoveCommand( "s_info" );
 
 	S_CodecShutdown();
+	cls.firstClick = qtrue;
 }
