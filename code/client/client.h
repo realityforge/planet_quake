@@ -352,10 +352,8 @@ typedef struct {
 	float		biasX;
 	float		biasY;
 
-#ifdef EMSCRIPTEN
 	float		 cursorx;
 	float    cursory;
-#endif
 } clientStatic_t;
 
 extern int bigchar_width;

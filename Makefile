@@ -300,6 +300,141 @@ else # ifeq Linux
 
 
 #############################################################################
+# SETUP AND BUILD -- MAC OS X
+#############################################################################
+
+ifeq ($(PLATFORM),darwin)
+  USE_SDL = 1
+  USE_LOCAL_HEADERS = 0
+  HAVE_VM_COMPILED=true
+  LIBS = -framework Cocoa
+  CLIENT_LIBS=
+  RENDERER_LIBS=
+  OPTIMIZEVM = -O3
+
+  # Default minimum Mac OS X version
+  ifeq ($(MACOSX_VERSION_MIN),)
+    MACOSX_VERSION_MIN=10.7
+  endif
+
+  MACOSX_MAJOR=$(shell echo $(MACOSX_VERSION_MIN) | cut -d. -f1)
+  MACOSX_MINOR=$(shell echo $(MACOSX_VERSION_MIN) | cut -d. -f2)
+  ifeq ($(shell test $(MACOSX_MINOR) -gt 9; echo $$?),0)
+    # Multiply and then remove decimal. 10.10 -> 101000.0 -> 101000
+    MAC_OS_X_VERSION_MIN_REQUIRED=$(shell echo "$(MACOSX_MAJOR) * 10000 + $(MACOSX_MINOR) * 100" | bc | cut -d. -f1)
+  else
+    # Multiply by 100 and then remove decimal. 10.7 -> 1070.0 -> 1070
+    MAC_OS_X_VERSION_MIN_REQUIRED=$(shell echo "$(MACOSX_VERSION_MIN) * 100" | bc | cut -d. -f1)
+  endif
+
+  LDFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) -I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2
+  BASE_CFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) \
+                 -DMAC_OS_X_VERSION_MIN_REQUIRED=$(MAC_OS_X_VERSION_MIN_REQUIRED)
+
+  ifeq ($(ARCH),ppc)
+    BASE_CFLAGS += -arch ppc
+    ALTIVEC_CFLAGS = -faltivec
+  endif
+  ifeq ($(ARCH),ppc64)
+    BASE_CFLAGS += -arch ppc64
+    ALTIVEC_CFLAGS = -faltivec
+  endif
+  ifeq ($(ARCH),x86)
+    OPTIMIZEVM += -march=prescott -mfpmath=sse
+    # x86 vm will crash without -mstackrealign since MMX instructions will be
+    # used no matter what and they corrupt the frame pointer in VM calls
+    BASE_CFLAGS += -arch i386 -m32 -mstackrealign
+  endif
+  ifeq ($(ARCH),x86_64)
+    OPTIMIZEVM += -mfpmath=sse
+    BASE_CFLAGS += -arch x86_64
+  endif
+
+  # When compiling on OSX for OSX, we're not cross compiling as far as the
+  # Makefile is concerned, as target architecture is specified as a compiler
+  # argument
+  ifeq ($(COMPILE_PLATFORM),darwin)
+    CROSS_COMPILING=0
+  endif
+
+  ifeq ($(CROSS_COMPILING),1)
+    ifeq ($(ARCH),x86_64)
+      CC=x86_64-apple-darwin13-cc
+      RANLIB=x86_64-apple-darwin13-ranlib
+    else
+      ifeq ($(ARCH),x86)
+        CC=i386-apple-darwin13-cc
+        RANLIB=i386-apple-darwin13-ranlib
+      else
+        $(error Architecture $(ARCH) is not supported when cross compiling)
+      endif
+    endif
+  endif
+
+  BASE_CFLAGS += -fno-strict-aliasing -fno-common -pipe
+
+  ifeq ($(USE_OPENAL),1)
+    ifneq ($(USE_LOCAL_HEADERS),1)
+      CLIENT_CFLAGS += -I/System/Library/Frameworks/OpenAL.framework/Headers
+    endif
+    ifneq ($(USE_OPENAL_DLOPEN),1)
+      CLIENT_LIBS += -framework OpenAL
+    endif
+  endif
+
+  ifeq ($(USE_CURL),1)
+    CLIENT_CFLAGS += $(CURL_CFLAGS)
+    ifneq ($(USE_CURL_DLOPEN),1)
+      CLIENT_LIBS += $(CURL_LIBS)
+    endif
+  endif
+
+  BASE_CFLAGS += -D_THREAD_SAFE=1
+
+  CLIENT_LIBS += -framework IOKit
+  RENDERER_LIBS += -framework OpenGL
+
+  ifeq ($(USE_LOCAL_HEADERS),1)
+    # libSDL2-2.0.0.dylib for PPC is SDL 2.0.1 + changes to compile
+    ifneq ($(findstring $(ARCH),ppc ppc64),)
+      BASE_CFLAGS += -I$(SDLHDIR)/include-macppc
+    else
+      BASE_CFLAGS += -I$(SDLHDIR)/include
+    endif
+
+    # We copy sdlmain before ranlib'ing it so that subversion doesn't think
+    #  the file has been modified by each build.
+    LIBSDLMAIN=$(B)/libSDL2main.a
+    LIBSDLMAINSRC=$(LIBSDIR)/macosx/libSDL2main.a
+    CLIENT_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
+    RENDERER_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
+    CLIENT_EXTRA_FILES += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
+  else
+    BASE_CFLAGS += -Wall \
+		  -I/Library/Frameworks/SDL2.framework/Headers \
+			-I/usr/local/include/SDL2
+    CLIENT_LIBS += -framework SDL2 -framework OpenGL
+    RENDERER_LIBS += -framework SDL2 -framework OpenGL
+  endif
+
+  OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+
+  SHLIBEXT=dylib
+  SHLIBCFLAGS=-fPIC -fno-common
+  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) -Wl,-U,_com_altivec
+
+  NOTSHLIBCFLAGS=-mdynamic-no-pic
+	
+  DEBUG_CFLAGS=$(BASE_CFLAGS)
+  RELEASE_CFLAGS=$(BASE_CFLAGS) \
+		$(OPTIMIZE)
+		
+  LDFLAGS += $(CLIENT_LIBS)
+
+else # ifeq darwin
+
+
+#############################################################################
 # SETUP AND BUILD -- MINGW32
 #############################################################################
 
@@ -643,6 +778,7 @@ else # ifeq js
 
 endif #Linux
 endif #mingw32
+endif #darwin
 endif #FreeBSD
 endif #OpenBSD
 endif #NetBSD
@@ -1341,7 +1477,7 @@ endif # !MINGW
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(CFLAGS) \
+	$(Q)$(CC) -v -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(CFLAGS) \
 		$(LDFLAGS)
 
 # modular renderers

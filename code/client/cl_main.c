@@ -1561,6 +1561,8 @@ static void CL_Connect_f( void ) {
 	char	*server;	
 	int		len;
 	int		argc;
+	const char	*serverString;
+
 
 	argc = Cmd_Argc();
 	family = NA_UNSPEC;

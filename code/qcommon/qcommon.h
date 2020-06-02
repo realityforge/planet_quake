@@ -1168,11 +1168,7 @@ void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec );
 qboolean CL_GameCommand( void );
-#ifdef EMSCRIPTEN
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
-#else
-void CL_KeyEvent (int key, qboolean down, unsigned time);
-#endif
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control

@@ -2888,14 +2888,10 @@ int Com_EventLoop( void ) {
 		case SE_FINGER_UP:
 			CL_KeyEvent( ev.evValue, qfalse, ev.evTime, ev.evValue2 );
 			break;
+#endif
 		case SE_KEY:
 			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime, 0 );
 			break;
-#else
-		case SE_KEY:
-			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime );
-			break;
-#endif
 		case SE_CHAR:
 			CL_CharEvent( ev.evValue );
 			break;
@@ -3758,7 +3754,7 @@ void Com_Init_After_Filesystem( void ) {
 	}
 	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
 	if ( com_affinityMask->integer )
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
@@ -4102,7 +4098,7 @@ void Com_Frame( void ) {
 		}
 		com_viewlog->modified = qfalse;
 	}
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
 	if ( com_affinityMask->modified ) {
 		Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE );
 		com_affinityMask->modified = qfalse;

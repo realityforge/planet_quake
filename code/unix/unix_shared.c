@@ -557,7 +557,7 @@ int Sys_LoadFunctionErrors( void )
 Sys_SetAffinityMask
 =================
 */
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
 void Sys_SetAffinityMask( int mask )
 {
 	static qboolean inited = qfalse;
