@@ -632,7 +632,11 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 					CL_FlushMemory();
 				}
 #endif
+#ifndef EMSCRIPTEN
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+#else
+				Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+#endif
 			}
 			return;
 		}

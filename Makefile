@@ -651,7 +651,9 @@ ifeq ($(PLATFORM),js)
 define EM_CONFIG
 "LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
 endef
-#  EMSCRIPTEN_CACHE=$(EMSDK)/cache
+ifndef EMSCRIPTEN_CACHE
+  EMSCRIPTEN_CACHE=$(HOME)/.emscripten_cache
+endif
 
   CC=$(EMSCRIPTEN)/emcc
   RANLIB=$(EMSCRIPTEN)/emranlib
