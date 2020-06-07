@@ -252,7 +252,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		glw_state.desktop_height = 480;
 	}
 
-	Com_Printf( "...setting mode %d:", mode );
+	Com_Printf( "...setting mode %d (%s):", mode, fullscreen ? "fullscreen" : "windowed" );
 
 	if ( !CL_GetModeInfo( &config->vidWidth, &config->vidHeight, &config->windowAspect, mode, modeFS, glw_state.desktop_width, glw_state.desktop_height, fullscreen ) )
 	{

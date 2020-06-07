@@ -261,8 +261,8 @@ qboolean SNDDMA_Init( void )
 		char *message = SDL_GetError();
 		Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
 		if(!Q_stristr(message, "already open")) {
-			SDL_QuitSubSystem( SDL_INIT_AUDIO );
-			return qfalse;
+		//	SDL_QuitSubSystem( SDL_INIT_AUDIO );
+		//	return qfalse;
 		}
 	} else {
 		sdlPlaybackDevice = tmpPlayback;
