@@ -238,12 +238,16 @@
 </script>
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
-            console.log('Service Worker registered');
-        }).catch(function (err) {
-            console.log('Service Worker registration failed: ', err);
-        });
+      navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
+          console.log('Service Worker registered');
+      }).catch(function (err) {
+          console.log('Service Worker registration failed: ', err);
+      });
     }
+		if('Worker' in window) {
+		  window.serverWorker = new Worker('server-worker.js');
+			window.serverWorker.postMessage(['_SV_Init', 0]);
+		}
 </script>
 <script type="text/javascript" src="/nipplejs.js"></script>
 <script type="text/javascript" src="/quake3e.js"></script>

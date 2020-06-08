@@ -143,9 +143,19 @@ var LibrarySysMain = {
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    Object.assign(Module, {
+      websocket: Object.assign(Module.websocket || {}, {
+        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
+        ? 'wss://'
+        : 'ws://'
+      })
+    })
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
+    
+    if(typeof document == 'undefined') return
+    
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
-    
     // TODO: load this the same way demo does
     if(SYSC.eula) {
       // add eula frame to viewport
@@ -160,15 +170,7 @@ var LibrarySysMain = {
         '</div>'
       SYSM.eula = Module['viewport'].appendChild(eula)
     }
-    Object.assign(Module, {
-      websocket: Object.assign(Module.websocket || {}, {
-        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
-        ? 'wss://'
-        : 'ws://'
-      })
-    })
     window.addEventListener('resize', SYSM.resizeViewport)
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
   },
   Sys_PlatformExit: function () {
     /*
