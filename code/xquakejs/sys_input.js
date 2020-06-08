@@ -91,22 +91,22 @@ var LibrarySysInput = {
       var event = SYSI.inputHeap
 
       if(id == 1) {
-        if (evt.angle && Math.round(y / 40) > 0) {
+        if (data.vector && data.vector.y > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 87})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 87})
         }
-        if (evt.angle && Math.round(y / 40) < 0) {
+        if (data.vector && data.vector.y < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 83})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 83})
         }
-        if (evt.angle && Math.round(x / 40) < 0) {
+        if (data.vector && data.vector.x < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 65})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 65})
         }
-        if (evt.angle && Math.round(x / 40) > 0) {
+        if (data.vector && data.vector.x > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 68})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 68})
@@ -114,22 +114,22 @@ var LibrarySysInput = {
       }
       
       if(id == 2) {
-        if (evt.angle && Math.round(y / 40) > 0) {
+        if (data.vector && data.vector.y > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 40})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 40})
         }
-        if (evt.angle && Math.round(y / 40) < 0) {
+        if (data.vector && data.vector.y < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 38})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 38})
         }
-        if (evt.angle && Math.round(x / 40) < 0) {
+        if (data.vector && data.vector.x < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 37})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 37})
         }
-        if (evt.angle && Math.round(x / 40) > 0) {
+        if (data.vector && data.vector.x > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 39})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 39})
