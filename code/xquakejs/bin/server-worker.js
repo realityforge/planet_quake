@@ -1,14 +1,19 @@
 window = {}
-window.location = new URL('http://worker.js/?set dedicated 1&set ttycon 1')
+window.location = new URL(location.origin + '?set dedicated 1&set ttycon 1&set net_socksEnabled 0')
 window.performance = performance
 importScripts('quake3e.js')
 
 onmessage = function(e) {
-  var workerResult = 'Result: ' + (e.data[0] * e.data[1])
-  console.log('Posting message back to main script ' + workerResult)
-  postMessage(workerResult)
+  if(e.data[0] == 'vars') {
+    
+  } else if(e.data[0] == 'execute') {
+    var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK);
+    _Cbuf_AddText(cmd)
+    _Cbuf_Execute()
+  } else {
+    console.log('Command not found ', e.data)
+  }
 }
 
 Module.onRuntimeInitialized = function() {
-  Module.callMain()
 }

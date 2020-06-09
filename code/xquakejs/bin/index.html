@@ -215,40 +215,45 @@
 
 <script>
 	window.onload = function () {
-		IDBFS.loadRemoteEntry = function (store, path, callback) {
-			var req = store.get(path);
-			req.onsuccess = function (event) {
-				callback(null, {
-					timestamp: event.target.result.timestamp,
-					mode: event.target.result.mode,
-					contents: MEMFS.getFileDataAsTypedArray(event.target.result)
-				});
-			};
-			req.onerror = function (e) {
-				callback(this.error);
-				e.preventDefault();
-			};
-		};
-		//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
-		Module['viewport'] = document.getElementById('viewport-frame');
-		Module['elementPointerLock'] = true;
-		Module['onRuntimeInitialized'] = () => {
-		};
-	};
+		if(typeof IDBFS != 'undefined') {
+			IDBFS.loadRemoteEntry = function (store, path, callback) {
+				var req = store.get(path)
+				req.onsuccess = function (event) {
+					callback(null, {
+						timestamp: event.target.result.timestamp,
+						mode: event.target.result.mode,
+						contents: MEMFS.getFileDataAsTypedArray(event.target.result)
+					})
+				}
+				req.onerror = function (e) {
+					callback(this.error)
+					e.preventDefault()
+				}
+			}
+		}
+		if(typeof Module != 'undefined') {
+			//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
+			Module['viewport'] = document.getElementById('viewport-frame')
+			Module['elementPointerLock'] = true
+			Module['onRuntimeInitialized'] = () => {}
+		}
+	}
 </script>
 <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
-          console.log('Service Worker registered');
+          console.log('Service Worker registered')
       }).catch(function (err) {
-          console.log('Service Worker registration failed: ', err);
-      });
+          console.log('Service Worker registration failed: ', err)
+      })
     }
 		if('Worker' in window) {
-		  window.serverWorker = new Worker('server-worker.js');
-			window.serverWorker.postMessage(['_SV_Init', 0]);
+		  window.serverWorker = new Worker('server-worker.js')
+			window.serverWorker.postMessage(['vars', 0])
 		}
 </script>
 <script type="text/javascript" src="/nipplejs.js"></script>
+<!--
 <script type="text/javascript" src="/quake3e.js"></script>
+-->
 </html>

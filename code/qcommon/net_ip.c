@@ -892,12 +892,12 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		closesocket(newsocket);
 		return INVALID_SOCKET;
 	}
+#endif
 
 	// make it broadcast capable
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
-#endif
 
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;

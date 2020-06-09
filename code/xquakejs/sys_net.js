@@ -7,6 +7,10 @@ var LibrarySysNet = {
 		downloadSort: 0,
     lazyIterval: 0,
     LoadingDescription: function (desc) {
+      if(typeof document == 'undefined') {
+        console.log(desc)
+        return
+      }
 			var flipper = document.getElementById('flipper')
 			var progress = document.getElementById('loading-progress')
 			var description = progress.querySelector('.description')
@@ -21,6 +25,9 @@ var LibrarySysNet = {
 			description.innerHTML = desc
 		},
 		LoadingProgress: function (progress, total) {
+      if(typeof document == 'undefined') {
+        return
+      }
 			var frac = progress / total
 			var progress = document.getElementById('loading-progress')
 			var bar = progress.querySelector('.bar')

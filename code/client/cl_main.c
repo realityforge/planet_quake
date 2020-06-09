@@ -1080,11 +1080,11 @@ memory on the hunk from cgame, ui, and renderer
 =====================
 */
 void CL_MapLoading( void ) {
-  	if ( com_dedicated->integer ) {
-  		cls.state = CA_DISCONNECTED;
+	if ( com_dedicated->integer ) {
+		cls.state = CA_DISCONNECTED;
  		Key_SetCatcher( KEYCATCH_CONSOLE );
-  		return;
-  	}
+		return;
+	}
 
 	if ( !com_cl_running->integer ) {
 		return;
@@ -1333,10 +1333,12 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 
+#ifndef EMSCRIPTEN
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
 		return;
 	}
+#endif
 
 	if ( Cmd_Argc() > 1 ) {
 		CL_AddReliableCommand( string, qfalse );
