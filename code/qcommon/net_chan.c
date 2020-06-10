@@ -462,6 +462,10 @@ static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
+	
+#ifdef EMSCRIPTEN
+	Sys_NET_MulticastLocal(sock, length, data);
+#endif
 }
 
 //=============================================================================

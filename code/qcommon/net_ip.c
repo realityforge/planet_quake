@@ -867,8 +867,8 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	struct sockaddr_in	address;
 #ifndef EMSCRIPTEN
 	ioctlarg_t			_true = 1;
-	int					i = 1;
 #endif
+  int					i = 1;
 
 	*err = 0;
 
@@ -884,6 +884,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+
 #ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
@@ -892,12 +893,12 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		closesocket(newsocket);
 		return INVALID_SOCKET;
 	}
-#endif
 
 	// make it broadcast capable
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
+#endif
 
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;

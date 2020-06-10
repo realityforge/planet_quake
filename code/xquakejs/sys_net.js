@@ -6,6 +6,7 @@ var LibrarySysNet = {
 		downloads: [],
 		downloadSort: 0,
     lazyIterval: 0,
+    multicasting: false,
     LoadingDescription: function (desc) {
       if(typeof document == 'undefined') {
         console.log(desc)
@@ -208,6 +209,12 @@ var LibrarySysNet = {
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksMessage: function () {
   },
+  Sys_NET_MulticastLocal: function () {
+    // prevent recursion because NET_SendLoopPacket will call here again
+    if(SYSN.multicasting) return
+    SYSN.multicasting = true
+    
+  }
 }
 autoAddDeps(LibrarySysNet, '$SYSN')
 mergeInto(LibraryManager.library, LibrarySysNet);

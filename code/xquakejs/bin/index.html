@@ -250,6 +250,11 @@
 		if('Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')
 			window.serverWorker.postMessage(['vars', 0])
+			window.serviceWorker.on('message', (e) => {
+				if(e.data[0] == 'net') {
+					
+				}
+			})
 		}
 </script>
 <script type="text/javascript" src="/nipplejs.js"></script>
