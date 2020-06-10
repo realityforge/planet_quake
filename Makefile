@@ -304,9 +304,9 @@ else # ifeq Linux
 #############################################################################
 
 ifeq ($(PLATFORM),darwin)
+  HAVE_VM_COMPILED = 0
   USE_SDL = 1
   USE_LOCAL_HEADERS = 0
-  HAVE_VM_COMPILED=true
   LIBS = -framework Cocoa
   CLIENT_LIBS=
   RENDERER_LIBS=
