@@ -12,10 +12,7 @@ onmessage = function(e) {
     _Cbuf_AddText(cmd)
     _Cbuf_Execute()
   } else if(e.data[0] == 'net') {
-    SYSN.multicasting = true
-    var data = allocate(e.data[2], 'i8', ALLOC_STACK)
-    _NET_SendLoopPacket(e.data[1], e.data[2].length, data)
-    SYSN.multicasting = false
+    SYSN.receiveNetLoop(e.data[1], e.data[2])
   } else {
     console.log('Command not found ', e.data)
   }

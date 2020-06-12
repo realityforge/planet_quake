@@ -252,10 +252,7 @@
 			window.serverWorker.postMessage(['vars', 0])
 			window.serverWorker.onmessage = (e) => {
 				if(e.data[0] == 'net') {
-					SYSN.multicasting = true
-					var data = allocate(e.data[2], 'i8', ALLOC_STACK)
-					_NET_SendLoopPacket(e.data[1], e.data[2].length, data)
-					SYSN.multicasting = false
+					SYSN.receiveNetLoop(e.data[1], e.data[2])
 				}
 			}
 		}

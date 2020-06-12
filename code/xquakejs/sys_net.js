@@ -7,6 +7,16 @@ var LibrarySysNet = {
 		downloadSort: 0,
     lazyIterval: 0,
     multicasting: false,
+    multicastBuffer: 0,
+    receiveNetLoop: function (net, data) {
+      if(!SYSN.multicastBuffer) {
+        SYSN.multicastBuffer = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+      }
+      SYSN.multicasting = true
+      data.forEach((d, i) => HEAP8[SYSN.multicastBuffer+i] = d)
+      _NET_SendLoopPacket(net, data.length, SYSN.multicastBuffer)
+      SYSN.multicasting = false
+    },
     LoadingDescription: function (desc) {
       if(typeof document == 'undefined') {
         console.log(desc)
