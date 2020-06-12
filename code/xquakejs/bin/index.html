@@ -250,15 +250,16 @@
 		if('Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')
 			window.serverWorker.postMessage(['vars', 0])
-			window.serviceWorker.on('message', (e) => {
+			window.serverWorker.onmessage = (e) => {
 				if(e.data[0] == 'net') {
-					
+					SYSN.multicasting = true
+					var data = allocate(e.data[2], 'i8', ALLOC_STACK)
+					_NET_SendLoopPacket(e.data[1], e.data[2].length, data)
+					SYSN.multicasting = false
 				}
-			})
+			}
 		}
 </script>
 <script type="text/javascript" src="/nipplejs.js"></script>
-<!--
 <script type="text/javascript" src="/quake3e.js"></script>
--->
 </html>

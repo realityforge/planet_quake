@@ -209,11 +209,15 @@ var LibrarySysNet = {
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksMessage: function () {
   },
-  Sys_NET_MulticastLocal: function () {
+  Sys_NET_MulticastLocal: function (net, length, data) {
     // prevent recursion because NET_SendLoopPacket will call here again
     if(SYSN.multicasting) return
     SYSN.multicasting = true
-    
+    window.serverWorker.postMessage([
+      'net',
+      net,
+      Uint8Array.from(HEAP8.slice(data, data+length))])
+    SYSN.multicasting = false
   }
 }
 autoAddDeps(LibrarySysNet, '$SYSN')

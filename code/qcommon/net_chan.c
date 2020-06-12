@@ -59,6 +59,8 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
+extern void Sys_NET_MulticastLocal( int sock, int length, int *data );
+
 /*
 ===============
 Netchan_Init
@@ -450,7 +452,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 }
 
 
-static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
+void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 {
 	int		i;
 	loopback_t	*loop;
