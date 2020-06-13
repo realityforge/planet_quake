@@ -23,7 +23,7 @@ var LibrarySysCommon = {
 			str = allocate(intArrayFromString(str + '\n'), 'i8', ALLOC_STACK);
 			_Com_Printf(str)
 		},
-		Error: function (level, err) {
+		Error: function (level, errMsg) {
 			if (level === 'fatal') {
 				level = 0;
 			} else if (level === 'drop') {
@@ -38,10 +38,10 @@ var LibrarySysCommon = {
 				level = 0;
 			}
 
-			err = allocate(intArrayFromString(err + '\n'), 'i8', ALLOC_STACK);
-			if(!err) err = UTF8ToString(err);
+			errMsg = allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK);
+			if(!errMsg) errMsg = UTF8ToString(errMsg);
 
-			Browser.safeCallback(() => _Com_Error(level, err))();
+			Browser.safeCallback(() => _Com_Error(level, errMsg))();
 		},
 		ProxyCallback: function () {
 			Browser.safeCallback(() => {

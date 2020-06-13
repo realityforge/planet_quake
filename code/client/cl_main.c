@@ -1747,11 +1747,14 @@ static void CL_Rcon_f( void ) {
 	const char *sp;
 	int len;
 
+#if 0
+// allow black passwords for rcon clients
 	if ( !rcon_client_password->string[0] ) {
 		Com_Printf( "You must set 'rconpassword' before\n"
 			"issuing an rcon command.\n" );
 		return;
 	}
+#endif
 
 	if ( cls.state >= CA_CONNECTED ) {
 		rcon_address = clc.netchan.remoteAddress;
@@ -4122,6 +4125,23 @@ void CL_Init( void ) {
 	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
+	
+#ifdef EMSCRIPTEN
+	if(!com_dedicated->integer) {
+		netadrtype_t family;
+		netadr_t	addr;
+		family = NA_LOOPBACK;
+		NET_StringToAdr( cls.servername, &addr, family );
+		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
+		cls.state = CA_CONNECTING;
+		clc.serverAddress = addr;
+		clc.serverAddress.port = BigShort( PORT_SERVER );
+		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
+		clc.connectPacketCount = 0;
+
+	}
+
+#endif
 }
 
 

@@ -151,9 +151,10 @@ var LibrarySysMain = {
       })
     })
     SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
-    
+
     if(typeof document == 'undefined') return
-    
+
+    SYSF.firstTime = true
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
     // TODO: load this the same way demo does

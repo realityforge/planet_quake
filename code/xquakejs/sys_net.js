@@ -217,8 +217,7 @@ var LibrarySysNet = {
     Module['websocket'].on('error', callback)
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
-  Sys_SocksMessage: function () {
-  },
+  Sys_SocksMessage: function () {},
   Sys_NET_MulticastLocal: function (net, length, data) {
     // prevent recursion because NET_SendLoopPacket will call here again
     if(SYSN.multicasting) return

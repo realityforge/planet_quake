@@ -214,30 +214,11 @@
 	
 
 <script>
-	window.onload = function () {
-		if(typeof IDBFS != 'undefined') {
-			IDBFS.loadRemoteEntry = function (store, path, callback) {
-				var req = store.get(path)
-				req.onsuccess = function (event) {
-					callback(null, {
-						timestamp: event.target.result.timestamp,
-						mode: event.target.result.mode,
-						contents: MEMFS.getFileDataAsTypedArray(event.target.result)
-					})
-				}
-				req.onerror = function (e) {
-					callback(this.error)
-					e.preventDefault()
-				}
-			}
-		}
-		if(typeof Module != 'undefined') {
-			//DNS.address_map.addrs['proxy.quake.games'] = '35.208.54.87'
-			Module['viewport'] = document.getElementById('viewport-frame')
-			Module['elementPointerLock'] = true
-			Module['onRuntimeInitialized'] = () => {}
-		}
-	}
+	window.quake3e = {}
+	window.quake3e.printErr = console.log
+	window.quake3e.viewport = document.getElementById('viewport-frame')
+	window.quake3e.elementPointerLock = true
+	window.quake3e.onRuntimeInitialized = () => {}
 </script>
 <script>
     if ('serviceWorker' in navigator) {

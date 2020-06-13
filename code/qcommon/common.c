@@ -3816,9 +3816,9 @@ void Com_Init_After_Filesystem( void ) {
 
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 #ifdef EMSCRIPTEN
-	if(Cvar_VariableIntegerValue("net_socksLoading")) {
-		NET_Init( );
-	}
+//	if(Cvar_VariableIntegerValue("net_socksLoading")) {
+	NET_Init( );
+//	}
 #endif
 }
 
