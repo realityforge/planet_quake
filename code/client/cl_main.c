@@ -4128,17 +4128,12 @@ void CL_Init( void ) {
 	
 #ifdef EMSCRIPTEN
 	if(!com_dedicated->integer) {
-		netadrtype_t family;
-		netadr_t	addr;
-		family = NA_LOOPBACK;
-		NET_StringToAdr( cls.servername, &addr, family );
 		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
+		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_UNSPEC );
 		cls.state = CA_CONNECTING;
-		clc.serverAddress = addr;
-		clc.serverAddress.port = BigShort( PORT_SERVER );
 		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 		clc.connectPacketCount = 0;
-
+		CL_UpdateGUID(NULL, 0);
 	}
 
 #endif
