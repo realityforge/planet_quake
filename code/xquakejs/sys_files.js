@@ -190,8 +190,7 @@ var LibrarySysFiles = {
     // read from drive
     FS.syncfs(true, function (err) {
       if (err) {
-        SYSC.Print(err.message)
-        return SYSC.Error('fatal', err.message)
+        console.warn(err.message)
       }
 
       SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
@@ -408,5 +407,28 @@ if(typeof IDBFS != 'undefined') {
       callback(this.error)
       e.preventDefault()
     }
+  }
+  IDBFS.storeLocalEntry = function(path, entry, callback) {
+    try {
+      if (FS.isDir(entry['mode'])) {
+        FS.mkdir(path, entry['mode'])
+      } else if (FS.isFile(entry['mode'])) {
+        FS.writeFile(path, entry['contents'], { canOwn: true })
+      } else {
+        return callback(new Error('node type not supported'))
+      }
+    } catch (e) {
+      if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+        return callback(e)
+      }
+    }
+    try {
+      FS.chmod(path, entry['mode'])
+      FS.utime(path, entry['timestamp'], entry['timestamp'])
+    } catch (e) {
+      return callback(e)
+    }
+
+    callback(null)
   }
 }

@@ -189,20 +189,22 @@ var LibrarySysNet = {
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     var fs_game = SYSC.Cvar_VariableString('fs_game')
     
-    SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
-    
-    SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
-      SYSC.Cvar_SetValue('cl_downloadSize', total);
-      SYSC.Cvar_SetValue('cl_downloadCount', loaded);
-    }, (err, data) => {
-      if(err) {
-        SYSC.Error('drop', 'Download Error: ' + err.message)
-        return
-      } else {
-        //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
-        //  encoding: 'binary', flags: 'w', canOwn: true })
-      }
-      FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+    FS.syncfs(false, (e) => {
+      if(e) console.log(e)
+      SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
+      SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
+        SYSC.Cvar_SetValue('cl_downloadSize', total);
+        SYSC.Cvar_SetValue('cl_downloadCount', loaded);
+      }, (err, data) => {
+        if(err) {
+          SYSC.Error('drop', 'Download Error: ' + err.message)
+          return
+        } else {
+          //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+          //  encoding: 'binary', flags: 'w', canOwn: true })
+        }
+        FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+      })
     })
   },
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
