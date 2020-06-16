@@ -166,13 +166,16 @@ Server.prototype._timeoutUDP = function(udpLookupPort) {
   delete self._listeners[udpLookupPort]
 }
 
-Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
+Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udpLookupPort) {
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
   var onUDPMessage = this._onUDPMessage.bind(self, socket)
   if(!udpSocket) {
-    console.log('No socket found.')
-    return
+    await self.tryBindPort.apply(this, [{
+      dstPort: udpLookupPort,
+      dstAddr: '0.0.0.0'
+    }])
+    udpSocket = this._listeners[udpLookupPort]
   }
   console.log('Switching to UDP listener', udpLookupPort)
   //socket.dstSock = udpSocket
