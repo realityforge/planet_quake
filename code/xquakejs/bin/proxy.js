@@ -1,7 +1,6 @@
 var fs = require('fs')
 var path = require('path')
 var Buffer = require('buffer').Buffer
-var dgram = require('dgram')
 var WebSocketServer = require('ws').Server
 var Huffman = require('../lib/huffman.js')
 var {Server} = require('../lib/socks.server.js')

@@ -1748,7 +1748,7 @@ static void CL_Rcon_f( void ) {
 	int len;
 
 #if 0
-// allow black passwords for rcon clients
+// allow blank passwords for rcon clients
 	if ( !rcon_client_password->string[0] ) {
 		Com_Printf( "You must set 'rconpassword' before\n"
 			"issuing an rcon command.\n" );
