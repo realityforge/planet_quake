@@ -871,6 +871,7 @@ Called every frame to builds and sends a command packet to the server.
 */
 void CL_SendCmd( void ) {
 	// don't send any message if not connected
+#ifndef EMSCRIPTEN
 	if ( cls.state < CA_CONNECTED ) {
 		return;
 	}
@@ -879,6 +880,7 @@ void CL_SendCmd( void ) {
 	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
 		return;
 	}
+#endif
 
 	// we create commands even if a demo is playing,
 	CL_CreateNewCommands();

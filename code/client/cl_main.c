@@ -2097,17 +2097,17 @@ Called when all downloading has been completed
 */
 static void CL_DownloadsComplete( void ) {
 
-Com_Printf("Downloads complete\n");
+	Com_Printf("Downloads complete\n");
 
 #ifdef EMSCRIPTEN
-if(clc.dlDisconnect) {
-	if(clc.downloadRestart) {
-		FS_Restart(clc.checksumFeed);
-		clc.downloadRestart = qfalse;
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+	if(clc.dlDisconnect) {
+		if(clc.downloadRestart) {
+			FS_Restart(clc.checksumFeed);
+			clc.downloadRestart = qfalse;
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+		}
+		return;
 	}
-	return;
-}
 #endif
 
 #ifdef USE_CURL
@@ -4130,9 +4130,10 @@ void CL_Init( void ) {
 	if(!com_dedicated->integer) {
 		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
 		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_UNSPEC );
-		cls.state = CA_CONNECTING;
+		//cls.state = CA_CONNECTING;
 		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 		clc.connectPacketCount = 0;
+		//Cvar_Set( "sv_running", "1" );
 		CL_UpdateGUID(NULL, 0);
 	}
 

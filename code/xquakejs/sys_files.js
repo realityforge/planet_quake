@@ -116,7 +116,7 @@ var LibrarySysFiles = {
         SYSN.downloads = []
         SYSN.LoadingDescription('')
         SYSC.ProxyCallback()
-        if(SYSF.firstTime) {
+        if(SYSF.firstTime && typeof serverWorker != 'undefined') {
           SYSF.firstTime = false
           serverWorker.postMessage(['init'])
         }
