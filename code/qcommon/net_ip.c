@@ -687,6 +687,8 @@ Sys_SendPacket
 void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
+  
+  Com_Printf("SendPacket: %i\n", length);
 
 	switch ( to->type ) {
 		case NA_BROADCAST:
