@@ -56,13 +56,13 @@ var LibrarySysMain = {
       while (match = search.exec(query)) {
         var val = decodeURIComponent(match[1])
         val = val.split(' ')
-        val[0] = '+' + val[0]
+        val[0] = (val[0][0] != '+' ? '+' : '') + val[0]
         args.push.apply(args, val)
       }
       args.unshift.apply(args, [
         '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
-        '+set', 'r_customHeight', '' + window.innerHeight,
-        '+set', 'r_customWidth', '' + window.innerWidth,
+        '+set', 'r_customHeight', '' + window.innerHeight || 0,
+        '+set', 'r_customWidth', '' + window.innerWidth || 0,
       ])
       if(navigator && navigator.userAgent
         && navigator.userAgent.match(/mobile/i)) {

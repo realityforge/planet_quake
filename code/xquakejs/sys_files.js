@@ -118,7 +118,9 @@ var LibrarySysFiles = {
         SYSC.ProxyCallback()
         if(SYSF.firstTime && typeof window.serverWorker != 'undefined') {
           SYSF.firstTime = false
-          window.serverWorker.postMessage(['init'])
+          //_Com_WriteConfigToFile('interlinked.cfg')
+          window.serverWorker.postMessage(['init', ['+exec', 'interlinked.cfg']
+            .concat(SYSM.getQueryCommands())])
         }
       })
     },

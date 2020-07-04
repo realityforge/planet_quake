@@ -460,7 +460,7 @@ quake3 set test blah + map test
 ============================================================================
 */
 
-#define	MAX_CONSOLE_LINES	32
+#define	MAX_CONSOLE_LINES	1024
 int		com_numConsoleLines;
 char	*com_consoleLines[MAX_CONSOLE_LINES];
 // master rcon password
@@ -3825,7 +3825,7 @@ void Com_Init_After_Filesystem( void ) {
 
 //==================================================================
 
-static void Com_WriteConfigToFile( const char *filename ) {
+void Com_WriteConfigToFile( const char *filename ) {
 	fileHandle_t	f;
 
 	f = FS_FOpenFileWrite( filename );

@@ -230,7 +230,6 @@
     }
 		if('Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')
-			window.serverWorker.postMessage(['vars', 0])
 			window.serverWorker.onmessage = (e) => {
 				if(e.data[0] == 'init') {
 					//SYSC.Cvar_SetValue('sv_running', 1)

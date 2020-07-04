@@ -13,9 +13,8 @@ var runIsFirst = false
 onmessage = function(e) {
   if(e.data[0] == 'init') {
     initIsFirst = true
+    window.location = new URL(location.origin + '?' + (e.data[1] || []).join(' ') + '&set dedicated 1&set ttycon 1&set net_socksEnabled 0&spmap q3dm0')
     if(runIsFirst) Module.callMain()
-  } else if(e.data[0] == 'vars') {
-    
   } else if(e.data[0] == 'execute') {
     var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK)
     _Cbuf_AddText(cmd)
