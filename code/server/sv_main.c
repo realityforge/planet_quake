@@ -852,10 +852,15 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	redirectAddress = *from;
 	Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 
+#ifndef EMSCRIPTEN
 	if ( !sv_rconPassword->string[0] && !rconPassword2[0] ) {
 		Com_Printf( "No rconpassword set on the server.\n" );
 	} else if ( !valid ) {
 		Com_Printf( "Bad rconpassword.\n" );
+#else
+	if(!(!sv_rconPassword->string[0] && !rconPassword2[0]) && !valid) {
+		Com_Printf( "Bad rconpassword.\n" );
+#endif
 	} else {
 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 		// get the command directly, "rcon <pass> <command>" to avoid quoting issues

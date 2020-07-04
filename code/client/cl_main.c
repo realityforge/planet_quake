@@ -4138,11 +4138,6 @@ void CL_Init( void ) {
 		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 		clc.connectPacketCount = 0;
 		CL_CheckForResend();
-		/*
-		Com_Printf("Server name: %i\n", clc.serverAddress.type);
-		//cls.state = CA_CHALLENGING;
-		//Cvar_Set( "sv_running", "1" );
-		*/
 	}
 #endif
 }
