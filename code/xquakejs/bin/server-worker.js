@@ -1,6 +1,7 @@
 window = {}
+serverWorker = self
 window.serverWorker = self
-window.location = new URL(location.origin + '?set dedicated 1&set ttycon 1&set net_socksEnabled 0')
+window.location = new URL(location.origin + '?set dedicated 1&set ttycon 1&set net_socksEnabled 0&spmap q3dm0')
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true

@@ -4129,20 +4129,21 @@ void CL_Init( void ) {
 #ifdef EMSCRIPTEN
 	if(!com_dedicated->integer) {
 		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
-		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_UNSPEC );
-		cls.state = CA_CONNECTING;
-		Com_Printf("Server name: %i\n", clc.serverAddress.type);
+		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_LOOPBACK );
+		cls.state = CA_CHALLENGING;
+		Com_RandomBytes( (byte*)&clc.challenge, sizeof( clc.challenge ) );
+		CL_UpdateGUID(NULL, 0);
+		Netchan_Setup( NS_CLIENT, &clc.netchan, &clc.serverAddress,
+		  PORT_SERVER, clc.challenge, qtrue );
 		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 		clc.connectPacketCount = 0;
-		Com_RandomBytes( (byte*)&clc.challenge, sizeof( clc.challenge ) );
-		//Netchan_Setup( NS_CLIENT, &clc.netchan, &clc.serverAddress,
-		//  PORT_SERVER, clc.challenge, qtrue );
 		CL_CheckForResend();
-		cls.state = CA_DISCONNECTED;
+		/*
+		Com_Printf("Server name: %i\n", clc.serverAddress.type);
+		//cls.state = CA_CHALLENGING;
 		//Cvar_Set( "sv_running", "1" );
-		CL_UpdateGUID(NULL, 0);
+		*/
 	}
-
 #endif
 }
 

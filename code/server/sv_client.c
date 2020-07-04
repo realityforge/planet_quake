@@ -121,9 +121,11 @@ void SV_GetChallenge( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
+#ifndef EMSCRIPTEN
 	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
+#endif
 #endif
 
 	// Prevent using getchallenge as an amplifier

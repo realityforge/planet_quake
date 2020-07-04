@@ -5,7 +5,7 @@
 	<title>quakejs</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<style>
-			@import url('https://fonts.googleapis.com/css?family=Roboto');
+			/* @import url('https://fonts.googleapis.com/css?family=Roboto'); */
 			
 			html, body {
 				height: 100%;
@@ -232,7 +232,9 @@
 		  window.serverWorker = new Worker('server-worker.js')
 			window.serverWorker.postMessage(['vars', 0])
 			window.serverWorker.onmessage = (e) => {
-				if(e.data[0] == 'net') {
+				if(e.data[0] == 'init') {
+					//SYSC.Cvar_SetValue('sv_running', 1)
+				} else if(e.data[0] == 'net') {
 					SYSN.receiveNetLoop(e.data[1], e.data[2])
 				}
 			}

@@ -116,9 +116,9 @@ var LibrarySysFiles = {
         SYSN.downloads = []
         SYSN.LoadingDescription('')
         SYSC.ProxyCallback()
-        if(SYSF.firstTime && typeof serverWorker != 'undefined') {
+        if(SYSF.firstTime && typeof window.serverWorker != 'undefined') {
           SYSF.firstTime = false
-          serverWorker.postMessage(['init'])
+          window.serverWorker.postMessage(['init'])
         }
       })
     },

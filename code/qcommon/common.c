@@ -4210,6 +4210,9 @@ void Com_Frame( void ) {
 		timeBeforeServer = Sys_Milliseconds();
 	}
 
+#ifdef EMSCRIPTEN
+	if(com_dedicated->integer)
+#endif
 	SV_Frame( msec );
 
 	// if "dedicated" has been modified, start up
