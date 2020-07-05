@@ -246,6 +246,10 @@ var LibrarySysMain = {
       return
     }
   },
+  Sys_SetStatus__deps: ['$SYSN'],
+  Sys_SetStatus: function (s) {
+    SYSN.LoadingDescription(UTF8ToString(s))
+  },
   Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.args).concat(SYSM.getQueryCommands())

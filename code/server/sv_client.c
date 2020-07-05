@@ -1888,6 +1888,15 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	qboolean bFloodProtect;
 	
 	Cmd_TokenizeString( s );
+	
+	// TODO: check implied rconpassword from previous attempt by client
+#ifdef EMSCRIPTEN
+	// Execute client strings as local commands, 
+	// in case of running a web-worker dedicated server
+	if(Cmd_ExecuteString(s)) {
+		return qtrue;
+	}
+#endif
 
 	// malicious users may try using too many string commands
 	// to lag other players.  If we decide that we want to stall
@@ -1899,7 +1908,6 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	// normal to spam a lot of commands when downloading
 	bFloodProtect = cl->netchan.remoteAddress.type != NA_BOT && cl->state >= CS_ACTIVE;
 
-	// see if it is a server level command
 	for ( ucmd = ucmds; ucmd->name; ucmd++ ) {
 		if ( !strcmp( Cmd_Argv(0), ucmd->name ) ) {
 			if ( ucmd->func == SV_UpdateUserinfo_f ) {
@@ -1965,7 +1973,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		SV_DropClient( cl, "Lost reliable commands" );
 		return qfalse;
 	}
-
+	
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		return qfalse;
 	}
@@ -2203,6 +2211,13 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			return;	// disconnect command
 		}
 	} while ( 1 );
+
+#ifdef EMSCRIPTEN
+	// skip user move commands if server is restarting
+	if(!FS_Initialized()) {
+		return;
+	}
+#endif
 
 	// read the usercmd_t
 	if ( c == clc_move ) {

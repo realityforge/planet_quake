@@ -175,7 +175,6 @@ void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd ) {
 	int		index;
 	int		unacknowledged = clc.reliableSequence - clc.reliableAcknowledge;
 
-Com_Printf("CL_AddReliableCommand: %i\n", clc.serverAddress.type);
 	if ( clc.serverAddress.type == NA_BAD )
 		return;
 

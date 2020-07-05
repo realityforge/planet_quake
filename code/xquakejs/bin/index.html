@@ -215,7 +215,13 @@
 
 <script>
 	window.quake3e = {}
-	window.quake3e.printErr = console.log
+	window.quake3e.printErr = function (...args) {
+		var args = arguments
+		if(args[0] && args[0].includes('Sys_Error:'))
+			console.error.apply(console, args)
+		else
+			console.log.apply(console, args)
+	}
 	window.quake3e.viewport = document.getElementById('viewport-frame')
 	window.quake3e.elementPointerLock = true
 	window.quake3e.onRuntimeInitialized = () => {}

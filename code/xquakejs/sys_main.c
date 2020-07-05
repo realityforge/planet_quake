@@ -899,10 +899,7 @@ void Sys_Print( const char *msg )
 }
 
 
-void QDECL Sys_SetStatus( const char *format, ... )
-{
-	return;
-}
+extern void QDECL Sys_SetStatus( const char *format, ... );
 
 
 void Sys_ConfigureFPU( void )  // bk001213 - divide by zero

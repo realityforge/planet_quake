@@ -808,13 +808,13 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-void Cmd_ExecuteString( const char *text ) {
+qboolean Cmd_ExecuteString( const char *text ) {
 	cmd_function_t *cmd, **prev;
 
 	// execute the command line
 	Cmd_TokenizeString( text );
 	if ( !Cmd_Argc() ) {
-		return;		// no tokens
+		return qfalse;		// no tokens
 	}
 
 	// check registered command functions
@@ -834,36 +834,40 @@ void Cmd_ExecuteString( const char *text ) {
 			} else {
 				cmd->function();
 			}
-			return;
+			return qtrue;
 		}
 	}
 	
 	// check cvars
 	if ( Cvar_Command() ) {
-		return;
+		return qtrue;
 	}
 
 #ifndef DEDICATED
 	// check client game commands
 	if ( com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
-		return;
+		return qtrue;
 	}
 #endif
 
 	// check server game commands
 	if ( com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
-		return;
+		return qtrue;
 	}
 
 #ifndef DEDICATED
 	// check ui commands
 	if ( com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
-		return;
+		return qtrue;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	CL_ForwardCommandToServer( text );
+	if(!com_dedicated->integer) {
+		CL_ForwardCommandToServer( text );
+		return qtrue;
+	} else 
+		return qfalse;
 #endif
 }
 

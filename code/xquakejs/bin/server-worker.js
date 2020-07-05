@@ -5,7 +5,13 @@ window.location = new URL(location.origin + '?set dedicated 1&set ttycon 1&set n
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
-quake3e.printErr = console.log
+quake3e.printErr = function (...args) {
+  var args = arguments
+  if(args[0] && args[0].includes('Sys_Error:'))
+    console.error.apply(console, args)
+  else
+    console.log.apply(console, args)
+}
 importScripts('quake3e.js')
 var initIsFirst = false
 var runIsFirst = false

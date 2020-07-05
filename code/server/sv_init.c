@@ -518,7 +518,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	Cvar_Set( "mapname", mapname );
 
 #ifdef EMSCRIPTEN
-
+	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }
 
@@ -534,6 +534,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	const char	*p;
 	const char *mapname = Cvar_VariableString("mapname");
 	FS_Restart_After_Async();
+	Cvar_Set("sv_running", "1");
 #endif
 ;
 
