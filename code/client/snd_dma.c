@@ -1461,10 +1461,7 @@ void S_FreeOldestSound( void ) {
 // Shutdown sound engine
 // =======================================================================
 
-static void S_Base_Shutdown( void ) {
-	int i;
-	sfx_t	*sfx;
-	
+static void S_Base_Shutdown( void ) {	
 #ifdef EMSCRIPTEN
 	return;
 #endif
