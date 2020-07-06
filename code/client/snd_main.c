@@ -458,6 +458,10 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
+#ifdef EMSCRIPTEN
+	cls.firstClick = qtrue;
+#endif
+
 	if ( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}
@@ -476,5 +480,4 @@ void S_Shutdown( void )
 	Cmd_RemoveCommand( "s_info" );
 
 	S_CodecShutdown();
-	cls.firstClick = qtrue;
 }

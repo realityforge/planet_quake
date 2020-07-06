@@ -363,8 +363,8 @@ static void S_Base_BeginRegistration( void ) {
 
 	SND_setup();
 
-	//Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
-	//Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
+	Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
+	Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 
 	S_Base_RegisterSound("sound/feedback/hit.wav", qfalse);		// changed to a sound in baseq3
 }
@@ -1462,6 +1462,12 @@ void S_FreeOldestSound( void ) {
 // =======================================================================
 
 static void S_Base_Shutdown( void ) {
+	int i;
+	sfx_t	*sfx;
+	
+#ifdef EMSCRIPTEN
+	return;
+#endif
 
 	if ( !s_soundStarted ) {
 		return;
@@ -1476,7 +1482,7 @@ static void S_Base_Shutdown( void ) {
 
 	s_soundStarted = qfalse;
 
-	s_numSfx = 0; // clean up sound cache -EC-
+	//s_numSfx = 0; // clean up sound cache -EC-
 
 	if ( dma_buffer2 != buffer2 )
 		free( dma_buffer2 );

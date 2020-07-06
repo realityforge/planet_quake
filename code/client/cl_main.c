@@ -1951,7 +1951,8 @@ static void CL_Snd_Restart_f( void )
 {
 	CL_Snd_Shutdown();
 	// sound will be reinitialized by vid_restart
-	CL_Vid_Restart();
+	S_Init();
+	//CL_Vid_Restart();
 }
 
 

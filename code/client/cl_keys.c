@@ -650,7 +650,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	}
 
 #ifdef EMSCRIPTEN
-	if(cls.soundStarted && cls.firstClick
+	if(cls.firstClick
 	  && (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3
 		  || key == K_MOUSE4 || key == K_MOUSE5)) {
 		cls.firstClick = qfalse;
