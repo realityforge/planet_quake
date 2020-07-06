@@ -1246,10 +1246,12 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 		CL_CloseAVI();
 	}
 
+#ifndef EMSCRIPTEN
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
+#endif
 
 	SCR_StopCinematic();
 	S_StopAllSounds();
@@ -1270,6 +1272,11 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 		cl_disconnecting = qfalse;
 		return qfalse;
 	}
+	
+#ifdef EMSCRIPTEN
+	// skip disconnecting and just show the main menu
+	return cl_restarted;
+#endif
 
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped
@@ -2099,6 +2106,7 @@ Called when all downloading has been completed
 static void CL_DownloadsComplete( void ) {
 
 	Com_Printf("Downloads complete\n");
+	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
 #ifdef EMSCRIPTEN
 	if(clc.dlDisconnect) {
