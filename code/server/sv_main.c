@@ -167,7 +167,11 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
+	if(!Q_strncmp(cmd, "print", 5)) {
+		Q_strncpyz( client->reliableCommands[ index ], va("q_%s", cmd), sizeof( client->reliableCommands[ index ] ) );
+	} else {
+		Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
+	}
 }
 
 
