@@ -861,14 +861,19 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 		return qtrue;
 	}
 
-	if(com_dedicated->integer) {
+	if(noServer && com_dedicated->integer) {
 		return qfalse;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	CL_ForwardCommandToServer( text );
-	return qtrue;
+	if(!noServer && !com_dedicated->integer) {
+		CL_ForwardCommandToServer( text );
+		return qtrue;		
+	} else {
+		// ForwardCommandToClient
+		return qfalse;
+	}
 #endif
 }
 

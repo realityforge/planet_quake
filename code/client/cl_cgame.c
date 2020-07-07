@@ -351,6 +351,13 @@ rescan:
 	}
 
 	// we may want to put a "connect to other server" command here
+#ifdef EMSCRIPTEN
+	// pass server commands through to client like postgame
+  // skip sending to server since that where it came from
+	if(Cmd_ExecuteString(cmd, qtrue)) {
+		return qfalse;
+	}
+#endif
 
 	// cgame can now act on the command
 	return qtrue;
