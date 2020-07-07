@@ -885,7 +885,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		while ( *cmd_aux == ' ' )
 			cmd_aux++;
 
-		Cmd_ExecuteString( cmd_aux );
+		Cmd_ExecuteString( cmd_aux, qfalse );
 	}
 
 	Com_EndRedirect();

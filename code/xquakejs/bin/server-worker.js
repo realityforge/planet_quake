@@ -6,11 +6,13 @@ window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
 quake3e.printErr = function (...args) {
-  var args = arguments
-  if(args[0] && args[0].includes('Sys_Error:'))
-    console.error.apply(console, args)
+  var args = Array.from(arguments)
+  if(args[0] && (args[0].includes('Sys_Error:')
+    || args[0].includes('Error:')
+    || args[0].includes('server:')))
+    console.error.apply(console, ['DedServer: '].concat(args))
   else
-    console.log.apply(console, args)
+    console.log.apply(console, ['DedServer: '].concat(args))
 }
 importScripts('quake3e.js')
 var initIsFirst = false

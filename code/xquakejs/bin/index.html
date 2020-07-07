@@ -217,7 +217,9 @@
 	window.quake3e = {}
 	window.quake3e.printErr = function (...args) {
 		var args = arguments
-		if(args[0] && args[0].includes('Sys_Error:'))
+		if(args[0] && (args[0].includes('Sys_Error:')
+	    || args[0].includes('Error:')
+	    || args[0].includes('server:')))
 			console.error.apply(console, args)
 		else
 			console.log.apply(console, args)

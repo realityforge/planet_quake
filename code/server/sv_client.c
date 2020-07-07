@@ -583,6 +583,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ) {
 		if ( NET_CompareAdr( from, &cl->netchan.remoteAddress ) ) {
 			int elapsed = svs.time - cl->lastConnectTime;
+#ifndef EMSCRIPTEN
 			if ( elapsed < ( sv_reconnectlimit->integer * 1000 ) && elapsed >= 0 ) {
 				int remains = ( ( sv_reconnectlimit->integer * 1000 ) - elapsed + 999 ) / 1000;
 				if ( com_developer->integer ) {
@@ -595,6 +596,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 				}
 				return;
 			}
+#endif
 			newcl = cl; // we may reuse this slot
 			break;
 		}
@@ -1893,7 +1895,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 #ifdef EMSCRIPTEN
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
-	if(Cmd_ExecuteString(s)) {
+	if(cl->netchan.remoteAddress.type == NA_LOOPBACK && Cmd_ExecuteString(s, qtrue)) {
 		return qtrue;
 	}
 #endif
@@ -1908,6 +1910,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	// normal to spam a lot of commands when downloading
 	bFloodProtect = cl->netchan.remoteAddress.type != NA_BOT && cl->state >= CS_ACTIVE;
 
+	// see if it is a server level command
 	for ( ucmd = ucmds; ucmd->name; ucmd++ ) {
 		if ( !strcmp( Cmd_Argv(0), ucmd->name ) ) {
 			if ( ucmd->func == SV_UpdateUserinfo_f ) {

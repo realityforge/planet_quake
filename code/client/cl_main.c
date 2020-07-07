@@ -1703,9 +1703,12 @@ void CL_Connect_After_Restart( void ) {
 
 	// if we aren't playing on a lan, we need to authenticate
 	// with the cd key
+#ifndef EMSCRIPTEN
 	if ( NET_IsLocalAddress( &clc.serverAddress ) ) {
 		cls.state = CA_CHALLENGING;
-	} else {
+	} else 
+#endif
+	{
 		cls.state = CA_CONNECTING;
 
 		// Set a client challenge number that ideally is mirrored back by the server.
@@ -4136,7 +4139,8 @@ void CL_Init( void ) {
 	Com_Printf( "----- Client Initialization Complete -----\n" );
 	
 #ifdef EMSCRIPTEN
-	if(!com_dedicated->integer) {
+	// connect client immediately
+	if(0 && !com_dedicated->integer) {
 		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
 		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_LOOPBACK );
 		cls.state = CA_CONNECTING;

@@ -4219,6 +4219,7 @@ void Com_Frame( void ) {
 	// or shut down the client system.
 	// Do this after the server may have started,
 	// but before the client tries to auto-connect
+#ifndef EMSCRIPTEN
 	if ( com_dedicated->modified ) {
 		// get the latched value
 		Cvar_Get( "dedicated", "0", 0 );
@@ -4244,6 +4245,7 @@ void Com_Frame( void ) {
 			gw_minimized = qtrue;
 		}
 	}
+#endif
 
 #ifdef DEDICATED
 	if ( com_speeds->integer ) {

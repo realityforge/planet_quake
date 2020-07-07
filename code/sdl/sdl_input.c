@@ -392,6 +392,10 @@ static void IN_ActivateMouse( qboolean isFullscreen )
 	mouseActive = qtrue;
 }
 
+void IN_GrabMouse(void) {
+	SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
+	SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+}
 
 /*
 ===============
@@ -1253,6 +1257,7 @@ static void IN_Minimize( void )
 IN_Frame
 ===============
 */
+qboolean clickChanged = qfalse;
 void IN_Frame( void )
 {
 	qboolean loading;
@@ -1285,6 +1290,12 @@ void IN_Frame( void )
 	else
 		IN_ActivateMouse( fullscreen );
 
+	if(clickChanged != cls.firstClick) {
+		clickChanged = cls.firstClick;
+		if(cls.firstClick == false) {
+			IN_GrabMouse();
+		}
+	}
 	//IN_ProcessEvents();
 	//HandleEvents();
 
