@@ -847,7 +847,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			text = ( Cmd_Argc() > 1 ) ? va( "Server disconnected: %s", Cmd_Argv( 1 ) ) : "Server disconnected.";
 			Cvar_Set( "com_errorMessage", text );
 			Com_Printf( "%s\n", text );
-			if ( !CL_Disconnect( qtrue ) ) { // restart client if not done already
+			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
 			return;

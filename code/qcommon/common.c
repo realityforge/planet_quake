@@ -349,7 +349,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		SV_Shutdown( "Server disconnected" );
 		Com_EndRedirect();
 #ifndef DEDICATED
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -366,7 +366,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		SV_Shutdown( va( "Server crashed: %s",  com_errorMessage ) );
 		Com_EndRedirect();
 #ifndef DEDICATED
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -380,7 +380,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_EndRedirect();
 #ifndef DEDICATED
 		if ( com_cl_running && com_cl_running->integer ) {
-			CL_Disconnect( qfalse );
+			CL_Disconnect( qfalse, qtrue );
 			VM_Forced_Unload_Start();
 			CL_FlushMemory();
 			VM_Forced_Unload_Done();
@@ -3052,7 +3052,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #ifndef DEDICATED
 		if ( clientRestart )
 		{
-			CL_Disconnect( qfalse );
+			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
 #ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 

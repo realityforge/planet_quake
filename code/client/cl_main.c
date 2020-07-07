@@ -680,7 +680,7 @@ static void CL_DemoCompleted( void ) {
 		}
 	}
 
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 #ifndef EMSCRIPTEN
 	CL_NextDemo();
 
@@ -912,7 +912,7 @@ static void CL_PlayDemo_f( void ) {
 	// 2 means don't force disconnect of local client
 	Cvar_Set( "sv_killserver", "2" );
 
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 
 	// clc.demofile will be closed during CL_Disconnect so reopen it
 	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 ) 
@@ -1106,7 +1106,7 @@ void CL_MapLoading( void ) {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
 #ifndef EMSCRIPTEN
-		CL_Disconnect( qtrue );
+		CL_Disconnect( qtrue, qfalse );
 #endif
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
@@ -1205,7 +1205,7 @@ Sends a disconnect message to the server
 This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 =====================
 */
-qboolean CL_Disconnect( qboolean showMainMenu ) {
+qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
 	
@@ -1247,7 +1247,7 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 #ifndef EMSCRIPTEN
-	if ( cgvm ) {
+	if ( cgvm && dropped ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
@@ -1274,8 +1274,10 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	}
 	
 #ifdef EMSCRIPTEN
-	// skip disconnecting and just show the main menu
-	return cl_restarted;
+	if(!dropped) {
+		// skip disconnecting and just show the main menu
+		return cl_restarted;
+	}
 #endif
 
 	// send a disconnect message to the server
@@ -1528,7 +1530,7 @@ void CL_Disconnect_f( void ) {
 				Com_Printf( "Disconnected from %s\n", cls.servername );
 			}
 			Cvar_Set( "com_errorMessage", "" );
-			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+			if ( !CL_Disconnect( qfalse, qfalse ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
 			if ( uivm ) {
@@ -1648,7 +1650,7 @@ static void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 	noGameRestart = qtrue;
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 
 	Con_Close();
 
@@ -3052,7 +3054,7 @@ static void CL_CheckTimeout( void ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
 			Com_Error( ERR_DROP, "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
-			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
 			//if ( uivm ) {
@@ -4177,7 +4179,7 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	recursive = qtrue;
 
 	noGameRestart = quit;
-	CL_Disconnect( qfalse );
+	CL_Disconnect( qfalse, qtrue );
 
 	CL_ShutdownVMs();
 

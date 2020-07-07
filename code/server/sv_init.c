@@ -916,9 +916,11 @@ void SV_Shutdown( const char *finalmsg ) {
 	Com_Printf( "---------------------------\n" );
 
 #ifndef DEDICATED
+#ifndef EMSCRIPTEN
 	// disconnect any local clients
 	if ( sv_killserver->integer != 2 )
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
+#endif
 #endif
 
 	// clean some server cvars

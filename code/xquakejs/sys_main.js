@@ -184,7 +184,7 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
-    if(flipper) {
+    if(typeof flipper != 'undefined') {
       flipper.style.display = 'block'
       flipper.style.animation = 'none'
     }

@@ -1163,7 +1163,7 @@ CLIENT / SERVER SYSTEMS
 // client interface
 //
 void CL_Init( void );
-qboolean CL_Disconnect( qboolean showMainMenu );
+qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec );

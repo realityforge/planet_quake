@@ -37,6 +37,7 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
+  * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect.
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
   * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Multi-view, seamless Demo playback, instant replay, Demo voting and spectating
