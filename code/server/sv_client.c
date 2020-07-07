@@ -1887,7 +1887,7 @@ Also called by bot code
 */
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
-	qboolean bFloodProtect;
+	qboolean bFloodProtect, gameResult;
 	
 	Cmd_TokenizeString( s );
 	
@@ -1895,9 +1895,21 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 #ifdef EMSCRIPTEN
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
-	if(cl->netchan.remoteAddress.type == NA_LOOPBACK && Cmd_ExecuteString(s, qtrue)) {
-		return qtrue;
+	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
+		if(Cmd_ExecuteString(s, qtrue)) {
+			return qtrue;
+		}
+		
+		// in baseq3 game (not cgame or ui) the dedicated flag is used for
+		// say "server:" and other logging bs. hope this is sufficient?
+		Cvar_Set("dedicated", "0");
+		if(com_sv_running && com_sv_running->integer) {
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+			SV_GameCommand();
+		}
+		Cvar_Set("dedicated", "1");
 	}
+
 #endif
 
 	// malicious users may try using too many string commands

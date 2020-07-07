@@ -184,8 +184,10 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
-    flipper.style.display = 'block'
-    flipper.style.animation = 'none'
+    if(flipper) {
+      flipper.style.display = 'block'
+      flipper.style.animation = 'none'
+    }
     SYSM.exited = true
     window.removeEventListener('resize', SYSM.resizeViewport)
     window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
