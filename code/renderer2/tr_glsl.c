@@ -335,6 +335,12 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 								AGEN_LIGHTING_SPECULAR,
 								AGEN_PORTAL));
 
+	if(glConfig.vidWidth <= 0) {
+		glConfig.vidWidth = 640;
+	}
+	if(glConfig.vidHeight <= 0) {
+		glConfig.vidHeight = 480;
+	}
 	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth);
 	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight);
 	Q_strcat(dest, size,
@@ -385,7 +391,7 @@ static int GLSL_CompileGPUShader(GLuint program, GLuint *prevShader, const GLcha
 	{
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_SOURCE, qfalse);
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_INFO, qfalse);
-		ri.Error(ERR_DROP, "Couldn't compile shader");
+		ri.Printf(PRINT_WARNING, "Couldn't compile shader");
 		return 0;
 	}
 

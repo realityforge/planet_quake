@@ -687,6 +687,8 @@ Sys_SendPacket
 void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
+  
+  Com_Printf("SendPacket: %i\n", length);
 
 	switch ( to->type ) {
 		case NA_BROADCAST:
@@ -867,8 +869,8 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	struct sockaddr_in	address;
 #ifndef EMSCRIPTEN
 	ioctlarg_t			_true = 1;
-	int					i = 1;
 #endif
+  int					i = 1;
 
 	*err = 0;
 
@@ -884,6 +886,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+
 #ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
@@ -1141,6 +1144,7 @@ static void NET_OpenSocks( int port ) {
 #ifdef EMSCRIPTEN
   if(!Cvar_VariableIntegerValue("net_socksLoading")
     && strcmp(Cmd_Argv(0), "net_restart")) {
+    Cvar_Set("net_socksLoading", "0");
     Cvar_Set("net_socksLoading", "1");
     SOCKS_Frame_Callback(NULL, NET_OpenIP);
     return;

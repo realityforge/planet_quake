@@ -30,21 +30,32 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
+  * Removed SDL inputs, touch support on mobile works
+  * New cl_lazyLoad, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
+  * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
+  * Web-worker dedicated local server for mesh networked gaming.
   * Many, many bug fixes
 
 Coming soon!
+  * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect.
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Multiple QVM loader, multiple map loader in parallel with teleport switch
+  * Multi-view, seamless Demo playback, instant replay, Demo voting and spectating
+  * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
+  * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
+  * .cfg file uploads/local imports
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
-  * Remove SDL usage because EMSCRIPTEN uses SDL1, but the engine expects SDL2
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you
 use a modern copy from http://icculus.org/gtkradiant/.
 
 # Compilation and installation
+See [QuakeJS README](https://github.com/briancullinan/planet_quake/tree/master/code/xquakejs#quakejs) for more build instructions.
+
 As a prerequisite, you will need to install the dependencies specific to your
  operating system from ioq3 https://github.com/ioquake/ioq3#compilation-and-installation
 
@@ -60,7 +71,7 @@ then
 ```
 ./code/xquakejs/lib/emsdk/emsdk install latest-upstream
 ./code/xquakejs/lib/emsdk/emsdk activate latest
-
+./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2
 make PLATFORM=js
 ```
 

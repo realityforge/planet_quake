@@ -167,7 +167,11 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
+	if(!Q_strncmp(cmd, "print", 5)) {
+		Q_strncpyz( client->reliableCommands[ index ], va("q_%s", cmd), sizeof( client->reliableCommands[ index ] ) );
+	} else {
+		Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
+	}
 }
 
 
@@ -852,10 +856,15 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	redirectAddress = *from;
 	Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 
+#ifndef EMSCRIPTEN
 	if ( !sv_rconPassword->string[0] && !rconPassword2[0] ) {
 		Com_Printf( "No rconpassword set on the server.\n" );
 	} else if ( !valid ) {
 		Com_Printf( "Bad rconpassword.\n" );
+#else
+	if(!(!sv_rconPassword->string[0] && !rconPassword2[0]) && !valid) {
+		Com_Printf( "Bad rconpassword.\n" );
+#endif
 	} else {
 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 		// get the command directly, "rcon <pass> <command>" to avoid quoting issues
@@ -880,7 +889,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		while ( *cmd_aux == ' ' )
 			cmd_aux++;
 
-		Cmd_ExecuteString( cmd_aux );
+		Cmd_ExecuteString( cmd_aux, qfalse );
 	}
 
 	Com_EndRedirect();

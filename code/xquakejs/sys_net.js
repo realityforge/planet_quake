@@ -6,7 +6,22 @@ var LibrarySysNet = {
 		downloads: [],
 		downloadSort: 0,
     lazyIterval: 0,
+    multicasting: false,
+    multicastBuffer: 0,
+    receiveNetLoop: function (net, data) {
+      if(!SYSN.multicastBuffer) {
+        SYSN.multicastBuffer = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+      }
+      SYSN.multicasting = true
+      data.forEach((d, i) => HEAP8[SYSN.multicastBuffer+i] = d)
+      _NET_SendLoopPacket(net, data.length, SYSN.multicastBuffer)
+      SYSN.multicasting = false
+    },
     LoadingDescription: function (desc) {
+      if(typeof document == 'undefined') {
+        console.log(desc)
+        return
+      }
 			var flipper = document.getElementById('flipper')
 			var progress = document.getElementById('loading-progress')
 			var description = progress.querySelector('.description')
@@ -21,55 +36,44 @@ var LibrarySysNet = {
 			description.innerHTML = desc
 		},
 		LoadingProgress: function (progress, total) {
+      if(typeof document == 'undefined') {
+        return
+      }
 			var frac = progress / total
 			var progress = document.getElementById('loading-progress')
 			var bar = progress.querySelector('.bar')
 			bar.style.width = (frac*100) + '%'
 		},
     DoXHR: function (url, opts) {
+      var xhrError = null
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-
-      var req = new XMLHttpRequest()
-      req.open('GET', url, true)
-      if (opts.dataType &&
-        // responseType json not implemented in webkit, we'll do it manually later on
-        opts.dataType !== 'json') {
-        req.responseType = opts.dataType
-      }
-      req.onprogress = function (ev) {
-        if (opts.onprogress) {
-          opts.onprogress(ev.loaded, ev.total)
-        }
-      }
-      var xhrError = null
-      req.onload = function () {
-        var data = req.response
-        if (!(req.status >= 200 && req.status < 300 || req.status === 304)) {
-          xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + req.statusCode)
-        } else {
-          // manually parse out a request expecting a JSON response
-          if (opts.dataType === 'json') {
-            try {
-              data = JSON.parse(data)
-            } catch (e) {
-              xhrError = e
+      fetch(url, {credentials: 'include'})
+        .catch(e => console.log(e))
+        .then(response => {
+            if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
+              xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
+              if (opts.onload) {
+                opts.onload(xhrError, null)
+              }
+              return
             }
-          }
-        }
-
-        if (opts.onload) {
-          opts.onload(xhrError, data)
-        }
-      }
-      req.onerror = function (req) {
-        xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + req.type)
-        opts.onload(xhrError, req)
-      }
-      try {
-        req.send(null)
-      } catch(e) {console.log(e)}
+            if(!xhrError)
+              return response.arrayBuffer()
+                .then(data => {
+                  if (opts.dataType === 'json') {
+                    try {
+                      data = JSON.parse(data)
+                    } catch (e) {
+                      xhrError = e
+                    }
+                  }
+                  if (opts.onload) {
+                    opts.onload(xhrError, data)
+                  }
+                })
+        })
     },
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
@@ -142,8 +146,14 @@ var LibrarySysNet = {
 				if(err) {
 					return
 				}
-				FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
-					encoding: 'binary', flags: 'w', canOwn: true })
+        try {
+          FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
+  					encoding: 'binary', flags: 'w', canOwn: true })
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+            SYSC.Error('fatal', e.message)
+          }
+        }
 				SYSN.DownloadLazyFinish(indexFilename, file)
 			})
 		},
@@ -151,13 +161,14 @@ var LibrarySysNet = {
 			SYSC.DownloadAsset(index + '/index.json', SYSN.LoadingProgress, (err, data) => {
 				if(err) {
 					SYSN.LoadingDescription('')
-					SYSC.ProxyCallback(cb)
+					cb()
 					return
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
 					obj[k.toLowerCase()] = moreIndex[k]
-					obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+          if(typeof obj[k.toLowerCase()].downloading == 'undefined')
+					     obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
 					obj[k.toLowerCase()].downloading = false
 					obj[k.toLowerCase()].shaders = []
 					return obj
@@ -166,7 +177,7 @@ var LibrarySysNet = {
 					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
 					+ '}')
 				FS.writeFile(PATH.join(SYSF.fs_basepath, index, "index.json"),
-				 	Uint8Array.from(bits),
+				 	Uint8Array.from(bits.slice(0, bits.length-1)),
 					{encoding: 'binary', flags: 'w', canOwn: true })
 				cb()
 			})
@@ -178,20 +189,22 @@ var LibrarySysNet = {
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     var fs_game = SYSC.Cvar_VariableString('fs_game')
     
-    SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
-    
-    SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
-      SYSC.Cvar_SetValue('cl_downloadSize', total);
-      SYSC.Cvar_SetValue('cl_downloadCount', loaded);
-    }, (err, data) => {
-      if(err) {
-        SYSC.Error('drop', 'Download Error: ' + err.message)
-        return
-      } else {
-        FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
-          encoding: 'binary', flags: 'w', canOwn: true })
-      }
-      FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+    FS.syncfs(false, (e) => {
+      if(e) console.log(e)
+      SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
+      SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
+        SYSC.Cvar_SetValue('cl_downloadSize', total);
+        SYSC.Cvar_SetValue('cl_downloadCount', loaded);
+      }, (err, data) => {
+        if(err) {
+          SYSC.Error('drop', 'Download Error: ' + err.message)
+          return
+        } else {
+          //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+          //  encoding: 'binary', flags: 'w', canOwn: true })
+        }
+        FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+      })
     })
   },
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
@@ -199,15 +212,24 @@ var LibrarySysNet = {
     var timer = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
     var callback = () => {
       clearTimeout(timer)
-      Browser.safeCallback(_SOCKS_Frame_Proxy)
+      Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }
     Module['websocket'].on('open', callback)
     Module['websocket'].on('message', callback)
     Module['websocket'].on('error', callback)
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
-  Sys_SocksMessage: function () {
-  },
+  Sys_SocksMessage: function () {},
+  Sys_NET_MulticastLocal: function (net, length, data) {
+    // prevent recursion because NET_SendLoopPacket will call here again
+    if(SYSN.multicasting) return
+    SYSN.multicasting = true
+    window.serverWorker.postMessage([
+      'net',
+      net,
+      Uint8Array.from(HEAP8.slice(data, data+length))])
+    SYSN.multicasting = false
+  }
 }
 autoAddDeps(LibrarySysNet, '$SYSN')
 mergeInto(LibraryManager.library, LibrarySysNet);

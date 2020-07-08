@@ -365,6 +365,12 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
 	case G_ERROR:
+		// excessive plus checking if it is installed correctly
+		if(Q_stristr((const char*)VMA(1), "seems broken")) {
+			Com_Printf( "%s", (const char*)VMA(1) );
+			Cvar_Set("bot_enable", "1");
+			return 1;
+		}
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
 		return 0;
 	case G_MILLISECONDS:
@@ -1096,9 +1102,24 @@ See if the current console command is claimed by the game
 ====================
 */
 qboolean SV_GameCommand( void ) {
+	qboolean result;
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
 	}
 
-	return VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
+	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
+
+#ifdef EMSCRIPTEN
+	if(com_dedicated->integer) {
+		client_t	*client;
+		int			j;
+		for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
+			if(client->netchan.remoteAddress.type == NA_LOOPBACK)
+				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
+		}
+		return qtrue;
+	}
+#endif
+	
+	return result;
 }

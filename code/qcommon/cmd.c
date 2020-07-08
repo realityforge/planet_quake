@@ -148,7 +148,7 @@ void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-			Cmd_ExecuteString (text);
+			Cmd_ExecuteString (text, qfalse);
 		} else {
 			Cbuf_Execute();
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text.data);
@@ -250,7 +250,13 @@ void Cbuf_Execute( void )
 		}
 
 		// execute the command line
-		Cmd_ExecuteString( line );
+		Cmd_ExecuteString( line, qfalse );
+#ifdef EMSCRIPTEN
+		// if an execution invoked a callback event, run the rest next frame
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+			return;
+		}
+#endif
 	}
 }
 
@@ -808,13 +814,13 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-void Cmd_ExecuteString( const char *text ) {
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	cmd_function_t *cmd, **prev;
 
 	// execute the command line
 	Cmd_TokenizeString( text );
 	if ( !Cmd_Argc() ) {
-		return;		// no tokens
+		return qfalse;		// no tokens
 	}
 
 	// check registered command functions
@@ -834,36 +840,46 @@ void Cmd_ExecuteString( const char *text ) {
 			} else {
 				cmd->function();
 			}
-			return;
+			return qtrue;
 		}
 	}
 	
 	// check cvars
 	if ( Cvar_Command() ) {
-		return;
+		return qtrue;
 	}
-
+	
 #ifndef DEDICATED
 	// check client game commands
-	if ( com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
-		return;
+	if ( !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
+		return qtrue;
 	}
 #endif
 
 	// check server game commands
-	if ( com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
-		return;
+	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
+		return qtrue;
 	}
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
-		return;
+	if ( !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
+		return qtrue;
+	}
+
+	if(noServer && com_dedicated->integer) {
+		return qfalse;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	CL_ForwardCommandToServer( text );
+	if(!noServer && !com_dedicated->integer) {
+		CL_ForwardCommandToServer( text );
+		return qtrue;		
+	} else {
+		// ForwardCommandToClient
+		return qfalse;
+	}
 #endif
 }
 

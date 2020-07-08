@@ -9,8 +9,8 @@ var LibrarySysMain = {
       '+set', 'fs_basepath', '/base',
       //'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
       //'+set', 'cl_allowDownload', '1',
-      '+set', 'fs_basegame', 'baseq3-ccr',
-      '+set', 'fs_game', 'baseq3-ccr',
+      '+set', 'fs_basegame', 'baseq3-cc',
+      '+set', 'fs_game', 'baseq3-cc',
       //'+set', 'developer', '0',
       //'+set', 'fs_debug', '0',
       '+set', 'r_mode', '-1',
@@ -35,6 +35,8 @@ var LibrarySysMain = {
       //'+set', 'r_picmip', '4',
       //'+set', 'r_postProcess', '0',
       '+set', 'cg_drawfps', '1',
+      '+set', 's_compression', '1',
+      '+set', 'r_ext_compressed_textures', '1',
       //'+connect', 'proxy.quake.games:443',
       /*
       '+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
@@ -54,14 +56,13 @@ var LibrarySysMain = {
       while (match = search.exec(query)) {
         var val = decodeURIComponent(match[1])
         val = val.split(' ')
-        val[0] = '+' + val[0]
+        val[0] = (val[0][0] != '+' ? '+' : '') + val[0]
         args.push.apply(args, val)
       }
       args.unshift.apply(args, [
-        '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         '+set', 'r_fullscreen', window.fullscreen ? '1' : '0',
-        '+set', 'r_customHeight', '' + window.innerHeight,
-        '+set', 'r_customWidth', '' + window.innerWidth,
+        '+set', 'r_customHeight', '' + window.innerHeight || 0,
+        '+set', 'r_customWidth', '' + window.innerWidth || 0,
       ])
       if(navigator && navigator.userAgent
         && navigator.userAgent.match(/mobile/i)) {
@@ -69,11 +70,11 @@ var LibrarySysMain = {
           '+set', 'in_joystick', '1',
           '+set', 'in_nograb', '1',
           '+set', 'in_mouse', '0',
-          '+bind', 'mouse1', '+attack',
-          '+bind', 'UPARROW', '+attack',
-          '+bind', 'DOWNARROW', '+jump',
-          '+bind', 'LEFTARROW', '-strafe',
-          '+bind', 'RIGHTARROW', '+strafe',
+          '+bind', 'mouse1', '"+attack"',
+          '+bind', 'UPARROW', '"+attack"',
+          '+bind', 'DOWNARROW', '"+moveup"',
+          '+bind', 'LEFTARROW', '"+moveleft"',
+          '+bind', 'RIGHTARROW', '"+moveright"',
           '+unbind', 'A',
           '+unbind', 'D',
         ])
@@ -85,15 +86,50 @@ var LibrarySysMain = {
         ])
       }
       if(window.location.hostname.match(/quake\.games/i)) {
+        var match
         args.unshift.apply(args, [
-          '+set', 'net_socksServer', 'proxy.quake.games',
-          '+set', 'net_socksPort', '443',
+          '+set', 'sv_dlURL', '"https://quake.games/assets"',
         ])
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', window.location.hostname,
+            '+set', 'net_socksPort', '443',
+          ])
+          if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
+            args.unshift.apply(args, [
+              '+set', 'fs_basegame', match[1],
+              '+set', 'fs_game', match[1],
+            ])
+          }
+          if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+spdevmap') 
+            && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', window.location.hostname
+            ])
+          }
+        } else {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', 'proxy.quake.games',
+            '+set', 'net_socksPort', '443',
+          ])
+        }
       } else {
         args.unshift.apply(args, [
           '+set', 'net_socksServer', window.location.hostname,
+          '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         ])
       }
+      if(typeof document != 'undefined'
+        && !args.includes('+spmap')
+        && !args.includes('+map')
+        && !args.includes('+devmap')
+        && !args.includes('+spdevmap')
+        && !args.includes('+connect')) {
+          args.push.apply(args, [
+            '+connect', 'localhost'
+          ])
+        }
       return args
     },
     updateVideoCmd: function () {
@@ -114,12 +150,24 @@ var LibrarySysMain = {
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
   },
-  Sys_PlatformInit__deps: ['stackAlloc'],
+  Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+    SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    Object.assign(Module, {
+      websocket: Object.assign(Module.websocket || {}, {
+        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
+        ? 'wss://'
+        : 'ws://'
+      })
+    })
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
+
+    SYSF.firstTime = true
+    if(typeof document == 'undefined') return
+
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
-    
     // TODO: load this the same way demo does
     if(SYSC.eula) {
       // add eula frame to viewport
@@ -134,15 +182,7 @@ var LibrarySysMain = {
         '</div>'
       SYSM.eula = Module['viewport'].appendChild(eula)
     }
-    Object.assign(Module, {
-      websocket: Object.assign(Module.websocket || {}, {
-        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
-        ? 'wss://'
-        : 'ws://'
-      })
-    })
     window.addEventListener('resize', SYSM.resizeViewport)
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
   },
   Sys_PlatformExit: function () {
     /*
@@ -155,10 +195,22 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
-    flipper.style.display = 'block'
-    flipper.style.animation = 'none'
+    if(typeof flipper != 'undefined') {
+      flipper.style.display = 'block'
+      flipper.style.animation = 'none'
+    }
     SYSM.exited = true
-    window.removeEventListener('resize', SYSM.resizeViewport)
+    if(typeof document != 'undefined') {
+      window.removeEventListener('resize', SYSM.resizeViewport)
+      window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
+      window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
+      window.removeEventListener('keypress', SYSI.InputPushTextEvent)
+    }
+    
+    //Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
+    //Module['canvas'].addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
 
     if (Module['canvas']) {
       Module['canvas'].remove()
@@ -208,6 +260,10 @@ var LibrarySysMain = {
       Module.exitHandler(errorStr)
       return
     }
+  },
+  Sys_SetStatus__deps: ['$SYSN'],
+  Sys_SetStatus: function (s) {
+    SYSN.LoadingDescription(UTF8ToString(s))
   },
   Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {

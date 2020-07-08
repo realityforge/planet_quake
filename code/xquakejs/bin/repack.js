@@ -270,6 +270,7 @@ var {
   convertGameFiles, convertNonAlpha, convertAudio
 } = require('../bin/convert.js')
 var {getLeaves} = require('../lib/asset.graph.js')
+var {makeIndexJson} = require('../bin/content.js')
 
 var globalBars = []
 
@@ -813,6 +814,7 @@ async function repack(gs, outConverted, outputProject) {
     if(noOverwrite && ufs.existsSync(outFile)) continue
     ufs.closeSync(ufs.openSync(outFile, 'w'))
     var output = ufs.createWriteStream(outFile)
+    if(real.length == 0) continue
     // remove absolute path from zip file, make it relative
     await compressDirectory(real, output, real[0].includes(orderedKeys[i] + '.pk3dir')
       ? path.join(outConverted, orderedKeys[i] + '.pk3dir')
@@ -889,6 +891,8 @@ async function repackGames() {
         await convertGameFiles(gs, outCombined, outConverted, noOverwrite, progress)
         console.log(`Updating Pak layout written to "${PAK_NAME}"`)
         ufs.writeFileSync(PAK_NAME, JSON.stringify(gs.ordered, null, 2))
+        await makeIndexJson('/' + path.basename(outConverted) + '/index.json',
+          outConverted + '/index.json', true)
         stepCounter++
       }
       

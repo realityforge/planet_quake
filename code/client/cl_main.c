@@ -680,7 +680,7 @@ static void CL_DemoCompleted( void ) {
 		}
 	}
 
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 #ifndef EMSCRIPTEN
 	CL_NextDemo();
 
@@ -912,7 +912,7 @@ static void CL_PlayDemo_f( void ) {
 	// 2 means don't force disconnect of local client
 	Cvar_Set( "sv_killserver", "2" );
 
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 
 	// clc.demofile will be closed during CL_Disconnect so reopen it
 	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 ) 
@@ -1057,14 +1057,14 @@ Also called by Com_Error
 =================
 */
 void CL_FlushMemory( void ) {
-#ifdef EMSCRIPTEN
-	if(!FS_Initialized()) return;
-#endif
-
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
 	CL_ClearMemory();
+
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized()) return;
+#endif
 
 	CL_StartHunkUsers();
 }
@@ -1080,11 +1080,11 @@ memory on the hunk from cgame, ui, and renderer
 =====================
 */
 void CL_MapLoading( void ) {
-  	if ( com_dedicated->integer ) {
-  		cls.state = CA_DISCONNECTED;
+	if ( com_dedicated->integer ) {
+		cls.state = CA_DISCONNECTED;
  		Key_SetCatcher( KEYCATCH_CONSOLE );
-  		return;
-  	}
+		return;
+	}
 
 	if ( !com_cl_running->integer ) {
 		return;
@@ -1105,7 +1105,9 @@ void CL_MapLoading( void ) {
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
-		CL_Disconnect( qtrue );
+#ifndef EMSCRIPTEN
+		CL_Disconnect( qtrue, qfalse );
+#endif
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
@@ -1203,7 +1205,7 @@ Sends a disconnect message to the server
 This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 =====================
 */
-qboolean CL_Disconnect( qboolean showMainMenu ) {
+qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
 	
@@ -1244,6 +1246,9 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 		CL_CloseAVI();
 	}
 
+#ifdef EMSCRIPTEN
+	if(dropped)
+#endif
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
@@ -1268,6 +1273,14 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 		cl_disconnecting = qfalse;
 		return qfalse;
 	}
+	
+#ifdef EMSCRIPTEN
+	if(!dropped) {
+		// skip disconnecting and just show the main menu
+		cl_disconnecting = qfalse;
+		return cl_restarted;
+	}
+#endif
 
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped
@@ -1331,10 +1344,12 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 
+#ifndef EMSCRIPTEN
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
 		return;
 	}
+#endif
 
 	if ( Cmd_Argc() > 1 ) {
 		CL_AddReliableCommand( string, qfalse );
@@ -1517,7 +1532,7 @@ void CL_Disconnect_f( void ) {
 				Com_Printf( "Disconnected from %s\n", cls.servername );
 			}
 			Cvar_Set( "com_errorMessage", "" );
-			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+			if ( !CL_Disconnect( qfalse, qfalse ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
 			if ( uivm ) {
@@ -1559,6 +1574,8 @@ static void CL_Connect_f( void ) {
 	char	*server;	
 	int		len;
 	int		argc;
+	const char	*serverString;
+
 
 	argc = Cmd_Argc();
 	family = NA_UNSPEC;
@@ -1635,7 +1652,7 @@ static void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 	noGameRestart = qtrue;
-	CL_Disconnect( qtrue );
+	CL_Disconnect( qtrue, qfalse );
 
 	Con_Close();
 
@@ -1690,9 +1707,12 @@ void CL_Connect_After_Restart( void ) {
 
 	// if we aren't playing on a lan, we need to authenticate
 	// with the cd key
+#ifndef EMSCRIPTEN
 	if ( NET_IsLocalAddress( &clc.serverAddress ) ) {
 		cls.state = CA_CHALLENGING;
-	} else {
+	} else 
+#endif
+	{
 		cls.state = CA_CONNECTING;
 
 		// Set a client challenge number that ideally is mirrored back by the server.
@@ -1741,11 +1761,14 @@ static void CL_Rcon_f( void ) {
 	const char *sp;
 	int len;
 
+#if 0
+// allow blank passwords for rcon clients
 	if ( !rcon_client_password->string[0] ) {
 		Com_Printf( "You must set 'rconpassword' before\n"
 			"issuing an rcon command.\n" );
 		return;
 	}
+#endif
 
 	if ( cls.state >= CA_CONNECTED ) {
 		rcon_address = clc.netchan.remoteAddress;
@@ -1823,7 +1846,6 @@ doesn't know what graphics to reload
 =================
 */
 static void CL_Vid_Restart( void ) {
-
 	// Settings may have changed so stop recording now
 	if ( CL_VideoRecording() )
 		CL_CloseAVI();
@@ -1879,7 +1901,6 @@ void CL_Vid_Restart_After_Startup( void ) {
 void CL_Vid_Restart_After_Restart( void ) {
 #endif
 ;
-
 	// initialize the renderer interface
 	CL_InitRef();
 
@@ -1944,7 +1965,8 @@ static void CL_Snd_Restart_f( void )
 {
 	CL_Snd_Shutdown();
 	// sound will be reinitialized by vid_restart
-	CL_Vid_Restart();
+	S_Init();
+	//CL_Vid_Restart();
 }
 
 
@@ -2090,17 +2112,18 @@ Called when all downloading has been completed
 */
 static void CL_DownloadsComplete( void ) {
 
-Com_Printf("Downloads complete\n");
+	Com_Printf("Downloads complete\n");
+	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
 #ifdef EMSCRIPTEN
-if(clc.dlDisconnect) {
-	if(clc.downloadRestart) {
-		FS_Restart(clc.checksumFeed);
-		clc.downloadRestart = qfalse;
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+	if(clc.dlDisconnect) {
+		if(clc.downloadRestart) {
+			FS_Restart(clc.checksumFeed);
+			clc.downloadRestart = qfalse;
+			Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
+		}
+		return;
 	}
-	return;
-}
 #endif
 
 #ifdef USE_CURL
@@ -2156,7 +2179,9 @@ if(clc.dlDisconnect) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
+#ifndef EMSCRIPTEN
 	CL_FlushMemory();
+#endif
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
@@ -3029,14 +3054,14 @@ static void CL_CheckTimeout( void ) {
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
-			Com_Printf( "\nServer connection timed out.\n" );
+			Com_Error( ERR_DROP, "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
-			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			}
+			//if ( uivm ) {
+			//	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			//}
 			return;
 		}
 	} else {
@@ -3966,7 +3991,7 @@ void CL_Init( void ) {
 	cl_noprint = Cvar_Get( "cl_noprint", "0", 0 );
 	cl_motd = Cvar_Get( "cl_motd", "1", 0 );
 
-	cl_timeout = Cvar_Get( "cl_timeout", "200", 0 );
+	cl_timeout = Cvar_Get( "cl_timeout", "10", 0 );
 	Cvar_CheckRange( cl_timeout, "5", NULL, CV_INTEGER );
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );
@@ -4116,6 +4141,22 @@ void CL_Init( void ) {
 	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
+	
+#ifdef EMSCRIPTEN
+	// connect client immediately
+	if(0 && !com_dedicated->integer) {
+		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
+		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_LOOPBACK );
+		cls.state = CA_CONNECTING;
+		Com_RandomBytes( (byte*)&clc.challenge, sizeof( clc.challenge ) );
+		CL_UpdateGUID(NULL, 0);
+		Netchan_Setup( NS_CLIENT, &clc.netchan, &clc.serverAddress,
+		  PORT_SERVER, clc.challenge, qtrue );
+		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
+		clc.connectPacketCount = 0;
+		CL_CheckForResend();
+	}
+#endif
 }
 
 
@@ -4140,7 +4181,7 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	recursive = qtrue;
 
 	noGameRestart = quit;
-	CL_Disconnect( qfalse );
+	CL_Disconnect( qfalse, qtrue );
 
 	CL_ShutdownVMs();
 

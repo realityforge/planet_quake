@@ -391,6 +391,7 @@ This is NOT called for map_restart
 ================
 */
 qboolean killBots;
+static qboolean startingServer = qfalse;
 
 void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
@@ -399,7 +400,10 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	qboolean	isBot;
 	const char	*p;
 #endif
-
+	if(startingServer) {
+		return;
+	}
+	startingServer = qtrue;
 	killBots = kb;
 
 	// shut down the existing game if it is running
@@ -416,11 +420,17 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
+#ifndef EMSCRIPTEN
 	CL_ShutdownAll();
+#else
+	S_DisableSounds();
+#endif
 #endif
 
+#ifndef EMSCRIPTEN
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
+#endif
 
 	// clear collision map data
 	CM_ClearMap();
@@ -508,7 +518,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	Cvar_Set( "mapname", mapname );
 
 #ifdef EMSCRIPTEN
-
+	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }
 
@@ -524,6 +534,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	const char	*p;
 	const char *mapname = Cvar_VariableString("mapname");
 	FS_Restart_After_Async();
+	Cvar_Set("sv_running", "1");
 #endif
 ;
 
@@ -699,6 +710,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	Com_Printf ("-----------------------------------\n");
 
 	Sys_SetStatus( "Running map %s", mapname );
+	startingServer = qfalse;
 }
 
 
@@ -904,9 +916,11 @@ void SV_Shutdown( const char *finalmsg ) {
 	Com_Printf( "---------------------------\n" );
 
 #ifndef DEDICATED
+#ifndef EMSCRIPTEN
 	// disconnect any local clients
 	if ( sv_killserver->integer != 2 )
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
+#endif
 #endif
 
 	// clean some server cvars

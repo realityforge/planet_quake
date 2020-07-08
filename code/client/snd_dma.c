@@ -363,15 +363,20 @@ static void S_Base_BeginRegistration( void ) {
 
 	SND_setup();
 
-	//Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
-	//Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
+	Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
+	Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 
 	S_Base_RegisterSound("sound/feedback/hit.wav", qfalse);		// changed to a sound in baseq3
 }
 
 
 void S_memoryLoad( sfx_t *sfx ) {
+	int time = Com_Milliseconds();
+	if(sfx->inMemory || time - sfx->lastTimeUsed < 1000) {
+		return;
+	}
 	ri.Cvar_Set( "snd_loadingSound", sfx->soundName );	
+	sfx->lastTimeUsed = time;
 
 	// load the sound file
 	if ( !S_LoadSound ( sfx ) ) {
@@ -1456,7 +1461,10 @@ void S_FreeOldestSound( void ) {
 // Shutdown sound engine
 // =======================================================================
 
-static void S_Base_Shutdown( void ) {
+static void S_Base_Shutdown( void ) {	
+#ifdef EMSCRIPTEN
+	return;
+#endif
 
 	if ( !s_soundStarted ) {
 		return;
@@ -1471,7 +1479,7 @@ static void S_Base_Shutdown( void ) {
 
 	s_soundStarted = qfalse;
 
-	s_numSfx = 0; // clean up sound cache -EC-
+	//s_numSfx = 0; // clean up sound cache -EC-
 
 	if ( dma_buffer2 != buffer2 )
 		free( dma_buffer2 );
@@ -1493,9 +1501,9 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		return qfalse;
 	}
 
-	s_khz = Cvar_Get( "s_khz", "22", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	s_mixahead = Cvar_Get( "s_mixahead", "0.2", CVAR_ARCHIVE_ND );
-	s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.05", CVAR_ARCHIVE_ND );
+	s_khz = Cvar_Get( "s_khz", "44", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	s_mixahead = Cvar_Get( "s_mixahead", "0.5", CVAR_ARCHIVE_ND );
+	s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.1", CVAR_ARCHIVE_ND );
 	s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
 	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
 #ifdef __linux__
@@ -1511,7 +1519,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
-//		s_numSfx = 0;
+		//s_numSfx = 0;
 
 		//Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 
