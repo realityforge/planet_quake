@@ -4185,6 +4185,9 @@ void Com_Frame( void ) {
 		}
 		return;
 	}
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
 #endif
 ;
 
@@ -4193,12 +4196,6 @@ void Com_Frame( void ) {
 	msec = com_frameTime - lastTime;
 
 	Cbuf_Execute();
-#ifdef EMSCRIPTEN
-	// if an execution invoked a callback event, run the rest next frame
-	if(CB_Frame_Proxy || CB_Frame_After) {
-		return;
-	}
-#endif
 
 	// mess with msec if needed
 	msec = Com_ModifyMsec( msec );
@@ -4219,7 +4216,11 @@ void Com_Frame( void ) {
 	// or shut down the client system.
 	// Do this after the server may have started,
 	// but before the client tries to auto-connect
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
+#else
 	if ( com_dedicated->modified ) {
 		// get the latched value
 		Cvar_Get( "dedicated", "0", 0 );
@@ -4269,7 +4270,7 @@ void Com_Frame( void ) {
 		Cbuf_Execute();
 #ifdef EMSCRIPTEN
 		// if filesystem was restarted as a part of a command
-		if(!FS_Initialized()) {
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
 			return;
 		}
 #endif

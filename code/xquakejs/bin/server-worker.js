@@ -1,7 +1,7 @@
 window = {}
 serverWorker = self
 window.serverWorker = self
-window.location = new URL(location.origin + '?set dedicated 1&set ttycon 1&set net_socksEnabled 0&spmap q3dm0')
+window.location = new URL(location.origin + '?set dedicated 1')
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
@@ -22,7 +22,15 @@ var runIsFirst = false
 onmessage = function(e) {
   if(e.data[0] == 'init') {
     initIsFirst = true
-    window.location = new URL(location.origin + '?' + (e.data[1] || []).join(' ') + '&set dedicated 1&set ttycon 1&set net_socksEnabled 0&spmap q3dm0')
+    SYSM.args.push.apply(SYSM.args, e.data[1])
+    if(!SYSM.args.includes('+spmap')
+      && !SYSM.args.includes('+map')
+      && !SYSM.args.includes('+devmap')
+      && !SYSM.args.includes('+spdevmap')) {
+        SYSM.args.push.apply(SYSM.args, [
+          '+spmap', 'q3dm0',
+        ])
+      }
     if(runIsFirst) Module.callMain()
   } else if(e.data[0] == 'execute') {
     var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK)
@@ -36,6 +44,10 @@ onmessage = function(e) {
 }
 
 quake3e.onRuntimeInitialized = function() {
+  SYSM.args.unshift.apply(SYSM.args, [
+    '+set', 'ttycon', '1', 
+    '+set', 'net_socksEnabled', '0',
+  ])
   runIsFirst = true
   if(initIsFirst) Module.callMain()
   var callback = () => {}

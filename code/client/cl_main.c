@@ -1246,12 +1246,10 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		CL_CloseAVI();
 	}
 
-#ifndef EMSCRIPTEN
 	if ( cgvm && dropped ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
-#endif
 
 	SCR_StopCinematic();
 	S_StopAllSounds();
@@ -1276,6 +1274,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 #ifdef EMSCRIPTEN
 	if(!dropped) {
 		// skip disconnecting and just show the main menu
+		cl_disconnecting = qfalse;
 		return cl_restarted;
 	}
 #endif
@@ -3989,7 +3988,7 @@ void CL_Init( void ) {
 	cl_noprint = Cvar_Get( "cl_noprint", "0", 0 );
 	cl_motd = Cvar_Get( "cl_motd", "1", 0 );
 
-	cl_timeout = Cvar_Get( "cl_timeout", "200", 0 );
+	cl_timeout = Cvar_Get( "cl_timeout", "10", 0 );
 	Cvar_CheckRange( cl_timeout, "5", NULL, CV_INTEGER );
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );

@@ -102,7 +102,8 @@ var LibrarySysMain = {
             ])
           }
           if (!args.includes('+map') && !args.includes('+spmap')
-            && !args.includes('+devmap') && !args.includes('+connect')) {
+            && !args.includes('+devmap') && !args.includes('+spdevmap') 
+            && !args.includes('+connect')) {
             args.push.apply(args, [
               '+connect', window.location.hostname
             ])
@@ -119,6 +120,16 @@ var LibrarySysMain = {
           '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         ])
       }
+      if(typeof document != 'undefined'
+        && !args.includes('+spmap')
+        && !args.includes('+map')
+        && !args.includes('+devmap')
+        && !args.includes('+spdevmap')
+        && !args.includes('+connect')) {
+          args.push.apply(args, [
+            '+connect', 'localhost'
+          ])
+        }
       return args
     },
     updateVideoCmd: function () {
@@ -189,10 +200,12 @@ var LibrarySysMain = {
       flipper.style.animation = 'none'
     }
     SYSM.exited = true
-    window.removeEventListener('resize', SYSM.resizeViewport)
-    window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
-    window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
-    window.removeEventListener('keypress', SYSI.InputPushTextEvent)
+    if(typeof document != 'undefined') {
+      window.removeEventListener('resize', SYSM.resizeViewport)
+      window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
+      window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
+      window.removeEventListener('keypress', SYSI.InputPushTextEvent)
+    }
     
     //Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
     //Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)

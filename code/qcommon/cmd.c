@@ -251,6 +251,12 @@ void Cbuf_Execute( void )
 
 		// execute the command line
 		Cmd_ExecuteString( line, qfalse );
+#ifdef EMSCRIPTEN
+		// if an execution invoked a callback event, run the rest next frame
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+			return;
+		}
+#endif
 	}
 }
 
