@@ -1246,7 +1246,10 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		CL_CloseAVI();
 	}
 
-	if ( cgvm && dropped ) {
+#ifdef EMSCRIPTEN
+	if(dropped)
+#endif
+	if ( cgvm ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
