@@ -628,11 +628,19 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 				Cvar_Set( "com_errorMessage", "" );
 				if ( cls.state == CA_CINEMATIC ) {
 					SCR_StopCinematic();
-				} else if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+				} else if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 					CL_FlushMemory();
 				}
 #endif
+#ifndef EMSCRIPTEN
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+#else
+				if(!FS_Initialized()) {
+					Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+				} else {
+					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				}
+#endif
 			}
 			return;
 		}
@@ -642,7 +650,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	}
 
 #ifdef EMSCRIPTEN
-	if(cls.soundStarted && cls.firstClick
+	if(cls.firstClick
 	  && (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3
 		  || key == K_MOUSE4 || key == K_MOUSE5)) {
 		cls.firstClick = qfalse;

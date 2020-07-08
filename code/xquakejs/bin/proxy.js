@@ -1,5 +1,6 @@
+var fs = require('fs')
+var path = require('path')
 var Buffer = require('buffer').Buffer
-var dgram = require('dgram')
 var WebSocketServer = require('ws').Server
 var Huffman = require('../lib/huffman.js')
 var {Server} = require('../lib/socks.server.js')
@@ -65,11 +66,22 @@ const server = createServer(function(socket) {
 })
 server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))
 */
-
+var index
 ports.forEach((p, i, ports) => {
   var httpServer = http.createServer(function(req, res) {
-  	res.writeHead(200, {'Location': 'https://quake.games' + req.url})
-  	res.write('It works!')
+    var indexPath = path.join(__dirname, 'index.html')
+    if(index || fs.existsSync(indexPath)) {
+      if(!index) {
+        index = fs.readFileSync(indexPath).toString('utf-8')
+          .replace(/src="\//ig, 'src="https://quake.games/')
+          .replace(/url\('\//ig, 'url(https://quake.games/')
+          .replace(/href="\//ig, 'href="https://quake.games/')
+      }
+      res.write(index)
+    } else {
+      res.writeHead(200, {'Location': 'https://quake.games' + req.url})
+    	res.write('It works!')
+    }
   	res.end()
   })
 

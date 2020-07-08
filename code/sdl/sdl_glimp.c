@@ -62,6 +62,9 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( qboolean unloadDLL )
 {
+#ifdef EMSCRIPTEN
+	return;
+#endif
 	IN_Shutdown();
 
 	SDL_DestroyWindow( SDL_window );
@@ -249,7 +252,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		glw_state.desktop_height = 480;
 	}
 
-	Com_Printf( "...setting mode %d:", mode );
+	Com_Printf( "...setting mode %d (%s):", mode, fullscreen ? "fullscreen" : "windowed" );
 
 	if ( !CL_GetModeInfo( &config->vidWidth, &config->vidHeight, &config->windowAspect, mode, modeFS, glw_state.desktop_width, glw_state.desktop_height, fullscreen ) )
 	{
@@ -549,6 +552,26 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
+
+#ifdef EMSCRIPTEN
+	if(SDL_window) {
+		SDL_DisplayMode desktopMode;
+		int display = SDL_GetWindowDisplayIndex( SDL_window );
+		if ( SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = desktopMode.w;
+			glw_state.config->vidHeight = glw_state.desktop_height = desktopMode.h;
+		}
+		else
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = 640;
+			glw_state.config->vidHeight = glw_state.desktop_height = 480;
+		}
+		SDL_GL_GetDrawableSize( SDL_window, &glw_state.config->vidWidth, &glw_state.config->vidHeight );
+		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
+		return qtrue;
+	}
+#endif
 
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
 

@@ -7,7 +7,13 @@ var LibrarySysInput = {
     //inputCount: 0,
     InputPushKeyEvent: function (evt) {
       var event = SYSI.inputHeap
-
+      var modState = (evt.ctrlKey && evt.location === 1 ? 0x0040 : 0)
+        | (evt.shiftKey && evt.location === 1 ? 0x0001 : 0)
+        | (evt.altKey && evt.location === 1 ? 0x0100 : 0)
+        | (evt.ctrlKey && evt.location === 2 ? 0x0080 : 0)
+        | (evt.shiftKey && evt.location === 2 ? 0x0002 : 0)
+        | (evt.altKey && evt.location === 2 ? 0x0200 : 0)
+      
       HEAP32[((event+0)>>2)]= evt.type == 'keydown' ? 0x300 : 0x301 //Uint32 type; ::SDL_KEYDOWN or ::SDL_KEYUP
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds()
       HEAP32[((event+8)>>2)]=0 // windowID
@@ -17,13 +23,14 @@ var LibrarySysInput = {
       var scan
       if (key >= 1024) {
         scan = key - 1024
+        key = scan | 0x40000000
       } else {
         scan = SDL.scanCodes[key] || key
       }
 
       HEAP32[((event+16)>>2)]=scan
       HEAP32[((event+20)>>2)]=key
-      HEAP32[((event+24)>>2)]=SDL.modState
+      HEAP32[((event+24)>>2)]=modState
       HEAP32[((event+28)>>2)]=0
       if(evt.type == 'keydown')
         Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[0], event)
@@ -84,22 +91,22 @@ var LibrarySysInput = {
       var event = SYSI.inputHeap
 
       if(id == 1) {
-        if (evt.angle && Math.round(y / 40) > 0) {
+        if (data.vector && data.vector.y > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 87})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 87})
         }
-        if (evt.angle && Math.round(y / 40) < 0) {
+        if (data.vector && data.vector.y < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 83})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 83})
         }
-        if (evt.angle && Math.round(x / 40) < 0) {
+        if (data.vector && data.vector.x < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 65})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 65})
         }
-        if (evt.angle && Math.round(x / 40) > 0) {
+        if (data.vector && data.vector.x > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 68})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 68})
@@ -107,22 +114,22 @@ var LibrarySysInput = {
       }
       
       if(id == 2) {
-        if (evt.angle && Math.round(y / 40) > 0) {
+        if (data.vector && data.vector.y > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 40})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 40})
         }
-        if (evt.angle && Math.round(y / 40) < 0) {
+        if (data.vector && data.vector.y < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 38})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 38})
         }
-        if (evt.angle && Math.round(x / 40) < 0) {
+        if (data.vector && data.vector.x < -.4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 37})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 37})
         }
-        if (evt.angle && Math.round(x / 40) > 0) {
+        if (data.vector && data.vector.x > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 39})
         } else {
           SYSI.InputPushKeyEvent({type: 'keyup', keyCode: 39})

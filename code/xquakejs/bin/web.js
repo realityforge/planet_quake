@@ -8,6 +8,7 @@ var serveStatic = require('../lib/serve-static.js')
 
 var app = express()
 app.enable('etag')
+app.set('etag', 'strong')
 express.static.mime.types['wasm'] = 'application/wasm'
 express.static.mime.types['pk3'] = 'application/octet-stream'
 express.static.mime.types['bsp'] = 'application/octet-stream'

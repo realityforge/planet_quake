@@ -46,7 +46,7 @@ async function convertNonAlpha(inFile, project, output, noOverwrite) {
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   // convert, baseq3 already includes jpg
   try {
-    execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 50% "${inFile}" "${outFile}"`, {stdio : 'pipe'})
+    execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 20% "${inFile}" "${outFile}"`, {stdio : 'pipe'})
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }

@@ -2101,7 +2101,8 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 		out->originalBrushNumber = LittleLong( fogs->brushNum );
 
 		if ( (unsigned)out->originalBrushNumber >= brushesCount ) {
-			ri.Error( ERR_DROP, "fog brushNumber out of range" );
+			ri.Printf( PRINT_WARNING, "fog brushNumber out of range" );
+			continue;
 		}
 		brush = brushes + out->originalBrushNumber;
 
@@ -2718,7 +2719,7 @@ void RE_LoadWorldMap( const char *name ) {
 	byte		*startMarker;
 
 	if ( tr.worldMapLoaded ) {
-		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
+		ri.Printf( PRINT_WARNING, "ERROR: attempted to redundantly load world map\n" );
 	}
 
 	// set default map light scale

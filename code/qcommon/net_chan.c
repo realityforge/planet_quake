@@ -59,6 +59,8 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
+extern void Sys_NET_MulticastLocal( int sock, int length, int *data );
+
 /*
 ===============
 Netchan_Init
@@ -212,8 +214,9 @@ void Netchan_Transmit( netchan_t *chan, int length, const byte *data ) {
 	chan->lastSentSize = send.cursize;
 
 	if ( showpackets->integer ) {
-		Com_Printf( "%s send %4i : s=%i ack=%i\n"
+		Com_Printf( "%s (%i) send %4i : s=%i ack=%i\n"
 			, netsrcString[ chan->sock ]
+			, chan->remoteAddress.type
 			, send.cursize
 			, chan->outgoingSequence - 1
 			, chan->incomingSequence );
@@ -450,7 +453,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 }
 
 
-static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
+void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 {
 	int		i;
 	loopback_t	*loop;
@@ -462,6 +465,10 @@ static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
+	
+#ifdef EMSCRIPTEN
+	Sys_NET_MulticastLocal(sock, length, data);
+#endif
 }
 
 //=============================================================================
@@ -527,7 +534,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 
 	// sequenced packets are shown in netchan, so just show oob
 	if ( showpackets->integer && *(int *)data == -1 )	{
-		Com_Printf ("send %s packet %4i\n", to->name, length);
+		Com_Printf ("send %s (%i) packet %4i\n", to->name, to->type, length);
 	}
 
 	if ( to->type == NA_LOOPBACK ) {

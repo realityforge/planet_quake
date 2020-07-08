@@ -159,13 +159,23 @@ Server.prototype._onUDPMessage = function (socket, message, rinfo) {
   socket.send(Buffer.concat([bufrep, message]))
 }
 
-Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookupPort) {
+Server.prototype._timeoutUDP = function(udpLookupPort) {
+  var self = this
+  if(typeof self._listeners[udpLookupPort] !== 'undefined')
+    self._listeners[udpLookupPort].close()
+  delete self._listeners[udpLookupPort]
+}
+
+Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udpLookupPort) {
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
   var onUDPMessage = this._onUDPMessage.bind(self, socket)
   if(!udpSocket) {
-    console.log('No socket found.')
-    return
+    await self.tryBindPort.apply(this, [{
+      dstPort: udpLookupPort,
+      dstAddr: '0.0.0.0'
+    }])
+    udpSocket = this._listeners[udpLookupPort]
   }
   console.log('Switching to UDP listener', udpLookupPort)
   //socket.dstSock = udpSocket
@@ -177,7 +187,7 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   // connection and version number are implied from now on
   var newOnData = ((message) => {
     clearTimeout(self._timeouts[udpLookupPort])
-    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
+    self._timeouts[udpLookupPort] = setTimeout(self._timeoutUDP.bind(self, udpLookupPort), UDP_TIMEOUT)
     var chunk = Buffer.from(message)
     if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
       chunk[0] = 5
@@ -188,7 +198,7 @@ Server.prototype._onUdp = function (parser, socket, onRequest, onData, udpLookup
   })
   var newOnRequest = async (reqInfo) => {
     clearTimeout(self._timeouts[udpLookupPort])
-    self._timeouts[udpLookupPort] = setTimeout(() => self._listeners[udpLookupPort].close(), UDP_TIMEOUT)
+    self._timeouts[udpLookupPort] = setTimeout(self._timeoutUDP.bind(self, udpLookupPort), UDP_TIMEOUT)
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
       udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
@@ -335,7 +345,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
       // TODO: fix this, port will be the same for every client
       //   client needs to request the random port we assign
       self._listeners[reqInfo.dstPort] = listener
-      self._timeouts[reqInfo.dstPort] = setTimeout(() => listener.close(), UDP_TIMEOUT)
+      self._timeouts[reqInfo.dstPort] = setTimeout(self._timeoutUDP.bind(self, reqInfo.dstPort), UDP_TIMEOUT)
       return
     } catch(e) {
       if(!e.code.includes('EADDRINUSE')) throw e

@@ -349,7 +349,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		SV_Shutdown( "Server disconnected" );
 		Com_EndRedirect();
 #ifndef DEDICATED
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -366,7 +366,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		SV_Shutdown( va( "Server crashed: %s",  com_errorMessage ) );
 		Com_EndRedirect();
 #ifndef DEDICATED
-		CL_Disconnect( qfalse );
+		CL_Disconnect( qfalse, qtrue );
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -380,7 +380,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_EndRedirect();
 #ifndef DEDICATED
 		if ( com_cl_running && com_cl_running->integer ) {
-			CL_Disconnect( qfalse );
+			CL_Disconnect( qfalse, qtrue );
 			VM_Forced_Unload_Start();
 			CL_FlushMemory();
 			VM_Forced_Unload_Done();
@@ -460,7 +460,7 @@ quake3 set test blah + map test
 ============================================================================
 */
 
-#define	MAX_CONSOLE_LINES	32
+#define	MAX_CONSOLE_LINES	1024
 int		com_numConsoleLines;
 char	*com_consoleLines[MAX_CONSOLE_LINES];
 // master rcon password
@@ -2888,14 +2888,10 @@ int Com_EventLoop( void ) {
 		case SE_FINGER_UP:
 			CL_KeyEvent( ev.evValue, qfalse, ev.evTime, ev.evValue2 );
 			break;
+#endif
 		case SE_KEY:
 			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime, 0 );
 			break;
-#else
-		case SE_KEY:
-			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime );
-			break;
-#endif
 		case SE_CHAR:
 			CL_CharEvent( ev.evValue );
 			break;
@@ -3046,10 +3042,9 @@ Com_GameRestart
 Change to a new mod properly with cleaning up cvars before switching.
 ==================
 */
+static qboolean com_gameRestarting = qfalse;
 void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 {
-	static qboolean com_gameRestarting = qfalse;
-
 	// make sure no recursion can be triggered
 	if ( !com_gameRestarting && com_fullyInitialized )
 	{
@@ -3057,9 +3052,11 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #ifndef DEDICATED
 		if ( clientRestart )
 		{
-			CL_Disconnect( qfalse );
+			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
+#ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
+#endif
 		}
 #endif
 
@@ -3083,13 +3080,14 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #endif
 
 		FS_Restart( checksumFeed );
+		
+		com_gameRestarting = qfalse;
 #ifdef EMSCRIPTEN
 	}
 }
 
 void Com_GameRestart_After_Restart( void )
 {
-	static qboolean com_gameRestarting = qtrue;
 	qboolean clientRestart = qtrue;
 	{
 #endif
@@ -3102,8 +3100,6 @@ void Com_GameRestart_After_Restart( void )
 		if ( clientRestart )
 			CL_StartHunkUsers();
 #endif
-		
-		com_gameRestarting = qfalse;
 	}
 }
 
@@ -3758,7 +3754,7 @@ void Com_Init_After_Filesystem( void ) {
 	}
 	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
 	if ( com_affinityMask->integer )
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
@@ -3767,7 +3763,13 @@ void Com_Init_After_Filesystem( void ) {
 	Netchan_Init( qport & 0xffff );
 
 	VM_Init();
+#ifdef EMSCRIPTEN
+	if(com_dedicated->integer) {
+		SV_Init();
+	}
+#else
 	SV_Init();
+#endif
 
 	com_dedicated->modified = qfalse;
 
@@ -3814,16 +3816,16 @@ void Com_Init_After_Filesystem( void ) {
 
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 #ifdef EMSCRIPTEN
-	if(Cvar_VariableIntegerValue("net_socksLoading")) {
-		NET_Init( );
-	}
+//	if(Cvar_VariableIntegerValue("net_socksLoading")) {
+	NET_Init( );
+//	}
 #endif
 }
 
 
 //==================================================================
 
-static void Com_WriteConfigToFile( const char *filename ) {
+void Com_WriteConfigToFile( const char *filename ) {
 	fileHandle_t	f;
 
 	f = FS_FOpenFileWrite( filename );
@@ -4102,7 +4104,7 @@ void Com_Frame( void ) {
 		}
 		com_viewlog->modified = qfalse;
 	}
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
 	if ( com_affinityMask->modified ) {
 		Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE );
 		com_affinityMask->modified = qfalse;
@@ -4183,6 +4185,9 @@ void Com_Frame( void ) {
 		}
 		return;
 	}
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
 #endif
 ;
 
@@ -4191,12 +4196,6 @@ void Com_Frame( void ) {
 	msec = com_frameTime - lastTime;
 
 	Cbuf_Execute();
-#ifdef EMSCRIPTEN
-	// if an execution invoked a callback event, run the rest next frame
-	if(CB_Frame_Proxy || CB_Frame_After) {
-		return;
-	}
-#endif
 
 	// mess with msec if needed
 	msec = Com_ModifyMsec( msec );
@@ -4208,12 +4207,20 @@ void Com_Frame( void ) {
 		timeBeforeServer = Sys_Milliseconds();
 	}
 
+#ifdef EMSCRIPTEN
+	if(com_dedicated->integer)
+#endif
 	SV_Frame( msec );
 
 	// if "dedicated" has been modified, start up
 	// or shut down the client system.
 	// Do this after the server may have started,
 	// but before the client tries to auto-connect
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		return;
+	}
+#else
 	if ( com_dedicated->modified ) {
 		// get the latched value
 		Cvar_Get( "dedicated", "0", 0 );
@@ -4239,6 +4246,7 @@ void Com_Frame( void ) {
 			gw_minimized = qtrue;
 		}
 	}
+#endif
 
 #ifdef DEDICATED
 	if ( com_speeds->integer ) {
@@ -4260,6 +4268,12 @@ void Com_Frame( void ) {
 		}
 		Com_EventLoop();
 		Cbuf_Execute();
+#ifdef EMSCRIPTEN
+		// if filesystem was restarted as a part of a command
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+			return;
+		}
+#endif
 
 		//
 		// client side

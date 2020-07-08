@@ -13,7 +13,6 @@ NOTE: ./build/release-js-js is implied
 --virtual -V - create virtual pk3dir out of pk3 and exclude pk3 files, opposite of repack
 --write -wr - write all JSON files in every directory for CDN use
 --repack -rp - repack on the fly as pk3/media/images/sound files are accessed
-  opposit of pk3dir
 --hidden -H - include hidden files (uncommon)
 --watch - watch files for changes
 --help -h - print this help message and exit
@@ -21,27 +20,32 @@ e.g. npm run start -- -R -rp /assets/baseq3 /Applications/ioquake3/baseq3
 `
 
 var recursive = false
-var writeOut = false
+var writeOut = true
 var repackFiles = false
 var virtualPk3dir = false
 var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
+var scanOptions = false
 
 // check the process args for a directory to serve as the baseq3 folders
-var vol = Volume.fromJSON({})
-ufs.use(fs).use(vol)
 var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
   if(a.match(/\/node$/ig)) continue
-  if(a.match(/\/web\.js$/ig)) continue
+  if(a.match(/\/web\.js$/ig)) {
+    scanOptions = true
+    writeOut = false
+    continue
+  }
   if(fs.existsSync(a)) {
     // if running content script directly, automatically call each mount point 
     //   so the json files and zipped files can be generated
     if(a.match(/\/content\.js$/ig)) {
       console.log('Running content script')
+      scanOptions = true
+      writeOut = false
       runContentGeneration = true
       continue
     }
@@ -49,6 +53,8 @@ for(var i = 0; i < process.argv.length; i++) {
     // create a link for user specified directory that doesn't exist
     mountPoints.push([mountPoint, a])
   // use an absolute path as a mount point if it doesn't exist
+  } else if (!scanOptions) {
+    continue
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
     recursive = true
@@ -59,7 +65,7 @@ for(var i = 0; i < process.argv.length; i++) {
     console.log('Virtual pk3dirs')
     virtualPk3dir = true
   } else if(a == '--write' || a == '-wr') {
-    console.log('Writing manifest.json, not watching')
+    console.log('Writing index.json, not watching')
     writeOut = true
     watchChanges = false
   } else if(a == '--watch') {
@@ -78,6 +84,11 @@ for(var i = 0; i < process.argv.length; i++) {
   } else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
+}
+ufs.use(fs)
+var vol = Volume.fromJSON({})
+if(!writeOut) {
+  ufs.use(vol)
 }
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
@@ -187,11 +198,11 @@ async function cacheFile(fullpath) {
   return await compressFile(fullpath, vol)
 }
 
-async function makeIndexJson(filename, absolute) {
+async function makeIndexJson(filename, absolute, forceWrite) {
   // if there is no index.json, generate one
-  if(filename && !ufs.existsSync(absolute)) {
+  if(filename && (!ufs.existsSync(absolute) || forceWrite)) {
     console.log(`Creating directory index ${absolute}`)
-		var files = readMultiDir(path.dirname(absolute), recursive && !repackFiles)
+		var files = readMultiDir(path.dirname(absolute), forceWrite || (recursive && !repackFiles))
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]
@@ -236,7 +247,7 @@ async function makeIndexJson(filename, absolute) {
       }, file)
 		}
     console.log(`Writing directory index ${absolute}`)
-    var writefs = writeOut ? fs : vol
+    var writefs = writeOut || forceWrite ? fs : vol
 		vol.mkdirpSync(path.dirname(absolute))
     writefs.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
   }

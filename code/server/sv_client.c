@@ -121,7 +121,8 @@ void SV_GetChallenge( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
-	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
+	if (!com_dedicated->integer
+		&& (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive"))) {
 		return;
 	}
 #endif
@@ -582,6 +583,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ) {
 		if ( NET_CompareAdr( from, &cl->netchan.remoteAddress ) ) {
 			int elapsed = svs.time - cl->lastConnectTime;
+#ifndef EMSCRIPTEN
 			if ( elapsed < ( sv_reconnectlimit->integer * 1000 ) && elapsed >= 0 ) {
 				int remains = ( ( sv_reconnectlimit->integer * 1000 ) - elapsed + 999 ) / 1000;
 				if ( com_developer->integer ) {
@@ -594,6 +596,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 				}
 				return;
 			}
+#endif
 			newcl = cl; // we may reuse this slot
 			break;
 		}
@@ -1884,9 +1887,30 @@ Also called by bot code
 */
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
-	qboolean bFloodProtect;
+	qboolean bFloodProtect, gameResult;
 	
 	Cmd_TokenizeString( s );
+	
+	// TODO: check implied rconpassword from previous attempt by client
+#ifdef EMSCRIPTEN
+	// Execute client strings as local commands, 
+	// in case of running a web-worker dedicated server
+	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
+		if(Cmd_ExecuteString(s, qtrue)) {
+			return qtrue;
+		}
+		
+		// in baseq3 game (not cgame or ui) the dedicated flag is used for
+		// say "server:" and other logging bs. hope this is sufficient?
+		Cvar_Set("dedicated", "0");
+		if(com_sv_running && com_sv_running->integer) {
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+			SV_GameCommand();
+		}
+		Cvar_Set("dedicated", "1");
+	}
+
+#endif
 
 	// malicious users may try using too many string commands
 	// to lag other players.  If we decide that we want to stall
@@ -1964,7 +1988,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		SV_DropClient( cl, "Lost reliable commands" );
 		return qfalse;
 	}
-
+	
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		return qfalse;
 	}
@@ -2202,6 +2226,13 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			return;	// disconnect command
 		}
 	} while ( 1 );
+
+#ifdef EMSCRIPTEN
+	// skip user move commands if server is restarting
+	if(!FS_Initialized()) {
+		return;
+	}
+#endif
 
 	// read the usercmd_t
 	if ( c == clc_move ) {

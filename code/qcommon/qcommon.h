@@ -564,7 +564,7 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 // Takes a null terminated string.  Does not need to be /n terminated.
 // breaks the string up into arg tokens.
 
-void	Cmd_ExecuteString( const char *text );
+qboolean	Cmd_ExecuteString( const char *text, qboolean noServer );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
@@ -1163,16 +1163,12 @@ CLIENT / SERVER SYSTEMS
 // client interface
 //
 void CL_Init( void );
-qboolean CL_Disconnect( qboolean showMainMenu );
+qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec );
 qboolean CL_GameCommand( void );
-#ifdef EMSCRIPTEN
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
-#else
-void CL_KeyEvent (int key, qboolean down, unsigned time);
-#endif
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
@@ -1204,6 +1200,7 @@ void CL_CDDialog( void );
 // bring up the "need a cd to play" dialog
 
 void CL_ShutdownAll( void );
+void S_DisableSounds( void );
 // shutdown all the client stuff
 
 void CL_ClearMemory( void );

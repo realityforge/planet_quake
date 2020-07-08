@@ -245,7 +245,7 @@ void R_UpdateModel( const char *name )
 	
 	RE_RegisterModel(name);
 	
-	updateModels = qfalse;
+	updateModels = r_lazyLoad->integer < 2;;
 }
 
 /*
@@ -316,8 +316,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
 	
-	if(!updateModels)
-		ri.Cvar_Set("r_loadingModel", name);
+	ri.Cvar_Set("r_loadingModel", name);
 
 	ext = COM_GetExtension( localName );
 
@@ -1198,6 +1197,8 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	int	i;
+	
+	updateModels = r_lazyLoad->integer < 2 ? qtrue : qfalse;
 
 	R_Init();
 

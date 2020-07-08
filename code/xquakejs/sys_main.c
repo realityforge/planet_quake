@@ -899,10 +899,7 @@ void Sys_Print( const char *msg )
 }
 
 
-void QDECL Sys_SetStatus( const char *format, ... )
-{
-	return;
-}
+extern void QDECL Sys_SetStatus( const char *format, ... );
 
 
 void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
@@ -1072,9 +1069,7 @@ int main( int argc, char* argv[] )
 		}
 	}
 
-	// HACK for now to prevent Browser lib from calling
-	// requestAnimationFrame on dedicated builds.
-	emscripten_set_main_loop(Sys_Frame, 130, 0);
+	emscripten_set_main_loop(Sys_Frame, 160, 0);
 	emscripten_exit_with_live_runtime();
 	return 0;
 }

@@ -249,6 +249,7 @@ void S_DisableSounds( void )
 	if( si.DisableSounds ) {
 		si.DisableSounds();
 	}
+	cls.firstClick = qtrue;
 }
 
 
@@ -457,6 +458,10 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
+#ifdef EMSCRIPTEN
+	cls.firstClick = qtrue;
+#endif
+
 	if ( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}
