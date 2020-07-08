@@ -27,7 +27,7 @@ def c_mul(a, b):
     #v = eval(hex((long(a) * b) & 0xFFFFFFFFL)[:-1])
     # 32-bit signed
     v = a * b
-    v = v & 0xffffffffL
+    v = v & 0xffffffff
 
     if v > 0x7fffffff:
         v = -(0x100000000 - v)

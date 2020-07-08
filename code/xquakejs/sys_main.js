@@ -120,16 +120,13 @@ var LibrarySysMain = {
           '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
         ])
       }
-      if(typeof document != 'undefined'
-        && !args.includes('+spmap')
-        && !args.includes('+map')
-        && !args.includes('+devmap')
-        && !args.includes('+spdevmap')
-        && !args.includes('+connect')) {
+      if(typeof document != 'undefined') {
+        if(!args.includes('+connect')) {
           args.push.apply(args, [
             '+connect', 'localhost'
           ])
         }
+      }
       return args
     },
     updateVideoCmd: function () {
@@ -263,7 +260,9 @@ var LibrarySysMain = {
   },
   Sys_SetStatus__deps: ['$SYSN'],
   Sys_SetStatus: function (s) {
-    SYSN.LoadingDescription(UTF8ToString(s))
+    var args = Array.from(arguments)
+      .map(a => UTF8ToString(a))
+    SYSN.LoadingDescription(args.join(' '))
   },
   Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
