@@ -35,7 +35,7 @@ var LibrarySysMain = {
       //'+set', 'r_picmip', '4',
       //'+set', 'r_postProcess', '0',
       '+set', 'cg_drawfps', '1',
-      '+set', 's_compression', '1',
+      '+set', 's_compression', '0',
       '+set', 'r_ext_compressed_textures', '1',
       //'+connect', 'proxy.quake.games:443',
       /*
@@ -51,7 +51,7 @@ var LibrarySysMain = {
     getQueryCommands: function () {
       var search = /([^&=]+)/g
       var query  = window.location.search.substring(1)
-      var args = []
+      var args = Array.from(SYSM.args)
       var match
       while (match = search.exec(query)) {
         var val = decodeURIComponent(match[1])
@@ -276,7 +276,7 @@ var LibrarySysMain = {
   },
   Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
-    var argv = ['ioq3'].concat(SYSM.args).concat(SYSM.getQueryCommands())
+    var argv = ['ioq3'].concat(SYSM.getQueryCommands())
     var argc = argv.length
     // merge default args with query string args
     var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}})
@@ -287,7 +287,7 @@ var LibrarySysMain = {
     return list
   },
   Sys_CmdArgsC: function () {
-    return SYSM.args.length + SYSM.getQueryCommands().length + 1
+    return SYSM.getQueryCommands().length + 1
   },
 }
 autoAddDeps(LibrarySysMain, '$SYSM')

@@ -1,7 +1,7 @@
 window = {}
 serverWorker = self
 window.serverWorker = self
-window.location = new URL(location.origin + '?set dedicated 2&set sv_master1 207.246.91.235')
+window.location = new URL(location.origin + '?set dedicated 2')
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
@@ -46,7 +46,8 @@ onmessage = function(e) {
 quake3e.onRuntimeInitialized = function() {
   SYSM.args.unshift.apply(SYSM.args, [
     '+set', 'ttycon', '1',
-    '+set', 'net_socksEnabled', '0',
+    '+set', 'sv_master1', '207.246.91.235',
+  //  '+set', 'net_socksEnabled', '0',
   ])
   runIsFirst = true
   if(initIsFirst) Module.callMain()
