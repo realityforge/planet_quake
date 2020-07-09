@@ -51,7 +51,4 @@ quake3e.onRuntimeInitialized = function() {
   ])
   runIsFirst = true
   if(initIsFirst) Module.callMain()
-  var callback = () => {}
-  Module['websocket'].on('open', callback)
-  Module['websocket'].on('message', callback)
 }

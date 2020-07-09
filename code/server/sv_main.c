@@ -728,6 +728,10 @@ static void SVC_Info( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
+#ifdef EMSCRIPTEN
+	// allow people to connect to your single player server
+	if(!com_dedicated->integer)
+#endif
 	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
