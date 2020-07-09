@@ -719,6 +719,9 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 		socksBuf[2] = 0;	// fragment (not fragmented)
     socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
     // let socks server do the translation
+    if(to->name[0] == '\0') {
+      Q_strncpyz(to->name, NET_AdrToString(to), sizeof(to->name));
+    }
     socksBuf[4] = strlen(to->name) + 1;
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;

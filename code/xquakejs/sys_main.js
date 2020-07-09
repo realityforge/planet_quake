@@ -87,14 +87,18 @@ var LibrarySysMain = {
       }
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
-        args.unshift.apply(args, [
-          '+set', 'sv_dlURL', '"https://quake.games/assets"',
-        ])
-        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+        if (!args.includes('sv_dlURL')) {
           args.unshift.apply(args, [
-            '+set', 'net_socksServer', window.location.hostname,
-            '+set', 'net_socksPort', '443',
+            '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
+        }
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          if (!args.includes('net_socksServer')) {
+            args.unshift.apply(args, [
+              '+set', 'net_socksServer', window.location.hostname,
+              '+set', 'net_socksPort', '443',
+            ])
+          }
           if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
@@ -108,17 +112,23 @@ var LibrarySysMain = {
               '+connect', window.location.hostname
             ])
           }
-        } else {
+        } else if (!args.includes('net_socksServer')) {
           args.unshift.apply(args, [
             '+set', 'net_socksServer', 'proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }
       } else {
-        args.unshift.apply(args, [
-          '+set', 'net_socksServer', window.location.hostname,
-          '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
-        ])
+        if (!args.includes('net_socksServer')) {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', window.location.hostname,
+          ])
+        }
+        if (!args.includes('sv_dlURL')) {
+          args.unshift.apply(args, [
+            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
+          ])
+        }
       }
       if(typeof document != 'undefined') {
         if(!args.includes('+connect')) {

@@ -2670,13 +2670,25 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	int				numservers;
 	byte*			buffptr;
 	byte*			buffend;
-	serverInfo_t	*server;
+	serverInfo_t *server;
+	serverInfo_t *servers = &cls.globalServers[0];
+	int	*max = &cls.numglobalservers;
+
 	
+	// check if server response is from a specific list
+	
+	for (i = 0; i < MAX_OTHER_SERVERS; i++) {
+		if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
+			servers = &cls.localServers[0];
+			max = &cls.numlocalservers;
+		}
+	}
+
 	//Com_Printf("CL_ServersResponsePacket\n"); // moved down
 
-	if (cls.numglobalservers == -1) {
+	if (*max == -1) {
 		// state to detect lack of servers or lack of response
-		cls.numglobalservers = 0;
+		*max = 0;
 		cls.numGlobalServerAddresses = 0;
 		hash_reset();
 	}
@@ -2742,7 +2754,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			break;
 	}
 
-	count = cls.numglobalservers;
+	count = *max;
 
 	for (i = 0; i < numservers && count < MAX_GLOBAL_SERVERS; i++) {
 
@@ -2755,7 +2767,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		hash_insert( &addresses[i] );
 
 		// build net address
-		server = &cls.globalServers[count];
+		server = &servers[count];
 
 		CL_InitServerInfo( server, &addresses[i] );
 		// advance to next slot
@@ -2773,7 +2785,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		}
 	}
 
-	cls.numglobalservers = count;
+	*max = count;
 	total = count + cls.numGlobalServerAddresses;
 
 	Com_Printf( "getserversResponse:%3d servers parsed (total %d)\n", numservers, total);
@@ -4144,6 +4156,9 @@ void CL_Init( void ) {
 	
 #ifdef EMSCRIPTEN
 	// connect client immediately
+	/*
+	// Useful for instantly connecting client to server, 
+	// not used in favor on \connect command
 	if(0 && !com_dedicated->integer) {
 		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
 		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_LOOPBACK );
@@ -4155,7 +4170,23 @@ void CL_Init( void ) {
 		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 		clc.connectPacketCount = 0;
 		CL_CheckForResend();
+		
 	}
+	*/
+	//LAN_AddServer(AS_LOCAL, "master.okayplay.com", "207.246.91.235:27950");
+	{
+		netadr_t addr;
+		NET_StringToAdr( "207.246.91.235:27950", &addr, NA_IP );
+		hash_insert(&addr);
+		Com_Printf("ClientInit: %hi\n", BigShort((short) atoi("27950")));
+		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
+		Q_strncpyz(
+			cls.localServers[cls.numlocalservers].hostName,
+			"master.okayplay.com", sizeof(cls.localServers[cls.numlocalservers].hostName));
+		cls.localServers[cls.numlocalservers].visible = qfalse;
+		cls.numlocalservers++;
+	}
+	
 #endif
 }
 
@@ -4583,8 +4614,9 @@ static void CL_LocalServers_f( void ) {
 	int			i, j, n;
 	netadr_t	to;
 
-	Com_Printf( "Scanning for servers on the local network...\n");
+	Com_Printf( "Scanning for servers on the local network (%i servers)...\n", cls.numlocalservers);
 
+#if 0
 	// reset the list, waiting for response
 	cls.numlocalservers = 0;
 	cls.pingUpdateSource = AS_LOCAL;
@@ -4595,6 +4627,7 @@ static void CL_LocalServers_f( void ) {
 		cls.localServers[i].visible = b;
 	}
 	Com_Memset( &to, 0, sizeof( to ) );
+#endif
 
 	// The 'xxx' in the message is a challenge that will be echoed back
 	// by the server.  We don't care about that here, but master servers
@@ -4602,6 +4635,20 @@ static void CL_LocalServers_f( void ) {
 	message = "\377\377\377\377getinfo xxx";
 	n = (int)strlen( message );
 
+#ifdef EMSCRIPTEN
+	for (i = 0; i < cls.numlocalservers; i++) {
+		if (cls.localServers[i].adr.port == BigShort((short)PORT_MASTER)) {
+			Com_Printf("CL_LocalServers: checking master %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
+			NET_OutOfBandPrint( NS_SERVER, &cls.localServers[i].adr, "getservers 68 " );
+			NET_OutOfBandPrint( NS_SERVER, &cls.localServers[i].adr, "getservers 72 " );
+			cls.localServers[i].visible = qfalse;
+		} else {
+			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
+			NET_SendPacket( NS_CLIENT, n, message, &cls.localServers[i].adr );
+			cls.localServers[i].visible = qtrue;
+		}
+	}
+#else
 	// send each message twice in case one is dropped
 	for ( i = 0 ; i < 2 ; i++ ) {
 		// send a broadcast packet on each server port
@@ -4616,6 +4663,7 @@ static void CL_LocalServers_f( void ) {
 			NET_SendPacket( NS_CLIENT, n, message, &to );
 		}
 	}
+#endif
 }
 
 
