@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+qboolean svShuttingDown = qfalse;
 
 /*
 ===============
@@ -401,6 +402,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	const char	*p;
 #endif
 	if(startingServer) {
+		Com_Printf( "SpawnServer: Already starting\n" );
 		return;
 	}
 	startingServer = qtrue;
@@ -704,6 +706,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	Hunk_SetMark();
 	
 #ifdef EMSCRIPTEN
+	svShuttingDown = qfalse;
 	//CL_StartHunkUsers( );
 #endif
 
@@ -873,6 +876,20 @@ void SV_Shutdown( const char *finalmsg ) {
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
+
+#ifdef EMSCRIPTEN
+	// Local server is "always on"
+	if(!svShuttingDown) {
+		svShuttingDown = qtrue;
+		startingServer = qfalse;
+		SV_ShutdownGameProgs();
+		Cvar_Set( "sv_running", "0" );
+		svs.initialized = qfalse;
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		return;
+	}
+#endif
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 

@@ -158,6 +158,7 @@ var LibrarySysFiles = {
     if(newDLURL.length > 0) {
       SYSC.newDLURL = newDLURL
     }
+    SYSN.downloadLazy.splice(0) // reset lazy list to start of map
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')

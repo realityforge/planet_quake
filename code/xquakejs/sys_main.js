@@ -35,7 +35,7 @@ var LibrarySysMain = {
       //'+set', 'r_picmip', '4',
       //'+set', 'r_postProcess', '0',
       '+set', 'cg_drawfps', '1',
-      '+set', 's_compression', '1',
+      '+set', 's_compression', '0',
       '+set', 'r_ext_compressed_textures', '1',
       //'+connect', 'proxy.quake.games:443',
       /*
@@ -51,7 +51,7 @@ var LibrarySysMain = {
     getQueryCommands: function () {
       var search = /([^&=]+)/g
       var query  = window.location.search.substring(1)
-      var args = []
+      var args = Array.from(SYSM.args)
       var match
       while (match = search.exec(query)) {
         var val = decodeURIComponent(match[1])
@@ -87,14 +87,18 @@ var LibrarySysMain = {
       }
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
-        args.unshift.apply(args, [
-          '+set', 'sv_dlURL', '"https://quake.games/assets"',
-        ])
-        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+        if (!args.includes('sv_dlURL')) {
           args.unshift.apply(args, [
-            '+set', 'net_socksServer', window.location.hostname,
-            '+set', 'net_socksPort', '443',
+            '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
+        }
+        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          if (!args.includes('net_socksServer')) {
+            args.unshift.apply(args, [
+              '+set', 'net_socksServer', window.location.hostname,
+              '+set', 'net_socksPort', '443',
+            ])
+          }
           if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
@@ -108,28 +112,31 @@ var LibrarySysMain = {
               '+connect', window.location.hostname
             ])
           }
-        } else {
+        } else if (!args.includes('net_socksServer')) {
           args.unshift.apply(args, [
             '+set', 'net_socksServer', 'proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }
       } else {
-        args.unshift.apply(args, [
-          '+set', 'net_socksServer', window.location.hostname,
-          '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
-        ])
+        if (!args.includes('net_socksServer')) {
+          args.unshift.apply(args, [
+            '+set', 'net_socksServer', window.location.hostname,
+          ])
+        }
+        if (!args.includes('sv_dlURL')) {
+          args.unshift.apply(args, [
+            '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
+          ])
+        }
       }
-      if(typeof document != 'undefined'
-        && !args.includes('+spmap')
-        && !args.includes('+map')
-        && !args.includes('+devmap')
-        && !args.includes('+spdevmap')
-        && !args.includes('+connect')) {
+      if(typeof document != 'undefined') {
+        if(!args.includes('+connect')) {
           args.push.apply(args, [
             '+connect', 'localhost'
           ])
         }
+      }
       return args
     },
     updateVideoCmd: function () {
@@ -263,11 +270,13 @@ var LibrarySysMain = {
   },
   Sys_SetStatus__deps: ['$SYSN'],
   Sys_SetStatus: function (s) {
-    SYSN.LoadingDescription(UTF8ToString(s))
+    var args = Array.from(arguments)
+      .map(a => UTF8ToString(a))
+    SYSN.LoadingDescription(args.join(' '))
   },
   Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
-    var argv = ['ioq3'].concat(SYSM.args).concat(SYSM.getQueryCommands())
+    var argv = ['ioq3'].concat(SYSM.getQueryCommands())
     var argc = argv.length
     // merge default args with query string args
     var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}})
@@ -278,7 +287,7 @@ var LibrarySysMain = {
     return list
   },
   Sys_CmdArgsC: function () {
-    return SYSM.args.length + SYSM.getQueryCommands().length + 1
+    return SYSM.getQueryCommands().length + 1
   },
 }
 autoAddDeps(LibrarySysMain, '$SYSM')

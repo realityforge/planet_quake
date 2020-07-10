@@ -40,10 +40,10 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 
 #ifdef DEDICATED
 #define MIN_COMHUNKMEGS		48
-#define DEF_COMHUNKMEGS		56
+#define DEF_COMHUNKMEGS		380
 #else
 #define MIN_COMHUNKMEGS		64
-#define DEF_COMHUNKMEGS		128
+#define DEF_COMHUNKMEGS		380
 #endif
 
 #ifdef USE_MULTI_SEGMENT
@@ -2865,14 +2865,23 @@ int Com_EventLoop( void ) {
 			// manually send packet events for the loopback channel
 #ifndef DEDICATED
 			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
+#ifdef EMSCRIPTEN
+				if(!com_dedicated->integer)
+#endif
 				CL_PacketEvent( &evFrom, &buf );
 			}
 #endif
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events
+#ifdef EMSCRIPTEN
+				if(!com_dedicated->integer || com_sv_running->integer) {
+					Com_RunAndTimeServerPacket( &evFrom, &buf );
+				}
+#else
 				if ( com_sv_running->integer ) {
 					Com_RunAndTimeServerPacket( &evFrom, &buf );
 				}
+#endif
 			}
 
 			return ev.evTime;

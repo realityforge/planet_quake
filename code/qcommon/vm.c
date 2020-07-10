@@ -1333,12 +1333,14 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		
 		// excessive plus checking if it is installed correctly
 		if ( vm->crc32sum == 0x9e8dc0c1 && vm->instructionCount == 306441 && vm->exactDataLength == 7998664 ) {
-			ip = buf + 2768 - 2;
+			ip = buf + 0xAD0 - 2; 
 			if ( ip[2].op == OP_JUMP && ip[2].value == 0xca1 ) {
 			//	ip[0].op = OP_JUMP;
 				VM_IgnoreInstructions( &ip[1], 2 );
 			}
 		}
+		
+		
 	}
 
 	if ( vm->index == VM_UI ) {

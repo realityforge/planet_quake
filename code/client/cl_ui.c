@@ -507,6 +507,10 @@ LAN_MarkServerVisible
 ====================
 */
 static void LAN_MarkServerVisible(int source, int n, qboolean visible ) {
+	if(source == AS_LOCAL && !visible) {
+		Com_Printf("MarkServer: Error: should be visible\n");
+		return;
+	}
 	if (n == -1) {
 		int count = MAX_OTHER_SERVERS;
 		serverInfo_t *server = NULL;

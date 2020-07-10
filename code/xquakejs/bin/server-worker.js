@@ -1,7 +1,7 @@
 window = {}
 serverWorker = self
 window.serverWorker = self
-window.location = new URL(location.origin + '?set dedicated 1')
+window.location = new URL(location.origin + '?set dedicated 2')
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
@@ -10,7 +10,9 @@ quake3e.printErr = function (...args) {
   if(args[0] && (args[0].includes('Sys_Error:')
     || args[0].includes('Error:')
     || args[0].includes('ERROR:')
-    || args[0].includes('server:')))
+    || args[0].includes('server:')
+    || args[0].includes('Hunk_Clear:')
+    || args[0].includes('Frame Setup')))
     console.error.apply(console, ['DedServer: '].concat(args))
   else
     console.log.apply(console, ['DedServer: '].concat(args))
@@ -45,12 +47,14 @@ onmessage = function(e) {
 
 quake3e.onRuntimeInitialized = function() {
   SYSM.args.unshift.apply(SYSM.args, [
-    '+set', 'ttycon', '1', 
-    '+set', 'net_socksEnabled', '0',
+    '+set', 'ttycon', '1',
+    '+set', 'sv_master1', '207.246.91.235',
+    '+set', 'sv_hostname', 'Local Host',
+    '+set', 'sv_motd', 'For instant replays and stuff',
+    '+set', 'rconPassword', 'password123!',
+    '+set', 'sv_reconnectlimit', '0',
+  //  '+set', 'net_socksEnabled', '0',
   ])
   runIsFirst = true
   if(initIsFirst) Module.callMain()
-  var callback = () => {}
-  Module['websocket'].on('open', callback)
-  Module['websocket'].on('message', callback)
 }

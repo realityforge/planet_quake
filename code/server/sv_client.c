@@ -1888,6 +1888,7 @@ Also called by bot code
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
 	qboolean bFloodProtect, gameResult;
+	char *ded;
 	
 	Cmd_TokenizeString( s );
 	
@@ -1902,12 +1903,13 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		
 		// in baseq3 game (not cgame or ui) the dedicated flag is used for
 		// say "server:" and other logging bs. hope this is sufficient?
+		ded = Cvar_VariableString("dedicated");
 		Cvar_Set("dedicated", "0");
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand();
 		}
-		Cvar_Set("dedicated", "1");
+		Cvar_Set("dedicated", ded);
 	}
 
 #endif
