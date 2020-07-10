@@ -350,6 +350,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_EndRedirect();
 #ifndef DEDICATED
 		CL_Disconnect( qfalse, qtrue );
+#ifdef EMSCRIPTEN
+		if(!com_dedicated->integer)
+#endif
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -367,6 +370,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_EndRedirect();
 #ifndef DEDICATED
 		CL_Disconnect( qfalse, qtrue );
+#ifdef EMSCRIPTEN
+			if(!com_dedicated->integer)
+#endif
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -382,6 +388,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		if ( com_cl_running && com_cl_running->integer ) {
 			CL_Disconnect( qfalse, qtrue );
 			VM_Forced_Unload_Start();
+#ifdef EMSCRIPTEN
+			if(!com_dedicated->integer)
+#endif
 			CL_FlushMemory();
 			VM_Forced_Unload_Done();
 			CL_CDDialog();

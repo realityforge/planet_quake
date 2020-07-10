@@ -869,10 +869,25 @@ Called when each game quits,
 before Sys_Quit or Sys_Error
 ================
 */
+qboolean svShuttingDown = qfalse;
 void SV_Shutdown( const char *finalmsg ) {
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
+
+#ifdef EMSCRIPTEN
+	if(!svShuttingDown) {
+		svShuttingDown = qtrue;
+		startingServer = qfalse;
+		SV_ShutdownGameProgs();
+		Cvar_Set( "sv_running", "0" );
+		svs.initialized = qfalse;
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		Cbuf_Execute();
+		return;
+	}
+#endif
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 
