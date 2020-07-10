@@ -19,7 +19,6 @@ var LibrarySysMain = {
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4
-      '+set', 'net_socksServer', '127.0.0.1',
       '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
       //'+set', 'com_hunkMegs', '256',
@@ -122,6 +121,7 @@ var LibrarySysMain = {
         if (!args.includes('net_socksServer')) {
           args.unshift.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
+            '+set', 'net_socksPort', SYSM.isSecured('') ? '443' : '1081'
           ])
         }
         if (!args.includes('sv_dlURL')) {
@@ -156,6 +156,12 @@ var LibrarySysMain = {
 			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay);
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
+    isSecured: function (socksServer) {
+      return (window.location.search.includes('https://')
+        || window.location.protocol.includes('https'))
+        && !socksServer.includes('http:')
+        && !socksServer.includes('ws:')
+    }
   },
   Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
   Sys_PlatformInit: function () {
@@ -163,7 +169,7 @@ var LibrarySysMain = {
     SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     Object.assign(Module, {
       websocket: Object.assign(Module.websocket || {}, {
-        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
+        url: SYSM.isSecured(SYSC.Cvar_VariableString('net_socksServer'))
         ? 'wss://'
         : 'ws://'
       })

@@ -1658,9 +1658,14 @@ static void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 #ifdef EMSCRIPTEN
+	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
+		|| !strcmp (server, va("127.0.0.1:%i", PORT_SERVER)))) {
+		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
+	}
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
 		&& addr.type == NA_LOOPBACK && cgvm) {
 		cls.state = CA_PRIMED;
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
 	}
 #endif
@@ -4695,6 +4700,7 @@ static void CL_LocalServers_f( void ) {
 			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 72 " );
 			cls.localServers[i].visible = qfalse;
 		} else if (NET_CompareAdr(&to, &cls.localServers[i].adr)) {
+			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
 			// send over loopback instead
 			to.type = NA_LOOPBACK;
 			NET_SendPacket( NS_CLIENT, n, message, &to );
