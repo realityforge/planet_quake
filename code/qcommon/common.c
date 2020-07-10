@@ -370,9 +370,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_EndRedirect();
 #ifndef DEDICATED
 		CL_Disconnect( qfalse, qtrue );
-#ifdef EMSCRIPTEN
-			if(!com_dedicated->integer)
-#endif
+	#ifdef EMSCRIPTEN
+				if(!com_dedicated->integer)
+	#endif
 		CL_FlushMemory();
 #endif
 		VM_Forced_Unload_Done();
@@ -4027,6 +4027,9 @@ void Com_Frame_After_Startup() {
 		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
 	} else {
 		VM_Forced_Unload_Start();
+#ifdef EMSCRIPTEN
+		if(!com_dedicated->integer)
+#endif
 		CL_FlushMemory();
 		VM_Forced_Unload_Done();
 		Com_GameRestart_After_Restart();

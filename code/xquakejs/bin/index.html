@@ -221,7 +221,8 @@
 	    || args[0].includes('Error:')
 			|| args[0].includes('ERROR:')
 	    || args[0].includes('server:')
-			|| args[0].includes('Hunk_Clear:')))
+			|| args[0].includes('Hunk_Clear:')
+	    || args[0].includes('Frame Setup')))
 			console.error.apply(console, args)
 		else
 			console.log.apply(console, args)

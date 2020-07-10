@@ -5,7 +5,7 @@
     "start": "node ./code/xquakejs/bin/web.js",
     "content": "node ./code/xquakejs/bin/content.js",
     "proxy": "node ./code/xquakejs/bin/proxy.js",
-    "repack": "node --inspect-brk --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
+    "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
     "install:emsdk": "./code/xquakejs/lib/emsdk/emsdk install latest-upstream"
   },

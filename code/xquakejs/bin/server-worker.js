@@ -10,7 +10,9 @@ quake3e.printErr = function (...args) {
   if(args[0] && (args[0].includes('Sys_Error:')
     || args[0].includes('Error:')
     || args[0].includes('ERROR:')
-    || args[0].includes('server:')))
+    || args[0].includes('server:')
+    || args[0].includes('Hunk_Clear:')
+    || args[0].includes('Frame Setup')))
     console.error.apply(console, ['DedServer: '].concat(args))
   else
     console.log.apply(console, ['DedServer: '].concat(args))

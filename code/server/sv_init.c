@@ -401,6 +401,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	const char	*p;
 #endif
 	if(startingServer) {
+		Com_Printf( "SpawnServer: Already starting\n" );
 		return;
 	}
 	startingServer = qtrue;
@@ -884,7 +885,6 @@ void SV_Shutdown( const char *finalmsg ) {
 		svs.initialized = qfalse;
 		Cmd_Clear();
 		Cbuf_AddText("spmap q3dm0\n");
-		Cbuf_Execute();
 		return;
 	}
 #endif
