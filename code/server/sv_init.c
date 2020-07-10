@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+qboolean svShuttingDown = qfalse;
 
 /*
 ===============
@@ -705,6 +706,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	Hunk_SetMark();
 	
 #ifdef EMSCRIPTEN
+	svShuttingDown = qfalse;
 	//CL_StartHunkUsers( );
 #endif
 
@@ -870,13 +872,13 @@ Called when each game quits,
 before Sys_Quit or Sys_Error
 ================
 */
-qboolean svShuttingDown = qfalse;
 void SV_Shutdown( const char *finalmsg ) {
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
 
 #ifdef EMSCRIPTEN
+	// Local server is "always on"
 	if(!svShuttingDown) {
 		svShuttingDown = qtrue;
 		startingServer = qfalse;
