@@ -2865,14 +2865,23 @@ int Com_EventLoop( void ) {
 			// manually send packet events for the loopback channel
 #ifndef DEDICATED
 			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
+#ifdef EMSCRIPTEN
+				if(!com_dedicated->integer)
+#endif
 				CL_PacketEvent( &evFrom, &buf );
 			}
 #endif
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events
+#ifdef EMSCRIPTEN
+				if(!com_dedicated->integer || com_sv_running->integer) {
+					Com_RunAndTimeServerPacket( &evFrom, &buf );
+				}
+#else
 				if ( com_sv_running->integer ) {
 					Com_RunAndTimeServerPacket( &evFrom, &buf );
 				}
+#endif
 			}
 
 			return ev.evTime;

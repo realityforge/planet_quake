@@ -1273,13 +1273,19 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		cl_disconnecting = qfalse;
 		return qfalse;
 	}
-	
+
 #ifdef EMSCRIPTEN
+	netadr_t	addr;
+	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
+	clc.serverAddress = addr;
+	noGameRestart = qtrue;
+	cl_restarted = qtrue;
 	if(!dropped) {
 		// skip disconnecting and just show the main menu
 		cl_disconnecting = qfalse;
 		return cl_restarted;
 	}
+#else
 #endif
 
 	// send a disconnect message to the server
@@ -1295,7 +1301,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	// wipe the client connection
 	Com_Memset( &clc, 0, sizeof( clc ) );
-
+	
 	cls.state = CA_DISCONNECTED;
 
 	// allow cheats locally
@@ -1651,8 +1657,15 @@ static void CL_Connect_f( void ) {
 	Cvar_Set( "sv_killserver", "1" );
 	SV_Frame( 0 );
 
+#ifdef EMSCRIPTEN
+	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
+		&& addr.type == NA_LOOPBACK && cgvm) {
+		cls.state = CA_PRIMED;
+		return;
+	}
+#endif
 	noGameRestart = qtrue;
-	CL_Disconnect( qtrue, qfalse );
+	CL_Disconnect( qtrue, qtrue );
 
 	Con_Close();
 
@@ -1846,6 +1859,7 @@ doesn't know what graphics to reload
 =================
 */
 static void CL_Vid_Restart( void ) {
+
 	// Settings may have changed so stop recording now
 	if ( CL_VideoRecording() )
 		CL_CloseAVI();
@@ -1901,6 +1915,7 @@ void CL_Vid_Restart_After_Startup( void ) {
 void CL_Vid_Restart_After_Restart( void ) {
 #endif
 ;
+
 	// initialize the renderer interface
 	CL_InitRef();
 
@@ -3066,14 +3081,14 @@ static void CL_CheckTimeout( void ) {
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
-			Com_Error( ERR_DROP, "\nServer connection timed out.\n" );
+			Com_Printf( "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
 			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			//if ( uivm ) {
-			//	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			//}
+			if ( uivm ) {
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			}
 			return;
 		}
 	} else {
@@ -3316,6 +3331,9 @@ void CL_Frame( int msec ) {
 	CL_CheckUserinfo();
 
 	// if we haven't gotten a packet in a long time, drop the connection
+#ifdef EMSCRIPTEN
+	if(clc.serverAddress.type != NA_LOOPBACK)
+#endif
 	if ( !clc.demoplaying ) {
 		CL_CheckTimeout();
 	}
@@ -4175,15 +4193,25 @@ void CL_Init( void ) {
 	*/
 	//LAN_AddServer(AS_LOCAL, "master.okayplay.com", "207.246.91.235:27950");
 	{
+		// TODO: make this a cvar option like master servers
 		netadr_t addr;
 		NET_StringToAdr( "207.246.91.235:27950", &addr, NA_IP );
-		hash_insert(&addr);
-		Com_Printf("ClientInit: %hi\n", BigShort((short) atoi("27950")));
+		//hash_insert(&addr);
 		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
 		Q_strncpyz(
 			cls.localServers[cls.numlocalservers].hostName,
 			"master.okayplay.com", sizeof(cls.localServers[cls.numlocalservers].hostName));
 		cls.localServers[cls.numlocalservers].visible = qfalse;
+		cls.numlocalservers++;
+
+		NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &addr, NA_UNSPEC );
+		addr.type = NA_IP;
+		addr.port = BigShort((short)PORT_SERVER);
+		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
+		Q_strncpyz(
+			cls.localServers[cls.numlocalservers].hostName,
+			"localhost", sizeof(cls.localServers[cls.numlocalservers].hostName));
+		cls.localServers[cls.numlocalservers].visible = qtrue;
 		cls.numlocalservers++;
 	}
 	
@@ -4323,6 +4351,14 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	char	info[MAX_INFO_STRING];
 	const char *infoString;
 	int		prot;
+	netadr_t addr;
+	
+	if(from->type == NA_LOOPBACK) {
+		// emulate a local address instead of loopback to not hold up the list
+		NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &addr, NA_UNSPEC );
+		addr.type = NA_IP;
+		addr.port = BigShort((short)PORT_SERVER);
+	}
 
 	infoString = MSG_ReadString( msg );
 
@@ -4336,7 +4372,9 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	// iterate servers waiting for ping response
 	for (i=0; i<MAX_PINGREQUESTS; i++)
 	{
-		if ( cl_pinglist[i].adr.port && !cl_pinglist[i].time && NET_CompareAdr( from, &cl_pinglist[i].adr ) )
+		if ( !cl_pinglist[i].time && cl_pinglist[i].adr.port 
+			&& (NET_CompareAdr( from, &cl_pinglist[i].adr )
+			|| (from->type == NA_LOOPBACK && NET_CompareAdr( &addr, &cl_pinglist[i].adr ))))
 		{
 			// calc ping time
 			cl_pinglist[i].time = Sys_Milliseconds() - cl_pinglist[i].start;
@@ -4356,6 +4394,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			// NOTE: make sure these types are in sync with the netnames strings in the UI
 			switch (from->type)
 			{
+				case NA_LOOPBACK:
 				case NA_BROADCAST:
 				case NA_IP:
 					type = 1;
@@ -4368,10 +4407,18 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 					break;
 			}
 			Info_SetValueForKey( cl_pinglist[i].info, "nettype", va("%d", type) );
-			CL_SetServerInfoByAddress(from, infoString, cl_pinglist[i].time);
+			if(from->type == NA_LOOPBACK) {
+ 				CL_SetServerInfoByAddress(&addr, infoString, cl_pinglist[i].time);
+			} else {
+				CL_SetServerInfoByAddress(from, infoString, cl_pinglist[i].time);
+			}
 
 			return;
 		}
+	}
+
+	if(from->type == NA_LOOPBACK) {
+		return;
 	}
 
 	// if not just sent a local broadcast or pinging local servers
@@ -4381,7 +4428,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 
 	for ( i = 0 ; i < MAX_OTHER_SERVERS ; i++ ) {
 		// empty slot
-		if ( cls.localServers[i].adr.port == 0 ) {
+		if ( (!cls.localServers[i].adr.port && !cls.localServers[i].adr.type) ) {
 			break;
 		}
 
@@ -4616,10 +4663,10 @@ static void CL_LocalServers_f( void ) {
 
 	Com_Printf( "Scanning for servers on the local network (%i servers)...\n", cls.numlocalservers);
 
+	cls.pingUpdateSource = AS_LOCAL;
 #if 0
 	// reset the list, waiting for response
 	cls.numlocalservers = 0;
-	cls.pingUpdateSource = AS_LOCAL;
 
 	for (i = 0; i < MAX_OTHER_SERVERS; i++) {
 		qboolean b = cls.localServers[i].visible;
@@ -4636,12 +4683,22 @@ static void CL_LocalServers_f( void ) {
 	n = (int)strlen( message );
 
 #ifdef EMSCRIPTEN
+	// emulate localhost
+	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
+	to.type = NA_IP;
+	to.port = BigShort((short)PORT_SERVER);
+
 	for (i = 0; i < cls.numlocalservers; i++) {
 		if (cls.localServers[i].adr.port == BigShort((short)PORT_MASTER)) {
 			Com_Printf("CL_LocalServers: checking master %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
-			NET_OutOfBandPrint( NS_SERVER, &cls.localServers[i].adr, "getservers 68 " );
-			NET_OutOfBandPrint( NS_SERVER, &cls.localServers[i].adr, "getservers 72 " );
+			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 68 " );
+			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 72 " );
 			cls.localServers[i].visible = qfalse;
+		} else if (NET_CompareAdr(&to, &cls.localServers[i].adr)) {
+			// send over loopback instead
+			to.type = NA_LOOPBACK;
+			NET_SendPacket( NS_CLIENT, n, message, &to );
+			to.type = NA_IP;			
 		} else {
 			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
 			NET_SendPacket( NS_CLIENT, n, message, &cls.localServers[i].adr );
@@ -4778,7 +4835,7 @@ void CL_GetPing( int n, char *buf, int buflen, int *pingtime )
 	int		time;
 	int		maxPing;
 
-	if (n < 0 || n >= MAX_PINGREQUESTS || !cl_pinglist[n].adr.port)
+	if (n < 0 || n >= MAX_PINGREQUESTS || (!cl_pinglist[n].adr.port && !cl_pinglist[n].adr.type))
 	{
 		// empty or invalid slot
 		buf[0]    = '\0';
@@ -4818,7 +4875,7 @@ CL_GetPingInfo
 */
 void CL_GetPingInfo( int n, char *buf, int buflen )
 {
-	if (n < 0 || n >= MAX_PINGREQUESTS || !cl_pinglist[n].adr.port)
+	if (n < 0 || n >= MAX_PINGREQUESTS || (!cl_pinglist[n].adr.port && !cl_pinglist[n].adr.type))
 	{
 		// empty or invalid slot
 		if (buflen)
@@ -4841,6 +4898,7 @@ void CL_ClearPing( int n )
 		return;
 
 	cl_pinglist[n].adr.port = 0;
+	cl_pinglist[n].adr.type = 0;
 }
 
 
@@ -4859,7 +4917,7 @@ int CL_GetPingQueueCount( void )
 	pingptr = cl_pinglist;
 
 	for (i=0; i<MAX_PINGREQUESTS; i++, pingptr++ ) {
-		if (pingptr->adr.port) {
+		if (pingptr->adr.port || pingptr->adr.type) {
 			count++;
 		}
 	}
@@ -4886,7 +4944,7 @@ static ping_t* CL_GetFreePing( void )
 	for ( i = 0; i < ARRAY_LEN( cl_pinglist ); i++, pingptr++ )
 	{
 		// find free ping slot
-		if ( pingptr->adr.port )
+		if ( pingptr->adr.port || pingptr->adr.type )
 		{
 			if ( pingptr->time == 0 )
 			{
@@ -4905,6 +4963,7 @@ static ping_t* CL_GetFreePing( void )
 
 		// clear it
 		pingptr->adr.port = 0;
+		pingptr->adr.type = 0;
 		return pingptr;
 	}
 
@@ -5025,7 +5084,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 						break;
 					}
 					for (j = 0; j < MAX_PINGREQUESTS; j++) {
-						if (!cl_pinglist[j].adr.port) {
+						if (!cl_pinglist[j].adr.port && !cl_pinglist[j].adr.type) {
 							continue;
 						}
 						if (NET_CompareAdr( &cl_pinglist[j].adr, &server[i].adr)) {
@@ -5036,7 +5095,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 					if (j >= MAX_PINGREQUESTS) {
 						status = qtrue;
 						for (j = 0; j < MAX_PINGREQUESTS; j++) {
-							if (!cl_pinglist[j].adr.port) {
+							if (!cl_pinglist[j].adr.port && !cl_pinglist[j].adr.type) {
 								memcpy(&cl_pinglist[j].adr, &server[i].adr, sizeof(netadr_t));
 								cl_pinglist[j].start = Sys_Milliseconds();
 								cl_pinglist[j].time = 0;
@@ -5069,7 +5128,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 		status = qtrue;
 	}
 	for (i = 0; i < MAX_PINGREQUESTS; i++) {
-		if (!cl_pinglist[i].adr.port) {
+		if (!cl_pinglist[i].adr.port && !cl_pinglist[i].adr.type) {
 			continue;
 		}
 		CL_GetPing( i, buff, MAX_STRING_CHARS, &pingTime );

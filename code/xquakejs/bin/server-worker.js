@@ -47,6 +47,10 @@ quake3e.onRuntimeInitialized = function() {
   SYSM.args.unshift.apply(SYSM.args, [
     '+set', 'ttycon', '1',
     '+set', 'sv_master1', '207.246.91.235',
+    '+set', 'sv_hostname', 'Local Host',
+    '+set', 'sv_motd', 'For instant replays and stuff',
+    '+set', 'rconPassword', 'password123!',
+    '+set', 'sv_reconnectlimit', '0',
   //  '+set', 'net_socksEnabled', '0',
   ])
   runIsFirst = true

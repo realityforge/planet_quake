@@ -448,6 +448,14 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	net_message->cursize = loop->msgs[i].datalen;
 	Com_Memset (net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
+/*
+#ifdef EMSCRIPTEN
+	// also send queued messages to local client if running in dedicated thread
+	if(sock == NS_CLIENT && com_dedicated->integer) {
+		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);
+	}
+#endif
+*/
 	return qtrue;
 
 }

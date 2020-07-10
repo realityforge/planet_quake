@@ -687,8 +687,6 @@ Sys_SendPacket
 void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 	int				ret = SOCKET_ERROR;
 	struct sockaddr_storage	addr;
-  
-  Com_Printf("SendPacket: %i\n", length);
 
 	switch ( to->type ) {
 		case NA_BROADCAST:
@@ -1579,6 +1577,7 @@ NET_GetCvars
 */
 static qboolean NET_GetCvars( void ) {
 	int modified;
+  int port;
 
 #ifdef DEDICATED
 	// I want server owners to explicitly turn on ipv6 support.
@@ -1598,12 +1597,23 @@ static qboolean NET_GetCvars( void ) {
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
-	
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+
+#ifdef EMSCRIPTEN
+  if(!com_dedicated->integer) {
+  	Com_RandomBytes((byte*)&port, sizeof(int));
+  	port &= 0xffff;
+  } else {
+    port = PORT_SERVER;
+  }
+#else
+	port = PORT_SERVER;
+#endif
+
+	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
-	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 
