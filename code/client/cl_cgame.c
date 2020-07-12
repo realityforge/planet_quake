@@ -921,6 +921,7 @@ void CL_UpdateShader( void ) {
 	char *lazyShader = Sys_UpdateShader();
 	if(!lazyShader || strlen(lazyShader) == 0) return;
 	lazyShader[12] = '\0';
+	Com_Printf("UpdatingShader: %s\n", &lazyShader[13]);
 	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
 }
 

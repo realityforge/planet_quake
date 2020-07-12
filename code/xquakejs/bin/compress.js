@@ -56,8 +56,13 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
         mkdirpSync(path.dirname(levelPath))
         await progress([[2, i, index.length, entry.name]])
         if(noOverwrite && ufs.existsSync(levelPath)) {
-          skipped++
-          continue
+          // make an exception if the file was written, write it again so paks can update files
+          if(!Array.isArray(noOverwrite) || !noOverwrite.includes(levelPath)) {
+            skipped++
+            continue
+          } else if (Array.isArray(noOverwrite)) {
+            noOverwrite.push(levelPath)
+          }
         }
         await new Promise(resolve => {
           zip.extract(entry.name, levelPath, err => {
@@ -76,6 +81,13 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
 }
 
 async function unpackPk3s(project, outCombined, progress, noOverwrite) {
+  // pk3s are list mini filesystems overlayed on top of each other.
+  //   The first time repack runs, it must overlap files, otherwise
+  //   you will end up with the first qvm in pak0.pk3 instead of the
+  //   updated one because of no overlapping. So written files are stored
+  //   here so that if it writes the file the first time, then it will make
+  //   an exception and write the files again.
+  var overwriteFirstTime = []
   // TODO: copy non-pk3 files first, in case of unpure modes
   var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3', nocase: true})
   var skipped = 0
@@ -95,7 +107,8 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   for(var j = 0; j < pk3s.length; j++) {
     await progress([[1, j, pk3s.length, `${pk3s[j]}`]])
     var outDirectory = outCombined //TODO: make optional? path.join(outCombined, path.basename(pk3s[j]) + 'dir')
-    skipped += await readPak(path.join(project, pk3s[j]), progress, outDirectory, noOverwrite)
+    skipped += await readPak(path.join(project, pk3s[j]), progress, outDirectory,
+      noOverwrite ? overwriteFirstTime : false)
     await progress([[2, false]])
   }
   if(noOverwrite) {

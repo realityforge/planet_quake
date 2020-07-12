@@ -21,6 +21,7 @@ var LibrarySysMain = {
       '+set', 'net_enabled', '1', // 1 for IPv4
       '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
+      '+set', 'cl_lazyLoad', '1',
       //'+set', 'com_hunkMegs', '256',
       //'+set', 'com_maxfps', '125',
       //'+set', 'com_maxfpsUnfocused', '10',
@@ -198,6 +199,8 @@ var LibrarySysMain = {
     window.addEventListener('resize', SYSM.resizeViewport)
   },
   Sys_PlatformExit: function () {
+    if(SYSN.lazyInterval)
+      clearInterval(SYSN.lazyInterval)
     /*
     if(SYSC.varStr) {
       _free(SYSC.varStr)

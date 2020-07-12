@@ -19,6 +19,11 @@ var LibrarySysCommon = {
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_SetValue(SYSC.varStr, value)
 		},
+		Cvar_Get: function (str) {
+			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			HEAP8[(SYSC.varStr+str.length)] = 0
+			return _Cvar_Get(SYSC.varStr, SYSC.varStr+str.length, 0)
+		},
 		Print: function (str) {
 			str = allocate(intArrayFromString(str + '\n'), 'i8', ALLOC_STACK);
 			_Com_Printf(str)

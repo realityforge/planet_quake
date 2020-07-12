@@ -2,7 +2,6 @@ var LibrarySysFiles = {
   $SYSF__deps: ['$SYSC', '$IDBFS'],
   $SYSF: {
     index: [],
-    cl_lazyLoad: null,
     fs_basepath: '/base',
 		fs_game: 'baseq3-cc',
     pathname: 0,
@@ -155,11 +154,12 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function () {
+    SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
     var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     if(newDLURL.length > 0) {
       SYSC.newDLURL = newDLURL
     }
-    SYSN.downloadLazy.splice(0) // reset lazy list to start of map
+    //SYSN.downloadLazy.splice(0) // reset lazy list to start of map
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
@@ -272,12 +272,13 @@ var LibrarySysFiles = {
             if(loading.length === 0) {
               loading = SYSC.Cvar_VariableString('r_loadingModel')
             }
-          }
-          if (!SYSF.index[indexFilename].shaders.includes(loading)) {
+          } else if (!SYSF.index[indexFilename].shaders.includes(loading)) {
             SYSF.index[indexFilename].shaders.push(loading)
           }
-          if((SYSF.cl_lazyLoad === 2 || handle === 0)
-            && !SYSF.index[indexFilename].downloading) {
+
+          if((HEAP8[SYSF.cl_lazyLoad+8*4] === 2 || handle === 0)
+            && !SYSF.index[indexFilename].downloading
+            && !SYSF.index[indexFilename].alreadyDownloaded) {
             SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
             SYSF.index[indexFilename].downloading = true
           } 
@@ -357,8 +358,6 @@ var LibrarySysFiles = {
   },
   Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
   Sys_FS_Shutdown: function (cb) {
-    if(SYSN.lazyInterval)
-      clearInterval(SYSN.lazyInterval)
     /*
     if(SYSF.pathname) {
       _free(SYSF.pathname)

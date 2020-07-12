@@ -77,6 +77,7 @@ var LibrarySysNet = {
     },
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
+      SYSF.index[indexFilename].alreadyDownloaded = true
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
 				if(file[0]) {
 					SYS.soundCallback.unshift(file[0].replace('/' + SYSF.fs_game + '/', ''))
@@ -118,7 +119,6 @@ var LibrarySysNet = {
 			})
 		},
 		DownloadLazy: function () {
-      SYSF.cl_lazyLoad = SYSC.Cvar_VariableIntegerValue('cl_lazyLoad')
 			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
 			// if we haven't sorted the list in a while, sort by number of references to file
 			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {
