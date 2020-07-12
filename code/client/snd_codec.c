@@ -186,8 +186,7 @@ S_CodecLoad
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
 	void *result;
-	if(!updateSound)
-		ri.Cvar_Set( "snd_loadingSound", filename );	
+	ri.Cvar_Set( "snd_loadingSound", filename );	
 	result = S_CodecGetSound(filename, info);
 	ri.Cvar_Set( "snd_loadingSound", "" );	
 

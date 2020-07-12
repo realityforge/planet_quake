@@ -3639,8 +3639,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
-  if(!mapShaders)
-    ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
+  ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
 
 	InitShader( strippedName, lightmapIndex );
 

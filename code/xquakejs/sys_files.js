@@ -2,8 +2,8 @@ var LibrarySysFiles = {
   $SYSF__deps: ['$SYSC', '$IDBFS'],
   $SYSF: {
     index: [],
+    fs_replace: [],
     fs_basepath: '/base',
-		fs_game: 'baseq3-cc',
     pathname: 0,
     modeStr: 0,
     firstTime: false,
@@ -154,6 +154,8 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function () {
+    SYSF.fs_replace = []
+    SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
     var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     if(newDLURL.length > 0) {
@@ -166,9 +168,14 @@ var LibrarySysFiles = {
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSF.fs_basepath = fs_basepath;
     var fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
+    if(fs_basegame.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + fs_basegame + '\/', 'ig'))
+    SYSF.fs_basegame = fs_basegame
     var sv_pure = SYSC.Cvar_VariableString('sv_pure')
     var fs_game = SYSC.Cvar_VariableString('fs_game')
-    SYSF.fs_game = fs_game;
+    if(fs_game.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + fs_game + '\/', 'ig'))
+    SYSF.fs_replace.sort((a, b) => b.source.length - a.source.length)
     var mapname = SYSC.Cvar_VariableString('mapname')
     var clcState = _CL_GetClientState()
     const blankFile = new Uint8Array(4)
@@ -276,7 +283,9 @@ var LibrarySysFiles = {
             SYSF.index[indexFilename].shaders.push(loading)
           }
 
-          if((loading.length > 0 || handle === 0)
+          if((handle === 0
+            || (HEAP8[SYSF.cl_lazyLoad+8*4] === 2
+              && !SYSF.index[indexFilename].alreadyDownloaded))
             && !SYSF.index[indexFilename].downloading) {
             SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
             SYSF.index[indexFilename].downloading = true

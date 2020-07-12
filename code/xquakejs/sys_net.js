@@ -78,10 +78,8 @@ var LibrarySysNet = {
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded = true
-      var replacePaths = [SYSF.fs_game, SYSF.fs_basepath]
-      replacePaths.sort((a, b) => b.length - a.length)
       var replaceFunc = (path) => {
-        replacePaths.forEach(r => path = path.replace('/' + r + '/'))
+        SYSF.fs_replace.forEach(r => path = path.replace(r, ''))
         return path
       }
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
@@ -195,7 +193,6 @@ var LibrarySysNet = {
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
-    var fs_game = SYSC.Cvar_VariableString('fs_game')
     
     FS.syncfs(false, (e) => {
       if(e) console.log(e)
