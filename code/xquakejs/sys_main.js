@@ -174,7 +174,7 @@ var LibrarySysMain = {
         : 'ws://'
       })
     })
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
 
     SYSF.firstTime = true
     if(typeof document == 'undefined') return
@@ -231,7 +231,6 @@ var LibrarySysMain = {
     if(typeof Module.exitHandler != 'undefined') {
       Module.exitHandler()
     }
-    clearInterval(SYSN.lazyInterval)
   },
   Sys_Milliseconds: function () {
 		if (!SYSM.timeBase) {

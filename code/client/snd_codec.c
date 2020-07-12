@@ -151,7 +151,7 @@ void S_CodecInit()
 #endif
 	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
-	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );
+	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
 	updateSound = s_lazyLoad->integer < 2;
 	
 }

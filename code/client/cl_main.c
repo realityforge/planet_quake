@@ -70,6 +70,8 @@ cvar_t	*cl_guidServerUniq;
 cvar_t	*cl_dlURL;
 cvar_t	*cl_dlDirectory;
 
+cvar_t  *cl_lazyLoad;
+
 // common cvars for GLimp modules
 cvar_t	*vid_xpos;			// X coordinate of window position
 cvar_t	*vid_ypos;			// Y coordinate of window position
@@ -3216,20 +3218,22 @@ void CL_Frame( int msec ) {
 		}
 	}
 	
-	if((uivm || cgvm) && secondTimer > 20) {
-		secondTimer = 0;
-		CL_UpdateShader();
-	} else {
-		secondTimer += msec;
-	}
-	if((uivm || cgvm) && thirdTimer > 100) {
-		thirdTimer = 0;
-		if(cls.soundRegistered) { // && !cls.firstClick) {
-			CL_UpdateSound();
+	if(cl_lazyLoad->integer > 0) {
+		if((uivm || cgvm) && secondTimer > 20) {
+			secondTimer = 0;
+			CL_UpdateShader();
+		} else {
+			secondTimer += msec;
 		}
-		CL_UpdateModel();
-	} else {
-		thirdTimer += msec;
+		if((uivm || cgvm) && thirdTimer > 100) {
+			thirdTimer = 0;
+			if(cls.soundRegistered) { // && !cls.firstClick) {
+				CL_UpdateSound();
+			}
+			CL_UpdateModel();
+		} else {
+			thirdTimer += msec;
+		}
 	}
 #endif
 
@@ -4086,6 +4090,8 @@ void CL_Init( void ) {
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE_ND );
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
+
+	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
 
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/getpk3bymapname.php/%1", CVAR_ARCHIVE_ND );
 	

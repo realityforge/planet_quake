@@ -2,6 +2,7 @@ var LibrarySysFiles = {
   $SYSF__deps: ['$SYSC', '$IDBFS'],
   $SYSF: {
     index: [],
+    cl_lazyLoad: null,
     fs_basepath: '/base',
 		fs_game: 'baseq3-cc',
     pathname: 0,
@@ -272,13 +273,14 @@ var LibrarySysFiles = {
               loading = SYSC.Cvar_VariableString('r_loadingModel')
             }
           }
-          if(!SYSF.index[indexFilename].downloading) {
-            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
-            SYSF.index[indexFilename].shaders.push(loading)
-            SYSF.index[indexFilename].downloading = true
-          } else if (!SYSF.index[indexFilename].shaders.includes(loading)) {
+          if (!SYSF.index[indexFilename].shaders.includes(loading)) {
             SYSF.index[indexFilename].shaders.push(loading)
           }
+          if((SYSF.cl_lazyLoad === 2 || handle === 0)
+            && !SYSF.index[indexFilename].downloading) {
+            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+            SYSF.index[indexFilename].downloading = true
+          } 
         }
       //}
     } catch (e) {
@@ -355,6 +357,8 @@ var LibrarySysFiles = {
   },
   Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
   Sys_FS_Shutdown: function (cb) {
+    if(SYSN.lazyInterval)
+      clearInterval(SYSN.lazyInterval)
     /*
     if(SYSF.pathname) {
       _free(SYSF.pathname)

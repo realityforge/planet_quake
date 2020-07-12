@@ -118,6 +118,7 @@ var LibrarySysNet = {
 			})
 		},
 		DownloadLazy: function () {
+      SYSF.cl_lazyLoad = SYSC.Cvar_VariableIntegerValue('cl_lazyLoad')
 			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
 			// if we haven't sorted the list in a while, sort by number of references to file
 			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {

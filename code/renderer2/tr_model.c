@@ -1198,7 +1198,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	int	i;
 	
-	updateModels = r_lazyLoad->integer < 2 ? qtrue : qfalse;
+	updateModels = r_lazyLoad->integer < 2;
 
 	R_Init();
 
