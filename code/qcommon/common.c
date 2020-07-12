@@ -3063,9 +3063,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
-#ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
-#endif
 		}
 #endif
 

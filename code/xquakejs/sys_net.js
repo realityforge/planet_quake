@@ -78,23 +78,30 @@ var LibrarySysNet = {
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded = true
+      var replacePaths = [SYSF.fs_game, SYSF.fs_basepath]
+      replacePaths.sort((a, b) => b.length - a.length)
+      var replaceFunc = (path) => {
+        replacePaths.forEach(r => path = path.replace('/' + r + '/'))
+        return path
+      }
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
 				if(file[0]) {
-					SYS.soundCallback.unshift(file[0].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.soundCallback.unshift(replaceFunc(file[0]))
 				} else {
-					SYS.soundCallback.unshift(file[1].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.soundCallback.unshift(replaceFunc(file[1]))
 				}
 				SYS.soundCallback = SYS.soundCallback.filter((s, i, arr) => arr.indexOf(s) === i)
 			} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 				if(file[0]) {
-					SYS.modelCallback.unshift(file[0].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.modelCallback.unshift(replaceFunc(file[0]))
 				} else {
-					SYS.modelCallback.unshift(file[1].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.modelCallback.unshift(replaceFunc(file[1]))
 				}
 				SYS.modelCallback = SYS.modelCallback.filter((s, i, arr) => arr.indexOf(s) === i)
 			} else if(SYSF.index[indexFilename].shaders.length > 0) {
 				if(file[0]) {
-					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [file[0]].concat(SYSF.index[indexFilename].shaders))
+					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [replaceFunc(file[0])]
+            .concat(SYSF.index[indexFilename].shaders))
 				} else {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYSF.index[indexFilename].shaders)
 				}
