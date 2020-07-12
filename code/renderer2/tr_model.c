@@ -316,7 +316,8 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
 	
-	ri.Cvar_Set("r_loadingModel", name);
+	if(!updateModels)
+		ri.Cvar_Set("r_loadingModel", name);
 
 	ext = COM_GetExtension( localName );
 

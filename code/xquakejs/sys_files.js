@@ -276,9 +276,8 @@ var LibrarySysFiles = {
             SYSF.index[indexFilename].shaders.push(loading)
           }
 
-          if((HEAP8[SYSF.cl_lazyLoad+8*4] === 2 || handle === 0)
-            && !SYSF.index[indexFilename].downloading
-            && !SYSF.index[indexFilename].alreadyDownloaded) {
+          if((loading.length > 0 || handle === 0)
+            && !SYSF.index[indexFilename].downloading) {
             SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
             SYSF.index[indexFilename].downloading = true
           } 
