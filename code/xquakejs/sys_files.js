@@ -284,10 +284,13 @@ var LibrarySysFiles = {
           }
 
           if((handle === 0
-            || (HEAP8[SYSF.cl_lazyLoad+8*4] === 2
-              && !SYSF.index[indexFilename].alreadyDownloaded))
-            && !SYSF.index[indexFilename].downloading) {
-            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+            || HEAP8[SYSF.cl_lazyLoad+8*4] === 2)
+            && !SYSF.index[indexFilename].downloading
+          /*&& !SYSF.index[indexFilename].alreadyDownloaded*/) {
+            if(SYSF.index[indexFilename].alreadyDownloaded)
+              SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
+            else
+              SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
             SYSF.index[indexFilename].downloading = true
           } 
         }

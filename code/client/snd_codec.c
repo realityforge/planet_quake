@@ -201,8 +201,7 @@ S_CodecOpenStream
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
 	snd_stream_t *result;
-	if(!updateSound)
-		ri.Cvar_Set( "snd_loadingSound", filename );	
+	ri.Cvar_Set( "snd_loadingSound", filename );	
 	result = S_CodecGetSound(filename, NULL);
 	ri.Cvar_Set( "snd_loadingSound", "" );	
 

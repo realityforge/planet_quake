@@ -3263,7 +3263,6 @@ InitShader
 */
 static void InitShader( const char *name, int lightmapIndex ) {
 	int i;
-  mapShaders = r_lazyLoad->integer < 2;
 
 	// clear the global shader
 	Com_Memset( &shader, 0, sizeof( shader ) );
@@ -4164,6 +4163,7 @@ static void ScanAndLoadShaderFiles( void )
 	const char *p, *oldp;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
 
+  mapShaders = r_lazyLoad->integer < 2;
 	long sum = 0;
 
 	// scan for legacy shader files
