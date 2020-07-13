@@ -172,11 +172,12 @@ var LibrarySysNet = {
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
-					obj[k.toLowerCase()] = moreIndex[k]
-          if(typeof obj[k.toLowerCase()].downloading == 'undefined')
-					     obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
-					obj[k.toLowerCase()].downloading = false
-					obj[k.toLowerCase()].shaders = []
+          if(typeof obj[k.toLowerCase()] == 'undefined') {
+            obj[k.toLowerCase()] = moreIndex[k]
+            obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+  					obj[k.toLowerCase()].shaders = []
+            obj[k.toLowerCase()].downloading = false
+          }
 					return obj
 				}, SYSF.index || {})
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)

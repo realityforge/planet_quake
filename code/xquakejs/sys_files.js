@@ -89,7 +89,7 @@ var LibrarySysFiles = {
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
-          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt/i)
+          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
           || file.name.match(new RegExp('\/levelshots\/' + mapname, 'i'))
           || file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
@@ -100,7 +100,7 @@ var LibrarySysFiles = {
           // these files can be streamed in
           file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
           // download levelshots and common graphics
-          || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
+          || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {

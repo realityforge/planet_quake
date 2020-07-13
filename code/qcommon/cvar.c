@@ -612,9 +612,9 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	cvar_t	*var;
 
 //	Com_DPrintf( "Cvar_Set2: %s %s\n", var_name, value );
-	if(!Q_stricmpn(var_name, "fs_game", 7)) {
-		Com_Printf("Error: Cvar_Set: %s\n", value);
-	}
+	//if(!Q_stricmpn(var_name, "fs_game", 7)) {
+	//	Com_Printf("Error: Cvar_Set: %s\n", value);
+	//}
 
 	if ( !Cvar_ValidateName( var_name ) ) {
 		Com_Printf( "invalid cvar name string: %s\n", var_name );

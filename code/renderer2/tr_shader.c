@@ -1993,9 +1993,9 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
-				return qfalse;
-			}
-			stages[s].active = qtrue;
+				continue;
+			} else
+			  stages[s].active = qtrue;
 			s++;
 
 			continue;
@@ -2294,14 +2294,14 @@ static qboolean ParseShader( const char **text )
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          return qfalse;
+          continue;
         }
       } else
       {
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          return qfalse;
+          continue;
         }
       }
 
@@ -2428,7 +2428,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			break;
+			continue;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
@@ -3659,13 +3659,25 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( r_printShaders->integer ) {
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
+    
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qtrue;
+    }
 
-		if ( !ParseShader( &shaderText ) ) {
+		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
-		} else {
+		} else if(!mapShaders && shader.stages[0]->active == qfalse) {
+      shader.defaultShader = qtrue;
+    } else {
       shader.defaultShader = qfalse;
     }
+
+    if(!Q_stricmp(name, "console"))
+  		Com_Printf("Error: CL_UpdateShader: %s, %i\n", name, lightmapIndex);
+
 		sh = FinishShader();
 		return sh;
 	}
@@ -4330,7 +4342,7 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
   //if(Q_stristr(shaderName, "rocketExplosion"))
-  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex);
+  R_RemapShaderInternal(shaderName, shaderName, "\0", lightmapIndex);
   
   mapShaders = r_lazyLoad->integer < 2;
 }
