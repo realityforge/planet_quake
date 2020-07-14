@@ -353,7 +353,7 @@ rescan:
 	// we may want to put a "connect to other server" command here
 #ifdef EMSCRIPTEN
 	if ( !strcmp( cmd, "postgame" ) ) {
-		Key_SetCatcher( cls.postgame = qtrue );
+		cls.postgame = qtrue;
 	}
 	
 	// pass server commands through to client like postgame
