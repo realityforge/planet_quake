@@ -1993,7 +1993,7 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
-				continue;
+				return qfalse;
 			} else
 			  stages[s].active = qtrue;
 			s++;
@@ -2294,14 +2294,14 @@ static qboolean ParseShader( const char **text )
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          continue;
+          return qfalse;
         }
       } else
       {
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          continue;
+          return qfalse;
         }
       }
 
@@ -2428,7 +2428,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			continue;
+			break;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
@@ -4342,7 +4342,7 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
   //if(Q_stristr(shaderName, "rocketExplosion"))
-  R_RemapShaderInternal(shaderName, shaderName, "\0", lightmapIndex);
+  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex);
   
   mapShaders = r_lazyLoad->integer < 2;
 }

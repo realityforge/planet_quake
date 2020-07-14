@@ -174,9 +174,16 @@ var LibrarySysNet = {
 				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
           if(typeof obj[k.toLowerCase()] == 'undefined') {
             obj[k.toLowerCase()] = moreIndex[k]
-            obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
-  					obj[k.toLowerCase()].shaders = []
-            obj[k.toLowerCase()].downloading = false
+            // we use the downloading key because it doesn't
+            //   come with the index.json from the server
+            //   so we only recreate local paths once because it is saved below
+            //   then it can be used by the engine to check for remote resources
+            //   like FS_MapInIndex() or demos and cinematics files
+            if(typeof obj[k.toLowerCase()].downloading == 'undefined') {
+              obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+              obj[k.toLowerCase()].shaders = []
+              obj[k.toLowerCase()].downloading = false
+            }
           }
 					return obj
 				}, SYSF.index || {})

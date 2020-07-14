@@ -1234,6 +1234,8 @@ qboolean CL_GameSwitch( void );
 // server interface
 //
 void SV_Init( void );
+void SV_BotInitCvars( void );
+void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );
 void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );

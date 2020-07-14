@@ -86,7 +86,7 @@ var LibrarySysFiles = {
         }
         if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
         // download files for menu system
-          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud.txt|arenas\.txt/i)
+          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
           || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt|gfx\//i)

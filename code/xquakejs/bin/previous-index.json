@@ -1,1602 +1,1682 @@
 {
   "menu/pak11menu": {
     "name": "pak11menu.pk3",
-    "size": 186794
-  },
-  "menu/pak889bots": {
-    "name": "pak889bots.pk3",
-    "size": 5598
-  },
-  "menu/pak880classes": {
-    "name": "pak880classes.pk3",
-    "size": 912
+    "size": 248098
   },
   "menu/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "menu/pak13fonts": {
-    "name": "pak13fonts.pk3",
-    "size": 920
+  "menu/pak8881bots": {
+    "name": "pak8881bots.pk3",
+    "size": 27387
+  },
+  "menu/pak8882botfiles": {
+    "name": "pak8882botfiles.pk3",
+    "size": 103783
+  },
+  "menu/pak21game": {
+    "name": "pak21game.pk3",
+    "size": 383975
+  },
+  "menu/pak51weapon": {
+    "name": "pak51weapon.pk3",
+    "size": 90481
   },
   "menu/pak881fonts": {
     "name": "pak881fonts.pk3",
-    "size": 176795
+    "size": 85939
   },
-  "menu/pak8832d": {
-    "name": "pak8832d.pk3",
-    "size": 50159
+  "menu/pak91maps": {
+    "name": "pak91maps.pk3",
+    "size": 426
   },
-  "menu/pak8881hud": {
-    "name": "pak8881hud.pk3",
-    "size": 12893
+  "menu/pak44alpha": {
+    "name": "pak44alpha.pk3",
+    "size": 845
   },
-  "menu/pak14levelshots": {
-    "name": "pak14levelshots.pk3",
-    "size": 645759
+  "menu/pak45beta": {
+    "name": "pak45beta.pk3",
+    "size": 840
   },
-  "menu/pak8882locs": {
-    "name": "pak8882locs.pk3",
-    "size": 11909
+  "menu/pak52mp5": {
+    "name": "pak52mp5.pk3",
+    "size": 12673
   },
-  "menu/pak52oldgrapple": {
-    "name": "pak52oldgrapple.pk3",
-    "size": 63907
+  "menu/pak53r93": {
+    "name": "pak53r93.pk3",
+    "size": 5837
   },
-  "menu/pak8883modes": {
-    "name": "pak8883modes.pk3",
-    "size": 2869
+  "menu/pak83scripts": {
+    "name": "pak83scripts.pk3",
+    "size": 111814
   },
-  "menu/pak86scripts": {
-    "name": "pak86scripts.pk3",
-    "size": 69225
+  "menu/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 2605
   },
-  "menu/pak15scripts": {
-    "name": "pak15scripts.pk3",
-    "size": 3793
+  "menu/pak12ui": {
+    "name": "pak12ui.pk3",
+    "size": 82400
   },
-  "menu/pak41player": {
-    "name": "pak41player.pk3",
-    "size": 1103
+  "menu/pak889assets": {
+    "name": "pak889assets.pk3",
+    "size": 306703
   },
-  "menu/pak8886qfraggel2_senn": {
-    "name": "pak8886qfraggel2_senn.pk3",
-    "size": 133433
+  "menu/pak8883ui": {
+    "name": "pak8883ui.pk3",
+    "size": 918
   },
-  "menu/pak12art": {
-    "name": "pak12art.pk3",
-    "size": 299073
+  "menu/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
   },
-  "menu/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "menu/pak46player": {
+    "name": "pak46player.pk3",
+    "size": 943
   },
-  "menu/pak887sweltdm2": {
-    "name": "pak887sweltdm2.pk3",
-    "size": 88713
+  "menu/pak8884levelshots": {
+    "name": "pak8884levelshots.pk3",
+    "size": 71182
   },
   "game/pak21game": {
     "name": "pak21game.pk3",
-    "size": 522301
+    "size": 383975
   },
-  "game/pak8832d": {
-    "name": "pak8832d.pk3",
-    "size": 50159
+  "maps/ctc_cityheat/pak92ctc_cityheat": {
+    "name": "pak92ctc_cityheat.pk3",
+    "size": 3980638
   },
-  "game/pak62rocketnpm": {
-    "name": "pak62rocketnpm.pk3",
-    "size": 4343
+  "maps/ctc_cityheat/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
   },
-  "game/pak33powerup": {
-    "name": "pak33powerup.pk3",
-    "size": 46806
+  "maps/ctc_cityheat/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "game/pak61model": {
-    "name": "pak61model.pk3",
-    "size": 161249
-  },
-  "game/pak51weapon": {
+  "maps/ctc_cityheat/pak51weapon": {
     "name": "pak51weapon.pk3",
-    "size": 25710
+    "size": 90481
   },
-  "game/pak52oldgrapple": {
-    "name": "pak52oldgrapple.pk3",
-    "size": 63907
+  "maps/ctc_cityheat/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "game/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
+  "maps/ctc_cityheat/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "game/pak87cpm23": {
-    "name": "pak87cpm23.pk3",
-    "size": 1662465
+  "maps/ctc_cityheat/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
   },
-  "game/pak8884feedback": {
-    "name": "pak8884feedback.pk3",
-    "size": 31098
+  "maps/ctc_cityheat/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "game/pak8885hellchick": {
-    "name": "pak8885hellchick.pk3",
-    "size": 264535
+  "maps/ctc_cityheat/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "game/pak8888mrcq3dm5": {
-    "name": "pak8888mrcq3dm5.pk3",
-    "size": 38651
+  "maps/ctc_cityheat/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "game/pak8888888mrcq3t4": {
-    "name": "pak8888888mrcq3t4.pk3",
-    "size": 86745
+  "maps/ctc_cityheat/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
   },
-  "game/pak22ninemil-ctf2": {
-    "name": "pak22ninemil-ctf2.pk3",
-    "size": 23805
+  "maps/ctc_cityheat/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "game/pak23q2plats": {
-    "name": "pak23q2plats.pk3",
-    "size": 24911
+  "maps/ctc_cityheat/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "game/pak24qw": {
-    "name": "pak24qw.pk3",
-    "size": 25260
+  "maps/ctc_cityheat/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
   },
-  "game/pak25swelt": {
-    "name": "pak25swelt.pk3",
-    "size": 46908
+  "maps/ctc_cityheat/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "game/pak85world": {
-    "name": "pak85world.pk3",
-    "size": 134259
+  "maps/ctc_cityheat/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "game/pak262d": {
-    "name": "pak262d.pk3",
-    "size": 28847
+  "maps/ctc_cityheat/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
   },
-  "game/pak27icons": {
-    "name": "pak27icons.pk3",
-    "size": 4378
+  "maps/ctc_forest/pak93ctc_forest": {
+    "name": "pak93ctc_forest.pk3",
+    "size": 3814165
   },
-  "game/pak28effects": {
-    "name": "pak28effects.pk3",
-    "size": 4135
-  },
-  "maps/cpm10/pak91cpm10": {
-    "name": "pak91cpm10.pk3",
-    "size": 734467
-  },
-  "maps/cpm10/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm10/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm10/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm10/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm10/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm10/pak88888882decker": {
-    "name": "pak88888882decker.pk3",
-    "size": 83928
-  },
-  "maps/cpm11/pak92cpm11": {
-    "name": "pak92cpm11.pk3",
-    "size": 950693
-  },
-  "maps/cpm11/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm11/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm11/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm11/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm11/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm11/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm11/pak88888882decker": {
-    "name": "pak88888882decker.pk3",
-    "size": 83928
-  },
-  "maps/cpm11a/pak93cpm11a": {
-    "name": "pak93cpm11a.pk3",
-    "size": 1238946
-  },
-  "maps/cpm11a/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm11a/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm11a/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm11a/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm11a/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm11a/pak32invis": {
-    "name": "pak32invis.pk3",
-    "size": 9464
-  },
-  "maps/cpm11a/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm12/pak94cpm12": {
-    "name": "pak94cpm12.pk3",
-    "size": 1056621
-  },
-  "maps/cpm12/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm12/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm12/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm12/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm12/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm12/pak88888883hub3media": {
-    "name": "pak88888883hub3media.pk3",
-    "size": 79347
-  },
-  "maps/cpm13/pak95cpm13": {
-    "name": "pak95cpm13.pk3",
-    "size": 2367440
-  },
-  "maps/cpm13/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm13/pak8889mrcleantex_1": {
-    "name": "pak8889mrcleantex_1.pk3",
-    "size": 19061
-  },
-  "maps/cpm13/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm13/pak886mrcleantex_3": {
-    "name": "pak886mrcleantex_3.pk3",
-    "size": 158525
-  },
-  "maps/cpm13/pak8888mrcq3dm5": {
-    "name": "pak8888mrcq3dm5.pk3",
-    "size": 38651
-  },
-  "maps/cpm13/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm13/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm13/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm13/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm14/pak96cpm14": {
-    "name": "pak96cpm14.pk3",
-    "size": 1710720
-  },
-  "maps/cpm14/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm14/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm14/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm14/pak8880qfraggel2_ikbase_trim": {
-    "name": "pak8880qfraggel2_ikbase_trim.pk3",
-    "size": 3446
-  },
-  "maps/cpm14/pak88881qfraggel2_ikbase_wall": {
-    "name": "pak88881qfraggel2_ikbase_wall.pk3",
-    "size": 50407
-  },
-  "maps/cpm14/pak88882qfraggel2_qfraggel": {
-    "name": "pak88882qfraggel2_qfraggel.pk3",
-    "size": 22919
-  },
-  "maps/cpm14/pak8886qfraggel2_senn": {
-    "name": "pak8886qfraggel2_senn.pk3",
-    "size": 133433
-  },
-  "maps/cpm14/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm14/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm14/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm14/pak88888884mars": {
-    "name": "pak88888884mars.pk3",
-    "size": 528569
-  },
-  "maps/cpm15/pak97cpm15": {
-    "name": "pak97cpm15.pk3",
-    "size": 1324732
-  },
-  "maps/cpm15/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm15/pak88883blemish": {
-    "name": "pak88883blemish.pk3",
-    "size": 164298
-  },
-  "maps/cpm15/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm15/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm15/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm15/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm15/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm16/pak98cpm16": {
-    "name": "pak98cpm16.pk3",
-    "size": 769339
-  },
-  "maps/cpm16/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm16/pak88884sweltdm3": {
-    "name": "pak88884sweltdm3.pk3",
-    "size": 212908
-  },
-  "maps/cpm16/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm16/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm16/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm16/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm16/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm16/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm17/pak99cpm17": {
-    "name": "pak99cpm17.pk3",
-    "size": 509867
-  },
-  "maps/cpm17/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm17/pak88885AciD": {
-    "name": "pak88885AciD.pk3",
-    "size": 84643
-  },
-  "maps/cpm17/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm17/pak88886evil1_trims": {
-    "name": "pak88886evil1_trims.pk3",
-    "size": 4565
-  },
-  "maps/cpm17/pak88887evil8_floor": {
-    "name": "pak88887evil8_floor.pk3",
-    "size": 9675
-  },
-  "maps/cpm17/pak88888evil8_lights": {
-    "name": "pak88888evil8_lights.pk3",
-    "size": 5126
-  },
-  "maps/cpm17/pak88889evil8_trim": {
-    "name": "pak88889evil8_trim.pk3",
-    "size": 7031
-  },
-  "maps/cpm17/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm17/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm17/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm17/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm18/pak90cpm18": {
-    "name": "pak90cpm18.pk3",
-    "size": 1718857
-  },
-  "maps/cpm18/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm18/pak88880evil_basewall": {
-    "name": "pak88880evil_basewall.pk3",
-    "size": 485340
-  },
-  "maps/cpm18/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm18/pak888881evil_floors": {
-    "name": "pak888881evil_floors.pk3",
-    "size": 12900
-  },
-  "maps/cpm18/pak888882evil_metals": {
-    "name": "pak888882evil_metals.pk3",
-    "size": 13545
-  },
-  "maps/cpm18/pak888883evil_trim": {
-    "name": "pak888883evil_trim.pk3",
-    "size": 8092
-  },
-  "maps/cpm18/pak887sweltdm2": {
-    "name": "pak887sweltdm2.pk3",
-    "size": 88713
-  },
-  "maps/cpm18/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm18/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm18/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm18/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm18/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm18r/pak991cpm18r": {
-    "name": "pak991cpm18r.pk3",
-    "size": 1464751
-  },
-  "maps/cpm18r/pak885lun_cpm18": {
-    "name": "pak885lun_cpm18.pk3",
-    "size": 768218
-  },
-  "maps/cpm18r/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm18r/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm18r/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm18r/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm18r/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm18r/pak32invis": {
-    "name": "pak32invis.pk3",
-    "size": 9464
-  },
-  "maps/cpm18r/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm19/pak992cpm19": {
-    "name": "pak992cpm19.pk3",
-    "size": 1162459
-  },
-  "maps/cpm19/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm19/pak88887evil8_floor": {
-    "name": "pak88887evil8_floor.pk3",
-    "size": 9675
-  },
-  "maps/cpm19/pak88889evil8_trim": {
-    "name": "pak88889evil8_trim.pk3",
-    "size": 7031
-  },
-  "maps/cpm19/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm19/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm19/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm19/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm19/pak88888885evil8_fx": {
-    "name": "pak88888885evil8_fx.pk3",
-    "size": 198285
-  },
-  "maps/cpm19/pak88888evil8_lights": {
-    "name": "pak88888evil8_lights.pk3",
-    "size": 5126
-  },
-  "maps/cpm19/pak88888884mars": {
-    "name": "pak88888884mars.pk3",
-    "size": 528569
-  },
-  "maps/cpm1a/pak993cpm1a": {
-    "name": "pak993cpm1a.pk3",
-    "size": 375803
-  },
-  "maps/cpm1a/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm1a/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm1a/pak888881evil_floors": {
-    "name": "pak888881evil_floors.pk3",
-    "size": 12900
-  },
-  "maps/cpm1a/pak888884evil_misc": {
-    "name": "pak888884evil_misc.pk3",
-    "size": 236712
-  },
-  "maps/cpm1a/pak888885evil_trims": {
-    "name": "pak888885evil_trims.pk3",
-    "size": 6988
-  },
-  "maps/cpm1a/pak888886evil_walls": {
-    "name": "pak888886evil_walls.pk3",
-    "size": 11462
-  },
-  "maps/cpm1a/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm1a/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm1a/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm1a/pak88888886decker_light": {
-    "name": "pak88888886decker_light.pk3",
-    "size": 2704
-  },
-  "maps/cpm2/pak994cpm2": {
-    "name": "pak994cpm2.pk3",
-    "size": 889525
-  },
-  "maps/cpm2/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm2/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm2/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm2/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm2/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm2/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm20/pak995cpm20": {
-    "name": "pak995cpm20.pk3",
-    "size": 831341
-  },
-  "maps/cpm20/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm20/pak888887swelt_evil8_base": {
-    "name": "pak888887swelt_evil8_base.pk3",
-    "size": 180293
-  },
-  "maps/cpm20/pak888888swelt_evil8_floor": {
-    "name": "pak888888swelt_evil8_floor.pk3",
-    "size": 21095
-  },
-  "maps/cpm20/pak888swelt_evil8_trim": {
-    "name": "pak888swelt_evil8_trim.pk3",
-    "size": 40981
-  },
-  "maps/cpm20/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm20/pak888889swelt_majestic": {
-    "name": "pak888889swelt_majestic.pk3",
-    "size": 78262
-  },
-  "maps/cpm20/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm20/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm20/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm20/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm20/pak32invis": {
-    "name": "pak32invis.pk3",
-    "size": 9464
-  },
-  "maps/cpm20/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm20/pak88888887swelt": {
-    "name": "pak88888887swelt.pk3",
-    "size": 83985
-  },
-  "maps/cpm21/pak996cpm21": {
-    "name": "pak996cpm21.pk3",
-    "size": 1257983
-  },
-  "maps/cpm21/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm21/pak888880swelt_crate": {
-    "name": "pak888880swelt_crate.pk3",
-    "size": 11029
-  },
-  "maps/cpm21/pak888888swelt_evil8_floor": {
-    "name": "pak888888swelt_evil8_floor.pk3",
-    "size": 21095
-  },
-  "maps/cpm21/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm21/pak8887sweltdm4": {
-    "name": "pak8887sweltdm4.pk3",
-    "size": 243519
-  },
-  "maps/cpm21/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm21/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm21/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm21/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm21/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm22/pak997cpm22": {
-    "name": "pak997cpm22.pk3",
-    "size": 504542
-  },
-  "maps/cpm22/pak8888881mkoxide": {
-    "name": "pak8888881mkoxide.pk3",
-    "size": 233315
-  },
-  "maps/cpm22/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm22/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm22/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm22/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm22/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm22/pak88888888devilpunch": {
-    "name": "pak88888888devilpunch.pk3",
-    "size": 30134
-  },
-  "maps/cpm22/pak88888883hub3media": {
-    "name": "pak88888883hub3media.pk3",
-    "size": 79347
-  },
-  "maps/cpm23/pak998cpm23": {
-    "name": "pak998cpm23.pk3",
-    "size": 718033
-  },
-  "maps/cpm23/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm23/pak87cpm23": {
-    "name": "pak87cpm23.pk3",
-    "size": 1662465
-  },
-  "maps/cpm23/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm23/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm23/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm23/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpm23/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm23/pak88888889env": {
-    "name": "pak88888889env.pk3",
-    "size": 28255
-  },
-  "maps/cpm24/pak999cpm24": {
-    "name": "pak999cpm24.pk3",
-    "size": 328441
-  },
-  "maps/cpm24/pak88cpm24": {
-    "name": "pak88cpm24.pk3",
-    "size": 416507
-  },
-  "maps/cpm24/pak81other": {
-    "name": "pak81other.pk3",
-    "size": 1738158
-  },
-  "maps/cpm24/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
-  },
-  "maps/cpm24/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpm24/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm24/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm25/pak990cpm25": {
-    "name": "pak990cpm25.pk3",
-    "size": 629141
-  },
-  "maps/cpm25/pak8888882cpm25": {
-    "name": "pak8888882cpm25.pk3",
-    "size": 65166
-  },
-  "maps/cpm25/pak71mapobject": {
+  "maps/ctc_forest/pak71mapobject": {
     "name": "pak71mapobject.pk3",
-    "size": 16136
+    "size": 653664
   },
-  "maps/cpm25/pak81other": {
+  "maps/ctc_forest/pak880wvwq3dm7": {
+    "name": "pak880wvwq3dm7.pk3",
+    "size": 25656
+  },
+  "maps/ctc_fortress/pak94ctc_fortress": {
+    "name": "pak94ctc_fortress.pk3",
+    "size": 8392170
+  },
+  "maps/ctc_fortress/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/ctc_fortress/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
+  },
+  "maps/ctc_fortress/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm25/pak8888883egyptsoc_floor": {
-    "name": "pak8888883egyptsoc_floor.pk3",
-    "size": 27005
+  "maps/ctc_fortress/pak855th_terr1": {
+    "name": "pak855th_terr1.pk3",
+    "size": 66423
   },
-  "maps/cpm25/pak8888884egyptsoc_mat": {
-    "name": "pak8888884egyptsoc_mat.pk3",
-    "size": 13392
+  "maps/ctc_fortress/pak845th_cement": {
+    "name": "pak845th_cement.pk3",
+    "size": 25668
   },
-  "maps/cpm25/pak8888885egyptsoc_trim": {
-    "name": "pak8888885egyptsoc_trim.pk3",
-    "size": 8191
+  "maps/ctc_fortress/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpm25/pak8888886egyptsoc_wall": {
-    "name": "pak8888886egyptsoc_wall.pk3",
-    "size": 32110
+  "maps/ctc_fortress/pak875th_envsfx": {
+    "name": "pak875th_envsfx.pk3",
+    "size": 3832
   },
-  "maps/cpm25/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/ctc_fortress/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm25/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/ctc_fortress/pak865th_indoor": {
+    "name": "pak865th_indoor.pk3",
+    "size": 14021
   },
-  "maps/cpm25/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/ctc_gunstore/pak95ctc_gunstore": {
+    "name": "pak95ctc_gunstore.pk3",
+    "size": 2068087
   },
-  "maps/cpm25/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/ctc_gunstore/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpm25/pak51weapon": {
+  "maps/ctc_gunstore/pak51weapon": {
     "name": "pak51weapon.pk3",
-    "size": 25710
+    "size": 90481
   },
-  "maps/cpm26/pak9991cpm26": {
-    "name": "pak9991cpm26.pk3",
-    "size": 1389505
+  "maps/ctc_gunstore/pak52mp5": {
+    "name": "pak52mp5.pk3",
+    "size": 12673
   },
-  "maps/cpm26/pak81other": {
+  "maps/ctc_gunstore/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/ctc_gunstore/pak54common": {
+    "name": "pak54common.pk3",
+    "size": 9204
+  },
+  "maps/ctc_gunstore/pak53r93": {
+    "name": "pak53r93.pk3",
+    "size": 5837
+  },
+  "maps/ctc_gunstore/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm26/pak89cpm26": {
-    "name": "pak89cpm26.pk3",
-    "size": 1271049
+  "maps/ctc_gunstore/pak875th_envsfx": {
+    "name": "pak875th_envsfx.pk3",
+    "size": 3832
   },
-  "maps/cpm26/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/ctc_gunstore/pak865th_indoor": {
+    "name": "pak865th_indoor.pk3",
+    "size": 14021
   },
-  "maps/cpm26/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/ctc_gunstore/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm26/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/ctc_gunstore/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm26/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/ctc_gunstore/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpm26/pak32invis": {
-    "name": "pak32invis.pk3",
-    "size": 9464
+  "maps/ctc_gunstore/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm26/pak51weapon": {
+  "maps/ctc_gunstore/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
+  },
+  "maps/ctc_gunstore/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/ctc_gunstore/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/ctc_gunstoremx/pak96ctc_gunstoremx": {
+    "name": "pak96ctc_gunstoremx.pk3",
+    "size": 2787732
+  },
+  "maps/ctc_gunstoremx/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/ctc_gunstoremx/pak51weapon": {
     "name": "pak51weapon.pk3",
-    "size": 25710
+    "size": 90481
   },
-  "maps/cpm27/pak9992cpm27": {
-    "name": "pak9992cpm27.pk3",
-    "size": 833754
+  "maps/ctc_gunstoremx/pak52mp5": {
+    "name": "pak52mp5.pk3",
+    "size": 12673
   },
-  "maps/cpm27/pak80cpm27": {
-    "name": "pak80cpm27.pk3",
-    "size": 438959
+  "maps/ctc_gunstoremx/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm27/pak81other": {
+  "maps/ctc_gunstoremx/pak53r93": {
+    "name": "pak53r93.pk3",
+    "size": 5837
+  },
+  "maps/ctc_gunstoremx/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm27/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/ctc_gunstoremx/pak865th_indoor": {
+    "name": "pak865th_indoor.pk3",
+    "size": 14021
   },
-  "maps/cpm27/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/ctc_gunstoremx/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm27/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/ctc_gunstoremx/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm27/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/ctc_gunstoremx/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpm27/pak32invis": {
-    "name": "pak32invis.pk3",
-    "size": 9464
+  "maps/ctc_gunstoremx/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm27/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/ctc_gunstoremx/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm28/pak9993cpm28": {
-    "name": "pak9993cpm28.pk3",
-    "size": 635350
+  "maps/ctc_gunstoremx/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpm28/pak88885AciD": {
-    "name": "pak88885AciD.pk3",
-    "size": 84643
+  "maps/ctc_gunstoremx/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm28/pak81other": {
+  "maps/ctc_gunstoremx/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/ctc_mansion/pak97ctc_mansion": {
+    "name": "pak97ctc_mansion.pk3",
+    "size": 2570407
+  },
+  "maps/ctc_mansion/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/ctc_mansion/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/ctc_mansion/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm28/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/ctc_mansion/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm28/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/ctc_mansion/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm28/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/ctc_mansion/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpm28/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/ctc_mansion/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm29/pak9994cpm29": {
-    "name": "pak9994cpm29.pk3",
-    "size": 434133
+  "maps/ctc_mansion/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpm29/pak8888887cpm29": {
-    "name": "pak8888887cpm29.pk3",
-    "size": 1141973
+  "maps/ctc_skirmish/pak98ctc_skirmish": {
+    "name": "pak98ctc_skirmish.pk3",
+    "size": 2517725
   },
-  "maps/cpm29/pak81other": {
+  "maps/ctc_skirmish/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/ctc_skirmish/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/ctc_skirmish/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/ctc_skirmish/pak88881paynetex": {
+    "name": "pak88881paynetex.pk3",
+    "size": 6884
+  },
+  "maps/ctc_skirmish/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/ctc_skirmish/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/ctc_skirmish/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/ctc_skirmish/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/ctc_skirmish/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/ctc_skirmish/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/ctc_skirmish/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/ctc_skirmish/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/ctc_skirmish/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/ctc_skirmish/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm29/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/ctc_skirmish/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpm29/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/ctc_snowbridge/pak99ctc_snowbridge": {
+    "name": "pak99ctc_snowbridge.pk3",
+    "size": 1744463
   },
-  "maps/cpm29/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/ctc_snowbridge/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
   },
-  "maps/cpm29/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm29/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm3/pak9995cpm3": {
-    "name": "pak9995cpm3.pk3",
-    "size": 430920
-  },
-  "maps/cpm3/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm3/pak81other": {
+  "maps/ctc_snowbridge/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm3/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_bahamut/pak90tc_bahamut": {
+    "name": "pak90tc_bahamut.pk3",
+    "size": 1819263
   },
-  "maps/cpm3/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_bahamut/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm3/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_bahamut/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm3/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_bahamut/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm3a/pak9996cpm3a": {
-    "name": "pak9996cpm3a.pk3",
-    "size": 389202
+  "maps/tc_bahamut/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpm3a/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_bahamut/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm3a/pak888887swelt_evil8_base": {
-    "name": "pak888887swelt_evil8_base.pk3",
-    "size": 180293
+  "maps/tc_bahamut/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpm3a/pak888swelt_evil8_trim": {
-    "name": "pak888swelt_evil8_trim.pk3",
-    "size": 40981
+  "maps/tc_bahamut/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
   },
-  "maps/cpm3a/pak81other": {
+  "maps/tc_bahamut/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_bahamut/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_bahamut/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_bahamut/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_bahamut/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm3a/pak888889swelt_majestic": {
-    "name": "pak888889swelt_majestic.pk3",
-    "size": 78262
+  "maps/tc_bahamut/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm3a/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_bahamut/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpm3a/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_bahamut2/pak991tc_bahamut2": {
+    "name": "pak991tc_bahamut2.pk3",
+    "size": 4575955
   },
-  "maps/cpm3a/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpm3a/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpm3a/pak888888swelt_evil8_floor": {
-    "name": "pak888888swelt_evil8_floor.pk3",
-    "size": 21095
-  },
-  "maps/cpm3a/pak88888880swelt_ice": {
-    "name": "pak88888880swelt_ice.pk3",
-    "size": 47579
-  },
-  "maps/cpm4/pak9997cpm4": {
-    "name": "pak9997cpm4.pk3",
-    "size": 1197167
-  },
-  "maps/cpm4/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
-  },
-  "maps/cpm4/pak81other": {
+  "maps/tc_bahamut2/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm4/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_bahamut2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm4/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_bahamut2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm4/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_bahamut2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm4/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_bahamut2/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpm4a/pak9998cpm4a": {
-    "name": "pak9998cpm4a.pk3",
-    "size": 932606
+  "maps/tc_bahamut2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm4a/pak885lun_cpm18": {
-    "name": "pak885lun_cpm18.pk3",
-    "size": 768218
+  "maps/tc_bahamut2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm4a/pak81other": {
+  "maps/tc_bahamut2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_bahamut2/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_bahamut2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_bahamut2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_bahamut2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_bahamut2/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_bahamut2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_baugebiet/pak992tc_baugebiet": {
+    "name": "pak992tc_baugebiet.pk3",
+    "size": 2877014
+  },
+  "maps/tc_baugebiet/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm4a/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_baugebiet/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm4a/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_baugebiet/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm4a/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_baugebiet/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm4a/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_baugebiet/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm4a/pak888888881cpm4a": {
-    "name": "pak888888881cpm4a.pk3",
-    "size": 158802
+  "maps/tc_baugebiet/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpm5/pak9999cpm5": {
-    "name": "pak9999cpm5.pk3",
-    "size": 1181280
+  "maps/tc_baugebiet/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
   },
-  "maps/cpm5/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_baugebiet/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpm5/pak81other": {
+  "maps/tc_baugebiet/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_baugebiet/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_baugebiet/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_baugebiet/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
+  },
+  "maps/tc_baugebiet/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_cc2/pak993tc_cc2": {
+    "name": "pak993tc_cc2.pk3",
+    "size": 1932180
+  },
+  "maps/tc_cc2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_cc2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_cc2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_cc2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_cc2/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm5/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_cc2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm5/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_cc2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpm5/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_cc2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpm6/pak9990cpm6": {
-    "name": "pak9990cpm6.pk3",
-    "size": 855997
+  "maps/tc_cc2/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
   },
-  "maps/cpm6/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_cc2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpm6/pak8888888mrcq3t4": {
-    "name": "pak8888888mrcq3t4.pk3",
-    "size": 86745
+  "maps/tc_cc2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
   },
-  "maps/cpm6/pak81other": {
+  "maps/tc_cc2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_chlite/pak994tc_chlite": {
+    "name": "pak994tc_chlite.pk3",
+    "size": 3859906
+  },
+  "maps/tc_chlite/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm6/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_chlite/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpm6/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_chlite/pak886shaderlab_urban_brick": {
+    "name": "pak886shaderlab_urban_brick.pk3",
+    "size": 16271
   },
-  "maps/cpm6/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_chlite/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm6/pak88888889env": {
-    "name": "pak88888889env.pk3",
-    "size": 28255
+  "maps/tc_chlite/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm7/pak99991cpm7": {
-    "name": "pak99991cpm7.pk3",
-    "size": 748665
+  "maps/tc_chlite/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
   },
-  "maps/cpm7/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_chlite/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpm7/pak8888889r_tourney4": {
-    "name": "pak8888889r_tourney4.pk3",
-    "size": 440047
+  "maps/tc_chlite/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpm7/pak81other": {
+  "maps/tc_chlite/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_chlite/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_chlite/pak88881paynetex": {
+    "name": "pak88881paynetex.pk3",
+    "size": 6884
+  },
+  "maps/tc_chlite/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_chlite/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_chlite/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_chlite/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_chlite/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_closecombat/pak995tc_closecombat": {
+    "name": "pak995tc_closecombat.pk3",
+    "size": 1509947
+  },
+  "maps/tc_closecombat/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm7/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_closecombat/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpm7/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_closecombat/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm7/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_closecombat/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
   },
-  "maps/cpm8/pak99992cpm8": {
-    "name": "pak99992cpm8.pk3",
-    "size": 615716
+  "maps/tc_closecombat/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm8/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_closecombat/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpm8/pak81other": {
+  "maps/tc_closecombat/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_closecombat/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_closecombat/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_closecombat/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_closecombat/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_closecombat/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_closecombat/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_closecombat/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_deadliestxmas/pak996tc_deadliestxmas": {
+    "name": "pak996tc_deadliestxmas.pk3",
+    "size": 3066669
+  },
+  "maps/tc_deadliestxmas/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/tc_deadliestxmas/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_deadliestxmas/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm8/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_deadliestxmas/pak886shaderlab_urban_brick": {
+    "name": "pak886shaderlab_urban_brick.pk3",
+    "size": 16271
   },
-  "maps/cpm8/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_deadliestxmas/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm8/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_deadliestxmas/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpm9/pak99993cpm9": {
-    "name": "pak99993cpm9.pk3",
-    "size": 2690447
+  "maps/tc_deadliestxmas/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpm9/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_deadliestxmas/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
   },
-  "maps/cpm9/pak81other": {
+  "maps/tc_deadliestxmas/pak88881paynetex": {
+    "name": "pak88881paynetex.pk3",
+    "size": 6884
+  },
+  "maps/tc_deadliestxmas/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_deadliestxmas/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_deadliestxmas/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_deadliestxmas/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_deadliestxmas/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_deadliestxmas/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_deadlyxmas/pak997tc_deadlyxmas": {
+    "name": "pak997tc_deadlyxmas.pk3",
+    "size": 2656410
+  },
+  "maps/tc_deadlyxmas/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpm9/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_deadlyxmas/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpm9/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_deadlyxmas/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpm9/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_deadlyxmas/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpma3/pak99994cpma3": {
-    "name": "pak99994cpma3.pk3",
-    "size": 3205255
+  "maps/tc_deadlyxmas/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpma3/pak84swelt_evil8_lights": {
-    "name": "pak84swelt_evil8_lights.pk3",
-    "size": 4174
+  "maps/tc_deadlyxmas/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
   },
-  "maps/cpma3/pak88883blemish": {
-    "name": "pak88883blemish.pk3",
-    "size": 164298
+  "maps/tc_deadlyxmas/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpma3/pak81other": {
+  "maps/tc_deadlyxmas/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_deadlyxmas/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_deadlyxmas/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_deadlyxmas/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_deadlyxmas/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_deadlyxmas/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_deadlyxmas/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
+  },
+  "maps/tc_deadlyxmas/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_farpoint/pak998tc_farpoint": {
+    "name": "pak998tc_farpoint.pk3",
+    "size": 6518095
+  },
+  "maps/tc_farpoint/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_farpoint/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
+  },
+  "maps/tc_farpoint/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpma3/pak888881evil_floors": {
-    "name": "pak888881evil_floors.pk3",
-    "size": 12900
+  "maps/tc_farpoint/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpma3/pak888884evil_misc": {
-    "name": "pak888884evil_misc.pk3",
-    "size": 236712
+  "maps/tc_farpoint/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpma3/pak888885evil_trims": {
-    "name": "pak888885evil_trims.pk3",
-    "size": 6988
+  "maps/tc_farpoint/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpma3/pak888886evil_walls": {
-    "name": "pak888886evil_walls.pk3",
-    "size": 11462
+  "maps/tc_farpoint/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpma3/pak888880swelt_crate": {
-    "name": "pak888880swelt_crate.pk3",
-    "size": 11029
+  "maps/tc_farpoint/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
   },
-  "maps/cpma3/pak888887swelt_evil8_base": {
-    "name": "pak888887swelt_evil8_base.pk3",
-    "size": 180293
+  "maps/tc_farpoint/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
   },
-  "maps/cpma3/pak888888swelt_evil8_floor": {
-    "name": "pak888888swelt_evil8_floor.pk3",
-    "size": 21095
+  "maps/tc_farpoint/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpma3/pak888swelt_evil8_trim": {
-    "name": "pak888swelt_evil8_trim.pk3",
-    "size": 40981
+  "maps/tc_farpoint/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpma3/pak888889swelt_majestic": {
-    "name": "pak888889swelt_majestic.pk3",
-    "size": 78262
+  "maps/tc_farpoint/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
   },
-  "maps/cpma3/pak88884sweltdm3": {
-    "name": "pak88884sweltdm3.pk3",
-    "size": 212908
+  "maps/tc_farpoint/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpma3/pak8887sweltdm4": {
-    "name": "pak8887sweltdm4.pk3",
-    "size": 243519
+  "maps/tc_farpoint/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpma3/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_fracture/pak999tc_fracture": {
+    "name": "pak999tc_fracture.pk3",
+    "size": 1658869
   },
-  "maps/cpma3/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
-  },
-  "maps/cpma3/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
-  },
-  "maps/cpma3/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
-  },
-  "maps/cpma3/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
-  },
-  "maps/cpma3/pak88888886decker_light": {
-    "name": "pak88888886decker_light.pk3",
-    "size": 2704
-  },
-  "maps/cpma3/pak88888880swelt_ice": {
-    "name": "pak88888880swelt_ice.pk3",
-    "size": 47579
-  },
-  "maps/cpmctf1/pak99995cpmctf1": {
-    "name": "pak99995cpmctf1.pk3",
-    "size": 1664403
-  },
-  "maps/cpmctf1/pak81other": {
+  "maps/tc_fracture/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpmctf1/pak8888880cpmctf1": {
-    "name": "pak8888880cpmctf1.pk3",
-    "size": 1753784
+  "maps/tc_fracture/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpmctf1/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_fracture/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpmctf1/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_fracture/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
   },
-  "maps/cpmctf1/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/tc_fracture/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpmctf1/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_fracture/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpmctf1/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_fracture/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpmctf2/pak99996cpmctf2": {
-    "name": "pak99996cpmctf2.pk3",
-    "size": 1621218
+  "maps/tc_fracture/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpmctf2/pak88888881ninemil-ctf2": {
-    "name": "pak88888881ninemil-ctf2.pk3",
-    "size": 671060
+  "maps/tc_fracture/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
   },
-  "maps/cpmctf2/pak81other": {
+  "maps/tc_fracture/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_fracture/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_fracture/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_fracture/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_fracture/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_fracture/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_harbour/pak990tc_harbour": {
+    "name": "pak990tc_harbour.pk3",
+    "size": 2743409
+  },
+  "maps/tc_harbour/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpmctf2/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_harbour/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpmctf2/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_harbour/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpmctf2/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/tc_harbour/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpmctf2/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_harbour/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpmctf2/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_harbour/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpmctf2/pak888888882gothic_light": {
-    "name": "pak888888882gothic_light.pk3",
-    "size": 2967
+  "maps/tc_harbour/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpmctf3/pak99997cpmctf3": {
-    "name": "pak99997cpmctf3.pk3",
-    "size": 2920670
+  "maps/tc_harbour/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpmctf3/pak882cpmctf3": {
-    "name": "pak882cpmctf3.pk3",
-    "size": 1797552
+  "maps/tc_harbour/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
   },
-  "maps/cpmctf3/pak81other": {
+  "maps/tc_harbour/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_harbour/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_harbour/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_harbour/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_harbour/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_harbour/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_harbour2/pak9991tc_harbour2": {
+    "name": "pak9991tc_harbour2.pk3",
+    "size": 2835050
+  },
+  "maps/tc_harbour2/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpmctf3/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_harbour2/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpmctf3/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_harbour2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpmctf3/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/tc_harbour2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
   },
-  "maps/cpmctf3/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_harbour2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpmctf3/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_harbour2/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
   },
-  "maps/cpmctf3/pak888888882gothic_light": {
-    "name": "pak888888882gothic_light.pk3",
-    "size": 2967
+  "maps/tc_harbour2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpmctf4/pak99998cpmctf4": {
-    "name": "pak99998cpmctf4.pk3",
-    "size": 1832349
+  "maps/tc_harbour2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpmctf4/pak81other": {
+  "maps/tc_harbour2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_harbour2/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_harbour2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_harbour2/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_harbour2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_harbour2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_harbour2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_indochine/pak9992tc_indochine": {
+    "name": "pak9992tc_indochine.pk3",
+    "size": 7960031
+  },
+  "maps/tc_nuke/pak9993tc_nuke": {
+    "name": "pak9993tc_nuke.pk3",
+    "size": 2740697
+  },
+  "maps/tc_nuke/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
+  },
+  "maps/tc_nuke/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_nuke/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_nuke/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_nuke/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_nuke/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_nuke/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_nuke/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_nuke/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_nuke/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_nuke/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpmctf4/pak89cpm26": {
-    "name": "pak89cpm26.pk3",
-    "size": 1271049
+  "maps/tc_nuke/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpmctf4/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_nuke/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpmctf4/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_nuke2/pak9994tc_nuke2": {
+    "name": "pak9994tc_nuke2.pk3",
+    "size": 3103162
   },
-  "maps/cpmctf4/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_nuke2/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
   },
-  "maps/cpmctf4/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_nuke2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
   },
-  "maps/cpmctf5/pak99999cpmctf5": {
-    "name": "pak99999cpmctf5.pk3",
-    "size": 1247406
+  "maps/tc_nuke2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
   },
-  "maps/cpmctf5/pak888880swelt_crate": {
-    "name": "pak888880swelt_crate.pk3",
-    "size": 11029
+  "maps/tc_nuke2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
   },
-  "maps/cpmctf5/pak888888swelt_evil8_floor": {
-    "name": "pak888888swelt_evil8_floor.pk3",
-    "size": 21095
+  "maps/tc_nuke2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
   },
-  "maps/cpmctf5/pak81other": {
+  "maps/tc_nuke2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_nuke2/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_nuke2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_nuke2/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_nuke2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_nuke2/pak81other": {
     "name": "pak81other.pk3",
-    "size": 1738158
+    "size": 493566
   },
-  "maps/cpmctf5/pak8887sweltdm4": {
-    "name": "pak8887sweltdm4.pk3",
-    "size": 243519
+  "maps/tc_nuke2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
   },
-  "maps/cpmctf5/pak884icons": {
-    "name": "pak884icons.pk3",
-    "size": 8947
+  "maps/tc_nuke2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   },
-  "maps/cpmctf5/pak83armor": {
-    "name": "pak83armor.pk3",
-    "size": 4827
+  "maps/tc_outerdocks/pak9995tc_outerdocks": {
+    "name": "pak9995tc_outerdocks.pk3",
+    "size": 3552647
   },
-  "maps/cpmctf5/pak31armor": {
-    "name": "pak31armor.pk3",
-    "size": 46887
+  "maps/tc_outerdocks/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
   },
-  "maps/cpmctf5/pak82health": {
-    "name": "pak82health.pk3",
-    "size": 10129
+  "maps/tc_outerdocks/pak885tc_flashpoint": {
+    "name": "pak885tc_flashpoint.pk3",
+    "size": 33679
   },
-  "maps/cpmctf5/pak51weapon": {
-    "name": "pak51weapon.pk3",
-    "size": 25710
+  "maps/tc_outerdocks/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_outerdocks/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
+  },
+  "maps/tc_outerdocks/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_outerdocks/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_outerdocks/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_outerdocks/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_outerdocks/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_outerdocks/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_outerdocks/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_outerdocks/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_outerdocks/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_outerdocks/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_outerdocks/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_prison/pak9996tc_prison": {
+    "name": "pak9996tc_prison.pk3",
+    "size": 4414597
+  },
+  "maps/tc_prison/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
+  },
+  "maps/tc_prison/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/tc_prison/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_prison/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_prison/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_prison/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_prison/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_prison/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_prison/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_prison/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_prison/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_prison/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_prison/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_rdistrict2/pak9997tc_rdistrict2": {
+    "name": "pak9997tc_rdistrict2.pk3",
+    "size": 5737263
+  },
+  "maps/tc_rdistrict2/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
+  },
+  "maps/tc_rdistrict2/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/tc_rdistrict2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_rdistrict2/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_rdistrict2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_rdistrict2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_rdistrict2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_rdistrict2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_rdistrict2/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_rdistrict2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_rdistrict2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_rdistrict2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_rdistrict2/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_rdistrict2/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
+  },
+  "maps/tc_rdistrict2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_rdistrict2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_snow2/pak9998tc_snow2": {
+    "name": "pak9998tc_snow2.pk3",
+    "size": 2980741
+  },
+  "maps/tc_snow2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_snow2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_snow2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_snow2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_snow2/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_snow2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_snow2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_snow2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_snow2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_snow2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_snow2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_sprawl2/pak9999tc_sprawl2": {
+    "name": "pak9999tc_sprawl2.pk3",
+    "size": 3846506
+  },
+  "maps/tc_sprawl2/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/tc_sprawl2/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_sprawl2/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
+  },
+  "maps/tc_sprawl2/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
+  },
+  "maps/tc_sprawl2/pak886shaderlab_urban_brick": {
+    "name": "pak886shaderlab_urban_brick.pk3",
+    "size": 16271
+  },
+  "maps/tc_sprawl2/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_sprawl2/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_sprawl2/pak88881paynetex": {
+    "name": "pak88881paynetex.pk3",
+    "size": 6884
+  },
+  "maps/tc_sprawl2/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_sprawl2/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_sprawl2/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_sprawl2/pak887tc_misc": {
+    "name": "pak887tc_misc.pk3",
+    "size": 15655
+  },
+  "maps/tc_sprawl2/pak80tc_nature": {
+    "name": "pak80tc_nature.pk3",
+    "size": 32853
+  },
+  "maps/tc_sprawl2/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_sprawl2/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_sprawl2/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_sprawl2/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
+  },
+  "maps/tc_warehouse/pak9990tc_warehouse": {
+    "name": "pak9990tc_warehouse.pk3",
+    "size": 3053203
+  },
+  "maps/tc_warehouse/pak82world": {
+    "name": "pak82world.pk3",
+    "size": 67018
+  },
+  "maps/tc_warehouse/pak89env": {
+    "name": "pak89env.pk3",
+    "size": 30793
+  },
+  "maps/tc_warehouse/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 493566
+  },
+  "maps/tc_warehouse/pak886shaderlab_urban_brick": {
+    "name": "pak886shaderlab_urban_brick.pk3",
+    "size": 16271
+  },
+  "maps/tc_warehouse/pak885tc_flashpoint": {
+    "name": "pak885tc_flashpoint.pk3",
+    "size": 33679
+  },
+  "maps/tc_warehouse/pak883tc_floor": {
+    "name": "pak883tc_floor.pk3",
+    "size": 133227
+  },
+  "maps/tc_warehouse/pak884tc_wall": {
+    "name": "pak884tc_wall.pk3",
+    "size": 163028
+  },
+  "maps/tc_warehouse/pak88tc_windows": {
+    "name": "pak88tc_windows.pk3",
+    "size": 240464
+  },
+  "maps/tc_warehouse/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 653664
+  },
+  "maps/tc_warehouse/pak8887tc_containers": {
+    "name": "pak8887tc_containers.pk3",
+    "size": 104025
+  },
+  "maps/tc_warehouse/pak8888tc_doors": {
+    "name": "pak8888tc_doors.pk3",
+    "size": 32993
+  },
+  "maps/tc_warehouse/pak8889tc_furniture": {
+    "name": "pak8889tc_furniture.pk3",
+    "size": 27871
+  },
+  "maps/tc_warehouse/pak882tc_metals": {
+    "name": "pak882tc_metals.pk3",
+    "size": 64436
+  },
+  "maps/tc_warehouse/pak8885tc_roof": {
+    "name": "pak8885tc_roof.pk3",
+    "size": 30932
+  },
+  "maps/tc_warehouse/pak888tc_sfx": {
+    "name": "pak888tc_sfx.pk3",
+    "size": 14747
+  },
+  "maps/tc_warehouse/pak8886tc_waylander": {
+    "name": "pak8886tc_waylander.pk3",
+    "size": 32302
+  },
+  "maps/tc_warehouse/pak8880tc_wood": {
+    "name": "pak8880tc_wood.pk3",
+    "size": 38757
   }
 }
