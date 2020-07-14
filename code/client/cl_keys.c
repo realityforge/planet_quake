@@ -644,6 +644,10 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 			return;
 		}
+		else if(cls.postgame == qtrue) {
+			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
+			return;
+		}
 
 		VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
 		return;
@@ -825,5 +829,6 @@ void Key_SetCatcher( int catcher )
 	if ( catcher != keyCatchers )
 		Key_ClearStates();
 
+	Com_Printf( "Error: Key_SetCatcher: %i\n", catcher );
 	keyCatchers = catcher;
 }

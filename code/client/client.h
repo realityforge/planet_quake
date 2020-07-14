@@ -354,6 +354,7 @@ typedef struct {
 
 	float		 cursorx;
 	float    cursory;
+	qboolean postgame;
 } clientStatic_t;
 
 extern int bigchar_width;
