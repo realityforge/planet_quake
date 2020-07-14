@@ -50,7 +50,7 @@ function Server(opts) {
 }
 
 Server.prototype._onClose = function (socket, onData) {
-  console.log('Closing ', socket._socket.remoteAddress)
+  console.error('Closing ', socket._socket.remoteAddress)
   socket.off('data', onData)
   socket.off('message', onData)
   if (socket.dstSock) {
@@ -324,7 +324,6 @@ Server.prototype._onProxyError = function(socket, err) {
     }
   }
   socket.send(errbuf)
-  socket.close()
 }
 
 Server.prototype.tryBindPort = async function(reqInfo) {

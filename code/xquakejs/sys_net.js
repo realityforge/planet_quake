@@ -49,7 +49,7 @@ var LibrarySysNet = {
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-      fetch(url, {credentials: 'include'})
+      fetch(url, {credentials: 'omit'})
         .catch(e => console.log(e))
         .then(response => {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {

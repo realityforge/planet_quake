@@ -2705,11 +2705,12 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 
 	
 	// check if server response is from a specific list
-	
-	for (i = 0; i < MAX_OTHER_SERVERS; i++) {
-		if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
-			servers = &cls.localServers[0];
-			max = &cls.numlocalservers;
+	if(cls.pingUpdateSource == AS_LOCAL) {
+		for (i = 0; i < MAX_OTHER_SERVERS; i++) {
+			if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
+				servers = &cls.localServers[0];
+				max = &cls.numlocalservers;
+			}
 		}
 	}
 

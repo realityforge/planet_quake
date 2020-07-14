@@ -3770,16 +3770,7 @@ void Com_Init_After_Filesystem( void ) {
 	Netchan_Init( qport & 0xffff );
 
 	VM_Init();
-#ifdef EMSCRIPTEN
-	if(com_dedicated->integer) {
-		SV_Init();
-	} else {
-		SV_BotInitCvars();
-		SV_BotInitBotLib();
-	}
-#else
 	SV_Init();
-#endif
 
 	com_dedicated->modified = qfalse;
 
