@@ -1249,7 +1249,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	}
 
 #ifdef EMSCRIPTEN
-	if(dropped)
+	if(dropped || cls.postgame)
 #endif
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
@@ -1279,13 +1279,17 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 #ifdef EMSCRIPTEN
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
-	clc.serverAddress = addr;
-	noGameRestart = qtrue;
-	cl_restarted = qtrue;
-	if(!dropped) {
-		// skip disconnecting and just show the main menu
-		cl_disconnecting = qfalse;
-		return cl_restarted;
+	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
+		if(!dropped && !cls.postgame) {
+			// skip disconnecting and just show the main menu
+			noGameRestart = qtrue;
+			cl_restarted = qtrue;
+			cl_disconnecting = qfalse;
+			return cl_restarted;
+		} else if (cls.postgame) {
+			Cbuf_AddText("map_restart;");
+			Cbuf_Execute();
+		}
 	}
 #else
 #endif
@@ -1324,6 +1328,9 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	cl_disconnecting = qfalse;
 
+#ifdef EMSCRIPTEN
+	clc.serverAddress = addr;
+#endif
 	return cl_restarted;
 }
 
