@@ -175,7 +175,7 @@ async function mkdirp(path) {
 }
 
 async function fetchAsset(key) {
-  var response = await fetch(key, {credentials: 'include'})
+  var response = await fetch(key, {credentials: 'omit'})
   if (!response.ok) {
     throw new Error('Request for ' + key + ' returned a ' +
       'response with status ' + response.status)

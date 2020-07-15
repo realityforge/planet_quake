@@ -811,8 +811,9 @@ void SV_Init( void )
 	sv_master[17] = Cvar_Get( "sv_master15", "dpmaster.deathmask.net:27950", CVAR_INIT );
 	sv_master[18] = Cvar_Get( "sv_master16", "dctalk.no-ip.info:27950", CVAR_INIT );
 	sv_master[19] = Cvar_Get( "sv_master17", "monster.idsoftware.com:27950", CVAR_INIT );
-	sv_master[20] = Cvar_Get( "sv_master18", "master.quakeservers.net:27000", CVAR_INIT );
-	sv_master[21] = Cvar_Get( "sv_master19", MASTER_SERVER_NAME, CVAR_INIT );
+	sv_master[20] = Cvar_Get( "sv_master18", "master.quakejs.com", CVAR_INIT );
+	sv_master[20] = Cvar_Get( "sv_master19", "master.quakeservers.net:27000", CVAR_INIT );
+	sv_master[21] = Cvar_Get( "sv_master20", MASTER_SERVER_NAME, CVAR_INIT );
 
 
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )

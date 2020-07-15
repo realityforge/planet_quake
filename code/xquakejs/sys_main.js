@@ -88,13 +88,13 @@ var LibrarySysMain = {
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
         if (!args.includes('sv_dlURL')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
         }
         if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
-            args.unshift.apply(args, [
+            args.push.apply(args, [
               '+set', 'net_socksServer', window.location.hostname,
               '+set', 'net_socksPort', '443',
             ])
@@ -113,20 +113,20 @@ var LibrarySysMain = {
             ])
           }
         } else if (!args.includes('net_socksServer')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'net_socksServer', 'proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }
       } else {
         if (!args.includes('net_socksServer')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
             '+set', 'net_socksPort', SYSM.isSecured('') ? '443' : '1081'
           ])
         }
         if (!args.includes('sv_dlURL')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
           ])
         }
@@ -162,6 +162,7 @@ var LibrarySysMain = {
         || window.location.protocol.includes('https'))
         && !socksServer.includes('http:')
         && !socksServer.includes('ws:')
+        && !window.location.search.includes('ws://')
     }
   },
   Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
