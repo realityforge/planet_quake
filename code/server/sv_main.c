@@ -260,7 +260,7 @@ static void SV_MasterHeartbeat( const char *message )
 	// send to group masters
 	for (i = 0; i < MAX_MASTER_SERVERS; i++)
 	{
-		if(!sv_master[i]->string[0])
+		if(!sv_master[i] || !sv_master[i]->string[0])
 			continue;
 
 		// see if we haven't already resolved the name or if it's been over 24 hours

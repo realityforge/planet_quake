@@ -824,6 +824,7 @@ qboolean FS_FileExists( const char *file )
 	if(FS_IsExt(file, ".bsp", len) && FS_InMapIndex(file)) {
 		return 1;
 	}
+	// TODO: add videos and demos here InIndex()
 
 	return qfalse;
 }

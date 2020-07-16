@@ -360,6 +360,11 @@ static void IN_ActivateMouse( qboolean isFullscreen )
 }
 
 
+void IN_GrabMouse(void) {
+	SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
+	SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+}
+
 /*
 ===============
 IN_DeactivateMouse
@@ -591,11 +596,13 @@ static void IN_Minimize( void )
 	SDL_MinimizeWindow( SDL_window );
 }
 
+
 /*
 ===============
 IN_Frame
 ===============
 */
+qboolean clickChanged = qfalse;
 void IN_Frame( void )
 {
 	qboolean loading;
@@ -629,6 +636,13 @@ void IN_Frame( void )
 	else
 		IN_ActivateMouse( fullscreen );
 
+	if(clickChanged != cls.firstClick) {
+		clickChanged = cls.firstClick;
+		if(cls.firstClick == qfalse) {
+			IN_GrabMouse();
+		}
+	}
+
 	for(i = 1; i < 4; i++) {
 		/*
 		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
@@ -645,7 +659,6 @@ void IN_Frame( void )
 		}
 	}
 }
-
 
 /*
 ===============
