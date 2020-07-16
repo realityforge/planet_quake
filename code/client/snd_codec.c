@@ -149,6 +149,7 @@ void S_CodecInit()
 #if USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif
+	S_CodecRegister(&opus_codec);
 	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
 	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );

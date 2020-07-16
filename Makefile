@@ -163,7 +163,8 @@ RJSDIR=$(MOUNT_DIR)/rendererjs
 RVDIR=$(MOUNT_DIR)/renderervk
 RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
-
+OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
+OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 CMDIR=$(MOUNT_DIR)/qcommon
 UDIR=$(MOUNT_DIR)/unix
 W32DIR=$(MOUNT_DIR)/win32
@@ -241,6 +242,10 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
 
+ifeq ($(USE_CODEC_VORBIS),1)
+  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
+	
 #############################################################################
 # SETUP AND BUILD -- LINUX
 #############################################################################
@@ -699,7 +704,13 @@ endif
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
+		-I$(OPUSDIR)/include \
+		-I$(OPUSDIR)/celt \
+		-I$(OPUSDIR)/silk \
+    -I$(OPUSDIR)/silk/float \
+		-I$(OPUSFILEDIR)/include
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
@@ -824,10 +835,6 @@ endif
 ifneq ($(USE_RENDERER_DLOPEN),0)
   BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
   BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
-endif
-
-ifeq ($(USE_CODEC_VORBIS),1)
-  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
 endif
 
 ifeq ($(USE_CCACHE),1)
@@ -968,6 +975,7 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
@@ -1318,6 +1326,7 @@ Q3OBJ = \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
   $(B)/client/snd_codec_ogg.o \
+	$(B)/client/snd_codec_opus.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
@@ -1366,6 +1375,151 @@ Q3OBJ = \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
+
+Q3OBJ += \
+	$(B)/client/opus/analysis.o \
+	$(B)/client/opus/mlp.o \
+	$(B)/client/opus/mlp_data.o \
+	$(B)/client/opus/opus.o \
+	$(B)/client/opus/opus_decoder.o \
+	$(B)/client/opus/opus_encoder.o \
+	$(B)/client/opus/opus_multistream.o \
+	$(B)/client/opus/opus_multistream_encoder.o \
+	$(B)/client/opus/opus_multistream_decoder.o \
+	$(B)/client/opus/repacketizer.o \
+	\
+	$(B)/client/opus/bands.o \
+	$(B)/client/opus/celt.o \
+	$(B)/client/opus/cwrs.o \
+	$(B)/client/opus/entcode.o \
+	$(B)/client/opus/entdec.o \
+	$(B)/client/opus/entenc.o \
+	$(B)/client/opus/kiss_fft.o \
+	$(B)/client/opus/laplace.o \
+	$(B)/client/opus/mathops.o \
+	$(B)/client/opus/mdct.o \
+	$(B)/client/opus/modes.o \
+	$(B)/client/opus/pitch.o \
+	$(B)/client/opus/celt_encoder.o \
+	$(B)/client/opus/celt_decoder.o \
+	$(B)/client/opus/celt_lpc.o \
+	$(B)/client/opus/quant_bands.o \
+	$(B)/client/opus/rate.o \
+	$(B)/client/opus/vq.o \
+	\
+	$(B)/client/opus/CNG.o \
+	$(B)/client/opus/code_signs.o \
+	$(B)/client/opus/init_decoder.o \
+	$(B)/client/opus/decode_core.o \
+	$(B)/client/opus/decode_frame.o \
+	$(B)/client/opus/decode_parameters.o \
+	$(B)/client/opus/decode_indices.o \
+	$(B)/client/opus/decode_pulses.o \
+	$(B)/client/opus/decoder_set_fs.o \
+	$(B)/client/opus/dec_API.o \
+	$(B)/client/opus/enc_API.o \
+	$(B)/client/opus/encode_indices.o \
+	$(B)/client/opus/encode_pulses.o \
+	$(B)/client/opus/gain_quant.o \
+	$(B)/client/opus/interpolate.o \
+	$(B)/client/opus/LP_variable_cutoff.o \
+	$(B)/client/opus/NLSF_decode.o \
+	$(B)/client/opus/NSQ.o \
+	$(B)/client/opus/NSQ_del_dec.o \
+	$(B)/client/opus/PLC.o \
+	$(B)/client/opus/shell_coder.o \
+	$(B)/client/opus/tables_gain.o \
+	$(B)/client/opus/tables_LTP.o \
+	$(B)/client/opus/tables_NLSF_CB_NB_MB.o \
+	$(B)/client/opus/tables_NLSF_CB_WB.o \
+	$(B)/client/opus/tables_other.o \
+	$(B)/client/opus/tables_pitch_lag.o \
+	$(B)/client/opus/tables_pulses_per_block.o \
+	$(B)/client/opus/VAD.o \
+	$(B)/client/opus/control_audio_bandwidth.o \
+	$(B)/client/opus/quant_LTP_gains.o \
+	$(B)/client/opus/VQ_WMat_EC.o \
+	$(B)/client/opus/HP_variable_cutoff.o \
+	$(B)/client/opus/NLSF_encode.o \
+	$(B)/client/opus/NLSF_VQ.o \
+	$(B)/client/opus/NLSF_unpack.o \
+	$(B)/client/opus/NLSF_del_dec_quant.o \
+	$(B)/client/opus/process_NLSFs.o \
+	$(B)/client/opus/stereo_LR_to_MS.o \
+	$(B)/client/opus/stereo_MS_to_LR.o \
+	$(B)/client/opus/check_control_input.o \
+	$(B)/client/opus/control_SNR.o \
+	$(B)/client/opus/init_encoder.o \
+	$(B)/client/opus/control_codec.o \
+	$(B)/client/opus/A2NLSF.o \
+	$(B)/client/opus/ana_filt_bank_1.o \
+	$(B)/client/opus/biquad_alt.o \
+	$(B)/client/opus/bwexpander_32.o \
+	$(B)/client/opus/bwexpander.o \
+	$(B)/client/opus/debug.o \
+	$(B)/client/opus/decode_pitch.o \
+	$(B)/client/opus/inner_prod_aligned.o \
+	$(B)/client/opus/lin2log.o \
+	$(B)/client/opus/log2lin.o \
+	$(B)/client/opus/LPC_analysis_filter.o \
+	$(B)/client/opus/LPC_fit.o \
+	$(B)/client/opus/LPC_inv_pred_gain.o \
+	$(B)/client/opus/table_LSF_cos.o \
+	$(B)/client/opus/NLSF2A.o \
+	$(B)/client/opus/NLSF_stabilize.o \
+	$(B)/client/opus/NLSF_VQ_weights_laroia.o \
+	$(B)/client/opus/pitch_est_tables.o \
+	$(B)/client/opus/resampler.o \
+	$(B)/client/opus/resampler_down2_3.o \
+	$(B)/client/opus/resampler_down2.o \
+	$(B)/client/opus/resampler_private_AR2.o \
+	$(B)/client/opus/resampler_private_down_FIR.o \
+	$(B)/client/opus/resampler_private_IIR_FIR.o \
+	$(B)/client/opus/resampler_private_up2_HQ.o \
+	$(B)/client/opus/resampler_rom.o \
+	$(B)/client/opus/sigm_Q15.o \
+	$(B)/client/opus/sort.o \
+	$(B)/client/opus/sum_sqr_shift.o \
+	$(B)/client/opus/stereo_decode_pred.o \
+	$(B)/client/opus/stereo_encode_pred.o \
+	$(B)/client/opus/stereo_find_predictor.o \
+	$(B)/client/opus/stereo_quant_pred.o \
+	\
+	$(B)/client/opus/apply_sine_window_FLP.o \
+	$(B)/client/opus/corrMatrix_FLP.o \
+	$(B)/client/opus/encode_frame_FLP.o \
+	$(B)/client/opus/find_LPC_FLP.o \
+	$(B)/client/opus/find_LTP_FLP.o \
+	$(B)/client/opus/find_pitch_lags_FLP.o \
+	$(B)/client/opus/find_pred_coefs_FLP.o \
+	$(B)/client/opus/LPC_analysis_filter_FLP.o \
+	$(B)/client/opus/LTP_analysis_filter_FLP.o \
+	$(B)/client/opus/LTP_scale_ctrl_FLP.o \
+	$(B)/client/opus/noise_shape_analysis_FLP.o \
+	$(B)/client/opus/process_gains_FLP.o \
+	$(B)/client/opus/regularize_correlations_FLP.o \
+	$(B)/client/opus/residual_energy_FLP.o \
+	$(B)/client/opus/warped_autocorrelation_FLP.o \
+	$(B)/client/opus/wrappers_FLP.o \
+	$(B)/client/opus/autocorrelation_FLP.o \
+	$(B)/client/opus/burg_modified_FLP.o \
+	$(B)/client/opus/bwexpander_FLP.o \
+	$(B)/client/opus/energy_FLP.o \
+	$(B)/client/opus/inner_product_FLP.o \
+	$(B)/client/opus/k2a_FLP.o \
+	$(B)/client/opus/LPC_inv_pred_gain_FLP.o \
+	$(B)/client/opus/pitch_analysis_core_FLP.o \
+	$(B)/client/opus/scale_copy_vector_FLP.o \
+	$(B)/client/opus/scale_vector_FLP.o \
+	$(B)/client/opus/schur_FLP.o \
+	$(B)/client/opus/sort_FLP.o \
+	\
+  $(B)/client/http.o \
+  $(B)/client/info.o \
+  $(B)/client/internal.o \
+  $(B)/client/opusfile.o \
+  $(B)/client/stream.o \
+  $(B)/client/wincerts.o
 
   Q3OBJ += $(JPGOBJ)
 
@@ -1623,6 +1777,21 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 $(B)/client/%.o: $(JPDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/celt/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/silk/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/silk/float/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(OPUSFILEDIR)/src/%.c
+	$(DO_CC)
+
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
 
@@ -1682,7 +1851,6 @@ $(B)/client/%.o: $(W32DIR)/%.rc
 
 $(B)/client/%.o: $(QUAKEJS)/%.c
 	$(DO_CC)
-
 
 $(B)/ded/%.o: $(ADIR)/%.s
 	$(DO_AS)
