@@ -242,10 +242,6 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
 
-ifeq ($(USE_CODEC_VORBIS),1)
-  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
-endif
-	
 #############################################################################
 # SETUP AND BUILD -- LINUX
 #############################################################################
@@ -710,7 +706,8 @@ endif
 		-I$(OPUSDIR)/celt \
 		-I$(OPUSDIR)/silk \
     -I$(OPUSDIR)/silk/float \
-		-I$(OPUSFILEDIR)/include
+		-I$(OPUSFILEDIR)/include \
+		-DUSE_CODEC_VORBIS=1
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
