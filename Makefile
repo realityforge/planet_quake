@@ -681,7 +681,7 @@ endif
   USE_VULKAN=0
   USE_CURL=0
   USE_CODEC_VORBIS=1
-  USE_CODEC_OPUS=1
+  USE_CODEC_OPUS=0
   USE_FREETYPE=0
   USE_MUMBLE=0
   USE_VOIP=0
@@ -701,13 +701,18 @@ endif
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+		-DUSE_CODEC_VORBIS=1
+
+ifneq ($(USE_CODEC_OPUS),0)
+  BASE_CFLAGS += \
+		-DUSE_CODEC_OPUS \
     -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
 		-I$(OPUSDIR)/include \
 		-I$(OPUSDIR)/celt \
 		-I$(OPUSDIR)/silk \
     -I$(OPUSDIR)/silk/float \
-		-I$(OPUSFILEDIR)/include \
-		-DUSE_CODEC_VORBIS=1
+		-I$(OPUSFILEDIR)/include 
+endif
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
@@ -1323,12 +1328,13 @@ Q3OBJ = \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
   $(B)/client/snd_codec_ogg.o \
-	$(B)/client/snd_codec_opus.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
   $(B)/client/sv_client.o \
   $(B)/client/sv_filter.o \
+	$(B)/client/sv_demo.o \
+  $(B)/client/sv_demo_ext.o \
   $(B)/client/sv_game.o \
   $(B)/client/sv_init.o \
   $(B)/client/sv_main.o \
@@ -1373,7 +1379,9 @@ Q3OBJ = \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
 
+ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
+	$(B)/client/snd_codec_opus.o \
 	$(B)/client/opus/analysis.o \
 	$(B)/client/opus/mlp.o \
 	$(B)/client/opus/mlp_data.o \
@@ -1517,6 +1525,7 @@ Q3OBJ += \
   $(B)/client/opusfile.o \
   $(B)/client/stream.o \
   $(B)/client/wincerts.o
+endif
 
   Q3OBJ += $(JPGOBJ)
 
@@ -1664,6 +1673,8 @@ Q3DOBJ = \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
   $(B)/ded/sv_filter.o \
+	$(B)/ded/sv_demo.o \
+  $(B)/ded/sv_demo_ext.o \
   $(B)/ded/sv_game.o \
   $(B)/ded/sv_init.o \
   $(B)/ded/sv_main.o \

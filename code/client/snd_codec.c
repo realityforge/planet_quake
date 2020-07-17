@@ -146,8 +146,10 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
+#ifdef USE_CODEC_OPUS
 	S_CodecRegister(&opus_codec);
-#if USE_CODEC_VORBIS
+#endif
+#ifdef USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif
 	// Register wav codec last so that it is always tried first when a file extension was not found
