@@ -176,6 +176,11 @@ void MSG_ReadDeltaEntity( msg_t *msg, const entityState_t *from, entityState_t *
 void MSG_WriteDeltaPlayerstate( msg_t *msg, const playerState_t *from, const playerState_t *to );
 void MSG_ReadDeltaPlayerstate( msg_t *msg, const playerState_t *from, playerState_t *to );
 
+void MSG_WriteDeltaSharedEntity( msg_t *msg, void *from, void *to
+								   , qboolean force, int number );
+void MSG_ReadDeltaSharedEntity( msg_t *msg, void *from, void *to,
+								 int number );
+
 void MSG_ReportChangeVectors_f( void );
 
 //============================================================================
@@ -567,6 +572,10 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 qboolean	Cmd_ExecuteString( const char *text, qboolean noServer );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
+
+
+void Cmd_SaveCmdContext( void );
+void Cmd_RestoreCmdContext( void );
 
 
 /*
@@ -1234,6 +1243,8 @@ qboolean CL_GameSwitch( void );
 // server interface
 //
 void SV_Init( void );
+void SV_BotInitCvars( void );
+void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );
 void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );

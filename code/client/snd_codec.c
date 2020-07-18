@@ -146,12 +146,16 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
-#if USE_CODEC_VORBIS
+#ifdef USE_CODEC_OPUS
+	S_CodecRegister(&opus_codec);
+#endif
+#ifdef USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif
 	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
 	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );
+	Cvar_Get("snd_loadingSound", "", CVAR_TEMP);
 	updateSound = s_lazyLoad->integer < 2;
 	
 }
@@ -184,7 +188,12 @@ S_CodecLoad
 */
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
-	return S_CodecGetSound(filename, info);
+	void *result;
+	ri.Cvar_Set( "snd_loadingSound", filename );	
+	result = S_CodecGetSound(filename, info);
+	ri.Cvar_Set( "snd_loadingSound", "" );	
+
+	return result;
 }
 
 /*
@@ -194,7 +203,12 @@ S_CodecOpenStream
 */
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
-	return S_CodecGetSound(filename, NULL);
+	snd_stream_t *result;
+	ri.Cvar_Set( "snd_loadingSound", filename );	
+	result = S_CodecGetSound(filename, NULL);
+	ri.Cvar_Set( "snd_loadingSound", "" );	
+
+	return result;
 }
 
 void S_CodecCloseStream(snd_stream_t *stream)

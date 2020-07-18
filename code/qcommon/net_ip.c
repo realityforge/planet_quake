@@ -495,7 +495,7 @@ const char *NET_AdrToString( const netadr_t *a )
 	static char s[NET_ADDRSTRMAXLEN];
 
 	if (a->type == NA_LOOPBACK)
-		strcpy( s, "loopback" );
+		strcpy( s, "localhost" );
 	else if (a->type == NA_BOT)
 		strcpy( s, "bot" );
 	else if (a->type == NA_IP || a->type == NA_IP6)
@@ -514,7 +514,7 @@ const char *NET_AdrToStringwPort( const netadr_t *a )
 	static char s[NET_ADDRSTRMAXLEN];
 
 	if (a->type == NA_LOOPBACK)
-		strcpy( s, "loopback" );
+		strcpy( s, "localhost" );
 	else if (a->type == NA_BOT)
 		strcpy( s, "bot" );
 	else if(a->type == NA_IP)
@@ -1159,8 +1159,18 @@ static void NET_OpenSocks( int port ) {
 		Com_Printf( "WARNING: NET_OpenSocks: socket: %s\n", NET_ErrorString() );
 		return;
 	}
-
-	h = gethostbyname( net_socksServer->string );
+  
+  if ( !Q_stricmpn( net_socksServer->string, "ws://", 5 ) ) {
+    h = gethostbyname( &net_socksServer->string[5] );
+  } else if ( !Q_stricmpn( net_socksServer->string, "wss://", 6 ) ) {
+      h = gethostbyname( &net_socksServer->string[6] );
+	} else if ( !Q_stricmpn( net_socksServer->string, "http://", 7 ) ) {
+    h = gethostbyname( &net_socksServer->string[7] );
+  } else if ( !Q_stricmpn( net_socksServer->string, "https://", 8 ) ) {
+    h = gethostbyname( &net_socksServer->string[8] );
+  } else {
+    h = gethostbyname( net_socksServer->string );
+  }
 	if ( h == NULL ) {
 		Com_Printf( "WARNING: NET_OpenSocks: gethostbyname: %s\n", NET_ErrorString() );
 		return;
@@ -1357,7 +1367,17 @@ void NET_OpenSocks_After_Listen( void ) {
 	}
 	socksRelayAddr.sin_family = AF_INET;
 #ifdef EMSCRIPTEN
-  h = gethostbyname( net_socksServer->string );
+  if ( !Q_stricmpn( net_socksServer->string, "ws://", 5 ) ) {
+    h = gethostbyname( &net_socksServer->string[5] );
+  } else if ( !Q_stricmpn( net_socksServer->string, "wss://", 6 ) ) {
+      h = gethostbyname( &net_socksServer->string[6] );
+  } else if ( !Q_stricmpn( net_socksServer->string, "http://", 7 ) ) {
+    h = gethostbyname( &net_socksServer->string[7] );
+  } else if ( !Q_stricmpn( net_socksServer->string, "https://", 8 ) ) {
+    h = gethostbyname( &net_socksServer->string[8] );
+  } else {
+    h = gethostbyname( net_socksServer->string );
+  }
   socksRelayAddr.sin_addr.s_addr = *(int *)h->h_addr_list[0];
   socksRelayAddr.sin_port = htons( (short)net_socksPort->integer );
 #else

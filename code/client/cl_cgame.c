@@ -352,6 +352,10 @@ rescan:
 
 	// we may want to put a "connect to other server" command here
 #ifdef EMSCRIPTEN
+	if ( !strcmp( cmd, "postgame" ) ) {
+		cls.postgame = qtrue;
+	}
+	
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
 	if(Cmd_ExecuteString(s, qtrue)) {
@@ -921,6 +925,8 @@ void CL_UpdateShader( void ) {
 	char *lazyShader = Sys_UpdateShader();
 	if(!lazyShader || strlen(lazyShader) == 0) return;
 	lazyShader[12] = '\0';
+	//if(!strcmp(&lazyShader[13], "console"))
+	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
 	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
 }
 

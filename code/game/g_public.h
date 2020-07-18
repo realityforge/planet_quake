@@ -397,7 +397,7 @@ typedef enum {
 	BOTLIB_PC_SOURCE_FILE_AND_LINE,
 
 	// engine extensions
-	G_TRAP_GETVALUE = COM_TRAP_GETVALUE
+	G_TRAP_GETVALUE = 700
 
 } gameImport_t;
 
@@ -439,4 +439,3 @@ typedef enum {
 
 	GAME_EXPORT_LAST
 } gameExport_t;
-

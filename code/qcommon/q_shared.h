@@ -43,12 +43,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define STEAMPATH_APPID			"2200"
 
 #define MAX_TEAMNAME            32
-#define MAX_MASTER_SERVERS      5	// number of supported master servers
+#define MAX_MASTER_SERVERS      24	// number of supported master servers
 
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
 #define DEMOEXT	"dm_"			// standard demo extension
+#define SVDEMOEXT	"svdm_"		// server-side demo extension
 
 #ifdef _MSC_VER
 
@@ -1318,6 +1319,7 @@ typedef enum {
 	CA_LOADING,			// only during cgame initialization, never during main loop
 	CA_PRIMED,			// got gamestate, waiting for first frame
 	CA_ACTIVE,			// game views should be displayed
+//  CA_POSTGAME,    // post game stats should be displayed
 	CA_CINEMATIC		// playing a cinematic or a static pic, not connected to a server
 } connstate_t;
 
@@ -1396,6 +1398,18 @@ typedef enum _flag_status {
 	FLAG_DROPPED
 } flagStatus_t;
 
+
+typedef enum {
+	DS_NONE,
+
+	DS_WAITINGPLAYBACK, // demo will play after map_restart)
+	DS_PLAYBACK, // a demo is playing
+	DS_WAITINGSTOP, // demo is stopped but we must move clients over their normal slots
+
+	DS_RECORDING, // a demo is being recorded
+
+	DS_NUM_DEMO_STATES
+} demoState_t;
 
 
 #define	MAX_GLOBAL_SERVERS				4096

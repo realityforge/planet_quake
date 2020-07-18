@@ -753,7 +753,7 @@ void SV_SendClientMessages( void )
 	{
 		c = &svs.clients[ i ];
 		
-		if ( c->state == CS_FREE )
+		if ( c->state == CS_FREE || c->demoClient )
 			continue;		// not connected
 
 		if ( *c->downloadName )

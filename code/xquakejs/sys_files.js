@@ -2,8 +2,8 @@ var LibrarySysFiles = {
   $SYSF__deps: ['$SYSC', '$IDBFS'],
   $SYSF: {
     index: [],
+    fs_replace: [],
     fs_basepath: '/base',
-		fs_game: 'baseq3-cc',
     pathname: 0,
     modeStr: 0,
     firstTime: false,
@@ -86,10 +86,10 @@ var LibrarySysFiles = {
         }
         if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
         // download files for menu system
-          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud.txt|arenas\.txt/i)
+          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
-          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt/i)
+          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
           || file.name.match(new RegExp('\/levelshots\/' + mapname, 'i'))
           || file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
@@ -100,7 +100,7 @@ var LibrarySysFiles = {
           // these files can be streamed in
           file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
           // download levelshots and common graphics
-          || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|gfx\/|sfx\//i)
+          || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
@@ -154,20 +154,28 @@ var LibrarySysFiles = {
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_FS_Startup: function () {
+    SYSF.fs_replace = []
+    SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
+    SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
     var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     if(newDLURL.length > 0) {
       SYSC.newDLURL = newDLURL
     }
-    SYSN.downloadLazy.splice(0) // reset lazy list to start of map
+    //SYSN.downloadLazy.splice(0) // reset lazy list to start of map
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSF.fs_basepath = fs_basepath;
     var fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
+    if(fs_basegame.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + fs_basegame + '\/', 'ig'))
+    SYSF.fs_basegame = fs_basegame
     var sv_pure = SYSC.Cvar_VariableString('sv_pure')
     var fs_game = SYSC.Cvar_VariableString('fs_game')
-    SYSF.fs_game = fs_game;
+    if(fs_game.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + fs_game + '\/', 'ig'))
+    SYSF.fs_replace.sort((a, b) => b.source.length - a.source.length)
     var mapname = SYSC.Cvar_VariableString('mapname')
     var clcState = _CL_GetClientState()
     const blankFile = new Uint8Array(4)
@@ -271,14 +279,20 @@ var LibrarySysFiles = {
             if(loading.length === 0) {
               loading = SYSC.Cvar_VariableString('r_loadingModel')
             }
-          }
-          if(!SYSF.index[indexFilename].downloading) {
-            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
-            SYSF.index[indexFilename].shaders.push(loading)
-            SYSF.index[indexFilename].downloading = true
           } else if (!SYSF.index[indexFilename].shaders.includes(loading)) {
             SYSF.index[indexFilename].shaders.push(loading)
           }
+
+          if((handle === 0
+            || HEAP8[SYSF.cl_lazyLoad+8*4] === 2)
+            && !SYSF.index[indexFilename].downloading
+          /*&& !SYSF.index[indexFilename].alreadyDownloaded*/) {
+            if(SYSF.index[indexFilename].alreadyDownloaded)
+              SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
+            else
+              SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+            SYSF.index[indexFilename].downloading = true
+          } 
         }
       //}
     } catch (e) {

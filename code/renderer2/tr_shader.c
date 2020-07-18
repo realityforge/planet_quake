@@ -1995,7 +1995,7 @@ static qboolean ParseShader( const char **text )
 			{
 				return qfalse;
 			}
-			stages[s].active = qtrue;
+		  stages[s].active = qtrue;
 			s++;
 
 			continue;
@@ -3081,7 +3081,7 @@ static shader_t *GeneratePermanentShader( void ) {
 	int			size, hash;
 
 	if ( tr.numShaders == MAX_SHADERS ) {
-		ri.Printf( PRINT_WARNING, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
+		ri.Printf( PRINT_DEVELOPER, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
 		return tr.defaultShader;
 	}
   
@@ -3263,7 +3263,6 @@ InitShader
 */
 static void InitShader( const char *name, int lightmapIndex ) {
 	int i;
-  mapShaders = r_lazyLoad->integer < 2;
 
 	// clear the global shader
 	Com_Memset( &shader, 0, sizeof( shader ) );
@@ -3660,13 +3659,25 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( r_printShaders->integer ) {
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
+    
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qtrue;
+    }
 
-		if ( !ParseShader( &shaderText ) ) {
+		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
-		} else {
+		} else if(!mapShaders && shader.stages[0]->active == qfalse) {
+      shader.defaultShader = qtrue;
+    } else {
       shader.defaultShader = qfalse;
     }
+
+    if(!Q_stricmp(name, "console"))
+  		Com_Printf("Error: CL_UpdateShader: %s, %i\n", name, lightmapIndex);
+
 		sh = FinishShader();
 		return sh;
 	}
@@ -4164,6 +4175,7 @@ static void ScanAndLoadShaderFiles( void )
 	const char *p, *oldp;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
 
+  mapShaders = r_lazyLoad->integer < 2;
 	long sum = 0;
 
 	// scan for legacy shader files

@@ -3063,9 +3063,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
-#ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
-#endif
 		}
 #endif
 
@@ -3772,13 +3770,7 @@ void Com_Init_After_Filesystem( void ) {
 	Netchan_Init( qport & 0xffff );
 
 	VM_Init();
-#ifdef EMSCRIPTEN
-	if(com_dedicated->integer) {
-		SV_Init();
-	}
-#else
 	SV_Init();
-#endif
 
 	com_dedicated->modified = qfalse;
 

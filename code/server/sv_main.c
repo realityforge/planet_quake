@@ -63,6 +63,12 @@ serverBan_t serverBans[SERVER_MAXBANS];
 int serverBansCount = 0;
 #endif
 
+cvar_t	*sv_democlients;		// number of slots reserved for playing a demo
+cvar_t	*sv_demoState;
+cvar_t	*sv_autoDemo;
+cvar_t	*cl_freezeDemo; // to freeze server-side demos
+cvar_t	*sv_demoTolerant;
+
 /*
 =============================================================================
 
@@ -208,6 +214,12 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 		Com_Printf( "broadcast: %s\n", SV_ExpandNewlines( message ) );
 	}
 
+	// save broadcasts to demo
+	// note: in the case a command is only issued to a specific client, it is NOT recorded (see above when cl != NULL). If you want to record them, just place this code above, but be warned that it may be dangerous (such as "disconnect" command) because server commands will be replayed to every connected clients!
+	if ( sv.demoState == DS_RECORDING ) {
+		SV_DemoWriteServerCommand( (char *)message );
+	}
+
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
@@ -260,7 +272,7 @@ static void SV_MasterHeartbeat( const char *message )
 	// send to group masters
 	for (i = 0; i < MAX_MASTER_SERVERS; i++)
 	{
-		if(!sv_master[i]->string[0])
+		if(!sv_master[i] || !sv_master[i]->string[0])
 			continue;
 
 		// see if we haven't already resolved the name or if it's been over 24 hours
@@ -785,7 +797,7 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
 	Info_SetValueForKey(infostring, "g_humanplayers", va("%i", humans));
 	Info_SetValueForKey( infostring, "sv_maxclients", 
-		va("%i", sv_maxclients->integer - sv_privateClients->integer ) );
+		va("%i", sv_maxclients->integer - sv_privateClients->integer - sv_democlients->integer ) );
 	Info_SetValueForKey( infostring, "gametype", va("%i", sv_gametype->integer ) );
 	Info_SetValueForKey( infostring, "pure", va("%i", sv_pure->integer ) );
 	Info_SetValueForKey(infostring, "g_needpass", va("%d", Cvar_VariableIntegerValue("g_needpass")));
@@ -1397,6 +1409,14 @@ void SV_Frame( int msec ) {
 
 		// let everything in the world think and move
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		
+		// play/record demo frame (if enabled)
+		if (sv.demoState == DS_RECORDING) // Record the frame
+			SV_DemoWriteFrame();
+		else if (sv.demoState == DS_WAITINGPLAYBACK || Cvar_VariableIntegerValue("sv_demoState") == DS_WAITINGPLAYBACK) // Launch again the playback of the demo (because we needed a restart in order to set some cvars such as sv_maxclients or fs_game)
+			SV_DemoRestartPlayback();
+		else if (sv.demoState == DS_PLAYBACK) // Play the next demo frame
+			SV_DemoReadFrame();
 	}
 
 	if ( com_speeds->integer ) {

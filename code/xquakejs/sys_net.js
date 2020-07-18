@@ -49,7 +49,7 @@ var LibrarySysNet = {
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-      fetch(url, {credentials: 'include'})
+      fetch(url, {credentials: 'omit'})
         .catch(e => console.log(e))
         .then(response => {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
@@ -77,23 +77,29 @@ var LibrarySysNet = {
     },
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
+      SYSF.index[indexFilename].alreadyDownloaded = true
+      var replaceFunc = (path) => {
+        SYSF.fs_replace.forEach(r => path = path.replace(r, ''))
+        return path
+      }
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
 				if(file[0]) {
-					SYS.soundCallback.unshift(file[0].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.soundCallback.unshift(replaceFunc(file[0]))
 				} else {
-					SYS.soundCallback.unshift(file[1].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.soundCallback.unshift(replaceFunc(file[1]))
 				}
 				SYS.soundCallback = SYS.soundCallback.filter((s, i, arr) => arr.indexOf(s) === i)
 			} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 				if(file[0]) {
-					SYS.modelCallback.unshift(file[0].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.modelCallback.unshift(replaceFunc(file[0]))
 				} else {
-					SYS.modelCallback.unshift(file[1].replace('/' + SYSF.fs_game + '/', ''))
+					SYS.modelCallback.unshift(replaceFunc(file[1]))
 				}
 				SYS.modelCallback = SYS.modelCallback.filter((s, i, arr) => arr.indexOf(s) === i)
 			} else if(SYSF.index[indexFilename].shaders.length > 0) {
 				if(file[0]) {
-					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [file[0]].concat(SYSF.index[indexFilename].shaders))
+					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [replaceFunc(file[0])]
+            .concat(SYSF.index[indexFilename].shaders))
 				} else {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYSF.index[indexFilename].shaders)
 				}
@@ -121,7 +127,7 @@ var LibrarySysNet = {
 			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
 			// if we haven't sorted the list in a while, sort by number of references to file
 			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {
-				SYSN.DownloadLazySort()
+				//SYSN.DownloadLazySort()
 				SYSN.downloadSort = _Sys_Milliseconds()
 			}
 			var file = SYSN.downloadLazy.pop()
@@ -166,11 +172,19 @@ var LibrarySysNet = {
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
-					obj[k.toLowerCase()] = moreIndex[k]
-          if(typeof obj[k.toLowerCase()].downloading == 'undefined')
-					     obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
-					obj[k.toLowerCase()].downloading = false
-					obj[k.toLowerCase()].shaders = []
+          if(typeof obj[k.toLowerCase()] == 'undefined') {
+            obj[k.toLowerCase()] = moreIndex[k]
+            // we use the downloading key because it doesn't
+            //   come with the index.json from the server
+            //   so we only recreate local paths once because it is saved below
+            //   then it can be used by the engine to check for remote resources
+            //   like FS_MapInIndex() or demos and cinematics files
+            if(typeof obj[k.toLowerCase()].downloading == 'undefined') {
+              obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+              obj[k.toLowerCase()].shaders = []
+              obj[k.toLowerCase()].downloading = false
+            }
+          }
 					return obj
 				}, SYSF.index || {})
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
@@ -187,7 +201,6 @@ var LibrarySysNet = {
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
-    var fs_game = SYSC.Cvar_VariableString('fs_game')
     
     FS.syncfs(false, (e) => {
       if(e) console.log(e)

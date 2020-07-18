@@ -635,10 +635,10 @@ void SV_DirectConnect( const netadr_t *from ) {
 	// check for privateClient password
 	password = Info_ValueForKey( userinfo, "password" );
 	if ( *password && !strcmp( password, sv_privatePassword->string ) ) {
-		startIndex = 0;
+		startIndex = sv_democlients->integer;
 	} else {
 		// skip past the reserved slots
-		startIndex = sv_privateClients->integer;
+		startIndex = sv_privateClients->integer + sv_democlients->integer;
 	}
 
 	if ( newcl && newcl >= svs.clients + startIndex && newcl->state == CS_FREE ) {
@@ -857,7 +857,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	// to the master so it is known the server is empty
 	// send a heartbeat now so the master will get up to date info
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		if ( svs.clients[i].state >= CS_CONNECTED ) {
+		if ( svs.clients[i].state >= CS_CONNECTED && !svs.clients[i].demoClient ) {
 			break;
 		}
 	}
@@ -1049,6 +1049,12 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
 	client->state = CS_ACTIVE;
+
+	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
+	if (sv.demoState == DS_PLAYBACK &&
+	    ( (client - svs.clients) >= sv_democlients->integer ) && ( (client - svs.clients) < sv_maxclients->integer ) ) { // check that it's a real player
+		SV_ExecuteClientCommand(client, "team spectator");
+	}
 
 	// resend all configstrings using the cs commands since these are
 	// no longer sent when the client is CS_PRIMED
@@ -1747,8 +1753,13 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 SV_UpdateUserinfo_f
 ==================
 */
-static void SV_UpdateUserinfo_f( client_t *cl ) {
+void SV_UpdateUserinfo_f( client_t *cl ) {
 	const char *info;
+
+	// Save userinfo changes to demo (also in SV_SetUserinfo() in sv_init.c)
+	if ( sv.demoState == DS_RECORDING ) {
+		SV_DemoWriteClientUserinfo( cl, Cmd_Argv(1) );
+	}
 
 	info = Cmd_Argv( 1 );
 
@@ -1951,11 +1962,18 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		Com_DPrintf( "client text ignored for %s: %s\n", cl->name, Cmd_Argv(0) );
 	} else {
 		// pass unknown strings to the game
-		if ( !ucmd->name && sv.state == SS_GAME && cl->state >= CS_PRIMED ) {
-			if ( gvm->forceDataMask )
-				Cmd_Args_Sanitize( "\n\r;" ); // handle ';' for OSP
-			else
-				Cmd_Args_Sanitize( "\n\r" );
+		if (!ucmd->name && sv.state == SS_GAME && (cl->state == CS_ACTIVE || cl->state == CS_PRIMED || cl->demoClient)) { // accept democlients, else you won't be able to make democlients join teams nor say messages!
+			if ( sv.demoState == DS_RECORDING ) { // if demo is recording, we store this command and clientid
+				SV_DemoWriteClientCommand( cl, s );
+			} else if ( sv.demoState == DS_PLAYBACK &&
+				   ( (cl - svs.clients) >= sv_democlients->integer ) && ( (cl - svs.clients) < sv_maxclients->integer ) && // preventing only real clients commands (not democlients commands replayed)
+				   ( !Q_stricmp(Cmd_Argv(0), "team") && Q_stricmp(Cmd_Argv(1), "s") && Q_stricmp(Cmd_Argv(1), "spectator") ) ) { // if there is a demo playback, we prevent any real client from doing a team change, if so, we issue a chat messsage (except if the player join team spectator again)
+				SV_SendServerCommand(cl, "chat \"^3Can't join a team when a demo is replaying!\""); // issue a chat message only to the player trying to join a team
+				SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\""); // issue a chat message only to the player trying to join a team
+				return qtrue;
+			}
+			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team") )
+				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
 			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );
 		}
 	}

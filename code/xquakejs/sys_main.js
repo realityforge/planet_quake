@@ -19,9 +19,9 @@ var LibrarySysMain = {
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4
-      '+set', 'net_socksServer', '127.0.0.1',
       '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
+      '+set', 'cl_lazyLoad', '1',
       //'+set', 'com_hunkMegs', '256',
       //'+set', 'com_maxfps', '125',
       //'+set', 'com_maxfpsUnfocused', '10',
@@ -88,13 +88,13 @@ var LibrarySysMain = {
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
         if (!args.includes('sv_dlURL')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
         }
         if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
-            args.unshift.apply(args, [
+            args.push.apply(args, [
               '+set', 'net_socksServer', window.location.hostname,
               '+set', 'net_socksPort', '443',
             ])
@@ -113,19 +113,20 @@ var LibrarySysMain = {
             ])
           }
         } else if (!args.includes('net_socksServer')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'net_socksServer', 'proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }
       } else {
         if (!args.includes('net_socksServer')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
+            '+set', 'net_socksPort', SYSM.isSecured('') ? '443' : '1081'
           ])
         }
         if (!args.includes('sv_dlURL')) {
-          args.unshift.apply(args, [
+          args.push.apply(args, [
             '+set', 'sv_dlURL', '"' + window.location.origin + '/assets"',
           ])
         }
@@ -156,6 +157,13 @@ var LibrarySysMain = {
 			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay);
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
+    isSecured: function (socksServer) {
+      return (window.location.search.includes('https://')
+        || window.location.protocol.includes('https'))
+        && !socksServer.includes('http:')
+        && !socksServer.includes('ws:')
+        && !window.location.search.includes('ws://')
+    }
   },
   Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
   Sys_PlatformInit: function () {
@@ -163,12 +171,12 @@ var LibrarySysMain = {
     SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     Object.assign(Module, {
       websocket: Object.assign(Module.websocket || {}, {
-        url: window.location.search.includes('https://') || window.location.protocol.includes('https')
+        url: SYSM.isSecured(SYSC.Cvar_VariableString('net_socksServer'))
         ? 'wss://'
         : 'ws://'
       })
     })
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
 
     SYSF.firstTime = true
     if(typeof document == 'undefined') return
@@ -192,6 +200,8 @@ var LibrarySysMain = {
     window.addEventListener('resize', SYSM.resizeViewport)
   },
   Sys_PlatformExit: function () {
+    if(SYSN.lazyInterval)
+      clearInterval(SYSN.lazyInterval)
     /*
     if(SYSC.varStr) {
       _free(SYSC.varStr)
@@ -225,7 +235,6 @@ var LibrarySysMain = {
     if(typeof Module.exitHandler != 'undefined') {
       Module.exitHandler()
     }
-    clearInterval(SYSN.lazyInterval)
   },
   Sys_Milliseconds: function () {
 		if (!SYSM.timeBase) {

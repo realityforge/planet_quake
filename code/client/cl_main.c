@@ -70,6 +70,8 @@ cvar_t	*cl_guidServerUniq;
 cvar_t	*cl_dlURL;
 cvar_t	*cl_dlDirectory;
 
+cvar_t  *cl_lazyLoad;
+
 // common cvars for GLimp modules
 cvar_t	*vid_xpos;			// X coordinate of window position
 cvar_t	*vid_ypos;			// Y coordinate of window position
@@ -1247,7 +1249,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	}
 
 #ifdef EMSCRIPTEN
-	if(dropped)
+	if(dropped || cls.postgame)
 #endif
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
@@ -1277,13 +1279,17 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 #ifdef EMSCRIPTEN
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
-	clc.serverAddress = addr;
-	noGameRestart = qtrue;
-	cl_restarted = qtrue;
-	if(!dropped) {
-		// skip disconnecting and just show the main menu
-		cl_disconnecting = qfalse;
-		return cl_restarted;
+	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
+		if(!dropped && !cls.postgame) {
+			// skip disconnecting and just show the main menu
+			noGameRestart = qtrue;
+			cl_restarted = qtrue;
+			cl_disconnecting = qfalse;
+			return cl_restarted;
+		} else if (cls.postgame) {
+			Cbuf_AddText("map_restart;");
+			Cbuf_Execute();
+		}
 	}
 #else
 #endif
@@ -1322,6 +1328,9 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	cl_disconnecting = qfalse;
 
+#ifdef EMSCRIPTEN
+	clc.serverAddress = addr;
+#endif
 	return cl_restarted;
 }
 
@@ -1658,9 +1667,14 @@ static void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 #ifdef EMSCRIPTEN
+	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
+		|| !strcmp (server, va("127.0.0.1:%i", PORT_SERVER)))) {
+		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
+	}
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
 		&& addr.type == NA_LOOPBACK && cgvm) {
 		cls.state = CA_PRIMED;
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
 	}
 #endif
@@ -2691,11 +2705,12 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 
 	
 	// check if server response is from a specific list
-	
-	for (i = 0; i < MAX_OTHER_SERVERS; i++) {
-		if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
-			servers = &cls.localServers[0];
-			max = &cls.numlocalservers;
+	if(cls.pingUpdateSource == AS_LOCAL) {
+		for (i = 0; i < MAX_OTHER_SERVERS; i++) {
+			if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
+				servers = &cls.localServers[0];
+				max = &cls.numlocalservers;
+			}
 		}
 	}
 
@@ -3211,20 +3226,22 @@ void CL_Frame( int msec ) {
 		}
 	}
 	
-	if((uivm || cgvm) && secondTimer > 20) {
-		secondTimer = 0;
-		CL_UpdateShader();
-	} else {
-		secondTimer += msec;
-	}
-	if((uivm || cgvm) && thirdTimer > 100) {
-		thirdTimer = 0;
-		if(cls.soundRegistered) { // && !cls.firstClick) {
-			CL_UpdateSound();
+	if(cl_lazyLoad->integer > 0) {
+		if((uivm || cgvm) && secondTimer > 20) {
+			secondTimer = 0;
+			CL_UpdateShader();
+		} else {
+			secondTimer += msec;
 		}
-		CL_UpdateModel();
-	} else {
-		thirdTimer += msec;
+		if((uivm || cgvm) && thirdTimer > 100) {
+			thirdTimer = 0;
+			if(cls.soundRegistered) { // && !cls.firstClick) {
+				CL_UpdateSound();
+			}
+			CL_UpdateModel();
+		} else {
+			thirdTimer += msec;
+		}
 	}
 #endif
 
@@ -4082,6 +4099,8 @@ void CL_Init( void ) {
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
 
+	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/getpk3bymapname.php/%1", CVAR_ARCHIVE_ND );
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
@@ -4695,6 +4714,7 @@ static void CL_LocalServers_f( void ) {
 			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 72 " );
 			cls.localServers[i].visible = qfalse;
 		} else if (NET_CompareAdr(&to, &cls.localServers[i].adr)) {
+			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
 			// send over loopback instead
 			to.type = NA_LOOPBACK;
 			NET_SendPacket( NS_CLIENT, n, message, &to );

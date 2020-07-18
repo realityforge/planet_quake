@@ -375,12 +375,11 @@ void S_memoryLoad( sfx_t *sfx ) {
 	if(sfx->inMemory || time - sfx->lastTimeUsed < 1000) {
 		return;
 	}
-	ri.Cvar_Set( "snd_loadingSound", sfx->soundName );	
 	sfx->lastTimeUsed = time;
 
 	// load the sound file
 	if ( !S_LoadSound ( sfx ) ) {
-	//	Com_Printf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
+		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
 	} else {
@@ -389,7 +388,6 @@ void S_memoryLoad( sfx_t *sfx ) {
 		sfx->inMemory = qtrue;
 	}
 	
-	ri.Cvar_Set( "snd_loadingSound", "" );	
 }
 
 //=============================================================================
