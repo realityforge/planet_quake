@@ -1994,8 +1994,8 @@ static qboolean ParseShader( const char **text )
 			if ( !ParseStage( &stages[s], text ) )
 			{
 				return qfalse;
-			} else
-			  stages[s].active = qtrue;
+			}
+		  stages[s].active = qtrue;
 			s++;
 
 			continue;
