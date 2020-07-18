@@ -1460,8 +1460,8 @@ void SV_DemoStartPlayback(void)
 					savedBotMinPlayers = Cvar_VariableIntegerValue("bot_minplayers");
 
 				// automatically adjusting sv_democlients, sv_maxclients and bot_minplayers
-				Cvar_SetValue("sv_democlients", clients);
-				Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
+				//Cvar_SetValue("sv_democlients", clients);
+				//Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
 				/* BUGGY makes a dedicated server crash
 				Cvar_Get( "sv_maxclients", "8", 0 );
 				sv_maxclients->modified = qfalse;
@@ -1582,6 +1582,7 @@ void SV_DemoStartPlayback(void)
 
 	// Checking if all initial conditions from the demo are met (map, sv_fps, gametype, servertime, etc...)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
+	/*
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
 	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
@@ -1628,7 +1629,7 @@ void SV_DemoStartPlayback(void)
 			SV_DemoReadFrame(); // run a few frames to settle things out
 		}
 	}
-
+	*/
 
 
 	// Initialize our stuff

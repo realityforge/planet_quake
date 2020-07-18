@@ -669,7 +669,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 ;
 
-	Sys_SetStatus( "Loading map %s", mapname );
+	Sys_SetStatus( va("Loading map %s", mapname) );
 	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
@@ -841,7 +841,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	Com_Printf ("-----------------------------------\n");
 	
-	Sys_SetStatus( "Running map %s", mapname );
+	Sys_SetStatus( va("Running map %s", mapname) );
 	startingServer = qfalse;
 
 	// start recording a demo
@@ -968,6 +968,12 @@ void SV_Init( void )
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
 #endif
 
+	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
+	sv_democlients = Cvar_Get ("sv_democlients", "0", CVAR_ROM );
+	sv_autoDemo = Cvar_Get ("sv_autoDemo", "0", CVAR_ARCHIVE );
+	cl_freezeDemo = Cvar_Get("cl_freezeDemo", "0", CVAR_TEMP); // port from client-side to freeze server-side demos
+	sv_demoTolerant = Cvar_Get ("sv_demoTolerant", "0", CVAR_ARCHIVE );
+
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
 
 	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
@@ -1042,6 +1048,8 @@ void SV_Shutdown( const char *finalmsg ) {
 		return;
 	}
 
+	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
+
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
@@ -1061,8 +1069,6 @@ void SV_Shutdown( const char *finalmsg ) {
 		return;
 	}
 #endif
-
-	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 
 	NET_LeaveMulticast6();
 
