@@ -34,6 +34,7 @@ cvar_t	*cl_renderer;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
+cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
 
 cvar_t	*cl_timeout;
 cvar_t	*cl_autoNudge;
@@ -4019,6 +4020,7 @@ CL_Init
 */
 void CL_Init( void ) {
 	const char *s;
+	int index;
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
@@ -4066,6 +4068,12 @@ void CL_Init( void ) {
 		CVAR_ARCHIVE );
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
+
+	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_INIT);
+	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_INIT);
+	
+	for ( index = 2; index < MAX_MASTER_SERVERS; index++ )
+		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
@@ -4211,29 +4219,6 @@ void CL_Init( void ) {
 		
 	}
 	*/
-	//LAN_AddServer(AS_LOCAL, "master.okayplay.com", "207.246.91.235:27950");
-	{
-		// TODO: make this a cvar option like master servers
-		netadr_t addr;
-		NET_StringToAdr( "207.246.91.235:27950", &addr, NA_IP );
-		//hash_insert(&addr);
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			"master.okayplay.com", sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qfalse;
-		cls.numlocalservers++;
-
-		NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &addr, NA_UNSPEC );
-		addr.type = NA_IP;
-		addr.port = BigShort((short)PORT_SERVER);
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			"localhost", sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qtrue;
-		cls.numlocalservers++;
-	}
 	
 #endif
 }
@@ -4703,6 +4688,25 @@ static void CL_LocalServers_f( void ) {
 	n = (int)strlen( message );
 
 #ifdef EMSCRIPTEN
+	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
+		netadr_t addr;
+		qboolean found = qfalse;
+		if(!cl_master[i]->string[0]) continue;
+		NET_StringToAdr( cl_master[i]->string, &addr, NA_UNSPEC );
+		for(j = 0; j < cls.numlocalservers; j++) {
+			if ( NET_CompareAdr( &cls.localServers[j].adr, &addr ) ) {
+				found = qtrue;
+			}
+		}
+		if(found) continue;
+		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
+		Q_strncpyz(
+			cls.localServers[cls.numlocalservers].hostName,
+			cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
+		cls.localServers[cls.numlocalservers].visible = qfalse;
+		cls.numlocalservers++;
+	}
+
 	// emulate localhost
 	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
 	to.type = NA_IP;

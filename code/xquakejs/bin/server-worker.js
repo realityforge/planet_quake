@@ -15,7 +15,9 @@ quake3e.printErr = function (...args) {
     || args[0].includes('Frame Setup')
     || args[0].includes('Shutdown')
     || args[0].includes('DEMO:')
-    || args[0].includes('Game Initialization')))
+    || args[0].includes('Game Initialization')
+    || args[0].includes('Runtime error:')
+    || args[0].includes('AAS initialized')))
     console.error.apply(console, ['DedServer: '].concat(args))
   else
     console.log.apply(console, ['DedServer: '].concat(args))

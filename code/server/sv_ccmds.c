@@ -273,6 +273,12 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
+	// stop any demos
+	if (sv.demoState == DS_RECORDING)
+		SV_DemoStopRecord();
+	if (sv.demoState == DS_PLAYBACK)
+		SV_DemoStopPlayback();
+
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
 	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified ) {
@@ -285,12 +291,6 @@ static void SV_MapRestart_f( void ) {
 		SV_SpawnServer( mapname, qfalse );
 		return;
 	}
-
-	// stop any demos
-	if (sv.demoState == DS_RECORDING)
-		SV_DemoStopRecord();
-	if (sv.demoState == DS_PLAYBACK)
-		SV_DemoStopPlayback();
 
 	// toggle the server bit so clients can detect that a
 	// map_restart has happened
@@ -372,6 +372,7 @@ static void SV_MapRestart_f( void ) {
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
 	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	SV_BotFrame( sv.time );
 	svs.time += 100;
 	
 	

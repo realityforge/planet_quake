@@ -269,8 +269,6 @@ SV_LocateGameData
 */
 static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGameClient ) {
 
-	Com_Printf("LoacteGameData: locating data\n");
-
 	if ( !gvm->entryPoint ) {
 		if ( numGEntities > MAX_GENTITIES ) {
 			Com_Error( ERR_DROP, "%s: bad entity count %i", __func__, numGEntities );
@@ -1060,18 +1058,22 @@ void SV_RestartGameProgs( void ) {
 	if ( !gvm ) {
 		return;
 	}
-	VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
+	
+	SV_ShutdownGameProgs();
+	//VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
-	gvm = VM_Restart( gvm );
+	//gvm = VM_Restart( gvm );
+	SV_InitGameProgs();
+	//gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
 	if ( !gvm ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}
 
-	SV_InitGameVM( qtrue );
+	//SV_InitGameVM( qfalse );
 
 	// load userinfo filters
-	SV_LoadFilters( sv_filter->string );
+	//SV_LoadFilters( sv_filter->string );
 }
 
 
