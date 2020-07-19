@@ -1064,16 +1064,16 @@ void SV_RestartGameProgs( void ) {
 
 	// do a restart instead of a free
 	//gvm = VM_Restart( gvm );
-	SV_InitGameProgs();
-	//gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
+	//SV_InitGameProgs();
+	gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
 	if ( !gvm ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}
 
-	//SV_InitGameVM( qfalse );
+	SV_InitGameVM( qfalse );
 
 	// load userinfo filters
-	//SV_LoadFilters( sv_filter->string );
+	SV_LoadFilters( sv_filter->string );
 }
 
 
