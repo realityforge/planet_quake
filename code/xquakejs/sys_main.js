@@ -122,7 +122,7 @@ var LibrarySysMain = {
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
-            '+set', 'net_socksPort', SYSM.isSecured('') ? '443' : '1081'
+            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : '1081'
           ])
         }
         if (!args.includes('sv_dlURL')) {
@@ -158,8 +158,13 @@ var LibrarySysMain = {
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
     isSecured: function (socksServer) {
+      var startup = SYSM.getQueryCommands()
+      var startSocks = startup.indexOf('net_socksServer')
       return (window.location.search.includes('https://')
-        || window.location.protocol.includes('https'))
+        || window.location.protocol.includes('https')
+        || socksServer.includes('wss:')
+        || socksServer.includes('https:')
+        || (startSocks > -1 && startup[startSocks+1].includes('wss:')))
         && !socksServer.includes('http:')
         && !socksServer.includes('ws:')
         && !window.location.search.includes('ws://')
