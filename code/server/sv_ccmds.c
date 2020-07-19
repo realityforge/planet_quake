@@ -326,6 +326,7 @@ static void SV_MapRestart_f( void ) {
 	{
 		sv.time += 100;
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		SV_BotFrame( sv.time );
 	}
 
 	sv.state = SS_GAME;
@@ -372,7 +373,6 @@ static void SV_MapRestart_f( void ) {
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
 	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-	SV_BotFrame( sv.time );
 	svs.time += 100;
 	
 	
