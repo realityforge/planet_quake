@@ -344,8 +344,11 @@ static void SV_MapRestart_f( void ) {
 		if ( client->netchan.remoteAddress.type == NA_BOT ) {
 			// drop bots on map restart because they will be re-added by arena config
 			// TODO: only drop bots on single-player mode?
-			SV_DropClient( client, qtrue );
-			continue;
+			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
+				SV_DropClient( client, qtrue );
+				continue;
+			}
+			isBot = qtrue;
 		} else {
 			isBot = qfalse;
 		}
