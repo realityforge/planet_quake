@@ -3662,6 +3662,12 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
 
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qtrue;
+    }
+
 		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
@@ -3672,6 +3678,11 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     }
 
 		sh = FinishShader();
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qfalse;
+    }
 		return sh;
 	}
 
