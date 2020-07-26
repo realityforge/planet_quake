@@ -3079,8 +3079,10 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
+#ifndef EMSCRIPTEN
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
+#endif
 
 #ifndef DEDICATED
 		// Reparse pure paks and update cvars before FS startup

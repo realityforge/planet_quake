@@ -3482,6 +3482,8 @@ static shader_t *FinishShader( void ) {
 
 	// determine which vertex attributes this shader needs
 	ComputeVertexAttribs();
+  
+  ri.Printf(PRINT_DEVELOPER, "FinishShader: testing %s %i\n", shader.name, mapShaders);
 
 	return GeneratePermanentShader();
 }
@@ -3632,7 +3634,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       &&	!Q_stricmp(sh->name, strippedName)
-      &&  !mapShaders ) {
+      &&  (!mapShaders) ) {
 			// match found
 			return sh;
 		}
@@ -3659,7 +3661,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( r_printShaders->integer ) {
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
-  
+
 		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;

@@ -245,7 +245,7 @@ void R_UpdateModel( const char *name )
 	
 	RE_RegisterModel(name);
 	
-	updateModels = r_lazyLoad->integer < 2;;
+	updateModels = r_lazyLoad->integer < 2;
 }
 
 /*
