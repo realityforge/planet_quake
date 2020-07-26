@@ -87,7 +87,7 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   //   updated one because of no overlapping. So written files are stored
   //   here so that if it writes the file the first time, then it will make
   //   an exception and write the files again.
-  var overwriteFirstTime = []
+  var overwriteFirstTime = Array.isArray(noOverwrite) ? noOverwrite : []
   // TODO: copy non-pk3 files first, in case of unpure modes
   var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*.pk3', nocase: true})
   var skipped = 0

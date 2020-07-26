@@ -182,6 +182,7 @@ var LibrarySysInput = {
       }
     },
     InputPushFocus: function (evt) {
+      var event = SYSI.inputHeap
       HEAP32[((event+0)>>2)]=0x200;
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
       HEAP32[((event+8)>>2)]=0; // windowid

@@ -837,7 +837,7 @@ async function repackGames() {
           [0, stepCounter, stepTotal, STEPS['source']],
           [1, 0, 2, 'Sourcing files']
         ])
-        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite)
+        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite ? [] : false)
         stepCounter++
       }
       if(!noGraph) {

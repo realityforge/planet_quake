@@ -89,7 +89,7 @@ var LibrarySysFiles = {
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
-          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt|gfx\//i)
+          || file.name.match(/sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
           || file.name.match(new RegExp('\/levelshots\/' + mapname, 'i'))
           || file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
@@ -104,8 +104,8 @@ var LibrarySysFiles = {
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
-          SYSF.index[keys[i]].downloading = true
-          SYSN.downloadLazy.push(file.name)
+          //SYSF.index[keys[i]].downloading = true
+          //SYSN.downloadLazy.push(file.name)
         } else {
         }
       }

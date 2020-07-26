@@ -158,13 +158,10 @@ var LibrarySysMain = {
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
     isSecured: function (socksServer) {
-      var startup = SYSM.getQueryCommands()
-      var startSocks = startup.indexOf('net_socksServer')
       return (window.location.search.includes('https://')
         || window.location.protocol.includes('https')
         || socksServer.includes('wss:')
-        || socksServer.includes('https:')
-        || (startSocks > -1 && startup[startSocks+1].includes('wss:')))
+        || socksServer.includes('https:'))
         && !socksServer.includes('http:')
         && !socksServer.includes('ws:')
         && !window.location.search.includes('ws://')

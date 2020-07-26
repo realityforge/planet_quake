@@ -3063,7 +3063,9 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
+#ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
+#endif
 		}
 #endif
 
@@ -4010,7 +4012,7 @@ void Com_Frame_After_Startup() {
 		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
 	} else {
 		VM_Forced_Unload_Start();
-		CL_FlushMemory();
+		//CL_FlushMemory();
 		VM_Forced_Unload_Done();
 		Com_GameRestart_After_Restart();
 	}
