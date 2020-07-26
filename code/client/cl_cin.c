@@ -194,9 +194,9 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
     return result;
   
   COM_StripExtension(name, altName, sizeof(altName));
-  if((result = CIN_PlayOGM(va("%s.ogm", name), x, y, w, h, systemBits)))
+  if((result = CIN_PlayOGM(va("%s.ogm", altName), x, y, w, h, systemBits)))
     return result;
-  if((result = CIN_PlayOGM(va("%s.ogv", name), x, y, w, h, systemBits)))
+  if((result = CIN_PlayOGM(va("%s.ogv", altName), x, y, w, h, systemBits)))
     return result;
   return 0;
 }

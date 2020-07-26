@@ -39,8 +39,8 @@ RUN \
   cp -R /tmp/build/planet_quake/code/xquakejs/bin/* ~/quakejs/bin && \
   cp -R /tmp/build/planet_quake/code/xquakejs/lib/* ~/quakejs/lib && \
   cp /tmp/build/planet_quake/package.json ~/quakejs && \
-  cp /tmp/build/planet_quake/build/release-js-js/planet_quake.* ~/quakejs/bin && \
-  cp /tmp/build/planet_quake/build/release-linux-x86_64/planet_quake.ded.x64 ~/planet_quake
+  cp /tmp/build/planet_quake/build/release-js-js/quake3e.* ~/quakejs/bin && \
+  cp /tmp/build/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 ~/planet_quake
 
 #  cp /home/ioq3srv/planet_quake/quakejs/bin/q3eded.service /etc/systemd/system && \
 FROM node:12.15-slim AS server

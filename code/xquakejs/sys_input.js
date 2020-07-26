@@ -160,6 +160,41 @@ var LibrarySysInput = {
       }
       Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[6], event)
     },
+    // Source: https://stackoverflow.com/a/18717721/8037972
+    InputPushMoved: function (evt) {
+      if (evt.toElement === null && evt.relatedTarget === null) {
+        //if outside the window...
+        SYSI.interval = setInterval(function () {
+          //do something with evt.screenX/evt.screenY
+        }, 250);
+      } else {
+        //if inside the window...
+        clearInterval(SYSI.interval);
+        var event = SYSI.inputHeap
+        HEAP32[((event+0)>>2)]=0x200;
+        HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
+        HEAP32[((event+8)>>2)]=0; // windowid
+        HEAP32[((event+12)>>2)]=0x004; // event id
+        // padding?
+        HEAP32[((event+16)>>2)]=window.screenX || window.screenLeft;
+        HEAP32[((event+20)>>2)]=window.screenY || window.screenTop;
+        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
+      }
+    },
+    InputPushFocus: function (evt) {
+      HEAP32[((event+0)>>2)]=0x200;
+      HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
+      HEAP32[((event+8)>>2)]=0; // windowid
+      if (document.visibilityState === 'visible') {
+        HEAP32[((event+12)>>2)]=0x00C; // event id
+      } else {
+        HEAP32[((event+12)>>2)]=0x00D; // event id
+      }
+      // padding?
+      HEAP32[((event+16)>>2)]=0;
+      HEAP32[((event+20)>>2)]=0;
+      Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
+    },
     InputInit: function () {
       // TODO: clear JSEvents.eventHandlers
       Browser.safeCallback(_IN_PushInit)(SYSI.inputHeap)
@@ -175,6 +210,9 @@ var LibrarySysInput = {
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
+      
+      document.addEventListener("visibilitychange", SYSI.InputPushFocus, false);
+      window.addEventListener("mouseout", SYSI.InputPushMoved, false);
       /*
       let nipple handle touch events
       Module['canvas'].addEventListener('touchstart', SYSI.InputPushTouchEvent, false)

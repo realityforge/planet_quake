@@ -22,7 +22,6 @@ To see a live demo, check out https://quake.games or http://www.quakejs.com
 Some of the major features currently implemented are:
 
   * A working repack script to convert game assets to be more web compatible
-  * Deferred (lazy) loading of all game content, entities, models, textures, etc
   * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
   * A content server (NodeJS + express) to repack and live-reload the game as you develop
   * A SOCKS5 server to convert web-socket connections to UDP and connect to any standard Quake 3 server
@@ -31,7 +30,7 @@ Some of the major features currently implemented are:
   * PNG support
   * Docker support
   * Removed SDL inputs, touch support on mobile works
-  * New cl_lazyLoad, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
+  * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network.
   * Many, many bug fixes

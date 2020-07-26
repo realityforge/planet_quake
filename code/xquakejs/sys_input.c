@@ -547,6 +547,25 @@ void IN_PushTouchFinger(SDL_TouchFingerEvent e)
 	}
 }
 
+void IN_PushWindowEvent(SDL_WindowEvent e)
+{
+	switch( e.event )
+	{
+		case SDL_WINDOWEVENT_MOVED:
+			if ( gw_active && !glw_state.isFullscreen ) {
+				Cvar_SetIntegerValue( "vid_xpos", e.data1 );
+				Cvar_SetIntegerValue( "vid_ypos", e.data2 );
+			}
+			break;
+		case SDL_WINDOWEVENT_MINIMIZED:		re.SyncRender();
+											gw_active = qfalse; gw_minimized = qtrue; break;
+		case SDL_WINDOWEVENT_RESTORED:
+		case SDL_WINDOWEVENT_MAXIMIZED:		gw_active = qtrue;  gw_minimized = qfalse; break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:	gw_active = qfalse; break;
+		case SDL_WINDOWEVENT_FOCUS_GAINED:	gw_active = qtrue;  gw_minimized = qfalse; break;
+	}
+}
+
 void IN_PushEvent(int type, int *event)
 {
 	in_eventTime = Sys_Milliseconds();
@@ -572,6 +591,9 @@ void IN_PushEvent(int type, int *event)
 	if(type == (int)&IN_PushTouchFinger) {
 		IN_PushTouchFinger(*(SDL_TouchFingerEvent *)event);
 	}
+	if(type == (int)&IN_PushWindowEvent) {
+		IN_PushWindowEvent(*(SDL_WindowEvent *)event);
+	}
 }
 
 void IN_PushInit(int *inputInterface)
@@ -583,7 +605,9 @@ void IN_PushInit(int *inputInterface)
 	inputInterface[4] = (int)&IN_PushMouseButton;
 	inputInterface[5] = (int)&IN_PushMouseWheel;
 	inputInterface[6] = (int)&IN_PushTouchFinger;
+	inputInterface[7] = (int)&IN_PushWindowEvent;
 }
+
 
 /*
 ===============
@@ -604,6 +628,7 @@ IN_Frame
 ===============
 */
 qboolean clickChanged = qfalse;
+qboolean focusChanged = qfalse;
 void IN_Frame( void )
 {
 	qboolean loading;
