@@ -308,6 +308,8 @@ ifeq ($(PLATFORM),darwin)
   HAVE_VM_COMPILED = 0
   USE_SDL = 1
   USE_LOCAL_HEADERS = 0
+  USE_CODEC_OPUS=0
+  USE_CODEC_VORBIS=0
   LIBS = -framework Cocoa
   CLIENT_LIBS=
   RENDERER_LIBS=
@@ -334,11 +336,9 @@ ifeq ($(PLATFORM),darwin)
 
   ifeq ($(ARCH),ppc)
     BASE_CFLAGS += -arch ppc
-    ALTIVEC_CFLAGS = -faltivec
   endif
   ifeq ($(ARCH),ppc64)
     BASE_CFLAGS += -arch ppc64
-    ALTIVEC_CFLAGS = -faltivec
   endif
   ifeq ($(ARCH),x86)
     ARCHEXT = .x86
@@ -528,6 +528,7 @@ ifdef MINGW
 
   ifeq ($(USE_CODEC_VORBIS),1)
     CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
+    BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
   endif
 
   ifeq ($(USE_CURL),1)
@@ -700,18 +701,10 @@ endif
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
-		-DUSE_CODEC_VORBIS=1
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include
 
-ifneq ($(USE_CODEC_OPUS),0)
-  BASE_CFLAGS += \
-		-DUSE_CODEC_OPUS \
-    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
-		-I$(OPUSDIR)/include \
-		-I$(OPUSDIR)/celt \
-		-I$(OPUSDIR)/silk \
-    -I$(OPUSDIR)/silk/float \
-		-I$(OPUSFILEDIR)/include 
+ifneq ($(USE_CODEC_VORBIS),0)
+  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
 endif
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
@@ -734,6 +727,17 @@ endif
     -s ASSERTIONS=0 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
     -fPIC
+
+ifneq ($(USE_CODEC_OPUS),0)
+  RELEASE_CFLAGS += \
+		-DUSE_CODEC_OPUS \
+    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
+		-I$(OPUSDIR)/include \
+		-I$(OPUSDIR)/celt \
+		-I$(OPUSDIR)/silk \
+    -I$(OPUSDIR)/silk/float \
+		-I$(OPUSFILEDIR)/include 
+endif
 
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1

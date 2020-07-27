@@ -90,6 +90,7 @@ cvar_t	*com_skipIdLogo;
 cvar_t	*cl_paused;
 cvar_t	*cl_packetdelay;
 cvar_t	*com_cl_running;
+cvar_t  *com_cl_shownet;
 #endif
 
 cvar_t	*sv_paused;
@@ -3709,6 +3710,7 @@ void Com_Init_After_Filesystem( void ) {
 	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
 	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
 	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
+	com_cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
 #endif
 
 	sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);

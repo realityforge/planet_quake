@@ -39,6 +39,7 @@ theora:
  * theora doxygen docs (1.0beta1)
 */
 
+#ifdef USE_CODEC_VORBIS
 #include "cl_cin.h"
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
@@ -1116,3 +1117,5 @@ int CIN_PlayOGM( const char *name, int x, int y, int w, int h, int systemBits )
 
   return currentHandle;
 }
+
+#endif

@@ -9,7 +9,9 @@ cin_cache		cinTable[MAX_VIDEO_HANDLES];
 int				currentHandle = -1;
 int				CL_handle = -1;
 
+#ifdef USE_CODEC_VORBIS
 extern void Cin_OGM_Shutdown(void);
+#endif
 /******************************************************************************
 *
 * Function:		
@@ -63,11 +65,13 @@ void CIN_Shutdown( void ) {
 		CL_handle = -1;
 	}
 	cinTable[currentHandle].fileName[0] = '\0';
+#ifdef USE_CODEC_VORBIS
   if (cinTable[currentHandle].fileType == FT_OGM)
   {
     Cin_OGM_Shutdown();
     cinTable[currentHandle].buf = NULL;
   }
+#endif
 	currentHandle = -1;
 }
 
@@ -107,7 +111,9 @@ Fetch and decompress the pending frame
 ==================
 */
 extern e_status CIN_RunROQ(int handle);
+#ifdef USE_CODEC_VORBIS
 extern e_status CIN_RunOGM(int handle);
+#endif
 
 
 e_status CIN_RunCinematic (int handle)
@@ -138,10 +144,12 @@ e_status CIN_RunCinematic (int handle)
 		return cinTable[currentHandle].status;
 	}
 
+#ifdef USE_CODEC_VORBIS
 	if (cinTable[currentHandle].fileType == FT_OGM)
 	{
 		return CIN_RunOGM(handle);
 	}
+#endif
   
   if(CIN_RunROQ(handle)) {
     
@@ -153,7 +161,9 @@ e_status CIN_RunCinematic (int handle)
 CIN_PlayCinematic
 ==================
 */
+#ifdef USE_CODEC_VORBIS
 extern int CIN_PlayOGM(const char *arg, int x, int y, int w, int h, int systemBits );
+#endif
 extern int CIN_PlayROQ(const char *arg, int x, int y, int w, int h, int systemBits );
 
 int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBits ) {
@@ -186,18 +196,22 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 	cin.currentHandle = currentHandle;
 
   ext = COM_GetExtension(name);
+#ifdef USE_CODEC_VORBIS
   if (!Q_stricmp(ext, "ogm") || !Q_stricmp(ext, "ogv"))
   {
     return CIN_PlayOGM(name, x, y, w, h, systemBits);
   }
+#endif
   if((result = CIN_PlayROQ(name, x, y, w, h, systemBits)))
     return result;
   
   COM_StripExtension(name, altName, sizeof(altName));
+#ifdef USE_CODEC_VORBIS
   if((result = CIN_PlayOGM(va("%s.ogm", altName), x, y, w, h, systemBits)))
     return result;
   if((result = CIN_PlayOGM(va("%s.ogv", altName), x, y, w, h, systemBits)))
     return result;
+#endif
   return 0;
 }
 
