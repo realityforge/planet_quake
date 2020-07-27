@@ -3671,8 +3671,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
-		} else if(!mapShaders && shader.stages[0]->active == qfalse) {
-      shader.defaultShader = qtrue;
     } else {
       shader.defaultShader = qfalse;
     }
