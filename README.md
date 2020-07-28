@@ -31,13 +31,18 @@ Some of the major features currently implemented are:
   * Docker support
   * Removed SDL inputs, touch support on mobile works
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
-  * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
+  * Offline mode for local and LAN games, just visit quake.games and TODO: run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network.
   * Many, many bug fixes
 
 Coming soon!
   * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Drag and drop for sharing game content with the browser
+  * Shader pallets for pre-rendering colors and changing the theme of maps
+  * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
+  * LOD (level of detail) based compression, loading different levels of detail in models and images
+  * Brotli compression for game content from server
   * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Multi-view, seamless Demo playback, instant replay, Demo voting and spectating
   * Synchronized server/AI for offline and connection interruptions

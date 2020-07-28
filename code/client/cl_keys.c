@@ -611,7 +611,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvm)
+				VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
@@ -644,7 +645,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 			return;
 		}
-		else if(cls.postgame == qtrue) {
+		else if(cls.postgame == qtrue && cgvm) {
 			VM_Call( cgvm, 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
 			return;
 		}
