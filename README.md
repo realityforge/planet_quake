@@ -29,29 +29,33 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
-  * Removed SDL inputs, touch support on mobile works
+  * Removed SDL inputs, touch support on mobile works. TODO: fix mouse wheel in console, keys in console might not work after restarting renderer, GLimp_Init() called multiple times?
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and TODO: run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
-  * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network.
+  * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable.
   * Many, many bug fixes
 
 Coming soon!
   * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
-  * Drag and drop for sharing game content with the browser
+  * Multi-view, seamless Demo playback, instant replay, Demo voting and spectating
+  * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Shader pallets for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
   * LOD (level of detail) based compression, loading different levels of detail in models and images
   * Brotli compression for game content from server
+  * Asynchronous rendering for portals, mirrors, demos, videos, etc
+  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface
+  * Ported IQM and MD5 from spearmint engine
   * Multiple QVM loader, multiple map loader in parallel with teleport switch
-  * Multi-view, seamless Demo playback, instant replay, Demo voting and spectating
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
-  * .cfg file uploads/local imports
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
+  * Many BSP formats support and cross compatibility with other game content like Call of Duty and Savage
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
+  * Server moderator permissions, admins can set sv_modCmds and sv_modCvars to allow moderator passwords modpassword1-3 to only change specific settings, like maps, bans, allowing voting, but not change games like fs_basepath and fs_game.
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you

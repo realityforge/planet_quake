@@ -206,14 +206,14 @@ var LibrarySysInput = {
       window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
-      
+      window.addEventListener("mouseout", SYSI.InputPushMoved, false)
+
       Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
-      Module['canvas'].addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
       
-      document.addEventListener("visibilitychange", SYSI.InputPushFocus, false);
-      window.addEventListener("mouseout", SYSI.InputPushMoved, false);
+      document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
+      document.addEventListener("visibilitychange", SYSI.InputPushFocus, false)
       /*
       let nipple handle touch events
       Module['canvas'].addEventListener('touchstart', SYSI.InputPushTouchEvent, false)
