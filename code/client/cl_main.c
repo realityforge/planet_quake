@@ -688,7 +688,7 @@ static void CL_DemoCompleted( void ) {
 	CL_NextDemo();
 
 #else
-	Com_Printf("DemoCompleted: done\n");
+	Com_Printf("DEMO: DemoCompleted: done\n");
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
 	} else {

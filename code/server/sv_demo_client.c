@@ -50,7 +50,7 @@ void SV_StopRecord( client_t	*cl ) {
  	cvar_t	*fraglimit;
 
  	if ( !cl->demorecording ) {
- 		Com_Printf ("Not recording a demo for client %i.\n", clientnum);
+ 		Com_Printf ("DEMO: Not recording a demo for client %i.\n", clientnum);
  		return;
  	}
 
@@ -62,19 +62,20 @@ void SV_StopRecord( client_t	*cl ) {
 
 
  	if (!sv_autoRecord->integer) {
- 		Com_Printf ("Stopped demo for client %i.\n", clientnum);
+ 		Com_Printf ("DEMO: Stopped demo for client %i.\n", clientnum);
  	} else {
  		ps = SV_GameClientNum( clientnum );
- 		Com_Printf ("ps->persistant[PERS_SCORE] = %i",ps->persistant[PERS_SCORE]);
+ 		Com_Printf ("DEMO: ps->persistant[PERS_SCORE] = %i\n",ps->persistant[PERS_SCORE]);
  		fraglimit = Cvar_Get("fraglimit", "30", CVAR_SERVERINFO);
- 		if (cl->savedemo || ((ps->pm_type == PM_INTERMISSION || ps->clientNum==clientnum) && ps->persistant[PERS_SCORE]>=(int)(fraglimit->integer*0.9))) {
+ 		if (cl->savedemo || ((ps->pm_type == PM_INTERMISSION || ps->clientNum==clientnum)
+      && ps->persistant[PERS_SCORE]>=(int)(fraglimit->integer*0.9))) {
  			// keep demo
- 			Com_Printf ("Stoprecord: %i: stop\n", clientnum);
-			Com_Printf ("%s's serverside demo was recorded as %s\n", cl->name, cl->demoName);
+ 			Com_Printf ("DEMO: Stoprecord: %i: stop\n", clientnum);
+			Com_Printf ("DEMO: %s's serverside demo was recorded as %s\n", cl->name, cl->demoName);
 			// SV_SendServerCommand(NULL, "print \"%s^7's game was recorded as ^2http:/ /bb.game-host.org/oa/^3%s\n\"", cl->name, cl->demoName);
  		} else {
- 			Com_Printf ("Stoprecord: %i: abort\n", clientnum);
-			FS_HomeRemove(cl->demoName);
+ 			Com_Printf ("DEMO: Stoprecord: %i: abort\n", clientnum);
+			//FS_HomeRemove(cl->demoName);
  		}
  	}
 
@@ -132,7 +133,7 @@ void SV_Record( client_t	*cl, char *s ) {
  	clientnum = cl - svs.clients;
 
  	if ( cl->demorecording ) {
- 		Com_Printf ("Already recording client %i.\n", clientnum);
+ 		Com_Printf ("DEMO: Already recording client %i.\n", clientnum);
  		return;
  	}
 
@@ -179,9 +180,9 @@ void SV_Record( client_t	*cl, char *s ) {
  	// open the demo file
 
  	if (!sv_autoRecord->integer) {
- 		Com_Printf ("recording client %i to %s.\n", clientnum, name);
+ 		Com_Printf ("DEMO: recording client %i to %s.\n", clientnum, name);
  	} else {
- 		Com_Printf ("Record: %i: %s\n", clientnum, name);
+ 		Com_Printf ("DEMO: Record: %i: %s\n", clientnum, name);
  	}
 
  	cl->demofile = FS_FOpenFileWrite( name );

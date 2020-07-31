@@ -182,7 +182,7 @@ typedef struct client_s {
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
 	// serverside demo information
- 	char		demoName[MAX_QPATH];
+ 	char		  demoName[MAX_QPATH];
  	qboolean	demorecording;
  	qboolean	demowaiting;	// don't record until a non-delta message is received
  	fileHandle_t	demofile;

@@ -960,7 +960,7 @@ the wrong gamestate.
 ================
 */
 static void SV_SendClientGameState( client_t *client ) {
-	int			start;
+	int			start, headerBytes;
 	entityState_t nullstate;
 	const svEntity_t *svEnt;
 	msg_t		msg;
@@ -981,6 +981,8 @@ static void SV_SendClientGameState( client_t *client ) {
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 
 	MSG_Init( &msg, msgBuffer, MAX_MSGLEN );
+	headerBytes = msg.cursize;
+
 
 	// NOTE, MRE: all server->client messages now acknowledge
 	// let the client know which reliable clientCommands we have received
@@ -1022,6 +1024,12 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// write the checksum feed
 	MSG_WriteLong( &msg, sv.checksumFeed );
+	
+	if ( client->demorecording && !client->demowaiting) {
+		msg_t copyMsg;
+		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
+ 		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
+ 	}
 
 	// it is important to handle gamestate overflow
 	// but at this stage client can't process any reliable commands
@@ -1038,6 +1046,8 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// deliver this to the client
 	SV_SendMessageToClient( &msg, client );
+	
+	
 }
 
 
@@ -1198,6 +1208,10 @@ SV_BeginDownload_f
 ==================
 */
 static void SV_BeginDownload_f( client_t *cl ) {
+ 	// Stop serverside demo from this client
+  if (sv_autoRecord->integer && cl->demorecording) {
+  	SV_StopRecord( cl );
+ 	}
 
 	// Kill any existing download
 	SV_CloseDownload( cl );

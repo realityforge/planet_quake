@@ -1333,7 +1333,7 @@ void SV_DemoStartRecord(void)
 	Com_Memset(sv.demoEntities, 0, sizeof(sv.demoEntities));
 	Com_Memset(sv.demoPlayerStates, 0, sizeof(sv.demoPlayerStates));
 	SV_DemoWriteFrame();
-	Com_Printf("Recording demo %s.\n", sv.demoName);
+	Com_Printf("DEMO: Recording demo %s.\n", sv.demoName);
 	sv.demoState = DS_RECORDING;
 	Cvar_SetValue("sv_demoState", DS_RECORDING);
 }

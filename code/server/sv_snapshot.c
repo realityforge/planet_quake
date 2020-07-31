@@ -729,8 +729,10 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
 
- 	if ( client->demorecording && !client->demowaiting) {
- 		SV_WriteDemoMessage( client, &msg, headerBytes );
+ 	if ( client->demorecording ) {
+		msg_t copyMsg;
+		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
+ 		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
  		ps = SV_GameClientNum( client - svs.clients);
  		if (ps->pm_type == PM_INTERMISSION) {
  			SV_StopRecord( client );
