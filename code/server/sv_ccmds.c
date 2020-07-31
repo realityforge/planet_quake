@@ -103,7 +103,7 @@ SV_GetPlayerByNum
 Returns the player with idnum from Cmd_Argv(1)
 ==================
 */
-static client_t *SV_GetPlayerByNum( void ) {
+client_t *SV_GetPlayerByNum( void ) {
 	client_t	*cl;
 	int			i;
 	int			idnum;

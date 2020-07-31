@@ -702,6 +702,8 @@ Also called by SV_FinalMessage
 void SV_SendClientSnapshot( client_t *client ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
+	int     headerBytes;
+	playerState_t	*ps;
 
 	// build the snapshot
 	SV_BuildClientSnapshot( client );
@@ -714,6 +716,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
 	msg.allowoverflow = qtrue;
+	headerBytes = msg.cursize;
 
 	// NOTE, MRE: all server->client messages now acknowledge
 	// let the client know which reliable clientCommands we have received

@@ -181,6 +181,15 @@ typedef struct client_s {
 	sharedEntity_t	*gentity;			// SV_GentityNum(clientnum)
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
+	// serverside demo information
+ 	char		demoName[MAX_QPATH];
+ 	qboolean	demorecording;
+ 	qboolean	demowaiting;	// don't record until a non-delta message is received
+ 	fileHandle_t	demofile;
+ 	clientSnapshot_t *olddemoframe;
+ 	qboolean	savedemo; // qtrue iff the demo should be saved in any case (qfalse and sv_autorecord 1 --> the score decides)
+
+
 	// downloading
 	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
 	fileHandle_t	download;			// file being downloaded
@@ -394,7 +403,7 @@ void SV_PrintLocations_f( client_t *client );
 //
 void SV_Heartbeat_f( void );
 client_t *SV_GetPlayerByHandle( void );
-
+client_t *SV_GetPlayerByNum( void );
 //
 // sv_snapshot.c
 //
@@ -429,7 +438,10 @@ void SV_GameSendServerCommand( int clientNum, const char *text );
 // sv_demo_client.c
 //
 void SV_Record( client_t	*cl, char *s );
+void SV_Record_f( void );
 void SV_StopRecord( client_t	*cl );
+void SV_StopRecord_f( void );
+void SV_SaveRecord_f( void );
 void SV_WriteDemoMessage (client_t *cl, msg_t *msg, int headerBytes );
 
 

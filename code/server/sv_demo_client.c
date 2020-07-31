@@ -61,7 +61,7 @@ void SV_StopRecord( client_t	*cl ) {
  	FS_FCloseFile (cl->demofile);
 
 
- 	if (!sv_autorecord->integer) {
+ 	if (!sv_autoRecord->integer) {
  		Com_Printf ("Stopped demo for client %i.\n", clientnum);
  	} else {
  		ps = SV_GameClientNum( clientnum );
@@ -178,7 +178,7 @@ void SV_Record( client_t	*cl, char *s ) {
 
  	// open the demo file
 
- 	if (!sv_autorecord->integer) {
+ 	if (!sv_autoRecord->integer) {
  		Com_Printf ("recording client %i to %s.\n", clientnum, name);
  	} else {
  		Com_Printf ("Record: %i: %s\n", clientnum, name);
