@@ -158,6 +158,8 @@ static void SV_Map_f( void ) {
 	char		expanded[MAX_QPATH];
 	char		mapname[MAX_QPATH];
 	int			len;
+	int			i;
+ 	client_t	*cl;
 
 	map = Cmd_Argv(1);
 	if ( !map || !*map || strlen(map) == 0 ) {
@@ -211,6 +213,14 @@ static void SV_Map_f( void ) {
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+
+	if (sv_autoRecord->integer && svs.initialized) {
+ 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
+ 			if (cl->state >= CS_CONNECTED && cl->demorecording) {
+ 				SV_StopRecord( cl );
+ 			}
+ 		}
+ 	}
 
 	// save the map name here cause on a map restart we reload the q3config.cfg
 	// and thus nuke the arguments of the map command
@@ -1661,6 +1671,9 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
 	Cmd_SetCommandCompletionFunc( "demo_play", SV_CompleteDemoName );
 	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
+  Cmd_AddCommand ("cl_record", SV_Record_f);
+  Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
+  Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
 }
 
 

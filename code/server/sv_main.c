@@ -66,6 +66,7 @@ int serverBansCount = 0;
 cvar_t	*sv_democlients;		// number of slots reserved for playing a demo
 cvar_t	*sv_demoState;
 cvar_t	*sv_autoDemo;
+cvar_t  *sv_autoRecord;
 cvar_t	*cl_freezeDemo; // to freeze server-side demos
 cvar_t	*sv_demoTolerant;
 

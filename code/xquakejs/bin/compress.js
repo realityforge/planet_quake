@@ -93,7 +93,7 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   var skipped = 0
   for(var j = 0; j < notpk3s.length; j++) {
     await progress([[1, j, notpk3s.length, `${notpk3s[j]}`]])
-    if(notpk3s[j].match(/\.pk3/i)) continue
+    if(notpk3s[j].match(/\.pk3$/i)) continue
     var newFile = path.join(outCombined, notpk3s[j])
     mkdirpSync(path.dirname(newFile))
     if(!noOverwrite || !ufs.existsSync(newFile)) {

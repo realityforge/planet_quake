@@ -322,9 +322,11 @@ extern	int serverBansCount;
 
 extern	cvar_t	*sv_demoState;
 extern	cvar_t	*sv_autoDemo;
+extern  cvar_t  *sv_autoRecord;
 extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*sv_demoTolerant;
 extern	cvar_t	*sv_democlients; // number of democlients: this should always be set to 0, and will be automatically adjusted when needed by the demo facility. ATTENTION: if sv_maxclients = sv_democlients then server will be full! sv_democlients consume clients slots even if there are no democlients recorded nor replaying for this slot!
+extern	cvar_t	*sv_autoRecord;
 
 //===========================================================
 
@@ -421,6 +423,15 @@ void		SV_ShutdownGameProgs ( void );
 void		SV_RestartGameProgs( void );
 qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 void SV_GameSendServerCommand( int clientNum, const char *text );
+
+
+//
+// sv_demo_client.c
+//
+void SV_Record( client_t	*cl, char *s );
+void SV_StopRecord( client_t	*cl );
+void SV_WriteDemoMessage (client_t *cl, msg_t *msg, int headerBytes );
+
 
 //
 // sv_demo.c

@@ -1079,6 +1079,14 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	// call the game begin function
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
+	
+	// serverside demo
+ 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT) {
+ 		if (client->demorecording) {
+ 			SV_StopRecord( client );
+ 		}
+ 		SV_Record(client, 0);
+ 	}
 }
 
 

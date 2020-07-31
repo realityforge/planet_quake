@@ -726,6 +726,14 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
 
+ 	if ( client->demorecording && !client->demowaiting) {
+ 		SV_WriteDemoMessage( client, &msg, headerBytes );
+ 		ps = SV_GameClientNum( client - svs.clients);
+ 		if (ps->pm_type == PM_INTERMISSION) {
+ 			SV_StopRecord( client );
+ 		}
+ 	}
+
 	// check for overflow
 	if ( msg.overflowed ) {
 		Com_Printf( "WARNING: msg overflowed for %s\n", client->name );

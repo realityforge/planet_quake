@@ -971,6 +971,7 @@ void SV_Init( void )
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
 	sv_democlients = Cvar_Get ("sv_democlients", "0", CVAR_ROM );
 	sv_autoDemo = Cvar_Get ("sv_autoDemo", "0", CVAR_ARCHIVE );
+	sv_autoRecord = Cvar_Get ("sv_autoRecord", "0", CVAR_ARCHIVE );
 	cl_freezeDemo = Cvar_Get("cl_freezeDemo", "0", CVAR_TEMP); // port from client-side to freeze server-side demos
 	sv_demoTolerant = Cvar_Get ("sv_demoTolerant", "0", CVAR_ARCHIVE );
 
@@ -1020,6 +1021,11 @@ void SV_FinalMessage( const char *message ) {
 	for ( j = 0 ; j < 2 ; j++ ) {
 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
 			if (cl->state >= CS_CONNECTED ) {
+ 				// serverside demo
+  			if (cl->demorecording) {
+  				SV_StopRecord( cl );
+ 				}
+
 				// don't send a disconnect to a local client
 				if ( cl->netchan.remoteAddress.type != NA_LOOPBACK ) {
 					SV_SendServerCommand( cl, "print \"%s\n\"\n", message );
@@ -1044,6 +1050,9 @@ before Sys_Quit or Sys_Error
 ================
 */
 void SV_Shutdown( const char *finalmsg ) {
+	int		i;
+ 	client_t	*cl;
+
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
@@ -1055,6 +1064,13 @@ void SV_Shutdown( const char *finalmsg ) {
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+		
+	for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
+		if (cl->state >= CS_CONNECTED && cl->demorecording) {
+			SV_StopRecord( cl );
+		}
+	}
+
 
 #ifdef EMSCRIPTEN
 	// Local server is "always on"
