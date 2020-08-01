@@ -712,8 +712,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
-		if ( svs.clients[i].state >= CS_CONNECTED
-		 	&& !svs.clients[i].demoClient ) {
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			const char *denied;
 
 			if ( svs.clients[i].netchan.remoteAddress.type == NA_BOT ) {

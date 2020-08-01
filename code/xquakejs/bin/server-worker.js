@@ -58,8 +58,8 @@ quake3e.onRuntimeInitialized = function() {
     '+set', 'sv_motd', 'For instant replays and stuff',
     '+set', 'rconPassword', 'password123!',
     '+set', 'sv_reconnectlimit', '0',
-    '+set', 'sv_autoDemo', '1',
-    '+set', 'sv_autoRecord', '1',
+  //  '+set', 'sv_autoDemo', '1',
+  //  '+set', 'sv_autoRecord', '1',
   //  '+set', 'net_socksEnabled', '0',
   ])
   runIsFirst = true

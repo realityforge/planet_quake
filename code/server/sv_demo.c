@@ -771,6 +771,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 	num = MSG_ReadByte(msg);
 	configstring = MSG_ReadString(msg);
 
+	return;
 	/**** DEMOCLIENTS CONNECTION MANAGEMENT  ****/
 	// This part manages when a client should begin or be dropped based on the configstrings. This is a workaround because begin and disconnect events are managed in the gamecode, so we here use a clever way to know when these events happen (this is based on a careful reading of how work the mechanisms that manage players in a real game, so this should be OK in any case).
 	// Note: this part could also be used in userinfo instead of client configstrings (but since DropClient automatically sets userinfo to null, which is not the case the other way around, this way was preferred)
@@ -1460,8 +1461,8 @@ void SV_DemoStartPlayback(void)
 					savedBotMinPlayers = Cvar_VariableIntegerValue("bot_minplayers");
 
 				// automatically adjusting sv_democlients, sv_maxclients and bot_minplayers
-				Cvar_SetValue("sv_democlients", clients);
-				Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
+				//Cvar_SetValue("sv_democlients", clients);
+				//Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
 				/* BUGGY makes a dedicated server crash
 				Cvar_Get( "sv_maxclients", "8", 0 );
 				sv_maxclients->modified = qfalse;
@@ -1582,6 +1583,7 @@ void SV_DemoStartPlayback(void)
 
 	// Checking if all initial conditions from the demo are met (map, sv_fps, gametype, servertime, etc...)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
+	/*
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
 	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
@@ -1593,7 +1595,7 @@ void SV_DemoStartPlayback(void)
 
 		//Cvar_SetValue("sv_democlients", 0); // necessary to stop the playback, else it will produce an error since the demo has not yet started!
 		keepSaved = qtrue; // Declare that we want to keep the value saved (and we don't want to restore them now, because the demo hasn't started yet!)
-		//SV_DemoStopPlayback(); // Stop the demo playback (reset back any change)
+		SV_DemoStopPlayback(); // Stop the demo playback (reset back any change)
 		sv.demoState = DS_WAITINGPLAYBACK; // Set the status WAITINGPLAYBACK meaning that as soon as the server will be restarted, the next SV_Frame() iteration must reactivate the demo playback
 		Cvar_SetValue("sv_demoState", DS_WAITINGPLAYBACK); // set the cvar too because when restarting the server, all sv.* vars will be destroyed
 		Q_strncpyz(savedPlaybackDemoname, Cmd_Cmd(), MAX_QPATH); // we need to copy the value because since we may spawn a new server (if the demo is played client-side OR if we change fs_game), we will lose all sv. vars
@@ -1621,14 +1623,26 @@ void SV_DemoStartPlayback(void)
 
 		return; // Quit and wait for the next SV_Frame() iteration (when the server/map will have restarted) to retry playing the demo
 
-	} else if ( time < sv.time && keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
+	} else 
+	*/
+	if( !keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
+		keepSaved = qtrue; // Declare that we want to keep the value saved (and we don't want to restore them now, because the demo hasn't started yet!)
+		SV_DemoStopPlayback();
+		sv.demoState = DS_WAITINGPLAYBACK; // Set the status WAITINGPLAYBACK meaning that as soon as the server will be restarted, the next SV_Frame() iteration must reactivate the demo playback
+		Cvar_SetValue("sv_demoState", DS_WAITINGPLAYBACK); // set the cvar too because when restarting the server, all sv.* vars will be destroyed
+		Q_strncpyz(savedPlaybackDemoname, Cmd_Cmd(), MAX_QPATH); // we need to copy the value because since we may spawn a new server (if the demo is played client-side OR if we change fs_game), we will lose all sv. vars
+		Cvar_SetValue("sv_autoDemo", 0); // disable sv_autoDemo else it will start a recording before we can replay a demo (since we restart the map)
+		//Cbuf_ExecuteText(EXEC_NOW, "map_restart\n");
+		Cvar_Set( "sv_cheats", "1" );
+		Cbuf_ExecuteText(EXEC_NOW, va("g_gametype %i\ndevmap %s\n", gametype, map)); // Change gametype and map (using devmap to enable cheats)
+		return;
+	} else if ( time < sv.time && keepSaved ) {
 		int timetoreach = sv.time;
 		sv.time = time;
 		while (sv.time < timetoreach) {
 			SV_DemoReadFrame(); // run a few frames to settle things out
 		}
 	}
-
 
 	// Initialize our stuff
 	Com_Memset(sv.demoEntities, 0, sizeof(sv.demoEntities));
@@ -1653,7 +1667,7 @@ void SV_DemoStartPlayback(void)
 	//free( metadata ); // it seems glibc already frees this pointer automatically since the malloc was removed, if we specify this line we'll get a crash
 
 	// Start reading the first frame
-	Com_Printf("Playing demo %s.\n", sv.demoName); // log that the demo is started here
+	Com_Printf("DEMO: Playing demo %s.\n", sv.demoName); // log that the demo is started here
 	SV_SendServerCommand( NULL, "chat \"^3Demo replay started!\"" ); // send a message to player
 	SV_SendServerCommand( NULL, "cp \"^3Demo replay started!\"" ); // send a centerprint message to player
 	sv.demoState = DS_PLAYBACK; // set state to playback

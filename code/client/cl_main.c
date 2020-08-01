@@ -1289,6 +1289,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
+		cls.state = CA_CONNECTED;
 		if(!dropped && !cls.postgame) {
 			// skip disconnecting and just show the main menu
 			noGameRestart = qtrue;
@@ -3365,9 +3366,6 @@ void CL_Frame( int msec ) {
 	CL_CheckUserinfo();
 
 	// if we haven't gotten a packet in a long time, drop the connection
-#ifdef EMSCRIPTEN
-	if(clc.serverAddress.type != NA_LOOPBACK)
-#endif
 	if ( !clc.demoplaying ) {
 		CL_CheckTimeout();
 	}

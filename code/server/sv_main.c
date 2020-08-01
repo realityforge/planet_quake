@@ -1142,7 +1142,7 @@ static void SV_CheckTimeouts( void ) {
 	zombiepoint = svs.time - 1000 * sv_zombietime->integer;
 
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ) {
-		if ( cl->state == CS_FREE || cl->demoClient ) {
+		if ( cl->state == CS_FREE ) {
 			continue;
 		}
 		// message times may be wrong across a changelevel
