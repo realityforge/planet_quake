@@ -435,7 +435,17 @@ static void Console_Key( int key ) {
 	// command completion
 
 	if (key == K_TAB) {
+		int beforeLength = strlen(g_consoleField.buffer);
 		Field_AutoComplete(&g_consoleField);
+		
+		// try to rcon complete the command
+		if(!com_dedicated->integer
+			&& !Q_stristr(g_consoleField.buffer, "\\rcon")
+			&& beforeLength == strlen(g_consoleField.buffer)) {
+			Cbuf_AddText( va("rcon complete %s\n", g_consoleField.buffer) );
+			Cbuf_Execute();		
+		}
+
 		return;
 	}
 

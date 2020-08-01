@@ -808,7 +808,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	qboolean isBot;
 	int		i;
 
-	if ( drop->state == CS_ZOMBIE ) {
+	if ( drop->state == CS_ZOMBIE || drop->demoClient ) {
 		return;		// already dropped
 	}
 
@@ -1439,7 +1439,7 @@ int SV_SendQueuedMessages( void )
 	{
 		cl = &svs.clients[i];
 
-		if ( cl->state )
+		if ( cl->state && !cl->demoClient )
 		{
 			nextFragT = SV_RateMsec(cl);
 
@@ -1928,7 +1928,8 @@ Also called by bot code
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
 	qboolean bFloodProtect, gameResult;
-	char *ded;
+	char		sv_outputbuf[1024 - 16];
+	int     ded;
 	
 	Cmd_TokenizeString( s );
 	
@@ -1937,19 +1938,23 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
+		redirectAddress = cl->netchan.remoteAddress;
+		Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 		if(Cmd_ExecuteString(s, qtrue)) {
+			Com_EndRedirect();
 			return qtrue;
 		}
 		
 		// in baseq3 game (not cgame or ui) the dedicated flag is used for
 		// say "server:" and other logging bs. hope this is sufficient?
-		ded = Cvar_VariableString("dedicated");
+		ded = com_dedicated->integer;
 		Cvar_Set("dedicated", "0");
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand();
 		}
-		Cvar_Set("dedicated", ded);
+		Cvar_Set("dedicated", va("%i", ded));
+		Com_EndRedirect();
 	}
 
 #endif

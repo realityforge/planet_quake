@@ -1771,6 +1771,7 @@ void CL_Connect_After_Restart( void ) {
 CL_CompleteRcon
 ==================
 */
+qboolean hasRcon = qfalse;
 static void CL_CompleteRcon( char *args, int argNum )
 {
 	int beforeLength;
@@ -1783,7 +1784,7 @@ static void CL_CompleteRcon( char *args, int argNum )
 			Field_CompleteCommand( p, qtrue, qtrue );
 
 		// TODO: execute a \rcon cmdlist
-		if(argNum > 2 && beforeLength == strlen(g_consoleField.buffer)) {
+		if(beforeLength == strlen(g_consoleField.buffer)) {
 			Cbuf_AddText( va("rcon complete %s\n", p) );
 			Cbuf_Execute();
 		}
@@ -4390,10 +4391,15 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	if(autocomplete[0]) {
 		if((NET_CompareAdr(from, &clc.serverAddress)
 			|| (rcon_address.type != NA_BAD && NET_CompareAdr(from, &rcon_address)))) {
+			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon");
 			Field_Clear(&g_consoleField);
-			memcpy(&g_consoleField.buffer, autocomplete, sizeof(g_consoleField.buffer));
+			if(hasRcon) // add rcon back on to autocomplete command
+				memcpy(&g_consoleField.buffer, va("\\rcon %s", autocomplete), sizeof(g_consoleField.buffer));
+			else
+				memcpy(&g_consoleField.buffer, autocomplete, sizeof(g_consoleField.buffer));
 			Field_AutoComplete( &g_consoleField );
-			g_consoleField.cursor = strlen(autocomplete) + 1;
+			g_consoleField.cursor = strlen(g_consoleField.buffer);
+			hasRcon = qfalse;
 		} else
 			Com_Printf( "Rcon: autocomplete dropped\n" );
 		return;

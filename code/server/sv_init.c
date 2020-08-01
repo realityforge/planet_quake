@@ -712,7 +712,8 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
-		if ( svs.clients[i].state >= CS_CONNECTED ) {
+		if ( svs.clients[i].state >= CS_CONNECTED
+		 	&& !svs.clients[i].demoClient ) {
 			const char *denied;
 
 			if ( svs.clients[i].netchan.remoteAddress.type == NA_BOT ) {
@@ -1066,7 +1067,8 @@ void SV_Shutdown( const char *finalmsg ) {
 		SV_DemoStopPlayback();
 		
 	for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
-		if (cl->state >= CS_CONNECTED && cl->demorecording) {
+		if (cl->state >= CS_CONNECTED && cl->demorecording
+			&& !cl->demoClient) {
 			SV_StopRecord( cl );
 		}
 	}

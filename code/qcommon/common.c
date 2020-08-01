@@ -397,6 +397,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	} else {
 		VM_Forced_Unload_Start();
 #ifndef DEDICATED
+#ifdef EMSCRIPTEN
+		if(!com_dedicated->integer)
+#endif
 		CL_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ), qtrue );
 #endif
 		SV_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ) );

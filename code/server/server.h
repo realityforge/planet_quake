@@ -182,6 +182,7 @@ typedef struct client_s {
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
 	// serverside demo information
+	qboolean  demoClient; // is this a demoClient?
  	char		  demoName[MAX_QPATH];
  	qboolean	demorecording;
  	qboolean	demowaiting;	// don't record until a non-delta message is received
@@ -226,7 +227,6 @@ typedef struct client_s {
 	int				oldServerTime;
 	qboolean		csUpdated[MAX_CONFIGSTRINGS];
 	qboolean		compat;
-	qboolean            demoClient; // is this a demoClient?
 
 	// flood protection
 	rateLimit_t		cmd_rate;
@@ -341,6 +341,7 @@ extern	cvar_t	*sv_autoRecord;
 //
 // sv_main.c
 //
+extern netadr_t redirectAddress;
 qboolean SVC_RateLimit( rateLimit_t *bucket, int burst, int period );
 qboolean SVC_RateLimitAddress( const netadr_t *from, int burst, int period );
 void SVC_RateRestoreBurstAddress( const netadr_t *from, int burst, int period );
@@ -355,7 +356,7 @@ void SV_RemoveOperatorCommands( void );
 
 void SV_MasterShutdown( void );
 int SV_RateMsec( const client_t *client );
-
+void SV_FlushRedirect( const char *outputbuf );
 
 //
 // sv_init.c

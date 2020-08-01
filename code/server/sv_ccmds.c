@@ -216,7 +216,8 @@ static void SV_Map_f( void ) {
 
 	if (sv_autoRecord->integer && svs.initialized) {
  		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
- 			if (cl->state >= CS_CONNECTED && cl->demorecording) {
+ 			if (cl->state >= CS_CONNECTED && cl->demorecording
+				&& !cl->demoClient) {
  				SV_StopRecord( cl );
  			}
  		}

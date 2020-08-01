@@ -820,9 +820,9 @@ static void SVC_Info( const netadr_t *from ) {
 SV_FlushRedirect
 ================
 */
-static netadr_t redirectAddress; // for rcon return messages
+netadr_t redirectAddress; // for rcon return messages
 
-static void SV_FlushRedirect( const char *outputbuf )
+void SV_FlushRedirect( const char *outputbuf )
 {
 	if ( *outputbuf )
 	{
@@ -1142,7 +1142,7 @@ static void SV_CheckTimeouts( void ) {
 	zombiepoint = svs.time - 1000 * sv_zombietime->integer;
 
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ) {
-		if ( cl->state == CS_FREE ) {
+		if ( cl->state == CS_FREE || cl->demoClient ) {
 			continue;
 		}
 		// message times may be wrong across a changelevel
