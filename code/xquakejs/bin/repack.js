@@ -118,7 +118,8 @@ var usePrevious = false
 var noOverwrite = false
 var noGraph = false
 var noDedupe = false
-var TEMP_DIR = os.tmpdir()
+var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
 var verbose = false
 
 var isConvertParams = false

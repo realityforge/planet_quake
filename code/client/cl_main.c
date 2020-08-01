@@ -4393,7 +4393,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			Field_Clear(&g_consoleField);
 			memcpy(&g_consoleField.buffer, autocomplete, sizeof(g_consoleField.buffer));
 			Field_AutoComplete( &g_consoleField );
-			Field_Complete();
+			g_consoleField.cursor = strlen(autocomplete) + 1;
 		} else
 			Com_Printf( "Rcon: autocomplete dropped\n" );
 		return;

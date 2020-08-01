@@ -851,6 +851,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", name );
 		drop->state = CS_ZOMBIE;		// become free in a few seconds
 	}
+	
+	if(drop->demorecording) {
+		SV_StopRecord(drop);
+	}
 
 	if ( !reason ) {
 		return;

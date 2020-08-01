@@ -1323,7 +1323,7 @@ void SV_DemoStartRecord(void)
 		if (client->state >= CS_CONNECTED) {
 
 			// store client's userinfo (should be before clients configstrings since clients configstrings are derived from userinfo)
-			if (client->userinfo) { // if player is connected and the configstring exists, we store it
+			if (client->userinfo[0]) { // if player is connected and the configstring exists, we store it
 				SV_DemoWriteClientUserinfo(client, (const char *)client->userinfo);
 			}
 		}
@@ -1460,8 +1460,8 @@ void SV_DemoStartPlayback(void)
 					savedBotMinPlayers = Cvar_VariableIntegerValue("bot_minplayers");
 
 				// automatically adjusting sv_democlients, sv_maxclients and bot_minplayers
-				//Cvar_SetValue("sv_democlients", clients);
-				//Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
+				Cvar_SetValue("sv_democlients", clients);
+				Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
 				/* BUGGY makes a dedicated server crash
 				Cvar_Get( "sv_maxclients", "8", 0 );
 				sv_maxclients->modified = qfalse;
@@ -1582,7 +1582,6 @@ void SV_DemoStartPlayback(void)
 
 	// Checking if all initial conditions from the demo are met (map, sv_fps, gametype, servertime, etc...)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
-	/*
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
 	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
@@ -1594,7 +1593,7 @@ void SV_DemoStartPlayback(void)
 
 		//Cvar_SetValue("sv_democlients", 0); // necessary to stop the playback, else it will produce an error since the demo has not yet started!
 		keepSaved = qtrue; // Declare that we want to keep the value saved (and we don't want to restore them now, because the demo hasn't started yet!)
-		SV_DemoStopPlayback(); // Stop the demo playback (reset back any change)
+		//SV_DemoStopPlayback(); // Stop the demo playback (reset back any change)
 		sv.demoState = DS_WAITINGPLAYBACK; // Set the status WAITINGPLAYBACK meaning that as soon as the server will be restarted, the next SV_Frame() iteration must reactivate the demo playback
 		Cvar_SetValue("sv_demoState", DS_WAITINGPLAYBACK); // set the cvar too because when restarting the server, all sv.* vars will be destroyed
 		Q_strncpyz(savedPlaybackDemoname, Cmd_Cmd(), MAX_QPATH); // we need to copy the value because since we may spawn a new server (if the demo is played client-side OR if we change fs_game), we will lose all sv. vars
@@ -1629,7 +1628,6 @@ void SV_DemoStartPlayback(void)
 			SV_DemoReadFrame(); // run a few frames to settle things out
 		}
 	}
-	*/
 
 
 	// Initialize our stuff
@@ -1641,6 +1639,7 @@ void SV_DemoStartPlayback(void)
 	// Force all real clients already connected before the demo begins to be set to spectator team
 	for (i = sv_democlients->integer; i < sv_maxclients->integer; i++) {
 		if (svs.clients[i].state >= CS_CONNECTED) { // Only set as spectator a player that is at least connected (or primed or active)
+			//SV_SendClientGameState(svs.clients[i]);
 			SV_ExecuteClientCommand(&svs.clients[i], "team spectator"); // should be more interoperable than a forceteam
 			Cbuf_ExecuteText(EXEC_NOW, va("forceteam %i spectator", i)); // sometimes team spectator does not work when a demo is replayed client-side with some mods (eg: ExcessivePlus), in this case we also issue a forceteam (even if it's less interoperable)
 		}

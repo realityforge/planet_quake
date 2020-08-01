@@ -49,7 +49,7 @@ void SV_StopRecord( client_t	*cl ) {
  	clientnum = cl - svs.clients;
  	cvar_t	*fraglimit;
 
- 	if ( !cl->demorecording ) {
+ 	if ( !cl->demorecording || !cl->demofile ) {
  		Com_Printf ("DEMO: Not recording a demo for client %i.\n", clientnum);
  		return;
  	}
