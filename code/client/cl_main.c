@@ -789,7 +789,7 @@ static int CL_WalkDemoExt( const char *arg, char *name, fileHandle_t *handle )
 
 	while ( demo_protocols[ i ] )
 	{
-		Com_sprintf( name, MAX_OSPATH, "demos/%s.dm_%d", arg, demo_protocols[ i ] );
+		Com_sprintf( name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, demo_protocols[ i ] );
 		FS_BypassPure();
 		FS_FOpenFileRead( name, handle, qtrue );
 		FS_RestorePure();
@@ -869,7 +869,14 @@ static void CL_PlayDemo_f( void ) {
 	// check for an extension .dm_?? (?? is protocol)
 	// check for an extension .DEMOEXT_?? (?? is protocol)
 	ext_test = strrchr(arg, '.');
-	if ( ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1) )
+	if ( ext_test && !Q_stricmpn(ext_test + 1, SVDEMOEXT, ARRAY_LEN(SVDEMOEXT) - 1) )
+	{
+		Cbuf_AddText( "demo_stop\n" );
+		Cbuf_AddText( va("demo_play %s\n", arg) );
+		Cbuf_Execute();
+		return;
+	}
+	else if ( ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1) )
 	{
 		protocol = atoi(ext_test + ARRAY_LEN(DEMOEXT));
 
@@ -1766,13 +1773,20 @@ CL_CompleteRcon
 */
 static void CL_CompleteRcon( char *args, int argNum )
 {
-	if( argNum == 2 )
+	int beforeLength;
+	if( argNum >= 2 )
 	{
 		// Skip "rcon "
 		char *p = Com_SkipTokens( args, 1, " " );
-
+		beforeLength = strlen(g_consoleField.buffer);
 		if( p > args )
 			Field_CompleteCommand( p, qtrue, qtrue );
+
+		// TODO: execute a \rcon cmdlist
+		if(argNum > 2 && beforeLength == strlen(g_consoleField.buffer)) {
+			Cbuf_AddText( va("rcon complete %s\n", p) );
+			Cbuf_Execute();
+		}
 	}
 }
 
@@ -4354,7 +4368,7 @@ CL_ServerInfoPacket
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
-	const char *infoString;
+	const char *infoString, *autocomplete;
 	int		prot;
 	netadr_t addr;
 	
@@ -4366,6 +4380,24 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	}
 
 	infoString = MSG_ReadString( msg );
+	
+	// exit early if this is an autocomplete message
+	autocomplete = Info_ValueForKey( infoString, "autocomplete" );
+	NET_StringToAdr( rconAddress->string, &rcon_address, NA_UNSPEC );
+	if ( rcon_address.port == 0 ) {
+		rcon_address.port = BigShort( PORT_SERVER );
+	}
+	if(autocomplete[0]) {
+		if((NET_CompareAdr(from, &clc.serverAddress)
+			|| (rcon_address.type != NA_BAD && NET_CompareAdr(from, &rcon_address)))) {
+			Field_Clear(&g_consoleField);
+			memcpy(&g_consoleField.buffer, autocomplete, sizeof(g_consoleField.buffer));
+			Field_AutoComplete( &g_consoleField );
+			Field_Complete();
+		} else
+			Com_Printf( "Rcon: autocomplete dropped\n" );
+		return;
+	}
 
 	// if this isn't the correct protocol version, ignore it
 	prot = atoi( Info_ValueForKey( infoString, "protocol" ) );

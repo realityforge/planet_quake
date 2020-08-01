@@ -1479,49 +1479,49 @@ SV_Demo_Record_f
 =================
 */
 static void SV_Demo_Record_f( void ) {
-        // make sure server is running
-        if (!com_sv_running->integer) {
-                Com_Printf("Server is not running.\n");
-                return;
-        }
+  // make sure server is running
+  if (!com_sv_running->integer) {
+    Com_Printf("Server is not running.\n");
+    return;
+  }
 
-        if (Cmd_Argc() > 2) {
-                Com_Printf("Usage: demo_record <demoname>\n");
-                return;
-        }
+  if (Cmd_Argc() > 2) {
+    Com_Printf("Usage: demo_record <demoname>\n");
+    return;
+  }
 
-        if (sv.demoState != DS_NONE) {
-                Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
-                return;
-        }
+  if (sv.demoState != DS_NONE) {
+    Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
+    return;
+  }
 
-        if (sv_maxclients->integer == MAX_CLIENTS) {
-                Com_Printf("DEMO: ERROR: Too many client slots, reduce sv_maxclients and retry.\n");
-                return;
-        }
+  if (sv_maxclients->integer == MAX_CLIENTS) {
+    Com_Printf("DEMO: ERROR: Too many client slots, reduce sv_maxclients and retry.\n");
+    return;
+  }
 
-        if (Cmd_Argc() == 2)
-                sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, PROTOCOL_VERSION);
-        else {
-                int     number;
-                // scan for a free demo name
-                for (number = 0 ; number >= 0 ; number++) {
-                        Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, PROTOCOL_VERSION);
-                        if (!FS_FileExists(sv.demoName))
-                                break;  // file doesn't exist
-                }
-                if (number < 0) {
-                        Com_Printf("DEMO: ERROR: Couldn't generate a filename for the demo, try deleting some old ones.\n");
-                        return;
-                }
-        }
+  if (Cmd_Argc() == 2)
+    sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, PROTOCOL_VERSION);
+  else {
+    int     number;
+    // scan for a free demo name
+    for (number = 0 ; number >= 0 ; number++) {
+            Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, PROTOCOL_VERSION);
+            if (!FS_FileExists(sv.demoName))
+                    break;  // file doesn't exist
+    }
+    if (number < 0) {
+            Com_Printf("DEMO: ERROR: Couldn't generate a filename for the demo, try deleting some old ones.\n");
+            return;
+    }
+  }
 
-        sv.demoFile = FS_FOpenFileWrite(sv.demoName);
-        if (!sv.demoFile) {
-                Com_Printf("DEMO: ERROR: Couldn't open %s for writing.\n", sv.demoName);
-                return;
-        }
-        SV_DemoStartRecord();
+  sv.demoFile = FS_FOpenFileWrite(sv.demoName);
+  if (!sv.demoFile) {
+    Com_Printf("DEMO: ERROR: Couldn't open %s for writing.\n", sv.demoName);
+    return;
+  }
+  SV_DemoStartRecord();
 }
 
 
@@ -1531,34 +1531,35 @@ SV_Demo_Play_f
 =================
 */
 static void SV_Demo_Play_f( void ) {
-        char *arg;
+  char *arg, *ext_test;
 
-        if (Cmd_Argc() != 2) {
-                Com_Printf("Usage: demo_play <demoname>\n");
-                return;
-        }
+  if (Cmd_Argc() != 2) {
+	  Com_Printf("Usage: demo_play <demoname>\n");
+    return;
+  }
 
-        if (sv.demoState != DS_NONE && sv.demoState != DS_WAITINGPLAYBACK) {
-                Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
-                return;
-        }
+  if (sv.demoState != DS_NONE && sv.demoState != DS_WAITINGPLAYBACK) {
+    Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
+    return;
+  }
 
-        // check for an extension .svdm_?? (?? is protocol)
-        arg = Cmd_Argv(1);
-        if (!strcmp(arg + strlen(arg) - 6, va(".%s%d", SVDEMOEXT, PROTOCOL_VERSION)))
-                Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s", arg);
-        else
-                Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, PROTOCOL_VERSION);
+  // check for an extension .svdm_?? (?? is protocol)
+  arg = Cmd_Argv(1);
+	ext_test = strrchr(arg, '.');
+	if ( ext_test && !Q_stricmpn(ext_test + 1, SVDEMOEXT, ARRAY_LEN(SVDEMOEXT) - 1) )
+	  Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s", arg);
+  else
+    Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, PROTOCOL_VERSION);
 
 
-        //FS_FileExists(sv.demoName);
+  //FS_FileExists(sv.demoName);
 	FS_FOpenFileRead(sv.demoName, &sv.demoFile, qtrue);
-        if (!sv.demoFile) {
-                Com_Printf("ERROR: Couldn't open %s for reading.\n", sv.demoName);
-                return;
-        }
+  if (!sv.demoFile) {
+    Com_Printf("ERROR: Couldn't open %s for reading.\n", sv.demoName);
+    return;
+  }
 
-        SV_DemoStartPlayback();
+  SV_DemoStartPlayback();
 }
 
 
@@ -1568,16 +1569,16 @@ SV_Demo_Stop_f
 =================
 */
 static void SV_Demo_Stop_f( void ) {
-        if (sv.demoState == DS_NONE) {
-                Com_Printf("No demo is currently being recorded or played.\n");
-                return;
-        }
+  if (sv.demoState == DS_NONE) {
+    Com_Printf("No demo is currently being recorded or played.\n");
+    return;
+  }
 
-        // Close the demo file
-        if (sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK)
-                SV_DemoStopPlayback();
-        else
-                SV_DemoStopRecord();
+  // Close the demo file
+  if (sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK)
+    SV_DemoStopPlayback();
+  else
+    SV_DemoStopRecord();
 }
 
 

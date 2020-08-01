@@ -132,6 +132,11 @@ void SV_Record( client_t	*cl, char *s ) {
 
  	clientnum = cl - svs.clients;
 
+  if( sv.demoState == DS_PLAYBACK ) {
+    Com_Printf ("DEMO: not recording playback");
+    return;
+  }
+
  	if ( cl->demorecording ) {
  		Com_Printf ("DEMO: Already recording client %i.\n", clientnum);
  		return;

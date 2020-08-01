@@ -22,6 +22,8 @@ var LibrarySysMain = {
       '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
       '+set', 'cl_lazyLoad', '1',
+      '+set', 'rconpassword', 'password123!',
+      
       //'+set', 'com_hunkMegs', '256',
       //'+set', 'com_maxfps', '125',
       //'+set', 'com_maxfpsUnfocused', '10',

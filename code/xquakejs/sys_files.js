@@ -324,6 +324,11 @@ var LibrarySysFiles = {
           && (!dironly || typeof SYSF.index[k].size == 'undefined'))
         .map(k => PATH.basename(SYSF.index[k].name)))
         .filter((f, i, arr) => f && arr.indexOf(f) === i)
+      if(directory.match(/\/demos/i)) {
+        contents = contents
+          .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
+          .filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
+      }
       if(contents.length > 5000) {
         debugger
       }
@@ -338,6 +343,7 @@ var LibrarySysFiles = {
       if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)
         || (ext.match(/tga/i) && name.lastIndexOf('png') === (name.length - ext.length))
         || (ext.match(/tga/i) && name.lastIndexOf('jpg') === (name.length - ext.length))
+        || (ext.match(/dm_68/i) && name.lastIndexOf('svdm_68') === (name.length - 7))
       ) {
         matches.push(contents[i]);
       }

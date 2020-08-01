@@ -186,7 +186,6 @@ typedef struct client_s {
  	qboolean	demorecording;
  	qboolean	demowaiting;	// don't record until a non-delta message is received
  	fileHandle_t	demofile;
- 	clientSnapshot_t *olddemoframe;
  	qboolean	savedemo; // qtrue iff the demo should be saved in any case (qfalse and sv_autorecord 1 --> the score decides)
 
 

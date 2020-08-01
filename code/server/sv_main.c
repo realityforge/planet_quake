@@ -846,7 +846,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];
-	const char	*cmd_aux, *pw;
+	const char	*cmd_aux, *pw, *cmd;
 
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
@@ -910,7 +910,19 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		while ( *cmd_aux == ' ' )
 			cmd_aux++;
 
-		Cmd_ExecuteString( cmd_aux, qfalse );
+		cmd = Cmd_Argv( 2 );
+		if(!strcmp(cmd, "complete")) {
+			char	infostring[MAX_INFO_STRING];
+			field_t rconField;
+			cmd_aux += 9;
+			memcpy(rconField.buffer, cmd_aux, sizeof(rconField.buffer));
+			Field_AutoComplete( &rconField );
+			infostring[0] = '\0';
+			Info_SetValueForKey( infostring, "autocomplete", &rconField.buffer[1] );
+			NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+		} else {
+			Cmd_ExecuteString( cmd_aux, qfalse );
+		}
 	}
 
 	Com_EndRedirect();
