@@ -1578,7 +1578,7 @@ static void SV_Demo_Stop_f( void ) {
   // Close the demo file
   if (sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK)
     SV_DemoStopPlayback();
-  else
+  else if (sv.demoState == DS_RECORDING)
     SV_DemoStopRecord();
 }
 

@@ -1350,10 +1350,6 @@ Write end of demo (demo_endDemo marker) and close the demo file
 void SV_DemoStopRecord(void)
 {
 	msg_t msg;
-	if(sv.demoState != DS_RECORDING) {
-		Com_Printf("DEMO: Error: Not recording.");
-		return;
-	}
 
 	// End the demo
 	MSG_Init(&msg, buf, sizeof(buf));
@@ -1784,6 +1780,11 @@ void SV_DemoStopPlayback(void)
 #ifdef DEDICATED
 		Cbuf_AddText(va("map %s\n", Cvar_VariableString( "mapname" ))); // better to do a map command rather than map_restart if we do a mod switching with game_restart, map_restart will point to no map (because the config is completely unloaded)
 #else
+#ifdef EMSCRIPTEN
+		if(com_dedicated->integer) {
+			Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
+		}
+#endif
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
 		Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
 		sv_maxclients->modified = qfalse; // Set modified to false
