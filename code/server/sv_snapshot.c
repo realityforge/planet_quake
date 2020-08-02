@@ -506,7 +506,8 @@ static void SV_BuildCommonSnapshot( void )
 				continue;
 			}
 	
-			if ( ent->s.number != num ) {
+			if ( ent->s.number != num
+				&& !(sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK) ) {
 				Com_DPrintf( "FIXING ENT->S.NUMBER %i => %i\n", ent->s.number, num );
 				ent->s.number = num;
 			}
@@ -708,12 +709,6 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// build the snapshot
 	SV_BuildClientSnapshot( client );
 
-	// bots need to have their snapshots build, but
-	// the query them directly without needing to be sent
-	if ( client->netchan.remoteAddress.type == NA_BOT ) {
-		return;
-	}
-
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
 	msg.allowoverflow = qtrue;
 	headerBytes = msg.cursize;
@@ -738,6 +733,12 @@ void SV_SendClientSnapshot( client_t *client ) {
  			SV_StopRecord( client );
  		}
  	}
+
+	// bots need to have their snapshots build, but
+	// the query them directly without needing to be sent
+	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+		return;
+	}
 
 	// check for overflow
 	if ( msg.overflowed ) {
