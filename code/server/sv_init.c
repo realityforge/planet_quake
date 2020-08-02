@@ -1072,7 +1072,7 @@ void SV_Shutdown( const char *finalmsg ) {
 		}
 	}
 
-
+/*
 #ifdef EMSCRIPTEN
 	// Local server is "always on"
 	if(!svShuttingDown) {
@@ -1086,6 +1086,7 @@ void SV_Shutdown( const char *finalmsg ) {
 		return;
 	}
 #endif
+*/
 
 	NET_LeaveMulticast6();
 
@@ -1141,4 +1142,9 @@ void SV_Shutdown( const char *finalmsg ) {
 	Cvar_Set( "sv_serverid", "0" );
 
 	Sys_SetStatus( "Server is not running" );
+
+#ifdef EMSCRIPTEN
+	Cmd_Clear();
+	Cbuf_AddText("spmap q3dm0\n");
+#endif
 }

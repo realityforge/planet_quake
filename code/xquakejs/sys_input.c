@@ -662,6 +662,13 @@ void IN_Frame( void )
 	else
 		IN_ActivateMouse( fullscreen );
 
+	if(focusChanged != gw_active) {
+		focusChanged = gw_active;
+		if(gw_active == qtrue) {
+			IN_GrabMouse();
+		}
+	}
+
 	if(clickChanged != cls.firstClick) {
 		clickChanged = cls.firstClick;
 		if(cls.firstClick == qfalse) {
