@@ -1576,6 +1576,7 @@ CL_Reconnect_f
 static void CL_Reconnect_f( void ) {
 	if ( cl_reconnectArgs[0] == '\0' )
 		return;
+	CL_Disconnect(qtrue, qtrue);
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
 }

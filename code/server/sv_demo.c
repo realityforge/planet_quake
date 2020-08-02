@@ -1324,7 +1324,7 @@ void SV_DemoStartRecord(void)
 		if (client->state >= CS_CONNECTED) {
 
 			// store client's userinfo (should be before clients configstrings since clients configstrings are derived from userinfo)
-			if (client->userinfo[0]) { // if player is connected and the configstring exists, we store it
+			if (client->userinfo) { // if player is connected and the configstring exists, we store it
 				SV_DemoWriteClientUserinfo(client, (const char *)client->userinfo);
 			}
 		}
@@ -1350,6 +1350,10 @@ Write end of demo (demo_endDemo marker) and close the demo file
 void SV_DemoStopRecord(void)
 {
 	msg_t msg;
+	if(sv.demoState != DS_RECORDING) {
+		Com_Printf("DEMO: Error: Not recording.");
+		return;
+	}
 
 	// End the demo
 	MSG_Init(&msg, buf, sizeof(buf));
@@ -1583,7 +1587,7 @@ void SV_DemoStartPlayback(void)
 
 	// Checking if all initial conditions from the demo are met (map, sv_fps, gametype, servertime, etc...)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
-	/*
+
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
 	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
@@ -1619,24 +1623,23 @@ void SV_DemoStartPlayback(void)
 			Cbuf_AddText(va("game_restart %s\n", fs)); // switch mod!
 		}
 
+		Cvar_Set( "sv_cheats", "1" );
 		Cbuf_AddText(va("g_gametype %i\ndevmap %s\n", gametype, map)); // Change gametype and map (using devmap to enable cheats)
 
 		return; // Quit and wait for the next SV_Frame() iteration (when the server/map will have restarted) to retry playing the demo
 
-	} else 
-	*/
-	if( !keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
+	} else if(!keepSaved) {
 		keepSaved = qtrue; // Declare that we want to keep the value saved (and we don't want to restore them now, because the demo hasn't started yet!)
 		SV_DemoStopPlayback();
 		sv.demoState = DS_WAITINGPLAYBACK; // Set the status WAITINGPLAYBACK meaning that as soon as the server will be restarted, the next SV_Frame() iteration must reactivate the demo playback
 		Cvar_SetValue("sv_demoState", DS_WAITINGPLAYBACK); // set the cvar too because when restarting the server, all sv.* vars will be destroyed
 		Q_strncpyz(savedPlaybackDemoname, Cmd_Cmd(), MAX_QPATH); // we need to copy the value because since we may spawn a new server (if the demo is played client-side OR if we change fs_game), we will lose all sv. vars
 		Cvar_SetValue("sv_autoDemo", 0); // disable sv_autoDemo else it will start a recording before we can replay a demo (since we restart the map)
-		//Cbuf_ExecuteText(EXEC_NOW, "map_restart\n");
 		Cvar_Set( "sv_cheats", "1" );
-		Cbuf_ExecuteText(EXEC_NOW, va("g_gametype %i\ndevmap %s\n", gametype, map)); // Change gametype and map (using devmap to enable cheats)
+		//Cbuf_ExecuteText(EXEC_NOW, "map_restart\n");
+		//Cbuf_ExecuteText(EXEC_NOW, va("g_gametype %i\ndevmap %s\n", gametype, map)); // Change gametype and map (using devmap to enable cheats)
 		return;
-	} else if ( time < sv.time && keepSaved ) {
+	} else if ( time < sv.time && keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
 		int timetoreach = sv.time;
 		sv.time = time;
 		while (sv.time < timetoreach) {
@@ -1785,7 +1788,7 @@ void SV_DemoStopPlayback(void)
 		Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
 		sv_maxclients->modified = qfalse; // Set modified to false
 		// Kill the local server
-		Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
+		//Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
 #endif
 	}
 
