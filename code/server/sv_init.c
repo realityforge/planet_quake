@@ -1145,6 +1145,6 @@ void SV_Shutdown( const char *finalmsg ) {
 
 #ifdef EMSCRIPTEN
 	Cmd_Clear();
-	Cbuf_AddText("spmap q3dm0\n");
+	Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
 #endif
 }

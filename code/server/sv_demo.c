@@ -1782,7 +1782,7 @@ void SV_DemoStopPlayback(void)
 #else
 #ifdef EMSCRIPTEN
 		if(com_dedicated->integer) {
-			Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
+		//	Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
 		}
 #endif
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
