@@ -1369,12 +1369,10 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 
-#ifndef EMSCRIPTEN
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
 		return;
 	}
-#endif
 
 	if ( Cmd_Argc() > 1 ) {
 		CL_AddReliableCommand( string, qfalse );

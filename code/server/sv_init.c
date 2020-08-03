@@ -1066,8 +1066,7 @@ void SV_Shutdown( const char *finalmsg ) {
 		SV_DemoStopPlayback();
 		
 	for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
-		if (cl->state >= CS_CONNECTED && cl->demorecording
-			&& !cl->demoClient) {
+		if (cl->state >= CS_CONNECTED && cl->demorecording) {
 			SV_StopRecord( cl );
 		}
 	}

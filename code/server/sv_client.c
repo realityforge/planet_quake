@@ -1095,7 +1095,8 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	}
 	
 	// serverside demo
- 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT) {
+ 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT
+		&& !client->demoClient) { // don't record server side demo playbacks automatically
  		if (client->demorecording) {
  			SV_StopRecord( client );
  		}
@@ -1439,7 +1440,7 @@ int SV_SendQueuedMessages( void )
 	{
 		cl = &svs.clients[i];
 
-		if ( cl->state && !cl->demoClient )
+		if ( cl->state )
 		{
 			nextFragT = SV_RateMsec(cl);
 
@@ -2282,7 +2283,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	} while ( 1 );
 
 #ifdef EMSCRIPTEN
-	// skip user move commands if server is restarting
+	// skip user move commands if server is restarting because of the command above
 	if(!FS_Initialized()) {
 		return;
 	}

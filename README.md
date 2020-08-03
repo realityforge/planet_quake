@@ -33,6 +33,7 @@ Some of the major features currently implemented are:
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and TODO: run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable.
+  * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Many, many bug fixes
 
 Coming soon!

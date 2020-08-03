@@ -771,7 +771,6 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 	num = MSG_ReadByte(msg);
 	configstring = MSG_ReadString(msg);
 
-	return;
 	/**** DEMOCLIENTS CONNECTION MANAGEMENT  ****/
 	// This part manages when a client should begin or be dropped based on the configstrings. This is a workaround because begin and disconnect events are managed in the gamecode, so we here use a clever way to know when these events happen (this is based on a careful reading of how work the mechanisms that manage players in a real game, so this should be OK in any case).
 	// Note: this part could also be used in userinfo instead of client configstrings (but since DropClient automatically sets userinfo to null, which is not the case the other way around, this way was preferred)
@@ -1699,6 +1698,8 @@ void SV_DemoStopPlayback(void)
 	sv.demoState = DS_NONE;
 	Cvar_SetValue("sv_demoState", DS_NONE);
 	Com_Printf("DEMO: End of demo. Stopped playing demo %s.\n", sv.demoName);
+	
+	return;
 
 	// Restore initial cvars of the server that were modified by the demo playback
 	// Note: must do it before the map_restart! so that latched values such as sv_maxclients takes effect
