@@ -473,6 +473,7 @@ void SV_DemoChangeMaxClients( void ) {
 
 
 	// == Server-side demos management
+	SV_SetSnapshotParams();
 
 	// set demostate to none if it was just waiting to set maxclients and move real clients slots
 	if (sv.demoState == DS_WAITINGSTOP) {
@@ -1025,6 +1026,11 @@ void SV_FinalMessage( const char *message ) {
   			if (cl->demorecording) {
   				SV_StopRecord( cl );
  				}
+#ifdef EMSCRIPTEN
+				if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
+					SV_SendServerCommand( cl, "reconnect\n", message );
+				}
+#endif
 
 				// don't send a disconnect to a local client
 				if ( cl->netchan.remoteAddress.type != NA_LOOPBACK ) {
@@ -1089,9 +1095,15 @@ void SV_Shutdown( const char *finalmsg ) {
 
 	NET_LeaveMulticast6();
 
+#ifdef EMSCRIPTEN
+	if ( svs.clients ) {
+		SV_FinalMessage( finalmsg );
+	}
+#else
 	if ( svs.clients && !com_errorEntered ) {
 		SV_FinalMessage( finalmsg );
 	}
+#endif
 
 	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();

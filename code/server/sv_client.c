@@ -807,8 +807,12 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	char	name[ MAX_NAME_LENGTH ];
 	qboolean isBot;
 	int		i;
+	
+	if(drop->demorecording) {
+		SV_StopRecord(drop);
+	}
 
-	if ( drop->state == CS_ZOMBIE || sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK ) {
+	if ( drop->state == CS_ZOMBIE || drop->demoClient ) {
 		return;		// already dropped
 	}
 
@@ -850,10 +854,6 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	} else {
 		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", name );
 		drop->state = CS_ZOMBIE;		// become free in a few seconds
-	}
-	
-	if(drop->demorecording) {
-		SV_StopRecord(drop);
 	}
 
 	if ( !reason ) {
@@ -1440,7 +1440,7 @@ int SV_SendQueuedMessages( void )
 	{
 		cl = &svs.clients[i];
 
-		if ( cl->state )
+		if ( cl->state && !cl->demoClient )
 		{
 			nextFragT = SV_RateMsec(cl);
 

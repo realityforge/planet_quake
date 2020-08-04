@@ -771,6 +771,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 	num = MSG_ReadByte(msg);
 	configstring = MSG_ReadString(msg);
 
+	return;
 	/**** DEMOCLIENTS CONNECTION MANAGEMENT  ****/
 	// This part manages when a client should begin or be dropped based on the configstrings. This is a workaround because begin and disconnect events are managed in the gamecode, so we here use a clever way to know when these events happen (this is based on a careful reading of how work the mechanisms that manage players in a real game, so this should be OK in any case).
 	// Note: this part could also be used in userinfo instead of client configstrings (but since DropClient automatically sets userinfo to null, which is not the case the other way around, this way was preferred)
@@ -1460,8 +1461,8 @@ void SV_DemoStartPlayback(void)
 					savedBotMinPlayers = Cvar_VariableIntegerValue("bot_minplayers");
 
 				// automatically adjusting sv_democlients, sv_maxclients and bot_minplayers
-				//Cvar_SetValue("sv_democlients", clients);
-				//Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
+				Cvar_SetValue("sv_democlients", clients);
+				Cvar_SetLatched("sv_maxclients", va("%i", sv_maxclients->integer + clients) );
 				/* BUGGY makes a dedicated server crash
 				Cvar_Get( "sv_maxclients", "8", 0 );
 				sv_maxclients->modified = qfalse;
@@ -1634,11 +1635,13 @@ void SV_DemoStartPlayback(void)
 		//Cbuf_ExecuteText(EXEC_NOW, "map_restart\n");
 		//Cbuf_ExecuteText(EXEC_NOW, va("g_gametype %i\ndevmap %s\n", gametype, map)); // Change gametype and map (using devmap to enable cheats)
 		return;
-	} else if ( time < sv.time && keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
-		int timetoreach = sv.time;
-		sv.time = time;
+	} else  { //if ( time < sv.time && keepSaved ) { // else if the demo time is still below the server time but we already restarted for the demo playback, we just iterate a few demo frames in the void to catch to until we are above the server time. Note: having a server time below the demo time is CRITICAL, else we may send to the clients a server time that is below the previous, making the time going backward, which should NEVER happen!
+		int timetoreach = sv.time = time;
+		//sv.time = time;
 		while (sv.time < timetoreach) {
 			SV_DemoReadFrame(); // run a few frames to settle things out
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+			SV_BotFrame( sv.time );
 		}
 	}
 
@@ -1672,6 +1675,8 @@ void SV_DemoStartPlayback(void)
 	Cvar_SetValue("sv_demoState", DS_PLAYBACK);
 	keepSaved = qfalse; // Don't save values anymore: the next time we stop playback, we will restore previous values (because now we are really launching the playback, so anything that might happen now is either a big bug or the end of demo, in any case we want to restore the values)
 	SV_DemoReadFrame(); // reading the first frame, which should contain some initialization events (eg: initial confistrings/userinfo when demo recording started, initial entities states and placement, etc..)
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	SV_BotFrame( sv.time );
 }
 
 /*
@@ -1698,8 +1703,6 @@ void SV_DemoStopPlayback(void)
 	sv.demoState = DS_NONE;
 	Cvar_SetValue("sv_demoState", DS_NONE);
 	Com_Printf("DEMO: End of demo. Stopped playing demo %s.\n", sv.demoName);
-	
-	return;
 
 	// Restore initial cvars of the server that were modified by the demo playback
 	// Note: must do it before the map_restart! so that latched values such as sv_maxclients takes effect
@@ -1783,7 +1786,7 @@ void SV_DemoStopPlayback(void)
 #else
 #ifdef EMSCRIPTEN
 		if(com_dedicated->integer) {
-		//	Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
+			Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
 		}
 #endif
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
