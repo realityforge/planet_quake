@@ -375,11 +375,11 @@ change sv_maxclients and move real clients slots when a demo is playing or stopp
 ==================
 */
 void SV_DemoChangeMaxClients( void ) {
-        int             oldMaxClients, oldDemoClients;
-        int             i, j, k;
-        client_t        *oldClients = NULL;
-        int             count;
-        //qboolean firstTime = svs.clients == NULL;
+  int             oldMaxClients, oldDemoClients;
+  int             i, j, k;
+  client_t        *oldClients = NULL;
+  int             count;
+  //qboolean firstTime = svs.clients == NULL;
 
 
 	// == Checking the prerequisites
@@ -398,10 +398,10 @@ void SV_DemoChangeMaxClients( void ) {
 	// -- Save the previous oldMaxClients and oldDemoClients values, and update
 
 	// Save the previous sv_maxclients value before updating it
-        oldMaxClients = sv_maxclients->integer;
-        // update the cvars
-        Cvar_Get( "sv_maxclients", "8", 0 );
-        Cvar_Get( "sv_democlients", "0", 0 ); // unnecessary now that sv_democlients is not latched anymore?
+  oldMaxClients = sv_maxclients->integer;
+  // update the cvars
+  Cvar_Get( "sv_maxclients", "8", 0 );
+  Cvar_Get( "sv_democlients", "0", 0 ); // unnecessary now that sv_democlients is not latched anymore?
 	// Save the previous sv_democlients (since it's updated instantly, we cannot get it directly), we use a trick by computing the difference between the new and previous sv_maxclients (the difference should indeed be the exact value of sv_democlients)
 	oldDemoClients = (oldMaxClients - sv_maxclients->integer);
 	if (oldDemoClients < 0) // if the difference is negative, this means that before it was set to 0 (because the newer sv_maxclients is greater than the old)
@@ -411,10 +411,10 @@ void SV_DemoChangeMaxClients( void ) {
 	// never go below the highest client number in use (make sure we have enough room for all players)
 	SV_BoundMaxClients( count );
 
-        // -- Change check: if still the same, we just quit, there's nothing to do
-        if ( sv_maxclients->integer == oldMaxClients ) {
-                return;
-        }
+  // -- Change check: if still the same, we just quit, there's nothing to do
+  if ( sv_maxclients->integer == oldMaxClients ) {
+    return;
+  }
 
 
 	// == Memorizing clients
@@ -450,9 +450,9 @@ void SV_DemoChangeMaxClients( void ) {
 
 	// == Allocating the new svs.clients and moving the saved clients over from the temporary var
 
-        // allocate new svs.clients
-        svs.clients = Z_Malloc( sv_maxclients->integer * sizeof(client_t) );
-        Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
+  // allocate new svs.clients
+  svs.clients = Z_Malloc( sv_maxclients->integer * sizeof(client_t) );
+  Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
 
 	// copy the clients over (and move them depending on sv_democlients: if >0, move them upwards, if == 0, move them to their original slots)
 	Com_Memcpy( svs.clients + sv_democlients->integer, oldClients, (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) );
@@ -463,13 +463,13 @@ void SV_DemoChangeMaxClients( void ) {
 
 	// == Allocating snapshot entities
 
-        // allocate new snapshot entities
-        if ( com_dedicated->integer ) {
-                svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
-        } else {
-                // we don't need nearly as many when playing locally
-                svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
-        }
+  // allocate new snapshot entities
+  if ( com_dedicated->integer ) {
+    svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+  } else {
+          // we don't need nearly as many when playing locally
+    svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+  }
 
 
 	// == Server-side demos management
