@@ -767,11 +767,11 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 	client_t *client;
 	char	*configstring;
 	int num;
+	qboolean denied;
 
 	num = MSG_ReadByte(msg);
 	configstring = MSG_ReadString(msg);
 
-	return;
 	/**** DEMOCLIENTS CONNECTION MANAGEMENT  ****/
 	// This part manages when a client should begin or be dropped based on the configstrings. This is a workaround because begin and disconnect events are managed in the gamecode, so we here use a clever way to know when these events happen (this is based on a careful reading of how work the mechanisms that manage players in a real game, so this should be OK in any case).
 	// Note: this part could also be used in userinfo instead of client configstrings (but since DropClient automatically sets userinfo to null, which is not the case the other way around, this way was preferred)
@@ -791,10 +791,20 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 		svs.clients[num].demoClient = qtrue; // to check if a client is a democlient, you can either rely on this variable, either you can check if num (index of client) is >= CS_PLAYERS + sv_democlients->integer && < CS_PLAYERS + sv_maxclients->integer (if it's not a configstring, remove CS_PLAYERS from your if)
 		Q_strncpyz( svs.clients[num].name, Info_ValueForKey( configstring, "n" ), MAX_NAME_LENGTH ); // set the name (useful for internal functions such as status_f). Anyway userinfo will automatically set both name (server-side) and netname (gamecode-side).
 
+		// get the game a chance to reject this connection or modify the userinfo
+		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
+		if ( denied ) {
+			// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
+			const char *str = GVM_ArgPtr( denied );
+			Com_DPrintf( "DEMO: Game rejected a connection: %s.\n", str );
+			return;
+		}
+
 
 		// DEMOCLIENT INITIAL TEAM MANAGEMENT
 		// Note: needed only to set the initial team of the democlients, subsequent team changes are directly handled by their clientCommands
 		// DEPRECATED: moved to userinfo, more interoperable (because here team is an int, while in userinfo the full team name string is stored and can be directly replayed)
+		/*
 		if ( sv_gametype->integer != GT_TOURNAMENT ) {
 			if ( !strlen(Info_ValueForKey(svs.clients[num].userinfo, "team")) ) {
 				if (configstring && strlen(configstring) &&
@@ -815,6 +825,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 				}
 			}
 		}
+		*/
 
 		// Set the remoteAddress of this client to localhost (this will set "ip\localhost" in the userinfo, which will in turn force the gamecode to set this client as a localClient, which avoids inactivity timers and some other stuffs to be triggered)
 		if (strlen(configstring)) // we check that the client isn't being dropped
@@ -822,7 +833,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 
 		// Make sure the gamecode consider the democlients (this will allow to show them on the scoreboard and make them spectatable with a standard follow) - does not use argv (directly fetch client infos from userinfo) so no need to tokenize with Cmd_TokenizeString()
 		// Note: this also triggers the gamecode refreshing of the client's userinfo
-		VM_Call( gvm, GAME_CLIENT_BEGIN, num );
+		//VM_Call( gvm, GAME_CLIENT_BEGIN, num );
 	} else if ( Q_stricmp(sv.configstrings[CS_PLAYERS + num], configstring) && strlen(sv.configstrings[CS_PLAYERS + num]) && (!configstring || !strlen(configstring)) ) { // client disconnect: different configstrings and the new one is empty, so the client is not there anymore, we drop him (also we check that the old config was not empty, else we would be disconnecting a player who is already dropped)
 		client = &svs.clients[num];
 		SV_DropClient( client, "disconnected" ); // same as SV_Disconnect_f(client);
