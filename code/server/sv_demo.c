@@ -833,7 +833,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 
 		// Make sure the gamecode consider the democlients (this will allow to show them on the scoreboard and make them spectatable with a standard follow) - does not use argv (directly fetch client infos from userinfo) so no need to tokenize with Cmd_TokenizeString()
 		// Note: this also triggers the gamecode refreshing of the client's userinfo
-		//VM_Call( gvm, GAME_CLIENT_BEGIN, num );
+		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, num );
 	} else if ( Q_stricmp(sv.configstrings[CS_PLAYERS + num], configstring) && strlen(sv.configstrings[CS_PLAYERS + num]) && (!configstring || !strlen(configstring)) ) { // client disconnect: different configstrings and the new one is empty, so the client is not there anymore, we drop him (also we check that the old config was not empty, else we would be disconnecting a player who is already dropped)
 		client = &svs.clients[num];
 		SV_DropClient( client, "disconnected" ); // same as SV_Disconnect_f(client);
@@ -1786,7 +1786,9 @@ void SV_DemoStopPlayback(void)
 		Com_Printf("DEMOERROR: An error happened while playing/recording the demo, please check the log for more info\n"); // if server, don't crash it if an error happens, just print a message
 #else
 		Com_Error (ERR_DROP,"An error happened while replaying the demo, please check the log for more info\n");
+#ifndef EMSCRIPTEN
 		Cvar_SetValue("sv_killserver", 1);
+#endif
 #endif
 	} else if (olddemostate == DS_PLAYBACK) {
 		// set a special state to say that we are waiting to stop (SV_DemoChangeMaxClients() will set to DS_NONE after moving the real clients to their correct slots)
@@ -1803,8 +1805,10 @@ void SV_DemoStopPlayback(void)
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
 		Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
 		sv_maxclients->modified = qfalse; // Set modified to false
+#ifndef EMSCRIPTEN
 		// Kill the local server
 		Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
+#endif
 #endif
 	}
 
