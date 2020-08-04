@@ -370,7 +370,8 @@ void SV_GetUserinfo( int index, char *buffer, int bufferSize );
 
 void SV_ChangeMaxClients( void );
 void SV_SpawnServer( const char *mapname, qboolean killBots );
-
+void SV_BoundMaxClients( int minimum );
+void SV_SetSnapshotParams( void );
 
 
 //
@@ -489,6 +490,12 @@ void SV_DemoFilterClientUserinfo( const char *userinfo );
 char *SV_CleanFilename( char *str );
 char *SV_CleanStrCmd( char *str );
 char *SV_GenerateDateTime(void);
+
+void SV_DemoChangeMaxClients( void );
+void SV_CompleteDemoName( char *args, int argNum );
+void SV_Demo_Stop_f( void );
+void SV_Demo_Play_f( void );
+void SV_Demo_Record_f( void );
 
 //
 // sv_demo_ext.c

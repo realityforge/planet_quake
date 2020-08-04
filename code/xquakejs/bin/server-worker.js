@@ -33,7 +33,8 @@ onmessage = function(e) {
     if(!SYSM.args.includes('+spmap')
       && !SYSM.args.includes('+map')
       && !SYSM.args.includes('+devmap')
-      && !SYSM.args.includes('+spdevmap')) {
+      && !SYSM.args.includes('+spdevmap')
+      && !SYSM.args.includes('+demo_play')) {
         SYSM.args.push.apply(SYSM.args, [
           '+spmap', 'q3dm0',
         ])

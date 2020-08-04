@@ -1394,6 +1394,121 @@ void SV_DemoRestartPlayback(void)
 }
 
 /*
+==================
+SV_DemoChangeMaxClients
+change sv_maxclients and move real clients slots when a demo is playing or stopped
+==================
+*/
+void SV_DemoChangeMaxClients( void ) {
+  int             oldMaxClients, oldDemoClients;
+  int             i, j, k;
+  client_t        *oldClients = NULL;
+  int             count;
+  //qboolean firstTime = svs.clients == NULL;
+
+
+	// == Checking the prerequisites
+	// Note: we check  here that we have enough slots to fit all clients, and that it doesn't overflow the MAX_CLIENTS the engine can support. Also, we save the oldMaxClients and oldDemoClients values.
+
+        // -- Get the highest client number in use
+	count = 0;
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
+			if (i > count)
+				count = i;
+		}
+	}
+	count++;
+
+	// -- Save the previous oldMaxClients and oldDemoClients values, and update
+
+	// Save the previous sv_maxclients value before updating it
+  oldMaxClients = sv_maxclients->integer;
+  // update the cvars
+  Cvar_Get( "sv_maxclients", "8", 0 );
+  Cvar_Get( "sv_democlients", "0", 0 ); // unnecessary now that sv_democlients is not latched anymore?
+	// Save the previous sv_democlients (since it's updated instantly, we cannot get it directly), we use a trick by computing the difference between the new and previous sv_maxclients (the difference should indeed be the exact value of sv_democlients)
+	oldDemoClients = (oldMaxClients - sv_maxclients->integer);
+	if (oldDemoClients < 0) // if the difference is negative, this means that before it was set to 0 (because the newer sv_maxclients is greater than the old)
+		oldDemoClients = 0;
+
+	// -- Check limits
+	// never go below the highest client number in use (make sure we have enough room for all players)
+	SV_BoundMaxClients( count );
+
+  // -- Change check: if still the same, we just quit, there's nothing to do
+  if ( sv_maxclients->integer == oldMaxClients ) {
+    return;
+  }
+
+
+	// == Memorizing clients
+	// Note: we save in a temporary variables the clients, because after we will wipe completely the svs.clients struct
+
+	// copy the clients to hunk memory
+	oldClients = Hunk_AllocateTempMemory( (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) ); // we allocate just enough memory for the real clients (not counting in the democlients)
+	// For all previous clients slots, we copy the entire client into a temporary var
+	for ( i = 0, j = 0, k = sv_privateClients->integer ; i < oldMaxClients ; i++ ) { // for all the previously connected clients, we copy them to a temporary var
+		// If there is a real client in this slot
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
+			// if the client is in a privateClient reserved slot, we move him on the reserved slots
+			if (i >= oldDemoClients && i < oldDemoClients + sv_privateClients->integer) {
+				oldClients[j++] = svs.clients[i];
+			// else the client is not a privateClient, and we move him to the first available slot after the privateClients slots
+			} else {
+				oldClients[k++] = svs.clients[i];
+			}
+		}
+	}
+
+	// Fill in the remaining clients slots with empty clients (else the engine crash when copying into memory svs.clients)
+	for (i=j; i < sv_privateClients->integer; i++) { // Fill the privateClients empty slots
+		Com_Memset(&oldClients[i], 0, sizeof(client_t));
+	}
+	for (i=k; i < (sv_maxclients->integer - sv_democlients->integer); i++) { // Fill the other normal clients slots
+		Com_Memset(&oldClients[i], 0, sizeof(client_t));
+	}
+
+	// free old clients arrays
+	Z_Free( svs.clients );
+
+
+	// == Allocating the new svs.clients and moving the saved clients over from the temporary var
+
+  // allocate new svs.clients
+  svs.clients = Z_Malloc( sv_maxclients->integer * sizeof(client_t) );
+  Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
+
+	// copy the clients over (and move them depending on sv_democlients: if >0, move them upwards, if == 0, move them to their original slots)
+	Com_Memcpy( svs.clients + sv_democlients->integer, oldClients, (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) );
+
+	// free the old clients on the hunk
+	Hunk_FreeTempMemory( oldClients );
+
+
+	// == Allocating snapshot entities
+
+  // allocate new snapshot entities
+  if ( com_dedicated->integer ) {
+    svs.numSnapshotEntities = sv_maxclients->integer * PACKET_BACKUP * 64;
+  } else {
+          // we don't need nearly as many when playing locally
+    svs.numSnapshotEntities = sv_maxclients->integer * 4 * 64;
+  }
+
+
+	// == Server-side demos management
+	SV_SetSnapshotParams();
+
+	// set demostate to none if it was just waiting to set maxclients and move real clients slots
+	if (sv.demoState == DS_WAITINGSTOP) {
+		sv.demoState = DS_NONE;
+		Cvar_SetValue("sv_demoState", DS_NONE);
+	}
+
+}
+
+/*
 ====================
 SV_DemoStartPlayback
 
@@ -1814,4 +1929,129 @@ void SV_DemoStopPlayback(void)
 
 	return;
 
+}
+
+/*
+=================
+SV_Demo_Record_f
+=================
+*/
+void SV_Demo_Record_f( void ) {
+  // make sure server is running
+  if (!com_sv_running->integer) {
+    Com_Printf("Server is not running.\n");
+    return;
+  }
+
+  if (Cmd_Argc() > 2) {
+    Com_Printf("Usage: demo_record <demoname>\n");
+    return;
+  }
+
+  if (sv.demoState != DS_NONE) {
+    Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
+    return;
+  }
+
+  if (sv_maxclients->integer == MAX_CLIENTS) {
+    Com_Printf("DEMO: ERROR: Too many client slots, reduce sv_maxclients and retry.\n");
+    return;
+  }
+
+  if (Cmd_Argc() == 2)
+    sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, PROTOCOL_VERSION);
+  else {
+    int     number;
+    // scan for a free demo name
+    for (number = 0 ; number >= 0 ; number++) {
+            Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, PROTOCOL_VERSION);
+            if (!FS_FileExists(sv.demoName))
+                    break;  // file doesn't exist
+    }
+    if (number < 0) {
+            Com_Printf("DEMO: ERROR: Couldn't generate a filename for the demo, try deleting some old ones.\n");
+            return;
+    }
+  }
+
+  sv.demoFile = FS_FOpenFileWrite(sv.demoName);
+  if (!sv.demoFile) {
+    Com_Printf("DEMO: ERROR: Couldn't open %s for writing.\n", sv.demoName);
+    return;
+  }
+  SV_DemoStartRecord();
+}
+
+
+/*
+=================
+SV_Demo_Play_f
+=================
+*/
+void SV_Demo_Play_f( void ) {
+  char *arg, *ext_test;
+
+  if (Cmd_Argc() != 2) {
+	  Com_Printf("Usage: demo_play <demoname>\n");
+    return;
+  }
+
+  if (sv.demoState != DS_NONE && sv.demoState != DS_WAITINGPLAYBACK) {
+    Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
+    return;
+  }
+
+  // check for an extension .svdm_?? (?? is protocol)
+  arg = Cmd_Argv(1);
+	ext_test = strrchr(arg, '.');
+	if ( ext_test && !Q_stricmpn(ext_test + 1, SVDEMOEXT, ARRAY_LEN(SVDEMOEXT) - 1) )
+	  Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s", arg);
+  else
+    Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, PROTOCOL_VERSION);
+
+
+  //FS_FileExists(sv.demoName);
+	FS_FOpenFileRead(sv.demoName, &sv.demoFile, qtrue);
+  if (!sv.demoFile) {
+    Com_Printf("ERROR: Couldn't open %s for reading.\n", sv.demoName);
+    return;
+  }
+
+  SV_DemoStartPlayback();
+}
+
+
+/*
+=================
+SV_Demo_Stop_f
+=================
+*/
+void SV_Demo_Stop_f( void ) {
+  if (sv.demoState == DS_NONE) {
+    Com_Printf("No demo is currently being recorded or played.\n");
+    return;
+  }
+
+  // Close the demo file
+  if (sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK)
+    SV_DemoStopPlayback();
+  else if (sv.demoState == DS_RECORDING)
+    SV_DemoStopRecord();
+}
+
+
+/*
+====================
+SV_CompleteDemoName
+====================
+*/
+void SV_CompleteDemoName( char *args, int argNum )
+{
+	if( argNum == 2 )
+	{
+		char demoExt[ 16 ];
+
+		Com_sprintf( demoExt, sizeof( demoExt ), ".%s%d", SVDEMOEXT, PROTOCOL_VERSION );
+		Field_CompleteFilename( "svdemos", demoExt, qtrue, qtrue );
+	}
 }
