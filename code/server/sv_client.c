@@ -747,6 +747,13 @@ gotnewcl:
 		SV_InjectLocation( newcl->tld, newcl->country );
 	}
 
+#ifdef USE_MV
+#ifdef USE_MV_ZCMD
+	cl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
+#endif
+	cl->multiview.recorder = qfalse;
+#endif
+
 	// send the connect packet to the client
 	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d", challenge );
 
@@ -822,6 +829,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// Free all allocated data on the client structure
 	SV_FreeClient( drop );
+
+#ifdef USE_MV
+	SV_TrackDisconnect( drop - svs.clients );
+#endif
 
 	// tell everyone why they got dropped
 	if ( reason ) {
@@ -997,6 +1008,15 @@ static void SV_SendClientGameState( client_t *client ) {
 	// with a gamestate and it sets the clc.serverCommandSequence at
 	// the client side
 	SV_UpdateServerCommandsToClient( client, &msg );
+
+#ifdef USE_MV
+#ifdef USE_MV_ZCMD
+	// reset command compressor and score timer
+	//client->multiview.encoderInited = qfalse;
+	client->multiview.z.deltaSeq = 0; // force encoder reset on gamestate change
+#endif
+	client->multiview.scoreQueryTime = 0;
+#endif
 
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
@@ -1900,7 +1920,10 @@ static const ucmd_t ucmds[] = {
 	{"stopdl", SV_StopDownload_f},
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
-
+#ifdef USE_MV
+	{"mvjoin", SV_MultiView_f},
+	{"mvleave", SV_MultiView_f},
+#endif
 	{NULL, NULL}
 };
 
@@ -2010,6 +2033,10 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team") )
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
 			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );
+#ifdef USE_MV
+			cl->multiview.lastSentTime = svs.time;
+#endif
+
 		}
 	}
 
@@ -2047,6 +2074,13 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		return qfalse;
 	}
+
+#ifdef USE_MV
+	if ( !cl->multiview.recorder && sv_demoFile != FS_INVALID_HANDLE && sv_demoClientID == (cl - svs.clients) ) {
+		// forward changes to recorder slot
+		svs.clients[ sv_maxclients->integer ].lastClientCommand++;
+	}
+#endif
 
 	cl->lastClientCommand = seq;
 	Q_strncpyz( cl->lastClientCommandString, s, sizeof( cl->lastClientCommandString ) );

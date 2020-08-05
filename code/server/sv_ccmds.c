@@ -291,13 +291,20 @@ static void SV_MapRestart_f( void ) {
 
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
+#ifdef USE_MV
+	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified || sv_mvClients->modified ) {
+#else
 	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified ) {
+#endif
 		char	mapname[MAX_QPATH];
 
 		Com_Printf( "variable change -- restarting.\n" );
 		// restart the map the slow way
 		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
+#ifdef USE_MV
+		SV_MultiViewStopRecord_f(); // as an alternative: save/restore recorder state and continue recording?
+#endif
 		SV_SpawnServer( mapname, qfalse );
 		return;
 	}
@@ -1550,6 +1557,10 @@ void SV_AddOperatorCommands( void ) {
   Cmd_AddCommand ("cl_record", SV_Record_f);
   Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
   Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
+#ifdef USE_MV
+	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
+	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
+#endif
 }
 
 
