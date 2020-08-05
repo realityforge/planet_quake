@@ -484,6 +484,10 @@ client_t *SV_GetPlayerByNum( void );
 //
 // sv_multiview.c
 //
+#define	SCORE_RECORDER 1
+#define	SCORE_CLIENT   2
+#define SCORE_PERIOD   10000
+
 void SV_TrackDisconnect( int clientNum );
 void SV_ForwardServerCommands( client_t *recorder /*, const client_t *client */ );
 void SV_MultiViewStopRecord_f( void );
@@ -495,6 +499,9 @@ void SV_MultiViewRecord_f( void );
 void SV_MultiView_f( client_t *client );
 void SV_MV_BoundMaxClients( void );
 void SV_MV_SetSnapshotParams( void );
+int SV_GetMergeMaskEntities( clientSnapshot_t *snap );
+void SV_EmitPlayerStates( int baseClientID, const clientSnapshot_t *from, const clientSnapshot_t *to, msg_t *msg, skip_mask sm );
+void SV_QueryClientScore( client_t *client );
 #endif
 
 //

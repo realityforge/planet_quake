@@ -487,7 +487,7 @@ void SV_MultiViewStopRecord_f( void )
 		// store in cache
 		SV_InsertFileRecord( sv_demoFileNameLast );
 
-		Com_Printf( S_COLOR_CYAN "stopped multiview recording.\n" );
+		Com_Printf( S_COLOR_CYAN "DEMO: stopped multiview recording %s.\n", sv_demoFileName );
 		return;
 	}
 
@@ -608,6 +608,333 @@ void SV_MV_SetSnapshotParams( void )
 		svs.modSnapshotPSF = ( 0x10000000 / svs.numSnapshotPSF ) * svs.numSnapshotPSF;
 	else
 		svs.modSnapshotPSF = 1;
+}
+
+int SV_GetMergeMaskEntities( clientSnapshot_t *snap )
+{
+	const entityState_t *ent;
+	psFrame_t *psf;
+	int skipMask;
+	int i, n;
+
+	n = 0;
+	skipMask = 0;
+	psf = NULL;
+
+	if ( !svs.currFrame )
+		return skipMask;
+	
+	for ( i = 0; i < sv_maxclients->integer; i++ ) {
+		ent = svs.currFrame->ents[ i ];
+		if ( ent->number >= sv_maxclients->integer )
+			break;
+		for ( /*n = 0 */; n < snap->num_psf; n++ ) {
+			psf = &svs.snapshotPSF[ ( snap->first_psf + n ) % svs.numSnapshotPSF ];
+			if ( psf->clientSlot == ent->number ) {
+				skipMask |= MSG_PlayerStateToEntityStateXMask( &psf->ps, ent, qtrue );
+			}
+		}
+		//if ( n >= snap->num_psf ) {
+		//	Com_Error( ERR_DROP, "ent[%i] not found in psf array", ent->number );
+		//	break;
+		//}
+	}
+	return skipMask;
+}
+
+
+static void SV_EmitByteMask( msg_t *msg, const byte *mask, const int maxIndex, const int indexBits, qboolean ignoreFirstZero )
+{
+	int firstIndex;
+	int lastIndex;
+
+	for ( firstIndex = 0; firstIndex < maxIndex; firstIndex++ ) {
+		if ( mask[ firstIndex ] ) {
+			lastIndex = firstIndex;
+			while ( lastIndex < maxIndex-1 ) {
+				if ( mask[ lastIndex + 1 ] )
+					lastIndex++;
+				else if ( ignoreFirstZero && lastIndex < maxIndex-2 && mask[ lastIndex + 2 ] )
+					lastIndex += 2; // skip single zero block
+				else
+					break;
+			}
+			//printf( "start: %i end: %i\n", firstIndex, lastIndex );
+			MSG_WriteBits( msg, 1, 1 ); // delta change
+			MSG_WriteBits( msg, firstIndex, indexBits );
+			MSG_WriteBits( msg, lastIndex, indexBits );
+			for ( ; firstIndex < lastIndex + 1 ; firstIndex++ ) {
+				MSG_WriteByte( msg, mask[ firstIndex ] );
+			}
+			firstIndex = lastIndex;
+		}
+	}
+	MSG_WriteBits( msg, 0, 1 ); // no delta
+}
+
+
+void SV_EmitPlayerStates( int baseClientID, const clientSnapshot_t *from, const clientSnapshot_t *to, msg_t *msg, skip_mask sm )
+{
+	psFrame_t *psf;
+	const psFrame_t *old_psf;
+	const playerState_t *oldPs;
+
+	int i, n;
+	int clientSlot;
+	int oldIndex;
+
+	const byte *oldPsMask;
+	byte oldPsMaskBuf[MAX_CLIENTS/8];
+	byte newPsMask[MAX_CLIENTS/8];
+
+	const byte *oldEntMask;
+	byte oldEntMaskBuf[MAX_GENTITIES/8];
+	byte newEntMask[MAX_GENTITIES/8];
+
+	// generate playerstate mask
+	if ( !from || !from->num_psf ) {
+		Com_Memset( oldPsMaskBuf, 0, sizeof( oldPsMaskBuf ) );
+		oldPsMask = oldPsMaskBuf;
+	} else {
+		oldPsMask = from->psMask;
+	}
+
+#if 1
+	// delta-xor playerstate bitmask
+	for ( i = 0; i < ARRAY_LEN( newPsMask ); i++ ) {
+		newPsMask[ i ] = to->psMask[ i ] ^ oldPsMask[ i ];
+	}
+	SV_EmitByteMask( msg, newPsMask, MAX_CLIENTS/8, 3, qfalse );
+#else
+	MSG_WriteData( msg, to->psMask[ i ], sizeof( to->psMasks ) ); // direct playerstate mask
+#endif
+
+	oldIndex = 0;
+	clientSlot = 0;
+	old_psf = NULL; // silent warning
+	
+	for ( i = 0; i < to->num_psf; i++ ) 
+	{
+		psf = &svs.snapshotPSF[ ( to->first_psf + i ) % svs.numSnapshotPSF ];
+		clientSlot = psf->clientSlot;
+		// check if masked in previous frame:
+		if ( !GET_ABIT( oldPsMask, clientSlot ) ) {
+			if ( from && clientSlot == baseClientID ) // FIXME: ps->clientNum?
+				oldPs = &from->ps; // transition from legacy to multiview mode
+			else
+				oldPs = NULL; // new playerstate
+			// empty entity mask
+			Com_Memset( oldEntMaskBuf, 0, sizeof( oldEntMaskBuf ) );
+			oldEntMask = oldEntMaskBuf;
+		} else {
+			// masked in previous frame so MUST exist
+			old_psf = NULL;
+			 // search for client state in old frame
+			for ( ; oldIndex < from->num_psf; oldIndex++ ) {
+				old_psf = &svs.snapshotPSF[ ( from->first_psf + oldIndex ) % svs.numSnapshotPSF ];
+				if ( old_psf->clientSlot == clientSlot )
+					break;
+			}
+			if ( oldIndex >= from->num_psf ) { // should never happen?
+				Com_Error( ERR_DROP, "oldIndex(%i) >= from->num_psf(%i), from->first_pfs=%i", oldIndex, from->num_psf, from->first_psf );
+				continue;
+			}
+			oldPs = &old_psf->ps;
+			oldEntMask = old_psf->entMask;
+		}
+		
+		// areabytes
+		MSG_WriteBits( msg, psf->areabytes, 6 ); // was 8
+		MSG_WriteData( msg, psf->areabits, psf->areabytes );
+
+		// playerstate
+		MSG_WriteDeltaPlayerstate( msg, oldPs, &psf->ps );
+
+#if 1
+		// delta-xor mask
+		for ( n = 0; n < ARRAY_LEN( newEntMask ); n++ ) {
+			newEntMask[ n ] = psf->entMask[ n ] ^ oldEntMask[ n ];
+		}
+		SV_EmitByteMask( msg, newEntMask, sizeof( newEntMask ), 7, qtrue );
+#else 
+		// direct mask
+		MSG_WriteData( msg, psf->entMask.mask, sizeof( psf->entMask.mask ) );
+#endif
+	}
+}
+
+#ifdef USE_MV_ZCMD
+
+static int SV_GetTextBits( const byte *cmd, int cmdlen ) {
+	int n;
+	for ( n = 0; n < cmdlen; n++ ) {
+		if ( cmd[ n ] > 127 ) {
+			return 8;
+		}
+	}
+	return 7;
+}
+
+
+static int SV_GetCmdSize( int Cmd ) 
+{
+	if ( (unsigned)Cmd <= 0xFF ) {
+		return 1;
+	} else if ( (unsigned)Cmd <= 0xFFFF ) {
+		return 2;
+	} else if ( (unsigned)Cmd <= 0xFFFFFF ) {
+		return 3;
+	} else {
+		return 4;
+	}
+}
+
+
+static qboolean SV_BuildCompressedBuffer( client_t *client, int reliableSequence )
+{
+	int index;
+	int cmdLen;
+	const char *cmd;
+	lzstream_t *stream;
+
+	index = reliableSequence & (MAX_RELIABLE_COMMANDS-1);
+
+	if ( client->multiview.z.stream[ index ].zcommandNum == reliableSequence )
+		return qfalse; // already compressed
+
+	//Com_DPrintf( S_COLOR_YELLOW "zcmd: compressing %i.%i\n", reliableSequence, client->multiview.z.deltaSeq );
+
+	cmd = client->reliableCommands[ index ];
+	cmdLen = strlen( cmd );
+
+	if ( client->multiview.z.deltaSeq == 0 ) {
+		LZSS_InitContext( &client->multiview.z.ctx );
+	} 
+
+	stream = &client->multiview.z.stream[ index ];
+	stream->zdelta = client->multiview.z.deltaSeq;
+	stream->zcommandNum = reliableSequence;
+	stream->zcommandSize = SV_GetCmdSize( reliableSequence );
+	stream->zcharbits = SV_GetTextBits( (byte*)cmd, cmdLen );
+	/* stream->count = */ LZSS_CompressToStream( &client->multiview.z.ctx, stream, (byte*)cmd, cmdLen );
+
+	// don't forget to update delta sequence
+	if ( client->multiview.z.deltaSeq >= 7 )
+		client->multiview.z.deltaSeq = 1;
+	else
+		client->multiview.z.deltaSeq++;
+
+	return qtrue;
+}
+#endif // USE_MV_ZCMD
+
+
+/*
+==================
+SV_FindActiveClient
+
+find first human client we can use as primary/score requester
+bots is not good for that because they may not receive all feedback from game VM
+==================
+*/
+int SV_FindActiveClient( qboolean checkCommands, int skipClientNum, int minActive ) {
+	playerState_t *ps;
+	client_t *clist[ MAX_CLIENTS ];
+	client_t *cl;
+	int	longestInactivity;
+	int	longestSpecInactivity;
+	int bestIndex;
+	int i, nactive;
+
+	nactive = 0;	// number of active clients
+	bestIndex = -1;
+	longestInactivity = INT_MIN;
+	longestSpecInactivity = INT_MIN;
+
+	for ( i = 0, cl = svs.clients; i < sv_maxclients->integer ; i++, cl++ ) {
+
+		if ( cl->state != CS_ACTIVE || cl->gentity == NULL )
+			continue;
+
+		if ( cl->gentity->r.svFlags & SVF_BOT || i == skipClientNum )
+			continue;
+
+		if ( checkCommands ) {
+			// wait a few seconds after any command received/sent
+			// to avoid dropping score request by flood protection
+			// or lagging target client too much
+			if ( cl->multiview.lastRecvTime + 500 > svs.time )
+				continue;
+
+			if ( cl->multiview.lastSentTime + 1500 > svs.time )
+				continue;
+
+			// never send anything to client that has unacknowledged commands
+			if ( cl->reliableSequence > cl->reliableAcknowledge )
+				continue;
+		}
+
+		if ( longestInactivity < svs.time - cl->multiview.scoreQueryTime ) {
+			longestInactivity = svs.time - cl->multiview.scoreQueryTime;
+			bestIndex = cl - svs.clients;
+		}
+
+		clist[ nactive++ ] = cl;
+	}
+
+	if ( nactive < minActive )
+		return -1;
+
+	// count spectators from active
+	for ( i = 0; i < nactive; i++ ) {
+		cl = clist[ i ];
+		ps = SV_GameClientNum( cl - svs.clients );
+		if ( ps->persistant[ PERS_TEAM ] == TEAM_SPECTATOR || ps->pm_flags & PMF_FOLLOW ) {
+			if ( longestSpecInactivity < svs.time - cl->multiview.scoreQueryTime ) {
+				longestSpecInactivity = svs.time - cl->multiview.scoreQueryTime;
+				bestIndex = cl - svs.clients;
+			}
+		}
+	}
+
+	return bestIndex;
+}
+
+
+void SV_QueryClientScore( client_t *client )
+{
+	int clientNum;
+
+	if ( client->multiview.scoreQueryTime == 0 )
+	{
+		// first time init?
+		client->multiview.scoreQueryTime = svs.time + SCORE_PERIOD/3;
+	}
+	else if ( svs.time >= client->multiview.scoreQueryTime ) 
+	{
+		//} else if ( svs.time > client->multiview.scoreQueryTime + SCORE_PERIOD ) {
+		if ( client->multiview.recorder && sv_demoFlags->integer & SCORE_RECORDER ) {
+
+			clientNum = SV_FindActiveClient( qtrue, -1, 0 ); // count last sent command, ignore noone
+			if ( clientNum != -1 ) {
+				if ( clientNum != sv_demoClientID ) {
+					//Com_DPrintf( S_COLOR_YELLOW " change score target from %i to %i\n", clientNum, sv_demoClientID );
+					SV_SetTargetClient( clientNum );
+				}
+
+				SV_ExecuteClientCommand( svs.clients + sv_demoClientID, "score" );
+
+				client->multiview.scoreQueryTime = svs.time + SCORE_PERIOD;
+				svs.clients[ sv_demoClientID ].multiview.scoreQueryTime = svs.time + SCORE_PERIOD;
+					
+			} else {
+				//Com_DPrintf( S_COLOR_YELLOW "no active clients available for 'score'\n" ); // debug print
+			}
+		} else if ( sv_demoFlags->integer & SCORE_CLIENT ) {
+			SV_ExecuteClientCommand( client, "score" );
+			client->multiview.scoreQueryTime = svs.time + SCORE_PERIOD;
+		}
+	}
 }
 
 #endif // USE_MV

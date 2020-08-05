@@ -344,6 +344,7 @@ var LibrarySysFiles = {
         || (ext.match(/tga/i) && name.lastIndexOf('png') === (name.length - ext.length))
         || (ext.match(/tga/i) && name.lastIndexOf('jpg') === (name.length - ext.length))
         || (ext.match(/dm_68/i) && name.lastIndexOf('svdm_68') === (name.length - 7))
+        || (ext.match(/dm_68/i) && name.lastIndexOf('dm_71') === (name.length - 5))
       ) {
         matches.push(contents[i]);
       }

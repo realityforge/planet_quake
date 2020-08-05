@@ -1560,6 +1560,7 @@ void SV_AddOperatorCommands( void ) {
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
 	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
+	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
 #endif
 }
 
