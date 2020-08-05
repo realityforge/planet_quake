@@ -118,7 +118,8 @@ var usePrevious = false
 var noOverwrite = false
 var noGraph = false
 var noDedupe = false
-var TEMP_DIR = os.tmpdir()
+var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
 var verbose = false
 
 var isConvertParams = false
@@ -837,7 +838,7 @@ async function repackGames() {
           [0, stepCounter, stepTotal, STEPS['source']],
           [1, 0, 2, 'Sourcing files']
         ])
-        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite)
+        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite ? [] : false)
         stepCounter++
       }
       if(!noGraph) {

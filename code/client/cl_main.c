@@ -34,6 +34,7 @@ cvar_t	*cl_renderer;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
+cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
 
 cvar_t	*cl_timeout;
 cvar_t	*cl_autoNudge;
@@ -52,6 +53,11 @@ cvar_t	*cl_aviPipeFormat;
 cvar_t	*cl_activeAction;
 
 cvar_t	*cl_motdString;
+
+#ifdef USE_MV
+void CL_Multiview_f( void );
+void CL_MultiviewFollow_f( void );
+#endif
 
 cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
@@ -682,11 +688,12 @@ static void CL_DemoCompleted( void ) {
 		}
 	}
 
-	CL_Disconnect( qtrue, qfalse );
+	CL_Disconnect( qtrue, qtrue );
 #ifndef EMSCRIPTEN
 	CL_NextDemo();
 
 #else
+	Com_Printf("DEMO: DemoCompleted: done\n");
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
 	} else {
@@ -787,7 +794,7 @@ static int CL_WalkDemoExt( const char *arg, char *name, fileHandle_t *handle )
 
 	while ( demo_protocols[ i ] )
 	{
-		Com_sprintf( name, MAX_OSPATH, "demos/%s.dm_%d", arg, demo_protocols[ i ] );
+		Com_sprintf( name, MAX_OSPATH, "demos/%s.%s%d", arg, DEMOEXT, demo_protocols[ i ] );
 		FS_BypassPure();
 		FS_FOpenFileRead( name, handle, qtrue );
 		FS_RestorePure();
@@ -867,7 +874,14 @@ static void CL_PlayDemo_f( void ) {
 	// check for an extension .dm_?? (?? is protocol)
 	// check for an extension .DEMOEXT_?? (?? is protocol)
 	ext_test = strrchr(arg, '.');
-	if ( ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1) )
+	if ( ext_test && !Q_stricmpn(ext_test + 1, SVDEMOEXT, ARRAY_LEN(SVDEMOEXT) - 1) )
+	{
+		Cbuf_AddText( "demo_stop\n" );
+		Cbuf_AddText( va("demo_play %s\n", arg) );
+		Cbuf_Execute();
+		return;
+	}
+	else if ( ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1) )
 	{
 		protocol = atoi(ext_test + ARRAY_LEN(DEMOEXT));
 
@@ -944,9 +958,9 @@ static void CL_PlayDemo_f( void ) {
 
 	// read demo messages until connected
 #ifdef USE_CURL
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && !Com_DL_InProgress( &download ) ) {
+	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() && !Com_DL_InProgress( &download ) ) {
 #else
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED ) {
+	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() ) {
 #endif
 		CL_ReadDemoMessage();
 	}
@@ -1280,6 +1294,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
+		cls.state = CA_CONNECTED;
 		if(!dropped && !cls.postgame) {
 			// skip disconnecting and just show the main menu
 			noGameRestart = qtrue;
@@ -1359,12 +1374,10 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 
-#ifndef EMSCRIPTEN
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
 		return;
 	}
-#endif
 
 	if ( Cmd_Argc() > 1 ) {
 		CL_AddReliableCommand( string, qfalse );
@@ -1566,6 +1579,7 @@ CL_Reconnect_f
 static void CL_Reconnect_f( void ) {
 	if ( cl_reconnectArgs[0] == '\0' )
 		return;
+	CL_Disconnect(qtrue, qtrue);
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
 }
@@ -1762,15 +1776,23 @@ void CL_Connect_After_Restart( void ) {
 CL_CompleteRcon
 ==================
 */
+qboolean hasRcon = qfalse;
 static void CL_CompleteRcon( char *args, int argNum )
 {
-	if( argNum == 2 )
+	int beforeLength;
+	if( argNum >= 2 )
 	{
 		// Skip "rcon "
 		char *p = Com_SkipTokens( args, 1, " " );
-
+		beforeLength = strlen(g_consoleField.buffer);
 		if( p > args )
 			Field_CompleteCommand( p, qtrue, qtrue );
+
+		// TODO: execute a \rcon cmdlist
+		if(beforeLength == strlen(g_consoleField.buffer)) {
+			Cbuf_AddText( va("rcon complete %s\n", p) );
+			Cbuf_Execute();
+		}
 	}
 }
 
@@ -3042,7 +3064,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 		return;
 	}
 
-	if ( cls.state < CA_CONNECTED ) {
+	if ( cls.state < CA_CONNECTED || clc.demoplaying ) {
 		return;		// can't be a valid sequenced packet
 	}
 
@@ -3348,9 +3370,6 @@ void CL_Frame( int msec ) {
 	CL_CheckUserinfo();
 
 	// if we haven't gotten a packet in a long time, drop the connection
-#ifdef EMSCRIPTEN
-	if(clc.serverAddress.type != NA_LOOPBACK)
-#endif
 	if ( !clc.demoplaying ) {
 		CL_CheckTimeout();
 	}
@@ -3396,7 +3415,7 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 	switch ( level ) {
 		default: Com_Printf( "%s", msg ); break;
 		case PRINT_DEVELOPER: Com_DPrintf( "%s", msg ); break;
-		case PRINT_WARNING: Com_Printf( S_COLOR_YELLOW "%s", msg ); break;
+		case PRINT_WARNING: Com_DPrintf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
 	}
 }
@@ -4018,6 +4037,7 @@ CL_Init
 */
 void CL_Init( void ) {
 	const char *s;
+	int index;
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
@@ -4065,6 +4085,12 @@ void CL_Init( void ) {
 		CVAR_ARCHIVE );
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
+
+	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_INIT);
+	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_INIT);
+	
+	for ( index = 2; index < MAX_MASTER_SERVERS; index++ )
+		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
@@ -4176,6 +4202,12 @@ void CL_Init( void ) {
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
 
+#ifdef USE_MV
+	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
+	Cmd_AddCommand( "mvleave", CL_Multiview_f );
+	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
+#endif
+
 	CL_InitRef();
 
 	SCR_Init();
@@ -4184,7 +4216,7 @@ void CL_Init( void ) {
 
 	Cvar_Set( "cl_running", "1" );
 #ifdef USE_MD5
-	CL_GenerateQKey();	
+	CL_GenerateQKey();
 #endif
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 	CL_UpdateGUID( NULL, 0 );
@@ -4210,29 +4242,6 @@ void CL_Init( void ) {
 		
 	}
 	*/
-	//LAN_AddServer(AS_LOCAL, "master.okayplay.com", "207.246.91.235:27950");
-	{
-		// TODO: make this a cvar option like master servers
-		netadr_t addr;
-		NET_StringToAdr( "207.246.91.235:27950", &addr, NA_IP );
-		//hash_insert(&addr);
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			"master.okayplay.com", sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qfalse;
-		cls.numlocalservers++;
-
-		NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &addr, NA_UNSPEC );
-		addr.type = NA_IP;
-		addr.port = BigShort((short)PORT_SERVER);
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			"localhost", sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qtrue;
-		cls.numlocalservers++;
-	}
 	
 #endif
 }
@@ -4304,6 +4313,12 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand( "dlmap" );
 #endif
 
+#ifdef USE_MV
+	Cmd_RemoveCommand( "mvjoin" );
+	Cmd_RemoveCommand( "mvleave" );
+	Cmd_RemoveCommand( "mvfollow" );
+#endif
+
 	CL_ClearInput();
 
 	Cvar_Set( "cl_running", "0" );
@@ -4368,7 +4383,7 @@ CL_ServerInfoPacket
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
-	const char *infoString;
+	const char *infoString, *autocomplete;
 	int		prot;
 	netadr_t addr;
 	
@@ -4380,6 +4395,29 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	}
 
 	infoString = MSG_ReadString( msg );
+	
+	// exit early if this is an autocomplete message
+	autocomplete = Info_ValueForKey( infoString, "autocomplete" );
+	NET_StringToAdr( rconAddress->string, &rcon_address, NA_UNSPEC );
+	if ( rcon_address.port == 0 ) {
+		rcon_address.port = BigShort( PORT_SERVER );
+	}
+	if(autocomplete[0]) {
+		if((NET_CompareAdr(from, &clc.serverAddress)
+			|| (rcon_address.type != NA_BAD && NET_CompareAdr(from, &rcon_address)))) {
+			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon");
+			Field_Clear(&g_consoleField);
+			if(hasRcon) // add rcon back on to autocomplete command
+				memcpy(&g_consoleField.buffer, va("\\rcon %s", autocomplete), sizeof(g_consoleField.buffer));
+			else
+				memcpy(&g_consoleField.buffer, autocomplete, sizeof(g_consoleField.buffer));
+			Field_AutoComplete( &g_consoleField );
+			g_consoleField.cursor = strlen(g_consoleField.buffer);
+			hasRcon = qfalse;
+		} else
+			Com_Printf( "Rcon: autocomplete dropped\n" );
+		return;
+	}
 
 	// if this isn't the correct protocol version, ignore it
 	prot = atoi( Info_ValueForKey( infoString, "protocol" ) );
@@ -4702,6 +4740,25 @@ static void CL_LocalServers_f( void ) {
 	n = (int)strlen( message );
 
 #ifdef EMSCRIPTEN
+	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
+		netadr_t addr;
+		qboolean found = qfalse;
+		if(!cl_master[i]->string[0]) continue;
+		NET_StringToAdr( cl_master[i]->string, &addr, NA_UNSPEC );
+		for(j = 0; j < cls.numlocalservers; j++) {
+			if ( NET_CompareAdr( &cls.localServers[j].adr, &addr ) ) {
+				found = qtrue;
+			}
+		}
+		if(found) continue;
+		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
+		Q_strncpyz(
+			cls.localServers[cls.numlocalservers].hostName,
+			cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
+		cls.localServers[cls.numlocalservers].visible = qfalse;
+		cls.numlocalservers++;
+	}
+
 	// emulate localhost
 	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
 	to.type = NA_IP;
@@ -5314,3 +5371,70 @@ static void CL_Download_f( void )
 	CL_Download( Cmd_Argv( 0 ), Cmd_Argv( 1 ), qfalse );
 }
 #endif // USE_CURL
+
+#ifdef USE_MV
+
+static qboolean GetConfigString( int index, char *buf, int size )
+{
+	int		offset;
+
+	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
+		buf[0] = '\0';
+		return qfalse;
+	}
+
+	offset = cl.gameState.stringOffsets[ index ];
+	if ( !offset ) {
+		if ( size ) {
+			buf[0] = '\0';
+		}
+		return qfalse;
+	}
+
+	Q_strncpyz( buf, cl.gameState.stringData + offset, size );
+
+	return qtrue;
+}
+
+
+void CL_Multiview_f( void )
+{
+	char serverinfo[ MAX_INFO_STRING ];
+	char *v;
+	
+	if ( cls.state != CA_ACTIVE || !cls.servername[0] || clc.demoplaying ) {
+		Com_Printf( "Not connected.\n" );
+		return;
+	}
+
+	if ( !GetConfigString( CS_SERVERINFO, serverinfo, sizeof( serverinfo ) ) || !serverinfo[0] ) {
+		Com_Printf( "No serverinfo available.\n" );
+	}
+
+	v = Info_ValueForKey( serverinfo, "mvproto" );
+	if ( atoi( v ) != MV_PROTOCOL_VERSION ) {
+		Com_Printf( S_COLOR_YELLOW "Remote server does not support this function.\n" );
+		return;
+	}
+
+	CL_AddReliableCommand( Cmd_Argv( 0 ), qfalse );
+}
+
+
+void CL_MultiviewFollow_f( void )
+{
+	int clientNum;
+
+	if ( !cl.snap.multiview )
+		return;
+
+	clientNum = atoi( Cmd_Argv( 1 ) );
+
+	if ( (unsigned)clientNum >= MAX_CLIENTS )
+		return;
+
+	if ( GET_ABIT( cl.snap.clientMask, clientNum ) )
+		clc.clientView = clientNum;
+}
+
+#endif // USE_MV

@@ -89,7 +89,7 @@ var LibrarySysFiles = {
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
-          || file.name.match(/\/sarge\/icon_|sarge\/.*\.skin|botfiles|\.bot|bots\.txt|gfx\//i)
+          || file.name.match(/sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
           || file.name.match(new RegExp('\/levelshots\/' + mapname, 'i'))
           || file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
@@ -104,8 +104,8 @@ var LibrarySysFiles = {
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
-          SYSF.index[keys[i]].downloading = true
-          SYSN.downloadLazy.push(file.name)
+          //SYSF.index[keys[i]].downloading = true
+          //SYSN.downloadLazy.push(file.name)
         } else {
         }
       }
@@ -324,6 +324,11 @@ var LibrarySysFiles = {
           && (!dironly || typeof SYSF.index[k].size == 'undefined'))
         .map(k => PATH.basename(SYSF.index[k].name)))
         .filter((f, i, arr) => f && arr.indexOf(f) === i)
+      if(directory.match(/\/demos/i)) {
+        contents = contents
+          .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
+          .filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
+      }
       if(contents.length > 5000) {
         debugger
       }
@@ -338,6 +343,8 @@ var LibrarySysFiles = {
       if (!ext || name.lastIndexOf(ext) === (name.length - ext.length)
         || (ext.match(/tga/i) && name.lastIndexOf('png') === (name.length - ext.length))
         || (ext.match(/tga/i) && name.lastIndexOf('jpg') === (name.length - ext.length))
+        || (ext.match(/dm_68/i) && name.lastIndexOf('svdm_68') === (name.length - 7))
+        || (ext.match(/dm_68/i) && name.lastIndexOf('dm_71') === (name.length - 5))
       ) {
         matches.push(contents[i]);
       }

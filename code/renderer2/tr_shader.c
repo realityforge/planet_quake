@@ -70,7 +70,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	}
 
 	sh2 = R_FindShaderByName( newShaderName );
-  if (sh2 == NULL || sh2 == tr.defaultShader || sh2->defaultShader || mapShaders) {
+  if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
 		h = RE_RegisterShaderLightMap(newShaderName, index);
 		sh2 = R_GetShaderByHandle(h);
 	}
@@ -682,7 +682,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_GENNORMALMAP;
 				}
         
-        if(!mapShaders) {
+        if(!mapShaders && r_lazyLoad->integer == 2) {
           byte *pic;
           int len;
           R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
@@ -734,7 +734,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 
-      if(!mapShaders) {
+      if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
@@ -781,7 +781,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if (!shader.noPicMip)
 						flags |= IMGFLAG_PICMIP;
 
-          if(!mapShaders) {
+          if(!mapShaders && r_lazyLoad->integer == 2) {
             int len;
             byte *pic;
             R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
@@ -1604,7 +1604,7 @@ static void ParseSkyParms( const char **text ) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
         
-      if(!mapShaders) {
+      if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
@@ -1642,7 +1642,7 @@ static void ParseSkyParms( const char **text ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
-      if(!mapShaders) {
+      if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
@@ -2566,7 +2566,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			COM_StripExtension(diffuseImg->imgName, normalName, MAX_QPATH);
 			Q_strcat(normalName, MAX_QPATH, "_nh");
 
-      if(!mapShaders) {
+      if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
@@ -2583,7 +2583,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			{
 				// try a normal image ("_n" suffix)
 				normalName[strlen(normalName) - 1] = '\0';
-        if(!mapShaders) {
+        if(!mapShaders && r_lazyLoad->integer == 2) {
           byte *pic;
           int len;
           R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
@@ -2625,7 +2625,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			COM_StripExtension(diffuseImg->imgName, specularName, MAX_QPATH);
 			Q_strcat(specularName, MAX_QPATH, "_s");
 
-      if(!mapShaders) {
+      if(!mapShaders && r_lazyLoad->integer == 2) {
         byte *pic;
         int len;
         R_LoadImage(specularName, &pic, &len, &len, &len, &len, qtrue);
@@ -3080,7 +3080,7 @@ static shader_t *GeneratePermanentShader( void ) {
 	int			i, b;
 	int			size, hash;
 
-	if ( tr.numShaders == MAX_SHADERS ) {
+	if ( tr.numShaders >= MAX_SHADERS ) {
 		ri.Printf( PRINT_DEVELOPER, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
 		return tr.defaultShader;
 	}
@@ -3482,6 +3482,8 @@ static shader_t *FinishShader( void ) {
 
 	// determine which vertex attributes this shader needs
 	ComputeVertexAttribs();
+  
+  ri.Printf(PRINT_DEVELOPER, "FinishShader: testing %s %i\n", shader.name, mapShaders);
 
 	return GeneratePermanentShader();
 }
@@ -3632,7 +3634,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       &&	!Q_stricmp(sh->name, strippedName)
-      && (!mapShaders || !sh->defaultShader)) {
+      &&  (!mapShaders) ) {
 			// match found
 			return sh;
 		}
@@ -3659,7 +3661,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( r_printShaders->integer ) {
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
-    
+
     if(!strcmp(name, "console")
       || !strcmp(name, "white")
       || Q_stristr(name, "bigchars")) {
@@ -3669,16 +3671,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !ParseShader( &shaderText )) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
-		} else if(!mapShaders && shader.stages[0]->active == qfalse) {
-      shader.defaultShader = qtrue;
     } else {
       shader.defaultShader = qfalse;
     }
 
-    if(!Q_stricmp(name, "console"))
-  		Com_Printf("Error: CL_UpdateShader: %s, %i\n", name, lightmapIndex);
-
 		sh = FinishShader();
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qfalse;
+    }
 		return sh;
 	}
 
@@ -3706,7 +3708,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		if ( !shader.allowCompress )
 			flags |= IMGFLAG_NO_COMPRESSION;
       
-    if(!mapShaders) {
+    if(!mapShaders && r_lazyLoad->integer == 2) {
       byte *pic = NULL;
       int len = 0;
       R_LoadImage( name, &pic, &len, &len, &len, &len, qtrue );
@@ -4175,7 +4177,7 @@ static void ScanAndLoadShaderFiles( void )
 	const char *p, *oldp;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
 
-  mapShaders = r_lazyLoad->integer < 2;
+  mapShaders = qfalse;
 	long sum = 0;
 
 	// scan for legacy shader files
@@ -4344,7 +4346,7 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   //if(Q_stristr(shaderName, "rocketExplosion"))
   R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex);
   
-  mapShaders = r_lazyLoad->integer < 2;
+  mapShaders = qfalse;
 }
 
 /*

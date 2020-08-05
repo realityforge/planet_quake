@@ -1619,12 +1619,12 @@ static qboolean NET_GetCvars( void ) {
 	net_ip6->modified = qfalse;
 
 #ifdef EMSCRIPTEN
-  if(!com_dedicated->integer) {
+  //if(!com_dedicated->integer) {
   	Com_RandomBytes((byte*)&port, sizeof(int));
   	port &= 0xffff;
-  } else {
-    port = PORT_SERVER;
-  }
+  //} else {
+  //  port = PORT_SERVER;
+  //}
 #else
 	port = PORT_SERVER;
 #endif

@@ -121,8 +121,11 @@ void SV_GetChallenge( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
-	if (!com_dedicated->integer
-		&& (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive"))) {
+#ifdef EMSCRIPTEN
+	// allow people to connect to your single player server
+	if(!com_dedicated->integer)
+#endif
+	if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
 #endif
@@ -744,6 +747,13 @@ gotnewcl:
 		SV_InjectLocation( newcl->tld, newcl->country );
 	}
 
+#ifdef USE_MV
+#ifdef USE_MV_ZCMD
+	cl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
+#endif
+	cl->multiview.recorder = qfalse;
+#endif
+
 	// send the connect packet to the client
 	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d", challenge );
 
@@ -804,8 +814,12 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	char	name[ MAX_NAME_LENGTH ];
 	qboolean isBot;
 	int		i;
+	
+	if(drop->demorecording) {
+		SV_StopRecord(drop);
+	}
 
-	if ( drop->state == CS_ZOMBIE ) {
+	if ( drop->state == CS_ZOMBIE || drop->demoClient ) {
 		return;		// already dropped
 	}
 
@@ -815,6 +829,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// Free all allocated data on the client structure
 	SV_FreeClient( drop );
+
+#ifdef USE_MV
+	SV_TrackDisconnect( drop - svs.clients );
+#endif
 
 	// tell everyone why they got dropped
 	if ( reason ) {
@@ -957,7 +975,7 @@ the wrong gamestate.
 ================
 */
 static void SV_SendClientGameState( client_t *client ) {
-	int			start;
+	int			start, headerBytes;
 	entityState_t nullstate;
 	const svEntity_t *svEnt;
 	msg_t		msg;
@@ -978,6 +996,8 @@ static void SV_SendClientGameState( client_t *client ) {
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 
 	MSG_Init( &msg, msgBuffer, MAX_MSGLEN );
+	headerBytes = msg.cursize;
+
 
 	// NOTE, MRE: all server->client messages now acknowledge
 	// let the client know which reliable clientCommands we have received
@@ -988,6 +1008,15 @@ static void SV_SendClientGameState( client_t *client ) {
 	// with a gamestate and it sets the clc.serverCommandSequence at
 	// the client side
 	SV_UpdateServerCommandsToClient( client, &msg );
+
+#ifdef USE_MV
+#ifdef USE_MV_ZCMD
+	// reset command compressor and score timer
+	//client->multiview.encoderInited = qfalse;
+	client->multiview.z.deltaSeq = 0; // force encoder reset on gamestate change
+#endif
+	client->multiview.scoreQueryTime = 0;
+#endif
 
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
@@ -1019,6 +1048,12 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// write the checksum feed
 	MSG_WriteLong( &msg, sv.checksumFeed );
+	
+	if ( client->demorecording && !client->demowaiting) {
+		msg_t copyMsg;
+		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
+ 		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
+ 	}
 
 	// it is important to handle gamestate overflow
 	// but at this stage client can't process any reliable commands
@@ -1035,6 +1070,8 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// deliver this to the client
 	SV_SendMessageToClient( &msg, client );
+	
+	
 }
 
 
@@ -1049,12 +1086,6 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
 	client->state = CS_ACTIVE;
-
-	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
-	if (sv.demoState == DS_PLAYBACK &&
-	    ( (client - svs.clients) >= sv_democlients->integer ) && ( (client - svs.clients) < sv_maxclients->integer ) ) { // check that it's a real player
-		SV_ExecuteClientCommand(client, "team spectator");
-	}
 
 	// resend all configstrings using the cs commands since these are
 	// no longer sent when the client is CS_PRIMED
@@ -1076,6 +1107,21 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	// call the game begin function
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
+
+	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
+	if (sv.demoState == DS_PLAYBACK &&
+	    ( (client - svs.clients) >= sv_democlients->integer ) && ( (client - svs.clients) < sv_maxclients->integer ) ) { // check that it's a real player
+		SV_ExecuteClientCommand(client, "team spectator");
+	}
+	
+	// serverside demo
+ 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT
+		&& !client->demoClient) { // don't record server side demo playbacks automatically
+ 		if (client->demorecording) {
+ 			SV_StopRecord( client );
+ 		}
+ 		SV_Record(client, 0);
+ 	}
 }
 
 
@@ -1187,6 +1233,10 @@ SV_BeginDownload_f
 ==================
 */
 static void SV_BeginDownload_f( client_t *cl ) {
+ 	// Stop serverside demo from this client
+  if (sv_autoRecord->integer && cl->demorecording) {
+  	SV_StopRecord( cl );
+ 	}
 
 	// Kill any existing download
 	SV_CloseDownload( cl );
@@ -1410,7 +1460,7 @@ int SV_SendQueuedMessages( void )
 	{
 		cl = &svs.clients[i];
 
-		if ( cl->state )
+		if ( cl->state && !cl->demoClient )
 		{
 			nextFragT = SV_RateMsec(cl);
 
@@ -1870,7 +1920,10 @@ static const ucmd_t ucmds[] = {
 	{"stopdl", SV_StopDownload_f},
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
-
+#ifdef USE_MV
+	{"mvjoin", SV_MultiView_f},
+	{"mvleave", SV_MultiView_f},
+#endif
 	{NULL, NULL}
 };
 
@@ -1899,7 +1952,8 @@ Also called by bot code
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
 	qboolean bFloodProtect, gameResult;
-	char *ded;
+	char		sv_outputbuf[1024 - 16];
+	int     ded;
 	
 	Cmd_TokenizeString( s );
 	
@@ -1908,19 +1962,23 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
+		redirectAddress = cl->netchan.remoteAddress;
+		Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 		if(Cmd_ExecuteString(s, qtrue)) {
+			Com_EndRedirect();
 			return qtrue;
 		}
 		
 		// in baseq3 game (not cgame or ui) the dedicated flag is used for
 		// say "server:" and other logging bs. hope this is sufficient?
-		ded = Cvar_VariableString("dedicated");
+		ded = com_dedicated->integer;
 		Cvar_Set("dedicated", "0");
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand();
 		}
-		Cvar_Set("dedicated", ded);
+		Cvar_Set("dedicated", va("%i", ded));
+		Com_EndRedirect();
 	}
 
 #endif
@@ -1975,6 +2033,10 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team") )
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
 			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );
+#ifdef USE_MV
+			cl->multiview.lastSentTime = svs.time;
+#endif
+
 		}
 	}
 
@@ -2012,6 +2074,13 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		return qfalse;
 	}
+
+#ifdef USE_MV
+	if ( !cl->multiview.recorder && sv_demoFile != FS_INVALID_HANDLE && sv_demoClientID == (cl - svs.clients) ) {
+		// forward changes to recorder slot
+		svs.clients[ sv_maxclients->integer ].lastClientCommand++;
+	}
+#endif
 
 	cl->lastClientCommand = seq;
 	Q_strncpyz( cl->lastClientCommandString, s, sizeof( cl->lastClientCommandString ) );
@@ -2248,7 +2317,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	} while ( 1 );
 
 #ifdef EMSCRIPTEN
-	// skip user move commands if server is restarting
+	// skip user move commands if server is restarting because of the command above
 	if(!FS_Initialized()) {
 		return;
 	}

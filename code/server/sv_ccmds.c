@@ -103,7 +103,7 @@ SV_GetPlayerByNum
 Returns the player with idnum from Cmd_Argv(1)
 ==================
 */
-static client_t *SV_GetPlayerByNum( void ) {
+client_t *SV_GetPlayerByNum( void ) {
 	client_t	*cl;
 	int			i;
 	int			idnum;
@@ -158,6 +158,8 @@ static void SV_Map_f( void ) {
 	char		expanded[MAX_QPATH];
 	char		mapname[MAX_QPATH];
 	int			len;
+	int			i;
+ 	client_t	*cl;
 
 	map = Cmd_Argv(1);
 	if ( !map || !*map || strlen(map) == 0 ) {
@@ -212,12 +214,20 @@ static void SV_Map_f( void ) {
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
 
+	if (sv_autoRecord->integer && svs.initialized) {
+ 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
+ 			if (cl->state >= CS_CONNECTED && cl->demorecording) {
+ 				SV_StopRecord( cl );
+ 			}
+ 		}
+ 	}
+
 	// save the map name here cause on a map restart we reload the q3config.cfg
 	// and thus nuke the arguments of the map command
 	Q_strncpyz(mapname, map, sizeof(mapname));
 
 	// start up the map
-	SV_SpawnServer( mapname, killBots );
+	SV_SpawnServer( mapname, killBots ); // TODO: make bots on devmaps a Cvar bot_devmapEnable
 
 	// set the cheat value
 	// if the level was started with "map <levelname>", then
@@ -273,24 +283,31 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
+	// stop any demos
+	if (sv.demoState == DS_RECORDING)
+		SV_DemoStopRecord();
+	if (sv.demoState == DS_PLAYBACK)
+		SV_DemoStopPlayback();
+
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
+#ifdef USE_MV
+	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified || sv_mvClients->modified ) {
+#else
 	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified ) {
+#endif
 		char	mapname[MAX_QPATH];
 
 		Com_Printf( "variable change -- restarting.\n" );
 		// restart the map the slow way
 		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
+#ifdef USE_MV
+		SV_MultiViewStopRecord_f(); // as an alternative: save/restore recorder state and continue recording?
+#endif
 		SV_SpawnServer( mapname, qfalse );
 		return;
 	}
-
-	// stop any demos
-	if (sv.demoState == DS_RECORDING)
-		SV_DemoStopRecord();
-	if (sv.demoState == DS_PLAYBACK)
-		SV_DemoStopPlayback();
 
 	// toggle the server bit so clients can detect that a
 	// map_restart has happened
@@ -326,6 +343,7 @@ static void SV_MapRestart_f( void ) {
 	{
 		sv.time += 100;
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		SV_BotFrame( sv.time );
 	}
 
 	sv.state = SS_GAME;
@@ -341,6 +359,12 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		if ( client->netchan.remoteAddress.type == NA_BOT ) {
+			// drop bots on map restart because they will be re-added by arena config
+			// TODO: only drop bots on single-player mode?
+			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
+				SV_DropClient( client, qtrue );
+				continue;
+			}
 			isBot = qtrue;
 		} else {
 			isBot = qfalse;
@@ -1456,130 +1480,6 @@ static void SV_Locations_f( void ) {
 	SV_PrintLocations_f( NULL );
 }
 
-/*
-=================
-SV_Demo_Record_f
-=================
-*/
-static void SV_Demo_Record_f( void ) {
-        // make sure server is running
-        if (!com_sv_running->integer) {
-                Com_Printf("Server is not running.\n");
-                return;
-        }
-
-        if (Cmd_Argc() > 2) {
-                Com_Printf("Usage: demo_record <demoname>\n");
-                return;
-        }
-
-        if (sv.demoState != DS_NONE) {
-                Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
-                return;
-        }
-
-        if (sv_maxclients->integer == MAX_CLIENTS) {
-                Com_Printf("DEMO: ERROR: Too many client slots, reduce sv_maxclients and retry.\n");
-                return;
-        }
-
-        if (Cmd_Argc() == 2)
-                sprintf(sv.demoName, "svdemos/%s.%s%d", Cmd_Argv(1), SVDEMOEXT, PROTOCOL_VERSION);
-        else {
-                int     number;
-                // scan for a free demo name
-                for (number = 0 ; number >= 0 ; number++) {
-                        Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%d.%s%d", number, SVDEMOEXT, PROTOCOL_VERSION);
-                        if (!FS_FileExists(sv.demoName))
-                                break;  // file doesn't exist
-                }
-                if (number < 0) {
-                        Com_Printf("DEMO: ERROR: Couldn't generate a filename for the demo, try deleting some old ones.\n");
-                        return;
-                }
-        }
-
-        sv.demoFile = FS_FOpenFileWrite(sv.demoName);
-        if (!sv.demoFile) {
-                Com_Printf("DEMO: ERROR: Couldn't open %s for writing.\n", sv.demoName);
-                return;
-        }
-        SV_DemoStartRecord();
-}
-
-
-/*
-=================
-SV_Demo_Play_f
-=================
-*/
-static void SV_Demo_Play_f( void ) {
-        char *arg;
-
-        if (Cmd_Argc() != 2) {
-                Com_Printf("Usage: demo_play <demoname>\n");
-                return;
-        }
-
-        if (sv.demoState != DS_NONE && sv.demoState != DS_WAITINGPLAYBACK) {
-                Com_Printf("A demo is already being recorded/played. Use demo_stop and retry.\n");
-                return;
-        }
-
-        // check for an extension .svdm_?? (?? is protocol)
-        arg = Cmd_Argv(1);
-        if (!strcmp(arg + strlen(arg) - 6, va(".%s%d", SVDEMOEXT, PROTOCOL_VERSION)))
-                Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s", arg);
-        else
-                Com_sprintf(sv.demoName, sizeof(sv.demoName), "svdemos/%s.%s%d", arg, SVDEMOEXT, PROTOCOL_VERSION);
-
-
-        //FS_FileExists(sv.demoName);
-	FS_FOpenFileRead(sv.demoName, &sv.demoFile, qtrue);
-        if (!sv.demoFile) {
-                Com_Printf("ERROR: Couldn't open %s for reading.\n", sv.demoName);
-                return;
-        }
-
-        SV_DemoStartPlayback();
-}
-
-
-/*
-=================
-SV_Demo_Stop_f
-=================
-*/
-static void SV_Demo_Stop_f( void ) {
-        if (sv.demoState == DS_NONE) {
-                Com_Printf("No demo is currently being recorded or played.\n");
-                return;
-        }
-
-        // Close the demo file
-        if (sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK)
-                SV_DemoStopPlayback();
-        else
-                SV_DemoStopRecord();
-}
-
-
-/*
-====================
-SV_CompleteDemoName
-====================
-*/
-static void SV_CompleteDemoName( char *args, int argNum )
-{
-	if( argNum == 2 )
-	{
-		char demoExt[ 16 ];
-
-		Com_sprintf( demoExt, sizeof( demoExt ), ".%s%d", SVDEMOEXT, PROTOCOL_VERSION );
-		Field_CompleteFilename( "svdemos", demoExt, qtrue, qtrue );
-	}
-}
-
 //===========================================================
 
 /*
@@ -1654,6 +1554,14 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
 	Cmd_SetCommandCompletionFunc( "demo_play", SV_CompleteDemoName );
 	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
+  Cmd_AddCommand ("cl_record", SV_Record_f);
+  Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
+  Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
+#ifdef USE_MV
+	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
+	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
+	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
+#endif
 }
 
 

@@ -108,19 +108,46 @@ typedef struct {
 	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	playerState_t	ps;
 	int				num_entities;
-#if 0
-	int				first_entity;		// into the circular sv_packet_entities[]
-										// the entities MUST be in increasing state number
-										// order, otherwise the delta compression will fail
+	
+#ifdef USE_MV
+	qboolean		multiview;
+	int				version;
+	int				mergeMask;
+	int				first_psf;				// first playerState index
+	int				num_psf;				// number of playerStates to send
+	byte			psMask[MAX_CLIENTS/8];	// playerState mask
 #endif
+
 	int				messageSent;		// time the message was transmitted
 	int				messageAcked;		// time the message was acked
 	int				messageSize;		// used to rate drop packets
 
 	int				frameNum;			// from snapshot storage to compare with last valid
+#ifdef USE_MV
+	entityState_t	*ents[ MAX_GENTITIES ];
+#else
 	entityState_t	*ents[ MAX_SNAPSHOT_ENTITIES ];
+#endif
 
 } clientSnapshot_t;
+
+
+#ifdef USE_MV
+
+#define MAX_MV_FILES 4096 // for directory caching
+
+typedef byte entMask_t[ MAX_GENTITIES / 8 ];
+
+typedef struct psFrame_s {
+	int				clientSlot;
+	int				areabytes;
+	byte			areabits[ MAX_MAP_AREA_BYTES ]; // portalarea visibility bits
+	playerState_t	ps;
+	entMask_t		entMask;
+} psFrame_t;
+
+#endif // USE_MV
+
 
 typedef enum {
 	CS_FREE = 0,	// can be reused for a new connection
@@ -181,6 +208,15 @@ typedef struct client_s {
 	sharedEntity_t	*gentity;			// SV_GentityNum(clientnum)
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
+	// serverside demo information
+	qboolean  demoClient; // is this a demoClient?
+ 	char		  demoName[MAX_QPATH];
+ 	qboolean	demorecording;
+ 	qboolean	demowaiting;	// don't record until a non-delta message is received
+ 	fileHandle_t	demofile;
+ 	qboolean	savedemo; // qtrue iff the demo should be saved in any case (qfalse and sv_autorecord 1 --> the score decides)
+
+
 	// downloading
 	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
 	fileHandle_t	download;			// file being downloaded
@@ -218,7 +254,6 @@ typedef struct client_s {
 	int				oldServerTime;
 	qboolean		csUpdated[MAX_CONFIGSTRINGS];
 	qboolean		compat;
-	qboolean            demoClient; // is this a demoClient?
 
 	// flood protection
 	rateLimit_t		cmd_rate;
@@ -231,6 +266,26 @@ typedef struct client_s {
 
 	char			tld[3]; // "XX\0"
 	const char		*country;
+
+#ifdef USE_MV
+	struct {
+		int				protocol;
+
+		int				scoreQueryTime;
+		int				lastRecvTime; // any received command
+		int				lastSentTime; // any sent command
+#ifdef USE_MV_ZCMD
+		//  command compression
+		struct			{
+			int			deltaSeq;
+			lzctx_t		ctx;
+			lzstream_t	stream[ MAX_RELIABLE_COMMANDS ];
+		} z;
+#endif
+		qboolean		recorder;
+		
+	} multiview;
+#endif // USE_MV
 
 } client_t;
 
@@ -263,6 +318,14 @@ typedef struct {
 	snapshotFrame_t	snapFrames[ NUM_SNAPSHOT_FRAMES ];
 	snapshotFrame_t	*currFrame; // current frame that clients can refer
 
+#ifdef USE_MV	
+	int			numSnapshotPSF;				// sv_democlients->integer*PACKET_BACKUP*MAX_CLIENTS
+	int			nextSnapshotPSF;			// next snapshotPS to use
+	int			modSnapshotPSF;				// clamp value
+	psFrame_t	*snapshotPSF;				// [numSnapshotPS]
+	qboolean	emptyFrame;					// true if no game logic run during SV_Frame()
+#endif // USE_MV
+
 } serverStatic_t;
 
 #ifdef USE_BANS
@@ -293,6 +356,25 @@ extern	cvar_t	*sv_maxclients;
 extern	cvar_t	*sv_maxclientsPerIP;
 extern	cvar_t	*sv_clientTLD;
 
+#ifdef USE_MV
+extern	fileHandle_t	sv_demoFile;
+extern	char	sv_demoFileName[ MAX_OSPATH ];
+extern	char	sv_demoFileNameLast[ MAX_OSPATH ];
+
+extern	int		sv_demoClientID;
+extern	int		sv_lastAck;
+extern	int		sv_lastClientSeq;
+
+extern	cvar_t	*sv_mvClients;
+extern	cvar_t	*sv_mvPassword;
+extern	cvar_t	*sv_demoFlags;
+extern	cvar_t	*sv_autoRecord;
+
+extern	cvar_t	*sv_mvFileCount;
+extern	cvar_t	*sv_mvFolderSize;
+
+#endif // USE_MV
+
 extern	cvar_t	*sv_privateClients;
 extern	cvar_t	*sv_hostname;
 extern	cvar_t	*sv_master[MAX_MASTER_SERVERS];
@@ -322,15 +404,18 @@ extern	int serverBansCount;
 
 extern	cvar_t	*sv_demoState;
 extern	cvar_t	*sv_autoDemo;
+extern  cvar_t  *sv_autoRecord;
 extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*sv_demoTolerant;
 extern	cvar_t	*sv_democlients; // number of democlients: this should always be set to 0, and will be automatically adjusted when needed by the demo facility. ATTENTION: if sv_maxclients = sv_democlients then server will be full! sv_democlients consume clients slots even if there are no democlients recorded nor replaying for this slot!
+extern	cvar_t	*sv_autoRecord;
 
 //===========================================================
 
 //
 // sv_main.c
 //
+extern netadr_t redirectAddress;
 qboolean SVC_RateLimit( rateLimit_t *bucket, int burst, int period );
 qboolean SVC_RateLimitAddress( const netadr_t *from, int burst, int period );
 void SVC_RateRestoreBurstAddress( const netadr_t *from, int burst, int period );
@@ -345,7 +430,7 @@ void SV_RemoveOperatorCommands( void );
 
 void SV_MasterShutdown( void );
 int SV_RateMsec( const client_t *client );
-
+void SV_FlushRedirect( const char *outputbuf );
 
 //
 // sv_init.c
@@ -359,7 +444,8 @@ void SV_GetUserinfo( int index, char *buffer, int bufferSize );
 
 void SV_ChangeMaxClients( void );
 void SV_SpawnServer( const char *mapname, qboolean killBots );
-
+void SV_BoundMaxClients( int minimum );
+void SV_SetSnapshotParams( void );
 
 
 //
@@ -392,6 +478,31 @@ void SV_PrintLocations_f( client_t *client );
 //
 void SV_Heartbeat_f( void );
 client_t *SV_GetPlayerByHandle( void );
+client_t *SV_GetPlayerByNum( void );
+
+#ifdef USE_MV
+//
+// sv_multiview.c
+//
+#define	SCORE_RECORDER 1
+#define	SCORE_CLIENT   2
+#define SCORE_PERIOD   10000
+
+void SV_TrackDisconnect( int clientNum );
+void SV_ForwardServerCommands( client_t *recorder /*, const client_t *client */ );
+void SV_MultiViewStopRecord_f( void );
+int SV_FindActiveClient( qboolean checkCommands, int skipClientNum, int minActive );
+void SV_SetTargetClient( int clientNum );
+void SV_LoadRecordCache( void );
+void SV_SaveRecordCache( void );
+void SV_MultiViewRecord_f( void );
+void SV_MultiView_f( client_t *client );
+void SV_MV_BoundMaxClients( void );
+void SV_MV_SetSnapshotParams( void );
+int SV_GetMergeMaskEntities( clientSnapshot_t *snap );
+void SV_EmitPlayerStates( int baseClientID, const clientSnapshot_t *from, const clientSnapshot_t *to, msg_t *msg, skip_mask sm );
+void SV_QueryClientScore( client_t *client );
+#endif
 
 //
 // sv_snapshot.c
@@ -421,6 +532,18 @@ void		SV_ShutdownGameProgs ( void );
 void		SV_RestartGameProgs( void );
 qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 void SV_GameSendServerCommand( int clientNum, const char *text );
+
+
+//
+// sv_demo_client.c
+//
+void SV_Record( client_t	*cl, char *s );
+void SV_Record_f( void );
+void SV_StopRecord( client_t	*cl );
+void SV_StopRecord_f( void );
+void SV_SaveRecord_f( void );
+void SV_WriteDemoMessage (client_t *cl, msg_t *msg, int headerBytes );
+
 
 //
 // sv_demo.c
@@ -466,6 +589,12 @@ void SV_DemoFilterClientUserinfo( const char *userinfo );
 char *SV_CleanFilename( char *str );
 char *SV_CleanStrCmd( char *str );
 char *SV_GenerateDateTime(void);
+
+void SV_DemoChangeMaxClients( void );
+void SV_CompleteDemoName( char *args, int argNum );
+void SV_Demo_Stop_f( void );
+void SV_Demo_Play_f( void );
+void SV_Demo_Record_f( void );
 
 //
 // sv_demo_ext.c

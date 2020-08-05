@@ -435,7 +435,17 @@ static void Console_Key( int key ) {
 	// command completion
 
 	if (key == K_TAB) {
+		int beforeLength = strlen(g_consoleField.buffer);
 		Field_AutoComplete(&g_consoleField);
+		
+		// try to rcon complete the command
+		if(!com_dedicated->integer
+			&& !Q_stristr(g_consoleField.buffer, "\\rcon")
+			&& beforeLength == strlen(g_consoleField.buffer)) {
+			Cbuf_AddText( va("rcon complete %s\n", g_consoleField.buffer) );
+			Cbuf_Execute();		
+		}
+
 		return;
 	}
 
@@ -589,6 +599,25 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		}
 	}
 
+
+#ifdef USE_MV
+	if ( (/* key == K_MOUSE1 || */ key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
+		int id, n, d;
+		//if ( key == K_MOUSE1 )
+			d = 1;
+		//else
+		//	d = -1;
+		for ( id = (clc.clientView + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
+			if ( cl.snap.clps[ id ].valid ) {
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clc.clientView, id );
+				clc.clientView = id;
+				break;
+			}
+		}
+	}
+#endif // USE_MV
+
+
 	// escape is always handled special
 	if ( key == K_ESCAPE ) {
 #ifdef USE_CURL
@@ -611,7 +640,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvm)
+				VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
@@ -644,7 +674,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 			return;
 		}
-		else if(cls.postgame == qtrue) {
+		else if(cls.postgame == qtrue && cgvm) {
 			VM_Call( cgvm, 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
 			return;
 		}

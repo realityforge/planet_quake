@@ -36,6 +36,23 @@ cvar_t	*sv_maxclients;
 cvar_t	*sv_maxclientsPerIP;
 cvar_t	*sv_clientTLD;
 
+#ifdef USE_MV
+fileHandle_t	sv_demoFile = FS_INVALID_HANDLE;
+char	sv_demoFileName[ MAX_OSPATH ];
+char	sv_demoFileNameLast[ MAX_OSPATH ];
+int		sv_demoClientID; // current client
+int		sv_lastAck;
+int		sv_lastClientSeq;
+
+cvar_t	*sv_mvClients;
+cvar_t	*sv_mvPassword;
+cvar_t	*sv_demoFlags;
+cvar_t	*sv_autoRecord;
+
+cvar_t	*sv_mvFileCount;
+cvar_t	*sv_mvFolderSize;
+#endif
+
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
@@ -66,6 +83,7 @@ int serverBansCount = 0;
 cvar_t	*sv_democlients;		// number of slots reserved for playing a demo
 cvar_t	*sv_demoState;
 cvar_t	*sv_autoDemo;
+cvar_t  *sv_autoRecord;
 cvar_t	*cl_freezeDemo; // to freeze server-side demos
 cvar_t	*sv_demoTolerant;
 
@@ -670,6 +688,10 @@ static void SVC_Status( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
+#ifdef EMSCRIPTEN
+	// allow people to connect to your single player server
+	if(!com_dedicated->integer)
+#endif
 	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
@@ -815,9 +837,9 @@ static void SVC_Info( const netadr_t *from ) {
 SV_FlushRedirect
 ================
 */
-static netadr_t redirectAddress; // for rcon return messages
+netadr_t redirectAddress; // for rcon return messages
 
-static void SV_FlushRedirect( const char *outputbuf )
+void SV_FlushRedirect( const char *outputbuf )
 {
 	if ( *outputbuf )
 	{
@@ -841,7 +863,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];
-	const char	*cmd_aux, *pw;
+	const char	*cmd_aux, *pw, *cmd;
 
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
@@ -905,7 +927,19 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		while ( *cmd_aux == ' ' )
 			cmd_aux++;
 
-		Cmd_ExecuteString( cmd_aux, qfalse );
+		cmd = Cmd_Argv( 2 );
+		if(!strcmp(cmd, "complete")) {
+			char	infostring[MAX_INFO_STRING];
+			field_t rconField;
+			cmd_aux += 9;
+			memcpy(rconField.buffer, cmd_aux, sizeof(rconField.buffer));
+			Field_AutoComplete( &rconField );
+			infostring[0] = '\0';
+			Info_SetValueForKey( infostring, "autocomplete", &rconField.buffer[1] );
+			NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+		} else {
+			Cmd_ExecuteString( cmd_aux, qfalse );
+		}
 	}
 
 	Com_EndRedirect();
@@ -1374,6 +1408,22 @@ void SV_Frame( int msec ) {
 		}
 	}
 
+#ifdef USE_MV
+	if ( svs.nextSnapshotPSF > svs.modSnapshotPSF + svs.numSnapshotPSF ) {
+		svs.nextSnapshotPSF -= svs.modSnapshotPSF;
+		if ( svs.clients ) {
+			for ( i = 0; i < sv_maxclients->integer; i++ ) {
+				if ( svs.clients[ i ].state < CS_CONNECTED )
+					continue;
+				for ( n = 0; n < PACKET_BACKUP; n++ ) {
+					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
+						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
+				}
+			}
+		}
+	}
+#endif
+
 	if ( sv.restartTime && sv.time >= sv.restartTime ) {
 		sv.restartTime = 0;
 		Cbuf_AddText( "map_restart 0\n" );
@@ -1401,6 +1451,10 @@ void SV_Frame( int msec ) {
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 
+#ifdef USE_MV
+	svs.emptyFrame = qtrue;
+#endif
+
 	// run the game simulation in chunks
 	while ( sv.timeResidual >= frameMsec ) {
 		sv.timeResidual -= frameMsec;
@@ -1409,7 +1463,10 @@ void SV_Frame( int msec ) {
 
 		// let everything in the world think and move
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-		
+#ifdef USE_MV
+		svs.emptyFrame = qfalse; // ok, run recorder
+#endif
+
 		// play/record demo frame (if enabled)
 		if (sv.demoState == DS_RECORDING) // Record the frame
 			SV_DemoWriteFrame();
@@ -1431,6 +1488,17 @@ void SV_Frame( int msec ) {
 
 	// send messages back to the clients
 	SV_SendClientMessages();
+
+#ifdef USE_MV
+	svs.emptyFrame = qfalse;
+	if ( sv_autoRecord->integer > 0 ) {
+		if ( sv_demoFile == FS_INVALID_HANDLE ) {
+			if ( SV_FindActiveClient( qtrue, -1, sv_autoRecord->integer ) >= 0 ) {
+				Cbuf_AddText( "mvrecord\n" );
+			}
+		}
+	}
+#endif
 
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);

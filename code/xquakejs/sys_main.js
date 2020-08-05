@@ -22,6 +22,8 @@ var LibrarySysMain = {
       '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
       '+set', 'cl_lazyLoad', '1',
+      '+set', 'rconpassword', 'password123!',
+      
       //'+set', 'com_hunkMegs', '256',
       //'+set', 'com_maxfps', '125',
       //'+set', 'com_maxfpsUnfocused', '10',
@@ -122,7 +124,7 @@ var LibrarySysMain = {
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
-            '+set', 'net_socksPort', SYSM.isSecured('') ? '443' : '1081'
+            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : '1081'
           ])
         }
         if (!args.includes('sv_dlURL')) {
@@ -159,7 +161,9 @@ var LibrarySysMain = {
 		},
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')
-        || window.location.protocol.includes('https'))
+        || window.location.protocol.includes('https')
+        || socksServer.includes('wss:')
+        || socksServer.includes('https:'))
         && !socksServer.includes('http:')
         && !socksServer.includes('ws:')
         && !window.location.search.includes('ws://')

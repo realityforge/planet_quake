@@ -269,8 +269,6 @@ SV_LocateGameData
 */
 static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGameClient ) {
 
-	Com_Printf("LoacteGameData: locating data\n");
-
 	if ( !gvm->entryPoint ) {
 		if ( numGEntities > MAX_GENTITIES ) {
 			Com_Error( ERR_DROP, "%s: bad entity count %i", __func__, numGEntities );
@@ -1060,15 +1058,19 @@ void SV_RestartGameProgs( void ) {
 	if ( !gvm ) {
 		return;
 	}
-	VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
+	
+	SV_ShutdownGameProgs();
+	//VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
-	gvm = VM_Restart( gvm );
+	//gvm = VM_Restart( gvm );
+	//SV_InitGameProgs();
+	gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
 	if ( !gvm ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}
 
-	SV_InitGameVM( qtrue );
+	SV_InitGameVM( qfalse );
 
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );
@@ -1117,17 +1119,24 @@ See if the current console command is claimed by the game
 */
 qboolean SV_GameCommand( void ) {
 	qboolean result;
+	int ded;
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
 	}
 
+	// even in dedicated mode don't "say" command when it is not found
+	//ded = com_dedicated->integer;
+	//Cvar_Set("dedicated", "0");
+	//VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
+	//Cvar_Set("dedicated", va("%i", ded));
 
 #ifdef EMSCRIPTEN
-	if(com_dedicated->integer) {
+	if(!result && com_dedicated->integer) {
 		client_t	*client;
 		int			j;
 		for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
+			// TODO: send this to authenticated clients?
 			if(client->netchan.remoteAddress.type == NA_LOOPBACK)
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}

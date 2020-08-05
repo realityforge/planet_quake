@@ -40,10 +40,10 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 
 #ifdef DEDICATED
 #define MIN_COMHUNKMEGS		48
-#define DEF_COMHUNKMEGS		380
+#define DEF_COMHUNKMEGS		128
 #else
 #define MIN_COMHUNKMEGS		64
-#define DEF_COMHUNKMEGS		380
+#define DEF_COMHUNKMEGS		256
 #endif
 
 #ifdef USE_MULTI_SEGMENT
@@ -90,6 +90,7 @@ cvar_t	*com_skipIdLogo;
 cvar_t	*cl_paused;
 cvar_t	*cl_packetdelay;
 cvar_t	*com_cl_running;
+cvar_t  *com_cl_shownet;
 #endif
 
 cvar_t	*sv_paused;
@@ -396,6 +397,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	} else {
 		VM_Forced_Unload_Start();
 #ifndef DEDICATED
+#ifdef EMSCRIPTEN
+		if(!com_dedicated->integer)
+#endif
 		CL_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ), qtrue );
 #endif
 		SV_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ) );
@@ -3063,7 +3067,9 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
 			CL_ShutdownAll();
+#ifndef EMSCRIPTEN
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
+#endif
 		}
 #endif
 
@@ -3077,8 +3083,10 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
+#ifndef EMSCRIPTEN
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
+#endif
 
 #ifndef DEDICATED
 		// Reparse pure paks and update cvars before FS startup
@@ -3705,6 +3713,7 @@ void Com_Init_After_Filesystem( void ) {
 	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
 	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
 	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
+	com_cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
 #endif
 
 	sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
@@ -4010,7 +4019,7 @@ void Com_Frame_After_Startup() {
 		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
 	} else {
 		VM_Forced_Unload_Start();
-		CL_FlushMemory();
+		//CL_FlushMemory();
 		VM_Forced_Unload_Done();
 		Com_GameRestart_After_Restart();
 	}

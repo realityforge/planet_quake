@@ -15,7 +15,9 @@ quake3e.printErr = function (...args) {
     || args[0].includes('Frame Setup')
     || args[0].includes('Shutdown')
     || args[0].includes('DEMO:')
-    || args[0].includes('Game Initialization')))
+    || args[0].includes('Game Initialization')
+    || args[0].includes('Runtime error:')
+    || args[0].includes('AAS initialized')))
     console.error.apply(console, ['DedServer: '].concat(args))
   else
     console.log.apply(console, ['DedServer: '].concat(args))
@@ -31,7 +33,8 @@ onmessage = function(e) {
     if(!SYSM.args.includes('+spmap')
       && !SYSM.args.includes('+map')
       && !SYSM.args.includes('+devmap')
-      && !SYSM.args.includes('+spdevmap')) {
+      && !SYSM.args.includes('+spdevmap')
+      && !SYSM.args.includes('+demo_play')) {
         SYSM.args.push.apply(SYSM.args, [
           '+spmap', 'q3dm0',
         ])
@@ -56,7 +59,8 @@ quake3e.onRuntimeInitialized = function() {
     '+set', 'sv_motd', 'For instant replays and stuff',
     '+set', 'rconPassword', 'password123!',
     '+set', 'sv_reconnectlimit', '0',
-    '+set', 'sv_autoDemo', '1',
+  //  '+set', 'sv_autoDemo', '1',
+  //  '+set', 'sv_autoRecord', '1',
   //  '+set', 'net_socksEnabled', '0',
   ])
   runIsFirst = true
