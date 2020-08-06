@@ -1294,7 +1294,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
-		cls.state = CA_CONNECTED;
+		cls.state = CA_CONNECTING;
 		if(!dropped && !cls.postgame) {
 			// skip disconnecting and just show the main menu
 			noGameRestart = qtrue;

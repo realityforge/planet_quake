@@ -937,6 +937,7 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 #ifdef USE_MV
 	int		i;
 	client_t	*c;
+	msg_t copyMsg;
 
 	if ( client->multiview.protocol && client->multiview.recorder
 		&& sv_demoFile != FS_INVALID_HANDLE ) {
@@ -944,6 +945,7 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 
 		 // finalize packet
 		MSG_WriteByte( msg, svc_EOF );
+		Com_Memcpy(&copyMsg, msg, sizeof(copyMsg));
 
 		// write message sequence
 		v = LittleLong( client->netchan.outgoingSequence );
@@ -961,14 +963,16 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 		client->netchan.outgoingSequence++;
 		
 		// write msg to all joined clients?
+		/*
 		for( i = 0; i < sv_maxclients->integer; i++ )
 		{
 			c = &svs.clients[ i ];
 			if(c->multiview.protocol && !c->multiview.recorder) {
-				Com_Printf("Sending recorder message\n");
-				SV_SendMessageToClient(msg, c);
+				Com_Printf("Sending recorder message %i\n", copyMsg.cursize);
+				SV_SendMessageToClient(&copyMsg, c);
 			}
 		}
+		*/
 		
 		return;
 	}
@@ -1018,7 +1022,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 
  	if ( client->demorecording ) {
 		msg_t copyMsg;
-		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
+		Com_Memcpy(&copyMsg, &msg, sizeof(copyMsg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
  		ps = SV_GameClientNum( client - svs.clients);
  		if (ps->pm_type == PM_INTERMISSION) {
