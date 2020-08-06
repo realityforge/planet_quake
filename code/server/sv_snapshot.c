@@ -307,7 +307,7 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 
 		// write any unacknowledged serverCommands
 		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
-#if defined( USE_MV ) && defined( USE_MV_ZCMD )
+#ifdef USE_MV_ZCMD
 			// !!! do not start compression sequence from already sent uncompressed commands
 			// (re)send them uncompressed and only after that initiate compression sequence
 			if ( i <= client->reliableSent ) {
@@ -935,9 +935,6 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 void SV_SendMessageToClient( msg_t *msg, client_t *client )
 {
 #ifdef USE_MV
-	int		i;
-	client_t	*c;
-	msg_t copyMsg;
 
 	if ( client->multiview.protocol && client->multiview.recorder
 		&& sv_demoFile != FS_INVALID_HANDLE ) {
@@ -945,7 +942,6 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 
 		 // finalize packet
 		MSG_WriteByte( msg, svc_EOF );
-		Com_Memcpy(&copyMsg, msg, sizeof(copyMsg));
 
 		// write message sequence
 		v = LittleLong( client->netchan.outgoingSequence );
@@ -961,19 +957,6 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 		// update delta sequence
 		client->deltaMessage = client->netchan.outgoingSequence;
 		client->netchan.outgoingSequence++;
-		
-		// write msg to all joined clients?
-		/*
-		for( i = 0; i < sv_maxclients->integer; i++ )
-		{
-			c = &svs.clients[ i ];
-			if(c->multiview.protocol && !c->multiview.recorder) {
-				Com_Printf("Sending recorder message %i\n", copyMsg.cursize);
-				SV_SendMessageToClient(&copyMsg, c);
-			}
-		}
-		*/
-		
 		return;
 	}
 #endif // USE_MV
