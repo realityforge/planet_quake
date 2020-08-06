@@ -47,7 +47,7 @@ Coming soon!
   * LOD (level of detail) based compression, loading different levels of detail in models and images
   * Brotli compression for game content from server
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
-  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface
+  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 from spearmint engine
   * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Synchronized server/AI for offline and connection interruptions

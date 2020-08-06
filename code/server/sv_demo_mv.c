@@ -588,7 +588,7 @@ void SV_MV_BoundMaxClients( void )
   sv_maxclients->modified = qfalse;
 
   // get the current demoClients value
-  Cvar_Get( "sv_mvClients", "0", 0 );
+  Cvar_Get( "sv_mvClients", "8", 0 );
   sv_mvClients->modified = qfalse;
 
   if ( sv_mvClients->integer > sv_maxclients->integer ) {

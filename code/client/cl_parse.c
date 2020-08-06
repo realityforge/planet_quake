@@ -288,7 +288,6 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MV
 	if ( multiview ) {
-	
 		if ( !clc.demoplaying && clc.recordfile != FS_INVALID_HANDLE )
 			clc.dm68compat = qfalse;
 
@@ -1170,15 +1169,15 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		case svc_gamestate:
 			CL_ParseGamestate( msg );
 			break;
-#if defined( USE_MV ) && defined( USE_MV_ZCMD )
-		case svc_zcmd:
-			CL_ParseZCommandString( msg );
-			break;
-#endif
 		case svc_snapshot:
 			CL_ParseSnapshot( msg, qfalse );
 			break;
 #ifdef USE_MV
+#ifdef USE_MV_ZCMD
+		case svc_zcmd:
+			CL_ParseZCommandString( msg );
+			break;
+#endif
 		case svc_multiview:
 			CL_ParseSnapshot( msg, qtrue );
 			break;

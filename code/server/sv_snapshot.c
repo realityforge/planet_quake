@@ -935,7 +935,11 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 void SV_SendMessageToClient( msg_t *msg, client_t *client )
 {
 #ifdef USE_MV
-	if ( client->multiview.protocol && client->multiview.recorder && sv_demoFile != FS_INVALID_HANDLE ) {
+	int		i;
+	client_t	*c;
+
+	if ( client->multiview.protocol && client->multiview.recorder
+		&& sv_demoFile != FS_INVALID_HANDLE ) {
 		int v;
 
 		 // finalize packet
@@ -955,7 +959,17 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 		// update delta sequence
 		client->deltaMessage = client->netchan.outgoingSequence;
 		client->netchan.outgoingSequence++;
-
+		
+		// write msg to all joined clients?
+		for( i = 0; i < sv_maxclients->integer; i++ )
+		{
+			c = &svs.clients[ i ];
+			if(c->multiview.protocol && !c->multiview.recorder) {
+				Com_Printf("Sending recorder message\n");
+				SV_SendMessageToClient(msg, c);
+			}
+		}
+		
 		return;
 	}
 #endif // USE_MV
@@ -1041,18 +1055,14 @@ void SV_SendClientMessages( void )
 	svs.msgTime = Sys_Milliseconds();
 
 #ifdef USE_MV
-	if ( sv_demoFile != FS_INVALID_HANDLE )
+	c = svs.clients + sv_maxclients->integer; // recorder slot
+	if ( sv_demoFile != FS_INVALID_HANDLE
+	 	&& !svs.emptyFrame // we want to record only synced game frames
+		&& c->state >= CS_PRIMED)
 	{
-		if ( !svs.emptyFrame ) // we want to record only synced game frames
-		{
-			c = svs.clients + sv_maxclients->integer; // recorder slot
-			if ( c->state >= CS_PRIMED )
-			{
-				SV_SendClientSnapshot( c );
-				c->lastSnapshotTime = svs.time;
-				c->rateDelayed = qfalse;
-			}
-		}
+		SV_SendClientSnapshot( c );
+		c->lastSnapshotTime = svs.time;
+		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
 
