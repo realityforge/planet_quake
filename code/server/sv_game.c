@@ -1124,14 +1124,16 @@ qboolean SV_GameCommand( void ) {
 		return qfalse;
 	}
 
-	// even in dedicated mode don't "say" command when it is not found
-	//ded = com_dedicated->integer;
-	//Cvar_Set("dedicated", "0");
-	//VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
-	//Cvar_Set("dedicated", va("%i", ded));
-
 #ifdef EMSCRIPTEN
+	// even in dedicated mode don't "say" command when it is not found
+	// don't run game server on client anymore for single player
+
+	ded = com_dedicated->integer;
+	Cvar_Set("dedicated", "0");
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
+	Cvar_Set("dedicated", va("%i", ded));
+
 	if(!result && com_dedicated->integer) {
 		client_t	*client;
 		int			j;
@@ -1142,6 +1144,8 @@ qboolean SV_GameCommand( void ) {
 		}
 		return qtrue;
 	}
+#else
+	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
 #endif
 	
 	return result;

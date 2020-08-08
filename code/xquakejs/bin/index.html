@@ -226,7 +226,8 @@
 	    || args[0].includes('Shutdown')
 	    || args[0].includes('DEMO:')
 	    || args[0].includes('Game Initialization')
-	    || args[0].includes('Runtime error:')))
+	    || args[0].includes('Runtime error:')
+	    || args[0].includes('server:')))
 			console.error.apply(console, args)
 		else
 			console.log.apply(console, args)

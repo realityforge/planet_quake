@@ -238,16 +238,13 @@ CIN_ResampleCinematic
 Resample cinematic to 256x256 and store in buf2
 ==================
 */
-static void CIN_ResampleCinematic( int handle, int *buf2 ) {
+void CIN_ResampleCinematic( byte *buf, int origWidth, int origHeight, int *buf2 ) {
 	int ix, iy, *buf3, xm, ym, ll;
-	byte	*buf;
 
-	buf = cinTable[handle].buf;
-
-	xm = cinTable[handle].CIN_WIDTH/256;
-	ym = cinTable[handle].CIN_HEIGHT/256;
+	xm = origWidth/256;
+	ym = origHeight/256;
 	ll = 8;
-	if (cinTable[handle].CIN_WIDTH==512) {
+	if (origWidth==512) {
 		ll = 9;
 	}
 
@@ -332,7 +329,7 @@ void CIN_DrawCinematic( int handle ) {
 
 		buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
-		CIN_ResampleCinematic(handle, buf2);
+		CIN_ResampleCinematic(cinTable[handle].buf, cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, buf2);
 
 		re.DrawStretchRaw( x, y, w, h, 256, 256, (byte *)buf2, handle, qtrue);
 		cinTable[handle].dirty = qfalse;
@@ -421,7 +418,7 @@ void CIN_UploadCinematic( int handle ) {
 
 			buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
-			CIN_ResampleCinematic(handle, buf2);
+			CIN_ResampleCinematic(cinTable[handle].buf, cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, buf2);
 
 			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, 256, 256, (byte *)buf2, handle, qtrue);
 			cinTable[handle].dirty = qfalse;

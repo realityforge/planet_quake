@@ -630,7 +630,6 @@ void SCR_UpdateScreen( void ) {
 			SCR_DrawScreenField( STEREO_LEFT );
 			SCR_DrawScreenField( STEREO_RIGHT );
 		} else {
-			cls.glconfig.vidWidth = r_customwidth->integer / 2;
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
 
