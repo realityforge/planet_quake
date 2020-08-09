@@ -1824,6 +1824,11 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern float dvrXScale;
+extern float dvrYScale;
+extern float dvrXOffset;
+extern float dvrYOffset;
+
 //====================================================================
 
 static ID_INLINE qboolean ShaderRequiresCPUDeforms(const shader_t * shader)

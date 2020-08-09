@@ -271,10 +271,10 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	}
 	cmd->commandId = RC_STRETCH_PIC;
 	cmd->shader = R_GetShaderByHandle( hShader );
-	cmd->x = x;
-	cmd->y = y;
-	cmd->w = w;
-	cmd->h = h;
+	cmd->x = x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
+	cmd->y = y * dvrYScale + (dvrYOffset * glConfig.vidHeight);
+	cmd->w = w * dvrXScale;
+	cmd->h = h * dvrYScale;
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;
@@ -525,7 +525,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 #endif
-	
+
 	tr.refdef.stereoFrame = stereoFrame;
 }
 

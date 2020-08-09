@@ -2428,7 +2428,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			break;
+			continue;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
