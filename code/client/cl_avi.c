@@ -639,8 +639,8 @@ void CL_TakeVideoFrame( void )
 {
   if(!previousFrame) {
 Com_Printf("allocating video space, %i, %i\n", cls.captureWidth, cls.captureHeight);
-    afd.width = 512; //cls.captureWidth;
-    afd.height = 512; //cls.captureHeight;
+    afd.width = 512;
+    afd.height = 512;
     afd.cBuffer = Z_Malloc((afd.width * afd.height * 4) + MAX_PACK_LEN - 1);
     afd.eBuffer = Z_Malloc(PAD(afd.width * 4, AVI_LINE_PADDING) * afd.height);
     previousFrame = Z_Malloc(PAD(afd.width * 4, AVI_LINE_PADDING) * afd.height);

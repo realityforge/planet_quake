@@ -600,6 +600,7 @@ This is called every frame, and can also be called explicitly to flush
 text to the screen.
 ==================
 */
+static int previousTime;
 void SCR_UpdateScreen( void ) {
 	static int recursive;
 	static int framecount;
@@ -608,9 +609,9 @@ void SCR_UpdateScreen( void ) {
 	if ( !scr_initialized )
 		return; // not initialized yet
 
+	int ms = Sys_Milliseconds();
 #ifndef EMSCRIPTEN
 	if ( framecount == cls.framecount ) {
-		int ms = Sys_Milliseconds();
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
 		} else {
@@ -654,12 +655,15 @@ void SCR_UpdateScreen( void ) {
 			} else {
 				*/
 				SCR_DrawScreenField( STEREO_CENTER );
-				CL_TakeVideoFrame();
+				if(ms - previousTime > 30) {
+					previousTime = ms;
+					CL_TakeVideoFrame();
+				}
 				if(previousFrame) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
 					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-					re.DrawStretchRaw( 100, 100, 128, 128, 256, 256, previousFrame, 1, qtrue);
+					re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
 				}
 			//}
 			

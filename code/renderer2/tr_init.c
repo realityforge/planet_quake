@@ -783,6 +783,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	size_t				memcount, linelen;
 	int				padwidth, avipadwidth, padlen, avipadlen;
 	GLint packAlign;
+	FBO_t           *oldFbo;
 
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
@@ -802,9 +803,23 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	avipadlen = avipadwidth - linelen;
 
 	cBuf = PADP(cmd->captureBuffer, packAlign);
-		
+
+	//glState.finishCalled = qfalse;
+
+	oldFbo = glState.currentFBO;
+	if (tr.msaaResolveFbo)
+	{
+		FBO_Bind(tr.msaaResolveFbo);
+	}
+
 	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA,
 		GL_UNSIGNED_BYTE, cBuf);
+		
+	// if we're doing multisample rendering, switch to the old FBO
+	if (tr.msaaResolveFbo)
+	{
+		FBO_Bind(oldFbo);
+	}
 
 	memcount = padwidth * cmd->height;
 
@@ -824,15 +839,14 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	}
 	else
 	{
-		byte *lineend, *memend;
+		byte *lineend;
 		byte *srcptr, *destptr;
 	
-		srcptr = cBuf;
+		srcptr = cBuf + memcount - padwidth;
 		destptr = cmd->encodeBuffer;
-		memend = srcptr + memcount;
 		
 		// swap R and B and remove line paddings
-		while(srcptr < memend)
+		while(srcptr >= cBuf)
 		{
 			lineend = srcptr + linelen;
 			while(srcptr < lineend)
@@ -847,7 +861,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 			Com_Memset(destptr, '\0', avipadlen);
 			destptr += avipadlen;
 			
-			srcptr += padlen;
+			srcptr = srcptr - linelen - padwidth;
 		}
 		
 		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, avipadwidth * cmd->height);
