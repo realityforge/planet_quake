@@ -1002,7 +1002,7 @@ Sys_Frame
 */
 void Sys_Frame( void ) {
 	IN_Frame();
-	Com_Frame();
+	Com_Frame( CL_NoDelay() );
 }
 
 int main( int argc, char* argv[] )

@@ -410,8 +410,10 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				es = &cl.parseEntities [ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
 				if ( es->number >= MAX_CLIENTS )
 					break;
-				if ( newSnap.clps[ es->number ].valid )
+				if ( newSnap.clps[ es->number ].valid ) {
+					//es->eFlags |= EF_TELEPORT_BIT;
 					MSG_PlayerStateToEntityState( &newSnap.clps[ es->number ].ps, es, qtrue, newSnap.mergeMask );
+				}
 			}
 		}
 	}

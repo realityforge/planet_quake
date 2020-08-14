@@ -121,9 +121,10 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 CL_GetSnapshot
 ====================
 */
-static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
+qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
+	cl.updateSnap = 0;
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
 		Com_Error( ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl.snapshot.messageNum" );
@@ -146,13 +147,13 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		return qfalse;
 	}
 
-	// write the snapshot
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
 	
 #ifdef USE_MV
+cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {
 		int		entityNum;
 		int		startIndex;
@@ -1123,7 +1124,7 @@ or bursted delayed packets.
 
 #define	RESET_TIME	500
 
-static void CL_AdjustTimeDelta( void ) {
+void CL_AdjustTimeDelta( void ) {
 	int		newDelta;
 	int		deltaDelta;
 

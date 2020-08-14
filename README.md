@@ -39,17 +39,18 @@ Some of the major features currently implemented are:
 
 Coming soon!
   * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect
-  * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
-  * Multi-view, instant replay
   * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
-  * Shader pallets for pre-rendering colors and changing the theme of maps
+  * Multiple QVM loader, multiple map loader in parallel with teleport switch
+  * Multi-view, instant replay
+  * Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
+  * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Shader palettes for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
-  * LOD (level of detail) based compression, loading different levels of detail in models and images
+  * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
   * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 from spearmint engine
-  * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.

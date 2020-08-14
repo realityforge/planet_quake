@@ -506,6 +506,13 @@ This will be called twice if rendering in stereo mode
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	qboolean uiFullscreen;
+	
+	/*
+	if(clc.clientView == 0)
+		re.SetDvrFrame(0.0, 0.0, 0.5, 0.5);
+	else
+		re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
+	*/
 
 	re.BeginFrame( stereoFrame );
 
@@ -575,6 +582,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// console draws next
+	re.SetDvrFrame(0, 0, 1, 1);
 	Con_DrawConsole ();
 
 	// debug graph can be drawn on top of anything
@@ -630,7 +638,31 @@ void SCR_UpdateScreen( void ) {
 			SCR_DrawScreenField( STEREO_LEFT );
 			SCR_DrawScreenField( STEREO_RIGHT );
 		} else {
-			SCR_DrawScreenField( STEREO_CENTER );
+			/*
+			if(cl.snap.multiview && cl.snap.serverTime >= cl.updateSnap->serverTime) {
+				// write the snapshot
+				clc.clientView = (clc.clientView + 1) % 2;
+				CL_GetSnapshot(cl.snap.messageNum, cl.updateSnap);
+					
+				SCR_DrawScreenField( STEREO_CENTER );
+				CL_AdjustTimeDelta();
+
+				clc.clientView = (clc.clientView + 1) % 2;
+				CL_GetSnapshot(cl.snap.messageNum, cl.updateSnap);
+				
+				SCR_DrawScreenField( STEREO_CENTER );
+			} else {
+				*/
+				SCR_DrawScreenField( STEREO_CENTER );
+				CL_TakeVideoFrame();
+				if(previousFrame) {
+//Com_Printf("drawing frame: %i %i %i %i\n",
+// previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
+					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
+					re.DrawStretchRaw( 100, 100, 128, 128, 256, 256, previousFrame, 1, qtrue);
+				}
+			//}
+			
 		}
 
 		if ( com_speeds->integer ) {

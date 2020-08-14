@@ -75,7 +75,7 @@ static aviFileData_t afd;
 
 static byte buffer[ MAX_AVI_BUFFER ];
 static int  bufIndex;
-
+byte *previousFrame;
 
 /*
 ===============
@@ -504,8 +504,11 @@ void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size )
   int   paddingSize = PADLEN(size, 2);
   byte  padding[ 4 ] = { 0 };
 
-  if( !afd.fileOpen )
+  if( !afd.fileOpen ) {
+    CIN_ResampleCinematic((const byte *)imageBuffer, afd.width, afd.height, (int *)previousFrame);
+    //Com_Memcpy(previousFrame, imageBuffer, size);
     return;
+  }
 
   // Chunk header + contents + padding
   if ( CL_CheckFileSize( 8 + size + 2 ) )
@@ -634,9 +637,18 @@ CL_TakeVideoFrame
 */
 void CL_TakeVideoFrame( void )
 {
-	// AVI file isn't open
-	if( !afd.fileOpen )
-		return;
+  if(!previousFrame) {
+Com_Printf("allocating video space, %i, %i\n", cls.captureWidth, cls.captureHeight);
+    afd.width = 512; //cls.captureWidth;
+    afd.height = 512; //cls.captureHeight;
+    afd.cBuffer = Z_Malloc((afd.width * afd.height * 4) + MAX_PACK_LEN - 1);
+    afd.eBuffer = Z_Malloc(PAD(afd.width * 4, AVI_LINE_PADDING) * afd.height);
+    previousFrame = Z_Malloc(PAD(afd.width * 4, AVI_LINE_PADDING) * afd.height);
+  }
+  
+  // AVI file isn't open
+  //if( !afd.fileOpen )
+	//	return;
 
 	re.TakeVideoFrame( afd.width, afd.height,
 		afd.cBuffer, afd.eBuffer, afd.motionJpeg );

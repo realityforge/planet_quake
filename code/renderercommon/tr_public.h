@@ -103,6 +103,7 @@ typedef struct {
 	void	(*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 	void	(*ThrottleBackend)( void );
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
 	void	(*FinishBloom)( void );
 
 	void	(*SetColorMappings)( void );

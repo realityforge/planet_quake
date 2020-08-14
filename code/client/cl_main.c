@@ -3312,7 +3312,7 @@ void CL_Frame( int msec ) {
 			CL_TakeVideoFrame();
 
 			msec = (int)frameDuration;
-			clc.aviVideoFrameRemainder = frameDuration - msec;
+			clc.aviVideoFrameRemainder = frameDuration - (int)frameDuration;
 		}
 	}
 	

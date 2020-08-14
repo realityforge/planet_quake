@@ -792,7 +792,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 
-	linelen = cmd->width * 3;
+	linelen = cmd->width * 4;
 
 	// Alignment stuff for glReadPixels
 	padwidth = PAD(linelen, packAlign);
@@ -803,7 +803,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	cBuf = PADP(cmd->captureBuffer, packAlign);
 		
-	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGB,
+	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA,
 		GL_UNSIGNED_BYTE, cBuf);
 
 	memcount = padwidth * cmd->height;
@@ -811,6 +811,9 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	// gamma correct
 	if(glConfig.deviceSupportsGamma)
 		R_GammaCorrect(cBuf, memcount);
+
+	//ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+	//return (const void *)(cmd + 1);
 
 	if(cmd->motionJpeg)
 	{
@@ -834,10 +837,11 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 			lineend = srcptr + linelen;
 			while(srcptr < lineend)
 			{
-				*destptr++ = srcptr[2];
-				*destptr++ = srcptr[1];
 				*destptr++ = srcptr[0];
-				srcptr += 3;
+				*destptr++ = srcptr[1];
+				*destptr++ = srcptr[2];
+				*destptr++ = 255;
+				srcptr += 4;
 			}
 			
 			Com_Memset(destptr, '\0', avipadlen);
@@ -1453,6 +1457,13 @@ void RE_EndRegistration( void ) {
 	}
 }
 
+void RE_SetDvrFrame(float x, float y, float width, float height) {
+	dvrXScale = width;
+	dvrYScale = height;
+	dvrXOffset = x;
+	dvrYOffset = y;
+}
+
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -1521,6 +1532,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetColorMappings = R_SetColorMappings;
 
 	re.ThrottleBackend = RE_ThrottleBackend;
+	re.SetDvrFrame = RE_SetDvrFrame;
 	re.CanMinimize = RE_CanMinimize;
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;

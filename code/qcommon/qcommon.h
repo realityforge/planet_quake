@@ -1236,11 +1236,7 @@ void Com_TouchMemory( void );
 
 // commandLine should not include the executable name (argv[0])
 void Com_Init( char *commandLine );
-#ifdef EMSCRIPTEN
-void Com_Frame( void );
-#else
 void Com_Frame( qboolean noDelay );
-#endif
 
 /*
 ==============================================================

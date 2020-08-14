@@ -4036,12 +4036,7 @@ void Com_Frame_After_Shutdown() {
 Com_Frame
 =================
 */
-#ifndef EMSCRIPTEN
 void Com_Frame( qboolean noDelay ) {
-#else
-void Com_Frame( void ) {
-	qboolean noDelay = qfalse;
-#endif
 
 #ifndef DEDICATED
 	static int bias = 0;

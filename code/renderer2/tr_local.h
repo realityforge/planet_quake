@@ -2498,6 +2498,7 @@ void RE_TakeVideoFrame( int width, int height,
 
 void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );
+void RE_SetDvrFrame( float x, float y, float width, float height );
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );
