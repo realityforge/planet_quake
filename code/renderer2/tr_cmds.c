@@ -415,7 +415,6 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			ri.Error(ERR_FATAL, "RE_BeginFrame() - glGetError() failed (0x%x)!", err);
 	}
 
-#ifndef EMSCRIPTEN
 	if (glConfig.stereoEnabled) {
 		if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
 			return;
@@ -461,9 +460,9 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 					FBO_Bind(NULL);
 				}
 
-				qglDrawBuffer(GL_FRONT);
+				//qglDrawBuffer(GL_FRONT);
 				qglClear(GL_COLOR_BUFFER_BIT);
-				qglDrawBuffer(GL_BACK);
+				//qglDrawBuffer(GL_BACK);
 				qglClear(GL_COLOR_BUFFER_BIT);
 
 				r_anaglyphMode->modified = qfalse;
@@ -524,7 +523,6 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				cmd->buffer = (int)GL_BACK;
 		}
 	}
-#endif
 
 	tr.refdef.stereoFrame = stereoFrame;
 }

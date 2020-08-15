@@ -1199,7 +1199,7 @@ const void	*RB_DrawBuffer( const void *data ) {
 	if (glRefConfig.framebufferObject)
 		FBO_Bind(NULL);
 
-	qglDrawBuffer( cmd->buffer );
+	//qglDrawBuffer( cmd->buffer );
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {

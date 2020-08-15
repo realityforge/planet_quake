@@ -264,7 +264,6 @@ var LibrarySysInput = {
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
     SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
-    var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
@@ -274,11 +273,23 @@ var LibrarySysInput = {
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
-    if(in_joystick) {
-      setTimeout(SYSI.InitNippleJoysticks, 200)
-    }
-		setTimeout(SYSI.InputInit, 100)
 	},
+  Sys_GLContextCreated: function () {
+    var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
+    if(in_joystick) {
+      SYSI.InitNippleJoysticks()
+    }
+		SYSI.InputInit()
+    
+    function throwOnGLError(err, funcName, args) {
+      throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName
+    }
+    function logGLCall(functionName, args) {   
+       console.log("gl." + functionName + "(" + 
+          WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
+    }
+    WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
+  },
 	Sys_GLimpSafeInit: function () {
 	},
   

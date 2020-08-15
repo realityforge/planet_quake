@@ -462,6 +462,9 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		{
 			if ( !SDL_glContext )
 			{
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 				if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
 				{
 					Com_DPrintf( "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
@@ -471,12 +474,10 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 				}
 			}
 
-#ifndef EMSCRIPTEN
 			if ( SDL_GL_SetSwapInterval( r_swapInterval->integer ) == -1 )
 			{
 				Com_DPrintf( "SDL_GL_SetSwapInterval failed: %s\n", SDL_GetError( ) );
 			}
-#endif
 
 			SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &realColorBits[0] );
 			SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &realColorBits[1] );
@@ -553,7 +554,6 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
 
-#ifdef EMSCRIPTEN
 	if(SDL_window) {
 		SDL_DisplayMode desktopMode;
 		int display = SDL_GetWindowDisplayIndex( SDL_window );
@@ -571,7 +571,6 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
 		return qtrue;
 	}
-#endif
 
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
 
@@ -634,6 +633,10 @@ void GLimp_Init( glconfig_t *config )
 			return;
 		}
 	}
+
+#ifdef EMSCRIPTEN
+	Sys_GLContextCreated();
+#endif
 
 	// These values force the UI to disable driver selection
 	config->driverType = GLDRV_ICD;

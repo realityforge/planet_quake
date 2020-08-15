@@ -227,7 +227,8 @@
 	    || args[0].includes('DEMO:')
 	    || args[0].includes('Game Initialization')
 	    || args[0].includes('Runtime error:')
-	    || args[0].includes('server:')))
+	    || args[0].includes('server:')
+			|| args[0].includes('ERROR :')))
 			console.error.apply(console, args)
 		else
 			console.log.apply(console, args)
@@ -255,6 +256,7 @@
 			}
 		}
 </script>
+<script type="text/javascript" src="/webgl-debug.js"></script>
 <script type="text/javascript" src="/nipplejs.js"></script>
 <script type="text/javascript" src="/quake3e.js"></script>
 </html>

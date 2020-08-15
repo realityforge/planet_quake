@@ -776,6 +776,7 @@ void R_ExportCubemaps_f(void)
 RB_TakeVideoFrameCmd
 ==================
 */
+static uint32_t videoPBO[2] = {0, 0};
 const void *RB_TakeVideoFrameCmd( const void *data )
 {
 	const videoFrameCommand_t	*cmd;
@@ -783,14 +784,18 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	size_t				memcount, linelen;
 	int				padwidth, avipadwidth, padlen, avipadlen;
 	GLint packAlign;
-	FBO_t           *oldFbo;
+	//FBO_t           *oldFbo;
+	if(!videoPBO[0]) {
+		qglGenBuffers(1, &videoPBO[0]);
+		qglGenBuffers(1, &videoPBO[1]);
+	}
 
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
 
 	cmd = (const videoFrameCommand_t *)data;
-	
+
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 
 	linelen = cmd->width * 4;
@@ -804,22 +809,37 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	cBuf = PADP(cmd->captureBuffer, packAlign);
 
-	//glState.finishCalled = qfalse;
+/*
+	glState.finishCalled = qfalse;
 
 	oldFbo = glState.currentFBO;
 	if (tr.msaaResolveFbo)
 	{
 		FBO_Bind(tr.msaaResolveFbo);
+	} else {
+		FBO_Bind(tr.renderFbo);
+	}
+*/
+	//qglReadBuffer(GL_FRONT);
+	if(!tr.renderImage) {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+		return (const void *)(cmd + 1);
 	}
 
-	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA,
-		GL_UNSIGNED_BYTE, cBuf);
-		
+	glBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[0]);
+
+	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tr.renderImage->width, tr.renderImage->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	//qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	
+/*	
 	// if we're doing multisample rendering, switch to the old FBO
 	if (tr.msaaResolveFbo)
 	{
 		FBO_Bind(oldFbo);
 	}
+*/
 
 	memcount = padwidth * cmd->height;
 
@@ -827,6 +847,16 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	if(glConfig.deviceSupportsGamma)
 		R_GammaCorrect(cBuf, memcount);
 
+	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[1]);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[1]);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
+	cBuf = (GLubyte*)glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, memcount, 0x1A);
+	//ptr = (GLubyte*)qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	if(!cBuf) {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+		return (const void *)(cmd + 1);
+	}
+	qglUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 	//ri.CL_WriteAVIVideoFrame(cBuf, memcount);
 	//return (const void *)(cmd + 1);
 
@@ -866,6 +896,8 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 		
 		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, avipadwidth * cmd->height);
 	}
+	
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 	return (const void *)(cmd + 1);	
 }

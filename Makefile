@@ -698,10 +698,13 @@ endif
 
   BASE_CFLAGS = \
 	  -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
 
 ifneq ($(USE_CODEC_VORBIS),0)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
@@ -758,6 +761,9 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
     -lidbfs.js \
     -lsdl.js \
+		-lwebgl.js \
+		-lwebgl2.js \
+		-lglemu.js \
     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
@@ -771,11 +777,12 @@ endif
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=256MB \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s LEGACY_GL_EMULATION=1 \
+    -s LEGACY_GL_EMULATION=0 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=0 \
-    -s USE_WEBGL2=0 \
-    -s FULL_ES2=0 \
-    -s FULL_ES3=0 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
     -s USE_SDL=2 \
 		-s USE_SDL_MIXER=2 \
 		-s USE_VORBIS=1 \
