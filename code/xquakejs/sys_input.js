@@ -276,19 +276,22 @@ var LibrarySysInput = {
 	},
   Sys_GLContextCreated: function () {
     var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
+    var developer = SYSC.Cvar_VariableIntegerValue('developer')
     if(in_joystick) {
       SYSI.InitNippleJoysticks()
     }
 		SYSI.InputInit()
     
+    //if(!developer) return
+    
     function throwOnGLError(err, funcName, args) {
-      throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName
+      console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
     }
     function logGLCall(functionName, args) {   
        console.log("gl." + functionName + "(" + 
           WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
     }
-    WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
+    GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
   },
 	Sys_GLimpSafeInit: function () {
 	},

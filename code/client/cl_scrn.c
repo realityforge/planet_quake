@@ -657,13 +657,13 @@ void SCR_UpdateScreen( void ) {
 				SCR_DrawScreenField( STEREO_CENTER );
 				if(ms - previousTime > 30) {
 					previousTime = ms;
-					CL_TakeVideoFrame();
+					//CL_TakeVideoFrame();
 				}
 				if(previousFrame) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
 					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-					re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
+					//re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
 				}
 			//}
 			

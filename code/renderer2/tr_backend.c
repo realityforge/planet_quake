@@ -1199,7 +1199,10 @@ const void	*RB_DrawBuffer( const void *data ) {
 	if (glRefConfig.framebufferObject)
 		FBO_Bind(NULL);
 
-	//qglDrawBuffer( cmd->buffer );
+	{
+		GLenum DrawBuffers[1] = {cmd->buffer};
+		qglDrawBuffers( 1, DrawBuffers );
+	}
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {

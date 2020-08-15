@@ -826,12 +826,14 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 		return (const void *)(cmd + 1);
 	}
 
-	glBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
-	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[0]);
+	qglReadBuffer(GL_FRONT);
+
+	//qglBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[0]);
 
 	//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)0);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tr.renderImage->width, tr.renderImage->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	//qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tr.renderImage->width, tr.renderImage->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	
 /*	
 	// if we're doing multisample rendering, switch to the old FBO
@@ -848,15 +850,15 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 		R_GammaCorrect(cBuf, memcount);
 
 	//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[1]);
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[1]);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
-	cBuf = (GLubyte*)glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, memcount, 0x1A);
-	//ptr = (GLubyte*)qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[1]);
+	//qglBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
+	cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, memcount, 0xA);
+	//cBuf = (GLubyte*)qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 	if(!cBuf) {
 		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
 		return (const void *)(cmd + 1);
 	}
-	qglUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+	qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	//ri.CL_WriteAVIVideoFrame(cBuf, memcount);
 	//return (const void *)(cmd + 1);
 
@@ -897,7 +899,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, avipadwidth * cmd->height);
 	}
 	
-	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 	return (const void *)(cmd + 1);	
 }

@@ -460,10 +460,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 					FBO_Bind(NULL);
 				}
 
-				//qglDrawBuffer(GL_FRONT);
-				qglClear(GL_COLOR_BUFFER_BIT);
-				//qglDrawBuffer(GL_BACK);
-				qglClear(GL_COLOR_BUFFER_BIT);
+				{
+					GLenum DrawBuffers[1] = {GL_FRONT};
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
+				{
+					GLenum DrawBuffers[1] = {GL_BACK};
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
 
 				r_anaglyphMode->modified = qfalse;
 			}

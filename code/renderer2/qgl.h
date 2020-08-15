@@ -234,6 +234,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   GLE(void *, MapBufferRange, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) \
   GLE(void, ReadBuffer, GLenum mode ) \
   GLE(void, DrawBuffer, GLenum mode ) \
+  GLE(void, DrawBuffers, GLsizei n, const GLenum *bufs) \
+
 //  GLE(void *, MapBuffer, GLenum target, GLenum access) \
 
 // OpenGL 2.0, was GL_ARB_shading_language_100, GL_ARB_vertex_program, GL_ARB_shader_objects, and GL_ARB_vertex_shader

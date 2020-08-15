@@ -21,6 +21,8 @@
 ** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
+//Ported to node by Marcin Ignac on 2016-05-20
+
 // Various functions for helping debug WebGL apps.
 
 WebGLDebugUtils = function() {
@@ -298,7 +300,7 @@ function init(ctx) {
   if (glEnums == null) {
     glEnums = { };
     enumStringToValue = { };
-    for (var propertyName in ctx) {
+    for (var propertyName in Object.getPrototypeOf(ctx)) {
       if (typeof ctx[propertyName] == 'number') {
         glEnums[ctx[propertyName]] = propertyName;
         enumStringToValue[propertyName] = ctx[propertyName];
@@ -488,7 +490,7 @@ function makeDebugContext(ctx, opt_onErrorFunc, opt_onFunc, opt_err_ctx) {
   // Make a an object that has a copy of every property of the WebGL context
   // but wraps all functions.
   var wrapper = {};
-  for (var propertyName in ctx) {
+  for (var propertyName in Object.getPrototypeOf(ctx)) {
     if (typeof ctx[propertyName] == 'function') {
       if (propertyName != 'getExtension') {
         wrapper[propertyName] = makeErrorWrapper(ctx, propertyName);
@@ -1189,3 +1191,4 @@ return {
 
 }();
 
+window.WebGLDebugUtils = WebGLDebugUtils;
