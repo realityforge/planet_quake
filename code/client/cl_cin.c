@@ -151,9 +151,7 @@ e_status CIN_RunCinematic (int handle)
 	}
 #endif
   
-  if(CIN_RunROQ(handle)) {
-    
-  }
+  return CIN_RunROQ(handle);
 }
 
 /*

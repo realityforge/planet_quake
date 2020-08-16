@@ -3344,6 +3344,17 @@ out:
 **
 ** --------------------------------------------------------------------------------
 */
+#ifdef EMSCRIPTEN
+
+static void CPUID( int func, unsigned int *regs )
+{
+}
+
+static void Sys_GetProcessorId( char *vendor )
+{
+}
+
+#else
 
 #if (idx64 || id386)
 
@@ -3355,12 +3366,6 @@ static void CPUID( int func, unsigned int *regs )
 }
 
 #else // clang/gcc/mingw
-#ifdef EMSCRIPTEN
-static void CPUID( int func, unsigned int *regs )
-{
-}
-
-#else
 
 static void CPUID( int func, unsigned int *regs )
 {
@@ -3372,9 +3377,6 @@ static void CPUID( int func, unsigned int *regs )
 		"a"(func) );
 }
 #endif
-#endif
-
-#endif  // clang/gcc/mingw
 
 static void Sys_GetProcessorId( char *vendor )
 {
@@ -3486,6 +3488,7 @@ static void Sys_GetProcessorId( char *vendor )
 }
 
 #endif // non-x86
+#endif // EMSCRIPTEN
 
 /*
 ================
@@ -3596,19 +3599,6 @@ void Sys_SnapVector( vec3_t vec )
 
 #endif // id386
 #endif // linux/mingw
-
-#else // idx64, non-x86
-
-void Sys_SnapVector( vec3_t vec )
-{
-	vec[0] = rint(vec[0]);
-	vec[1] = rint(vec[1]);
-	vec[2] = rint(vec[2]);
-}
-
-#endif
-
-#endif // clang/gcc/mingw
 
 
 /*

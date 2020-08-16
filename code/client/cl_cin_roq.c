@@ -1213,47 +1213,46 @@ Fetch and decompress the pending frame
 
 e_status CIN_RunROQ(int handle) 
 {
-  int	start = 0;
-	int     thisTime = 0;
+	int	start = 0;
+	int thisTime = 0;
 
-  
-  	//FIXME? CL_ScaledMilliseconds already uses com_timescale (so I can't see that the com_timescale in here makes any sense at all O_o)
-  	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-  	thisTime = CL_ScaledMilliseconds()*com_timescale->value;
-  	if (cinTable[currentHandle].shader && (abs(thisTime - cinTable[currentHandle].lastTime))>100) {
-  		cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
-  	}
-  	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-  	cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime)*3)/100);
+	//FIXME? CL_ScaledMilliseconds already uses com_timescale (so I can't see that the com_timescale in here makes any sense at all O_o)
+	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
+	thisTime = CL_ScaledMilliseconds()*com_timescale->value;
+	if (cinTable[currentHandle].shader && (abs(thisTime - cinTable[currentHandle].lastTime))>100) {
+		cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
+	}
+	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
+	cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime)*3)/100);
 
-  	start = cinTable[currentHandle].startTime;
-  	while(  (cinTable[currentHandle].tfps != cinTable[currentHandle].numQuads)
-  		&& (cinTable[currentHandle].status == FMV_PLAY) ) 
-  	{
-  		RoQInterrupt();
-  		if (start != cinTable[currentHandle].startTime) {
-  			// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-  		  cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value)
-  							  - cinTable[currentHandle].startTime)*3)/100);
-  			start = cinTable[currentHandle].startTime;
-  		}
-  	}
+	start = cinTable[currentHandle].startTime;
+	while(  (cinTable[currentHandle].tfps != cinTable[currentHandle].numQuads)
+		&& (cinTable[currentHandle].status == FMV_PLAY) ) 
+	{
+		RoQInterrupt();
+		if (start != cinTable[currentHandle].startTime) {
+			// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
+		  cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value)
+							  - cinTable[currentHandle].startTime)*3)/100);
+			start = cinTable[currentHandle].startTime;
+		}
+	}
 
-  	cinTable[currentHandle].lastTime = thisTime;
+	cinTable[currentHandle].lastTime = thisTime;
 
-  	if (cinTable[currentHandle].status == FMV_LOOPED) {
-  		cinTable[currentHandle].status = FMV_PLAY;
-  	}
+	if (cinTable[currentHandle].status == FMV_LOOPED) {
+		cinTable[currentHandle].status = FMV_PLAY;
+	}
 
-  	if (cinTable[currentHandle].status == FMV_EOF) {
-  	  if (cinTable[currentHandle].looping) {
-  		RoQReset();
-  	  } else {
-  		CIN_Shutdown();
-  	  }
-  	}
+	if (cinTable[currentHandle].status == FMV_EOF) {
+	  if (cinTable[currentHandle].looping) {
+		RoQReset();
+	  } else {
+		CIN_Shutdown();
+	  }
+	}
 
-  	return cinTable[currentHandle].status;
+	return cinTable[currentHandle].status;
 }
 
 /*

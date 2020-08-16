@@ -320,9 +320,6 @@ CLIENT_EXTRA_FILES=
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-else # ifeq Linux
-
-
 #############################################################################
 # SETUP AND BUILD -- MAC OS X
 #############################################################################
@@ -569,7 +566,7 @@ ifdef MINGW
 
 else # !MINGW
 
-ifeq ($(COMPILE_PLATFORM),darwin)
+ifeq ($(PLATFORM),darwin)
 
 #############################################################################
 # SETUP AND BUILD -- MACOS
@@ -657,7 +654,6 @@ endif # *NIX platforms
 endif # !MINGW
 
 
-else # ifeq netbsd
 #############################################################################
 # SETUP AND BUILD -- JS
 #############################################################################
@@ -821,11 +817,6 @@ else # ifeq js
 
 endif #Linux
 endif #mingw32
-endif #darwin
-endif #FreeBSD
-endif #OpenBSD
-endif #NetBSD
-endif #js
 
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 

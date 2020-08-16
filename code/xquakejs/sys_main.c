@@ -123,6 +123,17 @@ void Sys_BeginProfiling( void )
 
 
 /*
+==============
+Sys_ResetReadOnlyAttribute
+==============
+*/
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath )
+{
+	return qfalse;
+}
+
+
+/*
 =================
 Sys_In_Restart_f
 

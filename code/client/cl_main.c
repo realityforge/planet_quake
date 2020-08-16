@@ -1783,11 +1783,13 @@ CL_CompleteRcon
 qboolean hasRcon = qfalse;
 static void CL_CompleteRcon( char *args, int argNum )
 {
+	int beforeLength;
 	if ( argNum >= 2 )
 	{
 		// Skip "rcon "
 		char *p = Com_SkipTokens( args, 1, " " );
 
+		beforeLength = strlen(g_consoleField.buffer);
 		if ( p > args )
 			Field_CompleteCommand( p, qtrue, qtrue );
 

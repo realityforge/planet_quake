@@ -43,7 +43,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #if defined (_WIN32) || defined(__linux__)
+#ifndef EMSCRIPTEN
 #define USE_AFFINITY_MASK
+#endif
 #endif
 
 // stringify macro
