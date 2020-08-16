@@ -283,15 +283,14 @@ var LibrarySysInput = {
 		SYSI.InputInit()
     
     //if(!developer) return
-    
     function throwOnGLError(err, funcName, args) {
-      console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
+      //console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
     }
     function logGLCall(functionName, args) {   
-       console.log("gl." + functionName + "(" + 
+      console.log("gl." + functionName + "(" + 
           WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
     }
-    GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
+    //GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
   },
 	Sys_GLimpSafeInit: function () {
 	},

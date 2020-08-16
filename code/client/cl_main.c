@@ -3168,6 +3168,8 @@ CL_NoDelay
 */
 qboolean CL_NoDelay( void )
 {
+	extern cvar_t *com_timedemo;
+
 	if ( CL_VideoRecording() || ( com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
 		return qtrue;
 	
@@ -4477,9 +4479,6 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			} else {
 				CL_SetServerInfoByAddress(from, infoString, cl_pinglist[i].time);
 			}
-
-			Info_SetValueForKey( cl_pinglist[i].info, "nettype", va( "%d", type ) );
-			CL_SetServerInfoByAddress( from, infoString, cl_pinglist[i].time );
 
 			return;
 		}
