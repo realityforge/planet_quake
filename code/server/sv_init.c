@@ -315,7 +315,9 @@ static void SV_Startup( void ) {
 	Cvar_Set( "sv_running", "1" );
 	
 	// Join the ipv6 multicast group now that a map is running so clients can scan for us on the local network.
+#ifdef USE_IPV6
 	NET_JoinMulticast6();
+#endif
 }
 
 
@@ -554,7 +556,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #endif
 
 	// get latched value
-	Cvar_Get( "sv_pure", "1", 0 );
+	Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
 
 	// get a new checksum feed and restart the file system
 	srand( Com_Milliseconds() );
@@ -1031,7 +1033,9 @@ void SV_Shutdown( const char *finalmsg ) {
 #endif
 */
 
+#ifdef USE_IPV6
 	NET_LeaveMulticast6();
+#endif
 
 #ifdef EMSCRIPTEN
 	if ( svs.clients ) {

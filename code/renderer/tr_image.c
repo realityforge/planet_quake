@@ -620,6 +620,14 @@ static void Upload32( byte *data, int x, int y, int width, int height, image_t *
 		}
 	}
 
+	if ( image->flags & IMGFLAG_COLORSHIFT ) {
+		byte *p = data;
+		int i, n = width * height;
+		for ( i = 0; i < n; i++, p+=4 ) {
+			R_ColorShiftLightingBytes( p, p );
+		}
+	}
+
 	//
 	// perform optional picmip operation
 	//
@@ -782,6 +790,11 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 	image->width = width;
 	image->height = height;
 
+	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
+		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
+		image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+	}
+
 	if ( flags & IMGFLAG_RGB )
 		image->internalFormat = GL_RGB;
 	else
@@ -816,9 +829,9 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	if ( image->flags & IMGFLAG_MIPMAP )
 	{
-		if ( textureFilterAnisotropic )
-			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-					(GLint)Com_Clamp( 1, maxAnisotropy, r_ext_max_anisotropy->integer ) );
+		if ( textureFilterAnisotropic ) {
+			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (GLint) maxAnisotropy );
+		}
 
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
@@ -1410,19 +1423,20 @@ void R_DeleteTextures( void ) {
 		qglDeleteTextures( 1, &img->texnum );
 	}
 
+	if ( qglActiveTextureARB ) {
+		for ( i = glConfig.numTextureUnits - 1; i >= 0; i-- ) {
+			qglActiveTextureARB( GL_TEXTURE0_ARB + i );
+			qglBindTexture( GL_TEXTURE_2D, 0 );
+		}
+	} else {
+		qglBindTexture( GL_TEXTURE_2D, 0 );
+	}
+
 	Com_Memset( tr.images, 0, sizeof( tr.images ) );
 	Com_Memset( tr.scratchImage, 0, sizeof( tr.scratchImage ) );
 	tr.numImages = 0;
 
 	Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglActiveTextureARB ) {
-		GL_SelectTexture( 1 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-		GL_SelectTexture( 0 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	} else {
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	}
 }
 
 

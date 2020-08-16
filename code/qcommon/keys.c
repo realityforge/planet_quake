@@ -20,7 +20,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#include "../client/client.h"
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
+#include "../client/keys.h"
 
 int		 anykeydown;
 qkey_t	 keys[MAX_KEYS];
@@ -192,7 +194,7 @@ static const keyname_t keynames[] =
 	{"KP_MINUS",		K_KP_MINUS },
 	{"KP_PLUS",			K_KP_PLUS },
 	{"KP_NUMLOCK",		K_KP_NUMLOCK },
-	{"KP_STAR",			K_KP_STAR },
+	//{"KP_STAR",			K_KP_STAR },
 	{"KP_EQUALS",		K_KP_EQUALS },
 
 	{"PAUSE", K_PAUSE},

@@ -74,7 +74,7 @@ cvar_t	*com_maxfpsUnfocused;
 cvar_t	*com_yieldCPU;
 cvar_t	*com_timedemo;
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#ifdef USE_AFFINITY_MASK
 cvar_t	*com_affinityMask;
 #endif
 cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
@@ -1816,8 +1816,8 @@ Goals:
 #define	HUNK_FREE_MAGIC	0x89537893
 
 typedef struct {
-	int		magic;
-	int		size;
+	unsigned int magic;
+	unsigned int size;
 } hunkHeader_t;
 
 typedef struct {
@@ -3345,26 +3345,16 @@ out:
 ** --------------------------------------------------------------------------------
 */
 
-#if defined _MSC_VER
+#if (idx64 || id386)
 
+#if defined _MSC_VER
+#include <intrin.h>
 static void CPUID( int func, unsigned int *regs )
 {
-#if _MSC_VER >= 1400
 	__cpuid( regs, func );
-#else
-	__asm {
-		mov edi,regs
-		mov eax,[edi]
-		cpuid
-		mov [edi], eax
-		mov [edi+4], ebx
-		mov [edi+8], ecx
-		mov [edi+12], edx
-	}
-#endif
 }
 
-#else
+#else // clang/gcc/mingw
 #ifdef EMSCRIPTEN
 static void CPUID( int func, unsigned int *regs )
 {
@@ -3384,7 +3374,9 @@ static void CPUID( int func, unsigned int *regs )
 #endif
 #endif
 
-int Sys_GetProcessorId( char *vendor )
+#endif  // clang/gcc/mingw
+
+static void Sys_GetProcessorId( char *vendor )
 {
 	unsigned int regs[4];
 
@@ -3456,9 +3448,44 @@ int Sys_GetProcessorId( char *vendor )
 				strcat( vendor, " SSE4.1" );
 		}
 	}
-	return 1;
 }
 
+#else // non-x86
+
+#if defined(__arm__)
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#endif
+static void Sys_GetProcessorId( char *vendor )
+{
+	long hwcaps;
+
+	CPU_Flags = 0;
+
+#if defined(__arm__)
+	Com_sprintf( vendor, 100, "ARM %s", (const char*)getauxval( AT_PLATFORM ) );
+
+	hwcaps = getauxval( AT_HWCAP );
+
+	if ( hwcaps & ( HWCAP_IDIVA | HWCAP_VFPv3 ) ) {
+		strcat( vendor, " /w" );
+
+		if ( hwcaps & HWCAP_IDIVA ) {
+			CPU_Flags |= CPU_IDIV;
+			strcat( vendor, " IDIV" );
+		}
+
+		if ( hwcaps & HWCAP_VFPv3 ) {
+			CPU_Flags |= CPU_VFPv3;
+			strcat( vendor, " VFPv3" );
+		}
+	}
+#else
+	Com_sprintf( vendor, 128, "%s %s", ARCH_STRING, (const char*)getauxval( AT_PLATFORM ) );
+#endif
+}
+
+#endif // non-x86
 
 /*
 ================
@@ -3466,7 +3493,6 @@ Sys_SnapVector
 ================
 */
 #ifdef _MSC_VER
-#include <intrin.h>
 #if idx64
 void Sys_SnapVector( float *vector ) 
 {
@@ -3492,7 +3518,7 @@ void Sys_SnapVector( float *vector )
 	_mm_store_ss( &vector[2], vf2 );
 }
 #else // id386
-void Sys_SnapVector( float *vector ) 
+void Sys_SnapVector( float *vector )
 {
 	static const DWORD cw037F = 0x037F;
 	DWORD cwCurr;
@@ -3521,9 +3547,9 @@ __asm {
 }
 #endif // id386
 
-#else // linux/mingw
+#else // clang/gcc/mingw
 
-#if idx64
+#if id386
 
 void Sys_SnapVector( vec3_t vec )
 {
@@ -3570,6 +3596,19 @@ void Sys_SnapVector( vec3_t vec )
 
 #endif // id386
 #endif // linux/mingw
+
+#else // idx64, non-x86
+
+void Sys_SnapVector( vec3_t vec )
+{
+	vec[0] = rint(vec[0]);
+	vec[1] = rint(vec[1]);
+	vec[2] = rint(vec[2]);
+}
+
+#endif
+
+#endif // clang/gcc/mingw
 
 
 /*
@@ -3658,7 +3697,7 @@ void Com_Init_After_Filesystem( void ) {
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
-  // get dedicated here for proper hunk megs initialization
+	// get dedicated here for proper hunk megs initialization
 #ifdef DEDICATED
 	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
 	Cvar_CheckRange( com_dedicated, "1", "2", CV_INTEGER );
@@ -3684,10 +3723,12 @@ void Com_Init_After_Filesystem( void ) {
 	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( com_yieldCPU, "0", "16", CV_INTEGER );
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+
+#ifdef USE_AFFINITY_MASK
 	com_affinityMask = Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE_ND );
 	com_affinityMask->modified = qfalse;
 #endif
+
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE_ND );
 
 	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
@@ -3708,8 +3749,8 @@ void Com_Init_After_Filesystem( void ) {
 	com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
 
 #ifndef DEDICATED	
-	com_timedemo = Cvar_Get("timedemo", "0", CVAR_CHEAT);
-	Cvar_CheckRange( com_timedemo, NULL, NULL, CV_BOOLEAN );
+	com_timedemo = Cvar_Get( "timedemo", "0", 0 );
+	Cvar_CheckRange( com_timedemo, "0", "1", CV_INTEGER );
 	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
 	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
 	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
@@ -3758,7 +3799,6 @@ void Com_Init_After_Filesystem( void ) {
 
 	Sys_Init();
 
-#if defined (id386) || defined (idx64)
 	// CPU detection
 	Cvar_Get( "sys_cpustring", "detect", CVAR_PROTECTED | CVAR_ROM | CVAR_NORESTART );
 	if ( !Q_stricmp( Cvar_VariableString( "sys_cpustring" ), "detect" ) )
@@ -3769,11 +3809,12 @@ void Com_Init_After_Filesystem( void ) {
 		Cvar_Set( "sys_cpustring", vendor );
 	}
 	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
-#endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
+
+#ifdef USE_AFFINITY_MASK
 	if ( com_affinityMask->integer )
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
+
 	// Pick a random port value
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
 	Netchan_Init( qport & 0xffff );
@@ -3840,8 +3881,10 @@ void Com_WriteConfigToFile( const char *filename ) {
 
 	f = FS_FOpenFileWrite( filename );
 	if ( f == FS_INVALID_HANDLE ) {
-		Com_Printf( "Couldn't write %s.\n", filename );
-		return;
+		if ( !FS_ResetReadOnlyAttribute( filename ) || ( f = FS_FOpenFileWrite( filename ) ) == FS_INVALID_HANDLE ) {
+			Com_Printf( "Couldn't write %s.\n", filename );
+			return;
+		}
 	}
 
 	FS_Printf( f, "// generated by quake, do not modify" Q_NEWLINE );
@@ -4109,13 +4152,15 @@ void Com_Frame( qboolean noDelay ) {
 		}
 		com_viewlog->modified = qfalse;
 	}
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
+
+#ifdef USE_AFFINITY_MASK
 	if ( com_affinityMask->modified ) {
 		Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE );
 		com_affinityMask->modified = qfalse;
 		Sys_SetAffinityMask( com_affinityMask->integer );
 	}
 #endif
+
 	//
 	// main event loop
 	//

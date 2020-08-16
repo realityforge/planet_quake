@@ -77,6 +77,9 @@ cvar_t	*r_vbo;
 #endif
 cvar_t	*r_fbo;
 cvar_t	*r_hdr;
+cvar_t	*r_bloom;
+cvar_t	*r_bloom_threshold;
+cvar_t	*r_bloom_intensity;
 cvar_t	*r_renderWidth;
 cvar_t	*r_renderHeight;
 cvar_t	*r_renderScale;
@@ -444,6 +447,7 @@ static void R_InitExtensions( void )
 			{
 				ri.Printf( PRINT_ALL, "...using GL_EXT_texture_filter_anisotropic (max: %i)\n", maxAnisotropy );
 				textureFilterAnisotropic = qtrue;
+				maxAnisotropy = MIN( r_ext_texture_filter_anisotropic->integer, maxAnisotropy );
 			}
 		}
 		else
@@ -1297,13 +1301,11 @@ static void GfxInfo( void )
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 #ifdef USE_VULKAN
 	ri.Printf( PRINT_ALL, " presentation: %s\n", vk_get_format_name( vk.surface_format.format ) );
-	if ( vk.fboActive ) {
-		if ( vk.color_format != vk.surface_format.format ) {
-			ri.Printf( PRINT_ALL, " color: %s\n", vk_get_format_name( vk.color_format ) );
-		}
-		//if ( r_ext_multisample->integer ) {
-		//	ri.Printf( PRINT_ALL, " resolve: %s\n", vk_get_format_name( vk.resolve_format ) );
-		//}
+	if ( vk.color_format != vk.surface_format.format ) {
+		ri.Printf( PRINT_ALL, " color: %s\n", vk_get_format_name( vk.color_format ) );
+	}
+	if ( vk.capture_format != vk.surface_format.format || vk.capture_format != vk.color_format ) {
+		ri.Printf( PRINT_ALL, " capture: %s\n", vk_get_format_name( vk.capture_format ) );
 	}
 	ri.Printf( PRINT_ALL, " depth: %s\n", vk_get_format_name( vk.depth_format ) );
 #endif
@@ -1507,6 +1509,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_dlightMode, "1", "2", CV_INTEGER );
 #endif
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "0.5", CVAR_ARCHIVE_ND );
+	ri.Cvar_CheckRange( r_dlightScale, "0.1", "1", CV_FLOAT );
 	r_dlightIntensity = ri.Cvar_Get( "r_dlightIntensity", "1.0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightIntensity, "0.1", "1", CV_FLOAT );
 #endif // USE_PMLIGHT
@@ -1562,9 +1565,6 @@ static void R_Register( void )
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get ("r_nobind", "0", CVAR_CHEAT);
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
-#ifndef USE_SKY_DEPTH_WRITE
-	r_showsky = ri.Cvar_Get( "r_showsky", "0", 0 );
-#endif
 	r_shownormals = ri.Cvar_Get( "r_shownormals", "0", CVAR_CHEAT );
 	r_clear = ri.Cvar_Get( "r_clear", "0", 0 );
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-2", CVAR_CHEAT | CVAR_LATCH );
@@ -1592,21 +1592,34 @@ static void R_Register( void )
 	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
 
 	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_texture_filter_anisotropic, "0", "1", CV_INTEGER );
+
 	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_max_anisotropy, "1", NULL, CV_INTEGER );
 
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_stencilbits, "0", "8", CV_INTEGER );
 
-#ifdef USE_SKY_DEPTH_WRITE
+	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ignorehwgamma, "0", "1", CV_INTEGER );
+
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", CVAR_LATCH );
-#endif
 
 #ifdef USE_VULKAN
 	r_device = ri.Cvar_Get( "r_device", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_device, "0", NULL, CV_INTEGER );
+	r_device->modified = qfalse;
 
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	r_hdr = ri.Cvar_Get( "r_hdr", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_bloom, "0", "1", CV_INTEGER );
+
+	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.6", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_bloom_threshold, "0.01", "1", CV_FLOAT );
+
+	r_bloom_intensity = ri.Cvar_Get( "r_bloom_intensity", "0.5", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_bloom_intensity, "0.01", "2", CV_FLOAT );
 
 	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_multisample, "0", "64", CV_INTEGER );
@@ -1729,9 +1742,9 @@ void R_Init( void ) {
 RE_Shutdown
 ===============
 */
-static void RE_Shutdown( int destroyWindow ) {
+static void RE_Shutdown( refShutdownCode_t code ) {
 
-	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
+	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", code );
 
 	ri.Cmd_RemoveCommand( "modellist" );
 	ri.Cmd_RemoveCommand( "screenshotBMP" );
@@ -1757,14 +1770,17 @@ static void RE_Shutdown( int destroyWindow ) {
 	R_DoneFreeType();
 
 	// shut down platform specific OpenGL/Vulkan stuff
-	if ( destroyWindow ) {
+	if ( code != REF_KEEP_CONTEXT ) {
 #ifdef USE_VULKAN
+		if ( r_device->modified ) {
+			code = REF_UNLOAD_DLL;
+		}
 		vk_shutdown();
-		ri.VKimp_Shutdown( destroyWindow ? qtrue: qfalse );
+		ri.VKimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
 		Com_Memset( &vk, 0, sizeof( vk ) );
 		Com_Memset( &vk_world, 0, sizeof( vk_world ) );
 #else
-		ri.GLimp_Shutdown( destroyWindow == 2 ? qtrue: qfalse );
+		ri.GLimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
 
 		R_ClearSymTables();
 #endif

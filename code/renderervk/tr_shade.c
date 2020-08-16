@@ -75,11 +75,7 @@ void R_BindAnimatedImage( const textureBundle_t *bundle ) {
 		if ( !backEnd.screenMapDone )
 			GL_Bind( tr.blackImage );
 		else
-#ifdef USE_SINGLE_FBO
 			vk_update_descriptor( glState.currenttmu + 2, vk.color_descriptor3 );
-#else
-			vk_update_descriptor( glState.currenttmu + 2, vk.cmd->color_descriptor3 );
-#endif
 		return;
 	}
 
@@ -905,9 +901,8 @@ static void RB_IterateStagesGeneric( const shaderCommands_t *input )
 #endif
 {
 	const shaderStage_t *pStage;
-	qboolean multitexture;
 	int tess_flags;
-	int stage;
+	int stage, i;
 	
 #ifdef USE_VULKAN
 	vkUniform_t uniform;
@@ -942,32 +937,20 @@ static void RB_IterateStagesGeneric( const shaderCommands_t *input )
 		tess.vboStage = stage;
 #endif
 
+#ifdef USE_VULKAN
+		tess_flags |= pStage->tessFlags;
+
 		if ( pStage->tessFlags & TESS_RGBA ) {
-			tess_flags |= TESS_RGBA;
 			R_ComputeColors( pStage );
 		}
 
-		if ( pStage->tessFlags & TESS_ST0 ) {
-			tess_flags |= TESS_ST0;
-			R_ComputeTexCoords( 0, &pStage->bundle[0] );
-		}
-
-		multitexture = (pStage->bundle[1].image[0] != NULL) ? qtrue : qfalse;
-
-#ifdef USE_VULKAN
-		if ( multitexture ) {
-			if ( pStage->tessFlags & TESS_ST1 ) {
-				tess_flags |= TESS_ST1;
-				R_ComputeTexCoords( 1, &pStage->bundle[1] );
-			}
-			GL_SelectTexture( 1 );
-			R_BindAnimatedImage( &pStage->bundle[1] );
-
-			if ( pStage->tessFlags & TESS_ST2 ) {
-				tess_flags |= TESS_ST2;
-				R_ComputeTexCoords( 2, &pStage->bundle[2] );
-				GL_SelectTexture( 2 );
-				R_BindAnimatedImage( &pStage->bundle[2] );
+		for ( i = NUM_TEXTURE_BUNDLES-1; i >= 0; i-- ) {
+			if ( pStage->bundle[i].image[0] != NULL ) {
+				GL_SelectTexture( i );
+				R_BindAnimatedImage( &pStage->bundle[i] );
+				if ( pStage->tessFlags & (TESS_ST0 << i) ) {
+					R_ComputeTexCoords( i, &pStage->bundle[i] );
+				}
 			}
 		}
 
@@ -976,11 +959,10 @@ static void RB_IterateStagesGeneric( const shaderCommands_t *input )
 		else
 			pipeline = pStage->vk_pipeline[ fog_stage ];
 
-		GL_SelectTexture( 0 );
-		if ( r_lightmap->integer && multitexture )
+		if ( r_lightmap->integer && pStage->bundle[1].isLightmap ) {
+			GL_SelectTexture( 0 );
 			GL_Bind( tr.whiteImage ); // replace diffuse texture with a white one thus effectively render only lightmap
-		else
-			R_BindAnimatedImage( &pStage->bundle[0] );
+		}
 
 		vk_bind_geometry_ext( tess_flags );
 		vk_draw_geometry( pipeline, tess.depthRange, qtrue );
@@ -993,10 +975,14 @@ static void RB_IterateStagesGeneric( const shaderCommands_t *input )
 			vk_draw_geometry( pipeline, tess.depthRange, qtrue );
 		}
 #else
+		R_ComputeColors( pStage );
+
+		R_ComputeTexCoords( 0, &pStage->bundle[0] );
+
 		//
 		// do multitexture
 		//
-		if ( multitexture )
+		if ( pStage->bundle[1].image[0] != NULL )
 		{
 			DrawMultitextured( input, stage );
 		}
@@ -1075,7 +1061,7 @@ static void VK_SetLightParams( vkUniform_t *uniform, const dlight_t *dl ) {
 	else
 		VectorCopy( dl->color, uniform->lightColor );
 
-	radius = dl->radius * r_dlightScale->value;
+	radius = dl->radius;
 
 	// vertex data
 	VectorCopy( backEnd.or.viewOrigin, uniform->eyePos ); uniform->eyePos[3] = 0.0f;

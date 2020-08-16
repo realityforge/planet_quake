@@ -25,6 +25,7 @@ USE_SDL          = 0
 USE_CURL         = 1
 USE_LOCAL_HEADERS= 0
 USE_VULKAN       = 0
+USE_SYSTEM_JPEG  = 0
 #USE_VULKAN_API   = 0
 
 USE_RENDERER_DLOPEN = 0
@@ -51,6 +52,10 @@ endif
 #
 #############################################################################
 -include Makefile.local
+
+ifeq ($(COMPILE_PLATFORM),darwin)
+  USE_SDL=1
+endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
   PLATFORM=mingw32
@@ -176,11 +181,8 @@ LOKISETUPDIR=$(UDIR)/setup
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
-STRIP=strip
-
-ifneq ($(PKG_CONFIG_PATH),)
-  PKG_CONFIG ?= pkg-config
-endif
+STRIP ?= strip
+PKG_CONFIG ?= pkg-config
 
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
   SDL_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
@@ -215,7 +217,31 @@ else
 endif
 endif
 
+ifeq ($(ARCH),arm)
+# check non-stripped CPU architecture string
+ifeq ($(shell uname -m),armv7l)
+  HAVE_VM_COMPILED = true
+endif
+endif
+
 BASE_CFLAGS =
+
+ifeq ($(USE_SYSTEM_JPEG),1)
+  BASE_CFLAGS += -DUSE_SYSTEM_JPEG
+endif
+
+ifneq ($(HAVE_VM_COMPILED),true)
+  BASE_CFLAGS += -DNO_VM_COMPILED
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+  BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
+  BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
 
 ifdef DEFAULT_BASEDIR
   BASE_CFLAGS += -DDEFAULT_BASEDIR=\\\"$(DEFAULT_BASEDIR)\\\"
@@ -227,11 +253,13 @@ endif
 
 ifeq ($(USE_CURL),1)
   BASE_CFLAGS += -DUSE_CURL
-ifeq ($(USE_CURL_DLOPEN),1)
-  BASE_CFLAGS += -DUSE_CURL_DLOPEN
-else
-  BASE_CFLAGS += -DCURL_STATICLIB
-endif
+  ifeq ($(USE_CURL_DLOPEN),1)
+    BASE_CFLAGS += -DUSE_CURL_DLOPEN
+  else
+    ifeq ($(MINGW),1)
+      BASE_CFLAGS += -DCURL_STATICLIB
+    endif
+  endif
 endif
 
 ifeq ($(USE_VULKAN_API),1)
@@ -242,10 +270,6 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
 
-#############################################################################
-# SETUP AND BUILD -- LINUX
-#############################################################################
-
 ## Defaults
 INSTALL=install
 MKDIR=mkdir
@@ -254,7 +278,6 @@ ARCHEXT=
 
 CLIENT_EXTRA_FILES=
 
-ifeq ($(PLATFORM),linux)
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
@@ -541,31 +564,51 @@ ifdef MINGW
     CLIENT_LDFLAGS += -lcurl -lwldap32 -lcrypt32
   endif
 
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-else # ifeq mingw32
+else # !MINGW
+
+ifeq ($(COMPILE_PLATFORM),darwin)
 
 #############################################################################
-# SETUP AND BUILD -- FREEBSD
+# SETUP AND BUILD -- MACOS
 #############################################################################
 
-ifeq ($(PLATFORM),freebsd)
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-                -I/usr/X11R6/include -I/usr/local/include \
-                -fvisibility=hidden
+  BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
 
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -g
+  OPTIMIZE = -O2 -fvisibility=hidden
+
+  SHLIBEXT = dylib
+  SHLIBCFLAGS = -fPIC -fvisibility=hidden
+  SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
+
+  LDFLAGS =
+
+  CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
+
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
+
+else
+
+#############################################################################
+# SETUP AND BUILD -- *NIX PLATFORMS
+#############################################################################
+
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
+
+  BASE_CFLAGS += -I/usr/include -I/usr/local/include
+
+  OPTIMIZE = -O2 -fvisibility=hidden
 
   ifeq ($(ARCH),x86_64)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -ffast-math -funroll-loops \
-      -fomit-frame-pointer -fexpensive-optimizations
+    ARCHEXT = .x64
   else
   ifeq ($(ARCH),x86)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -mtune=pentiumpro \
-      -march=pentium -fomit-frame-pointer -pipe -ffast-math \
-      -funroll-loops -fstrength-reduce
+    OPTIMIZE += -march=i586 -mtune=i686
   endif
   endif
 
@@ -573,74 +616,46 @@ ifeq ($(PLATFORM),freebsd)
   SHLIBCFLAGS = -fPIC -fvisibility=hidden
   SHLIBLDFLAGS = -shared $(LDFLAGS)
 
-  # don't need -ldl (FreeBSD)
-  LDFLAGS=-lm -lGL -lX11 -L/usr/local/lib -L/usr/X11R6/lib -lX11 -lXext
-
-  CLIENT_LDFLAGS =-lm -lGL -lX11 -L/usr/local/lib -L/usr/X11R6/lib -lX11 -lXext
-
-else # ifeq freebsd
-
-#############################################################################
-# SETUP AND BUILD -- OPENBSD
-#############################################################################
-
-ifeq ($(PLATFORM),openbsd)
-
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-                -I/usr/X11R6/include -I/usr/local/include \
-                -fvisibility=hidden
-
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -g
-
-  ifeq ($(ARCH),x86_64)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -ffast-math -funroll-loops \
-      -fomit-frame-pointer -fexpensive-optimizations
-  else
-  ifeq ($(ARCH),x86)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -mtune=pentiumpro \
-      -march=pentium -fomit-frame-pointer -pipe -ffast-math \
-      -funroll-loops -fstrength-reduce
-  endif
-  endif
-
-  SHLIBEXT = so
-  SHLIBCFLAGS = -fPIC
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
-
-  # don't need -ldl (FreeBSD)
-  LDFLAGS=-lm
+  LDFLAGS = -lm
 
   ifeq ($(USE_SDL),1)
-    BASE_CFLAGS += -I/usr/local/include/SDL2
-    CLIENT_LDFLAGS = -L/usr/X11R6/lib -L/usr/local/lib -lSDL2
+    BASE_CFLAGS += $(SDL_INCLUDE)
+    CLIENT_LDFLAGS = $(SDL_LIBS)
   else
-    CLIENT_LDFLAGS = -L/usr/X11R6/lib -L/usr/lib -lX11
+    BASE_CFLAGS += $(X11_INCLUDE)
+    CLIENT_LDFLAGS = $(X11_LIBS)
   endif
-
-  CLIENT_LDFLAGS += -lm -lGL -L/usr/local/lib
 
   ifeq ($(USE_CODEC_VORBIS),1)
     CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
   endif
 
-else # ifeq openbsd
+  ifeq ($(USE_SYSTEM_JPEG),1)
+    CLIENT_LDFLAGS += -ljpeg
+  endif
 
-#############################################################################
-# SETUP AND BUILD -- NETBSD
-#############################################################################
+  ifeq ($(USE_CURL),1)
+    ifeq ($(USE_CURL_DLOPEN),0)
+      CLIENT_LDFLAGS += -lcurl
+    endif
+  endif
 
-ifeq ($(PLATFORM),netbsd)
+  ifeq ($(PLATFORM),linux)
+    LDFLAGS += -ldl -Wl,--hash-style=both
+    ifeq ($(ARCH),x86)
+      # linux32 make ...
+      BASE_CFLAGS += -m32
+      LDFLAGS += -m32
+    endif
+  endif
 
-  LDFLAGS = -lm
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-  SHLIBEXT = so
-  SHLIBCFLAGS = -fPIC -fvisibility=hidden
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
+endif # *NIX platforms
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -g
+endif # !MINGW
 
-  BUILD_CLIENT = 0
 
 else # ifeq netbsd
 #############################################################################
@@ -1212,6 +1227,9 @@ Q3RENDVOBJ = \
   $(B)/rendv/vk_flares.o \
   $(B)/rendv/vk_vbo.o \
   \
+  $(B)/rendv/bloom_frag.o \
+  $(B)/rendv/blur_frag.o \
+  $(B)/rendv/blend_frag.o \
   $(B)/rendv/dot_frag.o \
   $(B)/rendv/dot_vert.o \
   $(B)/rendv/fog_frag.o \
@@ -1540,10 +1558,11 @@ Q3OBJ += \
   $(B)/client/wincerts.o
 endif
 
+ifneq ($(USE_SYSTEM_JPEG),1)
   Q3OBJ += $(JPGOBJ)
+endif
 
-ifeq ($(USE_RENDERER_DLOPEN),0)
-
+ifneq ($(USE_RENDERER_DLOPEN),1)
   ifeq ($(USE_VULKAN),1)
     Q3OBJ += $(Q3RENDVOBJ)
   else
@@ -1574,6 +1593,9 @@ ifeq ($(HAVE_VM_COMPILED),true)
   endif
   ifeq ($(ARCH),x86_64)
     Q3OBJ += $(B)/client/vm_x86.o
+  endif
+  ifeq ($(ARCH),arm)
+    Q3OBJ += $(B)/client/vm_armv7l.o
   endif
 endif
 
@@ -1771,6 +1793,9 @@ ifeq ($(HAVE_VM_COMPILED),true)
   endif
   ifeq ($(ARCH),x86_64)
     Q3DOBJ += $(B)/ded/vm_x86.o
+  endif
+  ifeq ($(ARCH),arm)
+    Q3DOBJ += $(B)/ded/vm_armv7l.o
   endif
 endif
 

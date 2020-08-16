@@ -42,6 +42,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #endif
 
+#if defined (_WIN32) || defined(__linux__)
+#define USE_AFFINITY_MASK
+#endif
+
 // stringify macro
 #define XSTRING(x)	STRING(x)
 #define STRING(x)	#x
@@ -266,6 +270,7 @@ NET
 
 ==============================================================
 */
+#define USE_IPV6
 
 #define NET_ENABLEV4            0x01
 #define NET_ENABLEV6            0x02
@@ -293,8 +298,10 @@ typedef enum {
 	NA_LOOPBACK,
 	NA_BROADCAST,
 	NA_IP,
+#ifdef USE_IPV6
 	NA_IP6,
 	NA_MULTICAST6,
+#endif
 	NA_UNSPEC
 } netadrtype_t;
 
@@ -311,10 +318,14 @@ typedef struct {
 	netadrtype_t	type;
 	union {
 		byte	_4[4];
+#ifdef USE_IPV6
 		byte	_6[16];
+#endif
 	} ipv;
 	unsigned short	port;
+#ifdef USE_IPV6
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
+#endif
 	char name[MAX_STRING_CHARS];
 } netadr_t;
 
@@ -333,8 +344,10 @@ const char	*NET_AdrToString( const netadr_t *a );
 const char	*NET_AdrToStringwPort( const netadr_t *a );
 int         NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_message );
+#ifdef USE_IPV6
 void		NET_JoinMulticast6( void );
 void		NET_LeaveMulticast6( void );
+#endif
 qboolean	NET_Sleep( int timeout );
 
 #define	MAX_PACKETLEN	1400	// max size of a network packet
@@ -858,6 +871,8 @@ fileHandle_t	FS_FOpenFileWrite( const char *qpath );
 fileHandle_t	FS_FOpenFileAppend( const char *filename );
 // will properly create any needed paths and deal with seperater character issues
 
+qboolean FS_ResetReadOnlyAttribute( const char *filename );
+
 qboolean FS_SV_FileExists( const char *file );
 
 fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
@@ -1048,12 +1063,17 @@ extern char cl_cdkey[34];
 
 extern	int	CPU_Flags;
 
+// x86 flags
 #define CPU_FCOM   0x01
 #define CPU_MMX    0x02
 #define CPU_SSE    0x04
 #define CPU_SSE2   0x08
 #define CPU_SSE3   0x10
 #define CPU_SSE41  0x20
+
+// ARM flags
+#define CPU_IDIV   0x01
+#define CPU_VFPv3  0x02
 
 // TTimo
 // centralized and cleaned, that's the max string you can send to a Com_Printf / Com_DPrintf (above gets truncated)
@@ -1148,7 +1168,9 @@ extern	cvar_t	*com_yieldCPU;
 #endif
 
 extern	cvar_t	*vm_rtChecks;
+#ifdef USE_AFFINITY_MASK
 extern	cvar_t	*com_affinityMask;
+#endif
 
 // com_speeds times
 extern	int		time_game;
@@ -1399,7 +1421,9 @@ void	Sys_Print( const char *msg );
 // dedicated console status, win32-only at the moment
 void	QDECL Sys_SetStatus( const char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
+#ifdef USE_AFFINITY_MASK
 void	Sys_SetAffinityMask( int mask );
+#endif
 
 // Sys_Milliseconds should only be used for profiling purposes,
 // any game related timing information should come from event timestamps
@@ -1412,8 +1436,6 @@ qboolean Sys_RandomBytes( byte *string, int len );
 
 // the system console is shown when a dedicated server is running
 void	Sys_DisplaySystemConsole( qboolean show );
-
-int		Sys_GetProcessorId( char *vendor );
 
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
@@ -1428,6 +1450,7 @@ void		Sys_ShowIP(void);
 
 void	Sys_Mkdir( const char *path );
 FILE	*Sys_FOpen( const char *ospath, const char *mode );
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
 
 const char *Sys_Pwd( void );
 const char *Sys_DefaultBasePath( void );

@@ -22,7 +22,7 @@ layout(set = 5, binding = 0) uniform sampler2D fog_texture;
 layout(location = 0) in vec4 frag_color;
 layout(location = 1) centroid in vec2 frag_tex_coord;
 //layout(location = 2) centroid in vec2 frag_tex_coord1;
-layout(location = 3) centroid in vec2 fog_tex_coord; // fog
+layout(location = 4) in vec2 fog_tex_coord; // fog
 
 layout(location = 0) out vec4 out_color;
 
@@ -30,6 +30,7 @@ layout (constant_id = 0) const int alpha_test_func = 0;
 layout (constant_id = 1) const float alpha_test_value = 0.0;
 //layout (constant_id = 2) const float depth_fragment = 0.85;
 layout (constant_id = 3) const int alpha_to_coverage = 0;
+layout (constant_id = 7) const int discard_mode = 0;
 
 float CorrectAlpha(float threshold, float alpha, vec2 tc)
 {
@@ -48,7 +49,7 @@ void main() {
 
 	if (alpha_to_coverage != 0) {
 		if (alpha_test_func == 1) {
-			base.a = CorrectAlpha(alpha_test_value, base.a, frag_tex_coord);
+			base.a =  base.a > 0.0 ? 1.0 : 0.0;
 		} else if (alpha_test_func == 2) {
 			base.a = CorrectAlpha(alpha_test_value, 1.0 - base.a, frag_tex_coord);
 		} else if (alpha_test_func == 3) {
@@ -64,7 +65,17 @@ void main() {
 		if (base.a < alpha_test_value) discard;
 	}
 
-	fog = fog * fogColor;
+	base = mix( base, fog * fogColor, fog.a );
 
-	out_color = mix( base, fog, fog.a );
+	if ( discard_mode == 1 ) {
+		if ( base.a == 0.0 ) {
+			discard;
+		}
+	} else if ( discard_mode == 2 ) {
+		if ( dot( base.rgb, base.rgb ) == 0.0 ) {
+			discard;
+		}
+	}
+
+	out_color = base;
 }

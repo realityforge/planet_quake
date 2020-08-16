@@ -286,7 +286,7 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 			case SDLK_KP_5:         key = K_KP_5;          break;
 			case SDLK_INSERT:       key = K_INS;           break;
 			case SDLK_KP_0:         key = K_KP_INS;        break;
-			case SDLK_KP_MULTIPLY:  key = K_KP_STAR;       break;
+			case SDLK_KP_MULTIPLY:  key = '*'; /*K_KP_STAR;*/ break;
 			case SDLK_KP_PLUS:      key = K_KP_PLUS;       break;
 			case SDLK_KP_MINUS:     key = K_KP_MINUS;      break;
 			case SDLK_KP_DIVIDE:    key = K_KP_SLASH;      break;
@@ -1294,6 +1294,21 @@ void IN_Frame( void )
 
 /*
 ===============
+IN_Restart
+===============
+*/
+static void IN_Restart( void )
+{
+#ifdef USE_JOYSTICK
+	IN_ShutdownJoystick();
+#endif
+	IN_Shutdown();
+	IN_Init();
+}
+
+
+/*
+===============
 IN_Init
 ===============
 */
@@ -1347,10 +1362,11 @@ void IN_Init( void )
 	IN_DeactivateMouse( glw_state.isFullscreen );
 
 #ifdef USE_JOYSTICK
-	IN_InitJoystick( );
+	IN_InitJoystick();
 #endif
 
 	Cmd_AddCommand( "minimize", IN_Minimize );
+	Cmd_AddCommand( "in_restart", IN_Restart );
 
 	Com_DPrintf( "------------------------------------\n" );
 }
@@ -1372,18 +1388,7 @@ void IN_Shutdown( void )
 #ifdef USE_JOYSTICK
 	IN_ShutdownJoystick();
 #endif
-}
 
-
-/*
-===============
-IN_Restart
-===============
-*/
-void IN_Restart( void )
-{
-#ifdef USE_JOYSTICK
-	IN_ShutdownJoystick();
-#endif
-	IN_Init();
+	Cmd_RemoveCommand( "minimize" );
+	Cmd_RemoveCommand( "in_restart" );
 }

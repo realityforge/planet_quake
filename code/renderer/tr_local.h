@@ -31,8 +31,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_TESS_NEEDS_NORMAL
 //#define USE_TESS_NEEDS_ST2
 
-//#define USE_SKY_DEPTH_WRITE
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
@@ -277,7 +275,8 @@ typedef struct {
 } texModInfo_t;
 
 
-#define	MAX_IMAGE_ANIMATIONS	8
+#define MAX_IMAGE_ANIMATIONS		24
+#define MAX_IMAGE_ANIMATIONS_VQ3	8
 
 typedef struct {
 	image_t			*image[MAX_IMAGE_ANIMATIONS];
@@ -1392,6 +1391,7 @@ void		R_Init( void );
 
 void		R_SetColorMappings( void );
 void		R_GammaCorrect( byte *buffer, int bufSize );
+void		R_ColorShiftLightingBytes( const byte in[4], byte out[4] );
 
 void	R_ImageList_f( void );
 void	R_SkinList_f( void );
@@ -1438,7 +1438,7 @@ typedef struct stageVars
 {
 	color4ub_t	colors[SHADER_MAX_VERTEXES];
 	vec2_t		texcoords[NUM_TEXTURE_BUNDLES][SHADER_MAX_VERTEXES];
-	vec2_t		*texcoordPtr[2];
+	vec2_t		*texcoordPtr[NUM_TEXTURE_BUNDLES];
 } stageVars_t;
 
 typedef struct shaderCommands_s 
@@ -1959,8 +1959,3 @@ qboolean ARB_CompileProgram( programType ptype, const char *text, GLuint program
 void ARB_ProgramEnableExt( GLuint vertexProgram, GLuint fragmentProgram );
 
 #endif //TR_LOCAL_H
-
-#ifdef EMSCRIPEN
-void RE_UpdateMode(glconfig_t *glconfigOut);
-void RE_UpdateShader(char *shaderName, int lightmapIndex);
-#endif

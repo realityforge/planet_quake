@@ -1209,6 +1209,20 @@ void FS_FCloseFile( fileHandle_t f ) {
 
 /*
 ===========
+FS_ResetReadOnlyAttribute
+===========
+*/
+qboolean FS_ResetReadOnlyAttribute( const char *filename ) {
+	char *ospath;
+	
+	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
+
+	return Sys_ResetReadOnlyAttribute( ospath );
+}
+
+
+/*
+===========
 FS_FOpenFileWrite
 ===========
 */
@@ -4747,6 +4761,8 @@ void FS_Startup( void ) {
 	}
 
 	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	Cvar_SetDescription( fs_homepath, "Directory to store user configuration and downloaded files." );
+
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
 #ifdef EMSCRIPTEN
@@ -4762,6 +4778,9 @@ void FS_Startup_After_Async( void )
 	}
 
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_SetDescription( fs_excludeReference,
+		"Exclude specified pak files from download list on client side.\n"
+		"Format is <moddir>/<pakname> (without .pk3 suffix), you may list multiple entries separated by space." );
 
 	start = Sys_Milliseconds();
 

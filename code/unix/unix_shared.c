@@ -345,6 +345,17 @@ FILE *Sys_FOpen( const char *ospath, const char *mode )
 
 
 /*
+==============
+Sys_ResetReadOnlyAttribute
+==============
+*/
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath )
+{
+	return qfalse;
+}
+
+
+/*
 =================
 Sys_Pwd
 =================
@@ -557,7 +568,7 @@ int Sys_LoadFunctionErrors( void )
 Sys_SetAffinityMask
 =================
 */
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
+#ifdef USE_AFFINITY_MASK
 void Sys_SetAffinityMask( int mask )
 {
 	static qboolean inited = qfalse;
@@ -602,4 +613,4 @@ void Sys_SetAffinityMask( int mask )
 		Com_Printf( S_COLOR_YELLOW "error setting CPU affinity mask %i\n", mask );
 	}
 }
-#endif
+#endif // USE_AFFINITY_MASK
