@@ -626,6 +626,25 @@ void NET_OutOfBandCompress( netsrc_t sock, const netadr_t *adr, const byte *data
 	NET_SendPacket( sock, mbuf.cursize, mbuf.data, adr );
 }
 
+char *NET_ParseProtocol(const char *s, const char *protocol)
+{
+	if ( !Q_stricmpn( s, "ws://", 5 ) ) {
+    if(protocol != 0) Com_Memcpy(protocol, "ws", 3);
+		return &s[5];
+  } else if ( !Q_stricmpn( s, "wss://", 6 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "wss", 4);
+		return &s[6];
+  } else if ( !Q_stricmpn( s, "http://", 7 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "http", 5);
+		return &s[7];
+  } else if ( !Q_stricmpn( s, "https://", 8 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "https", 6);
+		return &s[8];
+  } else {
+		if(protocol != 0) Com_Memcpy(protocol, "", 1);
+		return &s[0];
+  }
+}
 
 /*
 =============

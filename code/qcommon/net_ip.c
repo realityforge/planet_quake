@@ -779,6 +779,9 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 		socksBuf[2] = 0;	// fragment (not fragmented)
     socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
     // let socks server do the translation
+    if(!Q_stricmpn(to->protocol, "ws", 2) || !Q_stricmpn(to->protocol, "wss", 3)) {
+      socksBuf[1] = 4; // special connect command indicating web sockets
+    }
     if(to->name[0] == '\0') {
       Q_strncpyz(to->name, NET_AdrToString(to), sizeof(to->name));
     }
@@ -1234,17 +1237,7 @@ static void NET_OpenSocks( int port ) {
 		return;
 	}
   
-  if ( !Q_stricmpn( net_socksServer->string, "ws://", 5 ) ) {
-    h = gethostbyname( &net_socksServer->string[5] );
-  } else if ( !Q_stricmpn( net_socksServer->string, "wss://", 6 ) ) {
-      h = gethostbyname( &net_socksServer->string[6] );
-	} else if ( !Q_stricmpn( net_socksServer->string, "http://", 7 ) ) {
-    h = gethostbyname( &net_socksServer->string[7] );
-  } else if ( !Q_stricmpn( net_socksServer->string, "https://", 8 ) ) {
-    h = gethostbyname( &net_socksServer->string[8] );
-  } else {
-    h = gethostbyname( net_socksServer->string );
-  }
+  h = gethostbyname( NET_ParseProtocol(net_socksServer->string, 0));
 	if ( h == NULL ) {
 		Com_Printf( "WARNING: NET_OpenSocks: gethostbyname: %s\n", NET_ErrorString() );
 		return;
@@ -1441,17 +1434,7 @@ void NET_OpenSocks_After_Listen( void ) {
 	}
 	socksRelayAddr.sin_family = AF_INET;
 #ifdef EMSCRIPTEN
-  if ( !Q_stricmpn( net_socksServer->string, "ws://", 5 ) ) {
-    h = gethostbyname( &net_socksServer->string[5] );
-  } else if ( !Q_stricmpn( net_socksServer->string, "wss://", 6 ) ) {
-      h = gethostbyname( &net_socksServer->string[6] );
-  } else if ( !Q_stricmpn( net_socksServer->string, "http://", 7 ) ) {
-    h = gethostbyname( &net_socksServer->string[7] );
-  } else if ( !Q_stricmpn( net_socksServer->string, "https://", 8 ) ) {
-    h = gethostbyname( &net_socksServer->string[8] );
-  } else {
-    h = gethostbyname( net_socksServer->string );
-  }
+  h = gethostbyname(NET_ParseProtocol(net_socksServer->string, 0));
   socksRelayAddr.sin_addr.s_addr = *(int *)h->h_addr_list[0];
   socksRelayAddr.sin_port = htons( (short)net_socksPort->integer );
 #else

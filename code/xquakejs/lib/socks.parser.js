@@ -5,7 +5,8 @@ var EventEmitter = require('events').EventEmitter
 var CMD = {
   CONNECT: 0x01,
   BIND: 0x02,
-  UDP: 0x03
+  UDP: 0x03,
+  WS: 0x04
 }
 var ATYP = {
   IPv4: 0x01,
@@ -148,6 +149,8 @@ Parser.prototype._onData = function(message) {
           this._cmd = 'bind'
         else if (cmd === CMD.UDP)
           this._cmd = 'udp'
+        else if (cmd === CMD.UDP)
+          this._cmd = 'ws'
         else {
           this.stop()
           this.emit('error', new Error('Invalid request command: ' + cmd))

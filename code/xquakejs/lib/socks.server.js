@@ -5,6 +5,8 @@ var util = require('util')
 var Parser = require('./socks.parser')
 var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
+var WebSocketServer = require('ws').Server;
+const http = require('http');
 
 var UDP_TIMEOUT = 330 * 1000 // clear stale listeners so we don't run out of ports,
   // must be longer than any typical client timeout, maybe the map takes too long to load?
@@ -42,6 +44,7 @@ function Server(opts) {
 
   this._slaves = (opts || {}).slaves || []
   this._listeners = {}
+  this._directConnects = {}
   this._timeouts = {}
   this._dnsLookup = {}
   this._debug = true
@@ -192,7 +195,7 @@ Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udp
     var chunk = Buffer.from(message)
     if(chunk[3] === 1 || chunk[3] === 3 || chunk[3] === 4) {
       chunk[0] = 5
-      chunk[1] = 1
+      chunk[1] = chunk[1] || 1 // could be 0 or 4 from client
       chunk[2] = 0
       parser._onData(chunk)
     }
@@ -202,7 +205,18 @@ Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udp
     self._timeouts[udpLookupPort] = setTimeout(self._timeoutUDP.bind(self, udpLookupPort), UDP_TIMEOUT)
     try {
       var dstIP = await this.lookupDNS(reqInfo.dstAddr)
-      udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
+      var remoteAddr = dstIP+':'+reqInfo.dstPort
+      if(reqInfo.cmd == 'ws') {
+        if(typeof self._directConnects[remoteAddr] == 'undefined') {
+          self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
+            .on('message', self._onUDPMessage.bind(self, socket))
+        }
+        self._directConnects[remoteAddr].send(reqInfo.data)
+      } else if(typeof self._directConnects[remoteAddr] != 'undefined') {
+        self._directConnects[remoteAddr].send(reqInfo.data)
+      } else {
+        udpSocket.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
+      }
     } catch (err) {
       self._onProxyError(socket, err)
     }
@@ -362,6 +376,21 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
     var dstIP = await this.lookupDNS(reqInfo.dstAddr)
     if (reqInfo.cmd == 'udp') {
       await self.tryBindPort(reqInfo)
+      
+      // TODO: make command line option --no-ws to turn this off
+      var httpServer = http.createServer()
+      var wss = new WebSocketServer({server: httpServer})
+      var port = self._listeners[reqInfo.dstPort].address().port
+      httpServer.listen(port, reqInfo.dstAddr)
+      wss.on('connection', function(ws, req) {
+        console.log('Direct connect from ' + req.socket.remoteAddress)
+        var onUDPMessage = self._onUDPMessage.bind(self, socket)
+        var remoteAddr = req.socket.remoteAddress+':'+req.socket.remotePort
+        ws.on('message', onUDPMessage)
+          .on('close', () => delete self._directConnects[remoteAddr])
+        self._directConnects[remoteAddr] = ws;
+      })
+      
       onConnect()
     } else if(reqInfo.cmd == 'bind') {
       const listener = createServer()

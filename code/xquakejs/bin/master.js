@@ -16,7 +16,7 @@ if (argv.h || argv.help) {
 	return;
 }
 
-logger.cli();
+//logger.format();
 logger.level = 'debug';
 
 var config = loadConfig(argv.config);

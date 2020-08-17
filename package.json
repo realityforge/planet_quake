@@ -30,6 +30,9 @@
     "ip6addr": "^0.2.3",
     "nipplejs": "^0.8.5",
     "node-stream-zip": "^1.9.1",
+    "optimist": "^0.6.1",
+    "underscore": "^1.10.2",
+    "winston": "^3.3.3",
     "ws": "^7.2.1"
   },
   "devDependencies": {

@@ -331,6 +331,7 @@ typedef struct {
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
 #endif
 	char name[MAX_STRING_CHARS];
+	char protocol[10];
 } netadr_t;
 
 void		NET_Init( void );
@@ -346,6 +347,7 @@ qboolean	NET_CompareBaseAdr( const netadr_t *a, const netadr_t *b );
 qboolean	NET_IsLocalAddress( const netadr_t *adr );
 const char	*NET_AdrToString( const netadr_t *a );
 const char	*NET_AdrToStringwPort( const netadr_t *a );
+char *NET_ParseProtocol(const char *s, const char *protocol);
 int         NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_message );
 #ifdef USE_IPV6
