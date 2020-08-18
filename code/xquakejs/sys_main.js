@@ -23,6 +23,7 @@ var LibrarySysMain = {
       '+set', 'net_socksEnabled', '1',
       '+set', 'cl_lazyLoad', '1',
       '+set', 'rconpassword', 'password123!',
+      '+set', 'cg_drawfps', '1',
       
       // settings for browser that might help keep garbage low
       //'+set', 'com_hunkMegs', '256',
@@ -33,6 +34,7 @@ var LibrarySysMain = {
       // FBO specific settings
       '+set', 'r_ext_framebuffer_multisample', '0',
       '+set', 'r_ext_framebuffer_object', '0',
+      /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',
       '+set', 'r_postProcess', '0',
@@ -52,9 +54,9 @@ var LibrarySysMain = {
       '+set', 'r_lodbias', '1',
       '+set', 'r_picmip', '1',
       '+set', 'r_postProcess', '0',
-      '+set', 'cg_drawfps', '1',
       '+set', 's_compression', '1',
       '+set', 'r_ext_compressed_textures', '1',
+      */
       //'+connect', 'proxy.quake.games:443',
       
       // cheats for enabling content

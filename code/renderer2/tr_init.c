@@ -772,6 +772,7 @@ void R_ExportCubemaps_f(void)
 //============================================================================
 static GLuint videoPBO[2] = {0, 0};
 static GLuint fbo = 0;
+static int fboIndex = 0;
 GLuint depthrenderbuffer;
 void RB_FastCapture(byte *data)
 {
@@ -779,6 +780,7 @@ void RB_FastCapture(byte *data)
 	size_t				memcount, linelen;
 	int				padwidth, padlen;
 	GLint packAlign;
+	fboIndex = (fboIndex + 1) % 2;
 
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
@@ -858,8 +860,8 @@ void RB_FastCapture(byte *data)
 	
 	cBuf = PADP(data, packAlign);
 
-	//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[0]);
-	qglReadPixels(0, 0, 512, 512, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[fboIndex]);
+	qglReadPixels(0, 0, 1024, 1024, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
 
 	ri.CL_WriteAVIVideoFrame(cBuf, memcount);
 	/*
@@ -953,7 +955,8 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	cmd = (const videoFrameCommand_t *)data;
 	
-	RB_FastCaptureOld(cmd->captureBuffer, cmd->encodeBuffer);
+	RB_FastCapture(cmd->captureBuffer);
+	//RB_FastCaptureOld(cmd->captureBuffer, cmd->encodeBuffer);
 	
 	return (const void *)(cmd + 1);
 

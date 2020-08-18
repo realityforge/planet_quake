@@ -655,6 +655,7 @@ void SCR_UpdateScreen( void ) {
 			} else {
 				*/
 				SCR_DrawScreenField( STEREO_CENTER );
+				
 				if(previousFrame) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
@@ -682,8 +683,9 @@ void SCR_UpdateScreen( void ) {
 			//re.FastCapture(captureBuffer);
 			//re.FastCaptureOld(captureBuffer, encodeBuffer);
 			//CL_TakeVideoFrame();
-			re.TakeVideoFrame( 512, 512, captureBuffer, encodeBuffer, qfalse );
+			re.TakeVideoFrame( 1024, 1024, captureBuffer, encodeBuffer, qfalse );
 		}
+
 	}
 
 	recursive = 0;
