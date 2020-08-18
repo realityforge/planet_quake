@@ -887,8 +887,8 @@ void SV_Init( void )
 	sv_master[20] = Cvar_Get( "sv_master18", "master.quakejs.com", CVAR_INIT );
 	sv_master[20] = Cvar_Get( "sv_master19", "master.quakeservers.net:27000", CVAR_INIT );
 	sv_master[21] = Cvar_Get( "sv_master20", MASTER_SERVER_NAME, CVAR_INIT );
-	sv_master[22] = Cvar_Get( "sv_master21", "", CVAR_INIT );
-	sv_master[23] = Cvar_Get( "sv_master22", "", CVAR_INIT );
+	sv_master[22] = Cvar_Get( "sv_master21", "ws://master.quakejs.com", CVAR_INIT );
+	sv_master[23] = Cvar_Get( "sv_master22", "207.246.91.235:27950", CVAR_INIT );
 
 
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )

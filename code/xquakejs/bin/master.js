@@ -244,7 +244,7 @@ function getRemoteAddress(ws) {
 
 	// if this is an x-forwarded-for header (meaning the request
 	// has been proxied), use it
-	if (ws.upgradeReq.headers['x-forwarded-for']) {
+	if (ws.upgradeReq && ws.upgradeReq.headers['x-forwarded-for']) {
 		address = ws.upgradeReq.headers['x-forwarded-for'];
 	}
 
@@ -254,7 +254,7 @@ function getRemoteAddress(ws) {
 function getRemotePort(ws) {
 	var port = ws._socket.remotePort;
 
-	if (ws.upgradeReq.headers['x-forwarded-port']) {
+	if (ws.upgradeReq && ws.upgradeReq.headers['x-forwarded-port']) {
 		port = ws.upgradeReq.headers['x-forwarded-port'];
 	}
 

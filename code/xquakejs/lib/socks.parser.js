@@ -149,10 +149,9 @@ Parser.prototype._onData = function(message) {
           this._cmd = 'bind'
         else if (cmd === CMD.UDP)
           this._cmd = 'udp'
-        else if (cmd === CMD.UDP)
+        else if (cmd === CMD.WS)
           this._cmd = 'ws'
         else {
-          this.stop()
           this.emit('error', new Error('Invalid request command: ' + cmd))
           return
         }

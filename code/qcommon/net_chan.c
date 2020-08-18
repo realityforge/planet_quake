@@ -626,23 +626,23 @@ void NET_OutOfBandCompress( netsrc_t sock, const netadr_t *adr, const byte *data
 	NET_SendPacket( sock, mbuf.cursize, mbuf.data, adr );
 }
 
-char *NET_ParseProtocol(const char *s, const char *protocol)
+char *NET_ParseProtocol(const char *s, char *protocol)
 {
 	if ( !Q_stricmpn( s, "ws://", 5 ) ) {
     if(protocol != 0) Com_Memcpy(protocol, "ws", 3);
-		return &s[5];
+		return (char *)&s[5];
   } else if ( !Q_stricmpn( s, "wss://", 6 ) ) {
 		if(protocol != 0) Com_Memcpy(protocol, "wss", 4);
-		return &s[6];
+		return (char *)&s[6];
   } else if ( !Q_stricmpn( s, "http://", 7 ) ) {
 		if(protocol != 0) Com_Memcpy(protocol, "http", 5);
-		return &s[7];
+		return (char *)&s[7];
   } else if ( !Q_stricmpn( s, "https://", 8 ) ) {
 		if(protocol != 0) Com_Memcpy(protocol, "https", 6);
-		return &s[8];
+		return (char *)&s[8];
   } else {
 		if(protocol != 0) Com_Memcpy(protocol, "", 1);
-		return &s[0];
+		return (char *)&s[0];
   }
 }
 
@@ -666,7 +666,8 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
-	Q_strncpyz( base, s, sizeof( base ) );
+	search = NET_ParseProtocol(s, a->protocol);
+	Q_strncpyz( base, search, sizeof( base ) );
 	
 	if(*base == '[' || Q_CountChar(base, ':') > 1)
 	{
