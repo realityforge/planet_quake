@@ -174,6 +174,7 @@ Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udp
   var self = this
   var udpSocket = this._listeners[udpLookupPort]
   var onUDPMessage = this._onUDPMessage.bind(self, socket)
+  var onError = this._onProxyError.bind(this, socket) // err is passed in
   if(!udpSocket) {
     await self.tryBindPort.apply(this, [{
       dstPort: udpLookupPort,
@@ -208,10 +209,19 @@ Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udp
       var remoteAddr = dstIP+':'+reqInfo.dstPort
       if(reqInfo.cmd == 'ws') {
         if(typeof self._directConnects[remoteAddr] == 'undefined') {
+          var onUDPMessage = self._onUDPMessage.bind(self, socket)
           self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
-            .on('message', self._onUDPMessage.bind(self, socket))
+            .on('message', (msg) => onUDPMessage(msg, {
+              address: dstIP, port: reqInfo.dstPort
+            }))
+            .on('error', onError)
+            .on('open', () => {
+              self._directConnects[remoteAddr].send(reqInfo.data)
+            })
+        } else {
+          console.log('websocket connect')
+          self._directConnects[remoteAddr].send(reqInfo.data)
         }
-        self._directConnects[remoteAddr].send(reqInfo.data)
       } else if(typeof self._directConnects[remoteAddr] != 'undefined') {
         self._directConnects[remoteAddr].send(reqInfo.data)
       } else {
@@ -386,7 +396,10 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         console.log('Direct connect from ' + req.socket.remoteAddress)
         var onUDPMessage = self._onUDPMessage.bind(self, socket)
         var remoteAddr = req.socket.remoteAddress+':'+req.socket.remotePort
-        ws.on('message', onUDPMessage)
+        ws.on('message', (msg) => onUDPMessage(msg, {
+          address: req.socket.remoteAddress, port: req.socket.remotePort
+        }))
+          .on('error', onError)
           .on('close', () => delete self._directConnects[remoteAddr])
         self._directConnects[remoteAddr] = ws;
       })

@@ -1,6 +1,5 @@
 var _ = require('underscore');
 var http = require('http');
-var logger = require('winston');
 var opt = require('optimist');
 var url = require('url');
 var WebSocketClient = require('ws');
@@ -15,9 +14,6 @@ if (argv.h || argv.help) {
 	opt.showHelp();
 	return;
 }
-
-//logger.format();
-logger.level = 'debug';
 
 var config = loadConfig(argv.config);
 var clients = [];
@@ -92,19 +88,19 @@ function buildChallenge() {
 }
 
 function handleGetServers(conn, data) {
-	logger.info(conn.addr + ':' + conn.port + ' ---> getservers');
+	console.log(conn.addr + ':' + conn.port + ' ---> getservers');
 
 	sendGetServersResponse(conn, servers);
 }
 
 function handleHeartbeat(conn, data) {
-	logger.info(conn.addr + ':' + conn.port + ' ---> heartbeat');
+	console.log(conn.addr + ':' + conn.port + ' ---> heartbeat');
 
 	sendGetInfo(conn);
 }
 
 function handleInfoResponse(conn, data) {
-	logger.info(conn.addr + ':' + conn.port + ' ---> infoResponse');
+	console.log(conn.addr + ':' + conn.port + ' ---> infoResponse');
 
 	var info = parseInfoString(data);
 
@@ -116,7 +112,7 @@ function handleInfoResponse(conn, data) {
 function sendGetInfo(conn) {
 	var challenge = buildChallenge();
 
-	logger.info(conn.addr + ':' + conn.port + ' <--- getinfo with challenge \"' + challenge + '\"');
+	console.log(conn.addr + ':' + conn.port + ' <--- getinfo with challenge \"' + challenge + '\"');
 
 	var buffer = formatOOB('getinfo ' + challenge);
 	conn.socket.send(buffer, { binary: true });
@@ -142,7 +138,7 @@ function sendGetServersResponse(conn, servers) {
 	}
 	msg += '\\EOT';
 
-	logger.info(conn.addr + ':' + conn.port + ' <--- getserversResponse with ' + Object.keys(servers).length + ' server(s)');
+	console.log(conn.addr + ':' + conn.port + ' <--- getserversResponse with ' + Object.keys(servers).length + ' server(s)');
 
 	var buffer = formatOOB(msg);
 	conn.socket.send(buffer, { binary: true });
@@ -176,7 +172,7 @@ function removeServer(id) {
 
 	delete servers[id];
 
-	logger.info(server.addr + ':' + server.port + ' timed out, ' + Object.keys(servers).length + ' server(s) currently registered');
+	console.log(server.addr + ':' + server.port + ' timed out, ' + Object.keys(servers).length + ' server(s) currently registered');
 }
 
 function pruneServers() {
@@ -215,7 +211,7 @@ function addClient(conn) {
 		return;  // already subscribed
 	}
 
-	logger.info(conn.addr + ':' + conn.port + ' ---> subscribe');
+	console.log(conn.addr + ':' + conn.port + ' ---> subscribe');
 
 	clients.push(conn);
 }
@@ -228,7 +224,7 @@ function removeClient(conn) {
 
 	var conn = clients[idx];
 
-	logger.info(conn.addr + ':' + conn.port + ' ---> unsubscribe');
+	console.log(conn.addr + ':' + conn.port + ' ---> unsubscribe');
 
 	clients.splice(idx, 1);
 }
@@ -295,10 +291,7 @@ function loadConfig(configPath) {
 		var first = true;
 
 		ws.on('message', function (buffer, flags) {
-			if (!flags.binary) {
-				return;
-			}
-
+			
 			// node Buffer to ArrayBuffer
 			var view = Uint8Array.from(buffer);
 			var buffer = view.buffer;
