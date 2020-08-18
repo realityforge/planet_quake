@@ -461,7 +461,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				}
 
 				{
-					GLenum DrawBuffers[1] = {GL_FRONT};
+					GLenum DrawBuffers[1] = {GL_NONE};
 					qglDrawBuffers( 1, DrawBuffers );
 					qglClear(GL_COLOR_BUFFER_BIT);
 				}
@@ -524,7 +524,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
-				cmd->buffer = (int)GL_FRONT;
+				cmd->buffer = (int)GL_NONE;
 			else
 				cmd->buffer = (int)GL_BACK;
 		}

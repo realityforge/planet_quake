@@ -655,15 +655,11 @@ void SCR_UpdateScreen( void ) {
 			} else {
 				*/
 				SCR_DrawScreenField( STEREO_CENTER );
-				if(ms - previousTime > 30) {
-					previousTime = ms;
-					//CL_TakeVideoFrame();
-				}
 				if(previousFrame) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
 					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-					//re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
+					re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
 				}
 			//}
 			
@@ -673,6 +669,20 @@ void SCR_UpdateScreen( void ) {
 			re.EndFrame( &time_frontend, &time_backend );
 		} else {
 			re.EndFrame( NULL, NULL );
+		}
+		
+		if(ms - previousTime > 30) {
+			previousTime = ms;
+			if(!previousFrame) {
+				previousFrame = Z_Malloc(PAD(cls.captureWidth * 4, 4) * cls.captureHeight);
+				captureBuffer = Z_Malloc((cls.captureWidth * cls.captureHeight * 4) + 16 - 1);
+				encodeBuffer = Z_Malloc(PAD(cls.captureWidth * 4, 4) * cls.captureHeight);
+			}
+			
+			//re.FastCapture(captureBuffer);
+			//re.FastCaptureOld(captureBuffer, encodeBuffer);
+			//CL_TakeVideoFrame();
+			re.TakeVideoFrame( 512, 512, captureBuffer, encodeBuffer, qfalse );
 		}
 	}
 

@@ -619,6 +619,8 @@ qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg );
 // cl_avi.c
 //
 extern byte *previousFrame;
+extern byte *captureBuffer;
+extern byte *encodeBuffer;
 qboolean CL_OpenAVIForWriting( const char *filename, qboolean pipe );
 void CL_TakeVideoFrame( void );
 void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size );

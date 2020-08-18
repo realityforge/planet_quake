@@ -770,111 +770,126 @@ void R_ExportCubemaps_f(void)
 }
 
 //============================================================================
-static uint32_t videoPBO[2] = {0, 0};
-
-const void *RB_FastCapture(const void *data)
+static GLuint videoPBO[2] = {0, 0};
+static GLuint fbo = 0;
+GLuint depthrenderbuffer;
+void RB_FastCapture(byte *data)
 {
 	byte				*cBuf;
 	size_t				memcount, linelen;
-	int				padwidth, avipadwidth, padlen, avipadlen;
-
-	//if(!tr.renderImage)
-//	tr.renderImage = R_CreateImage("_render", NULL, glConfig.vidWidth, glConfig.vidHeight, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA);
-	
-	//if(!tr.renderFbo)
-	//	tr.renderFbo = FBO_Create("_render", tr.renderImage->width, tr.renderImage->height);
-
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tr.renderImage, 0);
-
-	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		ri.Printf( PRINT_ALL, "Frame bufering failed.\n" );
-	// Set the list of draw buffers.
-	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, tr.renderFbo);
-	glViewport(0,0,glConfig.vidWidth,glConfig.vidHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-	
-	/*
-		glState.finishCalled = qfalse;
-
-		oldFbo = glState.currentFBO;
-		if (tr.msaaResolveFbo)
-		{
-			FBO_Bind(tr.msaaResolveFbo);
-		} else {
-			FBO_Bind(tr.renderFbo);
-		}
-	*/
-		//qglReadBuffer(GL_FRONT);
-		if(!tr.renderImage) {
-			ri.Printf( PRINT_ALL, "Cancelling capture\n" );
-		}
-
-		qglReadBuffer(GL_FRONT);
-
-		//qglBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
-		qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[0]);
-
-		//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)0);
-		//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tr.renderImage->width, tr.renderImage->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-		
-	/*	
-		// if we're doing multisample rendering, switch to the old FBO
-		if (tr.msaaResolveFbo)
-		{
-			FBO_Bind(oldFbo);
-		}
-	*/
-
-		memcount = padwidth * glConfig.vidHeight;
-
-		// gamma correct
-		if(glConfig.deviceSupportsGamma)
-			R_GammaCorrect(cBuf, memcount);
-
-		//glBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[1]);
-		//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[1]);
-		//qglBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
-		cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, memcount, 0xA);
-		//cBuf = (GLubyte*)qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-		if(!cBuf) {
-			ri.Printf( PRINT_ALL, "Cancelling capture\n" );
-		}
-		qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-		//ri.CL_WriteAVIVideoFrame(cBuf, memcount);
-		//return (const void *)(cmd + 1);
-
-}
-
-/*
-==================
-RB_TakeVideoFrameCmd
-==================
-*/
-const void *RB_TakeVideoFrameCmd( const void *data )
-{
-	const videoFrameCommand_t	*cmd;
-	byte				*cBuf;
-	size_t				memcount, linelen;
-	int				padwidth, avipadwidth, padlen, avipadlen;
+	int				padwidth, padlen;
 	GLint packAlign;
-	//FBO_t           *oldFbo;
-	if(!videoPBO[0]) {
-		qglGenBuffers(1, &videoPBO[0]);
-		qglGenBuffers(1, &videoPBO[1]);
-	}
 
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
 
-	cmd = (const videoFrameCommand_t *)data;
+/*
+	if(!videoPBO[0]) {
+		glGenBuffers(1, &videoPBO[0]);
+		glGenBuffers(1, &videoPBO[1]);
+		qglGenFramebuffers(1, &fbo);
+		qglGenRenderbuffers(1, &depthrenderbuffer);
+	}
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	
+	qglGenTextures(1, &tr.renderImage->texnum);
+
+	// "Bind" the newly created texture : all future texture functions will modify this texture
+	qglBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+
+	// Give an empty image to OpenGL ( the last "0" )
+	qglTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, glConfig.vidWidth, glConfig.vidHeight, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Poor filtering. Needed !
+	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	
+	qglBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+	qglRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, glConfig.vidWidth, glConfig.vidHeight);
+	qglFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+	
+	qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tr.renderImage->texnum, 0);
+
+	if(qglCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		ri.Printf( PRINT_ALL, "Frame buffering failed.\n" );
+		return;
+	}
+	// Set the list of draw buffers.
+	GLenum DrawBuffers[1] = {GL_NONE};
+	qglDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	qglViewport(0,0,glConfig.vidWidth,glConfig.vidHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+	
+	if(!tr.renderImage->texnum) {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+		return;
+	}
+*/
 
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 
-	linelen = cmd->width * 4;
+	linelen = glConfig.vidWidth * 4;
+
+	// Alignment stuff for glReadPixels
+	padwidth = PAD(linelen, packAlign);
+	padlen = padwidth - linelen;
+
+	memcount = padwidth * glConfig.vidHeight;
+
+/*
+	glBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[0]);
+	qglBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
+	cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, memcount, 0xA);
+	if(cBuf) {
+		ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+		qglUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+	} else {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+	}
+	
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+	*/
+	
+	
+	cBuf = PADP(data, packAlign);
+
+	//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[0]);
+	qglReadPixels(0, 0, 512, 512, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
+
+	ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+	/*
+	cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, memcount, 0xA);
+	if(cBuf) {
+		ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+		qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+	} else {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+	}
+	
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	*/
+
+	GLenum DrawBuffers2[1] = {GL_NONE};
+	qglDrawBuffers( 1, DrawBuffers2 );
+
+	qglBindFramebuffer(GL_FRAMEBUFFER, 0);
+	qglBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer) {
+	byte				*cBuf;
+	size_t				memcount, linelen;
+	int				padwidth, avipadwidth, padlen, avipadlen;
+	GLint packAlign;
+
+	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
+
+	linelen = 512 * 4;
 
 	// Alignment stuff for glReadPixels
 	padwidth = PAD(linelen, packAlign);
@@ -883,22 +898,18 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 	avipadwidth = PAD(linelen, AVI_LINE_PADDING);
 	avipadlen = avipadwidth - linelen;
 
-	cBuf = PADP(cmd->captureBuffer, packAlign);
+	cBuf = PADP(captureBuffer, packAlign);
 
-	if(cmd->motionJpeg)
-	{
-		memcount = ri.CL_SaveJPGToBuffer(cmd->encodeBuffer, linelen * cmd->height,
-			r_aviMotionJpegQuality->integer,
-			cmd->width, cmd->height, cBuf, padlen);
-		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, memcount);
-	}
-	else
+	qglReadPixels(0, 0, 512, 512, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
+
+	memcount = padwidth * 512;
+
 	{
 		byte *lineend;
 		byte *srcptr, *destptr;
-	
+
 		srcptr = cBuf + memcount - padwidth;
-		destptr = cmd->encodeBuffer;
+		destptr = encodeBuffer;
 		
 		// swap R and B and remove line paddings
 		while(srcptr >= cBuf)
@@ -918,11 +929,92 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 			
 			srcptr = srcptr - linelen - padwidth;
 		}
+	}
+	
+	ri.CL_WriteAVIVideoFrame(encodeBuffer, avipadwidth * 512);
+}
+
+/*
+==================
+RB_TakeVideoFrameCmd
+==================
+*/
+const void *RB_TakeVideoFrameCmd( const void *data )
+{
+	const videoFrameCommand_t	*cmd;
+	byte				*cBuf;
+	size_t				memcount, linelen;
+	int				padwidth, avipadwidth, padlen, avipadlen;
+	GLint packAlign;
+
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
+
+	cmd = (const videoFrameCommand_t *)data;
+	
+	RB_FastCaptureOld(cmd->captureBuffer, cmd->encodeBuffer);
+	
+	return (const void *)(cmd + 1);
+
+	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
+
+	linelen = cmd->width * 3;
+
+	// Alignment stuff for glReadPixels
+	padwidth = PAD(linelen, packAlign);
+	padlen = padwidth - linelen;
+	// AVI line padding
+	avipadwidth = PAD(linelen, AVI_LINE_PADDING);
+	avipadlen = avipadwidth - linelen;
+
+	cBuf = PADP(cmd->captureBuffer, packAlign);
+		
+	qglReadPixels(0, 0, cmd->width, cmd->height, GL_RGB,
+		GL_UNSIGNED_BYTE, cBuf);
+
+	memcount = padwidth * cmd->height;
+
+	// gamma correct
+	if(glConfig.deviceSupportsGamma)
+		R_GammaCorrect(cBuf, memcount);
+
+	if(cmd->motionJpeg)
+	{
+		memcount = ri.CL_SaveJPGToBuffer(cmd->encodeBuffer, linelen * cmd->height,
+			r_aviMotionJpegQuality->integer,
+			cmd->width, cmd->height, cBuf, padlen);
+		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, memcount);
+	}
+	else
+	{
+		byte *lineend, *memend;
+		byte *srcptr, *destptr;
+	
+		srcptr = cBuf;
+		destptr = cmd->encodeBuffer;
+		memend = srcptr + memcount;
+		
+		// swap R and B and remove line paddings
+		while(srcptr < memend)
+		{
+			lineend = srcptr + linelen;
+			while(srcptr < lineend)
+			{
+				*destptr++ = srcptr[2];
+				*destptr++ = srcptr[1];
+				*destptr++ = srcptr[0];
+				srcptr += 3;
+			}
+			
+			Com_Memset(destptr, '\0', avipadlen);
+			destptr += avipadlen;
+			
+			srcptr += padlen;
+		}
 		
 		ri.CL_WriteAVIVideoFrame(cmd->encodeBuffer, avipadwidth * cmd->height);
 	}
-	
-	qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 	return (const void *)(cmd + 1);	
 }
@@ -1610,6 +1702,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SyncRender = RE_SyncRender;
 
 	//re.UpdateMode = RE_UpdateMode;
+	re.FastCapture = RB_FastCapture;
+	re.FastCaptureOld = RB_FastCaptureOld;
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
 
