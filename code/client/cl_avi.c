@@ -507,7 +507,7 @@ void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size )
   byte  padding[ 4 ] = { 0 };
 
   if( !afd.fileOpen ) {
-    CIN_ResampleCinematic((const byte *)imageBuffer, 1024, 1024, (int *)previousFrame);
+    CIN_ResampleCinematic((const byte *)imageBuffer, 2048, 2048, (int *)previousFrame);
     //Com_Memcpy(previousFrame, imageBuffer, size);
     return;
   }

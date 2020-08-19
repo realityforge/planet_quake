@@ -785,11 +785,12 @@ void RB_FastCapture(byte *data)
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
-
-/*
+	
 	if(!videoPBO[0]) {
 		glGenBuffers(1, &videoPBO[0]);
 		glGenBuffers(1, &videoPBO[1]);
+	}
+/*
 		qglGenFramebuffers(1, &fbo);
 		qglGenRenderbuffers(1, &depthrenderbuffer);
 	}
@@ -834,13 +835,13 @@ void RB_FastCapture(byte *data)
 
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 
-	linelen = glConfig.vidWidth * 4;
+	linelen = 2048 * 4;
 
 	// Alignment stuff for glReadPixels
 	padwidth = PAD(linelen, packAlign);
 	padlen = padwidth - linelen;
 
-	memcount = padwidth * glConfig.vidHeight;
+	memcount = padwidth * 2048;
 
 /*
 	glBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
@@ -861,20 +862,19 @@ void RB_FastCapture(byte *data)
 	cBuf = PADP(data, packAlign);
 
 	qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[fboIndex]);
-	qglReadPixels(0, 0, 1024, 1024, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
+	//qglReadPixels(0, 0, 2048, 2048, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-	ri.CL_WriteAVIVideoFrame(cBuf, memcount);
-	/*
-	cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_PACK_BUFFER, 0, memcount, 0xA);
+	//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[(fboIndex + 1) % 2]);
+	
+	//cBuf = qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	qglBufferSubData(GL_PIXEL_PACK_BUFFER, 0, memcount, cBuf);
 	if(cBuf) {
 		ri.CL_WriteAVIVideoFrame(cBuf, memcount);
-		qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+	//	qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	} else {
 		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
 	}
-	
 	qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-	*/
 
 	GLenum DrawBuffers2[1] = {GL_NONE};
 	qglDrawBuffers( 1, DrawBuffers2 );
@@ -955,10 +955,10 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	cmd = (const videoFrameCommand_t *)data;
 	
+	return (const void *)(cmd + 1);
+	
 	RB_FastCapture(cmd->captureBuffer);
 	//RB_FastCaptureOld(cmd->captureBuffer, cmd->encodeBuffer);
-	
-	return (const void *)(cmd + 1);
 
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 

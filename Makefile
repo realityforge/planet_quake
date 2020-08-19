@@ -764,8 +764,6 @@ endif
     -lsdl.js \
 		-lwebgl.js \
 		-lwebgl2.js \
-		-lglemu.js \
-    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \

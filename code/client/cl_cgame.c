@@ -1010,7 +1010,7 @@ void CL_UpdateShader( void ) {
 	if(!lazyShader || strlen(lazyShader) == 0) return;
 	lazyShader[12] = '\0';
 	//if(!strcmp(&lazyShader[13], "console"))
-		Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
+	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
 	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
 }
 

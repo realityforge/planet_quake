@@ -294,7 +294,7 @@ var LibrarySysInput = {
   },
 	Sys_GLimpSafeInit: function () {
 	},
-  
+  glPolygonMode: function(){}, // TODO
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

@@ -21,6 +21,7 @@ To see a live demo, check out https://quake.games or http://www.quakejs.com
 
 Some of the major features currently implemented are:
 
+  * ...using OpenGL OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
   * A working repack script to convert game assets to be more web compatible
   * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
   * A content server (NodeJS + express) to repack and live-reload the game as you develop

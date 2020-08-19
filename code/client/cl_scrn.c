@@ -656,11 +656,11 @@ void SCR_UpdateScreen( void ) {
 				*/
 				SCR_DrawScreenField( STEREO_CENTER );
 				
-				if(previousFrame) {
+				if(previousFrame[3]) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
 					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-					re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
+					//re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
 				}
 			//}
 			
@@ -675,15 +675,15 @@ void SCR_UpdateScreen( void ) {
 		if(ms - previousTime > 30) {
 			previousTime = ms;
 			if(!previousFrame) {
-				previousFrame = Z_Malloc(PAD(cls.captureWidth * 4, 4) * cls.captureHeight);
-				captureBuffer = Z_Malloc((cls.captureWidth * cls.captureHeight * 4) + 16 - 1);
-				encodeBuffer = Z_Malloc(PAD(cls.captureWidth * 4, 4) * cls.captureHeight);
+				previousFrame = Z_Malloc(PAD(2048 * 4, 4) * 2048);
+				captureBuffer = Z_Malloc((2048 * 2048 * 4) + 16 - 1);
+				encodeBuffer = Z_Malloc(PAD(2048 * 4, 4) * 2048);
 			}
 			
 			//re.FastCapture(captureBuffer);
 			//re.FastCaptureOld(captureBuffer, encodeBuffer);
 			//CL_TakeVideoFrame();
-			re.TakeVideoFrame( 1024, 1024, captureBuffer, encodeBuffer, qfalse );
+			//re.TakeVideoFrame( 2048, 2048, captureBuffer, encodeBuffer, qfalse );
 		}
 
 	}
