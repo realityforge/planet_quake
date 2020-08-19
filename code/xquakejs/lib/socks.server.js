@@ -219,7 +219,7 @@ Server.prototype._onUdp = async function (parser, socket, onRequest, onData, udp
               self._directConnects[remoteAddr].send(reqInfo.data)
             })
         } else {
-          console.log('websocket connect')
+          console.log('Websocket request ' + remoteAddr)
           self._directConnects[remoteAddr].send(reqInfo.data)
         }
       } else if(typeof self._directConnects[remoteAddr] != 'undefined') {

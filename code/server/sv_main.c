@@ -831,6 +831,8 @@ static void SVC_Info( const netadr_t *from ) {
 	gamedir = Cvar_VariableString( "fs_game" );
 	if( *gamedir ) {
 		Info_SetValueForKey( infostring, "game", gamedir );
+	} else {
+		Info_SetValueForKey( infostring, "game", BASEGAME );
 	}
 
 	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
