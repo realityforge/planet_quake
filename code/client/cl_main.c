@@ -2732,14 +2732,20 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	serverInfo_t *server;
 	serverInfo_t *servers = &cls.globalServers[0];
 	int	*max = &cls.numglobalservers;
+	qboolean websocket = qfalse;
 
 	
 	// check if server response is from a specific list
 	if(cls.pingUpdateSource == AS_LOCAL) {
 		for (i = 0; i < MAX_OTHER_SERVERS; i++) {
-			if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
+			if (NET_CompareAdr(from, &cls.localServers[i].adr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
+				if(!Q_stricmpn(cls.localServers[i].adr.protocol, "ws", 2)
+				 	|| !Q_stricmpn(cls.localServers[i].adr.protocol, "wss", 3)) {
+					websocket = qtrue;
+				}
+				break;
 			}
 		}
 	}
@@ -2806,6 +2812,10 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		addresses[numservers].port = (*buffptr++) << 8;
 		addresses[numservers].port += *buffptr++;
 		addresses[numservers].port = BigShort( addresses[numservers].port );
+		
+		if(websocket) {
+			Q_strncpyz(addresses[numservers].protocol, "ws", 3);
+		} 
 
 		// syntax check
 		if (*buffptr != '\\' && *buffptr != '/')
@@ -4415,7 +4425,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	if(autocomplete[0]) {
 		if((NET_CompareAdr(from, &clc.serverAddress)
 			|| (rcon_address.type != NA_BAD && NET_CompareAdr(from, &rcon_address)))) {
-			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon");
+			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon") != 0;
 			Field_Clear(&g_consoleField);
 			if(hasRcon) // add rcon back on to autocomplete command
 				memcpy(&g_consoleField.buffer, va("\\rcon %s", autocomplete), sizeof(g_consoleField.buffer));
@@ -4759,13 +4769,14 @@ static void CL_LocalServers_f( void ) {
 			if(!cl_master[i]->string[0]) continue;
 			NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC );
 			for(j = 0; j < cls.numlocalservers; j++) {
-				if ( NET_CompareAdr( &cls.localServers[j].adr, addr ) ) {
+				if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
 					found = qtrue;
 					cls.numGlobalServerAddresses--;
 					break;
 				}
 			}
-			if(found) continue;
+			if(found || !addr->type || !addr->port) continue;
+Com_Printf( "adding server: %s\n", NET_AdrToStringwPort(addr));
 			CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
 			Q_strncpyz(
 				cls.localServers[cls.numlocalservers].hostName,
