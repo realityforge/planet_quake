@@ -191,10 +191,10 @@ Server.prototype._onConnection = function(socket) {
       onClose = this._onClose.bind(this, socket, onData)
       
   if(socket instanceof WebSocket) {
-    console.log(`Websocket connection ${socket._socket.remoteAddress}....`)
+    console.log(`Websocket connection ${socket._socket.remoteAddress}:${socket._socket.remotePort}....`)
     socket.on('message', onData)
   } else if (socket instanceof Socket) {
-    console.log(`Net socket connection ${socket.remoteAddress}....`)
+    console.log(`Net socket connection ${socket.remoteAddress}:${socket.remotePort}....`)
     socket.on('data', onData)
     socket.send = socket.write
     socket._socket = socket
