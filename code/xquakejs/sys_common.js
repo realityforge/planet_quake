@@ -126,9 +126,6 @@ var LibrarySysCommon = {
 	Sys_RandomBytes: function (string, len) {
 		return false;
 	},
-	Sys_GetClipboardData: function () {
-		return 0;
-	},
 	Sys_LowPhysicalMemory: function () {
 		return false;
 	},
