@@ -229,6 +229,7 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 	int		len;
 
 	// shift-insert is paste
+	// TODO: convert to K_PASTE which changes depending on OS
 	if ( ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keys[K_SHIFT].down )
  		|| ( key == 'v' && ( keys[K_CTRL].down || keys[K_COMMAND].down || keys[K_SUPER].down ) ) ) {
 		Field_Paste( edit );

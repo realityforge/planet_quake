@@ -52,9 +52,15 @@ var LibrarySysFiles = {
       ['openjk-cc',       'Coming Soon: Jedi Knights: Jedi Academy'],
       ['baseef-cc',       'Coming Soon: Star Trek: Elite Force'],
 		],
-    filterDownloads: function (mapname) {
+    filterDownloads: function (mapname, modelname) {
       // create virtual file entries for everything in the directory list
       var keys = Object.keys(SYSF.index)
+      var mapMatch = new RegExp(
+        '\/levelshots\/' + mapname
+        + '|\/' + mapname + '\.bsp'
+        + '|\/' + mapname + '\.aas', 'i')
+      var playerMatch = new RegExp('sarge\/'
+        + '|' + modelname + '\/', 'i')
       // servers need some map and model info for hitboxes up front
       for(var i = 0; i < keys.length; i++) {
         var file = SYSF.index[keys[i]]
@@ -91,14 +97,13 @@ var LibrarySysFiles = {
         // download required model and bot
           || file.name.match(/sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
-          || file.name.match(new RegExp('\/levelshots\/' + mapname, 'i'))
-          || file.name.match(new RegExp('\/' + mapname + '\.bsp', 'i'))
-          || file.name.match(new RegExp('\/' + mapname + '\.aas', 'i'))) {
+          || (modelname.length > 0 && file.name.match(playerMatch))
+          || (mapname.length > 0 && file.name.match(mapMatch))) {
           SYSF.index[keys[i]].downloading = true
           SYSN.downloads.push(file.name)
         } else if (
           // these files can be streamed in
-          file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion)\//i)
+          file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion|gi)\//i)
           // download levelshots and common graphics
           || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
@@ -177,6 +182,7 @@ var LibrarySysFiles = {
       SYSF.fs_replace.push(new RegExp('\/*' + fs_game + '\/', 'ig'))
     SYSF.fs_replace.sort((a, b) => b.source.length - a.source.length)
     var mapname = SYSC.Cvar_VariableString('mapname')
+    var modelname = SYSC.Cvar_VariableString('model')
     var clcState = _CL_GetClientState()
     const blankFile = new Uint8Array(4)
     
@@ -229,13 +235,13 @@ var LibrarySysFiles = {
       if(fsMountPath != fs_basegame) {
         SYSN.DownloadIndex(fs_basegame, () => {
           SYSN.DownloadIndex(fsMountPath, () => {
-            SYSF.filterDownloads(mapname)
+            SYSF.filterDownloads(mapname, modelname)
             SYSF.downloadImmediately()
           })
         })
       } else {
         SYSN.DownloadIndex(fsMountPath, () => {
-          SYSF.filterDownloads(mapname)
+          SYSF.filterDownloads(mapname, modelname)
           SYSF.downloadImmediately()
         })
       }
