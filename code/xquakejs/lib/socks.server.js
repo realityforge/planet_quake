@@ -142,7 +142,7 @@ Server.prototype.lookupDNS = async function (address) {
 Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
   var self = this
   var socket = self._receivers[udpLookupPort]
-console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
+//console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort, message.toString('utf-8'))
   // is this valid SOCKS5 for UDP?
   var returnIP = false
   var ipv6 = ip6addr.parse(rinfo.address)
