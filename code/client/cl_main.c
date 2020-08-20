@@ -2741,6 +2741,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			if (NET_CompareAdr(from, &cls.localServers[i].adr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
+Com_Printf("Comparing protocol %s %s\n", cls.localServers[i].adr.protocol, NET_AdrToStringwPort(&cls.localServers[i].adr));
 				if(!Q_stricmpn(cls.localServers[i].adr.protocol, "ws", 2)
 				 	|| !Q_stricmpn(cls.localServers[i].adr.protocol, "wss", 3)) {
 					websocket = qtrue;

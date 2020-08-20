@@ -142,7 +142,6 @@ Server.prototype.lookupDNS = async function (address) {
 Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
   var self = this
   var socket = self._receivers[udpLookupPort]
-//console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort, message.toString('utf-8'))
   // is this valid SOCKS5 for UDP?
   var returnIP = false
   var ipv6 = ip6addr.parse(rinfo.address)
@@ -171,6 +170,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
     domainBuf.copy(bufrep, 5)
     bufrep.writeUInt16BE(rinfo.port, 5 + bufrep[4], true)
   }
+  console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
   socket.send(Buffer.concat([bufrep, message]))
 }
 
@@ -333,6 +333,9 @@ Server.prototype.websockify = async function (reqInfo) {
       .on('close', () => delete self._directConnects[remoteAddr])
     self._directConnects[remoteAddr] = ws;
   })
+  self._listeners[reqInfo.dstPort].on('close', () => {
+    wss.close()
+  })
   await new Promise(resolve => httpServer.listen(port, reqInfo.dstAddr, resolve))
 }
 
@@ -340,14 +343,16 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
   var self = this
   //var onConnect = this._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo)
   var remoteAddr = dstIP+':'+reqInfo.dstPort
-  if(typeof self._directConnects[remoteAddr] == 'undefined') {
+  if(typeof self._directConnects[remoteAddr] == 'undefined'
+    || self._directConnects[remoteAddr].readyState > 1) {
     console.log('Websocket request ' + remoteAddr)
     self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
     self._directConnects[remoteAddr]
-      .on('message', (msg) => onUDPMessage(Buffer.from(msg), {
-        address: dstIP, port: reqInfo.dstPort
-      }))
-      .on('error', onError)
+      .on('message', (msg) => self._directConnects[remoteAddr]
+        ._message(Buffer.from(msg), {
+          address: dstIP, port: reqInfo.dstPort
+        }))
+      .on('error', (err) => self._directConnects[remoteAddr]._error(err))
       .on('open', () => {
         //onConnect()
         self._directConnects[remoteAddr]._pending.forEach(d => {
@@ -363,6 +368,8 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
   } else {
     self._directConnects[remoteAddr].send(reqInfo.data)
   }
+  self._directConnects[remoteAddr]._message = onUDPMessage
+  self._directConnects[remoteAddr]._error = onError
 }
 
 Server.prototype.proxySocket = async function(socket, reqInfo) {
@@ -379,7 +386,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
   try {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
     // socket was connected from outside websocket connection
-    if((reqInfo.cmd == 'connect' || reqInfo.cmd == 'ws')
+    /*if((reqInfo.cmd == 'connect' || reqInfo.cmd == 'ws')
       && typeof self._directConnects[remoteAddr] != 'undefined') {
       if (self._directConnects[remoteAddr].readyState !== 1) {
         self._directConnects[remoteAddr]._pending.push(reqInfo.data)
@@ -391,7 +398,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       self._timeouts[socket.dstSock.address().port] = Date.now()
       socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
     // continue with normal commands
-    } else if (reqInfo.cmd == 'udp') {
+  } else*/ if (reqInfo.cmd == 'udp') {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
       if(typeof this._listeners[reqInfo.dstPort] == 'undefined'
@@ -415,19 +422,30 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
               .on('error', onError)
               .listen(reqInfo.dstPort, reqInfo.dstAddr, onConnect)
     } else if(reqInfo.cmd == 'connect') {
-      console.log('SHOULD NEVER HIT HERE')
-      var dstSock = new Socket()
-      socket.dstSock = dstSock
-      dstSock.setKeepAlive(false)
-      dstSock.on('error', this._onErrorNoop)
-             .on('connect', onConnect)
-             .connect(reqInfo.dstPort, dstIP)
+      if(socket.dstSock) {
+        var port = Object.keys(self._listeners)
+          .filter(k => self._listeners[k] === socket.dstSock)[0]
+          || reqInfo.srcPort
+        self._timeouts[port] = Date.now()
+        socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
+      } else {
+        console.log('SHOULD NEVER HIT HERE', reqInfo)
+        var dstSock = new Socket()
+        socket.dstSock = dstSock
+        dstSock.setKeepAlive(false)
+        dstSock.on('error', this._onErrorNoop)
+               .on('connect', onConnect)
+               .connect(reqInfo.dstPort, dstIP)
+      }
     // special websocket piping for quakejs servers
     } else if(reqInfo.cmd == 'ws') {
-      self._receivers[reqInfo.srcPort] = socket
+      var port = Object.keys(self._receivers)
+        .filter(k => self._receivers[k] === socket)[0]
+        || reqInfo.srcPort
+      self._receivers[port] = socket
       await self.websocketRequest(
-        self._onProxyError.bind(self, reqInfo.srcPort),
-        self._onUDPMessage.bind(self, reqInfo.srcPort),
+        self._onProxyError.bind(self, port),
+        self._onUDPMessage.bind(self, port),
         reqInfo, dstIP)
     } else {
       socket.send(BUF_REP_CMDUNSUPP)
