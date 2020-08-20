@@ -49,6 +49,12 @@ Parser.prototype._onData = function(message) {
       left,
       chunkLeft,
       minLen
+  // connection and version number are implied from now on
+  if(this.authed && Object.values(ATYP).includes(chunk[3])) {
+    chunk[0] = 0x05
+    chunk[1] = chunk[1] || 0x01 // could be 1 or 4 from client
+    chunk[2] = 0x00
+  }
   //console.log(chunk)
   while (i < len) {
     // emscripten overdoing it a little
@@ -62,7 +68,11 @@ Parser.prototype._onData = function(message) {
       this._dstport = chunk[i+8]
       this._dstport <<= 8
       this._dstport += chunk[i+9]
-      this.emit('udp', this._dstport)
+      this.authed = true
+      this.emit('request', {
+        cmd: 'udp',
+        dstPort: this._dstport
+      })
       return
     }
     switch (state) {
@@ -221,7 +231,7 @@ Parser.prototype._onData = function(message) {
             cmd: this._cmd,
             srcAddr: undefined,
             srcPort: undefined,
-            dstAddr: this._dstaddr,
+            dstAddr: this._dstaddr.replace('\0', ''),
             dstPort: this._dstport,
             data: chunk.slice(i)
           })

@@ -1295,7 +1295,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
-		cls.state = CA_CONNECTING;
+		//cls.state = CA_CONNECTED;
+		Key_SetCatcher((Key_GetCatcher() ^ KEYCATCH_CGAME) | KEYCATCH_UI);
 		if(!dropped && !cls.postgame) {
 			// skip disconnecting and just show the main menu
 			noGameRestart = qtrue;
@@ -4094,10 +4095,11 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
-	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_INIT);
-	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_INIT);
+	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_INIT | CVAR_ARCHIVE);
+	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_INIT | CVAR_ARCHIVE);
+	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_INIT | CVAR_ARCHIVE);
 	
-	for ( index = 2; index < MAX_MASTER_SERVERS; index++ )
+	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
@@ -4751,22 +4753,26 @@ static void CL_LocalServers_f( void ) {
 
 #ifdef EMSCRIPTEN
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
-		netadr_t addr;
-		qboolean found = qfalse;
-		if(!cl_master[i]->string[0]) continue;
-		NET_StringToAdr( cl_master[i]->string, &addr, NA_UNSPEC );
-		for(j = 0; j < cls.numlocalservers; j++) {
-			if ( NET_CompareAdr( &cls.localServers[j].adr, &addr ) ) {
-				found = qtrue;
+		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
+			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses++];
+			qboolean found = qfalse;
+			if(!cl_master[i]->string[0]) continue;
+			NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC );
+			for(j = 0; j < cls.numlocalservers; j++) {
+				if ( NET_CompareAdr( &cls.localServers[j].adr, addr ) ) {
+					found = qtrue;
+					cls.numGlobalServerAddresses--;
+					break;
+				}
 			}
+			if(found) continue;
+			CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
+			Q_strncpyz(
+				cls.localServers[cls.numlocalservers].hostName,
+				cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
+			cls.localServers[cls.numlocalservers].visible = qfalse;
+			cls.numlocalservers++;
 		}
-		if(found) continue;
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qfalse;
-		cls.numlocalservers++;
 	}
 
 	// emulate localhost

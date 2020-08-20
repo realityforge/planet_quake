@@ -620,8 +620,11 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
 	{
 		fromlen = sizeof(from);
-		ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
-
+//#ifdef EMSCRIPTEN
+//		ret = recvfrom( socks_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+//#else
+    ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+//#endif
 		if (ret == SOCKET_ERROR)
 		{
 			err = socketError;
@@ -645,10 +648,10 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
   				net_from->ipv._4[2] = net_message->data[6];
   				net_from->ipv._4[3] = net_message->data[7];
           net_message->readcount = 4 + 4 + 2;
+          Q_strncpyz(net_from->name, NET_AdrToString(net_from), sizeof(net_from->name));
         } else if (net_message->data[3] == 3) {
-          Q_strncpyz(net_from->name, (char *)&net_message->data[5], net_message->data[4]);
-          NET_StringToAdr(net_from->name, net_from, net_from->type);
           net_message->readcount = 5 + net_message->data[4] + 2;
+          NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
         }
 				net_from->port = *(short *)&net_message->data[net_message->readcount - 2];
 			}
@@ -789,7 +792,13 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
+//#ifdef EMSCRIPTEN
+    // maybe on desktop we have the luxury of maintaining separate connections
+    //  but the web browser is limit to 3 per thread
+//    ret = sendto( socks_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
+//#else
     ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
+//#endif
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -1695,15 +1704,6 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
-	modified += net_port->modified;
-	net_port->modified = qfalse;
-	
-#ifdef USE_IPV6
-	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
-	modified += net_ip6->modified;
-	net_ip6->modified = qfalse;
-
 #ifdef EMSCRIPTEN
   //if(!com_dedicated->integer) {
   	Com_RandomBytes((byte*)&port, sizeof(int));
@@ -1718,7 +1718,12 @@ static qboolean NET_GetCvars( void ) {
 	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
-	
+
+#ifdef USE_IPV6
+	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
+	modified += net_ip6->modified;
+	net_ip6->modified = qfalse;
+
 	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
