@@ -999,9 +999,6 @@ void SV_Shutdown( const char *finalmsg ) {
  	client_t	*cl;
 
 	if ( !com_sv_running || !com_sv_running->integer ) {
-#ifdef USE_MV
-		SV_SaveRecordCache();
-#endif
 		return;
 	}
 
