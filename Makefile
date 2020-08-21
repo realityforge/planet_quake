@@ -205,7 +205,6 @@ VERSION=$(shell grep "\#define Q3_VERSION" $(CMDIR)/q_shared.h | \
   sed -e 's/.*".* \([^ ]*\)"/\1/')
 
 # common qvm definition
-ifneq ($(PLATFORM),js)
 ifeq ($(ARCH),x86_64)
   HAVE_VM_COMPILED = true
 else
@@ -213,7 +212,6 @@ ifeq ($(ARCH),x86)
   HAVE_VM_COMPILED = true
 else
   HAVE_VM_COMPILED = false
-endif
 endif
 endif
 
@@ -670,7 +668,7 @@ endif
   DEBUG=0
   EMCC_DEBUG=0
 
-  HAVE_VM_COMPILED=0
+  HAVE_VM_COMPILED=true
   BUILD_SERVER=0
   BUILD_GAME_QVM=1
   BUILD_GAME_SO=0
