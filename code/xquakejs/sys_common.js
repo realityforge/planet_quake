@@ -1,5 +1,5 @@
 var LibrarySysCommon = {
-	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Error'],
+	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Outside_Error'],
 	$SYSC: {
 		varStr: 0,
 		oldDLURL: null,
@@ -30,23 +30,25 @@ var LibrarySysCommon = {
 		},
 		Error: function (level, errMsg) {
 			if (level === 'fatal') {
-				level = 0;
+				level = 0
 			} else if (level === 'drop') {
-				level = 1;
+				level = 1
 			} else if (level === 'serverdisconnect') {
-				level = 2;
+				level = 2
 			} else if (level === 'disconnect') {
-				level = 3;
+				level = 3
 			} else if (level === 'need_cd') {
-				level = 4;
+				level = 4
 			} else {
-				level = 0;
+				level = 0
 			}
 
-			errMsg = allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK);
-			if(!errMsg) errMsg = UTF8ToString(errMsg);
+			errMsg = allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK)
+			if(!errMsg) errMsg = UTF8ToString(errMsg)
 
-			Browser.safeCallback(() => _Com_Error(level, errMsg))();
+			Browser.safeCallback(_Com_Outside_Error)(level, errMsg)
+			// drop current stack frame and bubble out
+			throw new Error(errMsg)
 		},
 		ProxyCallback: function () {
 			Browser.safeCallback(() => {
@@ -76,7 +78,7 @@ var LibrarySysCommon = {
 				dataType: 'arraybuffer',
 				onprogress: onprogress,
 				onload: (err, data) => {
-					if(err) {
+					if(err && SYSC.oldDLURL.length > 0) {
 						url = (SYSC.oldDLURL.includes('://')
 							? SYSC.oldDLURL
 							: window

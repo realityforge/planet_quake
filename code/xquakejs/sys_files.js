@@ -92,7 +92,7 @@ var LibrarySysFiles = {
         }
         if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
         // download files for menu system
-          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud\.txt|arenas\.txt/i)
+          || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud[0-9]*\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
           || file.name.match(/sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
@@ -105,7 +105,7 @@ var LibrarySysFiles = {
           // these files can be streamed in
           file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion|gi)\//i)
           // download levelshots and common graphics
-          || file.name.match(/description\.txt|levelshots|^ui\/|common\/|icons\/|menu\/|sfx\//i)
+          || file.name.match(/description\.txt|levelshots|(^|\/)ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
@@ -164,6 +164,9 @@ var LibrarySysFiles = {
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
     var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     if(newDLURL.length > 0) {
+      if(SYSC.oldDLURL.length == 0) {
+        SYSC.oldDLURL = SYSC.newDLURL
+      }
       SYSC.newDLURL = newDLURL
     }
     //SYSN.downloadLazy.splice(0) // reset lazy list to start of map

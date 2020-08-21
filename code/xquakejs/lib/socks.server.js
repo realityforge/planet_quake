@@ -92,10 +92,10 @@ Server.prototype._onMethods = function(parser, socket, onData, methods) {
   parser.authed = true
   socket.off('data', onData)
   socket.off('message', onData)
-  socket.send(Buffer.from([0x05, 0x00]))
+  socket.send(Buffer.from([0x05, 0x00]), { binary: true })
   socket.on('data', onData)
   socket.on('message', onData)
-  //socket.send(BUF_AUTH_NO_ACCEPT)
+  //socket.send(BUF_AUTH_NO_ACCEPT, { binary: true })
 }
 
 Server.prototype._onRequest = async function(socket, onData, reqInfo) {
@@ -103,7 +103,7 @@ Server.prototype._onRequest = async function(socket, onData, reqInfo) {
   reqInfo.srcPort = socket._socket.remotePort
   var intercept = false // TODO: use this for something cool
   if (intercept && !reqInfo.dstAddr.includes('0.0.0.0')) {
-    socket.send(BUF_REP_INTR_SUCCESS);
+    socket.send(BUF_REP_INTR_SUCCESS, { binary: true });
     socket.removeListener('error', this._onErrorNoop);
     process.nextTick(function() {
       var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date());
@@ -171,7 +171,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
     bufrep.writeUInt16BE(rinfo.port, 5 + bufrep[4], true)
   }
   console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
-  socket.send(Buffer.concat([bufrep, message]))
+  socket.send(Buffer.concat([bufrep, message]), { binary: true })
 }
 
 Server.prototype._timeoutUDP = function(udpLookupPort) {
@@ -249,7 +249,7 @@ Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
   for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
     bufrep[p] = localbytes[i]
   bufrep.writeUInt16BE(socket._socket.localPort, p, true)
-  socket.send(bufrep)
+  socket.send(bufrep, { binary: true })
 
   // do some new piping for the socket
   if(typeof socket.dstSock == 'function') {
@@ -258,7 +258,7 @@ Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
     socket.dstSock.pipe(socket._socket)
   } else {
     console.log('Starting messages ' + ipv6.kind())
-    socket.send(bufrep)
+    socket.send(bufrep, { binary: true })
   }
 }
 
@@ -283,7 +283,7 @@ Server.prototype._onProxyError = function(udpLookupPort, err) {
       break
     }
   }
-  socket.send(errbuf)
+  socket.send(errbuf, { binary: true })
 }
 
 Server.prototype.tryBindPort = async function(reqInfo) {
@@ -323,6 +323,7 @@ Server.prototype.websockify = async function (reqInfo) {
   var httpServer = http.createServer()
   var wss = new WebSocketServer({server: httpServer})
   var port = self._listeners[reqInfo.dstPort].address().port
+  // socket was connected from outside websocket connection
   wss.on('connection', function(ws, req) {
     var remoteAddr = req.socket.remoteAddress+':'+req.socket.remotePort
     console.log('Direct connect from ' + remoteAddr)
@@ -356,7 +357,7 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
       .on('open', () => {
         //onConnect()
         self._directConnects[remoteAddr]._pending.forEach(d => {
-          self._directConnects[remoteAddr].send(d)
+          self._directConnects[remoteAddr].send(d, { binary: true })
         })
       })
       .on('close', () => delete self._directConnects[remoteAddr])
@@ -366,7 +367,7 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
   } else if (self._directConnects[remoteAddr].readyState !== 1) {
     self._directConnects[remoteAddr]._pending.push(reqInfo.data)
   } else {
-    self._directConnects[remoteAddr].send(reqInfo.data)
+    self._directConnects[remoteAddr].send(reqInfo.data, { binary: true })
   }
   self._directConnects[remoteAddr]._message = onUDPMessage
   self._directConnects[remoteAddr]._error = onError
@@ -385,20 +386,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
   }
   try {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
-    // socket was connected from outside websocket connection
-    /*if((reqInfo.cmd == 'connect' || reqInfo.cmd == 'ws')
-      && typeof self._directConnects[remoteAddr] != 'undefined') {
-      if (self._directConnects[remoteAddr].readyState !== 1) {
-        self._directConnects[remoteAddr]._pending.push(reqInfo.data)
-      } else {
-        self._directConnects[remoteAddr].send(reqInfo.data)
-      }
-    // web-socket is bound to a specific socket already
-    } else if(reqInfo.cmd == 'connect' && socket.dstSock) {
-      self._timeouts[socket.dstSock.address().port] = Date.now()
-      socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
-    // continue with normal commands
-  } else*/ if (reqInfo.cmd == 'udp') {
+    if (reqInfo.cmd == 'udp') {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
       if(typeof this._listeners[reqInfo.dstPort] == 'undefined'
@@ -448,7 +436,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         self._onUDPMessage.bind(self, port),
         reqInfo, dstIP)
     } else {
-      socket.send(BUF_REP_CMDUNSUPP)
+      socket.send(BUF_REP_CMDUNSUPP, { binary: true })
       socket.close()
     }
   } catch (err) {

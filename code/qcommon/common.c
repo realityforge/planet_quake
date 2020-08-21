@@ -2983,7 +2983,6 @@ static void __attribute__((__noreturn__)) Com_Error_f (void) {
 	}
 }
 
-
 /*
 =============
 Com_Freeze_f
@@ -4063,6 +4062,16 @@ void Com_Frame_After_Shutdown() {
 	Com_Frame_Callback(Sys_FS_Startup, Com_Frame_After_Startup);
 }
 
+
+int outsideError;
+char *outsideMsg;
+void Com_Outside_Error(int level, char *message)
+{
+	outsideError = level;
+	outsideMsg = message;
+}
+
+
 #endif
 /*
 =================
@@ -4087,6 +4096,8 @@ void Com_Frame( qboolean noDelay ) {
 
 	if ( setjmp( abortframe ) ) {
 #ifdef EMSCRIPTEN
+		outsideError = 0;
+		outsideMsg = 0;
 		CB_Frame_Proxy = NULL;
 		CB_Frame_After = NULL;
 		invokeFrameAfter = qfalse;
@@ -4108,6 +4119,16 @@ void Com_Frame( qboolean noDelay ) {
 	timeAfter = 0;
 
 #ifdef EMSCRIPTEN
+	// call error function from Com_Frame so we have the benefit of setjmp
+	//   in place to catch it and recover
+	if(outsideMsg) {
+		int err = outsideError;
+		char *msg = outsideMsg;
+		outsideError = 0;
+		outsideMsg = 0;
+		Com_Error(err, "%s\n", msg);
+	}
+
 	// used by cl_parsegamestate/cl_initcgame
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
