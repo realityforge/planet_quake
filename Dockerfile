@@ -3,7 +3,8 @@ FROM debian:bullseye-slim AS builder
 RUN \
   echo "# INSTALL DEPENDENCIES ##########################################" && \
   apt-get update && \
-  apt-get install -y build-essential linux-headers-5.6.0-2-common libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python && \
+  apt upgrade -y && apt dist-upgrade && \
+  apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils && \
   mkdir -p /tmp/build
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
@@ -11,7 +12,8 @@ RUN \
   git clone --recursive --progress https://github.com/briancullinan/planet_quake && \
   cd /tmp/build/planet_quake && \
   git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk && \
-  git submodule update --init --recursive --progress
+  git submodule update --init --recursive --progress && \
+  /tmp/build/planet_quake/code/xquakejs/lib/emsdk/emsdk install latest-upstream
 RUN \
   echo "# BUILD NATIVE SERVER ##########################################" && \
   cd /tmp/build/planet_quake && \
@@ -21,12 +23,13 @@ RUN \
   cd /tmp/build/planet_quake && \
   npm install && \
   npm run install:emsdk && \
+  echo "" >>  /root/.emscripten && \
   echo "BINARYEN_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /root/.emscripten && \
   echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /root/.emscripten && \
   echo "NODE_JS = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/node/12.9.1_64bit/bin/node'" >> /root/.emscripten && \
   echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /root/.emscripten && \
   export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
-  /usr/bin/python2.7 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
+  /usr/bin/python3 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
   export STANDALONE=1 && \
   make release PLATFORM=js
 RUN \
