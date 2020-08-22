@@ -83,7 +83,7 @@ then
 ```
 ./code/xquakejs/lib/emsdk/emsdk install latest-upstream
 ./code/xquakejs/lib/emsdk/emsdk activate latest
-./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2
+./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib
 make PLATFORM=js
 ```
 

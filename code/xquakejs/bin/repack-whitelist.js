@@ -73,12 +73,12 @@ var knownDirs = [
 ]
 
 function findTypes(types, project) {
-  if(Array.isArray(types)) types = `**/*+(${types.join('|')})`
+  if(Array.isArray(types)) types = `*+(${types.join('|')})`
   if(fs.existsSync(project)) {
-    return glob.sync(types, {cwd: project})
+    return glob.sync(types, {nocase: true, cwd: project, matchBase: true})
       .map(f => path.join(project, f))
   } else if(Array.isArray(project)) {
-    return project.filter(minimatch.filter(types))
+    return project.filter(minimatch.filter(types, {nocase: true, matchBase: true}))
   } else {
     throw new Error(`Don't know what to do with ${project}`)
   }

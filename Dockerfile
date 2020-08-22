@@ -3,7 +3,7 @@ FROM debian:bullseye-slim AS builder
 RUN \
   echo "# INSTALL DEPENDENCIES ##########################################" && \
   apt-get update && \
-  apt-get install -y build-essential linux-headers-5.4.0-4-common libcurl4-gnutls-dev curl g++ gcc git make nodejs npm && \
+  apt-get install -y build-essential linux-headers-5.6.0-2-common libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python && \
   mkdir -p /tmp/build
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
@@ -48,7 +48,7 @@ COPY --from=builder /root/planet_quake /home/ioq3srv/planet_quake
 COPY --from=builder /root/quakejs /home/ioq3srv/quakejs
 RUN \
   apt-get update && \
-  apt-get install -y systemd imagemagick imagemagick-common vorbis-tools vim && \
+  apt-get install -y systemd imagemagick imagemagick-common vorbis-tools vim python && \
   useradd ioq3srv && \
   mkdir /home/ioq3srv/baseq3 && \
   sed -i -e 's/code\/xquakejs\///g' /home/ioq3srv/quakejs/package.json && \

@@ -44,6 +44,7 @@ var LibrarySysFiles = {
 			['chili-cc', 			  'Chili Quake XXL'],
 			['hqq-cc', 				  'High Quality Quake'],
       ['entityplus-cc', 	'Engine Of Creation: Entity Plus'],
+      ['wop-cc',          'World of Padman'],
 			['rocketarena-cc',  'Coming Soon: Rocket Arena'],
 			['gpp-cc',          'Coming Soon: Tremulous'],
 			['gppl-cc',         'Coming Soon: Unvanquished'],
