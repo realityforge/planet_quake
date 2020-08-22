@@ -38,14 +38,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <sys/mman.h>
 #include <errno.h>
 #include <libgen.h> // dirname
-#ifdef __linux__ // rb010123
-  #include <mntent.h>
-#endif
 
 #include <dlfcn.h>
 
 #ifndef NOFPU
 #ifdef __linux__
+#ifdef __GLIBC__
   #include <fpu_control.h> // bk001213 - force dumps on divide by zero
 #endif
 #endif
@@ -133,22 +131,6 @@ void Sys_BeginProfiling( void )
 {
 
 }
-
-
-/*
-=================
-Sys_In_Restart_f
-
-Restart the input subsystem
-=================
-*/
-#ifndef DEDICATED
-void Sys_In_Restart_f( void )
-{
-	IN_Shutdown();
-	IN_Init();
-}
-#endif
 
 
 // =============================================================
@@ -320,21 +302,15 @@ void Sys_Quit( void )
 
 void Sys_Init( void )
 {
-
-#ifndef DEDICATED
-	Cmd_AddCommand( "in_restart", Sys_In_Restart_f );
-#endif
-
 	Cvar_Set( "arch", OS_STRING " " ARCH_STRING );
-
 	//IN_Init();   // rcg08312005 moved into glimp.
 }
 
 
 void Sys_Error( const char *format, ... )
 {
-	va_list     argptr;
-	char        text[1024];
+	va_list argptr;
+	char text[1024];
 
 	// change stdin to non blocking
 	// NOTE TTimo not sure how well that goes with tty console mode
@@ -782,6 +758,7 @@ void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
 #ifndef NOFPU
 #ifdef __linux__
 #ifdef __i386
+#ifdef __GLIBC__
 #ifndef NDEBUG
 	// bk0101022 - enable FPE's in debug mode
 	static int fpu_word = _FPU_DEFAULT & ~(_FPU_MASK_ZM | _FPU_MASK_IM);
@@ -800,6 +777,7 @@ void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
 	static int fpu_word = _FPU_DEFAULT;
 	_FPU_SETCW( fpu_word );
 #endif // NDEBUG
+#endif // __GLIBC__
 #endif // __i386 
 #endif // __linux
 #endif
@@ -832,28 +810,38 @@ builds because there are situations where you are likely to want
 to symlink to binaries and /not/ have the links resolved.
 =================
 */
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 const char *Sys_BinName( const char *arg0 )
 {
-	static char   dst[ PATH_MAX ];
+	static char dst[ PATH_MAX ];
 
 #ifdef NDEBUG
 
-#ifdef __linux__
+#if defined (__linux__)
 	int n = readlink( "/proc/self/exe", dst, PATH_MAX - 1 );
 
 	if ( n >= 0 && n < PATH_MAX )
 		dst[ n ] = '\0';
 	else
 		Q_strncpyz( dst, arg0, PATH_MAX );
+#elif defined (__APPLE__)
+	uint32_t bufsize = sizeof( dst );
+
+	if ( _NSGetExecutablePath( dst, &bufsize ) == -1 )
+	{
+		Q_strncpyz( dst, arg0, PATH_MAX );
+	}
 #else
+
 #warning Sys_BinName not implemented
 	Q_strncpyz( dst, arg0, PATH_MAX );
 #endif
 
-#else
+#else // DEBUG
 	Q_strncpyz( dst, arg0, PATH_MAX );
 #endif
-
 	return dst;
 }
 
@@ -881,6 +869,12 @@ int main( int argc, const char* argv[] )
 	char  *cmdline;
 	int   len, i;
 	tty_err	err;
+
+#ifdef __APPLE__
+	// This is passed if we are launched by double-clicking
+	if ( argc >= 2 && Q_strncmp( argv[1], "-psn", 4 ) == 0 )
+		argc = 1;
+#endif
 
 	if ( Sys_ParseArgs( argc, argv ) ) // added this for support
 		return 0;

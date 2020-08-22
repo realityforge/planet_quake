@@ -38,8 +38,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_TESS_NEEDS_NORMAL
 //#define USE_TESS_NEEDS_ST2
 
-//#define USE_SKY_DEPTH_WRITE
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
@@ -47,20 +45,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_common.h"
 #include "iqm.h"
 
+
 #ifdef USE_VULKAN
 #include "vk.h"
 // GL constants substitutions
 typedef enum {
-	GL_RGBA4,
-	GL_RGBA8,
-	GL_RGBA,
-	GL_RGB4_S3TC,
-	GL_RGB5,
-	GL_RGB8,
-	GL_RGB,
-	GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
-	GL_COMPRESSED_RGB_S3TC_DXT1_EXT,
-	GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,
 	GL_NEAREST,
 	GL_LINEAR,
 	GL_NEAREST_MIPMAP_NEAREST,
@@ -317,7 +306,8 @@ typedef struct {
 } texModInfo_t;
 
 
-#define	MAX_IMAGE_ANIMATIONS	8
+#define MAX_IMAGE_ANIMATIONS		24
+#define MAX_IMAGE_ANIMATIONS_VQ3	8
 
 typedef struct {
 	image_t			*image[MAX_IMAGE_ANIMATIONS];
@@ -525,6 +515,7 @@ typedef struct {
 #endif
 #ifdef USE_VULKAN
 	qboolean	switchRenderPass;
+	qboolean	needScreenMap;
 #endif
 } trRefdef_t;
 
@@ -1113,6 +1104,7 @@ typedef struct {
 	qboolean doneShadows;
 
 	qboolean screenMapDone;
+	qboolean doneBloom;
 
 } backEndState_t;
 
@@ -1282,6 +1274,9 @@ extern cvar_t	*r_vbo;
 #endif
 extern cvar_t	*r_fbo;
 extern cvar_t	*r_hdr;
+extern cvar_t	*r_bloom;
+extern cvar_t	*r_bloom_threshold;
+extern cvar_t	*r_bloom_intensity;
 extern cvar_t	*r_ext_multisample;
 extern cvar_t	*r_ext_alpha_to_coverage;
 extern cvar_t	*r_renderWidth;
@@ -1469,6 +1464,7 @@ void		R_Init( void );
 
 void		R_SetColorMappings( void );
 void		R_GammaCorrect( byte *buffer, int bufSize );
+void		R_ColorShiftLightingBytes( const byte in[4], byte out[4] );
 
 void	R_ImageList_f( void );
 void	R_SkinList_f( void );

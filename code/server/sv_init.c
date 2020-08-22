@@ -315,7 +315,9 @@ static void SV_Startup( void ) {
 	Cvar_Set( "sv_running", "1" );
 	
 	// Join the ipv6 multicast group now that a map is running so clients can scan for us on the local network.
+#ifdef USE_IPV6
 	NET_JoinMulticast6();
+#endif
 }
 
 
@@ -554,7 +556,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #endif
 
 	// get latched value
-	Cvar_Get( "sv_pure", "1", 0 );
+	Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
 
 	// get a new checksum feed and restart the file system
 	srand( Com_Milliseconds() );
@@ -817,7 +819,7 @@ void SV_Init( void )
 	Cvar_Get( "mvproto", va( "%i", MV_PROTOCOL_VERSION ), CVAR_SERVERINFO | CVAR_ROM );
 	sv_autoRecord = Cvar_Get( "sv_mvAutoRecord", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_demoFlags = Cvar_Get( "sv_mvFlags", "3", CVAR_ARCHIVE );
-	sv_mvClients = Cvar_Get( "sv_mvClients", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	sv_mvClients = Cvar_Get( "sv_mvClients", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_CheckRange( sv_mvClients, "0", NULL, CV_INTEGER );
 	sv_mvPassword = Cvar_Get( "sv_mvPassword", "", CVAR_ARCHIVE );
 
@@ -863,30 +865,32 @@ void SV_Init( void )
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
-	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT );
-	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
-	sv_master[3] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
-	sv_master[4] = Cvar_Get( "sv_master1", "master0.excessiveplus.net", CVAR_INIT );
-	sv_master[5] = Cvar_Get( "sv_master3", "master3.idsoftware.com", CVAR_INIT );
-	sv_master[6] = Cvar_Get( "sv_master4", "master0.gamespy.com", CVAR_INIT );
-	sv_master[7] = Cvar_Get( "sv_master5", "clanservers.net", CVAR_INIT );
-	sv_master[8] = Cvar_Get( "sv_master6", "master.kali.net", CVAR_INIT );
-	sv_master[9] = Cvar_Get( "sv_master7", "master.quake3arena.com", CVAR_INIT );
-	sv_master[10] = Cvar_Get( "sv_master8", "master0.excessiveplus.net:27950", CVAR_INIT );
-	sv_master[11] = Cvar_Get( "sv_master9", "master.maverickservers.com:27950", CVAR_INIT );
-	sv_master[12] = Cvar_Get( "sv_master10", "master3.idsoftware.com:27950", CVAR_INIT );
-	sv_master[13] = Cvar_Get( "sv_master11", "master.quake3arena.com", CVAR_INIT );
-	sv_master[14] = Cvar_Get( "sv_master12", "master.deathmask.net:27950", CVAR_INIT );
+	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_ARCHIVE );
+	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_ARCHIVE );
+	sv_master[3] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_ARCHIVE );
+	sv_master[4] = Cvar_Get( "sv_master1", "master0.excessiveplus.net", CVAR_ARCHIVE );
+	sv_master[5] = Cvar_Get( "sv_master3", "master3.idsoftware.com", CVAR_ARCHIVE );
+	sv_master[6] = Cvar_Get( "sv_master4", "master0.gamespy.com", CVAR_ARCHIVE );
+	sv_master[7] = Cvar_Get( "sv_master5", "clanservers.net", CVAR_ARCHIVE );
+	sv_master[8] = Cvar_Get( "sv_master6", "master.kali.net", CVAR_ARCHIVE );
+	sv_master[9] = Cvar_Get( "sv_master7", "master.quake3arena.com", CVAR_ARCHIVE );
+	sv_master[10] = Cvar_Get( "sv_master8", "master0.excessiveplus.net:27950", CVAR_ARCHIVE );
+	sv_master[11] = Cvar_Get( "sv_master9", "master.maverickservers.com:27950", CVAR_ARCHIVE );
+	sv_master[12] = Cvar_Get( "sv_master10", "master3.idsoftware.com:27950", CVAR_ARCHIVE );
+	sv_master[13] = Cvar_Get( "sv_master11", "master.quake3arena.com", CVAR_ARCHIVE );
+	sv_master[14] = Cvar_Get( "sv_master12", "master.deathmask.net:27950", CVAR_ARCHIVE );
 	sv_master[15] = Cvar_Get( "sv_master13", "stats.bigbrotherbot.net", CVAR_INIT );
-	sv_master[16] = Cvar_Get( "sv_master14", "master.maverickservers.com:27950", CVAR_INIT );
-	sv_master[17] = Cvar_Get( "sv_master15", "dpmaster.deathmask.net:27950", CVAR_INIT );
-	sv_master[18] = Cvar_Get( "sv_master16", "dctalk.no-ip.info:27950", CVAR_INIT );
-	sv_master[19] = Cvar_Get( "sv_master17", "monster.idsoftware.com:27950", CVAR_INIT );
-	sv_master[20] = Cvar_Get( "sv_master18", "master.quakejs.com", CVAR_INIT );
-	sv_master[20] = Cvar_Get( "sv_master19", "master.quakeservers.net:27000", CVAR_INIT );
-	sv_master[21] = Cvar_Get( "sv_master20", MASTER_SERVER_NAME, CVAR_INIT );
-	sv_master[22] = Cvar_Get( "sv_master21", "", CVAR_INIT );
-	sv_master[23] = Cvar_Get( "sv_master22", "", CVAR_INIT );
+	sv_master[16] = Cvar_Get( "sv_master14", "master.maverickservers.com:27950", CVAR_ARCHIVE );
+	sv_master[17] = Cvar_Get( "sv_master15", "dpmaster.deathmask.net:27950", CVAR_ARCHIVE );
+	sv_master[18] = Cvar_Get( "sv_master16", "dctalk.no-ip.info:27950", CVAR_ARCHIVE );
+	sv_master[19] = Cvar_Get( "sv_master17", "monster.idsoftware.com:27950", CVAR_ARCHIVE );
+	sv_master[20] = Cvar_Get( "sv_master18", "master.quakeservers.net:27000", CVAR_ARCHIVE );
+	sv_master[21] = Cvar_Get( "sv_master19", MASTER_SERVER_NAME, CVAR_ARCHIVE );
+#ifdef EMSCRIPTEN
+	sv_master[20] = Cvar_Get( "sv_master20", "master.quakejs.com", CVAR_ARCHIVE );
+	sv_master[22] = Cvar_Get( "sv_master21", "ws://master.quakejs.com", CVAR_ARCHIVE );
+	sv_master[23] = Cvar_Get( "sv_master22", "207.246.91.235:27950", CVAR_ARCHIVE );
+#endif
 
 
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
@@ -995,9 +999,6 @@ void SV_Shutdown( const char *finalmsg ) {
  	client_t	*cl;
 
 	if ( !com_sv_running || !com_sv_running->integer ) {
-#ifdef USE_MV
-		SV_SaveRecordCache();
-#endif
 		return;
 	}
 
@@ -1031,7 +1032,9 @@ void SV_Shutdown( const char *finalmsg ) {
 #endif
 */
 
+#ifdef USE_IPV6
 	NET_LeaveMulticast6();
+#endif
 
 #ifdef EMSCRIPTEN
 	if ( svs.clients ) {

@@ -40,9 +40,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
 #include <GL/gl.h>
 #include <GL/glx.h>
-#elif defined(EMSCRIPTEN) || defined(__APPLE__) || defined(__APPLE_CC__)
-#include <SDL_opengl.h>
-#include <SDL_opengl_glext.h>
+#elif defined(__APPLE__)
+#include <OpenGL/gl.h>
 #endif
 
 #ifndef APIENTRY
@@ -283,8 +282,8 @@ typedef char GLchar;
 	GLE( void, glXCopyContext, Display *dpy, GLXContext src, GLXContext dst, GLuint mask ) \
 	GLE( void, glXSwapBuffers, Display *dpy, GLXDrawable drawable )
 
-#if !defined(__APPLE__) && !defined(__APPLE_CC__)
-#ifndef EMSCRIPTEN
+#ifndef __APPLE__
+
 #define GLE( ret, name, ... ) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
 	QGL_Swp_PROCS;
 #ifdef _WIN32
@@ -292,11 +291,8 @@ typedef char GLchar;
 #else // assume in opposition to win32
 	QGL_LinX11_PROCS;
 #endif
-#endif
-#endif
 #undef GLE
 
-// renderer2 extensions
-//#include "glext.h"
+#endif // !__APPLE__
 
 #endif // __QGL_H__

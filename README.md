@@ -1,4 +1,15 @@
 
+- [Compilation and installation](#compilation-and-installation)
+- [Console](#console)
+- [Docker](#docker)
+- [Running content server](#running-content-server)
+- [Repacking](#repacking)
+- [Building](#building)
+- [Contributing](#contributing)
+- [Credits](#credits)
+
+
+
                 ,---------------------------------------------.
                 |   ____              _             _  _____  |
                 |  / __ \            | |           | |/ ____| |
@@ -21,6 +32,7 @@ To see a live demo, check out https://quake.games or http://www.quakejs.com
 
 Some of the major features currently implemented are:
 
+  * ...using OpenGL OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
   * A working repack script to convert game assets to be more web compatible
   * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
   * A content server (NodeJS + express) to repack and live-reload the game as you develop
@@ -29,7 +41,7 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
-  * Removed SDL inputs, touch support on mobile works.
+  * Removed SDL inputs, touch support on mobile works, copy/pase, .
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and TODO: run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable.
@@ -39,20 +51,22 @@ Some of the major features currently implemented are:
 
 Coming soon!
   * TODO: Stop local server from dropping, kickall bots, quit a server if all human clients disconnect
-  * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
-  * Multi-view, instant replay
   * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
-  * Shader pallets for pre-rendering colors and changing the theme of maps
+  * Multiple QVM loader, multiple map loader in parallel with teleport switch
+  * Multi-view, instant replay
+  * Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
+  * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Shader palettes for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
-  * LOD (level of detail) based compression, loading different levels of detail in models and images
+  * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
-  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface
+  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 from spearmint engine
-  * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
+  * Push notifications through web browser for pickup matches
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Many BSP formats support and cross compatibility with other game content like Call of Duty and Savage
@@ -70,6 +84,7 @@ As a prerequisite, you will need to install the dependencies specific to your
  operating system from ioq3 https://github.com/ioquake/ioq3#compilation-and-installation
 
 ```
+# install python2? python3?
 git clone --recurse-submodules --remote-submodules git@github.com:briancullinan/planet_quake.git
 cd planet_quake
 ```
@@ -81,7 +96,7 @@ then
 ```
 ./code/xquakejs/lib/emsdk/emsdk install latest-upstream
 ./code/xquakejs/lib/emsdk/emsdk activate latest
-./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2
+./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib
 make PLATFORM=js
 ```
 
@@ -113,136 +128,66 @@ After the image is built and running, you can skip repeating the conversion proc
 
 `docker start -i quake3e`
 
-# Running content server and repacking
+# Running content server
 
-TODO: https://github.com/inolen/quakejs/issues/61#issuecomment-583676811
+`npm run start -- /assets/baseq3-cc ~/.quake3/baseq3-cc`
 
-# README for Developers
+This starts the web server with converted files from all pk3s.
 
-## pk3dir
+Long version: repak.js has some limitations, defrag crashed on unicode,
+then again in the parser because of backtracking. After the bugs we fixed all
+kinds of assets were missing, some maps had no textures, some weapons don't
+load. This led me to _really_ think about the graphing problem. 
+QVMs have compiled strings and all different
+sorts of methods for loading files. Maps are fairly consistent but also have
+shaders that different games or engines interpret. Map makers and modders also
+leave files hanging around, some have entire copies of websites and
+documentation. We can't get a perfect graph, so I made the render lazy loading
+capable and thats more consistent, TODO: a combination solution would be best
+downloading and using pk3s for `sv_pure` validation, and using a directory
+of unpacked 'flat' files available for download.
 
-ioquake3 has a useful new feature for mappers. Paths in a game directory with
-the extension ".pk3dir" are treated like pk3 files. This means you can keep
-all files specific to your map in one directory tree and easily zip this
-folder for distribution.
+# Repacking
 
-## 64bit mods
+`npm run repack -- /Applications/ioquake3/baseq3`
 
-If you wish to compile external mods as shared libraries on a 64bit platform,
-and the mod source is derived from the id Q3 SDK, you will need to modify the
-interface code a little. Open the files ending in `_syscalls.c` and change
-every instance of int to intptr_t in the declaration of the syscall function
-pointer and the dllEntry function. Also find the vmMain function for each
-module (usually in cg_main.c g_main.c etc.) and similarly replace the return
-value in the prototype with intptr_t (arg0, arg1, ...stay int).
+Run repack on the baseq3 mod, default location is HOME directory/.quake3/baseq3-cc
 
-Add the following code snippet to q_shared.h:
+`npm run repack -- --no-graph --no-overwrite /Applications/ioquake3/baseq3`
 
-    #ifdef Q3_VM
-    typedef int intptr_t;
-    #else
-    #include <stdint.h>
-    #endif
+Turn off graphics and repack content into same pk3s. This mode is good if there
+is a small amount of content for a particular mod, and a very clear distinction
+between map content or downloadable content.
 
-Note if you simply wish to run mods on a 64bit platform you do not need to
-recompile anything since by default Q3 uses a virtual machine system.
+Basic repacking steps:
 
-## Creating mods compatible with Q3 1.32b
+1) baseq3-c - unpacks the mod and all pk3s
+2) Analyze QVMs (requires a python2 environment)
+3) baseq3-cc - flat files with converted images and audio
+4) baseq3-ccr - repacked files using new index.json
 
-If you're using this package to create mods for the last official release of
-Q3, it is necessary to pass the commandline option '-vq3' to your invocation
-of q3asm. This is because by default q3asm outputs an updated qvm format that
-is necessary to fix a bug involving the optimizing pass of the x86 vm JIT
-compiler.
+# Building
 
-## Creating standalone games
+Derives from [Quake3e Github](https://github.com/ec-/Quake3e#build-instructions)
 
-Have you finished the daunting task of removing all dependencies on the Q3
-game data? You probably now want to give your users the opportunity to play
-the game without owning a copy of Q3, which consequently means removing cd-key
-and authentication server checks. In addition to being a straightforward Q3
-client, ioquake3 also purports to be a reliable and stable code base on which
-to base your game project.
+and
 
-However, before you start compiling your own version of ioquake3, you have to
-ask yourself: Have we changed or will we need to change anything of importance
-in the engine?
+[QuakeJS Github](https://github.com/inolen/quakejs#building-binaries)
 
-If your answer to this question is "no", it probably makes no sense to build
-your own binaries. Instead, you can just use the pre-built binaries on the
-website. Just make sure the game is called with:
+It's also good to have understanding of Emscripten:
 
-    +set com_basegame <yournewbase>
-
-in any links/scripts you install for your users to start the game. The
-binary must not detect any original quake3 game pak files. If this
-condition is met, the game will set com_standalone to 1 and is then running
-in stand alone mode.
-
-If you want the engine to use a different directory in your homepath than
-e.g. "Quake3" on Windows or ".q3a" on Linux, then set a new name at startup
-by adding
-
-    +set com_homepath <homedirname>
-
-to the command line. You can also control which game name to use when talking
-to the master server:
-
-    +set com_gamename <gamename>
-
-So clients requesting a server list will only receive servers that have a
-matching game name.
-
-Example line:
-
-    +set com_basegame basefoo +set com_homepath .foo
-    +set com_gamename foo
-
-If you really changed parts that would make vanilla ioquake3 incompatible with
-your mod, we have included another way to conveniently build a stand-alone
-binary. Just run make with the option BUILD_STANDALONE=1. Don't forget to edit
-the PRODUCT_NAME and subsequent #defines in qcommon/q_shared.h with
-information appropriate for your project.
-
-## PNG support
-
-ioquake3 supports the use of PNG (Portable Network Graphic) images as
-textures. It should be noted that the use of such images in a map will
-result in missing placeholder textures where the map is used with the id
-Quake 3 client or earlier versions of ioquake3.
-
-Recent versions of GtkRadiant and q3map2 support PNG images without
-modification. However GtkRadiant is not aware that PNG textures are supported
-by ioquake3. To change this behaviour open the file 'q3.game' in the 'games'
-directory of the GtkRadiant base directory with an editor and change the
-line:
-
-    texturetypes="tga jpg"
-
-to
-
-    texturetypes="tga jpg png"
-
-Restart GtkRadiant and PNG textures are now available.
-
-## Building with MinGW for pre Windows XP
-
-IPv6 support requires a header named "wspiapi.h" to abstract away from
-differences in earlier versions of Windows' IPv6 stack. There is no MinGW
-equivalent of this header and the Microsoft version is obviously not
-redistributable, so in its absence we're forced to require Windows XP.
-However if this header is acquired separately and placed in the qcommon/
-directory, this restriction is lifted.
-
+[Emscripten docs](https://emscripten.org/docs/building_from_source/toolchain_what_is_needed.html)
 
 # Contributing
+
+Use [Issue tracker on Github](https://github.com/briancullinan/planet_quake/issues)
 
 # Credits
 
 Maintainers
 
   * Brian J. Cullinan <megamindbrian@gmail.com>
-  * Anyone else? Looking for volunteers
+  * Anyone else? Looking for volunteers.
 
 Significant contributions from
 

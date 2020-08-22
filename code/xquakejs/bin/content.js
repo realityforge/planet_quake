@@ -17,6 +17,7 @@ NOTE: ./build/release-js-js is implied
 --watch - watch files for changes
 --help -h - print this help message and exit
 e.g. npm run start -- -R -rp /assets/baseq3 /Applications/ioquake3/baseq3
+TODO: live reloading
 `
 
 var recursive = false

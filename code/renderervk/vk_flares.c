@@ -204,7 +204,12 @@ void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, vec3_t 
 
 	f->eyeZ = eye[2];
 
-	f->drawZ = clip[2] / clip[3];
+#ifdef USE_REVERSED_DEPTH
+	f->drawZ = (clip[2]+0.20) / clip[3];
+#else
+	f->drawZ = (clip[2]-0.20) / clip[3];
+#endif
+
 }
 
 
@@ -528,7 +533,7 @@ void RB_RenderFlares( void ) {
 		return;
 	}
 
-	if ( vk.renderPassIndex != RENDER_PASS_MAIN ) {
+	if ( vk.renderPassIndex == RENDER_PASS_SCREENMAP ) {
 		return;
 	}
 

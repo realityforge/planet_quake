@@ -74,7 +74,7 @@ cvar_t	*com_maxfpsUnfocused;
 cvar_t	*com_yieldCPU;
 cvar_t	*com_timedemo;
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#ifdef USE_AFFINITY_MASK
 cvar_t	*com_affinityMask;
 #endif
 cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
@@ -364,6 +364,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_Printf( "********************\nERROR: %s\n********************\n", 
 			com_errorMessage );
 		VM_Forced_Unload_Start();
+#ifdef EMSCRIPTEN
+		if(com_dedicated->integer)
+#endif
 		SV_Shutdown( va( "Server crashed: %s",  com_errorMessage ) );
 		Com_EndRedirect();
 #ifndef DEDICATED
@@ -401,6 +404,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		if(!com_dedicated->integer)
 #endif
 		CL_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ), qtrue );
+#endif
+#ifdef EMSCRIPTEN
+		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ) );
 		Com_EndRedirect();
@@ -1816,8 +1822,8 @@ Goals:
 #define	HUNK_FREE_MAGIC	0x89537893
 
 typedef struct {
-	int		magic;
-	int		size;
+	unsigned int magic;
+	unsigned int size;
 } hunkHeader_t;
 
 typedef struct {
@@ -2983,7 +2989,6 @@ static void __attribute__((__noreturn__)) Com_Error_f (void) {
 	}
 }
 
-
 /*
 =============
 Com_Freeze_f
@@ -3344,33 +3349,28 @@ out:
 **
 ** --------------------------------------------------------------------------------
 */
+#ifdef EMSCRIPTEN
+
+static void CPUID( int func, unsigned int *regs )
+{
+}
+
+static void Sys_GetProcessorId( char *vendor )
+{
+}
+
+#else
+
+#if (idx64 || id386)
 
 #if defined _MSC_VER
-
+#include <intrin.h>
 static void CPUID( int func, unsigned int *regs )
 {
-#if _MSC_VER >= 1400
 	__cpuid( regs, func );
-#else
-	__asm {
-		mov edi,regs
-		mov eax,[edi]
-		cpuid
-		mov [edi], eax
-		mov [edi+4], ebx
-		mov [edi+8], ecx
-		mov [edi+12], edx
-	}
-#endif
 }
 
-#else
-#ifdef EMSCRIPTEN
-static void CPUID( int func, unsigned int *regs )
-{
-}
-
-#else
+#else // clang/gcc/mingw
 
 static void CPUID( int func, unsigned int *regs )
 {
@@ -3382,9 +3382,8 @@ static void CPUID( int func, unsigned int *regs )
 		"a"(func) );
 }
 #endif
-#endif
 
-int Sys_GetProcessorId( char *vendor )
+static void Sys_GetProcessorId( char *vendor )
 {
 	unsigned int regs[4];
 
@@ -3456,9 +3455,45 @@ int Sys_GetProcessorId( char *vendor )
 				strcat( vendor, " SSE4.1" );
 		}
 	}
-	return 1;
 }
 
+#else // non-x86
+
+#if defined(__arm__)
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#endif
+static void Sys_GetProcessorId( char *vendor )
+{
+	long hwcaps;
+
+	CPU_Flags = 0;
+
+#if defined(__arm__)
+	Com_sprintf( vendor, 100, "ARM %s", (const char*)getauxval( AT_PLATFORM ) );
+
+	hwcaps = getauxval( AT_HWCAP );
+
+	if ( hwcaps & ( HWCAP_IDIVA | HWCAP_VFPv3 ) ) {
+		strcat( vendor, " /w" );
+
+		if ( hwcaps & HWCAP_IDIVA ) {
+			CPU_Flags |= CPU_IDIV;
+			strcat( vendor, " IDIV" );
+		}
+
+		if ( hwcaps & HWCAP_VFPv3 ) {
+			CPU_Flags |= CPU_VFPv3;
+			strcat( vendor, " VFPv3" );
+		}
+	}
+#else
+	Com_sprintf( vendor, 128, "%s %s", ARCH_STRING, (const char*)getauxval( AT_PLATFORM ) );
+#endif
+}
+
+#endif // non-x86
+#endif // EMSCRIPTEN
 
 /*
 ================
@@ -3466,7 +3501,6 @@ Sys_SnapVector
 ================
 */
 #ifdef _MSC_VER
-#include <intrin.h>
 #if idx64
 void Sys_SnapVector( float *vector ) 
 {
@@ -3492,7 +3526,7 @@ void Sys_SnapVector( float *vector )
 	_mm_store_ss( &vector[2], vf2 );
 }
 #else // id386
-void Sys_SnapVector( float *vector ) 
+void Sys_SnapVector( float *vector )
 {
 	static const DWORD cw037F = 0x037F;
 	DWORD cwCurr;
@@ -3521,9 +3555,9 @@ __asm {
 }
 #endif // id386
 
-#else // linux/mingw
+#else // clang/gcc/mingw
 
-#if idx64
+#if id386
 
 void Sys_SnapVector( vec3_t vec )
 {
@@ -3658,7 +3692,7 @@ void Com_Init_After_Filesystem( void ) {
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
-  // get dedicated here for proper hunk megs initialization
+	// get dedicated here for proper hunk megs initialization
 #ifdef DEDICATED
 	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
 	Cvar_CheckRange( com_dedicated, "1", "2", CV_INTEGER );
@@ -3684,10 +3718,12 @@ void Com_Init_After_Filesystem( void ) {
 	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( com_yieldCPU, "0", "16", CV_INTEGER );
 #endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
+
+#ifdef USE_AFFINITY_MASK
 	com_affinityMask = Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE_ND );
 	com_affinityMask->modified = qfalse;
 #endif
+
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE_ND );
 
 	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
@@ -3708,8 +3744,8 @@ void Com_Init_After_Filesystem( void ) {
 	com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
 
 #ifndef DEDICATED	
-	com_timedemo = Cvar_Get("timedemo", "0", CVAR_CHEAT);
-	Cvar_CheckRange( com_timedemo, NULL, NULL, CV_BOOLEAN );
+	com_timedemo = Cvar_Get( "timedemo", "0", 0 );
+	Cvar_CheckRange( com_timedemo, "0", "1", CV_INTEGER );
 	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
 	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
 	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
@@ -3758,7 +3794,6 @@ void Com_Init_After_Filesystem( void ) {
 
 	Sys_Init();
 
-#if defined (id386) || defined (idx64)
 	// CPU detection
 	Cvar_Get( "sys_cpustring", "detect", CVAR_PROTECTED | CVAR_ROM | CVAR_NORESTART );
 	if ( !Q_stricmp( Cvar_VariableString( "sys_cpustring" ), "detect" ) )
@@ -3769,11 +3804,12 @@ void Com_Init_After_Filesystem( void ) {
 		Cvar_Set( "sys_cpustring", vendor );
 	}
 	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
-#endif
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
+
+#ifdef USE_AFFINITY_MASK
 	if ( com_affinityMask->integer )
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
+
 	// Pick a random port value
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
 	Netchan_Init( qport & 0xffff );
@@ -3840,8 +3876,10 @@ void Com_WriteConfigToFile( const char *filename ) {
 
 	f = FS_FOpenFileWrite( filename );
 	if ( f == FS_INVALID_HANDLE ) {
-		Com_Printf( "Couldn't write %s.\n", filename );
-		return;
+		if ( !FS_ResetReadOnlyAttribute( filename ) || ( f = FS_FOpenFileWrite( filename ) ) == FS_INVALID_HANDLE ) {
+			Com_Printf( "Couldn't write %s.\n", filename );
+			return;
+		}
 	}
 
 	FS_Printf( f, "// generated by quake, do not modify" Q_NEWLINE );
@@ -4030,18 +4068,23 @@ void Com_Frame_After_Shutdown() {
 	Com_Frame_Callback(Sys_FS_Startup, Com_Frame_After_Startup);
 }
 
+
+int outsideError;
+char *outsideMsg;
+void Com_Outside_Error(int level, char *message)
+{
+	outsideError = level;
+	outsideMsg = message;
+}
+
+
 #endif
 /*
 =================
 Com_Frame
 =================
 */
-#ifndef EMSCRIPTEN
 void Com_Frame( qboolean noDelay ) {
-#else
-void Com_Frame( void ) {
-	qboolean noDelay = qfalse;
-#endif
 
 #ifndef DEDICATED
 	static int bias = 0;
@@ -4059,6 +4102,8 @@ void Com_Frame( void ) {
 
 	if ( setjmp( abortframe ) ) {
 #ifdef EMSCRIPTEN
+		outsideError = 0;
+		outsideMsg = 0;
 		CB_Frame_Proxy = NULL;
 		CB_Frame_After = NULL;
 		invokeFrameAfter = qfalse;
@@ -4080,6 +4125,16 @@ void Com_Frame( void ) {
 	timeAfter = 0;
 
 #ifdef EMSCRIPTEN
+	// call error function from Com_Frame so we have the benefit of setjmp
+	//   in place to catch it and recover
+	if(outsideMsg) {
+		int err = outsideError;
+		char *msg = outsideMsg;
+		outsideError = 0;
+		outsideMsg = 0;
+		Com_Error(err, "%s\n", msg);
+	}
+
 	// used by cl_parsegamestate/cl_initcgame
 	if(CB_Frame_Proxy) {
 		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
@@ -4114,13 +4169,15 @@ void Com_Frame( void ) {
 		}
 		com_viewlog->modified = qfalse;
 	}
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__APPLE__) && !defined(__APPLE_CC__)
+
+#ifdef USE_AFFINITY_MASK
 	if ( com_affinityMask->modified ) {
 		Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE );
 		com_affinityMask->modified = qfalse;
 		Sys_SetAffinityMask( com_affinityMask->integer );
 	}
 #endif
+
 	//
 	// main event loop
 	//

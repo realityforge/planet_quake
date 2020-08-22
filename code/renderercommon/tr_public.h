@@ -30,11 +30,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // these are the functions exported by the refresh module
 //
+typedef enum {
+	REF_KEEP_CONTEXT,	// don't destroy window or context
+	REF_DESTROY_WINDOW,
+	REF_UNLOAD_DLL
+} refShutdownCode_t;
+
 typedef struct {
 	// called before the library is unloaded
 	// if the system is just reconfiguring, pass destroyWindow = qfalse,
 	// which will keep the screen from flashing to the desktop.
-	void	(*Shutdown)( int destroyWindow );
+	void	(*Shutdown)( refShutdownCode_t code );
 
 	// All data that will be used in a level should be
 	// registered before rendering any frames to prevent disk hits,
@@ -76,8 +82,8 @@ typedef struct {
 		float s1, float t1, float s2, float t2, qhandle_t hShader );	// 0 = white
 
 	// Draw images for cinematic rendering, pass as 32 bit rgba
-	void	(*DrawStretchRaw)( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
-	void	(*UploadCinematic)( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
+	void	(*DrawStretchRaw)( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
+	void	(*UploadCinematic)( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
 
 	void	(*BeginFrame)( stereoFrame_t stereoFrame );
 
@@ -103,6 +109,7 @@ typedef struct {
 	void	(*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 	void	(*ThrottleBackend)( void );
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
 	void	(*FinishBloom)( void );
 
 	void	(*SetColorMappings)( void );
@@ -114,8 +121,10 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+  void (*FastCapture)(byte *data);
+	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*UpdateMode)(glconfig_t *glconfigOut);
-	void (*UpdateModel)(char *name);
+	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
 
 } refexport_t;

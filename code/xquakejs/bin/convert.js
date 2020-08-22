@@ -69,7 +69,8 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
   await progress([
     [2, false],
     [1, 0, 3, `Converting images`]
-  ])  
+  ])
+  debugger
   var images = findTypes(imageTypes, gs.everything)
   for(var j = 0; j < images.length; j++) {
     await progress([[2, j, images.length, chroot(images[j], project, '')]])

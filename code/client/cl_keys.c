@@ -33,8 +33,6 @@ qboolean	chat_team;
 
 int			chat_playerNum;
 
-static void Field_CharEvent( field_t *edit, int ch );
-
 /*
 =============================================================================
 
@@ -172,6 +170,10 @@ static void Field_Paste( field_t *edit ) {
 	char	*cbd;
 	int		pasteLen, i;
 
+#ifdef EMSCRIPTEN
+	Sys_SetClipboardData(edit);
+	return;
+#endif
 	cbd = Sys_GetClipboardData();
 
 	if ( !cbd ) {
@@ -227,7 +229,9 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 	int		len;
 
 	// shift-insert is paste
-	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keys[K_SHIFT].down ) {
+	// TODO: convert to K_PASTE which changes depending on OS
+	if ( ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keys[K_SHIFT].down )
+ 		|| ( key == 'v' && ( keys[K_CTRL].down || keys[K_COMMAND].down || keys[K_SUPER].down ) ) ) {
 		Field_Paste( edit );
 		return;
 	}
@@ -292,7 +296,7 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 Field_CharEvent
 ==================
 */
-static void Field_CharEvent( field_t *edit, int ch ) {
+void Field_CharEvent( field_t *edit, int ch ) {
 	int		len;
 
 	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste

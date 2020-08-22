@@ -30,17 +30,22 @@
     "ip6addr": "^0.2.3",
     "nipplejs": "^0.8.5",
     "node-stream-zip": "^1.9.1",
+    "optimist": "^0.6.1",
+    "underscore": "^1.10.2",
+    "winston": "^3.3.3",
     "ws": "^7.2.1"
   },
   "devDependencies": {
-    "glob": "^7.1.6",
-    "minimatch": "^3.0.4",
-    "cli-progress": "^3.6.0",
-    "balanced-match": "^1.0.0",
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.1",
     "archiver": "^3.1.1",
+    "balanced-match": "^1.0.0",
     "buffer-crc32": "~0.2.1",
     "chokidar": "^3.3.1",
+    "cli-progress": "^3.6.0",
+    "glob": "^7.1.6",
     "memfs": "^3.0.3",
+    "minimatch": "^3.0.4",
     "unionfs": "^4.2.1",
     "zlib": "^1.0.5"
   }

@@ -215,6 +215,11 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
+float dvrXScale = 0.5;
+float dvrYScale = 0.5;
+float dvrXOffset = 0.5;
+float dvrYOffset = 0.5;
+
 /*
 ** InitOpenGL
 **
@@ -765,6 +770,171 @@ void R_ExportCubemaps_f(void)
 }
 
 //============================================================================
+static GLuint videoPBO[2] = {0, 0};
+static GLuint fbo = 0;
+static int fboIndex = 0;
+GLuint depthrenderbuffer;
+void RB_FastCapture(byte *data)
+{
+	byte				*cBuf;
+	size_t				memcount, linelen;
+	int				padwidth, padlen;
+	GLint packAlign;
+	fboIndex = (fboIndex + 1) % 2;
+
+	// finish any 2D drawing if needed
+	if(tess.numIndexes)
+		RB_EndSurface();
+	
+	if(!videoPBO[0]) {
+		glGenBuffers(1, &videoPBO[0]);
+		glGenBuffers(1, &videoPBO[1]);
+	}
+/*
+		qglGenFramebuffers(1, &fbo);
+		qglGenRenderbuffers(1, &depthrenderbuffer);
+	}
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	
+	qglGenTextures(1, &tr.renderImage->texnum);
+
+	// "Bind" the newly created texture : all future texture functions will modify this texture
+	qglBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+
+	// Give an empty image to OpenGL ( the last "0" )
+	qglTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, glConfig.vidWidth, glConfig.vidHeight, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Poor filtering. Needed !
+	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	
+	qglBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+	qglRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, glConfig.vidWidth, glConfig.vidHeight);
+	qglFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+	
+	qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tr.renderImage->texnum, 0);
+
+	if(qglCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		ri.Printf( PRINT_ALL, "Frame buffering failed.\n" );
+		return;
+	}
+	// Set the list of draw buffers.
+	GLenum DrawBuffers[1] = {GL_NONE};
+	qglDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+	
+	qglBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	qglViewport(0,0,glConfig.vidWidth,glConfig.vidHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+	
+	if(!tr.renderImage->texnum) {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+		return;
+	}
+*/
+
+	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
+
+	linelen = 2048 * 4;
+
+	// Alignment stuff for glReadPixels
+	padwidth = PAD(linelen, packAlign);
+	padlen = padwidth - linelen;
+
+	memcount = padwidth * 2048;
+
+/*
+	glBindTexture(GL_TEXTURE_2D, tr.renderImage->texnum);
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, videoPBO[0]);
+	qglBufferData(GL_PIXEL_UNPACK_BUFFER, memcount, 0, GL_STREAM_DRAW);
+	cBuf = (GLubyte*)qglMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, memcount, 0xA);
+	if(cBuf) {
+		ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+		qglUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+	} else {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+	}
+	
+	qglBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+	*/
+	
+	
+	cBuf = PADP(data, packAlign);
+
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[fboIndex]);
+	//qglReadPixels(0, 0, 2048, 2048, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	//qglBindBuffer(GL_PIXEL_PACK_BUFFER, videoPBO[(fboIndex + 1) % 2]);
+	
+	//cBuf = qglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	qglBufferSubData(GL_PIXEL_PACK_BUFFER, 0, memcount, cBuf);
+	if(cBuf) {
+		ri.CL_WriteAVIVideoFrame(cBuf, memcount);
+	//	qglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+	} else {
+		ri.Printf( PRINT_ALL, "Cancelling capture\n" );
+	}
+	qglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+	GLenum DrawBuffers2[1] = {GL_NONE};
+	qglDrawBuffers( 1, DrawBuffers2 );
+
+	qglBindFramebuffer(GL_FRAMEBUFFER, 0);
+	qglBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer) {
+	byte				*cBuf;
+	size_t				memcount, linelen;
+	int				padwidth, avipadwidth, padlen, avipadlen;
+	GLint packAlign;
+
+	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
+
+	linelen = 512 * 4;
+
+	// Alignment stuff for glReadPixels
+	padwidth = PAD(linelen, packAlign);
+	padlen = padwidth - linelen;
+	// AVI line padding
+	avipadwidth = PAD(linelen, AVI_LINE_PADDING);
+	avipadlen = avipadwidth - linelen;
+
+	cBuf = PADP(captureBuffer, packAlign);
+
+	qglReadPixels(0, 0, 512, 512, GL_RGBA, GL_UNSIGNED_BYTE, cBuf);
+
+	memcount = padwidth * 512;
+
+	{
+		byte *lineend;
+		byte *srcptr, *destptr;
+
+		srcptr = cBuf + memcount - padwidth;
+		destptr = encodeBuffer;
+		
+		// swap R and B and remove line paddings
+		while(srcptr >= cBuf)
+		{
+			lineend = srcptr + linelen;
+			while(srcptr < lineend)
+			{
+				*destptr++ = srcptr[0];
+				*destptr++ = srcptr[1];
+				*destptr++ = srcptr[2];
+				*destptr++ = 255;
+				srcptr += 4;
+			}
+			
+			Com_Memset(destptr, '\0', avipadlen);
+			destptr += avipadlen;
+			
+			srcptr = srcptr - linelen - padwidth;
+		}
+	}
+	
+	ri.CL_WriteAVIVideoFrame(encodeBuffer, avipadwidth * 512);
+}
 
 /*
 ==================
@@ -785,6 +955,11 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 
 	cmd = (const videoFrameCommand_t *)data;
 	
+	return (const void *)(cmd + 1);
+	
+	RB_FastCapture(cmd->captureBuffer);
+	//RB_FastCaptureOld(cmd->captureBuffer, cmd->encodeBuffer);
+
 	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
 
 	linelen = cmd->width * 3;
@@ -1448,6 +1623,13 @@ void RE_EndRegistration( void ) {
 	}
 }
 
+void RE_SetDvrFrame(float x, float y, float width, float height) {
+	dvrXScale = width;
+	dvrYScale = height;
+	dvrXOffset = x;
+	dvrYOffset = y;
+}
+
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -1516,12 +1698,15 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetColorMappings = R_SetColorMappings;
 
 	re.ThrottleBackend = RE_ThrottleBackend;
+	re.SetDvrFrame = RE_SetDvrFrame;
 	re.CanMinimize = RE_CanMinimize;
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
 	//re.UpdateMode = RE_UpdateMode;
+	re.FastCapture = RB_FastCapture;
+	re.FastCaptureOld = RB_FastCaptureOld;
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
 

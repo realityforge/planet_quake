@@ -23,23 +23,43 @@ var LibrarySysMain = {
       '+set', 'net_socksEnabled', '1',
       '+set', 'cl_lazyLoad', '1',
       '+set', 'rconpassword', 'password123!',
+      '+set', 'cg_drawfps', '1',
       
+      // settings for browser that might help keep garbage low
       //'+set', 'com_hunkMegs', '256',
       //'+set', 'com_maxfps', '125',
       //'+set', 'com_maxfpsUnfocused', '10',
       //'+set', 'com_maxfpsMinimized', '10',
-      // these settings were set by the emscripten build
-      //'+set', 'r_normalMapping', '0',
-      //'+set', 'r_specularMapping', '0',
-      //'+set', 'r_deluxeMapping', '0',
-      //'+set', 'r_hdr', '0',
-      //'+set', 'r_lodbias', '0',
-      //'+set', 'r_picmip', '4',
-      //'+set', 'r_postProcess', '0',
-      '+set', 'cg_drawfps', '1',
-      '+set', 's_compression', '0',
+
+      // FBO specific settings
+      '+set', 'r_ext_framebuffer_multisample', '0',
+      '+set', 'r_ext_framebuffer_object', '0',
+      /*
+      '+set', 'r_ext_direct_state_access', '0',
+      '+set', 'r_cubeMapping', '0',
+      '+set', 'r_postProcess', '0',
+      '+set', 'r_sunlightMode', '0',
+      '+set', 'r_shadowCascadeZFar', '0',
+      '+set', 'r_shadowBlur', '0',
+      '+set', 'r_ssao', '0',
+      '+set', 'r_drawSun', '0',
+      '+set', 'r_drawSunRays', '0',
+      '+set', 'r_shadows', '0',
+      
+      // other settings QuakeJS may have changed in code
+      '+set', 'r_normalMapping', '0',
+      '+set', 'r_specularMapping', '0',
+      '+set', 'r_deluxeMapping', '0',
+      '+set', 'r_hdr', '0',
+      '+set', 'r_lodbias', '1',
+      '+set', 'r_picmip', '1',
+      '+set', 'r_postProcess', '0',
+      '+set', 's_compression', '1',
       '+set', 'r_ext_compressed_textures', '1',
+      */
       //'+connect', 'proxy.quake.games:443',
+      
+      // cheats for enabling content
       /*
       '+set', 'g_spVideos', '\\tier1\\1\\tier2\\2\\tier3\\3\\tier4\\4\\tier5\\5\\tier6\\6\\tier7\\7\\tier8\\8',
       '+set', 'g_spSkill', '5',

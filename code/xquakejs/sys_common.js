@@ -1,5 +1,5 @@
 var LibrarySysCommon = {
-	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Error'],
+	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Outside_Error'],
 	$SYSC: {
 		varStr: 0,
 		oldDLURL: null,
@@ -30,23 +30,23 @@ var LibrarySysCommon = {
 		},
 		Error: function (level, errMsg) {
 			if (level === 'fatal') {
-				level = 0;
+				level = 0
 			} else if (level === 'drop') {
-				level = 1;
+				level = 1
 			} else if (level === 'serverdisconnect') {
-				level = 2;
+				level = 2
 			} else if (level === 'disconnect') {
-				level = 3;
+				level = 3
 			} else if (level === 'need_cd') {
-				level = 4;
+				level = 4
 			} else {
-				level = 0;
+				level = 0
 			}
 
-			errMsg = allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK);
-			if(!errMsg) errMsg = UTF8ToString(errMsg);
-
-			Browser.safeCallback(() => _Com_Error(level, errMsg))();
+			Browser.safeCallback(_Com_Outside_Error)(level, 
+				allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK))
+			// drop current stack frame and bubble out
+			throw new Error(errMsg)
 		},
 		ProxyCallback: function () {
 			Browser.safeCallback(() => {
@@ -64,34 +64,40 @@ var LibrarySysCommon = {
 				}
 			})()
 		},
+		addProtocol: function (url) { 
+			return url.includes('://')
+				? url
+				: window
+					? (window.location.protocol + '//' + url)
+					: ('https://' + url)
+		},
 		DownloadAsset: function (asset, onprogress, onload) {
 			var name = asset.replace(/^\//, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
-			var url = (SYSC.newDLURL.includes('://')
-				? SYSC.newDLURL
-				: window
-					? (window.location.protocol + '//' + SYSC.newDLURL)
-					: ('https://' + SYSC.newDLURL)) + '/' + name
-
-			SYSN.DoXHR(url, {
+			var tryLinks = [
+				SYSC.addProtocol(SYSC.newDLURL) + '/' + name,
+				SYSC.addProtocol(SYSC.oldDLURL) + '/' + name,
+			]
+			// all of these test links are in case someone fucks up conversion or startup
+			var tryMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)[0]
+			if(SYSF.mods.includes(tryMod + '-cc')) {
+				var noMod = name.split(/\//ig).slice(1).join('/')
+				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)
+				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
+			}
+			var tryDownload = 0
+			var doDownload = url => SYSN.DoXHR(url, {
 				dataType: 'arraybuffer',
 				onprogress: onprogress,
 				onload: (err, data) => {
-					if(err) {
-						url = (SYSC.oldDLURL.includes('://')
-							? SYSC.oldDLURL
-							: window
-								? (window.location.protocol + '//' + SYSC.oldDLURL)
-								: ('https://' + SYSC.oldDLURL)) + '/' + name
-						SYSN.DoXHR(url, {
-							dataType: 'arraybuffer',
-							onprogress: onprogress,
-							onload: onload
-						})
+					if(err && tryDownload < tryLinks.length) {
+						tryDownload++
+						doDownload(tryLinks[tryDownload])
 					} else {
 						onload(err, data)
 					}
 				}
-			});
+			})
+			doDownload(tryLinks[0])
 		},
 		mkdirp: function (p) {
 			try {
@@ -125,9 +131,6 @@ var LibrarySysCommon = {
 	},
 	Sys_RandomBytes: function (string, len) {
 		return false;
-	},
-	Sys_GetClipboardData: function () {
-		return 0;
 	},
 	Sys_LowPhysicalMemory: function () {
 		return false;

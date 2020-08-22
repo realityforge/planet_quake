@@ -668,7 +668,7 @@ endif
   DEBUG=0
   EMCC_DEBUG=0
 
-  HAVE_VM_COMPILED=0
+  HAVE_VM_COMPILED=true
   BUILD_SERVER=0
   BUILD_GAME_QVM=1
   BUILD_GAME_SO=0
@@ -678,6 +678,7 @@ endif
   BUILD_RENDERER_OPENGL2=1
   BUILD_RENDERER_OPENGLES=0
 
+  USE_IPV6=0
   USE_SDL=1
   USE_VULKAN=0
   USE_CURL=0
@@ -698,10 +699,13 @@ endif
 
   BASE_CFLAGS = \
 	  -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
 
 ifneq ($(USE_CODEC_VORBIS),0)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
@@ -758,7 +762,9 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
     -lidbfs.js \
     -lsdl.js \
-    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+		-lglemu.js \
+		-lwebgl.js \
+		-lwebgl2.js \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
@@ -766,16 +772,18 @@ endif
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
     -s ALLOW_TABLE_GROWTH=1 \
     -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
     -s TOTAL_MEMORY=256MB \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s LEGACY_GL_EMULATION=1 \
-    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=0 \
-    -s USE_WEBGL2=0 \
-    -s FULL_ES2=0 \
-    -s FULL_ES3=0 \
+    -s LEGACY_GL_EMULATION=0 \
+    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
     -s USE_SDL=2 \
 		-s USE_SDL_MIXER=2 \
 		-s USE_VORBIS=1 \

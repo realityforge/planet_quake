@@ -288,7 +288,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MV
 	if ( multiview ) {
-	
+
 		if ( !clc.demoplaying && clc.recordfile != FS_INVALID_HANDLE )
 			clc.dm68compat = qfalse;
 
@@ -393,6 +393,10 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				// copy data to primary playerstate
 				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
 				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
+				//if(clc.clientView == ) {
+				newSnap.clps[ clientNum ].ps.pm_flags |= PMF_FOLLOW;
+				newSnap.ps.pm_flags |= PMF_FOLLOW;
+				//}
 			}
 		} // for [all clients]
 
@@ -406,8 +410,10 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				es = &cl.parseEntities [ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
 				if ( es->number >= MAX_CLIENTS )
 					break;
-				if ( newSnap.clps[ es->number ].valid )
+				if ( newSnap.clps[ es->number ].valid ) {
+					//es->eFlags |= EF_TELEPORT_BIT;
 					MSG_PlayerStateToEntityState( &newSnap.clps[ es->number ].ps, es, qtrue, newSnap.mergeMask );
+				}
 			}
 		}
 	}
@@ -1170,11 +1176,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		case svc_gamestate:
 			CL_ParseGamestate( msg );
 			break;
-#if defined( USE_MV ) && defined( USE_MV_ZCMD )
-		case svc_zcmd:
-			CL_ParseZCommandString( msg );
-			break;
-#endif
 		case svc_snapshot:
 			CL_ParseSnapshot( msg, qfalse );
 			break;
@@ -1182,6 +1183,11 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		case svc_multiview:
 			CL_ParseSnapshot( msg, qtrue );
 			break;
+#ifdef USE_MV_ZCMD
+		case svc_zcmd:
+			CL_ParseZCommandString( msg );
+			break;
+#endif
 #endif
 		case svc_download:
 			if ( clc.demofile != FS_INVALID_HANDLE )

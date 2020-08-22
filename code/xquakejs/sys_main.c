@@ -123,6 +123,17 @@ void Sys_BeginProfiling( void )
 
 
 /*
+==============
+Sys_ResetReadOnlyAttribute
+==============
+*/
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath )
+{
+	return qfalse;
+}
+
+
+/*
 =================
 Sys_In_Restart_f
 
@@ -1002,7 +1013,7 @@ Sys_Frame
 */
 void Sys_Frame( void ) {
 	IN_Frame();
-	Com_Frame();
+	Com_Frame( CL_NoDelay() );
 }
 
 int main( int argc, char* argv[] )

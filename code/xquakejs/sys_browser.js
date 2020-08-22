@@ -1,5 +1,5 @@
 var LibrarySys = {
-	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL'],
+	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL', '$VM'],
 	$SYS: {
 		resizeDelay: null,
 		style: null,

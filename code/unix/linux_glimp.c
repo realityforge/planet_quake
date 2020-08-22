@@ -1535,12 +1535,12 @@ int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vul
 	else
 		colorbits = MIN( r_colorbits->integer, 24);
 
-	if ( r_depthbits->integer == 0 )
+	if ( cl_depthbits->integer == 0 )
 		depthbits = 24;
 	else
-		depthbits = MIN( r_depthbits->integer, 32);
+		depthbits = MIN( cl_depthbits->integer, 32);
 
-	stencilbits = r_stencilbits->integer;
+	stencilbits = cl_stencilbits->integer;
 
 #ifdef USE_VULKAN_API
 	if ( vulkan )
@@ -1839,7 +1839,7 @@ void GLimp_Init( glconfig_t *config )
 /*
 ** GLW_LoadVulkan
 */
-static qboolean GLW_LoadVulkan( const char *name )
+static qboolean GLW_LoadVulkan( void )
 {
 	if ( r_swapInterval->integer )
 		setenv( "vblank_mode", "2", 1 );
@@ -1847,7 +1847,7 @@ static qboolean GLW_LoadVulkan( const char *name )
 		setenv( "vblank_mode", "1", 1 );
 
 	// load the QVK layer
-	if ( QVK_Init( name ) )
+	if ( QVK_Init() )
 	{
 		qboolean fullscreen = (r_fullscreen->integer != 0);
 		// create the window and set up the context
@@ -1866,7 +1866,7 @@ static qboolean GLW_StartVulkan( void )
 	//
 	// load and initialize the specific Vulkan driver
 	//
-	if ( !GLW_LoadVulkan( "libvulkan.so" ) )
+	if ( !GLW_LoadVulkan() )
 	{
 		Com_Error( ERR_FATAL, "GLW_StartVulkan() - could not load Vulkan subsystem\n" );
 		return qfalse;
@@ -1934,7 +1934,7 @@ void GLimp_EndFrame( void )
 	}
 
 	// don't flip if drawing to front buffer
-	if ( Q_stricmp( r_drawBuffer->string, "GL_FRONT" ) != 0 )
+	if ( Q_stricmp( cl_drawBuffer->string, "GL_FRONT" ) != 0 )
 	{
 		qglXSwapBuffers( dpy, win );
 	}
@@ -1944,6 +1944,8 @@ void GLimp_EndFrame( void )
 /*****************************************************************************/
 /* MOUSE                                                                     */
 /*****************************************************************************/
+
+void IN_Restart_f( void );
 
 void IN_Init( void )
 {
@@ -1984,6 +1986,7 @@ void IN_Init( void )
 #endif
 
 	Cmd_AddCommand( "minimize", IN_Minimize );
+	Cmd_AddCommand( "in_restart", IN_Restart_f );
 
 	Com_DPrintf( "------------------------------------\n" );
 }
@@ -1994,6 +1997,21 @@ void IN_Shutdown( void )
 	mouse_avail = qfalse;
 
 	Cmd_RemoveCommand( "minimize" );
+	Cmd_RemoveCommand( "in_restart" );
+}
+
+
+/*
+=================
+IM_Restart
+
+Restart the input subsystem
+=================
+*/
+void IN_Restart_f( void )
+{
+	IN_Shutdown();
+	IN_Init();
 }
 
 

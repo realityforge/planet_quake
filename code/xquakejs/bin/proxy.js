@@ -2,7 +2,7 @@ var fs = require('fs')
 var path = require('path')
 var Buffer = require('buffer').Buffer
 var WebSocketServer = require('ws').Server
-var Huffman = require('../lib/huffman.js')
+//var Huffman = require('../lib/huffman.js')
 var {Server} = require('../lib/socks.server.js')
 var {createServer} = require('net')
 var http = require('http')
@@ -20,6 +20,7 @@ all numbers and addresses are used as slave addresses
 e.g. 127.0.0.1:1080 1081 1082 192.168.0.120 1080-1082 or CIDR notations
 All of these numbers and addresses will be fully enumerated as a part of health check
 TODO:
+--no-ws - Do NOT automatically create a websocket server for port bindings, useful if you game already handles TCP connections
 Add a command to check the number of connections so it can be used as health check
 Either using the socket or event using process signals to communicate across process threads
 Add websocket piping back in for quakejs servers

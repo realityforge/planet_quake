@@ -112,6 +112,7 @@ typedef struct {
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
 	clSnapshot_t	snap;			// latest received from server
+	snapshot_t    *updateSnap;
 
 	int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards
@@ -418,7 +419,7 @@ extern	cvar_t	*cl_autoNudge;
 extern	cvar_t	*cl_timeNudge;
 extern	cvar_t	*cl_showTimeDelta;
 
-extern	cvar_t	*cl_timedemo;
+extern	cvar_t	*com_timedemo;
 extern	cvar_t	*cl_aviFrameRate;
 extern	cvar_t	*cl_aviMotionJpeg;
 extern	cvar_t	*cl_aviPipeFormat;
@@ -455,9 +456,9 @@ extern	cvar_t	*r_customwidth;
 extern	cvar_t	*r_customheight;
 extern	cvar_t	*r_customPixelAspect;
 extern	cvar_t	*r_colorbits;
-extern	cvar_t	*r_stencilbits;
-extern	cvar_t	*r_depthbits;
-extern	cvar_t	*r_drawBuffer;
+extern	cvar_t	*cl_stencilbits;
+extern	cvar_t	*cl_depthbits;
+extern	cvar_t	*cl_drawBuffer;
 
 //=================================================
 
@@ -567,6 +568,7 @@ void	SCR_DrawSmallString( int x, int y, const char *s, int len );
 // cl_cin.c
 //
 
+void CIN_ResampleCinematic( byte *buf, int origWidth, int origHeight, int *buf2 );
 void CL_PlayCinematic_f( void );
 void SCR_DrawCinematic (void);
 void SCR_RunCinematic (void);
@@ -593,6 +595,8 @@ void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
+void CL_AdjustTimeDelta( void );
+qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 
 //
 // cl_ui.c
@@ -614,6 +618,9 @@ qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg );
 //
 // cl_avi.c
 //
+extern byte *previousFrame;
+extern byte *captureBuffer;
+extern byte *encodeBuffer;
 qboolean CL_OpenAVIForWriting( const char *filename, qboolean pipe );
 void CL_TakeVideoFrame( void );
 void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size );

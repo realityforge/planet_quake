@@ -271,10 +271,10 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	}
 	cmd->commandId = RC_STRETCH_PIC;
 	cmd->shader = R_GetShaderByHandle( hShader );
-	cmd->x = x;
-	cmd->y = y;
-	cmd->w = w;
-	cmd->h = h;
+	cmd->x = x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
+	cmd->y = y * dvrYScale + (dvrYOffset * glConfig.vidHeight);
+	cmd->w = w * dvrXScale;
+	cmd->h = h * dvrYScale;
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;
@@ -415,7 +415,6 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			ri.Error(ERR_FATAL, "RE_BeginFrame() - glGetError() failed (0x%x)!", err);
 	}
 
-#ifndef EMSCRIPTEN
 	if (glConfig.stereoEnabled) {
 		if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
 			return;
@@ -461,10 +460,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 					FBO_Bind(NULL);
 				}
 
-				qglDrawBuffer(GL_FRONT);
-				qglClear(GL_COLOR_BUFFER_BIT);
-				qglDrawBuffer(GL_BACK);
-				qglClear(GL_COLOR_BUFFER_BIT);
+				{
+					GLenum DrawBuffers[1] = {GL_NONE};
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
+				{
+					GLenum DrawBuffers[1] = {GL_BACK};
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
 
 				r_anaglyphMode->modified = qfalse;
 			}
@@ -519,13 +524,12 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
-				cmd->buffer = (int)GL_FRONT;
+				cmd->buffer = (int)GL_NONE;
 			else
 				cmd->buffer = (int)GL_BACK;
 		}
 	}
-#endif
-	
+
 	tr.refdef.stereoFrame = stereoFrame;
 }
 

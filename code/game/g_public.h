@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 //
-
+#include "../qcommon/qcommon.h"
 // g_public.h -- game module information visible to server
 
 #define	GAME_API_VERSION	8
@@ -397,7 +397,7 @@ typedef enum {
 	BOTLIB_PC_SOURCE_FILE_AND_LINE,
 
 	// engine extensions
-	G_TRAP_GETVALUE = 700
+	G_TRAP_GETVALUE = COM_TRAP_GETVALUE
 
 } gameImport_t;
 

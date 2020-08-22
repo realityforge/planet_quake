@@ -307,7 +307,7 @@ void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg ) {
 
 		// write any unacknowledged serverCommands
 		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
-#if defined( USE_MV ) && defined( USE_MV_ZCMD )
+#ifdef USE_MV_ZCMD
 			// !!! do not start compression sequence from already sent uncompressed commands
 			// (re)send them uncompressed and only after that initiate compression sequence
 			if ( i <= client->reliableSent ) {
@@ -935,7 +935,9 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 void SV_SendMessageToClient( msg_t *msg, client_t *client )
 {
 #ifdef USE_MV
-	if ( client->multiview.protocol && client->multiview.recorder && sv_demoFile != FS_INVALID_HANDLE ) {
+
+	if ( client->multiview.protocol && client->multiview.recorder
+		&& sv_demoFile != FS_INVALID_HANDLE ) {
 		int v;
 
 		 // finalize packet
@@ -955,7 +957,6 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 		// update delta sequence
 		client->deltaMessage = client->netchan.outgoingSequence;
 		client->netchan.outgoingSequence++;
-
 		return;
 	}
 #endif // USE_MV
@@ -1004,7 +1005,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 
  	if ( client->demorecording ) {
 		msg_t copyMsg;
-		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
+		Com_Memcpy(&copyMsg, &msg, sizeof(copyMsg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
  		ps = SV_GameClientNum( client - svs.clients);
  		if (ps->pm_type == PM_INTERMISSION) {
@@ -1041,18 +1042,14 @@ void SV_SendClientMessages( void )
 	svs.msgTime = Sys_Milliseconds();
 
 #ifdef USE_MV
-	if ( sv_demoFile != FS_INVALID_HANDLE )
+	c = svs.clients + sv_maxclients->integer; // recorder slot
+	if ( sv_demoFile != FS_INVALID_HANDLE
+	 	&& !svs.emptyFrame // we want to record only synced game frames
+		&& c->state >= CS_PRIMED)
 	{
-		if ( !svs.emptyFrame ) // we want to record only synced game frames
-		{
-			c = svs.clients + sv_maxclients->integer; // recorder slot
-			if ( c->state >= CS_PRIMED )
-			{
-				SV_SendClientSnapshot( c );
-				c->lastSnapshotTime = svs.time;
-				c->rateDelayed = qfalse;
-			}
-		}
+		SV_SendClientSnapshot( c );
+		c->lastSnapshotTime = svs.time;
+		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
 

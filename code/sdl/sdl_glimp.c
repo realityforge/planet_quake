@@ -296,12 +296,12 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 	if ( colorBits == 0 || colorBits >= 32 )
 		colorBits = 24;
 
-	if ( r_depthbits->value == 0 )
+	if ( cl_depthbits->integer == 0 )
 		depthBits = 24;
 	else
-		depthBits = r_depthbits->value;
+		depthBits = cl_depthbits->integer;
 
-	stencilBits = r_stencilbits->value;
+	stencilBits = cl_stencilbits->integer;
 	samples = 0; // r_ext_multisample->integer;
 
 	for ( i = 0; i < 16; i++ )
@@ -462,6 +462,9 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		{
 			if ( !SDL_glContext )
 			{
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 				if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
 				{
 					Com_DPrintf( "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
@@ -471,12 +474,10 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 				}
 			}
 
-#ifndef EMSCRIPTEN
 			if ( SDL_GL_SetSwapInterval( r_swapInterval->integer ) == -1 )
 			{
 				Com_DPrintf( "SDL_GL_SetSwapInterval failed: %s\n", SDL_GetError( ) );
 			}
-#endif
 
 			SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &realColorBits[0] );
 			SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &realColorBits[1] );
@@ -553,7 +554,6 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
 
-#ifdef EMSCRIPTEN
 	if(SDL_window) {
 		SDL_DisplayMode desktopMode;
 		int display = SDL_GetWindowDisplayIndex( SDL_window );
@@ -571,7 +571,6 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
 		return qtrue;
 	}
-#endif
 
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
 
@@ -617,7 +616,6 @@ void GLimp_Init( glconfig_t *config )
 
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ignorehwgamma = Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 #ifdef EMSCRIPTEN
 	Sys_GLimpInit();
@@ -634,6 +632,10 @@ void GLimp_Init( glconfig_t *config )
 			return;
 		}
 	}
+
+#ifdef EMSCRIPTEN
+	Sys_GLContextCreated();
+#endif
 
 	// These values force the UI to disable driver selection
 	config->driverType = GLDRV_ICD;
@@ -656,7 +658,7 @@ Responsible for doing a swapbuffers
 void GLimp_EndFrame( void )
 {
 	// don't flip if drawing to front buffer
-	if ( Q_stricmp( r_drawBuffer->string, "GL_FRONT" ) != 0 )
+	if ( Q_stricmp( cl_drawBuffer->string, "GL_FRONT" ) != 0 )
 	{
 		SDL_GL_SwapWindow( SDL_window );
 	}
@@ -699,7 +701,6 @@ void VKimp_Init( glconfig_t *config )
 
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ignorehwgamma = Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// feedback to renderer configuration
 	glw_state.config = config;

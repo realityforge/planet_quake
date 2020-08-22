@@ -2405,6 +2405,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 	}
 }
 
+
 /*
 ===============
 R_FindImageFile

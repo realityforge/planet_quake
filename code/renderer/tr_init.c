@@ -193,11 +193,6 @@ typedef struct {
 	const char *name;
 } sym_t;
 
-#ifdef EMSCRIPTEN
-//#define GLE(ret, name, ...) name##proc * qgl##name;
-//QGL_Core_PROCS;
-//#undef GLE
-#else
 #define GLE( ret, name, ... ) { (void**)&q##name, XSTRING(name) },
 static sym_t core_procs[] = { QGL_Core_PROCS };
 static sym_t ext_procs[] = { QGL_Ext_PROCS };
@@ -206,7 +201,6 @@ static sym_t vbo_procs[] = { QGL_VBO_PROCS };
 static sym_t fbo_procs[] = { QGL_FBO_PROCS };
 static sym_t fbo_opt_procs[] = { QGL_FBO_OPT_PROCS };
 #undef GLE
-#endif
 
 
 /*
@@ -243,14 +237,12 @@ static void R_ClearSymbols( sym_t *syms, int count )
 
 static void R_ClearSymTables( void )
 {
-#ifndef EMSCRIPTEN
 	R_ClearSymbols( core_procs, ARRAY_LEN( core_procs ) );
 	R_ClearSymbols( ext_procs, ARRAY_LEN( ext_procs ) );
 	R_ClearSymbols( arb_procs, ARRAY_LEN( arb_procs ) );
 	R_ClearSymbols( vbo_procs, ARRAY_LEN( vbo_procs ) );
 	R_ClearSymbols( fbo_procs, ARRAY_LEN( fbo_procs ) );
 	R_ClearSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
-#endif
 }
 
 
@@ -394,7 +386,6 @@ static void R_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_env_add not found\n" );
 	}
 
-	#ifndef EMSCRIPTEN
 	// GL_ARB_multitexture
 	if ( R_HaveExtension( "GL_ARB_multitexture" ) )
 	{
@@ -465,6 +456,7 @@ static void R_InitExtensions( void )
 			{
 				ri.Printf( PRINT_ALL, "...using GL_EXT_texture_filter_anisotropic (max: %i)\n", maxAnisotropy );
 				textureFilterAnisotropic = qtrue;
+				maxAnisotropy = MIN( r_ext_max_anisotropy->integer, maxAnisotropy );
 			}
 		}
 		else
@@ -519,7 +511,6 @@ static void R_InitExtensions( void )
 			R_ResolveSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
 		}
 	}
-#endif
 }
 
 
@@ -555,29 +546,20 @@ static void InitOpenGL( void )
 
 		R_ClearSymTables();
 
-#ifdef EMSCRIPTEN
-//#define GLE( ret, name, ... ) q##name = (void *)#name;
-//QGL_Core_PROCS;
-//#undef GLE
-#else
 		err = R_ResolveSymbols( core_procs, ARRAY_LEN( core_procs ) );
 		if ( err )
 			ri.Error( ERR_FATAL, "Error resolving core OpenGL function '%s'", err );
 
 		R_InitExtensions();
-#endif
-
-ri.Printf( PRINT_ALL, "GetIntegerv\n" );
 
 		// OpenGL driver constants
-		glGetIntegerv( GL_MAX_TEXTURE_SIZE, &max_texture_size );
+		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &max_texture_size );
 		glConfig.maxTextureSize = max_texture_size;
 
 		// stubbed or broken drivers may have reported 0...
 		if ( glConfig.maxTextureSize <= 0 ) 
 			glConfig.maxTextureSize = 0;
 
-ri.Printf( PRINT_ALL, "GetIntegerv\n" );
 		qglGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS, &max_shader_units );
 		qglGetIntegerv( GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &max_bind_units );
 
@@ -1209,14 +1191,10 @@ static void GL_SetDefaultState( void )
 		glState.glClientStateBits[ i ] = 0;
 	}
 
-ri.Printf( PRINT_ALL, "ClearDepth\n" );
-
 	qglClearDepth( 1.0f );
 
 	qglCullFace( GL_FRONT );
 	glState.faceCulling = -1;
-
-ri.Printf( PRINT_ALL, "Color4\n" );
 
 	qglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
@@ -1575,9 +1553,7 @@ static void R_Register( void )
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get ("r_nobind", "0", CVAR_CHEAT);
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
-#ifdef USE_SKY_DEPTH_WRITE
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", 0 );
-#endif
 	r_shownormals = ri.Cvar_Get ("r_shownormals", "0", CVAR_CHEAT);
 	r_clear = ri.Cvar_Get( "r_clear", "0", 0 );
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
@@ -1605,14 +1581,13 @@ static void R_Register( void )
 	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
 
 	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_texture_filter_anisotropic, "0", "1", CV_INTEGER );
+
 	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_max_anisotropy, "1", NULL, CV_INTEGER );
 
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
-
-#ifndef USE_SKY_DEPTH_WRITE
-	r_showsky = ri.Cvar_Get( "r_showsky", "0", CVAR_LATCH );
-#endif
 
 	r_flares = ri.Cvar_Get( "r_flares", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
@@ -1731,9 +1706,9 @@ void R_Init( void ) {
 RE_Shutdown
 ===============
 */
-static void RE_Shutdown( int destroyWindow ) {
+static void RE_Shutdown( refShutdownCode_t code ) {
 
-	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
+	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", code );
 
 	ri.Cmd_RemoveCommand( "modellist" );
 	ri.Cmd_RemoveCommand( "screenshotBMP" );
@@ -1753,13 +1728,13 @@ static void RE_Shutdown( int destroyWindow ) {
 	R_DoneFreeType();
 
 	// shut down platform specific OpenGL stuff
-	if ( destroyWindow ) {
+	if ( code != REF_KEEP_CONTEXT ) {
 
 		QGL_DoneARB();
 
 		VBO_Cleanup();
 
-		ri.GLimp_Shutdown( destroyWindow == 2 ? qtrue: qfalse );
+		ri.GLimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
 
 		R_ClearSymTables();
 

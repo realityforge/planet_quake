@@ -4,9 +4,46 @@ var LibrarySysInput = {
     joysticks: [],
     inputInterface: 0,
     inputHeap: 0,
+    superKey: 0,
+    paste: '',
+    field: 0,
     //inputCount: 0,
+    captureClipBoard: function () {
+      var process = Browser.safeCallback(_Field_CharEvent)
+      // this is the same method I used on StudySauce
+      var text = document.createElement('TEXTAREA')
+      text.style.opacity = 0
+      text.style.height = '1px'
+      text.style.width = '1px'
+      text.style.display = 'block'
+      text.style.zIndex = 1000
+      text.style.position = 'absolute'
+      document.body.appendChild(text)
+      text.focus()
+      setTimeout(function () {
+        SYSI.paste = text.value
+        Module.viewport.focus()
+        if(SYSI.field) {
+          SYSI.paste.split('').forEach(k => {
+            process(SYSI.field, k.charCodeAt(0))
+          })
+          SYSI.paste = ''
+          SYSI.field = 0
+          text.remove()
+        }
+      }, 100)
+    },
+    checkPasteEvent: function (evt) {
+      if(evt.key == 'Meta') SYSI.superKey = evt.type == 'keydown'
+      if(SYSI.superKey && (evt.key == 'v' || evt.key == 'V')) {
+        if(SYSI.superKey && (evt.type == 'keypress' || evt.type == 'keydown')) {
+          SYSI.captureClipBoard()
+        }
+      }
+    },
     InputPushKeyEvent: function (evt) {
       var event = SYSI.inputHeap
+      SYSI.checkPasteEvent(evt)
       var modState = (evt.ctrlKey && evt.location === 1 ? 0x0040 : 0)
         | (evt.shiftKey && evt.location === 1 ? 0x0001 : 0)
         | (evt.altKey && evt.location === 1 ? 0x0100 : 0)
@@ -39,6 +76,7 @@ var LibrarySysInput = {
     },
     InputPushTextEvent: function (evt) {
       var event = SYSI.inputHeap
+      SYSI.checkPasteEvent(evt)
       HEAP32[((event+0)>>2)]= 0x303; //Uint32 type; ::SDL_TEXTINPUT
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds()
       HEAP32[((event+8)>>2)]=0; // windowID
@@ -264,7 +302,6 @@ var LibrarySysInput = {
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
     SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
-    var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
@@ -274,14 +311,34 @@ var LibrarySysInput = {
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
-    if(in_joystick) {
-      setTimeout(SYSI.InitNippleJoysticks, 200)
-    }
-		setTimeout(SYSI.InputInit, 100)
 	},
+  Sys_GLContextCreated: function () {
+    var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
+    var developer = SYSC.Cvar_VariableIntegerValue('developer')
+    if(in_joystick) {
+      SYSI.InitNippleJoysticks()
+    }
+		SYSI.InputInit()
+    
+    //if(!developer) return
+    function throwOnGLError(err, funcName, args) {
+      //console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
+    }
+    function logGLCall(functionName, args) {   
+      console.log("gl." + functionName + "(" + 
+          WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
+    }
+    //GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
+  },
 	Sys_GLimpSafeInit: function () {
 	},
-  
+  Sys_GetClipboardData: function () {
+		return 0;
+	},
+	Sys_SetClipboardData: function (field) {
+    SYSI.field = field
+	},
+  glPolygonMode: function(){}, // TODO
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

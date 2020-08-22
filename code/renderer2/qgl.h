@@ -37,15 +37,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #include <windows.h>
 #include <GL/gl.h>
-#elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
-#include <GL/gl.h>
-#include <GL/glx.h>
 #elif defined(EMSCRIPTEN)
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
+#include <SDL_opengles.h>
 #include <SDL_opengles2.h>
 #include <SDL_opengles2_gl2.h>
 #include <SDL_opengles2_gl2ext.h>
+#elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
+#include <GL/gl.h>
+#include <GL/glx.h>
 #elif defined(__APPLE__) || defined(__APPLE_CC__)
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
@@ -229,6 +230,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(void, GenBuffers, GLsizei n, GLuint *buffers) \
 	GLE(void, BufferData, GLenum target, GLsizeiptr size, const void *data, GLenum usage) \
 	GLE(void, BufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const void *data) \
+  GLE(GLboolean, UnmapBuffer, GLenum target) \
+  GLE(void *, MapBufferRange, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) \
+  GLE(void, ReadBuffer, GLenum mode ) \
+  GLE(void, DrawBuffer, GLenum mode ) \
+  GLE(void, DrawBuffers, GLsizei n, const GLenum *bufs) \
+
+//  GLE(void *, MapBuffer, GLenum target, GLenum access) \
 
 // OpenGL 2.0, was GL_ARB_shading_language_100, GL_ARB_vertex_program, GL_ARB_shader_objects, and GL_ARB_vertex_shader
 #define QGL_2_0_PROCS \

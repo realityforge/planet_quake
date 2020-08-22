@@ -5,7 +5,8 @@ var EventEmitter = require('events').EventEmitter
 var CMD = {
   CONNECT: 0x01,
   BIND: 0x02,
-  UDP: 0x03
+  UDP: 0x03,
+  WS: 0x04
 }
 var ATYP = {
   IPv4: 0x01,
@@ -48,6 +49,12 @@ Parser.prototype._onData = function(message) {
       left,
       chunkLeft,
       minLen
+  // connection and version number are implied from now on
+  if(this.authed && Object.values(ATYP).includes(chunk[3])) {
+    chunk[0] = 0x05
+    chunk[1] = chunk[1] || 0x01 // could be 1 or 4 from client
+    chunk[2] = 0x00
+  }
   //console.log(chunk)
   while (i < len) {
     // emscripten overdoing it a little
@@ -61,7 +68,11 @@ Parser.prototype._onData = function(message) {
       this._dstport = chunk[i+8]
       this._dstport <<= 8
       this._dstport += chunk[i+9]
-      this.emit('udp', this._dstport)
+      this.authed = true
+      this.emit('request', {
+        cmd: 'udp',
+        dstPort: this._dstport
+      })
       return
     }
     switch (state) {
@@ -148,8 +159,9 @@ Parser.prototype._onData = function(message) {
           this._cmd = 'bind'
         else if (cmd === CMD.UDP)
           this._cmd = 'udp'
+        else if (cmd === CMD.WS)
+          this._cmd = 'ws'
         else {
-          this.stop()
           this.emit('error', new Error('Invalid request command: ' + cmd))
           return
         }
@@ -219,7 +231,7 @@ Parser.prototype._onData = function(message) {
             cmd: this._cmd,
             srcAddr: undefined,
             srcPort: undefined,
-            dstAddr: this._dstaddr,
+            dstAddr: this._dstaddr.replace('\0', ''),
             dstPort: this._dstport,
             data: chunk.slice(i)
           })

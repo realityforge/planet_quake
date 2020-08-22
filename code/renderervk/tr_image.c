@@ -98,7 +98,7 @@ void GL_TextureMode( const char *string ) {
 	for ( i = 0 ; i < tr.numImages ; i++ ) {
 		img = tr.images[i];
 		if ( img->flags & IMGFLAG_MIPMAP ) {
-			vk_update_descriptor_set( img->descriptor, img->view, qtrue, img->wrapClampMode );
+			vk_update_descriptor_set( img, qtrue );
 		}
 	}
 #else
@@ -167,6 +167,24 @@ void R_ImageList_f( void ) {
 
 		switch ( image->internalFormat )
 		{
+#ifdef USE_VULKAN
+			case VK_FORMAT_B8G8R8A8_UNORM:
+				format = "BGRA ";
+				estSize *= 4;
+				break;
+			case VK_FORMAT_R8G8B8A8_UNORM:
+				format = "RGBA ";
+				estSize *= 4;
+				break;
+			case VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+				format = "RGBA ";
+				estSize *= 2;
+				break;
+			case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
+				format = "RGB  ";
+				estSize *= 2;
+				break;
+#else
 			case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
 			case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
 				format = "DXT1 ";
@@ -192,6 +210,7 @@ void R_ImageList_f( void ) {
 				// 3 bytes per pixel?
 				estSize *= 3;
 				break;
+#endif
 		}
 
 		// mipmap adds about 50%
@@ -590,6 +609,14 @@ static void generate_image_upload_data( image_t *image, byte *data, Image_Upload
 
 	if ( data == NULL ) {
 		data = upload_data->buffer;
+	} else {
+		if ( image->flags & IMGFLAG_COLORSHIFT ) {
+			byte *p = data;
+			int i, n = width * height;
+			for ( i = 0; i < n; i++, p+=4 ) {
+				R_ColorShiftLightingBytes( p, p );
+			}
+		}
 	}
 
 	//
@@ -628,16 +655,19 @@ static void generate_image_upload_data( image_t *image, byte *data, Image_Upload
 	upload_data->base_level_width = scaled_width;
 	upload_data->base_level_height = scaled_height;
 
-	if (scaled_width == width && scaled_height == height && !mipmap) {
+	if ( scaled_width == width && scaled_height == height && !mipmap ) {
 		upload_data->mip_levels = 1;
 		upload_data->buffer_size = scaled_width * scaled_height * 4;
+
 		if ( data != NULL ) {
-			Com_Memcpy(upload_data->buffer, data, upload_data->buffer_size);
+			Com_Memcpy( upload_data->buffer, data, upload_data->buffer_size );
 		}
-		if (resampled_buffer != NULL)
-			ri.Hunk_FreeTempMemory(resampled_buffer);
-		//return upload_data;
-		return;
+
+		if ( resampled_buffer != NULL ) {
+			ri.Hunk_FreeTempMemory( resampled_buffer );
+		}
+
+		return;	//return upload_data;
 	}
 
 	// Use the normal mip-mapping to go down from [width, height] to [scaled_width, scaled_height] dimensions.
@@ -655,7 +685,10 @@ static void generate_image_upload_data( image_t *image, byte *data, Image_Upload
 
 	scaled_buffer = (unsigned int*) ri.Hunk_AllocateTempMemory( sizeof( unsigned ) * scaled_width * scaled_height );
 	Com_Memcpy(scaled_buffer, data, scaled_width * scaled_height * 4);
-	R_LightScaleTexture((byte*)scaled_buffer, scaled_width, scaled_height, (qboolean) !mipmap);
+
+	if ( !(image->flags & IMGFLAG_NOLIGHTSCALE ) ) {
+		R_LightScaleTexture( (byte*)scaled_buffer, scaled_width, scaled_height, !mipmap );
+	}
 
 	miplevel = 0;
 	mip_level_size = scaled_width * scaled_height * 4;
@@ -663,7 +696,7 @@ static void generate_image_upload_data( image_t *image, byte *data, Image_Upload
 	Com_Memcpy(upload_data->buffer, scaled_buffer, mip_level_size);
 	upload_data->buffer_size = mip_level_size;
 	
-	if (mipmap) {
+	if ( mipmap ) {
 		while (scaled_width > 1 || scaled_height > 1) {
 			R_MipMap((byte *)scaled_buffer, (byte *)scaled_buffer, scaled_width, scaled_height);
 
@@ -687,57 +720,81 @@ static void generate_image_upload_data( image_t *image, byte *data, Image_Upload
 
 	upload_data->mip_levels = miplevel + 1;
 
-	ri.Hunk_FreeTempMemory(scaled_buffer);
+	ri.Hunk_FreeTempMemory( scaled_buffer );
+
 	if ( resampled_buffer != NULL )
 		ri.Hunk_FreeTempMemory( resampled_buffer );
 }
 
 
-void upload_vk_image(Image_Upload_Data *upload_data, VkSamplerAddressMode address_mode, image_t *image) {
-	int w = upload_data->base_level_width;
-	int h = upload_data->base_level_height;
-	qboolean has_alpha;
-	int bytes_per_pixel;
-	VkFormat format;
+byte *resample_image_data( const image_t *image, byte *data, const int data_size, int *bytes_per_pixel )
+{
 	byte *buffer;
+	uint16_t *p;
 	int i;
 
-	if (r_texturebits->integer > 16 || r_texturebits->integer == 0 || (image->flags & IMGFLAG_LIGHTMAP) ) {
-		buffer = upload_data->buffer;
-		format = VK_FORMAT_R8G8B8A8_UNORM;
-		bytes_per_pixel = 4;
-	} else {
-		has_alpha = RawImage_HasAlpha(upload_data->buffer, w * h);
-		buffer = (byte*) ri.Hunk_AllocateTempMemory( upload_data->buffer_size / 2 );
-		format = has_alpha ? VK_FORMAT_B4G4R4A4_UNORM_PACK16 : VK_FORMAT_A1R5G5B5_UNORM_PACK16;
-		bytes_per_pixel = 2;
+	switch ( image->internalFormat ) {
+		case VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+			buffer = (byte*) ri.Hunk_AllocateTempMemory( data_size / 2 );
+			p = (uint16_t*)buffer;
+			for ( i = 0; i < data_size; i += 4, p++ ) {
+				byte r = data[i+0];
+				byte g = data[i+1];
+				byte b = data[i+2];
+				byte a = data[i+3];
+				*p = (uint32_t)((a/255.0) * 15.0 + 0.5) |
+					((uint32_t)((r/255.0) * 15.0 + 0.5) << 4) |
+					((uint32_t)((g/255.0) * 15.0 + 0.5) << 8) |
+					((uint32_t)((b/255.0) * 15.0 + 0.5) << 12);
+			}
+			*bytes_per_pixel = 2;
+			return buffer; // must be freed after upload!
+
+		case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
+			buffer = (byte*) ri.Hunk_AllocateTempMemory( data_size / 2 );
+			p = (uint16_t*)buffer;
+			for ( i = 0; i < data_size; i += 4, p++ ) {
+				byte r = data[i+0];
+				byte g = data[i+1];
+				byte b = data[i+2];
+				*p = (uint32_t)((b/255.0) * 31.0 + 0.5) |
+					((uint32_t)((g/255.0) * 31.0 + 0.5) << 5) |
+					((uint32_t)((r/255.0) * 31.0 + 0.5) << 10) |
+					(1 << 15);
+			}
+			*bytes_per_pixel = 2;
+			return buffer; // must be freed after upload!
+
+		case VK_FORMAT_B8G8R8A8_UNORM:
+			buffer = (byte*) ri.Hunk_AllocateTempMemory( data_size );
+			for ( i = 0; i < data_size; i += 4 ) {
+				buffer[i+0] = data[i+2];
+				buffer[i+1] = data[i+1];
+				buffer[i+2] = data[i+0];
+				buffer[i+3] = data[i+3];
+			}
+			*bytes_per_pixel = 4;
+			return buffer;
+
+		default:
+			*bytes_per_pixel = 4;
+			return data;
 	}
+}
 
-	if (format == VK_FORMAT_A1R5G5B5_UNORM_PACK16) {
-		uint16_t *p = (uint16_t*)buffer;
-		for (i = 0; i < upload_data->buffer_size; i += 4, p++) {
-			byte r = upload_data->buffer[i+0];
-			byte g = upload_data->buffer[i+1];
-			byte b = upload_data->buffer[i+2];
 
-			*p = (uint32_t)((b/255.0) * 31.0 + 0.5) |
-				((uint32_t)((g/255.0) * 31.0 + 0.5) << 5) |
-				((uint32_t)((r/255.0) * 31.0 + 0.5) << 10) |
-				(1 << 15);
-		}
-	} else if (format == VK_FORMAT_B4G4R4A4_UNORM_PACK16) {
-		uint16_t *p = (uint16_t*)buffer;
-		for (i = 0; i < upload_data->buffer_size; i += 4, p++) {
-			byte r = upload_data->buffer[i+0];
-			byte g = upload_data->buffer[i+1];
-			byte b = upload_data->buffer[i+2];
-			byte a = upload_data->buffer[i+3];
+static void upload_vk_image( Image_Upload_Data *upload_data, image_t *image ) {
+	int w = upload_data->base_level_width;
+	int h = upload_data->base_level_height;
+	int bytes_per_pixel;
+	byte *buffer;
 
-			*p = (uint32_t)((a/255.0) * 15.0 + 0.5) |
-				((uint32_t)((r/255.0) * 15.0 + 0.5) << 4) |
-				((uint32_t)((g/255.0) * 15.0 + 0.5) << 8) |
-				((uint32_t)((b/255.0) * 15.0 + 0.5) << 12);
-		}
+	if ( r_texturebits->integer > 16 || r_texturebits->integer == 0 || ( image->flags & IMGFLAG_LIGHTMAP ) ) {
+		image->internalFormat = VK_FORMAT_R8G8B8A8_UNORM;
+		//image->internalFormat = VK_FORMAT_B8G8R8A8_UNORM;
+	} else {
+		qboolean has_alpha = RawImage_HasAlpha( upload_data->buffer, w * h );
+		image->internalFormat = has_alpha ? VK_FORMAT_B4G4R4A4_UNORM_PACK16 : VK_FORMAT_A1R5G5B5_UNORM_PACK16;
 	}
 
 	image->handle = VK_NULL_HANDLE;
@@ -747,11 +804,12 @@ void upload_vk_image(Image_Upload_Data *upload_data, VkSamplerAddressMode addres
 	image->uploadWidth = upload_data->base_level_width;
 	image->uploadHeight = upload_data->base_level_height;
 
-	vk_create_image( w, h, format, upload_data->mip_levels, address_mode, image );
+	vk_create_image( w, h, image->internalFormat, upload_data->mip_levels, image );
+	buffer = resample_image_data( image, upload_data->buffer, upload_data->buffer_size, &bytes_per_pixel ); 
 	vk_upload_image_data( image->handle, 0, 0, w, h, upload_data->mip_levels > 1, buffer, bytes_per_pixel );
-
-	if ( bytes_per_pixel == 2 )
-		ri.Hunk_FreeTempMemory(buffer);
+	if ( buffer != upload_data->buffer ) {
+		ri.Hunk_FreeTempMemory( buffer );
+	}
 }
 
 #else // !USE_VULKAN
@@ -856,6 +914,14 @@ static void Upload32( byte *data, int x, int y, int width, int height, image_t *
 			}
 			width = scaled_width;
 			height = scaled_height;
+		}
+	}
+
+	if ( image->flags & IMGFLAG_COLORSHIFT ) {
+		byte *p = data;
+		int i, n = width * height;
+		for ( i = 0; i < n; i++, p+=4 ) {
+			R_ColorShiftLightingBytes( p, p );
 		}
 	}
 
@@ -1026,6 +1092,11 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 	image->width = width;
 	image->height = height;
 
+	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
+		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
+		image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+	}
+
 #ifdef USE_VULKAN
 	if ( flags & IMGFLAG_CLAMPTOBORDER )
 		image->wrapClampMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
@@ -1036,7 +1107,7 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	generate_image_upload_data( image, pic, &upload_data );
 
-	upload_vk_image( &upload_data, image->wrapClampMode, image );
+	upload_vk_image( &upload_data, image );
 
 	ri.Hunk_FreeTempMemory( upload_data.buffer );
 #else
@@ -1074,9 +1145,9 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	if ( image->flags & IMGFLAG_MIPMAP )
 	{
-		if ( textureFilterAnisotropic )
-			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-					(GLint)Com_Clamp( 1, maxAnisotropy, r_ext_max_anisotropy->integer ) );
+		if ( textureFilterAnisotropic ) {
+			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (GLint) maxAnisotropy );
+		}
 
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
 		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
@@ -1308,7 +1379,7 @@ static void R_CreateDlightImage( void ) {
 			data[y][x][3] = 255;
 		}
 	}
-	tr.dlightImage = R_CreateImage("*dlight", NULL, (byte*)data, DLIGHT_SIZE, DLIGHT_SIZE, IMGFLAG_CLAMPTOEDGE );
+	tr.dlightImage = R_CreateImage( "*dlight", NULL, (byte*)data, DLIGHT_SIZE, DLIGHT_SIZE, IMGFLAG_CLAMPTOEDGE );
 }
 
 
@@ -1341,7 +1412,7 @@ This is called for each texel of the fog texture on startup
 and for each vertex of transparent shaders in fog dynamically
 ================
 */
-float	R_FogFactor( float s, float t ) {
+float R_FogFactor( float s, float t ) {
 	float	d;
 
 	s -= 1.0/512;
@@ -1641,7 +1712,7 @@ void R_SetColorMappings( void ) {
 #ifdef USE_VULKAN
 	if ( vk.fboActive ) {
 		// update gamma shader
-		vk_create_gamma_pipeline();
+		vk_create_post_process_pipeline( 0 );
 	}
 	
 	if ( glConfig.deviceSupportsGamma && !vk.fboActive )
@@ -1681,11 +1752,9 @@ void R_DeleteTextures( void ) {
 
 #ifdef USE_VULKAN
 	vk_wait_idle();
-#endif
 
 	for ( i = 0; i < tr.numImages; i++ ) {
 		img = tr.images[ i ];
-#ifdef USE_VULKAN
 		// img->descriptor will be released with pool reset
 		if ( img->handle != VK_NULL_HANDLE ) {
 			qvkDestroyImage( vk.device, img->handle, NULL );
@@ -1693,27 +1762,28 @@ void R_DeleteTextures( void ) {
 		}
 		img->handle = VK_NULL_HANDLE;
 		img->view = VK_NULL_HANDLE;
-#else
-		qglDeleteTextures( 1, &img->texnum );
-#endif
 	}
+#else
+	for ( i = 0; i < tr.numImages; i++ ) {
+		img = tr.images[ i ];
+		qglDeleteTextures( 1, &img->texnum );
+	}
+
+	if ( qglActiveTextureARB ) {
+		for ( i = glConfig.numTextureUnits - 1; i >= 0; i-- ) {
+			qglActiveTextureARB( GL_TEXTURE0_ARB + i );
+			qglBindTexture( GL_TEXTURE_2D, 0 );
+		}
+	} else {
+		qglBindTexture( GL_TEXTURE_2D, 0 );
+	}
+#endif
 
 	Com_Memset( tr.images, 0, sizeof( tr.images ) );
 	Com_Memset( tr.scratchImage, 0, sizeof( tr.scratchImage ) );
 	tr.numImages = 0;
 
 	Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-
-#ifndef USE_VULKAN
-	if ( qglActiveTextureARB ) {
-		GL_SelectTexture( 1 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-		GL_SelectTexture( 0 );
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	} else {
-		qglBindTexture( GL_TEXTURE_2D, 0 );
-	}
-#endif
 }
 
 

@@ -42,7 +42,6 @@ cvar_t	*cl_timeNudge;
 cvar_t	*cl_showTimeDelta;
 
 cvar_t	*cl_shownet;
-cvar_t	*cl_timedemo;
 cvar_t	*cl_autoRecordDemo;
 
 cvar_t	*cl_aviFrameRate;
@@ -96,7 +95,9 @@ cvar_t *r_customPixelAspect;
 
 cvar_t *r_colorbits;
 // these also shared with renderers:
-cvar_t *r_depthbits;
+cvar_t *cl_stencilbits;
+cvar_t *cl_depthbits;
+cvar_t *cl_drawBuffer;
 
 clientActive_t		cl;
 clientConnection_t	clc;
@@ -678,7 +679,7 @@ CL_DemoCompleted
 =================
 */
 static void CL_DemoCompleted( void ) {
-	if (cl_timedemo && cl_timedemo->integer) {
+	if ( com_timedemo->integer ) {
 		int	time;
 		
 		time = Sys_Milliseconds() - clc.timeDemoStart;
@@ -1033,7 +1034,7 @@ void CL_ShutdownAll( void ) {
 			cls.soundStarted = qfalse;
 			CL_ShutdownRef( qfalse ); // shutdown renderer & GLimp
 		} else {
-			re.Shutdown( 0 ); // don't destroy window or context
+			re.Shutdown( REF_KEEP_CONTEXT ); // don't destroy window or context
 		}
 	}
 
@@ -1294,7 +1295,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	netadr_t	addr;
 	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
-		cls.state = CA_CONNECTED;
+		//cls.state = CA_CONNECTED;
+		Key_SetCatcher((Key_GetCatcher() ^ KEYCATCH_CGAME) | KEYCATCH_UI);
 		if(!dropped && !cls.postgame) {
 			// skip disconnecting and just show the main menu
 			noGameRestart = qtrue;
@@ -1619,11 +1621,14 @@ static void CL_Connect_f( void ) {
 	} else {
 		if( !strcmp( Cmd_Argv(1), "-4" ) )
 			family = NA_IP;
+#ifdef USE_IPV6
 		else if( !strcmp( Cmd_Argv(1), "-6" ) )
 			family = NA_IP6;
 		else
-			Com_Printf( "warning: only -4 or -6 as address type understood.\n" );
-		
+			Com_Printf( S_COLOR_YELLOW "warning: only -4 or -6 as address type understood.\n" );
+#else
+			Com_Printf( S_COLOR_YELLOW "warning: only -4 as address type understood.\n" );
+#endif
 		server = Cmd_Argv(2);
 	}
 
@@ -1780,12 +1785,13 @@ qboolean hasRcon = qfalse;
 static void CL_CompleteRcon( char *args, int argNum )
 {
 	int beforeLength;
-	if( argNum >= 2 )
+	if ( argNum >= 2 )
 	{
 		// Skip "rcon "
 		char *p = Com_SkipTokens( args, 1, " " );
+
 		beforeLength = strlen(g_consoleField.buffer);
-		if( p > args )
+		if ( p > args )
 			Field_CompleteCommand( p, qtrue, qtrue );
 
 		// TODO: execute a \rcon cmdlist
@@ -2531,7 +2537,7 @@ static void CL_CheckForResend( void ) {
 			CL_RequestAuthorization();
 #endif
 		// The challenge request shall be followed by a client challenge so no malicious server can hijack this connection.
-		NET_OutOfBandPrint( NS_CLIENT, &clc.serverAddress, "getchallenge %d", clc.challenge );
+		NET_OutOfBandPrint( NS_CLIENT, &clc.serverAddress, "getchallenge %d %s", clc.challenge, GAMENAME_FOR_MASTER );
 		break;
 		
 	case CA_CHALLENGING:
@@ -2661,7 +2667,9 @@ unsigned int hash_func( const netadr_t *addr ) {
 
 	switch ( addr->type ) {
 		case NA_IP:  ip = addr->ipv._4; size = 4;  break;
+#ifdef USE_IPV6
 		case NA_IP6: ip = addr->ipv._6; size = 16; break;
+#endif
 		default: size = 0; break;
 	}
 
@@ -2724,14 +2732,21 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	serverInfo_t *server;
 	serverInfo_t *servers = &cls.globalServers[0];
 	int	*max = &cls.numglobalservers;
+	qboolean websocket = qfalse;
 
 	
 	// check if server response is from a specific list
 	if(cls.pingUpdateSource == AS_LOCAL) {
 		for (i = 0; i < MAX_OTHER_SERVERS; i++) {
-			if (!NET_CompareAdr(from, &cls.localServers[i].adr)) {
+			if (NET_CompareAdr(from, &cls.localServers[i].adr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
+Com_Printf("Comparing protocol %s %s\n", cls.localServers[i].adr.protocol, NET_AdrToStringwPort(&cls.localServers[i].adr));
+				if(!Q_stricmpn(cls.localServers[i].adr.protocol, "ws", 2)
+				 	|| !Q_stricmpn(cls.localServers[i].adr.protocol, "wss", 3)) {
+					websocket = qtrue;
+				}
+				break;
 			}
 		}
 	}
@@ -2774,6 +2789,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 
 			addresses[numservers].type = NA_IP;
 		}
+#ifdef USE_IPV6
 		// IPv6 address, if it's an extended response
 		else if (extended && *buffptr == '/')
 		{
@@ -2788,6 +2804,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			addresses[numservers].type = NA_IP6;
 			addresses[numservers].scope_id = from->scope_id;
 		}
+#endif
 		else
 			// syntax error!
 			break;
@@ -2796,6 +2813,10 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		addresses[numservers].port = (*buffptr++) << 8;
 		addresses[numservers].port += *buffptr++;
 		addresses[numservers].port = BigShort( addresses[numservers].port );
+		
+		if(websocket) {
+			Q_strncpyz(addresses[numservers].protocol, "ws", 3);
+		} 
 
 		// syntax check
 		if (*buffptr != '\\' && *buffptr != '/')
@@ -3311,8 +3332,8 @@ void CL_Frame( int msec ) {
 
 			CL_TakeVideoFrame();
 
-			msec = (int)frameDuration;
-			clc.aviVideoFrameRemainder = frameDuration - msec;
+			//msec = (int)frameDuration;
+			clc.aviVideoFrameRemainder = frameDuration - (int)frameDuration;
 		}
 	}
 	
@@ -3436,9 +3457,9 @@ static void CL_ShutdownRef( qboolean unloadDLL ) {
 	
 	if ( re.Shutdown ) {
 		if ( unloadDLL )
-			re.Shutdown( 2 );
+			re.Shutdown( REF_UNLOAD_DLL );
 		else
-			re.Shutdown( 1 );
+			re.Shutdown( REF_DESTROY_WINDOW );
 	}
 
 #ifdef USE_RENDERER_DLOPEN
@@ -4014,12 +4035,12 @@ static void CL_InitGLimp_Cvars( void )
 	Cvar_CheckRange( r_colorbits, "0", "32", CV_INTEGER );
 
 	// shared with renderer:
-	r_stencilbits = Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	Cvar_CheckRange( r_stencilbits, "0", "8", CV_INTEGER );
-	r_depthbits = Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	Cvar_CheckRange( r_depthbits, "0", "32", CV_INTEGER );
+	cl_stencilbits = Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_CheckRange( cl_stencilbits, "0", "8", CV_INTEGER );
+	cl_depthbits = Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_CheckRange( cl_depthbits, "0", "32", CV_INTEGER );
 
-	r_drawBuffer = Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
+	cl_drawBuffer = Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
 
 #ifdef USE_RENDERER_DLOPEN
 	cl_renderer = Cvar_Get( "cl_renderer", "opengl", CVAR_ARCHIVE | CVAR_LATCH );
@@ -4071,7 +4092,6 @@ void CL_Init( void ) {
 	rcon_client_password = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	cl_activeAction = Cvar_Get( "activeAction", "", CVAR_TEMP );
 
-	cl_timedemo = Cvar_Get ("timedemo", "0", 0);
 	cl_autoRecordDemo = Cvar_Get ("cl_autoRecordDemo", "0", CVAR_ARCHIVE);
 
 	cl_aviFrameRate = Cvar_Get ("cl_aviFrameRate", "25", CVAR_ARCHIVE);
@@ -4086,10 +4106,11 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
-	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_INIT);
-	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_INIT);
+	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
+	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
+	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
 	
-	for ( index = 2; index < MAX_MASTER_SERVERS; index++ )
+	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
@@ -4405,7 +4426,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	if(autocomplete[0]) {
 		if((NET_CompareAdr(from, &clc.serverAddress)
 			|| (rcon_address.type != NA_BAD && NET_CompareAdr(from, &rcon_address)))) {
-			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon");
+			hasRcon = Q_stristr(g_consoleField.buffer, "\\rcon") != 0;
 			Field_Clear(&g_consoleField);
 			if(hasRcon) // add rcon back on to autocomplete command
 				memcpy(&g_consoleField.buffer, va("\\rcon %s", autocomplete), sizeof(g_consoleField.buffer));
@@ -4456,9 +4477,11 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 				case NA_IP:
 					type = 1;
 					break;
+#ifdef USE_IPV6
 				case NA_IP6:
 					type = 2;
 					break;
+#endif
 				default:
 					type = 0;
 					break;
@@ -4741,22 +4764,27 @@ static void CL_LocalServers_f( void ) {
 
 #ifdef EMSCRIPTEN
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
-		netadr_t addr;
-		qboolean found = qfalse;
-		if(!cl_master[i]->string[0]) continue;
-		NET_StringToAdr( cl_master[i]->string, &addr, NA_UNSPEC );
-		for(j = 0; j < cls.numlocalservers; j++) {
-			if ( NET_CompareAdr( &cls.localServers[j].adr, &addr ) ) {
-				found = qtrue;
+		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
+			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses++];
+			qboolean found = qfalse;
+			if(!cl_master[i]->string[0]) continue;
+			NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC );
+			for(j = 0; j < cls.numlocalservers; j++) {
+				if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
+					found = qtrue;
+					cls.numGlobalServerAddresses--;
+					break;
+				}
 			}
+			if(found || !addr->type || !addr->port) continue;
+Com_Printf( "adding server: %s\n", NET_AdrToStringwPort(addr));
+			CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
+			Q_strncpyz(
+				cls.localServers[cls.numlocalservers].hostName,
+				cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
+			cls.localServers[cls.numlocalservers].visible = qfalse;
+			cls.numlocalservers++;
 		}
-		if(found) continue;
-		CL_InitServerInfo(&cls.localServers[cls.numlocalservers], &addr);
-		Q_strncpyz(
-			cls.localServers[cls.numlocalservers].hostName,
-			cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
-		cls.localServers[cls.numlocalservers].visible = qfalse;
-		cls.numlocalservers++;
 	}
 
 	// emulate localhost
@@ -4793,8 +4821,10 @@ static void CL_LocalServers_f( void ) {
 
 			to.type = NA_BROADCAST;
 			NET_SendPacket( NS_CLIENT, n, message, &to );
+#ifdef USE_IPV6
 			to.type = NA_MULTICAST6;
 			NET_SendPacket( NS_CLIENT, n, message, &to );
+#endif
 		}
 	}
 #endif
@@ -4873,6 +4903,7 @@ static void CL_GlobalServers_f( void ) {
 	cls.pingUpdateSource = AS_GLOBAL;
 
 	// Use the extended query for IPv6 masters
+#ifdef USE_IPV6
 	if ( to.type == NA_IP6 || to.type == NA_MULTICAST6 )
 	{
 		int v4enabled = Cvar_VariableIntegerValue( "net_enabled" ) & NET_ENABLEV4;
@@ -4888,7 +4919,8 @@ static void CL_GlobalServers_f( void ) {
 				GAMENAME_FOR_MASTER, Cmd_Argv(2) );
 		}
 	}
-	else 
+	else
+#endif
 		Com_sprintf( command, sizeof( command ), "getservers %s", Cmd_Argv(2) );
 
 	for ( i = 3; i < count; i++ )
@@ -5088,10 +5120,15 @@ static void CL_Ping_f( void ) {
 	{
 		if(!strcmp(Cmd_Argv(1), "-4"))
 			family = NA_IP;
+#ifdef USE_IPV6
 		else if(!strcmp(Cmd_Argv(1), "-6"))
 			family = NA_IP6;
 		else
 			Com_Printf( "warning: only -4 or -6 as address type understood.\n");
+#else
+		else
+			Com_Printf( "warning: only -4 as address type understood.\n");
+#endif
 		
 		server = Cmd_Argv(2);
 	}
@@ -5253,12 +5290,17 @@ static void CL_ServerStatus_f( void ) {
 			server = Cmd_Argv(1);
 		else
 		{
-			if(!strcmp(Cmd_Argv(1), "-4"))
+			if ( !strcmp( Cmd_Argv(1), "-4" ) )
 				family = NA_IP;
-			else if(!strcmp(Cmd_Argv(1), "-6"))
+#ifdef USE_IPV6
+			else if ( !strcmp( Cmd_Argv(1), "-6" ) )
 				family = NA_IP6;
 			else
-				Com_Printf( "warning: only -4 or -6 as address type understood.\n");
+				Com_Printf( "warning: only -4 or -6 as address type understood.\n" );
+#else
+			else
+				Com_Printf( "warning: only -4 as address type understood.\n" );
+#endif
 		
 			server = Cmd_Argv(2);
 		}
