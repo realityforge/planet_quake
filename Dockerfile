@@ -29,6 +29,7 @@ RUN \
   echo "NODE_JS = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/node/12.9.1_64bit/bin/node'" >> /root/.emscripten && \
   echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /root/.emscripten && \
   export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
+  export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   /usr/bin/python3 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
   export STANDALONE=1 && \
   make release PLATFORM=js

@@ -66,6 +66,7 @@ Coming soon!
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
+  * Push notifications through web browser for pickup matches
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Many BSP formats support and cross compatibility with other game content like Call of Duty and Savage
