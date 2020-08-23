@@ -132,25 +132,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // OpenGL 1.0/1.1 and OpenGL ES 1.0
 #define QGL_1_1_PROCS \
-	GLE(void, AlphaFunc, GLenum func, GLclampf ref) \
 	GLE(void, BindTexture, GLenum target, GLuint texture) \
 	GLE(void, BlendFunc, GLenum sfactor, GLenum dfactor) \
 	GLE(void, ClearColor, GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) \
 	GLE(void, Clear, GLbitfield mask) \
 	GLE(void, ClearStencil, GLint s) \
-	GLE(void, Color4f, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) \
 	GLE(void, ColorMask, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) \
-	GLE(void, ColorPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
 	GLE(void, CopyTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) \
 	GLE(void, CullFace, GLenum mode) \
 	GLE(void, DeleteTextures, GLsizei n, const GLuint *textures) \
 	GLE(void, DepthFunc, GLenum func) \
 	GLE(void, DepthMask, GLboolean flag) \
-	GLE(void, DisableClientState, GLenum cap) \
 	GLE(void, Disable, GLenum cap) \
 	GLE(void, DrawArrays, GLenum mode, GLint first, GLsizei count) \
 	GLE(void, DrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) \
-	GLE(void, EnableClientState, GLenum cap) \
 	GLE(void, Enable, GLenum cap) \
 	GLE(void, Finish, void) \
 	GLE(void, Flush, void) \
@@ -161,24 +156,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(const GLubyte *, GetString, GLenum name) \
 	GLE(void, LineWidth, GLfloat width) \
 	GLE(void, LoadIdentity, void) \
-	GLE(void, LoadMatrixf, const GLfloat *m) \
 	GLE(void, MatrixMode, GLenum mode) \
 	GLE(void, PolygonOffset, GLfloat factor, GLfloat units) \
-	GLE(void, PopMatrix, void) \
-	GLE(void, PushMatrix, void) \
 	GLE(void, ReadPixels, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) \
 	GLE(void, Scissor, GLint x, GLint y, GLsizei width, GLsizei height) \
-	GLE(void, ShadeModel, GLenum mode) \
 	GLE(void, StencilFunc, GLenum func, GLint ref, GLuint mask) \
 	GLE(void, StencilMask, GLuint mask) \
 	GLE(void, StencilOp, GLenum fail, GLenum zfail, GLenum zpass) \
-	GLE(void, TexCoordPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
-	GLE(void, TexEnvf, GLenum target, GLenum pname, GLfloat param) \
 	GLE(void, TexImage2D, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) \
 	GLE(void, TexParameterf, GLenum target, GLenum pname, GLfloat param) \
 	GLE(void, TexParameteri, GLenum target, GLenum pname, GLint param) \
 	GLE(void, TexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) \
-	GLE(void, Translatef, GLfloat x, GLfloat y, GLfloat z) \
 	GLE(void, VertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
 	GLE(void, Viewport, GLint x, GLint y, GLsizei width, GLsizei height) \
 
@@ -186,19 +174,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define QGL_DESKTOP_1_1_PROCS \
 	GLE(void, Begin, GLenum mode) \
 	GLE(void, ClearDepth, GLclampd depth) \
-	GLE(void, Color3f, GLfloat red, GLfloat green, GLfloat blue) \
-	GLE(void, Color4ubv, const GLubyte *v) \
 	GLE(void, DepthRange, GLclampd near_val, GLclampd far_val) \
 	GLE(void, DrawBuffer, GLenum mode) \
-	GLE(void, End, void) \
-	GLE(void, Frustum, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
-	GLE(void, Ortho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
 	GLE(void, PolygonMode, GLenum face, GLenum mode) \
-	GLE(void, TexCoord2f, GLfloat s, GLfloat t) \
-	GLE(void, TexCoord2fv, const GLfloat *v) \
-	GLE(void, Vertex2f, GLfloat x, GLfloat y) \
-	GLE(void, Vertex3f, GLfloat x, GLfloat y, GLfloat z) \
-	GLE(void, Vertex3fv, const GLfloat *v) \
 
 // OpenGL ES 1.1 but not desktop OpenGL 1.x
 #define QGL_ES_1_1_PROCS \
@@ -233,7 +211,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   GLE(GLboolean, UnmapBuffer, GLenum target) \
   GLE(void *, MapBufferRange, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) \
   GLE(void, ReadBuffer, GLenum mode ) \
-  GLE(void, DrawBuffer, GLenum mode ) \
   GLE(void, DrawBuffers, GLsizei n, const GLenum *bufs) \
 
 //  GLE(void *, MapBuffer, GLenum target, GLenum access) \

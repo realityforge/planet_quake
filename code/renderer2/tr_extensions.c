@@ -82,6 +82,7 @@ void GLimp_InitExtraExtensions( void )
 #endif
 
 	QGL_1_1_PROCS;
+	//QGL_ES_1_1_PROCS;
 	QGL_DESKTOP_1_1_PROCS;
 
 	// OpenGL 1.3, was GL_ARB_texture_compression

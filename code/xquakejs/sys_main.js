@@ -189,7 +189,7 @@ var LibrarySysMain = {
         && !window.location.search.includes('ws://')
     }
   },
-  Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
+  Sys_PlatformInit__deps: ['$SYSC', '$SYSM'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
@@ -307,12 +307,12 @@ var LibrarySysMain = {
       .map(a => UTF8ToString(a))
     SYSN.LoadingDescription(args.join(' '))
   },
-  Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.getQueryCommands())
     var argc = argv.length
     // merge default args with query string args
-    var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}})
+    var size = (argc + 1) * {{{ Runtime.POINTER_SIZE }}}
+    var list = allocate(new Int8Array(size), 'i8', ALLOC_NORMAL)
     for (var i = 0; i < argv.length; i++) {
       HEAP32[(list >> 2) + i] = allocateUTF8OnStack(argv[i])
     }

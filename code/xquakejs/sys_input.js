@@ -339,6 +339,7 @@ var LibrarySysInput = {
     SYSI.field = field
 	},
   glPolygonMode: function(){}, // TODO
+  glDrawBuffer: function(){},
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

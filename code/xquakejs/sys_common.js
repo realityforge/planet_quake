@@ -79,8 +79,9 @@ var LibrarySysCommon = {
 			]
 			// all of these test links are in case someone fucks up conversion or startup
 			var tryMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)[0]
+			var noMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)
+				.slice(1).join('/')
 			if(SYSF.mods.includes(tryMod + '-cc')) {
-				var noMod = name.split(/\//ig).slice(1).join('/')
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
 			}

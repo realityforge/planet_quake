@@ -762,7 +762,6 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
     -lidbfs.js \
     -lsdl.js \
-		-lglemu.js \
 		-lwebgl.js \
 		-lwebgl2.js \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \

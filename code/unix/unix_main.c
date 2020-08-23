@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #include <fpu_control.h> // bk001213 - force dumps on divide by zero
 #endif
 #endif
+#endif
 
 #if defined(__sun)
   #include <sys/file.h>
