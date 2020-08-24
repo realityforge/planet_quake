@@ -307,6 +307,7 @@ else # ifeq Linux
 ifeq ($(PLATFORM),darwin)
   HAVE_VM_COMPILED = 0
   USE_SDL = 1
+  USE_RENDERER_DLOPEN = 1
   USE_LOCAL_HEADERS = 0
   USE_CODEC_OPUS=0
   USE_CODEC_VORBIS=0
@@ -832,8 +833,8 @@ ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
     TARGETS += $(B)/$(TARGET_REND1)
     TARGETS += $(B)/$(TARGET_REND2)
-    TARGETS += $(B)/$(TARGET_RENDJS)
-    TARGETS += $(B)/$(TARGET_RENDV)
+#    TARGETS += $(B)/$(TARGET_RENDJS)
+#    TARGETS += $(B)/$(TARGET_RENDV)
   endif
 endif
 
@@ -1544,19 +1545,19 @@ endif
 
 ifeq ($(USE_RENDERER_DLOPEN),0)
 
-  ifeq ($(USE_VULKAN),1)
-    Q3OBJ += $(Q3RENDVOBJ)
-  else
-	ifeq ($(BUILD_RENDERER_JS),1)
-    Q3OBJ += $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
-	else
-	ifeq ($(BUILD_RENDERER_OPENGL2),1)
-    Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
-	else
-    Q3OBJ += $(Q3REND1OBJ)
-	endif
-  endif
-	endif
+ifeq ($(USE_VULKAN),1)
+  Q3OBJ += $(Q3RENDVOBJ)
+else
+ifeq ($(BUILD_RENDERER_JS),1)
+  Q3OBJ += $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
+else
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+  Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+else
+  Q3OBJ += $(Q3REND1OBJ)
+endif
+endif
+endif
 
 endif
 

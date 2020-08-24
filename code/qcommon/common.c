@@ -4133,6 +4133,7 @@ void Com_Frame( qboolean noDelay ) {
 		outsideError = 0;
 		outsideMsg = 0;
 		Com_Error(err, "%s\n", msg);
+		return;
 	}
 
 	// used by cl_parsegamestate/cl_initcgame

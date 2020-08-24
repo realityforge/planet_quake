@@ -2170,7 +2170,8 @@ Called when all downloading has been completed
 static void CL_DownloadsComplete( void ) {
 
 	Com_Printf("Downloads complete\n");
-	VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if(uivm)
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
 #ifdef EMSCRIPTEN
 	if(clc.dlDisconnect) {

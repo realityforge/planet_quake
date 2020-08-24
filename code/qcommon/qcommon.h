@@ -1422,8 +1422,8 @@ void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (
 void	Sys_Quit (void) __attribute__ ((noreturn));
 #ifdef EMSCRIPTEN
 void Sys_SetClipboardData( void *field );
-void Field_CharEvent( field_t *edit, int ch );
 #endif
+void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 

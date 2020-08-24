@@ -582,7 +582,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// console draws next
-	re.SetDvrFrame(0, 0, 1, 1);
+	//re.SetDvrFrame(0, 0, 1, 1);
 	Con_DrawConsole ();
 
 	// debug graph can be drawn on top of anything
@@ -656,12 +656,12 @@ void SCR_UpdateScreen( void ) {
 				*/
 				SCR_DrawScreenField( STEREO_CENTER );
 				
-				if(previousFrame[3]) {
+				//if(previousFrame && previousFrame[3]) {
 //Com_Printf("drawing frame: %i %i %i %i\n",
 // previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
 					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
 					//re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
-				}
+				//}
 			//}
 			
 		}
@@ -671,7 +671,8 @@ void SCR_UpdateScreen( void ) {
 		} else {
 			re.EndFrame( NULL, NULL );
 		}
-		
+
+		/*
 		if(ms - previousTime > 30) {
 			previousTime = ms;
 			if(!previousFrame) {
@@ -685,6 +686,7 @@ void SCR_UpdateScreen( void ) {
 			//CL_TakeVideoFrame();
 			//re.TakeVideoFrame( 2048, 2048, captureBuffer, encodeBuffer, qfalse );
 		}
+		*/
 
 	}
 
