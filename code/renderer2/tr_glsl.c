@@ -280,8 +280,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	//Q_strcat(dest, size,
 	//       va("#ifndef r_NormalScale\n#define r_NormalScale %f\n#endif\n", r_normalScale->value));
 
-
+#ifdef EMSCRIPTEN
 	Q_strcat(dest, size, "precision mediump float;\n");
+#endif
 
 	Q_strcat(dest, size, "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 
@@ -1274,7 +1275,7 @@ void GLSL_InitGPUShaders(void)
 	}
 #endif
 
-	attribs = ATTR_POSITION | ATTR_NORMAL;
+	attribs = ATTR_POSITION | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PCF\n#define USE_DISCARD\n");

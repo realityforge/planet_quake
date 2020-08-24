@@ -1706,7 +1706,7 @@ extern	cvar_t	*r_nocurves;
 extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
-extern cvar_t	*r_renderRefresh;		// optional display refresh option
+extern cvar_t	*r_displayRefresh;		// optional display refresh option
 
 extern  cvar_t  *r_ext_framebuffer_object;
 extern  cvar_t  *r_ext_texture_float;

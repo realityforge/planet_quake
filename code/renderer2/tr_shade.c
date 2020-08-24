@@ -1664,5 +1664,5 @@ void RB_EndSurface( void ) {
 	tess.numVertexes = 0;
 	tess.firstIndex = 0;
 
-//	ri.Printf(PRINT_DEVELOPER,  "----------\n" );
+//	GLimp_LogComment( "----------\n" );
 }

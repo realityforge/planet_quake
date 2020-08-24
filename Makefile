@@ -307,7 +307,9 @@ else # ifeq Linux
 ifeq ($(PLATFORM),darwin)
   HAVE_VM_COMPILED = 0
   USE_SDL = 1
-  USE_RENDERER_DLOPEN = 1
+	
+  USE_RENDERER_DLOPEN = 0
+  BUILD_RENDERER_OPENGL2 = 1
   USE_LOCAL_HEADERS = 0
   USE_CODEC_OPUS=0
   USE_CODEC_VORBIS=0
@@ -1178,6 +1180,10 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/rend1/q_shared.o \
     $(B)/rend1/puff.o \
     $(B)/rend1/q_math.o
+  Q3REND2OBJ += \
+    $(B)/rend2/q_shared.o \
+    $(B)/rend2/puff.o \
+    $(B)/rend2/q_math.o
 endif
 
 Q3RENDVOBJ = \
@@ -1241,7 +1247,7 @@ Q3RENDVOBJ = \
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3RENDVOBJ += \
-    $(B)/rend1/q_shared.o \
+    $(B)/rendv/q_shared.o \
     $(B)/rendv/puff.o \
     $(B)/rendv/q_math.o
 endif
@@ -1838,6 +1844,9 @@ $(B)/rend2/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend2/%.o: $(R2DIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendjs/glsl/%.c: $(RJSDIR)/glsl/%.glsl

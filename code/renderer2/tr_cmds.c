@@ -461,7 +461,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				}
 
 				{
+#ifdef EMSCRIPTEN
 					GLenum DrawBuffers[1] = {GL_NONE};
+#else
+					GLenum DrawBuffers[1] = {GL_FRONT};
+#endif
 					qglDrawBuffers( 1, DrawBuffers );
 					qglClear(GL_COLOR_BUFFER_BIT);
 				}
@@ -524,12 +528,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
+#ifdef EMSCRIPTEN
 				cmd->buffer = (int)GL_NONE;
+#else
+				cmd->buffer = (int)GL_FRONT;
+#endif
 			else
 				cmd->buffer = (int)GL_BACK;
 		}
 	}
-
+	
 	tr.refdef.stereoFrame = stereoFrame;
 }
 
