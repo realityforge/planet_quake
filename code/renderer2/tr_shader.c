@@ -37,7 +37,7 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
-qboolean mapShaders;
+static qboolean mapShaders;
 
 /*
 ================

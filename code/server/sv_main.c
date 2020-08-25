@@ -191,9 +191,14 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-	if(!Q_strncmp(cmd, "print", 5)) {
+#ifdef EMSCRIPTEN
+	// change the name of the command because both server and client have a print 
+	//   command and we don't want to accidentally execute the wrong one
+	if(!Q_strncmp(cmd, "print", 5)) { // q_print
 		Q_strncpyz( client->reliableCommands[ index ], va("q_%s", cmd), sizeof( client->reliableCommands[ index ] ) );
-	} else {
+	} else
+#endif
+	{
 		Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
 	}
 }

@@ -215,10 +215,10 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
-float dvrXScale = 0.5;
-float dvrYScale = 0.5;
-float dvrXOffset = 0.5;
-float dvrYOffset = 0.5;
+float dvrXScale = 1;
+float dvrYScale = 1;
+float dvrXOffset = 0;
+float dvrYOffset = 0;
 
 /*
 ** InitOpenGL
