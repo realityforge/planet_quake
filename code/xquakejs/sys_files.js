@@ -96,7 +96,7 @@ var LibrarySysFiles = {
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud[0-9]*\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
         // download required model and bot
-          || file.name.match(/sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
+          || file.name.match(/\.hit|sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
         // download the current map if it is referred to
           || (modelname.length > 0 && file.name.match(playerMatch))
           || (mapname.length > 0 && file.name.match(mapMatch))) {

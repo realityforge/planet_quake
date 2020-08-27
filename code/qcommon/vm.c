@@ -1340,7 +1340,12 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			}
 		}
 		
-		
+		if ( vm->crc32sum == 0x89688376 && vm->instructionCount == 202902 && vm->exactDataLength == 2910444 ) {
+			ip = buf + 0x1c5c8;
+			if(ip[2].op == OP_LEAVE && ip[2].value == 0x444) {
+				ip[0].op = OP_EQ;
+			}
+		}
 	}
 
 	if ( vm->index == VM_UI ) {
@@ -1364,7 +1369,6 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		}
 		
 		// skip auth check in urban terror, TODO: skip name check
-		// Com_Printf("crc32sum: 0x%08x, instructionCount: %i, exactDataLength: %i\n", vm->crc32sum, vm->instructionCount, vm->exactDataLength);
 		if ( vm->crc32sum == 0xe771cdf9 && vm->instructionCount == 101585 && vm->exactDataLength == 9162280 ) {
 			ip = buf + 0x149b - 2;
  			VM_IgnoreInstructions( &ip[2], 3 );
