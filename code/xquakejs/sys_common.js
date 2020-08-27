@@ -75,8 +75,10 @@ var LibrarySysCommon = {
 			var name = asset.replace(/^\//, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
 			var tryLinks = [
 				SYSC.addProtocol(SYSC.newDLURL) + '/' + name,
-				SYSC.addProtocol(SYSC.oldDLURL) + '/' + name,
 			]
+			if(SYSC.oldDLURL.length > 0) {
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + name)
+			}
 			// all of these test links are in case someone fucks up conversion or startup
 			var tryMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)[0]
 			var noMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)

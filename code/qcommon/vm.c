@@ -1344,6 +1344,8 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			ip = buf + 0x1c5c8;
 			if(ip[2].op == OP_LEAVE && ip[2].value == 0x444) {
 				ip[0].op = OP_EQ;
+				//VM_IgnoreInstructions( &ip[0], 4 );
+				//VM_IgnoreInstructions( &ip[0], 1 );
 			}
 		}
 	}

@@ -187,6 +187,7 @@ var LibrarySysFiles = {
     SYSF.fs_replace.sort((a, b) => b.source.length - a.source.length)
     var mapname = SYSC.Cvar_VariableString('mapname')
     var modelname = SYSC.Cvar_VariableString('model')
+    var playername = SYSC.Cvar_VariableString('name')
     var clcState = _CL_GetClientState()
     const blankFile = new Uint8Array(4)
     
@@ -239,14 +240,22 @@ var LibrarySysFiles = {
       if(fsMountPath != fs_basegame) {
         SYSN.DownloadIndex(fs_basegame, () => {
           SYSN.DownloadIndex(fsMountPath, () => {
-            SYSF.filterDownloads(mapname, modelname)
-            SYSF.downloadImmediately()
+            SYSN.DownloadIndex(fsMountPath + '/index-' + mapname + '.json', () => {
+              SYSN.DownloadIndex(fsMountPath + '/index-' + playername + '.json', () => {
+                SYSF.filterDownloads(mapname, modelname)
+                SYSF.downloadImmediately()
+              })
+            })
           })
         })
       } else {
         SYSN.DownloadIndex(fsMountPath, () => {
-          SYSF.filterDownloads(mapname, modelname)
-          SYSF.downloadImmediately()
+          SYSN.DownloadIndex(fsMountPath + '/index-' + mapname + '.json', () => {
+            SYSN.DownloadIndex(fsMountPath + '/index-' + playername + '.json', () => {
+              SYSF.filterDownloads(mapname, modelname)
+              SYSF.downloadImmediately()
+            })
+          })
         })
       }
     })

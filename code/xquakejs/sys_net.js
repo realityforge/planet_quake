@@ -164,7 +164,8 @@ var LibrarySysNet = {
 			})
 		},
 		DownloadIndex: function (index, cb) {
-			SYSC.DownloadAsset(index + '/index.json', SYSN.LoadingProgress, (err, data) => {
+      var filename = index.includes('.json') ? index : index + '/index.json'
+			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, (err, data) => {
 				if(err) {
 					SYSN.LoadingDescription('')
 					cb()
