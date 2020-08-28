@@ -76,7 +76,7 @@ var LibrarySysCommon = {
 			var tryLinks = [
 				SYSC.addProtocol(SYSC.newDLURL) + '/' + name,
 			]
-			if(SYSC.oldDLURL.length > 0) {
+			if(SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL) {
 				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + name)
 			}
 			// all of these test links are in case someone fucks up conversion or startup

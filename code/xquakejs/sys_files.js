@@ -130,11 +130,11 @@ var LibrarySysFiles = {
         }
       })
     },
-    downloadImmediately: function () {
+    downloadImmediately: function (cb) {
       var totals = []
       var progresses = []
       if(SYSN.downloads.length === 0) {
-        SYSF.downloadsDone()
+        cb()
         return
       }
       Promise.all(SYSN.downloads.map((file, i) => new Promise(resolve => {
@@ -155,11 +155,12 @@ var LibrarySysFiles = {
           resolve(file)
         })
         // save to drive
-      }))).then(SYSF.downloadsDone)
+      }))).then(cb)
     },
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
-  Sys_FS_Startup: function () {
+  Sys_FS_Startup: function (cb) {
+    if(!cb) cb = SYSF.downloadImmediately.bind(null, SYSF.downloadsDone)
     SYSF.fs_replace = []
     SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
@@ -237,27 +238,30 @@ var LibrarySysFiles = {
       */
 
       SYSN.downloads = []
+      var indexes = [
+        fs_basegame
+      ]
       if(fsMountPath != fs_basegame) {
-        SYSN.DownloadIndex(fs_basegame, () => {
-          SYSN.DownloadIndex(fsMountPath, () => {
-            SYSN.DownloadIndex(fsMountPath + '/index-' + mapname + '.json', () => {
-              SYSN.DownloadIndex(fsMountPath + '/index-' + playername + '.json', () => {
-                SYSF.filterDownloads(mapname, modelname)
-                SYSF.downloadImmediately()
-              })
-            })
-          })
-        })
-      } else {
-        SYSN.DownloadIndex(fsMountPath, () => {
-          SYSN.DownloadIndex(fsMountPath + '/index-' + mapname + '.json', () => {
-            SYSN.DownloadIndex(fsMountPath + '/index-' + playername + '.json', () => {
-              SYSF.filterDownloads(mapname, modelname)
-              SYSF.downloadImmediately()
-            })
-          })
-        })
+        indexes.push(fsMountPath)
       }
+      if(mapname.length > 0) {
+        indexes.push(fsMountPath + '/index-' + mapname + '.json')
+      }
+      if(playername.length > 0) {
+        indexes.push(fsMountPath + '/index-' + playername + '.json')
+      }
+      var current = 0
+      var download;
+      download = () => {
+        if(current < indexes.length) {
+          SYSN.DownloadIndex(indexes[current], download)
+          current++
+        } else {
+          SYSF.filterDownloads(mapname, modelname)
+          cb()
+        }
+      }
+      download()
     })
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
@@ -421,7 +425,21 @@ var LibrarySysFiles = {
 	},
 	Sys_Pwd: function () {
 		return allocate(intArrayFromString('/base'), 'i8', ALLOC_STACK)
-	}
+	},
+  Sys_FS_Offline: function () {
+    // call startup, it's idempotent and won't hurt to call multiple times in a row
+    _Sys_Startup(() => {
+      // but instead of calling filter, we add ALL files to download immediately
+      Object.keys(SYSF.index).forEach(k => {
+        SYSN.downloads.push(SYSF[k].name)
+      })
+      var filecount = SYSN.downloads.length
+      // download now, then report status
+      SYSF.downloadImmediately(() => {
+        SYSC.Print("Downloads finished: " + filecount + " files saved for offline.")
+      })
+    })
+  }
   // TODO: create an icon for the favicon so we know we did it right
   /*
   var buf = FS.readFile('/foo/bar')

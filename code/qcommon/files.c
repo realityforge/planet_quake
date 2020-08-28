@@ -4847,6 +4847,9 @@ void FS_Startup_After_Async( void )
  	Cmd_AddCommand( "which", FS_Which_f );
 	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
 	Cmd_AddCommand( "fs_restart", FS_Reload );
+#ifdef EMSCRIPTEN
+	Cmd_AddCommand( "offline", Sys_FS_Offline );
+#endif
 
 	// print the current search paths
 	//FS_Path_f();

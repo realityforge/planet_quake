@@ -2298,7 +2298,7 @@ static qboolean ParseShader( const char **text )
         }
       } else
       {
-        const char	*stageText = va("\nmap %s\n}", token);
+        const char	*stageText = va("\nmap %s.tga\n}", shader.name);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
           return qfalse;
@@ -3483,8 +3483,6 @@ static shader_t *FinishShader( void ) {
 	// determine which vertex attributes this shader needs
 	ComputeVertexAttribs();
   
-  ri.Printf(PRINT_DEVELOPER, "FinishShader: testing %s %i\n", shader.name, mapShaders);
-
 	return GeneratePermanentShader();
 }
 

@@ -43,7 +43,7 @@ Some of the major features currently implemented are:
   * Docker support
   * Removed SDL inputs, touch support on mobile works, copy/pase, .
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
-  * Offline mode for local and LAN games, just visit quake.games and TODO: run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
+  * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Server-side demos, recording for every client TheDoctor's method. Server-side demos, lrq3000 implementation recording entire server state and spectating playback. Cyrax' multiview protocol for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
@@ -59,7 +59,7 @@ Coming soon!
   * Shader palettes for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
-  * Brotli compression for game content from server
+  * Brotli compression for game content from server UDP downloads
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
   * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 from spearmint engine

@@ -58,7 +58,7 @@ async function convertAudio(inFile, project, output, noOverwrite) {
   mkdirpSync(path.dirname(outFile))
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   try {
-    execSync(`oggenc --quiet "${inFile}" -n "${outFile}"`, {stdio : 'pipe'})
+    execSync(`oggenc --downmix --resample 22050 --quiet "${inFile}" -n "${outFile}"`, {stdio : 'pipe'})
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }
