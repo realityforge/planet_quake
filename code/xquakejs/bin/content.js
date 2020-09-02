@@ -258,7 +258,7 @@ async function runContent() {
   if(runContentGeneration) {
     for(var i = 0; i < mountPoints.length; i++) {
       var absolute = pathToAbsolute(mountPoints[i][0])
-      await makeIndexJson(mountPoints[i][0], absolute + '/index.json')
+      await makeIndexJson(mountPoints[i][0], mountPoints[i][1] + '/index.json')
     }
   }
 }
