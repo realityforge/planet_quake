@@ -39,6 +39,7 @@ npm run repack [options] [mod directory]
   and anything else found with in the logs matching "R_FindImageFile could not find|Warning: Failed to load sound"
 --no-graph - skip graphing, just run the convert and put files back into pk3s like they were,
   works nicely with --virtual open on content server
+--pk3dir - divide up pk3s in to separate directories
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
@@ -108,6 +109,7 @@ var whitelist = {
   ]
 }
 
+var pk3dir = false
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -131,6 +133,9 @@ for(var i = 0; i < process.argv.length; i++) {
   if(ufs.existsSync(a) && ufs.statSync(a).isDirectory(a)) {
     mountPoints.push(a)
     continue
+  } else if(a == '--pk3dir') {
+    console.log('Separate pk3dirs')
+    pk3dir = true
   } else if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
     console.log(`Grouped edges by ${edges}`)
@@ -838,7 +843,7 @@ async function repackGames() {
           [0, stepCounter, stepTotal, STEPS['source']],
           [1, 0, 2, 'Sourcing files']
         ])
-        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite ? [] : false)
+        await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite ? [] : false, pk3dir)
         stepCounter++
       }
       if(!noGraph) {

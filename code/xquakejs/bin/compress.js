@@ -51,7 +51,7 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
       }
       for(var i = 0; i < index.length; i++) {
         var entry = index[i]
-        if(entry.isDirectory) continue
+        if(entry.isDirectory || entry.size === 0) continue
         var levelPath = path.join(outDirectory, entry.name)
         mkdirpSync(path.dirname(levelPath))
         await progress([[2, i, index.length, entry.name]])
@@ -81,7 +81,7 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
   return header
 }
 
-async function unpackPk3s(project, outCombined, progress, noOverwrite) {
+async function unpackPk3s(project, outCombined, progress, noOverwrite, pk3dir) {
   // pk3s are list mini filesystems overlayed on top of each other.
   //   The first time repack runs, it must overlap files, otherwise
   //   you will end up with the first qvm in pak0.pk3 instead of the
@@ -109,7 +109,9 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite) {
   pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
   for(var j = 0; j < pk3s.length; j++) {
     await progress([[1, j, pk3s.length, `${pk3s[j]}`]])
-    var outDirectory = outCombined //TODO: make optional? path.join(outCombined, path.basename(pk3s[j]) + 'dir')
+    var outDirectory = pk3dir 
+      ? path.join(outCombined, path.basename(pk3s[j]) + 'dir') 
+      : outCombined
     skipped += await readPak(path.join(project, pk3s[j]), progress, outDirectory,
       noOverwrite ? overwriteFirstTime : false)
     await progress([[2, false]])
