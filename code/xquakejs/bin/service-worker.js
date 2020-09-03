@@ -152,7 +152,7 @@ async function writeStore(value, key) {
     let storeValue = objStore.add(value, key)
     storeValue.onsuccess = resolve
     storeValue.onerror = error => {
-      console.error(error)
+      console.error(error, value, key)
       resolve(error)
     }
   })

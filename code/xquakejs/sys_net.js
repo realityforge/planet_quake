@@ -165,6 +165,7 @@ var LibrarySysNet = {
 		},
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
+      var basename = PATH.dirname(filename)
 			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, (err, data) => {
 				if(err) {
 					SYSN.LoadingDescription('')
@@ -181,7 +182,7 @@ var LibrarySysNet = {
             //   then it can be used by the engine to check for remote resources
             //   like FS_MapInIndex() or demos and cinematics files
             if(typeof obj[k.toLowerCase()].downloading == 'undefined') {
-              obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
+              obj[k.toLowerCase()].name = PATH.join(basename, moreIndex[k].name)
               obj[k.toLowerCase()].shaders = []
               obj[k.toLowerCase()].downloading = false
             }
@@ -191,7 +192,12 @@ var LibrarySysNet = {
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
 					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
 					+ '}')
-				FS.writeFile(PATH.join(SYSF.fs_basepath, PATH.dirname(filename), "index.json"),
+        var gameIndex = PATH.join(SYSF.fs_basepath, basename, "index.json")
+        SYSF.index[gameIndex.toLowerCase()] = {
+          name: gameIndex,
+          size: bits.length
+        }
+				FS.writeFile(gameIndex,
 				 	Uint8Array.from(bits.slice(0, bits.length-1)),
 					{encoding: 'binary', flags: 'w', canOwn: true })
 				cb()

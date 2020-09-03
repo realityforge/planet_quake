@@ -222,9 +222,14 @@ var LibrarySysFiles = {
 
       for(var i = 0; i < (SYSF.mods || []).length; i++) {
         var desc = PATH.join(fs_basepath, SYSF.mods[i][0], 'description.txt')
+        var prettyDesc = Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length-1))
         SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir'))
-        FS.writeFile(desc, Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length-1)), {
+        FS.writeFile(desc, prettyDesc, {
           encoding: 'binary', flags: 'w', canOwn: true })
+        SYSF.index[desc.toLowerCase()] = {
+          name: desc,
+          size: prettyDesc.length
+        }
       }
 
       // TODO: is this right? exit early without downloading anything so the server can force it instead
@@ -272,52 +277,39 @@ var LibrarySysFiles = {
         .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
       HEAP8[(SYSF.modeStr+2)] = 0
       var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
-      var exists = false
-      try { exists = HEAP8[(SYSF.modeStr+0)] === 'w'.charCodeAt(0)
-        || FS.lookupPath(filename) } catch (e) { exists = false }
-      if(exists) {
-        intArrayFromString(filename).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
-        HEAP8[(SYSF.pathname+filename.length)] = 0
-        handle = _fopen(SYSF.pathname, SYSF.modeStr)
-      }
-      //if(handle === 0) {
-        // use the index to make a case insensitive lookup
-        var indexFilename = filename.toLowerCase()
-        if(SYSF.index && typeof SYSF.index[indexFilename] != 'undefined') {
-          var altName = filename.substr(0, filename.length
-            - SYSF.index[indexFilename].name.length)
-            + SYSF.index[indexFilename].name
-          try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
-          if(handle === 0 && altName != filename && exists) {
-            intArrayFromString(altName).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
-            HEAP8[(SYSF.pathname+altName.length)] = 0
-            handle = _fopen(SYSF.pathname, SYSF.modeStr)
-            //if(handle > 0) {
-            //	return handle
-            //}
-          }
-          var loading = SYSC.Cvar_VariableString('r_loadingShader')
-          if(loading.length === 0) {
-            loading = SYSC.Cvar_VariableString('snd_loadingSound')
-            if(loading.length === 0) {
-              loading = SYSC.Cvar_VariableString('r_loadingModel')
-            }
-          } else if (!SYSF.index[indexFilename].shaders.includes(loading)) {
-            SYSF.index[indexFilename].shaders.push(loading)
-          }
-
-          if((handle === 0
-            || HEAP8[SYSF.cl_lazyLoad+8*4] === 2)
-            && !SYSF.index[indexFilename].downloading
-          /*&& !SYSF.index[indexFilename].alreadyDownloaded*/) {
-            if(SYSF.index[indexFilename].alreadyDownloaded)
-              SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
-            else
-              SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
-            SYSF.index[indexFilename].downloading = true
-          } 
+      // use the index to make a case insensitive lookup
+      var indexFilename = filename.toLowerCase()
+      if(SYSF.index && typeof SYSF.index[indexFilename] != 'undefined') {
+        var altName = filename.substr(0, filename.length
+          - SYSF.index[indexFilename].name.length)
+          + SYSF.index[indexFilename].name
+        var exists = false
+        try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
+        if(handle === 0 && exists) {
+          intArrayFromString(altName).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
+          HEAP8[(SYSF.pathname+altName.length)] = 0
+          handle = _fopen(SYSF.pathname, SYSF.modeStr)
         }
-      //}
+        var loading = SYSC.Cvar_VariableString('r_loadingShader')
+        if(loading.length === 0) {
+          loading = SYSC.Cvar_VariableString('snd_loadingSound')
+          if(loading.length === 0) {
+            loading = SYSC.Cvar_VariableString('r_loadingModel')
+          }
+        } else if (!SYSF.index[indexFilename].shaders.includes(loading)) {
+          SYSF.index[indexFilename].shaders.push(loading)
+        }
+
+        if((handle === 0
+          || HEAP8[SYSF.cl_lazyLoad+8*4] === 2)
+          && !SYSF.index[indexFilename].downloading) {
+          if(SYSF.index[indexFilename].alreadyDownloaded)
+            SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
+          else
+            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+          SYSF.index[indexFilename].downloading = true
+        }
+      }
     } catch (e) {
       // short for fstat check in sys_unix.c!!!
       if(e.code == 'ENOENT') {

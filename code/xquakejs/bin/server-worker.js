@@ -45,7 +45,8 @@ onmessage = function(e) {
     _Cbuf_AddText(cmd)
     _Cbuf_Execute()
   } else if(e.data[0] == 'net') {
-    SYSN.receiveNetLoop(e.data[1], e.data[2])
+    if(runIsFirst || initIsFirst)
+      SYSN.receiveNetLoop(e.data[1], e.data[2])
   } else {
     console.log('Command not found ', e.data)
   }
