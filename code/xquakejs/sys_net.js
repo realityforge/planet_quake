@@ -191,7 +191,7 @@ var LibrarySysNet = {
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
 					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
 					+ '}')
-				FS.writeFile(PATH.join(SYSF.fs_basepath, index, "index.json"),
+				FS.writeFile(PATH.join(SYSF.fs_basepath, PATH.dirname(filename), "index.json"),
 				 	Uint8Array.from(bits.slice(0, bits.length-1)),
 					{encoding: 'binary', flags: 'w', canOwn: true })
 				cb()
