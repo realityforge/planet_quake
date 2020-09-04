@@ -1469,6 +1469,14 @@ void R_Init( void ) {
 	int i;
 	byte *ptr;
 
+#ifdef EMSCRIPTEN
+	if(tr.defaultShader) {
+		// if already loaded, read new shaders but leave everything in memory
+		R_InitShaders();
+		return;
+	}
+#endif
+
 	ri.Printf( PRINT_ALL, "----- R_Init -----\n" );
 
 	// clear all our internal state

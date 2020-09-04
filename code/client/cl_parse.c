@@ -36,17 +36,17 @@ static const char *svc_strings[256] = {
 	"svc_EOF",
 	"svc_voipSpeex", // ioq3 extension
 	"svc_voipOpus",  // ioq3 extension
-	#ifdef USE_MV
-		NULL, // 11
-		NULL, // 12
-		NULL, // 13
-		NULL, // 14
-		NULL, // 15
-		"svc_multiview",  // 1.32e multiview extension
-	#ifdef USE_MV_ZCMD
-		"svc_zcmd",       // LZ-compressed version of svc_serverCommand
-	#endif
-	#endif
+#ifdef USE_MV
+	NULL, // 11
+	NULL, // 12
+	NULL, // 13
+	NULL, // 14
+	NULL, // 15
+	"svc_multiview",  // 1.32e multiview extension
+#ifdef USE_MV_ZCMD
+	"svc_zcmd",       // LZ-compressed version of svc_serverCommand
+#endif
+#endif
 };
 
 void SHOWNET( msg_t *msg, const char *s ) {
@@ -457,9 +457,9 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	SHOWNET( msg, "packet entities" );
 	CL_ParsePacketEntities( msg, old, &newSnap );
 
-	#ifdef USE_MV
+#ifdef USE_MV
 	} // !extended snapshot
-	#endif
+#endif
 
 	// if not valid, dump the entire thing now that it has
 	// been properly read

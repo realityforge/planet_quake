@@ -1074,6 +1074,7 @@ Also called by Com_Error
 =================
 */
 void CL_FlushMemory( void ) {
+
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
@@ -1122,9 +1123,7 @@ void CL_MapLoading( void ) {
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
-#ifndef EMSCRIPTEN
 		CL_Disconnect( qtrue, qfalse );
-#endif
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
@@ -1603,10 +1602,9 @@ static void CL_Connect_f( void ) {
 	char	buffer[ sizeof(cls.servername) ];  // same length as cls.servername
 	char	cmd_args[ sizeof(cl_reconnectArgs) ];
 	char	*server;	
+	const char	*serverString;
 	int		len;
 	int		argc;
-	const char	*serverString;
-
 
 	argc = Cmd_Argc();
 	family = NA_UNSPEC;
@@ -2239,6 +2237,8 @@ static void CL_DownloadsComplete( void ) {
 	//if ( !com_sv_running->integer )
 #ifndef EMSCRIPTEN
 	CL_FlushMemory();
+#else
+	re.BeginRegistration( &cls.glconfig );
 #endif
 
 	// initialize the CGame
@@ -2742,7 +2742,6 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			if (NET_CompareAdr(from, &cls.localServers[i].adr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
-Com_Printf("Comparing protocol %s %s\n", cls.localServers[i].adr.protocol, NET_AdrToStringwPort(&cls.localServers[i].adr));
 				if(!Q_stricmpn(cls.localServers[i].adr.protocol, "ws", 2)
 				 	|| !Q_stricmpn(cls.localServers[i].adr.protocol, "wss", 3)) {
 					websocket = qtrue;
@@ -3583,14 +3582,29 @@ static qboolean CL_IsMininized( void ) {
 /*
 ============
 CL_SetScaling
+
+Sets console chars height
 ============
 */
 static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
+
+	float scale;
+	int h;
+
+	// adjust factor proportionally to FullHD height (1080 pixels), with 1/16 granularity
+	h = (captureHeight * 16 / 1080);
+	scale = h / 16.0f;
+	if ( scale < 1.0f )
+		scale = 1.0f;
+
+	factor *= scale;
+
 	// set console scaling
 	smallchar_width = SMALLCHAR_WIDTH * factor;
 	smallchar_height = SMALLCHAR_HEIGHT * factor;
 	bigchar_width = BIGCHAR_WIDTH * factor;
 	bigchar_height = BIGCHAR_HEIGHT * factor;
+
 	// set custom capture resolution
 	cls.captureWidth = captureWidth;
 	cls.captureHeight = captureHeight;
@@ -3615,12 +3629,19 @@ static void CL_InitRef( void ) {
 	Com_Printf( "----- Initializing Renderer ----\n" );
 
 #ifdef USE_RENDERER_DLOPEN
-	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" ARCH_STRING DLL_EXT, cl_renderer->string );
+
+#if defined (__linux__) && defined(__i386__)
+#define REND_ARCH_STRING "x86"
+#else
+#define REND_ARCH_STRING ARCH_STRING
+#endif
+
+	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
 	if ( !rendererLib )
 	{
 		Cvar_ForceReset( "cl_renderer" );
-		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" ARCH_STRING DLL_EXT, cl_renderer->string );
+		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
 		if ( !rendererLib )
 		{
@@ -4244,28 +4265,6 @@ void CL_Init( void ) {
 	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
-	
-#ifdef EMSCRIPTEN
-	// connect client immediately
-	/*
-	// Useful for instantly connecting client to server, 
-	// not used in favor on \connect command
-	if(0 && !com_dedicated->integer) {
-		Q_strncpyz(cls.servername, "localhost", sizeof(cls.servername));
-		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_LOOPBACK );
-		cls.state = CA_CONNECTING;
-		Com_RandomBytes( (byte*)&clc.challenge, sizeof( clc.challenge ) );
-		CL_UpdateGUID(NULL, 0);
-		Netchan_Setup( NS_CLIENT, &clc.netchan, &clc.serverAddress,
-		  PORT_SERVER, clc.challenge, qtrue );
-		clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
-		clc.connectPacketCount = 0;
-		CL_CheckForResend();
-		
-	}
-	*/
-	
-#endif
 }
 
 

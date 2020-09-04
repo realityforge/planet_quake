@@ -41,6 +41,7 @@ typedef enum {
 	RSERR_OK,
 	RSERR_INVALID_FULLSCREEN,
 	RSERR_INVALID_MODE,
+	RSERR_FATAL_ERROR,
 	RSERR_UNKNOWN
 } rserr_t;
 
@@ -529,7 +530,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 GLimp_StartDriverAndSetMode
 ===============
 */
-static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
 {
 	rserr_t err;
 
@@ -548,7 +549,7 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 		if ( SDL_Init( SDL_INIT_VIDEO ) != 0 )
 		{
 			Com_Printf( "SDL_Init( SDL_INIT_VIDEO ) FAILED (%s)\n", SDL_GetError() );
-			return qfalse;
+			return RSERR_FATAL_ERROR;
 		}
 
 		driverName = SDL_GetCurrentVideoDriver();
@@ -580,15 +581,15 @@ static qboolean GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qbool
 	{
 		case RSERR_INVALID_FULLSCREEN:
 			Com_Printf( "...WARNING: fullscreen unavailable in this mode\n" );
-			return qfalse;
+			return err;
 		case RSERR_INVALID_MODE:
 			Com_Printf( "...WARNING: could not set the given mode (%d)\n", mode );
-			return qfalse;
+			return err;
 		default:
 			break;
 	}
 
-	return qtrue;
+	return RSERR_OK;
 }
 
 
@@ -602,6 +603,8 @@ of OpenGL
 */
 void GLimp_Init( glconfig_t *config )
 {
+	rserr_t err;
+
 #ifndef EMSCRIPTEN
 #ifndef _WIN32
 	InitSig();
@@ -624,17 +627,26 @@ void GLimp_Init( glconfig_t *config )
 #endif
 
 	// Create the window and set up the context
-	if ( !GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse ) )
+	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+	if ( err != RSERR_OK )
 	{
-		Com_Printf( "Setting r_mode %d failed, falling back on r_mode %d\n", r_mode->integer, 3 );
-		if ( !GLimp_StartDriverAndSetMode( 3, "", r_fullscreen->integer, qfalse ) )
+		if ( err == RSERR_FATAL_ERROR )
 		{
-			// Nothing worked, give up
 			Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
 			return;
 		}
-	}
 
+		if ( r_mode->integer != 3 || ( r_fullscreen->integer && atoi( r_modeFullscreen->string ) != 3 ) )
+		{
+			Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
+			if ( GLimp_StartDriverAndSetMode( 3, "", r_fullscreen->integer, qfalse ) != RSERR_OK )
+			{
+				// Nothing worked, give up
+				Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
+				return;
+			}
+		}
+	}
 #ifdef EMSCRIPTEN
 	Sys_GLContextCreated();
 #endif
@@ -691,6 +703,8 @@ of Vulkan
 */
 void VKimp_Init( glconfig_t *config )
 {
+	rserr_t err;
+
 #ifndef _WIN32
 #ifndef EMSCRIPTEN
 	InitSig();
@@ -708,10 +722,19 @@ void VKimp_Init( glconfig_t *config )
 	glw_state.config = config;
 
 	// Create the window and set up the context
-	if ( !GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qtrue ) )
+	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qtrue /* Vulkan */ );
+	if ( err != RSERR_OK )
 	{
+		if ( err == RSERR_FATAL_ERROR )
+		{
+			Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
+			return;
+		}
+
 		Com_Printf( "Setting r_mode %d failed, falling back on r_mode %d\n", r_mode->integer, 3 );
-		if ( !GLimp_StartDriverAndSetMode( 3, "", r_fullscreen->integer, qtrue ) )
+
+		err = GLimp_StartDriverAndSetMode( 3, "", r_fullscreen->integer, qtrue /* Vulkan */ );
+		if( err != RSERR_OK )
 		{
 			// Nothing worked, give up
 			Com_Error( ERR_FATAL, "VKimp_Init() - could not load Vulkan subsystem" );

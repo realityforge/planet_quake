@@ -969,6 +969,7 @@ void Cmd_CompleteWriteCfgName( char *args, int argNum ) {
 	}
 }
 
+
 /*
 ============
 Cmd_Init

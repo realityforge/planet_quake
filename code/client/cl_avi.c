@@ -79,6 +79,7 @@ byte *previousFrame;
 byte *captureBuffer;
 byte *encodeBuffer;
 
+
 /*
 ===============
 SafeFS_Write
@@ -639,10 +640,9 @@ CL_TakeVideoFrame
 */
 void CL_TakeVideoFrame( void )
 {
-
-  // AVI file isn't open
-  //if( !afd.fileOpen )
-	//	return;
+	// AVI file isn't open
+	if( !afd.fileOpen )
+		return;
 
 	re.TakeVideoFrame( afd.width, afd.height,
 		afd.cBuffer, afd.eBuffer, afd.motionJpeg );

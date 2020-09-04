@@ -507,10 +507,6 @@ LAN_MarkServerVisible
 ====================
 */
 static void LAN_MarkServerVisible(int source, int n, qboolean visible ) {
-	if(source == AS_LOCAL && !visible) {
-		Com_Printf("MarkServer: Error: should be visible\n");
-		return;
-	}
 	if (n == -1) {
 		int count = MAX_OTHER_SERVERS;
 		serverInfo_t *server = NULL;
@@ -787,7 +783,6 @@ The ui module is making a system call
 ====================
 */
 static intptr_t CL_UISystemCalls( intptr_t *args ) {
-	//Com_Printf("CL_UISystemCalls: %i\n", args[0]);
 	switch( args[0] ) {
 	case UI_ERROR:
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
