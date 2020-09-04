@@ -3774,9 +3774,6 @@ void Com_Init_After_Filesystem( void ) {
 	com_cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
 #endif
 
-	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CV_INTEGER);
-	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CV_INTEGER);
-
 	sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
 	sv_packetdelay = Cvar_Get ("sv_packetdelay", "0", CVAR_CHEAT);
 	com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);

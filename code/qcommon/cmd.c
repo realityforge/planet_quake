@@ -1006,4 +1006,7 @@ void Cmd_Init( void ) {
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
+
+	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CVAR_ARCHIVE | CV_INTEGER);
+	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);
 }
