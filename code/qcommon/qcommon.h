@@ -1162,6 +1162,8 @@ extern	cvar_t	*com_blood;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
+extern	cvar_t	*cl_execTimeout;
+extern	cvar_t	*cl_execOverflow;
 
 // both client and server must agree to pause
 extern	cvar_t	*sv_paused;
