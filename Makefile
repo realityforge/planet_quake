@@ -716,23 +716,23 @@ endif
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
-    -O1 --closure 0 --minify 0 -g -g3 \
+    -O1 -g3 \
 		-s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
-    --source-map-base http://localhost:8080/ \
     -frtti \
     -fPIC
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
-    -O3 -Oz -flto \
+    -O2 \
     -s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=0 \
     -s ASSERTIONS=0 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -frtti \
     -fPIC
 
 ifneq ($(USE_CODEC_OPUS),0)

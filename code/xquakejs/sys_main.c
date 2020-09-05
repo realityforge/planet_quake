@@ -296,7 +296,11 @@ void Sys_Exit( int code )
 #ifdef EMSCRIPTEN
 	Sys_PlatformExit( );
 	emscripten_cancel_main_loop();
+#ifdef NDEBUG // regular behavior
+	assert( code == 0 );
 #endif
+	emscripten_force_exit(code);
+#else
 #ifdef NDEBUG // regular behavior
 	// We can't do this 
 	//  as long as GL DLL's keep installing with atexit...
@@ -306,6 +310,7 @@ void Sys_Exit( int code )
 	// Give me a backtrace on error exits.
 	assert( code == 0 );
 	exit( code );
+#endif
 #endif
 }
 

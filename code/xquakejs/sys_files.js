@@ -83,14 +83,7 @@ var LibrarySysFiles = {
             SYSC.Error('fatal', e.message)
           }
         }
-        // temporary FIX
-        // TODO: remove this with when Async file system loading works,
-        //   renderer, client, deferred loading cg_deferPlayers|loaddeferred
-        // always download these files beforehand
-        if(file.name.match(/\.pk3dir/)) {
-          // create the directory to make sure it makes it in to Q3s search paths
-          SYSC.mkdirp(PATH.dirname(PATH.join(SYSF.fs_basepath, file.name)))
-        }
+
         if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
         // download files for menu system
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud[0-9]*\.txt|arenas\.txt/i)
@@ -334,11 +327,12 @@ var LibrarySysFiles = {
     try {
       contents = FS.readdir(directory)
         .filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
-      contents = contents.concat(Object.keys(SYSF.index)
+      /*contents = contents.concat(Object.keys(SYSF.index)
         .filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
           && (!dironly || typeof SYSF.index[k].size == 'undefined'))
         .map(k => PATH.basename(SYSF.index[k].name)))
         .filter((f, i, arr) => f && arr.indexOf(f) === i)
+      */
       if(directory.match(/\/demos/i)) {
         contents = contents
           .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))

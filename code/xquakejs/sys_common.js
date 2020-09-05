@@ -92,12 +92,12 @@ var LibrarySysCommon = {
 				dataType: 'arraybuffer',
 				onprogress: onprogress,
 				onload: (err, data) => {
+					tryDownload++
 					if(err && tryDownload < tryLinks.length) {
-						tryDownload++
 						doDownload(tryLinks[tryDownload])
-					} else {
-						onload(err, data)
+						return
 					}
+					onload(err, data)
 				}
 			})
 			doDownload(tryLinks[0])
@@ -233,7 +233,8 @@ var LibrarySysCommon = {
 			}
 			throw e
 		}
-	}
+	},
+	Sys_Debug: function () { debugger }
 };
 
 autoAddDeps(LibrarySysCommon, '$SYSC');

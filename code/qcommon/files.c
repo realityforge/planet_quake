@@ -4823,7 +4823,7 @@ void FS_Startup_After_Async( void )
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=506
 	// reorder the pure pk3 files according to server order
-	FS_ReorderPurePaks();
+	//FS_ReorderPurePaks();
 
 	FS_SetMapIndex( "" );
 
@@ -5900,12 +5900,12 @@ static void FS_SetMapIndex(const char *mapname) {
 						if(bspext) {
 							key[strlen(key) - 4] = '\0';
 						}
-						fs_mapPakNames[mpi] = CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
+						fs_mapPakNames[mpi] = FS_CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
 						Q_strlwr(fs_mapPakNames[mpi]);
-						mpi++;
 						if ( fs_debug->integer ) {
 							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
 						}
+						mpi++;
 					}
 				} else if(isKey) {
 					key[ki] = buf[i];
