@@ -3181,7 +3181,9 @@ CL_NoDelay
 qboolean CL_NoDelay( void )
 {
 	extern cvar_t *com_timedemo;
-
+#ifdef EMSCRIPTEN
+	return qfalse;
+#endif
 	if ( CL_VideoRecording() || ( com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
 		return qtrue;
 	

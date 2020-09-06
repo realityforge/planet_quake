@@ -729,10 +729,10 @@ endif
     -O2 \
     -s WASM=1 \
     -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=0 \
+    -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
-    -frtti \
+    -flto \
     -fPIC
 
 ifneq ($(USE_CODEC_OPUS),0)

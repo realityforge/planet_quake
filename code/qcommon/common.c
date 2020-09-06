@@ -3694,7 +3694,7 @@ void Com_Init( char *commandLine ) {
 	FS_InitFilesystem();
 
 #ifdef EMSCRIPTEN
-Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
+	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
 }
 
 void Com_Init_After_Filesystem( void ) {
@@ -3724,6 +3724,8 @@ void Com_Init_After_Filesystem( void ) {
 #endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
+
+	FS_SetMapIndex( "" );
 
 	// if any archived cvars are modified after this, we will trigger a writing
 	// of the config file

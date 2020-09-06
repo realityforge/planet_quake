@@ -359,7 +359,7 @@ static int		fs_numServerReferencedPaks;
 static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_REF_PAKS];		// checksums
 static char		*fs_serverReferencedPakNames[MAX_REF_PAKS];	// pk3 names
-static char		*fs_mapPakNames[MAX_REF_PAKS];		// pk3 names
+static char		*fs_mapPakNames[MAX_REF_PAKS*10];		// pk3 names
 
 int	fs_lastPakIndex;
 
@@ -370,7 +370,6 @@ FILE*		missingFiles = NULL;
 void Com_AppendCDKey( const char *filename );
 void Com_ReadCDKey( const char *filename );
 
-static void FS_SetMapIndex(const char *mapname);
 static qboolean FS_InMapIndex(const char *filename);
 static qboolean FS_IsExt( const char *filename, const char *ext, size_t namelen );
 static int FS_GetModList( char *listbuf, int bufsize );
@@ -819,12 +818,6 @@ qboolean FS_FileExists( const char *file )
 		fclose( f );
 		return qtrue;
 	}
-
-	len = strlen(file);
-	if(FS_IsExt(file, ".bsp", len) && FS_InMapIndex(file)) {
-		return 1;
-	}
-	// TODO: add videos and demos here InIndex()
 
 	return qfalse;
 }
@@ -1673,7 +1666,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		} else if ( search->dir && search->policy != DIR_DENY ) {
 			// check a file in the directory tree
 			dir = search->dir;
-
+Com_Printf("FS_FOpenFileRead: Searching path %s/%s\n", dir->gamedir, filename);
 			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
 
 			temp = Sys_FOpen( netpath, "rb" );
@@ -4825,8 +4818,6 @@ void FS_Startup_After_Async( void )
 	// reorder the pure pk3 files according to server order
 	//FS_ReorderPurePaks();
 
-	FS_SetMapIndex( "" );
-
 	// get the pure checksums of the pk3 files loaded by the server
 	FS_LoadedPakPureChecksums();
 
@@ -5864,7 +5855,7 @@ void *FS_LoadLibrary( const char *name )
 	return libHandle;
 }
 
-static void FS_SetMapIndex(const char *mapname) {
+void FS_SetMapIndex(const char *mapname) {
 	int r, i, ki = 0, level = 0, mpi = 0;
 	fileHandle_t indexfile;
 	char buf[MAX_OSPATH], key[MAX_OSPATH];
@@ -5895,7 +5886,9 @@ static void FS_SetMapIndex(const char *mapname) {
 					isKey = qfalse;
 					key[ki] = 0;
 					ki = 0;
-					if(Q_stristr(key, "maps/") != NULL && (Q_stristr(key, "pak9") != NULL || Q_stristr(key, ".bsp") != NULL)) {
+					if(mpi < MAX_REF_PAKS * 10 && Q_stristr(key, "maps/") != NULL
+					 	&& (Q_stristr(key, "pak9") != NULL
+						|| Q_stristr(key, ".bsp") != NULL)) {
 						const char *bspext = Q_stristr(key, ".bsp");
 						if(bspext) {
 							key[strlen(key) - 4] = '\0';
@@ -5903,7 +5896,7 @@ static void FS_SetMapIndex(const char *mapname) {
 						fs_mapPakNames[mpi] = FS_CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
 						Q_strlwr(fs_mapPakNames[mpi]);
 						if ( fs_debug->integer ) {
-							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
+							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi] );
 						}
 						mpi++;
 					}
@@ -5939,7 +5932,7 @@ static qboolean FS_InMapIndex(const char *filename) {
 	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
-		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
+		if(Q_stristr(fs_mapPakNames[i], mapname)) {
 			if ( fs_debug->integer ) {
 				Com_Printf( "FS_InMapIndex: Map in index %s\n", mapname );
 			}

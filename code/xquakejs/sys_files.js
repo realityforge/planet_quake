@@ -66,7 +66,11 @@ var LibrarySysFiles = {
       for(var i = 0; i < keys.length; i++) {
         var file = SYSF.index[keys[i]]
         if(typeof file.size == 'undefined') { // create a directory
-          SYSC.mkdirp(PATH.join(SYSF.fs_basepath, file.name))
+          try {
+            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, file.name))
+          } catch (e) {
+            debugger
+          }
           continue
         }
       
@@ -138,6 +142,7 @@ var LibrarySysFiles = {
           SYSN.LoadingProgress(++total, SYSN.downloads.length)
           if(err) return resolve(err)
           try {
+            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
             FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
               encoding: 'binary', flags: 'w', canOwn: true })
           } catch (e) {
@@ -206,7 +211,7 @@ var LibrarySysFiles = {
     // read from drive
     FS.syncfs(true, function (err) {
       if (err) {
-        console.warn(err.message)
+        console.error(err)
       }
 
       SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
@@ -325,14 +330,22 @@ var LibrarySysFiles = {
     
     var contents;
     try {
-      contents = FS.readdir(directory)
-        .filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
-      /*contents = contents.concat(Object.keys(SYSF.index)
+      //contents = FS.readdir(directory)
+      contents = Object.keys(SYSF.index)
         .filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
           && (!dironly || typeof SYSF.index[k].size == 'undefined'))
-        .map(k => PATH.basename(SYSF.index[k].name)))
+        .map(k => PATH.basename(SYSF.index[k].name))
         .filter((f, i, arr) => f && arr.indexOf(f) === i)
-      */
+        .filter(f => {
+          try {
+            var stat = FS.stat(PATH.join(directory, f))
+            return !dironly && stat || FS.isDir(stat.mode)
+          } catch (e) {
+            if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+              throw e
+            }
+          }
+        })
       if(directory.match(/\/demos/i)) {
         contents = contents
           .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
@@ -340,10 +353,11 @@ var LibrarySysFiles = {
       }
       if(contents.length > 5000) {
         debugger
+        return null
       }
     } catch (e) {
       {{{ makeSetValue('numfiles', '0', '0', 'i32') }}};
-      return null;
+      return null
     }
 
     var matches = [];
@@ -355,14 +369,14 @@ var LibrarySysFiles = {
         || (ext.match(/dm_68/i) && name.lastIndexOf('svdm_68') === (name.length - 7))
         || (ext.match(/dm_68/i) && name.lastIndexOf('dm_71') === (name.length - 5))
       ) {
-        matches.push(contents[i]);
+        matches.push(contents[i])
       }
     }
 
     {{{ makeSetValue('numfiles', '0', 'matches.length', 'i32') }}};
 
     if (!matches.length) {
-      return null;
+      return null
     }
 
     // return a copy of the match list
