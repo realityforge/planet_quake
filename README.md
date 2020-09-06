@@ -41,7 +41,8 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
-  * Removed SDL inputs, touch support on mobile works, copy/pase, .
+  * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned
+  * Removed SDL inputs, touch support on mobile works, copy/pase, TODO: drag and drop for loading local custom content
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable.
@@ -69,7 +70,7 @@ Coming soon!
   * Push notifications through web browser for pickup matches
   * Procedurally generated game content and maps
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
-  * Many BSP formats support and cross compatibility with other game content like Call of Duty and Savage
+  * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
   * Server moderator permissions, admins can set sv_modCmds and sv_modCvars to allow moderator passwords modpassword1-3 to only change specific settings, like maps, bans, allowing voting, but not change games like fs_basepath and fs_game.
   * Updated WebGL renderer

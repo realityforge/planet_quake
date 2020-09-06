@@ -248,10 +248,10 @@ var LibrarySysFiles = {
         indexes.push(fsMountPath)
       }
       if(mapname.length > 0) {
-        indexes.push(fsMountPath + '/index-' + mapname + '.json')
+        indexes.push(fsMountPath + '/index-' + mapname.toLowerCase() + '.json')
       }
       if(playername.length > 0) {
-        indexes.push(fsMountPath + '/index-' + playername + '.json')
+        indexes.push(fsMountPath + '/index-' + playername.toLowerCase() + '.json')
       }
       var current = 0
       var download;

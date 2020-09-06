@@ -89,6 +89,7 @@ var LibrarySysMain = {
       if(navigator && navigator.userAgent
         && navigator.userAgent.match(/mobile/i)) {
         args.unshift.apply(args, [
+          '+set', 'com_hunkMegs', '96',
           '+set', 'in_joystick', '1',
           '+set', 'in_nograb', '1',
           '+set', 'in_mouse', '0',
