@@ -1666,7 +1666,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 		} else if ( search->dir && search->policy != DIR_DENY ) {
 			// check a file in the directory tree
 			dir = search->dir;
-Com_Printf("FS_FOpenFileRead: Searching path %s/%s\n", dir->gamedir, filename);
+
 			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
 
 			temp = Sys_FOpen( netpath, "rb" );
