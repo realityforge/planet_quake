@@ -4816,7 +4816,7 @@ void FS_Startup_After_Async( void )
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=506
 	// reorder the pure pk3 files according to server order
-	//FS_ReorderPurePaks();
+	FS_ReorderPurePaks();
 
 	// get the pure checksums of the pk3 files loaded by the server
 	FS_LoadedPakPureChecksums();
