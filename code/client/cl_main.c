@@ -2238,7 +2238,7 @@ static void CL_DownloadsComplete( void ) {
 #ifndef EMSCRIPTEN
 	CL_FlushMemory();
 #else
-	re.BeginRegistration( &cls.glconfig );
+	re.LoadShaders();
 #endif
 
 	// initialize the CGame

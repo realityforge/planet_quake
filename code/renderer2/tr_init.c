@@ -1469,14 +1469,6 @@ void R_Init( void ) {
 	int i;
 	byte *ptr;
 
-#ifdef EMSCRIPTEN
-	if(tr.defaultShader) {
-		// if already loaded, read new shaders but leave everything in memory
-		R_InitShaders();
-		return;
-	}
-#endif
-
 	ri.Printf( PRINT_ALL, "----- R_Init -----\n" );
 
 	// clear all our internal state
@@ -1667,6 +1659,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.Shutdown = RE_Shutdown;
 
+	re.LoadShaders = RE_LoadShaders;
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
 	re.UpdateModel = R_UpdateModel;

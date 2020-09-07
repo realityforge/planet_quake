@@ -4347,6 +4347,10 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qfalse;
 }
 
+void RE_LoadShaders( void ) {
+  ScanAndLoadShaderFiles();
+}
+
 /*
 ==================
 R_InitShaders
@@ -4355,8 +4359,7 @@ R_InitShaders
 void R_InitShaders( void ) {
 	ri.Printf( PRINT_ALL, "Initializing Shaders\n" );
 
-  if(tr.numShaders == 0)
-	 Com_Memset(hashTable, 0, sizeof(hashTable));
+  Com_Memset(hashTable, 0, sizeof(hashTable));
 
 	CreateInternalShaders();
 
