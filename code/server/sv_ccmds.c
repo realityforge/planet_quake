@@ -172,6 +172,11 @@ static void SV_Map_f( void ) {
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
+	if(len == -1) {
+		if(FS_InMapIndex(expanded)) {
+			len = 1;
+		}
+	}
 	FS_RestorePure();
 	if ( len == -1 ) {
 		Com_Printf( "Can't find map %s\n", expanded );

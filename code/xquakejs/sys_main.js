@@ -115,7 +115,15 @@ var LibrarySysMain = {
             '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
         }
-        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+        if(window.location.hostname.match(/lvl\.quake\.games/i)) {
+          args.push.apply(args, [
+            '+set', 'com_maxfps', '30',
+            '+set', 'net_enable', '0',
+            '+set', 'cg_drawGun', '0',
+            '+set', 'cg_simpleItems', '0',
+            '+exec', 'lvl-default.cfg',
+          ])
+        } else if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
             args.push.apply(args, [
               '+set', 'net_socksServer', window.location.hostname,
@@ -126,13 +134,14 @@ var LibrarySysMain = {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
               '+set', 'fs_game', match[1],
+              '+exec', match[1] + '-default.cfg',
             ])
           }
           if (!args.includes('+map') && !args.includes('+spmap')
             && !args.includes('+devmap') && !args.includes('+spdevmap') 
             && !args.includes('+connect')) {
             args.push.apply(args, [
-              '+connect', window.location.hostname
+              '+connect', window.location.hostname,
             ])
           }
         } else if (!args.includes('net_socksServer')) {

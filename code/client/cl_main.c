@@ -2024,27 +2024,6 @@ static void CL_Snd_Restart_f( void )
 	//CL_Vid_Restart();
 }
 
-
-/*
-==================
-CL_PK3List_f
-==================
-*/
-void CL_OpenedPK3List_f( void ) {
-	Com_Printf("Opened PK3 Names: %s\n", FS_LoadedPakNames());
-}
-
-
-/*
-==================
-CL_PureList_f
-==================
-*/
-static void CL_ReferencedPK3List_f( void ) {
-	Com_Printf( "Referenced PK3 Names: %s\n", FS_ReferencedPakNames() );
-}
-
-
 /*
 ==================
 CL_Configstrings_f
@@ -4231,8 +4210,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("ping", CL_Ping_f );
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
-	Cmd_AddCommand ("fs_openedList", CL_OpenedPK3List_f );
-	Cmd_AddCommand ("fs_referencedList", CL_ReferencedPK3List_f );
 	Cmd_AddCommand ("model", CL_SetModel_f );
 	Cmd_AddCommand ("video", CL_Video_f );
 	Cmd_AddCommand ("video-pipe", CL_Video_f );

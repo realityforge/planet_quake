@@ -4277,7 +4277,7 @@ CreateInternalShaders
 ====================
 */
 static void CreateInternalShaders( void ) {
-	//tr.numShaders = 0;
+	tr.numShaders = 0;
 
 	// init the default shader
 	InitShader( "<default>", LIGHTMAP_NONE );

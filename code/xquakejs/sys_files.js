@@ -339,7 +339,7 @@ var LibrarySysFiles = {
         .filter(f => {
           try {
             var stat = FS.stat(PATH.join(directory, f))
-            return !dironly && stat || FS.isDir(stat.mode)
+            return stat && (!dironly || FS.isDir(stat.mode))
           } catch (e) {
             if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
               throw e

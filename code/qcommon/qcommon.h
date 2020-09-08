@@ -847,6 +847,7 @@ typedef	off_t  fileOffset_t;
 qboolean FS_Initialized( void );
 
 void	FS_InitFilesystem ( void );
+qboolean	FS_InMapIndex ( const char *filename );
 void	FS_SetMapIndex ( const char *mapname );
 void	FS_Shutdown( qboolean closemfp );
 

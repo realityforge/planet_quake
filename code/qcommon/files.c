@@ -370,7 +370,6 @@ FILE*		missingFiles = NULL;
 void Com_AppendCDKey( const char *filename );
 void Com_ReadCDKey( const char *filename );
 
-static qboolean FS_InMapIndex(const char *filename);
 static qboolean FS_IsExt( const char *filename, const char *ext, size_t namelen );
 static int FS_GetModList( char *listbuf, int bufsize );
 static void FS_CheckIdPaks( void );
@@ -1624,13 +1623,17 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					fclose( temp );
 					return length;
 				}
+				length = strlen(netpath);
+				if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(netpath)) {
+					return 1;
+				}
 			}
 		}
 		
-		length = strlen(filename);
-		if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(filename)) {
-			return 1;
-		}
+		//length = strlen(filename);
+		//if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(filename)) {
+		//	return 1;
+		//}
 		
 		return -1;
 	}
@@ -4714,6 +4717,26 @@ qboolean FS_IsPureChecksum( int sum )
 
 
 /*
+==================
+CL_PK3List_f
+==================
+*/
+void FS_OpenedPK3List_f( void ) {
+	Com_Printf("Opened PK3 Names: %s\n", FS_LoadedPakNames());
+}
+
+
+/*
+==================
+CL_PureList_f
+==================
+*/
+static void FS_ReferencedPK3List_f( void ) {
+	Com_Printf( "Referenced PK3 Names: %s\n", FS_ReferencedPakNames() );
+}
+
+
+/*
 ================
 FS_Startup
 ================
@@ -4841,6 +4864,8 @@ void FS_Startup_After_Async( void )
 #ifdef EMSCRIPTEN
 	Cmd_AddCommand( "offline", Sys_FS_Offline );
 #endif
+	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
+	Cmd_AddCommand ("fs_referencedList", FS_ReferencedPK3List_f );
 
 	// print the current search paths
 	//FS_Path_f();
@@ -5486,6 +5511,12 @@ void FS_Restart_After_Async( void ) {
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
 }
 
+#ifdef EMSCRIPTEN
+void FS_Reload_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, FS_Restart_After_Async);
+}
+#endif
 
 /*
 =================
@@ -5495,6 +5526,9 @@ FS_Reload
 void FS_Reload( void ) 
 {
 	FS_Restart( fs_checksumFeed );
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(Sys_FS_Shutdown, FS_Reload_After_Shutdown);
+#endif
 }
 
 
@@ -5889,11 +5923,11 @@ void FS_SetMapIndex(const char *mapname) {
 					if(mpi < MAX_REF_PAKS * 10 && Q_stristr(key, "maps/") != NULL
 					 	&& (Q_stristr(key, "pak9") != NULL
 						|| Q_stristr(key, ".bsp") != NULL)) {
-						const char *bspext = Q_stristr(key, ".bsp");
-						if(bspext) {
-							key[strlen(key) - 4] = '\0';
-						}
-						fs_mapPakNames[mpi] = FS_CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
+						//const char *bspext = Q_stristr(key, ".bsp");
+						//if(bspext) {
+						//	key[strlen(key) - 4] = '\0';
+						//}
+						fs_mapPakNames[mpi] = FS_CopyString( key );
 						Q_strlwr(fs_mapPakNames[mpi]);
 						if ( fs_debug->integer ) {
 							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi] );
@@ -5912,7 +5946,7 @@ void FS_SetMapIndex(const char *mapname) {
 	}
 }
 
-static qboolean FS_InMapIndex(const char *filename) {
+qboolean FS_InMapIndex(const char *filename) {
 	int			i, len, extpos, start;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
@@ -5924,7 +5958,7 @@ static qboolean FS_InMapIndex(const char *filename) {
 	len -= extpos;
 	start = 0;
 	if(Q_stristr(filename, "maps/")) {
-		start = 5;
+		start = Q_stristr(filename, "maps/") - filename + 5;
 	}
 	if(len - start < 1) {
 		return qfalse;
@@ -5932,7 +5966,7 @@ static qboolean FS_InMapIndex(const char *filename) {
 	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
-		if(Q_stristr(fs_mapPakNames[i], mapname)) {
+		if(Q_stristr(fs_mapPakNames[i], filename)) {
 			if ( fs_debug->integer ) {
 				Com_Printf( "FS_InMapIndex: Map in index %s\n", mapname );
 			}

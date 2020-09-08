@@ -1016,22 +1016,6 @@ void SV_Shutdown( const char *finalmsg ) {
 		}
 	}
 
-/*
-#ifdef EMSCRIPTEN
-	// Local server is "always on"
-	if(!svShuttingDown) {
-		svShuttingDown = qtrue;
-		startingServer = qfalse;
-		SV_ShutdownGameProgs();
-		Cvar_Set( "sv_running", "0" );
-		svs.initialized = qfalse;
-		Cmd_Clear();
-		Cbuf_AddText("spmap q3dm0\n");
-		return;
-	}
-#endif
-*/
-
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();
 #endif
@@ -1056,6 +1040,20 @@ void SV_Shutdown( const char *finalmsg ) {
 	}
 
 	SV_SaveRecordCache();
+#endif
+
+#ifdef EMSCRIPTEN
+	// Local server is "always on"
+	if(!svShuttingDown) {
+		svShuttingDown = qtrue;
+		startingServer = qfalse;
+		SV_ShutdownGameProgs();
+		Cvar_Set( "sv_running", "0" );
+		svs.initialized = qfalse;
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		return;
+	}
 #endif
 
 	SV_RemoveOperatorCommands();
@@ -1109,6 +1107,6 @@ void SV_Shutdown( const char *finalmsg ) {
 
 #ifdef EMSCRIPTEN
 	Cmd_Clear();
-	Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
+	Cbuf_AddText(va("spmap q3dm0\n"));
 #endif
 }
