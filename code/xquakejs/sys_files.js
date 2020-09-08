@@ -67,7 +67,7 @@ var LibrarySysFiles = {
         var file = SYSF.index[keys[i]]
         if(typeof file.size == 'undefined') { // create a directory
           try {
-            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, file.name))
+          //  SYSC.mkdirp(PATH.join(SYSF.fs_basepath, file.name))
           } catch (e) {
             debugger
           }
