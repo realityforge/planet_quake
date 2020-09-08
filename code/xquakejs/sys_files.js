@@ -470,6 +470,9 @@ if(typeof IDBFS != 'undefined') {
     }
   }
   IDBFS.storeLocalEntry = function(path, entry, callback) {
+    if(path.includes('http')) {
+      debugger
+    }
     try {
       if (FS.isDir(entry['mode'])) {
         FS.mkdir(path, entry['mode'])

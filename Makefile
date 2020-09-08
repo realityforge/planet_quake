@@ -726,7 +726,7 @@ endif
     -fPIC
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
-    -O2 \
+    -O3 -Oz \
     -s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \

@@ -103,7 +103,7 @@ var LibrarySysCommon = {
 			doDownload(tryLinks[0])
 		},
 		mkdirp: function (p) {
-			if(p.includes('http:')) {
+			if(p.includes('http')) {
 				debugger
 			}
 			try {
