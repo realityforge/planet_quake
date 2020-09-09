@@ -4,6 +4,7 @@ var LibrarySysCommon = {
 		varStr: 0,
 		oldDLURL: null,
 		newDLURL: null,
+		returnURL: null,
 		Cvar_VariableString: function (str) {
 			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
 			HEAP8[(SYSC.varStr+str.length)] = 0

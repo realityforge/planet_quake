@@ -116,11 +116,15 @@ var LibrarySysMain = {
           ])
         }
         if(window.location.hostname.match(/lvl\.quake\.games/i)) {
+          var detectMapId = ((/(&|\?|\/)id[:=]([0-9]+)($|[^0-9])/igm)
+            .exec(window.location.search)[2] || '')
           args.push.apply(args, [
             '+set', 'com_maxfps', '30',
             '+set', 'net_enable', '0',
             '+set', 'cg_drawGun', '0',
             '+set', 'cg_simpleItems', '0',
+            '+set', 'cg_draw2D', '0',
+            '+set', 'cl_returnURL', '"https://lvlworld.com/review/id:' + detectMapId + '"',
             '+exec', 'lvl-default.cfg',
           ])
         } else if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
@@ -234,6 +238,7 @@ var LibrarySysMain = {
     window.addEventListener('resize', SYSM.resizeViewport)
   },
   Sys_PlatformExit: function () {
+    SYSC.returnURL = SYSC.Cvar_VariableString('cl_returnURL')
     if(SYSN.lazyInterval)
       clearInterval(SYSN.lazyInterval)
     /*
@@ -265,6 +270,9 @@ var LibrarySysMain = {
 
     if (Module['canvas']) {
       Module['canvas'].remove()
+    }
+    if(SYSC.returnURL) {
+      window.location = SYSC.returnURL
     }
     if(typeof Module.exitHandler != 'undefined') {
       Module.exitHandler()

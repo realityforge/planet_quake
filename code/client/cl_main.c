@@ -58,6 +58,7 @@ void CL_Multiview_f( void );
 void CL_MultiviewFollow_f( void );
 #endif
 
+cvar_t  *cl_returnURL;
 cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
 cvar_t	*cl_mapAutoDownload;
@@ -1224,6 +1225,9 @@ This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
+#ifdef EMSCRIPTEN
+	netadr_t	addr;
+#endif
 	
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return cl_restarted;
@@ -1291,21 +1295,25 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	}
 
 #ifdef EMSCRIPTEN
-	netadr_t	addr;
-	NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
-	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
-		//cls.state = CA_CONNECTED;
-		Key_SetCatcher((Key_GetCatcher() ^ KEYCATCH_CGAME) | KEYCATCH_UI);
-		if(!dropped && !cls.postgame) {
-			// skip disconnecting and just show the main menu
-			noGameRestart = qtrue;
-			cl_restarted = qtrue;
-			cl_disconnecting = qfalse;
-			return cl_restarted;
-		} else if (cls.postgame) {
-			Cbuf_AddText("map_restart;");
-			Cbuf_Execute();
+	{
+		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
+		if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
+			//cls.state = CA_CONNECTED;
+			Key_SetCatcher((Key_GetCatcher() ^ KEYCATCH_CGAME) | KEYCATCH_UI);
+			if(!dropped && !cls.postgame) {
+				// skip disconnecting and just show the main menu
+				noGameRestart = qtrue;
+				cl_restarted = qtrue;
+				cl_disconnecting = qfalse;
+				return cl_restarted;
+			} else if (cls.postgame) {
+				Cbuf_AddText("map_restart;");
+				Cbuf_Execute();
+			}
 		}
+	}
+	if(showMainMenu && cl_returnURL->string[0]) {
+		Cbuf_AddText("quit;");
 	}
 #else
 #endif
@@ -1696,7 +1704,7 @@ static void CL_Connect_f( void ) {
 	}
 #endif
 	noGameRestart = qtrue;
-	CL_Disconnect( qtrue, qtrue );
+	CL_Disconnect( qfalse, qtrue );
 
 	Con_Close();
 
@@ -4116,6 +4124,7 @@ void CL_Init( void ) {
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
+	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );
