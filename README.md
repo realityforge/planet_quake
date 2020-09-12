@@ -41,7 +41,7 @@ Some of the major features currently implemented are:
   * Various graphs of mods, including file names for repacked content
   * PNG support
   * Docker support
-  * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned
+  * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
   * Removed SDL inputs, touch support on mobile works, copy/pase, TODO: drag and drop for loading local custom content
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)

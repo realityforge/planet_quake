@@ -451,6 +451,7 @@ void Com_Quit_f( void ) {
 #ifndef EMSCRIPTEN
 	Sys_Quit ();
 #else
+	emscripten_cancel_main_loop();
 	Com_Frame_Callback(Sys_FS_Shutdown, Sys_Quit);
 #endif
 }

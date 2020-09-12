@@ -73,6 +73,10 @@ void GLimp_Shutdown( qboolean unloadDLL )
 
 	if ( unloadDLL )
 		SDL_QuitSubSystem( SDL_INIT_VIDEO );
+#ifdef EMSCRIPTEN
+	if(unloadDLL)
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+#endif
 }
 
 
@@ -572,7 +576,7 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		}
 		SDL_GL_GetDrawableSize( SDL_window, &glw_state.config->vidWidth, &glw_state.config->vidHeight );
 		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
-		return qtrue;
+		return RSERR_OK;
 	}
 
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );

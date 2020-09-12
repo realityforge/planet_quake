@@ -295,7 +295,6 @@ void Sys_Exit( int code )
 
 #ifdef EMSCRIPTEN
 	Sys_PlatformExit( );
-	emscripten_cancel_main_loop();
 	emscripten_force_exit(code);
 	return;
 #endif

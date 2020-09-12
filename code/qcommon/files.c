@@ -3126,6 +3126,9 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 
 	fs_numHeaderLongs = 0;
 	fs_headerLongs[ fs_numHeaderLongs++ ] = LittleLong( fs_checksumFeed );
+	//if(Q_stristr(zipfile, "pak1")) {
+	//	Com_Printf("HeaderLong: %i", fs_headerLongs[0]);
+	//}
 
 	Com_Memcpy( pack->pakFilename, zipfile, fileNameLen );
 	Com_Memcpy( pack->pakBasename, basename, baseNameLen );
@@ -5052,7 +5055,6 @@ Returns a space separated string containing the names of all loaded pk3 files.
 Servers with sv_pure set will get this string and pass it to clients.
 =====================
 */
-#ifndef DEDICATED
 const char *FS_LoadedPakNames( void ) {
 	static char	info[BIG_INFO_STRING];
 	const searchpath_t *search;
@@ -5086,7 +5088,6 @@ const char *FS_LoadedPakNames( void ) {
 
 	return info;
 }
-#endif
 
 
 /*

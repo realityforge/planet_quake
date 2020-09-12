@@ -116,17 +116,21 @@ var LibrarySysMain = {
           ])
         }
         if(window.location.hostname.match(/lvl\.quake\.games/i)) {
-          var detectMapId = ((/(&|\?|\/)id[:=]([0-9]+)($|[^0-9])/igm)
-            .exec(window.location.search)[2] || '')
+          var detectMapId = (((/(&|\?|\/)id[:=]([0-9]+)($|[^0-9])/igm)
+            .exec(window.location.search) || [])[2] || '')
           args.push.apply(args, [
             '+set', 'com_maxfps', '30',
             '+set', 'net_enable', '0',
             '+set', 'cg_drawGun', '0',
             '+set', 'cg_simpleItems', '0',
             '+set', 'cg_draw2D', '0',
-            '+set', 'cl_returnURL', '"https://lvlworld.com/review/id:' + detectMapId + '"',
             '+exec', 'lvl-default.cfg',
           ])
+          if (!args.includes('cl_returnURL')) {
+            args.push.apply(args, [
+              '+set', 'cl_returnURL', '"https://lvlworld.com/review/id:' + detectMapId + '"',
+            ])
+          }
         } else if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
             args.push.apply(args, [
@@ -251,6 +255,8 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
+    delete Module.SDL2.audio
+    delete Module.SDL2.capture
     if(typeof flipper != 'undefined') {
       flipper.style.display = 'block'
       flipper.style.animation = 'none'
