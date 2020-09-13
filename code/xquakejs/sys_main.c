@@ -295,8 +295,7 @@ void Sys_Exit( int code )
 
 #ifdef EMSCRIPTEN
 	Sys_PlatformExit( );
-	emscripten_force_exit(code);
-	return;
+	emscripten_cancel_main_loop();
 #endif
 #ifdef NDEBUG // regular behavior
 	// We can't do this 

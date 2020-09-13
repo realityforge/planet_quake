@@ -43,7 +43,7 @@ npm run repack [options] [mod directory]
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
---no-deduplicate - utility, unzip to a combined directory to remove duplicate/overrides
+--deduplicate - utility, unzip to a combined directory to remove duplicate/overrides
 --collisions - skip unzipping and repacking, just list files that interfere with each other
 Better graph mode that ensures all files are present and allows clients to download entire pk3 based on indexed file it needs
 `
@@ -118,6 +118,7 @@ var entities = ''
 var mountPoints = []
 var usePrevious = false
 var noOverwrite = false
+var noDeduplicate = true
 var noGraph = false
 var noDedupe = false
 var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
@@ -143,6 +144,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--no-overwrite') {
     console.log('No over-writing existing files')
     noOverwrite = true
+  } else if (a == '--deduplicate') {
+    console.log('De-duplicating files')
+    noDeduplicate = false
   } else if (a == '--no-graph') {
     console.log('No graphing files, no info, just convert and repack')
     noGraph = true
@@ -256,6 +260,7 @@ if(!noProgress) {
     log: resetRedraw.bind(null, 'log'),
     error: resetRedraw.bind(null, 'error'),
     info: resetRedraw.bind(null, 'info'),
+    warn: resetRedraw.bind(null, 'warn'),
   }
 }
 
@@ -872,7 +877,8 @@ async function repackGames() {
       } else {
         var everything = glob.sync('**/*', { cwd: outCombined, nodir: true })
           .map(f => path.join(outCombined, f))
-        everything = deDuplicate(everything)
+        if(!noDeduplicate)
+          everything = deDuplicate(everything)
         gs = {
           ordered: everything.reduce((obj, f) => {
             if(f.match(/\.pk3dir/i)) {

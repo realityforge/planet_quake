@@ -37,48 +37,52 @@ function mkdirpSync(p) {
 }
 
 async function readPak(zipFile, progress, outDirectory, noOverwrite) {
+  var skipped = 0
   const zip = new StreamZip({
       file: zipFile,
       storeEntries: true
   })
-  var header = await new Promise(resolve => {
-    var skipped = 0
-    zip.on('ready', async () => {
+  var index = await new Promise(resolve => {
+    zip.on('ready', () => {
       console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(zipFile))
-      var index = Object.values(zip.entries())
-      if(!outDirectory) {
-        return resolve(index)
-      }
-      for(var i = 0; i < index.length; i++) {
-        var entry = index[i]
-        if(entry.isDirectory || entry.size === 0) continue
-        var levelPath = path.join(outDirectory, entry.name)
-        mkdirpSync(path.dirname(levelPath))
-        await progress([[2, i, index.length, entry.name]])
-        if(noOverwrite && ufs.existsSync(levelPath)) {
-          // make an exception if the file was already written once,
-          //   write it again so subsequent paks can update files
-          if(!Array.isArray(noOverwrite) || !noOverwrite.includes(levelPath)) {
-            skipped++
-            continue
-          }
-        } else if (Array.isArray(noOverwrite)) {
-          noOverwrite.push(levelPath)
-        }
-        await new Promise(resolve => {
-          zip.extract(entry.name, levelPath, err => {
-            if(err) console.log('Extract error ' + err)
-            resolve()
-          })
-        })
-      }
-      resolve(skipped)
+      resolve(Object.values(zip.entries()))
     })
-    
-    zip.on('error', resolve)
+    zip.on('error', (err) => {
+      console.warn(err, zipFile)
+      resolve([])
+    })
   })
   
-  return header
+  if(!outDirectory) {
+    return index
+  }
+
+  for(var i = 0; i < index.length; i++) {
+    var entry = index[i]
+    if(entry.isDirectory || entry.size === 0) continue
+    if(!entry.name) debugger
+    var levelPath = path.join(outDirectory, entry.name)
+    mkdirpSync(path.dirname(levelPath))
+    await progress([[2, i, index.length, entry.name]])
+    if(noOverwrite && ufs.existsSync(levelPath)) {
+      // make an exception if the file was already written once,
+      //   write it again so subsequent paks can update files
+      if(!Array.isArray(noOverwrite) || !noOverwrite.includes(levelPath)) {
+        skipped++
+        continue
+      }
+    } else if (Array.isArray(noOverwrite)) {
+      noOverwrite.push(levelPath)
+    }
+    await new Promise(resolve => {
+      zip.extract(entry.name, levelPath, err => {
+        if(err) console.log('Extract error ' + err)
+        resolve()
+      })
+    })
+  }
+
+  return skipped
 }
 
 async function unpackPk3s(project, outCombined, progress, noOverwrite, pk3dir) {

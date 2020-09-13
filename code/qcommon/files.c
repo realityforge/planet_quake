@@ -3126,9 +3126,6 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 
 	fs_numHeaderLongs = 0;
 	fs_headerLongs[ fs_numHeaderLongs++ ] = LittleLong( fs_checksumFeed );
-	//if(Q_stristr(zipfile, "pak1")) {
-	//	Com_Printf("HeaderLong: %i", fs_headerLongs[0]);
-	//}
 
 	Com_Memcpy( pack->pakFilename, zipfile, fileNameLen );
 	Com_Memcpy( pack->pakBasename, basename, baseNameLen );

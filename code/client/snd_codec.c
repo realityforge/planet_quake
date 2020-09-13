@@ -125,8 +125,8 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		{
 			if( orgNameFailed )
 			{
-				Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
-						filename, altName );
+				//Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
+				//		filename, altName );
 			}
 
 			return rtn;
