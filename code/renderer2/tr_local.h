@@ -1485,7 +1485,8 @@ typedef struct {
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
-
+	int							lastRegistrationTime;
+	
 	int						visIndex;
 	int						visClusters[MAX_VISCOUNTS];
 	int						visCounts[MAX_VISCOUNTS];	// incremented every time a new vis cluster is entered

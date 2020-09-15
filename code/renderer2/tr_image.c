@@ -2099,6 +2099,37 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 
 
 /*
+======================
+S_FreeOldestSound
+======================
+*/
+image_t *R_FreeOldestImage( void ) {
+	int	i, oldest, used;
+	image_t	*image;
+
+	oldest = Sys_Milliseconds();
+	used = 0;
+
+	for ( i = 1 ; i < tr.numImages ; i++ ) {
+		image = tr.images[i];
+		if ( (!image->lastTimeUsed || !image->texnum || image->lastTimeUsed - oldest < 0)
+			&& image->imgName[0] != '*'
+		 	&& image->lastTimeUsed < tr.lastRegistrationTime) {
+			used = i;
+			oldest = image->lastTimeUsed;
+		}
+	}
+
+	image = tr.images[used];
+	
+	if(image->texnum)
+		qglDeleteTextures( 1, &image->texnum );
+	Com_Memset(&image, 0, sizeof( image ));
+	
+	return image;
+}
+
+/*
 ================
 R_CreateImage2
 
@@ -2129,10 +2160,13 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	}
 
 	if ( tr.numImages == MAX_DRAWIMAGES ) {
-		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
-	}
-
-	image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+		image = R_FreeOldestImage();
+		if(!image) {
+			ri.Printf( PRINT_WARNING, "R_CreateImage: MAX_DRAWIMAGES hit");
+			return NULL;
+		}
+	} else
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
 	qglGenTextures(1, &image->texnum);
 	tr.numImages++;
 
@@ -2152,6 +2186,7 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	if (!internalFormat)
 		internalFormat = RawImage_GetFormat(pic, width * height, picFormat, isLightmap, image->type, image->flags);
 
+	image->lastTimeUsed = tr.lastRegistrationTime;
 	image->internalFormat = internalFormat;
 
 	// Possibly scale image before uploading.
@@ -2446,6 +2481,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
 				}
 			}
+			image->lastTimeUsed = tr.lastRegistrationTime;
 			return image;
 		}
 	}

@@ -34,6 +34,10 @@ var LibrarySysMain = {
       // FBO specific settings
       '+set', 'r_ext_framebuffer_multisample', '0',
       '+set', 'r_ext_framebuffer_object', '0',
+      // this prevents lightmap from being wrong when switching maps
+      //   renderer doesn't restart between maps, but BSP loading updates
+      //   textures with lightmap by default, so this keeps them separate
+      '+set', 'r_mergeLightmaps', '0',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',

@@ -4348,6 +4348,15 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 }
 
 void RE_LoadShaders( void ) {
+  int i;
+  tr.lastRegistrationTime = Com_Milliseconds();
+  
+  // remove lightmaps
+  for(i=0;i<tr.numLightmaps;i++) {
+    if(tr.lightmaps[i]->texnum)
+      qglDeleteTextures( 1, &tr.lightmaps[i]->texnum );
+    Com_Memset(&tr.lightmaps[i], 0, sizeof( tr.lightmaps[0] ));
+  }
   ScanAndLoadShaderFiles();
 }
 
