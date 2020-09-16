@@ -5138,6 +5138,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	*s = '\0';
 
 	checksum = fs_checksumFeed;
+Com_Printf( "FS_ReferencedPakPureChecksums: 0 %i\n", checksum );
 	numPaks = 0;
 	for ( nFlags = FS_CGAME_REF; nFlags; nFlags = nFlags >> 1 ) {
 		if ( nFlags & FS_GENERAL_REF ) {
@@ -5149,6 +5150,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
+Com_Printf( "FS_ReferencedPakPureChecksums: %s, %i\n", search->pack->pakFilename, search->pack->pure_checksum );
 				s = Q_stradd( s, va( "%i ", search->pack->pure_checksum ) );
 				if ( s > max ) // client-side overflow
 					break;

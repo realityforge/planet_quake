@@ -592,7 +592,11 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		return RSERR_OK;
 	}
 
+#ifdef EMSCRIPTEN
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan, webGL2 );
+#else
+	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
+#endif
 
 	switch ( err )
 	{
@@ -644,7 +648,11 @@ void GLimp_Init( glconfig_t *config )
 #endif
 
 	// Create the window and set up the context
+#ifndef EMSCRIPTEN
+	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+#else
 	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
+#endif
 	if ( err != RSERR_OK )
 	{
 		if ( err == RSERR_FATAL_ERROR )

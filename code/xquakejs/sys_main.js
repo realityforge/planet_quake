@@ -15,7 +15,7 @@ var LibrarySysMain = {
       //'+set', 'fs_debug', '0',
       '+set', 'r_mode', '-1',
       '+set', 'r_customPixelAspect', '1',
-      '+set', 'sv_pure', '0',
+      '+set', 'sv_pure', '1',
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4

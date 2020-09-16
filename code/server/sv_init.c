@@ -730,6 +730,7 @@ void SV_SpawnServer_After_Startup( void ) {
 			// load pk3s also loaded at the server
 			Cvar_Set( "sv_paks", p );
 			if ( *p == '\0' ) {
+				sv_pure->integer = 0;
 				Com_Printf( S_COLOR_YELLOW "WARNING: sv_pure set but no PK3 files loaded\n" );
 			}
 		}
@@ -754,7 +755,14 @@ void SV_SpawnServer_After_Startup( void ) {
 	
 #ifdef EMSCRIPTEN
 	svShuttingDown = qfalse;
-	//CL_StartHunkUsers( );
+#else
+#ifndef DEDICATED
+	if ( com_dedicated->integer ) {
+		// restart renderer in order to show console for dedicated servers
+		// launched through the regular binary
+		CL_StartHunkUsers( );
+	}
+#endif
 #endif
 
 	Com_Printf ("-----------------------------------\n");
