@@ -47,7 +47,7 @@ Some of the major features currently implemented are:
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
-  * Server-side demos, recording for every client TheDoctor's method. Server-side demos, lrq3000 implementation recording entire server state and spectating playback. Cyrax' multiview protocol for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
+  * Server-side demos, recording for every client (TheDoctor's method). Server-side demos, lrq3000 implementation recording entire server state and spectating playback. Cyrax' multiview protocol for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
   * Many, many bug fixes
 
 Coming soon!

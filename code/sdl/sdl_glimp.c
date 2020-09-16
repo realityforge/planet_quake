@@ -186,7 +186,11 @@ static SDL_HitTestResult SDL_HitTestFunc( SDL_Window *win, const SDL_Point *area
 GLimp_SetMode
 ===============
 */
+#ifdef EMSCRIPTEN
+static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan, qboolean webGL2 )
+#else
 static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+#endif
 {
 	glconfig_t *config = glw_state.config;
 	int perChannelColorBits;
@@ -469,8 +473,13 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 			{
 #ifdef EMSCRIPTEN
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				if(webGL2) {
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				} else {
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				}
 #endif
 				if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
 				{
@@ -534,7 +543,11 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 GLimp_StartDriverAndSetMode
 ===============
 */
+#ifdef EMSCRIPTEN
+static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan, qboolean webGL2 )
+#else
 static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+#endif
 {
 	rserr_t err;
 
@@ -579,7 +592,7 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		return RSERR_OK;
 	}
 
-	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
+	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan, webGL2 );
 
 	switch ( err )
 	{
@@ -631,7 +644,7 @@ void GLimp_Init( glconfig_t *config )
 #endif
 
 	// Create the window and set up the context
-	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
 	if ( err != RSERR_OK )
 	{
 		if ( err == RSERR_FATAL_ERROR )
@@ -640,6 +653,7 @@ void GLimp_Init( glconfig_t *config )
 			return;
 		}
 
+#ifndef EMSCRIPTEN
 		if ( r_mode->integer != 3 || ( r_fullscreen->integer && atoi( r_modeFullscreen->string ) != 3 ) )
 		{
 			Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
@@ -650,6 +664,17 @@ void GLimp_Init( glconfig_t *config )
 				return;
 			}
 		}
+#else
+		// instead of changing r_mode, which is just the default resolution,
+		//   we try a different opengl version
+		Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
+		if ( GLimp_StartDriverAndSetMode( r_mode->integer, "", r_fullscreen->integer, qfalse, qfalse ) != RSERR_OK )
+		{
+			// Nothing worked, give up
+			Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
+			return;
+		}
+#endif
 	}
 #ifdef EMSCRIPTEN
 	Sys_GLContextCreated();
