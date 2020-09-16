@@ -128,17 +128,13 @@ var LibrarySysFiles = {
       })
     },
     downloadImmediately: function (cb) {
-      var totals = []
-      var progresses = []
+      var total = 0
       if(SYSN.downloads.length === 0) {
         cb()
         return
       }
       Promise.all(SYSN.downloads.map((file, i) => new Promise(resolve => {
-        total = 0
-        progresses[i] = 0
         SYSC.DownloadAsset(file, null, (err, data) => {
-          progresses[i] = totals[i]
           SYSN.LoadingProgress(++total, SYSN.downloads.length)
           if(err) return resolve(err)
           try {

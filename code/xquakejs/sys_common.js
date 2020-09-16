@@ -108,7 +108,7 @@ var LibrarySysCommon = {
 				debugger
 			}
 			try {
-				FS.mkdir(p, 777);
+				FS.mkdir(p, 0o0777);
 			} catch (e) {
 				// make the subdirectory and then retry
 				if ((e instanceof FS.ErrnoError) && e.errno === ERRNO_CODES.ENOENT) {
@@ -175,7 +175,7 @@ var LibrarySysCommon = {
 	Sys_Mkdir: function (directory) {
 		directory = UTF8ToString(directory);
 		try {
-			FS.mkdir(directory, 777);
+			FS.mkdir(directory, 0o0777);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError)) {
 				SYSC.Error('drop', e.message);
