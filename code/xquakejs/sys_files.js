@@ -453,46 +453,4 @@ var LibrarySysFiles = {
   */
 }
 autoAddDeps(LibrarySysFiles, '$SYSF')
-mergeInto(LibraryManager.library, LibrarySysFiles);
-if(typeof IDBFS != 'undefined') {
-  IDBFS.loadRemoteEntry = function (store, path, callback) {
-    var req = store.get(path)
-    req.onsuccess = function (event) {
-      callback(null, {
-        timestamp: event.target.result.timestamp,
-        mode: event.target.result.mode,
-        contents: MEMFS.getFileDataAsTypedArray(event.target.result)
-      })
-    }
-    req.onerror = function (e) {
-      callback(this.error)
-      e.preventDefault()
-    }
-  }
-  IDBFS.storeLocalEntry = function(path, entry, callback) {
-    if(path.includes('http')) {
-      debugger
-    }
-    try {
-      if (FS.isDir(entry['mode'])) {
-        FS.mkdir(path, entry['mode'])
-      } else if (FS.isFile(entry['mode'])) {
-        FS.writeFile(path, entry['contents'], { canOwn: true })
-      } else {
-        return callback(new Error('node type not supported'))
-      }
-    } catch (e) {
-      if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-        return callback(e)
-      }
-    }
-    try {
-      FS.chmod(path, entry['mode'])
-      FS.utime(path, entry['timestamp'], entry['timestamp'])
-    } catch (e) {
-      return callback(e)
-    }
-
-    callback(null)
-  }
-}
+mergeInto(LibraryManager.library, LibrarySysFiles)

@@ -1,5 +1,5 @@
 var LibrarySys = {
-	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL', '$VM'],
+	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL', '$VM', '$Browser'],
 	$SYS: {
 		resizeDelay: null,
 		style: null,
@@ -39,7 +39,7 @@ var LibrarySys = {
 		var filename = _S_Malloc(nextFile.length + 1);
 		stringToUTF8(nextFile + '\0', filename, nextFile.length+1);
 		return filename
-	},
+	}
 }
 autoAddDeps(LibrarySys, '$SYS')
 mergeInto(LibraryManager.library, LibrarySys);

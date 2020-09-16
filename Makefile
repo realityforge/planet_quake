@@ -756,6 +756,12 @@ endif
 # --cache $(EMSCRIPTEN_CACHE) \
 
   CLIENT_LDFLAGS += \
+		-lbrowser.js \
+		-lasync.js \
+		-lidbfs.js \
+		-lsdl.js \
+		-lwebgl.js \
+		-lwebgl2.js \
     --js-library $(QUAKEJS)/sys_common.js \
     --js-library $(QUAKEJS)/sys_browser.js \
     --js-library $(QUAKEJS)/sys_net.js \
@@ -763,12 +769,11 @@ endif
 		--js-library $(QUAKEJS)/sys_input.js \
 		--js-library $(QUAKEJS)/sys_main.js \
 		--js-library $(CMDIR)/vm_js.js \
-    -lidbfs.js \
-    -lsdl.js \
-		-lwebgl.js \
-		-lwebgl2.js \
+		--post-js $(QUAKEJS)/sys_overrides.js \
+		-s STRICT=1 \
+		-s AUTO_JS_LIBRARIES=1 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
-    -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
+    -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
@@ -777,8 +782,7 @@ endif
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
     -s ALLOW_TABLE_GROWTH=1 \
-    -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
-    -s TOTAL_MEMORY=256MB \
+    -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s LEGACY_GL_EMULATION=0 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \

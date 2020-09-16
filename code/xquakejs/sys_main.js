@@ -259,8 +259,10 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
-    delete Module.SDL2.audio
-    delete Module.SDL2.capture
+    if(Module.SDL2) {
+      delete Module.SDL2.audio
+      delete Module.SDL2.capture
+    }
     if(typeof flipper != 'undefined') {
       flipper.style.display = 'block'
       flipper.style.animation = 'none'

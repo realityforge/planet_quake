@@ -1602,7 +1602,8 @@ void RE_Shutdown( int destroyWindow ) {
 
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
-		GLSL_ShutdownGPUShaders();
+		if ( tr.registered )
+			GLSL_ShutdownGPUShaders();
 		ri.GLimp_Shutdown( destroyWindow == 2 ? qtrue: qfalse );
 
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );
