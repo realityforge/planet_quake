@@ -1196,6 +1196,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	int	i;
+	tr.lastRegistrationTime = Com_Milliseconds();
 
 	R_Init();
 

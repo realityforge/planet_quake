@@ -11,7 +11,7 @@ var precacheConfig = [
   'assets/baseq3-cc/index.json',
 ]
 
-var caseInsensitiveCompare = (str, cmp) => str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0
+var caseInsensitiveCompare = function (str, cmp) { return str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0 }
 var ignoreUrlParametersMatching = [/^utm_/]
 var addDirectoryIndex = function (pathname, index) {
     if (pathname.slice(-1) === '/') {
@@ -92,13 +92,13 @@ async function readStore(db, store, predicate) {
   if(!db) {
     db = await openDatabase()
   }
-  return new Promise(resolve => {
+  return new Promise(function (resolve) {
     let tran = db.transaction(store)
     let objStore = tran.objectStore(store)
     let tranCursor = objStore.openCursor()
     let result = []
     tranCursor.onsuccess = openFile.bind(null, predicate, result, resolve)
-    tranCursor.onerror = error => {
+    tranCursor.onerror = function (error) {
       console.error(error)
       resolve(error)
     }
@@ -109,35 +109,35 @@ async function readFile(db, store, key) {
   if(!db) {
     db = await openDatabase()
   }
-  return new Promise(resolve => {
+  return new Promise(function (resolve) {
     let tran = db.transaction(store)
     let objStore = tran.objectStore(store)
     let tranCursor = objStore.get(key)
     let result = []
-    tranCursor.onsuccess = () => {
+    tranCursor.onsuccess = function () {
       resolve(tranCursor.result)
     }
-    tranCursor.onerror = error => {
+    tranCursor.onerror = function (error) {
       console.error(error)
       resolve(error)
     }
   })
 }
 async function openDatabase() {
-  return new Promise(resolve => {
+  return new Promise(function (resolve) {
     let open = indexedDB.open('/base', 21)
-    open.onsuccess = () => {
+    open.onsuccess = function () {
       var transaction = open.result.transaction(['FILE_DATA'], 'readwrite');
       var files = transaction.objectStore('FILE_DATA');
       resolve(open.result)
     }
-    open.onupgradeneeded = evt => {
+    open.onupgradeneeded = function (evt) {
       var fileStore = open.result.createObjectStore('FILE_DATA')
       if (!fileStore.indexNames.contains('timestamp')) {
         fileStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
     }
-    open.onerror = error => {
+    open.onerror = function (error) {
       console.error(error)
       resolve(error)
     }
@@ -146,12 +146,12 @@ async function openDatabase() {
 
 async function writeStore(value, key) {
   var db = await openDatabase()
-  return new Promise(resolve => {
+  return new Promise(function (resolve) {
     let tran = db.transaction('FILE_DATA', 'readwrite')
     let objStore = tran.objectStore('FILE_DATA')
     let storeValue = objStore.add(value, key)
     storeValue.onsuccess = resolve
-    storeValue.onerror = error => {
+    storeValue.onerror = function (error) {
       console.error(error, value, key)
       resolve(error)
     }
@@ -183,7 +183,7 @@ async function fetchAsset(key) {
   var content = await response.clone().arrayBuffer()
   if(key.match(/index\.json/i)) {
     var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(content)) || [])
-    Object.keys(moreIndex).forEach(k => {
+    Object.keys(moreIndex).forEach(function (k) {
       precacheConfig.push(k.toLowerCase().replace(/^\/base\//ig, 'assets/'))
     })
   }
@@ -203,19 +203,19 @@ async function fetchAsset(key) {
 self.addEventListener('install', function(event) {
   var db
   event.waitUntil(
-    Promise.all(precacheConfig.map(requiredFile => {
-      return new Promise(async resolve => {
-        var files = await readFile(db, 'FILE_DATA', '/base/' + requiredFile.replace(/^\/?assets\//ig, ''))
-        if(files && files.contents) {
-          // already saved
-        } else {
-          await fetchAsset(requiredFile)
-        }
-        resolve()
-      })
-    })).then(() => {
+    Promise.all(precacheConfig.map(function (requiredFile) {
+      var localName = '/base/' + requiredFile.replace(/^\/?assets\//ig, '')
+      return readFile(db, 'FILE_DATA', localName)
+        .then(function (files) {
+          if(files && files.contents) {
+            // already saved
+          } else {
+            return fetchAsset(requiredFile)
+          }
+        })
+    })).then(function () {
       //caches.open(PROGRAM_FILES)
-      //  .then(cache => cache.addAll(precacheConfig))
+      //  .then(function (cache) { return cache.addAll(precacheConfig })
       return self.skipWaiting()
     })
   )
@@ -259,39 +259,39 @@ self.addEventListener('fetch', function(event) {
     // If shouldRespond was set to true at any point, then call
     // event.respondWith(), using the appropriate cache key.
     if (shouldRespond) {
+      var localName = '/base/' + url.replace(/^\/?assets\/|^\//ig, '')
+      var init = { 
+        status : 200,
+        url: event.request.url,
+        headers: {
+          // these are needed to start up, the engine only cares about bits
+          'content-type': event.request.url.includes('.json')
+            ? 'application/json'
+            : event.request.url.includes('.html')
+              ? 'text/html'
+              : event.request.url.includes('.png')
+                ? 'image/png'
+                : event.request.url.includes('.jpg')
+                  ? 'image/jpg'
+                  : event.request.url.includes('.js')
+                    ? 'application/javascript'
+                    : event.request.url.includes('.wasm')
+                      ? 'application/wasm'
+                      : 'application/octet-stream'
+        }
+      }
       event.respondWith(
-        new Promise(async resolve => {
-          var localName = '/base/' + url.replace(/^\/?assets\/|^\//ig, '')
-          var files = await readFile(null, 'FILE_DATA', localName)
-          var response
-          var init = { 
-            status : 200,
-            url: event.request.url,
-            headers: {
-              'content-type': event.request.url.includes('.json')
-                ? 'application/json'
-                : event.request.url.includes('.html')
-                  ? 'text/html'
-                  : event.request.url.includes('.png')
-                    ? 'image/png'
-                    : event.request.url.includes('.jpg')
-                      ? 'image/jpg'
-                      : event.request.url.includes('.js')
-                        ? 'application/javascript'
-                        : event.request.url.includes('.wasm')
-                          ? 'application/wasm'
-                          : 'application/octet-stream'
+        readFile(null, 'FILE_DATA', localName)
+          .then(function (files) {
+            if(files && files.contents) {
+              return new Response(files.contents, init)
+            } else {
+              return fetchAsset(event.request.url)
             }
-          }
-          if(files && files.contents) {
-            
-          } else {
-            files = await fetchAsset(event.request.url)
-          }
-          response = new Response(files.contents, init)
-          return resolve(response)
-        })
-      )
+          })
+          .then(function (files) {
+            return new Response(files.contents, init)
+          }))
     }
   }
 })

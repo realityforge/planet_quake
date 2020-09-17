@@ -13,7 +13,7 @@ var LibrarySysNet = {
         SYSN.multicastBuffer = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
       }
       SYSN.multicasting = true
-      data.forEach((d, i) => HEAP8[SYSN.multicastBuffer+i] = d)
+      data.forEach(function (d, i) { HEAP8[SYSN.multicastBuffer+i] = d })
       _NET_SendLoopPacket(net, data.length, SYSN.multicastBuffer)
       SYSN.multicasting = false
     },
@@ -50,8 +50,8 @@ var LibrarySysNet = {
         return opts.onload(new Error('Must provide a URL'))
       }
       fetch(url, {credentials: 'omit'})
-        .catch(e => console.log(e))
-        .then(response => {
+        .catch(function (e) { console.log(e) })
+        .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
               xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
               if (opts.onload) {
@@ -61,7 +61,7 @@ var LibrarySysNet = {
             }
             if(!xhrError)
               return response.arrayBuffer()
-                .then(data => {
+                .then(function (data) {
                   if (opts.dataType === 'json') {
                     try {
                       data = JSON.parse(data)
@@ -78,8 +78,8 @@ var LibrarySysNet = {
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded = true
-      var replaceFunc = (path) => {
-        SYSF.fs_replace.forEach(r => path = path.replace(r, ''))
+      var replaceFunc = function (path) {
+        SYSF.fs_replace.forEach(function (r) { path = path.replace(r, '') })
         return path
       }
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
@@ -88,14 +88,14 @@ var LibrarySysNet = {
 				} else {
 					SYS.soundCallback.unshift(replaceFunc(file[1]))
 				}
-				SYS.soundCallback = SYS.soundCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.soundCallback = SYS.soundCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 				if(file[0]) {
 					SYS.modelCallback.unshift(replaceFunc(file[0]))
 				} else {
 					SYS.modelCallback.unshift(replaceFunc(file[1]))
 				}
-				SYS.modelCallback = SYS.modelCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.modelCallback = SYS.modelCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			} else if(SYSF.index[indexFilename].shaders.length > 0) {
 				if(file[0]) {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [replaceFunc(file[0])]
@@ -103,11 +103,11 @@ var LibrarySysNet = {
 				} else {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYSF.index[indexFilename].shaders)
 				}
-				SYS.shaderCallback = SYS.shaderCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.shaderCallback = SYS.shaderCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			}
 		},
 		DownloadLazySort: function () {
-			SYSN.downloadLazy.sort((a, b) => {
+			SYSN.downloadLazy.sort(function (a, b) {
 				var aIndex = typeof a == 'string'
 					? PATH.join(SYSF.fs_basepath, a)
 					: PATH.join(SYSF.fs_basepath, a[1])
@@ -148,7 +148,7 @@ var LibrarySysNet = {
 					SYSC.Error('fatal', e.message)
 				}
 			}
-			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
+			SYSC.DownloadAsset(file[1], function () {}, function (err, data) {
 				if(err) {
 					return
 				}
@@ -166,14 +166,14 @@ var LibrarySysNet = {
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
       var basename = PATH.dirname(filename)
-			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, (err, data) => {
+			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data) {
 				if(err) {
 					SYSN.LoadingDescription('')
 					cb()
 					return
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
-				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
+				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
           if(typeof obj[k.toLowerCase()] == 'undefined') {
             obj[k.toLowerCase()] = moreIndex[k]
             // we use the downloading key because it doesn't
@@ -190,7 +190,8 @@ var LibrarySysNet = {
 					return obj
 				}, SYSF.index || {})
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
-					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
+					.map(function (k) { return '"' + k + '":' + JSON.stringify(SYSF.index[k]) })
+          .join(',')
 					+ '}')
         var gameIndex = PATH.join(SYSF.fs_basepath, basename, "index.json")
         SYSF.index[gameIndex.toLowerCase()] = {
@@ -209,13 +210,13 @@ var LibrarySysNet = {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     
-    FS.syncfs(false, (e) => {
+    FS.syncfs(false, function (e) {
       if(e) console.log(e)
       SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
-      SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
+      SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
-      }, (err, data) => {
+      }, function (err, data) {
         if(err) {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
@@ -229,7 +230,7 @@ var LibrarySysNet = {
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksConnect: function () {
     var timer = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
-    var callback = () => {
+    var callback = function () {
       clearTimeout(timer)
       Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }

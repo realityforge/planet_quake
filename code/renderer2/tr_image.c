@@ -1974,7 +1974,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 
 		if (!rgba)
 		{
-			GLDSA_CompressedTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, picFormat, size, data);
+			qglCompressedTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, picFormat, size, data);
 		}
 		else
 		{
@@ -1984,7 +1984,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 			if (rgba8 && rgtc)
 				RawImage_UploadToRgtc2Texture(texture, miplevel, x, y, width, height, data);
 			else
-				GLDSA_TextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, dataFormat, dataType, data);
+				qglTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, dataFormat, dataType, data);
 		}
 
 		if (!lastMip && numMips < 2)
@@ -2122,9 +2122,11 @@ image_t *R_FreeOldestImage( void ) {
 
 	image = tr.images[used];
 	
+	ri.Printf(PRINT_DEVELOPER, "R_FreeOldestImage: freeing image %s\n", image->imgName);
+	
 	if(image->texnum)
 		qglDeleteTextures( 1, &image->texnum );
-	Com_Memset(&image, 0, sizeof( image ));
+	Com_Memset(image, 0, sizeof( *image ));
 	
 	return image;
 }
@@ -3288,3 +3290,5 @@ void	R_SkinList_f( void ) {
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
+
+

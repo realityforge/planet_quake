@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "tr_local.h"
 
+#include "tr_dsa.h"
+
 // tr_shader.c -- this file deals with the parsing and definition of shaders
 
 static char *s_shaderText;
@@ -2428,7 +2430,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			continue;
+			break;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
@@ -3085,10 +3087,6 @@ static shader_t *GeneratePermanentShader( void ) {
 		return tr.defaultShader;
 	}
   
-  //if(shader.index > 0) {
-  //  return &shader;
-  //}
-
 	newShader = ri.Hunk_Alloc( sizeof( shader_t ), h_low );
 
 	*newShader = shader;
@@ -4349,14 +4347,21 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 void RE_LoadShaders( void ) {
   int i;
-  tr.lastRegistrationTime = Com_Milliseconds();
+  R_IssuePendingRenderCommands();
   
   // remove lightmaps
   for(i=0;i<tr.numLightmaps;i++) {
-    if(tr.lightmaps[i]->texnum)
-      qglDeleteTextures( 1, &tr.lightmaps[i]->texnum );
-    Com_Memset(&tr.lightmaps[i], 0, sizeof( tr.lightmaps[0] ));
+    image_t *img = tr.lightmaps[i];
+    Com_Printf( "LoadShaders: %u\n", &img->texnum );
+    if(img->texnum)
+      qglDeleteTextures( 1, &img->texnum );
+    Com_Memset(img, 0, sizeof( *img ));
   }
+  tr.lightmaps = NULL;
+  tr.numLightmaps = 0;
+  GL_BindNullTextures();
+
+  tr.lastRegistrationTime = Com_Milliseconds();
   ScanAndLoadShaderFiles();
 }
 

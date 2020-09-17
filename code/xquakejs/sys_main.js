@@ -15,7 +15,7 @@ var LibrarySysMain = {
       //'+set', 'fs_debug', '0',
       '+set', 'r_mode', '-1',
       '+set', 'r_customPixelAspect', '1',
-      '+set', 'sv_pure', '1',
+      '+set', 'sv_pure', '0',
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4
@@ -142,7 +142,7 @@ var LibrarySysMain = {
               '+set', 'net_socksPort', '443',
             ])
           }
-          if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
+          if(SYSF.mods.filter(function (f) { return f.includes(match[1]) }).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
               '+set', 'fs_game', match[1],
@@ -334,7 +334,7 @@ var LibrarySysMain = {
   Sys_SetStatus__deps: ['$SYSN'],
   Sys_SetStatus: function (s) {
     var args = Array.from(arguments)
-      .map(a => UTF8ToString(a))
+      .map(function (a) { return UTF8ToString(a) })
     SYSN.LoadingDescription(args.join(' '))
   },
   Sys_CmdArgs: function () {

@@ -5,7 +5,7 @@ window.location = new URL(location.origin + '?set dedicated 2')
 window.performance = performance
 quake3e = {}
 quake3e.noInitialRun = true
-quake3e.printErr = function (...args) {
+quake3e.printErr = function (args) {
   var args = Array.from(arguments)
   if(args[0] && (args[0].includes('Sys_Error:')
     || args[0].includes('Error:')

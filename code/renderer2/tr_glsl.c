@@ -270,6 +270,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 		Q_strcat(dest, size, "#version 120\n");
 		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
+#else
+	Q_strcat(dest, size, "precision mediump float;\n");
 #endif
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
@@ -280,9 +282,6 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	//Q_strcat(dest, size,
 	//       va("#ifndef r_NormalScale\n#define r_NormalScale %f\n#endif\n", r_normalScale->value));
 
-#ifdef EMSCRIPTEN
-	Q_strcat(dest, size, "precision mediump float;\n");
-#endif
 
 	Q_strcat(dest, size, "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 
@@ -1086,11 +1085,6 @@ void GLSL_InitGPUShaders(void)
 		if ((i & LIGHTDEF_USE_PARALLAXMAP) && !r_parallaxMapping->integer)
 			continue;
 
-#ifdef EMSCRIPTEN
-		if ((i & LIGHTDEF_USE_SHADOWMAP) && !r_sunlightMode->integer)
-			continue;
-#endif
-
 		if ((i & LIGHTDEF_USE_SHADOWMAP) && (!lightType || !r_sunlightMode->integer))
 			continue;
 
@@ -1275,7 +1269,7 @@ void GLSL_InitGPUShaders(void)
 	}
 #endif
 
-	attribs = ATTR_POSITION | ATTR_NORMAL | ATTR_COLOR;
+	attribs = ATTR_POSITION | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
 	Q_strcat(extradefines, 1024, "#define USE_PCF\n#define USE_DISCARD\n");

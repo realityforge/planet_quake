@@ -6,22 +6,22 @@ var LibrarySysCommon = {
 		newDLURL: null,
 		returnURL: null,
 		Cvar_VariableString: function (str) {
-			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return UTF8ToString(_Cvar_VariableString(SYSC.varStr))
 		},
 		Cvar_VariableIntegerValue: function (str) {
-			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_VariableIntegerValue(SYSC.varStr)
 		},
 		Cvar_SetValue: function (str, value) {
-			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_SetValue(SYSC.varStr, value)
 		},
 		Cvar_Get: function (str) {
-			intArrayFromString(str).forEach((c, i) => HEAP8[(SYSC.varStr+i)] = c)
+			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_Get(SYSC.varStr, SYSC.varStr+str.length, 0)
 		},
@@ -50,7 +50,7 @@ var LibrarySysCommon = {
 			throw new Error(errMsg)
 		},
 		ProxyCallback: function () {
-			Browser.safeCallback(() => {
+			Browser.safeCallback(function () {
 				try {
 					_Com_Frame_Proxy();
 				} catch (e) {
@@ -89,18 +89,20 @@ var LibrarySysCommon = {
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
 			}
 			var tryDownload = 0
-			var doDownload = url => SYSN.DoXHR(url, {
-				dataType: 'arraybuffer',
-				onprogress: onprogress,
-				onload: (err, data) => {
-					tryDownload++
-					if(err && tryDownload < tryLinks.length) {
-						doDownload(tryLinks[tryDownload])
-						return
+			var doDownload = function (url) {
+				SYSN.DoXHR(url, {
+					dataType: 'arraybuffer',
+					onprogress: onprogress,
+					onload: function (err, data) {
+						tryDownload++
+						if(err && tryDownload < tryLinks.length) {
+							doDownload(tryLinks[tryDownload])
+							return
+						}
+						onload(err, data)
 					}
-					onload(err, data)
-				}
-			})
+				})
+			}
 			doDownload(tryLinks[0])
 		},
 		mkdirp: function (p) {
@@ -204,7 +206,7 @@ var LibrarySysCommon = {
 	Sys_LoadLibrary: function (name) {
 		return 0;
 		return loadDynamicLibrary(name) // passing memory address
-			.then(handle => SYSC.proxyCallback(handle))
+			.then(function (handle) { return SYSC.proxyCallback(handle) })
 	},
 	Sys_LoadFunction: function () {
 		throw new Error('TODO: Load DLL files')

@@ -24,7 +24,7 @@ var LibrarySysInput = {
         SYSI.paste = text.value
         Module.viewport.focus()
         if(SYSI.field) {
-          SYSI.paste.split('').forEach(k => {
+          SYSI.paste.split('').forEach(function (k) {
             process(SYSI.field, k.charCodeAt(0))
           })
           SYSI.paste = ''

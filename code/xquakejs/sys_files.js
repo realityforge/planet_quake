@@ -114,7 +114,7 @@ var LibrarySysFiles = {
       }
     },
     downloadsDone: function () {
-      return FS.syncfs(false, (e) => {
+      return FS.syncfs(false, function (e) {
         if(e) console.log(e)
         SYSN.downloads = []
         SYSN.LoadingDescription('')
@@ -133,23 +133,25 @@ var LibrarySysFiles = {
         cb()
         return
       }
-      Promise.all(SYSN.downloads.map((file, i) => new Promise(resolve => {
-        SYSC.DownloadAsset(file, null, (err, data) => {
-          SYSN.LoadingProgress(++total, SYSN.downloads.length)
-          if(err) return resolve(err)
-          try {
-            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
-            FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
-              encoding: 'binary', flags: 'w', canOwn: true })
-          } catch (e) {
-            if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-              SYSC.Error('fatal', e.message)
+      Promise.all(SYSN.downloads.map(function (file, i) { 
+        return new Promise(function (resolve) {
+          SYSC.DownloadAsset(file, null, function (err, data) {
+            SYSN.LoadingProgress(++total, SYSN.downloads.length)
+            if(err) return resolve(err)
+            try {
+              SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
+              FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
+                encoding: 'binary', flags: 'w', canOwn: true })
+            } catch (e) {
+              if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+                SYSC.Error('fatal', e.message)
+              }
             }
-          }
-          resolve(file)
+            resolve(file)
+          })
+          // save to drive
         })
-        // save to drive
-      }))).then(cb)
+      })).then(cb)
     },
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
@@ -179,12 +181,12 @@ var LibrarySysFiles = {
     var fs_game = SYSC.Cvar_VariableString('fs_game')
     if(fs_game.length > 0)
       SYSF.fs_replace.push(new RegExp('\/*' + fs_game + '\/', 'ig'))
-    SYSF.fs_replace.sort((a, b) => b.source.length - a.source.length)
+    SYSF.fs_replace.sort(function (a, b) { return b.source.length - a.source.length })
     var mapname = SYSC.Cvar_VariableString('mapname')
     var modelname = SYSC.Cvar_VariableString('model')
     var playername = SYSC.Cvar_VariableString('name')
     var clcState = _CL_GetClientState()
-    const blankFile = new Uint8Array(4)
+    var blankFile = new Uint8Array(4)
     
     SYSN.LoadingDescription('Loading Game UI...')
     var fsMountPath = fs_basegame
@@ -231,7 +233,7 @@ var LibrarySysFiles = {
       /*
       if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
         SYSN.LoadingDescription('')
-        FS.syncfs(false, () => SYSC.ProxyCallback(cb))
+        FS.syncfs(false, function () { SYSC.ProxyCallback(cb) })
         return
       }
       */
@@ -251,7 +253,7 @@ var LibrarySysFiles = {
       }
       var current = 0
       var download;
-      download = () => {
+      download = function () {
         if(current < indexes.length) {
           SYSN.DownloadIndex(indexes[current], download)
           current++
@@ -268,7 +270,7 @@ var LibrarySysFiles = {
     var handle = 0
     try {
       intArrayFromString(UTF8ToString(mode)
-        .replace('b', '')).forEach((c, i) => HEAP8[(SYSF.modeStr+i)] = c)
+        .replace('b', '')).forEach(function (c, i) { HEAP8[(SYSF.modeStr+i)] = c })
       HEAP8[(SYSF.modeStr+2)] = 0
       var filename = UTF8ToString(ospath).replace(/\/\//ig, '/')
       // use the index to make a case insensitive lookup
@@ -280,7 +282,7 @@ var LibrarySysFiles = {
         var exists = false
         try { exists = FS.lookupPath(altName) } catch (e) { exists = false }
         if(handle === 0 && exists) {
-          intArrayFromString(altName).forEach((c, i) => HEAP8[(SYSF.pathname+i)] = c)
+          intArrayFromString(altName).forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
           HEAP8[(SYSF.pathname+altName.length)] = 0
           handle = _fopen(SYSF.pathname, SYSF.modeStr)
         }
@@ -328,11 +330,11 @@ var LibrarySysFiles = {
     try {
       //contents = FS.readdir(directory)
       contents = Object.keys(SYSF.index)
-        .filter(k => k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
-          && (!dironly || typeof SYSF.index[k].size == 'undefined'))
-        .map(k => PATH.basename(SYSF.index[k].name))
-        .filter((f, i, arr) => f && arr.indexOf(f) === i)
-        .filter(f => {
+        .filter(function (k) { return k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
+          && (!dironly || typeof SYSF.index[k].size == 'undefined') })
+        .map(function (k) { return PATH.basename(SYSF.index[k].name) })
+        .filter(function (f, i, arr) { return f && arr.indexOf(f) === i })
+        .filter(function (f) {
           try {
             var stat = FS.stat(PATH.join(directory, f))
             return stat && (!dironly || FS.isDir(stat.mode))
@@ -345,7 +347,7 @@ var LibrarySysFiles = {
       if(directory.match(/\/demos/i)) {
         contents = contents
           .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
-          .filter(f => !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode))
+          .filter(function (f) { return !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode) })
       }
       if(contents.length > 5000) {
         debugger
@@ -424,14 +426,14 @@ var LibrarySysFiles = {
 	},
   Sys_FS_Offline: function () {
     // call startup, it's idempotent and won't hurt to call multiple times in a row
-    _Sys_Startup(() => {
+    _Sys_Startup(function () {
       // but instead of calling filter, we add ALL files to download immediately
-      Object.keys(SYSF.index).forEach(k => {
+      Object.keys(SYSF.index).forEach(function (k) {
         SYSN.downloads.push(SYSF[k].name)
       })
       var filecount = SYSN.downloads.length
       // download now, then report status
-      SYSF.downloadImmediately(() => {
+      SYSF.downloadImmediately(function () {
         SYSC.Print("Downloads finished: " + filecount + " files saved for offline.")
       })
     })
