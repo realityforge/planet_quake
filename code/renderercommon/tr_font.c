@@ -356,6 +356,8 @@ void RE_RegisterFont(const char *fontName, int pointSize, fontInfo_t *font) {
 		return;
 	}
 
+ri.Printf(PRINT_ALL, "Registering font %s\n", fontName);
+
 	if (pointSize <= 0) {
 		pointSize = 12;
 	}
@@ -562,4 +564,3 @@ void R_DoneFreeType(void) {
 #endif
 	registeredFontCount = 0;
 }
-

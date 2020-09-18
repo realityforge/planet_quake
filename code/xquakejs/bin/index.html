@@ -212,38 +212,13 @@
 	<div id="left-joystick"></div><div id="right-joystick"></div>
 </div>
 	
-
-<script>
-	window.quake3e = {}
-	window.quake3e.printErr = function () {
-		var args = arguments
-		if(args[0] && (args[0].includes('Sys_Error:')
-	    || args[0].includes('Error:')
-			|| args[0].includes('ERROR:')
-	    || args[0].includes('server:')
-			|| args[0].includes('Hunk_Clear:')
-	    || args[0].includes('Frame Setup')
-	    || args[0].includes('Shutdown')
-	    || args[0].includes('DEMO:')
-	    || args[0].includes('Game Initialization')
-	    || args[0].includes('Runtime error:')
-	    || args[0].includes('server:')
-			|| args[0].includes('ERROR :')))
-			console.error.apply(console, args)
-		else
-			console.log.apply(console, args)
-	}
-	window.quake3e.viewport = document.getElementById('viewport-frame')
-	window.quake3e.elementPointerLock = true
-	window.quake3e.onRuntimeInitialized = function () {}
-</script>
 <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
-          console.log('Service Worker registered')
-      }).catch(function (err) {
-          console.log('Service Worker registration failed: ', err)
-      })
+	          console.log('Service Worker registered')
+	      }).catch(function (err) {
+	          console.log('Service Worker registration failed: ', err)
+	      })
     }
 		if('Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')

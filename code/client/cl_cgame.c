@@ -567,6 +567,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	intptr_t result;
 	switch( args[0] ) {
 	case CG_PRINT:
+		if(Q_stristr((const char*)VMA(1), "font image")) {
+			Com_Printf("Font: %li\n", cgvm->opStack - cgvm->opStackTop);
+		}
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
 	case CG_ERROR:
@@ -609,7 +612,8 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		if((int)result <= 0) {
 			char altFilename[MAX_QPATH];
 			char *filename = (char *)VMA(1);
-			if(Q_stristr(filename, "players") && Q_stristr(filename, ".tga")) {
+			if((Q_stristr(filename, "players") && Q_stristr(filename, ".tga"))
+				|| (Q_stristr(filename, "gfx") && Q_stristr(filename, ".tga"))) {
 				COM_StripExtension(filename, altFilename, sizeof(altFilename));
 				result = FS_VM_OpenFile( va("%s.png", altFilename), VMA(2), args[3], H_CGAME );
 				if(VMA(2) == NULL && result > 0)

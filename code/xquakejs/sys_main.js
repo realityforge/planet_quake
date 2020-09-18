@@ -295,12 +295,12 @@ var LibrarySysMain = {
 			SYSM.timeBase = Date.now()
 		}
 
-		if (window.performance.now) {
+		if (window.performance && window.performance.now) {
 			return parseInt(window.performance.now(), 10)
-		} else if (window.performance.webkitNow) {
+		} else if (window.performance && window.performance.webkitNow) {
 			return parseInt(window.performance.webkitNow(), 10)
 		} else {
-			return Date.now() - SYSM.timeBase()
+			return Date.now() - SYSM.timeBase
 		}
 	},
 	Sys_GetCurrentUser: function () {

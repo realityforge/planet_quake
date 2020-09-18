@@ -1,27 +1,9 @@
-window = {}
-serverWorker = self
+"use strict";
+var window = {}
+if(typeof global != 'undefined')
+  global.window = window
+var serverWorker = self
 window.serverWorker = self
-window.location = new URL(location.origin + '?set dedicated 2')
-window.performance = performance
-quake3e = {}
-quake3e.noInitialRun = true
-quake3e.printErr = function (args) {
-  var args = Array.from(arguments)
-  if(args[0] && (args[0].includes('Sys_Error:')
-    || args[0].includes('Error:')
-    || args[0].includes('ERROR:')
-    || args[0].includes('server:')
-    || args[0].includes('Hunk_Clear:')
-    || args[0].includes('Frame Setup')
-    || args[0].includes('Shutdown')
-    || args[0].includes('DEMO:')
-    || args[0].includes('Game Initialization')
-    || args[0].includes('Runtime error:')
-    || args[0].includes('AAS initialized')))
-    console.error.apply(console, ['DedServer: '].concat(args))
-  else
-    console.log.apply(console, ['DedServer: '].concat(args))
-}
 importScripts('quake3e.js')
 var initIsFirst = false
 var runIsFirst = false
@@ -52,7 +34,7 @@ onmessage = function(e) {
   }
 }
 
-quake3e.onRuntimeInitialized = function() {
+Module.onRuntimeInitialized = function() {
   SYSM.args.unshift.apply(SYSM.args, [
     '+set', 'ttycon', '1',
     '+set', 'sv_master1', '207.246.91.235',
