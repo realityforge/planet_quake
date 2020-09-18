@@ -38,6 +38,9 @@ var LibrarySysMain = {
       //   renderer doesn't restart between maps, but BSP loading updates
       //   textures with lightmap by default, so this keeps them separate
       '+set', 'r_mergeLightmaps', '0',
+      '+set', 'r_deluxeMapping', '0',
+      '+set', 'r_normalMapping', '0',
+      '+set', 'r_specularMapping', '0',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',

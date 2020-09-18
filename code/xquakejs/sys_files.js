@@ -88,7 +88,8 @@ var LibrarySysFiles = {
           }
         }
 
-        if(file.name.match(/\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
+        // download files required to start
+        if(file.name.match(/description\.txt|\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
         // download files for menu system
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud[0-9]*\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
@@ -103,11 +104,12 @@ var LibrarySysFiles = {
           // these files can be streamed in
           file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion|gi)\//i)
           // download levelshots and common graphics
-          || file.name.match(/description\.txt|levelshots|(^|\/)ui\/|common\/|icons\/|menu\/|sfx\//i)
+          || file.name.match(/levelshots|(^|\/)ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
-          //SYSF.index[keys[i]].downloading = true
+          // TODO: reenable this when engine is stable, stream extra content
+          // don't mark as downloading so if its required it can be upgraded
           //SYSN.downloadLazy.push(file.name)
         } else {
         }
@@ -223,7 +225,7 @@ var LibrarySysFiles = {
         FS.writeFile(desc, prettyDesc, {
           encoding: 'binary', flags: 'w', canOwn: true })
         SYSF.index[desc.toLowerCase()] = {
-          name: desc,
+          name: desc.replace(fs_basepath, ''),
           size: prettyDesc.length
         }
       }

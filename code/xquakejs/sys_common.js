@@ -81,8 +81,8 @@ var LibrarySysCommon = {
 				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + name)
 			}
 			// all of these test links are in case someone fucks up conversion or startup
-			var tryMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)[0]
-			var noMod = name.replace(/^\/|-cc?r?\//ig, '').split(/\//ig)
+			var tryMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)[0]
+			var noMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)
 				.slice(1).join('/')
 			if(SYSF.mods.includes(tryMod + '-cc')) {
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)

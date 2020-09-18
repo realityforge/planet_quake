@@ -220,10 +220,11 @@ var LibrarySysNet = {
         if(err) {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
+          // don't need to save here because service-worker fetch() already did
           //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
           //  encoding: 'binary', flags: 'w', canOwn: true })
         }
-        FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+        FS.syncfs(false, Browser.safeCallback(_CL_Outside_NextDownload))
       })
     })
   },

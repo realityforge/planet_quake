@@ -2290,7 +2290,13 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 #endif
 }
 
-
+#ifdef EMSCRIPTEN
+void CL_Outside_NextDownload( void )
+{
+	Com_Frame_Callback(NULL, CL_NextDownload);
+	Com_Frame_Proxy();
+}
+#endif
 /*
 =================
 CL_NextDownload

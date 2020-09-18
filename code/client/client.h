@@ -474,6 +474,9 @@ void CL_ReadDemoMessage( void );
 void CL_StopRecord_f( void );
 
 void CL_InitDownloads( void );
+#ifdef EMSCRIPTEN
+void CL_Outside_NextDownload( void );
+#endif
 void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );

@@ -717,7 +717,7 @@ endif
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=0 \
+		-s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
@@ -727,7 +727,7 @@ endif
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
     -O3 -Oz \
-    -s WASM=0 \
+    -s WASM=1 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \
@@ -781,7 +781,7 @@ endif
     -s EXIT_RUNTIME=1 \
     -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
     -s ALLOW_TABLE_GROWTH=1 \
     -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \

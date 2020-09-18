@@ -208,6 +208,9 @@ if(typeof STEPS['convert'] != 'undefined') {
 if(noGraph && typeof STEPS['convert'] == 'undefined') {
   console.warn('Can\'t generate info with --no-graph option')
 }
+if(noGraph && !pk3dir) {
+  console.warn('Can\'t repack in to pk3s with --no-graph and without --pk3dir')
+}
 if(noGraph && usePrevious) {
   console.warn('Can\'t use previous graph because not graphing, use --no-overwrite to speed up extraction')
 } else if(usePrevious) {
@@ -220,6 +223,7 @@ if(mountPoints.length == 0) {
 } else {
   mountPoints.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
 }
+console.log(STEPS)
 for(var i = 0; i < mountPoints.length; i++) {
   var name = path.basename(mountPoints[i])
   console.log(`Repacking directory ${mountPoints[i]} -> ${path.join(TEMP_DIR, name + '-ccr')}`)
