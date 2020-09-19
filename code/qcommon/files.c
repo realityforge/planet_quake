@@ -3242,7 +3242,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	int index, checksum;
 	
 	thepak = FS_LoadZipFile( zipfile );
-Com_Printf( "Checksum: %s\n", zipfile);
+Com_Printf( "Checksum: %i, %s\n", fs_numServerReferencedPaks, zipfile);
 	
 	if ( !thepak )
 		return qfalse;
@@ -3254,6 +3254,7 @@ Com_Printf( "Checksum: %s\n", zipfile);
 	
 	for(index = 0; index < fs_numServerReferencedPaks; index++)
 	{
+Com_Printf( "Checksum: %s, %s\n", zipfile, fs_serverReferencedPakNames[index]);
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
 #ifdef EMSCRIPTEN
@@ -3261,7 +3262,6 @@ Com_Printf( "Checksum: %s\n", zipfile);
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
 		}
-Com_Printf( "Checksum: %s, %s\n", zipfile, fs_serverReferencedPakNames[index]);
 #endif
 
 	}
@@ -4410,7 +4410,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 		}
 
 		for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
-if(sp->pack)
 			if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[i] ) {
 				havepak = qtrue; // This is it!
 				break;

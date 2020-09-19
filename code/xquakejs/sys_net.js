@@ -212,10 +212,9 @@ var LibrarySysNet = {
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
-    
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
-      SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
+      //SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
@@ -223,9 +222,15 @@ var LibrarySysNet = {
         if(err) {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
+          var newKey = PATH.join(fs_basepath, cl_downloadName)
           // don't need to save here because service-worker fetch() already did
           //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
           //  encoding: 'binary', flags: 'w', canOwn: true })
+          // do need to add ad-hoc server downloads to the index
+          SYSF.index[newKey.toLowerCase()] = {
+            name: newKey.replace(fs_basepath, ''), // would try to delete/tryMod /baseq3/ but we just add it back on in DownloadIndex
+            size: new Uint8Array(data).length
+          }
         }
         FS.syncfs(false, Browser.safeCallback(_CL_Outside_NextDownload))
       })
