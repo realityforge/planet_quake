@@ -81,8 +81,8 @@ var LibrarySysCommon = {
 				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + name)
 			}
 			// all of these test links are in case someone fucks up conversion or startup
-			var tryMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)[0]
-			var noMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)
+			var tryMod = name.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)[0]
+			var noMod = name.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)
 				.slice(1).join('/')
 			if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
@@ -101,7 +101,7 @@ var LibrarySysCommon = {
 							doDownload(tryLinks[tryDownload])
 							return
 						}
-						onload(err, data)
+						onload(err, data, url)
 					}
 				})
 			}

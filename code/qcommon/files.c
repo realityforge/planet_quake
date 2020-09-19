@@ -4410,6 +4410,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 		}
 
 		for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
+if(sp->pack)
 			if ( sp->pack && sp->pack->checksum == fs_serverReferencedPaks[i] ) {
 				havepak = qtrue; // This is it!
 				break;

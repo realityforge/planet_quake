@@ -327,8 +327,10 @@ var LibrarySysFiles = {
     try {
       //contents = FS.readdir(directory)
       contents = Object.keys(SYSF.index)
-        .filter(function (k) { return k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
-          && (!dironly || typeof SYSF.index[k].size == 'undefined') })
+        .filter(function (k) { 
+          return k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
+            && (!dironly || typeof SYSF.index[k].size == 'undefined') 
+        })
         .map(function (k) { return PATH.basename(SYSF.index[k].name) })
         .filter(function (f, i, arr) { return f && arr.indexOf(f) === i })
         .filter(function (f) {

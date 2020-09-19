@@ -2315,7 +2315,7 @@ void CL_NextDownload( void )
  	{
  		const char *zippath = FS_BuildOSPath(Cvar_VariableString("fs_homepath"), clc.downloadName, NULL );
 
- 		if(!FS_CompareZipChecksum(clc.downloadName))
+ 		if(!FS_CompareZipChecksum(zippath))
  			Com_Error(ERR_DROP, "Incorrect checksum for file: %s", clc.downloadName);
  	}
 

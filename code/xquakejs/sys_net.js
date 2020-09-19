@@ -166,6 +166,8 @@ var LibrarySysNet = {
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
       var basename = PATH.dirname(filename)
+      var gamename = index.split(/\//ig)[0]
+      var tryMod = filename.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)[0]
 			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data) {
 				if(err) {
 					SYSN.LoadingDescription('')
@@ -174,17 +176,18 @@ var LibrarySysNet = {
 				}
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
-          if(typeof obj[k.toLowerCase()] == 'undefined') {
-            obj[k.toLowerCase()] = moreIndex[k]
+          var newKey = k.toLowerCase().replace(new RegExp(tryMod + '(-cc?r?)?\/', 'ig'), gamename + '/')
+          if(typeof obj[newKey] == 'undefined') {
+            obj[newKey] = moreIndex[k]
             // we use the downloading key because it doesn't
             //   come with the index.json from the server
             //   so we only recreate local paths once because it is saved below
             //   then it can be used by the engine to check for remote resources
             //   like FS_MapInIndex() or demos and cinematics files
-            if(typeof obj[k.toLowerCase()].downloading == 'undefined') {
-              obj[k.toLowerCase()].name = PATH.join(basename, moreIndex[k].name)
-              obj[k.toLowerCase()].shaders = []
-              obj[k.toLowerCase()].downloading = false
+            if(typeof obj[newKey].downloading == 'undefined') {
+              obj[newKey].name = PATH.join(basename, moreIndex[k].name)
+              obj[newKey].shaders = []
+              obj[newKey].downloading = false
             }
           }
 					return obj
