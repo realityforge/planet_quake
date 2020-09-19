@@ -2126,7 +2126,8 @@ static void CL_CompleteCallvote( char *args, int argNum )
 void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
 	FS_Restart_After_Async();
 	clc.dlDisconnect = qfalse;
-	CL_Reconnect_f();
+	Cvar_Set( "ui_singlePlayerActive", "0" );
+	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
 }
 
 void CL_DownloadsComplete_Disconnected_After_Shutdown( void ) {
