@@ -84,9 +84,11 @@ var LibrarySysCommon = {
 			var tryMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)[0]
 			var noMod = name.replace(/^\/|-cc?r?\//ig, '\/').split(/\//ig)
 				.slice(1).join('/')
-			if(SYSF.mods.includes(tryMod + '-cc')) {
-				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)
+			if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
 				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/' + noMod)
+				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/' + noMod)
 			}
 			var tryDownload = 0
 			var doDownload = function (url) {

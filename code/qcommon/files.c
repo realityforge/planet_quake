@@ -3242,6 +3242,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	int index, checksum;
 	
 	thepak = FS_LoadZipFile( zipfile );
+Com_Printf( "Checksum: %s\n", zipfile);
 	
 	if ( !thepak )
 		return qfalse;
@@ -3256,9 +3257,11 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
 #ifdef EMSCRIPTEN
+		// even if the pak checksum isn't the same, trust the pak is already downloaded
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
 		}
+Com_Printf( "Checksum: %s, %s\n", zipfile, fs_serverReferencedPakNames[index]);
 #endif
 
 	}

@@ -65,12 +65,7 @@ var LibrarySysFiles = {
       // servers need some map and model info for hitboxes up front
       for(var i = 0; i < keys.length; i++) {
         var file = SYSF.index[keys[i]]
-        if(typeof file.size == 'undefined') { // create a directory
-          try {
-          //  SYSC.mkdirp(PATH.join(SYSF.fs_basepath, file.name))
-          } catch (e) {
-            debugger
-          }
+        if(typeof file.size == 'undefined') { // skip directories, they are created during fetch
           continue
         }
       
