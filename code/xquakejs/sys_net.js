@@ -199,7 +199,10 @@ var LibrarySysNet = {
         var gameIndex = PATH.join(SYSF.fs_basepath, basename, "index.json")
         SYSF.index[gameIndex.toLowerCase()] = {
           name: gameIndex,
-          size: bits.length
+          size: bits.length,
+          shaders: [],
+          downloading: false,
+          alreadyDownloaded: true,
         }
 				FS.writeFile(gameIndex,
 				 	Uint8Array.from(bits.slice(0, bits.length-1)),
@@ -229,7 +232,10 @@ var LibrarySysNet = {
           // do need to add ad-hoc server downloads to the index
           SYSF.index[newKey.toLowerCase()] = {
             name: newKey.replace(fs_basepath, ''), // would try to delete/tryMod /baseq3/ but we just add it back on in DownloadIndex
-            size: new Uint8Array(data).length
+            size: new Uint8Array(data).length,
+            shaders: [],
+            downloading: false,
+            alreadyDownloaded: true,
           }
         }
         FS.syncfs(false, Browser.safeCallback(_CL_Outside_NextDownload))

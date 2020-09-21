@@ -147,8 +147,6 @@ var LibraryVM = {
 			return labels;
 		},
 		CompileModule: function (vmp, name, instructionCount, codeBase, dataBase) {
-			var fs_game = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)));
-
 			var state = {
 				name: name,
 				instructionCount: instructionCount,
@@ -1048,9 +1046,6 @@ var LibraryVM = {
 			result = VM.SUSPENDED;
 		}
 
-		// restore the current vm
-		//_VM_SetCurrent(savedVM);
-
 		// return value is at the top of the stack still
 		return result;
 	},
@@ -1088,9 +1083,6 @@ var LibraryVM = {
 			SYSC.Error('drop', 'invalid vm handle');
 			return;
 		}
-
-		//var savedVM = _VM_GetCurrent();
-		//_VM_SetCurrent(vmp);
 
 		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
 		var stackOnEntry = vm.stackOnEntry;
@@ -1136,9 +1128,6 @@ var LibraryVM = {
 
 			result = VM.SUSPENDED;
 		}
-
-		// restore the current vm
-		//_VM_SetCurrent(savedVM);
 
 		return result;
 	}

@@ -2145,6 +2145,12 @@ void CL_DownloadsComplete_After_Shutdown( void ) {
 	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_After_Startup);
 }
 
+void CL_Outside_NextDownload( void )
+{
+	Com_Frame_Callback(NULL, CL_NextDownload);
+	Com_Frame_Proxy();
+}
+
 #endif
 
 /*
@@ -2291,13 +2297,7 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 #endif
 }
 
-#ifdef EMSCRIPTEN
-void CL_Outside_NextDownload( void )
-{
-	Com_Frame_Callback(NULL, CL_NextDownload);
-	Com_Frame_Proxy();
-}
-#endif
+
 /*
 =================
 CL_NextDownload
@@ -2385,12 +2385,12 @@ void CL_NextDownload( void )
 					"(sv_allowDownload is %d)\n",
 					clc.sv_allowDownload);
 			}
-			else if(!*clc.sv_dlURL) {
-				Com_Printf("WARNING: server allows "
-					"download redirection, but does not "
-					"have sv_dlURL set\n");
-			}
 			else {
+				if(!*clc.sv_dlURL) {
+					Com_Printf("WARNING: server allows "
+						"download redirection, but does not "
+						"have sv_dlURL set\n");
+				}
 				Cvar_Set( "sv_dlURL", clc.sv_dlURL );
 				CL_BeginDownload( localName, remoteName );
 				useCURL = qtrue;
