@@ -21,6 +21,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // cl_main.c  -- client main loop
 
+#ifndef USE_LNBITS
+#define USE_LNBITS	1
+#endif
+
 #include "client.h"
 #include <limits.h>
 
@@ -1882,7 +1886,6 @@ static void CL_SendPureChecksums( void ) {
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
 	strcpy( cMsg + len, FS_ReferencedPakPureChecksums( sizeof( cMsg ) - len - 1 ) );
 
-Com_Printf("Pure: %s\n", cMsg);
 	CL_AddReliableCommand( cMsg, qfalse );
 }
 
@@ -4259,6 +4262,9 @@ void CL_Init( void ) {
 #endif
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 	CL_UpdateGUID( NULL, 0 );
+#ifdef USE_LNBITS
+	Cvar_Get( "cl_lnInvoice", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
+#endif
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
 }

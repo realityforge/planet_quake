@@ -337,7 +337,14 @@ Server.prototype.websockify = async function (reqInfo) {
   self._listeners[reqInfo.dstPort].on('close', () => {
     wss.close()
   })
-  await new Promise(resolve => httpServer.listen(port, reqInfo.dstAddr, resolve))
+  await new Promise(resolve => {
+    try {
+      httpServer.listen(port, reqInfo.dstAddr, resolve)
+    } catch (e) {
+      console.log(e.message)
+    }
+    resolve()
+  })
 }
 
 Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqInfo, dstIP) {
@@ -417,6 +424,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         self._timeouts[port] = Date.now()
         socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
       } else {
+        // this is a TCP ip connection with no prior bindings?
         console.log('SHOULD NEVER HIT HERE', reqInfo)
         var dstSock = new Socket()
         socket.dstSock = dstSock

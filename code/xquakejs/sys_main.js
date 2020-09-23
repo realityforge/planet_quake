@@ -24,6 +24,7 @@ var LibrarySysMain = {
       '+set', 'cl_lazyLoad', '1',
       '+set', 'rconpassword', 'password123!',
       '+set', 'cg_drawfps', '1',
+      '+set', 'cl_guidServerUniq', '1', // more randomness for server cl_guid so lnbitcoin never overlaps clients
       
       // settings for browser that might help keep garbage low
       //'+set', 'com_hunkMegs', '256',

@@ -1764,6 +1764,10 @@ Q3DOBJ = \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o
+	
+ifeq ($(USE_CURL),1)
+  Q3DOBJ += $(B)/ded/cl_curl.o
+endif
 
 ifdef MINGW
   Q3DOBJ += \

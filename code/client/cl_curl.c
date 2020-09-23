@@ -282,6 +282,7 @@ static void CL_cURL_CloseDownload( void )
 	clc.download = FS_INVALID_HANDLE;
 }
 
+#ifndef DEDICATED
 void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 {
 	CURLMcode result;
@@ -363,7 +364,7 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 		clc.cURLDisconnected = qtrue;
 	}
 }
-
+#endif
 
 void CL_cURL_PerformDownload( void )
 {

@@ -755,6 +755,27 @@ gotnewcl:
 	cl->multiview.recorder = qfalse;
 #endif
 
+#ifdef USE_LNBITS
+	// generate an invoice for lnbits for this client
+	if(sv_lnWallet->string[0] != '\0' && sv_lnMatchPrice->integer > 0) {
+		char invoice[MAX_OSPATH];
+		char invoicePost[MAX_OSPATH];
+		char *invoiceID = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
+		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json",
+		 	Info_ValueForKey(cl->userinfo, "cl_guid") );
+		Com_sprintf( invoicePost, sizeof( invoicePost ),
+			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
+			sv_lnMatchPrice->integer, Info_ValueForKey(cl->userinfo, "cl_guid"));
+		if(invoiceID[0] == '\0') {
+			// perform curl request to get invoice id
+			
+		} else {
+			// check lnbits invoice for client
+			
+		}
+	}
+#endif
+
 	// send the connect packet to the client
 	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d", challenge );
 

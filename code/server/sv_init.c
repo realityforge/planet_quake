@@ -19,6 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
+#define	USE_LNBITS	1
 
 #include "server.h"
 
@@ -914,6 +915,15 @@ void SV_Init( void )
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
+#endif
+
+#ifdef USE_LNBITS
+	sv_lnMatchPrice = Cvar_Get("sv_lnMatchPrice", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnMatchCut = Cvar_Get("sv_lnMatchCut", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP | CVAR_ROM);
+	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
+	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
+	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
 #endif
 
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
