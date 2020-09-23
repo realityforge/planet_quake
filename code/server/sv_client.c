@@ -23,13 +23,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+#ifdef USE_CURL
+#ifdef USE_LNBITS
+int      oldestInvoiceTime;
+client_t *oldestInvoiceClient;
+#endif
+download_t			svDownload;
 #ifdef DEDICATED
 clientConnection_t	clc;
 clientStatic_t		cls;
 cvar_t	*cl_dlDirectory;
 #endif
-#ifdef USE_CURL
-download_t			svDownload;
 #endif
 
 static void SV_CloseDownload( client_t *cl );
@@ -450,6 +454,46 @@ void SV_Download( const char *localName, const char *remoteName ) {
 }
 
 
+#ifdef USE_LNBITS
+void SV_CheckInvoicesAndPayments( client_t *cl ) {
+	if(!cl) return;
+	cl->lastInvoiceTime = Sys_Milliseconds();
+	if(!cl->pendingInvoice && !cl->pendingPayment) return;
+	
+	if(!svDownload.cURL) {
+		char invoice[MAX_OSPATH];
+		char *cl_invoice = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
+		char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
+		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", cl_guid );
+		if(cl->pendingInvoice) {
+			// check for json file
+			if(FS_SV_FileExists( invoice )) {
+				// extract key
+				int r;
+				fileHandle_t invoiceKey;
+				char buf[MAX_OSPATH];
+				FS_FOpenFileRead(invoice, &invoiceKey, qtrue);
+				do {
+					r = FS_Read(buf, MAX_OSPATH, invoiceKey);
+					Com_Printf( "CheckInvoice: %s\n", buf);
+				} while(r > 0);
+			} else {
+				// create the invoice
+				char invoicePost[MAX_OSPATH];
+				Com_sprintf( invoicePost, sizeof( invoicePost ),
+					"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
+					sv_lnMatchPrice->integer, cl_guid );
+				SV_Download(invoice, va("%s/payments", sv_lnAPI->string));
+			}
+		} else if (cl->pendingPayment) {
+			// check for payment
+			SV_Download(invoice, 
+				va("%s/payments/%s", sv_lnAPI->string, cl_invoice));
+		}
+	}
+}
+#endif
+
 /*
 ==================
 SV_DirectConnect
@@ -787,24 +831,14 @@ gotnewcl:
 #ifdef USE_LNBITS
 	// generate an invoice for lnbits for this client
 	if(sv_lnWallet->string[0] != '\0' && sv_lnMatchPrice->integer > 0) {
-		char invoice[MAX_OSPATH];
-		char invoicePost[MAX_OSPATH];
-		char invoiceID[64];
-		char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
 		char *cl_invoice = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
-		Com_sprintf( invoiceID, sizeof( invoiceID ), "%s", cl_invoice );
-		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", cl_guid );
-		Com_sprintf( invoicePost, sizeof( invoicePost ),
-			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-			sv_lnMatchPrice->integer, cl_guid );
-		if(invoiceID[0] == '\0') {
+		if(cl_invoice[0] == '\0') {
 			// perform curl request to get invoice id
-			SV_Download(invoice, 
-				va("%s/payments", sv_lnAPI->string));
+			cl->pendingInvoice = qtrue;
 		} else {
+			cl->pendingInvoice = qfalse;
 			// check lnbits invoice for client
-			SV_Download(invoice, 
-				va("%s/payments/%s", sv_lnAPI->string, invoiceID));
+			cl->pendingPayment = qtrue;
 		}
 	}
 #endif

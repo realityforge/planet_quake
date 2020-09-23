@@ -86,6 +86,8 @@ static void *GPA(char *str)
 }
 #endif /* USE_CURL_DLOPEN */
 
+#ifndef DEDICATED
+
 /*
 =================
 CL_cURL_Init
@@ -221,8 +223,6 @@ void CL_cURL_Cleanup(void)
 	}
 }
 
-#ifndef DEDICATED
-
 static int CL_cURL_CallbackProgress( void *dummy, double dltotal, double dlnow,
 	double ultotal, double ulnow )
 {
@@ -281,6 +281,8 @@ CURLcode qcurl_easy_setopt_warn(CURL *curl, CURLoption option, ...)
 	return result;
 }
 
+#ifndef DEDICATED
+
 static void CL_cURL_CloseDownload( void ) 
 {
 	if ( clc.download != FS_INVALID_HANDLE )
@@ -288,7 +290,6 @@ static void CL_cURL_CloseDownload( void )
 	clc.download = FS_INVALID_HANDLE;
 }
 
-#ifndef DEDICATED
 void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 {
 	CURLMcode result;
@@ -370,7 +371,6 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 		clc.cURLDisconnected = qtrue;
 	}
 }
-#endif
 
 void CL_cURL_PerformDownload( void )
 {
@@ -405,12 +405,9 @@ void CL_cURL_PerformDownload( void )
 			code, clc.downloadURL);
 	}
 
-#ifndef DEDICATED
-	CL_NextDownload();
-#else
-  // TODO: update server download status
-#endif
+  CL_NextDownload();
 }
+#endif
 
 
 /*  
@@ -1039,11 +1036,11 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 
 		Com_DL_Cleanup( dl );
+#ifndef DEDICATED
 		FS_Reload(); //clc.downloadRestart = qtrue;
 		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
 		if ( autoDownload )
 		{
-#ifndef DEDICATED
 			if ( cls.state == CA_CONNECTED && !clc.demoplaying )
 			{
 				CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
@@ -1054,9 +1051,9 @@ qboolean Com_DL_Perform( download_t *dl )
 				cls.startCgame = qtrue;
 				Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 			}
-#endif
 		}
-		return qfalse;
+#endif
+	  return qfalse;
 	}
 	else
 	{

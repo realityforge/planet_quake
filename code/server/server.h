@@ -242,6 +242,12 @@ typedef struct client_s {
 	int				downloadBlockSize[MAX_DOWNLOAD_WINDOW];
 	qboolean		downloadEOF;		// We have sent the EOF block
 	int				downloadSendTime;	// time we last got an ack from the client
+	
+#ifdef USE_LNBITS
+	int       lastInvoiceTime;
+	qboolean  pendingInvoice;
+	qboolean  pendingPayment;
+#endif
 
 	int				deltaMessage;		// frame last client usercmd message
 	int				lastPacketTime;		// svs.time when packet was last received
@@ -455,6 +461,10 @@ typedef struct {
 extern	clientStatic_t		cls;
 extern	clientConnection_t clc;
 extern	cvar_t	*cl_dlDirectory;
+#endif
+#ifdef USE_LNBITS
+extern  int oldestInvoiceTime;
+extern  client_t *oldestInvoiceClient;
 #endif
 
 extern		download_t	svDownload;

@@ -1129,6 +1129,13 @@ static void SV_CalcPings( void ) {
 			cl->ping = 0;
 			continue;
 		}
+#ifdef USE_LNBITS
+		if((cl->pendingInvoice || cl->pendingPayment)
+		 	&& cl->lastInvoiceTime < oldestInvoiceTime) {
+			oldestInvoiceTime = cl->lastInvoiceTime;
+			oldestInvoiceClient = cl;
+		}
+#endif
 
 		total = 0;
 		count = 0;
@@ -1379,6 +1386,13 @@ void SV_Frame( int msec ) {
 		return;
 	}
 
+#ifdef USE_CURL	
+	if ( svDownload.cURL ) 
+	{
+		Com_DL_Perform( &svDownload );
+	}
+#endif
+
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {
 		return;
@@ -1467,6 +1481,10 @@ void SV_Frame( int msec ) {
 
 	// update ping based on the all received frames
 	SV_CalcPings();
+	
+#ifdef USE_LNBITS
+	SV_CheckInvoicesAndPayments(oldestInvoiceClient);
+#endif
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 
