@@ -389,9 +389,9 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(USE_CURL),1)
-    CLIENT_CFLAGS += $(CURL_CFLAGS)
+    BASE_CFLAGS += -DUSE_CURL
     ifneq ($(USE_CURL_DLOPEN),1)
-      CLIENT_LIBS += $(CURL_LIBS)
+      BASE_CFLAGS += -DUSE_CURL_DLOPEN
     endif
   endif
 
@@ -517,7 +517,6 @@ ifdef MINGW
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
-    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
     ifeq ($(ARCH),x86)
       CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
       CLIENT_LDFLAGS += -lSDL2
@@ -1897,6 +1896,9 @@ $(B)/client/%.o: $(QUAKEJS)/%.c
 
 $(B)/ded/%.o: $(ADIR)/%.s
 	$(DO_AS)
+
+$(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)

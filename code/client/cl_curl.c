@@ -21,7 +21,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #ifdef USE_CURL
+#ifndef DEDICATED
 #include "client.h"
+#else
+#include "../server/server.h"
+#endif
 cvar_t *cl_cURLLib;
 
 #define ALLOWED_PROTOCOLS ( CURLPROTO_HTTP | CURLPROTO_HTTPS | CURLPROTO_FTP | CURLPROTO_FTPS )
@@ -217,6 +221,8 @@ void CL_cURL_Cleanup(void)
 	}
 }
 
+#ifndef DEDICATED
+
 static int CL_cURL_CallbackProgress( void *dummy, double dltotal, double dlnow,
 	double ultotal, double ulnow )
 {
@@ -226,7 +232,6 @@ static int CL_cURL_CallbackProgress( void *dummy, double dltotal, double dlnow,
 	Cvar_SetIntegerValue( "cl_downloadCount", clc.downloadCount );
 	return 0;
 }
-
 
 static size_t CL_cURL_CallbackWrite( void *buffer, size_t size, size_t nmemb, void *stream )
 {
@@ -247,6 +252,7 @@ static size_t CL_cURL_CallbackWrite( void *buffer, size_t size, size_t nmemb, vo
 	FS_Write( buffer, size*nmemb, ((fileHandle_t*)stream)[0] );
 	return size*nmemb;
 }
+#endif
 
 
 CURLcode qcurl_easy_setopt_warn(CURL *curl, CURLoption option, ...)
@@ -399,7 +405,11 @@ void CL_cURL_PerformDownload( void )
 			code, clc.downloadURL);
 	}
 
+#ifndef DEDICATED
 	CL_NextDownload();
+#else
+  // TODO: update server download status
+#endif
 }
 
 
@@ -701,6 +711,7 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 	dl->Size = (int)dltotal;
 	dl->Count = (int)dlnow;
 
+#ifndef DEDICATED
 	if ( dl->mapAutoDownload && cls.state == CA_CONNECTED )
 	{
 		if ( Key_IsDown( K_ESCAPE ) )
@@ -711,6 +722,7 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 		Cvar_Set( "cl_downloadSize", va( "%i", dl->Size ) );
 		Cvar_Set( "cl_downloadCount", va( "%i", dl->Count ) );
 	}
+#endif
 
 	if ( dl->Size ) {
 		percentage = ( dlnow / dltotal ) * 100.0;
@@ -740,12 +752,14 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
 	{
+#ifndef DEDICATED
 		if ( !CL_ValidPakSignature( ptr, size*nmemb ) ) 
 		{
 			Com_Printf( S_COLOR_YELLOW "Com_DL_CallbackWrite(): invalid pak signature for %s.\n", 
 				dl->Name );
 			return (size_t)-1;
 		}
+#endif
 
 		dl->fHandle = FS_SV_FOpenFileWrite( dl->TempName );
 		if ( dl->fHandle == FS_INVALID_HANDLE ) 
@@ -1029,6 +1043,7 @@ qboolean Com_DL_Perform( download_t *dl )
 		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
 		if ( autoDownload )
 		{
+#ifndef DEDICATED
 			if ( cls.state == CA_CONNECTED && !clc.demoplaying )
 			{
 				CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
@@ -1039,6 +1054,7 @@ qboolean Com_DL_Perform( download_t *dl )
 				cls.startCgame = qtrue;
 				Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 			}
+#endif
 		}
 		return qfalse;
 	}
@@ -1053,10 +1069,12 @@ qboolean Com_DL_Perform( download_t *dl )
 		FS_Remove( name );
 		if ( autoDownload )
 		{
+#ifndef DEDICATED
 			if ( cls.state == CA_CONNECTED )
 			{
 				Com_Error( ERR_DROP, "%s\n", "download error" );
 			}
+#endif
 		}
 	}
 

@@ -587,7 +587,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 ;
 
-	Sys_SetStatus( va("Loading map %s", mapname) );
+	Sys_SetStatus( "%s", va("Loading map %s", mapname) );
 	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
@@ -767,7 +767,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	Com_Printf ("-----------------------------------\n");
 	
-	Sys_SetStatus( va("Running map %s", mapname) );
+	Sys_SetStatus( "%s", va("Running map %s", mapname) );
 	startingServer = qfalse;
 
 	// start recording a demo

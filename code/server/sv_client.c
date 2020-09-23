@@ -23,6 +23,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+#ifdef DEDICATED
+clientConnection_t	clc;
+clientStatic_t		cls;
+cvar_t	*cl_dlDirectory;
+#endif
 #ifdef USE_CURL
 download_t			svDownload;
 #endif
@@ -425,29 +430,22 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-static void SV_Download( const char *localName, const char *remoteName ) {
+void SV_Download( const char *localName, const char *remoteName ) {
 
 	Com_DPrintf("***** CL_BeginDownload *****\n"
 				"Localname: %s\n"
 				"Remotename: %s\n"
 				"****************************\n", localName, remoteName);
 
-	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
-	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
-
 	// Set so UI gets access to it
 	Cvar_Set( "cl_downloadName", remoteName );
 	Cvar_Set( "cl_downloadSize", "0" );
 	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
-
-	clc.downloadBlock = 0; // Starting new file
-	clc.downloadCount = 0;
 
 #ifdef EMSCRIPTEN
 	Sys_BeginDownload();
 #else
-	CL_cURL_BeginDownload(localName, remoteName);
+	Com_DL_Begin(&svDownload, localName, remoteName, qtrue, qtrue);
 #endif
 }
 
@@ -793,21 +791,20 @@ gotnewcl:
 		char invoicePost[MAX_OSPATH];
 		char invoiceID[64];
 		char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
-		Com_sprintf( invoiceID, sizeof( invoiceID ),
-			Info_ValueForKey(cl->userinfo, "cl_lnInvoice") );
-		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json",
-		 	cl_guid );
+		char *cl_invoice = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
+		Com_sprintf( invoiceID, sizeof( invoiceID ), "%s", cl_invoice );
+		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", cl_guid );
 		Com_sprintf( invoicePost, sizeof( invoicePost ),
 			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
 			sv_lnMatchPrice->integer, cl_guid );
 		if(invoiceID[0] == '\0') {
 			// perform curl request to get invoice id
-			SV_Download(localName, 
+			SV_Download(invoice, 
 				va("%s/payments", sv_lnAPI->string));
 		} else {
 			// check lnbits invoice for client
-			SV_Download(localName, 
-				va("%s/payments/%s", sv_lnAPI->string, &invoiceID));
+			SV_Download(invoice, 
+				va("%s/payments/%s", sv_lnAPI->string, invoiceID));
 		}
 	}
 #endif

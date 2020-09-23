@@ -20,7 +20,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // server.h
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
+#include "../qcommon/vm_local.h"
+#include "../game/g_public.h"
+#include "../game/bg_public.h"
+
 #ifdef USE_CURL
+#include "../client/cl_curl.h"
 #define	USE_LNBITS	1
 #else
 #ifdef EMSCRIPTEN
@@ -32,11 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #endif
 
-#include "../qcommon/q_shared.h"
-#include "../qcommon/qcommon.h"
-#include "../qcommon/vm_local.h"
-#include "../game/g_public.h"
-#include "../game/bg_public.h"
 
 //=============================================================================
 
@@ -430,13 +432,38 @@ extern	cvar_t  *sv_lnAPI;
 
 //===========================================================
 #ifdef USE_CURL
+#ifdef DEDICATED
+typedef struct {
+	fileHandle_t download;
+	char		downloadTempName[MAX_OSPATH];
+	char		downloadName[MAX_OSPATH];
+	int			downloadCount;	// how many bytes we got
+	int			downloadSize;	// how many bytes we got
+	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
+	qboolean	cURLEnabled;
+	qboolean	cURLUsed;
+	qboolean	cURLDisconnected;
+	char		downloadURL[MAX_OSPATH];
+	CURL		*downloadCURL;
+	CURLM		*downloadCURLM;
+} clientConnection_t;
+
+typedef struct {
+	int			realtime;			// ignores pause	
+} clientStatic_t;
+
+extern	clientStatic_t		cls;
+extern	clientConnection_t clc;
+extern	cvar_t	*cl_dlDirectory;
+#endif
 
 extern		download_t	svDownload;
 qboolean	Com_DL_Perform( download_t *dl );
 void		Com_DL_Cleanup( download_t *dl );
+qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
 qboolean	Com_DL_InProgress( const download_t *dl );
 qboolean	Com_DL_ValidFileName( const char *fileName );
-qboolean	SV_Download( const char *localName, const char *remoteName );
+void	SV_Download( const char *localName, const char *remoteName );
 
 #endif
 
