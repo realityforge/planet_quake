@@ -769,7 +769,8 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_VariableStringBuffer( "fs_game", oldGame, sizeof( oldGame ) );
 
 	// parse useful values out of CS_SERVERINFO
-	+ cl.gameState.stringOffsets[ CS_SERVERINFO ]);
+	Com_Printf("Gamestate: %s\n", cl.gameState.stringData
+		+ cl.gameState.stringOffsets[ CS_SERVERINFO ]);
 	CL_ParseServerInfo();
 
 	// parse serverId and other cvars

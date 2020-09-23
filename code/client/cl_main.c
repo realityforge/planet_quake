@@ -21,8 +21,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // cl_main.c  -- client main loop
 
-#ifndef USE_LNBITS
-#define USE_LNBITS	1
+#ifdef USE_CURL
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
 #endif
 
 #include "client.h"

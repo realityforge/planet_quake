@@ -20,6 +20,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // server.h
+#ifdef USE_CURL
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
+#endif
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
@@ -410,7 +421,24 @@ extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*sv_demoTolerant;
 extern	cvar_t	*sv_democlients; // number of democlients: this should always be set to 0, and will be automatically adjusted when needed by the demo facility. ATTENTION: if sv_maxclients = sv_democlients then server will be full! sv_democlients consume clients slots even if there are no democlients recorded nor replaying for this slot!
 
+extern	cvar_t  *sv_lnMatchPrice;
+extern	cvar_t  *sv_lnMatchCut;
+extern	cvar_t  *sv_lnMatchReward;
+extern	cvar_t  *sv_lnWallet;
+extern	cvar_t  *sv_lnKey;
+extern	cvar_t  *sv_lnAPI;
+
 //===========================================================
+#ifdef USE_CURL
+
+extern		download_t	svDownload;
+qboolean	Com_DL_Perform( download_t *dl );
+void		Com_DL_Cleanup( download_t *dl );
+qboolean	Com_DL_InProgress( const download_t *dl );
+qboolean	Com_DL_ValidFileName( const char *fileName );
+qboolean	SV_Download( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
+
+#endif
 
 //
 // sv_main.c

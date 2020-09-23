@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+#ifdef USE_CURL
+download_t			svDownload;
+#endif
+
 static void SV_CloseDownload( client_t *cl );
 
 //
@@ -760,18 +764,21 @@ gotnewcl:
 	if(sv_lnWallet->string[0] != '\0' && sv_lnMatchPrice->integer > 0) {
 		char invoice[MAX_OSPATH];
 		char invoicePost[MAX_OSPATH];
-		char *invoiceID = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
+		char invoiceID[64];
+		char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
+		Com_sprintf( invoiceID, sizeof( invoiceID ),
+			Info_ValueForKey(cl->userinfo, "cl_lnInvoice") );
 		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json",
-		 	Info_ValueForKey(cl->userinfo, "cl_guid") );
+		 	cl_guid );
 		Com_sprintf( invoicePost, sizeof( invoicePost ),
 			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-			sv_lnMatchPrice->integer, Info_ValueForKey(cl->userinfo, "cl_guid"));
+			sv_lnMatchPrice->integer, cl_guid );
 		if(invoiceID[0] == '\0') {
 			// perform curl request to get invoice id
-			
+			va("%s/payments", sv_lnAPI->string);
 		} else {
 			// check lnbits invoice for client
-			
+			va("%s/payments/%s", sv_lnAPI->string, &invoiceID);
 		}
 	}
 #endif
