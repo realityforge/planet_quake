@@ -425,6 +425,33 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
+static void SV_Download( const char *localName, const char *remoteName ) {
+
+	Com_DPrintf("***** CL_BeginDownload *****\n"
+				"Localname: %s\n"
+				"Remotename: %s\n"
+				"****************************\n", localName, remoteName);
+
+	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
+	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
+
+	// Set so UI gets access to it
+	Cvar_Set( "cl_downloadName", remoteName );
+	Cvar_Set( "cl_downloadSize", "0" );
+	Cvar_Set( "cl_downloadCount", "0" );
+	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
+
+	clc.downloadBlock = 0; // Starting new file
+	clc.downloadCount = 0;
+
+#ifdef EMSCRIPTEN
+	Sys_BeginDownload();
+#else
+	CL_cURL_BeginDownload(localName, remoteName);
+#endif
+}
+
+
 /*
 ==================
 SV_DirectConnect
@@ -775,10 +802,12 @@ gotnewcl:
 			sv_lnMatchPrice->integer, cl_guid );
 		if(invoiceID[0] == '\0') {
 			// perform curl request to get invoice id
-			va("%s/payments", sv_lnAPI->string);
+			SV_Download(localName, 
+				va("%s/payments", sv_lnAPI->string));
 		} else {
 			// check lnbits invoice for client
-			va("%s/payments/%s", sv_lnAPI->string, &invoiceID);
+			SV_Download(localName, 
+				va("%s/payments/%s", sv_lnAPI->string, &invoiceID));
 		}
 	}
 #endif

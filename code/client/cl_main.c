@@ -2162,6 +2162,37 @@ void CL_Outside_NextDownload( void )
 	Com_Frame_Proxy();
 }
 
+static void CL_em_BeginDownload( const char *localName, const char *remoteName ) {
+
+	Com_DPrintf("***** CL_BeginDownload *****\n"
+				"Localname: %s\n"
+				"Remotename: %s\n"
+				"****************************\n", localName, remoteName);
+
+	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
+	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
+
+	// Set so UI gets access to it
+	Cvar_Set( "cl_downloadName", remoteName );
+	Cvar_Set( "cl_downloadSize", "0" );
+	Cvar_Set( "cl_downloadCount", "0" );
+	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
+
+	clc.downloadBlock = 0; // Starting new file
+	clc.downloadCount = 0;
+
+	Sys_BeginDownload();
+	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
+		!clc.dlDisconnect) {
+
+		CL_AddReliableCommand("disconnect", qtrue);
+		CL_WritePacket();
+		CL_WritePacket();
+		CL_WritePacket();
+		clc.dlDisconnect = qtrue;
+	}
+}
+
 #endif
 
 /*
@@ -2292,20 +2323,7 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
 
-#ifdef EMSCRIPTEN
-	Sys_BeginDownload();
-	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
-		!clc.dlDisconnect) {
-
-		CL_AddReliableCommand("disconnect", qtrue);
-		CL_WritePacket();
-		CL_WritePacket();
-		CL_WritePacket();
-		clc.dlDisconnect = qtrue;
-	}
-#else
 	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
-#endif
 }
 
 
@@ -2403,7 +2421,7 @@ void CL_NextDownload( void )
 						"have sv_dlURL set\n");
 				}
 				Cvar_Set( "sv_dlURL", clc.sv_dlURL );
-				CL_BeginDownload( localName, remoteName );
+				CL_em_BeginDownload( localName, remoteName );
 				useCURL = qtrue;
 			}
 		}
@@ -2415,7 +2433,7 @@ void CL_NextDownload( void )
 		}
 #endif /* EMSCRIPTEN */
 		if( !useCURL ) {
-		if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
+			if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
 					"disabled on your client. "
 					"(cl_allowDownload is %d)",

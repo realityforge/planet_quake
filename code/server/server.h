@@ -436,7 +436,7 @@ qboolean	Com_DL_Perform( download_t *dl );
 void		Com_DL_Cleanup( download_t *dl );
 qboolean	Com_DL_InProgress( const download_t *dl );
 qboolean	Com_DL_ValidFileName( const char *fileName );
-qboolean	SV_Download( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
+qboolean	SV_Download( const char *localName, const char *remoteName );
 
 #endif
 
