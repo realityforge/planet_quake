@@ -1129,13 +1129,6 @@ static void SV_CalcPings( void ) {
 			cl->ping = 0;
 			continue;
 		}
-#ifdef USE_LNBITS
-		if((cl->pendingInvoice || cl->pendingPayment)
-		 	&& cl->lastInvoiceTime < oldestInvoiceTime) {
-			oldestInvoiceTime = cl->lastInvoiceTime;
-			oldestInvoiceClient = cl;
-		}
-#endif
 
 		total = 0;
 		count = 0;
@@ -1483,7 +1476,7 @@ void SV_Frame( int msec ) {
 	SV_CalcPings();
 	
 #ifdef USE_LNBITS
-	SV_CheckInvoicesAndPayments(oldestInvoiceClient);
+	SV_CheckInvoicesAndPayments();
 #endif
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);

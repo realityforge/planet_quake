@@ -24,16 +24,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "server.h"
 
 #ifdef USE_CURL
-#ifdef USE_LNBITS
-int      oldestInvoiceTime;
-client_t *oldestInvoiceClient;
-#endif
 download_t			svDownload;
 #ifdef DEDICATED
 clientConnection_t	clc;
-clientStatic_t		cls;
-cvar_t	*cl_dlDirectory;
+clientStatic_t		  cls;
+cvar_t	            *cl_dlDirectory;
 #endif
+#endif
+
+#ifdef USE_LNBITS
+invoice_t *maxInvoices;
+int       numInvoices;
+int       oldestInvoiceTime;
+invoice_t *oldestInvoice;
 #endif
 
 static void SV_CloseDownload( client_t *cl );
@@ -455,17 +458,26 @@ void SV_Download( const char *localName, const char *remoteName ) {
 
 
 #ifdef USE_LNBITS
-void SV_CheckInvoicesAndPayments( client_t *cl ) {
-	if(!cl) return;
-	cl->lastInvoiceTime = Sys_Milliseconds();
-	if(!cl->pendingInvoice && !cl->pendingPayment) return;
-	
+void SV_CheckInvoicesAndPayments( void ) {
+	int i;
+	if(!maxInvoices) return;
+
+	oldestInvoiceTime = Sys_Milliseconds();
+	for(i=0;i<(sv_maxclients->integer+10);i++) {
+		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
+			&& !maxInvoices[i].invoice[0] && !maxInvoices[i].paid) {
+			oldestInvoiceTime = maxInvoices[i].lastTime;
+			oldestInvoice = &maxInvoices[i];
+		}
+	}
+
+	if(!oldestInvoice || !oldestInvoice->guid[0]) return;
+	oldestInvoice->lastTime = Sys_Milliseconds();
+
 	if(!svDownload.cURL) {
 		char invoice[MAX_OSPATH];
-		char *cl_invoice = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
-		char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
-		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", cl_guid );
-		if(cl->pendingInvoice) {
+		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", oldestInvoice->guid );
+		if(!oldestInvoice->invoice[0]) {
 			// check for json file
 			if(FS_SV_FileExists( invoice )) {
 				// extract key
@@ -482,13 +494,15 @@ void SV_CheckInvoicesAndPayments( client_t *cl ) {
 				char invoicePost[MAX_OSPATH];
 				Com_sprintf( invoicePost, sizeof( invoicePost ),
 					"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-					sv_lnMatchPrice->integer, cl_guid );
+					sv_lnMatchPrice->integer, oldestInvoice->guid );
+				Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 				SV_Download(invoice, va("%s/payments", sv_lnAPI->string));
 			}
-		} else if (cl->pendingPayment) {
+		} else if (!oldestInvoice->paid) {
 			// check for payment
+			Com_DPrintf ("Polling payment for %s.\n", oldestInvoice->invoice);
 			SV_Download(invoice, 
-				va("%s/payments/%s", sv_lnAPI->string, cl_invoice));
+				va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->invoice));
 		}
 	}
 }
@@ -770,6 +784,43 @@ void SV_DirectConnect( const netadr_t *from ) {
 		}
 	}
 
+#ifdef USE_LNBITS
+	// generate an invoice for lnbits for this client
+	if(*sv_lnWallet->string && sv_lnMatchPrice->integer > 0) {
+		char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
+		char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
+		if(!*cl_invoice) {
+			qboolean found = qfalse;
+			// perform curl request to get invoice id
+			newcl->pendingInvoice = qtrue;
+			NET_OutOfBandPrint( NS_SERVER, from, "print\nPayment required\n" );
+			for(i=0;i<sv_maxclients->integer+10;i++) {
+				if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
+					found = qtrue;
+					break;
+				}
+			}
+			if(!found) {
+				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
+				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
+				strcpy(maxInvoices[numInvoices].guid, cl_guid);
+				numInvoices++;
+				if(numInvoices > sv_maxclients->integer+10) {
+					numInvoices = 0;
+				}
+			}
+			return;
+		} else {
+			newcl->pendingInvoice = qfalse;
+			// check lnbits invoice for client
+			newcl->pendingPayment = qtrue;
+			NET_OutOfBandPrint( NS_SERVER, from, "print\nAwaiting payment\n" );
+			Com_DPrintf( "Checking payment for client: %s.\n", cl_guid );
+			return;
+		}
+	}
+#endif
+
 gotnewcl:
 	// build a new connection
 	// accept the new client
@@ -823,24 +874,9 @@ gotnewcl:
 
 #ifdef USE_MV
 #ifdef USE_MV_ZCMD
-	cl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
+	newcl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
 #endif
-	cl->multiview.recorder = qfalse;
-#endif
-
-#ifdef USE_LNBITS
-	// generate an invoice for lnbits for this client
-	if(sv_lnWallet->string[0] != '\0' && sv_lnMatchPrice->integer > 0) {
-		char *cl_invoice = Info_ValueForKey(cl->userinfo, "cl_lnInvoice");
-		if(cl_invoice[0] == '\0') {
-			// perform curl request to get invoice id
-			cl->pendingInvoice = qtrue;
-		} else {
-			cl->pendingInvoice = qfalse;
-			// check lnbits invoice for client
-			cl->pendingPayment = qtrue;
-		}
-	}
+	newcl->multiview.recorder = qfalse;
 #endif
 
 	// send the connect packet to the client
@@ -1069,6 +1105,9 @@ static void SV_SendClientGameState( client_t *client ) {
 	const svEntity_t *svEnt;
 	msg_t		msg;
 	byte		msgBuffer[ MAX_MSGLEN_BUF ];
+	
+	if(client->pendingInvoice || client->pendingPayment)
+	 	return;
 
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 
@@ -1278,7 +1317,7 @@ Downloads are finished
 ==================
 */
 static void SV_DoneDownload_f( client_t *cl ) {
-	if ( cl->state == CS_ACTIVE )
+	if ( cl->state == CS_ACTIVE || cl->pendingPayment || cl->pendingInvoice )
 		return;
 
 	Com_DPrintf( "clientDownload: %s Done\n", cl->name);
@@ -2261,7 +2300,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
-	if ( cl->state == CS_PRIMED ) {
+	if ( cl->state == CS_PRIMED && !cl->pendingInvoice && !cl->pendingPayment ) {
 		if ( sv_pure->integer != 0 && !cl->gotCP ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
@@ -2377,7 +2416,8 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 		// if we can tell that the client has dropped the last
 		// gamestate we sent them, resend it
-		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
+		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum
+		 	&& !cl->pendingPayment && !cl->pendingInvoice) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
 				SV_SendClientGameState( cl );

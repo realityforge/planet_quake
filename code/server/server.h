@@ -461,10 +461,21 @@ typedef struct {
 extern	clientStatic_t		cls;
 extern	clientConnection_t clc;
 extern	cvar_t	*cl_dlDirectory;
+extern	cvar_t	*cl_cURLLib;
 #endif
+
+
 #ifdef USE_LNBITS
-extern  int oldestInvoiceTime;
-extern  client_t *oldestInvoiceClient;
+typedef struct {
+	char     guid[64];
+	char     invoice[64];
+	int      lastTime;
+	qboolean paid;
+} invoice_t;
+extern invoice_t *maxInvoices;
+extern int       numInvoices;
+extern int       oldestInvoiceTime;
+extern invoice_t *oldestInvoiceClient;
 #endif
 
 extern		download_t	svDownload;
@@ -474,6 +485,7 @@ qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 qboolean	Com_DL_InProgress( const download_t *dl );
 qboolean	Com_DL_ValidFileName( const char *fileName );
 void	SV_Download( const char *localName, const char *remoteName );
+void SV_CheckInvoicesAndPayments(void);
 
 #endif
 

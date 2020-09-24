@@ -297,6 +297,9 @@ static void SV_Startup( void ) {
 	}
 	SV_BoundMaxClients( 1 );
 
+	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	numInvoices = 0;
 #ifdef USE_MV
 	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof( client_t ), TAG_CLIENTS ); // +1 client slot for recorder
 	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof( client_t ) );
@@ -365,8 +368,16 @@ void SV_ChangeMaxClients( void ) {
 	Z_Free( svs.clients );
 
 	// allocate new clients
+	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	numInvoices = 0;
+#ifdef USE_MV
+	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof(client_t), TAG_CLIENTS );
+	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof(client_t) );
+#else
 	svs.clients = Z_TagMalloc( sv_maxclients->integer * sizeof(client_t), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
+#endif
 
 	// copy the clients over
 	for ( i = 0 ; i < count ; i++ ) {
@@ -923,6 +934,12 @@ void SV_Init( void )
 	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
 	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
 	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
+#endif
+
+#ifdef DEDICATED
+#ifdef USE_CURL_DLOPEN
+	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
+#endif
 #endif
 
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );

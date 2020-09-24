@@ -1476,8 +1476,11 @@ void SV_DemoChangeMaxClients( void ) {
 	// == Allocating the new svs.clients and moving the saved clients over from the temporary var
 
   // allocate new svs.clients
-  svs.clients = Z_Malloc( sv_maxclients->integer * sizeof(client_t) );
-  Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
+  svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof(client_t), TAG_CLIENTS );
+  Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof(client_t) );
+	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	numInvoices = 0;
 
 	// copy the clients over (and move them depending on sv_democlients: if >0, move them upwards, if == 0, move them to their original slots)
 	Com_Memcpy( svs.clients + sv_democlients->integer, oldClients, (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) );
