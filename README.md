@@ -48,6 +48,7 @@ Some of the major features currently implemented are:
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
+  * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu.
   * Many, many bug fixes
 
 Coming soon!
@@ -56,6 +57,7 @@ Coming soon!
   * Multiple QVM loader, multiple map loader in parallel with teleport switch
   * Multi-view, instant replay
   * HTML and CSS menu renderer
+  * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
   * Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
   * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server

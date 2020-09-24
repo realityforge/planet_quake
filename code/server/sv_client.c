@@ -462,19 +462,53 @@ void SV_CheckInvoicesAndPayments( void ) {
 
 	if(!svDownload.cURL) {
 		char invoice[MAX_OSPATH];
+		char invoiceFinalName[MAX_OSPATH];
+		fileHandle_t invoiceKey;
+		// add pk3 because the curl interface is dumb and thinks that's all it is used for
 		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", oldestInvoice->guid );
+		Com_sprintf( invoiceFinalName, sizeof( invoiceFinalName ), "%s%c%s.pk3", FS_GetCurrentGameDir(), PATH_SEP, invoice );
 		if(!oldestInvoice->invoice[0]) {
 			// check for json file
-			if(FS_SV_FileExists( invoice )) {
+			if(FS_FOpenFileRead(va("%s.pk3", invoice), &invoiceKey, qtrue) > 0) {
 				// extract key
-				int r;
-				fileHandle_t invoiceKey;
+				int r = 0, ki = 0, vi = 0;
+				char keyName[64];
 				char buf[MAX_OSPATH];
-				FS_FOpenFileRead(invoice, &invoiceKey, qtrue);
+				qboolean key = qfalse, value = qfalse, paymentValue = qfalse, checkingId = qfalse;
 				do {
 					r = FS_Read(buf, MAX_OSPATH, invoiceKey);
-					Com_Printf( "CheckInvoice: %s\n", buf);
+					for(i = 0; i < r; i++) {
+						if(!key && !value && buf[i] == '"') {
+							if(paymentValue || checkingId) {
+								value = qtrue;
+								vi = 0;
+							} else {
+								key = qtrue;
+								ki = 0;
+							}
+						} else if (key && buf[i] == '"') {
+							key = qfalse;
+							keyName[ki] = '\0';
+							paymentValue = !Q_stricmp(keyName, "payment_request");
+							checkingId = !Q_stricmp(keyName, "checking_id");
+						} else if (value && buf[i] == '"') {
+							value = qfalse;
+							if(paymentValue) paymentValue = qfalse;
+							if(checkingId) checkingId = qfalse;
+						} else if (key) {
+							if(ki < 63) {
+								keyName[ki++] = buf[i];
+							}
+						} else if (value) {
+							if(checkingId) {
+								oldestInvoice->checkingId[vi++] = buf[i];
+							} else if (paymentValue) {
+								oldestInvoice->invoice[vi++] = buf[i];
+							}
+						}
+					}
 				} while(r > 0);
+				FS_Remove(invoiceFinalName);
 			} else {
 				// create the invoice
 				Com_sprintf( invoicePostData, sizeof( invoicePostData ),
@@ -486,17 +520,17 @@ void SV_CheckInvoicesAndPayments( void ) {
 					sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 					"Content-type: application/json");
 				Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
-				#ifdef EMSCRIPTEN
-					Sys_BeginDownload();
-				#else
-					svDownload.headers.readptr = invoicePostHeaders;
-					svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
-					svDownload.headers.dl = &svDownload;
-					svDownload.data.readptr = invoicePostData;
-					svDownload.data.sizeleft = strlen(invoicePostData);
-					svDownload.data.dl = &svDownload;
-					Com_DL_BeginPost(&svDownload, invoice, va("%s/payments", sv_lnAPI->string));
-				#endif
+#ifdef EMSCRIPTEN
+				Sys_BeginDownload();
+#else
+				svDownload.headers.readptr = invoicePostHeaders;
+				svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+				svDownload.headers.dl = &svDownload;
+				svDownload.data.readptr = invoicePostData;
+				svDownload.data.sizeleft = strlen(invoicePostData);
+				svDownload.data.dl = &svDownload;
+				Com_DL_BeginPost(&svDownload, invoice, va("%s/payments", sv_lnAPI->string));
+#endif
 			}
 		} else if (!oldestInvoice->paid) {
 			// check for payment
@@ -793,14 +827,14 @@ void SV_DirectConnect( const netadr_t *from ) {
 			qboolean found = qfalse;
 			// perform curl request to get invoice id
 			newcl->pendingInvoice = qtrue;
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 			for(i=0;i<sv_maxclients->integer+10;i++) {
 				if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
 					found = qtrue;
 					break;
 				}
 			}
-			if(!found) {
+			if(!found || !maxInvoices[i].invoice[0]) {
+				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
 				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 				strcpy(maxInvoices[numInvoices].guid, cl_guid);
@@ -808,6 +842,9 @@ void SV_DirectConnect( const netadr_t *from ) {
 				if(numInvoices > sv_maxclients->integer+10) {
 					numInvoices = 0;
 				}
+			} else {
+				NET_OutOfBandPrint( NS_SERVER, from,
+				 	"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
 			}
 			return;
 		} else {

@@ -468,7 +468,8 @@ extern	cvar_t	*cl_cURLLib;
 #ifdef USE_LNBITS
 typedef struct {
 	char     guid[64];
-	char     invoice[64];
+	char     checkingId[64];
+	char     invoice[256];
 	int      lastTime;
 	qboolean paid;
 } invoice_t;

@@ -131,8 +131,10 @@ typedef struct download_s {
 
 	struct func_s {
 		char*		(*version)(void);
+
     struct curl_slist* (*slist_append)(struct curl_slist *list, const char * string);
     void    (*slist_free_all)(struct curl_slist *list);
+
 		CURL*		(*easy_init)(void);
 		CURLcode	(*easy_setopt)(CURL *curl, CURLoption option, ...);
 		CURLcode	(*easy_perform)(CURL *curl);

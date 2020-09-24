@@ -670,10 +670,6 @@ void Com_DL_Cleanup( download_t *dl )
 		Cvar_Set( "cl_downloadTime", "0" );
 	}
 
-  if(dl->HeaderList) {
-    dl->func.slist_free_all(dl->HeaderList);
-  }
-
 	dl->Size = 0;
 	dl->Count = 0;
 
@@ -687,6 +683,7 @@ void Com_DL_Cleanup( download_t *dl )
 	dl->progress[0] = '\0';
 	dl->headerCheck = qfalse;
 	dl->mapAutoDownload = qfalse;
+  dl->HeaderList = NULL;
 
 	Com_DL_Done( dl );
 }
