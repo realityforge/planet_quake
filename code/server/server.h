@@ -480,12 +480,12 @@ extern invoice_t *oldestInvoiceClient;
 
 extern		download_t	svDownload;
 qboolean	Com_DL_Perform( download_t *dl );
-void		Com_DL_Cleanup( download_t *dl );
+void		  Com_DL_Cleanup( download_t *dl );
 qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
+qboolean	Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL);
 qboolean	Com_DL_InProgress( const download_t *dl );
 qboolean	Com_DL_ValidFileName( const char *fileName );
-void	SV_Download( const char *localName, const char *remoteName );
-void SV_CheckInvoicesAndPayments(void);
+void      SV_CheckInvoicesAndPayments(void);
 
 #endif
 

@@ -561,6 +561,8 @@ qboolean Com_DL_Init( download_t *dl )
 	Sys_LoadFunctionErrors(); // reset error count;
 
 	dl->func.version = Sys_LoadFunction( dl->func.lib, "curl_version" );
+  
+  dl->func.slist_append = Sys_LoadFunction( dl->func.lib, "curl_slist_append" );
 
 	dl->func.easy_init = Sys_LoadFunction( dl->func.lib, "curl_easy_init" );
 	dl->func.easy_setopt = Sys_LoadFunction( dl->func.lib, "curl_easy_setopt" );
@@ -593,6 +595,8 @@ qboolean Com_DL_Init( download_t *dl )
 
 	dl->func.version = curl_version;
 
+  dl->func.slist_append = curl_slist_append;
+  
 	dl->func.easy_init = curl_easy_init;
 	dl->func.easy_setopt = curl_easy_setopt;
 	dl->func.easy_perform = curl_easy_perform;
@@ -705,6 +709,7 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 {
 	double percentage, speed;
 	download_t *dl = (download_t *)data;
+Com_Printf( "Progress started\n" );
 	
 	dl->Size = (int)dltotal;
 	dl->Count = (int)dlnow;
@@ -746,6 +751,7 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 {
 	download_t *dl;
 
+Com_Printf( "Response started\n" );
 	dl = (download_t *)userdata;
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
@@ -769,6 +775,32 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 	FS_Write( ptr, size*nmemb, dl->fHandle );
 
 	return (size * nmemb);
+}
+
+
+/*
+=================
+Com_DL_CallbackRead
+=================
+*/
+static size_t Com_DL_CallbackRead(void *dest, size_t size, size_t nmemb, void *userp)
+{
+  downloadReader_t *wt = (downloadReader_t *)userp;
+  size_t buffer_size = size*nmemb;
+ 
+  if(wt->sizeleft) {
+    /* copy as much as possible from the source to the destination */ 
+    size_t copy_this_much = wt->sizeleft;
+    if(copy_this_much > buffer_size)
+      copy_this_much = buffer_size;
+    memcpy(dest, wt->readptr, copy_this_much);
+ 
+    wt->readptr += copy_this_much;
+    wt->sizeleft -= copy_this_much;
+    return copy_this_much; /* we copied this many bytes */ 
+  }
+ 
+  return 0; /* no more data left to deliver */ 
 }
 
 
@@ -860,6 +892,124 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 	}
 	
 	return size*nmemb;
+}
+
+
+/*
+===============================================================
+Com_DL_BeginPost()
+
+Start downloading file from remoteURL and save it under fs_game/localName
+==============================================================
+*/
+qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL )
+{
+  int count;
+	char *s;
+  struct curl_slist *chunk = NULL;
+
+	if ( Com_DL_InProgress( dl ) )
+	{
+		Com_Printf( S_COLOR_YELLOW " already downloading %s\n", dl->Name );
+		return qfalse;
+	}
+
+	Com_Printf( "URL: %s\n", remoteURL );
+
+	Com_DL_Cleanup( dl );
+
+	if ( !Com_DL_Init( dl ) ) 
+	{
+		Com_Printf( S_COLOR_YELLOW "Error initializing cURL library\n" );		
+		return qfalse;
+	}
+
+	dl->cURL = dl->func.easy_init();
+	if ( !dl->cURL ) 
+	{
+		Com_Printf( S_COLOR_RED "Com_DL_Begin: easy_init() failed\n" );
+		Com_DL_Cleanup( dl );
+		return qfalse;
+	}
+
+	Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
+
+	if ( cl_dlDirectory->integer ) {
+		Q_strncpyz( dl->gameDir, FS_GetBaseGameDir(), sizeof( dl->gameDir ) );
+	} else {
+		Q_strncpyz( dl->gameDir, FS_GetCurrentGameDir(), sizeof( dl->gameDir ) );
+	}
+
+	// try to extract game path from localName
+	// dl->Name should contain only pak name without game dir and extension
+	s = strrchr( localName, '/' );
+	if ( s ) 
+		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
+	else
+		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
+
+	FS_StripExt( dl->Name, ".pk3" );
+	if ( !dl->Name[0] )
+	{
+		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
+		return qfalse;
+	}
+
+	//dl->headerCheck = qtrue;
+
+	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
+		"%s/%s.%08x.tmp", dl->gameDir, dl->Name, rand() | (rand() << 16) );
+
+	if ( com_developer->integer )
+		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );
+
+	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
+  dl->func.easy_setopt( dl->cURL, CURLOPT_POST, 1 );
+  for(count=0;count<dl->headers.sizeleft;) {
+    chunk = dl->func.slist_append(chunk, &dl->headers.readptr[count]);
+    count += strlen(&dl->headers.readptr[count]) + 1;
+  }
+  dl->func.easy_setopt( dl->cURL, CURLOPT_HTTPHEADER, chunk);
+  dl->func.easy_setopt( dl->cURL, CURLOPT_TRANSFERTEXT, 0 );
+	//dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, "q3a://127.0.0.1" );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, dl->URL );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_USERAGENT, Q3_VERSION );
+  dl->func.easy_setopt( dl->cURL, CURLOPT_READFUNCTION, Com_DL_CallbackRead );
+  dl->func.easy_setopt( dl->cURL, CURLOPT_READDATA, dl->data );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEFUNCTION, Com_DL_CallbackWrite );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEDATA, dl );
+	//dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERFUNCTION, Com_DL_HeaderCallback );
+	//dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERDATA, dl );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_NOPROGRESS, 0 );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSFUNCTION, Com_DL_CallbackProgress );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSDATA, dl );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_FAILONERROR, 1 );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_FOLLOWLOCATION, 1 );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_MAXREDIRS, 5 );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_PROTOCOLS, ALLOWED_PROTOCOLS );
+
+	dl->cURLM = dl->func.multi_init();
+
+	if ( !dl->cURLM ) 
+	{
+		Com_DL_Cleanup( dl );	
+		Com_Printf( S_COLOR_RED "Com_DL_Begin: multi_init() failed\n" );
+		return qfalse;
+	}
+
+	if ( dl->func.multi_add_handle( dl->cURLM, dl->cURL ) != CURLM_OK ) 
+	{
+		Com_DL_Cleanup( dl );
+		Com_Printf( S_COLOR_RED "Com_DL_Begin: multi_add_handle() failed\n" );
+		return qfalse;
+	}
+
+	Cvar_Set( "cl_downloadName", dl->Name );
+	Cvar_Set( "cl_downloadSize", "0" );
+	Cvar_Set( "cl_downloadCount", "0" );
+	Cvar_Set( "cl_downloadTime", va( "%i", cls.realtime ) );
+
+	return qtrue;
 }
 
 

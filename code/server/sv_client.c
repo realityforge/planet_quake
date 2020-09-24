@@ -37,6 +37,8 @@ invoice_t *maxInvoices;
 int       numInvoices;
 int       oldestInvoiceTime;
 invoice_t *oldestInvoice;
+char invoicePostData[MAX_OSPATH];
+char invoicePostHeaders[2*MAX_OSPATH];
 #endif
 
 static void SV_CloseDownload( client_t *cl );
@@ -437,32 +439,14 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-void SV_Download( const char *localName, const char *remoteName ) {
-
-	Com_DPrintf("***** CL_BeginDownload *****\n"
-				"Localname: %s\n"
-				"Remotename: %s\n"
-				"****************************\n", localName, remoteName);
-
-	// Set so UI gets access to it
-	Cvar_Set( "cl_downloadName", remoteName );
-	Cvar_Set( "cl_downloadSize", "0" );
-	Cvar_Set( "cl_downloadCount", "0" );
-
-#ifdef EMSCRIPTEN
-	Sys_BeginDownload();
-#else
-	Com_DL_Begin(&svDownload, localName, remoteName, qtrue, qtrue);
-#endif
-}
-
-
 #ifdef USE_LNBITS
 void SV_CheckInvoicesAndPayments( void ) {
-	int i;
+	int i, now;
 	if(!maxInvoices) return;
 
-	oldestInvoiceTime = Sys_Milliseconds();
+	now = Sys_Milliseconds();
+	oldestInvoiceTime = now;
+	oldestInvoice = NULL;
 	for(i=0;i<(sv_maxclients->integer+10);i++) {
 		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
 			&& !maxInvoices[i].invoice[0] && !maxInvoices[i].paid) {
@@ -471,8 +455,10 @@ void SV_CheckInvoicesAndPayments( void ) {
 		}
 	}
 
-	if(!oldestInvoice || !oldestInvoice->guid[0]) return;
-	oldestInvoice->lastTime = Sys_Milliseconds();
+	if(!oldestInvoice || !oldestInvoice->guid[0]
+		|| (now - oldestInvoiceTime) < 1000)
+		return;
+	oldestInvoice->lastTime = now;
 
 	if(!svDownload.cURL) {
 		char invoice[MAX_OSPATH];
@@ -491,18 +477,32 @@ void SV_CheckInvoicesAndPayments( void ) {
 				} while(r > 0);
 			} else {
 				// create the invoice
-				char invoicePost[MAX_OSPATH];
-				Com_sprintf( invoicePost, sizeof( invoicePost ),
+				Com_sprintf( invoicePostData, sizeof( invoicePostData ),
 					"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
 					sv_lnMatchPrice->integer, oldestInvoice->guid );
+				Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+					"X-Api-Key: %s", sv_lnWallet->string );
+				Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+					sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+					"Content-type: application/json");
 				Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
-				SV_Download(invoice, va("%s/payments", sv_lnAPI->string));
+				#ifdef EMSCRIPTEN
+					Sys_BeginDownload();
+				#else
+					svDownload.headers.readptr = invoicePostHeaders;
+					svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+					svDownload.headers.dl = &svDownload;
+					svDownload.data.readptr = invoicePostData;
+					svDownload.data.sizeleft = strlen(invoicePostData);
+					svDownload.data.dl = &svDownload;
+					Com_DL_BeginPost(&svDownload, invoice, va("%s/payments", sv_lnAPI->string));
+				#endif
 			}
 		} else if (!oldestInvoice->paid) {
 			// check for payment
 			Com_DPrintf ("Polling payment for %s.\n", oldestInvoice->invoice);
-			SV_Download(invoice, 
-				va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->invoice));
+			//SV_Download(invoice, 
+			//	va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->invoice));
 		}
 	}
 }
