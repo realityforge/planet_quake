@@ -937,6 +937,10 @@ void SV_Init( void )
 #endif
 
 #ifdef DEDICATED
+#ifdef USE_CURL
+	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
+#endif
 #ifdef USE_CURL_DLOPEN
 	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
 #endif
