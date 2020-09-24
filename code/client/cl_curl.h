@@ -124,6 +124,8 @@ typedef struct download_s {
 	int			Size;
 	int			Count;
   struct curl_slist* HeaderList;
+  qboolean  isPak;
+  qboolean  isPost;
 	qboolean	headerCheck;
 	qboolean	mapAutoDownload;
   downloadReader_t headers;

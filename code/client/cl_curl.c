@@ -947,6 +947,9 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 	else
 		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
+  if(Q_stristr(dl->Name, ".pk3")) {
+    dl->isPak = qtrue;
+  }
 	FS_StripExt( dl->Name, ".pk3" );
 	if ( !dl->Name[0] )
 	{
@@ -963,7 +966,7 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );
 
 	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
-  dl->func.easy_setopt( dl->cURL, CURLOPT_POST, 1 );
+  dl->func.easy_setopt( dl->cURL, CURLOPT_POST, dl->isPost ? 1 : 0 );
   for(count=0;count<dl->headers.sizeleft;) {
     dl->HeaderList = dl->func.slist_append(dl->HeaderList, &dl->headers.readptr[count]);
     if(!dl->HeaderList) return qfalse;
@@ -1169,7 +1172,7 @@ qboolean Com_DL_Perform( download_t *dl )
 	{
 		qboolean autoDownload = dl->mapAutoDownload;
 
-		Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->Name );
+		Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.pk3" : "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
 
 		if ( !FS_SV_FileExists( name ) )
 		{
@@ -1178,7 +1181,7 @@ qboolean Com_DL_Perform( download_t *dl )
 		else
 		{
 			n = FS_GetZipChecksum( name );
-			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
+			Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.%08x.pk3" : "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
 
 			if ( FS_SV_FileExists( name ) )
 				FS_Remove( name );

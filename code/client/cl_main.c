@@ -4432,7 +4432,8 @@ CL_ServerInfoPacket
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
-	const char *infoString, *autocomplete;
+	const char *infoString;
+	char *autocomplete, *paymentInvoice, *challenge;
 	int		prot;
 	netadr_t addr;
 	
@@ -4465,6 +4466,18 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			hasRcon = qfalse;
 		} else
 			Com_Printf( "Rcon: autocomplete dropped\n" );
+		return;
+	}
+	
+	// exit early if this is a payment request
+	paymentInvoice = Info_ValueForKey( infoString, "cl_lnInvoice" );
+	if(paymentInvoice[0]) {
+		challenge = Info_ValueForKey( infoString, "oldChallenge" );
+		if(challenge[0] && clc.challenge == atoi(challenge)) {
+			Cvar_Set("cl_lnInvoice", paymentInvoice);
+			challenge = Info_ValueForKey( infoString, "challenge" );
+			clc.challenge = atoi(challenge);
+		}
 		return;
 	}
 
