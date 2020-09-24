@@ -563,6 +563,7 @@ qboolean Com_DL_Init( download_t *dl )
 	dl->func.version = Sys_LoadFunction( dl->func.lib, "curl_version" );
   
   dl->func.slist_append = Sys_LoadFunction( dl->func.lib, "curl_slist_append" );
+  dl->func.slist_free_all = Sys_LoadFunction( dl->func.lib, "curl_slist_free_all" );
 
 	dl->func.easy_init = Sys_LoadFunction( dl->func.lib, "curl_easy_init" );
 	dl->func.easy_setopt = Sys_LoadFunction( dl->func.lib, "curl_easy_setopt" );
@@ -596,6 +597,7 @@ qboolean Com_DL_Init( download_t *dl )
 	dl->func.version = curl_version;
 
   dl->func.slist_append = curl_slist_append;
+  dl->func.slist_free_all = curl_slist_free_all;
   
 	dl->func.easy_init = curl_easy_init;
 	dl->func.easy_setopt = curl_easy_setopt;
@@ -668,6 +670,10 @@ void Com_DL_Cleanup( download_t *dl )
 		Cvar_Set( "cl_downloadTime", "0" );
 	}
 
+  if(dl->HeaderList) {
+    dl->func.slist_free_all(dl->HeaderList);
+  }
+
 	dl->Size = 0;
 	dl->Count = 0;
 
@@ -709,7 +715,6 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 {
 	double percentage, speed;
 	download_t *dl = (download_t *)data;
-Com_Printf( "Progress started\n" );
 	
 	dl->Size = (int)dltotal;
 	dl->Count = (int)dlnow;
@@ -751,7 +756,6 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 {
 	download_t *dl;
 
-Com_Printf( "Response started\n" );
 	dl = (download_t *)userdata;
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
@@ -787,7 +791,6 @@ static size_t Com_DL_CallbackRead(void *dest, size_t size, size_t nmemb, void *u
 {
   downloadReader_t *wt = (downloadReader_t *)userp;
   size_t buffer_size = size*nmemb;
- 
   if(wt->sizeleft) {
     /* copy as much as possible from the source to the destination */ 
     size_t copy_this_much = wt->sizeleft;
@@ -799,7 +802,7 @@ static size_t Com_DL_CallbackRead(void *dest, size_t size, size_t nmemb, void *u
     wt->sizeleft -= copy_this_much;
     return copy_this_much; /* we copied this many bytes */ 
   }
- 
+
   return 0; /* no more data left to deliver */ 
 }
 
@@ -906,7 +909,6 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 {
   int count;
 	char *s;
-  struct curl_slist *chunk = NULL;
 
 	if ( Com_DL_InProgress( dl ) )
 	{
@@ -966,20 +968,21 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
   dl->func.easy_setopt( dl->cURL, CURLOPT_POST, 1 );
   for(count=0;count<dl->headers.sizeleft;) {
-    chunk = dl->func.slist_append(chunk, &dl->headers.readptr[count]);
+    dl->HeaderList = dl->func.slist_append(dl->HeaderList, &dl->headers.readptr[count]);
+    if(!dl->HeaderList) return qfalse;
     count += strlen(&dl->headers.readptr[count]) + 1;
   }
-  dl->func.easy_setopt( dl->cURL, CURLOPT_HTTPHEADER, chunk);
+  dl->func.easy_setopt( dl->cURL, CURLOPT_HTTPHEADER, dl->HeaderList);
   dl->func.easy_setopt( dl->cURL, CURLOPT_TRANSFERTEXT, 0 );
 	//dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, "q3a://127.0.0.1" );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, dl->URL );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_USERAGENT, Q3_VERSION );
   dl->func.easy_setopt( dl->cURL, CURLOPT_READFUNCTION, Com_DL_CallbackRead );
-  dl->func.easy_setopt( dl->cURL, CURLOPT_READDATA, dl->data );
+  dl->func.easy_setopt( dl->cURL, CURLOPT_READDATA, &dl->data );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEFUNCTION, Com_DL_CallbackWrite );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEDATA, dl );
-	//dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERFUNCTION, Com_DL_HeaderCallback );
-	//dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERDATA, dl );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERFUNCTION, Com_DL_HeaderCallback );
+	dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERDATA, dl );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_NOPROGRESS, 0 );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSFUNCTION, Com_DL_CallbackProgress );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSDATA, dl );

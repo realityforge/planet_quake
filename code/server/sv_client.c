@@ -793,7 +793,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 			qboolean found = qfalse;
 			// perform curl request to get invoice id
 			newcl->pendingInvoice = qtrue;
-			NET_OutOfBandPrint( NS_SERVER, from, "print\nPayment required\n" );
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 			for(i=0;i<sv_maxclients->integer+10;i++) {
 				if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
 					found = qtrue;
@@ -814,7 +814,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 			newcl->pendingInvoice = qfalse;
 			// check lnbits invoice for client
 			newcl->pendingPayment = qtrue;
-			NET_OutOfBandPrint( NS_SERVER, from, "print\nAwaiting payment\n" );
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
 			Com_DPrintf( "Checking payment for client: %s.\n", cl_guid );
 			return;
 		}

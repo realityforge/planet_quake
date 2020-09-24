@@ -49,6 +49,7 @@ extern cvar_t *cl_cURLLib;
 extern char* (*qcurl_version)(void);
 
 extern struct curl_slist* (*qcurl_slist_append)(struct curl_slist *list, const char * string);
+extern void (*qcurl_slist_free_all)(struct curl_slist *list);
 
 extern CURL* (*qcurl_easy_init)(void);
 extern CURLcode (*qcurl_easy_setopt)(CURL *curl, CURLoption option, ...);
@@ -78,6 +79,7 @@ extern const char *(*qcurl_multi_strerror)(CURLMcode);
 #define qcurl_version curl_version
 
 #define qcurl_slist_append curl_slist_append
+#define qcurl_slist_free_all curl_slist_free_all
 
 #define qcurl_easy_init curl_easy_init
 #define qcurl_easy_setopt curl_easy_setopt
@@ -121,6 +123,7 @@ typedef struct download_s {
 	fileHandle_t fHandle;
 	int			Size;
 	int			Count;
+  struct curl_slist* HeaderList;
 	qboolean	headerCheck;
 	qboolean	mapAutoDownload;
   downloadReader_t headers;
@@ -129,6 +132,7 @@ typedef struct download_s {
 	struct func_s {
 		char*		(*version)(void);
     struct curl_slist* (*slist_append)(struct curl_slist *list, const char * string);
+    void    (*slist_free_all)(struct curl_slist *list);
 		CURL*		(*easy_init)(void);
 		CURLcode	(*easy_setopt)(CURL *curl, CURLoption option, ...);
 		CURLcode	(*easy_perform)(CURL *curl);
