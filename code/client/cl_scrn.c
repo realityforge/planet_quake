@@ -501,42 +501,37 @@ void SCR_Init( void ) {
 
 #ifdef USE_LNBITS
 void SCR_GenerateQRCode() {
+	int i, j, x, y;
 	if(!cl_lnInvoice || !cl_lnInvoice->string[0]) return;
 
 	// Text data
 	uint8_t qr0[qrcodegen_BUFFER_LEN_MAX];
 	uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
 	bool ok = qrcodegen_encodeText(cl_lnInvoice->string,
-	    tempBuffer, qr0, qrcodegen_Ecc_MEDIUM,
+	    tempBuffer, qr0, qrcodegen_Ecc_LOW,
 	    qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
-	    qrcodegen_Mask_AUTO, true);
+	    qrcodegen_Mask_AUTO, qtrue);
 	if (!ok)
 	    return;
 
 	int size = qrcodegen_getSize(qr0);
 Com_Printf("QRCode: %i\n", size);
 	{
-		byte	data[size][size][4];
-		Com_Memset( data, 0, sizeof( data ) );
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < size; x++) {
-				if(qrcodegen_getModule(qr0, x, y)) {
-Com_Printf("1");
-					data[x][y][0] =
-					data[x][y][1] =
-					data[x][y][2] = 0;
-					data[x][y][3] = 255;
-				} else {
-Com_Printf("0");
-					data[x][y][0] =
-					data[x][y][1] =
-					data[x][y][2] =
-					data[x][y][3] = 255;
+		byte	data[(size+2)*4][(size+2)*4][4];
+		Com_Memset( data, 255, sizeof( data ) );
+		for (y = 1; y < size+1; y++) {
+			for (x = 1; x < size+1; x++) {
+				for(i = 0; i < 4; i++) {
+					for(j = 0; j < 4; j++) {
+						data[x*4+i][y*4+j][0] =
+						data[x*4+i][y*4+j][1] =
+						data[x*4+i][y*4+j][2] = qrcodegen_getModule(qr0, x-1, y-1) ? 0 : 255;
+						data[x*4+i][y*4+j][3] = 255;
+					}
 				}
 			}
-Com_Printf("\n");
 		}
-		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, size, size);
+		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, (size+2)*4, (size+2)*4);
 	}
 
 	// Binary data
