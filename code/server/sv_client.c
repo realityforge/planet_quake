@@ -890,8 +890,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 			}
 		}
 		if(!*cl_invoice || !found) {
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 			if(!found) {
+				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
 				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 				strcpy(maxInvoices[numInvoices].guid, cl_guid);
@@ -902,10 +902,10 @@ void SV_DirectConnect( const netadr_t *from ) {
 			} else if (!maxInvoices[i].invoice[0]) {
 				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
 			} else {
-				SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
 				NET_OutOfBandPrint( NS_SERVER, from,
 				 	"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
 			}
+			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
 			return;
 		} else if (!maxInvoices[i].paid) {
 			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));

@@ -609,6 +609,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// refresh to update the time
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if(cls.state == CA_CONNECTING && cl_lnInvoice->string[0]) {
+				SCR_DrawQRCode();
+			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
@@ -640,9 +643,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 	}
 
-	if(cl_lnInvoice->string[0]) {
-		SCR_DrawQRCode();
-	}
 	// console draws next
 	//re.SetDvrFrame(0, 0, 1, 1);
 	Con_DrawConsole ();

@@ -4301,7 +4301,6 @@ qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, 
   stages[0].stateBits = GLS_DEFAULT;
   sh = FinishShader();
   return sh->index;
-  //return RE_RegisterShaderFromImage(name, LIGHTMAP_2D, image, qfalse);
 }
 
 
