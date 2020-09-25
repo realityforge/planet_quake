@@ -585,6 +585,18 @@ void SV_CheckInvoicesAndPayments( void ) {
 		}
 	}
 }
+
+void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoice, const char *oldChallenge) {
+	int			challenge;
+	char	infostring[MAX_INFO_STRING];
+	infostring[0] = '\0';
+	Info_SetValueForKey( infostring, "cl_lnInvoice", invoice );
+	Info_SetValueForKey( infostring, "oldChallenge", oldChallenge );
+	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
+	Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
+	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+}
+
 #endif
 
 /*
@@ -877,7 +889,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 				break;
 			}
 		}
-		if(!*cl_invoice) {
+		if(!*cl_invoice || !found) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
 			if(!found) {
 				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
@@ -890,25 +902,18 @@ void SV_DirectConnect( const netadr_t *from ) {
 			} else if (!maxInvoices[i].invoice[0]) {
 				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
 			} else {
-				char	infostring[MAX_INFO_STRING];
-				infostring[0] = '\0';
-				Info_SetValueForKey( infostring, "cl_lnInvoice", maxInvoices[i].invoice );
-				Info_SetValueForKey( infostring, "oldChallenge", va("%i", challenge) );
-				challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
-				Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
-				NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+				SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
 				NET_OutOfBandPrint( NS_SERVER, from,
 				 	"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
 			}
 			return;
-		} else {
-			newcl->pendingInvoice = qfalse;
-			// check lnbits invoice for client
-			newcl->pendingPayment = qtrue;
+		} else if (!maxInvoices[i].paid) {
+			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
-			Com_DPrintf( "Checking payment for client: %s.\n", cl_guid );
+			Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
 			return;
 		}
+		// client has paid, let them through
 	}
 #endif
 

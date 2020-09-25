@@ -517,29 +517,26 @@ void SCR_GenerateQRCode() {
 Com_Printf("QRCode: %i\n", size);
 	{
 		byte	data[size][size][4];
-		Com_Memset( data, 0, sizeof( data ) );
+		Com_Memset( data, 255, sizeof( data ) );
 		for (int y = 0; y < size; y++) {
 			for (int x = 0; x < size; x++) {
 				if(qrcodegen_getModule(qr0, x, y)) {
 Com_Printf("1");
 					data[0][x][0] =
 					data[0][x][1] =
-					data[0][x][2] =
+					data[0][x][2] = 0;
 					data[0][x][3] = 255;
 				} else {
 Com_Printf("0");
+					data[0][x][0] =
+					data[0][x][1] =
+					data[0][x][2] =
+					data[0][x][3] = 255;
 				}
 			}
 Com_Printf("\n");
 		}
-		/*
-		if(!cls.qrCodeImage)
-			cls.qrCodeImage = ri.CreateImage("_qrCode", (byte *)data, size, size, IMGTYPE_COLORALPHA, IMGFLAG_MIPMAP, 0);
-		else
-			ri.UpdateSubImage(cls.qrCodeImage, data, 0, 0, size, size, IMGTYPE_COLORALPHA);
-		cls.qrCodeShader = ri.RegisterShaderFromImage("_qrCode", LIGHTMAP_2D, clc.qrCodeImage, qfalse);
-		*/
-		cls.qrCodeShader = 1;
+		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, size, size);
 	}
 
 	// Binary data
@@ -553,10 +550,13 @@ Com_Printf("\n");
 }
 
 void SCR_DrawQRCode( void ) {
+	static float conColorValue[4] = { 0.0, 0.0, 0.0, 0.0 };
 	if(!cls.qrCodeShader && cl_lnInvoice->string[0]) {
 		SCR_GenerateQRCode();
 	}
-	
+	re.SetColor( conColorValue );
+	re.DrawStretchPic( cls.glconfig.vidWidth / 2 - 128,
+		cls.glconfig.vidHeight / 2 - 128, 256, 256, 0, 0, 1, 1, cls.qrCodeShader );
 }
 #endif
 
@@ -616,9 +616,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// refresh to update the time
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
-			if(cl_lnInvoice->string[0]) {
-				SCR_DrawQRCode();
-			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
@@ -650,6 +647,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 	}
 
+	if(cl_lnInvoice->string[0]) {
+		SCR_DrawQRCode();
+	}
 	// console draws next
 	//re.SetDvrFrame(0, 0, 1, 1);
 	Con_DrawConsole ();

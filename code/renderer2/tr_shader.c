@@ -4291,6 +4291,21 @@ static void CreateInternalShaders( void ) {
 }
 
 
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height) {
+  shader_t	*sh;
+  image_t *image;
+  image = R_CreateImage(name, pic, width, height, IMGTYPE_NORMAL, IMGFLAG_NONE, 0 );
+  InitShader( name, LIGHTMAP_2D );
+  stages[0].bundle[0].image[0] = image;
+  stages[0].active = qtrue;
+  stages[0].stateBits = GLS_DEFAULT;
+  sh = FinishShader();
+  return sh->index;
+  //return RE_RegisterShaderFromImage(name, LIGHTMAP_2D, image, qfalse);
+}
+
+
+
 /*
 ====================
 CreateExternalShaders
@@ -4352,7 +4367,6 @@ void RE_LoadShaders( void ) {
   // remove lightmaps
   for(i=0;i<tr.numLightmaps;i++) {
     image_t *img = tr.lightmaps[i];
-    Com_Printf( "LoadShaders: %u\n", &img->texnum );
     if(img->texnum)
       qglDeleteTextures( 1, &img->texnum );
     Com_Memset(img, 0, sizeof( *img ));
