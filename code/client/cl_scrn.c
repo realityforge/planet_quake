@@ -517,21 +517,21 @@ void SCR_GenerateQRCode() {
 Com_Printf("QRCode: %i\n", size);
 	{
 		byte	data[size][size][4];
-		Com_Memset( data, 255, sizeof( data ) );
+		Com_Memset( data, 0, sizeof( data ) );
 		for (int y = 0; y < size; y++) {
 			for (int x = 0; x < size; x++) {
 				if(qrcodegen_getModule(qr0, x, y)) {
 Com_Printf("1");
-					data[0][x][0] =
-					data[0][x][1] =
-					data[0][x][2] = 0;
-					data[0][x][3] = 255;
+					data[x][y][0] =
+					data[x][y][1] =
+					data[x][y][2] = 0;
+					data[x][y][3] = 255;
 				} else {
 Com_Printf("0");
-					data[0][x][0] =
-					data[0][x][1] =
-					data[0][x][2] =
-					data[0][x][3] = 255;
+					data[x][y][0] =
+					data[x][y][1] =
+					data[x][y][2] =
+					data[x][y][3] = 255;
 				}
 			}
 Com_Printf("\n");
@@ -550,11 +550,9 @@ Com_Printf("\n");
 }
 
 void SCR_DrawQRCode( void ) {
-	static float conColorValue[4] = { 0.0, 0.0, 0.0, 0.0 };
 	if(!cls.qrCodeShader && cl_lnInvoice->string[0]) {
 		SCR_GenerateQRCode();
 	}
-	re.SetColor( conColorValue );
 	re.DrawStretchPic( cls.glconfig.vidWidth / 2 - 128,
 		cls.glconfig.vidHeight / 2 - 128, 256, 256, 0, 0, 1, 1, cls.qrCodeShader );
 }

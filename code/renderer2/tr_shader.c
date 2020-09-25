@@ -4295,7 +4295,7 @@ qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, 
   shader_t	*sh;
   image_t *image;
   image = R_CreateImage(name, pic, width, height, IMGTYPE_NORMAL, IMGFLAG_NONE, 0 );
-  InitShader( name, LIGHTMAP_2D );
+  InitShader( name, LIGHTMAP_NONE );
   stages[0].bundle[0].image[0] = image;
   stages[0].active = qtrue;
   stages[0].stateBits = GLS_DEFAULT;
