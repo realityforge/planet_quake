@@ -498,9 +498,11 @@ static qboolean SV_CheckInvoiceStatus(char *invoice, invoice_t *updateInvoice) {
 				}
 			}
 		} while(r > 0);
+		FS_FCloseFile(invoiceKey);
 		FS_HomeRemove(invoice);
 		return qtrue;
 	}
+	FS_FCloseFile(invoiceKey);
 	return qfalse;
 }
 

@@ -1338,6 +1338,7 @@ Q3OBJ = \
   $(B)/client/msg.o \
   $(B)/client/net_chan.o \
   $(B)/client/net_ip.o \
+	$(B)/client/qrcodegen.o \
   $(B)/client/huffman.o \
   $(B)/client/huffman_static.o \
   \

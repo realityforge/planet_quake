@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 
+#ifdef USE_LNBITS
+#include "../qcommon/qrcodegen.h"
+#endif
+
 qboolean	scr_initialized;		// ready to draw
 
 cvar_t		*cl_timegraph;
@@ -495,6 +499,68 @@ void SCR_Init( void ) {
 }
 
 
+#ifdef USE_LNBITS
+void SCR_GenerateQRCode() {
+	if(!cl_lnInvoice || !cl_lnInvoice->string[0]) return;
+
+	// Text data
+	uint8_t qr0[qrcodegen_BUFFER_LEN_MAX];
+	uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
+	bool ok = qrcodegen_encodeText(cl_lnInvoice->string,
+	    tempBuffer, qr0, qrcodegen_Ecc_MEDIUM,
+	    qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
+	    qrcodegen_Mask_AUTO, true);
+	if (!ok)
+	    return;
+
+	int size = qrcodegen_getSize(qr0);
+Com_Printf("QRCode: %i\n", size);
+	{
+		byte	data[size][size][4];
+		Com_Memset( data, 0, sizeof( data ) );
+		for (int y = 0; y < size; y++) {
+			for (int x = 0; x < size; x++) {
+				if(qrcodegen_getModule(qr0, x, y)) {
+Com_Printf("1");
+					data[0][x][0] =
+					data[0][x][1] =
+					data[0][x][2] =
+					data[0][x][3] = 255;
+				} else {
+Com_Printf("0");
+				}
+			}
+Com_Printf("\n");
+		}
+		/*
+		if(!cls.qrCodeImage)
+			cls.qrCodeImage = ri.CreateImage("_qrCode", (byte *)data, size, size, IMGTYPE_COLORALPHA, IMGFLAG_MIPMAP, 0);
+		else
+			ri.UpdateSubImage(cls.qrCodeImage, data, 0, 0, size, size, IMGTYPE_COLORALPHA);
+		cls.qrCodeShader = ri.RegisterShaderFromImage("_qrCode", LIGHTMAP_2D, clc.qrCodeImage, qfalse);
+		*/
+		cls.qrCodeShader = 1;
+	}
+
+	// Binary data
+	/*
+	uint8_t dataAndTemp[qrcodegen_BUFFER_LEN_FOR_VERSION(7)]
+	    = {0xE3, 0x81, 0x82};
+	uint8_t qr1[qrcodegen_BUFFER_LEN_FOR_VERSION(7)];
+	ok = qrcodegen_encodeBinary(dataAndTemp, 3, qr1,
+	    qrcodegen_Ecc_HIGH, 2, 7, qrcodegen_Mask_4, false);
+	*/
+}
+
+void SCR_DrawQRCode( void ) {
+	if(!cls.qrCodeShader && cl_lnInvoice->string[0]) {
+		SCR_GenerateQRCode();
+	}
+	
+}
+#endif
+
+
 //=======================================================
 
 /*
@@ -550,6 +616,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// refresh to update the time
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if(cl_lnInvoice->string[0]) {
+				SCR_DrawQRCode();
+			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:

@@ -35,6 +35,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cl_curl.h"
 #endif /* USE_CURL */
 
+#ifdef USE_CURL
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
+#endif
+
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
@@ -363,6 +375,9 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+#ifdef USE_LNBITS
+	qhandle_t qrCodeShader;
+#endif
 
 	int			lastVidRestart;
 	int			soundMuted;
@@ -426,6 +441,9 @@ extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 
+#ifdef USE_LNBITS
+extern  cvar_t	*cl_lnInvoice;
+#endif
 extern	cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
 extern	cvar_t	*cl_mapAutoDownload;

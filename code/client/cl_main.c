@@ -21,18 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // cl_main.c  -- client main loop
 
-#ifdef USE_CURL
-#define	USE_LNBITS	1
-#else
-#ifdef EMSCRIPTEN
-#define	USE_LNBITS	1
-#else
-#ifdef USE_LNBITS
-#undef USE_LNBITS
-#endif
-#endif
-#endif
-
 #include "client.h"
 #include <limits.h>
 
@@ -70,6 +58,9 @@ void CL_Multiview_f( void );
 void CL_MultiviewFollow_f( void );
 #endif
 
+#ifdef USE_LNBITS
+cvar_t  *cl_lnInvoice;
+#endif
 cvar_t  *cl_returnURL;
 cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
@@ -4289,7 +4280,7 @@ void CL_Init( void ) {
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 	CL_UpdateGUID( NULL, 0 );
 #ifdef USE_LNBITS
-	Cvar_Get( "cl_lnInvoice", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
+	cl_lnInvoice = Cvar_Get( "cl_lnInvoice", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 #endif
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
@@ -4477,6 +4468,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			Cvar_Set("cl_lnInvoice", paymentInvoice);
 			challenge = Info_ValueForKey( infoString, "challenge" );
 			clc.challenge = atoi(challenge);
+			cls.qrCodeShader = NULL;
 		}
 		return;
 	}
