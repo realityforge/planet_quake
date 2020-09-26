@@ -1061,7 +1061,7 @@ void SV_SendClientMessages( void )
 		if ( c->state == CS_FREE || c->demoClient ) // do not send a packet to a democlient, this will cause the engine to crash
 			continue;		// not connected
 
-		if ( *c->downloadName || c->pendingInvoice || c->pendingPayment )
+		if ( *c->downloadName )
 			continue;		// Client is downloading, don't send snapshots
 
 		// 1. Local clients get snapshots every server frame

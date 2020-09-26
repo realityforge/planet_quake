@@ -242,12 +242,6 @@ typedef struct client_s {
 	int				downloadBlockSize[MAX_DOWNLOAD_WINDOW];
 	qboolean		downloadEOF;		// We have sent the EOF block
 	int				downloadSendTime;	// time we last got an ack from the client
-	
-#ifdef USE_LNBITS
-	int       lastInvoiceTime;
-	qboolean  pendingInvoice;
-	qboolean  pendingPayment;
-#endif
 
 	int				deltaMessage;		// frame last client usercmd message
 	int				lastPacketTime;		// svs.time when packet was last received
@@ -480,6 +474,7 @@ typedef struct {
 	char     checkingId[64];
 	char     invoice[256];
 	int      lastTime;
+	int      price; // price at time of invoicing for scriptability
 	qboolean paid;
 } invoice_t;
 extern invoice_t *maxInvoices;

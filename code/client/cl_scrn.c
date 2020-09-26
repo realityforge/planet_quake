@@ -508,14 +508,13 @@ void SCR_GenerateQRCode() {
 	uint8_t qr0[qrcodegen_BUFFER_LEN_MAX];
 	uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
 	bool ok = qrcodegen_encodeText(cl_lnInvoice->string,
-	    tempBuffer, qr0, qrcodegen_Ecc_LOW,
+	    tempBuffer, qr0, qrcodegen_Ecc_MEDIUM,
 	    qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
 	    qrcodegen_Mask_AUTO, qtrue);
 	if (!ok)
 	    return;
 
 	int size = qrcodegen_getSize(qr0);
-Com_Printf("QRCode: %i\n", size);
 	{
 		byte	data[(size+2)*4][(size+2)*4][4];
 		Com_Memset( data, 255, sizeof( data ) );

@@ -543,7 +543,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 				// create the invoice
 				Com_sprintf( invoicePostData, sizeof( invoicePostData ),
 					"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-					sv_lnMatchPrice->integer, oldestInvoice->guid );
+					oldestInvoice->price, oldestInvoice->guid );
 				Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
 					"X-Api-Key: %s", sv_lnWallet->string );
 				Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
@@ -568,6 +568,9 @@ void SV_CheckInvoicesAndPayments( void ) {
 		} else if (!oldestInvoice->paid) {
 			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
 				if(oldestInvoice->paid) {
+					// add this once when paid status changes
+					Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
+					 	+ oldestInvoice->price - sv_lnMatchCut->integer));
 					return; // skip checking status again
 				}
 			}
@@ -603,6 +606,51 @@ void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoice, const char 
 	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
 	Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
 	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+}
+
+
+qboolean SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo, int challenge) {
+	int i;
+
+	if(*sv_lnWallet->string && sv_lnMatchPrice->integer > 0) {
+		char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
+		char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
+		qboolean found = qfalse;
+		// perform curl request to get invoice id
+		for(i=0;i<sv_maxclients->integer+10;i++) {
+			if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
+				found = qtrue;
+				break;
+			}
+		}
+		if(!*cl_invoice || !found) {
+			if(!found) {
+				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
+				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
+				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
+				strcpy(maxInvoices[numInvoices].guid, cl_guid);
+				maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
+				numInvoices++;
+				if(numInvoices > sv_maxclients->integer+10) {
+					numInvoices = 0;
+				}
+			} else if (!maxInvoices[i].invoice[0]) {
+				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
+			} else {
+				NET_OutOfBandPrint( NS_SERVER, from,
+					"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
+			}
+			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
+			return qtrue;
+		} else if (!maxInvoices[i].paid) {
+			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
+			Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
+			return qtrue;
+		}
+		// client has paid, let them through
+	}
+	return qfalse;
 }
 
 #endif
@@ -885,43 +933,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 #ifdef USE_LNBITS
 	// generate an invoice for lnbits for this client
-	if(*sv_lnWallet->string && sv_lnMatchPrice->integer > 0) {
-		char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
-		char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
-		qboolean found = qfalse;
-		// perform curl request to get invoice id
-		newcl->pendingInvoice = qtrue;
-		for(i=0;i<sv_maxclients->integer+10;i++) {
-			if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
-				found = qtrue;
-				break;
-			}
-		}
-		if(!*cl_invoice || !found) {
-			if(!found) {
-				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
-				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
-				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
-				strcpy(maxInvoices[numInvoices].guid, cl_guid);
-				numInvoices++;
-				if(numInvoices > sv_maxclients->integer+10) {
-					numInvoices = 0;
-				}
-			} else if (!maxInvoices[i].invoice[0]) {
-				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
-			} else {
-				NET_OutOfBandPrint( NS_SERVER, from,
-				 	"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
-			}
-			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
-			return;
-		} else if (!maxInvoices[i].paid) {
-			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
-			Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
-			return;
-		}
-		// client has paid, let them through
+	if(SVC_ClientRequiresInvoice(from, userinfo, challenge)) {
+		return;
 	}
 #endif
 
@@ -1209,9 +1222,6 @@ static void SV_SendClientGameState( client_t *client ) {
 	const svEntity_t *svEnt;
 	msg_t		msg;
 	byte		msgBuffer[ MAX_MSGLEN_BUF ];
-	
-	if(client->pendingInvoice || client->pendingPayment)
-	 	return;
 
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 
@@ -1421,7 +1431,7 @@ Downloads are finished
 ==================
 */
 static void SV_DoneDownload_f( client_t *cl ) {
-	if ( cl->state == CS_ACTIVE || cl->pendingPayment || cl->pendingInvoice )
+	if ( cl->state == CS_ACTIVE )
 		return;
 
 	Com_DPrintf( "clientDownload: %s Done\n", cl->name);
@@ -2404,7 +2414,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
-	if ( cl->state == CS_PRIMED && !cl->pendingInvoice && !cl->pendingPayment ) {
+	if ( cl->state == CS_PRIMED ) {
 		if ( sv_pure->integer != 0 && !cl->gotCP ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
@@ -2520,8 +2530,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 		// if we can tell that the client has dropped the last
 		// gamestate we sent them, resend it
-		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum
-		 	&& !cl->pendingPayment && !cl->pendingInvoice) {
+		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
 				SV_SendClientGameState( cl );
