@@ -1291,15 +1291,16 @@ void CL_InitUI( void ) {
 }
 
 
-#ifndef STANDALONE
 qboolean UI_usesUniqueCDKey( void ) {
+#ifndef STANDALONE
 	if (uivm) {
 		return (VM_Call( uivm, 0, UI_HASUNIQUECDKEY ) != 0);
-	} else {
+	} else
+#endif
+	{
 		return qfalse;
 	}
 }
-#endif
 
 
 /*

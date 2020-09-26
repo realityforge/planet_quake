@@ -373,7 +373,11 @@ void Com_ReadCDKey( const char *filename );
 
 static qboolean FS_IsExt( const char *filename, const char *ext, size_t namelen );
 static int FS_GetModList( char *listbuf, int bufsize );
+#ifndef EMSCRIPTEN
+#ifndef STANDALONE
 static void FS_CheckIdPaks( void );
+#endif
+#endif
 void FS_Reload( void );
 
 
@@ -4879,9 +4883,11 @@ void FS_Startup_After_Async( void )
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
 #ifndef EMSCRIPTEN
+#ifndef STANDALONE
 	// check original q3a files
 	if ( !Q_stricmp( fs_basegame->string, BASEGAME ) || !Q_stricmp( fs_basegame->string, BASEDEMO ) )
 		FS_CheckIdPaks();
+#endif
 #endif
 
 #ifdef FS_MISSING
@@ -4899,6 +4905,8 @@ void FS_Startup_After_Async( void )
 }
 
 
+#ifndef EMSCRIPTEN
+#ifndef STANDALONE
 /*
 ===================
 FS_CheckIdPaks
@@ -4999,6 +5007,8 @@ static void FS_CheckIdPaks( void )
 			Com_Error(ERR_FATAL, "\n*** you need to install Quake III Arena in order to play ***");
 	}
 }
+#endif
+#endif
 
 
 /*
