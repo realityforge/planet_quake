@@ -716,7 +716,7 @@ endif
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=1 \
+		-s WASM=0 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
@@ -726,7 +726,7 @@ endif
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
     -O3 -Oz \
-    -s WASM=1 \
+    -s WASM=0 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \

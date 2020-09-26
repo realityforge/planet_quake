@@ -464,6 +464,15 @@ extern	cvar_t	*cl_dlDirectory;
 extern	cvar_t	*cl_cURLLib;
 #endif
 
+extern		download_t	svDownload;
+qboolean	Com_DL_Perform( download_t *dl );
+void		  Com_DL_Cleanup( download_t *dl );
+qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
+qboolean	Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL);
+qboolean	Com_DL_InProgress( const download_t *dl );
+qboolean	Com_DL_ValidFileName( const char *fileName );
+
+#endif
 
 #ifdef USE_LNBITS
 typedef struct {
@@ -477,17 +486,7 @@ extern invoice_t *maxInvoices;
 extern int       numInvoices;
 extern int       oldestInvoiceTime;
 extern invoice_t *oldestInvoiceClient;
-#endif
-
-extern		download_t	svDownload;
-qboolean	Com_DL_Perform( download_t *dl );
-void		  Com_DL_Cleanup( download_t *dl );
-qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
-qboolean	Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL);
-qboolean	Com_DL_InProgress( const download_t *dl );
-qboolean	Com_DL_ValidFileName( const char *fileName );
 void      SV_CheckInvoicesAndPayments(void);
-
 #endif
 
 //

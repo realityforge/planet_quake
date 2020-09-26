@@ -1477,7 +1477,7 @@ static void S_Base_Shutdown( void ) {
 
 	s_soundStarted = qfalse;
 
-	//s_numSfx = 0; // clean up sound cache -EC-
+	s_numSfx = 0; // clean up sound cache -EC-
 
 	if ( dma_buffer2 != buffer2 )
 		free( dma_buffer2 );

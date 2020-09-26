@@ -30,6 +30,8 @@ clientConnection_t	clc;
 clientStatic_t		  cls;
 cvar_t	            *cl_dlDirectory;
 #endif
+#else
+qboolean        svDownload;
 #endif
 
 #ifdef USE_LNBITS
@@ -527,7 +529,11 @@ void SV_CheckInvoicesAndPayments( void ) {
 		return;
 	oldestInvoice->lastTime = now;
 
+#ifdef EMSCRIPTEN
+	if(!svDownload) {
+#else
 	if(!svDownload.cURL) {
+#endif
 		char invoice[MAX_OSPATH];
 		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", oldestInvoice->guid );
 		if(!oldestInvoice->invoice[0]) {
@@ -545,6 +551,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 					"Content-type: application/json");
 				Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
+				svDownload = qtrue;
 				Sys_BeginDownload();
 #else
 				svDownload.isPost = qtrue;
@@ -572,6 +579,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 				"Content-type: application/json");
 			Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
+			svDownload = qtrue;
 			Sys_BeginDownload();
 #else
 			svDownload.isPost = qfalse;
