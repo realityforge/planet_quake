@@ -51,7 +51,6 @@ typedef struct {
 	// and returns the current gl configuration, including screen width
 	// and height, which can be used by the client to intelligently
 	// size display elements
-	void	(*LoadShaders)( void );
 	void	(*BeginRegistration)( glconfig_t *config );
 	qhandle_t (*RegisterModel)( const char *name );
 	qhandle_t (*RegisterSkin)( const char *name );
@@ -83,9 +82,8 @@ typedef struct {
 		float s1, float t1, float s2, float t2, qhandle_t hShader );	// 0 = white
 
 	// Draw images for cinematic rendering, pass as 32 bit rgba
-	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
-	void	(*DrawStretchRaw)( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
-	void	(*UploadCinematic)( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
+	void	(*DrawStretchRaw)( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
+	void	(*UploadCinematic)( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
 
 	void	(*BeginFrame)( stereoFrame_t stereoFrame );
 
@@ -111,7 +109,6 @@ typedef struct {
 	void	(*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 	void	(*ThrottleBackend)( void );
-	void  (*SetDvrFrame)( float x, float y, float height, float width );
 	void	(*FinishBloom)( void );
 
 	void	(*SetColorMappings)( void );
@@ -123,6 +120,9 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
+	void	(*LoadShaders)( void );
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*UpdateMode)(glconfig_t *glconfigOut);
@@ -192,7 +192,6 @@ typedef struct {
 	// NULL can be passed for buf to just determine existance
 	//int		(*FS_FileIsInPAK)( const char *name, int *pCheckSum );
 	int		(*FS_ReadFile)( const char *name, void **buf );
-	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 	void	(*FS_FreeFile)( void *buf );
 	char **	(*FS_ListFiles)( const char *name, const char *extension, int *numfilesfound );
 	void	(*FS_FreeFileList)( char **filelist );
@@ -233,6 +232,7 @@ typedef struct {
 	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
+	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 	void (*Spy_CursorPosition)(float x, float y);
 } refimport_t;
 

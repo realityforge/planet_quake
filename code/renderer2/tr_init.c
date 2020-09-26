@@ -1664,10 +1664,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.Shutdown = RE_Shutdown;
 
-	re.LoadShaders = RE_LoadShaders;
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
-	re.UpdateModel = R_UpdateModel;
 	re.RegisterSkin = RE_RegisterSkin;
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
@@ -1693,7 +1691,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetColor = RE_SetColor;
 	re.DrawStretchPic = RE_StretchPic;
 	re.DrawStretchRaw = RE_StretchRaw;
-	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
 	re.UploadCinematic = RE_UploadCinematic;
 
 	re.RegisterFont = RE_RegisterFont;
@@ -1705,12 +1702,15 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetColorMappings = R_SetColorMappings;
 
 	re.ThrottleBackend = RE_ThrottleBackend;
-	re.SetDvrFrame = RE_SetDvrFrame;
 	re.CanMinimize = RE_CanMinimize;
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
+	re.SetDvrFrame = RE_SetDvrFrame;
+	re.LoadShaders = RE_LoadShaders;
+	re.UpdateModel = R_UpdateModel;
+	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
 	//re.UpdateMode = RE_UpdateMode;
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;

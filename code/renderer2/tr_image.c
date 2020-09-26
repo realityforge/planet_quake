@@ -2107,7 +2107,7 @@ image_t *R_FreeOldestImage( void ) {
 	int	i, oldest, used;
 	image_t	*image;
 
-	oldest = Sys_Milliseconds();
+	oldest = ri.Milliseconds();
 	used = 0;
 
 	for ( i = 1 ; i < tr.numImages ; i++ ) {
@@ -3290,5 +3290,3 @@ void	R_SkinList_f( void ) {
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
-
-

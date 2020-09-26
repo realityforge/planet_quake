@@ -4374,7 +4374,7 @@ void RE_LoadShaders( void ) {
   tr.numLightmaps = 0;
   GL_BindNullTextures();
 
-  tr.lastRegistrationTime = Com_Milliseconds();
+  tr.lastRegistrationTime = ri.Milliseconds();
   ScanAndLoadShaderFiles();
 }
 

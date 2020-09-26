@@ -234,6 +234,7 @@ static int CL_cURL_CallbackProgress( void *dummy, double dltotal, double dlnow,
 	return 0;
 }
 
+
 static size_t CL_cURL_CallbackWrite( void *buffer, size_t size, size_t nmemb, void *stream )
 {
 	if ( clc.download == FS_INVALID_HANDLE ) {
@@ -372,6 +373,7 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 		clc.cURLDisconnected = qtrue;
 	}
 }
+
 
 void CL_cURL_PerformDownload( void )
 {
