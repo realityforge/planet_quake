@@ -472,10 +472,12 @@ qboolean	Com_DL_ValidFileName( const char *fileName );
 typedef struct {
 	char     guid[64];
 	char     checkingId[64];
-	char     invoice[256];
+	char     invoice[512];
+	char     reward[512];
 	int      lastTime;
 	int      price; // price at time of invoicing for scriptability
 	qboolean paid;
+	client_t *cl;
 } invoice_t;
 extern invoice_t *maxInvoices;
 extern int       numInvoices;

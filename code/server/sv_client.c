@@ -509,18 +509,49 @@ static qboolean SV_CheckInvoiceStatus(char *invoice, invoice_t *updateInvoice) {
 }
 
 
+void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoice, char *reward, const char *oldChallenge) {
+	int			challenge;
+	char	infostring[MAX_INFO_STRING];
+	infostring[0] = '\0';
+	Info_SetValueForKey( infostring, "cl_lnInvoice", invoice );
+	Info_SetValueForKey( infostring, "oldChallenge", oldChallenge );
+	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
+	if(reward[0]) {
+		Info_SetValueForKey( infostring, "reward", reward );
+	}
+	Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
+	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+}
+
+
 void SV_CheckInvoicesAndPayments( void ) {
-	int i, now;
+	int i, now, highestScore = 0;
+	client_t	*c, *highestClient;
+	playerState_t	*ps;
 	if(!maxInvoices) return;
 
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;
 	oldestInvoice = NULL;
 	for(i=0;i<(sv_maxclients->integer+10);i++) {
+
 		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
 			&& !maxInvoices[i].paid) {
 			oldestInvoiceTime = maxInvoices[i].lastTime;
 			oldestInvoice = &maxInvoices[i];
+		}
+
+		if(!maxInvoices[i].cl) continue;
+
+		// detect client with highest score to reward
+		c = maxInvoices[i].cl;
+		ps = SV_GameClientNum( c - svs.clients);
+		if (ps->pm_type == PM_INTERMISSION
+			&& ps->persistant[PERS_SCORE] > highestScore) {
+			highestClient = c;
+			highestScore = ps->persistant[PERS_SCORE];
+			oldestInvoice = &maxInvoices[i];
+			oldestInvoiceTime = 0;
 		}
 	}
 
@@ -569,8 +600,10 @@ void SV_CheckInvoicesAndPayments( void ) {
 			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
 				if(oldestInvoice->paid) {
 					// add this once when paid status changes
-					Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
-					 	+ oldestInvoice->price - sv_lnMatchCut->integer));
+					if(sv_lnMatchCut->integer < oldestInvoice->price) {
+						Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
+						 	+ oldestInvoice->price - sv_lnMatchCut->integer));
+					}
 					return; // skip checking status again
 				}
 			}
@@ -593,64 +626,83 @@ void SV_CheckInvoicesAndPayments( void ) {
 			Com_DL_BeginPost(&svDownload, invoice,
 				va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
 #endif
+		} else if (highestScore) {
+			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
+				// send the reward to the client
+				SV_SendInvoiceAndChallenge(from, oldestInvoice.invoice,
+					oldestInvoice.reward, va("%i", challenge));
+				return;
+			}
+			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+				"%s %s %i %s %i %s",
+				"{\"title\": \"QuakeJS winner\",",
+				"\"min_withdrawable\":", sv_lnMatchReward->integer,
+				"\"max_withdrawable\":", sv_lnMatchReward->integer,
+				"\"uses\": 1, \"wait_time\": 1, \"is_unique\": true}");
+			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+				"X-Api-Key: %s", sv_lnKey->string );
+			Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+				sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+				"Content-type: application/json");
+			Com_DPrintf ("Awarding payout for %s.\n", oldestInvoice->guid);
+#ifdef EMSCRIPTEN
+			svDownload = qtrue;
+			Sys_BeginDownload();
+#else
+			svDownload.isPost = qtrue;
+			svDownload.isPak = qfalse;
+			svDownload.headers.readptr = invoicePostHeaders;
+			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+			svDownload.headers.dl = &svDownload;
+			svDownload.data.readptr = invoicePostData;
+			svDownload.data.sizeleft = strlen(invoicePostData);
+			svDownload.data.dl = &svDownload;
+			Com_DL_BeginPost(&svDownload, invoice,
+				va("%s/withdraw", sv_lnAPI->string));
+#endif			
 		}
 	}
 }
 
-void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoice, const char *oldChallenge) {
-	int			challenge;
-	char	infostring[MAX_INFO_STRING];
-	infostring[0] = '\0';
-	Info_SetValueForKey( infostring, "cl_lnInvoice", invoice );
-	Info_SetValueForKey( infostring, "oldChallenge", oldChallenge );
-	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
-	Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
-	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
-}
-
-
-qboolean SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo, int challenge) {
+invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo, int challenge) {
 	int i;
-
-	if(*sv_lnWallet->string && sv_lnMatchPrice->integer > 0) {
-		char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
-		char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
-		qboolean found = qfalse;
-		// perform curl request to get invoice id
-		for(i=0;i<sv_maxclients->integer+10;i++) {
-			if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
-				found = qtrue;
-				break;
-			}
+	char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
+	char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
+	qboolean found = qfalse;
+	// perform curl request to get invoice id
+	for(i=0;i<sv_maxclients->integer+10;i++) {
+		if(!Q_stricmp(maxInvoices[i].guid, cl_guid)) {
+			found = qtrue;
+			break;
 		}
-		if(!*cl_invoice || !found) {
-			if(!found) {
-				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
-				Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
-				memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
-				strcpy(maxInvoices[numInvoices].guid, cl_guid);
-				maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
-				numInvoices++;
-				if(numInvoices > sv_maxclients->integer+10) {
-					numInvoices = 0;
-				}
-			} else if (!maxInvoices[i].invoice[0]) {
-				NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
-			} else {
-				NET_OutOfBandPrint( NS_SERVER, from,
-					"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
-			}
-			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
-			return qtrue;
-		} else if (!maxInvoices[i].paid) {
-			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, va("%i", challenge));
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
-			Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
-			return qtrue;
-		}
-		// client has paid, let them through
 	}
-	return qfalse;
+	if(!*cl_invoice || !found) {
+		if(!found) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
+			Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
+			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
+			strcpy(maxInvoices[numInvoices].guid, cl_guid);
+			maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
+			numInvoices++;
+			if(numInvoices > sv_maxclients->integer+10) {
+				numInvoices = 0;
+			}
+		} else if (!maxInvoices[i].invoice[0]) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
+		} else {
+			NET_OutOfBandPrint( NS_SERVER, from,
+				"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
+		}
+		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+		return NULL;
+	} else if (!maxInvoices[i].paid) {
+		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
+		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
+		return NULL;
+	}
+	// client has paid, let them through
+	return &maxInvoices[i];
 }
 
 #endif
@@ -667,6 +719,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	char		userinfo[MAX_INFO_STRING], tld[3];
 	int			i, n;
 	client_t	*cl, *newcl;
+	invoice_t *invoice;
 	//sharedEntity_t *ent;
 	int			clientNum;
 	int			version;
@@ -931,14 +984,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 		}
 	}
 
-#ifdef USE_LNBITS
-	// generate an invoice for lnbits for this client
-	if(SVC_ClientRequiresInvoice(from, userinfo, challenge)) {
-		return;
-	}
-#endif
-
 gotnewcl:
+
 	// build a new connection
 	// accept the new client
 	// this is the only place a client_t is ever initialized
@@ -948,6 +995,18 @@ gotnewcl:
 #if 0 // skip this until CS_PRIMED
 	//ent = SV_GentityNum( clientNum );
 	//newcl->gentity = ent;
+#endif
+
+#ifdef USE_LNBITS
+	if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
+		// generate an invoice for lnbits for this client
+		invoice = SVC_ClientRequiresInvoice(from, userinfo, challenge);
+		if(!invoice) {
+			return;
+		} else {
+			invoice->cl = newcl;
+		}
+	}
 #endif
 
 	// save the challenge
