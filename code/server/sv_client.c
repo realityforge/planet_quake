@@ -442,78 +442,69 @@ static const char *SV_FindCountry( const char *tld ) {
 
 
 #ifdef USE_LNBITS
-static qboolean SV_CheckInvoiceStatus(char *invoice, invoice_t *updateInvoice) {
+void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
+	// extract key
 	int i;
-	fileHandle_t invoiceKey;
-	if(FS_FOpenFileRead(invoice, &invoiceKey, qtrue) > 0) {
-		// extract key
-		int r = 0, ki = 0, vi = 0;
-		char keyName[64];
-		char paidValue[10];
-		char buf[MAX_OSPATH];
-		qboolean key = qfalse, value = qfalse;
-		qboolean paymentValue = qfalse, checkingId = qfalse;
-		qboolean paid = qfalse;
-		do {
-			r = FS_Read(buf, MAX_OSPATH, invoiceKey);
-			// simple state machine for checking payment status json
-			for(i = 0; i < r; i++) {
-				if(!key && !value && buf[i] == '"') {
-					if(paymentValue || checkingId) {
-						value = qtrue;
-						vi = 0;
-					} else {
-						key = qtrue;
-						ki = 0;
-					}
-				} else if (key && buf[i] == '"') {
-					key = qfalse;
-					keyName[ki] = '\0';
-					paymentValue = !Q_stricmp(keyName, "payment_request");
-					checkingId = !Q_stricmp(keyName, "checking_id");
-					paid = !Q_stricmp(keyName, "paid");
-					vi = 0;
-				} else if (value && buf[i] == '"') {
-					value = qfalse;
-					if(paymentValue) paymentValue = qfalse;
-					if(checkingId) checkingId = qfalse;
-				} else if (key) {
-					if(ki < 63) {
-						keyName[ki++] = buf[i];
-					}
-				} else if (value) {
-					if(vi < 63 && checkingId) {
-						updateInvoice->checkingId[vi++] = buf[i];
-					} else if (vi < 255 && paymentValue) {
-						updateInvoice->invoice[vi++] = buf[i];
-					}
-				} else if (paid && buf[i] == '}') {
-					if(Q_stristr(paidValue, "true")) {
-						updateInvoice->paid = qtrue;
-					} else if (Q_stristr(paidValue, "false")) {
-						updateInvoice->paid = qfalse;
-					}
-				} else if (paid) {
-					if(vi < 9) {
-						paidValue[vi++] = buf[i];
-					}
-				}
+	int r = 0, ki = 0, vi = 0;
+	char keyName[64];
+	char paidValue[10];
+	qboolean key = qfalse, value = qfalse;
+	qboolean paymentValue = qfalse, checkingId = qfalse;
+	qboolean paid = qfalse;
+
+	r = strlen(svDownload.TempStore);
+	// simple state machine for checking payment status json
+	for(i = 0; i < r; i++) {
+		if(!key && !value && svDownload.TempStore[i] == '"') {
+			if(paymentValue || checkingId) {
+				value = qtrue;
+				vi = 0;
+			} else {
+				key = qtrue;
+				ki = 0;
 			}
-		} while(r > 0);
-		FS_FCloseFile(invoiceKey);
-		FS_HomeRemove(invoice);
-		return qtrue;
+		} else if (key && svDownload.TempStore[i] == '"') {
+			key = qfalse;
+			keyName[ki] = '\0';
+			paymentValue = !Q_stricmp(keyName, "payment_request");
+			checkingId = !Q_stricmp(keyName, "checking_id");
+			paid = !Q_stricmp(keyName, "paid");
+			vi = 0;
+		} else if (value && svDownload.TempStore[i] == '"') {
+			value = qfalse;
+			if(paymentValue) paymentValue = qfalse;
+			if(checkingId) checkingId = qfalse;
+		} else if (key) {
+			if(ki < 63) {
+				keyName[ki++] = svDownload.TempStore[i];
+			}
+		} else if (value) {
+			if(vi < 63 && checkingId) {
+				updateInvoice->checkingId[vi++] = svDownload.TempStore[i];
+			} else if (vi < 255 && paymentValue) {
+				updateInvoice->invoice[vi++] = svDownload.TempStore[i];
+			}
+		} else if (paid && svDownload.TempStore[i] == '}') {
+			if(Q_stristr(paidValue, "true")) {
+				updateInvoice->paid = qtrue;
+			} else if (Q_stristr(paidValue, "false")) {
+				updateInvoice->paid = qfalse;
+			}
+		} else if (paid) {
+			if(vi < 9) {
+				paidValue[vi++] = svDownload.TempStore[i];
+			}
+		}
 	}
-	FS_FCloseFile(invoiceKey);
-	return qfalse;
+	svDownload.TempStore[0] = '\0';
 }
 
 
-void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoice, char *reward, const char *oldChallenge) {
+void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoiceData, char *reward, const char *oldChallenge) {
 	int			challenge;
 	char	infostring[MAX_INFO_STRING];
 	infostring[0] = '\0';
-	Info_SetValueForKey( infostring, "cl_lnInvoice", invoice );
+	Info_SetValueForKey( infostring, "cl_lnInvoice", invoiceData );
 	Info_SetValueForKey( infostring, "oldChallenge", oldChallenge );
 	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
 	if(reward[0]) {
@@ -529,6 +520,18 @@ void SV_CheckInvoicesAndPayments( void ) {
 	client_t	*c, *highestClient;
 	playerState_t	*ps;
 	if(!maxInvoices) return;
+	
+	if(oldestInvoice && svDownload.TempStore[0]) {
+		SV_CheckInvoiceStatus(oldestInvoice);
+		if(oldestInvoice->paid) {
+			// add this once when paid status changes
+			if(sv_lnMatchCut->integer < oldestInvoice->price) {
+				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
+					+ oldestInvoice->price - sv_lnMatchCut->integer));
+			}
+			return; // skip checking status again
+		}
+	}
 
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;
@@ -565,48 +568,33 @@ void SV_CheckInvoicesAndPayments( void ) {
 #else
 	if(!svDownload.cURL) {
 #endif
-		char invoice[MAX_OSPATH];
-		Com_sprintf( invoice, sizeof( invoice ), "invoice-%s.json", oldestInvoice->guid );
+;
 		if(!oldestInvoice->invoice[0]) {
-			// check for json file
-			if(!SV_CheckInvoiceStatus(invoice, oldestInvoice)) 
-			{
-				// create the invoice
-				Com_sprintf( invoicePostData, sizeof( invoicePostData ),
-					"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-					oldestInvoice->price, oldestInvoice->guid );
-				Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
-					"X-Api-Key: %s", sv_lnWallet->string );
-				Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
-					sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
-					"Content-type: application/json");
-				Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
+			// create the invoice
+			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+				"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
+				oldestInvoice->price, oldestInvoice->guid );
+			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+				"X-Api-Key: %s", sv_lnWallet->string );
+			Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+				sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+				"Content-type: application/json");
+			Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
-				svDownload = qtrue;
-				Sys_BeginDownload();
+			svDownload = qtrue;
+			Sys_BeginDownload();
 #else
-				svDownload.isPost = qtrue;
-				svDownload.isPak = qfalse;
-				svDownload.headers.readptr = invoicePostHeaders;
-				svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
-				svDownload.headers.dl = &svDownload;
-				svDownload.data.readptr = invoicePostData;
-				svDownload.data.sizeleft = strlen(invoicePostData);
-				svDownload.data.dl = &svDownload;
-				Com_DL_BeginPost(&svDownload, invoice, va("%s/payments", sv_lnAPI->string));
+			svDownload.isPost = qtrue;
+			svDownload.isPak = qfalse;
+			svDownload.headers.readptr = invoicePostHeaders;
+			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+			svDownload.headers.dl = &svDownload;
+			svDownload.data.readptr = invoicePostData;
+			svDownload.data.sizeleft = strlen(invoicePostData);
+			svDownload.data.dl = &svDownload;
+			Com_DL_BeginPost(&svDownload, "", va("%s/payments", sv_lnAPI->string));
 #endif
-			}
 		} else if (!oldestInvoice->paid) {
-			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
-				if(oldestInvoice->paid) {
-					// add this once when paid status changes
-					if(sv_lnMatchCut->integer < oldestInvoice->price) {
-						Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
-						 	+ oldestInvoice->price - sv_lnMatchCut->integer));
-					}
-					return; // skip checking status again
-				}
-			}
 			// check for payment
 			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
 				"X-Api-Key: %s", sv_lnWallet->string );
@@ -623,17 +611,15 @@ void SV_CheckInvoicesAndPayments( void ) {
 			svDownload.headers.readptr = invoicePostHeaders;
 			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
 			svDownload.headers.dl = &svDownload;
-			Com_DL_BeginPost(&svDownload, invoice,
+			Com_DL_BeginPost(&svDownload, "",
 				va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
 #endif
 		} else if (highestScore) {
-			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
-				// send the reward to the client
-				if(oldestInvoice->reward[0]) {
-					SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
-						oldestInvoice->reward, va("%i", highestClient->challenge));
-					return;
-				}
+			// send the reward to the client
+			if(oldestInvoice->reward[0]) {
+				SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
+					oldestInvoice->reward, va("%i", highestClient->challenge));
+				return;
 			}
 			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
 				"%s %s %i %s %i %s",
@@ -659,8 +645,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 			svDownload.data.readptr = invoicePostData;
 			svDownload.data.sizeleft = strlen(invoicePostData);
 			svDownload.data.dl = &svDownload;
-			Com_DL_BeginPost(&svDownload, invoice,
-				va("%s/withdraw", sv_lnAPI->string));
+			Com_DL_BeginPost(&svDownload, "", va("%s/withdraw", sv_lnAPI->string));
 #endif			
 		}
 	}

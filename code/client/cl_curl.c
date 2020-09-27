@@ -532,6 +532,9 @@ Com_DL_Init
 */
 qboolean Com_DL_Init( download_t *dl )
 {
+  // clear temp storage on init instead of on clean so we have a moment to copy it
+  dl->TempStore[0] = '\0';
+  
 #ifdef USE_CURL_DLOPEN
 	Com_Printf( "Loading \"%s\"...", cl_cURLLib->string );
 	if( ( dl->func.lib = Sys_LoadLibrary( cl_cURLLib->string ) ) == NULL )
@@ -756,6 +759,12 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 	download_t *dl;
 
 	dl = (download_t *)userdata;
+  
+  if( !dl->Name[0] ) {
+    // copy to temporary for small requests
+    memcpy(dl->TempStore, ptr, (size*nmemb) >= 2048 ? 2047 : size*nmemb);
+    return (size * nmemb);
+  }
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
 	{

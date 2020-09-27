@@ -118,6 +118,7 @@ typedef struct download_s {
 	char		Name[MAX_OSPATH];
 	char		gameDir[MAX_OSPATH];
 	char		progress[MAX_OSPATH+64];
+  char    TempStore[2048];
 	CURL		*cURL;
 	CURLM		*cURLM;
 	fileHandle_t fHandle;
