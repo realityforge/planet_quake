@@ -423,12 +423,16 @@ extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*sv_demoTolerant;
 extern	cvar_t	*sv_democlients; // number of democlients: this should always be set to 0, and will be automatically adjusted when needed by the demo facility. ATTENTION: if sv_maxclients = sv_democlients then server will be full! sv_democlients consume clients slots even if there are no democlients recorded nor replaying for this slot!
 
+#ifdef USE_LNBITS
 extern	cvar_t  *sv_lnMatchPrice;
 extern	cvar_t  *sv_lnMatchCut;
 extern	cvar_t  *sv_lnMatchReward;
 extern	cvar_t  *sv_lnWallet;
 extern	cvar_t  *sv_lnKey;
 extern	cvar_t  *sv_lnAPI;
+extern	cvar_t  *sv_lnWithdraw;
+#endif
+
 
 //===========================================================
 #ifdef USE_CURL

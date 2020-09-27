@@ -87,12 +87,15 @@ cvar_t  *sv_autoRecord;
 cvar_t	*cl_freezeDemo; // to freeze server-side demos
 cvar_t	*sv_demoTolerant;
 
+#ifdef USE_LNBITS
 cvar_t  *sv_lnMatchPrice;
 cvar_t  *sv_lnMatchCut;
 cvar_t  *sv_lnMatchReward;
 cvar_t  *sv_lnWallet;
 cvar_t  *sv_lnKey;
 cvar_t  *sv_lnAPI;
+cvar_t  *sv_lnWithdraw;
+#endif
 
 /*
 =============================================================================

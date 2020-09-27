@@ -934,6 +934,7 @@ void SV_Init( void )
 	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
 	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
 	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnWithdraw = Cvar_Get("sv_lnAPI", "https://lnbits.com/withdraw/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
 #endif
 
 #ifdef DEDICATED

@@ -522,6 +522,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 	if(!maxInvoices) return;
 	
 	if(oldestInvoice && svDownload.TempStore[0]) {
+		// update the oldest invoice before finding a new one
 		SV_CheckInvoiceStatus(oldestInvoice);
 		if(oldestInvoice->paid) {
 			// add this once when paid status changes
@@ -529,9 +530,16 @@ void SV_CheckInvoicesAndPayments( void ) {
 				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
 					+ oldestInvoice->price - sv_lnMatchCut->integer));
 			}
-			return; // skip checking status again
 		}
 	}
+
+	// don't even bother if a request is already in progress
+#ifdef EMSCRIPTEN
+	if(svDownload)
+#else
+	if(svDownload.cURL)
+#endif
+		return;
 
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;
@@ -563,91 +571,84 @@ void SV_CheckInvoicesAndPayments( void ) {
 		return;
 	oldestInvoice->lastTime = now;
 
+	if(!oldestInvoice->invoice[0]) {
+		// create the invoice
+		Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
+			oldestInvoice->price, oldestInvoice->guid );
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnWallet->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
-	if(!svDownload) {
+		svDownload = qtrue;
+		Sys_BeginDownload();
 #else
-	if(!svDownload.cURL) {
+		svDownload.isPost = qtrue;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		svDownload.data.readptr = invoicePostData;
+		svDownload.data.sizeleft = strlen(invoicePostData);
+		svDownload.data.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "", va("%s/payments", sv_lnAPI->string));
 #endif
-;
-		if(!oldestInvoice->invoice[0]) {
-			// create the invoice
-			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
-				"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
-				oldestInvoice->price, oldestInvoice->guid );
-			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
-				"X-Api-Key: %s", sv_lnWallet->string );
-			Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
-				sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
-				"Content-type: application/json");
-			Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
+	} else if (!oldestInvoice->paid) {
+		// check for payment
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnWallet->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
-			svDownload = qtrue;
-			Sys_BeginDownload();
+		svDownload = qtrue;
+		Sys_BeginDownload();
 #else
-			svDownload.isPost = qtrue;
-			svDownload.isPak = qfalse;
-			svDownload.headers.readptr = invoicePostHeaders;
-			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
-			svDownload.headers.dl = &svDownload;
-			svDownload.data.readptr = invoicePostData;
-			svDownload.data.sizeleft = strlen(invoicePostData);
-			svDownload.data.dl = &svDownload;
-			Com_DL_BeginPost(&svDownload, "", va("%s/payments", sv_lnAPI->string));
+		svDownload.isPost = qfalse;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "",
+			va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
 #endif
-		} else if (!oldestInvoice->paid) {
-			// check for payment
-			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
-				"X-Api-Key: %s", sv_lnWallet->string );
-			Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
-				sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
-				"Content-type: application/json");
-			Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
-#ifdef EMSCRIPTEN
-			svDownload = qtrue;
-			Sys_BeginDownload();
-#else
-			svDownload.isPost = qfalse;
-			svDownload.isPak = qfalse;
-			svDownload.headers.readptr = invoicePostHeaders;
-			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
-			svDownload.headers.dl = &svDownload;
-			Com_DL_BeginPost(&svDownload, "",
-				va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
-#endif
-		} else if (highestScore) {
-			// send the reward to the client
-			if(oldestInvoice->reward[0]) {
-				SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
-					oldestInvoice->reward, va("%i", highestClient->challenge));
-				return;
-			}
-			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
-				"%s %s %i %s %i %s",
-				"{\"title\": \"QuakeJS winner\",",
-				"\"min_withdrawable\":", sv_lnMatchReward->integer,
-				"\"max_withdrawable\":", sv_lnMatchReward->integer,
-				"\"uses\": 1, \"wait_time\": 1, \"is_unique\": true}");
-			Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
-				"X-Api-Key: %s", sv_lnKey->string );
-			Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
-				sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
-				"Content-type: application/json");
-			Com_DPrintf ("Awarding payout for %s.\n", oldestInvoice->guid);
-#ifdef EMSCRIPTEN
-			svDownload = qtrue;
-			Sys_BeginDownload();
-#else
-			svDownload.isPost = qtrue;
-			svDownload.isPak = qfalse;
-			svDownload.headers.readptr = invoicePostHeaders;
-			svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
-			svDownload.headers.dl = &svDownload;
-			svDownload.data.readptr = invoicePostData;
-			svDownload.data.sizeleft = strlen(invoicePostData);
-			svDownload.data.dl = &svDownload;
-			Com_DL_BeginPost(&svDownload, "", va("%s/withdraw", sv_lnAPI->string));
-#endif			
+	} else if (highestScore) {
+		// send the reward to the client
+		if(oldestInvoice->reward[0]) {
+			SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
+				oldestInvoice->reward, va("%i", highestClient->challenge));
+			return;
 		}
+		Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+			"%s %s %i %s %i %s",
+			"{\"title\": \"QuakeJS winner\",",
+			"\"min_withdrawable\":", sv_lnMatchReward->integer,
+			"\"max_withdrawable\":", sv_lnMatchReward->integer,
+			"\"uses\": 1, \"wait_time\": 1, \"is_unique\": true}");
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnKey->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		Com_DPrintf ("Awarding payout for %s.\n", oldestInvoice->guid);
+#ifdef EMSCRIPTEN
+		svDownload = qtrue;
+		Sys_BeginDownload();
+#else
+		svDownload.isPost = qtrue;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		svDownload.data.readptr = invoicePostData;
+		svDownload.data.sizeleft = strlen(invoicePostData);
+		svDownload.data.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "", va("%s/links", sv_lnWithdraw->string));
+#endif			
 	}
 }
 
