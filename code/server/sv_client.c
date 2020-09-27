@@ -629,9 +629,11 @@ void SV_CheckInvoicesAndPayments( void ) {
 		} else if (highestScore) {
 			if(SV_CheckInvoiceStatus(invoice, oldestInvoice)) {
 				// send the reward to the client
-				SV_SendInvoiceAndChallenge(from, oldestInvoice.invoice,
-					oldestInvoice.reward, va("%i", challenge));
-				return;
+				if(oldestInvoice->reward[0]) {
+					SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
+						oldestInvoice->reward, va("%i", highestClient->challenge));
+					return;
+				}
 			}
 			Com_sprintf( invoicePostData, sizeof( invoicePostData ),
 				"%s %s %i %s %i %s",
