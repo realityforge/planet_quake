@@ -608,10 +608,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// refresh to update the time
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
-		
-			if(cl_lnInvoice->string[0]) {
-				SCR_DrawQRCode();
-			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
@@ -641,6 +637,12 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	// the menu draws next
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
 		VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+	}
+
+	if((cl.snap.ps.pm_type == PM_INTERMISSION
+		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
+		&& cl_lnInvoice->string[0]) {
+		SCR_DrawQRCode();
 	}
 
 	// console draws next

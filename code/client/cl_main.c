@@ -4463,9 +4463,14 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	// exit early if this is a payment request
 	paymentInvoice = Info_ValueForKey( infoString, "cl_lnInvoice" );
 	if(paymentInvoice[0]) {
+		char *reward = Info_ValueForKey( infoString, "reward" );
 		challenge = Info_ValueForKey( infoString, "oldChallenge" );
 		if(challenge[0] && clc.challenge == atoi(challenge)) {
-			Cvar_Set("cl_lnInvoice", paymentInvoice);
+			if(reward[0]) {
+				Cvar_Set( "cl_lnInvoice", reward );
+			} else {
+				Cvar_Set( "cl_lnInvoice", paymentInvoice );
+			}
 			challenge = Info_ValueForKey( infoString, "challenge" );
 			clc.challenge = atoi(challenge);
 			cls.qrCodeShader = NULL;
