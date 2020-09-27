@@ -442,6 +442,7 @@ static const char *SV_FindCountry( const char *tld ) {
 
 
 #ifdef USE_LNBITS
+#ifndef EMSCRIPTEN
 void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	// extract key
 	int i;
@@ -451,6 +452,7 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	qboolean key = qfalse, value = qfalse;
 	qboolean paymentValue = qfalse, checkingId = qfalse;
 	qboolean paid = qfalse;
+	if(!svDownload.TempStore[0]) return;
 
 	r = strlen(svDownload.TempStore);
 	// simple state machine for checking payment status json
@@ -498,6 +500,7 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	}
 	svDownload.TempStore[0] = '\0';
 }
+#endif
 
 
 void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoiceData, char *reward, const char *oldChallenge) {
@@ -521,10 +524,13 @@ void SV_CheckInvoicesAndPayments( void ) {
 	playerState_t	*ps;
 	if(!maxInvoices) return;
 	
-	if(oldestInvoice && svDownload.TempStore[0]) {
+	if(oldestInvoice) {
+		qboolean wasntPaid = !oldestInvoice->paid;
 		// update the oldest invoice before finding a new one
+#ifndef EMSCRIPTEN
 		SV_CheckInvoiceStatus(oldestInvoice);
-		if(oldestInvoice->paid) {
+#endif
+		if(wasntPaid && oldestInvoice->paid) {
 			// add this once when paid status changes
 			if(sv_lnMatchCut->integer < oldestInvoice->price) {
 				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
@@ -666,7 +672,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	}
 	if(!*cl_invoice || !found) {
 		if(!found) {
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required\n" );
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
 			Com_DPrintf( "Payment required for client: %s.\n", cl_guid );
 			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 			strcpy(maxInvoices[numInvoices].guid, cl_guid);
@@ -676,16 +682,16 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 				numInvoices = 0;
 			}
 		} else if (!maxInvoices[i].invoice[0]) {
-			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Payment required (invoicing...)\n" );
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED (invoicing...)\n" );
 		} else {
 			NET_OutOfBandPrint( NS_SERVER, from,
-				"print\n402: Payment required: %s\n", maxInvoices[i].invoice );
+				"print\n\n", maxInvoices[i].invoice );
 		}
 		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (!maxInvoices[i].paid) {
+		NET_OutOfBandPrint( NS_SERVER, from, "print\n\n" );
 		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
-		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: Awaiting payment\n" );
 		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
 		return NULL;
 	}
