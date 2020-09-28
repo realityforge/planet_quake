@@ -537,6 +537,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 
 	if(oldestInvoice) {
 		qboolean wasntPaid = !oldestInvoice->paid;
+		qboolean wasntInvoiced = !oldestInvoice->invoice[0];
 		// update the oldest invoice before finding a new one
 #ifndef EMSCRIPTEN
 		SV_CheckInvoiceStatus(oldestInvoice);
@@ -547,6 +548,9 @@ void SV_CheckInvoicesAndPayments( void ) {
 				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
 					+ oldestInvoice->price - sv_lnMatchCut->integer));
 			}
+		}
+		if(wasntInvoiced && oldestInvoice->invoice[0]) {
+			Com_DPrintf( "Received invoice for %s\n", oldestInvoice->guid );
 		}
 	}
 
@@ -695,7 +699,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	} else if (found && !maxInvoices[i].paid) {
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
 		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
-		//SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (found) {
 		// client has paid, let them through
