@@ -668,12 +668,12 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	int i;
 	char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
 	char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
-	qboolean found = qfalse;
+	invoice_t *found = NULL;
 	// perform curl request to get invoice id
 	for(i=0;i<sv_maxclients->integer+10;i++) {
 		if(cl_guid[0] && maxInvoices[i].guid[0]
 			&& !Q_stricmp(maxInvoices[i].guid, cl_guid)) {
-			found = qtrue;
+			found = &maxInvoices[i];
 			break;
 		}
 	}
@@ -688,22 +688,21 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 			if(numInvoices > sv_maxclients->integer+10) {
 				numInvoices = 0;
 			}
-		} else if (!maxInvoices[i].invoice[0]) {
+		} else if (!found->invoice[0]) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED (invoicing...)\n" );
 		} else if (found) {
-			NET_OutOfBandPrint( NS_SERVER, from,
-				"print\n402: PAYMENT REQUIRED\n", maxInvoices[i].invoice );
-			SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
+			SV_SendInvoiceAndChallenge(from, found->invoice, "", va("%i", challenge));
 		}
 		return NULL;
 	} else if (found && !maxInvoices[i].paid) {
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
 		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
-		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+		SV_SendInvoiceAndChallenge(from, found->invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (found) {
 		// client has paid, let them through
-		return &maxInvoices[i];
+		return found;
 	}
 	return NULL;
 }

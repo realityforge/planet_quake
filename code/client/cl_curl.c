@@ -976,7 +976,7 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
   }
 
 	if ( com_developer->integer )
-		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );
+		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 0 );
 
 	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
   dl->func.easy_setopt( dl->cURL, CURLOPT_POST, dl->isPost ? 1 : 0 );
