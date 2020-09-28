@@ -1268,6 +1268,11 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		SCR_UpdateScreen();
 		CL_CloseAVI();
 	}
+	
+#ifdef USE_LNBITS
+	Cvar_Set("cl_lnInvoice", "");
+	cls.qrCodeShader = NULL;
+#endif
 
 #ifdef EMSCRIPTEN
 	if(dropped || cls.postgame)
@@ -4424,7 +4429,10 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
 	const char *infoString;
-	char *autocomplete, *paymentInvoice, *challenge;
+	char *autocomplete;
+#ifdef USE_LNBITS
+	char *paymentInvoice, *challenge;
+#endif
 	int		prot;
 	netadr_t addr;
 	
@@ -4460,6 +4468,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 		return;
 	}
 
+#ifdef USE_LNBITS
 	// exit early if this is a payment request
 	paymentInvoice = Info_ValueForKey( infoString, "cl_lnInvoice" );
 	if(paymentInvoice[0]) {
@@ -4477,6 +4486,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 		}
 		return;
 	}
+#endif
 
 	// if this isn't the correct protocol version, ignore it
 	prot = atoi( Info_ValueForKey( infoString, "protocol" ) );

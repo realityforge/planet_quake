@@ -680,6 +680,7 @@ endif
   BUILD_RENDERER_OPENGL2=1
   BUILD_RENDERER_OPENGLES=0
 
+  USE_Q3KEY=1
   USE_IPV6=0
   USE_SDL=1
   USE_VULKAN=0
@@ -702,6 +703,7 @@ endif
   BASE_CFLAGS = \
 	  -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
 		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
+		-DUSE_Q3KEY -DUSE_MD5 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
@@ -851,6 +853,10 @@ endif
 
 ifeq ($(BUILD_STANDALONE),1)
   BASE_CFLAGS += -DSTANDALONE
+endif
+
+ifeq ($(USE_Q3KEY),1)
+  BASE_CFLAGS += -DUSE_Q3KEY -DUSE_MD5
 endif
 
 ifeq ($(NOFPU),1)

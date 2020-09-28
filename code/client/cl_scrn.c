@@ -501,7 +501,7 @@ void SCR_Init( void ) {
 
 #ifdef USE_LNBITS
 void SCR_GenerateQRCode() {
-	int i, j, x, y;
+	int i, j, x, y, border = 4;
 	if(!cl_lnInvoice || !cl_lnInvoice->string[0]) return;
 
 	// Text data
@@ -516,21 +516,21 @@ void SCR_GenerateQRCode() {
 
 	int size = qrcodegen_getSize(qr0);
 	{
-		byte	data[(size+2)*4][(size+2)*4][4];
+		byte	data[(size+border+border)*4][(size+border+border)*4][4];
 		Com_Memset( data, 255, sizeof( data ) );
-		for (y = 1; y < size+1; y++) {
-			for (x = 1; x < size+1; x++) {
+		for (y = border; y < size+border; y++) {
+			for (x = border; x < size+border; x++) {
 				for(i = 0; i < 4; i++) {
 					for(j = 0; j < 4; j++) {
 						data[x*4+i][y*4+j][0] =
 						data[x*4+i][y*4+j][1] =
-						data[x*4+i][y*4+j][2] = qrcodegen_getModule(qr0, x-1, y-1) ? 0 : 255;
+						data[x*4+i][y*4+j][2] = qrcodegen_getModule(qr0, x-border, y-border) ? 0 : 255;
 						data[x*4+i][y*4+j][3] = 255;
 					}
 				}
 			}
 		}
-		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, (size+2)*4, (size+2)*4);
+		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, (size+border+border)*4, (size+border+border)*4);
 	}
 
 	// Binary data
@@ -548,7 +548,7 @@ void SCR_DrawQRCode( void ) {
 		SCR_GenerateQRCode();
 	}
 	re.DrawStretchPic( cls.glconfig.vidWidth / 2 - 128,
-		cls.glconfig.vidHeight / 2 - 128, 256, 256, 0, 0, 1, 1, cls.qrCodeShader );
+		cls.glconfig.vidHeight / 2, 256, 256, 0, 0, 1, 1, cls.qrCodeShader );
 }
 #endif
 

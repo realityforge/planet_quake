@@ -772,6 +772,11 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Com_Printf("Gamestate: %s\n", cl.gameState.stringData
 		+ cl.gameState.stringOffsets[ CS_SERVERINFO ]);
 	CL_ParseServerInfo();
+	
+#ifdef USE_LNBITS
+	Cvar_Set("cl_lnInvoice", "");
+	cls.qrCodeShader = NULL;
+#endif
 
 	// parse serverId and other cvars
 	CL_SystemInfoChanged( qtrue );

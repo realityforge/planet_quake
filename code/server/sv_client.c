@@ -526,7 +526,15 @@ void SV_CheckInvoicesAndPayments( void ) {
 	client_t	*c, *highestClient;
 	playerState_t	*ps;
 	if(!maxInvoices) return;
-	
+
+	// don't even bother if a request is already in progress
+	#ifdef EMSCRIPTEN
+		if(svDownload)
+	#else
+		if(svDownload.cURL)
+	#endif
+			return;
+
 	if(oldestInvoice) {
 		qboolean wasntPaid = !oldestInvoice->paid;
 		// update the oldest invoice before finding a new one
@@ -541,14 +549,6 @@ void SV_CheckInvoicesAndPayments( void ) {
 			}
 		}
 	}
-
-	// don't even bother if a request is already in progress
-#ifdef EMSCRIPTEN
-	if(svDownload)
-#else
-	if(svDownload.cURL)
-#endif
-		return;
 
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;

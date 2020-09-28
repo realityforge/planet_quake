@@ -264,6 +264,7 @@ var LibrarySysFiles = {
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
   Sys_FOpen: function (ospath, mode) {
+    var whitelist = ['qkey', 'q3key', 'q3history', 'q3console.log']
     var handle = 0
     try {
       intArrayFromString(UTF8ToString(mode)
@@ -302,6 +303,10 @@ var LibrarySysFiles = {
             SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
           SYSF.index[indexFilename].downloading = true
         }
+      } else if (whitelist.includes(PATH.basename(indexFilename))) {
+        intArrayFromString(filename).forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
+        HEAP8[(SYSF.pathname+filename.length)] = 0
+        handle = _fopen(SYSF.pathname, SYSF.modeStr)
       }
     } catch (e) {
       // short for fstat check in sys_unix.c!!!
