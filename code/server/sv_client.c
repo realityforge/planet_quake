@@ -553,7 +553,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 	for(i=0;i<(sv_maxclients->integer+10);i++) {
 
 		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
-			&& !maxInvoices[i].paid) {
+			&& !maxInvoices[i].paid && !highestScore) {
 			oldestInvoiceTime = maxInvoices[i].lastTime;
 			oldestInvoice = &maxInvoices[i];
 		}
@@ -561,14 +561,13 @@ void SV_CheckInvoicesAndPayments( void ) {
 		if(!maxInvoices[i].cl) continue;
 
 		// detect client with highest score to reward
-		c = maxInvoices[i].cl;
-		ps = SV_GameClientNum( c - svs.clients);
+		ps = SV_GameClientNum( maxInvoices[i].cl - svs.clients);
 		if (ps->pm_type == PM_INTERMISSION
 			&& ps->persistant[PERS_SCORE] > highestScore) {
-			highestClient = c;
+			highestClient = maxInvoices[i].cl;
 			highestScore = ps->persistant[PERS_SCORE];
 			oldestInvoice = &maxInvoices[i];
-			oldestInvoiceTime = 0;
+			oldestInvoiceTime = maxInvoices[i].lastTime;
 		}
 	}
 
@@ -609,7 +608,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
+		Com_DPrintf ("Checking payment for %s.\n", oldestInvoice->guid);
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -622,7 +621,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_DL_BeginPost(&svDownload, "",
 			va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
 #endif
-	} else if (highestScore) {
+	} else if (highestScore > 0 && sv_lnMatchReward->integer > 0) {
 		// send the reward to the client
 		if(oldestInvoice->reward[0]) {
 			SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
@@ -690,9 +689,9 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (!maxInvoices[i].paid) {
-		NET_OutOfBandPrint( NS_SERVER, from, "print\n\n" );
-		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
+		NET_OutOfBandPrint( NS_SERVER, from, "print\n\n\n402: PAYMENT REQUIRED\n" );
 		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
+		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;
 	}
 	// client has paid, let them through

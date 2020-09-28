@@ -4459,7 +4459,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			Com_Printf( "Rcon: autocomplete dropped\n" );
 		return;
 	}
-	
+
 	// exit early if this is a payment request
 	paymentInvoice = Info_ValueForKey( infoString, "cl_lnInvoice" );
 	if(paymentInvoice[0]) {

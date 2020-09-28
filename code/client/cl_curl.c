@@ -952,21 +952,23 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 
 	// try to extract game path from localName
 	// dl->Name should contain only pak name without game dir and extension
-	s = strrchr( localName, '/' );
-	if ( s ) 
-		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
-	else
-		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
+  if(dl->Name[0]) {
+  	s = strrchr( localName, '/' );
+  	if ( s ) 
+  		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
+  	else
+  		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
-  if(Q_stristr(dl->Name, ".pk3")) {
-    dl->isPak = qtrue;
+    if(Q_stristr(dl->Name, ".pk3")) {
+      dl->isPak = qtrue;
+    }
+  	FS_StripExt( dl->Name, ".pk3" );
+  	if ( !dl->Name[0] )
+  	{
+  		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
+  		return qfalse;
+  	}
   }
-	FS_StripExt( dl->Name, ".pk3" );
-	if ( !dl->Name[0] )
-	{
-		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
-		return qfalse;
-	}
 
 	//dl->headerCheck = qtrue;
 
@@ -1070,20 +1072,22 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		Q_strncpyz( dl->gameDir, FS_GetCurrentGameDir(), sizeof( dl->gameDir ) );
 	}
 
-	// try to extract game path from localName
-	// dl->Name should contain only pak name without game dir and extension
-	s = strrchr( localName, '/' );
-	if ( s ) 
-		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
-	else
-		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
+  if(dl->Name[0]) {
+  	// try to extract game path from localName
+  	// dl->Name should contain only pak name without game dir and extension
+  	s = strrchr( localName, '/' );
+  	if ( s ) 
+  		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
+  	else
+  		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
-	FS_StripExt( dl->Name, ".pk3" );
-	if ( !dl->Name[0] )
-	{
-		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
-		return qfalse;
-	}
+  	FS_StripExt( dl->Name, ".pk3" );
+  	if ( !dl->Name[0] )
+  	{
+  		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
+  		return qfalse;
+  	}
+  }
 
 	dl->headerCheck = headerCheck;
 
