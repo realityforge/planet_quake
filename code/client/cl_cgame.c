@@ -442,7 +442,14 @@ rescan:
 	
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
+	if(!strcmp( cmd, "reconnect" )) {
+		Cbuf_AddText("reconnect\n");
+		Cmd_Clear();
+		return qfalse;
+	}
+	
 	if(Cmd_ExecuteString(s, qtrue)) {
+		Cmd_Clear();
 		return qfalse;
 	}
 	

@@ -968,12 +968,12 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
   		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
   		return qfalse;
   	}
+  
+  	//dl->headerCheck = qtrue;
+
+  	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
+  		"%s/%s.%08x.tmp", dl->gameDir, dl->Name, rand() | (rand() << 16) );
   }
-
-	//dl->headerCheck = qtrue;
-
-	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
-		"%s/%s.%08x.tmp", dl->gameDir, dl->Name, rand() | (rand() << 16) );
 
 	if ( com_developer->integer )
 		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 1 );

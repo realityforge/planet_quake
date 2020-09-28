@@ -450,7 +450,7 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	char keyName[64];
 	char paidValue[10];
 	qboolean key = qfalse, value = qfalse;
-	qboolean paymentValue = qfalse, checkingId = qfalse;
+	qboolean paymentValue = qfalse, checkingId = qfalse, withdraw = qfalse;
 	qboolean paid = qfalse;
 	if(!svDownload.TempStore[0]) return;
 
@@ -458,7 +458,7 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	// simple state machine for checking payment status json
 	for(i = 0; i < r; i++) {
 		if(!key && !value && svDownload.TempStore[i] == '"') {
-			if(paymentValue || checkingId) {
+			if(paymentValue || checkingId || withdraw) {
 				value = qtrue;
 				vi = 0;
 			} else {
@@ -470,12 +470,14 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 			keyName[ki] = '\0';
 			paymentValue = !Q_stricmp(keyName, "payment_request");
 			checkingId = !Q_stricmp(keyName, "checking_id");
+			withdraw = !Q_stricmp(keyName, "lnurl");
 			paid = !Q_stricmp(keyName, "paid");
 			vi = 0;
 		} else if (value && svDownload.TempStore[i] == '"') {
 			value = qfalse;
-			if(paymentValue) paymentValue = qfalse;
-			if(checkingId) checkingId = qfalse;
+			paymentValue = 
+			checkingId = 
+			withdraw = qfalse;
 		} else if (key) {
 			if(ki < 63) {
 				keyName[ki++] = svDownload.TempStore[i];
@@ -485,7 +487,8 @@ void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 				updateInvoice->checkingId[vi++] = svDownload.TempStore[i];
 			} else if (vi < 255 && paymentValue) {
 				updateInvoice->invoice[vi++] = svDownload.TempStore[i];
-			}
+			} else if (vi < 255 && withdraw)
+				updateInvoice->reward[vi++] = svDownload.TempStore[i];
 		} else if (paid && svDownload.TempStore[i] == '}') {
 			if(Q_stristr(paidValue, "true")) {
 				updateInvoice->paid = qtrue;
@@ -601,7 +604,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		svDownload.data.dl = &svDownload;
 		Com_DL_BeginPost(&svDownload, "", va("%s/payments", sv_lnAPI->string));
 #endif
-	} else if (!oldestInvoice->paid) {
+} else if (!oldestInvoice->paid && oldestInvoice->checkingId[0]) {
 		// check for payment
 		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
 			"X-Api-Key: %s", sv_lnWallet->string );
@@ -629,7 +632,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 			return;
 		}
 		Com_sprintf( invoicePostData, sizeof( invoicePostData ),
-			"%s %s %i %s %i %s",
+			"%s %s %i, %s %i, %s",
 			"{\"title\": \"QuakeJS winner\",",
 			"\"min_withdrawable\":", sv_lnMatchReward->integer,
 			"\"max_withdrawable\":", sv_lnMatchReward->integer,
@@ -684,12 +687,12 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED (invoicing...)\n" );
 		} else {
 			NET_OutOfBandPrint( NS_SERVER, from,
-				"print\n\n", maxInvoices[i].invoice );
+				"print\n402: PAYMENT REQUIRED\n", maxInvoices[i].invoice );
 		}
 		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (!maxInvoices[i].paid) {
-		NET_OutOfBandPrint( NS_SERVER, from, "print\n\n\n402: PAYMENT REQUIRED\n" );
+		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
 		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
 		SV_SendInvoiceAndChallenge(from, maxInvoices[i].invoice, "", va("%i", challenge));
 		return NULL;

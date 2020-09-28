@@ -553,12 +553,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	}
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
-#ifdef USE_LNBITS
-		if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
-			// reconnect clients so they have to repay
-			SV_SendServerCommand( &svs.clients[i], "reconnect\n%s", "402: PAYMENT REQUIRED" );
-		}
-#endif
 		// save when the server started for each client already connected
 		if ( svs.clients[i].state >= CS_CONNECTED && sv_levelTimeReset->integer ) {
 			svs.clients[i].oldServerTime = sv.time;
@@ -666,6 +660,14 @@ void SV_SpawnServer_After_Startup( void ) {
 			else {
 				isBot = qfalse;
 			}
+
+#ifdef USE_LNBITS
+			if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
+				// reconnect clients so they have to repay
+				SV_SendServerCommand( &svs.clients[i], "reconnect\n" );
+				continue;
+			}
+#endif
 
 			// connect the client again
 			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
