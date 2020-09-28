@@ -553,6 +553,12 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	}
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
+#ifdef USE_LNBITS
+		if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
+			// reconnect clients so they have to repay
+			SV_SendServerCommand( &svs.clients[i], "reconnect\n%s", "402: PAYMENT REQUIRED" );
+		}
+#endif
 		// save when the server started for each client already connected
 		if ( svs.clients[i].state >= CS_CONNECTED && sv_levelTimeReset->integer ) {
 			svs.clients[i].oldServerTime = sv.time;
@@ -936,7 +942,7 @@ void SV_Init( void )
 #ifdef USE_LNBITS
 	sv_lnMatchPrice = Cvar_Get("sv_lnMatchPrice", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
 	sv_lnMatchCut = Cvar_Get("sv_lnMatchCut", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
-	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP | CVAR_ROM);
+	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP);
 	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
 	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
 	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);

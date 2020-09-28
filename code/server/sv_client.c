@@ -621,7 +621,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_DL_BeginPost(&svDownload, "",
 			va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
 #endif
-	} else if (highestScore > 0 && sv_lnMatchReward->integer > 0) {
+	} else if (highestClient && highestScore > 0 && sv_lnMatchReward->integer > 0) {
 		// send the reward to the client
 		if(oldestInvoice->reward[0]) {
 			SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
