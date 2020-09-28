@@ -124,7 +124,7 @@ https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_bro
 
 Build the image from this repository:
 
-`docker build -t quake3e .`
+`docker build -t quake3e .` or `docker build --target builder .`
 
 Grab latest from dockerhub
 
@@ -135,6 +135,10 @@ After the image is built and running, you can skip repeating the conversion proc
 `docker commit quake3e quake3e`
 
 `docker start -i quake3e`
+
+To copy the built dedicated server out of the docker container, probably should just use cross-compiling with make:
+
+`docker cp quake3e:/tmp/build/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 ./build/`
 
 # Running content server
 

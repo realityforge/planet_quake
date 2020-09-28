@@ -1183,22 +1183,24 @@ qboolean Com_DL_Perform( download_t *dl )
 	{
 		qboolean autoDownload = dl->mapAutoDownload;
 
-		Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.pk3" : "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
+    if(dl->Name[0]) {
+  		Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.pk3" : "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
 
-		if ( !FS_SV_FileExists( name ) )
-		{
-			FS_SV_Rename( dl->TempName, name );
-		}
-		else
-		{
-			n = FS_GetZipChecksum( name );
-			Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.%08x.pk3" : "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
+  		if ( !FS_SV_FileExists( name ) )
+  		{
+  			FS_SV_Rename( dl->TempName, name );
+  		}
+  		else
+  		{
+  			n = FS_GetZipChecksum( name );
+  			Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.%08x.pk3" : "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
 
-			if ( FS_SV_FileExists( name ) )
-				FS_Remove( name );
+  			if ( FS_SV_FileExists( name ) )
+  				FS_Remove( name );
 
-			FS_SV_Rename( dl->TempName, name );
-		}
+  			FS_SV_Rename( dl->TempName, name );
+  		}
+    }
 
 		Com_DL_Cleanup( dl );
 #ifndef DEDICATED
@@ -1228,7 +1230,8 @@ qboolean Com_DL_Perform( download_t *dl )
 			dl->func.easy_strerror( msg->data.result ), code );
 		strcpy( name, dl->TempName );
 		Com_DL_Cleanup( dl );
-		FS_Remove( name );
+    if ( name[0] )
+		  FS_Remove( name );
 		if ( autoDownload )
 		{
 #ifndef DEDICATED
