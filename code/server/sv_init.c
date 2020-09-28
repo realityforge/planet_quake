@@ -526,6 +526,12 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	svs.nextSnapshotPSF = 0;
 #endif
 
+#ifdef USE_LNBITS
+	// reset invoice array so clients have to pay again in between matches
+	// TODO: make this a setting? make this a command?
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+#endif
+
 	// toggle the server bit so clients can detect that a
 	// server has changed
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;

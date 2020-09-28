@@ -167,6 +167,15 @@ var LibrarySysMain = {
           ])
         }
       } else {
+        if(window.location.hostname.match(/quake\.money/i)) {
+          if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+spdevmap') 
+            && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', window.location.hostname,
+            ])
+          }
+        }
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,

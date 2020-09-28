@@ -92,7 +92,7 @@ if(!writeOut) {
   ufs.use(vol)
 }
 if(mountPoints.length === 0) {
-  console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
+  console.log('ERROR: No mount points, e.g. run `npm run start -- /Applications/ioquake3`')
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
