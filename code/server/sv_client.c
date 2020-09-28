@@ -37,7 +37,7 @@ qboolean        svDownload;
 #ifdef USE_LNBITS
 invoice_t *maxInvoices;
 int       numInvoices;
-char 			*requestGuid;
+char 			*requestInvoice;
 char invoicePostData[MAX_OSPATH];
 char invoicePostHeaders[2*MAX_OSPATH];
 #endif
@@ -547,12 +547,6 @@ void SV_CheckInvoicesAndPayments( void ) {
 			oldestInvoiceTime = maxInvoices[i].lastTime;
 			oldestInvoice = &maxInvoices[i];
 		}
-		
-		if(requestGuid && maxInvoices[i].guid[0]) {
-			if(!Q_stricmp(maxInvoices[i].guid, requestGuid)) {
-				requestInvoice = &maxInvoices[i];
-			}
-		}
 
 		if(!maxInvoices[i].cl) continue;
 
@@ -579,7 +573,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 					+ requestInvoice->price - sv_lnMatchCut->integer));
 			}
 		}
-		requestGuid = NULL;
+		requestInvoice = NULL;
 	}
 
 	if(!oldestInvoice)
@@ -596,7 +590,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		requestGuid = oldestInvoice->guid;
+		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -618,7 +612,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		requestGuid = oldestInvoice->guid;
+		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -649,7 +643,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		requestGuid = oldestInvoice->guid;
+		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
