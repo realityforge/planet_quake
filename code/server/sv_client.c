@@ -37,8 +37,7 @@ qboolean        svDownload;
 #ifdef USE_LNBITS
 invoice_t *maxInvoices;
 int       numInvoices;
-int       oldestInvoiceTime;
-invoice_t *oldestInvoice;
+char 			*requestGuid;
 char invoicePostData[MAX_OSPATH];
 char invoicePostHeaders[2*MAX_OSPATH];
 #endif
@@ -523,8 +522,10 @@ void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoiceData, char *r
 
 void SV_CheckInvoicesAndPayments( void ) {
 	int i, now, highestScore = 0;
-	client_t	*c, *highestClient;
+	client_t	*highestClient;
 	playerState_t	*ps;
+	invoice_t  *oldestInvoice = NULL, *requestInvoice = NULL;
+	int        oldestInvoiceTime;
 	if(!maxInvoices) return;
 
 	// don't even bother if a request is already in progress
@@ -535,34 +536,22 @@ void SV_CheckInvoicesAndPayments( void ) {
 	#endif
 			return;
 
-	if(oldestInvoice) {
-		qboolean wasntPaid = !oldestInvoice->paid;
-		qboolean wasntInvoiced = !oldestInvoice->invoice[0];
-		// update the oldest invoice before finding a new one
-#ifndef EMSCRIPTEN
-		SV_CheckInvoiceStatus(oldestInvoice);
-#endif
-		if(wasntPaid && oldestInvoice->paid) {
-			// add this once when paid status changes
-			if(sv_lnMatchCut->integer < oldestInvoice->price) {
-				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
-					+ oldestInvoice->price - sv_lnMatchCut->integer));
-			}
-		}
-		if(wasntInvoiced && oldestInvoice->invoice[0]) {
-			Com_DPrintf( "Received invoice for %s\n", oldestInvoice->guid );
-		}
-	}
-
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;
 	oldestInvoice = NULL;
 	for(i=0;i<(sv_maxclients->integer+10);i++) {
 
 		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
-			&& !maxInvoices[i].paid && !highestScore) {
+			&& !maxInvoices[i].paid && !highestScore
+		  && (now - maxInvoices[i].lastTime) > 1000) {
 			oldestInvoiceTime = maxInvoices[i].lastTime;
 			oldestInvoice = &maxInvoices[i];
+		}
+		
+		if(requestGuid && maxInvoices[i].guid[0]) {
+			if(!Q_stricmp(maxInvoices[i].guid, requestGuid)) {
+				requestInvoice = &maxInvoices[i];
+			}
 		}
 
 		if(!maxInvoices[i].cl) continue;
@@ -574,12 +563,26 @@ void SV_CheckInvoicesAndPayments( void ) {
 			highestClient = maxInvoices[i].cl;
 			highestScore = ps->persistant[PERS_SCORE];
 			oldestInvoice = &maxInvoices[i];
-			oldestInvoiceTime = maxInvoices[i].lastTime;
 		}
 	}
 
-	if(!oldestInvoice || !oldestInvoice->guid[0]
-		|| (now - oldestInvoiceTime) < 1000)
+	if(requestInvoice && svDownload.TempStore[0]) {
+		qboolean wasntPaid = !requestInvoice->paid;
+		// update the oldest invoice before finding a new one
+#ifndef EMSCRIPTEN
+		SV_CheckInvoiceStatus(requestInvoice);
+#endif
+		if(wasntPaid && requestInvoice->paid) {
+			// add this once when paid status changes
+			if(sv_lnMatchCut->integer < requestInvoice->price) {
+				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
+					+ requestInvoice->price - sv_lnMatchCut->integer));
+			}
+		}
+		requestGuid = NULL;
+	}
+
+	if(!oldestInvoice)
 		return;
 	oldestInvoice->lastTime = now;
 
@@ -593,7 +596,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		Com_DPrintf ("Fetching invoice for %s.\n", oldestInvoice->guid);
+		requestGuid = oldestInvoice->guid;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -615,7 +618,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		Com_DPrintf ("Checking payment for %s.\n", oldestInvoice->guid);
+		requestGuid = oldestInvoice->guid;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -646,7 +649,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
-		Com_DPrintf ("Awarding payout for %s.\n", oldestInvoice->guid);
+		requestGuid = oldestInvoice->guid;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
 		Sys_BeginDownload();
@@ -669,6 +672,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
 	char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
 	invoice_t *found = NULL;
+	
 	// perform curl request to get invoice id
 	for(i=0;i<sv_maxclients->integer+10;i++) {
 		if(cl_guid[0] && maxInvoices[i].guid[0]
@@ -677,10 +681,10 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 			break;
 		}
 	}
+
 	if(!cl_invoice[0] || !found) {
 		if(!found) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
-			Com_DPrintf( "Payment required for client: %s (%s).\n", cl_guid, NET_AdrToStringwPort( from ));
 			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 			strcpy(maxInvoices[numInvoices].guid, cl_guid);
 			maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
@@ -697,7 +701,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 		return NULL;
 	} else if (found && !maxInvoices[i].paid) {
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
-		Com_DPrintf( "Checking payment for known client: %s.\n", cl_guid );
+		Com_Printf( "Checking payment for known client: %s (%s).\n", cl_guid, &found->invoice[strlen(found->invoice) - 8] );
 		SV_SendInvoiceAndChallenge(from, found->invoice, "", va("%i", challenge));
 		return NULL;
 	} else if (found) {

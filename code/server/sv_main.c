@@ -1389,6 +1389,10 @@ void SV_Frame( int msec ) {
 	}
 #endif
 
+#ifdef USE_LNBITS
+	SV_CheckInvoicesAndPayments();
+#endif
+
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {
 		return;
@@ -1477,10 +1481,6 @@ void SV_Frame( int msec ) {
 
 	// update ping based on the all received frames
 	SV_CalcPings();
-	
-#ifdef USE_LNBITS
-	SV_CheckInvoicesAndPayments();
-#endif
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 

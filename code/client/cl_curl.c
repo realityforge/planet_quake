@@ -536,7 +536,7 @@ qboolean Com_DL_Init( download_t *dl )
   dl->TempStore[0] = '\0';
   
 #ifdef USE_CURL_DLOPEN
-	Com_Printf( "Loading \"%s\"...", cl_cURLLib->string );
+	Com_DPrintf( "Loading \"%s\"...", cl_cURLLib->string );
 	if( ( dl->func.lib = Sys_LoadLibrary( cl_cURLLib->string ) ) == NULL )
 	{
 #ifdef _WIN32
@@ -592,7 +592,7 @@ qboolean Com_DL_Init( download_t *dl )
 		return qfalse;
 	}
 
-	Com_Printf( "OK\n" );
+	Com_DPrintf( "OK\n" );
 
 	return qtrue;
 #else
@@ -761,8 +761,11 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 	dl = (download_t *)userdata;
   
   if( !dl->Name[0] ) {
+    int maxWrite = (size*nmemb) >= 2047 ? 2047 : size*nmemb;
     // copy to temporary for small requests
-    memcpy(dl->TempStore, ptr, (size*nmemb) >= 2048 ? 2047 : size*nmemb);
+    memcpy(dl->TempStore, ptr, maxWrite);
+    dl->TempStore[maxWrite] = '\0';
+    
     return (size * nmemb);
   }
 
@@ -924,8 +927,6 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
 		return qfalse;
 	}
 
-	Com_Printf( "URL: %s\n", remoteURL );
-
 	Com_DL_Cleanup( dl );
 
 	if ( !Com_DL_Init( dl ) ) 
@@ -976,7 +977,7 @@ qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *re
   }
 
 	if ( com_developer->integer )
-		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, 0 );
+		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, com_developer->integer ? 1 : 0 );
 
 	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
   dl->func.easy_setopt( dl->cURL, CURLOPT_POST, dl->isPost ? 1 : 0 );

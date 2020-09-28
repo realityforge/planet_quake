@@ -145,6 +145,7 @@ async function openDatabase() {
 }
 
 async function writeStore(value, key) {
+  if(key.includes('http:')) debugger
   var db = await openDatabase()
   return new Promise(function (resolve) {
     let tran = db.transaction('FILE_DATA', 'readwrite')

@@ -10,7 +10,7 @@ var WebSocketServer = require('ws').Server
 var http = require('http')
 
 
-var ports = [1081, 80]
+var ports = [8080, 1081]
 var specifyPorts = false
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
@@ -97,5 +97,5 @@ ports.forEach((p, i, ports) => {
       console.log(e)
     }
   })
-  httpServer.listen(ports[i],  () => console.log(`Http running at http://0.0.0.0:${ports[i]}`))
+  httpServer.listen(ports[i], () => console.log(`Http running at http://0.0.0.0:${ports[i]}`))
 })
