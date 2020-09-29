@@ -6,7 +6,6 @@ var LibrarySysFiles = {
     fs_basepath: '/base',
     pathname: 0,
     modeStr: 0,
-    firstTime: false,
     mods: [
       // A list of supported mods, 'dirname-cc' (-ccr means combined converted repacked)
   		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
@@ -116,12 +115,6 @@ var LibrarySysFiles = {
         SYSN.downloads = []
         SYSN.LoadingDescription('')
         SYSC.ProxyCallback()
-        if(SYSF.firstTime && typeof window.serverWorker != 'undefined') {
-          SYSF.firstTime = false
-          //_Com_WriteConfigToFile('interlinked.cfg')
-          window.serverWorker.postMessage(['init', ['+exec', 'interlinked.cfg']
-            .concat(SYSM.getQueryCommands())])
-        }
       })
     },
     downloadImmediately: function (cb) {

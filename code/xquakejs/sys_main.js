@@ -188,12 +188,34 @@ var LibrarySysMain = {
           ])
         }
       }
-      if(typeof document != 'undefined') {
+      if(!SYS.dedicated) {
         if(!args.includes('+connect')) {
           args.push.apply(args, [
             '+connect', 'localhost'
           ])
         }
+      } else {
+        // IS dedicated settings
+        if(!args.includes('+spmap')
+          && !args.includes('+map')
+          && !args.includes('+devmap')
+          && !args.includes('+spdevmap')
+          && !args.includes('+demo_play')) {
+          args.push.apply(args, [
+            '+spmap', 'q3dm0',
+          ])
+        }
+        args.unshift.apply(args, [
+          '+set', 'ttycon', '1',
+          '+set', 'sv_master1', '207.246.91.235',
+          '+set', 'sv_hostname', 'Local Host',
+          '+set', 'sv_motd', 'For instant replays and stuff',
+          '+set', 'rconPassword', 'password123!',
+          '+set', 'sv_reconnectlimit', '0',
+          //  '+set', 'sv_autoDemo', '1',
+          //  '+set', 'sv_autoRecord', '1',
+          //  '+set', 'net_socksEnabled', '0',
+        ])
       }
       return args
     },
@@ -237,8 +259,8 @@ var LibrarySysMain = {
     })
     SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
 
-    SYSF.firstTime = true
-    if(typeof document == 'undefined') return
+    window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
+    if(SYS.dedicated) return
 
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
@@ -281,7 +303,7 @@ var LibrarySysMain = {
       flipper.style.animation = 'none'
     }
     SYSM.exited = true
-    if(typeof document != 'undefined') {
+    if(!SYS.dedicated) {
       window.removeEventListener('resize', SYSM.resizeViewport)
       window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
       window.removeEventListener('keyup', SYSI.InputPushKeyEvent)

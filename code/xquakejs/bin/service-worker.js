@@ -9,6 +9,8 @@ var precacheConfig = [
   'quake3e.js',
   'quake3e.wasm',
   'assets/baseq3-cc/index.json',
+  'server-worker.js',
+  'service-worker.js'
 ]
 
 var caseInsensitiveCompare = function (str, cmp) { return str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0 }
@@ -289,9 +291,6 @@ self.addEventListener('fetch', function(event) {
             } else {
               return fetchAsset(event.request.url)
             }
-          })
-          .then(function (files) {
-            return new Response(files.contents, init)
           }))
     }
   }

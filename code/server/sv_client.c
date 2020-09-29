@@ -560,11 +560,12 @@ void SV_CheckInvoicesAndPayments( void ) {
 		}
 	}
 
-	if(requestInvoice && svDownload.TempStore[0]) {
+	if(requestInvoice) {
 		qboolean wasntPaid = !requestInvoice->paid;
 		// update the oldest invoice before finding a new one
 #ifndef EMSCRIPTEN
-		SV_CheckInvoiceStatus(requestInvoice);
+		if(svDownload.TempStore[0])
+			SV_CheckInvoiceStatus(requestInvoice);
 #endif
 		if(wasntPaid && requestInvoice->paid) {
 			// add this once when paid status changes

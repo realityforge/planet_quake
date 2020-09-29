@@ -18,7 +18,7 @@ var LibrarySysNet = {
       SYSN.multicasting = false
     },
     LoadingDescription: function (desc) {
-      if(typeof document == 'undefined') {
+      if(SYS.dedicated) {
         console.log(desc)
         return
       }
@@ -36,7 +36,7 @@ var LibrarySysNet = {
 			description.innerHTML = desc
 		},
 		LoadingProgress: function (progress, total) {
-      if(typeof document == 'undefined') {
+      if(SYS.dedicated) {
         return
       }
 			var frac = progress / total

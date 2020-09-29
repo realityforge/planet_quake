@@ -1740,13 +1740,15 @@ function printErr() {
     console.info.apply(console, [dedicated ? 'DedServer: ' : ''].concat(args))
 }
 exports.Module.printErr = exports.printErr = printErr 
+exports.Module.onRuntimeInitialized = function () {
+  SYS.dedicated = dedicated
+}
 if(dedicated) {
   // in a worker
-  exports.Module.noInitialRun = true
+  exports.Module.noInitialRun = false
   exports.location = new URL(location.origin + '?set dedicated 2')
 } else {
   // not in a worker
   exports.Module.viewport = document.getElementById('viewport-frame')
   exports.Module.elementPointerLock = true
-  exports.Module.onRuntimeInitialized = function () {}
 }
