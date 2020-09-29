@@ -177,8 +177,8 @@ async function mkdirp(path) {
   }
 }
 
-async function fetchAsset(key) {
-  var response = await fetch(key, {credentials: 'omit'})
+async function fetchAsset(url, key) {
+  var response = await fetch(url, {credentials: 'omit'})
   if (!response.ok) {
     throw new Error('Request for ' + key + ' returned a ' +
       'response with status ' + response.status)
@@ -190,14 +190,14 @@ async function fetchAsset(key) {
       precacheConfig.push(k.toLowerCase().replace(/^\/base\//ig, 'assets/'))
     })
   }
-  await mkdirp('/base/' + key.replace(/^\/?assets\/|^\/|\/[^\/]*$/i, ''))
+  await mkdirp('/base/' + key.replace(/^\/base\/|^\/?assets\/|^\/|\/[^\/]*$/i, ''))
   var obj = {
     timestamp: new Date(),
     mode: 33206,
     contents: new Uint8Array(content)
   }
   try {
-    await writeStore(obj, '/base/' + key.replace(/^\/?assets\/|^\//i, ''))
+    await writeStore(obj, '/base/' + key.replace(/^\/base\/|^\/?assets\/|^\//i, ''))
   } catch (e) {
   }
   return obj
@@ -213,7 +213,7 @@ self.addEventListener('install', function(event) {
           if(files && files.contents) {
             // already saved
           } else {
-            return fetchAsset(requiredFile)
+            return fetchAsset(requiredFile, localName)
           }
         })
     })).then(function () {
@@ -289,7 +289,7 @@ self.addEventListener('fetch', function(event) {
             if(files && files.contents) {
               return new Response(files.contents, init)
             } else {
-              return fetchAsset(event.request.url)
+              return fetchAsset(event.request.url, url)
             }
           }))
     }
