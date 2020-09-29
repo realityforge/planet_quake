@@ -564,8 +564,10 @@ void SV_CheckInvoicesAndPayments( void ) {
 		qboolean wasntPaid = !requestInvoice->paid;
 		// update the oldest invoice before finding a new one
 #ifndef EMSCRIPTEN
-		if(svDownload.TempStore[0])
+		if(svDownload.TempStore[0]) {
+Com_Printf("Response: %s\n", svDownload.TempStore);
 			SV_CheckInvoiceStatus(requestInvoice);
+		}
 #endif
 		if(wasntPaid && requestInvoice->paid) {
 			// add this once when paid status changes
@@ -680,6 +682,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	if(!cl_invoice[0] || !found) {
 		if(!found) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
+			Com_Printf( "Payment required for new client: %s (%s).\n", cl_guid );
 			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 			strcpy(maxInvoices[numInvoices].guid, cl_guid);
 			maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;

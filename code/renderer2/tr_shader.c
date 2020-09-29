@@ -3742,6 +3742,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[1].rgbGen = CGEN_IDENTITY;
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
 	} else {
+if(Q_stristr(name, "diamond2c")) {
+  Com_Printf("FindShader: lightmap %i\n", shader.lightmapIndex);
+}
 		// two pass lightmap
 		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex];
 		stages[0].bundle[0].isLightmap = qtrue;
