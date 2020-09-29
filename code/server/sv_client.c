@@ -682,7 +682,7 @@ invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo,
 	if(!cl_invoice[0] || !found) {
 		if(!found) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
-			Com_Printf( "Payment required for new client: %s (%s).\n", cl_guid );
+			Com_Printf( "Payment required for new client: %s.\n", cl_guid );
 			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
 			strcpy(maxInvoices[numInvoices].guid, cl_guid);
 			maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
