@@ -37,7 +37,7 @@ qboolean        svDownload;
 #ifdef USE_LNBITS
 invoice_t *maxInvoices;
 int       numInvoices;
-char 			*requestInvoice;
+invoice_t *requestInvoice; // the invoice request currently being downloaded by svDownload
 char invoicePostData[MAX_OSPATH];
 char invoicePostHeaders[2*MAX_OSPATH];
 #endif
@@ -524,7 +524,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 	int i, now, highestScore = 0;
 	client_t	*highestClient;
 	playerState_t	*ps;
-	invoice_t  *oldestInvoice = NULL, *requestInvoice = NULL;
+	invoice_t  *oldestInvoice = NULL;
 	int        oldestInvoiceTime;
 	if(!maxInvoices) return;
 
