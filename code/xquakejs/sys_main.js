@@ -207,7 +207,6 @@ var LibrarySysMain = {
         }
         args.unshift.apply(args, [
           '+set', 'ttycon', '1',
-          '+set', 'sv_master1', '207.246.91.235',
           '+set', 'sv_hostname', 'Local Host',
           '+set', 'sv_motd', 'For instant replays and stuff',
           '+set', 'rconPassword', 'password123!',
@@ -225,7 +224,6 @@ var LibrarySysMain = {
 				.replace('%w', window.innerWidth)
 				.replace('%h', window.innerHeight)
 			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
-			_Cbuf_Execute();
 		},
     resizeViewport: function () {
 			if (!Module['canvas']) {

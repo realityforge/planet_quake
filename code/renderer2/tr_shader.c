@@ -3628,7 +3628,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
 		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       &&	!Q_stricmp(sh->name, strippedName)
-      &&  (!mapShaders) ) {
+      &&  !mapShaders ) {
 			// match found
 			return sh;
 		}
@@ -3697,7 +3697,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
     }
 if(Q_stristr(name, "diamond2c")) {
-  Com_Printf("FindShader: lightmap %i\n", shader.lightmapIndex);
+  Com_Printf("FindShader: lightmap %i %i\n", shader.lightmapIndex, image ? 1 : 0);
 }
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );

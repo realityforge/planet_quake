@@ -10,7 +10,6 @@ var LibrarySys = {
 		quitGameOnUnload: function (e) {
 			if(Module['canvas']) {
 				_Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
-				_Cbuf_Execute();
 				Module['canvas'].remove()
 				Module['canvas'] = null
 			}

@@ -1271,7 +1271,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	
 #ifdef USE_LNBITS
 	Cvar_Set("cl_lnInvoice", "");
-	cls.qrCodeShader = NULL;
+	cls.qrCodeShader = 0;
 #endif
 
 #ifdef EMSCRIPTEN
@@ -2771,8 +2771,6 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 		}
 	}
 
-	//Com_Printf("CL_ServersResponsePacket\n"); // moved down
-
 	if (*max == -1) {
 		// state to detect lack of servers or lack of response
 		*max = 0;
@@ -4152,9 +4150,9 @@ void CL_Init( void ) {
 
 	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
 	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
-	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
+	//cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
 	
-	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
+	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
@@ -4482,7 +4480,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 			}
 			challenge = Info_ValueForKey( infoString, "challenge" );
 			clc.challenge = atoi(challenge);
-			cls.qrCodeShader = NULL;
+			cls.qrCodeShader = 0;
 		}
 		return;
 	}
@@ -4792,7 +4790,6 @@ static void CL_LocalServers_f( void ) {
 	Com_Printf( "Scanning for servers on the local network (%i servers)...\n", cls.numlocalservers);
 
 	cls.pingUpdateSource = AS_LOCAL;
-#if 0
 	// reset the list, waiting for response
 	cls.numlocalservers = 0;
 
@@ -4802,7 +4799,6 @@ static void CL_LocalServers_f( void ) {
 		cls.localServers[i].visible = b;
 	}
 	Com_Memset( &to, 0, sizeof( to ) );
-#endif
 
 	// The 'xxx' in the message is a challenge that will be echoed back
 	// by the server.  We don't care about that here, but master servers
@@ -4815,17 +4811,21 @@ static void CL_LocalServers_f( void ) {
 		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
 			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses++];
 			qboolean found = qfalse;
-			if(!cl_master[i]->string[0]) continue;
+			if(!cl_master[i]->string[0]) {
+				cls.numGlobalServerAddresses--;
+				continue;
+			}
 			NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC );
 			for(j = 0; j < cls.numlocalservers; j++) {
 				if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
 					found = qtrue;
-					cls.numGlobalServerAddresses--;
 					break;
 				}
 			}
-			if(found || !addr->type || !addr->port) continue;
-Com_Printf( "adding server: %s\n", NET_AdrToStringwPort(addr));
+			if(found || !addr->type || addr->type == NA_BAD || !addr->port) {
+				cls.numGlobalServerAddresses--;
+				continue;
+			}
 			CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
 			Q_strncpyz(
 				cls.localServers[cls.numlocalservers].hostName,
@@ -4858,6 +4858,9 @@ Com_Printf( "adding server: %s\n", NET_AdrToStringwPort(addr));
 			cls.localServers[i].visible = qtrue;
 		}
 	}
+	
+	//cls.numlocalservers = -1; // reset hash table
+	hash_reset();
 #else
 	// send each message twice in case one is dropped
 	for ( i = 0 ; i < 2 ; i++ ) {

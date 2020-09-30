@@ -12,7 +12,6 @@ onmessage = function(e) {
   } else if(e.data[0] == 'execute') {
     var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK)
     _Cbuf_AddText(cmd)
-    _Cbuf_Execute()
   } else if(e.data[0] == 'net') {
     if(SYSN && SYSN.lazyInterval) // to see if Sys_PlatformInit has been called
       SYSN.receiveNetLoop(e.data[1], e.data[2])

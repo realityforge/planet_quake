@@ -176,8 +176,10 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
 
 Server.prototype._timeoutUDP = function(udpLookupPort) {
   var self = this
-  if(typeof self._listeners[udpLookupPort] !== 'undefined')
+  if(typeof self._listeners[udpLookupPort] !== 'undefined') {
+    console.error('socket timeout')
     self._listeners[udpLookupPort].close()
+  }
   delete self._listeners[udpLookupPort]
 }
 
@@ -395,6 +397,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
     if (reqInfo.cmd == 'udp') {
       socket.parser.authed = true
+      socket.binding = true
       self._receivers[reqInfo.dstPort] = socket
       if(typeof this._listeners[reqInfo.dstPort] == 'undefined'
         || this._listeners[reqInfo.dstPort].readyState > 1) {
@@ -407,16 +410,40 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       } else {
       }
       console.log('Switching to UDP listener', reqInfo.dstPort)
+      socket.binding = false
       socket.dstSock = this._listeners[reqInfo.dstPort]
+      socket.dstSock.on('close', () => {
+        socket.dstSock = null
+        socket.close()
+      }) // if udp binding closes also close websocket
     } else if(reqInfo.cmd == 'bind') {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
       const listener = createServer()
+      socket.binding = true
       socket.dstSock = listener
       listener.on('connection', () => {})
-              .on('error', onError)
-              .listen(reqInfo.dstPort, reqInfo.dstAddr, onConnect)
+        .on('error', onError)
+        .on('close', () => {
+          socket.dstSock = null
+          socket.close()
+        }) // if udp binding closes also close websocket
+        .listen(reqInfo.dstPort, reqInfo.dstAddr, () => {
+          socket.binding = false
+          onConnect()
+        })
     } else if(reqInfo.cmd == 'connect') {
+      if(socket.binding) {
+        // wait for the previous bind command to complete before performing a connect command
+        var waiting
+        var waitingCount = 0
+        await new Promise(resolve => waiting = setInterval(() => {
+          if(!socket.binding || waitingCount > 1000) {
+            clearInterval(waiting)
+            resolve()
+          }
+        }, 10))
+      }
       if(socket.dstSock) {
         var port = Object.keys(self._listeners)
           .filter(k => self._listeners[k] === socket.dstSock)[0]
@@ -444,6 +471,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         self._onUDPMessage.bind(self, port),
         reqInfo, dstIP)
     } else {
+      console.error('command unsupported')
       socket.send(BUF_REP_CMDUNSUPP, { binary: true })
       socket.close()
     }
