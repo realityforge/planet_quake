@@ -1390,6 +1390,19 @@ void CL_ForwardCommandToServer( const char *string ) {
 	if ( !strcmp( cmd, "userinfo" ) ) {
 		return;
 	}
+	
+#ifdef EMSCRIPTEN
+	// detect a map command and start connection to localhost
+	//   this helps the UI not sit around and wait while the server is starting
+	if( (!strcmp(cmd, "map")
+ 		|| !strcmp(cmd, "devmap")
+		|| !strcmp(cmd, "spmap")
+		|| !strcmp(cmd, "spdevmap")
+		|| !strcmp(cmd, "map_restart"))
+		&& clc.serverAddress.type == NA_LOOPBACK ) {
+		Cbuf_AddText("connect localhost\n");
+	}
+#endif
 
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
