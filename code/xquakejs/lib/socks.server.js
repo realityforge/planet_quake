@@ -358,13 +358,15 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
   var remoteAddr = dstIP+':'+reqInfo.dstPort
   if(typeof self._directConnects[remoteAddr] == 'undefined'
     || self._directConnects[remoteAddr].readyState > 1) {
-    console.log('Websocket request ' + remoteAddr)
+    console.log('Websocket (bound ' + reqInfo.dstPort + ') request ' + remoteAddr)
     self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
     self._directConnects[remoteAddr]
-      .on('message', (msg) => self._directConnects[remoteAddr]
-        ._message(Buffer.from(msg), {
-          address: dstIP, port: reqInfo.dstPort
-        }))
+      .on('message', (msg) => {
+        self._directConnects[remoteAddr]
+          ._message(Buffer.from(msg), {
+            address: dstIP, port: reqInfo.dstPort
+          })
+      })
       .on('error', (err) => self._directConnects[remoteAddr]._error(err))
       .on('open', () => {
         //onConnect()
@@ -447,21 +449,22 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
           }
         }, 10))
       }
+      /*
       var remoteAddr = dstIP+':'+reqInfo.dstPort
       if(typeof self._directConnects[remoteAddr] != 'undefined') {
-        console.log('Direct connect ' + remoteAddr)
+        console.log('Loopback connect ' + remoteAddr)
         // do loopback, send data from a proxy request to another known client
         self._directConnects[remoteAddr]._message(Buffer.from(reqInfo.data), {
           address: socket._socket.remoteAddress, port: socket._socket.remotePort
         })
         return
       }
+      */
       if(socket.dstSock) {
         var port = Object.keys(self._listeners)
           .filter(k => self._listeners[k] === socket.dstSock)[0]
           || reqInfo.srcPort
         self._timeouts[port] = Date.now()
-        console.log('Source port ' + socket.dstSock)
         socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
       } else {
         // this is a TCP ip connection with no prior bindings?
