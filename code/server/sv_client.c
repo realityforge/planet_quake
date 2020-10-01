@@ -596,7 +596,7 @@ Com_Printf("Response: %s\n", svDownload.TempStore);
 		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
-		Sys_BeginDownload();
+		//Sys_BeginDownload();
 #else
 		svDownload.isPost = qtrue;
 		svDownload.isPak = qfalse;
@@ -618,7 +618,7 @@ Com_Printf("Response: %s\n", svDownload.TempStore);
 		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
-		Sys_BeginDownload();
+		//Sys_BeginDownload();
 #else
 		svDownload.isPost = qfalse;
 		svDownload.isPak = qfalse;
@@ -649,7 +649,7 @@ Com_Printf("Response: %s\n", svDownload.TempStore);
 		requestInvoice = oldestInvoice;
 #ifdef EMSCRIPTEN
 		svDownload = qtrue;
-		Sys_BeginDownload();
+		//Sys_BeginDownload();
 #else
 		svDownload.isPost = qtrue;
 		svDownload.isPak = qfalse;
