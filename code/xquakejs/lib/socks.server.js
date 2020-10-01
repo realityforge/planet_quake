@@ -415,10 +415,10 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       console.log('Switching to UDP listener', reqInfo.dstPort)
       socket.binding = false
       socket.dstSock = this._listeners[reqInfo.dstPort]
-      socket.dstSock.on('close', () => {
-        socket.dstSock = null
-        socket.close()
-      }) // if udp binding closes also close websocket
+      //socket.dstSock.on('close', () => {
+      //  socket.dstSock = null
+      //  socket.close()
+      //}) // if udp binding closes also close websocket
     } else if(reqInfo.cmd == 'bind') {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
@@ -427,10 +427,10 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       socket.dstSock = listener
       listener.on('connection', () => {})
         .on('error', onError)
-        .on('close', () => {
-          socket.dstSock = null
-          socket.close()
-        }) // if udp binding closes also close websocket
+        //.on('close', () => {
+        //  socket.dstSock = null
+        //  socket.close()
+        //}) // if udp binding closes also close websocket
         .listen(reqInfo.dstPort, reqInfo.dstAddr, () => {
           socket.binding = false
           onConnect()
