@@ -1400,6 +1400,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 		|| !strcmp(cmd, "spdevmap")
 		|| !strcmp(cmd, "map_restart"))
 		&& clc.serverAddress.type == NA_LOOPBACK ) {
+			// TODO: only kick allbots if command comes from menu?
 		Cbuf_AddText("connect localhost\n");
 	}
 #endif

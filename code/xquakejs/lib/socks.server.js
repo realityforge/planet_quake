@@ -193,8 +193,11 @@ Server.prototype._onConnection = function(socket) {
       onClose = this._onClose.bind(this, socket, onData)
       
   if(socket instanceof WebSocket) {
-    console.log(`Websocket connection ${socket._socket.remoteAddress}:${socket._socket.remotePort}....`)
+    var remoteAddr = `${socket._socket.remoteAddress}:${socket._socket.remotePort}`
+    console.log(`Websocket connection ${remoteAddr}....`)
     socket.on('message', onData)
+    //if(typeof this._directConnects[remoteAddr] == 'undefined')
+    //  this._directConnects[remoteAddr] = socket
   } else if (socket instanceof Socket) {
     console.log(`Net socket connection ${socket.remoteAddress}:${socket.remotePort}....`)
     socket.on('data', onData)
@@ -297,7 +300,6 @@ Server.prototype.tryBindPort = async function(reqInfo) {
       var portLeft = Math.round(Math.random() * 50) * 1000 + 5000
       var portRight = reqInfo.dstPort & 0xfff
       const listener = dgram.createSocket('udp4')
-      console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight, ' -> ', reqInfo.dstPort)
       await new Promise((resolve, reject) => listener
         .on('listening', resolve)
         .on('close', () => {
@@ -306,6 +308,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
         .on('error', reject)
         .on('message', onUDPMessage)
         .bind(portLeft + portRight, reqInfo.dstAddr || '0.0.0.0'))
+      console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight, ' -> ', reqInfo.dstPort)
       // TODO: fix this, port will be the same for every client
       //   client needs to request the random port we assign
       self._listeners[reqInfo.dstPort] = listener
@@ -444,11 +447,21 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
           }
         }, 10))
       }
+      var remoteAddr = dstIP+':'+reqInfo.dstPort
+      if(typeof self._directConnects[remoteAddr] != 'undefined') {
+        console.log('Direct connect ' + remoteAddr)
+        // do loopback, send data from a proxy request to another known client
+        self._directConnects[remoteAddr]._message(Buffer.from(reqInfo.data), {
+          address: socket._socket.remoteAddress, port: socket._socket.remotePort
+        })
+        return
+      }
       if(socket.dstSock) {
         var port = Object.keys(self._listeners)
           .filter(k => self._listeners[k] === socket.dstSock)[0]
           || reqInfo.srcPort
         self._timeouts[port] = Date.now()
+        console.log('Source port ' + socket.dstSock)
         socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
       } else {
         // this is a TCP ip connection with no prior bindings?
