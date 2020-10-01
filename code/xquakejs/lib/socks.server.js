@@ -62,7 +62,7 @@ function Server(opts) {
 }
 
 Server.prototype._onClose = function (socket, onData) {
-  console.error('Closing ', socket._socket.remoteAddress)
+  console.error('Closing ', socket._socket.remoteAddress, ':', socket._socket.remotePort)
   socket.off('data', onData)
   socket.off('message', onData)
   /*
