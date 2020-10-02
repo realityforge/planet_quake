@@ -1377,7 +1377,9 @@ void SV_Frame( int msec ) {
 		{
 			// Block indefinitely until something interesting happens
 			// on STDIN.
+#ifndef EMSCRIPTEN
 			Sys_Sleep( -1 );
+#endif
 		}
 		return;
 	}

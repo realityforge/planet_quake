@@ -138,7 +138,11 @@ static cvar_t	*net_dropsim;
 static struct sockaddr_in socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
+#ifdef EMSCRIPTEN
+#define socks_socket ip_socket
+#else
 static SOCKET	socks_socket = INVALID_SOCKET;
+#endif
 
 #ifdef USE_IPV6
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -620,11 +624,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
 	{
 		fromlen = sizeof(from);
-//#ifdef EMSCRIPTEN
-//		ret = recvfrom( socks_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
-//#else
     ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
-//#endif
 		if (ret == SOCKET_ERROR)
 		{
 			err = socketError;
@@ -1309,7 +1309,10 @@ void NET_OpenSocks_After_Connect( void ) {
 	}
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
+#ifdef EMSCRIPTEN
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
+#endif
 		return;
 	}
 

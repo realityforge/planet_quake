@@ -257,7 +257,7 @@ var LibrarySysFiles = {
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
   Sys_FOpen: function (ospath, mode) {
-    var whitelist = ['qkey', 'q3key', 'q3history', 'q3console.log']
+    var whitelist = ['qkey', 'q3key', 'q3history', 'q3console.log', 'q3config.cfg']
     var handle = 0
     try {
       intArrayFromString(UTF8ToString(mode)
