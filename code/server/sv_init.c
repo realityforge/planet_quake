@@ -898,7 +898,6 @@ void SV_Init( void )
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
-#if 0
 	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_ARCHIVE );
 	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_ARCHIVE );
 	sv_master[3] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_ARCHIVE );
@@ -920,9 +919,8 @@ void SV_Init( void )
 	sv_master[19] = Cvar_Get( "sv_master17", "monster.idsoftware.com:27950", CVAR_ARCHIVE );
 	sv_master[20] = Cvar_Get( "sv_master18", "master.quakeservers.net:27000", CVAR_ARCHIVE );
 	sv_master[21] = Cvar_Get( "sv_master19", MASTER_SERVER_NAME, CVAR_ARCHIVE );
-#endif
 #ifdef EMSCRIPTEN
-	//sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com:27950", CVAR_ARCHIVE );
+	sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com:27950", CVAR_ARCHIVE );
 	sv_master[23] = Cvar_Get( "sv_master21", "207.246.91.235:27950", CVAR_ARCHIVE );
 #endif
 
