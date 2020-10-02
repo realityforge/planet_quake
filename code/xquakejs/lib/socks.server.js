@@ -196,6 +196,10 @@ Server.prototype._onConnection = function(socket) {
     var remoteAddr = `${socket._socket.remoteAddress}:${socket._socket.remotePort}`
     console.log(`Websocket connection ${remoteAddr}....`)
     socket.on('message', onData)
+    socket._socket.setTimeout(0)
+    socket._socket.setNoDelay(true)
+    socket._socket.setKeepAlive(false)
+
     //if(typeof this._directConnects[remoteAddr] == 'undefined')
     //  this._directConnects[remoteAddr] = socket
   } else if (socket instanceof Socket) {
@@ -471,6 +475,8 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         console.log('SHOULD NEVER HIT HERE', reqInfo)
         var dstSock = new Socket()
         socket.dstSock = dstSock
+        dstSock.setTimeout(0)
+        dskSock.setNoDelay(true)
         dstSock.setKeepAlive(false)
         dstSock.on('error', this._onErrorNoop)
                .on('connect', onConnect)

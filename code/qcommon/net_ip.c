@@ -1334,6 +1334,7 @@ void NET_OpenSocks_After_Method( void ) {
 	if ( len == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	if ( len != 2 || buf[0] != 5 ) {
@@ -1426,6 +1427,7 @@ void NET_OpenSocks_After_Listen( void ) {
 	if( len == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	if( len < 2 || buf[0] != 5 ) {
@@ -1442,6 +1444,7 @@ void NET_OpenSocks_After_Listen( void ) {
 	if( buf[3] != 1 ) {
 		Com_Printf( "NET_OpenSocks: relay address is not IPV4: %i\n", buf[3] );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	socksRelayAddr.sin_family = AF_INET;

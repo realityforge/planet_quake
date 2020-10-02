@@ -237,6 +237,7 @@ var LibrarySysMain = {
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')
         || window.location.protocol.includes('https')
+        || window.location.search.includes('wss://')
         || socksServer.includes('wss:')
         || socksServer.includes('https:'))
         && !socksServer.includes('http:')
