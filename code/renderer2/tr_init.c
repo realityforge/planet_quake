@@ -1716,6 +1716,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.FastCaptureOld = RB_FastCaptureOld;
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
+	re.ResetBannerSpy = RE_ResetBannerSpy;
 
 	return &re;
 }

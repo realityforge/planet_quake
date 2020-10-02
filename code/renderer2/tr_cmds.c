@@ -256,6 +256,16 @@ void	RE_SetColor( const float *rgba ) {
 RE_StretchPic
 =============
 */
+char banner[1024];
+int  bannerI;
+int  bannerResetTime;
+void RE_ResetBannerSpy( void ) {
+	bannerI = 0;
+	banner[0] = '\0';
+	bannerResetTime = ri.Milliseconds();
+}
+
+
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;
@@ -277,6 +287,9 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
+	if(ri.Milliseconds() - bannerResetTime < 1000 && Q_stristr(cmd->shader->name, "font2_prop")) {
+		ri.Spy_Banner(s1, t1);
+	}	
 	if(Q_stristr(cmd->shader->name, "cursor")) {
 		ri.Spy_CursorPosition(x, y);
 	}

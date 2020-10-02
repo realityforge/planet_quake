@@ -128,6 +128,7 @@ typedef struct {
 	void (*UpdateMode)(glconfig_t *glconfigOut);
 	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
+	void (*ResetBannerSpy)( void );
 
 } refexport_t;
 
@@ -234,6 +235,7 @@ typedef struct {
 
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 	void (*Spy_CursorPosition)(float x, float y);
+	void (*Spy_Banner)(float x, float y);
 } refimport_t;
 
 extern	refimport_t	ri;

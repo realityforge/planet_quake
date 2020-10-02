@@ -686,15 +686,16 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
           byte *pic;
           int len;
           R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
-          return qfalse;
+          //return qfalse;
         } else {
-				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+          stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
         }
 
 				if ( !stage->bundle[0].image[0] )
 				{
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-					return qfalse;
+					//return qfalse;
+          stage->bundle[0].image[0] = tr.defaultShader->stages[0]->bundle[0].image[0];
 				}
 			}
 		}
@@ -740,7 +741,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
         R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
         return qfalse;
       } else {
-			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+			  stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
       }
 			if ( !stage->bundle[0].image[0] )
 			{
@@ -787,7 +788,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
             R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
             return qfalse;
           } else {
-					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
+            stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
           }
 					if ( !stage->bundle[0].image[num] )
 					{
@@ -1610,7 +1611,7 @@ static void ParseSkyParms( const char **text ) {
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
         shader.sky.outerbox[i] = tr.defaultImage;
       } else {
-			shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
+        shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
       }
 
 			if ( !shader.sky.outerbox[i] ) {
@@ -1648,7 +1649,7 @@ static void ParseSkyParms( const char **text ) {
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
         shader.sky.innerbox[i] = tr.defaultImage;
       } else {
-			shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags );
+        shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags );
       }
 			if ( !shader.sky.innerbox[i] ) {
 				shader.sky.innerbox[i] = tr.defaultImage;
@@ -1993,9 +1994,10 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
-				return qfalse;
-			}
-			stages[s].active = qtrue;
+        stages[s].active = qfalse;
+			} else {
+  			stages[s].active = qtrue;
+      }
 			s++;
 
 			continue;
@@ -2572,7 +2574,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
         R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
         normalImg = NULL;
       } else {
-			normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags);
+        normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags);
       }
 
 			if (normalImg)
@@ -2589,7 +2591,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
           R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
           normalImg = NULL;
         } else {
-				normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+          normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
         }
 			}
 
@@ -2631,7 +2633,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
         R_LoadImage(specularName, &pic, &len, &len, &len, &len, qtrue);
         specularImg = NULL;
       } else {
-			specularImg = R_FindImageFile(specularName, IMGTYPE_COLORALPHA, specularFlags);
+        specularImg = R_FindImageFile(specularName, IMGTYPE_COLORALPHA, specularFlags);
       }
 
 			if (specularImg)

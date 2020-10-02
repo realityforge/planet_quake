@@ -3775,6 +3775,7 @@ static void CL_InitRef( void ) {
 #endif
 
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
+	rimp.Spy_Banner = Spy_Banner;
 
 	ret = GetRefAPI( REF_API_VERSION, &rimp );
 

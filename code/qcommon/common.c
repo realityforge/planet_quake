@@ -4261,12 +4261,13 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-		NET_Sleep( sleepMsec * 1000 - 500 );
 #ifndef EMSCRIPTEN
+		NET_Sleep( sleepMsec * 1000 - 500 );
 	} while( Com_TimeVal( minMsec ) );
 
 #else
 ;
+		NET_Sleep( com_yieldCPU->integer );
 	} while( 0 );
 
 	if(Cvar_VariableIntegerValue("net_socksLoading")) {

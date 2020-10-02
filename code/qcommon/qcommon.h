@@ -891,6 +891,8 @@ int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
 void Spy_CursorPosition(float x, float y);
+void Spy_Banner(float x, float y);
+
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
 // is found in an already open pak file.  If uniqueFILE is false, you must call
 // FS_FCloseFile instead of fclose, otherwise the pak FILE would be improperly closed
@@ -1429,6 +1431,7 @@ void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (
 void	Sys_Quit (void) __attribute__ ((noreturn));
 #ifdef EMSCRIPTEN
 void Sys_SetClipboardData( void *field );
+void Sys_EventMenuChanged( float x, float y );
 #endif
 void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...

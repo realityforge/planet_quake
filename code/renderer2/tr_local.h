@@ -1987,6 +1987,7 @@ skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 int R_ComputeLOD( trRefEntity_t *ent );
 
 const void *RB_TakeVideoFrameCmd( const void *data );
+void RE_ResetBannerSpy( void );
 
 //
 // tr_shader.c

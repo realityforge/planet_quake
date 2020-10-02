@@ -1,6 +1,54 @@
 var LibrarySysInput = {
   $SYSI__deps: ['$SDL'],
   $SYSI: {
+    menus: {
+      'baseq3': {
+        'ARENASERVERS': 'multiplayer',
+        'CHOOSELEVEL': 'singleplayer',
+        'SETUP': 'setup',
+        'PLAYERSETTINGS': 'player',
+        'CONTROLS': 'controls',
+        'SYSTEMSETUP': 'system',
+        'GAMEOPTIONS': 'options',
+        'CDKEY': 'cdkey',
+        'CINEMATICS': 'cinematics',
+        'MODS': 'mods',
+        'GAMESERVER': 'create',
+      }
+    },
+    propMapB: [
+      [11, 12, 33],
+      [49, 12, 31],
+      [85, 12, 31],
+      [120, 12, 30],
+      [156, 12, 21],
+      [183, 12, 21],
+      [207, 12, 32],
+
+      [13, 55, 30],
+      [49, 55, 13],
+      [66, 55, 29],
+      [101, 55, 31],
+      [135, 55, 21],
+      [158, 55, 40],
+      [204, 55, 32],
+
+      [12, 97, 31],
+      [48, 97, 31],
+      [82, 97, 30],
+      [118, 97, 30],
+      [153, 97, 30],
+      [185, 97, 25],
+      [213, 97, 30],
+
+      [11, 139, 32],
+      [42, 139, 51],
+      [93, 139, 32],
+      [126, 139, 31],
+      [158, 139, 25],
+    ],
+    banner: '',
+    bannerTime: 0,
     joysticks: [],
     inputInterface: 0,
     inputHeap: 0,
@@ -339,6 +387,33 @@ var LibrarySysInput = {
 	Sys_SetClipboardData: function (field) {
     SYSI.field = field
 	},
+  Sys_EventMenuChanged: function (x, y) {
+    var milli = _Sys_Milliseconds()
+    if(milli - SYSI.bannerTime > 1000) {
+      SYSI.banner = ''
+      SYSI.bannerTime = milli
+    } else if (milli < SYSI.bannerTime) return
+    var found = false
+    var index = 0
+    SYSI.propMapB.forEach(function (coords, i) {
+      if(coords[0] == Math.round(x * 256.0) && coords[1] == Math.round(y * 256.0)) {
+        found = true
+        index = i
+      }
+    })
+    if(found) SYSI.banner += String.fromCharCode('A'.charCodeAt(0)+index)
+    if(typeof history != 'undefined') {
+      var url = Object.keys(SYSI.menus['baseq3']).filter(function (m) {
+        return SYSI.banner.includes(m)
+      })[0]
+      if(url) {
+        history.pushState({location: window.location.toString()}, window.title, SYSI.menus['baseq3'][url])
+        // deflood
+        SYSI.banner = ''
+        SYSI.bannerTime += 1000
+      }
+    }
+  },
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},
 }
