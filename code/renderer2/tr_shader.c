@@ -91,7 +91,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0
-      && (!index || sh->lightmapIndex == index) ) {
+      && (sh->lightmapIndex == index) ) {
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -699,7 +699,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					//return qfalse;
-          stage->bundle[0].image[0] = tr.defaultShader->stages[0]->bundle[0].image[0];
+          stage->bundle[0].image[0] = tr.defaultImage;
 				}
 			}
 		}
@@ -750,7 +750,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			if ( !stage->bundle[0].image[0] )
 			{
 				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-				return qfalse;
+				//return qfalse;
+        stage->bundle[0].image[0] = tr.defaultImage;
 			}
 		}
 		//
@@ -797,7 +798,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if ( !stage->bundle[0].image[num] )
 					{
 						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-						return qfalse;
+						//return qfalse;
+            stage->bundle[0].image[num] = tr.defaultImage;
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -2300,16 +2302,19 @@ static qboolean ParseShader( const char **text )
         const char	*stageText = va("\nmap %s\n}", token);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          return qfalse;
+          stages[s].active = qfalse;
+          continue;
         }
       } else
       {
         const char	*stageText = va("\nmap %s.tga\n}", shader.name);
         if ( !ParseStage( &stages[s], &stageText ) )
         {
-          return qfalse;
+          stages[s].active = qfalse;
+          continue;
         }
       }
+      stages[s].active = qtrue;
 
 			continue;
 		}
@@ -2707,7 +2712,6 @@ static int CollapseStagesToGLSL(void)
 			shaderStage_t *pStage = &stages[i];
 
 			if (!pStage->active) {
-        skip = qtrue;
         continue;
       }
 
@@ -2819,7 +2823,7 @@ static int CollapseStagesToGLSL(void)
 
 							// Only add lightmap to blendfunc filter stage if it's the first time lightmap is used
 							// otherwise it will cause the shader to be darkened by the lightmap multiple times.
-							if ((!usedLightmap && !mapShaders) || (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
+							if (!usedLightmap || (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
 								&& blendBits != (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_DST_COLOR)))
 							{
 								lightmap = pStage2;
@@ -3273,6 +3277,7 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	Com_Memset( &stages, 0, sizeof( stages ) );
 
 	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
+  shader.lastTimeUsed = tr.lastRegistrationTime;
 	shader.lightmapIndex = lightmapIndex;
 
 	// we need to know original (unmodified) lightmap index
@@ -3636,7 +3641,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// with that same strippedName a new default shader is created.
     if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       &&	!Q_stricmp(sh->name, strippedName)
-      &&  !mapShaders ) {
+      &&  !mapShaders && sh->lastTimeUsed >= tr.lastRegistrationTime ) {
 			// match found
 			return sh;
 		}
@@ -3720,7 +3725,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-      image = tr.defaultShader->stages[0]->bundle[0].image[0];
+      image = tr.defaultImage;
 			//shader.defaultShader = qtrue;
 			//return FinishShader();
 		} else {
@@ -4368,7 +4373,11 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 void RE_LoadShaders( void ) {
   int i;
+  tr.lastRegistrationTime = ri.Milliseconds();
+
   R_IssuePendingRenderCommands();
+  
+  GLSL_InitGPUShaders();
   
   // remove lightmaps
   for(i=0;i<tr.numLightmaps;i++) {
@@ -4381,7 +4390,6 @@ void RE_LoadShaders( void ) {
   tr.numLightmaps = 0;
   GL_BindNullTextures();
 
-  tr.lastRegistrationTime = ri.Milliseconds();
   ScanAndLoadShaderFiles();
 }
 

@@ -523,6 +523,11 @@ static int GLSL_InitGPUShader2(shaderProgram_t * program, const char *name, int 
 	{
 		ri.Error(ERR_DROP, "GLSL_InitGPUShader2: \"%s\" is too long", name);
 	}
+	
+	if(program->program) {
+		ri.Printf(PRINT_DEVELOPER, "GLSL_InitGPUShader2: \"%s\" shader already exists\n", name);
+		return 1;
+	}
 
 	Q_strncpyz(program->name, name, sizeof(program->name));
 

@@ -1401,7 +1401,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 		|| !strcmp(cmd, "map_restart"))
 		&& clc.serverAddress.type == NA_LOOPBACK ) {
 			// TODO: only kick allbots if command comes from menu?
-		Cbuf_AddText("connect localhost\n");
+		Cbuf_AddText("wait\nwait\nconnect localhost\n");
 	}
 #endif
 
