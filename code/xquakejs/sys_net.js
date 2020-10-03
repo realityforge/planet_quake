@@ -77,7 +77,7 @@ var LibrarySysNet = {
     },
     DownloadLazyFinish: function (indexFilename, file) {
 			SYSF.index[indexFilename].downloading = false
-      SYSF.index[indexFilename].alreadyDownloaded = true
+      SYSF.index[indexFilename].alreadyDownloaded += true
       var replaceFunc = function (path) {
         SYSF.fs_replace.forEach(function (r) { path = path.replace(r, '') })
         return path
@@ -189,6 +189,7 @@ var LibrarySysNet = {
               obj[newKey].shaders = []
               obj[newKey].downloading = false
             }
+            obj[newKey].alreadyDownloaded = false
           }
 					return obj
 				}, SYSF.index || {})

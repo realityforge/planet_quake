@@ -306,7 +306,7 @@ qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
 	
-	ri.Cvar_Set("r_loadingModel", localName);
+	ri.Cvar_Set("r_loadingModel", name);
 
 	ext = COM_GetExtension( localName );
 

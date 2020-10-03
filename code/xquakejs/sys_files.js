@@ -290,10 +290,12 @@ var LibrarySysFiles = {
         if((handle === 0
           || HEAP8[SYSF.cl_lazyLoad+8*4] === 2)
           && !SYSF.index[indexFilename].downloading) {
-          if(SYSF.index[indexFilename].alreadyDownloaded)
-            SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
-          else
-            SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+          if(SYSF.index[indexFilename].alreadyDownloaded < 3) {
+            if(SYSF.index[indexFilename].alreadyDownloaded)
+              SYSN.downloadLazy.unshift([loading, SYSF.index[indexFilename].name])
+            else
+              SYSN.downloadLazy.push([loading, SYSF.index[indexFilename].name])
+          }
           SYSF.index[indexFilename].downloading = true
         }
       } else if (whitelist.includes(PATH.basename(indexFilename))) {

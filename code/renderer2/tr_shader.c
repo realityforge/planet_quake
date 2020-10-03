@@ -57,7 +57,9 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	int			hash;
 	shader_t	*sh, *sh2;
 	qhandle_t	h;
+  qboolean  wasMapping = mapShaders;
 
+  mapShaders = qfalse;
   sh = R_FindDefaultShaderByName( shaderName );
   if (sh == NULL) {
 	   sh = R_FindShaderByName( shaderName );
@@ -71,6 +73,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 		return;
 	}
 
+  mapShaders = wasMapping;
 	sh2 = R_FindShaderByName( newShaderName );
   if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
 		h = RE_RegisterShaderLightMap(newShaderName, index);
@@ -87,7 +90,8 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	COM_StripExtension(shaderName, strippedName, sizeof(strippedName));
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
-		if (Q_stricmp(sh->name, strippedName) == 0) {
+		if (Q_stricmp(sh->name, strippedName) == 0
+      && (!index || sh->lightmapIndex == index) ) {
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -1997,7 +2001,7 @@ static qboolean ParseShader( const char **text )
         stages[s].active = qfalse;
 			} else {
   			stages[s].active = qtrue;
-      }
+			}
 			s++;
 
 			continue;
@@ -2430,7 +2434,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			break;
+			continue;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
@@ -2702,8 +2706,10 @@ static int CollapseStagesToGLSL(void)
 		{
 			shaderStage_t *pStage = &stages[i];
 
-			if (!pStage->active)
-				continue;
+			if (!pStage->active) {
+        skip = qtrue;
+        continue;
+      }
 
 			//if (pStage->adjustColorsForFog)
 			//{
@@ -2813,7 +2819,7 @@ static int CollapseStagesToGLSL(void)
 
 							// Only add lightmap to blendfunc filter stage if it's the first time lightmap is used
 							// otherwise it will cause the shader to be darkened by the lightmap multiple times.
-							if (!usedLightmap || (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
+							if ((!usedLightmap && !mapShaders) || (blendBits != (GLS_DSTBLEND_SRC_COLOR | GLS_SRCBLEND_ZERO)
 								&& blendBits != (GLS_DSTBLEND_ZERO | GLS_SRCBLEND_DST_COLOR)))
 							{
 								lightmap = pStage2;
@@ -3628,7 +3634,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
+    if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       &&	!Q_stricmp(sh->name, strippedName)
       &&  !mapShaders ) {
 			// match found
@@ -3658,11 +3664,24 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			ri.Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
 
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qtrue;
+    }
+
 		if ( !ParseShader( &shaderText ) ) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
 		sh = FinishShader();
+
+    if(!strcmp(name, "console")
+      || !strcmp(name, "white")
+      || Q_stristr(name, "bigchars")) {
+      mapShaders = qfalse;
+    }
+
 		return sh;
 	}
 
@@ -3698,13 +3717,12 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     } else {
 		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
     }
-if(Q_stristr(name, "diamond2c")) {
-  Com_Printf("FindShader: lightmap %i %i\n", shader.lightmapIndex, image ? 1 : 0);
-}
+
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-			shader.defaultShader = qtrue;
-			return FinishShader();
+      image = tr.defaultShader->stages[0]->bundle[0].image[0];
+			//shader.defaultShader = qtrue;
+			//return FinishShader();
 		} else {
       shader.defaultShader = qfalse;
 		}
@@ -4343,7 +4361,7 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
   //if(Q_stristr(shaderName, "rocketExplosion"))
-  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex);
+  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex );
   
   mapShaders = qfalse;
 }
