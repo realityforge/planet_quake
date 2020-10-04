@@ -256,7 +256,7 @@ var LibrarySysNet = {
         if(!SYSN.socksfd) return
         var socket = Object.values(SOCKFS.getSocket(SYSN.socksfd).peers)[0].socket
         if(socket.readyState == socket.OPEN)
-          socket.send(Uint8Array.from([0x05, 0x01, 0x00]), { binary: true })
+          socket.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]), { binary: true })
       }, 1000)
     }
     var callback = function () {
