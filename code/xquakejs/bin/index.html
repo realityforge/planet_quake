@@ -229,6 +229,13 @@
 				} else if(e.data[0] == 'net') {
 					if(!SYSM.exited)
 						SYSN.receiveNetLoop(e.data[1], e.data[2])
+				} else if(e.data[0] == 'status') {
+					if(!SYSM.exited) {
+						SYSN.LoadingDescription.apply(null, e.data[1])
+						if(e.data[2]) {
+							SYSN.LoadingProgress.apply(null, e.data[2])
+						}
+					}
 				}
 			}
 		}

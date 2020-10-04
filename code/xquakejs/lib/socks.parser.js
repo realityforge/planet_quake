@@ -182,7 +182,10 @@ Parser.prototype._onData = function(message) {
           this._dstaddr = Buffer.alloc(16)
         else if (atyp === ATYP.NAME)
           state = STATE_REQ_DSTADDR_VARLEN
-        else {
+        else if (atyp === 0) {
+          // ignore
+          return
+        } else {
           this.emit('error', new Error('Invalid request address type: ' + atyp))
           return
         }

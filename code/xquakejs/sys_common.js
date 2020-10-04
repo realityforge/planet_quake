@@ -26,8 +26,11 @@ var LibrarySysCommon = {
 			return _Cvar_Get(SYSC.varStr, SYSC.varStr+str.length, 0)
 		},
 		Print: function (str) {
-			str = allocate(intArrayFromString(str + '\n'), 'i8', ALLOC_STACK);
-			_Com_Printf(str)
+			if(!Array.isArray(str)) str = [str]
+			//str = str.map(function (s) {
+			//	return allocate(intArrayFromString(s + '\0'), 'i8', ALLOC_STACK);
+			//})
+			console.log.apply(null, str)
 		},
 		Error: function (level, errMsg) {
 			if (level === 'fatal') {

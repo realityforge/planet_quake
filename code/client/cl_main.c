@@ -1315,13 +1315,14 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 				cl_disconnecting = qfalse;
 				return cl_restarted;
 			} else if (cls.postgame) {
-				Cbuf_AddText("map_restart;");
+				cls.postgame = qfalse;
+				Cbuf_AddText("map_restart\n");
 				Cbuf_Execute();
 			}
 		}
 	}
 	if(showMainMenu && cl_returnURL->string[0]) {
-		Cbuf_AddText("quit;");
+		Cbuf_AddText("quit\n");
 	}
 #else
 #endif
@@ -1397,8 +1398,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 	if( (!strcmp(cmd, "map")
  		|| !strcmp(cmd, "devmap")
 		|| !strcmp(cmd, "spmap")
-		|| !strcmp(cmd, "spdevmap")
-		|| !strcmp(cmd, "map_restart"))
+		|| !strcmp(cmd, "spdevmap"))
 		&& clc.serverAddress.type == NA_LOOPBACK ) {
 		// TODO: only kick allbots if command comes from menu?
 		Cmd_Clear();

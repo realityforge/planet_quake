@@ -629,8 +629,13 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 		{
 			err = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( err != EAGAIN && err != ECONNRESET ) {
+        char * err = NET_ErrorString();
+        if(Q_stristr(err, "Socket not connected")) {
+          socks_socket = INVALID_SOCKET;
+        }
 				Com_Printf( "NET_GetPacket: %s\n", NET_ErrorString() );
+      }
 		}
 		else
 		{
@@ -1266,6 +1271,8 @@ static void NET_OpenSocks( int port ) {
 #else
     if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
       Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+      Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
       return;
     }
   }
@@ -1376,6 +1383,7 @@ void NET_OpenSocks_After_Method( void ) {
 		if ( send( socks_socket, (void *)buf, 3 + ulen + plen, 0 ) == SOCKET_ERROR ) {
 			Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
       Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
 			return;
 		}
 
@@ -1407,6 +1415,8 @@ void NET_OpenSocks_After_Method( void ) {
 	*(short *)&buf[8] = htons( (short)port );		// port
 	if ( send( socks_socket, (void *)buf, 10, 0 ) == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 

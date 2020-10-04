@@ -250,9 +250,10 @@ var LibrarySysInput = {
     InputPushMoved: function (evt) {
       if (evt.toElement === null && evt.relatedTarget === null) {
         //if outside the window...
-        SYSI.interval = setInterval(function () {
-          //do something with evt.screenX/evt.screenY
-        }, 250);
+        if(SYSI.interval)
+          SYSI.interval = setInterval(function () {
+            //do something with evt.screenX/evt.screenY
+          }, 250);
       } else {
         //if inside the window...
         clearInterval(SYSI.interval);
@@ -292,7 +293,7 @@ var LibrarySysInput = {
       window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
-      window.addEventListener("mouseout", SYSI.InputPushMoved, false)
+      window.addEventListener('mouseout', SYSI.InputPushMoved, false)
 
       Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)

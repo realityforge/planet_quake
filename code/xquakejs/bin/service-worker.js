@@ -152,7 +152,7 @@ async function writeStore(value, key) {
   return new Promise(function (resolve) {
     let tran = db.transaction('FILE_DATA', 'readwrite')
     let objStore = tran.objectStore('FILE_DATA')
-    let storeValue = objStore.add(value, key)
+    let storeValue = objStore.put(value, key)
     storeValue.onsuccess = resolve
     storeValue.onerror = function (error) {
       console.error(error, value, key)

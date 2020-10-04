@@ -283,6 +283,10 @@ var LibrarySysMain = {
     SYSC.returnURL = SYSC.Cvar_VariableString('cl_returnURL')
     if(SYSN.lazyInterval)
       clearInterval(SYSN.lazyInterval)
+    if(SYSN.socksInterval)
+      clearInterval(SYSN.socksInterval)
+    if(SYSI.interval)
+      clearInterval(SYSI.interval)
     /*
     if(SYSC.varStr) {
       _free(SYSC.varStr)
@@ -369,7 +373,8 @@ var LibrarySysMain = {
   Sys_SetStatus: function (s) {
     var args = Array.from(arguments)
       .map(function (a) { return UTF8ToString(a) })
-    SYSN.LoadingDescription(args.join(' '))
+    SYSC.Print(args)
+    window.serverWorker.postMessage(['status', args])
   },
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.getQueryCommands())

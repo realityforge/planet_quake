@@ -18,8 +18,11 @@ var LibrarySysNet = {
       SYSN.multicasting = false
     },
     LoadingDescription: function (desc) {
+      var args = Array.from(arguments)
       if(SYS.dedicated) {
-        console.log(desc)
+        SYSC.desc = args
+        SYSC.Print(args)
+        window.serverWorker.postMessage(['status', args])
         return
       }
 			var flipper = document.getElementById('flipper')
@@ -37,6 +40,7 @@ var LibrarySysNet = {
 		},
 		LoadingProgress: function (progress, total) {
       if(SYS.dedicated) {
+        window.serverWorker.postMessage(['status', SYSC.desc, [progress, total]])
         return
       }
 			var frac = progress / total
@@ -127,7 +131,7 @@ var LibrarySysNet = {
 			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
 			// if we haven't sorted the list in a while, sort by number of references to file
 			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {
-				//SYSN.DownloadLazySort()
+				//SYSN.DownloadLazySort() // get stuck in a loop which might be fixed by .alreadyDownloaded
 				SYSN.downloadSort = _Sys_Milliseconds()
 			}
 			var file = SYSN.downloadLazy.pop()
@@ -136,7 +140,6 @@ var LibrarySysNet = {
 				file = [0, file]
 			}
 			var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
-			SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file[1])))
 			// if already exists somehow just call the finishing function
 			try {
 				var handle = FS.stat(PATH.join(SYSF.fs_basepath, file[1]))
@@ -153,6 +156,7 @@ var LibrarySysNet = {
 					return
 				}
         try {
+          SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file[1])))
           FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
   					encoding: 'binary', flags: 'w', canOwn: true })
         } catch (e) {
@@ -245,14 +249,33 @@ var LibrarySysNet = {
   },
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksConnect: function () {
-    var timer = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
+    SYSN.socksfd = 0
+    SYSN.socksConnect = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
+    if(!SYSN.socksInterval) {
+      SYSN.socksInterval = setInterval(function () {
+        if(!SYSN.socksfd) return
+        var socket = Object.values(SOCKFS.getSocket(SYSN.socksfd).peers)[0].socket
+        if(socket.readyState == socket.OPEN)
+          socket.send(Uint8Array.from([0x05, 0x01, 0x00]), { binary: true })
+      }, 1000)
+    }
     var callback = function () {
-      clearTimeout(timer)
+      if(SYSN.socksConnect) {
+        clearTimeout(SYSN.socksConnect)
+        SYSN.socksConnect = 0
+      }
       Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }
-    Module['websocket'].on('open', callback)
+    var socksOpen = function (id) {
+      SYSN.socksfd = id
+      callback()
+    }
+    Module['websocket'].on('open', socksOpen)
     Module['websocket'].on('message', callback)
     Module['websocket'].on('error', callback)
+    Module['websocket'].on('close', function () {
+      SYSN.socksfd = 0
+    })
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksMessage: function () {},
