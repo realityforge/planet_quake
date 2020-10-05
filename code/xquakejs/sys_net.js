@@ -250,15 +250,13 @@ var LibrarySysNet = {
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksConnect: function () {
     SYSN.socksfd = 0
-    SYSN.socksConnect = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
-    if(!SYSN.socksInterval) {
-      SYSN.socksInterval = setInterval(function () {
-        if(!SYSN.socksfd) return
-        var socket = Object.values(SOCKFS.getSocket(SYSN.socksfd).peers)[0].socket
-        if(socket.readyState == socket.OPEN)
-          socket.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]), { binary: true })
-      }, 1000)
-    }
+    SYSN.socksConnect = setTimeout(function () {
+      // broken
+      SYSN.socksfd = 0
+      clearInterval(SYSN.socksInterval)
+      SYSN.socksInterval = 0
+      Browser.safeCallback(_SOCKS_Frame_Proxy)()
+    }, 10000)
     var callback = function () {
       if(SYSN.socksConnect) {
         clearTimeout(SYSN.socksConnect)
@@ -266,16 +264,41 @@ var LibrarySysNet = {
       }
       Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }
+    if(!SYSN.socksInterval) {
+      SYSN.socksInterval = setInterval(function () {
+        if(!SYSN.peer) return
+        if(SYSN.peer.socket.readyState == SYSN.peer.socket.OPEN) {
+          SYSN.peer.socket.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
+            { binary: true })
+        } else if(SYSN.peer.socket.readyState == SYSN.peer.socket.CLOSED) {
+          var newSocket = new WebSocket(SYSN.peer.socket.url)
+          SYSN.peer.socket = newSocket
+          SOCKFS.websocket_sock_ops.handlePeerEvents(SYSN.sock, SYSN.peer)
+          SYSN.reconnect = true
+        }
+      }, 1000)
+    }
     var socksOpen = function (id) {
       SYSN.socksfd = id
+      SYSN.sock = SOCKFS.getSocket(SYSN.socksfd)
+      SYSN.peer = Object.values(SYSN.sock.peers)[0]
+      SYSN.port = SYSC.Cvar_VariableIntegerValue('net_port')
+      if(SYSN.reconnect) {
+        SYSN.reconnect = false
+        SYSN.peer.socket.send(Uint8Array.from([
+          0x05, 0x03, 0x00, 0x01,
+          0x00, 0x00, 0x00, 0x00,
+          (SYSN.port & 0xFF00) >> 8, (SYSN.port & 0xFF)
+        ]))
+      }
       callback()
     }
     Module['websocket'].on('open', socksOpen)
     Module['websocket'].on('message', callback)
     Module['websocket'].on('error', callback)
-    Module['websocket'].on('close', function () {
-      SYSN.socksfd = 0
-    })
+    //Module['websocket'].on('close', function () {
+    //  SYSN.socksfd = 0
+    //})
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksMessage: function () {},

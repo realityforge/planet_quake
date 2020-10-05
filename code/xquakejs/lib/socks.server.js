@@ -8,7 +8,7 @@ var WebSocket = require('ws')
 var WebSocketServer = require('ws').Server;
 const http = require('http');
 
-var UDP_TIMEOUT = 330 * 1000 // clear stale listeners so we don't run out of ports,
+var UDP_TIMEOUT = 30000 // 330 * 1000 // clear stale listeners so we don't run out of ports,
   // must be longer than any typical client timeout, maybe the map takes too long to load?
   // longer than server HEARTBEAT_MSEC
 var ATYP = {
@@ -216,6 +216,7 @@ Server.prototype._onConnection = function(socket) {
   
   parser
     .on('error', onError)
+    .on('ping', () => socket.send(Buffer.from([0x05, 0x00]), { binary: true }))
     .on('methods', onMethods)
     .on('request', onRequest)
 

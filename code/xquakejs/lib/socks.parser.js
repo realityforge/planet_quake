@@ -183,7 +183,7 @@ Parser.prototype._onData = function(message) {
         else if (atyp === ATYP.NAME)
           state = STATE_REQ_DSTADDR_VARLEN
         else if (atyp === 0) {
-          // ignore
+          this.emit('ping')
           return
         } else {
           this.emit('error', new Error('Invalid request address type: ' + atyp))
