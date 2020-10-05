@@ -272,6 +272,7 @@ var LibrarySysNet = {
             { binary: true })
         } else if(SYSN.peer.socket.readyState == SYSN.peer.socket.CLOSED) {
           var newSocket = new WebSocket(SYSN.peer.socket.url)
+          newSocket.binaryType = 'arraybuffer';
           SYSN.peer.socket = newSocket
           SOCKFS.websocket_sock_ops.handlePeerEvents(SYSN.sock, SYSN.peer)
           SYSN.reconnect = true
@@ -286,8 +287,8 @@ var LibrarySysNet = {
       if(SYSN.reconnect) {
         SYSN.reconnect = false
         SYSN.peer.socket.send(Uint8Array.from([
-          0x05, 0x03, 0x00, 0x01,
-          0x00, 0x00, 0x00, 0x00,
+          0xFF, 0xFF, 0xFF, 0xFF,
+          'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
           (SYSN.port & 0xFF00) >> 8, (SYSN.port & 0xFF)
         ]))
       }
