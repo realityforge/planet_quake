@@ -4,7 +4,7 @@ var {URL} = require('url')
 var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
 var { Readable } = require('stream')
-var {compressFile, compressDirectory} = require('./compress.js')
+var {compressFile, compressDirectory, readPak} = require('./compress.js')
 
 var help = `
 npm run start [options] [virtual path] [filesystem path]
@@ -252,6 +252,50 @@ async function makeIndexJson(filename, absolute, forceWrite) {
 		vol.mkdirpSync(path.dirname(absolute))
     writefs.writeFileSync(absolute, JSON.stringify(manifest, null, 2))    
   }
+}
+
+async function makeMapIndex(project, outConverted, outRepacked) {
+  var index = path.join(project, 'index.json')
+  var convertedIndex = JSON.parse(fs.readFileSync(index).toString('utf-8'))
+  var prefixPath = path.join('/base', path.basename(outConverted))
+  var pk3s = glob.sync('**/*.pk3', {nodir: true, cwd: project, nocase: true})
+  pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+  for(var j = 0; j < pk3s.length; j++) {
+    var index = await readPak(path.join(project, pk3s[j]))
+    var maps = index.filter(file => file.match(/\.bsp$/i))
+    var dir = path.basename(pk3s[j])
+    var initial = {}
+    var pk3Key = path.join(prefixPath, dir).toLowerCase()
+    convertedIndex[pk3Key] = initial[pk3Key] = {
+      name: path.join('/', dir).replace(/\/$/ig, '')
+    }
+    var manifest = pk3files.map(file => {
+      var stat = fs.statSync(path.join(searchPath, dir, file))
+      return stat.isDirectory() ? ({
+        name: path.join('/', dir, file).replace(/\/$/ig, ''),
+      }) : ({
+        name: path.join('/', dir, file),
+        size: stat.size
+      })
+    }).reduce((obj, o) => {
+      var key = path.join(prefixPath, o.name).toLowerCase()
+        + (typeof o.size == 'undefined' ? '/' : '')
+      obj[key] = o
+      return obj
+    }, initial)
+    var manifestJson = JSON.stringify(manifest, null, 2)
+    maps.forEach(map => {
+      var mapName = path.basename(map).toLowerCase().replace(/\.bsp/i, '')
+      var outIndexFile = path.join(searchPath, 'index-' + mapName + '.json')
+      var key = path.join(prefixPath, path.basename(pk3path), map).toLowerCase()
+      fs.writeFileSync(outIndexFile, manifestJson)
+      allMaps[key] = {
+        name: path.join('/', dir, map),
+        size: fs.statSync(path.join(searchPath, dir, map)).size
+      }
+    })
+  }
+  fs.writeFileSync(index, JSON.stringify(convertedIndex, null, 2))    
 }
 
 async function runContent() {

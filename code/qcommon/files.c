@@ -360,7 +360,7 @@ static int		fs_numServerReferencedPaks;
 static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_REF_PAKS];		// checksums
 static char		*fs_serverReferencedPakNames[MAX_REF_PAKS];	// pk3 names
-static char		*fs_mapPakNames[MAX_REF_PAKS*10];		// pk3 names
+static char		*fs_mapPakNames[MAX_REF_PAKS*20];		// pk3 names
 
 int	fs_lastPakIndex;
 
@@ -5930,7 +5930,7 @@ void FS_SetMapIndex(const char *mapname) {
 					isKey = qfalse;
 					key[ki] = 0;
 					ki = 0;
-					if(mpi < MAX_REF_PAKS * 10 && Q_stristr(key, "maps/") != NULL
+					if(mpi < sizeof(fs_mapPakNames) && Q_stristr(key, "maps/") != NULL
 					 	&& (Q_stristr(key, "pak9") != NULL
 						|| Q_stristr(key, ".bsp") != NULL)) {
 						//const char *bspext = Q_stristr(key, ".bsp");

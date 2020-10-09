@@ -42,6 +42,7 @@ var LibrarySysMain = {
       '+set', 'r_deluxeMapping', '0',
       '+set', 'r_normalMapping', '0',
       '+set', 'r_specularMapping', '0',
+      '+set', 'r_gamma', '1.5',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',
@@ -142,7 +143,7 @@ var LibrarySysMain = {
         } else if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
             args.push.apply(args, [
-              '+set', 'net_socksServer', window.location.hostname,
+              '+set', 'net_socksServer', 'wss://' + window.location.hostname,
               '+set', 'net_socksPort', '443',
             ])
           }
@@ -162,7 +163,7 @@ var LibrarySysMain = {
           }
         } else if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
-            '+set', 'net_socksServer', 'proxy.quake.games',
+            '+set', 'net_socksServer', 'wss://proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }

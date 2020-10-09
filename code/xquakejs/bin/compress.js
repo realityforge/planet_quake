@@ -63,7 +63,8 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
     if(!entry.name) debugger
     var levelPath = path.join(outDirectory, entry.name)
     mkdirpSync(path.dirname(levelPath))
-    await progress([[2, i, index.length, entry.name]])
+    if(progress)
+      await progress([[2, i, index.length, entry.name]])
     if(noOverwrite && ufs.existsSync(levelPath)) {
       // make an exception if the file was already written once,
       //   write it again so subsequent paks can update files

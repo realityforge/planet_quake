@@ -357,6 +357,7 @@ var LibrarySysFiles = {
       return null
     }
 
+// TODO: allow pk3s downloaded through
     var matches = [];
     for (var i = 0; i < contents.length; i++) {
       var name = contents[i].toLowerCase();

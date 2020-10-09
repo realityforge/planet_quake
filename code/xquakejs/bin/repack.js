@@ -40,6 +40,8 @@ npm run repack [options] [mod directory]
 --no-graph - skip graphing, just run the convert and put files back into pk3s like they were,
   works nicely with --virtual open on content server
 --pk3dir - divide up pk3s in to separate directories
+--no-pk3dir - don't create pk3 directories, even for overlapping files
+
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
@@ -110,6 +112,7 @@ var whitelist = {
 }
 
 var pk3dir = false
+var nopk3dir = false
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -137,6 +140,11 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--pk3dir') {
     console.log('Separate pk3dirs')
     pk3dir = true
+    nopk3dir = false
+  } else if(a == '--no-pk3dir') {
+    console.log('Don\'t use separate pk3dirs')
+    nopk3dir = true
+    pk3dir = false
   } else if(a == '--edges') {
     edges = parseInt(process.argv[i+1])
     console.log(`Grouped edges by ${edges}`)
@@ -926,6 +934,11 @@ async function repackGames() {
           [0, stepCounter, stepTotal, STEPS['repack']],
         ])
         repackIndexJson(gs, outCombined, outConverted)
+      }
+      
+      if(typeof STEPS['convert'] != 'undefined'
+        || typeof STEPS['repack'] != 'undefined') {
+        await makeMapIndex(mountPoints[i], outConverted, outRepacked)
       }
     } catch (e) {
       console.log(e)
