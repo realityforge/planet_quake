@@ -293,7 +293,7 @@ var {
   convertGameFiles, convertNonAlpha, convertAudio
 } = require('../bin/convert.js')
 var {getLeaves} = require('../lib/asset.graph.js')
-var {makeIndexJson} = require('../bin/content.js')
+var {makeIndexJson, makeMapIndex} = require('../bin/content.js')
 
 var globalBars = []
 

@@ -1,4 +1,5 @@
 var fs = require('fs')
+var path = require('path')
 var StreamZip = require('node-stream-zip')
 
 /* NOTE: This code makes no attempt to be fast!
@@ -194,18 +195,22 @@ function mdfour(out, input, n)
 
 async function checksumZip(file) {
     var digest = new Uint32Array(4)
-    const zip = new StreamZip({
-      file: file,
-      storeEntries: true
-    })
-    var index = await new Promise(resolve => {
-        var skipped = 0
-        zip.on('ready', async () => {
-          console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(file))
-          resolve(Object.values(zip.entries()))
-        })
-        zip.on('error', resolve)
-    })
+    if(Array.isArray(file)) {
+      index = file
+    } else if(typeof file == 'string') {
+      const zip = new StreamZip({
+        file: file,
+        storeEntries: true
+      })
+      var index = await new Promise(resolve => {
+          var skipped = 0
+          zip.on('ready', async () => {
+            console.log('Entries read: ' + zip.entriesCount + ' ' + path.basename(file))
+            resolve(Object.values(zip.entries()))
+          })
+          zip.on('error', resolve)
+      })
+    }
     var contents = new Uint32Array(index.length + 1)
     var j = 1
     for(var i = 0; i < index.length; i++) {
@@ -218,7 +223,7 @@ async function checksumZip(file) {
     mdfour(digest, headers.slice(4, j * 4), j * 4 - 4)
     var unsigned = new Uint32Array(1)
     unsigned[0] = digest[0] ^ digest[1] ^ digest[2] ^ digest[3]
-    return unsigned
+    return unsigned[0]
 }
 
 module.exports = checksumZip
