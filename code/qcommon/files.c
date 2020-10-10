@@ -5900,10 +5900,12 @@ void *FS_LoadLibrary( const char *name )
 }
 
 void FS_SetMapIndex(const char *mapname) {
-	int r, i, ki = 0, level = 0, mpi = 0;
+	searchpath_t	*search;
+	int r, i, csi = 0, ki = 0, level = 0, mpi = 0;
 	fileHandle_t indexfile;
-	char buf[MAX_OSPATH], key[MAX_OSPATH];
+	char buf[MAX_OSPATH], key[MAX_OSPATH], key2[MAX_OSPATH];
 	qboolean isKey = qfalse, isPak = qfalse;
+	qboolean isKey2 = qfalse, isChecksum = qfalse;
 	//char *mapsMatch = va("maps/%s", mapname);
 
 	//	Com_sprintf( descPath, sizeof ( descPath ), "%s%cdescription.txt", modDir, PATH_SEP );
@@ -5924,14 +5926,14 @@ void FS_SetMapIndex(const char *mapname) {
 					level++;
 				} else if(buf[i] == '}') {
 					level--;
-				} else if(buf[i] == '"' && level == 1 && !isKey && !isPak) {
+				} else if(buf[i] == '"' && level == 1 && !isKey && !isPak && !isKey2 && !isChecksum) {
 					isKey = qtrue;
-				} else if(buf[i] == '"' && level == 1 && isKey && !isPak) {
+				} else if(buf[i] == '"' && level == 1 && isKey && !isPak && !isKey2 && !isChecksum) {
 					isKey = qfalse;
-					key[ki] = 0;
+					key[ki] = '\0';
 					ki = 0;
 					if(mpi < sizeof(fs_mapPakNames) && Q_stristr(key, "maps/") != NULL
-					 	&& (Q_stristr(key, "pak9") != NULL
+					 	&& (Q_stristr(key, "pak9") != NULL // from repack all map bsp files are indexed in pak9### prefixed pk3s
 						|| Q_stristr(key, ".bsp") != NULL)) {
 						//const char *bspext = Q_stristr(key, ".bsp");
 						//if(bspext) {
@@ -5942,11 +5944,39 @@ void FS_SetMapIndex(const char *mapname) {
 						if ( fs_debug->integer ) {
 							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi] );
 						}
-						mpi++;
+						mpi += strlen(key);
 					}
 				} else if(isKey) {
 					key[ki] = buf[i];
 					ki++;
+				} else if (buf[i] == '"' && level == 2 && !isKey && !isPak) {
+					isKey2 = qtrue;
+				} else if (buf[i] == '"' && level == 2 && isKey2 && !isKey && !isPak) {
+					isKey2 = qfalse;
+					key2[ki] = '\0';
+					ki = 0;
+					if(!Q_stricmp(key2, "checksums") && Q_stristr(key, "pk3") != NULL) {
+						for ( search = fs_searchpaths ; search ; search = search->next ) {
+							if(search->pack && Q_stristr(search->pack->pakFilename, key)
+								|| search->dir && Q_stristr(search->dir->path, key)) {
+								isChecksum = qtrue;
+								csi = 0;
+								if ( fs_debug->integer ) {
+									Com_Printf( "FS_SetMapIndex: Found checksums for %s\n", key );
+								}
+								break;
+							}
+						}
+					}
+				} else if (isKey2) {
+					key2[ki] = buf[i];
+					ki++;
+				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2 && !isPak) {
+					
+				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2 && !isPak) {
+					csi++; // increment alternative checksum index
+				} else if ((buf[i] == ']' || csi >= sizeof()) && isChecksum) {
+					isChecksum = qfalse;
 				}
 			}
 		} while(r > 0);

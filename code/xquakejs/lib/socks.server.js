@@ -349,6 +349,7 @@ Server.prototype.websockify = async function (reqInfo) {
   })
   await new Promise(resolve => {
     try {
+      httpServer.on('error', this._onErrorNoop)
       httpServer.listen(port, reqInfo.dstAddr, resolve)
     } catch (e) {
       console.log(e.message)

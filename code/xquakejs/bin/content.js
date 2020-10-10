@@ -313,8 +313,8 @@ async function makeMapIndex(project, outConverted, outRepacked) {
       }
     })
   }
-  fs.writeFileSync(indexJson, JSON.stringify(convertedIndex, null, 2))    
-  fs.writeFileSync(indexFinalJson, JSON.stringify(finalIndex, null, 2))    
+  fs.writeFileSync(indexJson, JSON.stringify(convertedIndex, null, 2))
+  fs.writeFileSync(indexFinalJson, JSON.stringify(finalIndex, null, 2))
 }
 
 async function runContent() {
