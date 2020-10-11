@@ -289,6 +289,7 @@ typedef struct searchpath_s {
 	pack_t		*pack;		// only one of pack / dir will be non NULL
 	directory_t	*dir;
 	dirPolicy_t	policy;
+	unsigned altChecksums[4];
 } searchpath_t;
 
 static	char		fs_gamedir[MAX_OSPATH];	// this will be a single file name with no separators
@@ -3247,7 +3248,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	int index, checksum;
 	
 	thepak = FS_LoadZipFile( zipfile );
-	
+
 	if ( !thepak )
 		return qfalse;
 	
@@ -4444,6 +4445,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Local name
         Q_strcat( neededpaks, len, "@");
         // Do we have one with the same name?
+#ifndef EMSCRIPTEN
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
         {
           char st[MAX_ZPATH];
@@ -4452,6 +4454,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
           Com_sprintf( st, sizeof( st ), "%s.%08x.pk3", fs_serverReferencedPakNames[i], fs_serverReferencedPaks[i] );
           Q_strcat( neededpaks, len, st );
         } else
+#endif
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
           Q_strcat( neededpaks, len, ".pk3" );
@@ -5956,9 +5959,10 @@ void FS_SetMapIndex(const char *mapname) {
 					key2[ki] = '\0';
 					ki = 0;
 					if(!Q_stricmp(key2, "checksums") && Q_stristr(key, "pk3") != NULL) {
+						isChecksum = qfalse;
 						for ( search = fs_searchpaths ; search ; search = search->next ) {
-							if(search->pack && Q_stristr(search->pack->pakFilename, key)
-								|| search->dir && Q_stristr(search->dir->path, key)) {
+							if((search->pack && Q_stristr(search->pack->pakFilename, key))
+								|| (search->dir && Q_stristr(search->dir->path, key))) {
 								isChecksum = qtrue;
 								csi = 0;
 								if ( fs_debug->integer ) {
@@ -5972,10 +5976,10 @@ void FS_SetMapIndex(const char *mapname) {
 					key2[ki] = buf[i];
 					ki++;
 				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2 && !isPak) {
-					
+					search->altChecksums[csi] = (search->altChecksums[csi] << 1) + (buf[i] - '0');
 				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2 && !isPak) {
 					csi++; // increment alternative checksum index
-				} else if ((buf[i] == ']' || csi >= sizeof()) && isChecksum) {
+				} else if ((buf[i] == ']' || csi >= sizeof(search->altChecksums)) && isChecksum) {
 					isChecksum = qfalse;
 				}
 			}

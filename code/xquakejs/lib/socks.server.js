@@ -8,7 +8,7 @@ var WebSocket = require('ws')
 var WebSocketServer = require('ws').Server;
 const http = require('http');
 
-var UDP_TIMEOUT = 30000 // 330 * 1000 // clear stale listeners so we don't run out of ports,
+var UDP_TIMEOUT = 330 * 1000 // clear stale listeners so we don't run out of ports,
   // must be longer than any typical client timeout, maybe the map takes too long to load?
   // longer than server HEARTBEAT_MSEC
 var ATYP = {
@@ -170,7 +170,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
     domainBuf.copy(bufrep, 5)
     bufrep.writeUInt16BE(rinfo.port, 5 + bufrep[4], true)
   }
-  console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
+  //console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
 }
 
@@ -239,8 +239,11 @@ Server.prototype.useAuth = function(auth) {
 }
 
 Server.prototype._onErrorNoop = function(err) {
-  console.log(err)
+  if(!e.code.includes('EADDRINUSE'))
+    console.log(err)
 }
+
+process.on('uncaughtException', Server.prototype._onErrorNoop)
 
 Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
   var self = this
@@ -313,7 +316,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
         .on('error', reject)
         .on('message', onUDPMessage)
         .bind(portLeft + portRight, reqInfo.dstAddr || '0.0.0.0'))
-      console.log('Starting listener ', reqInfo.dstAddr, portLeft + portRight, ' -> ', reqInfo.dstPort)
+      console.log('Starting listener ', portLeft + portRight, ' -> ', reqInfo.dstPort)
       // TODO: fix this, port will be the same for every client
       //   client needs to request the random port we assign
       self._listeners[reqInfo.dstPort] = listener
@@ -351,6 +354,7 @@ Server.prototype.websockify = async function (reqInfo) {
     try {
       httpServer.on('error', this._onErrorNoop)
       httpServer.listen(port, reqInfo.dstAddr, resolve)
+        .on('error', this._onErrorNoop)
     } catch (e) {
       console.log(e.message)
     }
@@ -413,6 +417,9 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       if(typeof this._listeners[reqInfo.dstPort] == 'undefined'
         || this._listeners[reqInfo.dstPort].readyState > 1) {
         await self.tryBindPort(reqInfo)
+        this._listeners[reqInfo.dstPort].on('close', () => {
+          socket.close()
+        })
         // TODO: make command line option --no-ws to turn this off
         await self.websockify(reqInfo)
         onConnect()
@@ -500,7 +507,10 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       socket.close()
     }
   } catch (err) {
-    console.log('Request error:', err)
+    if(err.code.includes('ERR_SOCKET_DGRAM_NOT_RUNNING')) {
+      socket.close()
+    } else
+      console.log('Request error:', err)
   }
 }
 
