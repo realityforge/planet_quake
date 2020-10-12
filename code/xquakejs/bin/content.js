@@ -279,6 +279,9 @@ async function makeMapIndex(project, outConverted, outRepacked) {
     var index = await readPak(path.join(project, pk3s[j]))
     var maps = index.filter(entry => entry.name.match(/\.bsp$/i))
     var dir = path.basename(pk3s[j]) + 'dir'
+    if(!fs.existsSync(path.join(outConverted, dir))) {
+      continue
+    }
     var pk3files = glob.sync('**/*', {
       nodir: false, cwd: path.join(outConverted, dir), nocase: true
     })

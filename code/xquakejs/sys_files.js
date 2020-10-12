@@ -129,9 +129,11 @@ var LibrarySysFiles = {
             SYSN.LoadingProgress(++total, SYSN.downloads.length)
             if(err) return resolve(err)
             try {
-              SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
-              FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
-                encoding: 'binary', flags: 'w', canOwn: true })
+              if(!SYS.servicable) {
+                SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
+                FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
+                  encoding: 'binary', flags: 'w', canOwn: true })
+              }
             } catch (e) {
               if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
                 SYSC.Error('fatal', e.message)

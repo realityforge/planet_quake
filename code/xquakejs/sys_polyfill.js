@@ -1742,6 +1742,7 @@ function printErr() {
 exports.Module.printErr = exports.printErr = printErr 
 exports.Module.onRuntimeInitialized = function () {
   SYS.dedicated = dedicated
+  SYS.servicable = 'serviceWorker' in navigator
 }
 if(dedicated) {
   // in a worker

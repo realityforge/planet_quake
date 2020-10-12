@@ -1,6 +1,7 @@
 var LibrarySysNet = {
   $SYSN__deps: ['$SOCKFS'],
   $SYSN: {
+    downloadFail: [],
     downloadLazy: [],
 		downloadCount: 0,
 		downloads: [],
@@ -151,21 +152,9 @@ var LibrarySysNet = {
 					SYSC.Error('fatal', e.message)
 				}
 			}
-			SYSC.DownloadAsset(file[1], function () {}, function (err, data) {
-				if(err) {
-					return
-				}
-        try {
-          SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file[1])))
-          FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
-  					encoding: 'binary', flags: 'w', canOwn: true })
-        } catch (e) {
-          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-            SYSC.Error('fatal', e.message)
-          }
-        }
-				SYSN.DownloadLazyFinish(indexFilename, file)
-			})
+      SYSN.downloads.push(file[1])
+      SYSF.downloadImmediately(SYSN.DownloadLazyFinish
+        .bind(null, indexFilename, file))
 		},
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
@@ -223,7 +212,6 @@ var LibrarySysNet = {
     SYSN.LoadingDescription('')
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
-      //SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
@@ -232,9 +220,12 @@ var LibrarySysNet = {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
           var newKey = PATH.join(fs_basepath, cl_downloadName)
-          // don't need to save here because service-worker fetch() already did
-          //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
-          //  encoding: 'binary', flags: 'w', canOwn: true })
+          // TODO: don't need to save here because service-worker fetch() already did
+          if(!SYS.servicable) {
+            SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
+            FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+              encoding: 'binary', flags: 'w', canOwn: true })
+          }
           // do need to add ad-hoc server downloads to the index
           SYSF.index[newKey.toLowerCase()] = {
             name: newKey.replace(fs_basepath, ''), // would try to delete/tryMod /baseq3/ but we just add it back on in DownloadIndex

@@ -76,35 +76,36 @@ var LibrarySysCommon = {
 					: ('https://' + url)
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
-			var name = asset.replace(/^\//, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
+			var name = asset.replace(/^\//ig, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
+			var mod = name.split(/\//ig)[0]
+			var tryMod = mod.replace(/-cc?r?\//ig, '\/')
+			var noMod = name.split(/\//ig).slice(1).join('/')
 			var tryLinks = [
-				SYSC.addProtocol(SYSC.newDLURL) + '/' + name,
+				SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/',
 			]
 			if(SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL) {
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + name)
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
 			}
 			// all of these test links are in case someone fucks up conversion or startup
-			var tryMod = name.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)[0]
-			var noMod = name.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)
-				.slice(1).join('/')
 			if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
-				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/' + noMod)
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/' + noMod)
-				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/' + noMod)
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/' + noMod)
+				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/')
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/')
+				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/')
+				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/')
 			}
 			var tryDownload = 0
-			var doDownload = function (url) {
-				SYSN.DoXHR(url, {
+			var doDownload = function (baseUrl) {
+				SYSN.DoXHR(baseUrl + noMod, {
 					dataType: 'arraybuffer',
 					onprogress: onprogress,
 					onload: function (err, data) {
 						tryDownload++
 						if(err && tryDownload < tryLinks.length) {
+							
 							doDownload(tryLinks[tryDownload])
 							return
 						}
-						onload(err, data, url)
+						onload(err, data, baseUrl)
 					}
 				})
 			}
