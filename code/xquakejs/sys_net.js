@@ -82,6 +82,7 @@ var LibrarySysNet = {
         })
     },
     DownloadLazyFinish: function (indexFilename, file) {
+      SYSN.downloads = []
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded += true
       var replaceFunc = function (path) {
@@ -158,25 +159,25 @@ var LibrarySysNet = {
 		},
     buildAlternateUrls: function (mod) {
       var tryMod = mod.replace(/-cc?r?\//ig, '\/')
-      var differentMods = SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL
+      var differentDownloadURLS = SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL
       SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
-      if(differentMods) {
+      if(differentDownloadURLS) {
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
       }
       // all of these test links are in case someone fucks up conversion or startup
       if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/')
-        if(differentMods)
+        if(differentDownloadURLS)
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/')
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/')
-        if(differentMods)
+        if(differentDownloadURLS)
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/')
       }
     },
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
       var basename = PATH.dirname(filename)
-      var mod = index.split(/\//ig)[0]
+      var mod = index.replace(/^\//ig, '').split(/\//ig)[0]
       var tryMod = mod.replace(/-cc?r?\//ig, '\/')
       SYSN.buildAlternateUrls(mod)
 			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
@@ -229,12 +230,19 @@ var LibrarySysNet = {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSN.LoadingDescription('')
+    SYSN.downloads.push(cl_downloadName)
+    SYSN.downloadTries = []
+    var alts = SYSN.downloadAlternates
+    var mod = cl_downloadName.replace(/^\//ig, '').split(/\//ig)[0]
+    SYSN.buildAlternateUrls(mod)
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
       }, function (err, data) {
+        SYSN.downloads = []
+        SYSN.downloadAlternates = SYSN.downloadTries = alts
         if(err) {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
