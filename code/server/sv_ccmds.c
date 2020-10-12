@@ -178,7 +178,7 @@ static void SV_Map_f( void ) {
 		}
 	}
 	FS_RestorePure();
-	if ( len == -1 ) {
+	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
 		Com_Printf("Error: Can't find map %s\n", expanded );
 		Cmd_Clear();
 		Cbuf_AddText("spmap q3dm0\n");

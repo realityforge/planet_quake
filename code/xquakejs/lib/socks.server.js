@@ -239,7 +239,7 @@ Server.prototype.useAuth = function(auth) {
 }
 
 Server.prototype._onErrorNoop = function(err) {
-  if(!e.code.includes('EADDRINUSE'))
+  if(!err.code.includes('EADDRINUSE'))
     console.log(err)
 }
 

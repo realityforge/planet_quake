@@ -5976,7 +5976,8 @@ void FS_SetMapIndex(const char *mapname) {
 					key2[ki] = buf[i];
 					ki++;
 				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2 && !isPak) {
-					search->altChecksums[csi] = (search->altChecksums[csi] << 1) + (buf[i] - '0');
+					search->altChecksums[csi] *= 10;
+					search->altChecksums[csi] += buf[i] - '0';
 				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2 && !isPak) {
 					csi++; // increment alternative checksum index
 				} else if ((buf[i] == ']' || csi >= sizeof(search->altChecksums)) && isChecksum) {

@@ -1,4 +1,5 @@
 var fs = require('fs')
+var os = require('os')
 var path = require('path')
 var {URL} = require('url')
 var {Volume} = require('memfs')
@@ -30,6 +31,8 @@ var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
 var scanOptions = false
+var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
 
 // check the process args for a directory to serve as the baseq3 folders
 var mountPoint = '/assets/baseq3'
@@ -95,6 +98,14 @@ if(!writeOut) {
 }
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start -- /Applications/ioquake3`')
+  if(fs.existsSync(TEMP_DIR)) {
+    var defaultDirectories = fs.readdirSync(TEMP_DIR)
+      .filter(f => f[0] != '.')
+    defaultDirectories.forEach(f => {
+      mountPoints.push([path.join(path.dirname(mountPoint), f), path.join(TEMP_DIR, f)])
+    })
+    console.log('I really hope this is what you meant: ', defaultDirectories.join(', '))
+  }
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
@@ -268,6 +279,9 @@ async function makeMapIndex(project, outConverted, outRepacked) {
     var index = await readPak(path.join(project, pk3s[j]))
     var maps = index.filter(entry => entry.name.match(/\.bsp$/i))
     var dir = path.basename(pk3s[j]) + 'dir'
+    var pk3files = glob.sync('**/*', {
+      nodir: false, cwd: path.join(outConverted, dir), nocase: true
+    })
     var initial = {}
     var pk3Key = path.join(prefixPath, dir).toLowerCase()
     var checksums = [await checksumZip(index)]
@@ -286,14 +300,13 @@ async function makeMapIndex(project, outConverted, outRepacked) {
       name: path.join('/', dir).replace(/\/$/ig, ''),
       checksums: checksums
     }
-    var manifest = index.map(entry => {
-      return entry.isDirectory ? ({
-        name: path.join('/', dir, entry.name).replace(/\/$/ig, ''),
+    var manifest = pk3files.map(file => {
+      var stat = fs.statSync(path.join(outConverted, dir, file))
+      return stat.isDirectory() ? ({
+        name: path.join('/', dir, file).replace(/\/$/ig, ''),
       }) : ({
-        compressed: entry.compressedSize,
-        name: path.join('/', dir, entry.name),
-        size: entry.size,
-        offset: entry.offset
+        name: path.join('/', dir, file),
+        size: stat.size
       })
     }).reduce((obj, o) => {
       var key = path.join(prefixPath, o.name).toLowerCase()

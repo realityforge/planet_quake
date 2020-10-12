@@ -705,7 +705,7 @@ npm run start -- /assets/${noCCR} ${outputProject}
 `
 }
 
-function repackIndexJson(game, outCombined, outConverted, outputProject) {
+async function repackIndexJson(game, outCombined, outConverted, outputProject) {
   // replace game.ordered without extensions because the graph
   //   does not match the converted paths at this point
   var orderedNoExt = Object.keys(game.ordered)
@@ -724,7 +724,8 @@ function repackIndexJson(game, outCombined, outConverted, outputProject) {
     indexJson = INDEX_NAME
   }
   if(!game.graph) {
-    console.log(`Skipping index.json "${indexJson}"`, getHelp(outputProject))
+    await makeIndexJson('/' + path.basename(outputProject) + '/index.json',
+      outputProject + '/index.json', true)
     return
   }
   // generate a index.json the server can use for pk3 sorting based on map/game type
@@ -927,13 +928,13 @@ async function repackGames() {
           [0, stepCounter, stepTotal, STEPS['repack']],
         ])
         await repack(gs, outConverted, outRepacked)
-        repackIndexJson(gs, outCombined, outConverted, outRepacked)
+        await repackIndexJson(gs, outCombined, outConverted, outRepacked)
       } else {
         await progress([
           [1, false],
           [0, stepCounter, stepTotal, STEPS['repack']],
         ])
-        repackIndexJson(gs, outCombined, outConverted)
+        await repackIndexJson(gs, outCombined, outConverted)
       }
       
       if(typeof STEPS['convert'] != 'undefined'

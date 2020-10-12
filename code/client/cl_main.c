@@ -3158,6 +3158,19 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	}
 }
 
+#ifdef EMSCRIPTEN
+static void CL_CheckTimeout_After_Startup ( void ) {
+	FS_Restart_After_Async();
+	if ( uivm ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	}
+}
+
+static void CL_CheckTimeout_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, CL_CheckTimeout_After_Startup);
+}
+#endif
 
 /*
 ==================
@@ -3177,8 +3190,10 @@ static void CL_CheckTimeout( void ) {
 			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( uivm ) {
+			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			} else {
+				Com_Frame_Callback(Sys_FS_Shutdown, CL_CheckTimeout_After_Shutdown);
 			}
 			return;
 		}

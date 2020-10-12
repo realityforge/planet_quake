@@ -220,6 +220,7 @@ var LibrarySysNet = {
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
+    SYSN.LoadingDescription('')
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
       //SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))

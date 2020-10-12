@@ -3090,10 +3090,10 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Reset console command history
 		Con_ResetHistory();
 
+#ifndef EMSCRIPTEN
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
-#ifndef EMSCRIPTEN
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
 #endif
@@ -3107,7 +3107,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		FS_Restart( checksumFeed );
 		
 #ifdef EMSCRIPTEN
-		com_gameRestarting = qfalse;
+		com_gameRestarting = qtrue;
 	}
 }
 
