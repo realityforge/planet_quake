@@ -1347,6 +1347,7 @@ void NET_OpenSocks_After_Method( void ) {
 	if ( len != 2 || buf[0] != 5 ) {
 		Com_Printf( "NET_OpenSocks: bad response\n" );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	switch( buf[1] ) {
@@ -1397,6 +1398,7 @@ void NET_OpenSocks_After_Method( void ) {
 		if ( len != 2 || buf[0] != 1 ) {
 			Com_Printf( "NET_OpenSocks: bad response\n" );
       Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
 			return;
 		}
 		if ( buf[1] != 0 ) {
@@ -1443,6 +1445,7 @@ void NET_OpenSocks_After_Listen( void ) {
 	if( len < 2 || buf[0] != 5 ) {
 		Com_Printf( "NET_OpenSocks: bad response\n" );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	// check completion code

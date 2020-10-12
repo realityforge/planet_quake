@@ -1,7 +1,8 @@
 var LibrarySysNet = {
   $SYSN__deps: ['$SOCKFS'],
   $SYSN: {
-    downloadFail: [],
+    downloadAlternates: [],
+    downloadTries: [],
     downloadLazy: [],
 		downloadCount: 0,
 		downloads: [],
@@ -153,23 +154,41 @@ var LibrarySysNet = {
 				}
 			}
       SYSN.downloads.push(file[1])
-      SYSF.downloadImmediately(SYSN.DownloadLazyFinish
-        .bind(null, indexFilename, file))
+      SYSF.downloadImmediately(SYSN.DownloadLazyFinish.bind(null, indexFilename, file))
 		},
+    buildAlternateUrls: function (mod) {
+      var tryMod = mod.replace(/-cc?r?\//ig, '\/')
+      var differentMods = SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL
+      SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
+      if(differentMods) {
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
+      }
+      // all of these test links are in case someone fucks up conversion or startup
+      if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/')
+        if(differentMods)
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/')
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/')
+        if(differentMods)
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/')
+      }
+    },
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
       var basename = PATH.dirname(filename)
-      var gamename = index.split(/\//ig)[0]
-      var tryMod = filename.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/').split(/\//ig)[0]
-			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data) {
+      var mod = index.split(/\//ig)[0]
+      var tryMod = mod.replace(/-cc?r?\//ig, '\/')
+      SYSN.buildAlternateUrls(mod)
+			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
 				if(err) {
 					SYSN.LoadingDescription('')
 					cb()
 					return
 				}
+        SYSN.downloadAlternates.push(baseUrl)
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
-          var newKey = k.toLowerCase().replace(new RegExp(tryMod + '(-cc?r?)?\/', 'ig'), gamename + '/')
+          var newKey = k.toLowerCase().replace(new RegExp(tryMod + '(-cc?r?)?\/', 'ig'), mod + '/')
           if(typeof obj[newKey] == 'undefined') {
             obj[newKey] = moreIndex[k]
             // we use the downloading key because it doesn't

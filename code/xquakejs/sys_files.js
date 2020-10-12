@@ -245,11 +245,14 @@ var LibrarySysFiles = {
       }
       var current = 0
       var download;
+      SYSN.downloadAlternates = []
+      SYSN.downloadTries = []
       download = function () {
         if(current < indexes.length) {
           SYSN.DownloadIndex(indexes[current], download)
           current++
         } else {
+          SYSN.downloadTries = SYSN.downloadAlternates
           SYSF.filterDownloads(mapname, modelname)
           cb()
         }

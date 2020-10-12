@@ -76,23 +76,7 @@ var LibrarySysCommon = {
 					: ('https://' + url)
 		},
 		DownloadAsset: function (asset, onprogress, onload) {
-			var name = asset.replace(/^\//ig, '') //.replace(/(.+\/|)(.+?)$/, '$1' + asset.checksum + '-$2');
-			var mod = name.split(/\//ig)[0]
-			var tryMod = mod.replace(/-cc?r?\//ig, '\/')
-			var noMod = name.split(/\//ig).slice(1).join('/')
-			var tryLinks = [
-				SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/',
-			]
-			if(SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL) {
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
-			}
-			// all of these test links are in case someone fucks up conversion or startup
-			if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
-				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/')
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/')
-				tryLinks.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/')
-				tryLinks.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/')
-			}
+			var noMod = asset.replace(/^\//ig, '').split(/\//ig).slice(1).join('/')
 			var tryDownload = 0
 			var doDownload = function (baseUrl) {
 				SYSN.DoXHR(baseUrl + noMod, {
@@ -100,16 +84,15 @@ var LibrarySysCommon = {
 					onprogress: onprogress,
 					onload: function (err, data) {
 						tryDownload++
-						if(err && tryDownload < tryLinks.length) {
-							
-							doDownload(tryLinks[tryDownload])
+						if(err && tryDownload < SYSN.downloadTries.length) {
+							doDownload(SYSN.downloadTries[tryDownload])
 							return
 						}
 						onload(err, data, baseUrl)
 					}
 				})
 			}
-			doDownload(tryLinks[0])
+			doDownload(SYSN.downloadTries[0])
 		},
 		mkdirp: function (p) {
 			if(p.includes('http')) {
