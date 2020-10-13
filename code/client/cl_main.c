@@ -2988,6 +2988,7 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 
 		// take this address as the new server address.  This allows
 		// a server proxy to hand off connections to multiple servers
+		Q_strncpyz((char *)from->protocol, clc.serverAddress.protocol, sizeof(from->protocol));
 		clc.serverAddress = *from;
 		Com_DPrintf( "challengeResponse: %d\n", clc.challenge );
 		return qtrue;
