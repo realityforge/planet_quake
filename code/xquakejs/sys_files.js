@@ -4,53 +4,55 @@ var LibrarySysFiles = {
     index: [],
     fs_replace: [],
     fs_basepath: '/base',
+    fs_basegame: 'baseq3',
+    fs_game: 'baseq3',
     pathname: 0,
     modeStr: 0,
     mods: [
       // A list of supported mods, 'dirname-cc' (-ccr means combined converted repacked)
   		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
   		// We use a list here because Object keys have no guarantee of order
-			['baseq3-cc', 			'Quake III Arena'],
-			['missionpack-cc',  '0 Choice: Team Arena'],
-			['defrag-cc',       '1 Choice: Defrag'],
-			['baseq3r-cc',      '2 Choice: Q3Rally'],
-			['basemod-cc', 		  '3 Choice: Monkeys of Doom'],
-			['generations-cc',  '4 Choice: Generations Arena'],
-			['q3f2-cc', 				'5 Choice: Q3 Fortress 2'],
-			['cpma-cc', 				'6 Choice: Challenge ProMode'],
-			['q3ut4-cc', 		 	  '7 Choice: Urban Terror 4'],
-			['freezetag-cc', 	  '8 Choice: Freeze Tag'],
-			['corkscrew-cc', 	  '9 Choice: Corkscrew'],
-			['freon-cc', 			  'Excessive Plus: Freon'],
-      ['baseoa-cc', 			'Open Arena'],
-			['bfpq3-cc', 			  'Bid For Power'],
-			['excessive-cc', 	  'Excessive+'],
-			['q3ut3-cc', 			  'Urban Terror 3'],
-			['edawn-cc', 			  'eDawn'],
-			['geoball-cc', 		  'Geoball'],
-			['neverball-cc', 	  'Neverball'],
-			['omissionpack-cc', 'OpenArena Mission Pack'],
-			['platformer-cc', 	'Platformer'],
-			['legoc-cc', 			  'Lego Carnage'],
-			['osp-cc', 				  'Orange Smoothie Productions'],
-			['quake2arena-cc',  'Quake 2 Arena'],
-			['smokin-cc', 			'Smokin\' Guns'],
-			['wfa-cc', 				  'Weapons Factory Arena'],
-			['uberarena-cc', 	  'Uber Arena'],
-			['demoq3-cc', 			'Quake III Demo'],
-			['mfdata-cc', 			'Military Forces'],
-			['conjunction-cc',  'Dark Conjunction'],
-			['chili-cc', 			  'Chili Quake XXL'],
-			['hqq-cc', 				  'High Quality Quake'],
-      ['entityplus-cc', 	'Engine Of Creation: Entity Plus'],
-      ['wop-cc',          'World of Padman'],
-			['rocketarena-cc',  'Coming Soon: Rocket Arena'],
-			['gpp-cc',          'Coming Soon: Tremulous'],
-			['gppl-cc',         'Coming Soon: Unvanquished'],
-			['iortcw-cc',       'Coming Soon: Return to Castle Wolfenstien'],
-      ['baset-cc',        'Coming Soom: Wolfenstien: Enemy Territory'],
-      ['openjk-cc',       'Coming Soon: Jedi Knights: Jedi Academy'],
-      ['baseef-cc',       'Coming Soon: Star Trek: Elite Force'],
+			['baseq3', 			'Quake III Arena'],
+			['missionpack',  '0 Choice: Team Arena'],
+			['defrag',       '1 Choice: Defrag'],
+			['baseq3r',      '2 Choice: Q3Rally'],
+			['basemod', 		  '3 Choice: Monkeys of Doom'],
+			['generations',  '4 Choice: Generations Arena'],
+			['q3f2', 				'5 Choice: Q3 Fortress 2'],
+			['cpma', 				'6 Choice: Challenge ProMode'],
+			['q3ut4', 		 	  '7 Choice: Urban Terror 4'],
+			['freezetag', 	  '8 Choice: Freeze Tag'],
+			['corkscrew', 	  '9 Choice: Corkscrew'],
+			['freon', 			  'Excessive Plus: Freon'],
+      ['baseoa', 			'Open Arena'],
+			['bfpq3', 			  'Bid For Power'],
+			['excessive', 	  'Excessive+'],
+			['q3ut3', 			  'Urban Terror 3'],
+			['edawn', 			  'eDawn'],
+			['geoball', 		  'Geoball'],
+			['neverball', 	  'Neverball'],
+			['omissionpack', 'OpenArena Mission Pack'],
+			['platformer', 	'Platformer'],
+			['legoc', 			  'Lego Carnage'],
+			['osp', 				  'Orange Smoothie Productions'],
+			['quake2arena',  'Quake 2 Arena'],
+			['smokin', 			'Smokin\' Guns'],
+			['wfa', 				  'Weapons Factory Arena'],
+			['uberarena', 	  'Uber Arena'],
+			['demoq3', 			'Quake III Demo'],
+			['mfdata', 			'Military Forces'],
+			['conjunction',  'Dark Conjunction'],
+			['chili', 			  'Chili Quake XXL'],
+			['hqq', 				  'High Quality Quake'],
+      ['entityplus', 	'Engine Of Creation: Entity Plus'],
+      ['wop',          'World of Padman'],
+			['rocketarena',  'Coming Soon: Rocket Arena'],
+			['gpp',          'Coming Soon: Tremulous'],
+			['gppl',         'Coming Soon: Unvanquished'],
+			['iortcw',       'Coming Soon: Return to Castle Wolfenstien'],
+      ['baset',        'Coming Soom: Wolfenstien: Enemy Territory'],
+      ['openjk',       'Coming Soon: Jedi Knights: Jedi Academy'],
+      ['baseef',       'Coming Soon: Star Trek: Elite Force'],
 		],
     filterDownloads: function (mapname, modelname) {
       // create virtual file entries for everything in the directory list
@@ -163,16 +165,14 @@ var LibrarySysFiles = {
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
-    var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
-    SYSF.fs_basepath = fs_basepath;
-    var fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
-    if(fs_basegame.length > 0)
-      SYSF.fs_replace.push(new RegExp('\/*' + fs_basegame + '\/', 'ig'))
-    SYSF.fs_basegame = fs_basegame
+    SYSF.fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
+    SYSF.fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
+    if(SYSF.fs_basegame.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + SYSF.fs_basegame + '\/', 'ig'))
     var sv_pure = SYSC.Cvar_VariableString('sv_pure')
-    var fs_game = SYSC.Cvar_VariableString('fs_game')
-    if(fs_game.length > 0)
-      SYSF.fs_replace.push(new RegExp('\/*' + fs_game + '\/', 'ig'))
+    SYSF.fs_game = SYSC.Cvar_VariableString('fs_game')
+    if(SYSF.fs_game.length > 0)
+      SYSF.fs_replace.push(new RegExp('\/*' + SYSF.fs_game + '\/', 'ig'))
     SYSF.fs_replace.sort(function (a, b) { return b.source.length - a.source.length })
     var mapname = SYSC.Cvar_VariableString('mapname')
     var modelname = SYSC.Cvar_VariableString('model')
@@ -181,16 +181,16 @@ var LibrarySysFiles = {
     var blankFile = new Uint8Array(4)
     
     SYSN.LoadingDescription('Loading Game UI...')
-    var fsMountPath = fs_basegame
-    if(fs_game && fs_game.localeCompare(fs_basegame) !== 0) {
-      fsMountPath = fs_game // TODO: comment this out to test server induced downloading
+    var fsMountPath = SYSF.fs_basegame
+    if(SYSF.fs_game && SYSF.fs_game.localeCompare(SYSF.fs_basegame) !== 0) {
+      fsMountPath = SYSF.fs_game // TODO: comment this out to test server induced downloading
     }
 
     // mount a persistable filesystem into base
-    SYSC.mkdirp(fs_basepath)
+    SYSC.mkdirp(SYSF.fs_basepath)
 
     try {
-      FS.mount(IDBFS, {}, fs_basepath)
+      FS.mount(IDBFS, {}, SYSF.fs_basepath)
     } catch (e) {
       if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EBUSY) {
         SYSC.Error('fatal', e.message)
@@ -205,36 +205,42 @@ var LibrarySysFiles = {
       }
 
       SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
-      SYSC.mkdirp(PATH.join(fs_basepath, fs_basegame))
-      SYSC.mkdirp(PATH.join(fs_basepath, fsMountPath))
 
       for(var i = 0; i < (SYSF.mods || []).length; i++) {
-        var desc = PATH.join(fs_basepath, SYSF.mods[i][0], 'description.txt')
+        var desc = PATH.join(SYSF.fs_basepath, SYSF.mods[i][0], 'description.txt')
         var prettyDesc = Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length-1))
+        var origMod = PATH.join(SYSF.fs_basepath, SYSF.mods[i][0].replace(/-cc*r*$/ig, ''))
+        SYSC.mkdirp(origMod)
+        var symLinks = [
+          PATH.dirname(desc),
+          origMod + '-cc',
+          origMod + '-ccr',
+        ]
+        symLinks.forEach(function (link) {
+          try {
+            FS.symlink(origMod, link)
+          } catch (e) {
+            if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+              throw e
+            }
+          }
+        })
         SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir'))
-        FS.writeFile(desc, prettyDesc, {
-          encoding: 'binary', flags: 'w', canOwn: true })
+        FS.writeFile(desc, prettyDesc, {encoding: 'binary', flags: 'w', canOwn: true })
         SYSF.index[desc.toLowerCase()] = {
-          name: desc.replace(fs_basepath, ''),
+          name: desc.replace(SYSF.fs_basepath, ''),
           size: prettyDesc.length
         }
       }
 
-      // TODO: is this right? exit early without downloading anything so the server can force it instead
-      // server will tell us what pk3s we need
-      /*
-      if(clcState < 4 && sv_pure && fs_game.localeCompare(fs_basegame) !== 0) {
-        SYSN.LoadingDescription('')
-        FS.syncfs(false, function () { SYSC.ProxyCallback(cb) })
-        return
-      }
-      */
+      SYSC.mkdirp(PATH.join(SYSF.fs_basepath, SYSF.fs_basegame))
+      SYSC.mkdirp(PATH.join(SYSF.fs_basepath, fsMountPath))
 
       SYSN.downloads = []
       var indexes = [
-        fs_basegame
+        SYSF.fs_basegame
       ]
-      if(fsMountPath != fs_basegame) {
+      if(fsMountPath != SYSF.fs_basegame) {
         indexes.push(fsMountPath)
       }
       if(mapname.length > 0) {
@@ -330,13 +336,11 @@ var LibrarySysFiles = {
     
     var contents;
     try {
-      //contents = FS.readdir(directory)
       contents = Object.keys(SYSF.index)
         .filter(function (k) { 
           return k.match(new RegExp(directory + '\\/[^\\/]+\\/?$', 'i'))
             && (!dironly || typeof SYSF.index[k].size == 'undefined') 
-        })
-        .map(function (k) { return PATH.basename(SYSF.index[k].name) })
+        }).map(function (k) { return PATH.basename(SYSF.index[k].name) })
         .filter(function (f, i, arr) { return f && arr.indexOf(f) === i })
         .filter(function (f) {
           try {
@@ -348,6 +352,10 @@ var LibrarySysFiles = {
             }
           }
         })
+        .concat(FS.readdir(directory).filter(function (f) {
+          // allow additional downloaded pk3s NOT in index to processed
+          return f.match(/\.pk3$/ig)
+        }))
       if(directory.match(/\/demos/i)) {
         contents = contents
           .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
@@ -362,7 +370,6 @@ var LibrarySysFiles = {
       return null
     }
 
-// TODO: allow pk3s downloaded through
     var matches = [];
     for (var i = 0; i < contents.length; i++) {
       var name = contents[i].toLowerCase();

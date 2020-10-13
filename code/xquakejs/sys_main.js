@@ -9,8 +9,8 @@ var LibrarySysMain = {
       '+set', 'fs_basepath', '/base',
       //'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
       //'+set', 'cl_allowDownload', '1',
-      '+set', 'fs_basegame', 'baseq3-cc',
-      '+set', 'fs_game', 'baseq3-cc',
+      '+set', 'fs_basegame', 'baseq3',
+      '+set', 'fs_game', 'baseq3',
       //'+set', 'developer', '0',
       //'+set', 'fs_debug', '0',
       '+set', 'r_mode', '-1',
@@ -43,6 +43,7 @@ var LibrarySysMain = {
       '+set', 'r_normalMapping', '0',
       '+set', 'r_specularMapping', '0',
       '+set', 'r_gamma', '1.5',
+      '+set', 'r_picmip', '0',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',
@@ -61,7 +62,6 @@ var LibrarySysMain = {
       '+set', 'r_deluxeMapping', '0',
       '+set', 'r_hdr', '0',
       '+set', 'r_lodbias', '1',
-      '+set', 'r_picmip', '1',
       '+set', 'r_postProcess', '0',
       '+set', 's_compression', '1',
       '+set', 'r_ext_compressed_textures', '1',
@@ -259,7 +259,9 @@ var LibrarySysMain = {
     })
     SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
 
-    window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
+    if(typeof window.serviceWorker != 'undefined')
+      window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
+    
     if(SYS.dedicated) return
 
     SYSM.loading = document.getElementById('loading')

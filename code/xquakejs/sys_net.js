@@ -158,27 +158,30 @@ var LibrarySysNet = {
       SYSF.downloadImmediately(SYSN.DownloadLazyFinish.bind(null, indexFilename, file))
 		},
     buildAlternateUrls: function (mod) {
-      var tryMod = mod.replace(/-cc?r?\//ig, '\/')
-      var differentDownloadURLS = SYSC.oldDLURL.length > 0 && SYSC.oldDLURL != SYSC.newDLURL
+      var origMod = mod.replace(/-cc*r*/ig, '')
+      var hasOldURL = SYSC.oldDLURL.length > 0
       SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
-      if(differentDownloadURLS) {
+      if(hasOldURL) {
         SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
       }
       // all of these test links are in case someone fucks up conversion or startup
-      if(SYSF.mods.map(function (f) {return f[0]}).includes(tryMod + '-cc')) {
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-cc/')
-        if(differentDownloadURLS)
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-cc/')
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + tryMod + '-ccr/')
-        if(differentDownloadURLS)
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + tryMod + '-ccr/')
+      if(SYSF.mods.map(function (f) {return f[0]}).includes(origMod)) {
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + origMod + '-cc/')
+        if(hasOldURL)
+          SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-cc/')
+        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + origMod + '-ccr/')
+        if(hasOldURL)
+          SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-ccr/')
       }
+      SYSN.downloadTries = SYSN.downloadTries.filter(function (a, i, arr) {
+        return arr.indexOf(a) === i
+      })
     },
 		DownloadIndex: function (index, cb) {
       var filename = index.includes('.json') ? index : index + '/index.json'
       var basename = PATH.dirname(filename)
       var mod = index.replace(/^\//ig, '').split(/\//ig)[0]
-      var tryMod = mod.replace(/-cc?r?\//ig, '\/')
+      var origMod = mod.replace(/-cc?r?\//ig, '\/')
       SYSN.buildAlternateUrls(mod)
 			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
 				if(err) {
@@ -189,7 +192,7 @@ var LibrarySysNet = {
         SYSN.downloadAlternates.push(baseUrl)
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
-          var newKey = k.toLowerCase().replace(new RegExp(tryMod + '(-cc?r?)?\/', 'ig'), mod + '/')
+          var newKey = k.toLowerCase().replace(new RegExp(origMod + '(-cc?r?)?\/', 'ig'), mod + '/')
           if(typeof obj[newKey] == 'undefined') {
             obj[newKey] = moreIndex[k]
             // we use the downloading key because it doesn't
@@ -228,13 +231,14 @@ var LibrarySysNet = {
   Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
-    var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSN.LoadingDescription('')
     SYSN.downloads.push(cl_downloadName)
     SYSN.downloadTries = []
     var alts = SYSN.downloadAlternates
     var mod = cl_downloadName.replace(/^\//ig, '').split(/\//ig)[0]
     SYSN.buildAlternateUrls(mod)
+    SYSN.buildAlternateUrls(SYSF.fs_basegame)
+    SYSN.buildAlternateUrls(SYSF.fs_game)
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
@@ -246,16 +250,16 @@ var LibrarySysNet = {
         if(err) {
           SYSC.Error('drop', 'Download Error: ' + err.message)
         } else {
-          var newKey = PATH.join(fs_basepath, cl_downloadName)
+          var newKey = PATH.join(SYSF.fs_basepath, cl_downloadName)
           // TODO: don't need to save here because service-worker fetch() already did
           if(!SYS.servicable) {
-            SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
-            FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
+            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(cl_downloadName)))
+            FS.writeFile(PATH.join(SYSF.fs_basepath, cl_downloadName), new Uint8Array(data), {
               encoding: 'binary', flags: 'w', canOwn: true })
           }
           // do need to add ad-hoc server downloads to the index
           SYSF.index[newKey.toLowerCase()] = {
-            name: newKey.replace(fs_basepath, ''), // would try to delete/tryMod /baseq3/ but we just add it back on in DownloadIndex
+            name: newKey.replace(SYSF.fs_basepath, ''), // would try to delete/origMod /baseq3/ but we just add it back on in DownloadIndex
             size: new Uint8Array(data).length,
             shaders: [],
             downloading: false,

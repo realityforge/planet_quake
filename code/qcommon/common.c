@@ -308,7 +308,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		va_end (argptr);
 		if(!calledSysError) {
 			calledSysError = qtrue;
-			Sys_Error("recursive error after: %s\n and %s", com_errorMessage, another_errorMessage);
+			Sys_Error("recursive error after: %s and %s", com_errorMessage, another_errorMessage);
 		}
 	}
 

@@ -221,7 +221,7 @@
 	          console.log('Service Worker registration failed: ', err)
 	      })
     }
-		if('Worker' in window) {
+		if(false && 'Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')
 			window.serverWorker.onmessage = function (e) {
 				if(e.data[0] == 'init') {

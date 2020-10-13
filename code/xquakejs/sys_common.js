@@ -95,11 +95,8 @@ var LibrarySysCommon = {
 			doDownload(SYSN.downloadTries[0])
 		},
 		mkdirp: function (p) {
-			if(p.includes('http')) {
-				debugger
-			}
 			try {
-				FS.mkdir(p, 0o0777);
+				FS.mkdir(p, 16895);
 			} catch (e) {
 				// make the subdirectory and then retry
 				if ((e instanceof FS.ErrnoError) && e.errno === ERRNO_CODES.ENOENT) {
@@ -166,7 +163,7 @@ var LibrarySysCommon = {
 	Sys_Mkdir: function (directory) {
 		directory = UTF8ToString(directory);
 		try {
-			FS.mkdir(directory, 0o0777);
+			FS.mkdir(directory, 16895);
 		} catch (e) {
 			if (!(e instanceof FS.ErrnoError)) {
 				SYSC.Error('drop', e.message);

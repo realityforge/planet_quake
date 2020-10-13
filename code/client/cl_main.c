@@ -1311,9 +1311,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 			if(!dropped && !cls.postgame) {
 				// skip disconnecting and just show the main menu
 				noGameRestart = qtrue;
-				cl_restarted = qtrue;
 				cl_disconnecting = qfalse;
-				return cl_restarted;
+				return qfalse;
 			} else if (cls.postgame) {
 				cls.postgame = qfalse;
 				Cbuf_AddText("map_restart\n");
@@ -3182,6 +3181,7 @@ static void CL_CheckTimeout( void ) {
 	// check timeout
 	//
 	if ( ( !CL_CheckPaused() || !sv_paused->integer ) 
+		&& !*clc.downloadName
 		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
 		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
@@ -3192,7 +3192,8 @@ static void CL_CheckTimeout( void ) {
 			}
 			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			} else {
+			}
+			if(!FS_Initialized()) {
 				Com_Frame_Callback(Sys_FS_Shutdown, CL_CheckTimeout_After_Shutdown);
 			}
 			return;
