@@ -397,6 +397,7 @@ Server.prototype._timeoutUDP = function(udpLookupPort) {
 }
 
 Server.prototype._onConnection = function(socket) {
+	var self = this
   ++this._connections
   var parser = new Parser(socket)
       onData = parser._onData.bind(parser),
@@ -429,7 +430,14 @@ Server.prototype._onConnection = function(socket) {
   
   parser
     .on('error', onError)
-    .on('ping', () => socket.send(Buffer.from([0x05, 0x00]), { binary: true }))
+    .on('ping', () => {
+			var port = Object.keys(self._listeners)
+				.filter(k => self._listeners[k] === socket.dstSock)[0]
+			if(port) {
+				self._timeouts[port] = Date.now()
+			}
+			socket.send(Buffer.from([0x05, 0x00]), { binary: true })
+		})
     .on('methods', onMethods)
     .on('request', onRequest)
 
