@@ -2121,9 +2121,9 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 		// is the element a pak file?
 		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
 			// disregard if it doesn't match one of the allowed pure pak files
-			//if ( !FS_PakIsPure( search->pack ) ) {
-			//	continue;
-			//}
+			if ( !FS_PakIsPure( search->pack ) ) {
+				continue;
+			}
 			//
 			if ( search->pack->exclude ) {
 				continue;
@@ -3261,13 +3261,14 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	{
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
+/*
 #ifdef EMSCRIPTEN
 		// even if the pak checksum isn't the same, trust the pak is already downloaded
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
 		}
 #endif
-
+*/
 	}
 	
 	return qfalse;
@@ -4418,12 +4419,14 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				havepak = qtrue; // This is it!
 				break;
 			}
+/*
 #ifdef EMSCRIPTEN
 			else if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {
 				havepak = qtrue; // Accept that the checksums don't match and move on
 				break;
 			}
 #endif
+*/
 		}
 
 		if ( !havepak && fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 

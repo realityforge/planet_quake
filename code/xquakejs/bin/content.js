@@ -87,7 +87,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--help' || a == '-h') {
     console.log(help)
     process.exit(0)
-  } else {
+  } else if (!runContentGeneration && parseInt(a) + '' === a) {
+    // ignore, used by web.js and proxy.js both of them load this script
+	} else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
 }

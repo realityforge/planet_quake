@@ -192,6 +192,7 @@ var LibrarySysNet = {
         SYSN.downloadAlternates.push(baseUrl)
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
 				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
+          // TODO: make this more generalized and replace first directory after /base
           var newKey = k.toLowerCase().replace(new RegExp(origMod + '(-cc?r?)?\/', 'ig'), mod + '/')
           if(typeof obj[newKey] == 'undefined') {
             obj[newKey] = moreIndex[k]

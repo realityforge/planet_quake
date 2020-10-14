@@ -1907,6 +1907,7 @@ static void CL_SendPureChecksums( void ) {
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
 	strcpy( cMsg + len, FS_ReferencedPakPureChecksums( sizeof( cMsg ) - len - 1 ) );
 
+Com_Printf( "CL_SendPureChecksums: %s\n", cMsg);
 	CL_AddReliableCommand( cMsg, qfalse );
 }
 
@@ -3199,9 +3200,11 @@ static void CL_CheckTimeout( void ) {
 			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
+#ifdef EMSCRIPTEN
 			if(!FS_Initialized()) {
 				Com_Frame_Callback(Sys_FS_Shutdown, CL_CheckTimeout_After_Shutdown);
 			}
+#endif
 			return;
 		}
 	} else {

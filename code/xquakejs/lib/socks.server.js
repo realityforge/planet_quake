@@ -5,58 +5,74 @@ var util = require('util')
 var Parser = require('./socks.parser')
 var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
-var WebSocketServer = require('ws').Server;
-const http = require('http');
-var Huffman = require('../lib/huffman.js')
+var WebSocketServer = require('ws').Server
+const http = require('http')
 
+var svc_strings = [
+	"svc_bad",
+	"svc_nop",
+	"svc_gamestate",
+	"svc_configstring",
+	"svc_baseline",	
+	"svc_serverCommand",
+	"svc_download",
+	"svc_snapshot",
+	"svc_EOF",
+	"svc_voipSpeex", // ioq3 extension
+	"svc_voipOpus",  // ioq3 extension
+	null, // 11
+	null, // 12
+	null, // 13
+	null, // 14
+	null, // 15
+	"svc_multiview",  // 1.32e multiview extension
+	"svc_zcmd",       // LZ-compressed version of svc_serverCommand
+]
+
+var MAX_STRING_CHARS = 8192
 var MAX_PACKETLEN = 1400
 var buffer
 
-Huffman.onRuntimeInitialized = () => {
-    Huffman['_MSG_initHuffman']()
-    buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', Huffman.ALLOC_NORMAL)
-}
-
 /*
 typedef struct {
-	qboolean	allowoverflow;	// if false, do a Com_Error
-	qboolean	overflowed;		// set to true if the buffer size failed (with allowoverflow set)
-	qboolean	oob;			// raw out-of-band operation, no static huffman encoding/decoding
-	byte	*data;
-	int		maxsize;
-	int		maxbits;			// maxsize in bits, for overflow checks
-	int		cursize;
-	int		readcount;
-	int		bit;				// for bitwise reads and writes
-} msg_t;
+	qboolean	allowoverflow	// if false, do a Com_Error
+	qboolean	overflowed		// set to true if the buffer size failed (with allowoverflow set)
+	qboolean	oob			// raw out-of-band operation, no static huffman encoding/decoding
+	byte	*data
+	int		maxsize
+	int		maxbits			// maxsize in bits, for overflow checks
+	int		cursize
+	int		readcount
+	int		bit				// for bitwise reads and writes
+} msg_t
 */
 
 function readBits(m, offset, bits = 8) {
-    var value = 0
-    var nbits = bits & 7
-    var sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
-    var bitIndex = offset
-    m.forEach((c,i) => Huffman.HEAP8[buffer+i] = c)
-    if ( nbits )
-    {
-        for ( i = 0; i < nbits; i++ ) {
-            value |= Huffman._HuffmanGetBit( buffer, bitIndex ) << i
-            bitIndex++
-        }
-        bits -= nbits
+  var value = 0
+  var nbits = bits & 7
+  var sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
+  var bitIndex = offset
+  m.forEach((c,i) => Huffman.HEAP8[buffer+i] = c)
+  if ( nbits )
+  {
+    for ( i = 0; i < nbits; i++ ) {
+      value |= Huffman._HuffmanGetBit( buffer, bitIndex ) << i
+      bitIndex++
     }
-    if ( bits )
+    bits -= nbits
+  }
+  if ( bits )
+  {
+    for ( i = 0; i < bits; i += 8 )
     {
-        for ( i = 0; i < bits; i += 8 )
-        {
-            bitIndex += Huffman._HuffmanGetSymbol( sym, buffer, bitIndex )
-            value |= ( Huffman.getValue(sym) << (i+nbits) )
-        }
+      bitIndex += Huffman._HuffmanGetSymbol( sym, buffer, bitIndex )
+      value |= ( Huffman.getValue(sym) << (i+nbits) )
     }
-    return [bitIndex, value]
+  }
+  return [bitIndex, value]
 }
 
-var UDP_TIMEOUT = 330 * 1000 // clear stale listeners so we don't run out of ports,
+var UDP_TIMEOUT = 10 * 1000 // 330 * 1000 // clear stale listeners so we don't run out of ports,
   // must be longer than any typical client timeout, maybe the map takes too long to load?
   // longer than server HEARTBEAT_MSEC
 var ATYP = {
@@ -109,18 +125,33 @@ function Server(opts) {
   }, 100)
 }
 
+Server.prototype._onErrorNoop = function(err) {
+  if(!(err.code && err.code.includes('EADDRINUSE')))
+    console.log(err)
+}
+
+process.on('uncaughtException', Server.prototype._onErrorNoop)
+process.on('unhandledRejection', Server.prototype._onErrorNoop)
+
+var Huffman = require('../lib/huffman.js')
+Huffman.onRuntimeInitialized = () => {
+  Huffman['_MSG_initHuffman']()
+  buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', 1)
+  process.on('uncaughtException', Server.prototype._onErrorNoop)
+	process.on('unhandledRejection', Server.prototype._onErrorNoop)
+
+}
+
 Server.prototype._onClose = function (socket, onData) {
   console.error('Closing ', socket._socket.remoteAddress, ':', socket._socket.remotePort)
   socket.off('data', onData)
   socket.off('message', onData)
-  /*
   if (socket.dstSock) {
     if(typeof socket.dstSock.end == 'function')
       socket.dstSock.end()
     else if(typeof socket.dstSock.close == 'function')
       socket.dstSock.close()
   }
-  */
   socket.dstSock = undefined
   if(socket._socket.writable) {
     socket.on('data', onData)
@@ -151,10 +182,10 @@ Server.prototype._onRequest = async function(socket, onData, reqInfo) {
   reqInfo.srcPort = socket._socket.remotePort
   var intercept = false // TODO: use this for something cool
   if (intercept && !reqInfo.dstAddr.includes('0.0.0.0')) {
-    socket.send(BUF_REP_INTR_SUCCESS, { binary: true });
-    socket.removeListener('error', this._onErrorNoop);
+    socket.send(BUF_REP_INTR_SUCCESS, { binary: true })
+    socket.removeListener('error', this._onErrorNoop)
     process.nextTick(function() {
-      var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date());
+      var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date())
       socket.send([
         'HTTP/1.1 200 OK',
         'Connection: close',
@@ -162,11 +193,11 @@ Server.prototype._onRequest = async function(socket, onData, reqInfo) {
         'Content-Length: ' + Buffer.byteLength(body),
         '',
         body
-      ].join('\r\n'));
-    });
-    return socket;
+      ].join('\r\n'))
+    })
+    return socket
   } else {
-    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
     await this.proxySocket.apply(this, [socket, reqInfo])
   }
 }
@@ -208,15 +239,39 @@ function SwapShort(read, message) {
   return (message[(read>>3)+1] << 8) + message[(read>>3)]
 }
 
+function ReadString(read, message) {
+  var result = ''
+  do {
+    read = readBits( message, read[0], 8 ) // use ReadByte so -1 is out of bounds
+    var c = read[1]
+    if ( c <= 0 /*c == -1 || c == 0 */ || result.length >= MAX_STRING_CHARS-1 ) {
+      break
+    }
+    // translate all fmt spec to avoid crash bugs
+    if ( c == '%' ) {
+      c = '.'
+    } else
+    // don't allow higher ascii values
+    if ( c > 127 ) {
+      c = '.'
+    }
+    result += String.fromCharCode(c)
+  } while ( true )
+  return [read[0], result]
+}
+
 function SHOWNET(message, socket, client) {
   var unzipped
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
-    unzipped = Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
-    if(unzipped.match(/connectResponse/ig)) {
-      socket.challenge = parseInt(unzipped.substr(20))
+    var msg = Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
+		unzipped = [client ? 'client' : 'server', msg]
+    if(msg.match(/connectResponse/ig)) {
+      socket.challenge = parseInt(msg.substr(20))
       socket.compat = false
       socket.incomingSequence = 0
+    } else if(msg.match(/connect/ig)) {
+      //Huffman._Huffman_Decode( message, 20 * 8 )
     }
   } else {
     //console.log(Array.from(message))
@@ -245,20 +300,49 @@ function SHOWNET(message, socket, client) {
       read += 16
     }
     if ( sequence <= socket.incomingSequence ) {
-      return false
+      // TODO: implement fragment and only return on final message
+      //return false
     }
-    socket.dropped = sequence - (socket.incomingSequence+1);
+    socket.dropped = sequence - (socket.incomingSequence+1)
     if(fragment) {
       
     }
-    socket.incomingSequence = sequence;
-    console.log(message.slice(read>>3))
+    socket.incomingSequence = sequence
+    //console.log(message.slice(read>>3))
     // finished parsing header
     read = readBits(message, read, 32)
     var ack = read[1]
-    
-    unzipped = [client ? 'client' : 'server', sequence, fragment, ack]
-    
+    read = readBits(message, read[0], 8)
+    var cmd = read[1]
+    if(cmd === 2 || cmd === 5) {
+      read = readBits(message, read[0], 32)
+      var seq = read[1]
+    }
+    switch(cmd) {
+      case 2:
+        /*
+        while(true) {
+          read = readBits(message, read[0], 8)
+          switch(read[1]) {
+            case 3:
+              read = readBits(message, read[0], 16)
+              read = ReadString(read, message)
+            break
+            case 4:
+            break
+            case 8:
+            break
+          }
+          if(read[1] === 8 || read[1] === 0) break
+        }
+        */
+      break
+      case 5:
+        read = ReadString(read, message)
+      break
+    }
+    unzipped = [client ? 'client' : 'server', read[1]]
+    //unzipped = [client ? 'client' : 'server', sequence, fragment, fragmentStart, fragmentLength, cmd, svc_strings[cmd]]
   }
   console.log(unzipped)
 }
@@ -289,17 +373,18 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
     for (var i = 0, p = 4; i < localbytes.length; ++i, ++p) {
       bufrep[p] = localbytes[i]
     }
-    bufrep.writeUInt16BE(rinfo.port, 8, true)
+    bufrep.writeUInt16LE(rinfo.port, 8, true)
   } else {
     var domainBuf = Buffer.from(domain)
     bufrep[3] = 0x03
     bufrep[4] = domain.length+1
     domainBuf.copy(bufrep, 5)
-    bufrep.writeUInt16BE(rinfo.port, 5 + bufrep[4], true)
+    bufrep.writeUInt16LE(rinfo.port, 5 + bufrep[4], true)
   }
   SHOWNET(message, socket, true)
-  //console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
+  console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
+	self._timeouts[udpLookupPort] = Date.now()
 }
 
 Server.prototype._timeoutUDP = function(udpLookupPort) {
@@ -366,13 +451,6 @@ Server.prototype.useAuth = function(auth) {
   return this
 }
 
-Server.prototype._onErrorNoop = function(err) {
-  if(!err.code.includes('EADDRINUSE'))
-    console.log(err)
-}
-
-process.on('uncaughtException', Server.prototype._onErrorNoop)
-
 Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
   var self = this
   var socket = self._receivers[udpLookupPort]
@@ -389,7 +467,7 @@ Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
   bufrep[3] = (ipv6.kind() == 'ipv4' ? ATYP.IPv4 : ATYP.IPv6)
   for (var i = 0, p = 4; i < localbytes.length; ++i, ++p)
     bufrep[p] = localbytes[i]
-  bufrep.writeUInt16BE(socket._socket.localPort, p, true)
+  bufrep.writeUInt16LE(socket._socket.localPort, p, true)
   socket.send(bufrep, { binary: true })
 
   // do some new piping for the socket
@@ -398,7 +476,7 @@ Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
     socket._socket.pipe(socket.dstSock)
     socket.dstSock.pipe(socket._socket)
   } else {
-    console.log('Starting messages ' + ipv6.kind())
+    console.log('Starting messages ' + ipv6.kind(), socket._socket.localPort)
     socket.send(bufrep, { binary: true })
   }
 }
@@ -473,7 +551,7 @@ Server.prototype.websockify = async function (reqInfo) {
     }))
       .on('error', this._onErrorNoop)
       .on('close', () => delete self._directConnects[remoteAddr])
-    self._directConnects[remoteAddr] = ws;
+    self._directConnects[remoteAddr] = ws
   })
   self._listeners[reqInfo.dstPort].on('close', () => {
     wss.close()
@@ -606,6 +684,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
           .filter(k => self._listeners[k] === socket.dstSock)[0]
           || reqInfo.srcPort
         self._timeouts[port] = Date.now()
+				SHOWNET(reqInfo.data, socket, true)
         socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
       } else {
         // this is a TCP ip connection with no prior bindings?
@@ -636,7 +715,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       socket.close()
     }
   } catch (err) {
-    if(err.code.includes('ERR_SOCKET_DGRAM_NOT_RUNNING')) {
+    if(err.code && err.code.includes('ERR_SOCKET_DGRAM_NOT_RUNNING')) {
       socket.close()
     } else
       console.log('Request error:', err)

@@ -55,19 +55,21 @@ for(var i = 0; i < process.argv.length; i++) {
 
 var socks = new Server({slaves}) // TODO: add password authentication
 
-// redirect http attempts to loading page
-/*
-const server = createServer(function(socket) {
-	try {
-		socks._onConnection(socket)
-	} catch (e) {
-		console.log(e)
-	}
-})
-server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))
-*/
+if(ports.includes(1080)) {
+  // redirect http attempts to loading page
+  const server = createServer(function(socket) {
+  	try {
+  		socks._onConnection(socket)
+  	} catch (e) {
+  		console.log(e)
+  	}
+  })
+  server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))
+}
+
 var index
 ports.forEach((p, i, ports) => {
+  if(ports[i] === 1080) return
   var httpServer = http.createServer(function(req, res) {
     var indexPath = path.join(__dirname, 'index.html')
     if(index || fs.existsSync(indexPath)) {

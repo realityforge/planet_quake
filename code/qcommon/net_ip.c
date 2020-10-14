@@ -139,6 +139,8 @@ static struct sockaddr_in socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
 #ifdef EMSCRIPTEN
+// maybe on desktop we have the luxury of maintaining separate connections
+//  but the web browser is limit to 3 per thread
 #define socks_socket ip_socket
 #else
 static SOCKET	socks_socket = INVALID_SOCKET;
@@ -659,7 +661,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
           net_message->readcount = 5 + net_message->data[4] + 2;
           NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
         }
-				net_from->port = *(short *)&net_message->data[net_message->readcount - 2];
+				net_from->port = htons( *(short *)&net_message->data[net_message->readcount - 2] );
 			}
 			else {
         net_from->type = NA_BAD;
@@ -798,13 +800,7 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
-//#ifdef EMSCRIPTEN
-    // maybe on desktop we have the luxury of maintaining separate connections
-    //  but the web browser is limit to 3 per thread
-//    ret = sendto( socks_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
-//#else
     ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
-//#endif
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -1470,12 +1466,17 @@ void NET_OpenSocks_After_Listen( void ) {
   socksRelayAddr.sin_port = htons( (short)net_socksPort->integer );
 #else
 	socksRelayAddr.sin_addr.s_addr = *(int *)&buf[4];
-	socksRelayAddr.sin_port = *(short *)&buf[8];
+	socksRelayAddr.sin_port = htons( *(short *)&buf[8] );
 #endif
 	memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
 
+  Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%i\n",
+    socksRelayAddr.sin_addr.s_addr & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 8 & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 16 & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 24 & 0xFF,
+    socksRelayAddr.sin_port);
 #ifdef EMSCRIPTEN
-  Com_Printf( "NET_OpenSocks: SOCKS relay configured.\n" );
   Cvar_Set("net_socksLoading", "0");
 #endif
 	usingSocks = qtrue;

@@ -50,12 +50,13 @@ Some of the major features currently implemented are:
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
+  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parents computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parents computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens, remove -cc/-ccr specialities in client by managing the index better in the proxy/web server and index.json files
   * Use com_journal instead of index.json (or manifest.json in quakejs), fix fucking emscripten duplicating files in symbolic links
-  * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads
+  * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Multiple QVM loader, multiple map loader in parallel with teleport switch, compile QVMs in native mode (wasm) and load with Webassembly asynchronously
   * Multi-view, instant replay
@@ -63,7 +64,7 @@ Coming soon!
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
   * Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
-  * Huffman decoding for proxy, Man-In-The-Middle always on twitch.tv streaming at no expense to the game server
+  * Always on twitch.tv streaming at no expense to the game server
   * Shader palettes for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
