@@ -7,6 +7,54 @@ var ip6addr = require('ip6addr')
 var WebSocket = require('ws')
 var WebSocketServer = require('ws').Server;
 const http = require('http');
+var Huffman = require('../lib/huffman.js')
+
+var MAX_PACKETLEN = 1400
+var buffer
+
+Huffman.onRuntimeInitialized = () => {
+    Huffman['_MSG_initHuffman']()
+    buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', Huffman.ALLOC_NORMAL)
+}
+
+/*
+typedef struct {
+	qboolean	allowoverflow;	// if false, do a Com_Error
+	qboolean	overflowed;		// set to true if the buffer size failed (with allowoverflow set)
+	qboolean	oob;			// raw out-of-band operation, no static huffman encoding/decoding
+	byte	*data;
+	int		maxsize;
+	int		maxbits;			// maxsize in bits, for overflow checks
+	int		cursize;
+	int		readcount;
+	int		bit;				// for bitwise reads and writes
+} msg_t;
+*/
+
+function readBits(m, offset, bits = 8) {
+    var value = 0
+    var nbits = bits & 7
+    var sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
+    var bitIndex = offset
+    m.forEach((c,i) => Huffman.HEAP8[buffer+i] = c)
+    if ( nbits )
+    {
+        for ( i = 0; i < nbits; i++ ) {
+            value |= Huffman._HuffmanGetBit( buffer, bitIndex ) << i
+            bitIndex++
+        }
+        bits -= nbits
+    }
+    if ( bits )
+    {
+        for ( i = 0; i < bits; i += 8 )
+        {
+            bitIndex += Huffman._HuffmanGetSymbol( sym, buffer, bitIndex )
+            value |= ( Huffman.getValue(sym) << (i+nbits) )
+        }
+    }
+    return [bitIndex, value]
+}
 
 var UDP_TIMEOUT = 330 * 1000 // clear stale listeners so we don't run out of ports,
   // must be longer than any typical client timeout, maybe the map takes too long to load?
@@ -118,7 +166,7 @@ Server.prototype._onRequest = async function(socket, onData, reqInfo) {
     });
     return socket;
   } else {
-    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
     await this.proxySocket.apply(this, [socket, reqInfo])
   }
 }
@@ -139,7 +187,83 @@ Server.prototype.lookupDNS = async function (address) {
   }))
 }
 
-Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
+function NETCHAN_GENCHECKSUM(challenge, sequence) {
+  return (challenge) ^ ((sequence) * (challenge))
+}
+
+function SV_ConnectionlessPacket() {
+  
+}
+
+function Netchan_Process() {
+  
+}
+
+function SwapLong(read, message) {
+  return (message[(read>>3)+3] << 24) + (message[(read>>3)+2] << 16)
+    + (message[(read>>3)+1] << 8) + message[(read>>3)]
+}
+
+function SwapShort(read, message) {
+  return (message[(read>>3)+1] << 8) + message[(read>>3)]
+}
+
+function SHOWNET(message, socket, client) {
+  var unzipped
+  if(message[0] === 255 && message[1] === 255
+    && message[2] === 255 && message[3] === 255) {
+    unzipped = Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
+    if(unzipped.match(/connectResponse/ig)) {
+      socket.challenge = parseInt(unzipped.substr(20))
+      socket.compat = false
+      socket.incomingSequence = 0
+    }
+  } else {
+    //console.log(Array.from(message))
+    var read = 0
+    var sequence = SwapLong(read, message)
+    read += 32
+    var fragment = (sequence >>> 31) === 1
+    if(fragment) {
+      sequence &= ~(1 << 31)
+    }
+    if(!client) {
+      read += 16
+    }
+    var valid = false
+    if(!socket.compat) {
+      var checksum = SwapLong(read, message)
+      read += 32
+      valid = NETCHAN_GENCHECKSUM(socket.challenge, sequence) === checksum
+    }
+    var fragmentStart = 0
+    var fragmentLength = 0
+    if(fragment) {
+      fragmentStart = SwapShort(read, message)
+      read += 16
+      fragmentLength = SwapShort(read, message)
+      read += 16
+    }
+    if ( sequence <= socket.incomingSequence ) {
+      return false
+    }
+    socket.dropped = sequence - (socket.incomingSequence+1);
+    if(fragment) {
+      
+    }
+    socket.incomingSequence = sequence;
+    console.log(message.slice(read>>3))
+    // finished parsing header
+    read = readBits(message, read, 32)
+    var ack = read[1]
+    
+    unzipped = [client ? 'client' : 'server', sequence, fragment, ack]
+    
+  }
+  console.log(unzipped)
+}
+
+Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, rinfo) {
   var self = this
   var socket = self._receivers[udpLookupPort]
   // is this valid SOCKS5 for UDP?
@@ -151,6 +275,9 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
   }
   var domain = Object.keys(this._dnsLookup)
     .filter(n => this._dnsLookup[n] == rinfo.address)[0]
+  if(domain && isWebSocket) {
+    domain = 'ws://' + domain
+  }
   var bufrep = returnIP || !domain
     ? Buffer.alloc(4 + localbytes.length + 2 /* port */)
     : Buffer.alloc(4 + 1 /* for strlen */ + domain.length + 1 /* \0 null */ + 2)
@@ -158,7 +285,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
   bufrep[1] = 0x00
   bufrep[2] = 0x00
   if(returnIP || !domain) {
-    bufrep[3] = 0x01
+    bufrep[3] = isWebSocket ? 0x04 : 0x01
     for (var i = 0, p = 4; i < localbytes.length; ++i, ++p) {
       bufrep[p] = localbytes[i]
     }
@@ -170,6 +297,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, message, rinfo) {
     domainBuf.copy(bufrep, 5)
     bufrep.writeUInt16BE(rinfo.port, 5 + bufrep[4], true)
   }
+  SHOWNET(message, socket, true)
   //console.log('UDP message from', rinfo.address, ' -> ', udpLookupPort)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
 }
@@ -301,7 +429,7 @@ Server.prototype._onProxyError = function(udpLookupPort, err) {
 
 Server.prototype.tryBindPort = async function(reqInfo) {
   var self = this
-  var onUDPMessage = this._onUDPMessage.bind(self, reqInfo.dstPort)
+  var onUDPMessage = this._onUDPMessage.bind(self, reqInfo.dstPort, false /* not websocket */)
   for(var i = 0; i < 10; i++) {
     try {
       var fail = false
@@ -331,7 +459,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
 
 Server.prototype.websockify = async function (reqInfo) {
   var self = this
-  var onUDPMessage = self._onUDPMessage.bind(self, reqInfo.dstPort)
+  var onUDPMessage = self._onUDPMessage.bind(self, reqInfo.dstPort, true)
   var onError = this._onProxyError.bind(this, reqInfo.dstPort)
   var httpServer = http.createServer()
   var wss = new WebSocketServer({server: httpServer})
@@ -497,9 +625,10 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         .filter(k => self._receivers[k] === socket)[0]
         || reqInfo.srcPort
       self._receivers[port] = socket
+      SHOWNET(reqInfo.data, socket, false)
       await self.websocketRequest(
         self._onProxyError.bind(self, port),
-        self._onUDPMessage.bind(self, port),
+        self._onUDPMessage.bind(self, port, true),
         reqInfo, dstIP)
     } else {
       console.error('command unsupported')

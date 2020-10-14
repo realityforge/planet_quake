@@ -647,13 +647,14 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 				}
 				net_from->type = NA_IP;
         net_message->readcount = 4; // including type below
-        if(net_message->data[3] == 1) {
+        if(net_message->data[3] == 1 || net_message->data[3] == 4) {
   				net_from->ipv._4[0] = net_message->data[4];
   				net_from->ipv._4[1] = net_message->data[5];
   				net_from->ipv._4[2] = net_message->data[6];
   				net_from->ipv._4[3] = net_message->data[7];
           net_message->readcount = 4 + 4 + 2;
           Q_strncpyz(net_from->name, NET_AdrToString(net_from), sizeof(net_from->name));
+          Q_strncpyz(net_from->protocol, "ws", 3);
         } else if (net_message->data[3] == 3) {
           net_message->readcount = 5 + net_message->data[4] + 2;
           NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
@@ -791,7 +792,7 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
       socksBuf[1] = 4; // special connect command indicating web sockets
     }
     if(to->name[0] == '\0') {
-      Q_strncpyz(to->name, NET_AdrToString(to), sizeof(to->name));
+      Q_strncpyz((char *)to->name, NET_AdrToString(to), sizeof(to->name));
     }
     socksBuf[4] = strlen(to->name) + 1;
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
@@ -1228,9 +1229,11 @@ int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
 	struct hostent		*h;
+#ifndef EMSCRIPTEN
 	int					len;
 	qboolean			rfc1929;
 	unsigned char		buf[64];
+#endif
 
 	usingSocks = qfalse;
 #ifdef EMSCRIPTEN

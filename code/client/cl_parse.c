@@ -775,7 +775,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	
 #ifdef USE_LNBITS
 	Cvar_Set("cl_lnInvoice", "");
-	cls.qrCodeShader = NULL;
+	cls.qrCodeShader = 0;
 #endif
 
 	// parse serverId and other cvars
@@ -999,6 +999,22 @@ static void CL_ParseDownload( msg_t *msg ) {
 }
 
 
+#ifdef EMSCRIPTEN
+static void CL_ParseCommand_After_Startup ( void ) {
+	FS_Restart_After_Async();
+	CL_FlushMemory();
+	if ( uivm ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	}
+}
+
+static void CL_ParseCommand_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, CL_ParseCommand_After_Startup);
+}
+#endif
+
+
 /*
 =====================
 CL_ParseCommandString
@@ -1038,7 +1054,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 #endif
 	// -EC- : we may stuck on downloading because of non-working cgvm
 	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state == CA_PRIMED ) ) {
+	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state <= CA_PRIMED ) ) {
 		const char *text;
 		Cmd_TokenizeString( s );
 		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {
@@ -1047,6 +1063,11 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			Com_Printf( "%s\n", text );
 			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
+#ifdef EMSCRIPTEN
+				if(!FS_Initialized()) {
+					Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseCommand_After_Shutdown);
+				}
+#endif
 			}
 			return;
 		}

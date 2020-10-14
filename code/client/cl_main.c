@@ -1348,7 +1348,10 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	// not connected to a pure server anymore
 	cl_connectedToPureServer = 0;
 
-	CL_UpdateGUID( NULL, 0 );
+#ifdef EMSCRIPTEN
+	if(FS_Initialized())
+		CL_UpdateGUID( NULL, 0 );
+#endif
 
 	// Cmd_RemoveCommand( "callvote" );
 	Cmd_RemoveCgameCommands();
@@ -3161,6 +3164,8 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 #ifdef EMSCRIPTEN
 static void CL_CheckTimeout_After_Startup ( void ) {
 	FS_Restart_After_Async();
+	CL_UpdateGUID( NULL, 0 );
+	CL_FlushMemory();
 	if ( uivm ) {
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}

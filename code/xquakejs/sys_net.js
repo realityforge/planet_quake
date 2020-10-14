@@ -238,7 +238,8 @@ var LibrarySysNet = {
     var mod = cl_downloadName.replace(/^\//ig, '').split(/\//ig)[0]
     SYSN.buildAlternateUrls(mod)
     SYSN.buildAlternateUrls(SYSF.fs_basegame)
-    SYSN.buildAlternateUrls(SYSF.fs_game)
+    if(SYSF.fs_game.length > 0)
+      SYSN.buildAlternateUrls(SYSF.fs_game)
     FS.syncfs(false, function (e) {
       if(e) console.log(e)
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
