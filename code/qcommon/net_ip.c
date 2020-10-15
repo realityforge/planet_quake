@@ -623,10 +623,15 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	socklen_t	fromlen;
 	int		err;
 
-	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
+	if((ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
+    || (usingSocks && socks_socket != INVALID_SOCKET && FD_ISSET(socks_socket, fdr)))
 	{
 		fromlen = sizeof(from);
-    ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+    if(usingSocks && socks_socket != INVALID_SOCKET && FD_ISSET(socks_socket, fdr)) {
+      ret = recvfrom( socks_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+    } else {
+      ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+    }
 		if (ret == SOCKET_ERROR)
 		{
 			err = socketError;
@@ -634,7 +639,10 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 			if( err != EAGAIN && err != ECONNRESET ) {
         char * err = NET_ErrorString();
         if(Q_stristr(err, "Socket not connected")) {
+          // turn off socket so we arent sleeping to receive a message from broken socket
           socks_socket = INVALID_SOCKET;
+          // TODO: reconnect with keepAlive message every second,
+          //   rebind same port like in sys_net.js
         }
 				Com_Printf( "NET_GetPacket: %s\n", NET_ErrorString() );
       }
@@ -800,7 +808,7 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
-    ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
+    ret = sendto( socks_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -1466,9 +1474,18 @@ void NET_OpenSocks_After_Listen( void ) {
   socksRelayAddr.sin_port = htons( (short)net_socksPort->integer );
 #else
 	socksRelayAddr.sin_addr.s_addr = *(int *)&buf[4];
-	socksRelayAddr.sin_port = htons( *(short *)&buf[8] );
+	socksRelayAddr.sin_port = *(short *)&buf[8]; // no htons because it only uses 2 bytes instead of 4?
 #endif
 	memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
+
+#ifndef EMSCRIPTEN
+  {
+    ioctlarg_t			_true = 1;
+    if( ioctlsocket( socks_socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+  		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
+    }
+  }
+#endif
 
   Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%i\n",
     socksRelayAddr.sin_addr.s_addr & 0xFF,
@@ -1671,7 +1688,7 @@ static void NET_OpenIP( void ) {
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
 #ifdef EMSCRIPTEN
-        else
+        else // for blocking Com_Frame until net is setup
           Cvar_Set("net_socksLoading", "0");
 #endif
 
@@ -2046,7 +2063,17 @@ qboolean NET_Sleep( int timeout )
 	if ( retval > 0 ) {
 		NET_Event( &fdr );
 		return qfalse;
-	}
+	} else if (usingSocks && socks_socket != INVALID_SOCKET) {
+    // alternate between the two sockets
+    FD_SET( socks_socket, &fdr );
+
+    retval = select( socks_socket + 1, &fdr, NULL, NULL, &tv );
+    
+    if ( retval > 0 ) {
+  		NET_Event( &fdr );
+  		return qfalse;
+  	}
+  }
 
 	if ( retval == SOCKET_ERROR ) {
 #ifndef _WIN32

@@ -275,6 +275,10 @@ NET
 */
 #ifndef EMSCRIPTEN
 #define USE_IPV6
+#else
+#ifdef USE_IPV6
+#undef USE_IPV6
+#endif
 #endif
 
 #define NET_ENABLEV4            0x01

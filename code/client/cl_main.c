@@ -3357,6 +3357,9 @@ void CL_Frame( int msec ) {
 		}
 	}
 	
+	// TODO: from WASP.sk, only load when a warmup or a dead state is detected
+	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
+	//   cl_lazyLoad 3 is force lazy loading everytime
 	if(cl_lazyLoad->integer > 0) {
 		if((uivm || cgvm) && secondTimer > 20) {
 			secondTimer = 0;

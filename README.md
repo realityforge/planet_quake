@@ -54,8 +54,8 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parents computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens, remove -cc/-ccr specialities in client by managing the index better in the proxy/web server and index.json files
-  * Use com_journal instead of index.json (or manifest.json in quakejs), fix fucking emscripten duplicating files in symbolic links
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parents computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens, remove -cc/-ccr specialities in client by managing the index better in the proxy/web server and index.json files, cl_lazyLoad 2 and 3 for only loading during downtimes, fix socks server inbound connections for reading websocket traffic from proxy server and native, add websockets to native dedicated server instead of relying on proxy
+  * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Multiple QVM loader, multiple map loader in parallel with teleport switch, compile QVMs in native mode (wasm) and load with Webassembly asynchronously

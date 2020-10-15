@@ -8,6 +8,7 @@ var serveStatic = require('../lib/serve-static.js')
 var {Server} = require('../lib/socks.server.js')
 var WebSocketServer = require('ws').Server
 var http = require('http')
+var {createServer} = require('net')
 
 
 var ports = [8080, 1081]
@@ -87,7 +88,20 @@ app.use(serveStatic(path.join(__dirname), {
 }))
 app.use(serveUnionFs)
 
+if(ports.includes(1080)) {
+  // redirect http attempts to loading page
+  const server = createServer(function(socket) {
+  	try {
+  		socks._onConnection(socket)
+  	} catch (e) {
+  		console.log(e)
+  	}
+  })
+  server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))
+}
+
 ports.forEach((p, i, ports) => {
+  if(ports[i] === 1080) return
   var httpServer = http.createServer(app)
   var wss = new WebSocketServer({server: httpServer})
   wss.on('connection', function(ws) {
