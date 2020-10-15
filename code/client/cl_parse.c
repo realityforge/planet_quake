@@ -581,6 +581,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		s = Info_ValueForKey( systemInfo, "sv_paks" );
 		t = Info_ValueForKey( systemInfo, "sv_pakNames" );
 		FS_PureServerSetLoadedPaks( s, t );
+Com_Printf("Checksum feed: %i\n", clc.checksumFeed);
 Com_Printf("Paks: %s\n\nNames: %s\n\n", s, t);
 
 		s = Info_ValueForKey( systemInfo, "sv_referencedPaks" );

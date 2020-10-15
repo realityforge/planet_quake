@@ -1485,6 +1485,7 @@ static int FS_OpenFileInPak( fileHandle_t *file, pack_t *pak, fileInPack_t *pakF
 		pak->referenced |= FS_CGAME_REF;
 	}
 	if ( !( pak->referenced & FS_UI_REF ) && !strcmp( pakFile->name, "vm/ui.qvm" ) ) {
+Com_Printf("FS_OpenFileInPak: UI\n");
 		pak->referenced |= FS_UI_REF;
 	}
 
@@ -5155,6 +5156,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	s = info;
 	*s = '\0';
 
+Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 	checksum = fs_checksumFeed;
 	numPaks = 0;
 	for ( nFlags = FS_CGAME_REF; nFlags; nFlags = nFlags >> 1 ) {
@@ -5171,6 +5173,10 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 				if ( s > max ) // client-side overflow
 					break;
 				if ( nFlags & (FS_CGAME_REF | FS_UI_REF) ) {
+if(nFlags & FS_CGAME_REF)
+Com_Printf( "Found cgame\n" );
+if(nFlags & FS_UI_REF)
+Com_Printf( "Found ui\n" );
 					break;
 				}
 				checksum ^= search->pack->pure_checksum;

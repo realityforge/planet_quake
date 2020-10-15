@@ -197,7 +197,7 @@ Server.prototype._onRequest = async function(socket, onData, reqInfo) {
     })
     return socket
   } else {
-    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
     await this.proxySocket.apply(this, [socket, reqInfo])
   }
 }
@@ -261,6 +261,7 @@ function ReadString(read, message) {
 }
 
 function SHOWNET(message, socket, client) {
+	return
   var unzipped
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
@@ -382,7 +383,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
     bufrep.writeUInt16LE(rinfo.port, 5 + bufrep[4], true)
   }
   SHOWNET(message, socket, true)
-  console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort)
+  //console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
 	self._timeouts[udpLookupPort] = Date.now()
 }

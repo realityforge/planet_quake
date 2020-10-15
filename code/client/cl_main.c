@@ -1907,6 +1907,7 @@ static void CL_SendPureChecksums( void ) {
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
 	strcpy( cMsg + len, FS_ReferencedPakPureChecksums( sizeof( cMsg ) - len - 1 ) );
 
+Com_Printf("Checksum feed: %i\n", clc.checksumFeed);
 Com_Printf( "CL_SendPureChecksums: %s\n", cMsg);
 	CL_AddReliableCommand( cMsg, qfalse );
 }
@@ -3606,6 +3607,14 @@ void CL_StartHunkUsers( void ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI();
 	}
+
+#ifdef EMSCRIPTEN
+	// because restarting VMs is not done, especially when file system doesnt change
+	//   but resetting which Paks are used is cleared in parse gamestate
+	//   also the server does this
+	FS_TouchFileInPak( "vm/cgame.qvm" );
+	FS_TouchFileInPak( "vm/ui.qvm" );
+#endif
 }
 
 

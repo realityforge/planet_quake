@@ -1855,6 +1855,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	const char *pArg;
 	qboolean bGood = qtrue;
 
+Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
 	// ui and cgame that we think should be loaded based on the pure setting
@@ -1878,6 +1879,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 		pArg = Cmd_Argv(nCurArg++);
 		if ( !*pArg ) {
 			bGood = qfalse;
+Com_DPrintf("VerifyPaks: No args at all\n");
 		}
 		else
 		{
@@ -1898,24 +1900,28 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			// numChecksums is encoded
 			if (nClientPaks < 6) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Not enough paks %i\n", nClientPaks);
 				break;
 			}
 			// verify first to be the cgame checksum
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum1 ) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: CGame doesn't match %s\n", pArg);
 				break;
 			}
 			// verify the second to be the ui checksum
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum2 ) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: UI doesn't match %s\n", pArg);
 				break;
 			}
 			// should be sitting at the delimeter now
 			pArg = Cmd_Argv(nCurArg++);
 			if (*pArg != '@') {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Delimiiter is off %s\n", pArg);
 				break;
 			}
 			// store checksums since tokenization is not re-entrant
@@ -1934,6 +1940,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 						continue;
 					if (nClientChkSum[i] == nClientChkSum[j]) {
 						bGood = qfalse;
+Com_DPrintf("VerifyPaks: Duplicate checksums: %i == %i\n", i, j);
 						break;
 					}
 				}
@@ -1947,6 +1954,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			for ( i = 0; i < nClientPaks; i++ ) {
 				if ( !FS_IsPureChecksum( nClientChkSum[i] ) ) {
 					bGood = qfalse;
+Com_DPrintf("VerifyPaks: Checksum doesn't exist: %i\n", nClientChkSum[i]);
 					break;
 				}
 			}
@@ -1962,6 +1970,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			nChkSum1 ^= nClientPaks;
 			if (nChkSum1 != nClientChkSum[nClientPaks]) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Number of checksums wrong: %i != %i\n", nChkSum1, nClientChkSum[nClientPaks]);
 				break;
 			}
 
