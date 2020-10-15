@@ -638,6 +638,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         || this._listeners[reqInfo.dstPort].readyState > 1) {
         await self.tryBindPort(reqInfo)
         this._listeners[reqInfo.dstPort].on('close', () => {
+					delete socket.dstSock
           socket.close()
         })
         // TODO: make command line option --no-ws to turn this off

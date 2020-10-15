@@ -1484,6 +1484,7 @@ void NET_OpenSocks_After_Listen( void ) {
     if( ioctlsocket( socks_socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
   		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
     }
+    ip_socket = socks_socket;
   }
 #endif
 
