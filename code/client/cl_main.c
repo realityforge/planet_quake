@@ -1605,6 +1605,19 @@ void CL_Disconnect_f( void ) {
 }
 
 
+#ifdef EMSCRIPTEN
+void CL_Reconnect_After_Startup( void ) {
+	FS_Restart_After_Async();
+	Cvar_Set( "ui_singlePlayerActive", "0" );
+	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
+}
+
+void CL_Reconnect_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, CL_Reconnect_After_Startup);
+}
+#endif
+
 /*
 ================
 CL_Reconnect_f
@@ -1613,7 +1626,13 @@ CL_Reconnect_f
 static void CL_Reconnect_f( void ) {
 	if ( cl_reconnectArgs[0] == '\0' )
 		return;
-	CL_Disconnect(qtrue, qtrue);
+	CL_Disconnect(qfalse, qtrue);
+#ifdef EMSCRIPTEN
+	if(!FS_Initialized()) {
+		Com_Frame_Callback(Sys_FS_Shutdown, CL_Reconnect_After_Shutdown);
+		return;
+	}
+#endif
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
 }
@@ -1902,6 +1921,14 @@ static void CL_SendPureChecksums( void ) {
 
 	if ( !cl_connectedToPureServer || clc.demoplaying )
 		return;
+
+#ifdef EMSCRIPTEN
+	// because restarting VMs is not done, especially when file system doesnt change
+	//   but resetting which Paks are used is cleared in parse gamestate
+	//   also the server does this
+	FS_TouchFileInPak( "vm/cgame.qvm" );
+	FS_TouchFileInPak( "vm/ui.qvm" );
+#endif
 
 	// if we are pure we need to send back a command with our referenced pk3 checksums
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
@@ -3607,14 +3634,6 @@ void CL_StartHunkUsers( void ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI();
 	}
-
-#ifdef EMSCRIPTEN
-	// because restarting VMs is not done, especially when file system doesnt change
-	//   but resetting which Paks are used is cleared in parse gamestate
-	//   also the server does this
-	FS_TouchFileInPak( "vm/cgame.qvm" );
-	FS_TouchFileInPak( "vm/ui.qvm" );
-#endif
 }
 
 
