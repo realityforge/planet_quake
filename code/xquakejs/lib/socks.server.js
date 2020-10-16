@@ -184,12 +184,13 @@ Server.prototype._onMethods = function(parser, socket, onData, methods) {
 }
 
 Server.prototype._onRequest = async function(socket, onData, reqInfo) {
+	var self = this
   reqInfo.srcAddr = socket._socket.remoteAddress
   reqInfo.srcPort = socket._socket.remotePort
   var intercept = false // TODO: use this for something cool
   if (intercept && !reqInfo.dstAddr.includes('0.0.0.0')) {
     socket.send(BUF_REP_INTR_SUCCESS, { binary: true })
-    socket.removeListener('error', this._onErrorNoop)
+    socket.removeListener('error', self._onErrorNoop)
     process.nextTick(function() {
       var body = 'Hello ' + reqInfo.srcAddr + '!\n\nToday is: ' + (new Date())
       socket.send([
@@ -448,7 +449,7 @@ Server.prototype._onConnection = function(socket) {
     .on('request', onRequest)
 
   socket.parser = parser
-  socket.on('error', this._onErrorNoop)
+  socket.on('error', self._onErrorNoop)
         .on('close', onClose)
 }
 
@@ -549,13 +550,13 @@ Server.prototype.tryBindPort = async function(reqInfo) {
   throw new Error('Failed to start UDP listener.')
 }
 
-Server.prototype.websockify = async function (reqInfo) {
+Server.prototype.websockify = async function (reqInfo, socket) {
   var self = this
   var onUDPMessage = self._onUDPMessage.bind(self, reqInfo.dstPort, true)
   var onError = this._onProxyError.bind(this, reqInfo.dstPort)
   var httpServer = http.createServer()
   var wss = new WebSocketServer({server: httpServer})
-  var port = self._listeners[reqInfo.dstPort].address().port
+  var port = socket.dstSock.address().port
   // socket was connected from outside websocket connection
   wss.on('connection', function(ws, req) {
     var remoteAddr = req.socket.remoteAddress+':'+req.socket.remotePort
@@ -563,7 +564,7 @@ Server.prototype.websockify = async function (reqInfo) {
     ws.on('message', (msg) => onUDPMessage(Buffer.from(msg), {
       address: req.socket.remoteAddress, port: req.socket.remotePort
     }))
-      .on('error', this._onErrorNoop)
+      .on('error', self._onErrorNoop)
       .on('close', () => delete self._directConnects[remoteAddr])
     self._directConnects[remoteAddr] = ws
   })
@@ -572,9 +573,9 @@ Server.prototype.websockify = async function (reqInfo) {
   })
   await new Promise(resolve => {
     try {
-      httpServer.on('error', this._onErrorNoop)
+      httpServer.on('error', self._onErrorNoop)
       httpServer.listen(port, reqInfo.dstAddr, resolve)
-        .on('error', this._onErrorNoop)
+        .on('error', self._onErrorNoop)
     } catch (e) {
       console.log(e.message)
     }
@@ -582,14 +583,22 @@ Server.prototype.websockify = async function (reqInfo) {
   })
 }
 
-Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqInfo, dstIP) {
+Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqInfo, dstIP, socket) {
   var self = this
   //var onConnect = this._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo)
   var remoteAddr = dstIP+':'+reqInfo.dstPort
   if(typeof self._directConnects[remoteAddr] == 'undefined'
     || self._directConnects[remoteAddr].readyState > 1) {
     console.log('Websocket (bound ' + reqInfo.dstPort + ') request ' + remoteAddr)
-    self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
+		if(socket.dstSock) {
+			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`, null, {
+				headers: {
+					'x-forwarded-port': socket.dstSock.address().port
+				}
+			})
+		} else {
+			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
+		}
     self._directConnects[remoteAddr]
       .on('message', (msg) => {
         self._directConnects[remoteAddr]
@@ -605,6 +614,12 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
         })
       })
       .on('close', () => delete self._directConnects[remoteAddr])
+		socket.on('close', () => {
+			if(typeof self._directConnects[remoteAddr] != 'undefined') {
+				self._directConnects[remoteAddr].close()
+				delete self._directConnects[remoteAddr]
+			}
+		})
     self._directConnects[remoteAddr]._pending = [
       reqInfo.data
     ]
@@ -641,8 +656,9 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
 					delete socket.dstSock
           socket.close()
         })
+				socket.dstSock = this._listeners[reqInfo.dstPort]
         // TODO: make command line option --no-ws to turn this off
-        await self.websockify(reqInfo)
+        await self.websockify(reqInfo, socket)
         onConnect()
       } else if (reqInfo.dstAddr) {
         onConnect()
@@ -650,7 +666,6 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       }
       console.log('Switching to UDP listener', reqInfo.dstPort)
       socket.binding = false
-      socket.dstSock = this._listeners[reqInfo.dstPort]
       //socket.dstSock.on('close', () => {
       //  socket.dstSock = null
       //  socket.close()
@@ -709,7 +724,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
         dstSock.setTimeout(0)
         dskSock.setNoDelay(true)
         dstSock.setKeepAlive(true)
-        dstSock.on('error', this._onErrorNoop)
+        dstSock.on('error', self._onErrorNoop)
                .on('connect', onConnect)
                .connect(reqInfo.dstPort, dstIP)
       }
@@ -723,7 +738,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       await self.websocketRequest(
         self._onProxyError.bind(self, port),
         self._onUDPMessage.bind(self, port, true),
-        reqInfo, dstIP)
+        reqInfo, dstIP, socket)
     } else {
       console.error('command unsupported')
       socket.send(BUF_REP_CMDUNSUPP, { binary: true })
