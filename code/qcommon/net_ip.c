@@ -75,6 +75,7 @@ static qboolean	winsockInitialized = qfalse;
 #		define _BSD_SOCKLEN_T_
 #	endif
 
+# include <netinet/tcp.h>
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>
@@ -999,7 +1000,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	// make it broadcast capable
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
-	}
+  }
 #endif
 
 	if( !net_interface || !net_interface[0]) {
@@ -1240,6 +1241,7 @@ static void NET_OpenSocks( int port ) {
 	struct hostent		*h;
 #ifndef EMSCRIPTEN
 	int					len;
+  int i = 1;
 	qboolean			rfc1929;
 	unsigned char		buf[64];
 #endif
@@ -1262,6 +1264,13 @@ static void NET_OpenSocks( int port ) {
 		Com_Printf( "WARNING: NET_OpenSocks: socket: %s\n", NET_ErrorString() );
 		return;
 	}
+  
+#ifndef EMSCRIPTEN
+	// set no delay
+	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
+		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
+	}
+#endif
   
   h = gethostbyname( NET_ParseProtocol(net_socksServer->string, 0));
 	if ( h == NULL ) {
@@ -1489,10 +1498,10 @@ void NET_OpenSocks_After_Listen( void ) {
     if( ioctlsocket( socks_socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
   		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
     }
-    ip_socket = socks_socket;
   }
 #endif
 
+//  ip_socket = socks_socket;
   Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%i\n",
     socksRelayAddr.sin_addr.s_addr & 0xFF,
     socksRelayAddr.sin_addr.s_addr >> 8 & 0xFF,

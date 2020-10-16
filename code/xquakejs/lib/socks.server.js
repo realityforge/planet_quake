@@ -143,7 +143,7 @@ Huffman.onRuntimeInitialized = () => {
 
 }
 
-Server.prototype._onClose = function (socket, onData) {
+Server.prototype._onClose = function (socket, onData, onEnd) {
   console.error('Closing ', socket._socket.remoteAddress, ':', socket._socket.remotePort)
   socket.off('data', onData)
   socket.off('message', onData)
@@ -158,32 +158,35 @@ Server.prototype._onClose = function (socket, onData) {
 				throw err
 		}
   }
-  socket.dstSock = undefined
+  delete socket.dstSock
+	delete socket.dstPort
   if(socket._socket.writable) {
     socket.on('data', onData)
     socket.on('message', onData)
   }
 }
 
-Server.prototype._onParseError = function(socket, onData, err) {
+Server.prototype._onParseError = function(socket, onData, onEnd, err) {
   console.log('Parse error ', err)
   socket.off('data', onData)
   socket.off('message', onData)
   socket.close()
 }
 
-Server.prototype._onMethods = function(parser, socket, onData, methods) {
+Server.prototype._onMethods = function(parser, socket, onData, onEnd, methods) {
   var auths = this._auths
   parser.authed = true
   socket.off('data', onData)
   socket.off('message', onData)
   socket.send(Buffer.from([0x05, 0x00]), { binary: true })
+	if(socket._socket.resume)
+		socket._socket.resume()
   socket.on('data', onData)
   socket.on('message', onData)
   //socket.send(BUF_AUTH_NO_ACCEPT, { binary: true })
 }
 
-Server.prototype._onRequest = async function(socket, reqInfo) {
+Server.prototype._onRequest = async function(socket, onData, onEnd, reqInfo) {
 	var self = this
   reqInfo.srcAddr = socket._socket.remoteAddress
   reqInfo.srcPort = socket._socket.remotePort
@@ -204,8 +207,10 @@ Server.prototype._onRequest = async function(socket, reqInfo) {
     })
     return socket
   } else {
-    console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
-    await this.proxySocket.apply(this, [socket, reqInfo])
+    //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
+		if(socket._socket.resume)
+			socket._socket.resume()
+    await this.proxyCommand.apply(this, [socket, reqInfo])
   }
 }
 
@@ -382,14 +387,13 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
     }
     bufrep.writeUInt16LE(rinfo.port, 8, true)
   } else {
-    var domainBuf = Buffer.from(domain)
     bufrep[3] = 0x03
     bufrep[4] = domain.length+1
-    domainBuf.copy(bufrep, 5)
+		bufrep.write(domain, 5)
     bufrep.writeUInt16LE(rinfo.port, 5 + bufrep[4], true)
   }
   SHOWNET(message, socket, true)
-  console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort, isWebSocket)
+  //console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort, isWebSocket)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
 	self._timeouts[udpLookupPort] = Date.now()
 }
@@ -408,15 +412,17 @@ Server.prototype._onConnection = function(socket) {
   ++this._connections
   var parser = new Parser(socket)
       onData = parser._onData.bind(parser),
-      onError = this._onParseError.bind(this, socket, onData), // data for unbinding, err passed in
-      onMethods = this._onMethods.bind(this, parser, socket, onData),
-      onRequest = this._onRequest.bind(this, socket), // reqInfo passed in
-      onClose = this._onClose.bind(this, socket, onData)
+			onEnd = parser._onData.bind(parser, null),
+      onError = this._onParseError.bind(this, socket, onData, onEnd), // data for unbinding, err passed in
+      onMethods = this._onMethods.bind(this, parser, socket, onData, onEnd),
+      onRequest = this._onRequest.bind(this, socket, onData, onEnd), // reqInfo passed in
+      onClose = this._onClose.bind(this, socket, onData, onEnd)
       
   if(socket instanceof WebSocket) {
     var remoteAddr = `${socket._socket.remoteAddress}:${socket._socket.remotePort}`
     console.log(`Websocket connection ${remoteAddr}....`)
     socket.on('message', onData)
+		socket.on('message', onEnd)
     socket._socket.setTimeout(0)
     socket._socket.setNoDelay(true)
     socket._socket.setKeepAlive(true)
@@ -426,6 +432,10 @@ Server.prototype._onConnection = function(socket) {
   } else if (socket instanceof Socket) {
     console.log(`Net socket connection ${socket.remoteAddress}:${socket.remotePort}....`)
     socket.on('data', onData)
+		socket.on('end', onEnd)
+		socket.setTimeout(0)
+    socket.setNoDelay(true)
+    socket.setKeepAlive(true)
     socket.send = socket.write
     socket._socket = socket
     socket.close = socket.end
@@ -634,10 +644,8 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
   self._directConnects[remoteAddr]._error = onError
 }
 
-Server.prototype.proxySocket = async function(socket, reqInfo) {
+Server.prototype.proxyCommand = async function(socket, reqInfo) {
   var self = this
-  var onConnect = this._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo)
-  var onError = this._onProxyError.bind(this, reqInfo.dstPort) // err is passed in
   var dstIP
   try {
     dstIP = await this.lookupDNS(reqInfo.dstAddr || '0.0.0.0')
@@ -647,7 +655,7 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
   }
   try {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
-    if (reqInfo.cmd == 'udp') {
+    if (reqInfo.cmd == Parser.CMD.UDP) {
       socket.parser.authed = true
       socket.binding = true
       self._receivers[reqInfo.dstPort] = socket
@@ -659,11 +667,12 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
           socket.close()
         })
 				socket.dstSock = this._listeners[reqInfo.dstPort]
+				socket.dstPort = reqInfo.dstPort
         // TODO: make command line option --no-ws to turn this off
         await self.websockify(reqInfo, socket)
-        onConnect()
+        this._onSocketConnect(reqInfo.dstPort, reqInfo)
       } else if (reqInfo.dstAddr) {
-        onConnect()
+				this._onSocketConnect(reqInfo.dstPort, reqInfo)
       } else {
       }
       console.log('Switching to UDP listener', reqInfo.dstPort)
@@ -672,23 +681,24 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       //  socket.dstSock = null
       //  socket.close()
       //}) // if udp binding closes also close websocket
-    } else if(reqInfo.cmd == 'bind') {
+    } else if(reqInfo.cmd == Parser.CMD.BIND) {
       socket.parser.authed = true
       self._receivers[reqInfo.dstPort] = socket
       const listener = createServer()
       socket.binding = true
       socket.dstSock = listener
+			socket.dstPort = reqInfo.dstPort
       listener.on('connection', () => {})
-        .on('error', onError)
+        .on('error', this._onProxyError.bind(this, reqInfo.dstPort))
         //.on('close', () => {
         //  socket.dstSock = null
         //  socket.close()
         //}) // if udp binding closes also close websocket
         .listen(reqInfo.dstPort, reqInfo.dstAddr, () => {
           socket.binding = false
-          onConnect()
+					this._onSocketConnect(reqInfo.dstPort, reqInfo)
         })
-    } else if(reqInfo.cmd == 'connect') {
+    } else if(reqInfo.cmd == Parser.CMD.CONNECT) {
       if(socket.binding) {
         // wait for the previous bind command to complete before performing a connect command
         var waiting
@@ -712,29 +722,25 @@ Server.prototype.proxySocket = async function(socket, reqInfo) {
       }
       */
       if(socket.dstSock) {
-        var port = Object.keys(self._listeners)
-          .filter(k => self._listeners[k] === socket.dstSock)[0]
-          || reqInfo.srcPort
-        self._timeouts[port] = Date.now()
 				SHOWNET(reqInfo.data, socket, true)
         socket.dstSock.send(reqInfo.data, 0, reqInfo.data.length, reqInfo.dstPort, dstIP)
+				self._timeouts[socket.dstPort || reqInfo.srcPort] = Date.now()
       } else {
         // this is a TCP ip connection with no prior bindings?
         console.log('SHOULD NEVER HIT HERE', reqInfo)
         var dstSock = new Socket()
         socket.dstSock = dstSock
+				socket.dstPort = reqInfo.dstPort
         dstSock.setTimeout(0)
         dskSock.setNoDelay(true)
         dstSock.setKeepAlive(true)
         dstSock.on('error', self._onErrorNoop)
-               .on('connect', onConnect)
+               .on('connect', this._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo))
                .connect(reqInfo.dstPort, dstIP)
       }
     // special websocket piping for quakejs servers
-    } else if(reqInfo.cmd == 'ws') {
-      var port = Object.keys(self._receivers)
-        .filter(k => self._receivers[k] === socket)[0]
-        || reqInfo.srcPort
+		} else if(reqInfo.cmd == Parser.CMD.WS) {
+      var port = socket.dstPort || reqInfo.srcPort
       self._receivers[port] = socket
       SHOWNET(reqInfo.data, socket, false)
       await self.websocketRequest(
