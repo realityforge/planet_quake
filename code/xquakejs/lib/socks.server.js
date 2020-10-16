@@ -183,7 +183,7 @@ Server.prototype._onMethods = function(parser, socket, onData, methods) {
   //socket.send(BUF_AUTH_NO_ACCEPT, { binary: true })
 }
 
-Server.prototype._onRequest = async function(socket, onData, reqInfo) {
+Server.prototype._onRequest = async function(socket, reqInfo) {
 	var self = this
   reqInfo.srcAddr = socket._socket.remoteAddress
   reqInfo.srcPort = socket._socket.remotePort
@@ -389,7 +389,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
     bufrep.writeUInt16LE(rinfo.port, 5 + bufrep[4], true)
   }
   SHOWNET(message, socket, true)
-  console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort)
+  console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort, isWebSocket)
   socket.send(Buffer.concat([bufrep, message]), { binary: true })
 	self._timeouts[udpLookupPort] = Date.now()
 }
@@ -410,7 +410,7 @@ Server.prototype._onConnection = function(socket) {
       onData = parser._onData.bind(parser),
       onError = this._onParseError.bind(this, socket, onData), // data for unbinding, err passed in
       onMethods = this._onMethods.bind(this, parser, socket, onData),
-      onRequest = this._onRequest.bind(this, socket, onData), // reqInfo passed in
+      onRequest = this._onRequest.bind(this, socket), // reqInfo passed in
       onClose = this._onClose.bind(this, socket, onData)
       
   if(socket instanceof WebSocket) {
@@ -537,7 +537,7 @@ Server.prototype.tryBindPort = async function(reqInfo) {
         .on('error', reject)
         .on('message', onUDPMessage)
         .bind(portLeft + portRight, reqInfo.dstAddr || '0.0.0.0'))
-      console.log('Starting listener ', portLeft + portRight, ' -> ', reqInfo.dstPort)
+      console.log('Starting listener ', reqInfo.dstPort, ' -> ', portLeft + portRight)
       // TODO: fix this, port will be the same for every client
       //   client needs to request the random port we assign
       self._listeners[reqInfo.dstPort] = listener
@@ -586,6 +586,12 @@ Server.prototype.websockify = async function (reqInfo, socket) {
 Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqInfo, dstIP, socket) {
   var self = this
   //var onConnect = this._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo)
+	var onForward = (msg) => {
+		self._directConnects[remoteAddr]
+			._message(Buffer.from(msg), {
+				address: dstIP, port: reqInfo.dstPort
+			})
+	}
   var remoteAddr = dstIP+':'+reqInfo.dstPort
   if(typeof self._directConnects[remoteAddr] == 'undefined'
     || self._directConnects[remoteAddr].readyState > 1) {
@@ -600,12 +606,7 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
 			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
 		}
     self._directConnects[remoteAddr]
-      .on('message', (msg) => {
-        self._directConnects[remoteAddr]
-          ._message(Buffer.from(msg), {
-            address: dstIP, port: reqInfo.dstPort
-          })
-      })
+      .on('message', onForward)
       .on('error', (err) => self._directConnects[remoteAddr]._error(err))
       .on('open', () => {
         //onConnect()
@@ -616,6 +617,7 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
       .on('close', () => delete self._directConnects[remoteAddr])
 		socket.on('close', () => {
 			if(typeof self._directConnects[remoteAddr] != 'undefined') {
+				self._directConnects[remoteAddr].off('message', onForward)
 				self._directConnects[remoteAddr].close()
 				delete self._directConnects[remoteAddr]
 			}

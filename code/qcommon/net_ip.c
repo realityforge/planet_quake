@@ -664,9 +664,14 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
   				net_from->ipv._4[3] = net_message->data[7];
           net_message->readcount = 4 + 4 + 2;
           Q_strncpyz(net_from->name, NET_AdrToString(net_from), sizeof(net_from->name));
-          Q_strncpyz(net_from->protocol, "ws", 3);
+          if(net_message->data[3] == 4) {
+            Q_strncpyz(net_from->protocol, "ws", 3);
+          } else {
+            net_from->protocol[0] = '\0';
+          }
         } else if (net_message->data[3] == 3) {
           net_message->readcount = 5 + net_message->data[4] + 2;
+          net_from->protocol[0] = '\0';
           NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
         }
 				net_from->port = htons( *(short *)&net_message->data[net_message->readcount - 2] );
