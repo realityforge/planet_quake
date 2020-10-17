@@ -10,6 +10,7 @@ var ip6addr = require('ip6addr')
 var help = `
 npm run proxy [options]
 --help -h - print this help message and exit
+--proxy-ip - (x-forwarded-for header) redirect websocket requests to a specific IP address, good for telling master server
 --max {number} - Max number of connections for this process
 --master - Designated master server, force redirection after connection
 --slave - is implied from lack of --master, don't need this option
@@ -28,6 +29,7 @@ e.g. npm run proxy -- --max 10
 
 var ports = [1081, 80]
 var specifyPorts = false
+var forwardIP = ''
 var slaves = []
 for(var i = 0; i < process.argv.length; i++) {
   var a = process.argv[i]
@@ -43,7 +45,10 @@ for(var i = 0; i < process.argv.length; i++) {
       specifyPorts = true
     }
     ports.push(parseInt(a))
-	} else {
+	} else if (a == '--proxy-ip') {
+    forwardIP = process.argv[i+1]
+    i++
+  } else {
     try {
       var ipv6 = ip6addr.parse(a)
       slaves.push(a)
@@ -53,7 +58,7 @@ for(var i = 0; i < process.argv.length; i++) {
 	}
 }
 
-var socks = new Server({slaves}) // TODO: add password authentication
+var socks = new Server({slaves, proxy: forwardIP}) // TODO: add password authentication
 
 if(ports.includes(1080)) {
   // redirect http attempts to loading page

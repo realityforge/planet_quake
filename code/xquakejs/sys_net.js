@@ -83,7 +83,7 @@ var LibrarySysNet = {
                 })
         })
     },
-    DownloadLazyFinish: function (indexFilename, file) {
+    DownloadLazyFinish: function (file) {
       var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded += true

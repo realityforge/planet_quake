@@ -984,7 +984,7 @@ var LibraryVM = {
 
 		delete VM.vms[handle];
 	},
-	VM_CallCompiled__sig: 'iii',
+	VM_CallCompiled__sig: 'iiii',
 	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_SuspendCompiled'],
 	VM_CallCompiled: function (vmp, nargs, args) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};

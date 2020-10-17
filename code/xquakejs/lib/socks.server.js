@@ -108,6 +108,7 @@ function Server(opts) {
     return new Server()
 
   var self = this
+	this._forwardIP = (opts || {}).proxy || ''
   this._slaves = (opts || {}).slaves || []
   this._listeners = {}
   this._receivers = {}
@@ -607,11 +608,16 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, reqIn
     || self._directConnects[remoteAddr].readyState > 1) {
     console.log('Websocket (bound ' + reqInfo.dstPort + ') request ' + remoteAddr)
 		if(socket.dstSock) {
-			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`, null, {
+			var options = {
 				headers: {
+					// TODO: make this configurable
 					'x-forwarded-port': socket.dstSock.address().port
 				}
-			})
+			}
+			if(self._forwardIP && self._forwardIP.length > 0) {
+				options.headers['x-forwarded-for'] = self._forwardIP
+			}
+			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`, null, options)
 		} else {
 			self._directConnects[remoteAddr] = new WebSocket(`ws://${remoteAddr}`)
 		}

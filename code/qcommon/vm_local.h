@@ -243,7 +243,7 @@ extern opcode_info_t ops[ OP_MAX ];
 #endif // VM_LOCAL_H
 
 #ifdef EMSCRIPTEN
-qboolean VM_IsSuspendedCompiled(vm_t *vm);
-void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
-int VM_ResumeCompiled(vm_t *vm);
+extern qboolean VM_IsSuspendedCompiled(vm_t *vm);
+extern void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
+extern int VM_ResumeCompiled(vm_t *vm);
 #endif

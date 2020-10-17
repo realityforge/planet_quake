@@ -257,7 +257,7 @@ var LibrarySysMain = {
         : 'ws://'
       })
     })
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
 
     if(typeof window.serverWorker != 'undefined')
       window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
