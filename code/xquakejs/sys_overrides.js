@@ -96,6 +96,102 @@ if(typeof IDBFS != 'undefined') {
 
     return callback(null, { type: 'local', entries: entries });
   }
+  IDBFS.reconcile = function(src, dst, callback) {
+    var total = 0;
+
+    var create = [];
+    Object.keys(src.entries).forEach(function (key) {
+      var e = src.entries[key];
+      var e2 = dst.entries[key];
+      if (!e2 || e['timestamp'] > e2['timestamp']) {
+        create.push(key);
+        total++;
+      }
+    });
+
+    var remove = [];
+    Object.keys(dst.entries).forEach(function (key) {
+      var e = dst.entries[key];
+      var e2 = src.entries[key];
+      if (!e2 || e2['timestamp'] > e['timestamp']) {
+        remove.push(key);
+        total++;
+      }
+    });
+
+    if (!total) {
+      return callback(null);
+    }
+
+    var errored = false;
+    var db = src.type === 'remote' ? src.db : dst.db;
+    var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+    var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+
+    function done(err) {
+      /*
+      if (err && !errored) {
+        errored = true;
+        return callback(err);
+      }
+      */
+    };
+
+    transaction.onerror = function(e) {
+      done(this.error);
+      e.preventDefault();
+    };
+
+    transaction.oncomplete = function(e) {
+      if (!errored) {
+        callback(null);
+      }
+    };
+
+    // sort paths in ascending order so directory entries are created
+    // before the files inside them
+    create.sort().forEach(function (path) {
+      if (dst.type === 'local') {
+        IDBFS.loadRemoteEntry(store, path, function (err, entry) {
+          if (err) return done(err);
+          IDBFS.storeLocalEntry(path, entry, done);
+        });
+      } else {
+        IDBFS.loadLocalEntry(path, function (err, entry) {
+          if (err) return done(err);
+          IDBFS.storeRemoteEntry(store, path, entry, done);
+        });
+      }
+    });
+
+    // TODO: add rsync with timebased event handling and actual delete auditing
+    //   fuck this, its so lazy
+    remove.sort().forEach(function (path) {
+      if (dst.type === 'local') {
+        IDBFS.loadLocalEntry(path, function (err, entry) {
+          if (err) return done(err);
+          IDBFS.storeRemoteEntry(store, path, entry, done);
+        });
+      } else {
+        IDBFS.loadRemoteEntry(store, path, function (err, entry) {
+          if (err) return done(err);
+          IDBFS.storeLocalEntry(path, entry, done);
+        });
+      }
+    });
+    
+    // sort paths in descending order so files are deleted before their
+    // parent directories
+    /*
+    remove.sort().reverse().forEach(function(path) {
+      if (dst.type === 'local') {
+        IDBFS.removeLocalEntry(path, done);
+      } else {
+        IDBFS.removeRemoteEntry(store, path, done);
+      }
+    });
+    */
+  }
 }
 if(typeof GL != 'undefined') {
   GL.createContext = function(canvas, webGLContextAttributes) {

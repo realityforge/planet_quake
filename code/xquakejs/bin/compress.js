@@ -4,6 +4,7 @@ var zlib = require('zlib')
 var {ufs} = require('unionfs')
 var archiver = require('archiver')
 var glob = require('glob')
+var mime = require('mime')
 var StreamZip = require('node-stream-zip')
 
 /*
@@ -190,6 +191,7 @@ function sendCompressed(file, res, acceptEncoding) {
   var readStream = ufs.createReadStream(file)
   var compressionExists = false
   res.set('cache-control', 'public, max-age=31557600')
+  res.set('content-type', mime.lookup(file))
   // if compressed version already exists, send it directly
   if(acceptEncoding.includes('br')) {
     res.append('content-encoding', 'br')

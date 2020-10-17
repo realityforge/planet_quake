@@ -208,7 +208,7 @@ var LibrarySysMain = {
         }
         args.unshift.apply(args, [
           '+set', 'ttycon', '1',
-          '+set', 'sv_hostname', 'Local Host',
+          '+set', 'sv_hostname', '"http://quake.games"',
           '+set', 'sv_motd', 'For instant replays and stuff',
           '+set', 'rconPassword', 'password123!',
           '+set', 'sv_reconnectlimit', '0',
@@ -259,7 +259,7 @@ var LibrarySysMain = {
     })
     SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
 
-    if(typeof window.serviceWorker != 'undefined')
+    if(typeof window.serverWorker != 'undefined')
       window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
     
     if(SYS.dedicated) return

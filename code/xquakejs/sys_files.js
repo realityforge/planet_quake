@@ -125,10 +125,11 @@ var LibrarySysFiles = {
         cb()
         return
       }
+      var total = SYSN.downloads.length
       Promise.all(SYSN.downloads.map(function (file, i) { 
         return new Promise(function (resolve) {
           SYSC.DownloadAsset(file, null, function (err, data) {
-            SYSN.LoadingProgress(++total, SYSN.downloads.length)
+            SYSN.LoadingProgress(++total, total)
             if(err) return resolve(err)
             try {
               if(!SYS.servicable) {
@@ -146,6 +147,7 @@ var LibrarySysFiles = {
           // save to drive
         })
       })).then(cb)
+      SYSN.downloads = []
     },
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
@@ -268,7 +270,7 @@ var LibrarySysFiles = {
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
   Sys_FOpen: function (ospath, mode) {
-    var whitelist = new RegExp('qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
+    var whitelist = new RegExp('default.cfg|qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
     var handle = 0
     var exists = false
     try {

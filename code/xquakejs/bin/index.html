@@ -213,15 +213,18 @@
 </div>
 	
 <script>
-    if ('serviceWorker' in navigator) {
+    if('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
 				.then(function (registration) {
-	          console.log('Service Worker registered')
+					window.serviceWorker = true
+					if(typeof SYS != 'undefined') SYS.servicable = true
 	      }).catch(function (err) {
-	          console.log('Service Worker registration failed: ', err)
+					window.serviceWorker = false
+					if(typeof SYS != 'undefined') SYS.servicable = false
+          console.log('Service Worker registration failed: ', err)
 	      })
     }
-		if(false && 'Worker' in window) {
+		if('Worker' in window) {
 		  window.serverWorker = new Worker('server-worker.js')
 			window.serverWorker.onmessage = function (e) {
 				if(e.data[0] == 'init') {

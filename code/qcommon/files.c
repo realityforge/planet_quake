@@ -361,7 +361,7 @@ static int		fs_numServerReferencedPaks;
 static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_REF_PAKS];		// checksums
 static char		*fs_serverReferencedPakNames[MAX_REF_PAKS];	// pk3 names
-static char		*fs_mapPakNames[MAX_REF_PAKS*20];		// pk3 names
+static char		fs_mapPakNames[MAX_REF_PAKS*100];		// pk3 names
 
 int	fs_lastPakIndex;
 
@@ -1485,7 +1485,6 @@ static int FS_OpenFileInPak( fileHandle_t *file, pack_t *pak, fileInPack_t *pakF
 		pak->referenced |= FS_CGAME_REF;
 	}
 	if ( !( pak->referenced & FS_UI_REF ) && !strcmp( pakFile->name, "vm/ui.qvm" ) ) {
-Com_Printf("FS_OpenFileInPak: UI\n");
 		pak->referenced |= FS_UI_REF;
 	}
 
@@ -5914,9 +5913,11 @@ void *FS_LoadLibrary( const char *name )
 void FS_SetMapIndex(const char *mapname) {
 	searchpath_t	*search;
 	int r, i, csi = 0, ki = 0, level = 0, mpi = 0;
+	int mapCount = 0;
+	const char *mapNameIndex = NULL;
 	fileHandle_t indexfile;
 	char buf[MAX_OSPATH], key[MAX_OSPATH], key2[MAX_OSPATH];
-	qboolean isKey = qfalse, isPak = qfalse;
+	qboolean isKey = qfalse;
 	qboolean isKey2 = qfalse, isChecksum = qfalse;
 	//char *mapsMatch = va("maps/%s", mapname);
 
@@ -5938,32 +5939,39 @@ void FS_SetMapIndex(const char *mapname) {
 					level++;
 				} else if(buf[i] == '}') {
 					level--;
-				} else if(buf[i] == '"' && level == 1 && !isKey && !isPak && !isKey2 && !isChecksum) {
+				} else if(buf[i] == '"' && level == 1 && !isKey && !isKey2 && !isChecksum) {
 					isKey = qtrue;
-				} else if(buf[i] == '"' && level == 1 && isKey && !isPak && !isKey2 && !isChecksum) {
+				} else if(buf[i] == '"' && level == 1 && isKey && !isKey2 && !isChecksum) {
 					isKey = qfalse;
 					key[ki] = '\0';
-					ki = 0;
-					if(mpi < sizeof(fs_mapPakNames) && Q_stristr(key, "maps/") != NULL
+					mapNameIndex = Q_stristr(key, "maps/");
+					if(mapNameIndex != NULL
 					 	&& (Q_stristr(key, "pak9") != NULL // from repack all map bsp files are indexed in pak9### prefixed pk3s
 						|| Q_stristr(key, ".bsp") != NULL)) {
 						//const char *bspext = Q_stristr(key, ".bsp");
 						//if(bspext) {
 						//	key[strlen(key) - 4] = '\0';
 						//}
-						fs_mapPakNames[mpi] = FS_CopyString( key );
-						Q_strlwr(fs_mapPakNames[mpi]);
-						if ( fs_debug->integer ) {
-							Com_Printf( "FS_SetMapIndex: Map in index %s\n", fs_mapPakNames[mpi] );
-						}
-						mpi += strlen(key);
+						if((mpi + ki) < sizeof(fs_mapPakNames)) {
+							Com_Memcpy(&fs_mapPakNames[mpi], mapNameIndex, strlen(mapNameIndex));
+							Q_strlwr(&fs_mapPakNames[mpi]);
+							if ( fs_debug->integer ) {
+								//Com_Printf( "FS_SetMapIndex: Map in index %s\n", &fs_mapPakNames[mpi] );
+							}
+							mpi += strlen(mapNameIndex);
+							fs_mapPakNames[mpi] = '\0';
+							mpi++;
+							mapCount++;
+						} else if ( fs_debug->integer )
+							Com_Printf( "FS_SetMapIndex: Too many maps %s\n", key );
 					}
+					ki = 0;
 				} else if(isKey) {
 					key[ki] = buf[i];
 					ki++;
-				} else if (buf[i] == '"' && level == 2 && !isKey && !isPak) {
+				} else if (buf[i] == '"' && level == 2 && !isKey && !isKey2) {
 					isKey2 = qtrue;
-				} else if (buf[i] == '"' && level == 2 && isKey2 && !isKey && !isPak) {
+				} else if (buf[i] == '"' && level == 2 && isKey2 && !isKey) {
 					isKey2 = qfalse;
 					key2[ki] = '\0';
 					ki = 0;
@@ -5984,10 +5992,10 @@ void FS_SetMapIndex(const char *mapname) {
 				} else if (isKey2) {
 					key2[ki] = buf[i];
 					ki++;
-				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2 && !isPak) {
+				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2) {
 					search->altChecksums[csi] *= 10;
 					search->altChecksums[csi] += buf[i] - '0';
-				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2 && !isPak) {
+				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2) {
 					csi++; // increment alternative checksum index
 				} else if ((buf[i] == ']' || csi >= sizeof(search->altChecksums)) && isChecksum) {
 					isChecksum = qfalse;
@@ -5995,13 +6003,13 @@ void FS_SetMapIndex(const char *mapname) {
 			}
 		} while(r > 0);
 		// set by server, don't interfere
-		fs_numMapPakNames = mpi;
+		fs_numMapPakNames = mapCount;
 		FS_FCloseFile( indexfile );
 	}
 }
 
 qboolean FS_InMapIndex(const char *filename) {
-	int			i, len, extpos, start;
+	int			i, len, extpos, start, mpi = 0;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
 	Com_Printf( "FS_InMapIndex: Searching %i maps for %s\n", fs_numMapPakNames, filename );
@@ -6020,12 +6028,13 @@ qboolean FS_InMapIndex(const char *filename) {
 	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
-		if(Q_stristr(fs_mapPakNames[i], filename)) {
+		if(Q_stristr(&fs_mapPakNames[mpi], filename)) {
 			if ( fs_debug->integer ) {
 				Com_Printf( "FS_InMapIndex: Map in index %s\n", mapname );
 			}
 			return qtrue;
 		}
+		mpi += strlen(&fs_mapPakNames[mpi]) + 1;
 	}
 	if ( fs_debug->integer ) {
 		Com_Printf( "FS_InMapIndex: Map NOT in index %s\n", mapname );

@@ -6,6 +6,8 @@ var LibrarySysNet = {
     downloadLazy: [],
 		downloadCount: 0,
 		downloads: [],
+    downloadsCompleted: [],
+    downloadsSyncing: false,
 		downloadSort: 0,
     lazyIterval: 0,
     multicasting: false,
@@ -82,7 +84,7 @@ var LibrarySysNet = {
         })
     },
     DownloadLazyFinish: function (indexFilename, file) {
-      SYSN.downloads = []
+      var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
 			SYSF.index[indexFilename].downloading = false
       SYSF.index[indexFilename].alreadyDownloaded += true
       var replaceFunc = function (path) {
@@ -131,23 +133,36 @@ var LibrarySysNet = {
 			})
 		},
 		DownloadLazy: function () {
-			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
-			// if we haven't sorted the list in a while, sort by number of references to file
-			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {
+      // don't download lazy if we are downloading immediately already
+      if(SYSN.downloads.length > 0) return
+      // if we haven't sorted the list in a while, sort by number of references to file
+      // TODO: uncomment this when syncfs is working
+			if(Date.now() - SYSN.downloadSort > 1000
+        && SYSN.downloadsCompleted.length > 0
+        && !SYSN.downloadsSyncing) {
+        SYSN.downloadsSyncing = true
 				//SYSN.DownloadLazySort() // get stuck in a loop which might be fixed by .alreadyDownloaded
-				SYSN.downloadSort = _Sys_Milliseconds()
+				SYSN.downloadSort = Date.now()
+        FS.syncfs(true, function () {
+          var complete
+          while((complete = SYSN.downloadsCompleted.pop())) {
+            SYSN.DownloadLazyFinish(complete)
+          }
+          SYSN.downloadsSyncing = false
+        })
 			}
+      
+			if(SYSN.downloadLazy.length == 0) return
 			var file = SYSN.downloadLazy.pop()
 			if(!file) return
 			if(typeof file == 'string') {
 				file = [0, file]
 			}
-			var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
 			// if already exists somehow just call the finishing function
 			try {
 				var handle = FS.stat(PATH.join(SYSF.fs_basepath, file[1]))
 				if(handle) {
-					return SYSN.DownloadLazyFinish(indexFilename, file)
+					return SYSN.DownloadLazyFinish(file)
 				}
 			} catch (e) {
 				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
@@ -155,7 +170,9 @@ var LibrarySysNet = {
 				}
 			}
       SYSN.downloads.push(file[1])
-      SYSF.downloadImmediately(SYSN.DownloadLazyFinish.bind(null, indexFilename, file))
+      SYSF.downloadImmediately(function () {
+        SYSN.downloadsCompleted.push(file)
+      })
 		},
     buildAlternateUrls: function (mod) {
       var origMod = mod.replace(/-cc*r*/ig, '')
@@ -211,7 +228,11 @@ var LibrarySysNet = {
 					return obj
 				}, SYSF.index || {})
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
-					.map(function (k) { return '"' + k + '":' + JSON.stringify(SYSF.index[k]) })
+					.map(function (k) {
+            return '"' + k + '":' + JSON.stringify(SYSF.index[k].checksums ? {
+              checksums: SYSF.index[k].checksums
+            } : {})
+          })
           .join(',')
 					+ '}')
         var gameIndex = PATH.join(SYSF.fs_basepath, basename, "index.json")
@@ -241,7 +262,7 @@ var LibrarySysNet = {
     SYSN.buildAlternateUrls(SYSF.fs_basegame)
     if(SYSF.fs_game.length > 0)
       SYSN.buildAlternateUrls(SYSF.fs_game)
-    FS.syncfs(false, function (e) {
+    FS.syncfs(!SYS.servicable, function (e) {
       if(e) console.log(e)
       SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
@@ -268,7 +289,7 @@ var LibrarySysNet = {
             alreadyDownloaded: true,
           }
         }
-        FS.syncfs(false, Browser.safeCallback(_CL_Outside_NextDownload))
+        FS.syncfs(SYS.servicable, Browser.safeCallback(_CL_Outside_NextDownload))
       })
     })
   },

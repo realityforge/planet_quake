@@ -1,4 +1,7 @@
 'use strict'
+console.log('Service Worker registered')
+
+var DB_STORE_NAME = 'FILE_DATA';
 var PROGRAM_FILES = 'quake-games-cache-v1';
 
 var precacheConfig = [
@@ -95,8 +98,8 @@ async function readStore(db, store, predicate) {
     db = await openDatabase()
   }
   return new Promise(function (resolve) {
-    let tran = db.transaction(store)
-    let objStore = tran.objectStore(store)
+    let transaction = db.transaction(store)
+    let objStore = transaction.objectStore(store)
     let tranCursor = objStore.openCursor()
     let result = []
     tranCursor.onsuccess = openFile.bind(null, predicate, result, resolve)
@@ -112,8 +115,8 @@ async function readFile(db, store, key) {
     db = await openDatabase()
   }
   return new Promise(function (resolve) {
-    let tran = db.transaction(store)
-    let objStore = tran.objectStore(store)
+    let transaction = db.transaction(store)
+    let objStore = transaction.objectStore(store)
     let tranCursor = objStore.get(key)
     let result = []
     tranCursor.onsuccess = function () {
@@ -129,12 +132,12 @@ async function openDatabase() {
   return new Promise(function (resolve) {
     let open = indexedDB.open('/base', 21)
     open.onsuccess = function () {
-      var transaction = open.result.transaction(['FILE_DATA'], 'readwrite');
-      var files = transaction.objectStore('FILE_DATA');
+      var transaction = open.result.transaction([DB_STORE_NAME], 'readwrite');
+      var files = transaction.objectStore(DB_STORE_NAME);
       resolve(open.result)
     }
     open.onupgradeneeded = function (evt) {
-      var fileStore = open.result.createObjectStore('FILE_DATA')
+      var fileStore = open.result.createObjectStore(DB_STORE_NAME)
       if (!fileStore.indexNames.contains('timestamp')) {
         fileStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
@@ -147,13 +150,13 @@ async function openDatabase() {
 }
 
 async function writeStore(value, key) {
-  if(key.includes('http:')) debugger
   var db = await openDatabase()
   return new Promise(function (resolve) {
-    let tran = db.transaction('FILE_DATA', 'readwrite')
-    let objStore = tran.objectStore('FILE_DATA')
+    let transaction = db.transaction(DB_STORE_NAME, 'readwrite')
+    let objStore = transaction.objectStore(DB_STORE_NAME)
     let storeValue = objStore.put(value, key)
-    storeValue.onsuccess = resolve
+    //storeValue.onsuccess = resolve
+    transaction.oncomplete = resolve
     storeValue.onerror = function (error) {
       console.error(error, value, key)
       resolve(error)
@@ -162,10 +165,11 @@ async function writeStore(value, key) {
 }
 
 async function mkdirp(path) {
-  var segments = path.split(/\/|\\/gi)
+  var segments = path.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/')
+    .split(/\/|\\/gi)
   for(var i = 3; i < segments.length; i++)
   {
-    var dir = segments.slice(0, i).join('/')
+    var dir = '/' + segments.slice(0, i).join('/')
     var obj = {
       timestamp: new Date(),
       mode: 16895
@@ -200,7 +204,7 @@ async function fetchAsset(url, key) {
     await writeStore(obj, '/base/' + key.replace(/^\/base\/|^\/?assets\/|^\//i, ''))
   } catch (e) {
   }
-  return obj
+  return response
 }
 
 self.addEventListener('install', function(event) {
@@ -208,7 +212,7 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     Promise.all(precacheConfig.map(function (requiredFile) {
       var localName = '/base/' + requiredFile.replace(/^\/?assets\//ig, '')
-      return readFile(db, 'FILE_DATA', localName)
+      return readFile(db, DB_STORE_NAME, localName)
         .then(function (files) {
           if(files && files.contents) {
             // already saved
@@ -224,7 +228,7 @@ self.addEventListener('install', function(event) {
   )
 })
 self.addEventListener('activate', function(event) {
-  
+  return self.clients.claim();
 })
 self.addEventListener('fetch', function(event) {
   if (event.request.method === 'GET') {
@@ -284,12 +288,12 @@ self.addEventListener('fetch', function(event) {
         }
       }
       event.respondWith(
-        readFile(null, 'FILE_DATA', localName)
-          .then(function (files) {
+        readFile(null, DB_STORE_NAME, localName)
+          .then(async function (files) {
             if(files && files.contents) {
               return new Response(files.contents, init)
             } else {
-              return fetchAsset(event.request.url, url)
+              return await fetchAsset(event.request.url, url)
             }
           }))
     }

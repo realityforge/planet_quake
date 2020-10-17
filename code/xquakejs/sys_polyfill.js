@@ -1,4 +1,4 @@
-var exports = window || global;
+var exportContext = window || global;
 
 // object.assign polyfill
 function assign(target, firstSource) {
@@ -293,7 +293,7 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
     configureProperties(this);
   };
 
-  exports.ArrayBuffer = exports.ArrayBuffer || ArrayBuffer;
+  exportContext.ArrayBuffer = exportContext.ArrayBuffer || ArrayBuffer;
 
   //
   // 4 The ArrayBufferView Type
@@ -529,18 +529,18 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
   var Float32Array = makeConstructor(4, packF32, unpackF32);
   var Float64Array = makeConstructor(8, packF64, unpackF64);
 
-  exports.Int8Array = exports.Int8Array || Int8Array;
-  exports.Uint8Array = exports.Uint8Array || Uint8Array;
-  exports.Uint8Array.from = function (buffer) {
-    return new exports.Uint8Array(buffer);
+  exportContext.Int8Array = exportContext.Int8Array || Int8Array;
+  exportContext.Uint8Array = exportContext.Uint8Array || Uint8Array;
+  exportContext.Uint8Array.from = function (buffer) {
+    return new exportContext.Uint8Array(buffer);
   }
-  exports.Uint8ClampedArray = exports.Uint8ClampedArray || Uint8ClampedArray;
-  exports.Int16Array = exports.Int16Array || Int16Array;
-  exports.Uint16Array = exports.Uint16Array || Uint16Array;
-  exports.Int32Array = exports.Int32Array || Int32Array;
-  exports.Uint32Array = exports.Uint32Array || Uint32Array;
-  exports.Float32Array = exports.Float32Array || Float32Array;
-  exports.Float64Array = exports.Float64Array || Float64Array;
+  exportContext.Uint8ClampedArray = exportContext.Uint8ClampedArray || Uint8ClampedArray;
+  exportContext.Int16Array = exportContext.Int16Array || Int16Array;
+  exportContext.Uint16Array = exportContext.Uint16Array || Uint16Array;
+  exportContext.Int32Array = exportContext.Int32Array || Int32Array;
+  exportContext.Uint32Array = exportContext.Uint32Array || Uint32Array;
+  exportContext.Float32Array = exportContext.Float32Array || Float32Array;
+  exportContext.Float64Array = exportContext.Float64Array || Float64Array;
 }());
 
 //
@@ -553,8 +553,8 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
   }
 
   var IS_BIG_ENDIAN = (function() {
-    var u16array = new(exports.Uint16Array)([0x1234]),
-        u8array = new(exports.Uint8Array)(u16array.buffer);
+    var u16array = new(exportContext.Uint16Array)([0x1234]),
+        u8array = new(exportContext.Uint8Array)(u16array.buffer);
     return r(u8array, 0) === 0x12;
   }());
 
@@ -563,12 +563,12 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
   //             optional unsigned long byteLength)
   var DataView = function DataView(buffer, byteOffset, byteLength) {
     if (arguments.length === 0) {
-      buffer = new exports.ArrayBuffer(0);
-    } else if (!(buffer instanceof exports.ArrayBuffer || ECMAScript.Class(buffer) === 'ArrayBuffer')) {
+      buffer = new exportContext.ArrayBuffer(0);
+    } else if (!(buffer instanceof exportContext.ArrayBuffer || ECMAScript.Class(buffer) === 'ArrayBuffer')) {
       throw new TypeError("TypeError");
     }
 
-    this.buffer = buffer || new exports.ArrayBuffer(0);
+    this.buffer = buffer || new exportContext.ArrayBuffer(0);
 
     this.byteOffset = ECMAScript.ToUint32(byteOffset);
     if (this.byteOffset > this.buffer.byteLength) {
@@ -598,7 +598,7 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
       }
       byteOffset += this.byteOffset;
 
-      var uint8Array = new exports.Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT),
+      var uint8Array = new exportContext.Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT),
           bytes = [], i;
       for (i = 0; i < arrayType.BYTES_PER_ELEMENT; i += 1) {
         bytes.push(r(uint8Array, i));
@@ -608,18 +608,18 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
         bytes.reverse();
       }
 
-      return r(new arrayType(new exports.Uint8Array(bytes).buffer), 0);
+      return r(new arrayType(new exportContext.Uint8Array(bytes).buffer), 0);
     };
   }
 
-  DataView.prototype.getUint8 = makeGetter(exports.Uint8Array);
-  DataView.prototype.getInt8 = makeGetter(exports.Int8Array);
-  DataView.prototype.getUint16 = makeGetter(exports.Uint16Array);
-  DataView.prototype.getInt16 = makeGetter(exports.Int16Array);
-  DataView.prototype.getUint32 = makeGetter(exports.Uint32Array);
-  DataView.prototype.getInt32 = makeGetter(exports.Int32Array);
-  DataView.prototype.getFloat32 = makeGetter(exports.Float32Array);
-  DataView.prototype.getFloat64 = makeGetter(exports.Float64Array);
+  DataView.prototype.getUint8 = makeGetter(exportContext.Uint8Array);
+  DataView.prototype.getInt8 = makeGetter(exportContext.Int8Array);
+  DataView.prototype.getUint16 = makeGetter(exportContext.Uint16Array);
+  DataView.prototype.getInt16 = makeGetter(exportContext.Int16Array);
+  DataView.prototype.getUint32 = makeGetter(exportContext.Uint32Array);
+  DataView.prototype.getInt32 = makeGetter(exportContext.Int32Array);
+  DataView.prototype.getFloat32 = makeGetter(exportContext.Float32Array);
+  DataView.prototype.getFloat64 = makeGetter(exportContext.Float64Array);
 
   function makeSetter(arrayType) {
     return function(byteOffset, value, littleEndian) {
@@ -631,7 +631,7 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
 
       // Get bytes
       var typeArray = new arrayType([value]),
-          byteArray = new exports.Uint8Array(typeArray.buffer),
+          byteArray = new exportContext.Uint8Array(typeArray.buffer),
           bytes = [], i, byteView;
 
       for (i = 0; i < arrayType.BYTES_PER_ELEMENT; i += 1) {
@@ -644,21 +644,21 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
       }
 
       // Write them
-      byteView = new exports.Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT);
+      byteView = new exportContext.Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT);
       byteView.set(bytes);
     };
   }
 
-  DataView.prototype.setUint8 = makeSetter(exports.Uint8Array);
-  DataView.prototype.setInt8 = makeSetter(exports.Int8Array);
-  DataView.prototype.setUint16 = makeSetter(exports.Uint16Array);
-  DataView.prototype.setInt16 = makeSetter(exports.Int16Array);
-  DataView.prototype.setUint32 = makeSetter(exports.Uint32Array);
-  DataView.prototype.setInt32 = makeSetter(exports.Int32Array);
-  DataView.prototype.setFloat32 = makeSetter(exports.Float32Array);
-  DataView.prototype.setFloat64 = makeSetter(exports.Float64Array);
+  DataView.prototype.setUint8 = makeSetter(exportContext.Uint8Array);
+  DataView.prototype.setInt8 = makeSetter(exportContext.Int8Array);
+  DataView.prototype.setUint16 = makeSetter(exportContext.Uint16Array);
+  DataView.prototype.setInt16 = makeSetter(exportContext.Int16Array);
+  DataView.prototype.setUint32 = makeSetter(exportContext.Uint32Array);
+  DataView.prototype.setInt32 = makeSetter(exportContext.Int32Array);
+  DataView.prototype.setFloat32 = makeSetter(exportContext.Float32Array);
+  DataView.prototype.setFloat64 = makeSetter(exportContext.Float64Array);
 
-  exports.DataView = exports.DataView || DataView;
+  exportContext.DataView = exportContext.DataView || DataView;
 
 }());
 
@@ -819,12 +819,12 @@ var polyfillURLSearchParams = function() {
   };
 
 
-  exports.URLSearchParams = URLSearchParams;
+  exportContext.URLSearchParams = URLSearchParams;
 };
 
 var checkIfURLSearchParamsSupported = function() {
   try {
-    var URLSearchParams = exports.URLSearchParams;
+    var URLSearchParams = exportContext.URLSearchParams;
 
     return (
       (new URLSearchParams('?a=1').toString() === 'a=1') &&
@@ -840,7 +840,7 @@ if (!checkIfURLSearchParamsSupported()) {
   polyfillURLSearchParams();
 }
 
-var proto = exports.URLSearchParams.prototype;
+var proto = exportContext.URLSearchParams.prototype;
 
 if (typeof proto.sort !== 'function') {
   proto.sort = function() {
@@ -906,7 +906,7 @@ if (typeof proto._fromString !== 'function') {
 
 var checkIfURLIsSupported = function() {
   try {
-    var u = new exports.URL('b', 'http://a');
+    var u = new exportContext.URL('b', 'http://a');
     u.pathname = 'c d';
     return (u.href === 'http://a/c%20d') && u.searchParams;
   } catch (e) {
@@ -916,14 +916,14 @@ var checkIfURLIsSupported = function() {
 
 
 var polyfillURL = function() {
-  var _URL = exports.URL;
+  var _URL = exportContext.URL;
 
   var URL = function(url, base) {
     if (typeof url !== 'string') url = String(url);
 
     // Only create another document if the base is different from current location.
     var doc = document, baseElement;
-    if (base && (exports.location === void 0 || base !== exports.location.href)) {
+    if (base && (exportContext.location === void 0 || base !== exportContext.location.href)) {
       doc = document.implementation.createHTMLDocument('');
       baseElement = doc.createElement('base');
       baseElement.href = base;
@@ -956,7 +956,7 @@ var polyfillURL = function() {
 
 
     // create a linked searchParams which reflect its changes on URL
-    var searchParams = new exports.URLSearchParams(this.search);
+    var searchParams = new exportContext.URLSearchParams(this.search);
     var enableSearchUpdate = true;
     var enableSearchParamsUpdate = true;
     var _this = this;
@@ -1102,7 +1102,7 @@ var polyfillURL = function() {
     return _URL.revokeObjectURL.apply(_URL, arguments);
   };
 
-  exports.URL = URL;
+  exportContext.URL = URL;
 
 };
 
@@ -1110,31 +1110,31 @@ if (!checkIfURLIsSupported()) {
   polyfillURL();
 }
 
-if ((exports.location !== void 0) && !('origin' in exports.location)) {
+if ((exportContext.location !== void 0) && !('origin' in exportContext.location)) {
   var getOrigin = function() {
-    return exports.location.protocol + '//' + exports.location.hostname + (exports.location.port ? (':' + exports.location.port) : '');
+    return exportContext.location.protocol + '//' + exportContext.location.hostname + (exportContext.location.port ? (':' + exportContext.location.port) : '');
   };
 
   try {
-    Object.defineProperty(exports.location, 'origin', {
+    Object.defineProperty(exportContext.location, 'origin', {
       get: getOrigin,
       enumerable: true
     });
   } catch (e) {
     setInterval(function() {
-      exports.location.origin = getOrigin();
+      exportContext.location.origin = getOrigin();
     }, 100);
   }
 }
 
 // fetch polyfill
-if (!exports.fetch) {
+if (!exportContext.fetch) {
   var support = {
-    searchParams: 'URLSearchParams' in exports,
-    iterable: 'Symbol' in exports && 'iterator' in Symbol,
+    searchParams: 'URLSearchParams' in exportContext,
+    iterable: 'Symbol' in exportContext && 'iterator' in Symbol,
     blob:
-      'FileReader' in exports &&
-      'Blob' in exports &&
+      'FileReader' in exportContext &&
+      'Blob' in exportContext &&
       (function() {
         try {
           new Blob()
@@ -1143,8 +1143,8 @@ if (!exports.fetch) {
           return false
         }
       })(),
-    formData: 'FormData' in exports,
-    arrayBuffer: 'ArrayBuffer' in exports
+    formData: 'FormData' in exportContext,
+    arrayBuffer: 'ArrayBuffer' in exportContext
   }
 
   function isDataView(obj) {
@@ -1597,7 +1597,7 @@ if (!exports.fetch) {
     return new Response(null, {status: status, headers: {location: url}})
   }
 
-  var DOMException = exports.DOMException
+  var DOMException = exportContext.DOMException
   try {
     new DOMException()
   } catch (err) {
@@ -1658,7 +1658,7 @@ if (!exports.fetch) {
 
       function fixUrl(url) {
         try {
-          return url === '' && exports.location.href ? exports.location.href : url
+          return url === '' && exportContext.location.href ? exportContext.location.href : url
         } catch (e) {
           return url
         }
@@ -1710,15 +1710,15 @@ if (!exports.fetch) {
   }
 
   fetch.polyfill = true
-  exports.fetch = fetch
-  exports.Headers = Headers
-  exports.Request = Request
-  exports.Response = Response
+  exportContext.fetch = fetch
+  exportContext.Headers = Headers
+  exportContext.Request = Request
+  exportContext.Response = Response
 }
 
 var Module = {}
 var dedicated = typeof document == 'undefined'
-exports.Module = Module
+exportContext.Module = Module
 function printErr() {
   var args = Array.from(arguments)
   if(args[0] && (args[0].includes('Sys_Error:')
@@ -1739,17 +1739,17 @@ function printErr() {
   else
     console.info.apply(console, [dedicated ? 'DedServer: ' : ''].concat(args))
 }
-exports.Module.printErr = exports.printErr = printErr 
-exports.Module.onRuntimeInitialized = function () {
+exportContext.Module.printErr = exportContext.printErr = printErr 
+exportContext.Module.onRuntimeInitialized = function () {
   SYS.dedicated = dedicated
-  SYS.servicable = 'serviceWorker' in navigator
+  SYS.servicable = 'serviceWorker' in navigator && window.serviceWorker
 }
 if(dedicated) {
   // in a worker
-  exports.Module.noInitialRun = false
-  exports.location = new URL(location.origin + '?set dedicated 2')
+  exportContext.Module.noInitialRun = false
+  exportContext.location = new URL(location.origin + '?set dedicated 2')
 } else {
   // not in a worker
-  exports.Module.viewport = document.getElementById('viewport-frame')
-  exports.Module.elementPointerLock = true
+  exportContext.Module.viewport = document.getElementById('viewport-frame')
+  exportContext.Module.elementPointerLock = true
 }
