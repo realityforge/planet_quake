@@ -3,6 +3,7 @@ console.log('Service Worker registered')
 
 var DB_STORE_NAME = 'FILE_DATA';
 var PROGRAM_FILES = 'quake-games-cache-v1';
+var open
 
 var precacheConfig = [
   'index.html',
@@ -13,7 +14,6 @@ var precacheConfig = [
   'quake3e.wasm',
   'assets/baseq3-cc/index.json',
   'server-worker.js',
-  'service-worker.js'
 ]
 
 var caseInsensitiveCompare = function (str, cmp) { return str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0 }
@@ -93,30 +93,11 @@ function openFile(predicate, result, resolve, evt) {
   cursor.continue()
 }
 
-async function readStore(db, store, predicate) {
-  if(!db) {
-    db = await openDatabase()
-  }
-  return new Promise(function (resolve) {
-    let transaction = db.transaction(store)
-    let objStore = transaction.objectStore(store)
-    let tranCursor = objStore.openCursor()
-    let result = []
-    tranCursor.onsuccess = openFile.bind(null, predicate, result, resolve)
-    tranCursor.onerror = function (error) {
-      console.error(error)
-      resolve(error)
-    }
-  })
-}
-
-async function readFile(db, store, key) {
-  if(!db) {
-    db = await openDatabase()
-  }
-  return new Promise(function (resolve) {
-    let transaction = db.transaction(store)
-    let objStore = transaction.objectStore(store)
+async function readFile(key) {
+  var db = await openDatabase()
+  var transaction = db.transaction([DB_STORE_NAME], 'readwrite');
+  var objStore = transaction.objectStore(DB_STORE_NAME);
+  return await new Promise(function (resolve) {
     let tranCursor = objStore.get(key)
     let result = []
     tranCursor.onsuccess = function () {
@@ -126,14 +107,17 @@ async function readFile(db, store, key) {
       console.error(error)
       resolve(error)
     }
+    transaction.commit()
   })
 }
+
 async function openDatabase() {
-  return new Promise(function (resolve) {
-    let open = indexedDB.open('/base', 21)
+  return await new Promise(function (resolve) {
+    if(open) {
+      return resolve(open.result)
+    }
+    open = indexedDB.open('/base', 21)
     open.onsuccess = function () {
-      var transaction = open.result.transaction([DB_STORE_NAME], 'readwrite');
-      var files = transaction.objectStore(DB_STORE_NAME);
       resolve(open.result)
     }
     open.onupgradeneeded = function (evt) {
@@ -151,33 +135,33 @@ async function openDatabase() {
 
 async function writeStore(value, key) {
   var db = await openDatabase()
-  return new Promise(function (resolve) {
-    let transaction = db.transaction(DB_STORE_NAME, 'readwrite')
-    let objStore = transaction.objectStore(DB_STORE_NAME)
+  var transaction = db.transaction([DB_STORE_NAME], 'readwrite');
+  var objStore = transaction.objectStore(DB_STORE_NAME);
+  return await new Promise(function (resolve) {
     let storeValue = objStore.put(value, key)
-    //storeValue.onsuccess = resolve
-    transaction.oncomplete = resolve
+    storeValue.onsuccess = function () {}
+    transaction.oncomplete = function () {
+      //db.close()
+      resolve()
+    }
     storeValue.onerror = function (error) {
       console.error(error, value, key)
       resolve(error)
     }
+    transaction.commit()
   })
 }
 
 async function mkdirp(path) {
-  var segments = path.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/')
-    .split(/\/|\\/gi)
-  for(var i = 3; i < segments.length; i++)
+  var segments = path.split(/\/|\\/gi)
+  for(var i = 3; i <= segments.length; i++)
   {
     var dir = '/' + segments.slice(0, i).join('/')
     var obj = {
       timestamp: new Date(),
       mode: 16895
     }
-    try {
-      await writeStore(obj, dir)
-    } catch (e) {
-    }
+    await writeStore(obj, dir)
   }
 }
 
@@ -194,25 +178,22 @@ async function fetchAsset(url, key) {
       precacheConfig.push(k.toLowerCase().replace(/^\/base\//ig, 'assets/'))
     })
   }
-  await mkdirp('/base/' + key.replace(/^\/base\/|^\/?assets\/|^\/|\/[^\/]*$/i, ''))
+  key = key.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/')
+  await mkdirp('base/' + key.replace(/^\/?base\/|^\/?assets\/|^\/|\/[^\/]*$/ig, ''))
   var obj = {
     timestamp: new Date(),
     mode: 33206,
     contents: new Uint8Array(content)
   }
-  try {
-    await writeStore(obj, '/base/' + key.replace(/^\/base\/|^\/?assets\/|^\//i, ''))
-  } catch (e) {
-  }
+  await writeStore(obj, '/base/' + key.replace(/^\/?base\/|^\/?assets\/|^\//ig, ''))
   return response
 }
 
 self.addEventListener('install', function(event) {
-  var db
   event.waitUntil(
     Promise.all(precacheConfig.map(function (requiredFile) {
       var localName = '/base/' + requiredFile.replace(/^\/?assets\//ig, '')
-      return readFile(db, DB_STORE_NAME, localName)
+      return readFile(localName)
         .then(function (files) {
           if(files && files.contents) {
             // already saved
@@ -228,6 +209,12 @@ self.addEventListener('install', function(event) {
   )
 })
 self.addEventListener('activate', function(event) {
+  // make sure database is created so emscripten picks up the same instance
+  event.waitUntil(openDatabase()
+    .then(db => {
+      open = null
+      db.close()
+    })
   return self.clients.claim();
 })
 self.addEventListener('fetch', function(event) {
@@ -287,15 +274,14 @@ self.addEventListener('fetch', function(event) {
                       : 'application/octet-stream'
         }
       }
-      event.respondWith(
-        readFile(null, DB_STORE_NAME, localName)
-          .then(async function (files) {
-            if(files && files.contents) {
-              return new Response(files.contents, init)
-            } else {
-              return await fetchAsset(event.request.url, url)
-            }
-          }))
+      event.respondWith(readFile(localName)
+        .then(function (files) {
+          if(files && files.contents) {
+            return new Response(files.contents, init)
+          } else {
+            return fetchAsset(event.request.url, url)
+          }
+        }))
     }
   }
 })

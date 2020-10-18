@@ -162,34 +162,33 @@ var LibrarySysNet = {
 			try {
 				var handle = FS.stat(PATH.join(SYSF.fs_basepath, file[1]))
 				if(handle) {
-					return SYSN.DownloadLazyFinish(file)
+					return SYSN.downloadsCompleted.push(file)
 				}
 			} catch (e) {
 				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
 					SYSC.Error('fatal', e.message)
 				}
 			}
-      SYSN.downloads.push(file[1])
-      SYSF.downloadImmediately(function () {
+      SYSF.downloadSingle(file[1], function () {
         SYSN.downloadsCompleted.push(file)
       })
 		},
     buildAlternateUrls: function (mod) {
       var origMod = mod.replace(/-cc*r*/ig, '')
       var hasOldURL = SYSC.oldDLURL.length > 0
-      SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
+      SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
       if(hasOldURL) {
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
       }
       // all of these test links are in case someone fucks up conversion or startup
-      if(SYSF.mods.map(function (f) {return f[0]}).includes(origMod)) {
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + origMod + '-cc/')
+      //if(SYSF.mods.map(function (f) {return f[0]}).includes(origMod)) {
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + origMod + '-cc/')
         if(hasOldURL)
-          SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-cc/')
-        SYSN.downloadTries.push(SYSC.addProtocol(SYSC.newDLURL) + '/' + origMod + '-ccr/')
+          SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-cc/')
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + origMod + '-ccr/')
         if(hasOldURL)
-          SYSN.downloadTries.push(SYSC.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-ccr/')
-      }
+          SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-ccr/')
+      //}
       SYSN.downloadTries = SYSN.downloadTries.filter(function (a, i, arr) {
         return arr.indexOf(a) === i
       })
@@ -200,7 +199,7 @@ var LibrarySysNet = {
       var mod = index.replace(/^\//ig, '').split(/\//ig)[0]
       var origMod = mod.replace(/-cc?r?\//ig, '\/')
       SYSN.buildAlternateUrls(mod)
-			SYSC.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
+			SYSN.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
 				if(err) {
 					SYSN.LoadingDescription('')
 					cb()
@@ -249,6 +248,36 @@ var LibrarySysNet = {
 				cb()
 			})
 		},
+    addProtocol: function (url) { 
+			return url.includes('://')
+				? url
+				: window
+					? (window.location.protocol + '//' + url)
+					: ('https://' + url)
+		},
+    DownloadAsset: function (asset, onprogress, onload) {
+      var segments = asset.replace(/^\//ig, '').split(/\//ig)
+			var noMod = segments.slice(1).join('/')
+			var tryDownload = 0
+      SYSN.downloadTries.sort(function (a, b) { 
+        return b.includes(segments[0]) - a.includes(segments[0])
+      })
+			var doDownload = function (baseUrl) {
+				SYSN.DoXHR(baseUrl + noMod, {
+					dataType: 'arraybuffer',
+					onprogress: onprogress,
+					onload: function (err, data) {
+						tryDownload++
+						if(err && tryDownload < SYSN.downloadTries.length) {
+							doDownload(SYSN.downloadTries[tryDownload])
+							return
+						}
+						onload(err, data, baseUrl)
+					}
+				})
+			}
+			doDownload(SYSN.downloadTries[0])
+		},
   },
   Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_BeginDownload: function () {
@@ -264,7 +293,7 @@ var LibrarySysNet = {
       SYSN.buildAlternateUrls(SYSF.fs_game)
     FS.syncfs(!SYS.servicable, function (e) {
       if(e) console.log(e)
-      SYSC.DownloadAsset(cl_downloadName, function (loaded, total) {
+      SYSN.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
       }, function (err, data) {
@@ -351,7 +380,7 @@ var LibrarySysNet = {
   Sys_SocksMessage: function () {},
   Sys_NET_MulticastLocal: function (net, length, data) {
     // prevent recursion because NET_SendLoopPacket will call here again
-    if(SYSN.multicasting) return
+    if(SYSN.multicasting || typeof window.serverWorker == 'undefined') return
     SYSN.multicasting = true
     window.serverWorker.postMessage([
       'net',

@@ -68,32 +68,6 @@ var LibrarySysCommon = {
 				}
 			})()
 		},
-		addProtocol: function (url) { 
-			return url.includes('://')
-				? url
-				: window
-					? (window.location.protocol + '//' + url)
-					: ('https://' + url)
-		},
-		DownloadAsset: function (asset, onprogress, onload) {
-			var noMod = asset.replace(/^\//ig, '').split(/\//ig).slice(1).join('/')
-			var tryDownload = 0
-			var doDownload = function (baseUrl) {
-				SYSN.DoXHR(baseUrl + noMod, {
-					dataType: 'arraybuffer',
-					onprogress: onprogress,
-					onload: function (err, data) {
-						tryDownload++
-						if(err && tryDownload < SYSN.downloadTries.length) {
-							doDownload(SYSN.downloadTries[tryDownload])
-							return
-						}
-						onload(err, data, baseUrl)
-					}
-				})
-			}
-			doDownload(SYSN.downloadTries[0])
-		},
 		mkdirp: function (p) {
 			try {
 				FS.mkdir(p, 16895);

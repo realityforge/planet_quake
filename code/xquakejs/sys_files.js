@@ -12,40 +12,41 @@ var LibrarySysFiles = {
       // A list of supported mods, 'dirname-cc' (-ccr means combined converted repacked)
   		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
   		// We use a list here because Object keys have no guarantee of order
-			['baseq3', 			'Quake III Arena'],
+			['baseq3', 			 'Quake III Arena'],
 			['missionpack',  '0 Choice: Team Arena'],
 			['defrag',       '1 Choice: Defrag'],
 			['baseq3r',      '2 Choice: Q3Rally'],
-			['basemod', 		  '3 Choice: Monkeys of Doom'],
+			['basemod', 		 '3 Choice: Monkeys of Doom'],
 			['generations',  '4 Choice: Generations Arena'],
-			['q3f2', 				'5 Choice: Q3 Fortress 2'],
-			['cpma', 				'6 Choice: Challenge ProMode'],
-			['q3ut4', 		 	  '7 Choice: Urban Terror 4'],
-			['freezetag', 	  '8 Choice: Freeze Tag'],
-			['corkscrew', 	  '9 Choice: Corkscrew'],
-			['freon', 			  'Excessive Plus: Freon'],
-      ['baseoa', 			'Open Arena'],
-			['bfpq3', 			  'Bid For Power'],
-			['excessive', 	  'Excessive+'],
-			['q3ut3', 			  'Urban Terror 3'],
-			['edawn', 			  'eDawn'],
-			['geoball', 		  'Geoball'],
-			['neverball', 	  'Neverball'],
+			['q3f2', 				 '5 Choice: Q3 Fortress 2'],
+			['cpma', 				 '6 Choice: Challenge ProMode'],
+			['q3ut4', 		 	 '7 Choice: Urban Terror 4'],
+			['freezetag', 	 '8 Choice: Freeze Tag'],
+			['corkscrew', 	 '9 Choice: Corkscrew'],
+			['freon', 			 'Excessive Plus: Freon'],
+      ['baseoa', 			 'Open Arena'],
+			['bfpq3', 			 'Bid For Power'],
+			['excessive', 	 'Excessive+'],
+			['q3ut3', 			 'Urban Terror 3'],
+			['edawn', 			 'eDawn'],
+			['geoball', 		 'Geoball'],
+			['neverball', 	 'Neverball'],
 			['omissionpack', 'OpenArena Mission Pack'],
-			['platformer', 	'Platformer'],
-			['legoc', 			  'Lego Carnage'],
-			['osp', 				  'Orange Smoothie Productions'],
+			['platformer', 	 'Platformer'],
+			['legoc', 			 'Lego Carnage'],
+			['osp', 				 'Orange Smoothie Productions'],
 			['quake2arena',  'Quake 2 Arena'],
-			['smokin', 			'Smokin\' Guns'],
-			['wfa', 				  'Weapons Factory Arena'],
-			['uberarena', 	  'Uber Arena'],
-			['demoq3', 			'Quake III Demo'],
-			['mfdata', 			'Military Forces'],
+			['smokin', 			 'Smokin\' Guns'],
+			['wfa', 				 'Weapons Factory Arena'],
+			['uberarena', 	 'Uber Arena'],
+			['demoq3', 			 'Quake III Demo'],
+			['mfdata', 			 'Military Forces'],
 			['conjunction',  'Dark Conjunction'],
-			['chili', 			  'Chili Quake XXL'],
-			['hqq', 				  'High Quality Quake'],
-      ['entityplus', 	'Engine Of Creation: Entity Plus'],
+			['chili', 			 'Chili Quake XXL'],
+			['hqq', 				 'High Quality Quake'],
+      ['entityplus', 	 'Engine Of Creation: Entity Plus'],
       ['wop',          'World of Padman'],
+      ['truecombat',   'True Combat 1.3'],
 			['rocketarena',  'Coming Soon: Rocket Arena'],
 			['gpp',          'Coming Soon: Tremulous'],
 			['gppl',         'Coming Soon: Unvanquished'],
@@ -112,11 +113,29 @@ var LibrarySysFiles = {
       }
     },
     downloadsDone: function () {
+      // save to drive
       return FS.syncfs(false, function (e) {
         if(e) console.log(e)
         SYSN.downloads = []
         SYSN.LoadingDescription('')
         SYSC.ProxyCallback()
+      })
+    },
+    downloadSingle: function (file, resolve) {
+      SYSN.DownloadAsset(file, null, function (err, data) {
+        if(err) return resolve(err)
+        try {
+          if(!SYS.servicable) {
+            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
+            FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
+              encoding: 'binary', flags: 'w', canOwn: true })
+          }
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+            SYSC.Error('fatal', e.message)
+          }
+        }
+        resolve(file)
       })
     },
     downloadImmediately: function (cb) {
@@ -126,28 +145,24 @@ var LibrarySysFiles = {
         return
       }
       var total = SYSN.downloads.length
-      Promise.all(SYSN.downloads.map(function (file, i) { 
-        return new Promise(function (resolve) {
-          SYSC.DownloadAsset(file, null, function (err, data) {
-            SYSN.LoadingProgress(++total, total)
-            if(err) return resolve(err)
-            try {
-              if(!SYS.servicable) {
-                SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
-                FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
-                  encoding: 'binary', flags: 'w', canOwn: true })
-              }
-            } catch (e) {
-              if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-                SYSC.Error('fatal', e.message)
-              }
-            }
-            resolve(file)
+      var count = 0
+      var chunks = []
+      var doUntilEmpty
+      doUntilEmpty = function (resolve) {
+        var file = SYSN.downloads.pop()
+        if(file) {
+          SYSF.downloadSingle(file, function () {
+            SYSN.LoadingProgress(++count, total)
+            doUntilEmpty(resolve)
           })
-          // save to drive
-        })
-      })).then(cb)
-      SYSN.downloads = []
+        } else {
+          resolve()
+        }
+      }
+      for(var c = 0; c < 10; c++) {
+        chunks[c] = new Promise(doUntilEmpty)
+      }
+      return Promise.all(chunks).then(cb)
     },
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
@@ -183,9 +198,8 @@ var LibrarySysFiles = {
     var blankFile = new Uint8Array(4)
     
     SYSN.LoadingDescription('Loading Game UI...')
-    var fsMountPath = SYSF.fs_basegame
-    if(SYSF.fs_game && SYSF.fs_game.localeCompare(SYSF.fs_basegame) !== 0) {
-      fsMountPath = SYSF.fs_game // TODO: comment this out to test server induced downloading
+    if(!SYSF.fs_game || SYSF.fs_game.localeCompare(SYSF.fs_basegame) === 0) {
+      SYSF.fs_game = SYSF.fs_basegame // TODO: comment this out to test server induced downloading
     }
 
     // mount a persistable filesystem into base
@@ -208,9 +222,16 @@ var LibrarySysFiles = {
 
       SYSC.Print('initial sync completed in ' + ((Date.now() - start) / 1000).toFixed(2) + ' seconds')
 
+      // add the current fs_game to the mods list so it shows up on the mods menu
+      if(!SYSF.mods.map(function (mod) {
+        return mod[0]
+      }).includes(SYSF.fs_game)) {
+        SYSF.mods.push([SYSF.fs_game, SYSF.fs_game])
+      }
+
       for(var i = 0; i < (SYSF.mods || []).length; i++) {
         var desc = PATH.join(SYSF.fs_basepath, SYSF.mods[i][0], 'description.txt')
-        var prettyDesc = Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length-1))
+        var prettyDesc = Uint8Array.from(intArrayFromString(SYSF.mods[i][1]).slice(0, SYSF.mods[i][1].length))
         var origMod = PATH.join(SYSF.fs_basepath, SYSF.mods[i][0].replace(/-cc*r*$/ig, ''))
         SYSC.mkdirp(origMod)
         var symLinks = [
@@ -227,8 +248,16 @@ var LibrarySysFiles = {
             }
           }
         })
-        SYSC.mkdirp(PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir'))
+        // mods must have at least one pk3 to be considered valid, since we download individual files there likely isn't one
+        var markerPk3Dir = PATH.join(PATH.dirname(desc), '0000placeholder.pk3dir')
+        SYSC.mkdirp(markerPk3Dir)
         FS.writeFile(desc, prettyDesc, {encoding: 'binary', flags: 'w', canOwn: true })
+        SYSF.index[PATH.dirname(desc).toLowerCase() + '/'] = {
+          name: PATH.dirname(desc.replace(SYSF.fs_basepath, '')),
+        }
+        SYSF.index[markerPk3Dir.toLowerCase() + '/'] = {
+          name: markerPk3Dir.replace(SYSF.fs_basepath, ''),
+        }
         SYSF.index[desc.toLowerCase()] = {
           name: desc.replace(SYSF.fs_basepath, ''),
           size: prettyDesc.length
@@ -236,27 +265,29 @@ var LibrarySysFiles = {
       }
 
       SYSC.mkdirp(PATH.join(SYSF.fs_basepath, SYSF.fs_basegame))
-      SYSC.mkdirp(PATH.join(SYSF.fs_basepath, fsMountPath))
+      if(SYSF.fs_game != SYSF.fs_basegame) {
+        SYSC.mkdirp(PATH.join(SYSF.fs_basepath, SYSF.fs_game))
+      }
 
       SYSN.downloads = []
       var indexes = [
         SYSF.fs_basegame
       ]
-      if(fsMountPath != SYSF.fs_basegame) {
-        indexes.push(fsMountPath)
+      if(SYSF.fs_game != SYSF.fs_basegame) {
+        indexes.push(SYSF.fs_game)
       }
       if(mapname.length > 0) {
-        indexes.push(fsMountPath + '/index-' + mapname.toLowerCase() + '.json')
+        indexes.push(SYSF.fs_game + '/index-' + mapname.toLowerCase() + '.json')
       }
       if(playername.length > 0) {
-        indexes.push(fsMountPath + '/index-' + playername.toLowerCase() + '.json')
+        indexes.push(SYSF.fs_game + '/index-' + playername.toLowerCase() + '.json')
       }
       var current = 0
       var download;
       SYSN.downloadAlternates = []
-      SYSN.downloadTries = []
       download = function () {
         if(current < indexes.length) {
+          SYSN.downloadTries = []
           SYSN.DownloadIndex(indexes[current], download)
           current++
         } else {

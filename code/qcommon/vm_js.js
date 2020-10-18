@@ -1062,6 +1062,7 @@ var LibraryVM = {
 		return vm.suspended;
 	},
 	VM_SuspendCompiled__deps: ['$SYSC'],
+	VM_SuspendCompiled__sig: 'vii',
 	VM_SuspendCompiled: function (vmp, stackOnEntry) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
@@ -1075,6 +1076,7 @@ var LibraryVM = {
 		vm.stackOnEntry = stackOnEntry;
 	},
 	VM_ResumeCompiled__deps: ['$SYSC', 'VM_SuspendCompiled'],
+	VM_ResumeCompiled__sig: 'vii',
 	VM_ResumeCompiled: function (vmp) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
