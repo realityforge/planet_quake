@@ -227,9 +227,9 @@ Server.prototype.lookupDNS = async function (address) {
     }
     if(address.localeCompare(dstIP, 'en', { sensitivity: 'base' }) > 0) {
       console.log('DNS found ' + address + ' -> ' + dstIP)
+			self._dnsLookup[address] = dstIP.replace('::ffff:', '')
     }
-		self._dnsLookup[address] = dstIP.replace('::ffff:', '')
-    return resolve(self._dnsLookup[address])
+    return resolve(dstIP.replace('::ffff:', ''))
   }))
 }
 
