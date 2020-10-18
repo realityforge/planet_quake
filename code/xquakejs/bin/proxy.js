@@ -46,6 +46,7 @@ for(var i = 0; i < process.argv.length; i++) {
     }
     ports.push(parseInt(a))
 	} else if (a == '--proxy-ip') {
+    console.log('Forwarding ip address: ', process.argv[i+1])
     forwardIP = process.argv[i+1]
     i++
   } else {
@@ -93,7 +94,7 @@ ports.forEach((p, i, ports) => {
   })
 
   var wss = new WebSocketServer({server: httpServer})
-
+  
   wss.on('connection', function(ws) {
   	try {
   		socks._onConnection(ws)

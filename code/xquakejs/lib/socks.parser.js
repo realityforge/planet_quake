@@ -243,7 +243,7 @@ Parser.prototype._onData = function(message) {
             srcPort: undefined,
             dstAddr: this._dstaddr.replace('\0', ''),
             dstPort: this._dstport,
-            data: this._buffer.subarray(i, len)
+            data: Buffer.from(this._buffer.subarray(i, len))
           })
           return
         }

@@ -814,7 +814,7 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
-    ret = sendto( socks_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
+    ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -1475,7 +1475,7 @@ void NET_OpenSocks_After_Listen( void ) {
     Cvar_Set("net_socksLoading", "0");
 		return;
 	}
-	if( buf[3] != 1 ) {
+	if( buf[3] != 1 && buf[3] != 4 ) {
 		Com_Printf( "NET_OpenSocks: relay address is not IPV4: %i\n", buf[3] );
     Cvar_Set("net_socksLoading", "0");
     socks_socket = INVALID_SOCKET;

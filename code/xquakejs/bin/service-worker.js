@@ -112,10 +112,23 @@ async function readFile(key) {
 }
 
 async function openDatabase() {
+  if(open && open.readyState != 'done') {
+    var checkInterval, count = 0
+    await new Promise(resolve => {
+      checkInterval = setInterval(() => {
+        if(open.readyState == 'done' || count === 1000) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+        else
+          count++
+      }, 20)
+    })
+  }
+  if(open && open.readyState == 'done') {
+    return Promise.resolve(open.result)
+  }
   return await new Promise(function (resolve) {
-    if(open) {
-      return resolve(open.result)
-    }
     open = indexedDB.open('/base', 21)
     open.onsuccess = function () {
       resolve(open.result)
@@ -214,7 +227,7 @@ self.addEventListener('activate', function(event) {
     .then(db => {
       open = null
       db.close()
-    })
+    }))
   return self.clients.claim();
 })
 self.addEventListener('fetch', function(event) {

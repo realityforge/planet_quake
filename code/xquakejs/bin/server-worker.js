@@ -5,10 +5,10 @@ if(typeof global != 'undefined')
 var serverWorker = self
 window.serverWorker = self
 
-onmessage = function(e) {
+self.onmessage = function(e) {
   if(e.data[0] == 'init') {
     importScripts('quake3e.js')
-    SYSM.args.push.apply(SYSM.args, e.data[1])
+    Module.args = e.data[1]
   } else if(e.data[0] == 'execute') {
     var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK)
     _Cbuf_AddText(cmd)

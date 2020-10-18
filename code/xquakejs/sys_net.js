@@ -341,7 +341,7 @@ var LibrarySysNet = {
     }
     if(!SYSN.socksInterval) {
       SYSN.socksInterval = setInterval(function () {
-        if(!SYSN.peer) return
+        if(!SYSN.peer || !SYSN.sock || !SYSN.socksfd) return
         if(SYSN.peer.socket.readyState == SYSN.peer.socket.OPEN) {
           SYSN.peer.socket.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
             { binary: true })
@@ -356,16 +356,18 @@ var LibrarySysNet = {
     }
     var socksOpen = function (id) {
       SYSN.socksfd = id
-      SYSN.sock = SOCKFS.getSocket(SYSN.socksfd)
-      SYSN.peer = Object.values(SYSN.sock.peers)[0]
-      SYSN.port = SYSC.Cvar_VariableIntegerValue('net_port')
-      if(SYSN.reconnect) {
-        SYSN.reconnect = false
-        SYSN.peer.socket.send(Uint8Array.from([
-          0xFF, 0xFF, 0xFF, 0xFF,
-          'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
-          (SYSN.port & 0xFF00) >> 8, (SYSN.port & 0xFF)
-        ]))
+      if(SYSN.socksfs) {
+        SYSN.sock = SOCKFS.getSocket(SYSN.socksfd)
+        SYSN.peer = Object.values(SYSN.sock.peers)[0]
+        SYSN.port = SYSC.Cvar_VariableIntegerValue('net_port')
+        if(SYSN.reconnect) {
+          SYSN.reconnect = false
+          SYSN.peer.socket.send(Uint8Array.from([
+            0xFF, 0xFF, 0xFF, 0xFF,
+            'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
+            (SYSN.port & 0xFF00) >> 8, (SYSN.port & 0xFF)
+          ]))
+        }
       }
       callback()
     }

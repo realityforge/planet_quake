@@ -923,7 +923,7 @@ void SV_Init( void )
 	
 */
 #ifdef EMSCRIPTEN
-	sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com:27950", CVAR_ARCHIVE );
+	sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com", CVAR_ARCHIVE );
 	sv_master[23] = Cvar_Get( "sv_master21", "207.246.91.235:27950", CVAR_ARCHIVE );
 #endif
 

@@ -331,6 +331,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string );
 			}
+#ifndef EMSCRIPTEN
 #ifdef USE_IPV6
 			if(netenabled & NET_ENABLEV6)
 			{
@@ -348,6 +349,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string );
 			}
+#endif
 #endif
 		}
 

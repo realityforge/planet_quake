@@ -1741,6 +1741,9 @@ function printErr() {
 }
 exportContext.Module.printErr = exportContext.printErr = printErr 
 exportContext.Module.onRuntimeInitialized = function () {
+  if(typeof exportContext.Module.args != 'undefined') {
+    SYSM.args.push.apply(SYSM.args, exportContext.Module.args)
+  }
   SYS.dedicated = dedicated
   SYS.servicable = 'serviceWorker' in navigator && window.serviceWorker
 }
