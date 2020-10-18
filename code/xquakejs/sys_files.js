@@ -12,19 +12,19 @@ var LibrarySysFiles = {
       // A list of supported mods, 'dirname-cc' (-ccr means combined converted repacked)
   		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
   		// We use a list here because Object keys have no guarantee of order
-			['baseq3', 			 'Quake III Arena'],
-			['missionpack',  '0 Choice: Team Arena'],
+			['baseq3', 			 'Quake III Arena', '(players|player)\/(sarge|major)'],
+			['missionpack',  '0 Choice: Team Arena', '(players|player)\/(sarge|james)'],
 			['defrag',       '1 Choice: Defrag'],
-			['baseq3r',      '2 Choice: Q3Rally'],
+			['baseq3r',      '2 Choice: Q3Rally', '(players|player)\/(sidepipe)'],
 			['basemod', 		 '3 Choice: Monkeys of Doom'],
 			['generations',  '4 Choice: Generations Arena'],
 			['q3f2', 				 '5 Choice: Q3 Fortress 2'],
-			['cpma', 				 '6 Choice: Challenge ProMode'],
-			['q3ut4', 		 	 '7 Choice: Urban Terror 4'],
+			['cpma', 				 '6 Choice: Challenge ProMode', '(players|player)\/(sarge|mynx)'],
+			['q3ut4', 		 	 '7 Choice: Urban Terror 4', '(players|player)\/(athena|orion)'],
 			['freezetag', 	 '8 Choice: Freeze Tag'],
 			['corkscrew', 	 '9 Choice: Corkscrew'],
 			['freon', 			 'Excessive Plus: Freon'],
-      ['baseoa', 			 'Open Arena'],
+      ['baseoa', 			 'Open Arena', '(players|player)\/(sarge|gi)'],
 			['bfpq3', 			 'Bid For Power'],
 			['excessive', 	 'Excessive+'],
 			['q3ut3', 			 'Urban Terror 3'],
@@ -46,7 +46,7 @@ var LibrarySysFiles = {
 			['hqq', 				 'High Quality Quake'],
       ['entityplus', 	 'Engine Of Creation: Entity Plus'],
       ['wop',          'World of Padman'],
-      ['truecombat',   'True Combat 1.3'],
+      ['truecombat',   'True Combat 1.3', '(tc_players|player)\/(sarge|alpha)'],
 			['rocketarena',  'Coming Soon: Rocket Arena'],
 			['gpp',          'Coming Soon: Tremulous'],
 			['gppl',         'Coming Soon: Unvanquished'],
@@ -64,6 +64,10 @@ var LibrarySysFiles = {
         + '|\/' + mapname + '\.aas', 'i')
       var playerMatch = new RegExp('sarge\/'
         + '|' + modelname + '\/', 'i')
+      var mod = SYSF.mods.filter(function (mod) {
+        return mod[0] == SYSF.fs_game.replace(/-cc*r*$/ig, '')
+      })[0]
+      var defaultModel = new RegExp((mod || [])[2] || '(players|player)\/(sarge|major)', 'i')
       // servers need some map and model info for hitboxes up front
       for(var i = 0; i < keys.length; i++) {
         var file = SYSF.index[keys[i]]
@@ -87,26 +91,26 @@ var LibrarySysFiles = {
 
         // download files required to start
         if(file.name.match(/description\.txt|\.pk3$|\.wasm|\.qvm|\.cfg|\.arena|\.shader|\.font/i)
-        // download files for menu system
+          // download files for menu system
           || file.name.match(/\.menu|menus\.txt|ingame\.txt|hud[0-9]*\.txt|arenas\.txt/i)
           || file.name.match(/ui\/.*\.h|\.crosshair|logo512|banner5|\/hit\.|\/2d\//i)
-        // download required model and bot
-          || file.name.match(/\.hit|sarge\/|botfiles|\.bot|bots\.txt|gfx\//i)
-        // download the current map if it is referred to
+          // download required model and bot
+          || file.name.match(/\.ini|\.hit|botfiles|\.bot|bots\.txt|gfx\//i)
+          // download the current map if it is referred to
           || (modelname.length > 0 && file.name.match(playerMatch))
+          || file.name.match(defaultModel)
           || (mapname.length > 0 && file.name.match(mapMatch))) {
           SYSF.index[keys[i]].downloading = true
           SYSN.downloads.push(file.name)
         } else if (
           // these files can be streamed in
-          file.name.match(/(players|player)\/(sarge|major|sidepipe|athena|orion|gi)\//i)
           // download levelshots and common graphics
-          || file.name.match(/levelshots|(^|\/)ui\/|common\/|icons\/|menu\/|sfx\//i)
+          file.name.match(/levelshots|(^|\/)ui\/|common\/|icons\/|menu\/|sfx\//i)
           // stream player icons so they show up in menu
           || file.name.match(/\/icon_|\.skin/i)
         ) {
           // TODO: reenable this when engine is stable, stream extra content
-          // don't mark as downloading so if its required it can be upgraded
+          // don't mark as downloading so if its required it can be upgraded to immediate
           //SYSN.downloadLazy.push(file.name)
         } else {
         }
