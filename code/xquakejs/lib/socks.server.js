@@ -213,7 +213,7 @@ Server.prototype._onRequest = async function(socket, onData, onEnd, reqInfo) {
     //console.log('Requesting', reqInfo.cmd, reqInfo.dstAddr, ':', reqInfo.dstPort)
 		if(socket._socket.resume)
 			socket._socket.resume()
-    await this.proxyCommand.apply(this, [socket, reqInfo])
+    await this.proxyCommand.apply(this, [socket, reqInfo, onData])
   }
 }
 
@@ -277,6 +277,7 @@ function ReadString(read, message) {
 
 function SHOWNET(message, socket, client) {
   var unzipped
+	if(message === true) return
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
     var msg = Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
@@ -380,8 +381,8 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
   var bufrep = returnIP || !domain
     ? Buffer.alloc(4 + localbytes.length + 2 /* port */)
     : Buffer.alloc(4 + 1 /* for strlen */ + domain.length + 1 /* \0 null */ + 2)
-  bufrep[0] = 0x00
-  bufrep[1] = 0x00
+  bufrep[0] = 0x05
+  bufrep[1] = message === true ? REP.SUCCESS : 0x00
   bufrep[2] = 0x00
   if(returnIP || !domain) {
     bufrep[3] = isWebSocket ? 0x04 : 0x01
@@ -397,7 +398,8 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
   }
   SHOWNET(message, socket, true)
   //console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort, isWebSocket)
-  socket.send(Buffer.concat([bufrep, message]), { binary: true })
+  socket.send(message === true ? bufrep : Buffer.concat([bufrep, message]),
+	 	{ binary: true })
 	self._timeouts[udpLookupPort] = Date.now()
 }
 
@@ -425,7 +427,7 @@ Server.prototype._onConnection = function(socket) {
     var remoteAddr = `${socket._socket.remoteAddress}:${socket._socket.remotePort}`
     console.log(`Websocket connection ${remoteAddr}....`)
     socket.on('message', onData)
-		socket.on('message', onEnd)
+		//socket.on('message', onEnd)
     socket._socket.setTimeout(0)
     socket._socket.setNoDelay(true)
     socket._socket.setKeepAlive(true)
@@ -435,7 +437,7 @@ Server.prototype._onConnection = function(socket) {
   } else if (socket instanceof Socket) {
     console.log(`Net socket connection ${socket.remoteAddress}:${socket.remotePort}....`)
     socket.on('data', onData)
-		socket.on('end', onEnd)
+		//socket.on('end', onEnd)
 		socket.setTimeout(0)
     socket.setNoDelay(true)
     socket.setKeepAlive(true)
@@ -505,7 +507,7 @@ Server.prototype._onSocketConnect = function(udpLookupPort, reqInfo) {
     socket.dstSock.pipe(socket._socket)
   } else {
     console.log('Starting messages ' + ipv6.kind(), socket._socket.localPort)
-    socket.send(bufrep, { binary: true })
+    //socket.send(bufrep, { binary: true })
   }
 }
 
@@ -638,7 +640,7 @@ Server.prototype.websocketRequest = async function (onError, onUDPMessage, onFor
   self._directConnects[remoteAddr]._error = onError
 }
 
-Server.prototype.proxyCommand = async function(socket, reqInfo) {
+Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
   var self = this
   var dstIP
   try {
@@ -734,8 +736,10 @@ Server.prototype.proxyCommand = async function(socket, reqInfo) {
 				self._timeouts[socket.dstPort || reqInfo.srcPort] = Date.now()
       } else {
         // this is a TCP ip connection with no prior bindings?
-        console.log(`${socket._socket.remoteAddress}:${socket._socket.remotePort}`, 'SHOULD NEVER HIT HERE', reqInfo)
+        console.log(`${socket._socket.remoteAddress}:${socket._socket.remotePort}`,
+					'TCP connection to ', reqInfo.dstAddr, reqInfo.dstPort)
         var dstSock = new Socket()
+				self._receivers[socket._socket.remotePort] = socket
         socket.dstSock = dstSock
 				socket.dstPort = reqInfo.dstPort
 				dstSock.setTimeout(0)
@@ -744,9 +748,31 @@ Server.prototype.proxyCommand = async function(socket, reqInfo) {
 				dstSock.send = dstSock.write
 				dstSock._socket = dstSock
 				dstSock.close = dstSock.end
+				socket._socket.pause()
         dstSock.on('error', self._onErrorNoop)
-               .on('connect', self._onSocketConnect.bind(this, reqInfo.dstPort, reqInfo))
-               .connect(reqInfo.dstPort, dstIP)
+					/*
+					.on('data', function (message) {
+						self._onUDPMessage(socket._socket.remotePort, false, message, {
+							address: dstIP, port: reqInfo.dstPort
+						})
+					})
+					*/
+					.on('end', function () {
+						socket._socket.pause()
+						socket.unpipe(socket.dstSock)
+						socket.on('data', onData)
+						socket._socket.resume()
+					})
+					.on('connect', function () {
+						self._onUDPMessage(socket._socket.remotePort, false, true, {
+							address: socket._socket.localAddress, port: dstSock.address().port
+						})
+						socket.off('data', onData)
+						socket._socket.pipe(socket.dstSock)
+				    socket.dstSock.pipe(socket._socket)
+						socket._socket.resume()
+					})
+					.connect(reqInfo.dstPort, dstIP)
       }
     // special websocket piping for quakejs servers
 		} else if(reqInfo.cmd == Parser.CMD.WS) {
