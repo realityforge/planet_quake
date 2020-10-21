@@ -54,7 +54,10 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens, don't resize so often as it might crash mobile, remove -cc/-ccr specialities in client by managing the index better in the proxy/web server and index.json files, cl_lazyLoad 2 and 3 for only loading during downtimes, add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, allow the server to run in one thread on mobile, adjust gun position for vertical screen resolution or small screens, don't resize so often as it might crash mobile, remove -cc/-ccr specialities in client by managing the index better in the proxy/web server and index.json files, cl_lazyLoad 2 and 3 for only loading during downtimes, add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile, bring back download commands for grabbing new content
+  * SSE support in vm_js.js, https://emscripten.org/docs/porting/simd.html
+  * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
+  * Switching renderers to WebGL 1/OpenGL 1/ES 1+2
   * Alternate chat server integration, discord and telegram
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup
   * Use com_journal instead of index.json (or manifest.json in quakejs)

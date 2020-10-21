@@ -615,6 +615,16 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 
 
 /*
+=============
+RE_UpdateMode
+=============
+*/
+void GLimp_UpdateMode( glconfig_t *config ) {
+	GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
+}
+
+
+/*
 ===============
 GLimp_Init
 

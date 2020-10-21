@@ -981,6 +981,9 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 	case UI_GETGLCONFIG:
 		VM_CHECKBOUNDS( uivm, args[1], sizeof( glconfig_t ) );
+#ifdef EMSCRIPTEN
+		cls.uiGlConfig = VMA(1);
+#endif
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 
@@ -1224,6 +1227,8 @@ void CL_ShutdownUI( void ) {
 #ifdef EMSCRIPTEN
 	cls.cursorx = 0;
 	cls.cursory = 0;
+	cls.uiGlConfig = NULL;
+	cls.numUiPatches = 0;
 #endif
 }
 

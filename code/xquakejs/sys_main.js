@@ -220,11 +220,13 @@ var LibrarySysMain = {
       return args
     },
     updateVideoCmd: function () {
-			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+      canvas.setAttribute('width', window.innerWidth)
+      canvas.setAttribute('height', window.innerHeight)
+			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart fast;'
 				.replace('%fs', window.fullscreen ? '1' : '0')
 				.replace('%w', window.innerWidth)
 				.replace('%h', window.innerHeight)
-			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
+			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
 		},
     resizeViewport: function () {
 			if (!Module['canvas']) {
@@ -232,8 +234,8 @@ var LibrarySysMain = {
 				return;
 			}
 
-			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay);
-			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
+			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay)
+			//SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')

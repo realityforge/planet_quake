@@ -28,6 +28,7 @@
     "dgram": "^1.0.1",
     "express": "^4.17.1",
     "ip6addr": "^0.2.3",
+    "mime": "^2.4.6",
     "nipplejs": "^0.8.5",
     "node-stream-zip": "^1.9.1",
     "optimist": "^0.6.1",

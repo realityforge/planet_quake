@@ -327,6 +327,24 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
+#ifdef EMSCRIPTEN
+
+#define MAX_PATCHES  8
+
+typedef enum {
+	PATCH_NONE,
+	PATCH_XSCALE,
+	PATCH_YSCALE,
+	PATCH_BIAS
+} patch_type_t;
+
+typedef struct patch_s {
+	patch_type_t type;
+	void *addr;
+} patch_t;
+
+#endif
+
 typedef struct {
 	connstate_t	state;				// connection status
 	qboolean	gameSwitch;
@@ -394,6 +412,20 @@ typedef struct {
 	float		 cursorx;
 	float    cursory;
 	qboolean postgame;
+#ifdef EMSCRIPTEN
+	glconfig_t *uiGlConfig;
+
+	patch_t uiPatches[MAX_PATCHES];
+	unsigned numUiPatches;
+
+	// the cgame scales are normally stuffed somewhere inbetween
+	// cgameGlConfig and cgameFirstCvar
+	glconfig_t *cgameGlConfig;
+	vmCvar_t *cgameFirstCvar;
+
+	patch_t cgamePatches[MAX_PATCHES];
+	unsigned numCgamePatches;
+#endif	
 } clientStatic_t;
 
 extern int bigchar_width;
@@ -660,7 +692,7 @@ void	CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *hei
 void	GLimp_Init( glconfig_t *config );
 void	GLimp_Shutdown( qboolean unloadDLL );
 void	GLimp_EndFrame( void );
-
+void  GLimp_UpdateMode( glconfig_t *config );
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
 

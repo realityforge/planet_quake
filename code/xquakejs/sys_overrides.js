@@ -25,7 +25,7 @@ if(typeof IDBFS != 'undefined') {
         return callback(new Error('node type not supported'))
       }
     } catch (e) {
-      if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
+      if (!(e instanceof FS.ErrnoError) || e.code !== 'EEXIST') {
         return callback(e)
       }
     }

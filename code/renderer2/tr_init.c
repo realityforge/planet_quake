@@ -1709,9 +1709,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.SetDvrFrame = RE_SetDvrFrame;
 	re.LoadShaders = RE_LoadShaders;
-	re.UpdateModel = R_UpdateModel;
 	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
-	//re.UpdateMode = RE_UpdateMode;
+	re.UpdateMode = RE_UpdateMode;
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
 	re.UpdateShader = RE_UpdateShader;
@@ -1719,4 +1718,22 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.ResetBannerSpy = RE_ResetBannerSpy;
 
 	return &re;
+}
+
+
+/*
+=============
+RE_UpdateMode
+=============
+*/
+void RE_UpdateMode(glconfig_t *glconfigOut) {
+	R_IssuePendingRenderCommands();
+
+	ri.GLimp_UpdateMode( glconfigOut );
+
+	GL_SetDefaultState();
+
+	GL_CheckErrors();
+
+	*glconfigOut = glConfig;
 }

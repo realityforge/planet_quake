@@ -227,8 +227,8 @@ self.addEventListener('activate', function(event) {
     .then(db => {
       open = null
       db.close()
+      return self.clients.claim()
     }))
-  return self.clients.claim();
 })
 self.addEventListener('fetch', function(event) {
   if (event.request.method === 'GET') {

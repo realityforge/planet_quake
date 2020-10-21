@@ -2509,5 +2509,6 @@ void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer);
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );
+void RE_UpdateMode(glconfig_t *glconfigOut);
 
 #endif //TR_LOCAL_H
