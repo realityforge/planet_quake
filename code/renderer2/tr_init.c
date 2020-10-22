@@ -1729,6 +1729,7 @@ RE_UpdateMode
 void RE_UpdateMode(glconfig_t *glconfigOut) {
 	R_IssuePendingRenderCommands();
 
+	glconfigOut = &glConfig;
 	ri.GLimp_UpdateMode( glconfigOut );
 
 	GL_SetDefaultState();

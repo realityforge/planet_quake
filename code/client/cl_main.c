@@ -1989,6 +1989,8 @@ static void CL_Vid_Restart( void ) {
 			glconfig_t old = *cls.uiGlConfig;
 
 			*cls.uiGlConfig = cls.glconfig;
+Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
+ 	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
 
 			float oldXScale = old.vidWidth * (1.0 / 640.0);
 			float oldYScale = old.vidHeight * (1.0 / 480.0);
@@ -2114,6 +2116,8 @@ static void CL_Vid_Restart( void ) {
 
 			*cls.cgameGlConfig = cls.glconfig;
 
+Com_Printf( "Cgame Old Scale: %i x %i -> New Scale: %i x %i\n",
+ 	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
 			float oldXScale = old.vidWidth / 640.0;
 			float oldYScale = old.vidHeight / 480.0;
 
@@ -2135,19 +2139,21 @@ static void CL_Vid_Restart( void ) {
 					float *xScale = (float*)current;
 					float *yScale = ((float*)current)+1;
 
-					if (fabs(*xScale - oldXScale) < MATCH_EPSILON && fabs(*yScale - oldYScale) < MATCH_EPSILON) {
+					if (fabs(*xScale - oldXScale) < MATCH_EPSILON) {
 						cls.cgamePatches[cls.numCgamePatches].type = PATCH_XSCALE;
 						cls.cgamePatches[cls.numCgamePatches].addr = xScale;
 						cls.numCgamePatches++;
 						Com_Printf("Found cgame xscale offset at 0x%08x\n", (int)xScale);
-
+					}
+					
+					if (fabs(*yScale - oldYScale) < MATCH_EPSILON) {
 						cls.cgamePatches[cls.numCgamePatches].type = PATCH_YSCALE;
 						cls.cgamePatches[cls.numCgamePatches].addr = yScale;
 						cls.numCgamePatches++;
 						Com_Printf("Found cgame yscale offset at 0x%08x\n", (int)yScale);
-
-						current += 3;
 					}
+					
+					current += 1;
 				} while (++current != stop);
 			}
 

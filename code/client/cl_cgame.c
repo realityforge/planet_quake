@@ -795,6 +795,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETGLCONFIG:
 		VM_CHECKBOUNDS( cgvm, args[1], sizeof( glconfig_t ) );
 #ifdef EMSCRIPTEN
+		// TODO: add this to native build
 		cls.cgameGlConfig = VMA(1);
 #endif
 		CL_GetGlconfig( VMA(1) );
