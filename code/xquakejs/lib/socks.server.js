@@ -666,7 +666,6 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
 				socket.dstSock = self._listeners[reqInfo.dstPort]
 				socket.dstPort = reqInfo.dstPort
 				socket.dstSock.on('close', onClose)
-				socket.on('close', () => socket.dstSock.off('close', onClose))
         // TODO: make command line option --no-ws to turn this off
         await self.websockify(reqInfo, socket.dstSock.address().port)
 				

@@ -220,9 +220,14 @@ var LibrarySysMain = {
       return args
     },
     updateVideoCmd: function () {
-      canvas.setAttribute('width', window.innerWidth)
-      canvas.setAttribute('height', window.innerHeight)
-			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart fast;'
+      var oldHeight = canvas.getAttribute('height')
+      var oldWidth = canvas.getAttribute('width')
+      // only update size if the canvas changes by more than 0.1
+      if((oldWidth / oldHeight) - (canvas.clientWidth / canvas.clientHeight) < 0.1)
+        return
+      canvas.setAttribute('width', canvas.clientWidth)
+      canvas.setAttribute('height', canvas.clientHeight)
+			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart;'
 				.replace('%fs', window.fullscreen ? '1' : '0')
 				.replace('%w', window.innerWidth)
 				.replace('%h', window.innerHeight)
@@ -231,11 +236,11 @@ var LibrarySysMain = {
     resizeViewport: function () {
 			if (!Module['canvas']) {
 				// ignore if the canvas hasn't yet initialized
-				return;
+				return
 			}
 
 			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay)
-			//SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
+			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')

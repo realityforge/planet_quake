@@ -179,7 +179,7 @@ async function mkdirp(path) {
 }
 
 async function fetchAsset(url, key) {
-  var response = await fetch(url, {credentials: 'omit'})
+  var response = await fetch(url, {credentials: 'omit', mode: 'no-cors'})
   if (!response.ok) {
     throw new Error('Request for ' + key + ' returned a ' +
       'response with status ' + response.status)

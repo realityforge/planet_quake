@@ -1745,9 +1745,18 @@ exportContext.Module.onRuntimeInitialized = function () {
     SYSM.args.push.apply(SYSM.args, exportContext.Module.args)
   }
   SYS.dedicated = dedicated
-  SYS.servicable = 'serviceWorker' in navigator && window.serviceWorker
 }
 if(dedicated) {
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+      .then(function (registration) {
+        if(typeof SYS != 'undefined') SYS.servicable = true
+      })
+      .catch(function (err) {
+        if(typeof SYS != 'undefined') SYS.servicable = false
+        console.log('Service Worker registration failed: ', err)
+      })
+  }
   // in a worker
   exportContext.Module.noInitialRun = false
   exportContext.location = new URL(location.origin + '?set dedicated 2')

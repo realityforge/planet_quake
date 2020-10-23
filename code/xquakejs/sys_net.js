@@ -57,7 +57,28 @@ var LibrarySysNet = {
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-      fetch(url, {credentials: 'omit'})
+      /*
+      return new Promise(resolve => {
+        var request = new XMLHttpRequest();
+        request.open('GET', url)
+        request.responseType = 'blob'
+        request.credentials = 'omit'
+        request.mode = 'no-cors'
+
+        request.onload = function() {
+          request.response.status = request.status
+          resolve(request.response)
+        }
+        
+        request.onerror = function() {
+          request.response.status = request.status
+          resolve(request.error)
+        }
+
+        request.send()
+      })
+      */
+      fetch(url, {responseType: 'blob', credentials: 'omit', mode: 'no-cors'})
         .catch(function (e) { console.log(e) })
         .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
@@ -69,18 +90,18 @@ var LibrarySysNet = {
             }
             if(!xhrError)
               return response.arrayBuffer()
-                .then(function (data) {
-                  if (opts.dataType === 'json') {
-                    try {
-                      data = JSON.parse(data)
-                    } catch (e) {
-                      xhrError = e
-                    }
-                  }
-                  if (opts.onload) {
-                    opts.onload(xhrError, data)
-                  }
-                })
+        })
+        .then(function (data) {
+          if (opts.dataType === 'json') {
+            try {
+              data = JSON.parse(data)
+            } catch (e) {
+              xhrError = e
+            }
+          }
+          if (opts.onload) {
+            opts.onload(xhrError, data)
+          }
         })
     },
     DownloadLazyFinish: function (file) {
@@ -304,11 +325,11 @@ var LibrarySysNet = {
         } else {
           var newKey = PATH.join(SYSF.fs_basepath, cl_downloadName)
           // TODO: don't need to save here because service-worker fetch() already did
-          if(!SYS.servicable) {
+          //if(!SYS.servicable) {
             SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(cl_downloadName)))
             FS.writeFile(PATH.join(SYSF.fs_basepath, cl_downloadName), new Uint8Array(data), {
               encoding: 'binary', flags: 'w', canOwn: true })
-          }
+          //}
           // do need to add ad-hoc server downloads to the index
           SYSF.index[newKey.toLowerCase()] = {
             name: newKey.replace(SYSF.fs_basepath, ''), // would try to delete/origMod /baseq3/ but we just add it back on in DownloadIndex
