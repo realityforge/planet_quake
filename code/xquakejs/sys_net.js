@@ -35,6 +35,7 @@ var LibrarySysNet = {
 			if (!desc) {
 				progress.style.display = 'none'
 				flipper.style.display = 'none'
+        SYS.previousProgress = [0, 0]
 				SYSN.LoadingProgress(0)
 			} else {
 				progress.style.display = 'block'
@@ -47,10 +48,14 @@ var LibrarySysNet = {
         window.serverWorker.postMessage(['status', SYSC.desc, [progress, total]])
         return
       }
-			var frac = progress / total
-			var progress = document.getElementById('loading-progress')
-			var bar = progress.querySelector('.bar')
-			bar.style.width = (frac*100) + '%'
+      if(!progress) progress = SYS.previousProgress[0]
+      if(!total) total = SYS.previousProgress[1]
+      SYS.previousProgress = [progress, total]
+			var frac = SYS.serviceProgress 
+        ? (progress + SYS.serviceProgress[0]) / (total + SYS.serviceProgress[0])
+        : progress / total
+			var progressBar = document.getElementById('loading-progress').querySelector('.bar')
+			progressBar.style.width = (frac*100) + '%'
 		},
     DoXHR: function (url, opts) {
       var xhrError = null
@@ -83,15 +88,17 @@ var LibrarySysNet = {
         .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
               xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
-              if (opts.onload) {
-                opts.onload(xhrError, null)
-              }
               return
-            }
-            if(!xhrError)
+            } else
               return response.arrayBuffer()
         })
         .then(function (data) {
+          if(xhrError) {
+            if (opts.onload) {
+              opts.onload(xhrError, null)
+            }
+            return
+          }
           if (opts.dataType === 'json') {
             try {
               data = JSON.parse(data)

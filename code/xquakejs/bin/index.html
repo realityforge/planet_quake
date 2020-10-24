@@ -213,36 +213,41 @@
 </div>
 	
 <script>
-    if('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js', { scope: '/' })
-		.then(function (registration) {
-		  window.serviceWorker = true
-		  if(typeof SYS != 'undefined') SYS.servicable = true
-		})
-		.catch(function (err) {
-		  window.serviceWorker = false
-		  if(typeof SYS != 'undefined') SYS.servicable = false
-		  console.log('Service Worker registration failed: ', err)
-		})
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+	.then(function (registration) {
+	  window.serviceWorker = true
+	  if(typeof SYS != 'undefined') SYS.servicable = true
+	})
+	.catch(function (err) {
+	  window.serviceWorker = false
+	  if(typeof SYS != 'undefined') SYS.servicable = false
+	  console.log('Service Worker registration failed: ', err)
+	})
+}
+
+if('Worker' in window) {
+  window.serverWorker = new Worker('server-worker.js')
+  window.serverWorker.onmessage = function (e) {
+    if(e.data[0] == 'init') {
+      //SYSC.Cvar_SetValue('sv_running', 1)
+    } else if(e.data[0] == 'net') {
+      if(typeof SYSM != 'undefined' && !SYSM.exited)
+        SYSN.receiveNetLoop(e.data[1], e.data[2])
+    } else if(e.data[0] == 'status') {
+      if(typeof SYSM != 'undefined' && !SYSM.exited) {
+        SYSN.LoadingDescription.apply(null, e.data[1])
+        if(e.data[2]) {
+          SYS.serviceProgress = e.data[2]
+          SYSN.LoadingProgress()
+        } else {
+          SYS.serviceProgress = [0, 0]
+        }
+      }
     }
-		if('Worker' in window) {
-		  window.serverWorker = new Worker('server-worker.js')
-		  window.serverWorker.onmessage = function (e) {
-		    if(e.data[0] == 'init') {
-		      //SYSC.Cvar_SetValue('sv_running', 1)
-		    } else if(e.data[0] == 'net') {
-		      if(typeof SYSM != 'undefined' && !SYSM.exited)
-		        SYSN.receiveNetLoop(e.data[1], e.data[2])
-		    } else if(e.data[0] == 'status') {
-		      if(typeof SYSM != 'undefined' && !SYSM.exited) {
-		        SYSN.LoadingDescription.apply(null, e.data[1])
-		        if(e.data[2]) {
-		          SYSN.LoadingProgress.apply(null, e.data[2])
-		        }
-		      }
-		    }
-		  }
-		}
+  }
+}
+
 </script>
 <script type="text/javascript" src="/webgl-debug.js"></script>
 <script type="text/javascript" src="/nipplejs.js"></script>

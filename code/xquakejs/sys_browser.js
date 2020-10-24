@@ -1,6 +1,8 @@
 var LibrarySys = {
 	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL', '$VM', '$Browser'],
 	$SYS: {
+		serviceProgress: [0, 0],
+		previousProgress: [0, 0],
 		servicable: false,
 		dedicated: true,
 		resizeDelay: null,
