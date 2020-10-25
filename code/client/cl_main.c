@@ -4293,6 +4293,8 @@ qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, int mode,
 	} else if ( mode == -1 ) { // custom resolution
 		r_customwidth = Cvar_Get("r_customWidth", "", 0);
 		r_customheight = Cvar_Get("r_customHeight", "", 0);
+Com_Printf( "New Scale: %i x %i\n",
+ 	r_customwidth->integer, r_customheight->integer);
 		*width = r_customwidth->integer;
 		*height = r_customheight->integer;
 		pixelAspect = r_customPixelAspect->value;

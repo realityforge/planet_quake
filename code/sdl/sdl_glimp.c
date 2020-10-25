@@ -574,6 +574,7 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
 
+#ifndef EMSCRIPTEN
 	if(SDL_window) {
 		SDL_DisplayMode desktopMode;
 		int display = SDL_GetWindowDisplayIndex( SDL_window );
@@ -591,6 +592,7 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
 		return RSERR_OK;
 	}
+#endif
 
 #ifdef EMSCRIPTEN
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan, webGL2 );

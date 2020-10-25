@@ -217,6 +217,18 @@ var LibrarySysMain = {
           //  '+set', 'net_socksEnabled', '0',
         ])
       }
+      if(window.innerWidth / window.innerHeight < .8
+        && !args.includes('cg_gunZ') && !args.includes('cg_gunX')) {
+        args.push.apply(args, [
+          '+set', 'cg_gunZ', '-5',
+          '+set', 'cg_gunX', '-5',
+        ])
+      } else {
+        args.push.apply(args, [
+          '+set', 'cg_gunZ', '0',
+          '+set', 'cg_gunX', '0',
+        ])
+      }
       return args
     },
     updateVideoCmd: function () {
@@ -228,10 +240,15 @@ var LibrarySysMain = {
         return
       canvas.setAttribute('width', canvas.clientWidth)
       canvas.setAttribute('height', canvas.clientHeight)
-			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart;'
+			var update = 'set r_fullscreen %fs; set r_mode -1;'
+        + ' set r_customWidth %w; set r_customHeight %h;'
+        + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
 				.replace('%fs', window.fullscreen ? '1' : '0')
 				.replace('%w', canvas.clientWidth)
 				.replace('%h', canvas.clientHeight)
+        .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
+          ? -5 : 0)
+
 			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
 		},
     resizeViewport: function () {
