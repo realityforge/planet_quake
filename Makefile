@@ -665,7 +665,7 @@ endif
   RANLIB=$(EMSCRIPTEN)/emranlib
   ARCH=js
   BINEXT=.js
-
+  SHLIBEXT=wasm
 
   DEBUG=0
   EMCC_DEBUG=0
@@ -746,6 +746,8 @@ ifneq ($(USE_CODEC_OPUS),0)
     -I$(OPUSDIR)/silk/float \
 		-I$(OPUSFILEDIR)/include 
 endif
+
+  SHLIBCFLAGS = -fPIC -fvisibility=hidden
 
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1
@@ -840,7 +842,9 @@ endif
 ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/$(TARGET_REND1)
+    ifneq ($(PLATFORM),js)
+      TARGETS += $(B)/$(TARGET_REND1)
+    endif
     TARGETS += $(B)/$(TARGET_REND2)
 #    TARGETS += $(B)/$(TARGET_RENDJS)
 #    TARGETS += $(B)/$(TARGET_RENDV)

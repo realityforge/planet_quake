@@ -400,7 +400,11 @@ var LibrarySysMain = {
   Sys_SetStatus__deps: ['$SYSN'],
   Sys_SetStatus: function (s) {
     var args = Array.from(arguments)
-      .map(function (a) { return UTF8ToString(a) })
+      .map(function (a, i) { return i == 0
+        ? UTF8ToString(a)
+        // TODO: fix this for numbers and strings, 
+        //   return the correct type based on the position of variable
+        : UTF8ToString(HEAP32[a>>2]) })
     SYSC.Print(args)
     window.serverWorker.postMessage(['status', args])
   },
