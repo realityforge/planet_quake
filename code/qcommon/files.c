@@ -4819,9 +4819,11 @@ void FS_Startup_After_Async( void )
 #endif
 
 	// add search path elements in reverse priority order
+#ifndef EMSCRIPTEN
 	if ( fs_steampath->string[0] ) {
 		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string );
 	}
+#endif
 
 	if ( fs_basepath->string[0] ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );

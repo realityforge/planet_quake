@@ -575,7 +575,7 @@ char *Sys_ConsoleInput( void )
 		}
 		return NULL;
 	}
-	else if ( stdin_active && com_dedicated->integer )
+	else if ( com_dedicated && stdin_active && com_dedicated->integer )
 	{
 		int len;
 		fd_set fdset;

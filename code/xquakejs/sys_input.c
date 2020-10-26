@@ -361,9 +361,11 @@ static void IN_ActivateMouse( qboolean isFullscreen )
 
 
 void IN_GrabMouse(void) {
-	Com_Printf( "IN_GrabMouse: grabbing mouse\n" );
-	SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
-	SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+	if(in_mouse) {
+		Com_Printf( "IN_GrabMouse: grabbing mouse\n" );
+		SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
+		SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+	}
 }
 
 /*
