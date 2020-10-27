@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <ogg/ogg.h>
-#include "vorbis/codec.h"
+#include "../ogg/ogg.h"
+#include "./codec.h"
 #include "codec_internal.h"
 #include "registry.h"
 #include "scales.h"
@@ -107,14 +107,3 @@ void _analysis_output(char *base,int i,float *v,int n,int bark,int dB,
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-
-

@@ -22,7 +22,7 @@
 #endif
 
 #include <math.h>
-#include <ogg/os_types.h>
+#include "../ogg/os_types.h"
 
 #include "misc.h"
 
@@ -126,6 +126,7 @@ static inline int vorbis_ftoi(double f){  /* yes, double!  Otherwise,
 
 typedef ogg_int16_t vorbis_fpu_control;
 
+#ifndef EMSCRIPTEN
 static __inline int vorbis_ftoi(double f){
         int i;
         __asm{
@@ -134,6 +135,7 @@ static __inline int vorbis_ftoi(double f){
         }
         return i;
 }
+#endif
 
 static __inline void vorbis_fpu_setround(vorbis_fpu_control *fpu){
   (void)fpu;
@@ -171,6 +173,7 @@ static __inline void vorbis_fpu_restore(vorbis_fpu_control fpu){
 
 /* If no special implementation was found for the current compiler / platform,
    use the default implementation here: */
+#ifndef EMSCRIPTEN
 #ifndef VORBIS_FPU_CONTROL
 
 typedef int vorbis_fpu_control;
@@ -187,5 +190,6 @@ static int vorbis_ftoi(double f){
 #  define vorbis_fpu_restore(vorbis_fpu_control) {}
 
 #endif /* default implementation */
+#endif
 
 #endif /* _OS_H */

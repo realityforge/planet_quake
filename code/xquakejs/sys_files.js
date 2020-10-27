@@ -68,6 +68,7 @@ var LibrarySysFiles = {
         return mod[0] == SYSF.fs_game.replace(/-cc*r*$/ig, '')
       })[0]
       var defaultModel = new RegExp((mod || [])[2] || '(players|player)\/(sarge|major)', 'i')
+      
       // servers need some map and model info for hitboxes up front
       for(var i = 0; i < keys.length; i++) {
         var file = SYSF.index[keys[i]]
@@ -296,8 +297,18 @@ var LibrarySysFiles = {
           current++
         } else {
           SYSN.downloadTries = SYSN.downloadAlternates
-          SYSF.filterDownloads(mapname, modelname)
-          cb()
+          SYSN.DownloadAsset('quake3e_opengl2_js.wasm', null, function (err, data) {
+            if(!err) {
+              try {
+                FS.writeFile(PATH.join(SYSF.fs_basepath, 'quake3e_opengl2_js.wasm'), new Uint8Array(data), {
+                  encoding: 'binary', flags: 'w', canOwn: true })
+              } catch (e) {
+                console.error(e)
+              }
+            }
+            SYSF.filterDownloads(mapname, modelname)
+            cb()
+          })
         }
       }
       download()

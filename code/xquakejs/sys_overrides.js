@@ -205,8 +205,16 @@ if(typeof GL != 'undefined') {
     return handle
   }
 }
+/*
 if(typeof JSEvents != 'undefined') {
+  var oldRegistration = JSEvents.registerOrRemoveHandler
   JSEvents.registerOrRemoveHandler = function (event) {
-    console.log('Skipping event registration: ' + event.eventTypeString)
+    if(event.eventTypeString.includes('pointerlock')
+      || event.eventTypeString.includes('touch')
+      || event.eventTypeString.includes('focus')) {
+      oldRegistration(event)
+    } else 
+      console.log('Skipping event registration: ' + event.eventTypeString)
   }
 }
+*/

@@ -285,7 +285,7 @@ var LibrarySysNet = {
 		},
     DownloadAsset: function (asset, onprogress, onload) {
       var segments = asset.replace(/^\//ig, '').split(/\//ig)
-			var noMod = segments.slice(1).join('/')
+			var noMod = segments.length > 1 ? segments.slice(1).join('/') : segments[0]
 			var tryDownload = 0
       SYSN.downloadTries.sort(function (a, b) { 
         return b.includes(segments[0]) - a.includes(segments[0])
@@ -300,11 +300,16 @@ var LibrarySysNet = {
 							doDownload(SYSN.downloadTries[tryDownload])
 							return
 						}
-						onload(err, data, baseUrl)
+            if(onload)
+						  onload(err, data, baseUrl)
 					}
 				})
 			}
-			doDownload(SYSN.downloadTries[0])
+      if(segments.length > 1) {
+  			doDownload(SYSN.downloadTries[0])
+      } else {
+        doDownload('')
+      }
 		},
   },
   Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],

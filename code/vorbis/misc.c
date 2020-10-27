@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "vorbis/codec.h"
+#include "./codec.h"
 #define MISC_C
 #include "misc.h"
 #include <sys/time.h>
@@ -213,4 +213,3 @@ void _VDBG_free(void *ptr,char *file,long line){
     free(ptr);
   }
 }
-

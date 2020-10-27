@@ -695,7 +695,7 @@ endif
   USE_VOIP=0
   SDL_LOADSO_DLOPEN=0
   USE_OPENAL_DLOPEN=0
-  USE_RENDERER_DLOPEN=0
+  USE_RENDERER_DLOPEN=1
   USE_LOCAL_HEADERS=0
   USE_INTERNAL_LIBS=1
   GL_EXT_direct_state_access=1
@@ -707,21 +707,17 @@ endif
 		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
 		-DUSE_Q3KEY -DUSE_MD5 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm/include
-#	-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-#	-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
-#	-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
-#	-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
-
-ifneq ($(USE_CODEC_VORBIS),0)
-  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
-endif
+		-I$(EMSCRIPTEN_CACHE)/wasm/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=0 \
-    -s SAFE_HEAP=1 \
+		-s WASM=1 \
+    -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
@@ -730,8 +726,8 @@ endif
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
     -O3 -Oz \
-    -s WASM=0 \
-    -s SAFE_HEAP=1 \
+    -s WASM=1 \
+    -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
@@ -740,13 +736,20 @@ endif
 
 ifneq ($(USE_CODEC_OPUS),0)
   RELEASE_CFLAGS += \
-		-DUSE_CODEC_OPUS \
+		-DUSE_CODEC_OPUS=1 \
     -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
 		-I$(OPUSDIR)/include \
 		-I$(OPUSDIR)/celt \
 		-I$(OPUSDIR)/silk \
     -I$(OPUSDIR)/silk/float \
 		-I$(OPUSFILEDIR)/include 
+endif
+
+ifneq ($(USE_CODEC_VORBIS),0)
+  RELEASE_CFLAGS += \
+    -DUSE_CODEC_VORBIS=1 \
+    -I$(OGGDIR)/ \
+    -I$(VORBISDIR)/
 endif
 
   SHLIBCFLAGS = -fPIC -fvisibility=hidden
@@ -776,6 +779,7 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
 		--pre-js $(QUAKEJS)/sys_polyfill.js \
 		--post-js $(QUAKEJS)/sys_overrides.js \
+		-s RELOCATABLE=1 \
 		-s STRICT=1 \
 		-s AUTO_JS_LIBRARIES=1 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
@@ -1012,6 +1016,8 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
+	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
@@ -1367,7 +1373,6 @@ Q3OBJ = \
   $(B)/client/snd_main.o \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
-  $(B)/client/snd_codec_ogg.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
@@ -1420,6 +1425,38 @@ Q3OBJ = \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
+
+ifneq ($(USE_CODEC_VORBIS),0)
+Q3OBJ += \
+  $(B)/client/snd_codec_ogg.o \
+  $(B)/client/ogg/bitwise.o \
+  $(B)/client/ogg/framing.o \
+  \
+  $(B)/client/vorbis/analysis.o \
+  $(B)/client/vorbis/barkmel.o \
+  $(B)/client/vorbis/bitrate.o \
+  $(B)/client/vorbis/block.o \
+  $(B)/client/vorbis/codebook.o \
+  $(B)/client/vorbis/floor0.o \
+  $(B)/client/vorbis/floor1.o \
+  $(B)/client/vorbis/info.o \
+  $(B)/client/vorbis/lookup.o \
+  $(B)/client/vorbis/lpc.o \
+  $(B)/client/vorbis/lsp.o \
+  $(B)/client/vorbis/mapping0.o \
+  $(B)/client/vorbis/mdct.o \
+  $(B)/client/vorbis/misc.o \
+  $(B)/client/vorbis/psy.o \
+  $(B)/client/vorbis/psytune.o \
+  $(B)/client/vorbis/registry.o \
+  $(B)/client/vorbis/res0.o \
+  $(B)/client/vorbis/sharedbook.o \
+  $(B)/client/vorbis/smallft.o \
+  $(B)/client/vorbis/synthesis.o \
+  $(B)/client/vorbis/vorbisenc.o \
+  $(B)/client/vorbis/vorbisfile.o \
+  $(B)/client/vorbis/window.o
+endif
 
 ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
@@ -1831,6 +1868,12 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
 
 $(B)/client/%.o: $(JPDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/ogg/%.o: $(OGGDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/vorbis/%.o: $(VORBISDIR)/%.c
 	$(DO_CC)
 
 $(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
