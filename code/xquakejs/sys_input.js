@@ -299,7 +299,7 @@ var LibrarySysInput = {
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
       
-      document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
+      document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
       document.addEventListener("visibilitychange", SYSI.InputPushFocus, false)
       /*
       let nipple handle touch events

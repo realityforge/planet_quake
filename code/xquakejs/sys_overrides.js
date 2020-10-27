@@ -205,3 +205,8 @@ if(typeof GL != 'undefined') {
     return handle
   }
 }
+if(typeof JSEvents != 'undefined') {
+  JSEvents.registerOrRemoveHandler = function (event) {
+    console.log('Skipping event registration: ' + event.eventTypeString)
+  }
+}

@@ -915,7 +915,8 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 		code_pos++;
 		ci->op = op0;
 		if ( n == 4 ) {
-			ci->value = LittleLong( *((int*)code_pos) );
+			memcpy(&ci->value, code_pos, 4);
+		//	ci->value = LittleLong( *((int*)code_pos) );
 			code_pos += 4;
 		} else if ( n == 1 ) { 
 			ci->value = *((unsigned char*)code_pos);
@@ -923,9 +924,6 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 		} else {
 			ci->value = 0;
 		}
-if(i < 20) {
-	Com_Printf("LoadInstruction: n:%i - op:%i - v:%i\n", n, ci->op, ci->value);
-}
 
 		// setup jump value from previous const
 		if ( op0 == OP_JUMP && op1 == OP_CONST ) {
@@ -1000,7 +998,6 @@ const char *VM_CheckInstructions( instruction_t *buf,
 				return errBuf;
 			}
 			v = ci->value;
-Com_Printf("CheckInstructions: %i - %i\n", v, i);
 			if ( v < 0 || v >= PROGRAM_STACK_SIZE || (v & 3) ) {
 				sprintf( errBuf, "bad entry programStack %i at %i", v, i );
 				return errBuf;

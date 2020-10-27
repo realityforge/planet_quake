@@ -163,6 +163,8 @@ RJSDIR=$(MOUNT_DIR)/rendererjs
 RVDIR=$(MOUNT_DIR)/renderervk
 RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
+OGGDIR=$(MOUNT_DIR)/ogg
+VORBISDIR=$(MOUNT_DIR)/vorbis
 OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 CMDIR=$(MOUNT_DIR)/qcommon
@@ -686,7 +688,7 @@ endif
   USE_VULKAN=0
   USE_CURL=0
   USE_CURL_DLOPEN=0
-  USE_CODEC_VORBIS=1
+  USE_CODEC_VORBIS=0
   USE_CODEC_OPUS=0
   USE_FREETYPE=0
   USE_MUMBLE=0
@@ -705,11 +707,11 @@ endif
 		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
 		-DUSE_Q3KEY -DUSE_MD5 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
-		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
+		-I$(EMSCRIPTEN_CACHE)/wasm/include
+#	-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
+#	-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+#	-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
+#	-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
 
 ifneq ($(USE_CODEC_VORBIS),0)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
