@@ -762,7 +762,7 @@ endif
 		-s AUTO_JS_LIBRARIES=1 \
 		-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
 		-s SIDE_MODULE=1 \
-		-s RELOCATABLE=0 \
+		-s RELOCATABLE=1 \
 		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
 		-s ALLOW_TABLE_GROWTH=1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
@@ -809,17 +809,22 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
 		--pre-js $(QUAKEJS)/sys_polyfill.js \
 		--post-js $(QUAKEJS)/sys_overrides.js \
-		-DRELOCATABLE=1 \
+		-s RELOCATABLE=0 \
 		-s STRICT=1 \
 		-s AUTO_JS_LIBRARIES=1 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
-    -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent', '_CL_InitRef_After_Load_Callback']" \
+		-s EXPORT_ALL=1 \
+		-s DECLARE_ASM_MODULE_EXPORTS=1 \
+		-s LINKABLE=1 \
+		-s INCLUDE_FULL_LIBRARY=0 \
+		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \
     -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \
@@ -836,6 +841,7 @@ endif
 		-s USE_VORBIS=1 \
 		-s USE_ZLIB=1 \
 		-s USE_OGG=1 \
+		-s USE_PTHREADS=0 \
     -s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"quake3e\"
 
@@ -1654,10 +1660,6 @@ endif
 
 endif # build js
 endif # use vulcan
-else
-ifeq ($(PLATFORM),js)
-  Q3OBJ += $(B)/rend2/tr_extensions.o
-endif
 endif # no dlopen
 
 ifeq ($(ARCH),x86)
