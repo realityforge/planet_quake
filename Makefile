@@ -673,6 +673,7 @@ endif
   EMCC_DEBUG=0
 
   HAVE_VM_COMPILED=true
+  BUILD_CLIENT=1
   BUILD_SERVER=0
   BUILD_GAME_QVM=1
   BUILD_GAME_SO=0
@@ -697,7 +698,6 @@ endif
   USE_OPENAL_DLOPEN=0
   USE_RENDERER_DLOPEN=1
   USE_LOCAL_HEADERS=0
-  USE_INTERNAL_LIBS=1
   GL_EXT_direct_state_access=1
   GL_ARB_ES2_compatibility=1
   GL_GLEXT_PROTOTYPES=1
@@ -711,13 +711,15 @@ endif
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include/SDL2
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
 		-s WASM=1 \
-    -s SAFE_HEAP=0 \
+    -s SAFE_HEAP=1 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
@@ -747,12 +749,40 @@ endif
 
 ifneq ($(USE_CODEC_VORBIS),0)
   RELEASE_CFLAGS += \
-    -DUSE_CODEC_VORBIS=1 \
+	  -DUSE_CODEC_VORBIS=1 \
     -I$(OGGDIR)/ \
     -I$(VORBISDIR)/
 endif
 
-  SHLIBCFLAGS = -fPIC -fvisibility=hidden
+  SHLIBCFLAGS = \
+		-DEMSCRIPTEN \
+	  -fvisibility=hidden \
+		-O1 -g3 \
+		-s STRICT=1 \
+		-s AUTO_JS_LIBRARIES=1 \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+		-s SIDE_MODULE=1 \
+		-s RELOCATABLE=0 \
+		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
+		-s ALLOW_TABLE_GROWTH=1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s GL_UNSAFE_OPTS=0 \
+		-s LEGACY_GL_EMULATION=0 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
+		-s USE_SDL=2 \
+		-s EXPORT_NAME=\"quake3e_opengl2_js\" \
+		-s WASM=1 \
+    -s SAFE_HEAP=1 \
+    -s DEMANGLE_SUPPORT=1 \
+    -s ASSERTIONS=1 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -frtti \
+    -fPIC
 
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1
@@ -779,7 +809,7 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
 		--pre-js $(QUAKEJS)/sys_polyfill.js \
 		--post-js $(QUAKEJS)/sys_overrides.js \
-		-s RELOCATABLE=1 \
+		-DRELOCATABLE=1 \
 		-s STRICT=1 \
 		-s AUTO_JS_LIBRARIES=1 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
@@ -788,12 +818,12 @@ endif
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
-    -s GL_UNSAFE_OPTS=0 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent', '_CL_InitRef_After_Load_Callback']" \
     -s ALLOW_TABLE_GROWTH=1 \
     -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \
+		-s GL_UNSAFE_OPTS=0 \
     -s LEGACY_GL_EMULATION=0 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
 		-s MIN_WEBGL_VERSION=1 \
@@ -847,14 +877,15 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
-  ifneq ($(USE_RENDERER_DLOPEN),0)
-    ifneq ($(PLATFORM),js)
-      TARGETS += $(B)/$(TARGET_REND1)
-    endif
-    TARGETS += $(B)/$(TARGET_REND2)
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+ifneq ($(PLATFORM),js)
+  TARGETS += $(B)/$(TARGET_REND1)
+endif
+  TARGETS += $(B)/$(TARGET_REND2)
 #    TARGETS += $(B)/$(TARGET_RENDJS)
 #    TARGETS += $(B)/$(TARGET_RENDV)
-  endif
 endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
@@ -1609,7 +1640,6 @@ endif
   Q3OBJ += $(JPGOBJ)
 
 ifeq ($(USE_RENDERER_DLOPEN),0)
-
 ifeq ($(USE_VULKAN),1)
   Q3OBJ += $(Q3RENDVOBJ)
 else
@@ -1621,10 +1651,14 @@ ifeq ($(BUILD_RENDERER_OPENGL2),1)
 else
   Q3OBJ += $(Q3REND1OBJ)
 endif
-endif
-endif
 
+endif # build js
+endif # use vulcan
+else
+ifeq ($(PLATFORM),js)
+  Q3OBJ += $(B)/rend2/tr_extensions.o
 endif
+endif # no dlopen
 
 ifeq ($(ARCH),x86)
 ifndef MINGW

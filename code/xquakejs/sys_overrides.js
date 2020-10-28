@@ -218,3 +218,4 @@ if(typeof JSEvents != 'undefined') {
   }
 }
 */
+var Math_rand = Math.random

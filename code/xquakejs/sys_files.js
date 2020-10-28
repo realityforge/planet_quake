@@ -297,18 +297,8 @@ var LibrarySysFiles = {
           current++
         } else {
           SYSN.downloadTries = SYSN.downloadAlternates
-          SYSN.DownloadAsset('quake3e_opengl2_js.wasm', null, function (err, data) {
-            if(!err) {
-              try {
-                FS.writeFile(PATH.join(SYSF.fs_basepath, 'quake3e_opengl2_js.wasm'), new Uint8Array(data), {
-                  encoding: 'binary', flags: 'w', canOwn: true })
-              } catch (e) {
-                console.error(e)
-              }
-            }
-            SYSF.filterDownloads(mapname, modelname)
-            cb()
-          })
+          SYSF.filterDownloads(mapname, modelname)
+          cb()
         }
       }
       download()

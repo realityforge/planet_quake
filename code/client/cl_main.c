@@ -126,7 +126,11 @@ download_t			download;
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
 #ifdef USE_RENDERER_DLOPEN
+#ifdef EMSCRIPTEN
+static int rendererLib;
+#else
 static void	*rendererLib;
+#endif
 #endif
 
 ping_t	cl_pinglist[MAX_PINGREQUESTS];
@@ -2241,7 +2245,7 @@ void CL_Vid_Restart_After_Restart( void ) {
 ;
 
 	// initialize the renderer interface
-	CL_InitRef();
+	//CL_InitRef();
 
 	// startup all the client stuff
 	CL_StartHunkUsers();
@@ -3839,7 +3843,7 @@ void CL_StartHunkUsers( void ) {
 		CL_InitRef();
 	}
 
-	if ( !cls.rendererStarted ) {
+	if ( re.BeginRegistration && !cls.rendererStarted ) {
 		cls.rendererStarted = qtrue;
 		CL_InitRenderer();
 	}
@@ -3855,7 +3859,7 @@ void CL_StartHunkUsers( void ) {
 		S_BeginRegistration();
 	}
 
-	if ( !cls.uiStarted ) {
+	if ( re.BeginRegistration && !cls.uiStarted ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI();
 	}
@@ -3924,6 +3928,13 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 }
 
 
+#ifdef EMSCRIPTEN
+static void CL_InitRef_After_Load( void );
+static void CL_InitRef_After_Load2( void );
+static void CL_InitRenderer( void );
+#endif
+
+
 /*
 ============
 CL_InitRef
@@ -3955,11 +3966,44 @@ static void CL_InitRef( void ) {
 
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(NULL, CL_InitRef_After_Load);
+}
+
+void CL_InitRef_After_Load_Callback( int handle )
+{
+	rendererLib = handle;
+	Com_Frame_Proxy();
+}
+
+static void CL_InitRef_After_Load( void )
+{
+	char			dllName[ MAX_OSPATH ];
+#endif
+
 	if ( !rendererLib )
 	{
 		Cvar_ForceReset( "cl_renderer" );
 		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
+#ifdef EMSCRIPTEN
+	}
+	else {
+		CL_InitRef_After_Load2();
+		return;
+	}
+	Com_Frame_Callback(NULL, CL_InitRef_After_Load2);
+}
+
+static void CL_InitRef_After_Load2( void )
+{
+	refimport_t	rimp;
+	refexport_t	*ret;
+	GetRefAPI_t		GetRefAPI;
+	char			dllName[ MAX_OSPATH ];
+	{
+#endif
+
 		if ( !rendererLib )
 		{
 			Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
@@ -4073,6 +4117,19 @@ static void CL_InitRef( void ) {
 
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
+#ifdef USE_RENDERER_DLOPEN
+#ifdef EMSCRIPTEN
+	if(!cls.rendererStarted) {
+		cls.rendererStarted = qtrue;
+		CL_InitRenderer();
+	}
+
+	if(!cls.uiStarted) {
+		cls.uiStarted = qtrue;
+		CL_InitUI();
+	}
+#endif
+#endif
 }
 
 
@@ -4574,7 +4631,7 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
 #endif
 
-	CL_InitRef();
+	//CL_InitRef();
 
 	SCR_Init();
 
