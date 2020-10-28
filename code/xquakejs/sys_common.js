@@ -542,7 +542,7 @@ var LibrarySysCommon = {
 		        return obj[prop] = function() {
 							var func = resolveSymbol(prop, 'function')
 							if(!func) {
-								throw new Error('Couldn\t load function ' + prop)
+								throw new Error('Couldn\'t load function ' + prop)
 							}
 		          return func.apply(null, arguments)
 		        };

@@ -417,6 +417,11 @@ var LibrarySysInput = {
   },
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},
+  SDL_uclibc_exp: function(){},
+  SDL_uclibc_fmod: function(){},
+  SDL_uclibc_log10: function(){},
+  __cxa_find_matching_catch_3: function (){},
+  __cxa_find_matching_catch_2: function (){},
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

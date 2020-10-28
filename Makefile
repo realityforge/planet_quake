@@ -759,10 +759,10 @@ endif
 	  -fvisibility=hidden \
 		-O1 -g3 \
 		-s STRICT=1 \
-		-s AUTO_JS_LIBRARIES=1 \
+		-s AUTO_JS_LIBRARIES=0 \
 		-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
 		-s SIDE_MODULE=1 \
-		-s RELOCATABLE=1 \
+		-s RELOCATABLE=0 \
 		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
 		-s ALLOW_TABLE_GROWTH=1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
@@ -784,6 +784,7 @@ endif
     -frtti \
     -fPIC
 
+
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1
 #   -s MIN_WEBGL_VERSION=2
@@ -800,9 +801,9 @@ endif
 		-lsdl.js \
 		-lwebgl.js \
 		-lwebgl2.js \
-    --js-library $(QUAKEJS)/sys_common.js \
-    --js-library $(QUAKEJS)/sys_browser.js \
-    --js-library $(QUAKEJS)/sys_net.js \
+		--js-library $(QUAKEJS)/sys_common.js \
+		--js-library $(QUAKEJS)/sys_browser.js \
+		--js-library $(QUAKEJS)/sys_net.js \
 		--js-library $(QUAKEJS)/sys_files.js \
 		--js-library $(QUAKEJS)/sys_input.js \
 		--js-library $(QUAKEJS)/sys_main.js \
@@ -811,10 +812,10 @@ endif
 		--post-js $(QUAKEJS)/sys_overrides.js \
 		-s RELOCATABLE=0 \
 		-s STRICT=1 \
-		-s AUTO_JS_LIBRARIES=1 \
+		-s AUTO_JS_LIBRARIES=0 \
 		-s DISABLE_EXCEPTION_CATCHING=0 \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
-    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
@@ -823,7 +824,7 @@ endif
 		-s EXPORT_ALL=1 \
 		-s DECLARE_ASM_MODULE_EXPORTS=1 \
 		-s LINKABLE=1 \
-		-s INCLUDE_FULL_LIBRARY=0 \
+		-s INCLUDE_FULL_LIBRARY=1 \
 		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \
     -s INITIAL_MEMORY=50MB \
@@ -844,7 +845,7 @@ endif
 		-s USE_PTHREADS=0 \
     -s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"quake3e\"
-
+		
 else # ifeq js
 
 #############################################################################
