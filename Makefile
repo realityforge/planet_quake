@@ -667,7 +667,6 @@ endif
   RANLIB=$(EMSCRIPTEN)/emranlib
   ARCH=js
   BINEXT=.js
-  SHLIBEXT=wasm
 
   DEBUG=0
   EMCC_DEBUG=0
@@ -696,7 +695,7 @@ endif
   USE_VOIP=0
   SDL_LOADSO_DLOPEN=0
   USE_OPENAL_DLOPEN=0
-  USE_RENDERER_DLOPEN=1
+  USE_RENDERER_DLOPEN=0
   USE_LOCAL_HEADERS=0
   GL_EXT_direct_state_access=1
   GL_ARB_ES2_compatibility=1
@@ -718,7 +717,7 @@ endif
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=1 \
+		-s WASM=0 \
     -s SAFE_HEAP=1 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
@@ -760,9 +759,11 @@ endif
 		-O1 -g3 \
 		-s STRICT=1 \
 		-s AUTO_JS_LIBRARIES=0 \
-		-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s SIDE_MODULE=1 \
 		-s RELOCATABLE=0 \
+		-s LINKABLE=1 \
+		-s EXPORT_ALL=1 \
 		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
 		-s ALLOW_TABLE_GROWTH=1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
@@ -784,6 +785,15 @@ endif
     -frtti \
     -fPIC
 
+ifeq ($(USE_RENDERER_DLOPEN),1)
+  CLIENT_LDFLAGS += \
+		-s EXPORT_ALL=1 \
+		-s DECLARE_ASM_MODULE_EXPORTS=1 \
+		-s LINKABLE=1 \
+		-s INCLUDE_FULL_LIBRARY=1
+endif
+
+  SHLIBEXT=js
 
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1
@@ -820,11 +830,7 @@ endif
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent', '_CL_InitRef_After_Load_Callback']" \
-		-s EXPORT_ALL=1 \
-		-s DECLARE_ASM_MODULE_EXPORTS=1 \
-		-s LINKABLE=1 \
-		-s INCLUDE_FULL_LIBRARY=1 \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
 		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \
     -s INITIAL_MEMORY=50MB \

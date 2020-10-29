@@ -218,5 +218,7 @@ if(typeof JSEvents != 'undefined') {
   }
 }
 */
-var Math_rand = Math.random
-var Math_exp2 = _Q_exp2f
+if(typeof _Q_exp2f != 'undefined') {
+  var Math_rand = Math.random
+  var Math_exp2 = _Q_exp2f
+}

@@ -124,6 +124,35 @@ var LibrarySysCommon = {
 		    return new Uint8Array(buffer);
 		  });
 		},
+#if WASM == 0 || WASM2JS
+		/** @param {Object=} module */
+		getFunctionTables: function (module) {
+		  if (!module) module = Module;
+		  var tables = {};
+		  for (var t in module) {
+		    if (/^FUNCTION_TABLE_.*/.test(t)) {
+		      var table = module[t];
+		      if (typeof table === 'object') tables[t.substr('FUNCTION_TABLE_'.length)] = table;
+		    }
+		  }
+		  return tables;
+		},
+
+		/** @param {Object=} module */
+		alignFunctionTables: function (module) {
+		  var tables = SYSC.getFunctionTables(module);
+		  var maxx = 0;
+		  for (var sig in tables) {
+		    maxx = Math.max(maxx, tables[sig].length);
+		  }
+		  assert(maxx >= 0);
+		  for (var sig in tables) {
+		    var table = tables[sig];
+		    while (table.length < maxx) table.push(0);
+		  }
+		  return maxx;
+		},
+#endif // WASM == 0
 
 		// loadDynamicLibrary loads dynamic library @ lib URL / path and returns handle for loaded DSO.
 		//
@@ -185,7 +214,7 @@ var LibrarySysCommon = {
 
 		  // libData <- libFile
 		  function loadLibData(libFile) {
-#if WASM
+#if WASM && !WASM2JS
 		    // for wasm, we can use fetch for async, but for fs mode we can only imitate it
 		    if (flags.fs) {
 		      var libData = flags.fs.readFile(libFile, {encoding: 'binary'});
@@ -222,11 +251,12 @@ var LibrarySysCommon = {
 
 		  // libModule <- libData
 		  function createLibModule(libData) {
-#if WASM
+#if WASM && !WASM2JS
 		    return SYSC.loadWebAssemblyModule(libData, flags)
 #else
-		    var libModule = /**@type{function(...)}*/(eval(libData))(
-		      alignFunctionTables(),
+		    var libModule = /**@type{function(...)}*/(eval(
+					'(function (wasmTable, Module) {\n' + libData + '\nreturn Module})'))(
+		      SYSC.alignFunctionTables(),
 		      Module
 		    );
 		    // load dynamic libraries that this js lib depends on
@@ -321,7 +351,7 @@ var LibrarySysCommon = {
 		  return handle;
 		},
 
-#if WASM
+#if WASM && !WASM2JS
 		// Applies relocations to exported things.
 		relocateExports: function (exports, memoryBase, tableBase, moduleLocal) {
 		  var relocated = {};
@@ -673,10 +703,11 @@ var LibrarySysCommon = {
 	Sys_LoadLibrary__deps: [],
 	Sys_LoadLibrary: function (name) {
 		var file = UTF8ToString(name)
-		SYSN.DownloadAsset('quake3e_opengl2_js.wasm', null, function (err, data) {
+		file = file.replace(/\/?base\//ig, '')
+		SYSN.DownloadAsset(file, null, function (err, data) {
 			if(!err) {
 				try {
-					FS.writeFile(PATH.join(SYSF.fs_basepath, 'quake3e_opengl2_js.wasm'), new Uint8Array(data), {
+					FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
 						encoding: 'binary', flags: 'w', canOwn: true })
 				} catch (e) {
 					console.error(e)
@@ -685,8 +716,13 @@ var LibrarySysCommon = {
 						
 			return SYSC.loadDynamicLibrary(file, {
 				loadAsync: true, global: true, nodelete: true
-			}).then(Browser.safeCallback(_CL_InitRef_After_Load_Callback))
+			})
+			.catch(function(e) { err = e })
+			.then(Browser.safeCallback(function (handle) {
+				_CL_InitRef_After_Load_Callback(err ? 0 : handle)
+			}))
 		})
+		return 0
 	},
 	Sys_LoadFunction: function(handle, symbol) {
     // void *dlsym(void *restrict handle, const char *restrict name);
@@ -709,11 +745,14 @@ var LibrarySysCommon = {
 #endif
 
     if (!lib.module.hasOwnProperty(modSymbol)) {
-      return 0;
+			if(lib.module.hasOwnProperty(mangled)) {
+				modSymbol = mangled;
+			} else
+      	return 0;
     }
 
     var result = lib.module[modSymbol];
-#if WASM
+#if WASM && !WASM2JS
     // Attempt to get the real "unwrapped" symbol so we have more chance of
     // getting wasm function which can be added to a table.
     if (isMainModule) {
@@ -730,7 +769,7 @@ var LibrarySysCommon = {
     if (typeof result !== 'function')
       return result;
 
-#if WASM && EMULATE_FUNCTION_POINTER_CASTS
+#if WASM && EMULATE_FUNCTION_POINTER_CASTS && !WASM2JS
     // for wasm with emulated function pointers, the i64 ABI is used for all
     // function calls, so we can't just call addFunction on something JS
     // can call (which does not use that ABI), as the function pointer would
@@ -745,7 +784,7 @@ var LibrarySysCommon = {
     return result;
 #else // WASM && EMULATE_FUNCTION_POINTER_CASTS
 
-#if WASM
+#if WASM && !WASM2JS
     // Insert the function into the wasm table.  Since we know the function
     // comes directly from the loaded wasm module we can insert it directly
     // into the table, avoiding any JS interaction.
