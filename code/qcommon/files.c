@@ -212,7 +212,7 @@ static const unsigned pak_checksums[] = {
 };
 
 typedef struct altChecksumFiles {
-	char pakBasename[100];
+	char pakBasename[20];
 	unsigned checksum;
 } altChecksumFiles_t;
 

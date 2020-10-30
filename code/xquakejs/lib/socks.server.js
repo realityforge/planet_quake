@@ -35,7 +35,10 @@ var svc_strings = [
 
 var MAX_STRING_CHARS = 8192
 var MAX_PACKETLEN = 1400
+var MAX_MSGLEN = 16384
 var buffer
+var msgData
+var msg
 
 /*
 typedef struct {
@@ -139,9 +142,13 @@ var Huffman = require('../lib/huffman.js')
 Huffman.onRuntimeInitialized = () => {
   Huffman['_MSG_initHuffman']()
   buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', 1)
+	msgData = Huffman.allocate(new Int8Array(MAX_MSGLEN), 'i8', 1)
+	msg = Huffman.allocate(new Int32Array(40), 'i32', 1)
+	Huffman.HEAP32[(msg>>2)+3] = msgData
+	Huffman.HEAP32[(msg>>2)+4] = MAX_MSGLEN
+
   process.on('uncaughtException', Server.prototype._onErrorNoop)
 	process.on('unhandledRejection', Server.prototype._onErrorNoop)
-
 }
 
 Server.prototype._onClose = function (socket, onData, onEnd) {
@@ -275,19 +282,32 @@ function ReadString(read, message) {
   return [read[0], result]
 }
 
+function decompressMessage(message, offset) {
+	message.forEach((c,i) => Huffman.HEAP8[msgData+i] = c)
+	Huffman.HEAP32[(msg>>2)+5] = message.length
+	Huffman._Huff_Decompress( msg, 12 )
+	return Huffman.HEAP8.slice(msgData + offset, msgData + Huffman.HEAP32[(msg>>2)+5])
+}
+
+function convertPrintable(message) {
+	return Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
+}
+
 function SHOWNET(message, socket, client) {
   var unzipped
 	if(message === true) return
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
-    var msg = Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
+    var msg = convertPrintable(message)
 		unzipped = [client ? 'client' : 'server', msg]
     if(msg.match(/connectResponse/ig)) {
       socket.challenge = parseInt(msg.substr(20))
       socket.compat = false
       socket.incomingSequence = 0
-    } else if(msg.match(/connect/ig)) {
-      //Huffman._Huffman_Decode( message, 20 * 8 )
+    } else if(msg.match(/connect\s/ig)) {
+			var decompressed = decompressMessage(message, 12)
+			decompressed = convertPrintable(decompressed)
+      unzipped = [client ? 'client' : 'server', msg.substr(0, 12) + decompressed]
     }
   } else {
     //console.log(Array.from(message))
@@ -335,7 +355,11 @@ function SHOWNET(message, socket, client) {
       var seq = read[1]
     }
     switch(cmd) {
-      case 2:
+			case 0: // svc_bad
+			break
+			case 1: // svc_nop
+			break
+      case 2: // svc_gamestate
         /*
         while(true) {
           read = readBits(message, read[0], 8)
@@ -353,9 +377,27 @@ function SHOWNET(message, socket, client) {
         }
         */
       break
-      case 5:
+			case 3: // svc_configstring
+			break
+			case 4: // svc_baseline
+			break
+      case 5: // 
         read = ReadString(read, message)
       break
+			case 6: // svc_download
+			break
+			case 7: // svc_snapshot
+			break
+			case 8: // svc_EOF
+			break
+			case 9: // svc_voipSpeex
+			break
+			case 10: // svc_voipOpus
+			break
+			case 16: // svc_multiview
+			break
+			case 17: // svc_zcmd
+			break
     }
     unzipped = [client ? 'client' : 'server', read[1]]
     //unzipped = [client ? 'client' : 'server', sequence, fragment, fragmentStart, fragmentLength, cmd, svc_strings[cmd]]
