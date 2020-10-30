@@ -27,6 +27,7 @@
     "cors": "^2.8.5",
     "dgram": "^1.0.1",
     "express": "^4.17.1",
+    "google-closure-compiler": "^20201006.0.0",
     "ip6addr": "^0.2.3",
     "mime": "^2.4.6",
     "nipplejs": "^0.8.5",

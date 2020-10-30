@@ -653,7 +653,7 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
       if ( usingSocks ) { //&& memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
-				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
+				if ( ret < 10 || (net_message->data[0] != 0 && net_message->data[0] != 0x05) || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
 					return qfalse;
 				}
 				net_from->type = NA_IP;
@@ -675,7 +675,8 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
           net_from->protocol[0] = '\0';
           NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
         }
-				net_from->port = htons( *(short *)&net_message->data[net_message->readcount - 2] );
+        memcpy(&net_from->port, &net_message->data[net_message->readcount - 2], 2);
+				net_from->port = htons( net_from->port );
 			}
 			else {
         net_from->type = NA_BAD;

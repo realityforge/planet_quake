@@ -211,6 +211,15 @@ static const unsigned pak_checksums[] = {
 	977125798u
 };
 
+typedef struct altChecksumFiles {
+	char pakBasename[100];
+	unsigned checksum;
+} altChecksumFiles_t;
+
+static const altChecksumFiles_t hardcoded_checksums[] = {
+	{"pak8a", 499742591u}
+};
+
 // if this is defined, the executable positively won't work with any paks other
 // than the demo pak, even if productid is present.  This is only used for our
 // last demo release to prevent the mac and linux users from using the demo

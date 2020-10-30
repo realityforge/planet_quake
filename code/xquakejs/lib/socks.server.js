@@ -409,6 +409,7 @@ Server.prototype._timeoutUDP = function(udpLookupPort) {
     console.error('socket timeout')
     self._listeners[udpLookupPort].close()
 		delete self._listeners[udpLookupPort]
+		delete self._timeouts[udpLookupPort]
   }
 }
 
@@ -547,7 +548,8 @@ Server.prototype.tryBindPort = async function(reqInfo) {
       await new Promise((resolve, reject) => listener
         .on('listening', resolve)
         .on('close', () => {
-          delete this._listeners[reqInfo.dstPort]
+          delete self._listeners[reqInfo.dstPort]
+					delete self._timeouts[reqInfo.dstPort]
         })
         .on('error', reject)
         .on('message', onUDPMessage)
@@ -653,7 +655,6 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
     if (reqInfo.cmd == Parser.CMD.UDP) {
 			var onClose = () => {
-				delete self._listeners[reqInfo.dstPort]
 				delete socket.dstSock
 				socket.close()
 			}

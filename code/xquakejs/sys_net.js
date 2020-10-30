@@ -389,7 +389,7 @@ var LibrarySysNet = {
     }
     var socksOpen = function (id) {
       SYSN.socksfd = id
-      if(SYSN.socksfs) {
+      if(SYSN.socksfd) {
         SYSN.sock = SOCKFS.getSocket(SYSN.socksfd)
         SYSN.peer = Object.values(SYSN.sock.peers)[0]
         SYSN.port = SYSC.Cvar_VariableIntegerValue('net_port')
