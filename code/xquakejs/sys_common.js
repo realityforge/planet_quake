@@ -637,7 +637,14 @@ var LibrarySysCommon = {
 		return 0;
 	},
 	Sys_RandomBytes: function (string, len) {
-		return false;
+		if(typeof crypto != 'undefined') {
+			crypto.getRandomValues(HEAP8.subarray(string, string+len))
+		} else {
+			for(var i = 0; i < len; i++) {
+				HEAP8[string] = Math.random() * 255
+			}
+		}
+		return true;
 	},
 	Sys_LowPhysicalMemory: function () {
 		return false;

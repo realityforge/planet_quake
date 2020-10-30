@@ -36,6 +36,7 @@ var svc_strings = [
 var MAX_STRING_CHARS = 8192
 var MAX_PACKETLEN = 1400
 var MAX_MSGLEN = 16384
+var FRAGMENT_SIZE = (MAX_PACKETLEN - 100)
 var buffer
 var msgData
 var msg
@@ -299,18 +300,20 @@ function SHOWNET(message, socket, client) {
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
     var msg = convertPrintable(message)
-		unzipped = [client ? 'client' : 'server', msg]
+		unzipped = [client ? '--> client' : '<-- server', msg]
     if(msg.match(/connectResponse/ig)) {
       socket.challenge = parseInt(msg.substr(20))
       socket.compat = false
       socket.incomingSequence = 0
+			socket.fragmentSequence = 0
     } else if(msg.match(/connect\s/ig)) {
 			var decompressed = decompressMessage(message, 12)
 			decompressed = convertPrintable(decompressed)
-      unzipped = [client ? 'client' : 'server', msg.substr(0, 12) + decompressed]
+      unzipped = [client ? '--> client' : '<-- server', msg.substr(0, 12) + decompressed]
     }
   } else {
-    //console.log(Array.from(message))
+    console.log(Array.from(message))
+
     var read = 0
     var sequence = SwapLong(read, message)
     read += 32
@@ -318,15 +321,17 @@ function SHOWNET(message, socket, client) {
     if(fragment) {
       sequence &= ~(1 << 31)
     }
-    if(!client) {
+    if(client) {
       read += 16
     }
+
     var valid = false
     if(!socket.compat) {
       var checksum = SwapLong(read, message)
       read += 32
       valid = NETCHAN_GENCHECKSUM(socket.challenge, sequence) === checksum
     }
+		
     var fragmentStart = 0
     var fragmentLength = 0
     if(fragment) {
@@ -335,31 +340,73 @@ function SHOWNET(message, socket, client) {
       fragmentLength = SwapShort(read, message)
       read += 16
     }
-    if ( sequence <= socket.incomingSequence ) {
-      // TODO: implement fragment and only return on final message
-      //return false
+		
+    if ( !client && sequence <= socket.incomingSequence ) {
+			console.log([client ? '--> client' : '<-- server', 'Out of order packet', sequence, socket.incomingSequence])
+      return false
     }
+		
     socket.dropped = sequence - (socket.incomingSequence+1)
+		
     if(fragment) {
-      
+			console.log([client ? '--> client' : '<-- server', 'fragment'])
+
+			// TODO: implement fragment and only return on final message
+			if(!socket.fragmentBuffer) socket.fragmentBuffer = Buffer.from([])
+			if(sequence != socket.fragmentSequence) {
+	      socket.fragmentSequence = sequence
+				socket.fragmentLength = 0
+				socket.fragmentBuffer = Buffer.from([])
+			}
+			
+			if ( fragmentStart != socket.fragmentLength ) {
+				return false
+			}
+			
+			socket.fragmentBuffer = Buffer.concat([
+				Buffer.from(socket.fragmentBuffer),
+				Buffer.from(message.subarray(read>>3, (read>>3) + fragmentLength))
+			])
+			socket.fragmentLength += fragmentLength
+			
+			if ( fragmentLength == FRAGMENT_SIZE ) {
+				return false
+			}
+			
+			if ( socket.fragmentLength > MAX_MSGLEN ) {
+				return false
+			}
+			
+			// make sure the message sequence is still there
+			message = Buffer.concat([
+				new Uint8Array(4),
+				Buffer.from(socket.fragmentBuffer)
+			])
+			read = 32
+			socket.fragmentBuffer = Buffer.from([])
+			socket.fragmentLength = 0
     }
-    socket.incomingSequence = sequence
-    //console.log(message.slice(read>>3))
+
+		if(!client) {
+    	socket.incomingSequence = sequence
+		}
+		//var serverSeq = SwapLong(0, message)
+
+		// start decoding with MSG_Bitstream()
     // finished parsing header
     read = readBits(message, read, 32)
     var ack = read[1]
+
     read = readBits(message, read[0], 8)
     var cmd = read[1]
-    if(cmd === 2 || cmd === 5) {
-      read = readBits(message, read[0], 32)
-      var seq = read[1]
-    }
     switch(cmd) {
 			case 0: // svc_bad
 			break
 			case 1: // svc_nop
 			break
       case 2: // svc_gamestate
+				read = readBits(message, read[0], 64)
+				var seq = read[1]
         /*
         while(true) {
           read = readBits(message, read[0], 8)
@@ -381,7 +428,9 @@ function SHOWNET(message, socket, client) {
 			break
 			case 4: // svc_baseline
 			break
-      case 5: // 
+      case 5: // svc_serverCommand
+				read = readBits(message, read[0], 32)
+      	var seq = read[1]
         read = ReadString(read, message)
       break
 			case 6: // svc_download
@@ -399,7 +448,7 @@ function SHOWNET(message, socket, client) {
 			case 17: // svc_zcmd
 			break
     }
-    unzipped = [client ? 'client' : 'server', read[1]]
+    unzipped = [client ? '--> client' : '<-- server', svc_strings[cmd], read[1]]
     //unzipped = [client ? 'client' : 'server', sequence, fragment, fragmentStart, fragmentLength, cmd, svc_strings[cmd]]
   }
   console.log(unzipped)
@@ -438,7 +487,7 @@ Server.prototype._onUDPMessage = function (udpLookupPort, isWebSocket, message, 
 		bufrep.write(domain, 5)
     bufrep.writeUInt16LE(rinfo.port, 5 + bufrep[4], true)
   }
-  SHOWNET(message, socket, true)
+  SHOWNET(message, socket, false)
   //console.log('UDP message from', rinfo.address, ':', rinfo.port, ' -> ', udpLookupPort, isWebSocket)
   socket.send(message === true ? bufrep : Buffer.concat([bufrep, message]),
 	 	{ binary: true })
@@ -697,6 +746,7 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
     var remoteAddr = dstIP+':'+reqInfo.dstPort
     if (reqInfo.cmd == Parser.CMD.UDP) {
 			var onClose = () => {
+				socket.dstSock.off('close', onClose)
 				delete socket.dstSock
 				socket.close()
 			}
@@ -717,7 +767,6 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
 				socket.dstSock = self._listeners[reqInfo.dstPort]
 				socket.dstPort = reqInfo.dstPort
 				socket.dstSock.on('close', onClose)
-				socket.on('close', () => socket.dstSock.off('close', onClose))
 				
 				self._onSocketConnect(reqInfo.dstPort, reqInfo)
       } else {
@@ -746,6 +795,8 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
           socket.binding = false
 					self._onSocketConnect(reqInfo.dstPort, reqInfo)
         })
+			console.log(`${socket._socket.remoteAddress}:${socket._socket.remotePort}`, 
+				'Binding TCP listener', reqInfo.dstPort, '->', socket.dstSock.address().port)
     } else if(reqInfo.cmd == Parser.CMD.CONNECT) {
       if(socket.binding) {
         // wait for the previous bind command to complete before performing a connect command

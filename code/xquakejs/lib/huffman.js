@@ -124,15 +124,6 @@ if (ENVIRONMENT_IS_NODE) {
     module['exports'] = Module;
   }
 
-  process['on']('uncaughtException', function(ex) {
-    // suppress ExitStatus exceptions from showing an error
-    if (!(ex instanceof ExitStatus)) {
-      throw ex;
-    }
-  });
-
-  process['on']('unhandledRejection', abort);
-
   quit_ = function(status) {
     process['exit'](status);
   };
@@ -4841,6 +4832,3 @@ run();
 
 
 // {{MODULE_ADDITIONS}}
-
-
-
