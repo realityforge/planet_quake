@@ -33,13 +33,28 @@ var svc_strings = [
 	"svc_zcmd",       // LZ-compressed version of svc_serverCommand
 ]
 
+var clc_strings = [
+	"clc_bad",
+	"clc_nop", 		
+	"clc_move",				// [[usercmd_t]
+	"clc_moveNoDelta",		// [[usercmd_t]
+	"clc_clientCommand",		// [string] message
+	"clc_EOF",
+
+	// new commands, supported only by ioquake3 protocol but not legacy
+	"clc_voipSpeex",   // not wrapped in USE_VOIP, so this value is reserved.
+	"clc_voipOpus",    //
+]
+
 var MAX_STRING_CHARS = 8192
 var MAX_PACKETLEN = 1400
 var MAX_MSGLEN = 16384
 var FRAGMENT_SIZE = (MAX_PACKETLEN - 100)
+var MAX_RELIABLE_COMMANDS = 64
 var buffer
 var msgData
 var msg
+var sym
 
 /*
 typedef struct {
@@ -58,7 +73,6 @@ typedef struct {
 function readBits(m, offset, bits = 8) {
   var value = 0
   var nbits = bits & 7
-  var sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
   var bitIndex = offset
   m.forEach((c,i) => Huffman.HEAP8[buffer+i] = c)
   if ( nbits )
@@ -145,6 +159,7 @@ Huffman.onRuntimeInitialized = () => {
   buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', 1)
 	msgData = Huffman.allocate(new Int8Array(MAX_MSGLEN), 'i8', 1)
 	msg = Huffman.allocate(new Int32Array(40), 'i32', 1)
+	sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
 	Huffman.HEAP32[(msg>>2)+3] = msgData
 	Huffman.HEAP32[(msg>>2)+4] = MAX_MSGLEN
 
@@ -306,13 +321,14 @@ function SHOWNET(message, socket, client) {
       socket.compat = false
       socket.incomingSequence = 0
 			socket.fragmentSequence = 0
+			socket.serverSequence = 0
     } else if(msg.match(/connect\s/ig)) {
 			var decompressed = decompressMessage(message, 12)
 			decompressed = convertPrintable(decompressed)
       unzipped = [client ? '--> client' : '<-- server', msg.substr(0, 12) + decompressed]
     }
   } else {
-    console.log(Array.from(message))
+    //console.log(Array.from(message))
 
     var read = 0
     var sequence = SwapLong(read, message)
@@ -321,7 +337,7 @@ function SHOWNET(message, socket, client) {
     if(fragment) {
       sequence &= ~(1 << 31)
     }
-    if(client) {
+    if(client) { // from client to server qport=*
       read += 16
     }
 
@@ -341,7 +357,8 @@ function SHOWNET(message, socket, client) {
       read += 16
     }
 		
-    if ( !client && sequence <= socket.incomingSequence ) {
+    if ( (!client && sequence <= socket.incomingSequence)
+	 		|| (client && sequence <= socket.serverSequence) ) {
 			console.log([client ? '--> client' : '<-- server', 'Out of order packet', sequence, socket.incomingSequence])
       return false
     }
@@ -389,66 +406,110 @@ function SHOWNET(message, socket, client) {
 
 		if(!client) {
     	socket.incomingSequence = sequence
+		} else {
+			socket.serverSequence = sequence
 		}
 		//var serverSeq = SwapLong(0, message)
 
 		// start decoding with MSG_Bitstream()
     // finished parsing header
-    read = readBits(message, read, 32)
-    var ack = read[1]
-
-    read = readBits(message, read[0], 8)
-    var cmd = read[1]
-    switch(cmd) {
-			case 0: // svc_bad
-			break
-			case 1: // svc_nop
-			break
-      case 2: // svc_gamestate
-				read = readBits(message, read[0], 64)
-				var seq = read[1]
-        /*
-        while(true) {
-          read = readBits(message, read[0], 8)
-          switch(read[1]) {
-            case 3:
-              read = readBits(message, read[0], 16)
-              read = ReadString(read, message)
-            break
-            case 4:
-            break
-            case 8:
-            break
-          }
-          if(read[1] === 8 || read[1] === 0) break
-        }
-        */
-      break
-			case 3: // svc_configstring
-			break
-			case 4: // svc_baseline
-			break
-      case 5: // svc_serverCommand
-				read = readBits(message, read[0], 32)
-      	var seq = read[1]
-        read = ReadString(read, message)
-      break
-			case 6: // svc_download
-			break
-			case 7: // svc_snapshot
-			break
-			case 8: // svc_EOF
-			break
-			case 9: // svc_voipSpeex
-			break
-			case 10: // svc_voipOpus
-			break
-			case 16: // svc_multiview
-			break
-			case 17: // svc_zcmd
-			break
-    }
-    unzipped = [client ? '--> client' : '<-- server', svc_strings[cmd], read[1]]
+		if (client) {
+			read = readBits(message, read, 32)
+			var serverId = read[1]
+			
+			read = readBits(message, read[0], 32)
+			var ack = read[1]
+			if(ack < 0) {
+				console.log([client ? '--> client' : '<-- server', 'Illegible client message', serverId, ack])
+				return
+			}
+			read = readBits(message, read[0], 32)
+			var reliableAcknowledge = read[1]
+			if(reliableAcknowledge < socket.reliableSequence - MAX_RELIABLE_COMMANDS) {
+				console.log([client ? '--> client' : '<-- server', 'Unreliable client message', serverId, reliableAcknowledge])
+				return
+			}
+			read = readBits(message, read[0], 8)
+			var cmd = read[1]
+			
+			switch(cmd) {
+				case 0: // clc_bad
+				break
+				case 1: // clc_nop
+				break
+				case 2: // clc_move
+				break
+				case 3: // clc_moveNoDelta
+				break
+				case 4: // clc_clientCommand
+				break
+				case 5: // clc_EOF
+				break
+				case 6: // clc_voipSpeex
+				break
+				case 7: // clc_voipOpus
+				break
+				default:
+			}
+			
+			unzipped = [client ? '--> client' : '<-- server', clc_strings[cmd], read[1]]
+		} else {
+			read = readBits(message, read, 32)
+	    var ack = read[1]
+	    read = readBits(message, read[0], 8)
+	    var cmd = read[1]
+	    switch(cmd) {
+				case 0: // svc_bad
+				break
+				case 1: // svc_nop
+				break
+	      case 2: // svc_gamestate
+					read = readBits(message, read[0], 64)
+					var seq = read[1]
+	        /*
+	        while(true) {
+	          read = readBits(message, read[0], 8)
+	          switch(read[1]) {
+	            case 3:
+	              read = readBits(message, read[0], 16)
+	              read = ReadString(read, message)
+	            break
+	            case 4:
+	            break
+	            case 8:
+	            break
+	          }
+	          if(read[1] === 8 || read[1] === 0) break
+	        }
+	        */
+	      break
+				case 3: // svc_configstring
+				break
+				case 4: // svc_baseline
+				break
+	      case 5: // svc_serverCommand
+					read = readBits(message, read[0], 32)
+	      	var seq = read[1]
+	        read = ReadString(read, message)
+	      break
+				case 6: // svc_download
+				break
+				case 7: // svc_snapshot
+				break
+				case 8: // svc_EOF
+				break
+				case 9: // svc_voipSpeex
+				break
+				case 10: // svc_voipOpus
+				break
+				case 16: // svc_multiview
+				break
+				case 17: // svc_zcmd
+				break
+				default:
+	    }
+			unzipped = [client ? '--> client' : '<-- server', svc_strings[cmd], read[1]]
+		}
     //unzipped = [client ? 'client' : 'server', sequence, fragment, fragmentStart, fragmentLength, cmd, svc_strings[cmd]]
   }
   console.log(unzipped)
