@@ -213,12 +213,16 @@ static const unsigned pak_checksums[] = {
 
 typedef struct altChecksumFiles {
 	char pakFilename[20];
-	unsigned altChecksums[4];
+	unsigned altChecksum;
+	int *headerLongs;
+	int numHeaderLongs;
 } altChecksumFiles_t;
 
-static const altChecksumFiles_t hardcoded_checksums[] = {
+static unsigned pak8a[] = {0,4168817368,648165122,3945419347,1851007370,4202768680,876243795,1942151452,3178592546,1153350843,3769072725,2720435158,4283363005,2513798360,3196420357,3294239822,3843894834,3612475719,2452860159,1771172871,521576783,2625819854,584016992,2958438589,1429740117,692665736,2782664450,2014190904,2605149972,3557074172,1493690996,1695508328,2506974389,1119778648,4100615894,207768556,2962204083,2989626223,834694448,998360432,2468686401,590702909,4262317924,4090096319,2021230797,913943199,2705129625,4262899421,1366373502,3617588623,2090316327,1489331521,4262317924,4090096319,2021230797,2021230797,913943199,2705129625,4262899421,1366373502,3617588623,2090316327,1489331521,756019980,3319986050,2936458518,1654841402,4112743226,1068586093,1401170057,490473087,956283964,1582219463,4106187763,3522732034,3930678813,4150711566,2793092674,3739835880,3674567183,3798185172,3666345486,2994942517,1272299605,3275207171,867236152,1994416512,583491622,2679656084,2054855793,2216416451,3634873522,3842827215,3600358968,2772540046,524533412,1262644876,1021576846,570308653,3190592338,2050935401,2322029085,4105773991,1528985787,1635175012,3461261149,2650237048,1632416110,2290912050,4253405899,772083468,2004614012,3276688688,2358222605,3730959469,1663787964,3129394621,433571376,949686090,4022328675,1482074390,147556280,3993444853,3516686239,692213471,2396676371,2525919655,2181919263,2866617875,567238308,1777622049,2526871802,1544980608,3929608672,1078565448,578648295,418670111,3269476184,3518090876,362533177,1477836325,269752830,546857576,3988115811,3095238384,3670144132,3286061346,2953382418,2797602118,2613905158,3821306670,2756396361,80235487,3794546000,3320940892,3020815043,553464634,3585597447,3771589513,2117132357,3389226997,3621428080,571938637,3498531776,3235014181,267571670,3252186061,1642506645,1309329426,2015676612,4204742729,1799578886,1732762157,248206417,2078167977,2216461138,1866819357,1524371252,3808546946,3207715107,1100481281,1793984879,2443342384,4103520306,1251380216,3377382031,1047946387,2072236435,2532989182,2836600589,3453330260,1552649093,4007608366,2972303737,1742323804,1734502319,1265542426,3902170010,2025207911,378331702,818320060,2639181107,632514819,1578912020,887994084,1389950679,3417578204,1697703158,774987403,494500645,293317761,2172725341,2757600324,2936139107,320472903,2121331099,2249035898,1278052730,1615104875,3882557698,869036284,1119031802,3065140807,2983784925,3847931960,1863303811,949344497,1513967688};
+
+static altChecksumFiles_t hardcoded_checksums[] = {
 //	{"pak8a", {-231307135}}
-	{"pak8a", {4063660161u}}
+	{"pak8a", 4063660161u, (int *)pak8a, sizeof(pak8a) / sizeof(pak8a[0])}
 };
 
 // if this is defined, the executable positively won't work with any paks other
@@ -299,7 +303,6 @@ typedef struct searchpath_s {
 	pack_t		*pack;		// only one of pack / dir will be non NULL
 	directory_t	*dir;
 	dirPolicy_t	policy;
-	unsigned altChecksums[4];
 } searchpath_t;
 
 static	char		fs_gamedir[MAX_OSPATH];	// this will be a single file name with no separators
@@ -4399,8 +4402,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	searchpath_t	*sp;
 	qboolean havepak;
 	char *origpos = neededpaks;
-	int i, c;
-	const altChecksumFiles_t *alt;
+	int i;
 
 	if (!fs_numServerReferencedPaks)
 		return qfalse; // Server didn't send any pack information along
@@ -4429,15 +4431,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				break;
 			}
 #ifdef EMSCRIPTEN
-			if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {
-				// add alternate checksums
-				for(c = 0; c < sizeof(hardcoded_checksums) / sizeof(altChecksumFiles_t); c++) {
-					alt = &hardcoded_checksums[c];
-					if(Q_stristr(sp->pack->pakFilename, alt->pakFilename)) {
-						memcpy(&sp->altChecksums, &alt->altChecksums, sizeof(alt->altChecksums));
-					}
-				}
-				
+			if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {				
 				havepak = qtrue; // Accept that the checksums don't match and move on
 				break;
 			}
@@ -5168,6 +5162,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	searchpath_t	*search;
 	int nFlags, numPaks, checksum;
 	int c, i;
+	const altChecksumFiles_t *alt;
 
 	max = info + maxlen; // maxlen is always smaller than MAX_STRING_CHARS so we can overflow a bit
 	s = info;
@@ -5189,15 +5184,22 @@ Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 				int useChecksum = search->pack->pure_checksum;
 				qboolean found = qfalse;
 				// send the pure checksum instead of real pak checksum
-				for(c = 0; c < fs_numServerReferencedPaks; c++) {
-					for(i = 0; i < sizeof(search->altChecksums)>>2; i++) {
-						if(search->altChecksums[i] == (unsigned int)fs_serverReferencedPaks[c]) {
-							found = qtrue;
-							useChecksum = fs_serverReferencedPaks[c];
+				// add alternate checksums
+				for(c = 0; c < sizeof(hardcoded_checksums) / sizeof(altChecksumFiles_t); c++) {
+					alt = &hardcoded_checksums[c];
+					if(Q_stristr(search->pack->pakFilename, alt->pakFilename)) {
+						for(i = 0; i < fs_numServerReferencedPaks; i++) {
+							if(alt->altChecksum == (unsigned int)fs_serverReferencedPaks[i]) {
+								found = qtrue;
+								alt->headerLongs[0] = LittleLong( fs_checksumFeed );
+								useChecksum = Com_BlockChecksum( alt->headerLongs, sizeof( alt->headerLongs[0] ) * alt->numHeaderLongs );
+								useChecksum = LittleLong( useChecksum );
+								Com_Printf( "FS_ReferencedPakPureChecksums: (%i) %i == %i\n", alt->numHeaderLongs, alt->altChecksum, useChecksum);
+							}
 						}
 					}
 				}
-Com_Printf( "FS_ReferencedPakPureChecksums: %s\n", search->pack->pakFilename);
+
 				s = Q_stradd( s, va( "%i ", useChecksum ) );
 				if ( s > max ) // client-side overflow
 					break;
@@ -5208,7 +5210,7 @@ if(nFlags & FS_UI_REF)
 Com_Printf( "Found ui %s\n", search->pack->pakFilename );
 					break;
 				}
-				checksum ^= search->pack->pure_checksum;
+				checksum ^= useChecksum;
 				numPaks++;
 			}
 		}
@@ -6023,11 +6025,11 @@ void FS_SetMapIndex(const char *mapname) {
 					key2[ki] = buf[i];
 					ki++;
 				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2) {
-					search->altChecksums[csi] *= 10;
-					search->altChecksums[csi] += buf[i] - '0';
+					//search->altChecksums[csi] *= 10;
+					//search->altChecksums[csi] += buf[i] - '0';
 				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2) {
 					csi++; // increment alternative checksum index
-				} else if ((buf[i] == ']' || csi >= sizeof(search->altChecksums)) && isChecksum) {
+				} else if (buf[i] == ']' && isChecksum) {
 					isChecksum = qfalse;
 				}
 			}
