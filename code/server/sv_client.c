@@ -1854,6 +1854,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	int nClientChkSum[512];
 	const char *pArg;
 	qboolean bGood = qtrue;
+	char url[MAX_CVAR_VALUE_STRING];
 
 Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 	// if we are pure, we "expect" the client to load certain things from 
@@ -1865,7 +1866,7 @@ Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 		nChkSum1 = nChkSum2 = 0;
 
 		// we run the game, so determine which cgame and ui the client "should" be running
-		bGood = FS_FileIsInPAK( "vm/cgame.qvm", &nChkSum1, NULL );
+		bGood = FS_FileIsInPAK( "vm/cgame.qvm", &nChkSum1, url );
 		bGood &= FS_FileIsInPAK( "vm/ui.qvm", &nChkSum2, NULL );
 
 		nClientPaks = Cmd_Argc();
@@ -1907,7 +1908,7 @@ Com_DPrintf("VerifyPaks: Not enough paks %i\n", nClientPaks);
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum1 ) {
 				bGood = qfalse;
-Com_DPrintf("VerifyPaks: CGame doesn't match %s != %i\n", pArg, nChkSum1);
+Com_DPrintf("VerifyPaks: CGame doesn't match %s != %i (%s)\n", pArg, nChkSum1, url);
 				break;
 			}
 			// verify the second to be the ui checksum
