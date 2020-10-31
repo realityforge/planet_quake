@@ -495,7 +495,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 				Com_DPrintf( "SDL_GL_SetSwapInterval failed: %s\n", SDL_GetError( ) );
 			}
 
-			/*
+#ifndef EMSCRIPTEN
 			SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &realColorBits[0] );
 			SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &realColorBits[1] );
 			SDL_GL_GetAttribute( SDL_GL_BLUE_SIZE, &realColorBits[2] );
@@ -503,7 +503,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 			SDL_GL_GetAttribute( SDL_GL_STENCIL_SIZE, &config->stencilBits );
 
 			config->colorBits = realColorBits[0] + realColorBits[1] + realColorBits[2];
-			*/
+#endif
 		} // if ( !vulkan )
 
 
@@ -624,7 +624,11 @@ RE_UpdateMode
 =============
 */
 void GLimp_UpdateMode( glconfig_t *config ) {
+#ifdef EMSCRIPTEN
 	GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
+#else
+	GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+#endif
 }
 
 

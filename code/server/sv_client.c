@@ -1907,14 +1907,14 @@ Com_DPrintf("VerifyPaks: Not enough paks %i\n", nClientPaks);
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum1 ) {
 				bGood = qfalse;
-Com_DPrintf("VerifyPaks: CGame doesn't match %s\n", pArg);
+Com_DPrintf("VerifyPaks: CGame doesn't match %s != %i\n", pArg, nChkSum1);
 				break;
 			}
 			// verify the second to be the ui checksum
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum2 ) {
 				bGood = qfalse;
-Com_DPrintf("VerifyPaks: UI doesn't match %s\n", pArg);
+Com_DPrintf("VerifyPaks: UI doesn't match %s != %i\n", pArg, nChkSum2);
 				break;
 			}
 			// should be sitting at the delimeter now

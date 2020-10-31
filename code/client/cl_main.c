@@ -1934,10 +1934,10 @@ static void CL_SendPureChecksums( void ) {
 
 #ifdef EMSCRIPTEN
 	// because restarting VMs is not done, especially when file system doesnt change
-	//   but resetting which Paks are used is cleared in parse gamestate
+	//   but resetting which Paks are used is cleared in ParseGamestate
 	//   also the server does this
-	FS_TouchFileInPak( "vm/cgame.qvm" );
 	FS_TouchFileInPak( "vm/ui.qvm" );
+	FS_TouchFileInPak( "vm/cgame.qvm" );
 #endif
 
 	// if we are pure we need to send back a command with our referenced pk3 checksums

@@ -2,7 +2,7 @@
   "name": "quakejs",
   "version": "0.0.1",
   "scripts": {
-    "start": "node --inspect-brk ./code/xquakejs/bin/web.js",
+    "start": "node ./code/xquakejs/bin/web.js",
     "content": "node ./code/xquakejs/bin/content.js",
     "proxy": "node ./code/xquakejs/bin/proxy.js",
     "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",

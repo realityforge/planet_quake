@@ -212,12 +212,13 @@ static const unsigned pak_checksums[] = {
 };
 
 typedef struct altChecksumFiles {
-	char pakBasename[20];
-	unsigned checksum;
+	char pakFilename[20];
+	unsigned altChecksums[4];
 } altChecksumFiles_t;
 
 static const altChecksumFiles_t hardcoded_checksums[] = {
-	{"pak8a", 499742591u}
+//	{"pak8a", {-231307135}}
+	{"pak8a", {4063660161u}}
 };
 
 // if this is defined, the executable positively won't work with any paks other
@@ -3270,14 +3271,12 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	{
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
-/*
 #ifdef EMSCRIPTEN
 		// even if the pak checksum isn't the same, trust the pak is already downloaded
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
 		}
 #endif
-*/
 	}
 	
 	return qfalse;
@@ -4400,7 +4399,8 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 	searchpath_t	*sp;
 	qboolean havepak;
 	char *origpos = neededpaks;
-	int i;
+	int i, c;
+	const altChecksumFiles_t *alt;
 
 	if (!fs_numServerReferencedPaks)
 		return qfalse; // Server didn't send any pack information along
@@ -4428,14 +4428,20 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				havepak = qtrue; // This is it!
 				break;
 			}
-/*
 #ifdef EMSCRIPTEN
-			else if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {
+			if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {
+				// add alternate checksums
+				for(c = 0; c < sizeof(hardcoded_checksums) / sizeof(altChecksumFiles_t); c++) {
+					alt = &hardcoded_checksums[c];
+					if(Q_stristr(sp->pack->pakFilename, alt->pakFilename)) {
+						memcpy(&sp->altChecksums, &alt->altChecksums, sizeof(alt->altChecksums));
+					}
+				}
+				
 				havepak = qtrue; // Accept that the checksums don't match and move on
 				break;
 			}
 #endif
-*/
 		}
 
 		if ( !havepak && fs_serverReferencedPakNames[i] && *fs_serverReferencedPakNames[i] ) { 
@@ -4475,10 +4481,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Find out whether it might have overflowed the buffer and don't add this file to the
         // list if that is the case.
         if(strlen(origpos) + (origpos - neededpaks) >= len - 1)
-	{
-		*origpos = '\0';
-		break;
-	}
+				{
+					*origpos = '\0';
+					break;
+				}
       }
       else
       {
@@ -5161,6 +5167,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	char *s, *max;
 	searchpath_t	*search;
 	int nFlags, numPaks, checksum;
+	int c, i;
 
 	max = info + maxlen; // maxlen is always smaller than MAX_STRING_CHARS so we can overflow a bit
 	s = info;
@@ -5179,14 +5186,26 @@ Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
-				s = Q_stradd( s, va( "%i ", search->pack->pure_checksum ) );
+				int useChecksum = search->pack->pure_checksum;
+				qboolean found = qfalse;
+				// send the pure checksum instead of real pak checksum
+				for(c = 0; c < fs_numServerReferencedPaks; c++) {
+					for(i = 0; i < sizeof(search->altChecksums)>>2; i++) {
+						if(search->altChecksums[i] == (unsigned int)fs_serverReferencedPaks[c]) {
+							found = qtrue;
+							useChecksum = fs_serverReferencedPaks[c];
+						}
+					}
+				}
+Com_Printf( "FS_ReferencedPakPureChecksums: %s\n", search->pack->pakFilename);
+				s = Q_stradd( s, va( "%i ", useChecksum ) );
 				if ( s > max ) // client-side overflow
 					break;
 				if ( nFlags & (FS_CGAME_REF | FS_UI_REF) ) {
 if(nFlags & FS_CGAME_REF)
-Com_Printf( "Found cgame\n" );
+Com_Printf( "Found cgame %s\n", search->pack->pakFilename );
 if(nFlags & FS_UI_REF)
-Com_Printf( "Found ui\n" );
+Com_Printf( "Found ui %s\n", search->pack->pakFilename );
 					break;
 				}
 				checksum ^= search->pack->pure_checksum;
