@@ -832,7 +832,7 @@ endif
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['SYS', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
 		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \

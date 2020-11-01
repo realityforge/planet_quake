@@ -83,7 +83,7 @@ var LibrarySysNet = {
         request.send()
       })
       */
-      fetch(url, {responseType: 'blob', credentials: 'omit', mode: 'no-cors'})
+      fetch(url, {responseType: 'blob'})
         .catch(function (e) { console.log(e) })
         .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
