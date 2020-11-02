@@ -54,7 +54,7 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, pure server compatibility by spoofing checksums for known (memory finger printing?) paks, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile, bring back download commands for grabbing new content
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content
   * Payment API for micropayments to access server or content https://developers.google.com/web/fundamentals/codelabs/payment-request-api
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
@@ -69,7 +69,7 @@ Coming soon!
   * HTML and CSS menu renderer
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
-  * Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
+  * r_smp 2 Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
   * Always on twitch.tv streaming at no expense to the game server
   * Shader palettes for pre-rendering colors and changing the theme of maps
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls

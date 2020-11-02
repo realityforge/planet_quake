@@ -41,7 +41,12 @@ var LibrarySysNet = {
 				progress.style.display = 'block'
 				flipper.style.display = 'block'
 			}
-			description.innerHTML = desc
+      
+      var div = document.createElement('div')
+      div.innerHTML = desc.replace('%s', args[1])
+      if(description.children.length == 0
+        || div.innerText != description.children[description.children.length-1].innerText)
+			  description.appendChild(div)
 		},
 		LoadingProgress: function (progress, total) {
       if(SYS.dedicated) {

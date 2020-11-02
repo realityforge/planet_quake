@@ -158,40 +158,58 @@ var LibrarySysFiles = {
         resolve(file, data)
       })
     },
-    checkForUpdates: function (file, data) {
-      if(file && file.includes('/version.json')) {
-        try {
-          var updatedVersion = JSON.parse(Array.from(new Uint8Array(data)).map(function (c) {return String.fromCharCode(c)}).join(''))
-          var updatedDate = Date.parse(updatedVersion[0])
-          var updatedAssets = Date.parse(updatedVersion[1])
-          var compareCache = FS.stat(PATH.join(SYSF.fs_basepath, SYSF.precacheConfig[0]))
-          if(updatedDate > compareCache.mtime.getTime()) {
-            SYSF.forceCDNUpdate = updatedDate
+    checkForUpdates: function (cb) {
+      var checkVersion = '/version.json?' + Math.floor(Date.now() / 1000 / 60) * 1000 * 60
+      return new Promise(function (resolve) {
+        SYSF.downloadSingle(checkVersion, function (file, data) {
+          if(!file) return resolve()
+          try {
+            var updatedVersion = JSON.parse(Array.from(new Uint8Array(data))
+              .map(function (c) {return String.fromCharCode(c)}).join(''))
+            var updatedDate = Date.parse(updatedVersion[0])
+            var updatedAssets = Date.parse(updatedVersion[1])
+            var compareCache = FS.stat(PATH.join(SYSF.fs_basepath, SYSF.precacheConfig[0]))
+            if(updatedDate > compareCache.mtime.getTime()) {
+              SYSF.forceCDNUpdate = updatedDate
+            }
+          } catch (e) {
+            if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+              throw e
+            } else {
+              SYSF.forceCDNUpdate = updatedDate
+            }
           }
-        } catch (e) {
-          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
-            throw e
-          } else {
-            SYSF.forceCDNUpdate = updatedDate
+          if(SYSF.forceCDNUpdate) {
+            console.log('Forcing update ' + SYSF.forceCDNUpdate)
+            SYSN.LoadingDescription('Forcing update... Sorry')
+            SYSN.downloads.unshift.apply(SYSN.downloads, SYSF.precacheConfig
+              .map(function (f) { return f + '?' + SYSF.forceCDNUpdate}))
           }
-        }
-        try {
-          var compareAssets = FS.stat(PATH.join(SYSF.basepath, SYSF.fs_game, 'version.json'))
-          if(updatedAssets > compareAssets.mtime.getTime()) {
-            SYSF.forceAssetUpdate = updatedAssets
-          }
-        } catch (e) {
-          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
-            throw e
-          }
-        }
-        if(SYSF.forceCDNUpdate) {
-          console.log('Forcing update ' + SYSF.forceCDNUpdate)
-          SYSN.LoadingDescription('Forcing update... Sorry')
-          SYSN.downloads.unshift.apply(SYSN.downloads, SYSF.precacheConfig
-            .map(function (f) { return f + '?' + SYSF.forceCDNUpdate}))
-        }
-      }
+          resolve()
+        })
+      })
+      .then(function () {
+        SYSN.buildAlternateUrls(SYSF.fs_game)
+        var checkVersion = '/' + SYSF.fs_game + '/version.json?' + Math.floor(Date.now() / 1000 / 60) * 1000 * 60
+        return new Promise(function (resolve) {
+          SYSF.downloadSingle(checkVersion, function (file, data) {
+            if(!file) return resolve()
+            try {
+              var updatedAssets = Date.parse(updatedVersion[1])
+              var compareAssets = FS.stat(PATH.join(SYSF.basepath, SYSF.fs_game, 'version.json'))
+              if(updatedAssets > compareAssets.mtime.getTime()) {
+                SYSF.forceAssetUpdate = updatedAssets
+              }
+            } catch (e) {
+              if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+                throw e
+              }
+            }
+            resolve()
+          })
+        })
+      })
+      .then(cb)
     },
     downloadImmediately: function (cb) {
       var total = 0
@@ -208,7 +226,6 @@ var LibrarySysFiles = {
         if(file) {
           SYSF.downloadSingle(file, function (file, data) {
             SYSN.LoadingProgress(++count, total)
-            SYSF.checkForUpdates(file, data)
             doUntilEmpty(resolve)
           })
         } else {
@@ -327,10 +344,10 @@ var LibrarySysFiles = {
 
       SYSN.downloads = []
       var indexes = [
-        SYSF.fs_basegame
+        SYSF.fs_basegame + '/index.json'
       ]
       if(SYSF.fs_game != SYSF.fs_basegame) {
-        indexes.push(SYSF.fs_game)
+        indexes.push(SYSF.fs_game + '/index.json')
       }
       if(mapname.length > 0) {
         indexes.push(SYSF.fs_game + '/index-' + mapname.toLowerCase() + '.json')
@@ -344,16 +361,17 @@ var LibrarySysFiles = {
       download = function () {
         if(current < indexes.length) {
           SYSN.downloadTries = []
-          SYSN.DownloadIndex(indexes[current], download)
+          SYSN.DownloadIndex(indexes[current] + (SYSF.forceAssetUpdate 
+            ? ('?' + SYSF.forceAssetUpdate)
+            : ''), download)
           current++
         } else {
           SYSN.downloadTries = SYSN.downloadAlternates
-          SYSN.downloads.push('/version.json?' + Math.floor(Date.now() / 1000 / 60) * 1000 * 60)
           SYSF.filterDownloads(mapname, modelname)
           cb()
         }
       }
-      download()
+      SYSF.checkForUpdates(download)
     })
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
