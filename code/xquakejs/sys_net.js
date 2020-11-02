@@ -344,7 +344,8 @@ var LibrarySysNet = {
           //}
           // do need to add ad-hoc server downloads to the index
           SYSF.index[newKey.toLowerCase()] = {
-            name: newKey.replace(SYSF.fs_basepath, ''), // would try to delete/origMod /baseq3/ but we just add it back on in DownloadIndex
+            name: newKey.replace(SYSF.fs_basepath, ''),
+            // would try to delete/origMod /baseq3/ but we just add it back on in DownloadIndex
             size: new Uint8Array(data).length,
             shaders: [],
             downloading: false,

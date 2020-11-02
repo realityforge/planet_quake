@@ -8,7 +8,11 @@
     "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
     "install:emsdk": "./code/xquakejs/lib/emsdk/emsdk install latest-upstream",
-    "install:libs": "./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib"
+    "install:libs": "./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib",
+    "deploy:program": "gsutil cp ./build/release-js-js/quake3e.* gs://quake.games",
+    "deploy:version": "node -e \"try{require('fs').writeFileSync('./build/release-js-js/version.json', JSON.stringify([new Date(), new Date()]))}catch(e){require('fs').writeFileSync('./build/debug-js-js/version.json', JSON.stringify([new Date(), new Date()]))}\" && gsutil cp ./build/*-js-js/version.json gs://quake.games",
+    "deploy:assets": "",
+    "deploy": "npm run deploy:program && npm run deploy:version"
   },
   "bin": {
     "quakejs-content": "bin/content.js",

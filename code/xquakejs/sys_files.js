@@ -8,6 +8,18 @@ var LibrarySysFiles = {
     fs_game: 'baseq3',
     pathname: 0,
     modeStr: 0,
+    forceCDNUpdate: false,
+    forceAssetUpdate: false,
+    precacheConfig: [
+      'index.html',
+      'nipplejs.js',
+      'quakejs-border.png',
+      'quakejs-noborder-transparent.png',
+      'quake3e.js',
+      'quake3e.wasm',
+      'assets/baseq3-cc/index.json',
+      'server-worker.js',
+    ],
     mods: [
       // A list of supported mods, 'dirname-cc' (-ccr means combined converted repacked)
   		//   To the right is the description text, atomatically creates a placeholder.pk3dir with description.txt inside
@@ -124,15 +136,18 @@ var LibrarySysFiles = {
         SYSN.downloads = []
         SYSN.LoadingDescription('')
         SYSC.ProxyCallback()
+        if(SYSF.forceCDNUpdate) {
+          window.location = window.location.toString()
+        }
       })
     },
     downloadSingle: function (file, resolve) {
       SYSN.DownloadAsset(file, null, function (err, data) {
-        if(err) return resolve(err)
+        if(err) return resolve()
         try {
           //if(!SYS.servicable) {
             SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file)))
-            FS.writeFile(PATH.join(SYSF.fs_basepath, file), new Uint8Array(data), {
+            FS.writeFile(PATH.join(SYSF.fs_basepath, file.replace(/\?.*$/, '')), new Uint8Array(data), {
               encoding: 'binary', flags: 'w', canOwn: true })
           //}
         } catch (e) {
@@ -140,8 +155,43 @@ var LibrarySysFiles = {
             SYSC.Error('fatal', e.message)
           }
         }
-        resolve(file)
+        resolve(file, data)
       })
+    },
+    checkForUpdates: function (file, data) {
+      if(file && file.includes('/version.json')) {
+        try {
+          var updatedVersion = JSON.parse(Array.from(new Uint8Array(data)).map(function (c) {return String.fromCharCode(c)}).join(''))
+          var updatedDate = Date.parse(updatedVersion[0])
+          var updatedAssets = Date.parse(updatedVersion[1])
+          var compareCache = FS.stat(PATH.join(SYSF.fs_basepath, SYSF.precacheConfig[0]))
+          if(updatedDate > compareCache.mtime.getTime()) {
+            SYSF.forceCDNUpdate = updatedDate
+          }
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+            throw e
+          } else {
+            SYSF.forceCDNUpdate = updatedDate
+          }
+        }
+        try {
+          var compareAssets = FS.stat(PATH.join(SYSF.basepath, SYSF.fs_game, 'version.json'))
+          if(updatedAssets > compareAssets.mtime.getTime()) {
+            SYSF.forceAssetUpdate = updatedAssets
+          }
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+            throw e
+          }
+        }
+        if(SYSF.forceCDNUpdate) {
+          console.log('Forcing update ' + SYSF.forceCDNUpdate)
+          SYSN.LoadingDescription('Forcing update... Sorry')
+          SYSN.downloads.unshift.apply(SYSN.downloads, SYSF.precacheConfig
+            .map(function (f) { return f + '?' + SYSF.forceCDNUpdate}))
+        }
+      }
     },
     downloadImmediately: function (cb) {
       var total = 0
@@ -156,8 +206,9 @@ var LibrarySysFiles = {
       doUntilEmpty = function (resolve) {
         var file = SYSN.downloads.pop()
         if(file) {
-          SYSF.downloadSingle(file, function () {
+          SYSF.downloadSingle(file, function (file, data) {
             SYSN.LoadingProgress(++count, total)
+            SYSF.checkForUpdates(file, data)
             doUntilEmpty(resolve)
           })
         } else {
@@ -297,6 +348,7 @@ var LibrarySysFiles = {
           current++
         } else {
           SYSN.downloadTries = SYSN.downloadAlternates
+          SYSN.downloads.push('/version.json?' + Math.floor(Date.now() / 1000 / 60) * 1000 * 60)
           SYSF.filterDownloads(mapname, modelname)
           cb()
         }
