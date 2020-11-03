@@ -135,9 +135,10 @@ var LibrarySysFiles = {
         if(e) console.log(e)
         SYSN.downloads = []
         SYSN.LoadingDescription('')
-        SYSC.ProxyCallback()
         if(SYSF.forceCDNUpdate) {
           window.location = window.location.toString()
+        } else {
+          SYSC.ProxyCallback()
         }
       })
     },
@@ -181,7 +182,7 @@ var LibrarySysFiles = {
           }
           if(SYSF.forceCDNUpdate) {
             console.log('Forcing update ' + SYSF.forceCDNUpdate)
-            SYSN.LoadingDescription('Forcing update... Sorry')
+            SYSN.LoadingDescription('Forcing update... Reloading.')
             SYSN.downloads.unshift.apply(SYSN.downloads, SYSF.precacheConfig
               .map(function (f) { return f + '?' + SYSF.forceCDNUpdate}))
           }

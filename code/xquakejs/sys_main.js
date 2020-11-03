@@ -119,15 +119,13 @@ var LibrarySysMain = {
       }
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
-        if (!args.includes('sv_dlURL')) {
-          args.push.apply(args, [
-            '+set', 'sv_dlURL', '"https://quake.games/assets"',
-          ])
-        }
         if(window.location.hostname.match(/lvl\.quake\.games/i)) {
           var detectMapId = (((/(&|\?|\/)id[:=]([0-9]+)($|[^0-9])/igm)
             .exec(window.location.search) || [])[2] || '')
           args.push.apply(args, [
+            '+set', 'sv_dlURL', '"https://lvl.quake.games/assets"',
+            '+set', 'net_socksEnabled', '0',
+            '+set', 'net_enabled', '0',
             '+set', 'com_maxfps', '30',
             '+set', 'net_enable', '0',
             '+set', 'cg_drawGun', '0',
@@ -165,6 +163,11 @@ var LibrarySysMain = {
           args.push.apply(args, [
             '+set', 'net_socksServer', 'wss://proxy.quake.games',
             '+set', 'net_socksPort', '443',
+          ])
+        }
+        if (!args.includes('sv_dlURL')) {
+          args.push.apply(args, [
+            '+set', 'sv_dlURL', '"https://quake.games/assets"',
           ])
         }
       } else {
