@@ -72,6 +72,54 @@ var knownDirs = [
   'textures',
 ]
 
+// minimatch/globs
+var whitelist = {
+  'baseq3': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'missionpack': [
+    '**/+(james|janet|sarge)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+    '**/ui/assets/**',
+  ],
+  'baseoa': [
+    '**/+(sarge|major)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(machinegun|gauntlet)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'baseq3r': [
+    '**/+(player|players)/sidepipe/**',
+    '**/+(player|players)/heads/doom*',
+    '**/+(player|players)/plates/**',
+    '**/+(player|players)/wheels/*cobra*',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'q3ut4': [
+    '**/+(athena)/**',
+    '**/player/*',
+    '**/player/footsteps/*',
+    '**/weapons2/+(handskins)/**',
+    '**/weaphits/**',
+    '**/scripts/*.shader',
+  ],
+  'threewave': []
+}
+
 function findTypes(types, project) {
   if(Array.isArray(types)) types = `*+(${types.join('|')})`
   if(fs.existsSync(project)) {
@@ -91,5 +139,6 @@ module.exports = {
   audioTypes,
   imageTypes,
   findTypes,
+  whitelist,
   allTypes: [imageTypes, audioTypes, sourceTypes, fileTypes].flat(1)
 }

@@ -22,8 +22,6 @@ var STEPS = {
 
 var help = `
 npm run repack [options] [mod directory]
---edges {n} - (default is 3) number of connected edges to deserve it's own pk3
---roots - insert yourself anywhere in the graph, show top connections from that asset
 --info -i - only print info, don't actually do any converting
 --convert {args} - options to pass to image magick, make sure to put these last
 --transcode {args} - options to pass to opus/ogg vorbis, make sure to put these last
@@ -35,6 +33,8 @@ npm run repack [options] [mod directory]
 --verbose -v - print all percentage status updates in case there is an error
 --help -h - print this help message and exit
 --no-overwrite - don't overwrite files during conversion, TODO: during unzipping either
+--no-missing - don't try to find missing textures across multiple pk3 files (affects indexing)
+--no-repack - skip repacking, don't create pk3 files
 --whitelist - TODO: force include matching files with menu/game like sarge/major/footsteps,
   and anything else found with in the logs matching "R_FindImageFile could not find|Warning: Failed to load sound"
 --no-graph - skip graphing, just run the convert and put files back into pk3s like they were,
@@ -45,6 +45,8 @@ npm run repack [options] [mod directory]
 e.g. npm run repack -- /Applications/ioquake3/baseq3
 npm run repack -- --info
 TODO:
+--edges {n} - (default is 3) number of connected edges to deserve it's own pk3
+--roots - insert yourself anywhere in the graph, show top connections from that asset
 --deduplicate - utility, unzip to a combined directory to remove duplicate/overrides
 --collisions - skip unzipping and repacking, just list files that interfere with each other
 Better graph mode that ensures all files are present and allows clients to download entire pk3 based on indexed file it needs
@@ -64,55 +66,10 @@ var numericMap = [
   ['other', /.*/, 8], // 80-89 - map models
 ]
 
-// minimatch/globs
-var whitelist = {
-  'baseq3': [
-    '**/+(sarge|major)/**',
-    '**/player/*',
-    '**/player/footsteps/*',
-    '**/weapons2/+(machinegun|gauntlet)/**',
-    '**/weaphits/**',
-    '**/scripts/*.shader',
-  ],
-  'missionpack': [
-    '**/+(james|janet|sarge)/**',
-    '**/player/*',
-    '**/player/footsteps/*',
-    '**/weapons2/+(machinegun|gauntlet)/**',
-    '**/weaphits/**',
-    '**/scripts/*.shader',
-    '**/ui/assets/**',
-  ],
-  'baseoa': [
-    '**/+(sarge|major)/**',
-    '**/player/*',
-    '**/player/footsteps/*',
-    '**/weapons2/+(machinegun|gauntlet)/**',
-    '**/weaphits/**',
-    '**/scripts/*.shader',
-  ],
-  'baseq3r': [
-    '**/+(player|players)/sidepipe/**',
-    '**/+(player|players)/heads/doom*',
-    '**/+(player|players)/plates/**',
-    '**/+(player|players)/wheels/*cobra*',
-    '**/player/*',
-    '**/player/footsteps/*',
-    '**/weaphits/**',
-    '**/scripts/*.shader',
-  ],
-  'q3ut4': [
-    '**/+(athena)/**',
-    '**/player/*',
-    '**/player/footsteps/*',
-    '**/weapons2/+(handskins)/**',
-    '**/weaphits/**',
-    '**/scripts/*.shader',
-  ]
-}
-
+var noRepack = false
 var pk3dir = false
 var nopk3dir = false
+var noMissing = false
 var edges = 3
 var noProgress = false
 var convert = ''
@@ -155,6 +112,13 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--deduplicate') {
     console.log('De-duplicating files')
     noDeduplicate = false
+  } else if (a == '--no-repack') {
+    console.log('No repack pk3 files')
+    noRepack = true
+    delete STEPS['repack']
+  } else if (a == '--no-missing') {
+    console.log('Don\'t look for missing files')
+    noMissing = true
   } else if (a == '--no-graph') {
     console.log('No graphing files, no info, just convert and repack')
     noGraph = true
@@ -186,7 +150,7 @@ for(var i = 0; i < process.argv.length; i++) {
       usePrevious = true
     }
   } else if (a == '--temp') {
-    if(ufs.existsSync(process.argv[i+1]) && ufs.statSync(process.argv[i+1].isDirectory())) {
+    if(ufs.existsSync(process.argv[i+1]) && ufs.statSync(process.argv[i+1]).isDirectory()) {
       TEMP_DIR = process.argv[i+1]
       console.log(`Temporary directory set to ${TEMP_DIR}`)
       i++
@@ -216,10 +180,10 @@ if(typeof STEPS['convert'] != 'undefined') {
 if(noGraph && typeof STEPS['convert'] == 'undefined') {
   console.warn('Can\'t generate info with --no-graph option')
 }
-if(noGraph && !pk3dir) {
+if(noGraph && !pk3dir && !noRepack) {
   console.warn('Can\'t repack in to pk3s with --no-graph and without --pk3dir')
 }
-if(noGraph && usePrevious) {
+if(noGraph && usePrevious && !noRepack) {
   console.warn('Can\'t use previous graph because not graphing, use --no-overwrite to speed up extraction')
 } else if(usePrevious) {
   delete STEPS['source']
@@ -287,7 +251,7 @@ var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
-  allTypes
+  allTypes, whitelist
 } = require('../bin/repack-whitelist.js')
 var {
   convertGameFiles, convertNonAlpha, convertAudio
@@ -725,7 +689,7 @@ async function repackIndexJson(game, outCombined, outConverted, outputProject) {
   }
   if(!game.graph) {
     await makeIndexJson('/' + path.basename(outputProject) + '/index.json',
-      outputProject + '/index.json', true)
+      outputProject + '/index.json', true, pk3dir)
     return
   }
   // generate a index.json the server can use for pk3 sorting based on map/game type
@@ -801,7 +765,8 @@ async function repackIndexJson(game, outCombined, outConverted, outputProject) {
           .replace(path.extname(f), '')
           .replace(/^\/|\/$/ig, '')))[0]
       if(typeof matchPak === 'undefined') {
-        throw new Error('Couldn\'t find file in packs ' + f)
+        console.error('Couldn\'t find file in packs ' + f)
+        return
       }
       var newName = 'maps/' + map + '/' + matchPak
       if(typeof remapped[newName] == 'undefined') {
@@ -917,7 +882,7 @@ async function repackGames() {
         console.log(`Updating Pak layout written to "${PAK_NAME}"`)
         ufs.writeFileSync(PAK_NAME, JSON.stringify(gs.ordered, null, 2))
         await makeIndexJson('/' + path.basename(outConverted) + '/index.json',
-          outConverted + '/index.json', true)
+          outConverted + '/index.json', true, pk3dir)
         stepCounter++
       }
       
@@ -932,14 +897,15 @@ async function repackGames() {
       } else {
         await progress([
           [1, false],
-          [0, stepCounter, stepTotal, STEPS['repack']],
+          [0, false],
         ])
-        await repackIndexJson(gs, outCombined, outConverted)
+        // await repackIndexJson(gs, outCombined, outConverted)
       }
       
-      if(typeof STEPS['convert'] != 'undefined'
-        || typeof STEPS['repack'] != 'undefined') {
-        await makeMapIndex(mountPoints[i], outConverted, outRepacked)
+      if((typeof STEPS['convert'] != 'undefined'
+        || typeof STEPS['repack'] != 'undefined')
+        && pk3dir) {
+        await makeMapIndex(mountPoints[i], outConverted, outRepacked, noMissing, progress)
       }
     } catch (e) {
       console.log(e)

@@ -193,7 +193,7 @@ function mdfour(out, input, n)
     mdfour_result(md, out)
 }
 
-async function checksumZip(file) {
+async function checksumZip(file, headerLongs) {
     var digest = new Uint32Array(4)
     if(Array.isArray(file)) {
       index = file
@@ -211,19 +211,21 @@ async function checksumZip(file) {
           zip.on('error', resolve)
       })
     }
-    var contents = new Uint32Array(index.length + 1)
-    var j = 1
+    headerLongs = headerLongs || []
+    headerLongs.splice(0)
+    headerLongs.push(0)
     for(var i = 0; i < index.length; i++) {
         var entry = index[i]
-        if(entry.method != 0 && entry.method != 8 || entry.size === 0)
+        if((entry.method != 0 && entry.method != 8) || entry.size === 0)
             continue
-        contents[j++] = entry.crc
+        headerLongs.push(entry.crc)
     }
-    var headers = new Uint8Array(contents.buffer)
+    var j = headerLongs.length
+    var headers = new Uint8Array(Uint32Array.from(headerLongs).buffer)
     mdfour(digest, headers.slice(4, j * 4), j * 4 - 4)
     var unsigned = new Uint32Array(1)
     unsigned[0] = digest[0] ^ digest[1] ^ digest[2] ^ digest[3]
-    return unsigned[0]
+    return unsigned
 }
 
 module.exports = checksumZip

@@ -1,3 +1,4 @@
+var os = require('os')
 var fs = require('fs')
 var path = require('path')
 var glob = require('glob')
@@ -11,7 +12,7 @@ var skinLoader = require('../lib/asset.skin.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
-  allTypes
+  allTypes, whitelist
 } = require('../bin/repack-whitelist.js')
 var {DirectedGraph} = require('../lib/asset.graph.js')
 
@@ -29,13 +30,30 @@ var STEPS = {
   'shaders': 'Graphing shaders',
 }
 
-var BASEQ3 = '/Users/briancullinan/planet_quake_data/quake3-baseq3'
+var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
 var TEMP_NAME = path.join(__dirname, '../bin/previous-graph.json')
-
-if(fs.existsSync(BASEQ3)) {
-  var baseq3 = glob.sync('**/*', {cwd: BASEQ3})
-    .map(f => path.join(BASEQ3, f).toLowerCase())
-  fs.writeFileSync(path.join(__dirname, './baseq3-filelist.json'), JSON.stringify(baseq3, null, 2))
+var mountPoints = []
+var BASEMOD = []
+if(fs.existsSync(TEMP_DIR)) {
+  /* var defaultDirectories = fs.readdirSync(TEMP_DIR)
+    .filter(f => f[0] != '.') */
+  var defaultDirectories = [
+  /*
+    'mapmedia',
+    'threewave-cc',
+  */
+    'baseq3-cc',
+    'mapmedia-cc'
+  //  'q3ut4-cc'
+  ]
+  defaultDirectories.forEach(f => {
+    //if(whitelist.keys().filter(w => f.includes(w)).length === 0) return
+    mountPoints.push(path.join(TEMP_DIR, f))
+    var baseModFiles = glob.sync('**/*', {cwd: path.join(TEMP_DIR, f)})
+    fs.writeFileSync(path.join(__dirname, f + '-filelist.json'), JSON.stringify(baseModFiles, null, 2))
+    BASEMOD[BASEMOD.length] = baseModFiles
+  })
 }
 
 function graphMaps(project) {
@@ -280,7 +298,7 @@ async function graphGame(gs, project, progress) {
   
   // add all edges to the graph
   var notfound = []
-  var inbaseq3 = []
+  var inbasemod = Array.from(new Array(BASEMOD.length)).map(a => [])
   var everything = gs.everything.map(f => f.toLowerCase())
   var unknownTypes = gs.everything.map(f => path.extname(f).toLowerCase())
     .filter((t, i, arr) => arr.indexOf(t) === i)
@@ -310,7 +328,7 @@ async function graphGame(gs, project, progress) {
     // everything in vertices should match a file
     if(!fs.existsSync(vertices[i])) {
       var index = searchMinimatch(vertices[i], everything)
-      if(index == -1) inbaseq3.push(vertices[i])
+      if(index <= -1) inbasemod[Math.abs(index) - 1].push(vertices[i])
       else if (index !== null) {
         fileLookups[vertices[i]] = graph.getVertex(gs.everything[index])
           || graph.addVertex(gs.everything[index], {
@@ -359,7 +377,7 @@ async function graphGame(gs, project, progress) {
     } else {
       // try to match a filename directly
       index = searchMinimatch(allShaders[i], everything)
-      if(index == -1) inbaseq3.push(allShaders[i])
+      if(index <= -1) inbasemod[Math.abs(index) - 1].push(allShaders[i])
       else if(index !== null) {
         shaderLookups[allShaders[i]] = graph.getVertex(gs.everything[index])
           || graph.addVertex(gs.everything[index], {
@@ -441,7 +459,7 @@ async function graphGame(gs, project, progress) {
   
   gs.graph = graph
   gs.notfound = notfound
-  gs.baseq3 = inbaseq3
+  gs.baseq3 = inbasemod
   
   return gs
 }
@@ -455,8 +473,10 @@ function searchMinimatch(search, everything) {
   if(lookup.length === 0) return null
   var name = everything.filter(f => f.includes(lookup)) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
-    if(baseq3.filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
-      return -1
+    for(var i = 0; i < BASEMOD.length; i++) {
+      if(BASEMOD[i].filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
+        return -1 * (i + 1)
+      }      
     }
     return null
   } else if (name.length > 1) {
@@ -486,5 +506,7 @@ module.exports = {
   graphSkins,
   graphGame,
   load: graphGame,
-  TEMP_NAME: TEMP_NAME
+  TEMP_NAME,
+  BASEMOD,
+  BASEMOD_DIRS: mountPoints
 }

@@ -319,7 +319,7 @@ function parseSkyparms(words, script) {
 
 	var innerBox = words[0].toLowerCase();
 	var cloudSize = parseInt(words[1], 10);
-	var outerBox = words[2].toLowerCase();
+	var outerBox = (words[2] || words[0]).toLowerCase();
 
 	script.sky = true;
 	script.innerBox = innerBox === '-' ? [] : suffixes.map(function (suf) {

@@ -192,24 +192,28 @@ var LibrarySysFiles = {
       .then(function () {
         SYSN.buildAlternateUrls(SYSF.fs_game)
         var checkVersion = '/' + SYSF.fs_game + '/version.json?' + Math.floor(Date.now() / 1000 / 60) * 1000 * 60
+        var compareAssets
+        try {
+          compareAssets = FS.stat(PATH.join(SYSF.basepath, SYSF.fs_game, 'version.json'))
+        } catch (e) {
+          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
+            throw e
+          }
+        }
         return new Promise(function (resolve) {
           SYSF.downloadSingle(checkVersion, function (file, data) {
             if(!file) return resolve()
-            try {
-              var updatedAssets = Date.parse(updatedVersion[1])
-              var compareAssets = FS.stat(PATH.join(SYSF.basepath, SYSF.fs_game, 'version.json'))
-              if(updatedAssets > compareAssets.mtime.getTime()) {
-                SYSF.forceAssetUpdate = updatedAssets
-              }
-            } catch (e) {
-              if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
-                throw e
-              }
+            var updatedVersion = JSON.parse(Array.from(new Uint8Array(data))
+              .map(function (c) {return String.fromCharCode(c)}).join(''))
+            var updatedAssets = Date.parse(updatedVersion[1])
+            if(!compareAssets || updatedAssets > compareAssets.mtime.getTime()) {
+              SYSF.forceAssetUpdate = updatedAssets
             }
             resolve()
           })
         })
       })
+      .catch(function (e) { console.error(e) })
       .then(cb)
     },
     downloadImmediately: function (cb) {
