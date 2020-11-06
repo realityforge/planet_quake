@@ -8,7 +8,7 @@ var { Readable } = require('stream')
 var glob = require('glob')
 var {compressFile, compressDirectory, readPak} = require('./compress.js')
 var checksumZip = require('./checksum.js')
-var {graphGame, BASEMOD, BASEMOD_DIRS} = require('../lib/asset.game.js')
+var {graphGame, loadDefaultDirectories, TEMP_NAME, BASEMOD, BASEMOD_LOWER, BASEMOD_DIRS} = require('../lib/asset.game.js')
 
 var help = `
 npm run start [options] [virtual path] [filesystem path]
@@ -34,6 +34,8 @@ var watchChanges = false
 var scanOptions = false
 var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
   || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
+var GRAPH_PATH = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/Collections/lvlworld')
 
 // check the process args for a directory to serve as the baseq3 folders
 var mountPoint = '/assets/baseq3'
@@ -271,10 +273,10 @@ async function makeIndexJson(filename, absolute, forceWrite, pk3dir) {
   }
 }
 
-async function findMissingTextures(project, progress) {
+async function findMissingTextures(project, progress, previous) {
   if(!progress) progress = console.log
   // compare pk3 index with bsp graph
-  var game = await graphGame(null, project, progress)
+  var game = await graphGame(previous, project, progress)
   // try to match up some missing textures from mods
   console.log(game.notfound)
   console.log.apply(console.log, game.baseq3.reduce((arr, l, i) => {
@@ -283,27 +285,58 @@ async function findMissingTextures(project, progress) {
     return arr
   }, []))
   
-  return BASEMOD[1].map((f) => {
-    var match = game.baseq3[1].filter(f2 => f.includes(f2))
-    if(match.length == 0) return
-    var stat = fs.statSync(path.join(BASEMOD_DIRS[1], f))
-    if(stat.isFile())
-      return {
-        name: path.join('/', path.basename(BASEMOD_DIRS[1]).replace(/-cc*r*\//ig, '/') + '.pk3dir', f),
-        size: stat.size
-      }
-  }).reduce((obj, m) => {
-    if(!m) return obj
-    var newKey = path.join('/base/baseq3-cc', m.name.toLowerCase())
-    if(!obj[newKey]) obj[newKey] = m
-    return obj
-  }, {})
+  if(!previous)
+    fs.writeFileSync(__dirname + '/previous-graph-' + path.basename(project) + '.json', fs.readFileSync(TEMP_NAME))
+
+  var initial = {}
+  for(var j = 1; j < BASEMOD_DIRS.length; j++) {
+    var pk3dir = path.basename(BASEMOD_DIRS[j]).replace(/-cc*r*/ig, '') + '.pk3dir'
+    var missing = game.baseq3[j].map((search) => {
+      var lookup = search
+        .replace(/\/\//ig, '/')
+        .replace(/\\/g, '/')
+        .replace(/\.[^\.]*$/, '') // remove extension
+        .toLowerCase() + '.'
+      var match = Object.keys(BASEMOD_LOWER[j]).filter(i => BASEMOD_LOWER[j][i].includes(lookup))
+      if(match.length == 0) return
+      var stat = fs.statSync(path.join(BASEMOD_DIRS[j], BASEMOD[j][match[0]]))
+      if(stat.isFile())
+        return {
+          name: path.join('/', pk3dir, BASEMOD[j][match[0]]),
+          size: stat.size
+        }
+    }).reduce((obj, m) => {
+      if(!m) return obj
+      var newKey = path.join('/base/baseq3-cc', m.name.toLowerCase())
+      if(!obj[newKey]) obj[newKey] = m
+      return obj
+    }, {})
+    if(game.baseq3[j].length == 0 || Object.values(missing).length == 0) continue
+    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/'] = {
+      name: pk3dir
+    }
+    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/scripts/shader.missing'] = {
+      name: pk3dir,
+      size: 2
+    }
+    Object.assign(initial, missing)
+  }
+  return initial
 }
 
-async function makeMapIndex(project, outConverted, outRepacked, noGraph, progress) {
+async function makeMapIndex(project, outConverted, outRepacked, noGraph, progress, usePrevious) {
   var indexJson = path.join(outConverted, 'index.json')
   var indexFinalJson = path.join(outRepacked, 'index.json')
-  var convertedIndex = JSON.parse(fs.readFileSync(indexJson).toString('utf-8'))
+  var convertedIndex = {}
+  try {
+    convertedIndex = JSON.parse(fs.readFileSync(indexJson).toString('utf-8'))
+  } catch (e) {
+    if(e.code != 'ENOENT') throw e
+    finalIndex = {}
+  }
+
+  await loadDefaultDirectories()
+
   var finalIndex
   try {
     finalIndex = JSON.parse(fs.readFileSync(indexFinalJson).toString('utf-8'))
@@ -368,7 +401,11 @@ async function makeMapIndex(project, outConverted, outRepacked, noGraph, progres
     }, initial)
 
     if(!noGraph) {
-      var missing = await findMissingTextures(path.join(outConverted, dir), progress)
+      var previous = null
+      if(usePrevious) {
+        previous = JSON.parse(ufs.readFileSync(GRAPH_PATH + '/previous-graph-' + dir + '.json').toString('utf-8'))
+      }
+      var missing = await findMissingTextures(path.join(outConverted, dir), progress, previous)
       Object.assign(manifest, missing)
     }
     

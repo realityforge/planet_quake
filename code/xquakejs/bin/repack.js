@@ -245,7 +245,7 @@ var {
   loadQVM, loadQVMData, getGameAssets, mapGameAssets, MATCH_ENTS
 } = require('../lib/asset.qvm.js')
 var {
-  deDuplicate, graphGame, graphModels, graphMaps, graphShaders, TEMP_NAME
+  deDuplicate, graphGame, loadDefaultDirectories, graphModels, graphMaps, graphShaders, TEMP_NAME
 } = require('../lib/asset.game.js')
 var {compressDirectory, unpackPk3s} = require('../bin/compress.js')
 var {
@@ -829,6 +829,9 @@ async function repackGames() {
         await unpackPk3s(mountPoints[i], outCombined, progress, noOverwrite ? [] : false, pk3dir)
         stepCounter++
       }
+      
+      await loadDefaultDirectories()
+      
       if(!noGraph) {
         if(!usePrevious) {
           await progress([[0, stepCounter, stepTotal, STEPS['graph']]])

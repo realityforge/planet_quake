@@ -12,7 +12,7 @@ var skinLoader = require('../lib/asset.skin.js')
 var {
   findTypes, fileTypes, sourceTypes,
   audioTypes, imageTypes, findTypes,
-  allTypes, whitelist
+  allTypes, whitelist, entities
 } = require('../bin/repack-whitelist.js')
 var {DirectedGraph} = require('../lib/asset.graph.js')
 
@@ -35,25 +35,42 @@ var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH
 var TEMP_NAME = path.join(__dirname, '../bin/previous-graph.json')
 var mountPoints = []
 var BASEMOD = []
-if(fs.existsSync(TEMP_DIR)) {
-  /* var defaultDirectories = fs.readdirSync(TEMP_DIR)
-    .filter(f => f[0] != '.') */
-  var defaultDirectories = [
-  /*
-    'mapmedia',
-    'threewave-cc',
-  */
-    'baseq3-cc',
-    'mapmedia-cc'
-  //  'q3ut4-cc'
-  ]
-  defaultDirectories.forEach(f => {
-    //if(whitelist.keys().filter(w => f.includes(w)).length === 0) return
-    mountPoints.push(path.join(TEMP_DIR, f))
-    var baseModFiles = glob.sync('**/*', {cwd: path.join(TEMP_DIR, f)})
-    fs.writeFileSync(path.join(__dirname, f + '-filelist.json'), JSON.stringify(baseModFiles, null, 2))
-    BASEMOD[BASEMOD.length] = baseModFiles
-  })
+var BASEMOD_LOWER = []
+
+async function loadDefaultDirectories() {
+  if(fs.existsSync(TEMP_DIR) && BASEMOD.length === 0) {
+    /* var defaultDirectories = fs.readdirSync(TEMP_DIR)
+      .filter(f => f[0] != '.') */
+    var defaultDirectories = [
+      'baseq3-cc',
+      'mapmedia-cc',
+      'threewave-cc',
+      'missionpack-cc',
+      'q3ut4-cc',
+      'baseoa-cc',
+    ]
+    for (var i = 0; i < defaultDirectories.length; i++) {
+      var f = defaultDirectories[i]
+      //if(whitelist.keys().filter(w => f.includes(w)).length === 0) return
+      mountPoints.push(path.join(TEMP_DIR, f))
+      var baseModFiles = glob.sync('**/*', {cwd: path.join(TEMP_DIR, f)})
+      fs.writeFileSync(path.join(__dirname, f + '-filelist.json'), JSON.stringify(baseModFiles, null, 2))
+      var shaders = await graphShaders(path.join(TEMP_DIR, f))
+      var scriptShaders = Object.keys(shaders)
+        .reduce((obj, k) => {
+          obj[k] = Object.keys(shaders[k])
+          obj[k].sort()
+          return obj
+        }, {})
+      baseModFiles = baseModFiles.concat(Object.values(scriptShaders)
+        .flat(1)
+        .map(s => s.replace(new RegExp(imageTypes.join('|'), 'ig'), '')))
+        .filter((s, i, arr) => arr.indexOf(s) === i)
+        .concat(entities)
+      BASEMOD[BASEMOD.length] = baseModFiles
+      BASEMOD_LOWER[BASEMOD_LOWER.length] = baseModFiles.map(f => f.toLowerCase())
+    }
+  }
 }
 
 function graphMaps(project) {
@@ -304,6 +321,11 @@ async function graphGame(gs, project, progress) {
     .filter((t, i, arr) => arr.indexOf(t) === i)
     .filter(t => !allTypes.includes(t))
 
+  var everyShaderName = Object.values(gs.scripts)
+    .flat(1)
+    .map(s => s.replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
+    .filter((s, i, arr) => arr.indexOf(s) === i)
+
   // add all the vertices which are the keys of the variables above
   var vertices = []
     .concat(Object.values(gs.mapEntities).flat(1))
@@ -345,10 +367,6 @@ async function graphGame(gs, project, progress) {
   }
 
   // lookup all shaders
-  var everyShaderName = Object.values(gs.scripts)
-    .flat(1)
-    .map(s => s.replace(new RegExp(imageTypes.join('|'), 'ig'), ''))
-    .filter((s, i, arr) => arr.indexOf(s) === i)
   var allShaders = []
     .concat(Object.values(gs.entities).flat(1)) // match with shaders or files so icons match up
     .concat(Object.values(gs.maps).flat(1))
@@ -414,44 +432,44 @@ async function graphGame(gs, project, progress) {
   Object.keys(gs.mapEntities).forEach(k => {
     gs.mapEntities[k].forEach(e => {
       if(typeof fileLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), fileLookups[e])
+      graph.addEdge(fileLookups[k], fileLookups[e])
     })
   })
   Object.keys(gs.maps).forEach(k => {
     gs.maps[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      graph.addEdge(fileLookups[k], shaderLookups[e])
     })
   })
   Object.keys(gs.models).forEach(k => {
     gs.models[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      graph.addEdge(fileLookups[k], shaderLookups[e])
     })
   })
   Object.keys(gs.skins).forEach(k => {
     gs.skins[k].forEach(e => {
       if(typeof shaderLookups[e] == 'undefined') return
-      graph.addEdge(graph.getVertex(k), shaderLookups[e])
+      graph.addEdge(fileLookups[k], shaderLookups[e])
     })
   })
   Object.keys(gs.qvms).forEach(k => {
     gs.qvms[k].forEach(e => {
       if(typeof fileLookups[e] != 'undefined') {
-        graph.addEdge(graph.getVertex(k), fileLookups[e])
+        graph.addEdge(fileLookups[k], fileLookups[e])
       }
       if(typeof shaderLookups[e] != 'undefined') {
-        graph.addEdge(graph.getVertex(k), shaderLookups[e])
+        graph.addEdge(fileLookups[k], shaderLookups[e])
       }
     })
   })
   Object.keys(gs.menus).forEach(k => {
     gs.menus[k].forEach(e => {
       if(typeof fileLookups[e] != 'undefined') {
-        graph.addEdge(graph.getVertex(k), fileLookups[e])
+        graph.addEdge(fileLookups[k], fileLookups[e])
       }
       if(typeof shaderLookups[e] != 'undefined') {
-        graph.addEdge(graph.getVertex(k), shaderLookups[e])
+        graph.addEdge(fileLookups[k], shaderLookups[e])
       }
     })
   })
@@ -471,10 +489,10 @@ function searchMinimatch(search, everything) {
     .replace(/\.[^\.]*$/, '') // remove extension
     .toLowerCase()
   if(lookup.length === 0) return null
-  var name = everything.filter(f => f.includes(lookup)) //minimatch.filter('**/' + search + '*'))[0]
+  var name = everything.filter(f => f.includes(lookup + '.')) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
     for(var i = 0; i < BASEMOD.length; i++) {
-      if(BASEMOD[i].filter(f => f.includes(lookup))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
+      if(BASEMOD_LOWER[i].filter(f => f.includes(lookup) && !f.includes('.shader'))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
         return -1 * (i + 1)
       }      
     }
@@ -505,8 +523,10 @@ module.exports = {
   graphShaders,
   graphSkins,
   graphGame,
+  loadDefaultDirectories,
   load: graphGame,
   TEMP_NAME,
   BASEMOD,
+  BASEMOD_LOWER,
   BASEMOD_DIRS: mountPoints
 }

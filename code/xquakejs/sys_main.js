@@ -105,10 +105,15 @@ var LibrarySysMain = {
           '+bind', 'mouse1', '"+attack"',
           '+bind', 'UPARROW', '"+attack"',
           '+bind', 'DOWNARROW', '"+moveup"',
-          '+bind', 'LEFTARROW', '"+moveleft"',
-          '+bind', 'RIGHTARROW', '"+moveright"',
+          '+unbind', 'LEFTARROW',
+          '+unbind', 'RIGHTARROW',
           '+unbind', 'A',
           '+unbind', 'D',
+          '+bind', 'A', '"+moveleft"',
+          '+bind', 'D', '"+moveright"',
+          '+set', 'cl_sensitivity', '1.5',
+          '+set', 'cl_mouseAccel', '0.2',
+          '+set', 'cl_mouseAccelStyle', '1',
         ])
       } else {
         args.unshift.apply(args, [

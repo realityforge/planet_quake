@@ -687,7 +687,7 @@ void IN_Frame( void )
 		}
 		*/
 		// TODO: make config options for this?
-		if(i == 1 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
 			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
 				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
 			}

@@ -206,9 +206,9 @@ var LibrarySysFiles = {
             var updatedVersion = JSON.parse(Array.from(new Uint8Array(data))
               .map(function (c) {return String.fromCharCode(c)}).join(''))
             var updatedAssets = Date.parse(updatedVersion[1])
-            if(!compareAssets || updatedAssets > compareAssets.mtime.getTime()) {
+            //if(!compareAssets || updatedAssets > compareAssets.mtime.getTime()) {
               SYSF.forceAssetUpdate = updatedAssets
-            }
+            //}
             resolve()
           })
         })
