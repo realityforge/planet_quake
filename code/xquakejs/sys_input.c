@@ -667,7 +667,8 @@ void IN_Frame( void )
 	if(focusChanged != gw_active) {
 		focusChanged = gw_active;
 		if(gw_active == qtrue) {
-			IN_GrabMouse();
+			//IN_GrabMouse();
+			cls.firstClick = qtrue;
 		}
 	}
 

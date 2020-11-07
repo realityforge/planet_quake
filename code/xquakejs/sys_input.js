@@ -91,6 +91,10 @@ var LibrarySysInput = {
     },
     InputPushKeyEvent: function (evt) {
       var event = SYSI.inputHeap
+      if(evt.keyCode === 8) {
+        SYSI.cancelBackspace = true;
+        setTimeout(function () { SYSI.cancelBackspace = false }, 100)
+      }
       SYSI.checkPasteEvent(evt)
       var modState = (evt.ctrlKey && evt.location === 1 ? 0x0040 : 0)
         | (evt.shiftKey && evt.location === 1 ? 0x0001 : 0)
@@ -361,6 +365,12 @@ var LibrarySysInput = {
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
+    window.onbeforeunload = function() {
+      if(SYSI.cancelBackspace)
+        return 'Do you really want to quit?'
+      else
+        return // no popup
+    }
 	},
   Sys_GLContextCreated: function () {
     var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
