@@ -1,6 +1,54 @@
 var LibrarySysInput = {
   $SYSI__deps: ['$SDL'],
   $SYSI: {
+    menus: {
+      'baseq3': {
+        'ARENASERVERS': 'multiplayer',
+        'CHOOSELEVEL': 'singleplayer',
+        'SETUP': 'setup',
+        'PLAYERSETTINGS': 'player',
+        'CONTROLS': 'controls',
+        'SYSTEMSETUP': 'system',
+        'GAMEOPTIONS': 'options',
+        'CDKEY': 'cdkey',
+        'CINEMATICS': 'cinematics',
+        'MODS': 'mods',
+        'GAMESERVER': 'create',
+      }
+    },
+    propMapB: [
+      [11, 12, 33],
+      [49, 12, 31],
+      [85, 12, 31],
+      [120, 12, 30],
+      [156, 12, 21],
+      [183, 12, 21],
+      [207, 12, 32],
+
+      [13, 55, 30],
+      [49, 55, 13],
+      [66, 55, 29],
+      [101, 55, 31],
+      [135, 55, 21],
+      [158, 55, 40],
+      [204, 55, 32],
+
+      [12, 97, 31],
+      [48, 97, 31],
+      [82, 97, 30],
+      [118, 97, 30],
+      [153, 97, 30],
+      [185, 97, 25],
+      [213, 97, 30],
+
+      [11, 139, 32],
+      [42, 139, 51],
+      [93, 139, 32],
+      [126, 139, 31],
+      [158, 139, 25],
+    ],
+    banner: '',
+    bannerTime: 0,
     joysticks: [],
     inputInterface: 0,
     inputHeap: 0,
@@ -24,7 +72,7 @@ var LibrarySysInput = {
         SYSI.paste = text.value
         Module.viewport.focus()
         if(SYSI.field) {
-          SYSI.paste.split('').forEach(k => {
+          SYSI.paste.split('').forEach(function (k) {
             process(SYSI.field, k.charCodeAt(0))
           })
           SYSI.paste = ''
@@ -202,9 +250,10 @@ var LibrarySysInput = {
     InputPushMoved: function (evt) {
       if (evt.toElement === null && evt.relatedTarget === null) {
         //if outside the window...
-        SYSI.interval = setInterval(function () {
-          //do something with evt.screenX/evt.screenY
-        }, 250);
+        if(SYSI.interval)
+          SYSI.interval = setInterval(function () {
+            //do something with evt.screenX/evt.screenY
+          }, 250);
       } else {
         //if inside the window...
         clearInterval(SYSI.interval);
@@ -244,13 +293,13 @@ var LibrarySysInput = {
       window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
-      window.addEventListener("mouseout", SYSI.InputPushMoved, false)
+      window.addEventListener('mouseout', SYSI.InputPushMoved, false)
 
       Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
       
-      document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
+      document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
       document.addEventListener("visibilitychange", SYSI.InputPushFocus, false)
       /*
       let nipple handle touch events
@@ -301,7 +350,8 @@ var LibrarySysInput = {
   },
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
-    SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
+    if(!SYSI.inputHeap)
+      SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {
@@ -338,7 +388,40 @@ var LibrarySysInput = {
 	Sys_SetClipboardData: function (field) {
     SYSI.field = field
 	},
+  Sys_EventMenuChanged: function (x, y) {
+    var milli = _Sys_Milliseconds()
+    if(milli - SYSI.bannerTime > 1000) {
+      SYSI.banner = ''
+      SYSI.bannerTime = milli
+    } else if (milli < SYSI.bannerTime) return
+    var found = false
+    var index = 0
+    SYSI.propMapB.forEach(function (coords, i) {
+      if(coords[0] == Math.round(x * 256.0) && coords[1] == Math.round(y * 256.0)) {
+        found = true
+        index = i
+      }
+    })
+    if(found) SYSI.banner += String.fromCharCode('A'.charCodeAt(0)+index)
+    if(typeof history != 'undefined') {
+      var url = Object.keys(SYSI.menus['baseq3']).filter(function (m) {
+        return SYSI.banner.includes(m)
+      })[0]
+      if(url) {
+        history.pushState({location: window.location.toString()}, window.title, SYSI.menus['baseq3'][url])
+        // deflood
+        SYSI.banner = ''
+        SYSI.bannerTime += 1000
+      }
+    }
+  },
   glPolygonMode: function(){}, // TODO
+  glDrawBuffer: function(){},
+  SDL_uclibc_exp: function(){},
+  SDL_uclibc_fmod: function(){},
+  SDL_uclibc_log10: function(){},
+  __cxa_find_matching_catch_3: function (){},
+  __cxa_find_matching_catch_2: function (){},
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

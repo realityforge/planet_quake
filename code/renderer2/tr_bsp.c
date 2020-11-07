@@ -280,7 +280,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	if (tr.worldDeluxeMapping)
 		tr.deluxemaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 
-	textureInternalFormat = GL_RGBA;
+	textureInternalFormat = GL_RGBA8;
 	if (r_hdr->integer)
 	{
 		// Check for the first hdr lightmap, if it exists, use GL_RGBA16 for textures.
@@ -488,7 +488,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 			}
 
 			if (r_mergeLightmaps->integer)
-				R_UpdateSubImage(tr.deluxemaps[lightmapnum], image, xoff, yoff, tr.lightmapSize, tr.lightmapSize, GL_RGBA );
+				R_UpdateSubImage(tr.deluxemaps[lightmapnum], image, xoff, yoff, tr.lightmapSize, tr.lightmapSize, GL_RGBA8 );
 			else
 				tr.deluxemaps[i] = R_CreateImage(va("*deluxemap%d", i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_DELUXE, imgFlags, 0 );
 		}
@@ -2655,7 +2655,7 @@ void R_RenderMissingCubemaps(void)
 	{
 		if (!tr.cubemaps[i].image)
 		{
-			tr.cubemaps[i].image = R_CreateImage(va("*cubeMap%d", i), NULL, r_cubemapSize->integer, r_cubemapSize->integer, IMGTYPE_COLORALPHA, flags, GL_RGBA);
+			tr.cubemaps[i].image = R_CreateImage(va("*cubeMap%d", i), NULL, r_cubemapSize->integer, r_cubemapSize->integer, IMGTYPE_COLORALPHA, flags, GL_RGBA8);
 
 			for (j = 0; j < 6; j++)
 			{

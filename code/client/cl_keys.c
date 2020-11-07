@@ -859,6 +859,8 @@ Key_SetCatcher
 */
 void Key_SetCatcher( int catcher )
 {
+	if(uivm && re.BeginRegistration)
+		re.ResetBannerSpy();
 	// If the catcher state is changing, clear all key states
 	if ( catcher != keyCatchers )
 		Key_ClearStates();

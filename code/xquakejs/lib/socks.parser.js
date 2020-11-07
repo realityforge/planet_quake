@@ -28,6 +28,7 @@ function Parser(ws) {
   this._ws = ws
   this._listening = false
   
+  this._buffer = Buffer.alloc(1400*3, 0)
   this._state = STATE_VERSION
   this._methods = undefined
   this._methodsp = 0
@@ -41,36 +42,45 @@ function Parser(ws) {
 }
 inherits(Parser, EventEmitter)
 
+Parser.CMD = CMD
 Parser.prototype._onData = function(message) {
-  var chunk = Buffer.from(message)
+  if(message === null) {
+    this._buffer.fill(0)
+    return
+  }
+  if(typeof message == 'string') {
+    this._buffer.write(message)
+  } else {
+    message.copy(this._buffer, 0, 0, message.length)
+  }
   var state = this._state,
       i = 0,
-      len = chunk.length,
+      len = message.length,
       left,
       chunkLeft,
       minLen
   // connection and version number are implied from now on
-  if(this.authed && Object.values(ATYP).includes(chunk[3])) {
-    chunk[0] = 0x05
-    chunk[1] = chunk[1] || 0x01 // could be 1 or 4 from client
-    chunk[2] = 0x00
+  if(this.authed && Object.values(ATYP).includes(this._buffer[3])) {
+    this._buffer[0] = 0x05
+    this._buffer[1] = this._buffer[1] || 0x01 // could be 1 or 4 from client
+    this._buffer[2] = 0x00
   }
   //console.log(chunk)
   while (i < len) {
     // emscripten overdoing it a little
-    if(chunk[i] === 0xFF && chunk[i+1] === 0xFF
-      && chunk[i+2] === 0xFF && chunk[i+3] === 0xFF
-      && chunk[i+4] === 'p'.charCodeAt(0)
-      && chunk[i+5] === 'o'.charCodeAt(0)
-      && chunk[i+6] === 'r'.charCodeAt(0)
-      && chunk[i+7] === 't'.charCodeAt(0)) {
+    if(this._buffer[i] === 0xFF && this._buffer[i+1] === 0xFF
+      && this._buffer[i+2] === 0xFF && this._buffer[i+3] === 0xFF
+      && this._buffer[i+4] === 'p'.charCodeAt(0)
+      && this._buffer[i+5] === 'o'.charCodeAt(0)
+      && this._buffer[i+6] === 'r'.charCodeAt(0)
+      && this._buffer[i+7] === 't'.charCodeAt(0)) {
       // then we know we are in UDP mode, thanks a lot
-      this._dstport = chunk[i+8]
+      this._dstport = this._buffer[i+8]
       this._dstport <<= 8
-      this._dstport += chunk[i+9]
+      this._dstport += this._buffer[i+9]
       this.authed = true
       this.emit('request', {
-        cmd: 'udp',
+        cmd: CMD.UDP,
         dstPort: this._dstport
       })
       return
@@ -84,12 +94,12 @@ Parser.prototype._onData = function(message) {
         +----+----------+----------+
       */
       case STATE_VERSION:
-        if(chunk[i] !== 0x05)
-          if (this.authed && chunk[i] === 0x00) {
+        if(this._buffer[i] !== 0x05)
+          if (this.authed && this._buffer[i] === 0x00) {
           } else {
-            if(chunk[i] !== 0x00)
+            if(this._buffer[i] !== 0x00)
               this.emit('error', new Error('Incompatible SOCKS protocol version: '
-                                  + chunk[i]))
+                                  + this._buffer[i]))
             return
           }
         ++i
@@ -99,7 +109,7 @@ Parser.prototype._onData = function(message) {
           ++state
       break
       case STATE_NMETHODS:
-        var nmethods = chunk[i]
+        var nmethods = this._buffer[i]
         if (nmethods === 0) {
           this.emit('error', new Error('Unexpected empty methods list'))
           return
@@ -113,7 +123,7 @@ Parser.prototype._onData = function(message) {
         left = this._methods.length - this._methodsp
         chunkLeft = len - i
         minLen = (left < chunkLeft ? left : chunkLeft)
-        chunk.copy(this._methods,
+        this._buffer.copy(this._methods,
                    this._methodsp,
                    i,
                    i + minLen)
@@ -123,6 +133,8 @@ Parser.prototype._onData = function(message) {
           this._state = STATE_VERSION
           var methods = this._methods
           this._methods = undefined
+          if(this._ws._socket.pause)
+            this._ws._socket.pause()
           this.emit('methods', methods)
           return
         }
@@ -152,16 +164,9 @@ Parser.prototype._onData = function(message) {
                  order
       */
       case STATE_REQ_CMD:
-        var cmd = chunk[i]
-        if (cmd === CMD.CONNECT || cmd === 0x00)
-          this._cmd = 'connect'
-        else if (cmd === CMD.BIND)
-          this._cmd = 'bind'
-        else if (cmd === CMD.UDP)
-          this._cmd = 'udp'
-        else if (cmd === CMD.WS)
-          this._cmd = 'ws'
-        else {
+        var cmd = this._buffer[i]
+        this._cmd = cmd || CMD.CONNECT
+        if(cmd < 0 || cmd > 0x04) {
           this.emit('error', new Error('Invalid request command: ' + cmd))
           return
         }
@@ -174,7 +179,7 @@ Parser.prototype._onData = function(message) {
         ++state
       break
       case STATE_REQ_ATYP:
-        var atyp = chunk[i]
+        var atyp = this._buffer[i]
         state = STATE_REQ_DSTADDR
         if (atyp === ATYP.IPv4)
           this._dstaddr = Buffer.alloc(4)
@@ -182,7 +187,10 @@ Parser.prototype._onData = function(message) {
           this._dstaddr = Buffer.alloc(16)
         else if (atyp === ATYP.NAME)
           state = STATE_REQ_DSTADDR_VARLEN
-        else {
+        else if (atyp === 0) {
+          this.emit('ping')
+          return
+        } else {
           this.emit('error', new Error('Invalid request address type: ' + atyp))
           return
         }
@@ -193,24 +201,24 @@ Parser.prototype._onData = function(message) {
         left = this._dstaddr.length - this._dstaddrp
         chunkLeft = len - i
         minLen = (left < chunkLeft ? left : chunkLeft)
-        chunk.copy(this._dstaddr, this._dstaddrp, i, i + minLen)
+        this._buffer.copy(this._dstaddr, this._dstaddrp, i, i + minLen)
         this._dstaddrp += minLen
         i += minLen
         if (this._dstaddrp === this._dstaddr.length)
           state = STATE_REQ_DSTPORT
       break
       case STATE_REQ_DSTADDR_VARLEN:
-        this._dstaddr = Buffer.alloc(chunk[i])
+        this._dstaddr = Buffer.alloc(this._buffer[i])
         this._dstaddrp = 0
         state = STATE_REQ_DSTADDR
         ++i
       break
       case STATE_REQ_DSTPORT:
         if (this._dstport === undefined)
-          this._dstport = chunk[i]
+          this._dstport = this._buffer[i]
         else {
           this._dstport <<= 8
-          this._dstport += chunk[i]
+          this._dstport += this._buffer[i]
           ++i
 
           if (this._atyp === ATYP.IPv4)
@@ -227,13 +235,15 @@ Parser.prototype._onData = function(message) {
           } else
             this._dstaddr = this._dstaddr.toString()
 
+          if(this._ws._socket.pause)
+            this._ws._socket.pause()
           this.emit('request', {
             cmd: this._cmd,
             srcAddr: undefined,
             srcPort: undefined,
             dstAddr: this._dstaddr.replace('\0', ''),
             dstPort: this._dstport,
-            data: chunk.slice(i)
+            data: Buffer.from(this._buffer.subarray(i, len))
           })
           return
         }

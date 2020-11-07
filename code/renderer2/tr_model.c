@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *modName);
 static qboolean R_LoadMDR(model_t *mod, void *buffer, int filesize, const char *name );
 
-qboolean updateModels = qfalse;
 /*
 ====================
 R_RegisterMD3
@@ -239,15 +238,6 @@ model_t *R_AllocModel( void ) {
 	return mod;
 }
 
-void R_UpdateModel( const char *name )
-{
-	updateModels = qtrue;
-	
-	RE_RegisterModel(name);
-	
-	updateModels = r_lazyLoad->integer < 2;
-}
-
 /*
 ====================
 RE_RegisterModel
@@ -260,9 +250,9 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
-qhandle_t RE_RegisterModel( const char *name ) {
+qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
 	model_t		*mod = NULL;
-	qhandle_t	hModel;
+	qhandle_t	hModel = 0;
 	qboolean	orgNameFailed = qfalse, found = qfalse;
 	int			orgLoader = -1;
 	int			i;
@@ -392,6 +382,15 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	ri.Cvar_Set("r_loadingModel", "");
 
 	return mod->index;
+}
+
+qhandle_t RE_RegisterModel( const char *name ) {
+	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
+}
+
+void R_UpdateModel( const char *name )
+{
+	RE_RegisterModel_Internal( name, qtrue );
 }
 
 /*
@@ -1197,8 +1196,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	int	i;
-	
-	updateModels = r_lazyLoad->integer < 2;
+	tr.lastRegistrationTime = ri.Milliseconds();
 
 	R_Init();
 

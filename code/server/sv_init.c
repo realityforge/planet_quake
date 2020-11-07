@@ -297,6 +297,9 @@ static void SV_Startup( void ) {
 	}
 	SV_BoundMaxClients( 1 );
 
+	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	numInvoices = 0;
 #ifdef USE_MV
 	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof( client_t ), TAG_CLIENTS ); // +1 client slot for recorder
 	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof( client_t ) );
@@ -365,8 +368,16 @@ void SV_ChangeMaxClients( void ) {
 	Z_Free( svs.clients );
 
 	// allocate new clients
+	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+	numInvoices = 0;
+#ifdef USE_MV
+	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof(client_t), TAG_CLIENTS );
+	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof(client_t) );
+#else
 	svs.clients = Z_TagMalloc( sv_maxclients->integer * sizeof(client_t), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0, sv_maxclients->integer * sizeof(client_t) );
+#endif
 
 	// copy the clients over
 	for ( i = 0 ; i < count ; i++ ) {
@@ -515,6 +526,12 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	svs.nextSnapshotPSF = 0;
 #endif
 
+#ifdef USE_LNBITS
+	// reset invoice array so clients have to pay again in between matches
+	// TODO: make this a setting? make this a command?
+	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+#endif
+
 	// toggle the server bit so clients can detect that a
 	// server has changed
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
@@ -587,7 +604,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 ;
 
-	Sys_SetStatus( va("Loading map %s", mapname) );
+	Sys_SetStatus( "Loading map %s", mapname );
 	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
@@ -643,6 +660,14 @@ void SV_SpawnServer_After_Startup( void ) {
 			else {
 				isBot = qfalse;
 			}
+
+#ifdef USE_LNBITS
+			if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
+				// reconnect clients so they have to repay
+				SV_SendServerCommand( &svs.clients[i], "reconnect\n" );
+				continue;
+			}
+#endif
 
 			// connect the client again
 			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
@@ -730,6 +755,7 @@ void SV_SpawnServer_After_Startup( void ) {
 			// load pk3s also loaded at the server
 			Cvar_Set( "sv_paks", p );
 			if ( *p == '\0' ) {
+				sv_pure->integer = 0;
 				Com_Printf( S_COLOR_YELLOW "WARNING: sv_pure set but no PK3 files loaded\n" );
 			}
 		}
@@ -754,12 +780,19 @@ void SV_SpawnServer_After_Startup( void ) {
 	
 #ifdef EMSCRIPTEN
 	svShuttingDown = qfalse;
-	//CL_StartHunkUsers( );
+#else
+#ifndef DEDICATED
+	if ( com_dedicated->integer ) {
+		// restart renderer in order to show console for dedicated servers
+		// launched through the regular binary
+		CL_StartHunkUsers( );
+	}
+#endif
 #endif
 
 	Com_Printf ("-----------------------------------\n");
 	
-	Sys_SetStatus( va("Running map %s", mapname) );
+	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
 
 	// start recording a demo
@@ -865,6 +898,7 @@ void SV_Init( void )
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
+/*
 	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_ARCHIVE );
 	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_ARCHIVE );
 	sv_master[3] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_ARCHIVE );
@@ -886,14 +920,15 @@ void SV_Init( void )
 	sv_master[19] = Cvar_Get( "sv_master17", "monster.idsoftware.com:27950", CVAR_ARCHIVE );
 	sv_master[20] = Cvar_Get( "sv_master18", "master.quakeservers.net:27000", CVAR_ARCHIVE );
 	sv_master[21] = Cvar_Get( "sv_master19", MASTER_SERVER_NAME, CVAR_ARCHIVE );
+	
+*/
 #ifdef EMSCRIPTEN
-	sv_master[20] = Cvar_Get( "sv_master20", "master.quakejs.com", CVAR_ARCHIVE );
-	sv_master[22] = Cvar_Get( "sv_master21", "ws://master.quakejs.com", CVAR_ARCHIVE );
-	sv_master[23] = Cvar_Get( "sv_master22", "207.246.91.235:27950", CVAR_ARCHIVE );
+	sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com", CVAR_ARCHIVE );
+	sv_master[23] = Cvar_Get( "sv_master21", "207.246.91.235:27950", CVAR_ARCHIVE );
 #endif
 
 
-	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
+	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[index] = Cvar_Get(va("sv_master%d", index + 1), "", CVAR_ARCHIVE);
 
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
@@ -906,6 +941,26 @@ void SV_Init( void )
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
+#endif
+
+#ifdef USE_LNBITS
+	sv_lnMatchPrice = Cvar_Get("sv_lnMatchPrice", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnMatchCut = Cvar_Get("sv_lnMatchCut", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP);
+	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
+	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
+	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
+	sv_lnWithdraw = Cvar_Get("sv_lnWithdraw", "https://lnbits.com/withdraw/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
+#endif
+
+#ifdef DEDICATED
+#ifdef USE_CURL
+	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
+#endif
+#ifdef USE_CURL_DLOPEN
+	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
+#endif
 #endif
 
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
@@ -967,7 +1022,7 @@ void SV_FinalMessage( const char *message ) {
  				}
 #ifdef EMSCRIPTEN
 				if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
-					SV_SendServerCommand( cl, "reconnect\n", message );
+					SV_SendServerCommand( cl, "reconnect\nprint \"%s\n\"\n", message );
 				}
 #endif
 
@@ -1016,22 +1071,6 @@ void SV_Shutdown( const char *finalmsg ) {
 		}
 	}
 
-/*
-#ifdef EMSCRIPTEN
-	// Local server is "always on"
-	if(!svShuttingDown) {
-		svShuttingDown = qtrue;
-		startingServer = qfalse;
-		SV_ShutdownGameProgs();
-		Cvar_Set( "sv_running", "0" );
-		svs.initialized = qfalse;
-		Cmd_Clear();
-		Cbuf_AddText("spmap q3dm0\n");
-		return;
-	}
-#endif
-*/
-
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();
 #endif
@@ -1056,6 +1095,20 @@ void SV_Shutdown( const char *finalmsg ) {
 	}
 
 	SV_SaveRecordCache();
+#endif
+
+#ifdef EMSCRIPTEN
+	// Local server is "always on"
+	if(!svShuttingDown) {
+		svShuttingDown = qtrue;
+		startingServer = qfalse;
+		SV_ShutdownGameProgs();
+		Cvar_Set( "sv_running", "0" );
+		svs.initialized = qfalse;
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		return;
+	}
 #endif
 
 	SV_RemoveOperatorCommands();
@@ -1109,6 +1162,6 @@ void SV_Shutdown( const char *finalmsg ) {
 
 #ifdef EMSCRIPTEN
 	Cmd_Clear();
-	Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
+	Cbuf_AddText(va("spmap q3dm0\n"));
 #endif
 }

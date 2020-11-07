@@ -275,6 +275,9 @@ void Cbuf_Execute( void )
 Cmd_Exec_f
 ===============
 */
+int overflowCounter = 0;
+int lastExec = 0;
+char lastScript[MAX_QPATH*10];
 static void Cmd_Exec_f( void ) {
 	qboolean quiet;
 	union {
@@ -282,6 +285,7 @@ static void Cmd_Exec_f( void ) {
 		void *v;
 	} f;
 	char filename[MAX_QPATH];
+	int execTime = Com_Milliseconds();
 
 	quiet = !Q_stricmp(Cmd_Argv(0), "execq");
 
@@ -293,6 +297,23 @@ static void Cmd_Exec_f( void ) {
 
 	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
+	if(lastExec == 0 || execTime - lastExec > cl_execTimeout->integer) {
+		lastExec = execTime;
+		lastScript[0] = 0;
+		overflowCounter = 0;
+	} else {
+		overflowCounter++;
+	}
+	if(overflowCounter >= cl_execOverflow->integer) {
+		if(!Q_stristr(lastScript, filename)) {
+			int addFile = strlen(lastScript);
+			lastScript[addFile] = ';';
+			Com_Memcpy(&lastScript[addFile+1], filename, strlen(filename));
+		}
+		// TODO: show a line number of where the repeat exec came from in the cfg?
+		Com_Printf( "EXEC OVERFLOW ERROR! not executing %s for at least %i milliseconds\n", filename, cl_execTimeout->integer );
+		return;
+	}
 	FS_BypassPure();
 	FS_ReadFile( filename, &f.v );
 	FS_RestorePure();
@@ -969,6 +990,7 @@ void Cmd_CompleteWriteCfgName( char *args, int argNum ) {
 	}
 }
 
+
 /*
 ============
 Cmd_Init
@@ -984,4 +1006,7 @@ void Cmd_Init( void ) {
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
+
+	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CVAR_ARCHIVE | CV_INTEGER);
+	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);
 }

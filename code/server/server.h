@@ -20,12 +20,25 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // server.h
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "../qcommon/vm_local.h"
 #include "../game/g_public.h"
 #include "../game/bg_public.h"
+
+#ifdef USE_CURL
+#include "../client/cl_curl.h"
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
+#endif
+
 
 //=============================================================================
 
@@ -410,7 +423,72 @@ extern	cvar_t	*cl_freezeDemo;
 extern	cvar_t	*sv_demoTolerant;
 extern	cvar_t	*sv_democlients; // number of democlients: this should always be set to 0, and will be automatically adjusted when needed by the demo facility. ATTENTION: if sv_maxclients = sv_democlients then server will be full! sv_democlients consume clients slots even if there are no democlients recorded nor replaying for this slot!
 
+#ifdef USE_LNBITS
+extern	cvar_t  *sv_lnMatchPrice;
+extern	cvar_t  *sv_lnMatchCut;
+extern	cvar_t  *sv_lnMatchReward;
+extern	cvar_t  *sv_lnWallet;
+extern	cvar_t  *sv_lnKey;
+extern	cvar_t  *sv_lnAPI;
+extern	cvar_t  *sv_lnWithdraw;
+#endif
+
+
 //===========================================================
+#ifdef USE_CURL
+#ifdef DEDICATED
+typedef struct {
+	fileHandle_t download;
+	char		downloadTempName[MAX_OSPATH];
+	char		downloadName[MAX_OSPATH];
+	int			downloadCount;	// how many bytes we got
+	int			downloadSize;	// how many bytes we got
+	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
+	qboolean	cURLEnabled;
+	qboolean	cURLUsed;
+	qboolean	cURLDisconnected;
+	char		downloadURL[MAX_OSPATH];
+	CURL		*downloadCURL;
+	CURLM		*downloadCURLM;
+} clientConnection_t;
+
+typedef struct {
+	int			realtime;			// ignores pause	
+} clientStatic_t;
+
+extern	clientStatic_t		cls;
+extern	clientConnection_t clc;
+extern	cvar_t	*cl_dlDirectory;
+extern	cvar_t	*cl_cURLLib;
+#endif
+
+extern		download_t	svDownload;
+qboolean	Com_DL_Perform( download_t *dl );
+void		  Com_DL_Cleanup( download_t *dl );
+qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean headerCheck, qboolean autoDownload );
+qboolean	Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL);
+qboolean	Com_DL_InProgress( const download_t *dl );
+qboolean	Com_DL_ValidFileName( const char *fileName );
+
+#endif
+
+#ifdef USE_LNBITS
+typedef struct {
+	char     guid[64];
+	char     checkingId[64];
+	char     invoice[512];
+	char     reward[512];
+	int      lastTime;
+	int      price; // price at time of invoicing for scriptability
+	qboolean paid;
+	client_t *cl;
+} invoice_t;
+extern invoice_t *maxInvoices;
+extern int       numInvoices;
+extern int       oldestInvoiceTime;
+extern invoice_t *oldestInvoiceClient;
+void      SV_CheckInvoicesAndPayments(void);
+#endif
 
 //
 // sv_main.c

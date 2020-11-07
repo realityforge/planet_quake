@@ -366,6 +366,12 @@ void Spy_CursorPosition(float x, float y) {
 	cls.cursorx = x;
 	cls.cursory = y;
 }
+
+void Spy_Banner(float x, float y) {
+#ifdef EMSCRIPTEN
+	//Sys_EventMenuChanged(x, y);
+#endif
+}
 /*
 =================
 CL_MouseEvent
@@ -447,6 +453,7 @@ static void CL_JoystickMove( usercmd_t *cmd ) {
 
 	cmd->upmove = ClampCharMove( cmd->upmove + cl.joystickAxis[AXIS_UP] );
 }
+
 
 /*
 =================
@@ -871,7 +878,6 @@ Called every frame to builds and sends a command packet to the server.
 */
 void CL_SendCmd( void ) {
 	// don't send any message if not connected
-//#ifndef EMSCRIPTEN
 	if ( cls.state < CA_CONNECTED ) {
 		return;
 	}
@@ -880,7 +886,6 @@ void CL_SendCmd( void ) {
 	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
 		return;
 	}
-//#endif
 
 	// we create commands even if a demo is playing,
 	CL_CreateNewCommands();

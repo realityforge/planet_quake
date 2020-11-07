@@ -293,6 +293,10 @@ void Sys_Exit( int code )
 {
 	Sys_ConsoleInputShutdown();
 
+#ifdef EMSCRIPTEN
+	Sys_PlatformExit( );
+	emscripten_cancel_main_loop();
+#endif
 #ifdef NDEBUG // regular behavior
 	// We can't do this 
 	//  as long as GL DLL's keep installing with atexit...
@@ -301,10 +305,6 @@ void Sys_Exit( int code )
 #else
 	// Give me a backtrace on error exits.
 	assert( code == 0 );
-#ifdef EMSCRIPTEN
-	Sys_PlatformExit( );
-	emscripten_cancel_main_loop();
-#endif
 	exit( code );
 #endif
 }
@@ -575,7 +575,7 @@ char *Sys_ConsoleInput( void )
 		}
 		return NULL;
 	}
-	else if ( stdin_active && com_dedicated->integer )
+	else if ( com_dedicated && stdin_active && com_dedicated->integer )
 	{
 		int len;
 		fd_set fdset;

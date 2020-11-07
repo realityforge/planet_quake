@@ -35,6 +35,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cl_curl.h"
 #endif /* USE_CURL */
 
+#ifdef USE_CURL
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
+#endif
+
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
@@ -315,6 +327,24 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
+#ifdef EMSCRIPTEN
+
+#define MAX_PATCHES  8
+
+typedef enum {
+	PATCH_NONE,
+	PATCH_XSCALE,
+	PATCH_YSCALE,
+	PATCH_BIAS
+} patch_type_t;
+
+typedef struct patch_s {
+	patch_type_t type;
+	void *addr;
+} patch_t;
+
+#endif
+
 typedef struct {
 	connstate_t	state;				// connection status
 	qboolean	gameSwitch;
@@ -363,6 +393,9 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+#ifdef USE_LNBITS
+	qhandle_t qrCodeShader;
+#endif
 
 	int			lastVidRestart;
 	int			soundMuted;
@@ -379,6 +412,20 @@ typedef struct {
 	float		 cursorx;
 	float    cursory;
 	qboolean postgame;
+#ifdef EMSCRIPTEN
+	glconfig_t *uiGlConfig;
+
+	patch_t uiPatches[MAX_PATCHES];
+	unsigned numUiPatches;
+
+	// the cgame scales are normally stuffed somewhere inbetween
+	// cgameGlConfig and cgameFirstCvar
+	glconfig_t *cgameGlConfig;
+	vmCvar_t *cgameFirstCvar;
+
+	patch_t cgamePatches[MAX_PATCHES];
+	unsigned numCgamePatches;
+#endif	
 } clientStatic_t;
 
 extern int bigchar_width;
@@ -426,6 +473,9 @@ extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 
+#ifdef USE_LNBITS
+extern  cvar_t	*cl_lnInvoice;
+#endif
 extern	cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
 extern	cvar_t	*cl_mapAutoDownload;
@@ -474,6 +524,9 @@ void CL_ReadDemoMessage( void );
 void CL_StopRecord_f( void );
 
 void CL_InitDownloads( void );
+#ifdef EMSCRIPTEN
+void CL_Outside_NextDownload( void );
+#endif
 void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );
@@ -639,7 +692,7 @@ void	CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *hei
 void	GLimp_Init( glconfig_t *config );
 void	GLimp_Shutdown( qboolean unloadDLL );
 void	GLimp_EndFrame( void );
-
+void  GLimp_UpdateMode( glconfig_t *config );
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
 

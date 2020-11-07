@@ -1070,15 +1070,16 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data, 
 	}
 	for ( j = 0 ; ( 1 << j ) < rows ; j++ ) {
 	}
-	if ( ( 1 << i ) != cols || ( 1 << j ) != rows) {
-		ri.Error (ERR_DROP, "Draw_StretchRaw: size not a power of 2: %i by %i", cols, rows);
+
+	if ( ( 1 << i ) != cols || ( 1 << j ) != rows ) {
+		ri.Error( ERR_DROP, "%s(): size not a power of 2: %i by %i", __func__, cols, rows );
 	}
 
 	RE_UploadCinematic( w, h, cols, rows, data, client, dirty );
 
 	if ( r_speeds->integer ) {
 		end = ri.Milliseconds();
-		ri.Printf( PRINT_ALL, "qglTexSubImage2D %i, %i: %i msec\n", cols, rows, end - start );
+		ri.Printf( PRINT_ALL, "RE_UploadCinematic( %i, %i ): %i msec\n", cols, rows, end - start );
 	}
 
 	tr.cinematicShader->stages[0]->bundle[0].image[0] = tr.scratchImage[client];
@@ -1339,7 +1340,8 @@ static void RB_DebugPolygon( int color, int numPoints, float *points ) {
 		tess.numIndexes += 3;
 	}
 
-	vk_bind_geometry_ext( TESS_IDX | TESS_XYZ | TESS_RGBA | TESS_ST0 );
+	vk_bind_index();
+	vk_bind_geometry( TESS_XYZ | TESS_RGBA | TESS_ST0 );
 	vk_draw_geometry( vk.surface_debug_pipeline_solid, DEPTH_RANGE_NORMAL, qtrue );
 
 	// Outline.
@@ -1352,7 +1354,7 @@ static void RB_DebugPolygon( int color, int numPoints, float *points ) {
 	tess.numVertexes = numPoints * 2;
 	tess.numIndexes = 0;
 
-	vk_bind_geometry_ext( TESS_XYZ | TESS_RGBA );
+	vk_bind_geometry( TESS_XYZ | TESS_RGBA );
 	vk_draw_geometry( vk.surface_debug_pipeline_outline, DEPTH_RANGE_ZERO, qfalse );
 	tess.numVertexes = 0;
 #else
@@ -1566,7 +1568,7 @@ void RB_ShowImages( void )
 
 		tess.svars.texcoordPtr[0] = tess.svars.texcoords[0];
 
-		vk_bind_geometry_ext( TESS_XYZ | TESS_RGBA | TESS_ST0 );
+		vk_bind_geometry( TESS_XYZ | TESS_RGBA | TESS_ST0 );
 		vk_draw_geometry( vk.images_debug_pipeline, DEPTH_RANGE_NORMAL, qfalse );
 	}
 
@@ -1834,6 +1836,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		default:
 			// stop rendering
 #ifdef USE_VULKAN
+			if ( vk.frame_count ) {
+				vk_end_frame();
+			}
 //			if (com_errorEntered && (begin_frame_called && !end_frame_called)) {
 //				vk_end_frame();
 //			}

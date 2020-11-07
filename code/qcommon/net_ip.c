@@ -75,6 +75,7 @@ static qboolean	winsockInitialized = qfalse;
 #		define _BSD_SOCKLEN_T_
 #	endif
 
+# include <netinet/tcp.h>
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>
@@ -138,7 +139,13 @@ static cvar_t	*net_dropsim;
 static struct sockaddr_in socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
+#ifdef EMSCRIPTEN
+// maybe on desktop we have the luxury of maintaining separate connections
+//  but the web browser is limit to 3 per thread
+#define socks_socket ip_socket
+#else
 static SOCKET	socks_socket = INVALID_SOCKET;
+#endif
 
 #ifdef USE_IPV6
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -617,43 +624,59 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 	socklen_t	fromlen;
 	int		err;
 
-	if(ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
+	if((ip_socket != INVALID_SOCKET && FD_ISSET(ip_socket, fdr))
+    || (usingSocks && socks_socket != INVALID_SOCKET && FD_ISSET(socks_socket, fdr)))
 	{
 		fromlen = sizeof(from);
-//#ifdef EMSCRIPTEN
-//		ret = recvfrom( socks_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
-//#else
-    ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
-//#endif
+    if(usingSocks && socks_socket != INVALID_SOCKET && FD_ISSET(socks_socket, fdr)) {
+      ret = recvfrom( socks_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+    } else {
+      ret = recvfrom( ip_socket, (void *)net_message->data, net_message->maxsize, 0, (struct sockaddr *) &from, &fromlen );
+    }
 		if (ret == SOCKET_ERROR)
 		{
 			err = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( err != EAGAIN && err != ECONNRESET ) {
+        char * err = NET_ErrorString();
+        if(Q_stristr(err, "Socket not connected")) {
+          // turn off socket so we arent sleeping to receive a message from broken socket
+          socks_socket = INVALID_SOCKET;
+          // TODO: reconnect with keepAlive message every second,
+          //   rebind same port like in sys_net.js
+        }
 				Com_Printf( "NET_GetPacket: %s\n", NET_ErrorString() );
+      }
 		}
 		else
 		{
 			memset( ((struct sockaddr_in *)&from)->sin_zero, 0, 8 );
 		
       if ( usingSocks ) { //&& memcmp( &from, &socksRelayAddr, sizeof( struct sockaddr_in ) ) == 0 ) {
-				if ( ret < 10 || net_message->data[0] != 0 || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
+				if ( ret < 10 || (net_message->data[0] != 0 && net_message->data[0] != 0x05) || net_message->data[1] != 0 || net_message->data[2] != 0 ) {
 					return qfalse;
 				}
 				net_from->type = NA_IP;
         net_message->readcount = 4; // including type below
-        if(net_message->data[3] == 1) {
+        if(net_message->data[3] == 1 || net_message->data[3] == 4) {
   				net_from->ipv._4[0] = net_message->data[4];
   				net_from->ipv._4[1] = net_message->data[5];
   				net_from->ipv._4[2] = net_message->data[6];
   				net_from->ipv._4[3] = net_message->data[7];
           net_message->readcount = 4 + 4 + 2;
           Q_strncpyz(net_from->name, NET_AdrToString(net_from), sizeof(net_from->name));
+          if(net_message->data[3] == 4) {
+            Q_strncpyz(net_from->protocol, "ws", 3);
+          } else {
+            net_from->protocol[0] = '\0';
+          }
         } else if (net_message->data[3] == 3) {
           net_message->readcount = 5 + net_message->data[4] + 2;
+          net_from->protocol[0] = '\0';
           NET_StringToAdr((char *)&net_message->data[5], net_from, net_from->type);
         }
-				net_from->port = *(short *)&net_message->data[net_message->readcount - 2];
+        memcpy(&net_from->port, &net_message->data[net_message->readcount - 2], 2);
+				net_from->port = htons( net_from->port );
 			}
 			else {
         net_from->type = NA_BAD;
@@ -786,19 +809,13 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
       socksBuf[1] = 4; // special connect command indicating web sockets
     }
     if(to->name[0] == '\0') {
-      Q_strncpyz(to->name, NET_AdrToString(to), sizeof(to->name));
+      Q_strncpyz((char *)to->name, NET_AdrToString(to), sizeof(to->name));
     }
     socksBuf[4] = strlen(to->name) + 1;
     Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
 		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
 		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
-//#ifdef EMSCRIPTEN
-    // maybe on desktop we have the luxury of maintaining separate connections
-    //  but the web browser is limit to 3 per thread
-//    ret = sendto( socks_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
-//#else
     ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
-//#endif
 	}
 	else {
 		if(addr.ss_family == AF_INET)
@@ -984,7 +1001,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	// make it broadcast capable
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
-	}
+  }
 #endif
 
 	if( !net_interface || !net_interface[0]) {
@@ -1223,9 +1240,12 @@ int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
 	struct hostent		*h;
+#ifndef EMSCRIPTEN
 	int					len;
+  int i = 1;
 	qboolean			rfc1929;
 	unsigned char		buf[64];
+#endif
 
 	usingSocks = qfalse;
 #ifdef EMSCRIPTEN
@@ -1245,6 +1265,13 @@ static void NET_OpenSocks( int port ) {
 		Com_Printf( "WARNING: NET_OpenSocks: socket: %s\n", NET_ErrorString() );
 		return;
 	}
+  
+#ifndef EMSCRIPTEN
+	// set no delay
+	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
+		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
+	}
+#endif
   
   h = gethostbyname( NET_ParseProtocol(net_socksServer->string, 0));
 	if ( h == NULL ) {
@@ -1266,6 +1293,8 @@ static void NET_OpenSocks( int port ) {
 #else
     if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
       Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+      Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
       return;
     }
   }
@@ -1309,7 +1338,10 @@ void NET_OpenSocks_After_Connect( void ) {
 	}
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
+#ifdef EMSCRIPTEN
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
+#endif
 		return;
 	}
 
@@ -1331,11 +1363,13 @@ void NET_OpenSocks_After_Method( void ) {
 	if ( len == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	if ( len != 2 || buf[0] != 5 ) {
 		Com_Printf( "NET_OpenSocks: bad response\n" );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	switch( buf[1] ) {
@@ -1372,6 +1406,7 @@ void NET_OpenSocks_After_Method( void ) {
 		if ( send( socks_socket, (void *)buf, 3 + ulen + plen, 0 ) == SOCKET_ERROR ) {
 			Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
       Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
 			return;
 		}
 
@@ -1385,6 +1420,7 @@ void NET_OpenSocks_After_Method( void ) {
 		if ( len != 2 || buf[0] != 1 ) {
 			Com_Printf( "NET_OpenSocks: bad response\n" );
       Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
 			return;
 		}
 		if ( buf[1] != 0 ) {
@@ -1403,6 +1439,8 @@ void NET_OpenSocks_After_Method( void ) {
 	*(short *)&buf[8] = htons( (short)port );		// port
 	if ( send( socks_socket, (void *)buf, 10, 0 ) == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 
@@ -1423,11 +1461,13 @@ void NET_OpenSocks_After_Listen( void ) {
 	if( len == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: recv: %s\n", NET_ErrorString() );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	if( len < 2 || buf[0] != 5 ) {
 		Com_Printf( "NET_OpenSocks: bad response\n" );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	// check completion code
@@ -1436,9 +1476,10 @@ void NET_OpenSocks_After_Listen( void ) {
     Cvar_Set("net_socksLoading", "0");
 		return;
 	}
-	if( buf[3] != 1 ) {
+	if( buf[3] != 1 && buf[3] != 4 ) {
 		Com_Printf( "NET_OpenSocks: relay address is not IPV4: %i\n", buf[3] );
     Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		return;
 	}
 	socksRelayAddr.sin_family = AF_INET;
@@ -1448,12 +1489,27 @@ void NET_OpenSocks_After_Listen( void ) {
   socksRelayAddr.sin_port = htons( (short)net_socksPort->integer );
 #else
 	socksRelayAddr.sin_addr.s_addr = *(int *)&buf[4];
-	socksRelayAddr.sin_port = *(short *)&buf[8];
+	socksRelayAddr.sin_port = *(short *)&buf[8]; // no htons because it only uses 2 bytes instead of 4?
 #endif
 	memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
 
+#ifndef EMSCRIPTEN
+  {
+    ioctlarg_t			_true = 1;
+    if( ioctlsocket( socks_socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+  		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
+    }
+  }
+#endif
+
+//  ip_socket = socks_socket;
+  Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%i\n",
+    socksRelayAddr.sin_addr.s_addr & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 8 & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 16 & 0xFF,
+    socksRelayAddr.sin_addr.s_addr >> 24 & 0xFF,
+    socksRelayAddr.sin_port);
 #ifdef EMSCRIPTEN
-  Com_Printf( "NET_OpenSocks: SOCKS relay configured.\n" );
   Cvar_Set("net_socksLoading", "0");
 #endif
 	usingSocks = qtrue;
@@ -1648,7 +1704,7 @@ static void NET_OpenIP( void ) {
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
 #ifdef EMSCRIPTEN
-        else
+        else // for blocking Com_Frame until net is setup
           Cvar_Set("net_socksLoading", "0");
 #endif
 
@@ -2023,7 +2079,17 @@ qboolean NET_Sleep( int timeout )
 	if ( retval > 0 ) {
 		NET_Event( &fdr );
 		return qfalse;
-	}
+	} else if (usingSocks && socks_socket != INVALID_SOCKET) {
+    // alternate between the two sockets
+    FD_SET( socks_socket, &fdr );
+
+    retval = select( socks_socket + 1, &fdr, NULL, NULL, &tv );
+    
+    if ( retval > 0 ) {
+  		NET_Event( &fdr );
+  		return qfalse;
+  	}
+  }
 
 	if ( retval == SOCKET_ERROR ) {
 #ifndef _WIN32

@@ -116,7 +116,7 @@ vao_t *R_CreateVao(const char *name, byte *vertexes, int vertexesSize, byte *ind
 			break;
 
 		default:
-			Com_Error(ERR_FATAL, "bad vaoUsage_t given: %i", usage);
+			ri.Error(ERR_FATAL, "bad vaoUsage_t given: %i", usage);
 			return NULL;
 	}
 
@@ -382,7 +382,7 @@ R_BindNullVao
 */
 void R_BindNullVao(void)
 {
-//	ri.Printf(PRINT_DEVELOPER, "--- R_BindNullVao ---\n");
+//	GLimp_LogComment("--- R_BindNullVao ---\n");
 
 	if(glState.currentVao)
 	{
@@ -588,7 +588,7 @@ Update the default VAO to replace the client side vertex arrays
 */
 void RB_UpdateTessVao(unsigned int attribBits)
 {
-//	ri.Printf(PRINT_DEVELOPER, "--- RB_UpdateTessVao ---\n");
+//	GLimp_LogComment("--- RB_UpdateTessVao ---\n");
 
 	backEnd.pc.c_dynamicVaoDraws++;
 

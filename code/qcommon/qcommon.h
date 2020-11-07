@@ -80,6 +80,7 @@ extern int Sys_CmdArgsC( void );
 extern void	Sys_GLimpInit( void );
 extern void	Sys_GLContextCreated( void );
 
+extern void Sys_FS_Offline( void );
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
@@ -274,6 +275,10 @@ NET
 */
 #ifndef EMSCRIPTEN
 #define USE_IPV6
+#else
+#ifdef USE_IPV6
+#undef USE_IPV6
+#endif
 #endif
 
 #define NET_ENABLEV4            0x01
@@ -809,6 +814,8 @@ issues.
 #define FS_GENERAL_REF	0x01
 #define FS_UI_REF		0x02
 #define FS_CGAME_REF	0x04
+#define FS_REPAK_REF	0x08
+
 // number of id paks that will never be autodownloaded from baseq3/missionpack
 #define NUM_ID_PAKS		9
 #define NUM_TA_PAKS		4
@@ -846,6 +853,8 @@ typedef	off_t  fileOffset_t;
 qboolean FS_Initialized( void );
 
 void	FS_InitFilesystem ( void );
+qboolean	FS_InMapIndex ( const char *filename );
+void	FS_SetMapIndex ( const char *mapname );
 void	FS_Shutdown( qboolean closemfp );
 
 qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart );
@@ -886,6 +895,8 @@ int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
 void Spy_CursorPosition(float x, float y);
+void Spy_Banner(float x, float y);
+
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
 // is found in an already open pak file.  If uniqueFILE is false, you must call
 // FS_FCloseFile instead of fclose, otherwise the pak FILE would be improperly closed
@@ -1161,6 +1172,8 @@ extern	cvar_t	*com_blood;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
+extern	cvar_t	*cl_execTimeout;
+extern	cvar_t	*cl_execOverflow;
 
 // both client and server must agree to pause
 extern	cvar_t	*sv_paused;
@@ -1421,9 +1434,11 @@ char	*Sys_ConsoleInput( void );
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
 #ifdef EMSCRIPTEN
+extern float Math_rand(void);
 void Sys_SetClipboardData( void *field );
-void Field_CharEvent( field_t *edit, int ch );
+void Sys_EventMenuChanged( float x, float y );
 #endif
+void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 
@@ -1471,6 +1486,7 @@ const char *Sys_SteamPath( void );
 char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs );
 void Sys_FreeFileList( char **list );
 
+void Sys_Debug(void);
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime );
 
 void Sys_BeginProfiling( void );

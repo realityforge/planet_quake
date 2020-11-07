@@ -247,20 +247,24 @@ function getRemoteAddress(ws) {
 	return address;
 }
 
-function getRemotePort(ws) {
+function getRemotePort(ws, req) {
 	var port = ws._socket.remotePort;
 
 	if (ws.upgradeReq && ws.upgradeReq.headers['x-forwarded-port']) {
 		port = ws.upgradeReq.headers['x-forwarded-port'];
 	}
+	
+	if(req.headers && req.headers['x-forwarded-port']) {
+		port = req.headers['x-forwarded-port']
+	}
 
 	return port;
 }
 
-function connection(ws) {
+function connection(ws, req) {
 	this.socket = ws;
-	this.addr = getRemoteAddress(ws);
-	this.port = getRemotePort(ws);
+	this.addr = getRemoteAddress(ws, req);
+	this.port = getRemotePort(ws, req);
 }
 
 function loadConfig(configPath) {
@@ -286,8 +290,8 @@ function loadConfig(configPath) {
 		server: server
 	});
 
-	wss.on('connection', function (ws) {
-		var conn = new connection(ws);
+	wss.on('connection', function (ws, req) {
+		var conn = new connection(ws, req);
 		var first = true;
 
 		ws.on('message', function (buffer, flags) {

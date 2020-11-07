@@ -45,7 +45,7 @@ cvar_t	*r_railSegmentLength;
 
 cvar_t	*r_ignore;
 
-cvar_t  *r_renderRefresh;
+cvar_t  *r_displayRefresh;
 
 cvar_t	*r_detailTextures;
 
@@ -215,10 +215,10 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
-float dvrXScale = 0.5;
-float dvrYScale = 0.5;
-float dvrXOffset = 0.5;
-float dvrYOffset = 0.5;
+float dvrXScale = 1;
+float dvrYScale = 1;
+float dvrXOffset = 0;
+float dvrYOffset = 0;
 
 /*
 ** InitOpenGL
@@ -1306,7 +1306,11 @@ void R_Register( void )
 	r_glossType = ri.Cvar_Get("r_glossType", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_pshadowDist = ri.Cvar_Get( "r_pshadowDist", "128", CVAR_ARCHIVE );
+#ifdef EMSCRIPTEN
+	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
+#else
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
+#endif
 	r_imageUpsample = ri.Cvar_Get( "r_imageUpsample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsampleMaxSize = ri.Cvar_Get( "r_imageUpsampleMaxSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsampleType = ri.Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1330,8 +1334,8 @@ void R_Register( void )
 	//
 	// temporary latched variables that can only change over a restart
 	//
-	r_renderRefresh = ri.Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
-	ri.Cvar_CheckRange( r_renderRefresh, "0", "250", CV_INTEGER );
+	r_displayRefresh = ri.Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
+	ri.Cvar_CheckRange( r_displayRefresh, "0", "250", CV_INTEGER );
 	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", CVAR_LATCH|CVAR_CHEAT );
 	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "2", CVAR_LATCH );
 	r_intensity = ri.Cvar_Get ("r_intensity", "1", CVAR_LATCH );
@@ -1598,7 +1602,8 @@ void RE_Shutdown( int destroyWindow ) {
 
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
-		GLSL_ShutdownGPUShaders();
+		if ( tr.registered )
+			GLSL_ShutdownGPUShaders();
 		ri.GLimp_Shutdown( destroyWindow == 2 ? qtrue: qfalse );
 
 		Com_Memset( &glConfig, 0, sizeof( glConfig ) );
@@ -1661,7 +1666,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
-	re.UpdateModel = R_UpdateModel;
 	re.RegisterSkin = RE_RegisterSkin;
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
@@ -1698,17 +1702,39 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetColorMappings = R_SetColorMappings;
 
 	re.ThrottleBackend = RE_ThrottleBackend;
-	re.SetDvrFrame = RE_SetDvrFrame;
 	re.CanMinimize = RE_CanMinimize;
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
-	//re.UpdateMode = RE_UpdateMode;
+	re.SetDvrFrame = RE_SetDvrFrame;
+	re.LoadShaders = RE_LoadShaders;
+	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
+	re.UpdateMode = RE_UpdateMode;
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
+	re.ResetBannerSpy = RE_ResetBannerSpy;
 
 	return &re;
+}
+
+
+/*
+=============
+RE_UpdateMode
+=============
+*/
+void RE_UpdateMode(glconfig_t *glconfigOut) {
+	R_IssuePendingRenderCommands();
+
+	glconfigOut = &glConfig;
+	ri.GLimp_UpdateMode( glconfigOut );
+
+	GL_SetDefaultState();
+
+	GL_CheckErrors();
+
+	*glconfigOut = glConfig;
 }

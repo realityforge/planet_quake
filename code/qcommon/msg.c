@@ -199,6 +199,7 @@ int MSG_ReadBits( msg_t *msg, int bits ) {
 	} else {
 		const int nbits = bits & 7;
 		int bitIndex = msg->bit; // dereference optimization
+		int bitIndex2;
 		if ( nbits )
 		{		
 			for ( i = 0; i < nbits; i++ ) {
@@ -211,7 +212,8 @@ int MSG_ReadBits( msg_t *msg, int bits ) {
 		{
 			for ( i = 0; i < bits; i += 8 )
 			{
-				bitIndex += HuffmanGetSymbol( &sym, buffer, bitIndex );
+				bitIndex2 = HuffmanGetSymbol( &sym, buffer, bitIndex );
+				bitIndex = bitIndex + bitIndex2;
 				value |= ( sym << (i+nbits) );
 			}
 		}

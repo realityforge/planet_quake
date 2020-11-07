@@ -18,6 +18,12 @@
       "maxAgeSeconds": 3600
     },
     {
+      "origin": ["https://lvl.quake.games"],
+      "responseHeader": ["*"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    },
+    {
       "origin": ["*"],
       "responseHeader": ["*"],
       "method": ["*"],

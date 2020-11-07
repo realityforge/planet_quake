@@ -211,6 +211,23 @@ static const unsigned pak_checksums[] = {
 	977125798u
 };
 
+typedef struct altChecksumFiles {
+	char pakFilename[20];
+	unsigned altChecksum;
+	int *headerLongs;
+	int numHeaderLongs;
+} altChecksumFiles_t;
+
+static unsigned pak8a[] = {0,4168817368,648165122,3945419347,1851007370,4202768680,876243795,1942151452,3178592546,1153350843,3769072725,2720435158,4283363005,2513798360,3196420357,3294239822,3843894834,3612475719,2452860159,1771172871,521576783,2625819854,584016992,2958438589,1429740117,692665736,2782664450,2014190904,2605149972,3557074172,1493690996,1695508328,2506974389,1119778648,4100615894,207768556,2962204083,2989626223,834694448,998360432,2468686401,590702909,4262317924,4090096319,2021230797,913943199,2705129625,4262899421,1366373502,3617588623,2090316327,1489331521,4262317924,4090096319,2021230797,2021230797,913943199,2705129625,4262899421,1366373502,3617588623,2090316327,1489331521,756019980,3319986050,2936458518,1654841402,4112743226,1068586093,1401170057,490473087,956283964,1582219463,4106187763,3522732034,3930678813,4150711566,2793092674,3739835880,3674567183,3798185172,3666345486,2994942517,1272299605,3275207171,867236152,1994416512,583491622,2679656084,2054855793,2216416451,3634873522,3842827215,3600358968,2772540046,524533412,1262644876,1021576846,570308653,3190592338,2050935401,2322029085,4105773991,1528985787,1635175012,3461261149,2650237048,1632416110,2290912050,4253405899,772083468,2004614012,3276688688,2358222605,3730959469,1663787964,3129394621,433571376,949686090,4022328675,1482074390,147556280,3993444853,3516686239,692213471,2396676371,2525919655,2181919263,2866617875,567238308,1777622049,2526871802,1544980608,3929608672,1078565448,578648295,418670111,3269476184,3518090876,362533177,1477836325,269752830,546857576,3988115811,3095238384,3670144132,3286061346,2953382418,2797602118,2613905158,3821306670,2756396361,80235487,3794546000,3320940892,3020815043,553464634,3585597447,3771589513,2117132357,3389226997,3621428080,571938637,3498531776,3235014181,267571670,3252186061,1642506645,1309329426,2015676612,4204742729,1799578886,1732762157,248206417,2078167977,2216461138,1866819357,1524371252,3808546946,3207715107,1100481281,1793984879,2443342384,4103520306,1251380216,3377382031,1047946387,2072236435,2532989182,2836600589,3453330260,1552649093,4007608366,2972303737,1742323804,1734502319,1265542426,3902170010,2025207911,378331702,818320060,2639181107,632514819,1578912020,887994084,1389950679,3417578204,1697703158,774987403,494500645,293317761,2172725341,2757600324,2936139107,320472903,2121331099,2249035898,1278052730,1615104875,3882557698,869036284,1119031802,3065140807,2983784925,3847931960,1863303811,949344497,1513967688};
+
+static unsigned pak8pk3[] = {0,695294960,269430381,2656948387,485997170,1095318617};
+
+static altChecksumFiles_t hardcoded_checksums[] = {
+//	{"pak8a", {-231307135}}
+	{"pak8a.pk3", 4063660161u, (int *)pak8a, sizeof(pak8a) / sizeof(pak8a[0])},
+	{"pak8.pk3", 977125798u, (int *)pak8pk3, sizeof(pak8pk3) / sizeof(pak8pk3[0])}
+};
+
 // if this is defined, the executable positively won't work with any paks other
 // than the demo pak, even if productid is present.  This is only used for our
 // last demo release to prevent the mac and linux users from using the demo
@@ -242,6 +259,7 @@ typedef struct pack_s {
 	unzFile			handle;						// handle to zip file
 	int				checksum;					// regular checksum
 	int				pure_checksum;				// checksum for pure
+	int				orig_checksum;
 	int				numfiles;					// number of files in pk3
 	int				referenced;					// referenced file flags
 	qboolean		exclude;					// found in \fs_excludeReference list
@@ -359,7 +377,7 @@ static int		fs_numServerReferencedPaks;
 static int		fs_numMapPakNames;
 static int		fs_serverReferencedPaks[MAX_REF_PAKS];		// checksums
 static char		*fs_serverReferencedPakNames[MAX_REF_PAKS];	// pk3 names
-static char		*fs_mapPakNames[MAX_REF_PAKS];		// pk3 names
+static char		fs_mapPakNames[MAX_REF_PAKS*100];		// pk3 names
 
 int	fs_lastPakIndex;
 
@@ -370,11 +388,13 @@ FILE*		missingFiles = NULL;
 void Com_AppendCDKey( const char *filename );
 void Com_ReadCDKey( const char *filename );
 
-static void FS_SetMapIndex(const char *mapname);
-static qboolean FS_InMapIndex(const char *filename);
 static qboolean FS_IsExt( const char *filename, const char *ext, size_t namelen );
 static int FS_GetModList( char *listbuf, int bufsize );
+#ifndef EMSCRIPTEN
+#ifndef STANDALONE
 static void FS_CheckIdPaks( void );
+#endif
+#endif
 void FS_Reload( void );
 
 
@@ -819,12 +839,6 @@ qboolean FS_FileExists( const char *file )
 		fclose( f );
 		return qtrue;
 	}
-
-	len = strlen(file);
-	if(FS_IsExt(file, ".bsp", len) && FS_InMapIndex(file)) {
-		return 1;
-	}
-	// TODO: add videos and demos here InIndex()
 
 	return qfalse;
 }
@@ -1631,13 +1645,17 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					fclose( temp );
 					return length;
 				}
+				length = strlen(netpath);
+				if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(netpath)) {
+					return 1;
+				}
 			}
 		}
 		
-		length = strlen(filename);
-		if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(filename)) {
-			return 1;
-		}
+		//length = strlen(filename);
+		//if(FS_IsExt(filename, ".bsp", length) && FS_InMapIndex(filename)) {
+		//	return 1;
+		//}
 		
 		return -1;
 	}
@@ -2119,9 +2137,9 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 		// is the element a pak file?
 		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
 			// disregard if it doesn't match one of the allowed pure pak files
-			//if ( !FS_PakIsPure( search->pack ) ) {
-			//	continue;
-			//}
+			if ( !FS_PakIsPure( search->pack ) ) {
+				continue;
+			}
 			//
 			if ( search->pack->exclude ) {
 				continue;
@@ -3246,9 +3264,9 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	int index, checksum;
 	
 	thepak = FS_LoadZipFile( zipfile );
-	
+
 	if ( !thepak )
-		return qfalse;
+		return qtrue;
 	
 	checksum = thepak->checksum;
 #ifndef USE_PK3_CACHE
@@ -3260,11 +3278,11 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
 #ifdef EMSCRIPTEN
+		// even if the pak checksum isn't the same, trust the pak is already downloaded
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
 		}
 #endif
-
 	}
 	
 	return qfalse;
@@ -4401,6 +4419,12 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 
 		// never autodownload any of the id paks
 		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEGAME, NUM_ID_PAKS) || FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS) ) {
+			// TODO: expand this to exclude base QuakeJS paks
+			continue;
+		}
+		
+		if(fs_excludeReference->string[0] 
+			&& Q_stristr(fs_excludeReference->string, fs_serverReferencedPakNames[i])) {
 			continue;
 		}
 
@@ -4416,7 +4440,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				break;
 			}
 #ifdef EMSCRIPTEN
-			else if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {
+			if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {				
 				havepak = qtrue; // Accept that the checksums don't match and move on
 				break;
 			}
@@ -4442,6 +4466,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Local name
         Q_strcat( neededpaks, len, "@");
         // Do we have one with the same name?
+#ifndef EMSCRIPTEN
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
         {
           char st[MAX_ZPATH];
@@ -4450,6 +4475,7 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
           Com_sprintf( st, sizeof( st ), "%s.%08x.pk3", fs_serverReferencedPakNames[i], fs_serverReferencedPaks[i] );
           Q_strcat( neededpaks, len, st );
         } else
+#endif
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
           Q_strcat( neededpaks, len, ".pk3" );
@@ -4458,10 +4484,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Find out whether it might have overflowed the buffer and don't add this file to the
         // list if that is the case.
         if(strlen(origpos) + (origpos - neededpaks) >= len - 1)
-	{
-		*origpos = '\0';
-		break;
-	}
+				{
+					*origpos = '\0';
+					break;
+				}
       }
       else
       {
@@ -4721,6 +4747,26 @@ qboolean FS_IsPureChecksum( int sum )
 
 
 /*
+==================
+CL_PK3List_f
+==================
+*/
+void FS_OpenedPK3List_f( void ) {
+	Com_Printf("Opened PK3 Names: %s\n", FS_LoadedPakNames());
+}
+
+
+/*
+==================
+CL_PureList_f
+==================
+*/
+static void FS_ReferencedPK3List_f( void ) {
+	Com_Printf( "Referenced PK3 Names: %s\n", FS_ReferencedPakNames() );
+}
+
+
+/*
 ================
 FS_Startup
 ================
@@ -4765,7 +4811,9 @@ void FS_Startup( void ) {
 
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
+
 #ifdef EMSCRIPTEN
+	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
 }
 
 void FS_Startup_After_Async( void )
@@ -4791,9 +4839,11 @@ void FS_Startup_After_Async( void )
 #endif
 
 	// add search path elements in reverse priority order
+#ifndef EMSCRIPTEN
 	if ( fs_steampath->string[0] ) {
 		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string );
 	}
+#endif
 
 	if ( fs_basepath->string[0] ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
@@ -4825,8 +4875,6 @@ void FS_Startup_After_Async( void )
 	// reorder the pure pk3 files according to server order
 	FS_ReorderPurePaks();
 
-	FS_SetMapIndex( "" );
-
 	// get the pure checksums of the pk3 files loaded by the server
 	FS_LoadedPakPureChecksums();
 
@@ -4847,6 +4895,11 @@ void FS_Startup_After_Async( void )
  	Cmd_AddCommand( "which", FS_Which_f );
 	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
 	Cmd_AddCommand( "fs_restart", FS_Reload );
+#ifdef EMSCRIPTEN
+	Cmd_AddCommand( "offline", Sys_FS_Offline );
+#endif
+	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
+	Cmd_AddCommand ("fs_referencedList", FS_ReferencedPK3List_f );
 
 	// print the current search paths
 	//FS_Path_f();
@@ -4858,9 +4911,11 @@ void FS_Startup_After_Async( void )
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
 #ifndef EMSCRIPTEN
+#ifndef STANDALONE
 	// check original q3a files
 	if ( !Q_stricmp( fs_basegame->string, BASEGAME ) || !Q_stricmp( fs_basegame->string, BASEDEMO ) )
 		FS_CheckIdPaks();
+#endif
 #endif
 
 #ifdef FS_MISSING
@@ -4878,6 +4933,8 @@ void FS_Startup_After_Async( void )
 }
 
 
+#ifndef EMSCRIPTEN
+#ifndef STANDALONE
 /*
 ===================
 FS_CheckIdPaks
@@ -4978,6 +5035,8 @@ static void FS_CheckIdPaks( void )
 			Com_Error(ERR_FATAL, "\n*** you need to install Quake III Arena in order to play ***");
 	}
 }
+#endif
+#endif
 
 
 /*
@@ -5033,7 +5092,6 @@ Returns a space separated string containing the names of all loaded pk3 files.
 Servers with sv_pure set will get this string and pass it to clients.
 =====================
 */
-#ifndef DEDICATED
 const char *FS_LoadedPakNames( void ) {
 	static char	info[BIG_INFO_STRING];
 	const searchpath_t *search;
@@ -5067,7 +5125,6 @@ const char *FS_LoadedPakNames( void ) {
 
 	return info;
 }
-#endif
 
 
 /*
@@ -5100,6 +5157,32 @@ const char *FS_ReferencedPakChecksums( void ) {
 }
 
 
+int getAltChecksum(char *pakName, int *altChecksum) {
+	const altChecksumFiles_t *alt;
+	int c, i;
+	qboolean found = qfalse;
+	int useChecksum, useChecksum2;
+	// add alternate checksums
+	for(c = 0; c < sizeof(hardcoded_checksums) / sizeof(altChecksumFiles_t); c++) {
+		alt = &hardcoded_checksums[c];
+		if(Q_stristr(pakName, alt->pakFilename)) {
+			for(i = 0; i < fs_numServerReferencedPaks; i++) {
+				if(alt->altChecksum == (unsigned int)fs_serverReferencedPaks[i]) {
+					found = qtrue;
+					alt->headerLongs[0] = LittleLong( fs_checksumFeed );
+					useChecksum = Com_BlockChecksum( alt->headerLongs, sizeof( alt->headerLongs[0] ) * alt->numHeaderLongs );
+					useChecksum2 = Com_BlockChecksum( alt->headerLongs + 1, sizeof( alt->headerLongs[0] ) * (alt->numHeaderLongs - 1) );
+					Com_Printf( "FS_ReferencedPakPureChecksums: (%i) %i == %i (pure: %i)\n", alt->numHeaderLongs, alt->altChecksum, useChecksum2, useChecksum);
+					break;
+				}
+			}
+		}
+	}
+	
+	memcpy(altChecksum, &LittleLong(useChecksum), 4);
+	return found;
+}
+
 /*
 =====================
 FS_ReferencedPakPureChecksums
@@ -5120,6 +5203,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	s = info;
 	*s = '\0';
 
+Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 	checksum = fs_checksumFeed;
 	numPaks = 0;
 	for ( nFlags = FS_CGAME_REF; nFlags; nFlags = nFlags >> 1 ) {
@@ -5132,13 +5216,29 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
-				s = Q_stradd( s, va( "%i ", search->pack->pure_checksum ) );
+				int useChecksum = search->pack->pure_checksum;
+				int altChecksum = 0;
+				qboolean found = qfalse;
+				// send the pure checksum instead of real pak checksum
+				found = getAltChecksum(search->pack->pakFilename, &altChecksum);
+				if(found) useChecksum = altChecksum;
+				if(!found && Q_stristr(search->pack->pakFilename, "pak8a.pk3")) {
+					found = getAltChecksum("pak8.pk3", &altChecksum);
+					if(found) useChecksum = altChecksum;
+					Com_Printf( "something: %i\n", useChecksum );
+				}
+				
+				s = Q_stradd( s, va( "%i ", useChecksum ) );
 				if ( s > max ) // client-side overflow
 					break;
 				if ( nFlags & (FS_CGAME_REF | FS_UI_REF) ) {
+if(nFlags & FS_CGAME_REF)
+Com_Printf( "Found cgame %s\n", search->pack->pakFilename );
+if(nFlags & FS_UI_REF)
+Com_Printf( "Found ui %s\n", search->pack->pakFilename );
 					break;
 				}
-				checksum ^= search->pack->pure_checksum;
+				checksum ^= useChecksum;
 				numPaks++;
 			}
 		}
@@ -5492,6 +5592,12 @@ void FS_Restart_After_Async( void ) {
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
 }
 
+#ifdef EMSCRIPTEN
+void FS_Reload_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, FS_Restart_After_Async);
+}
+#endif
 
 /*
 =================
@@ -5501,6 +5607,9 @@ FS_Reload
 void FS_Reload( void ) 
 {
 	FS_Restart( fs_checksumFeed );
+#ifdef EMSCRIPTEN
+	Com_Frame_Callback(Sys_FS_Shutdown, FS_Reload_After_Shutdown);
+#endif
 }
 
 
@@ -5861,11 +5970,15 @@ void *FS_LoadLibrary( const char *name )
 	return libHandle;
 }
 
-static void FS_SetMapIndex(const char *mapname) {
-	int r, i, ki = 0, level = 0, mpi = 0;
+void FS_SetMapIndex(const char *mapname) {
+	searchpath_t	*search;
+	int r, i, csi = 0, ki = 0, level = 0, mpi = 0;
+	int mapCount = 0;
+	const char *mapNameIndex = NULL;
 	fileHandle_t indexfile;
-	char buf[MAX_OSPATH], key[MAX_OSPATH];
-	qboolean isKey = qfalse, isPak = qfalse;
+	char buf[MAX_OSPATH], key[MAX_OSPATH], key2[MAX_OSPATH];
+	qboolean isKey = qfalse;
+	qboolean isKey2 = qfalse, isChecksum = qfalse;
 	//char *mapsMatch = va("maps/%s", mapname);
 
 	//	Com_sprintf( descPath, sizeof ( descPath ), "%s%cdescription.txt", modDir, PATH_SEP );
@@ -5886,38 +5999,77 @@ static void FS_SetMapIndex(const char *mapname) {
 					level++;
 				} else if(buf[i] == '}') {
 					level--;
-				} else if(buf[i] == '"' && level == 1 && !isKey && !isPak) {
+				} else if(buf[i] == '"' && level == 1 && !isKey && !isKey2 && !isChecksum) {
 					isKey = qtrue;
-				} else if(buf[i] == '"' && level == 1 && isKey && !isPak) {
+				} else if(buf[i] == '"' && level == 1 && isKey && !isKey2 && !isChecksum) {
 					isKey = qfalse;
-					key[ki] = 0;
-					ki = 0;
-					if(Q_stristr(key, "maps/") != NULL && (Q_stristr(key, "pak9") != NULL || Q_stristr(key, ".bsp") != NULL)) {
-						const char *bspext = Q_stristr(key, ".bsp");
-						if(bspext) {
-							key[strlen(key) - 4] = '\0';
-						}
-						fs_mapPakNames[mpi] = CopyString( &key[Q_stristr(key, "maps/") - key + 5] );
-						Q_strlwr(fs_mapPakNames[mpi]);
-						mpi++;
-						if ( fs_debug->integer ) {
-							Com_Printf( "FS_SetMapIndex: Map in index %s\n", key );
-						}
+					key[ki] = '\0';
+					mapNameIndex = Q_stristr(key, "maps/");
+					if(mapNameIndex != NULL
+					 	&& (Q_stristr(key, "pak9") != NULL // from repack all map bsp files are indexed in pak9### prefixed pk3s
+						|| Q_stristr(key, ".bsp") != NULL)) {
+						//const char *bspext = Q_stristr(key, ".bsp");
+						//if(bspext) {
+						//	key[strlen(key) - 4] = '\0';
+						//}
+						if((mpi + ki) < sizeof(fs_mapPakNames)) {
+							Com_Memcpy(&fs_mapPakNames[mpi], mapNameIndex, strlen(mapNameIndex));
+							Q_strlwr(&fs_mapPakNames[mpi]);
+							if ( fs_debug->integer ) {
+								//Com_Printf( "FS_SetMapIndex: Map in index %s\n", &fs_mapPakNames[mpi] );
+							}
+							mpi += strlen(mapNameIndex);
+							fs_mapPakNames[mpi] = '\0';
+							mpi++;
+							mapCount++;
+						} else if ( fs_debug->integer )
+							Com_Printf( "FS_SetMapIndex: Too many maps %s\n", key );
 					}
+					ki = 0;
 				} else if(isKey) {
 					key[ki] = buf[i];
 					ki++;
+				} else if (buf[i] == '"' && level == 2 && !isKey && !isKey2) {
+					isKey2 = qtrue;
+				} else if (buf[i] == '"' && level == 2 && isKey2 && !isKey) {
+					isKey2 = qfalse;
+					key2[ki] = '\0';
+					ki = 0;
+					if(!Q_stricmp(key2, "checksums") && Q_stristr(key, "pk3") != NULL) {
+						isChecksum = qfalse;
+						for ( search = fs_searchpaths ; search ; search = search->next ) {
+							if((search->pack && Q_stristr(search->pack->pakFilename, key))
+								|| (search->dir && Q_stristr(search->dir->path, key))) {
+								isChecksum = qtrue;
+								csi = 0;
+								if ( fs_debug->integer ) {
+									Com_Printf( "FS_SetMapIndex: Found checksums for %s\n", key );
+								}
+								break;
+							}
+						}
+					}
+				} else if (isKey2) {
+					key2[ki] = buf[i];
+					ki++;
+				} else if (buf[i] >= '0' && buf[i] <= '9' && isChecksum && !isKey && !isKey2) {
+					//search->altChecksums[csi] *= 10;
+					//search->altChecksums[csi] += buf[i] - '0';
+				} else if (buf[i] == ',' && isChecksum && !isKey && !isKey2) {
+					csi++; // increment alternative checksum index
+				} else if (buf[i] == ']' && isChecksum) {
+					isChecksum = qfalse;
 				}
 			}
 		} while(r > 0);
 		// set by server, don't interfere
-		fs_numMapPakNames = mpi;
+		fs_numMapPakNames = mapCount;
 		FS_FCloseFile( indexfile );
 	}
 }
 
-static qboolean FS_InMapIndex(const char *filename) {
-	int			i, len, extpos, start;
+qboolean FS_InMapIndex(const char *filename) {
+	int			i, len, extpos, start, mpi = 0;
 	char mapname[MAX_QPATH];
 	len = strlen(filename);
 	Com_Printf( "FS_InMapIndex: Searching %i maps for %s\n", fs_numMapPakNames, filename );
@@ -5928,7 +6080,7 @@ static qboolean FS_InMapIndex(const char *filename) {
 	len -= extpos;
 	start = 0;
 	if(Q_stristr(filename, "maps/")) {
-		start = 5;
+		start = Q_stristr(filename, "maps/") - filename + 5;
 	}
 	if(len - start < 1) {
 		return qfalse;
@@ -5936,12 +6088,13 @@ static qboolean FS_InMapIndex(const char *filename) {
 	Q_strncpyz(mapname, &filename[start], len - start + 1);
 	Q_strlwr(mapname);
 	for(i = 0; i < fs_numMapPakNames; i++) {
-		if(Q_stristr(fs_mapPakNames[i], mapname) != NULL) {
+		if(Q_stristr(&fs_mapPakNames[mpi], filename)) {
 			if ( fs_debug->integer ) {
 				Com_Printf( "FS_InMapIndex: Map in index %s\n", mapname );
 			}
 			return qtrue;
 		}
+		mpi += strlen(&fs_mapPakNames[mpi]) + 1;
 	}
 	if ( fs_debug->integer ) {
 		Com_Printf( "FS_InMapIndex: Map NOT in index %s\n", mapname );

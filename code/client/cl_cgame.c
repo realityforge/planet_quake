@@ -442,13 +442,19 @@ rescan:
 	
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
-	if(Cmd_ExecuteString(s, qtrue)) {
+	if(!strcmp( cmd, "reconnect" )) {
+		Cbuf_AddText("reconnect\n");
+		Cmd_Clear();
 		return qfalse;
 	}
 	
-	Cmd_TokenizeString(s);
-	if(!Q_strncmp(Cmd_Argv(0), "q_print", 7)) {
-		Cmd_TokenizeString( va("print \"%s\"", Cmd_ArgsFrom(1)) );
+	if(!Q_strncmp(cmd, "print", 5)) {
+		return qtrue;
+	}
+
+	if(Cmd_ExecuteString(s, qtrue)) {
+		Cmd_Clear();
+		return qfalse;
 	}
 #endif
 
@@ -498,6 +504,12 @@ void CL_ShutdownCGame( void ) {
 	VM_Free( cgvm );
 	cgvm = NULL;
 	FS_VM_CloseFiles( H_CGAME );
+
+#ifdef EMSCRIPTEN
+	cls.cgameGlConfig = NULL;
+	cls.cgameFirstCvar = NULL;
+	cls.numCgamePatches = 0;
+#endif
 }
 
 
@@ -567,6 +579,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	intptr_t result;
 	switch( args[0] ) {
 	case CG_PRINT:
+		if(Q_stristr((const char*)VMA(1), "font image")) {
+			Com_Printf("Font: %li\n", cgvm->opStack - cgvm->opStackTop);
+		}
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
 	case CG_ERROR:
@@ -575,8 +590,17 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_MILLISECONDS:
 		return Sys_Milliseconds();
 	case CG_CVAR_REGISTER:
+	{
+		vmCvar_t *cvar;
+		cvar = (vmCvar_t *)VMA(1);
+#ifdef EMSCRIPTEN
+		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
+			cls.cgameFirstCvar = cvar;
+		}
+#endif
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
 		return 0;
+	}
 	case CG_CVAR_UPDATE:
 		Cvar_Update( VMA(1) );
 		return 0;
@@ -609,7 +633,8 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		if((int)result <= 0) {
 			char altFilename[MAX_QPATH];
 			char *filename = (char *)VMA(1);
-			if(Q_stristr(filename, "players") && Q_stristr(filename, ".tga")) {
+			if((Q_stristr(filename, "players") && Q_stristr(filename, ".tga"))
+				|| (Q_stristr(filename, "gfx") && Q_stristr(filename, ".tga"))) {
 				COM_StripExtension(filename, altFilename, sizeof(altFilename));
 				result = FS_VM_OpenFile( va("%s.png", altFilename), VMA(2), args[3], H_CGAME );
 				if(VMA(2) == NULL && result > 0)
@@ -768,6 +793,10 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
 		VM_CHECKBOUNDS( cgvm, args[1], sizeof( glconfig_t ) );
+#ifdef EMSCRIPTEN
+		// TODO: add this to native build
+		cls.cgameGlConfig = VMA(1);
+#endif
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 	case CG_GETGAMESTATE:

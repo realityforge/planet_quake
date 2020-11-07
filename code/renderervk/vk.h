@@ -16,15 +16,14 @@
 #define MAX_IMAGE_CHUNKS 48
 
 #define NUM_COMMAND_BUFFERS 2	// number of command buffers / render semaphores / framebuffer sets
-//#define USE_DEDICATED_ALLOCATION
-
-#define USE_IMAGE_POOL
-#define USE_IMAGE_LAYOUT_1
-#define MIN_IMAGE_ALIGN (128*1024)
 
 #define USE_REVERSED_DEPTH
 
 #define VK_NUM_BLOOM_PASSES 4
+
+#define USE_DEDICATED_ALLOCATION
+//#define MIN_IMAGE_ALIGN (128*1024)
+#define MAX_ATTACHMENTS_IN_POOL (6+1+VK_NUM_BLOOM_PASSES*2) // depth + msaa + msaa-resolve + screenmap.msaa + screenmap.resolve + screenmap.depth + bloom_extract + blur pairs
 
 #define VK_CHECK(function_call) { \
 	VkResult result = function_call; \
@@ -123,16 +122,14 @@ typedef struct vkUniform_s {
 	vec4_t lightVector;
 } vkUniform_t;
 
-#define TESS_IDX   (1)
-#define TESS_XYZ   (2)
-#define TESS_RGBA  (4)
-#define TESS_ST0   (8)
-#define TESS_ST1   (16)
-#define TESS_ST2   (32)
-#define TESS_NNN   (64)
-#define TESS_VPOS  (128) // uniform with eyePos
-#define TESS_ENV   (256) // mark shader stage with environment mapping
-
+#define TESS_XYZ   (1)
+#define TESS_RGBA  (2)
+#define TESS_ST0   (4)
+#define TESS_ST1   (8)
+#define TESS_ST2   (16)
+#define TESS_NNN   (32)
+#define TESS_VPOS  (64)  // uniform with eyePos
+#define TESS_ENV   (128) // mark shader stage with environment mapping
 //
 // Initialization.
 //
@@ -180,8 +177,10 @@ void vk_end_render_pass( void );
 void vk_begin_main_render_pass( void );
 void vk_begin_screenmap_render_pass( void );
 
-void vk_bind_geometry_ext(int flags);
-void vk_draw_geometry( uint32_t pipeline, Vk_Depth_Range depth_range, qboolean indexed);
+void vk_bind_index( void );
+void vk_bind_index_ext( const int numIndexes, const uint32_t*indexes );
+void vk_bind_geometry( uint32_t flags );
+void vk_draw_geometry( uint32_t pipeline, Vk_Depth_Range depth_range, qboolean indexed );
 
 void vk_draw_light( uint32_t pipeline, Vk_Depth_Range depth_range, uint32_t uniform_offset, int fog);
 
@@ -231,6 +230,8 @@ typedef struct vk_tess_s {
 
 	Vk_Depth_Range depth_range;
 	VkPipeline last_pipeline;
+
+	uint32_t num_indexes; // value from most recent vk_bind_index() call
 } vk_tess_t;
 
 
@@ -255,9 +256,8 @@ typedef struct {
 	VkCommandPool command_pool;
 	VkSemaphore image_acquired;
 
-#ifdef USE_IMAGE_POOL
-	VkDeviceMemory image_memory;
-#endif
+	VkDeviceMemory image_memory[ MAX_ATTACHMENTS_IN_POOL ];
+	uint32_t image_memory_count;
 
 	struct {
 		VkRenderPass main;
@@ -281,22 +281,32 @@ typedef struct {
 	VkDescriptorSet color_descriptor;
 
 	VkImage color_image;
-	VkDeviceMemory color_image_memory;
 	VkImageView color_image_view;
 
 	VkImage bloom_image[1+VK_NUM_BLOOM_PASSES*2];
-	VkDeviceMemory bloom_image_memory[1+VK_NUM_BLOOM_PASSES*2];
 	VkImageView bloom_image_view[1+VK_NUM_BLOOM_PASSES*2];
 
 	VkDescriptorSet bloom_image_descriptor[1+VK_NUM_BLOOM_PASSES*2];
 
 	VkImage depth_image;
-	VkDeviceMemory depth_image_memory;
 	VkImageView depth_image_view;
 
 	VkImage msaa_image;
-	VkDeviceMemory msaa_image_memory;
 	VkImageView msaa_image_view;
+
+	// screenMap
+	struct {
+		VkDescriptorSet color_descriptor;
+		VkImage color_image;
+		VkImageView color_image_view;
+
+		VkImage color_image_msaa;
+		VkImageView color_image_view_msaa;
+
+		VkImage depth_image;
+		VkImageView depth_image_view;
+
+	} screenMap;
 
 	struct {
 		VkFramebuffer blur[VK_NUM_BLOOM_PASSES*2];
@@ -305,22 +315,6 @@ typedef struct {
 		VkFramebuffer gamma[MAX_SWAPCHAIN_IMAGES];
 		VkFramebuffer screenmap;
 	} framebuffers;
-
-	// screenMap
-
-	VkDescriptorSet color_descriptor3;
-
-	VkImage color_image3;
-	VkDeviceMemory color_image3_memory;
-	VkImageView color_image3_view;
-
-	VkImage color_image3_msaa;
-	VkDeviceMemory color_image3_memory_msaa;
-	VkImageView color_image3_view_msaa;
-
-	VkImage depth_image3;
-	VkDeviceMemory depth_image3_memory;
-	VkImageView depth_image3_view;
 
 	vk_tess_t tess[ NUM_COMMAND_BUFFERS ], *cmd;
 	int cmd_index;
@@ -422,7 +416,9 @@ typedef struct {
 	// dim 0 is based on dlight additive flag: 0 - not additive, 1 - additive
 	// dim 1 is directly a cullType_t enum value.
 	// dim 2 is a polygon offset value (0 - off, 1 - on).
+#ifdef USE_LEGACY_DLIGHTS
 	uint32_t dlight_pipelines[2][3][2];
+#endif
 
 	// cullType[3], polygonOffset[2], fogStage[2], absLight[2]
 #ifdef USE_PMLIGHT

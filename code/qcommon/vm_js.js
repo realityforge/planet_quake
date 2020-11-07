@@ -15,35 +15,54 @@ var LibraryVM = {
 		},
 		vm_t: {
 			__size__: 156,
-			programStack: 0,
-			systemCall: 4,
-			name: 8,
-			searchPath: 72,
-			dllHandle: 76,
-			entryPoint: 80,
-			destroy: 84,
-			currentlyInterpreting: 88,
-			compiled: 92,
-			codeBase: 96,
-			entryOfs: 100,
-			codeLength: 104,
-			instructionPointers: 108,
-			instructionCount: 112,
-			dataBase: 116,
-			dataMask: 120,
-			stackBottom: 124,
-			numSymbols: 128,
-			symbols: 132,
-			callLevel: 136,
-			breakFunction: 140,
-			breakCount: 144,
-			jumpTableTargets: 148,
-			numJumpTableTargets: 152
+			systemCall: 0,
+			dataBase: 4,
+			opStack: 8,
+			opStackTop: 12,
+			
+			programStack: 16,
+			stackBottom: 20,
+			
+			name: 24,
+			index: 28,
+			
+			dllHandle: 32,
+			entryPoint: 36,
+			dllSyscall: 40,
+			destroy: 44,
+			
+			compiled: 48,
+			
+			codeBase: 52,
+			codeSize: 56,
+			codeLength: 60,
+			
+			instructionCount: 64,
+			instructionPointers: 68,
+			
+			dataMask: 72,
+			dataLength: 76,
+			exactDataLength: 80,
+			dataAlloc: 84,
+			
+			numSymbols: 88,
+			symbols: 92,
+			
+			callLevel: 96,
+			breakFunction: 100,
+			breakCount: 104,
+			
+			jumpTableTargets: 108,
+			numJumpTableTargets: 112,
+			
+			crc32sum: 116,
+			forceDataMask: 120,
+			privateFlag: 124,
 		},
 		vms: [],
 		SUSPENDED: 0xDEADBEEF,
-		MAX_VMMAIN_ARGS: 13,
-		ENTRY_FRAME_SIZE: 8 + 4 * 13,
+		MAX_VMMAIN_ARGS: 4,
+		ENTRY_FRAME_SIZE: 8 + 4 * 4,
 		OPSTACK_SIZE: 1024,
 		TYPE: {
 			F4: 1,
@@ -128,8 +147,6 @@ var LibraryVM = {
 			return labels;
 		},
 		CompileModule: function (vmp, name, instructionCount, codeBase, dataBase) {
-			var fs_game = UTF8ToString(_Cvar_VariableString(allocate(intArrayFromString('fs_game'), 'i8', ALLOC_STACK)));
-
 			var state = {
 				name: name,
 				instructionCount: instructionCount,
@@ -574,14 +591,6 @@ var LibraryVM = {
 			function EmitConditionalJump(lhs, rhs, cond, label) {
 				var expr = '(' + lhs + ') ' + cond + ' (' + rhs + ')';
 
-				// MEGA HACK FOR CPMA 1.47
-				// ignore its built in pak-file checking since we repackage our own paks
-				if (fs_game === 'cpma' && name === 'qagame' && (state.instr === 1382 || state.instr === 1392)) {
-					// 1382 is checking if trap_FS_FOpenFile returned 0 for the pak, and if so, jumps to an error block
-					// 1392 is checking if trap_FS_FOpenFile's returned length matches the expected length and if so, jumps to a success block
-					expr = state.instr === 1382 ? '0' : '1';
-				}
-
 				EmitStatement('if (' + expr + ') {');
 				indent++;
 				EmitJump(label);
@@ -624,20 +633,7 @@ var LibraryVM = {
 			EmitStatement('\t// store the callnum in the return address space');
 			EmitStatement('\tvar returnAddr = {{{ makeGetValue("image", "stackOnEntry + 4", "i32") }}};');
 			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry + 4", "callnum", "i32") }}};');
-			// MEGA HACK FOR CPMA 1.47
-			// it uses the default model mynx which we don't have. if
-			// it fails to load the default model, the game will exit
-			if (fs_game === 'cpma' && name === 'cgame') {
-				EmitStatement('\tif (callnum === 10 /* trap_FS_FOpenFile */ || callnum === 34 /* trap_S_RegisterSound */ || callnum === 37 /* trap_R_RegisterModel */ || callnum === 38 /* trap_R_RegisterSkin */) {');
-				EmitStatement('\t\tvar modelName = UTF8ToString(' + state.dataBase + ' + {{{ makeGetValue("image", "stackOnEntry + 8", "i32") }}});');
-				EmitStatement('\t\tif (modelName.indexOf("/mynx") !== -1) {');
-				EmitStatement('\t\t\tmodelName = modelName.replace("/mynx", "/sarge");');
-				EmitStatement('\t\t\tSTACKTOP -= modelName.length+1;');
-				EmitStatement('\t\t\stringToUTF8(modelName, ' + state.dataBase + ' + STACKTOP, modelName.length+1);');
-				EmitStatement('\t\t\t{{{ makeSetValue("image", "stackOnEntry + 8", "STACKTOP", "i32") }}};');
-				EmitStatement('\t\t}');
-				EmitStatement('\t}');
-			}
+
 			EmitStatement('\t// modify VM stack pointer for recursive VM entry');
 			EmitStatement('\tSTACKTOP -= 4;')
 			EmitStatement('\t{{{ makeSetValue("vmp", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
@@ -953,7 +949,7 @@ var LibraryVM = {
 	VM_Compile__deps: ['$SYSC', '$VM', 'VM_Destroy'],
 	VM_Compile: function (vmp, headerp) {
 		//var current = _VM_GetCurrent();
-		var name = UTF8ToString(vmp + VM.vm_t.name);
+		var name = UTF8ToString({{{ makeGetValue('vmp', 'VM.vm_t.name', 'i32') }}});
 		var dataBase = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i8*') }}};
 		var codeOffset = {{{ makeGetValue('headerp', 'VM.vmHeader_t.codeOffset', 'i32') }}};
 		var instructionCount = {{{ makeGetValue('headerp', 'VM.vmHeader_t.instructionCount', 'i32') }}};
@@ -973,25 +969,25 @@ var LibraryVM = {
 			SYSC.Error('fatal', e);
 		}
 
-		var handle = VM.vms.length+1;
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		VM.vms[handle] = vm;
 
 		if (!VM.DestroyPtr) {
 			VM.DestroyPtr = addFunction(_VM_Destroy ,'vi');
 		}
 
-		{{{ makeSetValue('vmp', 'VM.vm_t.entryOfs', 'handle', 'i32') }}};
 		{{{ makeSetValue('vmp', 'VM.vm_t.destroy', 'VM.DestroyPtr', 'void*') }}};
+		return true;
 	},
 	VM_Destroy: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 
 		delete VM.vms[handle];
 	},
-	VM_CallCompiled__sig: 'iii',
+	VM_CallCompiled__sig: 'iiii',
 	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_SuspendCompiled'],
-	VM_CallCompiled: function (vmp, args) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
+	VM_CallCompiled: function (vmp, nargs, args) {
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		// we can't re-enter the vm until it's been resumed
@@ -1013,7 +1009,7 @@ var LibraryVM = {
 		{{{ makeSetValue('image', 'stackTop', '-1', 'i32') }}};
 		{{{ makeSetValue('image', 'stackTop + 4', '0', 'i32') }}};
 
-		for (var i = 0; i < VM.MAX_VMMAIN_ARGS; i++) {
+		for (var i = 0; i < nargs; i++) {
 			var arg = {{{ makeGetValue('args', 'i * 4', 'i32' )}}};
 			{{{ makeSetValue('image', 'stackTop + 8 + i * 4', 'arg', 'i32') }}};
 		}
@@ -1050,15 +1046,12 @@ var LibraryVM = {
 			result = VM.SUSPENDED;
 		}
 
-		// restore the current vm
-		//_VM_SetCurrent(savedVM);
-
 		// return value is at the top of the stack still
 		return result;
 	},
 	VM_IsSuspendedCompiled__deps: ['$SYSC'],
 	VM_IsSuspendedCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {
@@ -1069,8 +1062,9 @@ var LibraryVM = {
 		return vm.suspended;
 	},
 	VM_SuspendCompiled__deps: ['$SYSC'],
+	VM_SuspendCompiled__sig: 'vii',
 	VM_SuspendCompiled: function (vmp, stackOnEntry) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {
@@ -1082,17 +1076,15 @@ var LibraryVM = {
 		vm.stackOnEntry = stackOnEntry;
 	},
 	VM_ResumeCompiled__deps: ['$SYSC', 'VM_SuspendCompiled'],
+	VM_ResumeCompiled__sig: 'vii',
 	VM_ResumeCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.entryOfs', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {
 			SYSC.Error('drop', 'invalid vm handle');
 			return;
 		}
-
-		//var savedVM = _VM_GetCurrent();
-		//_VM_SetCurrent(vmp);
 
 		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
 		var stackOnEntry = vm.stackOnEntry;
@@ -1138,9 +1130,6 @@ var LibraryVM = {
 
 			result = VM.SUSPENDED;
 		}
-
-		// restore the current vm
-		//_VM_SetCurrent(savedVM);
 
 		return result;
 	}

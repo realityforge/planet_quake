@@ -172,9 +172,17 @@ static void SV_Map_f( void ) {
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
+	if(len == -1) {
+		if(FS_InMapIndex(expanded)) {
+			len = 1;
+		}
+	}
 	FS_RestorePure();
-	if ( len == -1 ) {
-		Com_Printf( "Can't find map %s\n", expanded );
+	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
+		Com_Printf("Error: Can't find map %s\n", expanded );
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		Cbuf_Execute();
 		return;
 	}
 
@@ -362,7 +370,7 @@ static void SV_MapRestart_f( void ) {
 			// drop bots on map restart because they will be re-added by arena config
 			// TODO: only drop bots on single-player mode?
 			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
-				SV_DropClient( client, qtrue );
+				SV_DropClient( client, NULL );
 				continue;
 			}
 			isBot = qtrue;

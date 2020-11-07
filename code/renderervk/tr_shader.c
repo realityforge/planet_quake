@@ -2879,8 +2879,10 @@ static shader_t *FinishShader( void ) {
 	//
 	// look for multitexture potential
 	//
-	for ( i = 0; i < stage-1; i++ ) {
-		stage -= CollapseMultitexture( &stages[i+0], &stages[i+1], stage-i );
+	if ( r_ext_multitexture->integer ) {
+		for ( i = 0; i < stage-1; i++ ) {
+			stage -= CollapseMultitexture( &stages[i+0], &stages[i+1], stage-i );
+		}
 	}
 
 	if ( shader.lightmapIndex >= 0 && !hasLightmapStage ) {
@@ -2909,7 +2911,7 @@ static shader_t *FinishShader( void ) {
 
 #ifdef USE_VULKAN
 
-	shader.tessFlags = TESS_IDX | TESS_XYZ;
+	shader.tessFlags = TESS_XYZ;
 	stages[0].tessFlags = TESS_RGBA | TESS_ST0;
 
 	{

@@ -1,5 +1,9 @@
 'use strict'
+console.log('Service Worker registered')
+
+var DB_STORE_NAME = 'FILE_DATA';
 var PROGRAM_FILES = 'quake-games-cache-v1';
+var open
 
 var precacheConfig = [
   'index.html',
@@ -9,9 +13,10 @@ var precacheConfig = [
   'quake3e.js',
   'quake3e.wasm',
   'assets/baseq3-cc/index.json',
+  'server-worker.js',
 ]
 
-var caseInsensitiveCompare = (str, cmp) => str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0
+var caseInsensitiveCompare = function (str, cmp) { return str.localeCompare(cmp, 'en', {sensitivity: 'base'}) === 0 }
 var ignoreUrlParametersMatching = [/^utm_/]
 var addDirectoryIndex = function (pathname, index) {
     if (pathname.slice(-1) === '/') {
@@ -88,56 +93,53 @@ function openFile(predicate, result, resolve, evt) {
   cursor.continue()
 }
 
-async function readStore(db, store, predicate) {
-  if(!db) {
-    db = await openDatabase()
-  }
-  return new Promise(resolve => {
-    let tran = db.transaction(store)
-    let objStore = tran.objectStore(store)
-    let tranCursor = objStore.openCursor()
+async function readFile(key) {
+  var db = await openDatabase()
+  var transaction = db.transaction([DB_STORE_NAME], 'readwrite');
+  var objStore = transaction.objectStore(DB_STORE_NAME);
+  return await new Promise(function (resolve) {
+    let tranCursor = objStore.get(key)
     let result = []
-    tranCursor.onsuccess = openFile.bind(null, predicate, result, resolve)
-    tranCursor.onerror = error => {
+    tranCursor.onsuccess = function () {
+      resolve(tranCursor.result)
+    }
+    tranCursor.onerror = function (error) {
       console.error(error)
       resolve(error)
     }
+    transaction.commit()
   })
 }
 
-async function readFile(db, store, key) {
-  if(!db) {
-    db = await openDatabase()
-  }
-  return new Promise(resolve => {
-    let tran = db.transaction(store)
-    let objStore = tran.objectStore(store)
-    let tranCursor = objStore.get(key)
-    let result = []
-    tranCursor.onsuccess = () => {
-      resolve(tranCursor.result)
-    }
-    tranCursor.onerror = error => {
-      console.error(error)
-      resolve(error)
-    }
-  })
-}
 async function openDatabase() {
-  return new Promise(resolve => {
-    let open = indexedDB.open('/base', 21)
-    open.onsuccess = () => {
-      var transaction = open.result.transaction(['FILE_DATA'], 'readwrite');
-      var files = transaction.objectStore('FILE_DATA');
+  if(open && open.readyState != 'done') {
+    var checkInterval, count = 0
+    await new Promise(resolve => {
+      checkInterval = setInterval(() => {
+        if(open.readyState == 'done' || count === 1000) {
+          clearInterval(checkInterval)
+          resolve()
+        }
+        else
+          count++
+      }, 20)
+    })
+  }
+  if(open && open.readyState == 'done') {
+    return Promise.resolve(open.result)
+  }
+  return await new Promise(function (resolve) {
+    open = indexedDB.open('/base', 21)
+    open.onsuccess = function () {
       resolve(open.result)
     }
-    open.onupgradeneeded = evt => {
-      var fileStore = open.result.createObjectStore('FILE_DATA')
+    open.onupgradeneeded = function (evt) {
+      var fileStore = open.result.createObjectStore(DB_STORE_NAME)
       if (!fileStore.indexNames.contains('timestamp')) {
         fileStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
     }
-    open.onerror = error => {
+    open.onerror = function (error) {
       console.error(error)
       resolve(error)
     }
@@ -146,36 +148,38 @@ async function openDatabase() {
 
 async function writeStore(value, key) {
   var db = await openDatabase()
-  return new Promise(resolve => {
-    let tran = db.transaction('FILE_DATA', 'readwrite')
-    let objStore = tran.objectStore('FILE_DATA')
-    let storeValue = objStore.add(value, key)
-    storeValue.onsuccess = resolve
-    storeValue.onerror = error => {
-      console.error(error)
+  var transaction = db.transaction([DB_STORE_NAME], 'readwrite');
+  var objStore = transaction.objectStore(DB_STORE_NAME);
+  return await new Promise(function (resolve) {
+    let storeValue = objStore.put(value, key)
+    storeValue.onsuccess = function () {}
+    transaction.oncomplete = function () {
+      //db.close()
+      resolve()
+    }
+    storeValue.onerror = function (error) {
+      console.error(error, value, key)
       resolve(error)
     }
+    transaction.commit()
   })
 }
 
 async function mkdirp(path) {
   var segments = path.split(/\/|\\/gi)
-  for(var i = 3; i < segments.length; i++)
+  for(var i = 3; i <= segments.length; i++)
   {
-    var dir = segments.slice(0, i).join('/')
+    var dir = '/' + segments.slice(0, i).join('/')
     var obj = {
       timestamp: new Date(),
       mode: 16895
     }
-    try {
-      await writeStore(obj, dir)
-    } catch (e) {
-    }
+    await writeStore(obj, dir)
   }
 }
 
-async function fetchAsset(key) {
-  var response = await fetch(key, {credentials: 'omit'})
+async function fetchAsset(url, key) {
+  var response = await fetch(url, {credentials: 'omit', mode: 'no-cors'})
   if (!response.ok) {
     throw new Error('Request for ' + key + ' returned a ' +
       'response with status ' + response.status)
@@ -183,45 +187,48 @@ async function fetchAsset(key) {
   var content = await response.clone().arrayBuffer()
   if(key.match(/index\.json/i)) {
     var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(content)) || [])
-    Object.keys(moreIndex).forEach(k => {
+    Object.keys(moreIndex).forEach(function (k) {
       precacheConfig.push(k.toLowerCase().replace(/^\/base\//ig, 'assets/'))
     })
   }
-  await mkdirp('/base/' + key.replace(/^\/?assets\/|^\/|\/[^\/]*$/i, ''))
+  key = key.replace(/^\//ig, '').replace(/-cc?r?\//ig, '\/')
+  await mkdirp('base/' + key.replace(/^\/?base\/|^\/?assets\/|^\/|\/[^\/]*$/ig, ''))
   var obj = {
     timestamp: new Date(),
     mode: 33206,
     contents: new Uint8Array(content)
   }
-  try {
-    await writeStore(obj, '/base/' + key.replace(/^\/?assets\/|^\//i, ''))
-  } catch (e) {
-  }
-  return obj
+  await writeStore(obj, '/base/' + key.replace(/^\/?base\/|^\/?assets\/|^\//ig, ''))
+  return response
 }
 
 self.addEventListener('install', function(event) {
-  var db
   event.waitUntil(
-    Promise.all(precacheConfig.map(requiredFile => {
-      return new Promise(async resolve => {
-        var files = await readFile(db, 'FILE_DATA', '/base/' + requiredFile.replace(/^\/?assets\//ig, ''))
-        if(files && files.contents) {
-          // already saved
-        } else {
-          await fetchAsset(requiredFile)
-        }
-        resolve()
-      })
-    })).then(() => {
+    Promise.all(precacheConfig.map(function (requiredFile) {
+      var localName = '/base/' + requiredFile.replace(/^\/?assets\//ig, '')
+      return readFile(localName)
+        .then(function (files) {
+          if(files && files.contents) {
+            // already saved
+          } else {
+            return fetchAsset(requiredFile, localName)
+          }
+        })
+    })).then(function () {
       //caches.open(PROGRAM_FILES)
-      //  .then(cache => cache.addAll(precacheConfig))
+      //  .then(function (cache) { return cache.addAll(precacheConfig })
       return self.skipWaiting()
     })
   )
 })
 self.addEventListener('activate', function(event) {
-  
+  // make sure database is created so emscripten picks up the same instance
+  event.waitUntil(openDatabase()
+    .then(db => {
+      open = null
+      db.close()
+      return self.clients.claim()
+    }))
 })
 self.addEventListener('fetch', function(event) {
   if (event.request.method === 'GET') {
@@ -259,39 +266,35 @@ self.addEventListener('fetch', function(event) {
     // If shouldRespond was set to true at any point, then call
     // event.respondWith(), using the appropriate cache key.
     if (shouldRespond) {
-      event.respondWith(
-        new Promise(async resolve => {
-          var localName = '/base/' + url.replace(/^\/?assets\/|^\//ig, '')
-          var files = await readFile(null, 'FILE_DATA', localName)
-          var response
-          var init = { 
-            status : 200,
-            url: event.request.url,
-            headers: {
-              'content-type': event.request.url.includes('.json')
-                ? 'application/json'
-                : event.request.url.includes('.html')
-                  ? 'text/html'
-                  : event.request.url.includes('.png')
-                    ? 'image/png'
-                    : event.request.url.includes('.jpg')
-                      ? 'image/jpg'
-                      : event.request.url.includes('.js')
-                        ? 'application/javascript'
-                        : event.request.url.includes('.wasm')
-                          ? 'application/wasm'
-                          : 'application/octet-stream'
-            }
-          }
+      var localName = '/base/' + url.replace(/^\/?assets\/|^\//ig, '')
+      var init = { 
+        status : 200,
+        url: event.request.url,
+        headers: {
+          // these are needed to start up, the engine only cares about bits
+          'content-type': event.request.url.includes('.json')
+            ? 'application/json'
+            : event.request.url.includes('.html')
+              ? 'text/html'
+              : event.request.url.includes('.png')
+                ? 'image/png'
+                : event.request.url.includes('.jpg')
+                  ? 'image/jpg'
+                  : event.request.url.includes('.js')
+                    ? 'application/javascript'
+                    : event.request.url.includes('.wasm')
+                      ? 'application/wasm'
+                      : 'application/octet-stream'
+        }
+      }
+      event.respondWith(readFile(localName)
+        .then(function (files) {
           if(files && files.contents) {
-            
+            return new Response(files.contents, init)
           } else {
-            files = await fetchAsset(event.request.url)
+            return fetchAsset(event.request.url, url)
           }
-          response = new Response(files.contents, init)
-          return resolve(response)
-        })
-      )
+        }))
     }
   }
 })

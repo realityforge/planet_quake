@@ -270,6 +270,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 		Q_strcat(dest, size, "#version 120\n");
 		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
+#else
+	Q_strcat(dest, size, "precision mediump float;\n");
 #endif
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
@@ -280,8 +282,6 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	//Q_strcat(dest, size,
 	//       va("#ifndef r_NormalScale\n#define r_NormalScale %f\n#endif\n", r_normalScale->value));
 
-
-	Q_strcat(dest, size, "precision mediump float;\n");
 
 	Q_strcat(dest, size, "#ifndef M_PI\n#define M_PI 3.14159265358979323846\n#endif\n");
 
@@ -522,6 +522,11 @@ static int GLSL_InitGPUShader2(shaderProgram_t * program, const char *name, int 
 	if(strlen(name) >= MAX_QPATH)
 	{
 		ri.Error(ERR_DROP, "GLSL_InitGPUShader2: \"%s\" is too long", name);
+	}
+	
+	if(program->program) {
+		ri.Printf(PRINT_DEVELOPER, "GLSL_InitGPUShader2: \"%s\" shader already exists\n", name);
+		return 1;
 	}
 
 	Q_strncpyz(program->name, name, sizeof(program->name));
@@ -1084,11 +1089,6 @@ void GLSL_InitGPUShaders(void)
 		// skip impossible combos
 		if ((i & LIGHTDEF_USE_PARALLAXMAP) && !r_parallaxMapping->integer)
 			continue;
-
-#ifdef EMSCRIPTEN
-		if ((i & LIGHTDEF_USE_SHADOWMAP) && !r_sunlightMode->integer)
-			continue;
-#endif
 
 		if ((i & LIGHTDEF_USE_SHADOWMAP) && (!lightType || !r_sunlightMode->integer))
 			continue;

@@ -915,7 +915,8 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 		code_pos++;
 		ci->op = op0;
 		if ( n == 4 ) {
-			ci->value = LittleLong( *((int*)code_pos) );
+			memcpy(&ci->value, code_pos, 4);
+		//	ci->value = LittleLong( *((int*)code_pos) );
 			code_pos += 4;
 		} else if ( n == 1 ) { 
 			ci->value = *((unsigned char*)code_pos);
@@ -1289,7 +1290,7 @@ VM_ReplaceInstructions
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	instruction_t *ip;
 
-	//Com_Printf( S_COLOR_GREEN "VMINFO [%s] crc: %08X, ic: %i, dl: %i\n", vm->name, vm->crc32sum, vm->instructionCount, vm->exactDataLength );
+	Com_Printf( S_COLOR_GREEN "VMINFO [%s] crc: %08X, ic: %i, dl: %i\n", vm->name, vm->crc32sum, vm->instructionCount, vm->exactDataLength );
 
 	if ( vm->index == VM_CGAME ) {
 		if ( vm->crc32sum == 0x3E93FC1A && vm->instructionCount == 123596 && vm->exactDataLength == 2007536 ) {
@@ -1340,7 +1341,14 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			}
 		}
 		
-		
+		if ( vm->crc32sum == 0x89688376 && vm->instructionCount == 202902 && vm->exactDataLength == 2910444 ) {
+			ip = buf + 0x1c5c8;
+			if(ip[2].op == OP_LEAVE && ip[2].value == 0x444) {
+				ip[0].op = OP_EQ;
+				//VM_IgnoreInstructions( &ip[0], 4 );
+				//VM_IgnoreInstructions( &ip[0], 1 );
+			}
+		}
 	}
 
 	if ( vm->index == VM_UI ) {
@@ -1364,7 +1372,6 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		}
 		
 		// skip auth check in urban terror, TODO: skip name check
-		// Com_Printf("crc32sum: 0x%08x, instructionCount: %i, exactDataLength: %i\n", vm->crc32sum, vm->instructionCount, vm->exactDataLength);
 		if ( vm->crc32sum == 0xe771cdf9 && vm->instructionCount == 101585 && vm->exactDataLength == 9162280 ) {
 			ip = buf + 0x149b - 2;
  			VM_IgnoreInstructions( &ip[2], 3 );
@@ -1892,6 +1899,40 @@ void VM_LogSyscalls( int *args ) {
 }
 
 #ifdef EMSCRIPTEN
+
+int GetIntFromByte(byte *offset) {
+	return (offset[3] << 24) | (offset[2] << 16)
+		| (offset[1] << 8) | offset[0];
+}
+
+
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker) {
+	int i, j;
+	int diff = realtimeMarker ^ 0x7FFFFFFF;
+	int frame = diff - realtimeMarker;
+	byte *ret = 0;
+	struct vmSymbol_s *sym;
+	//Com_Printf("Searching for UI cursorx at %i %i was %i\n", diff, frame, realtimeMarker);
+	
+	//VM_Call( vm, mouseCmd, 1, 1 );
+	VM_Call( vm, refreshCmd, diff);
+
+	for(i = vm->dataAlloc - 32; i >= 0; i--) {
+		int frameTime = GetIntFromByte(&vm->dataBase[i]);
+		int realTime = GetIntFromByte(&vm->dataBase[i-4]);
+		if(realTime == diff) { // && ) {
+			//Com_Printf("Found UI cursorx at %p %i %i\n", &vm->dataBase[i], frameTime, realTime);
+			//VM_Call( vm, refreshCmd, realtimeMarker);
+			ret = &vm->dataBase[i-8];
+		}
+	}
+	if(!ret) {
+		Com_Error(ERR_FATAL, "Couldn't locate UI cursor %i\n", diff);
+	}
+	return ret;
+}
+
+
 qboolean VM_IsSuspended(vm_t * vm) {
 #ifndef NO_VM_COMPILED
 		if (vm->compiled) {
@@ -1901,6 +1942,7 @@ qboolean VM_IsSuspended(vm_t * vm) {
 		// return VM_IsSuspendedInterpreted(vm);
 		return qfalse;
 }
+
 
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp) {
 #ifndef NO_VM_COMPILED
@@ -1913,6 +1955,7 @@ void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp) {
 		// return;
 		Com_Error(ERR_FATAL, "VM_SuspendInterpreted not implemented");
 }
+
 
 int VM_Resume(vm_t *vm) {
 #ifndef NO_VM_COMPILED

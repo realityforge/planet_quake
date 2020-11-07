@@ -9,13 +9,13 @@ var LibrarySysMain = {
       '+set', 'fs_basepath', '/base',
       //'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
       //'+set', 'cl_allowDownload', '1',
-      '+set', 'fs_basegame', 'baseq3-cc',
-      '+set', 'fs_game', 'baseq3-cc',
+      '+set', 'fs_basegame', 'baseq3',
+      '+set', 'fs_game', 'baseq3',
       //'+set', 'developer', '0',
       //'+set', 'fs_debug', '0',
       '+set', 'r_mode', '-1',
       '+set', 'r_customPixelAspect', '1',
-      '+set', 'sv_pure', '0',
+      '+set', 'sv_pure', '1',
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4
@@ -24,6 +24,7 @@ var LibrarySysMain = {
       '+set', 'cl_lazyLoad', '1',
       '+set', 'rconpassword', 'password123!',
       '+set', 'cg_drawfps', '1',
+      '+set', 'cl_guidServerUniq', '1', // more randomness for server cl_guid so lnbitcoin never overlaps clients
       
       // settings for browser that might help keep garbage low
       //'+set', 'com_hunkMegs', '256',
@@ -34,6 +35,15 @@ var LibrarySysMain = {
       // FBO specific settings
       '+set', 'r_ext_framebuffer_multisample', '0',
       '+set', 'r_ext_framebuffer_object', '0',
+      // this prevents lightmap from being wrong when switching maps
+      //   renderer doesn't restart between maps, but BSP loading updates
+      //   textures with lightmap by default, so this keeps them separate
+      '+set', 'r_mergeLightmaps', '0',
+      '+set', 'r_deluxeMapping', '0',
+      '+set', 'r_normalMapping', '0',
+      '+set', 'r_specularMapping', '0',
+      '+set', 'r_gamma', '1.1',
+      '+set', 'r_picmip', '1',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',
@@ -52,7 +62,6 @@ var LibrarySysMain = {
       '+set', 'r_deluxeMapping', '0',
       '+set', 'r_hdr', '0',
       '+set', 'r_lodbias', '1',
-      '+set', 'r_picmip', '1',
       '+set', 'r_postProcess', '0',
       '+set', 's_compression', '1',
       '+set', 'r_ext_compressed_textures', '1',
@@ -89,16 +98,22 @@ var LibrarySysMain = {
       if(navigator && navigator.userAgent
         && navigator.userAgent.match(/mobile/i)) {
         args.unshift.apply(args, [
+          '+set', 'com_hunkMegs', '96',
           '+set', 'in_joystick', '1',
           '+set', 'in_nograb', '1',
           '+set', 'in_mouse', '0',
           '+bind', 'mouse1', '"+attack"',
           '+bind', 'UPARROW', '"+attack"',
           '+bind', 'DOWNARROW', '"+moveup"',
-          '+bind', 'LEFTARROW', '"+moveleft"',
-          '+bind', 'RIGHTARROW', '"+moveright"',
+          '+unbind', 'LEFTARROW',
+          '+unbind', 'RIGHTARROW',
           '+unbind', 'A',
           '+unbind', 'D',
+          '+bind', 'A', '"+moveleft"',
+          '+bind', 'D', '"+moveright"',
+          '+set', 'cl_sensitivity', '1.5',
+          '+set', 'cl_mouseAccel', '0.2',
+          '+set', 'cl_mouseAccelStyle', '1',
         ])
       } else {
         args.unshift.apply(args, [
@@ -109,38 +124,67 @@ var LibrarySysMain = {
       }
       if(window.location.hostname.match(/quake\.games/i)) {
         var match
-        if (!args.includes('sv_dlURL')) {
+        if(window.location.hostname.match(/lvl\.quake\.games/i)) {
+          var detectMapId = (((/(&|\?|\/)id[:=]([0-9]+)($|[^0-9])/igm)
+            .exec(window.location.search) || [])[2] || '')
           args.push.apply(args, [
-            '+set', 'sv_dlURL', '"https://quake.games/assets"',
+            '+set', 'sv_dlURL', '"https://lvl.quake.games/assets"',
+            '+set', 'net_socksEnabled', '0',
+            '+set', 'net_enabled', '0',
+            '+set', 'com_maxfps', '30',
+            '+set', 'net_enable', '0',
+            '+set', 'cg_drawGun', '0',
+            '+set', 'cg_simpleItems', '0',
+            '+set', 'cg_draw2D', '0',
+            '+exec', 'lvl-default.cfg',
           ])
-        }
-        if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
+          if (!args.includes('cl_returnURL')) {
+            args.push.apply(args, [
+              '+set', 'cl_returnURL', '"https://lvlworld.com/review/id:' + detectMapId + '"',
+            ])
+          }
+        } else if((match = (/(.+)\.quake\.games/i).exec(window.location.hostname))) {
           if (!args.includes('net_socksServer')) {
             args.push.apply(args, [
-              '+set', 'net_socksServer', window.location.hostname,
+              '+set', 'net_socksServer', 'wss://' + window.location.hostname,
               '+set', 'net_socksPort', '443',
             ])
           }
-          if(SYSF.mods.filter(f => f.includes(match[1])).length > 0) {
+          if(SYSF.mods.filter(function (f) { return f.includes(match[1]) }).length > 0) {
             args.unshift.apply(args, [
               '+set', 'fs_basegame', match[1],
               '+set', 'fs_game', match[1],
+              '+exec', match[1] + '-default.cfg',
             ])
           }
           if (!args.includes('+map') && !args.includes('+spmap')
             && !args.includes('+devmap') && !args.includes('+spdevmap') 
             && !args.includes('+connect')) {
             args.push.apply(args, [
-              '+connect', window.location.hostname
+              '+connect', window.location.hostname,
             ])
           }
         } else if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
-            '+set', 'net_socksServer', 'proxy.quake.games',
+            '+set', 'net_socksServer', 'wss://proxy.quake.games',
             '+set', 'net_socksPort', '443',
           ])
         }
+        if (!args.includes('sv_dlURL')) {
+          args.push.apply(args, [
+            '+set', 'sv_dlURL', '"https://quake.games/assets"',
+          ])
+        }
       } else {
+        if(window.location.hostname.match(/quake\.money/i)) {
+          if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+spdevmap') 
+            && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', window.location.hostname,
+            ])
+          }
+        }
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
@@ -153,35 +197,81 @@ var LibrarySysMain = {
           ])
         }
       }
-      if(typeof document != 'undefined') {
+      if(!SYS.dedicated) {
         if(!args.includes('+connect')) {
           args.push.apply(args, [
             '+connect', 'localhost'
           ])
         }
+      } else {
+        // IS dedicated settings
+        if(!args.includes('+spmap')
+          && !args.includes('+map')
+          && !args.includes('+devmap')
+          && !args.includes('+spdevmap')
+          && !args.includes('+demo_play')) {
+          args.push.apply(args, [
+            '+spmap', 'q3dm0',
+          ])
+        }
+        args.unshift.apply(args, [
+          '+set', 'ttycon', '1',
+          '+set', 'sv_hostname', '"http://quake.games"',
+          '+set', 'sv_motd', 'For instant replays and stuff',
+          '+set', 'rconPassword', 'password123!',
+          '+set', 'sv_reconnectlimit', '0',
+          //  '+set', 'sv_autoDemo', '1',
+          //  '+set', 'sv_autoRecord', '1',
+          //  '+set', 'net_socksEnabled', '0',
+        ])
+      }
+      if(window.innerWidth / window.innerHeight < .8
+        && !args.includes('cg_gunZ') && !args.includes('cg_gunX')) {
+        args.push.apply(args, [
+          '+set', 'cg_gunZ', '-5',
+          '+set', 'cg_gunX', '-5',
+        ])
+      } else {
+        args.push.apply(args, [
+          '+set', 'cg_gunZ', '0',
+          '+set', 'cg_gunX', '0',
+        ])
       }
       return args
     },
     updateVideoCmd: function () {
-			var update = 'set r_fullscreen %fs; set r_mode -1; set r_customWidth %w; set r_customHeight %h; vid_restart; '
+      var oldHeight = canvas.getAttribute('height')
+      var oldWidth = canvas.getAttribute('width')
+      // only update size if the canvas changes by more than 0.1
+      if(!((canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
+        || (canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
+        return
+      canvas.setAttribute('width', canvas.clientWidth)
+      canvas.setAttribute('height', canvas.clientHeight)
+			var update = 'set r_fullscreen %fs; set r_mode -1;'
+        + ' set r_customWidth %w; set r_customHeight %h;'
+        + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
 				.replace('%fs', window.fullscreen ? '1' : '0')
-				.replace('%w', window.innerWidth)
-				.replace('%h', window.innerHeight)
-			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK));
-			_Cbuf_Execute();
+				.replace('%w', canvas.clientWidth)
+				.replace('%h', canvas.clientHeight)
+        .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
+          ? -5 : 0)
+
+			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
 		},
     resizeViewport: function () {
 			if (!Module['canvas']) {
 				// ignore if the canvas hasn't yet initialized
-				return;
+				return
 			}
 
-			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay);
+			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay)
 			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
 		},
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')
         || window.location.protocol.includes('https')
+        || window.location.search.includes('wss://')
         || socksServer.includes('wss:')
         || socksServer.includes('https:'))
         && !socksServer.includes('http:')
@@ -189,7 +279,7 @@ var LibrarySysMain = {
         && !window.location.search.includes('ws://')
     }
   },
-  Sys_PlatformInit__deps: ['$SYSC', '$SYSM', 'stackAlloc'],
+  Sys_PlatformInit__deps: ['$SYSC', '$SYSM'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
@@ -200,10 +290,12 @@ var LibrarySysMain = {
         : 'ws://'
       })
     })
-    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 50)
+    SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
 
-    SYSF.firstTime = true
-    if(typeof document == 'undefined') return
+    if(typeof window.serverWorker != 'undefined')
+      window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
+    
+    if(SYS.dedicated) return
 
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
@@ -224,8 +316,13 @@ var LibrarySysMain = {
     window.addEventListener('resize', SYSM.resizeViewport)
   },
   Sys_PlatformExit: function () {
+    SYSC.returnURL = SYSC.Cvar_VariableString('cl_returnURL')
     if(SYSN.lazyInterval)
       clearInterval(SYSN.lazyInterval)
+    if(SYSN.socksInterval)
+      clearInterval(SYSN.socksInterval)
+    if(SYSI.interval)
+      clearInterval(SYSI.interval)
     /*
     if(SYSC.varStr) {
       _free(SYSC.varStr)
@@ -236,12 +333,16 @@ var LibrarySysMain = {
       SYSI.inputHeap = 0
     }
     */
+    if(Module.SDL2) {
+      delete Module.SDL2.audio
+      delete Module.SDL2.capture
+    }
     if(typeof flipper != 'undefined') {
       flipper.style.display = 'block'
       flipper.style.animation = 'none'
     }
     SYSM.exited = true
-    if(typeof document != 'undefined') {
+    if(!SYS.dedicated) {
       window.removeEventListener('resize', SYSM.resizeViewport)
       window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
       window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
@@ -256,6 +357,9 @@ var LibrarySysMain = {
     if (Module['canvas']) {
       Module['canvas'].remove()
     }
+    if(SYSC.returnURL) {
+      window.location = SYSC.returnURL
+    }
     if(typeof Module.exitHandler != 'undefined') {
       Module.exitHandler()
     }
@@ -265,12 +369,12 @@ var LibrarySysMain = {
 			SYSM.timeBase = Date.now()
 		}
 
-		if (window.performance.now) {
+		if (window.performance && window.performance.now) {
 			return parseInt(window.performance.now(), 10)
-		} else if (window.performance.webkitNow) {
+		} else if (window.performance && window.performance.webkitNow) {
 			return parseInt(window.performance.webkitNow(), 10)
 		} else {
-			return Date.now() - SYSM.timeBase()
+			return Date.now() - SYSM.timeBase
 		}
 	},
 	Sys_GetCurrentUser: function () {
@@ -304,15 +408,20 @@ var LibrarySysMain = {
   Sys_SetStatus__deps: ['$SYSN'],
   Sys_SetStatus: function (s) {
     var args = Array.from(arguments)
-      .map(a => UTF8ToString(a))
-    SYSN.LoadingDescription(args.join(' '))
+      .map(function (a, i) { return i == 0
+        ? UTF8ToString(a)
+        // TODO: fix this for numbers and strings, 
+        //   return the correct type based on the position of variable
+        : UTF8ToString(HEAP32[a>>2]) })
+    SYSC.Print(args)
+    window.serverWorker.postMessage(['status', args])
   },
-  Sys_CmdArgs__deps: ['stackAlloc'],
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.getQueryCommands())
     var argc = argv.length
     // merge default args with query string args
-    var list = stackAlloc((argc + 1) * {{{ Runtime.POINTER_SIZE }}})
+    var size = (argc + 1) * {{{ Runtime.POINTER_SIZE }}}
+    var list = allocate(new Int8Array(size), 'i8', ALLOC_NORMAL)
     for (var i = 0; i < argv.length; i++) {
       HEAP32[(list >> 2) + i] = allocateUTF8OnStack(argv[i])
     }

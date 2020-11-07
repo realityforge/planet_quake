@@ -5,6 +5,28 @@ var express = require('express')
 var {pathToAbsolute, makeIndexJson, repackPk3Dir} = require('./content.js')
 var {sendCompressed} = require('./compress.js')
 var serveStatic = require('../lib/serve-static.js')
+var {Server} = require('../lib/socks.server.js')
+var WebSocketServer = require('ws').Server
+var http = require('http')
+var {createServer} = require('net')
+
+
+var ports = [8080, 1081]
+var specifyPorts = false
+for(var i = 0; i < process.argv.length; i++) {
+  var a = process.argv[i]
+  if(a.match(/\/node$/ig)) continue
+  if(a.match(/\/proxy\.js$/ig)) continue
+  
+  if (parseInt(a) + '' === a) {
+    if(!specifyPorts) {
+      ports = []
+      specifyPorts = true
+    }
+    ports.push(parseInt(a))
+	}
+}
+var socks = new Server() // TODO: add password authentication
 
 var app = express()
 app.enable('etag')
@@ -66,4 +88,28 @@ app.use(serveStatic(path.join(__dirname), {
 }))
 app.use(serveUnionFs)
 
-app.listen(8080)
+if(ports.includes(1080)) {
+  // redirect http attempts to loading page
+  const server = createServer(function(socket) {
+  	try {
+  		socks._onConnection(socket)
+  	} catch (e) {
+  		console.log(e)
+  	}
+  })
+  server.listen(1080, () => console.log(`Server running at http://0.0.0.0:1080`))
+}
+
+ports.forEach((p, i, ports) => {
+  if(ports[i] === 1080) return
+  var httpServer = http.createServer(app)
+  var wss = new WebSocketServer({server: httpServer})
+  wss.on('connection', function(ws) {
+    try {
+      socks._onConnection(ws)
+    } catch (e) {
+      console.log(e)
+    }
+  })
+  httpServer.listen(ports[i], () => console.log(`Http running at http://0.0.0.0:${ports[i]}`))
+})

@@ -17,7 +17,7 @@ function disassembleQVM(inputQVM, output) {
   try {
     var disassembler = path.join(__dirname, '../lib/q3vm')
     var type = inputQVM.match(/cgame/) ? 'cgame' : inputQVM.match(/qagame/) ? 'game' : inputQVM.match(/ui/) ? 'ui' : ''
-    execSync(`./qvmdis "${inputQVM}" ${type} > "${output}"`, {cwd: disassembler, stdio: 'pipe'})
+    execSync(`python2 ./qvmdis "${inputQVM}" ${type} > "${output}"`, {cwd: disassembler, stdio: 'pipe'})
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }

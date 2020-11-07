@@ -127,8 +127,10 @@ void FBO_CreateBuffer(FBO_t *fbo, int format, int index, int multisample)
 	{
 		case GL_RGB:
 		case GL_RGBA:
+#ifndef EMSCRIPTEN
 		case GL_RGB8:
 		case GL_RGBA8:
+#endif
 		case GL_RGB16F_ARB:
 		case GL_RGBA16F_ARB:
 		case GL_RGB32F_ARB:
@@ -232,7 +234,7 @@ void FBO_Bind(FBO_t * fbo)
 	//if (r_logFile->integer)
 	//{
 		// don't just call LogComment, or we will get a call to va() every frame!
-		//ri.Printf(PRINT_DEVELOPER, va("--- FBO_Bind( %s ) ---\n", fbo ? fbo->name : "NULL"));
+		//GLimp_LogComment(va("--- FBO_Bind( %s ) ---\n", fbo ? fbo->name : "NULL"));
 	//}
 
 	GL_BindFramebuffer(GL_FRAMEBUFFER, fbo ? fbo->frameBuffer : 0);
@@ -260,7 +262,7 @@ void FBO_Init(void)
 
 	R_IssuePendingRenderCommands();
 
-	hdrFormat = GL_RGBA;
+	hdrFormat = GL_RGBA8;
 	if (r_hdr->integer && glRefConfig.textureFloat)
 		hdrFormat = GL_RGBA16F_ARB;
 
@@ -328,7 +330,7 @@ void FBO_Init(void)
 		{
 			tr.pshadowFbos[i] = FBO_Create(va("_shadowmap%d", i), tr.pshadowMaps[i]->width, tr.pshadowMaps[i]->height);
 			// FIXME: this next line wastes 16mb with 16x512x512 sun shadow maps, skip if OpenGL 4.3+ or ARB_framebuffer_no_attachments
-			FBO_CreateBuffer(tr.pshadowFbos[i], GL_RGBA, 0, 0);
+			FBO_CreateBuffer(tr.pshadowFbos[i], GL_RGBA8, 0, 0);
 			FBO_AttachImage(tr.pshadowFbos[i], tr.pshadowMaps[i], GL_DEPTH_ATTACHMENT, 0);
 			R_CheckFBO(tr.pshadowFbos[i]);
 		}
@@ -341,7 +343,7 @@ void FBO_Init(void)
 			tr.sunShadowFbo[i] = FBO_Create("_sunshadowmap", tr.sunShadowDepthImage[i]->width, tr.sunShadowDepthImage[i]->height);
 			// FIXME: this next line wastes 16mb with 4x1024x1024 sun shadow maps, skip if OpenGL 4.3+ or ARB_framebuffer_no_attachments
 			// This at least gets sun shadows working on older GPUs (Intel)
-			FBO_CreateBuffer(tr.sunShadowFbo[i], GL_RGBA, 0, 0);
+			FBO_CreateBuffer(tr.sunShadowFbo[i], GL_RGBA8, 0, 0);
 			FBO_AttachImage(tr.sunShadowFbo[i], tr.sunShadowDepthImage[i], GL_DEPTH_ATTACHMENT, 0);
 			R_CheckFBO(tr.sunShadowFbo[i]);
 		}

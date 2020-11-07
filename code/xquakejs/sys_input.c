@@ -361,9 +361,11 @@ static void IN_ActivateMouse( qboolean isFullscreen )
 
 
 void IN_GrabMouse(void) {
-	Com_Printf( "IN_GrabMouse: grabbing mouse\n" );
-	SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
-	SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+	if(in_mouse) {
+		Com_Printf( "IN_GrabMouse: grabbing mouse\n" );
+		SDL_SetRelativeMouseMode( in_mouse->integer == 1 ? SDL_TRUE : SDL_FALSE );
+		SDL_SetWindowGrab( SDL_window, SDL_TRUE );
+	}
 }
 
 /*
@@ -685,7 +687,7 @@ void IN_Frame( void )
 		}
 		*/
 		// TODO: make config options for this?
-		if(i == 1 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
+		if(i == 2 && !(Key_GetCatcher( ) & KEYCATCH_UI)) {
 			if(touchhats[i][0] != 0 || touchhats[i][1] != 0) {
 				Com_QueueEvent( in_eventTime, SE_MOUSE, touchhats[i][0], 0, 0, NULL );
 			}

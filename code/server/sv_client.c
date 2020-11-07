@@ -23,6 +23,25 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+#ifdef USE_CURL
+download_t			svDownload;
+#ifdef DEDICATED
+clientConnection_t	clc;
+clientStatic_t		  cls;
+cvar_t	            *cl_dlDirectory;
+#endif
+#else
+qboolean        svDownload;
+#endif
+
+#ifdef USE_LNBITS
+invoice_t *maxInvoices;
+int       numInvoices;
+invoice_t *requestInvoice; // the invoice request currently being downloaded by svDownload
+char invoicePostData[MAX_OSPATH];
+char invoicePostHeaders[2*MAX_OSPATH];
+#endif
+
 static void SV_CloseDownload( client_t *cl );
 
 //
@@ -421,6 +440,277 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
+#ifdef USE_LNBITS
+#ifndef EMSCRIPTEN
+void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
+	// extract key
+	int i;
+	int r = 0, ki = 0, vi = 0;
+	char keyName[64];
+	char paidValue[10];
+	qboolean key = qfalse, value = qfalse;
+	qboolean paymentValue = qfalse, checkingId = qfalse, withdraw = qfalse;
+	qboolean paid = qfalse;
+	if(!svDownload.TempStore[0]) return;
+
+	r = strlen(svDownload.TempStore);
+	// simple state machine for checking payment status json
+	for(i = 0; i < r; i++) {
+		if(!key && !value && svDownload.TempStore[i] == '"') {
+			if(paymentValue || checkingId || withdraw) {
+				value = qtrue;
+				vi = 0;
+			} else {
+				key = qtrue;
+				ki = 0;
+			}
+		} else if (key && svDownload.TempStore[i] == '"') {
+			key = qfalse;
+			keyName[ki] = '\0';
+			paymentValue = !Q_stricmp(keyName, "payment_request");
+			checkingId = !Q_stricmp(keyName, "checking_id");
+			withdraw = !Q_stricmp(keyName, "lnurl");
+			paid = !Q_stricmp(keyName, "paid");
+			vi = 0;
+		} else if (value && svDownload.TempStore[i] == '"') {
+			value = qfalse;
+			paymentValue = 
+			checkingId = 
+			withdraw = qfalse;
+		} else if (key) {
+			if(ki < 63) {
+				keyName[ki++] = svDownload.TempStore[i];
+			}
+		} else if (value) {
+			if(vi < 63 && checkingId) {
+				updateInvoice->checkingId[vi++] = svDownload.TempStore[i];
+			} else if (vi < 255 && paymentValue) {
+				updateInvoice->invoice[vi++] = svDownload.TempStore[i];
+			} else if (vi < 255 && withdraw)
+				updateInvoice->reward[vi++] = svDownload.TempStore[i];
+		} else if (paid && svDownload.TempStore[i] == '}') {
+			if(Q_stristr(paidValue, "true")) {
+				updateInvoice->paid = qtrue;
+			} else if (Q_stristr(paidValue, "false")) {
+				updateInvoice->paid = qfalse;
+			}
+		} else if (paid) {
+			if(vi < 9) {
+				paidValue[vi++] = svDownload.TempStore[i];
+			}
+		}
+	}
+	svDownload.TempStore[0] = '\0';
+}
+#endif
+
+
+void SV_SendInvoiceAndChallenge(const netadr_t *from, char *invoiceData, char *reward, const char *oldChallenge) {
+	int			challenge;
+	char	infostring[MAX_INFO_STRING];
+	infostring[0] = '\0';
+	Info_SetValueForKey( infostring, "cl_lnInvoice", invoiceData );
+	Info_SetValueForKey( infostring, "oldChallenge", oldChallenge );
+	challenge = SV_CreateChallenge( svs.time >> TS_SHIFT, from );
+	if(reward[0]) {
+		Info_SetValueForKey( infostring, "reward", reward );
+	}
+	Info_SetValueForKey( infostring, "challenge", va("%i", challenge) );
+	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+}
+
+
+void SV_CheckInvoicesAndPayments( void ) {
+	int i, now, highestScore = 0;
+	client_t	*highestClient;
+	playerState_t	*ps;
+	invoice_t  *oldestInvoice = NULL;
+	int        oldestInvoiceTime;
+	if(!maxInvoices) return;
+
+	// don't even bother if a request is already in progress
+	#ifdef EMSCRIPTEN
+		if(svDownload)
+	#else
+		if(svDownload.cURL)
+	#endif
+			return;
+
+	now = Sys_Milliseconds();
+	oldestInvoiceTime = now;
+	oldestInvoice = NULL;
+	for(i=0;i<(sv_maxclients->integer+10);i++) {
+
+		if(maxInvoices[i].guid[0] && maxInvoices[i].lastTime < oldestInvoiceTime
+			&& !maxInvoices[i].paid && !highestScore
+		  && (now - maxInvoices[i].lastTime) > 1000) {
+			oldestInvoiceTime = maxInvoices[i].lastTime;
+			oldestInvoice = &maxInvoices[i];
+		}
+
+		if(!maxInvoices[i].cl) continue;
+
+		// detect client with highest score to reward
+		ps = SV_GameClientNum( maxInvoices[i].cl - svs.clients);
+		if (ps->pm_type == PM_INTERMISSION
+			&& ps->persistant[PERS_SCORE] > highestScore) {
+			highestClient = maxInvoices[i].cl;
+			highestScore = ps->persistant[PERS_SCORE];
+			oldestInvoice = &maxInvoices[i];
+		}
+	}
+
+	if(requestInvoice) {
+		qboolean wasntPaid = !requestInvoice->paid;
+		// update the oldest invoice before finding a new one
+#ifndef EMSCRIPTEN
+		if(svDownload.TempStore[0]) {
+Com_Printf("Response: %s\n", svDownload.TempStore);
+			SV_CheckInvoiceStatus(requestInvoice);
+		}
+#endif
+		if(wasntPaid && requestInvoice->paid) {
+			// add this once when paid status changes
+			if(sv_lnMatchCut->integer < requestInvoice->price) {
+				Cvar_Set("sv_lnMatchReward", va("%i", sv_lnMatchReward->integer
+					+ requestInvoice->price - sv_lnMatchCut->integer));
+			}
+		}
+		requestInvoice = NULL;
+	}
+
+	if(!oldestInvoice)
+		return;
+	oldestInvoice->lastTime = now;
+
+	if(!oldestInvoice->invoice[0]) {
+		// create the invoice
+		Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+			"{\"out\": false, \"amount\": %i, \"memo\": \"%s\"}",
+			oldestInvoice->price, oldestInvoice->guid );
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnWallet->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		requestInvoice = oldestInvoice;
+#ifdef EMSCRIPTEN
+		svDownload = qtrue;
+		//Sys_BeginDownload();
+#else
+		svDownload.isPost = qtrue;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		svDownload.data.readptr = invoicePostData;
+		svDownload.data.sizeleft = strlen(invoicePostData);
+		svDownload.data.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "", va("%s/payments", sv_lnAPI->string));
+#endif
+} else if (!oldestInvoice->paid && oldestInvoice->checkingId[0]) {
+		// check for payment
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnWallet->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		requestInvoice = oldestInvoice;
+#ifdef EMSCRIPTEN
+		svDownload = qtrue;
+		//Sys_BeginDownload();
+#else
+		svDownload.isPost = qfalse;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "",
+			va("%s/payments/%s", sv_lnAPI->string, oldestInvoice->checkingId));
+#endif
+	} else if (highestClient && highestScore > 0 && sv_lnMatchReward->integer > 0) {
+		// send the reward to the client
+		if(oldestInvoice->reward[0]) {
+			SV_SendInvoiceAndChallenge(&highestClient->netchan.remoteAddress, oldestInvoice->invoice,
+				oldestInvoice->reward, va("%i", highestClient->challenge));
+			return;
+		}
+		Com_sprintf( invoicePostData, sizeof( invoicePostData ),
+			"%s %s %i, %s %i, %s",
+			"{\"title\": \"QuakeJS winner\",",
+			"\"min_withdrawable\":", sv_lnMatchReward->integer,
+			"\"max_withdrawable\":", sv_lnMatchReward->integer,
+			"\"uses\": 1, \"wait_time\": 1, \"is_unique\": true}");
+		Com_sprintf( invoicePostHeaders, sizeof( invoicePostHeaders ),
+			"X-Api-Key: %s", sv_lnKey->string );
+		Com_sprintf( &invoicePostHeaders[strlen( invoicePostHeaders ) + 1],
+			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
+			"Content-type: application/json");
+		requestInvoice = oldestInvoice;
+#ifdef EMSCRIPTEN
+		svDownload = qtrue;
+		//Sys_BeginDownload();
+#else
+		svDownload.isPost = qtrue;
+		svDownload.isPak = qfalse;
+		svDownload.headers.readptr = invoicePostHeaders;
+		svDownload.headers.sizeleft = sizeof(invoicePostHeaders);
+		svDownload.headers.dl = &svDownload;
+		svDownload.data.readptr = invoicePostData;
+		svDownload.data.sizeleft = strlen(invoicePostData);
+		svDownload.data.dl = &svDownload;
+		Com_DL_BeginPost(&svDownload, "", va("%s/links", sv_lnWithdraw->string));
+#endif			
+	}
+}
+
+invoice_t *SVC_ClientRequiresInvoice(const netadr_t *from, const char *userinfo, int challenge) {
+	int i;
+	char *cl_invoice = Info_ValueForKey(userinfo, "cl_lnInvoice");
+	char *cl_guid = Info_ValueForKey(userinfo, "cl_guid");
+	invoice_t *found = NULL;
+	
+	// perform curl request to get invoice id
+	for(i=0;i<sv_maxclients->integer+10;i++) {
+		if(cl_guid[0] && maxInvoices[i].guid[0]
+			&& !Q_stricmp(maxInvoices[i].guid, cl_guid)) {
+			found = &maxInvoices[i];
+			break;
+		}
+	}
+
+	if(!cl_invoice[0] || !found) {
+		if(!found) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
+			Com_Printf( "Payment required for new client: %s.\n", cl_guid );
+			memset(&maxInvoices[numInvoices], 0, sizeof(invoice_t));
+			strcpy(maxInvoices[numInvoices].guid, cl_guid);
+			maxInvoices[numInvoices].price = sv_lnMatchPrice->integer;
+			numInvoices++;
+			if(numInvoices > sv_maxclients->integer+10) {
+				numInvoices = 0;
+			}
+		} else if (!found->invoice[0]) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED (invoicing...)\n" );
+		} else if (found) {
+			NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
+			SV_SendInvoiceAndChallenge(from, found->invoice, "", va("%i", challenge));
+		}
+		return NULL;
+	} else if (found && !maxInvoices[i].paid) {
+		NET_OutOfBandPrint( NS_SERVER, from, "print\n402: PAYMENT REQUIRED\n" );
+		Com_Printf( "Checking payment for known client: %s (%s).\n", cl_guid, &found->invoice[strlen(found->invoice) - 8] );
+		SV_SendInvoiceAndChallenge(from, found->invoice, "", va("%i", challenge));
+		return NULL;
+	} else if (found) {
+		// client has paid, let them through
+		return found;
+	}
+	return NULL;
+}
+
+#endif
+
 /*
 ==================
 SV_DirectConnect
@@ -433,6 +723,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	char		userinfo[MAX_INFO_STRING], tld[3];
 	int			i, n;
 	client_t	*cl, *newcl;
+	invoice_t *invoice;
 	//sharedEntity_t *ent;
 	int			clientNum;
 	int			version;
@@ -698,6 +989,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	}
 
 gotnewcl:
+
 	// build a new connection
 	// accept the new client
 	// this is the only place a client_t is ever initialized
@@ -707,6 +999,18 @@ gotnewcl:
 #if 0 // skip this until CS_PRIMED
 	//ent = SV_GentityNum( clientNum );
 	//newcl->gentity = ent;
+#endif
+
+#ifdef USE_LNBITS
+	if(sv_lnWallet->string[0] && sv_lnMatchPrice->integer > 0) {
+		// generate an invoice for lnbits for this client
+		invoice = SVC_ClientRequiresInvoice(from, userinfo, challenge);
+		if(!invoice) {
+			return;
+		} else {
+			invoice->cl = newcl;
+		}
+	}
 #endif
 
 	// save the challenge
@@ -750,9 +1054,9 @@ gotnewcl:
 
 #ifdef USE_MV
 #ifdef USE_MV_ZCMD
-	cl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
+	newcl->multiview.z.deltaSeq = 0; // reset on DirectConnect();
 #endif
-	cl->multiview.recorder = qfalse;
+	newcl->multiview.recorder = qfalse;
 #endif
 
 	// send the connect packet to the client
@@ -1550,7 +1854,9 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	int nClientChkSum[512];
 	const char *pArg;
 	qboolean bGood = qtrue;
+	char url[MAX_CVAR_VALUE_STRING];
 
+Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
 	// ui and cgame that we think should be loaded based on the pure setting
@@ -1560,7 +1866,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 		nChkSum1 = nChkSum2 = 0;
 
 		// we run the game, so determine which cgame and ui the client "should" be running
-		bGood = FS_FileIsInPAK( "vm/cgame.qvm", &nChkSum1, NULL );
+		bGood = FS_FileIsInPAK( "vm/cgame.qvm", &nChkSum1, url );
 		bGood &= FS_FileIsInPAK( "vm/ui.qvm", &nChkSum2, NULL );
 
 		nClientPaks = Cmd_Argc();
@@ -1574,6 +1880,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 		pArg = Cmd_Argv(nCurArg++);
 		if ( !*pArg ) {
 			bGood = qfalse;
+Com_DPrintf("VerifyPaks: No args at all\n");
 		}
 		else
 		{
@@ -1594,24 +1901,28 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			// numChecksums is encoded
 			if (nClientPaks < 6) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Not enough paks %i\n", nClientPaks);
 				break;
 			}
 			// verify first to be the cgame checksum
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum1 ) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: CGame doesn't match %s != %i (%s)\n", pArg, nChkSum1, url);
 				break;
 			}
 			// verify the second to be the ui checksum
 			pArg = Cmd_Argv(nCurArg++);
 			if ( !*pArg || *pArg == '@' || atoi(pArg) != nChkSum2 ) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: UI doesn't match %s != %i\n", pArg, nChkSum2);
 				break;
 			}
 			// should be sitting at the delimeter now
 			pArg = Cmd_Argv(nCurArg++);
 			if (*pArg != '@') {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Delimiiter is off %s\n", pArg);
 				break;
 			}
 			// store checksums since tokenization is not re-entrant
@@ -1630,6 +1941,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 						continue;
 					if (nClientChkSum[i] == nClientChkSum[j]) {
 						bGood = qfalse;
+Com_DPrintf("VerifyPaks: Duplicate checksums: %i == %i\n", i, j);
 						break;
 					}
 				}
@@ -1643,6 +1955,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			for ( i = 0; i < nClientPaks; i++ ) {
 				if ( !FS_IsPureChecksum( nClientChkSum[i] ) ) {
 					bGood = qfalse;
+Com_DPrintf("VerifyPaks: Checksum doesn't exist: %i\n", nClientChkSum[i]);
 					break;
 				}
 			}
@@ -1658,6 +1971,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			nChkSum1 ^= nClientPaks;
 			if (nChkSum1 != nClientChkSum[nClientPaks]) {
 				bGood = qfalse;
+Com_DPrintf("VerifyPaks: Number of checksums wrong: %i != %i\n", nChkSum1, nClientChkSum[nClientPaks]);
 				break;
 			}
 

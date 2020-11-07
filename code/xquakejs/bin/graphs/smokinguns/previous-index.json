@@ -1,0 +1,3190 @@
+{
+  "menu/pak11menu": {
+    "name": "pak11menu.pk3",
+    "size": 301880
+  },
+  "menu/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "menu/pak12ui": {
+    "name": "pak12ui.pk3",
+    "size": 62877
+  },
+  "menu/pak58gatling": {
+    "name": "pak58gatling.pk3",
+    "size": 384807
+  },
+  "menu/pak62model": {
+    "name": "pak62model.pk3",
+    "size": 595803
+  },
+  "menu/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "menu/pak8883wq3_assets": {
+    "name": "pak8883wq3_assets.pk3",
+    "size": 654022
+  },
+  "menu/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "menu/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "menu/pak8884assets": {
+    "name": "pak8884assets.pk3",
+    "size": 4871
+  },
+  "menu/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "menu/pak54molotov": {
+    "name": "pak54molotov.pk3",
+    "size": 571947
+  },
+  "menu/pak55peacemaker": {
+    "name": "pak55peacemaker.pk3",
+    "size": 1244248
+  },
+  "menu/pak57remington58": {
+    "name": "pak57remington58.pk3",
+    "size": 1793196
+  },
+  "menu/pak52sawedoff": {
+    "name": "pak52sawedoff.pk3",
+    "size": 1012936
+  },
+  "menu/pak56schofield": {
+    "name": "pak56schofield.pk3",
+    "size": 1494346
+  },
+  "menu/pak59sharps": {
+    "name": "pak59sharps.pk3",
+    "size": 814197
+  },
+  "menu/pak50winch66": {
+    "name": "pak50winch66.pk3",
+    "size": 648827
+  },
+  "menu/pak51winch97": {
+    "name": "pak51winch97.pk3",
+    "size": 718655
+  },
+  "menu/pak42player": {
+    "name": "pak42player.pk3",
+    "size": 9768
+  },
+  "menu/pak8885bg": {
+    "name": "pak8885bg.pk3",
+    "size": 1091793
+  },
+  "menu/pak13wq3_assets": {
+    "name": "pak13wq3_assets.pk3",
+    "size": 198534
+  },
+  "menu/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "menu/pak14misc": {
+    "name": "pak14misc.pk3",
+    "size": 13432
+  },
+  "menu/pak43player": {
+    "name": "pak43player.pk3",
+    "size": 48126
+  },
+  "menu/pak45players": {
+    "name": "pak45players.pk3",
+    "size": 317065
+  },
+  "menu/pak8881wqfx": {
+    "name": "pak8881wqfx.pk3",
+    "size": 30182
+  },
+  "game/pak21game": {
+    "name": "pak21game.pk3",
+    "size": 350308
+  },
+  "game/pak58gatling": {
+    "name": "pak58gatling.pk3",
+    "size": 384807
+  },
+  "game/pak41wq3_players": {
+    "name": "pak41wq3_players.pk3",
+    "size": 858
+  },
+  "game/pak12ui": {
+    "name": "pak12ui.pk3",
+    "size": 62877
+  },
+  "game/pak222d": {
+    "name": "pak222d.pk3",
+    "size": 138406
+  },
+  "game/pak23damage": {
+    "name": "pak23damage.pk3",
+    "size": 29700
+  },
+  "game/pak24misc": {
+    "name": "pak24misc.pk3",
+    "size": 118416
+  },
+  "game/pak25score": {
+    "name": "pak25score.pk3",
+    "size": 58073
+  },
+  "game/pak26hud": {
+    "name": "pak26hud.pk3",
+    "size": 73728
+  },
+  "game/pak27weapons": {
+    "name": "pak27weapons.pk3",
+    "size": 249137
+  },
+  "game/pak28gibs": {
+    "name": "pak28gibs.pk3",
+    "size": 56167
+  },
+  "game/pak29items": {
+    "name": "pak29items.pk3",
+    "size": 41699
+  },
+  "game/pak20gatling": {
+    "name": "pak20gatling.pk3",
+    "size": 94073
+  },
+  "game/pak221molotov": {
+    "name": "pak221molotov.pk3",
+    "size": 9791
+  },
+  "game/pak222wq3_players": {
+    "name": "pak222wq3_players.pk3",
+    "size": 30730
+  },
+  "game/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "game/pak223player": {
+    "name": "pak223player.pk3",
+    "size": 237566
+  },
+  "game/pak13wq3_assets": {
+    "name": "pak13wq3_assets.pk3",
+    "size": 198534
+  },
+  "game/pak224wqfx": {
+    "name": "pak224wqfx.pk3",
+    "size": 124103
+  },
+  "game/pak44wq_male1": {
+    "name": "pak44wq_male1.pk3",
+    "size": 1236
+  },
+  "game/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "game/pak63misc": {
+    "name": "pak63misc.pk3",
+    "size": 79809
+  },
+  "game/pak62model": {
+    "name": "pak62model.pk3",
+    "size": 595803
+  },
+  "game/pak8884assets": {
+    "name": "pak8884assets.pk3",
+    "size": 4871
+  },
+  "game/pak225wq_male1": {
+    "name": "pak225wq_male1.pk3",
+    "size": 1065
+  },
+  "maps/br_alamo_2/pak91br_alamo_2": {
+    "name": "pak91br_alamo_2.pk3",
+    "size": 7866263
+  },
+  "maps/br_alamo_2/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_alamo_2/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_alamo_2/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_alamo_2/pak88joekari_grass": {
+    "name": "pak88joekari_grass.pk3",
+    "size": 542741
+  },
+  "maps/br_alamo_2/pak8886joekari_wood": {
+    "name": "pak8886joekari_wood.pk3",
+    "size": 121580
+  },
+  "maps/br_alamo_2/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_alamo_2/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_alamo_2/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_alamo_2/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_alamo_2/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_alamo_2/pak54molotov": {
+    "name": "pak54molotov.pk3",
+    "size": 571947
+  },
+  "maps/br_alamo_2/pak50winch66": {
+    "name": "pak50winch66.pk3",
+    "size": 648827
+  },
+  "maps/br_alamo_2/pak87joekari_stone": {
+    "name": "pak87joekari_stone.pk3",
+    "size": 48231
+  },
+  "maps/br_alamo_2/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/br_alamo_2/pak51winch97": {
+    "name": "pak51winch97.pk3",
+    "size": 718655
+  },
+  "maps/br_backwater/pak92br_backwater": {
+    "name": "pak92br_backwater.pk3",
+    "size": 4383198
+  },
+  "maps/br_backwater/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_backwater/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_backwater/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_backwater/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_backwater/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_backwater/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_backwater/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_backwater/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_backwater/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_backwater/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_backwater/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_backwater/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_backwater/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/br_backwater/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_backwater/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_backwater/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_backwater/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_backwater/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_backwater/pak888sfx": {
+    "name": "pak888sfx.pk3",
+    "size": 12965
+  },
+  "maps/br_backwater/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_backwater/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_backwater/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_backwater/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_cobber/pak93br_cobber": {
+    "name": "pak93br_cobber.pk3",
+    "size": 1257450
+  },
+  "maps/br_cobber/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_cobber/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_cobber/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_cobber/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_cobber/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_cobber/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_cobber/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_cobber/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_cobber/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_cobber/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_cobber/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_cobber/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_cobber/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_cobber/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_cobber/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_comanchecanyon/pak94br_comanchecanyon": {
+    "name": "pak94br_comanchecanyon.pk3",
+    "size": 1473558
+  },
+  "maps/br_comanchecanyon/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_comanchecanyon/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_comanchecanyon/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_comanchecanyon/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_comanchecanyon/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_comanchecanyon/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_comanchecanyon/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_comanchecanyon/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_comanchecanyon/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_comanchecanyon/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_comanchecanyon/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_comanchecanyon/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_comanchecanyon/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_comanchecanyon/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_comanchecanyon/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_comanchecanyon/pak63misc": {
+    "name": "pak63misc.pk3",
+    "size": 79809
+  },
+  "maps/br_comanchecanyon/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_comanchecanyon/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_comanchecanyon/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_comanchecanyon/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_comanchecanyon/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/br_coyotebluff/pak95br_coyotebluff": {
+    "name": "pak95br_coyotebluff.pk3",
+    "size": 5289321
+  },
+  "maps/br_coyotebluff/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_coyotebluff/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_coyotebluff/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_coyotebluff/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_coyotebluff/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_coyotebluff/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_coyotebluff/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_coyotebluff/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_coyotebluff/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_coyotebluff/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_coyotebluff/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_coyotebluff/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_coyotebluff/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_coyotebluff/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_coyotebluff/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_coyotebluff/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_coyotebluff/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_coyotebluff/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_coyotebluff/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_coyotebluff/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_coyotebluff/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_dawnfort/pak96br_dawnfort": {
+    "name": "pak96br_dawnfort.pk3",
+    "size": 3682156
+  },
+  "maps/br_dawnfort/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_dawnfort/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_dawnfort/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_dawnfort/pak31shells": {
+    "name": "pak31shells.pk3",
+    "size": 17164
+  },
+  "maps/br_dawnfort/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/br_dawnfort/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_dawnfort/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_dawnfort/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_dawnfort/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_dawnfort/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_dawnfort/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_dawnfort/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_dawnfort/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_dawnfort/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/br_dawnfort/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_dawnfort/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_dawnfort/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_dawnfort/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_dawnfort/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_dawnfort/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_dawnfort/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_dawnfort/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_dawnfort/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_durango/pak97br_durango": {
+    "name": "pak97br_durango.pk3",
+    "size": 1889412
+  },
+  "maps/br_durango/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_durango/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_durango/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_durango/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_durango/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_durango/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_durango/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_durango/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_durango/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_durango/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_durango/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_durango/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_durango/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_durango/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/br_durango/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_elpaso/pak98br_elpaso": {
+    "name": "pak98br_elpaso.pk3",
+    "size": 2770122
+  },
+  "maps/br_elpaso/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_elpaso/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_elpaso/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_elpaso/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_elpaso/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_elpaso/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_elpaso/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_elpaso/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_elpaso/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_elpaso/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_elpaso/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_elpaso/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_elpaso/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_elpaso/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_elpaso/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_elpaso/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/br_farm/pak99br_farm": {
+    "name": "pak99br_farm.pk3",
+    "size": 1669988
+  },
+  "maps/br_farm/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_farm/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_farm/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_farm/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_farm/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_farm/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_farm/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_farm/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_farm/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_farm/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_farm/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_farm/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_ghosttown/pak90br_ghosttown": {
+    "name": "pak90br_ghosttown.pk3",
+    "size": 4305720
+  },
+  "maps/br_ghosttown/pak62model": {
+    "name": "pak62model.pk3",
+    "size": 595803
+  },
+  "maps/br_ghosttown/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_ghosttown/pak88joekari_grass": {
+    "name": "pak88joekari_grass.pk3",
+    "size": 542741
+  },
+  "maps/br_ghosttown/pak8886joekari_wood": {
+    "name": "pak8886joekari_wood.pk3",
+    "size": 121580
+  },
+  "maps/br_ghosttown/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_ghosttown/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_ghosttown/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_ghosttown/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_ghosttown/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_ghosttown/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_ghosttown/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_ghosttown/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_ghosttown/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/br_ghosttown/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_ghosttown/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 166677
+  },
+  "maps/br_ghosttown/pak87joekari_stone": {
+    "name": "pak87joekari_stone.pk3",
+    "size": 48231
+  },
+  "maps/br_ghosttown/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_ghosttown/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_ghosttown/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_hangemhigh/pak991br_hangemhigh": {
+    "name": "pak991br_hangemhigh.pk3",
+    "size": 3224920
+  },
+  "maps/br_hangemhigh/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_hangemhigh/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_hangemhigh/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_hangemhigh/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_hangemhigh/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_hangemhigh/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_hangemhigh/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_hangemhigh/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_hangemhigh/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_hangemhigh/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_hangemhigh/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_hangemhigh/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_hangemhigh/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_hangemhigh/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_hangemhigh/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_hangemhigh/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_hangemhigh/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_hangemhigh/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_hangemhigh/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_hangemhigh/pak63misc": {
+    "name": "pak63misc.pk3",
+    "size": 79809
+  },
+  "maps/br_hangemhigh/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_hangemhigh/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_hangemhigh/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_hangemhigh/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/br_lago/pak992br_lago": {
+    "name": "pak992br_lago.pk3",
+    "size": 1734602
+  },
+  "maps/br_lago/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_lago/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_lago/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_lago/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_lago/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_lago/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_lago/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_lago/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_lago/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_lago/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_lago/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_lago/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_lago/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_lago/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_lago/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_lago/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/br_lago/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_lago/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_lago/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_lago/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_lago/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_lake/pak993br_lake": {
+    "name": "pak993br_lake.pk3",
+    "size": 3526147
+  },
+  "maps/br_lake/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_lake/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_lake/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_lake/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_lake/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_lake/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_lake/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_lake/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_lake/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_lake/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_lake/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_lake/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/br_lake/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_lake/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_lake/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_lake/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_lake/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_lake/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_lake/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_lake/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_mexico/pak994br_mexico": {
+    "name": "pak994br_mexico.pk3",
+    "size": 807621
+  },
+  "maps/br_mexico/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_mexico/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_mexico/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_mexico/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_mexico/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_mexico/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_mexico/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_mexico/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_mexico/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_mexico/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_mexico/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_mexico/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_nonamecity/pak995br_nonamecity": {
+    "name": "pak995br_nonamecity.pk3",
+    "size": 2732542
+  },
+  "maps/br_nonamecity/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_nonamecity/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_nonamecity/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_nonamecity/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_nonamecity/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_nonamecity/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_nonamecity/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_nonamecity/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_nonamecity/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_nonamecity/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_nonamecity/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_nonamecity/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_nonamecity/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_nonamecity/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_nonamecity/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_nonamecity/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_nonamecity/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_nonamecity/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_nonamecity/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_nonamecity/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/br_santacruz/pak996br_santacruz": {
+    "name": "pak996br_santacruz.pk3",
+    "size": 2057214
+  },
+  "maps/br_santacruz/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/br_santacruz/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/br_santacruz/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/br_santacruz/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_santacruz/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_santacruz/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_santacruz/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_santacruz/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/br_santacruz/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_santacruz/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/br_santacruz/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_santacruz/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_santacruz/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_santacruz/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_santacruz/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_santacruz/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_santacruz/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_santacruz/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_santacruz/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/br_santacruz/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_santacruz/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/br_santacruz/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/br_train/pak997br_train": {
+    "name": "pak997br_train.pk3",
+    "size": 1486553
+  },
+  "maps/br_train/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/br_train/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/br_train/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/br_train/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/br_train/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/br_train/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/br_train/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/br_train/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/br_train/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/br_train/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/br_train/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/br_train/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/br_train/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/br_train/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/br_train/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/br_train/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/br_train/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_alamo_2/pak998dm_alamo_2": {
+    "name": "pak998dm_alamo_2.pk3",
+    "size": 7866263
+  },
+  "maps/dm_alamo_2/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_alamo_2/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_alamo_2/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_alamo_2/pak88joekari_grass": {
+    "name": "pak88joekari_grass.pk3",
+    "size": 542741
+  },
+  "maps/dm_alamo_2/pak8886joekari_wood": {
+    "name": "pak8886joekari_wood.pk3",
+    "size": 121580
+  },
+  "maps/dm_alamo_2/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_alamo_2/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_alamo_2/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_alamo_2/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_alamo_2/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_alamo_2/pak54molotov": {
+    "name": "pak54molotov.pk3",
+    "size": 571947
+  },
+  "maps/dm_alamo_2/pak50winch66": {
+    "name": "pak50winch66.pk3",
+    "size": 648827
+  },
+  "maps/dm_alamo_2/pak87joekari_stone": {
+    "name": "pak87joekari_stone.pk3",
+    "size": 48231
+  },
+  "maps/dm_alamo_2/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/dm_alamo_2/pak51winch97": {
+    "name": "pak51winch97.pk3",
+    "size": 718655
+  },
+  "maps/dm_backwater/pak999dm_backwater": {
+    "name": "pak999dm_backwater.pk3",
+    "size": 4383198
+  },
+  "maps/dm_backwater/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_backwater/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_backwater/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_backwater/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_backwater/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_backwater/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_backwater/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_backwater/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_backwater/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_backwater/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_backwater/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_backwater/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_backwater/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_backwater/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_backwater/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_backwater/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_backwater/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_backwater/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_backwater/pak888sfx": {
+    "name": "pak888sfx.pk3",
+    "size": 12965
+  },
+  "maps/dm_backwater/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_backwater/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_backwater/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_backwater/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_canyon/pak990dm_canyon": {
+    "name": "pak990dm_canyon.pk3",
+    "size": 1216191
+  },
+  "maps/dm_canyon/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_canyon/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_canyon/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_canyon/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_canyon/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_canyon/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_canyon/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_canyon/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_canyon/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_canyon/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_canyon/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_coyotebluff/pak9991dm_coyotebluff": {
+    "name": "pak9991dm_coyotebluff.pk3",
+    "size": 4976266
+  },
+  "maps/dm_coyotebluff/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_coyotebluff/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_coyotebluff/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_coyotebluff/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_coyotebluff/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_coyotebluff/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_coyotebluff/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_coyotebluff/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_coyotebluff/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_coyotebluff/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_coyotebluff/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_coyotebluff/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_coyotebluff/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_coyotebluff/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_coyotebluff/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_coyotebluff/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_coyotebluff/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_coyotebluff/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_coyotebluff/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_coyotebluff/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_dawnfort/pak9992dm_dawnfort": {
+    "name": "pak9992dm_dawnfort.pk3",
+    "size": 3682156
+  },
+  "maps/dm_dawnfort/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_dawnfort/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_dawnfort/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_dawnfort/pak31shells": {
+    "name": "pak31shells.pk3",
+    "size": 17164
+  },
+  "maps/dm_dawnfort/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_dawnfort/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_dawnfort/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_dawnfort/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_dawnfort/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_dawnfort/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_dawnfort/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_dawnfort/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_dawnfort/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_dawnfort/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_dawnfort/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_dawnfort/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_dawnfort/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_dawnfort/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_dawnfort/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_dawnfort/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_dawnfort/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_dawnfort/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_dawnfort/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_dry/pak9993dm_dry": {
+    "name": "pak9993dm_dry.pk3",
+    "size": 1394803
+  },
+  "maps/dm_dry/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_dry/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_dry/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_dry/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_dry/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_dry/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_dry/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_dry/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_dry/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_dry/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_dry/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_dry/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_dry/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_dry/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_fort/pak9994dm_fort": {
+    "name": "pak9994dm_fort.pk3",
+    "size": 846725
+  },
+  "maps/dm_fort/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_fort/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_fort/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_fort/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_fort/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_fort/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_fort/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_fort/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_fort/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_fort/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_fort/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_fort/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_fort/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_fort/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_fort/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_fort/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_fort/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_fort/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_ghosttown/pak9995dm_ghosttown": {
+    "name": "pak9995dm_ghosttown.pk3",
+    "size": 4291261
+  },
+  "maps/dm_ghosttown/pak62model": {
+    "name": "pak62model.pk3",
+    "size": 595803
+  },
+  "maps/dm_ghosttown/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_ghosttown/pak88joekari_grass": {
+    "name": "pak88joekari_grass.pk3",
+    "size": 542741
+  },
+  "maps/dm_ghosttown/pak8886joekari_wood": {
+    "name": "pak8886joekari_wood.pk3",
+    "size": 121580
+  },
+  "maps/dm_ghosttown/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_ghosttown/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_ghosttown/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_ghosttown/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_ghosttown/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_ghosttown/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_ghosttown/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_ghosttown/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_ghosttown/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_ghosttown/pak71mapobject": {
+    "name": "pak71mapobject.pk3",
+    "size": 166677
+  },
+  "maps/dm_ghosttown/pak87joekari_stone": {
+    "name": "pak87joekari_stone.pk3",
+    "size": 48231
+  },
+  "maps/dm_ghosttown/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_ghosttown/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_ghosttown/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_hangemhigh/pak9996dm_hangemhigh": {
+    "name": "pak9996dm_hangemhigh.pk3",
+    "size": 3139734
+  },
+  "maps/dm_hangemhigh/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_hangemhigh/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_hangemhigh/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_hangemhigh/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_hangemhigh/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_hangemhigh/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_hangemhigh/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_hangemhigh/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_hangemhigh/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_hangemhigh/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_hangemhigh/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_hangemhigh/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_hangemhigh/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_hangemhigh/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_hangemhigh/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_hangemhigh/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_hangemhigh/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_hangemhigh/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_hangemhigh/pak31shells": {
+    "name": "pak31shells.pk3",
+    "size": 17164
+  },
+  "maps/dm_hangemhigh/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_hangemhigh/pak63misc": {
+    "name": "pak63misc.pk3",
+    "size": 79809
+  },
+  "maps/dm_hangemhigh/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_hangemhigh/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_hangemhigh/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_hangemhigh/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_hangemhigh/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/dm_lago/pak9997dm_lago": {
+    "name": "pak9997dm_lago.pk3",
+    "size": 1939892
+  },
+  "maps/dm_lago/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_lago/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_lago/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_lago/pak31shells": {
+    "name": "pak31shells.pk3",
+    "size": 17164
+  },
+  "maps/dm_lago/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_lago/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_lago/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_lago/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_lago/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_lago/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_lago/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_lago/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_lago/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_lago/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_lago/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_lago/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_lago/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_lago/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_lago/pak63misc": {
+    "name": "pak63misc.pk3",
+    "size": 79809
+  },
+  "maps/dm_lago/pak55peacemaker": {
+    "name": "pak55peacemaker.pk3",
+    "size": 1244248
+  },
+  "maps/dm_lago/pak57remington58": {
+    "name": "pak57remington58.pk3",
+    "size": 1793196
+  },
+  "maps/dm_lago/pak52sawedoff": {
+    "name": "pak52sawedoff.pk3",
+    "size": 1012936
+  },
+  "maps/dm_lago/pak56schofield": {
+    "name": "pak56schofield.pk3",
+    "size": 1494346
+  },
+  "maps/dm_lago/pak59sharps": {
+    "name": "pak59sharps.pk3",
+    "size": 814197
+  },
+  "maps/dm_lago/pak50winch66": {
+    "name": "pak50winch66.pk3",
+    "size": 648827
+  },
+  "maps/dm_lago/pak51winch97": {
+    "name": "pak51winch97.pk3",
+    "size": 718655
+  },
+  "maps/dm_lago/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_lago/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_lago/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_lago/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_lago/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_lago/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/dm_lake/pak9998dm_lake": {
+    "name": "pak9998dm_lake.pk3",
+    "size": 3491212
+  },
+  "maps/dm_lake/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_lake/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_lake/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_lake/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_lake/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_lake/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_lake/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_lake/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_lake/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_lake/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_lake/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_lake/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_lake/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_lake/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_lake/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_lake/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_lake/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_lake/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_lake/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_lake/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_mine/pak9999dm_mine": {
+    "name": "pak9999dm_mine.pk3",
+    "size": 1268930
+  },
+  "maps/dm_mine/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_mine/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_mine/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_mine/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_mine/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_mine/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_mine/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_mine/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_mine/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_mine/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_mine/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_mine/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_mine/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_mine/pak888sfx": {
+    "name": "pak888sfx.pk3",
+    "size": 12965
+  },
+  "maps/dm_mine/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_mine/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_mine/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_mine/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_newtown/pak9990dm_newtown": {
+    "name": "pak9990dm_newtown.pk3",
+    "size": 3573598
+  },
+  "maps/dm_newtown/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_newtown/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_newtown/pak84wind": {
+    "name": "pak84wind.pk3",
+    "size": 206021
+  },
+  "maps/dm_newtown/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_newtown/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_newtown/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_newtown/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_newtown/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_newtown/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_newtown/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_newtown/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_newtown/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_newtown/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_newtown/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_newtown/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_newtown/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_newtown/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_newtown/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_newtown/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_newtown/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_newtown/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_newtown/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_newtown/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_newtown/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_nonamecity/pak99991dm_nonamecity": {
+    "name": "pak99991dm_nonamecity.pk3",
+    "size": 3458538
+  },
+  "maps/dm_nonamecity/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_nonamecity/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_nonamecity/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_nonamecity/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_nonamecity/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_nonamecity/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_nonamecity/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_nonamecity/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_nonamecity/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_nonamecity/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_nonamecity/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_nonamecity/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_nonamecity/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_nonamecity/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_nonamecity/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_nonamecity/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_nonamecity/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_nonamecity/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_nonamecity/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/dm_sancuchillo/pak99992dm_sancuchillo": {
+    "name": "pak99992dm_sancuchillo.pk3",
+    "size": 2015061
+  },
+  "maps/dm_sancuchillo/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/dm_sancuchillo/pak83animal": {
+    "name": "pak83animal.pk3",
+    "size": 168560
+  },
+  "maps/dm_sancuchillo/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_sancuchillo/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_sancuchillo/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_sancuchillo/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_sancuchillo/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_sancuchillo/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_sancuchillo/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_sancuchillo/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_sancuchillo/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_sancuchillo/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_sancuchillo/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_sancuchillo/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_sancuchillo/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_station/pak99993dm_station": {
+    "name": "pak99993dm_station.pk3",
+    "size": 4110839
+  },
+  "maps/dm_station/pak62model": {
+    "name": "pak62model.pk3",
+    "size": 595803
+  },
+  "maps/dm_station/pak8886joekari_wood": {
+    "name": "pak8886joekari_wood.pk3",
+    "size": 121580
+  },
+  "maps/dm_station/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_station/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_station/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_station/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_station/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_station/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_station/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_station/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_station/pak8882sg_wood3": {
+    "name": "pak8882sg_wood3.pk3",
+    "size": 44630
+  },
+  "maps/dm_station/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_station/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_station/pak87joekari_stone": {
+    "name": "pak87joekari_stone.pk3",
+    "size": 48231
+  },
+  "maps/dm_station/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_station/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_station/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_steamboat/pak99994dm_steamboat": {
+    "name": "pak99994dm_steamboat.pk3",
+    "size": 3539212
+  },
+  "maps/dm_steamboat/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_steamboat/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_steamboat/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_steamboat/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_steamboat/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_steamboat/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_steamboat/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_steamboat/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_steamboat/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_steamboat/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_steamboat/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_steamboat/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_steamboat/pak31shells": {
+    "name": "pak31shells.pk3",
+    "size": 17164
+  },
+  "maps/dm_steamboat/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_steamboat/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_steamboat/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/dm_steamboat/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_steamboat/pak86hud": {
+    "name": "pak86hud.pk3",
+    "size": 430035
+  },
+  "maps/dm_steamboat/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_steamboat/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_tillian/pak99995dm_tillian": {
+    "name": "pak99995dm_tillian.pk3",
+    "size": 2064714
+  },
+  "maps/dm_tillian/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_tillian/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_tillian/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_tillian/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_tillian/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_tillian/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/dm_tillian/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_tillian/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/dm_tillian/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_tillian/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_tillian/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_tillian/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/dm_tillian/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_tillian/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/dm_train/pak99996dm_train": {
+    "name": "pak99996dm_train.pk3",
+    "size": 1478082
+  },
+  "maps/dm_train/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/dm_train/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/dm_train/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/dm_train/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/dm_train/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/dm_train/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/dm_train/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/dm_train/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/dm_train/pak85misc": {
+    "name": "pak85misc.pk3",
+    "size": 30581
+  },
+  "maps/dm_train/pak33ammo": {
+    "name": "pak33ammo.pk3",
+    "size": 15710
+  },
+  "maps/dm_train/pak551weapons": {
+    "name": "pak551weapons.pk3",
+    "size": 146908
+  },
+  "maps/dm_train/pak53weapon": {
+    "name": "pak53weapon.pk3",
+    "size": 3465081
+  },
+  "maps/dm_train/pak32powerup": {
+    "name": "pak32powerup.pk3",
+    "size": 7226
+  },
+  "maps/dm_train/pak61money": {
+    "name": "pak61money.pk3",
+    "size": 43815
+  },
+  "maps/dm_train/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/dm_train/pak8889env": {
+    "name": "pak8889env.pk3",
+    "size": 204784
+  },
+  "maps/dm_train/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/du_highnoon/pak99997du_highnoon": {
+    "name": "pak99997du_highnoon.pk3",
+    "size": 3703970
+  },
+  "maps/du_highnoon/pak82ambient": {
+    "name": "pak82ambient.pk3",
+    "size": 261850
+  },
+  "maps/du_highnoon/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/du_highnoon/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/du_highnoon/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/du_highnoon/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/du_highnoon/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/du_highnoon/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/du_highnoon/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/du_highnoon/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/du_highnoon/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/du_highnoon/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/du_highnoon/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  },
+  "maps/du_highnoon/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/du_highnoon/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 46846942
+  },
+  "maps/du_showdown/pak99998du_showdown": {
+    "name": "pak99998du_showdown.pk3",
+    "size": 3007280
+  },
+  "maps/du_showdown/pak8887sg_cloth": {
+    "name": "pak8887sg_cloth.pk3",
+    "size": 290684
+  },
+  "maps/du_showdown/pak884sg_dirt": {
+    "name": "pak884sg_dirt.pk3",
+    "size": 208617
+  },
+  "maps/du_showdown/pak887sg_grass": {
+    "name": "pak887sg_grass.pk3",
+    "size": 104504
+  },
+  "maps/du_showdown/pak889sg_metal": {
+    "name": "pak889sg_metal.pk3",
+    "size": 220037
+  },
+  "maps/du_showdown/pak8888sg_other": {
+    "name": "pak8888sg_other.pk3",
+    "size": 265176
+  },
+  "maps/du_showdown/pak89sg_plant": {
+    "name": "pak89sg_plant.pk3",
+    "size": 3910543
+  },
+  "maps/du_showdown/pak885sg_sand": {
+    "name": "pak885sg_sand.pk3",
+    "size": 88374
+  },
+  "maps/du_showdown/pak881sg_sfx": {
+    "name": "pak881sg_sfx.pk3",
+    "size": 15329
+  },
+  "maps/du_showdown/pak886sg_stone": {
+    "name": "pak886sg_stone.pk3",
+    "size": 298438
+  },
+  "maps/du_showdown/pak80sg_wood1": {
+    "name": "pak80sg_wood1.pk3",
+    "size": 731481
+  },
+  "maps/du_showdown/pak880sg_wood2": {
+    "name": "pak880sg_wood2.pk3",
+    "size": 337021
+  },
+  "maps/du_showdown/pak883effects": {
+    "name": "pak883effects.pk3",
+    "size": 3452
+  },
+  "maps/du_showdown/pak882sg_glass": {
+    "name": "pak882sg_glass.pk3",
+    "size": 36334
+  }
+}

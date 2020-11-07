@@ -21,8 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "tr_local.h"
 
-static shader_t *cursor = 0;
-
 /*
 =====================
 R_PerformanceCounters
@@ -258,6 +256,16 @@ void	RE_SetColor( const float *rgba ) {
 RE_StretchPic
 =============
 */
+char banner[1024];
+int  bannerI;
+int  bannerResetTime;
+void RE_ResetBannerSpy( void ) {
+	bannerI = 0;
+	banner[0] = '\0';
+	bannerResetTime = 0;
+}
+
+
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;
@@ -279,6 +287,10 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
+	if(bannerResetTime < 100 && Q_stristr(cmd->shader->name, "font2_prop")) {
+		bannerResetTime++;
+		ri.Spy_Banner(s1, t1);
+	}	
 	if(Q_stristr(cmd->shader->name, "cursor")) {
 		ri.Spy_CursorPosition(x, y);
 	}
@@ -461,7 +473,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				}
 
 				{
+#ifdef EMSCRIPTEN
 					GLenum DrawBuffers[1] = {GL_NONE};
+#else
+					GLenum DrawBuffers[1] = {GL_FRONT};
+#endif
 					qglDrawBuffers( 1, DrawBuffers );
 					qglClear(GL_COLOR_BUFFER_BIT);
 				}
@@ -524,12 +540,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
+#ifdef EMSCRIPTEN
 				cmd->buffer = (int)GL_NONE;
+#else
+				cmd->buffer = (int)GL_FRONT;
+#endif
 			else
 				cmd->buffer = (int)GL_BACK;
 		}
 	}
-
+	
 	tr.refdef.stereoFrame = stereoFrame;
 }
 

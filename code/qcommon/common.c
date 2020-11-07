@@ -102,6 +102,9 @@ cvar_t	*com_cameraMode;
 cvar_t	*com_noErrorInterrupt;
 #endif
 
+cvar_t *cl_execOverflow;
+cvar_t *cl_execTimeout;
+
 // com_speeds times
 int		time_game;
 int		time_frontend;		// renderer frontend time
@@ -305,7 +308,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		va_end (argptr);
 		if(!calledSysError) {
 			calledSysError = qtrue;
-			Sys_Error("recursive error after: %s\n and %s", com_errorMessage, another_errorMessage);
+			Sys_Error("recursive error after: %s and %s", com_errorMessage, another_errorMessage);
 		}
 	}
 
@@ -2989,6 +2992,7 @@ static void __attribute__((__noreturn__)) Com_Error_f (void) {
 	}
 }
 
+
 /*
 =============
 Com_Freeze_f
@@ -3060,9 +3064,10 @@ Com_GameRestart
 Change to a new mod properly with cleaning up cvars before switching.
 ==================
 */
-static qboolean com_gameRestarting = qfalse;
 void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 {
+	static qboolean com_gameRestarting = qfalse;
+
 	// make sure no recursion can be triggered
 	if ( !com_gameRestarting && com_fullyInitialized )
 	{
@@ -3071,8 +3076,8 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		if ( clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
-			CL_ShutdownAll();
 #ifndef EMSCRIPTEN
+			CL_ShutdownAll();
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
 #endif
 		}
@@ -3085,10 +3090,10 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Reset console command history
 		Con_ResetHistory();
 
+#ifndef EMSCRIPTEN
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
-#ifndef EMSCRIPTEN
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
 #endif
@@ -3101,8 +3106,8 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 
 		FS_Restart( checksumFeed );
 		
-		com_gameRestarting = qfalse;
 #ifdef EMSCRIPTEN
+		com_gameRestarting = qtrue;
 	}
 }
 
@@ -3119,6 +3124,10 @@ void Com_GameRestart_After_Restart( void )
 		//CL_Snd_Restart();
 		if ( clientRestart )
 			CL_StartHunkUsers();
+#endif
+		
+#ifndef EMSCRIPTEN
+		com_gameRestarting = qfalse;
 #endif
 	}
 }
@@ -3381,7 +3390,8 @@ static void CPUID( int func, unsigned int *regs )
 		"=d"(regs[3]) :
 		"a"(func) );
 }
-#endif
+
+#endif  // clang/gcc/mingw
 
 static void Sys_GetProcessorId( char *vendor )
 {
@@ -3459,35 +3469,55 @@ static void Sys_GetProcessorId( char *vendor )
 
 #else // non-x86
 
-#if defined(__arm__)
+#if arm32 || arm64
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #endif
+
 static void Sys_GetProcessorId( char *vendor )
 {
+#if arm32 || arm64
+	const char *platform;
+#if arm32
 	long hwcaps;
-
+#endif
 	CPU_Flags = 0;
 
-#if defined(__arm__)
-	Com_sprintf( vendor, 100, "ARM %s", (const char*)getauxval( AT_PLATFORM ) );
+	platform = (const char*)getauxval( AT_PLATFORM );
 
+	if ( !platform || *platform == '\0' ) {
+		platform = "(unknown)";
+	}
+
+	if ( platform[0] == 'v' || platform[0] == 'V' ) {
+		if ( atoi( platform + 1 ) >= 7 ) {
+			CPU_Flags |= CPU_ARMv7;
+		}
+	}
+
+	Com_sprintf( vendor, 100, "ARM %s", platform );
+#if arm32
 	hwcaps = getauxval( AT_HWCAP );
-
 	if ( hwcaps & ( HWCAP_IDIVA | HWCAP_VFPv3 ) ) {
 		strcat( vendor, " /w" );
 
 		if ( hwcaps & HWCAP_IDIVA ) {
-			CPU_Flags |= CPU_IDIV;
-			strcat( vendor, " IDIV" );
+			CPU_Flags |= CPU_IDIVA;
+			strcat( vendor, " IDIVA" );
 		}
 
 		if ( hwcaps & HWCAP_VFPv3 ) {
 			CPU_Flags |= CPU_VFPv3;
 			strcat( vendor, " VFPv3" );
 		}
+
+		if ( ( CPU_Flags & ( CPU_ARMv7 | CPU_VFPv3 ) ) == ( CPU_ARMv7 | CPU_VFPv3 ) ) {
+			strcat( vendor, " QVM-bytecode" );
+		}
 	}
-#else
+#endif // arm32
+#else // !arm32 && !arm64
+	CPU_Flags = 0;
 	Com_sprintf( vendor, 128, "%s %s", ARCH_STRING, (const char*)getauxval( AT_PLATFORM ) );
 #endif
 }
@@ -3559,15 +3589,6 @@ __asm {
 
 #if id386
 
-void Sys_SnapVector( vec3_t vec )
-{
-	vec[0] = rint(vec[0]);
-	vec[1] = rint(vec[1]);
-	vec[2] = rint(vec[2]);
-}
-
-#elif id386
-
 #define QROUNDX87(src) \
 	"flds " src "\n" \
 	"fistpl " src "\n" \
@@ -3593,7 +3614,7 @@ void Sys_SnapVector( vec3_t vector )
 	);
 }
 
-#else
+#else // idx64, non-x86
 
 void Sys_SnapVector( vec3_t vec )
 {
@@ -3602,8 +3623,9 @@ void Sys_SnapVector( vec3_t vec )
 	vec[2] = rint(vec[2]);
 }
 
-#endif // id386
-#endif // linux/mingw
+#endif
+
+#endif // clang/gcc/mingw
 
 
 /*
@@ -3672,7 +3694,7 @@ void Com_Init( char *commandLine ) {
 	FS_InitFilesystem();
 
 #ifdef EMSCRIPTEN
-Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
+	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
 }
 
 void Com_Init_After_Filesystem( void ) {
@@ -3702,6 +3724,8 @@ void Com_Init_After_Filesystem( void ) {
 #endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
+
+	FS_SetMapIndex( "" );
 
 	// if any archived cvars are modified after this, we will trigger a writing
 	// of the config file
@@ -4133,6 +4157,7 @@ void Com_Frame( qboolean noDelay ) {
 		outsideError = 0;
 		outsideMsg = 0;
 		Com_Error(err, "%s\n", msg);
+		return;
 	}
 
 	// used by cl_parsegamestate/cl_initcgame
@@ -4236,12 +4261,13 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-		NET_Sleep( sleepMsec * 1000 - 500 );
 #ifndef EMSCRIPTEN
+		NET_Sleep( sleepMsec * 1000 - 500 );
 	} while( Com_TimeVal( minMsec ) );
 
 #else
 ;
+		NET_Sleep( com_yieldCPU->integer );
 	} while( 0 );
 
 	if(Cvar_VariableIntegerValue("net_socksLoading")) {

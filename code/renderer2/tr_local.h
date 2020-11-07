@@ -435,6 +435,7 @@ typedef struct {
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
+	int     lastTimeUsed;
 	int			lightmapSearchIndex;	// for a shader to match, both name and lightmapIndex must match
 	int			lightmapIndex;			// for rendering
 
@@ -1485,7 +1486,8 @@ typedef struct {
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
-
+	int							lastRegistrationTime;
+	
 	int						visIndex;
 	int						visClusters[MAX_VISCOUNTS];
 	int						visCounts[MAX_VISCOUNTS];	// incremented every time a new vis cluster is entered
@@ -1706,7 +1708,7 @@ extern	cvar_t	*r_nocurves;
 extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
-extern cvar_t	*r_renderRefresh;		// optional display refresh option
+extern cvar_t	*r_displayRefresh;		// optional display refresh option
 
 extern  cvar_t  *r_ext_framebuffer_object;
 extern  cvar_t  *r_ext_texture_float;
@@ -1956,7 +1958,6 @@ void		RE_BeginRegistration( glconfig_t *glconfig );
 void		RE_LoadWorldMap( const char *mapname );
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
-void	  R_UpdateModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
 void		RE_Shutdown( int destroyWindow );
 
@@ -1987,6 +1988,7 @@ skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 int R_ComputeLOD( trRefEntity_t *ent );
 
 const void *RB_TakeVideoFrameCmd( const void *data );
+void RE_ResetBannerSpy( void );
 
 //
 // tr_shader.c
@@ -1994,11 +1996,14 @@ const void *RB_TakeVideoFrameCmd( const void *data );
 shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage );
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
-shader_t *R_FindDefaultShaderByName( const char *name );
 shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+shader_t *R_FindDefaultShaderByName( const char *name );
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
+void		RE_LoadShaders( void );
+void	  R_UpdateModel( const char *name );
 void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 
 /*
@@ -2504,5 +2509,6 @@ void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer);
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );
+void RE_UpdateMode(glconfig_t *glconfigOut);
 
 #endif //TR_LOCAL_H

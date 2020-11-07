@@ -1,9 +1,13 @@
 var LibrarySysNet = {
   $SYSN__deps: ['$SOCKFS'],
   $SYSN: {
+    downloadAlternates: [],
+    downloadTries: [],
     downloadLazy: [],
 		downloadCount: 0,
 		downloads: [],
+    downloadsCompleted: [],
+    downloadsSyncing: false,
 		downloadSort: 0,
     lazyIterval: 0,
     multicasting: false,
@@ -13,13 +17,16 @@ var LibrarySysNet = {
         SYSN.multicastBuffer = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
       }
       SYSN.multicasting = true
-      data.forEach((d, i) => HEAP8[SYSN.multicastBuffer+i] = d)
+      data.forEach(function (d, i) { HEAP8[SYSN.multicastBuffer+i] = d })
       _NET_SendLoopPacket(net, data.length, SYSN.multicastBuffer)
       SYSN.multicasting = false
     },
     LoadingDescription: function (desc) {
-      if(typeof document == 'undefined') {
-        console.log(desc)
+      var args = Array.from(arguments)
+      if(SYS.dedicated) {
+        SYSC.desc = args
+        SYSC.Print(args)
+        window.serverWorker.postMessage(['status', args])
         return
       }
 			var flipper = document.getElementById('flipper')
@@ -28,58 +35,93 @@ var LibrarySysNet = {
 			if (!desc) {
 				progress.style.display = 'none'
 				flipper.style.display = 'none'
+        SYS.previousProgress = [0, 0]
 				SYSN.LoadingProgress(0)
 			} else {
 				progress.style.display = 'block'
 				flipper.style.display = 'block'
 			}
-			description.innerHTML = desc
+      
+      var div = document.createElement('div')
+      div.innerHTML = desc.replace('%s', args[1])
+      if(description.children.length == 0
+        || div.innerText.toLowerCase() != description.children[description.children.length-1].innerText.toLowerCase())
+			  description.appendChild(div)
 		},
 		LoadingProgress: function (progress, total) {
-      if(typeof document == 'undefined') {
+      if(SYS.dedicated) {
+        window.serverWorker.postMessage(['status', SYSC.desc, [progress, total]])
         return
       }
-			var frac = progress / total
-			var progress = document.getElementById('loading-progress')
-			var bar = progress.querySelector('.bar')
-			bar.style.width = (frac*100) + '%'
+      if(!progress) progress = SYS.previousProgress[0]
+      if(!total) total = SYS.previousProgress[1]
+      SYS.previousProgress = [progress, total]
+			var frac = SYS.serviceProgress 
+        ? (progress + SYS.serviceProgress[0]) / (total + SYS.serviceProgress[0])
+        : progress / total
+			var progressBar = document.getElementById('loading-progress').querySelector('.bar')
+			progressBar.style.width = (frac*100) + '%'
 		},
     DoXHR: function (url, opts) {
       var xhrError = null
       if (!url) {
         return opts.onload(new Error('Must provide a URL'))
       }
-      fetch(url, {credentials: 'omit'})
-        .catch(e => console.log(e))
-        .then(response => {
+      /*
+      return new Promise(resolve => {
+        var request = new XMLHttpRequest();
+        request.open('GET', url)
+        request.responseType = 'blob'
+        request.credentials = 'omit'
+        request.mode = 'no-cors'
+
+        request.onload = function() {
+          request.response.status = request.status
+          resolve(request.response)
+        }
+        
+        request.onerror = function() {
+          request.response.status = request.status
+          resolve(request.error)
+        }
+
+        request.send()
+      })
+      */
+      fetch(url, {responseType: 'blob'})
+        .catch(function (e) { console.log(e) })
+        .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
               xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
-              if (opts.onload) {
-                opts.onload(xhrError, null)
-              }
               return
-            }
-            if(!xhrError)
+            } else
               return response.arrayBuffer()
-                .then(data => {
-                  if (opts.dataType === 'json') {
-                    try {
-                      data = JSON.parse(data)
-                    } catch (e) {
-                      xhrError = e
-                    }
-                  }
-                  if (opts.onload) {
-                    opts.onload(xhrError, data)
-                  }
-                })
+        })
+        .then(function (data) {
+          if(xhrError) {
+            if (opts.onload) {
+              opts.onload(xhrError, null)
+            }
+            return
+          }
+          if (opts.dataType === 'json') {
+            try {
+              data = JSON.parse(data)
+            } catch (e) {
+              xhrError = e
+            }
+          }
+          if (opts.onload) {
+            opts.onload(xhrError, data)
+          }
         })
     },
-    DownloadLazyFinish: function (indexFilename, file) {
+    DownloadLazyFinish: function (file) {
+      var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
 			SYSF.index[indexFilename].downloading = false
-      SYSF.index[indexFilename].alreadyDownloaded = true
-      var replaceFunc = (path) => {
-        SYSF.fs_replace.forEach(r => path = path.replace(r, ''))
+      SYSF.index[indexFilename].alreadyDownloaded += true
+      var replaceFunc = function (path) {
+        SYSF.fs_replace.forEach(function (r) { path = path.replace(r, '') })
         return path
       }
 			if(file[1].match(/\.opus|\.wav|\.ogg/i)) {
@@ -88,14 +130,14 @@ var LibrarySysNet = {
 				} else {
 					SYS.soundCallback.unshift(replaceFunc(file[1]))
 				}
-				SYS.soundCallback = SYS.soundCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.soundCallback = SYS.soundCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			} else if(file[1].match(/\.md3|\.iqm|\.mdr/i)) {
 				if(file[0]) {
 					SYS.modelCallback.unshift(replaceFunc(file[0]))
 				} else {
 					SYS.modelCallback.unshift(replaceFunc(file[1]))
 				}
-				SYS.modelCallback = SYS.modelCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.modelCallback = SYS.modelCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			} else if(SYSF.index[indexFilename].shaders.length > 0) {
 				if(file[0]) {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, [replaceFunc(file[0])]
@@ -103,11 +145,11 @@ var LibrarySysNet = {
 				} else {
 					SYS.shaderCallback.unshift.apply(SYS.shaderCallback, SYSF.index[indexFilename].shaders)
 				}
-				SYS.shaderCallback = SYS.shaderCallback.filter((s, i, arr) => arr.indexOf(s) === i)
+				SYS.shaderCallback = SYS.shaderCallback.filter(function (s, i, arr) { return arr.indexOf(s) === i })
 			}
 		},
 		DownloadLazySort: function () {
-			SYSN.downloadLazy.sort((a, b) => {
+			SYSN.downloadLazy.sort(function (a, b) {
 				var aIndex = typeof a == 'string'
 					? PATH.join(SYSF.fs_basepath, a)
 					: PATH.join(SYSF.fs_basepath, a[1])
@@ -124,117 +166,265 @@ var LibrarySysNet = {
 			})
 		},
 		DownloadLazy: function () {
-			if(SYSN.downloadLazy.length == 0 || SYSN.downloads.length > 0) return
-			// if we haven't sorted the list in a while, sort by number of references to file
-			if(_Sys_Milliseconds() - SYSN.downloadSort > 1000) {
-				//SYSN.DownloadLazySort()
-				SYSN.downloadSort = _Sys_Milliseconds()
+      // don't download lazy if we are downloading immediately already
+      if(SYSN.downloads.length > 0) return
+      // if we haven't sorted the list in a while, sort by number of references to file
+      // TODO: uncomment this when syncfs is working
+			if(Date.now() - SYSN.downloadSort > 1000
+        && SYSN.downloadsCompleted.length > 0
+        && !SYSN.downloadsSyncing) {
+        SYSN.downloadsSyncing = true
+				//SYSN.DownloadLazySort() // get stuck in a loop which might be fixed by .alreadyDownloaded
+				SYSN.downloadSort = Date.now()
+        FS.syncfs(true, function () {
+          var complete
+          while((complete = SYSN.downloadsCompleted.pop())) {
+            SYSN.DownloadLazyFinish(complete)
+          }
+          SYSN.downloadsSyncing = false
+        })
 			}
+      
+			if(SYSN.downloadLazy.length == 0) return
 			var file = SYSN.downloadLazy.pop()
 			if(!file) return
 			if(typeof file == 'string') {
 				file = [0, file]
 			}
-			var indexFilename = PATH.join(SYSF.fs_basepath, file[1]).toLowerCase()
-			SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(file[1])))
 			// if already exists somehow just call the finishing function
 			try {
 				var handle = FS.stat(PATH.join(SYSF.fs_basepath, file[1]))
 				if(handle) {
-					return SYSN.DownloadLazyFinish(indexFilename, file)
+					return SYSN.downloadsCompleted.push(file)
 				}
 			} catch (e) {
 				if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.ENOENT) {
 					SYSC.Error('fatal', e.message)
 				}
 			}
-			SYSC.DownloadAsset(file[1], () => {}, (err, data) => {
-				if(err) {
-					return
-				}
-        try {
-          FS.writeFile(PATH.join(SYSF.fs_basepath, file[1]), new Uint8Array(data), {
-  					encoding: 'binary', flags: 'w', canOwn: true })
-        } catch (e) {
-          if (!(e instanceof FS.ErrnoError) || e.errno !== ERRNO_CODES.EEXIST) {
-            SYSC.Error('fatal', e.message)
-          }
-        }
-				SYSN.DownloadLazyFinish(indexFilename, file)
-			})
+      SYSF.downloadSingle(file[1], function () {
+        SYSN.downloadsCompleted.push(file)
+      })
 		},
+    buildAlternateUrls: function (mod) {
+      var origMod = mod.replace(/-cc*r*/ig, '')
+      var hasOldURL = SYSC.oldDLURL.length > 0
+      SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + mod + '/')
+      if(hasOldURL) {
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + mod + '/')
+      }
+      // all of these test links are in case someone fucks up conversion or startup
+      //if(SYSF.mods.map(function (f) {return f[0]}).includes(origMod)) {
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + origMod + '-cc/')
+        if(hasOldURL)
+          SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-cc/')
+        SYSN.downloadTries.push(SYSN.addProtocol(SYSC.newDLURL) + '/' + origMod + '-ccr/')
+        if(hasOldURL)
+          SYSN.downloadTries.push(SYSN.addProtocol(SYSC.oldDLURL) + '/' + origMod + '-ccr/')
+      //}
+      SYSN.downloadTries = SYSN.downloadTries.filter(function (a, i, arr) {
+        return arr.indexOf(a) === i
+      })
+    },
 		DownloadIndex: function (index, cb) {
-			SYSC.DownloadAsset(index + '/index.json', SYSN.LoadingProgress, (err, data) => {
+      var filename = index.includes('.json') ? index : index + '/index.json'
+      var basename = PATH.dirname(filename)
+      var mod = index.replace(/^\//ig, '').split(/\//ig)[0]
+      var origMod = mod.replace(/-cc?r?\//ig, '\/')
+      SYSN.buildAlternateUrls(mod)
+			SYSN.DownloadAsset(filename, SYSN.LoadingProgress, function (err, data, baseUrl) {
 				if(err) {
 					SYSN.LoadingDescription('')
 					cb()
 					return
 				}
+        SYSN.downloadAlternates.push(baseUrl)
 				var moreIndex = (JSON.parse((new TextDecoder("utf-8")).decode(data)) || [])
-				SYSF.index = Object.keys(moreIndex).reduce((obj, k) => {
-          if(typeof obj[k.toLowerCase()] == 'undefined') {
-            obj[k.toLowerCase()] = moreIndex[k]
+				SYSF.index = Object.keys(moreIndex).reduce(function (obj, k) {
+          // TODO: make this more generalized and replace first directory after /base
+          var newKey = k.toLowerCase().replace(new RegExp(origMod + '(-cc?r?)?\/', 'ig'), mod + '/')
+          if(typeof obj[newKey] == 'undefined') {
+            obj[newKey] = moreIndex[k]
             // we use the downloading key because it doesn't
             //   come with the index.json from the server
             //   so we only recreate local paths once because it is saved below
             //   then it can be used by the engine to check for remote resources
             //   like FS_MapInIndex() or demos and cinematics files
-            if(typeof obj[k.toLowerCase()].downloading == 'undefined') {
-              obj[k.toLowerCase()].name = PATH.join(index, moreIndex[k].name)
-              obj[k.toLowerCase()].shaders = []
-              obj[k.toLowerCase()].downloading = false
+            if(typeof obj[newKey].downloading == 'undefined') {
+              obj[newKey].name = PATH.join(basename, moreIndex[k].name)
+              obj[newKey].shaders = []
+              obj[newKey].downloading = false
             }
+            obj[newKey].alreadyDownloaded = false
           }
 					return obj
 				}, SYSF.index || {})
 				var bits = intArrayFromString('{' + Object.keys(SYSF.index)
-					.map(k => '"' + k + '":' + JSON.stringify(SYSF.index[k])).join(',')
+					.map(function (k) {
+            return '"' + k + '":' + JSON.stringify(SYSF.index[k].checksums ? {
+              checksums: SYSF.index[k].checksums
+            } : {})
+          })
+          .join(',')
 					+ '}')
-				FS.writeFile(PATH.join(SYSF.fs_basepath, index, "index.json"),
+        var gameIndex = PATH.join(SYSF.fs_basepath, basename, "index.json")
+        SYSF.index[gameIndex.toLowerCase()] = {
+          name: gameIndex,
+          size: bits.length,
+          shaders: [],
+          downloading: false,
+          alreadyDownloaded: true,
+        }
+				FS.writeFile(gameIndex,
 				 	Uint8Array.from(bits.slice(0, bits.length-1)),
 					{encoding: 'binary', flags: 'w', canOwn: true })
 				cb()
 			})
 		},
+    addProtocol: function (url) { 
+			return url.includes('://')
+				? url
+				: window
+					? (window.location.protocol + '//' + url)
+					: ('https://' + url)
+		},
+    DownloadAsset: function (asset, onprogress, onload) {
+      var segments = asset.replace(/^\//ig, '').split(/\//ig)
+			var noMod = segments.length > 1 ? segments.slice(1).join('/') : segments[0]
+			var tryDownload = 0
+      SYSN.downloadTries.sort(function (a, b) { 
+        return b.includes(segments[0]) - a.includes(segments[0])
+      })
+			var doDownload = function (baseUrl) {
+				SYSN.DoXHR(baseUrl + noMod, {
+					dataType: 'arraybuffer',
+					onprogress: onprogress,
+					onload: function (err, data) {
+						tryDownload++
+						if(err && tryDownload < SYSN.downloadTries.length) {
+							doDownload(SYSN.downloadTries[tryDownload])
+							return
+						}
+            if(onload)
+						  onload(err, data, baseUrl)
+					}
+				})
+			}
+      if(segments.length > 1) {
+  			doDownload(SYSN.downloadTries[0])
+      } else {
+        doDownload('')
+      }
+		},
   },
   Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
-    var fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
-    
-    FS.syncfs(false, (e) => {
+    SYSN.LoadingDescription('')
+    SYSN.downloads.push(cl_downloadName)
+    SYSN.downloadTries = []
+    var alts = SYSN.downloadAlternates
+    var mod = cl_downloadName.replace(/^\//ig, '').split(/\//ig)[0]
+    SYSN.buildAlternateUrls(mod)
+    SYSN.buildAlternateUrls(SYSF.fs_basegame)
+    if(SYSF.fs_game.length > 0)
+      SYSN.buildAlternateUrls(SYSF.fs_game)
+    FS.syncfs(!SYS.servicable, function (e) {
       if(e) console.log(e)
-      SYSC.mkdirp(PATH.join(fs_basepath, PATH.dirname(cl_downloadName)))
-      SYSC.DownloadAsset(cl_downloadName, (loaded, total) => {
+      SYSN.DownloadAsset(cl_downloadName, function (loaded, total) {
         SYSC.Cvar_SetValue('cl_downloadSize', total);
         SYSC.Cvar_SetValue('cl_downloadCount', loaded);
-      }, (err, data) => {
+      }, function (err, data) {
+        SYSN.downloads = []
+        SYSN.downloadAlternates = SYSN.downloadTries = alts
         if(err) {
-          SYSC.Error('drop', 'Download Error: ' + err.message)
+          SYSC.Cvar_SetString('fs_excludeReference', 
+            SYSC.Cvar_VariableString('fs_excludeReference')
+            + cl_downloadName.replace(/\.pk3$/ig, ''))
+          SYSC.Print('Download Error: ' + err.message)
         } else {
-          //FS.writeFile(PATH.join(fs_basepath, cl_downloadName), new Uint8Array(data), {
-          //  encoding: 'binary', flags: 'w', canOwn: true })
+          var newKey = PATH.join(SYSF.fs_basepath, cl_downloadName)
+          // TODO: don't need to save here because service-worker fetch() already did
+          //if(!SYS.servicable) {
+            SYSC.mkdirp(PATH.join(SYSF.fs_basepath, PATH.dirname(cl_downloadName)))
+            FS.writeFile(PATH.join(SYSF.fs_basepath, cl_downloadName), new Uint8Array(data), {
+              encoding: 'binary', flags: 'w', canOwn: true })
+          //}
+          // do need to add ad-hoc server downloads to the index
+          SYSF.index[newKey.toLowerCase()] = {
+            name: newKey.replace(SYSF.fs_basepath, ''),
+            // would try to delete/origMod /baseq3/ but we just add it back on in DownloadIndex
+            size: new Uint8Array(data).length,
+            shaders: [],
+            downloading: false,
+            alreadyDownloaded: true,
+          }
         }
-        FS.syncfs(false, Browser.safeCallback(_CL_NextDownload))
+        FS.syncfs(SYS.servicable, Browser.safeCallback(_CL_Outside_NextDownload))
       })
     })
   },
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksConnect: function () {
-    var timer = setTimeout(Browser.safeCallback(_SOCKS_Frame_Proxy), 10000)
-    var callback = () => {
-      clearTimeout(timer)
+    SYSN.socksfd = 0
+    SYSN.socksConnect = setTimeout(function () {
+      // broken
+      SYSN.socksfd = 0
+      clearInterval(SYSN.socksInterval)
+      SYSN.socksInterval = 0
+      Browser.safeCallback(_SOCKS_Frame_Proxy)()
+    }, 10000)
+    var callback = function () {
+      if(SYSN.socksConnect) {
+        clearTimeout(SYSN.socksConnect)
+        SYSN.socksConnect = 0
+      }
       Browser.safeCallback(_SOCKS_Frame_Proxy)()
     }
-    Module['websocket'].on('open', callback)
+    if(!SYSN.socksInterval) {
+      SYSN.socksInterval = setInterval(function () {
+        if(!SYSN.peer || !SYSN.sock || !SYSN.socksfd) return
+        if(SYSN.peer.socket.readyState == SYSN.peer.socket.OPEN) {
+          SYSN.peer.socket.send(Uint8Array.from([0x05, 0x01, 0x00, 0x00]),
+            { binary: true })
+        } else if(SYSN.peer.socket.readyState == SYSN.peer.socket.CLOSED) {
+          var newSocket = new WebSocket(SYSN.peer.socket.url)
+          newSocket.binaryType = 'arraybuffer';
+          SYSN.peer.socket = newSocket
+          SOCKFS.websocket_sock_ops.handlePeerEvents(SYSN.sock, SYSN.peer)
+          SYSN.reconnect = true
+        }
+      }, 1000)
+    }
+    var socksOpen = function (id) {
+      SYSN.socksfd = id
+      if(SYSN.socksfd) {
+        SYSN.sock = SOCKFS.getSocket(SYSN.socksfd)
+        SYSN.peer = Object.values(SYSN.sock.peers)[0]
+        SYSN.port = SYSC.Cvar_VariableIntegerValue('net_port')
+        if(SYSN.reconnect) {
+          SYSN.reconnect = false
+          SYSN.peer.socket.send(Uint8Array.from([
+            0xFF, 0xFF, 0xFF, 0xFF,
+            'p'.charCodeAt(0), 'o'.charCodeAt(0), 'r'.charCodeAt(0), 't'.charCodeAt(0),
+            (SYSN.port & 0xFF00) >> 8, (SYSN.port & 0xFF)
+          ]))
+        }
+      }
+      callback()
+    }
+    Module['websocket'].on('open', socksOpen)
     Module['websocket'].on('message', callback)
     Module['websocket'].on('error', callback)
+    //Module['websocket'].on('close', function () {
+    //  SYSN.socksfd = 0
+    //})
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
   Sys_SocksMessage: function () {},
   Sys_NET_MulticastLocal: function (net, length, data) {
     // prevent recursion because NET_SendLoopPacket will call here again
-    if(SYSN.multicasting) return
+    if(SYSN.multicasting || typeof window.serverWorker == 'undefined') return
     SYSN.multicasting = true
     window.serverWorker.postMessage([
       'net',

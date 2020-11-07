@@ -36,17 +36,17 @@ static const char *svc_strings[256] = {
 	"svc_EOF",
 	"svc_voipSpeex", // ioq3 extension
 	"svc_voipOpus",  // ioq3 extension
-	#ifdef USE_MV
-		NULL, // 11
-		NULL, // 12
-		NULL, // 13
-		NULL, // 14
-		NULL, // 15
-		"svc_multiview",  // 1.32e multiview extension
-	#ifdef USE_MV_ZCMD
-		"svc_zcmd",       // LZ-compressed version of svc_serverCommand
-	#endif
-	#endif
+#ifdef USE_MV
+	NULL, // 11
+	NULL, // 12
+	NULL, // 13
+	NULL, // 14
+	NULL, // 15
+	"svc_multiview",  // 1.32e multiview extension
+#ifdef USE_MV_ZCMD
+	"svc_zcmd",       // LZ-compressed version of svc_serverCommand
+#endif
+#endif
 };
 
 void SHOWNET( msg_t *msg, const char *s ) {
@@ -457,9 +457,9 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	SHOWNET( msg, "packet entities" );
 	CL_ParsePacketEntities( msg, old, &newSnap );
 
-	#ifdef USE_MV
+#ifdef USE_MV
 	} // !extended snapshot
-	#endif
+#endif
 
 	// if not valid, dump the entire thing now that it has
 	// been properly read
@@ -580,11 +580,14 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		// check pure server string
 		s = Info_ValueForKey( systemInfo, "sv_paks" );
 		t = Info_ValueForKey( systemInfo, "sv_pakNames" );
+Com_Printf("Paks: %s\n\nNames: %s\n\n", s, t);
 		FS_PureServerSetLoadedPaks( s, t );
+Com_Printf("Checksum feed: %i\n", clc.checksumFeed);
 
 		s = Info_ValueForKey( systemInfo, "sv_referencedPaks" );
 		t = Info_ValueForKey( systemInfo, "sv_referencedPakNames" );
 		FS_PureServerSetReferencedPaks( s, t );
+Com_Printf("Paks: %s\n\nNames: %s\n\n", s, t);
 	}
 
 	// scan through all the variables in the systeminfo and locally set cvars to match
@@ -767,7 +770,14 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_VariableStringBuffer( "fs_game", oldGame, sizeof( oldGame ) );
 
 	// parse useful values out of CS_SERVERINFO
+	Com_Printf("Gamestate: %s\n", cl.gameState.stringData
+		+ cl.gameState.stringOffsets[ CS_SERVERINFO ]);
 	CL_ParseServerInfo();
+	
+#ifdef USE_LNBITS
+	Cvar_Set("cl_lnInvoice", "");
+	cls.qrCodeShader = 0;
+#endif
 
 	// parse serverId and other cvars
 	CL_SystemInfoChanged( qtrue );
@@ -814,10 +824,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
 	Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
+	FS_Startup();
 	if(*clc.sv_dlURL) {
 		Cvar_Set( "sv_dlURL", clc.sv_dlURL );
 	}
-	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_Game_After_Startup);
 }
 
@@ -990,6 +1000,22 @@ static void CL_ParseDownload( msg_t *msg ) {
 }
 
 
+#ifdef EMSCRIPTEN
+static void CL_ParseCommand_After_Startup ( void ) {
+	FS_Restart_After_Async();
+	CL_FlushMemory();
+	if ( uivm ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	}
+}
+
+static void CL_ParseCommand_After_Shutdown( void ) {
+	FS_Startup();
+	Com_Frame_Callback(Sys_FS_Startup, CL_ParseCommand_After_Startup);
+}
+#endif
+
+
 /*
 =====================
 CL_ParseCommandString
@@ -1029,7 +1055,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 #endif
 	// -EC- : we may stuck on downloading because of non-working cgvm
 	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state == CA_PRIMED ) ) {
+	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state <= CA_PRIMED ) ) {
 		const char *text;
 		Cmd_TokenizeString( s );
 		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {
@@ -1038,6 +1064,11 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			Com_Printf( "%s\n", text );
 			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
+#ifdef EMSCRIPTEN
+				if(!FS_Initialized()) {
+					Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseCommand_After_Shutdown);
+				}
+#endif
 			}
 			return;
 		}

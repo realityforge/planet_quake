@@ -215,7 +215,9 @@ void R_ImageList_f( void ) {
 				estSize *= 8;
 				break;
 			case GL_RGBA4:
+#ifndef EMSCRIPTEN
 			case GL_RGBA8:
+#endif
 			case GL_RGBA:
 				format = "RGBA   ";
 				// 4 bytes per pixel
@@ -227,7 +229,9 @@ void R_ImageList_f( void ) {
 				// 1 byte per pixel?
 				break;
 			case GL_RGB5:
+#ifndef EMSCRIPTEN
 			case GL_RGB8:
+#endif
 			case GL_RGB:
 				format = "RGB    ";
 				// 3 bytes per pixel?
@@ -1647,7 +1651,9 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 	qboolean forceNoCompression = (flags & IMGFLAG_NO_COMPRESSION);
 	qboolean normalmap = (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT);
 
+#ifndef EMSCRIPTEN
 	if (picFormat != GL_RGBA8)
+#endif
 		return picFormat;
 
 	if(normalmap)
@@ -1668,7 +1674,7 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 			}
 			else if ( r_texturebits->integer == 32 )
 			{
-				internalFormat = GL_RGBA;
+				internalFormat = GL_RGBA8;
 			}
 			else
 			{
@@ -1780,7 +1786,7 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 				}
 				else if ( r_texturebits->integer == 32 )
 				{
-					internalFormat = GL_RGBA;
+					internalFormat = GL_RGBA8;
 				}
 				else
 				{
@@ -1911,7 +1917,6 @@ static int CalculateMipSize(int width, int height, GLenum picFormat)
 		case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB:
 			return numBlocks * 16;
 
-		case GL_RGBA:
 		case GL_RGBA8:
 		case GL_SRGB8_ALPHA8_EXT:
 			return numPixels * 4;
@@ -1947,7 +1952,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 {
 	GLenum dataFormat, dataType;
 	qboolean rgtc = internalFormat == GL_COMPRESSED_RG_RGTC2;
-	qboolean rgba8 = picFormat == GL_RGBA || picFormat == GL_SRGB8_ALPHA8_EXT;
+	qboolean rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean rgba = rgba8 || picFormat == GL_RGBA16;
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP);
 	int size, miplevel;
@@ -1969,7 +1974,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 
 		if (!rgba)
 		{
-			GLDSA_CompressedTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, picFormat, size, data);
+			qglCompressedTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, picFormat, size, data);
 		}
 		else
 		{
@@ -1979,7 +1984,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 			if (rgba8 && rgtc)
 				RawImage_UploadToRgtc2Texture(texture, miplevel, x, y, width, height, data);
 			else
-				GLDSA_TextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, dataFormat, dataType, data);
+				qglTextureSubImage2DEXT(texture, target, miplevel, x, y, width, height, dataFormat, dataType, data);
 		}
 
 		if (!lastMip && numMips < 2)
@@ -2028,7 +2033,7 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 	imgType_t type = image->type;
 	imgFlags_t flags = image->flags;
 	GLenum internalFormat = image->internalFormat;
-	qboolean rgba8 = picFormat == GL_RGBA || picFormat == GL_SRGB8_ALPHA8_EXT;
+	qboolean rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean mipmap = !!(flags & IMGFLAG_MIPMAP) && (rgba8 || numMips > 1);
 	qboolean cubemap = !!(flags & IMGFLAG_CUBEMAP);
 
@@ -2094,6 +2099,39 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 
 
 /*
+======================
+S_FreeOldestSound
+======================
+*/
+image_t *R_FreeOldestImage( void ) {
+	int	i, oldest, used;
+	image_t	*image;
+
+	oldest = ri.Milliseconds();
+	used = 0;
+
+	for ( i = 1 ; i < tr.numImages ; i++ ) {
+		image = tr.images[i];
+		if ( (!image->lastTimeUsed || !image->texnum || image->lastTimeUsed - oldest < 0)
+			&& image->imgName[0] != '*'
+		 	&& image->lastTimeUsed < tr.lastRegistrationTime) {
+			used = i;
+			oldest = image->lastTimeUsed;
+		}
+	}
+
+	image = tr.images[used];
+	
+	ri.Printf(PRINT_DEVELOPER, "R_FreeOldestImage: freeing image %s\n", image->imgName);
+	
+	if(image->texnum)
+		qglDeleteTextures( 1, &image->texnum );
+	Com_Memset(image, 0, sizeof( *image ));
+	
+	return image;
+}
+
+/*
 ================
 R_CreateImage2
 
@@ -2106,7 +2144,7 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	qboolean    isLightmap = qfalse, scaled = qfalse;
 	long        hash;
 	int         glWrapClampMode, mipWidth, mipHeight, miplevel;
-	qboolean    rgba8 = picFormat == GL_RGBA || picFormat == GL_SRGB8_ALPHA8_EXT;
+	qboolean    rgba8 = picFormat == GL_RGBA8 || picFormat == GL_SRGB8_ALPHA8_EXT;
 	qboolean    mipmap = !!(flags & IMGFLAG_MIPMAP);
 	qboolean    cubemap = !!(flags & IMGFLAG_CUBEMAP);
 	qboolean    picmip = !!(flags & IMGFLAG_PICMIP);
@@ -2124,10 +2162,13 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	}
 
 	if ( tr.numImages == MAX_DRAWIMAGES ) {
-		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
-	}
-
-	image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+		image = R_FreeOldestImage();
+		if(!image) {
+			ri.Printf( PRINT_WARNING, "R_CreateImage: MAX_DRAWIMAGES hit");
+			return NULL;
+		}
+	} else
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
 	qglGenTextures(1, &image->texnum);
 	tr.numImages++;
 
@@ -2147,6 +2188,7 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	if (!internalFormat)
 		internalFormat = RawImage_GetFormat(pic, width * height, picFormat, isLightmap, image->type, image->flags);
 
+	image->lastTimeUsed = tr.lastRegistrationTime;
 	image->internalFormat = internalFormat;
 
 	// Possibly scale image before uploading.
@@ -2251,7 +2293,7 @@ Wrapper for R_CreateImage2(), for the old parameters.
 */
 image_t *R_CreateImage(const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, int internalFormat)
 {
-	return R_CreateImage2(name, pic, width, height, GL_RGBA, 0, type, flags, internalFormat);
+	return R_CreateImage2(name, pic, width, height, GL_RGBA8, 0, type, flags, internalFormat);
 }
 
 
@@ -2308,7 +2350,7 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 	*pic = NULL;
 	*width = 0;
 	*height = 0;
-	*picFormat = GL_RGBA;
+	*picFormat = GL_RGBA8;
 	*numMips = 0;
 
 	Q_strncpyz( localName, name, sizeof( localName ) );
@@ -2396,8 +2438,8 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		{
 			if( orgNameFailed )
 			{
-				ri.Printf( PRINT_DEVELOPER, "WARNING: %s not present, using %s instead\n",
-						name, altName );
+				//ri.Printf( PRINT_DEVELOPER, "WARNING: %s not present, using %s instead\n",
+				//		name, altName );
 			}
 
 			break;
@@ -2441,6 +2483,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
 				}
 			}
+			image->lastTimeUsed = tr.lastRegistrationTime;
 			return image;
 		}
 	}
@@ -2455,7 +2498,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 
 	checkFlagsTrue = IMGFLAG_PICMIP | IMGFLAG_MIPMAP | IMGFLAG_GENNORMALMAP;
 	checkFlagsFalse = IMGFLAG_CUBEMAP;
-	if (r_normalMapping->integer && (picFormat == GL_RGBA) && (type == IMGTYPE_COLORALPHA) &&
+	if (r_normalMapping->integer && (picFormat == GL_RGBA8) && (type == IMGTYPE_COLORALPHA) &&
 		((flags & checkFlagsTrue) == checkFlagsTrue) && !(flags & checkFlagsFalse))
 	{
 		char normalName[MAX_QPATH];
@@ -2560,7 +2603,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	}
 
 	// force mipmaps off if image is compressed but doesn't have enough mips
-	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA && picFormat != GL_SRGB8_ALPHA8_EXT)
+	if ((flags & IMGFLAG_MIPMAP) && picFormat != GL_RGBA8 && picFormat != GL_SRGB8_ALPHA8_EXT)
 	{
 		int wh = MAX(width, height);
 		int neededMips = 0;
@@ -2784,11 +2827,11 @@ void R_CreateBuiltinImages( void ) {
 		width = glConfig.vidWidth;
 		height = glConfig.vidHeight;
 
-		hdrFormat = GL_RGBA;
+		hdrFormat = GL_RGBA8;
 		if (r_hdr->integer && glRefConfig.textureFloat)
 			hdrFormat = GL_RGBA16F_ARB;
 
-		rgbFormat = GL_RGBA;
+		rgbFormat = GL_RGBA8;
 
 		tr.renderImage = R_CreateImage("_render", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
@@ -2820,16 +2863,16 @@ void R_CreateBuiltinImages( void ) {
 
 		for (x = 0; x < 2; x++)
 		{
-			tr.textureScratchImage[x] = R_CreateImage(va("*textureScratch%d", x), NULL, 256, 256, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA);
+			tr.textureScratchImage[x] = R_CreateImage(va("*textureScratch%d", x), NULL, 256, 256, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 		for (x = 0; x < 2; x++)
 		{
-			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA);
+			tr.quarterImage[x] = R_CreateImage(va("*quarter%d", x), NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
 		if (r_ssao->integer)
 		{
-			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA);
+			tr.screenSsaoImage = R_CreateImage("*screenSsao", NULL, width / 2, height / 2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
 		for( x = 0; x < MAX_DRAWN_PSHADOWS; x++)
@@ -2848,7 +2891,7 @@ void R_CreateBuiltinImages( void ) {
 				qglTextureParameterfEXT(tr.sunShadowDepthImage[x]->texnum, GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			}
 
-			tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA);
+			tr.screenShadowImage = R_CreateImage("*screenShadow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, GL_RGBA8);
 		}
 
 		if (r_cubeMapping->integer)

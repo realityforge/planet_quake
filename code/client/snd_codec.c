@@ -125,8 +125,8 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		{
 			if( orgNameFailed )
 			{
-				Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
-						filename, altName );
+				//Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
+				//		filename, altName );
 			}
 
 			return rtn;
@@ -189,9 +189,9 @@ S_CodecLoad
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
 	void *result;
-	ri.Cvar_Set( "snd_loadingSound", filename );	
+	Cvar_Set( "snd_loadingSound", filename );	
 	result = S_CodecGetSound(filename, info);
-	ri.Cvar_Set( "snd_loadingSound", "" );	
+	Cvar_Set( "snd_loadingSound", "" );	
 
 	return result;
 }
@@ -204,9 +204,9 @@ S_CodecOpenStream
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
 	snd_stream_t *result;
-	ri.Cvar_Set( "snd_loadingSound", filename );	
+	Cvar_Set( "snd_loadingSound", filename );	
 	result = S_CodecGetSound(filename, NULL);
-	ri.Cvar_Set( "snd_loadingSound", "" );	
+	Cvar_Set( "snd_loadingSound", "" );	
 
 	return result;
 }

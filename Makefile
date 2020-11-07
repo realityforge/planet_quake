@@ -163,6 +163,8 @@ RJSDIR=$(MOUNT_DIR)/rendererjs
 RVDIR=$(MOUNT_DIR)/renderervk
 RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
+OGGDIR=$(MOUNT_DIR)/ogg
+VORBISDIR=$(MOUNT_DIR)/vorbis
 OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
 OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 CMDIR=$(MOUNT_DIR)/qcommon
@@ -307,6 +309,9 @@ else # ifeq Linux
 ifeq ($(PLATFORM),darwin)
   HAVE_VM_COMPILED = 0
   USE_SDL = 1
+	
+  USE_RENDERER_DLOPEN = 0
+  BUILD_RENDERER_OPENGL2 = 1
   USE_LOCAL_HEADERS = 0
   USE_CODEC_OPUS=0
   USE_CODEC_VORBIS=0
@@ -386,9 +391,9 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(USE_CURL),1)
-    CLIENT_CFLAGS += $(CURL_CFLAGS)
+    BASE_CFLAGS += -DUSE_CURL
     ifneq ($(USE_CURL_DLOPEN),1)
-      CLIENT_LIBS += $(CURL_LIBS)
+      BASE_CFLAGS += -DUSE_CURL_DLOPEN
     endif
   endif
 
@@ -514,7 +519,6 @@ ifdef MINGW
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
-    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
     ifeq ($(ARCH),x86)
       CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
       CLIENT_LDFLAGS += -lSDL2
@@ -664,11 +668,11 @@ endif
   ARCH=js
   BINEXT=.js
 
-
   DEBUG=0
   EMCC_DEBUG=0
 
   HAVE_VM_COMPILED=true
+  BUILD_CLIENT=1
   BUILD_SERVER=0
   BUILD_GAME_QVM=1
   BUILD_GAME_SO=0
@@ -678,21 +682,21 @@ endif
   BUILD_RENDERER_OPENGL2=1
   BUILD_RENDERER_OPENGLES=0
 
+  USE_Q3KEY=1
   USE_IPV6=0
   USE_SDL=1
   USE_VULKAN=0
   USE_CURL=0
+  USE_CURL_DLOPEN=0
   USE_CODEC_VORBIS=1
-  USE_CODEC_OPUS=0
+  USE_CODEC_OPUS=1
   USE_FREETYPE=0
   USE_MUMBLE=0
   USE_VOIP=0
   SDL_LOADSO_DLOPEN=0
-  USE_CURL_DLOPEN=0
   USE_OPENAL_DLOPEN=0
   USE_RENDERER_DLOPEN=0
   USE_LOCAL_HEADERS=0
-  USE_INTERNAL_LIBS=1
   GL_EXT_direct_state_access=1
   GL_ARB_ES2_compatibility=1
   GL_GLEXT_PROTOTYPES=1
@@ -700,41 +704,42 @@ endif
   BASE_CFLAGS = \
 	  -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
 		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
+		-DUSE_Q3KEY -DUSE_MD5 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2
-
-ifneq ($(USE_CODEC_VORBIS),0)
-  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
-endif
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include/SDL2
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
-    -O1 --closure 0 --minify 0 -g -g3 \
+    -O1 -g3 \
 		-s WASM=1 \
+		-s MODULARIZE=0 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
-    --source-map-base http://localhost:8080/ \
     -frtti \
     -fPIC
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
-    -O3 -Oz -flto \
+    -O3 -Oz \
     -s WASM=1 \
+		-s MODULARIZE=0 \
     -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=0 \
+    -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -flto \
     -fPIC
 
 ifneq ($(USE_CODEC_OPUS),0)
   RELEASE_CFLAGS += \
-		-DUSE_CODEC_OPUS \
+		-DUSE_CODEC_OPUS=1 \
     -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
 		-I$(OPUSDIR)/include \
 		-I$(OPUSDIR)/celt \
@@ -742,6 +747,56 @@ ifneq ($(USE_CODEC_OPUS),0)
     -I$(OPUSDIR)/silk/float \
 		-I$(OPUSFILEDIR)/include 
 endif
+
+ifneq ($(USE_CODEC_VORBIS),0)
+  RELEASE_CFLAGS += \
+	  -DUSE_CODEC_VORBIS=1 \
+    -I$(OGGDIR)/ \
+    -I$(VORBISDIR)/
+endif
+
+  SHLIBCFLAGS = \
+		-DEMSCRIPTEN \
+	  -fvisibility=hidden \
+		-O1 -g3 \
+		-s STRICT=1 \
+		-s AUTO_JS_LIBRARIES=0 \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+		-s SIDE_MODULE=1 \
+		-s RELOCATABLE=0 \
+		-s LINKABLE=1 \
+		-s EXPORT_ALL=1 \
+		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
+		-s ALLOW_TABLE_GROWTH=1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s GL_UNSAFE_OPTS=0 \
+		-s LEGACY_GL_EMULATION=0 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
+		-s USE_SDL=2 \
+		-s EXPORT_NAME=\"quake3e_opengl2_js\" \
+		-s WASM=0 \
+		-s MODULARIZE=0 \
+    -s SAFE_HEAP=1 \
+    -s DEMANGLE_SUPPORT=1 \
+    -s ASSERTIONS=1 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -frtti \
+    -fPIC
+
+ifeq ($(USE_RENDERER_DLOPEN),1)
+  CLIENT_LDFLAGS += \
+		-s EXPORT_ALL=1 \
+		-s DECLARE_ASM_MODULE_EXPORTS=1 \
+		-s LINKABLE=1 \
+		-s INCLUDE_FULL_LIBRARY=1
+endif
+
+  SHLIBEXT=js
 
 #  --llvm-lto 3
 #   -s USE_WEBGL2=1
@@ -753,30 +808,37 @@ endif
 # --cache $(EMSCRIPTEN_CACHE) \
 
   CLIENT_LDFLAGS += \
-    --js-library $(QUAKEJS)/sys_common.js \
-    --js-library $(QUAKEJS)/sys_browser.js \
-    --js-library $(QUAKEJS)/sys_net.js \
+		-lbrowser.js \
+		-lasync.js \
+		-lidbfs.js \
+		-lsdl.js \
+		-lwebgl.js \
+		-lwebgl2.js \
+		--js-library $(QUAKEJS)/sys_common.js \
+		--js-library $(QUAKEJS)/sys_browser.js \
+		--js-library $(QUAKEJS)/sys_net.js \
 		--js-library $(QUAKEJS)/sys_files.js \
 		--js-library $(QUAKEJS)/sys_input.js \
 		--js-library $(QUAKEJS)/sys_main.js \
 		--js-library $(CMDIR)/vm_js.js \
-    -lidbfs.js \
-    -lsdl.js \
-		-lglemu.js \
-		-lwebgl.js \
-		-lwebgl2.js \
-    -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 \
+		--pre-js $(QUAKEJS)/sys_polyfill.js \
+		--post-js $(QUAKEJS)/sys_overrides.js \
+		-s RELOCATABLE=0 \
+		-s STRICT=1 \
+		-s AUTO_JS_LIBRARIES=0 \
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+    -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
-    -s GL_UNSAFE_OPTS=0 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
-    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['SYS', 'SYSC', 'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
+		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \
-    -s MEMFS_APPEND_TO_TYPED_ARRAYS=1 \
-    -s TOTAL_MEMORY=256MB \
+    -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \
+		-s GL_UNSAFE_OPTS=0 \
     -s LEGACY_GL_EMULATION=0 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
 		-s MIN_WEBGL_VERSION=1 \
@@ -789,9 +851,10 @@ endif
 		-s USE_VORBIS=1 \
 		-s USE_ZLIB=1 \
 		-s USE_OGG=1 \
+		-s USE_PTHREADS=0 \
     -s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"quake3e\"
-
+		
 else # ifeq js
 
 #############################################################################
@@ -830,16 +893,27 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
-  ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/$(TARGET_REND1)
-    TARGETS += $(B)/$(TARGET_REND2)
-    TARGETS += $(B)/$(TARGET_RENDJS)
-    TARGETS += $(B)/$(TARGET_RENDV)
-  endif
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+ifneq ($(PLATFORM),js)
+  TARGETS += $(B)/$(TARGET_REND1)
+endif
+  TARGETS += $(B)/$(TARGET_REND2)
+#    TARGETS += $(B)/$(TARGET_RENDJS)
+#    TARGETS += $(B)/$(TARGET_RENDV)
 endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
+endif
+
+ifeq ($(BUILD_STANDALONE),1)
+  BASE_CFLAGS += -DSTANDALONE
+endif
+
+ifeq ($(USE_Q3KEY),1)
+  BASE_CFLAGS += -DUSE_Q3KEY -DUSE_MD5
 endif
 
 ifeq ($(NOFPU),1)
@@ -989,6 +1063,8 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
+	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
@@ -1178,6 +1254,10 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/rend1/q_shared.o \
     $(B)/rend1/puff.o \
     $(B)/rend1/q_math.o
+  Q3REND2OBJ += \
+    $(B)/rend2/q_shared.o \
+    $(B)/rend2/puff.o \
+    $(B)/rend2/q_math.o
 endif
 
 Q3RENDVOBJ = \
@@ -1241,7 +1321,7 @@ Q3RENDVOBJ = \
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3RENDVOBJ += \
-    $(B)/rend1/q_shared.o \
+    $(B)/rendv/q_shared.o \
     $(B)/rendv/puff.o \
     $(B)/rendv/q_math.o
 endif
@@ -1327,6 +1407,7 @@ Q3OBJ = \
   $(B)/client/msg.o \
   $(B)/client/net_chan.o \
   $(B)/client/net_ip.o \
+	$(B)/client/qrcodegen.o \
   $(B)/client/huffman.o \
   $(B)/client/huffman_static.o \
   \
@@ -1339,7 +1420,7 @@ Q3OBJ = \
   $(B)/client/snd_main.o \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
-  $(B)/client/snd_codec_ogg.o \
+	$(B)/client/snd_codec_ogg.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
@@ -1393,6 +1474,39 @@ Q3OBJ = \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
 
+ifneq ($(USE_LOCAL_HEADERS),0)
+ifneq ($(USE_CODEC_VORBIS),0)
+Q3OBJ += \
+  $(B)/client/ogg/bitwise.o \
+  $(B)/client/ogg/framing.o \
+  \
+  $(B)/client/vorbis/analysis.o \
+  $(B)/client/vorbis/barkmel.o \
+  $(B)/client/vorbis/bitrate.o \
+  $(B)/client/vorbis/block.o \
+  $(B)/client/vorbis/codebook.o \
+  $(B)/client/vorbis/floor0.o \
+  $(B)/client/vorbis/floor1.o \
+  $(B)/client/vorbis/info.o \
+  $(B)/client/vorbis/lookup.o \
+  $(B)/client/vorbis/lpc.o \
+  $(B)/client/vorbis/lsp.o \
+  $(B)/client/vorbis/mapping0.o \
+  $(B)/client/vorbis/mdct.o \
+  $(B)/client/vorbis/misc.o \
+  $(B)/client/vorbis/psy.o \
+  $(B)/client/vorbis/registry.o \
+  $(B)/client/vorbis/res0.o \
+  $(B)/client/vorbis/sharedbook.o \
+  $(B)/client/vorbis/smallft.o \
+  $(B)/client/vorbis/synthesis.o \
+  $(B)/client/vorbis/vorbisenc.o \
+  $(B)/client/vorbis/vorbisfile.o \
+  $(B)/client/vorbis/window.o
+endif
+endif
+
+ifneq ($(DEBUG),1)
 ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
 	$(B)/client/snd_codec_opus.o \
@@ -1540,26 +1654,26 @@ Q3OBJ += \
   $(B)/client/stream.o \
   $(B)/client/wincerts.o
 endif
+endif
 
   Q3OBJ += $(JPGOBJ)
 
 ifeq ($(USE_RENDERER_DLOPEN),0)
-
-  ifeq ($(USE_VULKAN),1)
-    Q3OBJ += $(Q3RENDVOBJ)
-  else
-	ifeq ($(BUILD_RENDERER_JS),1)
-    Q3OBJ += $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
-	else
-	ifeq ($(BUILD_RENDERER_OPENGL2),1)
-    Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
-	else
-    Q3OBJ += $(Q3REND1OBJ)
-	endif
-  endif
-	endif
-
+ifeq ($(USE_VULKAN),1)
+  Q3OBJ += $(Q3RENDVOBJ)
+else
+ifeq ($(BUILD_RENDERER_JS),1)
+  Q3OBJ += $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
+else
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+  Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+else
+  Q3OBJ += $(Q3REND1OBJ)
 endif
+
+endif # build js
+endif # use vulcan
+endif # no dlopen
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
@@ -1752,6 +1866,10 @@ Q3DOBJ = \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o
+	
+ifeq ($(USE_CURL),1)
+  Q3DOBJ += $(B)/ded/cl_curl.o
+endif
 
 ifdef MINGW
   Q3DOBJ += \
@@ -1801,6 +1919,12 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 $(B)/client/%.o: $(JPDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/ogg/%.o: $(OGGDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/vorbis/%.o: $(VORBISDIR)/%.c
+	$(DO_CC)
+
 $(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
 	$(DO_CC)
 
@@ -1838,6 +1962,9 @@ $(B)/rend2/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend2/%.o: $(R2DIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendjs/glsl/%.c: $(RJSDIR)/glsl/%.glsl
@@ -1878,6 +2005,9 @@ $(B)/client/%.o: $(QUAKEJS)/%.c
 
 $(B)/ded/%.o: $(ADIR)/%.s
 	$(DO_AS)
+
+$(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)

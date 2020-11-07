@@ -1,10 +1,14 @@
 var fs = require('fs')
+var os = require('os')
 var path = require('path')
 var {URL} = require('url')
 var {Volume} = require('memfs')
 var {ufs} = require('unionfs')
 var { Readable } = require('stream')
-var {compressFile, compressDirectory} = require('./compress.js')
+var glob = require('glob')
+var {compressFile, compressDirectory, readPak} = require('./compress.js')
+var checksumZip = require('./checksum.js')
+var {graphGame, loadDefaultDirectories, TEMP_NAME, BASEMOD, BASEMOD_LOWER, BASEMOD_DIRS} = require('../lib/asset.game.js')
 
 var help = `
 npm run start [options] [virtual path] [filesystem path]
@@ -28,6 +32,10 @@ var runContentGeneration = false
 var includeHidden = false
 var watchChanges = false
 var scanOptions = false
+var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
+var GRAPH_PATH = path.join(process.env.HOME || process.env.HOMEPATH 
+  || process.env.USERPROFILE || os.tmpdir(), '/Collections/lvlworld')
 
 // check the process args for a directory to serve as the baseq3 folders
 var mountPoint = '/assets/baseq3'
@@ -82,7 +90,9 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if (a == '--help' || a == '-h') {
     console.log(help)
     process.exit(0)
-  } else {
+  } else if (!runContentGeneration && parseInt(a) + '' === a) {
+    // ignore, used by web.js and proxy.js both of them load this script
+	} else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
 }
@@ -92,7 +102,15 @@ if(!writeOut) {
   ufs.use(vol)
 }
 if(mountPoints.length === 0) {
-  console.log('ERROR: No mount points, e.g. run `npm run start /Applications/ioquake3`')
+  console.log('ERROR: No mount points, e.g. run `npm run start -- /Applications/ioquake3`')
+  if(fs.existsSync(TEMP_DIR)) {
+    var defaultDirectories = fs.readdirSync(TEMP_DIR)
+      .filter(f => f[0] != '.')
+    defaultDirectories.forEach(f => {
+      mountPoints.push([path.join(path.dirname(mountPoint), f), path.join(TEMP_DIR, f)])
+    })
+    console.log('I really hope this is what you meant: ', defaultDirectories.join(', '))
+  }
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
@@ -158,7 +176,8 @@ function readMultiDir(fullpath, forceRecursive) {
   if(ufs.existsSync(fullpath)) {
     var files = ufs.readdirSync(fullpath)
       .map(f => path.join(fullpath, f))
-      .filter(f => includeHidden || path.basename(f)[0] != '.')
+      .filter(f => (includeHidden || path.basename(f)[0] != '.')
+        && !f.match(/index.*\.json/))
     dir.push.apply(dir, files)
     if(recursive || forceRecursive) {
       for(var j = 0; j < files.length; j++) {
@@ -199,11 +218,11 @@ async function cacheFile(fullpath) {
   return await compressFile(fullpath, vol)
 }
 
-async function makeIndexJson(filename, absolute, forceWrite) {
+async function makeIndexJson(filename, absolute, forceWrite, pk3dir) {
   // if there is no index.json, generate one
   if(filename && (!ufs.existsSync(absolute) || forceWrite)) {
     console.log(`Creating directory index ${absolute}`)
-		var files = readMultiDir(path.dirname(absolute), forceWrite || (recursive && !repackFiles))
+		var files = readMultiDir(path.dirname(absolute), (forceWrite && !pk3dir) || (recursive && !repackFiles))
 		var manifest = {}
 		for(var i = 0; i < files.length; i++) {
 			var fullpath = files[i]
@@ -254,11 +273,165 @@ async function makeIndexJson(filename, absolute, forceWrite) {
   }
 }
 
+async function findMissingTextures(project, progress, previous) {
+  if(!progress) progress = console.log
+  // compare pk3 index with bsp graph
+  var game = await graphGame(previous, project, progress)
+  // try to match up some missing textures from mods
+  console.log(game.notfound)
+  console.log.apply(console.log, game.baseq3.reduce((arr, l, i) => {
+    arr.push(BASEMOD_DIRS[i])
+    arr.push(l)
+    return arr
+  }, []))
+  
+  if(!previous)
+    fs.writeFileSync(__dirname + '/previous-graph-' + path.basename(project) + '.json', fs.readFileSync(TEMP_NAME))
+
+  var initial = {}
+  for(var j = 1; j < BASEMOD_DIRS.length; j++) {
+    var pk3dir = path.basename(BASEMOD_DIRS[j]).replace(/-cc*r*/ig, '') + '.pk3dir'
+    var missing = game.baseq3[j].map((search) => {
+      var lookup = search
+        .replace(/\/\//ig, '/')
+        .replace(/\\/g, '/')
+        .replace(/\.[^\.]*$/, '') // remove extension
+        .toLowerCase() + '.'
+      var match = Object.keys(BASEMOD_LOWER[j]).filter(i => BASEMOD_LOWER[j][i].includes(lookup))
+      if(match.length == 0) return
+      var stat = fs.statSync(path.join(BASEMOD_DIRS[j], BASEMOD[j][match[0]]))
+      if(stat.isFile())
+        return {
+          name: path.join('/', pk3dir, BASEMOD[j][match[0]]),
+          size: stat.size
+        }
+    }).reduce((obj, m) => {
+      if(!m) return obj
+      var newKey = path.join('/base/baseq3-cc', m.name.toLowerCase())
+      if(!obj[newKey]) obj[newKey] = m
+      return obj
+    }, {})
+    if(game.baseq3[j].length == 0 || Object.values(missing).length == 0) continue
+    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/'] = {
+      name: pk3dir
+    }
+    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/scripts/shader.missing'] = {
+      name: pk3dir,
+      size: 2
+    }
+    Object.assign(initial, missing)
+  }
+  return initial
+}
+
+async function makeMapIndex(project, outConverted, outRepacked, noGraph, progress, usePrevious) {
+  var indexJson = path.join(outConverted, 'index.json')
+  var indexFinalJson = path.join(outRepacked, 'index.json')
+  var convertedIndex = {}
+  try {
+    convertedIndex = JSON.parse(fs.readFileSync(indexJson).toString('utf-8'))
+  } catch (e) {
+    if(e.code != 'ENOENT') throw e
+    finalIndex = {}
+  }
+
+  await loadDefaultDirectories()
+
+  var finalIndex
+  try {
+    finalIndex = JSON.parse(fs.readFileSync(indexFinalJson).toString('utf-8'))
+  } catch (e) {
+    if(e.code != 'ENOENT') throw e
+    finalIndex = {}
+  }
+  await progress([[2, false], [1, false], [0, false]])
+  await progress([[0, 0, 1, 'Counting assets.']])
+  
+  var prefixPath = path.join('/base', path.basename(outConverted))
+  var pk3s = glob.sync('**/*.pk3', {nodir: true, cwd: project, nocase: true})
+  pk3s.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
+
+  await progress([[0, 0, 1, 'Making indexes.']])
+  for(var j = 0; j < pk3s.length; j++) {
+    var index = await readPak(path.join(project, pk3s[j]))
+    await progress([[1, j, pk3s.length, pk3s[j]]])
+
+    var maps = index.filter(entry => entry.name.match(/\.bsp$/i))
+    var dir = path.basename(pk3s[j]) + 'dir'
+    if(!fs.existsSync(path.join(outConverted, dir))) {
+      continue
+    }
+    var pk3files = glob.sync('**/*', {
+      nodir: false, cwd: path.join(outConverted, dir), nocase: true
+    })
+    var initial = {}
+    var pk3Key = path.join(prefixPath, dir).toLowerCase() + '/'
+    var headerLongs = []
+    var checksums = [...await checksumZip(index, headerLongs)]
+    if(fs.existsSync(path.join(outRepacked, path.basename(pk3s[j])))) {
+      checksums.push(...await checksumZip(path.join(outRepacked, dir)))
+    }
+    Object.values(finalIndex).forEach(f => {
+      if(!f.name.includes(dir)) return
+      if(typeof f.checksums == 'undefined') {
+        f.checksums = []
+      }
+      f.checksums.push.apply(f.checksums, checksums)
+      f.headerLongs = headerLongs
+      f.checksums = f.checksums.filter((c, i, arr) => arr.indexOf(c) === i)
+    })
+    convertedIndex[pk3Key] = initial[pk3Key] = {
+      name: path.join('/', dir).replace(/\/$/ig, ''),
+      headerLongs: headerLongs,
+      checksums: checksums
+    }
+    var manifest = pk3files.map(file => {
+      var stat = fs.statSync(path.join(outConverted, dir, file))
+      return stat.isDirectory() ? ({
+        name: path.join('/', dir, file).replace(/\/$/ig, ''),
+      }) : ({
+        name: path.join('/', dir, file),
+        size: stat.size
+      })
+    }).reduce((obj, o) => {
+      var key = path.join(prefixPath, o.name).toLowerCase()
+        + (typeof o.size == 'undefined' ? '/' : '')
+      obj[key] = o
+      return obj
+    }, initial)
+
+    if(!noGraph) {
+      var previous = null
+      if(usePrevious) {
+        previous = JSON.parse(ufs.readFileSync(GRAPH_PATH + '/previous-graph-' + dir + '.json').toString('utf-8'))
+      }
+      var missing = await findMissingTextures(path.join(outConverted, dir), progress, previous)
+      Object.assign(manifest, missing)
+    }
+    
+    var manifestJson = JSON.stringify(manifest, null, 2)
+    for(var i = 0; i < maps.length; i++) {
+      var entry = maps[i]
+      var mapName = path.basename(entry.name).toLowerCase().replace(/\.bsp/i, '')
+      var outIndexFile = path.join(outConverted, 'index-' + mapName + '.json')
+      var key = path.join(prefixPath, dir, entry.name).toLowerCase()
+      fs.writeFileSync(outIndexFile, manifestJson)
+      convertedIndex[key] = {
+        name: path.join('/', dir, entry.name),
+        size: fs.statSync(path.join(outConverted, dir, entry.name)).size
+      }
+    }
+  }
+  fs.writeFileSync(indexJson, JSON.stringify(convertedIndex, null, 2))
+  if(fs.existsSync(path.dirname(indexFinalJson)))
+    fs.writeFileSync(indexFinalJson, JSON.stringify(finalIndex, null, 2))
+}
+
 async function runContent() {
   if(runContentGeneration) {
     for(var i = 0; i < mountPoints.length; i++) {
       var absolute = pathToAbsolute(mountPoints[i][0])
-      await makeIndexJson(mountPoints[i][0], absolute + '/index.json')
+      await makeIndexJson(mountPoints[i][0], mountPoints[i][1] + '/index.json')
     }
   }
 }
@@ -269,4 +442,6 @@ module.exports = {
 	makeIndexJson,
 	pathToAbsolute,
   repackPk3Dir,
+  makeMapIndex,
+  findMissingTextures,
 }

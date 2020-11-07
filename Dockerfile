@@ -26,7 +26,7 @@ RUN \
   echo "" >>  /root/.emscripten && \
   echo "BINARYEN_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /root/.emscripten && \
   echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /root/.emscripten && \
-  echo "NODE_JS = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/node/12.9.1_64bit/bin/node'" >> /root/.emscripten && \
+  echo "NODE_JS = '/usr/bin/node'" >> /root/.emscripten && \
   echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /root/.emscripten && \
   export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
@@ -70,7 +70,7 @@ EXPOSE 8080/tcp
 VOLUME [ "/tmp/baseq3" ]
 VOLUME [ "/tmp/planet_quake" ]
 VOLUME [ "/tmp/quakejs" ]
-ENV RCON=rconpass
+ENV RCON=password123!
 ENV GAME=baseq3-cc
 ENV BASEGAME=baseq3-cc
 CMD ["/home/ioq3srv/quakejs/bin/start.sh"]

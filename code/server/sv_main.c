@@ -87,6 +87,16 @@ cvar_t  *sv_autoRecord;
 cvar_t	*cl_freezeDemo; // to freeze server-side demos
 cvar_t	*sv_demoTolerant;
 
+#ifdef USE_LNBITS
+cvar_t  *sv_lnMatchPrice;
+cvar_t  *sv_lnMatchCut;
+cvar_t  *sv_lnMatchReward;
+cvar_t  *sv_lnWallet;
+cvar_t  *sv_lnKey;
+cvar_t  *sv_lnAPI;
+cvar_t  *sv_lnWithdraw;
+#endif
+
 /*
 =============================================================================
 
@@ -191,11 +201,8 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-	if(!Q_strncmp(cmd, "print", 5)) {
-		Q_strncpyz( client->reliableCommands[ index ], va("q_%s", cmd), sizeof( client->reliableCommands[ index ] ) );
-	} else {
-		Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
-	}
+
+	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
 }
 
 
@@ -316,6 +323,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string );
 			}
+#ifndef EMSCRIPTEN
 #ifdef USE_IPV6
 			if(netenabled & NET_ENABLEV6)
 			{
@@ -333,6 +341,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string );
 			}
+#endif
 #endif
 		}
 
@@ -1362,10 +1371,23 @@ void SV_Frame( int msec ) {
 		{
 			// Block indefinitely until something interesting happens
 			// on STDIN.
+#ifndef EMSCRIPTEN
 			Sys_Sleep( -1 );
+#endif
 		}
 		return;
 	}
+
+#ifdef USE_CURL	
+	if ( svDownload.cURL ) 
+	{
+		Com_DL_Perform( &svDownload );
+	}
+#endif
+
+#ifdef USE_LNBITS
+	SV_CheckInvoicesAndPayments();
+#endif
 
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {

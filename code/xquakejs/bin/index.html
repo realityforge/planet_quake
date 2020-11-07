@@ -2,7 +2,7 @@
 <html>
 <head>
 	<link rel="icon" href="/quakejs-bnw.png">
-	<title>quakejs</title>
+	<title>Quake 3: Arena</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<style>
 			/* @import url('https://fonts.googleapis.com/css?family=Roboto'); */
@@ -98,13 +98,13 @@
 			
 			#loading-progress {
 				position: absolute;
-				top: 50%;
 				left: 50%;
-				margin-top: 12em;
+				bottom: 50%;
+				margin-bottom: -14em;
 				margin-left: -12em;
 				padding: 0.4em;
 				width: 24em;
-				background: rgba(0, 0, 0, 0.7);
+				background: transparent;
 				z-index: 9999;
 			}
 			
@@ -116,6 +116,26 @@
 				text-transform: uppercase;
 			}
 			
+			#loading-progress .description div {
+				opacity: 0;
+			}
+
+			#loading-progress .description div:nth-last-child(1) {
+				opacity: 1;
+			}
+
+			#loading-progress .description div:nth-last-child(2) {
+				opacity: 0.7;
+			}
+			
+			#loading-progress .description div:nth-last-child(3) {
+				opacity: 0.5;
+			}
+			
+			#loading-progress .description div:nth-last-child(4) {
+				opacity: 0.2;
+			}
+
 			#loading-progress .bar-wrapper {
 				background: #222;
 				border-radius: 2px;
@@ -212,51 +232,54 @@
 	<div id="left-joystick"></div><div id="right-joystick"></div>
 </div>
 	
+<script>
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+	.then(function (registration) {
+	  window.serviceWorker = true
+	  if(typeof SYS != 'undefined') SYS.servicable = true
+	})
+	.catch(function (err) {
+	  window.serviceWorker = false
+	  if(typeof SYS != 'undefined') SYS.servicable = false
+	  console.log('Service Worker registration failed: ', err)
+	})
+}
 
-<script>
-	window.quake3e = {}
-	window.quake3e.printErr = function (...args) {
-		var args = arguments
-		if(args[0] && (args[0].includes('Sys_Error:')
-	    || args[0].includes('Error:')
-			|| args[0].includes('ERROR:')
-	    || args[0].includes('server:')
-			|| args[0].includes('Hunk_Clear:')
-	    || args[0].includes('Frame Setup')
-	    || args[0].includes('Shutdown')
-	    || args[0].includes('DEMO:')
-	    || args[0].includes('Game Initialization')
-	    || args[0].includes('Runtime error:')
-	    || args[0].includes('server:')
-			|| args[0].includes('ERROR :')))
-			console.error.apply(console, args)
-		else
-			console.log.apply(console, args)
-	}
-	window.quake3e.viewport = document.getElementById('viewport-frame')
-	window.quake3e.elementPointerLock = true
-	window.quake3e.onRuntimeInitialized = () => {}
-</script>
-<script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js').then(function (registration) {
-          console.log('Service Worker registered')
-      }).catch(function (err) {
-          console.log('Service Worker registration failed: ', err)
-      })
+if('Worker' in window) {
+  window.serverWorker = new Worker('server-worker.js')
+  window.serverWorker.onmessage = function (e) {
+    if(e.data[0] == 'init') {
+      //SYSC.Cvar_SetValue('sv_running', 1)
+    } else if(e.data[0] == 'net') {
+      if(typeof Module != 'undefined' 
+				&& typeof Module.SYSM != 'undefined' && !Module.SYSM.exited)
+        Module.SYSN.receiveNetLoop(e.data[1], e.data[2])
+    } else if(e.data[0] == 'status') {
+      if(typeof Module != 'undefined' 
+				&& typeof Module.SYSM != 'undefined' && !Module.SYSM.exited) {
+        Module.SYSN.LoadingDescription.apply(null, e.data[1])
+        if(e.data[2]) {
+          Module.SYS.serviceProgress = e.data[2]
+          Module.SYSN.LoadingProgress()
+        } else {
+          Module.SYS.serviceProgress = [0, 0]
+        }
+      }
     }
-		if('Worker' in window) {
-		  window.serverWorker = new Worker('server-worker.js')
-			window.serverWorker.onmessage = (e) => {
-				if(e.data[0] == 'init') {
-					//SYSC.Cvar_SetValue('sv_running', 1)
-				} else if(e.data[0] == 'net') {
-					SYSN.receiveNetLoop(e.data[1], e.data[2])
-				}
-			}
-		}
+  }
+}
+
 </script>
-<script type="text/javascript" src="/webgl-debug.js"></script>
-<script type="text/javascript" src="/nipplejs.js"></script>
-<script type="text/javascript" src="/quake3e.js"></script>
+<!--<script type="text/javascript" src="/webgl-debug.js"></script>-->
+<script async type="text/javascript" src="/nipplejs.js"></script>
+<script async type="module" src="/quake3e.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-177284065-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-177284065-1');
+</script>
 </html>
