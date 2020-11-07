@@ -42,7 +42,7 @@ Some of the major features currently implemented are:
   * PNG support
   * Docker support
   * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
-  * Removed SDL inputs, touch support on mobile works, copy/pase, TODO: drag and drop for loading local custom content
+  * Removed SDL inputs, touch support on mobile works, copy/paste, TODO: drag and drop for loading local custom content
   * Deferred (lazy) loading of all game content, entities, models, textures. New cl_lazyLoad cvar, 1 for on load lowest quality until displayed, 2 set all to default and try to load from sv_dlURL
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
@@ -50,15 +50,16 @@ Some of the major features currently implemented are:
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. TODO: adding my multi-world mod and multi-qvm for ultimate administration. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
-  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC
+  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
+  * Checksum pk3 spoofing for playing with original clients using web converted files.
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, fix loading on parent's computer (webgl 1?), add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content, fix sound in debug build mode and asm.js build
   * Payment API for micropayments to access server or content https://developers.google.com/web/fundamentals/codelabs/payment-request-api
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
-  * Switching renderers to WebGL 1/OpenGL 1/ES 1+2
+  * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
   * Alternate chat server integration, discord and telegram
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup
   * Use com_journal instead of index.json (or manifest.json in quakejs)
@@ -77,7 +78,7 @@ Coming soon!
   * Brotli compression for game content from server UDP downloads
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
   * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
-  * Ported IQM and MD5 from spearmint engine
+  * Ported IQM and MD5 bone structures from spearmint engine
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.

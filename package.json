@@ -7,7 +7,7 @@
     "proxy": "node ./code/xquakejs/bin/proxy.js",
     "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
     "repack:index": "node -e \"require('./code/xquakejs/bin/content.js').makeMapIndex('/Volumes/External/Personal/planet_quake_data/bestmaps', '/Volumes/External/Personal/planet_quake_data/bestmaps-cc', '/Volumes/External/Personal/planet_quake_data/bestmaps-ccr', false, console.log)\"",
-    "repack:replace": "node -e \"var fs = require('fs'); require('glob').sync('*.json', {cwd: '/Volumes/External/Personal/planet_quake_data/bestmaps-cc/'}).forEach(f => fs.writeFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps-cc/' + f, fs.readFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps-cc/' + f).toString('utf-8').replace(/bestmaps-cc/ig, 'baseq3-cc')))\"",
+    "repack:replace": "node -e \"var fs = require('fs'); require('glob').sync('*.json', {cwd: '/Volumes/External/Personal/planet_quake_data/bestmaps2-cc/'}).forEach(f => fs.writeFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps2-cc/' + f, fs.readFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps2-cc/' + f).toString('utf-8').replace(/bestmaps.*?\\//ig, 'baseq3-cc\/')))\"",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
     "install:emsdk": "./code/xquakejs/lib/emsdk/emsdk install latest-upstream",
     "install:libs": "./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib",

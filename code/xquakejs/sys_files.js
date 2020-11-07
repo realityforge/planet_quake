@@ -1,7 +1,7 @@
 var LibrarySysFiles = {
   $SYSF__deps: ['$SYSC', '$IDBFS'],
   $SYSF: {
-    index: [],
+    index: {},
     fs_replace: [],
     fs_basepath: '/base',
     fs_basegame: 'baseq3',
@@ -249,13 +249,19 @@ var LibrarySysFiles = {
     SYSF.fs_replace = []
     SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
-    var newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
-    if(newDLURL.length > 0) {
+    SYSC.newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    if(SYSC.newDLURL.length > 0) {
       if(SYSC.oldDLURL.length == 0) {
         SYSC.oldDLURL = SYSC.newDLURL
       }
-      SYSC.newDLURL = newDLURL
     }
+    // doesn't work with cors anyways, need to download over SOCKS proxy
+    /*
+    var cdn = SYSC.Cvar_VariableString('fs_cdn')
+    if(cdn.length > 0 && SYSC.oldDLURL == SYSC.newDLURL) {
+      SYSC.newDLURL = cdn
+    }
+    */
     //SYSN.downloadLazy.splice(0) // reset lazy list to start of map
     SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)

@@ -3266,7 +3266,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	thepak = FS_LoadZipFile( zipfile );
 
 	if ( !thepak )
-		return qfalse;
+		return qtrue;
 	
 	checksum = thepak->checksum;
 #ifndef USE_PK3_CACHE
@@ -4419,6 +4419,12 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 
 		// never autodownload any of the id paks
 		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEGAME, NUM_ID_PAKS) || FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS) ) {
+			// TODO: expand this to exclude base QuakeJS paks
+			continue;
+		}
+		
+		if(fs_excludeReference->string[0] 
+			&& Q_stristr(fs_excludeReference->string, fs_serverReferencedPakNames[i])) {
 			continue;
 		}
 
@@ -4805,7 +4811,9 @@ void FS_Startup( void ) {
 
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
+
 #ifdef EMSCRIPTEN
+	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
 }
 
 void FS_Startup_After_Async( void )

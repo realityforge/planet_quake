@@ -38,6 +38,13 @@ var LibrarySysCommon = {
 			HEAP8[(SYSC.varStr+str.length)] = 0
 			return _Cvar_SetValue(SYSC.varStr, value)
 		},
+		Cvar_SetString: function (str, value) {
+			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
+			HEAP8[(SYSC.varStr+str.length)] = 0
+			intArrayFromString(value).forEach(function (c, i) { HEAP8[(SYSC.varStr+str.length+i+1)] = c })
+			HEAP8[(SYSC.varStr+str.length+value.length+1)] = 0
+			return _Cvar_Set(SYSC.varStr, SYSC.varStr + str.length + 1)
+		},
 		Cvar_Get: function (str) {
 			intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
 			HEAP8[(SYSC.varStr+str.length)] = 0

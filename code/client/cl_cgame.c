@@ -448,14 +448,13 @@ rescan:
 		return qfalse;
 	}
 	
+	if(!Q_strncmp(cmd, "print", 5)) {
+		return qtrue;
+	}
+
 	if(Cmd_ExecuteString(s, qtrue)) {
 		Cmd_Clear();
 		return qfalse;
-	}
-	
-	Cmd_TokenizeString(s);
-	if(!Q_strncmp(Cmd_Argv(0), "q_print", 7)) {
-		Cmd_TokenizeString( va("print \"%s\"", Cmd_ArgsFrom(1)) );
 	}
 #endif
 

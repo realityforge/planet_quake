@@ -41,8 +41,8 @@ theora:
 
 #ifdef USE_CODEC_VORBIS
 #include "cl_cin.h"
-#include "../ogg/ogg.h"
-#include "../vorbis/codec.h"
+#include <ogg/ogg.h>
+#include <vorbis/codec.h>
 
 #ifdef USE_CIN_XVID
 #include <xvid.h>

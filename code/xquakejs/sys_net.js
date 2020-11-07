@@ -45,7 +45,7 @@ var LibrarySysNet = {
       var div = document.createElement('div')
       div.innerHTML = desc.replace('%s', args[1])
       if(description.children.length == 0
-        || div.innerText != description.children[description.children.length-1].innerText)
+        || div.innerText.toLowerCase() != description.children[description.children.length-1].innerText.toLowerCase())
 			  description.appendChild(div)
 		},
 		LoadingProgress: function (progress, total) {
@@ -338,7 +338,10 @@ var LibrarySysNet = {
         SYSN.downloads = []
         SYSN.downloadAlternates = SYSN.downloadTries = alts
         if(err) {
-          SYSC.Error('drop', 'Download Error: ' + err.message)
+          SYSC.Cvar_SetString('fs_excludeReference', 
+            SYSC.Cvar_VariableString('fs_excludeReference')
+            + cl_downloadName.replace(/\.pk3$/ig, ''))
+          SYSC.Print('Download Error: ' + err.message)
         } else {
           var newKey = PATH.join(SYSF.fs_basepath, cl_downloadName)
           // TODO: don't need to save here because service-worker fetch() already did

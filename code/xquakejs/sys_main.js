@@ -42,8 +42,8 @@ var LibrarySysMain = {
       '+set', 'r_deluxeMapping', '0',
       '+set', 'r_normalMapping', '0',
       '+set', 'r_specularMapping', '0',
-      '+set', 'r_gamma', '1.5',
-      '+set', 'r_picmip', '0',
+      '+set', 'r_gamma', '1.1',
+      '+set', 'r_picmip', '1',
       /*
       '+set', 'r_ext_direct_state_access', '0',
       '+set', 'r_cubeMapping', '0',

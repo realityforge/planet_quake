@@ -688,8 +688,8 @@ endif
   USE_VULKAN=0
   USE_CURL=0
   USE_CURL_DLOPEN=0
-  USE_CODEC_VORBIS=0
-  USE_CODEC_OPUS=0
+  USE_CODEC_VORBIS=1
+  USE_CODEC_OPUS=1
   USE_FREETYPE=0
   USE_MUMBLE=0
   USE_VOIP=0
@@ -832,7 +832,7 @@ endif
     -s INVOKE_RUN=1 \
     -s NO_EXIT_RUNTIME=1 \
     -s EXIT_RUNTIME=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['SYS', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['SYS', 'SYSC', 'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
 		-s MAIN_MODULE=0 \
     -s ALLOW_TABLE_GROWTH=1 \
@@ -1420,6 +1420,7 @@ Q3OBJ = \
   $(B)/client/snd_main.o \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
+	$(B)/client/snd_codec_ogg.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
@@ -1473,9 +1474,9 @@ Q3OBJ = \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
 
+ifneq ($(USE_LOCAL_HEADERS),0)
 ifneq ($(USE_CODEC_VORBIS),0)
 Q3OBJ += \
-  $(B)/client/snd_codec_ogg.o \
   $(B)/client/ogg/bitwise.o \
   $(B)/client/ogg/framing.o \
   \
@@ -1494,7 +1495,6 @@ Q3OBJ += \
   $(B)/client/vorbis/mdct.o \
   $(B)/client/vorbis/misc.o \
   $(B)/client/vorbis/psy.o \
-  $(B)/client/vorbis/psytune.o \
   $(B)/client/vorbis/registry.o \
   $(B)/client/vorbis/res0.o \
   $(B)/client/vorbis/sharedbook.o \
@@ -1504,7 +1504,9 @@ Q3OBJ += \
   $(B)/client/vorbis/vorbisfile.o \
   $(B)/client/vorbis/window.o
 endif
+endif
 
+ifneq ($(DEBUG),1)
 ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
 	$(B)/client/snd_codec_opus.o \
@@ -1651,6 +1653,7 @@ Q3OBJ += \
   $(B)/client/opusfile.o \
   $(B)/client/stream.o \
   $(B)/client/wincerts.o
+endif
 endif
 
   Q3OBJ += $(JPGOBJ)
