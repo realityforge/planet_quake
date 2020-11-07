@@ -47,6 +47,7 @@ var LibrarySysInput = {
       [126, 139, 31],
       [158, 139, 25],
     ],
+    cancelBackspace: true,
     banner: '',
     bannerTime: 0,
     joysticks: [],
@@ -143,6 +144,7 @@ var LibrarySysInput = {
     InputPushMouseEvent: function (evt) {
       var event = SYSI.inputHeap
       if (evt.type != 'mousemove') {
+        SYSI.cancelBackspace = false
         var down = evt.type == 'mousedown'
         HEAP32[((event+0)>>2)]=down ? 0x401 : 0x402
         HEAP32[((event+4)>>2)]=_Sys_Milliseconds() // timestamp
@@ -179,7 +181,7 @@ var LibrarySysInput = {
     },
     InputPushTouchEvent: function (joystick, id, evt, data) {
       var event = SYSI.inputHeap
-
+      SYSI.cancelBackspace = false
       if(id == 1) {
         if (data.vector && data.vector.y > .4) {
           SYSI.InputPushKeyEvent({type: 'keydown', repeat: true, keyCode: 87})
@@ -365,12 +367,15 @@ var LibrarySysInput = {
 			canvas.height = viewport.offsetHeight
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
-    window.onbeforeunload = function() {
-      if(SYSI.cancelBackspace)
-        return 'Do you really want to quit?'
-      else
-        return // no popup
-    }
+    window.addEventListener('beforeunload', function (e) {
+      if(SYSI.cancelBackspace) {
+        e.preventDefault();
+        e.returnValue = 'Do you really want to quit?';
+        return e.returnValue
+      } else {
+        delete e.returnValue
+      }
+    })
 	},
   Sys_GLContextCreated: function () {
     var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
