@@ -249,8 +249,9 @@ if('serviceWorker' in navigator) {
 if('Worker' in window) {
   window.serverWorker = new Worker('server-worker.js')
   window.serverWorker.onmessage = function (e) {
-    if(e.data[0] == 'init') {
-      //SYSC.Cvar_SetValue('sv_running', 1)
+    if(typeof Module != 'undefined' 
+			&& typeof Module.SYSC != 'undefined' && e.data[0] == 'init') {
+      Module.SYSC.Cvar_SetValue('sv_running', 1)
     } else if(e.data[0] == 'net') {
       if(typeof Module != 'undefined' 
 				&& typeof Module.SYSM != 'undefined' && !Module.SYSM.exited)

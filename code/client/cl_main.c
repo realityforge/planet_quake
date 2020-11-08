@@ -1737,9 +1737,11 @@ static void CL_Connect_f( void ) {
 	clc.serverMessage[0] = '\0';
 
 	// if running a local server, kill it
+#ifndef EMSCRIPTEN
 	if ( com_sv_running->integer && !strcmp( server, "localhost" ) ) {
 		SV_Shutdown( "Server quit" );
 	}
+#endif
 
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
@@ -1750,6 +1752,7 @@ static void CL_Connect_f( void ) {
 		|| !strcmp (server, va("127.0.0.1:%i", PORT_SERVER)))) {
 		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 	}
+	// if we were already connected to the local server, don't reconnect
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
 		&& addr.type == NA_LOOPBACK && cgvm) {
 		cls.state = CA_PRIMED;
@@ -3285,6 +3288,12 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 				return qfalse;
 			}
 		}
+		
+#ifdef EMSCRIPTEN
+		if(clc.serverAddress.type == NA_LOOPBACK) {
+			Cvar_Set( "sv_running", "1" );
+		}
+#endif
 
 		Netchan_Setup( NS_CLIENT, &clc.netchan, from, Cvar_VariableIntegerValue("net_qport"),
 			clc.challenge, clc.compat );

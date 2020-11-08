@@ -1506,7 +1506,7 @@ Q3OBJ += \
 endif
 endif
 
-ifneq ($(DEBUG),1)
+ifneq (,$(findstring release,$(B)))
 ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
 	$(B)/client/snd_codec_opus.o \

@@ -203,8 +203,7 @@ var LibrarySysMain = {
             '+connect', 'localhost'
           ])
         }
-      } else {
-        // IS dedicated settings
+      } else { // IS dedicated settings
         if(!args.includes('+spmap')
           && !args.includes('+map')
           && !args.includes('+devmap')
