@@ -572,11 +572,14 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		Cvar_SetCheatState();
 	}
 
+#ifndef EMSCRIPTEN // allow file restrictions locally
 	if ( com_sv_running->integer ) {
 		// no filesystem restrictions for localhost
 		FS_PureServerSetLoadedPaks( "", "" );
 		FS_PureServerSetReferencedPaks( "", "" );
-	} else {
+	} else
+#endif
+	{
 		// check pure server string
 		s = Info_ValueForKey( systemInfo, "sv_paks" );
 		t = Info_ValueForKey( systemInfo, "sv_pakNames" );

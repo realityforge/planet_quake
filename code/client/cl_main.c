@@ -1597,10 +1597,13 @@ void CL_Disconnect_f( void ) {
 		} else {
 			// clear any previous "server full" type messages
 			clc.serverMessage[0] = '\0';
+#ifndef EMSCRIPTEN
 			if ( com_sv_running && com_sv_running->integer ) {
 				// if running a local server, kill it
 				SV_Shutdown( "Disconnected from server" );
-			} else {
+			} else 
+#endif
+			{
 				Com_Printf( "Disconnected from %s\n", cls.servername );
 			}
 			Cvar_Set( "com_errorMessage", "" );
@@ -1736,16 +1739,16 @@ static void CL_Connect_f( void ) {
 	// clear any previous "server full" type messages
 	clc.serverMessage[0] = '\0';
 
-	// if running a local server, kill it
 #ifndef EMSCRIPTEN
+	// if running a local server, kill it
 	if ( com_sv_running->integer && !strcmp( server, "localhost" ) ) {
 		SV_Shutdown( "Server quit" );
 	}
-#endif
 
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
 	SV_Frame( 0 );
+#endif
 
 #ifdef EMSCRIPTEN
 	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
@@ -3291,7 +3294,7 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		
 #ifdef EMSCRIPTEN
 		if(clc.serverAddress.type == NA_LOOPBACK) {
-			Cvar_Set( "sv_running", "1" );
+		//	Cvar_Set( "sv_running", "1" );
 		}
 #endif
 

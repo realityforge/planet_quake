@@ -2887,14 +2887,11 @@ int Com_EventLoop( void ) {
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events
 #ifdef EMSCRIPTEN
-				if(!com_dedicated->integer || com_sv_running->integer) {
-					Com_RunAndTimeServerPacket( &evFrom, &buf );
-				}
-#else
+				if(com_dedicated->integer)
+#endif
 				if ( com_sv_running->integer ) {
 					Com_RunAndTimeServerPacket( &evFrom, &buf );
 				}
-#endif
 			}
 
 			return ev.evTime;
@@ -3083,6 +3080,9 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		}
 #endif
 
+#ifdef EMSCRIPTEN
+		if(com_dedicated->integer)
+#endif
 		// Kill server if we have one
 		if ( com_sv_running->integer )
 			SV_Shutdown( "Game directory changed" );
@@ -4246,7 +4246,12 @@ void Com_Frame( qboolean noDelay ) {
 	// waiting for incoming packets
 	if ( noDelay == qfalse )
 	do {
-		if ( com_sv_running->integer ) {
+		if ( 
+#ifdef EMSCRIPTEN
+			com_dedicated->integer &&
+#endif
+			com_sv_running->integer 
+		) {
 			timeValSV = SV_SendQueuedPackets();
 			timeVal = Com_TimeVal( minMsec );
 			if ( timeValSV < timeVal )
@@ -4278,6 +4283,7 @@ void Com_Frame( qboolean noDelay ) {
 		}
 		return;
 	}
+
 	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
 		return;
 	}

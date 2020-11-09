@@ -1735,7 +1735,8 @@ function printErr() {
     || args[0].includes('ERROR :')
     || args[0].includes('error:')
     || args[0].includes('CG_LoadFont:')
-    || args[0].includes('Assertion failed:')))
+    || args[0].includes('Assertion failed:')
+    || args[0].includes('Runtime error:')))
     console.error.apply(console, [dedicated ? 'DedServer: ' : ''].concat(args))
   else
     console.info.apply(console, [dedicated ? 'DedServer: ' : ''].concat(args))

@@ -286,7 +286,7 @@ async function findMissingTextures(project, progress, previous) {
   }, []))
   
   if(!previous)
-    fs.writeFileSync(__dirname + '/previous-graph-' + path.basename(project) + '.json', fs.readFileSync(TEMP_NAME))
+    fs.writeFileSync(GRAPH_PATH + '/previous-graph-' + path.basename(project) + '.json', fs.readFileSync(TEMP_NAME))
 
   var initial = {}
   for(var j = 1; j < BASEMOD_DIRS.length; j++) {
@@ -313,10 +313,10 @@ async function findMissingTextures(project, progress, previous) {
     }, {})
     if(game.baseq3[j].length == 0 || Object.values(missing).length == 0) continue
     initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/'] = {
-      name: pk3dir
+      name: '/' + pk3dir
     }
-    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/scripts/shader.missing'] = {
-      name: pk3dir,
+    initial['/base/baseq3-cc/' + pk3dir.toLowerCase() + '/scripts/missing.shader'] = {
+      name: '/' + pk3dir + '/scripts/missing.shader',
       size: 2
     }
     Object.assign(initial, missing)

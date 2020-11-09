@@ -45,12 +45,14 @@ async function loadDefaultDirectories() {
       'baseq3-cc',
       'mapmedia-cc',
       'threewave-cc',
+      'cpma-cc',
       'missionpack-cc',
       'q3ut4-cc',
       'baseoa-cc',
     ]
     for (var i = 0; i < defaultDirectories.length; i++) {
       var f = defaultDirectories[i]
+      if(!fs.existsSync(path.join(TEMP_DIR, f))) continue
       //if(whitelist.keys().filter(w => f.includes(w)).length === 0) return
       mountPoints.push(path.join(TEMP_DIR, f))
       var baseModFiles = glob.sync('**/*', {cwd: path.join(TEMP_DIR, f)})

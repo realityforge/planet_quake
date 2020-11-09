@@ -911,6 +911,9 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	}
 #endif
 
+#ifdef EMSCRIPTEN
+	if (com_dedicated->integer)
+#endif
 	// check server game commands
 	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
 		return qtrue;
