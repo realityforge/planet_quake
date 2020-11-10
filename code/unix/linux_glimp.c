@@ -80,6 +80,7 @@ typedef enum
 
   RSERR_INVALID_FULLSCREEN,
   RSERR_INVALID_MODE,
+  RSERR_FATAL_ERROR,
 
   RSERR_UNKNOWN
 } rserr_t;
@@ -127,8 +128,8 @@ static cvar_t *in_mouse;
 static cvar_t *in_dgamouse; // user pref for dga mouse
 static cvar_t *in_shiftedKeys; // obey modifiers for certain keys in non-console (comma, numbers, etc)
 
-cvar_t *in_subframe;
-cvar_t *in_nograb; // this is strictly for developers
+static cvar_t *in_subframe;
+static cvar_t *in_nograb; // this is strictly for developers
 
 cvar_t *in_forceCharset;
 
@@ -816,7 +817,7 @@ void HandleEvents( void )
 					{
 						mwx = window_width/2;
 						mwy = window_height/2;
-						if (t - mouseResetTime > MOUSE_RESET_DELAY )
+						if ( t - mouseResetTime > MOUSE_RESET_DELAY )
 						{
 							Sys_QueEvent( t, SE_MOUSE, mx, my, 0, NULL );
 						}
@@ -881,13 +882,26 @@ void HandleEvents( void )
 			win_x = event.xconfigure.x;
 			win_y = event.xconfigure.y;
 
-			Com_DPrintf( "ConfigureNotify: gw_minimized=%i, x=%i, y=%i\n",
-				gw_minimized, win_x, win_y );
+			Com_DPrintf( "ConfigureNotify: gw_minimized=%i, created=%i, exposed=%i, x=%i, y=%i\n",
+				gw_minimized, window_created, window_exposed, win_x, win_y );
 
-			if ( !glw_state.cdsFullscreen && window_created && !gw_minimized )
+			if ( !glw_state.cdsFullscreen && window_created && !gw_minimized && window_exposed )
 			{
+				unsigned int w, h, border, depth;
+				Window r;
+				int x, y;
+
+				if ( XGetGeometry( dpy, win, &r, &x, &y, &w, &h, &border, &depth ) ) {
+					// workaround to compensate constant shift added by window decorations
+					if ( x < 200 && y < 200 ) {
+						win_x -= x;
+						win_y -= y;
+					}
+				}
+
 				Cvar_SetIntegerValue( "vid_xpos", win_x );
 				Cvar_SetIntegerValue( "vid_ypos", win_y );
+
 				RandR_UpdateMonitor( win_x, win_y,
 					event.xconfigure.width,
 					event.xconfigure.height );
@@ -1087,6 +1101,8 @@ void GLimp_Shutdown( qboolean unloadDLL )
 {
 	IN_DeactivateMouse();
 
+	IN_Shutdown();
+
 	if ( dpy )
 	{
 		XSync( dpy, True );
@@ -1157,6 +1173,8 @@ void VKimp_Shutdown( qboolean unloadDLL )
 {
 	IN_DeactivateMouse();
 
+	IN_Shutdown();
+
 	if ( dpy )
 	{
 		XSync( dpy, True );
@@ -1216,7 +1234,7 @@ void VKimp_Shutdown( qboolean unloadDLL )
 /*
 ** GLimp_LogComment
 */
-void ri.Printf(PRINT_DEVELOPER,  char *comment )
+void GLimp_LogComment( char *comment )
 {
 	if ( glw_state.log_fp )
 	{
@@ -1230,7 +1248,7 @@ void ri.Printf(PRINT_DEVELOPER,  char *comment )
 */
 int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan );
 
-static qboolean GLW_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+static rserr_t GLW_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
 {
 	rserr_t err;
 	
@@ -1248,11 +1266,15 @@ static qboolean GLW_StartDriverAndSetMode( int mode, const char *modeFS, qboolea
 	{
 	case RSERR_INVALID_FULLSCREEN:
 		Com_Printf( "...WARNING: fullscreen unavailable in this mode\n" );
-		return qfalse;
+		return err;
 
 	case RSERR_INVALID_MODE:
 		Com_Printf( "...WARNING: could not set the given mode (%d)\n", mode );
-		return qfalse;
+		return err;
+
+	case RSERR_FATAL_ERROR:
+		Com_Printf( "...WARNING: couldn't open the X display\n" );
+		return err;
 
 	default:
 	    break;
@@ -1260,7 +1282,7 @@ static qboolean GLW_StartDriverAndSetMode( int mode, const char *modeFS, qboolea
 
 	glw_state.config->isFullscreen = fullscreen;
 
-	return qtrue;
+	return RSERR_OK;
 }
 
 
@@ -1466,7 +1488,7 @@ int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vul
 		if ( dpy == NULL )
 		{
 			fprintf( stderr, "Error: couldn't open the X display\n" );
-			return RSERR_INVALID_MODE;
+			return RSERR_FATAL_ERROR;
 		}
 	}
 
@@ -1632,6 +1654,8 @@ int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vul
 	}
 
 //	XSync( dpy, False );
+
+	// create rendering context
 #ifdef USE_VULKAN_API
 	if ( vulkan )
 	{
@@ -1711,13 +1735,21 @@ static qboolean GLW_LoadOpenGL( const char *name )
 	// load the QGL layer
 	if ( QGL_Init( name ) )
 	{
+		rserr_t err;
 		fullscreen = (r_fullscreen->integer != 0);
+
 		// create the window and set up the context
-		if ( !GLW_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, fullscreen, qfalse /* vulkan */ ) )
+		err = GLW_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, fullscreen, qfalse /* vulkan */ );
+		if ( err != RSERR_OK )
 		{
-			if ( r_mode->integer != 3 )
+			if ( err == RSERR_FATAL_ERROR )
+				goto fail;
+
+			if ( r_mode->integer != 3 || ( fullscreen && atoi( r_modeFullscreen->string ) != 3 ) )
 			{
-				if ( !GLW_StartDriverAndSetMode( 3, "", fullscreen, qfalse /* vulkan */ ) )
+				Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
+
+				if ( GLW_StartDriverAndSetMode( 3, "", fullscreen, qfalse /* vulkan */ ) != RSERR_OK )
 				{
 					goto fail;
 				}
@@ -1788,6 +1820,21 @@ int qXErrorHandler( Display *dpy, XErrorEvent *ev )
 }
 
 
+static void InitCvars( void )
+{
+	// referenced in GLW_StartDriverAndSetMode() so must be inited there
+	in_nograb = Cvar_Get( "in_nograb", "0", 0 );
+
+	// turn on-off sub-frame timing of X events, referenced in Sys_XTimeToSysTime
+	in_subframe = Cvar_Get( "in_subframe", "1", CVAR_ARCHIVE_ND );
+
+	in_dgamouse = Cvar_Get( "in_dgamouse", "1", CVAR_ARCHIVE_ND );
+	in_shiftedKeys = Cvar_Get( "in_shiftedKeys", "0", CVAR_ARCHIVE_ND );
+
+	in_forceCharset = Cvar_Get( "in_forceCharset", "1", CVAR_ARCHIVE_ND );
+}
+
+
 /*
 ** GLimp_Init
 **
@@ -1798,7 +1845,8 @@ void GLimp_Init( glconfig_t *config )
 {
 	InitSig();
 
-	IN_Init();   // rcg08312005 moved into glimp.
+	// initialize variables that may be referenced during window creation/setup
+	InitCvars();
 
 	// set up our custom error handler for X failures
 	XSetErrorHandler( &qXErrorHandler );
@@ -1811,6 +1859,8 @@ void GLimp_Init( glconfig_t *config )
 	{
 		return;
 	}
+
+	IN_Init();
 
 	// This values force the UI to disable driver selection
 	config->driverType = GLDRV_ICD;
@@ -1849,10 +1899,15 @@ static qboolean GLW_LoadVulkan( void )
 	// load the QVK layer
 	if ( QVK_Init() )
 	{
+		rserr_t err;
 		qboolean fullscreen = (r_fullscreen->integer != 0);
+
 		// create the window and set up the context
-		if ( GLW_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, fullscreen, qtrue /* vulkan */) )
+		err = GLW_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, fullscreen, qtrue /* vulkan */ );
+		if ( err == RSERR_OK )
+		{
 			return qtrue;
+		}
 	}
 
 	QVK_Shutdown( qtrue );
@@ -1886,7 +1941,8 @@ void VKimp_Init( glconfig_t *config )
 {
 	InitSig();
 
-	IN_Init();
+	// initialize variables that may be referenced during window creation/setup
+	InitCvars();
 
 	// set up our custom error handler for X failures
 	XSetErrorHandler( &qXErrorHandler );
@@ -1899,6 +1955,8 @@ void VKimp_Init( glconfig_t *config )
 	{
 		return;
 	}
+
+	IN_Init();
 
 	// This values force the UI to disable driver selection
 	config->driverType = GLDRV_ICD;
@@ -1953,16 +2011,6 @@ void IN_Init( void )
 
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
-	in_dgamouse = Cvar_Get( "in_dgamouse", "1", CVAR_ARCHIVE_ND );
-	in_shiftedKeys = Cvar_Get( "in_shiftedKeys", "0", CVAR_ARCHIVE_ND );
-
-	// turn on-off sub-frame timing of X events
-	in_subframe = Cvar_Get( "in_subframe", "1", CVAR_ARCHIVE_ND );
-
-	// developer feature, allows to break without loosing mouse pointer
-	in_nograb = Cvar_Get( "in_nograb", "0", 0 );
-
-	in_forceCharset = Cvar_Get( "in_forceCharset", "1", CVAR_ARCHIVE_ND );
 
 #ifdef USE_JOYSTICK
 	// bk001130 - from cvs.17 (mkv), joystick variables

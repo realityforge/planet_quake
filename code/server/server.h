@@ -511,6 +511,7 @@ void SV_MasterShutdown( void );
 int SV_RateMsec( const client_t *client );
 void SV_FlushRedirect( const char *outputbuf );
 
+
 //
 // sv_init.c
 //
@@ -525,6 +526,7 @@ void SV_ChangeMaxClients( void );
 void SV_SpawnServer( const char *mapname, qboolean killBots );
 void SV_BoundMaxClients( int minimum );
 void SV_SetSnapshotParams( void );
+
 
 
 //

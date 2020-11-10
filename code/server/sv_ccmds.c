@@ -172,12 +172,17 @@ static void SV_Map_f( void ) {
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
+	FS_RestorePure();
 	if(len == -1) {
+#ifdef USE_LOCAL_DED
 		if(FS_InMapIndex(expanded)) {
 			len = 1;
 		}
+#else
+		return
+#endif
 	}
-	FS_RestorePure();
+#ifdef USE_LOCAL_DED
 	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
 		Com_Printf("Error: Can't find map %s\n", expanded );
 		Cmd_Clear();
@@ -185,6 +190,7 @@ static void SV_Map_f( void ) {
 		Cbuf_Execute();
 		return;
 	}
+#endif
 
 	// force latched values to get set
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
