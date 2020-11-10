@@ -776,7 +776,7 @@ static void SVC_Info( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	// allow people to connect to your single player server
 	if(!com_dedicated->integer)
 #endif

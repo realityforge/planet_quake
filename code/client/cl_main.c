@@ -1282,7 +1282,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	cls.qrCodeShader = 0;
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	if(dropped || cls.postgame)
 #endif
 	if ( cgvm ) {
@@ -1402,7 +1402,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 	
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	// detect a map command and start connection to localhost
 	//   this helps the UI not sit around and wait while the server is starting
 	if( (!strcmp(cmd, "map")
@@ -1936,7 +1936,7 @@ static void CL_SendPureChecksums( void ) {
 	if ( !cl_connectedToPureServer || clc.demoplaying )
 		return;
 
-#ifdef EMSCRIPTEN
+#ifdef USE_SPOOF_CHECKSUM
 	// because restarting VMs is not done, especially when file system doesnt change
 	//   but resetting which Paks are used is cleared in ParseGamestate
 	//   also the server does this
@@ -4125,7 +4125,8 @@ static void CL_InitRef_After_Load2( void )
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 #ifdef USE_RENDERER_DLOPEN
-#ifdef EMSCRIPTEN // because starting dlopen is async have to rerun this code
+#ifdef EMSCRIPTEN
+ 	// because starting dlopen is async have to rerun this code
 	if(!cls.rendererStarted) {
 		cls.rendererStarted = qtrue;
 		CL_InitRenderer();

@@ -1484,10 +1484,6 @@ void NET_OpenSocks_After_Listen( void ) {
 #else
 	socksRelayAddr.sin_addr.s_addr = *(int *)&buf[4];
 	socksRelayAddr.sin_port = *(short *)&buf[8]; // no htons because it only uses 2 bytes instead of 4?
-#endif
-	memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
-
-#ifndef EMSCRIPTEN
   // set non-blocking on the socks TCP connection
   {
     ioctlarg_t			_true = 1;
@@ -1496,6 +1492,8 @@ void NET_OpenSocks_After_Listen( void ) {
     }
   }
 #endif
+
+  memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
 
 //  ip_socket = socks_socket;
   Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%i\n",

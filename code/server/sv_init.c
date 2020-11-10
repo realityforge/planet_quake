@@ -812,12 +812,13 @@ void SV_Init( void )
 {
 	int index;
 
-#ifdef EMSCRIPTEN
+#ifdef USE_CMD_CONNECTOR
+	// if using a local dedicated server and these commands are not present, 
+	//   then they will automatically be forwarded to the local dedicated server
+	//   via `CL_ForwardCommandToServer()`
 	if(com_dedicated->integer) {
 		SV_AddOperatorCommands();
-
-		if ( com_dedicated->integer )
-			SV_AddDedicatedCommands();
+		SV_AddDedicatedCommands();
 	}
 #else
 	SV_AddOperatorCommands();

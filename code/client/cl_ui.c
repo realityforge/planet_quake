@@ -1224,7 +1224,7 @@ void CL_ShutdownUI( void ) {
 	VM_Free( uivm );
 	uivm = NULL;
 	FS_VM_CloseFiles( H_Q3UI );
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
 	cls.cursory = 0;
 	cls.uiGlConfig = NULL;

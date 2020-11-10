@@ -793,7 +793,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
 		VM_CHECKBOUNDS( cgvm, args[1], sizeof( glconfig_t ) );
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 		// TODO: add this to native build
 		cls.cgameGlConfig = VMA(1);
 #endif

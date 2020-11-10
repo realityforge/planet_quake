@@ -4468,6 +4468,8 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         Q_strcat( neededpaks, len, "@");
         // Do we have one with the same name?
 #ifndef EMSCRIPTEN
+				// TODO: remove this requirement, if a file already exists in Sys_BeginDownload
+				//   then append the checksum to the file, need to add TempName handling
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
         {
           char st[MAX_ZPATH];

@@ -1915,7 +1915,7 @@ void SV_DemoStopPlayback(void)
 #ifdef DEDICATED
 		Cbuf_AddText(va("map %s\n", Cvar_VariableString( "mapname" ))); // better to do a map command rather than map_restart if we do a mod switching with game_restart, map_restart will point to no map (because the config is completely unloaded)
 #else
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(com_dedicated->integer) {
 			Cbuf_AddText(va("spmap %s\n", Cvar_VariableString( "mapname" )));
 		}

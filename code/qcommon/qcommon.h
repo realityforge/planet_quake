@@ -609,7 +609,7 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 typedef struct {
 	int					frametime;
 	int					realtime;
@@ -1338,7 +1338,7 @@ void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute );
 #else
 void CL_MouseEvent( int dx, int dy, int time );
