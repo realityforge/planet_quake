@@ -969,9 +969,7 @@ NET_IPSocket
 static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	SOCKET				newsocket;
 	struct sockaddr_in	address;
-#ifndef EMSCRIPTEN
 	ioctlarg_t			_true = 1;
-#endif
   int					i = 1;
 
 	*err = 0;
@@ -1044,9 +1042,7 @@ NET_IP6Socket
 static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockaddr_in6 *bindto, int *err ) {
 	SOCKET				newsocket;
 	struct sockaddr_in6	address;
-#ifndef EMSCRIPTEN
 	ioctlarg_t			_true = 1;
-#endif
 
 	*err = 0;
 
@@ -1240,12 +1236,10 @@ int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
 	struct hostent		*h;
-#ifndef EMSCRIPTEN
 	int					len;
   int i = 1;
 	qboolean			rfc1929;
 	unsigned char		buf[64];
-#endif
 
 	usingSocks = qfalse;
 #ifdef EMSCRIPTEN
@@ -1494,6 +1488,7 @@ void NET_OpenSocks_After_Listen( void ) {
 	memset( &socksRelayAddr.sin_zero, 0, sizeof( socksRelayAddr.sin_zero ) );
 
 #ifndef EMSCRIPTEN
+  // set non-blocking on the socks TCP connection
   {
     ioctlarg_t			_true = 1;
     if( ioctlsocket( socks_socket, FIONBIO, &_true ) == SOCKET_ERROR ) {

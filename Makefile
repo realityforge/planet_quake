@@ -702,7 +702,7 @@ endif
   GL_GLEXT_PROTOTYPES=1
 
   BASE_CFLAGS = \
-	  -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+	  -Wall -Wno-unused-variable -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
 		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
 		-DUSE_Q3KEY -DUSE_MD5 \
     -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \

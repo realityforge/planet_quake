@@ -3277,7 +3277,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	{
 		if(checksum == fs_serverReferencedPaks[index])
 			return qtrue;
-#ifdef EMSCRIPTEN
+#ifdef USE_SPOOF_CHECKSUM
 		// even if the pak checksum isn't the same, trust the pak is already downloaded
 		else if (Q_stristr(zipfile, fs_serverReferencedPakNames[index])) {
 			return qtrue;
@@ -4439,7 +4439,8 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 				havepak = qtrue; // This is it!
 				break;
 			}
-#ifdef EMSCRIPTEN
+#ifdef USE_SPOOF_CHECKSUM
+			// if we have a pack with the same name, skip it
 			if (sp->pack && Q_stristr(sp->pack->pakFilename, fs_serverReferencedPakNames[i])) {				
 				havepak = qtrue; // Accept that the checksums don't match and move on
 				break;
@@ -5519,6 +5520,8 @@ void FS_InitFilesystem( void ) {
 	// try to start up normally
 	FS_Restart( 0 );
 #ifdef EMSCRIPTEN
+	// normally this would be called, but because of async, we don't need to wait for
+	//   a shutdown callback the first time around
 	FS_Startup();
 #endif
 }
@@ -5531,13 +5534,11 @@ FS_Restart
 */
 void FS_Restart( int checksumFeed ) {
 
-#ifndef EMSCRIPTEN
 	// last valid game folder used
 	static char lastValidBase[MAX_OSPATH];
 	static char lastValidGame[MAX_OSPATH];
 
 	static qboolean execConfig = qfalse;
-#endif
 
 	// free anything we currently have loaded
 	FS_Shutdown( qfalse );

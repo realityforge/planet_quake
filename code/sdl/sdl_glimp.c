@@ -63,7 +63,8 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( qboolean unloadDLL )
 {
-#ifdef EMSCRIPTEN
+#ifdef USE_LAZY_LOAD
+	// never shutdown here, will shut down when platform exits
 	return;
 #endif
 	IN_Shutdown();
@@ -73,10 +74,6 @@ void GLimp_Shutdown( qboolean unloadDLL )
 
 	if ( unloadDLL )
 		SDL_QuitSubSystem( SDL_INIT_VIDEO );
-#ifdef EMSCRIPTEN
-	if(unloadDLL)
-		SDL_QuitSubSystem(SDL_INIT_AUDIO);
-#endif
 }
 
 

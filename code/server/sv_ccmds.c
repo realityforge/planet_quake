@@ -1598,9 +1598,13 @@ void SV_AddDedicatedCommands( void )
 {
 	Cmd_AddCommand( "serverinfo", SV_Serverinfo_f );
 	Cmd_AddCommand( "systeminfo", SV_Systeminfo_f );
-#ifndef EMSCRIPTEN
+#ifndef USE_CMD_CONNECTOR
 	Cmd_AddCommand( "tell", SV_ConTell_f );
 	Cmd_AddCommand( "say", SV_ConSay_f );
+#else
+	// so these commands to interfer with vm_game commands with the same name
+	Cmd_AddCommand( "svtell", SV_ConTell_f );
+	Cmd_AddCommand( "svsay", SV_ConSay_f );
 #endif
 	Cmd_AddCommand( "locations", SV_Locations_f );
 }
@@ -1610,9 +1614,12 @@ void SV_RemoveDedicatedCommands( void )
 {
 	Cmd_RemoveCommand( "serverinfo" );
 	Cmd_RemoveCommand( "systeminfo" );
-#ifndef EMSCRIPTEN
+#ifndef USE_CMD_CONNECTOR
 	Cmd_RemoveCommand( "tell" );
 	Cmd_RemoveCommand( "say" );
+#else
+	Cmd_RemoveCommand( "svtell" );
+	Cmd_RemoveCommand( "svsay" );
 #endif
 	Cmd_RemoveCommand( "locations" );
 }

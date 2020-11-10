@@ -377,7 +377,7 @@ void Spy_Banner(float x, float y) {
 CL_MouseEvent
 =================
 */
-#ifndef EMSCRIPTEN
+#ifndef USE_ABS_MOUSE
 void CL_MouseEvent( int dx, int dy, int time ) {
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {

@@ -435,7 +435,7 @@ rescan:
 	}
 
 	// we may want to put a "connect to other server" command here
-#ifdef EMSCRIPTEN
+#ifdef USE_CMD_CONNECTOR
 	if ( !strcmp( cmd, "postgame" ) ) {
 		cls.postgame = qtrue;
 	}
@@ -505,7 +505,7 @@ void CL_ShutdownCGame( void ) {
 	cgvm = NULL;
 	FS_VM_CloseFiles( H_CGAME );
 
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 	cls.cgameGlConfig = NULL;
 	cls.cgameFirstCvar = NULL;
 	cls.numCgamePatches = 0;
@@ -593,7 +593,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	{
 		vmCvar_t *cvar;
 		cvar = (vmCvar_t *)VMA(1);
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 		if (cvar && (!cls.cgameFirstCvar || cvar < cls.cgameFirstCvar)) {
 			cls.cgameFirstCvar = cvar;
 		}

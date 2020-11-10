@@ -350,6 +350,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 	if ( code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT ) {
 		VM_Forced_Unload_Start();
+#ifdef USE_LOCAL_DED
+		if(com_dedicated->integer)
+#endif
 		SV_Shutdown( "Server disconnected" );
 		Com_EndRedirect();
 #ifndef DEDICATED
@@ -367,7 +370,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_Printf( "********************\nERROR: %s\n********************\n", 
 			com_errorMessage );
 		VM_Forced_Unload_Start();
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( va( "Server crashed: %s",  com_errorMessage ) );
@@ -383,6 +386,9 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 		longjmp( abortframe, -1 );
 	} else if ( code == ERR_NEED_CD ) {
+#ifdef USE_LOCAL_DED
+		if(com_dedicated->integer)
+#endif
 		SV_Shutdown( "Server didn't have CD" );
 		Com_EndRedirect();
 #ifndef DEDICATED
@@ -403,12 +409,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	} else {
 		VM_Forced_Unload_Start();
 #ifndef DEDICATED
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(!com_dedicated->integer)
 #endif
 		CL_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ), qtrue );
 #endif
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ) );
@@ -440,6 +446,9 @@ void Com_Quit_f( void ) {
 		// Sys_Quit will kill this process anyways, so
 		// a corrupt call stack makes no difference
 		VM_Forced_Unload_Start();
+#ifdef USE_LOCAL_DED
+		if(com_dedicated->integer)
+#endif
 		SV_Shutdown( p[0] ? p : "Server quit" );
 #ifndef DEDICATED
 		CL_Shutdown( p[0] ? p : "Client quit", qtrue );
@@ -2878,7 +2887,7 @@ int Com_EventLoop( void ) {
 			// manually send packet events for the loopback channel
 #ifndef DEDICATED
 			while ( NET_GetLoopPacket( NS_CLIENT, &evFrom, &buf ) ) {
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 				if(!com_dedicated->integer)
 #endif
 				CL_PacketEvent( &evFrom, &buf );
@@ -2886,7 +2895,7 @@ int Com_EventLoop( void ) {
 #endif
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 				if(com_dedicated->integer)
 #endif
 				if ( com_sv_running->integer ) {
@@ -2900,7 +2909,7 @@ int Com_EventLoop( void ) {
 
 		switch ( ev.evType ) {
 #ifndef DEDICATED
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 		case SE_FINGER_DOWN:
 			CL_KeyEvent( ev.evValue, qtrue, ev.evTime, ev.evValue2 );
 			break;
@@ -2915,13 +2924,13 @@ int Com_EventLoop( void ) {
 			CL_CharEvent( ev.evValue );
 			break;
 		case SE_MOUSE:
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 			CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime, qfalse );
 #else
 			CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime );
 #endif
 			break;
-#ifdef EMSCRIPTEN
+#ifdef USE_ABS_MOUSE
 		case SE_MOUSE_ABS:
 			CL_MouseEvent( ev.evValue, ev.evValue2, ev.evTime, qtrue );
 			break;
@@ -3080,7 +3089,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		}
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		// Kill server if we have one
@@ -3634,10 +3643,8 @@ Com_Init
 =================
 */
 void Com_Init( char *commandLine ) {
-#ifndef EMSCRIPTEN
 	const char *s;
 	int	qport;
-#endif
 
 	Com_Printf( "%s %s %s\n", SVN_VERSION, PLATFORM_STRING, __DATE__ );
 
@@ -3886,9 +3893,7 @@ void Com_Init_After_Filesystem( void ) {
 
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 #ifdef EMSCRIPTEN
-//	if(Cvar_VariableIntegerValue("net_socksLoading")) {
 	NET_Init( );
-//	}
 #endif
 }
 
@@ -4247,7 +4252,7 @@ void Com_Frame( qboolean noDelay ) {
 	if ( noDelay == qfalse )
 	do {
 		if ( 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 			com_dedicated->integer &&
 #endif
 			com_sv_running->integer 
@@ -4306,7 +4311,7 @@ void Com_Frame( qboolean noDelay ) {
 		timeBeforeServer = Sys_Milliseconds();
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	if(com_dedicated->integer)
 #endif
 	SV_Frame( msec );
@@ -4319,7 +4324,8 @@ void Com_Frame( qboolean noDelay ) {
 	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
 		return;
 	}
-#else
+#endif
+#ifndef USE_LOCAL_DED
 	if ( com_dedicated->modified ) {
 		// get the latched value
 		Cvar_Get( "dedicated", "0", 0 );

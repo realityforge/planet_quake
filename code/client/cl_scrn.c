@@ -674,7 +674,6 @@ void SCR_UpdateScreen( void ) {
 		return; // not initialized yet
 
 	int ms = Sys_Milliseconds();
-#ifndef EMSCRIPTEN
 	if ( framecount == cls.framecount ) {
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
@@ -685,7 +684,6 @@ void SCR_UpdateScreen( void ) {
 		next_frametime = 0;
 		framecount = cls.framecount;
 	}
-#endif
 
 	if ( ++recursive > 2 ) {
 		Com_Error( ERR_FATAL, "SCR_UpdateScreen: recursively called" );

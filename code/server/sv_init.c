@@ -432,11 +432,9 @@ static qboolean startingServer = qfalse;
 
 void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
-#ifndef EMSCRIPTEN
 	int			checksum;
 	qboolean	isBot;
 	const char	*p;
-#endif
 	if(startingServer) {
 		Com_Printf( "SpawnServer: Already starting\n" );
 		return;
@@ -469,7 +467,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #endif
 #endif
 
-#ifndef EMSCRIPTEN
+#ifndef USE_LAZY_LOAD
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 #endif
@@ -778,7 +776,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	Hunk_SetMark();
 	
-#ifdef EMSCRIPTEN
+#ifdef USE_LAZY_LOAD
 	svShuttingDown = qfalse;
 #else
 #ifndef DEDICATED
@@ -1020,7 +1018,7 @@ void SV_FinalMessage( const char *message ) {
   			if (cl->demorecording) {
   				SV_StopRecord( cl );
  				}
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 				if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
 					SV_SendServerCommand( cl, "reconnect\nprint \"%s\n\"\n", message );
 				}
@@ -1056,6 +1054,12 @@ void SV_Shutdown( const char *finalmsg ) {
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
+	
+#ifdef USE_LOCAL_DED
+	if(!svs.clients || !com_dedicated->integer) {
+		return;
+	}
+#endif
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 
@@ -1097,7 +1101,7 @@ void SV_Shutdown( const char *finalmsg ) {
 	SV_SaveRecordCache();
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	// Local server is "always on"
 	if(!svShuttingDown) {
 		svShuttingDown = qtrue;
@@ -1145,7 +1149,7 @@ void SV_Shutdown( const char *finalmsg ) {
 	Com_Printf( "---------------------------\n" );
 
 #ifndef DEDICATED
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 	// disconnect any local clients
 	if ( sv_killserver->integer != 2 )
 		CL_Disconnect( qfalse, qtrue );
@@ -1160,7 +1164,7 @@ void SV_Shutdown( const char *finalmsg ) {
 
 	Sys_SetStatus( "Server is not running" );
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	Cmd_Clear();
 	Cbuf_AddText(va("spmap q3dm0\n"));
 #endif

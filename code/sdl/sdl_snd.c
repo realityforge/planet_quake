@@ -389,6 +389,7 @@ void SNDDMA_Shutdown( void )
 #endif
 
 #ifndef EMSCRIPTEN
+	// audio can't restart in emscripten, so skip it here
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 	free(dma.buffer);
 #endif

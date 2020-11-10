@@ -1461,6 +1461,7 @@ void S_FreeOldestSound( void ) {
 
 static void S_Base_Shutdown( void ) {	
 #ifdef EMSCRIPTEN
+	// never shut down sounds, emscripten has a problem starting them again
 	return;
 #endif
 

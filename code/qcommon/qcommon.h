@@ -19,6 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
+
 // qcommon.h -- definitions common between client and server, but not game.or ref modules
 #ifndef _QCOMMON_H_
 #define _QCOMMON_H_
@@ -45,6 +46,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #if defined (_WIN32) || defined(__linux__)
 #ifndef EMSCRIPTEN
 #define USE_AFFINITY_MASK
+#else
+#undef USE_AFFINITY_MASK
 #endif
 #endif
 

@@ -572,7 +572,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		Cvar_SetCheatState();
 	}
 
-#ifndef EMSCRIPTEN // allow file restrictions locally
+#ifndef USE_LOCAL_DED // allow file restrictions locally
 	if ( com_sv_running->integer ) {
 		// no filesystem restrictions for localhost
 		FS_PureServerSetLoadedPaks( "", "" );

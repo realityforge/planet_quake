@@ -1898,14 +1898,12 @@ void VM_LogSyscalls( int *args ) {
 #endif
 }
 
-#ifdef EMSCRIPTEN
-
 int GetIntFromByte(byte *offset) {
 	return (offset[3] << 24) | (offset[2] << 16)
 		| (offset[1] << 8) | offset[0];
 }
 
-
+#ifdef USE_ABS_MOUSE
 byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker) {
 	int i, j;
 	int diff = realtimeMarker ^ 0x7FFFFFFF;
@@ -1931,8 +1929,9 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 	}
 	return ret;
 }
+#endif
 
-
+#ifdef EMSCRIPTEN
 qboolean VM_IsSuspended(vm_t * vm) {
 #ifndef NO_VM_COMPILED
 		if (vm->compiled) {

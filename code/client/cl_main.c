@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include <limits.h>
 
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 #include "../ui/ui_shared.h"
 #endif
 
@@ -1238,9 +1238,7 @@ This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
-#ifdef EMSCRIPTEN
 	netadr_t	addr;
-#endif
 	
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return cl_restarted;
@@ -1312,7 +1310,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		return qfalse;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	{
 		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 		if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
@@ -1373,7 +1371,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	cl_disconnecting = qfalse;
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	clc.serverAddress = addr;
 #endif
 	return cl_restarted;
@@ -1597,7 +1595,7 @@ void CL_Disconnect_f( void ) {
 		} else {
 			// clear any previous "server full" type messages
 			clc.serverMessage[0] = '\0';
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 			if ( com_sv_running && com_sv_running->integer ) {
 				// if running a local server, kill it
 				SV_Shutdown( "Disconnected from server" );
@@ -1739,7 +1737,7 @@ static void CL_Connect_f( void ) {
 	// clear any previous "server full" type messages
 	clc.serverMessage[0] = '\0';
 
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 	// if running a local server, kill it
 	if ( com_sv_running->integer && !strcmp( server, "localhost" ) ) {
 		SV_Shutdown( "Server quit" );
@@ -1748,9 +1746,9 @@ static void CL_Connect_f( void ) {
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
 	SV_Frame( 0 );
-#endif
 
-#ifdef EMSCRIPTEN
+#else
+
 	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
 		|| !strcmp (server, va("127.0.0.1:%i", PORT_SERVER)))) {
 		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
@@ -1819,7 +1817,7 @@ void CL_Connect_After_Restart( void ) {
 
 	// if we aren't playing on a lan, we need to authenticate
 	// with the cd key
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 	if ( NET_IsLocalAddress( &clc.serverAddress ) ) {
 		cls.state = CA_CHALLENGING;
 	} else 
@@ -1978,7 +1976,7 @@ doesn't know what graphics to reload
 */
 static void CL_Vid_Restart( void ) {
 
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 	const float MATCH_EPSILON = 0.001f;
 	const char *arg = Cmd_Argv(1);
 
@@ -2546,7 +2544,7 @@ static void CL_DownloadsComplete( void ) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
-#ifndef EMSCRIPTEN
+#ifndef USE_LAZY_LOAD
 	CL_FlushMemory();
 #else
 	re.LoadShaders();
@@ -3292,9 +3290,9 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 			}
 		}
 		
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 		if(clc.serverAddress.type == NA_LOOPBACK) {
-		//	Cvar_Set( "sv_running", "1" );
+			Cvar_Set( "sv_running", "1" );
 		}
 #endif
 
@@ -3505,9 +3503,6 @@ CL_NoDelay
 qboolean CL_NoDelay( void )
 {
 	extern cvar_t *com_timedemo;
-#ifdef EMSCRIPTEN
-	return qfalse;
-#endif
 	if ( CL_VideoRecording() || ( com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
 		return qtrue;
 	
@@ -4130,7 +4125,7 @@ static void CL_InitRef_After_Load2( void )
 	// unpause so the cgame definately gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 #ifdef USE_RENDERER_DLOPEN
-#ifdef EMSCRIPTEN
+#ifdef EMSCRIPTEN // because starting dlopen is async have to rerun this code
 	if(!cls.rendererStarted) {
 		cls.rendererStarted = qtrue;
 		CL_InitRenderer();
@@ -5179,7 +5174,7 @@ static void CL_LocalServers_f( void ) {
 	message = "\377\377\377\377getinfo xxx";
 	n = (int)strlen( message );
 
-#ifdef EMSCRIPTEN
+#ifdef USE_MASTER_LAN
 	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
 		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
 			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses++];

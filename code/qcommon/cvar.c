@@ -2054,7 +2054,11 @@ void Cvar_Init (void)
 	cvar_cheats = Cvar_Get( "sv_cheats", "1", CVAR_ROM | CVAR_SYSTEMINFO );
 	cvar_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
 
+#ifndef USE_CMD_CONNECTOR
 	Cmd_AddCommand ("print", Cvar_Print_f);
+#else
+	Cmd_AddCommand ("echo", Cvar_Print_f);
+#endif
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc( "toggle", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("set", Cvar_Set_f);

@@ -1904,7 +1904,7 @@ void SV_DemoStopPlayback(void)
 		Com_Printf("DEMOERROR: An error happened while playing/recording the demo, please check the log for more info\n"); // if server, don't crash it if an error happens, just print a message
 #else
 		Com_Error (ERR_DROP,"An error happened while replaying the demo, please check the log for more info\n");
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 		Cvar_SetValue("sv_killserver", 1);
 #endif
 #endif
@@ -1923,7 +1923,7 @@ void SV_DemoStopPlayback(void)
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
 		Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
 		sv_maxclients->modified = qfalse; // Set modified to false
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 		// Kill the local server
 		Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
 #endif

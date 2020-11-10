@@ -140,7 +140,7 @@ void SV_GetChallenge( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	// allow people to connect to your single player server
 	if(!com_dedicated->integer)
 #endif
@@ -529,12 +529,12 @@ void SV_CheckInvoicesAndPayments( void ) {
 	if(!maxInvoices) return;
 
 	// don't even bother if a request is already in progress
-	#ifdef EMSCRIPTEN
-		if(svDownload)
-	#else
-		if(svDownload.cURL)
-	#endif
-			return;
+#ifdef EMSCRIPTEN
+	if(svDownload)
+#else
+	if(svDownload.cURL)
+#endif
+		return;
 
 	now = Sys_Milliseconds();
 	oldestInvoiceTime = now;
@@ -565,7 +565,6 @@ void SV_CheckInvoicesAndPayments( void ) {
 		// update the oldest invoice before finding a new one
 #ifndef EMSCRIPTEN
 		if(svDownload.TempStore[0]) {
-Com_Printf("Response: %s\n", svDownload.TempStore);
 			SV_CheckInvoiceStatus(requestInvoice);
 		}
 #endif
@@ -2277,7 +2276,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	Cmd_TokenizeString( s );
 	
 	// TODO: check implied rconpassword from previous attempt by client
-#ifdef EMSCRIPTEN
+#ifdef USE_CMD_CONNECTOR
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
@@ -2299,7 +2298,6 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		Cvar_Set("dedicated", va("%i", ded));
 		Com_EndRedirect();
 	}
-
 #endif
 
 	// malicious users may try using too many string commands

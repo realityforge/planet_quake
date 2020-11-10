@@ -252,7 +252,7 @@ void Cbuf_Execute( void )
 		// execute the command line
 		Cmd_ExecuteString( line, qfalse );
 #ifdef EMSCRIPTEN
-		// if an execution invoked a callback event, run the rest next frame
+		// if an execution invoked a callback event like `\fs_restart`, run the rest next frame
 		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
 			return;
 		}
@@ -911,7 +911,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	}
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	if (com_dedicated->integer)
 #endif
 	// check server game commands

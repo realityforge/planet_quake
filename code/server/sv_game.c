@@ -1124,7 +1124,7 @@ qboolean SV_GameCommand( void ) {
 		return qfalse;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef USE_CMD_CONNECTOR
 	// even in dedicated mode don't "say" command when it is not found
 	// don't run game server on client anymore for single player
 

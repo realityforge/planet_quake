@@ -981,7 +981,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 	case UI_GETGLCONFIG:
 		VM_CHECKBOUNDS( uivm, args[1], sizeof( glconfig_t ) );
-#ifdef EMSCRIPTEN
+#ifdef USE_VID_FAST
 		cls.uiGlConfig = VMA(1);
 #endif
 		CL_GetGlconfig( VMA(1) );
