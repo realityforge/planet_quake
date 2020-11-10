@@ -1,6 +1,7 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 2012-2020 Quake3e project
 
 This file is part of Quake III Arena source code.
 
@@ -37,6 +38,7 @@ and one exported function: Perform
 
 opcode_info_t ops[ OP_MAX ] = 
 {
+	// size, stack, nargs, flags
 	{ 0, 0, 0, 0 }, // undef
 	{ 0, 0, 0, 0 }, // ignore
 	{ 0, 0, 0, 0 }, // break
@@ -64,13 +66,13 @@ opcode_info_t ops[ OP_MAX ] =
 	{ 4,-8, 2, JUMP }, // gtu
 	{ 4,-8, 2, JUMP }, // geu
 
-	{ 4,-8, 2, JUMP }, // eqf
-	{ 4,-8, 2, JUMP }, // nef
+	{ 4,-8, 2, JUMP|FPU }, // eqf
+	{ 4,-8, 2, JUMP|FPU }, // nef
 
-	{ 4,-8, 2, JUMP }, // ltf
-	{ 4,-8, 2, JUMP }, // lef
-	{ 4,-8, 2, JUMP }, // gtf
-	{ 4,-8, 2, JUMP }, // gef
+	{ 4,-8, 2, JUMP|FPU }, // ltf
+	{ 4,-8, 2, JUMP|FPU }, // lef
+	{ 4,-8, 2, JUMP|FPU }, // gtf
+	{ 4,-8, 2, JUMP|FPU }, // gef
 
 	{ 0, 0, 1, 0 }, // load1
 	{ 0, 0, 1, 0 }, // load2
@@ -103,14 +105,14 @@ opcode_info_t ops[ OP_MAX ] =
 	{ 0,-4, 3, 0 }, // rshi
 	{ 0,-4, 3, 0 }, // rshu
 
-	{ 0, 0, 1, 0 }, // negf
-	{ 0,-4, 3, 0 }, // addf
-	{ 0,-4, 3, 0 }, // subf
-	{ 0,-4, 3, 0 }, // divf
-	{ 0,-4, 3, 0 }, // mulf
+	{ 0, 0, 1, FPU }, // negf
+	{ 0,-4, 3, FPU }, // addf
+	{ 0,-4, 3, FPU }, // subf
+	{ 0,-4, 3, FPU }, // divf
+	{ 0,-4, 3, FPU }, // mulf
 
 	{ 0, 0, 1, 0 }, // cvif
-	{ 0, 0, 1, 0 } // cvfi
+	{ 0, 0, 1, FPU }  // cvfi
 };
 
 const char *opname[ 256 ] = {
@@ -410,6 +412,7 @@ int	ParseHex( const char *text ) {
 	return value;
 }
 
+
 /*
 ===============
 VM_LoadSymbols
@@ -705,8 +708,7 @@ static char *VM_ValidateHeader( vmHeader_t *header, int fileSize )
 		return errMsg;
 	}
 
-	if ( header->vmMagic == VM_MAGIC_VER2 ) 
-	{
+	if ( header->vmMagic == VM_MAGIC_VER2 ) {
 		// bad lit/jtrg length
 		if ( header->dataOffset + header->dataLength + header->litLength + header->jtrgLength != fileSize ) {
 			sprintf( errMsg, "bad lit/jtrg segment length" );
@@ -714,8 +716,7 @@ static char *VM_ValidateHeader( vmHeader_t *header, int fileSize )
 		}
 	} 
 	// bad lit length
-	else if ( header->dataOffset + header->dataLength + header->litLength != fileSize ) 
-	{
+	else if ( header->dataOffset + header->dataLength + header->litLength != fileSize ) {
 		sprintf( errMsg, "bad lit segment length %i", header->litLength );
 		return errMsg;
 	}
@@ -787,6 +788,9 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	vm->exactDataLength = header->dataLength + header->litLength + header->bssLength;
 	dataLength = vm->exactDataLength + PROGRAM_STACK_EXTRA;
+	if ( dataLength < PROGRAM_STACK_SIZE + PROGRAM_STACK_EXTRA ) {
+		dataLength = PROGRAM_STACK_SIZE + PROGRAM_STACK_EXTRA;
+	}
 	vm->dataLength = dataLength;
 
 	// round up to next power of 2 so all data operations can
@@ -799,6 +803,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 	dataAlloc = dataLength + 1024;
 
 	if ( dataLength >= (1U<<31) || dataAlloc >= (1U<<31) ) {
+		// dataLenth is negative int32
 		VM_Free( vm );
 		FS_FreeFile( header );
 		Com_Printf( S_COLOR_RED "%s: data segment is too large\n", __func__ );
@@ -879,6 +884,100 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 }
 
 
+static void VM_IgnoreInstructions( instruction_t *buf, const int count ) {
+	int i;
+
+	for ( i = 0; i < count; i++ ) {
+		Com_Memset( buf + i, 0, sizeof( *buf ) );
+		buf[i].op = OP_IGNORE;
+	}
+
+	buf[0].value = count > 0 ? count - 1 : 0;
+}
+
+
+/*
+=================
+VM_FindLocal
+
+search for specified local variable until end of function
+=================
+*/
+static qboolean VM_FindLocal( int addr, const instruction_t *buf, const instruction_t *end ) {
+	while ( buf < end ) {
+		if ( buf->op == OP_LOCAL && buf->value == addr )
+			return qtrue;
+		if ( buf->op == OP_PUSH && (buf+1)->op == OP_LEAVE )
+			break;
+		++buf;
+	}
+	return qfalse;
+}
+
+
+/*
+=================
+VM_Fixup
+
+Do some corrections to fix known Q3LCC flaws
+=================
+*/
+static void VM_Fixup( instruction_t *buf, int instructionCount )
+{
+	int n;
+	instruction_t *i;
+
+	i = buf;
+	n = 0;
+
+	while ( n < instructionCount )
+	{
+		if ( i->op == OP_LOCAL ) {
+
+			// skip useless sequences
+			if ( (i+1)->op == OP_LOCAL && (i+0)->value == (i+1)->value && (i+2)->op == OP_LOAD4 && (i+3)->op == OP_STORE4 ) {
+				VM_IgnoreInstructions( i, 4 );
+				i += 4; n += 4;
+				continue;
+			}
+
+			// OP_LOCAL + OP_CONST + OP_CALL + OP_STORE4
+			if ( (i+1)->op == OP_CONST && (i+2)->op == OP_CALL && (i+3)->op == OP_STORE4 && !(i+4)->jused ) {
+				// OP_CONST|OP_LOCAL + OP_LOCAL + OP_LOAD4 + OP_STORE4
+				if ( (i+4)->op == OP_CONST || (i+4)->op == OP_LOCAL ) {
+					if ((i+5)->op == OP_LOCAL && (i+5)->value == (i+0)->value && (i+6)->op == OP_LOAD4 && (i+7)->op == OP_STORE4 ) {
+						// make sure that address of temporary variable is not referenced anymore in this function
+						if ( !VM_FindLocal( i->value, i + 8, buf + instructionCount ) ) {
+							(i+0)->op = (i+4)->op;
+							(i+0)->value = (i+4)->value;
+							VM_IgnoreInstructions( i + 4, 4 );
+							i += 8;
+							n += 8;
+							continue;
+						}
+					}
+				}
+			}
+		}
+
+		if ( i->op == OP_LEAVE && !i->endp ) {
+			if ( !(i+1)->jused && (i+1)->op == OP_CONST && (i+2)->op == OP_JUMP ) {
+				int v = (i+1)->value;
+				if ( buf[ v ].op == OP_PUSH && buf[ v+1 ].op == OP_LEAVE && buf[ v+1 ].endp ) {
+					VM_IgnoreInstructions( i + 1, 2 );
+					i += 3;
+					n += 3;
+					continue;
+				}
+			}
+		}
+
+		i++;
+		n++;
+	}
+}
+
+
 /*
 =================
 VM_LoadInstructions
@@ -925,6 +1024,10 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 			ci->value = 0;
 		}
 
+		if ( ops[ op0 ].flags & FPU ) {
+			ci->fpu = 1;
+		}
+
 		// setup jump value from previous const
 		if ( op0 == OP_JUMP && op1 == OP_CONST ) {
 			ci->value = (ci-1)->value;
@@ -935,6 +1038,26 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 	}
 
 	return NULL;
+}
+
+
+static qboolean safe_address( instruction_t *ci, instruction_t *proc, int dataLength )
+{
+	if ( ci->op == OP_LOCAL ) {
+		// local address can't exceed programStack frame plus 256 bytes of passed arguments
+		if ( ci->value < 8 || ( proc && ci->value >= proc->value + 256 ) )
+			return qfalse;
+		return qtrue;
+	}
+
+	if ( ci->op == OP_CONST ) {
+		// constant address can't exceed data segment
+		if ( ci->value >= dataLength || ci->value < 0 )
+			return qfalse;
+		return qtrue;
+	}
+
+	return qfalse;
 }
 
 
@@ -952,9 +1075,12 @@ const char *VM_CheckInstructions( instruction_t *buf,
 								int dataLength )
 {
 	static char errBuf[ 128 ];
-	int i, n, v, op0, op1, opStack, pstack;
+	instruction_t *opStackPtr[ PROC_OPSTACK_SIZE ];
+	int i, m, n, v, op0, op1, opStack, pstack;
 	instruction_t *ci, *proc;
 	int startp, endp;
+	int safe_stores;
+	int unsafe_stores;
 
 	ci = buf;
 	opStack = 0;
@@ -974,8 +1100,12 @@ const char *VM_CheckInstructions( instruction_t *buf,
 
 	ci = buf;
 	pstack = 0;
+	opStack = 0;
+	safe_stores = 0;
+	unsafe_stores = 0;
 	op1 = OP_UNDEF;
 	proc = NULL;
+	Com_Memset( opStackPtr, 0, sizeof( opStackPtr ) );
 
 	startp = 0;
 	endp = instructionCount - 1;
@@ -984,6 +1114,26 @@ const char *VM_CheckInstructions( instruction_t *buf,
 
 	for ( i = 0; i < instructionCount; i++, ci++, op1 = op0 ) {
 		op0 = ci->op;
+
+		m = ops[ ci->op ].stack;
+		opStack += m;
+		if ( m >= 0 ) {
+			// do some FPU type promotion for more efficient loads
+			if ( ci->fpu && ci->op != OP_CVIF ) {
+				opStackPtr[ opStack / 4 ]->fpu = 1;
+			}
+			opStackPtr[ opStack >> 2 ] = ci;
+		} else {
+			if ( ci->fpu ) {
+				if ( m <= -8 ) {
+					opStackPtr[ opStack / 4 + 1 ]->fpu = 1;
+					opStackPtr[ opStack / 4 + 2 ]->fpu = 1;
+				} else {
+					opStackPtr[ opStack / 4 + 0 ]->fpu = 1;
+					opStackPtr[ opStack / 4 + 1 ]->fpu = 1;
+				}
+			}
+		}
 
 		// function entry
 		if ( op0 == OP_ENTER ) {
@@ -1013,6 +1163,7 @@ const char *VM_CheckInstructions( instruction_t *buf,
 			// locate endproc
 			for ( endp = 0, n = i+1 ; n < instructionCount; n++ ) {
 				if ( buf[n].op == OP_PUSH && buf[n+1].op == OP_LEAVE ) {
+					buf[n+1].endp = 1;
 					endp = n;
 					break;
 				}
@@ -1106,7 +1257,7 @@ const char *VM_CheckInstructions( instruction_t *buf,
 				}
 				if ( buf[v].op == OP_ENTER ) {
 					n = buf[v].op;
-					sprintf( errBuf, "jump target %i has bad opcode %i", v, n ); 
+					sprintf( errBuf, "jump target %i has bad opcode %s", v, opname[ n ] ); 
 					return errBuf;
 				}
 				if ( v == (i-1) ) {
@@ -1139,11 +1290,11 @@ const char *VM_CheckInstructions( instruction_t *buf,
 					}
 					if ( buf[v].op != OP_ENTER ) {
 						n = buf[v].op;
-						sprintf( errBuf, "call target %i has bad opcode %i", v, n );
+						sprintf( errBuf, "call target %i has bad opcode %s", v, opname[ n ] );
 						return errBuf;
 					}
 					if ( v == 0 ) {
-						sprintf( errBuf, "explicit vmMain call inside VM" );
+						sprintf( errBuf, "explicit vmMain call inside VM at %i", i );
 						return errBuf;
 					}
 					// mark jump target
@@ -1155,6 +1306,10 @@ const char *VM_CheckInstructions( instruction_t *buf,
 
 		if ( ci->op == OP_ARG ) {
 			v = ci->value & 255;
+			if ( proc == NULL ) {
+				sprintf( errBuf, "missing proc frame for %s %i at %i", opname[ ci->op ], v, i );
+				return errBuf;
+			}
 			// argument can't exceed programStack frame
 			if ( v < 8 || v > pstack - 4 || (v & 3) ) {
 				sprintf( errBuf, "bad argument address %i at %i", v, i );
@@ -1166,52 +1321,96 @@ const char *VM_CheckInstructions( instruction_t *buf,
 		if ( ci->op == OP_LOCAL ) {
 			v = ci->value;
 			if ( proc == NULL ) {
-				sprintf( errBuf, "missing proc frame for local %i at %i", v, i );
+				sprintf( errBuf, "missing proc frame for %s %i at %i", opname[ ci->op ], v, i );
 				return errBuf;
 			}
-			if ( (ci+1)->op == OP_LOAD1 || (ci+1)->op == OP_LOAD2 || (ci+1)->op == OP_LOAD4 || (ci+1)->op == OP_ARG ) {
-				// FIXME: alloc 256 bytes of programStack in VM_CallCompiled()?
-				if ( v < 8 || v >= proc->value + 256 ) {
-					sprintf( errBuf, "bad local address %i at %i", v, i );
+			if ( (ci+1)->op == OP_LOAD4 || (ci+1)->op == OP_LOAD2 || (ci+1)->op == OP_LOAD1 ) {
+				if ( !safe_address( ci, proc, dataLength ) ) {
+					sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], v, i );
 					return errBuf;
 				}
 			}
+			continue;
 		}
 
 		if ( ci->op == OP_LOAD4 && op1 == OP_CONST ) {
 			v = (ci-1)->value;
 			if ( v < 0 || v > dataLength - 4 ) {
-				sprintf( errBuf, "bad load4 address %i at %i", v, i - 1 );
+				sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], v, i - 1 );
 				return errBuf;
 			}
+			continue;
 		}
 
 		if ( ci->op == OP_LOAD2 && op1 == OP_CONST ) {
 			v = (ci-1)->value;
 			if ( v < 0 || v > dataLength - 2 ) {
-				sprintf( errBuf, "bad load2 address %i at %i", v, i - 1 );
+				sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], v, i - 1 );
 				return errBuf;
 			}
+			continue;
 		}
 
 		if ( ci->op == OP_LOAD1 && op1 == OP_CONST ) {
 			v =  (ci-1)->value;
 			if ( v < 0 || v > dataLength - 1 ) {
-				sprintf( errBuf, "bad load1 address %i at %i", v, i - 1 );
+				sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], v, i - 1 );
+				return errBuf;
+			}
+			continue;
+		}
+
+		if ( ci->op == OP_STORE4 || ci->op == OP_STORE2 || ci->op == OP_STORE1 ) {
+			instruction_t *x = opStackPtr[ opStack / 4 + 1 ];
+			if ( x->op == OP_CONST || x->op == OP_LOCAL ) {
+				if ( safe_address( x, proc, dataLength ) ) {
+					ci->safe = 1;
+					safe_stores++;
+					continue;
+				} else {
+					sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], x->value, (int)(x - buf) );
 				return errBuf;
 			}
 		}
+			unsafe_stores++;
+			continue;
+		}
 
 		if ( ci->op == OP_BLOCK_COPY ) {
+			instruction_t *src = opStackPtr[ opStack / 4 + 2 ];
+			instruction_t *dst = opStackPtr[ opStack / 4 + 1 ];
+			int safe = 0;
 			v = ci->value;
 			if ( v >= dataLength ) {
 				sprintf( errBuf, "bad count %i for block copy at %i", v, i - 1 );
 				return errBuf;
 			}
+			if ( src->op == OP_LOCAL || src->op == OP_CONST ) {
+				if ( !safe_address( src, proc, dataLength ) ) {
+					sprintf( errBuf, "bad src for block copy at %i", (int)(dst - buf) );
+					return errBuf;
+				}
+				src->safe = 1;
+				safe++;
+			}
+			if ( dst->op == OP_LOCAL || dst->op == OP_CONST ) {
+				if ( !safe_address( dst, proc, dataLength ) ) {
+					sprintf( errBuf, "bad dst for block copy at %i", (int)(dst - buf) );
+					return errBuf;
+				}
+				dst->safe = 1;
+				safe++;
+			}
+			if ( safe == 2 ) {
+				ci->safe = 1;
+			}
 		}
-
 //		op1 = op0;
 //		ci++;
+	}
+
+	if ( ( safe_stores + unsafe_stores ) > 0 ) {
+		Com_DPrintf( "%s: safe stores - %i (%i%%)\n", __func__, safe_stores, safe_stores * 100 / ( safe_stores + unsafe_stores ) );
 	}
 
 	if ( op1 != OP_UNDEF && op1 != OP_LEAVE ) {
@@ -1266,19 +1465,9 @@ __noJTS:
 		}
 	}
 
+	VM_Fixup( buf, instructionCount );
+
 	return NULL;
-}
-
-
-void VM_IgnoreInstructions( instruction_t *buf, int count ) {
-	int i;
-
-	for ( i = 0; i < count; i++ ) {
-		Com_Memset( buf + i, 0, sizeof( *buf ) );
-		buf[i].op = OP_IGNORE;
-	}
-
-	buf[0].value = count > 0 ? count - 1 : 0;
 }
 
 

@@ -133,6 +133,9 @@ typedef struct {
 	byte	opStack;	// 8
 	unsigned jused:1;
 	unsigned swtch:1;
+	unsigned safe:1;   // non-masked op_store
+	unsigned endp:1;
+	unsigned fpu:1;    // load into FPU register
 } instruction_t;
 
 typedef struct vmSymbol_s {
@@ -156,8 +159,8 @@ struct vm_s {
 	int			*opStack;			// pointer to local function stack
 	int			*opStackTop;
 
-	unsigned int programStack;		// the vm may be recursively entered
-	unsigned int stackBottom;		// if programStack < stackBottom, error
+	int			programStack;		// the vm may be recursively entered
+	int			stackBottom;		// if programStack < stackBottom, error
 
 	//------------------------------------
 
@@ -225,10 +228,10 @@ const char *VM_CheckInstructions( instruction_t *buf, int instructionCount,
 								 int numJumpTableTargets, 
 								 int dataLength );
 
-void VM_IgnoreInstructions( instruction_t *buf, int count );
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf );
 
 #define JUMP	(1<<0)
+#define FPU		(1<<1)
 
 typedef struct opcode_info_s 
 {

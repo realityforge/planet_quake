@@ -1,6 +1,7 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 2011-2020 Quake3e project
 
 This file is part of Quake III Arena source code.
 
@@ -53,6 +54,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define NUM_PASSES 3
 #endif
 
+#define REGS_OPTIMIZE
+#define CONST_OPTIMIZE
+#define MACRO_OPTIMIZE
+#define MISC_OPTIMIZE
 
 static void *VM_Alloc_Compiled( vm_t *vm, int codeLength, int tableLength );
 static void VM_Destroy_Compiled( vm_t *vm );
@@ -108,7 +113,7 @@ static void VM_Destroy_Compiled( vm_t *vm );
   | ???? | +4 - unused, reserved for interpreter
   | arg0 | +8  \
   | arg1 | +12  \ - passed arguments, accessible from vmMain
-  | arg2 | +16  / 
+  | arg2 | +16  /
   | arg3 | +20 /
   |------| vm->programStack = vm->dataMask + 1 // set by VM_Create()
 
@@ -422,6 +427,7 @@ static void EmitCommand( ELastCommand command )
 
 static void EmitAddEDI4( vm_t *vm )
 {
+#ifdef REGS_OPTIMIZE
 	if ( LastCommand == LAST_COMMAND_NONE )
 	{
 		EmitRexString( "83 C7 04" );			// add edi,4
@@ -440,7 +446,7 @@ static void EmitAddEDI4( vm_t *vm )
 	}
 
 	if ( LastCommand == LAST_COMMAND_SUB_DI_8 ) // sub edi, 8
-	{	
+	{
 #if idx64
 		REWIND( 4 );
 #else
@@ -451,7 +457,7 @@ static void EmitAddEDI4( vm_t *vm )
 	}
 
 	if ( LastCommand == LAST_COMMAND_SUB_DI_12 ) // sub edi, 12
-	{	
+	{
 #if idx64
 		REWIND( 4 );
 #else
@@ -460,6 +466,7 @@ static void EmitAddEDI4( vm_t *vm )
 		EmitCommand( LAST_COMMAND_SUB_DI_8 );
 		return;
 	}
+#endif // REGS_OPTIMIZE
 
 	EmitRexString( "83 C7 04" );				// add edi,4
 }
@@ -469,8 +476,8 @@ static void EmitMovEAXEDI( vm_t *vm )
 {
 	opcode_t pop = pop1;
 	pop1 = OP_UNDEF;
-
-	if ( LastCommand == LAST_COMMAND_NONE ) 
+#ifdef REGS_OPTIMIZE
+	if ( LastCommand == LAST_COMMAND_NONE )
 	{
 		EmitString( "8B 07" );		// mov eax, dword ptr [edi]
 		return;
@@ -485,18 +492,18 @@ static void EmitMovEAXEDI( vm_t *vm )
 	if ( LastCommand == LAST_COMMAND_MOV_EDI_EAX ) // mov dword ptr [edi], eax
 	{	
 		REWIND( 2 );
-		LastCommand = LAST_COMMAND_NONE; 
+		LastCommand = LAST_COMMAND_NONE;
 		return;
 	}
 
 	if ( pop == OP_DIVI || pop == OP_DIVU || pop == OP_MULI || pop == OP_MULU ||
 		pop == OP_STORE4 || pop == OP_STORE2 || pop == OP_STORE1 ) 
-	{	
+	{
 		return;
 	}
 
 	if ( LastCommand == LAST_COMMAND_MOV_EDI_CONST ) // mov dword ptr [edi], 0x12345678
-	{	
+	{
 		REWIND( 6 );
 		if ( lastConst == 0 ) {
 			EmitString( "31 C0" );		// xor eax, eax
@@ -506,8 +513,8 @@ static void EmitMovEAXEDI( vm_t *vm )
 		}
 		return;
 	}
-
-	EmitString( "8B 07" );		    // mov eax, dword ptr [edi]
+#endif
+	EmitString( "8B 07" );				// mov eax, dword ptr [edi]
 }
 
 
@@ -515,20 +522,20 @@ void EmitMovECXEDI( vm_t *vm )
 {
 	opcode_t pop = pop1;
 	pop1 = OP_UNDEF;
-
-	if ( LastCommand == LAST_COMMAND_NONE ) 
+#ifdef REGS_OPTIMIZE
+	if ( LastCommand == LAST_COMMAND_NONE )
 	{
 		EmitString( "8B 0F" );		// mov ecx, dword ptr [edi]
 		return;
 	}
 
-	if ( LastCommand == LAST_COMMAND_MOV_EAX_EDI_CALL ) 
+	if ( LastCommand == LAST_COMMAND_MOV_EAX_EDI_CALL )
 	{
 		EmitString( "89 C1" );		// mov ecx, eax
 		return;
 	}
 
-	if ( LastCommand == LAST_COMMAND_MOV_EAX_EDI ) // mov eax, dword ptr [edi] 
+	if ( LastCommand == LAST_COMMAND_MOV_EAX_EDI ) // mov eax, dword ptr [edi]
 	{
 		REWIND( 2 );
 		EmitString( "8B 0F" );		// mov ecx, dword ptr [edi]
@@ -556,14 +563,20 @@ void EmitMovECXEDI( vm_t *vm )
 		Emit4( lastConst );
 		return;
 	}
-
-	EmitString( "8B 0F" );		    // mov ecx, dword ptr [edi]
+#endif
+	EmitString( "8B 0F" );			// mov ecx, dword ptr [edi]
 }
 
 
-static void EmitCheckReg( vm_t *vm, int reg, int size )
+static void EmitCheckReg( vm_t *vm, instruction_t *ins, int reg, int size )
 {
 	int n;
+
+#ifdef MISC_OPTIMIZE
+	if ( ins->safe ) {
+		return;
+	}
+#endif
 
 	if ( !( vm_rtChecks->integer & 8 ) || vm->forceDataMask ) {
 		if ( vm->forceDataMask ) {
@@ -609,6 +622,7 @@ static void EmitCheckReg( vm_t *vm, int reg, int size )
 static int EmitLoadFloatEDI_SSE( vm_t *vm )
 {
 	// movss dword ptr [edi], xmm0
+#ifdef REGS_OPTIMIZE
 	if ( LastCommand == LAST_COMMAND_STORE_FLOAT_EDI_SSE )
 	{
 		if ( !vm )
@@ -617,6 +631,7 @@ static int EmitLoadFloatEDI_SSE( vm_t *vm )
 		LastCommand = LAST_COMMAND_NONE;
 		return 1;
 	}
+#endif
 	EmitString( "F3 0F 10 07" ); // movss xmm0, dword ptr [edi]
 	return 0;
 }
@@ -625,15 +640,16 @@ static int EmitLoadFloatEDI_SSE( vm_t *vm )
 static int EmitLoadFloatEDI_X87( vm_t *vm )
 {
 	// fstp dword ptr [edi]
+#ifdef REGS_OPTIMIZE
 	if ( LastCommand == LAST_COMMAND_STORE_FLOAT_EDI_X87 )
-	{ 	
+	{
 		if ( !vm )
 			return 1;
 		REWIND( 2 );
 		LastCommand = LAST_COMMAND_NONE;
 		return 1;
 	}
-
+#endif
 	EmitString( "D9 07" );		// fld dword ptr [edi]
 	return 0;
 }
@@ -648,7 +664,7 @@ static int EmitLoadFloatEDI( vm_t *vm )
 }
 
 #if JUMP_OPTIMIZE
-const char *NearJumpStr( int op ) 
+const char *NearJumpStr( int op )
 {
 	switch ( op )
 	{
@@ -802,7 +818,7 @@ static void EmitCallAddr( vm_t *vm, int addr )
 	int v;
 	v = instructionOffsets[ addr ] - compiledOfs;
 	EmitString( "E8" );
-	Emit4( v - 5 ); 
+	Emit4( v - 5 );
 }
 
 
@@ -984,7 +1000,7 @@ funcOffset[FUNC_SYSC] = compiledOfs;
 
 	// currentVM->programStack = programStack - 4;
 	EmitString( "8D 56 FC" );				// lea edx, [esi-4]
-	EmitString( "89 15" );					// mov [&vm->programStack], edx 
+	EmitString( "89 15" );					// mov [&vm->programStack], edx
 	EmitPtr( &vm->programStack );
 
 	// params[0] = syscallNum
@@ -1031,8 +1047,8 @@ static void EmitBCPYFunc( vm_t *vm )
 	// FIXME: range check
 	EmitString( "56" );						// push esi
 	EmitString( "57" );						// push edi
-	EmitString( "8B 37" );					// mov esi,[edi] 
-	EmitString( "8B 7F FC" );				// mov edi,[edi-4] 
+	EmitString( "8B 37" );					// mov esi,[edi]
+	EmitString( "8B 7F FC" );				// mov edi,[edi-4]
 	EmitString( "B8" );						// mov eax, datamask
 	Emit4( vm->dataMask );
 	EmitString( "21 C6" );					// and esi, eax
@@ -1278,6 +1294,7 @@ static qboolean IsCeilTrap( const vm_t *vm, const int trap )
 ConstOptimize
 =================
 */
+#ifdef CONST_OPTIMIZE
 static qboolean ConstOptimize( vm_t *vm )
 {
 	int v;
@@ -1357,7 +1374,7 @@ static qboolean ConstOptimize( vm_t *vm )
 			EmitString( "B9" );			// mov	ecx, 0x12345678
 			Emit4( ci->value );
 		}
-		EmitCheckReg( vm, REG_EAX, 4 );
+		EmitCheckReg( vm, ni, REG_EAX, 4 );
 		EmitString( "89 0C 03" );		// mov dword ptr [ebx + eax], ecx
 		EmitCommand( LAST_COMMAND_SUB_DI_4 );		// sub edi, 4
 		ip += 1;
@@ -1371,7 +1388,7 @@ static qboolean ConstOptimize( vm_t *vm )
 			EmitString( "B9" );			// mov	ecx, 0x12345678
 			Emit4( ci->value );
 		}
-		EmitCheckReg( vm, REG_EAX, 2 );
+		EmitCheckReg( vm, ni, REG_EAX, 2 );
 		EmitString( "66 89 0C 03" );	// mov word ptr [ebx + eax], cx
 		EmitCommand( LAST_COMMAND_SUB_DI_4 ); // sub edi, 4
 		ip += 1;
@@ -1385,7 +1402,7 @@ static qboolean ConstOptimize( vm_t *vm )
 			EmitString( "B9" );			// mov	ecx, 0x12345678
 			Emit4( ci->value );
 		}
-		EmitCheckReg( vm, REG_EAX, 1 );
+		EmitCheckReg( vm, ni, REG_EAX, 1 );
 		EmitString( "88 0C 03" );		// mov byte ptr [ebx + eax], cl
 		EmitCommand( LAST_COMMAND_SUB_DI_4 );	// sub edi, 4
 		ip += 1;
@@ -1440,9 +1457,9 @@ static qboolean ConstOptimize( vm_t *vm )
 		v = ci->value;
 		EmitLoadFloatEDI( vm );
 		if ( HasSSEFP() ) {
-			EmitString( "C7 45 00" );			// mov dword ptr [ebp], v
+			EmitString( "B8" );					// mov eax, 0x12345678
 			Emit4( v );
-			EmitString( "F3 0F 10 4D 00" );		// movss xmm1, dword ptr [ebp]
+			EmitString( "66 0F 6E C8" );		// movd xmm1, eax
 			switch( op1 ) {
 				case OP_ADDF: EmitString( "0F 58 C1" ); break;	// addps xmm0, xmm1
 				case OP_SUBF: EmitString( "0F 5C C1" ); break;	// subps xmm0, xmm1
@@ -1616,9 +1633,9 @@ static qboolean ConstOptimize( vm_t *vm )
 			if ( v == 0 ) {
 				EmitString( "0F 57 C9" );			// xorps xmm1, xmm1
 			} else {
-				EmitString( "C7 45 00" );			// mov dword ptr [ebp], v
+				EmitString( "B8" );					// mov eax, 0x12345678
 				Emit4( v );
-				EmitString( "F3 0F 10 4D 00" );		// movss xmm1, dword ptr [ebp]
+				EmitString( "66 0F 6E C8" );		// movd xmm1, eax
 			}
 			EmitString( "0F 2F C1" );				// comiss xmm0, xmm1
 			EmitJump( vm, ni, ni->op, ni->value );
@@ -1651,13 +1668,13 @@ static qboolean ConstOptimize( vm_t *vm )
 		EmitCommand( LAST_COMMAND_SUB_DI_4 );
 		v = ci->value;
 		if ( v == 0 && ( op1 == OP_EQ || op1 == OP_NE ) ) {
-			EmitString( "85 C0" );       // test eax, eax
+			EmitString( "85 C0" );		// test eax, eax
 		} else {
 			if ( ISS8( v ) ) {
-				EmitString( "83 F8" );   // cmp eax, 0x7F
+				EmitString( "83 F8" );	// cmp eax, 0x7F
 				Emit1( v );
 			} else {
-				EmitString( "3D" );      // cmp eax, 0xFFFFFFFF
+				EmitString( "3D" );		 // cmp eax, 0xFFFFFFFF
 				Emit4( v );
 			}
 		}
@@ -1671,18 +1688,7 @@ static qboolean ConstOptimize( vm_t *vm )
 
 	return qfalse;
 }
-
-
-static qboolean FindLocal( int addr, const instruction_t *buf, const instruction_t *end ) {
-	while ( buf < end ) {
-		if ( buf->op == OP_LOCAL && buf->value == addr )
-			return qtrue;
-		if ( buf->op == OP_PUSH && (buf+1)->op == OP_LEAVE )
-			break;
-		++buf;
-	}
-	return qfalse;
-} 
+#endif // CONST_OPTIMIZE
 
 
 /*
@@ -1692,11 +1698,12 @@ VM_FindMOps
 Search for known macro-op sequences
 =================
 */
+#ifdef MACRO_OPTIMIZE
 static void VM_FindMOps( instruction_t *buf, int instructionCount )
 {
 	int n, v, op0;
 	instruction_t *i;
-	
+
 	i = buf;
 	n = 0;
 
@@ -1728,31 +1735,6 @@ static void VM_FindMOps( instruction_t *buf, int instructionCount )
 					continue;
 				}
 			}
-
-			// skip useless sequences
-			if ( (i+1)->op == OP_LOCAL && (i+0)->value == (i+1)->value && (i+2)->op == OP_LOAD4 && (i+3)->op == OP_STORE4 ) {
-				VM_IgnoreInstructions( i, 4 );
-				i += 4; n += 4;
-				continue;
-			}
-
-			// OP_LOCAL + OP_CONST + OP_CALL + OP_STORE4
-			if ( (i+1)->op == OP_CONST && (i+2)->op == OP_CALL && (i+3)->op == OP_STORE4 && !(i+4)->jused ) {
-				// OP_CONST|OP_LOCAL + OP_LOCAL + OP_LOAD4 + OP_STORE4
-				if ( (i+4)->op == OP_CONST || (i+4)->op == OP_LOCAL ) {
-					if (( i+5)->op == OP_LOCAL && (i+5)->value == (i+0)->value && (i+6)->op == OP_LOAD4 && (i+7)->op == OP_STORE4 ) {
-						// make sure that address of temporary variable is not referenced anymore in this function
-						if ( !FindLocal( i->value, i + 8, buf + instructionCount ) ) {
-							(i+0)->op = (i+4)->op;
-							(i+0)->value = (i+4)->value;
-							VM_IgnoreInstructions( i + 4, 4 );
-							i += 8;
-							n += 8;
-							continue;
-						}
-					}
-				}
-			}
 		} else if ( op0 == OP_CONST && (i+1)->op == OP_CALL && (i+2)->op == OP_POP && i >= buf+6 && (i-1)->op == OP_ARG && !i->jused ) {
 			// some void function( arg1, arg2, arg3 )
 			if ( i->value == ~TRAP_STRNCPY ) {
@@ -1773,10 +1755,10 @@ static void VM_FindMOps( instruction_t *buf, int instructionCount )
 EmitMOPs
 =================
 */
-static qboolean EmitMOPs( vm_t *vm, int op ) 
+static qboolean EmitMOPs( vm_t *vm, int op )
 {
 	int v, n;
-	switch ( op ) 
+	switch ( op )
 	{
 		//[local] += CONST
 		case MOP_ADD4:
@@ -1899,6 +1881,7 @@ static qboolean EmitMOPs( vm_t *vm, int op )
 	};
 	return qfalse;
 }
+#endif // MACRO_OPTIMIZE
 
 
 /*
@@ -1929,7 +1912,9 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header ) {
 
 	VM_ReplaceInstructions( vm, inst );
 
+#ifdef MACRO_OPTIMIZE
 	VM_FindMOps( inst, vm->instructionCount );
+#endif
 
 	code = NULL; // we will allocate memory later, after last defined pass
 	instructionPointers = NULL;
@@ -2085,6 +2070,8 @@ __compile:
 		ip++;
 
 		if ( ci->jused ) {
+			// we can safely perform rewind-optimizations only in case if
+			// we are 100% sure that current instruction is not a jump label
 			LastCommand = LAST_COMMAND_NONE;
 			pop1 = OP_UNDEF;
 		}
@@ -2112,23 +2099,22 @@ __compile:
 				Emit4( v );
 			}
 
+			proc_base = ip;
+
 			// locate endproc
-			for ( n = -1, i = ip + 1; i < instructionCount; i++ ) {
+			for ( proc_len = -1, i = ip; i < instructionCount; i++ ) {
 				if ( inst[ i ].op == OP_PUSH && inst[ i + 1 ].op == OP_LEAVE ) {
-					n = i;
+					proc_len = i - proc_base;
 					break;
 				}
 			}
 
-			// should never happen because equal check in VM_LoadInstructions() but anyway
-			if ( n == -1 ) {
+			// should never happen because equal check in VM_CheckInstructions() but anyway
+			if ( proc_len == -1 ) {
 				VM_FreeBuffers();
 				Com_Printf( "VM_CompileX86 error: %s\n", "missing proc end" );
 				return qfalse;
 			}
-
-			proc_base = ip + 1;
-			proc_len = n - proc_base + 1 ;
 
 			// programStack overflow check
 			if ( vm_rtChecks->integer & 1 ) {
@@ -2139,7 +2125,7 @@ __compile:
 				EmitString( "81 FE" );			// cmp	esi, vm->stackBottom
 				Emit4( vm->stackBottom );
 #endif
-				EmitString( "0F 82" );			// jb +funcOffset[FUNC_PSOF]
+				EmitString( "0F 8C" );			// jl +funcOffset[FUNC_PSOF]
 				n = funcOffset[FUNC_PSOF] - compiledOfs;
 				Emit4( n - 6 );
 			}
@@ -2168,12 +2154,10 @@ __compile:
 			break;
 
 		case OP_CONST:
-
-			// we can safely perform optimizations only in case if
-			// we are 100% sure that next instruction is not a jump label
-			if ( !ni->jused && ConstOptimize( vm ) )
+#ifdef CONST_OPTIMIZE
+			if ( ConstOptimize( vm ) )
 				break;
-
+#endif
 			EmitAddEDI4( vm );					// add edi, 4
 			EmitString( "C7 07" );				// mov dword ptr [edi], 0x12345678
 			lastConst = ci->value;
@@ -2183,6 +2167,7 @@ __compile:
 
 		case OP_LOCAL:
 			// optimization: merge OP_LOCAL + OP_LOAD4
+#ifdef MISC_OPTIMIZE
 			if ( ni->op == OP_LOAD4 ) {
 				EmitAddEDI4( vm );				// add edi, 4
 				v = ci->value;
@@ -2229,6 +2214,7 @@ __compile:
 				ip++;
 				break;
 			}
+#endif // MISC_OPTIMIZE
 
 			// TODO: i = j + k;
 			// TODO: i = j - k;
@@ -2246,6 +2232,7 @@ __compile:
 			break;
 
 		case OP_ARG:
+#ifdef MISC_OPTIMIZE
 			if ( LastCommand == LAST_COMMAND_STORE_FLOAT_EDI_SSE ) {
 				REWIND(4);
 				v = ci->value;
@@ -2259,12 +2246,15 @@ __compile:
 				EmitCommand( LAST_COMMAND_SUB_DI_4 );	// sub edi, 4
 				break;
 			}
+#endif
 			EmitMovEAXEDI( vm );					// mov	eax, dword ptr [edi]
+#ifdef MACRO_OPTIMIZE
 			if ( (ci+1)->op == MOP_NCPY && !(ci+1)->jused ) {
 				// we will read counter from eax
 				EmitCommand( LAST_COMMAND_SUB_DI_4 );	// sub edi, 4
 				break;
 			}
+#endif
 			v = ci->value;
 			if ( ISU8( v ) ) {
 				EmitString( "89 45" );				// mov	dword ptr [ebp + 0x7F], eax
@@ -2288,6 +2278,9 @@ __compile:
 
 		case OP_PUSH:
 			EmitAddEDI4( vm );						// add edi, 4
+			if ( ni->op == OP_LEAVE ) {
+				proc_base = -1;
+			}
 			break;
 
 		case OP_POP:
@@ -2309,23 +2302,26 @@ __compile:
 			break;
 
 		case OP_LOAD4:
+#ifdef MISC_OPTIMIZE
 			if ( LastCommand == LAST_COMMAND_MOV_EDI_EAX ) {
 				REWIND( 2 );
-				EmitCheckReg( vm, REG_EAX, 4 );			// range check eax
+				EmitCheckReg( vm, ci, REG_EAX, 4 );		// range check eax
 				EmitString( "8B 04 03" );				// mov	eax, dword ptr [ebx + eax]
 				EmitCommand( LAST_COMMAND_MOV_EDI_EAX );// mov dword ptr [edi], eax
 				break;
 			}
-			EmitMovECXEDI( vm );						// mov ecx, dword ptr [edi]		
-			EmitCheckReg( vm, REG_ECX, 4 );				// range check ecx
+#endif
+			EmitMovECXEDI( vm );						// mov ecx, dword ptr [edi]
+			EmitCheckReg( vm, ci, REG_ECX, 4 );			// range check ecx
 			EmitString( "8B 04 0B" );					// mov	eax, dword ptr [ebx + ecx]
 			EmitCommand( LAST_COMMAND_MOV_EDI_EAX );	// mov dword ptr [edi], eax
 			break;
 
 		case OP_LOAD2:
+#ifdef MISC_OPTIMIZE
 			if ( LastCommand == LAST_COMMAND_MOV_EDI_EAX ) {
 				REWIND( 2 );
-				EmitCheckReg( vm, REG_EAX, 2 );			// range check eax
+				EmitCheckReg( vm, ci, REG_EAX, 2 );		// range check eax
 				if ( ni->op == OP_SEX16 ) {
 					EmitString( "0F BF 04 03" );		// movsx eax, word ptr [ebx + eax]
 					ip++;
@@ -2335,8 +2331,9 @@ __compile:
 				EmitCommand( LAST_COMMAND_MOV_EDI_EAX );// mov dword ptr [edi], eax
 				break;
 			}
+#endif
 			EmitMovECXEDI( vm );						// mov ecx, dword ptr [edi]
-			EmitCheckReg( vm, REG_ECX, 2 );				// range check ecx
+			EmitCheckReg( vm, ci, REG_ECX, 2 );			// range check ecx
 			if ( ni->op == OP_SEX16 ) {
 				EmitString( "0F BF 04 0B" );			// movsx eax, word ptr [ebx + ecx]
 				ip++;
@@ -2347,9 +2344,10 @@ __compile:
 			break;
 
 		case OP_LOAD1:
+#ifdef MISC_OPTIMIZE
 			if ( LastCommand == LAST_COMMAND_MOV_EDI_EAX ) {
 				REWIND( 2 );
-				EmitCheckReg( vm, REG_EAX, 1 );			// range check eax
+				EmitCheckReg( vm, ci, REG_EAX, 1 );		// range check eax
 				if ( ni->op == OP_SEX8 ) {
 					EmitString( "0F BE 04 03" );		// movsx eax, byte ptr [ebx + eax]
 					ip++;
@@ -2359,8 +2357,9 @@ __compile:
 				EmitCommand( LAST_COMMAND_MOV_EDI_EAX );// mov dword ptr [edi], eax
 				break;
 			}
+#endif
 			EmitMovECXEDI( vm );						// mov ecx, dword ptr [edi]
-			EmitCheckReg( vm, REG_ECX, 1 );				// range check ecx
+			EmitCheckReg( vm, ci, REG_ECX, 1 );			// range check ecx
 			if ( ni->op == OP_SEX8 ) {
 				EmitString( "0F BE 04 0B" );			// movsx eax, byte ptr [ebx + ecx]
 				ip++;
@@ -2373,7 +2372,7 @@ __compile:
 		case OP_STORE4:
 			EmitMovEAXEDI( vm );						// mov eax, dword ptr [edi]
 			EmitString( "8B 4F FC" );					// mov ecx, dword ptr [edi-4]
-			EmitCheckReg( vm, REG_ECX, 4 );				// range check
+			EmitCheckReg( vm, ci, REG_ECX, 4 );			// range check
 			EmitString( "89 04 0B" );					// mov dword ptr [ebx + ecx], eax
 			EmitCommand( LAST_COMMAND_SUB_DI_8 );		// sub edi, 8
 			break;
@@ -2381,7 +2380,7 @@ __compile:
 		case OP_STORE2:
 			EmitMovEAXEDI( vm );						// mov eax, dword ptr [edi]	
 			EmitString( "8B 4F FC" );					// mov ecx, dword ptr [edi-4]
-			EmitCheckReg( vm, REG_ECX, 2 );				// range check
+			EmitCheckReg( vm, ci, REG_ECX, 2 );			// range check
 			EmitString( "66 89 04 0B" );				// mov word ptr [ebx + ecx], ax
 			EmitCommand( LAST_COMMAND_SUB_DI_8 );		// sub edi, 8
 			break;
@@ -2389,7 +2388,7 @@ __compile:
 		case OP_STORE1:
 			EmitMovEAXEDI( vm );						// mov eax, dword ptr [edi]	
 			EmitString( "8B 4F FC" );					// mov ecx, dword ptr [edi-4]
-			EmitCheckReg( vm, REG_ECX, 1 );				// range check
+			EmitCheckReg( vm, ci, REG_ECX, 1 );			// range check
 			EmitString( "88 04 0B" );					// mov byte ptr [ebx + ecx], al
 			EmitCommand( LAST_COMMAND_SUB_DI_8 );		// sub edi, 8
 			break;
@@ -2614,7 +2613,7 @@ __compile:
 				if ( wantres ) {
 					if ( ni->op == OP_STORE4 ) {
 						 EmitString( "8B 47 F8" );	// mov eax, dword ptr [edi-8]
-						 EmitCheckReg( vm, REG_EAX, 4 );
+						 EmitCheckReg( vm, ni, REG_EAX, 4 );
 					} else if ( ni->op == OP_ARG ) {
 						//
 					} else {
@@ -2731,7 +2730,7 @@ __compile:
 					EmitString( "3D" );				// cmp eax, 0x12345678
 					Emit4( vm->instructionCount );
 				}
-				EmitString( "0F 83" );				// jae +funcOffset[FUNC_BADJ]
+				EmitString( "0F 87" );				// ja +funcOffset[FUNC_BADJ]
 				n = funcOffset[FUNC_BADJ] - compiledOfs;
 				Emit4( n - 6 );
 			}
@@ -2743,6 +2742,7 @@ __compile:
 #endif
 			break;
 
+#ifdef MACRO_OPTIMIZE
 		case MOP_ADD4:
 		case MOP_SUB4:
 		case MOP_BAND4:
@@ -2751,7 +2751,7 @@ __compile:
 			if ( !EmitMOPs( vm, ci->op ) )
 				Com_Error( ERR_FATAL, "VM_CompileX86: bad opcode %02X", ci->op );
 			break;
-
+#endif
 		default:
 			Com_Error( ERR_FATAL, "VM_CompileX86: bad opcode %02X", ci->op );
 			VM_FreeBuffers();
@@ -2946,14 +2946,15 @@ int VM_CallCompiled( vm_t *vm, int nargs, int *args )
 
 	vm->programStack -= (MAX_VMMAIN_CALL_ARGS+2)*4;
 
-	// set up the stack frame 
+	// set up the stack frame
 	image = (int*)( vm->dataBase + vm->programStack );
 	for ( i = 0; i < nargs; i++ ) {
 		image[ i + 2 ] = args[ i ];
 	}
 
-	image[1] =  0;	// return stack
-	image[0] = -1;	// will terminate loop on return
+	// these only needed for interpreter:
+	// image[1] =  0;	// return stack
+	// image[0] = -1;	// will terminate loop on return
 
 	opStack[1] = 0;
 

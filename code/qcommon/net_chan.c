@@ -214,9 +214,8 @@ void Netchan_Transmit( netchan_t *chan, int length, const byte *data ) {
 	chan->lastSentSize = send.cursize;
 
 	if ( showpackets->integer ) {
-		Com_Printf( "%s (%i) send %4i : s=%i ack=%i\n"
+		Com_Printf( "%s send %4i : s=%i ack=%i\n"
 			, netsrcString[ chan->sock ]
-			, chan->remoteAddress.type
 			, send.cursize
 			, chan->outgoingSequence - 1
 			, chan->incomingSequence );
@@ -543,7 +542,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 
 	// sequenced packets are shown in netchan, so just show oob
 	if ( showpackets->integer && *(int *)data == -1 )	{
-		Com_Printf ("send %s (%i) packet %4i\n", to->name, to->type, length);
+		Com_Printf ("send packet %4i\n", length);
 	}
 
 	if ( to->type == NA_LOOPBACK ) {

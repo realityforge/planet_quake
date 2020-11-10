@@ -1,6 +1,7 @@
 /*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 2012-2020 Quake3e project
 
 This file is part of Quake III Arena source code.
 
@@ -52,18 +53,6 @@ typedef enum {
 } macro_op_t;
 
 
-static qboolean FindLocal( int addr, const instruction_t *buf, const instruction_t *end ) {
-	while ( buf < end ) {
-		if ( buf->op == OP_LOCAL && buf->value == addr )
-			return qtrue;
-		if ( buf->op == OP_PUSH && (buf+1)->op == OP_LEAVE )
-			break;
-		++buf;
-	}
-	return qfalse;
-} 
-
-
 /*
 =================
 VM_FindMOps
@@ -75,7 +64,7 @@ static void VM_FindMOps( instruction_t *buf, int instructionCount )
 {
 	int i, op0;
 	instruction_t *ci;
-	
+
 	ci = buf;
 	i = 0;
 
@@ -105,32 +94,6 @@ static void VM_FindMOps( instruction_t *buf, int instructionCount )
 				ci += 2; i += 2;
 				continue;
 			}
-
-			// skip useless sequences
-			if ( (ci+1)->op == OP_LOCAL && (ci+0)->value == (ci+1)->value && (ci+2)->op == OP_LOAD4 && (ci+3)->op == OP_STORE4 ) {
-				VM_IgnoreInstructions( ci, 4 );
-				ci += 4; i += 4;
-				continue;
-			}
-
-			// OP_LOCAL + OP_CONST + OP_CALL + OP_STORE4
-			if ( (ci+1)->op == OP_CONST && (ci+2)->op == OP_CALL && (ci+3)->op == OP_STORE4 && !(ci+4)->jused ) {
-				// OP_CONST|OP_LOCAL + OP_LOCAL + OP_LOAD4 + OP_STORE4
-				if ( (ci+4)->op == OP_CONST || (ci+4)->op == OP_LOCAL ) {
-					if ( (ci+5)->op == OP_LOCAL && (ci+5)->value == (ci+0)->value && (ci+6)->op == OP_LOAD4 && (ci+7)->op == OP_STORE4 ) {
-						// make sure that address of temporary variable is not referenced anymore in this function
-						if ( !FindLocal( ci->value, ci + 8, buf + instructionCount ) ) {
-							(ci+0)->op = (ci+4)->op;
-							(ci+0)->value = (ci+4)->value;
-							VM_IgnoreInstructions( ci + 4, 4 );
-							ci += 8;
-							i += 8;
-							continue;
-						}
-					}
-				}
-			}
-
 		}
 
 		ci++;
@@ -144,7 +107,7 @@ static void VM_FindMOps( instruction_t *buf, int instructionCount )
 VM_PrepareInterpreter2
 ====================
 */
-qboolean VM_PrepareInterpreter2( vm_t *vm, vmHeader_t *header ) 
+qboolean VM_PrepareInterpreter2( vm_t *vm, vmHeader_t *header )
 {
 	const char *errMsg;
 	instruction_t *buf;
@@ -194,8 +157,8 @@ locals from sp
 int	VM_CallInterpreted2( vm_t *vm, int nargs, int *args ) {
 	int		stack[MAX_OPSTACK_SIZE];
 	int		*opStack, *opStackTop;
-	unsigned int programStack;
-	unsigned int stackOnEntry;
+	int		programStack;
+	int		stackOnEntry;
 	byte	*image;
 	int		v1, v0;
 	int		dataMask;
@@ -259,7 +222,7 @@ nextInstruction2:
 		case OP_ENTER:
 			// get size of stack frame
 			programStack -= v0;
-			if ( programStack <= vm->stackBottom ) {
+			if ( programStack < vm->stackBottom ) {
 				Com_Error( ERR_DROP, "VM programStack overflow" );
 			}
 			if ( opStack + ((ci-1)->opStack/4) >= opStackTop ) {
@@ -520,58 +483,47 @@ nextInstruction2:
 			break;
 
 		case OP_ADD:
-			opStack[-1] = r1.i + r0.i;
-			opStack--;
+			*(--opStack) = r1.i + r0.i;
 			break;
 
 		case OP_SUB:
-			opStack[-1] = r1.i - r0.i;
-			opStack--;
+			*(--opStack) = r1.i - r0.i;
 			break;
 
 		case OP_DIVI:
-			opStack[-1] = r1.i / r0.i;
-			opStack--;
+			*(--opStack) = r1.i / r0.i;
 			break;
 
 		case OP_DIVU:
-			opStack[-1] = r1.u / r0.u;
-			opStack--;
+			*(--opStack) = r1.u / r0.u;
 			break;
 
 		case OP_MODI:
-			opStack[-1] = r1.i % r0.i;
-			opStack--;
+			*(--opStack) = r1.i % r0.i;
 			break;
 
 		case OP_MODU:
-			opStack[-1] = r1.u % r0.u;
-			opStack--;
+			*(--opStack) = r1.u % r0.u;
 			break;
 
 		case OP_MULI:
-			opStack[-1] = r1.i * r0.i;
-			opStack--;
+			*(--opStack) = r1.i * r0.i;
 			break;
 
 		case OP_MULU:
-			opStack[-1] = r1.u * r0.u;
-			opStack--;
+			*(--opStack) = r1.u * r0.u;
 			break;
 
 		case OP_BAND:
-			opStack[-1] = r1.u & r0.u;
-			opStack--;
+			*(--opStack) = r1.u & r0.u;
 			break;
 
 		case OP_BOR:
-			opStack[-1] = r1.u | r0.u;
-			opStack--;
+			*(--opStack) = r1.u | r0.u;
 			break;
 
 		case OP_BXOR:
-			opStack[-1] = r1.u ^ r0.u;
-			opStack--;
+			*(--opStack) = r1.u ^ r0.u;
 			break;
 
 		case OP_BCOM:
@@ -579,18 +531,15 @@ nextInstruction2:
 			break;
 
 		case OP_LSH:
-			opStack[-1] = r1.i << r0.i;
-			opStack--;
+			*(--opStack) = r1.i << r0.i;
 			break;
 
 		case OP_RSHI:
-			opStack[-1] = r1.i >> r0.i;
-			opStack--;
+			*(--opStack) = r1.i >> r0.i;
 			break;
 
 		case OP_RSHU:
-			opStack[-1] = r1.u >> r0.i;
-			opStack--;
+			*(--opStack) = r1.u >> r0.i;
 			break;
 
 		case OP_NEGF:
@@ -598,23 +547,19 @@ nextInstruction2:
 			break;
 
 		case OP_ADDF:
-			*(float *)(opStack-1) = r1.f + r0.f;
-			opStack--;
+			*(float *)(--opStack) = r1.f + r0.f;
 			break;
 
 		case OP_SUBF:
-			*(float *)(opStack-1) = r1.f - r0.f;
-			opStack--;
+			*(float *)(--opStack) = r1.f - r0.f;
 			break;
 
 		case OP_DIVF:
-			*(float *)(opStack-1) = r1.f / r0.f;
-			opStack--;
+			*(float *)(--opStack) = r1.f / r0.f;
 			break;
 
 		case OP_MULF:
-			*(float *)(opStack-1) = r1.f * r0.f;
-			opStack--;
+			*(float *)(--opStack) = r1.f * r0.f;
 			break;
 
 		case OP_CVIF:

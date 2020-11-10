@@ -38,7 +38,9 @@ cvar_t	*cl_renderer;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
+#ifdef USE_MASTER_LAN
 cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
+#endif
 
 cvar_t	*cl_timeout;
 cvar_t	*cl_autoNudge;
@@ -2249,7 +2251,7 @@ void CL_Vid_Restart_After_Restart( void ) {
 ;
 
 	// initialize the renderer interface
-	//CL_InitRef();
+	CL_InitRef();
 
 	// startup all the client stuff
 	CL_StartHunkUsers();
@@ -2677,6 +2679,7 @@ void CL_NextDownload( void )
 				cl_allowDownload->integer);
 		}
 #endif /* USE_CURL */
+
 #ifdef EMSCRIPTEN
 // TODO: add check for HTTP only using strcmp
 		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
@@ -4194,6 +4197,18 @@ void CL_Video_f( void )
 	{
 		// explicit filename
 		Com_sprintf( filename, sizeof( filename ), "videos/%s", Cmd_Argv( 1 ) );
+
+		// override video file extension
+		if ( pipe )
+		{
+			char *sep = strrchr( filename, '/' ); // last path separator
+			char *e = strrchr( filename, '.' );
+
+			if ( e && e > sep && *(e+1) != '\0' ) {
+				ext = e + 1;
+				*e = '\0';
+			}
+		}
 	}
 	else
 	{
@@ -4517,12 +4532,14 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
+#ifdef USE_MASTER_LAN
 	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
 	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
 	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
 	
 	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
+#endif
 
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
@@ -4633,13 +4650,13 @@ void CL_Init( void ) {
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
 
+	CL_InitRef();
+
 #ifdef USE_MV
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
 	Cmd_AddCommand( "mvleave", CL_Multiview_f );
 	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
 #endif
-
-	//CL_InitRef();
 
 	SCR_Init();
 

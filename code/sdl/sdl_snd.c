@@ -201,12 +201,15 @@ qboolean SNDDMA_Init( void )
 	int tmp;
 	SDL_AudioDeviceID tmpPlayback;
 
+#ifndef EMSCRIPTEN
+	if ( snd_inited )
+		return qtrue;
+#else
 	if(snd_inited) {
 		SNDDMA_Shutdown();
 	}
+#endif
 
-	//if ( snd_inited )
-	//	return qtrue;
 
 	//if ( !s_sdlBits )
 	{

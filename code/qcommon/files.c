@@ -2137,9 +2137,9 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 		// is the element a pak file?
 		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
 			// disregard if it doesn't match one of the allowed pure pak files
-			if ( !FS_PakIsPure( search->pack ) ) {
-				continue;
-			}
+			//if ( !FS_PakIsPure( search->pack ) ) {
+			//	continue;
+			//}
 			//
 			if ( search->pack->exclude ) {
 				continue;
@@ -3265,8 +3265,13 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 	
 	thepak = FS_LoadZipFile( zipfile );
 
+#ifdef USE_SPOOF_CHECKSUM
 	if ( !thepak )
 		return qtrue;
+#else
+	if ( !thepak )
+		return qtrue;
+#endif
 	
 	checksum = thepak->checksum;
 #ifndef USE_PK3_CACHE
