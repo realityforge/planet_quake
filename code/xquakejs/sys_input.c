@@ -742,9 +742,8 @@ void IN_Init( void )
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE );
 
-#ifndef EMSCRIPTEN
-	SDL_StartTextInput();
-#endif
+	// TODO: activate text input for text fields
+	//SDL_StartTextInput();
 
 	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
 

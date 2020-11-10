@@ -1079,7 +1079,7 @@ void SV_Shutdown( const char *finalmsg ) {
 	NET_LeaveMulticast6();
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	if ( svs.clients ) {
 		SV_FinalMessage( finalmsg );
 	}
