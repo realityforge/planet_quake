@@ -6,8 +6,9 @@
     "content": "node ./code/xquakejs/bin/content.js",
     "proxy": "node ./code/xquakejs/bin/proxy.js",
     "repack": "node --max_old_space_size=4096 ./code/xquakejs/bin/repack.js",
-    "repack:index": "node -e \"require('./code/xquakejs/bin/content.js').makeMapIndex('/Volumes/External/Personal/planet_quake_data/bestmaps', '/Volumes/External/Personal/planet_quake_data/bestmaps-cc', '/Volumes/External/Personal/planet_quake_data/bestmaps-ccr', false, console.log)\"",
+    "repack:index": "node -e \"require('./code/xquakejs/bin/content.js').makeMapIndex('/Volumes/External/Personal/planet_quake_data/bestmaps', '/Volumes/External/Personal/planet_quake_data/bestmaps-cc', '/Volumes/External/Personal/planet_quake_data/bestmaps-ccr', false, console.log, true)\"",
     "repack:replace": "node -e \"var fs = require('fs'); require('glob').sync('*.json', {cwd: '/Volumes/External/Personal/planet_quake_data/bestmaps-cc/'}).forEach(f => fs.writeFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps-cc/' + f, fs.readFileSync('/Volumes/External/Personal/planet_quake_data/bestmaps-cc/' + f).toString('utf-8').replace(/bestmaps.*?\\//ig, 'baseq3-cc\/')))\"",
+    "repack:allmaps": "npm run repack -- --no-graph --pk3dir /Volumes/External/Personal/planet_quake_data/bestmaps --temp /Volumes/External/Personal/planet_quake_data/  --no-overwrite --no-repack",
     "build": "make PLATFORM=js USE_LOCAL_HEADERS=1",
     "install:emsdk": "./code/xquakejs/lib/emsdk/emsdk install latest-upstream",
     "install:libs": "./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib",
@@ -16,6 +17,7 @@
     "deploy:version": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/",
     "deploy:assets": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/assets/baseq3-cc/",
     "deploy:precache": "gsutil cp ./code/xquakejs/bin/index.html gs://quake.games && gsutil cp ./code/xquakejs/bin/server-worker.js gs://quake.games && gsutil cp ./code/xquakejs/bin/service-worker.js gs://quake.games",
+    "deploy:allmaps": "gsutil rsync -R /Volumes/External/Personal/planet_quake_data/bestmaps-cc/ gs://quake.games/assets/baseq3-cc",
     "deploy:built": "cp ./build/release-js-js/quake3e.* ./code/xquakejs/bin/",
     "deploy:cors": "gsutil cors set ./code/xquakejs/bin/cors.json gs://quake.games/",
     "deploy": "npm run deploy:program && npm run deploy:version && npm run deploy:precache && npm run deploy:built"

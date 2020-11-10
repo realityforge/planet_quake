@@ -275,6 +275,7 @@ async function makeIndexJson(filename, absolute, forceWrite, pk3dir) {
 
 async function findMissingTextures(project, progress, previous) {
   if(!progress) progress = console.log
+  if(BASEMOD_DIRS.length === 0) await loadDefaultDirectories()
   // compare pk3 index with bsp graph
   var game = await graphGame(previous, project, progress)
   // try to match up some missing textures from mods

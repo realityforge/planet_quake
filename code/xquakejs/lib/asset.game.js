@@ -493,10 +493,17 @@ function searchMinimatch(search, everything) {
   if(lookup.length === 0) return null
   var name = everything.filter(f => f.includes(lookup + '.')) //minimatch.filter('**/' + search + '*'))[0]
   if(!name[0]) {
+    // search for file name with .
+    for(var i = 0; i < BASEMOD.length; i++) {
+      if(BASEMOD_LOWER[i].filter(f => f.includes(lookup + '.') && !f.includes('.shader'))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
+        return -1 * (i + 1)
+      }
+    }
+    // search for shader name without .
     for(var i = 0; i < BASEMOD.length; i++) {
       if(BASEMOD_LOWER[i].filter(f => f.includes(lookup) && !f.includes('.shader'))[0]) { //minimatch.filter('**/' + search + '*'))[0]) {
         return -1 * (i + 1)
-      }      
+      }
     }
     return null
   } else if (name.length > 1) {
