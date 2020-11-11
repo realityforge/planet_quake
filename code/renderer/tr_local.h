@@ -1427,7 +1427,7 @@ shader_t	*R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void		RE_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
-//shader_t *R_FindDefaultShaderByName( const char *name );
+shader_t *R_FindDefaultShaderByName( const char *name );
 //qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
 void		RE_LoadShaders( void );
 void	  R_UpdateModel( const char *name );

@@ -4362,6 +4362,8 @@ static void CreateExternalShaders( void ) {
 
 }
 
+
+#ifdef USE_LAZY_LOAD
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
@@ -4392,6 +4394,8 @@ void RE_LoadShaders( void ) {
 
   ScanAndLoadShaderFiles();
 }
+#endif
+
 
 /*
 ==================

@@ -37,6 +37,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #include <windows.h>
 #include <GL/gl.h>
+#elif defined(EMSCRIPTEN)
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
+#include <SDL_opengles.h>
+#undef GL_RGBA8
+#define GL_RGBA8 GL_RGBA
+#undef GL_RGB8
+#define GL_RGB8 GL_RGB
 #elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -284,6 +292,7 @@ typedef char GLchar;
 
 #ifndef __APPLE__
 
+#ifndef EMSCRIPTEN
 #define GLE( ret, name, ... ) extern ret ( APIENTRY * q##name )( __VA_ARGS__ );
 	QGL_Swp_PROCS;
 #ifdef _WIN32
@@ -292,6 +301,7 @@ typedef char GLchar;
 	QGL_LinX11_PROCS;
 #endif
 #undef GLE
+#endif
 
 #endif // !__APPLE__
 

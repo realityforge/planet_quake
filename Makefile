@@ -677,9 +677,9 @@ endif
   BUILD_GAME_QVM=1
   BUILD_GAME_SO=0
   BUILD_STANDALONE=0
-  BUILD_RENDERER_OPENGL=0
+  BUILD_RENDERER_OPENGL=1
   BUILD_RENDERER_JS=0
-  BUILD_RENDERER_OPENGL2=1
+  BUILD_RENDERER_OPENGL2=0
   BUILD_RENDERER_OPENGLES=0
 
   USE_Q3KEY=1
@@ -812,8 +812,6 @@ endif
 		-lasync.js \
 		-lidbfs.js \
 		-lsdl.js \
-		-lwebgl.js \
-		-lwebgl2.js \
 		--js-library $(QUAKEJS)/sys_common.js \
 		--js-library $(QUAKEJS)/sys_browser.js \
 		--js-library $(QUAKEJS)/sys_net.js \
@@ -839,13 +837,6 @@ endif
     -s INITIAL_MEMORY=50MB \
     -s ALLOW_MEMORY_GROWTH=1 \
 		-s GL_UNSAFE_OPTS=0 \
-    -s LEGACY_GL_EMULATION=0 \
-    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
-		-s MIN_WEBGL_VERSION=1 \
-		-s MAX_WEBGL_VERSION=3 \
-    -s USE_WEBGL2=1 \
-    -s FULL_ES2=1 \
-    -s FULL_ES3=1 \
     -s USE_SDL=2 \
 		-s USE_SDL_MIXER=2 \
 		-s USE_VORBIS=1 \
@@ -854,6 +845,33 @@ endif
 		-s USE_PTHREADS=0 \
     -s FORCE_FILESYSTEM=1 \
     -s EXPORT_NAME=\"quake3e\"
+		
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+	CLIENT_LDFLAGS += \
+		-lwebgl.js \
+		-lwebgl2.js \
+		-s LEGACY_GL_EMULATION=0 \
+    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1
+endif
+
+ifeq ($(BUILD_RENDERER_OPENGL),1)
+	CLIENT_LDFLAGS += \
+		-lglemu.js \
+		-lwebgl.js \
+		-s LEGACY_GL_EMULATION=0 \
+    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=2 \
+    -s USE_WEBGL2=0 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=0
+endif
+
 		
 else # ifeq js
 

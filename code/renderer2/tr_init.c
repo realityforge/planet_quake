@@ -69,7 +69,9 @@ cvar_t	*r_dlightBacks;
 
 cvar_t	*r_lodbias;
 cvar_t	*r_lodscale;
+#ifdef USE_LAZY_LOAD
 cvar_t	*r_lazyLoad;
+#endif
 
 cvar_t	*r_norefresh;
 cvar_t	*r_drawentities;
