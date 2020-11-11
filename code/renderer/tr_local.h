@@ -350,6 +350,7 @@ typedef struct {
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
+	int 		lastTimeUsed;
 	int			lightmapSearchIndex;	// for a shader to match, both name and lightmapIndex must match
 	int			lightmapIndex;			// for rendering
 
@@ -481,6 +482,7 @@ typedef struct image_s {
 
 	int			frameUsed;			// for texture usage in frame statistics
 
+	int			lastTimeUsed;
 	GLint		internalFormat;
 	int			TMU;				// only needed for voodoo2
 
@@ -1051,6 +1053,7 @@ typedef struct {
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
+	int 					lastRegistrationTime;
 
 	int						visCount;		// incremented every time a new vis cluster is entered
 	int						frameCount;		// incremented every frame
@@ -1181,6 +1184,10 @@ extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo renderi
 
 extern cvar_t	*r_lodbias;				// push/pull LOD transitions
 extern cvar_t	*r_lodscale;
+
+#ifdef USE_LAZY_LOAD
+extern cvar_t	*r_lazyLoad;
+#endif
 
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_neatsky;				// nomip and nopicmip for skyboxes, cnq3 like look
@@ -1420,6 +1427,11 @@ shader_t	*R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void		RE_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+//shader_t *R_FindDefaultShaderByName( const char *name );
+//qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
+void		RE_LoadShaders( void );
+void	  R_UpdateModel( const char *name );
+void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 
 
 //
@@ -1578,6 +1590,7 @@ void FBO_BlitSS( void );
 qboolean FBO_Bloom( const float gamma, const float obScale, qboolean finalPass );
 void FBO_CopyScreen( void );
 GLuint FBO_ScreenTexture( void );
+void RE_UpdateMode(glconfig_t *glconfigOut);
 
 /*
 ============================================================

@@ -1546,6 +1546,8 @@ static void R_Register( void )
 	r_skipBackEnd = ri.Cvar_Get ("r_skipBackEnd", "0", CVAR_CHEAT);
 
 	r_lodscale = ri.Cvar_Get( "r_lodscale", "5", CVAR_CHEAT );
+#ifdef USE_LAZY_LOAD
+#endif
 	r_norefresh = ri.Cvar_Get ("r_norefresh", "0", CVAR_CHEAT);
 	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_nocull = ri.Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
@@ -1837,5 +1839,38 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
+	//re.SetDvrFrame = RE_SetDvrFrame;
+	re.LoadShaders = RE_LoadShaders;
+	//re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
+#ifdef USE_VID_FAST
+	re.UpdateMode = RE_UpdateMode;
+#endif
+	//re.FastCapture = RB_FastCapture;
+	//re.FastCaptureOld = RB_FastCaptureOld;
+	re.UpdateShader = RE_UpdateShader;
+	re.UpdateModel = R_UpdateModel;
+	//re.ResetBannerSpy = RE_ResetBannerSpy;
+
 	return &re;
 }
+
+
+#ifdef USE_VID_FAST
+/*
+=============
+RE_UpdateMode
+=============
+*/
+void RE_UpdateMode(glconfig_t *glconfigOut) {
+	R_IssuePendingRenderCommands();
+
+	glconfigOut = &glConfig;
+	ri.GLimp_UpdateMode( glconfigOut );
+
+	GL_SetDefaultState();
+
+	GL_CheckErrors();
+
+	*glconfigOut = glConfig;
+}
+#endif

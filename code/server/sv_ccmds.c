@@ -179,7 +179,7 @@ static void SV_Map_f( void ) {
 			len = 1;
 		}
 #else
-		return
+		return;
 #endif
 	}
 #ifdef USE_LOCAL_DED

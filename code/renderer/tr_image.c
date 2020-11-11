@@ -167,14 +167,18 @@ void R_ImageList_f( void ) {
 				estSize /= 2;
 				break;
 			case GL_RGBA4:
+#ifndef EMSCRIPTEN
 			case GL_RGBA8:
+#endif
 			case GL_RGBA:
 				format = "RGBA ";
 				// 4 bytes per pixel
 				estSize *= 4;
 				break;
 			case GL_RGB5:
+#ifndef EMSCRIPTEN
 			case GL_RGB8:
+#endif
 			case GL_RGB:
 				format = "RGB  ";
 				// 3 bytes per pixel?

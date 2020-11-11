@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 
 static snd_codec_t *codecs;
+
+#ifdef USE_LAZY_LOAD
 cvar_t *s_lazyLoad;
 qboolean updateSound = qfalse;
 void S_UpdateSound(char *name, qboolean compressed)
@@ -35,7 +37,7 @@ void S_UpdateSound(char *name, qboolean compressed)
 	
 	updateSound = s_lazyLoad->integer < 2;
 }
-
+#endif
 
 /*
 =================
@@ -154,9 +156,12 @@ void S_CodecInit()
 #endif
 	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
+
+#ifdef USE_LAZY_LOAD
 	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );
 	Cvar_Get("snd_loadingSound", "", CVAR_TEMP);
 	updateSound = s_lazyLoad->integer < 2;
+#endif
 	
 }
 

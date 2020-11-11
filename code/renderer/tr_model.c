@@ -249,10 +249,15 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
+#else
 qhandle_t RE_RegisterModel( const char *name ) {
-	model_t		*mod;
-	qhandle_t	hModel;
-	qboolean	orgNameFailed = qfalse;
+#endif
+;
+	model_t		*mod = NULL;
+	qhandle_t	hModel = 0;
+	qboolean	orgNameFailed = qfalse, found = qfalse;
 	int			orgLoader = -1;
 	int			i;
 	char		localName[ MAX_QPATH ];
@@ -275,16 +280,18 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
 		mod = tr.models[hModel];
 		if ( !strcmp( mod->name, name ) ) {
-			if( mod->type == MOD_BAD ) {
-				return 0;
+			found = qtrue;
+			if( mod->type != MOD_BAD ) {
+				return hModel;
+			} else {
+				break;
 			}
-			return hModel;
 		}
 	}
 
 	// allocate a new model_t
 
-	if ( ( mod = R_AllocModel() ) == NULL ) {
+	if ( !found && ( mod = R_AllocModel() ) == NULL ) {
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
@@ -302,6 +309,8 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	Q_strncpyz( localName, name, MAX_QPATH );
 
+	ri.Cvar_Set("r_loadingModel", name);
+
 	ext = COM_GetExtension( localName );
 
 	if( *ext )
@@ -312,7 +321,13 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			if( !Q_stricmp( ext, modelLoaders[ i ].ext ) )
 			{
 				// Load
-				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+				if ( !updateModels ) {
+					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
+						hModel = 0;
+					}
+				} else {
+					hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+				}
 				break;
 			}
 		}
@@ -330,6 +345,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			}
 			else
 			{
+				ri.Cvar_Set("r_loadingModel", "");
 				// Something loaded
 				return mod->index;
 			}
@@ -346,7 +362,13 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, modelLoaders[ i ].ext );
 
 		// Load
-		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+		if ( !updateModels ) {
+			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
+				hModel = 0;
+			}
+		} else {
+			hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+		}
 
 		if( hModel )
 		{
@@ -360,8 +382,22 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		}
 	}
 
-	return hModel;
+	ri.Cvar_Set("r_loadingModel", "");
+
+	return mod->index;
 }
+
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel( const char *name ) {
+	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
+}
+
+void R_UpdateModel( const char *name )
+{
+	RE_RegisterModel_Internal( name, qtrue );
+}
+#endif
+
 
 /*
 =================
@@ -476,18 +512,18 @@ static qboolean R_LoadMD3 (model_t *mod, int lod, void *buffer, const char *mod_
 			surf->name[j-2] = 0;
 		}
 
-        // register the shaders
-        shader = (md3Shader_t *) ( (byte *)surf + surf->ofsShaders );
-        for ( j = 0 ; j < surf->numShaders ; j++, shader++ ) {
-            shader_t	*sh;
+    // register the shaders
+    shader = (md3Shader_t *) ( (byte *)surf + surf->ofsShaders );
+    for ( j = 0 ; j < surf->numShaders ; j++, shader++ ) {
+      shader_t	*sh;
 
-            sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
+      sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
 			if ( sh->defaultShader ) {
-				shader->shaderIndex = 0;
-			} else {
-				shader->shaderIndex = sh->index;
+				sh->remappedShader = tr.defaultShader;
 			}
-        }
+
+			shader->shaderIndex = sh->index;
+    }
 
 		// swap all the triangles
 		tri = (md3Triangle_t *) ( (byte *)surf + surf->ofsTriangles );
@@ -748,10 +784,10 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
-				surf->shaderIndex = 0;
-			} else {
-				surf->shaderIndex = sh->index;
+				sh->remappedShader = tr.defaultShader;
 			}
+
+			surf->shaderIndex = sh->index;
 			
 			// now copy the vertexes.
 			v = (mdrVertex_t *) (surf + 1);
@@ -873,6 +909,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 ** RE_BeginRegistration
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
+	tr.lastRegistrationTime = ri.Milliseconds();
 
 	R_Init();
 

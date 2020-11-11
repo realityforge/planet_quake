@@ -250,7 +250,12 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
+#ifdef USE_LAZY_LOAD
 qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
+#else
+qhandle_t RE_RegisterModel( const char *name ) {
+#endif
+;
 	model_t		*mod = NULL;
 	qhandle_t	hModel = 0;
 	qboolean	orgNameFailed = qfalse, found = qfalse;
@@ -384,6 +389,7 @@ qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
 	return mod->index;
 }
 
+#ifdef USE_LAZY_LOAD
 qhandle_t RE_RegisterModel( const char *name ) {
 	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
 }
@@ -392,6 +398,7 @@ void R_UpdateModel( const char *name )
 {
 	RE_RegisterModel_Internal( name, qtrue );
 }
+#endif
 
 /*
 =================

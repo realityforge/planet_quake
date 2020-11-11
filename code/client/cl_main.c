@@ -85,7 +85,9 @@ cvar_t	*cl_guidServerUniq;
 cvar_t	*cl_dlURL;
 cvar_t	*cl_dlDirectory;
 
+#ifdef USE_LAZY_LOAD
 cvar_t  *cl_lazyLoad;
+#endif
 
 // common cvars for GLimp modules
 cvar_t	*vid_xpos;			// X coordinate of window position
@@ -3592,7 +3594,9 @@ void CL_Frame( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
-	
+#endif
+
+#ifdef USE_LAZY_LOAD
 	// TODO: from WASP.sk, only load when a warmup or a dead state is detected
 	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
 	//   cl_lazyLoad 3 is force lazy loading everytime
@@ -4575,7 +4579,9 @@ void CL_Init( void ) {
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
 
+#ifdef USE_LAZY_LOAD
 	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+#endif
 
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/getpk3bymapname.php/%1", CVAR_ARCHIVE_ND );
 	

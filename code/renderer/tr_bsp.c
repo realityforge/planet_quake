@@ -516,7 +516,8 @@ static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
-		return tr.defaultShader;
+		//return tr.defaultShader;
+		shader->remappedShader = tr.defaultShader;
 	}
 
 	return shader;
@@ -2184,7 +2185,7 @@ void RE_LoadWorldMap( const char *name ) {
 	byte		*startMarker;
 
 	if ( tr.worldMapLoaded ) {
-		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
+		ri.Printf( PRINT_WARNING, "ERROR: attempted to redundantly load world map" );
 	}
 
 	// set default sun direction to be used if it isn't

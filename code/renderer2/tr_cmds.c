@@ -290,10 +290,12 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	if(bannerResetTime < 100 && Q_stristr(cmd->shader->name, "font2_prop")) {
 		bannerResetTime++;
 		ri.Spy_Banner(s1, t1);
-	}	
+	}
+#ifdef USE_ABS_MOUSE
 	if(Q_stristr(cmd->shader->name, "cursor")) {
 		ri.Spy_CursorPosition(x, y);
 	}
+#endif
 }
 
 #define MODE_RED_CYAN	1
