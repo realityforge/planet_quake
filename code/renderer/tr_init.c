@@ -182,7 +182,11 @@ int		captureHeight;
 
 static char gl_extensions[ 32768 ];
 
+#ifndef EMSCRIPTEN
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
+#else
+#define GLE(ret, name, ...) name##proc * q##name;
+#endif
 	QGL_Core_PROCS;
 	QGL_Ext_PROCS;
 	QGL_ARB_PROGRAM_PROCS;
@@ -196,6 +200,7 @@ typedef struct {
 	const char *name;
 } sym_t;
 
+#ifndef EMSCRIPTEN
 #define GLE( ret, name, ... ) { (void**)&q##name, XSTRING(name) },
 static sym_t core_procs[] = { QGL_Core_PROCS };
 static sym_t ext_procs[] = { QGL_Ext_PROCS };
@@ -204,8 +209,10 @@ static sym_t vbo_procs[] = { QGL_VBO_PROCS };
 static sym_t fbo_procs[] = { QGL_FBO_PROCS };
 static sym_t fbo_opt_procs[] = { QGL_FBO_OPT_PROCS };
 #undef GLE
+#endif
 
 
+#ifndef EMSCRIPTEN
 /*
 ==================
 R_ResolveSymbols
@@ -236,16 +243,19 @@ static void R_ClearSymbols( sym_t *syms, int count )
 		*syms[ i ].symbol = NULL;
 	}
 }
+#endif
 
 
 static void R_ClearSymTables( void )
 {
+#ifndef EMSCRIPTEN
 	R_ClearSymbols( core_procs, ARRAY_LEN( core_procs ) );
 	R_ClearSymbols( ext_procs, ARRAY_LEN( ext_procs ) );
 	R_ClearSymbols( arb_procs, ARRAY_LEN( arb_procs ) );
 	R_ClearSymbols( vbo_procs, ARRAY_LEN( vbo_procs ) );
 	R_ClearSymbols( fbo_procs, ARRAY_LEN( fbo_procs ) );
 	R_ClearSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
+#endif
 }
 
 
@@ -296,6 +306,17 @@ static void R_InitExtensions( void )
 	size_t len;
 	const char *err;
 
+#ifdef EMSCRIPTEN	
+	#define GLE( ret, name, ... ) q##name = (void *) name;
+	QGL_Core_PROCS;
+//	QGL_Ext_PROCS;
+//	QGL_ARB_PROGRAM_PROCS;
+//	QGL_VBO_PROCS;
+//	QGL_FBO_PROCS;
+//	QGL_FBO_OPT_PROCS;
+	#undef GLE
+#endif
+
 	if ( !qglGetString( GL_EXTENSIONS ) )
 	{
 		ri.Error( ERR_FATAL, "OpenGL installation is broken. Please fix video drivers and/or restart your system" );
@@ -342,6 +363,7 @@ static void R_InitExtensions( void )
 
 	ri.Printf( PRINT_ALL, "Initializing OpenGL extensions\n" );
 
+#ifndef EMSCRIPTEN
 	if ( R_HaveExtension( "GL_EXT_texture_edge_clamp" ) ) {
 		gl_clamp_mode = GL_CLAMP_TO_EDGE;
 		ri.Printf( PRINT_ALL, "...using GL_EXT_texture_edge_clamp\n" );
@@ -514,6 +536,7 @@ static void R_InitExtensions( void )
 			R_ResolveSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
 		}
 	}
+#endif
 }
 
 
@@ -549,9 +572,11 @@ static void InitOpenGL( void )
 
 		R_ClearSymTables();
 
+#ifndef EMSCRIPTEN
 		err = R_ResolveSymbols( core_procs, ARRAY_LEN( core_procs ) );
 		if ( err )
 			ri.Error( ERR_FATAL, "Error resolving core OpenGL function '%s'", err );
+#endif
 
 		R_InitExtensions();
 

@@ -1538,7 +1538,14 @@ static void FBO_BlitToBackBuffer( int index )
 	FBO_Bind( GL_READ_FRAMEBUFFER, src->fbo );
 	FBO_Bind( GL_DRAW_FRAMEBUFFER, 0 );
 	//qglReadBuffer( GL_COLOR_ATTACHMENT0 );
-	qglDrawBuffer( GL_BACK );
+	{
+#ifdef EMSCRIPTEN
+		GLenum DrawBuffers[1] = {GL_NONE};
+#else
+		GLenum DrawBuffers[1] = {GL_BACK};
+#endif
+		qglDrawBuffers( 1, DrawBuffers );
+	}
 
 	if ( windowAdjusted )
 	{

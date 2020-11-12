@@ -432,6 +432,9 @@ var LibrarySysInput = {
   },
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},
+  glActiveTextureARB: function(){ return _glActiveTexture.apply(null, Array.from(arguments)) },
+  glBindBufferARB: function(){ return _glBindBuffer.apply(null, Array.from(arguments)) },
+  glDeleteProgramsARB: function(){}, // TODO
   SDL_uclibc_exp: function(){},
   SDL_uclibc_fmod: function(){},
   SDL_uclibc_log10: function(){},

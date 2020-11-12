@@ -1763,6 +1763,14 @@ if(dedicated) {
   exportContext.Module.noInitialRun = false
   exportContext.location = new URL(location.origin + '?set dedicated 2')
 } else {
+  var _emscripten_glTexEnvf
+  var _glTexEnvf
+  var _emscripten_glTexEnvi
+  var _emscripten_glTexEnvfv
+  var _glTexEnvfv
+  var _glGetTexEnviv
+  var _glGetTexEnvfv
+
   // not in a worker
   exportContext.Module.viewport = document.getElementById('viewport-frame')
   exportContext.Module.elementPointerLock = true

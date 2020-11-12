@@ -192,7 +192,8 @@ typedef char GLchar;
 	GLE( void, glDisable, GLenum cap ) \
 	GLE( void, glDisableClientState, GLenum array ) \
 	GLE( void, glDrawArrays, GLenum mode, GLint first, GLsizei count ) \
-	GLE( void, glDrawBuffer, GLenum mode ) \
+	/* GLE( void, glDrawBuffer, GLenum mode ) */ \
+	GLE(void, glDrawBuffers, GLsizei n, const GLenum *bufs) \
 	GLE( void, glDrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices ) \
 	GLE( void, glEnable, GLenum cap ) \
 	GLE( void, glEnableClientState, GLenum array ) \
@@ -300,6 +301,15 @@ typedef char GLchar;
 #else // assume in opposition to win32
 	QGL_LinX11_PROCS;
 #endif
+#undef GLE
+#else
+#define GLE(ret, name, ...) typedef ret APIENTRY name##proc(__VA_ARGS__); extern name##proc * q##name;
+QGL_Core_PROCS;
+QGL_Ext_PROCS;
+QGL_ARB_PROGRAM_PROCS;
+QGL_VBO_PROCS;
+QGL_FBO_PROCS;
+QGL_FBO_OPT_PROCS;
 #undef GLE
 #endif
 

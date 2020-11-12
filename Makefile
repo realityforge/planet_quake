@@ -717,11 +717,11 @@ endif
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=1 \
+		-s WASM=0 \
 		-s MODULARIZE=0 \
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
-    -s ASSERTIONS=1 \
+    -s ASSERTIONS=0 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
     -frtti \
     -fPIC
@@ -863,12 +863,13 @@ ifeq ($(BUILD_RENDERER_OPENGL),1)
 	CLIENT_LDFLAGS += \
 		-lglemu.js \
 		-lwebgl.js \
-		-s LEGACY_GL_EMULATION=0 \
+		-DUSE_CLOSURE_COMPILER \
+		-s LEGACY_GL_EMULATION=1 \
     -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
 		-s MIN_WEBGL_VERSION=1 \
-		-s MAX_WEBGL_VERSION=2 \
-    -s USE_WEBGL2=0 \
-    -s FULL_ES2=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=0 \
     -s FULL_ES3=0
 endif
 

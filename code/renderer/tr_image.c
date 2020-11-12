@@ -577,7 +577,7 @@ static void LoadTexture( int miplevel, int x, int y, int width, int height, cons
 	if ( subImage )
 		qglTexSubImage2D( GL_TEXTURE_2D, miplevel, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data );
 	else
-		qglTexImage2D( GL_TEXTURE_2D, miplevel, image->internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+		qglTexImage2D( GL_TEXTURE_2D, miplevel, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 }
 
 
@@ -833,6 +833,7 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 	GL_Bind( image );
 	Upload32( pic, 0, 0, image->width, image->height, image, qfalse ); // subImage = qfalse
 
+#ifndef EMSCRIPTEN
 	if ( image->flags & IMGFLAG_MIPMAP )
 	{
 		if ( textureFilterAnisotropic ) {
@@ -853,6 +854,7 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
+#endif
 
 	// restore original state
 	GL_SelectTexture( currTMU );

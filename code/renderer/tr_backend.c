@@ -1309,10 +1309,12 @@ static const void *RB_DrawBuffer( const void *data ) {
 	cmd = (const drawBufferCommand_t *)data;
 
 	if ( fboEnabled ) {
+		GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 		FBO_BindMain();
-		qglDrawBuffer( GL_COLOR_ATTACHMENT0 );
+		qglDrawBuffers( 1, DrawBuffers );
 	} else {
-		qglDrawBuffer( cmd->buffer );
+		GLenum DrawBuffers[1] = {cmd->buffer};
+		qglDrawBuffers( 1, DrawBuffers );
 	}
 
 	// clear screen for debugging
@@ -1443,9 +1445,15 @@ static const void *RB_ClearColor( const void *data )
 
 	if ( cmd->frontAndBack )
 	{
-		qglDrawBuffer( GL_FRONT );
+		GLenum DrawBuffers[1] = {GL_FRONT};
+		qglDrawBuffers( 1, DrawBuffers );
 		qglClear( GL_COLOR_BUFFER_BIT );
-		qglDrawBuffer( GL_BACK );
+#ifdef EMSCRIPTEN
+		DrawBuffers[1] = GL_NONE;
+#else
+		DrawBuffers[1] = GL_BACK;
+#endif
+		qglDrawBuffers( 1, DrawBuffers );
 	}
 
 	qglClear( GL_COLOR_BUFFER_BIT );
