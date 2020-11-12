@@ -6,6 +6,7 @@ var LibrarySysMain = {
     eula: null,
     timeBase: null,
     args: [
+      '+unbind', 'F11',
       '+set', 'fs_basepath', '/base',
       //'+set', 'sv_dlURL', '"http://localhost:8080/assets"',
       //'+set', 'cl_allowDownload', '1',

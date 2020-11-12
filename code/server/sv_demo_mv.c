@@ -123,6 +123,8 @@ void SV_SaveRecordCache( void )
 	int start;
 	int n, count, pad;
 
+	if(!FS_Initialized()) return;
+
 	fh = FS_FOpenFileWrite( MV_CACHE_FILE );
 	if ( fh == FS_INVALID_HANDLE ) 
 		return;
