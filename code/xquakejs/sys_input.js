@@ -47,6 +47,7 @@ var LibrarySysInput = {
       [126, 139, 31],
       [158, 139, 25],
     ],
+    resizeDelay: 0,
     cancelBackspace: true,
     banner: '',
     bannerTime: 0,
@@ -353,6 +354,35 @@ var LibrarySysInput = {
       SYSI.joysticks[1].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[1], 2))
       SYSI.joysticks[2].on('start end move', SYSI.InputPushTouchEvent.bind(null, SYSI.joysticks[2], 3))
     },
+    updateVideoCmd: function () {
+      var oldHeight = canvas.getAttribute('height')
+      var oldWidth = canvas.getAttribute('width')
+      // only update size if the canvas changes by more than 0.1
+      if(!((canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
+        || (canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
+        return
+      canvas.setAttribute('width', canvas.clientWidth)
+      canvas.setAttribute('height', canvas.clientHeight)
+			var update = 'set r_fullscreen %fs; set r_mode -1;'
+        + ' set r_customWidth %w; set r_customHeight %h;'
+        + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
+				.replace('%fs', window.fullscreen ? '1' : '0')
+				.replace('%w', canvas.clientWidth)
+				.replace('%h', canvas.clientHeight)
+        .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
+          ? -5 : 0)
+
+			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
+		},
+    resizeViewport: function () {
+			if (!Module['canvas']) {
+				// ignore if the canvas hasn't yet initialized
+				return
+			}
+
+			if (SYSI.resizeDelay) clearTimeout(SYSI.resizeDelay)
+			SYSI.resizeDelay = setTimeout(Browser.safeCallback(SYSI.updateVideoCmd), 100);
+		},
   },
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
@@ -376,6 +406,7 @@ var LibrarySysInput = {
         delete e.returnValue
       }
     })
+    window.addEventListener('resize', SYSI.resizeViewport)
 	},
   Sys_GLContextCreated: function () {
     var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')

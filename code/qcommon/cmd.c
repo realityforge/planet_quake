@@ -763,7 +763,7 @@ Cmd_Help
 Prints the value, default, and latched string of the given variable
 ============
 */
-static void Cmd_Help( const cmd_function_t *cmd ) {
+static void Cmd_Help( const cmd_function_t *cmd ) {	
 	Com_Printf ("\"%s\" " S_COLOR_WHITE "",
 		cmd->name );
 
@@ -790,7 +790,8 @@ static void Cmd_Help_f( void )
 {
 	char *name;
 	cmd_function_t *cmd;
-	
+	cvar_t	*v;
+
 	if(Cmd_Argc() != 2)
 	{
 		Com_Printf ("usage: help <command>\n");
@@ -799,6 +800,14 @@ static void Cmd_Help_f( void )
 
 	name = Cmd_Argv(1);
 
+	v = Cvar_FindVar (name);
+
+	if(v) {
+		Cmd_TokenizeString(name);
+		Cvar_Command();
+		return;
+	}
+	
 	cmd = Cmd_FindCommand( name );
 	
 	if(cmd)

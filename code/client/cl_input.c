@@ -921,6 +921,7 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("+forward",IN_ForwardDown);
 	Cmd_AddCommand ("-forward",IN_ForwardUp);
 	Cmd_AddCommand ("+back",IN_BackDown);
+	Cmd_SetDescription("+back", "Start moving backwards\nusage: bind <key> +back");
 	Cmd_AddCommand ("-back",IN_BackUp);
 	Cmd_AddCommand ("+lookup", IN_LookupDown);
 	Cmd_AddCommand ("-lookup", IN_LookupUp);
@@ -935,12 +936,16 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
 	Cmd_AddCommand ("+attack", IN_Button0Down);
+	Cmd_SetDescription("+attack", "Start attacking (shooting, punching)\nusage: bind <key> +attack");
 	Cmd_AddCommand ("-attack", IN_Button0Up);
 	Cmd_AddCommand ("+button0", IN_Button0Down);
+	Cmd_SetDescription("+button0", "Start firing same as mouse button 1 (fires weapon)\nusage: bind <key> +button0");
 	Cmd_AddCommand ("-button0", IN_Button0Up);
 	Cmd_AddCommand ("+button1", IN_Button1Down);
+	Cmd_SetDescription("+button1", "Start displaying chat bubble\nusage: bind <key> +button1");
 	Cmd_AddCommand ("-button1", IN_Button1Up);
 	Cmd_AddCommand ("+button2", IN_Button2Down);
+	Cmd_SetDescription("+button2", "Start using items (same as enter)\nusage: bind <key> +button2");
 	Cmd_AddCommand ("-button2", IN_Button2Up);
 	Cmd_AddCommand ("+button3", IN_Button3Down);
 	Cmd_AddCommand ("-button3", IN_Button3Up);

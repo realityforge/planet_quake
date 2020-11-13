@@ -112,7 +112,7 @@ var LibrarySysMain = {
           '+unbind', 'D',
           '+bind', 'A', '"+moveleft"',
           '+bind', 'D', '"+moveright"',
-          '+set', 'cl_sensitivity', '1.5',
+          '+set', 'sensitivity', '5',
           '+set', 'cl_mouseAccel', '0.2',
           '+set', 'cl_mouseAccelStyle', '1',
         ])
@@ -137,6 +137,7 @@ var LibrarySysMain = {
             '+set', 'cg_drawGun', '0',
             '+set', 'cg_simpleItems', '0',
             '+set', 'cg_draw2D', '0',
+            '+set', 'sensitivity', '3.5',
             '+exec', 'lvl-default.cfg',
           ])
           if (!args.includes('cl_returnURL')) {
@@ -239,35 +240,6 @@ var LibrarySysMain = {
       }
       return args
     },
-    updateVideoCmd: function () {
-      var oldHeight = canvas.getAttribute('height')
-      var oldWidth = canvas.getAttribute('width')
-      // only update size if the canvas changes by more than 0.1
-      if(!((canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
-        || (canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
-        return
-      canvas.setAttribute('width', canvas.clientWidth)
-      canvas.setAttribute('height', canvas.clientHeight)
-			var update = 'set r_fullscreen %fs; set r_mode -1;'
-        + ' set r_customWidth %w; set r_customHeight %h;'
-        + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
-				.replace('%fs', window.fullscreen ? '1' : '0')
-				.replace('%w', canvas.clientWidth)
-				.replace('%h', canvas.clientHeight)
-        .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
-          ? -5 : 0)
-
-			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
-		},
-    resizeViewport: function () {
-			if (!Module['canvas']) {
-				// ignore if the canvas hasn't yet initialized
-				return
-			}
-
-			if (SYSM.resizeDelay) clearTimeout(SYSM.resizeDelay)
-			SYSM.resizeDelay = setTimeout(Browser.safeCallback(SYSM.updateVideoCmd), 100);
-		},
     isSecured: function (socksServer) {
       return (window.location.search.includes('https://')
         || window.location.protocol.includes('https')
@@ -313,7 +285,6 @@ var LibrarySysMain = {
         '</div>'
       SYSM.eula = Module['viewport'].appendChild(eula)
     }
-    window.addEventListener('resize', SYSM.resizeViewport)
   },
   Sys_PlatformExit: function () {
     SYSC.returnURL = SYSC.Cvar_VariableString('cl_returnURL')
@@ -343,7 +314,7 @@ var LibrarySysMain = {
     }
     SYSM.exited = true
     if(!SYS.dedicated) {
-      window.removeEventListener('resize', SYSM.resizeViewport)
+      window.removeEventListener('resize', SYSI.resizeViewport)
       window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
       window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
       window.removeEventListener('keypress', SYSI.InputPushTextEvent)
