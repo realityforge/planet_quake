@@ -798,13 +798,11 @@ static void Cmd_Help_f( void )
 		return;
 	}
 
-	name = Cmd_Argv(1);
+	name = CopyString(Cmd_Argv(1));
 
-	v = Cvar_FindVar (name);
-
-	if(v) {
-		Cmd_TokenizeString(name);
-		Cvar_Command();
+	Cmd_TokenizeString(name);
+	if(Cvar_Command()) {
+		Z_Free(name);
 		return;
 	}
 	
@@ -814,6 +812,8 @@ static void Cmd_Help_f( void )
 		Cmd_Help(cmd);
 	else
 		Com_Printf ("Command %s does not exist.\n", name);
+
+	Z_Free(name);
 }
 
 

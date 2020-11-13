@@ -388,13 +388,20 @@ void Con_Init( void )
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
+	Cmd_SetDescription("clear", "Clear all text from console\nusage: clear");
 	Cmd_AddCommand( "condump", Con_Dump_f );
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
+	Cmd_SetDescription("condump", "Write the console text to a file\nusage: condump <file>");
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
+	Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nusage: bind <key> toggleconsole");
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
+	Cmd_SetDescription("messagemode", "Send a message to everyone");
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
+	Cmd_SetDescription("messagemode2", "Send a message to teammates");
 	Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
+	Cmd_SetDescription("messagemode3", "Send a message to targeted player");
 	Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
+	Cmd_SetDescription("messagemode3", "Send a message to last attacker");
 }
 
 

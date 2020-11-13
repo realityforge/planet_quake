@@ -2231,12 +2231,16 @@ static void Com_InitHunkMemory( void ) {
 	Hunk_Clear();
 
 	Cmd_AddCommand( "meminfo", Com_Meminfo_f );
+	Cmd_SetDescription( "meminfo", "Show how much memory is currently being used and more information\nusage: meminfo");
 #ifdef ZONE_DEBUG
 	Cmd_AddCommand( "zonelog", Z_LogHeap );
+	Cmd_SetDescription( "zonelog", "Show a log of all memory zones\nusage: zonelog");
 #endif
 #ifdef HUNK_DEBUG
 	Cmd_AddCommand( "hunklog", Hunk_Log );
+	Cmd_SetDescription( "hunklog", "Show a log of hunk memory\nusage: hunklog");
 	Cmd_AddCommand( "hunksmalllog", Hunk_SmallLog );
+	Cmd_SetDescription( "hunksmalllog", "Show a log of small hunk memory\nusage: hunksmalllog");
 #endif
 }
 
@@ -3807,15 +3811,22 @@ void Com_Init_After_Filesystem( void ) {
 
 	if ( com_developer->integer ) {
 		Cmd_AddCommand( "error", Com_Error_f );
+		Cmd_SetDescription( "error", "Create an artificial error for testing\nusage: error" );
 		Cmd_AddCommand( "crash", Com_Crash_f );
+		Cmd_SetDescription( "error", "Create an artificial crash for testing\nusage: crash" );
 		Cmd_AddCommand( "freeze", Com_Freeze_f );
+		Cmd_SetDescription( "error", "Create an artificial freeze for testing\nusage: freeze" );
 	}
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
+	Cmd_SetDescription( "quit", "Quit arena and quit Quake 3 Arena and return to your OS\nusage: quit" );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
+	Cmd_SetDescription( "changeVectors", "Change to vector defined by FIND_NEW_CHANGE_VECTORS as in vector graphics\nusage: changevectors" );
 	Cmd_AddCommand( "writeconfig", Com_WriteConfig_f );
 	Cmd_SetCommandCompletionFunc( "writeconfig", Cmd_CompleteWriteCfgName );
+	Cmd_SetDescription( "writeconfig", "Saves current configuration to a cfg file\nusage: writeconfig <filename>" );
 	Cmd_AddCommand( "game_restart", Com_GameRestart_f );
+	Cmd_SetDescription( "game_restart", "Restart the game module\nusage: game_restart" );
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
