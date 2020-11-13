@@ -402,6 +402,17 @@ var LibrarySysMain = {
   Sys_CmdArgsC: function () {
     return SYSM.getQueryCommands().length + 1
   },
+  Sys_DownloadLocalFile: function (fileName) {
+    fileName = PATH.join(SYSF.fs_basepath, SYSF.fs_game, UTF8ToString(fileName))
+    let file = new File([FS.readFile(fileName)],
+      fileName, {
+      type: 'image/' + PATH.extname(fileName).substr(1)
+    });
+    let exportUrl = URL.createObjectURL(file);
+    var popout = window.open(exportUrl, '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+    URL.revokeObjectURL(exportUrl);
+    setTimeout(function () {popout.close()}, 1000)
+  }
 }
 autoAddDeps(LibrarySysMain, '$SYSM')
 mergeInto(LibraryManager.library, LibrarySysMain);

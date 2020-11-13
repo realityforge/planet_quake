@@ -238,6 +238,7 @@ typedef struct {
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 	void (*Spy_CursorPosition)(float x, float y);
 	void (*Spy_Banner)(float x, float y);
+	void (*Sys_DownloadLocalFile)(char *fileName);
 } refimport_t;
 
 extern	refimport_t	ri;

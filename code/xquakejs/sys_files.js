@@ -387,7 +387,7 @@ var LibrarySysFiles = {
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
   Sys_FOpen: function (ospath, mode) {
-    var whitelist = new RegExp('default.cfg|qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
+    var whitelist = new RegExp('screenshots\/|default.cfg|qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
     var handle = 0
     var exists = false
     try {
@@ -428,7 +428,7 @@ var LibrarySysFiles = {
           }
           SYSF.index[indexFilename].downloading = true
         }
-      } else if (PATH.basename(indexFilename).match(whitelist)) {
+      } else if (indexFilename.match(whitelist)) {
         intArrayFromString(filename).forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
         HEAP8[(SYSF.pathname+filename.length)] = 0
         handle = _fopen(SYSF.pathname, SYSF.modeStr)

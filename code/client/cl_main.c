@@ -4118,6 +4118,9 @@ static void CL_InitRef_After_Load2( void )
 
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
 	rimp.Spy_Banner = Spy_Banner;
+#ifdef EMSCRIPTEN
+	rimp.Sys_DownloadLocalFile = Sys_DownloadLocalFile;
+#endif
 
 	ret = GetRefAPI( REF_API_VERSION, &rimp );
 
