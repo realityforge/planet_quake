@@ -574,7 +574,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	re.BeginFrame( stereoFrame );
 
-	uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
+	uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
 
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
@@ -588,7 +588,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// if the menu is going to cover the entire screen, we
 	// don't need to render anything under it
-	if ( uivm && !uiFullscreen ) {
+	if ( uivms[uivm] && !uiFullscreen ) {
 		switch( cls.state ) {
 		default:
 			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
@@ -599,15 +599,15 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_DISCONNECTED:
 			// force menu up
 			S_StopAllSounds();
-			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+			VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
@@ -618,8 +618,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+			VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
@@ -635,8 +635,25 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm == 0 && uivms[uivm] ) {
+		int i = 0, count = 0, x, y, xMax, yMax;
+		//VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(uivms[i]) count++;
+		}
+		xMax = ceil(sqrt(count));
+		yMax = round(sqrt(count));
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			uivm = i;
+			y = floor(i / x);
+			x = i % x;
+			re.SetDvrFrame(1.0f / xMax * x, 1.0f / yMax * y, 1.0f / xMax, 1.0f / yMax);
+			if(uivms[uivm]) {
+				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+			}
+		}
+		uivm = 0;
+		re.SetDvrFrame(0, 0, 1, 1);
 	}
 
 	if((cl.snap.ps.pm_type == PM_INTERMISSION
@@ -646,7 +663,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// console draws next
-	//re.SetDvrFrame(0, 0, 1, 1);
 	Con_DrawConsole ();
 
 	// debug graph can be drawn on top of anything
@@ -692,7 +708,7 @@ void SCR_UpdateScreen( void ) {
 
 	// If there is no VM, there are also no rendering commands issued. Stop the renderer in
 	// that case.
-	if ( uivm )
+	if ( uivms[uivm] )
 	{
 		// XXX
 		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");

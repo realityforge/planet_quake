@@ -212,7 +212,8 @@ int		vm_debugLevel;
 // used by Com_Error to get rid of running vm's before longjmp
 static int forced_unload;
 
-struct vm_s	vmTable[ VM_COUNT ];
+static int vmIndex = 0;
+struct vm_s	vmTable[ VM_COUNT * MAX_NUM_VMS ];
 
 static const char *vmName[ VM_COUNT ] = {
 	"qagame",
@@ -1688,7 +1689,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	remaining = Hunk_MemoryRemaining();
 
-	vm = &vmTable[ index ];
+	vm = &vmTable[ vmIndex ];
 
 	// see if we already have the VM
 	if ( vm->name ) {
@@ -1703,6 +1704,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	vm->name = name;
 	vm->index = index;
+	vm->vmIndex = vmIndex;
 	vm->systemCall = systemCalls;
 	vm->dllSyscall = dllSyscalls;
 	vm->privateFlag = CVAR_PRIVATE;
@@ -1778,6 +1780,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
 
+	vmIndex++;
 	return vm;
 }
 
@@ -1825,7 +1828,7 @@ void VM_Free( vm_t *vm ) {
 
 void VM_Clear( void ) {
 	int i;
-	for ( i = 0; i < VM_COUNT; i++ ) {
+	for ( i = 0; i < VM_COUNT * MAX_NUM_VMS; i++ ) {
 		VM_Free( &vmTable[ i ] );
 	}
 }
@@ -2041,7 +2044,7 @@ static void VM_VmInfo_f( void ) {
 	int		i;
 
 	Com_Printf( "Registered virtual machines:\n" );
-	for ( i = 0 ; i < VM_COUNT ; i++ ) {
+	for ( i = 0 ; i < VM_COUNT * MAX_NUM_VMS ; i++ ) {
 		vm = &vmTable[i];
 		if ( !vm->name ) {
 			continue;

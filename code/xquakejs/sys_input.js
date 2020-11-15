@@ -97,6 +97,11 @@ var LibrarySysInput = {
         SYSI.cancelBackspace = true;
         setTimeout(function () { SYSI.cancelBackspace = false }, 100)
       }
+      if(evt.keyCode === 27) {
+        SYSI.cancelBackspace = true;
+        SYSI.InputPushFocus({visible: false})
+      }
+      
       SYSI.checkPasteEvent(evt)
       var modState = (evt.ctrlKey && evt.location === 1 ? 0x0040 : 0)
         | (evt.shiftKey && evt.location === 1 ? 0x0001 : 0)
@@ -280,7 +285,8 @@ var LibrarySysInput = {
       HEAP32[((event+0)>>2)]=0x200;
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
       HEAP32[((event+8)>>2)]=0; // windowid
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible'
+        & !evt.visible === false) {
         HEAP32[((event+12)>>2)]=0x00C; // event id
       } else {
         HEAP32[((event+12)>>2)]=0x00D; // event id
@@ -308,6 +314,7 @@ var LibrarySysInput = {
       
       document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
       document.addEventListener("visibilitychange", SYSI.InputPushFocus, false)
+      //document.addEventListener('pointerlockchange', SYSI.InputPushFocus, false);
       /*
       let nipple handle touch events
       Module['canvas'].addEventListener('touchstart', SYSI.InputPushTouchEvent, false)

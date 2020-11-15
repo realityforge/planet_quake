@@ -651,7 +651,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
 			if ( cgvm && cls.state == CA_ACTIVE && !clc.demoplaying ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 #if 0
@@ -667,12 +667,12 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 				}
 #endif
 #ifndef EMSCRIPTEN
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 #else
 				if(!FS_Initialized()) {
 					Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
 				} else {
-					VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+					VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 				}
 #endif
 			}
@@ -683,7 +683,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			return;
 		}
 
-		VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
 		return;
 	}
 
@@ -708,8 +708,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 		Console_Key( key );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if ( uivm ) {
-			VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+		if ( uivms[uivm] ) {
+			VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
 		if ( cgvm ) {
@@ -759,8 +759,8 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 	if( cls.state != CA_DISCONNECTED )
 		Key_ParseBinding( key, qfalse, time );
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qfalse );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
 		VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
 	}
@@ -804,7 +804,7 @@ void CL_CharEvent( int key )
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_UI )
 	{
-		VM_Call( uivm, 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) 
 	{
@@ -859,7 +859,7 @@ Key_SetCatcher
 */
 void Key_SetCatcher( int catcher )
 {
-	//if(uivm && re.BeginRegistration)
+	//if(uivms[uivm] && re.BeginRegistration)
 	//	re.ResetBannerSpy();
 	// If the catcher state is changing, clear all key states
 	if ( catcher != keyCatchers )

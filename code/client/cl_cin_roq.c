@@ -1291,8 +1291,8 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 
 	if (cinTable[currentHandle].alterGameState) {
 		// close the menu
-		if ( uivm ) {
-			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+		if ( uivms[uivm] ) {
+			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		}
 	} else {
 		cinTable[currentHandle].playonwalls = cl_inGameVideo->integer;

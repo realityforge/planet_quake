@@ -166,6 +166,7 @@ struct vm_s {
 
 	const char	*name;
 	vmIndex_t	index;
+	int       vmIndex;
 
 	// for dynamic linked modules
 	void		*dllHandle;
@@ -207,9 +208,11 @@ struct vm_s {
 	int			privateFlag;
 };
 
+#define MAX_NUM_VMS 10
 extern	vm_t			*gvm;				// game virtual machine
 extern	vm_t			*cgvm;	// interface to cgame dll or vm
-extern	vm_t			*uivm;	// interface to ui dll or vm
+extern  int       uivm;
+extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );

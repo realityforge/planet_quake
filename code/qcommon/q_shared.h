@@ -48,9 +48,48 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#ifdef EMSCRIPTEN
+// TODO: convert local dedicated server to native, possibly using `set dedicated 4 and 6` as flags
+#define USE_LOCAL_DED 1
+// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
+#define USE_VID_FAST 1
+// allow touch events to set exact cursor position using "cursor spy"
+#define USE_ABS_MOUSE 1
+// minimize the number of times renderer restarts and reloads graphics
+#define USE_LAZY_LOAD 1
+// set specific master servers to be used in the Local LAN game list, 
+//   as if masters were also used in LAN games instead of just broadcasting
+//   or to specific master servers that host games geographically nearby
+#define USE_MASTER_LAN 1
+// 
+#endif
+
+#ifdef USE_LAZY_LOAD
+// because of the nature of loading files lazily, spoofing checksums 
+//   allows repacking files, and still sending original checksum to pure servers
+#define USE_SPOOF_CHECKSUM 1
+//
+#endif
+
+#ifdef USE_LOCAL_DED
+// allows server to run any client command from remote to client, opposite of /rcon
+#define USE_CMD_CONNECTOR 1
+//
+#else
+//
+#undef USE_CMD_CONNECTOR
+//
+#endif
+
 #define MV_PROTOCOL_VERSION	1 // multiview protocol version
 #define USE_MV				  // multiview enabled
 //#define USE_MV_ZCMD		// command compression
+
+#ifdef USE_MV
+#define USE_MULTIVM 1
+#else
+#undef USE_MULTIVM
+#endif
 
 #define GET_ABIT( byteArray, bitIndex ) ((byteArray)[ (bitIndex) / 8 ] & ( 1 << ( (bitIndex) & 7 ) ))
 #define SET_ABIT( byteArray, bitIndex ) (byteArray)[ (bitIndex) / 8 ] |= ( 1 << ( (bitIndex) & 7 ) )

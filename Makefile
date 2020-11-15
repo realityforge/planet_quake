@@ -719,7 +719,7 @@ endif
     -O1 -g3 \
 		-s WASM=0 \
 		-s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
+    -s SAFE_HEAP=1 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \

@@ -25,39 +25,40 @@ var LibraryVM = {
 			
 			name: 24,
 			index: 28,
+			vmIndex: 32,
 			
-			dllHandle: 32,
-			entryPoint: 36,
-			dllSyscall: 40,
-			destroy: 44,
+			dllHandle: 36,
+			entryPoint: 40,
+			dllSyscall: 44,
+			destroy: 48,
 			
-			compiled: 48,
+			compiled: 52,
 			
-			codeBase: 52,
-			codeSize: 56,
-			codeLength: 60,
+			codeBase: 56,
+			codeSize: 60,
+			codeLength: 64,
 			
-			instructionCount: 64,
-			instructionPointers: 68,
+			instructionCount: 68,
+			instructionPointers: 72,
 			
-			dataMask: 72,
-			dataLength: 76,
-			exactDataLength: 80,
-			dataAlloc: 84,
+			dataMask: 76,
+			dataLength: 80,
+			exactDataLength: 84,
+			dataAlloc: 88,
 			
-			numSymbols: 88,
-			symbols: 92,
+			numSymbols: 92,
+			symbols: 96,
 			
-			callLevel: 96,
-			breakFunction: 100,
-			breakCount: 104,
+			callLevel: 100,
+			breakFunction: 104,
+			breakCount: 108,
 			
-			jumpTableTargets: 108,
-			numJumpTableTargets: 112,
+			jumpTableTargets: 112,
+			numJumpTableTargets: 116,
 			
-			crc32sum: 116,
-			forceDataMask: 120,
-			privateFlag: 124,
+			crc32sum: 120,
+			forceDataMask: 124,
+			privateFlag: 128,
 		},
 		vms: [],
 		SUSPENDED: 0xDEADBEEF,
@@ -969,7 +970,7 @@ var LibraryVM = {
 			SYSC.Error('fatal', e);
 		}
 
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		VM.vms[handle] = vm;
 
 		if (!VM.DestroyPtr) {
@@ -980,14 +981,14 @@ var LibraryVM = {
 		return true;
 	},
 	VM_Destroy: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 
 		delete VM.vms[handle];
 	},
 	VM_CallCompiled__sig: 'iiii',
 	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_SuspendCompiled'],
 	VM_CallCompiled: function (vmp, nargs, args) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		// we can't re-enter the vm until it's been resumed
@@ -1051,7 +1052,7 @@ var LibraryVM = {
 	},
 	VM_IsSuspendedCompiled__deps: ['$SYSC'],
 	VM_IsSuspendedCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {
@@ -1064,7 +1065,7 @@ var LibraryVM = {
 	VM_SuspendCompiled__deps: ['$SYSC'],
 	VM_SuspendCompiled__sig: 'vii',
 	VM_SuspendCompiled: function (vmp, stackOnEntry) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {
@@ -1078,7 +1079,7 @@ var LibraryVM = {
 	VM_ResumeCompiled__deps: ['$SYSC', 'VM_SuspendCompiled'],
 	VM_ResumeCompiled__sig: 'vii',
 	VM_ResumeCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.index', 'i32') }}};
+		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
 
 		if (!vm) {

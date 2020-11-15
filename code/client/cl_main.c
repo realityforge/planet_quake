@@ -1298,8 +1298,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	S_StopAllSounds();
 	Key_ClearStates();
 
-	if ( uivm && showMainMenu ) {
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if ( uivms[uivm] && showMainMenu ) {
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 	}
 
 	// Remove pure paks
@@ -1405,20 +1405,6 @@ void CL_ForwardCommandToServer( const char *string ) {
 	if ( !strcmp( cmd, "userinfo" ) ) {
 		return;
 	}
-	
-#ifdef USE_LOCAL_DED
-	// detect a map command and start connection to localhost
-	//   this helps the UI not sit around and wait while the server is starting
-	if( (!strcmp(cmd, "map")
- 		|| !strcmp(cmd, "devmap")
-		|| !strcmp(cmd, "spmap")
-		|| !strcmp(cmd, "spdevmap"))
-		&& clc.serverAddress.type == NA_LOOPBACK ) {
-		// TODO: only kick allbots if command comes from menu?
-		Cmd_Clear();
-		Cbuf_AddText("wait\nwait\nconnect localhost\n");
-	}
-#endif
 
 	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
@@ -1430,6 +1416,20 @@ void CL_ForwardCommandToServer( const char *string ) {
 	} else {
 		CL_AddReliableCommand( cmd, qfalse );
 	}
+
+#ifdef USE_LOCAL_DED
+	// detect a map command and start connection to localhost
+	//   this helps the UI not sit around and wait while the server is starting
+	if( (!strcmp(cmd, "map")
+ 		|| !strcmp(cmd, "devmap")
+		|| !strcmp(cmd, "spmap")
+		|| !strcmp(cmd, "spdevmap"))
+		&& clc.serverAddress.type == NA_LOOPBACK ) {
+		// TODO: only kick allbots if command comes from menu?
+		Cmd_Clear();
+		Cbuf_AddText("wait\nwait\nwait\nwait\nconnect localhost\n");
+	}
+#endif
 }
 
 
@@ -1594,7 +1594,7 @@ void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
-		if ( (uivm && uivm->callLevel) || (cgvm && cgvm->callLevel) ) {
+		if ( (uivms[uivm] && uivms[uivm]->callLevel) || (cgvm && cgvm->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
 		} else {
 			// clear any previous "server full" type messages
@@ -1612,8 +1612,8 @@ void CL_Disconnect_f( void ) {
 			if ( !CL_Disconnect( qfalse, qfalse ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if ( uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 		}
 	}
@@ -1761,7 +1761,7 @@ static void CL_Connect_f( void ) {
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
 		&& addr.type == NA_LOOPBACK && cgvm) {
 		cls.state = CA_PRIMED;
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
 	}
 #endif
@@ -2481,8 +2481,8 @@ Called when all downloading has been completed
 static void CL_DownloadsComplete( void ) {
 
 	Com_Printf("Downloads complete\n");
-	if(uivm)
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if(uivms[uivm])
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
 #ifdef EMSCRIPTEN
 	if(clc.dlDisconnect) {
@@ -3436,8 +3436,8 @@ static void CL_CheckTimeout_After_Startup ( void ) {
 	FS_Restart_After_Async();
 	CL_UpdateGUID( NULL, 0 );
 	CL_FlushMemory();
-	if ( uivm ) {
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	if ( uivms[uivm] ) {
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 }
 
@@ -3466,8 +3466,8 @@ static void CL_CheckTimeout( void ) {
 			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( FS_Initialized() && uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if ( FS_Initialized() && uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 #ifdef EMSCRIPTEN
 			if(!FS_Initialized()) {
@@ -3508,7 +3508,7 @@ CL_NoDelay
 qboolean CL_NoDelay( void )
 {
 	extern cvar_t *com_timedemo;
-	if ( CL_VideoRecording() || ( com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
+	if ( CL_VideoRecording() || ( com_timedemo && com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
 		return qtrue;
 	
 	return qfalse;
@@ -3601,13 +3601,13 @@ void CL_Frame( int msec ) {
 	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
 	//   cl_lazyLoad 3 is force lazy loading everytime
 	if(cl_lazyLoad->integer > 0) {
-		if((uivm || cgvm) && secondTimer > 20) {
+		if((uivms[uivm] || cgvm) && secondTimer > 20) {
 			secondTimer = 0;
 			CL_UpdateShader();
 		} else {
 			secondTimer += msec;
 		}
-		if((uivm || cgvm) && thirdTimer > 100) {
+		if((uivms[uivm] || cgvm) && thirdTimer > 100) {
 			thirdTimer = 0;
 			if(cls.soundRegistered) { // && !cls.firstClick) {
 				CL_UpdateSound();
@@ -3641,12 +3641,12 @@ void CL_Frame( int msec ) {
 	if ( cls.cddialog ) {
 		// bring up the cd error dialog if needed
 		cls.cddialog = qfalse;
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NEED_CD );
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NEED_CD );
 	} else	if ( cls.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI )
-		&& !com_sv_running->integer && uivm ) {
+		&& !com_sv_running->integer && uivms[uivm] ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -3875,7 +3875,7 @@ void CL_StartHunkUsers( void ) {
 
 	if ( re.BeginRegistration && !cls.uiStarted ) {
 		cls.uiStarted = qtrue;
-		CL_InitUI();
+		CL_InitUI(qfalse);
 	}
 }
 
@@ -4144,7 +4144,7 @@ static void CL_InitRef_After_Load2( void )
 
 	if(!cls.uiStarted) {
 		cls.uiStarted = qtrue;
-		CL_InitUI();
+		CL_InitUI(qfalse);
 	}
 #endif
 #endif
@@ -4484,6 +4484,36 @@ static void CL_InitGLimp_Cvars( void )
 }
 
 
+#ifdef USE_MULTIVM
+void CL_LoadVM_f( void ) {
+	vmIndex_t index;
+	char *name;
+	
+		if ( Cmd_Argc() < 2 ) {
+			Com_Printf( "usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+			return;
+		}
+
+	name = Cmd_Argv( 1 );
+
+	if ( !Q_stricmp( name, "game" ) )
+		index = VM_GAME;
+	else if ( !Q_stricmp( name, "cgame" ) )
+		index = VM_CGAME;
+	else if ( !Q_stricmp( name, "ui" ) ) {
+		CL_InitUI(qtrue);
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		uivm = 0;
+	}
+	else {
+		Com_Printf( " unknown VM name '%s'\n", name );
+		return;
+	}
+
+}
+#endif
+
+
 /*
 ====================
 CL_Init
@@ -4665,6 +4695,10 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
 	Cmd_AddCommand( "mvleave", CL_Multiview_f );
 	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
+#endif
+
+#ifdef USE_MULTIVM
+	Cmd_AddCommand( "load", CL_LoadVM_f );
 #endif
 
 	SCR_Init();
