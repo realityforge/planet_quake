@@ -636,21 +636,15 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// the menu draws next
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm == 0 && uivms[uivm] ) {
-		int i = 0, count = 0, x, y, xMax, yMax;
-		//VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+		int i = 0, count = 0, x, y;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(uivms[i]) count++;
-		}
-		xMax = ceil(sqrt(count));
-		yMax = round(sqrt(count));
-		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(!uivms[i]) continue;
 			uivm = i;
-			y = floor(i / x);
-			x = i % x;
-			re.SetDvrFrame(1.0f / xMax * x, 1.0f / yMax * y, 1.0f / xMax, 1.0f / yMax);
-			if(uivms[uivm]) {
-				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-			}
+			y = floor(count / x);
+			x = count % x;
+			re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+			count++;
 		}
 		uivm = 0;
 		re.SetDvrFrame(0, 0, 1, 1);

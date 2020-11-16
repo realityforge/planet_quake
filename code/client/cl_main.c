@@ -1981,6 +1981,8 @@ doesn't know what graphics to reload
 static void CL_Vid_Restart( void ) {
 
 #ifdef USE_VID_FAST
+	int oldXMaxVMs = 1;
+	int oldYMaxVMs = 1;
 	const float MATCH_EPSILON = 0.001f;
 	const char *arg = Cmd_Argv(1);
 
@@ -1994,7 +1996,7 @@ static void CL_Vid_Restart( void ) {
 		// NOTE while we could reference exact offsets (derived from cg_local.h /
 		// ui_local.h), mods may have changed the layout slightly so we're scanning
 		// a reasonable range to uh.. be safe
-
+		//VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
 		re.UpdateMode(&cls.glconfig);
 
 		if (cls.uiGlConfig) {
@@ -2008,9 +2010,9 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 			float oldYScale = old.vidHeight * (1.0 / 480.0);
 			float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
 
-			float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
-			float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
-			float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
+			float newXScale = (cls.glconfig.vidWidth / xMaxVMs) * (1.0 / 640.0);
+			float newYScale = (cls.glconfig.vidHeight / yMaxVMs) * (1.0 / 480.0);
+			float newBias = (cls.glconfig.vidWidth / xMaxVMs) * 480 > (cls.glconfig.vidHeight / yMaxVMs) * 640 ? 0.5 * ((cls.glconfig.vidWidth / xMaxVMs) - ((cls.glconfig.vidHeight / yMaxVMs) * (640.0 / 480.0))) : 0.0;
 
 			if (!cls.numUiPatches) {
 				// having tested a few mods and UI configurations, these
@@ -2020,9 +2022,10 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 				void *current = (void *)cls.uiGlConfig - sizeof(cachedAssets_t) - 128;
 				void *stop = (void *)cls.uiGlConfig + sizeof(glconfig_t) + 128;
 				qboolean valid = qfalse;
-				float *xScale = NULL;
-				float *yScale = NULL;
-				float *bias = NULL;
+				float xScale = 0.0;
+				float yScale = 0.0;
+				float bias = 0.0;
+				int i, j, l;
 
 				patch_type_t layouts[][3] = {
 					{ PATCH_XSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
@@ -2032,15 +2035,15 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 				};
 
 				do {
-					for (int i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
+					for (i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
 						patch_type_t *layout = layouts[i];
 
 						valid = qtrue;
-						xScale = NULL;
-						yScale = NULL;
-						bias = NULL;
+						xScale = 0.0;
+						yScale = 0.0;
+						bias = 0.0;
 
-						for (int j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
+						for (j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
 							patch_type_t type = layout[j];
 
 							switch (type) {
@@ -2048,48 +2051,48 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 								break;
 
 								case PATCH_XSCALE:
-									xScale = ((float*)current)+j;
-									if (fabs(*xScale - oldXScale) >= MATCH_EPSILON) {
+									memcpy(&xScale, current+j, 4);
+									if (fabs(xScale - oldXScale) >= MATCH_EPSILON) {
 										valid = qfalse;
 									}
 								break;
 
 								case PATCH_YSCALE:
-									yScale = ((float*)current)+j;
-									if (fabs(*yScale - oldYScale) >= MATCH_EPSILON) {
+									memcpy(&yScale, current+j, 4);
+									if (fabs(yScale - oldYScale) >= MATCH_EPSILON) {
 										valid = qfalse;
 									}
 								break;
 
 								case PATCH_BIAS:
-									bias = ((float*)current)+j;
-									if (fabs(*bias - oldBias) >= MATCH_EPSILON) {
+									memcpy(&bias, current+j, 4);
+									if (fabs(bias - oldBias) >= MATCH_EPSILON) {
 										valid = qfalse;
 									}
 								break;
 							}
 						}
 					}
-				} while (++current != stop && !valid);
+				} while (!valid && ++current != stop);
 
 				if (valid) {
 					if (xScale) {
 						cls.uiPatches[cls.numUiPatches].type = PATCH_XSCALE;
-						cls.uiPatches[cls.numUiPatches].addr = xScale;
+						cls.uiPatches[cls.numUiPatches].addr = current+j;
 						cls.numUiPatches++;
 						Com_Printf("Found ui xscale offset at 0x%08x\n", (int)xScale);
 					}
 
 					if (yScale) {
 						cls.uiPatches[cls.numUiPatches].type = PATCH_YSCALE;
-						cls.uiPatches[cls.numUiPatches].addr = yScale;
+						cls.uiPatches[cls.numUiPatches].addr = current+j;
 						cls.numUiPatches++;
 						Com_Printf("Found ui yscale offset at 0x%08x\n", (int)yScale);
 					}
 
 					if (bias) {
 						cls.uiPatches[cls.numUiPatches].type = PATCH_BIAS;
-						cls.uiPatches[cls.numUiPatches].addr = bias;
+						cls.uiPatches[cls.numUiPatches].addr = current+j;
 						cls.numUiPatches++;
 						Com_Printf("Found ui bias offset at 0x%08x\n", (int)bias);
 					}
@@ -2102,15 +2105,15 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 
 					switch (p->type) {
 						case PATCH_XSCALE:
-							*(float*)p->addr = newXScale;
+							memcpy((float*)p->addr, &newXScale, 4);
 						break;
 
 						case PATCH_YSCALE:
-							*(float*)p->addr = newYScale;
+							memcpy((float*)p->addr, &newYScale, 4);
 						break;
 
 						case PATCH_BIAS:
-							*(float*)p->addr = newBias;
+							memcpy((float*)p->addr, &newBias, 4);
 						break;
 
 						default:
@@ -4501,15 +4504,23 @@ void CL_LoadVM_f( void ) {
 	else if ( !Q_stricmp( name, "cgame" ) )
 		index = VM_CGAME;
 	else if ( !Q_stricmp( name, "ui" ) ) {
+		int i, count = 0;
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(uivms[i]) count++;
+			else uivm = i;
+		}
 		CL_InitUI(qtrue);
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		count++;
+		xMaxVMs = ceil(sqrt(count));
+		yMaxVMs = round(sqrt(count));
 		uivm = 0;
 	}
 	else {
 		Com_Printf( " unknown VM name '%s'\n", name );
 		return;
 	}
-
+	//Cbuf_AddText("vid_restart fast\n");
 }
 #endif
 

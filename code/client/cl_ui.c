@@ -28,6 +28,8 @@ extern	botlib_export_t	*botlib_export;
 
 int  uivm = 0;
 vm_t *uivms[MAX_NUM_VMS] = {};
+int  xMaxVMs = 1;
+int  yMaxVMs = 1;
 
 /*
 ====================
@@ -920,7 +922,8 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_UPDATESCREEN:
-		//SCR_UpdateScreen();
+		if(uivm == 0)
+			SCR_UpdateScreen();
 		return 0;
 
 	case UI_CM_LERPTAG:
@@ -967,7 +970,8 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 	case UI_KEY_SETCATCHER:
 		// Don't allow the ui module to close the console
-		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
+		if(uivm == 0)
+			Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
 		return 0;
 
 	case UI_GETCLIPBOARDDATA:
