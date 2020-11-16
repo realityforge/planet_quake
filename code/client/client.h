@@ -646,7 +646,7 @@ void CL_UpdateModel( void );
 #endif
 void CL_InitCGameFinished( void );
 #endif
-void CL_InitCGame( void );
+void CL_InitCGame( qboolean createNew );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );

@@ -564,6 +564,7 @@ This will be called twice if rendering in stereo mode
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	qboolean uiFullscreen;
+	int i = 0, count = 0, x, y;
 	
 	/*
 	if(clc.clientView == 0)
@@ -612,7 +613,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if ( cgvm ) {
+			if ( cgvms[cgvm] ) {
 				CL_CGameRendering( stereoFrame );
 			}
 			// also draw the connection information, so it doesn't
@@ -623,8 +624,18 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			if( cgvm ) {
-				CL_CGameRendering( stereoFrame );
+			if( cgvms[cgvm] ) {
+				for(i = 0; i < 1; i++) {
+					if(!cgvms[i]) continue;
+					cgvm = i;
+					y = floor(count / x);
+					x = count % x;
+					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+					CL_CGameRendering( stereoFrame );
+					count++;
+				}
+				cgvm = 0;
+				re.SetDvrFrame(0, 0, 1, 1);
 				SCR_DrawDemoRecording();
 			}
 #ifdef USE_VOIP
@@ -636,7 +647,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// the menu draws next
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm == 0 && uivms[uivm] ) {
-		int i = 0, count = 0, x, y;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(!uivms[i]) continue;
 			uivm = i;

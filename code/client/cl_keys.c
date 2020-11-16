@@ -644,13 +644,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			if(cgvm)
-				VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvms[cgvm])
+				VM_Call( cgvms[cgvm], 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( cgvm && cls.state == CA_ACTIVE && !clc.demoplaying ) {
+			if ( cgvms[cgvm] && cls.state == CA_ACTIVE && !clc.demoplaying ) {
 				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
@@ -678,8 +678,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 			return;
 		}
-		else if(cls.postgame == qtrue && cgvm) {
-			VM_Call( cgvm, 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
+		else if(cls.postgame == qtrue && uivms[uivm]) {
+			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
 			return;
 		}
 
@@ -712,8 +712,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvm ) {
-			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qtrue );
+		if ( cgvms[cgvm] ) {
+			VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		Message_Key( key );
@@ -761,8 +761,8 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
 		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qfalse );
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
-		VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
+	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvms[cgvm] ) {
+		VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qfalse );
 	}
 }
 

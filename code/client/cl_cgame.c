@@ -488,21 +488,21 @@ void CL_ShutdownCGame( void ) {
 	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
 	cls.cgameStarted = qfalse;
 
-	if ( !cgvm ) {
+	if ( !cgvms[cgvm] ) {
 		return;
 	}
 
 #ifdef EMSCRIPTEN
-	while (VM_IsSuspended(cgvm)) {
-		VM_Resume(cgvm);
+	while (VM_IsSuspended(cgvms[cgvm])) {
+		VM_Resume(cgvms[cgvm]);
 	}
 #endif
 
 	re.VertexLighting( qfalse );
 
-	VM_Call( cgvm, 0, CG_SHUTDOWN );
-	VM_Free( cgvm );
-	cgvm = NULL;
+	VM_Call( cgvms[cgvm], 0, CG_SHUTDOWN );
+	VM_Free( cgvms[cgvm] );
+	cgvms[cgvm] = NULL;
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST
@@ -522,13 +522,13 @@ static int FloatAsInt( float f ) {
 
 static void *VM_ArgPtr( intptr_t intValue ) {
 
-	if ( !intValue || cgvm == NULL )
+	if ( !intValue || cgvms[cgvm] == NULL )
 	  return NULL;
 
-	if ( cgvm->entryPoint )
+	if ( cgvms[cgvm]->entryPoint )
 		return (void *)(intValue);
 	else
-		return (void *)(cgvm->dataBase + (intValue & cgvm->dataMask));
+		return (void *)(cgvms[cgvm]->dataBase + (intValue & cgvms[cgvm]->dataMask));
 }
 
 
@@ -580,7 +580,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
 	case CG_PRINT:
 		if(Q_stristr((const char*)VMA(1), "font image")) {
-			Com_Printf("Font: %li\n", cgvm->opStack - cgvm->opStackTop);
+			Com_Printf("Font: %li\n", cgvms[cgvm]->opStack - cgvms[cgvm]->opStackTop);
 		}
 		Com_Printf( "%s", (const char*)VMA(1) );
 		return 0;
@@ -608,17 +608,17 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cvar_SetSafe( VMA(1), VMA(2) );
 		return 0;
 	case CG_CVAR_VARIABLESTRINGBUFFER:
-		VM_CHECKBOUNDS( cgvm, args[2], args[3] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[2], args[3] );
 		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], CVAR_PRIVATE );
 		return 0;
 	case CG_ARGC:
 		return Cmd_Argc();
 	case CG_ARGV:
-		VM_CHECKBOUNDS( cgvm, args[2], args[3] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[2], args[3] );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case CG_ARGS:
-		VM_CHECKBOUNDS( cgvm, args[1], args[2] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[2] );
 		Cmd_ArgsBuffer( VMA(1), args[2] );
 		return 0;
 
@@ -652,11 +652,11 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		}
 		return result;
 	case CG_FS_READ:
-		VM_CHECKBOUNDS( cgvm, args[1], args[2] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[2] );
 		FS_VM_ReadFile( VMA(1), args[2], args[3], H_CGAME );
 		return 0;
 	case CG_FS_WRITE:
-		VM_CHECKBOUNDS( cgvm, args[1], args[2] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[2] );
 		FS_VM_WriteFile( VMA(1), args[2], args[3], H_CGAME );
 		return 0;
 	case CG_FS_FCLOSEFILE:
@@ -683,7 +683,8 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		// We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 		// if there is a map change while we are downloading at pk3.
 		// ZOID
-		SCR_UpdateScreen();
+		if(uivm == 0)
+			SCR_UpdateScreen();
 		return 0;
 	case CG_CM_LOADMAP:
 		CL_CM_LoadMap( VMA(1) );
@@ -792,7 +793,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
 	case CG_GETGLCONFIG:
-		VM_CHECKBOUNDS( cgvm, args[1], sizeof( glconfig_t ) );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], sizeof( glconfig_t ) );
 #ifdef USE_VID_FAST
 		// TODO: add this to native build
 		cls.cgameGlConfig = VMA(1);
@@ -800,7 +801,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetGlconfig( VMA(1) );
 		return 0;
 	case CG_GETGAMESTATE:
-		VM_CHECKBOUNDS( cgvm, args[1], sizeof( gameState_t ) );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], sizeof( gameState_t ) );
 		CL_GetGameState( VMA(1) );
 		return 0;
 	case CG_GETCURRENTSNAPSHOTNUMBER:
@@ -825,22 +826,23 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return Key_GetCatcher();
 	case CG_KEY_SETCATCHER:
 		// Don't allow the cgame module to close the console
-		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
+		if(uivm == 0)
+			Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
 		return 0;
 	case CG_KEY_GETKEY:
 		return Key_GetKey( VMA(1) );
 
 	// shared syscalls
 	case TRAP_MEMSET:
-		VM_CHECKBOUNDS( cgvm, args[1], args[3] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
 		return args[1];
 	case TRAP_MEMCPY:
-		VM_CHECKBOUNDS2( cgvm, args[1], args[2], args[3] );
+		VM_CHECKBOUNDS2( cgvms[cgvm], args[1], args[2], args[3] );
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 	case TRAP_STRNCPY:
-		VM_CHECKBOUNDS( cgvm, args[1], args[3] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[3] );
 		strncpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 	case TRAP_SIN:
@@ -917,7 +919,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return getCameraInfo(args[1], VMA(2), VMA(3));
 */
 	case CG_GET_ENTITY_TOKEN:
-		VM_CHECKBOUNDS( cgvm, args[1], args[2] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[2] );
 		return re.GetEntityToken( VMA(1), args[2] );
 
 	case CG_R_INPVS:
@@ -940,7 +942,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return clc.demorecording;
 
 	case CG_TRAP_GETVALUE:
-		VM_CHECKBOUNDS( cgvm, args[1], args[2] );
+		VM_CHECKBOUNDS( cgvms[cgvm], args[1], args[2] );
 		return CL_GetValue( VMA(1), args[2], VMA(3) );
 
 	default:
@@ -982,7 +984,7 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 static int				t1, t2;
-void CL_InitCGame( void ) {
+void CL_InitCGame( qboolean createNew ) {
 	const char			*info;
 	const char			*mapname;
 	vmInterpret_t		interpret;
@@ -1010,8 +1012,8 @@ void CL_InitCGame( void ) {
 			interpret = VMI_COMPILED;
 	}
 
-	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
-	if ( !cgvm ) {
+	cgvms[cgvm] = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+	if ( !cgvms[cgvm] ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
 	cls.state = CA_LOADING;
@@ -1019,9 +1021,12 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	result = VM_Call( cgvm, 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 #ifdef EMSCRIPTEN
+	// do not allow vid_restart for first time
+	cls.lastVidRestart = Sys_Milliseconds();
+
 	// if the VM was suspended during initialization, we'll finish initialization later
 	if (result == 0xDEADBEEF) {
 		return;
@@ -1102,19 +1107,19 @@ See if the current console command is claimed by the cgame
 ====================
 */
 qboolean CL_GameCommand( void ) {
-	if ( !cgvm ) {
+	if ( !cgvms[cgvm] ) {
 		return qfalse;
 	}
 
 #ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command
 		// before the frame has resumed the vm
-		if (VM_IsSuspended(cgvm)) {
+		if (VM_IsSuspended(cgvms[cgvm])) {
 			return qfalse;
 		}
 #endif
 
-	return VM_Call( cgvm, 0, CG_CONSOLE_COMMAND );
+	return VM_Call( cgvms[cgvm], 0, CG_CONSOLE_COMMAND );
 }
 
 
@@ -1124,7 +1129,7 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif

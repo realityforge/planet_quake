@@ -1056,9 +1056,9 @@ static void CL_ParseCommandString( msg_t *msg ) {
 #ifdef USE_CURL
 	if ( !clc.cURLUsed )
 #endif
-	// -EC- : we may stuck on downloading because of non-working cgvm
+	// -EC- : we may stuck on downloading because of non-working cgvms[cgvm]
 	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state <= CA_PRIMED ) ) {
+	if ( ( !cgvms[cgvm] && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvms[cgvm] && cls.state <= CA_PRIMED ) ) {
 		const char *text;
 		Cmd_TokenizeString( s );
 		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {

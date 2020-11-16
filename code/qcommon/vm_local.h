@@ -209,13 +209,14 @@ struct vm_s {
 };
 
 extern	vm_t			*gvm;				// game virtual machine
-extern	vm_t			*cgvm;	// interface to cgame dll or vm
+extern  int       cgvm;
 extern  int       uivm;
 #ifdef USE_MULTIVM
 extern  int       xMaxVMs;
 extern  int       yMaxVMs;
 #endif
 #define MAX_NUM_VMS 10
+extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
 extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );

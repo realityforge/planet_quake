@@ -114,7 +114,8 @@ cvar_t *cl_drawBuffer;
 clientActive_t		cl;
 clientConnection_t	clc;
 clientStatic_t		cls;
-vm_t				*cgvm = NULL;
+int  cgvm = 0;
+vm_t *cgvms[MAX_NUM_VMS] = {};
 
 netadr_t			rcon_address;
 
@@ -1289,7 +1290,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 #ifdef USE_LOCAL_DED
 	if(dropped || cls.postgame)
 #endif
-	if ( cgvm ) {
+	if ( cgvms[cgvm] ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
@@ -1594,7 +1595,7 @@ void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
-		if ( (uivms[uivm] && uivms[uivm]->callLevel) || (cgvm && cgvm->callLevel) ) {
+		if ( (uivms[uivm] && uivms[uivm]->callLevel) || (cgvms[cgvm] && cgvms[cgvm]->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
 		} else {
 			// clear any previous "server full" type messages
@@ -1759,7 +1760,7 @@ static void CL_Connect_f( void ) {
 	}
 	// if we were already connected to the local server, don't reconnect
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
-		&& addr.type == NA_LOOPBACK && cgvm) {
+		&& addr.type == NA_LOOPBACK && cgvms[cgvm]) {
 		cls.state = CA_PRIMED;
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
@@ -2264,7 +2265,7 @@ void CL_Vid_Restart_After_Restart( void ) {
 	// start the cgame if connected
 	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) || cls.startCgame ) {
 		cls.cgameStarted = qtrue;
-		CL_InitCGame();
+		CL_InitCGame(qfalse);
 		// send pure checksums
 		CL_SendPureChecksums();
 	}
@@ -2559,7 +2560,7 @@ static void CL_DownloadsComplete( void ) {
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
-	CL_InitCGame();
+	CL_InitCGame(qfalse);
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		Cmd_AddCommand( "callvote", NULL );
@@ -3586,8 +3587,8 @@ void CL_Frame( int msec ) {
 	// enabling the event loop to breath. we're checking here if it has
 	// been suspended, and resuming it if so now that we've successfully
 	// swapped buffers
-	if (cgvm && VM_IsSuspended(cgvm)) {
-		unsigned result = VM_Resume(cgvm);
+	if (cgvms[cgvm] && VM_IsSuspended(cgvms[cgvm])) {
+		unsigned result = VM_Resume(cgvms[cgvm]);
 
 		if (result == 0xDEADBEEF) {
 			return;
@@ -3604,13 +3605,13 @@ void CL_Frame( int msec ) {
 	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
 	//   cl_lazyLoad 3 is force lazy loading everytime
 	if(cl_lazyLoad->integer > 0) {
-		if((uivms[uivm] || cgvm) && secondTimer > 20) {
+		if((uivms[uivm] || cgvms[cgvm]) && secondTimer > 20) {
 			secondTimer = 0;
 			CL_UpdateShader();
 		} else {
 			secondTimer += msec;
 		}
-		if((uivms[uivm] || cgvm) && thirdTimer > 100) {
+		if((uivms[uivm] || cgvms[cgvm]) && thirdTimer > 100) {
 			thirdTimer = 0;
 			if(cls.soundRegistered) { // && !cls.firstClick) {
 				CL_UpdateSound();
@@ -3946,8 +3947,10 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 
 
 #ifdef EMSCRIPTEN
+#ifdef USE_RENDERER_DLOPEN
 static void CL_InitRef_After_Load( void );
 static void CL_InitRef_After_Load2( void );
+#endif
 static void CL_InitRenderer( void );
 #endif
 
@@ -3978,8 +3981,8 @@ static void CL_InitRef( void ) {
 #define REND_ARCH_STRING "x86"
 #else
 #define REND_ARCH_STRING ARCH_STRING
-#endif
-#endif
+#endif // __linux__
+#endif // EMSCRIPTEN
 
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
@@ -4035,7 +4038,7 @@ static void CL_InitRef_After_Load2( void )
 	}
 
 	cl_renderer->modified = qfalse;
-#endif
+#endif // USE_RENDERER_DLOPEN
 
 	Com_Memset( &rimp, 0, sizeof( rimp ) );
 
@@ -4501,9 +4504,19 @@ void CL_LoadVM_f( void ) {
 
 	if ( !Q_stricmp( name, "game" ) )
 		index = VM_GAME;
-	else if ( !Q_stricmp( name, "cgame" ) )
-		index = VM_CGAME;
-	else if ( !Q_stricmp( name, "ui" ) ) {
+	else if ( !Q_stricmp( name, "cgame" ) ) {
+		int i, count = 0;
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(cgvms[i]) count++;
+			else cgvm = i;
+		}
+		CL_InitCGame(qtrue);
+		//VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		count++;
+		xMaxVMs = ceil(sqrt(count));
+		yMaxVMs = round(sqrt(count));
+		cgvm = 0;
+	} else if ( !Q_stricmp( name, "ui" ) ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(uivms[i]) count++;
