@@ -1023,6 +1023,15 @@ void CL_InitCGame( qboolean createNew ) {
 	// otherwise server commands sent just before a gamestate are dropped
 	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
+#ifdef USE_MULTIVM
+	if(createNew) {
+		re.EndRegistration();
+		Com_TouchMemory();
+		cls.lastVidRestart = Sys_Milliseconds();
+		return;
+	}
+#endif
+
 #ifdef EMSCRIPTEN
 	// do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();
