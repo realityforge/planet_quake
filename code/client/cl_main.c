@@ -3603,6 +3603,7 @@ void CL_Frame( int msec ) {
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
 		if(VM_IsSuspended(cgvms[i])) {
+			cgvm = i;
 			result = VM_Resume(cgvms[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
@@ -4522,7 +4523,7 @@ void CL_LoadVM_f( void ) {
 			else cgvm = i;
 		}
 		CL_InitCGame(qtrue);
-		//VM_Resume(cgvms[cgvm]);
+		VM_Resume(cgvms[cgvm]);
 		count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
