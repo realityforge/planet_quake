@@ -625,8 +625,15 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			if( cgvms[cgvm] ) {
-				for(i = 0; i < 1; i++) {
+				unsigned result;
+				for(i = 0; i < MAX_NUM_VMS; i++) {
 					if(!cgvms[i]) continue;
+					if(VM_IsSuspended(cgvms[i])) {
+					//	result = VM_Resume(cgvms[i]);
+					//	if (result == 0xDEADBEEF) {
+							continue;
+					//	}
+					}
 					cgvm = i;
 					y = floor(count / x);
 					x = count % x;

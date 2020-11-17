@@ -153,7 +153,10 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->serverTime = clSnap->serverTime;
 	
 #ifdef USE_MV
-cl.updateSnap = snapshot;
+#ifdef USE_MULTIVM
+	clc.clientView = cgvm;
+#endif
+	cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {
 		int		entityNum;
 		int		startIndex;
@@ -1025,6 +1028,7 @@ void CL_InitCGame( qboolean createNew ) {
 
 #ifdef USE_MULTIVM
 	if(createNew) {
+		cls.state = CA_ACTIVE;
 		re.EndRegistration();
 		Com_TouchMemory();
 		cls.lastVidRestart = Sys_Milliseconds();

@@ -3562,6 +3562,8 @@ static int thirdTimer = 0;
 void CL_Frame( int msec ) {
 	float fps;
 	float frameDuration;
+	int i;
+	unsigned result;
 
 #ifdef USE_CURL	
 	if ( download.cURL ) 
@@ -3596,6 +3598,15 @@ void CL_Frame( int msec ) {
 
 		if (cls.state == CA_LOADING) {
 			CL_InitCGameFinished();
+		}
+	}
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(!cgvms[i]) continue;
+		if(VM_IsSuspended(cgvms[i])) {
+			result = VM_Resume(cgvms[i]);
+			if (result == 0xDEADBEEF) {
+				continue;
+			}
 		}
 	}
 #endif
@@ -4511,7 +4522,7 @@ void CL_LoadVM_f( void ) {
 			else cgvm = i;
 		}
 		CL_InitCGame(qtrue);
-		//VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		//VM_Resume(cgvms[cgvm]);
 		count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
