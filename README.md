@@ -48,6 +48,7 @@ Some of the major features currently implemented are:
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. MultiVM command `\load <ui,cgame,game>; \mvjoin`. TODO: bug shutting down client times out because it isn't in svc.clients anymore?
+  * Multiple QVM loading for supplemental UIs and multiview.
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
@@ -66,8 +67,8 @@ Coming soon!
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
-  * Multiple QVM loader, multiple map loader in parallel with teleport switch
-  * Multi-view, instant replay
+  * Multiple map loader in parallel with teleport switch
+  * Instant replay
   * HTML and CSS menu renderer
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
