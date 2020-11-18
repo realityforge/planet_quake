@@ -154,7 +154,14 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	
 #ifdef USE_MV
 #ifdef USE_MULTIVM
-	clc.clientView = cgvm;
+	// TODO: make a table and \mvassign command?
+	if(cgvm == 0) {
+		clc.clientView = clc.clientNum;
+	} else if (cgvm == clc.clientNum) {
+		clc.clientView = 0;
+	} else {
+		clc.clientView = cgvm;		
+	}
 #endif
 	cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {

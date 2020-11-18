@@ -626,6 +626,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			if( cgvms[cgvm] ) {
 				unsigned result;
+				count = 0;
 				for(i = 0; i < MAX_NUM_VMS; i++) {
 					if(!cgvms[i]) continue;
 					if(VM_IsSuspended(cgvms[i])) {
@@ -635,8 +636,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 					//	}
 					}
 					cgvm = i;
-					y = floor(count / x);
-					x = count % x;
+					y = floor(count / xMaxVMs);
+					x = count % xMaxVMs;
 					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
 					CL_CGameRendering( stereoFrame );
 					count++;
@@ -654,11 +655,12 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// the menu draws next
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm == 0 && uivms[uivm] ) {
+		count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(!uivms[i]) continue;
 			uivm = i;
-			y = floor(count / x);
-			x = count % x;
+			y = floor(count / xMaxVMs);
+			x = count % xMaxVMs;
 			re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
 			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
 			count++;
@@ -728,31 +730,7 @@ void SCR_UpdateScreen( void ) {
 			SCR_DrawScreenField( STEREO_LEFT );
 			SCR_DrawScreenField( STEREO_RIGHT );
 		} else {
-			/*
-			if(cl.snap.multiview && cl.snap.serverTime >= cl.updateSnap->serverTime) {
-				// write the snapshot
-				clc.clientView = (clc.clientView + 1) % 2;
-				CL_GetSnapshot(cl.snap.messageNum, cl.updateSnap);
-					
-				SCR_DrawScreenField( STEREO_CENTER );
-				CL_AdjustTimeDelta();
-
-				clc.clientView = (clc.clientView + 1) % 2;
-				CL_GetSnapshot(cl.snap.messageNum, cl.updateSnap);
-				
-				SCR_DrawScreenField( STEREO_CENTER );
-			} else {
-				*/
-				SCR_DrawScreenField( STEREO_CENTER );
-				
-				//if(previousFrame && previousFrame[3]) {
-//Com_Printf("drawing frame: %i %i %i %i\n",
-// previousFrame[0], previousFrame[1], previousFrame[2], previousFrame[3]);
-					//re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-					//re.DrawStretchRaw( 100, 100, 256 /* * cls.scale + cls.biasX*/, 256 /* * cls.scale + cls.biasY*/, 256, 256, previousFrame, 1, qtrue);
-				//}
-			//}
-			
+			SCR_DrawScreenField( STEREO_CENTER );
 		}
 
 		if ( com_speeds->integer ) {

@@ -393,10 +393,10 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				// copy data to primary playerstate
 				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
 				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
-				//if(clc.clientView == ) {
-				newSnap.clps[ clientNum ].ps.pm_flags |= PMF_FOLLOW;
-				newSnap.ps.pm_flags |= PMF_FOLLOW;
-				//}
+				if(clc.clientView != clc.clientNum) {
+					newSnap.clps[ clientNum ].ps.pm_flags |= PMF_FOLLOW;
+					newSnap.ps.pm_flags |= PMF_FOLLOW;
+				}
 			}
 		} // for [all clients]
 

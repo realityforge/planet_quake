@@ -4520,7 +4520,10 @@ void CL_LoadVM_f( void ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(cgvms[i]) count++;
-			else cgvm = i;
+			else {
+				cgvm = i;
+				break;
+			}
 		}
 		CL_InitCGame(qtrue);
 		VM_Resume(cgvms[cgvm]);
@@ -4532,7 +4535,10 @@ void CL_LoadVM_f( void ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(uivms[i]) count++;
-			else uivm = i;
+			else {
+				uivm = i;
+				break;
+			}
 		}
 		CL_InitUI(qtrue);
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
