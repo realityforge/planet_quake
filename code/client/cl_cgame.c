@@ -501,21 +501,25 @@ void CL_ShutdownCGame( void ) {
 	Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
 	cls.cgameStarted = qfalse;
 
-	if ( !cgvms[cgvm] ) {
-		return;
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		cgvm = i;
+		if ( !cgvms[cgvm] ) {
+			continue;
+		}
+
+	#ifdef EMSCRIPTEN
+		while (VM_IsSuspended(cgvms[cgvm])) {
+			VM_Resume(cgvms[cgvm]);
+		}
+	#endif
+
+		re.VertexLighting( qfalse );
+
+		VM_Call( cgvms[cgvm], 0, CG_SHUTDOWN );
+		VM_Free( cgvms[cgvm] );
+		cgvms[cgvm] = NULL;
 	}
-
-#ifdef EMSCRIPTEN
-	while (VM_IsSuspended(cgvms[cgvm])) {
-		VM_Resume(cgvms[cgvm]);
-	}
-#endif
-
-	re.VertexLighting( qfalse );
-
-	VM_Call( cgvms[cgvm], 0, CG_SHUTDOWN );
-	VM_Free( cgvms[cgvm] );
-	cgvms[cgvm] = NULL;
+	cgvm = 0;
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST

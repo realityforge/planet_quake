@@ -441,8 +441,8 @@ SV_BotFrame
 void SV_BotFrame( int time ) {
 	if (!bot_enable) return;
 	//NOTE: maybe the game is already shutdown
-	if (!gvm) return;
-	VM_Call( gvm, 1, BOTAI_START_FRAME, time );
+	if (!gvms[gvm]) return;
+	VM_Call( gvms[gvm], 1, BOTAI_START_FRAME, time );
 }
 
 /*

@@ -1222,13 +1222,18 @@ CL_ShutdownUI
 void CL_ShutdownUI( void ) {
 	Key_SetCatcher( Key_GetCatcher() & ~KEYCATCH_UI );
 	cls.uiStarted = qfalse;
-	if ( !uivms[uivm] ) {
-		return;
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		uivm = i;
+		if ( !uivms[uivm] ) {
+			continue;
+		}
+		VM_Call( uivms[uivm], 0, UI_SHUTDOWN );
+		VM_Free( uivms[uivm] );
+		uivms[uivm] = NULL;
 	}
-	VM_Call( uivms[uivm], 0, UI_SHUTDOWN );
-	VM_Free( uivms[uivm] );
-	uivms[uivm] = NULL;
+	uivm = 0;
 	FS_VM_CloseFiles( H_Q3UI );
+
 #ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
 	cls.cursory = 0;

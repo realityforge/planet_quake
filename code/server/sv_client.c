@@ -920,7 +920,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 //			// disconnect the client from the game first so any flags the
 //			// player might have are dropped
-//			VM_Call( gvm, GAME_CLIENT_DISCONNECT, 1, newcl - svs.clients );
+//			VM_Call( gvms[gvm], GAME_CLIENT_DISCONNECT, 1, newcl - svs.clients );
 			//
 			goto gotnewcl;
 		}
@@ -1037,7 +1037,7 @@ gotnewcl:
 	}
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
+	denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
 		// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 		const char *str = GVM_ArgPtr( denied );
@@ -1145,7 +1145,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
-	VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 
 	// add the disconnect command
 	if ( reason ) {
@@ -1414,7 +1414,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 
 	// call the game begin function
-	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, client - svs.clients );
 
 	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
 	if (sv.demoState == DS_PLAYBACK &&
@@ -2078,7 +2078,7 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 	// name for C code
 	val = Info_ValueForKey( cl->userinfo, "name" );
 	// truncate if it is too long as it may cause memory corruption in OSP mod
-	if ( gvm->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
+	if ( gvms[gvm]->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
 		Q_strncpyz( buf, val, sizeof( buf ) );
 		Info_SetValueForKey( cl->userinfo, "name", buf );
 		val = buf;
@@ -2141,7 +2141,7 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
 	// call prog code to allow overrides
-	VM_Call( gvm, 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
 
 extern int SV_Strlen( const char *str );
@@ -2292,7 +2292,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		ded = com_dedicated->integer;
 		Cvar_Set("dedicated", "0");
 		if(com_sv_running && com_sv_running->integer) {
-			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand();
 		}
 		Cvar_Set("dedicated", va("%i", ded));
@@ -2349,7 +2349,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			}
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team") )
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
-			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );
+			VM_Call( gvms[gvm], 1, GAME_CLIENT_COMMAND, cl - svs.clients );
 #ifdef USE_MV
 			cl->multiview.lastSentTime = svs.time;
 #endif
@@ -2423,7 +2423,7 @@ void SV_ClientThink (client_t *cl, usercmd_t *cmd) {
 		return;		// may have been kicked during the last usercmd
 	}
 
-	VM_Call( gvm, 1, GAME_CLIENT_THINK, cl - svs.clients );
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_THINK, cl - svs.clients );
 }
 
 

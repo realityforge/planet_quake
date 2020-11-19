@@ -114,7 +114,7 @@ cvar_t *cl_drawBuffer;
 clientActive_t		cl;
 clientConnection_t	clc;
 clientStatic_t		cls;
-int  cgvm = 0;
+int   cgvm = 0;
 vm_t *cgvms[MAX_NUM_VMS] = {};
 
 netadr_t			rcon_address;
@@ -1026,6 +1026,8 @@ static void CL_ShutdownVMs( void )
 {
 	CL_ShutdownCGame();
 	CL_ShutdownUI();
+	xMaxVMs = 1;
+	yMaxVMs = 1;
 }
 
 

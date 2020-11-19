@@ -208,7 +208,7 @@ struct vm_s {
 	int			privateFlag;
 };
 
-extern	vm_t			*gvm;				// game virtual machine
+extern  int       gvm;
 extern  int       cgvm;
 extern  int       uivm;
 #ifdef USE_MULTIVM
@@ -218,6 +218,7 @@ extern  int       yMaxVMs;
 #define MAX_NUM_VMS 10
 extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
 extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
+extern	vm_t			*gvms[MAX_NUM_VMS];				// game virtual machine
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );

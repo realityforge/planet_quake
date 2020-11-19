@@ -792,7 +792,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 		Q_strncpyz( svs.clients[num].name, Info_ValueForKey( configstring, "n" ), MAX_NAME_LENGTH ); // set the name (useful for internal functions such as status_f). Anyway userinfo will automatically set both name (server-side) and netname (gamecode-side).
 
 		// get the game a chance to reject this connection or modify the userinfo
-		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
+		denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
 		if ( denied ) {
 			// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 			const char *str = GVM_ArgPtr( denied );
@@ -833,7 +833,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 
 		// Make sure the gamecode consider the democlients (this will allow to show them on the scoreboard and make them spectatable with a standard follow) - does not use argv (directly fetch client infos from userinfo) so no need to tokenize with Cmd_TokenizeString()
 		// Note: this also triggers the gamecode refreshing of the client's userinfo
-		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, num );
+		VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, num );
 	} else if ( Q_stricmp(sv.configstrings[CS_PLAYERS + num], configstring) && strlen(sv.configstrings[CS_PLAYERS + num]) && (!configstring || !strlen(configstring)) ) { // client disconnect: different configstrings and the new one is empty, so the client is not there anymore, we drop him (also we check that the old config was not empty, else we would be disconnecting a player who is already dropped)
 		client = &svs.clients[num];
 		SV_DropClient( client, "disconnected" ); // same as SV_Disconnect_f(client);
@@ -1769,7 +1769,7 @@ void SV_DemoStartPlayback(void)
 		//sv.time = time;
 		while (sv.time < timetoreach) {
 			SV_DemoReadFrame(); // run a few frames to settle things out
-			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 			SV_BotFrame( sv.time );
 		}
 	}
@@ -1804,7 +1804,7 @@ void SV_DemoStartPlayback(void)
 	Cvar_SetValue("sv_demoState", DS_PLAYBACK);
 	keepSaved = qfalse; // Don't save values anymore: the next time we stop playback, we will restore previous values (because now we are really launching the playback, so anything that might happen now is either a big bug or the end of demo, in any case we want to restore the values)
 	SV_DemoReadFrame(); // reading the first frame, which should contain some initialization events (eg: initial confistrings/userinfo when demo recording started, initial entities states and placement, etc..)
-	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 }
 
