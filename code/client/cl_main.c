@@ -4526,7 +4526,6 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		CL_InitCGame(qtrue);
-		VM_Resume(cgvms[cgvm]);
 		count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));

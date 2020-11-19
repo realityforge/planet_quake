@@ -686,12 +686,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_GENNORMALMAP;
 				}
 
+#ifdef USE_LAZY_LOAD
         if(!mapShaders && r_lazyLoad->integer == 2) {
           byte *pic;
           int len;
           R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
           //return qfalse;
-        } else {
+        } else 
+#endif
+        {
           stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
         }
 
@@ -739,12 +742,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 
+#ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
         return qfalse;
-      } else {
+      } else 
+#endif
+      {
 			  stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
       }
 			if ( !stage->bundle[0].image[0] )
@@ -787,12 +793,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if (!shader.noPicMip)
 						flags |= IMGFLAG_PICMIP;
 
+#ifdef USE_LAZY_LOAD
           if(!mapShaders && r_lazyLoad->integer == 2) {
             int len;
             byte *pic;
             R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
             return qfalse;
-          } else {
+          } else 
+#endif
+          {
             stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
           }
 					if ( !stage->bundle[0].image[num] )
@@ -1610,13 +1619,16 @@ static void ParseSkyParms( const char **text ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
-        
+
+#ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
         shader.sky.outerbox[i] = tr.defaultImage;
-      } else {
+      } else 
+#endif
+      {
         shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE );
       }
 
@@ -1649,12 +1661,15 @@ static void ParseSkyParms( const char **text ) {
 		for (i=0 ; i<6 ; i++) {
 			Com_sprintf( pathname, sizeof(pathname), "%s_%s.tga"
 				, token, suf[i] );
+#ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
         shader.sky.innerbox[i] = tr.defaultImage;
-      } else {
+      } else 
+#endif
+      {
         shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags );
       }
 			if ( !shader.sky.innerbox[i] ) {
@@ -2577,12 +2592,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			COM_StripExtension(diffuseImg->imgName, normalName, MAX_QPATH);
 			Q_strcat(normalName, MAX_QPATH, "_nh");
 
+#ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
         int len;
         byte *pic;
         R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
         normalImg = NULL;
-      } else {
+      } else 
+#endif
+      {
         normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags);
       }
 
@@ -2594,12 +2612,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			{
 				// try a normal image ("_n" suffix)
 				normalName[strlen(normalName) - 1] = '\0';
+#ifdef USE_LAZY_LOAD
         if(!mapShaders && r_lazyLoad->integer == 2) {
           byte *pic;
           int len;
           R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
           normalImg = NULL;
-        } else {
+        } else 
+#endif
+        {
           normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
         }
 			}
@@ -2636,12 +2657,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			COM_StripExtension(diffuseImg->imgName, specularName, MAX_QPATH);
 			Q_strcat(specularName, MAX_QPATH, "_s");
 
+#ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
         byte *pic;
         int len;
         R_LoadImage(specularName, &pic, &len, &len, &len, &len, qtrue);
         specularImg = NULL;
-      } else {
+      } else 
+#endif
+      {
         specularImg = R_FindImageFile(specularName, IMGTYPE_COLORALPHA, specularFlags);
       }
 
@@ -3713,13 +3737,16 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if ( !shader.allowCompress )
 			flags |= IMGFLAG_NO_COMPRESSION;
-      
+
+#ifdef USE_LAZY_LOAD
     if(!mapShaders && r_lazyLoad->integer == 2) {
       byte *pic = NULL;
       int len = 0;
       R_LoadImage( name, &pic, &len, &len, &len, &len, qtrue );
       image = NULL;
-    } else {
+    } else 
+#endif
+    {
 		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
     }
 

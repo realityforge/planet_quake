@@ -629,12 +629,14 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 				count = 0;
 				for(i = 0; i < MAX_NUM_VMS; i++) {
 					if(!cgvms[i]) continue;
+#ifdef EMSCRIPTEN
 					if(VM_IsSuspended(cgvms[i])) {
 					//	result = VM_Resume(cgvms[i]);
 					//	if (result == 0xDEADBEEF) {
 							continue;
 					//	}
 					}
+#endif
 					cgvm = i;
 					y = floor(count / xMaxVMs);
 					x = count % xMaxVMs;

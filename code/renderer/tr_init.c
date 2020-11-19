@@ -1868,15 +1868,17 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SyncRender = RE_SyncRender;
 
 	//re.SetDvrFrame = RE_SetDvrFrame;
-	re.LoadShaders = RE_LoadShaders;
 	//re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif
 	//re.FastCapture = RB_FastCapture;
 	//re.FastCaptureOld = RB_FastCaptureOld;
+#ifdef USE_LAZY_LOAD
+	re.LoadShaders = RE_LoadShaders;
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
+#endif
 	//re.ResetBannerSpy = RE_ResetBannerSpy;
 
 	return &re;

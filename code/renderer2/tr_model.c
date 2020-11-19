@@ -323,11 +323,14 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			if( !Q_stricmp( ext, modelLoaders[ i ].ext ) )
 			{
 				// Load
+#ifdef USE_LAZY_LOAD
 				if ( !updateModels ) {
 					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
 						hModel = 0;
 					}
-				} else {
+				} else 
+#endif
+				{
 					hModel = modelLoaders[ i ].ModelLoader( localName, mod );
 				}
 				break;
@@ -364,11 +367,14 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, modelLoaders[ i ].ext );
 
 		// Load
+#ifdef USE_LAZY_LOAD
 		if ( !updateModels ) {
 			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
 				hModel = 0;
 			}
-		} else {
+		} else 
+#endif
+		{
 			hModel = modelLoaders[ i ].ModelLoader( altName, mod );
 		}
 
