@@ -318,6 +318,10 @@ var LibrarySysMain = {
       window.removeEventListener('keydown', SYSI.InputPushKeyEvent)
       window.removeEventListener('keyup', SYSI.InputPushKeyEvent)
       window.removeEventListener('keypress', SYSI.InputPushTextEvent)
+      document.removeEventListener('mousewheel', SYSI.InputPushWheelEvent)
+      document.removeEventListener('visibilitychange', SYSI.InputPushFocusEvent)
+      document.removeEventListener('drop', SYSI.dropHandler)
+      document.removeEventListener('dragover', SYSI.dragOverHandler)    
     }
     
     //Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)

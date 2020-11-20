@@ -568,6 +568,23 @@ void IN_PushWindowEvent(SDL_WindowEvent e)
 	}
 }
 
+void IN_PushDropEvent(SDL_DropEvent e)
+{
+	char file[MAX_OSPATH];
+	if(e.type == SDL_DROPBEGIN) {
+		// TODO: show the full console
+		if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
+			Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
+
+		Com_Printf("Dropping files:\n");
+	}
+	if(e.type == SDL_DROPFILE) {
+		// show the contents of the dropped file and offer to load something
+		Com_Printf("Opening file: %s\n", e.file);
+		Q_strncpyz(file, e.file, MAX_OSPATH);
+	}
+}
+
 void IN_PushEvent(int type, int *event)
 {
 	in_eventTime = Sys_Milliseconds();
@@ -596,6 +613,9 @@ void IN_PushEvent(int type, int *event)
 	if(type == (int)&IN_PushWindowEvent) {
 		IN_PushWindowEvent(*(SDL_WindowEvent *)event);
 	}
+	if(type == (int)&IN_PushDropEvent) {
+		IN_PushDropEvent(*(SDL_DropEvent *)event);
+	}
 }
 
 void IN_PushInit(int *inputInterface)
@@ -608,6 +628,7 @@ void IN_PushInit(int *inputInterface)
 	inputInterface[5] = (int)&IN_PushMouseWheel;
 	inputInterface[6] = (int)&IN_PushTouchFinger;
 	inputInterface[7] = (int)&IN_PushWindowEvent;
+	inputInterface[8] = (int)&IN_PushDropEvent;
 }
 
 

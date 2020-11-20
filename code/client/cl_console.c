@@ -83,7 +83,7 @@ Con_ToggleConsole_f
 */
 void Con_ToggleConsole_f( void ) {
 	// Can't toggle the console when it's the only thing available
-    if ( cls.state == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
+  if ( cls.state == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
 		return;
 	}
 

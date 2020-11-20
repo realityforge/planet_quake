@@ -53,10 +53,11 @@ Some of the major features currently implemented are:
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
   * Checksum pk3 spoofing for playing with original clients using web converted files.
+  * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Many, many bug fixes
 
 Coming soon!
-  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content, fix sound in debug build mode and asm.js build, possible bug in screen size detection (tig), pre-download content like the repack graph mode sets up so less is download in game, use lvlworld.cfg and autoconfig after so people can save their settings (need a way to exit "preview mode" and play the game with networking, simple menu items in preview mode "start game" option)
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content, fix sound in debug build mode and asm.js build, possible bug in screen size detection (tig), pre-download content like the repack graph mode sets up so less is downloaded in game, use lvlworld.cfg and autoconfig after so people can save their settings (need a way to exit "preview mode" and play the game with networking, simple menu items in preview mode "start game" option)
   * Make all game code entry points asynchronous with engine to run all QVMs in web workers/pthreads. Pause VM for async calls between engine and VM. Allow different VMs on file system by using more search directories and Pure server calls for filtering.
   * Payment API for micropayments to access server or content https://developers.google.com/web/fundamentals/codelabs/payment-request-api
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
@@ -66,7 +67,6 @@ Coming soon!
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
-  * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Multiple map loader in parallel with teleport switch
   * Instant replay
   * HTML and CSS menu renderer

@@ -387,7 +387,7 @@ var LibrarySysFiles = {
   },
   Sys_FOpen__deps: ['$SYS', '$FS', '$PATH', 'fopen'],
   Sys_FOpen: function (ospath, mode) {
-    var whitelist = new RegExp('screenshots\/|default.cfg|qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
+    var whitelist = new RegExp('demos\/|\.svdm_|screenshots\/|default.cfg|qkey|q3key|q3history|q3console.log|q3config.cfg|\.pk3$', 'gi')
     var handle = 0
     var exists = false
     try {

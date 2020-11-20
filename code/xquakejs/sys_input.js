@@ -259,7 +259,7 @@ var LibrarySysInput = {
       Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[6], event)
     },
     // Source: https://stackoverflow.com/a/18717721/8037972
-    InputPushMoved: function (evt) {
+    InputPushMovedEvent: function (evt) {
       if (evt.toElement === null && evt.relatedTarget === null) {
         //if outside the window...
         if(SYSI.interval)
@@ -280,7 +280,7 @@ var LibrarySysInput = {
         Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
       }
     },
-    InputPushFocus: function (evt) {
+    InputPushFocusEvent: function (evt) {
       var event = SYSI.inputHeap
       HEAP32[((event+0)>>2)]=0x200;
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
@@ -296,6 +296,28 @@ var LibrarySysInput = {
       HEAP32[((event+20)>>2)]=0;
       Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
     },
+    InputPushDropEvent: function (filename) {
+      var event = SYSI.inputHeap
+      HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
+      HEAP32[((event+12)>>2)]=0; // windowid
+      if(typeof filename == 'string') {
+        filename.forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
+        HEAP8[(SYSF.pathname+filename.length)] = 0;
+        HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
+        HEAP32[((event+0)>>2)]=0x1000;
+        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+      } else if(file === true) {
+        HEAP32[((event+0)>>2)]=0x1002;
+        HEAP8[(SYSF.pathname)] = 0;
+        HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
+        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+      } else if (file === false) {
+        HEAP32[((event+0)>>2)]=0x1003;
+        HEAP8[(SYSF.pathname)] = 0;
+        HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
+        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+      }
+    },
     InputInit: function () {
       // TODO: clear JSEvents.eventHandlers
       Browser.safeCallback(_IN_PushInit)(SYSI.inputHeap)
@@ -306,15 +328,17 @@ var LibrarySysInput = {
       window.addEventListener('keydown', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keyup', SYSI.InputPushKeyEvent, false)
       window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
-      window.addEventListener('mouseout', SYSI.InputPushMoved, false)
+      window.addEventListener('mouseout', SYSI.InputPushMovedEvent, false)
 
       Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
       Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
       
       document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
-      document.addEventListener("visibilitychange", SYSI.InputPushFocus, false)
-      //document.addEventListener('pointerlockchange', SYSI.InputPushFocus, false);
+      document.addEventListener('visibilitychange', SYSI.InputPushFocusEvent, false)
+      document.addEventListener('drop', SYSI.dropHandler, false)
+      document.addEventListener('dragover', SYSI.dragOverHandler, false)
+      //document.addEventListener('pointerlockchange', SYSI.InputPushFocusEvent, false);
       /*
       let nipple handle touch events
       Module['canvas'].addEventListener('touchstart', SYSI.InputPushTouchEvent, false)
@@ -390,11 +414,45 @@ var LibrarySysInput = {
 			if (SYSI.resizeDelay) clearTimeout(SYSI.resizeDelay)
 			SYSI.resizeDelay = setTimeout(Browser.safeCallback(SYSI.updateVideoCmd), 100);
 		},
+    dropHandler: function (ev) {
+      // Prevent default behavior (Prevent file from being opened)
+      ev.preventDefault();
+      var handleFile = function (file) {
+        if(file.name.match(/\.svdm_|\.dm_/ig)) {
+          // import demo file
+          
+        }
+        SYSI.InputPushDropEvent(file.name)
+      }
+
+      if (ev.dataTransfer.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+          // If dropped items aren't files, reject them
+          if (ev.dataTransfer.items[i].kind === 'file') {
+            var file = ev.dataTransfer.items[i].getAsFile();
+            handleFile(file)
+          }
+        }
+      } else {
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+          handleFile(file)
+        }
+      }
+      
+      SYSI.InputPushDropEvent(false)
+    },
+    dragOverHandler: function (ev) {
+      SYSI.InputPushDropEvent(true)
+      ev.preventDefault();
+    },
   },
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
     if(!SYSI.inputHeap)
       SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
+
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
 		if (!Module['canvas']) {

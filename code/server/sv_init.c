@@ -491,6 +491,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #else
 		if ( sv_maxclients->modified ) {
 #endif
+;
 			// If we are playing/waiting to play/waiting to stop a demo, we use a specialized function that will move real clients slots (so that democlients will be put to their original slots they were affected at the time of the real game)
 			if (sv.demoState == DS_WAITINGPLAYBACK || sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGSTOP)
 				SV_DemoChangeMaxClients();

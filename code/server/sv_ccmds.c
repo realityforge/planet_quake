@@ -1568,9 +1568,11 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
 	Cmd_SetCommandCompletionFunc( "demo_play", SV_CompleteDemoName );
 	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
+
   Cmd_AddCommand ("cl_record", SV_Record_f);
   Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
   Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
+
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
 	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
