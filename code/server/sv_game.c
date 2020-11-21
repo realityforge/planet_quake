@@ -375,7 +375,8 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_ERROR:
 		// excessive plus checking if it is installed correctly
 		if(Q_stristr((const char*)VMA(1), "seems broken")
-			|| Q_stristr((const char*)VMA(1), "missing or corrupt")) {
+			|| Q_stristr((const char*)VMA(1), "missing or corrupt")
+			|| Q_stristr((const char*)VMA(1), "no free entities")) {
 			Com_Printf( "%s", (const char*)VMA(1) );
 			Cvar_Set("bot_enable", "1");
 			return 1;

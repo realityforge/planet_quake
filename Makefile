@@ -717,7 +717,7 @@ endif
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-		-s WASM=0 \
+		-s WASM=1 \
 		-s MODULARIZE=0 \
     -s SAFE_HEAP=1 \
     -s DEMANGLE_SUPPORT=1 \

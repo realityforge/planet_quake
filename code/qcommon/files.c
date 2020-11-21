@@ -4590,6 +4590,8 @@ void FS_Shutdown( qboolean closemfp )
 	Cmd_RemoveCommand( "which" );
 	Cmd_RemoveCommand( "lsof" );
 	Cmd_RemoveCommand( "fs_restart" );
+	Cmd_RemoveCommand ("fs_openedList");
+	Cmd_RemoveCommand ("fs_referencedList");
 }
 
 

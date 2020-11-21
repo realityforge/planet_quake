@@ -429,7 +429,7 @@ This is NOT called for map_restart
 */
 qboolean killBots;
 static qboolean startingServer = qfalse;
-
+char map[MAX_CMD_LINE];
 void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
 	int			checksum;
@@ -583,6 +583,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	Cvar_Set( "mapname", mapname );
 
 #ifdef EMSCRIPTEN
+	Memcpy(&map, mapname, sizeof(map));
 	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }
@@ -597,7 +598,8 @@ void SV_SpawnServer_After_Startup( void ) {
 	int			checksum;
 	qboolean	isBot;
 	const char	*p;
-	const char *mapname = Cvar_VariableString("mapname");
+	const char *mapname;
+	mapname = &map;
 	FS_Restart_After_Async();
 	Cvar_Set("sv_running", "1");
 #endif

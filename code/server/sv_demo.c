@@ -1408,9 +1408,11 @@ void SV_DemoChangeMaxClients( void ) {
 
 
 	// == Checking the prerequisites
-	// Note: we check  here that we have enough slots to fit all clients, and that it doesn't overflow the MAX_CLIENTS the engine can support. Also, we save the oldMaxClients and oldDemoClients values.
+	// Note: we check  here that we have enough slots to fit all clients, 
+	//   and that it doesn't overflow the MAX_CLIENTS the engine can support. 
+	//   Also, we save the oldMaxClients and oldDemoClients values.
 
-        // -- Get the highest client number in use
+  // -- Get the highest client number in use
 	count = 0;
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
@@ -1423,17 +1425,26 @@ void SV_DemoChangeMaxClients( void ) {
 	// -- Save the previous oldMaxClients and oldDemoClients values, and update
 
 	// Save the previous sv_maxclients value before updating it
+Com_Printf("Old max clients %i\n", sv_maxclients->integer);
   oldMaxClients = sv_maxclients->integer;
   // update the cvars
   Cvar_Get( "sv_maxclients", "8", 0 );
-  Cvar_Get( "sv_democlients", "0", 0 ); // unnecessary now that sv_democlients is not latched anymore?
-	// Save the previous sv_democlients (since it's updated instantly, we cannot get it directly), we use a trick by computing the difference between the new and previous sv_maxclients (the difference should indeed be the exact value of sv_democlients)
+	// unnecessary now that sv_democlients is not latched anymore?
+  Cvar_Get( "sv_democlients", "0", 0 );
+	// Save the previous sv_democlients (since it's updated instantly, 
+	//   we cannot get it directly), we use a trick by computing the difference 
+	//   between the new and previous sv_maxclients (the difference should 
+	//   indeed be the exact value of sv_democlients)
 	oldDemoClients = (oldMaxClients - sv_maxclients->integer);
-	if (oldDemoClients < 0) // if the difference is negative, this means that before it was set to 0 (because the newer sv_maxclients is greater than the old)
+	// if the difference is negative, this means that 
+	//   before it was set to 0 (because the newer sv_maxclients is greater
+	//   than the old)
+	if (oldDemoClients < 0)
 		oldDemoClients = 0;
 
 	// -- Check limits
-	// never go below the highest client number in use (make sure we have enough room for all players)
+	// never go below the highest client number in use (make sure we have enough
+	//   room for all players)
 	SV_BoundMaxClients( count );
 
   // -- Change check: if still the same, we just quit, there's nothing to do
@@ -1443,29 +1454,34 @@ void SV_DemoChangeMaxClients( void ) {
 
 
 	// == Memorizing clients
-	// Note: we save in a temporary variables the clients, because after we will wipe completely the svs.clients struct
+	// Note: we save in a temporary variables the clients, because after we will 
+	//   wipe completely the svs.clients struct
 
 	// copy the clients to hunk memory
 	oldClients = Hunk_AllocateTempMemory( (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) ); // we allocate just enough memory for the real clients (not counting in the democlients)
 	// For all previous clients slots, we copy the entire client into a temporary var
-	for ( i = 0, j = 0, k = sv_privateClients->integer ; i < oldMaxClients ; i++ ) { // for all the previously connected clients, we copy them to a temporary var
+	for ( i = 0, j = 0, k = sv_privateClients->integer ; i < oldMaxClients ; i++ ) {
+		// for all the previously connected clients, we copy them to a temporary var
 		// If there is a real client in this slot
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			// if the client is in a privateClient reserved slot, we move him on the reserved slots
 			if (i >= oldDemoClients && i < oldDemoClients + sv_privateClients->integer) {
 				oldClients[j++] = svs.clients[i];
-			// else the client is not a privateClient, and we move him to the first available slot after the privateClients slots
+			// else the client is not a privateClient, and we move him to the first 
+			//   available slot after the privateClients slots
 			} else {
 				oldClients[k++] = svs.clients[i];
 			}
 		}
 	}
 
-	// Fill in the remaining clients slots with empty clients (else the engine crash when copying into memory svs.clients)
+	// Fill in the remaining clients slots with empty clients (else the engine 
+	//   crash when copying into memory svs.clients)
 	for (i=j; i < sv_privateClients->integer; i++) { // Fill the privateClients empty slots
 		Com_Memset(&oldClients[i], 0, sizeof(client_t));
 	}
-	for (i=k; i < (sv_maxclients->integer - sv_democlients->integer); i++) { // Fill the other normal clients slots
+	for (i=k; i < (sv_maxclients->integer - sv_democlients->integer); i++) { 
+		// Fill the other normal clients slots
 		Com_Memset(&oldClients[i], 0, sizeof(client_t));
 	}
 
@@ -1482,7 +1498,8 @@ void SV_DemoChangeMaxClients( void ) {
 	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	numInvoices = 0;
 
-	// copy the clients over (and move them depending on sv_democlients: if >0, move them upwards, if == 0, move them to their original slots)
+	// copy the clients over (and move them depending on sv_democlients: if >0, 
+	//   move them upwards, if == 0, move them to their original slots)
 	Com_Memcpy( svs.clients + sv_democlients->integer, oldClients, (sv_maxclients->integer - sv_democlients->integer) * sizeof(client_t) );
 
 	// free the old clients on the hunk
@@ -1905,7 +1922,7 @@ void SV_DemoStopPlayback(void)
 #else
 		Com_Error (ERR_DROP,"An error happened while replaying the demo, please check the log for more info\n");
 #ifndef USE_LOCAL_DED
-		Cvar_SetValue("sv_killserver", 1);
+		//Cvar_SetValue("sv_killserver", 1);
 #endif
 #endif
 	} else if (olddemostate == DS_PLAYBACK) {
@@ -1921,11 +1938,11 @@ void SV_DemoStopPlayback(void)
 		}
 #endif
 		// Update sv_maxclients latched value (since we will kill the server because it's not a dedicated server, we won't restart the map, so latched values won't be affected unless we force the refresh)
-		Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
-		sv_maxclients->modified = qfalse; // Set modified to false
+		//Cvar_Get( "sv_maxclients", "8", 0 ); // Get sv_maxclients value (force latched values to commit)
+		//sv_maxclients->modified = qfalse; // Set modified to false
 #ifndef USE_LOCAL_DED
 		// Kill the local server
-		Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
+		//Cvar_SetValue("sv_killserver", 1); // instead of sending a Cbuf_AddText("killserver") command, we here just set a special cvar which will kill the server at the next SV_Frame() iteration (smoother than force killing)
 #endif
 #endif
 	}

@@ -475,10 +475,12 @@ var LibrarySysFiles = {
           // allow additional downloaded pk3s NOT in index to processed
           return f.match(/\.pk3$/ig)
         }))
-      if(directory.match(/\/demos/i)) {
+      if(directory.match(/\/demos|\/svdemos/i)) {
         contents = contents
-          .concat(FS.readdir(PATH.join(PATH.dirname(directory), '/svdemos')))
-          .filter(function (f) { return !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode) })
+          .concat(FS.readdir(directory))
+          .filter(function (f) { 
+            return !dironly || FS.isDir(FS.stat(PATH.join(directory, f)).mode)
+          })
       }
       if(contents.length > 5000) {
         debugger

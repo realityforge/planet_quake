@@ -416,11 +416,15 @@ var LibrarySysInput = {
 			SYSI.resizeDelay = setTimeout(Browser.safeCallback(SYSI.updateVideoCmd), 100);
 		},
     dropHandler: function (ev) {
+      var files = []
       // Prevent default behavior (Prevent file from being opened)
       ev.preventDefault();
-      var handleFile = function (file) {
+      var handleFile
+      handleFile = function (file, done) {
         var newPath
-        if(file.name.match(/\.svdm_|\.dm_/ig)) {
+        if(file.name.match(/\.svdm_/ig)) {
+          newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game, 'svdemos', file.name)
+        } else if (file.name.match(/\.dm_/ig)) {
           newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game, 'demos', file.name)
         } else {
           newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game)
@@ -431,6 +435,11 @@ var LibrarySysInput = {
           FS.writeFile(newPath, new Uint8Array(e.target.result), {
             encoding: 'binary', flags: 'w', canOwn: true })
           SYSI.InputPushDropEvent(file.name)
+          if(files.length) {
+            handleFile(files.pop())
+          } else {
+            done()
+          }
         }
         reader.readAsArrayBuffer(file)
       }
@@ -441,17 +450,21 @@ var LibrarySysInput = {
           // If dropped items aren't files, reject them
           if (ev.dataTransfer.items[i].kind === 'file') {
             var file = ev.dataTransfer.items[i].getAsFile();
-            handleFile(file)
+            files.push(file)
           }
         }
       } else {
         // Use DataTransfer interface to access the file(s)
         for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-          handleFile(file)
+          files.push(file)
         }
       }
       
-      SYSI.InputPushDropEvent(false)
+      handleFile(files.pop(), function () {
+        FS.syncfs(false, function () {
+          SYSI.InputPushDropEvent(false)
+        })
+      })
     },
     dragEnterHandler: function (ev) {
       SYSI.InputPushDropEvent(true)
