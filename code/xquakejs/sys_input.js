@@ -421,13 +421,14 @@ var LibrarySysInput = {
       var handleFile = function (file) {
         var newPath
         if(file.name.match(/\.svdm_|\.dm_/ig)) {
-          newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game, file.name)
+          newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game, 'demos', file.name)
         } else {
           newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game)
         }
+        SYSC.mkdirp(PATH.dirname(newPath))
         var reader = new FileReader();
         reader.onload = function(e) {
-          FS.writeFile(newPath, e.target.result, {
+          FS.writeFile(newPath, new Uint8Array(e.target.result), {
             encoding: 'binary', flags: 'w', canOwn: true })
           SYSI.InputPushDropEvent(file.name)
         }
