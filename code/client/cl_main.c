@@ -4717,40 +4717,63 @@ void CL_Init( void ) {
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
 	Cmd_SetDescription("demo", "Play a demo\nusage: demo <demoname>");
 	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
+	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nusage: cinematic <videofile>");
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
+	Cmd_SetDescription("stoprecord", "Stop recording a demo\nusage: stoprecord");
 	Cmd_AddCommand ("connect", CL_Connect_f);
+	Cmd_SetDescription("connect", "Connect to a server\nusage: connect ([-4|-6]) <serveraddress>");
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
+	Cmd_SetDescription("reconnect", "Reinitialize the connection to the last server you were connected to\nusage: reconnect");
 	Cmd_AddCommand ("localservers", CL_LocalServers_f);
+	Cmd_SetDescription("localservers", "List servers on LAN or local sub net only\nusage: localservers");
 	Cmd_AddCommand ("globalservers", CL_GlobalServers_f);
+	Cmd_SetDescription("globalservers", "List public servers on the internet\nusage: globalservers");
 	Cmd_AddCommand ("rcon", CL_Rcon_f);
 	Cmd_SetCommandCompletionFunc( "rcon", CL_CompleteRcon );
+	Cmd_SetDescription("rcon", "Start a remote console to a server\nusage: rcon");
 	Cmd_AddCommand ("ping", CL_Ping_f );
+	Cmd_SetDescription( "ping", "Manually ping a server\nusage: ping <serveraddress>");
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
+	Cmd_SetDescription( "serverstatus", "Display the current status of the connected server as well as connected users and their slot number\nusage: serverstatus (<serveraddress>)");
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
+	Cmd_SetDescription("showip", "Display your current TCP/IP address\nusage: showip");
 	Cmd_AddCommand ("model", CL_SetModel_f );
+	Cmd_SetDescription("model", "Display the name of current player model if no parameters are given\nusage: model (<modelname>)");
 	Cmd_AddCommand ("video", CL_Video_f );
+	Cmd_SetDescription("video", "Convert a demo playback to a video file/stream\nusage: video (<videopipe>)");
 	Cmd_AddCommand ("video-pipe", CL_Video_f );
 	Cmd_SetCommandCompletionFunc( "video", CL_CompleteVideoName );
+	Cmd_SetDescription("video-pipe", "Set the video pipe to convert demo playback to a video file\nusage: video <videopipe>");
 	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
+	Cmd_SetDescription("stopvideo", "Stop convert a demo playback to video file\nusage: stopvideo");
 	Cmd_AddCommand ("serverinfo", CL_Serverinfo_f );
+	Cmd_SetDescription("serverinfo", "Gives information about local server from the console of that server\nusage: serverinfo");
 	Cmd_AddCommand ("systeminfo", CL_Systeminfo_f );
+	Cmd_SetDescription("systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nusage: systeminfo");
 
 #ifdef USE_CURL
 	Cmd_AddCommand( "download", CL_Download_f );
+	Cmd_SetDescription("download", "Download a file from the server\nusage: download <mapname>");
 	Cmd_AddCommand( "dlmap", CL_Download_f );
+	Cmd_SetDescription("dlmap", "Download a file from the server\nusage: dlmap <mapname>");
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
+	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nusage: modelist");
 
 	CL_InitRef();
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
+	Cmd_SetDescription("mvjoin", "Join multiview to allow viewing of other players\nusage: mvjoin");
 	Cmd_AddCommand( "mvleave", CL_Multiview_f );
+	Cmd_SetDescription("mvleave", "Leave multiview and stop showing other players\nusage: mvleave");
 	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
+	Cmd_SetDescription("mvfollow", "Follow a specific player in multiview\nusage: mvfollow <playernumber>");
 #endif
 
 #ifdef USE_MULTIVM
 	Cmd_AddCommand( "load", CL_LoadVM_f );
+	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nusage: load [ui|cgame|game]");
 #endif
 
 	SCR_Init();
