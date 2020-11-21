@@ -42,7 +42,7 @@ Some of the major features currently implemented are:
   * PNG support
   * Docker support
   * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
-  * Removed SDL inputs, touch support on mobile works, copy/paste, TODO: drag and drop for loading local custom content
+  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Deferred (lazy) loading of all game content, entities, models, textures. New `cl_lazyLoad` cvar, 0 - turn off lazy loading, only load textures available on disk, 1 - load all textures available and fetch remotely as needed, 2 - set all to default and try to load from `sv_dlURL`, TODO: 3 - load textures only during INTERMISSION or dead or SPECTATING, 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes), load lowest quality until displayed using a palette defined in a .shader
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
@@ -53,7 +53,6 @@ Some of the major features currently implemented are:
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
   * Checksum pk3 spoofing for playing with original clients using web converted files.
-  * Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
   * Many, many bug fixes
 
 Coming soon!
@@ -64,11 +63,9 @@ Coming soon!
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
   * Alternate chat server integration, discord and telegram
-  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup
+  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Multiple map loader in parallel with teleport switch, Instant replay
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
-  * Multiple map loader in parallel with teleport switch
-  * Instant replay
   * HTML and CSS menu renderer
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua

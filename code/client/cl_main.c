@@ -2567,6 +2567,7 @@ static void CL_DownloadsComplete( void ) {
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		Cmd_AddCommand( "callvote", NULL );
 		Cmd_SetCommandCompletionFunc( "callvote", CL_CompleteCallvote );
+		Cmd_SetDescription("callvote", "Caller automatically votes yes vote has a 30 second timeout each client can only call 3 votes a level vote is displayed on screen with totals\nvote commands are: map_restart, nextmap, map, g_gametype and kick\nusage: callvote <command> vote <y/n>");
 	}
 
 	// set pure checksums
@@ -4698,15 +4699,23 @@ void CL_Init( void ) {
 	// register client commands
 	//
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
+	Cmd_SetDescription("cmd", "Send a command to server remote console\nusage: cmd <command>");
 	Cmd_AddCommand ("configstrings", CL_Configstrings_f);
+	Cmd_SetDescription("configstrings", "List the current config strings in effect\nusage: configstrings");
 	Cmd_AddCommand ("clientinfo", CL_Clientinfo_f);
+	Cmd_SetDescription("clientinfo", "Display name, rate, number of snaps, player model, rail color, and handicap\nusage: clientinfo");
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
+	Cmd_SetDescription("snd_restart", "Reinitialize sound\nusage: snd_restart");
 	Cmd_AddCommand ("vid_restart", CL_Vid_Restart_f);
+	Cmd_SetDescription("vid_restart", "Reinitialize video\nusage: vid_restart");
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
+	Cmd_SetDescription("disconnect", "Disconnect from a server, including local\nusage: disconnect");
 	Cmd_AddCommand ("record", CL_Record_f);
 	Cmd_SetCommandCompletionFunc( "record", CL_CompleteRecordName );
+	Cmd_SetDescription("record", "Record a demo\nusage: record <demoname>");
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
+	Cmd_SetDescription("demo", "Play a demo\nusage: demo <demoname>");
 	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_AddCommand ("connect", CL_Connect_f);
