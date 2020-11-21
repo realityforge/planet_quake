@@ -583,6 +583,12 @@ void IN_PushDropEvent(SDL_DropEvent e)
 		Com_Printf("Opening file: %s\n", e.file);
 		Q_strncpyz(file, e.file, MAX_OSPATH);
 	}
+	if(e.type == SDL_DROPCOMPLETE) {
+		Con_ClearNotify();
+		memcpy(&g_consoleField.buffer, "", sizeof(g_consoleField.buffer));
+		Field_AutoComplete( &g_consoleField );
+		g_consoleField.cursor = strlen(g_consoleField.buffer);
+	}
 }
 
 void IN_PushEvent(int type, int *event)

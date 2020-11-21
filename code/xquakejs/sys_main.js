@@ -321,6 +321,7 @@ var LibrarySysMain = {
       document.removeEventListener('mousewheel', SYSI.InputPushWheelEvent)
       document.removeEventListener('visibilitychange', SYSI.InputPushFocusEvent)
       document.removeEventListener('drop', SYSI.dropHandler)
+      document.removeEventListener('dragenter', SYSI.dragEnterHandler)
       document.removeEventListener('dragover', SYSI.dragOverHandler)    
     }
     

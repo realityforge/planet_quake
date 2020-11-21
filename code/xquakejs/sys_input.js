@@ -301,17 +301,17 @@ var LibrarySysInput = {
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
       HEAP32[((event+12)>>2)]=0; // windowid
       if(typeof filename == 'string') {
-        filename.forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
+        intArrayFromString(filename).forEach(function (c, i) { HEAP8[(SYSF.pathname+i)] = c })
         HEAP8[(SYSF.pathname+filename.length)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
         HEAP32[((event+0)>>2)]=0x1000;
         Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
-      } else if(file === true) {
+      } else if(filename === true) {
         HEAP32[((event+0)>>2)]=0x1002;
         HEAP8[(SYSF.pathname)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
         Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
-      } else if (file === false) {
+      } else if (filename === false) {
         HEAP32[((event+0)>>2)]=0x1003;
         HEAP8[(SYSF.pathname)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
@@ -337,6 +337,7 @@ var LibrarySysInput = {
       document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
       document.addEventListener('visibilitychange', SYSI.InputPushFocusEvent, false)
       document.addEventListener('drop', SYSI.dropHandler, false)
+      document.addEventListener('dragenter', SYSI.dragEnterHandler, false)
       document.addEventListener('dragover', SYSI.dragOverHandler, false)
       //document.addEventListener('pointerlockchange', SYSI.InputPushFocusEvent, false);
       /*
@@ -418,11 +419,19 @@ var LibrarySysInput = {
       // Prevent default behavior (Prevent file from being opened)
       ev.preventDefault();
       var handleFile = function (file) {
+        var newPath
         if(file.name.match(/\.svdm_|\.dm_/ig)) {
-          // import demo file
-          
+          newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game, file.name)
+        } else {
+          newPath = PATH.join(SYSF.fs_basepath, SYSF.fs_game)
         }
-        SYSI.InputPushDropEvent(file.name)
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          FS.writeFile(newPath, e.target.result, {
+            encoding: 'binary', flags: 'w', canOwn: true })
+          SYSI.InputPushDropEvent(file.name)
+        }
+        reader.readAsArrayBuffer(file)
       }
 
       if (ev.dataTransfer.items) {
@@ -443,8 +452,11 @@ var LibrarySysInput = {
       
       SYSI.InputPushDropEvent(false)
     },
-    dragOverHandler: function (ev) {
+    dragEnterHandler: function (ev) {
       SYSI.InputPushDropEvent(true)
+      ev.preventDefault();
+    },
+    dragOverHandler: function (ev) {
       ev.preventDefault();
     },
   },
