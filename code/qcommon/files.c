@@ -4794,11 +4794,16 @@ void FS_Startup( void ) {
 	Com_Printf( "----- FS_Startup -----\n" );
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
+	Cvar_SetDescription(fs_debug, "Toggle filesystem debug logging, every file open is shown\nDefault: 0");
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
+	Cvar_SetDescription(fs_copyfiles, "Toggle if files can be copied after downloading from the server\nDefault: 0");
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	Cvar_SetDescription(fs_basepath, "Set the path of the engine where files can be downloaded\nDefault: varies by operating system");
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
+	Cvar_SetDescription(fs_basegame, "Set the base game for the engine, baseq3, baseoa, baseef\nDefault: " BASEGAME);
 #ifndef EMSCRIPTEN
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	Cvar_SetDescription(fs_steampath, "The search path for Steam data when the engine is downloaded through Steam");
 #endif
 
 #ifndef USE_HANDLE_CACHE
@@ -4821,6 +4826,7 @@ void FS_Startup( void ) {
 
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
+	Cvar_SetDescription(fs_gamedirvar, "Set gamedir set the game folder/dir default is baseq3 in addition to the fs_basegame\nDefault: empty");
 
 #ifdef EMSCRIPTEN
 	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
