@@ -4600,34 +4600,49 @@ void CL_Init( void ) {
 	// register client variables
 	//
 	cl_noprint = Cvar_Get( "cl_noprint", "0", 0 );
+	Cvar_SetDescription("cl_noprint", "Don't printout messages to your screen, only the console\nDefault: 0");
 	cl_motd = Cvar_Get( "cl_motd", "1", 0 );
+	Cvar_SetDescription(cl_motd, "Show the message of the day from the server\nDefault: 1");
 
 	cl_timeout = Cvar_Get( "cl_timeout", "10", 0 );
 	Cvar_CheckRange( cl_timeout, "5", NULL, CV_INTEGER );
+	Cvar_SetDescription(cl_timeout, "Seconds to wait before client drops from the server after a timeout\nDefault: 10 seconds");
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_autoNudge, "0", "1", CV_FLOAT );
+	Cvar_SetDescription(cl_autoNudge, "Automatically set cl_timeNudge value based on connection stream\nDefault: 0");
 	cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_timeNudge, "-30", "30", CV_INTEGER );
+	Cvar_SetDescription(cl_timeNudge, "Effectively adds local lag to interpolate movement instead of skipping (try 100 for a really laggy server)\nDefault: 0");
 
 	cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
+	Cvar_SetDescription( cl_shownet, "Display network quality info\nDefault: 0" );
 	cl_showTimeDelta = Cvar_Get ("cl_showTimeDelta", "0", CVAR_TEMP );
+	Cvar_SetDescription( cl_showTimeDelta, "Display time delta between server updates\nDefault: 0" );
 	rcon_client_password = Cvar_Get ("rconPassword", "", CVAR_TEMP );
+	Cvar_SetDescription( rcon_client_password, "Set the rcon password when connecting to a passworded server\nDefault: empty" );
 	cl_activeAction = Cvar_Get( "activeAction", "", CVAR_TEMP );
+	Cvar_SetDescription( cl_activeAction, "Variable holds a command to be executed upon connecting to a server\nDefault: empty" );
 
 	cl_autoRecordDemo = Cvar_Get ("cl_autoRecordDemo", "0", CVAR_ARCHIVE);
+	Cvar_SetDescription( cl_autoRecordDemo, "Automatically start a demo recording when the game start\nDefault: 0" );
 
 	cl_aviFrameRate = Cvar_Get ("cl_aviFrameRate", "25", CVAR_ARCHIVE);
 	Cvar_CheckRange( cl_aviFrameRate, "1", "1000", CV_INTEGER );
+	Cvar_SetDescription( cl_aviFrameRate, "Frame rate for AVI video capture\nDefault: 1000" );
 	cl_aviMotionJpeg = Cvar_Get ("cl_aviMotionJpeg", "1", CVAR_ARCHIVE);
+	Cvar_SetDescription( cl_aviMotionJpeg, "Use the motion JPEG format for AVI video capture\nDefault: 1" );
 	cl_forceavidemo = Cvar_Get ("cl_forceavidemo", "0", 0);
+	Cvar_SetDescription( cl_forceavidemo, "Force the use of AVI video format for demo capture\nDefault: 0" );
 
 	cl_aviPipeFormat = Cvar_Get( "cl_aviPipeFormat",
 		"-preset medium -crf 23 -vcodec libx264 -flags +cgop -pix_fmt yuv420p "
 		"-bf 2 -codec:a aac -strict -2 -b:a 160k -r:a 22050 -movflags faststart", 
 		CVAR_ARCHIVE );
+	Cvar_SetDescription(cl_aviPipeFormat, "Extra flags send to the AVI encoding pipeline\nDefault: -preset medium -r:a ...");
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
+	Cvar_SetDescription(rconAddress, "Set the server address for rcon commands, rcon can be used without being connected to a game\nDefault: empty");
 
 #ifdef USE_MASTER_LAN
 	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
