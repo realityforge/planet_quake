@@ -800,6 +800,13 @@ static void Cmd_Help_f( void )
 
 	name = CopyString(Cmd_Argv(1));
 
+	if(!Q_stricmp("all", name)) {
+		for( cmd = cmd_functions; cmd; cmd = cmd->next ) {
+			Cmd_Help(cmd);
+		}
+		return;
+	}
+
 	Cmd_TokenizeString(name);
 	if(Cvar_Command()) {
 		Z_Free(name);

@@ -4919,7 +4919,7 @@ void FS_Startup_After_Async( void )
 	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
 	Cmd_SetDescription( "fs_openedList", "Display a list of all open pak names\nusage: fs_openedList");
 	Cmd_AddCommand ("fs_referencedList", FS_ReferencedPK3List_f );
-	Cmd_SetDescription( "fs_openedList", "Display a list of all referenced pak names\nusage: fs_referencedList");	
+	Cmd_SetDescription( "fs_referencedList", "Display a list of all referenced pak names\nusage: fs_referencedList");	
 
 	// print the current search paths
 	//FS_Path_f();

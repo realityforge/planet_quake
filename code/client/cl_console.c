@@ -401,7 +401,7 @@ void Con_Init( void )
 	Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
 	Cmd_SetDescription("messagemode3", "Send a message to targeted player");
 	Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
-	Cmd_SetDescription("messagemode3", "Send a message to last attacker");
+	Cmd_SetDescription("messagemode4", "Send a message to last attacker");
 }
 
 
