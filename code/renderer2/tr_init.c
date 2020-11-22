@@ -1434,23 +1434,23 @@ void R_Register( void )
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
 	ri.Cmd_AddCommand( "imagelist", R_ImageList_f );
-	ri.Cmd_SetDescription( "imagelist", "List currently open images/textures used by the map\nusage: imagelist" );
+	ri.Cmd_SetDescription( "imagelist", "List currently open images/textures used by the map\nUsage: imagelist" );
 	ri.Cmd_AddCommand( "shaderlist", R_ShaderList_f );
-	ri.Cmd_SetDescription( "shaderlist", "List currently used shaders by the map\nusage: shaderlist" );
+	ri.Cmd_SetDescription( "shaderlist", "List currently used shaders by the map\nUsage: shaderlist" );
 	ri.Cmd_AddCommand( "skinlist", R_SkinList_f );
-	ri.Cmd_SetDescription( "skinlist", "List currently used skins by the map\nusage: shaderlist" );
+	ri.Cmd_SetDescription( "skinlist", "List currently used skins by the map\nUsage: shaderlist" );
 	ri.Cmd_AddCommand( "modellist", R_Modellist_f );
-	ri.Cmd_SetDescription( "modellist", "List currently used models by the map\nusage: shaderlist" );
+	ri.Cmd_SetDescription( "modellist", "List currently used models by the map\nUsage: shaderlist" );
 	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
-	ri.Cmd_SetDescription( "screenshot", "Take a screenshot of the current frame\nusage: screenshot [silent] [filename]" );
+	ri.Cmd_SetDescription( "screenshot", "Take a screenshot of the current frame\nUsage: screenshot [silent] [filename]" );
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShotJPEG_f );
-	ri.Cmd_SetDescription( "screenshotJPEG", "Take a screenshot of the current frame and output JPEG as the format\nusage: screenshotJPEG [silent] [filename]" );
+	ri.Cmd_SetDescription( "screenshotJPEG", "Take a screenshot of the current frame and output JPEG as the format\nUsage: screenshotJPEG [silent] [filename]" );
 	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
-	ri.Cmd_SetDescription( "gfxinfo", "Returns extensive information about video settings\nusage: gfxinfo");
+	ri.Cmd_SetDescription( "gfxinfo", "Returns extensive information about video settings\nUsage: gfxinfo");
 	ri.Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
-	ri.Cmd_SetDescription( "gfxmeminfo", "Returns extensive memory information\nusage: gfxmeminfo");
+	ri.Cmd_SetDescription( "gfxmeminfo", "Returns extensive memory information\nUsage: gfxmeminfo");
 	ri.Cmd_AddCommand( "exportCubemaps", R_ExportCubemaps_f );
-	ri.Cmd_SetDescription( "exportCubemaps", "Export a DDS file of graphics loaded as a cubemap\nusage: exportCubemaps");
+	ri.Cmd_SetDescription( "exportCubemaps", "Export a DDS file of graphics loaded as a cubemap\nUsage: exportCubemaps");
 }
 
 void R_InitQueries(void)

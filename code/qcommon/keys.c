@@ -668,12 +668,12 @@ void Com_InitKeyCommands( void )
 	// register our functions
 	Cmd_AddCommand( "bind", Key_Bind_f );
 	Cmd_SetCommandCompletionFunc( "bind", Key_CompleteBind );
-	Cmd_SetDescription( "bind", "Assign a key to command\nusage: bind <key> <command>");
+	Cmd_SetDescription( "bind", "Assign a key to command\nUsage: bind <key> <command>");
 	Cmd_AddCommand( "unbind", Key_Unbind_f );
 	Cmd_SetCommandCompletionFunc( "unbind", Key_CompleteUnbind );
-	Cmd_SetDescription( "unbind", "Unbind a specific key\nusage: unbind <key>");
+	Cmd_SetDescription( "unbind", "Unbind a specific key\nUsage: unbind <key>");
 	Cmd_AddCommand( "unbindall", Key_Unbindall_f );
-	Cmd_SetDescription( "unbindall", "Unbind all keys\nusage: unbindall");
+	Cmd_SetDescription( "unbindall", "Unbind all keys\nUsage: unbindall");
 	Cmd_AddCommand( "bindlist", Key_Bindlist_f );
-	Cmd_SetDescription( "bindlist", "List all currently bound keys and what command they are bound\nusage: bindlist");
+	Cmd_SetDescription( "bindlist", "List all currently bound keys and what command they are bound\nUsage: bindlist");
 }

@@ -277,9 +277,9 @@ void VM_Init( void ) {
 	Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
 
 	Cmd_AddCommand( "vmprofile", VM_VmProfile_f );
-	Cmd_SetDescription( "vmprofile", "Show VM profiling information\nusage: vmprofile <game|cgame|ui>" );
+	Cmd_SetDescription( "vmprofile", "Show VM profiling information\nUsage: vmprofile <game|cgame|ui>" );
 	Cmd_AddCommand( "vminfo", VM_VmInfo_f );
-	Cmd_SetDescription( "vminfo", "Show VM information\nusage: vminfo" );
+	Cmd_SetDescription( "vminfo", "Show VM information\nUsage: vminfo" );
 
 	Com_Memset( vmTable, 0, sizeof( vmTable ) );
 }
@@ -1997,7 +1997,7 @@ static void VM_VmProfile_f( void ) {
 	double		total;
 
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+		Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
 		return;
 	}
 

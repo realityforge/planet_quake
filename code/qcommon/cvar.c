@@ -950,7 +950,7 @@ static void Cvar_Print_f( void )
 	
 	if(Cmd_Argc() != 2)
 	{
-		Com_Printf ("usage: print <variable>\n");
+		Com_Printf ("Usage: print <variable>\n");
 		return;
 	}
 
@@ -979,7 +979,7 @@ static void Cvar_Toggle_f( void ) {
 
 	c = Cmd_Argc();
 	if ( c < 2 ) {
-		Com_Printf( "usage: toggle <variable> [value1, value2, ...]\n" );
+		Com_Printf( "Usage: toggle <variable> [value1, value2, ...]\n" );
 		return;
 	}
 
@@ -1027,7 +1027,7 @@ static void Cvar_Set_f( void ) {
 	cmd = Cmd_Argv(0);
 
 	if ( c < 2 ) {
-		Com_Printf ("usage: %s <variable> <value>\n", cmd);
+		Com_Printf ("Usage: %s <variable> <value>\n", cmd);
 		return;
 	}
 	if ( c == 2 ) {
@@ -1069,7 +1069,7 @@ Cvar_Reset_f
 */
 static void Cvar_Reset_f( void ) {
 	if ( Cmd_Argc() != 2 ) {
-		Com_Printf ("usage: reset <variable>\n");
+		Com_Printf ("Usage: reset <variable>\n");
 		return;
 	}
 	Cvar_Reset( Cmd_Argv( 1 ) );
@@ -1259,7 +1259,7 @@ static void Cvar_Func_f( void ) {
 	float		fval;
 
 	if ( Cmd_Argc() < 3 ) {
-		Com_Printf( "usage: \n" \
+		Com_Printf( "Usage: \n" \
 			"  \\varfunc <add|sub|mul|div|mod|sin|cos> <cvar> <value> [lo.cap] [hi.cap]\n" \
 			"  \\varfunc rand <cvar> [base] [modulus]\n" );
 		return;
@@ -2056,42 +2056,42 @@ void Cvar_Init (void)
 
 #ifndef USE_CMD_CONNECTOR
 	Cmd_AddCommand ("print", Cvar_Print_f);
-	Cmd_SetDescription("print", "Prints the contents of a cvar\nusage: print <cvar>");
+	Cmd_SetDescription("print", "Prints the contents of a cvar\nUsage: print <cvar>");
 #else
 	Cmd_AddCommand ("vprint", Cvar_Print_f);
-	Cmd_SetDescription("vprint", "Prints the contents of a cvar\nusage: vprint <cvar>");
+	Cmd_SetDescription("vprint", "Prints the contents of a cvar\nUsage: vprint <cvar>");
 #endif
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc( "toggle", Cvar_CompleteCvarName );
-	Cmd_SetDescription("toggle", "Toggles a cvar for easy single key binding\nusage: toggle <variable> [value1, value2, ...]");
+	Cmd_SetDescription("toggle", "Toggles a cvar for easy single key binding\nUsage: toggle <variable> [value1, value2, ...]");
 	Cmd_AddCommand ("set", Cvar_Set_f);
 	Cmd_SetCommandCompletionFunc( "set", Cvar_CompleteCvarName );
-	Cmd_SetDescription("set", "Set a variable\nusage: set <variable> (<value>)");
+	Cmd_SetDescription("set", "Set a variable\nUsage: set <variable> (<value>)");
 	Cmd_AddCommand ("sets", Cvar_Set_f);
 	Cmd_SetCommandCompletionFunc( "sets", Cvar_CompleteCvarName );
-	Cmd_SetDescription("sets", "Set a variable with the server flag so it is sent to the server\nusage: sets <variable> (<value>)");
+	Cmd_SetDescription("sets", "Set a variable with the server flag so it is sent to the server\nUsage: sets <variable> (<value>)");
 	Cmd_AddCommand ("setu", Cvar_Set_f);
 	Cmd_SetCommandCompletionFunc( "setu", Cvar_CompleteCvarName );
-	Cmd_SetDescription("setu", "Set a variable with the userinfo flag so it is sent to the server while connecting\nusage: setu <variable> (<value>)");
+	Cmd_SetDescription("setu", "Set a variable with the userinfo flag so it is sent to the server while connecting\nUsage: setu <variable> (<value>)");
 	Cmd_AddCommand ("seta", Cvar_Set_f);
 	Cmd_SetCommandCompletionFunc( "seta", Cvar_CompleteCvarName );
-	Cmd_SetDescription("seta", "Set a variable with the archive flag so it is saved in q3config.cfg file\nusage: seta <variable> (<value>)");
+	Cmd_SetDescription("seta", "Set a variable with the archive flag so it is saved in q3config.cfg file\nUsage: seta <variable> (<value>)");
 	Cmd_AddCommand ("reset", Cvar_Reset_f);
 	Cmd_SetCommandCompletionFunc( "reset", Cvar_CompleteCvarName );
-	Cmd_SetDescription("reset", "Reset specified variable to the default value\nusage: reset <variable>");
+	Cmd_SetDescription("reset", "Reset specified variable to the default value\nUsage: reset <variable>");
 	Cmd_AddCommand ("unset", Cvar_Unset_f);
 	Cmd_SetCommandCompletionFunc("unset", Cvar_CompleteCvarName);
-	Cmd_SetDescription("unset", "Unset a user defined variable\nusage: unset <variable>");
+	Cmd_SetDescription("unset", "Unset a user defined variable\nUsage: unset <variable>");
 
 	Cmd_AddCommand( "varfunc", Cvar_Func_f );
-	Cmd_SetDescription( "varfunc", "Set a variable based on a function\nusage: varfunc <add|sub|mul|div|mod|sin|cos> <cvar> <value>");
+	Cmd_SetDescription( "varfunc", "Set a variable based on a function\nUsage: varfunc <add|sub|mul|div|mod|sin|cos> <cvar> <value>");
 
 	Cmd_AddCommand ("cvarlist", Cvar_List_f);
-	Cmd_SetDescription( "cvarlist", "List all available console variables and their values\nusage: cvarlist");
+	Cmd_SetDescription( "cvarlist", "List all available console variables and their values\nUsage: cvarlist");
 	Cmd_AddCommand ("cvar_modified", Cvar_ListModified_f);
-	Cmd_SetDescription( "cvar_modified", "List all modified variables from their default values\nusage: cvar_modified");
+	Cmd_SetDescription( "cvar_modified", "List all modified variables from their default values\nUsage: cvar_modified");
 	Cmd_AddCommand ("cvar_restart", Cvar_Restart_f);
-	Cmd_SetDescription( "cvar_restart", "Reset all variables back to factory defaults\nusage: cvar_restart");
+	Cmd_SetDescription( "cvar_restart", "Reset all variables back to factory defaults\nUsage: cvar_restart");
 	Cmd_AddCommand ("cvar_trim", Cvar_Trim_f);
-	Cmd_SetDescription("cvar_trim", "Removes all user-created cvars\nusage: cvar_trim");
+	Cmd_SetDescription("cvar_trim", "Removes all user-created cvars\nUsage: cvar_trim");
 }

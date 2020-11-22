@@ -1924,7 +1924,7 @@ void NET_Init( void ) {
 	NET_Config( qtrue );
 	
 	Cmd_AddCommand( "net_restart", NET_Restart_f );
-  Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nusage: net_restart");
+  Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nUsage: net_restart");
 }
 
 

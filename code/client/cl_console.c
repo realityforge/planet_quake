@@ -199,7 +199,7 @@ static void Con_Dump_f( void )
 
 	if ( Cmd_Argc() != 2 )
 	{
-		Com_Printf( "usage: condump <filename>\n" );
+		Com_Printf( "Usage: condump <filename>\n" );
 		return;
 	}
 
@@ -382,18 +382,20 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
+	Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+	Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
-	Cmd_SetDescription("clear", "Clear all text from console\nusage: clear");
+	Cmd_SetDescription("clear", "Clear all text from console\nUsage: clear");
 	Cmd_AddCommand( "condump", Con_Dump_f );
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
-	Cmd_SetDescription("condump", "Write the console text to a file\nusage: condump <file>");
+	Cmd_SetDescription("condump", "Write the console text to a file\nUsage: condump <file>");
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
-	Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nusage: bind <key> toggleconsole");
+	Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nUsage: bind <key> toggleconsole");
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
 	Cmd_SetDescription("messagemode", "Send a message to everyone");
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );

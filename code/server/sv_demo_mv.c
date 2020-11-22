@@ -328,7 +328,7 @@ void SV_MultiViewRecord_f( void )
 	int i, cid, len;
 
 	if ( Cmd_Argc() > 2 ) {
-		Com_Printf( "usage: mvrecord [filename]\n" );
+		Com_Printf( "Usage: mvrecord [filename]\n" );
 		return;
 	}
 

@@ -425,23 +425,23 @@ void S_Init( void )
 		S_CodecInit();
 
 		Cmd_AddCommand( "play", S_Play_f );
-		Cmd_SetDescription("play", "Play a sound file\nusage: play <filename>");
+		Cmd_SetDescription("play", "Play a sound file\nUsage: play <filename>");
 		Cmd_AddCommand( "music", S_Music_f );
-		Cmd_SetDescription("music", "Play a specific music file\nusage: music <filename>");
+		Cmd_SetDescription("music", "Play a specific music file\nUsage: music <filename>");
 		Cmd_AddCommand( "stopmusic", S_StopMusic_f );
-		Cmd_SetDescription("stopmusic", "Stop playing music\nusage: stopmusic");
+		Cmd_SetDescription("stopmusic", "Stop playing music\nUsage: stopmusic");
 		Cmd_AddCommand( "s_list", S_SoundList );
-		Cmd_SetDescription("s_list", "Display paths and filenames of all sound files as they are played\nusage: s_list");
+		Cmd_SetDescription("s_list", "Display paths and filenames of all sound files as they are played\nUsage: s_list");
 		Cmd_AddCommand( "soundlist", S_SoundList );
-		Cmd_SetDescription("soundlist", "Display paths and filenames of all sound files as they are played\nusage: soundlist");
+		Cmd_SetDescription("soundlist", "Display paths and filenames of all sound files as they are played\nUsage: soundlist");
 		Cmd_AddCommand( "s_stop", S_StopAllSounds );
-		Cmd_SetDescription("s_stop", "Stop whatever sound that is currently playing from playing\nusage: s_stop");
+		Cmd_SetDescription("s_stop", "Stop whatever sound that is currently playing from playing\nUsage: s_stop");
 		Cmd_AddCommand( "stopsound", S_StopAllSounds );
-		Cmd_SetDescription("stopsound", "Stop whatever sound that is currently playing from playing\nusage: stopsound");
+		Cmd_SetDescription("stopsound", "Stop whatever sound that is currently playing from playing\nUsage: stopsound");
 		Cmd_AddCommand( "s_info", S_SoundInfo );
-		Cmd_SetDescription("s_info", "Display information about sound system\nusage: s_info");
+		Cmd_SetDescription("s_info", "Display information about sound system\nUsage: s_info");
 		Cmd_AddCommand( "soundinfo", S_SoundInfo );
-		Cmd_SetDescription("soundinfo", "Display information about sound system\nusage: soundinfo");
+		Cmd_SetDescription("soundinfo", "Display information about sound system\nUsage: soundinfo");
 
 		if( !started ) {
 			started = S_Base_Init( &si );

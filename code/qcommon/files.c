@@ -3876,7 +3876,7 @@ static void FS_Dir_f( void ) {
 	int i;
 
 	if ( Cmd_Argc() < 2 || Cmd_Argc() > 3 ) {
-		Com_Printf( "usage: dir <directory> [extension]\n" );
+		Com_Printf( "Usage: dir <directory> [extension]\n" );
 		return;
 	}
 
@@ -3996,7 +3996,7 @@ static void FS_NewDir_f( void ) {
 	int		i;
 
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "usage: fdir <filter>\n" );
+		Com_Printf( "Usage: fdir <filter>\n" );
 		Com_Printf( "example: fdir *q3dm*.bsp\n");
 		return;
 	}
@@ -4898,28 +4898,28 @@ void FS_Startup_After_Async( void )
 
 	// add our commands
 	Cmd_AddCommand( "path", FS_Path_f );
-	Cmd_SetDescription( "path", "Display all current game paths\nusage: path" );
+	Cmd_SetDescription( "path", "Display all current game paths\nUsage: path" );
 	Cmd_AddCommand( "dir", FS_Dir_f );
-	Cmd_SetDescription( "dir", "List a directory's contents\nusage: dir <directory> [extension]" );
+	Cmd_SetDescription( "dir", "List a directory's contents\nUsage: dir <directory> [extension]" );
 	Cmd_AddCommand( "fdir", FS_NewDir_f );
-	Cmd_SetDescription( "fdir", "List a directory's contents filtered\nusage: fdir <filter>" );
+	Cmd_SetDescription( "fdir", "List a directory's contents filtered\nUsage: fdir <filter>" );
 	Cmd_AddCommand( "touchFile", FS_TouchFile_f );
-	Cmd_SetDescription( "touchFile", "Update the file-opened time\nusage: touchFile <filename>");
+	Cmd_SetDescription( "touchFile", "Update the file-opened time\nUsage: touchFile <filename>");
 	Cmd_AddCommand( "lsof", FS_ListOpenFiles_f );
-	Cmd_SetDescription( "lsof", "List opened files\nusage: lsof");
+	Cmd_SetDescription( "lsof", "List opened files\nUsage: lsof");
  	Cmd_AddCommand( "which", FS_Which_f );
 	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
-	Cmd_SetDescription( "which", "Show the full path of a file\nusage: which <file>");
+	Cmd_SetDescription( "which", "Show the full path of a file\nUsage: which <file>");
 	Cmd_AddCommand( "fs_restart", FS_Reload );
-	Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nusage: fs_restart");
+	Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nUsage: fs_restart");
 #ifdef EMSCRIPTEN
 	Cmd_AddCommand( "offline", Sys_FS_Offline );
-	Cmd_SetDescription( "offline", "Download all the files needed to play offline without an internet connection\nusage: offline");
+	Cmd_SetDescription( "offline", "Download all the files needed to play offline without an internet connection\nUsage: offline");
 #endif
 	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
-	Cmd_SetDescription( "fs_openedList", "Display a list of all open pak names\nusage: fs_openedList");
+	Cmd_SetDescription( "fs_openedList", "Display a list of all open pak names\nUsage: fs_openedList");
 	Cmd_AddCommand ("fs_referencedList", FS_ReferencedPK3List_f );
-	Cmd_SetDescription( "fs_referencedList", "Display a list of all referenced pak names\nusage: fs_referencedList");	
+	Cmd_SetDescription( "fs_referencedList", "Display a list of all referenced pak names\nUsage: fs_referencedList");	
 
 	// print the current search paths
 	//FS_Path_f();

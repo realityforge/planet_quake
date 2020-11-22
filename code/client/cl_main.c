@@ -1680,7 +1680,7 @@ static void CL_Connect_f( void ) {
 	family = NA_UNSPEC;
 
 	if ( argc != 2 && argc != 3 ) {
-		Com_Printf( "usage: connect [-4|-6] server\n");
+		Com_Printf( "Usage: connect [-4|-6] server\n");
 		return;	
 	}
 	
@@ -2567,7 +2567,7 @@ static void CL_DownloadsComplete( void ) {
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		Cmd_AddCommand( "callvote", NULL );
 		Cmd_SetCommandCompletionFunc( "callvote", CL_CompleteCallvote );
-		Cmd_SetDescription("callvote", "Caller automatically votes yes vote has a 30 second timeout each client can only call 3 votes a level vote is displayed on screen with totals\nvote commands are: map_restart, nextmap, map, g_gametype and kick\nusage: callvote <command> vote <y/n>");
+		Cmd_SetDescription("callvote", "Caller automatically votes yes vote has a 30 second timeout each client can only call 3 votes a level vote is displayed on screen with totals\nvote commands are: map_restart, nextmap, map, g_gametype and kick\nUsage: callvote <command> vote <y/n>");
 	}
 
 	// set pure checksums
@@ -4512,7 +4512,7 @@ void CL_LoadVM_f( void ) {
 	char *name;
 	
 		if ( Cmd_Argc() < 2 ) {
-			Com_Printf( "usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+			Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
 			return;
 		}
 
@@ -4700,81 +4700,81 @@ void CL_Init( void ) {
 	// register client commands
 	//
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
-	Cmd_SetDescription("cmd", "Send a command to server remote console\nusage: cmd <command>");
+	Cmd_SetDescription("cmd", "Send a command to server remote console\nUsage: cmd <command>");
 	Cmd_AddCommand ("configstrings", CL_Configstrings_f);
-	Cmd_SetDescription("configstrings", "List the current config strings in effect\nusage: configstrings");
+	Cmd_SetDescription("configstrings", "List the current config strings in effect\nUsage: configstrings");
 	Cmd_AddCommand ("clientinfo", CL_Clientinfo_f);
-	Cmd_SetDescription("clientinfo", "Display name, rate, number of snaps, player model, rail color, and handicap\nusage: clientinfo");
+	Cmd_SetDescription("clientinfo", "Display name, rate, number of snaps, player model, rail color, and handicap\nUsage: clientinfo");
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
-	Cmd_SetDescription("snd_restart", "Reinitialize sound\nusage: snd_restart");
+	Cmd_SetDescription("snd_restart", "Reinitialize sound\nUsage: snd_restart");
 	Cmd_AddCommand ("vid_restart", CL_Vid_Restart_f);
-	Cmd_SetDescription("vid_restart", "Reinitialize video\nusage: vid_restart");
+	Cmd_SetDescription("vid_restart", "Reinitialize video\nUsage: vid_restart");
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
-	Cmd_SetDescription("disconnect", "Disconnect from a server, including local\nusage: disconnect");
+	Cmd_SetDescription("disconnect", "Disconnect from a server, including local\nUsage: disconnect");
 	Cmd_AddCommand ("record", CL_Record_f);
 	Cmd_SetCommandCompletionFunc( "record", CL_CompleteRecordName );
-	Cmd_SetDescription("record", "Record a demo\nusage: record <demoname>");
+	Cmd_SetDescription("record", "Record a demo\nUsage: record <demoname>");
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
-	Cmd_SetDescription("demo", "Play a demo\nusage: demo <demoname>");
+	Cmd_SetDescription("demo", "Play a demo\nUsage: demo <demoname>");
 	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
-	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nusage: cinematic <videofile>");
+	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nUsage: cinematic <videofile>");
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
-	Cmd_SetDescription("stoprecord", "Stop recording a demo\nusage: stoprecord");
+	Cmd_SetDescription("stoprecord", "Stop recording a demo\nUsage: stoprecord");
 	Cmd_AddCommand ("connect", CL_Connect_f);
-	Cmd_SetDescription("connect", "Connect to a server\nusage: connect ([-4|-6]) <serveraddress>");
+	Cmd_SetDescription("connect", "Connect to a server\nUsage: connect ([-4|-6]) <serveraddress>");
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
-	Cmd_SetDescription("reconnect", "Reinitialize the connection to the last server you were connected to\nusage: reconnect");
+	Cmd_SetDescription("reconnect", "Reinitialize the connection to the last server you were connected to\nUsage: reconnect");
 	Cmd_AddCommand ("localservers", CL_LocalServers_f);
-	Cmd_SetDescription("localservers", "List servers on LAN or local sub net only\nusage: localservers");
+	Cmd_SetDescription("localservers", "List servers on LAN or local sub net only\nUsage: localservers");
 	Cmd_AddCommand ("globalservers", CL_GlobalServers_f);
-	Cmd_SetDescription("globalservers", "List public servers on the internet\nusage: globalservers");
+	Cmd_SetDescription("globalservers", "List public servers on the internet\nUsage: globalservers");
 	Cmd_AddCommand ("rcon", CL_Rcon_f);
 	Cmd_SetCommandCompletionFunc( "rcon", CL_CompleteRcon );
-	Cmd_SetDescription("rcon", "Start a remote console to a server\nusage: rcon");
+	Cmd_SetDescription("rcon", "Start a remote console to a server\nUsage: rcon");
 	Cmd_AddCommand ("ping", CL_Ping_f );
-	Cmd_SetDescription( "ping", "Manually ping a server\nusage: ping <serveraddress>");
+	Cmd_SetDescription( "ping", "Manually ping a server\nUsage: ping <serveraddress>");
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
-	Cmd_SetDescription( "serverstatus", "Display the current status of the connected server as well as connected users and their slot number\nusage: serverstatus (<serveraddress>)");
+	Cmd_SetDescription( "serverstatus", "Display the current status of the connected server as well as connected users and their slot number\nUsage: serverstatus (<serveraddress>)");
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
-	Cmd_SetDescription("showip", "Display your current TCP/IP address\nusage: showip");
+	Cmd_SetDescription("showip", "Display your current TCP/IP address\nUsage: showip");
 	Cmd_AddCommand ("model", CL_SetModel_f );
-	Cmd_SetDescription("model", "Display the name of current player model if no parameters are given\nusage: model (<modelname>)");
+	Cmd_SetDescription("model", "Display the name of current player model if no parameters are given\nUsage: model (<modelname>)");
 	Cmd_AddCommand ("video", CL_Video_f );
-	Cmd_SetDescription("video", "Convert a demo playback to a video file/stream\nusage: video (<videopipe>)");
+	Cmd_SetDescription("video", "Convert a demo playback to a video file/stream\nUsage: video (<videopipe>)");
 	Cmd_AddCommand ("video-pipe", CL_Video_f );
 	Cmd_SetCommandCompletionFunc( "video", CL_CompleteVideoName );
-	Cmd_SetDescription("video-pipe", "Set the video pipe to convert demo playback to a video file\nusage: video <videopipe>");
+	Cmd_SetDescription("video-pipe", "Set the video pipe to convert demo playback to a video file\nUsage: video <videopipe>");
 	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
-	Cmd_SetDescription("stopvideo", "Stop convert a demo playback to video file\nusage: stopvideo");
+	Cmd_SetDescription("stopvideo", "Stop convert a demo playback to video file\nUsage: stopvideo");
 	Cmd_AddCommand ("serverinfo", CL_Serverinfo_f );
-	Cmd_SetDescription("serverinfo", "Gives information about local server from the console of that server\nusage: serverinfo");
+	Cmd_SetDescription("serverinfo", "Gives information about local server from the console of that server\nUsage: serverinfo");
 	Cmd_AddCommand ("systeminfo", CL_Systeminfo_f );
-	Cmd_SetDescription("systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nusage: systeminfo");
+	Cmd_SetDescription("systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nUsage: systeminfo");
 
 #ifdef USE_CURL
 	Cmd_AddCommand( "download", CL_Download_f );
-	Cmd_SetDescription("download", "Download a file from the server\nusage: download <mapname>");
+	Cmd_SetDescription("download", "Download a file from the server\nUsage: download <mapname>");
 	Cmd_AddCommand( "dlmap", CL_Download_f );
-	Cmd_SetDescription("dlmap", "Download a file from the server\nusage: dlmap <mapname>");
+	Cmd_SetDescription("dlmap", "Download a file from the server\nUsage: dlmap <mapname>");
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
-	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nusage: modelist");
+	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nUsage: modelist");
 
 	CL_InitRef();
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
-	Cmd_SetDescription("mvjoin", "Join multiview to allow viewing of other players\nusage: mvjoin");
+	Cmd_SetDescription("mvjoin", "Join multiview to allow viewing of other players\nUsage: mvjoin");
 	Cmd_AddCommand( "mvleave", CL_Multiview_f );
-	Cmd_SetDescription("mvleave", "Leave multiview and stop showing other players\nusage: mvleave");
+	Cmd_SetDescription("mvleave", "Leave multiview and stop showing other players\nUsage: mvleave");
 	Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
-	Cmd_SetDescription("mvfollow", "Follow a specific player in multiview\nusage: mvfollow <playernumber>");
+	Cmd_SetDescription("mvfollow", "Follow a specific player in multiview\nUsage: mvfollow <playernumber>");
 #endif
 
 #ifdef USE_MULTIVM
 	Cmd_AddCommand( "load", CL_LoadVM_f );
-	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nusage: load [ui|cgame|game]");
+	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load [ui|cgame|game]");
 #endif
 
 	SCR_Init();
@@ -5402,7 +5402,7 @@ static void CL_GlobalServers_f( void ) {
 	
 	if ( (count = Cmd_Argc()) < 3 || (masterNum = atoi(Cmd_Argv(1))) < 0 || masterNum > MAX_MASTER_SERVERS )
 	{
-		Com_Printf( "usage: globalservers <master# 0-%d> <protocol> [keywords]\n", MAX_MASTER_SERVERS );
+		Com_Printf( "Usage: globalservers <master# 0-%d> <protocol> [keywords]\n", MAX_MASTER_SERVERS );
 		return;
 	}
 
@@ -5664,7 +5664,7 @@ static void CL_Ping_f( void ) {
 	argc = Cmd_Argc();
 
 	if ( argc != 2 && argc != 3 ) {
-		Com_Printf( "usage: ping [-4|-6] server\n");
+		Com_Printf( "Usage: ping [-4|-6] server\n");
 		return;	
 	}
 	
@@ -5829,7 +5829,7 @@ static void CL_ServerStatus_f( void ) {
 		if (cls.state != CA_ACTIVE || clc.demoplaying)
 		{
 			Com_Printf( "Not connected to a server.\n" );
-			Com_Printf( "usage: serverstatus [-4|-6] server\n" );
+			Com_Printf( "Usage: serverstatus [-4|-6] server\n" );
 			return;
 		}
 
@@ -5954,7 +5954,7 @@ static void CL_Download_f( void )
 {
 	if ( Cmd_Argc() < 2 || !*Cmd_Argv( 1 ) )
 	{
-		Com_Printf( "usage: %s <mapname>\n", Cmd_Argv( 0 ) );
+		Com_Printf( "Usage: %s <mapname>\n", Cmd_Argv( 0 ) );
 		return;
 	}
 
