@@ -4059,6 +4059,7 @@ static void CL_InitRef_After_Load2( void )
 
 	rimp.Cmd_AddCommand = Cmd_AddCommand;
 	rimp.Cmd_RemoveCommand = Cmd_RemoveCommand;
+	rimp.Cmd_SetDescription = Cmd_SetDescription;
 	rimp.Cmd_Argc = Cmd_Argc;
 	rimp.Cmd_Argv = Cmd_Argv;
 	rimp.Cmd_ExecuteText = Cbuf_ExecuteText;
