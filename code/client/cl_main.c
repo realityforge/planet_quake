@@ -1555,6 +1555,7 @@ static void CL_RequestAuthorization( void ) {
 	nums[j] = 0;
 
 	fs = Cvar_Get ("cl_anonymous", "0", CVAR_INIT|CVAR_SYSTEMINFO );
+	Cvar_SetDescription = Cvar_Get( fs, "Begin anonymous connect to server\nDefault: 0" );
 
 	NET_OutOfBandPrint(NS_CLIENT, &cls.authorizeServer, "getKeyAuthorize %i %s", fs->integer, nums );
 }
@@ -4457,19 +4458,26 @@ static void CL_InitGLimp_Cvars( void )
 {
 	// shared with GLimp
 	r_allowSoftwareGL = Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
+	Cvar_SetDescription( r_allowSoftwareGL, "Toggle the use of the default software OpenGL driver\nDefault: 0" );
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( r_swapInterval, "Toggle frame swapping\nDefault: 0" );
 	r_glDriver = Cvar_Get( "r_glDriver", OPENGL_DRIVER_NAME, CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_SetDescription( r_glDriver, "Used OpenGL driver by name\nDefault: opengl32" );
 	
 	cl_displayRefresh = Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
 	Cvar_CheckRange( cl_displayRefresh, "0", "250", CV_INTEGER );
+	Cvar_SetDescription( cl_displayRefresh, "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
 
 	vid_xpos = Cvar_Get( "vid_xpos", "3", CVAR_ARCHIVE );
-	vid_ypos = Cvar_Get( "vid_ypos", "22", CVAR_ARCHIVE );
 	Cvar_CheckRange( vid_xpos, NULL, NULL, CV_INTEGER );
+	Cvar_SetDescription( vid_xpos, "Set the window x starting position on the screen\nDefault: 3" );
+	vid_ypos = Cvar_Get( "vid_ypos", "22", CVAR_ARCHIVE );
 	Cvar_CheckRange( vid_ypos, NULL, NULL, CV_INTEGER );
+	Cvar_SetDescription( vid_xpos, "Set the window y starting position on the screen\nDefault: 22" );
 
 	r_noborder = Cvar_Get( "r_noborder", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( r_noborder, "0", "1", CV_INTEGER );
+	Cvar_SetDescription( r_noborder, "Set window borderless mode usually set by SDL and fullscreen mode\nDefault: 0" );
 
 	r_mode = Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_modeFullscreen = Cvar_Get( "r_modeFullscreen", "-2", CVAR_ARCHIVE | CVAR_LATCH );
@@ -4478,7 +4486,9 @@ static void CL_InitGLimp_Cvars( void )
 	Cvar_SetDescription( r_modeFullscreen, "Dedicated fullscreen mode, set to \"\" to use \\r_mode in all cases" );
 
 	r_fullscreen = Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	Cvar_SetDescription( r_fullscreen, "Set fullscreen mode on startup\nDefault: 1" );
 	r_customPixelAspect = Cvar_Get( "r_customPixelAspect", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_SetDescription( r_customPixelAspect, "Custom pixel aspect to use with \\r_mode -1\nDefault: 1" );
 	r_customwidth = Cvar_Get( "r_customWidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customheight = Cvar_Get( "r_customHeight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_CheckRange( r_customwidth, "4", NULL, CV_INTEGER );
@@ -4488,20 +4498,25 @@ static void CL_InitGLimp_Cvars( void )
 
 	r_colorbits = Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( r_colorbits, "0", "32", CV_INTEGER );
+	Cvar_SetDescription( r_colorbits, "Set number of bits used for each color from 0 to 32 bit, usually set by SDL\nDefault: 0" );
 
 	// shared with renderer:
 	cl_stencilbits = Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( cl_stencilbits, "0", "8", CV_INTEGER );
+	Cvar_SetDescription(cl_stencilbits, "Stencil buffer size (0, 8bit, and 16bit)\nDefault: 8" );
 	cl_depthbits = Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( cl_depthbits, "0", "32", CV_INTEGER );
+	Cvar_SetDescription(cl_depthbits, "Set the number of depth bits\nDefault: 0");
 
 	cl_drawBuffer = Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
+	Cvar_SetDescription(cl_drawBuffer, "Set which frame buffer to draw into using framebuffers\nDefault: GL_BACK");
 
 #ifdef USE_RENDERER_DLOPEN
 	cl_renderer = Cvar_Get( "cl_renderer", "opengl2", CVAR_ARCHIVE | CVAR_LATCH );
 	if ( !isValidRenderer( cl_renderer->string ) ) {
 		Cvar_ForceReset( "cl_renderer" );
 	}
+	Cvar_SetDescription(cl_renderer, "Set the name of the dynamically linked renderer\nDefault: opengl2");
 #endif
 }
 
