@@ -1335,10 +1335,11 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 			}
 		}
 	}
+#ifdef EMSCRIPTEN
 	if(showMainMenu && cl_returnURL->string[0]) {
 		Cbuf_AddText("quit\n");
 	}
-#else
+#endif
 #endif
 
 	// send a disconnect message to the server
@@ -4646,6 +4647,7 @@ void CL_Init( void ) {
 
 #ifdef USE_MASTER_LAN
 	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
+	Cvar_SetDescription(cl_master[0], "Set the URL of a master server used in the Local LAN list, for nearby servers\nDefault: empty");
 	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
 	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
 	
@@ -4653,17 +4655,25 @@ void CL_Init( void ) {
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 #endif
 
+#ifdef EMSCRIPTEN
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
+	Cvar_SetDescription(cl_returnURL, "Set the return URL to go to when the client disconnects from the server\nDefault: empty");
+#endif
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(cl_allowDownload, "Toggle automatic downloading of maps, models, sounds, and textures\n1 - allow downloads\n2 - disallow redirects, must download from the same server\n4 - Disallow UDP downloads\n8 - don't disconnect clients while they are downloading\nDefault: 1");
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_mapAutoDownload, "Automatically download map files\nDefault: 0" );
 #ifdef USE_CURL_DLOPEN
 	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
+	Cvar_SetDescription(cl_cURLLib, "Name of the cURL library to link\nDefault: libcurl");
 #endif
 #endif
 
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
+	Cvar_SetDescription(cl_conXOffset, "Offset the console message display\n0 - top lef\n999 - extreme top right\nDefault: 0");
 	cl_conColor = Cvar_Get( "cl_conColor", "", 0 );
+	Cvar_SetDescription(cl_conColor, "Set the console background color, instead of the default animated\nDefault: empty");
 
 #ifdef MACOS_X
 	// In game video is REALLY slow in Mac OS X right now due to driver slowness
@@ -4671,27 +4681,33 @@ void CL_Init( void ) {
 #else
 	cl_inGameVideo = Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE_ND );
 #endif
-	Cvar_SetDescription( cl_inGameVideo, "Controls whether in game video should be draw" );
+	Cvar_SetDescription( cl_inGameVideo, "Controls whether in game video should be drawn\nDefault: 1" );
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
+	Cvar_SetDescription( cl_serverStatusResendTime, "The rate of the heartbeats to the master server, or check server status\nDefault: 750 seconds" );
 
 	// init autoswitch so the ui will have it correctly even
 	// if the cgame hasn't been started
 	Cvar_Get ("cg_autoswitch", "1", CVAR_ARCHIVE);
 
 	cl_motdString = Cvar_Get( "cl_motdString", "", CVAR_ROM );
+	Cvar_SetDescription(cl_motdString, "Holds the message of the day variable from the server\nDefault: empty");
 
 	Cvar_Get( "cl_maxPing", "800", CVAR_ARCHIVE_ND );
 
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_lanForcePackets, "Send packets over LAN every frame whether the client state changes or not\nDefault: 1" );
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_guidServerUniq, "Generate a unique GUID for every server, based on server ID and Q3 key (more secure)\nDefault: 1" );
 
 #ifdef USE_LAZY_LOAD
 	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+	Cvar_SetDescription( cl_lazyLoad, "Download graphics over the network after the level loads\n1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
 #endif
 
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/getpk3bymapname.php/%1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(cl_dlURL, "Set the download URL for the client in case it isn't set by the server\nDefault: http://ws.q3df.org/getpk3bymapname.php/%1");
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
@@ -4819,6 +4835,7 @@ void CL_Init( void ) {
 	CL_UpdateGUID( NULL, 0 );
 #ifdef USE_LNBITS
 	cl_lnInvoice = Cvar_Get( "cl_lnInvoice", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
+	Cvar_SetDescription(cl_lnInvoice, "The previous LNBits invoice code sent by the server requesting payment\nDefault: empty");
 #endif
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
