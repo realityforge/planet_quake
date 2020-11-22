@@ -4898,18 +4898,28 @@ void FS_Startup_After_Async( void )
 
 	// add our commands
 	Cmd_AddCommand( "path", FS_Path_f );
+	Cmd_SetDescription( "path", "Display all current game paths\nusage: path" );
 	Cmd_AddCommand( "dir", FS_Dir_f );
+	Cmd_SetDescription( "dir", "List a directory's contents\nusage: dir <directory> [extension]" );
 	Cmd_AddCommand( "fdir", FS_NewDir_f );
+	Cmd_SetDescription( "fdir", "List a directory's contents filtered\nusage: fdir <filter>" );
 	Cmd_AddCommand( "touchFile", FS_TouchFile_f );
+	Cmd_SetDescription( "touchFile", "Update the file-opened time\nusage: touchFile <filename>");
 	Cmd_AddCommand( "lsof", FS_ListOpenFiles_f );
+	Cmd_SetDescription( "lsof", "List opened files\nusage: lsof");
  	Cmd_AddCommand( "which", FS_Which_f );
 	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
+	Cmd_SetDescription( "which", "Show the full path of a file\nusage: which <file>");
 	Cmd_AddCommand( "fs_restart", FS_Reload );
+	Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nusage: fs_restart");
 #ifdef EMSCRIPTEN
 	Cmd_AddCommand( "offline", Sys_FS_Offline );
+	Cmd_SetDescription( "offline", "Download all the files needed to play offline without an internet connection\nusage: offline");
 #endif
 	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
+	Cmd_SetDescription( "fs_openedList", "Display a list of all open pak names\nusage: fs_openedList");
 	Cmd_AddCommand ("fs_referencedList", FS_ReferencedPK3List_f );
+	Cmd_SetDescription( "fs_openedList", "Display a list of all referenced pak names\nusage: fs_referencedList");	
 
 	// print the current search paths
 	//FS_Path_f();
