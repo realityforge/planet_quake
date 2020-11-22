@@ -3813,9 +3813,9 @@ void Com_Init_After_Filesystem( void ) {
 		Cmd_AddCommand( "error", Com_Error_f );
 		Cmd_SetDescription( "error", "Create an artificial error for testing\nusage: error" );
 		Cmd_AddCommand( "crash", Com_Crash_f );
-		Cmd_SetDescription( "error", "Create an artificial crash for testing\nusage: crash" );
+		Cmd_SetDescription( "crash", "Create an artificial crash for testing\nusage: crash" );
 		Cmd_AddCommand( "freeze", Com_Freeze_f );
-		Cmd_SetDescription( "error", "Create an artificial freeze for testing\nusage: freeze" );
+		Cmd_SetDescription( "freeze", "Create an artificial freeze for testing\nusage: freeze" );
 	}
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
