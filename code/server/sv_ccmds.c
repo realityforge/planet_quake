@@ -1526,20 +1526,28 @@ void SV_AddOperatorCommands( void ) {
 	initialized = qtrue;
 
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
+	Cmd_SetDescription( "heartbeat", "Send a manual heartbeat to the master servers\nusage: heartbeat" );
 	Cmd_AddCommand ("kick", SV_Kick_f);
+	Cmd_SetDescription( "kick", "Kick the player with the given name off the server\nusag: kick <playername>" );
 #ifndef STANDALONE
 #ifdef USE_BANS
 	if(!Cvar_VariableIntegerValue("com_standalone"))
 	{
 		Cmd_AddCommand ("banUser", SV_Ban_f);
+		Cmd_SetDescription( "banUser", "Ban a client by their player name\nusage: banUser <playername>" );
 		Cmd_AddCommand ("banClient", SV_BanNum_f);
+		Cmd_SetDescription( "banClient", "Ban a client by their slot number\nusage: banClient <slot #>" );
 	}
 #endif
 #endif
 	Cmd_AddCommand ("clientkick", SV_KickNum_f);
+	Cmd_SetDescription( "clientkick", "Kick a client by slot number used\nusage: clientkick <slot #>" );
 	Cmd_AddCommand ("status", SV_Status_f);
+	Cmd_SetDescription( "status", "Show status of the currently connected server\nusage: status" );
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
+	Cmd_SetDescription( "dumpuser", "Display user info (handicap, model/color, rail color, more)\nusage: dumpuser <playername>");
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
+	
 	Cmd_AddCommand ("sectorlist", SV_SectorList_f);
 	Cmd_AddCommand ("map", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "map", SV_CompleteMapName );
