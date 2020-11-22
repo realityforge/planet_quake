@@ -490,10 +490,15 @@ SCR_Init
 */
 void SCR_Init( void ) {
 	cl_timegraph = Cvar_Get ("timegraph", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_timegraph, "Display the time graph\nDefault: 0");
 	cl_debuggraph = Cvar_Get ("debuggraph", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_debuggraph, "Display the debug graph\nDefault: 0");
 	cl_graphheight = Cvar_Get ("graphheight", "32", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphheight, "Set the height of the graph\nDefault: 32");
 	cl_graphscale = Cvar_Get ("graphscale", "1", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphscale, "Set the scale of the size\nDefault: 1");
 	cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphshift, "Set the shift of the graph\nDefault: 0");
 
 	scr_initialized = qtrue;
 }

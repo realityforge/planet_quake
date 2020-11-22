@@ -412,12 +412,18 @@ void S_Init( void )
 	Com_Printf( "------ Initializing Sound ------\n" );
 
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );
+	Cvar_SetDescription(s_volume, "Sound FX volume\nDefault: 0.8");
 	s_musicVolume = Cvar_Get( "s_musicvolume", "0.25", CVAR_ARCHIVE );
+	Cvar_SetDescription(s_musicVolume, "Music volume level\nDefault: 0.25");
 	s_doppler = Cvar_Get( "s_doppler", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( s_doppler, "How much the sound changes based on the speed the source is moving\nDefault: 1");
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "1", CVAR_ARCHIVE );
+	Cvar_SetDescription( s_muteWhenUnfocused, "Mute the sound when the window is in the background\nDefault: 1" );
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "1", CVAR_ARCHIVE );
+	Cvar_SetDescription( s_muteWhenMinimized, "Mute the sound when the window is minimized\nDefault: 1");
 
 	cv = Cvar_Get( "s_initsound", "1", 0 );
+	Cvar_SetDescription(cv, "Use sounds, or disable them entirely\nDefault: 1");
 	if( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {

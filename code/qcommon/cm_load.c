@@ -612,8 +612,11 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 
 #ifndef BSPC
 	cm_noAreas = Cvar_Get ("cm_noAreas", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cm_noAreas, "Create one giant area for the clipmap and don't use culling\nDefault: 0");
 	cm_noCurves = Cvar_Get ("cm_noCurves", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cm_noCurves, "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
+	Cvar_SetDescription( cm_playerCurveClip, "Don't clip player bounding box around curves\nDefault: 1" );
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
