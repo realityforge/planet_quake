@@ -1429,7 +1429,9 @@ void R_Register( void )
 	r_screenshotJpegQuality = ri.Cvar_Get("r_screenshotJpegQuality", "90", CVAR_ARCHIVE);
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
+	ri.Cvar_SetDescription(r_maxpolyverts, "Max number of polygons\nDefault: " XSTRING(MAX_POLYS));
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+	ri.Cvar_SetDescription(r_maxpolyverts, "Max number of polygon vertices to display at a time\nDefault: " XSTRING(MAX_POLYVERTS));
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
@@ -1599,7 +1601,6 @@ void RE_Shutdown( int destroyWindow ) {
 	ri.Cmd_RemoveCommand( "screenshot" );
 	ri.Cmd_RemoveCommand( "screenshotJPEG" );
 	ri.Cmd_RemoveCommand( "gfxinfo" );
-	ri.Cmd_RemoveCommand( "minimize" );
 	ri.Cmd_RemoveCommand( "gfxmeminfo" );
 	ri.Cmd_RemoveCommand( "exportCubemaps" );
 
