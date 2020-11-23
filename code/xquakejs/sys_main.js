@@ -34,6 +34,7 @@ var LibrarySysMain = {
       //'+set', 'com_maxfpsMinimized', '10',
 
       // FBO specific settings
+      '+set', 'r_ext_multitexture', '0',
       '+set', 'r_ext_framebuffer_multisample', '0',
       '+set', 'r_ext_framebuffer_object', '0',
       // this prevents lightmap from being wrong when switching maps
