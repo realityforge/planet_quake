@@ -270,11 +270,15 @@ VM_Init
 ==============
 */
 void VM_Init( void ) {
+	cvar_t *cv;
 #ifndef DEDICATED
-	Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
-	Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	cv = Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the UI QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
+	cv = Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the CGame QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 #endif
-	Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	cv = Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the Game QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 
 	Cmd_AddCommand( "vmprofile", VM_VmProfile_f );
 	Cmd_SetDescription( "vmprofile", "Show VM profiling information\nUsage: vmprofile <game|cgame|ui>" );

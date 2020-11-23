@@ -3872,7 +3872,7 @@ void Com_Init_After_Filesystem( void ) {
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
-	Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients\nDefault: " Q3_VERSION);
+	Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients\nDefault: " XSTRING(Q3_VERSION));
 
 	// this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM );

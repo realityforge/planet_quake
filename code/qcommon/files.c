@@ -4800,7 +4800,7 @@ void FS_Startup( void ) {
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 	Cvar_SetDescription(fs_basepath, "Set the path of the engine where files can be downloaded\nDefault: varies by operating system");
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
-	Cvar_SetDescription(fs_basegame, "Set the base game for the engine, baseq3, baseoa, baseef\nDefault: " BASEGAME);
+	Cvar_SetDescription(fs_basegame, "Set the base game for the engine, baseq3, baseoa, baseef\nDefault: " XSTRING(BASEGAME));
 #ifndef EMSCRIPTEN
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 	Cvar_SetDescription(fs_steampath, "The search path for Steam data when the engine is downloaded through Steam");
