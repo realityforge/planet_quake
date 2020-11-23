@@ -1689,7 +1689,6 @@ void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, float *poin
 	if ( !cv2 )
 	{
 		cv2 = Cvar_Get( "r_debugSurface", "0", 0 );
-		Cvar_SetDescription( cv2, "Debug surface shapes\nDefault: 0" );
 	}
 
 	if (cv2->integer != 1)

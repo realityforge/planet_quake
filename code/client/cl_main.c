@@ -4601,7 +4601,7 @@ void CL_Init( void ) {
 	// register client variables
 	//
 	cl_noprint = Cvar_Get( "cl_noprint", "0", 0 );
-	Cvar_SetDescription("cl_noprint", "Don't printout messages to your screen, only the console\nDefault: 0");
+	Cvar_SetDescription(cl_noprint, "Don't printout messages to your screen, only the console\nDefault: 0");
 	cl_motd = Cvar_Get( "cl_motd", "1", 0 );
 	Cvar_SetDescription(cl_motd, "Show the message of the day from the server\nDefault: 1");
 

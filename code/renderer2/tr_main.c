@@ -619,6 +619,11 @@ static void R_SetFarClip( void )
 		tr.viewParms.zFar = 2048;
 		return;
 	}
+	
+	if(r_zfar->integer > 0) {
+		tr.viewParms.zFar = r_zfar->integer;
+		return;
+	}
 
 	//
 	// set far clipping planes dynamically

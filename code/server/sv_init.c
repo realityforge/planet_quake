@@ -973,7 +973,7 @@ void SV_Init( void )
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
-	Cvar_SetDescription("Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
+	Cvar_SetDescription(sv_banFile, "Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
 #endif
 
 #ifdef USE_LNBITS

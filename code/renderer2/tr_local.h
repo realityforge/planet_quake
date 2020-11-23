@@ -1682,6 +1682,7 @@ extern cvar_t	*r_railSegmentLength;
 extern cvar_t	*r_ignore;				// used for debugging anything
 
 extern cvar_t	*r_znear;				// near Z clip plane
+extern cvar_t	*r_zfar;				// far Z clip plane
 extern cvar_t	*r_zproj;				// z distance of projection plane
 extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo rendering
 
