@@ -1654,6 +1654,11 @@ void SV_AddDedicatedCommands( void )
 #endif
 	Cmd_AddCommand( "locations", SV_Locations_f );
 	Cmd_SetDescription( "locations", "Display a list of client locations from their country setting\nUsage: locations" );
+#ifdef USE_MULTIVM
+	Cmd_AddCommand( "load", SV_LoadVM_f );
+	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load");
+#endif
+
 }
 
 
@@ -1669,4 +1674,7 @@ void SV_RemoveDedicatedCommands( void )
 	Cmd_RemoveCommand( "svsay" );
 #endif
 	Cmd_RemoveCommand( "locations" );
+#ifdef USE_MULTIVM
+	Cmd_RemoveCommand( "load" );
+#endif
 }

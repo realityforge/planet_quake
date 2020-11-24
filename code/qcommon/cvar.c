@@ -1871,7 +1871,6 @@ Cvar_SetDescription
 */
 void Cvar_SetDescription( cvar_t *var, const char *var_description )
 {
-	Com_Printf("%s\n", var->name);
 	if( var_description && var_description[0] != '\0' )
 	{
 		if( var->description != NULL )

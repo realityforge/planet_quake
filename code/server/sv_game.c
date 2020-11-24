@@ -407,7 +407,8 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SEND_CONSOLE_COMMAND:
-		Cbuf_ExecuteText( args[1], VMA(2) );
+		if(gvm == 0)
+			Cbuf_ExecuteText( args[1], VMA(2) );
 		return 0;
 
 	case G_FS_FOPEN_FILE:
@@ -438,13 +439,16 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_GameDropClient( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
-		SV_GameSendServerCommand( args[1], VMA(2) );
+		if(gvm == 0)
+			SV_GameSendServerCommand( args[1], VMA(2) );
 		return 0;
 	case G_LINKENTITY:
-		SV_LinkEntity( VMA(1) );
+		if(gvm == 0)
+			SV_LinkEntity( VMA(1) );
 		return 0;
 	case G_UNLINKENTITY:
-		SV_UnlinkEntity( VMA(1) );
+		if(gvm == 0)
+			SV_UnlinkEntity( VMA(1) );
 		return 0;
 	case G_ENTITIES_IN_BOX:
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] * sizeof( int ) );
@@ -539,7 +543,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		//====================================
 
 	case BOTLIB_SETUP:
-		return SV_BotLibSetup();
+		if(gvm == 0)
+			return SV_BotLibSetup();
+		else
+			return 0;
 	case BOTLIB_SHUTDOWN:
 		return SV_BotLibShutdown();
 	case BOTLIB_LIBVAR_SET:
@@ -1038,8 +1045,10 @@ static void SV_InitGameVM( qboolean restart ) {
 	// a previous level
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=522
 	// now done before GAME_INIT call
-	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		svs.clients[i].gentity = NULL;
+	if(!restart) {
+		for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+			svs.clients[i].gentity = NULL;
+		}
 	}
 	
 	// use the current msec count for a random seed
@@ -1085,12 +1094,13 @@ SV_InitGameProgs
 Called on a normal map change, not on a map_restart
 ===============
 */
-void SV_InitGameProgs( void ) {
+void SV_InitGameProgs( qboolean createNew ) {
 	cvar_t	*var;
 	//FIXME these are temp while I make bots run in vm
 	extern int	bot_enable;
 
 	var = Cvar_Get( "bot_enable", "1", CVAR_LATCH );
+	Cvar_SetDescription(var, "Enable and disable adding of bots to the map/game\nDefault: 1");
 	if ( var ) {
 		bot_enable = var->integer;
 	}
@@ -1104,7 +1114,7 @@ void SV_InitGameProgs( void ) {
 		Com_Error( ERR_DROP, "VM_Create on game failed" );
 	}
 
-	SV_InitGameVM( qfalse );
+	SV_InitGameVM( createNew );
 
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );

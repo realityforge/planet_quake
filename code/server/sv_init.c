@@ -628,7 +628,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	sv.time = sv.time ? sv.time : 8;
 
 	// load and spawn all other entities
-	SV_InitGameProgs();
+	SV_InitGameProgs( qfalse );
 
 	// don't allow a map_restart if game is modified
 	sv_gametype->modified = qfalse;

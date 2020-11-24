@@ -2222,6 +2222,23 @@ void SV_PrintLocations_f( client_t *client ) {
 	}
 }
 
+#ifdef USE_MULTIVM
+void SV_LoadVM_f( void ) {
+	vmIndex_t index;
+	char *name;
+	int i;
+
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(gvms[i]) continue;
+		else {
+			gvm = i;
+			break;
+		}
+	}
+	SV_InitGameProgs(qtrue);
+	gvm = 0;
+}
+#endif
 
 typedef struct {
 	const char *name;
@@ -2238,6 +2255,9 @@ static const ucmd_t ucmds[] = {
 	{"stopdl", SV_StopDownload_f},
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
+#ifdef USE_MULTIVM
+	{"load", SV_LoadVM_f},
+#endif
 #ifdef USE_MV
 	{"mvjoin", SV_MultiView_f},
 	{"mvleave", SV_MultiView_f},

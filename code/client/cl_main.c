@@ -4527,16 +4527,17 @@ void CL_LoadVM_f( void ) {
 	vmIndex_t index;
 	char *name;
 	
-		if ( Cmd_Argc() < 2 ) {
-			Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
-			return;
-		}
+	if ( Cmd_Argc() < 2 ) {
+		Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+		return;
+	}
 
 	name = Cmd_Argv( 1 );
 
-	if ( !Q_stricmp( name, "game" ) )
-		index = VM_GAME;
-	else if ( !Q_stricmp( name, "cgame" ) ) {
+	if ( !Q_stricmp( name, "game" ) ) {
+		CL_AddReliableCommand( "load game", qfalse );
+		//CL_ForwardCommandToServer("load game");
+	} else if ( !Q_stricmp( name, "cgame" ) ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(cgvms[i]) count++;
@@ -4910,6 +4911,9 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand( "mvjoin" );
 	Cmd_RemoveCommand( "mvleave" );
 	Cmd_RemoveCommand( "mvfollow" );
+#endif
+#ifdef USE_MULTIVM
+	Cmd_RemoveCommand( "load" );
 #endif
 
 	CL_ClearInput();
