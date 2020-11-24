@@ -571,7 +571,7 @@ void SV_DemoWriteAllEntityState(void)
 
 	// Write entities (gentity_t->entityState_t or concretely sv.gentities[num].s, in gamecode level. instead of sv.)
 	MSG_WriteByte(&msg, demo_entityState);
-	for (i = 0; i < sv.num_entities; i++)
+	for (i = 0; i < sv.num_entities[gvm]; i++)
 	{
 		if (i >= sv_maxclients->integer && i < MAX_CLIENTS)
 			continue;
@@ -606,7 +606,7 @@ void SV_DemoWriteAllEntityShared(void)
 
 	// Write entities (gentity_t->entityShared_t or concretely sv.gentities[num].r, in gamecode level. instead of sv.)
 	MSG_WriteByte(&msg, demo_entityShared);
-	for (i = 0; i < sv.num_entities; i++)
+	for (i = 0; i < sv.num_entities[gvm]; i++)
 	{
 		if (i >= sv_maxclients->integer && i < MAX_CLIENTS)
 			continue;
@@ -1035,8 +1035,8 @@ void SV_DemoReadAllEntityShared( msg_t *msg )
 
         // Save the new state in sv.demoEntities (ie, display current entity state)
 		sv.demoEntities[num].r = entity->r;
-		if (num > sv.num_entities)
-			sv.num_entities = num;
+		if (num > sv.num_entities[gvm])
+			sv.num_entities[gvm] = num;
 	}
 }
 
@@ -1052,7 +1052,7 @@ void SV_DemoReadRefreshEntities( void )
 	int i;
 
 	// Overwrite anything the game may have changed
-	for (i = 0; i < sv.num_entities; i++)
+	for (i = 0; i < sv.num_entities[gvm]; i++)
 	{
 		if (i >= sv_democlients->integer && i < MAX_CLIENTS) // FIXME? shouldn't MAX_CLIENTS be sv_maxclients->integer?
 			continue;

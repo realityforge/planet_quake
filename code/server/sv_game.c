@@ -32,7 +32,7 @@ botlib_export_t	*botlib_export;
 int	SV_NumForGentity( sharedEntity_t *ent ) {
 	int		num;
 
-	num = ( (byte *)ent - (byte *)sv.gentities ) / sv.gentitySize;
+	num = ( (byte *)ent - (byte *)sv.gentities[gvm] ) / sv.gentitySize[gvm];
 
 	return num;
 }
@@ -41,7 +41,7 @@ int	SV_NumForGentity( sharedEntity_t *ent ) {
 sharedEntity_t *SV_GentityNum( int num ) {
 	sharedEntity_t *ent;
 
-	ent = (sharedEntity_t *)((byte *)sv.gentities + sv.gentitySize*(num));
+	ent = (sharedEntity_t *)((byte *)sv.gentities[gvm] + sv.gentitySize[gvm]*(num));
 
 	return ent;
 }
@@ -50,7 +50,7 @@ sharedEntity_t *SV_GentityNum( int num ) {
 playerState_t *SV_GameClientNum( int num ) {
 	playerState_t	*ps;
 
-	ps = (playerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
+	ps = (playerState_t *)((byte *)sv.gameClients[gvm] + sv.gameClientSize[gvm]*(num));
 
 	return ps;
 }
@@ -60,14 +60,14 @@ svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt ) {
 	if ( !gEnt || gEnt->s.number < 0 || gEnt->s.number >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
 	}
-	return &sv.svEntities[ gEnt->s.number ];
+	return &sv.svEntities[gvm][ gEnt->s.number ];
 }
 
 
 sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt ) {
 	int		num;
 
-	num = svEnt - sv.svEntities;
+	num = svEnt - sv.svEntities[gvm];
 	return SV_GentityNum( num );
 }
 
@@ -287,12 +287,12 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 		}
 	}
 
-	sv.gentities = gEnts;
-	sv.gentitySize = sizeofGEntity_t;
-	sv.num_entities = numGEntities;
+	sv.gentities[gvm] = gEnts;
+	sv.gentitySize[gvm] = sizeofGEntity_t;
+	sv.num_entities[gvm] = numGEntities;
 
-	sv.gameClients = clients;
-	sv.gameClientSize = sizeofGameClient;
+	sv.gameClients[gvm] = clients;
+	sv.gameClientSize[gvm] = sizeofGameClient;
 }
 
 
@@ -433,8 +433,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
 	case G_LOCATE_GAME_DATA:
-		if(gvm == 0)
-			SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
+		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case G_DROP_CLIENT:
 		SV_GameDropClient( args[1], VMA(2) );
@@ -444,12 +443,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			SV_GameSendServerCommand( args[1], VMA(2) );
 		return 0;
 	case G_LINKENTITY:
-		if(gvm == 0)
-			SV_LinkEntity( VMA(1) );
+		SV_LinkEntity( VMA(1) );
 		return 0;
 	case G_UNLINKENTITY:
-		if(gvm == 0)
-			SV_UnlinkEntity( VMA(1) );
+		SV_UnlinkEntity( VMA(1) );
 		return 0;
 	case G_ENTITIES_IN_BOX:
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] * sizeof( int ) );

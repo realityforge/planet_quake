@@ -229,7 +229,7 @@ static void SV_CreateBaseline( void ) {
 	sharedEntity_t *ent;
 	int				entnum;	
 
-	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
+	for ( entnum = 0; entnum < sv.num_entities[gvm] ; entnum++ ) {
 		ent = SV_GentityNum( entnum );
 		if ( !ent->r.linked ) {
 			continue;
@@ -239,8 +239,8 @@ static void SV_CreateBaseline( void ) {
 		//
 		// take current state as baseline
 		//
-		sv.svEntities[ entnum ].baseline = ent->s;
-		sv.baselineUsed[ entnum ] = 1;
+		sv.svEntities[gvm][ entnum ].baseline = ent->s;
+		sv.baselineUsed[gvm][ entnum ] = 1;
 	}
 }
 

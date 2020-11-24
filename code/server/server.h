@@ -90,22 +90,22 @@ typedef struct {
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
 	char			*configstrings[MAX_CONFIGSTRINGS];
-	svEntity_t		svEntities[MAX_GENTITIES];
+	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
 
 	const char		*entityParsePoint;	// used during game VM init
 
 	// the game virtual machine will update these on init and changes
-	sharedEntity_t	*gentities;
-	int				gentitySize;
-	int				num_entities;		// current number, <= MAX_GENTITIES
+	sharedEntity_t	*gentities[MAX_NUM_VMS];
+	int				gentitySize[MAX_NUM_VMS];
+	int				num_entities[MAX_NUM_VMS];		// current number, <= MAX_GENTITIES
 
-	playerState_t	*gameClients;
-	int				gameClientSize;		// will be > sizeof(playerState_t) due to game private data
+	playerState_t	*gameClients[MAX_NUM_VMS];
+	int				gameClientSize[MAX_NUM_VMS];		// will be > sizeof(playerState_t) due to game private data
 
 	int				restartTime;
 	int				time;
 
-	byte			baselineUsed[ MAX_GENTITIES ];
+	byte			baselineUsed[MAX_NUM_VMS][ MAX_GENTITIES ];
 	
 	// serverside demo recording
 	fileHandle_t		demoFile;

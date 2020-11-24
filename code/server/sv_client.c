@@ -1240,10 +1240,10 @@ int SV_RemainingGameState( void )
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		if ( !sv.baselineUsed[ start ] ) {
+		if ( !sv.baselineUsed[gvm][ start ] ) {
 			continue;
 		}
-		svEnt = &sv.svEntities[ start ];
+		svEnt = &sv.svEntities[gvm][ start ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 	}
@@ -1342,10 +1342,10 @@ static void SV_SendClientGameState( client_t *client ) {
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		if ( !sv.baselineUsed[ start ] ) {
+		if ( !sv.baselineUsed[gvm][ start ] ) {
 			continue;
 		}
-		svEnt = &sv.svEntities[ start ];
+		svEnt = &sv.svEntities[gvm][ start ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 	}
@@ -2235,6 +2235,7 @@ void SV_LoadVM_f( void ) {
 			break;
 		}
 	}
+	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
 	gvm = 0;
 }

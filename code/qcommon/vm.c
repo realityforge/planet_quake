@@ -1519,6 +1519,8 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 				VM_IgnoreInstructions( ip, 8 );
 			}
 		} else
+		// hack baseq3a to not display USE MEDKIT
+		// just an example because baseq3a is open source https://github.com/ec-/baseq3a
 		if( vm->crc32sum == 0x2DD51C2A && vm->instructionCount == 95182 && vm->exactDataLength == 2122744 ) {
 			ip = buf + 0x5bb9;
 			VM_IgnoreInstructions( ip, 0x5bd8 - 0x5bb9 );

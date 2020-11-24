@@ -71,7 +71,7 @@ typedef struct worldSector_s {
 #define	AREA_DEPTH	4
 #define	AREA_NODES	64
 
-worldSector_t	sv_worldSectors[AREA_NODES];
+worldSector_t	sv_worldSectors[MAX_NUM_VMS][AREA_NODES];
 int			sv_numworldSectors;
 
 
@@ -86,7 +86,7 @@ void SV_SectorList_f( void ) {
 	svEntity_t		*ent;
 
 	for ( i = 0 ; i < AREA_NODES ; i++ ) {
-		sec = &sv_worldSectors[i];
+		sec = &sv_worldSectors[gvm][i];
 
 		c = 0;
 		for ( ent = sec->entities ; ent ; ent = ent->nextEntityInWorldSector ) {
@@ -108,7 +108,7 @@ static worldSector_t *SV_CreateworldSector( int depth, vec3_t mins, vec3_t maxs 
 	vec3_t		size;
 	vec3_t		mins1, maxs1, mins2, maxs2;
 
-	anode = &sv_worldSectors[sv_numworldSectors];
+	anode = &sv_worldSectors[gvm][sv_numworldSectors];
 	sv_numworldSectors++;
 
 	if (depth == AREA_DEPTH) {
@@ -148,7 +148,7 @@ void SV_ClearWorld( void ) {
 	clipHandle_t	h;
 	vec3_t			mins, maxs;
 
-	Com_Memset( sv_worldSectors, 0, sizeof(sv_worldSectors) );
+	Com_Memset( sv_worldSectors[gvm], 0, sizeof(sv_worldSectors[gvm]) );
 	sv_numworldSectors = 0;
 
 	// get world map bounds
@@ -333,7 +333,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	gEnt->r.linkcount++;
 
 	// find the first world sector node that the ent's box crosses
-	node = sv_worldSectors;
+	node = sv_worldSectors[gvm];
 	while (1)
 	{
 		if (node->axis == -1)
@@ -401,7 +401,7 @@ static void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
 			return;
 		}
 
-		ap->list[ap->count] = check - sv.svEntities;
+		ap->list[ap->count] = check - sv.svEntities[gvm];
 		ap->count++;
 	}
 	
@@ -432,7 +432,7 @@ int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int 
 	ap.count = 0;
 	ap.maxcount = maxcount;
 
-	SV_AreaEntities_r( sv_worldSectors, &ap );
+	SV_AreaEntities_r( sv_worldSectors[gvm], &ap );
 
 	return ap.count;
 }
@@ -683,5 +683,3 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 
 	return contents;
 }
-
-

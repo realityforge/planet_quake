@@ -432,8 +432,8 @@ void SV_MultiViewRecord_f( void )
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0 ; i < MAX_GENTITIES; i++ ) {
-		base = &sv.svEntities[ i ].baseline;
-		if ( !sv.baselineUsed[ i ] ) {
+		base = &sv.svEntities[gvm][ i ].baseline;
+		if ( !sv.baselineUsed[gvm][ i ] ) {
 			continue;
 		}
 		MSG_WriteByte( &msg, svc_baseline );

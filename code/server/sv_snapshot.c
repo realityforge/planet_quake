@@ -96,7 +96,7 @@ static void SV_EmitPacketEntities( const clientSnapshot_t *from, const clientSna
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &sv.svEntities[newnum].baseline, newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &sv.svEntities[gvm][newnum].baseline, newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -495,7 +495,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 				continue;
 		}
 
-		svEnt = &sv.svEntities[ es->number ];
+		svEnt = &sv.svEntities[gvm][ es->number ];
 
 		// don't double add an entity through portals
 		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
@@ -638,7 +638,7 @@ static void SV_BuildCommonSnapshot( void )
 
 	// gather all linked entities
 	if ( sv.state != SS_DEAD ) {
-		for ( num = 0 ; num < sv.num_entities ; num++ ) {
+		for ( num = 0 ; num < sv.num_entities[gvm] ; num++ ) {
 			ent = SV_GentityNum( num );
 
 			// never send entities that aren't linked in
@@ -658,7 +658,7 @@ static void SV_BuildCommonSnapshot( void )
 			}
 
 			list[ count++ ] = ent;
-			sv.svEntities[ num ].snapshotCounter = -1;
+			sv.svEntities[gvm][ num ].snapshotCounter = -1;
 		}
 	}
 
@@ -732,7 +732,7 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 
 		// never send client's own entity, because it can
 		// be regenerated from the playerstate
-		svEnt = &sv.svEntities[ ps->clientNum ];
+		svEnt = &sv.svEntities[gvm][ ps->clientNum ];
 		svEnt->snapshotCounter = sv.snapshotCounter;
 
 		// add all the entities directly visible to the eye, which
