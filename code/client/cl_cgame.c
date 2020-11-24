@@ -231,6 +231,19 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
+	// check for a use_item event and don't print in renderer
+	// TODO: sing game VM hack instead
+	/*
+	{
+		for(int i = 0; i < MAX_PS_EVENTS; i++) {
+			int event = snapshot->ps.events[i] & ~EV_EVENT_BITS;
+			if(event >= EV_USE_ITEM0 && event <= EV_USE_ITEM15) {
+				re.ResetBannerSpy();
+				break;
+			}
+		}
+	}
+	*/
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );

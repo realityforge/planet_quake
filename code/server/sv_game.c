@@ -433,7 +433,8 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
 	case G_LOCATE_GAME_DATA:
-		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
+		if(gvm == 0)
+			SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case G_DROP_CLIENT:
 		SV_GameDropClient( args[1], VMA(2) );
@@ -1018,12 +1019,16 @@ Called every time a map changes
 ===============
 */
 void SV_ShutdownGameProgs( void ) {
-	if ( !gvms[gvm] ) {
-		return;
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		gvm = i;
+		if ( !gvms[gvm] ) {
+			continue;
+		}
+		VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
+		VM_Free( gvms[gvm] );
+		gvms[gvm] = NULL;
 	}
-	VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
-	VM_Free( gvms[gvm] );
-	gvms[gvm] = NULL;
+	gvm = 0;
 	FS_VM_CloseFiles( H_QAGAME );
 }
 
@@ -1045,10 +1050,8 @@ static void SV_InitGameVM( qboolean restart ) {
 	// a previous level
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=522
 	// now done before GAME_INIT call
-	if(!restart) {
-		for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-			svs.clients[i].gentity = NULL;
-		}
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+		svs.clients[i].gentity = NULL;
 	}
 	
 	// use the current msec count for a random seed
@@ -1114,7 +1117,12 @@ void SV_InitGameProgs( qboolean createNew ) {
 		Com_Error( ERR_DROP, "VM_Create on game failed" );
 	}
 
-	SV_InitGameVM( createNew );
+	if(createNew) {
+		sv.entityParsePoint = CM_EntityString();
+		VM_Call( gvms[gvm], 3, GAME_INIT, sv.time, Com_Milliseconds(), qfalse );
+		return;
+	}
+	SV_InitGameVM( qfalse );
 
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );

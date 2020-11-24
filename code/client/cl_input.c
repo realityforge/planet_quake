@@ -369,7 +369,7 @@ void Spy_CursorPosition(float x, float y) {
 
 void Spy_Banner(float x, float y) {
 #ifdef EMSCRIPTEN
-	//Sys_EventMenuChanged(x, y);
+	Sys_EventMenuChanged(x, y);
 #endif
 }
 /*

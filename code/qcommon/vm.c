@@ -1518,7 +1518,12 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			if ( ip->value == 70943 ) {
 				VM_IgnoreInstructions( ip, 8 );
 			}
+		} /* else
+		if( vm->crc32sum == 0x2DD51C2A && vm->instructionCount == 95182 && vm->exactDataLength == 2122744 ) {
+			ip = buf + 0x5bd7;
+			VM_IgnoreInstructions( ip, 16 );
 		}
+		*/
 	}
 
 	if ( vm->index == VM_GAME ) {
