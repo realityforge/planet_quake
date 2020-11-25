@@ -2272,15 +2272,22 @@ void SV_Tele_f( client_t *client ) {
 	ps = SV_GameClientNum( clientNum );
 	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
 	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
-	memset(ent->s.angles, 0, sizeof(vec3_t));
-	memset(ent->s.angles2, 0, sizeof(vec3_t));
-	memset(ps->viewangles, 0, sizeof(vec3_t));
-	memset(ps->delta_angles, 0, sizeof(vec3_t));
+	memset(&ps->viewangles, 0, sizeof(vec3_t));
+	memset(&ps->delta_angles, 0, sizeof(vec3_t));
+	memset(&ps->origin, 0, sizeof(vec3_t));
+	memset(&ent->r.currentOrigin, 0, sizeof(vec3_t));
+	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
+	memset(&ent->s.angles, 0, sizeof(vec3_t));
+	memset(&ent->s.angles2, 0, sizeof(vec3_t));
+	memset(&ent->s.origin, 0, sizeof(vec3_t));
+	memset(&ent->s.origin2, 0, sizeof(vec3_t));
+	memset(&ent->s.pos.trBase, 0, sizeof(vec3_t));
+	memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
+	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
+	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
 	newOrigin[0] = Cmd_Argv(1);
 	newOrigin[1] = Cmd_Argv(2);
 	newOrigin[2] = Cmd_Argv(3);
-	//client->deltaMessage = -1;
-	//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
@@ -2307,19 +2314,22 @@ void SV_Tele_f( client_t *client ) {
 	if(anyOrigin) {
 		//memcpy(ent->s.angles, oldAngles, sizeof(oldAngles));
 	}
-	/*
-	memcpy(ent->s.angles, oldAngles, sizeof(vec3_t));
-	memcpy(ent->s.angles2, oldAngles, sizeof(vec3_t));
-	memcpy(ps->viewangles, oldAngles, sizeof(vec3_t));
-	memcpy(ps->delta_angles, oldAngles, sizeof(vec3_t));
-	*/
 	memset(&ps->viewangles, 0, sizeof(vec3_t));
 	memset(&ps->delta_angles, 0, sizeof(vec3_t));
+	memset(&ent->r.currentOrigin, 0, sizeof(vec3_t));
+	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
 	memset(&ent->s.angles, 0, sizeof(vec3_t));
 	memset(&ent->s.angles2, 0, sizeof(vec3_t));
+	memset(&ent->s.origin, 0, sizeof(vec3_t));
+	memset(&ent->s.origin2, 0, sizeof(vec3_t));
+	memset(&ent->s.pos.trBase, 0, sizeof(vec3_t));
+	memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
 	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
 	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
-	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
+	client->deltaMessage = -1;
+	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+	//ent->s.eFlags ^= EF_TELEPORT_BIT;
+	//ps->eFlags ^= EF_TELEPORT_BIT;
 
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
 		ent = SV_GentityNum(i);
