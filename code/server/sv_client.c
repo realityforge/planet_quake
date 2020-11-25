@@ -2248,9 +2248,16 @@ void SV_LoadVM_f( client_t *cl ) {
 	gvm = 0;
 }
 
+static int FloatAsInt( float f ) {
+	floatint_t fi;
+	fi.f = f;
+	return fi.i;
+}
+
 void SV_Tele_f( client_t *client ) {
 	int		clientNum, i;
 	vec3_t oldOrigin, oldAngles;
+	int oldDelta[3];
 	char *newOrigin[3];
 	sharedEntity_t *ent;
 	playerState_t	*ps;
@@ -2272,6 +2279,8 @@ void SV_Tele_f( client_t *client ) {
 	ps = SV_GameClientNum( clientNum );
 	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
 	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
+	memcpy(oldDelta, ps->delta_angles, sizeof(oldDelta));
+	/*
 	memset(&ps->viewangles, 0, sizeof(vec3_t));
 	memset(&ps->delta_angles, 0, sizeof(vec3_t));
 	memset(&ps->origin, 0, sizeof(vec3_t));
@@ -2285,6 +2294,7 @@ void SV_Tele_f( client_t *client ) {
 	memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
 	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
 	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
+	*/
 	newOrigin[0] = Cmd_Argv(1);
 	newOrigin[1] = Cmd_Argv(2);
 	newOrigin[2] = Cmd_Argv(3);
@@ -2314,6 +2324,10 @@ void SV_Tele_f( client_t *client ) {
 	if(anyOrigin) {
 		//memcpy(ent->s.angles, oldAngles, sizeof(oldAngles));
 	}
+	ps->delta_angles[0] = oldDelta[0];
+	ps->delta_angles[1] = oldDelta[1];
+	ps->delta_angles[2] = oldDelta[2];
+	/*
 	memset(&ps->viewangles, 0, sizeof(vec3_t));
 	memset(&ps->delta_angles, 0, sizeof(vec3_t));
 	memset(&ent->r.currentOrigin, 0, sizeof(vec3_t));
@@ -2328,9 +2342,11 @@ void SV_Tele_f( client_t *client ) {
 	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
 	client->deltaMessage = -1;
 	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+	*/
 	//ent->s.eFlags ^= EF_TELEPORT_BIT;
 	//ps->eFlags ^= EF_TELEPORT_BIT;
 
+/*
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
 		ent = SV_GentityNum(i);
 		if(ent->s.clientNum == clientNum && (ent->s.eFlags & (ET_EVENTS + EV_PLAYER_TELEPORT_IN))) {
@@ -2345,6 +2361,7 @@ void SV_Tele_f( client_t *client ) {
 Com_Printf( "Teleport: %f - %f\n", ent->r.currentOrigin[0], oldOrigin[0] );
 		}
 	}
+*/
 }
 #endif
 

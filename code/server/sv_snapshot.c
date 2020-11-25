@@ -119,7 +119,7 @@ SV_WriteSnapshotToClient
 ==================
 */
 static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
-	const clientSnapshot_t	*oldframe;
+	clientSnapshot_t	*oldframe;
 	clientSnapshot_t	*frame;
 	int					lastframe;
 	int					i;
@@ -143,6 +143,15 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		// we have a valid snapshot to delta from
 		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
+		/*
+		if((oldframe->ps.eFlags & EF_TELEPORT_BIT)) {
+Com_Printf("Old state: %i %i\n", oldframe->ps.delta_angles[0], oldframe->ps.delta_angles[1]);
+Com_Printf("New state: %i %i\n", frame->ps.delta_angles[0], frame->ps.delta_angles[1]);
+			oldframe->ps.delta_angles[0] = 0;
+			oldframe->ps.delta_angles[1] = 0;
+			oldframe->ps.delta_angles[2] = 0;
+		}
+		*/
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
 			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
