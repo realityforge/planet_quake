@@ -2248,20 +2248,13 @@ void SV_LoadVM_f( client_t *cl ) {
 	gvm = 0;
 }
 
-static int FloatAsInt( float f ) {
-	floatint_t fi;
-	fi.f = f;
-	return fi.i;
-}
-
 void SV_Tele_f( client_t *client ) {
 	int		clientNum, i;
 	vec3_t oldOrigin, oldAngles;
 	int oldDelta[3];
 	char *newOrigin[3];
 	sharedEntity_t *ent;
-	playerState_t	*ps;
-	qboolean anyOrigin;
+	playerState_t	*ps, *ps2;
 
 	if(!client) return;
 	
@@ -2301,67 +2294,50 @@ void SV_Tele_f( client_t *client ) {
 
 	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
-	//VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time + 100 );
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time + 100 );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
 
-	for(i = 0; i < 3; i++) {
-		if(newOrigin[i][0] != '\0') {
-			anyOrigin = qtrue;
-			if(newOrigin[i][0] == '-') {
-				ps->origin[i] = oldOrigin[i] - atoi(&newOrigin[i][1]);
-			} else if (newOrigin[i][0] == '+') {
-				ps->origin[i] = oldOrigin[i] + atoi(&newOrigin[i][1]);
+	if(newOrigin[0][0] != '\0'
+    || newOrigin[1][0] != '\0'
+	  || newOrigin[2][0] != '\0') {
+		for(i = 0; i < 3; i++) {
+			if(newOrigin[i][0] != '\0') {
+				if(newOrigin[i][0] == '-') {
+					ps->origin[i] = oldOrigin[i] - atoi(&newOrigin[i][1]);
+				} else if (newOrigin[i][0] == '+') {
+					ps->origin[i] = oldOrigin[i] + atoi(&newOrigin[i][1]);
+				} else {
+					ps->origin[i] = atoi(newOrigin[i]);
+				}
 			} else {
-				ps->origin[i] = atoi(newOrigin[i]);
+				ps->origin[i] = oldOrigin[i];
 			}
-		} else {
-			ps->origin[i] = oldOrigin[i];
 		}
+		ps->delta_angles[0] = oldDelta[0];
+		ps->delta_angles[1] = oldDelta[1];
+		ps->delta_angles[2] = oldDelta[2];
+	} else {
+		// accept new position
 	}
-	memcpy(&oldOrigin, &ps->origin, sizeof(vec3_t));
-
-	if(anyOrigin) {
-		//memcpy(ent->s.angles, oldAngles, sizeof(oldAngles));
-	}
-	ps->delta_angles[0] = oldDelta[0];
-	ps->delta_angles[1] = oldDelta[1];
-	ps->delta_angles[2] = oldDelta[2];
-	/*
-	memset(&ps->viewangles, 0, sizeof(vec3_t));
-	memset(&ps->delta_angles, 0, sizeof(vec3_t));
-	memset(&ent->r.currentOrigin, 0, sizeof(vec3_t));
-	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
-	memset(&ent->s.angles, 0, sizeof(vec3_t));
-	memset(&ent->s.angles2, 0, sizeof(vec3_t));
-	memset(&ent->s.origin, 0, sizeof(vec3_t));
-	memset(&ent->s.origin2, 0, sizeof(vec3_t));
-	memset(&ent->s.pos.trBase, 0, sizeof(vec3_t));
-	memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
-	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
-	client->deltaMessage = -1;
-	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-	*/
 	//ent->s.eFlags ^= EF_TELEPORT_BIT;
 	//ps->eFlags ^= EF_TELEPORT_BIT;
 
-/*
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
 		ent = SV_GentityNum(i);
-		if(ent->s.clientNum == clientNum && (ent->s.eFlags & (ET_EVENTS + EV_PLAYER_TELEPORT_IN))) {
-			ps = SV_GameClientNum(i);
-			memcpy(&ps->origin, &oldOrigin, sizeof(vec3_t));
-			memcpy(&ent->s.origin, &oldOrigin, sizeof(vec3_t));
-			memcpy(&ent->s.origin2, &oldOrigin, sizeof(vec3_t));
-			memcpy(&ent->s.pos.trBase, &oldOrigin, sizeof(vec3_t));
+		if(ent->s.clientNum == clientNum 
+			&& i != clientNum
+			&& (ent->s.eType == (ET_EVENTS + EV_PLAYER_TELEPORT_IN))) {
+			ps2 = SV_GameClientNum(i);
+			memcpy(&ps2->origin, &ps->origin, sizeof(vec3_t));
+			memcpy(&ent->s.origin, &ps->origin, sizeof(vec3_t));
+			memcpy(&ent->s.origin2, &ps->origin, sizeof(vec3_t));
+			memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+			memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
 			memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-			memcpy(&ent->r.currentOrigin, &oldOrigin, sizeof(vec3_t));
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
-Com_Printf( "Teleport: %f - %f\n", ent->r.currentOrigin[0], oldOrigin[0] );
 		}
 	}
-*/
 }
 #endif
 
