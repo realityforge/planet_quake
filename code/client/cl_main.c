@@ -3567,7 +3567,6 @@ static int thirdTimer = 0;
 void CL_Frame( int msec ) {
 	float fps;
 	float frameDuration;
-	int i;
 	unsigned result;
 
 #ifdef USE_CURL	
@@ -4528,7 +4527,7 @@ void CL_LoadVM_f( void ) {
 	char *name;
 	
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+		Com_Printf( "Usage: %s <game|cgame|ui> [mapname]\n", Cmd_Argv( 0 ) );
 		return;
 	}
 
@@ -4538,6 +4537,11 @@ void CL_LoadVM_f( void ) {
 		CL_AddReliableCommand( "load game", qfalse );
 		//CL_ForwardCommandToServer("load game");
 	} else if ( !Q_stricmp( name, "cgame" ) ) {
+		if(Cmd_Argc() > 3) {
+			Com_Printf( "Usage: %s <game|cgame|ui> [numclient]\n", Cmd_Argv( 0 ) );
+			return;
+		}
+
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(cgvms[i]) count++;
@@ -4581,6 +4585,15 @@ void CL_Tele_f ( void ) {
 	}
 
 	CL_AddReliableCommand( va("tele %s", Cmd_ArgsFrom(1)), qfalse );
+}
+
+void CL_Game_f ( void ) {
+	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
+		Com_Printf ("Usage: game [num]\n");
+		return;
+	}
+
+	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
 }
 #endif
 
@@ -4833,6 +4846,8 @@ void CL_Init( void ) {
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load [ui|cgame|game]");
 	Cmd_AddCommand ("tele", CL_Tele_f);
 	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
+	Cmd_AddCommand ("game", CL_Game_f);
+	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [num]" );
 #endif
 
 	SCR_Init();

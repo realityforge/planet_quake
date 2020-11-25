@@ -30,6 +30,7 @@ extern	botlib_export_t	*botlib_export;
 //extern qboolean loadCamera(const char *name);
 //extern void startCamera(int time);
 //extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
+int clientWorlds[MAX_NUM_VMS];
 
 /*
 ====================
@@ -499,7 +500,7 @@ Just adds default parameters that cgame doesn't need to know about
 static void CL_CM_LoadMap( const char *mapname ) {
 	int		checksum;
 
-	CM_LoadMap( mapname, qtrue, &checksum );
+	clientWorlds[cgvm] = CM_LoadMap( mapname, qtrue, &checksum );
 }
 
 

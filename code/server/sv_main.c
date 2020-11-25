@@ -24,8 +24,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
-int        gvm = 0;
+int       gvm = 0;
 vm_t			*gvms[MAX_NUM_VMS] = {};		// game virtual machine
+int       gameWorlds[MAX_NUM_VMS];
 
 cvar_t	*sv_fps;				// time rate for running non-clients
 cvar_t	*sv_timeout;			// seconds without any message
@@ -1494,7 +1495,13 @@ void SV_Frame( int msec ) {
 		sv.time += frameMsec;
 
 		// let everything in the world think and move
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(!gvms[i]) continue;
+			gvm = i;
+			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		}
+		gvm = 0;
+		
 #ifdef USE_MV
 		svs.emptyFrame = qfalse; // ok, run recorder
 #endif

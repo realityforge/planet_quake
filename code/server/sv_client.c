@@ -2226,14 +2226,23 @@ void SV_PrintLocations_f( client_t *client ) {
 void SV_LoadVM_f( client_t *cl ) {
 	vmIndex_t index;
 	char *name;
-	int i;
+	int checksum;
+	int i, previous;
 
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(gvms[i]) continue;
 		else {
+			previous = gameWorlds[i];
 			gvm = i;
 			break;
 		}
+	}
+	name = Cmd_Argv(1);
+	if(name[0] == '\0') {
+		gameWorlds[gvm] = previous;
+	} else {
+		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", name ), qfalse, &checksum );
+		Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
 	}
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
@@ -2294,7 +2303,6 @@ void SV_Tele_f( client_t *client ) {
 
 	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time + 100 );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
 
@@ -2320,6 +2328,11 @@ void SV_Tele_f( client_t *client ) {
 	} else {
 		// accept new position
 	}
+	// put up a little so it can drop to the floor on the next frame and 
+	//   doesn't bounce with tracing/lerping to the floor
+	ps->origin[2] = oldOrigin[2] + 9.0f;
+	memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+	//memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
 	//ent->s.eFlags ^= EF_TELEPORT_BIT;
 	//ps->eFlags ^= EF_TELEPORT_BIT;
 
@@ -2338,6 +2351,40 @@ void SV_Tele_f( client_t *client ) {
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
+
+	/*
+	sv.time += 100;
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	SV_BotFrame( sv.time );
+	svs.time += 100;
+	*/
+}
+
+void SV_Game_f( client_t *client ) {
+	int worldC, count = 0, i;
+	char *world;
+	if(!client) return;
+	
+	world = Cmd_Argv(1);
+	if(world[0] != '\0') {
+		worldC = atoi(world);
+	} else {
+		worldC = client->gameWorld + 1;
+	}
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(!gvms[i]) continue;
+		if(count == worldC) break;
+		count++;
+	}
+	if(worldC > count) {
+		return;
+	} else {
+		gvm = i;
+	}
+	
+	client->gameWorld = gvm;
+	SV_Tele_f(client);
+	gvm = 0;
 }
 #endif
 
@@ -2359,7 +2406,7 @@ static const ucmd_t ucmds[] = {
 #ifdef USE_MULTIVM
 	{"load", SV_LoadVM_f},
 	{"tele", SV_Tele_f},
-	//{"game", SV_Game_f},
+	{"game", SV_Game_f},
 #endif
 #ifdef USE_MV
 	{"mvjoin", SV_MultiView_f},

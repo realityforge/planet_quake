@@ -170,6 +170,7 @@ typedef struct {
 
 	int			floodvalid;
 	int			checkcount;					// incremented on each trace
+	int     checksum;
 } clipMap_t;
 
 

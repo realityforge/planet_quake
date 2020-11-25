@@ -301,6 +301,9 @@ typedef struct client_s {
 		
 	} multiview;
 #endif // USE_MV
+#ifdef USE_MULTIVM
+	int gameWorld;
+#endif
 
 } client_t;
 
@@ -360,6 +363,7 @@ typedef struct
 
 extern	serverStatic_t	svs;				// persistant server info across maps
 extern	server_t		sv;					// cleared each map
+extern  int    gameWorlds[MAX_NUM_VMS];
 
 extern	cvar_t	*sv_fps;
 extern	cvar_t	*sv_timeout;

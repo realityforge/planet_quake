@@ -619,7 +619,7 @@ CM_LoadMap
 Loads in the map and all submodels
 ==================
 */
-void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
+int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	union {
 		int				*i;
 		void			*v;
@@ -627,7 +627,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	int				i;
 	dheader_t		header;
 	int				length;
-	static unsigned	last_checksum;
 
 	if ( !name || !name[0] ) {
 		Com_Error( ERR_DROP, "CM_LoadMap: NULL name" );
@@ -643,13 +642,17 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
-	if ( !strcmp( cms[cm].name, name ) && clientload ) {
-		*checksum = last_checksum;
-		return;
+	for(int i = 0; i < MAX_NUM_MAPS; i++) {
+		cm = i;
+		if(!cms[cm].name[0]) break;
+		if ( !strcmp( cms[cm].name, name ) /* && clientload */ ) {
+			*checksum = cms[cm].checksum;
+			return cm;
+		}
 	}
 
 	// free old stuff
-	Com_Memset( &cm, 0, sizeof( cm ) );
+	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
 	CM_ClearLevelPatches();
 
 	if ( !name[0] ) {
@@ -658,7 +661,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		cms[cm].numAreas = 1;
 		cms[cm].cmodels = Hunk_Alloc( sizeof( *cms[cm].cmodels ), h_high );
 		*checksum = 0;
-		return;
+		return cm;
 	}
 
 	//
@@ -674,8 +677,8 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		Com_Error (ERR_DROP, "Couldn't load %s", name);
 	}
 
-	last_checksum = LittleLong (Com_BlockChecksum (buf.i, length));
-	*checksum = last_checksum;
+	cms[cm].checksum = LittleLong (Com_BlockChecksum (buf.i, length));
+	*checksum = cms[cm].checksum;
 
 	header = *(dheader_t *)buf.i;
 	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
@@ -715,9 +718,11 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	CM_FloodAreaConnections();
 
 	// allow this to be cached if it is loaded by the server
-	if ( !clientload ) {
+	//if ( !clientload ) {
 		Q_strncpyz( cms[cm].name, name, sizeof( cms[cm].name ) );
-	}
+	//}
+	
+	return cm;
 }
 
 
@@ -727,7 +732,7 @@ CM_ClearMap
 ==================
 */
 void CM_ClearMap( void ) {
-	Com_Memset( &cm, 0, sizeof( cm ) );
+	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
 	CM_ClearLevelPatches();
 }
 
