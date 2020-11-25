@@ -4534,7 +4534,7 @@ void CL_LoadVM_f( void ) {
 	name = Cmd_Argv( 1 );
 
 	if ( !Q_stricmp( name, "game" ) ) {
-		CL_AddReliableCommand( "load game", qfalse );
+		CL_AddReliableCommand( va("load %s", Cmd_ArgsFrom(1)), qfalse );
 		//CL_ForwardCommandToServer("load game");
 	} else if ( !Q_stricmp( name, "cgame" ) ) {
 		if(Cmd_Argc() > 3) {
@@ -4588,7 +4588,7 @@ void CL_Tele_f ( void ) {
 }
 
 void CL_Game_f ( void ) {
-	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
+	if ( Cmd_Argc() > 2 ) {
 		Com_Printf ("Usage: game [num]\n");
 		return;
 	}

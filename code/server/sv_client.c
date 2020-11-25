@@ -2237,12 +2237,12 @@ void SV_LoadVM_f( client_t *cl ) {
 			break;
 		}
 	}
-	name = Cmd_Argv(1);
+	name = Cmd_Argv(2);
 	if(name[0] == '\0') {
 		gameWorlds[gvm] = previous;
 	} else {
 		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", name ), qfalse, &checksum );
-		Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
+		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
@@ -2363,7 +2363,10 @@ void SV_Tele_f( client_t *client ) {
 void SV_Game_f( client_t *client ) {
 	int worldC, count = 0, i;
 	char *world;
+	int clientNum;
+	qboolean found = qfalse, tryAgain = qtrue;
 	if(!client) return;
+	clientNum = client - svs.clients;
 	
 	world = Cmd_Argv(1);
 	if(world[0] != '\0') {
@@ -2371,18 +2374,29 @@ void SV_Game_f( client_t *client ) {
 	} else {
 		worldC = client->gameWorld + 1;
 	}
+resetwithcount:
+	count = 0;
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!gvms[i]) continue;
-		if(count == worldC) break;
+		if(count == worldC) {
+			found = qtrue;
+			count++;
+			break;
+		}
 		count++;
 	}
-	if(worldC > count) {
+	if(!found) {
+		if(tryAgain) {
+			tryAgain = qfalse;
+			worldC = worldC % count;
+			goto resetwithcount;
+		}
 		return;
-	} else {
-		gvm = i;
 	}
 	
-	client->gameWorld = gvm;
+	Com_Printf("Switching worlds (client %i): %i -> %i\n", clientNum, client->gameWorld, i);
+	client->gameWorld = i;
+	gvm = client->gameWorld;
 	SV_Tele_f(client);
 	gvm = 0;
 }
