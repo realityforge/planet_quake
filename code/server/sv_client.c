@@ -2249,7 +2249,7 @@ void SV_LoadVM_f( client_t *cl ) {
 }
 
 void SV_Tele_f( client_t *client ) {
-	int		clientNum;
+	int		clientNum, i;
 	vec3_t oldOrigin, oldAngles;
 	char *newOrigin[3];
 	sharedEntity_t *ent;
@@ -2262,7 +2262,7 @@ void SV_Tele_f( client_t *client ) {
 
 	// resend all configstrings using the cs commands since these are
 	// no longer sent when the client is CS_PRIMED
-	SV_UpdateConfigstrings( client );
+	//SV_UpdateConfigstrings( client );
 
 	// set up the entity for the client
 	clientNum = client - svs.clients;
@@ -2270,9 +2270,12 @@ void SV_Tele_f( client_t *client ) {
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	ps = SV_GameClientNum( clientNum );
-	memcpy(oldOrigin, ps->origin, sizeof(oldOrigin));
-	memcpy(oldAngles, ps->viewangles, sizeof(oldAngles));
-	memset(ps->viewangles, 0, sizeof(ps->viewangles));
+	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
+	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
+	memset(ent->s.angles, 0, sizeof(vec3_t));
+	memset(ent->s.angles2, 0, sizeof(vec3_t));
+	memset(ps->viewangles, 0, sizeof(vec3_t));
+	memset(ps->delta_angles, 0, sizeof(vec3_t));
 	newOrigin[0] = Cmd_Argv(1);
 	newOrigin[1] = Cmd_Argv(2);
 	newOrigin[2] = Cmd_Argv(3);
@@ -2281,10 +2284,11 @@ void SV_Tele_f( client_t *client ) {
 
 	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
+	//VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time + 100 );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
 
-	for(int i = 0; i < 3; i++) {
+	for(i = 0; i < 3; i++) {
 		if(newOrigin[i][0] != '\0') {
 			anyOrigin = qtrue;
 			if(newOrigin[i][0] == '-') {
@@ -2298,23 +2302,39 @@ void SV_Tele_f( client_t *client ) {
 			ps->origin[i] = oldOrigin[i];
 		}
 	}
+	memcpy(&oldOrigin, &ps->origin, sizeof(vec3_t));
 
 	if(anyOrigin) {
 		//memcpy(ent->s.angles, oldAngles, sizeof(oldAngles));
 	}
-	//memcpy(ps->viewangles, oldAngles, sizeof(oldAngles));
-	ent->s.angles[0] =
-	ent->s.angles[1] =
-	ent->s.angles[2] =
-	ent->s.angles2[0] =
-	ent->s.angles2[1] =
-	ent->s.angles2[2] =
-	ps->viewangles[0] = 
-	ps->viewangles[1] = 
-	ps->viewangles[2] = 0;
-	ps->delta_angles[0] = oldAngles[0];
-	ps->delta_angles[1] = oldAngles[1];
-	ps->delta_angles[2] = oldAngles[2];
+	/*
+	memcpy(ent->s.angles, oldAngles, sizeof(vec3_t));
+	memcpy(ent->s.angles2, oldAngles, sizeof(vec3_t));
+	memcpy(ps->viewangles, oldAngles, sizeof(vec3_t));
+	memcpy(ps->delta_angles, oldAngles, sizeof(vec3_t));
+	*/
+	memset(&ps->viewangles, 0, sizeof(vec3_t));
+	memset(&ps->delta_angles, 0, sizeof(vec3_t));
+	memset(&ent->s.angles, 0, sizeof(vec3_t));
+	memset(&ent->s.angles2, 0, sizeof(vec3_t));
+	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
+	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
+	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
+
+	for(i = 0; i < sv.num_entities[gvm]; i++) {
+		ent = SV_GentityNum(i);
+		if(ent->s.clientNum == clientNum && (ent->s.eFlags & (ET_EVENTS + EV_PLAYER_TELEPORT_IN))) {
+			ps = SV_GameClientNum(i);
+			memcpy(&ps->origin, &oldOrigin, sizeof(vec3_t));
+			memcpy(&ent->s.origin, &oldOrigin, sizeof(vec3_t));
+			memcpy(&ent->s.origin2, &oldOrigin, sizeof(vec3_t));
+			memcpy(&ent->s.pos.trBase, &oldOrigin, sizeof(vec3_t));
+			memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
+			memcpy(&ent->r.currentOrigin, &oldOrigin, sizeof(vec3_t));
+			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
+Com_Printf( "Teleport: %f - %f\n", ent->r.currentOrigin[0], oldOrigin[0] );
+		}
+	}
 }
 #endif
 
