@@ -524,6 +524,7 @@ void SV_GetUserinfo( int index, char *buffer, int bufferSize );
 
 void SV_ChangeMaxClients( void );
 void SV_SpawnServer( const char *mapname, qboolean killBots );
+void SV_CreateBaseline( void );
 void SV_BoundMaxClients( int minimum );
 void SV_SetSnapshotParams( void );
 
@@ -553,7 +554,7 @@ int SV_SendQueuedMessages( void );
 
 void SV_FreeIP4DB( void );
 void SV_PrintLocations_f( client_t *client );
-void SV_LoadVM_f( void );
+void SV_LoadVM_f( client_t *client );
 
 //
 // sv_ccmds.c

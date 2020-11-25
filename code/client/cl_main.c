@@ -4573,6 +4573,15 @@ void CL_LoadVM_f( void ) {
 	}
 	//Cbuf_AddText("vid_restart fast\n");
 }
+
+void CL_Tele_f ( void ) {
+	if ( Cmd_Argc() > 3 || Cmd_Argc() == 2 ) {
+		Com_Printf ("Usage: tele [xcoord ycoord]\n");
+		return;
+	}
+
+	CL_AddReliableCommand( va("tele %s", Cmd_ArgsFrom(1)), qfalse );
+}
 #endif
 
 
@@ -4822,6 +4831,8 @@ void CL_Init( void ) {
 #ifdef USE_MULTIVM
 	Cmd_AddCommand( "load", CL_LoadVM_f );
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load [ui|cgame|game]");
+	Cmd_AddCommand ("tele", CL_Tele_f);
+	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord ycoord]" );
 #endif
 
 	SCR_Init();

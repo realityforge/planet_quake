@@ -2223,7 +2223,7 @@ void SV_PrintLocations_f( client_t *client ) {
 }
 
 #ifdef USE_MULTIVM
-void SV_LoadVM_f( void ) {
+void SV_LoadVM_f( client_t *cl ) {
 	vmIndex_t index;
 	char *name;
 	int i;
@@ -2237,7 +2237,40 @@ void SV_LoadVM_f( void ) {
 	}
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
+	for ( i = 0; i < 3; i++ )
+	{
+		sv.time += 100;
+		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		SV_BotFrame( sv.time );
+	}
+	SV_CreateBaseline();
+
 	gvm = 0;
+}
+
+void SV_Tele_f( client_t *client ) {
+	int		clientNum;
+	sharedEntity_t *ent;
+
+	if(!client) return;
+	
+	client->state = CS_ACTIVE;
+
+	// resend all configstrings using the cs commands since these are
+	// no longer sent when the client is CS_PRIMED
+	SV_UpdateConfigstrings( client );
+
+	// set up the entity for the client
+	clientNum = client - svs.clients;
+	ent = SV_GentityNum( clientNum );
+	ent->s.number = clientNum;
+	client->gentity = ent;
+	//client->deltaMessage = -1;
+	//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+
+	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );	
 }
 #endif
 
@@ -2258,6 +2291,8 @@ static const ucmd_t ucmds[] = {
 	{"locations", SV_PrintLocations_f},
 #ifdef USE_MULTIVM
 	{"load", SV_LoadVM_f},
+	{"tele", SV_Tele_f},
+	//{"game", SV_Game_f},
 #endif
 #ifdef USE_MV
 	{"mvjoin", SV_MultiView_f},
