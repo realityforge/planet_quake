@@ -2250,7 +2250,11 @@ void SV_LoadVM_f( client_t *cl ) {
 
 void SV_Tele_f( client_t *client ) {
 	int		clientNum;
+	vec3_t oldOrigin, oldAngles;
+	char *newOrigin[3];
 	sharedEntity_t *ent;
+	playerState_t	*ps;
+	qboolean anyOrigin;
 
 	if(!client) return;
 	
@@ -2265,12 +2269,52 @@ void SV_Tele_f( client_t *client ) {
 	ent = SV_GentityNum( clientNum );
 	ent->s.number = clientNum;
 	client->gentity = ent;
+	ps = SV_GameClientNum( clientNum );
+	memcpy(oldOrigin, ps->origin, sizeof(oldOrigin));
+	memcpy(oldAngles, ps->viewangles, sizeof(oldAngles));
+	memset(ps->viewangles, 0, sizeof(ps->viewangles));
+	newOrigin[0] = Cmd_Argv(1);
+	newOrigin[1] = Cmd_Argv(2);
+	newOrigin[2] = Cmd_Argv(3);
 	//client->deltaMessage = -1;
 	//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
+	ent = SV_GentityNum( clientNum );
+	ps = SV_GameClientNum( clientNum );
 
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );	
+	for(int i = 0; i < 3; i++) {
+		if(newOrigin[i][0] != '\0') {
+			anyOrigin = qtrue;
+			if(newOrigin[i][0] == '-') {
+				ps->origin[i] = oldOrigin[i] - atoi(&newOrigin[i][1]);
+			} else if (newOrigin[i][0] == '+') {
+				ps->origin[i] = oldOrigin[i] + atoi(&newOrigin[i][1]);
+			} else {
+				ps->origin[i] = atoi(newOrigin[i]);
+			}
+		} else {
+			ps->origin[i] = oldOrigin[i];
+		}
+	}
+
+	if(anyOrigin) {
+		//memcpy(ent->s.angles, oldAngles, sizeof(oldAngles));
+	}
+	//memcpy(ps->viewangles, oldAngles, sizeof(oldAngles));
+	ent->s.angles[0] =
+	ent->s.angles[1] =
+	ent->s.angles[2] =
+	ent->s.angles2[0] =
+	ent->s.angles2[1] =
+	ent->s.angles2[2] =
+	ps->viewangles[0] = 
+	ps->viewangles[1] = 
+	ps->viewangles[2] = 0;
+	ps->delta_angles[0] = oldAngles[0];
+	ps->delta_angles[1] = oldAngles[1];
+	ps->delta_angles[2] = oldAngles[2];
 }
 #endif
 

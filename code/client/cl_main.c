@@ -4575,8 +4575,8 @@ void CL_LoadVM_f( void ) {
 }
 
 void CL_Tele_f ( void ) {
-	if ( Cmd_Argc() > 3 || Cmd_Argc() == 2 ) {
-		Com_Printf ("Usage: tele [xcoord ycoord]\n");
+	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
+		Com_Printf ("Usage: tele [xcoord zcoord ycoord]\n");
 		return;
 	}
 
@@ -4832,7 +4832,7 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "load", CL_LoadVM_f );
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load [ui|cgame|game]");
 	Cmd_AddCommand ("tele", CL_Tele_f);
-	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord ycoord]" );
+	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
 #endif
 
 	SCR_Init();

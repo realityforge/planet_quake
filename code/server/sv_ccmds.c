@@ -1532,8 +1532,8 @@ void SV_SwitchGame_f ( void ) {
 
 void SV_Teleport_f (void) {
 
-	if ( Cmd_Argc() > 3 || Cmd_Argc() == 2 ) {
-		Com_Printf ("Usage: teleport <client> [xcoord ycoord]\n");
+	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
+		Com_Printf ("Usage: teleport <client> [xcoord zcoord ycoord]\n");
 		return;
 	}
 	
@@ -1647,7 +1647,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("switchgame", SV_SwitchGame_f);
 	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
 	Cmd_AddCommand ("teleport", SV_Teleport_f);
-	Cmd_SetDescription( "teleport", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord ycoord]" );
+	Cmd_SetDescription( "teleport", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
 #endif
 }
 
