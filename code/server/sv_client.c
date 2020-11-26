@@ -2263,126 +2263,85 @@ void SV_LoadVM_f( client_t *cl ) {
 	gvm = 0;
 }
 
-void SV_Tele_f( client_t *client ) {
+typedef enum {
+	SPAWNORIGIN,
+	SAMEORIGIN,
+	COPYORIGIN,
+	MOVEORIGIN,
+} origin_enum_t;
+
+void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum, i;
-	vec3_t oldOrigin, oldAngles;
+	vec3_t oldOrigin;
 	int oldDelta[3];
-	char *newOrigin[3];
 	sharedEntity_t *ent;
 	playerState_t	*ps, *ps2, oldps;
-	gentity_t *gent, oldEnt;
-
-	if(!client) return;
+	//gentity_t *gent, oldEnt;
 	
 	client->state = CS_ACTIVE;
 
 	// set up the entity for the client
 	clientNum = client - svs.clients;
+	// TODO: move to same position in new world, or save position in both worlds?
+	if(client->gameWorld != newWorld) {
+		
+	}
+
+	gvm = client->gameWorld;
 	ent = SV_GentityNum( clientNum );
-	gent = (gentity_t *)ent;
 	ps = SV_GameClientNum( clientNum );
-	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
-	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
 	memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
 	memcpy(&oldps, ps, sizeof(playerState_t));
-	memcpy(&oldEnt, gent, sizeof(gentity_t));
-/*
-TODO: fix PAD
-Com_Printf("Update client:");
-	for(i = 0; i < sizeof(gentity_t); i++) {
-		if(((byte *)gent)[i] > 120 && ((byte *)gent)[i] <= 125) {
-			Com_Printf("(%i)", i);
+
+	if(client->gameWorld != newWorld) {
+		client->gameWorld = newWorld;
+		gvm = client->gameWorld;
+		SV_UpdateConfigstrings( client );
+		if(ent->s.eType == 0) {
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			/*
+			client->state = CS_PRIMED;
+			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			client->lastPacketTime = svs.time;
+			client->lastConnectTime = svs.time;
+			client->lastDisconnectTime = svs.time;
+			client->justConnected = qtrue;
+			SV_SendClientGameState( client );
+			*/
+		} else {
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 		}
-		Com_Printf("%i ", ((byte *)gent)[i]);
 	}
-	Com_Printf("\n");
-Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
-*/
-	/*
-	memset(&ps->viewangles, 0, sizeof(vec3_t));
-	memset(&ps->delta_angles, 0, sizeof(vec3_t));
-	memset(&ps->origin, 0, sizeof(vec3_t));
-	memset(&ent->r.currentOrigin, 0, sizeof(vec3_t));
-	memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
-	memset(&ent->s.angles, 0, sizeof(vec3_t));
-	memset(&ent->s.angles2, 0, sizeof(vec3_t));
-	memset(&ent->s.origin, 0, sizeof(vec3_t));
-	memset(&ent->s.origin2, 0, sizeof(vec3_t));
-	memset(&ent->s.pos.trBase, 0, sizeof(vec3_t));
-	memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-	memset(&ent->s.apos.trBase, 0, sizeof(vec3_t));
-	memset(&ent->s.apos.trDelta, 0, sizeof(vec3_t));
-	*/
-	newOrigin[0] = Cmd_Argv(1);
-	newOrigin[1] = Cmd_Argv(2);
-	newOrigin[2] = Cmd_Argv(3);
-Com_Printf("Update client: %i\n", (int)ent);
-	
-	gvm = client->gameWorld;
-	SV_UpdateConfigstrings( client );
-	if(ent->s.eType == 0) {
-		VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
-		/*
-		client->state = CS_PRIMED;
-		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-		client->lastPacketTime = svs.time;
-		client->lastConnectTime = svs.time;
-		client->lastDisconnectTime = svs.time;
-		client->justConnected = qtrue;
-		SV_SendClientGameState( client );
-		*/
-	} else {
-		VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
-	}
+
 	ent = SV_GentityNum( clientNum );
+	ps = SV_GameClientNum( clientNum );
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	//client->deltaMessage = -1;
 	//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 	//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
-	ent = SV_GentityNum( clientNum );
-	ps = SV_GameClientNum( clientNum );
-Com_Printf("Update client: %i\n", (int)ent);
 
-	if(newOrigin[0][0] != '\0'
-    || newOrigin[1][0] != '\0'
-	  || newOrigin[2][0] != '\0') {
-		for(i = 0; i < 3; i++) {
-			if(newOrigin[i][0] != '\0') {
-				// TODO: calculate direction change relative to oldAngles
-				if(newOrigin[i][0] == '-') {
-					ps->origin[i] = oldOrigin[i] - atoi(&newOrigin[i][1]);
-				} else if (newOrigin[i][0] == '+') {
-					ps->origin[i] = oldOrigin[i] + atoi(&newOrigin[i][1]);
-				} else {
-					ps->origin[i] = atoi(newOrigin[i]);
-				}
-			} else {
-				ps->origin[i] = oldOrigin[i];
-			}
-		}
+	// if copy, keeping the original/same, or moving origins,
+	//   we need to reset a few things
+	//   default is same origin, so it appears as though you haven't moved
+	//   when changing worlds
+	if(changeOrigin > SPAWNORIGIN) {
+		// keep the same view angles if changing origins
 		ps->delta_angles[0] = oldDelta[0];
 		ps->delta_angles[1] = oldDelta[1];
 		ps->delta_angles[2] = oldDelta[2];
-	} else {
-		// accept new position
+
+		// put up a little so it can drop to the floor on the next frame and 
+		//   doesn't bounce with tracing/lerping to the floor
+		ps->origin[2] = ps->origin[2] + 9.0f;
+		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
 	}
-	// put up a little so it can drop to the floor on the next frame and 
-	//   doesn't bounce with tracing/lerping to the floor
-	ps->origin[2] = ps->origin[2] + 9.0f;
-	memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
 
 	// restore player stats
 	memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
 	memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
 	memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
-	//memcpy(&gent->health, &oldEnt.health, sizeof(gent->health));
-	//memcpy(&gent->client->pers, &oldEnt.client->pers, sizeof(gent->client->pers));
-	//memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
-	//memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
-	//ent->s.eFlags ^= EF_TELEPORT_BIT;
-	//ps->eFlags ^= EF_TELEPORT_BIT;
 
 	// Move Teleporter Res entity to follow player anywhere
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
@@ -2393,28 +2352,66 @@ Com_Printf("Update client: %i\n", (int)ent);
 			ps2 = SV_GameClientNum(i);
 			memcpy(&ps2->origin, &ps->origin, sizeof(vec3_t));
 			memcpy(&ent->s.origin, &ps->origin, sizeof(vec3_t));
-			memcpy(&ent->s.origin2, &ps->origin, sizeof(vec3_t));
+			//memcpy(&ent->s.origin2, &ps->origin, sizeof(vec3_t));
 			memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
-			memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
-			memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
+			//memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
+			//memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
+			//memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
+	gvm = 0;
+}
 
-	/*
-	sv.time += 100;
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
-	SV_BotFrame( sv.time );
-	svs.time += 100;
-	*/
+void SV_Tele_f( client_t *client ) {
+	vec3_t oldOrigin, newOrigin = {0.0, 0.0, 0.0};
+	char *userOrigin[3];
+	playerState_t	*ps;
+
+	if(!client) return;
+
+	userOrigin[0] = Cmd_Argv(1);
+	userOrigin[1] = Cmd_Argv(2);
+	userOrigin[2] = Cmd_Argv(3);
+
+	if(userOrigin[0][0] != '\0'
+    || userOrigin[1][0] != '\0'
+	  || userOrigin[2][0] != '\0') {
+
+		gvm = client->gameWorld;
+		ps = SV_GameClientNum( clientNum );
+		memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
+
+		for(i = 0; i < 3; i++) {
+			if(newOrigin[i][0] != '\0') {
+				// TODO: calculate direction change relative to oldAngles
+				if(newOrigin[i][0] == '-') {
+					newOrigin[i] = oldOrigin[i] - atoi(&userOrigin[i][1]);
+				} else if (newOrigin[i][0] == '+') {
+					newOrigin[i] = oldOrigin[i] + atoi(&userOrigin[i][1]);
+				} else {
+					newOrigin[i] = atoi(userOrigin[i]);
+				}
+			} else {
+				newOrigin[i] = oldOrigin[i];
+			}
+		}
+		SV_Teleport(client, client->gameWorld, MOVEORIGIN, &newOrigin);
+	} else {
+		// accept new position
+		SV_Teleport(client, client->gameWorld, SPAWNORIGIN, &newOrigin);
+	}	
+
 	gvm = 0;
 }
 
 void SV_Game_f( client_t *client ) {
 	int worldC, count = 0, i;
-	char *world;
+	char *world, *userOrigin;
 	int clientNum;
+	origin_enum_t changeOrigin;
 	qboolean found = qfalse, tryAgain = qtrue;
+	vec3_t newOrigin = {0.0, 0.0, 0.0};
+
 	if(!client) return;
 	clientNum = client - svs.clients;
 	
@@ -2424,6 +2421,16 @@ void SV_Game_f( client_t *client ) {
 	} else {
 		worldC = client->gameWorld + 1;
 	}
+	
+	userOrigin = Cmd_Argv(2);
+	if(changeOrigin[0] == '0') {
+		changeOrigin = SPAWNORIGIN;
+	} else if(changeOrigin[0] == '2') {
+		changeOrigin = COPYORIGIN;
+	} else {
+		changeOrigin = SAMEORIGIN;
+	}
+
 resetwithcount:
 	count = 0;
 	for(i = 0; i < MAX_NUM_VMS; i++) {
@@ -2449,8 +2456,7 @@ resetwithcount:
 	}
 	
 	Com_Printf("Switching worlds (client %i): %i -> %i\n", clientNum, client->gameWorld, i);
-	client->gameWorld = i;
-	SV_Tele_f(client);
+	SV_Teleport(client, i, changeOrigin, &newOrigin);
 }
 #endif
 

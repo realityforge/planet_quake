@@ -645,6 +645,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	// create a baseline for more efficient communications
 	SV_CreateBaseline();
+	Cmd_Clear();
 	Cmd_TokenizeString("load game");
 	SV_LoadVM_f( NULL );
 
