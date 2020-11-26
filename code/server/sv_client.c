@@ -1037,6 +1037,9 @@ gotnewcl:
 		SV_SaveSequences();
 	}
 
+	newcl->gameWorld = 1;
+	gvm = 1;
+
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
@@ -1089,6 +1092,8 @@ gotnewcl:
 	if ( count == 1 || count == sv_maxclients->integer ) {
 		SV_Heartbeat_f();
 	}
+	
+	gvm = 0;
 }
 
 
@@ -2271,23 +2276,19 @@ void SV_Tele_f( client_t *client ) {
 	
 	client->state = CS_ACTIVE;
 
-	// resend all configstrings using the cs commands since these are
-	// no longer sent when the client is CS_PRIMED
-	//SV_UpdateConfigstrings( client );
-
 	// set up the entity for the client
 	clientNum = client - svs.clients;
 	ent = SV_GentityNum( clientNum );
 	gent = (gentity_t *)ent;
-	ent->s.number = clientNum;
-	client->gentity = ent;
 	ps = SV_GameClientNum( clientNum );
 	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
 	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
 	memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
 	memcpy(&oldps, ps, sizeof(playerState_t));
 	memcpy(&oldEnt, gent, sizeof(gentity_t));
-	Com_Printf("Update client:");
+/*
+TODO: fix PAD
+Com_Printf("Update client:");
 	for(i = 0; i < sizeof(gentity_t); i++) {
 		if(((byte *)gent)[i] > 120 && ((byte *)gent)[i] <= 125) {
 			Com_Printf("(%i)", i);
@@ -2296,6 +2297,7 @@ void SV_Tele_f( client_t *client ) {
 	}
 	Com_Printf("\n");
 Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
+*/
 	/*
 	memset(&ps->viewangles, 0, sizeof(vec3_t));
 	memset(&ps->delta_angles, 0, sizeof(vec3_t));
@@ -2314,11 +2316,34 @@ Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
 	newOrigin[0] = Cmd_Argv(1);
 	newOrigin[1] = Cmd_Argv(2);
 	newOrigin[2] = Cmd_Argv(3);
-
-	VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+Com_Printf("Update client: %i\n", (int)ent);
+	
+	gvm = client->gameWorld;
+	SV_UpdateConfigstrings( client );
+	if(ent->s.eType == 0) {
+		VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+		/*
+		client->state = CS_PRIMED;
+		client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+		client->lastPacketTime = svs.time;
+		client->lastConnectTime = svs.time;
+		client->lastDisconnectTime = svs.time;
+		client->justConnected = qtrue;
+		SV_SendClientGameState( client );
+		*/
+	} else {
+		VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+	}
+	ent = SV_GentityNum( clientNum );
+	ent->s.number = clientNum;
+	client->gentity = ent;
+	//client->deltaMessage = -1;
+	//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+	//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
+Com_Printf("Update client: %i\n", (int)ent);
 
 	if(newOrigin[0][0] != '\0'
     || newOrigin[1][0] != '\0'
@@ -2347,6 +2372,7 @@ Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
 	//   doesn't bounce with tracing/lerping to the floor
 	ps->origin[2] = ps->origin[2] + 9.0f;
 	memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+
 	// restore player stats
 	memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
 	memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
@@ -2357,9 +2383,8 @@ Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
 	//memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
 	//ent->s.eFlags ^= EF_TELEPORT_BIT;
 	//ps->eFlags ^= EF_TELEPORT_BIT;
-	client->deltaMessage = -1;
-	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
+	// Move Teleporter Res entity to follow player anywhere
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
 		ent = SV_GentityNum(i);
 		if(ent->s.clientNum == clientNum 
@@ -2382,6 +2407,7 @@ Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
 	SV_BotFrame( sv.time );
 	svs.time += 100;
 	*/
+	gvm = 0;
 }
 
 void SV_Game_f( client_t *client ) {
