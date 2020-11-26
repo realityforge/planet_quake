@@ -1037,9 +1037,6 @@ gotnewcl:
 		SV_SaveSequences();
 	}
 
-	newcl->gameWorld = 1;
-	gvm = 1;
-
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {

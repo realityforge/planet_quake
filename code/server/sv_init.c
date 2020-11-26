@@ -645,9 +645,6 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	// create a baseline for more efficient communications
 	SV_CreateBaseline();
-	Cmd_Clear();
-	Cmd_TokenizeString("load game");
-	SV_LoadVM_f( NULL );
 
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
@@ -672,6 +669,7 @@ void SV_SpawnServer_After_Startup( void ) {
 				continue;
 			}
 #endif
+
 			// connect the client again
 			denied = GVM_ArgPtr( VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
 			if ( denied ) {

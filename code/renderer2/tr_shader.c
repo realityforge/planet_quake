@@ -2242,6 +2242,16 @@ static qboolean ParseShader( const char **text )
 			ParseSort( text );
 			continue;
 		}
+    else if (!Q_stricmp( token, "translucent" ) )
+		{
+			shader.contentFlags |= CONTENTS_TRANSLUCENT;
+			continue;
+		}
+		else if (!Q_stricmp( token, "twosided" ) )
+		{
+			shader.cullType = CT_TWO_SIDED;
+			continue;
+		}
 		// conditional stage definition
 		else if ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "else" ) || !Q_stricmp( token, "elif" ) )
 		{

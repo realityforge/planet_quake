@@ -255,7 +255,8 @@ var LibrarySysMain = {
   Sys_PlatformInit__deps: ['$SYSC', '$SYSM'],
   Sys_PlatformInit: function () {
     SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
-    SYSC.newDLURL = SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
+    SYSC.newDLURL = SYSC.Cvar_VariableString('cl_dlURL')
+    SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     Object.assign(Module, {
       websocket: Object.assign(Module.websocket || {}, {
         url: SYSM.isSecured(SYSC.Cvar_VariableString('net_socksServer'))

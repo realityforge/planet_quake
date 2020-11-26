@@ -5251,7 +5251,6 @@ Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 				if(!found && Q_stristr(search->pack->pakFilename, "pak8a.pk3")) {
 					found = getAltChecksum("pak8.pk3", &altChecksum);
 					if(found) useChecksum = altChecksum;
-					Com_Printf( "something: %i\n", useChecksum );
 				}
 				
 				s = Q_stradd( s, va( "%i ", useChecksum ) );
