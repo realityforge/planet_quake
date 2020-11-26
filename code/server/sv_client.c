@@ -2272,33 +2272,45 @@ typedef enum {
 
 void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, vec3_t *newOrigin ) {
 	int		clientNum, i;
-	vec3_t oldOrigin;
 	int oldDelta[3];
 	sharedEntity_t *ent;
-	playerState_t	*ps, *ps2, oldps;
+	playerState_t	*ps, *rez, oldps;
 	//gentity_t *gent, oldEnt;
 	
 	client->state = CS_ACTIVE;
 
 	// set up the entity for the client
 	clientNum = client - svs.clients;
-	// TODO: move to same position in new world, or save position in both worlds?
-	if(client->gameWorld != newWorld) {
-		
-	}
-
 	gvm = client->gameWorld;
-	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
-	memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
 	memcpy(&oldps, ps, sizeof(playerState_t));
+
+	// move to same position in new world, or save position in both worlds?
+	if(client->gameWorld != newWorld) {
+		if(changeOrigin == COPYORIGIN) {
+			// copy old view angles from previous world to new world
+			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
+			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+		}
+		// not possible, but if it was, copy delta from new world
+		// if(changeOrigin == MOVEORIGIN) {
+	} else {
+		if(changeOrigin == MOVEORIGIN) {
+			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+		}
+	}
 
 	if(client->gameWorld != newWorld) {
 		client->gameWorld = newWorld;
 		gvm = client->gameWorld;
+		ent = SV_GentityNum( clientNum );
 		SV_UpdateConfigstrings( client );
 		if(ent->s.eType == 0) {
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			// if the client is new to the world, the only option is SPAWNORIGIN
+			if(changeOrigin != COPYORIGIN) {
+				changeOrigin = SPAWNORIGIN;
+			}
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			/*
 			client->state = CS_PRIMED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
@@ -2309,6 +2321,13 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			SV_SendClientGameState( client );
 			*/
 		} else {
+			// keep the same origin in the new world as if you've switched worlds
+			//   but haven't moved, default behavior
+			if(changeOrigin == SAMEORIGIN) {
+				ps = SV_GameClientNum( clientNum );
+				memcpy(newOrigin, ps->origin, sizeof(vec3_t));
+				memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			}
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 		}
 	}
@@ -2324,18 +2343,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 
 	// if copy, keeping the original/same, or moving origins,
 	//   we need to reset a few things
-	//   default is same origin, so it appears as though you haven't moved
-	//   when changing worlds
 	if(changeOrigin > SPAWNORIGIN) {
+		// put up a little so it can drop to the floor on the next frame and 
+		//   doesn't bounce with tracing/lerping to the floor
+		*newOrigin[2] = *newOrigin[2] + 9.0f;
+		memcpy(&ps->origin, newOrigin, sizeof(vec3_t));
+		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
 		// keep the same view angles if changing origins
 		ps->delta_angles[0] = oldDelta[0];
 		ps->delta_angles[1] = oldDelta[1];
 		ps->delta_angles[2] = oldDelta[2];
-
-		// put up a little so it can drop to the floor on the next frame and 
-		//   doesn't bounce with tracing/lerping to the floor
-		ps->origin[2] = ps->origin[2] + 9.0f;
-		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
 	}
 
 	// restore player stats
@@ -2349,21 +2366,22 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		if(ent->s.clientNum == clientNum 
 			&& i != clientNum
 			&& (ent->s.eType == (ET_EVENTS + EV_PLAYER_TELEPORT_IN))) {
-			ps2 = SV_GameClientNum(i);
-			memcpy(&ps2->origin, &ps->origin, sizeof(vec3_t));
+			rez = SV_GameClientNum(i);
+			memcpy(&rez->origin, &ps->origin, sizeof(vec3_t));
 			memcpy(&ent->s.origin, &ps->origin, sizeof(vec3_t));
-			//memcpy(&ent->s.origin2, &ps->origin, sizeof(vec3_t));
+			memcpy(&ent->s.origin2, &ps->origin, sizeof(vec3_t));
 			memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
-			//memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
-			//memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-			//memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
+			memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
+			memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
+			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
 	gvm = 0;
 }
 
 void SV_Tele_f( client_t *client ) {
-	vec3_t oldOrigin, newOrigin = {0.0, 0.0, 0.0};
+	int i, clientNum;
+	vec3_t newOrigin = {0.0, 0.0, 0.0};
 	char *userOrigin[3];
 	playerState_t	*ps;
 
@@ -2377,22 +2395,22 @@ void SV_Tele_f( client_t *client ) {
     || userOrigin[1][0] != '\0'
 	  || userOrigin[2][0] != '\0') {
 
+		clientNum = client - svs.clients;
 		gvm = client->gameWorld;
 		ps = SV_GameClientNum( clientNum );
-		memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
 
 		for(i = 0; i < 3; i++) {
-			if(newOrigin[i][0] != '\0') {
+			if(userOrigin[i][0] != '\0') {
 				// TODO: calculate direction change relative to oldAngles
-				if(newOrigin[i][0] == '-') {
-					newOrigin[i] = oldOrigin[i] - atoi(&userOrigin[i][1]);
-				} else if (newOrigin[i][0] == '+') {
-					newOrigin[i] = oldOrigin[i] + atoi(&userOrigin[i][1]);
+				if(userOrigin[i][0] == '-') {
+					newOrigin[i] = ps->origin[i] - atoi(&userOrigin[i][1]);
+				} else if (userOrigin[i][0] == '+') {
+					newOrigin[i] = ps->origin[i] + atoi(&userOrigin[i][1]);
 				} else {
 					newOrigin[i] = atoi(userOrigin[i]);
 				}
 			} else {
-				newOrigin[i] = oldOrigin[i];
+				newOrigin[i] = ps->origin[i];
 			}
 		}
 		SV_Teleport(client, client->gameWorld, MOVEORIGIN, &newOrigin);
@@ -2415,20 +2433,20 @@ void SV_Game_f( client_t *client ) {
 	if(!client) return;
 	clientNum = client - svs.clients;
 	
-	world = Cmd_Argv(1);
+	userOrigin = Cmd_Argv(1);
+	if(userOrigin[0] == '0') {
+		changeOrigin = SPAWNORIGIN;
+	} else if(userOrigin[0] == '2') {
+		changeOrigin = COPYORIGIN;
+	} else {
+		changeOrigin = SAMEORIGIN;
+	}
+	
+	world = Cmd_Argv(2);
 	if(world[0] != '\0') {
 		worldC = atoi(world);
 	} else {
 		worldC = client->gameWorld + 1;
-	}
-	
-	userOrigin = Cmd_Argv(2);
-	if(changeOrigin[0] == '0') {
-		changeOrigin = SPAWNORIGIN;
-	} else if(changeOrigin[0] == '2') {
-		changeOrigin = COPYORIGIN;
-	} else {
-		changeOrigin = SAMEORIGIN;
 	}
 
 resetwithcount:

@@ -4589,7 +4589,7 @@ void CL_Tele_f ( void ) {
 
 void CL_Game_f ( void ) {
 	if ( Cmd_Argc() > 3 ) {
-		Com_Printf ("Usage: game [num] [0/1/2 moveorigin]\n");
+		Com_Printf ("Usage: game [0/1/2 moveorigin] [num]\n");
 		return;
 	}
 
@@ -4847,7 +4847,7 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("tele", CL_Tele_f);
 	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
 	Cmd_AddCommand ("game", CL_Game_f);
-	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [num] [0/1/2 moveorigin]" );
+	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [0/1/2 moveorigin] [num]" );
 #endif
 
 	SCR_Init();
