@@ -985,6 +985,8 @@ void SV_SendClientSnapshot( client_t *client ) {
 	int     headerBytes;
 	playerState_t	*ps;
 
+	gvm = client->gameWorld;
+
 	// build the snapshot
 	SV_BuildClientSnapshot( client );
 
@@ -1016,6 +1018,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+		gvm = 0;
 		return;
 	}
 
@@ -1026,6 +1029,8 @@ void SV_SendClientSnapshot( client_t *client ) {
 	}
 
 	SV_SendMessageToClient( &msg, client );
+	
+	gvm = 0;
 }
 
 
