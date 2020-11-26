@@ -1530,4 +1530,7 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex );
 // functional gate syscall number
 #define COM_TRAP_GETVALUE 700
 
+int b64_encode(const unsigned char *in, char *out, size_t len);
+int b64_decode(const char *in, unsigned char *out, size_t outlen);
+
 #endif // _QCOMMON_H_

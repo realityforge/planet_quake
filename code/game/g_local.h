@@ -24,7 +24,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 #include "bg_public.h"
+#ifndef GAME_API_VERSION
 #include "g_public.h"
+#endif
 
 //==================================================================
 
@@ -79,7 +81,7 @@ struct gentity_s {
 
 	qboolean	inuse;
 
-	char		*classname;			// set in QuakeEd
+	const char	*classname;			// set in QuakeEd
 	int			spawnflags;			// set in QuakeEd
 
 	qboolean	neverFree;			// if true, FreeEntity will only unlink
@@ -87,8 +89,8 @@ struct gentity_s {
 
 	int			flags;				// FL_* variables
 
-	char		*model;
-	char		*model2;
+	const char	*model;
+	const char	*model2;
 	int			freetime;			// level.time when the object was freed
 	
 	int			eventTime;			// events will be cleared EVENT_VALID_MSEC after set
@@ -119,11 +121,11 @@ struct gentity_s {
 	int			timestamp;		// body queue sinking, etc
 
 	float		angle;			// set in editor, -1 = up, -2 = down
-	char		*target;
-	char		*targetname;
-	char		*team;
-	char		*targetShaderName;
-	char		*targetShaderNewName;
+	const char	*target;
+	const char	*targetname;
+	const char	*team;
+	const char	*targetShaderName;
+	const char	*targetShaderNewName;
 	gentity_t	*target_ent;
 
 	float		speed;
@@ -175,6 +177,11 @@ struct gentity_s {
 	float		random;
 
 	gitem_t		*item;			// for bonus items
+
+	// team for spawn spot
+	team_t		fteam;
+
+	tag_t		tag;
 };
 
 
@@ -969,4 +976,3 @@ void	trap_BotResetWeaponState(int weaponstate);
 int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 
 void	trap_SnapVector( float *v );
-

@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // sv_client.c -- server code for dealing with clients
 
 #include "server.h"
+#include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
 
 #ifdef USE_CURL
 download_t			svDownload;
@@ -2263,7 +2264,8 @@ void SV_Tele_f( client_t *client ) {
 	int oldDelta[3];
 	char *newOrigin[3];
 	sharedEntity_t *ent;
-	playerState_t	*ps, *ps2;
+	playerState_t	*ps, *ps2, oldps;
+	gentity_t *gent, oldEnt;
 
 	if(!client) return;
 	
@@ -2276,12 +2278,24 @@ void SV_Tele_f( client_t *client ) {
 	// set up the entity for the client
 	clientNum = client - svs.clients;
 	ent = SV_GentityNum( clientNum );
+	gent = (gentity_t *)ent;
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	ps = SV_GameClientNum( clientNum );
 	memcpy(oldOrigin, ps->origin, sizeof(vec3_t));
 	memcpy(oldAngles, ps->viewangles, sizeof(vec3_t));
-	memcpy(oldDelta, ps->delta_angles, sizeof(oldDelta));
+	memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+	memcpy(&oldps, ps, sizeof(playerState_t));
+	memcpy(&oldEnt, gent, sizeof(gentity_t));
+	Com_Printf("Update client:");
+	for(i = 0; i < sizeof(gentity_t); i++) {
+		if(((byte *)gent)[i] > 120 && ((byte *)gent)[i] <= 125) {
+			Com_Printf("(%i)", i);
+		}
+		Com_Printf("%i ", ((byte *)gent)[i]);
+	}
+	Com_Printf("\n");
+Com_Printf("Update health: %i\n", (int)&oldEnt.health - (int)&oldEnt);
 	/*
 	memset(&ps->viewangles, 0, sizeof(vec3_t));
 	memset(&ps->delta_angles, 0, sizeof(vec3_t));
@@ -2311,6 +2325,7 @@ void SV_Tele_f( client_t *client ) {
 	  || newOrigin[2][0] != '\0') {
 		for(i = 0; i < 3; i++) {
 			if(newOrigin[i][0] != '\0') {
+				// TODO: calculate direction change relative to oldAngles
 				if(newOrigin[i][0] == '-') {
 					ps->origin[i] = oldOrigin[i] - atoi(&newOrigin[i][1]);
 				} else if (newOrigin[i][0] == '+') {
@@ -2330,11 +2345,20 @@ void SV_Tele_f( client_t *client ) {
 	}
 	// put up a little so it can drop to the floor on the next frame and 
 	//   doesn't bounce with tracing/lerping to the floor
-	ps->origin[2] = oldOrigin[2] + 9.0f;
+	ps->origin[2] = ps->origin[2] + 9.0f;
 	memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+	// restore player stats
+	memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
+	memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
+	memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
+	//memcpy(&gent->health, &oldEnt.health, sizeof(gent->health));
+	//memcpy(&gent->client->pers, &oldEnt.client->pers, sizeof(gent->client->pers));
+	//memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 	//memset(&ent->r.currentAngles, 0, sizeof(vec3_t));
 	//ent->s.eFlags ^= EF_TELEPORT_BIT;
 	//ps->eFlags ^= EF_TELEPORT_BIT;
+	client->deltaMessage = -1;
+	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
 		ent = SV_GentityNum(i);
@@ -2394,11 +2418,13 @@ resetwithcount:
 		return;
 	}
 	
+	if(client->gameWorld == i) {
+		return;
+	}
+	
 	Com_Printf("Switching worlds (client %i): %i -> %i\n", clientNum, client->gameWorld, i);
 	client->gameWorld = i;
-	gvm = client->gameWorld;
 	SV_Tele_f(client);
-	gvm = 0;
 }
 #endif
 
@@ -2667,6 +2693,8 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
 	}
 
+	gvm = cl->gameWorld;
+
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
 	if ( cl->state == CS_PRIMED ) {
@@ -2676,6 +2704,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 				Com_DPrintf( "%s: didn't get cp command, resending gamestate\n", cl->name );
 				SV_SendClientGameState( cl );
 			}
+			gvm = 0;
 			return;
 		}
 		SV_ClientEnterWorld( cl, &cmds[0] );
@@ -2685,11 +2714,13 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// a bad cp command was sent, drop the client
 	if ( sv_pure->integer != 0 && !cl->pureAuthentic ) {
 		SV_DropClient( cl, "Cannot validate pure client!" );
+		gvm = 0;
 		return;
 	}
 
 	if ( cl->state != CS_ACTIVE ) {
 		cl->deltaMessage = -1;
+		gvm = 0;
 		return;
 	}
 
@@ -2712,6 +2743,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		}
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
+	gvm = 0;
 }
 
 

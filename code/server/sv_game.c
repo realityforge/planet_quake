@@ -439,8 +439,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_GameDropClient( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
-		if(gvm == 0)
-			SV_GameSendServerCommand( args[1], VMA(2) );
+		SV_GameSendServerCommand( args[1], VMA(2) );
 		return 0;
 	case G_LINKENTITY:
 		SV_LinkEntity( VMA(1) );
