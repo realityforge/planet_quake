@@ -1013,7 +1013,7 @@ gotnewcl:
 	}
 #endif
 
-	newcl->gameWorld = 0;
+	newcl->gameWorld = newcl->newWorld = 0;
 	gvm = newcl->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 
@@ -1400,7 +1400,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	int		clientNum;
 	sharedEntity_t *ent;
 
-	Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
+	Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvm );
 	client->state = CS_ACTIVE;
 
 	// resend all configstrings using the cs commands since these are
@@ -2233,7 +2233,7 @@ void SV_PrintLocations_f( client_t *client ) {
 #ifdef USE_MULTIVM
 void SV_LoadVM_f( client_t *cl ) {
 	vmIndex_t index;
-	char *name;
+	char *mapname;
 	int checksum;
 	int i, previous;
 
@@ -2245,21 +2245,22 @@ void SV_LoadVM_f( client_t *cl ) {
 			break;
 		}
 	}
-	name = Cmd_Argv(2);
-	if(name[0] == '\0') {
+	mapname = Cmd_Argv(2);
+	if(mapname[0] == '\0') {
 		gameWorlds[gvm] = previous;
 	} else {
-		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", name ), qfalse, &checksum );
+		Cvar_Set( "mapname", mapname );
+		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
-	//for ( i = 0; i < 3; i++ )
-	//{
-	//	sv.time += 100;
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	// catch up with current VM
+	for ( i = 3; i > 0; i-- )
+	{
+		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		//SV_BotFrame( sv.time );
-	//}
+	}
 	SV_CreateBaseline();
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
@@ -2303,8 +2304,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	}
 
 	if(client->gameWorld != newWorld) {
-		client->gameWorld = newWorld;
-		gvm = client->gameWorld;
+		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
 		SV_UpdateConfigstrings( client );
@@ -2313,16 +2313,32 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
 			}
+			// remove from old world?
+			//gvm = client->gameWorld;
+			//CM_SwitchMap(gameWorlds[gvm]);
+			//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			client->newWorld = newWorld;
+			client->gotCP = qfalse;
+			//gvm = newWorld;
+			//CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
-			/*
 			client->state = CS_PRIMED;
+			/*
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			client->lastPacketTime = svs.time;
 			client->lastConnectTime = svs.time;
 			client->lastDisconnectTime = svs.time;
 			client->justConnected = qtrue;
 			*/
+			//ent->s.number = clientNum;
+			//client->gentity = ent;
+			//client->gameWorld = newWorld;
 			//SV_SendClientGameState( client );
+			//SV_ClientEnterWorld( client, NULL );
+			gvm = 0;
+			CM_SwitchMap(gameWorlds[gvm]);
+			return;
+			//SV_ClientEnterWorld( client, NULL );
 			//SV_SendServerCommand(client, "load cgame");
 		} else {
 			// keep the same origin in the new world as if you've switched worlds
@@ -2750,6 +2766,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 
 	gvm = cl->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
+Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
@@ -2758,18 +2775,31 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s: didn't get cp command, resending gamestate\n", cl->name );
-				SV_SendClientGameState( cl );
+				if(cl->newWorld != cl->gameWorld) {
+					gvm = cl->newWorld;
+					CM_SwitchMap(gameWorlds[gvm]);
+					SV_SendClientGameState( cl );
+					// skip pure check for world switching
+					cl->pureAuthentic = qtrue;
+					cl->state = CS_PRIMED;
+				} else {
+					SV_SendClientGameState( cl );
+				}
 			}
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		}
+		gvm = cl->newWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
 		SV_ClientEnterWorld( cl, &cmds[0] );
+		cl->gameWorld = cl->newWorld;
 		// the moves can be processed normaly
 	}
 	
 	// a bad cp command was sent, drop the client
 	if ( sv_pure->integer != 0 && !cl->pureAuthentic ) {
+Com_DPrintf( "Cannot validate pure client!\n" );
 		SV_DropClient( cl, "Cannot validate pure client!" );
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);

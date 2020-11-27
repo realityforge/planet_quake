@@ -303,6 +303,7 @@ typedef struct client_s {
 #endif // USE_MV
 #ifdef USE_MULTIVM
 	int gameWorld;
+	int newWorld;
 #endif
 
 } client_t;

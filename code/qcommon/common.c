@@ -32,6 +32,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <winsock.h>
 #endif
 
+#ifdef _DEBUG
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#endif
+
 #include "../client/keys.h"
 
 const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0 };
@@ -292,7 +299,8 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	static qboolean	calledSysError = qfalse;
 	int			currentTime;
 
-#if defined(_WIN32) && defined(_DEBUG)
+#ifdef _DEBUG
+#if defined(_WIN32)
 	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
 		if (!com_noErrorInterrupt->integer) {
 			DebugBreak();
@@ -305,8 +313,17 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 			Sys_Debug();
 		}
 	}
-#endif
-#endif
+#else
+#if defined(__linux__) || defined(__APPLE__)
+	{
+		void *syms[10];
+		const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
+		backtrace_symbols_fd( syms, size, STDERR_FILENO );
+	}
+#endif // linux
+#endif // emscripten
+#endif // win32
+#endif // _DEBUG
 
 	if(com_errorEntered)
 	{

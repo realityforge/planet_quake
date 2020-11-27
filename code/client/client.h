@@ -637,6 +637,9 @@ void CIN_CloseAllVideos(void);
 //
 // cl_cgame.c
 //
+#ifdef USE_MULTIVM
+extern int clientWorlds[MAX_NUM_VMS];
+#endif
 #ifdef EMSCRIPTEN
 #ifdef USE_LAZY_LOAD
 // TODO: make these work on native, by checking files.c for rediness or something?

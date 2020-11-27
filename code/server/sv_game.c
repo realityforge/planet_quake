@@ -545,7 +545,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		else
 			return 0;
 	case BOTLIB_SHUTDOWN:
-		return SV_BotLibShutdown();
+		if(gvm == 0)
+			return SV_BotLibShutdown();
+		else
+			return 0;
 	case BOTLIB_LIBVAR_SET:
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
 	case BOTLIB_LIBVAR_GET:
@@ -567,10 +570,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
-		//if(gvm == 0)
+		if(gvm == 0)
 			return botlib_export->BotLibLoadMap( VMA(1) );
-		//else
-		//	return -1;
+		else
+			return -1;
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:

@@ -635,14 +635,14 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 				for(i = 0; i < MAX_NUM_VMS; i++) {
 					if(!cgvms[i]) continue;
 #ifdef EMSCRIPTEN
+					// skip drawing until VM is ready
 					if(VM_IsSuspended(cgvms[i])) {
-					//	result = VM_Resume(cgvms[i]);
-					//	if (result == 0xDEADBEEF) {
-							continue;
-					//	}
+						continue;
 					}
 #endif
 					cgvm = i;
+					if(clientWorlds[cgvm] > 0) continue;
+					CM_SwitchMap(clientWorlds[cgvm]);
 					y = floor(count / xMaxVMs);
 					x = count % xMaxVMs;
 					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);

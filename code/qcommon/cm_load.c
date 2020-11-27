@@ -623,7 +623,7 @@ int CM_SwitchMap( int world ) {
 		return 0;
 	}
 	if(world != cm) {
-		Com_Printf("Switching maps: %i -> %i\n", cm, world);
+		//Com_Printf("Switching maps: %i -> %i\n", cm, world);
 		cm = world;
 	}
 	return prev;
