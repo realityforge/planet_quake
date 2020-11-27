@@ -72,7 +72,7 @@ typedef struct worldSector_s {
 #define	AREA_NODES	64
 
 worldSector_t	sv_worldSectors[MAX_NUM_VMS][AREA_NODES];
-int			sv_numworldSectors;
+int			sv_numworldSectors[MAX_NUM_VMS];
 
 
 /*
@@ -108,8 +108,8 @@ static worldSector_t *SV_CreateworldSector( int depth, vec3_t mins, vec3_t maxs 
 	vec3_t		size;
 	vec3_t		mins1, maxs1, mins2, maxs2;
 
-	anode = &sv_worldSectors[gvm][sv_numworldSectors];
-	sv_numworldSectors++;
+	anode = &sv_worldSectors[gvm][sv_numworldSectors[gvm]];
+	sv_numworldSectors[gvm]++;
 
 	if (depth == AREA_DEPTH) {
 		anode->axis = -1;
@@ -149,7 +149,7 @@ void SV_ClearWorld( void ) {
 	vec3_t			mins, maxs;
 
 	Com_Memset( sv_worldSectors[gvm], 0, sizeof(sv_worldSectors[gvm]) );
-	sv_numworldSectors = 0;
+	sv_numworldSectors[gvm] = 0;
 
 	// get world map bounds
 	h = CM_InlineModel( 0 );

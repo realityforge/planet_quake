@@ -1013,6 +1013,10 @@ gotnewcl:
 	}
 #endif
 
+	newcl->gameWorld = 0;
+	gvm = newcl->gameWorld;
+	CM_SwitchMap(gameWorlds[gvm]);
+
 	// save the challenge
 	newcl->challenge = challenge;
 
@@ -1091,6 +1095,7 @@ gotnewcl:
 	}
 	
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 
@@ -2301,6 +2306,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	if(client->gameWorld != newWorld) {
 		client->gameWorld = newWorld;
 		gvm = client->gameWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
 		SV_UpdateConfigstrings( client );
 		if(ent->s.eType == 0) {
@@ -2317,7 +2323,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->lastDisconnectTime = svs.time;
 			client->justConnected = qtrue;
 			*/
-			SV_SendClientGameState( client );
+			//SV_SendClientGameState( client );
 			//SV_SendServerCommand(client, "load cgame");
 		} else {
 			// keep the same origin in the new world as if you've switched worlds
@@ -2376,6 +2382,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		}
 	}
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 void SV_Tele_f( client_t *client ) {

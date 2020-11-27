@@ -1957,8 +1957,6 @@ static void CL_SendPureChecksums( void ) {
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
 	strcpy( cMsg + len, FS_ReferencedPakPureChecksums( sizeof( cMsg ) - len - 1 ) );
 
-Com_Printf("Checksum feed: %i\n", clc.checksumFeed);
-Com_Printf( "CL_SendPureChecksums: %s\n", cMsg);
 	CL_AddReliableCommand( cMsg, qfalse );
 }
 

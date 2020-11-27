@@ -5229,7 +5229,6 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 	s = info;
 	*s = '\0';
 
-Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 	checksum = fs_checksumFeed;
 	numPaks = 0;
 	for ( nFlags = FS_CGAME_REF; nFlags; nFlags = nFlags >> 1 ) {
@@ -5257,10 +5256,6 @@ Com_Printf("Checksum feed: %i\n", fs_checksumFeed);
 				if ( s > max ) // client-side overflow
 					break;
 				if ( nFlags & (FS_CGAME_REF | FS_UI_REF) ) {
-if(nFlags & FS_CGAME_REF)
-Com_Printf( "Found cgame %s\n", search->pack->pakFilename );
-if(nFlags & FS_UI_REF)
-Com_Printf( "Found ui %s\n", search->pack->pakFilename );
 					break;
 				}
 				checksum ^= useChecksum;

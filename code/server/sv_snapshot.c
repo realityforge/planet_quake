@@ -1020,6 +1020,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
 		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
@@ -1032,6 +1033,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 	SV_SendMessageToClient( &msg, client );
 	
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 
