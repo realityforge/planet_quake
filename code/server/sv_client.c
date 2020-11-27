@@ -2258,10 +2258,9 @@ void SV_LoadVM_f( client_t *cl ) {
 	{
 		sv.time += 100;
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
-		SV_BotFrame( sv.time );
+		//SV_BotFrame( sv.time );
 	}
 	SV_CreateBaseline();
-
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 }
@@ -2750,6 +2749,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	}
 
 	gvm = cl->gameWorld;
+	CM_SwitchMap(gameWorlds[gvm]);
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
@@ -2761,6 +2761,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 				SV_SendClientGameState( cl );
 			}
 			gvm = 0;
+			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		}
 		SV_ClientEnterWorld( cl, &cmds[0] );
@@ -2771,12 +2772,14 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	if ( sv_pure->integer != 0 && !cl->pureAuthentic ) {
 		SV_DropClient( cl, "Cannot validate pure client!" );
 		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
 	if ( cl->state != CS_ACTIVE ) {
 		cl->deltaMessage = -1;
 		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
@@ -2800,6 +2803,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 
