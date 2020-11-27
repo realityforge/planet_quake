@@ -2254,12 +2254,12 @@ void SV_LoadVM_f( client_t *cl ) {
 	}
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
-	for ( i = 0; i < 3; i++ )
-	{
-		sv.time += 100;
+	//for ( i = 0; i < 3; i++ )
+	//{
+	//	sv.time += 100;
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 		//SV_BotFrame( sv.time );
-	}
+	//}
 	SV_CreateBaseline();
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
@@ -2350,8 +2350,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	if(changeOrigin > SPAWNORIGIN) {
 		// put up a little so it can drop to the floor on the next frame and 
 		//   doesn't bounce with tracing/lerping to the floor
-		*newOrigin[2] = *newOrigin[2] + 9.0f;
 		memcpy(&ps->origin, newOrigin, sizeof(vec3_t));
+		//ps->origin[2] = *newOrigin[2] + 9.0f;
 		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
 		// keep the same view angles if changing origins
 		ps->delta_angles[0] = oldDelta[0];
