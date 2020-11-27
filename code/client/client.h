@@ -542,7 +542,7 @@ qboolean CL_CheckPaused( void );
 qboolean CL_NoDelay( void );
 
 qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, int mode, const char *modeFS, int dw, int dh, qboolean fullscreen );
-
+void CL_LoadVM_f( void );
 
 //
 // cl_input

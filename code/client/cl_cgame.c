@@ -461,6 +461,14 @@ rescan:
 		return qtrue;
 	}
 
+#ifdef USE_MULTIVM
+	if ( !strcmp( cmd, "load" ) ) {
+		CL_LoadVM_f();
+		Cmd_Clear();
+		return qfalse;
+	}
+#endif
+
 	// we may want to put a "connect to other server" command here
 #ifdef USE_CMD_CONNECTOR
 	if ( !strcmp( cmd, "postgame" ) ) {

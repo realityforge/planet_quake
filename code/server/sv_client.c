@@ -2316,8 +2316,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->lastConnectTime = svs.time;
 			client->lastDisconnectTime = svs.time;
 			client->justConnected = qtrue;
-			SV_SendClientGameState( client );
 			*/
+			SV_SendClientGameState( client );
+			//SV_SendServerCommand(client, "load cgame");
 		} else {
 			// keep the same origin in the new world as if you've switched worlds
 			//   but haven't moved, default behavior
