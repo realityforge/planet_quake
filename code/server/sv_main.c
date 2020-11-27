@@ -228,6 +228,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	va_end( argptr );
 
 	if ( cl != NULL ) {
+		if(cl->gameWorld != gvm) return;
 		// outdated clients can't properly decode 1023-chars-long strings
 		// http://aluigi.altervista.org/adv/q3msgboom-adv.txt
 		if ( len <= 1022 || cl->longstr ) {
@@ -250,6 +251,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
+			if(cl->gameWorld != gvm) continue;
 			SV_AddServerCommand( client, message );
 		}
 	}
@@ -1498,9 +1500,11 @@ void SV_Frame( int msec ) {
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(!gvms[i]) continue;
 			gvm = i;
+			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 		}
 		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		
 #ifdef USE_MV
 		svs.emptyFrame = qfalse; // ok, run recorder

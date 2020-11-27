@@ -614,6 +614,22 @@ unsigned CM_Checksum(dheader_t *header) {
 
 /*
 ==================
+CM_SwitchMap
+==================
+*/
+int CM_SwitchMap( int world ) {
+	int prev = cm;
+	if(!cms[cm].name[0]) {
+		return 0;
+	}
+	if(world != cm) {
+		cm = world;
+	}
+	return prev;
+}
+
+/*
+==================
 CM_LoadMap
 
 Loads in the map and all submodels

@@ -2258,6 +2258,7 @@ void SV_LoadVM_f( client_t *cl ) {
 	SV_CreateBaseline();
 
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 typedef enum {
