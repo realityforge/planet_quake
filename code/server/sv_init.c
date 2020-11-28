@@ -581,6 +581,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
+	Cvar_Set( "mapname0", mapname );
 
 #ifdef EMSCRIPTEN
 	Memcpy(&map, mapname, sizeof(map));

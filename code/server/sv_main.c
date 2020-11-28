@@ -251,7 +251,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
-			if(cl->gameWorld != gvm) continue;
+			if(client->gameWorld != gvm) continue;
 			SV_AddServerCommand( client, message );
 		}
 	}
@@ -1501,6 +1501,7 @@ void SV_Frame( int msec ) {
 			if(!gvms[i]) continue;
 			gvm = i;
 			CM_SwitchMap(gameWorlds[gvm]);
+Com_Printf( "Game World: %i\n", gvm );
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 		}
 		gvm = 0;
