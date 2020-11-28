@@ -423,8 +423,7 @@ Com_Printf( "Cvar_Set: %s - %s\n", name, (const char *)VMA(2) );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SEND_CONSOLE_COMMAND:
-		if(gvm == 0)
-			Cbuf_ExecuteText( args[1], VMA(2) );
+		Cbuf_ExecuteText( args[1], VMA(2) );
 		return 0;
 
 	case G_FS_FOPEN_FILE:

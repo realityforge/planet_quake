@@ -1302,7 +1302,7 @@ static void SV_SendClientGameState( client_t *client ) {
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 
 	if ( client->state != CS_PRIMED ) {
-		Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
+		Com_Printf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
 	Cvar_Set( "mapname", Cvar_VariableString( va("mapname%i", gvm) ) );
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
@@ -1409,7 +1409,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	int		clientNum;
 	sharedEntity_t *ent;
 
-	Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvm );
+	Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvm );
 	client->state = CS_ACTIVE;
 
 	// resend all configstrings using the cs commands since these are
@@ -1872,13 +1872,14 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	qboolean bGood = qtrue;
 	char url[MAX_CVAR_VALUE_STRING];
 
+	Com_Printf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
+
 	if(cl->newWorld > 0) {
 		cl->gotCP = qtrue;
 		cl->pureAuthentic = qtrue;
 		return;
 	}
 
-Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
 	// ui and cgame that we think should be loaded based on the pure setting
@@ -2330,22 +2331,22 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				changeOrigin = SPAWNORIGIN;
 			}
 			// remove from old world?
-			gvm = client->gameWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			SV_FreeClient(client);
-			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			//gvm = client->gameWorld;
+			//CM_SwitchMap(gameWorlds[gvm]);
+			//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 			client->newWorld = newWorld;
-			client->gotCP = qfalse;
-			gvm = newWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d", client->netchan.challenge );
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			client->justConnected = qtrue;
-			client->gamestateMessageNum = -1;
-
-			//SV_SendClientGameState( client );
+			//SV_SendServerCommand( client, "reconnect\n" );
+			/*
+			gvm = newWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
+			SV_SendClientGameState( client );
+			*/
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
@@ -2783,35 +2784,29 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
 	if ( cl->state == CS_PRIMED ) {
+		gvm = cl->newWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
 		if ( sv_pure->integer != 0 && !cl->gotCP ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
-			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
-				Com_DPrintf( "%s: didn't get cp command, resending gamestate\n", cl->name );
-				if(cl->newWorld != cl->gameWorld) {
-					gvm = cl->newWorld;
-					CM_SwitchMap(gameWorlds[gvm]);
-					SV_FreeClient(cl);
-					SV_SendClientGameState( cl );
-					// skip pure check for world switching
-					//cl->state = CS_PRIMED;
-				} else {
-					SV_SendClientGameState( cl );
-				}
+			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 )
+		 		&& cl->newWorld == cl->gameWorld) {
+				Com_Printf( "%s: didn't get cp command, resending gamestate\n", cl->name );
+				SV_SendClientGameState( cl );
+			} else {
+				cl->lastSnapshotTime = svs.time - 9999;
 			}
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		}
-		gvm = cl->newWorld;
-		CM_SwitchMap(gameWorlds[gvm]);
 		if(cl->newWorld != cl->gameWorld) {
 			//SV_SetUserinfo( cl - svs.clients, "" );
 			//SV_FreeClient(cl);
+			cl->gameWorld = cl->newWorld;
 			SV_ClientEnterWorld( cl, NULL );
 		} else {
 			SV_ClientEnterWorld( cl, &cmds[0] );
 		}
-		cl->gameWorld = cl->newWorld;
 		// the moves can be processed normaly
 	}
 	

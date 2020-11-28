@@ -816,7 +816,7 @@ void SV_Init( void )
 {
 	int index;
 
-#ifdef USE_CMD_CONNECTOR
+#if defined(USE_CMD_CONNECTOR) && defined(USE_LOCAL_DED)
 	// if using a local dedicated server and these commands are not present, 
 	//   then they will automatically be forwarded to the local dedicated server
 	//   via `CL_ForwardCommandToServer()`
