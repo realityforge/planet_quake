@@ -1095,11 +1095,11 @@ Also called by Com_Error
 =================
 */
 void CL_FlushMemory( void ) {
-
+Com_Printf("Shutdown all\n");
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
-	CL_ClearMemory();
+	//CL_ClearMemory();
 
 #ifdef EMSCRIPTEN
 	if(!FS_Initialized()) return;

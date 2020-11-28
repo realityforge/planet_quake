@@ -2341,8 +2341,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
+			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			client->justConnected = qtrue;
+			client->gamestateMessageNum = -1;
 
-			SV_SendClientGameState( client );
+			//SV_SendClientGameState( client );
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
@@ -2790,7 +2793,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 					SV_FreeClient(cl);
 					SV_SendClientGameState( cl );
 					// skip pure check for world switching
-					cl->state = CS_PRIMED;
+					//cl->state = CS_PRIMED;
 				} else {
 					SV_SendClientGameState( cl );
 				}
