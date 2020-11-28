@@ -1304,9 +1304,10 @@ static void SV_SendClientGameState( client_t *client ) {
 	if ( client->state != CS_PRIMED ) {
 		Com_Printf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
-	Cvar_Set( "mapname", Cvar_VariableString( va("mapname%i", gvm) ) );
-	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+	//Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvm) ) );
+	//SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+	//SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+	//SV_RemainingGameState();
 	client->state = CS_PRIMED;
 
 	client->pureAuthentic = qfalse;
@@ -1874,11 +1875,11 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 
 	Com_Printf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 
-	if(cl->newWorld > 0) {
+	//if(cl->newWorld > 0) {
 		cl->gotCP = qtrue;
 		cl->pureAuthentic = qtrue;
 		return;
-	}
+	//}
 
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
@@ -2266,7 +2267,7 @@ void SV_LoadVM_f( client_t *cl ) {
 	if(mapname[0] == '\0') {
 		gameWorlds[gvm] = previous;
 	} else {
-		Cvar_Set( va("mapname%i", gvm), mapname );
+		Cvar_Set( va("mapname_%i", gvm), mapname );
 		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
@@ -2330,23 +2331,23 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
 			}
+
 			// remove from old world?
-			//gvm = client->gameWorld;
-			//CM_SwitchMap(gameWorlds[gvm]);
-			//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			gvm = client->gameWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
+			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 			client->newWorld = newWorld;
+			gvm = client->gameWorld; //newWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
-			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d", client->netchan.challenge );
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			client->justConnected = qtrue;
-			//SV_SendServerCommand( client, "reconnect\n" );
-			/*
-			gvm = newWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			SV_SendClientGameState( client );
-			*/
+			// notify the client of the secondary map
+			//NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d", client->netchan.challenge );
+			client->oldServerTime = sv.time;
+			client->gamestateMessageNum = -1;
+
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
@@ -2792,14 +2793,13 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		 		&& cl->newWorld == cl->gameWorld) {
 				Com_Printf( "%s: didn't get cp command, resending gamestate\n", cl->name );
 				SV_SendClientGameState( cl );
-			} else {
-				cl->lastSnapshotTime = svs.time - 9999;
 			}
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		}
 		if(cl->newWorld != cl->gameWorld) {
+Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 			//SV_SetUserinfo( cl - svs.clients, "" );
 			//SV_FreeClient(cl);
 			cl->gameWorld = cl->newWorld;
@@ -2911,7 +2911,10 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	// don't drop as long as previous command was a nextdl, after a dl is done, downloadName is set back to ""
 	// but we still need to read the next message to move to next download or send gamestate
 	// I don't like this hack though, it must have been working fine at some point, suspecting the fix is somewhere else
-	if ( serverId != sv.serverId && !*cl->downloadName && !strstr(cl->lastClientCommandString, "nextdl") ) {
+	if ( (serverId != sv.serverId 
+		|| (cl->newWorld != cl->gameWorld && cl->state == CS_CONNECTED))
+		&& !*cl->downloadName && !strstr(cl->lastClientCommandString, "nextdl") 
+	) {
 		if ( serverId >= sv.restartedServerId && serverId < sv.serverId ) { // TTimo - use a comparison here to catch multiple map_restart
 			// they just haven't caught the map_restart yet
 			Com_DPrintf("%s : ignoring pre map_restart / outdated client message\n", cl->name);

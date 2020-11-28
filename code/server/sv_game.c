@@ -88,6 +88,7 @@ void SV_GameSendServerCommand( int clientNum, const char *text ) {
 		SV_CheckLastCmd( text, qtrue ); // store the new game command, so when replaying a demo message, we can check for duplicates: maybe this message was already submitted (because of the events simulation, an event may trigger a message), and so we want to avoid those duplicates: if an event already triggered a message, no need to issue the one stored in the demo
 	}
 
+Com_Printf( "ServerCommand: %s\n", text );
 	if ( clientNum == -1 ) {
 		SV_SendServerCommand( NULL, "%s", text );
 	} else {
@@ -360,6 +361,24 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 }
 
 
+static char *RenameMultiworld(char *name) {
+	char *newName;
+	if(!Q_stricmp(name, "mapname")) {
+		newName = va("mapname_%i", gvm);
+	}
+	else if(!Q_stricmp(name, "session")) {
+		newName = va("session_%i", gvm);
+	}
+	else if(Q_stristr(name, "session") == name) {
+		newName = va("session_%i_%s", gvm, &name[7]);
+	}
+	else
+		newName = name;
+	Com_Printf( "Cvar_Set: %s\n", newName );
+	return newName;
+}
+
+
 /*
 ====================
 SV_GameSystemCalls
@@ -387,10 +406,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
 		{
-			char *name = VMA(2);
-			if(!Q_stricmp(name, "mapname")) {
-				name = va("mapname%i", gvm);
-			}
+			char *name = RenameMultiworld(VMA(2));
 			Cvar_Register( VMA(1), name, VMA(3), args[4] ); 
 			return 0;
 		}
@@ -399,20 +415,16 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_CVAR_SET:
 		{
-			char *name = VMA(1);
-Com_Printf( "Cvar_Set: %s - %s\n", name, (const char *)VMA(2) );
+			char *name = RenameMultiworld(VMA(1));
+			Cvar_SetSafe( name, (const char *)VMA(2) );
 		}
-		Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		{
-			char *name = VMA(1);
-			if(!Q_stricmp(name, "mapname")) {
-				name = va("mapname%i", gvm);
-			}
+			char *name = RenameMultiworld(VMA(1));
 			Cvar_VariableStringBufferSafe( name, VMA(2), args[3], gvms[gvm]->privateFlag );
 		}
 		return 0;
@@ -588,7 +600,7 @@ Com_Printf( "Cvar_Set: %s - %s\n", name, (const char *)VMA(2) );
 		if(gvm == 0)
 			return botlib_export->BotLibLoadMap( VMA(1) );
 		else
-			return -1;
+			return 0;
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:

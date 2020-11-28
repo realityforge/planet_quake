@@ -3271,8 +3271,16 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 	// server connection
 	if ( !Q_stricmp(c, "connectResponse") ) {
 		if ( cls.state >= CA_CONNECTED ) {
+#ifdef USE_MULTIVM
+			cls.state = CA_CHALLENGING;
+			//clc.connectPacketCount = 0;
+			//clc.connectTime = -99999;
+			//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
+			//cls.lastVidRestart = Sys_Milliseconds();
+#else
 			Com_Printf( "Dup connect received. Ignored.\n" );
 			return qfalse;
+#endif
 		}
 		if ( cls.state != CA_CHALLENGING ) {
 			Com_Printf( "connectResponse packet while not connecting. Ignored.\n" );
@@ -3784,7 +3792,7 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 
 	switch ( level ) {
 		default: Com_Printf( "%s", msg ); break;
-		case PRINT_DEVELOPER: Com_DPrintf( "%s", msg ); break;
+		case PRINT_DEVELOPER: /* Com_DPrintf( "%s", msg ); */ break;
 		case PRINT_WARNING: Com_DPrintf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
 	}
