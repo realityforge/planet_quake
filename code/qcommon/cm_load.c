@@ -64,9 +64,9 @@ cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
 #endif
 
-cmodel_t	box_model;
-cplane_t	*box_planes;
-cbrush_t	*box_brush;
+cmodel_t	box_model[MAX_NUM_MAPS];
+cplane_t	*box_planes[MAX_NUM_MAPS];
+cbrush_t	*box_brush[MAX_NUM_MAPS];
 
 
 
@@ -767,7 +767,7 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle ) {
 		return &cms[cm].cmodels[handle];
 	}
 	if ( handle == BOX_MODEL_HANDLE ) {
-		return &box_model;
+		return &box_model[cm];
 	}
 	if ( handle < MAX_SUBMODELS ) {
 		Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i < %i < %i", 
@@ -840,16 +840,16 @@ void CM_InitBoxHull( void )
 	cplane_t	*p;
 	cbrushside_t	*s;
 
-	box_planes = &cms[cm].planes[cms[cm].numPlanes];
+	box_planes[cm] = &cms[cm].planes[cms[cm].numPlanes];
 
-	box_brush = &cms[cm].brushes[cms[cm].numBrushes];
-	box_brush->numsides = 6;
-	box_brush->sides = cms[cm].brushsides + cms[cm].numBrushSides;
-	box_brush->contents = CONTENTS_BODY;
+	box_brush[cm] = &cms[cm].brushes[cms[cm].numBrushes];
+	box_brush[cm]->numsides = 6;
+	box_brush[cm]->sides = cms[cm].brushsides + cms[cm].numBrushSides;
+	box_brush[cm]->contents = CONTENTS_BODY;
 
-	box_model.leaf.numLeafBrushes = 1;
+	box_model[cm].leaf.numLeafBrushes = 1;
 //	box_model.leaf.firstLeafBrush = cms[cm].numBrushes;
-	box_model.leaf.firstLeafBrush = cms[cm].numLeafBrushes;
+	box_model[cm].leaf.firstLeafBrush = cms[cm].numLeafBrushes;
 	cms[cm].leafbrushes[cms[cm].numLeafBrushes] = cms[cm].numBrushes;
 
 	for ( i = 0; i < 6; i++ )
@@ -862,13 +862,13 @@ void CM_InitBoxHull( void )
 		s->surfaceFlags = 0;
 
 		// planes
-		p = &box_planes[i * 2];
+		p = &box_planes[cm][i * 2];
 		p->type = i >> 1;
 		p->signbits = 0;
 		VectorClear( p->normal );
 		p->normal[i >> 1] = 1;
 
-		p = &box_planes[i * 2 + 1];
+		p = &box_planes[cm][i * 2 + 1];
 		p->type = 3 + ( i >> 1 );
 		p->signbits = 0;
 		VectorClear( p->normal );
@@ -890,28 +890,28 @@ Capsules are handled differently though.
 */
 clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs, int capsule ) {
 
-	VectorCopy( mins, box_model.mins );
-	VectorCopy( maxs, box_model.maxs );
+	VectorCopy( mins, box_model[cm].mins );
+	VectorCopy( maxs, box_model[cm].maxs );
 
 	if ( capsule ) {
 		return CAPSULE_MODEL_HANDLE;
 	}
 
-	box_planes[0].dist = maxs[0];
-	box_planes[1].dist = -maxs[0];
-	box_planes[2].dist = mins[0];
-	box_planes[3].dist = -mins[0];
-	box_planes[4].dist = maxs[1];
-	box_planes[5].dist = -maxs[1];
-	box_planes[6].dist = mins[1];
-	box_planes[7].dist = -mins[1];
-	box_planes[8].dist = maxs[2];
-	box_planes[9].dist = -maxs[2];
-	box_planes[10].dist = mins[2];
-	box_planes[11].dist = -mins[2];
+	box_planes[cm][0].dist = maxs[0];
+	box_planes[cm][1].dist = -maxs[0];
+	box_planes[cm][2].dist = mins[0];
+	box_planes[cm][3].dist = -mins[0];
+	box_planes[cm][4].dist = maxs[1];
+	box_planes[cm][5].dist = -maxs[1];
+	box_planes[cm][6].dist = mins[1];
+	box_planes[cm][7].dist = -mins[1];
+	box_planes[cm][8].dist = maxs[2];
+	box_planes[cm][9].dist = -maxs[2];
+	box_planes[cm][10].dist = mins[2];
+	box_planes[cm][11].dist = -mins[2];
 
-	VectorCopy( mins, box_brush->bounds[0] );
-	VectorCopy( maxs, box_brush->bounds[1] );
+	VectorCopy( mins, box_brush[cm]->bounds[0] );
+	VectorCopy( maxs, box_brush[cm]->bounds[1] );
 
 	return BOX_MODEL_HANDLE;
 }

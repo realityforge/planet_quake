@@ -1872,12 +1872,18 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 	qboolean bGood = qtrue;
 	char url[MAX_CVAR_VALUE_STRING];
 
+	if(cl->newWorld > 0) {
+		cl->gotCP = qtrue;
+		cl->pureAuthentic = qtrue;
+		return;
+	}
+
 Com_DPrintf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
 	// ui and cgame that we think should be loaded based on the pure setting
 	//
-	if ( sv_pure->integer != 0 && cl->newWorld == 0 ) {
+	if ( sv_pure->integer != 0 ) {
 
 		nChkSum1 = nChkSum2 = 0;
 
@@ -2158,6 +2164,7 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
 	// call prog code to allow overrides
+Com_Printf("Update user: %i\n", gvm);
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
 
@@ -2665,7 +2672,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		return qfalse;
 	}
 	
-	gvm = cl->gameWorld;
+	gvm = cl->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		gvm = 0;
@@ -2783,7 +2790,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 					SV_FreeClient(cl);
 					SV_SendClientGameState( cl );
 					// skip pure check for world switching
-					cl->pureAuthentic = qtrue;
 					cl->state = CS_PRIMED;
 				} else {
 					SV_SendClientGameState( cl );
@@ -2808,7 +2814,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	
 	// a bad cp command was sent, drop the client
 	if ( sv_pure->integer != 0 && !cl->pureAuthentic ) {
-Com_DPrintf( "Cannot validate pure client!\n" );
 		SV_DropClient( cl, "Cannot validate pure client!" );
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);

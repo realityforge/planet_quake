@@ -1501,7 +1501,7 @@ void SV_Frame( int msec ) {
 			if(!gvms[i]) continue;
 			gvm = i;
 			CM_SwitchMap(gameWorlds[gvm]);
-Com_Printf( "Game World: %i\n", gvm );
+//Com_Printf( "Game World: %i\n", gvm );
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 		}
 		gvm = 0;

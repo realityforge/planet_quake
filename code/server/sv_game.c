@@ -368,29 +368,24 @@ The module is making a system call
 ====================
 */
 static intptr_t SV_GameSystemCalls( intptr_t *args ) {
-	Com_Printf("GameCommand: %i - ", args[0]);
-	switch( args[0] ) {
+		switch( args[0] ) {
 	case G_PRINT:
-Com_Printf("G_PRINT\n");
 		Com_Printf( "%s", (const char*)VMA(1) );
-		return 0;
+				return 0;
 	case G_ERROR:
-Com_Printf("G_ERROR\n");
 		// excessive plus checking if it is installed correctly
 		if(Q_stristr((const char*)VMA(1), "seems broken")
 			|| Q_stristr((const char*)VMA(1), "missing or corrupt")
 			|| Q_stristr((const char*)VMA(1), "no free entities")) {
 			Com_Printf( "%s", (const char*)VMA(1) );
-			Cvar_Set("bot_enable", "1");
+						Cvar_Set("bot_enable", "1");
 			return 1;
 		}
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
 		return 0;
 	case G_MILLISECONDS:
-Com_Printf("G_MILLISECONDS\n");
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
-Com_Printf("G_CVAR_REGISTER\n");
 		{
 			char *name = VMA(2);
 			if(!Q_stricmp(name, "mapname")) {
@@ -400,22 +395,18 @@ Com_Printf("G_CVAR_REGISTER\n");
 			return 0;
 		}
 	case G_CVAR_UPDATE:
-Com_Printf("G_CVAR_UPDATE\n");
 		Cvar_Update( VMA(1) );
 		return 0;
 	case G_CVAR_SET:
-Com_Printf("G_CVAR_SET\n");
 		{
-			char *name = VMA(2);
-			Com_Printf( "%s", (const char*)VMA(1) );
+			char *name = VMA(1);
+Com_Printf( "Cvar_Set: %s - %s\n", name, (const char *)VMA(2) );
 		}
 		Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
-Com_Printf("G_CVAR_VARIABLE_INTEGER_VALUE\n");
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 	case G_CVAR_VARIABLE_STRING_BUFFER:
-Com_Printf("G_CVAR_VARIABLE_STRING_BUFFER\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		{
 			char *name = VMA(1);
@@ -426,146 +417,112 @@ Com_Printf("G_CVAR_VARIABLE_STRING_BUFFER\n");
 		}
 		return 0;
 	case G_ARGC:
-Com_Printf("G_ARGC\n");
 		return Cmd_Argc();
 	case G_ARGV:
-Com_Printf("G_ARGV\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SEND_CONSOLE_COMMAND:
-Com_Printf("G_SEND_CONSOLE_COMMAND\n");
 		if(gvm == 0)
 			Cbuf_ExecuteText( args[1], VMA(2) );
 		return 0;
 
 	case G_FS_FOPEN_FILE:
-Com_Printf("G_FS_FOPEN_FILE\n");
 		return FS_VM_OpenFile( VMA(1), VMA(2), args[3], H_QAGAME );
 	case G_FS_READ:
-Com_Printf("G_FS_READ\n");
 		if ( args[3] == 0 ) // UrT may pass this with args[2]=-1 and cause false bounds check error
 			return 0;
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		return FS_VM_ReadFile( VMA(1), args[2], args[3], H_QAGAME );
 	case G_FS_WRITE:
-Com_Printf("G_FS_WRITE\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		FS_VM_WriteFile( VMA(1), args[2], args[3], H_QAGAME );
 		return 0;
 	case G_FS_FCLOSE_FILE:
-Com_Printf("G_FS_FCLOSE_FILE\n");
 		FS_VM_CloseFile( args[1], H_QAGAME );
 		return 0;
 	case G_FS_SEEK:
-Com_Printf("G_FS_SEEK\n");
 		return FS_VM_SeekFile( args[1], args[2], args[3], H_QAGAME );
 
 	case G_FS_GETFILELIST:
-Com_Printf("G_FS_GETFILELIST\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
 	case G_LOCATE_GAME_DATA:
-Com_Printf("G_LOCATE_GAME_DATA\n");
 		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
 	case G_DROP_CLIENT:
-Com_Printf("G_DROP_CLIENT\n");
 		SV_GameDropClient( args[1], VMA(2) );
 		return 0;
 	case G_SEND_SERVER_COMMAND:
-Com_Printf("G_SEND_SERVER_COMMAND\n");
 		SV_GameSendServerCommand( args[1], VMA(2) );
 		return 0;
 	case G_LINKENTITY:
-Com_Printf("G_LINKENTITY\n");
 		SV_LinkEntity( VMA(1) );
 		return 0;
 	case G_UNLINKENTITY:
-Com_Printf("G_UNLINKENTITY\n");
 		SV_UnlinkEntity( VMA(1) );
 		return 0;
 	case G_ENTITIES_IN_BOX:
-Com_Printf("G_ENTITIES_IN_BOX\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] * sizeof( int ) );
 		return SV_AreaEntities( VMA(1), VMA(2), VMA(3), args[4] );
 	case G_ENTITY_CONTACT:
-Com_Printf("G_ENTITY_CONTACT\n");
 		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qfalse );
 	case G_ENTITY_CONTACTCAPSULE:
-Com_Printf("G_ENTITY_CONTACTCAPSULE\n");
 		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qtrue );
 	case G_TRACE:
-Com_Printf("G_TRACE\n");
 		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse );
 		return 0;
 	case G_TRACECAPSULE:
-Com_Printf("G_TRACECAPSULE\n");
 		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qtrue );
 		return 0;
 	case G_POINT_CONTENTS:
-Com_Printf("G_POINT_CONTENTS\n");
 		return SV_PointContents( VMA(1), args[2] );
 	case G_SET_BRUSH_MODEL:
-Com_Printf("G_SET_BRUSH_MODEL\n");
 		SV_SetBrushModel( VMA(1), VMA(2) );
 		return 0;
 	case G_IN_PVS:
-Com_Printf("G_IN_PVS\n");
 		return SV_inPVS( VMA(1), VMA(2) );
 	case G_IN_PVS_IGNORE_PORTALS:
-Com_Printf("G_IN_PVS_IGNORE_PORTALS\n");
 		return SV_inPVSIgnorePortals( VMA(1), VMA(2) );
 
 	case G_SET_CONFIGSTRING:
-Com_Printf("G_SET_CONFIGSTRING\n");
 		// Don't allow the game to overwrite demo configstrings (unless it modifies the normal spectator clients configstrings, this exception allows for player connecting during a demo playback to be correctly rendered, else they will get an empty configstring so no icon, no name, nothing...)
 		if ( (sv_democlients->integer > 0 && args[1] >= CS_PLAYERS + sv_democlients->integer && args[1] < CS_PLAYERS + sv_maxclients->integer) || sv.demoState != DS_PLAYBACK ) { // ATTENTION: sv.demoState check must be placed LAST! Else, it will short-circuit and prevent normal players configstrings from being set!
 			SV_SetConfigstring( args[1], VMA(2) );
 		}
 		return 0;
 	case G_GET_CONFIGSTRING:
-Com_Printf("G_GET_CONFIGSTRING\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		SV_GetConfigstring( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SET_USERINFO:
-Com_Printf("G_SET_USERINFO\n");
 		SV_SetUserinfo( args[1], VMA(2) );
 		return 0;
 	case G_GET_USERINFO:
-Com_Printf("G_GET_USERINFO\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		SV_GetUserinfo( args[1], VMA(2), args[3] );
 		return 0;
 	case G_GET_SERVERINFO:
-Com_Printf("G_GET_SERVERINFO\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		SV_GetServerinfo( VMA(1), args[2] );
 		return 0;
 	case G_ADJUST_AREA_PORTAL_STATE:
-Com_Printf("G_ADJUST_AREA_PORTAL_STATE\n");
 		SV_AdjustAreaPortalState( VMA(1), args[2] );
 		return 0;
 	case G_AREAS_CONNECTED:
-Com_Printf("G_AREAS_CONNECTED\n");
 		return CM_AreasConnected( args[1], args[2] );
 
 	case G_BOT_ALLOCATE_CLIENT:
-Com_Printf("G_BOT_ALLOCATE_CLIENT\n");
 		return SV_BotAllocateClient();
 	case G_BOT_FREE_CLIENT:
-Com_Printf("G_BOT_FREE_CLIENT\n");
 		SV_BotFreeClient( args[1] );
 		return 0;
 
 	case G_GET_USERCMD:
-Com_Printf("G_GET_USERCMD\n");
 		SV_GetUsercmd( args[1], VMA(2) );
 		return 0;
 	case G_GET_ENTITY_TOKEN:
-Com_Printf("G_GET_ENTITY_TOKEN\n");
 		{
 			const char *s = COM_Parse( &sv.entityParsePoint );
 			VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
@@ -586,87 +543,68 @@ Com_Printf("G_GET_ENTITY_TOKEN\n");
 		}
 
 	case G_DEBUG_POLYGON_CREATE:
-Com_Printf("G_DEBUG_POLYGON_CREATE\n");
 		return BotImport_DebugPolygonCreate( args[1], args[2], VMA(3) );
 	case G_DEBUG_POLYGON_DELETE:
-Com_Printf("G_DEBUG_POLYGON_DELETE\n");
 		BotImport_DebugPolygonDelete( args[1] );
 		return 0;
 	case G_REAL_TIME:
-Com_Printf("G_REAL_TIME\n");
 		return Com_RealTime( VMA(1) );
 	case G_SNAPVECTOR:
-Com_Printf("G_SNAPVECTOR\n");
 		Sys_SnapVector( VMA(1) );
 		return 0;
 
 		//====================================
 
 	case BOTLIB_SETUP:
-Com_Printf("BOTLIB_SETUP\n");
 		if(gvm == 0)
 			return SV_BotLibSetup();
 		else
 			return 0;
 	case BOTLIB_SHUTDOWN:
-Com_Printf("BOTLIB_SHUTDOWN\n");
 		if(gvm == 0)
 			return SV_BotLibShutdown();
 		else
 			return 0;
 	case BOTLIB_LIBVAR_SET:
-Com_Printf("BOTLIB_LIBVAR_SET\n");
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
 	case BOTLIB_LIBVAR_GET:
-Com_Printf("BOTLIB_LIBVAR_GET\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		return botlib_export->BotLibVarGet( VMA(1), VMA(2), args[3] );
 
 	case BOTLIB_PC_ADD_GLOBAL_DEFINE:
-Com_Printf("BOTLIB_PC_ADD_GLOBAL_DEFINE\n");
 		return botlib_export->PC_AddGlobalDefine( VMA(1) );
 	case BOTLIB_PC_LOAD_SOURCE:
-Com_Printf("BOTLIB_PC_LOAD_SOURCE\n");
 		return botlib_export->PC_LoadSourceHandle( VMA(1) );
 	case BOTLIB_PC_FREE_SOURCE:
-Com_Printf("BOTLIB_PC_FREE_SOURCE\n");
 		return botlib_export->PC_FreeSourceHandle( args[1] );
 	case BOTLIB_PC_READ_TOKEN:
-Com_Printf("BOTLIB_PC_READ_TOKEN\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], sizeof( pc_token_t ) );
 		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
 	case BOTLIB_PC_SOURCE_FILE_AND_LINE:
-Com_Printf("BOTLIB_PC_SOURCE_FILE_AND_LINE\n");
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 
 	case BOTLIB_START_FRAME:
-Com_Printf("BOTLIB_START_FRAME\n");
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
-Com_Printf("BOTLIB_LOAD_MAP\n");
 		if(gvm == 0)
 			return botlib_export->BotLibLoadMap( VMA(1) );
 		else
 			return -1;
 	case BOTLIB_UPDATENTITY:
-Com_Printf("BOTLIB_UPDATENTITY\n");
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:
-Com_Printf("BOTLIB_TEST\n");
 		return botlib_export->Test( args[1], VMA(2), VMA(3), VMA(4) );
 
 	case BOTLIB_GET_SNAPSHOT_ENTITY:
-Com_Printf("BOTLIB_GET_SNAPSHOT_ENTITY\n");
 		return SV_BotGetSnapshotEntity( args[1], args[2] );
 	case BOTLIB_GET_CONSOLE_MESSAGE:
-Com_Printf("BOTLIB_GET_CONSOLE_MESSAGE\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		return SV_BotGetConsoleMessage( args[1], VMA(2), args[3] );
 	case BOTLIB_USER_COMMAND:
-Com_Printf("BOTLIB_USER_COMMAND\n");
 		{
 			unsigned clientNum = args[1];
-			if ( clientNum < sv_maxclients->integer )
+			if ( clientNum < sv_maxclients->integer
+			 	&& svs.clients[ clientNum ].gameWorld == gvm)
 			{
 				SV_ClientThink( &svs.clients[ clientNum ], VMA(2) );
 			}
@@ -674,526 +612,390 @@ Com_Printf("BOTLIB_USER_COMMAND\n");
 		return 0;
 
 	case BOTLIB_AAS_BBOX_AREAS:
-Com_Printf("BOTLIB_AAS_BBOX_AREAS\n");
 		return botlib_export->aas.AAS_BBoxAreas( VMA(1), VMA(2), VMA(3), args[4] );
 	case BOTLIB_AAS_AREA_INFO:
-Com_Printf("BOTLIB_AAS_AREA_INFO\n");
 		return botlib_export->aas.AAS_AreaInfo( args[1], VMA(2) );
 	case BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL:
-Com_Printf("BOTLIB_AAS_ALTERNATIVE_ROUTE_GOAL\n");
 		return botlib_export->aas.AAS_AlternativeRouteGoals( VMA(1), args[2], VMA(3), args[4], args[5], VMA(6), args[7], args[8] );
 	case BOTLIB_AAS_ENTITY_INFO:
-Com_Printf("BOTLIB_AAS_ENTITY_INFO\n");
 		botlib_export->aas.AAS_EntityInfo( args[1], VMA(2) );
 		return 0;
 
 	case BOTLIB_AAS_INITIALIZED:
-Com_Printf("BOTLIB_AAS_INITIALIZED\n");
 		return botlib_export->aas.AAS_Initialized();
 	case BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX:
-Com_Printf("BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX\n");
 		botlib_export->aas.AAS_PresenceTypeBoundingBox( args[1], VMA(2), VMA(3) );
 		return 0;
 	case BOTLIB_AAS_TIME:
-Com_Printf("BOTLIB_AAS_TIME\n");
 		return FloatAsInt( botlib_export->aas.AAS_Time() );
 
 	case BOTLIB_AAS_POINT_AREA_NUM:
-Com_Printf("BOTLIB_AAS_POINT_AREA_NUM\n");
 		return botlib_export->aas.AAS_PointAreaNum( VMA(1) );
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
-Com_Printf("BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX\n");
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
 	case BOTLIB_AAS_TRACE_AREAS:
-Com_Printf("BOTLIB_AAS_TRACE_AREAS\n");
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
 
 	case BOTLIB_AAS_POINT_CONTENTS:
-Com_Printf("BOTLIB_AAS_POINT_CONTENTS\n");
 		return botlib_export->aas.AAS_PointContents( VMA(1) );
 	case BOTLIB_AAS_NEXT_BSP_ENTITY:
-Com_Printf("BOTLIB_AAS_NEXT_BSP_ENTITY\n");
 		return botlib_export->aas.AAS_NextBSPEntity( args[1] );
 	case BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY:
-Com_Printf("BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		return botlib_export->aas.AAS_ValueForBSPEpairKey( args[1], VMA(2), VMA(3), args[4] );
 	case BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY:
-Com_Printf("BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY\n");
 		return botlib_export->aas.AAS_VectorForBSPEpairKey( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY:
-Com_Printf("BOTLIB_AAS_FLOAT_FOR_BSP_EPAIR_KEY\n");
 		return botlib_export->aas.AAS_FloatForBSPEpairKey( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY:
-Com_Printf("BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY\n");
 		return botlib_export->aas.AAS_IntForBSPEpairKey( args[1], VMA(2), VMA(3) );
 
 	case BOTLIB_AAS_AREA_REACHABILITY:
-Com_Printf("BOTLIB_AAS_AREA_REACHABILITY\n");
 		return botlib_export->aas.AAS_AreaReachability( args[1] );
 
 	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
-Com_Printf("BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA\n");
 		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
 	case BOTLIB_AAS_ENABLE_ROUTING_AREA:
-Com_Printf("BOTLIB_AAS_ENABLE_ROUTING_AREA\n");
 		return botlib_export->aas.AAS_EnableRoutingArea( args[1], args[2] );
 	case BOTLIB_AAS_PREDICT_ROUTE:
-Com_Printf("BOTLIB_AAS_PREDICT_ROUTE\n");
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
 
 	case BOTLIB_AAS_SWIMMING:
-Com_Printf("BOTLIB_AAS_SWIMMING\n");
 		return botlib_export->aas.AAS_Swimming( VMA(1) );
 	case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
-Com_Printf("BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT\n");
 		return botlib_export->aas.AAS_PredictClientMovement( VMA(1), args[2], VMA(3), args[4], args[5],
 			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13] );
 
 	case BOTLIB_EA_SAY:
-Com_Printf("BOTLIB_EA_SAY\n");
 		botlib_export->ea.EA_Say( args[1], VMA(2) );
 		return 0;
 	case BOTLIB_EA_SAY_TEAM:
-Com_Printf("BOTLIB_EA_SAY_TEAM\n");
 		botlib_export->ea.EA_SayTeam( args[1], VMA(2) );
 		return 0;
 	case BOTLIB_EA_COMMAND:
-Com_Printf("BOTLIB_EA_COMMAND\n");
 		botlib_export->ea.EA_Command( args[1], VMA(2) );
 		return 0;
 
 	case BOTLIB_EA_ACTION:
-Com_Printf("BOTLIB_EA_ACTION\n");
 		botlib_export->ea.EA_Action( args[1], args[2] );
 		return 0;
 	case BOTLIB_EA_GESTURE:
-Com_Printf("BOTLIB_EA_GESTURE\n");
 		botlib_export->ea.EA_Gesture( args[1] );
 		return 0;
 	case BOTLIB_EA_TALK:
-Com_Printf("BOTLIB_EA_TALK\n");
 		botlib_export->ea.EA_Talk( args[1] );
 		return 0;
 	case BOTLIB_EA_ATTACK:
-Com_Printf("BOTLIB_EA_ATTACK\n");
 		botlib_export->ea.EA_Attack( args[1] );
 		return 0;
 	case BOTLIB_EA_USE:
-Com_Printf("BOTLIB_EA_USE\n");
 		botlib_export->ea.EA_Use( args[1] );
 		return 0;
 	case BOTLIB_EA_RESPAWN:
-Com_Printf("BOTLIB_EA_RESPAWN\n");
 		botlib_export->ea.EA_Respawn( args[1] );
 		return 0;
 	case BOTLIB_EA_CROUCH:
-Com_Printf("BOTLIB_EA_CROUCH\n");
 		botlib_export->ea.EA_Crouch( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_UP:
-Com_Printf("BOTLIB_EA_MOVE_UP\n");
 		botlib_export->ea.EA_MoveUp( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_DOWN:
-Com_Printf("BOTLIB_EA_MOVE_DOWN\n");
 		botlib_export->ea.EA_MoveDown( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_FORWARD:
-Com_Printf("BOTLIB_EA_MOVE_FORWARD\n");
 		botlib_export->ea.EA_MoveForward( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_BACK:
-Com_Printf("BOTLIB_EA_MOVE_BACK\n");
 		botlib_export->ea.EA_MoveBack( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_LEFT:
-Com_Printf("BOTLIB_EA_MOVE_LEFT\n");
 		botlib_export->ea.EA_MoveLeft( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE_RIGHT:
-Com_Printf("BOTLIB_EA_MOVE_RIGHT\n");
 		botlib_export->ea.EA_MoveRight( args[1] );
 		return 0;
 
 	case BOTLIB_EA_SELECT_WEAPON:
-Com_Printf("BOTLIB_EA_SELECT_WEAPON\n");
 		botlib_export->ea.EA_SelectWeapon( args[1], args[2] );
 		return 0;
 	case BOTLIB_EA_JUMP:
-Com_Printf("BOTLIB_EA_JUMP\n");
 		botlib_export->ea.EA_Jump( args[1] );
 		return 0;
 	case BOTLIB_EA_DELAYED_JUMP:
-Com_Printf("BOTLIB_EA_DELAYED_JUMP\n");
 		botlib_export->ea.EA_DelayedJump( args[1] );
 		return 0;
 	case BOTLIB_EA_MOVE:
-Com_Printf("BOTLIB_EA_MOVE\n");
 		botlib_export->ea.EA_Move( args[1], VMA(2), VMF(3) );
 		return 0;
 	case BOTLIB_EA_VIEW:
-Com_Printf("BOTLIB_EA_VIEW\n");
 		botlib_export->ea.EA_View( args[1], VMA(2) );
 		return 0;
 
 	case BOTLIB_EA_END_REGULAR:
-Com_Printf("BOTLIB_EA_END_REGULAR\n");
 		botlib_export->ea.EA_EndRegular( args[1], VMF(2) );
 		return 0;
 	case BOTLIB_EA_GET_INPUT:
-Com_Printf("BOTLIB_EA_GET_INPUT\n");
 		botlib_export->ea.EA_GetInput( args[1], VMF(2), VMA(3) );
 		return 0;
 	case BOTLIB_EA_RESET_INPUT:
-Com_Printf("BOTLIB_EA_RESET_INPUT\n");
 		botlib_export->ea.EA_ResetInput( args[1] );
 		return 0;
 
 	case BOTLIB_AI_LOAD_CHARACTER:
-Com_Printf("BOTLIB_AI_LOAD_CHARACTER\n");
 		return botlib_export->ai.BotLoadCharacter( VMA(1), VMF(2) );
 	case BOTLIB_AI_FREE_CHARACTER:
-Com_Printf("BOTLIB_AI_FREE_CHARACTER\n");
 		botlib_export->ai.BotFreeCharacter( args[1] );
 		return 0;
 	case BOTLIB_AI_CHARACTERISTIC_FLOAT:
-Com_Printf("BOTLIB_AI_CHARACTERISTIC_FLOAT\n");
 		return FloatAsInt( botlib_export->ai.Characteristic_Float( args[1], args[2] ) );
 	case BOTLIB_AI_CHARACTERISTIC_BFLOAT:
-Com_Printf("BOTLIB_AI_CHARACTERISTIC_BFLOAT\n");
 		return FloatAsInt( botlib_export->ai.Characteristic_BFloat( args[1], args[2], VMF(3), VMF(4) ) );
 	case BOTLIB_AI_CHARACTERISTIC_INTEGER:
-Com_Printf("BOTLIB_AI_CHARACTERISTIC_INTEGER\n");
 		return botlib_export->ai.Characteristic_Integer( args[1], args[2] );
 	case BOTLIB_AI_CHARACTERISTIC_BINTEGER:
-Com_Printf("BOTLIB_AI_CHARACTERISTIC_BINTEGER\n");
 		return botlib_export->ai.Characteristic_BInteger( args[1], args[2], args[3], args[4] );
 	case BOTLIB_AI_CHARACTERISTIC_STRING:
-Com_Printf("BOTLIB_AI_CHARACTERISTIC_STRING\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		botlib_export->ai.Characteristic_String( args[1], args[2], VMA(3), args[4] );
 		return 0;
 
 	case BOTLIB_AI_ALLOC_CHAT_STATE:
-Com_Printf("BOTLIB_AI_ALLOC_CHAT_STATE\n");
 		return botlib_export->ai.BotAllocChatState();
 	case BOTLIB_AI_FREE_CHAT_STATE:
-Com_Printf("BOTLIB_AI_FREE_CHAT_STATE\n");
 		botlib_export->ai.BotFreeChatState( args[1] );
 		return 0;
 	case BOTLIB_AI_QUEUE_CONSOLE_MESSAGE:
-Com_Printf("BOTLIB_AI_QUEUE_CONSOLE_MESSAGE\n");
 		botlib_export->ai.BotQueueConsoleMessage( args[1], args[2], VMA(3) );
 		return 0;
 	case BOTLIB_AI_REMOVE_CONSOLE_MESSAGE:
-Com_Printf("BOTLIB_AI_REMOVE_CONSOLE_MESSAGE\n");
 		botlib_export->ai.BotRemoveConsoleMessage( args[1], args[2] );
 		return 0;
 	case BOTLIB_AI_NEXT_CONSOLE_MESSAGE:
-Com_Printf("BOTLIB_AI_NEXT_CONSOLE_MESSAGE\n");
 		return botlib_export->ai.BotNextConsoleMessage( args[1], VMA(2) );
 	case BOTLIB_AI_NUM_CONSOLE_MESSAGE:
-Com_Printf("BOTLIB_AI_NUM_CONSOLE_MESSAGE\n");
 		return botlib_export->ai.BotNumConsoleMessages( args[1] );
 	case BOTLIB_AI_INITIAL_CHAT:
-Com_Printf("BOTLIB_AI_INITIAL_CHAT\n");
 		botlib_export->ai.BotInitialChat( args[1], VMA(2), args[3], VMA(4), VMA(5), VMA(6), VMA(7), VMA(8), VMA(9), VMA(10), VMA(11) );
 		return 0;
 	case BOTLIB_AI_NUM_INITIAL_CHATS:
-Com_Printf("BOTLIB_AI_NUM_INITIAL_CHATS\n");
 		return botlib_export->ai.BotNumInitialChats( args[1], VMA(2) );
 	case BOTLIB_AI_REPLY_CHAT:
-Com_Printf("BOTLIB_AI_REPLY_CHAT\n");
 		return botlib_export->ai.BotReplyChat( args[1], VMA(2), args[3], args[4], VMA(5), VMA(6), VMA(7), VMA(8), VMA(9), VMA(10), VMA(11), VMA(12) );
 	case BOTLIB_AI_CHAT_LENGTH:
-Com_Printf("BOTLIB_AI_CHAT_LENGTH\n");
 		return botlib_export->ai.BotChatLength( args[1] );
 	case BOTLIB_AI_ENTER_CHAT:
-Com_Printf("BOTLIB_AI_ENTER_CHAT\n");
 		botlib_export->ai.BotEnterChat( args[1], args[2], args[3] );
 		return 0;
 	case BOTLIB_AI_GET_CHAT_MESSAGE:
-Com_Printf("BOTLIB_AI_GET_CHAT_MESSAGE\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		botlib_export->ai.BotGetChatMessage( args[1], VMA(2), args[3] );
 		return 0;
 	case BOTLIB_AI_STRING_CONTAINS:
-Com_Printf("BOTLIB_AI_STRING_CONTAINS\n");
 		return botlib_export->ai.StringContains( VMA(1), VMA(2), args[3] );
 	case BOTLIB_AI_FIND_MATCH:
-Com_Printf("BOTLIB_AI_FIND_MATCH\n");
 		return botlib_export->ai.BotFindMatch( VMA(1), VMA(2), args[3] );
 	case BOTLIB_AI_MATCH_VARIABLE:
-Com_Printf("BOTLIB_AI_MATCH_VARIABLE\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		botlib_export->ai.BotMatchVariable( VMA(1), args[2], VMA(3), args[4] );
 		return 0;
 	case BOTLIB_AI_UNIFY_WHITE_SPACES:
-Com_Printf("BOTLIB_AI_UNIFY_WHITE_SPACES\n");
 		botlib_export->ai.UnifyWhiteSpaces( VMA(1) );
 		return 0;
 	case BOTLIB_AI_REPLACE_SYNONYMS:
-Com_Printf("BOTLIB_AI_REPLACE_SYNONYMS\n");
 		botlib_export->ai.BotReplaceSynonyms( VMA(1), args[2] );
 		return 0;
 	case BOTLIB_AI_LOAD_CHAT_FILE:
-Com_Printf("BOTLIB_AI_LOAD_CHAT_FILE\n");
 		return botlib_export->ai.BotLoadChatFile( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AI_SET_CHAT_GENDER:
-Com_Printf("BOTLIB_AI_SET_CHAT_GENDER\n");
 		botlib_export->ai.BotSetChatGender( args[1], args[2] );
 		return 0;
 	case BOTLIB_AI_SET_CHAT_NAME:
-Com_Printf("BOTLIB_AI_SET_CHAT_NAME\n");
 		botlib_export->ai.BotSetChatName( args[1], VMA(2), args[3] );
 		return 0;
 
 	case BOTLIB_AI_RESET_GOAL_STATE:
-Com_Printf("BOTLIB_AI_RESET_GOAL_STATE\n");
 		botlib_export->ai.BotResetGoalState( args[1] );
 		return 0;
 	case BOTLIB_AI_RESET_AVOID_GOALS:
-Com_Printf("BOTLIB_AI_RESET_AVOID_GOALS\n");
 		botlib_export->ai.BotResetAvoidGoals( args[1] );
 		return 0;
 	case BOTLIB_AI_REMOVE_FROM_AVOID_GOALS:
-Com_Printf("BOTLIB_AI_REMOVE_FROM_AVOID_GOALS\n");
 		botlib_export->ai.BotRemoveFromAvoidGoals( args[1], args[2] );
 		return 0;
 	case BOTLIB_AI_PUSH_GOAL:
-Com_Printf("BOTLIB_AI_PUSH_GOAL\n");
 		botlib_export->ai.BotPushGoal( args[1], VMA(2) );
 		return 0;
 	case BOTLIB_AI_POP_GOAL:
-Com_Printf("BOTLIB_AI_POP_GOAL\n");
 		botlib_export->ai.BotPopGoal( args[1] );
 		return 0;
 	case BOTLIB_AI_EMPTY_GOAL_STACK:
-Com_Printf("BOTLIB_AI_EMPTY_GOAL_STACK\n");
 		botlib_export->ai.BotEmptyGoalStack( args[1] );
 		return 0;
 	case BOTLIB_AI_DUMP_AVOID_GOALS:
-Com_Printf("BOTLIB_AI_DUMP_AVOID_GOALS\n");
 		botlib_export->ai.BotDumpAvoidGoals( args[1] );
 		return 0;
 	case BOTLIB_AI_DUMP_GOAL_STACK:
-Com_Printf("BOTLIB_AI_DUMP_GOAL_STACK\n");
 		botlib_export->ai.BotDumpGoalStack( args[1] );
 		return 0;
 	case BOTLIB_AI_GOAL_NAME:
-Com_Printf("BOTLIB_AI_GOAL_NAME\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		botlib_export->ai.BotGoalName( args[1], VMA(2), args[3] );
 		return 0;
 	case BOTLIB_AI_GET_TOP_GOAL:
-Com_Printf("BOTLIB_AI_GET_TOP_GOAL\n");
 		return botlib_export->ai.BotGetTopGoal( args[1], VMA(2) );
 	case BOTLIB_AI_GET_SECOND_GOAL:
-Com_Printf("BOTLIB_AI_GET_SECOND_GOAL\n");
 		return botlib_export->ai.BotGetSecondGoal( args[1], VMA(2) );
 	case BOTLIB_AI_CHOOSE_LTG_ITEM:
-Com_Printf("BOTLIB_AI_CHOOSE_LTG_ITEM\n");
 		return botlib_export->ai.BotChooseLTGItem( args[1], VMA(2), VMA(3), args[4] );
 	case BOTLIB_AI_CHOOSE_NBG_ITEM:
-Com_Printf("BOTLIB_AI_CHOOSE_NBG_ITEM\n");
 		return botlib_export->ai.BotChooseNBGItem( args[1], VMA(2), VMA(3), args[4], VMA(5), VMF(6) );
 	case BOTLIB_AI_TOUCHING_GOAL:
-Com_Printf("BOTLIB_AI_TOUCHING_GOAL\n");
 		return botlib_export->ai.BotTouchingGoal( VMA(1), VMA(2) );
 	case BOTLIB_AI_ITEM_GOAL_IN_VIS_BUT_NOT_VISIBLE:
-Com_Printf("BOTLIB_AI_ITEM_GOAL_IN_VIS_BUT_NOT_VISIBLE\n");
 		return botlib_export->ai.BotItemGoalInVisButNotVisible( args[1], VMA(2), VMA(3), VMA(4) );
 	case BOTLIB_AI_GET_LEVEL_ITEM_GOAL:
-Com_Printf("BOTLIB_AI_GET_LEVEL_ITEM_GOAL\n");
 		return botlib_export->ai.BotGetLevelItemGoal( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AI_GET_NEXT_CAMP_SPOT_GOAL:
-Com_Printf("BOTLIB_AI_GET_NEXT_CAMP_SPOT_GOAL\n");
 		return botlib_export->ai.BotGetNextCampSpotGoal( args[1], VMA(2) );
 	case BOTLIB_AI_GET_MAP_LOCATION_GOAL:
-Com_Printf("BOTLIB_AI_GET_MAP_LOCATION_GOAL\n");
 		return botlib_export->ai.BotGetMapLocationGoal( VMA(1), VMA(2) );
 	case BOTLIB_AI_AVOID_GOAL_TIME:
-Com_Printf("BOTLIB_AI_AVOID_GOAL_TIME\n");
 		return FloatAsInt( botlib_export->ai.BotAvoidGoalTime( args[1], args[2] ) );
 	case BOTLIB_AI_SET_AVOID_GOAL_TIME:
-Com_Printf("BOTLIB_AI_SET_AVOID_GOAL_TIME\n");
 		botlib_export->ai.BotSetAvoidGoalTime( args[1], args[2], VMF(3));
 		return 0;
 	case BOTLIB_AI_INIT_LEVEL_ITEMS:
-Com_Printf("BOTLIB_AI_INIT_LEVEL_ITEMS\n");
 		botlib_export->ai.BotInitLevelItems();
 		return 0;
 	case BOTLIB_AI_UPDATE_ENTITY_ITEMS:
-Com_Printf("BOTLIB_AI_UPDATE_ENTITY_ITEMS\n");
 		botlib_export->ai.BotUpdateEntityItems();
 		return 0;
 	case BOTLIB_AI_LOAD_ITEM_WEIGHTS:
-Com_Printf("BOTLIB_AI_LOAD_ITEM_WEIGHTS\n");
 		return botlib_export->ai.BotLoadItemWeights( args[1], VMA(2) );
 	case BOTLIB_AI_FREE_ITEM_WEIGHTS:
-Com_Printf("BOTLIB_AI_FREE_ITEM_WEIGHTS\n");
 		botlib_export->ai.BotFreeItemWeights( args[1] );
 		return 0;
 	case BOTLIB_AI_INTERBREED_GOAL_FUZZY_LOGIC:
-Com_Printf("BOTLIB_AI_INTERBREED_GOAL_FUZZY_LOGIC\n");
 		botlib_export->ai.BotInterbreedGoalFuzzyLogic( args[1], args[2], args[3] );
 		return 0;
 	case BOTLIB_AI_SAVE_GOAL_FUZZY_LOGIC:
-Com_Printf("BOTLIB_AI_SAVE_GOAL_FUZZY_LOGIC\n");
 		botlib_export->ai.BotSaveGoalFuzzyLogic( args[1], VMA(2) );
 		return 0;
 	case BOTLIB_AI_MUTATE_GOAL_FUZZY_LOGIC:
-Com_Printf("BOTLIB_AI_MUTATE_GOAL_FUZZY_LOGIC\n");
 		botlib_export->ai.BotMutateGoalFuzzyLogic( args[1], VMF(2) );
 		return 0;
 	case BOTLIB_AI_ALLOC_GOAL_STATE:
-Com_Printf("BOTLIB_AI_ALLOC_GOAL_STATE\n");
 		return botlib_export->ai.BotAllocGoalState( args[1] );
 	case BOTLIB_AI_FREE_GOAL_STATE:
-Com_Printf("BOTLIB_AI_FREE_GOAL_STATE\n");
 		botlib_export->ai.BotFreeGoalState( args[1] );
 		return 0;
 
 	case BOTLIB_AI_RESET_MOVE_STATE:
-Com_Printf("BOTLIB_AI_RESET_MOVE_STATE\n");
 		botlib_export->ai.BotResetMoveState( args[1] );
 		return 0;
 	case BOTLIB_AI_ADD_AVOID_SPOT:
-Com_Printf("BOTLIB_AI_ADD_AVOID_SPOT\n");
 		botlib_export->ai.BotAddAvoidSpot( args[1], VMA(2), VMF(3), args[4] );
 		return 0;
 	case BOTLIB_AI_MOVE_TO_GOAL:
-Com_Printf("BOTLIB_AI_MOVE_TO_GOAL\n");
 		botlib_export->ai.BotMoveToGoal( VMA(1), args[2], VMA(3), args[4] );
 		return 0;
 	case BOTLIB_AI_MOVE_IN_DIRECTION:
-Com_Printf("BOTLIB_AI_MOVE_IN_DIRECTION\n");
 		return botlib_export->ai.BotMoveInDirection( args[1], VMA(2), VMF(3), args[4] );
 	case BOTLIB_AI_RESET_AVOID_REACH:
-Com_Printf("BOTLIB_AI_RESET_AVOID_REACH\n");
 		botlib_export->ai.BotResetAvoidReach( args[1] );
 		return 0;
 	case BOTLIB_AI_RESET_LAST_AVOID_REACH:
-Com_Printf("BOTLIB_AI_RESET_LAST_AVOID_REACH\n");
 		botlib_export->ai.BotResetLastAvoidReach( args[1] );
 		return 0;
 	case BOTLIB_AI_REACHABILITY_AREA:
-Com_Printf("BOTLIB_AI_REACHABILITY_AREA\n");
 		return botlib_export->ai.BotReachabilityArea( VMA(1), args[2] );
 	case BOTLIB_AI_MOVEMENT_VIEW_TARGET:
-Com_Printf("BOTLIB_AI_MOVEMENT_VIEW_TARGET\n");
 		return botlib_export->ai.BotMovementViewTarget( args[1], VMA(2), args[3], VMF(4), VMA(5) );
 	case BOTLIB_AI_PREDICT_VISIBLE_POSITION:
-Com_Printf("BOTLIB_AI_PREDICT_VISIBLE_POSITION\n");
 		return botlib_export->ai.BotPredictVisiblePosition( VMA(1), args[2], VMA(3), args[4], VMA(5) );
 	case BOTLIB_AI_ALLOC_MOVE_STATE:
-Com_Printf("BOTLIB_AI_ALLOC_MOVE_STATE\n");
 		return botlib_export->ai.BotAllocMoveState();
 	case BOTLIB_AI_FREE_MOVE_STATE:
-Com_Printf("BOTLIB_AI_FREE_MOVE_STATE\n");
 		botlib_export->ai.BotFreeMoveState( args[1] );
 		return 0;
 	case BOTLIB_AI_INIT_MOVE_STATE:
-Com_Printf("BOTLIB_AI_INIT_MOVE_STATE\n");
 		botlib_export->ai.BotInitMoveState( args[1], VMA(2) );
 		return 0;
 
 	case BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON:
-Com_Printf("BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON\n");
 		return botlib_export->ai.BotChooseBestFightWeapon( args[1], VMA(2) );
 	case BOTLIB_AI_GET_WEAPON_INFO:
-Com_Printf("BOTLIB_AI_GET_WEAPON_INFO\n");
 		botlib_export->ai.BotGetWeaponInfo( args[1], args[2], VMA(3) );
 		return 0;
 	case BOTLIB_AI_LOAD_WEAPON_WEIGHTS:
-Com_Printf("BOTLIB_AI_LOAD_WEAPON_WEIGHTS\n");
 		return botlib_export->ai.BotLoadWeaponWeights( args[1], VMA(2) );
 	case BOTLIB_AI_ALLOC_WEAPON_STATE:
-Com_Printf("BOTLIB_AI_ALLOC_WEAPON_STATE\n");
 		return botlib_export->ai.BotAllocWeaponState();
 	case BOTLIB_AI_FREE_WEAPON_STATE:
-Com_Printf("BOTLIB_AI_FREE_WEAPON_STATE\n");
 		botlib_export->ai.BotFreeWeaponState( args[1] );
 		return 0;
 	case BOTLIB_AI_RESET_WEAPON_STATE:
-Com_Printf("BOTLIB_AI_RESET_WEAPON_STATE\n");
 		botlib_export->ai.BotResetWeaponState( args[1] );
 		return 0;
 
 	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
-Com_Printf("BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION\n");
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
 
 	// shared syscalls
 
 	case TRAP_MEMSET:
-Com_Printf("TRAP_MEMSET\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
 		return args[1];
 
 	case TRAP_MEMCPY:
-Com_Printf("TRAP_MEMCPY\n");
 		VM_CHECKBOUNDS2( gvms[gvm], args[1], args[2], args[3] );
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 
 	case TRAP_STRNCPY:
-Com_Printf("TRAP_STRNCPY\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[3] );
 		strncpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 
 	case TRAP_SIN:
-Com_Printf("TRAP_SIN\n");
 		return FloatAsInt( sin( VMF(1) ) );
 
 	case TRAP_COS:
-Com_Printf("TRAP_COS\n");
 		return FloatAsInt( cos( VMF(1) ) );
 
 	case TRAP_ATAN2:
-Com_Printf("TRAP_ATAN2\n");
 		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
 
 	case TRAP_SQRT:
-Com_Printf("TRAP_SQRT\n");
 		return FloatAsInt( sqrt( VMF(1) ) );
 
 	case G_MATRIXMULTIPLY:
-Com_Printf("G_MATRIXMULTIPLY\n");
 		MatrixMultiply( VMA(1), VMA(2), VMA(3) );
 		return 0;
 
 	case G_ANGLEVECTORS:
-Com_Printf("G_ANGLEVECTORS\n");
 		AngleVectors( VMA(1), VMA(2), VMA(3), VMA(4) );
 		return 0;
 
 	case G_PERPENDICULARVECTOR:
-Com_Printf("G_PERPENDICULARVECTOR\n");
 		PerpendicularVector( VMA(1), VMA(2) );
 		return 0;
 
 	case G_FLOOR:
-Com_Printf("G_FLOOR\n");
 		return FloatAsInt( floor( VMF(1) ) );
 
 	case G_CEIL:
-Com_Printf("G_CEIL\n");
 		return FloatAsInt( ceil( VMF(1) ) );
 
 	case G_TESTPRINTINT:
-Com_Printf("G_TESTPRINTINT\n");
 		return sprintf( VMA(1), "%i", (int)args[2] );
 
 	case G_TESTPRINTFLOAT:
-Com_Printf("G_TESTPRINTFLOAT\n");
 		return sprintf( VMA(1), "%f", VMF(2) );
 
 	case G_TRAP_GETVALUE:
-Com_Printf("G_TRAP_GETVALUE\n");
 		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		return SV_GetValue( VMA(1), args[2], VMA(3) );
 
