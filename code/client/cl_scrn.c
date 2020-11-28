@@ -641,11 +641,10 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 					}
 #endif
 					cgvm = i;
-					if(clientWorlds[cgvm] > 0) continue;
-					CM_SwitchMap(clientWorlds[cgvm]);
 					y = floor(count / xMaxVMs);
 					x = count % xMaxVMs;
 					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+					CM_SwitchMap(clientWorlds[cgvm]);
 					CL_CGameRendering( stereoFrame );
 					count++;
 				}

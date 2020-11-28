@@ -2274,12 +2274,19 @@ void SV_LoadVM_f( client_t *cl ) {
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
-	for ( i = 3; i > 0; i-- )
+	for ( i =4; i > 1; i-- )
 	{
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		//SV_BotFrame( sv.time );
 	}
 	SV_CreateBaseline();
+	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
+		if ( svs.clients[i].state >= CS_CONNECTED
+		 	&& svs.clients[i].netchan.remoteAddress.type == NA_BOT) {
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qtrue, qfalse );
+		}
+	}
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 }
@@ -2326,7 +2333,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
 		SV_UpdateConfigstrings( client );
-		if(ent->s.eType == 0) {
+		//if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
@@ -2340,7 +2347,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->newWorld = newWorld;
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+			//SV_SaveSequences();
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			// notify the client of the secondary map
@@ -2351,6 +2359,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
+			/*
 		} else {
 			// keep the same origin in the new world as if you've switched worlds
 			//   but haven't moved, default behavior
@@ -2361,6 +2370,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 		}
+		*/
 	}
 
 	ent = SV_GentityNum( clientNum );
@@ -2800,7 +2810,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		if(cl->newWorld != cl->gameWorld) {
 Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 			cl->gameWorld = cl->newWorld;
-			SV_ClientEnterWorld( cl, NULL );
+			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
 		} else {
 			SV_ClientEnterWorld( cl, &cmds[0] );
 		}
