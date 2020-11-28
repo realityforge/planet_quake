@@ -361,9 +361,11 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 }
 
 
+#ifdef USE_MULTIVM
 static char *RenameMultiworld(char *name) {
 	char *newName;
 	if(!Q_stricmp(name, "mapname")) {
+		// TODO: change this to gameWorlds[gvm]
 		newName = va("mapname_%i", gvm);
 	}
 	else if(!Q_stricmp(name, "session")) {
@@ -377,6 +379,7 @@ static char *RenameMultiworld(char *name) {
 	Com_Printf( "Cvar_Set: %s\n", newName );
 	return newName;
 }
+#endif
 
 
 /*

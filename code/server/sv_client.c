@@ -1304,9 +1304,9 @@ static void SV_SendClientGameState( client_t *client ) {
 	if ( client->state != CS_PRIMED ) {
 		Com_Printf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
-	//Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvm) ) );
-	//SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
-	//SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+	Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvm) ) );
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
 	//SV_RemainingGameState();
 	client->state = CS_PRIMED;
 
@@ -2333,18 +2333,18 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 
 			// remove from old world?
-			gvm = client->gameWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			//gvm = client->gameWorld;
+			//CM_SwitchMap(gameWorlds[gvm]);
+			//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 			client->newWorld = newWorld;
-			gvm = client->gameWorld; //newWorld;
+			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			// notify the client of the secondary map
-			//NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d", client->netchan.challenge );
+			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d %i", client->netchan.challenge, client->newWorld );
 			client->oldServerTime = sv.time;
 			client->gamestateMessageNum = -1;
 
@@ -2780,7 +2780,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 
 	gvm = cl->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
-//Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
@@ -2800,8 +2799,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		}
 		if(cl->newWorld != cl->gameWorld) {
 Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
-			//SV_SetUserinfo( cl - svs.clients, "" );
-			//SV_FreeClient(cl);
 			cl->gameWorld = cl->newWorld;
 			SV_ClientEnterWorld( cl, NULL );
 		} else {
@@ -2925,9 +2922,13 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
+				gvm = cl->newWorld;
+				CM_SwitchMap(gameWorlds[gvm]);
 				SV_SendClientGameState( cl );
 			}
 		}
+		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 

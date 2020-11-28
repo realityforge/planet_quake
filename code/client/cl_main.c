@@ -1075,12 +1075,12 @@ void CL_ClearMemory( void ) {
 	// if not running a server clear the whole hunk
 	if ( !com_sv_running->integer ) {
 		// clear the whole hunk
-		Hunk_Clear();
+		//Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-		Hunk_ClearToMark();
+		//Hunk_ClearToMark();
 	}
 }
 
@@ -1099,7 +1099,7 @@ Com_Printf("Shutdown all\n");
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
-	//CL_ClearMemory();
+	CL_ClearMemory();
 
 #ifdef EMSCRIPTEN
 	if(!FS_Initialized()) return;
@@ -3272,11 +3272,15 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 	if ( !Q_stricmp(c, "connectResponse") ) {
 		if ( cls.state >= CA_CONNECTED ) {
 #ifdef USE_MULTIVM
-			cls.state = CA_CHALLENGING;
+			cls.state = CA_CONNECTED;
+			c = Cmd_Argv(2);
+			clientWorlds[cgvm] = atoi(c);
 			//clc.connectPacketCount = 0;
 			//clc.connectTime = -99999;
 			//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
 			//cls.lastVidRestart = Sys_Milliseconds();
+			clc.lastPacketSentTime = -9999;		// send first packet immediately
+			return qtrue;
 #else
 			Com_Printf( "Dup connect received. Ignored.\n" );
 			return qfalse;

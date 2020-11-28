@@ -1040,7 +1040,11 @@ void CL_InitCGame( qboolean createNew ) {
 
 	// find the current mapname
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
+#ifdef USE_MULTIVM
+	mapname = Info_ValueForKey( info, va("mapname_", clientWorlds[cgvm]) );
+#else
 	mapname = Info_ValueForKey( info, "mapname" );
+#endif
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
 	// allow vertex lighting for in-game elements

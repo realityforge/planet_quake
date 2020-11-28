@@ -985,7 +985,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 	int     headerBytes;
 	playerState_t	*ps;
 
-	gvm = client->gameWorld;
+	gvm = client->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 
 	// build the snapshot
