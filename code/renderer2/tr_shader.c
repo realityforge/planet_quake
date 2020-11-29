@@ -4409,7 +4409,8 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   
   mapShaders = qfalse;
 }
-
+#endif
+#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
 void RE_LoadShaders( void ) {
   int i;
   tr.lastRegistrationTime = ri.Milliseconds();

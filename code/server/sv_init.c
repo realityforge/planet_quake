@@ -460,14 +460,14 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
-#ifndef EMSCRIPTEN
+#if !defined(EMSCRIPTEN) && !defined(USE_LAZY_LOAD) && !defined(USE_MULTIVM)
 	CL_ShutdownAll();
 #else
 	S_DisableSounds();
 #endif
 #endif
 
-#ifndef USE_LAZY_LOAD
+#if !defined(USE_LAZY_LOAD) && !defined(USE_MULTIVM)
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 #endif

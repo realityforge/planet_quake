@@ -48,6 +48,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#define MV_PROTOCOL_VERSION	1 // multiview protocol version
+#define USE_MV				  // multiview enabled
+//#define USE_MV_ZCMD		// command compression
+
+#ifdef USE_MV
+#define USE_MULTIVM 1
+//#ifndef USE_CMD_CONNECTOR
+//#define USE_CMD_CONNECTOR 1
+//#endif
+//#define USE_LAZY_LOAD 1
+#else
+#undef USE_MULTIVM
+#endif
+
 #ifdef EMSCRIPTEN
 // TODO: convert local dedicated server to native, possibly using `set dedicated 4 and 6` as flags
 #define USE_LOCAL_DED 1
@@ -81,18 +95,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 #endif
 
-#define MV_PROTOCOL_VERSION	1 // multiview protocol version
-#define USE_MV				  // multiview enabled
-//#define USE_MV_ZCMD		// command compression
-
-#ifdef USE_MV
-#define USE_MULTIVM 1
-//#ifndef USE_CMD_CONNECTOR
-//#define USE_CMD_CONNECTOR 1
-//#endif
-#else
-#undef USE_MULTIVM
-#endif
 
 #define GET_ABIT( byteArray, bitIndex ) ((byteArray)[ (bitIndex) / 8 ] & ( 1 << ( (bitIndex) & 7 ) ))
 #define SET_ABIT( byteArray, bitIndex ) (byteArray)[ (bitIndex) / 8 ] |= ( 1 << ( (bitIndex) & 7 ) )

@@ -2554,10 +2554,10 @@ static void CL_DownloadsComplete( void ) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
-#ifndef USE_LAZY_LOAD
-	CL_FlushMemory();
-#else
+#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
 	re.LoadShaders();
+#else
+	CL_FlushMemory();
 #endif
 
 	// initialize the CGame

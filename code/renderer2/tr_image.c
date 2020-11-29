@@ -2466,7 +2466,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	long	hash;
 	imgFlags_t checkFlagsTrue, checkFlagsFalse;
 
-	if (!name) {
+	if (!name || !name[0]) {
 		return NULL;
 	}
 

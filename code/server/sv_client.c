@@ -2266,6 +2266,7 @@ void SV_LoadVM_f( client_t *cl ) {
 	mapname = Cmd_Argv(2);
 	if(mapname[0] == '\0') {
 		gameWorlds[gvm] = previous;
+		CM_SwitchMap(gameWorlds[gvm]);
 	} else {
 		Cvar_Set( va("mapname_%i", gvm), mapname );
 		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
@@ -2340,14 +2341,15 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 
 			// remove from old world?
-			//gvm = client->gameWorld;
-			//CM_SwitchMap(gameWorlds[gvm]);
-			//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			gvm = client->gameWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
+			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			SV_FreeClient( client );
+			SV_SaveSequences();
 
 			client->newWorld = newWorld;
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
-			//SV_SaveSequences();
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately

@@ -1874,8 +1874,10 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #endif
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
-#ifdef USE_LAZY_LOAD
+#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
 	re.LoadShaders = RE_LoadShaders;
+#endif
+#ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
 #endif
