@@ -1374,7 +1374,13 @@ void R_Register( void )
 	//ri.Cvar_SetDescription();
 	r_pshadowDist = ri.Cvar_Get( "r_pshadowDist", "128", CVAR_ARCHIVE );
 	//ri.Cvar_SetDescription();
+#if defined(USE_MULTIVM) || defined(USE_LAZY_LOAD)
+	// turn off lightmap merge so they can be updated every time the world loads
+	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_mergeLightmaps, "0", "0", CV_INTEGER );
+#else
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
+#endif
 	//ri.Cvar_SetDescription();
 	r_imageUpsample = ri.Cvar_Get( "r_imageUpsample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	//ri.Cvar_SetDescription();

@@ -3112,7 +3112,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		if ( clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
-#ifndef EMSCRIPTEN
+#if !defined(EMSCRIPTEN) && !defined(USE_LAZY_LOAD) && !defined(USE_MULTIVM)
 			CL_ShutdownAll();
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
 #endif
@@ -4157,7 +4157,7 @@ void Com_Frame_After_Startup() {
 		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
 	} else {
 		VM_Forced_Unload_Start();
-		//CL_FlushMemory();
+		CL_FlushMemory();
 		VM_Forced_Unload_Done();
 		Com_GameRestart_After_Restart();
 	}

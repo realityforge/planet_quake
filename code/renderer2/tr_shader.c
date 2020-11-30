@@ -4420,6 +4420,8 @@ void RE_LoadShaders( void ) {
   GLSL_InitGPUShaders();
   
   // remove lightmaps
+  /*
+  Gets reassigned on subsequent loads
   for(i=0;i<tr.numLightmaps;i++) {
     image_t *img = tr.lightmaps[i];
     if(img->texnum)
@@ -4428,11 +4430,12 @@ void RE_LoadShaders( void ) {
   }
   tr.lightmaps = NULL;
   tr.numLightmaps = 0;
+  */
   // must reset model list to match tr.world and ent->hmodel from snapshots
   memset(tr.models, 0, sizeof(tr.models));
   tr.numModels = 0;
   for(i = 0; i < ARRAY_LEN(worldModels); i++) {
-    // TODO: dealloc or reuse
+    // dealloc or reuse
     if(worldModels[i] && worldModels[i]->name[0] == '*') {
       memset(worldModels[i], 0, sizeof(model_t));
     }

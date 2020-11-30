@@ -1189,6 +1189,11 @@ typedef struct {
 
 	char		*entityString;
 	char		*entityParsePoint;
+	
+	// backup lightmaps so they can be reapplied when the world changes
+	int						numLightmaps;
+	int						lightmapSize;
+	image_t					**lightmaps;
 } world_t;
 
 

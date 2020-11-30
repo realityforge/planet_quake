@@ -1075,12 +1075,17 @@ void CL_ClearMemory( void ) {
 	// if not running a server clear the whole hunk
 	if ( !com_sv_running->integer ) {
 		// clear the whole hunk
-		//Hunk_Clear();
+		Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-		//Hunk_ClearToMark();
+#ifdef USE_MULTIVM
+		// clear to mark doesn't work in multivm mode because there are many marks
+		Hunk_Clear();
+#else
+		Hunk_ClearToMark();
+#endif
 	}
 }
 
