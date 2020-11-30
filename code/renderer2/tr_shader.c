@@ -4440,6 +4440,7 @@ void RE_ReloadShaders( qboolean createNew ) {
       memset(worldModels[i], 0, sizeof(model_t));
     }
   }
+
   GL_BindNullTextures();
 
   ScanAndLoadShaderFiles();

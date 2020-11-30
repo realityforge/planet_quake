@@ -1054,7 +1054,7 @@ Called every time a map changes
 void SV_ShutdownGameProgs( void ) {
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		gvm = i;
-		if ( !gvms[gvm] || i > 0 ) {
+		if ( !gvms[gvm] ) {
 			continue;
 		}
 		VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
@@ -1062,10 +1062,6 @@ void SV_ShutdownGameProgs( void ) {
 		gvms[gvm] = NULL;
 	}
 	gvm = 0;
-	if(!gvms[gvm]) return;
-	VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
-	VM_Free( gvms[gvm] );
-	gvms[gvm] = NULL;
 	FS_VM_CloseFiles( H_QAGAME );
 }
 

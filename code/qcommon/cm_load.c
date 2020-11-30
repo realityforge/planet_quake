@@ -629,6 +629,20 @@ int CM_SwitchMap( int world ) {
 	return prev;
 }
 
+
+static void CM_MapList_f(void) {
+	int count = 0;
+	Com_Printf ("-----------------------\n");
+	for(int i = 0; i < MAX_NUM_MAPS; i++) {
+		if(!cms[i].name[0]) break;
+		count++;
+		Com_Printf("%s\n", cms[i].name);
+	}
+	Com_Printf ("%i total maps\n", count);
+	Com_Printf ("------------------\n");
+}
+
+
 /*
 ==================
 CM_LoadMap
@@ -656,6 +670,10 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cvar_SetDescription(cm_noCurves, "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
 	Cvar_SetDescription( cm_playerCurveClip, "Don't clip player bounding box around curves\nDefault: 1" );
+#endif
+#ifdef USE_LAZY_MEMORY
+	Cmd_AddCommand("maplist", CM_MapList_f);
+	Cmd_SetDescription("maplist", "List the currently loaded clip maps\nUsage: maplist");
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 

@@ -48,7 +48,7 @@ Some of the major features currently implemented are:
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients that allow local commands to be run, good for browser, might make native client vulnerable. TODO: if map doesn't load report it to client.
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. TODO: playing back dm_68 files for all players. MultiVM command `\load <ui,cgame,game>; \mvjoin`.
-  * Multiple QVM loading for supplemental UIs and multiview.
+  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview.
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
@@ -63,7 +63,7 @@ Coming soon!
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
   * Alternate chat server integration, discord and telegram
-  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Multiple map loader in parallel with teleport switch, Instant replay
+  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * HTML and CSS menu renderer
