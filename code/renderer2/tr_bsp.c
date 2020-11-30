@@ -2731,6 +2731,7 @@ void RE_LoadWorldMap( const char *name ) {
 			tr.numLightmaps = s_worldData[rw].numLightmaps;
 			tr.lightmaps = s_worldData[rw].lightmaps;
 			out = s_worldData[rw].bmodels;
+			// TODO: move a copy in to trGlobals_t, like above?
 			for ( i = 0; i < s_worldData[rw].numBModels; i++, out++ ) {
 				model_t *model = R_AllocModel();
 				model->type = MOD_BRUSH;

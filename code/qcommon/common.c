@@ -3112,7 +3112,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		if ( clientRestart )
 		{
 			CL_Disconnect( qfalse, qfalse );
-#if !defined(EMSCRIPTEN) && !defined(USE_LAZY_LOAD) && !defined(USE_MULTIVM)
+#ifndef USE_LAZY_MEMORY
 			CL_ShutdownAll();
 			CL_ClearMemory(); // Hunk_Clear(); // -EC- 
 #endif

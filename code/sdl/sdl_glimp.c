@@ -63,7 +63,7 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( qboolean unloadDLL )
 {
-#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
+#ifdef USE_LAZY_MEMORY
 	// never shutdown here, will shut down when platform exits
 	return;
 #endif

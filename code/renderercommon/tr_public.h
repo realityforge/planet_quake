@@ -121,7 +121,7 @@ typedef struct {
 	void	(*SyncRender)( void );
 
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
-	void	(*LoadShaders)( void );
+	void	(*ReloadShaders)( qboolean createNew );
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);

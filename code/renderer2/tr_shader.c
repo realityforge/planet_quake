@@ -4410,8 +4410,8 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qfalse;
 }
 #endif
-#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
-void RE_LoadShaders( void ) {
+#ifdef USE_LAZY_MEMORY
+void RE_ReloadShaders( qboolean createNew ) {
   int i;
   tr.lastRegistrationTime = ri.Milliseconds();
 
@@ -4420,17 +4420,17 @@ void RE_LoadShaders( void ) {
   GLSL_InitGPUShaders();
   
   // remove lightmaps
-  /*
-  Gets reassigned on subsequent loads
-  for(i=0;i<tr.numLightmaps;i++) {
-    image_t *img = tr.lightmaps[i];
-    if(img->texnum)
-      qglDeleteTextures( 1, &img->texnum );
-    Com_Memset(img, 0, sizeof( *img ));
+  if(!createNew) {
+    // Gets reassigned on subsequent loads
+    for(i=0;i<tr.numLightmaps;i++) {
+      image_t *img = tr.lightmaps[i];
+      if(img->texnum)
+        qglDeleteTextures( 1, &img->texnum );
+      Com_Memset(img, 0, sizeof( *img ));
+    }
+    tr.lightmaps = NULL;
+    tr.numLightmaps = 0;
   }
-  tr.lightmaps = NULL;
-  tr.numLightmaps = 0;
-  */
   // must reset model list to match tr.world and ent->hmodel from snapshots
   memset(tr.models, 0, sizeof(tr.models));
   tr.numModels = 0;

@@ -2014,7 +2014,7 @@ void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
 shader_t *R_FindDefaultShaderByName( const char *name );
 qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
-void		RE_LoadShaders( void );
+void		RE_ReloadShaders( qboolean createNew );
 void	  R_UpdateModel( const char *name );
 void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 

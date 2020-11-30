@@ -2559,8 +2559,8 @@ static void CL_DownloadsComplete( void ) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
-#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
-	re.LoadShaders();
+#ifdef USE_LAZY_MEMORY
+	re.ReloadShaders(cgvm == 0 && clientWorlds[cgvm] == 0);
 #else
 	CL_FlushMemory();
 #endif

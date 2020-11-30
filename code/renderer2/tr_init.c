@@ -1374,7 +1374,7 @@ void R_Register( void )
 	//ri.Cvar_SetDescription();
 	r_pshadowDist = ri.Cvar_Get( "r_pshadowDist", "128", CVAR_ARCHIVE );
 	//ri.Cvar_SetDescription();
-#if defined(USE_MULTIVM) || defined(USE_LAZY_LOAD)
+#ifdef USE_LAZY_MEMORY
 	// turn off lightmap merge so they can be updated every time the world loads
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_mergeLightmaps, "0", "0", CV_INTEGER );
@@ -1880,8 +1880,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #endif
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
-#if defined(USE_LAZY_LOAD) || defined(USE_MULTIVM)
-	re.LoadShaders = RE_LoadShaders;
+#ifdef USE_LAZY_MEMORY
+	re.ReloadShaders = RE_ReloadShaders;
 #endif
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;
