@@ -4428,6 +4428,8 @@ void RE_LoadShaders( void ) {
   }
   tr.lightmaps = NULL;
   tr.numLightmaps = 0;
+  // must reset model list to match tr.world and ent->hmodel from snapshots
+  tr.numModels = 0;
   GL_BindNullTextures();
 
   ScanAndLoadShaderFiles();
