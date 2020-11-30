@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS] = {};
+
 #define	LL(x) x=LittleLong(x)
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *modName);
@@ -227,10 +229,18 @@ model_t *R_AllocModel( void ) {
 	model_t		*mod;
 
 	if ( tr.numModels == MAX_MOD_KNOWN ) {
+		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
 
-	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+	for(int i = 0; i < ARRAY_LEN(worldModels); i++) {
+		if(!worldModels[i]) {
+			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+			break;
+		} else if (!worldModels[i]->name[0]) {
+			mod = worldModels[i];
+		}
+	}
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
@@ -278,12 +288,18 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	// search the currently loaded models
 	//
-	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
-		mod = tr.models[hModel];
-		if ( !strcmp( mod->name, name ) ) {
+	for ( hModel = 1 ; hModel < ARRAY_LEN(worldModels); hModel++ ) {
+		mod = worldModels[hModel];
+		if ( mod && !strcmp( mod->name, name ) ) {
 			found = qtrue;
+			// check it is loaded in world models
+			if(tr.models[mod->index] != mod) {
+				mod->index = tr.numModels;
+				tr.models[tr.numModels] = mod;
+				tr.numModels++;
+			}
 			if( mod->type != MOD_BAD ) {
-				return hModel;
+				return mod->index;
 			} else {
 				break;
 			}

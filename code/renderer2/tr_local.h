@@ -53,6 +53,8 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
+#define MAX_NUM_WORLDS 10
+
 #define	MAX_FBOS      64
 #define MAX_VISCOUNTS 5
 #define MAX_VAOS      4096
@@ -1288,6 +1290,7 @@ typedef struct model_s {
 
 
 #define	MAX_MOD_KNOWN	1024
+extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 
 void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
