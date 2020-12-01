@@ -4619,7 +4619,7 @@ void CL_Game_f ( void ) {
 }
 
 void CL_World_f( void ) {
-	int newWorld;
+	int newWorld, prev;
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
@@ -4627,7 +4627,8 @@ void CL_World_f( void ) {
 	
 	newWorld = atoi( Cmd_Argv(1) );
 	
-	CM_SwitchMap(newWorld);
+	prev = CM_SwitchMap(newWorld);
+	Com_Printf( "Client switching world: %i -> %i\n", prev, newWorld );
 	re.SwitchWorld(newWorld);
 	clientWorlds[0] = newWorld;
 }

@@ -655,7 +655,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		int				*i;
 		void			*v;
 	} buf;
-	int				i;
+	int				i, empty = -1;
 	dheader_t		header;
 	int				length;
 
@@ -678,13 +678,16 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
 	for(int i = 0; i < MAX_NUM_MAPS; i++) {
-		cm = i;
-		if(!cms[cm].name[0]) break;
-		if ( !strcmp( cms[cm].name, name ) /* && clientload */ ) {
-			*checksum = cms[cm].checksum;
+		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
+			*checksum = cms[i].checksum;
+			CM_SwitchMap(i);
 			return cm;
+		} else if (cms[i].name[0] == '\0' && empty == -1) {
+			// fill the next empty clipmap slot
+			empty = i;
 		}
 	}
+	cm = empty;
 
 	// free old stuff
 	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
@@ -802,9 +805,9 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle ) {
 CM_InlineModel
 ==================
 */
-clipHandle_t CM_InlineModel( int index ) {
+clipHandle_t CM_InlineModel( int index, int client, int world ) {
 	if ( index < 0 || index >= cms[cm].numSubModels ) {
-		Com_Error (ERR_DROP, "CM_InlineModel: bad number");
+		Com_Error (ERR_DROP, "CM_InlineModel: bad number %i in %i (client: %i, world: %i)", index, cm, client, world);
 	}
 	return index;
 }

@@ -237,7 +237,7 @@ model_t *R_AllocModel( void ) {
 		if(!worldModels[i]) {
 			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( model_t ), h_low );
 			break;
-		} else if (!worldModels[i]->name[0]) {
+		} else if (i > 0 && !worldModels[i]->name[0]) {
 			mod = worldModels[i];
 			break;
 		}
@@ -1263,13 +1263,14 @@ void R_ModelInit( void ) {
 	// leave a space for NULL model
 	rw = 0;
 	s_worldData[0].numModels = 0;
+	memset(worldModels, 0, sizeof(worldModels));
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
 
 	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
 		s_worldData[i].models[0] = mod;
-		s_worldData[i].numModels++;
+		s_worldData[i].numModels = 1;
 	}
 }
 

@@ -4418,7 +4418,7 @@ void RE_ReloadShaders( qboolean createNew ) {
   R_IssuePendingRenderCommands();
   
   GLSL_InitGPUShaders();
-  
+
   // remove lightmaps
   if(!createNew) {
     // Gets reassigned on subsequent loads

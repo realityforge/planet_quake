@@ -2722,7 +2722,7 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	int			i, j;
+	int			i, j, empty = -1;
 	dheader_t	*header;
 	union {
 		byte *b;
@@ -2737,12 +2737,12 @@ void RE_LoadWorldMap( const char *name ) {
 			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
 			RE_SwitchWorld(j);
 			return;
-		} else if (s_worldData[j].name[0] == '\0') {
+		} else if (s_worldData[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot
-			rw = j;
-			break;
+			empty = j;
 		}
 	}
+	rw = empty;
 #else
 	if ( tr.worldMapLoaded ) {
 		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map\n" );

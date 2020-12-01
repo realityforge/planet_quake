@@ -35,7 +35,7 @@ be returned, otherwise a custom box tree will be constructed.
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
 	if ( ent->r.bmodel ) {
 		// explicit hulls in the BSP model
-		return CM_InlineModel( ent->s.modelindex );
+		return CM_InlineModel( ent->s.modelindex, 3, gvm );
 	}
 	if ( ent->r.svFlags & SVF_CAPSULE ) {
 		// create a temp capsule from bounding box sizes
@@ -152,7 +152,7 @@ void SV_ClearWorld( void ) {
 	sv_numworldSectors[gvm] = 0;
 
 	// get world map bounds
-	h = CM_InlineModel( 0 );
+	h = CM_InlineModel( 0, 2, gvm );
 	CM_ModelBounds( h, mins, maxs );
 	SV_CreateworldSector( 0, mins, maxs );
 }

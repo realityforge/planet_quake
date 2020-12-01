@@ -2335,55 +2335,42 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		SV_FreeClient( client );
 		SV_SaveSequences();
 		SV_UpdateConfigstrings( client );
+
+		// keep the same origin in the new world as if you've switched worlds
+		//   but haven't moved, default behavior
+		if(changeOrigin == SAMEORIGIN) {
+			ps = SV_GameClientNum( clientNum );
+			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
+			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+		}
+		
+		// remove from old world?
+		gvm = client->gameWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
+		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+
+		client->newWorld = newWorld;
+
 		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
 			}
-
-			// remove from old world?
-			gvm = client->gameWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
-
-			client->newWorld = newWorld;
 			// notify the client of the secondary map
-			//SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
+			//SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
-			//Netchan_Setup( NS_SERVER, &client->netchan, &client->netchan.remoteAddress,
-			//	client->netchan.qport, client->netchan.challenge, client->compat );
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
-			//client->deltaMessage = -1;
-			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			//client->lastPacketTime = svs.time;
-			//client->lastConnectTime = svs.time;
-			//client->lastDisconnectTime = svs.time;
-			//client->justConnected = qtrue;
-			//NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d %i", client->netchan.challenge, client->newWorld );
-			//client->oldServerTime = svs.time;
 			client->gamestateMessageNum = -1;
 
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		} else {
-			// keep the same origin in the new world as if you've switched worlds
-			//   but haven't moved, default behavior
-			if(changeOrigin == SAMEORIGIN) {
-				ps = SV_GameClientNum( clientNum );
-				memcpy(newOrigin, ps->origin, sizeof(vec3_t));
-				memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
-			}
-			// remove from old world?
-			gvm = client->gameWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
-			
-			client->newWorld = newWorld;
 			// notify the client of the secondary map
 			SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
@@ -2391,6 +2378,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 		}
 	}

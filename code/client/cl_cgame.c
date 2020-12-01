@@ -83,7 +83,7 @@ CL_GetCurrentCmdNumber
 */
 static int CL_GetCurrentCmdNumber( void ) {
 	if(cgvm != clientWorlds[0]) {
-		return cl.cmdNumber - 1;
+		return cl.cmdNumber + 1;
 	} else {
 		return cl.cmdNumber;
 	}
@@ -96,12 +96,14 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
+	/*
 #ifdef USE_MULTIVM
 	if(!cl.snap.multiview && cgvm != clientWorlds[0]) {
 		*snapshotNumber = cl.snap.messageNum - 1;
 		*serverTime = cl.snap.serverTime - 1;
 	} else 
 #endif
+	*/
 	{
 		*snapshotNumber = cl.snap.messageNum;
 		*serverTime = cl.snap.serverTime;
@@ -163,7 +165,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
-//Com_Printf("Client snapshot: %i (%i, %i)\n", snapshot->serverTime, cgvm, clc.clientView);
 
 #ifdef USE_MV
 #ifdef USE_MULTIVM
@@ -259,10 +260,13 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	*/
 
 	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
-		snapshot->serverTime = clSnap->serverTime - 1;
-		snapshot->serverCommandSequence = clSnap->serverCommandNum - 1;
+		snapshot->serverTime = clSnap->serverTime;
+		snapshot->serverCommandSequence = clSnap->serverCommandNum;
 		// send a game update but don't bother with entities yet
 		snapshot->numEntities = 0;
+		for ( i = 0 ; i < MAX_ENTITIES_IN_SNAPSHOT ; i++ ) {
+			memset(&snapshot->entities[i], 0, sizeof(entityState_t));
+		}
 		return qtrue;
 	}
 
@@ -492,6 +496,7 @@ rescan:
 
 		Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clientWorlds[0] != newWorld) {
+			clientWorlds[0] = newWorld; // safe to switch this here, not safe to switch renderers
 			Cbuf_AddText(va("world %i\n", newWorld));
 		}
 		Cmd_Clear();
@@ -763,7 +768,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_CM_NUMINLINEMODELS:
 		return CM_NumInlineModels();
 	case CG_CM_INLINEMODEL:
-		return CM_InlineModel( args[1] );
+		return CM_InlineModel( args[1], 1, cgvm );
 	case CG_CM_TEMPBOXMODEL:
 		return CM_TempBoxModel( VMA(1), VMA(2), /*int capsule*/ qfalse );
 	case CG_CM_TEMPCAPSULEMODEL:
@@ -888,7 +893,10 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETCURRENTCMDNUMBER:
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
-		return CL_GetUserCmd( args[1], VMA(2) );
+		if(cgvm == clientWorlds[0])
+			return CL_GetUserCmd( args[1], VMA(2) );
+		else
+			return qfalse;
 	case CG_SETUSERCMDVALUE:
 		if(cgvm == clientWorlds[0])
 			CL_SetUserCmdValue( args[1], VMF(2) );
@@ -1223,7 +1231,7 @@ CL_CGameRendering
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
 	if(cgvm != clientWorlds[0]) {
-		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime - 1, stereo, clc.demoplaying );
+		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 	} else {
 		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 	}
