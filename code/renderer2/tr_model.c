@@ -211,11 +211,11 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
 
 	// out of range gets the defualt model
-	if ( index < 1 || index >= tr.numModels ) {
-		return tr.models[0];
+	if ( index < 1 || index >= s_worldData[rw].numModels ) {
+		return s_worldData[rw].models[0];
 	}
 
-	mod = tr.models[index];
+	mod = s_worldData[rw].models[index];
 
 	return mod;
 }
@@ -228,7 +228,7 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 model_t *R_AllocModel( void ) {
 	model_t		*mod = NULL;
 
-	if ( tr.numModels == MAX_MOD_KNOWN ) {
+	if ( s_worldData[rw].numModels == MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
@@ -244,10 +244,9 @@ model_t *R_AllocModel( void ) {
 	}
 	if(mod == NULL) return NULL;
 
-	mod->index = tr.numModels;
-	tr.models[tr.numModels] = mod;
-	tr.numModels++;
-	s_worldData[rw].numModels = tr.numModels;
+	mod->index = s_worldData[rw].numModels;
+	s_worldData[rw].models[s_worldData[rw].numModels] = mod;
+	s_worldData[rw].numModels++;
 
 	return mod;
 }
@@ -294,14 +293,15 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	for ( hModel = 1 ; hModel < ARRAY_LEN(worldModels); hModel++ ) {
 		mod = worldModels[hModel];
-		if ( mod && !strcmp( mod->name, name ) ) {
+		if ( mod && !strcmp( mod->name, name )
+			// make sure brush models are referenced properly
+		 	&& (name[0] != '*' || s_worldData[rw].models[mod->index] == mod) ) {
 			found = qtrue;
 			// check it is loaded in world models
-			if(tr.models[mod->index] != mod) {
-				mod->index = tr.numModels;
-				tr.models[tr.numModels] = mod;
-				tr.numModels++;
-				s_worldData[rw].numModels = tr.numModels;
+			if(s_worldData[rw].models[mod->index] != mod) {
+				mod->index = s_worldData[rw].numModels;
+				s_worldData[rw].models[s_worldData[rw].numModels] = mod;
+				s_worldData[rw].numModels++;
 			}
 			if( mod->type != MOD_BAD ) {
 				return mod->index;
@@ -1261,11 +1261,16 @@ void R_ModelInit( void ) {
 	model_t		*mod = NULL;
 
 	// leave a space for NULL model
-	tr.models = (model_t **)&s_worldData[0].models;
-	tr.numModels = 0;
+	rw = 0;
+	s_worldData[0].numModels = 0;
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
+
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		s_worldData[i].models[0] = mod;
+		s_worldData[i].numModels++;
+	}
 }
 
 
@@ -1281,8 +1286,9 @@ void R_Modellist_f( void ) {
 	int		lods;
 
 	total = 0;
-	for ( i = 1 ; i < tr.numModels; i++ ) {
-		mod = tr.models[i];
+	for ( i = 0 ; i < ARRAY_LEN(worldModels); i++ ) {
+		mod = worldModels[i];
+		if(!mod) continue;
 		lods = 1;
 		for ( j = 1 ; j < MD3_MAX_LODS ; j++ ) {
 			if ( mod->mdv[j] && mod->mdv[j] != mod->mdv[j-1] ) {

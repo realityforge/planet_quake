@@ -2332,6 +2332,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
+		SV_FreeClient( client );
+		SV_SaveSequences();
 		SV_UpdateConfigstrings( client );
 		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
@@ -2343,12 +2345,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			gvm = client->gameWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
-			//SV_FreeClient( client );
-			//SV_SaveSequences();
 
 			client->newWorld = newWorld;
 			// notify the client of the secondary map
-			SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
+			//SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;
@@ -2385,7 +2385,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			
 			client->newWorld = newWorld;
 			// notify the client of the secondary map
-			SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
+			SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;

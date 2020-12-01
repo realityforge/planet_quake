@@ -4432,14 +4432,14 @@ void RE_ReloadShaders( qboolean createNew ) {
     tr.numLightmaps = 0;
   }
   // must reset model list to match tr.world and ent->hmodel from snapshots
-  tr.models = (model_t **)&s_worldData[0].models;
-  tr.numModels = 0;
+  /*
   for(i = 0; i < ARRAY_LEN(worldModels); i++) {
     // dealloc or reuse
     if(worldModels[i] && worldModels[i]->name[0] == '*') {
       memset(worldModels[i], 0, sizeof(model_t));
     }
   }
+  */
 
   GL_BindNullTextures();
 

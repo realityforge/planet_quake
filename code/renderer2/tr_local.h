@@ -1640,9 +1640,6 @@ typedef struct {
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
 	//
-	model_t					**models;
-	int						numModels;
-
 	int						numImages;
 	image_t					*images[MAX_DRAWIMAGES];
 

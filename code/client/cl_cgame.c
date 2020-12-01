@@ -484,20 +484,16 @@ rescan:
 
 
 #ifdef USE_MULTIVM
-	if ( !strcmp( cmd, "load" ) ) {
+	if ( !strcmp( cmd, "world" ) ) {
+		int newWorld;
 		//CL_LoadVM_f();
-		s = Cmd_Argv(2);
-		clientWorlds[0] = atoi(s); // prepare to start another cgvm
-		Com_Printf( "------------------------------- hit (%i) ------------------------\n", clientWorlds[0] );
-		// TODO: 
-		CM_SwitchMap(clientWorlds[0]);
-		re.SwitchWorld(clientWorlds[0]);
-		//cls.state = CA_ACTIVE;
-		//clc.connectPacketCount = 0;
-		//clc.connectTime = -99999;
-		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
-		//cls.lastVidRestart = Sys_Milliseconds();
-		//clc.lastPacketSentTime = -9999;		// send first packet immediately
+		s = Cmd_Argv(1);
+		newWorld = atoi(s);
+
+		Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
+		if(clientWorlds[0] != newWorld) {
+			Cbuf_AddText(va("world %i\n", newWorld));
+		}
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -836,37 +832,46 @@ Com_Printf("Update display: %i\n", clientWorlds[0]);
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
 	case CG_R_CLEARSCENE:
-		re.ClearScene();
+		if(cgvm == clientWorlds[0])
+			re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1), qfalse );
+		if(cgvm == clientWorlds[0])
+			re.AddRefEntityToScene( VMA(1), qfalse );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
+		if(cgvm == clientWorlds[0])
+			re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
 		return 0;
 	case CG_R_ADDPOLYSTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
+		if(cgvm == clientWorlds[0])
+			re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
 		return 0;
 	case CG_R_LIGHTFORPOINT:
 		return re.LightForPoint( VMA(1), VMA(2), VMA(3), VMA(4) );
 	case CG_R_ADDLIGHTTOSCENE:
-		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		if(cgvm == clientWorlds[0])
+			re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
-		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		if(cgvm == clientWorlds[0])
+			re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_RENDERSCENE:
 		if(cgvm == clientWorlds[0])
 			re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:
-		re.SetColor( VMA(1) );
+		if(cgvm == clientWorlds[0])
+			re.SetColor( VMA(1) );
 		return 0;
 	case CG_R_DRAWSTRETCHPIC:
-		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
+		if(cgvm == clientWorlds[0])
+			re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
 		return 0;
 	case CG_R_MODELBOUNDS:
-		re.ModelBounds( args[1], VMA(2), VMA(3) );
+		if(cgvm == clientWorlds[0])
+			re.ModelBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
@@ -1406,6 +1411,8 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
+	CM_SwitchMap(clientWorlds[0]);
+	cgvm = clientWorlds[0];
 
 	// getting a valid frame message ends the connection process
 	if ( cls.state != CA_ACTIVE ) {

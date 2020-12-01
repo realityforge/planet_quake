@@ -622,6 +622,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// draw the game information screen and loading progress
 			prev = cgvm;
 			cgvm = clientWorlds[i];
+			CM_SwitchMap(clientWorlds[i]);
 			CL_CGameRendering( stereoFrame );
 			cgvm = prev;
 			// also draw the connection information, so it doesn't
@@ -645,8 +646,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 #endif
 					y = floor(count / xMaxVMs);
 					x = count % xMaxVMs;
-					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
-					prev = CM_SwitchMap(cgvm);
+					//re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+					CM_SwitchMap(cgvm);
 					//re.SwitchWorld(cgvm);
 					CL_CGameRendering( stereoFrame );
 					count++;

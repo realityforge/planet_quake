@@ -2561,6 +2561,10 @@ static void CL_DownloadsComplete( void ) {
 	//if ( !com_sv_running->integer )
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders(qtrue);
+#ifndef EMSCRIPTEN
+	cls.soundRegistered = qtrue;
+	S_BeginRegistration();
+#endif
 #else
 	CL_FlushMemory();
 #endif
@@ -2571,7 +2575,6 @@ static void CL_DownloadsComplete( void ) {
 	Cmd_TokenizeString( "load cgame" );
 	CL_LoadVM_f();
 	Cmd_Clear();
-	cgvm = clientWorlds[0];
 #else
 	CL_InitCGame(qfalse);
 #endif
@@ -3398,6 +3401,8 @@ A packet has arrived from the main event loop
 */
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
+	CM_SwitchMap(clientWorlds[0]);
+	cgvm = clientWorlds[0];
 
 	if ( msg->cursize < 5 ) {
 		Com_DPrintf( "%s: Runt packet\n", NET_AdrToStringwPort( from ) );
@@ -4563,6 +4568,7 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		clientWorlds[0] = cgvm;
+		re.SwitchWorld(cgvm);
 		CL_InitCGame(qtrue);
 		count++;
 		xMaxVMs = ceil(sqrt(count));
@@ -4609,6 +4615,19 @@ void CL_Game_f ( void ) {
 	}
 
 	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
+}
+
+void CL_World_f( void ) {
+	int newWorld;
+	if ( Cmd_Argc() > 3 ) {
+		Com_Printf ("Usage: world [numworld]\n");
+		return;
+	}
+	
+	newWorld = atoi( Cmd_Argv(1) );
+	
+	clientWorlds[0] = newWorld;
+	re.SwitchWorld(newWorld);
 }
 #endif
 
@@ -4863,6 +4882,8 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "tele", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
 	Cmd_AddCommand ("game", CL_Game_f);
 	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [0/1/2 moveorigin] [num]" );
+	Cmd_AddCommand ("world", CL_World_f);
+	Cmd_SetDescription( "world", "Switch the rendered world client side only\nUsage: world <numworld>" );
 #endif
 
 	SCR_Init();
