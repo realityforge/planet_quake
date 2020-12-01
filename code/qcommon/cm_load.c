@@ -619,7 +619,7 @@ CM_SwitchMap
 */
 int CM_SwitchMap( int world ) {
 	int prev = cm;
-	if(!cms[cm].name[0]) {
+	if(!cms[world].name[0]) {
 		return 0;
 	}
 	if(world != cm) {

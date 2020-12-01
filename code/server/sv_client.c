@@ -2166,7 +2166,6 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
 	// call prog code to allow overrides
-Com_Printf("Update user: %i\n", gvm);
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
 
@@ -2348,13 +2347,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			SV_SaveSequences();
 
 			client->newWorld = newWorld;
+			// notify the client of the secondary map
+			SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
+			// above must come before this because there is a filter 
+			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			// notify the client of the secondary map
-			NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d %i", client->netchan.challenge, client->newWorld );
+			//NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d %i", client->netchan.challenge, client->newWorld );
 			client->oldServerTime = sv.time;
 			client->gamestateMessageNum = -1;
 
@@ -2810,7 +2812,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			return;
 		}
 		if(cl->newWorld != cl->gameWorld) {
-Com_Printf("Game World: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
+Com_Printf("Game world: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 			cl->gameWorld = cl->newWorld;
 			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
 		} else {

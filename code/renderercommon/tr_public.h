@@ -129,6 +129,7 @@ typedef struct {
 	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
 	void (*ResetBannerSpy)( void );
+	void (*SwitchWorld)(int world);
 
 } refexport_t;
 

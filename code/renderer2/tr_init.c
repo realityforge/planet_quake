@@ -1882,6 +1882,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.FastCaptureOld = RB_FastCaptureOld;
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders = RE_ReloadShaders;
+	re.SwitchWorld = RE_SwitchWorld;
 #endif
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;

@@ -35,6 +35,8 @@ cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
 
+int clientWorlds[MAX_NUM_VMS] = {0,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+
 /*
 ================
 SCR_DrawNamedPic
@@ -569,7 +571,7 @@ This will be called twice if rendering in stereo mode
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	qboolean uiFullscreen;
-	int i = 0, count = 0, x, y;
+	int i = 0, count = 0, x, y, prev;
 	
 	/*
 	if(clc.clientView == 0)
@@ -618,7 +620,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if ( cgvms[cgvm] ) {
+			if ( cgvms[cgvm] && cgvm == 0 ) {
 				CL_CGameRendering( stereoFrame );
 			}
 			// also draw the connection information, so it doesn't
@@ -630,21 +632,23 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			if( cgvms[cgvm] ) {
-				unsigned result;
 				count = 0;
 				for(i = 0; i < MAX_NUM_VMS; i++) {
-					if(!cgvms[i]) continue;
+					cgvm = clientWorlds[i];
+					if(!cgvms[cgvm]) continue;
 #ifdef EMSCRIPTEN
 					// skip drawing until VM is ready
-					if(VM_IsSuspended(cgvms[i])) {
+					if(VM_IsSuspended(cgvms[cgvm])) {
 						continue;
 					}
 #endif
-					cgvm = i;
 					y = floor(count / xMaxVMs);
 					x = count % xMaxVMs;
 					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
-					CM_SwitchMap(clientWorlds[cgvm]);
+					prev = CM_SwitchMap(cgvm);
+					if(prev != cgvm) {
+						//re.SwitchWorld(clientWorlds[cgvm]);
+					}
 					CL_CGameRendering( stereoFrame );
 					count++;
 				}

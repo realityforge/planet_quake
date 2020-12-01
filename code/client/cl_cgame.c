@@ -30,7 +30,6 @@ extern	botlib_export_t	*botlib_export;
 //extern qboolean loadCamera(const char *name);
 //extern void startCamera(int time);
 //extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
-int clientWorlds[MAX_NUM_VMS];
 
 /*
 ====================
@@ -148,10 +147,15 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		return qfalse;
 	}
 
+	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
+		return qfalse;
+	}
+
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
+Com_Printf("Client snapshot: %i (%i, %i)\n", snapshot->serverTime, cgvm, clc.clientView);
 	
 #ifdef USE_MV
 #ifdef USE_MULTIVM
@@ -462,13 +466,23 @@ rescan:
 	}
 
 #ifdef USE_MULTIVM
-/*
 	if ( !strcmp( cmd, "load" ) ) {
-		CL_LoadVM_f();
+		int prev = cgvm;
+		//CL_LoadVM_f();
+		cls.state = CA_CONNECTED;
+		s = Cmd_Argv(2);
+		cgvm = atoi(s);
+		clientWorlds[0] = cgvm; // prepare to start another cgvm
+		Com_Printf( "------------------------------- hit (%i, %s) ------------------------\n", cgvm, s );
+		//clc.connectPacketCount = 0;
+		//clc.connectTime = -99999;
+		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
+		//cls.lastVidRestart = Sys_Milliseconds();
+		clc.lastPacketSentTime = -9999;		// send first packet immediately
 		Cmd_Clear();
+		cgvm = prev;
 		return qfalse;
 	}
-*/
 #endif
 
 	// we may want to put a "connect to other server" command here
@@ -510,7 +524,7 @@ Just adds default parameters that cgame doesn't need to know about
 static void CL_CM_LoadMap( const char *mapname ) {
 	int		checksum;
 
-	clientWorlds[cgvm] = CM_LoadMap( mapname, qtrue, &checksum );
+	CM_LoadMap( mapname, qtrue, &checksum );
 }
 
 
@@ -1041,7 +1055,7 @@ void CL_InitCGame( qboolean createNew ) {
 	// find the current mapname
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 #ifdef USE_MULTIVM
-	mapname = Info_ValueForKey( info, va("mapname_", clientWorlds[cgvm]) );
+	mapname = Info_ValueForKey( info, va("mapname_%i", clientWorlds[cgvm]) );
 #else
 	mapname = Info_ValueForKey( info, "mapname" );
 #endif

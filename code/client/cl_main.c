@@ -2491,7 +2491,7 @@ Called when all downloading has been completed
 */
 static void CL_DownloadsComplete( void ) {
 
-	Com_Printf("Downloads complete\n");
+	Com_Printf("Downloads complete (%i, %i)\n", cgvm, clientWorlds[cgvm]);
 	if(uivms[uivm])
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
@@ -2561,13 +2561,28 @@ static void CL_DownloadsComplete( void ) {
 	//if ( !com_sv_running->integer )
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders(qtrue);
+	// TODO: shutdown previous cgame
+	//if(cgvms[cgvm]) {
+	//	CL_ShutdownCGame();
+	//}
 #else
 	CL_FlushMemory();
 #endif
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
-	CL_InitCGame(qfalse);
+#ifdef USE_MULTIVM
+	if(!cgvms[clientWorlds[cgvm]]) {
+		// switch back to rendering another VM and do nothing
+		Cmd_TokenizeString( "load cgame" );
+		CL_LoadVM_f();
+		Cmd_Clear();
+	} else {
+		cls.state = CA_ACTIVE;
+	}
+#else
+	CL_InitCGame(clientWorlds[cgvm] > 0);
+#endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		Cmd_AddCommand( "callvote", NULL );
@@ -3276,20 +3291,8 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 	// server connection
 	if ( !Q_stricmp(c, "connectResponse") ) {
 		if ( cls.state >= CA_CONNECTED ) {
-#ifdef USE_MULTIVM
-			cls.state = CA_CONNECTED;
-			c = Cmd_Argv(2);
-			clientWorlds[cgvm] = atoi(c);
-			//clc.connectPacketCount = 0;
-			//clc.connectTime = -99999;
-			//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
-			//cls.lastVidRestart = Sys_Milliseconds();
-			clc.lastPacketSentTime = -9999;		// send first packet immediately
-			return qtrue;
-#else
 			Com_Printf( "Dup connect received. Ignored.\n" );
 			return qfalse;
-#endif
 		}
 		if ( cls.state != CA_CHALLENGING ) {
 			Com_Printf( "connectResponse packet while not connecting. Ignored.\n" );
@@ -3629,6 +3632,7 @@ void CL_Frame( int msec ) {
 			}
 		}
 	}
+	cgvm = 0;
 #endif
 
 #ifdef USE_LAZY_LOAD

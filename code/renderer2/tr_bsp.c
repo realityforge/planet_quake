@@ -2703,6 +2703,26 @@ void R_CalcVertexLightDirs( void )
 }
 
 
+void RE_SwitchWorld(int w) {
+	bmodel_t	*out;
+	int i;
+ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
+	rw = w;
+	tr.world = &s_worldData[rw];
+	// reassign bmodels to same position as server entities
+	tr.numLightmaps = s_worldData[rw].numLightmaps;
+	tr.lightmaps = s_worldData[rw].lightmaps;
+	out = s_worldData[rw].bmodels;
+	// TODO: move a copy in to trGlobals_t, like above?
+	for ( i = 0; i < s_worldData[rw].numBModels; i++, out++ ) {
+		model_t *model = R_AllocModel();
+		model->type = MOD_BRUSH;
+		model->bmodel = out;
+		Com_sprintf( model->name, sizeof( model->name ), "*%d", i );
+	}
+}
+
+
 /*
 =================
 RE_LoadWorldMap
@@ -2711,7 +2731,6 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	bmodel_t	*out;
 	int			i, j;
 	dheader_t	*header;
 	union {
@@ -2725,19 +2744,7 @@ void RE_LoadWorldMap( const char *name ) {
 		if ( !Q_stricmp( s_worldData[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER
 			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
-			rw = j;
-			tr.world = &s_worldData[rw];
-			// reassign bmodels to same position as server entities
-			tr.numLightmaps = s_worldData[rw].numLightmaps;
-			tr.lightmaps = s_worldData[rw].lightmaps;
-			out = s_worldData[rw].bmodels;
-			// TODO: move a copy in to trGlobals_t, like above?
-			for ( i = 0; i < s_worldData[rw].numBModels; i++, out++ ) {
-				model_t *model = R_AllocModel();
-				model->type = MOD_BRUSH;
-				model->bmodel = out;
-				Com_sprintf( model->name, sizeof( model->name ), "*%d", i );
-			}
+			RE_SwitchWorld(j);
 			return;
 		} else if (s_worldData[j].name[0] == '\0') {
 			// load additional world in to next slot
