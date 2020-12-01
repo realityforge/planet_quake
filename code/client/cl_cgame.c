@@ -245,7 +245,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
 	// check for a use_item event and don't print in renderer
-	// TODO: sing game VM hack instead
+	// TODO: using game VM hack instead
 	/*
 	{
 		for(int i = 0; i < MAX_PS_EVENTS; i++) {
@@ -755,9 +755,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		// We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 		// if there is a map change while we are downloading at pk3.
 		// ZOID
-Com_Printf("Update display: %i\n", clientWorlds[0]);
-		if(cgvm == clientWorlds[0])
-			SCR_UpdateScreen();
+		SCR_UpdateScreen(qtrue);
 		return 0;
 	case CG_CM_LOADMAP:
 		CL_CM_LoadMap( VMA(1) );
@@ -832,46 +830,36 @@ Com_Printf("Update display: %i\n", clientWorlds[0]);
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
 	case CG_R_CLEARSCENE:
-		if(cgvm == clientWorlds[0])
-			re.ClearScene();
+		re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
-		if(cgvm == clientWorlds[0])
-			re.AddRefEntityToScene( VMA(1), qfalse );
+		re.AddRefEntityToScene( VMA(1), qfalse );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
-		if(cgvm == clientWorlds[0])
-			re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
+		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
 		return 0;
 	case CG_R_ADDPOLYSTOSCENE:
-		if(cgvm == clientWorlds[0])
-			re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
+		re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
 		return 0;
 	case CG_R_LIGHTFORPOINT:
 		return re.LightForPoint( VMA(1), VMA(2), VMA(3), VMA(4) );
 	case CG_R_ADDLIGHTTOSCENE:
-		if(cgvm == clientWorlds[0])
-			re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
-		if(cgvm == clientWorlds[0])
-			re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_RENDERSCENE:
-		if(cgvm == clientWorlds[0])
-			re.RenderScene( VMA(1) );
+		re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:
-		if(cgvm == clientWorlds[0])
-			re.SetColor( VMA(1) );
+		re.SetColor( VMA(1) );
 		return 0;
 	case CG_R_DRAWSTRETCHPIC:
-		if(cgvm == clientWorlds[0])
-			re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
+		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
 		return 0;
 	case CG_R_MODELBOUNDS:
-		if(cgvm == clientWorlds[0])
-			re.ModelBounds( args[1], VMA(2), VMA(3) );
+		re.ModelBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 	case CG_R_LERPTAG:
 		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
@@ -1044,6 +1032,8 @@ CL_DllSyscall
 ====================
 */
 static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
+	int prev = cgvm;
+	intptr_t result;
 #if !id386 || defined __clang__
 	intptr_t	args[10]; // max.count for cgame
 	va_list	ap;
@@ -1055,10 +1045,15 @@ static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 		args[ i ] = va_arg( ap, intptr_t );
 	va_end( ap );
 
-	return CL_CgameSystemCalls( args );
+	result = CL_CgameSystemCalls( args );
+	
 #else
-	return CL_CgameSystemCalls( &arg );
+	result = CL_CgameSystemCalls( &arg );
 #endif
+	if(cgvm != prev) {
+		Com_Error( ERR_DROP, "Cgame changed while in callback %i -> %i\n", prev, cgvm );
+	}
+	return result;
 }
 
 
@@ -1110,6 +1105,7 @@ void CL_InitCGame( qboolean createNew ) {
 	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 #ifdef USE_MULTIVM
+/*
 	if(createNew) {
 		cls.state = CA_ACTIVE;
 		re.EndRegistration();
@@ -1117,6 +1113,7 @@ void CL_InitCGame( qboolean createNew ) {
 		cls.lastVidRestart = Sys_Milliseconds();
 		return;
 	}
+*/
 #endif
 
 #ifdef EMSCRIPTEN

@@ -570,19 +570,13 @@ This will be called twice if rendering in stereo mode
 ==================
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	qboolean uiFullscreen;
-	int i = 0, count = 0, x, y, prev;
-	
-	/*
-	if(clc.clientView == 0)
-		re.SetDvrFrame(0.0, 0.0, 0.5, 0.5);
-	else
-		re.SetDvrFrame(0.5, 0.5, 0.5, 0.5);
-	*/
+	qboolean uiFullscreen = qfalse;
 
 	re.BeginFrame( stereoFrame );
 
-	uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
+	if(uivms[uivm]) {
+		uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
+	}
 
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
@@ -596,7 +590,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// if the menu is going to cover the entire screen, we
 	// don't need to render anything under it
-	if ( uivms[uivm] && !uiFullscreen ) {
+	if ( !uiFullscreen ) {
 		switch( cls.state ) {
 		default:
 			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
@@ -607,53 +601,47 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_DISCONNECTED:
 			// force menu up
 			S_StopAllSounds();
-			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if( uivms[uivm] )
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if( uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			prev = cgvm;
-			cgvm = clientWorlds[i];
-			CM_SwitchMap(clientWorlds[i]);
-			CL_CGameRendering( stereoFrame );
-			cgvm = prev;
+			if(cgvms[cgvm]
+#ifdef EMSCRIPTEN
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended(cgvms[cgvm])
+#endif
+			) {
+				CL_CGameRendering( stereoFrame );
+			}
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			if( uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			}
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			if( cgvms[cgvm] ) {
-				count = 0;
-				for(i = 0; i < MAX_NUM_VMS; i++) {
-					cgvm = clientWorlds[i];
-					if(!cgvms[cgvm]) continue;
+			if( cgvms[cgvm] 
 #ifdef EMSCRIPTEN
-					// skip drawing until VM is ready
-					if(VM_IsSuspended(cgvms[cgvm])) {
-						continue;
-					}
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended(cgvms[cgvm])
 #endif
-					y = floor(count / xMaxVMs);
-					x = count % xMaxVMs;
-					//re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
-					CM_SwitchMap(cgvm);
-					//re.SwitchWorld(cgvm);
-					CL_CGameRendering( stereoFrame );
-					count++;
-				}
-				cgvm = 0;
-				re.SetDvrFrame(0, 0, 1, 1);
+			) {
+				CL_CGameRendering( stereoFrame );
 				SCR_DrawDemoRecording();
 			}
 #ifdef USE_VOIP
@@ -664,33 +652,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm == 0 && uivms[uivm] ) {
-		count = 0;
-		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(!uivms[i]) continue;
-			uivm = i;
-			y = floor(count / xMaxVMs);
-			x = count % xMaxVMs;
-			re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
-			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-			count++;
-		}
-		uivm = 0;
-		re.SetDvrFrame(0, 0, 1, 1);
-	}
-
-	if((cl.snap.ps.pm_type == PM_INTERMISSION
-		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
-		&& cl_lnInvoice->string[0]) {
-		SCR_DrawQRCode();
-	}
-
-	// console draws next
-	Con_DrawConsole ();
-
-	// debug graph can be drawn on top of anything
-	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
-		SCR_DrawDebugGraph ();
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
 	}
 }
 
@@ -703,8 +666,8 @@ This is called every frame, and can also be called explicitly to flush
 text to the screen.
 ==================
 */
-static int previousTime;
-void SCR_UpdateScreen( void ) {
+void SCR_UpdateScreen( qboolean fromVM ) {
+	int i, x, y, cgvmCount, uivmCount;
 	static int recursive;
 	static int framecount;
 	static int next_frametime;
@@ -731,10 +694,62 @@ void SCR_UpdateScreen( void ) {
 
 	// If there is no VM, there are also no rendering commands issued. Stop the renderer in
 	// that case.
-	if ( uivms[uivm] )
-	{
-		// XXX
-		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
+	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
+
+	if(fromVM) {
+		// figure out which position to draw in based on current vm number
+		//   this way we aren't changing clip map or render worlds
+		cgvmCount = 0;
+		uivmCount = 0;
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(cgvms[i] && i < cgvm)
+				cgvmCount++;
+			if(uivms[i] && i < uivm)
+				uivmCount++;
+		}
+
+		if(cgvmCount > uivmCount) {
+			y = floor(cgvmCount / xMaxVMs);
+			x = cgvmCount % xMaxVMs;
+		} else {
+			y = floor(uivmCount / xMaxVMs);
+			x = uivmCount % xMaxVMs;
+		}
+
+		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+
+		// don't switch renderer or clipmap when updated from VM
+		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
+			SCR_DrawScreenField( STEREO_LEFT );
+			SCR_DrawScreenField( STEREO_RIGHT );
+		} else {
+			SCR_DrawScreenField( STEREO_CENTER );
+		}
+		goto donewithupdate;
+	}
+
+	uivmCount = 0;
+	cgvmCount = 0;
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		cgvm = i; //clientWorlds[i];
+		uivm = i;
+		
+		//if(cgvm != clientWorlds[0]) continue;
+		
+		if(!cgvms[cgvm] && !uivms[uivm]) continue;
+
+		if(cgvmCount > uivmCount) {
+			y = floor(cgvmCount / xMaxVMs);
+			x = cgvmCount % xMaxVMs;
+		} else {
+			y = floor(uivmCount / xMaxVMs);
+			x = uivmCount % xMaxVMs;
+		}
+
+		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+		CM_SwitchMap(cgvm);
+		re.SwitchWorld(cgvm);
+
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
 			SCR_DrawScreenField( STEREO_LEFT );
@@ -743,28 +758,37 @@ void SCR_UpdateScreen( void ) {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
 
-		if ( com_speeds->integer ) {
-			re.EndFrame( &time_frontend, &time_backend );
-		} else {
-			re.EndFrame( NULL, NULL );
-		}
+		if(cgvms[cgvm])
+			cgvmCount++;
+		if(uivms[uivm])
+			uivmCount++;
+	}
 
-		/*
-		if(ms - previousTime > 30) {
-			previousTime = ms;
-			if(!previousFrame) {
-				previousFrame = Z_Malloc(PAD(2048 * 4, 4) * 2048);
-				captureBuffer = Z_Malloc((2048 * 2048 * 4) + 16 - 1);
-				encodeBuffer = Z_Malloc(PAD(2048 * 4, 4) * 2048);
-			}
-			
-			//re.FastCapture(captureBuffer);
-			//re.FastCaptureOld(captureBuffer, encodeBuffer);
-			//CL_TakeVideoFrame();
-			//re.TakeVideoFrame( 2048, 2048, captureBuffer, encodeBuffer, qfalse );
-		}
-		*/
+	cgvm = 0;
+	uivm = 0;
 
+donewithupdate:
+
+	if((cl.snap.ps.pm_type == PM_INTERMISSION
+		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
+		&& cl_lnInvoice->string[0]) {
+		SCR_DrawQRCode();
+	}
+
+	re.SetDvrFrame(0, 0, 1, 1);
+
+	// console draws next
+	Con_DrawConsole ();
+
+	// debug graph can be drawn on top of anything
+	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
+		SCR_DrawDebugGraph ();
+	}
+
+	if ( com_speeds->integer ) {
+		re.EndFrame( &time_frontend, &time_backend );
+	} else {
+		re.EndFrame( NULL, NULL );
 	}
 
 	recursive = 0;

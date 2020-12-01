@@ -1145,7 +1145,7 @@ void CL_MapLoading( void ) {
 		Com_Memset( &cl.gameState, 0, sizeof( cl.gameState ) );
 		clc.lastPacketSentTime = -9999;
 		cls.framecount++;
-		SCR_UpdateScreen();
+		SCR_UpdateScreen(qfalse);
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
@@ -1154,7 +1154,7 @@ void CL_MapLoading( void ) {
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
 		cls.framecount++;
-		SCR_UpdateScreen();
+		SCR_UpdateScreen(qfalse);
 		clc.connectTime = -RETRANSMIT_TIMEOUT;
 		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_UNSPEC );
 		// we don't need a challenge on the localhost
@@ -1285,7 +1285,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	if ( CL_VideoRecording() ) {
 		// Finish rendering current frame
 		cls.framecount++;
-		SCR_UpdateScreen();
+		SCR_UpdateScreen(qfalse);
 		CL_CloseAVI();
 	}
 	
@@ -2560,6 +2560,7 @@ static void CL_DownloadsComplete( void ) {
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
 #ifdef USE_LAZY_MEMORY
+	S_DisableSounds();
 	re.ReloadShaders(qtrue);
 #ifndef EMSCRIPTEN
 	cls.soundRegistered = qtrue;
@@ -3666,7 +3667,7 @@ void CL_Frame( int msec ) {
 			cls.frametime = msec;
 			cls.realtime += cls.frametime;
 			cls.framecount++;
-			SCR_UpdateScreen();
+			SCR_UpdateScreen(qfalse);
 			S_Update();
 			Con_RunConsole();
 			return;
@@ -3773,7 +3774,7 @@ void CL_Frame( int msec ) {
 
 	// update the screen
 	cls.framecount++;
-	SCR_UpdateScreen();
+	SCR_UpdateScreen(qfalse);
 
 	// update audio
 	S_Update();
@@ -4567,12 +4568,12 @@ void CL_LoadVM_f( void ) {
 				break;
 			}
 		}
-		clientWorlds[0] = cgvm;
-		re.SwitchWorld(cgvm);
-		CL_InitCGame(qtrue);
 		count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
+		clientWorlds[0] = cgvm;
+		re.SwitchWorld(cgvm);
+		CL_InitCGame(qtrue);
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
@@ -4584,11 +4585,11 @@ void CL_LoadVM_f( void ) {
 				break;
 			}
 		}
-		CL_InitUI(qtrue);
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 		count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
+		CL_InitUI(qtrue);
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 		uivm = 0;
 		return;
 	}
@@ -4626,8 +4627,9 @@ void CL_World_f( void ) {
 	
 	newWorld = atoi( Cmd_Argv(1) );
 	
-	clientWorlds[0] = newWorld;
+	CM_SwitchMap(newWorld);
 	re.SwitchWorld(newWorld);
+	clientWorlds[0] = newWorld;
 }
 #endif
 

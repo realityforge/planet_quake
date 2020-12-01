@@ -599,7 +599,7 @@ void CL_SaveConsoleHistory( void );
 // cl_scrn.c
 //
 void	SCR_Init (void);
-void	SCR_UpdateScreen (void);
+void	SCR_UpdateScreen (qboolean fromVM);
 
 void	SCR_DebugGraph( float value );
 

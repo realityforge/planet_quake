@@ -2705,7 +2705,7 @@ void R_CalcVertexLightDirs( void )
 
 void RE_SwitchWorld(int w) {
 	R_IssuePendingRenderCommands();
-ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
+//ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
 	rw = w;
 	tr.world = &s_worldData[rw];
 	// reassign bmodels to same position as server entities

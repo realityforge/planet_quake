@@ -923,7 +923,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 	case UI_UPDATESCREEN:
 		if(uivm == 0)
-			SCR_UpdateScreen();
+			SCR_UpdateScreen(qtrue);
 		return 0;
 
 	case UI_CM_LERPTAG:
