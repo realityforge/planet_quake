@@ -620,9 +620,10 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if ( cgvms[cgvm] && cgvm == 0 ) {
-				CL_CGameRendering( stereoFrame );
-			}
+			prev = cgvm;
+			cgvm = clientWorlds[i];
+			CL_CGameRendering( stereoFrame );
+			cgvm = prev;
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time

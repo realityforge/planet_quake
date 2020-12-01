@@ -2711,7 +2711,7 @@ ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
 	tr.numLightmaps = s_worldData[rw].numLightmaps;
 	tr.lightmaps = s_worldData[rw].lightmaps;
 	tr.numModels = s_worldData[rw].numModels;
-	tr.models = s_worldData[rw].models;
+	tr.models = (model_t **)&s_worldData[rw].models;
 }
 
 
@@ -2784,6 +2784,7 @@ void RE_LoadWorldMap( const char *name ) {
 	// clear tr.world so if the level fails to load, the next
 	// try will not look at the partially loaded version
 	tr.world = NULL;
+	tr.models = (model_t **)&s_worldData[rw].models;
 
 	Com_Memset( &s_worldData[rw], 0, sizeof( s_worldData[rw] ) );
 	Q_strncpyz( s_worldData[rw].name, name, sizeof( s_worldData[rw].name ) );
@@ -3039,7 +3040,6 @@ void RE_LoadWorldMap( const char *name ) {
 	// only set tr.world now that we know the entire level has loaded properly
 	tr.world = &s_worldData[rw];
 	tr.numModels = s_worldData[rw].numModels;
-	tr.models = s_worldData[rw].models;
 
 	// make sure the VAO glState entry is safe
 	R_BindNullVao();

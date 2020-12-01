@@ -82,7 +82,11 @@ CL_GetCurrentCmdNumber
 ====================
 */
 static int CL_GetCurrentCmdNumber( void ) {
-	return cl.cmdNumber;
+	if(cgvm != clientWorlds[0]) {
+		return cl.cmdNumber - 1;
+	} else {
+		return cl.cmdNumber;
+	}
 }
 
 
@@ -92,8 +96,16 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
-	*snapshotNumber = cl.snap.messageNum;
-	*serverTime = cl.snap.serverTime;
+#ifdef USE_MULTIVM
+	if(!cl.snap.multiview && cgvm != clientWorlds[0]) {
+		*snapshotNumber = cl.snap.messageNum - 1;
+		*serverTime = cl.snap.serverTime - 1;
+	} else 
+#endif
+	{
+		*snapshotNumber = cl.snap.messageNum;
+		*serverTime = cl.snap.serverTime;
+	}
 }
 
 
@@ -247,8 +259,8 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	*/
 
 	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
-		snapshot->serverTime = clSnap->serverTime;
-		snapshot->serverCommandSequence = clSnap->serverCommandNum;
+		snapshot->serverTime = clSnap->serverTime - 1;
+		snapshot->serverCommandSequence = clSnap->serverCommandNum - 1;
 		// send a game update but don't bother with entities yet
 		snapshot->numEntities = 0;
 		return qtrue;
@@ -470,25 +482,27 @@ rescan:
 		return qtrue;
 	}
 
+
 #ifdef USE_MULTIVM
 	if ( !strcmp( cmd, "load" ) ) {
-		int prev = cgvm;
 		//CL_LoadVM_f();
-		cls.state = CA_CONNECTED;
 		s = Cmd_Argv(2);
-		cgvm = atoi(s);
-		clientWorlds[0] = cgvm; // prepare to start another cgvm
-		Com_Printf( "------------------------------- hit (%i) ------------------------\n", cgvm );
+		clientWorlds[0] = atoi(s); // prepare to start another cgvm
+		Com_Printf( "------------------------------- hit (%i) ------------------------\n", clientWorlds[0] );
+		// TODO: 
+		CM_SwitchMap(clientWorlds[0]);
+		re.SwitchWorld(clientWorlds[0]);
+		//cls.state = CA_ACTIVE;
 		//clc.connectPacketCount = 0;
 		//clc.connectTime = -99999;
 		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
 		//cls.lastVidRestart = Sys_Milliseconds();
-		clc.lastPacketSentTime = -9999;		// send first packet immediately
+		//clc.lastPacketSentTime = -9999;		// send first packet immediately
 		Cmd_Clear();
-		cgvm = prev;
 		return qfalse;
 	}
 #endif
+
 
 	// we may want to put a "connect to other server" command here
 #ifdef USE_CMD_CONNECTOR
@@ -745,6 +759,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		// We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 		// if there is a map change while we are downloading at pk3.
 		// ZOID
+Com_Printf("Update display: %i\n", clientWorlds[0]);
 		if(cgvm == clientWorlds[0])
 			SCR_UpdateScreen();
 		return 0;
@@ -1063,11 +1078,7 @@ void CL_InitCGame( qboolean createNew ) {
 
 	// find the current mapname
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-#ifdef USE_MULTIVM
-	mapname = Info_ValueForKey( info, va("mapname_%i", clientWorlds[cgvm]) );
-#else
 	mapname = Info_ValueForKey( info, "mapname" );
-#endif
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
 	// allow vertex lighting for in-game elements
@@ -1209,7 +1220,11 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+	if(cgvm != clientWorlds[0]) {
+		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime - 1, stereo, clc.demoplaying );
+	} else {
+		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+	}
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif

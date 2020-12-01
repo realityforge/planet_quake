@@ -2333,7 +2333,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
 		SV_UpdateConfigstrings( client );
-		//if(ent->s.eType == 0) {
+		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
@@ -2343,8 +2343,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			gvm = client->gameWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
-			SV_FreeClient( client );
-			SV_SaveSequences();
+			//SV_FreeClient( client );
+			//SV_SaveSequences();
 
 			client->newWorld = newWorld;
 			// notify the client of the secondary map
@@ -2357,8 +2357,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//	client->netchan.qport, client->netchan.challenge, client->compat );
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
-			client->deltaMessage = -1;
-			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			//client->lastPacketTime = svs.time;
 			//client->lastConnectTime = svs.time;
 			//client->lastDisconnectTime = svs.time;
@@ -2370,7 +2370,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
-			/*
 		} else {
 			// keep the same origin in the new world as if you've switched worlds
 			//   but haven't moved, default behavior
@@ -2379,9 +2378,21 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				memcpy(newOrigin, ps->origin, sizeof(vec3_t));
 				memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
 			}
+			// remove from old world?
+			gvm = client->gameWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
+			VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+			
+			client->newWorld = newWorld;
+			// notify the client of the secondary map
+			SV_SendServerCommand(client, "load cgame %i ", client->newWorld);
+			// above must come before this because there is a filter 
+			//   to only send commands from a game to the client of the same world
+			gvm = newWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			client->gameWorld = newWorld;
 		}
-		*/
 	}
 
 	ent = SV_GentityNum( clientNum );

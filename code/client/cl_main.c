@@ -2561,10 +2561,6 @@ static void CL_DownloadsComplete( void ) {
 	//if ( !com_sv_running->integer )
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders(qtrue);
-	// TODO: shutdown previous cgame
-	//if(cgvms[cgvm]) {
-	//	CL_ShutdownCGame();
-	//}
 #else
 	CL_FlushMemory();
 #endif
@@ -2572,17 +2568,12 @@ static void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 #ifdef USE_MULTIVM
-	if(!cgvms[clientWorlds[cgvm]]) {
-		// switch back to rendering another VM and do nothing
-		Cmd_TokenizeString( "load cgame" );
-		CL_LoadVM_f();
-		Cmd_Clear();
-	} else {
-		re.SwitchWorld(cgvm);
-		cls.state = CA_ACTIVE;
-	}
+	Cmd_TokenizeString( "load cgame" );
+	CL_LoadVM_f();
+	Cmd_Clear();
+	cgvm = clientWorlds[0];
 #else
-	CL_InitCGame(clientWorlds[cgvm] > 0);
+	CL_InitCGame(qfalse);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
@@ -4571,6 +4562,7 @@ void CL_LoadVM_f( void ) {
 				break;
 			}
 		}
+		clientWorlds[0] = cgvm;
 		CL_InitCGame(qtrue);
 		count++;
 		xMaxVMs = ceil(sqrt(count));

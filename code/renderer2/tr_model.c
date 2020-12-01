@@ -1261,7 +1261,7 @@ void R_ModelInit( void ) {
 	model_t		*mod = NULL;
 
 	// leave a space for NULL model
-	tr.models = s_worldData[0].models;
+	tr.models = (model_t **)&s_worldData[0].models;
 	tr.numModels = 0;
 
 	mod = R_AllocModel();
