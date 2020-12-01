@@ -2353,11 +2353,18 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
+			//Netchan_Setup( NS_SERVER, &client->netchan, &client->netchan.remoteAddress,
+			//	client->netchan.qport, client->netchan.challenge, client->compat );
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			client->state = CS_CONNECTED;
+			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			//client->lastPacketTime = svs.time;
+			//client->lastConnectTime = svs.time;
+			//client->lastDisconnectTime = svs.time;
+			//client->justConnected = qtrue;
 			//NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "connectResponse %d %i", client->netchan.challenge, client->newWorld );
-			client->oldServerTime = sv.time;
+			//client->oldServerTime = svs.time;
 			client->gamestateMessageNum = -1;
 
 			gvm = 0;

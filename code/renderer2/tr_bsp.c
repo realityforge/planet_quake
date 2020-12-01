@@ -37,8 +37,8 @@ void RE_LoadWorldMap( const char *name );
 
 */
 
-static	world_t		s_worldData[MAX_NUM_WORLDS] = {};
-static  int       rw; // render worl, should match number of loaded clip maps
+world_t		s_worldData[MAX_NUM_WORLDS] = {};
+int       rw; // render worl, should match number of loaded clip maps
 static	byte		*fileBase;
 
 int			c_subdivisions;
@@ -2704,22 +2704,14 @@ void R_CalcVertexLightDirs( void )
 
 
 void RE_SwitchWorld(int w) {
-	bmodel_t	*out;
-	int i;
 ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
 	rw = w;
 	tr.world = &s_worldData[rw];
 	// reassign bmodels to same position as server entities
 	tr.numLightmaps = s_worldData[rw].numLightmaps;
 	tr.lightmaps = s_worldData[rw].lightmaps;
-	out = s_worldData[rw].bmodels;
-	// TODO: move a copy in to trGlobals_t, like above?
-	for ( i = 0; i < s_worldData[rw].numBModels; i++, out++ ) {
-		model_t *model = R_AllocModel();
-		model->type = MOD_BRUSH;
-		model->bmodel = out;
-		Com_sprintf( model->name, sizeof( model->name ), "*%d", i );
-	}
+	tr.numModels = s_worldData[rw].numModels;
+	tr.models = s_worldData[rw].models;
 }
 
 
@@ -3046,6 +3038,8 @@ void RE_LoadWorldMap( const char *name ) {
 
 	// only set tr.world now that we know the entire level has loaded properly
 	tr.world = &s_worldData[rw];
+	tr.numModels = s_worldData[rw].numModels;
+	tr.models = s_worldData[rw].models;
 
 	// make sure the VAO glState entry is safe
 	R_BindNullVao();

@@ -776,11 +776,12 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
-	CM_SwitchMap(clientWorlds[cgvm]);
+	cgvm = clientWorlds[0];
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );
 	else
 		CL_KeyUpEvent( key, time, finger );
+	cgvm = 0;
 }
 
 

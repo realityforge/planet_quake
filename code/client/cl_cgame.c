@@ -147,16 +147,12 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		return qfalse;
 	}
 
-	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
-		return qfalse;
-	}
-
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
-Com_Printf("Client snapshot: %i (%i, %i)\n", snapshot->serverTime, cgvm, clc.clientView);
-	
+//Com_Printf("Client snapshot: %i (%i, %i)\n", snapshot->serverTime, cgvm, clc.clientView);
+
 #ifdef USE_MV
 #ifdef USE_MULTIVM
 	// TODO: make a table and \mvassign command?
@@ -249,6 +245,15 @@ Com_Printf("Client snapshot: %i (%i, %i)\n", snapshot->serverTime, cgvm, clc.cli
 		}
 	}
 	*/
+
+	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
+		snapshot->serverTime = clSnap->serverTime;
+		snapshot->serverCommandSequence = clSnap->serverCommandNum;
+		// send a game update but don't bother with entities yet
+		snapshot->numEntities = 0;
+		return qtrue;
+	}
+
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
@@ -473,7 +478,7 @@ rescan:
 		s = Cmd_Argv(2);
 		cgvm = atoi(s);
 		clientWorlds[0] = cgvm; // prepare to start another cgvm
-		Com_Printf( "------------------------------- hit (%i, %s) ------------------------\n", cgvm, s );
+		Com_Printf( "------------------------------- hit (%i) ------------------------\n", cgvm );
 		//clc.connectPacketCount = 0;
 		//clc.connectTime = -99999;
 		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
@@ -540,6 +545,7 @@ void CL_ShutdownCGame( void ) {
 	cls.cgameStarted = qfalse;
 
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		clientWorlds[i] = -1;
 		cgvm = i;
 		if ( !cgvms[cgvm] ) {
 			continue;
@@ -558,6 +564,7 @@ void CL_ShutdownCGame( void ) {
 		cgvms[cgvm] = NULL;
 	}
 	cgvm = 0;
+	clientWorlds[0] = 0;
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST
@@ -730,8 +737,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cmd_RemoveCommandSafe( VMA(1) );
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
-		if(cgvm == 0)
-			CL_AddReliableCommand( VMA(1), qfalse );
+		CL_AddReliableCommand( VMA(1), qfalse );
 		return 0;
 	case CG_UPDATESCREEN:
 		// this is used during lengthy level loading, so pump message loop
@@ -739,7 +745,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		// We can't call Com_EventLoop here, a restart will crash and this _does_ happen
 		// if there is a map change while we are downloading at pk3.
 		// ZOID
-		if(uivm == 0)
+		if(cgvm == clientWorlds[0])
 			SCR_UpdateScreen();
 		return 0;
 	case CG_CM_LOADMAP:
@@ -835,7 +841,8 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_RENDERSCENE:
-		re.RenderScene( VMA(1) );
+		if(cgvm == clientWorlds[0])
+			re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:
 		re.SetColor( VMA(1) );
@@ -866,13 +873,16 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETSNAPSHOT:
 		return CL_GetSnapshot( args[1], VMA(2) );
 	case CG_GETSERVERCOMMAND:
-		return CL_GetServerCommand( args[1] );
+		if(cgvm == clientWorlds[0])
+			return CL_GetServerCommand( args[1] );
+		else
+			return qfalse;
 	case CG_GETCURRENTCMDNUMBER:
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2) );
 	case CG_SETUSERCMDVALUE:
-		if(cgvm == 0)
+		if(cgvm == clientWorlds[0])
 			CL_SetUserCmdValue( args[1], VMF(2) );
 		return 0;
 	case CG_MEMORY_REMAINING:
@@ -883,8 +893,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return Key_GetCatcher();
 	case CG_KEY_SETCATCHER:
 		// Don't allow the cgame module to close the console
-		if(uivm == 0)
-			Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
+		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
 		return 0;
 	case CG_KEY_GETKEY:
 		return Key_GetKey( VMA(1) );

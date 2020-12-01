@@ -646,9 +646,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 					x = count % xMaxVMs;
 					re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
 					prev = CM_SwitchMap(cgvm);
-					if(prev != cgvm) {
-						//re.SwitchWorld(clientWorlds[cgvm]);
-					}
+					//re.SwitchWorld(cgvm);
 					CL_CGameRendering( stereoFrame );
 					count++;
 				}

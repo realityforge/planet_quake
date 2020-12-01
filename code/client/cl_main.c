@@ -2578,6 +2578,7 @@ static void CL_DownloadsComplete( void ) {
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
+		re.SwitchWorld(cgvm);
 		cls.state = CA_ACTIVE;
 	}
 #else
@@ -4555,6 +4556,7 @@ void CL_LoadVM_f( void ) {
 	if ( !Q_stricmp( name, "game" ) ) {
 		CL_AddReliableCommand( va("load %s", Cmd_ArgsFrom(1)), qfalse );
 		//CL_ForwardCommandToServer("load game");
+		return;
 	} else if ( !Q_stricmp( name, "cgame" ) ) {
 		if(Cmd_Argc() > 3) {
 			Com_Printf( "Usage: %s <game|cgame|ui> [numclient]\n", Cmd_Argv( 0 ) );
@@ -4574,6 +4576,7 @@ void CL_LoadVM_f( void ) {
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
 		cgvm = 0;
+		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
@@ -4589,6 +4592,7 @@ void CL_LoadVM_f( void ) {
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
 		uivm = 0;
+		return;
 	}
 	else {
 		Com_Printf( " unknown VM name '%s'\n", name );

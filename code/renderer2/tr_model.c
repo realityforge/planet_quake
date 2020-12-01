@@ -226,7 +226,7 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 ** R_AllocModel
 */
 model_t *R_AllocModel( void ) {
-	model_t		*mod;
+	model_t		*mod = NULL;
 
 	if ( tr.numModels == MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
@@ -235,15 +235,19 @@ model_t *R_AllocModel( void ) {
 
 	for(int i = 0; i < ARRAY_LEN(worldModels); i++) {
 		if(!worldModels[i]) {
-			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
+			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( model_t ), h_low );
 			break;
 		} else if (!worldModels[i]->name[0]) {
 			mod = worldModels[i];
+			break;
 		}
 	}
+	if(mod == NULL) return NULL;
+
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
+	s_worldData[rw].numModels = tr.numModels;
 
 	return mod;
 }
@@ -297,6 +301,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 				mod->index = tr.numModels;
 				tr.models[tr.numModels] = mod;
 				tr.numModels++;
+				s_worldData[rw].numModels = tr.numModels;
 			}
 			if( mod->type != MOD_BAD ) {
 				return mod->index;
@@ -1253,9 +1258,10 @@ R_ModelInit
 ===============
 */
 void R_ModelInit( void ) {
-	model_t		*mod;
+	model_t		*mod = NULL;
 
 	// leave a space for NULL model
+	tr.models = s_worldData[0].models;
 	tr.numModels = 0;
 
 	mod = R_AllocModel();

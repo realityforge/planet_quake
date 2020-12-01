@@ -379,10 +379,12 @@ CL_MouseEvent
 */
 #ifndef USE_ABS_MOUSE
 void CL_MouseEvent( int dx, int dy, int time ) {
-	CM_SwitchMap(clientWorlds[cgvm]);
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
-	CM_SwitchMap(clientWorlds[cgvm]);
+#endif
+;
+	cgvm = clientWorlds[0];
+#ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if(absolute) {
 			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
@@ -392,7 +394,6 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 		return;
 	}
 #endif
-;
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
@@ -401,6 +402,7 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
+	cgvm = 0;
 }
 
 
