@@ -2335,7 +2335,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		ent = SV_GentityNum( clientNum );
 		SV_FreeClient( client );
 		SV_SaveSequences();
-		SV_UpdateConfigstrings( client );
 
 		// keep the same origin in the new world as if you've switched worlds
 		//   but haven't moved, default behavior
@@ -2350,10 +2349,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		CM_SwitchMap(gameWorlds[gvm]);
 		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
-		client->newWorld = newWorld;
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-
+		client->newWorld = newWorld;
 		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
 			if(changeOrigin != COPYORIGIN) {
@@ -2367,6 +2365,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
+			SV_SendClientSnapshot( client, qfalse );
 
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
@@ -2374,8 +2373,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		} else {
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
-			//client->state = CS_CONNECTED;
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			client->state = CS_PRIMED;
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 			// notify the client of the secondary map
@@ -2385,10 +2384,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 			SV_SendClientSnapshot( client, qtrue );
-			client->state = CS_PRIMED;
+			client->state = CS_ACTIVE;
 		}
 	}
 
+	SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
 	ent->s.number = clientNum;
@@ -2528,7 +2528,7 @@ resetwithcount:
 		return;
 	}
 	
-	Com_Printf("Switching worlds (client %i): %i -> %i\n", clientNum, client->gameWorld, i);
+	Com_Printf("Switching worlds (client: %i, origin: %i): %i -> %i\n", clientNum, changeOrigin, client->gameWorld, i);
 	SV_Teleport(client, i, changeOrigin, &newOrigin);
 }
 #endif

@@ -1212,6 +1212,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 #ifdef USE_MULTIVM
 		case svc_baseline:
 			if(firstBaseline) {
+Com_Printf( "------------------------------- ents (%i, %i) ------------------------\n", cgvm, clientWorlds[0] );
 				memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
 				memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
 				firstBaseline = qfalse;

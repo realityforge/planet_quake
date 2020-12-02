@@ -1015,8 +1015,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 			MSG_WriteByte( &msg, svc_baseline );
 			MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 		}
-
-		//MSG_WriteByte( &msg, svc_EOF );
 	}
 
 	// send over all the relevant entityState_t
@@ -1048,9 +1046,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 
 	SV_SendMessageToClient( &msg, client );
-	
-	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 

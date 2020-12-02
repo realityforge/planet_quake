@@ -252,7 +252,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
 		// send a game update but don't bother with entities yet
-	//	snapshot->serverTime = clSnap->serverTime - 5;
 		snapshot->numEntities = 0;
 		return qtrue;
 	}
@@ -480,12 +479,12 @@ rescan:
 		s = Cmd_Argv(1);
 		newWorld = atoi(s);
 
+Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clientWorlds[0] != newWorld) {
 			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
 			Cbuf_AddText(va("world %i\n", newWorld));
-			cls.state = CA_PRIMED;
 		}
 		Cmd_Clear();
 		return qfalse;
