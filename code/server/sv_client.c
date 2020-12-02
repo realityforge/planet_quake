@@ -2382,6 +2382,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// notify the client of the secondary map
 			SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// send new baselines
+			client->deltaMessage = -1;
+			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 			SV_SendClientSnapshot( client, qtrue );
 		}
 	}
@@ -2390,8 +2393,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	ps = SV_GameClientNum( clientNum );
 	ent->s.number = clientNum;
 	client->gentity = ent;
-	client->deltaMessage = -1;
-	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
 
 	// if copy, keeping the original/same, or moving origins,

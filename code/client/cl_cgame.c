@@ -82,11 +82,7 @@ CL_GetCurrentCmdNumber
 ====================
 */
 static int CL_GetCurrentCmdNumber( void ) {
-	if(cgvm != clientWorlds[0]) {
-		return cl.cmdNumber + 1;
-	} else {
-		return cl.cmdNumber;
-	}
+	return cl.cmdNumber;
 }
 
 
@@ -96,18 +92,13 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
-	/*
-#ifdef USE_MULTIVM
-	if(!cl.snap.multiview && cgvm != clientWorlds[0]) {
-		*snapshotNumber = cl.snap.messageNum - 1;
-		*serverTime = cl.snap.serverTime - 1;
-	} else 
-#endif
-	*/
-	{
+	//if(cgvm != clientWorlds[0]) {
+	//	*snapshotNumber = cl.snap.messageNum;
+	//	*serverTime = cl.snap.serverTime - 5;
+	//} else {
 		*snapshotNumber = cl.snap.messageNum;
 		*serverTime = cl.snap.serverTime;
-	}
+	//}
 }
 
 
@@ -159,17 +150,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	// circular buffer, we can't return it
 	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
-	}
-
-	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
-		snapshot->serverTime = clSnap->serverTime;
-		snapshot->serverCommandSequence = clSnap->serverCommandNum;
-		// send a game update but don't bother with entities yet
-		snapshot->numEntities = 0;
-		//for ( i = 0 ; i < MAX_ENTITIES_IN_SNAPSHOT ; i++ ) {
-		//	memset(&snapshot->entities[i], 0, sizeof(entityState_t));
-		//}
-		return qtrue;
 	}
 
 	snapshot->snapFlags = clSnap->snapFlags;
@@ -269,6 +249,13 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		}
 	}
 	*/
+
+	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
+		// send a game update but don't bother with entities yet
+	//	snapshot->serverTime = clSnap->serverTime - 5;
+		snapshot->numEntities = 0;
+		return qtrue;
+	}
 
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
@@ -497,9 +484,10 @@ rescan:
 Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clientWorlds[0] != newWorld) {
 			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
-			memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
-			memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
+			//memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
+			//memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
 			//clientWorlds[0] = newWorld; // safe to switch this here, not safe to switch renderers
+			cls.lastVidRestart = Sys_Milliseconds();
 			Cbuf_AddText(va("world %i\n", newWorld));
 		}
 		Cmd_Clear();
@@ -896,10 +884,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETCURRENTCMDNUMBER:
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
-		if(cgvm == clientWorlds[0])
-			return CL_GetUserCmd( args[1], VMA(2) );
-		else
-			return qfalse;
+		return CL_GetUserCmd( args[1], VMA(2) );
 	case CG_SETUSERCMDVALUE:
 		if(cgvm == clientWorlds[0])
 			CL_SetUserCmdValue( args[1], VMF(2) );
@@ -1233,11 +1218,11 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	if(cgvm != clientWorlds[0]) {
+	//if(cgvm != clientWorlds[0]) {
+	//	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime - 5, stereo, clc.demoplaying );
+	//} else {
 		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
-	} else {
-		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
-	}
+	//}
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif

@@ -1152,6 +1152,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 	entityState_t	*es;
 	int				newnum;
 	entityState_t	nullstate;
+	qboolean firstBaseline = qtrue;
 
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 
@@ -1210,6 +1211,11 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 #ifdef USE_MULTIVM
 		case svc_baseline:
+			if(firstBaseline) {
+				memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
+				memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
+				firstBaseline = qfalse;
+			}
 			// parse baselines after a world change
 			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
@@ -1218,7 +1224,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			es = &cl.entityBaselines[ newnum ];
 			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
 			cl.baselineUsed[ newnum ] = 1;
-			break
+			break;
 #endif
 		case svc_snapshot:
 			CL_ParseSnapshot( msg, qfalse );

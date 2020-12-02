@@ -734,7 +734,12 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		cgvm = i; //clientWorlds[i];
 		uivm = i;
 		
-		if(cgvm != clientWorlds[0]) continue;
+		// if we just switched from a VM, skip it for a few frames so it never times out
+		// otherwise there is a time going backwards error
+		if(/* cgvm != clientWorlds[0] && */ ms - cls.lastVidRestart <= 5) {
+Com_Printf("Skipping frame\n");
+			continue;
+		}
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 
