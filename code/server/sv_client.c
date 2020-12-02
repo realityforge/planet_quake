@@ -1875,11 +1875,11 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 
 	Com_Printf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 
-	//if(cl->newWorld > 0) {
+	if(cl->newWorld > 0) {
 		cl->gotCP = qtrue;
 		cl->pureAuthentic = qtrue;
 		return;
-	//}
+	}
 
 	// if we are pure, we "expect" the client to load certain things from 
 	// certain pk3 files, namely we want the client to have loaded the
@@ -2011,7 +2011,7 @@ Com_DPrintf("VerifyPaks: Number of checksums wrong: %i != %i\n", nChkSum1, nClie
 			cl->pureAuthentic = qfalse;
 			cl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			cl->state = CS_ZOMBIE; // skip delta generation
-			SV_SendClientSnapshot( cl );
+			SV_SendClientSnapshot( cl, qfalse );
 			cl->state = CS_ACTIVE;
 			SV_DropClient( cl, "Unpure client detected. Invalid .PK3 files referenced!" );
 		}
@@ -2287,6 +2287,7 @@ void SV_LoadVM_f( client_t *cl ) {
 		}
 	}
 	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	SV_RemainingGameState();
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 }
@@ -2365,14 +2366,12 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
-			client->gamestateMessageNum = -1;
+			client->gamestateMessageNum = -1; // send a new gamestate
 
 			gvm = 0;
 			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		} else {
-			// notify the client of the secondary map
-			SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			gvm = newWorld;
@@ -2380,6 +2379,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
+			// notify the client of the secondary map
+			SV_SendServerCommand(client, "world %i ", client->newWorld);
+			// send new baselines
+			SV_SendClientSnapshot( client, qtrue );
 		}
 	}
 
@@ -2387,6 +2390,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	ps = SV_GameClientNum( clientNum );
 	ent->s.number = clientNum;
 	client->gentity = ent;
+	client->deltaMessage = -1;
+	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
 
 	// if copy, keeping the original/same, or moving origins,

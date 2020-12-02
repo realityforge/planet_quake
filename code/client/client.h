@@ -168,11 +168,11 @@ typedef struct {
 	// big stuff at end of structure so most offsets are 15 bits or less
 	clSnapshot_t	snapshots[PACKET_BACKUP];
 
-	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
+	entityState_t	entityBaselines[MAX_GENTITIES];	// for delta compression when not in previous frame
 
 	entityState_t	parseEntities[MAX_PARSE_ENTITIES];
 
-	byte			baselineUsed[MAX_NUM_VMS][MAX_GENTITIES];
+	byte			baselineUsed[MAX_GENTITIES];
 } clientActive_t;
 
 extern	clientActive_t		cl;

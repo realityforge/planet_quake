@@ -161,6 +161,17 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		return qfalse;
 	}
 
+	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
+		snapshot->serverTime = clSnap->serverTime;
+		snapshot->serverCommandSequence = clSnap->serverCommandNum;
+		// send a game update but don't bother with entities yet
+		snapshot->numEntities = 0;
+		//for ( i = 0 ; i < MAX_ENTITIES_IN_SNAPSHOT ; i++ ) {
+		//	memset(&snapshot->entities[i], 0, sizeof(entityState_t));
+		//}
+		return qtrue;
+	}
+
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
@@ -258,17 +269,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		}
 	}
 	*/
-
-	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
-		snapshot->serverTime = clSnap->serverTime;
-		snapshot->serverCommandSequence = clSnap->serverCommandNum;
-		// send a game update but don't bother with entities yet
-		snapshot->numEntities = 0;
-		for ( i = 0 ; i < MAX_ENTITIES_IN_SNAPSHOT ; i++ ) {
-			memset(&snapshot->entities[i], 0, sizeof(entityState_t));
-		}
-		return qtrue;
-	}
 
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
@@ -494,9 +494,12 @@ rescan:
 		s = Cmd_Argv(1);
 		newWorld = atoi(s);
 
-		Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
+Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clientWorlds[0] != newWorld) {
-			clientWorlds[0] = newWorld; // safe to switch this here, not safe to switch renderers
+			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
+			memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
+			memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
+			//clientWorlds[0] = newWorld; // safe to switch this here, not safe to switch renderers
 			Cbuf_AddText(va("world %i\n", newWorld));
 		}
 		Cmd_Clear();

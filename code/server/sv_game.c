@@ -88,7 +88,6 @@ void SV_GameSendServerCommand( int clientNum, const char *text ) {
 		SV_CheckLastCmd( text, qtrue ); // store the new game command, so when replaying a demo message, we can check for duplicates: maybe this message was already submitted (because of the events simulation, an event may trigger a message), and so we want to avoid those duplicates: if an event already triggered a message, no need to issue the one stored in the demo
 	}
 
-Com_Printf( "ServerCommand: %s\n", text );
 	if ( clientNum == -1 ) {
 		SV_SendServerCommand( NULL, "%s", text );
 	} else {

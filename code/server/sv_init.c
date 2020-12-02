@@ -1092,7 +1092,7 @@ void SV_FinalMessage( const char *message ) {
 				// force a snapshot to be sent
 				cl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 				cl->state = CS_ZOMBIE; // skip delta generation
-				SV_SendClientSnapshot( cl );
+				SV_SendClientSnapshot( cl, qfalse );
 			}
 		}
 	}
@@ -1153,7 +1153,7 @@ void SV_Shutdown( const char *finalmsg ) {
 	if ( sv_demoFile != FS_INVALID_HANDLE ) {
 		// finalize record
 		if ( svs.clients[ sv_maxclients->integer ].multiview.recorder ) {
-			SV_SendClientSnapshot( &svs.clients[ sv_maxclients->integer ] );
+			SV_SendClientSnapshot( &svs.clients[ sv_maxclients->integer ], qfalse );
 		}
 		SV_MultiViewStopRecord_f();
 	}

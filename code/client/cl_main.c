@@ -386,9 +386,9 @@ static void CL_WriteGamestate( qboolean initial )
 	// baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		if ( !cl.baselineUsed[cgvm][ i ] )
+		if ( !cl.baselineUsed[ i ] )
 			continue;
-		ent = &cl.entityBaselines[cgvm][ i ];
+		ent = &cl.entityBaselines[ i ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, ent, qtrue );
 	}
@@ -471,7 +471,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[cgvm][newnum], newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[newnum], newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -4626,9 +4626,10 @@ void CL_World_f( void ) {
 	}
 	
 	newWorld = atoi( Cmd_Argv(1) );
+	Com_Printf( "Client switching world: %i -> %i\n", clientWorlds[0], newWorld );
 	
+	//Com_EventLoop();
 	prev = CM_SwitchMap(newWorld);
-	Com_Printf( "Client switching world: %i -> %i\n", prev, newWorld );
 	re.SwitchWorld(newWorld);
 	clientWorlds[0] = newWorld;
 }

@@ -734,7 +734,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		cgvm = i; //clientWorlds[i];
 		uivm = i;
 		
-		//if(cgvm != clientWorlds[0]) continue;
+		if(cgvm != clientWorlds[0]) continue;
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 

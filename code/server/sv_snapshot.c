@@ -979,11 +979,13 @@ Also called by SV_FinalMessage
 
 =======================
 */
-void SV_SendClientSnapshot( client_t *client ) {
+void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
-	int     headerBytes;
+	int     headerBytes, start;
 	playerState_t	*ps;
+	entityState_t nullstate;
+	const svEntity_t *svEnt;
 
 	gvm = client->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
@@ -1001,6 +1003,21 @@ void SV_SendClientSnapshot( client_t *client ) {
 
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
+	
+	if(includeBaselines) {
+		// write the baselines
+		Com_Memset( &nullstate, 0, sizeof( nullstate ) );
+		for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
+			if ( !sv.baselineUsed[gvm][ start ] ) {
+				continue;
+			}
+			svEnt = &sv.svEntities[gvm][ start ];
+			MSG_WriteByte( &msg, svc_baseline );
+			MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
+		}
+
+		//MSG_WriteByte( &msg, svc_EOF );
+	}
 
 	// send over all the relevant entityState_t
 	// and the playerState_t
@@ -1055,7 +1072,7 @@ void SV_SendClientMessages( void )
 	 	&& !svs.emptyFrame // we want to record only synced game frames
 		&& c->state >= CS_PRIMED)
 	{
-		SV_SendClientSnapshot( c );
+		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}
@@ -1092,7 +1109,7 @@ void SV_SendClientMessages( void )
 		}
 
 		// generate and send a new message
-		SV_SendClientSnapshot( c );
+		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}

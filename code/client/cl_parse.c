@@ -175,7 +175,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[cgvm][newnum], qfalse );
+			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[newnum], qfalse );
 			continue;
 		}
 
@@ -743,9 +743,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}
-			es = &cl.entityBaselines[cgvm][ newnum ];
+			es = &cl.entityBaselines[ newnum ];
 			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
-			cl.baselineUsed[cgvm][ newnum ] = 1;
+			cl.baselineUsed[ newnum ] = 1;
 		} else {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}
@@ -1149,6 +1149,11 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
+	entityState_t	*es;
+	int				newnum;
+	entityState_t	nullstate;
+
+	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 
 	if ( cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);
@@ -1203,6 +1208,18 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		case svc_gamestate:
 			CL_ParseGamestate( msg );
 			break;
+#ifdef USE_MULTIVM
+		case svc_baseline:
+			// parse baselines after a world change
+			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
+			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
+				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
+			}
+			es = &cl.entityBaselines[ newnum ];
+			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
+			cl.baselineUsed[ newnum ] = 1;
+			break
+#endif
 		case svc_snapshot:
 			CL_ParseSnapshot( msg, qfalse );
 			break;
