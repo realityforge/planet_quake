@@ -477,18 +477,15 @@ rescan:
 #ifdef USE_MULTIVM
 	if ( !strcmp( cmd, "world" ) ) {
 		int newWorld;
-		//CL_LoadVM_f();
 		s = Cmd_Argv(1);
 		newWorld = atoi(s);
 
-Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clientWorlds[0] != newWorld) {
 			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
-			//memset(cl.entityBaselines, 0, sizeof(cl.entityBaselines));
-			//memset(cl.baselineUsed, 0, sizeof(cl.baselineUsed));
-			//clientWorlds[0] = newWorld; // safe to switch this here, not safe to switch renderers
+			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
 			Cbuf_AddText(va("world %i\n", newWorld));
+			cls.state = CA_PRIMED;
 		}
 		Cmd_Clear();
 		return qfalse;

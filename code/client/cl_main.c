@@ -4632,6 +4632,13 @@ void CL_World_f( void ) {
 	prev = CM_SwitchMap(newWorld);
 	re.SwitchWorld(newWorld);
 	clientWorlds[0] = newWorld;
+	
+	cl.newSnapshots = qfalse;
+	clc.eventMask |= EM_SNAPSHOT;
+	CL_SetCGameTime();
+	CL_WritePacket();
+	CL_WritePacket();
+	CL_WritePacket();
 }
 #endif
 

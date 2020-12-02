@@ -716,7 +716,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 			x = uivmCount % xMaxVMs;
 		}
 
-		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+		//re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
 
 		// don't switch renderer or clipmap when updated from VM
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -731,13 +731,12 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	uivmCount = 0;
 	cgvmCount = 0;
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		cgvm = i; //clientWorlds[i];
+		cgvm = clientWorlds[i];
 		uivm = i;
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		if(/* cgvm != clientWorlds[0] && */ ms - cls.lastVidRestart <= 5) {
-Com_Printf("Skipping frame\n");
+		if(cgvm != clientWorlds[0] && ms - cls.lastVidRestart <= 5) {
 			continue;
 		}
 		
@@ -751,7 +750,7 @@ Com_Printf("Skipping frame\n");
 			x = uivmCount % xMaxVMs;
 		}
 
-		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+		//re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
 		CM_SwitchMap(cgvm);
 		re.SwitchWorld(cgvm);
 

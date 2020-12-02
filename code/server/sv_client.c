@@ -2351,6 +2351,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		client->newWorld = newWorld;
+		gvm = newWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
 
 		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
@@ -2361,9 +2363,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			gvm = newWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
@@ -2374,18 +2374,18 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		} else {
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			gvm = newWorld;
-			CM_SwitchMap(gameWorlds[gvm]);
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+			//client->state = CS_CONNECTED;
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 			// notify the client of the secondary map
-			SV_SendServerCommand(client, "world %i ", client->newWorld);
+			SV_AddServerCommand(client, va("world %i ", client->newWorld));
 			// send new baselines
 			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 			SV_SendClientSnapshot( client, qtrue );
+			client->state = CS_PRIMED;
 		}
 	}
 
