@@ -4628,17 +4628,18 @@ void CL_World_f( void ) {
 	newWorld = atoi( Cmd_Argv(1) );
 	Com_Printf( "Client switching world: %i -> %i\n", clientWorlds[0], newWorld );
 	
-	Com_EventLoop();
+	//Com_EventLoop();
 	prev = CM_SwitchMap(newWorld);
 	re.SwitchWorld(newWorld);
 	clientWorlds[0] = newWorld;
 	
-	cl.newSnapshots = qfalse;
-	clc.eventMask |= EM_SNAPSHOT;
-	CL_SetCGameTime();
-	CL_WritePacket();
-	CL_WritePacket();
-	CL_WritePacket();
+	//cl.snap
+	//cl.newSnapshots = qfalse;
+	//clc.eventMask |= EM_SNAPSHOT;
+	//CL_SetCGameTime();
+	//CL_WritePacket();
+	//CL_WritePacket();
+	//CL_WritePacket();
 }
 #endif
 

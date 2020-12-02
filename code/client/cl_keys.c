@@ -782,7 +782,6 @@ void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 		CL_KeyDownEvent( key, time, finger );
 	else
 		CL_KeyUpEvent( key, time, finger );
-	cgvm = 0;
 }
 
 

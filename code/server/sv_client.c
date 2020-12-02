@@ -2304,6 +2304,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	int oldDelta[3];
 	sharedEntity_t *ent;
 	playerState_t	*ps, *rez, oldps;
+	vec3_t newAngles;
 	//gentity_t *gent, oldEnt;
 	
 	client->state = CS_ACTIVE;
@@ -2320,12 +2321,14 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// copy old view angles from previous world to new world
 			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
 			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			memcpy(newAngles, ps->viewangles, sizeof(vec3_t));
 		}
 		// not possible, but if it was, copy delta from new world
 		// if(changeOrigin == MOVEORIGIN) {
 	} else {
 		if(changeOrigin == MOVEORIGIN) {
 			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			// TODO: move in the direction of the view
 		}
 	}
 
@@ -2342,6 +2345,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			ps = SV_GameClientNum( clientNum );
 			memcpy(newOrigin, ps->origin, sizeof(vec3_t));
 			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
+			memcpy(newAngles, ps->viewangles, sizeof(vec3_t));
 		}
 		
 		// remove from old world?
@@ -2366,9 +2370,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
 			SV_SendClientSnapshot( client, qfalse );
-
-			gvm = 0;
-			CM_SwitchMap(gameWorlds[gvm]);
 			return;
 		} else {
 			// above must come before this because there is a filter 
@@ -2380,9 +2381,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// notify the client of the secondary map
 			SV_AddServerCommand(client, va("world %i ", client->newWorld));
 			// send new baselines
-			client->deltaMessage = -1;
-			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
+			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 			SV_SendClientSnapshot( client, qtrue );
 			client->state = CS_ACTIVE;
 		}
@@ -2400,9 +2401,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	if(changeOrigin > SPAWNORIGIN) {
 		// put up a little so it can drop to the floor on the next frame and 
 		//   doesn't bounce with tracing/lerping to the floor
-		memcpy(&ps->origin, newOrigin, sizeof(vec3_t));
+		memcpy(ps->origin, newOrigin, sizeof(vec3_t));
+		memcpy(ps->viewangles, newAngles, sizeof(vec3_t));
 		//ps->origin[2] = *newOrigin[2] + 9.0f;
-		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
+		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
 		// keep the same view angles if changing origins
 		ps->delta_angles[0] = oldDelta[0];
 		ps->delta_angles[1] = oldDelta[1];
@@ -2410,9 +2413,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	}
 
 	// restore player stats
-	memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
-	memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
-	memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
+	//memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
+	//memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
+	//memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
 
 	// Move Teleporter Res entity to follow player anywhere
 	for(i = 0; i < sv.num_entities[gvm]; i++) {
@@ -2430,8 +2433,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
-	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
 }
 
 void SV_Tele_f( client_t *client ) {

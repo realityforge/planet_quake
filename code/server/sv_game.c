@@ -375,7 +375,6 @@ static char *RenameMultiworld(char *name) {
 	}
 	else
 		newName = name;
-	Com_Printf( "Cvar_Set: %s\n", newName );
 	return newName;
 }
 #endif

@@ -234,21 +234,23 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	}
 #endif // USE_MV
 
-	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
-	snapshot->ps = clSnap->ps;
 	// check for a use_item event and don't print in renderer
 	// TODO: using game VM hack instead
-	/*
-	{
-		for(int i = 0; i < MAX_PS_EVENTS; i++) {
-			int event = snapshot->ps.events[i] & ~EV_EVENT_BITS;
+	for ( i = clSnap->ps.eventSequence - MAX_PS_EVENTS ; i < clSnap->ps.eventSequence ; i++ ) {
+		if ( i >= snapshot->ps.eventSequence ) {
+			int event = clSnap->ps.events[ i & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
 			if(event >= EV_USE_ITEM0 && event <= EV_USE_ITEM15) {
-				re.ResetBannerSpy();
-				break;
+	//				re.ResetBannerSpy();
+	//				break;
+			}
+			if(event == EV_CHANGE_WEAPON) {
+	Com_Printf( "Weapon change event\n" );
 			}
 		}
 	}
-	*/
+
+	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
+	snapshot->ps = clSnap->ps;
 
 	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
 		// send a game update but don't bother with entities yet
@@ -484,7 +486,7 @@ Com_Printf( "------------------------------- hit (%i) ------------------------\n
 			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
-			Cbuf_AddText(va("world %i\n", newWorld));
+			Cbuf_AddText(va("wait\nworld %i\n", newWorld));
 		}
 		Cmd_Clear();
 		return qfalse;

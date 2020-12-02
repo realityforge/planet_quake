@@ -403,7 +403,6 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
 	}
-	cgvm = 0;
 }
 
 
