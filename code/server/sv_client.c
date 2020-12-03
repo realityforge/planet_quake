@@ -2337,7 +2337,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
 		SV_FreeClient( client );
-		SV_SaveSequences();
+		//SV_SaveSequences();
 
 		// keep the same origin in the new world as if you've switched worlds
 		//   but haven't moved, default behavior
@@ -2380,11 +2380,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->gameWorld = newWorld;
 			// notify the client of the secondary map
 			SV_AddServerCommand(client, va("world %i ", client->newWorld));
-			// send new baselines
 			//client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 			SV_SendClientSnapshot( client, qtrue );
+			// send new baselines
+			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
+				if(strlen(sv.configstrings[index]) > 0) {
+					client->csUpdated[index] = qtrue;
+				}
+			}
 			client->state = CS_ACTIVE;
 		}
 	}

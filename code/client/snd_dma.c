@@ -77,7 +77,7 @@ int   		s_paintedtime; 		// sample PAIRS
 // MAX_SFX may be larger than MAX_SOUNDS because
 // of custom player sounds
 #define		MAX_SFX			4096
-sfx_t		s_knownSfx[MAX_SFX];
+sfx_t		s_knownSfx[MAX_SFX * MAX_NUM_VMS];
 int			s_numSfx = 0;
 
 #define		LOOP_HASH		128
@@ -271,7 +271,7 @@ static sfx_t *S_FindName( const char *name ) {
 	}
 
 	if (i == s_numSfx) {
-		if (s_numSfx >= MAX_SFX) {
+		if (s_numSfx >= MAX_SFX * MAX_NUM_VMS) {
 			Com_Error (ERR_FATAL, "S_FindName: out of sfx_t");
 		}
 		s_numSfx++;
@@ -330,7 +330,7 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 
 	if ( sfx->soundData ) {
 		if ( sfx->defaultSound ) {
-			//Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
+			Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
 			//return 0;
 		}
 		return sfx - s_knownSfx;
@@ -342,7 +342,7 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	S_memoryLoad( sfx );
 
 	if ( sfx->defaultSound ) {
-		//Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
+		Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
 		//return 0;
 	}
 

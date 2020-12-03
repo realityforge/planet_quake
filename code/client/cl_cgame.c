@@ -486,6 +486,7 @@ Com_Printf( "------------------------------- hit (%i) ------------------------\n
 			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
+			cvar_modifiedFlags |= CVAR_USERINFO;
 			Cbuf_AddText(va("wait\nworld %i\n", newWorld));
 		}
 		Cmd_Clear();

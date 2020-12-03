@@ -1444,10 +1444,10 @@ void R_Register( void )
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription(r_flares, "Toggle projectile flare and lighting effect\nDefault: 0");
 	r_znear = ri.Cvar_Get( "r_znear", "4", CVAR_CHEAT );
-	ri.Cvar_CheckRange( r_znear, "0.001", "200", CV_FLOAT );
+	ri.Cvar_CheckRange( r_znear, "0.001", NULL, CV_FLOAT );
 	ri.Cvar_SetDescription(r_znear, "Set how close objects can be to the player before they're clipped out of the scene, so you can't see your nose or shoulders\nDefault: 0.001");
-	r_zfar = ri.Cvar_Get( "r_zfar", "0", CVAR_ARCHIVE );
-	ri.Cvar_CheckRange( r_zfar, "0", NULL, CV_INTEGER );
+	r_zfar = ri.Cvar_Get( "r_zfar", "0", CVAR_ARCHIVE|CVAR_CHEAT );
+	ri.Cvar_CheckRange( r_zfar, "0", NULL, CV_FLOAT );
 	ri.Cvar_SetDescription( r_zfar, "Set how far objects are before they are clipped out, usually automatically calculated based on map size, 0 - infinity, 2048 - used for menus\nDefault: 0 infinity" );
 	r_zproj = ri.Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE );
 	//ri.Cvar_SetDescription();
