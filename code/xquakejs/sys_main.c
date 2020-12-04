@@ -323,6 +323,7 @@ void Sys_Init( void )
 
 #ifndef DEDICATED
 	Cmd_AddCommand( "in_restart", Sys_In_Restart_f );
+	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
 #endif
 
 	Cvar_Set( "arch", OS_STRING " " ARCH_STRING );

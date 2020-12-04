@@ -2248,7 +2248,7 @@ void SV_PrintLocations_f( client_t *client ) {
 }
 
 #ifdef USE_MULTIVM
-void SV_LoadVM_f( client_t *cl ) {
+void SV_LoadVM( client_t *cl ) {
 	vmIndex_t index;
 	char *mapname;
 	int checksum;
@@ -2555,7 +2555,7 @@ static const ucmd_t ucmds[] = {
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
 #ifdef USE_MULTIVM
-	{"load", SV_LoadVM_f},
+	{"load", SV_LoadVM},
 	{"tele", SV_Tele_f},
 	{"game", SV_Game_f},
 #endif

@@ -1542,6 +1542,10 @@ void SV_Teleport_f (void) {
 	//client = SV_GetPlayerByHandle();
 
 }
+
+void SV_LoadVM_f() {
+	SV_LoadVM(NULL);
+}
 #endif
 
 

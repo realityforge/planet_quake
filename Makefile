@@ -204,7 +204,7 @@ endif
 
 # extract version info
 VERSION=$(shell grep "\#define Q3_VERSION" $(CMDIR)/q_shared.h | \
-  sed -e 's/.*".* \([^ ]*\)"/\1/')
+  sed -e 's/.*".* \([^ ]*\)\( MV\)*"/\1/')
 
 # common qvm definition
 ifeq ($(ARCH),x86_64)

@@ -785,11 +785,6 @@ void IN_Init( void )
 	IN_InitJoystick( );
 #endif
 
-	Cmd_AddCommand( "minimize", IN_Minimize );
-	Cmd_SetDescription( "minimize", "Toggle minimizing the game\nUsage: minimize" );
-	Cmd_AddCommand( "in_restart", IN_Restart );
-	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
-
 	Com_DPrintf( "------------------------------------\n" );
 }
 

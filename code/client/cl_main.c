@@ -1561,7 +1561,7 @@ static void CL_RequestAuthorization( void ) {
 	nums[j] = 0;
 
 	fs = Cvar_Get ("cl_anonymous", "0", CVAR_INIT|CVAR_SYSTEMINFO );
-	Cvar_SetDescription = Cvar_Get( fs, "Begin anonymous connect to server\nDefault: 0" );
+	Cvar_SetDescription( fs, "Begin anonymous connect to server\nDefault: 0" );
 
 	NET_OutOfBandPrint(NS_CLIENT, &cls.authorizeServer, "getKeyAuthorize %i %s", fs->integer, nums );
 }
@@ -3620,7 +3620,7 @@ void CL_Frame( int msec ) {
 			CL_InitCGameFinished();
 		}
 	}
-	for(i = 0; i < MAX_NUM_VMS; i++) {
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
 		if(VM_IsSuspended(cgvms[i])) {
 			cgvm = i;
@@ -4897,6 +4897,8 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [0/1/2 moveorigin] [num]" );
 	Cmd_AddCommand ("world", CL_World_f);
 	Cmd_SetDescription( "world", "Switch the rendered world client side only\nUsage: world <numworld>" );
+	Cmd_AddCommand ("mvtile", NULL);
+	Cmd_SetDescription( "mvtile", "Display multiview renderings in a grid\nUsage: mvtile [+/-] [x y clientnum]" );
 #endif
 
 	SCR_Init();

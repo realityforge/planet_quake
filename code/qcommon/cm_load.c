@@ -62,6 +62,7 @@ byte		*cmod_base;
 cvar_t		*cm_noAreas;
 cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
+cvar_t    *cm_saveEnts;
 #endif
 
 cmodel_t	box_model[MAX_NUM_MAPS];
@@ -496,6 +497,9 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	cms[cm].entityString = Hunk_Alloc( l->filelen, h_high );
 	cms[cm].numEntityChars = l->filelen;
 	memcpy( cms[cm].entityString, cmod_base + l->fileofs, l->filelen );
+	if(cm_saveEnts->integer) {
+		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
+	}
 }
 
 
@@ -670,6 +674,8 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cvar_SetDescription(cm_noCurves, "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
 	Cvar_SetDescription( cm_playerCurveClip, "Don't clip player bounding box around curves\nDefault: 1" );
+	cm_saveEnts = Cvar_Get ("cm_saveEnts", "0", 0);
+	Cvar_SetDescription(cm_saveEnts, "Export entities from the next map that is loaded by the same name with a .ent extension, usually in your fs_homepath/maps directory\nDefault: 0");
 #endif
 #ifdef USE_LAZY_MEMORY
 	Cmd_AddCommand("maplist", CM_MapList_f);

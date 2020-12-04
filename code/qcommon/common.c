@@ -105,7 +105,7 @@ cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
 
 cvar_t	*com_cameraMode;
-#if defined(_WIN32) && defined(_DEBUG)
+#if (defined(_WIN32) && defined(_DEBUG)) || (defined(EMSCRIPTEN) && defined(_DEBUG))
 cvar_t	*com_noErrorInterrupt;
 #endif
 
@@ -3688,14 +3688,9 @@ void Com_Init( char *commandLine ) {
 	Com_InitSmallZoneMemory();
 	Cvar_Init();
 
-#if defined(_WIN32) && defined(_DEBUG)
+#if (defined(_WIN32) && defined(_DEBUG)) || (defined(EMSCRIPTEN) && defined(_DEBUG))
 	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
 	Cvar_SetDescription(com_noErrorInterrupt, "No interrupt with a debug break when an error occurs\nDefault: 0");
-#else
-#ifdef EMSCRIPTEN
-	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
-	Cvar_SetDescription(com_noErrorInterrupt, "No interrupt with a debug break when an error occurs\nDefault: 0");
-#endif
 #endif
 
 #ifdef DEFAULT_GAME

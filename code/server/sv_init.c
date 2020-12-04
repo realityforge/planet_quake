@@ -584,7 +584,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	Cvar_Set( "mapname_0", mapname );
 
 #ifdef EMSCRIPTEN
-	Memcpy(&map, mapname, sizeof(map));
+	memcpy(&map, mapname, sizeof(map));
 	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }

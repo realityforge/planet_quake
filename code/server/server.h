@@ -559,7 +559,7 @@ int SV_SendQueuedMessages( void );
 
 void SV_FreeIP4DB( void );
 void SV_PrintLocations_f( client_t *client );
-void SV_LoadVM_f( client_t *client );
+void SV_LoadVM( client_t *client );
 
 //
 // sv_ccmds.c
