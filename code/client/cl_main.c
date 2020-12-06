@@ -4538,6 +4538,7 @@ static void CL_InitGLimp_Cvars( void )
 void CL_LoadVM_f( void ) {
 	vmIndex_t index;
 	char *name;
+	float prevDvr[4];
 	
 	if ( Cmd_Argc() < 2 ) {
 		Com_Printf( "Usage: %s <game|cgame|ui> [mapname]\n", Cmd_Argv( 0 ) );
@@ -4565,8 +4566,20 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
+		prevDvr[0] = clientWorlds[clc.currentView][0];
+		prevDvr[1] = clientWorlds[clc.currentView][1];
+		prevDvr[2] = clientWorlds[clc.currentView][2];
+		prevDvr[3] = clientWorlds[clc.currentView][3];
+		clientWorlds[clc.currentView][0] =
+		clientWorlds[clc.currentView][1] =
+		clientWorlds[clc.currentView][2] =
+		clientWorlds[clc.currentView][3] = -1;
 		clc.currentView = cgvm;
 		re.SwitchWorld(cgvm);
+		clientWorlds[clc.currentView][0] = prevDvr[0];
+		clientWorlds[clc.currentView][1] = prevDvr[1];
+		clientWorlds[clc.currentView][2] = prevDvr[2];
+		clientWorlds[clc.currentView][3] = prevDvr[3];
 		CL_InitCGame(qtrue);
 		cgvm = 0;
 		return;
@@ -4612,6 +4625,7 @@ void CL_Game_f ( void ) {
 
 void CL_World_f( void ) {
 	int newWorld, prev;
+	float prevDvr[4];
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
@@ -4622,9 +4636,21 @@ void CL_World_f( void ) {
 	
 	Com_EventLoop();
 	prev = CM_SwitchMap(newWorld);
+	prevDvr[0] = clientWorlds[clc.currentView][0];
+	prevDvr[1] = clientWorlds[clc.currentView][1];
+	prevDvr[2] = clientWorlds[clc.currentView][2];
+	prevDvr[3] = clientWorlds[clc.currentView][3];
+	clientWorlds[clc.currentView][0] =
+	clientWorlds[clc.currentView][1] =
+	clientWorlds[clc.currentView][2] =
+	clientWorlds[clc.currentView][3] = -1;
 	//re.ReloadShaders(qtrue);
 	re.SwitchWorld(newWorld);
 	clc.currentView = newWorld;
+	clientWorlds[clc.currentView][0] = prevDvr[0];
+	clientWorlds[clc.currentView][1] = prevDvr[1];
+	clientWorlds[clc.currentView][2] = prevDvr[2];
+	clientWorlds[clc.currentView][3] = prevDvr[3];
 	
 	//cl.snap
 	//cl.newSnapshots = qfalse;
@@ -4636,9 +4662,9 @@ void CL_World_f( void ) {
 }
 
 void CL_Tile_f(void) {
-	char *xIn, *yIn;
+	char *xIn, *yIn, *opIn;
 	int clientNum, i, x, y, argc = 1, xMaxVMs, yMaxVMs, count = 0;
-	if(Cmd_Argc() == 1 || Cmd_Argc() == 4 || Cmd_Argc() > 5) {
+	if(Cmd_Argc() == 1 || Cmd_Argc() > 5) {
 		Com_Printf ("Usage: tile [+/-] [x y] [clientnum]\n");
 		return;
 	}
@@ -4646,41 +4672,43 @@ void CL_Tile_f(void) {
 		if(!cgvms[i]) continue;
 		if(clientWorlds[i][0] > -1) count++;
 	}
-	xMaxVMs = ceil(sqrt(count));
-	yMaxVMs = round(sqrt(count));
-	xIn = Cmd_Argv(1);
-	if(xIn[0] == '-') {
-		count--;
-		clientWorlds[count][0] =
-		clientWorlds[count][1] =
-		clientWorlds[count][2] =
-		clientWorlds[count][3] = -1;
+	xIn = opIn = Cmd_Argv(1);
+	if(opIn[0] == '-' || opIn[0] == '+') {
 		argc++;
 		xIn = Cmd_Argv(++argc);
 	}
-	if(xIn[0] == '+') {
-		argc++;
-		xIn = Cmd_Argv(++argc);
-	}
-	if(Cmd_Argc() == 2) return;
-	if(Cmd_Argc() == 3) {
+	if(Cmd_Argc() == 2 || Cmd_Argc() == 3) {
 		// tile + 1
-		clientNum = Cmd_Argv(argc);
+		if(Cmd_Argc() == 2) {
+			clientNum = count;
+		} else {
+			clientNum = Cmd_Argv(argc);
+		}
+		if(opIn == '-') count--;
+		xMaxVMs = ceil(sqrt(count));
+		yMaxVMs = round(sqrt(count));
 		y = floor(count / xMaxVMs);
 		x = count % xMaxVMs;
 	} else {
 		yIn = Cmd_Argv(++argc);
 		if(*Cmd_Argv(argc) == '\0') {
-			clientNum = clc.currentView;
+			if(opIn == '-' || opIn == '+') {
+				clientNum = count;
+				if(opIn == '-') count--;
+			} else {
+				clientNum = clc.currentView;
+			}
 		} else {
 			clientNum = atoi(Cmd_Argv(argc));
 		}
+		xMaxVMs = ceil(sqrt(count));
+		yMaxVMs = round(sqrt(count));
 		x = atoi(xIn);
 		y = atoi(yIn);
 		if(x > xMaxVMs) x = xMaxVMs;
 		if(y > yMaxVMs) y = yMaxVMs;
 	}
-	if(x < 0 || y < 0) {
+	if(x < 0 || y < 0 || opIn == '-') {
 		clientWorlds[clientNum][0] = 
 		clientWorlds[clientNum][1] = 
 		clientWorlds[clientNum][2] = 
@@ -4713,7 +4741,6 @@ void CL_Dvr_f(void) {
 	clientWorlds[clientNum][1] = Q_atof(yIn);
 	clientWorlds[clientNum][2] = Q_atof(wIn);
 	clientWorlds[clientNum][3] = Q_atof(hIn);
-	
 }
 
 #endif

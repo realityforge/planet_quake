@@ -481,7 +481,7 @@ rescan:
 
 Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clc.currentView != newWorld) {
-			clc.currentView = -1; // don't process anymore snapshots until we pump and dump
+			//clc.currentView = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
 			cvar_modifiedFlags |= CVAR_USERINFO;
@@ -833,39 +833,55 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.RegisterFont( VMA(1), args[2], VMA(3));
 		return 0;
 	case CG_R_CLEARSCENE:
-		re.ClearScene();
+		if(clientWorlds[cgvm][0] > -1)
+			re.ClearScene();
 		return 0;
 	case CG_R_ADDREFENTITYTOSCENE:
-		re.AddRefEntityToScene( VMA(1), qfalse );
+		if(clientWorlds[cgvm][0] > -1)
+			re.AddRefEntityToScene( VMA(1), qfalse );
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
+		if(clientWorlds[cgvm][0] > -1)
+			re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
 		return 0;
 	case CG_R_ADDPOLYSTOSCENE:
-		re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
+		if(clientWorlds[cgvm][0] > -1)
+			re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
 		return 0;
 	case CG_R_LIGHTFORPOINT:
-		return re.LightForPoint( VMA(1), VMA(2), VMA(3), VMA(4) );
+		if(clientWorlds[cgvm][0] > -1)
+			return re.LightForPoint( VMA(1), VMA(2), VMA(3), VMA(4) );
+		else
+			return qfalse;
 	case CG_R_ADDLIGHTTOSCENE:
-		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		if(clientWorlds[cgvm][0] > -1)
+			re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_ADDADDITIVELIGHTTOSCENE:
-		re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
+		if(clientWorlds[cgvm][0] > -1)
+			re.AddAdditiveLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;
 	case CG_R_RENDERSCENE:
-		re.RenderScene( VMA(1) );
+		if(clientWorlds[cgvm][0] > -1)
+			re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:
-		re.SetColor( VMA(1) );
+		if(clientWorlds[cgvm][0] > -1)
+			re.SetColor( VMA(1) );
 		return 0;
 	case CG_R_DRAWSTRETCHPIC:
-		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
+		if(clientWorlds[cgvm][0] > -1)
+			re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
 		return 0;
 	case CG_R_MODELBOUNDS:
-		re.ModelBounds( args[1], VMA(2), VMA(3) );
+		if(clientWorlds[cgvm][0] > -1)
+			re.ModelBounds( args[1], VMA(2), VMA(3) );
 		return 0;
 	case CG_R_LERPTAG:
-		return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+		if(clientWorlds[cgvm][0] > -1)
+			return re.LerpTag( VMA(1), args[2], args[3], args[4], VMF(5), VMA(6) );
+		else
+			return qfalse;
 	case CG_GETGLCONFIG:
 		VM_CHECKBOUNDS( cgvms[cgvm], args[1], sizeof( glconfig_t ) );
 #ifdef USE_VID_FAST
