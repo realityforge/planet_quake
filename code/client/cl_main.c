@@ -1026,8 +1026,6 @@ static void CL_ShutdownVMs( void )
 {
 	CL_ShutdownCGame();
 	CL_ShutdownUI();
-	xMaxVMs = 1;
-	yMaxVMs = 1;
 }
 
 
@@ -1989,8 +1987,6 @@ doesn't know what graphics to reload
 static void CL_Vid_Restart( void ) {
 
 #ifdef USE_VID_FAST
-	int oldXMaxVMs = 1;
-	int oldYMaxVMs = 1;
 	const float MATCH_EPSILON = 0.001f;
 	const char *arg = Cmd_Argv(1);
 
@@ -2018,9 +2014,9 @@ Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
 			float oldYScale = old.vidHeight * (1.0 / 480.0);
 			float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
 
-			float newXScale = (cls.glconfig.vidWidth / xMaxVMs) * (1.0 / 640.0);
-			float newYScale = (cls.glconfig.vidHeight / yMaxVMs) * (1.0 / 480.0);
-			float newBias = (cls.glconfig.vidWidth / xMaxVMs) * 480 > (cls.glconfig.vidHeight / yMaxVMs) * 640 ? 0.5 * ((cls.glconfig.vidWidth / xMaxVMs) - ((cls.glconfig.vidHeight / yMaxVMs) * (640.0 / 480.0))) : 0.0;
+			float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
+			float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
+			float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
 
 			if (!cls.numUiPatches) {
 				// having tested a few mods and UI configurations, these
@@ -2491,7 +2487,7 @@ Called when all downloading has been completed
 */
 static void CL_DownloadsComplete( void ) {
 
-	Com_Printf("Downloads complete (%i, %i)\n", cgvm, clientWorlds[cgvm]);
+	Com_Printf("Downloads complete\n");
 	if(uivms[uivm])
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
@@ -3402,8 +3398,8 @@ A packet has arrived from the main event loop
 */
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
-	CM_SwitchMap(clientWorlds[0]);
-	cgvm = clientWorlds[0];
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 
 	if ( msg->cursize < 5 ) {
 		Com_DPrintf( "%s: Runt packet\n", NET_AdrToStringwPort( from ) );
@@ -4569,9 +4565,7 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
-		xMaxVMs = ceil(sqrt(count));
-		yMaxVMs = round(sqrt(count));
-		clientWorlds[0] = cgvm;
+		clc.currentView = cgvm;
 		re.SwitchWorld(cgvm);
 		CL_InitCGame(qtrue);
 		cgvm = 0;
@@ -4586,8 +4580,6 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
-		xMaxVMs = ceil(sqrt(count));
-		yMaxVMs = round(sqrt(count));
 		CL_InitUI(qtrue);
 		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 		uivm = 0;
@@ -4626,13 +4618,13 @@ void CL_World_f( void ) {
 	}
 	
 	newWorld = atoi( Cmd_Argv(1) );
-	Com_Printf( "Client switching world: %i -> %i\n", clientWorlds[0], newWorld );
+	Com_Printf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
 	
 	Com_EventLoop();
 	prev = CM_SwitchMap(newWorld);
 	//re.ReloadShaders(qtrue);
 	re.SwitchWorld(newWorld);
-	clientWorlds[0] = newWorld;
+	clc.currentView = newWorld;
 	
 	//cl.snap
 	//cl.newSnapshots = qfalse;
@@ -4642,6 +4634,88 @@ void CL_World_f( void ) {
 	//CL_WritePacket();
 	//CL_WritePacket();
 }
+
+void CL_Tile_f(void) {
+	char *xIn, *yIn;
+	int clientNum, i, x, y, argc = 1, xMaxVMs, yMaxVMs, count = 0;
+	if(Cmd_Argc() == 1 || Cmd_Argc() == 4 || Cmd_Argc() > 5) {
+		Com_Printf ("Usage: tile [+/-] [x y] [clientnum]\n");
+		return;
+	}
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(!cgvms[i]) continue;
+		if(clientWorlds[i][0] > -1) count++;
+	}
+	xMaxVMs = ceil(sqrt(count));
+	yMaxVMs = round(sqrt(count));
+	xIn = Cmd_Argv(1);
+	if(xIn[0] == '-') {
+		count--;
+		clientWorlds[count][0] =
+		clientWorlds[count][1] =
+		clientWorlds[count][2] =
+		clientWorlds[count][3] = -1;
+		argc++;
+		xIn = Cmd_Argv(++argc);
+	}
+	if(xIn[0] == '+') {
+		argc++;
+		xIn = Cmd_Argv(++argc);
+	}
+	if(Cmd_Argc() == 2) return;
+	if(Cmd_Argc() == 3) {
+		// tile + 1
+		clientNum = Cmd_Argv(argc);
+		y = floor(count / xMaxVMs);
+		x = count % xMaxVMs;
+	} else {
+		yIn = Cmd_Argv(++argc);
+		if(*Cmd_Argv(argc) == '\0') {
+			clientNum = clc.currentView;
+		} else {
+			clientNum = atoi(Cmd_Argv(argc));
+		}
+		x = atoi(xIn);
+		y = atoi(yIn);
+		if(x > xMaxVMs) x = xMaxVMs;
+		if(y > yMaxVMs) y = yMaxVMs;
+	}
+	if(x < 0 || y < 0) {
+		clientWorlds[clientNum][0] = 
+		clientWorlds[clientNum][1] = 
+		clientWorlds[clientNum][2] = 
+		clientWorlds[clientNum][3] = -1;	
+	} else {
+		clientWorlds[clientNum][0] = 1.0f / xMaxVMs * x;
+		clientWorlds[clientNum][1] = 1.0f / yMaxVMs * y;
+		clientWorlds[clientNum][2] = 1.0f / xMaxVMs;
+		clientWorlds[clientNum][3] = 1.0f / yMaxVMs;
+	}
+}
+
+void CL_Dvr_f(void) {
+	char *xIn, *yIn, *wIn, *hIn;
+	int clientNum, argc = 1;
+	if(Cmd_Argc() < 5 || Cmd_Argc() > 6) {
+		Com_Printf ("Usage: dvr [clientnum] [x y w h]\n");
+		return;
+	}
+	if(Cmd_Argc() == 5) {
+		clientNum = clc.currentView;
+	} else {
+		clientNum = atoi(Cmd_Argv(++argc));
+	}
+	xIn = Cmd_Argv(++argc);
+	yIn = Cmd_Argv(++argc);
+	wIn = Cmd_Argv(++argc);
+	hIn = Cmd_Argv(++argc);
+	clientWorlds[clientNum][0] = Q_atof(xIn);
+	clientWorlds[clientNum][1] = Q_atof(yIn);
+	clientWorlds[clientNum][2] = Q_atof(wIn);
+	clientWorlds[clientNum][3] = Q_atof(hIn);
+	
+}
+
 #endif
 
 
@@ -4897,8 +4971,11 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "game", "Switch games in multiVM mode to another match\nUsage: game [0/1/2 moveorigin] [num]" );
 	Cmd_AddCommand ("world", CL_World_f);
 	Cmd_SetDescription( "world", "Switch the rendered world client side only\nUsage: world <numworld>" );
-	Cmd_AddCommand ("mvtile", NULL);
-	Cmd_SetDescription( "mvtile", "Display multiview renderings in a grid\nUsage: mvtile [+/-] [x y clientnum]" );
+	Cmd_AddCommand ("tile", CL_Tile_f);
+	Cmd_SetDescription( "tile", "Display multiview renderings in a grid\nUsage: tile [+/-] [x y] [clientnum]" );
+	Cmd_AddCommand ("dvr", CL_Dvr_f);
+	Cmd_SetDescription( "dvr", "Change where the screen output is drawn using percentages\nUsage: dvr [clientnum] x y w h" );
+	
 #endif
 
 	SCR_Init();

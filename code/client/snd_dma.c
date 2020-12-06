@@ -363,8 +363,10 @@ static void S_Base_BeginRegistration( void ) {
 
 	SND_setup();
 
+#ifndef USE_LAZY_MEMORY
 	Com_Memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
 	Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
+#endif
 
 	S_Base_RegisterSound( "sound/feedback/hit.wav", qfalse ); // changed to a sound in baseq3
 }
@@ -1478,7 +1480,9 @@ static void S_Base_Shutdown( void ) {
 
 	s_soundStarted = qfalse;
 
+#ifndef USE_LAZY_MEMORY
 	s_numSfx = 0; // clean up sound cache -EC-
+#endif
 
 	if ( dma_buffer2 != buffer2 )
 		free( dma_buffer2 );

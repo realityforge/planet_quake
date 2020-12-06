@@ -28,8 +28,6 @@ extern	botlib_export_t	*botlib_export;
 
 int  uivm = 0;
 vm_t *uivms[MAX_NUM_VMS] = {};
-int  xMaxVMs = 1;
-int  yMaxVMs = 1;
 
 /*
 ====================

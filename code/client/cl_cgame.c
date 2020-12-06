@@ -95,13 +95,8 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
-	//if(cgvm != clientWorlds[0]) {
-	//	*snapshotNumber = cl.snap.messageNum;
-	//	*serverTime = cl.snap.serverTime - 5;
-	//} else {
-		*snapshotNumber = cl.snap.messageNum;
-		*serverTime = cl.snap.serverTime;
-	//}
+	*snapshotNumber = cl.snap.messageNum;
+	*serverTime = cl.snap.serverTime;
 }
 
 
@@ -255,7 +250,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
 
-	if(!clSnap->multiview && cgvm != clientWorlds[0]) {
+	if(!clSnap->multiview && cgvm != clc.currentView) {
 		// send a game update but don't bother with entities yet
 		snapshot->numEntities = 0;
 		return qtrue;
@@ -485,8 +480,8 @@ rescan:
 		newWorld = atoi(s);
 
 Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
-		if(clientWorlds[0] != newWorld) {
-			clientWorlds[0] = -1; // don't process anymore snapshots until we pump and dump
+		if(clc.currentView != newWorld) {
+			clc.currentView = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
 			cvar_modifiedFlags |= CVAR_USERINFO;
@@ -553,7 +548,10 @@ void CL_ShutdownCGame( void ) {
 	cls.cgameStarted = qfalse;
 
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		clientWorlds[i] = -1;
+		clientWorlds[i][0] =
+		clientWorlds[i][1] =
+		clientWorlds[i][2] =
+		clientWorlds[i][3] = -1;
 		cgvm = i;
 		if ( !cgvms[cgvm] ) {
 			continue;
@@ -572,7 +570,11 @@ void CL_ShutdownCGame( void ) {
 		cgvms[cgvm] = NULL;
 	}
 	cgvm = 0;
-	clientWorlds[0] = 0;
+	clientWorlds[cgvm][0] = 
+	clientWorlds[cgvm][1] = 0;
+	clientWorlds[cgvm][2] = 
+	clientWorlds[cgvm][3] = 1;
+	clc.currentView = 0;
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST
@@ -786,11 +788,11 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.MarkFragments( args[1], VMA(2), VMA(3), args[4], VMA(5), args[6], VMA(7) );
 	case CG_S_STARTSOUND:
 		// TODO: use worldly sounds
-		if(cgvm == clientWorlds[0])
+		if(cgvm == clc.currentView)
 			S_StartSound( VMA(1), args[2], args[3], args[4] );
 		return 0;
 	case CG_S_STARTLOCALSOUND:
-		if(cgvm == clientWorlds[0])
+		if(cgvm == clc.currentView)
 			S_StartLocalSound( args[1], args[2] );
 		return 0;
 	case CG_S_CLEARLOOPINGSOUNDS:
@@ -882,7 +884,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETSNAPSHOT:
 		return CL_GetSnapshot( args[1], VMA(2) );
 	case CG_GETSERVERCOMMAND:
-		if(cgvm == clientWorlds[0])
+		if(cgvm == clc.currentView)
 			return CL_GetServerCommand( args[1] );
 		else
 			return qfalse;
@@ -891,7 +893,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2) );
 	case CG_SETUSERCMDVALUE:
-		if(cgvm == clientWorlds[0])
+		if(cgvm == clc.currentView)
 			CL_SetUserCmdValue( args[1], VMF(2) );
 		return 0;
 	case CG_MEMORY_REMAINING:
@@ -1223,7 +1225,7 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	//if(cgvm != clientWorlds[0]) {
+	//if(cgvm != clc.currentView) {
 	//	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime - 5, stereo, clc.demoplaying );
 	//} else {
 		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
@@ -1409,8 +1411,8 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
-	CM_SwitchMap(clientWorlds[0]);
-	cgvm = clientWorlds[0];
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 
 	// getting a valid frame message ends the connection process
 	if ( cls.state != CA_ACTIVE ) {

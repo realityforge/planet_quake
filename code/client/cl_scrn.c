@@ -35,7 +35,13 @@ cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
 
-int clientWorlds[MAX_NUM_VMS] = {0,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+float clientWorlds[MAX_NUM_VMS][4] = {
+	{0,0,0,0},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1}
+};
 
 /*
 ================
@@ -667,7 +673,7 @@ text to the screen.
 ==================
 */
 void SCR_UpdateScreen( qboolean fromVM ) {
-	int i, x, y, cgvmCount, uivmCount;
+	int i;
 	static int recursive;
 	static int framecount;
 	static int next_frametime;
@@ -697,27 +703,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
-		// figure out which position to draw in based on current vm number
-		//   this way we aren't changing clip map or render worlds
-		cgvmCount = 0;
-		uivmCount = 0;
-		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(cgvms[i] && i < cgvm)
-				cgvmCount++;
-			if(uivms[i] && i < uivm)
-				uivmCount++;
-		}
-
-		if(cgvmCount > uivmCount) {
-			y = floor(cgvmCount / xMaxVMs);
-			x = cgvmCount % xMaxVMs;
-		} else {
-			y = floor(uivmCount / xMaxVMs);
-			x = uivmCount % xMaxVMs;
-		}
-
 		// TODO: prevent hidden VMs from adding entities to renderer, but refresh the cgvms anyways
-		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
 
 		// don't switch renderer or clipmap when updated from VM
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -729,29 +716,19 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		goto donewithupdate;
 	}
 
-	uivmCount = 0;
-	cgvmCount = 0;
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		cgvm = i; //clientWorlds[i];
+		cgvm = i;
 		uivm = i;
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		//if(cgvm != clientWorlds[0] && ms - cls.lastVidRestart <= 5) {
+		//if(cgvm != clc.currentView && ms - cls.lastVidRestart <= 5) {
 		//	continue;
 		//}
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 
-		if(cgvmCount > uivmCount) {
-			y = floor(cgvmCount / xMaxVMs);
-			x = cgvmCount % xMaxVMs;
-		} else {
-			y = floor(uivmCount / xMaxVMs);
-			x = uivmCount % xMaxVMs;
-		}
-
-		re.SetDvrFrame(1.0f / xMaxVMs * x, 1.0f / yMaxVMs * y, 1.0f / xMaxVMs, 1.0f / yMaxVMs);
+		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
 		CM_SwitchMap(cgvm);
 		re.SwitchWorld(cgvm);
 
@@ -762,11 +739,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
-
-		if(cgvms[cgvm])
-			cgvmCount++;
-		if(uivms[uivm])
-			uivmCount++;
 	}
 
 	cgvm = 0;

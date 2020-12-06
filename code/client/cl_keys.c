@@ -776,8 +776,8 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
-	CM_SwitchMap(clientWorlds[0]);
-	cgvm = clientWorlds[0];
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );
 	else

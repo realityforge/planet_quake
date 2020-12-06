@@ -383,8 +383,8 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
 ;
-	CM_SwitchMap(clientWorlds[0]);
-	cgvm = clientWorlds[0];
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if(absolute) {

@@ -199,6 +199,7 @@ typedef struct {
 #ifdef USE_MV
 	int			clientView;
 	int			zexpectDeltaSeq;			// for compressed server commands
+	int     currentView;
 #endif
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
@@ -637,7 +638,7 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 #ifdef USE_MULTIVM
-extern int clientWorlds[MAX_NUM_VMS];
+extern float clientWorlds[MAX_NUM_VMS][4];
 #endif
 #ifdef EMSCRIPTEN
 #ifdef USE_LAZY_LOAD
