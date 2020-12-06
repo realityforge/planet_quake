@@ -729,8 +729,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 
 		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
-		CM_SwitchMap(cgvm);
-		re.SwitchWorld(cgvm);
+		CM_SwitchMap(clientMaps[cgvm]);
+		re.SwitchWorld(clientMaps[cgvm]);
 
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {

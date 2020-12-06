@@ -2492,6 +2492,8 @@ void SV_Game_f( client_t *client ) {
 	vec3_t newOrigin = {0.0, 0.0, 0.0};
 
 	if(!client) return;
+	client->multiview.protocol = MV_PROTOCOL_VERSION;
+	client->multiview.scoreQueryTime = 0;
 	clientNum = client - svs.clients;
 	
 	userOrigin = Cmd_Argv(1);

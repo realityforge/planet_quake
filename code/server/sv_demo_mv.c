@@ -570,7 +570,7 @@ void SV_MultiView_f( client_t *client ) {
 		// FIXME: only local print?
 		SV_SendServerCommand( client, "print \"%s "S_COLOR_WHITE "joined multiview.\n\"", client->name );
 
-	} else { // assume "mvleave" in opposition to "mvjoin"
+	} else if ( Q_stricmp( Cmd_Argv( 0 ), "mvleave" ) == 0 ) { // assume "mvleave" in opposition to "mvjoin"
 		if ( client->multiview.protocol == 0 ) {
 			SV_SendServerCommand( client, "print \"You are not in multiview state.\n\"" );
 		} else {

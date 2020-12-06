@@ -4665,6 +4665,14 @@ void CL_Tile_f(void) {
 	char *xIn, *yIn, *opIn;
 	int clientNum, i, x, y, argc = 1, xMaxVMs, yMaxVMs, count = 0;
 	if(Cmd_Argc() == 1 || Cmd_Argc() > 5) {
+		if(Cmd_Argc() == 1) {
+			for(int i = 0; i < MAX_NUM_VMS; i++) {
+				if(clientWorlds[i][0] > -1) {
+					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientWorlds[i][0], clientWorlds[i][1],
+					 	clientWorlds[i][2], clientWorlds[i][3]);
+				}
+			}
+		}
 		Com_Printf ("Usage: tile [+/-] [x y] [clientnum]\n");
 		return;
 	}
@@ -4682,9 +4690,10 @@ void CL_Tile_f(void) {
 		if(Cmd_Argc() == 2) {
 			clientNum = count;
 		} else {
-			clientNum = Cmd_Argv(argc);
+			clientNum = atoi(Cmd_Argv(argc));
 		}
-		if(opIn == '-') count--;
+		if(opIn[0] == '-') count--;
+		if(opIn[0] == '+') count++;
 		xMaxVMs = ceil(sqrt(count));
 		yMaxVMs = round(sqrt(count));
 		y = floor(count / xMaxVMs);
@@ -4692,9 +4701,9 @@ void CL_Tile_f(void) {
 	} else {
 		yIn = Cmd_Argv(++argc);
 		if(*Cmd_Argv(argc) == '\0') {
-			if(opIn == '-' || opIn == '+') {
+			if(opIn[0] == '-' || opIn[0] == '+') {
 				clientNum = count;
-				if(opIn == '-') count--;
+				if(opIn[0] == '-') count--;
 			} else {
 				clientNum = clc.currentView;
 			}
@@ -4708,7 +4717,16 @@ void CL_Tile_f(void) {
 		if(x > xMaxVMs) x = xMaxVMs;
 		if(y > yMaxVMs) y = yMaxVMs;
 	}
-	if(x < 0 || y < 0 || opIn == '-') {
+	count = 0;
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		if(!cgvms[i] || clientWorlds[i][0] == -1) continue;
+		clientWorlds[i][0] = 1.0f / xMaxVMs * (count % xMaxVMs);
+		clientWorlds[i][1] = 1.0f / yMaxVMs * floor(count / xMaxVMs);
+		clientWorlds[i][2] = 1.0f / xMaxVMs;
+		clientWorlds[i][3] = 1.0f / yMaxVMs;
+		count++;
+	}
+	if(x < 0 || y < 0 || opIn[0] == '-') {
 		clientWorlds[clientNum][0] = 
 		clientWorlds[clientNum][1] = 
 		clientWorlds[clientNum][2] = 

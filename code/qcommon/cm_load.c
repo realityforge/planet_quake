@@ -646,6 +646,24 @@ static void CM_MapList_f(void) {
 	Com_Printf ("------------------\n");
 }
 
+void LoadQ3BspFile(dheader_t header, const char *name) {
+	
+		// load into heap
+		CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
+		CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
+		CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
+		CMod_LoadLeafSurfaces (&header.lumps[LUMP_LEAFSURFACES]);
+		CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
+		CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
+		CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
+		CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
+		CMod_LoadNodes (&header.lumps[LUMP_NODES]);
+		CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES], name);
+		CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
+		CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
+
+}
+
 
 /*
 ==================
@@ -729,28 +747,34 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
 	}
 
-	if ( header.version != BSP_VERSION
-	 	&& header.version != BSP_VERSION_QLIVE
-	 	&& header.version != BSP_VERSION_OPENJK) {
-		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number (%i should be %i)"
-		, name, header.version, BSP_VERSION );
-	}
-
 	cmod_base = (byte *)buf.i;
 
-	// load into heap
-	CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
-	CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
-	CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
-	CMod_LoadLeafSurfaces (&header.lumps[LUMP_LEAFSURFACES]);
-	CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
-	CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
-	CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
-	CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
-	CMod_LoadNodes (&header.lumps[LUMP_NODES]);
-	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES], name);
-	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
-	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
+	switch (header.ident)
+	{
+	case BSP_IDENT:
+		switch (header.version)
+		{
+		case BSP2_VERSION:
+			//LoadQ2BspFile();
+			break;
+		case BSP_VERSION_QLIVE:
+		case BSP_VERSION_OPENJK:
+		case BSP3_VERSION:
+			LoadQ3BspFile(header, name);
+			break;
+		default:
+			Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number "
+				"(%i should be %i)", name, header.version, BSP_VERSION );
+		}
+		break;
+	case BSP1_VERSION:
+	case BSPHL_VERSION:
+		//LoadQ1BspFile();
+		break;
+	default:
+		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number "
+			"(%i should be %i)", name, header.version, BSP_VERSION );
+	}
 
 	CMod_CheckLeafBrushes();
 
@@ -763,7 +787,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 
 	// allow this to be cached if it is loaded by the server
 	//if ( !clientload ) {
-		Q_strncpyz( cms[cm].name, name, sizeof( cms[cm].name ) );
+	Q_strncpyz( cms[cm].name, name, sizeof( cms[cm].name ) );
 	//}
 	
 	return cm;

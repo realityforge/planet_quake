@@ -2743,6 +2743,7 @@ void RE_LoadWorldMap( const char *name ) {
 		}
 	}
 	rw = empty;
+	// TODO: if (empty == -1) FreeOldestClipmap
 #else
 	if ( tr.worldMapLoaded ) {
 		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map\n" );

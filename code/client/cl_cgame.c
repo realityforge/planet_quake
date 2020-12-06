@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern	botlib_export_t	*botlib_export;
 
 // default cameras to an entity viewpoint instead of same location
+int clientMaps[MAX_NUM_VMS] = {};
 vec3_t clientCameras[MAX_NUM_VMS] = {};
 
 //extern qboolean loadCamera(const char *name);
@@ -479,7 +480,6 @@ rescan:
 		s = Cmd_Argv(1);
 		newWorld = atoi(s);
 
-Com_Printf( "------------------------------- hit (%i) ------------------------\n", newWorld );
 		if(clc.currentView != newWorld) {
 			//clc.currentView = -1; // don't process anymore snapshots until we pump and dump
 			clc.serverCommandsIgnore[ index ] = qtrue;
@@ -532,7 +532,7 @@ Just adds default parameters that cgame doesn't need to know about
 static void CL_CM_LoadMap( const char *mapname ) {
 	int		checksum;
 
-	CM_LoadMap( mapname, qtrue, &checksum );
+	clientMaps[cgvm] = CM_LoadMap( mapname, qtrue, &checksum );
 }
 
 

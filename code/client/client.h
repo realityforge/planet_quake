@@ -638,6 +638,7 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 #ifdef USE_MULTIVM
+extern int clientMaps[MAX_NUM_VMS];
 extern float clientWorlds[MAX_NUM_VMS][4];
 #endif
 #ifdef EMSCRIPTEN
