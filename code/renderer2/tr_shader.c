@@ -91,7 +91,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0
-  /*&& sh->lightmapIndex == index*/ ) {
+      && (index == 0 || sh->lightmapIndex == index) ) {
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -106,6 +106,7 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 
 void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 {
+  Com_Printf("Remapping shader: %s -> %s\n", shaderName, newShaderName);
   R_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }
 
@@ -599,7 +600,7 @@ ParseStage
 */
 static qboolean ParseStage( shaderStage_t *stage, const char **text )
 {
-	char *token;
+	char *token, path[MAX_QPATH];
 	int depthMaskBits = GLS_DEPTHMASK_TRUE, blendSrcBits = 0, blendDstBits = 0, atestBits = 0, depthFuncBits = 0;
 	qboolean depthMaskExplicit = qfalse;
 
@@ -822,18 +823,23 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		}
 		else if ( !Q_stricmp( token, "videoMap" ) )
 		{
-			token = COM_ParseExt( text, qfalse );
-			if ( !token[0] )
-			{
+      token = COM_ParseExt( text, qfalse );
+      if ( !token[0] ) {
 				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMap' keyword in shader '%s'\n", shader.name );
 				return qfalse;
 			}
-			stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( token, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
+      memcpy(&path, token, sizeof(path));
+      token = COM_ParseExt( text, qfalse );
+      if(token[0]) {
+        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( &path, 0, 0, 256, 256, (CIN_loop | CIN_shader));
+      } else {
+        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( &path, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
+      }
 			if (stage->bundle[0].videoMapHandle != -1) {
 				stage->bundle[0].isVideoMap = qtrue;
 				stage->bundle[0].image[0] = tr.scratchImage[stage->bundle[0].videoMapHandle];
 			} else {
-				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", token, shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", &path, shader.name );
 			}
 		}
 		//

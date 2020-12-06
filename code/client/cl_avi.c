@@ -507,11 +507,11 @@ void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size )
   int   paddingSize = PADLEN(size, 2);
   byte  padding[ 4 ] = { 0 };
 
-  if( !afd.fileOpen ) {
-    CIN_ResampleCinematic((const byte *)imageBuffer, 2048, 2048, (int *)previousFrame);
+  //if( !afd.fileOpen ) {
+    //CIN_ResampleCinematic((const byte *)imageBuffer, 2048, 2048, (int *)previousFrame);
     //Com_Memcpy(previousFrame, imageBuffer, size);
-    return;
-  }
+    //return;
+  //}
 
   // Chunk header + contents + padding
   if ( CL_CheckFileSize( 8 + size + 2 ) )

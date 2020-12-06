@@ -25,9 +25,10 @@ USE_SDL          = 0
 USE_CURL         = 1
 USE_LOCAL_HEADERS= 0
 USE_VULKAN       = 0
-#USE_VULKAN_API   = 0
+USE_SYSTEM_JPEG  = 0
+USE_VULKAN_API   = 1
 
-USE_RENDERER_DLOPEN = 0
+USE_RENDERER_DLOPEN = 1
 
 CNAME            = quake3e
 DNAME            = quake3e.ded
@@ -51,6 +52,10 @@ endif
 #
 #############################################################################
 -include Makefile.local
+
+ifeq ($(COMPILE_PLATFORM),darwin)
+  USE_SDL=1
+endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
   PLATFORM=mingw32
@@ -81,6 +86,9 @@ endif
 
 ifndef ARCH
 ARCH=$(COMPILE_ARCH)
+endif
+ifeq ($(PLATFORM),js)
+ARCH=js
 endif
 export ARCH
 
@@ -124,6 +132,22 @@ ifndef USE_CODEC_VORBIS
 USE_CODEC_VORBIS=0
 endif
 
+ifndef USE_CODEC_OPUS
+USE_CODEC_OPUS=0
+endif
+
+ifndef USE_CIN_THEORA
+USE_CIN_THEORA=0
+endif
+
+ifndef USE_CIN_XVID
+USE_CIN_THEORA=0
+endif
+
+ifndef USE_CIN_VPX
+USE_CIN_THEORA=0
+endif
+
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
@@ -159,10 +183,10 @@ SDIR=$(MOUNT_DIR)/server
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
 R2DIR=$(MOUNT_DIR)/renderer2
-RJSDIR=$(MOUNT_DIR)/rendererjs
 RVDIR=$(MOUNT_DIR)/renderervk
 RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
+
 OGGDIR=$(MOUNT_DIR)/ogg
 VORBISDIR=$(MOUNT_DIR)/vorbis
 OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
@@ -178,11 +202,8 @@ LOKISETUPDIR=$(UDIR)/setup
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
-STRIP=strip
-
-ifneq ($(PKG_CONFIG_PATH),)
+STRIP ?= strip
   PKG_CONFIG ?= pkg-config
-endif
 
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
   SDL_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
@@ -204,7 +225,7 @@ endif
 
 # extract version info
 VERSION=$(shell grep "\#define Q3_VERSION" $(CMDIR)/q_shared.h | \
-  sed -e 's/.*".* \([^ ]*\)\( MV\)*"/\1/')
+  sed -e 's/.*"[^" ]* \([^" ]*\)\( MV\)*"/\1/')
 
 # common qvm definition
 ifeq ($(ARCH),x86_64)
@@ -217,7 +238,31 @@ else
 endif
 endif
 
+ifeq ($(ARCH),arm)
+  HAVE_VM_COMPILED = true
+endif
+ifeq ($(ARCH),aarch64)
+  HAVE_VM_COMPILED = true
+endif
+
 BASE_CFLAGS =
+
+ifeq ($(USE_SYSTEM_JPEG),1)
+  BASE_CFLAGS += -DUSE_SYSTEM_JPEG
+endif
+
+ifneq ($(HAVE_VM_COMPILED),true)
+  BASE_CFLAGS += -DNO_VM_COMPILED
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+  BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
+  BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
 
 ifdef DEFAULT_BASEDIR
   BASE_CFLAGS += -DDEFAULT_BASEDIR=\\\"$(DEFAULT_BASEDIR)\\\"
@@ -232,7 +277,9 @@ ifeq ($(USE_CURL),1)
 ifeq ($(USE_CURL_DLOPEN),1)
   BASE_CFLAGS += -DUSE_CURL_DLOPEN
 else
+    ifeq ($(MINGW),1)
   BASE_CFLAGS += -DCURL_STATICLIB
+endif
 endif
 endif
 
@@ -244,10 +291,6 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
 
-#############################################################################
-# SETUP AND BUILD -- LINUX
-#############################################################################
-
 ## Defaults
 INSTALL=install
 MKDIR=mkdir
@@ -255,190 +298,6 @@ MKDIR=mkdir
 ARCHEXT=
 
 CLIENT_EXTRA_FILES=
-
-ifeq ($(PLATFORM),linux)
-
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
-
-  BASE_CFLAGS += -I/usr/include
-
-  OPTIMIZE = -O2 -fvisibility=hidden
-
-  ifeq ($(ARCH),x86_64)
-    ARCHEXT = .x64
-  else
-  ifeq ($(ARCH),x86)
-    OPTIMIZE += -march=i586 -mtune=i686
-  endif
-  endif
-
-  SHLIBEXT = so
-  SHLIBCFLAGS = -fPIC
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
-
-  LDFLAGS=-ldl -lm -Wl,--hash-style=both
-
-  ifeq ($(USE_SDL),1)
-    BASE_CFLAGS += $(SDL_INCLUDE)
-    CLIENT_LDFLAGS = $(SDL_LIBS)
-  else
-    BASE_CFLAGS += $(X11_INCLUDE)
-    CLIENT_LDFLAGS = $(X11_LIBS)
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
-  endif
-
-  ifeq ($(ARCH),x86)
-    # linux32 make ...
-    BASE_CFLAGS += -m32
-    LDFLAGS += -m32
-  endif
-	
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
-  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
-
-else # ifeq Linux
-
-
-#############################################################################
-# SETUP AND BUILD -- MAC OS X
-#############################################################################
-
-ifeq ($(PLATFORM),darwin)
-  HAVE_VM_COMPILED = 0
-  USE_SDL = 1
-	
-  USE_RENDERER_DLOPEN = 0
-  BUILD_RENDERER_OPENGL2 = 1
-  USE_LOCAL_HEADERS = 0
-  USE_CODEC_OPUS=0
-  USE_CODEC_VORBIS=0
-  LIBS = -framework Cocoa
-  CLIENT_LIBS=
-  RENDERER_LIBS=
-  OPTIMIZEVM = -O3
-
-  # Default minimum Mac OS X version
-  ifeq ($(MACOSX_VERSION_MIN),)
-    MACOSX_VERSION_MIN=10.7
-  endif
-
-  MACOSX_MAJOR=$(shell echo $(MACOSX_VERSION_MIN) | cut -d. -f1)
-  MACOSX_MINOR=$(shell echo $(MACOSX_VERSION_MIN) | cut -d. -f2)
-  ifeq ($(shell test $(MACOSX_MINOR) -gt 9; echo $$?),0)
-    # Multiply and then remove decimal. 10.10 -> 101000.0 -> 101000
-    MAC_OS_X_VERSION_MIN_REQUIRED=$(shell echo "$(MACOSX_MAJOR) * 10000 + $(MACOSX_MINOR) * 100" | bc | cut -d. -f1)
-  else
-    # Multiply by 100 and then remove decimal. 10.7 -> 1070.0 -> 1070
-    MAC_OS_X_VERSION_MIN_REQUIRED=$(shell echo "$(MACOSX_VERSION_MIN) * 100" | bc | cut -d. -f1)
-  endif
-
-  LDFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) -I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2
-  BASE_CFLAGS += -mmacosx-version-min=$(MACOSX_VERSION_MIN) \
-                 -DMAC_OS_X_VERSION_MIN_REQUIRED=$(MAC_OS_X_VERSION_MIN_REQUIRED)
-
-  ifeq ($(ARCH),ppc)
-    BASE_CFLAGS += -arch ppc
-  endif
-  ifeq ($(ARCH),ppc64)
-    BASE_CFLAGS += -arch ppc64
-  endif
-  ifeq ($(ARCH),x86)
-    ARCHEXT = .x86
-    OPTIMIZEVM += -march=prescott -mfpmath=sse
-    # x86 vm will crash without -mstackrealign since MMX instructions will be
-    # used no matter what and they corrupt the frame pointer in VM calls
-    BASE_CFLAGS += -arch i386 -m32 -mstackrealign
-  endif
-  ifeq ($(ARCH),x86_64)
-    ARCHEXT = .x86_64
-    OPTIMIZEVM += -mfpmath=sse
-    BASE_CFLAGS += -arch x86_64
-  endif
-
-  # When compiling on OSX for OSX, we're not cross compiling as far as the
-  # Makefile is concerned, as target architecture is specified as a compiler
-  # argument
-  ifeq ($(COMPILE_PLATFORM),darwin)
-    CROSS_COMPILING=0
-  endif
-
-  ifeq ($(CROSS_COMPILING),1)
-    ifeq ($(ARCH),x86_64)
-      CC=x86_64-apple-darwin13-cc
-      RANLIB=x86_64-apple-darwin13-ranlib
-    else
-      ifeq ($(ARCH),x86)
-        CC=i386-apple-darwin13-cc
-        RANLIB=i386-apple-darwin13-ranlib
-      else
-        $(error Architecture $(ARCH) is not supported when cross compiling)
-      endif
-    endif
-  endif
-
-  BASE_CFLAGS += -fno-strict-aliasing -fno-common -pipe
-
-  ifeq ($(USE_OPENAL),1)
-    ifneq ($(USE_LOCAL_HEADERS),1)
-      CLIENT_CFLAGS += -I/System/Library/Frameworks/OpenAL.framework/Headers
-    endif
-    ifneq ($(USE_OPENAL_DLOPEN),1)
-      CLIENT_LIBS += -framework OpenAL
-    endif
-  endif
-
-  ifeq ($(USE_CURL),1)
-    BASE_CFLAGS += -DUSE_CURL
-    ifneq ($(USE_CURL_DLOPEN),1)
-      BASE_CFLAGS += -DUSE_CURL_DLOPEN
-    endif
-  endif
-
-  BASE_CFLAGS += -D_THREAD_SAFE=1
-
-  CLIENT_LIBS += -framework IOKit
-  RENDERER_LIBS += -framework OpenGL
-
-  ifeq ($(USE_LOCAL_HEADERS),1)
-    # libSDL2-2.0.0.dylib for PPC is SDL 2.0.1 + changes to compile
-    ifneq ($(findstring $(ARCH),ppc ppc64),)
-      BASE_CFLAGS += -I$(SDLHDIR)/include-macppc
-    else
-      BASE_CFLAGS += -I$(SDLHDIR)/include
-    endif
-
-    # We copy sdlmain before ranlib'ing it so that subversion doesn't think
-    #  the file has been modified by each build.
-    LIBSDLMAIN=$(B)/libSDL2main.a
-    LIBSDLMAINSRC=$(LIBSDIR)/macosx/libSDL2main.a
-    CLIENT_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
-    RENDERER_LIBS += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
-    CLIENT_EXTRA_FILES += $(LIBSDIR)/macosx/libSDL2-2.0.0.dylib
-  else
-    BASE_CFLAGS += -Wall \
-		  -I/Library/Frameworks/SDL2.framework/Headers \
-			-I/usr/local/include/SDL2
-    CLIENT_LIBS += -framework SDL2 -framework OpenGL
-    RENDERER_LIBS += -framework SDL2 -framework OpenGL
-  endif
-
-  OPTIMIZE = $(OPTIMIZEVM) -ffast-math
-
-  SHLIBEXT=dylib
-  SHLIBCFLAGS=-fPIC -fno-common
-  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) -Wl,-U,_com_altivec
-
-  NOTSHLIBCFLAGS=-mdynamic-no-pic
-	
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
-  RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
-		
-  LDFLAGS += $(CLIENT_LIBS)
-
-else # ifeq darwin
 
 
 #############################################################################
@@ -547,105 +406,33 @@ ifdef MINGW
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-else # ifeq mingw32
+else # !MINGW
+
+ifeq ($(PLATFORM),darwin)
 
 #############################################################################
-# SETUP AND BUILD -- FREEBSD
+# SETUP AND BUILD -- MACOS
 #############################################################################
 
-ifeq ($(PLATFORM),freebsd)
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-                -I/usr/X11R6/include -I/usr/local/include \
-                -fvisibility=hidden
+  BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
 
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -g
+  OPTIMIZE = -O2 -fvisibility=hidden
 
-  ifeq ($(ARCH),x86_64)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -ffast-math -funroll-loops \
-      -fomit-frame-pointer -fexpensive-optimizations
-  else
-  ifeq ($(ARCH),x86)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -mtune=pentiumpro \
-      -march=pentium -fomit-frame-pointer -pipe -ffast-math \
-      -funroll-loops -fstrength-reduce
-  endif
-  endif
-
-  SHLIBEXT = so
+  SHLIBEXT = dylib
   SHLIBCFLAGS = -fPIC -fvisibility=hidden
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
+  SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
 
-  # don't need -ldl (FreeBSD)
-  LDFLAGS=-lm -lGL -lX11 -L/usr/local/lib -L/usr/X11R6/lib -lX11 -lXext
+  LDFLAGS =
 
-  CLIENT_LDFLAGS =-lm -lGL -lX11 -L/usr/local/lib -L/usr/X11R6/lib -lX11 -lXext
+  CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 
-else # ifeq freebsd
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
-#############################################################################
-# SETUP AND BUILD -- OPENBSD
-#############################################################################
+else
 
-ifeq ($(PLATFORM),openbsd)
-
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
-                -I/usr/X11R6/include -I/usr/local/include \
-                -fvisibility=hidden
-
-  DEBUG_CFLAGS=$(BASE_CFLAGS) -g
-
-  ifeq ($(ARCH),x86_64)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -ffast-math -funroll-loops \
-      -fomit-frame-pointer -fexpensive-optimizations
-  else
-  ifeq ($(ARCH),x86)
-    RELEASE_CFLAGS=$(BASE_CFLAGS) -DNDEBUG -O3 -mtune=pentiumpro \
-      -march=pentium -fomit-frame-pointer -pipe -ffast-math \
-      -funroll-loops -fstrength-reduce
-  endif
-  endif
-
-  SHLIBEXT = so
-  SHLIBCFLAGS = -fPIC
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
-
-  # don't need -ldl (FreeBSD)
-  LDFLAGS=-lm
-
-  ifeq ($(USE_SDL),1)
-    BASE_CFLAGS += -I/usr/local/include/SDL2
-    CLIENT_LDFLAGS = -L/usr/X11R6/lib -L/usr/local/lib -lSDL2
-  else
-    CLIENT_LDFLAGS = -L/usr/X11R6/lib -L/usr/lib -lX11
-  endif
-
-  CLIENT_LDFLAGS += -lm -lGL -L/usr/local/lib
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
-  endif
-
-else # ifeq openbsd
-
-#############################################################################
-# SETUP AND BUILD -- NETBSD
-#############################################################################
-
-ifeq ($(PLATFORM),netbsd)
-
-  LDFLAGS = -lm
-
-  SHLIBEXT = so
-  SHLIBCFLAGS = -fPIC -fvisibility=hidden
-  SHLIBLDFLAGS = -shared $(LDFLAGS)
-
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -g
-
-  BUILD_CLIENT = 0
-
-else # ifeq netbsd
 #############################################################################
 # SETUP AND BUILD -- JS
 #############################################################################
@@ -688,7 +475,7 @@ endif
   USE_CURL=0
   USE_CURL_DLOPEN=0
   USE_CODEC_VORBIS=1
-  USE_CODEC_OPUS=1
+  USE_CODEC_OPUS=0
   USE_FREETYPE=0
   USE_MUMBLE=0
   USE_VOIP=0
@@ -723,6 +510,7 @@ endif
     -s ASSERTIONS=1 \
     -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
     -frtti \
+		-flto \
     -fPIC
 
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
@@ -732,7 +520,7 @@ endif
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=0 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
     -flto \
     -fPIC
 
@@ -762,7 +550,7 @@ endif
 		-s AUTO_JS_LIBRARIES=0 \
 		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s SIDE_MODULE=1 \
-		-s RELOCATABLE=0 \
+		-s RELOCATABLE=1 \
 		-s LINKABLE=1 \
 		-s EXPORT_ALL=1 \
 		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
@@ -790,6 +578,7 @@ endif
 ifeq ($(USE_RENDERER_DLOPEN),1)
   CLIENT_LDFLAGS += \
 		-s EXPORT_ALL=1 \
+		-s RELOCATABLE=1 \
 		-s DECLARE_ASM_MODULE_EXPORTS=1 \
 		-s LINKABLE=1 \
 		-s INCLUDE_FULL_LIBRARY=1
@@ -805,6 +594,7 @@ endif
 #   -s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
 # --em-config $(EM_CONFIG) \
 # --cache $(EMSCRIPTEN_CACHE) \
+#    -s INITIAL_MEMORY=56MB \
 
   CLIENT_LDFLAGS += \
 		-lbrowser.js \
@@ -820,9 +610,13 @@ endif
 		--js-library $(CMDIR)/vm_js.js \
 		--pre-js $(QUAKEJS)/sys_polyfill.js \
 		--post-js $(QUAKEJS)/sys_overrides.js \
-		-s RELOCATABLE=0 \
 		-s STRICT=1 \
-		-s AUTO_JS_LIBRARIES=0 \
+		-s MAIN_MODULE=0 \
+		-s AUTO_JS_LIBRARIES=1 \
+		-s ALLOW_TABLE_GROWTH=1 \
+		-s INITIAL_MEMORY=56MB \
+    -s ALLOW_MEMORY_GROWTH=1 \
+		\
 		-s DISABLE_EXCEPTION_CATCHING=0 \
     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
@@ -831,10 +625,6 @@ endif
     -s EXIT_RUNTIME=1 \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC', 'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'stackAlloc', 'stackSave', 'stackRestore', 'dynCall']" \
     -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_CL_UpdateSound', '_CL_UpdateShader', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
-		-s MAIN_MODULE=0 \
-    -s ALLOW_TABLE_GROWTH=1 \
-    -s INITIAL_MEMORY=50MB \
-    -s ALLOW_MEMORY_GROWTH=1 \
 		-s GL_UNSAFE_OPTS=0 \
     -s USE_SDL=2 \
 		-s USE_SDL_MIXER=2 \
@@ -872,33 +662,85 @@ ifeq ($(BUILD_RENDERER_OPENGL),1)
     -s FULL_ES3=0
 endif
 
-		
-else # ifeq js
+else
 
 #############################################################################
-# SETUP AND BUILD -- GENERIC
+# SETUP AND BUILD -- *NIX PLATFORMS
 #############################################################################
 
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -ggdb -O0
-  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG -O2
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
+
+  BASE_CFLAGS += -I/usr/include -I/usr/local/include
+
+  OPTIMIZE = -O2 -fvisibility=hidden
+
+  ifeq ($(ARCH),x86_64)
+    ARCHEXT = .x64
+  else
+  ifeq ($(ARCH),x86)
+    OPTIMIZE += -march=i586 -mtune=i686
+  endif
+  endif
+
+  ifeq ($(ARCH),arm)
+    ARCHEXT = .arm
+  endif
+
+  ifeq ($(ARCH),aarch64)
+    ARCHEXT = .aarch64
+  endif
 
   SHLIBEXT = so
   SHLIBCFLAGS = -fPIC -fvisibility=hidden
-  SHLIBLDFLAGS = -shared
+  SHLIBLDFLAGS = -shared $(LDFLAGS)
 
-endif #Linux
-endif #mingw32
-endif #darwin
-endif #FreeBSD
-endif #OpenBSD
-endif #NetBSD
-endif #js
+  LDFLAGS=-lm
+
+  ifeq ($(USE_SDL),1)
+    BASE_CFLAGS += $(SDL_INCLUDE)
+    CLIENT_LDFLAGS = $(SDL_LIBS)
+  else
+    BASE_CFLAGS += $(X11_INCLUDE)
+    CLIENT_LDFLAGS = $(X11_LIBS)
+  endif
+
+  ifeq ($(USE_CODEC_VORBIS),1)
+    CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
+  endif
+
+  ifeq ($(USE_SYSTEM_JPEG),1)
+    CLIENT_LDFLAGS += -ljpeg
+  endif
+
+  ifeq ($(USE_CURL),1)
+    ifeq ($(USE_CURL_DLOPEN),0)
+      CLIENT_LDFLAGS += -lcurl
+    endif
+  endif
+
+  ifeq ($(PLATFORM),linux)
+    LDFLAGS += -ldl -Wl,--hash-style=both
+    ifeq ($(ARCH),x86)
+      # linux32 make ...
+      BASE_CFLAGS += -m32
+      LDFLAGS += -m32
+    endif
+  endif
+
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+  RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
+
+  DEBUG_LDFLAGS = -rdynamic
+
+endif # !EMSCRIPTEN
+endif # !darwin
+endif # !MINGW
+
 
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 
 TARGET_REND1 = $(RENDERER_PREFIX)_opengl_$(SHLIBNAME)
 TARGET_REND2 = $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
-TARGET_RENDJS = $(RENDERER_PREFIX)_js_$(SHLIBNAME)
 TARGET_RENDV = $(RENDERER_PREFIX)_vulkan_$(SHLIBNAME)
 
 TARGET_SERVER = $(DNAME)$(ARCHEXT)$(BINEXT)
@@ -918,7 +760,6 @@ ifneq ($(PLATFORM),js)
   TARGETS += $(B)/$(TARGET_REND1)
 endif
   TARGETS += $(B)/$(TARGET_REND2)
-#    TARGETS += $(B)/$(TARGET_RENDJS)
 #    TARGETS += $(B)/$(TARGET_RENDV)
 endif
 
@@ -1019,7 +860,7 @@ default: release
 all: debug release
 
 debug:
-	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" V=$(V)
+	@$(MAKE) targets B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" V=$(V)
 
 release:
 	@$(MAKE) targets B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" V=$(V)
@@ -1087,8 +928,6 @@ makedirs:
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
-	@if [ ! -d $(B)/rendjs ];then $(MKDIR) $(B)/rendjs;fi
-	@if [ ! -d $(B)/rendjs/glsl ];then $(MKDIR) $(B)/rendjs/glsl;fi
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
 
@@ -1198,75 +1037,6 @@ Q3R2STRINGOBJ = \
   $(B)/rend2/glsl/tonemap_fp.o \
   $(B)/rend2/glsl/tonemap_vp.o
 
-Q3RENDJSOBJ = \
-  $(B)/rendjs/tr_animation.o \
-  $(B)/rendjs/tr_backend.o \
-  $(B)/rendjs/tr_bsp.o \
-  $(B)/rendjs/tr_cmds.o \
-  $(B)/rendjs/tr_curve.o \
-  $(B)/rendjs/tr_dsa.o \
-  $(B)/rendjs/tr_extramath.o \
-  $(B)/rendjs/tr_extensions.o \
-  $(B)/rendjs/tr_fbo.o \
-  $(B)/rendjs/tr_flares.o \
-  $(B)/rendjs/tr_font.o \
-  $(B)/rendjs/tr_glsl.o \
-  $(B)/rendjs/tr_image.o \
-  $(B)/rendjs/tr_image_bmp.o \
-  $(B)/rendjs/tr_image_jpg.o \
-  $(B)/rendjs/tr_image_pcx.o \
-  $(B)/rendjs/tr_image_png.o \
-  $(B)/rendjs/tr_image_tga.o \
-  $(B)/rendjs/tr_image_dds.o \
-  $(B)/rendjs/tr_init.o \
-  $(B)/rendjs/tr_light.o \
-  $(B)/rendjs/tr_main.o \
-  $(B)/rendjs/tr_marks.o \
-  $(B)/rendjs/tr_mesh.o \
-  $(B)/rendjs/tr_model.o \
-  $(B)/rendjs/tr_model_iqm.o \
-  $(B)/rendjs/tr_noise.o \
-  $(B)/rendjs/tr_postprocess.o \
-  $(B)/rendjs/tr_scene.o \
-  $(B)/rendjs/tr_shade.o \
-  $(B)/rendjs/tr_shade_calc.o \
-  $(B)/rendjs/tr_shader.o \
-  $(B)/rendjs/tr_shadows.o \
-  $(B)/rendjs/tr_sky.o \
-  $(B)/rendjs/tr_surface.o \
-  $(B)/rendjs/tr_vbo.o \
-  $(B)/rendjs/tr_world.o
-
-Q3RJSSTRINGOBJ = \
-  $(B)/rendjs/glsl/bokeh_fp.o \
-  $(B)/rendjs/glsl/bokeh_vp.o \
-  $(B)/rendjs/glsl/calclevels4x_fp.o \
-  $(B)/rendjs/glsl/calclevels4x_vp.o \
-  $(B)/rendjs/glsl/depthblur_fp.o \
-  $(B)/rendjs/glsl/depthblur_vp.o \
-  $(B)/rendjs/glsl/dlight_fp.o \
-  $(B)/rendjs/glsl/dlight_vp.o \
-  $(B)/rendjs/glsl/down4x_fp.o \
-  $(B)/rendjs/glsl/down4x_vp.o \
-  $(B)/rendjs/glsl/fogpass_fp.o \
-  $(B)/rendjs/glsl/fogpass_vp.o \
-  $(B)/rendjs/glsl/generic_fp.o \
-  $(B)/rendjs/glsl/generic_vp.o \
-  $(B)/rendjs/glsl/lightall_fp.o \
-  $(B)/rendjs/glsl/lightall_vp.o \
-  $(B)/rendjs/glsl/pshadow_fp.o \
-  $(B)/rendjs/glsl/pshadow_vp.o \
-  $(B)/rendjs/glsl/shadowfill_fp.o \
-  $(B)/rendjs/glsl/shadowfill_vp.o \
-  $(B)/rendjs/glsl/shadowmask_fp.o \
-  $(B)/rendjs/glsl/shadowmask_vp.o \
-  $(B)/rendjs/glsl/ssao_fp.o \
-  $(B)/rendjs/glsl/ssao_vp.o \
-  $(B)/rendjs/glsl/texturecolor_fp.o \
-  $(B)/rendjs/glsl/texturecolor_vp.o \
-  $(B)/rendjs/glsl/tonemap_fp.o \
-  $(B)/rendjs/glsl/tonemap_vp.o
-
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3REND1OBJ += \
     $(B)/rend1/q_shared.o \
@@ -1311,8 +1081,13 @@ Q3RENDVOBJ = \
   $(B)/rendv/vk_flares.o \
   $(B)/rendv/vk_vbo.o \
   \
+  $(B)/rendv/bloom_frag.o \
+  $(B)/rendv/blur_frag.o \
+  $(B)/rendv/blend_frag.o \
   $(B)/rendv/dot_frag.o \
   $(B)/rendv/dot_vert.o \
+  $(B)/rendv/color_frag.o \
+  $(B)/rendv/color_vert.o \
   $(B)/rendv/fog_frag.o \
   $(B)/rendv/fog_vert.o \
   $(B)/rendv/gamma_frag.o \
@@ -1327,12 +1102,14 @@ Q3RENDVOBJ = \
   $(B)/rendv/mt_vert.o \
   $(B)/rendv/mt_fog_frag.o \
   $(B)/rendv/mt_frag.o \
+  $(B)/rendv/mt2_fog_vert.o \
+  $(B)/rendv/mt2_vert.o \
+  $(B)/rendv/mt2_fog_frag.o \
+  $(B)/rendv/mt2_frag.o \
   $(B)/rendv/st_fog_vert.o \
   $(B)/rendv/st_vert.o \
   $(B)/rendv/st_enviro_fog_vert.o \
   $(B)/rendv/st_enviro_vert.o \
-  $(B)/rendv/color_frag.o \
-  $(B)/rendv/color_vert.o \
   $(B)/rendv/st_fog_frag.o \
   $(B)/rendv/st_df_frag.o \
   $(B)/rendv/st_frag.o
@@ -1397,6 +1174,7 @@ Q3OBJ = \
   $(B)/client/cl_cin.o \
 	$(B)/client/cl_cin_roq.o \
 	$(B)/client/cl_cin_ogm.o \
+	$(B)/client/cl_cin_vpx.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
@@ -1439,6 +1217,7 @@ Q3OBJ = \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
 	$(B)/client/snd_codec_ogg.o \
+	$(B)/client/snd_codec_opus.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
@@ -1492,6 +1271,10 @@ Q3OBJ = \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
 
+ifneq ($(USE_SYSTEM_JPEG),1)
+  Q3OBJ += $(JPGOBJ)
+endif
+
 ifneq ($(USE_LOCAL_HEADERS),0)
 ifneq ($(USE_CODEC_VORBIS),0)
 Q3OBJ += \
@@ -1527,7 +1310,6 @@ endif
 ifneq (,$(findstring release,$(B)))
 ifneq ($(USE_CODEC_OPUS),0)
 Q3OBJ += \
-	$(B)/client/snd_codec_opus.o \
 	$(B)/client/opus/analysis.o \
 	$(B)/client/opus/mlp.o \
 	$(B)/client/opus/mlp_data.o \
@@ -1674,14 +1456,9 @@ Q3OBJ += \
 endif
 endif
 
-  Q3OBJ += $(JPGOBJ)
-
 ifeq ($(USE_RENDERER_DLOPEN),0)
 ifeq ($(USE_VULKAN),1)
   Q3OBJ += $(Q3RENDVOBJ)
-else
-ifeq ($(BUILD_RENDERER_JS),1)
-  Q3OBJ += $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
 else
 ifeq ($(BUILD_RENDERER_OPENGL2),1)
   Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
@@ -1689,7 +1466,6 @@ else
   Q3OBJ += $(Q3REND1OBJ)
 endif
 
-endif # build js
 endif # use vulcan
 endif # no dlopen
 
@@ -1707,6 +1483,12 @@ ifeq ($(HAVE_VM_COMPILED),true)
   endif
   ifeq ($(ARCH),x86_64)
     Q3OBJ += $(B)/client/vm_x86.o
+  endif
+  ifeq ($(ARCH),arm)
+    Q3OBJ += $(B)/client/vm_armv7l.o
+  endif
+  ifeq ($(ARCH),aarch64)
+    Q3OBJ += $(B)/client/vm_aarch64.o
   endif
 endif
 
@@ -1801,10 +1583,6 @@ $(B)/$(TARGET_REND1): $(Q3REND1OBJ)
 $(B)/$(TARGET_REND2): $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
-
-$(B)/$(TARGET_RENDJS): $(Q3RENDJSOBJ) $(Q3R2STRINGOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3RENDJSOBJ) $(Q3RJSSTRINGOBJ)
 
 $(B)/$(TARGET_RENDV): $(Q3RENDVOBJ)
 	$(echo_cmd) "LD $@"
@@ -1909,6 +1687,12 @@ ifeq ($(HAVE_VM_COMPILED),true)
   ifeq ($(ARCH),x86_64)
     Q3DOBJ += $(B)/ded/vm_x86.o
   endif
+  ifeq ($(ARCH),arm)
+    Q3DOBJ += $(B)/ded/vm_armv7l.o
+  endif
+  ifeq ($(ARCH),aarch64)
+    Q3DOBJ += $(B)/ded/vm_aarch64.o
+  endif
 endif
 
 $(B)/$(TARGET_SERVER): $(Q3DOBJ)
@@ -1983,18 +1767,6 @@ $(B)/rend2/%.o: $(R2DIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend2/%.o: $(CMDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rendjs/glsl/%.c: $(RJSDIR)/glsl/%.glsl
-	$(DO_REF_STR)
-
-$(B)/rendjs/glsl/%.o: $(B)/rendererjs/glsl/%.c
-	$(DO_REND_CC)
-
-$(B)/rendjs/%.o: $(RCDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rendjs/%.o: $(RJSDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendv/%.o: $(RVDIR)/%.c

@@ -49,7 +49,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ZA_SOUND_STEREO		0x1021
 
 extern	int		s_paintedtime;
-extern	int		s_rawend;
 
 
 static void RoQ_init( void );
@@ -76,8 +75,6 @@ static	unsigned short		vq8[256*256*4];
 extern cinematics_t		cin;
 extern cin_cache		cinTable[MAX_VIDEO_HANDLES];
 extern int				currentHandle;
-
-extern int				s_soundtime;		// sample PAIRS
 
 extern int				CL_ScaledMilliseconds( void );
 
@@ -441,7 +438,7 @@ int		spl;
 *
 ******************************************************************************/
 
-static void ROQ_GenYUVTables( void )
+void ROQ_GenYUVTables( void )
 {
 	float t_ub,t_vr,t_ug,t_vg;
 	long i;
@@ -521,6 +518,63 @@ static unsigned short yuv_to_rgb( long y, long u, long v )
 	if (b > 31) b = 31;
 
 	return (unsigned short)((r<<11)+(g<<5)+(b));
+}
+
+/*
+Frame_yuv_to_rgb24
+is used by the Theora(ogm) code
+
+  moved the convertion into one function, to reduce the number of function-calls
+*/
+void Frame_yuv_to_rgb24( const unsigned char* y, const unsigned char* u, const unsigned char* v,
+						 int width, int height, int y_stride, int uv_stride,
+						 int yWShift, int uvWShift, int yHShift, int uvHShift, unsigned int* output )
+{
+	int             i, j, uvI;
+	long            r, g, b, YY;
+	
+	for( j = 0; j < height; ++j )
+	{
+		for( i = 0; i < width; ++i )
+		{
+		
+			YY = ( long )( ROQ_YY_tab[( y[( i >> yWShift ) + ( j >> yHShift ) * y_stride] )] );
+			uvI = ( i >> uvWShift ) + ( j >> uvHShift ) * uv_stride;
+			
+			r = ( YY + ROQ_VR_tab[v[uvI]] ) >> 6;
+			g = ( YY + ROQ_UG_tab[u[uvI]] + ROQ_VG_tab[v[uvI]] ) >> 6;
+			b = ( YY + ROQ_UB_tab[u[uvI]] ) >> 6;
+			
+			if( r < 0 )
+			{
+				r = 0;
+			}
+			if( g < 0 )
+			{
+				g = 0;
+			}
+			if( b < 0 )
+			{
+				b = 0;
+			}
+			if( r > 255 )
+			{
+				r = 255;
+			}
+			if( g > 255 )
+			{
+				g = 255;
+			}
+			if( b > 255 )
+			{
+				b = 255;
+			}
+			
+			*output = LittleLong( ( r ) | ( g << 8 ) | ( b << 16 ) | ( 255 << 24 ) );
+			++output;
+		}
+	}
+	
 }
 
 
@@ -1099,6 +1153,7 @@ redump:
 			}
 			break;
 		case	ZA_SOUND_STEREO:
+		
 			if (!cinTable[currentHandle].silent) {
 				if (cinTable[currentHandle].numQuads == -1) {
 					S_Update();
@@ -1160,7 +1215,11 @@ redump:
 		}
 		return;
 	}
-	if (cinTable[currentHandle].inMemory && (cinTable[currentHandle].status != FMV_EOF)) { cinTable[currentHandle].inMemory--; framedata += 8; goto redump; }
+	if (cinTable[currentHandle].inMemory && (cinTable[currentHandle].status != FMV_EOF)) { 
+		cinTable[currentHandle].inMemory--;
+		framedata += 8;
+		goto redump; 
+	}
 //
 // one more frame hits the dust
 //
@@ -1220,7 +1279,13 @@ e_status CIN_RunROQ(int handle)
 	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
 	thisTime = CL_ScaledMilliseconds()*com_timescale->value;
 	if (cinTable[currentHandle].shader && (abs(thisTime - cinTable[currentHandle].lastTime))>100) {
-		cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
+		//Com_Printf("--------------------------------------- Reading sound: \n");
+		RoQReset();
+		// TODO: synchronize with server sending when a looping sound should reset?
+		// TODO: run video in the background outside of the frame renderer when it is not in view
+		// TODO: this causes the slowness we are seeing on Mac, it's like it has to reload a bunch of data to catch up
+		//cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
+		//cinTable[currentHandle].numQuads = -1;
 	}
 	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
 	cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime)*3)/100);

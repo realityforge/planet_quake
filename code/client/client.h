@@ -621,7 +621,6 @@ void	SCR_DrawSmallString( int x, int y, const char *s, int len );
 // cl_cin.c
 //
 
-void CIN_ResampleCinematic( byte *buf, int origWidth, int origHeight, int *buf2 );
 void CL_PlayCinematic_f( void );
 void SCR_DrawCinematic (void);
 void SCR_RunCinematic (void);

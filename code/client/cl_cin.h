@@ -7,7 +7,8 @@
 typedef enum
 {
 	FT_ROQ = 0,				// normal roq (vq3 stuff)
-	FT_OGM					// ogm(ogg wrapper, vorbis audio, xvid/theora video) for WoP
+	FT_OGM,					// ogm(ogg wrapper, vorbis audio, xvid/theora video) for WoP
+	FT_VPX
 } filetype_t;
 
 typedef struct {
@@ -66,5 +67,9 @@ typedef struct {
   filetype_t			fileType;
 } cin_cache;
 
+void ROQ_GenYUVTables( void );
 void CIN_Shutdown( void );
 void CIN_SetLooping (int handle, qboolean loop);
+void Frame_yuv_to_rgb24( const unsigned char* y, const unsigned char* u, const unsigned char* v,
+						 int width, int height, int y_stride, int uv_stride,
+						 int yWShift, int uvWShift, int yHShift, int uvHShift, unsigned int* output );

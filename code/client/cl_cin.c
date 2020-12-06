@@ -9,9 +9,43 @@ cin_cache		cinTable[MAX_VIDEO_HANDLES];
 int				currentHandle = -1;
 int				CL_handle = -1;
 
-#ifdef USE_CODEC_VORBIS
-extern void Cin_OGM_Shutdown(void);
+typedef struct {
+	filetype_t fileType;
+	char ext[10];
+	int (* Play)(const char *arg, int x, int y, int w, int h, int systemBits);
+	e_status (* Run)(int handle);
+	void (* Shutdown)(void);
+} videoapi_t;
+
+extern void RoQReset( void );
+extern e_status CIN_RunROQ(int handle);
+extern int CIN_PlayROQ(const char *arg, int x, int y, int w, int h, int systemBits );
+
+#ifdef USE_CODEC_VPX
+extern void Cin_VPX_Shutdown(void);
+extern int CIN_PlayVPX(const char *arg, int x, int y, int w, int h, int systemBits );
+extern e_status CIN_RunVPX(int handle);
 #endif
+
+#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+extern void Cin_OGM_Shutdown(void);
+extern int CIN_PlayOGM(const char *arg, int x, int y, int w, int h, int systemBits );
+extern e_status CIN_RunOGM(int handle);
+#endif
+
+static videoapi_t cinematicLoaders[ ] = {
+#ifdef USE_CODEC_VPX
+	{FT_VPX, "webm", CIN_PlayVPX, CIN_RunVPX, Cin_VPX_Shutdown},
+#endif
+#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+	{FT_OGM, "ogm", CIN_PlayOGM, CIN_RunOGM, Cin_OGM_Shutdown},
+	{FT_OGM, "ogv", CIN_PlayOGM, CIN_RunOGM, Cin_OGM_Shutdown},
+#endif
+	{FT_ROQ, "roq", CIN_PlayROQ, CIN_RunROQ, }
+};
+
+static int numCinematicLoaders = ARRAY_LEN(cinematicLoaders);
+
 /******************************************************************************
 *
 * Function:		
@@ -65,17 +99,17 @@ void CIN_Shutdown( void ) {
 		CL_handle = -1;
 	}
 	cinTable[currentHandle].fileName[0] = '\0';
-#ifdef USE_CODEC_VORBIS
-  if (cinTable[currentHandle].fileType == FT_OGM)
-  {
-    Cin_OGM_Shutdown();
-    cinTable[currentHandle].buf = NULL;
-  }
-#endif
+	for(int i = 0; i < numCinematicLoaders; i++) {
+		if(cinTable[currentHandle].fileType == cinematicLoaders[i].fileType) {
+			if(cinematicLoaders[i].Shutdown) {
+				cinematicLoaders[i].Shutdown();
+			}
+		}
+	}
+	cinTable[currentHandle].buf = NULL;
 	currentHandle = -1;
 }
 
-extern void RoQReset( void );
 /*
 ==================
 CIN_StopCinematic
@@ -110,10 +144,6 @@ CIN_RunCinematic
 Fetch and decompress the pending frame
 ==================
 */
-extern e_status CIN_RunROQ(int handle);
-#ifdef USE_CODEC_VORBIS
-extern e_status CIN_RunOGM(int handle);
-#endif
 
 
 e_status CIN_RunCinematic (int handle)
@@ -143,15 +173,14 @@ e_status CIN_RunCinematic (int handle)
 	if (cinTable[currentHandle].status == FMV_IDLE) {
 		return cinTable[currentHandle].status;
 	}
-
-#ifdef USE_CODEC_VORBIS
-	if (cinTable[currentHandle].fileType == FT_OGM)
-	{
-		return CIN_RunOGM(handle);
+	
+	for(int i = 0; i < numCinematicLoaders; i++) {
+		if(cinTable[currentHandle].fileType == cinematicLoaders[i].fileType) {
+			return cinematicLoaders[i].Run(handle);
+		}
 	}
-#endif
   
-  return CIN_RunROQ(handle);
+  return FMV_EOF;
 }
 
 /*
@@ -159,10 +188,6 @@ e_status CIN_RunCinematic (int handle)
 CIN_PlayCinematic
 ==================
 */
-#ifdef USE_CODEC_VORBIS
-extern int CIN_PlayOGM(const char *arg, int x, int y, int w, int h, int systemBits );
-#endif
-extern int CIN_PlayROQ(const char *arg, int x, int y, int w, int h, int systemBits );
 
 int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBits ) {
 	char	name[MAX_OSPATH];
@@ -194,22 +219,25 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 	cin.currentHandle = currentHandle;
 
   ext = COM_GetExtension(name);
-#ifdef USE_CODEC_VORBIS
-  if (!Q_stricmp(ext, "ogm") || !Q_stricmp(ext, "ogv"))
-  {
-    return CIN_PlayOGM(name, x, y, w, h, systemBits);
-  }
-#endif
+	for(i = 0; i < numCinematicLoaders; i++) {
+		if(!Q_stricmp(ext, cinematicLoaders[i].ext)) {
+			if((result = cinematicLoaders[i].Play(name, x, y, w, h, systemBits)))
+				return result;
+		}
+	}
+
   if((result = CIN_PlayROQ(name, x, y, w, h, systemBits)))
     return result;
   
   COM_StripExtension(name, altName, sizeof(altName));
-#ifdef USE_CODEC_VORBIS
-  if((result = CIN_PlayOGM(va("%s.ogm", altName), x, y, w, h, systemBits)))
-    return result;
-  if((result = CIN_PlayOGM(va("%s.ogv", altName), x, y, w, h, systemBits)))
-    return result;
-#endif
+	for(i = 0; i < numCinematicLoaders; i++) {
+		if((result = cinematicLoaders[i].Play(va("%s.%s", altName, cinematicLoaders[i].ext), x, y, w, h, systemBits))) {
+			Com_DPrintf( "WARNING: %s not present, using %s.%s instead\n",
+					name, altName, cinematicLoaders[i].ext );
+		  return result;
+		}
+	}
+
   return 0;
 }
 
@@ -236,13 +264,16 @@ CIN_ResampleCinematic
 Resample cinematic to 256x256 and store in buf2
 ==================
 */
-void CIN_ResampleCinematic( byte *buf, int origWidth, int origHeight, int *buf2 ) {
+static void CIN_ResampleCinematic( int handle, int *buf2 ) {
 	int ix, iy, *buf3, xm, ym, ll;
+	byte	*buf;
 
-	xm = origWidth/256;
-	ym = origHeight/256;
+	buf = cinTable[handle].buf;
+
+	xm = cinTable[handle].CIN_WIDTH/256;
+	ym = cinTable[handle].CIN_HEIGHT/256;
 	ll = 8;
-	if (origWidth==512) {
+	if (cinTable[handle].CIN_WIDTH==512) {
 		ll = 9;
 	}
 
@@ -327,7 +358,7 @@ void CIN_DrawCinematic( int handle ) {
 
 		buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
-		CIN_ResampleCinematic(cinTable[handle].buf, cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, buf2);
+		CIN_ResampleCinematic(handle, buf2);
 
 		re.DrawStretchRaw( x, y, w, h, 256, 256, (byte *)buf2, handle, qtrue);
 		cinTable[handle].dirty = qfalse;
@@ -416,7 +447,7 @@ void CIN_UploadCinematic( int handle ) {
 
 			buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
-			CIN_ResampleCinematic(cinTable[handle].buf, cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, buf2);
+			CIN_ResampleCinematic(handle, buf2);
 
 			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, 256, 256, (byte *)buf2, handle, qtrue);
 			cinTable[handle].dirty = qfalse;

@@ -39,7 +39,7 @@ theora:
  * theora doxygen docs (1.0beta1)
 */
 
-#ifdef USE_CODEC_VORBIS
+#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
 #include "cl_cin.h"
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
@@ -84,7 +84,7 @@ typedef struct
 #endif
 
 	unsigned char  *outputBuffer;
-	int             outputWidht;
+	int             outputWidth;
 	int             outputHeight;
 	int             outputBufferSize;	// in Pixel (so "real Bytesize" = outputBufferSize*4)
 	int             VFrameCount;	// output video-stream
@@ -172,7 +172,7 @@ static int dec_xvid(unsigned char *input, int input_size)
 
 	/* Output frame structure */
 	xvid_dec_frame.output.plane[0] = g_ogm.outputBuffer;
-	xvid_dec_frame.output.stride[0] = g_ogm.outputWidht * BPP;
+	xvid_dec_frame.output.stride[0] = g_ogm.outputWidth * BPP;
 	if(g_ogm.outputBuffer == NULL)
 		xvid_dec_frame.output.csp = XVID_CSP_NULL;
 	else
@@ -368,12 +368,12 @@ static int loadVideoFrameXvid(void)
 		used_bytes = dec_xvid(op.packet, op.bytes);
 		if(g_ogm.xvid_dec_stats.type == XVID_TYPE_VOL)
 		{
-			if(g_ogm.outputWidht != g_ogm.xvid_dec_stats.data.vol.width ||
+			if(g_ogm.outputWidth != g_ogm.xvid_dec_stats.data.vol.width ||
 			   g_ogm.outputHeight != g_ogm.xvid_dec_stats.data.vol.height)
 			{
-				g_ogm.outputWidht = g_ogm.xvid_dec_stats.data.vol.width;
+				g_ogm.outputWidth = g_ogm.xvid_dec_stats.data.vol.width;
 				g_ogm.outputHeight = g_ogm.xvid_dec_stats.data.vol.height;
-				Com_DPrintf("[XVID]new resolution %dx%d\n", g_ogm.outputWidht, g_ogm.outputHeight);
+				Com_DPrintf("[XVID]new resolution %dx%d\n", g_ogm.outputWidth, g_ogm.outputHeight);
 			}
 
 			if(g_ogm.outputBufferSize < g_ogm.xvid_dec_stats.data.vol.width * g_ogm.xvid_dec_stats.data.vol.height)
@@ -464,11 +464,11 @@ static int loadVideoFrameTheora(void)
 			if(theora_decode_YUVout(&g_ogm.th_state, &g_ogm.th_yuvbuffer))
 				continue;
 
-			if(g_ogm.outputWidht != g_ogm.th_info.width || g_ogm.outputHeight != g_ogm.th_info.height)
+			if(g_ogm.outputWidth != g_ogm.th_info.width || g_ogm.outputHeight != g_ogm.th_info.height)
 			{
-				g_ogm.outputWidht = g_ogm.th_info.width;
+				g_ogm.outputWidth = g_ogm.th_info.width;
 				g_ogm.outputHeight = g_ogm.th_info.height;
-				Com_DPrintf("[Theora(ogg)]new resolution %dx%d\n", g_ogm.outputWidht, g_ogm.outputHeight);
+				Com_DPrintf("[Theora(ogg)]new resolution %dx%d\n", g_ogm.outputWidth, g_ogm.outputHeight);
 			}
 
 			if(g_ogm.outputBufferSize < g_ogm.th_info.width * g_ogm.th_info.height)
@@ -936,7 +936,7 @@ int Cin_OGM_Run(int time)
 unsigned char  *Cin_OGM_GetOutput(int *outWidth, int *outHeight)
 {
 	if(outWidth != NULL)
-		*outWidth = g_ogm.outputWidht;
+		*outWidth = g_ogm.outputWidth;
 	if(outHeight != NULL)
 		*outHeight = g_ogm.outputHeight;
 
