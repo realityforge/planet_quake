@@ -972,6 +972,7 @@ Q3REND2OBJ = \
   $(B)/rend2/tr_animation.o \
   $(B)/rend2/tr_backend.o \
   $(B)/rend2/tr_bsp.o \
+	$(B)/rend2/tr_bsp2.o \
   $(B)/rend2/tr_cmds.o \
   $(B)/rend2/tr_curve.o \
   $(B)/rend2/tr_dsa.o \
@@ -1187,6 +1188,7 @@ Q3OBJ = \
   $(B)/client/cl_jpeg.o \
   \
   $(B)/client/cm_load.o \
+	$(B)/client/cm_load2.o \
   $(B)/client/cm_patch.o \
   $(B)/client/cm_polylib.o \
   $(B)/client/cm_test.o \
@@ -1609,6 +1611,7 @@ Q3DOBJ = \
   $(B)/ded/sv_world.o \
   \
   $(B)/ded/cm_load.o \
+	$(B)/ded/cm_load_bsp2.o \
   $(B)/ded/cm_patch.o \
   $(B)/ded/cm_polylib.o \
   $(B)/ded/cm_test.o \

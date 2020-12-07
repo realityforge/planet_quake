@@ -646,21 +646,28 @@ static void CM_MapList_f(void) {
 	Com_Printf ("------------------\n");
 }
 
-void LoadQ3BspFile(dheader_t header, const char *name) {
-	
-		// load into heap
-		CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
-		CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
-		CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
-		CMod_LoadLeafSurfaces (&header.lumps[LUMP_LEAFSURFACES]);
-		CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
-		CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
-		CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
-		CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
-		CMod_LoadNodes (&header.lumps[LUMP_NODES]);
-		CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES], name);
-		CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
-		CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
+void LoadQ3Map(const char *name) {
+	dheader_t		header;
+	int				i;
+
+	header = *(dheader_t *)cmod_base;
+	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
+		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
+	}
+
+	// load into heap
+	CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
+	CMod_LoadLeafs (&header.lumps[LUMP_LEAFS]);
+	CMod_LoadLeafBrushes (&header.lumps[LUMP_LEAFBRUSHES]);
+	CMod_LoadLeafSurfaces (&header.lumps[LUMP_LEAFSURFACES]);
+	CMod_LoadPlanes (&header.lumps[LUMP_PLANES]);
+	CMod_LoadBrushSides (&header.lumps[LUMP_BRUSHSIDES]);
+	CMod_LoadBrushes (&header.lumps[LUMP_BRUSHES]);
+	CMod_LoadSubmodels (&header.lumps[LUMP_MODELS]);
+	CMod_LoadNodes (&header.lumps[LUMP_NODES]);
+	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES], name);
+	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
+	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
 
 }
 
@@ -678,8 +685,9 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		void			*v;
 	} buf;
 	int				i, empty = -1;
-	dheader_t		header;
 	int				length;
+	unsigned id1, id2;
+	dheader_t		header;
 
 	if ( !name || !name[0] ) {
 		Com_Error( ERR_DROP, "CM_LoadMap: NULL name" );
@@ -701,7 +709,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #endif
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
-	for(int i = 0; i < MAX_NUM_MAPS; i++) {
+	for(i = 0; i < MAX_NUM_MAPS; i++) {
 		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
 			*checksum = cms[i].checksum;
 			CM_SwitchMap(i);
@@ -741,26 +749,23 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 
 	cms[cm].checksum = LittleLong (Com_BlockChecksum (buf.i, length));
 	*checksum = cms[cm].checksum;
-
-	header = *(dheader_t *)buf.i;
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
-		((int *)&header)[i] = LittleLong ( ((int *)&header)[i]);
-	}
-
 	cmod_base = (byte *)buf.i;
+	header = *(dheader_t *)cmod_base;
+	id1 = LittleLong(header.ident);
+	id2 = LittleLong(header.version);
 
-	switch (header.ident)
+	switch (id1)
 	{
 	case BSP_IDENT:
-		switch (header.version)
+		switch (id2)
 		{
 		case BSP2_VERSION:
-			//LoadQ2BspFile();
+			LoadQ2Map(name);
 			break;
 		case BSP_VERSION_QLIVE:
 		case BSP_VERSION_OPENJK:
 		case BSP3_VERSION:
-			LoadQ3BspFile(header, name);
+			LoadQ3Map(name);
 			break;
 		default:
 			Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number "
@@ -769,7 +774,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		break;
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		//LoadQ1BspFile();
+		//LoadQ1Map();
 		break;
 	default:
 		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number "

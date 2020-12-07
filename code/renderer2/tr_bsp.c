@@ -39,7 +39,7 @@ void RE_LoadWorldMap( const char *name );
 
 world_t		s_worldData[MAX_NUM_WORLDS] = {};
 int       rw; // render worl, should match number of loaded clip maps
-static	byte		*fileBase;
+byte		*fileBase;
 
 int			c_subdivisions;
 int			c_gridVerts;
@@ -2714,6 +2714,32 @@ void RE_SwitchWorld(int w) {
 }
 
 
+void LoadBsp3(char *name) {
+	int i;
+	dheader_t	*header;
+	header = (dheader_t *)fileBase;
+
+	// swap all the lumps
+	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
+		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+	}
+
+	// load into heap
+	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
+	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
+	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
+	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
+	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
+	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
+	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
+	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
+	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
+	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
+
+}
+
+
 /*
 =================
 RE_LoadWorldMap
@@ -2722,7 +2748,7 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	int			i, j, empty = -1;
+	int			i, id1, id2, j, empty = -1;
 	dheader_t	*header;
 	union {
 		byte *b;
@@ -2797,29 +2823,35 @@ void RE_LoadWorldMap( const char *name ) {
 	header = (dheader_t *)buffer.b;
 	fileBase = (byte *)header;
 
-	i = LittleLong (header->version);
-	if ( i != BSP_VERSION && i != 47 ) {
+	id1 = LittleLong(header->ident);
+	id2 = LittleLong(header->version);
+
+	switch (id1)
+	{
+	case BSP_IDENT:
+		switch (id2)
+		{
+		case BSP2_VERSION:
+			LoadBsp2(name);
+			break;
+		case BSP_VERSION_QLIVE:
+		case BSP_VERSION_OPENJK:
+		case BSP3_VERSION:
+			LoadBsp3(name);
+			break;
+		default:
+			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
+				name, id1, BSP_VERSION);
+		}
+		break;
+	case BSP1_VERSION:
+	case BSPHL_VERSION:
+		//LoadBsp1();
+		break;
+	default:
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
-			name, i, BSP_VERSION);
+			name, id1, BSP_VERSION);
 	}
-
-	// swap all the lumps
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
-	}
-
-	// load into heap
-	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
-	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
-	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
-	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
-	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
-	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
-	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
-	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
-	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
 
 	// determine vertex light directions
 	R_CalcVertexLightDirs();
