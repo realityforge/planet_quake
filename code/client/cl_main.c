@@ -4536,7 +4536,6 @@ static void CL_InitGLimp_Cvars( void )
 
 #ifdef USE_MULTIVM
 void CL_LoadVM_f( void ) {
-	vmIndex_t index;
 	char *name;
 	float prevDvr[4];
 	
@@ -4662,9 +4661,8 @@ void CL_World_f( void ) {
 }
 
 void CL_Tile_f(void) {
-	char *xIn, *yIn, *opIn;
-	int clientNum, i, x, y, argc = 1, xMaxVMs, yMaxVMs, count = 0;
-	if(Cmd_Argc() == 1 || Cmd_Argc() > 5) {
+	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
+	if(Cmd_Argc() == 1 || Cmd_Argc() > 4) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientWorlds[i][0] > -1) {
@@ -4673,67 +4671,45 @@ void CL_Tile_f(void) {
 				}
 			}
 		}
-		Com_Printf ("Usage: tile [+/-] [x y] [clientnum]\n");
+		Com_Printf ("Usage: tile [x y] [clientnum]\n");
 		return;
 	}
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
 		if(clientWorlds[i][0] > -1) count++;
 	}
-	xIn = opIn = Cmd_Argv(1);
-	if(opIn[0] == '-' || opIn[0] == '+') {
-		argc++;
-		xIn = Cmd_Argv(++argc);
-	}
-	if(Cmd_Argc() == 2 || Cmd_Argc() == 3) {
-		// tile + 1
-		if(Cmd_Argc() == 2) {
-			clientNum = count;
-		} else {
-			clientNum = atoi(Cmd_Argv(argc));
-		}
-		if(opIn[0] == '-') count--;
-		if(opIn[0] == '+') count++;
-		xMaxVMs = ceil(sqrt(count));
-		yMaxVMs = round(sqrt(count));
-		y = floor(count / xMaxVMs);
-		x = count % xMaxVMs;
+	if(Cmd_Argc() == 3 || Cmd_Argc() == 4) {
+		if(Cmd_Argc() == 4)
+			clientNum = atoi(Cmd_Argv(3));
+		else
+			clientNum = clc.currentView;
+		x = atoi(Cmd_Argv(1));
+		y = atoi(Cmd_Argv(2));
+		if (clientWorlds[clientNum][0] == -1
+			&& x > -1 && y > -1) count++;
+			else if (x < 0 || y < 0) count--;
 	} else {
-		yIn = Cmd_Argv(++argc);
-		if(*Cmd_Argv(argc) == '\0') {
-			if(opIn[0] == '-' || opIn[0] == '+') {
-				clientNum = count;
-				if(opIn[0] == '-') count--;
-			} else {
-				clientNum = clc.currentView;
-			}
-		} else {
-			clientNum = atoi(Cmd_Argv(argc));
-		}
-		xMaxVMs = ceil(sqrt(count));
-		yMaxVMs = round(sqrt(count));
-		x = atoi(xIn);
-		y = atoi(yIn);
-		if(x > xMaxVMs) x = xMaxVMs;
-		if(y > yMaxVMs) y = yMaxVMs;
+		clientNum = atoi(Cmd_Argv(1));
+		if (clientWorlds[clientNum][0] == -1) count++;
 	}
-	count = 0;
-	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		if(!cgvms[i] || clientWorlds[i][0] == -1) continue;
-		clientWorlds[i][0] = 1.0f / xMaxVMs * (count % xMaxVMs);
-		clientWorlds[i][1] = 1.0f / yMaxVMs * floor(count / xMaxVMs);
-		clientWorlds[i][2] = 1.0f / xMaxVMs;
-		clientWorlds[i][3] = 1.0f / yMaxVMs;
-		count++;
+	xMaxVMs = ceil(sqrt(count));
+	yMaxVMs = round(sqrt(count));
+	if(Cmd_Argc() < 4) {
+		x = xMaxVMs - 1;
+		y = yMaxVMs - 1;
 	}
-	if(x < 0 || y < 0 || opIn[0] == '-') {
+	if(x > xMaxVMs) x = xMaxVMs - 1;
+	if(y > yMaxVMs) y = yMaxVMs - 1;
+	if(x < 0 || y < 0) {
+Com_Printf("Tiling subtracting: %i x %i (client: %i)\n", x, y, clientNum);
 		clientWorlds[clientNum][0] = 
 		clientWorlds[clientNum][1] = 
 		clientWorlds[clientNum][2] = 
 		clientWorlds[clientNum][3] = -1;	
 	} else {
-		clientWorlds[clientNum][0] = 1.0f / xMaxVMs * x;
-		clientWorlds[clientNum][1] = 1.0f / yMaxVMs * y;
+Com_Printf("Tiling adding: %i x %i (client: %i)\n", x, y, clientNum);
+		clientWorlds[clientNum][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
+		clientWorlds[clientNum][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
 		clientWorlds[clientNum][2] = 1.0f / xMaxVMs;
 		clientWorlds[clientNum][3] = 1.0f / yMaxVMs;
 	}
@@ -4771,7 +4747,6 @@ CL_Init
 */
 void CL_Init( void ) {
 	const char *s;
-	int index;
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
