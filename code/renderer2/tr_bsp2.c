@@ -345,41 +345,6 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 }
 
 
-static float FatPackU(float input, int lightmapnum)
-{
-	if (lightmapnum < 0)
-		return input;
-
-	if (tr.worldDeluxeMapping)
-		lightmapnum >>= 1;
-
-	if (tr.fatLightmapCols > 0)
-	{
-		lightmapnum %= (tr.fatLightmapCols * tr.fatLightmapRows);
-		return (input + (lightmapnum % tr.fatLightmapCols)) / (float)(tr.fatLightmapCols);
-	}
-
-	return input;
-}
-
-static float FatPackV(float input, int lightmapnum)
-{
-	if (lightmapnum < 0)
-		return input;
-
-	if (tr.worldDeluxeMapping)
-		lightmapnum >>= 1;
-
-	if (tr.fatLightmapCols > 0)
-	{
-		lightmapnum %= (tr.fatLightmapCols * tr.fatLightmapRows);
-		return (input + (lightmapnum / tr.fatLightmapCols)) / (float)(tr.fatLightmapRows);
-	}
-
-	return input;
-}
-
-
 static int FatLightmap(int lightmapnum)
 {
 	if (lightmapnum < 0)
@@ -392,18 +357,6 @@ static int FatLightmap(int lightmapnum)
 		return lightmapnum / (tr.fatLightmapCols * tr.fatLightmapRows);
 	
 	return lightmapnum;
-}
-
-/*
-=================
-RE_SetWorldVisData
-
-This is called by the clipmodel subsystem so we can share the 1.8 megs of
-space in big maps...
-=================
-*/
-void		RE_SetWorldVisData( const byte *vis ) {
-	tr.externalVisData = vis;
 }
 
 
@@ -441,44 +394,40 @@ static	void R_LoadVisibility( lump_t *l ) {
 //===============================================================================
 
 
+void LoadVertToSrfVert(srfVert_t *s, vec3_t *d, float hdrVertColors[3], vec3_t *bounds)
+{
+	memcpy(&s->xyz, d, sizeof(s->xyz));
+
+	if (bounds)
+		AddPointToBounds(s->xyz, bounds[0], bounds[1]);
+}
+
+
 /*
 ===============
 ParseFace
 ===============
 */
-static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  ) {
-	int			i, j;
+static void ParseFace( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  ) {
+	int			i;
 	srfBspSurface_t	*cv;
-	glIndex_t  *tri;
-	int			numVerts, numIndexes, badTriangles;
-	int realLightmapNum;
-
-	realLightmapNum = LittleLong( ds->lightmapNum );
-
-	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	int			numVerts;
 
 	// get shader value
-	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
 
-	numVerts = LittleLong(ds->numVerts);
+	numVerts = LittleLong(ds->numedges);
 	if (numVerts > MAX_FACE_POINTS) {
 		ri.Printf( PRINT_WARNING, "WARNING: MAX_FACE_POINTS exceeded: %i\n", numVerts);
 		numVerts = MAX_FACE_POINTS;
 		surf->shader = tr.defaultShader;
 	}
 
-	numIndexes = LittleLong(ds->numIndexes);
-
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (void *)surf->data;
 	cv->surfaceType = SF_FACE;
-
-	cv->numIndexes = numIndexes;
-	cv->indexes = ri.Hunk_Alloc(numIndexes * sizeof(cv->indexes[0]), h_low);
 
 	cv->numVerts = numVerts;
 	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
@@ -486,62 +435,11 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 	// copy vertexes
 	surf->cullinfo.type = CULLINFO_PLANE | CULLINFO_BOX;
 	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
-	verts += LittleLong(ds->firstVert);
+	verts += LittleLong(ds->firstedge);
 	for(i = 0; i < numVerts; i++)
-		LoadDrawVertToSrfVert(&cv->verts[i], &verts[i], realLightmapNum, hdrVertColors ? hdrVertColors + (ds->firstVert + i) * 3 : NULL, surf->cullinfo.bounds);
-
-	// copy triangles
-	badTriangles = 0;
-	indexes += LittleLong(ds->firstIndex);
-	for(i = 0, tri = cv->indexes; i < numIndexes; i += 3, tri += 3)
-	{
-		for(j = 0; j < 3; j++)
-		{
-			tri[j] = LittleLong(indexes[i + j]);
-
-			if(tri[j] >= numVerts)
-			{
-				ri.Error(ERR_DROP, "Bad index in face surface");
-			}
-		}
-
-		if ((tri[0] == tri[1]) || (tri[1] == tri[2]) || (tri[0] == tri[2]))
-		{
-			tri -= 3;
-			badTriangles++;
-		}
-	}
-
-	if (badTriangles)
-	{
-		ri.Printf(PRINT_WARNING, "Face has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numIndexes / 3, numVerts, numIndexes / 3 - badTriangles);
-		cv->numIndexes -= badTriangles * 3;
-	}
-
-	// take the plane information from the lightmap vector
-	for ( i = 0 ; i < 3 ; i++ ) {
-		cv->cullPlane.normal[i] = LittleFloat( ds->lightmapVecs[2][i] );
-	}
-	cv->cullPlane.dist = DotProduct( cv->verts[0].xyz, cv->cullPlane.normal );
-	SetPlaneSignbits( &cv->cullPlane );
-	cv->cullPlane.type = PlaneTypeForNormal( cv->cullPlane.normal );
-	surf->cullinfo.plane = cv->cullPlane;
+		LoadVertToSrfVert(&cv->verts[i], &verts[i], hdrVertColors ? hdrVertColors + (ds->firstedge + i) * 3 : NULL, surf->cullinfo.bounds);
 
 	surf->data = (surfaceType_t *)cv;
-
-	// Calculate tangent spaces
-	{
-		srfVert_t      *dv[3];
-
-		for(i = 0, tri = cv->indexes; i < numIndexes; i += 3, tri += 3)
-		{
-			dv[0] = &cv->verts[tri[0]];
-			dv[1] = &cv->verts[tri[1]];
-			dv[2] = &cv->verts[tri[2]];
-
-			R_CalcTangentVectors(dv);
-		}
-	}
 }
 
 
@@ -550,55 +448,33 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 ParseMesh
 ===============
 */
-static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf ) {
+static void ParseMesh ( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msurface_t *surf ) {
 	srfBspSurface_t	*grid = (srfBspSurface_t *)surf->data;
 	int				i;
-	int				width, height, numPoints;
+	int				numPoints;
 	srfVert_t points[MAX_PATCH_SIZE*MAX_PATCH_SIZE];
 	vec3_t			bounds[2];
 	vec3_t			tmpVec;
 	static surfaceType_t	skipData = SF_SKIP;
-	int realLightmapNum;
-
-	realLightmapNum = LittleLong( ds->lightmapNum );
-
-	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
 
 	// get shader value
-	surf->shader = ShaderForShaderNum( ds->shaderNum, FatLightmap(realLightmapNum) );
+	//surf->shader = ShaderForShaderNum( ds->texinfo, FatLightmap(realLightmapNum) );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
-	if ( s_worldData[rw].shaders[ LittleLong( ds->shaderNum ) ].surfaceFlags & SURF_NODRAW ) {
+	if ( s_worldData[rw].shaders[ LittleLong( ds->texinfo ) ].surfaceFlags & SURF_NODRAW ) {
 		surf->data = &skipData;
 		return;
 	}
 
-	width = LittleLong( ds->patchWidth );
-	height = LittleLong( ds->patchHeight );
-
-	if(width < 0 || width > MAX_PATCH_SIZE || height < 0 || height > MAX_PATCH_SIZE)
-		ri.Error(ERR_DROP, "ParseMesh: bad size");
-
-	verts += LittleLong( ds->firstVert );
-	numPoints = width * height;
+	verts += LittleLong( ds->firstedge );
+	numPoints = LittleLong( ds->numedges );
 	for(i = 0; i < numPoints; i++)
-		LoadDrawVertToSrfVert(&points[i], &verts[i], realLightmapNum, hdrVertColors ? hdrVertColors + (ds->firstVert + i) * 3 : NULL, NULL);
+		LoadVertToSrfVert(&points[i], &verts[i], hdrVertColors ? hdrVertColors + (ds->firstedge + i) * 3 : NULL, NULL);
 
-	// pre-tesseleate
-	R_SubdividePatchToGrid( grid, width, height, points );
-
-	// copy the level of detail origin, which is the center
-	// of the group of all curves that must subdivide the same
-	// to avoid cracking
-	for ( i = 0 ; i < 3 ; i++ ) {
-		bounds[0][i] = LittleFloat( ds->lightmapVecs[0][i] );
-		bounds[1][i] = LittleFloat( ds->lightmapVecs[1][i] );
-	}
 	VectorAdd( bounds[0], bounds[1], bounds[1] );
 	VectorScale( bounds[1], 0.5f, grid->lodOrigin );
 	VectorSubtract( bounds[0], grid->lodOrigin, tmpVec );
@@ -616,30 +492,22 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 ParseTriSurf
 ===============
 */
-static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
+static void ParseTriSurf( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
 	srfBspSurface_t *cv;
-	glIndex_t  *tri;
-	int             i, j;
-	int             numVerts, numIndexes, badTriangles;
-
-	// get fog volume
-	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+	int             i;
+	int             numVerts;
 
 	// get shader
-	surf->shader = ShaderForShaderNum( ds->shaderNum, LIGHTMAP_BY_VERTEX );
+	surf->shader = ShaderForShaderNum( ds->texinfo, LIGHTMAP_BY_VERTEX );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
 
-	numVerts = LittleLong(ds->numVerts);
-	numIndexes = LittleLong(ds->numIndexes);
+	numVerts = LittleLong(ds->numedges);
 
 	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (void *)surf->data;
 	cv->surfaceType = SF_TRIANGLES;
-
-	cv->numIndexes = numIndexes;
-	cv->indexes = ri.Hunk_Alloc(numIndexes * sizeof(cv->indexes[0]), h_low);
 
 	cv->numVerts = numVerts;
 	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
@@ -649,65 +517,24 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	// copy vertexes
 	surf->cullinfo.type = CULLINFO_BOX;
 	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
-	verts += LittleLong(ds->firstVert);
+	verts += LittleLong(ds->firstedge);
 	for(i = 0; i < numVerts; i++)
-		LoadDrawVertToSrfVert(&cv->verts[i], &verts[i], -1, hdrVertColors ? hdrVertColors + (ds->firstVert + i) * 3 : NULL, surf->cullinfo.bounds);
+		LoadVertToSrfVert(&cv->verts[i], &verts[i], hdrVertColors ? hdrVertColors + (ds->firstedge + i) * 3 : NULL, surf->cullinfo.bounds);
 
-	// copy triangles
-	badTriangles = 0;
-	indexes += LittleLong(ds->firstIndex);
-	for(i = 0, tri = cv->indexes; i < numIndexes; i += 3, tri += 3)
-	{
-		for(j = 0; j < 3; j++)
-		{
-			tri[j] = LittleLong(indexes[i + j]);
-
-			if(tri[j] >= numVerts)
-			{
-				ri.Error(ERR_DROP, "Bad index in face surface");
-			}
-		}
-
-		if ((tri[0] == tri[1]) || (tri[1] == tri[2]) || (tri[0] == tri[2]))
-		{
-			tri -= 3;
-			badTriangles++;
-		}
-	}
-
-	if (badTriangles)
-	{
-		ri.Printf(PRINT_WARNING, "Trisurf has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", surf->shader->name, numIndexes / 3, numVerts, numIndexes / 3 - badTriangles);
-		cv->numIndexes -= badTriangles * 3;
-	}
-
-	// Calculate tangent spaces
-	{
-		srfVert_t      *dv[3];
-
-		for(i = 0, tri = cv->indexes; i < numIndexes; i += 3, tri += 3)
-		{
-			dv[0] = &cv->verts[tri[0]];
-			dv[1] = &cv->verts[tri[1]];
-			dv[2] = &cv->verts[tri[2]];
-
-			R_CalcTangentVectors(dv);
-		}
-	}
 }
 
 
 
 /*
 ===============
-R_LoadSurfaces
+
 ===============
 */
-static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
-	dsurface_t	*in;
+static	void R_LoadSurfaces2( lump_t *surfs, lump_t *verts ) {
+	dBspFace_t	*in;
 	msurface_t	*out;
-	drawVert_t	*dv;
-	int			*indexes;
+	vec3_t	*dv;
+	//int			*indexes;
 	int			count;
 	int			numFaces, numMeshes, numTriSurfs, numFlares;
 	int			i;
@@ -726,9 +553,11 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	if (verts->filelen % sizeof(*dv))
 		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
 
+/*
 	indexes = (void *)(fileBase + indexLump->fileofs);
 	if ( indexLump->filelen % sizeof(*indexes))
 		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+*/
 
 	out = ri.Hunk_Alloc ( count * sizeof(*out), h_low );	
 
@@ -764,47 +593,14 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	in = (void *)(fileBase + surfs->fileofs);
 	out = s_worldData[rw].surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
-		switch ( LittleLong( in->surfaceType ) ) {
-			case MST_PATCH:
-				out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
-				break;
-			case MST_TRIANGLE_SOUP:
-				out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
-				break;
-			case MST_PLANAR:
-				out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
-				break;
-			case MST_FLARE:
-				out->data = ri.Hunk_Alloc( sizeof(srfFlare_t), h_low);
-				break;
-			default:
-				break;
-		}
+		out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
 	}
 
 	in = (void *)(fileBase + surfs->fileofs);
 	out = s_worldData[rw].surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
-		switch ( LittleLong( in->surfaceType ) ) {
-		case MST_PATCH:
-			ParseMesh ( in, dv, hdrVertColors, out );
-			numMeshes++;
-			break;
-		case MST_TRIANGLE_SOUP:
-			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
-			numTriSurfs++;
-			break;
-		case MST_PLANAR:
-			ParseFace( in, dv, hdrVertColors, out, indexes );
-			numFaces++;
-			break;
-		case MST_FLARE:
-			ParseFlare( in, dv, out, indexes );
-			numFlares++;
-			break;
-		default:
-			ri.Error( ERR_DROP, "Bad surfaceType" );
-		}
+		ParseMesh ( in, dv, hdrVertColors, out );
+		numMeshes++;
 	}
 
 	if (hdrVertColors)
@@ -833,7 +629,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 R_LoadSubmodels
 =================
 */
-static	void R_LoadSubmodels( lump_t *l ) {
+static	void R_LoadSubmodels2( lump_t *l ) {
 	dmodel_t	*in;
 	bmodel_t	*out;
 	int			i, j, count;
@@ -962,7 +758,7 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 R_LoadShaders
 =================
 */
-static	void R_LoadShaders( lump_t *l ) {	
+static	void R_LoadShaders2( lump_t *l ) {	
 	int		i, count;
 	dshader_t	*in, *out;
 	
@@ -1026,7 +822,7 @@ R_LoadFogs
 
 =================
 */
-static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
+static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 	int			i;
 	fog_t		*out;
 	dfog_t		*fogs;
@@ -1039,11 +835,8 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 	float		d;
 	int			firstSide;
 
-	fogs = (void *)(fileBase + l->fileofs);
-	if (l->filelen % sizeof(*fogs)) {
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
-	}
-	count = l->filelen / sizeof(*fogs);
+	fogs = NULL;
+	return;
 
 	// create fog strucutres for them
 	s_worldData[rw].numfogs = count + 1;
@@ -1136,118 +929,8 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 }
 
 
-/*
-================
-R_LoadLightGrid
 
-================
-*/
-void R_LoadLightGrid( lump_t *l ) {
-	int		i;
-	vec3_t	maxs;
-	int		numGridPoints;
-	world_t	*w;
-	float	*wMins, *wMaxs;
-
-	w = &s_worldData[rw];
-
-	w->lightGridInverseSize[0] = 1.0f / w->lightGridSize[0];
-	w->lightGridInverseSize[1] = 1.0f / w->lightGridSize[1];
-	w->lightGridInverseSize[2] = 1.0f / w->lightGridSize[2];
-
-	wMins = w->bmodels[0].bounds[0];
-	wMaxs = w->bmodels[0].bounds[1];
-
-	for ( i = 0 ; i < 3 ; i++ ) {
-		w->lightGridOrigin[i] = w->lightGridSize[i] * ceil( wMins[i] / w->lightGridSize[i] );
-		maxs[i] = w->lightGridSize[i] * floor( wMaxs[i] / w->lightGridSize[i] );
-		w->lightGridBounds[i] = (maxs[i] - w->lightGridOrigin[i])/w->lightGridSize[i] + 1;
-	}
-
-	numGridPoints = w->lightGridBounds[0] * w->lightGridBounds[1] * w->lightGridBounds[2];
-
-	if ( l->filelen != numGridPoints * 8 ) {
-		ri.Printf( PRINT_WARNING, "WARNING: light grid mismatch\n" );
-		w->lightGridData = NULL;
-		return;
-	}
-
-	w->lightGridData = ri.Hunk_Alloc( l->filelen, h_low );
-	Com_Memcpy( w->lightGridData, (void *)(fileBase + l->fileofs), l->filelen );
-
-	// deal with overbright bits
-	for ( i = 0 ; i < numGridPoints ; i++ ) {
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8], &w->lightGridData[i*8] );
-		R_ColorShiftLightingBytes( &w->lightGridData[i*8+3], &w->lightGridData[i*8+3] );
-	}
-
-	// load hdr lightgrid
-	if (r_hdr->integer)
-	{
-		char filename[MAX_QPATH];
-		float *hdrLightGrid;
-		int size;
-
-		Com_sprintf( filename, sizeof( filename ), "maps/%s/lightgrid.raw", s_worldData[rw].baseName);
-		//ri.Printf(PRINT_ALL, "looking for %s\n", filename);
-
-		size = ri.FS_ReadFile(filename, (void **)&hdrLightGrid);
-
-		if (hdrLightGrid)
-		{
-			//ri.Printf(PRINT_ALL, "found!\n");
-
-			if (size != sizeof(float) * 6 * numGridPoints)
-				ri.Error(ERR_DROP, "Bad size for %s (%i, expected %i)!", filename, size, (int)(sizeof(float)) * 6 * numGridPoints);
-
-			w->lightGrid16 = ri.Hunk_Alloc(sizeof(w->lightGrid16) * 6 * numGridPoints, h_low);
-
-			for (i = 0; i < numGridPoints ; i++)
-			{
-				vec4_t c;
-
-				c[0] = hdrLightGrid[i * 6];
-				c[1] = hdrLightGrid[i * 6 + 1];
-				c[2] = hdrLightGrid[i * 6 + 2];
-				c[3] = 1.0f;
-
-				R_ColorShiftLightingFloats(c, c);
-				ColorToRGB16(c, &w->lightGrid16[i * 6]);
-
-				c[0] = hdrLightGrid[i * 6 + 3];
-				c[1] = hdrLightGrid[i * 6 + 4];
-				c[2] = hdrLightGrid[i * 6 + 5];
-				c[3] = 1.0f;
-
-				R_ColorShiftLightingFloats(c, c);
-				ColorToRGB16(c, &w->lightGrid16[i * 6 + 3]);
-			}
-		}
-		else if (0)
-		{
-			// promote 8-bit lightgrid to 16-bit
-			w->lightGrid16 = ri.Hunk_Alloc(sizeof(w->lightGrid16) * 6 * numGridPoints, h_low);
-
-			for (i = 0; i < numGridPoints; i++)
-			{
-				w->lightGrid16[i * 6]     = w->lightGridData[i * 8] * 257;
-				w->lightGrid16[i * 6 + 1] = w->lightGridData[i * 8 + 1] * 257;
-				w->lightGrid16[i * 6 + 2] = w->lightGridData[i * 8 + 2] * 257;
-				w->lightGrid16[i * 6 + 3] = w->lightGridData[i * 8 + 3] * 257;
-				w->lightGrid16[i * 6 + 4] = w->lightGridData[i * 8 + 4] * 257;
-				w->lightGrid16[i * 6 + 5] = w->lightGridData[i * 8 + 5] * 257;
-			}
-		}
-
-		if (hdrLightGrid)
-			ri.FS_FreeFile(hdrLightGrid);
-	}
-}
-
-
-
-
-void LoadBsp2(char *name) {
+void LoadBsp2(const char *name) {
 	int i;
 	dheader_t	*header;
 	header = (dheader_t *)fileBase;
@@ -1258,16 +941,16 @@ void LoadBsp2(char *name) {
 	}
 
 	// load into heap
-	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
-	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
-	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
-	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
-	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
-	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
-	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
-	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
-	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
+	R_LoadEntities( &header->lumps[LUMP_Q2_ENTITIES] );
+	R_LoadShaders2( &header->lumps[LUMP_Q2_TEXINFO] );
+	R_LoadLightmaps( &header->lumps[LUMP_Q2_LIGHTING], &header->lumps[LUMP_Q2_FACES] );
+	R_LoadPlanes (&header->lumps[LUMP_Q2_PLANES]);
+	R_LoadFogs2( &header->lumps[LUMP_Q2_BRUSHES], &header->lumps[LUMP_Q2_BRUSHSIDES] );
+	R_LoadSurfaces2( &header->lumps[LUMP_Q2_FACES], &header->lumps[LUMP_Q2_VERTEXES] );
+	//R_LoadMarksurfaces (&header->lumps[LUMP_Q2_LEAFSURFACES]);
+	R_LoadNodesAndLeafs (&header->lumps[LUMP_Q2_NODES], &header->lumps[LUMP_Q2_LEAFS]);
+	R_LoadSubmodels2 (&header->lumps[LUMP_Q2_MODELS]);
+	R_LoadVisibility( &header->lumps[LUMP_Q2_VISIBILITY] );
+	//R_LoadLightGrid( &header->lumps[LUMP_Q2_LIGHTGRID] );
 
 }

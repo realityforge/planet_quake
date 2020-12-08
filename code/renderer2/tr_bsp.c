@@ -46,7 +46,7 @@ int			c_gridVerts;
 
 //===============================================================================
 
-static void HSVtoRGB( float h, float s, float v, float rgb[3] )
+void HSVtoRGB( float h, float s, float v, float rgb[3] )
 {
 	int i;
 	float f;
@@ -102,7 +102,7 @@ R_ColorShiftLightingBytes
 
 ===============
 */
-static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
+void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	int		shift, r, g, b;
 
 	// shift the color data based on overbright range
@@ -137,7 +137,7 @@ R_ColorShiftLightingFloats
 
 ===============
 */
-static void R_ColorShiftLightingFloats(float in[4], float out[4])
+void R_ColorShiftLightingFloats(float in[4], float out[4])
 {
 	float	r, g, b;
 	float   scale = (1 << (r_mapOverBrightBits->integer - tr.overbrightBits)) / 255.0f;
@@ -604,7 +604,7 @@ static	void R_LoadVisibility( lump_t *l ) {
 ShaderForShaderNum
 ===============
 */
-static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
+shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 	shader_t	*shader;
 	dshader_t	*dsh;
 
@@ -1875,7 +1875,7 @@ static	void R_LoadSubmodels( lump_t *l ) {
 R_SetParent
 =================
 */
-static	void R_SetParent (mnode_t *node, mnode_t *parent)
+void R_SetParent (mnode_t *node, mnode_t *parent)
 {
 	node->parent = parent;
 	if (node->contents != -1)
@@ -2714,7 +2714,7 @@ void RE_SwitchWorld(int w) {
 }
 
 
-void LoadBsp3(char *name) {
+void LoadBsp3(const char *name) {
 	int i;
 	dheader_t	*header;
 	header = (dheader_t *)fileBase;

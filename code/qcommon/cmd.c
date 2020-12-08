@@ -1000,7 +1000,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	
 #ifndef DEDICATED
 	// check client game commands
-	if ( !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
 		return qtrue;
 	}
 #endif
@@ -1015,17 +1015,17 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
 		return qtrue;
 	}
 
-	if(noServer && com_dedicated->integer) {
+	if(noServer && com_dedicated && com_dedicated->integer) {
 		return qfalse;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	if(!noServer && !com_dedicated->integer) {
+	if(!noServer && com_dedicated && !com_dedicated->integer) {
 		CL_ForwardCommandToServer( text );
 		return qtrue;		
 	} else {

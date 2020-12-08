@@ -2119,6 +2119,18 @@ void R_AddBrushModelSurfaces( trRefEntity_t *e );
 void R_AddWorldSurfaces( void );
 qboolean R_inPVS( const vec3_t p1, const vec3_t p2 );
 extern byte		*fileBase;
+void HSVtoRGB( float h, float s, float v, float rgb[3] );
+void R_ColorShiftLightingBytes( byte in[4], byte out[4] );
+void R_SetParent (mnode_t *node, mnode_t *parent);
+shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum );
+void LoadBsp2(const char *name);
+void R_ColorShiftLightingFloats(float in[4], float out[4]);
+void ColorToRGB16(const vec3_t color, uint16_t rgb16[3]);
+void R_LoadEntities( lump_t *l );
+void R_MovePatchSurfacesToHunk(void);
+void R_StitchAllPatches( void );
+void LoadDrawVertToSrfVert(srfVert_t *s, drawVert_t *d, int realLightmapNum, float hdrVertColors[3], vec3_t *bounds);
+void R_FixSharedVertexLodError( void );
 
 
 /*

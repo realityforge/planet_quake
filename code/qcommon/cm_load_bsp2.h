@@ -170,19 +170,64 @@ typedef struct dBsp2Vis_s
 	int		bitOfs[8][2];			// bitOfs[numClusters][2]
 } dBsp2Vis_t;
 
+typedef enum
+{
+	MATERIAL_SILENT,		// no footstep sounds (and no bullethit sounds)
+	MATERIAL_CONCRETE,		// standard sounds
+	MATERIAL_FABRIC,		// rug
+	MATERIAL_GRAVEL,		// gravel
+	MATERIAL_METAL,			// metalh
+	MATERIAL_METAL_L,		// metall
+	MATERIAL_SNOW,			// tin (replace with pure snow from AHL??)
+	MATERIAL_TIN,
+	MATERIAL_TILE,			// marble (similar to concrete, but slightly muffled sound)
+	MATERIAL_WOOD,			// wood
+	MATERIAL_WATER,
+	MATERIAL_GLASS,
+	MATERIAL_DIRT,
+	//!! reserved for constant MATERIAL_COUNT, but not implemented now:
+	MATERIAL_R0,
+	MATERIAL_R1,
+	MATERIAL_R2,
+	MATERIAL_R3,
+
+	MATERIAL_COUNT			// must be last
+} dBsp2Material_t;
+
+// surface flags
+#define Q2_SURF_LIGHT				0x0001		// value will hold the light strength
+
+#define Q2_SURF_SLICK				0x0002		// effects game physics
+
+#define Q2_SURF_SKY				0x0004		// don't draw, but add to skybox
+#define Q2_SURF_WARP				0x0008		// turbulent water warp
+#define Q2_SURF_TRANS33			0x0010
+#define Q2_SURF_TRANS66			0x0020
+#define Q2_SURF_FLOWING			0x0040		// scroll towards angle
+#define Q2_SURF_NODRAW				0x0080		// do not draw texture
+
+// added since 4.00
+// Kingpin (used for non-KP maps from scripts too)
+#define Q2_SURF_ALPHA				0x1000
+#define Q2_SURF_SPECULAR			0x4000		// have a bug in KP's headers: SPECULAR and DIFFUSE consts are 0x400 and 0x800
+#define Q2_SURF_DIFFUSE			0x8000
+
+#define Q2_SURF_AUTOFLARE			0x2000		// just free flag (should use extra struc for dBsp2Texinfo_t !!)
+
+
 /*-----------------------------------------------------------------------------
 	Kingpin extensions for Q2 BSP
 -----------------------------------------------------------------------------*/
 // materials
 
-#define SURF_WATER			0x00080000
-#define SURF_CONCRETE		0x00100000
-#define SURF_FABRIC			0x00200000
-#define SURF_GRAVEL			0x00400000
-#define SURF_METAL			0x00800000
-#define SURF_METAL_L		0x01000000
-#define SURF_SNOW			0x02000000
-#define SURF_TILE			0x04000000
-#define SURF_WOOD			0x08000000
+#define Q2_SURF_WATER			0x00080000
+#define Q2_SURF_CONCRETE		0x00100000
+#define Q2_SURF_FABRIC			0x00200000
+#define Q2_SURF_GRAVEL			0x00400000
+#define Q2_SURF_METAL			0x00800000
+#define Q2_SURF_METAL_L		0x01000000
+#define Q2_SURF_SNOW			0x02000000
+#define Q2_SURF_TILE			0x04000000
+#define Q2_SURF_WOOD			0x08000000
 
-#define SURF_KP_MATERIAL	0x0FF80000
+#define Q2_SURF_KP_MATERIAL	0x0FF80000

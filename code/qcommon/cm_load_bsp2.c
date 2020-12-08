@@ -42,24 +42,6 @@ void CMod_LoadShaders2( lump_t *l ) {
 	dshader_t *out;
 	int			i, count;
 
-/*
-int i, j;
-
-// texinfo: lowercase all filenames and remove leading "." and "/"
-for (i = 0; i < cms[cm].numTexinfo; i++)
-{
-	dBsp2Texinfo_t &d = cms[cm].texinfo2[i];
-	char *s = d.texture;
-	for (j = 0; j < sizeof(d.texture); j++, s++)
-		*s = toLower(*s);
-	s = d.texture;
-	if (s[0] == '.') s++;
-	if (s[0] == '/') s++;
-	if (s != d.texture)
-		strcpy(d.texture, s);
-}
-*/
-
 	in = (void *)(cmod_base + l->fileofs);
 	if (l->filelen % sizeof(*in)) {
 		Com_Error (ERR_DROP, "CMod_LoadShaders: funny lump size");
@@ -72,12 +54,19 @@ for (i = 0; i < cms[cm].numTexinfo; i++)
 	cms[cm].shaders = Hunk_Alloc( count * sizeof( *cms[cm].shaders ), h_high );
 	cms[cm].numShaders = count;
 
-	Com_Memcpy( cms[cm].shaders, in, count * sizeof( *cms[cm].shaders ) );
-
 	out = cms[cm].shaders;
 	for ( i=0 ; i<count ; i++, in++, out++ ) {
-		out->contentFlags = LittleLong( out->contentFlags );
-		out->surfaceFlags = LittleLong( out->surfaceFlags );
+		memcpy(&out->shader, va("textures/%s", in->texture[0] == '.' || in->texture[0] == '/' ? &in->texture[1] : in->texture), sizeof(out->shader));
+		out->shader[sizeof(out->shader)-1] = '\0';
+		out->contentFlags = LittleLong( in->flags );
+		if(in->flags & Q2_SURF_SKY)
+			out->surfaceFlags |= SURF_SKY;
+		if(in->flags & Q2_SURF_NODRAW)
+			out->surfaceFlags |= SURF_NODRAW;
+		if (in->flags & MATERIAL_METAL)
+			out->surfaceFlags |= SURF_METALSTEPS;
+		if (in->flags & MATERIAL_SILENT)
+			out->surfaceFlags |= SURF_NOSTEPS;
 	}
 }
 
@@ -110,7 +99,6 @@ void CMod_LoadSubmodels2( lump_t *l ) {
 	for ( i=0 ; i<count ; i++, in++)
 	{
 		out = &cms[cm].cmodels[i];
-
 		for (j=0 ; j<3 ; j++)
 		{	// spread the mins / maxs by a pixel
 			out->mins[j] = LittleFloat (in->mins[j]) - 1;
@@ -121,12 +109,19 @@ void CMod_LoadSubmodels2( lump_t *l ) {
 			continue;	// world model doesn't need other info
 		}
 
-		int leafNum = cms[cm].numLeafs + HULL_LEAFS + i;
+		int leafNum = in->headnode + 1;
 		// make a "leaf" just to hold the model's brushes and surfaces
-		out->leaf.numLeafBrushes = cms[cm].leafs[leafNum].numLeafBrushes;
+		out->leaf.numLeafBrushes = LittleLong( cms[cm].leafs[leafNum].numLeafBrushes );
 		indexes = Hunk_Alloc( out->leaf.numLeafBrushes * 4, h_high );
 		out->leaf.firstLeafBrush = indexes - cms[cm].leafbrushes;
 		for ( j = 0 ; j < out->leaf.numLeafBrushes ; j++ ) {
+			indexes[j] = LittleLong( in->headnode ) + j;
+		}
+
+		out->leaf.numLeafSurfaces = LittleLong( in->numfaces );
+		indexes = Hunk_Alloc( out->leaf.numLeafSurfaces * 4, h_high );
+		out->leaf.firstLeafSurface = indexes - cms[cm].leafsurfaces;
+		for ( j = 0 ; j < out->leaf.numLeafSurfaces ; j++ ) {
 			indexes[j] = LittleLong( in->firstface ) + j;
 		}
 	}
@@ -158,8 +153,8 @@ void CMod_LoadBrushes2( lump_t *l ) {
 	for ( i = 0; i < count; i++, out++, in++ ) {
 		out->sides = cms[cm].brushsides + LittleLong( in->firstside );
 		out->numsides = LittleLong( in->numsides );
-		dBsp2Brushside_t *s0 = out->sides;
-		out->shaderNum = LittleLong( s0->texinfo );
+		
+		out->shaderNum = (*out->sides).shaderNum;
 		if ( out->shaderNum < 0 || out->shaderNum >= cms[cm].numShaders ) {
 			Com_Error( ERR_DROP, "CMod_LoadBrushes: bad shaderNum: %i", out->shaderNum );
 		}
@@ -222,6 +217,44 @@ void CMod_LoadLeafs2( lump_t *l )
 
 	cms[cm].areas = Hunk_Alloc( cms[cm].numAreas * sizeof( *cms[cm].areas ), h_high );
 	cms[cm].areaPortals = Hunk_Alloc( cms[cm].numAreas * cms[cm].numAreas * sizeof( *cms[cm].areaPortals ), h_high );
+}
+
+
+/*
+=================
+CMod_LoadNodes
+
+=================
+*/
+void CMod_LoadNodes2( lump_t *l ) {
+	dBsp2Node_t	*in;
+	int		child;
+	cNode_t	*out;
+	int		i, j, count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if (l->filelen % sizeof(*in))
+		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
+
+	count = l->filelen / sizeof(*in);
+
+	if (count < 1)
+		Com_Error( ERR_DROP, "Map has no nodes" );
+	cms[cm].nodes = Hunk_Alloc( count * sizeof( *cms[cm].nodes ), h_high );
+	cms[cm].numNodes = count;
+
+	out = cms[cm].nodes;
+
+	for ( i = 0; i < count; i++, out++, in++ )
+	{
+		out->plane = cms[cm].planes + LittleLong( in->planeNum );
+		for ( j = 0; j < 2; j++ )
+		{
+			child = LittleLong( in->children[j] );
+			out->children[j] = child;
+		}
+	}
+
 }
 
 
@@ -315,7 +348,7 @@ void CMod_LoadLeafSurfaces2( const lump_t *l )
 {
 	int i;
 	int *out;
-	int *in;
+	short *in;
 	int count;
 
 	in = (void *)(cmod_base + l->fileofs);
@@ -332,20 +365,6 @@ void CMod_LoadLeafSurfaces2( const lump_t *l )
 	for ( i = 0; i < count; i++, in++, out++ ) {
 		*out = LittleLong( *in );
 	}
-}
-
-
-static int CheckLump(lump_t *l, void **ptr, int size)
-{
-	int length = l->filelen;
-	int ofs    = l->fileofs;
-
-	if (length % size)
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
-	*ptr = cmod_base + ofs;
-
-	return length / size;
 }
 
 
@@ -377,8 +396,9 @@ void CMod_LoadBrushSides2 (lump_t *l)
 		num = LittleLong( in->planenum );
 		out->plane = &cms[cm].planes[num];
 		out->shaderNum = LittleLong( in->texinfo );
+		if ( out->shaderNum < 0 ) out->shaderNum = 0;
 		if ( out->shaderNum < 0 || out->shaderNum >= cms[cm].numShaders ) {
-			Com_Error( ERR_DROP, "CMod_LoadBrushSides: bad shaderNum: %i", out->shaderNum );
+			Com_Error( ERR_DROP, "CMod_LoadBrushSides2: bad shaderNum: %i", out->shaderNum );
 		}
 		out->surfaceFlags = cms[cm].shaders[out->shaderNum].surfaceFlags;
 	}
@@ -476,11 +496,10 @@ void CMod_LoadVisibility2( lump_t *l ) {
 CMod_LoadPatches
 =================
 */
-/*
 #define	MAX_PATCH_VERTS		1024
-void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
-	drawVert_t	*dv, *dv_p;
-	dsurface_t	*in;
+void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
+	vec3_t	*dv, *dv_p;
+	dBspFace_t	*in;
 	int			count;
 	int			i, j;
 	int			c;
@@ -491,48 +510,55 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 
 	in = (void *)(cmod_base + surfs->fileofs);
 	if (surfs->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
+		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
 	cms[cm].numSurfaces = count = surfs->filelen / sizeof(*in);
 	cms[cm].surfaces = Hunk_Alloc( cms[cm].numSurfaces * sizeof( cms[cm].surfaces[0] ), h_high );
 
 	dv = (void *)(cmod_base + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))
-		Com_Error (ERR_DROP, "MOD_LoadBmodel: funny lump size");
+		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
 
 	// scan through all the surfaces, but only load patches,
 	// not planar faces
 	for ( i = 0 ; i < count ; i++, in++ ) {
-		if ( LittleLong( in->surfaceType ) != MST_PATCH ) {
-			continue;		// ignore other surfaces
-		}
 		// FIXME: check for non-colliding patches
 
 		cms[cm].surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
 
 		// load the full drawverts onto the stack
-		width = LittleLong( in->patchWidth );
-		height = LittleLong( in->patchHeight );
-		c = width * height;
+		width = 5; //LittleLong( in->patchWidth );
+		height = 5; //LittleLong( in->patchHeight );
+		c = LittleLong( in->numedges );
+		if(c == 6) {
+			width = 3;
+			height = 3;
+		}
 		if ( c > MAX_PATCH_VERTS ) {
 			Com_Error( ERR_DROP, "ParseMesh: MAX_PATCH_VERTS" );
 		}
+		if(!c) continue;
+		Com_Printf("CMod_LoadPatches2: %i, %f x %f x %f\n", c, 
+			points[j][0], points[j][1], points[j][2]);
 
-		dv_p = dv + LittleLong( in->firstVert );
+		dv_p = dv + LittleLong( in->firstedge );
 		for ( j = 0 ; j < c ; j++, dv_p++ ) {
-			points[j][0] = LittleFloat( dv_p->xyz[0] );
-			points[j][1] = LittleFloat( dv_p->xyz[1] );
-			points[j][2] = LittleFloat( dv_p->xyz[2] );
+			points[j][0] = LittleFloat( *dv_p[0] );
+			points[j][1] = LittleFloat( *dv_p[1] );
+			points[j][2] = LittleFloat( *dv_p[2] );
 		}
 
-		shaderNum = LittleLong( in->shaderNum );
+		shaderNum = LittleLong( in->texinfo );
 		patch->contents = cms[cm].shaders[shaderNum].contentFlags;
 		patch->surfaceFlags = cms[cm].shaders[shaderNum].surfaceFlags;
+		
+		//if(patch->surfaceFlags & SURF_SKY) {
+		//	continue;
+		//}
 
 		// create the internal facet structure
-		patch->pc = CM_GeneratePatchCollide( width, height, points );
+		//patch->pc = CM_GeneratePatchCollide( width, height, points );
 	}
 }
-*/
 
 
 void LoadQ2Map(const char *name) {
@@ -546,55 +572,23 @@ void LoadQ2Map(const char *name) {
 		((int *)cmod_base)[i] = LittleLong(((int *)cmod_base)[i]);
 #endif
 
-	//cms[cm].type = map_q2;
-	/*
-
-#define C(num,field,count,type) \
-	cms[cm].count = CheckLump(&header.lumps[LUMP_Q2_##num], (void**)&cms[cm].field, sizeof(type))
-	C(LIGHTING, lighting, lightDataSize, byte);
-	C(VERTEXES, vertexes2, numVertexes, vec3_t);
-	C(PLANES, planes, numPlanes, dBsp2Plane_t);
-	C(LEAFS, leafs2, numLeafs, dBsp2Leaf_t);
-	C(NODES, nodes2, numNodes, dBsp2Node_t);
-	C(TEXINFO, texinfo2, numTexinfo, dBsp2Texinfo_t);
-	C(FACES, faces2, numFaces, dBspFace_t);
-	C(LEAFFACES, leaffaces2, numLeaffaces, unsigned short);
-	C(LEAFBRUSHES, leafbrushes2, numLeafbrushes, unsigned short);
-	C(SURFEDGES, surfedges, numSurfedges, int);
-	C(EDGES, edges, numEdges, dEdge_t);
-	C(BRUSHES, brushes2, numBrushes, dBsp2Brush_t);
-	C(BRUSHSIDES, brushsides2, numBrushSides, dBsp2Brushside_t);
-	C(ZONES, zones, numZones, dZone_t);
-	C(ZONEPORTALS, zonePortals, numZonePortals, dZonePortal_t);
-	C(MODELS, cmodels, numSubModels, dBsp2Model_t);
-	C(VISIBILITY, visData, visDataSize, dBsp2Vis_t);
-	C(ENTITIES, entityString, numEntityChars, char);
-	
-	#if !LITTLE_ENDIAN
-		// swap everything
-		SwapQ2BspFile();
-	#endif
-
-	#undef C
-	*/
-
 	// load into heap
-	CMod_LoadVisibility2( &header.lumps[LUMP_Q2_VISIBILITY] );
-	CMod_LoadEntityString2 (&header.lumps[LUMP_Q2_ENTITIES], name);
 	CMod_LoadShaders2( &header.lumps[LUMP_Q2_TEXINFO] );
+	CMod_LoadLeafs2 (&header.lumps[LUMP_Q2_LEAFS]);
+	CMod_LoadLeafBrushes2 (&header.lumps[LUMP_Q2_LEAFBRUSHES]);
+	CMod_LoadLeafSurfaces2 (&header.lumps[LUMP_Q2_LEAFFACES]);
 	CMod_LoadPlanes2 (&header.lumps[LUMP_Q2_PLANES]);
-	//CMod_LoadSurfaces2 (&header.lumps[LUMP_Q2_TEXINFO]);
 	CMod_LoadBrushSides2 (&header.lumps[LUMP_Q2_BRUSHSIDES]);
 	CMod_LoadBrushes2 (&header.lumps[LUMP_Q2_BRUSHES]);
-	CMod_LoadLeafs2 (&header.lumps[LUMP_Q2_LEAFS]);
-	CMod_LoadNodes (&header.lumps[LUMP_Q2_NODES]);
-	CMod_LoadLeafBrushes2 (&header.lumps[LUMP_Q2_LEAFBRUSHES]);
+	CMod_LoadSubmodels2 (&header.lumps[LUMP_Q2_MODELS]);
+	CMod_LoadNodes2 (&header.lumps[LUMP_Q2_NODES]);
+	CMod_LoadEntityString2 (&header.lumps[LUMP_Q2_ENTITIES], name);
+	CMod_LoadVisibility2( &header.lumps[LUMP_Q2_VISIBILITY] );
 	// TODO: area portals and area mask stuff
 	//CMod_LoadZones( &header.lumps[LUMP_Q2_ZONES] );
 	//CMod_LoadZonePortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
-	CMod_LoadSubmodels2 (&header.lumps[LUMP_Q2_MODELS]);
 	//
 	//;
-	//CMod_LoadPatches( &header.lumps[LUMP_Q2_SURFACES], &header.lumps[LUMP_Q2_DRAWVERTS] );
+	CMod_LoadPatches2( &header.lumps[LUMP_Q2_FACES], &header.lumps[LUMP_Q2_VERTEXES] );
 
 }

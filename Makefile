@@ -1188,7 +1188,7 @@ Q3OBJ = \
   $(B)/client/cl_jpeg.o \
   \
   $(B)/client/cm_load.o \
-	$(B)/client/cm_load2.o \
+	$(B)/client/cm_load_bsp2.o \
   $(B)/client/cm_patch.o \
   $(B)/client/cm_polylib.o \
   $(B)/client/cm_test.o \
