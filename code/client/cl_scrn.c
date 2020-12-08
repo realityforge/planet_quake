@@ -657,10 +657,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		}
 	}
 
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
-		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-	}
 }
 
 
@@ -713,6 +709,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
+		
 		goto donewithupdate;
 	}
 
@@ -744,15 +741,18 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	cgvm = 0;
 	uivm = 0;
 
-donewithupdate:
+	re.SetDvrFrame(0, 0, 1, 1);
 
 	if((cl.snap.ps.pm_type == PM_INTERMISSION
 		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
 		&& cl_lnInvoice->string[0]) {
 		SCR_DrawQRCode();
 	}
-
-	re.SetDvrFrame(0, 0, 1, 1);
+	
+	// the menu draws next
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+	}
 
 	// console draws next
 	Con_DrawConsole ();
@@ -761,6 +761,8 @@ donewithupdate:
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
 		SCR_DrawDebugGraph ();
 	}
+
+donewithupdate:
 
 	if ( com_speeds->integer ) {
 		re.EndFrame( &time_frontend, &time_backend );
