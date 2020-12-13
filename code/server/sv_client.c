@@ -2336,9 +2336,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( clientNum );
-		SV_FreeClient( client );
-		//SV_SaveSequences();
-
 		// keep the same origin in the new world as if you've switched worlds
 		//   but haven't moved, default behavior
 		if(changeOrigin == SAMEORIGIN) {
@@ -2351,7 +2348,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		// remove from old world?
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+		SV_ExecuteClientCommand(client, "team spectator");
+		//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
@@ -2361,8 +2359,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			if(changeOrigin != COPYORIGIN) {
 				changeOrigin = SPAWNORIGIN;
 			}
-			// notify the client of the secondary map
-			//SV_SendServerCommand(client, "world %i ", client->newWorld);
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
@@ -2375,14 +2371,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
-			client->state = CS_PRIMED;
 			// not the first time they have entered, automatically connect
+			client->state = CS_PRIMED;
 			client->gameWorld = newWorld;
 			// notify the client of the secondary map
-			SV_AddServerCommand(client, va("world %i ", client->newWorld));
-			//client->deltaMessage = -1;
-			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
+			SV_SendServerCommand(client, "world %i", client->newWorld);
 			SV_SendClientSnapshot( client, qtrue );
 			// send new baselines
 			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
@@ -2392,6 +2385,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			client->state = CS_ACTIVE;
 		}
+		memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	}
 
 	SV_UpdateConfigstrings( client );
@@ -2492,8 +2486,8 @@ void SV_Game_f( client_t *client ) {
 	vec3_t newOrigin = {0.0, 0.0, 0.0};
 
 	if(!client) return;
-	client->multiview.protocol = MV_PROTOCOL_VERSION;
-	client->multiview.scoreQueryTime = 0;
+	//client->multiview.protocol = MV_PROTOCOL_VERSION;
+	//client->multiview.scoreQueryTime = 0;
 	clientNum = client - svs.clients;
 	
 	userOrigin = Cmd_Argv(1);

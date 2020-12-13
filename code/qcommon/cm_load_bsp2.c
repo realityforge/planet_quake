@@ -524,6 +524,7 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 		// FIXME: check for non-colliding patches
 
 		cms[cm].surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
+		Com_Printf( "Loading map ------------------\n" );
 
 		// load the full drawverts onto the stack
 		width = 5; //LittleLong( in->patchWidth );
@@ -537,8 +538,8 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 			Com_Error( ERR_DROP, "ParseMesh: MAX_PATCH_VERTS" );
 		}
 		if(!c) continue;
-		Com_Printf("CMod_LoadPatches2: %i, %f x %f x %f\n", c, 
-			points[j][0], points[j][1], points[j][2]);
+		//Com_Printf("CMod_LoadPatches2: %i, %f x %f x %f\n", c, 
+		//	points[j][0], points[j][1], points[j][2]);
 
 		dv_p = dv + LittleLong( in->firstedge );
 		for ( j = 0 ; j < c ; j++, dv_p++ ) {
@@ -561,6 +562,17 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 }
 
 
+static int CheckLump(lump_t *l, char *lumpName, int size)
+{
+	if (l->filelen % size)
+		Com_Error(ERR_DROP, "LoadBSPFile: incorrect lump size (%s)", lumpName);
+
+	//*ptr = (void *)(cmod_base + l->fileofs);
+
+	return l->filelen / size;
+}
+
+
 void LoadQ2Map(const char *name) {
 	dBsp2Hdr_t		header;
 
@@ -572,6 +584,25 @@ void LoadQ2Map(const char *name) {
 		((int *)cmod_base)[i] = LittleLong(((int *)cmod_base)[i]);
 #endif
 
+#define C(num,field,count,type) \
+	CheckLump(&header.lumps[LUMP_Q2_##num], XSTRING(num), sizeof(type))
+	C(LIGHTING, lighting, lightDataSize, byte);
+	C(VERTEXES, vertexes2, numVertexes, vec3_t);
+	C(PLANES, planes2, numPlanes, dBsp2Plane_t);
+	C(LEAFS, leafs2, numLeafs, dBsp2Leaf_t);
+	C(NODES, nodes2, numNodes, dBsp2Node_t);
+	C(TEXINFO, texinfo2, numTexinfo, dBsp2Texinfo_t);
+	C(FACES, faces2, numFaces, dBspFace_t);
+	C(LEAFFACES, leaffaces2, numLeaffaces, unsigned short);
+	C(LEAFBRUSHES, leafbrushes2, numLeafbrushes, unsigned short);
+	C(SURFEDGES, surfedges, numSurfedges, int);
+	C(EDGES, edges, numEdges, short[2]);
+	C(BRUSHES, brushes2, numBrushes, dBsp2Brush_t);
+	C(BRUSHSIDES, brushsides2, numBrushSides, dBsp2Brushside_t);
+	C(ZONES, zones, numZones, dZone_t);
+	C(ZONEPORTALS, zonePortals, numZonePortals, dZonePortal_t);
+	C(MODELS, models2, numModels, dBsp2Model_t);
+#undef C
 	// load into heap
 	CMod_LoadShaders2( &header.lumps[LUMP_Q2_TEXINFO] );
 	CMod_LoadLeafs2 (&header.lumps[LUMP_Q2_LEAFS]);
@@ -585,8 +616,8 @@ void LoadQ2Map(const char *name) {
 	CMod_LoadEntityString2 (&header.lumps[LUMP_Q2_ENTITIES], name);
 	CMod_LoadVisibility2( &header.lumps[LUMP_Q2_VISIBILITY] );
 	// TODO: area portals and area mask stuff
-	//CMod_LoadZones( &header.lumps[LUMP_Q2_ZONES] );
-	//CMod_LoadZonePortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
+	//CMod_LoadAreas( &header.lumps[LUMP_Q2_ZONES] );
+	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
 	//
 	//;
 	CMod_LoadPatches2( &header.lumps[LUMP_Q2_FACES], &header.lumps[LUMP_Q2_VERTEXES] );

@@ -111,7 +111,7 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[ n ].number == entityID ) {
+		if ( cl.parseEntities[cgvm][ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -147,7 +147,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
 	}
 
@@ -219,7 +219,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", clc.clientView );
 							break;
 						}
-						snapshot->entities[ count++ ] = cl.parseEntities[ parsedIndex ];
+						snapshot->entities[ count++ ] = cl.parseEntities[cgvm][ parsedIndex ];
 					} else {
 						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i", entityNum );
 						break;
@@ -265,7 +265,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
 		snapshot->entities[i] = 
-			cl.parseEntities[ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+			cl.parseEntities[cgvm][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
 	}
 
 	// FIXME: configstring changes and server commands!!!
@@ -377,7 +377,7 @@ static qboolean CL_GetServerCommand( int serverCommandNumber ) {
 			Cmd_Clear();
 			return qfalse;
 		}
-		Com_Error( ERR_DROP, "CL_GetServerCommand: a reliable command was cycled out" );
+		Com_DPrintf( "WARNING: CL_GetServerCommand: a reliable command was cycled out" );
 		return qfalse;
 	}
 
@@ -480,13 +480,14 @@ rescan:
 		s = Cmd_Argv(1);
 		newWorld = atoi(s);
 
-		if(clc.currentView != newWorld) {
-			//clc.currentView = -1; // don't process anymore snapshots until we pump and dump
-			clc.serverCommandsIgnore[ index ] = qtrue;
+		//if(clc.currentView != newWorld) {
+			clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
+			//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
+			//clc.serverCommandsIgnore[ index ] = qtrue;
 			cls.lastVidRestart = Sys_Milliseconds();
 			cvar_modifiedFlags |= CVAR_USERINFO;
-			Cbuf_AddText(va("wait\nworld %i\n", newWorld));
-		}
+			Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", newWorld));
+		//}
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -788,12 +789,10 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return re.MarkFragments( args[1], VMA(2), VMA(3), args[4], VMA(5), args[6], VMA(7) );
 	case CG_S_STARTSOUND:
 		// TODO: use worldly sounds
-		if(cgvm == clc.currentView)
-			S_StartSound( VMA(1), args[2], args[3], args[4] );
+		S_StartSound( VMA(1), args[2], args[3], args[4] );
 		return 0;
 	case CG_S_STARTLOCALSOUND:
-		if(cgvm == clc.currentView)
-			S_StartLocalSound( args[1], args[2] );
+		S_StartLocalSound( args[1], args[2] );
 		return 0;
 	case CG_S_CLEARLOOPINGSOUNDS:
 		S_ClearLoopingSounds(args[1]);

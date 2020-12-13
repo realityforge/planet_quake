@@ -2711,6 +2711,7 @@ void RE_SwitchWorld(int w) {
 	// reassign bmodels to same position as server entities
 	tr.numLightmaps = s_worldData[rw].numLightmaps;
 	tr.lightmaps = s_worldData[rw].lightmaps;
+	//GLSL_InitGPUShaders();
 }
 
 

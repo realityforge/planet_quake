@@ -42,10 +42,10 @@ R_LoadLightmaps
 ===============
 */
 #define	DEFAULT_LIGHTMAP_SIZE	128
-static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
+static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 	imgFlags_t  imgFlags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE;
 	byte		*buf, *buf_p;
-	dsurface_t  *surf;
+	dBspFace_t  *surf;
 	int			len;
 	byte		*image;
 	int			i, j, numLightmaps, textureInternalFormat = 0;
@@ -78,9 +78,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	else
 	{
 		tr.worldDeluxeMapping = qtrue;
-		for( i = 0, surf = (dsurface_t *)(fileBase + surfs->fileofs);
-			i < surfs->filelen / sizeof(dsurface_t); i++, surf++ ) {
-			int lightmapNum = LittleLong( surf->lightmapNum );
+		for( i = 0, surf = (dBspFace_t *)(fileBase + surfs->fileofs);
+			i < surfs->filelen / sizeof(dBspFace_t); i++, surf++ ) {
+			int lightmapNum = LittleLong( surf->lightofs );
 
 			if ( lightmapNum >= 0 && (lightmapNum & 1) != 0 ) {
 				tr.worldDeluxeMapping = qfalse;
@@ -365,7 +365,7 @@ static int FatLightmap(int lightmapnum)
 R_LoadVisibility
 =================
 */
-static	void R_LoadVisibility( lump_t *l ) {
+static	void R_LoadVisibility2( lump_t *l ) {
 	int		len;
 	byte	*buf;
 
@@ -546,12 +546,12 @@ static	void R_LoadSurfaces2( lump_t *surfs, lump_t *verts ) {
 	numFlares = 0;
 
 	if (surfs->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData[rw].name);
 	count = surfs->filelen / sizeof(*in);
 
 	dv = (void *)(fileBase + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData[rw].name);
 
 /*
 	indexes = (void *)(fileBase + indexLump->fileofs);
@@ -630,13 +630,13 @@ R_LoadSubmodels
 =================
 */
 static	void R_LoadSubmodels2( lump_t *l ) {
-	dmodel_t	*in;
+	dBsp2Model_t	*in;
 	bmodel_t	*out;
 	int			i, j, count;
 
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSubmodels2: funny lump size in %s",s_worldData[rw].name);
 	count = l->filelen / sizeof(*in);
 
 	s_worldData[rw].numBModels = count;
@@ -649,7 +649,7 @@ static	void R_LoadSubmodels2( lump_t *l ) {
 
 		assert( model != NULL );			// this should never happen
 		if ( model == NULL ) {
-			ri.Error(ERR_DROP, "R_LoadSubmodels: R_AllocModel() failed");
+			ri.Error(ERR_DROP, "R_LoadSubmodels2: R_AllocModel() failed");
 		}
 
 		model->type = MOD_BRUSH;
@@ -661,8 +661,8 @@ static	void R_LoadSubmodels2( lump_t *l ) {
 			out->bounds[1][j] = LittleFloat (in->maxs[j]);
 		}
 
-		out->firstSurface = LittleLong( in->firstSurface );
-		out->numSurfaces = LittleLong( in->numSurfaces );
+		out->firstSurface = LittleLong( in->firstface );
+		out->numSurfaces = LittleLong( in->numfaces );
 
 		if(i == 0)
 		{
@@ -681,20 +681,20 @@ static	void R_LoadSubmodels2( lump_t *l ) {
 R_LoadNodesAndLeafs
 =================
 */
-static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
+static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 	int			i, j, p;
-	dnode_t		*in;
-	dleaf_t		*inLeaf;
+	dBsp2Node_t		*in;
+	dBsp2Leaf_t		*inLeaf;
 	mnode_t 	*out;
 	int			numNodes, numLeafs;
 
 	in = (void *)(fileBase + nodeLump->fileofs);
-	if (nodeLump->filelen % sizeof(dnode_t) ||
-		leafLump->filelen % sizeof(dleaf_t) ) {
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+	if (nodeLump->filelen % sizeof(dBsp2Node_t) ||
+		leafLump->filelen % sizeof(dBsp2Leaf_t) ) {
+		ri.Error (ERR_DROP, "R_LoadNodesAndLeafs: funny lump size in %s",s_worldData[rw].name);
 	}
-	numNodes = nodeLump->filelen / sizeof(dnode_t);
-	numLeafs = leafLump->filelen / sizeof(dleaf_t);
+	numNodes = nodeLump->filelen / sizeof(dBsp2Node_t);
+	numLeafs = leafLump->filelen / sizeof(dBsp2Leaf_t);
 
 	out = ri.Hunk_Alloc ( (numNodes + numLeafs) * sizeof(*out), h_low);	
 
@@ -737,14 +737,14 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 		}
 
 		out->cluster = LittleLong(inLeaf->cluster);
-		out->area = LittleLong(inLeaf->area);
+		out->area = LittleLong(inLeaf->zone);
 
 		if ( out->cluster >= s_worldData[rw].numClusters ) {
 			s_worldData[rw].numClusters = out->cluster + 1;
 		}
 
-		out->firstmarksurface = LittleLong(inLeaf->firstLeafSurface);
-		out->nummarksurfaces = LittleLong(inLeaf->numLeafSurfaces);
+		out->firstmarksurface = LittleLong(inLeaf->firstleafface);
+		out->nummarksurfaces = LittleLong(inLeaf->numleaffaces);
 	}	
 
 	// chain descendants
@@ -760,11 +760,12 @@ R_LoadShaders
 */
 static	void R_LoadShaders2( lump_t *l ) {	
 	int		i, count;
-	dshader_t	*in, *out;
+	dBsp2Texinfo_t	*in;
+	dshader_t *out;
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadShaders2: funny lump size in %s",s_worldData[rw].name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low );
 
@@ -782,19 +783,46 @@ static	void R_LoadShaders2( lump_t *l ) {
 
 /*
 =================
+R_LoadMarksurfaces
+=================
+*/
+static	void R_LoadMarksurfaces (lump_t *l)
+{	
+	int		i, j, count;
+	short		*in;
+	int     *out;
+	
+	in = (void *)(fileBase + l->fileofs);
+	if (l->filelen % sizeof(*in))
+		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+	count = l->filelen / sizeof(*in);
+	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low);	
+
+	s_worldData[rw].marksurfaces = out;
+	s_worldData[rw].nummarksurfaces = count;
+
+	for ( i=0 ; i<count ; i++)
+	{
+		j = LittleLong(in[i]);
+		out[i] = j;
+	}
+}
+
+/*
+=================
 R_LoadPlanes
 =================
 */
-static	void R_LoadPlanes( lump_t *l ) {
+static	void R_LoadPlanes2( lump_t *l ) {
 	int			i, j;
 	cplane_t	*out;
-	dplane_t 	*in;
+	dBsp2Plane_t 	*in;
 	int			count;
 	int			bits;
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadPlanes: funny lump size in %s",s_worldData[rw].name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*2*sizeof(*out), h_low);	
 	
@@ -826,8 +854,8 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 	int			i;
 	fog_t		*out;
 	dfog_t		*fogs;
-	dbrush_t 	*brushes, *brush;
-	dbrushside_t	*sides;
+	dBsp2Brush_t 	*brushes, *brush;
+	dBsp2Brushside_t	*sides;
 	int			count, brushesCount, sidesCount;
 	int			sideNum;
 	int			planeNum;
@@ -849,13 +877,13 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 
 	brushes = (void *)(fileBase + brushesLump->fileofs);
 	if (brushesLump->filelen % sizeof(*brushes)) {
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadFogs2: funny lump size in %s",s_worldData[rw].name);
 	}
 	brushesCount = brushesLump->filelen / sizeof(*brushes);
 
 	sides = (void *)(fileBase + sidesLump->fileofs);
 	if (sidesLump->filelen % sizeof(*sides)) {
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadFogs2: funny lump size in %s",s_worldData[rw].name);
 	}
 	sidesCount = sidesLump->filelen / sizeof(*sides);
 
@@ -868,7 +896,7 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 		}
 		brush = brushes + out->originalBrushNumber;
 
-		firstSide = LittleLong( brush->firstSide );
+		firstSide = LittleLong( brush->firstside );
 
 			if ( (unsigned)firstSide > sidesCount - 6 ) {
 			ri.Error( ERR_DROP, "fog brush sideNumber out of range" );
@@ -876,27 +904,27 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 
 		// brushes are always sorted with the axial sides first
 		sideNum = firstSide + 0;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[0][0] = -s_worldData[rw].planes[ planeNum ].dist;
 
 		sideNum = firstSide + 1;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[1][0] = s_worldData[rw].planes[ planeNum ].dist;
 
 		sideNum = firstSide + 2;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[0][1] = -s_worldData[rw].planes[ planeNum ].dist;
 
 		sideNum = firstSide + 3;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[1][1] = s_worldData[rw].planes[ planeNum ].dist;
 
 		sideNum = firstSide + 4;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[0][2] = -s_worldData[rw].planes[ planeNum ].dist;
 
 		sideNum = firstSide + 5;
-		planeNum = LittleLong( sides[ sideNum ].planeNum );
+		planeNum = LittleLong( sides[ sideNum ].planenum );
 		out->bounds[1][2] = s_worldData[rw].planes[ planeNum ].dist;
 
 		// get information from the shader for fog parameters
@@ -918,7 +946,7 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 			out->hasSurface = qfalse;
 		} else {
 			out->hasSurface = qtrue;
-			planeNum = LittleLong( sides[ firstSide + sideNum ].planeNum );
+			planeNum = LittleLong( sides[ firstSide + sideNum ].planenum );
 			VectorSubtract( vec3_origin, s_worldData[rw].planes[ planeNum ].normal, out->surface );
 			out->surface[3] = -s_worldData[rw].planes[ planeNum ].dist;
 		}
@@ -943,14 +971,14 @@ void LoadBsp2(const char *name) {
 	// load into heap
 	R_LoadEntities( &header->lumps[LUMP_Q2_ENTITIES] );
 	R_LoadShaders2( &header->lumps[LUMP_Q2_TEXINFO] );
-	R_LoadLightmaps( &header->lumps[LUMP_Q2_LIGHTING], &header->lumps[LUMP_Q2_FACES] );
-	R_LoadPlanes (&header->lumps[LUMP_Q2_PLANES]);
+	R_LoadLightmaps2( &header->lumps[LUMP_Q2_LIGHTING], &header->lumps[LUMP_Q2_FACES] );
+	R_LoadPlanes2 (&header->lumps[LUMP_Q2_PLANES]);
 	R_LoadFogs2( &header->lumps[LUMP_Q2_BRUSHES], &header->lumps[LUMP_Q2_BRUSHSIDES] );
 	R_LoadSurfaces2( &header->lumps[LUMP_Q2_FACES], &header->lumps[LUMP_Q2_VERTEXES] );
-	//R_LoadMarksurfaces (&header->lumps[LUMP_Q2_LEAFSURFACES]);
-	R_LoadNodesAndLeafs (&header->lumps[LUMP_Q2_NODES], &header->lumps[LUMP_Q2_LEAFS]);
+	R_LoadMarksurfaces (&header->lumps[LUMP_Q2_LEAFFACES]);
+	R_LoadNodesAndLeafs2 (&header->lumps[LUMP_Q2_NODES], &header->lumps[LUMP_Q2_LEAFS]);
 	R_LoadSubmodels2 (&header->lumps[LUMP_Q2_MODELS]);
-	R_LoadVisibility( &header->lumps[LUMP_Q2_VISIBILITY] );
-	//R_LoadLightGrid( &header->lumps[LUMP_Q2_LIGHTGRID] );
+	R_LoadVisibility2( &header->lumps[LUMP_Q2_VISIBILITY] );
+	//R_LoadLightGrid( &header->lumps[LUMP_Q2_LIGHTING] );
 
 }

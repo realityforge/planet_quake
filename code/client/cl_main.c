@@ -386,9 +386,9 @@ static void CL_WriteGamestate( qboolean initial )
 	// baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		if ( !cl.baselineUsed[ i ] )
+		if ( !cl.baselineUsed[cgvm][ i ] )
 			continue;
-		ent = &cl.entityBaselines[ i ];
+		ent = &cl.entityBaselines[cgvm][ i ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, ent, qtrue );
 	}
@@ -447,14 +447,14 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 		if ( newindex >= to->numEntities ) {
 			newnum = MAX_GENTITIES+1;
 		} else {
-			newent = &cl.parseEntities[(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
+			newent = &cl.parseEntities[cgvm][(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
 			newnum = newent->number;
 		}
 
 		if ( oldindex >= from_num_entities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			//oldent = &cl.parseEntities[(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
+			//oldent = &cl.parseEntities[cgvm][(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
 			oldent = &oldents[ oldindex ];
 			oldnum = oldent->number;
 		}
@@ -471,7 +471,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[newnum], newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[cgvm][newnum], newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -551,7 +551,7 @@ static void CL_WriteSnapshot( void ) {
 
 	// save last sent state so if there any need - we can skip any further incoming messages
 	for ( i = 0; i < snap->numEntities; i++ )
-		saved_ents[ i ] = cl.parseEntities[ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
+		saved_ents[ i ] = cl.parseEntities[cgvm][ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
 
 	saved_snap = *snap;
 	saved_snap.parseEntitiesNum = 0;
@@ -1434,7 +1434,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 		&& clc.serverAddress.type == NA_LOOPBACK ) {
 		// TODO: only kick allbots if command comes from menu?
 		Cmd_Clear();
-		Cbuf_AddText("wait\nwait\nwait\nwait\nconnect localhost\n");
+		Cbuf_AddText("wait 10\nconnect localhost\n");
 	}
 #endif
 }
@@ -3398,6 +3398,7 @@ A packet has arrived from the main event loop
 */
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
+
 	CM_SwitchMap(clc.currentView);
 	cgvm = clc.currentView;
 
@@ -4631,33 +4632,17 @@ void CL_World_f( void ) {
 	}
 	
 	newWorld = atoi( Cmd_Argv(1) );
-	Com_Printf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
+	Com_DPrintf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
 	
-	Com_EventLoop();
-	prev = CM_SwitchMap(newWorld);
-	prevDvr[0] = clientWorlds[clc.currentView][0];
-	prevDvr[1] = clientWorlds[clc.currentView][1];
-	prevDvr[2] = clientWorlds[clc.currentView][2];
-	prevDvr[3] = clientWorlds[clc.currentView][3];
-	clientWorlds[clc.currentView][0] =
-	clientWorlds[clc.currentView][1] =
-	clientWorlds[clc.currentView][2] =
-	clientWorlds[clc.currentView][3] = -1;
+	//Com_EventLoop();
 	//re.ReloadShaders(qtrue);
-	re.SwitchWorld(newWorld);
 	clc.currentView = newWorld;
-	clientWorlds[clc.currentView][0] = prevDvr[0];
-	clientWorlds[clc.currentView][1] = prevDvr[1];
-	clientWorlds[clc.currentView][2] = prevDvr[2];
-	clientWorlds[clc.currentView][3] = prevDvr[3];
-	
-	//cl.snap
-	//cl.newSnapshots = qfalse;
-	//clc.eventMask |= EM_SNAPSHOT;
-	//CL_SetCGameTime();
-	//CL_WritePacket();
-	//CL_WritePacket();
-	//CL_WritePacket();
+	cl.newSnapshots = qtrue;
+	clc.eventMask |= EM_SNAPSHOT;
+	CL_SetCGameTime();
+	CL_WritePacket();
+	CL_WritePacket();
+	CL_WritePacket();
 }
 
 void CL_Tile_f(void) {
@@ -4701,13 +4686,13 @@ void CL_Tile_f(void) {
 	if(x > xMaxVMs) x = xMaxVMs - 1;
 	if(y > yMaxVMs) y = yMaxVMs - 1;
 	if(x < 0 || y < 0) {
-Com_Printf("Tiling subtracting: %i x %i (client: %i)\n", x, y, clientNum);
+Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, clientNum, count);
 		clientWorlds[clientNum][0] = 
 		clientWorlds[clientNum][1] = 
 		clientWorlds[clientNum][2] = 
 		clientWorlds[clientNum][3] = -1;	
 	} else {
-Com_Printf("Tiling adding: %i x %i (client: %i)\n", x, y, clientNum);
+Com_DPrintf("Tiling adding: %i x %i (client: %i, total: %i)\n", x, y, clientNum, count);
 		clientWorlds[clientNum][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
 		clientWorlds[clientNum][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
 		clientWorlds[clientNum][2] = 1.0f / xMaxVMs;
@@ -4815,7 +4800,7 @@ void CL_Init( void ) {
 	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
 	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
 	
-	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
+	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
 #endif
 

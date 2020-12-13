@@ -1005,6 +1005,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	SV_UpdateServerCommandsToClient( client, &msg );
 	
 	if(includeBaselines) {
+		qboolean first = qtrue;
 		// write the baselines
 		Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 		for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
@@ -1013,6 +1014,10 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 			}
 			svEnt = &sv.svEntities[gvm][ start ];
 			MSG_WriteByte( &msg, svc_baseline );
+			if(first) {
+				MSG_WriteByte( &msg, client->newWorld );
+				first = qfalse;
+			}
 			MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 		}
 	}

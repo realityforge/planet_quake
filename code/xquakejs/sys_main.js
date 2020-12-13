@@ -139,6 +139,9 @@ var LibrarySysMain = {
             '+set', 'cg_simpleItems', '0',
             '+set', 'cg_draw2D', '0',
             '+set', 'sensitivity', '3.5',
+            '+set', 'sv_shareError', '1',
+            '+set', 'sv_hostname', '"Planet Quake with lvlworld.com"',
+            '+set', 'g_motd', '"The all around best game created thus far"',
             '+exec', 'lvl-default.cfg',
           ])
           if (!args.includes('cl_returnURL')) {

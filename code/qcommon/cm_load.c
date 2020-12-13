@@ -707,12 +707,12 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cmd_AddCommand("maplist", CM_MapList_f);
 	Cmd_SetDescription("maplist", "List the currently loaded clip maps\nUsage: maplist");
 #endif
-	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
 		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
 			*checksum = cms[i].checksum;
 			CM_SwitchMap(i);
+			Com_DPrintf( "CM_LoadMap( %s, %i ) already loaded\n", name, clientload );
 			return cm;
 		} else if (cms[i].name[0] == '\0' && empty == -1) {
 			// fill the next empty clipmap slot
@@ -720,6 +720,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		}
 	}
 	cm = empty;
+	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
 
 	// free old stuff
 	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );

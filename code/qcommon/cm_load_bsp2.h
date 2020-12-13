@@ -142,17 +142,17 @@ typedef struct dBsp2Brushside_s
 // each zone has a list of portals that lead into other zones
 // when portals are closed, other zones may not be visible or
 // hearable even if the vis info says that it should be
-struct dZonePortal_t
+typedef struct dZonePortal_s
 {
 	int		portalNum;
 	int		otherZone;
-};
+} dZonePortal_t;
 
-struct dZone_t
+typedef struct dZone_s
 {
 	int		numZonePortals;
 	int		firstZonePortal;
-};
+} dZone_t;
 
 
 // the visibility lump consists of a header with a count, then
@@ -169,6 +169,7 @@ typedef struct dBsp2Vis_s
 	int		numClusters;
 	int		bitOfs[8][2];			// bitOfs[numClusters][2]
 } dBsp2Vis_t;
+
 
 typedef enum
 {

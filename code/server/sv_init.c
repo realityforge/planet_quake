@@ -600,7 +600,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	qboolean	isBot;
 	const char	*p;
 	const char *mapname;
-	mapname = &map;
+	mapname = map;
 	FS_Restart_After_Async();
 	Cvar_Set("sv_running", "1");
 #endif
@@ -682,6 +682,9 @@ void SV_SpawnServer_After_Startup( void ) {
 					// when we get the next packet from a connected client,
 					// the new gamestate will be sent
 					svs.clients[i].state = CS_CONNECTED;
+					if(Cvar_Get("sv_shareError", 0, 0)->integer) {
+						SV_SendServerCommand(&svs.clients[i], "print \"%s\"\n", Cvar_VariableString("com_errorMessage"));
+					}
 				}
 				else {
 					client_t		*client;

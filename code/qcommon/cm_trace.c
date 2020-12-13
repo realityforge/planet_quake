@@ -276,6 +276,8 @@ static void CM_TestInLeaf( traceWork_t *tw, const cLeaf_t *leaf ) {
 				continue;
 			}
 			
+			if(!patch->pc) continue;
+			
 			if ( CM_PositionTestInPatchCollide( tw, patch->pc ) ) {
 				tw->trace.startsolid = tw->trace.allsolid = qtrue;
 				tw->trace.fraction = 0;
@@ -712,6 +714,9 @@ static void CM_TraceThroughLeaf( traceWork_t *tw, const cLeaf_t *leaf ) {
 			if ( !(patch->contents & tw->contents) ) {
 				continue;
 			}
+			
+			// TODO: aadd findsurface1
+			if(!patch->pc) continue;
 			
 			CM_TraceThroughPatch( tw, patch );
 			if ( !tw->trace.fraction ) {
