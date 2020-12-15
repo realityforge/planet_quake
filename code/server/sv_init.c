@@ -682,9 +682,6 @@ void SV_SpawnServer_After_Startup( void ) {
 					// when we get the next packet from a connected client,
 					// the new gamestate will be sent
 					svs.clients[i].state = CS_CONNECTED;
-					if(Cvar_Get("sv_shareError", 0, 0)->integer) {
-						SV_SendServerCommand(&svs.clients[i], "print \"%s\"\n", Cvar_VariableString("com_errorMessage"));
-					}
 				}
 				else {
 					client_t		*client;

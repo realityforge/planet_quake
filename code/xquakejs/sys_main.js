@@ -317,6 +317,7 @@ var LibrarySysMain = {
       flipper.style.display = 'block'
       flipper.style.animation = 'none'
     }
+    SYSI.cancelBackspace = false
     SYSM.exited = true
     if(!SYS.dedicated) {
       window.removeEventListener('resize', SYSI.resizeViewport)

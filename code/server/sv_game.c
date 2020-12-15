@@ -1050,6 +1050,7 @@ Called every time a map changes
 ===============
 */
 void SV_ShutdownGameProgs( void ) {
+Com_Printf("Shutting down games\n");
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		gvm = i;
 		if ( !gvms[gvm] ) {
