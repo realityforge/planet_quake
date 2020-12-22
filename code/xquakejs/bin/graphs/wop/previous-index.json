@@ -1,0 +1,2250 @@
+{
+  "menu/pak11menu": {
+    "name": "pak11menu.pk3",
+    "size": 99917
+  },
+  "menu/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "game/pak21game": {
+    "name": "pak21game.pk3",
+    "size": 278461
+  },
+  "maps/lensflaretest/pak91lensflaretest": {
+    "name": "pak91lensflaretest.pk3",
+    "size": 17991
+  },
+  "maps/wop_anteroom/pak92wop_anteroom": {
+    "name": "pak92wop_anteroom.pk3",
+    "size": 4847984
+  },
+  "maps/wop_anteroom/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_anteroom/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_anteroom/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_anteroom/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_anteroom/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_anteroom/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_anteroom/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_anteroom/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_anteroom/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_anteroom/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_anteroom/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_anteroom/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_anteroom/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_anteroom/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_anteroom/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_anteroom/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_anteroom/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_anteroom/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_anteroom/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_anteroom/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_anteroom/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_anteroom/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_backyard/pak93wop_backyard": {
+    "name": "pak93wop_backyard.pk3",
+    "size": 4937344
+  },
+  "maps/wop_backyard/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_backyard/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_backyard/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_backyard/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_backyard/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_backyard/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_backyard/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_backyard/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_backyard/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_backyard/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_backyard/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_backyard/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_backyard/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_backyard/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonanteroom/pak94wop_balloonanteroom": {
+    "name": "pak94wop_balloonanteroom.pk3",
+    "size": 2804730
+  },
+  "maps/wop_balloonanteroom/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonanteroom/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonanteroom/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonanteroom/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonanteroom/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_balloonanteroom/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_balloonanteroom/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_balloonanteroom/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloonanteroom/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonanteroom/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonanteroom/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloonanteroom/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonanteroom/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonanteroom/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonanteroom/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonanteroom/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonanteroom/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonanteroom/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_balloonanteroom/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonanteroom/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonattic/pak95wop_balloonattic": {
+    "name": "pak95wop_balloonattic.pk3",
+    "size": 4780574
+  },
+  "maps/wop_balloonattic/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonattic/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_balloonattic/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonattic/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonattic/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonattic/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonattic/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_balloonattic/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonattic/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonattic/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonattic/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonattic/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_balloonattic/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonattic/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonattic/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonattic/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonattic/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonattic/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonattic/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_balloonbackyard/pak96wop_balloonbackyard": {
+    "name": "pak96wop_balloonbackyard.pk3",
+    "size": 2772610
+  },
+  "maps/wop_balloonbackyard/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonbackyard/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonbackyard/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonbackyard/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonbackyard/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonbackyard/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonbackyard/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonbackyard/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_balloonbackyard/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonbackyard/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonbackyard/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonbackyard/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonbackyard/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonbath/pak97wop_balloonbath": {
+    "name": "pak97wop_balloonbath.pk3",
+    "size": 4998852
+  },
+  "maps/wop_balloonbath/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonbath/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonbath/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonbath/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonbath/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonbath/pak70pad_bath": {
+    "name": "pak70pad_bath.pk3",
+    "size": 220245
+  },
+  "maps/wop_balloonbath/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_balloonbath/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_balloonbath/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloonbath/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonbath/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonbath/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonbath/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloonbath/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonbath/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_balloonbath/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonbath/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonbath/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonbath/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonbath/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonbath/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonbath/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_ballooncabin/pak98wop_ballooncabin": {
+    "name": "pak98wop_ballooncabin.pk3",
+    "size": 2567568
+  },
+  "maps/wop_ballooncabin/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_ballooncabin/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_ballooncabin/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_ballooncabin/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_ballooncabin/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_ballooncabin/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_ballooncabin/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_ballooncabin/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_ballooncabin/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_ballooncabin/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_ballooncabin/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_ballooncabin/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_ballooncabin/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_ballooncabin/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_ballooncabin/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_ballooncabin/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_ballooncabin/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_ballooncabin/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_ballooncabin/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_balloondiner/pak99wop_balloondiner": {
+    "name": "pak99wop_balloondiner.pk3",
+    "size": 6256990
+  },
+  "maps/wop_balloondiner/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloondiner/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloondiner/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloondiner/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloondiner/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloondiner/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_balloondiner/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloondiner/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloondiner/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_balloondiner/pak886pad_harm": {
+    "name": "pak886pad_harm.pk3",
+    "size": 59962
+  },
+  "maps/wop_balloondiner/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloondiner/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloondiner/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloondiner/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_balloondiner/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloondiner/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloondiner/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloondiner/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_balloondiner/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloondiner/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloondiner/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloondiner/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_balloongarden/pak90wop_balloongarden": {
+    "name": "pak90wop_balloongarden.pk3",
+    "size": 4165736
+  },
+  "maps/wop_balloongarden/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloongarden/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloongarden/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_balloongarden/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloongarden/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloongarden/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloongarden/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_balloongarden/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloongarden/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloongarden/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_balloongarden/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloongarden/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloongarden/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloongarden/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_balloongarden/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_balloongarden/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloongarden/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloongarden/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloongarden/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_balloongarden/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloongarden/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloongarden/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonhuette/pak991wop_balloonhuette": {
+    "name": "pak991wop_balloonhuette.pk3",
+    "size": 3075897
+  },
+  "maps/wop_balloonhuette/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonhuette/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonhuette/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonhuette/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonhuette/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_balloonhuette/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_balloonhuette/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_balloonhuette/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloonhuette/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonhuette/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_balloonhuette/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonhuette/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonhuette/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonhuette/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_balloonhuette/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonhuette/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonhuette/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonhuette/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_balloonhuette/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonhuette/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_balloonjail/pak992wop_balloonjail": {
+    "name": "pak992wop_balloonjail.pk3",
+    "size": 7393877
+  },
+  "maps/wop_balloonjail/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonjail/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonjail/pak70pad_bath": {
+    "name": "pak70pad_bath.pk3",
+    "size": 220245
+  },
+  "maps/wop_balloonjail/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_balloonjail/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_balloonjail/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonjail/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonjail/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloonjail/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonjail/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_balloonjail/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_balloonjail/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonjail/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonjail/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_balloonjail/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonjail/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonjail/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonjail/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_balloonkitchen/pak993wop_balloonkitchen": {
+    "name": "pak993wop_balloonkitchen.pk3",
+    "size": 4277780
+  },
+  "maps/wop_balloonkitchen/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonkitchen/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonkitchen/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonkitchen/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonkitchen/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonkitchen/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonkitchen/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_balloonkitchen/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_balloonkitchen/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloonkitchen/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_balloonkitchen/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_balloonkitchen/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonkitchen/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloonkitchen/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonkitchen/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonkitchen/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonkitchen/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonkitchen/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_balloonkitchen/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_balloonkitchen/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonkitchen/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonkitchen/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonkitchen/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_balloonlibrary/pak994wop_balloonlibrary": {
+    "name": "pak994wop_balloonlibrary.pk3",
+    "size": 7741296
+  },
+  "maps/wop_balloonlibrary/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonlibrary/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonlibrary/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_balloonlibrary/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_balloonlibrary/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_balloonlibrary/pak74pad_books": {
+    "name": "pak74pad_books.pk3",
+    "size": 138613
+  },
+  "maps/wop_balloonlibrary/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonlibrary/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonlibrary/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_balloonlibrary/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonlibrary/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonlibrary/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonlibrary/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonlibrary/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonlibrary/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_balloonlibrary/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonship/pak995wop_balloonship": {
+    "name": "pak995wop_balloonship.pk3",
+    "size": 6044109
+  },
+  "maps/wop_balloonship/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_balloonship/pak61model": {
+    "name": "pak61model.pk3",
+    "size": 38571
+  },
+  "maps/wop_balloonship/pak74pad_books": {
+    "name": "pak74pad_books.pk3",
+    "size": 138613
+  },
+  "maps/wop_balloonship/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_balloonship/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_balloonship/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_balloonship/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_balloonship/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_balloonship/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_balloonship/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_balloonship/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_balloonship/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_balloonship/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_balloonship/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_balloonship/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_cabin/pak996wop_cabin": {
+    "name": "pak996wop_cabin.pk3",
+    "size": 2564357
+  },
+  "maps/wop_cabin/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_cabin/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_cabin/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_cabin/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_cabin/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_cabin/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_cabin/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_cabin/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_cabin/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_cabin/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_cabin/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_cabin/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_cabin/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_cabin/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_cabin/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_cabin/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_cabin/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_cabin/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_cabin/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_cybbath/pak997wop_cybbath": {
+    "name": "pak997wop_cybbath.pk3",
+    "size": 6105431
+  },
+  "maps/wop_cybbath/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_cybbath/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_cybbath/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_cybbath/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_cybbath/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_cybbath/pak70pad_bath": {
+    "name": "pak70pad_bath.pk3",
+    "size": 220245
+  },
+  "maps/wop_cybbath/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_cybbath/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_cybbath/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_cybbath/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_cybbath/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_cybbath/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_cybbath/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_cybbath/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_cybbath/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_cybbath/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_cybbath/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_cybbath/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_cybbath/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_cybbath/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_cybbath/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_cybbath/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_cybbath/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_diner/pak998wop_diner": {
+    "name": "pak998wop_diner.pk3",
+    "size": 6278262
+  },
+  "maps/wop_diner/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_diner/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_diner/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_diner/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_diner/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_diner/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_diner/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_diner/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_diner/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_diner/pak886pad_harm": {
+    "name": "pak886pad_harm.pk3",
+    "size": 59962
+  },
+  "maps/wop_diner/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_diner/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_diner/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_diner/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_diner/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_diner/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_diner/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_diner/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_diner/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_diner/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_diner/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_diner/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_huette/pak999wop_huette": {
+    "name": "pak999wop_huette.pk3",
+    "size": 4051075
+  },
+  "maps/wop_huette/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_huette/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_huette/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_huette/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_huette/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_huette/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_huette/pak74pad_books": {
+    "name": "pak74pad_books.pk3",
+    "size": 138613
+  },
+  "maps/wop_huette/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_huette/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_huette/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_huette/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_huette/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_huette/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_huette/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_huette/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_huette/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_huette/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_huette/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_huette/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_huette/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_huette/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_mopans_jail/pak990wop_mopans_jail": {
+    "name": "pak990wop_mopans_jail.pk3",
+    "size": 9763553
+  },
+  "maps/wop_mopans_jail/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_mopans_jail/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_mopans_jail/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_mopans_jail/pak70pad_bath": {
+    "name": "pak70pad_bath.pk3",
+    "size": 220245
+  },
+  "maps/wop_mopans_jail/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_mopans_jail/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_mopans_jail/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_mopans_jail/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_mopans_jail/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_mopans_jail/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_mopans_jail/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_mopans_jail/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_mopans_jail/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_mopans_jail/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_mopans_jail/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_mopans_jail/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_mopans_jail/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_mopans_jail/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_mopans_jail/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_mopans_jail/pak89pad_jail": {
+    "name": "pak89pad_jail.pk3",
+    "size": 3953
+  },
+  "maps/wop_mopans_jail/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padattic/pak9991wop_padattic": {
+    "name": "pak9991wop_padattic.pk3",
+    "size": 6148980
+  },
+  "maps/wop_padattic/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padattic/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_padattic/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padattic/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padattic/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_padattic/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padattic/pak77kids": {
+    "name": "pak77kids.pk3",
+    "size": 82248
+  },
+  "maps/wop_padattic/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padattic/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_padattic/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_padattic/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padattic/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padattic/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_padattic/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padattic/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padattic/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padattic/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padattic/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padattic/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padattic/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padattic/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padcastle/pak9992wop_padcastle": {
+    "name": "pak9992wop_padcastle.pk3",
+    "size": 5505618
+  },
+  "maps/wop_padcastle/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padcastle/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padcastle/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_padcastle/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padcastle/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padcastle/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padcastle/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padcastle/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padcastle/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padcastle/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padcastle/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padcastle/pak775multiplant": {
+    "name": "pak775multiplant.pk3",
+    "size": 178711
+  },
+  "maps/wop_padcrash_dm17/pak9993wop_padcrash_dm17": {
+    "name": "pak9993wop_padcrash_dm17.pk3",
+    "size": 2337060
+  },
+  "maps/wop_padcrash_dm17/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padcrash_dm17/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_padcrash_dm17/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padcrash/pak9994wop_padcrash": {
+    "name": "pak9994wop_padcrash.pk3",
+    "size": 2153177
+  },
+  "maps/wop_padcrash/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padcrash/pak9993wop_padcrash_dm17": {
+    "name": "pak9993wop_padcrash_dm17.pk3",
+    "size": 2337060
+  },
+  "maps/wop_padcrash/pak880pad_tex": {
+    "name": "pak880pad_tex.pk3",
+    "size": 7587
+  },
+  "maps/wop_padcrash/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padgallery/pak9995wop_padgallery": {
+    "name": "pak9995wop_padgallery.pk3",
+    "size": 5618291
+  },
+  "maps/wop_padgallery/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padgallery/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padgallery/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padgallery/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padgallery/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_padgallery/pak886pad_harm": {
+    "name": "pak886pad_harm.pk3",
+    "size": 59962
+  },
+  "maps/wop_padgallery/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padgallery/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padgallery/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padgallery/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padgallery/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padgallery/pak775multiplant": {
+    "name": "pak775multiplant.pk3",
+    "size": 178711
+  },
+  "maps/wop_padgallery/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padgallery/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_padgarden/pak9996wop_padgarden": {
+    "name": "pak9996wop_padgarden.pk3",
+    "size": 8600880
+  },
+  "maps/wop_padgarden/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padgarden/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padgarden/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_padgarden/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padgarden/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_padgarden/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padgarden/pak771rhodan": {
+    "name": "pak771rhodan.pk3",
+    "size": 27797
+  },
+  "maps/wop_padgarden/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_padgarden/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_padgarden/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_padgarden/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padgarden/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_padgarden/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padgarden/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padgarden/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padgarden/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padgarden/pak889pad_textile": {
+    "name": "pak889pad_textile.pk3",
+    "size": 19119
+  },
+  "maps/wop_padgarden/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padgarden/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padgarden/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padgarden/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_padgarden/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padgarden/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padgarden/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padgarden/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_padgarden/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padkitchen/pak9997wop_padkitchen": {
+    "name": "pak9997wop_padkitchen.pk3",
+    "size": 5625906
+  },
+  "maps/wop_padkitchen/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padkitchen/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padkitchen/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padkitchen/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_padkitchen/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padkitchen/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padkitchen/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_padkitchen/pak72pad_pencils": {
+    "name": "pak72pad_pencils.pk3",
+    "size": 13862
+  },
+  "maps/wop_padkitchen/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_padkitchen/pak79pad_tins": {
+    "name": "pak79pad_tins.pk3",
+    "size": 129497
+  },
+  "maps/wop_padkitchen/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_padkitchen/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padkitchen/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padkitchen/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padkitchen/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padkitchen/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padkitchen/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padkitchen/pak774pad_cups": {
+    "name": "pak774pad_cups.pk3",
+    "size": 86992
+  },
+  "maps/wop_padkitchen/pak772pad_plates": {
+    "name": "pak772pad_plates.pk3",
+    "size": 65710
+  },
+  "maps/wop_padkitchen/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padkitchen/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padkitchen/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padkitchen/pak80pad_liquidfx": {
+    "name": "pak80pad_liquidfx.pk3",
+    "size": 32388
+  },
+  "maps/wop_padkitchen/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padlibrary/pak9998wop_padlibrary": {
+    "name": "pak9998wop_padlibrary.pk3",
+    "size": 10061108
+  },
+  "maps/wop_padlibrary/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padlibrary/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padlibrary/pak84pad_animals": {
+    "name": "pak84pad_animals.pk3",
+    "size": 228974
+  },
+  "maps/wop_padlibrary/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padlibrary/pak74pad_books": {
+    "name": "pak74pad_books.pk3",
+    "size": 138613
+  },
+  "maps/wop_padlibrary/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padlibrary/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padlibrary/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padlibrary/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padlibrary/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padlibrary/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padlibrary/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padlibrary/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padlibrary/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padlibrary/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padlibrary/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padlibrary/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padship/pak9999wop_padship": {
+    "name": "pak9999wop_padship.pk3",
+    "size": 8485315
+  },
+  "maps/wop_padship/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padship/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padship/pak74pad_books": {
+    "name": "pak74pad_books.pk3",
+    "size": 138613
+  },
+  "maps/wop_padship/pak78pad_sunflower": {
+    "name": "pak78pad_sunflower.pk3",
+    "size": 51981
+  },
+  "maps/wop_padship/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_padship/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padship/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padship/pak884pad_objects": {
+    "name": "pak884pad_objects.pk3",
+    "size": 438229
+  },
+  "maps/wop_padship/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padship/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padship/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padship/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padship/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padship/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padship/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padship/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  },
+  "maps/wop_padship/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padshop/pak9990wop_padshop": {
+    "name": "pak9990wop_padshop.pk3",
+    "size": 8621089
+  },
+  "maps/wop_padshop/pak81other": {
+    "name": "pak81other.pk3",
+    "size": 362618
+  },
+  "maps/wop_padshop/pak71pad_teleporter": {
+    "name": "pak71pad_teleporter.pk3",
+    "size": 823992
+  },
+  "maps/wop_padshop/pak83pad_misc": {
+    "name": "pak83pad_misc.pk3",
+    "size": 283998
+  },
+  "maps/wop_padshop/pak82pad_ambiente": {
+    "name": "pak82pad_ambiente.pk3",
+    "size": 246359
+  },
+  "maps/wop_padshop/pak73mapobject": {
+    "name": "pak73mapobject.pk3",
+    "size": 1015158
+  },
+  "maps/wop_padshop/pak76comics": {
+    "name": "pak76comics.pk3",
+    "size": 45828
+  },
+  "maps/wop_padshop/pak75padfigures": {
+    "name": "pak75padfigures.pk3",
+    "size": 1329454
+  },
+  "maps/wop_padshop/pak86pad_crytek": {
+    "name": "pak86pad_crytek.pk3",
+    "size": 232128
+  },
+  "maps/wop_padshop/pak886pad_harm": {
+    "name": "pak886pad_harm.pk3",
+    "size": 59962
+  },
+  "maps/wop_padshop/pak887pad_kitchen": {
+    "name": "pak887pad_kitchen.pk3",
+    "size": 76358
+  },
+  "maps/wop_padshop/pak888pad_nature": {
+    "name": "pak888pad_nature.pk3",
+    "size": 56764
+  },
+  "maps/wop_padshop/pak881pad_pirate": {
+    "name": "pak881pad_pirate.pk3",
+    "size": 70882
+  },
+  "maps/wop_padshop/pak883pad_wallin": {
+    "name": "pak883pad_wallin.pk3",
+    "size": 48155
+  },
+  "maps/wop_padshop/pak87pad_wallout": {
+    "name": "pak87pad_wallout.pk3",
+    "size": 164363
+  },
+  "maps/wop_padshop/pak882pad_wood": {
+    "name": "pak882pad_wood.pk3",
+    "size": 286212
+  },
+  "maps/wop_padshop/pak51pad_weaponmarker": {
+    "name": "pak51pad_weaponmarker.pk3",
+    "size": 400984
+  },
+  "maps/wop_padshop/pak773tone": {
+    "name": "pak773tone.pk3",
+    "size": 38061
+  },
+  "maps/wop_padshop/pak88pad_gfx": {
+    "name": "pak88pad_gfx.pk3",
+    "size": 9021
+  },
+  "maps/wop_padshop/pak85pad_gfx02": {
+    "name": "pak85pad_gfx02.pk3",
+    "size": 746013
+  },
+  "maps/wop_padshop/pak885pad_tex02": {
+    "name": "pak885pad_tex02.pk3",
+    "size": 17879
+  }
+}

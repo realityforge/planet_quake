@@ -32,7 +32,7 @@ botlib_export_t	*botlib_export;
 int	SV_NumForGentity( sharedEntity_t *ent ) {
 	int		num;
 
-	num = ( (byte *)ent - (byte *)sv.gentities ) / sv.gentitySize;
+	num = ( (byte *)ent - (byte *)sv.gentities[gvm] ) / sv.gentitySize[gvm];
 
 	return num;
 }
@@ -41,7 +41,7 @@ int	SV_NumForGentity( sharedEntity_t *ent ) {
 sharedEntity_t *SV_GentityNum( int num ) {
 	sharedEntity_t *ent;
 
-	ent = (sharedEntity_t *)((byte *)sv.gentities + sv.gentitySize*(num));
+	ent = (sharedEntity_t *)((byte *)sv.gentities[gvm] + sv.gentitySize[gvm]*(num));
 
 	return ent;
 }
@@ -50,7 +50,7 @@ sharedEntity_t *SV_GentityNum( int num ) {
 playerState_t *SV_GameClientNum( int num ) {
 	playerState_t	*ps;
 
-	ps = (playerState_t *)((byte *)sv.gameClients + sv.gameClientSize*(num));
+	ps = (playerState_t *)((byte *)sv.gameClients[gvm] + sv.gameClientSize[gvm]*(num));
 
 	return ps;
 }
@@ -60,14 +60,14 @@ svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt ) {
 	if ( !gEnt || gEnt->s.number < 0 || gEnt->s.number >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
 	}
-	return &sv.svEntities[ gEnt->s.number ];
+	return &sv.svEntities[gvm][ gEnt->s.number ];
 }
 
 
 sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt ) {
 	int		num;
 
-	num = svEnt - sv.svEntities;
+	num = svEnt - sv.svEntities[gvm];
 	return SV_GentityNum( num );
 }
 
@@ -79,7 +79,15 @@ SV_GameSendServerCommand
 Sends a command string to a client
 ===============
 */
-static void SV_GameSendServerCommand( int clientNum, const char *text ) {
+void SV_GameSendServerCommand( int clientNum, const char *text ) {
+
+	// record the game server commands in demos
+	if ( sv.demoState == DS_RECORDING ) {
+		SV_DemoWriteGameCommand( clientNum, text );
+	} else if ( sv.demoState == DS_PLAYBACK ) {
+		SV_CheckLastCmd( text, qtrue ); // store the new game command, so when replaying a demo message, we can check for duplicates: maybe this message was already submitted (because of the events simulation, an event may trigger a message), and so we want to avoid those duplicates: if an event already triggered a message, no need to issue the one stored in the demo
+	}
+
 	if ( clientNum == -1 ) {
 		SV_SendServerCommand( NULL, "%s", text );
 	} else {
@@ -127,7 +135,7 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 
 	ent->s.modelindex = atoi( name + 1 );
 
-	h = CM_InlineModel( ent->s.modelindex );
+	h = CM_InlineModel( ent->s.modelindex, 4, gvm );
 	CM_ModelBounds( h, mins, maxs );
 	VectorCopy (mins, ent->r.mins);
 	VectorCopy (maxs, ent->r.maxs);
@@ -261,30 +269,30 @@ SV_LocateGameData
 */
 static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGameClient ) {
 
-	if ( !gvm->entryPoint ) {
+	if ( !gvms[gvm]->entryPoint ) {
 		if ( numGEntities > MAX_GENTITIES ) {
 			Com_Error( ERR_DROP, "%s: bad entity count %i", __func__, numGEntities );
 		} else {
-			if ( sizeofGEntity_t > gvm->exactDataLength / numGEntities ) {
+			if ( sizeofGEntity_t > gvms[gvm]->exactDataLength / numGEntities ) {
 				Com_Error( ERR_DROP, "%s: bad entity size %i", __func__, sizeofGEntity_t );	
-			} else if ( (byte*)gEnts + (numGEntities * sizeofGEntity_t) > (gvm->dataBase + gvm->exactDataLength) ) {
+			} else if ( (byte*)gEnts + (numGEntities * sizeofGEntity_t) > (gvms[gvm]->dataBase + gvms[gvm]->exactDataLength) ) {
 				Com_Error( ERR_DROP, "%s: entities located out of data segment", __func__ );
 			}
 		}
 
-		if ( sizeofGameClient > gvm->exactDataLength / MAX_CLIENTS ) {
+		if ( sizeofGameClient > gvms[gvm]->exactDataLength / MAX_CLIENTS ) {
 			Com_Error( ERR_DROP, "%s: bad game client size %i", __func__, sizeofGameClient );	
-		} else if ( (byte*)clients + (sizeofGameClient * MAX_CLIENTS) > gvm->dataBase + gvm->exactDataLength ) {
+		} else if ( (byte*)clients + (sizeofGameClient * MAX_CLIENTS) > gvms[gvm]->dataBase + gvms[gvm]->exactDataLength ) {
 			Com_Error( ERR_DROP, "%s: clients located out of data segment", __func__ );
 		}
 	}
 
-	sv.gentities = gEnts;
-	sv.gentitySize = sizeofGEntity_t;
-	sv.num_entities = numGEntities;
+	sv.gentities[gvm] = gEnts;
+	sv.gentitySize[gvm] = sizeofGEntity_t;
+	sv.num_entities[gvm] = numGEntities;
 
-	sv.gameClients = clients;
-	sv.gameClientSize = sizeofGameClient;
+	sv.gameClients[gvm] = clients;
+	sv.gameClientSize[gvm] = sizeofGameClient;
 }
 
 
@@ -317,13 +325,13 @@ VM_ArgPtr
 */
 static void *VM_ArgPtr( intptr_t intValue ) {
 
-	if ( !intValue || gvm == NULL )
+	if ( !intValue || gvms[gvm] == NULL )
 		return NULL;
 
-	if ( gvm->entryPoint )
+	if ( gvms[gvm]->entryPoint )
 		return (void *)(intValue);
 	else
-		return (void *)(gvm->dataBase + (intValue & gvm->dataMask));
+		return (void *)(gvms[gvm]->dataBase + (intValue & gvms[gvm]->dataMask));
 }
 
 
@@ -352,6 +360,26 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 }
 
 
+#ifdef USE_MULTIVM
+static char *RenameMultiworld(char *name) {
+	char *newName;
+	if(!Q_stricmp(name, "mapname")) {
+		// TODO: change this to gameWorlds[gvm]
+		newName = va("mapname_%i", gvm);
+	}
+	else if(!Q_stricmp(name, "session")) {
+		newName = va("session_%i", gvm);
+	}
+	else if(Q_stristr(name, "session") == name) {
+		newName = va("session_%i_%s", gvm, &name[7]);
+	}
+	else
+		newName = name;
+	return newName;
+}
+#endif
+
+
 /*
 ====================
 SV_GameSystemCalls
@@ -360,34 +388,63 @@ The module is making a system call
 ====================
 */
 static intptr_t SV_GameSystemCalls( intptr_t *args ) {
-	switch( args[0] ) {
+		switch( args[0] ) {
 	case G_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
-		return 0;
+				return 0;
 	case G_ERROR:
+		// excessive plus checking if it is installed correctly
+		if(Q_stristr((const char*)VMA(1), "seems broken")
+			|| Q_stristr((const char*)VMA(1), "missing or corrupt")
+			|| Q_stristr((const char*)VMA(1), "no free entities")) {
+			Com_Printf( "%s", (const char*)VMA(1) );
+						Cvar_Set("bot_enable", "1");
+			return 1;
+		}
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
 		return 0;
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
+#ifdef USE_MULTIVM
+		{
+			char *name = RenameMultiworld(VMA(2));
+			Cvar_Register( VMA(1), name, VMA(3), args[4] ); 
+		}
+#else
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
+#endif
 		return 0;
 	case G_CVAR_UPDATE:
 		Cvar_Update( VMA(1) );
 		return 0;
 	case G_CVAR_SET:
-		Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
+#ifdef USE_MULTIVM
+		{
+			char *name = RenameMultiworld(VMA(1));
+			Cvar_SetSafe( name, (const char *)VMA(2) );
+		}
+#else
+		Cvar_SetSafe( VMA(1), (const char *)VMA(2) );
+#endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 	case G_CVAR_VARIABLE_STRING_BUFFER:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
-		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
+#ifdef USE_MULTIVM
+		{
+			char *name = RenameMultiworld(VMA(1));
+			Cvar_VariableStringBufferSafe( name, VMA(2), args[3], gvms[gvm]->privateFlag );
+		}
+#else
+		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvms[gvm]->privateFlag );
+#endif
 		return 0;
 	case G_ARGC:
 		return Cmd_Argc();
 	case G_ARGV:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SEND_CONSOLE_COMMAND:
@@ -399,10 +456,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_FS_READ:
 		if ( args[3] == 0 ) // UrT may pass this with args[2]=-1 and cause false bounds check error
 			return 0;
-		VM_CHECKBOUNDS( gvm, args[1], args[2] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		return FS_VM_ReadFile( VMA(1), args[2], args[3], H_QAGAME );
 	case G_FS_WRITE:
-		VM_CHECKBOUNDS( gvm, args[1], args[2] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		FS_VM_WriteFile( VMA(1), args[2], args[3], H_QAGAME );
 		return 0;
 	case G_FS_FCLOSE_FILE:
@@ -412,7 +469,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return FS_VM_SeekFile( args[1], args[2], args[3], H_QAGAME );
 
 	case G_FS_GETFILELIST:
-		VM_CHECKBOUNDS( gvm, args[3], args[4] );
+		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
 	case G_LOCATE_GAME_DATA:
@@ -431,7 +488,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_UnlinkEntity( VMA(1) );
 		return 0;
 	case G_ENTITIES_IN_BOX:
-		VM_CHECKBOUNDS( gvm, args[3], args[4] * sizeof( int ) );
+		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] * sizeof( int ) );
 		return SV_AreaEntities( VMA(1), VMA(2), VMA(3), args[4] );
 	case G_ENTITY_CONTACT:
 		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qfalse );
@@ -454,21 +511,24 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return SV_inPVSIgnorePortals( VMA(1), VMA(2) );
 
 	case G_SET_CONFIGSTRING:
-		SV_SetConfigstring( args[1], VMA(2) );
+		// Don't allow the game to overwrite demo configstrings (unless it modifies the normal spectator clients configstrings, this exception allows for player connecting during a demo playback to be correctly rendered, else they will get an empty configstring so no icon, no name, nothing...)
+		if ( (sv_democlients->integer > 0 && args[1] >= CS_PLAYERS + sv_democlients->integer && args[1] < CS_PLAYERS + sv_maxclients->integer) || sv.demoState != DS_PLAYBACK ) { // ATTENTION: sv.demoState check must be placed LAST! Else, it will short-circuit and prevent normal players configstrings from being set!
+			SV_SetConfigstring( args[1], VMA(2) );
+		}
 		return 0;
 	case G_GET_CONFIGSTRING:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		SV_GetConfigstring( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SET_USERINFO:
 		SV_SetUserinfo( args[1], VMA(2) );
 		return 0;
 	case G_GET_USERINFO:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		SV_GetUserinfo( args[1], VMA(2), args[3] );
 		return 0;
 	case G_GET_SERVERINFO:
-		VM_CHECKBOUNDS( gvm, args[1], args[2] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		SV_GetServerinfo( VMA(1), args[2] );
 		return 0;
 	case G_ADJUST_AREA_PORTAL_STATE:
@@ -489,7 +549,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_GET_ENTITY_TOKEN:
 		{
 			const char *s = COM_Parse( &sv.entityParsePoint );
-			VM_CHECKBOUNDS( gvm, args[1], args[2] );
+			VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 			//Q_strncpyz( VMA(1), s, args[2] );
 			// we can't use our optimized Q_strncpyz() function
 			// because of uninitialized memory bug in defrag mod
@@ -520,13 +580,19 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		//====================================
 
 	case BOTLIB_SETUP:
-		return SV_BotLibSetup();
+		if(gvm == 0)
+			return SV_BotLibSetup();
+		else
+			return 0;
 	case BOTLIB_SHUTDOWN:
-		return SV_BotLibShutdown();
+		if(gvm == 0)
+			return SV_BotLibShutdown();
+		else
+			return 0;
 	case BOTLIB_LIBVAR_SET:
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
 	case BOTLIB_LIBVAR_GET:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		return botlib_export->BotLibVarGet( VMA(1), VMA(2), args[3] );
 
 	case BOTLIB_PC_ADD_GLOBAL_DEFINE:
@@ -536,7 +602,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_PC_FREE_SOURCE:
 		return botlib_export->PC_FreeSourceHandle( args[1] );
 	case BOTLIB_PC_READ_TOKEN:
-		VM_CHECKBOUNDS( gvm, args[2], sizeof( pc_token_t ) );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], sizeof( pc_token_t ) );
 		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
 	case BOTLIB_PC_SOURCE_FILE_AND_LINE:
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
@@ -544,7 +610,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
-		return botlib_export->BotLibLoadMap( VMA(1) );
+		if(gvm == 0)
+			return botlib_export->BotLibLoadMap( VMA(1) );
+		else
+			return 0;
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:
@@ -553,13 +622,16 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_GET_SNAPSHOT_ENTITY:
 		return SV_BotGetSnapshotEntity( args[1], args[2] );
 	case BOTLIB_GET_CONSOLE_MESSAGE:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		return SV_BotGetConsoleMessage( args[1], VMA(2), args[3] );
 	case BOTLIB_USER_COMMAND:
 		{
 			unsigned clientNum = args[1];
-			if ( clientNum < sv_maxclients->integer )
-			{
+			if ( clientNum < sv_maxclients->integer
+#ifdef USE_MULTIVM
+			 	&& svs.clients[ clientNum ].gameWorld == gvm
+#endif
+			) {
 				SV_ClientThink( &svs.clients[ clientNum ], VMA(2) );
 			}
 		}
@@ -595,7 +667,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_NEXT_BSP_ENTITY:
 		return botlib_export->aas.AAS_NextBSPEntity( args[1] );
 	case BOTLIB_AAS_VALUE_FOR_BSP_EPAIR_KEY:
-		VM_CHECKBOUNDS( gvm, args[3], args[4] );
+		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		return botlib_export->aas.AAS_ValueForBSPEpairKey( args[1], VMA(2), VMA(3), args[4] );
 	case BOTLIB_AAS_VECTOR_FOR_BSP_EPAIR_KEY:
 		return botlib_export->aas.AAS_VectorForBSPEpairKey( args[1], VMA(2), VMA(3) );
@@ -710,7 +782,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_CHARACTERISTIC_BINTEGER:
 		return botlib_export->ai.Characteristic_BInteger( args[1], args[2], args[3], args[4] );
 	case BOTLIB_AI_CHARACTERISTIC_STRING:
-		VM_CHECKBOUNDS( gvm, args[3], args[4] );
+		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		botlib_export->ai.Characteristic_String( args[1], args[2], VMA(3), args[4] );
 		return 0;
 
@@ -742,7 +814,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotEnterChat( args[1], args[2], args[3] );
 		return 0;
 	case BOTLIB_AI_GET_CHAT_MESSAGE:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		botlib_export->ai.BotGetChatMessage( args[1], VMA(2), args[3] );
 		return 0;
 	case BOTLIB_AI_STRING_CONTAINS:
@@ -750,7 +822,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_FIND_MATCH:
 		return botlib_export->ai.BotFindMatch( VMA(1), VMA(2), args[3] );
 	case BOTLIB_AI_MATCH_VARIABLE:
-		VM_CHECKBOUNDS( gvm, args[3], args[4] );
+		VM_CHECKBOUNDS( gvms[gvm], args[3], args[4] );
 		botlib_export->ai.BotMatchVariable( VMA(1), args[2], VMA(3), args[4] );
 		return 0;
 	case BOTLIB_AI_UNIFY_WHITE_SPACES:
@@ -793,7 +865,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotDumpGoalStack( args[1] );
 		return 0;
 	case BOTLIB_AI_GOAL_NAME:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 		botlib_export->ai.BotGoalName( args[1], VMA(2), args[3] );
 		return 0;
 	case BOTLIB_AI_GET_TOP_GOAL:
@@ -899,17 +971,17 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	// shared syscalls
 
 	case TRAP_MEMSET:
-		VM_CHECKBOUNDS( gvm, args[1], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
 		return args[1];
 
 	case TRAP_MEMCPY:
-		VM_CHECKBOUNDS2( gvm, args[1], args[2], args[3] );
+		VM_CHECKBOUNDS2( gvms[gvm], args[1], args[2], args[3] );
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 
 	case TRAP_STRNCPY:
-		VM_CHECKBOUNDS( gvm, args[1], args[3] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[3] );
 		strncpy( VMA(1), VMA(2), args[3] );
 		return args[1];
 
@@ -950,7 +1022,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return sprintf( VMA(1), "%f", VMF(2) );
 
 	case G_TRAP_GETVALUE:
-		VM_CHECKBOUNDS( gvm, args[1], args[2] );
+		VM_CHECKBOUNDS( gvms[gvm], args[1], args[2] );
 		return SV_GetValue( VMA(1), args[2], VMA(3) );
 
 	default:
@@ -992,12 +1064,17 @@ Called every time a map changes
 ===============
 */
 void SV_ShutdownGameProgs( void ) {
-	if ( !gvm ) {
-		return;
+Com_Printf("Shutting down games\n");
+	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		gvm = i;
+		if ( !gvms[gvm] ) {
+			continue;
+		}
+		VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
+		VM_Free( gvms[gvm] );
+		gvms[gvm] = NULL;
 	}
-	VM_Call( gvm, 1, GAME_SHUTDOWN, qfalse );
-	VM_Free( gvm );
-	gvm = NULL;
+	gvm = 0;
 	FS_VM_CloseFiles( H_QAGAME );
 }
 
@@ -1025,7 +1102,7 @@ static void SV_InitGameVM( qboolean restart ) {
 	
 	// use the current msec count for a random seed
 	// init for this gamestate
-	VM_Call( gvm, 3, GAME_INIT, sv.time, Com_Milliseconds(), restart );
+	VM_Call( gvms[gvm], 3, GAME_INIT, sv.time, Com_Milliseconds(), restart );
 }
 
 
@@ -1037,18 +1114,22 @@ Called on a map_restart, but not on a normal map change
 ===================
 */
 void SV_RestartGameProgs( void ) {
-	if ( !gvm ) {
+	if ( !gvms[gvm] ) {
 		return;
 	}
-	VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
+	
+	SV_ShutdownGameProgs();
+	//VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
-	gvm = VM_Restart( gvm );
-	if ( !gvm ) {
+	//gvms[gvm] = VM_Restart( gvms[gvm] );
+	//SV_InitGameProgs();
+	gvms[gvm] = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
+	if ( !gvms[gvm] ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}
 
-	SV_InitGameVM( qtrue );
+	SV_InitGameVM( qfalse );
 
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );
@@ -1062,12 +1143,13 @@ SV_InitGameProgs
 Called on a normal map change, not on a map_restart
 ===============
 */
-void SV_InitGameProgs( void ) {
+void SV_InitGameProgs( qboolean createNew ) {
 	cvar_t	*var;
 	//FIXME these are temp while I make bots run in vm
 	extern int	bot_enable;
 
 	var = Cvar_Get( "bot_enable", "1", CVAR_LATCH );
+	Cvar_SetDescription(var, "Enable and disable adding of bots to the map/game\nDefault: 1");
 	if ( var ) {
 		bot_enable = var->integer;
 	}
@@ -1076,11 +1158,16 @@ void SV_InitGameProgs( void ) {
 	}
 
 	// load the dll or bytecode
-	gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
-	if ( !gvm ) {
+	gvms[gvm] = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
+	if ( !gvms[gvm] ) {
 		Com_Error( ERR_DROP, "VM_Create on game failed" );
 	}
 
+	if(createNew) {
+		sv.entityParsePoint = CM_EntityString();
+		VM_Call( gvms[gvm], 3, GAME_INIT, sv.time, Com_Milliseconds(), qfalse );
+		return;
+	}
 	SV_InitGameVM( qfalse );
 
 	// load userinfo filters
@@ -1096,9 +1183,35 @@ See if the current console command is claimed by the game
 ====================
 */
 qboolean SV_GameCommand( void ) {
+	qboolean result;
+	int ded;
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
 	}
 
-	return VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
+#ifdef USE_CMD_CONNECTOR
+	// even in dedicated mode don't "say" command when it is not found
+	// don't run game server on client anymore for single player
+
+	ded = com_dedicated->integer;
+	Cvar_Set("dedicated", "0");
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	result = VM_Call( gvms[gvm], 0, GAME_CONSOLE_COMMAND );
+	Cvar_Set("dedicated", va("%i", ded));
+
+	if(!result && com_dedicated->integer) {
+		client_t	*client;
+		int			j;
+		for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
+			// TODO: send this to authenticated clients?
+			if(client->netchan.remoteAddress.type == NA_LOOPBACK)
+				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
+		}
+		return qtrue;
+	}
+#else
+	result = VM_Call( gvms[gvm], 0, GAME_CONSOLE_COMMAND );
+#endif
+	
+	return result;
 }

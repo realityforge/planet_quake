@@ -265,7 +265,7 @@ void RB_ShadowFinish( void ) {
 
 	GL_BindToTMU( tr.whiteImage, TB_COLORMAP );
 
-    qglLoadIdentity ();
+  //  qglLoadIdentity ();
 
 	qglColor3f( 0.6f, 0.6f, 0.6f );
 	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO );

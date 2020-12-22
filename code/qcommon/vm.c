@@ -36,7 +36,7 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
-opcode_info_t ops[ OP_MAX ] =
+opcode_info_t ops[ OP_MAX ] = 
 {
 	// size, stack, nargs, flags
 	{ 0, 0, 0, 0 }, // undef
@@ -111,14 +111,14 @@ opcode_info_t ops[ OP_MAX ] =
 	{ 0,-4, 3, FPU }, // divf
 	{ 0,-4, 3, FPU }, // mulf
 
-	{ 0, 0, 1, 0 },   // cvif
+	{ 0, 0, 1, 0 }, // cvif
 	{ 0, 0, 1, FPU }  // cvfi
 };
 
 const char *opname[ 256 ] = {
-	"OP_UNDEF",
+	"OP_UNDEF", 
 
-	"OP_IGNORE",
+	"OP_IGNORE", 
 
 	"OP_BREAK",
 
@@ -212,7 +212,8 @@ int		vm_debugLevel;
 // used by Com_Error to get rid of running vm's before longjmp
 static int forced_unload;
 
-struct vm_s	vmTable[ VM_COUNT ];
+static int vmIndex = 0;
+struct vm_s	vmTable[ VM_COUNT * MAX_NUM_VMS ];
 
 static const char *vmName[ VM_COUNT ] = {
 	"qagame",
@@ -269,14 +270,20 @@ VM_Init
 ==============
 */
 void VM_Init( void ) {
+	cvar_t *cv;
 #ifndef DEDICATED
-	Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
-	Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	cv = Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the UI QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
+	cv = Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the CGame QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 #endif
-	Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	cv = Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+	Cvar_SetDescription(cv, "Attempt to load the Game QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 
 	Cmd_AddCommand( "vmprofile", VM_VmProfile_f );
+	Cmd_SetDescription( "vmprofile", "Show VM profiling information\nUsage: vmprofile <game|cgame|ui>" );
 	Cmd_AddCommand( "vminfo", VM_VmInfo_f );
+	Cmd_SetDescription( "vminfo", "Show VM information\nUsage: vminfo" );
 
 	Com_Memset( vmTable, 0, sizeof( vmTable ) );
 }
@@ -633,7 +640,7 @@ static int Load_JTS( vm_t *vm, unsigned int crc32, void *data, int vmPakIndex ) 
 	length -= sizeof( header ); // skip header and filesize
 
 	// we need just filesize
-	if ( !data ) {
+	if ( !data ) { 
 		FS_FCloseFile( fh );
 		return length;
 	}
@@ -714,14 +721,14 @@ static char *VM_ValidateHeader( vmHeader_t *header, int fileSize )
 			sprintf( errMsg, "bad lit/jtrg segment length" );
 			return errMsg;
 		}
-	}
+	} 
 	// bad lit length
 	else if ( header->dataOffset + header->dataLength + header->litLength != fileSize ) {
 		sprintf( errMsg, "bad lit segment length %i", header->litLength );
 		return errMsg;
 	}
 
-	return NULL;
+	return NULL;	
 }
 
 
@@ -795,7 +802,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	// round up to next power of 2 so all data operations can
 	// be mask protected
-	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ )
+	for ( i = 0 ; dataLength > ( 1 << i ) ; i++ ) 
 		;
 	dataLength = 1 << i;
 
@@ -849,7 +856,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 				FS_FreeFile( header );
 
 				Com_Printf( S_COLOR_YELLOW "Warning: Jump table size of %s not matching after "
-					"VM_Restart()\n", filename );
+						"VM_Restart()\n", filename );
 				return NULL;
 			}
 
@@ -1014,9 +1021,10 @@ const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instr
 		code_pos++;
 		ci->op = op0;
 		if ( n == 4 ) {
-			ci->value = LittleLong( *((int*)code_pos) );
+			memcpy(&ci->value, code_pos, 4);
+		//	ci->value = LittleLong( *((int*)code_pos) );
 			code_pos += 4;
-		} else if ( n == 1 ) {
+		} else if ( n == 1 ) { 
 			ci->value = *((unsigned char*)code_pos);
 			code_pos += 1;
 		} else {
@@ -1169,7 +1177,7 @@ const char *VM_CheckInstructions( instruction_t *buf,
 			}
 
 			if ( endp == 0 ) {
-				sprintf( errBuf, "missing end proc for %i", i );
+				sprintf( errBuf, "missing end proc for %i", i ); 
 				return errBuf;
 			}
 
@@ -1368,9 +1376,9 @@ const char *VM_CheckInstructions( instruction_t *buf,
 					continue;
 				} else {
 					sprintf( errBuf, "bad %s address %i at %i", opname[ ci->op ], x->value, (int)(x - buf) );
-					return errBuf;
-				}
+				return errBuf;
 			}
+		}
 			unsafe_stores++;
 			continue;
 		}
@@ -1424,12 +1432,12 @@ const char *VM_CheckInstructions( instruction_t *buf,
 			n = *(int *)(jumpTableTargets + ( i * sizeof( int ) ) );
 			if ( n < 0 || n >= instructionCount ) {
 				Com_Printf( S_COLOR_YELLOW "jump target %i set on instruction %i that is out of range [0..%i]",
-					i, n, instructionCount - 1 );
+					i, n, instructionCount - 1 ); 
 				break;
 			}
 			if ( buf[n].opStack != 0 ) {
 				Com_Printf( S_COLOR_YELLOW "jump target %i set on instruction %i (%s) with bad opStack %i\n",
-					i, n, opname[ buf[n].op ], buf[n].opStack );
+					i, n, opname[ buf[n].op ], buf[n].opStack ); 
 				break;
 			}
 		}
@@ -1478,7 +1486,7 @@ VM_ReplaceInstructions
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	instruction_t *ip;
 
-	//Com_Printf( S_COLOR_GREEN "VMINFO [%s] crc: %08X, ic: %i, dl: %i\n", vm->name, vm->crc32sum, vm->instructionCount, vm->exactDataLength );
+	Com_Printf( S_COLOR_GREEN "VMINFO [%s] crc: %08X, ic: %i, dl: %i\n", vm->name, vm->crc32sum, vm->instructionCount, vm->exactDataLength );
 
 	if ( vm->index == VM_CGAME ) {
 		if ( vm->crc32sum == 0x3E93FC1A && vm->instructionCount == 123596 && vm->exactDataLength == 2007536 ) {
@@ -1510,6 +1518,12 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			if ( ip->value == 70943 ) {
 				VM_IgnoreInstructions( ip, 8 );
 			}
+		} else
+		// hack baseq3a to not display USE MEDKIT
+		// just an example because baseq3a is open source https://github.com/ec-/baseq3a
+		if( vm->crc32sum == 0x2DD51C2A && vm->instructionCount == 95182 && vm->exactDataLength == 2122744 ) {
+			ip = buf + 0x5bb9;
+			VM_IgnoreInstructions( ip, 0x5bd8 - 0x5bb9 );
 		}
 	}
 
@@ -1518,6 +1532,24 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			vm->forceDataMask = qtrue; // OSP server doing some bad things with memory
 		} else {
 			vm->forceDataMask = qfalse;
+		}
+		
+		// excessive plus checking if it is installed correctly
+		if ( vm->crc32sum == 0x9e8dc0c1 && vm->instructionCount == 306441 && vm->exactDataLength == 7998664 ) {
+			ip = buf + 0xAD0 - 2; 
+			if ( ip[2].op == OP_JUMP && ip[2].value == 0xca1 ) {
+			//	ip[0].op = OP_JUMP;
+				VM_IgnoreInstructions( &ip[1], 2 );
+			}
+		}
+		
+		if ( vm->crc32sum == 0x89688376 && vm->instructionCount == 202902 && vm->exactDataLength == 2910444 ) {
+			ip = buf + 0x1c5c8;
+			if(ip[2].op == OP_LEAVE && ip[2].value == 0x444) {
+				ip[0].op = OP_EQ;
+				//VM_IgnoreInstructions( &ip[0], 4 );
+				//VM_IgnoreInstructions( &ip[0], 1 );
+			}
 		}
 	}
 
@@ -1539,6 +1571,19 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 				ip = buf + 60438;
 				VM_IgnoreInstructions( ip, 6 );
 			}
+		}
+		
+		// skip auth check in urban terror, TODO: skip name check
+		if ( vm->crc32sum == 0xe771cdf9 && vm->instructionCount == 101585 && vm->exactDataLength == 9162280 ) {
+			ip = buf + 0x149b - 2;
+ 			VM_IgnoreInstructions( &ip[2], 3 );
+			ip = buf + 0xb27 - 2;
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
+			//Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
+			ip[2].op = OP_JUMP;
+			//VM_IgnoreInstructions( &ip[2], 1 );
 		}
 	}
 }
@@ -1651,12 +1696,12 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 	}
 
 	if ( (unsigned)index >= VM_COUNT ) {
-		Com_Error( ERR_DROP, "VM_Create: bad vm index %i", index );
+		Com_Error( ERR_DROP, "VM_Create: bad vm index %i", index );	
 	}
 
 	remaining = Hunk_MemoryRemaining();
 
-	vm = &vmTable[ index ];
+	vm = &vmTable[ vmIndex ];
 
 	// see if we already have the VM
 	if ( vm->name ) {
@@ -1671,6 +1716,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	vm->name = name;
 	vm->index = index;
+	vm->vmIndex = vmIndex;
 	vm->systemCall = systemCalls;
 	vm->dllSyscall = dllSyscalls;
 	vm->privateFlag = CVAR_PRIVATE;
@@ -1746,6 +1792,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
 
+	vmIndex++;
 	return vm;
 }
 
@@ -1793,7 +1840,7 @@ void VM_Free( vm_t *vm ) {
 
 void VM_Clear( void ) {
 	int i;
-	for ( i = 0; i < VM_COUNT; i++ ) {
+	for ( i = 0; i < VM_COUNT * MAX_NUM_VMS; i++ ) {
 		VM_Free( &vmTable[ i ] );
 	}
 }
@@ -1855,7 +1902,7 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... )
 
 	++vm->callLevel;
 	// if we have a dll loaded, call it directly
-	if ( vm->entryPoint )
+	if ( vm->entryPoint ) 
 	{
 		//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
 		int args[MAX_VMMAIN_CALL_ARGS-1];
@@ -1960,7 +2007,7 @@ static void VM_VmProfile_f( void ) {
 	double		total;
 
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
+		Com_Printf( "Usage: %s <game|cgame|ui>\n", Cmd_Argv( 0 ) );
 		return;
 	}
 
@@ -2009,7 +2056,7 @@ static void VM_VmInfo_f( void ) {
 	int		i;
 
 	Com_Printf( "Registered virtual machines:\n" );
-	for ( i = 0 ; i < VM_COUNT ; i++ ) {
+	for ( i = 0 ; i < VM_COUNT * MAX_NUM_VMS ; i++ ) {
 		vm = &vmTable[i];
 		if ( !vm->name ) {
 			continue;
@@ -2054,3 +2101,73 @@ void VM_LogSyscalls( int *args ) {
 		args[0], args[1], args[2], args[3], args[4] );
 #endif
 }
+
+int GetIntFromByte(byte *offset) {
+	return (offset[3] << 24) | (offset[2] << 16)
+		| (offset[1] << 8) | offset[0];
+}
+
+#ifdef USE_ABS_MOUSE
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker) {
+	int i, j;
+	int diff = realtimeMarker ^ 0x7FFFFFFF;
+	int frame = diff - realtimeMarker;
+	byte *ret = 0;
+	struct vmSymbol_s *sym;
+	//Com_Printf("Searching for UI cursorx at %i %i was %i\n", diff, frame, realtimeMarker);
+	
+	//VM_Call( vm, mouseCmd, 1, 1 );
+	VM_Call( vm, refreshCmd, diff);
+
+	for(i = vm->dataAlloc - 32; i >= 0; i--) {
+		int frameTime = GetIntFromByte(&vm->dataBase[i]);
+		int realTime = GetIntFromByte(&vm->dataBase[i-4]);
+		if(realTime == diff) { // && ) {
+			//Com_Printf("Found UI cursorx at %p %i %i\n", &vm->dataBase[i], frameTime, realTime);
+			//VM_Call( vm, refreshCmd, realtimeMarker);
+			ret = &vm->dataBase[i-8];
+		}
+	}
+	if(!ret) {
+		Com_Error(ERR_FATAL, "Couldn't locate UI cursor %i\n", diff);
+	}
+	return ret;
+}
+#endif
+
+#ifdef EMSCRIPTEN
+qboolean VM_IsSuspended(vm_t * vm) {
+#ifndef NO_VM_COMPILED
+		if (vm->compiled) {
+			return VM_IsSuspendedCompiled(vm);
+		}
+#endif
+		// return VM_IsSuspendedInterpreted(vm);
+		return qfalse;
+}
+
+
+void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp) {
+#ifndef NO_VM_COMPILED
+		if (vm->compiled) {
+			VM_SuspendCompiled(vm, pc, sp);
+			return;
+		}
+#endif
+		// VM_SuspendInterpreted(vm, pc, sp);
+		// return;
+		Com_Error(ERR_FATAL, "VM_SuspendInterpreted not implemented");
+}
+
+
+int VM_Resume(vm_t *vm) {
+#ifndef NO_VM_COMPILED
+		if (vm->compiled) {
+			return VM_ResumeCompiled(vm);
+		}
+#endif
+		// return VM_ResumeInterpreted(vm);
+		Com_Error(ERR_FATAL, "VM_ResumeInterpreted not implemented");
+
+}
+#endif

@@ -53,6 +53,8 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
+#define MAX_NUM_WORLDS 10
+
 #define	MAX_FBOS      64
 #define MAX_VISCOUNTS 5
 #define MAX_VAOS      4096
@@ -435,6 +437,7 @@ typedef struct {
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
+	int     lastTimeUsed;
 	int			lightmapSearchIndex;	// for a shader to match, both name and lightmapIndex must match
 	int			lightmapIndex;			// for rendering
 
@@ -449,6 +452,8 @@ typedef struct shader_s {
 										// something calls RE_RegisterShader again with
 										// the same name, we don't try looking for it again
 
+	qboolean	noVertexLightingCollapse;
+	qboolean  allowCompress;
 	qboolean	explicitlyDefined;		// found in a .shader file
 
 	int			surfaceFlags;			// if explicitlyDefined, this will have SURF_* flags
@@ -1137,55 +1142,6 @@ typedef struct {
 	int			numSurfaces;
 } bmodel_t;
 
-typedef struct {
-	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
-	char		baseName[MAX_QPATH];	// ie: tim_dm2
-
-	int			dataSize;
-
-	int			numShaders;
-	dshader_t	*shaders;
-
-	int			numBModels;
-	bmodel_t	*bmodels;
-
-	int			numplanes;
-	cplane_t	*planes;
-
-	int			numnodes;		// includes leafs
-	int			numDecisionNodes;
-	mnode_t		*nodes;
-
-	int         numWorldSurfaces;
-
-	int			numsurfaces;
-	msurface_t	*surfaces;
-	int         *surfacesViewCount;
-	int         *surfacesDlightBits;
-	int			*surfacesPshadowBits;
-
-	int			nummarksurfaces;
-	int         *marksurfaces;
-
-	int			numfogs;
-	fog_t		*fogs;
-
-	vec3_t		lightGridOrigin;
-	vec3_t		lightGridSize;
-	vec3_t		lightGridInverseSize;
-	int			lightGridBounds[3];
-	byte		*lightGridData;
-	uint16_t	*lightGrid16;
-
-
-	int			numClusters;
-	int			clusterBytes;
-	const byte	*vis;			// may be passed in by CM_LoadMap to save space
-
-	char		*entityString;
-	char		*entityParsePoint;
-} world_t;
-
 
 /*
 ==============================================================================
@@ -1285,6 +1241,7 @@ typedef struct model_s {
 
 
 #define	MAX_MOD_KNOWN	1024
+extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 
 void		R_ModelInit (void);
 model_t		*R_GetModelByHandle( qhandle_t hModel );
@@ -1302,6 +1259,63 @@ void		R_Modellist_f (void);
 
 #define	MAX_DRAWSURFS			0x10000
 #define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
+
+typedef struct {
+	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
+	char		baseName[MAX_QPATH];	// ie: tim_dm2
+
+	int			dataSize;
+
+	int			numShaders;
+	dshader_t	*shaders;
+
+	int			numBModels;
+	bmodel_t	*bmodels;
+
+	int			numplanes;
+	cplane_t	*planes;
+
+	int			numnodes;		// includes leafs
+	int			numDecisionNodes;
+	mnode_t		*nodes;
+
+	int         numWorldSurfaces;
+
+	int			numsurfaces;
+	msurface_t	*surfaces;
+	int         *surfacesViewCount;
+	int         *surfacesDlightBits;
+	int			*surfacesPshadowBits;
+
+	int			nummarksurfaces;
+	int         *marksurfaces;
+
+	int			numfogs;
+	fog_t		*fogs;
+
+	vec3_t		lightGridOrigin;
+	vec3_t		lightGridSize;
+	vec3_t		lightGridInverseSize;
+	int			lightGridBounds[3];
+	byte		*lightGridData;
+	uint16_t	*lightGrid16;
+
+
+	int			numClusters;
+	int			clusterBytes;
+	const byte	*vis;			// may be passed in by CM_LoadMap to save space
+
+	char		*entityString;
+	char		*entityParsePoint;
+	
+	// backup lightmaps so they can be reapplied when the world changes
+	int						numLightmaps;
+	int						lightmapSize;
+	image_t				**lightmaps;
+	model_t				*models[MAX_MOD_KNOWN];
+	int						numModels;
+
+} world_t;
 
 /*
 
@@ -1473,6 +1487,9 @@ typedef struct {
 	qboolean    depthFill;
 } backEndState_t;
 
+extern world_t s_worldData[MAX_NUM_WORLDS];
+extern int     rw;
+
 /*
 ** trGlobals_t 
 **
@@ -1483,7 +1500,8 @@ typedef struct {
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
-
+	int							lastRegistrationTime;
+	
 	int						visIndex;
 	int						visClusters[MAX_VISCOUNTS];
 	int						visCounts[MAX_VISCOUNTS];	// incremented every time a new vis cluster is entered
@@ -1622,9 +1640,6 @@ typedef struct {
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
 	//
-	model_t					*models[MAX_MOD_KNOWN];
-	int						numModels;
-
 	int						numImages;
 	image_t					*images[MAX_DRAWIMAGES];
 
@@ -1678,6 +1693,7 @@ extern cvar_t	*r_railSegmentLength;
 extern cvar_t	*r_ignore;				// used for debugging anything
 
 extern cvar_t	*r_znear;				// near Z clip plane
+extern cvar_t	*r_zfar;				// far Z clip plane
 extern cvar_t	*r_zproj;				// z distance of projection plane
 extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo rendering
 
@@ -1685,6 +1701,10 @@ extern cvar_t	*r_measureOverdraw;		// enables stencil buffer overdraw measuremen
 
 extern cvar_t	*r_lodbias;				// push/pull LOD transitions
 extern cvar_t	*r_lodscale;
+
+#ifdef USE_LAZY_LOAD
+extern cvar_t	*r_lazyLoad;
+#endif
 
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
@@ -1821,6 +1841,11 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern float dvrXScale;
+extern float dvrYScale;
+extern float dvrXOffset;
+extern float dvrYOffset;
+
 //====================================================================
 
 static ID_INLINE qboolean ShaderRequiresCPUDeforms(const shader_t * shader)
@@ -1946,10 +1971,11 @@ void	RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
 void		RE_LoadWorldMap( const char *mapname );
+void		RE_SwitchWorld( int world );
 void		RE_SetWorldVisData( const byte *vis );
 qhandle_t	RE_RegisterModel( const char *name );
 qhandle_t	RE_RegisterSkin( const char *name );
-void		RE_Shutdown( int destroyWindow );
+void		RE_Shutdown( refShutdownCode_t code );
 
 qboolean	R_GetEntityToken( char *buffer, int size );
 
@@ -1978,6 +2004,7 @@ skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 int R_ComputeLOD( trRefEntity_t *ent );
 
 const void *RB_TakeVideoFrameCmd( const void *data );
+void RE_ResetBannerSpy( void );
 
 //
 // tr_shader.c
@@ -1989,6 +2016,11 @@ shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
+shader_t *R_FindDefaultShaderByName( const char *name );
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
+void		RE_ReloadShaders( qboolean createNew );
+void	  R_UpdateModel( const char *name );
+void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 
 /*
 ====================================================================
@@ -2086,6 +2118,19 @@ WORLD MAP
 void R_AddBrushModelSurfaces( trRefEntity_t *e );
 void R_AddWorldSurfaces( void );
 qboolean R_inPVS( const vec3_t p1, const vec3_t p2 );
+extern byte		*fileBase;
+void HSVtoRGB( float h, float s, float v, float rgb[3] );
+void R_ColorShiftLightingBytes( byte in[4], byte out[4] );
+void R_SetParent (mnode_t *node, mnode_t *parent);
+shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum );
+void LoadBsp2(const char *name);
+void R_ColorShiftLightingFloats(float in[4], float out[4]);
+void ColorToRGB16(const vec3_t color, uint16_t rgb16[3]);
+void R_LoadEntities( lump_t *l );
+void R_MovePatchSurfacesToHunk(void);
+void R_StitchAllPatches( void );
+void LoadDrawVertToSrfVert(srfVert_t *s, drawVert_t *d, int realLightmapNum, float hdrVertColors[3], vec3_t *bounds);
+void R_FixSharedVertexLodError( void );
 
 
 /*
@@ -2487,8 +2532,12 @@ void RE_TakeVideoFrame( int width, int height,
 
 void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );
+void RE_SetDvrFrame( float x, float y, float width, float height );
+void RB_FastCapture(byte *data);
+void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer);
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );
+void RE_UpdateMode(glconfig_t *glconfigOut);
 
 #endif //TR_LOCAL_H

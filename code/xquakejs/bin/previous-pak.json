@@ -1,0 +1,47 @@
+{
+  "adsa3dm1": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/adsa3dm1.pk3dir/adsa3dm1.txt",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/adsa3dm1.pk3dir/levelshots/adsa3dm1.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/adsa3dm1.pk3dir/maps/adsa3dm1.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/adsa3dm1.pk3dir/maps/adsa3dm1.bsp"
+  ],
+  "atrocity": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/levelshots/atrocity.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/maps/atrocity.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/maps/atrocity.bsp",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/scripts/atrocity.arena",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/scripts/decker.shader",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/textures/decker/decker_night_sky_back.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/textures/decker/decker_night_sky_front.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/textures/decker/decker_tele.png",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/atrocity.pk3dir/textures/q1metal7_99.jpg"
+  ],
+  "halven": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/halven.pk3dir/Halven.txt",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/halven.pk3dir/levelshots/halven.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/halven.pk3dir/maps/halven.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/halven.pk3dir/maps/halven.bsp",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/halven.pk3dir/scripts/halven.arena"
+  ],
+  "map-ctf_gutterlandmusic": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/gutterland.txt",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/levelshots/ctf_gutterland.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/maps/ctf_gutterland.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/maps/ctf_gutterland.bsp",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/music/gutterland.ogg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/scripts/halo.shader",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/textures/halo/halo.png",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/map-ctf_gutterlandmusic.pk3dir/textures/halo/red_logo.jpg"
+  ],
+  "plutoniq": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/plutoniq.pk3dir/maps/PLUTONIQ.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/plutoniq.pk3dir/maps/PLUTONIQ.bsp",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/plutoniq.pk3dir/PLUTONIQ.txt"
+  ],
+  "vedq3dm1": [
+    "/Users/briancullinan/.quake3/bestmaps2-cc/vedq3dm1.pk3dir/levelshots/vedq3dm1.jpg",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/vedq3dm1.pk3dir/maps/vedq3dm1.aas",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/vedq3dm1.pk3dir/maps/vedq3dm1.bsp",
+    "/Users/briancullinan/.quake3/bestmaps2-cc/vedq3dm1.pk3dir/vedq3dm1.txt"
+  ]
+}

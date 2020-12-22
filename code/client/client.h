@@ -35,6 +35,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cl_curl.h"
 #endif /* USE_CURL */
 
+#ifdef USE_CURL
+#define	USE_LNBITS	1
+#else
+#ifdef EMSCRIPTEN
+#define	USE_LNBITS	1
+#else
+#ifdef USE_LNBITS
+#undef USE_LNBITS
+#endif
+#endif
+#endif
+
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
@@ -61,7 +73,22 @@ typedef struct {
 	int				parseEntitiesNum;		// at the time of this snapshot
 
 	int				serverCommandNum;		// execute all commands up to this before
-											// making the snapshot current
+
+// making the snapshot current
+#ifdef USE_MV
+	struct {
+		int				areabytes;
+		byte			areamask[MAX_MAP_AREA_BYTES]; // portalarea visibility bits
+		byte			entMask[MAX_GENTITIES/8];
+		playerState_t	ps;
+		qboolean		valid;
+	} clps[ MAX_CLIENTS ];
+	qboolean	multiview;
+	int			version;
+	int			mergeMask;
+	byte		clientMask[MAX_CLIENTS/8];
+#endif // USE_MV
+
 } clSnapshot_t;
 
 
@@ -84,7 +111,11 @@ typedef struct {
 // the parseEntities array must be large enough to hold PACKET_BACKUP frames of
 // entities, so that when a delta compressed message arives from the server
 // it can be un-deltad from the original 
+#ifdef USE_MV
+#define	MAX_PARSE_ENTITIES	( PACKET_BACKUP * MAX_GENTITIES )
+#else
 #define	MAX_PARSE_ENTITIES	( PACKET_BACKUP * MAX_SNAPSHOT_ENTITIES )
+#endif
 
 extern int g_console_field_width;
 
@@ -93,6 +124,7 @@ typedef struct {
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
 	clSnapshot_t	snap;			// latest received from server
+	snapshot_t    *updateSnap;
 
 	int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards
@@ -106,7 +138,7 @@ typedef struct {
 	gameState_t	gameState;			// configstrings
 	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
-	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
+	int			parseEntitiesNum[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
 
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
@@ -136,11 +168,11 @@ typedef struct {
 	// big stuff at end of structure so most offsets are 15 bits or less
 	clSnapshot_t	snapshots[PACKET_BACKUP];
 
-	entityState_t	entityBaselines[MAX_GENTITIES];	// for delta compression when not in previous frame
+	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
 
-	entityState_t	parseEntities[MAX_PARSE_ENTITIES];
+	entityState_t	parseEntities[MAX_NUM_VMS][MAX_PARSE_ENTITIES];
 
-	byte			baselineUsed[MAX_GENTITIES];
+	byte			baselineUsed[MAX_NUM_VMS][MAX_GENTITIES];
 } clientActive_t;
 
 extern	clientActive_t		cl;
@@ -164,6 +196,11 @@ demo through a file.
 typedef struct {
 
 	int			clientNum;
+#ifdef USE_MV
+	int			clientView;
+	int			zexpectDeltaSeq;			// for compressed server commands
+	int     currentView;
+#endif
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
 
@@ -205,6 +242,9 @@ typedef struct {
 	int			downloadCount;	// how many bytes we got
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[BIG_INFO_STRING]; // list of paks we need to download
+#ifdef EMSCRIPTEN
+	qboolean  dlDisconnect;
+#endif
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
 
 #ifdef USE_CURL
@@ -288,6 +328,24 @@ typedef struct {
 	int			g_needpass;
 } serverInfo_t;
 
+#ifdef USE_VID_FAST
+
+#define MAX_PATCHES  8
+
+typedef enum {
+	PATCH_NONE,
+	PATCH_XSCALE,
+	PATCH_YSCALE,
+	PATCH_BIAS
+} patch_type_t;
+
+typedef struct patch_s {
+	patch_type_t type;
+	void *addr;
+} patch_t;
+
+#endif
+
 typedef struct {
 	connstate_t	state;				// connection status
 	qboolean	gameSwitch;
@@ -299,6 +357,7 @@ typedef struct {
 	// when the server clears the hunk, all of these must be restarted
 	qboolean	rendererStarted;
 	qboolean	soundStarted;
+	qboolean  firstClick;
 	qboolean	soundRegistered;
 	qboolean	uiStarted;
 	qboolean	cgameStarted;
@@ -335,6 +394,9 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+#ifdef USE_LNBITS
+	qhandle_t qrCodeShader;
+#endif
 
 	int			lastVidRestart;
 	int			soundMuted;
@@ -348,6 +410,23 @@ typedef struct {
 	float		biasX;
 	float		biasY;
 
+	float		 cursorx;
+	float    cursory;
+	qboolean postgame;
+#ifdef USE_VID_FAST
+	glconfig_t *uiGlConfig;
+
+	patch_t uiPatches[MAX_PATCHES];
+	unsigned numUiPatches;
+
+	// the cgame scales are normally stuffed somewhere inbetween
+	// cgameGlConfig and cgameFirstCvar
+	glconfig_t *cgameGlConfig;
+	vmCvar_t *cgameFirstCvar;
+
+	patch_t cgamePatches[MAX_PATCHES];
+	unsigned numCgamePatches;
+#endif	
 } clientStatic_t;
 
 extern int bigchar_width;
@@ -374,8 +453,6 @@ qboolean	CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 
 //=============================================================================
 
-extern	vm_t			*cgvm;	// interface to cgame dll or vm
-extern	vm_t			*uivm;	// interface to ui dll or vm
 extern	refexport_t		re;		// interface to refresh .dll
 
 
@@ -397,6 +474,9 @@ extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 
+#ifdef USE_LNBITS
+extern  cvar_t	*cl_lnInvoice;
+#endif
 extern	cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
 extern	cvar_t	*cl_mapAutoDownload;
@@ -445,6 +525,9 @@ void CL_ReadDemoMessage( void );
 void CL_StopRecord_f( void );
 
 void CL_InitDownloads( void );
+#ifdef EMSCRIPTEN
+void CL_Outside_NextDownload( void );
+#endif
 void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );
@@ -460,7 +543,7 @@ qboolean CL_CheckPaused( void );
 qboolean CL_NoDelay( void );
 
 qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, int mode, const char *modeFS, int dw, int dh, qboolean fullscreen );
-
+void CL_LoadVM_f( void );
 
 //
 // cl_input
@@ -517,7 +600,7 @@ void CL_SaveConsoleHistory( void );
 // cl_scrn.c
 //
 void	SCR_Init (void);
-void	SCR_UpdateScreen (void);
+void	SCR_UpdateScreen (qboolean fromVM);
 
 void	SCR_DebugGraph( float value );
 
@@ -554,16 +637,31 @@ void CIN_CloseAllVideos(void);
 //
 // cl_cgame.c
 //
-void CL_InitCGame( void );
+//#ifdef USE_MULTIVM
+extern int clientMaps[MAX_NUM_VMS];
+extern float clientWorlds[MAX_NUM_VMS][4];
+//#endif
+#ifdef EMSCRIPTEN
+#ifdef USE_LAZY_LOAD
+// TODO: make these work on native, by checking files.c for rediness or something?
+void CL_UpdateShader( void );
+void CL_UpdateSound( void );
+void CL_UpdateModel( void );
+#endif
+void CL_InitCGameFinished( void );
+#endif
+void CL_InitCGame( qboolean createNew );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( void );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
+void CL_AdjustTimeDelta( void );
+qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 
 //
 // cl_ui.c
 //
-void CL_InitUI( void );
+void CL_InitUI( qboolean createNew );
 void CL_ShutdownUI( void );
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
@@ -580,6 +678,9 @@ qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg );
 //
 // cl_avi.c
 //
+extern byte *previousFrame;
+extern byte *captureBuffer;
+extern byte *encodeBuffer;
 qboolean CL_OpenAVIForWriting( const char *filename, qboolean pipe );
 void CL_TakeVideoFrame( void );
 void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size );
@@ -598,7 +699,7 @@ void	CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *hei
 void	GLimp_Init( glconfig_t *config );
 void	GLimp_Shutdown( qboolean unloadDLL );
 void	GLimp_EndFrame( void );
-
+void  GLimp_UpdateMode( glconfig_t *config );
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
 

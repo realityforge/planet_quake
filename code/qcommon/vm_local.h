@@ -128,9 +128,9 @@ typedef enum {
 } opcode_t;
 
 typedef struct {
-	int	value;         // 32
-	byte	op;        // 8
-	byte	opStack;   // 8
+	int	value;	// 32
+	byte	op;		// 8
+	byte	opStack;	// 8
 	unsigned jused:1;
 	unsigned swtch:1;
 	unsigned safe:1;   // non-masked op_store
@@ -166,6 +166,7 @@ struct vm_s {
 
 	const char	*name;
 	vmIndex_t	index;
+	int       vmIndex;
 
 	// for dynamic linked modules
 	void		*dllHandle;
@@ -207,6 +208,14 @@ struct vm_s {
 	int			privateFlag;
 };
 
+extern  int       gvm;
+extern  int       cgvm;
+extern  int       uivm;
+#define MAX_NUM_VMS 10
+extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
+extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
+extern	vm_t			*gvms[MAX_NUM_VMS];				// game virtual machine
+
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );
 
@@ -219,9 +228,9 @@ const char *VM_ValueToSymbol( vm_t *vm, int value );
 void VM_LogSyscalls( int *args );
 
 const char *VM_LoadInstructions( const byte *code_pos, int codeLength, int instructionCount, instruction_t *buf );
-const char *VM_CheckInstructions( instruction_t *buf, int instructionCount,
-								 const byte *jumpTableTargets,
-								 int numJumpTableTargets,
+const char *VM_CheckInstructions( instruction_t *buf, int instructionCount, 
+								 const byte *jumpTableTargets, 
+								 int numJumpTableTargets, 
 								 int dataLength );
 
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf );
@@ -229,7 +238,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf );
 #define JUMP	(1<<0)
 #define FPU		(1<<1)
 
-typedef struct opcode_info_s
+typedef struct opcode_info_s 
 {
 	int	size;
 	int	stack;
@@ -240,3 +249,9 @@ typedef struct opcode_info_s
 extern opcode_info_t ops[ OP_MAX ];
 
 #endif // VM_LOCAL_H
+
+#ifdef EMSCRIPTEN
+extern qboolean VM_IsSuspendedCompiled(vm_t *vm);
+extern void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
+extern int VM_ResumeCompiled(vm_t *vm);
+#endif

@@ -1,0 +1,79 @@
+{
+  "entities": {},
+  "mapEntities": {
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/maps/vedq3dm1.bsp": [
+      "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/maps/vedq3dm1.aas",
+      "ammo_bullets",
+      "ammo_lightning",
+      "ammo_rockets",
+      "ammo_shells",
+      "info_player_deathmatch",
+      "info_player_intermission",
+      "item_armor_combat",
+      "item_armor_shard",
+      "item_health",
+      "item_health_large",
+      "item_health_mega",
+      "item_health_small",
+      "light",
+      "misc_model",
+      "models/mapobjects/wallhead/wallhead02.md3",
+      "sound/world/xchoir2.wav",
+      "target_position",
+      "target_push",
+      "target_speaker",
+      "trigger_push",
+      "weapon_lightning",
+      "weapon_rocketlauncher",
+      "weapon_shotgun",
+      "worldspawn"
+    ]
+  },
+  "maps": {
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/maps/vedq3dm1.bsp": [
+      "flareShader",
+      "models/mapobjects/wallhead/wallhead02",
+      "noshader",
+      "textures/GOTHIC_BLOCK/BLOCKS11B",
+      "textures/common/caulk",
+      "textures/common/clip",
+      "textures/common/trigger",
+      "textures/gothic_block/blocks18c",
+      "textures/gothic_ceiling/ceilingtech_big",
+      "textures/gothic_ceiling/ceilingtechplain",
+      "textures/gothic_floor/largerblock3b2",
+      "textures/gothic_floor/xstairtop4bbrn",
+      "textures/gothic_floor/xstepborder3brn",
+      "textures/gothic_light/ironcrosslt2_1000",
+      "textures/gothic_light/light1_4Kgothic",
+      "textures/gothic_trim/baseboard09_c3",
+      "textures/gothic_trim/baseboard09_i",
+      "textures/gothic_trim/baseboard10_e",
+      "textures/gothic_trim/demoniron01_e",
+      "textures/gothic_trim/metalbase03a_blocks18c2",
+      "textures/gothic_trim/metalsupport4d",
+      "textures/gothic_trim/pitted_rust",
+      "textures/gothic_trim/pitted_rust3_black",
+      "textures/gothic_trim/xian_tourney_trim",
+      "textures/gothic_wall/streetbricks10",
+      "textures/sfx/bounce_largeblock3b",
+      "textures/skies/kcbasesky_arena1_sky"
+    ]
+  },
+  "models": {},
+  "scripts": {},
+  "shaders": {},
+  "skins": {},
+  "qvms": {},
+  "menus": {
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/vedq3dm1.txt": [
+      "/sv_pure 0"
+    ]
+  },
+  "everything": [
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/vedq3dm1.txt",
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/maps/vedq3dm1.bsp",
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/maps/vedq3dm1.aas",
+    "/Users/briancullinan/.quake3/bestmaps-2020-cc/vedq3dm1.pk3dir/levelshots/vedq3dm1.jpg"
+  ]
+}

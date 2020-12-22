@@ -306,7 +306,13 @@ typedef struct {
 #define BSP_IDENT	(('P'<<24)+('S'<<16)+('B'<<8)+'I')
 		// little-endian "IBSP"
 
-#define BSP_VERSION			46
+#define BSP_VERSION			   46
+#define BSP3_VERSION		   46
+#define BSP_VERSION_QLIVE  47
+#define BSP_VERSION_OPENJK 1
+#define BSP2_VERSION       38
+#define BSP1_VERSION		   29
+#define BSPHL_VERSION		   30
 
 
 // there shouldn't be any problem with increasing these values at the
@@ -375,6 +381,7 @@ typedef struct {
 #define	LUMP_LIGHTGRID		15
 #define	LUMP_VISIBILITY		16
 #define	HEADER_LUMPS		17
+#define	HEADER_LUMPS_OPENJK		18
 
 typedef struct {
 	int			ident;
@@ -382,6 +389,13 @@ typedef struct {
 
 	lump_t		lumps[HEADER_LUMPS];
 } dheader_t;
+
+typedef struct {
+	int			ident;
+	int			version;
+
+	lump_t		lumps[HEADER_LUMPS_OPENJK];
+} dheader_OpenJK_t;
 
 typedef struct {
 	float		mins[3], maxs[3];

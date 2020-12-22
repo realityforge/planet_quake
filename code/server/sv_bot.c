@@ -268,7 +268,7 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 	float max;
 	int	i;
 
-	h = CM_InlineModel(modelnum);
+	h = CM_InlineModel(modelnum, 5, gvm);
 	CM_ModelBounds(h, mins, maxs);
 	//if the model is rotated
 	if ((angles[0] || angles[1] || angles[2])) {
@@ -313,7 +313,7 @@ BotImport_HunkAlloc
 */
 static void *BotImport_HunkAlloc( int size ) {
 	if( Hunk_CheckMark() ) {
-		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+	//	Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
 	}
 	return Hunk_Alloc( size, h_high );
 }
@@ -441,8 +441,8 @@ SV_BotFrame
 void SV_BotFrame( int time ) {
 	if (!bot_enable) return;
 	//NOTE: maybe the game is already shutdown
-	if (!gvm) return;
-	VM_Call( gvm, 1, BOTAI_START_FRAME, time );
+	if (!gvms[gvm]) return;
+	VM_Call( gvms[gvm], 1, BOTAI_START_FRAME, time );
 }
 
 /*

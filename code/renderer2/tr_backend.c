@@ -55,7 +55,7 @@ void GL_BindToTMU( image_t *image, int tmu )
 	}
 	else
 	{
-		ri.Printf(PRINT_WARNING, "GL_BindToTMU: NULL image\n");
+		ri.Printf(PRINT_DEVELOPER, "GL_BindToTMU: NULL image\n");
 	}
 
 	GL_BindMultiTexture(GL_TEXTURE0_ARB + tmu, target, texture);
@@ -1198,7 +1198,10 @@ const void	*RB_DrawBuffer( const void *data ) {
 	if (glRefConfig.framebufferObject)
 		FBO_Bind(NULL);
 
-	qglDrawBuffer( cmd->buffer );
+	{
+		GLenum DrawBuffers[1] = {cmd->buffer};
+		qglDrawBuffers( 1, DrawBuffers );
+	}
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {
@@ -1235,6 +1238,7 @@ void RB_ShowImages( void ) {
 
 	for ( i=0 ; i<tr.numImages ; i++ ) {
 		image = tr.images[i];
+		if(!image->texnum) continue;
 
 		w = glConfig.vidWidth / 20;
 		h = glConfig.vidHeight / 15;

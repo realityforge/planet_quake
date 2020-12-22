@@ -120,6 +120,16 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
+	void	(*ReloadShaders)( qboolean createNew );
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
+  void (*FastCapture)(byte *data);
+	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
+	void (*UpdateMode)(glconfig_t *glconfigOut);
+	void (*UpdateModel)(const char *name);
+	void (*UpdateShader)(char *shaderName, int lightmapIndex);
+	void (*ResetBannerSpy)( void );
+	void (*SwitchWorld)(int world);
 
 } refexport_t;
 
@@ -169,6 +179,7 @@ typedef struct {
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
+	void	(*Cmd_SetDescription)( const char *name, char *description );
 
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
@@ -212,6 +223,7 @@ typedef struct {
 	// platform-dependent functions
 	void	(*GLimp_Init)( glconfig_t *config );
 	void	(*GLimp_Shutdown)( qboolean unloadDLL );
+	void  (*GLimp_UpdateMode)( glconfig_t *config );
 	void	(*GLimp_EndFrame)( void );
 	void	(*GLimp_InitGamma)( glconfig_t *config );
 	void	(*GLimp_SetGamma)( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
@@ -224,6 +236,10 @@ typedef struct {
 	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
+	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
+	void (*Spy_CursorPosition)(float x, float y);
+	void (*Spy_Banner)(float x, float y);
+	void (*Sys_DownloadLocalFile)(char *fileName);
 } refimport_t;
 
 extern	refimport_t	ri;

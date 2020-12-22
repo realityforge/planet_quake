@@ -33,8 +33,6 @@ qboolean	chat_team;
 
 int			chat_playerNum;
 
-static void Field_CharEvent( field_t *edit, int ch );
-
 /*
 =============================================================================
 
@@ -172,6 +170,10 @@ static void Field_Paste( field_t *edit ) {
 	char	*cbd;
 	int		pasteLen, i;
 
+#ifdef EMSCRIPTEN
+	Sys_SetClipboardData(edit);
+	return;
+#endif
 	cbd = Sys_GetClipboardData();
 
 	if ( !cbd ) {
@@ -227,7 +229,9 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 	int		len;
 
 	// shift-insert is paste
-	if ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keys[K_SHIFT].down ) {
+	// TODO: convert to K_PASTE which changes depending on OS
+	if ( ( ( ( key == K_INS ) || ( key == K_KP_INS ) ) && keys[K_SHIFT].down )
+ 		|| ( key == 'v' && ( keys[K_CTRL].down || keys[K_COMMAND].down || keys[K_SUPER].down ) ) ) {
 		Field_Paste( edit );
 		return;
 	}
@@ -292,7 +296,7 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 Field_CharEvent
 ==================
 */
-static void Field_CharEvent( field_t *edit, int ch ) {
+void Field_CharEvent( field_t *edit, int ch ) {
 	int		len;
 
 	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste
@@ -427,7 +431,7 @@ static void Console_Key( int key ) {
 		g_consoleField.widthInChars = g_console_field_width;
 
 		if ( cls.state == CA_DISCONNECTED ) {
-			SCR_UpdateScreen ();	// force an update, because the command
+			SCR_UpdateScreen (qfalse);	// force an update, because the command
 		}							// may take some time
 		return;
 	}
@@ -435,7 +439,17 @@ static void Console_Key( int key ) {
 	// command completion
 
 	if (key == K_TAB) {
+		int beforeLength = strlen(g_consoleField.buffer);
 		Field_AutoComplete(&g_consoleField);
+		
+		// try to rcon complete the command
+		if(!com_dedicated->integer
+			&& !Q_stristr(g_consoleField.buffer, "\\rcon")
+			&& beforeLength == strlen(g_consoleField.buffer)) {
+			Cbuf_AddText( va("rcon complete %s\n", g_consoleField.buffer) );
+			Cbuf_Execute();		
+		}
+
 		return;
 	}
 
@@ -543,7 +557,7 @@ CL_KeyDownEvent
 Called by CL_KeyEvent to handle a keypress
 ===================
 */
-static void CL_KeyDownEvent( int key, unsigned time )
+static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 {
 	keys[key].down = qtrue;
 	keys[key].repeats++;
@@ -589,6 +603,25 @@ static void CL_KeyDownEvent( int key, unsigned time )
 		}
 	}
 
+
+#ifdef USE_MV
+	if ( (/* key == K_MOUSE1 || */ key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
+		int id, n, d;
+		//if ( key == K_MOUSE1 )
+			d = 1;
+		//else
+		//	d = -1;
+		for ( id = (clc.clientView + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
+			if ( cl.snap.clps[ id ].valid ) {
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clc.clientView, id );
+				clc.clientView = id;
+				break;
+			}
+		}
+	}
+#endif // USE_MV
+
+
 	// escape is always handled special
 	if ( key == K_ESCAPE ) {
 #ifdef USE_CURL
@@ -611,13 +644,14 @@ static void CL_KeyDownEvent( int key, unsigned time )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvms[cgvm])
+				VM_Call( cgvms[cgvm], 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( cls.state == CA_ACTIVE && !clc.demoplaying ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+			if ( cgvms[cgvm] && cls.state == CA_ACTIVE && !clc.demoplaying ) {
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 #if 0
@@ -628,30 +662,58 @@ static void CL_KeyDownEvent( int key, unsigned time )
 				Cvar_Set( "com_errorMessage", "" );
 				if ( cls.state == CA_CINEMATIC ) {
 					SCR_StopCinematic();
-				} else if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+				} else if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 					CL_FlushMemory();
 				}
 #endif
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+#ifndef EMSCRIPTEN
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+#else
+				if(!FS_Initialized()) {
+					Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
+				} else {
+					VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				}
+#endif
 			}
 			return;
 		}
+		else if(cls.postgame == qtrue && uivms[uivm]) {
+			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
+			return;
+		}
 
-		VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
 		return;
 	}
 
+#ifdef EMSCRIPTEN
+	if(cls.firstClick
+	  && (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3
+		  || key == K_MOUSE4 || key == K_MOUSE5)) {
+		cls.firstClick = qfalse;
+		S_Init();
+		cls.soundRegistered = qtrue;
+		S_BeginRegistration();
+	// only process touch events for 3rd device which is hidden on screen
+	//   this simulates tapping on the menu screen
+	// TODO: use second finger as K_MOUSE2 for zooming on weapons?
+	}
+	if (fingerId > 0 && (fingerId != 3 || !(Key_GetCatcher( ) & KEYCATCH_UI))) {
+		return;
+	}
+#endif
 
 	// distribute the key down event to the apropriate handler
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 		Console_Key( key );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if ( uivm ) {
-			VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+		if ( uivms[uivm] ) {
+			VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvm ) {
-			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qtrue );
+		if ( cgvms[cgvm] ) {
+			VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		Message_Key( key );
@@ -671,7 +733,7 @@ CL_KeyUpEvent
 Called by CL_KeyEvent to handle a keyrelease
 ===================
 */
-static void CL_KeyUpEvent( int key, unsigned time )
+static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 {
 	keys[key].repeats = 0;
 	keys[key].down = qfalse;
@@ -697,10 +759,10 @@ static void CL_KeyUpEvent( int key, unsigned time )
 	if( cls.state != CA_DISCONNECTED )
 		Key_ParseBinding( key, qfalse, time );
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
-		VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qfalse );
+	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvms[cgvm] ) {
+		VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qfalse );
 	}
 }
 
@@ -712,12 +774,14 @@ CL_KeyEvent
 Called by the system for both key up and key down events
 ===================
 */
-void CL_KeyEvent( int key, qboolean down, unsigned time )
+void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 	if ( down )
-		CL_KeyDownEvent( key, time );
+		CL_KeyDownEvent( key, time, finger );
 	else
-		CL_KeyUpEvent( key, time );
+		CL_KeyUpEvent( key, time, finger );
 }
 
 
@@ -742,7 +806,7 @@ void CL_CharEvent( int key )
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_UI )
 	{
-		VM_Call( uivm, 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
+		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) 
 	{
@@ -769,7 +833,7 @@ void Key_ClearStates( void )
 	for ( i = 0 ; i < MAX_KEYS ; i++ )
 	{
 		if ( keys[i].down )
-			CL_KeyEvent( i, qfalse, 0 );
+			CL_KeyEvent( i, qfalse, 0, 0 );
 
 		keys[i].down = qfalse;
 		keys[i].repeats = 0;
@@ -797,6 +861,8 @@ Key_SetCatcher
 */
 void Key_SetCatcher( int catcher )
 {
+	//if(uivms[uivm] && re.BeginRegistration)
+	//	re.ResetBannerSpy();
 	// If the catcher state is changing, clear all key states
 	if ( catcher != keyCatchers )
 		Key_ClearStates();

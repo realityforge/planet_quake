@@ -148,7 +148,7 @@ void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-			Cmd_ExecuteString (text);
+			Cmd_ExecuteString (text, qfalse);
 		} else {
 			Cbuf_Execute();
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text.data);
@@ -250,7 +250,13 @@ void Cbuf_Execute( void )
 		}
 
 		// execute the command line
-		Cmd_ExecuteString( line );
+		Cmd_ExecuteString( line, qfalse );
+#ifdef EMSCRIPTEN
+		// if an execution invoked a callback event like `\fs_restart`, run the rest next frame
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+			return;
+		}
+#endif
 	}
 }
 
@@ -269,6 +275,9 @@ void Cbuf_Execute( void )
 Cmd_Exec_f
 ===============
 */
+int overflowCounter = 0;
+int lastExec = 0;
+char lastScript[MAX_QPATH*10];
 static void Cmd_Exec_f( void ) {
 	qboolean quiet;
 	union {
@@ -276,6 +285,7 @@ static void Cmd_Exec_f( void ) {
 		void *v;
 	} f;
 	char filename[MAX_QPATH];
+	int execTime = Com_Milliseconds();
 
 	quiet = !Q_stricmp(Cmd_Argv(0), "execq");
 
@@ -287,6 +297,23 @@ static void Cmd_Exec_f( void ) {
 
 	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
+	if(lastExec == 0 || execTime - lastExec > cl_execTimeout->integer) {
+		lastExec = execTime;
+		lastScript[0] = 0;
+		overflowCounter = 0;
+	} else {
+		overflowCounter++;
+	}
+	if(overflowCounter >= cl_execOverflow->integer) {
+		if(!Q_stristr(lastScript, filename)) {
+			int addFile = strlen(lastScript);
+			lastScript[addFile] = ';';
+			Com_Memcpy(&lastScript[addFile+1], filename, strlen(filename));
+		}
+		// TODO: show a line number of where the repeat exec came from in the cfg?
+		Com_Printf( "EXEC OVERFLOW ERROR! not executing %s for at least %i milliseconds\n", filename, cl_execTimeout->integer );
+		return;
+	}
 	FS_BypassPure();
 	FS_ReadFile( filename, &f.v );
 	FS_RestorePure();
@@ -354,6 +381,7 @@ typedef struct cmd_function_s
 {
 	struct cmd_function_s	*next;
 	char					*name;
+	char					*description;
 	xcommand_t				function;
 	completionFunc_t	complete;
 } cmd_function_t;
@@ -365,6 +393,40 @@ static	char		cmd_tokenized[BIG_INFO_STRING+MAX_STRING_TOKENS];	// will have 0 by
 static	char		cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
 
 static	cmd_function_t	*cmd_functions;		// possible commands to execute
+typedef struct cmdContext_s
+{
+	int		argc;
+	char	*argv[ MAX_STRING_TOKENS ];	// points into cmd.tokenized
+	char	tokenized[ BIG_INFO_STRING + MAX_STRING_TOKENS ];	// will have 0 bytes inserted
+	char	cmd[ BIG_INFO_STRING ]; // the original command we received (no token processing)
+} cmdContext_t;
+
+static cmdContext_t		cmd;
+static cmdContext_t		savedCmd;
+
+/*
+============
+Cmd_SaveCmdContext
+
+Save the tokenized strings and cmd so that later we can restore them and the engine will continue its usual processing normally
+============
+*/
+void Cmd_SaveCmdContext( void )
+{
+	Com_Memcpy( &savedCmd, &cmd, sizeof( cmdContext_t ) );
+}
+
+/*
+============
+Cmd_RestoreCmdContext
+
+Restore the tokenized strings and cmd saved previously so that the engine can continue its usual processing
+============
+*/
+void Cmd_RestoreCmdContext( void )
+{
+	Com_Memcpy( &cmd, &savedCmd, sizeof( cmdContext_t ) );
+}
 
 /*
 ============
@@ -665,10 +727,100 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	// use a small malloc to avoid zone fragmentation
 	cmd = S_Malloc( sizeof( *cmd ) );
 	cmd->name = CopyString( cmd_name );
+	cmd->description = NULL;
 	cmd->function = function;
 	cmd->complete = NULL;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
+}
+
+
+/*
+=====================
+Cmd_SetDescription
+=====================
+*/
+void Cmd_SetDescription( const char *cmd_name, char *cmd_description )
+{
+	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
+	if(!cmd) return;
+
+	if( cmd_description && cmd_description[0] != '\0' )
+	{
+		if( cmd->description != NULL )
+		{
+			Z_Free( cmd->description );
+		}
+		cmd->description = CopyString( cmd_description );
+	}
+}
+
+
+/*
+============
+Cmd_Help
+
+Prints the value, default, and latched string of the given variable
+============
+*/
+static void Cmd_Help( const cmd_function_t *cmd ) {	
+	Com_Printf ("\"%s\" " S_COLOR_WHITE "",
+		cmd->name );
+
+	Com_Printf (" autocomplete:\"%s" S_COLOR_WHITE "\"",
+		cmd->complete ? "yes" : "no" );
+
+	Com_Printf ("\n");
+
+	if ( cmd->description ) {
+		Com_Printf( "%s\n", cmd->description );
+	}
+}
+
+
+/*
+============
+Cmd_Help_f
+
+Prints the contents of a cvar 
+(preferred over Cvar_Command where cvar names and commands conflict)
+============
+*/
+static void Cmd_Help_f( void )
+{
+	char *name;
+	cmd_function_t *cmd;
+	cvar_t	*v;
+
+	if(Cmd_Argc() != 2)
+	{
+		Com_Printf ("Usage: help <command>\n");
+		return;
+	}
+
+	name = CopyString(Cmd_Argv(1));
+
+	if(!Q_stricmp("all", name)) {
+		for( cmd = cmd_functions; cmd; cmd = cmd->next ) {
+			Cmd_Help(cmd);
+		}
+		return;
+	}
+
+	Cmd_TokenizeString(name);
+	if(Cvar_Command()) {
+		Z_Free(name);
+		return;
+	}
+	
+	cmd = Cmd_FindCommand( name );
+	
+	if(cmd)
+		Cmd_Help(cmd);
+	else
+		Com_Printf ("Command %s does not exist.\n", name);
+
+	Z_Free(name);
 }
 
 
@@ -708,6 +860,9 @@ void Cmd_RemoveCommand( const char *cmd_name ) {
 			*back = cmd->next;
 			if (cmd->name) {
 				Z_Free(cmd->name);
+			}
+			if (cmd->description) {
+				Z_Free(cmd->description);
 			}
 			Z_Free (cmd);
 			return;
@@ -808,13 +963,13 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-void Cmd_ExecuteString( const char *text ) {
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	cmd_function_t *cmd, **prev;
 
 	// execute the command line
 	Cmd_TokenizeString( text );
 	if ( !Cmd_Argc() ) {
-		return;		// no tokens
+		return qfalse;		// no tokens
 	}
 
 	// check registered command functions
@@ -834,36 +989,49 @@ void Cmd_ExecuteString( const char *text ) {
 			} else {
 				cmd->function();
 			}
-			return;
+			return qtrue;
 		}
 	}
 	
 	// check cvars
 	if ( Cvar_Command() ) {
-		return;
+		return qtrue;
 	}
-
+	
 #ifndef DEDICATED
 	// check client game commands
-	if ( com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
-		return;
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
+		return qtrue;
 	}
 #endif
 
+#ifdef USE_LOCAL_DED
+	if (com_dedicated->integer)
+#endif
 	// check server game commands
-	if ( com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
-		return;
+	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
+		return qtrue;
 	}
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
-		return;
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
+		return qtrue;
+	}
+
+	if(noServer && com_dedicated && com_dedicated->integer) {
+		return qfalse;
 	}
 
 	// send it as a server command if we are connected
 	// this will usually result in a chat message
-	CL_ForwardCommandToServer( text );
+	if(!noServer && com_dedicated && !com_dedicated->integer) {
+		CL_ForwardCommandToServer( text );
+		return qtrue;		
+	} else {
+		// ForwardCommandToClient
+		return qfalse;
+	}
 #endif
 }
 
@@ -927,12 +1095,25 @@ Cmd_Init
 */
 void Cmd_Init( void ) {
 	Cmd_AddCommand ("cmdlist",Cmd_List_f);
+	Cmd_SetDescription("cmdlist", "List all available console commands\nUsage: cmdlist");
 	Cmd_AddCommand ("exec",Cmd_Exec_f);
-	Cmd_AddCommand ("execq",Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
+	Cmd_SetDescription("exec", "Execute a config file or script\nUsage: exec <configfile>");
+	Cmd_AddCommand ("execq",Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "execq", Cmd_CompleteCfgName );
+	Cmd_SetDescription("exec", "Quietly execute a config file or script\nUsage: execq <configfile>");
 	Cmd_AddCommand ("vstr",Cmd_Vstr_f);
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
+	Cmd_SetDescription("vstr", "Identifies the attached command as a variable string\nUsage: vstr <variable>");
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
+	Cmd_SetDescription( "echo", "Echo a string to the message display to your console only\nUsage: echo <message>");
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
+	Cmd_SetDescription( "wait", "Stop execution and wait one game tick\nUsage: wait (<# ticks> optional)" );
+	Cmd_AddCommand ("help", Cmd_Help_f);
+	Cmd_SetDescription("help", "Display helpful description for any console command\nUsage: help <command>");
+
+	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CVAR_ARCHIVE | CV_INTEGER);
+	Cvar_SetDescription(cl_execTimeout, "Minimum milliseconds between executions to reset overflow detection\nDefault: 2000");
+	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);
+	Cvar_SetDescription( cl_execOverflow, "Maximum milliseconds an execution can take before it becomes overflowed\nDefault: 200" );
 }
