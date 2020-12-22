@@ -99,7 +99,7 @@ var LibrarySysInput = {
       }
       if(evt.keyCode === 27) {
         SYSI.cancelBackspace = true;
-        SYSI.InputPushFocus({visible: false})
+        SYSI.InputPushFocusEvent({visible: false})
       }
       
       SYSI.checkPasteEvent(evt)

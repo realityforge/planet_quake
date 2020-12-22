@@ -191,6 +191,15 @@ var LibrarySysMain = {
             ])
           }
         }
+        if(window.location.hostname.match(/quakeiiiarena\.com/i)) {
+          if (!args.includes('+map') && !args.includes('+spmap')
+            && !args.includes('+devmap') && !args.includes('+spdevmap') 
+            && !args.includes('+connect')) {
+            args.push.apply(args, [
+              '+connect', 'quakeiiiarena.com',
+            ])
+          }
+        }
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
@@ -422,7 +431,9 @@ var LibrarySysMain = {
     let exportUrl = URL.createObjectURL(file);
     var popout = window.open(exportUrl, '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
     URL.revokeObjectURL(exportUrl);
-    setTimeout(function () {popout.close()}, 1000)
+    setTimeout(function () {
+      if(popout) popout.close()
+    }, 1000)
   }
 }
 autoAddDeps(LibrarySysMain, '$SYSM')

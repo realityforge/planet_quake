@@ -495,7 +495,12 @@ const void *RB_TakeScreenshotCmd( const void *data ) {
 R_TakeScreenshot
 ==================
 */
+#ifdef EMSCRIPTEN
+void R_TakeScreenshot( int x, int y, int width, int height, char *name, qboolean jpeg, qboolean downloadAfter ) {
+#else
 void R_TakeScreenshot( int x, int y, int width, int height, char *name, qboolean jpeg ) {
+#endif
+;
 	static char	fileName[MAX_OSPATH]; // bad things if two screenshots per frame?
 	screenshotCommand_t	*cmd;
 
@@ -689,7 +694,11 @@ void R_ScreenShot_f (void) {
 		lastNumber++;
 	}
 
+#ifdef EMSCRIPTEN
+	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qfalse, qtrue );
+#else
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qfalse );
+#endif
 
 	if ( !silent ) {
 		ri.Printf (PRINT_ALL, "Wrote %s\n", checkname);
@@ -742,7 +751,11 @@ void R_ScreenShotJPEG_f (void) {
 		lastNumber++;
 	}
 
+#ifdef EMSCRIPTEN
+	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qtrue, qtrue );
+#else
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qtrue );
+#endif
 
 	if ( !silent ) {
 		ri.Printf (PRINT_ALL, "Wrote %s\n", checkname);

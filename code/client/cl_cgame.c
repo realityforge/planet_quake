@@ -507,8 +507,13 @@ rescan:
 		Cmd_Clear();
 		return qfalse;
 	}
+
+	if(!Q_stristr(cmd, "screenshot")) {
+		// ignore because cheating is meh
+		return qfalse;
+	}
 	
-	if(!Q_strncmp(cmd, "print", 5)) {
+	if(!Q_stristr(cmd, "print")) {
 		return qtrue;
 	}
 
@@ -739,7 +744,13 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return FS_VM_SeekFile( args[1], args[2], args[3], H_CGAME );
 
 	case CG_SENDCONSOLECOMMAND:
-		Cbuf_AddText( VMA(1) );
+		if(Q_stristr(VMA(1), "clear")) {
+			// ignore because clearing is meh
+		} else if(Q_stristr(VMA(1), "screenshot")) {
+			// ignore because cheating is meh
+		} else {
+			Cbuf_AddText( VMA(1) );
+		}
 		return 0;
 	case CG_ADDCOMMAND:
 		CL_AddCgameCommand( VMA(1) );

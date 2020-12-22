@@ -4388,7 +4388,7 @@ void Com_Frame( qboolean noDelay ) {
 		return;
 	}
 #endif
-Com_Printf( "Starting dedicated changes\n" );
+
 #ifndef USE_LOCAL_DED
 	if ( com_dedicated->modified ) {
 		// get the latched value

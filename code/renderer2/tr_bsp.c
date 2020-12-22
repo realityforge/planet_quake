@@ -2773,7 +2773,11 @@ void RE_LoadWorldMap( const char *name ) {
 	// TODO: if (empty == -1) FreeOldestClipmap
 #else
 	if ( tr.worldMapLoaded ) {
+#ifdef USE_LAZY_MEMORY
+		ri.Printf( PRINT_WARNING, "ERROR: attempted to redundantly load world map\n" );
+#else
 		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map\n" );
+#endif
 	}
 #endif
 

@@ -233,11 +233,9 @@ S_Update
 */
 void S_Update( int msec )
 {
-	Com_Printf("Starting sound\n");
 	if( si.Update ) {
 		si.Update( msec );
 	}
-	Com_Printf("Ending sound\n");
 }
 
 
