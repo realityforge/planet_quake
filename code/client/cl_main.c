@@ -3570,6 +3570,8 @@ static void CL_CheckUserinfo( void ) {
 CL_Frame
 ==================
 */
+static int secondTimer = 0;
+static int thirdTimer = 0;
 void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
