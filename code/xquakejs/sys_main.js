@@ -182,21 +182,13 @@ var LibrarySysMain = {
           ])
         }
       } else {
-        if(window.location.hostname.match(/quake\.money/i)) {
+        if(window.location.hostname.match(/quake\.money/i)
+          || window.location.hostname.match(/quakeiiiarena\.com/i)) {
           if (!args.includes('+map') && !args.includes('+spmap')
             && !args.includes('+devmap') && !args.includes('+spdevmap') 
             && !args.includes('+connect')) {
             args.push.apply(args, [
               '+connect', window.location.hostname,
-            ])
-          }
-        }
-        if(window.location.hostname.match(/quakeiiiarena\.com/i)) {
-          if (!args.includes('+map') && !args.includes('+spmap')
-            && !args.includes('+devmap') && !args.includes('+spdevmap') 
-            && !args.includes('+connect')) {
-            args.push.apply(args, [
-              '+connect', 'quakeiiiarena.com',
             ])
           }
         }

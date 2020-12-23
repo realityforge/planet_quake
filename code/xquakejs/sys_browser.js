@@ -4,7 +4,7 @@ var LibrarySys = {
 		serviceProgress: [0, 0],
 		previousProgress: [0, 0],
 		servicable: false,
-		dedicated: true,
+		dedicated: false,
 		resizeDelay: null,
 		style: null,
 		shaderCallback: [],

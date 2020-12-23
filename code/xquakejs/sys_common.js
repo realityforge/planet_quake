@@ -4,7 +4,6 @@ var LibrarySysCommon = {
 		// next free handle to use for a loaded dso.
 		// (handle=0 is avoided as it means "error" in dlopen)
 		nextHandle: 1,
-
 		loadedLibs: {         // handle -> dso [refcount, name, module, global]
 			// program itself
 			// XXX uglifyjs fails on "[-1]: {"

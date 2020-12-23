@@ -489,6 +489,7 @@ var LibrarySysInput = {
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
     window.addEventListener('beforeunload', function (e) {
+      Browser.safeCallback(_S_DisableSounds)();
       if(SYSI.cancelBackspace) {
         e.preventDefault();
         e.returnValue = 'Do you really want to quit?';

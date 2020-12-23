@@ -14,7 +14,7 @@
     "deploy:version": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/",
     "deploy:assets": "npm run write:version && gsutil cp ./build/*-js-js/version.json gs://quake.games/assets/baseq3-cc/",
     "deploy:precache": "gsutil cp ./code/xquakejs/bin/index.html gs://quake.games && gsutil cp ./code/xquakejs/bin/server-worker.js gs://quake.games && gsutil cp ./code/xquakejs/bin/service-worker.js gs://quake.games",
-    "deploy:built": "cp ./build/release-js-js/quake3e.* ./code/xquakejs/bin/",
+    "deploy:built": "cp ./build/release-js-js/quake3e.* ./code/xquakejs/bin/ && ./build/release-js-js/version.json ./code/xquakejs/bin/",
     "deploy:cors": "gsutil cors set ./code/xquakejs/bin/cors.json gs://quake.games/",
     "deploy": "npm run deploy:program && npm run deploy:version && npm run deploy:precache && npm run deploy:built",
     "update:lvl": "node -e \"require('./code/xquakejs/bin/lvlworldsync.js')\""

@@ -88,8 +88,11 @@ var LibrarySysNet = {
         request.send()
       })
       */
-      fetch(url, {responseType: 'blob'})
-        .catch(function (e) { console.log(e) })
+      fetch(url, {
+        mode: opts.mode || 'cors',
+        responseType: 'arraybuffer',
+        credentials: opts.credentials || 'omit'
+      }).catch(function (e) { console.log(e) })
         .then(function (response) {
             if (!response || !(response.status >= 200 && response.status < 300 || response.status === 304)) {
               xhrError = new Error('Couldn\'t load ' + url + '. Status: ' + (response || {}).statusCode)
@@ -295,14 +298,20 @@ var LibrarySysNet = {
       SYSN.downloadTries.sort(function (a, b) { 
         return b.includes(segments[0]) - a.includes(segments[0])
       })
-			var doDownload = function (baseUrl) {
+			var doDownload = function (baseUrl, opaque) {
 				SYSN.DoXHR(baseUrl + noMod, {
+          credentials: opaque ? 'omit' : 'same-origin',
+          mode: opaque ? 'no-cors' : 'cors',
 					dataType: 'arraybuffer',
 					onprogress: onprogress,
 					onload: function (err, data) {
-						tryDownload++
+            if(err && !opaque) {
+              doDownload(baseUrl, true)
+              return
+            }
+            tryDownload++
 						if(err && tryDownload < SYSN.downloadTries.length) {
-							doDownload(SYSN.downloadTries[tryDownload])
+							doDownload(SYSN.downloadTries[tryDownload], false)
 							return
 						}
             if(onload)
@@ -311,9 +320,9 @@ var LibrarySysNet = {
 				})
 			}
       if(segments.length > 1) {
-  			doDownload(SYSN.downloadTries[0])
+  			doDownload(SYSN.downloadTries[0], false)
       } else {
-        doDownload('')
+        doDownload('', false)
       }
 		},
   },

@@ -4846,7 +4846,11 @@ void CL_Init( void ) {
 	Cvar_SetDescription( cl_lazyLoad, "Download graphics over the network after the level loads\n1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
 #endif
 
+#ifdef EMSCRIPTEN
+	cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
+#else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
+#endif
 	Cvar_SetDescription(cl_dlURL, "Set the download URL for the client in case it isn't set by the server\nDefault: http://ws.q3df.org/getpk3bymapname.php/%1");
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
