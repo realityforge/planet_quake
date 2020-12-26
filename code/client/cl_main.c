@@ -447,14 +447,14 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 		if ( newindex >= to->numEntities ) {
 			newnum = MAX_GENTITIES+1;
 		} else {
-			newent = &cl.parseEntities[cgvm][(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
+			newent = &cl.parseEntities[0][(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
 			newnum = newent->number;
 		}
 
 		if ( oldindex >= from_num_entities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			//oldent = &cl.parseEntities[cgvm][(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
+			//oldent = &cl.parseEntities[0][(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
 			oldent = &oldents[ oldindex ];
 			oldnum = oldent->number;
 		}
@@ -551,7 +551,7 @@ static void CL_WriteSnapshot( void ) {
 
 	// save last sent state so if there any need - we can skip any further incoming messages
 	for ( i = 0; i < snap->numEntities; i++ )
-		saved_ents[ i ] = cl.parseEntities[cgvm][ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
+		saved_ents[ i ] = cl.parseEntities[0][ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
 
 	saved_snap = *snap;
 	saved_snap.parseEntitiesNum = 0;
@@ -3570,8 +3570,10 @@ static void CL_CheckUserinfo( void ) {
 CL_Frame
 ==================
 */
+#ifdef USE_LAZY_LOAD
 static int secondTimer = 0;
 static int thirdTimer = 0;
+#endif
 void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
@@ -4571,7 +4573,7 @@ void CL_LoadVM_f( void ) {
 		clientWorlds[clc.currentView][1] = prevDvr[1];
 		clientWorlds[clc.currentView][2] = prevDvr[2];
 		clientWorlds[clc.currentView][3] = prevDvr[3];
-		CL_InitCGame(qtrue);
+		CL_InitCGame(cgvms[0] != NULL); // createNew if cgvms[0] is already taken
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
@@ -4625,15 +4627,17 @@ void CL_World_f( void ) {
 	newWorld = atoi( Cmd_Argv(1) );
 	Com_DPrintf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
 	
-	//Com_EventLoop();
-	//re.ReloadShaders(qtrue);
 	clc.currentView = newWorld;
+	/*
+	Com_EventLoop();
+	re.ReloadShaders(qtrue);
 	cl.newSnapshots = qtrue;
 	clc.eventMask |= EM_SNAPSHOT;
 	CL_SetCGameTime();
 	CL_WritePacket();
 	CL_WritePacket();
 	CL_WritePacket();
+	*/
 }
 
 void CL_Tile_f(void) {
@@ -6226,8 +6230,10 @@ void CL_MultiviewFollow_f( void )
 {
 	int clientNum;
 
-	if ( !cl.snap.multiview )
+	if ( !cl.snap.multiview ) {
+		Com_Printf("Not a multiview snapshot.\n");
 		return;
+	}
 
 	clientNum = atoi( Cmd_Argv( 1 ) );
 

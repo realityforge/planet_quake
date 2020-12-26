@@ -51,7 +51,8 @@ int		sv_lastClientSeq;
 cvar_t	*sv_mvClients;
 cvar_t	*sv_mvPassword;
 cvar_t	*sv_demoFlags;
-cvar_t	*sv_autoRecord;
+cvar_t	*sv_mvAutoRecord;
+cvar_t  *sv_autoRecordThreshold;
 
 cvar_t	*sv_mvFileCount;
 cvar_t	*sv_mvFolderSize;
@@ -1540,9 +1541,10 @@ void SV_Frame( int msec ) {
 
 #ifdef USE_MV
 	svs.emptyFrame = qfalse;
-	if ( sv_autoRecord->integer > 0 ) {
+	if ( sv_mvAutoRecord->integer > 0 || sv_mvAutoRecord->integer == -1 ) {
 		if ( sv_demoFile == FS_INVALID_HANDLE ) {
-			if ( SV_FindActiveClient( qtrue, -1, sv_autoRecord->integer ) >= 0 ) {
+			if ( sv_mvAutoRecord->integer == -1
+				|| SV_FindActiveClient( qtrue, -1, sv_mvAutoRecord->integer ) >= 0 ) {
 				Cbuf_AddText( "mvrecord\n" );
 			}
 		}

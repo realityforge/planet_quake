@@ -67,8 +67,11 @@ void SV_StopRecord( client_t	*cl ) {
  		ps = SV_GameClientNum( clientnum );
  		Com_Printf ("DEMO: ps->persistant[PERS_SCORE] = %i\n",ps->persistant[PERS_SCORE]);
  		fraglimit = Cvar_Get("fraglimit", "30", CVAR_SERVERINFO);
- 		if (cl->savedemo || ((ps->pm_type == PM_INTERMISSION || ps->clientNum==clientnum)
-      && ps->persistant[PERS_SCORE]>=(int)(fraglimit->integer*0.9))) {
+ 		if (cl->savedemo 
+      || ((ps->pm_type == PM_INTERMISSION || ps->clientNum==clientnum)
+      && (sv_autoRecordThreshold->value == 0
+        || ps->persistant[PERS_SCORE]>=
+          (int)((float)fraglimit->integer*sv_autoRecordThreshold->value)))) {
  			// keep demo
  			Com_Printf ("DEMO: Stoprecord: %i: stop\n", clientnum);
 			Com_Printf ("DEMO: %s's serverside demo was recorded as %s\n", cl->name, cl->demoName);

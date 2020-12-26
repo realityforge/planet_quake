@@ -1637,7 +1637,7 @@ void SV_AddOperatorCommands( void ) {
   Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
 	Cmd_SetDescription( "cl_stoprecord", "Stop recording a client demo\nUsage: cl_stoprecord" );
   Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
-	Cmd_SetDescription( "cl_saverecord", "Save a client recording\nUsage: cl_saverecord <filename>" );
+	Cmd_SetDescription( "cl_saverecord", "Save a client recording regardless of score\nUsage: cl_saverecord <filename>" );
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );

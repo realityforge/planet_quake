@@ -78,7 +78,7 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 
 	// save the parsed entity state into the big circular buffer so
 	// it can be used as the source for a later delta
-	state = &cl.parseEntities[cgvm][cl.parseEntitiesNum[cgvm] & (MAX_PARSE_ENTITIES-1)];
+	state = &cl.parseEntities[0][cl.parseEntitiesNum[0] & (MAX_PARSE_ENTITIES-1)];
 
 	if ( unchanged ) {
 		*state = *old;
@@ -89,7 +89,7 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 	if ( state->number == (MAX_GENTITIES-1) ) {
 		return;		// entity was delta removed
 	}
-	cl.parseEntitiesNum[cgvm]++;
+	cl.parseEntitiesNum[0]++;
 	frame->numEntities++;
 }
 
@@ -104,7 +104,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 	int	newnum;
 	int	oldindex, oldnum;
 
-	newframe->parseEntitiesNum = cl.parseEntitiesNum[cgvm];
+	newframe->parseEntitiesNum = cl.parseEntitiesNum[0];
 	newframe->numEntities = 0;
 
 	// delta from the entities present in oldframe
@@ -116,7 +116,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[cgvm][
+			oldstate = &cl.parseEntities[0][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -146,7 +146,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[cgvm][
+				oldstate = &cl.parseEntities[0][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -163,7 +163,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[cgvm][
+				oldstate = &cl.parseEntities[0][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -194,7 +194,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[cgvm][
+			oldstate = &cl.parseEntities[0][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -279,7 +279,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			// The frame that the server did the delta from
 			// is too old, so we can't reconstruct it properly.
 			Com_Printf ("Delta frame too old.\n");
-		} else if ( cl.parseEntitiesNum[cgvm] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+		} else if ( cl.parseEntitiesNum[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
 			Com_Printf ("Delta parseEntitiesNum too old.\n");
 		} else {
 			newSnap.valid = qtrue;	// valid delta parse
@@ -403,7 +403,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		// apply skipmask to player entities
 		if ( newSnap.mergeMask ) {
 			for ( i = 0; i < newSnap.numEntities; i++ ) {
-				es = &cl.parseEntities[cgvm][ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
+				es = &cl.parseEntities[0][ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
 				if ( es->number >= MAX_CLIENTS )
 					break;
 				if ( newSnap.clps[ es->number ].valid ) {

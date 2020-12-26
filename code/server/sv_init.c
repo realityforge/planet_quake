@@ -862,8 +862,8 @@ void SV_Init( void )
 
 #ifdef USE_MV
 	Cvar_Get( "mvproto", va( "%i", MV_PROTOCOL_VERSION ), CVAR_SERVERINFO | CVAR_ROM );
-	sv_autoRecord = Cvar_Get( "sv_mvAutoRecord", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	Cvar_SetDescription(sv_autoRecord, "Automatically record a multiview demo\nDefault: 0");
+	sv_mvAutoRecord = Cvar_Get( "sv_mvAutoRecord", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
+	Cvar_SetDescription(sv_mvAutoRecord, "Automatically record a multiview demo\nDefault: 0");
 	sv_demoFlags = Cvar_Get( "sv_mvFlags", "3", CVAR_ARCHIVE );
 	Cvar_SetDescription(sv_demoFlags, "Record scoring in the multiview demo\nDefault: 3");
 	sv_mvClients = Cvar_Get( "sv_mvClients", "8", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1020,6 +1020,8 @@ void SV_Init( void )
 	Cvar_SetDescription( sv_autoDemo, "Automatically record a server-side demo for the match\nDefault: 0" );
 	sv_autoRecord = Cvar_Get ("sv_autoRecord", "0", CVAR_ARCHIVE );
 	Cvar_SetDescription( sv_autoRecord, "Automatically record a client demo for every client in the match\nDefault: 0" );
+	sv_autoRecordThreshold = Cvar_Get("sv_autoRecordThreshold", "0.9", CVAR_ARCHIVE );
+	Cvar_SetDescription( sv_autoRecordThreshold, "Automatically save a client demo recording if this threshold is met for their score\n0 - Save all clients\n0.9 - Save only clients with 90% of the points\nDefault: 0.9" );
 	// port from client-side to freeze server-side demos
 	cl_freezeDemo = Cvar_Get("cl_freezeDemo", "0", CVAR_TEMP);
 	Cvar_SetDescription( cl_freezeDemo, "Freeze the playing demo using this variable, just like in client demo mode\nDefault: 0" );

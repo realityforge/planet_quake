@@ -497,7 +497,6 @@ endif
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=2 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
 		-s SINGLE_FILE=1 \
     -frtti \
 		-flto \
@@ -510,7 +509,6 @@ endif
     -s SAFE_HEAP=0 \
     -s DEMANGLE_SUPPORT=0 \
     -s ASSERTIONS=2 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
     -flto \
     -fPIC
 

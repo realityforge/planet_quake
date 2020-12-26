@@ -111,7 +111,7 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[cgvm][ n ].number == entityID ) {
+		if ( cl.parseEntities[0][ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -147,7 +147,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+	if ( cl.parseEntitiesNum[0] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
 	}
 
@@ -219,7 +219,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", clc.clientView );
 							break;
 						}
-						snapshot->entities[ count++ ] = cl.parseEntities[cgvm][ parsedIndex ];
+						snapshot->entities[ count++ ] = cl.parseEntities[0][ parsedIndex ];
 					} else {
 						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i", entityNum );
 						break;
@@ -265,7 +265,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
 		snapshot->entities[i] = 
-			cl.parseEntities[cgvm][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+			cl.parseEntities[0][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
 	}
 
 	// FIXME: configstring changes and server commands!!!
@@ -481,12 +481,12 @@ rescan:
 		newWorld = atoi(s);
 
 		//if(clc.currentView != newWorld) {
-			clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
-			//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
-			//clc.serverCommandsIgnore[ index ] = qtrue;
-			cls.lastVidRestart = Sys_Milliseconds();
-			cvar_modifiedFlags |= CVAR_USERINFO;
-			Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", newWorld));
+		clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
+		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
+		//clc.serverCommandsIgnore[ index ] = qtrue;
+		cls.lastVidRestart = Sys_Milliseconds();
+		cvar_modifiedFlags |= CVAR_USERINFO;
+		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", newWorld));
 		//}
 		Cmd_Clear();
 		return qfalse;
@@ -1137,7 +1137,6 @@ void CL_InitCGame( qboolean createNew ) {
 	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 #ifdef USE_MULTIVM
-/*
 	if(createNew) {
 		cls.state = CA_ACTIVE;
 		re.EndRegistration();
@@ -1145,7 +1144,6 @@ void CL_InitCGame( qboolean createNew ) {
 		cls.lastVidRestart = Sys_Milliseconds();
 		return;
 	}
-*/
 #endif
 
 #ifdef EMSCRIPTEN

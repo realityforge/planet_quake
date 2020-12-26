@@ -4,7 +4,7 @@ RUN \
   echo "# INSTALL DEPENDENCIES ##########################################" && \
   apt-get update && \
   apt upgrade -y && apt dist-upgrade && \
-  apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils && \
+  apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils vim && \
   mkdir -p /tmp/build
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
@@ -17,7 +17,7 @@ RUN \
 RUN \
   echo "# BUILD NATIVE SERVER ##########################################" && \
   cd /tmp/build/planet_quake && \
-  make release BUILD_CLIENT=0 NOFPU=1
+  make clean release BUILD_CLIENT=0 NOFPU=1
 RUN \
   echo "# BUILD JS CLIENT ##########################################" && \
   cd /tmp/build/planet_quake && \
@@ -32,7 +32,7 @@ RUN \
   export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   /usr/bin/python3 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
   export STANDALONE=1 && \
-  make release PLATFORM=js
+  make clean release PLATFORM=js
 RUN \
   echo "# COPY OUTPUT ##########################################" && \
   mkdir ~/planet_quake && \
