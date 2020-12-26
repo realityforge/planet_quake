@@ -493,6 +493,11 @@ rescan:
 	}
 #endif
 
+	if(Q_stristr(cmd, "screenshot")) {
+		// ignore because cheating is meh
+		Cmd_Clear();
+		return qfalse;
+	}
 
 	// we may want to put a "connect to other server" command here
 #ifdef USE_CMD_CONNECTOR
@@ -502,18 +507,13 @@ rescan:
 	
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
-	if(!strcmp( cmd, "reconnect" )) {
+	if( !strcmp( cmd, "reconnect" ) ) {
 		Cbuf_AddText("reconnect\n");
 		Cmd_Clear();
 		return qfalse;
 	}
 
-	if(!Q_stristr(cmd, "screenshot")) {
-		// ignore because cheating is meh
-		return qfalse;
-	}
-	
-	if(!Q_stristr(cmd, "print")) {
+	if( Q_stristr(cmd, "print") ) {
 		return qtrue;
 	}
 
@@ -759,6 +759,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cmd_RemoveCommandSafe( VMA(1) );
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
+Com_DPrintf( "clientCommand: %s\n", VMA(1) );
 		CL_AddReliableCommand( VMA(1), qfalse );
 		return 0;
 	case CG_UPDATESCREEN:
@@ -927,7 +928,9 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_KEY_ISDOWN:
 		return Key_IsDown( args[1] );
 	case CG_KEY_GETCATCHER:
-		return Key_GetCatcher();
+		// keep console use a secret from cgame because freon/e+ has fuck-arounds with it
+		// TODO: move console image settings to server-side
+		return Key_GetCatcher() & ~KEYCATCH_CONSOLE;
 	case CG_KEY_SETCATCHER:
 		// Don't allow the cgame module to close the console
 		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );

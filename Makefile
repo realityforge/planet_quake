@@ -974,6 +974,7 @@ Q3REND2OBJ = \
   $(B)/rend2/tr_animation.o \
   $(B)/rend2/tr_backend.o \
   $(B)/rend2/tr_bsp.o \
+	$(B)/rend2/tr_bsp1.o \
 	$(B)/rend2/tr_bsp2.o \
   $(B)/rend2/tr_cmds.o \
   $(B)/rend2/tr_curve.o \

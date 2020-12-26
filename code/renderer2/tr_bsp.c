@@ -503,7 +503,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 }
 
 
-static float FatPackU(float input, int lightmapnum)
+float FatPackU(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return input;
@@ -520,7 +520,7 @@ static float FatPackU(float input, int lightmapnum)
 	return input;
 }
 
-static float FatPackV(float input, int lightmapnum)
+float FatPackV(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return input;
@@ -538,7 +538,7 @@ static float FatPackV(float input, int lightmapnum)
 }
 
 
-static int FatLightmap(int lightmapnum)
+int FatLightmap(int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return lightmapnum;
@@ -2851,7 +2851,7 @@ void RE_LoadWorldMap( const char *name ) {
 		break;
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		//LoadBsp1();
+		LoadBsp1(name);
 		break;
 	default:
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 

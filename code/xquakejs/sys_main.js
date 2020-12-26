@@ -397,7 +397,9 @@ var LibrarySysMain = {
         //   return the correct type based on the position of variable
         : UTF8ToString(HEAP32[a>>2]) })
     SYSC.Print(args)
-    window.serverWorker.postMessage(['status', args])
+    if(SYS.dedicated) {
+      window.serverWorker.postMessage(['status', args])
+    }
   },
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.getQueryCommands())
