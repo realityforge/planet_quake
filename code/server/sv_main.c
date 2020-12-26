@@ -1543,8 +1543,7 @@ void SV_Frame( int msec ) {
 	svs.emptyFrame = qfalse;
 	if ( sv_mvAutoRecord->integer > 0 || sv_mvAutoRecord->integer == -1 ) {
 		if ( sv_demoFile == FS_INVALID_HANDLE ) {
-			if ( sv_mvAutoRecord->integer == -1
-				|| SV_FindActiveClient( qtrue, -1, sv_mvAutoRecord->integer ) >= 0 ) {
+			if ( SV_FindActiveClient( qtrue, -1, sv_mvAutoRecord->integer == -1 ? 0 : sv_mvAutoRecord->integer ) >= 0 ) {
 				Cbuf_AddText( "mvrecord\n" );
 			}
 		}

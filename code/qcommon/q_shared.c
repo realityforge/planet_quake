@@ -2089,7 +2089,7 @@ qboolean Info_SetValueForKey_s( char *s, int slen, const char *key, const char *
 
 	if ( len1 + len2 >= slen )
 	{
-		Com_Printf( S_COLOR_YELLOW "Info string length exceeded for key '%s'\n", key );
+		Com_DPrintf( S_COLOR_YELLOW "Info string length exceeded for key '%s'\n", key );
 		return qfalse;
 	}
 
