@@ -106,6 +106,12 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
 
 void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 {
+  // don't fuck with my console, e+ does this
+  if(Q_stristr(newShaderName, "empty")) {
+    if(Q_stristr(shaderName, "console") || Q_stristr(shaderName, "white")) {
+      return;
+    }
+  }
   Com_Printf("Remapping shader: %s -> %s\n", shaderName, newShaderName);
   R_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }

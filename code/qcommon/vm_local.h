@@ -146,7 +146,6 @@ typedef struct vmSymbol_s {
 } vmSymbol_t;
 
 //typedef void(*vmfunc_t)(void);
-
 typedef union vmFunc_u {
 	byte		*ptr;
 	void (*func)(void);
@@ -206,6 +205,7 @@ struct vm_s {
 	qboolean	forceDataMask;
 
 	int			privateFlag;
+	recognizedVM_t knownVM;
 };
 
 extern  int       gvm;

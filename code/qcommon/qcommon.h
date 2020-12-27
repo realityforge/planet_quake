@@ -515,6 +515,18 @@ VIRTUAL MACHINE
 
 ==============================================================
 */
+typedef enum {
+	VMR_UNKNOWN = 0,
+	VMR_BASEQ3A,
+	VMR_OSP,
+	VMR_DEFRAG,
+	VMR_URT,
+	VMR_EPLUS,
+	VMR_CPMA1,
+	VMR_CPMA2,
+	VMR_SMOKIN, // Smokin' Guns
+} recognizedVM_t;
+
 typedef struct vm_s vm_t;
 
 typedef enum {

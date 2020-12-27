@@ -2553,6 +2553,9 @@ static void CL_DownloadsComplete( void ) {
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
+	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
+	cls.whiteShader = re.RegisterShader( "white" );
+	cls.consoleShader = re.RegisterShader( "console" );
 #ifndef EMSCRIPTEN
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();

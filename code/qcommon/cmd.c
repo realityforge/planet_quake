@@ -794,7 +794,7 @@ static void Cmd_Help_f( void )
 
 	if(Cmd_Argc() != 2)
 	{
-		Com_Printf ("Usage: help <command>\n");
+		Com_Printf ("List all commands using \\cmdlist\nUsage: help <command>\n");
 		return;
 	}
 

@@ -59,6 +59,7 @@ var LibraryVM = {
 			crc32sum: 120,
 			forceDataMask: 124,
 			privateFlag: 128,
+			knownVM: 132,
 		},
 		vms: [],
 		SUSPENDED: 0xDEADBEEF,
