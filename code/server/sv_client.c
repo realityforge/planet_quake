@@ -2395,10 +2395,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			client->state = CS_ACTIVE;
 		}
-		memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
+		//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	}
 
-	SV_UpdateConfigstrings( client );
+	//SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
 	ent->s.number = clientNum;

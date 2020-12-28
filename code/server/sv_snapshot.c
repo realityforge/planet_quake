@@ -989,7 +989,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 #ifdef USE_MULTIVM
 	gvm = 0;
-	CM_SwitchMap(gameWorlds[0]);
+	CM_SwitchMap(gameWorlds[gvm]);
 #endif
 
 	// build the snapshot
