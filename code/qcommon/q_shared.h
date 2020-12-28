@@ -63,17 +63,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#ifndef USE_CMD_CONNECTOR
 //#define USE_CMD_CONNECTOR 1
 //#endif
-#if !defined(DEDICATED) && defined(USE_MULTIVM)
+
 // allow loading graphics after the BSP and world has been entered
 //#define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts
 #define USE_LAZY_MEMORY 1
-
-#else // not USE_MULTIVM
-#undef USE_MULTIVM
-#undef USE_LAZY_MEMORY
-#undef USE_LAZY_LOAD
-#endif // USE_MULTIVM
 
 #else // not USE_MV
 #undef USE_MULTIVM

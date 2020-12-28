@@ -605,7 +605,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_MV
-	if ( (/* key == K_MOUSE1 || */ key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
+	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )
 			d = 1;

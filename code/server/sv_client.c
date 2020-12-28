@@ -2373,6 +2373,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
+			client->deltaMessage = -1;
+			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			SV_SendClientSnapshot( client, qfalse );
 			return;
 		} else {
@@ -2494,8 +2496,8 @@ void SV_Game_f( client_t *client ) {
 	vec3_t newOrigin = {0.0, 0.0, 0.0};
 
 	if(!client) return;
-	//client->multiview.protocol = MV_PROTOCOL_VERSION;
-	//client->multiview.scoreQueryTime = 0;
+	client->multiview.protocol = MV_PROTOCOL_VERSION;
+	client->multiview.scoreQueryTime = 0;
 	clientNum = client - svs.clients;
 	
 	userOrigin = Cmd_Argv(1);

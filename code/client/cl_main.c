@@ -386,9 +386,9 @@ static void CL_WriteGamestate( qboolean initial )
 	// baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		if ( !cl.baselineUsed[cgvm][ i ] )
+		if ( !cl.baselineUsed[0][ i ] )
 			continue;
-		ent = &cl.entityBaselines[cgvm][ i ];
+		ent = &cl.entityBaselines[0][ i ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, ent, qtrue );
 	}
@@ -471,7 +471,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[cgvm][newnum], newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[0][newnum], newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -6240,11 +6240,15 @@ void CL_MultiviewFollow_f( void )
 
 	clientNum = atoi( Cmd_Argv( 1 ) );
 
-	if ( (unsigned)clientNum >= MAX_CLIENTS )
+	if ( (unsigned)clientNum >= MAX_CLIENTS ) {
+		Com_Printf("Multiview client out of range.\n");
 		return;
+	}
 
 	if ( GET_ABIT( cl.snap.clientMask, clientNum ) )
 		clc.clientView = clientNum;
+	else 
+		Com_Printf("Multiview client not available.\n");
 }
 
 #endif // USE_MV

@@ -175,7 +175,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[cgvm][newnum], qfalse );
+			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[0][newnum], qfalse );
 			continue;
 		}
 
@@ -744,9 +744,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}
-			es = &cl.entityBaselines[cgvm][ newnum ];
+			es = &cl.entityBaselines[0][ newnum ];
 			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
-			cl.baselineUsed[cgvm][ newnum ] = 1;
+			cl.baselineUsed[0][ newnum ] = 1;
 		} else {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}

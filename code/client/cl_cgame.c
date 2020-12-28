@@ -251,7 +251,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
 
-	if(!clSnap->multiview && cgvm != clc.currentView) {
+	if(cgvm != clc.currentView) {
 		// send a game update but don't bother with entities yet
 		snapshot->numEntities = 0;
 		return qtrue;
