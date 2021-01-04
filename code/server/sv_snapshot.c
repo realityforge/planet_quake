@@ -145,7 +145,6 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 #ifdef USE_MULTIVM
 		if(oldframe->world != gvm) {
-Com_Printf("Hit\n");			
 			oldframe = NULL;
 			lastframe = 0;
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
@@ -836,7 +835,9 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	Com_Memset( frame->psMask, 0, sizeof( frame->psMask ) );
 	frame->first_psf = svs.nextSnapshotPSF;
 	frame->num_psf = 0;
+#ifdef USE_MULTIVM
 	frame->world = gvm;
+#endif
 #endif
 	
 	if ( client->state == CS_ZOMBIE )

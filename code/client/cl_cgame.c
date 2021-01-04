@@ -166,6 +166,8 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	} else {
 		cv = cgvm;
 	}
+#else
+	cv = clc.clientView;
 #endif
 	cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {
@@ -779,7 +781,6 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		Cmd_RemoveCommandSafe( VMA(1) );
 		return 0;
 	case CG_SENDCLIENTCOMMAND:
-Com_DPrintf( "clientCommand: %s\n", VMA(1) );
 		CL_AddReliableCommand( VMA(1), qfalse );
 		return 0;
 	case CG_UPDATESCREEN:

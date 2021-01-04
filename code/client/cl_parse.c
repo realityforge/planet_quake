@@ -326,9 +326,9 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 					break;
 				}
 			}
-//Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
+Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
 		} else {
-//Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
+Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
 		}
 #endif
 
