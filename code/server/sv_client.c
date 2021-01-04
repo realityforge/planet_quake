@@ -1308,12 +1308,14 @@ static void SV_SendClientGameState( client_t *client ) {
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 
 	if ( client->state != CS_PRIMED ) {
-		Com_Printf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
+		Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
+#ifdef USE_MULTIVM
 	Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvm) ) );
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
 	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
 	//SV_RemainingGameState();
+#endif
 	client->state = CS_PRIMED;
 
 	client->pureAuthentic = qfalse;
@@ -2900,8 +2902,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		}
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
+#ifdef USE_MULTIVM
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
+#endif
 }
 
 

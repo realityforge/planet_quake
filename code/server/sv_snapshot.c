@@ -1014,6 +1014,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( client - svs.clients );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
+		// TODO: remove this line when MULTIIVM is working
 		if(gvm != client->newWorld) continue;
 #endif
 ;
@@ -1071,6 +1072,8 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
@@ -1081,6 +1084,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 
 	SV_SendMessageToClient( &msg, client );
+
 #ifdef USE_MULTIVM
 	}
 #endif

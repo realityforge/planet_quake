@@ -157,7 +157,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->serverTime = clSnap->serverTime;
 
 #ifdef USE_MV
-#ifdef USE_MULTIVM
+#ifdef USE_0MULTIVM
 	// TODO: make a table and \mvassign command?
 	if(cgvm == 0) {
 		cv = clc.clientNum;

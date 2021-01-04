@@ -53,7 +53,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_MV_ZCMD		// command compression
 
 #ifdef USE_MV
-//#define USE_MULTIVM 1
+#define USE_MULTIVM 1
 // enable loading multiple QVM images
 #ifdef USE_MULTIVM
 #undef MV_PROTOCOL_VERSION
