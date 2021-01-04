@@ -78,7 +78,7 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 
 	// save the parsed entity state into the big circular buffer so
 	// it can be used as the source for a later delta
-	state = &cl.parseEntities[0][cl.parseEntitiesNum[0] & (MAX_PARSE_ENTITIES-1)];
+	state = &cl.parseEntities[cgvm][cl.parseEntitiesNum[cgvm] & (MAX_PARSE_ENTITIES-1)];
 
 	if ( unchanged ) {
 		*state = *old;
@@ -89,7 +89,7 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 	if ( state->number == (MAX_GENTITIES-1) ) {
 		return;		// entity was delta removed
 	}
-	cl.parseEntitiesNum[0]++;
+	cl.parseEntitiesNum[cgvm]++;
 	frame->numEntities++;
 }
 
@@ -104,7 +104,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 	int	newnum;
 	int	oldindex, oldnum;
 
-	newframe->parseEntitiesNum = cl.parseEntitiesNum[0];
+	newframe->parseEntitiesNum = cl.parseEntitiesNum[cgvm];
 	newframe->numEntities = 0;
 
 	// delta from the entities present in oldframe
@@ -116,7 +116,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[0][
+			oldstate = &cl.parseEntities[cgvm][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -146,7 +146,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[0][
+				oldstate = &cl.parseEntities[cgvm][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -163,7 +163,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[0][
+				oldstate = &cl.parseEntities[cgvm][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -175,7 +175,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[0][newnum], qfalse );
+			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[cgvm][newnum], qfalse );
 			continue;
 		}
 
@@ -194,7 +194,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[0][
+			oldstate = &cl.parseEntities[cgvm][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -279,7 +279,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			// The frame that the server did the delta from
 			// is too old, so we can't reconstruct it properly.
 			Com_Printf ("Delta frame too old.\n");
-		} else if ( cl.parseEntitiesNum[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+		} else if ( cl.parseEntitiesNum[cgvm] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
 			Com_Printf ("Delta parseEntitiesNum too old.\n");
 		} else {
 			newSnap.valid = qtrue;	// valid delta parse
@@ -297,6 +297,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 		commandTime = 0;
 
+
 		if ( old && old->multiview ) {
 			Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
 			newSnap.mergeMask = old->mergeMask;
@@ -310,11 +311,31 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			newSnap.version = MSG_ReadByte( msg );
 		}
 
-		// from here we can start version-dependent snapshot parsing
+#ifdef USE_MULTIVM
+		cgvm = newSnap.world = MSG_ReadByte( msg );
+		if(!old || old->world != cgvm) {
+			old = NULL;
+			for(int j = 0; j < MAX_NUM_VMS; j++) {
+				if(cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].world == cgvm
+					&& cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].valid) {
+					old = &cl.snapshots[newSnap.deltaNum - j & PACKET_MASK];
+					if(newSnap.version != MV_PROTOCOL_VERSION) {
+						newSnap.version = old->version;
+						newSnap.mergeMask = old->mergeMask;
+					}
+					break;
+				}
+			}
+//Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
+		} else {
+//Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
+		}
+#endif
 
+		// from here we can start version-dependent snapshot parsing
 		if ( newSnap.version != MV_PROTOCOL_VERSION ) {
-			Com_Error( ERR_DROP, "CL_ParseSnapshot(): unknown multiview protocol version %i",
-				newSnap.version );
+			Com_Error( ERR_DROP, "CL_ParseSnapshot(): unknown multiview protocol version %i (%i)",
+				newSnap.version, cgvm );
 		}
 
 		// playerState to entityState merge mask
@@ -403,7 +424,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		// apply skipmask to player entities
 		if ( newSnap.mergeMask ) {
 			for ( i = 0; i < newSnap.numEntities; i++ ) {
-				es = &cl.parseEntities[0][ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
+				es = &cl.parseEntities[cgvm][ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
 				if ( es->number >= MAX_CLIENTS )
 					break;
 				if ( newSnap.clps[ es->number ].valid ) {
@@ -420,13 +441,14 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			clc.clientView = clc.clientNum;
 			if ( old ) {
 				// invalidate state
-				Com_Memset( &old->clps, 0, sizeof( old->clps ) );
+				memset( &old->clps, 0, sizeof( old->clps ) );
 				Com_DPrintf( S_COLOR_CYAN "transition from multiview to legacy stream\n" );
 				//old->ps = old->clps[ clc.clientView ].ps;
 				//Com_Memcpy( old->areamask, old->clps[ clc.clientView ].areamask, sizeof( old->areamask ) );
 			}
 		}
 #endif // USE_MV
+;
 
 	// read areamask
 	newSnap.areabytes = MSG_ReadByte( msg );
@@ -657,7 +679,7 @@ static void CL_ParseServerInfo( void )
 
 	serverInfo = cl.gameState.stringData
 		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	Com_Printf("Gamestate: %.*s\n", strlen(serverInfo), serverInfo);
+	Com_Printf("Gamestate: %.*s\n", (int)strlen(serverInfo), serverInfo);
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
 		"sv_allowDownload"));
@@ -744,9 +766,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}
-			es = &cl.entityBaselines[0][ newnum ];
+			es = &cl.entityBaselines[cgvm][ newnum ];
 			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
-			cl.baselineUsed[0][ newnum ] = 1;
+			cl.baselineUsed[cgvm][ newnum ] = 1;
 		} else {
 			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 		}

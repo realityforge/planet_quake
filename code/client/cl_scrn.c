@@ -699,7 +699,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
-		// TODO: prevent hidden VMs from adding entities to renderer, but refresh the cgvms anyways
 		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
 
 		// don't switch renderer or clipmap when updated from VM
@@ -719,9 +718,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		//if(cgvm != clc.currentView && ms - cls.lastVidRestart <= 5) {
-		//	continue;
-		//}
+		if(cgvm != clc.currentView) { // && ms - cls.lastVidRestart <= 5) {
+			continue;
+		}
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 

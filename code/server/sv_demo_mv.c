@@ -604,7 +604,11 @@ void SV_MV_SetSnapshotParams( void )
 	svs.numSnapshotPSF = sv_mvClients->integer * PACKET_BACKUP * MAX_CLIENTS;
 
 	// reserve 2 additional frames for recorder slot
+#ifdef USE_MULTIVM
+	svs.numSnapshotPSF += 2 * MAX_CLIENTS * MAX_NUM_VMS;
+#else
 	svs.numSnapshotPSF += 2 * MAX_CLIENTS;
+#endif
 
 	if ( svs.numSnapshotPSF )
 		svs.modSnapshotPSF = ( 0x10000000 / svs.numSnapshotPSF ) * svs.numSnapshotPSF;
@@ -633,6 +637,8 @@ int SV_GetMergeMaskEntities( clientSnapshot_t *snap )
 		for ( /*n = 0 */; n < snap->num_psf; n++ ) {
 			psf = &svs.snapshotPSF[ ( snap->first_psf + n ) % svs.numSnapshotPSF ];
 			if ( psf->clientSlot == ent->number ) {
+				
+//Com_Printf("Server snapshot: %i\n", snap->world);
 				skipMask |= MSG_PlayerStateToEntityStateXMask( &psf->ps, ent, qtrue );
 			}
 		}

@@ -143,6 +143,20 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		// we have a valid snapshot to delta from
 		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
+#ifdef USE_MULTIVM
+		if(oldframe->world != gvm) {
+Com_Printf("Hit\n");			
+			oldframe = NULL;
+			lastframe = 0;
+			for(int j = 0; j < MAX_NUM_VMS; j++) {
+				if(client->frames[ client->deltaMessage - j & PACKET_MASK ].world == gvm) {
+					oldframe = &client->frames[ client->deltaMessage - j & PACKET_MASK ];
+					lastframe = client->netchan.outgoingSequence - client->deltaMessage - j;
+					break;
+				}
+			}
+		}
+#endif
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
 			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
@@ -219,6 +233,10 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
+#ifdef USE_MULTIVM
+		frame->world = gvm;
+		MSG_WriteByte( msg, gvm );
+#endif
 		
 		newmask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
 
@@ -818,6 +836,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	Com_Memset( frame->psMask, 0, sizeof( frame->psMask ) );
 	frame->first_psf = svs.nextSnapshotPSF;
 	frame->num_psf = 0;
+	frame->world = gvm;
 #endif
 	
 	if ( client->state == CS_ZOMBIE )
@@ -985,12 +1004,18 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	int     headerBytes, start;
 	playerState_t	*ps;
 	entityState_t nullstate;
+	sharedEntity_t *ent;
 	const svEntity_t *svEnt;
 
 #ifdef USE_MULTIVM
-	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
+	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
+		if(!gvms[gvm]) continue;
+		CM_SwitchMap(gameWorlds[gvm]);
+		ent = SV_GentityNum( client - svs.clients );
+		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
+		if(gvm != client->newWorld) continue;
 #endif
+;
 
 	// build the snapshot
 	SV_BuildClientSnapshot( client );
@@ -1006,6 +1031,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
 	
+/*
 	if(includeBaselines) {
 		qboolean first = qtrue;
 		// write the baselines
@@ -1025,6 +1051,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 			MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 		}
 	}
+*/
 
 	// send over all the relevant entityState_t
 	// and the playerState_t
@@ -1043,8 +1070,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
@@ -1055,6 +1080,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 
 	SV_SendMessageToClient( &msg, client );
+#ifdef USE_MULTIVM
+	}
+#endif
 }
 
 

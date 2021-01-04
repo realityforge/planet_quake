@@ -88,6 +88,9 @@ typedef struct {
 	int			mergeMask;
 	byte		clientMask[MAX_CLIENTS/8];
 #endif // USE_MV
+#ifdef USE_MULTIVM
+	int     world;
+#endif
 
 } clSnapshot_t;
 

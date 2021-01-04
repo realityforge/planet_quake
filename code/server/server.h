@@ -131,6 +131,9 @@ typedef struct {
 	int				num_psf;				// number of playerStates to send
 	byte			psMask[MAX_CLIENTS/8];	// playerState mask
 #endif
+#ifdef  USE_MULTIVM
+	int       world;
+#endif
 
 	int				messageSent;		// time the message was transmitted
 	int				messageAcked;		// time the message was acked

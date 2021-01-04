@@ -2285,15 +2285,18 @@ void SV_LoadVM( client_t *cl ) {
 	for ( i =4; i > 1; i-- )
 	{
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
+		// TODO: fix bots
 		//SV_BotFrame( sv.time );
 	}
 	SV_CreateBaseline();
+	/*
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( svs.clients[i].state >= CS_CONNECTED
 		 	&& svs.clients[i].netchan.remoteAddress.type == NA_BOT) {
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qtrue, qfalse );
 		}
 	}
+	*/
 	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 	SV_RemainingGameState();
 	gvm = 0;
@@ -2356,7 +2359,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		// remove from old world?
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_ExecuteClientCommand(client, "team spectator");
+		//SV_ExecuteClientCommand(client, "team spectator");
 		//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		gvm = newWorld;
@@ -2372,10 +2375,10 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
-			client->gamestateMessageNum = -1; // send a new gamestate
-			client->deltaMessage = -1;
-			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			SV_SendClientSnapshot( client, qfalse );
+			//client->gamestateMessageNum = -1; // send a new gamestate
+			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			//SV_SendClientSnapshot( client, qfalse );
 			return;
 		} else {
 			// above must come before this because there is a filter 
@@ -2386,7 +2389,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->gameWorld = newWorld;
 			// notify the client of the secondary map
 			SV_SendServerCommand(client, "world %i", client->newWorld);
-			SV_SendClientSnapshot( client, qtrue );
+			//SV_SendClientSnapshot( client, qtrue );
 			// send new baselines
 			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
 				if(strlen(sv.configstrings[index]) > 0) {

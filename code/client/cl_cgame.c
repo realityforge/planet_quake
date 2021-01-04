@@ -111,7 +111,7 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[0][ n ].number == entityID ) {
+		if ( cl.parseEntities[cgvm][ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -127,7 +127,7 @@ CL_GetSnapshot
 */
 qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	clSnapshot_t	*clSnap;
-	int				i, count;
+	int				i, count, cv;
 	cl.updateSnap = 0;
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
@@ -147,7 +147,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum[0] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
 	}
 
@@ -160,11 +160,11 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 #ifdef USE_MULTIVM
 	// TODO: make a table and \mvassign command?
 	if(cgvm == 0) {
-		clc.clientView = clc.clientNum;
-	} else if (cgvm == clc.clientNum) {
-		clc.clientView = 0;
+		cv = clc.clientNum;
+	} else if (cgvm == 1) {
+		cv = clc.clientView;
 	} else {
-		clc.clientView = cgvm;		
+		cv = cgvm;
 	}
 #endif
 	cl.updateSnap = snapshot;
@@ -173,19 +173,30 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		int		startIndex;
 		int		parsedIndex;
 		byte	*entMask;
+		
+#ifdef USE_MULTIVM
+		if(clSnap->world != cgvm) {
+			for(int j = 0; j < MAX_NUM_VMS; j++) {
+				if(cl.snapshots[snapshotNumber - j & PACKET_MASK].world == cgvm
+					&& cl.snapshots[snapshotNumber - j & PACKET_MASK].valid) {
+					clSnap = &cl.snapshots[snapshotNumber - j & PACKET_MASK];
+				}
+			}
+		}
+#endif
 
-		if ( clSnap->clps[ clc.clientView ].valid ) {
+		if ( clSnap->clps[ cv ].valid ) {
 			//clientView = clc.clientView;
 		} else {
 			// we need to select another POV
 			if ( clSnap->clps[ clc.clientNum ].valid ) {
 				Com_DPrintf( S_COLOR_CYAN "multiview: switch POV back from %d to %d\n", clc.clientView, clc.clientNum );
-				clc.clientView = clc.clientNum; // fixup to avoid glitches
+				cv = clc.clientView = clc.clientNum; // fixup to avoid glitches
 			} else { 
 				// invalid primary id? search for any valid
 				for ( i = 0; i < MAX_CLIENTS; i++ ) {
 					if ( clSnap->clps[ i ].valid ) {
-						/*clientView = */ clc.clientNum = clc.clientView = i;
+						/*clientView = */ cv = clc.clientNum = clc.clientView = i;
 						Com_Printf( S_COLOR_CYAN "multiview: set primary client id %d\n", clc.clientNum );
 						break;
 					}
@@ -198,30 +209,39 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 				}
 			}
 		}
-		Com_Memcpy( snapshot->areamask, clSnap->clps[ clc.clientView ].areamask, sizeof( snapshot->areamask ) );
-		snapshot->ps = clSnap->clps[ clc.clientView ].ps;
-		entMask = clSnap->clps[ clc.clientView ].entMask;
-		if(clc.clientView != clc.clientNum) {
+		Com_Memcpy( snapshot->areamask, clSnap->clps[ cv ].areamask, sizeof( snapshot->areamask ) );
+		snapshot->ps = clSnap->clps[ cv ].ps;
+		entMask = clSnap->clps[ cv ].entMask;
+		if(cv != clc.clientNum) {
 			snapshot->ps.pm_flags |= PMF_FOLLOW;
 		}
+
+#ifdef USE_MULTIVM
+		if(clSnap->world != cgvm) {
+			// send a game update but don't bother with entities yet
+			snapshot->numEntities = 0;
+			return qtrue;
+		} else {
+		}
+#endif
 
 		count = 0;
 		startIndex = 0;
 		for ( entityNum = 0; entityNum < MAX_GENTITIES-1; entityNum++ ) {
 			if ( GET_ABIT( entMask, entityNum ) ) {
 				// skip own and spectated entity
-				if ( entityNum != clc.clientView && entityNum != snapshot->ps.clientNum )
+				if ( entityNum != cv && entityNum != snapshot->ps.clientNum )
 				{
 					startIndex = CL_GetParsedEntityIndexByID( clSnap, entityNum, startIndex, &parsedIndex );
 					if ( startIndex >= 0 ) {
 						// should never happen but anyway:
 						if ( count >= MAX_ENTITIES_IN_SNAPSHOT ) {
-							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", clc.clientView );
+							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", cv );
 							break;
 						}
-						snapshot->entities[ count++ ] = cl.parseEntities[0][ parsedIndex ];
+						snapshot->entities[ count++ ] = cl.parseEntities[cgvm][ parsedIndex ];
 					} else {
-						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i", entityNum );
+						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvm );
 						break;
 					}
 				}
@@ -265,7 +285,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
 		snapshot->entities[i] = 
-			cl.parseEntities[0][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+			cl.parseEntities[cgvm][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
 	}
 
 	// FIXME: configstring changes and server commands!!!
