@@ -315,16 +315,18 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		cgvm = newSnap.world = MSG_ReadByte( msg );
 		if((!old || old->world != cgvm) && newSnap.deltaNum > 0) {
 			old = NULL;
+			/*
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
 				if(cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].world == cgvm) {
 					old = &cl.snapshots[newSnap.deltaNum - j & PACKET_MASK];
-					//if(newSnap.version != MV_PROTOCOL_VERSION) {
-					//	newSnap.version = old->version;
-					//	newSnap.mergeMask = old->mergeMask;
-					//}
+					if(newSnap.version != MV_PROTOCOL_VERSION) {
+						newSnap.version = old->version;
+						newSnap.mergeMask = old->mergeMask;
+					}
 					break;
 				}
 			}
+			*/
 //Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
 		} else {
 //Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
@@ -727,6 +729,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			clc.serverCommandsIgnore[ i ] = qtrue;
 		}
 	}
+	
+#ifdef USE_MULTIVM
+	cgvm = MSG_ReadByte( msg );
+#endif
 
 	// a gamestate always marks a server command sequence
 	clc.serverCommandSequence = MSG_ReadLong( msg );

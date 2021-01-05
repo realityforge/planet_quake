@@ -1014,6 +1014,8 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( client - svs.clients );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
+		// TODO: remove this line when MULTIIVM is working
+		//if(gvm != client->newWorld) continue;
 #endif
 ;
 

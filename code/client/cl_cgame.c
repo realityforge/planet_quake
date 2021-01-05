@@ -96,6 +96,19 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
+	clSnapshot_t	*clSnap;
+#ifdef USE_MULTIVM
+	if(cl.snap.multiview && cl.snap.world != cgvm) {
+		for(int j = 0; j < MAX_NUM_VMS; j++) {
+			clSnap = &cl.snapshots[cl.snap.messageNum - j & PACKET_MASK];
+			if(clSnap->world == cgvm) {
+				*snapshotNumber = clSnap->messageNum;
+				*serverTime = clSnap->serverTime;
+				return;
+			}
+		}
+	}
+#endif
 	*snapshotNumber = cl.snap.messageNum;
 	*serverTime = cl.snap.serverTime;
 }
@@ -175,14 +188,16 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		int		startIndex;
 		int		parsedIndex;
 		byte	*entMask;
-		
+
 #ifdef USE_MULTIVM
 		if(clSnap->world != cgvm) {
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
-				if(cl.snapshots[snapshotNumber - j & PACKET_MASK].world == cgvm
-					&& cl.snapshots[snapshotNumber - j & PACKET_MASK].valid) {
+				if(cl.snapshots[snapshotNumber - j & PACKET_MASK].world == cgvm) {
 					clSnap = &cl.snapshots[snapshotNumber - j & PACKET_MASK];
 				}
+			}
+			if ( !clSnap->valid ) {
+				return qfalse;
 			}
 		}
 #endif
@@ -220,6 +235,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 #ifdef USE_MULTIVM
 		if(clSnap->world != cgvm) {
+Com_Printf( "Not working\n" );
 			// send a game update but don't bother with entities yet
 			snapshot->numEntities = 0;
 			return qtrue;
@@ -249,7 +265,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 				}
 			}
 		}
-
 		snapshot->numEntities = count;
 		return qtrue;
 	}

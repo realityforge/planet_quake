@@ -1165,7 +1165,7 @@ void SV_InitGameProgs( qboolean createNew ) {
 
 	if(createNew) {
 		sv.entityParsePoint = CM_EntityString();
-		VM_Call( gvms[gvm], 3, GAME_INIT, sv.time, Com_Milliseconds(), qfalse );
+		VM_Call( gvms[gvm], 3, GAME_INIT, sv.time - 5 * 100, Com_Milliseconds() - 5 * 100, qfalse );
 		return;
 	}
 	SV_InitGameVM( qfalse );

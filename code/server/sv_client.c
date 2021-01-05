@@ -1354,6 +1354,9 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
+#ifdef USE_MULTIVM
+	MSG_WriteByte( &msg, client->newWorld );
+#endif
 	MSG_WriteLong( &msg, client->reliableSequence );
 
 	// write the configstrings
@@ -2284,7 +2287,7 @@ void SV_LoadVM( client_t *cl ) {
 	SV_ClearWorld();
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
-	for ( i =4; i > 1; i-- )
+	for ( i = 4; i > 1; i-- )
 	{
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		// TODO: fix bots
@@ -2361,7 +2364,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		// remove from old world?
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		//SV_ExecuteClientCommand(client, "team spectator");
+		SV_ExecuteClientCommand(client, "team spectator");
 		//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		gvm = newWorld;
@@ -2379,8 +2382,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->state = CS_CONNECTED;
 			//client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			client->gamestateMessageNum = -1; // send a new gamestate
 			//SV_SendClientSnapshot( client, qfalse );
+			client->gamestateMessageNum = -1; // send a new gamestate
 			return;
 		} else {
 			// above must come before this because there is a filter 
