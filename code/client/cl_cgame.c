@@ -503,7 +503,7 @@ rescan:
 		newWorld = atoi(s);
 
 		//if(clc.currentView != newWorld) {
-		clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
+		//clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
 		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
 		//clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();

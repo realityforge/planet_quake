@@ -718,9 +718,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		if(cgvm != clc.currentView) { // && ms - cls.lastVidRestart <= 5) {
-			continue;
-		}
+		//if(cgvm != clc.currentView) { // && ms - cls.lastVidRestart <= 5) {
+		//	continue;
+		//}
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 

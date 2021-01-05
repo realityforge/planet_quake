@@ -313,20 +313,18 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
-		if(!old || old->world != cgvm) {
+		if((!old || old->world != cgvm) && newSnap.deltaNum > 0) {
 			old = NULL;
-			/*
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
 				if(cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].world == cgvm) {
 					old = &cl.snapshots[newSnap.deltaNum - j & PACKET_MASK];
-					if(newSnap.version != MV_PROTOCOL_VERSION) {
-						newSnap.version = old->version;
-						newSnap.mergeMask = old->mergeMask;
-					}
+					//if(newSnap.version != MV_PROTOCOL_VERSION) {
+					//	newSnap.version = old->version;
+					//	newSnap.mergeMask = old->mergeMask;
+					//}
 					break;
 				}
 			}
-			*/
 //Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
 		} else {
 //Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
@@ -764,6 +762,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			cl.gameState.dataCount += len + 1;
 		} else if ( cmd == svc_baseline ) {
 			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
+Com_Printf("Baselines: %i (%i)\n", newnum, cgvm);
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}

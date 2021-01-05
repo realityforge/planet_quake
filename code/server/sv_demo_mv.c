@@ -638,7 +638,7 @@ int SV_GetMergeMaskEntities( clientSnapshot_t *snap )
 			psf = &svs.snapshotPSF[ ( snap->first_psf + n ) % svs.numSnapshotPSF ];
 			if ( psf->clientSlot == ent->number ) {
 				
-//Com_Printf("Server snapshot: %i\n", snap->world);
+//Com_Printf("Server snapshot: %i (%i -> %i)\n", snap->world, snap->first_psf, snap->num_psf);
 				skipMask |= MSG_PlayerStateToEntityStateXMask( &psf->ps, ent, qtrue );
 			}
 		}

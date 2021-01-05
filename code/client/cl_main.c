@@ -4629,8 +4629,21 @@ void CL_World_f( void ) {
 	
 	newWorld = atoi( Cmd_Argv(1) );
 	Com_DPrintf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
-	
+
+	prevDvr[0] = clientWorlds[clc.currentView][0];
+	prevDvr[1] = clientWorlds[clc.currentView][1];
+	prevDvr[2] = clientWorlds[clc.currentView][2];
+	prevDvr[3] = clientWorlds[clc.currentView][3];
+	clientWorlds[clc.currentView][0] =
+	clientWorlds[clc.currentView][1] =
+	clientWorlds[clc.currentView][2] =
+	clientWorlds[clc.currentView][3] = -1;
 	clc.currentView = newWorld;
+	clientWorlds[clc.currentView][0] = prevDvr[0];
+	clientWorlds[clc.currentView][1] = prevDvr[1];
+	clientWorlds[clc.currentView][2] = prevDvr[2];
+	clientWorlds[clc.currentView][3] = prevDvr[3];
+	
 	/*
 	Com_EventLoop();
 	re.ReloadShaders(qtrue);
