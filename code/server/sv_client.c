@@ -2377,7 +2377,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
-			//client->gamestateMessageNum = -1; // send a new gamestate
+			//client->deltaMessage = -1;
+			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			client->gamestateMessageNum = -1; // send a new gamestate
 			//SV_SendClientSnapshot( client, qfalse );
 			return;
 		} else {
@@ -2398,8 +2400,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			client->state = CS_ACTIVE;
 		}
-		//client->deltaMessage = -1;
-		//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 		//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	}
 

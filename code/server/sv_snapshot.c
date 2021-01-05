@@ -488,8 +488,8 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 
 	clientpvs = CM_ClusterPVS (clientcluster);
 
-	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
-		es = svs.currFrame->ents[ e ];
+	for ( e = 0 ; e < svs.currFrame[gvm]->count; e++ ) {
+		es = svs.currFrame[gvm]->ents[ e ];
 		ent = SV_GentityNum( es->number );
 
 		// entities can be flagged to be sent to only one client
@@ -608,7 +608,7 @@ void SV_InitSnapshotStorage( void )
 	svs.currentSnapshotFrame = 0;
 	svs.lastValidFrame = 0;
 
-	svs.currFrame = NULL;
+	Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
 
 	Com_Memset( client_pvs, 0, sizeof( client_pvs ) );
 }
@@ -623,7 +623,7 @@ This should be called before any new client snaphot built
 */
 void SV_IssueNewSnapshot( void ) 
 {
-	svs.currFrame = NULL;
+	Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
 	
 	// value that clients can use even for their empty frames
 	// as it will not increment on new snapshot built
@@ -715,7 +715,7 @@ static void SV_BuildCommonSnapshot( void )
 	sf->frameNum = svs.snapshotFrame;
 	svs.snapshotFrame++;
 
-	svs.currFrame = sf; // clients can refer to this
+	svs.currFrame[gvm] = sf; // clients can refer to this
 
 	// setup start index
 	index = sf->start;
@@ -782,7 +782,7 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		pvs->entMaskBuilt = qtrue;
 		memset( pvs->entMask, 0, sizeof ( pvs->entMask ) );
 		for ( i = 0; i < pvs->numbers.numSnapshotEntities ; i++ ) {
-			SET_ABIT( pvs->entMask, svs.currFrame->ents[ pvs->numbers.snapshotEntities[ i ] ]->number );
+			SET_ABIT( pvs->entMask, svs.currFrame[gvm]->ents[ pvs->numbers.snapshotEntities[ i ] ]->number );
 		}
 	}
 
@@ -863,12 +863,12 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		return;
 	}
 
-	if ( svs.currFrame == NULL ) {
+	if ( svs.currFrame[gvm] == NULL ) {
 		// this will always success and setup current frame
 		SV_BuildCommonSnapshot();
 	}
 
-	frame->frameNum = svs.currFrame->frameNum;
+	frame->frameNum = svs.currFrame[gvm]->frameNum;
 
 #ifdef USE_MV
 	if ( frame->multiview ) {
@@ -912,9 +912,9 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		}
 
 		// get ALL pointers from common snapshot
-		frame->num_entities = svs.currFrame->count;
+		frame->num_entities = svs.currFrame[gvm]->count;
 		for ( i = 0 ; i < frame->num_entities ; i++ ) {
-			frame->ents[ i ] = svs.currFrame->ents[ i ];
+			frame->ents[ i ] = svs.currFrame[gvm]->ents[ i ];
 		}
 
 #ifdef USE_MV_ZCMD
@@ -939,7 +939,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		frame->num_entities = pvs->numbers.numSnapshotEntities;
 		// get pointers from common snapshot
 		for ( i = 0 ; i < pvs->numbers.numSnapshotEntities ; i++ )	{
-			frame->ents[ i ] = svs.currFrame->ents[ pvs->numbers.snapshotEntities[ i ] ];
+			frame->ents[ i ] = svs.currFrame[gvm]->ents[ pvs->numbers.snapshotEntities[ i ] ];
 		}
 	}
 }
@@ -1014,8 +1014,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		CM_SwitchMap(gameWorlds[gvm]);
 		ent = SV_GentityNum( client - svs.clients );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
-		// TODO: remove this line when MULTIIVM is working
-		if(gvm != client->newWorld) continue;
 #endif
 ;
 

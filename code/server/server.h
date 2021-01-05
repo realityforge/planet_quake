@@ -68,7 +68,11 @@ typedef enum {
 
 // we might not use all MAX_GENTITIES every frame
 // so leave more room for slow-snaps clients etc.
+#ifdef USE_MULTIVM
+#define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4*MAX_NUM_VMS)
+#else
 #define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4)
+#endif
 
 typedef struct snapshotFrame_s {
 	entityState_t *ents[ MAX_GENTITIES ];
@@ -338,7 +342,7 @@ typedef struct {
 	int			currentSnapshotFrame;	// for initializing empty frames
 	int			lastValidFrame;			// updated with each snapshot built
 	snapshotFrame_t	snapFrames[ NUM_SNAPSHOT_FRAMES ];
-	snapshotFrame_t	*currFrame; // current frame that clients can refer
+	snapshotFrame_t	*currFrame[MAX_NUM_VMS]; // current frame that clients can refer
 
 #ifdef USE_MV	
 	int			numSnapshotPSF;				// sv_democlients->integer*PACKET_BACKUP*MAX_CLIENTS

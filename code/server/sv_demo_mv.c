@@ -627,11 +627,11 @@ int SV_GetMergeMaskEntities( clientSnapshot_t *snap )
 	skipMask = 0;
 	psf = NULL;
 
-	if ( !svs.currFrame )
+	if ( !svs.currFrame[gvm] )
 		return skipMask;
 	
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
-		ent = svs.currFrame->ents[ i ];
+		ent = svs.currFrame[gvm]->ents[ i ];
 		if ( ent->number >= sv_maxclients->integer )
 			break;
 		for ( /*n = 0 */; n < snap->num_psf; n++ ) {

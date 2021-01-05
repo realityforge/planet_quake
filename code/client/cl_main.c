@@ -4688,6 +4688,10 @@ void CL_Tile_f(void) {
 		clientNum = atoi(Cmd_Argv(1));
 		if (clientWorlds[clientNum][0] == -1) count++;
 	}
+	if(!cgvms[clientNum]) {
+		Com_Printf("CGame not active on %i\n", clientNum);
+		return;
+	}
 	xMaxVMs = ceil(sqrt(count));
 	yMaxVMs = round(sqrt(count));
 	if(Cmd_Argc() < 4) {
