@@ -315,10 +315,12 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		cgvm = newSnap.world = MSG_ReadByte( msg );
 		if((!old || old->world != cgvm) && newSnap.deltaNum > 0) {
 			old = NULL;
-			/*
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
 				if(cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].world == cgvm) {
 					old = &cl.snapshots[newSnap.deltaNum - j & PACKET_MASK];
+					if(old->valid) {
+						newSnap.valid = qtrue;
+					}
 					if(newSnap.version != MV_PROTOCOL_VERSION) {
 						newSnap.version = old->version;
 						newSnap.mergeMask = old->mergeMask;
@@ -326,10 +328,11 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 					break;
 				}
 			}
-			*/
-//Com_Printf("Parsing world: %i -> %i (+%i)\n", old ? old->world : -1, cgvm, newSnap.deltaNum);
+Com_Printf("Parsing world: %i -> %i (+%i -> %i)\n", old ? old->world : -1, cgvm, deltaNum, newSnap.valid);
+		} else if (old) {
+Com_Printf("Parsing world: %i -> %i (%i -> %i)\n", cgvm, old->world, deltaNum, newSnap.valid);
 		} else {
-//Com_Printf("Parsing world: %i -> %i (%i)\n", cgvm, old->world, newSnap.deltaNum);
+Com_Printf("Parsing world: %i (%i -> %i)\n", cgvm, deltaNum, newSnap.valid);
 		}
 #endif
 
@@ -732,6 +735,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	
 #ifdef USE_MULTIVM
 	cgvm = MSG_ReadByte( msg );
+	CM_SwitchMap(cgvm);
 #endif
 
 	// a gamestate always marks a server command sequence
@@ -768,7 +772,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			cl.gameState.dataCount += len + 1;
 		} else if ( cmd == svc_baseline ) {
 			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
-Com_Printf("Baselines: %i (%i)\n", newnum, cgvm);
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 			}
@@ -818,6 +821,9 @@ Com_Printf("Baselines: %i (%i)\n", newnum, cgvm);
 		cl_oldGameSet = qtrue;
 		Q_strncpyz( cl_oldGame, oldGame, sizeof( cl_oldGame ) );
 	}
+
+	cgvm = 0;
+	CM_SwitchMap(0);
 
 	// try to keep gamestate and connection state during game switch
 	cls.gameSwitch = gamedirModified;

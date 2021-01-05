@@ -127,6 +127,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 
 	// this is the snapshot we are creating
 	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+	frame->world = gvm;
 
 	// try to use a previous frame as the source for delta compressing the snapshot
 	if ( client->deltaMessage <= 0 || client->state != CS_ACTIVE ) {
@@ -146,11 +147,9 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 #ifdef USE_MULTIVM
 		if(oldframe->world != gvm) {
 			oldframe = NULL;
-			lastframe = 0;
 			for(int j = 0; j < MAX_NUM_VMS; j++) {
 				if(client->frames[ client->deltaMessage - j & PACKET_MASK ].world == gvm) {
 					oldframe = &client->frames[ client->deltaMessage - j & PACKET_MASK ];
-					lastframe = client->netchan.outgoingSequence - client->deltaMessage - j;
 					break;
 				}
 			}
@@ -233,7 +232,6 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 #ifdef USE_MULTIVM
-		frame->world = gvm;
 		MSG_WriteByte( msg, gvm );
 #endif
 		
@@ -1012,7 +1010,8 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
 		if(!gvms[gvm]) continue;
 		CM_SwitchMap(gameWorlds[gvm]);
-		ent = SV_GentityNum( client - svs.clients );
+		ps = SV_GameClientNum( client - svs.clients );
+		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
 		// TODO: remove this line when MULTIIVM is working
 		//if(gvm != client->newWorld) continue;

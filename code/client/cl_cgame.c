@@ -197,6 +197,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 				}
 			}
 			if ( !clSnap->valid ) {
+Com_Printf( "Kinda working: %i\n", cgvm );
 				return qfalse;
 			}
 		}
