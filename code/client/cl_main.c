@@ -503,7 +503,7 @@ static void CL_WriteSnapshot( void ) {
 	msg_t	msg;
 	int		i, len;
 
-	snap = &cl.snapshots[ cl.snap.messageNum & PACKET_MASK ]; // current snapshot
+	snap = &cl.snapshots[cgvm][ cl.snap[cgvm].messageNum & PACKET_MASK ]; // current snapshot
 	//if ( !snap->valid ) // should never happen?
 	//	return;
 
@@ -6250,7 +6250,7 @@ void CL_MultiviewFollow_f( void )
 {
 	int clientNum;
 
-	if ( !cl.snap.multiview ) {
+	if ( !cl.snap[cgvm].multiview ) {
 		Com_Printf("Not a multiview snapshot.\n");
 		return;
 	}
@@ -6262,7 +6262,7 @@ void CL_MultiviewFollow_f( void )
 		return;
 	}
 
-	if ( GET_ABIT( cl.snap.clientMask, clientNum ) )
+	if ( GET_ABIT( cl.snap[cgvm].clientMask, clientNum ) )
 		clc.clientView = clientNum;
 	else 
 		Com_Printf("Multiview client not available.\n");

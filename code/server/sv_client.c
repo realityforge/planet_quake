@@ -2364,7 +2364,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		// remove from old world?
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_ExecuteClientCommand(client, "team spectator");
+		//SV_ExecuteClientCommand(client, "team spectator");
 		//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		gvm = newWorld;
@@ -2825,15 +2825,15 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		oldcmd = cmd;
 	}
 
-	// save time for ping calculation
-	if ( cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked == 0 ) {
-		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
-	}
-
 #ifdef USE_MULTIVM
 	gvm = cl->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 #endif
+
+	// save time for ping calculation
+	if ( cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked == 0 ) {
+		cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
+	}
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world

@@ -403,7 +403,9 @@ ifeq ($(PLATFORM),darwin)
 # SETUP AND BUILD -- MACOS
 #############################################################################
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
+  BASE_CFLAGS += -Wall -fno-strict-aliasing \
+		-Wno-incompatible-pointer-types-discards-qualifiers \
+	 	-Wimplicit -Wstrict-prototypes -pipe
 
   BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
 

@@ -89,7 +89,7 @@ static cvar_t *m_filter;
 static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[cgvm].ps.delta_angles[PITCH]);
 }
 
 static void IN_MLookDown( void ) {
@@ -830,8 +830,8 @@ void CL_WritePacket( void ) {
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
-			|| clc.serverMessageSequence != cl.snap.messageNum ) {
+		if ( cl_nodelta->integer || !cl.snap[cgvm].valid || clc.demowaiting
+			|| clc.serverMessageSequence != cl.snap[cgvm].messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
 			MSG_WriteByte (&buf, clc_move);

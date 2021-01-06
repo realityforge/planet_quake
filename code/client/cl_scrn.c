@@ -742,7 +742,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 	re.SetDvrFrame(0, 0, 1, 1);
 
-	if((cl.snap.ps.pm_type == PM_INTERMISSION
+	if((cl.snap[cgvm].ps.pm_type == PM_INTERMISSION
 		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
 		&& cl_lnInvoice->string[0]) {
 		SCR_DrawQRCode();

@@ -1143,10 +1143,10 @@ static void SV_CalcPings( void ) {
 		total = 0;
 		count = 0;
 		for ( j = 0 ; j < PACKET_BACKUP ; j++ ) {
-			if ( cl->frames[j].messageAcked == 0 ) {
+			if ( cl->frames[cl->gameWorld][j].messageAcked == 0 ) {
 				continue;
 			}
-			delta = cl->frames[j].messageAcked - cl->frames[j].messageSent;
+			delta = cl->frames[cl->gameWorld][j].messageAcked - cl->frames[cl->gameWorld][j].messageSent;
 			count++;
 			total += delta;
 		}
@@ -1457,10 +1457,19 @@ void SV_Frame( int msec ) {
 			for ( i = 0; i < sv_maxclients->integer; i++ ) {
 				if ( svs.clients[ i ].state < CS_CONNECTED )
 					continue;
+#ifdef USE_MULTIVM
+				for(int j = 0; j < MAX_NUM_VMS; j++) {
+					for ( n = 0; n < PACKET_BACKUP; n++ ) {
+						if ( svs.clients[ i ].frames[j][ n ].first_psf > svs.modSnapshotPSF )
+							svs.clients[ i ].frames[j][ n ].first_psf -= svs.modSnapshotPSF;
+					}
+				}
+#else
 				for ( n = 0; n < PACKET_BACKUP; n++ ) {
 					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
 						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
 				}
+#endif
 			}
 		}
 	}

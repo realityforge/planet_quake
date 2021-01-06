@@ -271,7 +271,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		old = NULL;
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
-		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
+		old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
 		if ( !old->valid ) {
 			// should never happen
 			Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
@@ -313,33 +313,12 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
-		if((!old || old->world != cgvm) && newSnap.deltaNum > 0) {
-			old = NULL;
-			for(int j = 0; j < MAX_NUM_VMS; j++) {
-				if(cl.snapshots[newSnap.deltaNum - j & PACKET_MASK].world == cgvm) {
-					old = &cl.snapshots[newSnap.deltaNum - j & PACKET_MASK];
-					if(old->valid) {
-						newSnap.valid = qtrue;
-					}
-					if(newSnap.version != MV_PROTOCOL_VERSION) {
-						newSnap.version = old->version;
-						newSnap.mergeMask = old->mergeMask;
-					}
-					break;
-				}
-			}
-Com_Printf("Parsing world: %i -> %i (+%i -> %i)\n", old ? old->world : -1, cgvm, deltaNum, newSnap.valid);
-		} else if (old) {
-Com_Printf("Parsing world: %i -> %i (%i -> %i)\n", cgvm, old->world, deltaNum, newSnap.valid);
-		} else {
-Com_Printf("Parsing world: %i (%i -> %i)\n", cgvm, deltaNum, newSnap.valid);
-		}
 #endif
 
 		// from here we can start version-dependent snapshot parsing
 		if ( newSnap.version != MV_PROTOCOL_VERSION ) {
-			Com_Error( ERR_DROP, "CL_ParseSnapshot(): unknown multiview protocol version %i (%i)",
-				newSnap.version, cgvm );
+			Com_Error( ERR_DROP, "CL_ParseSnapshot(): unknown multiview protocol version %i",
+				newSnap.version );
 		}
 
 		// playerState to entityState merge mask
@@ -441,7 +420,7 @@ Com_Printf("Parsing world: %i (%i -> %i)\n", cgvm, deltaNum, newSnap.valid);
 	else // !multiview
 	{
 		// detect transition to non-multiview
-		if ( cl.snap.multiview ) {
+		if ( cl.snap[cgvm].multiview ) {
 			clc.clientView = clc.clientNum;
 			if ( old ) {
 				// invalidate state
@@ -493,32 +472,32 @@ Com_Printf("Parsing world: %i (%i -> %i)\n", cgvm, deltaNum, newSnap.valid);
 	// received and this one, so if there was a dropped packet
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
-	oldMessageNum = cl.snap.messageNum + 1;
+	oldMessageNum = cl.snap[cgvm].messageNum + 1;
 
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
+		cl.snapshots[cgvm][oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
 	// copy to the current good spot
-	cl.snap = newSnap;
-	cl.snap.ping = 999;
+	cl.snap[cgvm] = newSnap;
+	cl.snap[cgvm].ping = 999;
 	// calculate ping time
 	for ( i = 0 ; i < PACKET_BACKUP ; i++ ) {
 		packetNum = ( clc.netchan.outgoingSequence - 1 - i ) & PACKET_MASK;
 		if ( commandTime >= cl.outPackets[ packetNum ].p_serverTime ) {
-			cl.snap.ping = cls.realtime - cl.outPackets[ packetNum ].p_realtime;
+			cl.snap[cgvm].ping = cls.realtime - cl.outPackets[ packetNum ].p_realtime;
 			break;
 		}
 	}
 	// save the frame off in the backup array for later delta comparisons
-	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
+	cl.snapshots[cgvm][cl.snap[cgvm].messageNum & PACKET_MASK] = cl.snap[cgvm];
 
 	if (cl_shownet->integer == 3) {
-		Com_Printf( "   snapshot:%i  delta:%i  ping:%i\n", cl.snap.messageNum,
-		cl.snap.deltaNum, cl.snap.ping );
+		Com_Printf( "   snapshot:%i  delta:%i  ping:%i\n", cl.snap[cgvm].messageNum,
+		cl.snap[cgvm].deltaNum, cl.snap[cgvm].ping );
 	}
 
 	cl.newSnapshots = qtrue;
@@ -723,7 +702,15 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_Set( "com_errorMessage", "" );
 
 	// wipe local client state
+#ifndef USE_MULTIVM
 	CL_ClearState();
+#else
+	cgvm = MSG_ReadByte( msg );
+	CM_SwitchMap(cgvm);
+	if(cgvm == 0) {
+		CL_ClearState();
+	}
+#endif
 
 	// all configstring updates received before new gamestate must be discarded
 	for ( i = 0; i < MAX_RELIABLE_COMMANDS; i++ ) {
@@ -732,11 +719,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			clc.serverCommandsIgnore[ i ] = qtrue;
 		}
 	}
-	
-#ifdef USE_MULTIVM
-	cgvm = MSG_ReadByte( msg );
-	CM_SwitchMap(cgvm);
-#endif
 
 	// a gamestate always marks a server command sequence
 	clc.serverCommandSequence = MSG_ReadLong( msg );

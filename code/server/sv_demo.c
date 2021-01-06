@@ -1335,7 +1335,7 @@ void SV_DemoStartRecord(void)
 		if (client->state >= CS_CONNECTED) {
 
 			// store client's userinfo (should be before clients configstrings since clients configstrings are derived from userinfo)
-			if (client->userinfo) { // if player is connected and the configstring exists, we store it
+			if (*client->userinfo) { // if player is connected and the configstring exists, we store it
 				SV_DemoWriteClientUserinfo(client, (const char *)client->userinfo);
 			}
 		}

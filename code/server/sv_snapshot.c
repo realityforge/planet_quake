@@ -126,7 +126,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	int					snapFlags;
 
 	// this is the snapshot we are creating
-	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
 	frame->world = gvm;
 
 	// try to use a previous frame as the source for delta compressing the snapshot
@@ -142,19 +142,8 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		lastframe = 0;
 	} else {
 		// we have a valid snapshot to delta from
-		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+		oldframe = &client->frames[gvm][ client->deltaMessage & PACKET_MASK ];
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
-#ifdef USE_MULTIVM
-		if(oldframe->world != gvm) {
-			oldframe = NULL;
-			for(int j = 0; j < MAX_NUM_VMS; j++) {
-				if(client->frames[ client->deltaMessage - j & PACKET_MASK ].world == gvm) {
-					oldframe = &client->frames[ client->deltaMessage - j & PACKET_MASK ];
-					break;
-				}
-			}
-		}
-#endif
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
 			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
@@ -809,7 +798,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	clientPVS_t					*pvs;
 
 	// this is the frame we are creating
-	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
 	cl = client - svs.clients;
 
 	// clear everything in this snapshot
@@ -980,9 +969,9 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 #endif // USE_MV
 
 	// record information about the message
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
 
 	// send the datagram
 	SV_Netchan_Transmit( client, msg );
@@ -1014,7 +1003,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
 		// TODO: remove this line when MULTIIVM is working
-		//if(gvm != client->newWorld) continue;
+		if(gvm != client->newWorld) continue;
 #endif
 ;
 

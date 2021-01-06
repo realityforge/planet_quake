@@ -126,7 +126,7 @@ typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
-	clSnapshot_t	snap;			// latest received from server
+	clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
 	snapshot_t    *updateSnap;
 
 	int			serverTime;			// may be paused during play
@@ -169,7 +169,7 @@ typedef struct {
 	int			serverId;			// included in each client message so the server
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
-	clSnapshot_t	snapshots[PACKET_BACKUP];
+	clSnapshot_t	snapshots[MAX_NUM_VMS][PACKET_BACKUP];
 
 	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
 
