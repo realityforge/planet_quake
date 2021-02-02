@@ -88,9 +88,17 @@ extern void Sys_FS_Offline( void );
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
+#ifdef USE_LAZY_LOAD
+#ifdef EMSCRIPTEN
 extern char *Sys_UpdateShader( void );
 extern char *Sys_UpdateSound( void );
 extern char *Sys_UpdateModel( void );
+#else
+char *Sys_UpdateShader( void );
+char *Sys_UpdateSound( void );
+char *Sys_UpdateModel( void );
+#endif
+#endif
 
 void FS_Startup( void );
 void FS_Startup_After_Async( void );

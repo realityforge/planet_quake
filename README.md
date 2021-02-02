@@ -51,7 +51,7 @@ Some of the major features currently implemented are:
   * PNG support
   * Docker support
   * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
-  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports
+  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports. TODO: add touch absolute mouse subtraction and addition with optional variable for cursor spy shader name.
   * Deferred (lazy) loading of all game content, entities, models, textures. New `cl_lazyLoad` cvar, 0 - turn off lazy loading, only load textures available on disk, 1 - load all textures available and fetch remotely as needed, 2 - set all to default and try to load from `sv_dlURL`, TODO: 3 - load textures only during INTERMISSION or dead or SPECTATING, 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes), load lowest quality until displayed using a palette defined in a .shader
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients.

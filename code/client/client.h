@@ -644,13 +644,13 @@ void CIN_CloseAllVideos(void);
 extern int clientMaps[MAX_NUM_VMS];
 extern float clientWorlds[MAX_NUM_VMS][4];
 //#endif
-#ifdef EMSCRIPTEN
 #ifdef USE_LAZY_LOAD
 // TODO: make these work on native, by checking files.c for rediness or something?
 void CL_UpdateShader( void );
 void CL_UpdateSound( void );
 void CL_UpdateModel( void );
 #endif
+#ifdef EMSCRIPTEN
 void CL_InitCGameFinished( void );
 #endif
 void CL_InitCGame( qboolean createNew );

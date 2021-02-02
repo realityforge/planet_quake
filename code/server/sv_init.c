@@ -928,21 +928,21 @@ void SV_Init( void )
 /*
 	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_ARCHIVE );
 	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_ARCHIVE );
-	sv_master[3] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_ARCHIVE );
-	sv_master[4] = Cvar_Get( "sv_master4", "master0.excessiveplus.net", CVAR_ARCHIVE );
-	sv_master[5] = Cvar_Get( "sv_master5", "master3.idsoftware.com", CVAR_ARCHIVE );
-	sv_master[7] = Cvar_Get( "sv_master6", "clanservers.net", CVAR_ARCHIVE );
-	sv_master[8] = Cvar_Get( "sv_master7", "master.kali.net", CVAR_ARCHIVE );
-	sv_master[9] = Cvar_Get( "sv_master8", "master.quake3arena.com", CVAR_ARCHIVE );
-	sv_master[10] = Cvar_Get( "sv_master9", "master0.excessiveplus.net:27950", CVAR_ARCHIVE );
-	sv_master[12] = Cvar_Get( "sv_master10", "master3.idsoftware.com:27950", CVAR_ARCHIVE );
-	sv_master[13] = Cvar_Get( "sv_master11", "master.quake3arena.com", CVAR_ARCHIVE );
-	sv_master[17] = Cvar_Get( "sv_master12", "dpmaster.deathmask.net:27950", CVAR_ARCHIVE );
-	sv_master[19] = Cvar_Get( "sv_master13", "monster.idsoftware.com:27950", CVAR_ARCHIVE );
-	sv_master[20] = Cvar_Get( "sv_master14", "master.quakeservers.net:27000", CVAR_ARCHIVE );
-	sv_master[21] = Cvar_Get( "sv_master15", MASTER_SERVER_NAME, CVAR_ARCHIVE );
-	
+	sv_master[2] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_ARCHIVE );
+	sv_master[3] = Cvar_Get( "sv_master4", "master0.excessiveplus.net", CVAR_ARCHIVE );
+	sv_master[4] = Cvar_Get( "sv_master5", "master3.idsoftware.com", CVAR_ARCHIVE );
+	sv_master[5] = Cvar_Get( "sv_master6", "clanservers.net", CVAR_ARCHIVE );
+	sv_master[6] = Cvar_Get( "sv_master7", "master.kali.net", CVAR_ARCHIVE );
+	sv_master[7] = Cvar_Get( "sv_master8", "master.quake3arena.com", CVAR_ARCHIVE );
+	sv_master[8] = Cvar_Get( "sv_master9", "master0.excessiveplus.net:27950", CVAR_ARCHIVE );
+	sv_master[9] = Cvar_Get( "sv_master10", "master3.idsoftware.com:27950", CVAR_ARCHIVE );
+	sv_master[10] = Cvar_Get( "sv_master11", "master.quake3arena.com", CVAR_ARCHIVE );
+	sv_master[11] = Cvar_Get( "sv_master12", "dpmaster.deathmask.net:27950", CVAR_ARCHIVE );
+	sv_master[12] = Cvar_Get( "sv_master13", "monster.idsoftware.com:27950", CVAR_ARCHIVE );
+	sv_master[13] = Cvar_Get( "sv_master14", "master.quakeservers.net:27000", CVAR_ARCHIVE );
+	sv_master[14] = Cvar_Get( "sv_master15", MASTER_SERVER_NAME, CVAR_ARCHIVE );
 */
+
 #ifdef EMSCRIPTEN
 	sv_master[22] = Cvar_Get( "sv_master20", "ws://master.quakejs.com", CVAR_ARCHIVE );
 	sv_master[23] = Cvar_Get( "sv_master21", "207.246.91.235:27950", CVAR_ARCHIVE );

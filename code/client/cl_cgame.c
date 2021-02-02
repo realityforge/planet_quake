@@ -96,7 +96,6 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
-//Com_Printf("Bullshit: %i (%i)\n", cl.snap[cgvm].messageNum, cgvm);
 	*snapshotNumber = cl.snap[cgvm].messageNum;
 	*serverTime = cl.snap[cgvm].serverTime;
 }
@@ -916,17 +915,13 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETSNAPSHOT:
 		return CL_GetSnapshot( args[1], VMA(2) );
 	case CG_GETSERVERCOMMAND:
-		if(cgvm == clc.currentView)
-			return CL_GetServerCommand( args[1] );
-		else
-			return qfalse;
+		return CL_GetServerCommand( args[1] );
 	case CG_GETCURRENTCMDNUMBER:
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
 		return CL_GetUserCmd( args[1], VMA(2) );
 	case CG_SETUSERCMDVALUE:
-		if(cgvm == clc.currentView)
-			CL_SetUserCmdValue( args[1], VMF(2) );
+		CL_SetUserCmdValue( args[1], VMF(2) );
 		return 0;
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();
@@ -1167,31 +1162,6 @@ int CL_GetClientState( void ) {
 	return cls.state;
 }
 
-#ifdef USE_LAZY_LOAD
-void CL_UpdateShader( void ) {
-	char *lazyShader = Sys_UpdateShader();
-	if(!lazyShader || strlen(lazyShader) == 0) return;
-	lazyShader[12] = '\0';
-	//if(!strcmp(&lazyShader[13], "console"))
-	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
-	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
-}
-
-
-void CL_UpdateSound( void ) {
-	char *lazySound = Sys_UpdateSound();
-	if(!lazySound || strlen(lazySound) == 0) return;
-	S_UpdateSound(lazySound, qtrue);
-}
-
-
-void CL_UpdateModel( void ) {
-	char *lazyModel = Sys_UpdateModel();
-	if(!lazyModel || strlen(lazyModel) == 0) return;
-	re.UpdateModel(lazyModel);
-}
-#endif
-
 /*
 ====================
 CL_InitCGameFinished
@@ -1229,6 +1199,31 @@ void CL_InitCGameFinished() {
 }
 
 
+#ifdef USE_LAZY_LOAD
+void CL_UpdateShader( void ) {
+	char *lazyShader = Sys_UpdateShader();
+	if(!lazyShader || strlen(lazyShader) == 0) return;
+	lazyShader[12] = '\0';
+	//if(!strcmp(&lazyShader[13], "console"))
+	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
+	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
+}
+
+
+void CL_UpdateSound( void ) {
+	char *lazySound = Sys_UpdateSound();
+	if(!lazySound || strlen(lazySound) == 0) return;
+	S_UpdateSound(lazySound, qtrue);
+}
+
+
+void CL_UpdateModel( void ) {
+	char *lazyModel = Sys_UpdateModel();
+	if(!lazyModel || strlen(lazyModel) == 0) return;
+	re.UpdateModel(lazyModel);
+}
+#endif
+
 /*
 ====================
 CL_GameCommand
@@ -1259,11 +1254,7 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	//if(cgvm != clc.currentView) {
-	//	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime - 5, stereo, clc.demoplaying );
-	//} else {
-		VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
-	//}
+	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif
@@ -1482,9 +1473,11 @@ void CL_SetCGameTime( void ) {
 		return;
 	}
 
+#ifndef USE_MULTIVM
 	if ( cl.snap[cgvm].serverTime < cl.oldFrameServerTime && !clc.demoplaying ) {
 		Com_Error( ERR_DROP, "cl.snap.serverTime < cl.oldFrameServerTime" );
 	}
+#endif
 	cl.oldFrameServerTime = cl.snap[cgvm].serverTime;
 
 	// get our current view of time

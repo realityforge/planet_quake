@@ -4562,6 +4562,7 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
+		// TODO: add command for tiling if count <= 1
 		prevDvr[0] = clientWorlds[clc.currentView][0];
 		prevDvr[1] = clientWorlds[clc.currentView][1];
 		prevDvr[2] = clientWorlds[clc.currentView][2];
@@ -4628,7 +4629,7 @@ void CL_World_f( void ) {
 	}
 	
 	newWorld = atoi( Cmd_Argv(1) );
-	Com_DPrintf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
+	Com_Printf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
 
 	prevDvr[0] = clientWorlds[clc.currentView][0];
 	prevDvr[1] = clientWorlds[clc.currentView][1];

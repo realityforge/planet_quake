@@ -397,6 +397,63 @@ static void FS_CheckIdPaks( void );
 #endif
 void FS_Reload( void );
 
+#ifdef USE_LAZY_LOAD
+#ifndef EMSCRIPTEN
+char *modelCallback[1024] = {}; // MAX_MOD_KNOWN
+int modelCallbacki = 0;
+char *soundCallback[1024] = {}; // 
+int soundCallbacki = 0;
+char *shaderCallback[1024] = {}; // MAX_SHADERS
+int shaderCallbacki = 0;
+
+char *Sys_UpdateShader( void ) {
+	char *nextFile = &shaderCallback[shaderCallbacki]
+	shaderCallbacki--;
+	if(!nextFile[0]) return NULL;
+	int i = stristr(nextFile, ".pk3dir");
+	if(i) nextFile[i] = '\0';
+	return nextFile;
+}
+char *Sys_UpdateSound( void ) {
+	char *nextFile = &soundCallback[soundCallbacki]
+	soundCallbacki--;
+	if(!nextFile[0]) return NULL;
+	int i = stristr(nextFile, ".pk3dir");
+	if(i) nextFile[i] = '\0';
+	return nextFile;
+}
+char *Sys_UpdateModel( void ) {
+	char *nextFile = &modelCallback[modelCallbacki]
+	modelCallbacki--;
+	if(!nextFile[0]) return NULL;
+	int i = stristr(nextFile, ".pk3dir");
+	if(i) nextFile[i] = '\0';
+	return nextFile;
+}
+
+void Sys_FileReady(char *filename) {
+	char *loading = Cvar_VariableString("r_loadingShader");
+	if(!loading[0]) {
+		loading = Cvar_VariableString("snd_loadingSound");
+		if(!loading[0]) {
+			loading = Cvar_VariableString("r_loadingModel");
+			if(loading[0]) {
+			 modelCallback[modelCallbacki] = FS_CopyString(loading);
+			 modelCallbacki++;
+		 }
+		} else {
+			soundCallback[soundCallbacki] = FS_CopyString(loading);
+			soundCallbacki++;
+		}
+	} else {
+		shaderCallback[shaderCallbacki] = FS_CopyString(loading);
+		shaderCallbacki++;
+	}
+}
+#endif
+#endif
+
+
 
 /*
 ==============

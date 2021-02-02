@@ -144,6 +144,10 @@ Sys_FOpen
 FILE *Sys_FOpen( const char *ospath, const char *mode )
 {
 	size_t length;
+	
+#ifdef USE_LAZY_LOAD
+  Sys_FileReady(ospath);
+#endif
 
 	// Windows API ignores all trailing spaces and periods which can get around Quake 3 file system restrictions.
 	length = strlen( ospath );

@@ -272,17 +272,19 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
-		if ( !old->valid ) {
-			// should never happen
-			Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
-		} else if ( old->messageNum != newSnap.deltaNum ) {
-			// The frame that the server did the delta from
-			// is too old, so we can't reconstruct it properly.
-			Com_Printf ("Delta frame too old.\n");
-		} else if ( cl.parseEntitiesNum[cgvm] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
-			Com_Printf ("Delta parseEntitiesNum too old.\n");
-		} else {
-			newSnap.valid = qtrue;	// valid delta parse
+		if ( !multiview ) {
+			if ( !old->valid ) {
+				// should never happen
+				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
+			} else if ( old->messageNum != newSnap.deltaNum ) {
+				// The frame that the server did the delta from
+				// is too old, so we can't reconstruct it properly.
+				Com_Printf ("Delta frame too old.\n");
+			} else if ( cl.parseEntitiesNum[cgvm] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+				Com_Printf ("Delta parseEntitiesNum too old.\n");
+			} else {
+				newSnap.valid = qtrue;	// valid delta parse
+			}
 		}
 	}
 
@@ -313,6 +315,18 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
+		if ( newSnap.deltaNum <= 0 ) {
+		} else {
+			old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
+			if(old && old->multiview) {
+				if(old->valid) {
+					newSnap.valid = qtrue;
+				}
+				Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
+				newSnap.mergeMask = old->mergeMask;
+			}
+		}
+Com_Printf("Parsing world: %i == %i (%i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum);
 #endif
 
 		// from here we can start version-dependent snapshot parsing
@@ -478,6 +492,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
+		Com_Printf("Invalidated: %i\n", oldMessageNum);
 		cl.snapshots[cgvm][oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 

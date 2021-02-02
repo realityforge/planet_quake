@@ -2380,7 +2380,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->state = CS_CONNECTED;
-			//client->deltaMessage = -1;
+			client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			//SV_SendClientSnapshot( client, qfalse );
 			client->gamestateMessageNum = -1; // send a new gamestate
@@ -2392,6 +2392,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			// not the first time they have entered, automatically connect
 			client->state = CS_PRIMED;
 			client->gameWorld = newWorld;
+			//client->deltaMessage = -1;
 			// notify the client of the secondary map
 			SV_SendServerCommand(client, "world %i", client->newWorld);
 			//SV_SendClientSnapshot( client, qtrue );
