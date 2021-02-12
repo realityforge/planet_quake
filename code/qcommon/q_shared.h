@@ -55,17 +55,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef USE_MV
 #define USE_MULTIVM 1
 // enable loading multiple QVM images
-#ifdef USE_MULTIVM
-#undef MV_PROTOCOL_VERSION
-#define MV_MULTIWORLD_VERSION 2
-#define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
-#endif
+
 //#ifndef USE_CMD_CONNECTOR
 //#define USE_CMD_CONNECTOR 1
 //#endif
-
-// allow loading graphics after the BSP and world has been entered
-#define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts
 #define USE_LAZY_MEMORY 1
 
@@ -74,6 +67,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #undef USE_LAZY_MEMORY
 #undef USE_LAZY_LOAD
 #endif // USE_MV
+
+#ifdef USE_MULTIVM
+#undef MV_PROTOCOL_VERSION
+#define MV_MULTIWORLD_VERSION 2
+#define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
+
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+#endif
 
 #ifdef EMSCRIPTEN
 // TODO: convert local dedicated server to native using pthreads, possibly using `set dedicated 4 and 6` as flags

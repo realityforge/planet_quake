@@ -41,7 +41,8 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
   var skipped = 0
   const zip = new StreamZip({
       file: zipFile,
-      storeEntries: true
+      storeEntries: true,
+      skipEntryNameValidation: true,
   })
   var index = await new Promise(resolve => {
     zip.on('ready', () => {
@@ -53,7 +54,13 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
       resolve([])
     })
   })
-  
+
+  for(var i = 0; i < index.length; i++) {
+    var entry = index[i]
+    entry.key = entry.name
+    entry.name = entry.name.replace(/\\/ig, '/')
+  }
+
   if(!outDirectory) {
     return index
   }
@@ -77,7 +84,7 @@ async function readPak(zipFile, progress, outDirectory, noOverwrite) {
       noOverwrite.push(levelPath)
     }
     await new Promise(resolve => {
-      zip.extract(entry.name, levelPath, err => {
+      zip.extract(entry.key, levelPath, err => {
         if(err) console.log('Extract error ' + err)
         resolve()
       })

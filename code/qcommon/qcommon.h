@@ -88,17 +88,6 @@ extern void Sys_FS_Offline( void );
 extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
-#ifdef USE_LAZY_LOAD
-#ifdef EMSCRIPTEN
-extern char *Sys_UpdateShader( void );
-extern char *Sys_UpdateSound( void );
-extern char *Sys_UpdateModel( void );
-#else
-char *Sys_UpdateShader( void );
-char *Sys_UpdateSound( void );
-char *Sys_UpdateModel( void );
-#endif
-#endif
 
 void FS_Startup( void );
 void FS_Startup_After_Async( void );
@@ -127,6 +116,19 @@ void CL_Vid_Restart_After_Startup( void );
 void CL_DemoCompleted_After_Startup( void );
 void CL_DemoCompleted_After_Shutdown( void );
 
+#endif
+
+#ifdef USE_LAZY_LOAD
+#ifdef EMSCRIPTEN
+extern char *Sys_UpdateShader( void );
+extern char *Sys_UpdateSound( void );
+extern char *Sys_UpdateModel( void );
+#else
+char *Sys_UpdateShader( void );
+char *Sys_UpdateSound( void );
+char *Sys_UpdateModel( void );
+void Sys_FileReady(char *filename);
+#endif
 #endif
 
 //
@@ -524,8 +526,8 @@ VIRTUAL MACHINE
 ==============================================================
 */
 typedef enum {
-	VMR_UNKNOWN = 0,
-	VMR_BASEQ3A,
+	VMR_UNKNOWN = -1,
+	VMR_BASEQ3A = 0,
 	VMR_OSP,
 	VMR_DEFRAG,
 	VMR_URT,
@@ -533,6 +535,7 @@ typedef enum {
 	VMR_CPMA1,
 	VMR_CPMA2,
 	VMR_SMOKIN, // Smokin' Guns
+	VMR_COUNT
 } recognizedVM_t;
 
 typedef struct vm_s vm_t;

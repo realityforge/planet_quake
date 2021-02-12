@@ -9,11 +9,21 @@ var {unpackPk3s} = require('./compress.js')
 var {convertGameFiles} = require('./convert.js');
 var {loadDefaultDirectories} = require('../lib/asset.game.js')
 
-var UPDATE_DIRNAME = 'bestmaps-' + (new Date()).getFullYear()
 //  + '-' + (new Date()).getMonth() + '-' + (new Date()).getDate()
-var UPDATE_DIRECTORY = '/Applications/ioquake3/' + UPDATE_DIRNAME
-var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
-  || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
+if(fs.existsSync('/Volumes/External/Personal/planet_quake_data/lvlworld'))
+{
+  var UPDATE_DIRNAME = 'bestmaps'
+  var UPDATE_DIRECTORY = '/Volumes/External/Personal/planet_quake_data/lvlworld/' + UPDATE_DIRNAME + '-' + (new Date()).getFullYear()
+} else {
+  var UPDATE_DIRNAME = 'bestmaps-' + (new Date()).getFullYear()
+  var UPDATE_DIRECTORY = '/Applications/ioquake3/' + UPDATE_DIRNAME
+}
+if(fs.existsSync('/Volumes/External/Personal/planet_quake_data')) {
+  var TEMP_DIR = '/Volumes/External/Personal/planet_quake_data'
+} else {
+  var TEMP_DIR = path.join(process.env.HOME || process.env.HOMEPATH 
+    || process.env.USERPROFILE || os.tmpdir(), '/.quake3')
+}
 var DIRMAP = [
   /[a-f]/i, 'a-f',
   /[g-l]/i, 'g-l',

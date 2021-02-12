@@ -199,6 +199,7 @@ or configs will never get loaded from disk!
 // every time a new demo pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
 #define	DEMO_PAK0_CHECKSUM	2985612116u
+#ifndef STANDALONE
 static const unsigned pak_checksums[] = {
 	1566731103u,
 	298122907u,
@@ -210,6 +211,7 @@ static const unsigned pak_checksums[] = {
 	908855077u,
 	977125798u
 };
+#endif
 
 typedef struct altChecksumFiles {
 	char pakFilename[20];
@@ -399,35 +401,40 @@ void FS_Reload( void );
 
 #ifdef USE_LAZY_LOAD
 #ifndef EMSCRIPTEN
-char *modelCallback[1024] = {}; // MAX_MOD_KNOWN
+char *modelCallback[1024*2] = {}; // MAX_MOD_KNOWN
 int modelCallbacki = 0;
-char *soundCallback[1024] = {}; // 
+char *soundCallback[1024*2] = {}; // 
 int soundCallbacki = 0;
-char *shaderCallback[1024] = {}; // MAX_SHADERS
+char *shaderCallback[1024*2] = {}; // MAX_SHADERS
 int shaderCallbacki = 0;
 
 char *Sys_UpdateShader( void ) {
-	char *nextFile = &shaderCallback[shaderCallbacki]
+	char *nextFile = shaderCallback[shaderCallbacki];
+	if(shaderCallbacki == 0) {
+		shaderCallbacki = ARRAY_LEN(shaderCallback);
+	}
 	shaderCallbacki--;
-	if(!nextFile[0]) return NULL;
-	int i = stristr(nextFile, ".pk3dir");
-	if(i) nextFile[i] = '\0';
+	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
+
 char *Sys_UpdateSound( void ) {
-	char *nextFile = &soundCallback[soundCallbacki]
+	char *nextFile = soundCallback[soundCallbacki];
+	if(soundCallbacki == 0) {
+		soundCallbacki = ARRAY_LEN(soundCallback);
+	}
 	soundCallbacki--;
-	if(!nextFile[0]) return NULL;
-	int i = stristr(nextFile, ".pk3dir");
-	if(i) nextFile[i] = '\0';
+	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
+
 char *Sys_UpdateModel( void ) {
-	char *nextFile = &modelCallback[modelCallbacki]
+	char *nextFile = modelCallback[modelCallbacki];
+	if(modelCallbacki == 0) {
+		modelCallbacki = ARRAY_LEN(modelCallback);
+	}
 	modelCallbacki--;
-	if(!nextFile[0]) return NULL;
-	int i = stristr(nextFile, ".pk3dir");
-	if(i) nextFile[i] = '\0';
+	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
 
@@ -440,14 +447,20 @@ void Sys_FileReady(char *filename) {
 			if(loading[0]) {
 			 modelCallback[modelCallbacki] = FS_CopyString(loading);
 			 modelCallbacki++;
+			 if(modelCallbacki == ARRAY_LEN(modelCallback))
+			 	modelCallbacki = 0;
 		 }
 		} else {
 			soundCallback[soundCallbacki] = FS_CopyString(loading);
 			soundCallbacki++;
+			if(soundCallbacki == ARRAY_LEN(soundCallback))
+			 soundCallbacki = 0;
 		}
 	} else {
 		shaderCallback[shaderCallbacki] = FS_CopyString(loading);
 		shaderCallbacki++;
+		if(shaderCallbacki == ARRAY_LEN(shaderCallback))
+		 shaderCallbacki = 0;
 	}
 }
 #endif
@@ -887,7 +900,6 @@ qboolean FS_FileExists( const char *file )
 {
 	FILE *f;
 	char *testpath;
-	int len;
 
 	testpath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, file );
 
@@ -5028,7 +5040,6 @@ void FS_Startup_After_Async( void )
 }
 
 
-#ifndef EMSCRIPTEN
 #ifndef STANDALONE
 /*
 ===================
@@ -5130,7 +5141,6 @@ static void FS_CheckIdPaks( void )
 			Com_Error(ERR_FATAL, "\n*** you need to install Quake III Arena in order to play ***");
 	}
 }
-#endif
 #endif
 
 
