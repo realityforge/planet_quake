@@ -336,10 +336,6 @@ FILE *Sys_FOpen( const char *ospath, const char *mode )
 {
 	struct stat buf;
 
-#ifdef USE_LAZY_LOAD
-  Sys_FileReady(ospath);
-#endif
-
 	// check if path exists and its not a directory
 	if ( stat( ospath, &buf ) == 0 && S_ISDIR( buf.st_mode ) )
 		return NULL;

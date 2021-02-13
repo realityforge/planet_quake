@@ -401,39 +401,42 @@ void FS_Reload( void );
 
 #ifdef USE_LAZY_LOAD
 #ifndef EMSCRIPTEN
-char *modelCallback[1024*2] = {}; // MAX_MOD_KNOWN
+char *modelCallback[1024*5] = {}; // MAX_MOD_KNOWN
 int modelCallbacki = 0;
-char *soundCallback[1024*2] = {}; // 
+char *soundCallback[1024*5] = {}; // 
 int soundCallbacki = 0;
-char *shaderCallback[1024*2] = {}; // MAX_SHADERS
+char *shaderCallback[1024*5] = {}; // MAX_SHADERS
 int shaderCallbacki = 0;
 
 char *Sys_UpdateShader( void ) {
 	char *nextFile = shaderCallback[shaderCallbacki];
-	if(shaderCallbacki == 0) {
-		shaderCallbacki = ARRAY_LEN(shaderCallback);
+	shaderCallback[shaderCallbacki] = NULL;
+	shaderCallbacki++;
+	if(shaderCallbacki == ARRAY_LEN(shaderCallback)) {
+		shaderCallbacki = 0;
 	}
-	shaderCallbacki--;
 	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
 
 char *Sys_UpdateSound( void ) {
 	char *nextFile = soundCallback[soundCallbacki];
-	if(soundCallbacki == 0) {
-		soundCallbacki = ARRAY_LEN(soundCallback);
+	soundCallback[soundCallbacki] = NULL;
+	soundCallbacki++;
+	if(soundCallbacki == ARRAY_LEN(soundCallback)) {
+		soundCallbacki = 0;
 	}
-	soundCallbacki--;
 	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
 
 char *Sys_UpdateModel( void ) {
 	char *nextFile = modelCallback[modelCallbacki];
-	if(modelCallbacki == 0) {
-		modelCallbacki = ARRAY_LEN(modelCallback);
+	modelCallback[modelCallbacki] = NULL;
+	modelCallbacki++;
+	if(modelCallbacki == ARRAY_LEN(modelCallback)) {
+		modelCallbacki = 0;
 	}
-	modelCallbacki--;
 	if(!nextFile || !nextFile[0]) return NULL;
 	return nextFile;
 }
@@ -445,22 +448,37 @@ void Sys_FileReady(char *filename) {
 		if(!loading[0]) {
 			loading = Cvar_VariableString("r_loadingModel");
 			if(loading[0]) {
-			 modelCallback[modelCallbacki] = FS_CopyString(loading);
-			 modelCallbacki++;
-			 if(modelCallbacki == ARRAY_LEN(modelCallback))
-			 	modelCallbacki = 0;
-		 }
+				qboolean found = qfalse;
+				for(int i = 0; i < ARRAY_LEN(modelCallback); i++) {
+					if(modelCallback[i] && Q_stristr(modelCallback[i], loading)) {
+						found = qtrue;
+					}
+					if(modelCallback[i] == NULL) modelCallbacki = i;
+				}
+				if(!found)
+					modelCallback[modelCallbacki] = FS_CopyString(loading);
+		 	}
 		} else {
-			soundCallback[soundCallbacki] = FS_CopyString(loading);
-			soundCallbacki++;
-			if(soundCallbacki == ARRAY_LEN(soundCallback))
-			 soundCallbacki = 0;
+			qboolean found = qfalse;
+			for(int i = 0; i < ARRAY_LEN(soundCallback); i++) {
+				if(soundCallback[i] && Q_stristr(soundCallback[i], loading)) {
+					found = qtrue;
+				}
+				if(soundCallback[i] == NULL) soundCallbacki = i;
+			}
+			if(!found)
+				soundCallback[soundCallbacki] = FS_CopyString(loading);
 		}
 	} else {
-		shaderCallback[shaderCallbacki] = FS_CopyString(loading);
-		shaderCallbacki++;
-		if(shaderCallbacki == ARRAY_LEN(shaderCallback))
-		 shaderCallbacki = 0;
+		qboolean found = qfalse;
+		for(int i = 0; i < ARRAY_LEN(shaderCallback); i++) {
+			if(shaderCallback[i] && Q_stristr(shaderCallback[i], loading)) {
+				found = qtrue;
+			}
+			if(shaderCallback[i] == NULL) shaderCallbacki = i;
+		}
+		if(!found)
+			shaderCallback[shaderCallbacki] = FS_CopyString(loading);
 	}
 }
 #endif
@@ -1703,6 +1721,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					// case and separator insensitive comparisons
 					if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 						// found it!
+#ifdef USE_LAZY_LOAD
+#ifndef EMSCRIPTEN
+						Sys_FileReady(filename);
+#endif
+#endif
 						return pakFile->size; 
 					}
 					pakFile = pakFile->next;
@@ -1714,6 +1737,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				if ( temp ) {
 					length = FS_FileLength( temp );
 					fclose( temp );
+#ifdef USE_LAZY_LOAD
+#ifndef EMSCRIPTEN
+					Sys_FileReady(netpath);
+#endif
+#endif
 					return length;
 				}
 				length = strlen(netpath);
@@ -1755,6 +1783,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				// case and separator insensitive comparisons
 				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 					// found it!
+#ifdef USE_LAZY_LOAD
+#ifndef EMSCRIPTEN
+					Sys_FileReady(filename);
+#endif
+#endif
 					return FS_OpenFileInPak( file, pak, pakFile, uniqueFILE );
 				}
 				pakFile = pakFile->next;
@@ -1769,6 +1802,11 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			if ( temp == NULL ) {
 				continue;
 			}
+#ifdef USE_LAZY_LOAD
+#ifndef EMSCRIPTEN
+			Sys_FileReady(netpath);
+#endif
+#endif
 
 			*file = FS_HandleForFile();
 			f = &fsh[ *file ];
