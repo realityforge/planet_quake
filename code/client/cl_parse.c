@@ -326,7 +326,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				newSnap.mergeMask = old->mergeMask;
 			}
 		}
-Com_Printf("Parsing world: %i == %i (%i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum);
+//Com_Printf("Parsing world: %i == %i (%i -> %i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
 
 		// from here we can start version-dependent snapshot parsing
@@ -486,13 +486,17 @@ Com_Printf("Parsing world: %i == %i (%i -> %i)\n", cgvm, clc.currentView, deltaN
 	// received and this one, so if there was a dropped packet
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
+#ifdef USE_MULTIVM
+	oldMessageNum = cl.snap[cgvm].messageNum + 1 + cgvm;
+#else
 	oldMessageNum = cl.snap[cgvm].messageNum + 1;
+#endif
 
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-		Com_Printf("Invalidated: %i\n", oldMessageNum);
+	//	Com_Printf("Invalidated (%i): %i == %i\n", cgvm, oldMessageNum, numCGames);
 		cl.snapshots[cgvm][oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
@@ -724,6 +728,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	CM_SwitchMap(cgvm);
 	if(cgvm == 0) {
 		CL_ClearState();
+	}
+	if(cgvm > numCGames) {
+		numCGames = cgvm;
 	}
 #endif
 

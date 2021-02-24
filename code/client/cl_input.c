@@ -806,6 +806,12 @@ void CL_WritePacket( void ) {
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
+	
+#ifdef USE_MULTIVM
+	if(cl.snap[cgvm].multiview) {
+		MSG_WriteByte( &buf, cgvm );
+	}
+#endif
 
 	// write any unacknowledged clientCommands
 	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
@@ -818,7 +824,11 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
+#ifdef USE_MULTIVM
+	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cgvm - cl_packetdup->integer) & PACKET_MASK;
+#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
+#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
@@ -902,7 +912,22 @@ void CL_SendCmd( void ) {
 		return;
 	}
 
+#ifdef USE_MULTIVM
+	// TODO: make optional based on game setup, 
+	//   e.g. clone world with multiple simultaneous game types, 
+	//     deathmatch players are unaware they are also participating in CTF
+	//   e.g. dead world versus living world, like respawn in WoW, 
+	//     different enemies in dead world for powerups like in Prey
+	int i = 0;
+	do {
+		if(i > 0 && !cgvms[i]) continue;
+		//if(i != clc.currentView) continue;
+		cgvm = i;
+		CL_WritePacket();
+	} while(++i < MAX_NUM_VMS);
+#else
 	CL_WritePacket();
+#endif
 }
 
 

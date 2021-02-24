@@ -780,7 +780,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	Hunk_SetMark();
 	
-#ifdef USE_LAZY_LOAD
+#ifdef USE_LOCAL_DED
 	svShuttingDown = qfalse;
 #else
 #ifndef DEDICATED

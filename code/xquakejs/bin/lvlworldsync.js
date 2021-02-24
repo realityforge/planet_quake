@@ -12,9 +12,11 @@ var {loadDefaultDirectories} = require('../lib/asset.game.js')
 //  + '-' + (new Date()).getMonth() + '-' + (new Date()).getDate()
 if(fs.existsSync('/Volumes/External/Personal/planet_quake_data/lvlworld'))
 {
+  var downloadAll = true
   var UPDATE_DIRNAME = 'bestmaps'
   var UPDATE_DIRECTORY = '/Volumes/External/Personal/planet_quake_data/lvlworld/' + UPDATE_DIRNAME + '-' + (new Date()).getFullYear()
 } else {
+  var downloadAll = false
   var UPDATE_DIRNAME = 'bestmaps-' + (new Date()).getFullYear()
   var UPDATE_DIRECTORY = '/Applications/ioquake3/' + UPDATE_DIRNAME
 }
@@ -51,8 +53,7 @@ async function downloadMaps(newMaps) {
       return i % 2 === 1 ? (nextMap.zip[0].match(arr[i-1])?1:0) : false
     })[0] + '/' + nextMap.zip + '.zip'
     console.log('Downloading ' + nextMap.includes[0].title + ' from ' + ftpUrl)
-    var newFile = path.join(UPDATE_DIRECTORY, nextMap.levelId + '-'
-      + nextMap.zip + '.zip')
+    var newFile = path.join(UPDATE_DIRECTORY, nextMap.zip + '.zip')
     if(fs.existsSync(newFile)) {
       continue
     }
@@ -123,11 +124,55 @@ async function downloadMapIndex() {
         })
       })
   })
-  return await downloadExistingIndex(maps)
+  var index = await downloadExistingIndex(maps)
+  return index
+}
+
+async function downloadAllMaps() {
+  var maps
+  await new Promise(resolve => {
+    https.get('https://lvlworld.com/zip-file-list/filename-only',
+      function(res) {
+        var body = ''
+        res.on('data', function(chunk) {
+            body += chunk
+        })
+        res.on('end', function() {
+            maps = body.split(/\n/g)
+              .filter(m => m)
+              .map((map, i) => ({
+                levelId: i,
+                bsp: null,
+                zip: map.replace(/\.zip$/ig, ''),
+                includes: [{"bsp":map,"title":map}]
+              }))
+            resolve()
+        })
+      })
+  })
+  var existing
+  await new Promise(resolve => {
+    https.get('https://quake.games/assets/baseq3-cc/index.json?' + Date.now(),
+      function(res) {
+        var body = ''
+        res.on('data', function(chunk) {
+            body += chunk
+        })
+        res.on('end', function() {
+            existing = JSON.parse(body)
+            resolve()
+        })
+      })
+  })
+  debugger
+  await downloadMaps(maps)
+  return existing
 }
 
 async function doUpdate() {
-  var remoteIndex = await downloadMapIndex()
+  var remoteIndex = downloadAll
+    ? await downloadAllMaps()
+    : await downloadMapIndex()
   var outCombined = path.join(TEMP_DIR, UPDATE_DIRNAME + '-c')
   var outConverted = path.join(TEMP_DIR, UPDATE_DIRNAME + '-cc')
   var outRepacked = path.join(TEMP_DIR, UPDATE_DIRNAME + '-ccr')

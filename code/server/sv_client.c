@@ -2826,11 +2826,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		oldcmd = cmd;
 	}
 
-#ifdef USE_MULTIVM
-	gvm = cl->gameWorld;
-	CM_SwitchMap(gameWorlds[gvm]);
-#endif
-
 	// save time for ping calculation
 	if ( cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked == 0 ) {
 		cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
@@ -2853,10 +2848,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 				Com_Printf( "%s: didn't get cp command, resending gamestate\n", cl->name );
 				SV_SendClientGameState( cl );
 			}
-#ifdef USE_MULTIVM
-			gvm = 0;
-			CM_SwitchMap(gameWorlds[gvm]);
-#endif
 			return;
 		}
 #ifdef USE_MULTIVM
@@ -2875,15 +2866,11 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// a bad cp command was sent, drop the client
 	if ( sv_pure->integer != 0 && !cl->pureAuthentic ) {
 		SV_DropClient( cl, "Cannot validate pure client!" );
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
 	if ( cl->state != CS_ACTIVE ) {
 		cl->deltaMessage = -1;
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
 		return;
 	}
 
@@ -2901,15 +2888,14 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		//}
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
+#ifdef USE_MULTIVM
+		if(0)
+#endif
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
 			continue;
 		}
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
-#ifdef USE_MULTIVM
-	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
-#endif
 }
 
 
@@ -2929,7 +2915,7 @@ Parse a client packet
 ===================
 */
 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
-	int			c;
+	int			c, igvm = 0;
 	int			serverId;
 
 	MSG_Bitstream(msg);
@@ -3011,6 +2997,12 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		Com_DPrintf( "%s acknowledged gamestate\n", cl->name );
 		cl->oldServerTime = 0;
 	}
+	
+#ifdef USE_MULTIVM
+	if(cl->multiview.protocol > 0) {
+		igvm = MSG_ReadByte( msg );
+	}
+#endif
 
 	// read optional clientCommand strings
 	do {
@@ -3032,6 +3024,15 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		return;
 	}
 #endif
+#ifdef USE_MULTIVM
+	if(cl->multiview.protocol > 0) {
+		gvm = igvm;
+		CM_SwitchMap(gameWorlds[gvm]);
+	} else {
+		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
+	}
+#endif
 
 	// read the usercmd_t
 	if ( c == clc_move ) {
@@ -3044,4 +3045,8 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 //	if ( msg->readcount != msg->cursize ) {
 //		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
 //	}
+#ifdef USE_MULTIVM
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
+#endif
 }

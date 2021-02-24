@@ -116,6 +116,7 @@ clientConnection_t	clc;
 clientStatic_t		cls;
 int   cgvm = 0;
 vm_t *cgvms[MAX_NUM_VMS] = {};
+int   numCGames = 0;
 
 netadr_t			rcon_address;
 
@@ -3581,6 +3582,11 @@ void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
 	unsigned result;
+
+#ifdef USE_MULTIVM
+CM_SwitchMap(clc.currentView);
+cgvm = clc.currentView;
+#endif
 
 #ifdef USE_CURL	
 	if ( download.cURL ) {

@@ -52,7 +52,12 @@ return a hash value for the filename
 
 #define generateHashValue Com_GenerateHashValue
 
+#ifdef USE_LAZY_LOAD
 void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, const char *timeOffset, int index) {
+#else
+void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset) {
+#endif
+;
 	char		strippedName[MAX_QPATH];
 	int			hash;
 	shader_t	*sh, *sh2;
@@ -104,6 +109,8 @@ void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, co
   }
 }
 
+
+#ifdef USE_LAZY_LOAD
 void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 {
   // don't fuck with my console, e+ does this
@@ -115,6 +122,8 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
   Com_Printf("Remapping shader: %s -> %s\n", shaderName, newShaderName);
   R_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }
+#endif
+
 
 /*
 ===============
@@ -698,7 +707,6 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
           byte *pic;
           int len;
           R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
-          //return qfalse;
         } else 
 #endif
         {
@@ -754,7 +762,6 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
         int len;
         byte *pic;
         R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
-        return qfalse;
       } else 
 #endif
       {
@@ -805,7 +812,6 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
             int len;
             byte *pic;
             R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
-            return qfalse;
           } else 
 #endif
           {
@@ -4416,12 +4422,13 @@ static void CreateExternalShaders( void ) {
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
-  //if(Q_stristr(shaderName, "rocketExplosion"))
   R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex );
   
   mapShaders = qfalse;
 }
 #endif
+
+
 #ifdef USE_LAZY_MEMORY
 void RE_ReloadShaders( qboolean createNew ) {
   int i;

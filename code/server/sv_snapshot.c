@@ -989,11 +989,11 @@ Also called by SV_FinalMessage
 void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
-	int     headerBytes, start;
+	int     headerBytes;
 	playerState_t	*ps;
-	entityState_t nullstate;
 	sharedEntity_t *ent;
-	const svEntity_t *svEnt;
+	//entityState_t nullstate;
+	//const svEntity_t *svEnt;
 
 #ifdef USE_MULTIVM
 	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {

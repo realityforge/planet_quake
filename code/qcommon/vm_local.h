@@ -213,6 +213,7 @@ extern  int       cgvm;
 extern  int       uivm;
 #define MAX_NUM_VMS 10
 extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
+extern  int             numCGames;
 extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
 extern	vm_t			*gvms[MAX_NUM_VMS];				// game virtual machine
 

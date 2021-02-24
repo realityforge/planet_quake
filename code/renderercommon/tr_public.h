@@ -121,13 +121,17 @@ typedef struct {
 	void	(*SyncRender)( void );
 
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
-	void	(*ReloadShaders)( qboolean createNew );
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*UpdateMode)(glconfig_t *glconfigOut);
+#ifdef USE_LAZY_MEMORY
+	void	(*ReloadShaders)( qboolean createNew );
+#endif
+#ifdef USE_LAZY_LOAD
 	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
+#endif
 	void (*ResetBannerSpy)( void );
 	void (*SwitchWorld)(int world);
 
@@ -236,7 +240,9 @@ typedef struct {
 	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
+#ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
+#endif
 	void (*Spy_CursorPosition)(float x, float y);
 	void (*Spy_Banner)(float x, float y);
 	void (*Sys_DownloadLocalFile)(char *fileName);
