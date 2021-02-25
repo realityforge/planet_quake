@@ -1238,16 +1238,19 @@ static qboolean SV_CheckPaused( void ) {
 	int	count;
 	int	i;
 
-	if ( !cl_paused->integer ) {
-		return qfalse;
-	}
-
 	// only pause if there is just a single client connected
 	count = 0;
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
 			count++;
+			if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))) {
+				Cvar_Set("cl_paused", "1");
+			}
 		}
+	}
+
+	if ( !cl_paused->integer ) {
+		return qfalse;
 	}
 
 	if ( count > 1 ) {

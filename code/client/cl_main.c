@@ -3584,8 +3584,8 @@ void CL_Frame( int msec, int realMsec ) {
 	unsigned result;
 
 #ifdef USE_MULTIVM
-CM_SwitchMap(clc.currentView);
-cgvm = clc.currentView;
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
 #endif
 
 #ifdef USE_CURL	

@@ -3821,7 +3821,7 @@ void Com_Init_After_Filesystem( void ) {
 	com_timedemo = Cvar_Get( "timedemo", "0", 0 );
 	Cvar_CheckRange( com_timedemo, "0", "1", CV_INTEGER );
 	Cvar_SetDescription(com_timedemo, "Times a demo and returns frames per second like a benchmark\nDefault: 0");
-	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
+	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM | CVAR_USERINFO);
 	Cvar_SetDescription(cl_paused, "Holds the status of the paused flag on the client side\nDefault: 0");
 	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
 	Cvar_SetDescription(cl_packetdelay, "Stream network packets to the server instead of trying to send immediately\nDefault: 0");
