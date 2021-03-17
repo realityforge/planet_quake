@@ -196,6 +196,13 @@ demo through a file.
 =============================================================================
 */
 
+typedef struct demoIndex_s
+{
+	int serverTime;
+	int offset;
+	entityState_t	entities[MAX_GENTITIES];
+} demoIndex_t;
+
 typedef struct {
 
 	int			clientNum;
@@ -272,6 +279,7 @@ typedef struct {
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
 	fileHandle_t	recordfile;
+	demoIndex_t   *demoIndex;
 
 	int		timeDemoFrames;		// counter of rendered frames
 	int		timeDemoStart;		// cls.realtime before first frame

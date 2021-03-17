@@ -136,21 +136,18 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the frame has fallen out of the circular buffer, we can't return it
 	if ( cl.snap[cgvm].messageNum - snapshotNumber >= PACKET_BACKUP ) {
-//Com_Printf( "Definitely not working 0: %i\n", cgvm );
 		return qfalse;
 	}
 
 	// if the frame is not valid, we can't return it
 	clSnap = &cl.snapshots[cgvm][snapshotNumber & PACKET_MASK];
 	if ( !clSnap->valid ) {
-//Com_Printf( "Definitely not working 1: %i\n", cgvm );
 		return qfalse;
 	}
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
 	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
-//Com_Printf( "Definitely not working 2: %i\n", cgvm );
 		return qfalse;
 	}
 
@@ -1257,7 +1254,7 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.snap[cgvm].valid ? cl.snap[cgvm].serverTime : cl.serverTime, stereo, clc.demoplaying );
+	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.snap[cgvm].serverTime, stereo, clc.demoplaying );
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif

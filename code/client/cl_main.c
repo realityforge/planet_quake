@@ -699,6 +699,10 @@ CL_DemoCompleted
 =================
 */
 static void CL_DemoCompleted( void ) {
+	if(clc.demoIndex) {
+		Z_Free(clc.demoIndex);
+	}
+	
 	if ( com_timedemo->integer ) {
 		int	time;
 		
@@ -733,6 +737,121 @@ void CL_DemoCompleted_After_Shutdown( void ) {
 #endif
 }
 
+void CL_ReadDemoIndex() {
+	int			s;
+	int			r;
+	msg_t		buf;
+	int count = 0, offset = 0;
+	byte		bufData[ MAX_MSGLEN_BUF ];
+	int    startTime, endTime;
+	int    demoStart = 0, demoEnd;
+	const int SIMPLE_READ_SIZE = 24;
+	
+	startTime = Sys_Milliseconds();
+	
+	while(qtrue) {
+		// get the sequence number
+		r = FS_Read( &s, 4, clc.demofile );
+		if ( r != 4 ) {
+			break;
+		}
+	
+		// init the message
+		MSG_Init( &buf, bufData, MAX_MSGLEN );
+
+		// get the length
+		r = FS_Read( &buf.cursize, 4, clc.demofile );
+
+		// only read enough to get acknowledge and cmd
+		r = FS_Read( buf.data, SIMPLE_READ_SIZE, clc.demofile );
+
+		// check it if is a gamestate/snapshot
+		MSG_Bitstream( &buf );
+		MSG_ReadLong( &buf );
+		s = MSG_ReadByte( &buf );
+		if(s == svc_gamestate) {
+
+		} else if (s == svc_snapshot) {
+			// serverTime is first
+			if(demoStart == 0)
+				demoStart = MSG_ReadLong( &buf );
+			else
+				demoEnd = MSG_ReadLong( &buf );
+			count++;
+		} else if(s == svc_baseline) {
+			count++;
+		} else {
+			// skip this message
+		}
+		r = FS_Seek( clc.demofile, buf.cursize - SIMPLE_READ_SIZE, FS_SEEK_CUR );
+	}
+
+	endTime = Sys_Milliseconds();
+	
+	// allocate the necessary number of indexes 1 for each second, +1 in case it's ever rounded down after / 1000
+	Com_Printf("DEMO: Allocating %i KB for %i frames\n", ((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t) / 1000, (demoEnd - demoStart) / 1000 + 10);
+	clc.demoIndex = Z_Malloc(((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t));
+	
+	// TODO: parse every snapshot and make a copy of the entity state once every second so it can be rewound
+	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
+	
+	count = -1;
+	offset = 0;
+	while(qtrue) {
+		// get the sequence number
+		r = FS_Read( &s, 4, clc.demofile );
+		if ( r != 4 ) {
+			break;
+		}
+	
+		// init the message
+		MSG_Init( &buf, bufData, MAX_MSGLEN );
+
+		// get the length
+		r = FS_Read( &buf.cursize, 4, clc.demofile );
+
+		// only read enough to get acknowledge and cmd
+		r = FS_Read( buf.data, buf.cursize, clc.demofile );
+
+		// check it if is a gamestate/snapshot
+		MSG_Bitstream( &buf );
+		MSG_ReadLong( &buf );
+		s = MSG_ReadByte( &buf );
+		if(s == svc_gamestate) {
+
+		} else if (s == svc_snapshot) {
+			int newcount = MSG_ReadLong( &buf ) / 1000;
+			if(newcount > count) {
+				count = newcount;
+				clc.demoIndex[count].serverTime = count * 1000;
+				clc.demoIndex[count].offset = offset;
+				memcpy(clc.demoIndex[count].entities, cl.entityBaselines[cgvm], MAX_GENTITIES * sizeof(entityState_t));
+			} else {
+				// TODO: merge entity with baseline, the same way ParseSnapshot does
+				
+				
+				// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
+			}
+		}
+		offset = 8 + buf.cursize;
+	}
+	
+	// TODO: generate a baseline message at this sequence for saving in a side-cache
+
+	Com_Printf( "DEMO: Read %i key frames\n", count );
+	if(demoEnd - demoStart > 120000)
+		Com_Printf( "DEMO: Length %im %is\n", (demoEnd - demoStart) / 1000 / 60, (demoEnd - demoStart) / 1000 % 60 );
+	else if(demoEnd - demoStart > 2000)
+		Com_Printf( "DEMO: Length %is\n", (demoEnd - demoStart) / 1000 );
+	else
+		Com_Printf( "DEMO: Length %ims\n", demoEnd - demoStart );
+	Com_Printf( "DEMO: Indexing took %ims\n", endTime - startTime );
+	
+	
+	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
+	
+}
+
 
 /*
 =================
@@ -748,6 +867,10 @@ void CL_ReadDemoMessage( void ) {
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		CL_DemoCompleted();
 		return;
+	}
+	
+	if(FS_FTell(clc.demofile)==0) {
+		CL_ReadDemoIndex();
 	}
 
 	// get the sequence number
@@ -1148,7 +1271,9 @@ void CL_MapLoading( void ) {
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
+#ifndef EMSCRIPTEN
 		CL_Disconnect( qtrue, qfalse );
+#endif
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
@@ -4874,7 +4999,8 @@ void CL_Init( void ) {
 
 #ifdef USE_LAZY_LOAD
 	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
-	Cvar_SetDescription( cl_lazyLoad, "Download graphics over the network after the level loads\n1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
+	Cvar_SetDescription( cl_lazyLoad, "Download graphics over the network after the level loads\n"
+		"1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
 #endif
 
 #ifdef EMSCRIPTEN

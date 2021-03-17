@@ -724,13 +724,17 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifndef USE_MULTIVM
 	CL_ClearState();
 #else
-	cgvm = MSG_ReadByte( msg );
-	CM_SwitchMap(cgvm);
-	if(cgvm == 0) {
+	if(clc.demoplaying || !cl.snap[0].multiview) {
 		CL_ClearState();
-	}
-	if(cgvm > numCGames) {
-		numCGames = cgvm;
+	} else {
+		cgvm = MSG_ReadByte( msg );
+		CM_SwitchMap(cgvm);
+		if(cgvm == 0) {
+			CL_ClearState();
+		}
+		if(cgvm > numCGames) {
+			numCGames = cgvm;
+		}
 	}
 #endif
 
