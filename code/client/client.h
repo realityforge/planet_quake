@@ -580,6 +580,7 @@ extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
 void CL_ParseServerMessage( msg_t *msg );
+void CL_ParseSnapshot( msg_t *msg, qboolean multiview );
 
 //====================================================================
 

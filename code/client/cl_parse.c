@@ -211,7 +211,7 @@ cl.snap and saved in cl.snapshots[].  If the snapshot is invalid
 for any reason, no changes to the state will be made at all.
 ================
 */
-static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
+void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	const clSnapshot_t *old;
 	clSnapshot_t	newSnap;
 	int			deltaNum;

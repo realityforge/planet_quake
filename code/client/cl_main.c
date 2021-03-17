@@ -741,13 +741,18 @@ void CL_ReadDemoIndex() {
 	int			s;
 	int			r;
 	msg_t		buf;
-	int count = 0, offset = 0;
+	int				cmd;
+	int count = 0, offset = 0, newnum, i;
 	byte		bufData[ MAX_MSGLEN_BUF ];
 	int    startTime, endTime;
 	int    demoStart = 0, demoEnd;
+	entityState_t	*es;
+	entityState_t	nullstate;
 	const int SIMPLE_READ_SIZE = 24;
 	
 	startTime = Sys_Milliseconds();
+	
+	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	
 	while(qtrue) {
 		// get the sequence number
@@ -789,7 +794,7 @@ void CL_ReadDemoIndex() {
 	endTime = Sys_Milliseconds();
 	
 	// allocate the necessary number of indexes 1 for each second, +1 in case it's ever rounded down after / 1000
-	Com_Printf("DEMO: Allocating %i KB for %i frames\n", ((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t) / 1000, (demoEnd - demoStart) / 1000 + 10);
+	Com_Printf("DEMO: Allocating %lu KB for %i frames\n", ((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t) / 1000, (demoEnd - demoStart) / 1000 + 10);
 	clc.demoIndex = Z_Malloc(((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t));
 	
 	// TODO: parse every snapshot and make a copy of the entity state once every second so it can be rewound
@@ -818,19 +823,62 @@ void CL_ReadDemoIndex() {
 		MSG_ReadLong( &buf );
 		s = MSG_ReadByte( &buf );
 		if(s == svc_gamestate) {
+			CL_ClearState();
+
+			// a gamestate always marks a server command sequence
+			clc.serverCommandSequence = MSG_ReadLong( &buf );
+
+			// parse all the configstrings and baselines
+			cl.gameState.dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+			while ( 1 ) {
+				cmd = MSG_ReadByte( &buf );
+
+				if ( cmd == svc_EOF ) {
+					break;
+				}
+				
+				if ( cmd == svc_configstring ) {
+					i = MSG_ReadShort( &buf );
+					if ( i < 0 || i >= MAX_CONFIGSTRINGS ) {
+						Com_Error( ERR_DROP, "configstring > MAX_CONFIGSTRINGS" );
+					}
+
+					MSG_ReadBigString( &buf );
+				} else if ( cmd == svc_baseline ) {
+					newnum = MSG_ReadBits( &buf, GENTITYNUM_BITS );
+					if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
+						Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
+					}
+					es = &cl.entityBaselines[cgvm][ newnum ];
+					MSG_ReadDeltaEntity( &buf, &nullstate, es, newnum );
+					cl.baselineUsed[cgvm][ newnum ] = 1;
+				} else {
+					Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
+				}
+			}
+
+			clc.eventMask |= EM_GAMESTATE;
+
+#ifdef USE_MV
+			clc.clientView = clc.clientNum;
+			clc.zexpectDeltaSeq = 0; // that will reset compression context
+#endif
+
+			clc.clientNum = MSG_ReadLong( &buf );
+			// read the checksum feed
+			clc.checksumFeed = MSG_ReadLong( &buf );
 
 		} else if (s == svc_snapshot) {
-			int newcount = MSG_ReadLong( &buf ) / 1000;
+			CL_ParseSnapshot( &buf, qfalse );
+			int newcount = cl.snap[cgvm].serverTime / 1000;
 			if(newcount > count) {
 				count = newcount;
 				clc.demoIndex[count].serverTime = count * 1000;
 				clc.demoIndex[count].offset = offset;
+				// TODO: merge entity with baseline, the same way ParseSnapshot does
+				// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
 				memcpy(clc.demoIndex[count].entities, cl.entityBaselines[cgvm], MAX_GENTITIES * sizeof(entityState_t));
 			} else {
-				// TODO: merge entity with baseline, the same way ParseSnapshot does
-				
-				
-				// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
 			}
 		}
 		offset = 8 + buf.cursize;
@@ -849,7 +897,8 @@ void CL_ReadDemoIndex() {
 	
 	
 	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
-	
+	CL_ClearState();
+
 }
 
 
