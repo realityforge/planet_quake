@@ -272,7 +272,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
-		if ( !multiview ) {
+		if ( !multiview && !clc.demoplaying ) {
 			if ( !old->valid ) {
 				// should never happen
 				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
@@ -285,6 +285,9 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			} else {
 				newSnap.valid = qtrue;	// valid delta parse
 			}
+		}
+		if(clc.demoplaying) {
+			newSnap.valid = qtrue;
 		}
 	}
 
@@ -724,7 +727,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifndef USE_MULTIVM
 	CL_ClearState();
 #else
-	if(clc.demoplaying || !cl.snap[0].multiview) {
+	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
 		cgvm = MSG_ReadByte( msg );

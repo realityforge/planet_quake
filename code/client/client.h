@@ -279,6 +279,7 @@ typedef struct {
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
 	fileHandle_t	recordfile;
+	int			      numDemoIndex;
 	demoIndex_t   *demoIndex;
 
 	int		timeDemoFrames;		// counter of rendered frames

@@ -744,7 +744,7 @@ void CL_ReadDemoIndex() {
 	int				cmd;
 	int count = 0, offset = 0, newnum, i;
 	byte		bufData[ MAX_MSGLEN_BUF ];
-	int    startTime, endTime;
+	int    startTime;
 	int    demoStart = 0, demoEnd;
 	entityState_t	*es;
 	entityState_t	nullstate;
@@ -791,11 +791,15 @@ void CL_ReadDemoIndex() {
 		r = FS_Seek( clc.demofile, buf.cursize - SIMPLE_READ_SIZE, FS_SEEK_CUR );
 	}
 
-	endTime = Sys_Milliseconds();
+	clc.numDemoIndex = (demoEnd - demoStart) / 1000 + 10;
 	
-	// allocate the necessary number of indexes 1 for each second, +1 in case it's ever rounded down after / 1000
-	Com_Printf("DEMO: Allocating %lu KB for %i frames\n", ((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t) / 1000, (demoEnd - demoStart) / 1000 + 10);
-	clc.demoIndex = Z_Malloc(((demoEnd - demoStart) / 1000 + 10) * sizeof(demoIndex_t));
+	// allocate the necessary number of indexes 1 for each second, 
+	//   +1 in case it's ever rounded down after / 1000
+	Com_Printf( "DEMO: Initial scan took %ims\n", Sys_Milliseconds() - startTime );
+	Com_Printf("DEMO: Allocating %lu KB for %i frames\n", 
+		clc.numDemoIndex * sizeof(demoIndex_t) / 1000, clc.numDemoIndex);
+
+	clc.demoIndex = Z_Malloc(clc.numDemoIndex * sizeof(demoIndex_t));
 	
 	// TODO: parse every snapshot and make a copy of the entity state once every second so it can be rewound
 	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
@@ -870,13 +874,12 @@ void CL_ReadDemoIndex() {
 
 		} else if (s == svc_snapshot) {
 			CL_ParseSnapshot( &buf, qfalse );
-			int newcount = cl.snap[cgvm].serverTime / 1000;
+			int newcount = (cl.snap[cgvm].serverTime - demoStart) / 1000;
 			if(newcount > count) {
 				count = newcount;
-				clc.demoIndex[count].serverTime = count * 1000;
-				clc.demoIndex[count].offset = offset;
+				clc.demoIndex[count].serverTime = cl.snap[cgvm].serverTime;
+				clc.demoIndex[count].offset = FS_FTell(clc.demofile) - buf.cursize - 8;
 				// TODO: merge entity with baseline, the same way ParseSnapshot does
-				// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
 				memcpy(clc.demoIndex[count].entities, cl.entityBaselines[cgvm], MAX_GENTITIES * sizeof(entityState_t));
 			} else {
 			}
@@ -884,7 +887,7 @@ void CL_ReadDemoIndex() {
 		offset = 8 + buf.cursize;
 	}
 	
-	// TODO: generate a baseline message at this sequence for saving in a side-cache
+	// TODO: generate a baseline network message for saving in a side-cache
 
 	Com_Printf( "DEMO: Read %i key frames\n", count );
 	if(demoEnd - demoStart > 120000)
@@ -893,7 +896,7 @@ void CL_ReadDemoIndex() {
 		Com_Printf( "DEMO: Length %is\n", (demoEnd - demoStart) / 1000 );
 	else
 		Com_Printf( "DEMO: Length %ims\n", demoEnd - demoStart );
-	Com_Printf( "DEMO: Indexing took %ims\n", endTime - startTime );
+	Com_Printf( "DEMO: Indexing took %ims\n", Sys_Milliseconds() - startTime );
 	
 	
 	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
@@ -1039,6 +1042,61 @@ static void CL_CompleteDemoName( char *args, int argNum )
 	}
 }
 
+
+static void CL_Pause_f( void ) {
+	if(!clc.demoplaying) {
+		Com_Printf("Demo not playing.");
+		return;
+	}
+
+	Cvar_Set("cl_paused", "1");
+}
+
+static void CL_Play_f( void ) {
+	if(!clc.demoplaying) {
+		Com_Printf("Demo not playing.");
+		return;
+	}
+
+	Cvar_Set("cl_paused", "0");
+}
+
+static void CL_Rewind_f( void ) {
+	int seconds = 10;
+	
+	if(!clc.demoplaying) {
+		Com_Printf("Demo not playing.");
+		return;
+	}
+
+	if(Cmd_Argc() > 2) {
+		Com_Printf( "Usage: %s (10|<seconds>)\n", Cmd_Argv(0) );
+		return;
+	}
+	
+	if(Cmd_Argc() == 2) {
+		seconds = atoi(Cmd_Argv(1));
+	}
+
+	//  find the nearest snapshot
+	int nearest = (cl.snap[cgvm].serverTime - clc.demoIndex[0].serverTime) / 1000;
+	if(Q_stricmpn(Cmd_Argv(0), "rew", 3)==0) {
+		Com_Printf("DEMO: rewind %i seconds\n", seconds);
+		nearest -= seconds;
+		if(nearest < 0) {
+			nearest = 0;
+		}
+	} else if (Q_stricmpn(Cmd_Argv(0), "for", 3)==0) {
+		Com_Printf("DEMO: fast forward %i seconds\n", seconds);
+		nearest += seconds;
+		if(nearest > clc.numDemoIndex) {
+			nearest = clc.numDemoIndex - 1;
+		}
+	}
+
+	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
+	// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
+}
 
 /*
 ====================
@@ -5107,12 +5165,22 @@ void CL_Init( void ) {
 	Cmd_SetDescription("vid_restart", "Reinitialize video\nUsage: vid_restart");
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
 	Cmd_SetDescription("disconnect", "Disconnect from a server, including local\nUsage: disconnect");
+
 	Cmd_AddCommand ("record", CL_Record_f);
 	Cmd_SetCommandCompletionFunc( "record", CL_CompleteRecordName );
 	Cmd_SetDescription("record", "Record a demo\nUsage: record <demoname>");
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
 	Cmd_SetDescription("demo", "Play a demo\nUsage: demo <demoname>");
+	Cmd_AddCommand("pause", CL_Pause_f);
+	Cmd_SetDescription("pause", "Pause the demo playing\nUsage: pause");
+	Cmd_AddCommand("rewind", CL_Rewind_f);
+	Cmd_SetDescription("rewind", "Rewind demo playback\nUsage: rewind (10|<seconds>)");
+	Cmd_AddCommand("forward", CL_Rewind_f);
+	Cmd_SetDescription("forward", "Fast forward demo playback\nUsage: forward (10|<seconds>)");
+	Cmd_AddCommand("play", CL_Play_f);
+	Cmd_SetDescription("play", "Unpause and continue playing\nUsage: play");
+	
 	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
 	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nUsage: cinematic <videofile>");
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
