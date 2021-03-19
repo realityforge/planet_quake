@@ -699,6 +699,7 @@ CL_DemoCompleted
 =================
 */
 static void CL_DemoCompleted( void ) {
+	Com_Printf("DEMO: ended.\n");
 	if(clc.demoIndex) {
 		Z_Free(clc.demoIndex);
 	}
@@ -718,7 +719,6 @@ static void CL_DemoCompleted( void ) {
 	CL_NextDemo();
 
 #else
-	Com_Printf("DEMO: DemoCompleted: done\n");
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
 	} else {
@@ -905,6 +905,9 @@ void CL_ReadDemoIndex() {
 }
 
 
+static int messageShift = 0;
+int        serverShift = 0;
+
 /*
 =================
 CL_ReadDemoMessage
@@ -922,6 +925,8 @@ void CL_ReadDemoMessage( void ) {
 	}
 	
 	if(FS_FTell(clc.demofile)==0) {
+		messageShift = 0;
+		serverShift = 0;
 		CL_ReadDemoIndex();
 	}
 
@@ -931,7 +936,7 @@ void CL_ReadDemoMessage( void ) {
 		CL_DemoCompleted();
 		return;
 	}
-	clc.serverMessageSequence = LittleLong( s );
+	clc.serverMessageSequence = LittleLong( s ) - messageShift;
 
 	// init the message
 	MSG_Init( &buf, bufData, MAX_MSGLEN );
@@ -1079,6 +1084,8 @@ static void CL_Rewind_f( void ) {
 	}
 
 	//  find the nearest snapshot
+	int prevMessageNum = cl.snap[cgvm].messageNum;
+	int prevServerTime = cl.snap[cgvm].serverTime;
 	int nearest = (cl.snap[cgvm].serverTime - clc.demoIndex[0].serverTime) / 1000;
 	if(Q_stricmpn(Cmd_Argv(0), "rew", 3)==0) {
 		Com_Printf("DEMO: rewind %i seconds\n", seconds);
@@ -1092,9 +1099,32 @@ static void CL_Rewind_f( void ) {
 		if(nearest > clc.numDemoIndex) {
 			nearest = clc.numDemoIndex - 1;
 		}
+	} else if (Q_stricmpn(Cmd_Argv(0), "skip", 3)==0) {
+		nearest = seconds;
+		if(nearest < 0) {
+			Com_Printf("Starting from the beginning.");
+			nearest = 0;
+		}
+		if(nearest > clc.numDemoIndex) {
+			Com_Printf("Skipping to the end.");
+			nearest = clc.numDemoIndex - 1;
+		}
 	}
 
+	// reset snapshot state to time we are skipping to
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
+	for(int j = 0; j < 3; j++) {
+		CL_ReadDemoMessage();
+	}
+	messageShift = (cl.snap[cgvm].messageNum + messageShift) - prevMessageNum;
+	serverShift = (cl.snap[cgvm].serverTime + serverShift) - prevServerTime;
+	//Com_Printf("Message shift: %i (%i)\n", messageShift, serverShift);
+	// reset again to load the correct message shift
+	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
+	for(int j = 0; j < 3; j++) {
+		CL_ReadDemoMessage();
+	}
+
 	// TODO: on time change (rewind, forward) reset the previous snapshot to 0?
 }
 

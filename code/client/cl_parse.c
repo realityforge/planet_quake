@@ -246,7 +246,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// message before we got to svc_snapshot
 	newSnap.serverCommandNum = clc.serverCommandSequence;
 
-	newSnap.serverTime = MSG_ReadLong( msg );
+	newSnap.serverTime = MSG_ReadLong( msg ) - serverShift;
 
 	// if we were just unpaused, we can only *now* really let the
 	// change come into effect or the client hangs.
