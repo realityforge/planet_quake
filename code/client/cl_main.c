@@ -1099,7 +1099,7 @@ static void CL_Rewind_f( void ) {
 		if(nearest > clc.numDemoIndex) {
 			nearest = clc.numDemoIndex - 1;
 		}
-	} else if (Q_stricmpn(Cmd_Argv(0), "skip", 3)==0) {
+	} else if (Q_stricmpn(Cmd_Argv(0), "skip", 4)==0) {
 		nearest = seconds;
 		if(nearest < 0) {
 			Com_Printf("Starting from the beginning.");
@@ -1116,9 +1116,9 @@ static void CL_Rewind_f( void ) {
 	for(int j = 0; j < 3; j++) {
 		CL_ReadDemoMessage();
 	}
-	messageShift = (cl.snap[cgvm].messageNum + messageShift) - prevMessageNum;
-	serverShift = (cl.snap[cgvm].serverTime + serverShift) - prevServerTime;
-	//Com_Printf("Message shift: %i (%i)\n", messageShift, serverShift);
+	messageShift = cl.snap[cgvm].messageNum - (prevMessageNum - messageShift) ;
+	serverShift = cl.snap[cgvm].serverTime - (prevServerTime - serverShift);
+	Com_Printf("Message shift: %i (%i)\n", messageShift, serverShift);
 	// reset again to load the correct message shift
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
 	for(int j = 0; j < 3; j++) {

@@ -97,6 +97,7 @@ CL_GetCurrentSnapshotNumber
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
 	*snapshotNumber = cl.snap[cgvm].messageNum;
+	//Com_Printf("SNAP: %i\n", *snapshotNumber);
 	*serverTime = cl.snap[cgvm].serverTime;
 }
 
