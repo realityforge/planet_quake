@@ -805,41 +805,9 @@ void SV_SpawnServer_After_Startup( void ) {
 }
 
 
-static	char		props[BIG_INFO_STRING];
-char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
-	int c = 0, r = 0, len = strlen(text_in);
-	props[0] = 0;
-	while(c < len) {
-		if((text_in[c] >= 'a' && text_in[c] <= 'z')
-			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
-			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
-			props[r] = text_in[c];
-			r++;
-		} else {
-Com_Printf("Props: split %i\n", *count);
-			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
-				props[r] = 0;
-				(*count)++;
-				r++;
-			}
-		}
-		c++;
-	}
-	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
-		props[r] = 0;
-		(*count)++;
-		r++;
-	}
-	if(*count == MAX_CLIENT_ROLES) {
-		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
-	}
-	return props;
-}
-
-
 #ifdef USE_SERVER_ROLES
 // TODO: sv_roles->modified on every use connect? Need to run this loop again
-void static SV_InitUserRoles (void) {
+void SV_InitUserRoles (void) {
 	int roleCount = 0;
 	// force 3 roles to be available?
 	char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);

@@ -881,6 +881,25 @@ void SV_FlushRedirect( const char *outputbuf )
 }
 
 
+#ifdef USE_SERVER_ROLES
+static qboolean SV_UserHasAccess(char *pw, int *role) {
+	SV_InitUserRoles();
+
+	// check passwords	
+	for(int i = 0; i < MAX_CLIENT_ROLES; i++) {
+		if(sv_role[i] && sv_rolePassword[i] && sv_rolePassword[i]->string[0] 
+			&& strcmp( pw, sv_rolePassword[i]->string ) == 0) {
+			// update command list with current role information
+			Cmd_FilterLimited(sv_role[i]->string);
+			*role = i;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+#endif
+
+
 /*
 ===============
 SVC_RemoteCommand
@@ -894,6 +913,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	static rateLimit_t bucket;
 	qboolean	valid;
 	qboolean  limited;
+	int role;
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];
@@ -913,10 +933,12 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		( rconPassword2[0] && strcmp( pw, rconPassword2 ) == 0 ) ) {
 		valid = qtrue;
 		Com_Printf( "Rcon from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
-	} else if (SV_UserHasAccess(pw)) {
+#ifdef USE_SERVER_ROLES
+	} else if (SV_UserHasAccess(pw, &role)) {
 		limited = qtrue;
 		valid = qtrue;
 		Com_Printf( "Rcon (limited) from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
+#endif
 	} else {
 		// Make DoS via rcon impractical
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) ) {
@@ -978,6 +1000,11 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 			Info_SetValueForKey( infostring, "autocomplete", &rconField.buffer[1] );
 			NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
 		} else {
+#ifdef USE_SERVER_ROLES
+			if(limited) {
+				Cmd_ExecuteLimitedString( cmd_aux, qfalse, role );
+			} else
+#endif
 			Cmd_ExecuteString( cmd_aux, qfalse );
 		}
 	}

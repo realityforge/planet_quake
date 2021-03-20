@@ -384,6 +384,7 @@ typedef struct cmd_function_s
 	char					*description;
 	xcommand_t				function;
 	completionFunc_t	complete;
+	qboolean limited;
 } cmd_function_t;
 
 
@@ -790,7 +791,6 @@ static void Cmd_Help_f( void )
 {
 	char *name;
 	cmd_function_t *cmd;
-	cvar_t	*v;
 
 	if(Cmd_Argc() != 2)
 	{
@@ -956,6 +956,73 @@ qboolean Cmd_CompleteArgument( const char *command, char *args, int argNum ) {
 }
 
 
+#ifdef USE_SERVER_ROLES
+static qboolean limited;
+
+qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
+	limited = qtrue;
+	qboolean result = Cmd_ExecuteString(text, noServer);
+	limited = qfalse;
+	return result;
+}
+
+
+static	char		props[BIG_INFO_STRING];
+char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
+	int c = 0, r = 0, len = strlen(text_in);
+	props[0] = 0;
+	while(c < len) {
+		if((text_in[c] >= 'a' && text_in[c] <= 'z')
+			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
+			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
+			props[r] = text_in[c];
+			r++;
+		} else {
+Com_Printf("Props: split %i\n", *count);
+			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+				props[r] = 0;
+				(*count)++;
+				r++;
+			}
+		}
+		c++;
+	}
+	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+		props[r] = 0;
+		(*count)++;
+		r++;
+	}
+	if(*count == MAX_CLIENT_ROLES) {
+		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
+	}
+	return props;
+}
+
+
+void Cmd_FilterLimited(char *commandList) {
+	cmd_function_t *cmd, **prev;
+	int cmdCount = 0;
+	// force 3 roles to be available?
+	char *cmds = Cmd_TokenizeAlphanumeric(commandList, &cmdCount);
+	// loop through each command and mark it  as limited
+	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
+		cmd = *prev;
+		cmd->limited = qfalse;
+		// check if command  is in  command whitelist for the role
+		int cmdI = 0;
+		for(int i = 0; i < cmdCount; i++) {
+			if(Q_stricmp(&cmds[cmdI], cmd->name)==0) {
+				cmd->limited = qtrue;
+			}
+			cmdI += strlen(cmds)+1;
+		}
+	}
+	
+}
+
+#endif
+
+
 /*
 ============
 Cmd_ExecuteString
@@ -987,6 +1054,11 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 				// let the cgame or game handle it
 				break;
 			} else {
+#ifdef USE_SERVER_ROLES
+				if(limited && !cmd->limited)
+					Com_Printf("Could not execute command %s, you do not have permission.", cmd->name);
+				else
+#endif
 				cmd->function();
 			}
 			return qtrue;
@@ -1032,6 +1104,8 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 		// ForwardCommandToClient
 		return qfalse;
 	}
+#else
+	return qfalse;
 #endif
 }
 

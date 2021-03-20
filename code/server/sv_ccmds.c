@@ -190,6 +190,8 @@ static void SV_Map_f( void ) {
 		Cbuf_Execute();
 		return;
 	}
+	// TODO: check if com_errorMessage, display it onscreen with
+	//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
 #endif
 
 	// force latched values to get set
@@ -1515,7 +1517,7 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 #ifdef USE_MULTIVM
 void SV_SwitchGame_f ( void ) {
 	client_t *client;
-	int game, count;
+	int game;
 	if ( Cmd_Argc() > 2 ) {
 		Com_Printf ("Usage: game <clientnum>\n");
 		return;
@@ -1524,6 +1526,8 @@ void SV_SwitchGame_f ( void ) {
 	client = SV_GetPlayerByHandle();
 
 	if(Cmd_Argc() == 1) {
+		// TODO: finish this, switch a specific client to a new game or switch all clients to a new game
+		//   client command already exists in sv_client.c
 	//	game = 
 	} else {
 		game = atoi(Cmd_Argv(1));
@@ -1549,6 +1553,23 @@ void SV_LoadVM_f() {
 #endif
 
 
+void SV_Shout_f(void) {
+	client_t	*cl;
+	int i;
+	char *message;
+	if(Cmd_Argc() < 2) {
+		Com_Printf ("Usage: shout <message>");
+		return;
+	}
+	message = Cmd_ArgsFrom(1);
+	for ( i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
+		if ( cl->state < CS_CONNECTED ) {
+			continue;
+		}
+		SV_SendServerCommand(cl, "cp \"%s\"", message);
+	}
+}
+
 /*
 ==================
 SV_AddOperatorCommands
@@ -1562,6 +1583,8 @@ void SV_AddOperatorCommands( void ) {
 	}
 	initialized = qtrue;
 
+	Cmd_AddCommand ("shout", SV_Shout_f);
+	Cmd_SetDescription( "shout", "Send a message printed big and center screen to all connected players.\nUsage: shout <message>");
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
 	Cmd_SetDescription( "heartbeat", "Send a manual heartbeat to the master servers\nUsage: heartbeat" );
 	Cmd_AddCommand ("kick", SV_Kick_f);

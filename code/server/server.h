@@ -535,6 +535,9 @@ void SV_FlushRedirect( const char *outputbuf );
 //
 // sv_init.c
 //
+#ifdef USE_SERVER_ROLES
+void SV_InitUserRoles (void);
+#endif
 void SV_SetConfigstring( int index, const char *val );
 void SV_GetConfigstring( int index, char *buffer, int bufferSize );
 void SV_UpdateConfigstrings( client_t *client );
