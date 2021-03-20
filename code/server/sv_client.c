@@ -2681,10 +2681,21 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 				   ( !Q_stricmp(Cmd_Argv(0), "team") && Q_stricmp(Cmd_Argv(1), "s") && Q_stricmp(Cmd_Argv(1), "spectator") ) ) { // if there is a demo playback, we prevent any real client from doing a team change, if so, we issue a chat messsage (except if the player join team spectator again)
 				SV_SendServerCommand(cl, "chat \"^3Can't join a team when a demo is replaying!\""); // issue a chat message only to the player trying to join a team
 				SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\""); // issue a chat message only to the player trying to join a team
+				Cmd_Clear();
 				return qtrue;
 			}
-			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team") )
+			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team")
+		 		&& strcmp(Cmd_Argv(0), "tell"))
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
+#ifdef USE_REFEREE_CMDS
+			else {
+				;
+				if(cl->muted) {
+					Cmd_Clear();
+					return qtrue;
+				}
+			}
+#endif
 			VM_Call( gvms[gvm], 1, GAME_CLIENT_COMMAND, cl - svs.clients );
 #ifdef USE_MV
 			cl->multiview.lastSentTime = svs.time;

@@ -312,6 +312,13 @@ typedef struct client_s {
 	int gameWorld;
 	int newWorld;
 #endif
+#ifdef USE_SERVER_ROLES
+	int role;
+#endif
+#ifdef USE_REFEREE_CMDS
+	qboolean muted;
+	qboolean nofire;
+#endif
 
 } client_t;
 

@@ -1573,7 +1573,7 @@ void SV_Shout_f(void) {
 
 void SV_Freeze_f(void) {
 	if(Cmd_Argc() > 1) {
-		Com_Printf ("Usage: %s", Cmd_Argv(1));
+		Com_Printf ("Usage: %s", Cmd_Argv(0));
 		return;
 	}
 	
@@ -1581,6 +1581,24 @@ void SV_Freeze_f(void) {
 		Cvar_Set("sv_frozen", "1");
 	} else {
 		Cvar_Set("sv_frozen", "0");
+	}
+}
+
+void SV_Mute_f(void) {
+	client_t cl;
+	if(Cmd_Argc() != 2) {
+		Com_Printf ("Usage: %s <player>", Cmd_Argv(0));
+		return;
+	}
+	
+	cl = SV_GetPlayerByHandle();
+	if ( !cl ) {
+		return;
+	}
+	if(Q_stricmp(Cmd_Argv(0), "mute") == 0) {
+		cl->muted = qtrue;
+	} else {
+		cl->muted = qfalse;
 	}
 }
 #endif
@@ -1600,6 +1618,10 @@ void SV_AddOperatorCommands( void ) {
 	initialized = qtrue;
 
 #ifdef USE_REFEREE_CMDS
+	Cmd_AddCommand ("mute", SV_Mute_f);
+	Cmd_SetDescription( "mute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: mute <player>");
+	Cmd_AddCommand ("unmute", SV_Mute_f);
+	Cmd_SetDescription( "unmute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: unmute <player>");
 	Cmd_AddCommand ("shout", SV_Shout_f);
 	Cmd_SetDescription( "shout", "Send a message printed big and center screen to all connected players.\nUsage: shout <message>");
 	Cmd_AddCommand ("freeze", SV_Freeze_f);
