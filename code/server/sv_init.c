@@ -837,6 +837,21 @@ Com_Printf("Props: split %i\n", *count);
 }
 
 
+#ifdef USE_SERVER_ROLES
+// TODO: sv_roles->modified on every use connect? Need to run this loop again
+void static SV_InitUserRoles (void) {
+	int roleCount = 0;
+	// force 3 roles to be available?
+	char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);
+	for(int i = 0; i < roleCount; i++) {
+		sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
+		sv_rolePassword[i] = Cvar_Get(va("%sPassword", roles), "", CVAR_TEMP);
+		roles = &roles[strlen(roles)+1];
+	}
+}
+#endif
+
+
 /*
 ===============
 SV_Init
@@ -943,14 +958,7 @@ void SV_Init( void )
 		sv_clientRoles[index] = Cvar_Get(va("sv_role%d", index + 1), "", CVAR_ARCHIVE);
 	sv_role[0] = Cvar_Get( "sv_referee", "ban kick restart map", CVAR_ARCHIVE);
 	sv_role[1] = Cvar_Get( "sv_moderator", "kick ban timelimit fraglimit capturelimit shuffle mute map nextmap map_restart", CVAR_ARCHIVE);
-	{
-		int roleCount = 0;
-		char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);
-		for(int i = 0; i < roleCount; i++) {
-			sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
-			roles = &roles[strlen(roles)+1];
-		}
-	}
+	SV_InitUserRoles();
 #endif
 
 	// server vars

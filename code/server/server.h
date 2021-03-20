@@ -409,6 +409,8 @@ extern	cvar_t	*sv_master[MAX_MASTER_SERVERS];
 extern	cvar_t	*sv_roles;
 extern	cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_role[MAX_CLIENT_ROLES];
+extern	cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
+
 #endif
 extern	cvar_t	*sv_reconnectlimit;
 extern	cvar_t	*sv_padPackets;

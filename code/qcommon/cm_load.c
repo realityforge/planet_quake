@@ -704,8 +704,8 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cvar_SetDescription(cm_saveEnts, "Export entities from the next map that is loaded by the same name with a .ent extension, usually in your fs_homepath/maps directory\nDefault: 0");
 #endif
 #ifdef USE_LAZY_MEMORY
-	Cmd_AddCommand("maplist", CM_MapList_f);
-	Cmd_SetDescription("maplist", "List the currently loaded clip maps\nUsage: maplist");
+	Cmd_AddCommand("cmlist", CM_MapList_f);
+	Cmd_SetDescription("cmlist", "List the currently loaded clip maps\nUsage: maplist");
 #endif
 
 	for(i = 0; i < MAX_NUM_MAPS; i++) {

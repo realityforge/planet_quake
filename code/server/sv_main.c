@@ -65,6 +65,7 @@ cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
 cvar_t  *sv_roles;
 cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];		// master server ip address
 cvar_t	*sv_role[MAX_CLIENT_ROLES];		// master server ip address
+cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 #endif
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
@@ -892,6 +893,7 @@ Redirect all printfs
 static void SVC_RemoteCommand( const netadr_t *from ) {
 	static rateLimit_t bucket;
 	qboolean	valid;
+	qboolean  limited;
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];
@@ -911,6 +913,10 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		( rconPassword2[0] && strcmp( pw, rconPassword2 ) == 0 ) ) {
 		valid = qtrue;
 		Com_Printf( "Rcon from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
+	} else if (SV_UserHasAccess(pw)) {
+		limited = qtrue;
+		valid = qtrue;
+		Com_Printf( "Rcon (limited) from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
 	} else {
 		// Make DoS via rcon impractical
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) ) {
