@@ -1553,6 +1553,7 @@ void SV_LoadVM_f() {
 #endif
 
 
+#ifdef USE_REFEREE_CMDS
 void SV_Shout_f(void) {
 	client_t	*cl;
 	int i;
@@ -1570,6 +1571,21 @@ void SV_Shout_f(void) {
 	}
 }
 
+void SV_Freeze_f(void) {
+	if(Cmd_Argc() > 1) {
+		Com_Printf ("Usage: %s", Cmd_Argv(1));
+		return;
+	}
+	
+	if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
+		Cvar_Set("sv_frozen", "1");
+	} else {
+		Cvar_Set("sv_frozen", "0");
+	}
+}
+#endif
+
+
 /*
 ==================
 SV_AddOperatorCommands
@@ -1583,8 +1599,16 @@ void SV_AddOperatorCommands( void ) {
 	}
 	initialized = qtrue;
 
+#ifdef USE_REFEREE_CMDS
 	Cmd_AddCommand ("shout", SV_Shout_f);
 	Cmd_SetDescription( "shout", "Send a message printed big and center screen to all connected players.\nUsage: shout <message>");
+	Cmd_AddCommand ("freeze", SV_Freeze_f);
+	Cmd_SetDescription( "freeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+	// TODO: Cmd_AddAlias, for here an map, spmap, etc
+	Cmd_AddCommand ("unfreeze", SV_Freeze_f);
+	Cmd_SetDescription( "unfreeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+#endif
+	
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
 	Cmd_SetDescription( "heartbeat", "Send a manual heartbeat to the master servers\nUsage: heartbeat" );
 	Cmd_AddCommand ("kick", SV_Kick_f);

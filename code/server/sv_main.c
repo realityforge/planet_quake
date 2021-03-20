@@ -67,6 +67,9 @@ cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];		// master server ip address
 cvar_t	*sv_role[MAX_CLIENT_ROLES];		// master server ip address
 cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 #endif
+#ifdef USE_REFEREE_CMDS
+cvar_t  *sv_frozen;
+#endif
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
 cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down

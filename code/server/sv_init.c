@@ -929,6 +929,10 @@ void SV_Init( void )
 	SV_InitUserRoles();
 #endif
 
+#ifdef USE_REFEREE_CMDS
+	sv_frozen = Cvar_Get("sv_frozen", "0", CVAR_TEMP);
+#endif
+
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	Cvar_SetDescription(sv_rconPassword, "Set the rcon password required to send the server commands\nDefault: empty");

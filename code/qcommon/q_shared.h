@@ -48,6 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#define USE_REFEREE_CMDS 1
 #define USE_SERVER_ROLES 1
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES        24

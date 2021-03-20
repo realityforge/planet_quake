@@ -412,6 +412,9 @@ extern	cvar_t	*sv_role[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 
 #endif
+#ifdef USE_REFEREE_CMDS
+extern  cvar_t  *sv_frozen;
+#endif
 extern	cvar_t	*sv_reconnectlimit;
 extern	cvar_t	*sv_padPackets;
 extern	cvar_t	*sv_killserver;

@@ -2823,6 +2823,12 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	for ( i = 0 ; i < cmdCount ; i++ ) {
 		cmd = &cmds[i];
 		MSG_ReadDeltaUsercmdKey( msg, key, oldcmd, cmd );
+#ifdef USE_REFEREE_CMDS
+		if(sv_frozen->integer) {
+			cmd->forwardmove = cmd->rightmove = cmd->upmove
+				= cmd->weapon = cmd->buttons = 0;
+		}
+#endif
 		oldcmd = cmd;
 	}
 
