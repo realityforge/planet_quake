@@ -489,7 +489,9 @@ endif
 		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
 		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2 \
 		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include \
-		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include/SDL2
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/sysroot/include \
+		-I$(EMSCRIPTEN_CACHE)/sysroot/include/SDL2
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
   DEBUG_CFLAGS=$(BASE_CFLAGS) \

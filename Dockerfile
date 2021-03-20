@@ -28,6 +28,7 @@ RUN \
   echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /root/.emscripten && \
   echo "NODE_JS = '/usr/bin/node'" >> /root/.emscripten && \
   echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /root/.emscripten && \
+  mkdir /tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
   /usr/bin/python3 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
