@@ -19,6 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
+
 // qcommon.h -- definitions common between client and server, but not game.or ref modules
 #ifndef _QCOMMON_H_
 #define _QCOMMON_H_
@@ -43,7 +44,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #if defined (_WIN32) || defined(__linux__)
+#ifndef EMSCRIPTEN
 #define USE_AFFINITY_MASK
+#else
+#undef USE_AFFINITY_MASK
+#endif
 #endif
 
 // stringify macro
@@ -54,6 +59,77 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define DELAY_WRITECONFIG
 
 //============================================================================
+
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void Com_Frame_Proxy( void );
+
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
+void SOCKS_Frame_Proxy( void );
+static void (*SOCKS_Proxy)( void ) = NULL;
+static void (*SOCKS_After)( void ) = NULL;
+
+static void (*CB_Frame_Proxy)( void ) = NULL;
+static void (*CB_Frame_After)( void ) = NULL;
+
+void IN_Init (void);
+void IN_Frame (void);
+void IN_Shutdown (void);
+
+extern char **Sys_CmdArgs( void );
+extern int Sys_CmdArgsC( void );
+
+extern void	Sys_GLimpInit( void );
+extern void	Sys_GLContextCreated( void );
+
+extern void Sys_DownloadLocalFile( char *fileName );
+extern void Sys_FS_Offline( void );
+extern void Sys_FS_Startup( void );
+extern void Sys_FS_Shutdown( void );
+extern void Sys_BeginDownload( void );
+
+void FS_Startup( void );
+void FS_Startup_After_Async( void );
+void Com_Init_After_Filesystem( void );
+void FS_Restart_After_Async( void );
+void CL_ParseGamestate_After_Restart( void );
+void Com_GameRestart_After_Restart( void );
+void CL_Vid_Restart_After_Restart( void );
+void CL_Connect_After_Shutdown( void );
+void CL_Connect_After_Restart( void );
+void CL_Connect_After_Startup( void );
+
+void Com_Frame_After_Startup( void );
+void Com_Frame_After_Shutdown( void );
+void Com_GameRestart_User_After_Shutdown( void );
+void Com_GameRestart_User_After_Startup( void );
+void SV_SpawnServer_After_Shutdown( void );
+void SV_SpawnServer_After_Startup( void );
+void CL_ParseGamestate_Game_After_Shutdown( void );
+void CL_ParseGamestate_Game_After_Startup( void );
+void CL_ParseGamestate_After_Shutdown( void );
+void CL_ParseGamestate_After_Startup( void );
+void CL_Vid_Restart_After_Shutdown( void );
+void CL_Vid_Restart_After_Startup( void );
+
+void CL_DemoCompleted_After_Startup( void );
+void CL_DemoCompleted_After_Shutdown( void );
+
+#endif
+
+#ifdef USE_LAZY_LOAD
+#ifdef EMSCRIPTEN
+extern char *Sys_UpdateShader( void );
+extern char *Sys_UpdateSound( void );
+extern char *Sys_UpdateModel( void );
+#else
+char *Sys_UpdateShader( void );
+char *Sys_UpdateSound( void );
+char *Sys_UpdateModel( void );
+void Sys_FileReady(char *filename);
+#endif
+#endif
 
 //
 // msg.c
@@ -123,9 +199,86 @@ void MSG_ReadDeltaEntity( msg_t *msg, const entityState_t *from, entityState_t *
 void MSG_WriteDeltaPlayerstate( msg_t *msg, const playerState_t *from, const playerState_t *to );
 void MSG_ReadDeltaPlayerstate( msg_t *msg, const playerState_t *from, playerState_t *to );
 
+void MSG_WriteDeltaSharedEntity( msg_t *msg, void *from, void *to
+								   , qboolean force, int number );
+void MSG_ReadDeltaSharedEntity( msg_t *msg, void *from, void *to,
+								 int number );
+
 void MSG_ReportChangeVectors_f( void );
 
+
 //============================================================================
+// PureMultiView protocol
+
+#ifdef USE_MV
+
+typedef enum {
+	SM_BASE = 1,
+	SM_EFLAGS = 2,
+	SM_TRTIME = 4,	 // CPMA
+	SM_TRTYPE = 8,	 // !CPMA
+	SM_TRDELTA = 16, // CPMA: snapped pos.trDelta values
+	SM_ALL = SM_BASE | SM_EFLAGS | SM_TRTIME | SM_TRTYPE | SM_TRDELTA,
+	SM_BITS = 5,
+} skip_mask;
+
+extern int MSG_entMergeMask;
+
+int MSG_PlayerStateToEntityStateXMask( const playerState_t *ps, const entityState_t *s, qboolean snap );
+void MSG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean snap, skip_mask sm );
+
+// command compression
+
+#define INDEX_BITS		12	// dictionary index size
+#define LENGTH_BITS		4	// match length bits
+#define LENGTH_MASK		((1<<LENGTH_BITS)-1)	
+#define LENGTH_MASK1	(0xFF & ~LENGTH_MASK)
+#define LZ_WINDOW_SIZE	(1 << INDEX_BITS)
+
+#define RAW_LOOK_AHEAD_SIZE (1 << LENGTH_BITS) // max match length
+#define LZ_MIN_MATCH 3 // minimal match length for efficient encoding
+#define LOOK_AHEAD_SIZE (RAW_LOOK_AHEAD_SIZE + LZ_MIN_MATCH - 1)
+
+#define DICT_SIZE LZ_WINDOW_SIZE
+#define HTAB_SIZE 2048
+
+#define SEARCH_OPTIMIZE
+
+typedef struct lz_ctx_s 
+{
+#ifdef SEARCH_OPTIMIZE
+	byte window[ PAD(LZ_WINDOW_SIZE + LOOK_AHEAD_SIZE, 4) ];
+#else
+	byte window[ LZ_WINDOW_SIZE ];
+#endif
+	int current_pos;
+	// hash context
+	short int htable[ HTAB_SIZE ];
+	short int htlast[ HTAB_SIZE ];
+	short int hlist[ DICT_SIZE ];
+	short int hvals[ DICT_SIZE ];
+} lzctx_t;
+
+typedef struct lzstream_s {
+	int		count;
+	byte	type[(MAX_STRING_CHARS/8)+4]; // bitarray: 0 - match pair, 1 - literal
+	byte	cmd[MAX_STRING_CHARS+1];
+
+	int		zdelta;	      // 0 - reset encoder, 1..7 - control sequences
+	int		zcharbits;    // 0 or 1
+	int		zcommandSize; // 0..3
+	int		zcommandNum;  // client->reliableSequence
+} lzstream_t;
+
+void LZSS_InitContext( lzctx_t *ctx ); 
+void LZSS_SeekEOS( msg_t *msg, int charbits );
+int LZSS_Expand( lzctx_t *ctx, msg_t *msg, byte *out, int maxsize, int charbits );
+int LZSS_Compress( lzctx_t *ctx, msg_t *msg, const byte *in, int length, int charbits );
+int LZSS_CompressToStream( lzctx_t *ctx, lzstream_t *stream, const byte *in, int length );
+void MSG_WriteLZStream( msg_t *msg, lzstream_t *stream );
+
+#endif // USE_MV
+
 
 /*
 ==============================================================
@@ -134,7 +287,13 @@ NET
 
 ==============================================================
 */
+#ifndef EMSCRIPTEN
 #define USE_IPV6
+#else
+#ifdef USE_IPV6
+#undef USE_IPV6
+#endif
+#endif
 
 #define NET_ENABLEV4            0x01
 #define NET_ENABLEV6            0x02
@@ -190,6 +349,8 @@ typedef struct {
 #ifdef USE_IPV6
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
 #endif
+	char name[MAX_STRING_CHARS];
+	char protocol[10];
 } netadr_t;
 
 void		NET_Init( void );
@@ -205,6 +366,7 @@ qboolean	NET_CompareBaseAdr( const netadr_t *a, const netadr_t *b );
 qboolean	NET_IsLocalAddress( const netadr_t *adr );
 const char	*NET_AdrToString( const netadr_t *a );
 const char	*NET_AdrToStringwPort( const netadr_t *a );
+char        *NET_ParseProtocol(const char *s, char *protocol);
 int         NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 qboolean	NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_message );
 #ifdef USE_IPV6
@@ -329,6 +491,14 @@ enum svc_ops_e {
 	// new commands, supported only by ioquake3 protocol but not legacy
 	svc_voipSpeex,     // not wrapped in USE_VOIP, so this value is reserved.
 	svc_voipOpus,      //
+	
+#ifdef USE_MV
+	svc_multiview = 16, // 1.32e multiview extension
+#ifdef USE_MV_ZCMD
+	svc_zcmd = 17,      // LZ-compressed version of svc_serverCommand
+#endif
+#endif
+
 };
 
 
@@ -355,6 +525,19 @@ VIRTUAL MACHINE
 
 ==============================================================
 */
+typedef enum {
+	VMR_UNKNOWN = -1,
+	VMR_BASEQ3A = 0,
+	VMR_OSP,
+	VMR_DEFRAG,
+	VMR_URT,
+	VMR_EPLUS,
+	VMR_CPMA1,
+	VMR_CPMA2,
+	VMR_SMOKIN, // Smokin' Guns
+	VMR_COUNT
+} recognizedVM_t;
+
 typedef struct vm_s vm_t;
 
 typedef enum {
@@ -419,6 +602,19 @@ static ID_INLINE float _vmf(intptr_t x)
 }
 #define	VMF(x)	_vmf(args[x])
 
+#ifdef USE_ABS_MOUSE
+typedef struct {
+	int					frametime;
+	int					realtime;
+	int					cursorx;
+	int					cursory;
+} ui_hack;
+
+byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker);
+qboolean VM_IsSuspended(vm_t *vm);
+void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp);
+int VM_Resume(vm_t *vm);
+#endif
 
 /*
 ==============================================================
@@ -469,6 +665,7 @@ typedef void (*xcommand_t) (void);
 void	Cmd_Init( void );
 
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
+void	Cmd_SetDescription( const char *cmd_name, char *description );
 // called by the init functions of other parts of the program to
 // register commands and functions to call for them.
 // The cmd_name is referenced later, so it should not be in temp memory
@@ -506,9 +703,18 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 // Takes a null terminated string.  Does not need to be /n terminated.
 // breaks the string up into arg tokens.
 
-void	Cmd_ExecuteString( const char *text );
+#ifdef USE_SERVER_ROLES
+char      *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
+qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
+void      Cmd_FilterLimited(char *commandList);
+#endif
+qboolean	Cmd_ExecuteString( const char *text, qboolean noServer );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
+
+
+void Cmd_SaveCmdContext( void );
+void Cmd_RestoreCmdContext( void );
 
 
 /*
@@ -641,6 +847,8 @@ issues.
 #define FS_GENERAL_REF	0x01
 #define FS_UI_REF		0x02
 #define FS_CGAME_REF	0x04
+#define FS_REPAK_REF	0x08
+
 // number of id paks that will never be autodownloaded from baseq3/missionpack
 #define NUM_ID_PAKS		9
 #define NUM_TA_PAKS		4
@@ -678,6 +886,8 @@ typedef	off_t  fileOffset_t;
 qboolean FS_Initialized( void );
 
 void	FS_InitFilesystem ( void );
+qboolean	FS_InMapIndex ( const char *filename );
+void	FS_SetMapIndex ( const char *mapname );
 void	FS_Shutdown( qboolean closemfp );
 
 qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart );
@@ -717,6 +927,9 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
 int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
+void Spy_CursorPosition(float x, float y);
+void Spy_Banner(float x, float y);
+
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
 // is found in an already open pak file.  If uniqueFILE is false, you must call
 // FS_FCloseFile instead of fclose, otherwise the pak FILE would be improperly closed
@@ -729,6 +942,8 @@ void FS_BypassPure( void );
 void FS_RestorePure( void );
 
 int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file );
+char **FS_Home_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles );
+int	FS_Home_FileSize( const char *name );
 
 qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName );
 // returns qtrue if a file is in the PAK file, otherwise qfalse
@@ -924,8 +1139,10 @@ void		Info_Print( const char *s );
 
 void		Com_BeginRedirect (char *buffer, int buffersize, void (*flush)(const char *));
 void		Com_EndRedirect( void );
+void Com_Outside_Error(int level, char *msg);
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 
@@ -992,6 +1209,8 @@ extern	cvar_t	*com_blood;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
+extern	cvar_t	*cl_execTimeout;
+extern	cvar_t	*cl_execOverflow;
 
 // both client and server must agree to pause
 extern	cvar_t	*sv_paused;
@@ -1112,17 +1331,21 @@ CLIENT / SERVER SYSTEMS
 // client interface
 //
 void CL_Init( void );
-qboolean CL_Disconnect( qboolean showMainMenu );
+qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
 qboolean CL_GameCommand( void );
-void CL_KeyEvent (int key, qboolean down, unsigned time);
+void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
 
+#ifdef USE_ABS_MOUSE
+void CL_MouseEvent( int dx, int dy, int time, qboolean absolute );
+#else
 void CL_MouseEvent( int dx, int dy, int time );
+#endif
 
 void CL_JoystickEvent( int axis, int value, int time );
 
@@ -1145,6 +1368,7 @@ void CL_CDDialog( void );
 // bring up the "need a cd to play" dialog
 
 void CL_ShutdownAll( void );
+void S_DisableSounds( void );
 // shutdown all the client stuff
 
 void CL_ClearMemory( void );
@@ -1178,6 +1402,8 @@ qboolean CL_GameSwitch( void );
 // server interface
 //
 void SV_Init( void );
+void SV_BotInitCvars( void );
+void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );
 void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );
@@ -1218,8 +1444,11 @@ typedef enum {
   // bk001129 - make sure SE_NONE is zero
 	SE_NONE = 0,	// evTime is still valid
 	SE_KEY,		// evValue is a key code, evValue2 is the down flag
+	SE_FINGER_DOWN,
+	SE_FINGER_UP,
 	SE_CHAR,	// evValue is an ascii char
 	SE_MOUSE,	// evValue and evValue2 are relative signed x / y moves
+	SE_MOUSE_ABS,
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
 	SE_MAX,
@@ -1241,6 +1470,13 @@ char	*Sys_ConsoleInput( void );
 
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
+#ifdef EMSCRIPTEN
+extern void Sys_Debug(void);
+extern float Math_rand(void);
+void Sys_SetClipboardData( void *field );
+void Sys_EventMenuChanged( float x, float y );
+#endif
+void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 
@@ -1325,5 +1561,8 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex );
 
 // functional gate syscall number
 #define COM_TRAP_GETVALUE 700
+
+int b64_encode(const unsigned char *in, char *out, size_t len);
+int b64_decode(const char *in, unsigned char *out, size_t outlen);
 
 #endif // _QCOMMON_H_

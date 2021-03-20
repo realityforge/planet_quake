@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 //
+#include "../qcommon/qcommon.h"
 
 // g_public.h -- game module information visible to server
 
@@ -228,6 +229,16 @@ typedef enum {
 
 	// 1.32
 	G_FS_SEEK,
+
+	/*
+	TRAP_MEMSET = 100,
+	TRAP_MEMCPY,
+	TRAP_STRNCPY,
+	TRAP_SIN,
+	TRAP_COS,
+	TRAP_ATAN2,
+	TRAP_SQRT,
+	*/
 
 	G_MATRIXMULTIPLY = 107,
 	G_ANGLEVECTORS,
@@ -439,4 +450,3 @@ typedef enum {
 
 	GAME_EXPORT_LAST
 } gameExport_t;
-

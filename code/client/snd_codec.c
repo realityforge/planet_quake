@@ -26,6 +26,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 static snd_codec_t *codecs;
 
+#ifdef USE_LAZY_LOAD
+qboolean updateSound = qfalse;
+cvar_t *s_lazyLoad;
+void S_UpdateSound(char *name, qboolean compressed)
+{
+	updateSound = qtrue;
+	
+	S_RegisterSound(name, compressed);
+	
+	updateSound = s_lazyLoad->integer < 2;
+}
+#endif
+
 /*
 =================
 S_CodecGetSound
@@ -56,10 +69,19 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 			if( !Q_stricmp( ext, codec->ext ) )
 			{
 				// Load
-				if( info )
-					rtn = codec->load(localName, info);
-				else
-					rtn = codec->open(localName);
+#ifdef USE_LAZY_LOAD
+				if(!updateSound) {
+					if(FS_FOpenFileRead(localName, NULL, qfalse) > -1) {
+						return NULL;
+					}
+				} else 
+#endif
+				{
+					if( info )
+						rtn = codec->load(localName, info);
+					else
+						rtn = codec->open(localName);
+				}
 				break;
 			}
 		}
@@ -86,31 +108,40 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 	// Try and find a suitable match using all
 	// the sound codecs supported
 	for( codec = codecs; codec; codec = codec->next )
-	{
+	{		
 		if( codec == orgCodec )
 			continue;
 
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, codec->ext );
 
 		// Load
-		if( info )
-			rtn = codec->load(altName, info);
-		else
-			rtn = codec->open(altName);
+#ifdef USE_LAZY_LOAD
+		if(!updateSound) {
+			if(FS_FOpenFileRead(altName, NULL, qfalse) > -1) {
+				return NULL;
+			}
+		} else 
+#endif
+		{
+			if( info )
+				rtn = codec->load(altName, info);
+			else
+				rtn = codec->open(altName);
+		}
 
 		if( rtn )
 		{
 			if( orgNameFailed )
 			{
-				Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
-						filename, altName );
+				//Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
+				//		filename, altName );
 			}
 
 			return rtn;
 		}
 	}
 
-	Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
+	//Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
 
 	return NULL;
 }
@@ -123,11 +154,21 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
-#if USE_CODEC_VORBIS
+#ifdef USE_CODEC_OPUS
+	S_CodecRegister(&opus_codec);
+#endif
+#ifdef USE_CODEC_VORBIS
 	S_CodecRegister(&ogg_codec);
 #endif
 	// Register wav codec last so that it is always tried first when a file extension was not found
 	S_CodecRegister(&wav_codec);
+
+#ifdef USE_LAZY_LOAD
+	s_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", 0 );
+	Cvar_Get("snd_loadingSound", "", CVAR_TEMP);
+	updateSound = s_lazyLoad->integer < 2;
+#endif
+	
 }
 
 /*
@@ -158,7 +199,12 @@ S_CodecLoad
 */
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
-	return S_CodecGetSound(filename, info);
+	void *result;
+	Cvar_Set( "snd_loadingSound", filename );	
+	result = S_CodecGetSound(filename, info);
+	Cvar_Set( "snd_loadingSound", "" );	
+
+	return result;
 }
 
 /*
@@ -168,7 +214,12 @@ S_CodecOpenStream
 */
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
-	return S_CodecGetSound(filename, NULL);
+	snd_stream_t *result;
+	Cvar_Set( "snd_loadingSound", filename );	
+	result = S_CodecGetSound(filename, NULL);
+	Cvar_Set( "snd_loadingSound", "" );	
+
+	return result;
 }
 
 void S_CodecCloseStream(snd_stream_t *stream)

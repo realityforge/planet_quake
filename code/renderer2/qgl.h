@@ -37,9 +37,23 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #include <windows.h>
 #include <GL/gl.h>
+#elif defined(EMSCRIPTEN)
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
+#include <SDL_opengles.h>
+#include <SDL_opengles2.h>
+#include <SDL_opengles2_gl2.h>
+#include <SDL_opengles2_gl2ext.h>
+#undef GL_RGBA8
+#define GL_RGBA8 GL_RGBA
+#undef GL_RGB8
+#define GL_RGB8 GL_RGB
 #elif defined( __linux__ ) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined( __sun )
 #include <GL/gl.h>
 #include <GL/glx.h>
+#elif defined(__APPLE__) || defined(__APPLE_CC__)
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
 #endif
 
 #ifndef APIENTRY
@@ -122,25 +136,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // OpenGL 1.0/1.1 and OpenGL ES 1.0
 #define QGL_1_1_PROCS \
-	GLE(void, AlphaFunc, GLenum func, GLclampf ref) \
 	GLE(void, BindTexture, GLenum target, GLuint texture) \
 	GLE(void, BlendFunc, GLenum sfactor, GLenum dfactor) \
 	GLE(void, ClearColor, GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) \
 	GLE(void, Clear, GLbitfield mask) \
 	GLE(void, ClearStencil, GLint s) \
-	GLE(void, Color4f, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) \
 	GLE(void, ColorMask, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) \
-	GLE(void, ColorPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
 	GLE(void, CopyTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) \
 	GLE(void, CullFace, GLenum mode) \
 	GLE(void, DeleteTextures, GLsizei n, const GLuint *textures) \
 	GLE(void, DepthFunc, GLenum func) \
 	GLE(void, DepthMask, GLboolean flag) \
-	GLE(void, DisableClientState, GLenum cap) \
 	GLE(void, Disable, GLenum cap) \
 	GLE(void, DrawArrays, GLenum mode, GLint first, GLsizei count) \
 	GLE(void, DrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) \
-	GLE(void, EnableClientState, GLenum cap) \
 	GLE(void, Enable, GLenum cap) \
 	GLE(void, Finish, void) \
 	GLE(void, Flush, void) \
@@ -150,47 +159,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(void, GetIntegerv, GLenum pname, GLint *params) \
 	GLE(const GLubyte *, GetString, GLenum name) \
 	GLE(void, LineWidth, GLfloat width) \
-	GLE(void, LoadIdentity, void) \
-	GLE(void, LoadMatrixf, const GLfloat *m) \
-	GLE(void, MatrixMode, GLenum mode) \
+	/* GLE(void, LoadIdentity, void) */ \
+	/* GLE(void, MatrixMode, GLenum mode) */ \
 	GLE(void, PolygonOffset, GLfloat factor, GLfloat units) \
-	GLE(void, PopMatrix, void) \
-	GLE(void, PushMatrix, void) \
 	GLE(void, ReadPixels, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) \
 	GLE(void, Scissor, GLint x, GLint y, GLsizei width, GLsizei height) \
-	GLE(void, ShadeModel, GLenum mode) \
 	GLE(void, StencilFunc, GLenum func, GLint ref, GLuint mask) \
 	GLE(void, StencilMask, GLuint mask) \
 	GLE(void, StencilOp, GLenum fail, GLenum zfail, GLenum zpass) \
-	GLE(void, TexCoordPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
-	GLE(void, TexEnvf, GLenum target, GLenum pname, GLfloat param) \
 	GLE(void, TexImage2D, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) \
 	GLE(void, TexParameterf, GLenum target, GLenum pname, GLfloat param) \
 	GLE(void, TexParameteri, GLenum target, GLenum pname, GLint param) \
 	GLE(void, TexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) \
-	GLE(void, Translatef, GLfloat x, GLfloat y, GLfloat z) \
-	GLE(void, VertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) \
+	/* GLE(void, VertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid *ptr) */ \
 	GLE(void, Viewport, GLint x, GLint y, GLsizei width, GLsizei height) \
 
 // OpenGL 1.0/1.1 but not OpenGL ES 1.x
 #define QGL_DESKTOP_1_1_PROCS \
-	GLE(void, ArrayElement, GLint i) \
 	GLE(void, Begin, GLenum mode) \
 	GLE(void, ClearDepth, GLclampd depth) \
-	GLE(void, ClipPlane, GLenum plane, const GLdouble *equation) \
-	GLE(void, Color3f, GLfloat red, GLfloat green, GLfloat blue) \
-	GLE(void, Color4ubv, const GLubyte *v) \
 	GLE(void, DepthRange, GLclampd near_val, GLclampd far_val) \
 	GLE(void, DrawBuffer, GLenum mode) \
-	GLE(void, End, void) \
-	GLE(void, Frustum, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
-	GLE(void, Ortho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) \
 	GLE(void, PolygonMode, GLenum face, GLenum mode) \
-	GLE(void, TexCoord2f, GLfloat s, GLfloat t) \
-	GLE(void, TexCoord2fv, const GLfloat *v) \
-	GLE(void, Vertex2f, GLfloat x, GLfloat y) \
-	GLE(void, Vertex3f, GLfloat x, GLfloat y, GLfloat z) \
-	GLE(void, Vertex3fv, const GLfloat *v) \
 
 // OpenGL ES 1.1 but not desktop OpenGL 1.x
 #define QGL_ES_1_1_PROCS \
@@ -206,19 +196,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(void, CompressedTexImage2D, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void *data) \
 	GLE(void, CompressedTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data) \
 
+  // GL_ARB_occlusion_query, built-in to OpenGL 1.5 but not OpenGL ES 2.0
+#define QGL_ARB_occlusion_query_PROCS \
+  GLE(void, GenQueries, GLsizei n, GLuint *ids) \
+  GLE(void, DeleteQueries, GLsizei n, const GLuint *ids) \
+  GLE(void, BeginQuery, GLenum target, GLuint id) \
+  GLE(void, EndQuery, GLenum target) \
+  GLE(void, GetQueryObjectiv, GLuint id, GLenum pname, GLint *params) \
+  GLE(void, GetQueryObjectuiv, GLuint id, GLenum pname, GLuint *params) \
+
 // OpenGL 1.5, was GL_ARB_vertex_buffer_object and GL_ARB_occlusion_query
 #define QGL_1_5_PROCS \
-	GLE(void, GenQueries, GLsizei n, GLuint *ids) \
-	GLE(void, DeleteQueries, GLsizei n, const GLuint *ids) \
-	GLE(void, BeginQuery, GLenum target, GLuint id) \
-	GLE(void, EndQuery, GLenum target) \
-	GLE(void, GetQueryObjectiv, GLuint id, GLenum pname, GLint *params) \
-	GLE(void, GetQueryObjectuiv, GLuint id, GLenum pname, GLuint *params) \
 	GLE(void, BindBuffer, GLenum target, GLuint buffer) \
 	GLE(void, DeleteBuffers, GLsizei n, const GLuint *buffers) \
 	GLE(void, GenBuffers, GLsizei n, GLuint *buffers) \
 	GLE(void, BufferData, GLenum target, GLsizeiptr size, const void *data, GLenum usage) \
 	GLE(void, BufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const void *data) \
+  GLE(GLboolean, UnmapBuffer, GLenum target) \
+  GLE(void *, MapBufferRange, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) \
+  GLE(void, ReadBuffer, GLenum mode ) \
+  GLE(void, DrawBuffers, GLsizei n, const GLenum *bufs) \
+
+//  GLE(void *, MapBuffer, GLenum target, GLenum access) \
 
 // OpenGL 2.0, was GL_ARB_shading_language_100, GL_ARB_vertex_program, GL_ARB_shader_objects, and GL_ARB_vertex_shader
 #define QGL_2_0_PROCS \
@@ -384,6 +383,7 @@ QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
 QGL_3_0_PROCS;
+QGL_ARB_occlusion_query_PROCS;
 QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_array_object_PROCS;
 QGL_EXT_direct_state_access_PROCS;

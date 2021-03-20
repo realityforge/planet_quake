@@ -59,6 +59,8 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
+extern void Sys_NET_MulticastLocal( int sock, int length, int *data );
+
 /*
 ===============
 Netchan_Init
@@ -68,8 +70,11 @@ Netchan_Init
 void Netchan_Init( int port ) {
 	port &= 0xffff;
 	showpackets = Cvar_Get ("showpackets", "0", CVAR_TEMP );
+	Cvar_SetDescription(showpackets, "Toggle display of all packets sent and received\nDefault: 0");
 	showdrop = Cvar_Get ("showdrop", "0", CVAR_TEMP );
+	Cvar_SetDescription(showdrop, "Toggle display of dropped packets\nDefault: 0");
 	qport = Cvar_Get ("net_qport", va("%i", port), CVAR_INIT );
+	Cvar_SetDescription(qport, "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
 }
 
 
@@ -445,12 +450,21 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	net_message->cursize = loop->msgs[i].datalen;
 	Com_Memset (net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
+/*
+#ifdef EMSCRIPTEN
+	// TODO: server to server communication, multiple server
+	// also send queued messages to local client if running in dedicated thread
+	if(sock == NS_CLIENT && com_dedicated->integer) {
+		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);
+	}
+#endif
+*/
 	return qtrue;
 
 }
 
 
-static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
+void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 {
 	int		i;
 	loopback_t	*loop;
@@ -462,6 +476,10 @@ static void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
+	
+#ifdef EMSCRIPTEN
+	Sys_NET_MulticastLocal(sock, length, data);
+#endif
 }
 
 //=============================================================================
@@ -611,6 +629,25 @@ void NET_OutOfBandCompress( netsrc_t sock, const netadr_t *adr, const byte *data
 	NET_SendPacket( sock, mbuf.cursize, mbuf.data, adr );
 }
 
+char *NET_ParseProtocol(const char *s, char *protocol)
+{
+	if ( !Q_stricmpn( s, "ws://", 5 ) ) {
+    if(protocol != 0) Com_Memcpy(protocol, "ws", 3);
+		return (char *)&s[5];
+  } else if ( !Q_stricmpn( s, "wss://", 6 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "wss", 4);
+		return (char *)&s[6];
+  } else if ( !Q_stricmpn( s, "http://", 7 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "http", 5);
+		return (char *)&s[7];
+  } else if ( !Q_stricmpn( s, "https://", 8 ) ) {
+		if(protocol != 0) Com_Memcpy(protocol, "https", 6);
+		return (char *)&s[8];
+  } else {
+		if(protocol != 0) Com_Memcpy(protocol, "", 1);
+		return (char *)&s[0];
+  }
+}
 
 /*
 =============
@@ -632,7 +669,8 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
-	Q_strncpyz( base, s, sizeof( base ) );
+	search = NET_ParseProtocol(s, a->protocol);
+	Q_strncpyz( base, search, sizeof( base ) );
 	
 	if(*base == '[' || Q_CountChar(base, ':') > 1)
 	{
@@ -665,6 +703,7 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		search = base;
 	}
 
+	Q_strncpyz( a->name, search, sizeof(a->name) );
 	if(!Sys_StringToAdr(search, a, family))
 	{
 		a->type = NA_BAD;

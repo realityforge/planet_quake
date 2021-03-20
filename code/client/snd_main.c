@@ -233,7 +233,7 @@ S_Update
 */
 void S_Update( int msec )
 {
-	if ( si.Update ) {
+	if( si.Update ) {
 		si.Update( msec );
 	}
 }
@@ -249,6 +249,7 @@ void S_DisableSounds( void )
 	if( si.DisableSounds ) {
 		si.DisableSounds();
 	}
+	cls.firstClick = qtrue;
 }
 
 
@@ -411,36 +412,48 @@ void S_Init( void )
 	Com_Printf( "------ Initializing Sound ------\n" );
 
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );
+	Cvar_SetDescription(s_volume, "Sound FX volume\nDefault: 0.8");
 	s_musicVolume = Cvar_Get( "s_musicvolume", "0.25", CVAR_ARCHIVE );
+	Cvar_SetDescription(s_musicVolume, "Music volume level\nDefault: 0.25");
 	s_doppler = Cvar_Get( "s_doppler", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( s_doppler, "How much the sound changes based on the speed the source is moving\nDefault: 1");
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "1", CVAR_ARCHIVE );
+	Cvar_SetDescription( s_muteWhenUnfocused, "Mute the sound when the window is in the background\nDefault: 1" );
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "1", CVAR_ARCHIVE );
-
-	Cvar_CheckRange( s_volume, "0", "1", CV_FLOAT );
-	Cvar_CheckRange( s_musicVolume, "0", "1", CV_FLOAT );
-	Cvar_CheckRange( s_doppler, "0", "1", CV_INTEGER );
-	Cvar_CheckRange( s_muteWhenUnfocused, "0", "1", CV_INTEGER );
-	Cvar_CheckRange( s_muteWhenMinimized, "0", "1", CV_INTEGER );
+	Cvar_SetDescription( s_muteWhenMinimized, "Mute the sound when the window is minimized\nDefault: 1");
 
 	cv = Cvar_Get( "s_initsound", "1", 0 );
-	if ( !cv->integer ) {
+	Cvar_SetDescription(cv, "Use sounds, or disable them entirely\nDefault: 1");
+	if( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {
 
 		S_CodecInit();
 
 		Cmd_AddCommand( "play", S_Play_f );
+		Cmd_SetDescription("play", "Play a sound file\nUsage: play <filename>");
 		Cmd_AddCommand( "music", S_Music_f );
+		Cmd_SetDescription("music", "Play a specific music file\nUsage: music <filename>");
 		Cmd_AddCommand( "stopmusic", S_StopMusic_f );
+		Cmd_SetDescription("stopmusic", "Stop playing music\nUsage: stopmusic");
 		Cmd_AddCommand( "s_list", S_SoundList );
+		Cmd_SetDescription("s_list", "Display paths and filenames of all sound files as they are played\nUsage: s_list");
+		Cmd_AddCommand( "soundlist", S_SoundList );
+		Cmd_SetDescription("soundlist", "Display paths and filenames of all sound files as they are played\nUsage: soundlist");
 		Cmd_AddCommand( "s_stop", S_StopAllSounds );
+		Cmd_SetDescription("s_stop", "Stop whatever sound that is currently playing from playing\nUsage: s_stop");
+		Cmd_AddCommand( "stopsound", S_StopAllSounds );
+		Cmd_SetDescription("stopsound", "Stop whatever sound that is currently playing from playing\nUsage: stopsound");
 		Cmd_AddCommand( "s_info", S_SoundInfo );
+		Cmd_SetDescription("s_info", "Display information about sound system\nUsage: s_info");
+		Cmd_AddCommand( "soundinfo", S_SoundInfo );
+		Cmd_SetDescription("soundinfo", "Display information about sound system\nUsage: soundinfo");
 
-		if ( !started ) {
+		if( !started ) {
 			started = S_Base_Init( &si );
 		}
 
-		if ( started ) {
+		if( started ) {
 			if( !S_ValidSoundInterface( &si ) ) {
 				Com_Error( ERR_FATAL, "Sound interface invalid" );
 			}
@@ -463,6 +476,10 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
+#ifdef EMSCRIPTEN
+	cls.firstClick = qtrue;
+#endif
+
 	if ( si.StopAllSounds ) {
 		si.StopAllSounds();
 	}

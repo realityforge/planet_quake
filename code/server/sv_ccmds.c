@@ -103,7 +103,7 @@ SV_GetPlayerByNum
 Returns the player with idnum from Cmd_Argv(1)
 ==================
 */
-static client_t *SV_GetPlayerByNum( void ) {
+client_t *SV_GetPlayerByNum( void ) {
 	client_t	*cl;
 	int			i;
 	int			idnum;
@@ -158,9 +158,11 @@ static void SV_Map_f( void ) {
 	char		expanded[MAX_QPATH];
 	char		mapname[MAX_QPATH];
 	int			len;
+	int			i;
+ 	client_t	*cl;
 
 	map = Cmd_Argv(1);
-	if ( !map || !*map ) {
+	if ( !map || !*map || strlen(map) == 0 ) {
 		return;
 	}
 
@@ -171,10 +173,26 @@ static void SV_Map_f( void ) {
 	FS_BypassPure();
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
 	FS_RestorePure();
-	if ( len == -1 ) {
-		Com_Printf( "Can't find map %s\n", expanded );
+	if(len == -1) {
+#ifdef USE_LOCAL_DED
+		if(FS_InMapIndex(expanded)) {
+			len = 1;
+		}
+#else
+		return;
+#endif
+	}
+#ifdef USE_LOCAL_DED
+	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
+		Com_Printf("Error: Can't find map %s\n", expanded );
+		Cmd_Clear();
+		Cbuf_AddText("spmap q3dm0\n");
+		Cbuf_Execute();
 		return;
 	}
+	// TODO: check if com_errorMessage, display it onscreen with
+	//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
+#endif
 
 	// force latched values to get set
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
@@ -206,12 +224,26 @@ static void SV_Map_f( void ) {
 		}
 	}
 
+	// stop any demos
+	if (sv.demoState == DS_RECORDING)
+		SV_DemoStopRecord();
+	if (sv.demoState == DS_PLAYBACK)
+		SV_DemoStopPlayback();
+
+	if (sv_autoRecord->integer && svs.initialized) {
+ 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
+ 			if (cl->state >= CS_CONNECTED && cl->demorecording) {
+ 				SV_StopRecord( cl );
+ 			}
+ 		}
+ 	}
+
 	// save the map name here cause on a map restart we reload the q3config.cfg
 	// and thus nuke the arguments of the map command
 	Q_strncpyz(mapname, map, sizeof(mapname));
 
 	// start up the map
-	SV_SpawnServer( mapname, killBots );
+	SV_SpawnServer( mapname, killBots ); // TODO: make bots on devmaps a Cvar bot_devmapEnable
 
 	// set the cheat value
 	// if the level was started with "map <levelname>", then
@@ -267,15 +299,28 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
+	// stop any demos
+	if (sv.demoState == DS_RECORDING)
+		SV_DemoStopRecord();
+	if (sv.demoState == DS_PLAYBACK)
+		SV_DemoStopPlayback();
+
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
+#ifdef USE_MV
+	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified || sv_mvClients->modified ) {
+#else
 	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified ) {
+#endif
 		char	mapname[MAX_QPATH];
 
 		Com_Printf( "variable change -- restarting.\n" );
 		// restart the map the slow way
 		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
+#ifdef USE_MV
+		SV_MultiViewStopRecord_f(); // as an alternative: save/restore recorder state and continue recording?
+#endif
 		SV_SpawnServer( mapname, qfalse );
 		return;
 	}
@@ -313,7 +358,8 @@ static void SV_MapRestart_f( void ) {
 	for ( i = 0; i < 3; i++ )
 	{
 		sv.time += 100;
-		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		SV_BotFrame( sv.time );
 	}
 
 	sv.state = SS_GAME;
@@ -329,6 +375,12 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		if ( client->netchan.remoteAddress.type == NA_BOT ) {
+			// drop bots on map restart because they will be re-added by arena config
+			// TODO: only drop bots on single-player mode?
+			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
+				SV_DropClient( client, NULL );
+				continue;
+			}
 			isBot = qtrue;
 		} else {
 			isBot = qfalse;
@@ -338,7 +390,7 @@ static void SV_MapRestart_f( void ) {
 		SV_AddServerCommand( client, "map_restart\n" );
 
 		// connect the client again, without the firstTime flag
-		denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
+		denied = GVM_ArgPtr( VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
 		if ( denied ) {
 			// this generally shouldn't happen, because the client
 			// was connected before the level change
@@ -359,8 +411,14 @@ static void SV_MapRestart_f( void ) {
 
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
-	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 	svs.time += 100;
+	
+	
+	// start recording a demo
+  if ( sv_autoDemo->integer ) {
+    SV_DemoAutoDemoRecord();
+  }
 }
 
 
@@ -1152,7 +1210,7 @@ static void SV_Status_f( void ) {
 	// first pass: save and determine max.legths of name/address fields
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ )
 	{
-		if ( cl->state == CS_FREE )
+		if ( cl->state == CS_FREE && !cl->demoClient )
 			continue;
 
 		l = strlen( cl->name ) + 1;
@@ -1456,6 +1514,96 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 }
 
 
+#ifdef USE_MULTIVM
+void SV_SwitchGame_f ( void ) {
+	client_t *client;
+	int game;
+	if ( Cmd_Argc() > 2 ) {
+		Com_Printf ("Usage: game <clientnum>\n");
+		return;
+	}
+
+	client = SV_GetPlayerByHandle();
+
+	if(Cmd_Argc() == 1) {
+		// TODO: finish this, switch a specific client to a new game or switch all clients to a new game
+		//   client command already exists in sv_client.c
+	//	game = 
+	} else {
+		game = atoi(Cmd_Argv(1));
+	}
+}
+
+void SV_Teleport_f (void) {
+
+	if ( Cmd_Argc() > 4 || Cmd_Argc() == 2 ) {
+		Com_Printf ("Usage: teleport <clientnum> [xcoord zcoord ycoord]\n");
+		return;
+	}
+	
+	//cl = SV_GetPlayerByNum();
+	//ps = SV_GameClientNum( i );
+	//client = SV_GetPlayerByHandle();
+
+}
+
+void SV_LoadVM_f() {
+	SV_LoadVM(NULL);
+}
+#endif
+
+
+#ifdef USE_REFEREE_CMDS
+void SV_Shout_f(void) {
+	client_t	*cl;
+	int i;
+	char *message;
+	if(Cmd_Argc() < 2) {
+		Com_Printf ("Usage: shout <message>");
+		return;
+	}
+	message = Cmd_ArgsFrom(1);
+	for ( i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
+		if ( cl->state < CS_CONNECTED ) {
+			continue;
+		}
+		SV_SendServerCommand(cl, "cp \"%s\"", message);
+	}
+}
+
+void SV_Freeze_f(void) {
+	if(Cmd_Argc() > 1) {
+		Com_Printf ("Usage: %s", Cmd_Argv(0));
+		return;
+	}
+	
+	if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
+		Cvar_Set("sv_frozen", "1");
+	} else {
+		Cvar_Set("sv_frozen", "0");
+	}
+}
+
+void SV_Mute_f(void) {
+	client_t cl;
+	if(Cmd_Argc() != 2) {
+		Com_Printf ("Usage: %s <player>", Cmd_Argv(0));
+		return;
+	}
+	
+	cl = SV_GetPlayerByHandle();
+	if ( !cl ) {
+		return;
+	}
+	if(Q_stricmp(Cmd_Argv(0), "mute") == 0) {
+		cl->muted = qtrue;
+	} else {
+		cl->muted = qfalse;
+	}
+}
+#endif
+
+
 /*
 ==================
 SV_AddOperatorCommands
@@ -1469,44 +1617,111 @@ void SV_AddOperatorCommands( void ) {
 	}
 	initialized = qtrue;
 
+#ifdef USE_REFEREE_CMDS
+	Cmd_AddCommand ("mute", SV_Mute_f);
+	Cmd_SetDescription( "mute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: mute <player>");
+	Cmd_AddCommand ("unmute", SV_Mute_f);
+	Cmd_SetDescription( "unmute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: unmute <player>");
+	Cmd_AddCommand ("shout", SV_Shout_f);
+	Cmd_SetDescription( "shout", "Send a message printed big and center screen to all connected players.\nUsage: shout <message>");
+	Cmd_AddCommand ("freeze", SV_Freeze_f);
+	Cmd_SetDescription( "freeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+	// TODO: Cmd_AddAlias, for here an map, spmap, etc
+	Cmd_AddCommand ("unfreeze", SV_Freeze_f);
+	Cmd_SetDescription( "unfreeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+#endif
+	
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
+	Cmd_SetDescription( "heartbeat", "Send a manual heartbeat to the master servers\nUsage: heartbeat" );
 	Cmd_AddCommand ("kick", SV_Kick_f);
+	Cmd_SetDescription( "kick", "Kick the player with the given name off the server\nusag: kick <playername>" );
 #ifndef STANDALONE
 #ifdef USE_BANS
 	if(!Cvar_VariableIntegerValue("com_standalone"))
 	{
 		Cmd_AddCommand ("banUser", SV_Ban_f);
+		Cmd_SetDescription( "banUser", "Ban a client by their player name\nUsage: banUser <playername>" );
 		Cmd_AddCommand ("banClient", SV_BanNum_f);
+		Cmd_SetDescription( "banClient", "Ban a client by their slot number\nUsage: banClient <slot #>" );
 	}
 #endif
 #endif
 	Cmd_AddCommand ("clientkick", SV_KickNum_f);
+	Cmd_SetDescription( "clientkick", "Kick a client by slot number used\nUsage: clientkick <slot #>" );
 	Cmd_AddCommand ("status", SV_Status_f);
+	Cmd_SetDescription( "status", "Show status of the currently connected server\nUsage: status" );
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
+	Cmd_SetDescription( "dumpuser", "Display user info (handicap, model/color, rail color, more)\nUsage: dumpuser <playername>");
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
+	Cmd_SetDescription( "map_restart", "Resets the game on the same map\nUsage: map_restart" );
 	Cmd_AddCommand ("sectorlist", SV_SectorList_f);
+	Cmd_SetDescription( "sectorlist", "Lists sectors and number of entities in each on the currently loaded map\nUsage: sectorlist" );
 	Cmd_AddCommand ("map", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "map", SV_CompleteMapName );
+	Cmd_SetDescription( "map", "Loads specified map\nUsage: map <mapname>" );
 #ifndef PRE_RELEASE_DEMO
 	Cmd_AddCommand ("devmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "devmap", SV_CompleteMapName );
+	Cmd_SetDescription( "devmap", "Load maps in development mode\nUsage: devmap <mapname>" );
 	Cmd_AddCommand ("spmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "spmap", SV_CompleteMapName );
+	Cmd_SetDescription( "spmap", "Load map in single player mode with bots\nUsage: spmap <mapname>" );
 	Cmd_AddCommand ("spdevmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "spdevmap", SV_CompleteMapName );
+	Cmd_SetDescription( "spdevmap", "Load maps in development single player mode\nUsage: spdevmap <mapname>" );
 #endif
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
+	Cmd_SetDescription( "killserver", "Stops server from running\nUsage: killserver" );
 #ifdef USE_BANS	
 	Cmd_AddCommand("rehashbans", SV_RehashBans_f);
+	Cmd_SetDescription( "rehashbans", "Hash ban list for faster lookup\nUsage: rehashbans" );
 	Cmd_AddCommand("listbans", SV_ListBans_f);
+	Cmd_SetDescription( "listbans", "List all ban rules\nUsage: listbans" );
 	Cmd_AddCommand("banaddr", SV_BanAddr_f);
+	Cmd_SetDescription( "banaddr", "Ban a specific IP address\nUsage: banaddr <address>" );
 	Cmd_AddCommand("exceptaddr", SV_ExceptAddr_f);
+	Cmd_SetDescription( "exceptaddr", "Allow a specific IP address to be excluded from ban\nUsage: exceptaddr <address>" );
 	Cmd_AddCommand("bandel", SV_BanDel_f);
+	Cmd_SetDescription( "bandel", "Remove a specific ban\nUsage: bandel <ban>" );
 	Cmd_AddCommand("exceptdel", SV_ExceptDel_f);
+	Cmd_SetDescription( "exceptdel", "Allow a specific ban to be excluded\nUsage: exceptdel <ban>" );
 	Cmd_AddCommand("flushbans", SV_FlushBans_f);
+	Cmd_SetDescription( "flushbans", "Clear all bans\nUsage: flushbans" );
 #endif
 	Cmd_AddCommand( "filter", SV_AddFilter_f );
+	Cmd_SetDescription( "filter", "Filter a specific client from connecting\nUsage: %s <id> [key1] [key2]" );
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );
+	Cmd_SetDescription( "filtercmd", "Run a command while filtering\nUsage: %s <filter format string>" );
+
+	Cmd_AddCommand ("demo_record", SV_Demo_Record_f);
+	Cmd_SetDescription( "demo_record", "Record a server-side demo\nUsage: demo_record [filename]" );
+	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
+	Cmd_SetCommandCompletionFunc( "demo_play", SV_CompleteDemoName );
+	Cmd_SetDescription( "demo_play", "Play a server-side demo\nUsage: demo_play <filename>" );
+	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
+	Cmd_SetDescription( "demo_stop", "Stop playing a server-side demo\nUsage: demo_stop" );
+
+  Cmd_AddCommand ("cl_record", SV_Record_f);
+	Cmd_SetDescription( "cl_record", "Record a demo file for a client\nUsage: cl_record <client #>" );
+  Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
+	Cmd_SetDescription( "cl_stoprecord", "Stop recording a client demo\nUsage: cl_stoprecord" );
+  Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
+	Cmd_SetDescription( "cl_saverecord", "Save a client recording regardless of score\nUsage: cl_saverecord <filename>" );
+
+#ifdef USE_MV
+	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
+	Cmd_SetDescription( "mvrecord", "Start a multiview recording\nUsage: mvrecord <filename>" );
+	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
+	Cmd_SetDescription( "mvstoprecord", "Stop a multiview recording\nUsage: mvstoprecord" );
+	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
+	Cmd_SetDescription( "mvstop", "Stop a multiview recording\nUsage: mvstop" );
+#endif
+#ifdef USE_MULTIVM
+	Cmd_AddCommand ("switchgame", SV_SwitchGame_f);
+	Cmd_SetDescription( "switchgame", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
+	Cmd_AddCommand ("teleport", SV_Teleport_f);
+	Cmd_SetDescription( "teleport", "Teleport into the game as if you just connected\nUsage: teleport <client> [xcoord zcoord ycoord]" );
+#endif
 }
 
 
@@ -1534,10 +1749,28 @@ void SV_RemoveOperatorCommands( void ) {
 void SV_AddDedicatedCommands( void )
 {
 	Cmd_AddCommand( "serverinfo", SV_Serverinfo_f );
+	Cmd_SetDescription( "serverinfo", "Gives information about local server from the console of that server\nUsage: serverinfo" );
 	Cmd_AddCommand( "systeminfo", SV_Systeminfo_f );
+	Cmd_SetDescription( "systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nUsage: systeminfo" );
+#ifndef USE_CMD_CONNECTOR
 	Cmd_AddCommand( "tell", SV_ConTell_f );
+	Cmd_SetDescription( "tell", "Say something to an individual on the server\nUsage: tell <playername> <text>" );
 	Cmd_AddCommand( "say", SV_ConSay_f );
+	Cmd_SetDescription( "say", "Say something to everyone on the server\nUsage: say <text>");
+#else
+	// so these commands to interfer with vm_game commands with the same name
+	Cmd_AddCommand( "svtell", SV_ConTell_f );
+	Cmd_SetDescription( "svtell", "Say something to an individual on the server\nUsage: svtell <playername> <text>" );
+	Cmd_AddCommand( "svsay", SV_ConSay_f );
+	Cmd_SetDescription( "say", "Say something to everyone on the server\nUsage: svsay <text>");
+#endif
 	Cmd_AddCommand( "locations", SV_Locations_f );
+	Cmd_SetDescription( "locations", "Display a list of client locations from their country setting\nUsage: locations" );
+#ifdef USE_MULTIVM
+	Cmd_AddCommand( "load", SV_LoadVM_f );
+	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load");
+#endif
+
 }
 
 
@@ -1545,7 +1778,15 @@ void SV_RemoveDedicatedCommands( void )
 {
 	Cmd_RemoveCommand( "serverinfo" );
 	Cmd_RemoveCommand( "systeminfo" );
+#ifndef USE_CMD_CONNECTOR
 	Cmd_RemoveCommand( "tell" );
 	Cmd_RemoveCommand( "say" );
+#else
+	Cmd_RemoveCommand( "svtell" );
+	Cmd_RemoveCommand( "svsay" );
+#endif
 	Cmd_RemoveCommand( "locations" );
+#ifdef USE_MULTIVM
+	Cmd_RemoveCommand( "load" );
+#endif
 }
