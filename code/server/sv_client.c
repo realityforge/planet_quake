@@ -865,7 +865,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 		// avoid excessive outgoing traffic
 		if ( !SVC_RateLimit( &bucket, 10, 200 ) ) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\nUserinfo string length exceeded.  "
-				"Try removing setu cvars from your config.\n" );
+				"Try removing setup cvars from your config.\n" );
 		}
 		return;
 	}

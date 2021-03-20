@@ -693,6 +693,9 @@ CLIENT SIDE DEMO PLAYBACK
 =======================================================================
 */
 
+static int messageShift = 0;
+int        serverShift = 0;
+
 /*
 =================
 CL_DemoCompleted
@@ -701,6 +704,8 @@ CL_DemoCompleted
 static void CL_DemoCompleted( void ) {
 	Com_Printf("DEMO: ended.\n");
 	if(clc.demoIndex) {
+		messageShift = 0;
+		serverShift = 0;
 		Z_Free(clc.demoIndex);
 	}
 	
@@ -904,9 +909,6 @@ void CL_ReadDemoIndex() {
 
 }
 
-
-static int messageShift = 0;
-int        serverShift = 0;
 
 /*
 =================

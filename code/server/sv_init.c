@@ -805,6 +805,38 @@ void SV_SpawnServer_After_Startup( void ) {
 }
 
 
+static	char		props[BIG_INFO_STRING];
+char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
+	int c = 0, r = 0, len = strlen(text_in);
+	props[0] = 0;
+	while(c < len) {
+		if((text_in[c] >= 'a' && text_in[c] <= 'z')
+			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
+			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
+			props[r] = text_in[c];
+			r++;
+		} else {
+Com_Printf("Props: split %i\n", *count);
+			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+				props[r] = 0;
+				(*count)++;
+				r++;
+			}
+		}
+		c++;
+	}
+	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+		props[r] = 0;
+		(*count)++;
+		r++;
+	}
+	if(*count == MAX_CLIENT_ROLES) {
+		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
+	}
+	return props;
+}
+
+
 /*
 ===============
 SV_Init
@@ -903,6 +935,23 @@ void SV_Init( void )
 	Cvar_Get( "sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_SetDescription(sv_referencedPakNames, "Holds the names of paks referenced by the server for comparison client-side\nDefault: empty");
+
+#ifdef USE_SERVER_ROLES
+	sv_roles = Cvar_Get( "sv_roles", "referee moderator admin", CVAR_ARCHIVE);
+	Cvar_SetDescription(sv_roles, "Space seperated list of roles to configure\nDefault: referee moderator admin");
+	for ( index = 0; index < MAX_CLIENT_ROLES; index++ )
+		sv_clientRoles[index] = Cvar_Get(va("sv_role%d", index + 1), "", CVAR_ARCHIVE);
+	sv_role[0] = Cvar_Get( "sv_referee", "ban kick restart map", CVAR_ARCHIVE);
+	sv_role[1] = Cvar_Get( "sv_moderator", "kick ban timelimit fraglimit capturelimit shuffle mute map nextmap map_restart", CVAR_ARCHIVE);
+	{
+		int roleCount = 0;
+		char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);
+		for(int i = 0; i < roleCount; i++) {
+			sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
+			roles = &roles[strlen(roles)+1];
+		}
+	}
+#endif
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );

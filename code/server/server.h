@@ -405,6 +405,11 @@ extern	cvar_t	*sv_mvFolderSize;
 extern	cvar_t	*sv_privateClients;
 extern	cvar_t	*sv_hostname;
 extern	cvar_t	*sv_master[MAX_MASTER_SERVERS];
+#ifdef USE_SERVER_ROLES
+extern	cvar_t	*sv_roles;
+extern	cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];
+extern	cvar_t	*sv_role[MAX_CLIENT_ROLES];
+#endif
 extern	cvar_t	*sv_reconnectlimit;
 extern	cvar_t	*sv_padPackets;
 extern	cvar_t	*sv_killserver;

@@ -61,6 +61,11 @@ cvar_t	*sv_mvFolderSize;
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
+#ifdef USE_SERVER_ROLES
+cvar_t  *sv_roles;
+cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];		// master server ip address
+cvar_t	*sv_role[MAX_CLIENT_ROLES];		// master server ip address
+#endif
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
 cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down
