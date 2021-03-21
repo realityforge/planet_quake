@@ -317,9 +317,9 @@ var LibrarySysCommon = {
 		      // We should copy the symbols (which include methods and variables) from SIDE_MODULE to MAIN_MODULE.
 
 		      var module_sym = sym;
-#if WASM_BACKEND
+//#if WASM_BACKEND
 		      module_sym = '_' + sym;
-#else
+//#else
 		      // Module of SIDE_MODULE has not only the symbols (which should be copied)
 		      // but also others (print*, asmGlobal*, FUNCTION_TABLE_**, NAMED_GLOBALS, and so on).
 		      //
@@ -327,10 +327,10 @@ var LibrarySysCommon = {
 		      // When the symbol (which should be copied) is variable, Module.* 's type becomes number.
 		      // Except for the symbol prefix (_), there is no difference in the symbols (which should be copied) and others.
 		      // So this just copies over compiled symbols (which start with _).
-		      if (sym[0] !== '_') {
-		        continue;
-		      }
-#endif
+//		      if (sym[0] !== '_') {
+//		        continue;
+//		      }
+//#endif
 
 		      if (!Module.hasOwnProperty(module_sym)) {
 		        Module[module_sym] = libModule[sym];
@@ -384,11 +384,11 @@ var LibrarySysCommon = {
 		    }
 		    relocated[e] = value;
 		    if (moduleLocal) {
-#if WASM_BACKEND
+//#if WASM_BACKEND
 		      moduleLocal['_' + e] = value;
-#else
-		      moduleLocal[e] = value;
-#endif
+//#else
+//		      moduleLocal[e] = value;
+//#endif
 		    }
 		  }
 		  return relocated;
@@ -593,9 +593,9 @@ var LibrarySysCommon = {
 		      'global.Math': Math,
 		      env: proxy,
 		      {{{ WASI_MODULE_NAME }}}: proxy,
-#if !WASM_BACKEND
+//#if !WASM_BACKEND
 		      'asm2wasm': asm2wasmImports
-#endif
+//#endif
 		    };
 
 		    function postInstantiation(instance, moduleLocal) {
@@ -751,11 +751,11 @@ var LibrarySysCommon = {
 
     var mangled = '_' + symbol;
     var modSymbol = mangled;
-#if WASM_BACKEND
+//#if WASM_BACKEND
     if (!isMainModule) {
       modSymbol = symbol;
     }
-#endif
+//#endif
 
     if (!lib.module.hasOwnProperty(modSymbol)) {
 			if(lib.module.hasOwnProperty(mangled)) {
@@ -769,11 +769,11 @@ var LibrarySysCommon = {
     // Attempt to get the real "unwrapped" symbol so we have more chance of
     // getting wasm function which can be added to a table.
     if (isMainModule) {
-#if WASM_BACKEND
+//#if WASM_BACKEND
       var asmSymbol = symbol;
-#else
-      var asmSymbol = mangled;
-#endif
+//#else
+//      var asmSymbol = mangled;
+//#endif
       if (lib.module["asm"][asmSymbol]) {
         result = lib.module["asm"][asmSymbol];
       }
