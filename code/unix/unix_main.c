@@ -41,9 +41,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <dlfcn.h>
 
+#ifndef NOFPU
 #ifdef __linux__
 #ifdef __GLIBC__
   #include <fpu_control.h> // bk001213 - force dumps on divide by zero
+#endif
 #endif
 #endif
 
@@ -754,6 +756,7 @@ void QDECL Sys_SetStatus( const char *format, ... )
 
 void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
 {
+#ifndef NOFPU
 #ifdef __linux__
 #ifdef __i386
 #ifdef __GLIBC__
@@ -778,6 +781,7 @@ void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
 #endif // __GLIBC__
 #endif // __i386
 #endif // __linux
+#endif
 }
 
 
@@ -929,8 +933,10 @@ int main( int argc, const char* argv[] )
 
 	while (1)
 	{
+#ifndef NOFPU
 #ifdef __linux__
 		Sys_ConfigureFPU();
+#endif
 #endif
 
 #ifdef DEDICATED

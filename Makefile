@@ -1,4 +1,3 @@
-
 # Quake3 Unix Makefile
 #
 # Nov '98 by Zoid <zoid@idsoftware.com>
@@ -13,10 +12,6 @@
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
-ifeq ($(shell uname -m),arm64)
-  COMPILE_ARCH=aarch64
-endif
-
 ifeq ($(COMPILE_PLATFORM),mingw32)
   ifeq ($(COMPILE_ARCH),i386)
     COMPILE_ARCH=x86
@@ -26,7 +21,7 @@ endif
 BUILD_CLIENT     = 1
 BUILD_SERVER     = 1
 
-USE_SDL          = 1
+USE_SDL          = 0
 USE_CURL         = 1
 USE_LOCAL_HEADERS= 0
 USE_VULKAN       = 0
@@ -92,6 +87,9 @@ endif
 ifndef ARCH
 ARCH=$(COMPILE_ARCH)
 endif
+ifeq ($(PLATFORM),js)
+ARCH=js
+endif
 export ARCH
 
 ifneq ($(PLATFORM),$(COMPILE_PLATFORM))
@@ -104,6 +102,10 @@ else
   endif
 endif
 export CROSS_COMPILING
+
+ifndef COPYDIR
+COPYDIR="/usr/local/games/quake3"
+endif
 
 ifndef DESTDIR
 DESTDIR=/usr/local/games/quake3
@@ -130,6 +132,22 @@ ifndef USE_CODEC_VORBIS
 USE_CODEC_VORBIS=0
 endif
 
+ifndef USE_CODEC_OPUS
+USE_CODEC_OPUS=0
+endif
+
+ifndef USE_CIN_THEORA
+USE_CIN_THEORA=0
+endif
+
+ifndef USE_CIN_XVID
+USE_CIN_THEORA=0
+endif
+
+ifndef USE_CIN_VPX
+USE_CIN_THEORA=0
+endif
+
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
@@ -139,11 +157,11 @@ USE_CURL=1
 endif
 
 ifndef USE_CURL_DLOPEN
-  ifdef MINGW
-    USE_CURL_DLOPEN=0
-  else
-    USE_CURL_DLOPEN=1
-  endif
+ifdef MINGW
+  USE_CURL_DLOPEN=0
+else
+  USE_CURL_DLOPEN=1
+endif
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),0)
@@ -164,12 +182,19 @@ CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
+R2DIR=$(MOUNT_DIR)/renderer2
 RVDIR=$(MOUNT_DIR)/renderervk
+RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
 
+OGGDIR=$(MOUNT_DIR)/ogg
+VORBISDIR=$(MOUNT_DIR)/vorbis
+OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
+OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
 CMDIR=$(MOUNT_DIR)/qcommon
 UDIR=$(MOUNT_DIR)/unix
 W32DIR=$(MOUNT_DIR)/win32
+QUAKEJS=$(MOUNT_DIR)/xquakejs
 BLIBDIR=$(MOUNT_DIR)/botlib
 UIDIR=$(MOUNT_DIR)/ui
 JPDIR=$(MOUNT_DIR)/libjpeg
@@ -177,7 +202,7 @@ JPDIR=$(MOUNT_DIR)/libjpeg
 bin_path=$(shell which $(1) 2> /dev/null)
 
 STRIP ?= strip
-PKG_CONFIG ?= pkg-config
+  PKG_CONFIG ?= pkg-config
 INSTALL=install
 MKDIR=mkdir
 
@@ -201,7 +226,7 @@ endif
 
 # extract version info
 VERSION=$(shell grep "\#define Q3_VERSION" $(CMDIR)/q_shared.h | \
-  sed -e 's/.*".* \([^ ]*\)"/\1/')
+  sed -e 's/.*"[^" ]* \([^" ]*\)\( MV\)*"/\1/')
 
 # common qvm definition
 ifeq ($(ARCH),x86_64)
@@ -248,17 +273,6 @@ ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1
 endif
 
-ifeq ($(USE_CURL),1)
-  BASE_CFLAGS += -DUSE_CURL
-  ifeq ($(USE_CURL_DLOPEN),1)
-    BASE_CFLAGS += -DUSE_CURL_DLOPEN
-  else
-    ifeq ($(MINGW),1)
-      BASE_CFLAGS += -DCURL_STATICLIB
-    endif
-  endif
-endif
-
 ifeq ($(USE_VULKAN_API),1)
   BASE_CFLAGS += -DUSE_VULKAN_API
 endif
@@ -267,6 +281,9 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
 
+## Defaults
+INSTALL=install
+MKDIR=mkdir
 
 ARCHEXT=
 
@@ -316,7 +333,7 @@ ifdef MINGW
   endif
 
   # using generic windres if specific one is not present
-  ifeq ($(WINDRES),)
+  ifndef WINDRES
     WINDRES=windres
   endif
 
@@ -326,8 +343,6 @@ ifdef MINGW
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -DUSE_ICON -DMINGW=1
-
-  BASE_CFLAGS += -Wno-unused-result
 
   ifeq ($(ARCH),x86_64)
     ARCHEXT = .x64
@@ -352,7 +367,6 @@ ifdef MINGW
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
-    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
     ifeq ($(ARCH),x86)
       CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
       CLIENT_LDFLAGS += -lSDL2
@@ -366,6 +380,7 @@ ifdef MINGW
 
   ifeq ($(USE_CODEC_VORBIS),1)
     CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
+    BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
   endif
 
   ifeq ($(USE_CURL),1)
@@ -378,20 +393,22 @@ ifdef MINGW
     CLIENT_LDFLAGS += -lcurl -lwldap32 -lcrypt32
   endif
 
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
 else # !MINGW
 
-ifeq ($(COMPILE_PLATFORM),darwin)
+ifeq ($(PLATFORM),darwin)
 
 #############################################################################
 # SETUP AND BUILD -- MACOS
 #############################################################################
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
+  BASE_CFLAGS += -Wall -fno-strict-aliasing \
+		-Wno-incompatible-pointer-types-discards-qualifiers \
+	 	-Wimplicit -Wstrict-prototypes -pipe
 
-  BASE_CFLAGS += -Wno-unused-result
+  BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
 
   OPTIMIZE = -O2 -fvisibility=hidden
 
@@ -401,16 +418,243 @@ ifeq ($(COMPILE_PLATFORM),darwin)
 
   LDFLAGS =
 
-  ifneq ($(SDL_INCLUDE),)
-    BASE_CFLAGS += $(SDL_INCLUDE)
-    CLIENT_LDFLAGS = $(SDL_LIBS)
-  else
-    BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
-    CLIENT_LDFLAGS = -F/Library/Frameworks -framework SDL2
-  endif
+  CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
+
+else
+
+#############################################################################
+# SETUP AND BUILD -- JS
+#############################################################################
+
+ifeq ($(PLATFORM),js)
+  EMSDK=$(MOUNT_DIR)/xquakejs/lib/emsdk
+  NODE_JS=$(EMSDK)/node/12.9.1_64bit/bin/node
+  BINARYEN_ROOT=$(EMSDK)/upstream
+  EMSCRIPTEN=$(EMSDK)/upstream/emscripten
+define EM_CONFIG
+"LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
+endef
+ifndef EMSCRIPTEN_CACHE
+  EMSCRIPTEN_CACHE=$(HOME)/.emscripten_cache
+endif
+
+  CC=$(EMSCRIPTEN)/emcc
+  RANLIB=$(EMSCRIPTEN)/emranlib
+  ARCH=js
+  BINEXT=.js
+
+  DEBUG=0
+  EMCC_DEBUG=0
+
+  HAVE_VM_COMPILED=true
+  BUILD_CLIENT=1
+  BUILD_SERVER=0
+  BUILD_GAME_QVM=1
+  BUILD_GAME_SO=0
+  BUILD_STANDALONE=1
+  BUILD_RENDERER_OPENGL=0
+  BUILD_RENDERER_JS=0
+  BUILD_RENDERER_OPENGL2=1
+  BUILD_RENDERER_OPENGLES=0
+
+  USE_Q3KEY=1
+  USE_IPV6=0
+  USE_SDL=1
+  USE_VULKAN=0
+  USE_CURL=0
+  USE_CURL_DLOPEN=0
+  USE_CODEC_VORBIS=1
+  USE_CODEC_OPUS=0
+  USE_FREETYPE=0
+  USE_MUMBLE=0
+  USE_VOIP=0
+  SDL_LOADSO_DLOPEN=0
+  USE_OPENAL_DLOPEN=0
+  USE_RENDERER_DLOPEN=0
+  USE_LOCAL_HEADERS=0
+  GL_EXT_direct_state_access=1
+  GL_ARB_ES2_compatibility=1
+  GL_GLEXT_PROTOTYPES=1
+
+  BASE_CFLAGS = \
+	  -Wall -Wno-unused-variable -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+		-DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1 -DGL_EXT_direct_state_access=1 \
+		-DUSE_Q3KEY -DUSE_MD5 \
+    -I$(EMSCRIPTEN_CACHE)/wasm/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm-obj/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include \
+		-I$(EMSCRIPTEN_CACHE)/wasm-lto-pic/include/SDL2 \
+		-I$(EMSCRIPTEN_CACHE)/sysroot/include \
+		-I$(EMSCRIPTEN_CACHE)/sysroot/include/SDL2
+
+# debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
+  DEBUG_CFLAGS=$(BASE_CFLAGS) \
+    -O1 -g3 \
+		-s WASM=1 \
+		-s MODULARIZE=0 \
+    -s SAFE_HEAP=0 \
+    -s DEMANGLE_SUPPORT=1 \
+    -s ASSERTIONS=2 \
+		-s SINGLE_FILE=1 \
+    -frtti \
+		-flto \
+	  -fPIC
+
+  RELEASE_CFLAGS=$(BASE_CFLAGS) \
+    -O3 -Oz \
+    -s WASM=1 \
+		-s MODULARIZE=0 \
+    -s SAFE_HEAP=0 \
+    -s DEMANGLE_SUPPORT=0 \
+    -s ASSERTIONS=2 \
+    -flto \
+    -fPIC
+
+ifneq ($(USE_CODEC_OPUS),0)
+  RELEASE_CFLAGS += \
+		-DUSE_CODEC_OPUS=1 \
+    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
+		-I$(OPUSDIR)/include \
+		-I$(OPUSDIR)/celt \
+		-I$(OPUSDIR)/silk \
+    -I$(OPUSDIR)/silk/float \
+		-I$(OPUSFILEDIR)/include 
+endif
+
+ifneq ($(USE_CODEC_VORBIS),0)
+  RELEASE_CFLAGS += \
+	  -DUSE_CODEC_VORBIS=1 \
+    -I$(OGGDIR)/ \
+    -I$(VORBISDIR)/
+endif
+
+  SHLIBCFLAGS = \
+		-DEMSCRIPTEN \
+	  -fvisibility=hidden \
+		-O1 -g3 \
+		-s STRICT=1 \
+		-s AUTO_JS_LIBRARIES=0 \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+		-s SIDE_MODULE=1 \
+		-s RELOCATABLE=1 \
+		-s LINKABLE=1 \
+		-s EXPORT_ALL=1 \
+		-s EXPORTED_FUNCTIONS="['_GetRefAPI']" \
+		-s ALLOW_TABLE_GROWTH=1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s GL_UNSAFE_OPTS=0 \
+		-s LEGACY_GL_EMULATION=0 \
+		-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1 \
+		-s USE_SDL=2 \
+		-s EXPORT_NAME=\"quake3e_opengl2_js\" \
+		-s WASM=0 \
+		-s MODULARIZE=0 \
+    -s SAFE_HEAP=1 \
+    -s DEMANGLE_SUPPORT=1 \
+    -s ASSERTIONS=1 \
+    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
+    -frtti \
+    -fPIC
+
+ifeq ($(USE_RENDERER_DLOPEN),1)
+  CLIENT_LDFLAGS += \
+		-s EXPORT_ALL=1 \
+		-s RELOCATABLE=1 \
+		-s DECLARE_ASM_MODULE_EXPORTS=1 \
+		-s LINKABLE=1 \
+		-s INCLUDE_FULL_LIBRARY=1
+endif
+
+  SHLIBEXT=js
+
+#  --llvm-lto 3
+#   -s USE_WEBGL2=1
+#   -s MIN_WEBGL_VERSION=2
+#   -s MAX_WEBGL_VERSION=2
+#   -s USE_SDL_IMAGE=2 \
+#   -s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
+# --em-config $(EM_CONFIG) \
+# --cache $(EMSCRIPTEN_CACHE) \
+#    -s INITIAL_MEMORY=56MB \
+
+  CLIENT_LDFLAGS += \
+		-lbrowser.js \
+		-lasync.js \
+		-lidbfs.js \
+		-lsdl.js \
+		--js-library $(QUAKEJS)/sys_common.js \
+		--js-library $(QUAKEJS)/sys_browser.js \
+		--js-library $(QUAKEJS)/sys_net.js \
+		--js-library $(QUAKEJS)/sys_files.js \
+		--js-library $(QUAKEJS)/sys_input.js \
+		--js-library $(QUAKEJS)/sys_main.js \
+		--js-library $(CMDIR)/vm_js.js \
+		--pre-js $(QUAKEJS)/sys_polyfill.js \
+		--post-js $(QUAKEJS)/sys_overrides.js \
+		-s MINIMAL_RUNTIME=0 \
+		-s STRICT=1 \
+		-s MAIN_MODULE=0 \
+		-s AUTO_JS_LIBRARIES=1 \
+		-s ALLOW_TABLE_GROWTH=1 \
+		-s INITIAL_MEMORY=200MB \
+    -s ALLOW_MEMORY_GROWTH=1 \
+		--memory-init-file 0 \
+		\
+		-s DISABLE_EXCEPTION_CATCHING=0 \
+    -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+    -s INVOKE_RUN=1 \
+    -s NO_EXIT_RUNTIME=1 \
+    -s EXIT_RUNTIME=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC', 'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'dynCall']" \
+    -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_S_DisableSounds', '_CL_GetClientState', '_Com_Printf', '_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', '_S_Malloc', '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', '_Cbuf_AddText', '_Field_CharEvent']" \
+		-s GL_UNSAFE_OPTS=0 \
+    -s USE_SDL=2 \
+		-s USE_SDL_MIXER=2 \
+		-s USE_VORBIS=1 \
+		-s USE_OGG=1 \
+		-s USE_PTHREADS=0 \
+    -s FORCE_FILESYSTEM=1 \
+    -s EXPORT_NAME=\"quake3e\"
+		
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+	CLIENT_LDFLAGS += \
+		-lwebgl.js \
+		-lwebgl2.js \
+		-s LEGACY_GL_EMULATION=0 \
+    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=1 \
+    -s FULL_ES3=1
+endif
+
+ifeq ($(BUILD_RENDERER_OPENGL),1)
+	CLIENT_LDFLAGS += \
+		-lglemu.js \
+		-lwebgl.js \
+		-DUSE_CLOSURE_COMPILER \
+		-s LEGACY_GL_EMULATION=1 \
+    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+		-s MIN_WEBGL_VERSION=1 \
+		-s MAX_WEBGL_VERSION=3 \
+    -s USE_WEBGL2=1 \
+    -s FULL_ES2=0 \
+    -s FULL_ES3=0
+endif
 
 else
 
@@ -419,10 +663,6 @@ else
 #############################################################################
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
-
-  BASE_CFLAGS += -Wno-unused-result
-
-  BASE_CFLAGS += -DUSE_ICON
 
   BASE_CFLAGS += -I/usr/include -I/usr/local/include
 
@@ -437,7 +677,6 @@ else
   endif
 
   ifeq ($(ARCH),arm)
-    OPTIMIZE += -march=armv7-a
     ARCHEXT = .arm
   endif
 
@@ -449,7 +688,7 @@ else
   SHLIBCFLAGS = -fPIC -fvisibility=hidden
   SHLIBLDFLAGS = -shared $(LDFLAGS)
 
-  LDFLAGS = -lm
+  LDFLAGS=-lm
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += $(SDL_INCLUDE)
@@ -487,14 +726,15 @@ else
 
   DEBUG_LDFLAGS = -rdynamic
 
-endif # *NIX platforms
-
+endif # !EMSCRIPTEN
+endif # !darwin
 endif # !MINGW
 
 
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 
 TARGET_REND1 = $(RENDERER_PREFIX)_opengl_$(SHLIBNAME)
+TARGET_REND2 = $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
 TARGET_RENDV = $(RENDERER_PREFIX)_vulkan_$(SHLIBNAME)
 
 TARGET_SERVER = $(DNAME)$(ARCHEXT)$(BINEXT)
@@ -507,10 +747,46 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
-  ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/$(TARGET_REND1)
-    TARGETS += $(B)/$(TARGET_RENDV)
-  endif
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+ifneq ($(PLATFORM),js)
+  TARGETS += $(B)/$(TARGET_REND1)
+endif
+  TARGETS += $(B)/$(TARGET_REND2)
+#    TARGETS += $(B)/$(TARGET_RENDV)
+endif
+
+ifneq ($(HAVE_VM_COMPILED),true)
+  BASE_CFLAGS += -DNO_VM_COMPILED
+endif
+
+ifeq ($(BUILD_STANDALONE),1)
+  BASE_CFLAGS += -DSTANDALONE
+endif
+
+ifeq ($(USE_Q3KEY),1)
+  BASE_CFLAGS += -DUSE_Q3KEY -DUSE_MD5
+endif
+
+ifeq ($(NOFPU),1)
+  BASE_CFLAGS += -DNOFPU
+endif
+
+ifeq ($(USE_CURL),1)
+  BASE_CFLAGS += -DUSE_CURL
+ifeq ($(USE_CURL_DLOPEN),1)
+  BASE_CFLAGS += -DUSE_CURL_DLOPEN
+else
+ifeq ($(MINGW),1)
+  BASE_CFLAGS += -DCURL_STATICLIB
+endif
+endif
+endif
+
+ifneq ($(USE_RENDERER_DLOPEN),0)
+  BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
+  BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
 endif
 
 ifeq ($(USE_CCACHE),1)
@@ -531,6 +807,14 @@ endef
 define DO_REND_CC
 $(echo_cmd) "REND_CC $<"
 $(Q)$(CC) $(RENDCFLAGS) $(CFLAGS) -o $@ -c $<
+endef
+
+define DO_REF_STR
+$(echo_cmd) "REF_STR $<"
+$(Q)rm -f $@
+$(Q)echo "const char *fallbackShader_$(notdir $(basename $<)) =" >> $@
+$(Q)cat $< | sed -e 's/^/\"/;s/$$/\\n\"/' | tr -d '\r' >> $@
+$(Q)echo ";" >> $@
 endef
 
 define DO_BOT_CC
@@ -643,7 +927,12 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
+	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
+	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
+	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
+	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
 
@@ -684,11 +973,86 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_vbo.o \
   $(B)/rend1/tr_world.o
 
+Q3REND2OBJ = \
+  $(B)/rend2/tr_animation.o \
+  $(B)/rend2/tr_backend.o \
+  $(B)/rend2/tr_bsp.o \
+	$(B)/rend2/tr_bsp1.o \
+	$(B)/rend2/tr_bsp2.o \
+  $(B)/rend2/tr_cmds.o \
+  $(B)/rend2/tr_curve.o \
+  $(B)/rend2/tr_dsa.o \
+  $(B)/rend2/tr_extramath.o \
+  $(B)/rend2/tr_extensions.o \
+  $(B)/rend2/tr_fbo.o \
+  $(B)/rend2/tr_flares.o \
+  $(B)/rend2/tr_font.o \
+  $(B)/rend2/tr_glsl.o \
+  $(B)/rend2/tr_image.o \
+  $(B)/rend2/tr_image_bmp.o \
+  $(B)/rend2/tr_image_jpg.o \
+  $(B)/rend2/tr_image_pcx.o \
+  $(B)/rend2/tr_image_png.o \
+  $(B)/rend2/tr_image_tga.o \
+  $(B)/rend2/tr_image_dds.o \
+  $(B)/rend2/tr_init.o \
+  $(B)/rend2/tr_light.o \
+  $(B)/rend2/tr_main.o \
+  $(B)/rend2/tr_marks.o \
+  $(B)/rend2/tr_mesh.o \
+  $(B)/rend2/tr_model.o \
+  $(B)/rend2/tr_model_iqm.o \
+  $(B)/rend2/tr_noise.o \
+  $(B)/rend2/tr_postprocess.o \
+  $(B)/rend2/tr_scene.o \
+  $(B)/rend2/tr_shade.o \
+  $(B)/rend2/tr_shade_calc.o \
+  $(B)/rend2/tr_shader.o \
+  $(B)/rend2/tr_shadows.o \
+  $(B)/rend2/tr_sky.o \
+  $(B)/rend2/tr_surface.o \
+  $(B)/rend2/tr_vbo.o \
+  $(B)/rend2/tr_world.o
+
+Q3R2STRINGOBJ = \
+  $(B)/rend2/glsl/bokeh_fp.o \
+  $(B)/rend2/glsl/bokeh_vp.o \
+  $(B)/rend2/glsl/calclevels4x_fp.o \
+  $(B)/rend2/glsl/calclevels4x_vp.o \
+  $(B)/rend2/glsl/depthblur_fp.o \
+  $(B)/rend2/glsl/depthblur_vp.o \
+  $(B)/rend2/glsl/dlight_fp.o \
+  $(B)/rend2/glsl/dlight_vp.o \
+  $(B)/rend2/glsl/down4x_fp.o \
+  $(B)/rend2/glsl/down4x_vp.o \
+  $(B)/rend2/glsl/fogpass_fp.o \
+  $(B)/rend2/glsl/fogpass_vp.o \
+  $(B)/rend2/glsl/generic_fp.o \
+  $(B)/rend2/glsl/generic_vp.o \
+  $(B)/rend2/glsl/lightall_fp.o \
+  $(B)/rend2/glsl/lightall_vp.o \
+  $(B)/rend2/glsl/pshadow_fp.o \
+  $(B)/rend2/glsl/pshadow_vp.o \
+  $(B)/rend2/glsl/shadowfill_fp.o \
+  $(B)/rend2/glsl/shadowfill_vp.o \
+  $(B)/rend2/glsl/shadowmask_fp.o \
+  $(B)/rend2/glsl/shadowmask_vp.o \
+  $(B)/rend2/glsl/ssao_fp.o \
+  $(B)/rend2/glsl/ssao_vp.o \
+  $(B)/rend2/glsl/texturecolor_fp.o \
+  $(B)/rend2/glsl/texturecolor_vp.o \
+  $(B)/rend2/glsl/tonemap_fp.o \
+  $(B)/rend2/glsl/tonemap_vp.o
+
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3REND1OBJ += \
     $(B)/rend1/q_shared.o \
     $(B)/rend1/puff.o \
     $(B)/rend1/q_math.o
+  Q3REND2OBJ += \
+    $(B)/rend2/q_shared.o \
+    $(B)/rend2/puff.o \
+    $(B)/rend2/q_math.o
 endif
 
 Q3RENDVOBJ = \
@@ -723,10 +1087,43 @@ Q3RENDVOBJ = \
   $(B)/rendv/vk.o \
   $(B)/rendv/vk_flares.o \
   $(B)/rendv/vk_vbo.o \
+  \
+  $(B)/rendv/bloom_frag.o \
+  $(B)/rendv/blur_frag.o \
+  $(B)/rendv/blend_frag.o \
+  $(B)/rendv/dot_frag.o \
+  $(B)/rendv/dot_vert.o \
+  $(B)/rendv/color_frag.o \
+  $(B)/rendv/color_vert.o \
+  $(B)/rendv/fog_frag.o \
+  $(B)/rendv/fog_vert.o \
+  $(B)/rendv/gamma_frag.o \
+  $(B)/rendv/gamma_vert.o \
+  $(B)/rendv/light_fog_vert.o \
+  $(B)/rendv/light_vert.o \
+  $(B)/rendv/light_fog_frag.o \
+  $(B)/rendv/light_frag.o \
+  $(B)/rendv/light1_fog_frag.o \
+  $(B)/rendv/light1_frag.o \
+  $(B)/rendv/mt_fog_vert.o \
+  $(B)/rendv/mt_vert.o \
+  $(B)/rendv/mt_fog_frag.o \
+  $(B)/rendv/mt_frag.o \
+  $(B)/rendv/mt2_fog_vert.o \
+  $(B)/rendv/mt2_vert.o \
+  $(B)/rendv/mt2_fog_frag.o \
+  $(B)/rendv/mt2_frag.o \
+  $(B)/rendv/st_fog_vert.o \
+  $(B)/rendv/st_vert.o \
+  $(B)/rendv/st_enviro_fog_vert.o \
+  $(B)/rendv/st_enviro_vert.o \
+  $(B)/rendv/st_fog_frag.o \
+  $(B)/rendv/st_df_frag.o \
+  $(B)/rendv/st_frag.o
 
 ifneq ($(USE_RENDERER_DLOPEN), 0)
   Q3RENDVOBJ += \
-    $(B)/rend1/q_shared.o \
+    $(B)/rendv/q_shared.o \
     $(B)/rendv/puff.o \
     $(B)/rendv/q_math.o
 endif
@@ -782,6 +1179,9 @@ JPGOBJ = \
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
+	$(B)/client/cl_cin_roq.o \
+	$(B)/client/cl_cin_ogm.o \
+	$(B)/client/cl_cin_vpx.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
@@ -794,6 +1194,7 @@ Q3OBJ = \
   $(B)/client/cl_jpeg.o \
   \
   $(B)/client/cm_load.o \
+	$(B)/client/cm_load_bsp2.o \
   $(B)/client/cm_patch.o \
   $(B)/client/cm_polylib.o \
   $(B)/client/cm_test.o \
@@ -810,6 +1211,7 @@ Q3OBJ = \
   $(B)/client/msg.o \
   $(B)/client/net_chan.o \
   $(B)/client/net_ip.o \
+	$(B)/client/qrcodegen.o \
   $(B)/client/huffman.o \
   $(B)/client/huffman_static.o \
   \
@@ -822,12 +1224,17 @@ Q3OBJ = \
   $(B)/client/snd_main.o \
   $(B)/client/snd_codec.o \
   $(B)/client/snd_codec_wav.o \
-  $(B)/client/snd_codec_ogg.o \
+	$(B)/client/snd_codec_ogg.o \
+	$(B)/client/snd_codec_opus.o \
   \
   $(B)/client/sv_bot.o \
   $(B)/client/sv_ccmds.o \
   $(B)/client/sv_client.o \
   $(B)/client/sv_filter.o \
+	$(B)/client/sv_demo.o \
+	$(B)/client/sv_demo_cl.o \
+  $(B)/client/sv_demo_ext.o \
+	$(B)/client/sv_demo_mv.o \
   $(B)/client/sv_game.o \
   $(B)/client/sv_init.o \
   $(B)/client/sv_main.o \
@@ -876,13 +1283,199 @@ ifneq ($(USE_SYSTEM_JPEG),1)
   Q3OBJ += $(JPGOBJ)
 endif
 
-ifneq ($(USE_RENDERER_DLOPEN),1)
-  ifeq ($(USE_VULKAN),1)
-    Q3OBJ += $(Q3RENDVOBJ)
-  else
-    Q3OBJ += $(Q3REND1OBJ)
-  endif
+ifneq ($(USE_LOCAL_HEADERS),0)
+ifneq ($(USE_CODEC_VORBIS),0)
+Q3OBJ += \
+  $(B)/client/ogg/bitwise.o \
+  $(B)/client/ogg/framing.o \
+  \
+  $(B)/client/vorbis/analysis.o \
+  $(B)/client/vorbis/barkmel.o \
+  $(B)/client/vorbis/bitrate.o \
+  $(B)/client/vorbis/block.o \
+  $(B)/client/vorbis/codebook.o \
+  $(B)/client/vorbis/floor0.o \
+  $(B)/client/vorbis/floor1.o \
+  $(B)/client/vorbis/info.o \
+  $(B)/client/vorbis/lookup.o \
+  $(B)/client/vorbis/lpc.o \
+  $(B)/client/vorbis/lsp.o \
+  $(B)/client/vorbis/mapping0.o \
+  $(B)/client/vorbis/mdct.o \
+  $(B)/client/vorbis/misc.o \
+  $(B)/client/vorbis/psy.o \
+  $(B)/client/vorbis/registry.o \
+  $(B)/client/vorbis/res0.o \
+  $(B)/client/vorbis/sharedbook.o \
+  $(B)/client/vorbis/smallft.o \
+  $(B)/client/vorbis/synthesis.o \
+  $(B)/client/vorbis/vorbisenc.o \
+  $(B)/client/vorbis/vorbisfile.o \
+  $(B)/client/vorbis/window.o
 endif
+endif
+
+ifneq (,$(findstring release,$(B)))
+ifneq ($(USE_CODEC_OPUS),0)
+Q3OBJ += \
+	$(B)/client/opus/analysis.o \
+	$(B)/client/opus/mlp.o \
+	$(B)/client/opus/mlp_data.o \
+	$(B)/client/opus/opus.o \
+	$(B)/client/opus/opus_decoder.o \
+	$(B)/client/opus/opus_encoder.o \
+	$(B)/client/opus/opus_multistream.o \
+	$(B)/client/opus/opus_multistream_encoder.o \
+	$(B)/client/opus/opus_multistream_decoder.o \
+	$(B)/client/opus/repacketizer.o \
+	\
+	$(B)/client/opus/bands.o \
+	$(B)/client/opus/celt.o \
+	$(B)/client/opus/cwrs.o \
+	$(B)/client/opus/entcode.o \
+	$(B)/client/opus/entdec.o \
+	$(B)/client/opus/entenc.o \
+	$(B)/client/opus/kiss_fft.o \
+	$(B)/client/opus/laplace.o \
+	$(B)/client/opus/mathops.o \
+	$(B)/client/opus/mdct.o \
+	$(B)/client/opus/modes.o \
+	$(B)/client/opus/pitch.o \
+	$(B)/client/opus/celt_encoder.o \
+	$(B)/client/opus/celt_decoder.o \
+	$(B)/client/opus/celt_lpc.o \
+	$(B)/client/opus/quant_bands.o \
+	$(B)/client/opus/rate.o \
+	$(B)/client/opus/vq.o \
+	\
+	$(B)/client/opus/CNG.o \
+	$(B)/client/opus/code_signs.o \
+	$(B)/client/opus/init_decoder.o \
+	$(B)/client/opus/decode_core.o \
+	$(B)/client/opus/decode_frame.o \
+	$(B)/client/opus/decode_parameters.o \
+	$(B)/client/opus/decode_indices.o \
+	$(B)/client/opus/decode_pulses.o \
+	$(B)/client/opus/decoder_set_fs.o \
+	$(B)/client/opus/dec_API.o \
+	$(B)/client/opus/enc_API.o \
+	$(B)/client/opus/encode_indices.o \
+	$(B)/client/opus/encode_pulses.o \
+	$(B)/client/opus/gain_quant.o \
+	$(B)/client/opus/interpolate.o \
+	$(B)/client/opus/LP_variable_cutoff.o \
+	$(B)/client/opus/NLSF_decode.o \
+	$(B)/client/opus/NSQ.o \
+	$(B)/client/opus/NSQ_del_dec.o \
+	$(B)/client/opus/PLC.o \
+	$(B)/client/opus/shell_coder.o \
+	$(B)/client/opus/tables_gain.o \
+	$(B)/client/opus/tables_LTP.o \
+	$(B)/client/opus/tables_NLSF_CB_NB_MB.o \
+	$(B)/client/opus/tables_NLSF_CB_WB.o \
+	$(B)/client/opus/tables_other.o \
+	$(B)/client/opus/tables_pitch_lag.o \
+	$(B)/client/opus/tables_pulses_per_block.o \
+	$(B)/client/opus/VAD.o \
+	$(B)/client/opus/control_audio_bandwidth.o \
+	$(B)/client/opus/quant_LTP_gains.o \
+	$(B)/client/opus/VQ_WMat_EC.o \
+	$(B)/client/opus/HP_variable_cutoff.o \
+	$(B)/client/opus/NLSF_encode.o \
+	$(B)/client/opus/NLSF_VQ.o \
+	$(B)/client/opus/NLSF_unpack.o \
+	$(B)/client/opus/NLSF_del_dec_quant.o \
+	$(B)/client/opus/process_NLSFs.o \
+	$(B)/client/opus/stereo_LR_to_MS.o \
+	$(B)/client/opus/stereo_MS_to_LR.o \
+	$(B)/client/opus/check_control_input.o \
+	$(B)/client/opus/control_SNR.o \
+	$(B)/client/opus/init_encoder.o \
+	$(B)/client/opus/control_codec.o \
+	$(B)/client/opus/A2NLSF.o \
+	$(B)/client/opus/ana_filt_bank_1.o \
+	$(B)/client/opus/biquad_alt.o \
+	$(B)/client/opus/bwexpander_32.o \
+	$(B)/client/opus/bwexpander.o \
+	$(B)/client/opus/debug.o \
+	$(B)/client/opus/decode_pitch.o \
+	$(B)/client/opus/inner_prod_aligned.o \
+	$(B)/client/opus/lin2log.o \
+	$(B)/client/opus/log2lin.o \
+	$(B)/client/opus/LPC_analysis_filter.o \
+	$(B)/client/opus/LPC_fit.o \
+	$(B)/client/opus/LPC_inv_pred_gain.o \
+	$(B)/client/opus/table_LSF_cos.o \
+	$(B)/client/opus/NLSF2A.o \
+	$(B)/client/opus/NLSF_stabilize.o \
+	$(B)/client/opus/NLSF_VQ_weights_laroia.o \
+	$(B)/client/opus/pitch_est_tables.o \
+	$(B)/client/opus/resampler.o \
+	$(B)/client/opus/resampler_down2_3.o \
+	$(B)/client/opus/resampler_down2.o \
+	$(B)/client/opus/resampler_private_AR2.o \
+	$(B)/client/opus/resampler_private_down_FIR.o \
+	$(B)/client/opus/resampler_private_IIR_FIR.o \
+	$(B)/client/opus/resampler_private_up2_HQ.o \
+	$(B)/client/opus/resampler_rom.o \
+	$(B)/client/opus/sigm_Q15.o \
+	$(B)/client/opus/sort.o \
+	$(B)/client/opus/sum_sqr_shift.o \
+	$(B)/client/opus/stereo_decode_pred.o \
+	$(B)/client/opus/stereo_encode_pred.o \
+	$(B)/client/opus/stereo_find_predictor.o \
+	$(B)/client/opus/stereo_quant_pred.o \
+	\
+	$(B)/client/opus/apply_sine_window_FLP.o \
+	$(B)/client/opus/corrMatrix_FLP.o \
+	$(B)/client/opus/encode_frame_FLP.o \
+	$(B)/client/opus/find_LPC_FLP.o \
+	$(B)/client/opus/find_LTP_FLP.o \
+	$(B)/client/opus/find_pitch_lags_FLP.o \
+	$(B)/client/opus/find_pred_coefs_FLP.o \
+	$(B)/client/opus/LPC_analysis_filter_FLP.o \
+	$(B)/client/opus/LTP_analysis_filter_FLP.o \
+	$(B)/client/opus/LTP_scale_ctrl_FLP.o \
+	$(B)/client/opus/noise_shape_analysis_FLP.o \
+	$(B)/client/opus/process_gains_FLP.o \
+	$(B)/client/opus/regularize_correlations_FLP.o \
+	$(B)/client/opus/residual_energy_FLP.o \
+	$(B)/client/opus/warped_autocorrelation_FLP.o \
+	$(B)/client/opus/wrappers_FLP.o \
+	$(B)/client/opus/autocorrelation_FLP.o \
+	$(B)/client/opus/burg_modified_FLP.o \
+	$(B)/client/opus/bwexpander_FLP.o \
+	$(B)/client/opus/energy_FLP.o \
+	$(B)/client/opus/inner_product_FLP.o \
+	$(B)/client/opus/k2a_FLP.o \
+	$(B)/client/opus/LPC_inv_pred_gain_FLP.o \
+	$(B)/client/opus/pitch_analysis_core_FLP.o \
+	$(B)/client/opus/scale_copy_vector_FLP.o \
+	$(B)/client/opus/scale_vector_FLP.o \
+	$(B)/client/opus/schur_FLP.o \
+	$(B)/client/opus/sort_FLP.o \
+	\
+  $(B)/client/http.o \
+  $(B)/client/info.o \
+  $(B)/client/internal.o \
+  $(B)/client/opusfile.o \
+  $(B)/client/stream.o \
+  $(B)/client/wincerts.o
+endif
+endif
+
+ifeq ($(USE_RENDERER_DLOPEN),0)
+ifeq ($(USE_VULKAN),1)
+  Q3OBJ += $(Q3RENDVOBJ)
+else
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+  Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+else
+  Q3OBJ += $(Q3REND1OBJ)
+endif
+
+endif # use vulcan
+endif # no dlopen
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
@@ -920,11 +1513,13 @@ ifdef MINGW
     $(B)/client/win_resource.o
 
 ifeq ($(USE_SDL),1)
+ifneq ($(PLATFORM),js)
     Q3OBJ += \
         $(B)/client/sdl_glimp.o \
         $(B)/client/sdl_gamma.o \
         $(B)/client/sdl_input.o \
         $(B)/client/sdl_snd.o
+endif
 else # !USE_SDL
     Q3OBJ += \
         $(B)/client/win_gamma.o \
@@ -941,18 +1536,29 @@ endif
 endif # !USE_SDL
 
 else # !MINGW
+ifeq ($(PLATFORM),js)
+Q3OBJ += \
+	$(B)/client/sdl_glimp.o \
+	$(B)/client/sdl_gamma.o \
+	$(B)/client/sdl_snd.o \
+	$(B)/client/sys_main.o \
+	$(B)/client/sys_input.o
 
+else
   Q3OBJ += \
     $(B)/client/unix_main.o \
     $(B)/client/unix_shared.o \
     $(B)/client/linux_signals.o
+endif
 
 ifeq ($(USE_SDL),1)
+ifneq ($(PLATFORM),js)
     Q3OBJ += \
         $(B)/client/sdl_glimp.o \
         $(B)/client/sdl_gamma.o \
         $(B)/client/sdl_input.o \
         $(B)/client/sdl_snd.o
+endif
 else # !USE_SDL
     Q3OBJ += \
         $(B)/client/linux_glimp.o \
@@ -973,18 +1579,22 @@ endif # !MINGW
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) \
+	$(Q)$(CC) -v -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(CFLAGS) \
 		$(LDFLAGS)
 
 # modular renderers
 
 $(B)/$(TARGET_REND1): $(Q3REND1OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3REND1OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3REND1OBJ)
+
+$(B)/$(TARGET_REND2): $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
 
 $(B)/$(TARGET_RENDV): $(Q3RENDVOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3RENDVOBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3RENDVOBJ)
 
 #############################################################################
 # DEDICATED SERVER
@@ -995,6 +1605,10 @@ Q3DOBJ = \
   $(B)/ded/sv_client.o \
   $(B)/ded/sv_ccmds.o \
   $(B)/ded/sv_filter.o \
+	$(B)/ded/sv_demo.o \
+	$(B)/ded/sv_demo_cl.o \
+  $(B)/ded/sv_demo_ext.o \
+	$(B)/ded/sv_demo_mv.o \
   $(B)/ded/sv_game.o \
   $(B)/ded/sv_init.o \
   $(B)/ded/sv_main.o \
@@ -1003,6 +1617,7 @@ Q3DOBJ = \
   $(B)/ded/sv_world.o \
   \
   $(B)/ded/cm_load.o \
+	$(B)/ded/cm_load_bsp2.o \
   $(B)/ded/cm_patch.o \
   $(B)/ded/cm_polylib.o \
   $(B)/ded/cm_test.o \
@@ -1026,7 +1641,7 @@ Q3DOBJ = \
   \
   $(B)/ded/unzip.o \
   $(B)/ded/vm.o \
-  $(B)/ded/vm_interpreted.o \
+	$(B)/ded/vm_interpreted.o \
   \
   $(B)/ded/be_aas_bspq3.o \
   $(B)/ded/be_aas_cluster.o \
@@ -1056,6 +1671,10 @@ Q3DOBJ = \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o
+	
+ifeq ($(USE_CURL),1)
+  Q3DOBJ += $(B)/ded/cl_curl.o
+endif
 
 ifdef MINGW
   Q3DOBJ += \
@@ -1111,6 +1730,27 @@ $(B)/client/%.o: $(BLIBDIR)/%.c
 $(B)/client/%.o: $(JPDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/ogg/%.o: $(OGGDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/vorbis/%.o: $(VORBISDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/celt/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/silk/%.c
+	$(DO_CC)
+
+$(B)/client/opus/%.o: $(OPUSDIR)/silk/float/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(OPUSFILEDIR)/src/%.c
+	$(DO_CC)
+
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
 
@@ -1123,10 +1763,28 @@ $(B)/rend1/%.o: $(RCDIR)/%.c
 $(B)/rend1/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
+$(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl
+	$(DO_REF_STR)
+
+$(B)/rend2/glsl/%.o: $(B)/renderer2/glsl/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(RCDIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(R2DIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(CMDIR)/%.c
+	$(DO_REND_CC)
+
 $(B)/rendv/%.o: $(RVDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendv/%.o: $(RCDIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rendv/%.o: $(RVSDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendv/%.o: $(CMDIR)/%.c
@@ -1141,8 +1799,14 @@ $(B)/client/%.o: $(W32DIR)/%.c
 $(B)/client/%.o: $(W32DIR)/%.rc
 	$(DO_WINDRES)
 
+$(B)/client/%.o: $(QUAKEJS)/%.c
+	$(DO_CC)
+
 $(B)/ded/%.o: $(ADIR)/%.s
 	$(DO_AS)
+
+$(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)

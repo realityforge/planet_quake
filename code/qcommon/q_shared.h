@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define Q3_VERSION            "Q3 1.32e"
+#define Q3_VERSION            "Q3 1.32e MV"
 #ifndef SVN_VERSION
   #define SVN_VERSION Q3_VERSION
 #endif
@@ -43,12 +43,87 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define STEAMPATH_APPID			"2200"
 
 #define MAX_TEAMNAME            32
-#define MAX_MASTER_SERVERS      5	// number of supported master servers
+#define MAX_MASTER_SERVERS      24	// number of supported master servers
 
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#define USE_REFEREE_CMDS 1
+#define USE_SERVER_ROLES 1
+#ifdef USE_SERVER_ROLES
+#define MAX_CLIENT_ROLES        24
+#endif
+
+#define MV_PROTOCOL_VERSION	1 // multiview protocol version
+#define USE_MV				  // multiview enabled
+//#define USE_MV_ZCMD		// command compression
+
+#ifdef USE_MV
+#define USE_MULTIVM 1
+// enable loading multiple QVM images
+
+//#ifndef USE_CMD_CONNECTOR
+//#define USE_CMD_CONNECTOR 1
+//#endif
+// minimize the number of times the renderer restarts
+#define USE_LAZY_MEMORY 1
+
+#else // not USE_MV
+#undef USE_MULTIVM
+#undef USE_LAZY_MEMORY
+#undef USE_LAZY_LOAD
+#endif // USE_MV
+
+#ifdef USE_MULTIVM
+#undef MV_PROTOCOL_VERSION
+#define MV_MULTIWORLD_VERSION 2
+#define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
+
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+#endif
+
+#ifdef EMSCRIPTEN
+// TODO: convert local dedicated server to native using pthreads, possibly using `set dedicated 4 and 6` as flags
+#define USE_LOCAL_DED 1
+// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
+#define USE_VID_FAST 1
+// allow touch events to set exact cursor position using "cursor spy"
+#define USE_ABS_MOUSE 1
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+// minimize the number of times the renderer restarts
+#define USE_LAZY_MEMORY 1
+// set specific master servers to be used in the Local LAN game list, 
+//   as if masters were also used in LAN games instead of just broadcasting
+//   or to specific master servers that host games geographically nearby
+#define USE_MASTER_LAN 1
+// 
+#endif
+
+#ifdef USE_LAZY_LOAD
+// because of the nature of loading files lazily, spoofing checksums 
+//   allows repacking files, and still sending original checksum to pure servers
+#define USE_SPOOF_CHECKSUM 1
+//
+#endif
+
+#ifdef USE_LOCAL_DED
+// allows server to run any client command from remote to client, opposite of /rcon
+#define USE_CMD_CONNECTOR 1
+//
+#else
+//
+#undef USE_CMD_CONNECTOR
+//
+#endif
+
+
+#define GET_ABIT( byteArray, bitIndex ) ((byteArray)[ (bitIndex) / 8 ] & ( 1 << ( (bitIndex) & 7 ) ))
+#define SET_ABIT( byteArray, bitIndex ) (byteArray)[ (bitIndex) / 8 ] |= ( 1 << ( (bitIndex) & 7 ) )
+
 #define DEMOEXT	"dm_"			// standard demo extension
+#define SVDEMOEXT	"svdm_"		// server-side demo extension
 
 #ifdef _MSC_VER
 
@@ -859,8 +934,10 @@ const char *Info_NextPair( const char *s, char *key, char *value );
 int Info_RemoveKey( char *s, const char *key );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
+void Com_Outside_Error(int level, char *msg);
 void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
 void	QDECL Com_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
+void	QDECL Com_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 
 
 /*
@@ -1071,6 +1148,11 @@ typedef enum {
 #define	SNAPFLAG_RATE_DELAYED	1
 #define	SNAPFLAG_NOT_ACTIVE		2	// snapshot used during connection and for zombies
 #define SNAPFLAG_SERVERCOUNT	4	// toggled every map_restart so transitions can be detected
+
+#ifdef USE_MV
+#define SNAPFLAG_MULTIVIEW		8	// this snapshot built from multiview stream
+#endif
+
 
 //
 // per-level limits
@@ -1322,6 +1404,7 @@ typedef enum {
 	CA_LOADING,			// only during cgame initialization, never during main loop
 	CA_PRIMED,			// got gamestate, waiting for first frame
 	CA_ACTIVE,			// game views should be displayed
+//  CA_POSTGAME,    // post game stats should be displayed
 	CA_CINEMATIC		// playing a cinematic or a static pic, not connected to a server
 } connstate_t;
 
@@ -1400,6 +1483,18 @@ typedef enum _flag_status {
 	FLAG_DROPPED
 } flagStatus_t;
 
+
+typedef enum {
+	DS_NONE,
+
+	DS_WAITINGPLAYBACK, // demo will play after map_restart)
+	DS_PLAYBACK, // a demo is playing
+	DS_WAITINGSTOP, // demo is stopped but we must move clients over their normal slots
+
+	DS_RECORDING, // a demo is being recorded
+
+	DS_NUM_DEMO_STATES
+} demoState_t;
 
 
 #define	MAX_GLOBAL_SERVERS				4096

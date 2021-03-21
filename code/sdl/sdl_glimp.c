@@ -1,4 +1,4 @@
-/*
+	/*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
 
@@ -63,6 +63,10 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown( qboolean unloadDLL )
 {
+#ifdef USE_LAZY_MEMORY
+	// never shutdown here, will shut down when platform exits
+	return;
+#endif
 	IN_Shutdown();
 
 	SDL_DestroyWindow( SDL_window );
@@ -184,7 +188,11 @@ static SDL_HitTestResult SDL_HitTestFunc( SDL_Window *win, const SDL_Point *area
 GLimp_SetMode
 ===============
 */
+#ifdef EMSCRIPTEN
+static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan, qboolean webGL2 )
+#else
 static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+#endif
 {
 	glconfig_t *config = glw_state.config;
 	int perChannelColorBits;
@@ -290,7 +298,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 	{
 		// implicitly assume Z-buffer depth == desktop color depth
 		if ( colorBits > 16 )
-			depthBits = 24;
+		depthBits = 24;
 		else
 			depthBits = 16;
 	}
@@ -454,6 +462,16 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		{
 			if ( !SDL_glContext )
 			{
+#ifdef EMSCRIPTEN
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+				if(webGL2) {
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				} else {
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+					SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				}
+#endif
 				if ( ( SDL_glContext = SDL_GL_CreateContext( SDL_window ) ) == NULL )
 				{
 					Com_DPrintf( "SDL_GL_CreateContext failed: %s\n", SDL_GetError( ) );
@@ -468,6 +486,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 				Com_DPrintf( "SDL_GL_SetSwapInterval failed: %s\n", SDL_GetError( ) );
 			}
 
+#ifndef EMSCRIPTEN
 			SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &realColorBits[0] );
 			SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &realColorBits[1] );
 			SDL_GL_GetAttribute( SDL_GL_BLUE_SIZE, &realColorBits[2] );
@@ -475,6 +494,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 			SDL_GL_GetAttribute( SDL_GL_STENCIL_SIZE, &config->stencilBits );
 
 			config->colorBits = realColorBits[0] + realColorBits[1] + realColorBits[2];
+#endif
 		} // if ( !vulkan )
 
 
@@ -501,7 +521,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 		if ( icon )
 		{
 			SDL_SetWindowIcon( SDL_window, icon );
-			SDL_FreeSurface( icon );
+	SDL_FreeSurface( icon );
 		}
 #endif
 	}
@@ -536,7 +556,11 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 GLimp_StartDriverAndSetMode
 ===============
 */
+#ifdef EMSCRIPTEN
+static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan, qboolean webGL2 )
+#else
 static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vulkan )
+#endif
 {
 	rserr_t err;
 
@@ -563,7 +587,31 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 		Com_Printf( "SDL using driver \"%s\"\n", driverName );
 	}
 
+#ifndef EMSCRIPTEN
+	if(SDL_window) {
+		SDL_DisplayMode desktopMode;
+		int display = SDL_GetWindowDisplayIndex( SDL_window );
+		if ( SDL_GetDesktopDisplayMode( display, &desktopMode ) == 0 )
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = desktopMode.w;
+			glw_state.config->vidHeight = glw_state.desktop_height = desktopMode.h;
+		}
+		else
+		{
+			glw_state.config->vidWidth = glw_state.desktop_width = 640;
+			glw_state.config->vidHeight = glw_state.desktop_height = 480;
+		}
+		SDL_GL_GetDrawableSize( SDL_window, &glw_state.config->vidWidth, &glw_state.config->vidHeight );
+		Com_Printf( "...setting mode %d: %d %d\n", mode, glw_state.config->vidWidth, glw_state.config->vidHeight );
+		return RSERR_OK;
+	}
+#endif
+
+#ifdef EMSCRIPTEN
+	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan, webGL2 );
+#else
 	err = GLW_SetMode( mode, modeFS, fullscreen, vulkan );
+#endif
 
 	switch ( err )
 	{
@@ -582,6 +630,20 @@ static rserr_t GLimp_StartDriverAndSetMode( int mode, const char *modeFS, qboole
 
 
 /*
+=============
+RE_UpdateMode
+=============
+*/
+void GLimp_UpdateMode( glconfig_t *config ) {
+#ifdef EMSCRIPTEN
+	GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
+#else
+	GLW_SetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+#endif
+}
+
+
+/*
 ===============
 GLimp_Init
 
@@ -593,8 +655,10 @@ void GLimp_Init( glconfig_t *config )
 {
 	rserr_t err;
 
+#ifndef EMSCRIPTEN
 #ifndef _WIN32
 	InitSig();
+#endif
 #endif
 
 	Com_DPrintf( "GLimp_Init()\n" );
@@ -602,14 +666,26 @@ void GLimp_Init( glconfig_t *config )
 	glw_state.config = config; // feedback renderer configuration
 
 	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
+	Cvar_SetDescription(in_nograb, "Don't grab mouse when client in not in fullscreen mode\nDefault: 0");
 
 	r_allowSoftwareGL = Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
+	Cvar_SetDescription(r_allowSoftwareGL, "Toggle the use of the default software OpenGL driver\nDefault: 0");
 
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	Cvar_SetDescription( r_swapInterval, "Toggle frame swapping\nDefault: 0" );
 	r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	Cvar_SetDescription( r_stereoEnabled, "Enable stereo rendering for use with virtual reality headsets\nDefault: 0");
+
+#ifdef EMSCRIPTEN
+	Sys_GLimpInit();
+#endif
 
 	// Create the window and set up the context
+#ifndef EMSCRIPTEN
 	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse );
+#else
+	err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qfalse, qtrue );
+#endif
 	if ( err != RSERR_OK )
 	{
 		if ( err == RSERR_FATAL_ERROR )
@@ -618,6 +694,7 @@ void GLimp_Init( glconfig_t *config )
 			return;
 		}
 
+#ifndef EMSCRIPTEN
 		if ( r_mode->integer != 3 || ( r_fullscreen->integer && atoi( r_modeFullscreen->string ) != 3 ) )
 		{
 			Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
@@ -628,7 +705,21 @@ void GLimp_Init( glconfig_t *config )
 				return;
 			}
 		}
+#else
+		// instead of changing r_mode, which is just the default resolution,
+		//   we try a different opengl version
+		Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
+		if ( GLimp_StartDriverAndSetMode( r_mode->integer, "", r_fullscreen->integer, qfalse, qfalse ) != RSERR_OK )
+		{
+			// Nothing worked, give up
+			Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
+			return;
+		}
+#endif
 	}
+#ifdef EMSCRIPTEN
+	Sys_GLContextCreated();
+#endif
 
 	// These values force the UI to disable driver selection
 	config->driverType = GLDRV_ICD;
@@ -636,7 +727,9 @@ void GLimp_Init( glconfig_t *config )
 
 	Key_ClearStates();
 
+#ifndef EMSCRIPTEN
 	HandleEvents();
+#endif
 
 	// This depends on SDL_INIT_VIDEO, hence having it here
 	IN_Init();
@@ -687,15 +780,20 @@ void VKimp_Init( glconfig_t *config )
 	rserr_t err;
 
 #ifndef _WIN32
+#ifndef EMSCRIPTEN
 	InitSig();
+#endif
 #endif
 
 	Com_DPrintf( "VKimp_Init()\n" );
 
 	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
+	Cvar_SetDescription(in_nograb, "Don't grab mouse when client in not in fullscreen mode\nDefault: 0");
 
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	Cvar_SetDescription( r_swapInterval, "Toggle frame swapping\nDefault: 0" );
 	r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	Cvar_SetDescription( r_stereoEnabled, "Enable stereo rendering for use with virtual reality headsets\nDefault: 0");
 
 	// feedback to renderer configuration
 	glw_state.config = config;
@@ -735,7 +833,9 @@ void VKimp_Init( glconfig_t *config )
 
 	Key_ClearStates();
 
+#ifndef EMSCRIPTEN
 	HandleEvents();
+#endif
 
 	// This depends on SDL_INIT_VIDEO, hence having it here
 	IN_Init();

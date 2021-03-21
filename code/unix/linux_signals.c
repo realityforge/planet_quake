@@ -51,20 +51,22 @@ static void signal_handler( int sig )
 	printf( "Received signal %d, exiting...\n", sig );
 
 #ifdef _DEBUG
-	if ( sig == SIGSEGV || sig == SIGILL || sig == SIGBUS )
-	{
-		void *syms[10];
+	//if ( sig == SIGSEGV || sig == SIGILL || sig == SIGBUS )
+	//{
+		void *syms[20];
 		const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
 		backtrace_symbols_fd( syms, size, STDERR_FILENO );
-	}
+	//}
 #endif
 
 	signalcaught = qtrue;
 	sprintf( msg, "Signal caught (%d)", sig );
+	VM_Forced_Unload_Start();
 #ifndef DEDICATED
 	CL_Shutdown( msg, qtrue );
 #endif
 	SV_Shutdown( msg );
+	VM_Forced_Unload_Done();
 	Sys_Exit( 0 ); // send a 0 to avoid DOUBLE SIGNAL FAULT
 }
 

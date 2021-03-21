@@ -1,167 +1,231 @@
-# Quake3e
 
-[![build](../../workflows/build/badge.svg)](../../actions?query=workflow%3Abuild) * <a href="https://discord.gg/X3Exs4C"><img src="https://img.shields.io/discord/314456230649135105?color=7289da&logo=discord&logoColor=white" alt="Discord server" /></a>
+- [Compilation and installation](#compilation-and-installation)
+- [Console](#console)
+- [Docker](#docker)
+- [Running content server](#running-content-server)
+- [Repacking](#repacking)
+- [Building](#building)
+- [Contributing](#contributing)
+- [Credits](#credits)
 
-This is a modern Quake III Arena engine aimed to be fast, secure and compatible with all existing Q3A mods.
-It is based on last non-SDL source dump of [ioquake3](https://github.com/ioquake/ioq3) with latest upstream fixes applied.
 
-Go to [Releases](../../releases) section to download latest binaries for your platform or follow [Build Instructions](#build-instructions)
+# Reasons I quit working on this:
+- Chrome Network inspect no longer translate messages to UTF-8, only shows up in Base64
+- Compiling is really freaking slow, Emscripten changed something in 2020 to cause this and didn't make clear how my Makefile should change
+- Emscripten started generating separate .js.mem files, using `--memory-init-file 0` didn't help
+- Firefox is incredibly slow with this engine/renderer2 with GLSL
+- Unexplainable/punishing bugs. Can't figure out which function is being called and getting an error `function signature mismatch` but emscripten never tells me which function
+- No debugging symbols. Nothing lines up with files, offsets are wrong. Jumps to wrong places in code when clicking on exception messages or `.wasm[0xababab12e1]` some random hex offset that means nothing.
+- An unoptimized build -O0 is incredibly large, 150MB, but a slightly optimized build is not debuggable -O1 comes  out to like 5-15MB depending on the backend
 
-*This repository does not contain any game content so in order to play you must copy the resulting binaries into your existing Quake III Arena installation*
 
-**Key features**:
+                ,---------------------------------------------.
+                |   ____              _             _  _____  |
+                |  / __ \            | |           | |/ ____| |
+                | | |  | |_   _  __ _| | _____     | | (___   |
+                | | |  | | | | |/ _` | |/ / _ \_   | |\___ \  |
+                | | |__| | |_| | (_| |   |  __| |__| |____) | |
+                |  \___\_\\__,_|\__,_|_|\_\___|\____/|_____/  |
+                |                                             |
+                '----------- https://quake.games -------------'
+                                        
+This project derives from https://github.com/ec-/Quake3e and https://github.com/inolen/quakejs.
+It is not the intention of this project to add features that are not compatible with
+either of those two forks or the original Quake 3 source code release by id Software.
+The intention of this project is to give developers the tools needed to run Quake 3
+in a modern web browser, including Android Mobile Chrome.
 
-* optimized OpenGL renderer
-* optimized Vulkan renderer
-* raw mouse input support, enabled automatically instead of DirectInput(**\in_mouse 1**) if available
-* unlagged mouse events processing, can be reverted by setting **\in_lagged 1**
-* **\in_minimize** - hotkey for minimize/restore main window (win32-only, direct replacement for Q3Minimizer)
-* **\video-pipe** - to use external ffmpeg binary as an encoder for better quality and smaller output files
-* significally reworked QVM (Quake Virtual Machine)
-* improved server-side DoS protection, much reduced memory usage
-* raised filesystem limits (up to 20,000 maps can be handled in a single directory)
-* reworked Zone memory allocator, no more out-of-memory errors
-* non-intrusive support for SDL2 backend (video, audio, input), selectable at compile time
-* tons of bug fixes and other improvements
+QuakeJS is a port of [ioquake3](https://github.com/ioquake/ioq3) to JavaScript with the help of [Emscripten](https://emscripten.org/index.html).
 
-## Vulkan renderer
+To see a live demo, check out https://quake.games or http://www.quakejs.com
 
-Based on [Quake-III-Arena-Kenny-Edition](https://github.com/kennyalive/Quake-III-Arena-Kenny-Edition) with many additions:
+Some of the major features currently implemented are:
 
-* high-quality per-pixel dynamic lighting
-* very fast flares (**\r_flares 1**)
-* anisotropic filtering (**\r_ext_texture_filter_anisotropic**)
-* greatly reduced API overhead (call/dispatch ratio)
-* flexible vertex buffer memory management to allow loading huge maps
-* multiple command buffers to reduce processing bottlenecks
-* reversed depth buffer to eliminate z-fighting on big maps
-* merged lightmaps (atlases)
-* multitexturing optimizations
-* static world surfaces cached in VBO (**\r_vbo 1**)
-* useful debug markers for tools like RenderDoc
-* fixed framebuffer corruption on some Intel iGPUs
-* offscreen rendering, enabled with **\r_fbo 1**, all following requires it enabled:
-* `screenMap` texture rendering - to create realistic environment reflections
-* multisample anti-aliasing (**\r_ext_multisample**)
-* supersample anti-aliasing (**\r_ext_supersample**)
-* per-window gamma-correction which is important for screen-capture tools like OBS
-* you can minimize game window any time during **\video**|**\video-pipe** recording
-* high dynamic range render targets (**\r_hdr 1**) to avoid color banding
-* bloom post-processing effect
-* arbitrary resolution rendering
-* greyscale mode
+  * ...using OpenGL OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+  * A working repack script to convert game assets to be more web compatible
+  * [NippleJS](https://github.com/yoannmoinet/nipplejs) mobile support
+  * A content server (NodeJS + express) to repack and live-reload the game as you develop
+  * A SOCKS5 server to convert web-socket connections to UDP and connect to any standard Quake 3 server
+  * Various mod disassemblies for associating hard-coded shaders with files even if the mod isn't open source
+  * Various graphs of mods, including file names for repacked content
+  * PNG support
+  * Docker support
+  * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
+  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports. TODO: add touch absolute mouse subtraction and addition with optional variable for cursor spy shader name.
+  * Deferred (lazy) loading of all game content, entities, models, textures. New `cl_lazyLoad` cvar, 0 - turn off lazy loading, only load textures available on disk, 1 - load all textures available and fetch remotely as needed, 2 - set all to default and try to load from `sv_dlURL`, TODO: 3 - load textures only during INTERMISSION or dead or SPECTATING, 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes). TODO: load lowest quality until displayed using a palette defined in a .shader. TODO: leave files open for changing mip levels (especially on DDS)? TODO: lazy loading file streaming out of pk3 on server over UDP or cURL interface.
+  * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
+  * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients. TODO: add dedicated server to native
+  * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
+  * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. MultiVM command `\load <ui,cgame,game>; \mvjoin`. `\mvtile` display views in a grid. TODO: playing back dm_68 files for all players. TODO: fast forward, rewind 10 seconds using baseline indexes in demo files.
+  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"` TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: Drag and drop for multiQVM views. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: connect to multiple servers at the same time.
+  * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
+  * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
+  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
+  * Checksum pk3 spoofing for playing with original clients using web converted files.
+  * Many, many bug fixes
 
-In general, not counting offscreen rendering features you might expect from 10% to 200%+ FPS increase comparing to KE's original version
+Coming soon!
+  * TODO: (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, add swGL https://github.com/h0MER247/swGL as last chance, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy https://github.com/rohanrhu/cebsocket, run without dedicated server worker in single thread on mobile (bring back (also on native builds) r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content, fix sound in debug build mode and asm.js build, pre-download content like the repack graph mode sets up so less is downloaded in game, use lvlworld.cfg and autoconfig after so people can save their settings (need a way to exit "preview mode" and play the game with networking, simple menu items in preview mode "start game" option), move console background image API to server-side with console instead of mod side like in e+/freon.
+  * Popup keyboard on mobile, somehow detecting a text box from UIVM, might not work on all mods. 
+  * Fix r_fbo and add pixel buffer objects for recordings. Send PBO to a worker thread to encode to VPX web-assembly.
+  * Make all game code entry points asynchronous with engine to run all QVMs in web workers/pthreads. Pause VM for async calls between engine and VM. Allow different VMs on file system by using more search directories and Pure server calls for filtering.
+  * Payment API for micropayments to access server or content https://developers.google.com/web/fundamentals/codelabs/payment-request-api
+  * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
+  * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
+  * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
+  * Alternate chat server integration, discord and telegram
+  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay
+  * Use com_journal instead of index.json (or manifest.json in quakejs)
+  * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
+  * HTML and CSS menu renderer
+  * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
+  * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
+  * r_smp 2 Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
+  * Always on twitch.tv streaming at no expense to the game server
+  * Shader palettes for pre-rendering colors and changing the theme of maps
+  * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
+  * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
+  * Brotli compression for game content from server UDP downloads
+  * Asynchronous rendering for portals, mirrors, demos, videos, etc
+  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
+  * Ported IQM and MD5 bone structures from spearmint engine
+  * Synchronized server/AI for offline and connection interruptions
+  * Repacking-as-a-service, uploader for repacking game content
+  * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
+  * Push notifications through web browser for pickup matches
+  * Procedurally generated game content and maps, create voxelized model on server aka "destructible model" and stream to client, replace using z-index?
+  * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
+  * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
+  * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
+  * Server moderator permissions, admins can set sv_modCmds and sv_modCvars to allow moderator passwords modpassword1-3 to only change specific settings, like maps, bans, allowing voting, but not change games like fs_basepath and fs_game.
+  * Updated WebGL renderer
 
-Highly recommended to use on modern systems
+The map editor and associated compiling tools are not included. We suggest you
+use a modern copy from http://icculus.org/gtkradiant/.
 
-## OpenGL renderer
+# Compilation and installation
+See [QuakeJS README](https://github.com/briancullinan/planet_quake/tree/master/code/xquakejs#quakejs) for more build instructions.
 
-Based on classic OpenGL renderers from [idq3](https://github.com/id-Software/Quake-III-Arena)/[ioquake3](https://github.com/ioquake/ioq3)/[cnq3](https://bitbucket.org/CPMADevs/cnq3)/[openarena](https://github.com/OpenArena/engine), features:
+As a prerequisite, you will need to install the dependencies specific to your
+ operating system from ioq3 https://github.com/ioquake/ioq3#compilation-and-installation
 
-* OpenGL 1.1 compatible, uses features from newer versions whenever available
-* high-quality per-pixel dynamic lighting, can be triggered by **\r_dlightMode** cvar
-* merged lightmaps (atlases)
-* static world surfaces cached in VBO (**\r_vbo 1**)
-* all set of offscreen rendering features mentioned in Vulkan renderer, plus:
-* bloom reflection post-processing effect
+```
+# install python2? python3?
+git clone --recurse-submodules --remote-submodules git@github.com:briancullinan/planet_quake.git
+cd planet_quake
+```
+or 
+```
+git submodule update --init
+```
+then
+```
+./code/xquakejs/lib/emsdk/emsdk install latest-upstream
+./code/xquakejs/lib/emsdk/emsdk activate latest
+./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib
+make PLATFORM=js
+```
 
-Performance is usually greater or equal to other opengl1 renderers
+Binaries will be placed in `planet_quake/build/release-js-js/`.
 
-## OpenGL2 renderer
+For instructions on how to build a native dedicated server please see the
+ requirements on ioq3 https://github.com/ioquake/ioq3#compilation-and-installation
 
-Original ioquake3 renderer, performance is very poor on non-nvidia systems, unmaintained
+# Console
 
-## Build Instructions
+See the console commands from ioq3 https://github.com/ioquake/ioq3#console
 
-### windows/msvc
+Some client variables have been set by default for compatibility, those are listed here:
+https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_browser.js
 
-Install Visual Studio Community Edition 2017 or later and compile `quake3e` project from solution
+# Docker
 
-`code/win32/msvc2017/quake3e.sln`
+Build the image from this repository:
 
-Copy resulting exe from `code/win32/msvc2017/output` directory
+`docker build -t quake3e .` or `docker build --target builder .`
 
-To compile with Vulkan backend - clean solution, right click on `quake3e` project, find `Project Dependencies` and select `renderervk` instead of `renderer`
+Grab latest from dockerhub
 
----
+`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 1081:1081 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
 
-### windows/mingw
+After the image is built and running, you can skip repeating the conversion process:
 
-All build dependencies (libraries, headers) are bundled-in
+`docker commit quake3e quake3e`
 
-Build with either `make ARCH=x86` or `make ARCH=x86_64` commands depending on your target system, then copy resulting binaries from created `build` directory or use command:
+`docker start -i quake3e`
 
-`make install DESTDIR=<path_to_game_files>`
+To copy the built dedicated server out of the docker container, probably should just use cross-compiling with make:
 
----
+`docker cp quake3e:/tmp/build/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 ./build/`
 
-### linux/bsd
+# Running content server
 
-You may need to run the following commands to install packages (using fresh ubuntu-18.04 installation as example):
+`npm run start -- /assets/baseq3-cc ~/.quake3/baseq3-cc`
 
-* sudo apt install make gcc libcurl4-openssl-dev mesa-common-dev
-* sudo apt install libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev
-* sudo apt install libsdl2-dev
+This starts the web server with converted files from all pk3s.
 
-Build with: `make`
+Long version: repak.js has some limitations, defrag crashed on unicode,
+then again in the parser because of backtracking. After the bugs we fixed all
+kinds of assets were missing, some maps had no textures, some weapons don't
+load. This led me to _really_ think about the graphing problem. 
+QVMs have compiled strings and all different
+sorts of methods for loading files. Maps are fairly consistent but also have
+shaders that different games or engines interpret. Map makers and modders also
+leave files hanging around, some have entire copies of websites and
+documentation. We can't get a perfect graph, so I made the render lazy loading
+capable and thats more consistent, TODO: a combination solution would be best
+downloading and using pk3s for `sv_pure` validation, and using a directory
+of unpacked 'flat' files available for download.
 
-Copy the resulting binaries from created `build` directory or use command:
+# Repacking
 
-`make install DESTDIR=<path_to_game_files>`
+`npm run repack -- /Applications/ioquake3/baseq3`
 
----
+Run repack on the baseq3 mod, default location is HOME directory/.quake3/baseq3-cc
 
-### raspberry pi os
+`npm run repack -- --no-graph --no-overwrite /Applications/ioquake3/baseq3`
 
-Install the build dependencies:
+Turn off graphics and repack content into same pk3s. This mode is good if there
+is a small amount of content for a particular mod, and a very clear distinction
+between map content or downloadable content.
 
-* apt install libsdl2-dev libxxf86dga-dev libcurl4-openssl-dev
+Basic repacking steps:
 
-Build with: `make`
+1) baseq3-c - unpacks the mod and all pk3s
+2) Analyze QVMs (requires a python2 environment)
+3) baseq3-cc - flat files with converted images and audio
+4) baseq3-ccr - repacked files using new index.json
 
-Copy the resulting binaries from created `build` directory or use command:
+# Building
 
-`make install DESTDIR=<path_to_game_files>`
+Derives from [Quake3e Github](https://github.com/ec-/Quake3e#build-instructions)
 
----
+and
 
-### macos
+[QuakeJS Github](https://github.com/inolen/quakejs#building-binaries)
 
-* install the official SDL2 framework to /Library/Frameworks
-* `brew install molten-vk` or install Vulkan SDK to use MoltenVK library
+It's also good to have understanding of Emscripten:
 
-Build with: `make`
+[Emscripten docs](https://emscripten.org/docs/building_from_source/toolchain_what_is_needed.html)
 
-Copy the resulting binaries from created `build` directory
+# Contributing
 
----
+Use [Issue tracker on Github](https://github.com/briancullinan/planet_quake/issues)
 
-Several make options are available for linux/mingw/macos builds:
+# Credits
 
-`BUILD_CLIENT=1` - build unified client/server executable, enabled by default
+Maintainers
 
-`BUILD_SERVER=1` - build dedicated server executable, enabled by default
+  * Brian J. Cullinan <megamindbrian@gmail.com>
+  * Anyone else? Looking for volunteers.
 
-`USE_SDL=0`- use SDL2 backend for video, audio, input subsystems, disabled by default, enforced for macos
+Significant contributions from
 
-`USE_VULKAN=0` - link client with vulkan renderer instead of OpenGL, disabled by default, works only with single renderer builds
-
-`USE_RENDERER_DLOPEN=1` - do not link single renderer into client binary, compile all renderers (ignoring USE_VULKAN setting) as dynamic libraries and allow to switch them on the fly via `\cl_renderer` cvar, enabled by default
-
-`USE_SYSTEM_JPEG=0` - use current system JPEG library, disabled by default
-
-Example:
-
-`make BUILD_SERVER=0 USE_RENDERER_DLOPEN=0 USE_VULKAN=1` - which means do not build dedicated binary, build client with single static vulkan renderer
-
-## Contacts
-
-Discord channel: https://discordapp.com/invite/X3Exs4C
-
-## Links
-
-* https://bitbucket.org/CPMADevs/cnq3
-* https://github.com/ioquake/ioq3
-* https://github.com/kennyalive/Quake-III-Arena-Kenny-Edition
-* https://github.com/OpenArena/engine
+  * @klaussilveira, @inolen, @NTT123 (JS build mode)
+  * Ryan C. Gordon <icculus@icculus.org>
+  * Andreas Kohn <andreas@syndrom23.de>
+  * Joerg Dietrich <Dietrich_Joerg@t-online.de>
+  * Stuart Dalton <badcdev@gmail.com>
+  * Vincent S. Cojot <vincent at cojot dot name>
+  * optical <alex@rigbo.se>
+  * Aaron Gyes <floam@aaron.gy>

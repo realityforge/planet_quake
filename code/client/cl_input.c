@@ -89,7 +89,7 @@ static cvar_t *m_filter;
 static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[cgvm].ps.delta_angles[PITCH]);
 }
 
 static void IN_MLookDown( void ) {
@@ -108,7 +108,7 @@ static void IN_MLookUp( void ) {
 static void IN_KeyDown( kbutton_t *b ) {
 	const char *c;
 	int	k;
-
+	
 	c = Cmd_Argv(1);
 	if ( c[0] ) {
 		k = atoi(c);
@@ -119,7 +119,7 @@ static void IN_KeyDown( kbutton_t *b ) {
 	if ( k == b->down[0] || k == b->down[1] ) {
 		return;		// repeating key
 	}
-
+	
 	if ( !b->down[0] ) {
 		b->down[0] = k;
 	} else if ( !b->down[1] ) {
@@ -128,7 +128,7 @@ static void IN_KeyDown( kbutton_t *b ) {
 		Com_Printf ("Three keys down for a button!\n");
 		return;
 	}
-
+	
 	if ( b->active ) {
 		return;		// still down
 	}
@@ -297,7 +297,7 @@ Moves the local angle positions
 */
 static void CL_AdjustAngles( void ) {
 	float	speed;
-
+	
 	if ( in_speed.active ) {
 		speed = 0.001 * cls.frametime * cl_anglespeedkey->value;
 	} else {
@@ -327,7 +327,7 @@ static void CL_KeyMove( usercmd_t *cmd ) {
 
 	//
 	// adjust for speed key / running
-	// the walking flag is to keep animations consistent
+	// the walking flag is to keep animations consistant
 	// even during acceleration and develeration
 	//
 	if ( in_speed.active ^ cl_run->integer ) {
@@ -362,16 +362,43 @@ static void CL_KeyMove( usercmd_t *cmd ) {
 }
 
 
+void Spy_CursorPosition(float x, float y) {
+	cls.cursorx = x;
+	cls.cursory = y;
+}
+
+void Spy_Banner(float x, float y) {
+#ifdef EMSCRIPTEN
+	Sys_EventMenuChanged(x, y);
+#endif
+}
 /*
 =================
 CL_MouseEvent
 =================
 */
+#ifndef USE_ABS_MOUSE
 void CL_MouseEvent( int dx, int dy, int time ) {
+#else
+void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
+#endif
+;
+	CM_SwitchMap(clc.currentView);
+	cgvm = clc.currentView;
+#ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
+		if(absolute) {
+			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
+		} else {
+			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
+		}
+		return;
+	}
+#endif
+	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
+		VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		VM_Call( cgvm, 2, CG_MOUSE_EVENT, dx, dy );
+		VM_Call( cgvms[cgvm], 2, CG_MOUSE_EVENT, dx, dy );
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
@@ -452,27 +479,27 @@ static void CL_MouseMove( usercmd_t *cmd )
 		mx = cl.mouseDx[cl.mouseIndex];
 		my = cl.mouseDy[cl.mouseIndex];
 	}
-
+	
 	cl.mouseIndex ^= 1;
 	cl.mouseDx[cl.mouseIndex] = 0;
 	cl.mouseDy[cl.mouseIndex] = 0;
 
 	if (mx == 0.0f && my == 0.0f)
 		return;
-
+	
 	if (cl_mouseAccel->value != 0.0f)
 	{
 		if(cl_mouseAccelStyle->integer == 0)
 		{
 			float accelSensitivity;
 			float rate;
-
+			
 			rate = sqrt(mx * mx + my * my) / (float) frame_msec;
 
 			accelSensitivity = cl_sensitivity->value + rate * cl_mouseAccel->value;
 			mx *= accelSensitivity;
 			my *= accelSensitivity;
-
+			
 			if(cl_showMouseRate->integer)
 				Com_Printf("rate: %f, accelSensitivity: %f\n", rate, accelSensitivity);
 		}
@@ -540,7 +567,7 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	// figure button bits
 	// send a button bit even if the key was pressed and released in
 	// less than a frame
-	//
+	//	
 	for ( i = 0 ; i < ARRAY_LEN( in_buttons ); i++ ) {
 		if ( in_buttons[i].active || in_buttons[i].wasPressed ) {
 			cmd->buttons |= 1 << i;
@@ -594,7 +621,7 @@ static usercmd_t CL_CreateCmd( void ) {
 
 	// keyboard angle adjustment
 	CL_AdjustAngles ();
-
+	
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
 	CL_CmdButtons( &cmd );
@@ -613,7 +640,7 @@ static usercmd_t CL_CreateCmd( void ) {
 		cl.viewangles[PITCH] = oldAngles[PITCH] + 90;
 	} else if ( oldAngles[PITCH] - cl.viewangles[PITCH] > 90 ) {
 		cl.viewangles[PITCH] = oldAngles[PITCH] - 90;
-	}
+	} 
 
 	// store out the final values
 	CL_FinishMove( &cmd );
@@ -697,8 +724,8 @@ static qboolean CL_ReadyToSendPacket( void ) {
 
 	// if we don't have a valid gamestate yet, only send
 	// one packet a second
-	if ( cls.state != CA_ACTIVE &&
-		cls.state != CA_PRIMED &&
+	if ( cls.state != CA_ACTIVE && 
+		cls.state != CA_PRIMED && 
 		!*clc.downloadTempName &&
 		cls.realtime - clc.lastPacketSentTime < 1000 ) {
 		return qfalse;
@@ -778,6 +805,12 @@ void CL_WritePacket( void ) {
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
+	
+#ifdef USE_MULTIVM
+	if(cl.snap[cgvm].multiview) {
+		MSG_WriteByte( &buf, cgvm );
+	}
+#endif
 
 	// write any unacknowledged clientCommands
 	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
@@ -790,7 +823,11 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
+#ifdef USE_MULTIVM
+	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cgvm - cl_packetdup->integer) & PACKET_MASK;
+#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
+#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
@@ -802,8 +839,8 @@ void CL_WritePacket( void ) {
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
-			|| clc.serverMessageSequence != cl.snap.messageNum ) {
+		if ( cl_nodelta->integer || !cl.snap[cgvm].valid || clc.demowaiting
+			|| clc.serverMessageSequence != cl.snap[cgvm].messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
 			MSG_WriteByte (&buf, clc_move);
@@ -874,7 +911,22 @@ void CL_SendCmd( void ) {
 		return;
 	}
 
+#ifdef USE_MULTIVM
+	// TODO: make optional based on game setup, 
+	//   e.g. clone world with multiple simultaneous game types, 
+	//     deathmatch players are unaware they are also participating in CTF
+	//   e.g. dead world versus living world, like respawn in WoW, 
+	//     different enemies in dead world for powerups like in Prey
+	int i = 0;
+	do {
+		if(i > 0 && !cgvms[i]) continue;
+		//if(i != clc.currentView) continue;
+		cgvm = i;
+		CL_WritePacket();
+	} while(++i < MAX_NUM_VMS);
+#else
 	CL_WritePacket();
+#endif
 }
 
 
@@ -886,53 +938,78 @@ CL_InitInput
 void CL_InitInput( void ) {
 	Cmd_AddCommand ("centerview",IN_CenterView);
 
+	Cmd_SetDescription("centerview", "Quickly move current view to the center of screen\nUsage: bind <key> centerview");
 	Cmd_AddCommand ("+moveup",IN_UpDown);
+	Cmd_SetDescription("+moveup", "Start moving up (jump, climb up, swim up)\nUsage: bind <key> +moveup");
 	Cmd_AddCommand ("-moveup",IN_UpUp);
 	Cmd_AddCommand ("+movedown",IN_DownDown);
+	Cmd_SetDescription("+movedown", "Start moving down (crouch, climb down, swim down)\nUsage: bind <key> +movedown");
 	Cmd_AddCommand ("-movedown",IN_DownUp);
 	Cmd_AddCommand ("+left",IN_LeftDown);
+	Cmd_SetDescription("+left", "Start turning left\nUsage: bind <key> +left");
 	Cmd_AddCommand ("-left",IN_LeftUp);
 	Cmd_AddCommand ("+right",IN_RightDown);
+	Cmd_SetDescription("+right", "Start turning right\nUsage: bind <key> +right");
 	Cmd_AddCommand ("-right",IN_RightUp);
 	Cmd_AddCommand ("+forward",IN_ForwardDown);
+	Cmd_SetDescription("+forward", "Start moving forward\nUsage: bind <key> +forward");
 	Cmd_AddCommand ("-forward",IN_ForwardUp);
 	Cmd_AddCommand ("+back",IN_BackDown);
+	Cmd_SetDescription("+back", "Start moving backwards\nUsage: bind <key> +back");
 	Cmd_AddCommand ("-back",IN_BackUp);
 	Cmd_AddCommand ("+lookup", IN_LookupDown);
+	Cmd_SetDescription("+lookup", "Start looking up\nUsage: bind <key> +lookup");
 	Cmd_AddCommand ("-lookup", IN_LookupUp);
 	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
+	Cmd_SetDescription("+lookdown", "Start looking down\nUsage: bind <key> +lookdown");
 	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
 	Cmd_AddCommand ("+strafe", IN_StrafeDown);
+	Cmd_SetDescription("+strafe", "Start changing directional movement into strafing movement\nUsage: bind <key> +strafe");
 	Cmd_AddCommand ("-strafe", IN_StrafeUp);
 	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
+	Cmd_SetDescription("+moveleft", "Start strafing to the left\nUsage: bind <key> +moveleft");
 	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
 	Cmd_AddCommand ("+moveright", IN_MoverightDown);
+	Cmd_SetDescription("+moveright", "Start strafing to the right\nUsage: bind <key> +moveright");
 	Cmd_AddCommand ("-moveright", IN_MoverightUp);
 	Cmd_AddCommand ("+speed", IN_SpeedDown);
+	Cmd_SetDescription("+speed", "Speed toggle bound to shift key by default toggles run/walk\nUsage: bind <key> +speed");
 	Cmd_AddCommand ("-speed", IN_SpeedUp);
 	Cmd_AddCommand ("+attack", IN_Button0Down);
+	Cmd_SetDescription("+attack", "Start attacking (shooting, punching)\nUsage: bind <key> +attack");
 	Cmd_AddCommand ("-attack", IN_Button0Up);
 	Cmd_AddCommand ("+button0", IN_Button0Down);
+	Cmd_SetDescription("+button0", "Start firing same as mouse button 1 (fires weapon)\nUsage: bind <key> +button0");
 	Cmd_AddCommand ("-button0", IN_Button0Up);
 	Cmd_AddCommand ("+button1", IN_Button1Down);
+	Cmd_SetDescription("+button1", "Start displaying chat bubble\nUsage: bind <key> +button1");
 	Cmd_AddCommand ("-button1", IN_Button1Up);
 	Cmd_AddCommand ("+button2", IN_Button2Down);
+	Cmd_SetDescription("+button2", "Start using items (same as enter)\nUsage: bind <key> +button2");
 	Cmd_AddCommand ("-button2", IN_Button2Up);
 	Cmd_AddCommand ("+button3", IN_Button3Down);
+	Cmd_SetDescription("+button3", "Start player taunt animation\nUsage: bind <key> +button3");
 	Cmd_AddCommand ("-button3", IN_Button3Up);
 	Cmd_AddCommand ("+button4", IN_Button4Down);
+	Cmd_SetDescription("+button4", "Fixed +button4 not causing footsteps\nUsage: bind <key> +button4");
 	Cmd_AddCommand ("-button4", IN_Button4Up);
 	Cmd_AddCommand ("+button5", IN_Button5Down);
+	Cmd_SetDescription("+button5", "Used for MODS also used by Team Arena Mission Pack\nUsage: bind <key> +button5");
 	Cmd_AddCommand ("-button5", IN_Button5Up);
 	Cmd_AddCommand ("+button6", IN_Button6Down);
+	Cmd_SetDescription("+button6", "Used for MODS also used by Team Arena Mission Pack\nUsage: bind <key> +button6");
 	Cmd_AddCommand ("-button6", IN_Button6Up);
 	Cmd_AddCommand ("+button7", IN_Button7Down);
+	Cmd_SetDescription("+button7", "Start hand signal, player model looks like it's motioning to team \"move forward\"\nUsage: bind <key> +button7");
 	Cmd_AddCommand ("-button7", IN_Button7Up);
 	Cmd_AddCommand ("+button8", IN_Button8Down);
+	Cmd_SetDescription("+button8", "Start hand signal, player model looks like it's motioning to team \"come here\"\nUsage: bind <key> +button8");
 	Cmd_AddCommand ("-button8", IN_Button8Up);
 	Cmd_AddCommand ("+button9", IN_Button9Down);
+	Cmd_SetDescription("+button9", "Stop hand signal, player model looks like it's motioning to team \"come to my left side\"\nUsage: bind <key> +button9");
 	Cmd_AddCommand ("-button9", IN_Button9Up);
 	Cmd_AddCommand ("+button10", IN_Button10Down);
+	Cmd_SetDescription("+button10", "Start hand signal, player model looks like it's motioning to team \"come to my right side\"\nUsage: bind <key> +button10");
 	Cmd_AddCommand ("-button10", IN_Button10Up);
 	Cmd_AddCommand ("+button11", IN_Button11Down);
 	Cmd_AddCommand ("-button11", IN_Button11Up);
@@ -945,46 +1022,68 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("+button15", IN_Button15Down);
 	Cmd_AddCommand ("-button15", IN_Button15Up);
 	Cmd_AddCommand ("+mlook", IN_MLookDown);
+	Cmd_SetDescription("+mlook", "Start using mouse movements to control head movement\nUsage: bind <key> +mlook");
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
+	Cvar_SetDescription( cl_nodelta, "Disable delta compression (slows net performance, not recommended)\nDefault: 0" );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
+	Cvar_SetDescription( cl_debugMove, "Used for debugging movement, shown in debug graph\nDefault: 0" );
 
 	cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
+	Cvar_SetDescription( cl_showSend, "Show network packets as they are sent\nDefault: 0" );
 
 	cl_yawspeed = Cvar_Get( "cl_yawspeed", "140", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_yawspeed, "Set the yaw rate when +left and/or +right are active\nDefault: 140" );
 	cl_pitchspeed = Cvar_Get( "cl_pitchspeed", "140", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_pitchspeed, "Set the pitch rate when +lookup and/or +lookdown are active\nDefault: 140" );
 	cl_anglespeedkey = Cvar_Get( "cl_anglespeedkey", "1.5", 0 );
+	Cvar_SetDescription( cl_anglespeedkey, "Set the speed that the direction keys (not mouse) change the view angle\nDefault: 1.5" );
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "60", CVAR_ARCHIVE );
 	Cvar_CheckRange( cl_maxpackets, "15", "125", CV_INTEGER );
+	Cvar_SetDescription(cl_maxpackets, "Set the transmission packet size or how many packets are sent to client\nDefault: 60");
 	cl_packetdup = Cvar_Get( "cl_packetdup", "1", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_packetdup, "0", "5", CV_INTEGER );
+	Cvar_SetDescription(cl_packetdup, "How many times should a packet try to resend to the server\nDefault: 1");
 
 	cl_run = Cvar_Get( "cl_run", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(cl_run, "Default to player running instead of walking\nDefault: 1");
 	cl_sensitivity = Cvar_Get( "sensitivity", "5", CVAR_ARCHIVE );
+	Cvar_SetDescription(cl_sensitivity, "Set how far your mouse moves in relation to travel on the mouse pad\nDefault: 5");
 	cl_mouseAccel = Cvar_Get( "cl_mouseAccel", "0", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_mouseAccel, "Toggle the use of mouse acceleration\nDefault: 0");
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_freelook, "Toggle the use of freelook with the mouse, looking up or down\nDefault: 1");
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
 	cl_mouseAccelStyle = Cvar_Get( "cl_mouseAccelStyle", "0", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( cl_mouseAccelStyle, "Change the style of mouse acceleration in a given direction\n1 - the mouse speeds up\n2 - becomes more sensitive as it continues in one direction\nDefault 0");
 	// offset for the power function (for style 1, ignored otherwise)
 	// this should be set to the max rate value
 	cl_mouseAccelOffset = Cvar_Get( "cl_mouseAccelOffset", "5", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_mouseAccelOffset, "0.001", "50000", CV_FLOAT );
+	Cvar_SetDescription(cl_mouseAccelOffset, "Mouse acceleration aplifier\nDefault: 0.001");
 
-	cl_showMouseRate = Cvar_Get( "cl_showmouserate", "0", 0 );
+	cl_showMouseRate = Cvar_Get ("cl_showmouserate", "0", 0);
+	Cvar_SetDescription(cl_showMouseRate, "Show the mouse rate of mouse samples per frame\nDefault: 0");
 
 	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(m_pitch, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.022");
 	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(m_yaw, "Set the speed at which the player's screen moves left and right while using the mouse\nDefault: 0.022");
 	m_forward = Cvar_Get( "m_forward", "0.25", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription(m_forward, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 	m_side = Cvar_Get( "m_side", "0.25", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( m_side, "Set the strafe movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 #ifdef MACOS_X
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get( "m_filter", "1", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 1");
 #else
 	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE_ND );
+	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 0");
 #endif
 }
 
