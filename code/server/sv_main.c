@@ -24,7 +24,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
-vm_t			*gvm = NULL;		// game virtual machine
+int       gvm = 0;
+vm_t			*gvms[MAX_NUM_VMS] = {};		// game virtual machine
+//#ifdef USE_MULTIVM
+int       gameWorlds[MAX_NUM_VMS];
+//#endif
 
 cvar_t	*sv_fps;				// time rate for running non-clients
 cvar_t	*sv_timeout;			// seconds without any message
@@ -36,9 +40,36 @@ cvar_t	*sv_maxclients;
 cvar_t	*sv_maxclientsPerIP;
 cvar_t	*sv_clientTLD;
 
+#ifdef USE_MV
+fileHandle_t	sv_demoFile = FS_INVALID_HANDLE;
+char	sv_demoFileName[ MAX_OSPATH ];
+char	sv_demoFileNameLast[ MAX_OSPATH ];
+int		sv_demoClientID; // current client
+int		sv_lastAck;
+int		sv_lastClientSeq;
+
+cvar_t	*sv_mvClients;
+cvar_t	*sv_mvPassword;
+cvar_t	*sv_demoFlags;
+cvar_t	*sv_mvAutoRecord;
+cvar_t  *sv_autoRecordThreshold;
+
+cvar_t	*sv_mvFileCount;
+cvar_t	*sv_mvFolderSize;
+#endif
+
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
+#ifdef USE_SERVER_ROLES
+cvar_t  *sv_roles;
+cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];		// master server ip address
+cvar_t	*sv_role[MAX_CLIENT_ROLES];		// master server ip address
+cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
+#endif
+#ifdef USE_REFEREE_CMDS
+cvar_t  *sv_frozen;
+#endif
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
 cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down
@@ -61,6 +92,23 @@ cvar_t *sv_filter;
 cvar_t	*sv_banFile;
 serverBan_t serverBans[SERVER_MAXBANS];
 int serverBansCount = 0;
+#endif
+
+cvar_t	*sv_democlients;		// number of slots reserved for playing a demo
+cvar_t	*sv_demoState;
+cvar_t	*sv_autoDemo;
+cvar_t  *sv_autoRecord;
+cvar_t	*cl_freezeDemo; // to freeze server-side demos
+cvar_t	*sv_demoTolerant;
+
+#ifdef USE_LNBITS
+cvar_t  *sv_lnMatchPrice;
+cvar_t  *sv_lnMatchCut;
+cvar_t  *sv_lnMatchReward;
+cvar_t  *sv_lnWallet;
+cvar_t  *sv_lnKey;
+cvar_t  *sv_lnAPI;
+cvar_t  *sv_lnWithdraw;
 #endif
 
 /*
@@ -167,6 +215,7 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
+
 	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
 }
 
@@ -191,6 +240,9 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	va_end( argptr );
 
 	if ( cl != NULL ) {
+#ifdef USE_MULTIVM
+		if(cl->gameWorld != gvm) return;
+#endif
 		// outdated clients can't properly decode 1023-chars-long strings
 		// http://aluigi.altervista.org/adv/q3msgboom-adv.txt
 		if ( len <= 1022 || cl->longstr ) {
@@ -204,9 +256,18 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 		Com_Printf( "broadcast: %s\n", SV_ExpandNewlines( message ) );
 	}
 
+	// save broadcasts to demo
+	// note: in the case a command is only issued to a specific client, it is NOT recorded (see above when cl != NULL). If you want to record them, just place this code above, but be warned that it may be dangerous (such as "disconnect" command) because server commands will be replayed to every connected clients!
+	if ( sv.demoState == DS_RECORDING ) {
+		SV_DemoWriteServerCommand( (char *)message );
+	}
+
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
+#ifdef USE_MULTIVM
+			if(client->gameWorld != gvm) continue;
+#endif
 			SV_AddServerCommand( client, message );
 		}
 	}
@@ -256,7 +317,7 @@ static void SV_MasterHeartbeat( const char *message )
 	// send to group masters
 	for (i = 0; i < MAX_MASTER_SERVERS; i++)
 	{
-		if(!sv_master[i]->string[0])
+		if(!sv_master[i] || !sv_master[i]->string[0])
 			continue;
 
 		// see if we haven't already resolved the name or if it's been over 24 hours
@@ -282,6 +343,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string );
 			}
+#ifndef EMSCRIPTEN
 #ifdef USE_IPV6
 			if(netenabled & NET_ENABLEV6)
 			{
@@ -299,6 +361,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string );
 			}
+#endif
 #endif
 		}
 
@@ -659,6 +722,10 @@ static void SVC_Status( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
+#ifdef USE_LOCAL_DED
+	// allow people to connect to your single player server
+	if(!com_dedicated->integer)
+#endif
 	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
@@ -729,6 +796,10 @@ static void SVC_Info( const netadr_t *from ) {
 
 	// ignore if we are in single player
 #ifndef DEDICATED
+#ifdef USE_LOCAL_DED
+	// allow people to connect to your single player server
+	if(!com_dedicated->integer)
+#endif
 	if ( Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;
 	}
@@ -782,13 +853,15 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
 	Info_SetValueForKey(infostring, "g_humanplayers", va("%i", humans));
 	Info_SetValueForKey( infostring, "sv_maxclients", 
-		va("%i", sv_maxclients->integer - sv_privateClients->integer ) );
+		va("%i", sv_maxclients->integer - sv_privateClients->integer - sv_democlients->integer ) );
 	Info_SetValueForKey( infostring, "gametype", va("%i", sv_gametype->integer ) );
 	Info_SetValueForKey( infostring, "pure", va("%i", sv_pure->integer ) );
 	Info_SetValueForKey(infostring, "g_needpass", va("%d", Cvar_VariableIntegerValue("g_needpass")));
 	gamedir = Cvar_VariableString( "fs_game" );
 	if( *gamedir ) {
 		Info_SetValueForKey( infostring, "game", gamedir );
+	} else {
+		Info_SetValueForKey( infostring, "game", BASEGAME );
 	}
 
 	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
@@ -800,15 +873,34 @@ static void SVC_Info( const netadr_t *from ) {
 SV_FlushRedirect
 ================
 */
-static netadr_t redirectAddress; // for rcon return messages
+netadr_t redirectAddress; // for rcon return messages
 
-static void SV_FlushRedirect( const char *outputbuf )
+void SV_FlushRedirect( const char *outputbuf )
 {
 	if ( *outputbuf )
 	{
 		NET_OutOfBandPrint( NS_SERVER, &redirectAddress, "print\n%s", outputbuf );
 	}
 }
+
+
+#ifdef USE_SERVER_ROLES
+static qboolean SV_UserHasAccess(char *pw, int *role) {
+	SV_InitUserRoles();
+
+	// check passwords	
+	for(int i = 0; i < MAX_CLIENT_ROLES; i++) {
+		if(sv_role[i] && sv_rolePassword[i] && sv_rolePassword[i]->string[0] 
+			&& strcmp( pw, sv_rolePassword[i]->string ) == 0) {
+			// update command list with current role information
+			Cmd_FilterLimited(sv_role[i]->string);
+			*role = i;
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+#endif
 
 
 /*
@@ -823,10 +915,12 @@ Redirect all printfs
 static void SVC_RemoteCommand( const netadr_t *from ) {
 	static rateLimit_t bucket;
 	qboolean	valid;
+	qboolean  limited;
+	int role;
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];
-	const char	*cmd_aux, *pw;
+	const char	*cmd_aux, *pw, *cmd;
 
 	// Prevent using rcon as an amplifier and make dictionary attacks impractical
 	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
@@ -842,6 +936,12 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		( rconPassword2[0] && strcmp( pw, rconPassword2 ) == 0 ) ) {
 		valid = qtrue;
 		Com_Printf( "Rcon from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
+#ifdef USE_SERVER_ROLES
+	} else if (SV_UserHasAccess(pw, &role)) {
+		limited = qtrue;
+		valid = qtrue;
+		Com_Printf( "Rcon (limited) from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
+#endif
 	} else {
 		// Make DoS via rcon impractical
 		if ( SVC_RateLimit( &bucket, 10, 1000 ) ) {
@@ -857,10 +957,17 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	redirectAddress = *from;
 	Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 
+#ifndef USE_LOCAL_DED
 	if ( !sv_rconPassword->string[0] && !rconPassword2[0] ) {
 		Com_Printf( "No rconpassword set on the server.\n" );
 	} else if ( !valid ) {
 		Com_Printf( "Bad rconpassword.\n" );
+#else
+;
+	// allow empty rcon password
+	if(!(!sv_rconPassword->string[0] && !rconPassword2[0]) && !valid) {
+		Com_Printf( "Bad rconpassword.\n" );
+#endif
 	} else {
 		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 		// get the command directly, "rcon <pass> <command>" to avoid quoting issues
@@ -885,7 +992,24 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		while ( *cmd_aux == ' ' )
 			cmd_aux++;
 
-		Cmd_ExecuteString( cmd_aux );
+		cmd = Cmd_Argv( 2 );
+		if(!strcmp(cmd, "complete")) {
+			char	infostring[MAX_INFO_STRING];
+			field_t rconField;
+			cmd_aux += 9;
+			memcpy(rconField.buffer, cmd_aux, sizeof(rconField.buffer));
+			Field_AutoComplete( &rconField );
+			infostring[0] = '\0';
+			Info_SetValueForKey( infostring, "autocomplete", &rconField.buffer[1] );
+			NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+		} else {
+#ifdef USE_SERVER_ROLES
+			if(limited) {
+				Cmd_ExecuteLimitedString( cmd_aux, qfalse, role );
+			} else
+#endif
+			Cmd_ExecuteString( cmd_aux, qfalse );
+		}
 	}
 
 	Com_EndRedirect();
@@ -1060,10 +1184,10 @@ static void SV_CalcPings( void ) {
 		total = 0;
 		count = 0;
 		for ( j = 0 ; j < PACKET_BACKUP ; j++ ) {
-			if ( cl->frames[j].messageAcked == 0 ) {
+			if ( cl->frames[cl->gameWorld][j].messageAcked == 0 ) {
 				continue;
 			}
-			delta = cl->frames[j].messageAcked - cl->frames[j].messageSent;
+			delta = cl->frames[cl->gameWorld][j].messageAcked - cl->frames[cl->gameWorld][j].messageSent;
 			count++;
 			total += delta;
 		}
@@ -1155,16 +1279,19 @@ static qboolean SV_CheckPaused( void ) {
 	int	count;
 	int	i;
 
-	if ( !cl_paused->integer ) {
-		return qfalse;
-	}
-
 	// only pause if there is just a single client connected
 	count = 0;
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
 			count++;
+			if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))) {
+				Cvar_Set("cl_paused", "1");
+			}
 		}
+	}
+
+	if ( !cl_paused->integer ) {
+		return qfalse;
 	}
 
 	if ( count > 1 ) {
@@ -1301,10 +1428,23 @@ void SV_Frame( int msec ) {
 		{
 			// Block indefinitely until something interesting happens
 			// on STDIN.
+#ifndef EMSCRIPTEN
 			Sys_Sleep( -1 );
+#endif
 		}
 		return;
 	}
+
+#ifdef USE_CURL	
+	if ( svDownload.cURL ) 
+	{
+		Com_DL_Perform( &svDownload );
+	}
+#endif
+
+#ifdef USE_LNBITS
+	SV_CheckInvoicesAndPayments();
+#endif
 
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {
@@ -1354,6 +1494,31 @@ void SV_Frame( int msec ) {
 		}
 	}
 
+#ifdef USE_MV
+	if ( svs.nextSnapshotPSF > svs.modSnapshotPSF + svs.numSnapshotPSF ) {
+		svs.nextSnapshotPSF -= svs.modSnapshotPSF;
+		if ( svs.clients ) {
+			for ( i = 0; i < sv_maxclients->integer; i++ ) {
+				if ( svs.clients[ i ].state < CS_CONNECTED )
+					continue;
+#ifdef USE_MULTIVM
+				for(int j = 0; j < MAX_NUM_VMS; j++) {
+					for ( n = 0; n < PACKET_BACKUP; n++ ) {
+						if ( svs.clients[ i ].frames[j][ n ].first_psf > svs.modSnapshotPSF )
+							svs.clients[ i ].frames[j][ n ].first_psf -= svs.modSnapshotPSF;
+					}
+				}
+#else
+				for ( n = 0; n < PACKET_BACKUP; n++ ) {
+					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
+						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
+				}
+#endif
+			}
+		}
+	}
+#endif
+
 	if ( sv.restartTime && sv.time >= sv.restartTime ) {
 		sv.restartTime = 0;
 		Cbuf_AddText( "map_restart 0\n" );
@@ -1381,6 +1546,10 @@ void SV_Frame( int msec ) {
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 
+#ifdef USE_MV
+	svs.emptyFrame = qtrue;
+#endif
+
 	// run the game simulation in chunks
 	while ( sv.timeResidual >= frameMsec ) {
 		sv.timeResidual -= frameMsec;
@@ -1388,7 +1557,26 @@ void SV_Frame( int msec ) {
 		sv.time += frameMsec;
 
 		// let everything in the world think and move
-		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+		for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(!gvms[i]) continue;
+			gvm = i;
+			CM_SwitchMap(gameWorlds[gvm]);
+			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		}
+		gvm = 0;
+		CM_SwitchMap(gameWorlds[gvm]);
+		
+#ifdef USE_MV
+		svs.emptyFrame = qfalse; // ok, run recorder
+#endif
+
+		// play/record demo frame (if enabled)
+		if (sv.demoState == DS_RECORDING) // Record the frame
+			SV_DemoWriteFrame();
+		else if (sv.demoState == DS_WAITINGPLAYBACK || Cvar_VariableIntegerValue("sv_demoState") == DS_WAITINGPLAYBACK) // Launch again the playback of the demo (because we needed a restart in order to set some cvars such as sv_maxclients or fs_game)
+			SV_DemoRestartPlayback();
+		else if (sv.demoState == DS_PLAYBACK) // Play the next demo frame
+			SV_DemoReadFrame();
 	}
 
 	if ( com_speeds->integer ) {
@@ -1403,6 +1591,17 @@ void SV_Frame( int msec ) {
 
 	// send messages back to the clients
 	SV_SendClientMessages();
+
+#ifdef USE_MV
+	svs.emptyFrame = qfalse;
+	if ( sv_mvAutoRecord->integer > 0 || sv_mvAutoRecord->integer == -1 ) {
+		if ( sv_demoFile == FS_INVALID_HANDLE ) {
+			if ( SV_FindActiveClient( qtrue, -1, sv_mvAutoRecord->integer == -1 ? 0 : sv_mvAutoRecord->integer ) >= 0 ) {
+				Cbuf_AddText( "mvrecord\n" );
+			}
+		}
+	}
+#endif
 
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);

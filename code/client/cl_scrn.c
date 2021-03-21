@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 
+#ifdef USE_LNBITS
+#include "../qcommon/qrcodegen.h"
+#endif
+
 qboolean	scr_initialized;		// ready to draw
 
 cvar_t		*cl_timegraph;
@@ -30,6 +34,14 @@ cvar_t		*cl_debuggraph;
 cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
+
+float clientWorlds[MAX_NUM_VMS][4] = {
+	{0,0,0,0},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1},
+	{-1,-1,-1,-1},{-1,-1,-1,-1}
+};
 
 /*
 ================
@@ -486,13 +498,72 @@ SCR_Init
 */
 void SCR_Init( void ) {
 	cl_timegraph = Cvar_Get ("timegraph", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_timegraph, "Display the time graph\nDefault: 0");
 	cl_debuggraph = Cvar_Get ("debuggraph", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_debuggraph, "Display the debug graph\nDefault: 0");
 	cl_graphheight = Cvar_Get ("graphheight", "32", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphheight, "Set the height of the graph\nDefault: 32");
 	cl_graphscale = Cvar_Get ("graphscale", "1", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphscale, "Set the scale of the size\nDefault: 1");
 	cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
+	Cvar_SetDescription(cl_graphshift, "Set the shift of the graph\nDefault: 0");
 
 	scr_initialized = qtrue;
 }
+
+
+#ifdef USE_LNBITS
+void SCR_GenerateQRCode( void ) {
+	int i, j, x, y, border = 4;
+	if(!cl_lnInvoice || !cl_lnInvoice->string[0]) return;
+
+	// Text data
+	uint8_t qr0[qrcodegen_BUFFER_LEN_MAX];
+	uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
+	bool ok = qrcodegen_encodeText(cl_lnInvoice->string,
+	    tempBuffer, qr0, qrcodegen_Ecc_MEDIUM,
+	    qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
+	    qrcodegen_Mask_AUTO, qtrue);
+	if (!ok)
+	    return;
+
+	int size = qrcodegen_getSize(qr0);
+	{
+		byte	data[(size+border+border)*4][(size+border+border)*4][4];
+		Com_Memset( data, 255, sizeof( data ) );
+		for (y = border; y < size+border; y++) {
+			for (x = border; x < size+border; x++) {
+				for(i = 0; i < 4; i++) {
+					for(j = 0; j < 4; j++) {
+						data[x*4+i][y*4+j][0] =
+						data[x*4+i][y*4+j][1] =
+						data[x*4+i][y*4+j][2] = qrcodegen_getModule(qr0, x-border, y-border) ? 0 : 255;
+						data[x*4+i][y*4+j][3] = 255;
+					}
+				}
+			}
+		}
+		cls.qrCodeShader = re.CreateShaderFromImageBytes("_qrCode", (byte *)data, (size+border+border)*4, (size+border+border)*4);
+	}
+
+	// Binary data
+	/*
+	uint8_t dataAndTemp[qrcodegen_BUFFER_LEN_FOR_VERSION(7)]
+	    = {0xE3, 0x81, 0x82};
+	uint8_t qr1[qrcodegen_BUFFER_LEN_FOR_VERSION(7)];
+	ok = qrcodegen_encodeBinary(dataAndTemp, 3, qr1,
+	    qrcodegen_Ecc_HIGH, 2, 7, qrcodegen_Mask_4, false);
+	*/
+}
+
+void SCR_DrawQRCode( void ) {
+	if(!cls.qrCodeShader && cl_lnInvoice->string[0]) {
+		SCR_GenerateQRCode();
+	}
+	re.DrawStretchPic( cls.glconfig.vidWidth / 2 - 128,
+		cls.glconfig.vidHeight / 2, 256, 256, 0, 0, 1, 1, cls.qrCodeShader );
+}
+#endif
 
 
 //=======================================================
@@ -505,11 +576,13 @@ This will be called twice if rendering in stereo mode
 ==================
 */
 void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
-	qboolean uiFullscreen;
+	qboolean uiFullscreen = qfalse;
 
 	re.BeginFrame( stereoFrame );
 
-	uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
+	if(uivms[uivm]) {
+		uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
+	}
 
 	// wide aspect ratio screens need to have the sides cleared
 	// unless they are displaying game renderings
@@ -523,7 +596,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	// if the menu is going to cover the entire screen, we
 	// don't need to render anything under it
-	if ( uivm && !uiFullscreen ) {
+	if ( !uiFullscreen ) {
 		switch( cls.state ) {
 		default:
 			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
@@ -534,32 +607,49 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_DISCONNECTED:
 			// force menu up
 			S_StopAllSounds();
-			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if( uivms[uivm] )
+				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if( uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if ( cgvm ) {
+			if(cgvms[cgvm]
+#ifdef EMSCRIPTEN
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended(cgvms[cgvm])
+#endif
+			) {
 				CL_CGameRendering( stereoFrame );
 			}
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-			VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			if( uivms[uivm] ) {
+				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			}
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			CL_CGameRendering( stereoFrame );
-			SCR_DrawDemoRecording();
+			if( cgvms[cgvm] 
+#ifdef EMSCRIPTEN
+				// skip drawing until VM is ready
+				&& !VM_IsSuspended(cgvms[cgvm])
+#endif
+			) {
+				CL_CGameRendering( stereoFrame );
+				SCR_DrawDemoRecording();
+			}
 #ifdef USE_VOIP
 			SCR_DrawVoipMeter();
 #endif
@@ -567,18 +657,6 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		}
 	}
 
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
-		VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
-	}
-
-	// console draws next
-	Con_DrawConsole ();
-
-	// debug graph can be drawn on top of anything
-	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
-		SCR_DrawDebugGraph ();
-	}
 }
 
 
@@ -590,7 +668,8 @@ This is called every frame, and can also be called explicitly to flush
 text to the screen.
 ==================
 */
-void SCR_UpdateScreen( void ) {
+void SCR_UpdateScreen( qboolean fromVM ) {
+	int i;
 	static int recursive;
 	static int framecount;
 	static int next_frametime;
@@ -598,8 +677,8 @@ void SCR_UpdateScreen( void ) {
 	if ( !scr_initialized )
 		return; // not initialized yet
 
+	int ms = Sys_Milliseconds();
 	if ( framecount == cls.framecount ) {
-		int ms = Sys_Milliseconds();
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
 		} else {
@@ -617,10 +696,38 @@ void SCR_UpdateScreen( void ) {
 
 	// If there is no VM, there are also no rendering commands issued. Stop the renderer in
 	// that case.
-	if ( uivm )
-	{
-		// XXX
-		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
+	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
+
+	if(fromVM) {
+		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
+
+		// don't switch renderer or clipmap when updated from VM
+		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
+			SCR_DrawScreenField( STEREO_LEFT );
+			SCR_DrawScreenField( STEREO_RIGHT );
+		} else {
+			SCR_DrawScreenField( STEREO_CENTER );
+		}
+		
+		goto donewithupdate;
+	}
+
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		cgvm = i;
+		uivm = i;
+		
+		// if we just switched from a VM, skip it for a few frames so it never times out
+		// otherwise there is a time going backwards error
+		//if(cgvm != clc.currentView) { // && ms - cls.lastVidRestart <= 5) {
+		//	continue;
+		//}
+		
+		if(!cgvms[cgvm] && !uivms[uivm]) continue;
+
+		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
+		CM_SwitchMap(clientMaps[cgvm]);
+		re.SwitchWorld(clientMaps[cgvm]);
+
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
 			SCR_DrawScreenField( STEREO_LEFT );
@@ -628,12 +735,38 @@ void SCR_UpdateScreen( void ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
+	}
 
-		if ( com_speeds->integer ) {
-			re.EndFrame( &time_frontend, &time_backend );
-		} else {
-			re.EndFrame( NULL, NULL );
-		}
+	cgvm = 0;
+	uivm = 0;
+
+	re.SetDvrFrame(0, 0, 1, 1);
+
+	if((cl.snap[cgvm].ps.pm_type == PM_INTERMISSION
+		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
+		&& cl_lnInvoice->string[0]) {
+		SCR_DrawQRCode();
+	}
+	
+	// the menu draws next
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+	}
+
+	// console draws next
+	Con_DrawConsole ();
+
+	// debug graph can be drawn on top of anything
+	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
+		SCR_DrawDebugGraph ();
+	}
+
+donewithupdate:
+
+	if ( com_speeds->integer ) {
+		re.EndFrame( &time_frontend, &time_backend );
+	} else {
+		re.EndFrame( NULL, NULL );
 	}
 
 	recursive = 0;

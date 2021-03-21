@@ -83,7 +83,7 @@ Con_ToggleConsole_f
 */
 void Con_ToggleConsole_f( void ) {
 	// Can't toggle the console when it's the only thing available
-    if ( cls.state == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
+  if ( cls.state == CA_DISCONNECTED && Key_GetCatcher() == KEYCATCH_CONSOLE ) {
 		return;
 	}
 
@@ -130,7 +130,7 @@ Con_MessageMode3_f
 ================
 */
 static void Con_MessageMode3_f( void ) {
-	chat_playerNum = cgvm ? VM_Call( cgvm, 0, CG_CROSSHAIR_PLAYER ) : -1;
+	chat_playerNum = VM_Call( cgvms[cgvm], 0, CG_CROSSHAIR_PLAYER );
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -148,7 +148,7 @@ Con_MessageMode4_f
 ================
 */
 static void Con_MessageMode4_f( void ) {
-	chat_playerNum = cgvm ? VM_Call( cgvm, 0, CG_LAST_ATTACKER ) : -1;
+	chat_playerNum = VM_Call( cgvms[cgvm], 0, CG_LAST_ATTACKER );
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -199,7 +199,7 @@ static void Con_Dump_f( void )
 
 	if ( Cmd_Argc() != 2 )
 	{
-		Com_Printf( "usage: condump <filename>\n" );
+		Com_Printf( "Usage: condump <filename>\n" );
 		return;
 	}
 
@@ -383,19 +383,28 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
+	Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+	Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
+	Cmd_SetDescription("clear", "Clear all text from console\nUsage: clear");
 	Cmd_AddCommand( "condump", Con_Dump_f );
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
+	Cmd_SetDescription("condump", "Write the console text to a file\nUsage: condump <file>");
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
+	Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nUsage: bind <key> toggleconsole");
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
+	Cmd_SetDescription("messagemode", "Send a message to everyone");
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
+	Cmd_SetDescription("messagemode2", "Send a message to teammates");
 	Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
+	Cmd_SetDescription("messagemode3", "Send a message to targeted player");
 	Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
+	Cmd_SetDescription("messagemode4", "Send a message to last attacker");
 }
 
 
@@ -659,7 +668,7 @@ void Con_DrawNotify( void )
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 
-		if (cl.snap.ps.pm_type != PM_INTERMISSION && Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
+		if (cl.snap[cgvm].ps.pm_type != PM_INTERMISSION && Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
 			continue;
 		}
 

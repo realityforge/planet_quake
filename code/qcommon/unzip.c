@@ -1497,7 +1497,8 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	if (fseek(s->file,s->pos_in_central_dir+s->byte_before_the_zipfile,SEEK_SET)!=0)
 		err=UNZ_ERRNO;
 
-#if 1 // try ro reduce fread() overhead
+#ifndef EMSCRIPTEN
+//#if 1 // try ro reduce fread() overhead
 	if ( unzlocal_getData( s->file, buf, 46 ) != UNZ_OK )
 		return UNZ_ERRNO;
 	uMagic = LittleLong( *(int*)(buf+0) );

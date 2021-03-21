@@ -256,6 +256,16 @@ void	RE_SetColor( const float *rgba ) {
 RE_StretchPic
 =============
 */
+char banner[1024];
+int  bannerI;
+int  bannerResetTime;
+void RE_ResetBannerSpy( void ) {
+	bannerI = 0;
+	banner[0] = '\0';
+	bannerResetTime = 0;
+}
+
+
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;
@@ -269,14 +279,23 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	}
 	cmd->commandId = RC_STRETCH_PIC;
 	cmd->shader = R_GetShaderByHandle( hShader );
-	cmd->x = x;
-	cmd->y = y;
-	cmd->w = w;
-	cmd->h = h;
+	cmd->x = x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
+	cmd->y = y * dvrYScale + (dvrYOffset * glConfig.vidHeight);
+	cmd->w = w * dvrXScale;
+	cmd->h = h * dvrYScale;
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
+	if(bannerResetTime < 100 && Q_stristr(cmd->shader->name, "font2_prop")) {
+		bannerResetTime++;
+		ri.Spy_Banner(s1, t1);
+	}
+#ifdef USE_ABS_MOUSE
+	if(Q_stristr(cmd->shader->name, "cursor")) {
+		ri.Spy_CursorPosition(x, y);
+	}
+#endif
 }
 
 #define MODE_RED_CYAN	1
@@ -455,10 +474,20 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 					FBO_Bind(NULL);
 				}
 
-				qglDrawBuffer(GL_FRONT);
-				qglClear(GL_COLOR_BUFFER_BIT);
-				qglDrawBuffer(GL_BACK);
-				qglClear(GL_COLOR_BUFFER_BIT);
+				{
+#ifdef EMSCRIPTEN
+					GLenum DrawBuffers[1] = {GL_NONE};
+#else
+					GLenum DrawBuffers[1] = {GL_FRONT};
+#endif
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
+				{
+					GLenum DrawBuffers[1] = {GL_BACK};
+					qglDrawBuffers( 1, DrawBuffers );
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
 
 				r_anaglyphMode->modified = qfalse;
 			}
@@ -513,7 +542,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
+#ifdef EMSCRIPTEN
+				cmd->buffer = (int)GL_NONE;
+#else
 				cmd->buffer = (int)GL_FRONT;
+#endif
 			else
 				cmd->buffer = (int)GL_BACK;
 		}
