@@ -156,10 +156,10 @@ process.on('unhandledRejection', Server.prototype._onErrorNoop)
 var Huffman = require('../lib/huffman.js')
 Huffman.onRuntimeInitialized = () => {
   Huffman['_MSG_initHuffman']()
-  buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 'i8', 1)
-	msgData = Huffman.allocate(new Int8Array(MAX_MSGLEN), 'i8', 1)
-	msg = Huffman.allocate(new Int32Array(40), 'i32', 1)
-	sym = Huffman.allocate(new Int32Array(1), 'i32', 1)
+  buffer = Huffman.allocate(new Int8Array(MAX_PACKETLEN), 1)
+	msgData = Huffman.allocate(new Int8Array(MAX_MSGLEN), 1)
+	msg = Huffman.allocate(new Int32Array(40), 1)
+	sym = Huffman.allocate(new Int32Array(1), 1)
 	Huffman.HEAP32[(msg>>2)+3] = msgData
 	Huffman.HEAP32[(msg>>2)+4] = MAX_MSGLEN
 

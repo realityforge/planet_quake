@@ -146,7 +146,7 @@ Build the image from this repository:
 
 Grab latest from dockerhub
 
-`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 1081:1081 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
+`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
 
 After the image is built and running, you can skip repeating the conversion process:
 

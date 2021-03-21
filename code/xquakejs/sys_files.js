@@ -263,8 +263,8 @@ var LibrarySysFiles = {
     }
     */
     //SYSN.downloadLazy.splice(0) // reset lazy list to start of map
-    SYSF.pathname = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
-    SYSF.modeStr = allocate(new Int8Array(4), 'i8', ALLOC_NORMAL)
+    SYSF.pathname = allocate(new Int8Array(4096), ALLOC_NORMAL)
+    SYSF.modeStr = allocate(new Int8Array(4), ALLOC_NORMAL)
     var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
     SYSF.fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSF.fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
@@ -552,10 +552,10 @@ var LibrarySysFiles = {
     })
   },
   Sys_DefaultBasePath: function () {
-		return allocate(intArrayFromString('/base'), 'i8', ALLOC_STACK)
+		return allocate(intArrayFromString('/base'), ALLOC_STACK)
 	},
 	Sys_Pwd: function () {
-		return allocate(intArrayFromString('/base'), 'i8', ALLOC_STACK)
+		return allocate(intArrayFromString('/base'), ALLOC_STACK)
 	},
   Sys_FS_Offline: function () {
     // call startup, it's idempotent and won't hurt to call multiple times in a row

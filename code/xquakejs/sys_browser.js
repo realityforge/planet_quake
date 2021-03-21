@@ -12,7 +12,7 @@ var LibrarySys = {
 		modelCallback: [],
 		quitGameOnUnload: function (e) {
 			if(Module['canvas']) {
-				_Cbuf_AddText(allocate(intArrayFromString('quit;'), 'i8', ALLOC_STACK));
+				_Cbuf_AddText(allocate(intArrayFromString('quit;'), ALLOC_STACK));
 				Module['canvas'].remove()
 				Module['canvas'] = null
 			}

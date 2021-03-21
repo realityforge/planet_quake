@@ -564,7 +564,6 @@ endif
     -s SAFE_HEAP=1 \
     -s DEMANGLE_SUPPORT=1 \
     -s ASSERTIONS=1 \
-    -s AGGRESSIVE_VARIABLE_ELIMINATION=0 \
     -frtti \
     -fPIC
 

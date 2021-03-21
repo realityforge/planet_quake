@@ -14,7 +14,7 @@ var LibrarySysNet = {
     multicastBuffer: 0,
     receiveNetLoop: function (net, data) {
       if(!SYSN.multicastBuffer) {
-        SYSN.multicastBuffer = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+        SYSN.multicastBuffer = allocate(new Int8Array(4096), ALLOC_NORMAL)
       }
       SYSN.multicasting = true
       data.forEach(function (d, i) { HEAP8[SYSN.multicastBuffer+i] = d })
@@ -369,7 +369,7 @@ var LibrarySysNet = {
             alreadyDownloaded: true,
           }
         }
-        FS.syncfs(SYS.servicable, Browser.safeCallback(_CL_Outside_NextDownload))
+        FS.syncfs(SYS.servicable, _CL_Outside_NextDownload)
       })
     })
   },
@@ -381,14 +381,14 @@ var LibrarySysNet = {
       SYSN.socksfd = 0
       clearInterval(SYSN.socksInterval)
       SYSN.socksInterval = 0
-      Browser.safeCallback(_SOCKS_Frame_Proxy)()
+      _SOCKS_Frame_Proxy()
     }, 10000)
     var callback = function () {
       if(SYSN.socksConnect) {
         clearTimeout(SYSN.socksConnect)
         SYSN.socksConnect = 0
       }
-      Browser.safeCallback(_SOCKS_Frame_Proxy)()
+      _SOCKS_Frame_Proxy()
     }
     if(!SYSN.socksInterval) {
       SYSN.socksInterval = setInterval(function () {

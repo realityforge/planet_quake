@@ -10,7 +10,7 @@ self.onmessage = function(e) {
     importScripts('quake3e.js')
     Module.args = e.data[1]
   } else if(typeof Module != 'undefined' && e.data[0] == 'execute') {
-    var cmd = allocate(intArrayFromString(e.data[1]), 'i8', ALLOC_STACK)
+    var cmd = allocate(intArrayFromString(e.data[1]), ALLOC_STACK)
     _Cbuf_AddText(cmd)
   } else if(typeof Module != 'undefined' && e.data[0] == 'net') {
     if(typeof Module.SYSN != 'undefined' && Module.SYSN.lazyInterval)

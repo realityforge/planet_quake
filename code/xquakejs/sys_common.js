@@ -52,7 +52,7 @@ var LibrarySysCommon = {
 		Print: function (str) {
 			if(!Array.isArray(str)) str = [str]
 			//str = str.map(function (s) {
-			//	return allocate(intArrayFromString(s + '\0'), 'i8', ALLOC_STACK);
+			//	return allocate(intArrayFromString(s + '\0'), ALLOC_STACK);
 			//})
 			console.log.apply(null, str)
 		},
@@ -71,26 +71,24 @@ var LibrarySysCommon = {
 				level = 0
 			}
 
-			Browser.safeCallback(_Com_Outside_Error)(level, 
-				allocate(intArrayFromString(errMsg + '\n'), 'i8', ALLOC_STACK))
+			_Com_Outside_Error(level, 
+				allocate(intArrayFromString(errMsg + '\n'), ALLOC_STACK))
 			// drop current stack frame and bubble out
 			throw new Error(errMsg)
 		},
 		ProxyCallback: function () {
-			Browser.safeCallback(function () {
-				try {
-					_Com_Frame_Proxy();
-				} catch (e) {
-					if (e instanceof ExitStatus) {
-						return;
-					}
-					// TODO should we try and call back in using __Error?
-					var message = _S_Malloc(e.message.length + 1);
-					stringToUTF8(e.message, message, e.message.length+1);
-					_Sys_ErrorDialog(message);
-					throw e;
+			try {
+				_Com_Frame_Proxy();
+			} catch (e) {
+				if (e instanceof ExitStatus) {
+					return;
 				}
-			})()
+				// TODO should we try and call back in using __Error?
+				var message = _S_Malloc(e.message.length + 1);
+				stringToUTF8(e.message, message, e.message.length+1);
+				_Sys_ErrorDialog(message);
+				throw e;
+			}
 		},
 		mkdirp: function (p) {
 			try {
@@ -658,7 +656,7 @@ var LibrarySysCommon = {
 	Sys_Basename__deps: ['$PATH'],
 	Sys_Basename: function (path) {
 		path = PATH.basename(UTF8ToString(path));
-		return allocate(intArrayFromString(path), 'i8', ALLOC_STACK);
+		return allocate(intArrayFromString(path), ALLOC_STACK);
 	},
 	Sys_DllExtension__deps: ['$PATH'],
 	Sys_DllExtension: function (path) {
@@ -667,7 +665,7 @@ var LibrarySysCommon = {
 	Sys_Dirname__deps: ['$PATH'],
 	Sys_Dirname: function (path) {
 		path = PATH.dirname(UTF8ToString(path));
-		return allocate(intArrayFromString(path), 'i8', ALLOC_STACK);
+		return allocate(intArrayFromString(path), ALLOC_STACK);
 	},
 	Sys_Mkfifo: function (path) {
 		return 0;
@@ -698,7 +696,7 @@ var LibrarySysCommon = {
 		return true;
 	},
 	Sys_Cwd: function () {
-		var cwd = allocate(intArrayFromString(FS.cwd()), 'i8', ALLOC_STACK);
+		var cwd = allocate(intArrayFromString(FS.cwd()), ALLOC_STACK);
 		return cwd;
 	},
 	Sys_Sleep: function () {
@@ -731,9 +729,9 @@ var LibrarySysCommon = {
 				loadAsync: true, global: true, nodelete: true
 			})
 			.catch(function(e) { err = e })
-			.then(Browser.safeCallback(function (handle) {
+			.then(function (handle) {
 				_CL_InitRef_After_Load_Callback(err ? 0 : handle)
-			}))
+			})
 		})
 		return 0
 	},
