@@ -553,6 +553,7 @@ var LibrarySysInput = {
       }
     }
   },
+  eglGetProcAddress: function (){},
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},
   glActiveTextureARB: function(){ return _glActiveTexture.apply(null, Array.from(arguments)) },
