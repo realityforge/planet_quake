@@ -742,7 +742,7 @@ void CL_DemoCompleted_After_Shutdown( void ) {
 #endif
 }
 
-void CL_ReadDemoIndex() {
+void CL_ReadDemoIndex( void ) {
 	int			s;
 	int			r;
 	msg_t		buf;
@@ -2237,7 +2237,7 @@ we also have to reload the UI and CGame because the renderer
 doesn't know what graphics to reload
 =================
 */
-static void CL_Vid_Restart( void ) {
+static void CL_Vid_Restart( qboolean keepWindow ) {
 
 #ifdef USE_VID_FAST
 	const float MATCH_EPSILON = 0.001f;
@@ -2470,8 +2470,8 @@ Com_Printf( "Cgame Old Scale: %i x %i -> New Scale: %i x %i\n",
 	// shutdown sound system
 	S_Shutdown();
 	// shutdown the renderer and clear the renderer interface
-	CL_ShutdownRef( qfalse );
-	// client is no longer pure untill new checksums are sent
+	CL_ShutdownRef( keepWindow ? REF_KEEP_WINDOW : REF_DESTROY_WINDOW );
+	// client is no longer pure until new checksums are sent
 	CL_ResetPureClientAtServer();
 	// clear pak references
 	FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
@@ -2485,7 +2485,7 @@ Com_Printf( "Cgame Old Scale: %i x %i -> New Scale: %i x %i\n",
 	cls.soundRegistered = qfalse;
 	cls.soundStarted = qfalse;
 
-	// unpause so the cgame definately gets a snapshot and renders a frame
+	// unpause so the cgame definitely gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 
 	CL_ClearMemory();
@@ -2544,7 +2544,11 @@ static void CL_Vid_Restart_f( void ) {
 		if ( abs( cls.lastVidRestart - Sys_Milliseconds() ) < 500 )
 			return;
 
-	CL_Vid_Restart();
+	if ( Q_stricmp( Cmd_Argv(1), "keep_window" ) == 0
+ 		|| Q_stricmp( Cmd_Argv(1), "fast" ) == 0)
+		CL_Vid_Restart( qtrue );
+	else
+		CL_Vid_Restart( qfalse );
 }
 
 

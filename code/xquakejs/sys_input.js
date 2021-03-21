@@ -59,7 +59,7 @@ var LibrarySysInput = {
     field: 0,
     //inputCount: 0,
     captureClipBoard: function () {
-      var process = Browser.safeCallback(_Field_CharEvent)
+      var process = _Field_CharEvent
       // this is the same method I used on StudySauce
       var text = document.createElement('TEXTAREA')
       text.style.opacity = 0
@@ -129,9 +129,9 @@ var LibrarySysInput = {
       HEAP32[((event+24)>>2)]=modState
       HEAP32[((event+28)>>2)]=0
       if(evt.type == 'keydown')
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[0], event)
+        _IN_PushEvent(SYSI.inputInterface[0], event)
       if(evt.type == 'keyup')
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[1], event)
+        _IN_PushEvent(SYSI.inputInterface[1], event)
     },
     InputPushTextEvent: function (evt) {
       var event = SYSI.inputHeap
@@ -145,7 +145,7 @@ var LibrarySysInput = {
         HEAP32[((event+i)>>2)]=text[j]
         j++
       }
-      Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[2], event)
+      _IN_PushEvent(SYSI.inputInterface[2], event)
     },
     InputPushMouseEvent: function (evt) {
       var event = SYSI.inputHeap
@@ -171,9 +171,9 @@ var LibrarySysInput = {
         HEAP32[((event+32)>>2)]=Browser.getMovementY(evt)
       }
       if (evt.type == 'mousemove')
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[3], event)
+        _IN_PushEvent(SYSI.inputInterface[3], event)
       else
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[4], event)
+        _IN_PushEvent(SYSI.inputInterface[4], event)
     },
     InputPushWheelEvent: function (evt) {
       var event = SYSI.inputHeap
@@ -183,7 +183,7 @@ var LibrarySysInput = {
       HEAP32[((event+12)>>2)]=0; // mouseid
       HEAP32[((event+16)>>2)]=evt.deltaX;
       HEAP32[((event+20)>>2)]=evt.deltaY;
-      Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[5], event)
+      _IN_PushEvent(SYSI.inputInterface[5], event)
     },
     InputPushTouchEvent: function (joystick, id, evt, data) {
       var event = SYSI.inputHeap
@@ -256,7 +256,7 @@ var LibrarySysInput = {
       } else { // No pressure data, send a digital 0/1 pressure.
         HEAPF32[((event+(40))>>2)]=data.type == 'end' ? 0 : 1
       }
-      Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[6], event)
+      _IN_PushEvent(SYSI.inputInterface[6], event)
     },
     // Source: https://stackoverflow.com/a/18717721/8037972
     InputPushMovedEvent: function (evt) {
@@ -277,7 +277,7 @@ var LibrarySysInput = {
         // padding?
         HEAP32[((event+16)>>2)]=window.screenX || window.screenLeft;
         HEAP32[((event+20)>>2)]=window.screenY || window.screenTop;
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
+        _IN_PushEvent(SYSI.inputInterface[7], event)
       }
     },
     InputPushFocusEvent: function (evt) {
@@ -294,7 +294,7 @@ var LibrarySysInput = {
       // padding?
       HEAP32[((event+16)>>2)]=0;
       HEAP32[((event+20)>>2)]=0;
-      Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[7], event)
+      _IN_PushEvent(SYSI.inputInterface[7], event)
     },
     InputPushDropEvent: function (filename) {
       var event = SYSI.inputHeap
@@ -305,22 +305,22 @@ var LibrarySysInput = {
         HEAP8[(SYSF.pathname+filename.length)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
         HEAP32[((event+0)>>2)]=0x1000;
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+        _IN_PushEvent(SYSI.inputInterface[8], event)
       } else if(filename === true) {
         HEAP32[((event+0)>>2)]=0x1002;
         HEAP8[(SYSF.pathname)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+        _IN_PushEvent(SYSI.inputInterface[8], event)
       } else if (filename === false) {
         HEAP32[((event+0)>>2)]=0x1003;
         HEAP8[(SYSF.pathname)] = 0;
         HEAP32[((event+8)>>2)]=SYSF.pathname; // filename
-        Browser.safeCallback(_IN_PushEvent)(SYSI.inputInterface[8], event)
+        _IN_PushEvent(SYSI.inputInterface[8], event)
       }
     },
     InputInit: function () {
       // TODO: clear JSEvents.eventHandlers
-      Browser.safeCallback(_IN_PushInit)(SYSI.inputHeap)
+      _IN_PushInit(SYSI.inputHeap)
       SYSI.inputInterface = []
       for(var ei = 0; ei < 20; ei++) {
         SYSI.inputInterface[ei] = getValue(SYSI.inputHeap + 4 * ei, 'i32', true)
@@ -404,7 +404,7 @@ var LibrarySysInput = {
         .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
           ? -5 : 0)
 
-			_Cbuf_AddText(allocate(intArrayFromString(update), 'i8', ALLOC_STACK))
+			_Cbuf_AddText(allocate(intArrayFromString(update), ALLOC_STACK))
 		},
     resizeViewport: function () {
 			if (!Module['canvas']) {
@@ -413,7 +413,7 @@ var LibrarySysInput = {
 			}
 
 			if (SYSI.resizeDelay) clearTimeout(SYSI.resizeDelay)
-			SYSI.resizeDelay = setTimeout(Browser.safeCallback(SYSI.updateVideoCmd), 100);
+			SYSI.resizeDelay = setTimeout(SYSI.updateVideoCmd, 100);
 		},
     dropHandler: function (ev) {
       var files = []
@@ -477,7 +477,7 @@ var LibrarySysInput = {
 	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
 	Sys_GLimpInit: function () {
     if(!SYSI.inputHeap)
-      SYSI.inputHeap = allocate(new Int32Array(60>>2), 'i32', ALLOC_NORMAL)
+      SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
 
 		var viewport = document.getElementById('viewport-frame')
 		// create a canvas element at this point if one doesnt' already exist
@@ -489,7 +489,7 @@ var LibrarySysInput = {
 			Module['canvas'] = viewport.appendChild(canvas)
 		}
     window.addEventListener('beforeunload', function (e) {
-      Browser.safeCallback(_S_DisableSounds)();
+      _S_DisableSounds();
       if(SYSI.cancelBackspace) {
         e.preventDefault();
         e.returnValue = 'Do you really want to quit?';

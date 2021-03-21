@@ -258,7 +258,7 @@ var LibrarySysMain = {
   },
   Sys_PlatformInit__deps: ['$SYSC', '$SYSM'],
   Sys_PlatformInit: function () {
-    SYSC.varStr = allocate(new Int8Array(4096), 'i8', ALLOC_NORMAL)
+    SYSC.varStr = allocate(new Int8Array(4096), ALLOC_NORMAL)
     SYSC.newDLURL = SYSC.Cvar_VariableString('cl_dlURL')
     SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     Object.assign(Module, {
@@ -361,7 +361,7 @@ var LibrarySysMain = {
 		}
 	},
 	Sys_GetCurrentUser: function () {
-		return allocate(intArrayFromString('player'), 'i8', ALLOC_STACK)
+		return allocate(intArrayFromString('player'), ALLOC_STACK)
 	},
   Sys_Dialog: function (type, message, title) {
     SYSC.Error('SYS_Dialog not implemented')
@@ -406,7 +406,7 @@ var LibrarySysMain = {
     var argc = argv.length
     // merge default args with query string args
     var size = (argc + 1) * {{{ Runtime.POINTER_SIZE }}}
-    var list = allocate(new Int8Array(size), 'i8', ALLOC_NORMAL)
+    var list = allocate(new Int8Array(size), ALLOC_NORMAL)
     for (var i = 0; i < argv.length; i++) {
       HEAP32[(list >> 2) + i] = allocateUTF8OnStack(argv[i])
     }
