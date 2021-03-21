@@ -2687,11 +2687,27 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		 		&& strcmp(Cmd_Argv(0), "tell"))
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
 #ifdef USE_REFEREE_CMDS
-			else {
+			else { // don't sanitize, instead check chat commands for client referee mute
 				;
 				if(cl->muted) {
 					Cmd_Clear();
 					return qtrue;
+				}
+			}
+			if( !Q_stricmp(Cmd_Argv(0), "team") ) {
+				if(!Q_stricmp(Cmd_Argv(1), "r") || !Q_stricmp(Cmd_Argv(1), "red")) {
+					if(sv_lock[0]->integer) {
+						SV_SendServerCommand(cl, "cp \"^3Red team is locked!\"");
+						Cmd_Clear();
+						return qtrue;
+					}
+				}
+				if(!Q_stricmp(Cmd_Argv(1), "b") || !Q_stricmp(Cmd_Argv(1), "blue")) {
+					if(sv_lock[1]->integer) {
+						SV_SendServerCommand(cl, "cp \"^3Blue team is locked!\"");
+						Cmd_Clear();
+						return qtrue;
+					}
 				}
 			}
 #endif

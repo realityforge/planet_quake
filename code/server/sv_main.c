@@ -68,6 +68,7 @@ cvar_t	*sv_role[MAX_CLIENT_ROLES];		// master server ip address
 cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 #endif
 #ifdef USE_REFEREE_CMDS
+cvar_t  *sv_lock[2];
 cvar_t  *sv_frozen;
 #endif
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages

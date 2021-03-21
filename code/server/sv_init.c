@@ -930,6 +930,8 @@ void SV_Init( void )
 
 #ifdef USE_REFEREE_CMDS
 	sv_frozen = Cvar_Get("sv_frozen", "0", CVAR_TEMP);
+	sv_lock[0] = Cvar_Get("sv_lockRed", "0", CVAR_TEMP);
+	sv_lock[1] = Cvar_Get("sv_lockBlue", "0", CVAR_TEMP);
 #endif
 
 	// server vars

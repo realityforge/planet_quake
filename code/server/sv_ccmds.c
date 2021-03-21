@@ -1601,6 +1601,36 @@ void SV_Mute_f(void) {
 		cl->muted = qfalse;
 	}
 }
+
+void  SV_Lock_f(void) {
+	char *cmd = Cmd_Argv(0);
+	if(Cmd_Argc() > 2) {
+		Com_Printf ("Usage: lock/unlock", Cmd_Argv(0));
+		return;
+	}
+	
+	if(Q_stricmp(cmd, "lock")) {
+		Cvar_Set("sv_lockRed", "1");
+		Cvar_Set("sv_lockBlue", "1");
+		return;
+	} else if (Q_stricmp(cmd, "unlock")) {
+		Cvar_Set("sv_lockRed", "0");
+		Cvar_Set("sv_lockBlue", "0");
+		return;
+	} else if (Q_stricmp(cmd, "lockred")) {
+		Cvar_Set("sv_lockRed", "1");
+		return;
+	} else if (Q_stricmp(cmd, "unlockred")) {
+		Cvar_Set("sv_lockRed", "0");
+		return;
+	} else if (Q_stricmp(cmd, "lockblue")) {
+		Cvar_Set("sv_lockBlue", "1");
+		return;
+	} else if (Q_stricmp(cmd, "unlockblue")) {
+		Cvar_Set("sv_lockBlue", "0");
+		return;
+	}
+}
 #endif
 
 
@@ -1618,6 +1648,13 @@ void SV_AddOperatorCommands( void ) {
 	initialized = qtrue;
 
 #ifdef USE_REFEREE_CMDS
+	Cmd_AddCommand ("lock", SV_Lock_f);
+	Cmd_SetDescription( "lock", "Lock a team from being joined by new clients.\nUsage: lock/unlock");
+	Cmd_AddCommand ("unlock", SV_Lock_f);
+	Cmd_AddCommand ("lockred", SV_Lock_f);
+	Cmd_AddCommand ("lockblue", SV_Lock_f);
+	Cmd_AddCommand ("unlockred", SV_Lock_f);
+	Cmd_AddCommand ("unlockblue", SV_Lock_f);
 	Cmd_AddCommand ("mute", SV_Mute_f);
 	Cmd_SetDescription( "mute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: mute <player>");
 	Cmd_AddCommand ("unmute", SV_Mute_f);
