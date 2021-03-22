@@ -1602,6 +1602,24 @@ void SV_Mute_f(void) {
 	}
 }
 
+void SV_Nofire_f(void) {
+	client_t *cl;
+	if(Cmd_Argc() != 2) {
+		Com_Printf ("Usage: %s <player>", Cmd_Argv(0));
+		return;
+	}
+	
+	cl = SV_GetPlayerByHandle();
+	if ( !cl ) {
+		return;
+	}
+	if(Q_stricmp(Cmd_Argv(0), "nofire") == 0) {
+		cl->nofire = qtrue;
+	} else {
+		cl->nofire = qfalse;
+	}
+}
+
 void  SV_Lock_f(void) {
 	char *cmd = Cmd_Argv(0);
 	if(Cmd_Argc() > 2) {
@@ -1655,6 +1673,8 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("lockblue", SV_Lock_f);
 	Cmd_AddCommand ("unlockred", SV_Lock_f);
 	Cmd_AddCommand ("unlockblue", SV_Lock_f);
+	Cmd_AddCommand ("nofire", SV_Nofire_f);
+	Cmd_AddCommand ("fire", SV_Nofire_f);	
 	Cmd_AddCommand ("mute", SV_Mute_f);
 	Cmd_SetDescription( "mute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: mute <player>");
 	Cmd_AddCommand ("unmute", SV_Mute_f);

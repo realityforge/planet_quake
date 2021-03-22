@@ -729,8 +729,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
-		cgvm = MSG_ReadByte( msg );
-		CM_SwitchMap(cgvm);
+		if(cl.snap[cgvm].multiview) {
+			cgvm = MSG_ReadByte( msg );
+			CM_SwitchMap(cgvm);
+		}
 		if(cgvm == 0) {
 			CL_ClearState();
 		}

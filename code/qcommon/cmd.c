@@ -1014,7 +1014,7 @@ void Cmd_FilterLimited(char *commandList) {
 			if(Q_stricmp(&cmds[cmdI], cmd->name)==0) {
 				cmd->limited = qtrue;
 			}
-			cmdI += strlen(cmds)+1;
+			cmds = &cmds[strlen(cmds)+1];
 		}
 	}
 	
