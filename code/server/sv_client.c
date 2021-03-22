@@ -1354,7 +1354,9 @@ static void SV_SendClientGameState( client_t *client ) {
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
 #ifdef USE_MULTIVM
-	MSG_WriteByte( &msg, client->newWorld );
+	if(client->multiview.protocol > 0) {
+		MSG_WriteByte( &msg, client->newWorld );
+	}
 #endif
 	MSG_WriteLong( &msg, client->reliableSequence );
 
@@ -2851,8 +2853,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		MSG_ReadDeltaUsercmdKey( msg, key, oldcmd, cmd );
 #ifdef USE_REFEREE_CMDS
 		if(sv_frozen->integer) {
-			cmd->forwardmove = cmd->rightmove = cmd->upmove
-				= cmd->weapon = cmd->buttons = 0;
+			cmd->forwardmove = cmd->rightmove = cmd->upmove = cmd->buttons = 0;
+		}
+		if(cl->nofire) {
+			cmd->buttons = 0;
 		}
 #endif
 		oldcmd = cmd;
