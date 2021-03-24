@@ -286,7 +286,7 @@ var LibrarySysInput = {
       HEAP32[((event+4)>>2)]=_Sys_Milliseconds(); // timestamp
       HEAP32[((event+8)>>2)]=0; // windowid
       if (document.visibilityState === 'visible'
-        & !evt.visible === false) {
+        & (typeof evt.visible === 'undefined' || evt.visible !== false)) {
         HEAP32[((event+12)>>2)]=0x00C; // event id
       } else {
         HEAP32[((event+12)>>2)]=0x00D; // event id

@@ -1518,8 +1518,8 @@ void SV_Frame( int msec ) {
 				}
 #else
 				for ( n = 0; n < PACKET_BACKUP; n++ ) {
-					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
-						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
+					if ( svs.clients[ i ].frames[0][ n ].first_psf > svs.modSnapshotPSF )
+						svs.clients[ i ].frames[0][ n ].first_psf -= svs.modSnapshotPSF;
 				}
 #endif
 			}
