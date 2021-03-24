@@ -1132,8 +1132,12 @@ static void S_Base_Update( int msec ) {
 		return;
 	}
 
+#ifdef USE_MV
 	CM_SwitchMap(clc.currentView);
 	cgvm = clc.currentView;
+#else
+	cgvm = 0;
+#endif
 
 	//
 	// debugging output

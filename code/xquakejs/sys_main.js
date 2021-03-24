@@ -20,7 +20,6 @@ var LibrarySysMain = {
       //'+set', 'cg_simpleItems', '0',
       // these control the proxy server
       '+set', 'net_enabled', '1', // 1 for IPv4
-      '+set', 'net_socksPort', '1081', // default 1080 but 1081 for websocket
       '+set', 'net_socksEnabled', '1',
       '+set', 'cl_lazyLoad', '1',
       '+set', 'rconpassword', 'password123!',
@@ -153,7 +152,7 @@ var LibrarySysMain = {
           if (!args.includes('net_socksServer')) {
             args.push.apply(args, [
               '+set', 'net_socksServer', (SYSM.isSecured(window.location.origin) ? 'wss://' : 'ws://') + window.location.hostname,
-              '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : '80',
+              '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : window.location.port,
             ])
           }
           if(SYSF.mods.filter(function (f) { return f.includes(match[1]) }).length > 0) {
@@ -173,7 +172,7 @@ var LibrarySysMain = {
         } else if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', (SYSM.isSecured(window.location.origin) ? 'wss://' : 'ws://') + 'proxy.quake.games',
-            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : '80',
+            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : window.location.port,
           ])
         }
         if (!args.includes('sv_dlURL')) {
@@ -195,7 +194,11 @@ var LibrarySysMain = {
         if (!args.includes('net_socksServer')) {
           args.push.apply(args, [
             '+set', 'net_socksServer', window.location.hostname,
-            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : '1081'
+          ])
+        }
+        if (!args.includes('net_socksPort')) {
+          args.push.apply(args, [
+            '+set', 'net_socksPort', SYSM.isSecured(window.location.origin) ? '443' : window.location.port
           ])
         }
         if (!args.includes('sv_dlURL')) {

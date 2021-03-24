@@ -494,47 +494,6 @@ endif
 		-I$(EMSCRIPTEN_CACHE)/sysroot/include \
 		-I$(EMSCRIPTEN_CACHE)/sysroot/include/SDL2
 
-# debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
-  DEBUG_CFLAGS=$(BASE_CFLAGS) \
-    -O1 -g3 \
-		-s WASM=1 \
-		-s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=1 \
-    -s ASSERTIONS=2 \
-		-s SINGLE_FILE=1 \
-    -frtti \
-		-flto \
-	  -fPIC
-
-  RELEASE_CFLAGS=$(BASE_CFLAGS) \
-    -O3 -Oz \
-    -s WASM=1 \
-		-s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=0 \
-    -s ASSERTIONS=2 \
-    -flto \
-    -fPIC
-
-ifneq ($(USE_CODEC_OPUS),0)
-  RELEASE_CFLAGS += \
-		-DUSE_CODEC_OPUS=1 \
-    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
-		-I$(OPUSDIR)/include \
-		-I$(OPUSDIR)/celt \
-		-I$(OPUSDIR)/silk \
-    -I$(OPUSDIR)/silk/float \
-		-I$(OPUSFILEDIR)/include 
-endif
-
-ifneq ($(USE_CODEC_VORBIS),0)
-  RELEASE_CFLAGS += \
-	  -DUSE_CODEC_VORBIS=1 \
-    -I$(OGGDIR)/ \
-    -I$(VORBISDIR)/
-endif
-
   SHLIBCFLAGS = \
 		-DEMSCRIPTEN \
 	  -fvisibility=hidden \
@@ -629,30 +588,75 @@ endif
     -s EXPORT_NAME=\"quake3e\"
 		
 ifeq ($(BUILD_RENDERER_OPENGL2),1)
-	CLIENT_LDFLAGS += \
+  CLIENT_LDFLAGS += \
 		-lwebgl.js \
 		-lwebgl2.js \
 		-s LEGACY_GL_EMULATION=0 \
-    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+	  -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
 		-s MIN_WEBGL_VERSION=1 \
 		-s MAX_WEBGL_VERSION=3 \
-    -s USE_WEBGL2=1 \
-    -s FULL_ES2=1 \
-    -s FULL_ES3=1
+	  -s USE_WEBGL2=1 \
+	  -s FULL_ES2=1 \
+	  -s FULL_ES3=1
 endif
 
 ifeq ($(BUILD_RENDERER_OPENGL),1)
-	CLIENT_LDFLAGS += \
+  CLIENT_LDFLAGS += \
 		-lglemu.js \
 		-lwebgl.js \
 		-DUSE_CLOSURE_COMPILER \
 		-s LEGACY_GL_EMULATION=1 \
-    -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+	  -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
 		-s MIN_WEBGL_VERSION=1 \
 		-s MAX_WEBGL_VERSION=3 \
-    -s USE_WEBGL2=1 \
-    -s FULL_ES2=0 \
-    -s FULL_ES3=0
+	  -s USE_WEBGL2=1 \
+	  -s FULL_ES2=0 \
+	  -s FULL_ES3=0
+endif
+
+# debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
+# -DDEBUG -D_DEBUG
+  DEBUG_CFLAGS=$(BASE_CFLAGS) \
+    -O1 -g3 \
+	  -s WASM=1 \
+	  -s MODULARIZE=0 \
+    -s SAFE_HEAP=0 \
+    -s DEMANGLE_SUPPORT=1 \
+    -s ASSERTIONS=2 \
+	  -s SINGLE_FILE=1 \
+    -frtti \
+	  -flto \
+    -fPIC
+
+  RELEASE_CFLAGS=$(BASE_CFLAGS) \
+	  -DNDEBUG \
+    -O3 -Oz \
+    -s WASM=1 \
+	  -s MODULARIZE=0 \
+    -s SAFE_HEAP=0 \
+    -s DEMANGLE_SUPPORT=0 \
+    -s ASSERTIONS=2 \
+    -flto \
+    -fPIC
+
+ifneq ($(USE_CODEC_OPUS),0)
+  CLIENT_LDFLAGS += -lopus
+  RELEASE_CFLAGS += \
+	  -DUSE_CODEC_OPUS=1 \
+    -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA \
+	  -I$(OPUSDIR)/include \
+	  -I$(OPUSDIR)/celt \
+	  -I$(OPUSDIR)/silk \
+    -I$(OPUSDIR)/silk/float \
+	  -I$(OPUSFILEDIR)/include 
+endif
+
+ifneq ($(USE_CODEC_VORBIS),0)
+  CLIENT_LDFLAGS += -lvorbis -logg
+  RELEASE_CFLAGS += \
+    -DUSE_CODEC_VORBIS=1 \
+    -I$(OGGDIR)/ \
+    -I$(VORBISDIR)/
 endif
 
 else

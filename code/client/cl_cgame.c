@@ -252,11 +252,13 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
 
+#ifdef USE_MULTIVM
 	if(!clSnap->multiview && cgvm != clc.currentView) {
 		// send a game update but don't bother with entities yet
 		snapshot->numEntities = 0;
 		return qtrue;
 	}
+#endif
 
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
@@ -584,7 +586,9 @@ void CL_ShutdownCGame( void ) {
 	clientWorlds[cgvm][1] = 0;
 	clientWorlds[cgvm][2] = 
 	clientWorlds[cgvm][3] = 1;
+#ifdef USE_MV
 	clc.currentView = 0;
+#endif
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST
@@ -1436,8 +1440,12 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
+#ifdef USE_MV
 	CM_SwitchMap(clc.currentView);
 	cgvm = clc.currentView;
+#else
+	cgvm = 0;
+#endif
 
 	// getting a valid frame message ends the connection process
 	if ( cls.state != CA_ACTIVE ) {

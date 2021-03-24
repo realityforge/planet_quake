@@ -271,7 +271,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
-		if ( !multiview && !clc.demoplaying ) {
+		if ( !multiview ) {
 			if ( !old->valid ) {
 				// should never happen
 				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");

@@ -127,7 +127,9 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 
 	// this is the snapshot we are creating
 	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
+#ifdef USE_MULTIVM
 	frame->world = gvm;
+#endif
 
 	// try to use a previous frame as the source for delta compressing the snapshot
 	if ( client->deltaMessage <= 0 || client->state != CS_ACTIVE ) {

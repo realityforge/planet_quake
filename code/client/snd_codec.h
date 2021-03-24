@@ -67,6 +67,7 @@ struct snd_codec_s
 };
 
 // Codec management
+void S_CodecInfo( void );
 void S_CodecInit( void );
 void S_CodecShutdown( void );
 void S_CodecRegister(snd_codec_t *codec);

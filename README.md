@@ -9,15 +9,6 @@
 - [Credits](#credits)
 
 
-# Reasons I quit working on this:
-- Chrome Network inspect no longer translate messages to UTF-8, only shows up in Base64
-- Compiling is really freaking slow, Emscripten changed something in 2020 to cause this and didn't make clear how my Makefile should change
-- Emscripten started generating separate .js.mem files, using `--memory-init-file 0` didn't help
-- Firefox is incredibly slow with this engine/renderer2 with GLSL
-- Unexplainable/punishing bugs. Can't figure out which function is being called and getting an error `function signature mismatch` but emscripten never tells me which function
-- No debugging symbols. Nothing lines up with files, offsets are wrong. Jumps to wrong places in code when clicking on exception messages or `.wasm[0xababab12e1]` some random hex offset that means nothing.
-- An unoptimized build -O0 is incredibly large, 150MB, but a slightly optimized build is not debuggable -O1 comes  out to like 5-15MB depending on the backend
-
 
                 ,---------------------------------------------.
                 |   ____              _             _  _____  |
@@ -233,3 +224,12 @@ Significant contributions from
   * Vincent S. Cojot <vincent at cojot dot name>
   * optical <alex@rigbo.se>
   * Aaron Gyes <floam@aaron.gy>
+
+# Reasons I quit working on this:
+  - Chrome Network inspect no longer translate messages to UTF-8, only shows up in Base64
+  - Compiling is really freaking slow, Emscripten changed something in 2020 to cause this and didn't make clear how my Makefile should change
+  - Emscripten started generating separate .js.mem files, using `--memory-init-file 0` didn't help
+  - Firefox is incredibly slow with this engine/renderer2 with GLSL
+  - Unexplainable/punishing bugs. Can't figure out which function is being called and getting an error `function signature mismatch` but emscripten never tells me which function
+  - No debugging symbols. Nothing lines up with files, offsets are wrong. Jumps to wrong places in code when clicking on exception messages or `.wasm[0xababab12e1]` some random hex offset that means nothing.
+  - An unoptimized build -O0 is incredibly large, 150MB, but a slightly optimized build is not debuggable -O1 comes  out to like 5-15MB depending on the backend

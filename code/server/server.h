@@ -308,7 +308,7 @@ typedef struct client_s {
 		
 	} multiview;
 #endif // USE_MV
-#ifdef USE_MULTIVM
+#ifdef USE_MV
 	int gameWorld;
 	int newWorld;
 #endif

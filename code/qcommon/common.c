@@ -33,7 +33,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifdef _DEBUG
+#ifndef  EMSCRIPTEN
 #include <execinfo.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

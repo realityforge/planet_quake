@@ -465,6 +465,7 @@ void S_Init( void )
 			}
 
 			S_SoundInfo();
+			S_CodecInfo();
 			Com_Printf( "Sound initialization successful.\n" );
 		} else {
 			Com_Printf( "Sound initialization failed.\n" );
