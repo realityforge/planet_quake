@@ -560,11 +560,23 @@ void IN_PushWindowEvent(SDL_WindowEvent e)
 			}
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:		re.SyncRender();
-											gw_active = qfalse; gw_minimized = qtrue; break;
+			gw_active = qfalse;
+			gw_minimized = qtrue;
+			break;
 		case SDL_WINDOWEVENT_RESTORED:
-		case SDL_WINDOWEVENT_MAXIMIZED:		gw_active = qtrue;  gw_minimized = qfalse; break;
-		case SDL_WINDOWEVENT_FOCUS_LOST:	gw_active = qfalse; break;
-		case SDL_WINDOWEVENT_FOCUS_GAINED:	gw_active = qtrue;  gw_minimized = qfalse; break;
+		case SDL_WINDOWEVENT_MAXIMIZED:		
+			gw_active = qtrue;
+			gw_minimized = qfalse;
+			break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			Key_ClearStates();
+			gw_active = qfalse;
+			break;
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			Key_ClearStates();
+			gw_active = qtrue;
+			gw_minimized = qfalse;
+			break;
 	}
 }
 
@@ -683,18 +695,17 @@ void IN_Frame( void )
 		// Loading in windowed mode
 		IN_DeactivateMouse( fullscreen );
 	}
-	else if ( !( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_INPUT_FOCUS ) )
-	{
+	//else if ( !( SDL_GetWindowFlags( SDL_window ) & SDL_WINDOW_INPUT_FOCUS ) )
+	//{
 		// Window not got focus
-		IN_DeactivateMouse( fullscreen );
-	}
+	//	IN_DeactivateMouse( fullscreen );
+	//}
 	else
 		IN_ActivateMouse( fullscreen );
 
 	if(focusChanged != gw_active) {
 		focusChanged = gw_active;
 		if(gw_active == qtrue) {
-			//IN_GrabMouse();
 			cls.firstClick = qtrue;
 		}
 	}
