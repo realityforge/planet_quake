@@ -3659,8 +3659,12 @@ A packet has arrived from the main event loop
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
 
+#ifdef USE_MV
 	CM_SwitchMap(clc.currentView);
 	cgvm = clc.currentView;
+#else
+	cgvm = 0;
+#endif
 
 	if ( msg->cursize < 5 ) {
 		Com_DPrintf( "%s: Runt packet\n", NET_AdrToStringwPort( from ) );

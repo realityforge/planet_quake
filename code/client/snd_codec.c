@@ -280,3 +280,14 @@ void S_CodecUtilClose(snd_stream_t **stream)
 	Z_Free(*stream);
 	*stream = NULL;
 }
+
+void S_CodecInfo(void) {
+	int count;
+	snd_codec_t *codec;
+	Com_Printf("Codecs: ");
+	for( count = 0, codec = codecs; codec; count++, codec = codec->next )
+	{		
+		Com_Printf("%s%s", count > 0 ? ", " : "", codec->ext);
+	}
+	Com_Printf("\n");
+}

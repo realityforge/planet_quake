@@ -1623,7 +1623,7 @@ void SV_Nofire_f(void) {
 void  SV_Lock_f(void) {
 	char *cmd = Cmd_Argv(0);
 	if(Cmd_Argc() > 2) {
-		Com_Printf ("Usage: lock/unlock", Cmd_Argv(0));
+		Com_Printf ("Usage: %s", Cmd_Argv(0));
 		return;
 	}
 	
