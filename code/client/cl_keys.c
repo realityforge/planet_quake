@@ -665,7 +665,9 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 				if ( cls.state == CA_CINEMATIC ) {
 					SCR_StopCinematic();
 				} else if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
+#ifndef USE_LAZY_MEMORY
 					CL_FlushMemory();
+#endif
 				}
 #endif
 #ifndef EMSCRIPTEN

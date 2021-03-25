@@ -1885,7 +1885,7 @@ void CL_Disconnect_f( void ) {
 			}
 			Cvar_Set( "com_errorMessage", "" );
 			if ( !CL_Disconnect( qfalse, qfalse ) ) { // restart client if not done already
-#ifndef EMSCRIPTEN
+#ifndef USE_LAZY_MEMORY
 				CL_FlushMemory();
 #endif
 			}
