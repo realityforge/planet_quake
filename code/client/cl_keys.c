@@ -690,17 +690,9 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	}
 
 #ifdef EMSCRIPTEN
-	if(cls.firstClick
-	  && (key == K_MOUSE1 || key == K_MOUSE2 || key == K_MOUSE3
-		  || key == K_MOUSE4 || key == K_MOUSE5)) {
-		cls.firstClick = qfalse;
-		S_Init();
-		cls.soundRegistered = qtrue;
-		S_BeginRegistration();
 	// only process touch events for 3rd device which is hidden on screen
 	//   this simulates tapping on the menu screen
 	// TODO: use second finger as K_MOUSE2 for zooming on weapons?
-	}
 	if (fingerId > 0 && (fingerId != 3 || !(Key_GetCatcher( ) & KEYCATCH_UI))) {
 		return;
 	}

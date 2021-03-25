@@ -978,7 +978,6 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 			props[r] = text_in[c];
 			r++;
 		} else {
-Com_Printf("Props: split %i\n", *count);
 			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
 				props[r] = 0;
 				(*count)++;

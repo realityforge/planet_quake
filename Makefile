@@ -614,6 +614,14 @@ ifeq ($(BUILD_RENDERER_OPENGL),1)
 	  -s FULL_ES3=0
 endif
 
+ifneq ($(USE_CODEC_VORBIS),0)
+  CLIENT_LDFLAGS += -lvorbis -logg
+  BASE_CFLAGS += -DUSE_CODEC_VORBIS=1 \
+    -DUSE_CODEC_VORBIS=1 \
+    -I$(OGGDIR)/ \
+    -I$(VORBISDIR)/
+endif
+
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
 # -DDEBUG -D_DEBUG
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
@@ -649,14 +657,6 @@ ifneq ($(USE_CODEC_OPUS),0)
 	  -I$(OPUSDIR)/silk \
     -I$(OPUSDIR)/silk/float \
 	  -I$(OPUSFILEDIR)/include 
-endif
-
-ifneq ($(USE_CODEC_VORBIS),0)
-  CLIENT_LDFLAGS += -lvorbis -logg
-  RELEASE_CFLAGS += \
-    -DUSE_CODEC_VORBIS=1 \
-    -I$(OGGDIR)/ \
-    -I$(VORBISDIR)/
 endif
 
 else
