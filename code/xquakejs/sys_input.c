@@ -497,6 +497,8 @@ void IN_PushMouseMove(SDL_MouseMotionEvent e) {
 
 void IN_PushMouseButton(SDL_MouseButtonEvent e) {
 	int b;
+	cls.firstClick = qfalse;
+
 	if(!mouseActive || in_joystick->integer) {
 		return;
 	}
@@ -559,7 +561,8 @@ void IN_PushWindowEvent(SDL_WindowEvent e)
 				Cvar_SetIntegerValue( "vid_ypos", e.data2 );
 			}
 			break;
-		case SDL_WINDOWEVENT_MINIMIZED:		re.SyncRender();
+		case SDL_WINDOWEVENT_MINIMIZED:	
+			re.SyncRender();
 			gw_active = qfalse;
 			gw_minimized = qtrue;
 			break;
@@ -652,19 +655,6 @@ void IN_PushInit(int *inputInterface)
 
 /*
 ===============
-IN_Minimize
-
-Minimize the game so that user is back at the desktop
-===============
-*/
-static void IN_Minimize( void )
-{
-	SDL_MinimizeWindow( SDL_window );
-}
-
-
-/*
-===============
 IN_Frame
 ===============
 */
@@ -713,6 +703,11 @@ void IN_Frame( void )
 	if(clickChanged != cls.firstClick) {
 		clickChanged = cls.firstClick;
 		if(cls.firstClick == qfalse) {
+			gw_active = qtrue;
+			gw_minimized = qfalse;
+			S_Init();
+			cls.soundRegistered = qtrue;
+			S_BeginRegistration();
 			IN_GrabMouse();
 		}
 	}

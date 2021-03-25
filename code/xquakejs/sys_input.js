@@ -546,7 +546,7 @@ var LibrarySysInput = {
         return SYSI.banner.includes(m)
       })[0]
       if(url) {
-        history.pushState({location: window.location.toString()}, window.title, SYSI.menus['baseq3'][url])
+        //history.pushState({location: window.location.toString()}, window.title, SYSI.menus['baseq3'][url])
         // deflood
         SYSI.banner = ''
         SYSI.bannerTime += 1000

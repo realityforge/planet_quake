@@ -271,12 +271,19 @@ qboolean SNDDMA_Init( void )
 	tmpPlayback = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
 	if ( tmpPlayback == 0 )
 	{
-		char *message = SDL_GetError();
+		const char *message = SDL_GetError();
+#ifndef EMSCRIPTEN
 		Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
+		SDL_QuitSubSystem( SDL_INIT_AUDIO );
+		return qfalse;
+#else
 		if(!Q_stristr(message, "already open")) {
-		//	SDL_QuitSubSystem( SDL_INIT_AUDIO );
-		//	return qfalse;
+			Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
+			return qfalse;
+		} else {
+			sdlPlaybackDevice = tmpPlayback;
 		}
+#endif
 	} else {
 		sdlPlaybackDevice = tmpPlayback;
 	}
@@ -394,8 +401,8 @@ void SNDDMA_Shutdown( void )
 #ifndef EMSCRIPTEN
 	// audio can't restart in emscripten, so skip it here
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
-	free(dma.buffer);
 #endif
+	free(dma.buffer);
 	dma.buffer = NULL;
 	dmapos = dmasize = 0;
 	snd_inited = qfalse;

@@ -3718,7 +3718,11 @@ void Com_Init( char *commandLine ) {
 
 	// get the developer cvar set as early as possible
 	Com_StartupVariable( "developer" );
+#ifdef _DEBUG
+	com_developer = Cvar_Get( "developer", "1", CVAR_TEMP );
+#else
 	com_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
+#endif
 	Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
 	Cvar_SetDescription(com_developer, "Set developer mode that includes extra logging information\nDefault: 0");
 

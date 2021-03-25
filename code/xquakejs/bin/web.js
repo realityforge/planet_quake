@@ -65,6 +65,15 @@ async function serveUnionFs(req, res, next) {
   }
   if (absolute && ufs.existsSync(absolute)) {
     sendCompressed(absolute, res, req.headers['accept-encoding'])
+  } else if (req.url.includes('version.json')) {
+    var mtime = new Date()
+    if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')))
+      mtime = ufs.statSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')).mtime
+    if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js'))) {}
+      mtime = ufs.statSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')).mtime
+    var versionString = JSON.stringify([mtime, mtime])
+    res.append('content-length', versionString.length)
+    res.send(versionString)
   } else {
     console.log(`Couldn't find file "${req.url}" "${absolute}".`)
 		next()

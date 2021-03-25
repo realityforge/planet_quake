@@ -314,9 +314,11 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	sfx_t	*sfx;
 
 	compressed = qfalse;
+#ifndef EMSCRIPTEN
 	if (!s_soundStarted) {
 		return 0;
 	}
+#endif
 
 	if ( strlen( name ) >= MAX_QPATH ) {
 		Com_Printf( "Sound name exceeds MAX_QPATH\n" );
@@ -358,8 +360,29 @@ S_BeginRegistration
 static void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
+#ifndef EMSCRIPTEN
 	if ( s_numSfx )
 		return;
+#else
+	SND_shutdown();
+	{
+		sfx_t	*sfx;
+		sndBuffer	*buffer, *nbuffer;
+		for ( int i = 1 ; i < s_numSfx ; i++ ) {
+			sfx = &s_knownSfx[i];
+			if ( sfx->inMemory ) {
+				buffer = sfx->soundData;
+				while(buffer != NULL) {
+					nbuffer = buffer->next;
+					SND_free(buffer);
+					buffer = nbuffer;
+				}
+				sfx->inMemory = qfalse;
+				sfx->soundData = NULL;
+			}
+		}
+	}
+#endif
 
 	SND_setup();
 
@@ -380,7 +403,12 @@ void S_memoryLoad( sfx_t *sfx ) {
 	sfx->lastTimeUsed = time;
 
 	// load the sound file
-	if ( !S_LoadSound ( sfx ) ) {
+#ifdef EMSCRIPTEN
+	if(cls.firstClick) {
+		sfx->inMemory = qfalse;
+	} else
+#endif
+	if (!S_LoadSound ( sfx ) ) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
@@ -493,7 +521,7 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 	}
 
 	if ( s_show->integer == 1 ) {
-		Com_Printf( "%i : %s\n", s_paintedtime, sfx->soundName );
+		Com_Printf( "%i (%i && %i): %s\n", s_paintedtime, s_soundMuted, gw_active, sfx->soundName );
 	}
 
 	time = Com_Milliseconds();
@@ -1461,11 +1489,6 @@ void S_FreeOldestSound( void ) {
 // =======================================================================
 
 static void S_Base_Shutdown( void ) {
-#ifdef EMSCRIPTEN
-	// never shut down sounds, emscripten has a problem starting them again
-	return;
-#endif
-
 	if ( !s_soundStarted ) {
 		return;
 	}
@@ -1539,6 +1562,12 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		S_COLOR_YELLOW " Please note that only mono/stereo devices are acceptable.\n" );
 #endif
 
+#ifdef EMSCRIPTEN
+	r = qfalse;
+	if(cls.firstClick) {
+		S_Base_StopAllSounds();
+	} else
+#endif
 	r = SNDDMA_Init();
 
 	if ( r ) {

@@ -1324,6 +1324,9 @@ void CL_ShutdownAll( void ) {
 	cls.cgameStarted = qfalse;
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
+#ifdef EMSCRIPTEN
+	cls.firstClick = qtrue;
+#endif
 }
 
 
@@ -1362,7 +1365,6 @@ Also called by Com_Error
 */
 void CL_FlushMemory( void ) {
 
-Com_Printf("Shutdown all\n");
 	// shutdown all the client stuff
 	CL_ShutdownAll();
 
@@ -1883,7 +1885,9 @@ void CL_Disconnect_f( void ) {
 			}
 			Cvar_Set( "com_errorMessage", "" );
 			if ( !CL_Disconnect( qfalse, qfalse ) ) { // restart client if not done already
+#ifndef EMSCRIPTEN
 				CL_FlushMemory();
+#endif
 			}
 			if ( uivms[uivm] ) {
 				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
@@ -2581,6 +2585,10 @@ static void CL_Snd_Restart_f( void )
 	CL_Snd_Shutdown();
 	// sound will be reinitialized by vid_restart
 	S_Init();
+	cls.soundStarted = qtrue;
+	cls.firstClick = qtrue;
+	cls.soundRegistered = qtrue;
+	S_BeginRegistration();
 	//CL_Vid_Restart();
 }
 
@@ -2821,6 +2829,8 @@ static void CL_DownloadsComplete( void ) {
 #ifndef EMSCRIPTEN
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
+#else
+	cls.firstClick = qtrue;
 #endif
 #else
 	CL_FlushMemory();
