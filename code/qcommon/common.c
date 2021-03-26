@@ -102,6 +102,9 @@ cvar_t	*com_cl_running;
 cvar_t  *com_cl_shownet;
 #endif
 
+cvar_t	*com_gamename;
+cvar_t	*com_protocol;
+
 cvar_t	*sv_paused;
 cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
@@ -3902,6 +3905,10 @@ void Com_Init_After_Filesystem( void ) {
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
 	Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients\nDefault: " XSTRING(Q3_VERSION));
+	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
+	Cvar_SetDescription(com_gamename, "Set the name of the game played, usually this is set by the mod.\nDefault: " XSTRING(GAMENAME_FOR_MASTER));
+	com_protocol = Cvar_Get("com_protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_INIT);
+	Cvar_SetDescription(com_protocol, "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
 
 	// this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM | CVAR_NOTABCOMPLETE );

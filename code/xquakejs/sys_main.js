@@ -420,6 +420,7 @@ var LibrarySysMain = {
     return SYSM.getQueryCommands().length + 1
   },
   Sys_DownloadLocalFile: function (fileName) {
+    // used to download screenshots to the computer after they are taken
     fileName = PATH.join(SYSF.fs_basepath, SYSF.fs_game, UTF8ToString(fileName))
     let file = new File([FS.readFile(fileName)],
       fileName, {

@@ -1960,7 +1960,7 @@ Com_DPrintf("VerifyPaks: UI doesn't match %s != %i\n", pArg, nChkSum2);
 			pArg = Cmd_Argv(nCurArg++);
 			if (*pArg != '@') {
 				bGood = qfalse;
-Com_DPrintf("VerifyPaks: Delimiiter is off %s\n", pArg);
+Com_DPrintf("VerifyPaks: Delimiter is off %s\n", pArg);
 				break;
 			}
 			// store checksums since tokenization is not re-entrant
