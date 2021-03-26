@@ -3328,12 +3328,21 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	
 	// check if server response is from a specific list
 	if(cls.pingUpdateSource == AS_LOCAL) {
-		for (i = 0; i < MAX_OTHER_SERVERS; i++) {
-			if (NET_CompareAdr(from, &cls.localServers[i].adr)) {
+		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
+			netadr_t addr;
+			if(!cl_master[i]->string[0]) {
+				continue;
+			}
+
+			if(!NET_StringToAdr(cl_master[i]->string, &addr, NA_UNSPEC)) {
+				continue;
+			}
+
+			if (NET_CompareAdr(from, &addr)) {
 				servers = &cls.localServers[0];
 				max = &cls.numlocalservers;
-				if(!Q_stricmpn(cls.localServers[i].adr.protocol, "ws", 2)
-				 	|| !Q_stricmpn(cls.localServers[i].adr.protocol, "wss", 3)) {
+				if(!Q_stricmpn(addr.protocol, "ws", 2)
+				 	|| !Q_stricmpn(addr.protocol, "wss", 3)) {
 					websocket = qtrue;
 				}
 				break;
@@ -3449,7 +3458,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 	*max = count;
 	total = count + cls.numGlobalServerAddresses;
 
-	Com_Printf( "getserversResponse:%3d servers parsed (total %d)\n", numservers, total);
+	Com_Printf( "getserversResponse%s:%3d servers parsed (total %d)\n", websocket ? " (ws)" : "", numservers, total);
 }
 
 
@@ -5531,10 +5540,13 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	// iterate servers waiting for ping response
 	for (i=0; i<MAX_PINGREQUESTS; i++)
 	{
-		if ( !cl_pinglist[i].time && cl_pinglist[i].adr.port 
-			&& (NET_CompareAdr( from, &cl_pinglist[i].adr )
-			|| (from->type == NA_LOOPBACK && NET_CompareAdr( &addr, &cl_pinglist[i].adr ))))
+		if ( cl_pinglist[i].time || cl_pinglist[i].adr.port == 0)
+			continue;
+
+		if (NET_CompareAdr( from, &cl_pinglist[i].adr )
+			|| (from->type == NA_LOOPBACK && NET_CompareAdr( &addr, &cl_pinglist[i].adr )))
 		{
+
 			// calc ping time
 			cl_pinglist[i].time = Sys_Milliseconds() - cl_pinglist[i].start;
 			if ( cl_pinglist[i].time < 1 )
@@ -5578,10 +5590,6 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 		}
 	}
 
-	if(from->type == NA_LOOPBACK) {
-		return;
-	}
-
 	// if not just sent a local broadcast or pinging local servers
 	if (cls.pingUpdateSource != AS_LOCAL) {
 		return;
@@ -5589,7 +5597,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 
 	for ( i = 0 ; i < MAX_OTHER_SERVERS ; i++ ) {
 		// empty slot
-		if ( (!cls.localServers[i].adr.port && !cls.localServers[i].adr.type) ) {
+		if ( cls.localServers[i].adr.port == 0 ) {
 			break;
 		}
 
@@ -5822,11 +5830,11 @@ static void CL_LocalServers_f( void ) {
 	int			i, j, n;
 	netadr_t	to;
 
-	Com_Printf( "Scanning for servers on the local network (%i servers)...\n", cls.numlocalservers);
+	Com_Printf( "Scanning for servers on the local network...\n");
 
-	cls.pingUpdateSource = AS_LOCAL;
 	// reset the list, waiting for response
 	cls.numlocalservers = 0;
+	cls.pingUpdateSource = AS_LOCAL;
 
 	for (i = 0; i < MAX_OTHER_SERVERS; i++) {
 		qboolean b = cls.localServers[i].visible;
@@ -5842,60 +5850,50 @@ static void CL_LocalServers_f( void ) {
 	n = (int)strlen( message );
 
 #ifdef USE_MASTER_LAN
-	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
-		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
-			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses++];
-			qboolean found = qfalse;
-			if(!cl_master[i]->string[0]) {
-				cls.numGlobalServerAddresses--;
-				continue;
-			}
-			NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC );
-			for(j = 0; j < cls.numlocalservers; j++) {
-				if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
-					found = qtrue;
-					break;
-				}
-			}
-			if(found || !addr->type || addr->type == NA_BAD || !addr->port) {
-				cls.numGlobalServerAddresses--;
-				continue;
-			}
-			CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
-			Q_strncpyz(
-				cls.localServers[cls.numlocalservers].hostName,
-				cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
-			cls.localServers[cls.numlocalservers].visible = qfalse;
-			cls.numlocalservers++;
-		}
-	}
-
 	// emulate localhost
 	NET_StringToAdr( va("127.0.0.1:%i", PORT_SERVER), &to, NA_UNSPEC );
 	to.type = NA_IP;
 	to.port = BigShort((short)PORT_SERVER);
+	cls.numlocalservers = -1;
+	hash_reset();
+	for ( i = 0; i < MAX_MASTER_SERVERS; i++ ) {
+		if(cls.numGlobalServerAddresses < MAX_GLOBAL_SERVERS) {
+			netadr_t *addr = &cls.globalServerAddresses[cls.numGlobalServerAddresses];
+			qboolean found = qfalse;
+			if(!cl_master[i]->string[0]) {
+				continue;
+			}
 
-	for (i = 0; i < cls.numlocalservers; i++) {
-		if (cls.localServers[i].adr.port == BigShort((short)PORT_MASTER)) {
-			Com_Printf("CL_LocalServers: checking master %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
-			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 68 " );
-			NET_OutOfBandPrint( NS_CLIENT, &cls.localServers[i].adr, "getservers 72 " );
-			cls.localServers[i].visible = qfalse;
-		} else if (NET_CompareAdr(&to, &cls.localServers[i].adr)) {
-			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
-			// send over loopback instead
-			to.type = NA_LOOPBACK;
-			NET_SendPacket( NS_CLIENT, n, message, &to );
-			to.type = NA_IP;			
-		} else {
-			Com_Printf("CL_LocalServers: updating status %s\n", NET_AdrToStringwPort(&cls.localServers[i].adr));
-			NET_SendPacket( NS_CLIENT, n, message, &cls.localServers[i].adr );
-			cls.localServers[i].visible = qtrue;
+			if(!NET_StringToAdr( cl_master[i]->string, addr, NA_UNSPEC )) {
+				continue;
+			}
+			// only add localhost if its in the list of cl_master
+			if (NET_CompareAdr(&to, addr)) {
+				for(j = 0; j < cls.numlocalservers; j++) {
+					if ( NET_CompareAdr( addr, &cls.localServers[j].adr ) ) {
+						found = qtrue;
+						break;
+					}
+				}
+				/*
+				if(!found) {
+					CL_InitServerInfo(&cls.localServers[cls.numlocalservers], addr);
+					Q_strncpyz(
+						cls.localServers[cls.numlocalservers].hostName,
+						cl_master[i]->string, sizeof(cls.localServers[cls.numlocalservers].hostName));
+					cls.localServers[cls.numlocalservers].visible = qfalse;
+					cls.numlocalservers++;
+					cls.numGlobalServerAddresses++;
+				}
+				*/
+			} else {
+				Com_Printf( "Requesting servers from %s (%s)...\n", cl_master[i]->string, NET_AdrToStringwPort(addr) );
+				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 68 " );
+				NET_OutOfBandPrint( NS_CLIENT, addr, "getservers 72 " );
+			}
+			
 		}
 	}
-	
-	//cls.numlocalservers = -1; // reset hash table
-	hash_reset();
 #else
 	// send each message twice in case one is dropped
 	for ( i = 0 ; i < 2 ; i++ ) {
@@ -6030,7 +6028,7 @@ void CL_GetPing( int n, char *buf, int buflen, int *pingtime )
 	int		time;
 	int		maxPing;
 
-	if (n < 0 || n >= MAX_PINGREQUESTS || (!cl_pinglist[n].adr.port && !cl_pinglist[n].adr.type))
+	if (n < 0 || n >= MAX_PINGREQUESTS || !cl_pinglist[n].adr.port)
 	{
 		// empty or invalid slot
 		buf[0]    = '\0';
@@ -6038,7 +6036,7 @@ void CL_GetPing( int n, char *buf, int buflen, int *pingtime )
 		return;
 	}
 
-	str = NET_AdrToStringwPort( &cl_pinglist[n].adr );
+	str = NET_AdrToStringwPortandProtocol( &cl_pinglist[n].adr );
 	Q_strncpyz( buf, str, buflen );
 
 	time = cl_pinglist[n].time;
@@ -6070,7 +6068,7 @@ CL_GetPingInfo
 */
 void CL_GetPingInfo( int n, char *buf, int buflen )
 {
-	if (n < 0 || n >= MAX_PINGREQUESTS || (!cl_pinglist[n].adr.port && !cl_pinglist[n].adr.type))
+	if (n < 0 || n >= MAX_PINGREQUESTS || !cl_pinglist[n].adr.port)
 	{
 		// empty or invalid slot
 		if (buflen)
@@ -6093,7 +6091,6 @@ void CL_ClearPing( int n )
 		return;
 
 	cl_pinglist[n].adr.port = 0;
-	cl_pinglist[n].adr.type = 0;
 }
 
 
@@ -6112,7 +6109,7 @@ int CL_GetPingQueueCount( void )
 	pingptr = cl_pinglist;
 
 	for (i=0; i<MAX_PINGREQUESTS; i++, pingptr++ ) {
-		if (pingptr->adr.port || pingptr->adr.type) {
+		if (pingptr->adr.port) {
 			count++;
 		}
 	}
@@ -6139,7 +6136,7 @@ static ping_t* CL_GetFreePing( void )
 	for ( i = 0; i < ARRAY_LEN( cl_pinglist ); i++, pingptr++ )
 	{
 		// find free ping slot
-		if ( pingptr->adr.port || pingptr->adr.type )
+		if ( pingptr->adr.port )
 		{
 			if ( pingptr->time == 0 )
 			{
@@ -6158,7 +6155,6 @@ static ping_t* CL_GetFreePing( void )
 
 		// clear it
 		pingptr->adr.port = 0;
-		pingptr->adr.type = 0;
 		return pingptr;
 	}
 
@@ -6232,7 +6228,7 @@ static void CL_Ping_f( void ) {
 	pingptr->time  = 0;
 
 	CL_SetServerInfoByAddress( &pingptr->adr, NULL, 0 );
-		
+
 	NET_OutOfBandPrint( NS_CLIENT, &to, "getinfo xxx" );
 }
 
@@ -6284,7 +6280,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 						break;
 					}
 					for (j = 0; j < MAX_PINGREQUESTS; j++) {
-						if (!cl_pinglist[j].adr.port && !cl_pinglist[j].adr.type) {
+						if (!cl_pinglist[j].adr.port) {
 							continue;
 						}
 						if (NET_CompareAdr( &cl_pinglist[j].adr, &server[i].adr)) {
@@ -6295,7 +6291,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 					if (j >= MAX_PINGREQUESTS) {
 						status = qtrue;
 						for (j = 0; j < MAX_PINGREQUESTS; j++) {
-							if (!cl_pinglist[j].adr.port && !cl_pinglist[j].adr.type) {
+							if (!cl_pinglist[j].adr.port) {
 								memcpy(&cl_pinglist[j].adr, &server[i].adr, sizeof(netadr_t));
 								cl_pinglist[j].start = Sys_Milliseconds();
 								cl_pinglist[j].time = 0;
@@ -6328,7 +6324,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 		status = qtrue;
 	}
 	for (i = 0; i < MAX_PINGREQUESTS; i++) {
-		if (!cl_pinglist[i].adr.port && !cl_pinglist[i].adr.type) {
+		if (!cl_pinglist[i].adr.port) {
 			continue;
 		}
 		CL_GetPing( i, buff, MAX_STRING_CHARS, &pingTime );
