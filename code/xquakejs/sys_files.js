@@ -255,6 +255,11 @@ var LibrarySysFiles = {
         SYSC.oldDLURL = SYSC.newDLURL
       }
     }
+    
+    var server = SYSC.Cvar_VariableString('cl_currentServerAddress')
+    if(server.length)
+      history.pushState({location: window.location.toString()}, window.title, '?connect ' + server)
+
     // doesn't work with cors anyways, need to download over SOCKS proxy
     /*
     var cdn = SYSC.Cvar_VariableString('fs_cdn')

@@ -2365,11 +2365,14 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		COM_StripExtension(name, ddsName, MAX_QPATH);
 		Q_strcat(ddsName, MAX_QPATH, ".dds");
 
+#ifdef USE_LAZY_LOAD
 		if(checkOnly) {
 			if ( ri.FS_FOpenFileRead(ddsName, NULL, qfalse) > -1 ) {
 				return;
 			}
-		} else {
+		} else 
+#endif
+		{
 			R_LoadDDS(ddsName, pic, width, height, picFormat, numMips);
 		}
 
@@ -2386,11 +2389,14 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 			if( !Q_stricmp( ext, imageLoaders[ i ].ext ) )
 			{
 				// Load
+#ifdef USE_LAZY_LOAD
 				if(checkOnly) {
 					if ( ri.FS_FOpenFileRead(localName, NULL, qfalse) > -1 ) {
 						return;
 					}
-				} else {
+				} else
+#endif
+				{
 					imageLoaders[ i ].ImageLoader( localName, pic, width, height );
 				}
 				break;
@@ -2426,11 +2432,14 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
 
 		// Load
+#ifdef USE_LAZY_LOAD
 		if(checkOnly) {
 			if ( ri.FS_FOpenFileRead(altName, NULL, qfalse) > -1 ) {
 				return;
 			}
-		} else {
+		} else 
+#endif
+		{
 			imageLoaders[ i ].ImageLoader( altName, pic, width, height );
 		}
 
@@ -3290,5 +3299,3 @@ void	R_SkinList_f( void ) {
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
-
-

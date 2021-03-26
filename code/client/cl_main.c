@@ -2216,6 +2216,7 @@ static void CL_SendPureChecksums( void ) {
 	// if we are pure we need to send back a command with our referenced pk3 checksums
 	len = sprintf( cMsg, "cp %d ", cl.serverId );
 	strcpy( cMsg + len, FS_ReferencedPakPureChecksums( sizeof( cMsg ) - len - 1 ) );
+Com_Printf("Check pure: %s\n", cMsg);
 
 	CL_AddReliableCommand( cMsg, qfalse );
 }
@@ -3128,7 +3129,7 @@ static void CL_CheckForResend( void ) {
 			CL_RequestAuthorization();
 #endif
 		// The challenge request shall be followed by a client challenge so no malicious server can hijack this connection.
-		NET_OutOfBandPrint( NS_CLIENT, &clc.serverAddress, "getchallenge %d", clc.challenge );
+		NET_OutOfBandPrint( NS_CLIENT, &clc.serverAddress, "getchallenge %d %s", clc.challenge, com_gamename->string );
 		break;
 		
 	case CA_CHALLENGING:
@@ -3327,6 +3328,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 
 	
 	// check if server response is from a specific list
+#ifdef USE_MASTER_LAN
 	if(cls.pingUpdateSource == AS_LOCAL) {
 		for (i = 0; i < MAX_MASTER_SERVERS; i++) {
 			netadr_t addr;
@@ -3349,6 +3351,7 @@ static void CL_ServersResponsePacket( const netadr_t* from, msg_t *msg, qboolean
 			}
 		}
 	}
+#endif
 
 	if (*max == -1) {
 		// state to detect lack of servers or lack of response
@@ -4396,7 +4399,9 @@ static void CL_InitRef_After_Load2( void )
 	rimp.FS_ListFiles = FS_ListFiles;
 	//rimp.FS_FileIsInPAK = FS_FileIsInPAK;
 	rimp.FS_FileExists = FS_FileExists;
+#ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
+#endif
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;

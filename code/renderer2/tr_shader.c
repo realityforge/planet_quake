@@ -68,12 +68,19 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
   qboolean  wasMapping = mapShaders;
 
   mapShaders = qfalse;
+#ifdef USE_LAZY_LOAD
   sh = R_FindDefaultShaderByName( shaderName );
-  if (sh == NULL) {
+  if (sh == NULL) 
+#endif
+  {
 	   sh = R_FindShaderByName( shaderName );
   }
 	if (sh == NULL || sh == tr.defaultShader) {
+#ifdef USE_LAZY_LOAD
 		h = RE_RegisterShaderLightMap(shaderName, index);
+#else
+    h = RE_RegisterShaderLightMap(shaderName, 0);
+#endif
 		sh = R_GetShaderByHandle(h);
 	}
 	if (sh == NULL || sh == tr.defaultShader) {
@@ -84,7 +91,11 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
   mapShaders = wasMapping;
 	sh2 = R_FindShaderByName( newShaderName );
   if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
+#ifdef USE_LAZY_LOAD
 		h = RE_RegisterShaderLightMap(newShaderName, index);
+#else
+    h = RE_RegisterShaderLightMap(newShaderName, 0);
+#endif
 		sh2 = R_GetShaderByHandle(h);
 	}
 
@@ -99,7 +110,10 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0
-      && (index == 0 || sh->lightmapIndex == index) ) {
+#ifdef USE_LAZY_LOAD
+      && (index == 0 || sh->lightmapIndex == index) 
+#endif
+    ) {
 			if (sh != sh2) {
 				sh->remappedShader = sh2;
 			} else {
@@ -3655,9 +3669,11 @@ shader_t *R_FindShaderByName( const char *name ) {
   return R_FindShaderByNameInternal(name, qfalse);
 }
 
+#ifdef USE_LAZY_LOAD
 shader_t *R_FindDefaultShaderByName( const char *name ) {
   return R_FindShaderByNameInternal(name, qtrue);
 }
+#endif
 
 /*
 ===============

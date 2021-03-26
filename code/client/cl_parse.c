@@ -606,10 +606,12 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		s = Info_ValueForKey( systemInfo, "sv_paks" );
 		t = Info_ValueForKey( systemInfo, "sv_pakNames" );
 		FS_PureServerSetLoadedPaks( s, t );
+Com_Printf("Loaded: %s (%s)\n", s, t);
 
 		s = Info_ValueForKey( systemInfo, "sv_referencedPaks" );
 		t = Info_ValueForKey( systemInfo, "sv_referencedPakNames" );
 		FS_PureServerSetReferencedPaks( s, t );
+Com_Printf("Referenced: %s (%s)\n", s, t);
 	}
 
 	// scan through all the variables in the systeminfo and locally set cvars to match

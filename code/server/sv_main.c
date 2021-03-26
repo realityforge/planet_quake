@@ -847,7 +847,7 @@ static void SVC_Info( const netadr_t *from ) {
 	// echo back the parameter to status. so servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv(1) );
-
+	Info_SetValueForKey( infostring, "gamename", com_gamename->string );
 	Info_SetValueForKey( infostring, "protocol", va("%i", PROTOCOL_VERSION) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
@@ -1509,7 +1509,7 @@ void SV_Frame( int msec ) {
 			for ( i = 0; i < sv_maxclients->integer; i++ ) {
 				if ( svs.clients[ i ].state < CS_CONNECTED )
 					continue;
-#ifdef USE_MV
+#ifdef USE_MULTIVM
 				for(int j = 0; j < MAX_NUM_VMS; j++) {
 					for ( n = 0; n < PACKET_BACKUP; n++ ) {
 						if ( svs.clients[ i ].frames[j][ n ].first_psf > svs.modSnapshotPSF )

@@ -364,7 +364,7 @@ static void S_Base_BeginRegistration( void ) {
 	if ( s_numSfx )
 		return;
 #else
-	SND_shutdown();
+	//SND_shutdown();
 	{
 		sfx_t	*sfx;
 		sndBuffer	*buffer, *nbuffer;
