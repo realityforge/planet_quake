@@ -644,7 +644,7 @@ char *NET_ParseProtocol(const char *s, char *protocol)
 		if(protocol != 0) Com_Memcpy(protocol, "https", 6);
 		return (char *)&s[8];
   } else {
-		if(protocol != 0) Com_Memcpy(protocol, "", 1);
+		if(protocol != 0) protocol[0] = 0;
 		return (char *)&s[0];
   }
 }
@@ -669,6 +669,7 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 1;
 	}
 
+	a->protocol[0] = 0;
 	search = NET_ParseProtocol(s, a->protocol);
 	Q_strncpyz( base, search, sizeof( base ) );
 	

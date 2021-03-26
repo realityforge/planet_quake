@@ -309,13 +309,13 @@ function convertPrintable(message) {
 	return Array.from(message).map(c => c >= 20 && c <= 127 ? String.fromCharCode(c) : '.').join('')
 }
 
-function SHOWNET(message, socket, client) {
+function SHOWNET(message, socket, client, websocket) {
   var unzipped
 	if(message === true) return
   if(message[0] === 255 && message[1] === 255
     && message[2] === 255 && message[3] === 255) {
     var msg = convertPrintable(message)
-		unzipped = [client ? '--> client' : '<-- server', msg]
+		unzipped = [(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), msg]
     if(msg.match(/connectResponse/ig)) {
       socket.challenge = parseInt(msg.substr(20))
       socket.compat = false
@@ -325,7 +325,7 @@ function SHOWNET(message, socket, client) {
     } else if(msg.match(/connect\s/ig)) {
 			var decompressed = decompressMessage(message, 12)
 			decompressed = convertPrintable(decompressed)
-      unzipped = [client ? '--> client' : '<-- server', msg.substr(0, 12) + decompressed]
+      unzipped = [(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), msg.substr(0, 12) + decompressed]
     }
   } else {
     //console.log(Array.from(message))
@@ -359,14 +359,14 @@ function SHOWNET(message, socket, client) {
 		
     if ( (!client && sequence <= socket.incomingSequence)
 	 		|| (client && sequence <= socket.serverSequence) ) {
-			console.log([client ? '--> client' : '<-- server', 'Out of order packet', sequence, socket.incomingSequence])
+			console.log([(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), 'Out of order packet', sequence, socket.incomingSequence])
       return false
     }
 		
     socket.dropped = sequence - (socket.incomingSequence+1)
 		
     if(fragment) {
-			console.log([client ? '--> client' : '<-- server', 'fragment'])
+			console.log([(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), 'fragment'])
 
 			// TODO: implement fragment and only return on final message
 			if(!socket.fragmentBuffer) socket.fragmentBuffer = Buffer.from([])
@@ -420,13 +420,13 @@ function SHOWNET(message, socket, client) {
 			read = readBits(message, read[0], 32)
 			var ack = read[1]
 			if(ack < 0) {
-				console.log([client ? '--> client' : '<-- server', 'Illegible client message', serverId, ack])
+				console.log([(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), 'Illegible client message', serverId, ack])
 				return
 			}
 			read = readBits(message, read[0], 32)
 			var reliableAcknowledge = read[1]
 			if(reliableAcknowledge < socket.reliableSequence - MAX_RELIABLE_COMMANDS) {
-				console.log([client ? '--> client' : '<-- server', 'Unreliable client message', serverId, reliableAcknowledge])
+				console.log([(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), 'Unreliable client message', serverId, reliableAcknowledge])
 				return
 			}
 			read = readBits(message, read[0], 8)
@@ -452,7 +452,7 @@ function SHOWNET(message, socket, client) {
 				default:
 			}
 			
-			unzipped = [client ? '--> client' : '<-- server', clc_strings[cmd], read[1]]
+			unzipped = [(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), clc_strings[cmd], read[1]]
 		} else {
 			read = readBits(message, read, 32)
 	    var ack = read[1]
@@ -508,7 +508,7 @@ function SHOWNET(message, socket, client) {
 				break
 				default:
 	    }
-			unzipped = [client ? '--> client' : '<-- server', svc_strings[cmd], read[1]]
+			unzipped = [(websocket ? '*' : '') + (client ? '--> client' : '<-- server'), svc_strings[cmd], read[1]]
 		}
     //unzipped = [client ? 'client' : 'server', sequence, fragment, fragmentStart, fragmentLength, cmd, svc_strings[cmd]]
   }
@@ -942,7 +942,7 @@ Server.prototype.proxyCommand = async function(socket, reqInfo, onData) {
 				: null
 
       self._receivers[port] = socket
-      SHOWNET(reqInfo.data, socket, false)
+      SHOWNET(reqInfo.data, socket, false, true)
       await self.websocketRequest(
         self._onProxyError.bind(self, port),
         self._onUDPMessage.bind(self, port, true),

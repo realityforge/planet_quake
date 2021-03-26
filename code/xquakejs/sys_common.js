@@ -833,7 +833,13 @@ var LibrarySysCommon = {
 			throw e
 		}
 	},
-	Sys_Debug: function () { debugger },
+	Sys_Debug: function () {
+		try {
+			throw new Error('debugging error')
+		} catch (e) {
+			console.log(e)
+		}
+	},
 };
 
 autoAddDeps(LibrarySysCommon, '$SYSC');
