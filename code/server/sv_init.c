@@ -795,6 +795,10 @@ void SV_SpawnServer_After_Startup( void ) {
 	
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
+#ifdef USE_RECENT_EVENTS
+	memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MAPCHANGE, mapname), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+#endif
 
 	// start recording a demo
 	if ( sv_autoDemo->integer ) {
@@ -932,6 +936,11 @@ void SV_Init( void )
 	sv_frozen = Cvar_Get("sv_frozen", "0", CVAR_TEMP);
 	sv_lock[0] = Cvar_Get("sv_lockRed", "0", CVAR_TEMP);
 	sv_lock[1] = Cvar_Get("sv_lockBlue", "0", CVAR_TEMP);
+#endif
+
+#ifdef USE_RECENT_EVENTS
+	sv_recentPassword = Cvar_Get ("recentPassword", "", CVAR_TEMP );
+	Cvar_SetDescription(sv_recentPassword, "Set the required to get a response of key events that happened on the server since the last check\nDefault: empty");
 #endif
 
 	// server vars

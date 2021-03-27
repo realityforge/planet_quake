@@ -30,6 +30,13 @@ vm_t			*gvms[MAX_NUM_VMS] = {};		// game virtual machine
 int       gameWorlds[MAX_NUM_VMS];
 //#endif
 
+#ifdef USE_RECENT_EVENTS
+char recentEvents[1024][MAX_INFO_STRING] = {};
+int recentI = 0;
+cvar_t	*sv_recentPassword;		// password for recent event updates
+char *recentTemplate = "{\"timestamp\":\"%i\",\"type\":%i,\"value\":\"%s\"}";
+#endif
+
 cvar_t	*sv_fps;				// time rate for running non-clients
 cvar_t	*sv_timeout;			// seconds without any message
 cvar_t	*sv_zombietime;			// seconds to sink messages after disconnect
@@ -942,6 +949,16 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 		limited = qtrue;
 		valid = qtrue;
 		Com_Printf( "Rcon (limited) from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
+#endif
+#ifdef USE_RECENT_EVENTS
+	} else if (( sv_recentPassword->string[0] && strcmp( pw, sv_recentPassword->string ) == 0 )) {
+		// send all events to requester
+		for(int i = 0; i < ARRAY_LEN(recentEvents); i++) {
+			if(recentEvents[i][0] == 0)
+				continue;
+			NET_OutOfBandPrint( NS_SERVER, from, "%s", recentEvents[i] );
+		}
+		return;
 #endif
 	} else {
 		// Make DoS via rcon impractical
