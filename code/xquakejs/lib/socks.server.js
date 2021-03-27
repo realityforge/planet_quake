@@ -129,6 +129,7 @@ function Server(opts) {
 	this._forwardIP = (opts || {}).proxy || ''
   this._slaves = (opts || {}).slaves || []
   this._listeners = {}
+	this._httpServers = {}
   this._receivers = {}
   this._directConnects = {}
   this._timeouts = {}
@@ -721,6 +722,9 @@ Server.prototype.tryBindPort = async function(reqInfo) {
 
 Server.prototype.websockify = async function (reqInfo, realPort) {
   var self = this
+	if(typeof self._httpServers[realPort] != 'undefined') {
+		return
+	}
   var onUDPMessage = self._onUDPMessage.bind(self, reqInfo.dstPort, true)
   var onError = this._onProxyError.bind(self, reqInfo.dstPort)
   var httpServer = http.createServer()
@@ -744,7 +748,7 @@ Server.prototype.websockify = async function (reqInfo, realPort) {
     try {
       httpServer.on('error', self._onErrorNoop)
       httpServer.listen(realPort, reqInfo.dstAddr, resolve)
-        .on('error', self._onErrorNoop)
+			self._httpServers[realPort] = httpServer
     } catch (e) {
       console.log(e.message)
     }

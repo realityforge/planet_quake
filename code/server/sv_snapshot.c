@@ -992,11 +992,12 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	msg_t		msg;
 	int     headerBytes;
 	playerState_t	*ps;
+
+#ifdef USE_MULTIVM
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 
-#ifdef USE_MULTIVM
 	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
 		if(!gvms[gvm]) continue;
 		CM_SwitchMap(gameWorlds[gvm]);
@@ -1079,6 +1080,11 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 #endif
 }
 
+#ifdef USE_REFEREE_CMDS
+static int numConnected = 0;
+static int numScored = 0;
+static int lastReset = 0;
+#endif
 
 /*
 =======================
@@ -1138,10 +1144,30 @@ void SV_SendClientMessages( void )
 		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
+#ifdef USE_REFEREE_CMDS
+		{
+			playerState_t *ps = SV_GameClientNum( i );
+			numConnected++;
+			if ( ps->pm_flags & PMF_SCOREBOARD ) {
+				numScored++;
+			}
+		}
 	}
 	
-#ifdef USE_REFEREE_CMDS
 	// check if scoreboard is being shown to all players, indicating game end
-	//   if game has ended, create a matchend event with all the player scores
+	//   create a matchend event with all the player scores
+	if(numConnected > 0 && numConnected == numScored) {
+		// the polling service should callback at this time for a getstatus message?
+		memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MATCHEND, ""), MAX_INFO_STRING);
+		if(recentI == 1024) recentI = 0;
+	}
+	
+	// must send a snapshot to a client at least once every second
+	if(sv.time - lastReset > 1000) {
+		numConnected = 0;
+		numScored = 0;
+	}
+#else
+	}
 #endif
 }
