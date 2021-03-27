@@ -2711,8 +2711,8 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 					}
 				}
 			}
-			if(strcmp(Cmd_Argv(0), "say")
-				&& strcmp(Cmd_Argv(1), "server medic")) {
+			if(!strcmp(Cmd_Argv(0), "say")
+				&& Q_stristr(Cmd_ArgsFrom(1), "server medic")) {
 				memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
 				if(recentI == 1024) recentI = 0;
 				Cmd_Clear();

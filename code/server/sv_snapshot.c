@@ -1081,8 +1081,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 }
 
 #ifdef USE_REFEREE_CMDS
+// probably will never have more than 1024 client connected?
 static int numConnected = 0;
-static int numScored = 0;
+static byte numScored[128] = {};
 static int lastReset = 0;
 #endif
 
@@ -1109,6 +1110,9 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
+#ifdef USE_REFEREE_CMDS
+	numConnected = 0;
+#endif
 
 	// send a message to each connected client
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -1146,26 +1150,42 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 #ifdef USE_REFEREE_CMDS
 		{
-			playerState_t *ps = SV_GameClientNum( i );
-			numConnected++;
-			if ( ps->pm_flags & PMF_SCOREBOARD ) {
-				numScored++;
+			playerState_t *ps;
+			ps = SV_GameClientNum( i );
+			if(c->netchan.remoteAddress.type != NA_BOT) {
+				numConnected++;
+				//clientSnapshot_t	*frame;
+				//frame = &c->frames[gvm][ c->netchan.outgoingSequence & PACKET_MASK ];
+				//ps = &frame->ps;
+				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
+					numScored[i / 8] |= 1 << (i % 8);
+				} else {
+					numScored[i / 8] &= ~(1 << (i % 8));
+				}
 			}
 		}
 	}
-	
-	// check if scoreboard is being shown to all players, indicating game end
-	//   create a matchend event with all the player scores
-	if(numConnected > 0 && numConnected == numScored) {
-		// the polling service should callback at this time for a getstatus message?
-		memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MATCHEND, ""), MAX_INFO_STRING);
-		if(recentI == 1024) recentI = 0;
-	}
-	
 	// must send a snapshot to a client at least once every second
 	if(sv.time - lastReset > 1000) {
+		lastReset = sv.time;
 		numConnected = 0;
-		numScored = 0;
+		memset(&numScored, 0, sizeof(numScored));
+	} else if (lastReset < sv.time) {		
+		// check if scoreboard is being shown to all players, indicating game end
+		//   create a matchend event with all the player scores
+		int numScoredBits = 0;
+		for(int i = 0; i < ARRAY_LEN(numScored); i++) {
+			for(int j = 0; j < 8; j++) {
+				if(numScored[i] & (1 << j))
+					numScoredBits++;
+			}
+		}
+		if(numConnected > 0 && numConnected == numScoredBits) {
+			// the polling service should callback at this time for a getstatus message?
+			memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MATCHEND, "Match ended"), MAX_INFO_STRING);
+			if(recentI == 1024) recentI = 0;
+			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
+		}
 	}
 #else
 	}
