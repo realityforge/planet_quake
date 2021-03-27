@@ -380,6 +380,17 @@ extern	serverStatic_t	svs;				// persistant server info across maps
 extern	server_t		sv;					// cleared each map
 extern  int    gameWorlds[MAX_NUM_VMS];
 
+#ifdef USE_RECENT_EVENTS
+extern int  recentI;
+extern char recentEvents[1024][MAX_INFO_STRING];
+extern	cvar_t	*sv_recentPassword;
+typedef enum {
+	SV_EVENT_MAPCHANGE,
+	SV_EVENT_CLIENTSAY
+} recentEvent_t;
+extern char *recentTemplate;
+#endif
+
 extern	cvar_t	*sv_fps;
 extern	cvar_t	*sv_timeout;
 extern	cvar_t	*sv_zombietime;
