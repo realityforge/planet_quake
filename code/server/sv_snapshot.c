@@ -1139,4 +1139,9 @@ void SV_SendClientMessages( void )
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
 	}
+	
+#ifdef USE_REFEREE_CMDS
+	// check if scoreboard is being shown to all players, indicating game end
+	//   if game has ended, create a matchend event with all the player scores
+#endif
 }

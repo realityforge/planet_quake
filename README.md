@@ -40,7 +40,7 @@ Some of the major features currently implemented are:
   * Various mod disassemblies for associating hard-coded shaders with files even if the mod isn't open source
   * Various graphs of mods, including file names for repacked content
   * PNG support
-  * Docker support
+  * Docker support, TODO: copy kubernetes support https://github.com/criticalstack/quake-kube
   * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
   * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports. TODO: add touch absolute mouse subtraction and addition with optional variable for cursor spy shader name.
   * Deferred (lazy) loading of all game content, entities, models, textures. New `cl_lazyLoad` cvar, 0 - turn off lazy loading, only load textures available on disk, 1 - load all textures available and fetch remotely as needed, 2 - set all to default and try to load from `sv_dlURL`, TODO: 3 - load textures only during INTERMISSION or dead or SPECTATING, 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes). TODO: load lowest quality until displayed using a palette defined in a .shader. TODO: leave files open for changing mip levels (especially on DDS)? TODO: lazy loading file streaming out of pk3 on server over UDP or cURL interface.
@@ -51,8 +51,12 @@ Some of the major features currently implemented are:
   * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"` TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: Drag and drop for multiQVM views. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: connect to multiple servers at the same time.
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
-  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle POC.
+  * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle proof-of-concept.
   * Checksum pk3 spoofing for playing with original clients using web converted files.
+  * Referee controls. `freeze` for server side pausing. `lock/lockred/lockblue` to lock team joining.
+  * Roles based rcon access. Set up to 24 rcon passwords each with a specific role assigned to it. Set the names of the roles with `sv_roles` (default: admin referee moderator). Role names must be alphanumeric with spaces in between, up to 24 names can be specified. Roles are set with `sv_roleName` where Name one of the role names set in `sv_roles`. Role capabilities are set with the name of the console command, e.g. `ban kick map`. Authorized users can access the entire command, that is, if they have `exec` permissions they can execute ANY script. If you want to limit executions to specific commands or combinations an alias has to be used and the alias would be listed in the `sv_roleName` instead of the command.
+  * Event streaming. When specific things happen on the server, rcon can query the list of events and get a JSON style response of what happened since the last time it was checked. E.g. `{"type":1,"value":"q3dm1"}` where type `1` is SV_EVENT_MAPCHANGE. This is also used for the discord integration, and rankings. TODO: piped output for "pushing" events (as opposed to polling).
+  * Discord chat integration.
   * Many, many bug fixes
 
 Coming soon!
@@ -64,13 +68,11 @@ Coming soon!
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
-  * Alternate chat server integration, discord and telegram
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * HTML and CSS menu renderer
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
-  * Language agnostic events API for writing new cgames/games/uis in other languages like Python, JavaScript, Lua
   * r_smp 2 Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
   * Always on twitch.tv streaming at no expense to the game server
   * Shader palettes for pre-rendering colors and changing the theme of maps
@@ -78,7 +80,7 @@ Coming soon!
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server UDP downloads
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
-  * webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
+  * IN PROGRESS: webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Ported IQM and MD5 bone structures from spearmint engine
   * Synchronized server/AI for offline and connection interruptions
   * Repacking-as-a-service, uploader for repacking game content
@@ -88,7 +90,6 @@ Coming soon!
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
-  * Server moderator permissions, admins can set sv_modCmds and sv_modCvars to allow moderator passwords modpassword1-3 to only change specific settings, like maps, bans, allowing voting, but not change games like fs_basepath and fs_game.
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you

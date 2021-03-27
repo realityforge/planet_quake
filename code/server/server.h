@@ -386,7 +386,9 @@ extern char recentEvents[1024][MAX_INFO_STRING];
 extern	cvar_t	*sv_recentPassword;
 typedef enum {
 	SV_EVENT_MAPCHANGE,
-	SV_EVENT_CLIENTSAY
+	SV_EVENT_CLIENTSAY,
+	SV_EVENT_MATCHEND,
+	SV_EVENT_CALLADMIN,
 } recentEvent_t;
 extern char *recentTemplate;
 #endif

@@ -1649,6 +1649,11 @@ void  SV_Lock_f(void) {
 		return;
 	}
 }
+
+void SV_CallAdmin_f( void ) {
+	memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+}
 #endif
 
 
@@ -1666,6 +1671,7 @@ void SV_AddOperatorCommands( void ) {
 	initialized = qtrue;
 
 #ifdef USE_REFEREE_CMDS
+	Cmd_AddCommand ("calladmin", SV_CallAdmin_f);
 	Cmd_AddCommand ("lock", SV_Lock_f);
 	Cmd_SetDescription( "lock", "Lock a team from being joined by new clients.\nUsage: lock/unlock");
 	Cmd_AddCommand ("unlock", SV_Lock_f);

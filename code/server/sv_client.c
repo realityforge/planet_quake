@@ -2688,15 +2688,8 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team")
 		 		&& strcmp(Cmd_Argv(0), "tell"))
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
-#ifdef USE_RECENT_EVENTS
-			if(!strcmp(Cmd_Argv(0), "say")) {
-				memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTSAY, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
-				if(recentI == 1024) recentI = 0;
-			}
-#endif
 #ifdef USE_REFEREE_CMDS
 			else { // don't sanitize, instead check chat commands for client referee mute
-				;
 				if(cl->muted) {
 					Cmd_Clear();
 					return qtrue;
@@ -2717,6 +2710,19 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 						return qtrue;
 					}
 				}
+			}
+			if(strcmp(Cmd_Argv(0), "say")
+				&& strcmp(Cmd_Argv(1), "server medic")) {
+				memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				if(recentI == 1024) recentI = 0;
+				Cmd_Clear();
+				return qtrue;
+			}
+#endif
+#ifdef USE_RECENT_EVENTS
+			if(!strcmp(Cmd_Argv(0), "say")) {
+				memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTSAY, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				if(recentI == 1024) recentI = 0;
 			}
 #endif
 			VM_Call( gvms[gvm], 1, GAME_CLIENT_COMMAND, cl - svs.clients );
