@@ -45,6 +45,14 @@ A normal server packet will look like:
 =============================================================================
 */
 
+#ifdef USE_REFEREE_CMDS
+// probably will never have more than 1024 client connected?
+static int numConnected = 0;
+static byte numScored[128] = {};
+static byte numDied[128] = {};
+static int lastReset = 0;
+#endif
+
 /*
 =============
 SV_EmitPacketEntities
@@ -661,6 +669,24 @@ static void SV_BuildCommonSnapshot( void )
 			if ( ent->r.svFlags & SVF_NOCLIENT ) {
 				continue;
 			}
+			
+#ifdef USE_REFEREE_CMDS
+			if(ent->s.clientNum < sv_maxclients->integer
+				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
+				&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT ) {
+//if(ent->s.event > 0)
+//Com_Printf("event: %i\n", ent->s.event & ~EV_EVENT_BITS);
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.event & ~EV_EVENT_BITS) == EV_DEATH1
+					&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))) {
+					char clientId[10];
+					memcpy(clientId, va("%i", ent->s.clientNum), sizeof(clientId));
+					memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
+					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+				}
+			}
+#endif
 
 			list[ count++ ] = ent;
 			sv.svEntities[gvm][ num ].snapshotCounter = -1;
@@ -1080,13 +1106,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 #endif
 }
 
-#ifdef USE_REFEREE_CMDS
-// probably will never have more than 1024 client connected?
-static int numConnected = 0;
-static byte numScored[128] = {};
-static int lastReset = 0;
-#endif
-
 /*
 =======================
 SV_SendClientMessages
@@ -1154,9 +1173,31 @@ void SV_SendClientMessages( void )
 			ps = SV_GameClientNum( i );
 			if(c->netchan.remoteAddress.type != NA_BOT) {
 				numConnected++;
-				//clientSnapshot_t	*frame;
-				//frame = &c->frames[gvm][ c->netchan.outgoingSequence & PACKET_MASK ];
+				clientSnapshot_t	*frame;
+				frame = &c->frames[0][ c->netchan.outgoingSequence & PACKET_MASK ];
 				//ps = &frame->ps;
+#ifdef USE_REFEREE_CMDS
+			for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+				int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
+				//if(j >= ps.eventSequence) {
+//if(event > 0)
+//Com_Printf("event: %i\n", event);
+					if(event >= EV_DEATH1 && event <= EV_DEATH3) {
+Com_Printf("event: Player died...\n");
+						char clientId[10];
+						memcpy(clientId, va("%i", i), sizeof(clientId));
+						memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+						numDied[i / 8] |= 1 << (i % 8);
+					}
+				//}
+			}
+#endif
+
+
+				if(ps->pm_flags & (PMF_RESPAWNED)) {
+					numDied[i / 8] &= ~(1 << (i % 8));
+				}
 				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
 					numScored[i / 8] |= 1 << (i % 8);
 				} else {
@@ -1182,6 +1223,7 @@ void SV_SendClientMessages( void )
 		}
 		if(numConnected > 0 && numConnected == numScoredBits) {
 			// the polling service should callback at this time for a getstatus message?
+			// TODO: update match ended with player list
 			memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MATCHEND, "Match ended"), MAX_INFO_STRING);
 			if(recentI == 1024) recentI = 0;
 			lastReset = sv.time + 10000; // don't make match event for another 10 seconds

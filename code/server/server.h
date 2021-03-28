@@ -389,6 +389,7 @@ typedef enum {
 	SV_EVENT_CLIENTSAY,
 	SV_EVENT_MATCHEND,
 	SV_EVENT_CALLADMIN,
+	SV_EVENT_CLIENTDIED,
 } recentEvent_t;
 extern char *recentTemplate;
 #endif
