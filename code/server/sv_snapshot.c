@@ -673,7 +673,8 @@ static void SV_BuildCommonSnapshot( void )
 #ifdef USE_RECENT_EVENTS
 			if(ent->s.clientNum < sv_maxclients->integer
 				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
-				&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT ) {
+			//	&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT 
+			) {
 //if(ent->s.event > 0)
 //Com_Printf("event: %i\n", ent->s.event & ~EV_EVENT_BITS);
 				if(ent->s.eType == ET_PLAYER
@@ -691,6 +692,15 @@ static void SV_BuildCommonSnapshot( void )
 					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
 					if(recentI == 1024) recentI = 0;
 					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+				}
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.event & ~EV_EVENT_BITS) == EV_CHANGE_WEAPON) {
+					char weapon[1024];
+					playerState_t *ps = SV_GameClientNum( ent->s.clientNum );
+					client_t *c = &svs.clients[ent->s.clientNum];
+					memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
 				}
 			}
 #endif
@@ -1202,6 +1212,11 @@ void SV_SendClientMessages( void )
 	*/
 			
 				if(ps->pm_flags & (PMF_RESPAWNED)) {
+					char clientId[10];
+					memcpy(clientId, va("%i", i), sizeof(clientId));
+					// TODO: add respawn location
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
 					numDied[i / 8] &= ~(1 << (i % 8));
 				}
 				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {

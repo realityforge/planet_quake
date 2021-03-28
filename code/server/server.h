@@ -390,6 +390,8 @@ typedef enum {
 	SV_EVENT_MATCHEND,
 	SV_EVENT_CALLADMIN,
 	SV_EVENT_CLIENTDIED,
+	SV_EVENT_CLIENTWEAPON,
+	SV_EVENT_CLIENTRESPAWN,
 } recentEvent_t;
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
