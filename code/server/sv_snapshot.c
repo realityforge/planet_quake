@@ -670,7 +670,7 @@ static void SV_BuildCommonSnapshot( void )
 				continue;
 			}
 			
-#ifdef USE_REFEREE_CMDS
+#ifdef USE_RECENT_EVENTS
 			if(ent->s.clientNum < sv_maxclients->integer
 				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
 				&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT ) {
@@ -679,9 +679,16 @@ static void SV_BuildCommonSnapshot( void )
 				if(ent->s.eType == ET_PLAYER
 					&& (ent->s.event & ~EV_EVENT_BITS) == EV_DEATH1
 					&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))) {
-					char clientId[10];
-					memcpy(clientId, va("%i", ent->s.clientNum), sizeof(clientId));
-					memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
+					char player[1024];
+					int playerLength;
+					client_t *c1 = &svs.clients[ent->s.clientNum];
+					playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
+					client_t *c2 = &svs.clients[ent->s.eventParm];
+					playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
+					playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
+						ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
+						ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
 					if(recentI == 1024) recentI = 0;
 					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
 				}
@@ -1129,7 +1136,7 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
-#ifdef USE_REFEREE_CMDS
+#ifdef USE_RECENT_EVENTS
 	numConnected = 0;
 #endif
 
@@ -1167,7 +1174,7 @@ void SV_SendClientMessages( void )
 		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
-#ifdef USE_REFEREE_CMDS
+#ifdef USE_RECENT_EVENTS
 		{
 			playerState_t *ps;
 			ps = SV_GameClientNum( i );
@@ -1176,25 +1183,24 @@ void SV_SendClientMessages( void )
 				clientSnapshot_t	*frame;
 				frame = &c->frames[0][ c->netchan.outgoingSequence & PACKET_MASK ];
 				//ps = &frame->ps;
-#ifdef USE_REFEREE_CMDS
-			for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
-				int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
-				//if(j >= ps.eventSequence) {
-//if(event > 0)
-//Com_Printf("event: %i\n", event);
-					if(event >= EV_DEATH1 && event <= EV_DEATH3) {
-Com_Printf("event: Player died...\n");
-						char clientId[10];
-						memcpy(clientId, va("%i", i), sizeof(clientId));
-						memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
-						if(recentI == 1024) recentI = 0;
-						numDied[i / 8] |= 1 << (i % 8);
-					}
-				//}
-			}
-#endif
-
-
+	/*
+				for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+					int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
+					//if(j >= ps.eventSequence) {
+	//if(event > 0)
+	//Com_Printf("event: %i\n", event);
+						if(event >= EV_DEATH1 && event <= EV_DEATH3) {
+	Com_Printf("event: Player died...\n");
+							char clientId[10];
+							memcpy(clientId, va("%i", i), sizeof(clientId));
+							memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
+							if(recentI == 1024) recentI = 0;
+							numDied[i / 8] |= 1 << (i % 8);
+						}
+					//}
+				}
+	*/
+			
 				if(ps->pm_flags & (PMF_RESPAWNED)) {
 					numDied[i / 8] &= ~(1 << (i % 8));
 				}
@@ -1222,10 +1228,45 @@ Com_Printf("event: Player died...\n");
 			}
 		}
 		if(numConnected > 0 && numConnected == numScoredBits) {
+			playerState_t *ps;
+			int playerLength;
+			int statusLength;
+			char player[MAX_NAME_LENGTH + 100];
+			char status[MAX_INFO_STRING];
+			char *s;
+			i = 0;
+makestatus:
+			s = &status[1];
+			status[0] = '[';
+			status[1] = '\0';
+			statusLength = 1;
+			for ( ; i < sv_maxclients->integer ; i++ ) {
+				c = &svs.clients[i];
+				if ( c->state >= CS_CONNECTED ) {
+
+					ps = SV_GameClientNum( i );
+					playerLength = Com_sprintf( player, sizeof( player ), "[%i,%i,\"%s\"]%s", 
+						ps->persistant[ PERS_SCORE ], c->ping, c->name, statusLength > 0 ? "," : "" );
+					
+					if ( statusLength + playerLength >= MAX_INFO_STRING - 100 ) {
+						goto sendstatus;
+					}
+					
+					s = Q_stradd( s, player );
+					statusLength += playerLength;
+				}
+			}
+
+sendstatus:
+			// replace the final comma with a closing bracket
+			status[statusLength-1] = ']';
 			// the polling service should callback at this time for a getstatus message?
 			// TODO: update match ended with player list
-			memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MATCHEND, "Match ended"), MAX_INFO_STRING);
+			memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_MATCHEND, status), MAX_INFO_STRING);
 			if(recentI == 1024) recentI = 0;
+			if(i < sv_maxclients->integer) {
+				goto makestatus;
+			}
 			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
 		}
 	}

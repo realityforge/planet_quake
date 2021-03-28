@@ -391,7 +391,8 @@ typedef enum {
 	SV_EVENT_CALLADMIN,
 	SV_EVENT_CLIENTDIED,
 } recentEvent_t;
-extern char *recentTemplate;
+#define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
+#define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
 #endif
 
 extern	cvar_t	*sv_fps;

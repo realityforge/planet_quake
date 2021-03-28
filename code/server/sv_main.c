@@ -34,7 +34,6 @@ int       gameWorlds[MAX_NUM_VMS];
 char recentEvents[1024][MAX_INFO_STRING] = {};
 int recentI = 0;
 cvar_t	*sv_recentPassword;		// password for recent event updates
-char *recentTemplate = "{\"timestamp\":\"%i\",\"type\":%i,\"value\":\"%s\"}";
 #endif
 
 cvar_t	*sv_fps;				// time rate for running non-clients

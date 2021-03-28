@@ -796,7 +796,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_MAPCHANGE, mapname), MAX_INFO_STRING);
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_MAPCHANGE, mapname), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 #endif
 
