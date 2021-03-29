@@ -1135,6 +1135,11 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	qboolean isBot;
 	int		i;
 	
+#ifdef USE_RECENT_EVENTS
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, drop->userinfo), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+#endif
+	
 	if(drop->demorecording) {
 		SV_StopRecord(drop);
 	}
