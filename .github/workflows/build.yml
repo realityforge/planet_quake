@@ -193,9 +193,9 @@ jobs:
     - name: Install tools
       run: |
         sudo apt-get -qq update
-        sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs emsdk
-        emsdk install latest-upstream
+        sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs
         npm install
+        npm run install:emsdk
 
     - uses: actions/checkout@v2
       with:
