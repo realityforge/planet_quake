@@ -1520,7 +1520,7 @@ static specificVM_t knownVMs[] = {
 	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
 	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
 	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
-	{}
+	{0, 0, 0, 0, 0, ""}
 };
 
 static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
