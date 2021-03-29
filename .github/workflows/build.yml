@@ -181,7 +181,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        cc: [gcc]
+        cc: [emcc]
         config: [Release]
         include:
           - config: Release
@@ -208,7 +208,7 @@ jobs:
       run: |
         npm install
         npm run install:emsdk
-        make ${{ matrix.rule }} -j 8 CC=${{ matrix.cc }} DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
+        make ${{ matrix.rule }} -j 8 DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
 
     - uses: actions/upload-artifact@v2
       if: matrix.cc == 'gcc' && matrix.config == 'Release'
