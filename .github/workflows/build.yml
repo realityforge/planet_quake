@@ -194,10 +194,15 @@ jobs:
       run: |
         sudo apt-get -qq update
         sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs
-
+  
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+        
+    - name: Checkout submodules
+      run: |
+        git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk
+        git submodule update --init --recursive
 
     - name: Build
       run: |
