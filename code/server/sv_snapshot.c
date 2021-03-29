@@ -50,7 +50,7 @@ A normal server packet will look like:
 static int numConnected = 0;
 static byte numScored[128] = {};
 static byte numDied[128] = {};
-static int lastReset = 0;
+static int lastReset = 0; // debounce events
 #endif
 
 /*
@@ -1252,48 +1252,7 @@ void SV_SendClientMessages( void )
 			}
 		}
 		if(numConnected > 0 && numConnected == numScoredBits) {
-			playerState_t *ps;
-			int playerLength;
-			int statusLength;
-			char player[MAX_NAME_LENGTH + 100];
-			char status[MAX_INFO_STRING];
-			char *s;
-			i = 0;
-makestatus:
-			s = &status[1];
-			status[0] = '[';
-			status[1] = '\0';
-			statusLength = 1;
-			for ( ; i < sv_maxclients->integer ; i++ ) {
-				c = &svs.clients[i];
-				if ( c->state >= CS_CONNECTED ) {
-
-					ps = SV_GameClientNum( i );
-					playerLength = Com_sprintf( player, sizeof( player ), "[%i,%i,\"%s\",%i,%i,%i,%i]%s", 
-						ps->persistant[ PERS_SCORE ], c->ping, c->name,
-						ps->persistant[ PERS_HITS ], ps->persistant[ PERS_EXCELLENT_COUNT ],
-						ps->persistant[ PERS_IMPRESSIVE_COUNT ], ps->persistant[ PERS_KILLED ],
-						statusLength > 0 ? "," : "" );
-					
-					if ( statusLength + playerLength >= MAX_INFO_STRING - 100 ) {
-						goto sendstatus;
-					}
-					
-					s = Q_stradd( s, player );
-					statusLength += playerLength;
-				}
-			}
-
-sendstatus:
-			// replace the final comma with a closing bracket
-			status[statusLength-1] = ']';
-			// the polling service should callback at this time for a getstatus message?
-			// TODO: update match ended with player list
-			memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_MATCHEND, status), MAX_INFO_STRING);
-			if(recentI == 1024) recentI = 0;
-			if(i < sv_maxclients->integer) {
-				goto makestatus;
-			}
+			SV_RecentStatus(SV_EVENT_MATCHEND);
 			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
 		}
 	}

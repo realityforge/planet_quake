@@ -31,7 +31,7 @@ int       gameWorlds[MAX_NUM_VMS];
 //#endif
 
 #ifdef USE_RECENT_EVENTS
-char recentEvents[1024][MAX_INFO_STRING] = {};
+char recentEvents[1024][MAX_INFO_STRING+400] = {};
 int recentI = 0;
 cvar_t	*sv_recentPassword;		// password for recent event updates
 #endif
@@ -707,6 +707,59 @@ void SVC_RateDropAddress( const netadr_t *from, int burst, int period ) {
 }
 
 
+#ifdef USE_RECENT_EVENTS
+void SV_RecentStatus(recentEvent_t type) {
+	client_t *c;
+	playerState_t *ps;
+	int playerLength;
+	int statusLength;
+	int i;
+	char player[MAX_NAME_LENGTH + 100];
+	char status[MAX_INFO_STRING];
+	char *cl_guid;
+	char *s;
+	i = 0;
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL )), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+makestatus:
+	s = &status[1];
+	status[0] = '[';
+	status[1] = '\0';
+	statusLength = 1;
+	for ( ; i < sv_maxclients->integer ; i++ ) {
+		c = &svs.clients[i];
+		if ( c->state >= CS_CONNECTED ) {
+			cl_guid = Info_ValueForKey(c->userinfo, "cl_guid");
+			ps = SV_GameClientNum( i );
+			playerLength = Com_sprintf( player, sizeof( player ), "[%s,%i,%i,\"%s\",%i,%i,%i,%i],",
+				cl_guid, 
+				ps->persistant[ PERS_SCORE ], c->ping, c->name,
+				ps->persistant[ PERS_HITS ], ps->persistant[ PERS_EXCELLENT_COUNT ],
+				ps->persistant[ PERS_IMPRESSIVE_COUNT ], ps->persistant[ PERS_KILLED ]);
+			
+			if ( statusLength + playerLength >= MAX_INFO_STRING - 100 ) {
+				goto sendstatus;
+			}
+			
+			s = Q_stradd( s, player );
+			statusLength += playerLength;
+		}
+	}
+
+sendstatus:
+	// replace the final comma with a closing bracket
+	status[statusLength-1] = ']';
+	// the polling service should callback at this time for a getstatus message?
+	// TODO: update match ended with player list
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, type, status), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+	if(i < sv_maxclients->integer) {
+		goto makestatus;
+	}
+}
+#endif
+
+
 /*
 ================
 SVC_Status
@@ -951,6 +1004,9 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 #endif
 #ifdef USE_RECENT_EVENTS
 	} else if (( sv_recentPassword->string[0] && strcmp( pw, sv_recentPassword->string ) == 0 )) {
+		// send connected client guids to requester
+		SV_RecentStatus(SV_EVENT_GETSTATUS);
+		
 		// send all events to requester
 		for(int i = 0; i < ARRAY_LEN(recentEvents); i++) {
 			if(recentEvents[i][0] == 0)
