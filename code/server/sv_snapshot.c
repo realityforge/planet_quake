@@ -45,6 +45,14 @@ A normal server packet will look like:
 =============================================================================
 */
 
+#ifdef USE_REFEREE_CMDS
+// probably will never have more than 1024 client connected?
+static int numConnected = 0;
+static byte numScored[128] = {};
+static byte numDied[128] = {};
+static int lastReset = 0; // debounce events
+#endif
+
 /*
 =============
 SV_EmitPacketEntities
@@ -661,6 +669,50 @@ static void SV_BuildCommonSnapshot( void )
 			if ( ent->r.svFlags & SVF_NOCLIENT ) {
 				continue;
 			}
+			
+#ifdef USE_RECENT_EVENTS
+			if(ent->s.clientNum < sv_maxclients->integer
+				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
+			//	&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT 
+			) {
+//if(ent->s.event > 0)
+//Com_Printf("event: %i\n", ent->s.event & ~EV_EVENT_BITS);
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.event & ~EV_EVENT_BITS) == EV_DEATH1
+					&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))) {
+					char player[1024];
+					int playerLength;
+					client_t *c1 = &svs.clients[ent->s.clientNum];
+					playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
+					client_t *c2 = &svs.clients[ent->s.eventParm];
+					playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
+					playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
+						ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
+						ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
+					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+				}
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.event & ~EV_EVENT_BITS) == EV_CHANGE_WEAPON) {
+					char weapon[1024];
+					playerState_t *ps = SV_GameClientNum( ent->s.clientNum );
+					client_t *c = &svs.clients[ent->s.clientNum];
+					memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
+				}
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.eType & (EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET
+					| EF_AWARD_CAP | EF_AWARD_IMPRESSIVE | EF_AWARD_DEFEND
+					| EF_AWARD_ASSIST | EF_AWARD_DENIED))) {
+					char award[1024];
+					client_t *c = &svs.clients[ent->s.clientNum];
+					memcpy(award, va("[%i,\"%s\"]", ent->s.eType, c->name), sizeof(award));
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTAWARD, award), MAX_INFO_STRING);
+				}
+			}
+#endif
 
 			list[ count++ ] = ent;
 			sv.svEntities[gvm][ num ].snapshotCounter = -1;
@@ -992,11 +1044,12 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	msg_t		msg;
 	int     headerBytes;
 	playerState_t	*ps;
+
+#ifdef USE_MULTIVM
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 
-#ifdef USE_MULTIVM
 	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
 		if(!gvms[gvm]) continue;
 		CM_SwitchMap(gameWorlds[gvm]);
@@ -1079,7 +1132,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 #endif
 }
 
-
 /*
 =======================
 SV_SendClientMessages
@@ -1103,6 +1155,9 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
+#ifdef USE_RECENT_EVENTS
+	numConnected = 0;
+#endif
 
 	// send a message to each connected client
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -1138,5 +1193,70 @@ void SV_SendClientMessages( void )
 		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
+#ifdef USE_RECENT_EVENTS
+		{
+			playerState_t *ps;
+			ps = SV_GameClientNum( i );
+			if(c->netchan.remoteAddress.type != NA_BOT) {
+				numConnected++;
+				clientSnapshot_t	*frame;
+				frame = &c->frames[0][ c->netchan.outgoingSequence & PACKET_MASK ];
+				//ps = &frame->ps;
+	/*
+				for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+					int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
+					//if(j >= ps.eventSequence) {
+	//if(event > 0)
+	//Com_Printf("event: %i\n", event);
+						if(event >= EV_DEATH1 && event <= EV_DEATH3) {
+	Com_Printf("event: Player died...\n");
+							char clientId[10];
+							memcpy(clientId, va("%i", i), sizeof(clientId));
+							memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
+							if(recentI == 1024) recentI = 0;
+							numDied[i / 8] |= 1 << (i % 8);
+						}
+					//}
+				}
+	*/
+			
+				if(ps->pm_flags & (PMF_RESPAWNED)) {
+					char clientId[10];
+					memcpy(clientId, va("%i", i), sizeof(clientId));
+					// TODO: add respawn location
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
+					numDied[i / 8] &= ~(1 << (i % 8));
+				}
+				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
+					numScored[i / 8] |= 1 << (i % 8);
+				} else {
+					numScored[i / 8] &= ~(1 << (i % 8));
+				}
+			}
+		}
 	}
+	// must send a snapshot to a client at least once every second
+	if(sv.time - lastReset > 1000) {
+		lastReset = sv.time;
+		numConnected = 0;
+		memset(&numScored, 0, sizeof(numScored));
+	} else if (lastReset < sv.time) {		
+		// check if scoreboard is being shown to all players, indicating game end
+		//   create a matchend event with all the player scores
+		int numScoredBits = 0;
+		for(int i = 0; i < ARRAY_LEN(numScored); i++) {
+			for(int j = 0; j < 8; j++) {
+				if(numScored[i] & (1 << j))
+					numScoredBits++;
+			}
+		}
+		if(numConnected > 0 && numConnected == numScoredBits) {
+			SV_RecentStatus(SV_EVENT_MATCHEND);
+			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
+		}
+	}
+#else
+	}
+#endif
 }

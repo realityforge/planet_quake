@@ -1015,6 +1015,7 @@ int main( int argc, char* argv[] )
 	// Sys_ConsoleInputInit() might be called in signal handler
 	// so modify/init any cvars here
 	ttycon = Cvar_Get( "ttycon", "1", 0 );
+	Cvar_SetDescription( ttycon, "Turn console interactiveness on or off\nDefault: 1" );
 	ttycon_ansicolor = Cvar_Get( "ttycon_ansicolor", "0", CVAR_ARCHIVE );
 
 	err = Sys_ConsoleInputInit();

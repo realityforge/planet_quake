@@ -6,6 +6,12 @@ RUN \
   apt upgrade -y && apt dist-upgrade && \
   apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils vim && \
   mkdir -p /tmp/build
+
+
+
+
+FROM debian:bullseye-slim AS builder
+
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
   cd /tmp/build && \
