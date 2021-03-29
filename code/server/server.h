@@ -395,6 +395,7 @@ typedef enum {
 	SV_EVENT_CLIENTAWARD, // event for all awards
 	SV_EVENT_GETSTATUS, // from clients checking for events
 	SV_EVENT_SERVERINFO,
+	SV_EVENT_CONNECTED,
 } recentEvent_t;
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"

@@ -1095,6 +1095,11 @@ gotnewcl:
 		SV_Heartbeat_f();
 	}
 	
+#ifdef USE_RECENT_EVENTS
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, newcl->userinfo), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+#endif
+	
 #ifdef USE_MULTIVM
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
