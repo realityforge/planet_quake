@@ -632,24 +632,30 @@ endif
 # -DDEBUG -D_DEBUG
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-	  -s WASM=1 \
-	  -s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=1 \
-    -s ASSERTIONS=2 \
-	  -s SINGLE_FILE=1 \
     -frtti \
 	  -flto \
     -fPIC
 
+ifeq ($(DEBUG), 1)
+  CLIENT_LDFLAGS += \
+		-s WASM=1 \
+		-s MODULARIZE=0 \
+		-s SAFE_HEAP=0 \
+		-s DEMANGLE_SUPPORT=1 \
+		-s ASSERTIONS=2 \
+		-s SINGLE_FILE=1
+else
+  CLIENT_LDFLAGS += \
+		-s WASM=1 \
+		-s MODULARIZE=0 \
+		-s SAFE_HEAP=0 \
+		-s DEMANGLE_SUPPORT=0 \
+		-s ASSERTIONS=2
+endif
+
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
 	  -DNDEBUG \
     -O3 -Oz \
-    -s WASM=1 \
-	  -s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=0 \
-    -s ASSERTIONS=2 \
     -flto \
     -fPIC
 
