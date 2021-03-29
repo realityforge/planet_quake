@@ -1095,6 +1095,11 @@ gotnewcl:
 		SV_Heartbeat_f();
 	}
 	
+#ifdef USE_RECENT_EVENTS
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, newcl->userinfo), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+#endif
+	
 #ifdef USE_MULTIVM
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
@@ -1129,6 +1134,11 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	char	name[ MAX_NAME_LENGTH ];
 	qboolean isBot;
 	int		i;
+	
+#ifdef USE_RECENT_EVENTS
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, drop->userinfo), MAX_INFO_STRING);
+	if(recentI == 1024) recentI = 0;
+#endif
 	
 	if(drop->demorecording) {
 		SV_StopRecord(drop);
@@ -2411,6 +2421,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
+	//ent->s.eFlags |= EF_TELEPORT_BIT;
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
@@ -2452,6 +2463,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
+	SV_SendClientSnapshot(cl, qfalse);
 }
 
 void SV_Tele_f( client_t *client ) {
@@ -2688,15 +2700,8 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team")
 		 		&& strcmp(Cmd_Argv(0), "tell"))
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)
-#ifdef USE_RECENT_EVENTS
-			if(!strcmp(Cmd_Argv(0), "say")) {
-				memcpy(&recentEvents[recentI++], va(recentTemplate, sv.time, SV_EVENT_CLIENTSAY, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
-				if(recentI == 1024) recentI = 0;
-			}
-#endif
 #ifdef USE_REFEREE_CMDS
 			else { // don't sanitize, instead check chat commands for client referee mute
-				;
 				if(cl->muted) {
 					Cmd_Clear();
 					return qtrue;
@@ -2717,6 +2722,19 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 						return qtrue;
 					}
 				}
+			}
+			if(!strcmp(Cmd_Argv(0), "say")
+				&& Q_stristr(Cmd_ArgsFrom(1), "server medic")) {
+				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				if(recentI == 1024) recentI = 0;
+				Cmd_Clear();
+				return qtrue;
+			}
+#endif
+#ifdef USE_RECENT_EVENTS
+			if(!strcmp(Cmd_Argv(0), "say")) {
+				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTSAY, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				if(recentI == 1024) recentI = 0;
 			}
 #endif
 			VM_Call( gvms[gvm], 1, GAME_CLIENT_COMMAND, cl - svs.clients );

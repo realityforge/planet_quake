@@ -382,13 +382,25 @@ extern  int    gameWorlds[MAX_NUM_VMS];
 
 #ifdef USE_RECENT_EVENTS
 extern int  recentI;
-extern char recentEvents[1024][MAX_INFO_STRING];
+extern char recentEvents[1024][MAX_INFO_STRING+400];
 extern	cvar_t	*sv_recentPassword;
 typedef enum {
 	SV_EVENT_MAPCHANGE,
-	SV_EVENT_CLIENTSAY
+	SV_EVENT_CLIENTSAY,
+	SV_EVENT_MATCHEND,
+	SV_EVENT_CALLADMIN,
+	SV_EVENT_CLIENTDIED,
+	SV_EVENT_CLIENTWEAPON,
+	SV_EVENT_CLIENTRESPAWN,
+	SV_EVENT_CLIENTAWARD, // event for all awards
+	SV_EVENT_GETSTATUS, // from clients checking for events
+	SV_EVENT_SERVERINFO,
+	SV_EVENT_CONNECTED,
+	SV_EVENT_DISCONNECT,
 } recentEvent_t;
-extern char *recentTemplate;
+#define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
+#define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
+void SV_RecentStatus(recentEvent_t type);
 #endif
 
 extern	cvar_t	*sv_fps;
