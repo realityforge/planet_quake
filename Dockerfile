@@ -19,7 +19,9 @@ RUN \
   cd /tmp/build/planet_quake && \
   git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk && \
   git submodule update --init --recursive --progress && \
-  /tmp/build/planet_quake/code/xquakejs/lib/emsdk/emsdk install latest-upstream
+  /tmp/build/planet_quake/code/xquakejs/lib/emsdk/emsdk install latest-upstream && \
+  cd /tmp/build/planet_quake && \
+  npm install && \
 RUN \
   echo "# BUILD NATIVE SERVER ##########################################" && \
   cd /tmp/build/planet_quake && \
@@ -27,8 +29,6 @@ RUN \
 RUN \
   echo "# BUILD JS CLIENT ##########################################" && \
   cd /tmp/build/planet_quake && \
-  npm install && \
-  npm run install:emsdk && \
   echo "" >>  /root/.emscripten && \
   echo "BINARYEN_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /root/.emscripten && \
   echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /root/.emscripten && \

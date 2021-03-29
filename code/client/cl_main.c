@@ -98,7 +98,7 @@ cvar_t	*r_noborder;
 cvar_t *r_allowSoftwareGL;	// don't abort out if the pixelformat claims software
 cvar_t *r_swapInterval;
 cvar_t *r_glDriver;
-cvar_t *cl_displayRefresh;
+cvar_t *r_displayRefresh;
 cvar_t *r_fullscreen;
 cvar_t *r_mode;
 cvar_t *r_modeFullscreen;
@@ -4779,9 +4779,9 @@ static void CL_InitGLimp_Cvars( void )
 	r_glDriver = Cvar_Get( "r_glDriver", OPENGL_DRIVER_NAME, CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_SetDescription( r_glDriver, "Used OpenGL driver by name\nDefault: opengl32" );
 	
-	cl_displayRefresh = Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
-	Cvar_CheckRange( cl_displayRefresh, "0", "360", CV_INTEGER );
-	Cvar_SetDescription( cl_displayRefresh, "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
+	r_displayRefresh = Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
+	Cvar_CheckRange( r_displayRefresh, "0", "360", CV_INTEGER );
+	Cvar_SetDescription( r_displayRefresh, "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
 
 	vid_xpos = Cvar_Get( "vid_xpos", "3", CVAR_ARCHIVE );
 	vid_ypos = Cvar_Get( "vid_ypos", "22", CVAR_ARCHIVE );

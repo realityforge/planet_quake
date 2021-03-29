@@ -333,7 +333,7 @@ ifdef MINGW
   endif
 
   # using generic windres if specific one is not present
-  ifndef WINDRES
+  ifeq ($(WINDRES),)
     WINDRES=windres
   endif
 
@@ -343,6 +343,8 @@ ifdef MINGW
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -DUSE_ICON -DMINGW=1
+
+  BASE_CFLAGS += -Wno-unused-result
 
   ifeq ($(ARCH),x86_64)
     ARCHEXT = .x64
@@ -367,6 +369,7 @@ ifdef MINGW
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
+    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
     ifeq ($(ARCH),x86)
       CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
       CLIENT_LDFLAGS += -lSDL2
@@ -380,7 +383,6 @@ ifdef MINGW
 
   ifeq ($(USE_CODEC_VORBIS),1)
     CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
-    BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
   endif
 
   ifeq ($(USE_CURL),1)
@@ -393,7 +395,7 @@ ifdef MINGW
     CLIENT_LDFLAGS += -lcurl -lwldap32 -lcrypt32
   endif
 
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
 else # !MINGW
@@ -404,11 +406,9 @@ ifeq ($(PLATFORM),darwin)
 # SETUP AND BUILD -- MACOS
 #############################################################################
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing \
-		-Wno-incompatible-pointer-types-discards-qualifiers \
-	 	-Wimplicit -Wstrict-prototypes -pipe
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
-  BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
+  BASE_CFLAGS += -Wno-unused-result
 
   OPTIMIZE = -O2 -fvisibility=hidden
 
@@ -418,7 +418,13 @@ ifeq ($(PLATFORM),darwin)
 
   LDFLAGS =
 
+  ifneq ($(SDL_INCLUDE),)
+    BASE_CFLAGS += $(SDL_INCLUDE)
+    CLIENT_LDFLAGS = $(SDL_LIBS)
+  else
+    BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
+  endif
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
@@ -667,6 +673,10 @@ else
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
+  BASE_CFLAGS += -Wno-unused-result
+
+  BASE_CFLAGS += -DUSE_ICON
+
   BASE_CFLAGS += -I/usr/include -I/usr/local/include
 
   OPTIMIZE = -O2 -fvisibility=hidden
@@ -680,6 +690,7 @@ else
   endif
 
   ifeq ($(ARCH),arm)
+    OPTIMIZE += -march=armv7-a
     ARCHEXT = .arm
   endif
 
