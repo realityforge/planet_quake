@@ -702,6 +702,15 @@ static void SV_BuildCommonSnapshot( void )
 					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
 					if(recentI == 1024) recentI = 0;
 				}
+				if(ent->s.eType == ET_PLAYER
+					&& (ent->s.eType & (EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET
+					| EF_AWARD_CAP | EF_AWARD_IMPRESSIVE | EF_AWARD_DEFEND
+					| EF_AWARD_ASSIST | EF_AWARD_DENIED))) {
+					char award[1024];
+					client_t *c = &svs.clients[ent->s.clientNum];
+					memcpy(award, va("[%i,\"%s\"]", ent->s.eType, c->name), sizeof(award));
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTAWARD, award), MAX_INFO_STRING);
+				}
 			}
 #endif
 
@@ -1260,8 +1269,11 @@ makestatus:
 				if ( c->state >= CS_CONNECTED ) {
 
 					ps = SV_GameClientNum( i );
-					playerLength = Com_sprintf( player, sizeof( player ), "[%i,%i,\"%s\"]%s", 
-						ps->persistant[ PERS_SCORE ], c->ping, c->name, statusLength > 0 ? "," : "" );
+					playerLength = Com_sprintf( player, sizeof( player ), "[%i,%i,\"%s\",%i,%i,%i,%i]%s", 
+						ps->persistant[ PERS_SCORE ], c->ping, c->name,
+						ps->persistant[ PERS_HITS ], ps->persistant[ PERS_EXCELLENT_COUNT ],
+						ps->persistant[ PERS_IMPRESSIVE_COUNT ], ps->persistant[ PERS_KILLED ],
+						statusLength > 0 ? "," : "" );
 					
 					if ( statusLength + playerLength >= MAX_INFO_STRING - 100 ) {
 						goto sendstatus;
