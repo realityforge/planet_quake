@@ -47,7 +47,7 @@ static int in_eventTime = 0;
 #define CTRL(a) ((a)-'a'+1)
 
 static keyNum_t lastKeyDown = 0;
-static float touchhats[5][2] = {};
+static float touchhats[5][2];
 
 /*
 ===============

@@ -37,7 +37,7 @@ void RE_LoadWorldMap( const char *name );
 
 */
 
-world_t		s_worldData[MAX_NUM_WORLDS] = {};
+world_t		s_worldData[MAX_NUM_WORLDS];
 int       rw; // render worl, should match number of loaded clip maps
 byte		*fileBase;
 

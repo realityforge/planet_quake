@@ -116,7 +116,7 @@ clientActive_t		cl;
 clientConnection_t	clc;
 clientStatic_t		cls;
 int   cgvm = 0;
-vm_t *cgvms[MAX_NUM_VMS] = {};
+vm_t *cgvms[MAX_NUM_VMS];
 int   numCGames = 0;
 
 netadr_t			rcon_address;
