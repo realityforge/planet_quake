@@ -4436,7 +4436,9 @@ static void CL_InitRef_After_Load2( void )
 
 	// OpenGL API
 	rimp.GLimp_Init = GLimp_Init;
+#ifdef USE_VID_FAST
 	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
+#endif
 	rimp.GLimp_Shutdown = GLimp_Shutdown;
 	rimp.GL_GetProcAddress = GL_GetProcAddress;
 

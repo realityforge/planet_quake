@@ -1528,7 +1528,7 @@ int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qboolean vul
 
 	actualWidth = config->vidWidth;
 	actualHeight = config->vidHeight;
-	actualRate = r_displayRefresh->integer;
+	actualRate = cl_displayRefresh->integer;
 
 	if ( actualRate )
 		Com_Printf( " %d %d @%iHz\n", actualWidth, actualHeight, actualRate );
