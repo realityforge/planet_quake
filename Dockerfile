@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim AS briancullinan/quake3e:buildtools
+FROM debian:bullseye-slim AS briancullinan/quake3e:build-tools
 
 RUN \
   echo "# INSTALL BUILD DEPENDENCIES ##########################################" && \
@@ -7,10 +7,8 @@ RUN \
   apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils vim && \
   mkdir -p /tmp/build
 
-
-
-
-FROM debian:bullseye-slim AS builder
+# This is to speed up building
+FROM briancullinan/quake3e:build-tools AS briancullinan/quake3e:build-cache
 
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
@@ -21,11 +19,32 @@ RUN \
   git submodule update --init --recursive --progress && \
   /tmp/build/planet_quake/code/xquakejs/lib/emsdk/emsdk install latest-upstream && \
   cd /tmp/build/planet_quake && \
-  npm install && \
+  npm install
+
+FROM briancullinan/quake3e:build-tools AS briancullinan/quake3e:build-latest
+
+COPY --from=briancullinan/quake3e:build-cache /tmp/build/planet_quake /tmp/build/planet_quake
+
+# TODO: checkout different branches for different experiemental features
+RUN \
+  echo "# UPDATE SOURCE FILES ######################################" && \
+  cd /tmp/build/planet_quake && \
+  git pull --rebase && \
+  cd /tmp/build/planet_quake/code/xquakejs/lib/emsdk && \
+  git pull --rebase && \
+  /tmp/build/planet_quake/code/xquakejs/lib/emsdk/emsdk install latest-upstream && \
+  cd /tmp/build/planet_quake && \
+  npm install
+
+FROM briancullinan/quake3e:build-latest AS briancullinan/quake3e:build-ded
+
 RUN \
   echo "# BUILD NATIVE SERVER ##########################################" && \
   cd /tmp/build/planet_quake && \
   make clean release BUILD_CLIENT=0 NOFPU=1
+
+FROM briancullinan/quake3e:build-latest AS briancullinan/quake3e:build-js
+
 RUN \
   echo "# BUILD JS CLIENT ##########################################" && \
   cd /tmp/build/planet_quake && \
@@ -33,27 +52,16 @@ RUN \
   echo "BINARYEN_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /root/.emscripten && \
   echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /root/.emscripten && \
   echo "NODE_JS = '/usr/bin/node'" >> /root/.emscripten && \
-  echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /root/.emscripten && \
-  mkdir /tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
-  export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
-  export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache && \
+  echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache'" >> /root/.emscripten && \
+  mkdir /tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
+  export EM_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
+  export EMSCRIPTEN_CACHE=/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
   /usr/bin/python3 ./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib && \
   export STANDALONE=1 && \
   make clean release PLATFORM=js
-RUN \
-  echo "# COPY OUTPUT ##########################################" && \
-  mkdir ~/planet_quake && \
-  mkdir ~/quakejs && \
-  mkdir ~/quakejs/bin && \
-  mkdir ~/quakejs/lib && \
-  rm -R /tmp/build/planet_quake/code/xquakejs/lib/emsdk && \
-  cp -R /tmp/build/planet_quake/code/xquakejs/bin/* ~/quakejs/bin && \
-  cp -R /tmp/build/planet_quake/code/xquakejs/lib/* ~/quakejs/lib && \
-  cp /tmp/build/planet_quake/package.json ~/quakejs && \
-  cp /tmp/build/planet_quake/build/release-js-js/quake3e.* ~/quakejs/bin && \
-  cp /tmp/build/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 ~/planet_quake
 
-#  cp /home/ioq3srv/planet_quake/quakejs/bin/q3eded.service /etc/systemd/system && \
+
+
 FROM node:12.15-slim AS server
 COPY --from=builder /root/planet_quake /home/ioq3srv/planet_quake
 COPY --from=builder /root/quakejs /home/ioq3srv/quakejs

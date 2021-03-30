@@ -209,13 +209,13 @@ jobs:
         echo "BINARYEN_ROOT = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "LLVM_ROOT = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "NODE_JS = '/usr/bin/node'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
-        echo "EM_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
-        echo "EMSCRIPTEN_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "EM_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "EMSCRIPTEN_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         npm run install:libs
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j 8 DESTDIR=bin EMSCRIPTEN_CACHE="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache" USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
+        make ${{ matrix.rule }} -j 8 DESTDIR=bin EMSCRIPTEN_CACHE="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache" USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
 
     - uses: actions/upload-artifact@v2
       if: matrix.cc == 'gcc' && matrix.config == 'Release'
