@@ -203,6 +203,12 @@ jobs:
       run: |
         git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk
         git submodule update --init --recursive
+        echo "" > ~/.emscripten
+        echo "BINARYEN_ROOT = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> ~/.emscripten
+        echo "LLVM_ROOT = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> ~/.emscripten
+        echo "NODE_JS = '/usr/bin/node'" >> /root/.emscripten
+        echo "EM_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache'" >> ~/.emscripten
+
 
     - name: Build
       run: |
