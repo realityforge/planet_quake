@@ -440,9 +440,9 @@ ifeq ($(PLATFORM),js)
   NODE_JS=$(EMSDK)/node/12.9.1_64bit/bin/node
   BINARYEN_ROOT=$(EMSDK)/upstream
   EMSCRIPTEN=$(EMSDK)/upstream/emscripten
-define EM_CONFIG
-"LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
-endef
+#define EM_CONFIG
+#"LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
+#endef
 ifndef EMSCRIPTEN_CACHE
   EMSCRIPTEN_CACHE=$(HOME)/.emscripten_cache
 endif
