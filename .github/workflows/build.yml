@@ -193,7 +193,7 @@ jobs:
     - name: Install tools
       run: |
         sudo apt-get -qq update
-        sudo apt-get -y install libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs
+        sudo apt-get -y install build-essential libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev nodejs clang-tools-10
   
     - uses: actions/checkout@v2
       with:
@@ -203,13 +203,6 @@ jobs:
       run: |
         git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk
         git submodule update --init --recursive
-        export BINARYEN_ROOT="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream"
-        export LLVM_ROOT="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/bin"
-        export NODE_JS="/usr/bin/node"
-        export EM_CACHE="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache"
-
-    - name: Build
-      run: |
         npm install
         npm run install:emsdk
         echo "" >  /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
@@ -217,6 +210,9 @@ jobs:
         echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "NODE_JS = '/usr/bin/node'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+
+    - name: Build
+      run: |
         make ${{ matrix.rule }} -j 8 DESTDIR=bin USE_RENDERER_DLOPEN=0 USE_SDL=1 USE_VULKAN=0 BUILD_SERVER=0 PLATFORM=js
 
     - uses: actions/upload-artifact@v2
