@@ -1,4 +1,5 @@
-FROM debian:bullseye-slim AS briancullinan/quake3e:build-tools
+FROM node:12.15-slim as serve-tools
+FROM debian:bullseye-slim AS build-tools
 
 RUN \
   echo "# INSTALL BUILD DEPENDENCIES ##########################################" && \
@@ -7,8 +8,9 @@ RUN \
   apt-get install -y build-essential "linux-headers-*-common" libcurl4-gnutls-dev curl g++ gcc git make nodejs npm python3 python3-distutils vim && \
   mkdir -p /tmp
 
+# copy the output from grabbing master and installing
 # This is to speed up building
-FROM briancullinan/quake3e:build-tools AS briancullinan/quake3e:build-cache
+FROM build-tools AS build-cache
 
 RUN \
   echo "# FETCH INSTALLATION FILES ######################################" && \
@@ -21,9 +23,10 @@ RUN \
   cd /tmp/planet_quake && \
   npm install
 
-FROM briancullinan/quake3e:build-tools AS briancullinan/quake3e:build-latest
+# update the copy from cache to latest from github
+FROM build-tools AS build-latest
 
-COPY --from=briancullinan/quake3e:build-cache /tmp/planet_quake /tmp/planet_quake
+COPY --from=build-cache /tmp/planet_quake /tmp/planet_quake
 
 # TODO: checkout different branches for different experiemental features
 RUN \
@@ -36,18 +39,18 @@ RUN \
   cd /tmp/planet_quake && \
   npm install
 
-FROM briancullinan/quake3e:build-latest AS briancullinan/quake3e:build-ded
+FROM build-latest AS build-ded
 
 RUN \
   echo "# BUILD NATIVE SERVER ##########################################" && \
   cd /tmp/planet_quake && \
   make clean release BUILD_CLIENT=0 NOFPU=1
 
-FROM briancullinan/quake3e:build-js AS briancullinan/quake3e:build-both
+FROM build-js AS build-both
 
-COPY --from=briancullinan/quake3e:build-ded /tmp/planet_quake/build/release-linux-x86_64 /tmp/planet_quake/build/release-linux-x86_64
+COPY --from=build-ded /tmp/planet_quake/build/release-linux-x86_64 /tmp/planet_quake/build/release-linux-x86_64
 
-FROM briancullinan/quake3e:build-latest AS briancullinan/quake3e:build-js
+FROM build-latest AS build-js
 
 RUN \
   echo "# BUILD JS CLIENT ##########################################" && \
@@ -64,18 +67,18 @@ RUN \
   export STANDALONE=1 && \
   make clean release PLATFORM=js
 
-FROM node:12.15-slim AS briancullinan/quake3e:serve-content
+FROM serve-tools AS serve-content
 
-COPY --from=briancullinan/quake3e:build-js /tmp/planet_quake /tmp/planet_quake
+COPY --from=build-js /tmp/planet_quake /tmp/planet_quake
 
 EXPOSE 8080/tcp
 VOLUME [ "/tmp/baseq3" ]
 
 CMD node /tmp/planet_quake/code/xquakejs/bin/web.js /assets/baseq3-cc /tmp/baseq3
 
-FROM node:12.15-slim AS briancullinan/quake3e:serve-quake3e
+FROM serve-tools AS serve-quake3e
 
-COPY --from=briancullinan/quake3e:build-ded /tmp/planet_quake /tmp/planet_quake
+COPY --from=build-ded /tmp/planet_quake /tmp/planet_quake
 
 EXPOSE 27960/udp
 VOLUME [ "/tmp/baseq3" ]
@@ -91,15 +94,15 @@ CMD /home/ioq3srv/planet_quake/quake3e.ded.x64 \
   +set logfile 2 +set com_hunkmegs 150 +set vm_rtChecks 0 \
   +set sv_maxclients 32 +set sv_pure 0 +exec server.cfg
 
-FROM briancullinan/quake3e:serve-quake3e AS briancullinan/quake3e:serve-both
+FROM serve-quake3e AS serve-both
 
-COPY --from=briancullinan/quake3e:build-both /tmp/planet_quake /tmp/planet_quake
+COPY --from=build-both /tmp/planet_quake /tmp/planet_quake
 
 EXPOSE 8080/tcp
 
 CMD /tmp/planet_quake/code/xquakejs/bin/start.sh
 
-FROM node:12.15-slim AS briancullinan/quake3e:repack
+FROM serve-tools AS repack
 
 RUN \
   echo "# INSTALL REPACK DEPENDENCIES ##########################################" && \

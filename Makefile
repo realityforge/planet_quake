@@ -451,6 +451,7 @@ endif
   RANLIB=$(EMSCRIPTEN)/emranlib
   ARCH=js
   BINEXT=.js
+	STRIP=echo
 
   DEBUG=0
   EMCC_DEBUG=0

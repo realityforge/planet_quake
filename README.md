@@ -130,11 +130,35 @@ See the console commands from ioq3 https://github.com/ioquake/ioq3#console
 Some client variables have been set by default for compatibility, those are listed here:
 https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_browser.js
 
-# Docker
+# Docker (NEW)
 
 Build the image from this repository:
 
-`docker build -t quake3e .` or `docker build --target builder .`
+`docker build .` or `docker build --target ...`
+
+The Dockerfile has been updated to use https://docs.docker.com/develop/develop-images/multistage-build/
+
+All images extend from either:
+
+```
+FROM node:12.15-slim as serve-tools
+FROM debian:bullseye-slim AS build-tools
+```
+
+For some reason, some essential compile tool was missing from node-slim. This is a list of all the build targets and their reasoning:
+
+* build-tools - install all the build tools needed for both builds.
+* build-cache - copy the output from grabbing master and installing.
+* build-latest - update the copy from cache to latest from github.
+* build-ded - dedicated server build.
+* build-js - quake js based emscripten build.
+* build-both - copy build outputs from both.
+
+* serve-tools - just an alias, might install server tools, runs on node.
+* serve-content - just serve the content in the build directory.
+* serve-quake3e - start a quake3e dedicated server with run options.
+* serve-both - start a dedicated server and web server.
+* repack - all tools needed to repack game content for web.
 
 Grab latest from dockerhub
 
