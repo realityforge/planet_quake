@@ -210,7 +210,9 @@ jobs:
         echo "LLVM_ROOT = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "NODE_JS = '/usr/bin/node'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         echo "EM_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "EMSCRIPTEN_CACHE = '/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
         npm run install:libs
+        export EMSCRIPTEN_CACHE="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache"
 
     - name: Build
       run: |
