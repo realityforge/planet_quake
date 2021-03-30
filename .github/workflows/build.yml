@@ -207,7 +207,11 @@ jobs:
         export LLVM_ROOT="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/bin"
         export NODE_JS="/usr/bin/node"
         export EM_CACHE="/home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/cache"
-
+        echo "" >  /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "BINARYEN_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "LLVM_ROOT = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "NODE_JS = '/usr/bin/node'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
+        echo "EM_CACHE = '/tmp/build/planet_quake/code/xquakejs/lib/emsdk/cache'" >> /home/runner/work/planet_quake/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten
 
     - name: Build
       run: |
