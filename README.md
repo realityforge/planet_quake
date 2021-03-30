@@ -160,15 +160,11 @@ For some reason, some essential compile tool was missing from node-slim. This is
 * serve-both - start a dedicated server and web server.
 * repack - all tools needed to repack game content for web.
 
-Grab latest from dockerhub
+Un-ironically, they are in order of layer likely to necessitate change from least to most. Might be easier to grab latest from dockerhub:
 
 `docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
 
-After the image is built and running, you can skip repeating the conversion process:
 
-`docker commit quake3e quake3e`
-
-`docker start -i quake3e`
 
 Visit to view:
 
