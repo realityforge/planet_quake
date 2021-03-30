@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim AS builder
+FROM debian:bullseye-slim AS briancullinan/quake3e:buildtools
 
 RUN \
   echo "# INSTALL BUILD DEPENDENCIES ##########################################" && \
