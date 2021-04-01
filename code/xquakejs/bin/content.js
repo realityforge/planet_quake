@@ -40,9 +40,6 @@ var GRAPH_PATH = path.join(process.env.HOME || process.env.HOMEPATH
 // check the process args for a directory to serve as the baseq3 folders
 ufs.use(fs)
 var vol = Volume.fromJSON({})
-if(!writeOut) {
-  ufs.use(vol)
-}
 var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
@@ -109,16 +106,19 @@ for(var i = 0; i < process.argv.length; i++) {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
 }
+if(!writeOut) {
+  ufs.use(vol)
+}
+if(mountPoints.length === 0 && fs.existsSync(TEMP_DIR)) {
+  var defaultDirectories = fs.readdirSync(TEMP_DIR)
+    .filter(f => f[0] != '.')
+  defaultDirectories.forEach(f => {
+    mountPoints.push([path.join(path.dirname(mountPoint), f), path.join(TEMP_DIR, f)])
+  })
+  console.log('I really hope this is what you meant: ', defaultDirectories.join(', '))
+}
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start -- /Applications/ioquake3`')
-  if(fs.existsSync(TEMP_DIR)) {
-    var defaultDirectories = fs.readdirSync(TEMP_DIR)
-      .filter(f => f[0] != '.')
-    defaultDirectories.forEach(f => {
-      mountPoints.push([path.join(path.dirname(mountPoint), f), path.join(TEMP_DIR, f)])
-    })
-    console.log('I really hope this is what you meant: ', defaultDirectories.join(', '))
-  }
 }
 mountPoints.sort((a, b) => a[0].localeCompare(b[0], 'en', { sensitivity: 'base' }))
 
@@ -161,6 +161,9 @@ if(watchChanges) {
 
 function pathToAbsolute(virtualPath) {
   var result
+  if(mountPoints.length === 0) {
+    return -1
+  }
 	for(var i = 0; i < mountPoints.length; i++) {
 		if(virtualPath.includes(mountPoints[i][0])) {
       result = path.join(mountPoints[i][1],
