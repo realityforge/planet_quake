@@ -130,21 +130,45 @@ See the console commands from ioq3 https://github.com/ioquake/ioq3#console
 Some client variables have been set by default for compatibility, those are listed here:
 https://github.com/briancullinan/planet_quake/blob/ioq3-quakejs/code/sys/sys_browser.js
 
-# Docker
+# Docker (NEW)
 
 Build the image from this repository:
 
-`docker build -t quake3e .` or `docker build --target builder .`
+`docker build .` or `docker build --target ...`
 
-Grab latest from dockerhub
+The Dockerfile has been updated to use https://docs.docker.com/develop/develop-images/multistage-build/
 
-`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
+All images extend from either:
 
-After the image is built and running, you can skip repeating the conversion process:
+```
+FROM node:12.15-slim as serve-tools
+FROM debian:bullseye-slim AS build-tools
+```
 
-`docker commit quake3e quake3e`
+For some reason, some essential compile tool was missing from node-slim. This is a list of all the build targets and their reasoning:
 
-`docker start -i quake3e`
+* build-tools - install all the build tools needed for both builds.
+* build-latest - update the copy from cache to latest from github.
+* build-ded - dedicated server build.
+* build-js - quake js based emscripten build.
+
+* serve-tools - installs just the stuff needed to run and copied compiled output.
+* serve-content - just serve the content in the build directory.
+* serve-quake3e - start a quake3e dedicated server with run options.
+* repack - all tools needed to repack game content for web.
+* full - baseq3 testing content with everything in latest.
+
+Might be easier to grab latest from dockerhub:
+
+`docker run -ti -p 8080:8080 -p 27960:27960/udp briancullinan/quake3e:full`
+
+Add files to the container by attaching a volume containing pk3s:
+
+`docker run -ti -p 8080:8080 -p 27960:27960/udp -v quake3/baseq3:/tmp/baseq3 --name quake3e briancullinan/quake3e:full`
+
+Then store the converted files for future runs:
+
+`docker commit quake3e`
 
 Visit to view:
 

@@ -333,7 +333,7 @@ ifdef MINGW
   endif
 
   # using generic windres if specific one is not present
-  ifndef WINDRES
+  ifeq ($(WINDRES),)
     WINDRES=windres
   endif
 
@@ -343,6 +343,8 @@ ifdef MINGW
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
     -DUSE_ICON -DMINGW=1
+
+  BASE_CFLAGS += -Wno-unused-result
 
   ifeq ($(ARCH),x86_64)
     ARCHEXT = .x64
@@ -367,6 +369,7 @@ ifdef MINGW
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
+    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
     ifeq ($(ARCH),x86)
       CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
       CLIENT_LDFLAGS += -lSDL2
@@ -380,7 +383,6 @@ ifdef MINGW
 
   ifeq ($(USE_CODEC_VORBIS),1)
     CLIENT_LDFLAGS += -lvorbisfile -lvorbis -logg
-    BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
   endif
 
   ifeq ($(USE_CURL),1)
@@ -393,7 +395,7 @@ ifdef MINGW
     CLIENT_LDFLAGS += -lcurl -lwldap32 -lcrypt32
   endif
 
-  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -ggdb -O0
+  DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
 else # !MINGW
@@ -404,11 +406,9 @@ ifeq ($(PLATFORM),darwin)
 # SETUP AND BUILD -- MACOS
 #############################################################################
 
-  BASE_CFLAGS += -Wall -fno-strict-aliasing \
-		-Wno-incompatible-pointer-types-discards-qualifiers \
-	 	-Wimplicit -Wstrict-prototypes -pipe
+  BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
-  BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
+  BASE_CFLAGS += -Wno-unused-result
 
   OPTIMIZE = -O2 -fvisibility=hidden
 
@@ -418,7 +418,13 @@ ifeq ($(PLATFORM),darwin)
 
   LDFLAGS =
 
+  ifneq ($(SDL_INCLUDE),)
+    BASE_CFLAGS += $(SDL_INCLUDE)
+    CLIENT_LDFLAGS = $(SDL_LIBS)
+  else
+    BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
+  endif
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
@@ -434,9 +440,9 @@ ifeq ($(PLATFORM),js)
   NODE_JS=$(EMSDK)/node/12.9.1_64bit/bin/node
   BINARYEN_ROOT=$(EMSDK)/upstream
   EMSCRIPTEN=$(EMSDK)/upstream/emscripten
-define EM_CONFIG
-"LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
-endef
+#define EM_CONFIG
+#"LLVM_ROOT = '$(EMSDK)/upstream/bin';NODE_JS = '$(NODE_JS)';BINARYEN_ROOT = '$(BINARYEN_ROOT)';EMSCRIPTEN_ROOT = '$(EMSCRIPTEN)'"
+#endef
 ifndef EMSCRIPTEN_CACHE
   EMSCRIPTEN_CACHE=$(HOME)/.emscripten_cache
 endif
@@ -445,6 +451,7 @@ endif
   RANLIB=$(EMSCRIPTEN)/emranlib
   ARCH=js
   BINEXT=.js
+	STRIP=echo
 
   DEBUG=0
   EMCC_DEBUG=0
@@ -626,24 +633,30 @@ endif
 # -DDEBUG -D_DEBUG
   DEBUG_CFLAGS=$(BASE_CFLAGS) \
     -O1 -g3 \
-	  -s WASM=1 \
-	  -s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=1 \
-    -s ASSERTIONS=2 \
-	  -s SINGLE_FILE=1 \
     -frtti \
 	  -flto \
     -fPIC
 
+ifeq ($(DEBUG), 1)
+  CLIENT_LDFLAGS += \
+		-s WASM=1 \
+		-s MODULARIZE=0 \
+		-s SAFE_HEAP=0 \
+		-s DEMANGLE_SUPPORT=1 \
+		-s ASSERTIONS=2 \
+		-s SINGLE_FILE=1
+else
+  CLIENT_LDFLAGS += \
+		-s WASM=1 \
+		-s MODULARIZE=0 \
+		-s SAFE_HEAP=0 \
+		-s DEMANGLE_SUPPORT=0 \
+		-s ASSERTIONS=2
+endif
+
   RELEASE_CFLAGS=$(BASE_CFLAGS) \
 	  -DNDEBUG \
     -O3 -Oz \
-    -s WASM=1 \
-	  -s MODULARIZE=0 \
-    -s SAFE_HEAP=0 \
-    -s DEMANGLE_SUPPORT=0 \
-    -s ASSERTIONS=2 \
     -flto \
     -fPIC
 
@@ -667,6 +680,10 @@ else
 
   BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
+  BASE_CFLAGS += -Wno-unused-result
+
+  BASE_CFLAGS += -DUSE_ICON
+
   BASE_CFLAGS += -I/usr/include -I/usr/local/include
 
   OPTIMIZE = -O2 -fvisibility=hidden
@@ -680,6 +697,7 @@ else
   endif
 
   ifeq ($(ARCH),arm)
+    OPTIMIZE += -march=armv7-a
     ARCHEXT = .arm
   endif
 

@@ -1494,9 +1494,11 @@ Com_Printf("Old max clients %i\n", sv_maxclients->integer);
   // allocate new svs.clients
   svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof(client_t), TAG_CLIENTS );
   Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof(client_t) );
+#ifdef USE_LNBITS
 	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	numInvoices = 0;
+#endif
 
 	// copy the clients over (and move them depending on sv_democlients: if >0, 
 	//   move them upwards, if == 0, move them to their original slots)

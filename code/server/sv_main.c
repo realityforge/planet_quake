@@ -25,13 +25,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
 int       gvm = 0;
-vm_t			*gvms[MAX_NUM_VMS] = {};		// game virtual machine
+vm_t			*gvms[MAX_NUM_VMS];		// game virtual machine
 //#ifdef USE_MULTIVM
 int       gameWorlds[MAX_NUM_VMS];
 //#endif
 
 #ifdef USE_RECENT_EVENTS
-char recentEvents[1024][MAX_INFO_STRING+400] = {};
+char recentEvents[1024][MAX_INFO_STRING+400];
 int recentI = 0;
 cvar_t	*sv_recentPassword;		// password for recent event updates
 #endif

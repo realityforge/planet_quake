@@ -48,8 +48,8 @@ A normal server packet will look like:
 #ifdef USE_REFEREE_CMDS
 // probably will never have more than 1024 client connected?
 static int numConnected = 0;
-static byte numScored[128] = {};
-static byte numDied[128] = {};
+static byte numScored[128];
+static byte numDied[128];
 static int lastReset = 0; // debounce events
 #endif
 

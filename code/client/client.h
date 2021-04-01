@@ -36,10 +36,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif /* USE_CURL */
 
 #ifdef USE_CURL
-#define	USE_LNBITS	1
+//#define	USE_LNBITS	1
 #else
 #ifdef EMSCRIPTEN
-#define	USE_LNBITS	1
+//#define	USE_LNBITS	1
 #else
 #ifdef USE_LNBITS
 #undef USE_LNBITS

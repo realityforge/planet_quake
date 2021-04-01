@@ -45,8 +45,6 @@ cvar_t	*r_railSegmentLength;
 
 cvar_t	*r_ignore;
 
-cvar_t  *r_displayRefresh;
-
 cvar_t	*r_detailTextures;
 
 cvar_t	*r_znear;
@@ -1449,9 +1447,6 @@ void R_Register( void )
 	//
 	// temporary latched variables that can only change over a restart
 	//
-	r_displayRefresh = ri.Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
-	ri.Cvar_CheckRange( r_displayRefresh, "0", "250", CV_INTEGER );
-	ri.Cvar_SetDescription(r_displayRefresh, "Monitor refresh rate in game\nDefault: 0");
 	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", CVAR_LATCH|CVAR_CHEAT );
 	ri.Cvar_SetDescription(r_fullbright, "Toggle textures to full brightness level\nDefault: 0");
 	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "2", CVAR_LATCH );

@@ -723,7 +723,9 @@ void SV_DirectConnect( const netadr_t *from ) {
 	char		userinfo[MAX_INFO_STRING], tld[3];
 	int			i, n;
 	client_t	*cl, *newcl;
+#ifdef USE_LNBITS
 	invoice_t *invoice;
+#endif
 	//sharedEntity_t *ent;
 	int			clientNum;
 	int			version;

@@ -28,8 +28,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern	botlib_export_t	*botlib_export;
 
 // default cameras to an entity viewpoint instead of same location
-int clientMaps[MAX_NUM_VMS] = {};
-vec3_t clientCameras[MAX_NUM_VMS] = {};
+int clientMaps[MAX_NUM_VMS];
+vec3_t clientCameras[MAX_NUM_VMS];
 
 //extern qboolean loadCamera(const char *name);
 //extern void startCamera(int time);

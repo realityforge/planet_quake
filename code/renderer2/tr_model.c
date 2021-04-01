@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
-model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS] = {};
+model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 
 #define	LL(x) x=LittleLong(x)
 

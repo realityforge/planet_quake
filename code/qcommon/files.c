@@ -405,11 +405,11 @@ void FS_Reload( void );
 
 #ifdef USE_LAZY_LOAD
 #ifndef EMSCRIPTEN
-char *modelCallback[1024*5] = {}; // MAX_MOD_KNOWN
+char *modelCallback[1024*5]; // MAX_MOD_KNOWN
 int modelCallbacki = 0;
-char *soundCallback[1024*5] = {}; // 
+char *soundCallback[1024*5]; // 
 int soundCallbacki = 0;
-char *shaderCallback[1024*5] = {}; // MAX_SHADERS
+char *shaderCallback[1024*5]; // MAX_SHADERS
 int shaderCallbacki = 0;
 
 char *Sys_UpdateShader( void ) {

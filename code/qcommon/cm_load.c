@@ -50,7 +50,7 @@ void SetPlaneSignbits( cplane_t *out ) {
 
 #define	LL(x) x=LittleLong(x)
 
-clipMap_t	cms[MAX_NUM_MAPS] = {};
+clipMap_t	cms[MAX_NUM_MAPS];
 int     cm = 0;
 int			c_pointcontents;
 int			c_traces, c_brush_traces, c_patch_traces;

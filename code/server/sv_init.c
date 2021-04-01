@@ -297,9 +297,11 @@ static void SV_Startup( void ) {
 	}
 	SV_BoundMaxClients( 1 );
 
+#ifdef USE_LNBITS
 	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	numInvoices = 0;
+#endif
 #ifdef USE_MV
 	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof( client_t ), TAG_CLIENTS ); // +1 client slot for recorder
 	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof( client_t ) );
@@ -368,9 +370,11 @@ void SV_ChangeMaxClients( void ) {
 	Z_Free( svs.clients );
 
 	// allocate new clients
+#ifdef USE_LNBITS
 	maxInvoices = Z_Malloc( ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 	numInvoices = 0;
+#endif
 #ifdef USE_MV
 	svs.clients = Z_TagMalloc( ( sv_maxclients->integer + 1 ) * sizeof(client_t), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0, ( sv_maxclients->integer + 1 ) * sizeof(client_t) );

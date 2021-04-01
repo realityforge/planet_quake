@@ -38,6 +38,11 @@ var GRAPH_PATH = path.join(process.env.HOME || process.env.HOMEPATH
   || process.env.USERPROFILE || os.tmpdir(), '/Collections/lvlworld')
 
 // check the process args for a directory to serve as the baseq3 folders
+ufs.use(fs)
+var vol = Volume.fromJSON({})
+if(!writeOut) {
+  ufs.use(vol)
+}
 var mountPoint = '/assets/baseq3'
 var mountPoints = []
 for(var i = 0; i < process.argv.length; i++) {
@@ -84,6 +89,14 @@ for(var i = 0; i < process.argv.length; i++) {
   } else if(a == '--repack' || a == '-rp') {
     console.log('Live repacking')
     repackFiles = true
+  } else if (a == '--temp') {
+    if(ufs.existsSync(process.argv[i+1]) && ufs.statSync(process.argv[i+1]).isDirectory()) {
+      TEMP_DIR = process.argv[i+1]
+      console.log(`Temporary directory set to ${TEMP_DIR}`)
+      i++
+    } else {
+      throw new Error(`Temp directory ${process.argv[i+1]} not found or not a directory`)
+    }
   } else if (a.match(/^\//i)) {
 		console.log('Using mount point ' + a)
     mountPoint = a
@@ -95,11 +108,6 @@ for(var i = 0; i < process.argv.length; i++) {
 	} else {
     console.log(`ERROR: Unrecognized option "${a}"`)
   }
-}
-ufs.use(fs)
-var vol = Volume.fromJSON({})
-if(!writeOut) {
-  ufs.use(vol)
 }
 if(mountPoints.length === 0) {
   console.log('ERROR: No mount points, e.g. run `npm run start -- /Applications/ioquake3`')
