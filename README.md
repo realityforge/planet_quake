@@ -151,20 +151,25 @@ For some reason, some essential compile tool was missing from node-slim. This is
 * build-latest - update the copy from cache to latest from github.
 * build-ded - dedicated server build.
 * build-js - quake js based emscripten build.
-* build-only - copy build outputs from both.
 
-* serve-tools - just an alias, might install server tools, runs on node.
+* serve-tools - installs just the stuff needed to run and copied compiled output.
 * serve-content - just serve the content in the build directory.
 * serve-quake3e - start a quake3e dedicated server with run options.
 * serve-both - start a dedicated server and web server.
 * repack - all tools needed to repack game content for web.
-* baseq3 - transcoded baseq3 assets for testing purposes.
-* latest - repack service and content server and dedicated server.
 * full - baseq3 testing content with everything in latest.
 
-Un-ironically, they are in order of layer likely to necessitate change from least to most. Might be easier to grab latest from dockerhub:
+Might be easier to grab latest from dockerhub:
 
-`docker run -ti -v ~/Quake3e:/tmp/Quake3e -v /Applications/ioquake3/baseq3:/tmp/baseq3 -p 8080:8080 -p 27960:27960/udp --name quake3e briancullinan/quake3e:latest`
+`docker run -ti -p 8080:8080 -p 27960:27960/udp briancullinan/quake3e:full`
+
+Add files to the container by attaching a volume containing pk3s:
+
+`docker run -ti -p 8080:8080 -p 27960:27960/udp -v quake3/baseq3:/tmp/baseq3 --name quake3e briancullinan/quake3e:full`
+
+Then store the converted files for future runs:
+
+`docker commit quake3e`
 
 Visit to view:
 

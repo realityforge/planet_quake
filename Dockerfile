@@ -85,8 +85,7 @@ RUN \
 RUN \
   echo "# FETCH RUN FILES #################################" && \
   cd /tmp && \
-  git clone --progress https://github.com/briancullinan/planet_quake && \
-  cd /tmp/planet_quake
+  git clone --progress https://github.com/briancullinan/planet_quake
 
 FROM node:15.12-slim AS serve-content
 
@@ -95,6 +94,7 @@ RUN mkdir -p /tmp/planet_quake/code/xquakejs/lib
 RUN mkdir -p /tmp/planet_quake/build/release-js-js
 RUN mkdir -p /tmp/planet_quake/build/release-linux-x86_64
 
+COPY --from=serve-tools /tmp/planet_quake/package.json /tmp/planet_quake/package.json
 COPY --from=serve-tools /tmp/planet_quake/code/xquakejs/bin /tmp/planet_quake/code/xquakejs/bin
 COPY --from=serve-tools /tmp/planet_quake/code/xquakejs/lib /tmp/planet_quake/code/xquakejs/lib
 COPY --from=build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
@@ -117,11 +117,12 @@ CMD /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
   +set logfile 2 +set com_hunkmegs 150 +set vm_rtChecks 0 \
   +set sv_maxclients 32 +set sv_pure 0 +exec server.cfg
 
-FROM serve-quake3e AS serve-both
+FROM serve-content AS serve-both
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/web.js /assets/baseq3 /tmp/baseq3 & && \
+CMD \
+  (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /tmp &) && \
   /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
-    +cvar_restart +set net_port 27960 +set fs_basepath /tmp/ \
+    +cvar_restart +set net_port 27960 +set fs_basepath /tmp \
     +set dedicated 2 +set fs_homepath /home \
     +set fs_basegame ${BASEGAME} +set fs_game ${GAME} \
     +set ttycon 0 +set rconpassword ${RCON} \
@@ -135,24 +136,19 @@ RUN \
   apt-get update && \
   apt-get install -y systemd imagemagick imagemagick-common vorbis-tools vim python && \
   cd /tmp/planet_quake && \
-  npm install
+  npm install --dev
 
 VOLUME [ "/tmp/baseq3" ]
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite /tmp/baseq3
+CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite --temp /tmp /tmp/baseq3
 
-FROM repack AS latest
+########### TODO REPACK DOCKER HERE ############
+# needs a data source for baseq3 content, Github with demo data maybe?
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite /tmp/baseq3 && \
-  node /tmp/planet_quake/code/xquakejs/bin/web.js /assets/baseq3 /tmp/baseq3 & && \
-  /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
-    +cvar_restart +set net_port 27960 +set fs_basepath /tmp \
-    +set dedicated 2 +set fs_homepath /home \
-    +set fs_basegame ${BASEGAME} +set fs_game ${GAME} \
-    +set ttycon 0 +set rconpassword ${RCON} \
-    +set logfile 2 +set com_hunkmegs 150 +set vm_rtChecks 0 \
-    +set sv_maxclients 32 +set sv_pure 0 +exec server.cfg
+FROM serve-both AS full
 
-FROM latest AS full
+RUN \
+  cd /tmp/planet_quake && \
+  npm install --dev
 
-COPY --from=briancullinan/quake3e:baseq3 /tmp/baseq3-cc /tmp/baseq3-cc
+COPY --from=briancullinan/quake3e:baseq3 /tmp/baseq3-cc /tmp/baseq3
