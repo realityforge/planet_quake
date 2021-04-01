@@ -155,7 +155,6 @@ For some reason, some essential compile tool was missing from node-slim. This is
 * serve-tools - installs just the stuff needed to run and copied compiled output.
 * serve-content - just serve the content in the build directory.
 * serve-quake3e - start a quake3e dedicated server with run options.
-* serve-both - start a dedicated server and web server.
 * repack - all tools needed to repack game content for web.
 * full - baseq3 testing content with everything in latest.
 

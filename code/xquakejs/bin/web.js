@@ -80,16 +80,18 @@ async function serveUnionFs(req, res, next) {
 	}
 }
 
-app.use(serveStatic(path.join(__dirname, '../../../build/release-js-js'), {
-  setHeaders: (res, path) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-  }
-}))
-app.use(serveStatic(path.join(__dirname, '../../../build/debug-js-js'), {
-  setHeaders: (res, path) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-  }
-}))
+if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')))
+  app.use(serveStatic(path.join(__dirname, '../../../build/release-js-js'), {
+    setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+    }
+  }))
+if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
+  app.use(serveStatic(path.join(__dirname, '../../../build/debug-js-js'), {
+    setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+    }
+  }))
 app.use(serveStatic(path.join(__dirname), {
   setHeaders: (res, path) => {
     res.setHeader('Access-Control-Allow-Origin', '*')

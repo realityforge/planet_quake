@@ -100,12 +100,18 @@ COPY --from=serve-tools /tmp/planet_quake/code/xquakejs/lib /tmp/planet_quake/co
 COPY --from=build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
 COPY --from=build-ded /tmp/planet_quake/build/release-linux-x86_64/quake3e* /tmp/planet_quake/build/release-linux-x86_64/
 
+RUN \
+  cd /tmp/planet_quake && \
+  npm install --dev
+
 EXPOSE 8080/tcp
 EXPOSE 27960/udp
 VOLUME [ "/tmp/baseq3" ]
 ENV RCON=password123!
 ENV GAME=baseq3
 ENV BASEGAME=baseq3
+
+CMD node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /tmp
 
 FROM serve-content AS serve-quake3e
 
@@ -146,9 +152,5 @@ CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite
 # needs a data source for baseq3 content, Github with demo data maybe?
 
 FROM serve-both AS full
-
-RUN \
-  cd /tmp/planet_quake && \
-  npm install --dev
 
 COPY --from=briancullinan/quake3e:baseq3 /tmp/baseq3-cc /tmp/baseq3
