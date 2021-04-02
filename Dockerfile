@@ -80,6 +80,7 @@ RUN \
   echo "# INSTALL CONTENT DEPENDENCIES #################################" && \
   apt-get update && \
   apt-get install -y git && \
+  mkdir -p /home/baseq3 && \
   mkdir -p /tmp
 
 RUN \
@@ -106,17 +107,17 @@ RUN \
 
 EXPOSE 8080/tcp
 EXPOSE 27960/udp
-VOLUME [ "/tmp/baseq3" ]
+VOLUME [ "/home/baseq3" ]
 ENV RCON=password123!
 ENV GAME=baseq3
 ENV BASEGAME=baseq3
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /tmp
+CMD node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home
 
 FROM serve-content AS serve-quake3e
 
 CMD /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
-  +cvar_restart +set net_port 27960 +set fs_basepath /tmp/ \
+  +cvar_restart +set net_port 27960 +set fs_basepath /home \
   +set dedicated 2 +set fs_homepath /home \
   +set fs_basegame ${BASEGAME} +set fs_game ${GAME} \
   +set ttycon 0 +set rconpassword ${RCON} \
@@ -128,7 +129,7 @@ FROM serve-content AS serve-both
 CMD \
   (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /tmp &) && \
   /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
-    +cvar_restart +set net_port 27960 +set fs_basepath /tmp \
+    +cvar_restart +set net_port 27960 +set fs_basepath /home \
     +set dedicated 2 +set fs_homepath /home \
     +set fs_basegame ${BASEGAME} +set fs_game ${GAME} \
     +set ttycon 0 +set rconpassword ${RCON} \
@@ -144,13 +145,13 @@ RUN \
   cd /tmp/planet_quake && \
   npm install --dev
 
-VOLUME [ "/tmp/baseq3" ]
+VOLUME [ "/home/baseq3" ]
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite --temp /tmp /tmp/baseq3
+CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite --temp /home /home/baseq3
 
 ########### TODO REPACK DOCKER HERE ############
 # needs a data source for baseq3 content, Github with demo data maybe?
 
 FROM serve-both AS full
 
-COPY --from=briancullinan/quake3e:baseq3 /tmp/baseq3-cc /tmp/baseq3
+COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3
