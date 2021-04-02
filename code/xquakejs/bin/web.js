@@ -40,12 +40,12 @@ function pathToDirectoryIndex(url) {
   var absolute = pathToAbsolute(decodeURIComponent(parsed.pathname))
   // return index.json for directories or return a file out of baseq3
   var filename
-  if(absolute
+  if(absolute > 0
     && ufs.existsSync(absolute)
     && ufs.statSync(absolute).isDirectory()) {
     filename = path.join(parsed.pathname, 'index.json')
     absolute = path.join(absolute, 'index.json')
-  } else if (absolute
+  } else if (absolute > 0
     && ufs.existsSync(path.dirname(absolute))
     && ufs.statSync(path.dirname(absolute)).isDirectory()
     && parsed.pathname.match(/\/index\.json$/ig)) {
