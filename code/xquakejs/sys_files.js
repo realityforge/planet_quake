@@ -249,12 +249,8 @@ var LibrarySysFiles = {
     SYSF.fs_replace = []
     SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
-    SYSC.newDLURL = SYSC.Cvar_VariableString('sv_dlURL')
-    if(SYSC.newDLURL.length > 0) {
-      if(SYSC.oldDLURL.length == 0) {
-        SYSC.oldDLURL = SYSC.newDLURL
-      }
-    }
+    SYSC.newDLURL = SYSC.Cvar_VariableString('cl_dlURL')
+    SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
     
     var server = SYSC.Cvar_VariableString('cl_currentServerAddress')
     if(server.length)

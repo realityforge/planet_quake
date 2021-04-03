@@ -109,8 +109,8 @@ EXPOSE 8080/tcp
 EXPOSE 27960/udp
 VOLUME [ "/home/baseq3" ]
 ENV RCON=password123!
-ENV GAME=baseq3
-ENV BASEGAME=baseq3
+ENV GAME=baseq3-cc
+ENV BASEGAME=baseq3-cc
 
 CMD node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home
 
@@ -127,7 +127,7 @@ CMD /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
 FROM serve-content AS serve-both
 
 CMD \
-  (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /tmp &) && \
+  (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home &) && \
   /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
     +cvar_restart +set net_port 27960 +set fs_basepath /home \
     +set dedicated 2 +set fs_homepath /home \
@@ -154,4 +154,4 @@ CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite
 
 FROM serve-both AS full
 
-COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3
+COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
