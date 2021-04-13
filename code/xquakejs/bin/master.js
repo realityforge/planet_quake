@@ -1,21 +1,8 @@
-var _ = require('underscore');
 var http = require('http');
-var opt = require('optimist');
 var url = require('url');
 var WebSocketClient = require('ws');
 var WebSocketServer = require('ws').Server;
 
-var argv = require('optimist')
-	.describe('config', 'Location of the configuration file')
-	.default('config', './config.json')
-	.argv;
-
-if (argv.h || argv.help) {
-	opt.showHelp();
-	return;
-}
-
-var config = loadConfig(argv.config);
 var clients = [];
 var servers = {};
 var pruneInterval = 350 * 1000;
@@ -267,23 +254,7 @@ function connection(ws, req) {
 	this.port = getRemotePort(ws, req);
 }
 
-function loadConfig(configPath) {
-	var config = {
-		port: 27950
-	};
-
-	try {
-		console.log('Loading config file from ' + configPath + '..');
-		var data = require(configPath);
-		_.extend(config, data);
-	} catch (e) {
-		console.log('Failed to load config', e);
-	}
-
-	return config;
-}
-
-(function main() {
+function startMasterServer(port) {
 	var server = http.createServer();
 
 	var wss = new WebSocketServer({
@@ -340,9 +311,19 @@ function loadConfig(configPath) {
 	});
 
 	// listen only on 0.0.0.0 to force ipv4
-        server.listen(config.port, '0.0.0.0',  function() {
-                console.log('master server is listening on port ' + server.address().port);
-        });
+  server.listen(port, '0.0.0.0',  function() {
+    console.log('master server is listening on port ' + server.address().port);
+  });
 
 	setInterval(pruneServers, pruneInterval);
-})();
+}
+
+(function main() {
+	var port = parseInt(process.argv[2])
+	if(isNaN(port))
+		port = 27950
+	if(process.argv[1].match(/\/master\.js$/ig))
+		startMasterServer(port)
+})()
+
+module.exports = startMasterServer

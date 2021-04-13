@@ -251,7 +251,7 @@ var LibrarySysFiles = {
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
     SYSC.newDLURL = SYSC.Cvar_VariableString('cl_dlURL')
     SYSC.oldDLURL = SYSC.Cvar_VariableString('sv_dlURL')
-    
+
     var server = SYSC.Cvar_VariableString('cl_currentServerAddress')
     if(server.length)
       history.pushState({location: window.location.toString()}, window.title, '?connect ' + server)
