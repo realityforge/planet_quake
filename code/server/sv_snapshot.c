@@ -45,7 +45,7 @@ A normal server packet will look like:
 =============================================================================
 */
 
-#ifdef USE_REFEREE_CMDS
+#ifdef USE_RECENT_EVENTS
 // probably will never have more than 1024 client connected?
 static int numConnected = 0;
 static byte numScored[128];

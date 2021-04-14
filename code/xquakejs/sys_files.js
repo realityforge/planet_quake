@@ -3,6 +3,7 @@ var LibrarySysFiles = {
   $SYSF: {
     index: {},
     fs_replace: [],
+    fs_homepath: '',
     fs_basepath: '/base',
     fs_basegame: 'baseq3',
     fs_game: 'baseq3',
@@ -266,7 +267,7 @@ var LibrarySysFiles = {
     //SYSN.downloadLazy.splice(0) // reset lazy list to start of map
     SYSF.pathname = allocate(new Int8Array(4096), ALLOC_NORMAL)
     SYSF.modeStr = allocate(new Int8Array(4), ALLOC_NORMAL)
-    var fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
+    SYSF.fs_homepath = SYSC.Cvar_VariableString('fs_homepath')
     SYSF.fs_basepath = SYSC.Cvar_VariableString('fs_basepath')
     SYSF.fs_basegame = SYSC.Cvar_VariableString('fs_basegame')
     if(SYSF.fs_basegame.length > 0)

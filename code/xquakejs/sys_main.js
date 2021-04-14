@@ -207,9 +207,14 @@ var LibrarySysMain = {
           ])
         }
       }
-      if(!args.includes('sv_master24')) {
+      if(!args.includes('sv_master23')) {
         args.push.apply(args, [
           '+set', 'sv_master23', '"' + window.location.origin + '"',
+        ])
+      }
+      if(!args.includes('cl_master23')) {
+        args.push.apply(args, [
+          '+set', 'cl_master23', '"' + window.location.origin + '"',
         ])
       }
       if(!SYS.dedicated) {
@@ -278,11 +283,14 @@ var LibrarySysMain = {
     })
     SYSN.lazyInterval = setInterval(SYSN.DownloadLazy, 10)
 
-    if(typeof window.serverWorker != 'undefined')
-      window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
-    
     if(SYS.dedicated) return
 
+    if('Worker' in window) {
+      window.serverWorker = new Worker('server-worker.js')
+      window.serverWorker.onmessage = SYS.onWorkerMessage
+      window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])
+    }
+    
     SYSM.loading = document.getElementById('loading')
     SYSM.dialog = document.getElementById('dialog')
     // TODO: load this the same way demo does
