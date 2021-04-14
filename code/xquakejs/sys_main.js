@@ -207,6 +207,11 @@ var LibrarySysMain = {
           ])
         }
       }
+      if(!args.includes('sv_master24')) {
+        args.push.apply(args, [
+          '+set', 'sv_master23', '"' + window.location.origin + '"',
+        ])
+      }
       if(!SYS.dedicated) {
         if(!args.includes('+connect')) {
           args.push.apply(args, [

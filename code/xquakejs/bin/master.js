@@ -257,6 +257,38 @@ function connection(ws, req) {
 	this.port = getRemotePort(ws, req)
 }
 
+function onMessage(conn, buffer) {
+	// node Buffer to ArrayBuffer
+	var view = Uint8Array.from(buffer)
+	var buffer = view.buffer
+
+	// check to see if this is emscripten's port identifier message
+	if (view.byteLength === 10 &&
+			view[0] === 255 && view[1] === 255 && view[2] === 255 && view[3] === 255 &&
+			view[4] === 'p'.charCodeAt(0) && view[5] === 'o'.charCodeAt(0) && view[6] === 'r'.charCodeAt(0) && view[7] === 't'.charCodeAt(0)) {
+			conn.port = ((view[8] << 8) | view[9])
+			return
+	}
+
+	var msg = stripOOB(buffer)
+	if (!msg) {
+		removeClient(conn)
+		return
+	}
+
+	if (msg.indexOf('getservers ') === 0) {
+		handleGetServers(conn, msg.substr(11))
+	} else if (msg.indexOf('heartbeat ') === 0) {
+		handleHeartbeat(conn, msg.substr(10))
+	} else if (msg.indexOf('infoResponse\n') === 0) {
+		handleInfoResponse(conn, msg.substr(13))
+	} else if (msg.indexOf('subscribe') === 0) {
+		handleSubscribe(conn)
+	} else {
+		console.error('unexpected message "' + msg + '"')
+	}
+}
+
 async function startMasterServer(port) {
 	var server = http.createServer()
 
@@ -270,42 +302,9 @@ async function startMasterServer(port) {
 			connections[conn.addr+':'+conn.port] = conn
 		else
 			conn = connections[conn.addr+':'+conn.port]
-		var first = true
 
-		ws.on('message', function (buffer, flags) {
-			
-			// node Buffer to ArrayBuffer
-			var view = Uint8Array.from(buffer)
-			var buffer = view.buffer
-
-			// check to see if this is emscripten's port identifier message
-			var wasfirst = first
-			first = false
-			if (wasfirst &&
-					view.byteLength === 10 &&
-					view[0] === 255 && view[1] === 255 && view[2] === 255 && view[3] === 255 &&
-					view[4] === 'p'.charCodeAt(0) && view[5] === 'o'.charCodeAt(0) && view[6] === 'r'.charCodeAt(0) && view[7] === 't'.charCodeAt(0)) {
-					conn.port = ((view[8] << 8) | view[9])
-					return
-			}
-
-			var msg = stripOOB(buffer)
-			if (!msg) {
-				removeClient(conn)
-				return
-			}
-
-			if (msg.indexOf('getservers ') === 0) {
-				handleGetServers(conn, msg.substr(11))
-			} else if (msg.indexOf('heartbeat ') === 0) {
-				handleHeartbeat(conn, msg.substr(10))
-			} else if (msg.indexOf('infoResponse\n') === 0) {
-				handleInfoResponse(conn, msg.substr(13))
-			} else if (msg.indexOf('subscribe') === 0) {
-				handleSubscribe(conn)
-			} else {
-				console.error('unexpected message "' + msg + '"')
-			}
+		ws.on('message', function(buffer, flags) {
+			onMessage(conn, buffer)
 		})
 
 		ws.on('error', function (err) {
@@ -333,16 +332,21 @@ async function startMasterServer(port) {
 		})
 		.on('error', reject)
 		.on('message', function (message, rinfo) {
-			var conn = new connection(listener, {
+			var conn = new connection({
+				send: function (message) {
+					listener.send(message.toString(), 0, message.length, rinfo.port, rinfo.addr);
+				},
 				_socket: {
 					remoteAddress: rinfo.address,
 					remotePort: rinfo.port
 				}
-			})
+			}, {})
 			if(typeof connections[conn.addr+':'+conn.port] == 'undefined')
 				connections[conn.addr+':'+conn.port] = conn
 			else
 				conn = connections[conn.addr+':'+conn.port]
+			
+			onMessage(conn, message)
 		})
 		.bind(port, '0.0.0.0'))
 
