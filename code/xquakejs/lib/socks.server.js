@@ -1,4 +1,4 @@
-const dgram = require('dgram')
+var dgram = require('dgram')
 var {createServer, Socket, isIP} = require('net')
 var dns = require('dns')
 var util = require('util')
