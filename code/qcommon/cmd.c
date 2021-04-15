@@ -1170,12 +1170,11 @@ void Cmd_Init( void ) {
 	Cmd_AddCommand ("cmdlist",Cmd_List_f);
 	Cmd_SetDescription("cmdlist", "List all available console commands\nUsage: cmdlist");
 	Cmd_AddCommand ("exec",Cmd_Exec_f);
-	Cmd_AddCommand ("execq",Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
 	Cmd_SetDescription("exec", "Execute a config file or script\nUsage: exec <configfile>");
-	Cmd_AddCommand ("execq",Cmd_Exec_f);
+	Cmd_AddCommand ("execq", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "execq", Cmd_CompleteCfgName );
-	Cmd_SetDescription("exec", "Quietly execute a config file or script\nUsage: execq <configfile>");
+	Cmd_SetDescription("execq", "Quietly execute a config file or script\nUsage: execq <configfile>");
 	Cmd_AddCommand ("vstr",Cmd_Vstr_f);
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
 	Cmd_SetDescription("vstr", "Identifies the attached command as a variable string\nUsage: vstr <variable>");

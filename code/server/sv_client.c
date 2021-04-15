@@ -143,7 +143,7 @@ void SV_GetChallenge( const netadr_t *from ) {
 #ifndef DEDICATED
 #ifdef USE_LOCAL_DED
 	// allow people to connect to your single player server
-	if(!com_dedicated->integer)
+	if(qfalse && !com_dedicated->integer)
 #endif
 	if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
 		return;

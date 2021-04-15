@@ -62,6 +62,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "linux_local.h" // bk001204
 
+#ifdef USE_LOCAL_DED
+#include <pthread.h>
+pthread_t thread;
+#endif
+
 #ifndef DEDICATED
 #include "../client/client.h"
 #endif
@@ -277,6 +282,10 @@ void Sys_Exit( int code ) __attribute((noreturn));
 void Sys_Exit( int code )
 {
 	Sys_ConsoleInputShutdown();
+  
+#ifdef USE_LOCAL_DED
+//  pthread_join(thread, NULL);
+#endif
 
 #ifdef NDEBUG // regular behavior
 	// We can't do this
@@ -731,6 +740,9 @@ void Sys_Print( const char *msg )
 	{
 		tty_Hide();
 	}
+  
+  if(com_dedicated && com_dedicated->integer)
+    fputs( "Dedicated: ", stderr );
 
 	if ( ttycon_on && ttycon_color_on )
 	{
@@ -862,6 +874,65 @@ int Sys_ParseArgs( int argc, const char* argv[] )
 }
 
 
+#ifdef USE_LOCAL_DED
+char *cmdline2;
+char *cmdline3;
+char *argv0;
+void Sys_PlatformInit( void ) {
+  Com_Printf( "EXEC: %s\n", cmdline2 );
+  char *exec_argv[] = { argv0, cmdline2, " +set dedicated 1 ", 0 };
+  execv(argv0, exec_argv);
+}
+
+void Sys_PlatformInit2( void ) {
+  sleep(5);
+  Com_Printf( "EXEC: %s\n", cmdline3 );
+  char *exec_argv[] = { argv0, cmdline3, " +set dedicated 0 ", 0 };
+  execv(argv0, exec_argv);
+}
+
+/*
+void Sys_PlatformInit( void ) {
+  Cvar_Set("dedicated", "1");
+  Cvar_Set("ttycon", "0");
+
+	// get the initial time base
+	Sys_Milliseconds();
+
+	Com_Init( cmdline2 );
+	NET_Init();
+
+	Com_Printf( "Working directory: %s\n", Sys_Pwd() );
+
+#ifdef DEDICATED
+	// init here for dedicated, as we don't have GLimp_Init
+	InitSig();
+#endif
+
+	while (1)
+	{
+#ifndef NOFPU
+#ifdef __linux__
+		Sys_ConfigureFPU();
+#endif
+#endif
+
+#ifdef DEDICATED
+		// run the game
+		Com_Frame( qfalse );
+#else
+		// check for other input devices
+		IN_Frame();
+		// run the game
+		Com_Frame( CL_NoDelay() );
+#endif
+	}
+}
+*/
+
+#endif
+
+
 int main( int argc, const char* argv[] )
 {
 	char con_title[ MAX_CVAR_VALUE_STRING ];
@@ -885,14 +956,44 @@ int main( int argc, const char* argv[] )
 		len += strlen( argv[i] ) + 1;
 
 	cmdline = malloc( len );
+  cmdline2 = malloc(len);
+  cmdline3 = malloc(len);
 	*cmdline = '\0';
+  *cmdline2 = '\0';
+  *cmdline3 = '\0';
 	for ( i = 1; i < argc; i++ )
 	{
-		if ( i > 1 )
+		if ( i > 1 ) {
 			strcat( cmdline, " " );
+      strcat( cmdline2, " " );
+      strcat( cmdline3, " " );
+    }
 		strcat( cmdline, argv[i] );
+    strcat( cmdline2, argv[i] );
+    strcat( cmdline3, argv[i] );
 	}
+  
+#ifdef USE_LOCAL_DED
+  if(!Q_stristr(cmdline, "dedicated")) {
+    pthread_t thread;
+    pthread_t thread2;
+    int err;
+    argv0 = argv[0];
+    err = pthread_create(&thread, NULL, Sys_PlatformInit, NULL);
+    //err = pthread_create(&thread2, NULL, Sys_PlatformInit2, NULL);
+    if (err)
+    {
+        printf("An error occured: %d", err);
+        return 1;
+    }
+    sleep(5);
+    //pthread_join(thread, NULL);
+    //pthread_join(thread2, NULL);
+    //return 0;
+  }
+#endif
 
+  Com_Printf("Launching: %s\n", cmdline);
 	/*useXYpos = */ Com_EarlyParseCmdLine( cmdline, con_title, sizeof( con_title ), &xpos, &ypos );
 
 	// bk000306 - clear queues
