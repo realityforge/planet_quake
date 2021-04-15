@@ -880,12 +880,12 @@ char *cmdline3;
 char *argv0;
 void Sys_PlatformInit( void ) {
   Com_Printf( "EXEC: %s\n", cmdline2 );
-  char *exec_argv[] = { argv0, cmdline2, " +set dedicated 1 ", 0 };
+  char *exec_argv[] = { argv0, cmdline2, " +set dedicated 1 +set com_affinityMask 3", 0 };
   execv(argv0, exec_argv);
 }
 
 void Sys_PlatformInit2( void ) {
-  sleep(5);
+  sleep(1);
   Com_Printf( "EXEC: %s\n", cmdline3 );
   char *exec_argv[] = { argv0, cmdline3, " +set dedicated 0 ", 0 };
   execv(argv0, exec_argv);
@@ -979,21 +979,15 @@ int main( int argc, const char* argv[] )
     pthread_t thread2;
     int err;
     argv0 = argv[0];
-    err = pthread_create(&thread, NULL, Sys_PlatformInit, NULL);
-    //err = pthread_create(&thread2, NULL, Sys_PlatformInit2, NULL);
-    if (err)
-    {
-        printf("An error occured: %d", err);
-        return 1;
+    if (0 == fork()) {
+      Sys_PlatformInit2();
+      return 0;
     }
-    sleep(5);
-    //pthread_join(thread, NULL);
-    //pthread_join(thread2, NULL);
-    //return 0;
+    Sys_PlatformInit();    
   }
+  Com_Printf("Launching: %s\n", cmdline);
 #endif
 
-  Com_Printf("Launching: %s\n", cmdline);
 	/*useXYpos = */ Com_EarlyParseCmdLine( cmdline, con_title, sizeof( con_title ), &xpos, &ypos );
 
 	// bk000306 - clear queues
