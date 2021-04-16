@@ -1651,8 +1651,10 @@ void  SV_Lock_f(void) {
 }
 
 void SV_CallAdmin_f( void ) {
+#ifdef USE_RECENT_EVENTS
 	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
+#endif
 }
 #endif
 

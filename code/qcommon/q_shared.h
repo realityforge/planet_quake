@@ -48,7 +48,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
-//#define USE_REFEREE_CMDS 1
+#define USE_REFEREE_CMDS 1
 #define USE_LOCAL_DED 1
 
 #define USE_SERVER_ROLES 1
@@ -58,7 +58,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // recent event are for server status trackers to get previous match results
 //   it's also used for the Discord chat bot connector
-//#define USE_RECENT_EVENTS 1
+#define USE_RECENT_EVENTS 1
 
 #define MV_PROTOCOL_VERSION	1 // multiview protocol version
 #define USE_MV				  // multiview enabled
