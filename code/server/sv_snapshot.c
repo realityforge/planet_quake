@@ -669,7 +669,7 @@ static void SV_BuildCommonSnapshot( void )
 			if ( ent->r.svFlags & SVF_NOCLIENT ) {
 				continue;
 			}
-			
+
 #ifdef USE_RECENT_EVENTS
 			if(ent->s.clientNum < sv_maxclients->integer
 				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
@@ -684,7 +684,6 @@ static void SV_BuildCommonSnapshot( void )
 					if(event >= EV_DEATH1 && event <= EV_DEATH3
 						&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))
 					) {
-						Com_Printf("Died: %i %i \n", ent->s.clientNum, ent->s.eventParm);
 						char player[1024];
 						int playerLength;
 						client_t *c1 = &svs.clients[ent->s.clientNum];

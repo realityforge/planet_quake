@@ -994,6 +994,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	pw = Cmd_Argv( 1 );
 	if ( ( sv_rconPassword->string[0] && strcmp( pw, sv_rconPassword->string ) == 0 ) ||
 		( rconPassword2[0] && strcmp( pw, rconPassword2 ) == 0 ) ) {
+		limited = qfalse;
 		valid = qtrue;
 		Com_Printf( "Rcon from %s: %s\n", NET_AdrToString( from ), Cmd_ArgsFrom( 2 ) );
 #ifdef USE_SERVER_ROLES

@@ -1055,7 +1055,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 			} else {
 #ifdef USE_SERVER_ROLES
 				if(limited && !cmd->limited)
-					Com_Printf("Could not execute command %s, you do not have permission.", cmd->name);
+					Com_Printf("Could not execute command %s, you do not have permission.\n", cmd->name);
 				else
 #endif
 				cmd->function();

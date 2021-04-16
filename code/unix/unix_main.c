@@ -877,17 +877,17 @@ int Sys_ParseArgs( int argc, const char* argv[] )
 #ifdef USE_LOCAL_DED
 char *cmdline2;
 char *cmdline3;
-char *argv0;
+const char *argv0;
 void Sys_PlatformInit( void ) {
   Com_Printf( "EXEC: %s\n", cmdline2 );
-  char *exec_argv[] = { argv0, cmdline2, " +set dedicated 1 +set com_affinityMask 3", 0 };
+  char *exec_argv[] = { (char *)argv0, cmdline2, " +set dedicated 2 +set rconpassword \"password123!\" ", 0 };
   execv(argv0, exec_argv);
 }
 
 void Sys_PlatformInit2( void ) {
   sleep(1);
   Com_Printf( "EXEC: %s\n", cmdline3 );
-  char *exec_argv[] = { argv0, cmdline3, " +set dedicated 0 ", 0 };
+  char *exec_argv[] = { (char *)argv0, cmdline3, " +set dedicated 0 +set rconpassword \"password123!\" ", 0 };
   execv(argv0, exec_argv);
 }
 
@@ -975,9 +975,6 @@ int main( int argc, const char* argv[] )
   
 #ifdef USE_LOCAL_DED
   if(!Q_stristr(cmdline, "dedicated")) {
-    pthread_t thread;
-    pthread_t thread2;
-    int err;
     argv0 = argv[0];
     if (0 == fork()) {
       Sys_PlatformInit2();
