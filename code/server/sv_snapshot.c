@@ -675,24 +675,36 @@ static void SV_BuildCommonSnapshot( void )
 				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
 			//	&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT 
 			) {
-//if(ent->s.event > 0)
-//Com_Printf("event: %i\n", ent->s.event & ~EV_EVENT_BITS);
-				if(ent->s.eType == ET_PLAYER
-					&& (ent->s.event & ~EV_EVENT_BITS) == EV_DEATH1
-					&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))) {
-					char player[1024];
-					int playerLength;
-					client_t *c1 = &svs.clients[ent->s.clientNum];
-					playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
-					client_t *c2 = &svs.clients[ent->s.eventParm];
-					playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
-					playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
-						ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
-						ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
-					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+
+				if(ent->s.eType == ET_PLAYER && ent->s.event & EV_EVENT_BITS) {
+					int event = (ent->s.event & ~EV_EVENT_BITS);
+
+//					if(event > 1) // footsteps and none
+//						Com_Printf("event: %i %i\n", event, ent->s.clientNum);
+					if(event >= EV_DEATH1 && event <= EV_DEATH3
+						&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))
+					) {
+						Com_Printf("Died: %i %i \n", ent->s.clientNum, ent->s.eventParm);
+						char player[1024];
+						int playerLength;
+						client_t *c1 = &svs.clients[ent->s.clientNum];
+						playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
+						if(ent->s.eventParm == 1022) {
+							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"]]", 
+								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name);			
+						} else {
+							client_t *c2 = &svs.clients[ent->s.eventParm];
+							playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
+							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
+								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
+								ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
+						}
+						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+						numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+					}
 				}
+
 				if(ent->s.eType == ET_PLAYER
 					&& (ent->s.event & ~EV_EVENT_BITS) == EV_CHANGE_WEAPON) {
 					char weapon[1024];
@@ -1199,42 +1211,47 @@ void SV_SendClientMessages( void )
 			ps = SV_GameClientNum( i );
 			if(c->netchan.remoteAddress.type != NA_BOT) {
 				numConnected++;
-				clientSnapshot_t	*frame;
-				frame = &c->frames[0][ c->netchan.outgoingSequence & PACKET_MASK ];
-				//ps = &frame->ps;
-	/*
-				for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+			}
+			clientSnapshot_t	*frame;
+			frame = &c->frames[0][ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+			//ps = &frame->ps;
+			for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+				if ( j >= c->frames[0][ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
 					int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
 					//if(j >= ps.eventSequence) {
-	//if(event > 0)
-	//Com_Printf("event: %i\n", event);
-						if(event >= EV_DEATH1 && event <= EV_DEATH3) {
-	Com_Printf("event: Player died...\n");
-							char clientId[10];
-							memcpy(clientId, va("%i", i), sizeof(clientId));
-							memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
-							if(recentI == 1024) recentI = 0;
-							numDied[i / 8] |= 1 << (i % 8);
-						}
-					//}
-				}
-	*/
-			
-				if(ps->pm_flags & (PMF_RESPAWNED)) {
-					char clientId[10];
-					memcpy(clientId, va("%i", i), sizeof(clientId));
-					// TODO: add respawn location
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
-					numDied[i / 8] &= ~(1 << (i % 8));
-				}
-				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
-					numScored[i / 8] |= 1 << (i % 8);
-				} else {
-					numScored[i / 8] &= ~(1 << (i % 8));
+//					if(event > 1) // footsteps and none
+//						Com_Printf("event: %i %i\n", event, i);
+					if(event == EV_FOOTSTEP) {
+						numDied[i / 8] &= ~(1 << (i % 8));
+					}
+/*
+					if(event >= EV_DEATH1 && event <= EV_DEATH3) {
+						char clientId[10];
+						memcpy(clientId, va("%i", i), sizeof(clientId));
+						Com_Printf("Died: %s\n", clientId);
+						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, clientId), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+						numDied[i / 8] |= 1 << (i % 8);
+					}
+*/
 				}
 			}
+		
+			if(ps->pm_flags & (PMF_RESPAWNED)) {
+				char clientId[10];
+				memcpy(clientId, va("%i", i), sizeof(clientId));
+				// TODO: add respawn location
+				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
+				if(recentI == 1024) recentI = 0;
+				numDied[i / 8] &= ~(1 << (i % 8));
+			}
+			if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
+				numScored[i / 8] |= 1 << (i % 8);
+			} else {
+				numScored[i / 8] &= ~(1 << (i % 8));
+			}
 		}
+		//}
 	}
 	// must send a snapshot to a client at least once every second
 	if(sv.time - lastReset > 1000) {

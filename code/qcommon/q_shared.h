@@ -48,9 +48,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+// referee commands include things like: 
+// server-side pause/freeze
+// disciplinary actions such as mute/nofire
+// lock and unlock for team joining
 #define USE_REFEREE_CMDS 1
+
 #define USE_LOCAL_DED 1
 
+// adds roles to rcon access, each role has it's own password
+// each role can execute specific commands
 #define USE_SERVER_ROLES 1
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
