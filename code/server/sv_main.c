@@ -708,6 +708,31 @@ void SVC_RateDropAddress( const netadr_t *from, int burst, int period ) {
 
 
 #ifdef USE_RECENT_EVENTS
+static char *escaped;
+char *SV_EscapeStr(char *str, int len) {
+	int count = 0, i, j;
+	for(i = 0; i < len; i++) {
+		if(str[i] == 0) break;
+		if(str[i] == '\\') {
+			count++;
+		}
+	}
+	
+	if(escaped) {
+		Z_Free(escaped);
+	}
+	escaped = Z_Malloc((len+count)*8);
+	for(i = 0, j = 0; i < len; i++, j++) {
+		if(str[i] == 0) break;
+		if(str[i] == '\\') {
+			escaped[j] = '\\';
+			j++;
+		}
+		escaped[j] = str[i];
+	}
+	return escaped;
+}
+
 void SV_RecentStatus(recentEvent_t type) {
 	client_t *c;
 	playerState_t *ps;
@@ -719,7 +744,7 @@ void SV_RecentStatus(recentEvent_t type) {
 	char *cl_guid;
 	char *s;
 	i = 0;
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL )), MAX_INFO_STRING);
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL ), MAX_INFO_STRING)), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 makestatus:
 	s = &status[1];
@@ -731,7 +756,7 @@ makestatus:
 		if ( c->state >= CS_CONNECTED ) {
 			cl_guid = Info_ValueForKey(c->userinfo, "cl_guid");
 			ps = SV_GameClientNum( i );
-			playerLength = Com_sprintf( player, sizeof( player ), "[%s,%i,%i,\"%s\",%i,%i,%i,%i],",
+			playerLength = Com_sprintf( player, sizeof( player ), "[\"%s\",%i,%i,\"%s\",%i,%i,%i,%i],",
 				cl_guid, 
 				ps->persistant[ PERS_SCORE ], c->ping, c->name,
 				ps->persistant[ PERS_HITS ], ps->persistant[ PERS_EXCELLENT_COUNT ],

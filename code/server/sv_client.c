@@ -1098,7 +1098,7 @@ gotnewcl:
 	}
 	
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, newcl->userinfo), MAX_INFO_STRING);
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, SV_EscapeStr(newcl->userinfo, sizeof(newcl->userinfo))), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 #endif
 	
@@ -1138,7 +1138,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	int		i;
 	
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, drop->userinfo), MAX_INFO_STRING);
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, SV_EscapeStr(drop->userinfo, sizeof(drop->userinfo))), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 #endif
 	
@@ -2728,7 +2728,10 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 			if(!strcmp(Cmd_Argv(0), "say")
 				&& Q_stristr(Cmd_ArgsFrom(1), "server medic")) {
 #ifdef USE_RECENT_EVENTS
-				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				int playerLength;
+				char player[MAX_INFO_STRING];
+				playerLength = Com_sprintf( player, sizeof( player ), "%s: %s", cl->name, Cmd_ArgsFrom(1));
+				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, player), MAX_INFO_STRING);
 				if(recentI == 1024) recentI = 0;
 #endif
 				Cmd_Clear();
@@ -2737,7 +2740,10 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 #endif
 #ifdef USE_RECENT_EVENTS
 			if(!strcmp(Cmd_Argv(0), "say")) {
-				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTSAY, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
+				int playerLength;
+				char player[MAX_INFO_STRING];
+				playerLength = Com_sprintf( player, sizeof( player ), "%s: %s", cl->name, Cmd_ArgsFrom(1));
+				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTSAY, player), MAX_INFO_STRING);
 				if(recentI == 1024) recentI = 0;
 			}
 #endif

@@ -401,6 +401,7 @@ typedef enum {
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
 void SV_RecentStatus(recentEvent_t type);
+char *SV_EscapeStr(char *str, int len);
 #endif
 
 extern	cvar_t	*sv_fps;
