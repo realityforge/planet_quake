@@ -1203,7 +1203,8 @@ qboolean SV_GameCommand( void ) {
 		int			j;
 		for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 			// TODO: send this to authenticated clients?
-			if(client->netchan.remoteAddress.type == NA_LOOPBACK)
+			if(client->netchan.remoteAddress.type == NA_LOOPBACK
+				|| Info_ValueForKey(client->userinfo, "cmd_connector"))
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}
 		return qtrue;

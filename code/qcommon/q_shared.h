@@ -119,7 +119,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   allows repacking files, and still sending original checksum to pure servers
 #define USE_SPOOF_CHECKSUM 1
 //
-#endif
+#endif // EMSCRIPTEN
+
 
 #ifdef USE_LOCAL_DED
 // allows server to run any client command from remote to client, opposite of /rcon

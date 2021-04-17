@@ -502,24 +502,29 @@ rescan:
 		return qfalse;
 	}
 
-	// we may want to put a "connect to other server" command here
-#ifdef USE_CMD_CONNECTOR
-	if ( !strcmp( cmd, "postgame" ) ) {
-		cls.postgame = qtrue;
-	}
-	
-	// pass server commands through to client like postgame
-  // skip sending to server since that where it came from
+#if defined(USE_LOCAL_DED) || defined(USE_LNBITS)
 	if( !strcmp( cmd, "reconnect" ) ) {
 		Cbuf_AddText("reconnect\n");
 		Cmd_Clear();
 		return qfalse;
 	}
+#endif
 
+#ifdef USE_LOCAL_DED
+	if ( !strcmp( cmd, "postgame" ) ) {
+		cls.postgame = qtrue;
+	}
+#endif
+
+	// we may want to put a "connect to other server" command here
+#ifdef USE_CMD_CONNECTOR
+	// if it came from the server it was meant for cgame
 	if( Q_stristr(cmd, "print") ) {
 		return qtrue;
 	}
 
+	// pass server commands through to client like postgame
+  // skip sending to server since that where it came from
 	if(Cmd_ExecuteString(s, qtrue)) {
 		Cmd_Clear();
 		return qfalse;

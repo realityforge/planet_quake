@@ -3868,7 +3868,6 @@ static int thirdTimer = 0;
 void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
-	unsigned result;
 
 #ifdef USE_MULTIVM
 	CM_SwitchMap(clc.currentView);
@@ -5170,6 +5169,10 @@ void CL_Init( void ) {
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
 	Cvar_SetDescription( cl_guidServerUniq, "Generate a unique GUID for every server, based on server ID and Q3 key (more secure)\nDefault: 1" );
+
+#ifdef USE_CMD_CONNECTOR
+	Cvar_Get( "cmd_connector", "1", CVAR_ROM | CVAR_USERINFO );
+#endif
 
 #ifdef USE_LAZY_LOAD
 	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
