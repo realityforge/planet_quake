@@ -50,6 +50,7 @@ A normal server packet will look like:
 static int numConnected = 0;
 static byte numScored[128];
 static byte numDied[128];
+static byte numWeapon[1024];
 static int lastReset = 0; // debounce events
 #endif
 
@@ -708,10 +709,14 @@ static void SV_BuildCommonSnapshot( void )
 					&& (ent->s.event & ~EV_EVENT_BITS) == EV_CHANGE_WEAPON) {
 					char weapon[1024];
 					playerState_t *ps = SV_GameClientNum( ent->s.clientNum );
-					client_t *c = &svs.clients[ent->s.clientNum];
-					memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
+					// debounce weapon change event
+					if(numWeapon[ent->s.clientNum] != ps->weapon) {
+						numWeapon[ent->s.clientNum] = ps->weapon;
+						client_t *c = &svs.clients[ent->s.clientNum];
+						memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
+						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+					}
 				}
 				if(ent->s.eType == ET_PLAYER
 					&& (ent->s.eType & (EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET
@@ -1236,7 +1241,8 @@ void SV_SendClientMessages( void )
 				}
 			}
 		
-			if(ps->pm_flags & (PMF_RESPAWNED)) {
+			if(ps->pm_flags & (PMF_RESPAWNED)
+				&& (numDied[i / 8] & (1 << (i % 8)))) {
 				char clientId[10];
 				memcpy(clientId, va("%i", i), sizeof(clientId));
 				// TODO: add respawn location
