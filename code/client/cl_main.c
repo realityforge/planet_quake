@@ -1104,14 +1104,16 @@ static void CL_Rewind_f( void ) {
 	} else if (Q_stricmpn(Cmd_Argv(0), "skip", 4)==0) {
 		nearest = seconds;
 		if(nearest < 0) {
-			Com_Printf("Starting from the beginning.");
+			Com_Printf("DEMO: Starting from the beginning.");
 			nearest = 0;
 		}
 		if(nearest > clc.numDemoIndex) {
-			Com_Printf("Skipping to the end.");
+			Com_Printf("DEMO: Skipping to the end.");
 			nearest = clc.numDemoIndex - 1;
 		}
 	}
+	
+	nearest = 1;
 
 	// reset snapshot state to time we are skipping to
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
@@ -1123,6 +1125,8 @@ static void CL_Rewind_f( void ) {
 	Com_Printf("Message shift: %i (%i)\n", messageShift, serverShift);
 	// reset again to load the correct message shift
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
+	memcpy(cl.entityBaselines[cgvm], clc.demoIndex[nearest].entities, MAX_GENTITIES * sizeof(entityState_t));
+	cl.serverTime = cl.snap[cgvm].serverTime - serverShift;
 	for(int j = 0; j < 3; j++) {
 		CL_ReadDemoMessage();
 	}
