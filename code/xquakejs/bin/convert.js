@@ -19,13 +19,26 @@ function chroot(file, root, output) {
   return path.join(output, file.substr(root.length))
 }
 
-async function convertNonAlpha(inFile, project, output, noOverwrite) {
+async function convertNonAlpha(inFile, project, output, noOverwrite, palette) {
   var outFile
   var alphaCmd = '';
+  var colorCmd = '';
+
+  if(palette && typeof palette[inFile] == 'undefined') {
+    // get average image color for pallet
+    try {
+      colorCmd = execSync(`convert "${inFile}" -resize 1x1\! -format "%[fx:int(255*a+.5)],%[fx:int(255*r+.5)],%[fx:int(255*g+.5)],%[fx:int(255*b+.5)]" info:-`, {stdio : 'pipe'}).toString('utf-8')
+      palette[inFile] = colorCmd
+    } catch (e) {
+      console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
+    }
+  }
+
   outFile = chroot(chext(inFile, '.png'), project, output)
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   outFile = chroot(chext(inFile, '.jpg'), project, output)
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
+
   try {
     alphaCmd = execSync(`identify -format '%[opaque]' "${inFile}"`, {stdio : 'pipe'}).toString('utf-8')
   } catch (e) {
@@ -66,7 +79,19 @@ async function convertAudio(inFile, project, output, noOverwrite) {
   return outFile
 }
 
-async function convertGameFiles(gs, project, outConverted, noOverwrite, progress) {  
+var MATCH_PALETTE = /palette\s"(.*?)"\s([0-9]+,[0-9]+,[0-9]+)/ig
+
+async function convertGameFiles(gs, project, outConverted, noOverwrite, progress) {
+  var palette = {}
+  var existingPalette = ''
+  if(ufs.existsSync(path.join(outConverted, 'scripts/palette.shader'))) {
+    existingPalette = ufs.readFileSync(path.join(outConverted, 'scripts/palette.shader')).toString('utf-8')
+    var m
+    while((m = (MATCH_PALETTE).exec(existingPalette)) !== null) {
+      palette[path.join(project, m[1])] = m[2]
+    }
+    existingPalette = existingPalette.replace(/palettes\/.*?\n*\{[\s\S]*?\}\n*/ig, '')
+  }
   await progress([
     [2, false],
     [1, 0, 3, `Converting images`]
@@ -75,12 +100,20 @@ async function convertGameFiles(gs, project, outConverted, noOverwrite, progress
   for(var j = 0; j < images.length; j++) {
     await progress([[2, j, images.length, chroot(images[j], project, '')]])
     if(!ufs.existsSync(images[j])) continue
-    var newFile = await convertNonAlpha(images[j], project, outConverted, noOverwrite)
+    var newFile = await convertNonAlpha(images[j], project, outConverted, noOverwrite, palette)
     Object.keys(gs.ordered).forEach(k => {
       var index = gs.ordered[k].indexOf(images[j])
       if(index > -1) gs.ordered[k][index] = newFile
     })
   }
+  
+  // save palette to shader file
+  existingPalette = `palettes/default
+{
+${Object.keys(palette).map(k => `  palette "${chroot(k, project + '/', '')}" ${palette[k]}`).join('\n')}
+}
+` + existingPalette
+  ufs.writeFileSync(path.join(outConverted, 'scripts/palette.shader'), existingPalette)
   
   await progress([
     [2, false],

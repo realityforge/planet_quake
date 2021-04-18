@@ -390,8 +390,11 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if(absolute) {
+		if(absolute && in_mouseAbsolute && in_mouseAbsolute->integer > 1) {
 			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
+		} else if (absolute && in_mouseAbsolute && in_mouseAbsolute->integer == 1) {
+			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, -10000, -10000 );
+			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
 		} else {
 			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
 		}

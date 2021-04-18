@@ -38,6 +38,9 @@ cvar_t	*cl_renderer;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
+#ifdef USE_ABS_MOUSE
+cvar_t  *in_mouseAbsolute;
+#endif
 #ifdef USE_MASTER_LAN
 cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
 #endif
@@ -5126,6 +5129,10 @@ void CL_Init( void ) {
 	
 	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
+#endif
+
+#ifdef USE_ABS_MOUSE
+	in_mouseAbsolute = Cvar_Get("in_mouseAbsolute", "1", CVAR_ARCHIVE);
 #endif
 
 #ifdef EMSCRIPTEN

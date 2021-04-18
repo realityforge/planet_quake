@@ -2465,7 +2465,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
-	SV_SendClientSnapshot(cl, qfalse);
+	SV_SendClientSnapshot(client, qfalse);
 }
 
 void SV_Tele_f( client_t *client ) {

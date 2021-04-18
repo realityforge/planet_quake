@@ -32,6 +32,7 @@ int		gl_filter_max = GL_LINEAR;
 
 #define FILE_HASH_SIZE		1024
 static	image_t*		hashTable[FILE_HASH_SIZE];
+static	palette_t*		paletteTable[FILE_HASH_SIZE];
 
 /*
 ** R_GammaCorrect
@@ -2456,6 +2457,51 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 	}
 }
 
+void R_AddPalette(const char *name, int a, int r, int g, int b) {
+	int hash;
+	palette_t *palette;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	int namelen = strlen(normalName);
+	palette = ri.Hunk_Alloc( sizeof( *palette ) + namelen + 1, h_low );
+	palette->imgName = (char *)( palette + 1 );
+	strcpy( palette->imgName, normalName );
+	hash = generateHashValue(normalName);
+	palette->a = a;
+	palette->r = r;
+	palette->g = g;
+	palette->b = b;
+	palette->next = paletteTable[hash];
+	paletteTable[hash] = palette;
+}
+
+
+image_t *R_FindPalette(const char *name) {
+	palette_t *palette;
+	long	hash;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	hash = generateHashValue(normalName);
+	for (palette=paletteTable[hash]; palette; palette=palette->next) {
+		if ( !strcmp( normalName, palette->imgName ) ) {
+			if(!palette->image) {
+				byte	data[16][16][4];
+				for(int x = 0; x < 16; x++) {
+					for(int y = 0; y < 16; y++) {
+						data[x][y][3] = palette->a;
+						data[x][y][2] = palette->b;
+						data[x][y][1] = palette->g;
+						data[x][y][0] = palette->r;
+					}
+				}
+				palette->image = R_CreateImage("*pal%i-%i-%i", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+			}
+			return palette->image;
+		}
+	}
+	return tr.defaultImage;
+}
+
 
 /*
 ===============
@@ -2477,6 +2523,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 
 	if (!name || !name[0]) {
 		return NULL;
+	}
+
+	if((flags & IMGFLAG_PALETTE) && name[0] != '*') {
+		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
+		return R_FindPalette(name);
 	}
 
 	hash = generateHashValue(name);

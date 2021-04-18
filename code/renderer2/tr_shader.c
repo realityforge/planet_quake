@@ -723,9 +723,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 #ifdef USE_LAZY_LOAD
         if(!mapShaders && r_lazyLoad->integer == 2) {
-          byte *pic;
-          int len;
-          R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
+          stage->bundle[0].image[0] = 0;
         } else 
 #endif
         {
@@ -736,7 +734,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				{
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 					//return qfalse;
-          stage->bundle[0].image[0] = tr.defaultImage;
+          stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
 				}
 			}
 		}
@@ -778,9 +776,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 #ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
-        int len;
-        byte *pic;
-        R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
+        stage->bundle[0].image[0] = 0;
       } else 
 #endif
       {
@@ -790,7 +786,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			{
 				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 				//return qfalse;
-        stage->bundle[0].image[0] = tr.defaultImage;
+        stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
 			}
 		}
 		//
@@ -829,9 +825,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 #ifdef USE_LAZY_LOAD
           if(!mapShaders && r_lazyLoad->integer == 2) {
-            int len;
-            byte *pic;
-            R_LoadImage(token, &pic, &len, &len, &len, &len, qtrue);
+            stage->bundle[0].image[num] = 0;
           } else 
 #endif
           {
@@ -841,7 +835,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					{
 						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
 						//return qfalse;
-            stage->bundle[0].image[num] = tr.defaultImage;
+            stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -861,7 +855,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMap' keyword in shader '%s'\n", shader.name );
 				return qfalse;
 			}
-      memcpy(&path, token, sizeof(path));
+      memcpy(path, token, sizeof(path));
       token = COM_ParseExt( text, qfalse );
       if(token[0]) {
         stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( &path, 0, 0, 256, 256, (CIN_loop | CIN_shader));
@@ -1668,10 +1662,7 @@ static void ParseSkyParms( const char **text ) {
 
 #ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
-        int len;
-        byte *pic;
-        R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
-        shader.sky.outerbox[i] = tr.defaultImage;
+        shader.sky.outerbox[i] = 0;
       } else 
 #endif
       {
@@ -1679,7 +1670,7 @@ static void ParseSkyParms( const char **text ) {
       }
 
 			if ( !shader.sky.outerbox[i] ) {
-				shader.sky.outerbox[i] = tr.defaultImage;
+				shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE | IMGFLAG_PALETTE );
 			}
 		}
 	}
@@ -1708,17 +1699,14 @@ static void ParseSkyParms( const char **text ) {
 				, token, suf[i] );
 #ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
-        int len;
-        byte *pic;
-        R_LoadImage((char *) pathname, &pic, &len, &len, &len, &len, qtrue);
-        shader.sky.innerbox[i] = tr.defaultImage;
+        shader.sky.innerbox[i] = 0;
       } else 
 #endif
       {
         shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags );
       }
 			if ( !shader.sky.innerbox[i] ) {
-				shader.sky.innerbox[i] = tr.defaultImage;
+				shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_PALETTE );
 			}
 		}
 	}
@@ -2178,6 +2166,44 @@ static qboolean ParseShader( const char **text )
 		// skip stuff that only q3map or the server needs
 		else if ( !Q_stricmp( token, "surfaceParm" ) ) {
 			ParseSurfaceParm( text );
+			continue;
+		}
+    // parse palette colors for filename
+    else if ( !Q_stricmp( token, "palette" ) ) {
+      char file[MAX_QPATH];
+      token = COM_ParseExt( text, qfalse );
+      memcpy(file, token, sizeof(file));
+      const char *colors = COM_ParseExt( text, qfalse );
+      char color[4];
+      int a = 0, r = 0, g = 0, b = 0;
+      int ci = 0;
+      int ri = 0;
+      int gi = 0;
+      int bi = 0;
+      for(int i = 0; i < 12; i++) {
+        if(colors[i] == ',') {
+          if(ri == 0) {
+            color[ci] = 0;
+            a = atoi(color);
+            ri = i + 1;
+          } else if(gi == 0) {
+            color[ci] = 0;
+            r = atoi(color);
+            gi = i + 1;
+          } else {
+            color[ci] = 0;
+            g = atoi(color);
+            bi = i + 1;
+            b = atoi(&colors[bi]);
+            break;
+          }
+          ci = 0;
+        } else if (colors[i] >= '0' && colors[i] <= '9') {
+          color[ci] = colors[i];
+          ci++;
+        }
+      }
+      R_AddPalette(file, a, r, g, b);
 			continue;
 		}
 		// no mip maps
@@ -2665,17 +2691,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 #ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
-        int len;
-        byte *pic;
-        R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
-        normalImg = NULL;
+        normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags | IMGFLAG_PALETTE);
       } else 
 #endif
       {
         normalImg = R_FindImageFile(normalName, IMGTYPE_NORMALHEIGHT, normalFlags);
       }
 
-			if (normalImg)
+			if (normalImg && normalImg != tr.defaultImage)
 			{
 				parallax = qtrue;
 			}
@@ -2685,10 +2708,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				normalName[strlen(normalName) - 1] = '\0';
 #ifdef USE_LAZY_LOAD
         if(!mapShaders && r_lazyLoad->integer == 2) {
-          byte *pic;
-          int len;
-          R_LoadImage(normalName, &pic, &len, &len, &len, &len, qtrue);
-          normalImg = NULL;
+          normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags | IMGFLAG_PALETTE);
         } else 
 #endif
         {
@@ -2696,7 +2716,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
         }
 			}
 
-			if (normalImg)
+			if (normalImg && normalImg != tr.defaultImage)
 			{
 				diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
@@ -2730,10 +2750,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 #ifdef USE_LAZY_LOAD
       if(!mapShaders && r_lazyLoad->integer == 2) {
-        byte *pic;
-        int len;
-        R_LoadImage(specularName, &pic, &len, &len, &len, &len, qtrue);
-        specularImg = NULL;
+        specularImg = R_FindImageFile(specularName, IMGTYPE_COLORALPHA, specularFlags | IMGFLAG_PALETTE);
       } else 
 #endif
       {
@@ -3221,7 +3238,7 @@ static shader_t *GeneratePermanentShader( void ) {
 			size = newShader->stages[i]->bundle[b].numTexMods * sizeof( texModInfo_t );
 			if ( size ) {
 				newShader->stages[i]->bundle[b].texMods = ri.Hunk_Alloc( size, h_low );
-				Com_Memcpy( newShader->stages[i]->bundle[b].texMods, stages[i].bundle[b].texMods, size );
+				memcpy( newShader->stages[i]->bundle[b].texMods, stages[i].bundle[b].texMods, size );
 			}
 		}
 	}
@@ -3813,10 +3830,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 #ifdef USE_LAZY_LOAD
     if(!mapShaders && r_lazyLoad->integer == 2) {
-      byte *pic = NULL;
-      int len = 0;
-      R_LoadImage( name, &pic, &len, &len, &len, &len, qtrue );
-      image = NULL;
+      image = 0;
     } else 
 #endif
     {
@@ -3825,7 +3839,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-      image = tr.defaultImage;
+      image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
 			//shader.defaultShader = qtrue;
 			//return FinishShader();
 		} else {
@@ -4383,6 +4397,11 @@ static void ScanAndLoadShaderFiles( void )
 
 		SkipBracedSection(&p, 0);
 	}
+  
+  const char *shaderText = FindShaderInShaderText("palettes/default");
+	if ( !shaderText || !ParseShader( &shaderText ) ) {
+    Com_Printf("Error: parsing default palette\n");
+  }
 }
 
 
