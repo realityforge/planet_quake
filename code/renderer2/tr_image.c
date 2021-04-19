@@ -2192,6 +2192,43 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	image->lastTimeUsed = tr.lastRegistrationTime;
 	image->internalFormat = internalFormat;
 
+	if(!cubemap && !isLightmap && r_seeThroughWalls->integer) {
+		if(internalFormat == GL_RGB) {
+			byte *alphaPic = ri.Malloc(width * height * 4);
+			for (int y = 0; y < height; y++)
+			{
+				const byte *inbyte  = pic + y * width * 3;
+				byte       *outbyte = alphaPic + y * width * 4;
+
+				for (int x = 0; x < width; x++)
+				{
+					outbyte[0] = inbyte[0];
+					outbyte[1] = inbyte[1];
+					outbyte[2] = inbyte[2];
+					outbyte[3] = inbyte[3];
+					//outbyte[3] = 255;
+				}
+			}
+			//picFormat = GL_RGB8;
+			//pic = alphaPic;
+			internalFormat = GL_RGBA;
+		}
+		
+		if(internalFormat == GL_RGBA) {
+			// copy in to out
+			for (int y = 0; y < height; y++)
+			{
+				const byte *inbyte  = pic + y * width * 4;
+				byte       *outbyte = pic + y * width * 4;
+
+				for (int x = 0; x < width; x++)
+				{
+					outbyte[1] = inbyte[1] * 0.5;
+				}
+			}
+		}
+	}
+
 	// Possibly scale image before uploading.
 	// if not rgba8 and uploading an image, skip picmips.
 	if (!cubemap)

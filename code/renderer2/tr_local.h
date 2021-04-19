@@ -1827,6 +1827,7 @@ extern  cvar_t  *r_ignoreDstAlpha;
 
 extern	cvar_t	*r_greyscale;
 extern  cvar_t  *r_paletteMode;
+extern  cvar_t  *r_seeThroughWalls;
 
 extern	cvar_t	*r_ignoreGLErrors;
 

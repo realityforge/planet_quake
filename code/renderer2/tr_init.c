@@ -58,6 +58,7 @@ cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
 cvar_t  *r_paletteMode;
+cvar_t  *r_seeThroughWalls;
 
 cvar_t	*r_ignorehwgamma;
 cvar_t	*r_measureOverdraw;
@@ -1328,6 +1329,7 @@ void R_Register( void )
 	ri.Cvar_CheckRange( r_greyscale, "0", "1", CV_FLOAT );
 	ri.Cvar_SetDescription(r_greyscale, "Enable grayscale effect where all images are converted to grayscale\nDefault: 0");
 	r_paletteMode = ri.Cvar_Get("r_paletteMode", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_seeThroughWalls = ri.Cvar_Get("r_seeThroughWalls", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	r_externalGLSL = ri.Cvar_Get( "r_externalGLSL", "0", CVAR_LATCH );
 	ri.Cvar_SetDescription(r_externalGLSL, "Support loading GLSL files externally, Mods can supply their own rendering\nDefault: 0");
