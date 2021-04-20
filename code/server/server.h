@@ -441,8 +441,8 @@ extern	cvar_t	*sv_roles;
 extern	cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_role[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
-
 #endif
+extern  cvar_t  *sv_activeAction;
 #ifdef USE_REFEREE_CMDS
 extern  cvar_t	*sv_lock[2];
 extern  cvar_t  *sv_frozen;

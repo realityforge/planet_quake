@@ -805,6 +805,12 @@ void SV_SpawnServer_After_Startup( void ) {
 	if(recentI == 1024) recentI = 0;
 #endif
 
+	if ( com_dedicated->integer && sv_activeAction->string[0] ) {
+		Cbuf_AddText( sv_activeAction->string );
+		Cbuf_AddText( "\n" );
+		Cvar_Set( "activeAction", "" );
+	}
+
 	// start recording a demo
 	if ( sv_autoDemo->integer ) {
 		SV_DemoAutoDemoRecord();
@@ -947,6 +953,10 @@ void SV_Init( void )
 	sv_recentPassword = Cvar_Get ("recentPassword", "", CVAR_TEMP );
 	Cvar_SetDescription(sv_recentPassword, "Set the required to get a response of key events that happened on the server since the last check\nDefault: empty");
 #endif
+
+	if(com_dedicated->integer) {
+		sv_activeAction = Cvar_Get( "activeAction", "", CVAR_TEMP );
+	}
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );

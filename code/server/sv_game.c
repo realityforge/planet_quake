@@ -1193,7 +1193,9 @@ qboolean SV_GameCommand( void ) {
 	// don't run game server on client anymore for single player
 
 	ded = com_dedicated->integer;
+#ifndef DEDICATED
 	Cvar_Set("dedicated", "0");
+#endif
 	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 	result = VM_Call( gvms[gvm], 0, GAME_CONSOLE_COMMAND );
 	Cvar_Set("dedicated", va("%i", ded));

@@ -978,7 +978,7 @@ int main( int argc, const char* argv[] )
     strcat( cmdline3, argv[i] );
 #endif
 	}
-  
+
 #ifndef DEDICATED
 #ifdef USE_LOCAL_DED
   if(!Q_stristr(cmdline, "dedicated")) {

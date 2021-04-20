@@ -4075,6 +4075,11 @@ void CL_Frame( int msec, int realMsec ) {
 	SCR_RunCinematic();
 
 	Con_RunConsole();
+	
+	#ifdef USE_MULTIVM
+		CM_SwitchMap(0);
+		cgvm = 0;
+	#endif
 }
 
 

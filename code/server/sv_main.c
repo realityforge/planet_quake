@@ -80,6 +80,7 @@ cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 cvar_t  *sv_lock[2];
 cvar_t  *sv_frozen;
 #endif
+cvar_t  *sv_activeAction;
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
 cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down
@@ -1794,6 +1795,11 @@ void SV_Frame( int msec ) {
 
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);
+	
+#ifdef USE_MULTIVM
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
+#endif
 }
 
 
