@@ -979,6 +979,7 @@ int main( int argc, const char* argv[] )
 #endif
 	}
   
+#ifndef DEDICATED
 #ifdef USE_LOCAL_DED
   if(!Q_stristr(cmdline, "dedicated")) {
     argv0 = argv[0];
@@ -989,6 +990,7 @@ int main( int argc, const char* argv[] )
     Sys_PlatformInit();    
   }
   Com_Printf("Launching: %s\n", cmdline);
+#endif
 #endif
 
 	/*useXYpos = */ Com_EarlyParseCmdLine( cmdline, con_title, sizeof( con_title ), &xpos, &ypos );

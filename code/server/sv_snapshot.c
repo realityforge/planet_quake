@@ -47,11 +47,8 @@ A normal server packet will look like:
 
 #ifdef USE_RECENT_EVENTS
 // probably will never have more than 1024 client connected?
-static int numConnected = 0;
-static byte numScored[128];
-static byte numDied[128];
+byte numDied[128];
 static byte numWeapon[1024];
-static int lastReset = 0; // debounce events
 #endif
 
 /*
@@ -1177,9 +1174,6 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
-#ifdef USE_RECENT_EVENTS
-	numConnected = 0;
-#endif
 
 	// send a message to each connected client
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -1215,76 +1209,5 @@ void SV_SendClientMessages( void )
 		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
-#ifdef USE_RECENT_EVENTS
-		{
-			playerState_t *ps;
-			ps = SV_GameClientNum( i );
-			if(c->netchan.remoteAddress.type != NA_BOT) {
-				numConnected++;
-			}
-			clientSnapshot_t	*frame;
-			frame = &c->frames[0][ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
-			//ps = &frame->ps;
-			for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
-				if ( j >= c->frames[0][ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
-					int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
-					//if(j >= ps.eventSequence) {
-//					if(event > 1) // footsteps and none
-//						Com_Printf("event: %i %i\n", event, i);
-					if(event == EV_FOOTSTEP) {
-						numDied[i / 8] &= ~(1 << (i % 8));
-					}
-/*
-					if(event >= EV_DEATH1 && event <= EV_DEATH3) {
-						char clientId[10];
-						memcpy(clientId, va("%i", i), sizeof(clientId));
-						Com_Printf("Died: %s\n", clientId);
-						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, clientId), MAX_INFO_STRING);
-						if(recentI == 1024) recentI = 0;
-						numDied[i / 8] |= 1 << (i % 8);
-					}
-*/
-				}
-			}
-		
-			if(ps->pm_flags & (PMF_RESPAWNED)
-				&& (numDied[i / 8] & (1 << (i % 8)))) {
-				char clientId[10];
-				memcpy(clientId, va("%i", i), sizeof(clientId));
-				// TODO: add respawn location
-				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
-				if(recentI == 1024) recentI = 0;
-				numDied[i / 8] &= ~(1 << (i % 8));
-			}
-			if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
-				numScored[i / 8] |= 1 << (i % 8);
-			} else {
-				numScored[i / 8] &= ~(1 << (i % 8));
-			}
-		}
-		//}
 	}
-	// must send a snapshot to a client at least once every second
-	if(sv.time - lastReset > 1000) {
-		lastReset = sv.time;
-		numConnected = 0;
-		memset(&numScored, 0, sizeof(numScored));
-	} else if (lastReset < sv.time) {		
-		// check if scoreboard is being shown to all players, indicating game end
-		//   create a matchend event with all the player scores
-		int numScoredBits = 0;
-		for(int i = 0; i < ARRAY_LEN(numScored); i++) {
-			for(int j = 0; j < 8; j++) {
-				if(numScored[i] & (1 << j))
-					numScoredBits++;
-			}
-		}
-		if(numConnected > 0 && numConnected == numScoredBits) {
-			SV_RecentStatus(SV_EVENT_MATCHEND);
-			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
-		}
-	}
-#else
-	}
-#endif
 }

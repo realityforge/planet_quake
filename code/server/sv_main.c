@@ -34,6 +34,9 @@ int       gameWorlds[MAX_NUM_VMS];
 char recentEvents[1024][MAX_INFO_STRING+400];
 int recentI = 0;
 cvar_t	*sv_recentPassword;		// password for recent event updates
+static int lastReset = 0; // debounce events
+static int numConnected = 0;
+static byte numScored[128];
 #endif
 
 cvar_t	*sv_fps;				// time rate for running non-clients
@@ -709,7 +712,8 @@ void SVC_RateDropAddress( const netadr_t *from, int burst, int period ) {
 
 #ifdef USE_RECENT_EVENTS
 static char *escaped;
-char *SV_EscapeStr(char *str, int len) {
+char *SV_EscapeStr(const char *str, int len) {
+	return str;
 	int count = 0, i, j;
 	for(i = 0; i < len; i++) {
 		if(str[i] == 0) break;
@@ -1700,6 +1704,79 @@ void SV_Frame( int msec ) {
 
 	// reset current and build new snapshot on first query
 	SV_IssueNewSnapshot();
+
+#ifdef USE_RECENT_EVENTS
+	numConnected = 0;
+	for( i = 0; i < sv_maxclients->integer; i++ ) 
+	{
+		client_t *c = &svs.clients[ i ];
+		playerState_t *ps = SV_GameClientNum( i );
+		clientSnapshot_t	*frame = &c->frames[0][ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+
+		if(c->netchan.remoteAddress.type != NA_BOT) {
+			numConnected++;
+		}
+		//ps = &frame->ps;
+		for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
+			if ( j >= c->frames[0][ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
+				int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
+				//if(j >= ps.eventSequence) {
+//					if(event > 1) // footsteps and none
+//						Com_Printf("event: %i %i\n", event, i);
+				if(event == EV_FOOTSTEP) {
+					numDied[i / 8] &= ~(1 << (i % 8));
+				}
+/*
+				if(event >= EV_DEATH1 && event <= EV_DEATH3) {
+					char clientId[10];
+					memcpy(clientId, va("%i", i), sizeof(clientId));
+					Com_Printf("Died: %s\n", clientId);
+					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, clientId), MAX_INFO_STRING);
+					if(recentI == 1024) recentI = 0;
+					numDied[i / 8] |= 1 << (i % 8);
+				}
+*/
+			}
+		}
+	
+		if(ps->pm_flags & (PMF_RESPAWNED)
+			&& (numDied[i / 8] & (1 << (i % 8)))) {
+			char clientId[10];
+			memcpy(clientId, va("%i", i), sizeof(clientId));
+			// TODO: add respawn location
+			memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
+			if(recentI == 1024) recentI = 0;
+			numDied[i / 8] &= ~(1 << (i % 8));
+		}
+		if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
+			numScored[i / 8] |= 1 << (i % 8);
+		} else {
+			numScored[i / 8] &= ~(1 << (i % 8));
+		}
+		//}
+	}
+
+	// must send a snapshot to a client at least once every second
+	if(sv.time - lastReset > 1000) {
+		lastReset = sv.time;
+		numConnected = 0;
+		memset(&numScored, 0, sizeof(numScored));
+	} else if (lastReset < sv.time) {		
+		// check if scoreboard is being shown to all players, indicating game end
+		//   create a matchend event with all the player scores
+		int numScoredBits = 0;
+		for(int i = 0; i < ARRAY_LEN(numScored); i++) {
+			for(int j = 0; j < 8; j++) {
+				if(numScored[i] & (1 << j))
+					numScoredBits++;
+			}
+		}
+		if(numConnected > 0 && numConnected == numScoredBits) {
+			SV_RecentStatus(SV_EVENT_MATCHEND);
+			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
+		}
+	}
+#endif
 
 	// send messages back to the clients
 	SV_SendClientMessages();

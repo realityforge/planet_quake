@@ -401,7 +401,7 @@ typedef enum {
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
 void SV_RecentStatus(recentEvent_t type);
-char *SV_EscapeStr(char *str, int len);
+char *SV_EscapeStr(const char *str, int len);
 #endif
 
 extern	cvar_t	*sv_fps;
@@ -648,6 +648,7 @@ void SV_QueryClientScore( client_t *client );
 //
 // sv_snapshot.c
 //
+extern byte numDied[128];
 void SV_AddServerCommand( client_t *client, const char *cmd );
 void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg );
 void SV_WriteFrameToClient( client_t *client, msg_t *msg );
