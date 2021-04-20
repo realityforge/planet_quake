@@ -2525,7 +2525,11 @@ image_t *R_FindPalette(const char *name) {
 				byte	data[16][16][4];
 				for(int x = 0; x < 16; x++) {
 					for(int y = 0; y < 16; y++) {
-						data[x][y][3] = palette->a;
+						if(r_seeThroughWalls->integer) {
+							data[x][y][3] = palette->a * 0.5;
+						} else {
+							data[x][y][3] = palette->a;
+						}
 						data[x][y][2] = palette->b;
 						data[x][y][1] = palette->g;
 						data[x][y][0] = palette->r;

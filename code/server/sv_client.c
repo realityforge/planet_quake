@@ -3094,6 +3094,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		return;
 	}
 #endif
+
 #ifdef USE_MULTIVM
 	if(cl->multiview.protocol > 0) {
 		gvm = igvm;

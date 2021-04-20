@@ -279,6 +279,8 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	SV_EmitPacketEntities( oldframe, frame, msg );
 #ifdef USE_MV
 	} // !client->MVProtocol
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 #endif
 
 	// padding for rate debugging
@@ -288,6 +290,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		}
 	}
 }
+
 
 
 /*
@@ -1130,9 +1133,11 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
+#ifdef USE_MULTIVM
+		continue;
+#else
 		return;
+#endif
 	}
 
 	// check for overflow
@@ -1147,6 +1152,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	}
 #endif
 }
+
 
 /*
 =======================

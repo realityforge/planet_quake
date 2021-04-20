@@ -52,11 +52,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // server-side pause/freeze
 // disciplinary actions such as mute/nofire
 // lock and unlock for team joining
-#define USE_REFEREE_CMDS 1
+//#define USE_REFEREE_CMDS 1
 // start a dedicated server even for single player mode, automatically join a match
 #define USE_LOCAL_DED 1
 // allow loading graphics after the BSP and world has been entered
-#define USE_LAZY_LOAD 1
+//#define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts
 #define USE_LAZY_MEMORY 1
 // set specific master servers to be used in the Local LAN game list, 
@@ -66,14 +66,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // adds roles to rcon access, each role has it's own password
 // each role can execute specific commands
-#define USE_SERVER_ROLES 1
+// #define USE_SERVER_ROLES 1
+
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
 #endif
 
 // recent event are for server status trackers to get previous match results
 //   it's also used for the Discord chat bot connector
-#define USE_RECENT_EVENTS 1
+//#define USE_RECENT_EVENTS 1
 
 #define MV_PROTOCOL_VERSION	1 // multiview protocol version
 #define USE_MV				  // multiview enabled

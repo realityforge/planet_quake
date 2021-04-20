@@ -3834,7 +3834,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     } else 
 #endif
     {
-		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
+		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | (r_paletteMode->integer && lightmapIndex != LIGHTMAP_2D ?  : 0) );
     }
 
 		if ( !image ) {
@@ -4399,8 +4399,10 @@ static void ScanAndLoadShaderFiles( void )
 	}
   
   const char *shaderText = FindShaderInShaderText("palettes/default");
-	if ( !shaderText || !ParseShader( &shaderText ) ) {
+	if ( !shaderText ) {
     Com_Printf("Error: parsing default palette\n");
+  } else {
+    ParseShader( &shaderText );
   }
 }
 

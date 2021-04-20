@@ -397,6 +397,7 @@ void SV_ChangeMaxClients( void ) {
 }
 
 
+
 /*
 ================
 SV_ClearServer

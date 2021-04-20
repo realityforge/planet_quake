@@ -499,6 +499,8 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	memcpy( cms[cm].entityString, cmod_base + l->fileofs, l->filelen );
 	if(cm_saveEnts->integer) {
 		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
+	} else {
+		Com_Printf("Entities: %s\n", cms[cm].entityString);
 	}
 }
 

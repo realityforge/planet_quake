@@ -956,21 +956,27 @@ int main( int argc, const char* argv[] )
 		len += strlen( argv[i] ) + 1;
 
 	cmdline = malloc( len );
+  *cmdline = '\0';
+#ifdef USE_LOCAL_DED
   cmdline2 = malloc(len);
   cmdline3 = malloc(len);
-	*cmdline = '\0';
   *cmdline2 = '\0';
   *cmdline3 = '\0';
+#endif
 	for ( i = 1; i < argc; i++ )
 	{
 		if ( i > 1 ) {
 			strcat( cmdline, " " );
+#ifdef USE_LOCAL_DED
       strcat( cmdline2, " " );
       strcat( cmdline3, " " );
+#endif
     }
 		strcat( cmdline, argv[i] );
+#ifdef USE_LOCAL_DED
     strcat( cmdline2, argv[i] );
     strcat( cmdline3, argv[i] );
+#endif
 	}
   
 #ifdef USE_LOCAL_DED

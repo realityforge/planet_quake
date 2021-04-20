@@ -425,6 +425,9 @@ ifeq ($(PLATFORM),darwin)
     BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
   endif
+	
+#  BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
+#  CLIENT_LDFLAGS += -llibRmlCore
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)

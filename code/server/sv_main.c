@@ -931,6 +931,7 @@ static void SVC_Info( const netadr_t *from ) {
 	// echo back the parameter to status. so servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv(1) );
+
 	Info_SetValueForKey( infostring, "gamename", com_gamename->string );
 	Info_SetValueForKey( infostring, "protocol", va("%i", PROTOCOL_VERSION) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
@@ -1550,6 +1551,11 @@ void SV_Frame( int msec ) {
 
 #ifdef USE_LNBITS
 	SV_CheckInvoicesAndPayments();
+#endif
+
+#ifdef USE_MULTIVM
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
 #endif
 
 	// allow pause if only the local client is connected

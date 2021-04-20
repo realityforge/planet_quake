@@ -614,7 +614,7 @@ int EntityInPVS( int client, int entityNum ) {
 	int					i;
 
 	cl = &svs.clients[client];
-#ifdef USE_MV
+#ifdef USE_MULTIVM
 	frame = &cl->frames[cl->gameWorld][cl->netchan.outgoingSequence & PACKET_MASK];
 #else
 	frame = &cl->frames[0][cl->netchan.outgoingSequence & PACKET_MASK];
