@@ -229,7 +229,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 #ifdef USE_MULTIVM
-		MSG_WriteByte( msg, gvm );
+//		MSG_WriteByte( msg, gvm );
 #endif
 		
 		newmask = SM_ALL & ~SV_GetMergeMaskEntities( frame );

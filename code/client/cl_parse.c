@@ -313,10 +313,13 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		SHOWNET( msg, "version" );
 		if ( MSG_ReadBits( msg, 1 ) ) {
 			newSnap.version = MSG_ReadByte( msg );
+//Com_Printf("Read the fucking version %i -> %i\n", cgvm, newSnap.version);
 		}
 
+/*
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
+Com_Printf("Read the fucking version %i %i %i\n", old, newSnap.deltaNum, old->version);
 		if ( newSnap.deltaNum <= 0 ) {
 		} else {
 			old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
@@ -326,10 +329,12 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				}
 				Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
 				newSnap.mergeMask = old->mergeMask;
+				newSnap.version = old->version;
 			}
 		}
 //Com_Printf("Parsing world: %i == %i (%i -> %i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
+*/
 
 		// from here we can start version-dependent snapshot parsing
 		if ( newSnap.version != MV_PROTOCOL_VERSION ) {
@@ -731,7 +736,8 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
-		if(cl.snap[cgvm].multiview) {
+Com_Printf("Receiving gamestate: %i\n", cl.snap[cgvm].multiview);
+		if(cl.snap[0].multiview) {
 			cgvm = MSG_ReadByte( msg );
 			CM_SwitchMap(cgvm);
 		}
@@ -793,7 +799,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
 			cl.baselineUsed[cgvm][ newnum ] = 1;
 		} else {
-			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
+			Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte %i\n", cmd );
 		}
 	}
 

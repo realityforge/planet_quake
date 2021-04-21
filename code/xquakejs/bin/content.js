@@ -66,6 +66,7 @@ for(var i = 0; i < process.argv.length; i++) {
   // use an absolute path as a mount point if it doesn't exist
   } else if (!scanOptions) {
     continue
+  } else if(a == '--master') {
   } else if(a == '--recursive' || a == '-R') {
     console.log('Recursive')
     recursive = true

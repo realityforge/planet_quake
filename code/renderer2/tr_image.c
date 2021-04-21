@@ -3075,7 +3075,9 @@ R_InitImages
 ===============
 */
 void R_InitImages( void ) {
+	Com_Memset(paletteTable, 0, sizeof(paletteTable));
 	Com_Memset(hashTable, 0, sizeof(hashTable));
+
 	// build brightness translation tables
 	R_SetColorMappings();
 

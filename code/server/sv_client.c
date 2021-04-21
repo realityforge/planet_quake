@@ -2395,8 +2395,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->state = CS_CONNECTED;
 			client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
-			//SV_SendClientSnapshot( client, qfalse );
 			client->gamestateMessageNum = -1; // send a new gamestate
+			//SV_SendClientSnapshot( client, qfalse );
 			return;
 		} else {
 			// above must come before this because there is a filter 
@@ -3070,7 +3070,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	
 #ifdef USE_MULTIVM
 	if(cl->multiview.protocol > 0) {
-		igvm = MSG_ReadByte( msg );
+//		igvm = MSG_ReadByte( msg );
 	}
 #endif
 

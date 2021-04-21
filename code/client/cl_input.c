@@ -813,8 +813,8 @@ void CL_WritePacket( void ) {
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
 	
 #ifdef USE_MULTIVM
-	if(cl.snap[cgvm].multiview) {
-		MSG_WriteByte( &buf, cgvm );
+	if(cl.snap[0].multiview) {
+//		MSG_WriteByte( &buf, cgvm );
 	}
 #endif
 
