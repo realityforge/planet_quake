@@ -889,8 +889,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 	newcl = NULL;
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ) {
 		if ( NET_CompareAdr( from, &cl->netchan.remoteAddress ) ) {
-			int elapsed = svs.time - cl->lastConnectTime;
 #ifndef USE_LOCAL_DED
+			int elapsed = svs.time - cl->lastConnectTime;
 			if ( elapsed < ( sv_reconnectlimit->integer * 1000 ) && elapsed >= 0 ) {
 				int remains = ( ( sv_reconnectlimit->integer * 1000 ) - elapsed + 999 ) / 1000;
 				if ( com_developer->integer ) {
@@ -2275,7 +2275,6 @@ void SV_PrintLocations_f( client_t *client ) {
 
 #ifdef USE_MULTIVM
 void SV_LoadVM( client_t *cl ) {
-	vmIndex_t index;
 	char *mapname;
 	int checksum;
 	int i, previous;
@@ -2620,7 +2619,7 @@ Also called by bot code
 */
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
-	qboolean bFloodProtect, gameResult;
+	qboolean bFloodProtect;
 	char		sv_outputbuf[1024 - 16];
 	int     ded;
 	
@@ -3069,8 +3068,10 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	}
 	
 #ifdef USE_MULTIVM
-	if(cl->multiview.protocol > 0) {
-//		igvm = MSG_ReadByte( msg );
+	if(cl->multiview.protocol > 0
+		&& cl->mvAck > 0 && cl->mvAck < cl->messageAcknowledge
+	) {
+		igvm = MSG_ReadByte( msg );
 	}
 #endif
 

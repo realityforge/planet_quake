@@ -225,11 +225,13 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		if ( oldversion != frame->version ) {
 			MSG_WriteBits( msg, 1, 1 );
 			MSG_WriteByte( msg, frame->version );
+			client->mvAck = client->messageAcknowledge;
+Com_Printf("Multiview: %i\n", client->messageAcknowledge);
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 #ifdef USE_MULTIVM
-//		MSG_WriteByte( msg, gvm );
+		MSG_WriteByte( msg, gvm );
 #endif
 		
 		newmask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
@@ -250,7 +252,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else {
 #endif
-
+;
 	// send over the areabits
 	MSG_WriteByte (msg, frame->areabytes);
 	MSG_WriteData (msg, frame->areabits, frame->areabytes);

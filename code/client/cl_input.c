@@ -814,7 +814,7 @@ void CL_WritePacket( void ) {
 	
 #ifdef USE_MULTIVM
 	if(cl.snap[0].multiview) {
-//		MSG_WriteByte( &buf, cgvm );
+		MSG_WriteByte( &buf, cgvm );
 	}
 #endif
 
@@ -930,6 +930,7 @@ void CL_SendCmd( void ) {
 		cgvm = i;
 		CL_WritePacket();
 	} while(++i < MAX_NUM_VMS);
+	cgvm = 0;
 #else
 	CL_WritePacket();
 #endif

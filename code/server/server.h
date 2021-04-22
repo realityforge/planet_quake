@@ -311,6 +311,7 @@ typedef struct client_s {
 #ifdef USE_MV
 	int gameWorld;
 	int newWorld;
+	int mvAck;
 #endif
 #ifdef USE_SERVER_ROLES
 	int role;

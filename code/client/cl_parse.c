@@ -222,7 +222,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #ifdef USE_MV
 	int			clientNum;
 	entityState_t	*es;
-	playerState_t *oldPs;
+	const playerState_t *oldPs;
 
 	int firstIndex;
 	int lastIndex;
@@ -270,8 +270,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		old = NULL;
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
-		old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
+		old = &cl.snapshots[0][newSnap.deltaNum & PACKET_MASK];
+#ifdef USE_MULTIVM
 		if ( !multiview ) {
+#endif
+;
 			if ( !old->valid ) {
 				// should never happen
 				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
@@ -279,12 +282,15 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
 				Com_Printf ("Delta frame too old.\n");
-			} else if ( cl.parseEntitiesNum[cgvm] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+			} else if ( cl.parseEntitiesNum[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
 				newSnap.valid = qtrue;	// valid delta parse
 			}
+#ifdef USE_MULTIVM
 		}
+#endif
+;
 		if(clc.demoplaying) {
 			newSnap.valid = qtrue;
 		}
@@ -313,13 +319,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		SHOWNET( msg, "version" );
 		if ( MSG_ReadBits( msg, 1 ) ) {
 			newSnap.version = MSG_ReadByte( msg );
-//Com_Printf("Read the fucking version %i -> %i\n", cgvm, newSnap.version);
+			newSnap.valid = qtrue;
 		}
 
-/*
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
-Com_Printf("Read the fucking version %i %i %i\n", old, newSnap.deltaNum, old->version);
 		if ( newSnap.deltaNum <= 0 ) {
 		} else {
 			old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
@@ -334,7 +338,6 @@ Com_Printf("Read the fucking version %i %i %i\n", old, newSnap.deltaNum, old->ve
 		}
 //Com_Printf("Parsing world: %i == %i (%i -> %i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
-*/
 
 		// from here we can start version-dependent snapshot parsing
 		if ( newSnap.version != MV_PROTOCOL_VERSION ) {
@@ -445,7 +448,7 @@ Com_Printf("Read the fucking version %i %i %i\n", old, newSnap.deltaNum, old->ve
 			clc.clientView = clc.clientNum;
 			if ( old ) {
 				// invalidate state
-				memset( &old->clps, 0, sizeof( old->clps ) );
+				memset( (void *)&old->clps, 0, sizeof( old->clps ) );
 				Com_DPrintf( S_COLOR_CYAN "transition from multiview to legacy stream\n" );
 				//old->ps = old->clps[ clc.clientView ].ps;
 				//Com_Memcpy( old->areamask, old->clps[ clc.clientView ].areamask, sizeof( old->areamask ) );
@@ -486,6 +489,7 @@ Com_Printf("Read the fucking version %i %i %i\n", old, newSnap.deltaNum, old->ve
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
+Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 		return;
 	}
 
@@ -1202,12 +1206,6 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
-	entityState_t	*es;
-	int				newnum, currentWorld;
-	entityState_t	nullstate;
-	qboolean firstBaseline = qtrue;
-
-	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 
 	if ( cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);
@@ -1264,21 +1262,29 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 #ifdef USE_MULTIVM
 		case svc_baseline:
-			if(firstBaseline) {
-				currentWorld = MSG_ReadByte( msg );
-				memset(cl.entityBaselines[currentWorld], 0, sizeof(cl.entityBaselines[currentWorld]));
-				memset(cl.baselineUsed[currentWorld], 0, sizeof(cl.baselineUsed[currentWorld]));
-				Com_Printf("------------------ ents (%i) ----------------\n", currentWorld);
-				firstBaseline = qfalse;
+			{
+				entityState_t	nullstate;
+				entityState_t	*es;
+				int				newnum, currentWorld;
+				qboolean firstBaseline = qtrue;
+				Com_Memset( &nullstate, 0, sizeof( nullstate ) );
+
+				if(firstBaseline) {
+					currentWorld = MSG_ReadByte( msg );
+					memset(cl.entityBaselines[currentWorld], 0, sizeof(cl.entityBaselines[currentWorld]));
+					memset(cl.baselineUsed[currentWorld], 0, sizeof(cl.baselineUsed[currentWorld]));
+					Com_Printf("------------------ ents (%i) ----------------\n", currentWorld);
+					firstBaseline = qfalse;
+				}
+				// parse baselines after a world change
+				newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
+				if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
+					Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
+				}
+				es = &cl.entityBaselines[currentWorld][ newnum ];
+				MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
+				cl.baselineUsed[currentWorld][ newnum ] = 1;
 			}
-			// parse baselines after a world change
-			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
-			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
-				Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
-			}
-			es = &cl.entityBaselines[currentWorld][ newnum ];
-			MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
-			cl.baselineUsed[currentWorld][ newnum ] = 1;
 			break;
 #endif
 		case svc_snapshot:
