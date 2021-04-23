@@ -1445,10 +1445,10 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
-#ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
-#else
+#ifdef USE_MULTIVM
+	//CM_SwitchMap(clc.currentView);
+	//cgvm = clc.currentView;
+	CM_SwitchMap(0);
 	cgvm = 0;
 #endif
 

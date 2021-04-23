@@ -2391,11 +2391,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
-			client->state = CS_CONNECTED;
 			client->deltaMessage = -1;
 			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			SV_SendClientSnapshot( client, qfalse );
+			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
-			//SV_SendClientSnapshot( client, qfalse );
 			return;
 		} else {
 			// above must come before this because there is a filter 
@@ -3069,7 +3069,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	
 #ifdef USE_MULTIVM
 	if(cl->multiview.protocol > 0
-		&& cl->mvAck > 0 && cl->mvAck < cl->messageAcknowledge
+		&& cl->mvAck > 0 && cl->mvAck <= cl->messageAcknowledge
 	) {
 		igvm = MSG_ReadByte( msg );
 	}

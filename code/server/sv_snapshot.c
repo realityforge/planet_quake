@@ -154,7 +154,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
-			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
+			Com_DPrintf( "%s: Delta request from out of date frame. (%i)\n", client->name, gvm );
 			oldframe = NULL;
 			lastframe = 0;
 		}
@@ -225,8 +225,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		if ( oldversion != frame->version ) {
 			MSG_WriteBits( msg, 1, 1 );
 			MSG_WriteByte( msg, frame->version );
-			client->mvAck = client->messageAcknowledge;
-Com_Printf("Multiview: %i\n", client->messageAcknowledge);
+//Com_Printf("Multiview: %i (%i)\n", client->messageAcknowledge, gvm);
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
@@ -883,12 +882,15 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 #ifdef USE_MV
 	if ( client->multiview.protocol > 0 ) {
 		frame->multiview = qtrue;
+		if(client->mvAck == 0)
+			client->mvAck = client->messageAcknowledge;
 		// select primary client slot
 		if ( client->multiview.recorder ) {
 			cl = sv_demoClientID;
 		}
 	} else {
 		frame->multiview = qfalse;
+		client->mvAck = 0;
 	}
 	Com_Memset( frame->psMask, 0, sizeof( frame->psMask ) );
 	frame->first_psf = svs.nextSnapshotPSF;
@@ -1062,20 +1064,25 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	msg_t		msg;
 	int     headerBytes;
 	playerState_t	*ps;
+	int igvm;
 
 #ifdef USE_MULTIVM
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 
-	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
-		if(!gvms[gvm]) continue;
+	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(!gvms[igvm]) continue;
+		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
 		ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
 		// TODO: remove this line when MULTIIVM is working
-		//if(gvm != client->newWorld) continue;
+		//Com_Printf("Sending snapshot %i %i >= %i\n", gvm, client->mvAck, client->messageAcknowledge);
+		if(gvm != 0 && (client->mvAck == 0 || client->mvAck >= client->messageAcknowledge)) continue;
+		//if(gvm != 0) continue;
+		//if(gvm != client->gameWorld) continue;
 #endif
 ;
 

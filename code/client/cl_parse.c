@@ -320,6 +320,8 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		if ( MSG_ReadBits( msg, 1 ) ) {
 			newSnap.version = MSG_ReadByte( msg );
 			newSnap.valid = qtrue;
+//Com_Printf("Multiview: %i (%i)\n", clc.serverMessageSequence, cgvm);
+			old = NULL;
 		}
 
 #ifdef USE_MULTIVM
@@ -740,7 +742,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
-Com_Printf("Receiving gamestate: %i\n", cl.snap[cgvm].multiview);
+Com_Printf("Receiving gamestate: %i (%i)\n", cl.snap[cgvm].multiview, cgvm);
 		if(cl.snap[0].multiview) {
 			cgvm = MSG_ReadByte( msg );
 			CM_SwitchMap(cgvm);
