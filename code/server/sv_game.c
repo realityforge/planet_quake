@@ -253,6 +253,11 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 	if ( bufferSize < 1 ) {
 		Com_Error( ERR_DROP, "SV_GetServerinfo: bufferSize == %i", bufferSize );
 	}
+#ifdef USE_MULTIVM
+	Cvar_Set("mapname", Cvar_VariableString(va("mapname_%i", gvm)));
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+#endif
 	if ( sv.state != SS_GAME || !sv.configstrings[ CS_SERVERINFO ] ) {
 		Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL ), bufferSize );
 	} else {
@@ -361,8 +366,8 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 
 
 #ifdef USE_MULTIVM
-static char *RenameMultiworld(char *name) {
-	char *newName;
+static const char *RenameMultiworld(char *name) {
+	const char *newName;
 	if(!Q_stricmp(name, "mapname")) {
 		// TODO: change this to gameWorlds[gvm]
 		newName = va("mapname_%i", gvm);
@@ -408,7 +413,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_CVAR_REGISTER:
 #ifdef USE_MULTIVM
 		{
-			char *name = RenameMultiworld(VMA(2));
+			const char *name = RenameMultiworld(VMA(2));
 			Cvar_Register( VMA(1), name, VMA(3), args[4] ); 
 		}
 #else
@@ -421,7 +426,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_CVAR_SET:
 #ifdef USE_MULTIVM
 		{
-			char *name = RenameMultiworld(VMA(1));
+			const char *name = RenameMultiworld(VMA(1));
 			Cvar_SetSafe( name, (const char *)VMA(2) );
 		}
 #else
@@ -429,12 +434,19 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
+#ifdef USE_MULTIVM
+		{
+			const char *name = RenameMultiworld(VMA(1));
+			return Cvar_VariableIntegerValue( name );
+		}
+#else
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
+#endif
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
 #ifdef USE_MULTIVM
 		{
-			char *name = RenameMultiworld(VMA(1));
+			const char *name = RenameMultiworld(VMA(1));
 			Cvar_VariableStringBufferSafe( name, VMA(2), args[3], gvms[gvm]->privateFlag );
 		}
 #else
@@ -583,7 +595,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		if(gvm == 0)
 			return SV_BotLibSetup();
 		else
-			return 0;
+			return qtrue;
 	case BOTLIB_SHUTDOWN:
 		if(gvm == 0)
 			return SV_BotLibShutdown();
@@ -610,10 +622,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
-		if(gvm == 0)
-			return botlib_export->BotLibLoadMap( VMA(1) );
-		else
-			return 0;
+		return botlib_export->BotLibLoadMap( VMA(1) );
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
 	case BOTLIB_TEST:
