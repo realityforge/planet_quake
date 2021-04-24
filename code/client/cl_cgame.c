@@ -1241,11 +1241,15 @@ See if the current console command is claimed by the cgame
 ====================
 */
 qboolean CL_GameCommand( int igvm ) {
+	qboolean result;
+#ifdef USE_MULTIVM
+	int prevGvm = cgvm;
 	cgvm = igvm;
 	CM_SwitchMap(igvm);
 	if ( !cgvms[cgvm] ) {
 		return qfalse;
 	}
+#endif
 
 #ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command
@@ -1255,7 +1259,12 @@ qboolean CL_GameCommand( int igvm ) {
 		}
 #endif
 
-	return VM_Call( cgvms[cgvm], 0, CG_CONSOLE_COMMAND );
+	result = VM_Call( cgvms[cgvm], 0, CG_CONSOLE_COMMAND );
+#ifdef USE_MULTIVM
+	cgvm = prevGvm;
+	CM_SwitchMap(cgvm);
+#endif
+	return result;
 }
 
 

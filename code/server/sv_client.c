@@ -1176,7 +1176,22 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
+#ifdef USE_MULTIVM
+	// disconnect from all worlds
+	int prevGvm = gvm;
+	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(!gvms[igvm]) continue;
+		gvm = igvm;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
+		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+	}
+	gvm = prevGvm;
+	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
+#else	
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+#endif
 
 	// add the disconnect command
 	if ( reason ) {
@@ -2420,19 +2435,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			//   to only send commands from a game to the client of the same world
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// not the first time they have entered, automatically connect
-			client->state = CS_PRIMED;
 			client->gameWorld = newWorld;
 			//client->deltaMessage = -1;
 			// notify the client of the secondary map
 			SV_SendServerCommand(client, "world %i", client->newWorld);
-			//SV_SendClientSnapshot( client, qtrue );
 			// send new baselines
 			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
 				if(strlen(sv.configstrings[index]) > 0) {
 					client->csUpdated[index] = qtrue;
 				}
 			}
-			client->state = CS_ACTIVE;
 		}
 		//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	}
@@ -2482,7 +2494,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			memcpy(&ent->r.s, &ent->s, sizeof(ent->s));
 		}
 	}
-	SV_SendClientSnapshot(client, qfalse);
 }
 
 void SV_Tele_f( client_t *client ) {

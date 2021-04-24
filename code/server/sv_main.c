@@ -1352,6 +1352,21 @@ static void SV_CheckTimeouts( void ) {
 		if ( cl->state == CS_ZOMBIE && cl->lastPacketTime - zombiepoint < 0 ) {
 			// using the client id cause the cl->name is empty at this point
 			Com_DPrintf( "Going from CS_ZOMBIE to CS_FREE for client %d\n", i );
+#ifdef USE_MULTIVM
+			sharedEntity_t *ent;
+			int prevGvm = gvm;
+			for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+				if(!gvms[igvm]) continue;
+				gvm = igvm;
+				CM_SwitchMap(gameWorlds[gvm]);
+				SV_SetAASgvm(gvm);
+				ent = SV_GentityNum( i );
+				ent->s.eType = 0;
+			}
+			gvm = prevGvm;
+			CM_SwitchMap(gameWorlds[gvm]);
+			SV_SetAASgvm(gvm);
+#endif
 			cl->state = CS_FREE;	// can now be reused
 			continue;
 		}

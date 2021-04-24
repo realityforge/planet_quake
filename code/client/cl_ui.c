@@ -1326,11 +1326,19 @@ See if the current console command is claimed by the ui
 ====================
 */
 qboolean UI_GameCommand( int igvm ) {
+	qboolean result;
+#ifdef USE_MULTIVM
+	int prevGvm = uivm;
 	uivm = igvm;
 	CM_SwitchMap(uivm);
 	if ( !uivms[uivm] ) {
 		return qfalse;
 	}
+#endif
 
-	return VM_Call( uivms[uivm], 1, UI_CONSOLE_COMMAND, cls.realtime );
+	result = VM_Call( uivms[uivm], 1, UI_CONSOLE_COMMAND, cls.realtime );
+#ifdef USE_MULTIVM
+	uivm = prevGvm;
+#endif
+	return result;
 }

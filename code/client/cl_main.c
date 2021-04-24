@@ -3689,8 +3689,8 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
 
 #ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
+	CM_SwitchMap(0);
+	cgvm = 0;
 #else
 	cgvm = 0;
 #endif
@@ -4947,6 +4947,7 @@ void CL_World_f( void ) {
 	newWorld = atoi( Cmd_Argv(1) );
 	Com_Printf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
 
+	/*
 	prevDvr[0] = clientWorlds[clc.currentView][0];
 	prevDvr[1] = clientWorlds[clc.currentView][1];
 	prevDvr[2] = clientWorlds[clc.currentView][2];
@@ -4961,7 +4962,6 @@ void CL_World_f( void ) {
 	clientWorlds[clc.currentView][2] = prevDvr[2];
 	clientWorlds[clc.currentView][3] = prevDvr[3];
 	
-	/*
 	Com_EventLoop();
 	re.ReloadShaders(qtrue);
 	cl.newSnapshots = qtrue;

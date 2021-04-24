@@ -1190,13 +1190,16 @@ See if the current console command is claimed by the game
 */
 qboolean SV_GameCommand( int igvm ) {
 	qboolean result;
-	int ded;
+#ifdef USE_MULTIVM
+	int prevGvm = gvm;
 	gvm = igvm;
-	CM_SwitchMap(gameWorlds[igvm]);
+	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
 	if ( !gvms[gvm] ) {
 		return qfalse;
 	}
+#endif
+
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
 	}
@@ -1205,7 +1208,7 @@ qboolean SV_GameCommand( int igvm ) {
 	// even in dedicated mode don't "say" command when it is not found
 	// don't run game server on client anymore for single player
 
-	ded = com_dedicated->integer;
+	int ded = com_dedicated->integer;
 #ifndef DEDICATED
 	Cvar_Set("dedicated", "0");
 #endif
@@ -1222,11 +1225,20 @@ qboolean SV_GameCommand( int igvm ) {
 				|| Info_ValueForKey(client->userinfo, "cmd_connector"))
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}
+#ifdef USE_MULTIVM
+		gvm = prevGvm;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
+#endif
 		return qtrue;
 	}
 #else
 	result = VM_Call( gvms[gvm], 0, GAME_CONSOLE_COMMAND );
 #endif
-	
+#ifdef USE_MULTIVM
+	gvm = prevGvm;
+	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
+#endif
 	return result;
 }

@@ -327,15 +327,29 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #ifdef USE_MULTIVM
 		cgvm = newSnap.world = MSG_ReadByte( msg );
 		if ( newSnap.deltaNum <= 0 ) {
+			newSnap.valid = qtrue;
+			old = NULL;
 		} else {
+			//newSnap.deltaNum = cl.snap[cgvm].messageNum - deltaNum;
 			old = &cl.snapshots[cgvm][newSnap.deltaNum & PACKET_MASK];
-			if(old && old->multiview) {
-				if(old->valid) {
-					newSnap.valid = qtrue;
+			if ( !old->valid ) {
+				// should never happen
+				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
+			} else if ( old->messageNum != newSnap.deltaNum ) {
+				// The frame that the server did the delta from
+				// is too old, so we can't reconstruct it properly.
+				Com_Printf ("Delta frame too old.\n");
+			} else if ( cl.parseEntitiesNum[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+				Com_Printf ("Delta parseEntitiesNum too old.\n");
+			} else {
+				if(old && old->multiview) {
+					if(old->valid) {
+						newSnap.valid = qtrue;
+					}
+					Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
+					newSnap.mergeMask = old->mergeMask;
+					newSnap.version = old->version;
 				}
-				Com_Memcpy( newSnap.clientMask, old->clientMask, sizeof( newSnap.clientMask ) );
-				newSnap.mergeMask = old->mergeMask;
-				newSnap.version = old->version;
 			}
 		}
 //Com_Printf("Parsing world: %i == %i (%i -> %i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
@@ -491,7 +505,6 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
-Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 		return;
 	}
 
