@@ -402,7 +402,7 @@ typedef enum {
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
 void SV_RecentStatus(recentEvent_t type);
-char *SV_EscapeStr(const char *str, int len);
+const char *SV_EscapeStr(const char *str, int len);
 #endif
 
 extern	cvar_t	*sv_fps;
@@ -750,6 +750,9 @@ void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player )
 //
 // sv_bot.c
 //
+#ifdef USE_MULTIVM
+void    SV_SetAASgvm( int gvm );
+#endif
 void		SV_BotFrame( int time );
 int			SV_BotAllocateClient(void);
 void		SV_BotFreeClient( int clientNum );

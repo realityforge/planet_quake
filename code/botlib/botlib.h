@@ -430,6 +430,9 @@ typedef struct botlib_export_s
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	//just for testing
 	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
+#ifdef USE_MULTIVM
+	void (*SetAASgvm)(int gvm);
+#endif
 } botlib_export_t;
 
 //linking of bot library
@@ -516,4 +519,3 @@ name:						default:			module(s):			description:
 "max_levelitems"			"256"				be_ai_goal.c		maximum number of level items
 
 */
-

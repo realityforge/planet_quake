@@ -279,6 +279,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	} // !client->MVProtocol
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
 #endif
 
 	// padding for rate debugging
@@ -1075,6 +1076,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		if(!gvms[igvm]) continue;
 		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
 		ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet

@@ -1075,6 +1075,8 @@ Called every time a map changes
 void SV_ShutdownGameProgs( void ) {
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		gvm = i;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
 		if ( !gvms[gvm] ) {
 			continue;
 		}
@@ -1083,6 +1085,8 @@ void SV_ShutdownGameProgs( void ) {
 		gvms[gvm] = NULL;
 	}
 	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
 	FS_VM_CloseFiles( H_QAGAME );
 }
 

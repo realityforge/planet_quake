@@ -31,7 +31,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef AASINTERN
 
-extern aas_t aasworld;
+#ifndef MAX_NUM_VMS
+#define MAX_NUM_VMS 10
+#endif
+
+extern aas_t aasworld[MAX_NUM_VMS];
+extern int   aasgvm;
 
 //AAS error message
 void QDECL AAS_Error(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));

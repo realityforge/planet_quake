@@ -309,34 +309,34 @@ void AAS_ShowFace(int facenum)
 
 	color = LINECOLOR_YELLOW;
 	//check if face number is in range
-	if (facenum >= aasworld.numfaces)
+	if (facenum >= aasworld[aasgvm].numfaces)
 	{
 		botimport.Print(PRT_ERROR, "facenum %d out of range\n", facenum);
 	} //end if
-	face = &aasworld.faces[facenum];
+	face = &aasworld[aasgvm].faces[facenum];
 	//walk through the edges of the face
 	for (i = 0; i < face->numedges; i++)
 	{
 		//edge number
-		edgenum = abs(aasworld.edgeindex[face->firstedge + i]);
+		edgenum = abs(aasworld[aasgvm].edgeindex[face->firstedge + i]);
 		//check if edge number is in range
-		if (edgenum >= aasworld.numedges)
+		if (edgenum >= aasworld[aasgvm].numedges)
 		{
 			botimport.Print(PRT_ERROR, "edgenum %d out of range\n", edgenum);
 		} //end if
-		edge = &aasworld.edges[edgenum];
+		edge = &aasworld[aasgvm].edges[edgenum];
 		if (color == LINECOLOR_RED) color = LINECOLOR_GREEN;
 		else if (color == LINECOLOR_GREEN) color = LINECOLOR_BLUE;
 		else if (color == LINECOLOR_BLUE) color = LINECOLOR_YELLOW;
 		else color = LINECOLOR_RED;
-		AAS_DebugLine(aasworld.vertexes[edge->v[0]],
-										aasworld.vertexes[edge->v[1]],
+		AAS_DebugLine(aasworld[aasgvm].vertexes[edge->v[0]],
+										aasworld[aasgvm].vertexes[edge->v[1]],
 										color);
 	} //end for
-	plane = &aasworld.planes[face->planenum];
-	edgenum = abs(aasworld.edgeindex[face->firstedge]);
-	edge = &aasworld.edges[edgenum];
-	VectorCopy(aasworld.vertexes[edge->v[0]], start);
+	plane = &aasworld[aasgvm].planes[face->planenum];
+	edgenum = abs(aasworld[aasgvm].edgeindex[face->firstedge]);
+	edge = &aasworld[aasgvm].edges[edgenum];
+	VectorCopy(aasworld[aasgvm].vertexes[edge->v[0]], start);
 	VectorMA(start, 20, plane->normal, end);
 	AAS_DebugLine(start, end, LINECOLOR_RED);
 } //end of the function AAS_ShowFace
@@ -354,11 +354,11 @@ void AAS_ShowFacePolygon(int facenum, int color, int flip)
 	aas_face_t *face;
 
 	//check if face number is in range
-	if (facenum >= aasworld.numfaces)
+	if (facenum >= aasworld[aasgvm].numfaces)
 	{
 		botimport.Print(PRT_ERROR, "facenum %d out of range\n", facenum);
 	} //end if
-	face = &aasworld.faces[facenum];
+	face = &aasworld[aasgvm].faces[facenum];
 	//walk through the edges of the face
 	numpoints = 0;
 	if (flip)
@@ -366,9 +366,9 @@ void AAS_ShowFacePolygon(int facenum, int color, int flip)
 		for (i = face->numedges-1; i >= 0; i--)
 		{
 			//edge number
-			edgenum = aasworld.edgeindex[face->firstedge + i];
-			edge = &aasworld.edges[abs(edgenum)];
-			VectorCopy(aasworld.vertexes[edge->v[edgenum < 0]], points[numpoints]);
+			edgenum = aasworld[aasgvm].edgeindex[face->firstedge + i];
+			edge = &aasworld[aasgvm].edges[abs(edgenum)];
+			VectorCopy(aasworld[aasgvm].vertexes[edge->v[edgenum < 0]], points[numpoints]);
 			numpoints++;
 		} //end for
 	} //end if
@@ -377,9 +377,9 @@ void AAS_ShowFacePolygon(int facenum, int color, int flip)
 		for (i = 0; i < face->numedges; i++)
 		{
 			//edge number
-			edgenum = aasworld.edgeindex[face->firstedge + i];
-			edge = &aasworld.edges[abs(edgenum)];
-			VectorCopy(aasworld.vertexes[edge->v[edgenum < 0]], points[numpoints]);
+			edgenum = aasworld[aasgvm].edgeindex[face->firstedge + i];
+			edge = &aasworld[aasgvm].edges[abs(edgenum)];
+			VectorCopy(aasworld[aasgvm].vertexes[edge->v[edgenum < 0]], points[numpoints]);
 			numpoints++;
 		} //end for
 	} //end else
@@ -403,24 +403,24 @@ void AAS_ShowArea(int areanum, int groundfacesonly)
 	//
 	numareaedges = 0;
 	//
-	if (areanum < 0 || areanum >= aasworld.numareas)
+	if (areanum < 0 || areanum >= aasworld[aasgvm].numareas)
 	{
 		botimport.Print(PRT_ERROR, "area %d out of range [0, %d]\n",
-								areanum, aasworld.numareas);
+								areanum, aasworld[aasgvm].numareas);
 		return;
 	} //end if
 	//pointer to the convex area
-	area = &aasworld.areas[areanum];
+	area = &aasworld[aasgvm].areas[areanum];
 	//walk through the faces of the area
 	for (i = 0; i < area->numfaces; i++)
 	{
-		facenum = abs(aasworld.faceindex[area->firstface + i]);
+		facenum = abs(aasworld[aasgvm].faceindex[area->firstface + i]);
 		//check if face number is in range
-		if (facenum >= aasworld.numfaces)
+		if (facenum >= aasworld[aasgvm].numfaces)
 		{
 			botimport.Print(PRT_ERROR, "facenum %d out of range\n", facenum);
 		} //end if
-		face = &aasworld.faces[facenum];
+		face = &aasworld[aasgvm].faces[facenum];
 		//ground faces only
 		if (groundfacesonly)
 		{
@@ -430,9 +430,9 @@ void AAS_ShowArea(int areanum, int groundfacesonly)
 		for (j = 0; j < face->numedges; j++)
 		{
 			//edge number
-			edgenum = abs(aasworld.edgeindex[face->firstedge + j]);
+			edgenum = abs(aasworld[aasgvm].edgeindex[face->firstedge + j]);
 			//check if edge number is in range
-			if (edgenum >= aasworld.numedges)
+			if (edgenum >= aasworld[aasgvm].numedges)
 			{
 				botimport.Print(PRT_ERROR, "edgenum %d out of range\n", edgenum);
 			} //end if
@@ -465,14 +465,14 @@ void AAS_ShowArea(int areanum, int groundfacesonly)
 			} //end else
 		} //end for
 		if (line >= MAX_DEBUGLINES) return;
-		edge = &aasworld.edges[areaedges[n]];
+		edge = &aasworld[aasgvm].edges[areaedges[n]];
 		if (color == LINECOLOR_RED) color = LINECOLOR_BLUE;
 		else if (color == LINECOLOR_BLUE) color = LINECOLOR_GREEN;
 		else if (color == LINECOLOR_GREEN) color = LINECOLOR_YELLOW;
 		else color = LINECOLOR_RED;
 		botimport.DebugLineShow(debuglines[line],
-									aasworld.vertexes[edge->v[0]],
-									aasworld.vertexes[edge->v[1]],
+									aasworld[aasgvm].vertexes[edge->v[0]],
+									aasworld[aasgvm].vertexes[edge->v[1]],
 									color);
 		debuglinevisible[line] = qtrue;
 	} //end for*/
@@ -490,24 +490,24 @@ void AAS_ShowAreaPolygons(int areanum, int color, int groundfacesonly)
 	aas_face_t *face;
 
 	//
-	if (areanum < 0 || areanum >= aasworld.numareas)
+	if (areanum < 0 || areanum >= aasworld[aasgvm].numareas)
 	{
 		botimport.Print(PRT_ERROR, "area %d out of range [0, %d]\n",
-								areanum, aasworld.numareas);
+								areanum, aasworld[aasgvm].numareas);
 		return;
 	} //end if
 	//pointer to the convex area
-	area = &aasworld.areas[areanum];
+	area = &aasworld[aasgvm].areas[areanum];
 	//walk through the faces of the area
 	for (i = 0; i < area->numfaces; i++)
 	{
-		facenum = abs(aasworld.faceindex[area->firstface + i]);
+		facenum = abs(aasworld[aasgvm].faceindex[area->firstface + i]);
 		//check if face number is in range
-		if (facenum >= aasworld.numfaces)
+		if (facenum >= aasworld[aasgvm].numfaces)
 		{
 			botimport.Print(PRT_ERROR, "facenum %d out of range\n", facenum);
 		} //end if
-		face = &aasworld.faces[facenum];
+		face = &aasworld[aasgvm].faces[facenum];
 		//ground faces only
 		if (groundfacesonly)
 		{
@@ -693,7 +693,7 @@ void AAS_ShowReachableAreas(int areanum)
 		index = 0;
 		lastareanum = areanum;
 	} //end if
-	settings = &aasworld.areasettings[areanum];
+	settings = &aasworld[aasgvm].areasettings[areanum];
 	//
 	if (!settings->numreachableareas) return;
 	//
@@ -701,7 +701,7 @@ void AAS_ShowReachableAreas(int areanum)
 	//
 	if (AAS_Time() - lasttime > 1.5)
 	{
-		Com_Memcpy(&reach, &aasworld.reachability[settings->firstreachablearea + index], sizeof(aas_reachability_t));
+		Com_Memcpy(&reach, &aasworld[aasgvm].reachability[settings->firstreachablearea + index], sizeof(aas_reachability_t));
 		index++;
 		lasttime = AAS_Time();
 		AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
@@ -720,13 +720,13 @@ void AAS_FloodAreas_r(int areanum, int cluster, int *done)
 
 	AAS_ShowAreaPolygons(areanum, 1, qtrue);
 	//pointer to the convex area
-	area = &aasworld.areas[areanum];
-	settings = &aasworld.areasettings[areanum];
+	area = &aasworld[aasgvm].areas[areanum];
+	settings = &aasworld[aasgvm].areasettings[areanum];
 	//walk through the faces of the area
 	for (i = 0; i < area->numfaces; i++)
 	{
-		facenum = abs(aasworld.faceindex[area->firstface + i]);
-		face = &aasworld.faces[facenum];
+		facenum = abs(aasworld[aasgvm].faceindex[area->firstface + i]);
+		face = &aasworld[aasgvm].faces[facenum];
 		if (face->frontarea == areanum)
 			nextareanum = face->backarea;
 		else
@@ -736,7 +736,7 @@ void AAS_FloodAreas_r(int areanum, int cluster, int *done)
 		if (done[nextareanum])
 			continue;
 		done[nextareanum] = qtrue;
-		if (aasworld.areasettings[nextareanum].contents & AREACONTENTS_VIEWPORTAL)
+		if (aasworld[aasgvm].areasettings[nextareanum].contents & AREACONTENTS_VIEWPORTAL)
 			continue;
 		if (AAS_AreaCluster(nextareanum) != cluster)
 			continue;
@@ -745,14 +745,14 @@ void AAS_FloodAreas_r(int areanum, int cluster, int *done)
 	//
 	for (i = 0; i < settings->numreachableareas; i++)
 	{
-		reach = &aasworld.reachability[settings->firstreachablearea + i];
+		reach = &aasworld[aasgvm].reachability[settings->firstreachablearea + i];
 		nextareanum = reach->areanum;
 		if (!nextareanum)
 			continue;
 		if (done[nextareanum])
 			continue;
 		done[nextareanum] = qtrue;
-		if (aasworld.areasettings[nextareanum].contents & AREACONTENTS_VIEWPORTAL)
+		if (aasworld[aasgvm].areasettings[nextareanum].contents & AREACONTENTS_VIEWPORTAL)
 			continue;
 		if (AAS_AreaCluster(nextareanum) != cluster)
 			continue;
@@ -770,7 +770,7 @@ void AAS_FloodAreas(vec3_t origin)
 {
 	int areanum, cluster, *done;
 
-	done = (int *) GetClearedMemory(aasworld.numareas * sizeof(int));
+	done = (int *) GetClearedMemory(aasworld[aasgvm].numareas * sizeof(int));
 	areanum = AAS_PointAreaNum(origin);
 	cluster = AAS_AreaCluster(areanum);
 	AAS_FloodAreas_r(areanum, cluster, done);

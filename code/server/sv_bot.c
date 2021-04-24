@@ -58,6 +58,10 @@ int SV_BotAllocateClient( void ) {
 	if ( i == sv_maxclients->integer ) {
 		return -1;
 	}
+	
+#ifdef USE_MULTIVM
+	cl->newWorld = cl->gameWorld = gvm;
+#endif
 
 	cl->gentity = SV_GentityNum( i );
 	cl->gentity->s.number = i;
@@ -432,6 +436,15 @@ SV_BotClientCommand
 static void BotClientCommand( int client, const char *command ) {
 	SV_ExecuteClientCommand( &svs.clients[client], command );
 }
+
+
+#ifdef USE_MULTIVM
+void SV_SetAASgvm(int gvm) {
+	if(botlib_export)
+		botlib_export->SetAASgvm(gvm);
+}
+#endif
+
 
 /*
 ==================

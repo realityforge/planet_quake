@@ -713,7 +713,7 @@ void SVC_RateDropAddress( const netadr_t *from, int burst, int period ) {
 
 #ifdef USE_RECENT_EVENTS
 static char *escaped;
-char *SV_EscapeStr(const char *str, int len) {
+const char *SV_EscapeStr(const char *str, int len) {
 	return str;
 	int count = 0, i, j;
 	for(i = 0; i < len; i++) {
@@ -1561,6 +1561,7 @@ void SV_Frame( int msec ) {
 #ifdef USE_MULTIVM
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
 #endif
 
 	// allow pause if only the local client is connected
@@ -1678,10 +1679,12 @@ void SV_Frame( int msec ) {
 			if(!gvms[i]) continue;
 			gvm = i;
 			CM_SwitchMap(gameWorlds[gvm]);
+			SV_SetAASgvm(gvm);
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 		}
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
 		
 #ifdef USE_MV
 		svs.emptyFrame = qfalse; // ok, run recorder
@@ -1799,6 +1802,7 @@ void SV_Frame( int msec ) {
 #ifdef USE_MULTIVM
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
 #endif
 }
 
