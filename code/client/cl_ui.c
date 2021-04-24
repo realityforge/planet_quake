@@ -850,7 +850,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 			Com_Printf (S_COLOR_YELLOW "turning EXEC_NOW '%.11s' into EXEC_INSERT\n", (const char*)VMA(2));
 			args[1] = EXEC_INSERT;
 		}
-		Cbuf_ExecuteText( args[1], VMA(2) );
+		Cbuf_ExecuteTagged( args[1], VMA(2), uivm );
 		return 0;
 
 	case UI_FS_FOPENFILE:
@@ -1325,7 +1325,9 @@ UI_GameCommand
 See if the current console command is claimed by the ui
 ====================
 */
-qboolean UI_GameCommand( void ) {
+qboolean UI_GameCommand( int igvm ) {
+	uivm = igvm;
+	CM_SwitchMap(uivm);
 	if ( !uivms[uivm] ) {
 		return qfalse;
 	}

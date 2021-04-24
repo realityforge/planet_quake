@@ -435,6 +435,12 @@ typedef struct botlib_export_s
 #endif
 } botlib_export_t;
 
+#ifndef MAX_NUM_VMS
+#define MAX_NUM_VMS 10
+#endif
+
+extern int   aasgvm;
+
 //linking of bot library
 botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
 

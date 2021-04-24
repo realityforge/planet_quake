@@ -1113,7 +1113,7 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 				Cmd_ExecuteLimitedString( cmd_aux, qfalse, role );
 			} else
 #endif
-			Cmd_ExecuteString( cmd_aux, qfalse );
+			Cmd_ExecuteString( cmd_aux, qfalse, gvm );
 		}
 	}
 

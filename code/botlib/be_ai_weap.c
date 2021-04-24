@@ -125,8 +125,8 @@ typedef struct bot_weaponstate_s
 	int *weaponweightindex;							//weapon weight index
 } bot_weaponstate_t;
 
-static bot_weaponstate_t *botweaponstates[MAX_CLIENTS+1];
-static weaponconfig_t *weaponconfig;
+static bot_weaponstate_t *botweaponstates[MAX_NUM_VMS][MAX_CLIENTS+1];
+static weaponconfig_t *weaponconfig[MAX_NUM_VMS];
 
 //========================================================================
 //
@@ -136,7 +136,7 @@ static weaponconfig_t *weaponconfig;
 //========================================================================
 int BotValidWeaponNumber(int weaponnum)
 {
-	if (weaponnum <= 0 || weaponnum > weaponconfig->numweapons)
+	if (weaponnum <= 0 || weaponnum > weaponconfig[aasgvm]->numweapons)
 	{
 		botimport.Print(PRT_ERROR, "weapon number out of range\n");
 		return qfalse;
@@ -156,12 +156,12 @@ bot_weaponstate_t *BotWeaponStateFromHandle(int handle)
 		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", handle);
 		return NULL;
 	} //end if
-	if (!botweaponstates[handle])
+	if (!botweaponstates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", handle);
 		return NULL;
 	} //end if
-	return botweaponstates[handle];
+	return botweaponstates[aasgvm][handle];
 } //end of the function BotWeaponStateFromHandle
 //===========================================================================
 //
@@ -375,8 +375,8 @@ int BotLoadWeaponWeights(int weaponstate, char *filename)
 		botimport.Print(PRT_FATAL, "couldn't load weapon config %s\n", filename);
 		return BLERR_CANNOTLOADWEAPONWEIGHTS;
 	} //end if
-	if (!weaponconfig) return BLERR_CANNOTLOADWEAPONCONFIG;
-	ws->weaponweightindex = WeaponWeightIndex(ws->weaponweightconfig, weaponconfig);
+	if (!weaponconfig[aasgvm]) return BLERR_CANNOTLOADWEAPONCONFIG;
+	ws->weaponweightindex = WeaponWeightIndex(ws->weaponweightconfig, weaponconfig[aasgvm]);
 	return BLERR_NOERROR;
 } //end of the function BotLoadWeaponWeights
 //===========================================================================
@@ -392,8 +392,8 @@ void BotGetWeaponInfo(int weaponstate, int weapon, weaponinfo_t *weaponinfo)
 	if (!BotValidWeaponNumber(weapon)) return;
 	ws = BotWeaponStateFromHandle(weaponstate);
 	if (!ws) return;
-	if (!weaponconfig) return;
-	Com_Memcpy(weaponinfo, &weaponconfig->weaponinfo[weapon], sizeof(weaponinfo_t));
+	if (!weaponconfig[aasgvm]) return;
+	Com_Memcpy(weaponinfo, &weaponconfig[aasgvm]->weaponinfo[weapon], sizeof(weaponinfo_t));
 } //end of the function BotGetWeaponInfo
 //===========================================================================
 //
@@ -410,8 +410,8 @@ int BotChooseBestFightWeapon(int weaponstate, int *inventory)
 
 	ws = BotWeaponStateFromHandle(weaponstate);
 	if (!ws) return 0;
-	wc = weaponconfig;
-	if (!weaponconfig) return 0;
+	wc = weaponconfig[aasgvm];
+	if (!weaponconfig[aasgvm]) return 0;
 
 	//if the bot has no weapon weight configuration
 	if (!ws->weaponweightconfig) return 0;
@@ -453,9 +453,9 @@ int BotAllocWeaponState(void)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (!botweaponstates[i])
+		if (!botweaponstates[aasgvm][i])
 		{
-			botweaponstates[i] = GetClearedMemory(sizeof(bot_weaponstate_t));
+			botweaponstates[aasgvm][i] = GetClearedMemory(sizeof(bot_weaponstate_t));
 			return i;
 		} //end if
 	} //end for
@@ -474,14 +474,14 @@ void BotFreeWeaponState(int handle)
 		botimport.Print(PRT_FATAL, "weapon state handle %d out of range\n", handle);
 		return;
 	} //end if
-	if (!botweaponstates[handle])
+	if (!botweaponstates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid weapon state %d\n", handle);
 		return;
 	} //end if
 	BotFreeWeaponWeights(handle);
-	FreeMemory(botweaponstates[handle]);
-	botweaponstates[handle] = NULL;
+	FreeMemory(botweaponstates[aasgvm][handle]);
+	botweaponstates[aasgvm][handle] = NULL;
 } //end of the function BotFreeWeaponState
 //===========================================================================
 //
@@ -494,15 +494,15 @@ int BotSetupWeaponAI(void)
 	const char *file;
 
 	file = LibVarString("weaponconfig", "weapons.c");
-	weaponconfig = LoadWeaponConfig(file);
-	if (!weaponconfig)
+	weaponconfig[aasgvm] = LoadWeaponConfig(file);
+	if (!weaponconfig[aasgvm])
 	{
 		botimport.Print(PRT_FATAL, "couldn't load the weapon config\n");
 		return BLERR_CANNOTLOADWEAPONCONFIG;
 	} //end if
 
 #ifdef DEBUG_AI_WEAP
-	DumpWeaponConfig(weaponconfig);
+	Dumpweaponconfig[aasgvm](weaponconfig[aasgvm]);
 #endif //DEBUG_AI_WEAP
 	//
 	return BLERR_NOERROR;
@@ -517,15 +517,14 @@ void BotShutdownWeaponAI(void)
 {
 	int i;
 
-	if (weaponconfig) FreeMemory(weaponconfig);
-	weaponconfig = NULL;
+	if (weaponconfig[aasgvm]) FreeMemory(weaponconfig[aasgvm]);
+	weaponconfig[aasgvm] = NULL;
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (botweaponstates[i])
+		if (botweaponstates[aasgvm][i])
 		{
 			BotFreeWeaponState(i);
 		} //end if
 	} //end for
 } //end of the function BotShutdownWeaponAI
-

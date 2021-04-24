@@ -641,7 +641,7 @@ void Cbuf_Init( void );
 
 void Cbuf_AddText( const char *text );
 // Adds command text at the end of the buffer, does NOT add a final \n
-
+void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag );
 void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 
@@ -708,7 +708,7 @@ char      *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
 void      Cmd_FilterLimited(char *commandList);
 #endif
-qboolean	Cmd_ExecuteString( const char *text, qboolean noServer );
+qboolean	Cmd_ExecuteString( const char *text, qboolean noServer, int tag );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
@@ -1338,7 +1338,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
-qboolean CL_GameCommand( void );
+qboolean CL_GameCommand( int igvm );
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 
 void CL_CharEvent( int key );
@@ -1412,7 +1412,7 @@ void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );
 void SV_PacketEvent( const netadr_t *from, msg_t *msg );
 int SV_FrameMsec( void );
-qboolean SV_GameCommand( void );
+qboolean SV_GameCommand( int igvm );
 int SV_SendQueuedPackets( void );
 
 void SV_AddDedicatedCommands( void );
@@ -1422,7 +1422,7 @@ void SV_RemoveDedicatedCommands( void );
 //
 // UI interface
 //
-qboolean UI_GameCommand( void );
+qboolean UI_GameCommand( int igvm );
 qboolean UI_usesUniqueCDKey(void);
 
 /*

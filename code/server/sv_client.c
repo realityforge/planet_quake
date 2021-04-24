@@ -2297,21 +2297,23 @@ void SV_LoadVM( client_t *cl ) {
 	if(mapname[0] == '\0') {
 		gameWorlds[gvm] = previous;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
 	} else {
 		Cvar_Set( va("mapname_%i", gvm), mapname );
+		Sys_SetStatus( "Loading map %s", mapname );
 		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
 	SV_ClearWorld();
+	SV_SetAASgvm(gvm);
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
 	for ( i = 4; i > 1; i-- )
 	{
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
-		// fix bots
+		// TODO: fix bots
 		SV_BotFrame( sv.time - i * 100 );
 	}
+	Sys_SetStatus( "Running map %s", mapname );
 	SV_CreateBaseline();
 	/*
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
@@ -2322,7 +2324,10 @@ void SV_LoadVM( client_t *cl ) {
 	}
 	*/
 	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	SV_BotFrame( sv.time );
 	SV_RemainingGameState();
+	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvm);
+
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -2647,7 +2652,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
 		redirectAddress = cl->netchan.remoteAddress;
 		Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
-		if(Cmd_ExecuteString(s, qtrue)) {
+		if(Cmd_ExecuteString(s, qtrue, 0)) {
 			Com_EndRedirect();
 			return qtrue;
 		}
@@ -2658,7 +2663,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		Cvar_Set("dedicated", "0");
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
-			SV_GameCommand();
+			SV_GameCommand(gvm);
 		}
 		Cvar_Set("dedicated", va("%i", ded));
 		Com_EndRedirect();

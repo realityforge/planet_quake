@@ -525,7 +525,7 @@ rescan:
 
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
-	if(Cmd_ExecuteString(s, qtrue)) {
+	if(Cmd_ExecuteString(s, qtrue, cgvm)) {
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -763,7 +763,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		} else if(Q_stristr(VMA(1), "screenshot")) {
 			// ignore because cheating is meh
 		} else {
-			Cbuf_AddText( VMA(1) );
+			Cbuf_ExecuteTagged( EXEC_APPEND, VMA(1), cgvm );
 		}
 		return 0;
 	case CG_ADDCOMMAND:
@@ -1147,7 +1147,7 @@ void CL_InitCGame( qboolean createNew ) {
 
 #ifdef USE_MULTIVM
 	if(createNew) {
-		cls.state = CA_ACTIVE;
+		cls.state = CA_PRIMED;
 		re.EndRegistration();
 		Com_TouchMemory();
 		cls.lastVidRestart = Sys_Milliseconds();
@@ -1240,7 +1240,9 @@ CL_GameCommand
 See if the current console command is claimed by the cgame
 ====================
 */
-qboolean CL_GameCommand( void ) {
+qboolean CL_GameCommand( int igvm ) {
+	cgvm = igvm;
+	CM_SwitchMap(igvm);
 	if ( !cgvms[cgvm] ) {
 		return qfalse;
 	}

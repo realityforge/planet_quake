@@ -670,7 +670,7 @@ void CL_InitCGameFinished( void );
 #endif
 void CL_InitCGame( qboolean createNew );
 void CL_ShutdownCGame( void );
-qboolean CL_GameCommand( void );
+qboolean CL_GameCommand( int igvm );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
 void CL_AdjustTimeDelta( void );

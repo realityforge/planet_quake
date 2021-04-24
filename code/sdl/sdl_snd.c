@@ -271,14 +271,14 @@ qboolean SNDDMA_Init( void )
 	tmpPlayback = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
 	if ( tmpPlayback == 0 )
 	{
-		const char *message = SDL_GetError();
 #ifndef EMSCRIPTEN
 		Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
 		SDL_QuitSubSystem( SDL_INIT_AUDIO );
 		return qfalse;
 #else
+		const char *message = SDL_GetError();
 		if(!Q_stristr(message, "already open")) {
-			Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
+			Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", message );
 			return qfalse;
 		} else {
 			sdlPlaybackDevice = tmpPlayback;

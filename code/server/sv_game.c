@@ -460,7 +460,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
 		return 0;
 	case G_SEND_CONSOLE_COMMAND:
-		Cbuf_ExecuteText( args[1], VMA(2) );
+		Cbuf_ExecuteTagged( args[1], VMA(2), gvm );
 		return 0;
 
 	case G_FS_FOPEN_FILE:
@@ -592,15 +592,9 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		//====================================
 
 	case BOTLIB_SETUP:
-		if(gvm == 0)
-			return SV_BotLibSetup();
-		else
-			return qtrue;
+		return SV_BotLibSetup();
 	case BOTLIB_SHUTDOWN:
-		if(gvm == 0)
-			return SV_BotLibShutdown();
-		else
-			return 0;
+		return SV_BotLibShutdown();
 	case BOTLIB_LIBVAR_SET:
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
 	case BOTLIB_LIBVAR_GET:
@@ -1074,12 +1068,12 @@ Called every time a map changes
 */
 void SV_ShutdownGameProgs( void ) {
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
+		if ( !gvms[i] ) {
+			continue;
+		}
 		gvm = i;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
-		if ( !gvms[gvm] ) {
-			continue;
-		}
 		VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
 		VM_Free( gvms[gvm] );
 		gvms[gvm] = NULL;
@@ -1194,9 +1188,15 @@ SV_GameCommand
 See if the current console command is claimed by the game
 ====================
 */
-qboolean SV_GameCommand( void ) {
+qboolean SV_GameCommand( int igvm ) {
 	qboolean result;
 	int ded;
+	gvm = igvm;
+	CM_SwitchMap(gameWorlds[igvm]);
+	SV_SetAASgvm(gvm);
+	if ( !gvms[gvm] ) {
+		return qfalse;
+	}
 	if ( sv.state != SS_GAME ) {
 		return qfalse;
 	}

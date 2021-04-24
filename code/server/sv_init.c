@@ -796,7 +796,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 #endif
 
-	Com_Printf ("-----------------------------------\n");
+	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvm);
 	
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;

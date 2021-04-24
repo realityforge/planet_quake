@@ -114,7 +114,7 @@ libvar_t *cmd_grappleon;
 //type of model, func_plat or func_bobbing
 int modeltypes[MAX_MODELS];
 
-bot_movestate_t *botmovestates[MAX_CLIENTS+1];
+bot_movestate_t *botmovestates[MAX_NUM_VMS][MAX_CLIENTS+1];
 
 //========================================================================
 //
@@ -128,9 +128,9 @@ int BotAllocMoveState(void)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (!botmovestates[i])
+		if (!botmovestates[aasgvm][i])
 		{
-			botmovestates[i] = GetClearedMemory(sizeof(bot_movestate_t));
+			botmovestates[aasgvm][i] = GetClearedMemory(sizeof(bot_movestate_t));
 			return i;
 		} //end if
 	} //end for
@@ -149,13 +149,13 @@ void BotFreeMoveState(int handle)
 		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
 		return;
 	} //end if
-	if (!botmovestates[handle])
+	if (!botmovestates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
 		return;
 	} //end if
-	FreeMemory(botmovestates[handle]);
-	botmovestates[handle] = NULL;
+	FreeMemory(botmovestates[aasgvm][handle]);
+	botmovestates[aasgvm][handle] = NULL;
 } //end of the function BotFreeMoveState
 //========================================================================
 //
@@ -170,12 +170,12 @@ bot_movestate_t *BotMoveStateFromHandle(int handle)
 		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
 		return NULL;
 	} //end if
-	if (!botmovestates[handle])
+	if (!botmovestates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
 		return NULL;
 	} //end if
-	return botmovestates[handle];
+	return botmovestates[aasgvm][handle];
 } //end of the function BotMoveStateFromHandle
 //========================================================================
 //
@@ -3549,12 +3549,10 @@ void BotShutdownMoveAI(void)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (botmovestates[i])
+		if (botmovestates[aasgvm][i])
 		{
-			FreeMemory(botmovestates[i]);
-			botmovestates[i] = NULL;
+			FreeMemory(botmovestates[aasgvm][i]);
+			botmovestates[aasgvm][i] = NULL;
 		} //end if
 	} //end for
 } //end of the function BotShutdownMoveAI
-
-

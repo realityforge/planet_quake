@@ -94,7 +94,7 @@ int AAS_Initialized(void)
 void AAS_SetInitialized(void)
 {
 	aasworld[aasgvm].initialized = qtrue;
-	botimport.Print(PRT_MESSAGE, "AAS initialized.\n");
+	botimport.Print(PRT_MESSAGE, "AAS initialized (%i).\n", aasgvm);
 #ifdef DEBUG
 	//create all the routing cache
 	//AAS_CreateAllRoutingCache();

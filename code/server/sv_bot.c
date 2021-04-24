@@ -74,6 +74,7 @@ int SV_BotAllocateClient( void ) {
 	cl->tld[0] = '\0';
 	cl->country = "BOT";
 
+	Com_Printf("Allocating: %i (%i)\n", i, gvm);
 	return i;
 }
 

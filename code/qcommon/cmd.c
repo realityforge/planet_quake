@@ -30,11 +30,15 @@ typedef struct {
 	byte *data;
 	int maxsize;
 	int cursize;
+	qboolean filtered;
+	int tag;
 } cmd_t;
 
 int    cmd_wait;
-cmd_t  cmd_text;
-byte   cmd_text_buf[MAX_CMD_BUFFER];
+cmd_t  cmd_text[32];
+byte   cmd_text_buf[32][MAX_CMD_BUFFER];
+int    insCmdI;
+int    execCmdI;
 
 
 //=============================================================================
@@ -74,9 +78,11 @@ Cbuf_Init
 */
 void Cbuf_Init( void )
 {
-	cmd_text.data = cmd_text_buf;
-	cmd_text.maxsize = MAX_CMD_BUFFER;
-	cmd_text.cursize = 0;
+	for(int ci = 0; ci < 32; ci++) {
+		cmd_text[ci].data = cmd_text_buf[ci];
+		cmd_text[ci].maxsize = MAX_CMD_BUFFER;
+		cmd_text[ci].cursize = 0;
+	}
 }
 
 
@@ -92,13 +98,13 @@ void Cbuf_AddText( const char *text ) {
 
 	l = strlen (text);
 
-	if (cmd_text.cursize + l >= cmd_text.maxsize)
+	if (cmd_text[insCmdI].cursize + l >= cmd_text[insCmdI].maxsize)
 	{
 		Com_Printf ("Cbuf_AddText: overflow\n");
 		return;
 	}
-	Com_Memcpy(&cmd_text.data[cmd_text.cursize], text, l);
-	cmd_text.cursize += l;
+	Com_Memcpy(&cmd_text[insCmdI].data[cmd_text[insCmdI].cursize], text, l);
+	cmd_text[insCmdI].cursize += l;
 }
 
 
@@ -116,23 +122,23 @@ void Cbuf_InsertText( const char *text ) {
 
 	len = strlen( text ) + 1;
 
-	if ( len + cmd_text.cursize > cmd_text.maxsize ) {
+	if ( len + cmd_text[insCmdI].cursize > cmd_text[insCmdI].maxsize ) {
 		Com_Printf( "Cbuf_InsertText overflowed\n" );
 		return;
 	}
 
 	// move the existing command text
-	for ( i = cmd_text.cursize - 1 ; i >= 0 ; i-- ) {
-		cmd_text.data[ i + len ] = cmd_text.data[ i ];
+	for ( i = cmd_text[insCmdI].cursize - 1 ; i >= 0 ; i-- ) {
+		cmd_text[insCmdI].data[ i + len ] = cmd_text[insCmdI].data[ i ];
 	}
 
 	// copy the new text in
-	Com_Memcpy( cmd_text.data, text, len - 1 );
+	Com_Memcpy( cmd_text[insCmdI].data, text, len - 1 );
 
 	// add a \n
-	cmd_text.data[ len - 1 ] = '\n';
+	cmd_text[insCmdI].data[ len - 1 ] = '\n';
 
-	cmd_text.cursize += len;
+	cmd_text[insCmdI].cursize += len;
 }
 
 
@@ -141,17 +147,17 @@ void Cbuf_InsertText( const char *text ) {
 Cbuf_ExecuteText
 ============
 */
-void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
+static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 {
 	switch (exec_when)
 	{
 	case EXEC_NOW:
 		if ( text && text[0] != '\0' ) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
-			Cmd_ExecuteString (text, qfalse);
+			Cmd_ExecuteString (text, qfalse, 0);
 		} else {
 			Cbuf_Execute();
-			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text.data);
+			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text[insCmdI].data);
 		}
 		break;
 	case EXEC_INSERT:
@@ -168,6 +174,45 @@ void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
 
 /*
 ============
+Cbuf_ExecuteText
+============
+*/
+void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
+{
+	if(cmd_text[insCmdI].filtered == qfalse) {
+		// use same buffer
+	} else {
+		insCmdI++;
+		if(insCmdI == 32) {
+			insCmdI = 0;
+		}
+	}
+	cmd_text[insCmdI].filtered = qfalse;
+	cmd_text[insCmdI].tag = 0;
+	Cbuf_ExecuteInternal( exec_when, text );
+}
+
+
+void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag )
+{
+	if(cmd_text[insCmdI].filtered == qtrue
+		&& cmd_text[insCmdI].tag == tag) {
+		// use same buffer
+	} else {
+		insCmdI++;
+		if(insCmdI == 32) {
+			insCmdI = 0;
+		}
+	}
+	cmd_text[insCmdI].filtered = qtrue;
+	cmd_text[insCmdI].tag = tag;
+Com_Printf("Inserting: %s (%i)\n", text, cmd_text[execCmdI].tag);
+	Cbuf_ExecuteInternal( exec_when, text );
+}
+
+
+/*
+============
 Cbuf_Execute
 ============
 */
@@ -177,13 +222,20 @@ void Cbuf_Execute( void )
 	char *text;
 	char line[MAX_CMD_LINE];
 	int quotes;
+	
+	insCmdI++;
+	if(insCmdI == 32) {
+		insCmdI = 0;
+	}
+
+	while(execCmdI != insCmdI) {
 
 	// This will keep // style comments all on one line by not breaking on
 	// a semicolon.  It will keep /* ... */ style comments all on one line by not
 	// breaking it for semicolon or newline.
 	qboolean in_star_comment = qfalse;
 	qboolean in_slash_comment = qfalse;
-	while ( cmd_text.cursize > 0 )
+	while ( cmd_text[execCmdI].cursize > 0 )
 	{
 		if ( cmd_wait > 0 ) {
 			// skip out while text still remains in buffer, leaving it
@@ -193,16 +245,16 @@ void Cbuf_Execute( void )
 		}
 
 		// find a \n or ; line break or comment: // or /* */
-		text = (char *)cmd_text.data;
+		text = (char *)cmd_text[execCmdI].data;
 
 		quotes = 0;
-		for ( i = 0 ; i< cmd_text.cursize ; i++ )
+		for ( i = 0 ; i< cmd_text[execCmdI].cursize ; i++ )
 		{
 			if (text[i] == '"')
 				quotes++;
 
 			if ( !(quotes&1)) {
-				if ( i < cmd_text.cursize - 1 ) {
+				if ( i < cmd_text[execCmdI].cursize - 1 ) {
 					if ( !in_star_comment && text[i] == '/' && text[i+1] == '/' )
 						in_slash_comment = qtrue;
 					else if ( !in_slash_comment && text[i] == '/' && text[i+1] == '*' )
@@ -235,28 +287,42 @@ void Cbuf_Execute( void )
 		// this is necessary because commands (exec) can insert data at the
 		// beginning of the text buffer
 
-		if ( i == cmd_text.cursize )
-			cmd_text.cursize = 0;
+		if ( i == cmd_text[execCmdI].cursize ) {
+			cmd_text[execCmdI].cursize = 0;
+			cmd_text[execCmdI].tag = 0;
+			cmd_text[execCmdI].filtered = qfalse;
+		} 
 		else
 		{
 			i++;
-			cmd_text.cursize -= i;
+			cmd_text[execCmdI].cursize -= i;
 			// skip all repeating newlines/semicolons
-			while ( ( text[i] == '\n' || text[i] == '\r' || text[i] == ';' ) && cmd_text.cursize > 0 ) {
-				cmd_text.cursize--;
+			while ( ( text[i] == '\n' || text[i] == '\r' || text[i] == ';' ) && cmd_text[execCmdI].cursize > 0 ) {
+				cmd_text[execCmdI].cursize--;
 				i++;
 			}
-			memmove( text, text+i, cmd_text.cursize );
+			memmove( text, text+i, cmd_text[execCmdI].cursize );
 		}
 
 		// execute the command line
-		Cmd_ExecuteString( line, qfalse );
+		if(cmd_text[execCmdI].filtered) {
+Com_Printf("Executing: %s (%i)\n", line, cmd_text[execCmdI].tag);
+			Cmd_ExecuteString( line, qfalse, cmd_text[execCmdI].tag );
+		} else {
+			Cmd_ExecuteString( line, qfalse, 0 );
+		}
 #ifdef EMSCRIPTEN
 		// if an execution invoked a callback event like `\fs_restart`, run the rest next frame
 		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
 			return;
 		}
 #endif
+	}
+		
+		execCmdI++;
+		if(execCmdI == 32) {
+			execCmdI = 0;
+		}
 	}
 }
 
@@ -961,7 +1027,7 @@ static qboolean limited;
 
 qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
 	limited = qtrue;
-	qboolean result = Cmd_ExecuteString(text, noServer);
+	qboolean result = Cmd_ExecuteString(text, noServer, 0);
 	limited = qfalse;
 	return result;
 }
@@ -1008,9 +1074,8 @@ void Cmd_FilterLimited(char *commandList) {
 		cmd = *prev;
 		cmd->limited = qfalse;
 		// check if command  is in  command whitelist for the role
-		int cmdI = 0;
 		for(int i = 0; i < cmdCount; i++) {
-			if(Q_stricmp(&cmds[cmdI], cmd->name)==0) {
+			if(Q_stricmp(&cmds[i], cmd->name)==0) {
 				cmd->limited = qtrue;
 			}
 			cmds = &cmds[strlen(cmds)+1];
@@ -1029,7 +1094,7 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
+qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
 	cmd_function_t *cmd, **prev;
 
 	// execute the command line
@@ -1071,7 +1136,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	
 #ifndef DEDICATED
 	// check client game commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand() ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && CL_GameCommand(tag) ) {
 		return qtrue;
 	}
 #endif
@@ -1080,13 +1145,13 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer ) {
 	if (com_dedicated->integer)
 #endif
 	// check server game commands
-	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand() ) {
+	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand(tag) ) {
 		return qtrue;
 	}
 
 #ifndef DEDICATED
 	// check ui commands
-	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand() ) {
+	if ( com_dedicated && !com_dedicated->integer && com_cl_running && com_cl_running->integer && UI_GameCommand(tag) ) {
 		return qtrue;
 	}
 
