@@ -807,7 +807,8 @@ void CL_WritePacket( void ) {
 	// write the last message we received, which can
 	// be used for delta compression, and is also used
 	// to tell if we dropped a gamestate
-	MSG_WriteLong( &buf, clc.serverMessageSequence );
+	//MSG_WriteLong( &buf, clc.serverMessageSequence );
+	MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
@@ -829,11 +830,11 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
-#ifdef USE_MULTIVM
-	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cgvm - cl_packetdup->integer) & PACKET_MASK;
-#else
+//#ifdef USE_MULTIVM
+//	oldPacketNum = (clc.netchan.outgoingSequence - 10) & PACKET_MASK;
+//#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
-#endif
+//#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
@@ -846,7 +847,8 @@ void CL_WritePacket( void ) {
 
 		// begin a client move command
 		if ( cl_nodelta->integer || !cl.snap[cgvm].valid || clc.demowaiting
-			|| clc.serverMessageSequence != cl.snap[cgvm].messageNum ) {
+		//	|| clc.serverMessageSequence != cl.snap[cgvm].messageNum
+		) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
 			MSG_WriteByte (&buf, clc_move);
@@ -858,7 +860,8 @@ void CL_WritePacket( void ) {
 		// use the checksum feed in the key
 		key = clc.checksumFeed;
 		// also use the message acknowledge
-		key ^= clc.serverMessageSequence;
+		//key ^= clc.serverMessageSequence;
+		key ^= cl.snap[cgvm].messageNum;
 		// also use the last acknowledged server command in the key
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
@@ -923,13 +926,11 @@ void CL_SendCmd( void ) {
 	//     deathmatch players are unaware they are also participating in CTF
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
-	int i = 0;
-	do {
-		if(i > 0 && !cgvms[i]) continue;
-		//if(i != clc.currentView) continue;
-		cgvm = i;
+	for(int igvm = MAX_NUM_VMS - 1; igvm >= 0; igvm--) {
+		if(igvm > 0 && !cgvms[igvm]) continue;
+		cgvm = igvm;
 		CL_WritePacket();
-	} while(++i < MAX_NUM_VMS);
+	}
 	cgvm = 0;
 #else
 	CL_WritePacket();

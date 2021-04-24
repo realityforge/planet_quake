@@ -157,14 +157,16 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 			Com_DPrintf( "%s: Delta request from out of date frame. (%i)\n", client->name, gvm );
 			oldframe = NULL;
 			lastframe = 0;
-		}
 #ifdef USE_MV
-		else if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
+		} else if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
 			Com_DPrintf( "%s: Delta request from out of date playerstate.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
-		}
+		} else if ( frame->multiview && oldframe->version != MV_PROTOCOL_VERSION ) {
+			oldframe = NULL;
+			lastframe = 0;
 #endif
+		}
 	}
 
 #ifdef USE_MV
@@ -225,7 +227,6 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		if ( oldversion != frame->version ) {
 			MSG_WriteBits( msg, 1, 1 );
 			MSG_WriteByte( msg, frame->version );
-//Com_Printf("Multiview: %i (%i)\n", client->messageAcknowledge, gvm);
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}

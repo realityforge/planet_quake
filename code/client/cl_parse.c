@@ -505,6 +505,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
+//Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 		return;
 	}
 
@@ -512,17 +513,18 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// received and this one, so if there was a dropped packet
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
-#ifdef USE_MULTIVM
-	oldMessageNum = cl.snap[cgvm].messageNum + 1 + cgvm;
-#else
+//#ifdef USE_MULTIVM
+//	oldMessageNum = cl.snap[cgvm].messageNum + 1 + cgvm;
+//#else
 	oldMessageNum = cl.snap[cgvm].messageNum + 1;
-#endif
+//#endif
 
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-	//	Com_Printf("Invalidated (%i): %i == %i\n", cgvm, oldMessageNum, numCGames);
+//		if(cl.snapshots[cgvm][oldMessageNum & PACKET_MASK].valid)
+//Com_Printf("Invalidated (%i): %i == %i\n", cgvm, oldMessageNum, numCGames);
 		cl.snapshots[cgvm][oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
