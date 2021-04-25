@@ -2320,6 +2320,12 @@ void SV_LoadVM( client_t *cl ) {
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		SV_BotFrame( sv.time - i * 100 );
 	}
+	
+	// ------------- TODO: add that stuff with reconnecting clients and bots here
+	//   make it a cvar like a game dynamic if players should auutomatically have presence everywhere
+	//   like in the game mode with a mirror dimension with synchronized coords
+	
+	
 	Sys_SetStatus( "Running map %s", mapname );
 	SV_CreateBaseline();
 	/*

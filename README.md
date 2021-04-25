@@ -48,8 +48,8 @@ Some of the major features currently implemented are:
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
-  * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. MultiVM command `\load <ui,cgame,game>; \mvjoin`. `\mvtile` display views in a grid. TODO: playing back dm_68 files for all players. TODO: fast forward, rewind 10 seconds using baseline indexes in demo files.
-  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"` TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: Drag and drop for multiQVM views. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: fs_includeReference, server or client configured add packs downloaded to home directory. TODO: connect to multiple servers at the same time.
+  * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. MultiVM command `\load <ui,cgame,game>; \mvjoin`. `\mvtile` display views in a grid. TODO: playing back dm_68/mv-demo files for all players. TODO: fast forward, rewind 10 seconds using baseline indexes in demo files.
+  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"`. Multiworld working with bots and sounds. TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: Drag and drop for multiQVM views. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: fs_includeReference, server or client configured add packs downloaded to home directory. TODO: connect to multiple servers at the same time.
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle proof-of-concept.
@@ -227,6 +227,26 @@ and
 It's also good to have understanding of Emscripten:
 
 [Emscripten docs](https://emscripten.org/docs/building_from_source/toolchain_what_is_needed.html)
+
+# Multiworld
+
+
+Server:
+```
+./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 2 +set bot_enable 1 +set activeAction \"load\ game\ q3dm2\" +spmap q3dm1
+```
+
+then Client:
+
+```
+./build/debug-darwin-x86_64/quake3e +set fs_basepath /Applications/ioquake3 +set fs_game baseq3 +set sv_pure 0 +set net_enable 1 +set dedicated 0 +set cl_nodelta 0 +bind g \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ -1\ -1\ 1\;\ tile\ 0\ 0\ 0\" +bind h \"game\;\ wait\ 10\;\ tile\ -1\ -1\ 0\;\ tile\ 0\ 0\ 1\;\ tile\ 0\ 0\ 1\" +bind j \"game\;\ wait\ 10\;\ tile\ 0\ 0\ 0\;\ tile\ 1\ 0\ 1\;\ tile\ 0\ 0\ 0\" +connect local.games
+```
+
+Explanation: Server starts on map q3dm1, the activeAction is added and launches another single player VM on q3dm2. Dedicated is required with USE_LOCAL_DED to prevent automatically starting multiple processes.
+
+Client cl_nodelta is required for the time-being, deltas work but it causes server errors. Binds set the DVR for q3dm1 to `g` key, and q3dm2 to `h` key. Level only needs to load first time it's used.
+
+TODO: fix deltas, add game options like switching maps at the end of round, moving around in other maps or moving to spectator or disconnecting. Options for transferring game stats between worlds.
 
 # Contributing
 
