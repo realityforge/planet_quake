@@ -2325,7 +2325,6 @@ void SV_LoadVM( client_t *cl ) {
 	for ( i = 4; i > 1; i-- )
 	{
 		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
-		// TODO: fix bots
 		SV_BotFrame( sv.time - i * 100 );
 	}
 	Sys_SetStatus( "Running map %s", mapname );

@@ -1597,8 +1597,22 @@ void SV_Frame( int msec ) {
 
 	sv.timeResidual += msec;
 
+#ifdef USE_MULTIVM
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(!gvms[i]) continue;
+		gvm = i;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
+		if ( !com_dedicated->integer )
+			SV_BotFrame( sv.time + sv.timeResidual );
+	}
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
+#else
 	if ( !com_dedicated->integer )
 		SV_BotFrame( sv.time + sv.timeResidual );
+#endif
 
 	// if time is about to hit the 32nd bit, kick all clients
 	// and clear sv.time, rather
@@ -1677,7 +1691,20 @@ void SV_Frame( int msec ) {
 	// update ping based on the all received frames
 	SV_CalcPings();
 
+#ifdef USE_MULTIVM
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if(!gvms[i]) continue;
+		gvm = i;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
+		if (com_dedicated->integer) SV_BotFrame (sv.time);
+	}
+	gvm = 0;
+	CM_SwitchMap(gameWorlds[gvm]);
+	SV_SetAASgvm(gvm);
+#else
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
+#endif
 
 #ifdef USE_MV
 	svs.emptyFrame = qtrue;
