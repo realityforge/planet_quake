@@ -1015,8 +1015,7 @@ gotnewcl:
 #endif
 
 #ifdef USE_MULTIVM
-	newcl->gameWorld = newcl->newWorld = 0;
-	gvm = newcl->gameWorld;
+	gvm = newcl->gameWorld = newcl->newWorld = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
 	//TODO: add new clients to all worlds

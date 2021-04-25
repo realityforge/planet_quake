@@ -828,11 +828,11 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
-//#ifdef USE_MULTIVM
-//	oldPacketNum = (clc.netchan.outgoingSequence - 10) & PACKET_MASK;
-//#else
+#ifdef USE_MULTIVM
+	oldPacketNum = (clc.netchan.outgoingSequence - 11) & PACKET_MASK;
+#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
-//#endif
+#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;

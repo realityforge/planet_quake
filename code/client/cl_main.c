@@ -4930,7 +4930,7 @@ void CL_World_f( void ) {
 
 	Com_Printf( "Client switching world: %s\n", Cmd_Argv(1) );
 	serverWorld = qtrue;
-	Cbuf_AddText(va("tile -1 -1 0\ntile -1 -1 1\ntile -1 -1 2\ntile -1 -1 3\ntile -1 -1 4\ntile -1 -1 5\ntile -1 -1 6\ntile -1 -1 7\ntile -1 -1 8\ntile -1 -1 9\ntile 0 0 %s\n", Cmd_Argv(1)));
+	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %s\n", Cmd_Argv(1)));
 	Cbuf_Execute();
 	serverWorld = qfalse;
 }
@@ -4964,16 +4964,23 @@ void CL_Tile_f(void) {
 			clientNum = clc.currentView;
 		x = atoi(Cmd_Argv(1));
 		y = atoi(Cmd_Argv(2));
-		if (clientWorlds[clientNum][0] == -1
+		// if it was disabled, now it won't be
+		if (clientNum >= 0 && clientWorlds[clientNum][0] == -1
 			&& x > -1 && y > -1) count++;
 			else if (x < 0 || y < 0) count--;
 	} else {
 		clientNum = atoi(Cmd_Argv(1));
-		if (clientWorlds[clientNum][0] == -1) count++;
+		// if it was disabled, now it won't be
+		if (clientNum >= 0 && clientWorlds[clientNum][0] == -1) count++;
 	}
-	if(!cgvms[clientNum]) {
+	if(clientNum > MAX_NUM_VMS || clientNum < -1) {
+		Com_Printf("Must be between 0 and %i, given: %i\n", MAX_NUM_VMS, clientNum);
+		return;
+	} else if(clientNum >= 0 && !cgvms[clientNum]) {
 		Com_Printf("CGame not active on %i\n", clientNum);
 		return;
+	} else if(clientNum == -1) {
+		count = 0;
 	}
 	xMaxVMs = ceil(sqrt(count));
 	yMaxVMs = round(sqrt(count));
@@ -4983,18 +4990,22 @@ void CL_Tile_f(void) {
 	}
 	if(x > xMaxVMs) x = xMaxVMs - 1;
 	if(y > yMaxVMs) y = yMaxVMs - 1;
-	if(x < 0 || y < 0) {
-Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, clientNum, count);
-		clientWorlds[clientNum][0] = 
-		clientWorlds[clientNum][1] = 
-		clientWorlds[clientNum][2] = 
-		clientWorlds[clientNum][3] = -1;	
-	} else {
-Com_DPrintf("Tiling adding: %i x %i (client: %i, total: %i)\n", x, y, clientNum, count);
-		clientWorlds[clientNum][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
-		clientWorlds[clientNum][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
-		clientWorlds[clientNum][2] = 1.0f / xMaxVMs;
-		clientWorlds[clientNum][3] = 1.0f / yMaxVMs;
+	int s = clientNum == -1 ? 0 : clientNum;
+	int e = clientNum == -1 ? MAX_NUM_VMS : clientNum + 1;
+	for(; s < e; s++) {
+		if(x < 0 || y < 0) {
+	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);
+			clientWorlds[s][0] = 
+			clientWorlds[s][1] = 
+			clientWorlds[s][2] = 
+			clientWorlds[s][3] = -1;	
+		} else {
+	Com_DPrintf("Tiling adding: %i x %i (client: %i, total: %i)\n", x, y, s, count);
+			clientWorlds[s][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
+			clientWorlds[s][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
+			clientWorlds[s][2] = 1.0f / xMaxVMs;
+			clientWorlds[s][3] = 1.0f / yMaxVMs;
+		}
 	}
 }
 
