@@ -382,11 +382,9 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
-#ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
-#else
 	cgvm = 0;
+#ifdef USE_MULTIVM
+	CM_SwitchMap(cgvm);
 #endif
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {

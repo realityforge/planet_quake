@@ -772,11 +772,9 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
-#ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
-#else
 	cgvm = 0;
+#ifdef USE_MULTIVM
+	CM_SwitchMap(cgvm);
 #endif
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );

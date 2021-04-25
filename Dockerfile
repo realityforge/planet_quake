@@ -155,3 +155,38 @@ CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite
 FROM serve-both AS full
 
 COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
+
+FROM quay.io/parkervcp/pterodactyl-images:debian_nodejs-14 AS serve-pterodactyl
+
+RUN mkdir -p /tmp/planet_quake/code/xquakejs/bin
+RUN mkdir -p /tmp/planet_quake/code/xquakejs/lib
+RUN mkdir -p /tmp/planet_quake/build/release-js-js
+RUN mkdir -p /tmp/planet_quake/build/release-linux-x86_64
+
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/package.json /tmp/planet_quake/package.json
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/code/xquakejs/bin /tmp/planet_quake/code/xquakejs/bin
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/code/xquakejs/lib /tmp/planet_quake/code/xquakejs/lib
+COPY --from=briancullinan/quake3e:build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
+COPY --from=briancullinan/quake3e:build-ded /tmp/planet_quake/build/release-linux-x86_64/quake3e* /tmp/planet_quake/build/release-linux-x86_64/
+COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
+
+RUN \
+  cd /tmp/planet_quake && \
+  npm install --dev
+
+EXPOSE 8080/tcp
+EXPOSE 27960/udp
+VOLUME [ "/home/baseq3" ]
+ENV RCON=password123!
+ENV GAME=baseq3-cc
+ENV BASEGAME=baseq3-cc
+
+CMD \
+  (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home &) && \
+  /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
+    +cvar_restart +set net_port 27960 +set fs_basepath /home \
+    +set dedicated 2 +set fs_homepath /home \
+    +set fs_basegame ${BASEGAME} +set fs_game ${GAME} \
+    +set ttycon 0 +set rconpassword ${RCON} \
+    +set logfile 2 +set com_hunkmegs 150 +set vm_rtChecks 0 \
+    +set sv_maxclients 32 +set sv_pure 0 +exec server.cfg

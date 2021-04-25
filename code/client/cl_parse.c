@@ -352,7 +352,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				}
 			}
 		}
-//Com_Printf("Parsing world: %i == %i (%i -> %i -> %i)\n", cgvm, clc.currentView, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
+//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", cgvm, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
 
 		// from here we can start version-dependent snapshot parsing

@@ -1163,12 +1163,6 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	SV_TrackDisconnect( drop - svs.clients );
 #endif
 
-#ifdef USE_MULTIVM
-	gvm = drop->gameWorld;
-	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
-#endif
-
 	// tell everyone why they got dropped
 	if ( reason ) {
 		SV_SendServerCommand( NULL, "print \"%s" S_COLOR_WHITE " %s\n\"", name, reason );
@@ -1178,7 +1172,6 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	// this will remove the body, among other things
 #ifdef USE_MULTIVM
 	// disconnect from all worlds
-	int prevGvm = gvm;
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvms[igvm]) continue;
 		gvm = igvm;
@@ -1186,7 +1179,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		SV_SetAASgvm(gvm);
 		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 	}
-	gvm = prevGvm;
+	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
 #else	

@@ -252,14 +252,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
 	snapshot->ps = clSnap->ps;
 
-#ifdef USE_MULTIVM
-	if(!clSnap->multiview && cgvm != clc.currentView) {
-		// send a game update but don't bother with entities yet
-		snapshot->numEntities = 0;
-		return qtrue;
-	}
-#endif
-
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
@@ -479,18 +471,10 @@ rescan:
 
 #ifdef USE_MULTIVM
 	if ( !strcmp( cmd, "world" ) ) {
-		int newWorld;
-		s = Cmd_Argv(1);
-		newWorld = atoi(s);
-
-		//if(clc.currentView != newWorld) {
-		//clc.currentView = newWorld; // don't process anymore snapshots until we pump and dump
-		//Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
-		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", newWorld));
-		//}
+		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %s\n", Cmd_Argv(1)));
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -591,9 +575,6 @@ void CL_ShutdownCGame( void ) {
 	clientWorlds[cgvm][1] = 0;
 	clientWorlds[cgvm][2] = 
 	clientWorlds[cgvm][3] = 1;
-#ifdef USE_MV
-	clc.currentView = 0;
-#endif
 	FS_VM_CloseFiles( H_CGAME );
 
 #ifdef USE_VID_FAST
@@ -1457,8 +1438,6 @@ CL_SetCGameTime
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
 #ifdef USE_MULTIVM
-	//CM_SwitchMap(clc.currentView);
-	//cgvm = clc.currentView;
 	CM_SwitchMap(0);
 	cgvm = 0;
 #endif

@@ -3876,9 +3876,9 @@ void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
 
+	cgvm = 0;
 #ifdef USE_MULTIVM
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
+	CM_SwitchMap(cgvm);
 #endif
 
 #ifdef USE_CURL	
@@ -4850,7 +4850,6 @@ static void CL_InitGLimp_Cvars( void )
 #ifdef USE_MULTIVM
 void CL_LoadVM_f( void ) {
 	char *name;
-	float prevDvr[4];
 	
 	if ( Cmd_Argc() < 2 ) {
 		Com_Printf( "Usage: %s <game|cgame|ui> [mapname]\n", Cmd_Argv( 0 ) );
@@ -4878,22 +4877,9 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
-		// TODO: add command for tiling if count <= 1
-		prevDvr[0] = clientWorlds[clc.currentView][0];
-		prevDvr[1] = clientWorlds[clc.currentView][1];
-		prevDvr[2] = clientWorlds[clc.currentView][2];
-		prevDvr[3] = clientWorlds[clc.currentView][3];
-		clientWorlds[clc.currentView][0] =
-		clientWorlds[clc.currentView][1] =
-		clientWorlds[clc.currentView][2] =
-		clientWorlds[clc.currentView][3] = -1;
-		clc.currentView = cgvm;
 		re.SwitchWorld(cgvm);
-		clientWorlds[clc.currentView][0] = prevDvr[0];
-		clientWorlds[clc.currentView][1] = prevDvr[1];
-		clientWorlds[clc.currentView][2] = prevDvr[2];
-		clientWorlds[clc.currentView][3] = prevDvr[3];
 		CL_InitCGame(cgvms[0] != NULL); // createNew if cgvms[0] is already taken
+		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", cgvm));
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
@@ -4937,40 +4923,13 @@ void CL_Game_f ( void ) {
 }
 
 void CL_World_f( void ) {
-	int newWorld, prev;
-	float prevDvr[4];
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
 	}
 	
-	newWorld = atoi( Cmd_Argv(1) );
-	Com_Printf( "Client switching world: %i -> %i\n", clc.currentView, newWorld );
-
-	/*
-	prevDvr[0] = clientWorlds[clc.currentView][0];
-	prevDvr[1] = clientWorlds[clc.currentView][1];
-	prevDvr[2] = clientWorlds[clc.currentView][2];
-	prevDvr[3] = clientWorlds[clc.currentView][3];
-	clientWorlds[clc.currentView][0] =
-	clientWorlds[clc.currentView][1] =
-	clientWorlds[clc.currentView][2] =
-	clientWorlds[clc.currentView][3] = -1;
-	clc.currentView = newWorld;
-	clientWorlds[clc.currentView][0] = prevDvr[0];
-	clientWorlds[clc.currentView][1] = prevDvr[1];
-	clientWorlds[clc.currentView][2] = prevDvr[2];
-	clientWorlds[clc.currentView][3] = prevDvr[3];
-	
-	Com_EventLoop();
-	re.ReloadShaders(qtrue);
-	cl.newSnapshots = qtrue;
-	clc.eventMask |= EM_SNAPSHOT;
-	CL_SetCGameTime();
-	CL_WritePacket();
-	CL_WritePacket();
-	CL_WritePacket();
-	*/
+	Com_Printf( "Client switching world: %s\n", Cmd_Argv(1) );
+	Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\ntile -1 -1 0\ntile -1 -1 1\ntile -1 -1 2\ntile -1 -1 3\ntile -1 -1 4\ntile -1 -1 5\ntile -1 -1 6\ntile -1 -1 7\ntile -1 -1 8\ntile -1 -1 9\ntile 0 0 %s\n", Cmd_Argv(1)));
 }
 
 void CL_Tile_f(void) {
