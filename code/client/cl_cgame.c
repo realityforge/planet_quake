@@ -275,7 +275,7 @@ CL_SetUserCmdValue
 =====================
 */
 static void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
-	cl.cgameUserCmdValue = userCmdValue;
+	cl.cgameUserCmdValue[cgvm] = userCmdValue;
 	cl.cgameSensitivity = sensitivityScale;
 }
 

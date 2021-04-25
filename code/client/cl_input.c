@@ -382,6 +382,7 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
+;
 	cgvm = 0;
 #ifdef USE_MULTIVM
 	CM_SwitchMap(cgvm);
@@ -600,7 +601,7 @@ static void CL_FinishMove( usercmd_t *cmd ) {
 	int		i;
 
 	// copy the state that the cgame is currently sending
-	cmd->weapon = cl.cgameUserCmdValue;
+	cmd->weapon = cl.cgameUserCmdValue[cgvm];
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating

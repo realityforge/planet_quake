@@ -61,8 +61,8 @@ CURLMsg *(*qcurl_multi_info_read)(CURLM *multi_handle,
                                                 int *msgs_in_queue);
 const char *(*qcurl_multi_strerror)(CURLMcode);
 
+#ifndef DEDICATED
 static void *cURLLib = NULL;
-
 /*
 =================
 GPA
@@ -85,6 +85,7 @@ static void *GPA(char *str)
         return rv;
 	}
 }
+#endif /* !DEDICATED */
 #endif /* USE_CURL_DLOPEN */
 
 #ifndef DEDICATED
@@ -1208,7 +1209,9 @@ qboolean Com_DL_Perform( download_t *dl )
 
 	if ( msg->msg == CURLMSG_DONE && msg->data.result == CURLE_OK )
 	{
+#ifndef DEDICATED
 		qboolean autoDownload = dl->mapAutoDownload;
+#endif
 
     if(dl->Name[0]) {
   		Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.pk3" : "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );

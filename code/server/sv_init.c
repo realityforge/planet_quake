@@ -130,6 +130,10 @@ void SV_SetConfigstring (int index, const char *val) {
 		SV_DemoWriteConfigString( index, val );
 	}
 
+if ( index == CS_SERVERINFO ) {
+	Com_Printf("Setting server info\n");
+}
+
 	// send it to all the clients if we aren't
 	// spawning a new server
 	if ( sv.state == SS_GAME || sv.restarting ) {
