@@ -176,22 +176,22 @@ typedef struct bot_goalstate_s
 	float avoidgoaltimes[MAX_AVOIDGOALS];		//times to avoid the goals
 } bot_goalstate_t;
 
-bot_goalstate_t *botgoalstates[MAX_CLIENTS + 1]; // FIXME: init?
+bot_goalstate_t *botgoalstates[MAX_NUM_VMS][MAX_CLIENTS + 1]; // FIXME: init?
 //item configuration
-itemconfig_t *itemconfig = NULL;
+itemconfig_t *itemconfig[MAX_NUM_VMS];
 //level items
-levelitem_t *levelitemheap = NULL;
-levelitem_t *freelevelitems = NULL;
-levelitem_t *levelitems = NULL;
-int numlevelitems = 0;
+levelitem_t *levelitemheap[MAX_NUM_VMS];
+levelitem_t *freelevelitems[MAX_NUM_VMS];
+levelitem_t *levelitems[MAX_NUM_VMS];
+int numlevelitems[MAX_NUM_VMS];
 //map locations
-maplocation_t *maplocations = NULL;
+maplocation_t *maplocations[MAX_NUM_VMS];
 //camp spots
-campspot_t *campspots = NULL;
+campspot_t *campspots[MAX_NUM_VMS];
 //the game type
-int g_gametype = 0;
+int g_gametype[MAX_NUM_VMS];
 //additional dropped item weight
-libvar_t *droppedweight = NULL;
+libvar_t *droppedweight[MAX_NUM_VMS];
 
 //========================================================================
 //
@@ -206,12 +206,12 @@ bot_goalstate_t *BotGoalStateFromHandle(int handle)
 		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
 		return NULL;
 	} //end if
-	if (!botgoalstates[handle])
+	if (!botgoalstates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid goal state %d\n", handle);
 		return NULL;
 	} //end if
-	return botgoalstates[handle];
+	return botgoalstates[aasgvm][handle];
 } //end of the function BotGoalStateFromHandle
 //===========================================================================
 //
@@ -377,18 +377,18 @@ void InitLevelItemHeap(void)
 {
 	int i, max_levelitems;
 
-	if (levelitemheap) FreeMemory(levelitemheap);
+	if (levelitemheap[aasgvm]) FreeMemory(levelitemheap[aasgvm]);
 
 	max_levelitems = (int) LibVarValue("max_levelitems", "256");
-	levelitemheap = (levelitem_t *) GetClearedMemory(max_levelitems * sizeof(levelitem_t));
+	levelitemheap[aasgvm] = (levelitem_t *) GetClearedMemory(max_levelitems * sizeof(levelitem_t));
 
 	for (i = 0; i < max_levelitems-1; i++)
 	{
-		levelitemheap[i].next = &levelitemheap[i + 1];
+		levelitemheap[aasgvm][i].next = &levelitemheap[aasgvm][i + 1];
 	} //end for
-	levelitemheap[max_levelitems-1].next = NULL;
+	levelitemheap[aasgvm][max_levelitems-1].next = NULL;
 	//
-	freelevelitems = levelitemheap;
+	freelevelitems[aasgvm] = levelitemheap[aasgvm];
 } //end of the function InitLevelItemHeap
 //===========================================================================
 //
@@ -400,14 +400,14 @@ levelitem_t *AllocLevelItem(void)
 {
 	levelitem_t *li;
 
-	li = freelevelitems;
+	li = freelevelitems[aasgvm];
 	if (!li)
 	{
 		botimport.Print(PRT_FATAL, "out of level items\n");
 		return NULL;
 	} //end if
 	//
-	freelevelitems = freelevelitems->next;
+	freelevelitems[aasgvm] = freelevelitems[aasgvm]->next;
 	Com_Memset(li, 0, sizeof(levelitem_t));
 	return li;
 } //end of the function AllocLevelItem
@@ -419,8 +419,8 @@ levelitem_t *AllocLevelItem(void)
 //===========================================================================
 void FreeLevelItem(levelitem_t *li)
 {
-	li->next = freelevelitems;
-	freelevelitems = li;
+	li->next = freelevelitems[aasgvm];
+	freelevelitems[aasgvm] = li;
 } //end of the function FreeLevelItem
 //===========================================================================
 //
@@ -430,10 +430,10 @@ void FreeLevelItem(levelitem_t *li)
 //===========================================================================
 void AddLevelItemToList(levelitem_t *li)
 {
-	if (levelitems) levelitems->prev = li;
+	if (levelitems[aasgvm]) levelitems[aasgvm]->prev = li;
 	li->prev = NULL;
-	li->next = levelitems;
-	levelitems = li;
+	li->next = levelitems[aasgvm];
+	levelitems[aasgvm] = li;
 } //end of the function AddLevelItemToList
 //===========================================================================
 //
@@ -444,7 +444,7 @@ void AddLevelItemToList(levelitem_t *li)
 void RemoveLevelItemFromList(levelitem_t *li)
 {
 	if (li->prev) li->prev->next = li->next;
-	else levelitems = li->next;
+	else levelitems[aasgvm] = li->next;
 	if (li->next) li->next->prev = li->prev;
 } //end of the function RemoveLevelItemFromList
 //===========================================================================
@@ -458,18 +458,18 @@ void BotFreeInfoEntities(void)
 	maplocation_t *ml, *nextml;
 	campspot_t *cs, *nextcs;
 
-	for (ml = maplocations; ml; ml = nextml)
+	for (ml = maplocations[aasgvm]; ml; ml = nextml)
 	{
 		nextml = ml->next;
 		FreeMemory(ml);
 	} //end for
-	maplocations = NULL;
-	for (cs = campspots; cs; cs = nextcs)
+	maplocations[aasgvm] = NULL;
+	for (cs = campspots[aasgvm]; cs; cs = nextcs)
 	{
 		nextcs = cs->next;
 		FreeMemory(cs);
 	} //end for
-	campspots = NULL;
+	campspots[aasgvm] = NULL;
 } //end of the function BotFreeInfoEntities
 //===========================================================================
 //
@@ -482,12 +482,12 @@ void BotInitInfoEntities(void)
 	char classname[MAX_EPAIRKEY];
 	maplocation_t *ml;
 	campspot_t *cs;
-	int ent, numlocations, numcampspots;
+	int ent, numlocations, numcampspots[aasgvm];
 
 	BotFreeInfoEntities();
 	//
 	numlocations = 0;
-	numcampspots = 0;
+	numcampspots[aasgvm] = 0;
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
 	{
 		if (!AAS_ValueForBSPEpairKey(ent, "classname", classname, MAX_EPAIRKEY)) continue;
@@ -499,8 +499,8 @@ void BotInitInfoEntities(void)
 			AAS_VectorForBSPEpairKey(ent, "origin", ml->origin);
 			AAS_ValueForBSPEpairKey(ent, "message", ml->name, sizeof(ml->name));
 			ml->areanum = AAS_PointAreaNum(ml->origin);
-			ml->next = maplocations;
-			maplocations = ml;
+			ml->next = maplocations[aasgvm];
+			maplocations[aasgvm] = ml;
 			numlocations++;
 		} //end if
 		//camp spots
@@ -521,16 +521,16 @@ void BotInitInfoEntities(void)
 				FreeMemory(cs);
 				continue;
 			} //end if
-			cs->next = campspots;
-			campspots = cs;
+			cs->next = campspots[aasgvm];
+			campspots[aasgvm] = cs;
 			//AAS_DrawPermanentCross(cs->origin, 4, LINECOLOR_YELLOW);
-			numcampspots++;
+			numcampspots[aasgvm]++;
 		} //end else if
 	} //end for
 	if (botDeveloper)
 	{
 		botimport.Print(PRT_MESSAGE, "%d map locations\n", numlocations);
-		botimport.Print(PRT_MESSAGE, "%d camp spots\n", numcampspots);
+		botimport.Print(PRT_MESSAGE, "%d camp spots\n", numcampspots[aasgvm]);
 	} //end if
 } //end of the function BotInitInfoEntities
 //===========================================================================
@@ -554,10 +554,10 @@ void BotInitLevelItems(void)
 
 	//initialize the level item heap
 	InitLevelItemHeap();
-	levelitems = NULL;
-	numlevelitems = 0;
+	levelitems[aasgvm] = NULL;
+	numlevelitems[aasgvm] = 0;
 	//
-	ic = itemconfig;
+	ic = itemconfig[aasgvm];
 	if (!ic) return;
 
 	//if there's no AAS file loaded
@@ -620,7 +620,7 @@ void BotInitLevelItems(void)
 		li = AllocLevelItem();
 		if (!li) return;
 		//
-		li->number = ++numlevelitems;
+		li->number = ++numlevelitems[aasgvm];
 		li->timeout = 0;
 		li->entitynum = 0;
 		//
@@ -672,7 +672,7 @@ void BotInitLevelItems(void)
 		//
 		AddLevelItemToList(li);
 	} //end for
-	botimport.Print(PRT_MESSAGE, "found %d level items\n", numlevelitems);
+	botimport.Print(PRT_MESSAGE, "found %d level items\n", numlevelitems[aasgvm]);
 } //end of the function BotInitLevelItems
 //===========================================================================
 //
@@ -684,13 +684,13 @@ void BotGoalName(int number, char *name, int size)
 {
 	levelitem_t *li;
 
-	if (!itemconfig) return;
+	if (!itemconfig[aasgvm]) return;
 	//
-	for (li = levelitems; li; li = li->next)
+	for (li = levelitems[aasgvm]; li; li = li->next)
 	{
 		if (li->number == number)
 		{
-			Q_strncpyz( name, itemconfig->iteminfo[li->iteminfo].name, size );
+			Q_strncpyz( name, itemconfig[aasgvm]->iteminfo[li->iteminfo].name, size );
 			return;
 		} //end for
 	} //end for
@@ -829,14 +829,14 @@ void BotSetAvoidGoalTime(int goalstate, int number, float avoidtime)
 		return;
 	if (avoidtime < 0)
 	{
-		if (!itemconfig)
+		if (!itemconfig[aasgvm])
 			return;
 		//
-		for (li = levelitems; li; li = li->next)
+		for (li = levelitems[aasgvm]; li; li = li->next)
 		{
 			if (li->number == number)
 			{
-				avoidtime = itemconfig->iteminfo[li->iteminfo].respawntime;
+				avoidtime = itemconfig[aasgvm]->iteminfo[li->iteminfo].respawntime;
 				if (!avoidtime)
 					avoidtime = AVOID_DEFAULT_TIME;
 				if (avoidtime < AVOID_MINIMUM_TIME)
@@ -862,8 +862,8 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal)
 {
 	levelitem_t *li;
 
-	if (!itemconfig) return -1;
-	li = levelitems;
+	if (!itemconfig[aasgvm]) return -1;
+	li = levelitems[aasgvm];
 	if (index >= 0)
 	{
 		for (; li; li = li->next)
@@ -878,10 +878,10 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal)
 	for (; li; li = li->next)
 	{
 		//
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_gametype[aasgvm] == GT_SINGLE_PLAYER) {
 			if (li->flags & IFL_NOTSINGLE) continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		else if (g_gametype[aasgvm] >= GT_TEAM) {
 			if (li->flags & IFL_NOTTEAM) continue;
 		}
 		else {
@@ -889,18 +889,18 @@ int BotGetLevelItemGoal(int index, char *name, bot_goal_t *goal)
 		}
 		if (li->flags & IFL_NOTBOT) continue;
 		//
-		if (!Q_stricmp(name, itemconfig->iteminfo[li->iteminfo].name))
+		if (!Q_stricmp(name, itemconfig[aasgvm]->iteminfo[li->iteminfo].name))
 		{
 			goal->areanum = li->goalareanum;
 			VectorCopy(li->goalorigin, goal->origin);
 			goal->entitynum = li->entitynum;
-			VectorCopy(itemconfig->iteminfo[li->iteminfo].mins, goal->mins);
-			VectorCopy(itemconfig->iteminfo[li->iteminfo].maxs, goal->maxs);
+			VectorCopy(itemconfig[aasgvm]->iteminfo[li->iteminfo].mins, goal->mins);
+			VectorCopy(itemconfig[aasgvm]->iteminfo[li->iteminfo].maxs, goal->maxs);
 			goal->number = li->number;
 			goal->flags = GFL_ITEM;
 			if (li->timeout) goal->flags |= GFL_DROPPED;
 			goal->iteminfo = li->iteminfo;
-			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig->iteminfo[li->iteminfo].name);
+			//botimport.Print(PRT_MESSAGE, "found li %s\n", itemconfig[aasgvm]->iteminfo[li->iteminfo].name);
 			return li->number;
 		} //end if
 	} //end for
@@ -917,7 +917,7 @@ int BotGetMapLocationGoal(char *name, bot_goal_t *goal)
 	maplocation_t *ml;
 	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
 
-	for (ml = maplocations; ml; ml = ml->next)
+	for (ml = maplocations[aasgvm]; ml; ml = ml->next)
 	{
 		if (!Q_stricmp(ml->name, name))
 		{
@@ -948,7 +948,7 @@ int BotGetNextCampSpotGoal(int num, bot_goal_t *goal)
 
 	if (num < 0) num = 0;
 	i = num;
-	for (cs = campspots; cs; cs = cs->next)
+	for (cs = campspots[aasgvm]; cs; cs = cs->next)
 	{
 		if (--i < 0)
 		{
@@ -978,8 +978,8 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 	aas_entityinfo_t entinfo;
 	vec3_t dir;
 
-	ic = itemconfig;
-	if (!itemconfig) return;
+	ic = itemconfig[aasgvm];
+	if (!itemconfig[aasgvm]) return;
 	for (ent = AAS_NextEntity(0); ent; ent = AAS_NextEntity(ent))
 	{
 		//get the model index of the entity
@@ -1024,7 +1024,7 @@ void BotUpdateEntityItems(void)
 	itemconfig_t *ic;
 
 	//timeout current entity items if necessary
-	for (li = levelitems; li; li = nextli)
+	for (li = levelitems[aasgvm]; li; li = nextli)
 	{
 		nextli = li->next;
 		//if it is an item that will time out
@@ -1039,8 +1039,8 @@ void BotUpdateEntityItems(void)
 		} //end if
 	} //end for
 	//find new entity items
-	ic = itemconfig;
-	if (!itemconfig) return;
+	ic = itemconfig[aasgvm];
+	if (!itemconfig[aasgvm]) return;
 	//
 	for (ent = AAS_NextEntity(0); ent; ent = AAS_NextEntity(ent))
 	{
@@ -1059,7 +1059,7 @@ void BotUpdateEntityItems(void)
 				entinfo.origin[1] != entinfo.lastvisorigin[1] ||
 				entinfo.origin[2] != entinfo.lastvisorigin[2]) continue;
 		//check if the entity is already stored as a level item
-		for (li = levelitems; li; li = li->next)
+		for (li = levelitems[aasgvm]; li; li = li->next)
 		{
 			//if the level item is linked to an entity
 			if (li->entitynum && li->entitynum == ent)
@@ -1091,15 +1091,15 @@ void BotUpdateEntityItems(void)
 		} //end for
 		if (li) continue;
 		//try to link the entity to a level item
-		for (li = levelitems; li; li = li->next)
+		for (li = levelitems[aasgvm]; li; li = li->next)
 		{
 			//if this level item is already linked
 			if (li->entitynum) continue;
 			//
-			if (g_gametype == GT_SINGLE_PLAYER) {
+			if (g_gametype[aasgvm] == GT_SINGLE_PLAYER) {
 				if (li->flags & IFL_NOTSINGLE) continue;
 			}
-			else if (g_gametype >= GT_TEAM) {
+			else if (g_gametype[aasgvm] >= GT_TEAM) {
 				if (li->flags & IFL_NOTTEAM) continue;
 			}
 			else {
@@ -1151,7 +1151,7 @@ void BotUpdateEntityItems(void)
 		//entity number of the level item
 		li->entitynum = ent;
 		//number for the level item
-		li->number = numlevelitems + ent;
+		li->number = numlevelitems[aasgvm] + ent;
 		//set the item info index for the level item
 		li->iteminfo = i;
 		//origin of the item
@@ -1174,7 +1174,7 @@ void BotUpdateEntityItems(void)
 		//botimport.Print(PRT_MESSAGE, "found new level item %s\n", ic->iteminfo[i].classname);
 	} //end for
 	/*
-	for (li = levelitems; li; li = li->next)
+	for (li = levelitems[aasgvm]; li; li = li->next)
 	{
 		if (!li->entitynum)
 		{
@@ -1319,21 +1319,21 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	if (!areanum)
 		return qfalse;
 	//the item configuration
-	ic = itemconfig;
-	if (!itemconfig)
+	ic = itemconfig[aasgvm];
+	if (!itemconfig[aasgvm])
 		return qfalse;
 	//best weight and item so far
 	bestweight = 0;
 	bestitem = NULL;
 	Com_Memset(&goal, 0, sizeof(bot_goal_t));
 	//go through the items in the level
-	for (li = levelitems; li; li = li->next)
+	for (li = levelitems[aasgvm]; li; li = li->next)
 	{
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_gametype[aasgvm] == GT_SINGLE_PLAYER) {
 			if (li->flags & IFL_NOTSINGLE)
 				continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		else if (g_gametype[aasgvm] >= GT_TEAM) {
 			if (li->flags & IFL_NOTTEAM)
 				continue;
 		}
@@ -1363,7 +1363,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 #ifdef DROPPEDWEIGHT
 		//HACK: to make dropped items more attractive
 		if (li->timeout)
-			weight += droppedweight->value;
+			weight += droppedweight[aasgvm]->value;
 #endif //DROPPEDWEIGHT
 		//use weight scale for item_botroam
 		if (li->flags & IFL_ROAM) weight *= li->weight;
@@ -1490,21 +1490,21 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	if (ltg) ltg_time = AAS_AreaTravelTimeToGoalArea(areanum, origin, ltg->areanum, travelflags);
 	else ltg_time = 99999;
 	//the item configuration
-	ic = itemconfig;
-	if (!itemconfig)
+	ic = itemconfig[aasgvm];
+	if (!itemconfig[aasgvm])
 		return qfalse;
 	//best weight and item so far
 	bestweight = 0;
 	bestitem = NULL;
 	Com_Memset(&goal, 0, sizeof(bot_goal_t));
 	//go through the items in the level
-	for (li = levelitems; li; li = li->next)
+	for (li = levelitems[aasgvm]; li; li = li->next)
 	{
-		if (g_gametype == GT_SINGLE_PLAYER) {
+		if (g_gametype[aasgvm] == GT_SINGLE_PLAYER) {
 			if (li->flags & IFL_NOTSINGLE)
 				continue;
 		}
-		else if (g_gametype >= GT_TEAM) {
+		else if (g_gametype[aasgvm] >= GT_TEAM) {
 			if (li->flags & IFL_NOTTEAM)
 				continue;
 		}
@@ -1534,7 +1534,7 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 #ifdef DROPPEDWEIGHT
 		//HACK: to make dropped items more attractive
 		if (li->timeout)
-			weight += droppedweight->value;
+			weight += droppedweight[aasgvm]->value;
 #endif //DROPPEDWEIGHT
 		//use weight scale for item_botroam
 		if (li->flags & IFL_ROAM) weight *= li->weight;
@@ -1710,9 +1710,9 @@ int BotLoadItemWeights(int goalstate, char *filename)
 		return BLERR_CANNOTLOADITEMWEIGHTS;
 	} //end if
 	//if there's no item configuration
-	if (!itemconfig) return BLERR_CANNOTLOADITEMWEIGHTS;
+	if (!itemconfig[aasgvm]) return BLERR_CANNOTLOADITEMWEIGHTS;
 	//create the item weight index
-	gs->itemweightindex = ItemWeightIndex(gs->itemweightconfig, itemconfig);
+	gs->itemweightindex = ItemWeightIndex(gs->itemweightconfig, itemconfig[aasgvm]);
 	//everything went ok
 	return BLERR_NOERROR;
 } //end of the function BotLoadItemWeights
@@ -1743,10 +1743,10 @@ int BotAllocGoalState(int client)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (!botgoalstates[i])
+		if (!botgoalstates[aasgvm][i])
 		{
-			botgoalstates[i] = GetClearedMemory(sizeof(bot_goalstate_t));
-			botgoalstates[i]->client = client;
+			botgoalstates[aasgvm][i] = GetClearedMemory(sizeof(bot_goalstate_t));
+			botgoalstates[aasgvm][i]->client = client;
 			return i;
 		} //end if
 	} //end for
@@ -1765,14 +1765,14 @@ void BotFreeGoalState(int handle)
 		botimport.Print(PRT_FATAL, "goal state handle %d out of range\n", handle);
 		return;
 	} //end if
-	if (!botgoalstates[handle])
+	if (!botgoalstates[aasgvm][handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid goal state handle %d\n", handle);
 		return;
 	} //end if
 	BotFreeItemWeights(handle);
-	FreeMemory(botgoalstates[handle]);
-	botgoalstates[handle] = NULL;
+	FreeMemory(botgoalstates[aasgvm][handle]);
+	botgoalstates[aasgvm][handle] = NULL;
 } //end of the function BotFreeGoalState
 //===========================================================================
 //
@@ -1785,18 +1785,18 @@ int BotSetupGoalAI(void)
 	const char *filename;
 
 	//check if teamplay is on
-	g_gametype = LibVarValue("g_gametype", "0");
+	g_gametype[aasgvm] = LibVarValue("g_gametype", "0");
 	//item configuration file
 	filename = LibVarString("itemconfig", "items.c");
 	//load the item configuration
-	itemconfig = LoadItemConfig(filename);
-	if (!itemconfig)
+	itemconfig[aasgvm] = LoadItemConfig(filename);
+	if (!itemconfig[aasgvm])
 	{
 		botimport.Print(PRT_FATAL, "couldn't load item config\n");
 		return BLERR_CANNOTLOADITEMCONFIG;
 	} //end if
 	//
-	droppedweight = LibVar("droppedweight", "1000");
+	droppedweight[aasgvm] = LibVar("droppedweight", "1000");
 	//everything went ok
 	return BLERR_NOERROR;
 } //end of the function BotSetupGoalAI
@@ -1810,19 +1810,19 @@ void BotShutdownGoalAI(void)
 {
 	int i;
 
-	if (itemconfig) FreeMemory(itemconfig);
-	itemconfig = NULL;
-	if (levelitemheap) FreeMemory(levelitemheap);
-	levelitemheap = NULL;
-	freelevelitems = NULL;
-	levelitems = NULL;
-	numlevelitems = 0;
+	if (itemconfig[aasgvm]) FreeMemory(itemconfig[aasgvm]);
+	itemconfig[aasgvm] = NULL;
+	if (levelitemheap[aasgvm]) FreeMemory(levelitemheap[aasgvm]);
+	levelitemheap[aasgvm] = NULL;
+	freelevelitems[aasgvm] = NULL;
+	levelitems[aasgvm] = NULL;
+	numlevelitems[aasgvm] = 0;
 
 	BotFreeInfoEntities();
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (botgoalstates[i])
+		if (botgoalstates[aasgvm][i])
 		{
 			BotFreeGoalState(i);
 		} //end if

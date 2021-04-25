@@ -271,6 +271,7 @@ int AAS_LoadMap(const char *mapname)
 		aasworld[aasgvm].loaded = qfalse;
 		return errnum;
 	} //end if
+	
 	//
 	AAS_InitSettings();
 	//initialize the AAS link heap for the new map

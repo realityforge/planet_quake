@@ -615,7 +615,7 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 	if ((reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_JUMP ||
 		(reach->traveltype & TRAVELTYPE_MASK) == TRAVEL_WALKOFFLEDGE)
 	{
-		AAS_HorizontalVelocityForJump(aassettings.phys_jumpvel, reach->start, reach->end, &speed);
+		AAS_HorizontalVelocityForJump(aassettings[aasgvm].phys_jumpvel, reach->start, reach->end, &speed);
 		//
 		VectorSubtract(reach->end, reach->start, dir);
 		dir[2] = 0;
@@ -624,7 +624,7 @@ void AAS_ShowReachability(aas_reachability_t *reach)
 		VectorScale(dir, speed, velocity);
 		//set the command movement
 		VectorClear(cmdmove);
-		cmdmove[2] = aassettings.phys_jumpvel;
+		cmdmove[2] = aassettings[aasgvm].phys_jumpvel;
 		//
 		AAS_PredictClientMovement(&move, -1, reach->start, PRESENCE_NORMAL, qtrue,
 									velocity, cmdmove, 3, 30, 0.1f,

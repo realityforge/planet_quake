@@ -53,9 +53,9 @@ typedef struct midrangearea_s
 	unsigned short goaltime;
 } midrangearea_t;
 
-midrangearea_t *midrangeareas;
-int *clusterareas;
-int numclusterareas;
+midrangearea_t *midrangeareas[MAX_NUM_VMS];
+int *clusterareas[MAX_NUM_VMS];
+int numclusterareas[MAX_NUM_VMS];
 
 //===========================================================================
 //
@@ -70,10 +70,10 @@ void AAS_AltRoutingFloodCluster_r(int areanum)
 	aas_face_t *face;
 
 	//add the current area to the areas of the current cluster
-	clusterareas[numclusterareas] = areanum;
-	numclusterareas++;
+	clusterareas[aasgvm][numclusterareas[aasgvm]] = areanum;
+	numclusterareas[aasgvm]++;
 	//remove the area from the mid range areas
-	midrangeareas[areanum].valid = qfalse;
+	midrangeareas[aasgvm][areanum].valid = qfalse;
 	//flood to other areas through the faces of this area
 	area = &aasworld[aasgvm].areas[areanum];
 	for (i = 0; i < area->numfaces; i++)
@@ -85,7 +85,7 @@ void AAS_AltRoutingFloodCluster_r(int areanum)
 		//if there is an area at the other side of this face
 		if (!otherareanum) continue;
 		//if the other area is not a midrange area
-		if (!midrangeareas[otherareanum].valid) continue;
+		if (!midrangeareas[aasgvm][otherareanum].valid) continue;
 		//
 		AAS_AltRoutingFloodCluster_r(otherareanum);
 	} //end for
@@ -104,7 +104,7 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 	return 0;
 #else
 	int i, j, bestareanum;
-	int numaltroutegoals, nummidrangeareas;
+	int numaltroutegoals, nummidrangeareas[aasgvm];
 	int starttime, goaltime, goaltraveltime;
 	float dist, bestdist;
 	vec3_t mid, dir;
@@ -119,10 +119,10 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 	//travel time towards the goal area
 	goaltraveltime = AAS_AreaTravelTimeToGoalArea(startareanum, start, goalareanum, travelflags);
 	//clear the midrange areas
-	Com_Memset(midrangeareas, 0, aasworld[aasgvm].numareas * sizeof(midrangearea_t));
+	Com_Memset(midrangeareas[aasgvm], 0, aasworld[aasgvm].numareas * sizeof(midrangearea_t));
 	numaltroutegoals = 0;
 	//
-	nummidrangeareas = 0;
+	nummidrangeareas[aasgvm] = 0;
 	//
 	for (i = 1; i < aasworld[aasgvm].numareas; i++)
 	{
@@ -150,48 +150,48 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 		//if the travel time from the area to the goal is greater than the shortest goal travel time
 		if (goaltime > (float) 0.8 * goaltraveltime) continue;
 		//this is a mid range area
-		midrangeareas[i].valid = qtrue;
-		midrangeareas[i].starttime = starttime;
-		midrangeareas[i].goaltime = goaltime;
-		Log_Write("%d midrange area %d", nummidrangeareas, i);
-		nummidrangeareas++;
+		midrangeareas[aasgvm][i].valid = qtrue;
+		midrangeareas[aasgvm][i].starttime = starttime;
+		midrangeareas[aasgvm][i].goaltime = goaltime;
+		Log_Write("%d midrange area %d", nummidrangeareas[aasgvm], i);
+		nummidrangeareas[aasgvm]++;
 	} //end for
 	//
 	for (i = 1; i < aasworld[aasgvm].numareas; i++)
 	{
-		if (!midrangeareas[i].valid) continue;
+		if (!midrangeareas[aasgvm][i].valid) continue;
 		//get the areas in one cluster
-		numclusterareas = 0;
+		numclusterareas[aasgvm] = 0;
 		AAS_AltRoutingFloodCluster_r(i);
 		//now we've got a cluster with areas through which an alternative route could go
 		//get the 'center' of the cluster
 		VectorClear(mid);
-		for (j = 0; j < numclusterareas; j++)
+		for (j = 0; j < numclusterareas[aasgvm]; j++)
 		{
-			VectorAdd(mid, aasworld[aasgvm].areas[clusterareas[j]].center, mid);
+			VectorAdd(mid, aasworld[aasgvm].areas[clusterareas[aasgvm][j]].center, mid);
 		} //end for
-		VectorScale(mid, 1.0 / numclusterareas, mid);
+		VectorScale(mid, 1.0 / numclusterareas[aasgvm], mid);
 		//get the area closest to the center of the cluster
 		bestdist = 999999;
 		bestareanum = 0;
-		for (j = 0; j < numclusterareas; j++)
+		for (j = 0; j < numclusterareas[aasgvm]; j++)
 		{
-			VectorSubtract(mid, aasworld[aasgvm].areas[clusterareas[j]].center, dir);
+			VectorSubtract(mid, aasworld[aasgvm].areas[clusterareas[aasgvm][j]].center, dir);
 			dist = VectorLength(dir);
 			if (dist < bestdist)
 			{
 				bestdist = dist;
-				bestareanum = clusterareas[j];
+				bestareanum = clusterareas[aasgvm][j];
 			} //end if
 		} //end for
 		//now we've got an area for an alternative route
 		//FIXME: add alternative goal origin
 		VectorCopy(aasworld[aasgvm].areas[bestareanum].center, altroutegoals[numaltroutegoals].origin);
 		altroutegoals[numaltroutegoals].areanum = bestareanum;
-		altroutegoals[numaltroutegoals].starttraveltime = midrangeareas[bestareanum].starttime;
-		altroutegoals[numaltroutegoals].goaltraveltime = midrangeareas[bestareanum].goaltime;
+		altroutegoals[numaltroutegoals].starttraveltime = midrangeareas[aasgvm][bestareanum].starttime;
+		altroutegoals[numaltroutegoals].goaltraveltime = midrangeareas[aasgvm][bestareanum].goaltime;
 		altroutegoals[numaltroutegoals].extratraveltime =
-					(midrangeareas[bestareanum].starttime + midrangeareas[bestareanum].goaltime) -
+					(midrangeareas[aasgvm][bestareanum].starttime + midrangeareas[aasgvm][bestareanum].goaltime) -
 								goaltraveltime;
 		numaltroutegoals++;
 		//
@@ -216,10 +216,10 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 void AAS_InitAlternativeRouting(void)
 {
 #ifdef ENABLE_ALTROUTING
-	if (midrangeareas) FreeMemory(midrangeareas);
-	midrangeareas = (midrangearea_t *) GetMemory(aasworld[aasgvm].numareas * sizeof(midrangearea_t));
-	if (clusterareas) FreeMemory(clusterareas);
-	clusterareas = (int *) GetMemory(aasworld[aasgvm].numareas * sizeof(int));
+	if (midrangeareas[aasgvm]) FreeMemory(midrangeareas[aasgvm]);
+	midrangeareas[aasgvm] = (midrangearea_t *) GetMemory(aasworld[aasgvm].numareas * sizeof(midrangearea_t));
+	if (clusterareas[aasgvm]) FreeMemory(clusterareas[aasgvm]);
+	clusterareas[aasgvm] = (int *) GetMemory(aasworld[aasgvm].numareas * sizeof(int));
 #endif
 } //end of the function AAS_InitAlternativeRouting
 //===========================================================================
@@ -231,10 +231,10 @@ void AAS_InitAlternativeRouting(void)
 void AAS_ShutdownAlternativeRouting(void)
 {
 #ifdef ENABLE_ALTROUTING
-	if (midrangeareas) FreeMemory(midrangeareas);
-	midrangeareas = NULL;
-	if (clusterareas) FreeMemory(clusterareas);
-	clusterareas = NULL;
-	numclusterareas = 0;
+	if (midrangeareas[aasgvm]) FreeMemory(midrangeareas[aasgvm]);
+	midrangeareas[aasgvm] = NULL;
+	if (clusterareas[aasgvm]) FreeMemory(clusterareas[aasgvm]);
+	clusterareas[aasgvm] = NULL;
+	numclusterareas[aasgvm] = 0;
 #endif
 } //end of the function AAS_ShutdownAlternativeRouting

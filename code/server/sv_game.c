@@ -631,9 +631,9 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		{
 			unsigned clientNum = args[1];
 			if ( clientNum < sv_maxclients->integer
-#ifdef USE_MULTIVM
-			 	&& svs.clients[ clientNum ].gameWorld == gvm
-#endif
+//#ifdef USE_MULTIVM
+//			 	&& svs.clients[ clientNum ].gameWorld == gvm
+//#endif
 			) {
 				SV_ClientThink( &svs.clients[ clientNum ], VMA(2) );
 			}

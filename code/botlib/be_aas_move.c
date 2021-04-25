@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern botlib_import_t botimport;
 
-aas_settings_t aassettings;
+aas_settings_t aassettings[MAX_NUM_VMS];
 
 //#define AAS_MOVE_DEBUG
 
@@ -73,45 +73,45 @@ int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs)
 //===========================================================================
 void AAS_InitSettings(void)
 {
-	aassettings.phys_gravitydirection[0]	= 0;
-	aassettings.phys_gravitydirection[1]	= 0;
-	aassettings.phys_gravitydirection[2]	= -1;
-	aassettings.phys_friction				= LibVarValue("phys_friction", "6");
-	aassettings.phys_stopspeed				= LibVarValue("phys_stopspeed", "100");
-	aassettings.phys_gravity				= LibVarValue("phys_gravity", "800");
-	aassettings.phys_waterfriction			= LibVarValue("phys_waterfriction", "1");
-	aassettings.phys_watergravity			= LibVarValue("phys_watergravity", "400");
-	aassettings.phys_maxvelocity			= LibVarValue("phys_maxvelocity", "320");
-	aassettings.phys_maxwalkvelocity		= LibVarValue("phys_maxwalkvelocity", "320");
-	aassettings.phys_maxcrouchvelocity		= LibVarValue("phys_maxcrouchvelocity", "100");
-	aassettings.phys_maxswimvelocity		= LibVarValue("phys_maxswimvelocity", "150");
-	aassettings.phys_walkaccelerate			= LibVarValue("phys_walkaccelerate", "10");
-	aassettings.phys_airaccelerate			= LibVarValue("phys_airaccelerate", "1");
-	aassettings.phys_swimaccelerate			= LibVarValue("phys_swimaccelerate", "4");
-	aassettings.phys_maxstep				= LibVarValue("phys_maxstep", "19");
-	aassettings.phys_maxsteepness			= LibVarValue("phys_maxsteepness", "0.7");
-	aassettings.phys_maxwaterjump			= LibVarValue("phys_maxwaterjump", "18");
-	aassettings.phys_maxbarrier				= LibVarValue("phys_maxbarrier", "33");
-	aassettings.phys_jumpvel				= LibVarValue("phys_jumpvel", "270");
-	aassettings.phys_falldelta5				= LibVarValue("phys_falldelta5", "40");
-	aassettings.phys_falldelta10			= LibVarValue("phys_falldelta10", "60");
-	aassettings.rs_waterjump				= LibVarValue("rs_waterjump", "400");
-	aassettings.rs_teleport					= LibVarValue("rs_teleport", "50");
-	aassettings.rs_barrierjump				= LibVarValue("rs_barrierjump", "100");
-	aassettings.rs_startcrouch				= LibVarValue("rs_startcrouch", "300");
-	aassettings.rs_startgrapple				= LibVarValue("rs_startgrapple", "500");
-	aassettings.rs_startwalkoffledge		= LibVarValue("rs_startwalkoffledge", "70");
-	aassettings.rs_startjump				= LibVarValue("rs_startjump", "300");
-	aassettings.rs_rocketjump				= LibVarValue("rs_rocketjump", "500");
-	aassettings.rs_bfgjump					= LibVarValue("rs_bfgjump", "500");
-	aassettings.rs_jumppad					= LibVarValue("rs_jumppad", "250");
-	aassettings.rs_aircontrolledjumppad		= LibVarValue("rs_aircontrolledjumppad", "300");
-	aassettings.rs_funcbob					= LibVarValue("rs_funcbob", "300");
-	aassettings.rs_startelevator			= LibVarValue("rs_startelevator", "50");
-	aassettings.rs_falldamage5				= LibVarValue("rs_falldamage5", "300");
-	aassettings.rs_falldamage10				= LibVarValue("rs_falldamage10", "500");
-	aassettings.rs_maxfallheight			= LibVarValue("rs_maxfallheight", "0");
-	aassettings.rs_maxjumpfallheight		= LibVarValue("rs_maxjumpfallheight", "450");
+	aassettings[aasgvm].phys_gravitydirection[0]	= 0;
+	aassettings[aasgvm].phys_gravitydirection[1]	= 0;
+	aassettings[aasgvm].phys_gravitydirection[2]	= -1;
+	aassettings[aasgvm].phys_friction				= LibVarValue("phys_friction", "6");
+	aassettings[aasgvm].phys_stopspeed				= LibVarValue("phys_stopspeed", "100");
+	aassettings[aasgvm].phys_gravity				= LibVarValue("phys_gravity", "800");
+	aassettings[aasgvm].phys_waterfriction			= LibVarValue("phys_waterfriction", "1");
+	aassettings[aasgvm].phys_watergravity			= LibVarValue("phys_watergravity", "400");
+	aassettings[aasgvm].phys_maxvelocity			= LibVarValue("phys_maxvelocity", "320");
+	aassettings[aasgvm].phys_maxwalkvelocity		= LibVarValue("phys_maxwalkvelocity", "320");
+	aassettings[aasgvm].phys_maxcrouchvelocity		= LibVarValue("phys_maxcrouchvelocity", "100");
+	aassettings[aasgvm].phys_maxswimvelocity		= LibVarValue("phys_maxswimvelocity", "150");
+	aassettings[aasgvm].phys_walkaccelerate			= LibVarValue("phys_walkaccelerate", "10");
+	aassettings[aasgvm].phys_airaccelerate			= LibVarValue("phys_airaccelerate", "1");
+	aassettings[aasgvm].phys_swimaccelerate			= LibVarValue("phys_swimaccelerate", "4");
+	aassettings[aasgvm].phys_maxstep				= LibVarValue("phys_maxstep", "19");
+	aassettings[aasgvm].phys_maxsteepness			= LibVarValue("phys_maxsteepness", "0.7");
+	aassettings[aasgvm].phys_maxwaterjump			= LibVarValue("phys_maxwaterjump", "18");
+	aassettings[aasgvm].phys_maxbarrier				= LibVarValue("phys_maxbarrier", "33");
+	aassettings[aasgvm].phys_jumpvel				= LibVarValue("phys_jumpvel", "270");
+	aassettings[aasgvm].phys_falldelta5				= LibVarValue("phys_falldelta5", "40");
+	aassettings[aasgvm].phys_falldelta10			= LibVarValue("phys_falldelta10", "60");
+	aassettings[aasgvm].rs_waterjump				= LibVarValue("rs_waterjump", "400");
+	aassettings[aasgvm].rs_teleport					= LibVarValue("rs_teleport", "50");
+	aassettings[aasgvm].rs_barrierjump				= LibVarValue("rs_barrierjump", "100");
+	aassettings[aasgvm].rs_startcrouch				= LibVarValue("rs_startcrouch", "300");
+	aassettings[aasgvm].rs_startgrapple				= LibVarValue("rs_startgrapple", "500");
+	aassettings[aasgvm].rs_startwalkoffledge		= LibVarValue("rs_startwalkoffledge", "70");
+	aassettings[aasgvm].rs_startjump				= LibVarValue("rs_startjump", "300");
+	aassettings[aasgvm].rs_rocketjump				= LibVarValue("rs_rocketjump", "500");
+	aassettings[aasgvm].rs_bfgjump					= LibVarValue("rs_bfgjump", "500");
+	aassettings[aasgvm].rs_jumppad					= LibVarValue("rs_jumppad", "250");
+	aassettings[aasgvm].rs_aircontrolledjumppad		= LibVarValue("rs_aircontrolledjumppad", "300");
+	aassettings[aasgvm].rs_funcbob					= LibVarValue("rs_funcbob", "300");
+	aassettings[aasgvm].rs_startelevator			= LibVarValue("rs_startelevator", "50");
+	aassettings[aasgvm].rs_falldamage5				= LibVarValue("rs_falldamage5", "300");
+	aassettings[aasgvm].rs_falldamage10				= LibVarValue("rs_falldamage10", "500");
+	aassettings[aasgvm].rs_maxfallheight			= LibVarValue("rs_maxfallheight", "0");
+	aassettings[aasgvm].rs_maxjumpfallheight		= LibVarValue("rs_maxjumpfallheight", "450");
 } //end of the function AAS_InitSettings
 //===========================================================================
 // returns qtrue if the bot is against a ladder
@@ -201,7 +201,7 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 	if (origin[2] - trace.endpos[2] > 10) return qfalse;
 	//check if the plane isn't too steep
 	plane = AAS_PlaneFromNum(trace.planenum);
-	if (DotProduct(plane->normal, up) < aassettings.phys_maxsteepness) return qfalse;
+	if (DotProduct(plane->normal, up) < aassettings[aasgvm].phys_maxsteepness) return qfalse;
 	//the bot is on the ground
 	return qtrue;
 } //end of the function AAS_OnGround
@@ -330,7 +330,7 @@ float AAS_WeaponJumpZVelocity(vec3_t origin, float radiusdamage)
 	//damage velocity
 	VectorScale(dir, 1600.0 * (float)knockback / mass, kvel);	//the rocket jump hack...
 	//rocket impact velocity + jump velocity
-	return kvel[2] + aassettings.phys_jumpvel;
+	return kvel[2] + aassettings[aasgvm].phys_jumpvel;
 } //end of the function AAS_WeaponJumpZVelocity
 //===========================================================================
 //
@@ -524,20 +524,20 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 	
 	if (frametime <= 0) frametime = 0.1f;
 	//
-	phys_friction = aassettings.phys_friction;
-	phys_stopspeed = aassettings.phys_stopspeed;
-	phys_gravity = aassettings.phys_gravity;
-	phys_waterfriction = aassettings.phys_waterfriction;
-	phys_watergravity = aassettings.phys_watergravity;
-	phys_maxwalkvelocity = aassettings.phys_maxwalkvelocity;// * frametime;
-	phys_maxcrouchvelocity = aassettings.phys_maxcrouchvelocity;// * frametime;
-	phys_maxswimvelocity = aassettings.phys_maxswimvelocity;// * frametime;
-	phys_walkaccelerate = aassettings.phys_walkaccelerate;
-	phys_airaccelerate = aassettings.phys_airaccelerate;
-	phys_swimaccelerate = aassettings.phys_swimaccelerate;
-	phys_maxstep = aassettings.phys_maxstep;
-	phys_maxsteepness = aassettings.phys_maxsteepness;
-	phys_jumpvel = aassettings.phys_jumpvel * frametime;
+	phys_friction = aassettings[aasgvm].phys_friction;
+	phys_stopspeed = aassettings[aasgvm].phys_stopspeed;
+	phys_gravity = aassettings[aasgvm].phys_gravity;
+	phys_waterfriction = aassettings[aasgvm].phys_waterfriction;
+	phys_watergravity = aassettings[aasgvm].phys_watergravity;
+	phys_maxwalkvelocity = aassettings[aasgvm].phys_maxwalkvelocity;// * frametime;
+	phys_maxcrouchvelocity = aassettings[aasgvm].phys_maxcrouchvelocity;// * frametime;
+	phys_maxswimvelocity = aassettings[aasgvm].phys_maxswimvelocity;// * frametime;
+	phys_walkaccelerate = aassettings[aasgvm].phys_walkaccelerate;
+	phys_airaccelerate = aassettings[aasgvm].phys_airaccelerate;
+	phys_swimaccelerate = aassettings[aasgvm].phys_swimaccelerate;
+	phys_maxstep = aassettings[aasgvm].phys_maxstep;
+	phys_maxsteepness = aassettings[aasgvm].phys_maxsteepness;
+	phys_jumpvel = aassettings[aasgvm].phys_jumpvel * frametime;
 	//
 	Com_Memset( move, 0, sizeof( *move ) );
 	Com_Memset( &trace, 0, sizeof( trace ) );
@@ -943,13 +943,13 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 
 			VectorCopy(org, start);
 			VectorCopy(start, end);
-			end[2] -= 48 + aassettings.phys_maxbarrier;
+			end[2] -= 48 + aassettings[aasgvm].phys_maxbarrier;
 			gaptrace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
 			//if solid is found the bot cannot walk any further and will not fall into a gap
 			if (!gaptrace.startsolid)
 			{
 				//if it is a gap (lower than one step height)
-				if (gaptrace.endpos[2] < org[2] - aassettings.phys_maxstep - 1)
+				if (gaptrace.endpos[2] < org[2] - aassettings[aasgvm].phys_maxstep - 1)
 				{
 					if (!(AAS_PointContents(end) & CONTENTS_WATER))
 					{
@@ -1060,8 +1060,8 @@ int AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *v
 	float maxjump, height2fall, t, top;
 	vec3_t dir;
 
-	phys_gravity = aassettings.phys_gravity;
-	phys_maxvelocity = aassettings.phys_maxvelocity;
+	phys_gravity = aassettings[aasgvm].phys_gravity;
+	phys_maxvelocity = aassettings[aasgvm].phys_maxvelocity;
 
 	//maximum height a player can jump with the given initial z velocity
 	maxjump = 0.5 * phys_gravity * (zvel / phys_gravity) * (zvel / phys_gravity);

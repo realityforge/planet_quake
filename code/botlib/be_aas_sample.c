@@ -61,7 +61,7 @@ typedef struct aas_tracestack_s
 	int nodenum;		//node found after splitting with planenum
 } aas_tracestack_t;
 
-int numaaslinks;
+int numaaslinks[MAX_NUM_VMS];
 
 //===========================================================================
 //
@@ -122,7 +122,7 @@ void AAS_InitAASLinkHeap(void)
 	//pointer to the first free link
 	aasworld[aasgvm].freelinks = &aasworld[aasgvm].linkheap[0];
 	//
-	numaaslinks = max_aaslinks;
+	numaaslinks[aasgvm] = max_aaslinks;
 } //end of the function AAS_InitAASLinkHeap
 //===========================================================================
 //
@@ -159,7 +159,7 @@ aas_link_t *AAS_AllocAASLink(void)
 	} //end if
 	if (aasworld[aasgvm].freelinks) aasworld[aasgvm].freelinks = aasworld[aasgvm].freelinks->next_ent;
 	if (aasworld[aasgvm].freelinks) aasworld[aasgvm].freelinks->prev_ent = NULL;
-	numaaslinks--;
+	numaaslinks[aasgvm]--;
 	return link;
 } //end of the function AAS_AllocAASLink
 //===========================================================================
@@ -176,7 +176,7 @@ void AAS_DeAllocAASLink(aas_link_t *link)
 	link->prev_area = NULL;
 	link->next_area = NULL;
 	aasworld[aasgvm].freelinks = link;
-	numaaslinks++;
+	numaaslinks[aasgvm]++;
 } //end of the function AAS_DeAllocAASLink
 //===========================================================================
 //
