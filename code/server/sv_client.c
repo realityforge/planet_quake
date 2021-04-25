@@ -1019,6 +1019,7 @@ gotnewcl:
 	gvm = newcl->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
+	//TODO: add new clients to all worlds
 #endif
 
 	// save the challenge
@@ -2423,7 +2424,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->deltaMessage = -1;
-			//client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
+			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			SV_SendClientSnapshot( client, qfalse );
 			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
@@ -2436,7 +2437,9 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->gameWorld = newWorld;
 			//client->deltaMessage = -1;
 			// notify the client of the secondary map
-			SV_SendServerCommand(client, "world %i", client->newWorld);
+			if(sv_mvWorld->integer) {
+				SV_SendServerCommand(client, "world %i", client->newWorld);
+			}
 			// send new baselines
 			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
 				if(strlen(sv.configstrings[index]) > 0) {
@@ -2512,6 +2515,8 @@ void SV_Tele_f( client_t *client ) {
 
 		clientNum = client - svs.clients;
 		gvm = client->gameWorld;
+		CM_SwitchMap(gameWorlds[gvm]);
+		SV_SetAASgvm(gvm);
 		ps = SV_GameClientNum( clientNum );
 
 		for(i = 0; i < 3; i++) {
@@ -2957,6 +2962,11 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			Com_Printf("Game world: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 			cl->gameWorld = cl->newWorld;
 			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
+#ifdef USE_MULTIVM
+			if(sv_mvWorld->integer) {
+				SV_SendServerCommand(cl, "world %i", cl->newWorld);
+			}
+#endif
 		} else 
 #endif
 		{
@@ -3087,11 +3097,9 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 				SV_SendClientGameState( cl );
 			}
 		}
-#ifdef USE_MULTIVM
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
-#endif
 		return;
 	}
 

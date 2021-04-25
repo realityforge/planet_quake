@@ -206,7 +206,7 @@ void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag )
 	}
 	cmd_text[insCmdI].filtered = qtrue;
 	cmd_text[insCmdI].tag = tag;
-Com_Printf("Inserting: %s (%i)\n", text, cmd_text[execCmdI].tag);
+Com_Printf("Inserting: %s (%i)\n", text, cmd_text[insCmdI].tag);
 	Cbuf_ExecuteInternal( exec_when, text );
 }
 

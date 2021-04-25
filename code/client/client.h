@@ -246,6 +246,9 @@ typedef struct {
 	char		downloadName[MAX_OSPATH];
 	char		downloadTempName[MAX_OSPATH + 4]; // downloadName + ".tmp"
 	int			sv_allowDownload;
+#ifdef USE_MULTIVM
+	char    *world;
+#endif
 	char		sv_dlURL[MAX_CVAR_VALUE_STRING];
 	int			downloadNumber;
 	int			downloadBlock;	// block we are waiting for
@@ -585,6 +588,7 @@ void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor,
 extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
+void CL_ParseServerInfo( void );
 void CL_ParseServerMessage( msg_t *msg );
 void CL_ParseSnapshot( msg_t *msg, qboolean multiview );
 

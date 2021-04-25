@@ -911,6 +911,18 @@ void SV_Init( void )
 
 	SV_LoadRecordCache();
 #endif
+#ifdef USE_MULTIVM
+	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO);
+	Cvar_CheckRange( sv_mvWorld, "0", "1", CV_INTEGER );
+	Cvar_SetDescription(sv_mvWorld, "Micromanage the client view by sending world commands that update which camera view should be visible on screen. This gives servers/games/admins a more scripted control over client displays. Turn off to force clients to manage their own displays by using the `tile` or `popout` commands.\nDefault: 1");
+	sv_mvSyncPS = Cvar_Get("sv_mvSyncPS", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncPS, "0", "1", CV_INTEGER );
+	Cvar_SetDescription(sv_mvSyncPS, "Synchronize player state across worlds. If a player picks up a weapon in one world, that weapon slot will be filled in every other world. Only works with the same mods.\nDefault: 0");
+	sv_mvSyncXYZ = Cvar_Get("sv_mvSyncXYZ", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncXYZ, "0", "1", CV_INTEGER );
+	Cvar_SetDescription(sv_mvSyncXYZ, "Force players to occupy the same XYZ coordinates in every world. Useful in shadow/mirror dimension type games.\nDefault: 0");
+
+#endif
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
 	Cvar_SetDescription(sv_minRate, "Force clients to play with a minimum latency\nDefault: 0");

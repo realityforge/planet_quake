@@ -679,7 +679,7 @@ Client command management (generally automatic, such as tinfo for HUD team overl
 */
 void SV_DemoReadClientCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 	int num;
 
 	Cmd_SaveCmdContext(); // Save the context (tokenized strings) so that the engine can continue its usual processing normally just after this function
@@ -701,7 +701,7 @@ Server command management - except print/cp (dropped at recording because alread
 */
 void SV_DemoReadServerCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 
 	Cmd_SaveCmdContext();
 	cmd = MSG_ReadString(msg);
@@ -719,7 +719,7 @@ Game command management - such as prints/centerprint (cp) scores command - excep
 */
 void SV_DemoReadGameCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 
 	Cmd_SaveCmdContext();
 

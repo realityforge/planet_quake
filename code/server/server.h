@@ -433,6 +433,11 @@ extern	cvar_t	*sv_mvFileCount;
 extern	cvar_t	*sv_mvFolderSize;
 
 #endif // USE_MV
+#ifdef USE_MULTIVM
+extern  cvar_t  *sv_mvWorld;
+extern  cvar_t  *sv_mvSyncPS;
+extern  cvar_t  *sv_mvSyncXYZ;
+#endif
 
 extern	cvar_t	*sv_privateClients;
 extern	cvar_t	*sv_hostname;

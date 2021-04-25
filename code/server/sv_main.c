@@ -66,6 +66,12 @@ cvar_t  *sv_autoRecordThreshold;
 cvar_t	*sv_mvFileCount;
 cvar_t	*sv_mvFolderSize;
 #endif
+#ifdef USE_MULTIVM
+cvar_t  *sv_mvSyncPS; // synchronize player state between worlds
+cvar_t  *sv_mvSyncXYZ;
+cvar_t  *sv_mvWorld; // send world commands to manage view
+
+#endif
 
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;

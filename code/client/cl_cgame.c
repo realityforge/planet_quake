@@ -347,6 +347,8 @@ static void CL_ConfigstringModified( void ) {
 	if ( index == CS_SYSTEMINFO ) {
 		// parse serverId and other cvars
 		CL_SystemInfoChanged( qfalse );
+	} else if (index == CS_SERVERINFO) {
+		CL_ParseServerInfo();
 	}
 }
 
@@ -474,7 +476,7 @@ rescan:
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
-		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %s\n", Cmd_Argv(1)));
+		Cbuf_ExecuteText(EXEC_INSERT, va("wait 1\nworld %s\n", Cmd_Argv(1)));
 		Cmd_Clear();
 		return qfalse;
 	}

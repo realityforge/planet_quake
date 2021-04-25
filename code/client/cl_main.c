@@ -4879,7 +4879,6 @@ void CL_LoadVM_f( void ) {
 		count++;
 		re.SwitchWorld(cgvm);
 		CL_InitCGame(cgvms[0] != NULL); // createNew if cgvms[0] is already taken
-		Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\nworld %i\n", cgvm));
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
@@ -4922,19 +4921,24 @@ void CL_Game_f ( void ) {
 	CL_AddReliableCommand( va("game %s", Cmd_ArgsFrom(1)), qfalse );
 }
 
+static qboolean serverWorld = qfalse;
 void CL_World_f( void ) {
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
 	}
-	
+
 	Com_Printf( "Client switching world: %s\n", Cmd_Argv(1) );
-	Cbuf_ExecuteText(EXEC_INSERT, va("wait 10\ntile -1 -1 0\ntile -1 -1 1\ntile -1 -1 2\ntile -1 -1 3\ntile -1 -1 4\ntile -1 -1 5\ntile -1 -1 6\ntile -1 -1 7\ntile -1 -1 8\ntile -1 -1 9\ntile 0 0 %s\n", Cmd_Argv(1)));
+	serverWorld = qtrue;
+	Cbuf_AddText(va("tile -1 -1 0\ntile -1 -1 1\ntile -1 -1 2\ntile -1 -1 3\ntile -1 -1 4\ntile -1 -1 5\ntile -1 -1 6\ntile -1 -1 7\ntile -1 -1 8\ntile -1 -1 9\ntile 0 0 %s\n", Cmd_Argv(1)));
+	Cbuf_Execute();
+	serverWorld = qfalse;
 }
 
 void CL_Tile_f(void) {
 	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
-	if(Cmd_Argc() == 1 || Cmd_Argc() > 4) {
+	if(Cmd_Argc() == 1 || Cmd_Argc() > 4
+	|| (atoi(&clc.world[0]) && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientWorlds[i][0] > -1) {
@@ -4942,6 +4946,9 @@ void CL_Tile_f(void) {
 					 	clientWorlds[i][2], clientWorlds[i][3]);
 				}
 			}
+		} else if (atoi(&clc.world[0]) && !serverWorld) {
+			Com_Printf("In server world mode, no tiling.\n");
+			return; // silently disable on this server, world messages are sent
 		}
 		Com_Printf ("Usage: tile [x y] [clientnum]\n");
 		return;

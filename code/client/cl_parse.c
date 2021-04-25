@@ -704,7 +704,7 @@ qboolean CL_GameSwitch( void )
 CL_ParseServerInfo
 ==================
 */
-static void CL_ParseServerInfo( void )
+void CL_ParseServerInfo( void )
 {
 	const char *serverInfo;
 	size_t	len;
@@ -718,6 +718,10 @@ static void CL_ParseServerInfo( void )
 	Q_strncpyz(clc.sv_dlURL,
 		Info_ValueForKey(serverInfo, "sv_dlURL"),
 		sizeof(clc.sv_dlURL));
+
+#ifdef USE_MULTIVM
+	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
+#endif
 
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
