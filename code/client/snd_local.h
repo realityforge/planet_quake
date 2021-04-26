@@ -173,7 +173,7 @@ void	SNDDMA_Submit(void);
 //====================================================================
 
 #define	MAX_CHANNELS			96
-#define MAX_NUM_SNDS      10
+#define MAX_NUM_SNDS      MAX_NUM_VMS
 
 extern	channel_t   s_channels[MAX_NUM_SNDS][MAX_CHANNELS];
 extern	channel_t   loop_channels[MAX_NUM_SNDS][MAX_CHANNELS];

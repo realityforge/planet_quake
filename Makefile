@@ -426,7 +426,7 @@ else
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 endif
 	
-#  SERVER_LDFLAGS = -DUSE_MULTIVM
+#  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
 	
 #  BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
 #  CLIENT_LDFLAGS += -llibRmlCore

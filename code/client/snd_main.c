@@ -238,11 +238,11 @@ void S_Update( int msec )
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!cgvms[igvm]) continue;
 		cgvm = igvm;
-		CM_SwitchMap(cgvm);
+		CM_SwitchMap(clientMaps[cgvm]);
 		si.Update( msec );
 	}
 	cgvm = 0;
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #else
 	cgvm = 0;
 	si.Update( msec );

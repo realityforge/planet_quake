@@ -138,7 +138,7 @@ typedef struct {
 									// cleared when CL_AdjustTimeDelta looks at it
 	qboolean	newSnapshots;		// set on parse of any valid packet
 
-	gameState_t	gameState;			// configstrings
+	gameState_t	gameState[MAX_NUM_VMS];			// configstrings
 	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
 	int			parseEntitiesNum[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
@@ -208,9 +208,10 @@ typedef struct {
 
 	int			clientNum;
 #ifdef USE_MV
-	int			clientView;
 	int			zexpectDeltaSeq;			// for compressed server commands
-	int     currentView;
+#endif
+#ifdef USE_MULTIVM_CLIENT
+	int     currentView; // force the client to load a new VM
 #endif
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
@@ -662,7 +663,9 @@ void CIN_CloseAllVideos(void);
 // cl_cgame.c
 //
 extern int clientMaps[MAX_NUM_VMS];
-extern float clientWorlds[MAX_NUM_VMS][4];
+extern float clientScreens[MAX_NUM_VMS][4];
+extern int clientWorlds[MAX_NUM_VMS];
+extern int clientGames[MAX_NUM_VMS];
 
 #ifdef USE_LAZY_LOAD
 // TODO: make these work on native, by checking files.c for rediness or something?

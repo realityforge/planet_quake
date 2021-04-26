@@ -379,10 +379,10 @@ static void CL_WriteGamestate( qboolean initial )
 
 	// configstrings
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		if ( !cl.gameState.stringOffsets[i] ) {
+		if ( !cl.gameState[clc.currentView].stringOffsets[i] ) {
 			continue;
 		}
-		s = cl.gameState.stringData + cl.gameState.stringOffsets[i];
+		s = cl.gameState[clc.currentView].stringData + cl.gameState[clc.currentView].stringOffsets[i];
 		MSG_WriteByte( &msg, svc_configstring );
 		MSG_WriteShort( &msg, i );
 		MSG_WriteBigString( &msg, s );
@@ -842,7 +842,7 @@ void CL_ReadDemoIndex( void ) {
 			clc.serverCommandSequence = MSG_ReadLong( &buf );
 
 			// parse all the configstrings and baselines
-			cl.gameState.dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+			cl.gameState[clc.currentView].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
 			while ( 1 ) {
 				cmd = MSG_ReadByte( &buf );
 
@@ -873,7 +873,7 @@ void CL_ReadDemoIndex( void ) {
 			clc.eventMask |= EM_GAMESTATE;
 
 #ifdef USE_MV
-			clc.clientView = clc.clientNum;
+			clientWorlds[0] = clc.clientNum;
 			clc.zexpectDeltaSeq = 0; // that will reset compression context
 #endif
 
@@ -2616,11 +2616,11 @@ static void CL_Configstrings_f( void ) {
 	}
 
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		ofs = cl.gameState.stringOffsets[ i ];
+		ofs = cl.gameState[clc.currentView].stringOffsets[ i ];
 		if ( !ofs ) {
 			continue;
 		}
-		Com_Printf( "%4i: %s\n", i, cl.gameState.stringData + ofs );
+		Com_Printf( "%4i: %s\n", i, cl.gameState[clc.currentView].stringData + ofs );
 	}
 }
 
@@ -2648,12 +2648,12 @@ CL_Serverinfo_f
 static void CL_Serverinfo_f( void ) {
 	int		ofs;
 
-	ofs = cl.gameState.stringOffsets[ CS_SERVERINFO ];
+	ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SERVERINFO ];
 	if ( !ofs )
 		return;
 
 	Com_Printf( "Server info settings:\n" );
-	Info_Print( cl.gameState.stringData + ofs );
+	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
 }
 
 
@@ -2665,12 +2665,12 @@ CL_Systeminfo_f
 static void CL_Systeminfo_f( void ) {
 	int ofs;
 
-	ofs = cl.gameState.stringOffsets[ CS_SYSTEMINFO ];
+	ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SYSTEMINFO ];
 	if ( !ofs )
 		return;
 
 	Com_Printf( "System info settings:\n" );
-	Info_Print( cl.gameState.stringData + ofs );
+	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
 }
 
 
@@ -2848,10 +2848,15 @@ static void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 #ifdef USE_MULTIVM_CLIENT
-	if(!cgvms[clc.currentView]) {
+	// force the client to load a new VM using sv_mvWorld
+	// this only loads a VM the first time, decoupling game state from loading
+	// TODO: exec world 0:0 asynchronously
+	if(!cgvms[0]) {
 		Cmd_TokenizeString( "load cgame" );
 		CL_LoadVM_f();
 		Cmd_Clear();
+	} else {
+		cls.state = CA_ACTIVE;
 	}
 #else
 	CL_InitCGame(qfalse);
@@ -3081,7 +3086,7 @@ void CL_InitDownloads( void ) {
 		const char *info, *mapname, *bsp;
 
 		// get map name and BSP file name
-		info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
+		info = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ CS_SERVERINFO ];
 		mapname = Info_ValueForKey( info, "mapname" );
 		bsp = va( "maps/%s.bsp", mapname );
 
@@ -3692,7 +3697,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
 	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 
 	if ( msg->cursize < 5 ) {
@@ -3878,7 +3883,7 @@ void CL_Frame( int msec, int realMsec ) {
 
 	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 
 #ifdef USE_CURL	
@@ -4078,7 +4083,7 @@ void CL_Frame( int msec, int realMsec ) {
 	
 	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 }
 
@@ -4923,14 +4928,56 @@ void CL_Game_f ( void ) {
 
 static qboolean serverWorld = qfalse;
 void CL_World_f( void ) {
+	char world[10];
+	int i;
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
 	}
-
-	Com_Printf( "Client switching world: %s\n", Cmd_Argv(1) );
+	strncpyz(world, Cmd_Argv(1), sizeof(world));
+	Com_Printf( "Client switching world: %s\n", world );
+	if((i = Q_stristr(world, ":"))) {
+		int clworld, clgame;
+		qboolean found = qfalse;
+		int empty = -1;
+		world[i] = '\0';
+		clworld = atoi(&world[i+1]);
+		clgame = atoi(world);
+		// TODO: check if a client game with this address already exists
+		for(int i = 0; i < MAX_NUM_VMS; i++) {
+			if (!cgvms[i]) {
+				// open slot
+				empty = i;
+			} else {
+				// slot is taken
+				if(clientGames[i] == clgame) {
+					// TODO: if it a game exists and is unused it can switch clients
+					// e.g. clientGames[i] == -1
+					if(clientWorlds[i] == clworld) {
+						found = qtrue;
+						clc.currentView = i;
+						break;
+					} 
+				}
+			}
+		}
+		if(!found) {
+			if(empty == -1) {
+				Com_Error(ERR_DROP, "Too many worlds: \n");
+				return;
+			}
+			// use the empty slot and start a VM
+			clientGames[clc.currentView] = clgame;
+			clientWorlds[clc.currentView] = clworld;
+			Cmd_TokenizeString( "load cgame" );
+			CL_LoadVM_f();
+			Cmd_Clear();			
+		}
+	} else {
+		i = clc.currentView = atoi(world);
+	}
 	serverWorld = qtrue;
-	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %s\n", Cmd_Argv(1)));
+	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %s\n", i));
 	Cbuf_Execute();
 	serverWorld = qfalse;
 }
@@ -4941,9 +4988,9 @@ void CL_Tile_f(void) {
 		|| (atoi(&clc.world[0]) && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
-				if(clientWorlds[i][0] > -1) {
-					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientWorlds[i][0], clientWorlds[i][1],
-					 	clientWorlds[i][2], clientWorlds[i][3]);
+				if(clientScreens[i][0] > -1) {
+					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientScreens[i][0], clientScreens[i][1],
+					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
 		} else if (atoi(&clc.world[0]) && !serverWorld) {
@@ -4955,7 +5002,7 @@ void CL_Tile_f(void) {
 	}
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
-		if(clientWorlds[i][0] > -1) count++;
+		if(clientScreens[i][0] > -1) count++;
 	}
 	if(Cmd_Argc() == 3 || Cmd_Argc() == 4) {
 		if(Cmd_Argc() == 4)
@@ -4965,13 +5012,13 @@ void CL_Tile_f(void) {
 		x = atoi(Cmd_Argv(1));
 		y = atoi(Cmd_Argv(2));
 		// if it was disabled, now it won't be
-		if (clientNum >= 0 && clientWorlds[clientNum][0] == -1
+		if (clientNum >= 0 && clientScreens[clientNum][0] == -1
 			&& x > -1 && y > -1) count++;
 			else if (x < 0 || y < 0) count--;
 	} else {
 		clientNum = atoi(Cmd_Argv(1));
 		// if it was disabled, now it won't be
-		if (clientNum >= 0 && clientWorlds[clientNum][0] == -1) count++;
+		if (clientNum >= 0 && clientScreens[clientNum][0] == -1) count++;
 	}
 	if(clientNum > MAX_NUM_VMS || clientNum < -1) {
 		Com_Printf("Must be between 0 and %i, given: %i\n", MAX_NUM_VMS, clientNum);
@@ -4995,16 +5042,16 @@ void CL_Tile_f(void) {
 	for(; s < e; s++) {
 		if(x < 0 || y < 0) {
 	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);
-			clientWorlds[s][0] = 
-			clientWorlds[s][1] = 
-			clientWorlds[s][2] = 
-			clientWorlds[s][3] = -1;	
+			clientScreens[s][0] = 
+			clientScreens[s][1] = 
+			clientScreens[s][2] = 
+			clientScreens[s][3] = -1;	
 		} else {
 	Com_DPrintf("Tiling adding: %i x %i (client: %i, total: %i)\n", x, y, s, count);
-			clientWorlds[s][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
-			clientWorlds[s][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
-			clientWorlds[s][2] = 1.0f / xMaxVMs;
-			clientWorlds[s][3] = 1.0f / yMaxVMs;
+			clientScreens[s][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
+			clientScreens[s][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
+			clientScreens[s][2] = 1.0f / xMaxVMs;
+			clientScreens[s][3] = 1.0f / yMaxVMs;
 		}
 	}
 }
@@ -5016,9 +5063,9 @@ void CL_Dvr_f(void) {
 		|| (atoi(&clc.world[0]) && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
-				if(clientWorlds[i][0] > -1) {
-					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientWorlds[i][0], clientWorlds[i][1],
-					 	clientWorlds[i][2], clientWorlds[i][3]);
+				if(clientScreens[i][0] > -1) {
+					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientScreens[i][0], clientScreens[i][1],
+					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
 		} else if (atoi(&clc.world[0]) && !serverWorld) {
@@ -5037,10 +5084,10 @@ void CL_Dvr_f(void) {
 	yIn = Cmd_Argv(++argc);
 	wIn = Cmd_Argv(++argc);
 	hIn = Cmd_Argv(++argc);
-	clientWorlds[clientNum][0] = Q_atof(xIn);
-	clientWorlds[clientNum][1] = Q_atof(yIn);
-	clientWorlds[clientNum][2] = Q_atof(wIn);
-	clientWorlds[clientNum][3] = Q_atof(hIn);
+	clientScreens[clientNum][0] = Q_atof(xIn);
+	clientScreens[clientNum][1] = Q_atof(yIn);
+	clientScreens[clientNum][2] = Q_atof(wIn);
+	clientScreens[clientNum][3] = Q_atof(hIn);
 }
 
 #endif
@@ -6511,7 +6558,7 @@ static qboolean GetConfigString( int index, char *buf, int size )
 		return qfalse;
 	}
 
-	offset = cl.gameState.stringOffsets[ index ];
+	offset = cl.gameState[cgvm].stringOffsets[ index ];
 	if ( !offset ) {
 		if ( size ) {
 			buf[0] = '\0';
@@ -6519,7 +6566,7 @@ static qboolean GetConfigString( int index, char *buf, int size )
 		return qfalse;
 	}
 
-	Q_strncpyz( buf, cl.gameState.stringData + offset, size );
+	Q_strncpyz( buf, cl.gameState[cgvm].stringData + offset, size );
 
 	return qtrue;
 }
@@ -6566,7 +6613,7 @@ void CL_MultiviewFollow_f( void )
 	}
 
 	if ( GET_ABIT( cl.snap[cgvm].clientMask, clientNum ) )
-		clc.clientView = clientNum;
+		clientWorlds[0] = clientNum;
 	else 
 		Com_Printf("Multiview client not available.\n");
 }

@@ -178,7 +178,7 @@ typedef struct {
 // keep 1/8 unit away to keep the position valid before network snapping
 // and to avoid various numeric issues
 #define	SURFACE_CLIP_EPSILON	(0.125)
-#define MAX_NUM_MAPS 10
+#define MAX_NUM_MAPS MAX_NUM_VMS
 
 extern	clipMap_t	cms[MAX_NUM_MAPS];
 extern  int       cm;

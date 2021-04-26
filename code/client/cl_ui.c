@@ -716,7 +716,7 @@ static int GetConfigString(int index, char *buf, int size)
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 		return qfalse;
 
-	offset = cl.gameState.stringOffsets[index];
+	offset = cl.gameState[cgvm].stringOffsets[index];
 	if (!offset) {
 		if( size ) {
 			buf[0] = 0;
@@ -724,7 +724,7 @@ static int GetConfigString(int index, char *buf, int size)
 		return qfalse;
 	}
 
-	Q_strncpyz( buf, cl.gameState.stringData+offset, size);
+	Q_strncpyz( buf, cl.gameState[cgvm].stringData+offset, size);
  
 	return qtrue;
 }
@@ -1330,7 +1330,7 @@ qboolean UI_GameCommand( int igvm ) {
 #ifdef USE_MULTIVM_CLIENT
 	int prevGvm = uivm;
 	uivm = igvm;
-	CM_SwitchMap(uivm);
+	CM_SwitchMap(clientMaps[uivm]);
 	if ( !uivms[uivm] ) {
 		return qfalse;
 	}

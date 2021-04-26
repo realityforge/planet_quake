@@ -325,7 +325,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		}
 
 #ifdef USE_MULTIVM_CLIENT
-		igvm = newSnap.world = MSG_ReadByte( msg );
+		cgvm = igvm = newSnap.world = MSG_ReadByte( msg );
 		if ( newSnap.deltaNum <= 0 ) {
 			newSnap.valid = qtrue;
 			old = NULL;
@@ -414,7 +414,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			MSG_ReadDeltaPlayerstate( msg, oldPs, &newSnap.clps[ clientNum ].ps );
 
 			// spectated (pramary?) playerstate ping
-			if ( clientNum == clc.clientView ) // clc.clientNum?
+			if ( clientNum == clientWorlds[0] ) // clc.clientNum?
 				commandTime = newSnap.clps[ clientNum ].ps.commandTime;
 
 			// entity mask
@@ -433,7 +433,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #endif
 			newSnap.clps[ clientNum ].valid = qtrue;
 
-			if ( clientNum == clc.clientView /* clc.clientNum */ ) {
+			if ( clientNum == clientWorlds[0] /* clc.clientNum */ ) {
 				// copy data to primary playerstate
 				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
 				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
@@ -461,13 +461,13 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	{
 		// detect transition to non-multiview
 		if ( cl.snap[igvm].multiview ) {
-			clc.clientView = clc.clientNum;
+			clientWorlds[0] = clc.clientNum;
 			if ( old ) {
 				// invalidate state
 				memset( (void *)&old->clps, 0, sizeof( old->clps ) );
 				Com_DPrintf( S_COLOR_CYAN "transition from multiview to legacy stream\n" );
-				//old->ps = old->clps[ clc.clientView ].ps;
-				//Com_Memcpy( old->areamask, old->clps[ clc.clientView ].areamask, sizeof( old->areamask ) );
+				//old->ps = old->clps[ clientWorlds[0] ].ps;
+				//Com_Memcpy( old->areamask, old->clps[ clientWorlds[0] ].areamask, sizeof( old->areamask ) );
 			}
 		}
 #endif // USE_MV
@@ -573,7 +573,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 	char			key[BIG_INFO_KEY];
 	char			value[BIG_INFO_VALUE];
 
-	systemInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SYSTEMINFO ];
+	systemInfo = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ CS_SYSTEMINFO ];
 	// NOTE TTimo:
 	// when the serverId changes, any further messages we send to the server will use this new serverId
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
@@ -715,8 +715,8 @@ void CL_ParseServerInfo( void )
 	const char *serverInfo;
 	size_t	len;
 
-	serverInfo = cl.gameState.stringData
-		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
+	serverInfo = cl.gameState[cgvm].stringData
+		+ cl.gameState[cgvm].stringOffsets[ CS_SERVERINFO ];
 	Com_Printf("Gamestate (%i): %.*s\n", cgvm, (int)strlen(serverInfo), serverInfo);
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
@@ -792,7 +792,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	clc.serverCommandSequence = MSG_ReadLong( msg );
 
 	// parse all the configstrings and baselines
-	cl.gameState.dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+	cl.gameState[igvm].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
 	while ( 1 ) {
 		cmd = MSG_ReadByte( msg );
 
@@ -811,15 +811,15 @@ static void CL_ParseGamestate( msg_t *msg ) {
 			s = MSG_ReadBigString( msg );
 			len = strlen( s );
 
-			if ( len + 1 + cl.gameState.dataCount > MAX_GAMESTATE_CHARS ) {
+			if ( len + 1 + cl.gameState[igvm].dataCount > MAX_GAMESTATE_CHARS ) {
 				Com_Error( ERR_DROP, "MAX_GAMESTATE_CHARS exceeded: %i", 
-					len + 1 + cl.gameState.dataCount );
+					len + 1 + cl.gameState[igvm].dataCount );
 			}
 
 			// append it to the gameState string buffer
-			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
-			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
-			cl.gameState.dataCount += len + 1;
+			cl.gameState[igvm].stringOffsets[ i ] = cl.gameState[igvm].dataCount;
+			Com_Memcpy( cl.gameState[igvm].stringData + cl.gameState[igvm].dataCount, s, len + 1 );
+			cl.gameState[igvm].dataCount += len + 1;
 		} else if ( cmd == svc_baseline ) {
 			newnum = MSG_ReadBits( msg, GENTITYNUM_BITS );
 			if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
@@ -836,7 +836,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	clc.eventMask |= EM_GAMESTATE;
 
 #ifdef USE_MV
-	clc.clientView = clc.clientNum;
+	clientWorlds[0] = clc.clientNum;
 	clc.zexpectDeltaSeq = 0; // that will reset compression context
 #endif
 
@@ -899,7 +899,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 }
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
-	Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
+	Cvar_Set("mapname", Info_ValueForKey( cl.gameState[cl.currentView].stringData + cl.gameState[cl.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
 	FS_Startup();
 	if(*clc.sv_dlURL) {
 		Cvar_Set( "sv_dlURL", clc.sv_dlURL );

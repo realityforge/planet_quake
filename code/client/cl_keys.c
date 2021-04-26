@@ -613,10 +613,10 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			d = 1;
 		//else
 		//	d = -1;
-		for ( id = (clc.clientView + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
+		for ( id = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
 			if ( cl.snap[cgvm].clps[ id ].valid ) {
-				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clc.clientView, id );
-				clc.clientView = id;
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
+				clientWorlds[0] = id;
 				break;
 			}
 		}
@@ -774,7 +774,7 @@ void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
 	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );

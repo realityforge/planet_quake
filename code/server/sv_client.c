@@ -2425,7 +2425,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			SV_SendClientSnapshot( client, qfalse );
-			client->state = CS_CONNECTED;
+			client->state = CS_ACTIVE;
 			client->gamestateMessageNum = -1; // send a new gamestate
 			return;
 		} else {
@@ -2944,11 +2944,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
 	if ( cl->state == CS_PRIMED ) {
-#ifdef USE_MULTIVM_SERVER
-		gvm = cl->newWorld;
-		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
-#endif
 		if ( sv_pure->integer != 0 && !cl->gotCP ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 )
@@ -2963,14 +2958,9 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		}
 #ifdef USE_MULTIVM_SERVER
 		if(cl->newWorld != cl->gameWorld) {
-			Com_Printf("Game world: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
-			cl->gameWorld = cl->newWorld;
-			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
-#ifdef USE_MULTIVM_SERVER
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(cl, "world %i", cl->newWorld);
 			}
-#endif
 		} else 
 #endif
 		{
@@ -3005,13 +2995,13 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		//}
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
-//#ifdef USE_MULTIVM
+//#ifdef USE_MULTIVM_SERVER
 //		if(0)
 //#endif
 		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
 			continue;
 		}
-Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
+//Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
 		SV_ClientThink (cl, &cmds[ i ]);
 		thunk++;
 	}

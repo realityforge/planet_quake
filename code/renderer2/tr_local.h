@@ -53,7 +53,7 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
-#define MAX_NUM_WORLDS 10
+#define MAX_NUM_WORLDS MAX_NUM_VMS
 
 #define	MAX_FBOS      64
 #define MAX_VISCOUNTS 5

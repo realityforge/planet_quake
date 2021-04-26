@@ -385,7 +385,7 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 ;
 	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(cgvm);
+	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {

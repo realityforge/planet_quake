@@ -35,12 +35,15 @@ cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
 
-float clientWorlds[MAX_NUM_VMS][4] = {
-	{0,0,0,0},{-1,-1,-1,-1},
+float clientScreens[MAX_NUM_VMS][4] = {
+	{0,0,0,0}
+#if USE_MULTIVM_CLIENT
+	,{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1}
+#endif
 };
 
 /*
@@ -660,6 +663,29 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 }
 
 
+#ifdef USE_MULTIVM_CLIENT
+// draw a box around the current view where keypresses and mouse input is being sent
+void SCR_DrawCurrentView( void ) {
+	float	yf, wf;
+	float xadjust = 0;
+	wf = SCREEN_WIDTH;
+	yf = SCREEN_HEIGHT;
+	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
+	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
+	
+	// TODO: duh re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
+	// top
+	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// right
+	re.DrawStretchPic( clientScreens[cgvm][2] * wf - 2, 0, 2, clientScreens[cgvm][3] * yf, 0, 0, 1, 1, cls.whiteShader );
+	// bottom 
+	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][3] * yf - 2, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// left
+	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, 2, clientScreens[cgvm][3] * wf, 0, 0, 1, 1, cls.whiteShader);
+}
+#endif
+
+
 /*
 ==================
 SCR_UpdateScreen
@@ -699,7 +725,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
-		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
+		re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
 
 		// don't switch renderer or clipmap when updated from VM
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -724,7 +750,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 
-		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
+		re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
 #ifdef USE_MULTIVM_CLIENT
 		CM_SwitchMap(clientMaps[cgvm]);
 		re.SwitchWorld(clientMaps[cgvm]);
@@ -737,10 +763,19 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
+		
+		// the menu draws next
+		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
+			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+		}
 	}
 
 	cgvm = 0;
 	uivm = 0;
+#ifdef USE_MULTIVM_CLIENT
+	CM_SwitchMap(clientMaps[cgvm]);
+	re.SwitchWorld(clientMaps[cgvm]);
+#endif
 
 	re.SetDvrFrame(0, 0, 1, 1);
 
@@ -751,14 +786,14 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		SCR_DrawQRCode();
 	}
 #endif
-	
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
-		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-	}
 
 	// console draws next
 	Con_DrawConsole ();
+	
+#ifdef USE_MULTIVM_CLIENT
+	// TODO: make optional
+	SCR_DrawCurrentView();
+#endif
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
