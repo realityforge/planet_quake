@@ -3004,9 +3004,13 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		//}
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
+//#ifdef USE_MULTIVM
+//		if(0)
+//#endif
 		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
 			continue;
 		}
+Com_Printf("Moving: %i (%i)\n", cmd->weapon, gvm);
 		SV_ClientThink (cl, &cmds[ i ]);
 	}
 }

@@ -602,10 +602,14 @@ static void CL_FinishMove( usercmd_t *cmd ) {
 
 	// copy the state that the cgame is currently sending
 	cmd->weapon = cl.cgameUserCmdValue[cgvm];
+//Com_Printf("Moving: %i (%i)\n", cmd->weapon, cgvm);
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
-	cmd->serverTime = cl.serverTime;
+	//cmd->serverTime = cl.serverTime;
+	// Good: cmd->serverTime = cl.snap[cgvm].serverTime + 20;
+	//cmd->serverTime = cl.serverTime + (cl.snap[cgvm].serverTime - cl.snap[0].serverTime);
+	cmd->serverTime = cl.snap[cgvm].serverTime;
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -697,6 +701,7 @@ void CL_CreateNewCommands( void ) {
 
 	// generate a command for this frame
 	cl.cmdNumber++;
+	cl.clCmdNumbers[cgvm] = cl.cmdNumber;
 	cmdNum = cl.cmdNumber & CMD_MASK;
 	cl.cmds[cmdNum] = CL_CreateCmd();
 }
@@ -802,6 +807,8 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(igvm > 0 && !cgvms[igvm]) continue;
 		cgvm = igvm;
+		int oldCmdNum = cl.clCmdNumbers[cgvm];
+		CL_CreateNewCommands();
 #endif
 
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
@@ -817,8 +824,8 @@ void CL_WritePacket( void ) {
 	// write the last message we received, which can
 	// be used for delta compression, and is also used
 	// to tell if we dropped a gamestate
-	//MSG_WriteLong( &buf, clc.serverMessageSequence );
-	MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
+	MSG_WriteLong( &buf, clc.serverMessageSequence );
+	//MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
@@ -840,13 +847,14 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
-//#ifdef USE_MULTIVM_CLIENT
-//	oldPacketNum = (clc.netchan.outgoingSequence - 1 - MAX_NUM_VMS - cl_packetdup->integer) & PACKET_MASK;
-//#else
+#ifdef USE_MULTIVM_CLIENT
+	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
+	count = cl.clCmdNumbers[cgvm] - cl.outPackets[ oldPacketNum ].p_cmdNumber;
+#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
-//#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
-//Com_Printf("Sending commands %i\n", cgvm);
+#endif
+Com_Printf("Sending commands %i (%i)\n", count, cgvm);
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
 		Com_Printf("MAX_PACKET_USERCMDS\n");
@@ -871,14 +879,18 @@ void CL_WritePacket( void ) {
 		// use the checksum feed in the key
 		key = clc.checksumFeed;
 		// also use the message acknowledge
-		//key ^= clc.serverMessageSequence;
-		key ^= cl.snap[cgvm].messageNum;
+		key ^= clc.serverMessageSequence;
+		//key ^= cl.snap[cgvm].messageNum;
 		// also use the last acknowledged server command in the key
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
+#ifdef USE_MULTIVM_CLIENT
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[cgvm]) & CMD_MASK;
+#else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
+#endif
 			cmd = &cl.cmds[j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
@@ -891,7 +903,7 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
-	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;
+	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[cgvm];
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {
@@ -925,17 +937,9 @@ void CL_SendCmd( void ) {
 	}
 
 	// we create commands even if a demo is playing,
-#ifdef USE_MULTIVM_CLIENT
-	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(igvm > 0 && !cgvms[igvm]) continue;
-		cgvm = igvm;
-		CL_CreateNewCommands();
-	}
-#else
-;
+#ifndef USE_MULTIVM_CLIENT
 	CL_CreateNewCommands();
 #endif
-;
 
 	// don't send a packet if the last packet was sent too recently
 	if ( !CL_ReadyToSendPacket() ) {

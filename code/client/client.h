@@ -155,6 +155,7 @@ typedef struct {
 	// properly generated command
 	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmdNumber;			// incremented each frame, because multiple
+	int     clCmdNumbers[MAX_NUM_VMS];
 									// frames may need to be packed into a single packet
 
 	outPacket_t	outPackets[PACKET_BACKUP];	// information about each packet we have sent out

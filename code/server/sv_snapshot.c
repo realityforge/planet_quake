@@ -1160,6 +1160,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	SV_SendMessageToClient( &msg, client );
 
 #ifdef USE_MULTIVM_SERVER
+		sv.time++;
 	}
 #endif
 }
