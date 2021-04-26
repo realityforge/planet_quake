@@ -74,7 +74,22 @@ static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 		return qfalse;
 	}
 
-	*ucmd = cl.cmds[ cl.clCmdNumbers[cgvm] & CMD_MASK ];
+#ifdef USE_MULTIVM0
+	if(cl.cmds[cgvm][cmdNumber & CMD_MASK ].serverTime == 0) {
+//Com_Printf("Invalid: \n");
+		for(int i = cmdNumber + 1; i <= cl.clCmdNumbers[cgvm]; i++) {
+			if(cl.cmds[cgvm][i & CMD_MASK ].serverTime) {
+				*ucmd = cl.cmds[cgvm][i & CMD_MASK ];
+				break;
+			}
+		}
+		*ucmd = cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK ];
+	} else {
+		*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
+	}
+#else
+	*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
+#endif
 
 	return qtrue;
 }

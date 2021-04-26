@@ -703,7 +703,7 @@ void CL_CreateNewCommands( void ) {
 	cl.cmdNumber++;
 	cl.clCmdNumbers[cgvm] = cl.cmdNumber;
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[cmdNum] = CL_CreateCmd();
+	cl.cmds[cgvm][cmdNum] = CL_CreateCmd();
 }
 
 
@@ -812,12 +812,12 @@ void CL_WritePacket( void ) {
 		int oldCmdNum = cl.clCmdNumbers[cgvm];
 		CL_CreateNewCommands();
 		if(cgvm > 0) {
-			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].forwardmove = 
-				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
-			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].rightmove = 
-				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].rightmove;
-			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].upmove = 
-				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].upmove;
+			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].forwardmove = 
+				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
+			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].rightmove = 
+				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
+			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].upmove = 
+				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #endif
 ;
@@ -901,7 +901,7 @@ void CL_WritePacket( void ) {
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
 #endif
-			cmd = &cl.cmds[j];
+			cmd = &cl.cmds[cgvm][j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
 		}

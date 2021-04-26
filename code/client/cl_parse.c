@@ -717,7 +717,7 @@ void CL_ParseServerInfo( void )
 
 	serverInfo = cl.gameState.stringData
 		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	Com_Printf("Gamestate: %.*s\n", (int)strlen(serverInfo), serverInfo);
+	Com_Printf("Gamestate (%i): %.*s\n", cgvm, (int)strlen(serverInfo), serverInfo);
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
 		"sv_allowDownload"));
@@ -769,7 +769,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		CL_ClearState();
 	} else {
 		if(cl.snap[0].multiview) {
-			igvm = MSG_ReadByte( msg );
+			clc.currentView = igvm = MSG_ReadByte( msg );
 		}
 		if(igvm == 0) {
 			CL_ClearState();

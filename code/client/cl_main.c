@@ -2848,9 +2848,11 @@ static void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 #ifdef USE_MULTIVM_CLIENT
-	Cmd_TokenizeString( "load cgame" );
-	CL_LoadVM_f();
-	Cmd_Clear();
+	if(!cgvms[clc.currentView]) {
+		Cmd_TokenizeString( "load cgame" );
+		CL_LoadVM_f();
+		Cmd_Clear();
+	}
 #else
 	CL_InitCGame(qfalse);
 #endif
