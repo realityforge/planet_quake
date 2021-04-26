@@ -74,7 +74,7 @@ static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 		return qfalse;
 	}
 
-	*ucmd = cl.cmds[ cmdNumber & CMD_MASK ];
+	*ucmd = cl.cmds[ cl.clCmdNumbers[cgvm] & CMD_MASK ];
 
 	return qtrue;
 }
