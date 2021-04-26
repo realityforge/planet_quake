@@ -136,28 +136,36 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the frame has fallen out of the circular buffer, we can't return it
 	if ( cl.snap[cgvm].messageNum - snapshotNumber >= PACKET_BACKUP ) {
-//Com_Printf("Dropping: %i\n", cgvm);
 		return qfalse;
 	}
 
 	// if the frame is not valid, we can't return it
 	clSnap = &cl.snapshots[cgvm][snapshotNumber & PACKET_MASK];
 	if ( !clSnap->valid ) {
-//Com_Printf("Invalid: %i (%i)\n", snapshotNumber, cgvm);
+#ifdef USE_MULTIVM_CLIENT
+		for(int i = snapshotNumber+1; i <= cl.snap[cgvm].messageNum; i++)  {
+			clSnap = &cl.snapshots[cgvm][i & PACKET_MASK];
+			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[cgvm][snapshotNumber & PACKET_MASK].serverTime) {
+				return qfalse;
+			} else {
+				break;
+			}
+		}
+#else
 		return qfalse;
+#endif
 	}
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
 	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
-//Com_Printf("Entities: %i\n", cgvm);
 		return qfalse;
 	}
 
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
-	snapshot->serverTime = clSnap->serverTime;
+	snapshot->serverTime = clSnap->serverTime; // - (cl.snap[cgvm].messageNum - snapshotNumber);
 
 #ifdef USE_MV
 #ifdef USE_0MULTIVM

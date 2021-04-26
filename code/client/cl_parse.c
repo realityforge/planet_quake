@@ -514,7 +514,7 @@ Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
 #ifdef USE_MULTIVM_CLIENT
-	oldMessageNum = cl.snap[igvm].messageNum + 1 + igvm;
+	oldMessageNum = cl.snap[igvm].messageNum + 1;
 #else
 	oldMessageNum = cl.snap[0].messageNum + 1;
 #endif
