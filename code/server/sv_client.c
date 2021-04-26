@@ -2993,6 +2993,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// usually, the first couple commands will be duplicates
 	// of ones we have previously received, but the servertimes
 	// in the commands will cause them to be immediately discarded
+	int thunk = 0;
 	for ( i =  0 ; i < cmdCount ; i++ ) {
 		// if this is a cmd from before a map_restart ignore it
 		if ( cmds[i].serverTime > cmds[cmdCount-1].serverTime ) {
@@ -3010,9 +3011,11 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
 			continue;
 		}
-Com_Printf("Moving: %i (%i)\n", cmd->weapon, gvm);
 		SV_ClientThink (cl, &cmds[ i ]);
+		thunk++;
 	}
+//	if(thunk)
+//		Com_Printf("---\n");
 }
 
 

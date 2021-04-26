@@ -798,6 +798,8 @@ void CL_WritePacket( void ) {
 		return;
 	}
 
+	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
+
 #ifdef USE_MULTIVM_CLIENT
 	// TODO: make optional based on game setup, 
 	//   e.g. clone world with multiple simultaneous game types, 
@@ -809,9 +811,16 @@ void CL_WritePacket( void ) {
 		cgvm = igvm;
 		int oldCmdNum = cl.clCmdNumbers[cgvm];
 		CL_CreateNewCommands();
+		if(cgvm > 0) {
+			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].forwardmove = 
+				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
+			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].rightmove = 
+				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].rightmove;
+			cl.cmds[cl.clCmdNumbers[cgvm] & CMD_MASK].upmove = 
+				cl.cmds[cl.clCmdNumbers[0] & CMD_MASK].upmove;
+		}
 #endif
-
-	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
+;
 	oldcmd = &nullcmd;
 
 	MSG_Init( &buf, data, MAX_MSGLEN );
@@ -824,8 +833,8 @@ void CL_WritePacket( void ) {
 	// write the last message we received, which can
 	// be used for delta compression, and is also used
 	// to tell if we dropped a gamestate
-	MSG_WriteLong( &buf, clc.serverMessageSequence );
-	//MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
+	//MSG_WriteLong( &buf, clc.serverMessageSequence );
+	MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
@@ -849,12 +858,13 @@ void CL_WritePacket( void ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
-	count = cl.clCmdNumbers[cgvm] - cl.outPackets[ oldPacketNum ].p_cmdNumber;
+	count = 2;
+//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[cgvm], cgvm);
 #else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
+//	Com_Printf("Sending commands %i: %i -> %i (%i)\n", count, oldPacketNum, cl.cmdNumber, cgvm);
 #endif
-Com_Printf("Sending commands %i (%i)\n", count, cgvm);
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
 		Com_Printf("MAX_PACKET_USERCMDS\n");
@@ -879,8 +889,8 @@ Com_Printf("Sending commands %i (%i)\n", count, cgvm);
 		// use the checksum feed in the key
 		key = clc.checksumFeed;
 		// also use the message acknowledge
-		key ^= clc.serverMessageSequence;
-		//key ^= cl.snap[cgvm].messageNum;
+		//key ^= clc.serverMessageSequence;
+		key ^= cl.snap[cgvm].messageNum;
 		// also use the last acknowledged server command in the key
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 

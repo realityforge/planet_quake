@@ -975,7 +975,11 @@ void SV_Init( void )
 	Cvar_SetDescription(sv_rconPassword, "Set the rcon password required to send the server commands\nDefault: empty");
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
 	Cvar_SetDescription(sv_privatePassword, "Set password for private clients to login\nDefault: empty");
-	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP );
+#ifdef USE_MULTIVM_SERVER
+	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_TEMP | CVAR_SYSTEMINFO );
+#else
+	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP | CVAR_SYSTEMINFO );
+#endif
 	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
 	Cvar_SetDescription(sv_fps, "Set the max frames per second the server sends the client\nDefault: 20");
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );

@@ -505,7 +505,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
-//Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
+Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 		return;
 	}
 
@@ -513,11 +513,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// received and this one, so if there was a dropped packet
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
-//#ifdef USE_MULTIVM_CLIENT
-//	oldMessageNum = cl.snap[igvm].messageNum + 1 + igvm;
-//#else
-	oldMessageNum = cl.snap[igvm].messageNum + 1;
-//#endif
+#ifdef USE_MULTIVM_CLIENT
+	oldMessageNum = cl.snap[igvm].messageNum + 1 + igvm;
+#else
+	oldMessageNum = cl.snap[0].messageNum + 1;
+#endif
 
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
@@ -650,8 +650,14 @@ Com_Printf("Referenced: %s (%s)\n", s, t);
 			break;
 		}
 
+		if(!Q_stricmp( key, "sv_fps" )) {
+			if(value[0] != '0') {
+				Cvar_Set("snaps", va("%i", atoi(value)));
+			}
+		}
+
 		// we don't really need any of these server cvars to be set on client-side
-		if ( !Q_stricmp( key, "sv_pure" ) || !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) ) {
+		if ( !Q_stricmp( key, "sv_pure" ) || !Q_stricmp( key, "sv_serverid" ) ) {
 			continue;
 		}
 		if ( !Q_stricmp( key, "sv_paks" ) || !Q_stricmp( key, "sv_pakNames" ) ) {
