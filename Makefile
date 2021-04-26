@@ -418,13 +418,15 @@ ifeq ($(PLATFORM),darwin)
 
   LDFLAGS =
 
-  ifneq ($(SDL_INCLUDE),)
+ifneq ($(SDL_INCLUDE),)
     BASE_CFLAGS += $(SDL_INCLUDE)
     CLIENT_LDFLAGS = $(SDL_LIBS)
-  else
+else
     BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
-  endif
+endif
+	
+#  SERVER_LDFLAGS = -DUSE_MULTIVM
 	
 #  BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
 #  CLIENT_LDFLAGS += -llibRmlCore
@@ -1697,7 +1699,7 @@ endif
 
 $(B)/$(TARGET_SERVER): $(Q3DOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3DOBJ) $(LDFLAGS)
+	$(Q)$(CC) -o $@ $(Q3DOBJ) $(SERVER_LDFLAGS) $(LDFLAGS)
 
 #############################################################################
 ## CLIENT/SERVER RULES

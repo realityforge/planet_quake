@@ -88,7 +88,7 @@ typedef struct {
 	int			mergeMask;
 	byte		clientMask[MAX_CLIENTS/8];
 #endif // USE_MV
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	int     world;
 #endif
 
@@ -246,7 +246,7 @@ typedef struct {
 	char		downloadName[MAX_OSPATH];
 	char		downloadTempName[MAX_OSPATH + 4]; // downloadName + ".tmp"
 	int			sv_allowDownload;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	char    *world;
 #endif
 	char		sv_dlURL[MAX_CVAR_VALUE_STRING];
@@ -659,10 +659,9 @@ void CIN_CloseAllVideos(void);
 //
 // cl_cgame.c
 //
-//#ifdef USE_MULTIVM
 extern int clientMaps[MAX_NUM_VMS];
 extern float clientWorlds[MAX_NUM_VMS][4];
-//#endif
+
 #ifdef USE_LAZY_LOAD
 // TODO: make these work on native, by checking files.c for rediness or something?
 void CL_UpdateShader( void );

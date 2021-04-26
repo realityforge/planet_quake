@@ -234,7 +234,7 @@ S_Update
 void S_Update( int msec )
 {
 	if( si.Update ) {
-#ifdef USE_MV
+#ifdef USE_MULTIVM_CLIENT
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!cgvms[igvm]) continue;
 		cgvm = igvm;

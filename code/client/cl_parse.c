@@ -271,7 +271,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[0][newSnap.deltaNum & PACKET_MASK];
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 		if ( !multiview ) {
 #endif
 ;
@@ -287,7 +287,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			} else {
 				newSnap.valid = qtrue;	// valid delta parse
 			}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 		}
 #endif
 ;
@@ -324,7 +324,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			old = NULL;
 		}
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 		igvm = newSnap.world = MSG_ReadByte( msg );
 		if ( newSnap.deltaNum <= 0 ) {
 			newSnap.valid = qtrue;
@@ -513,7 +513,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// received and this one, so if there was a dropped packet
 	// it won't look like something valid to delta from next
 	// time we wrap around in the buffer
-//#ifdef USE_MULTIVM
+//#ifdef USE_MULTIVM_CLIENT
 //	oldMessageNum = cl.snap[igvm].messageNum + 1 + igvm;
 //#else
 	oldMessageNum = cl.snap[igvm].messageNum + 1;
@@ -719,7 +719,7 @@ void CL_ParseServerInfo( void )
 		Info_ValueForKey(serverInfo, "sv_dlURL"),
 		sizeof(clc.sv_dlURL));
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
 #endif
 
@@ -756,7 +756,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	// wipe local client state
 	int igvm = 0;
-#ifndef USE_MULTIVM
+#ifndef USE_MULTIVM_CLIENT
 	CL_ClearState();
 #else
 	if(clc.demoplaying) {
@@ -1277,7 +1277,7 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		case svc_gamestate:
 			CL_ParseGamestate( msg );
 			break;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 		case svc_baseline:
 			{
 				entityState_t	nullstate;

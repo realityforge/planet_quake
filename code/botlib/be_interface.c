@@ -828,7 +828,7 @@ static void Init_AI_Export( ai_export_t *ai ) {
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void SetAASgvm(int gvm) {
 	aasgvm = gvm;
 }
@@ -872,7 +872,7 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	be_botlib_export.BotLibLoadMap = Export_BotLibLoadMap;
 	be_botlib_export.BotLibUpdateEntity = Export_BotLibUpdateEntity;
 	be_botlib_export.Test = BotExportTest;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	be_botlib_export.SetAASgvm = SetAASgvm;
 #endif
 

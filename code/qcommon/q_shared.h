@@ -82,14 +82,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_MV
 // enable loading multiple QVM images
-#define USE_MULTIVM 1
+#define USE_MULTIVM_CLIENT 1
+#define USE_MULTIVM_SERVER 1
 #else // not USE_MV
-#undef USE_MULTIVM
+#undef USE_MULTIVM_CLIENT
+#undef USE_MULTIVM_SERVER
 #undef USE_LAZY_MEMORY
 #undef USE_LAZY_LOAD
 #endif // USE_MV
 
-#ifdef USE_MULTIVM
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 #undef MV_PROTOCOL_VERSION
 #define MV_MULTIWORLD_VERSION 2
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION

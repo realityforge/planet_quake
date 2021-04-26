@@ -68,7 +68,7 @@ typedef enum {
 
 // we might not use all MAX_GENTITIES every frame
 // so leave more room for slow-snaps clients etc.
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 #define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4*MAX_NUM_VMS)
 #else
 #define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4)
@@ -135,7 +135,7 @@ typedef struct {
 	int				num_psf;				// number of playerStates to send
 	byte			psMask[MAX_CLIENTS/8];	// playerState mask
 #endif
-#ifdef  USE_MULTIVM
+#ifdef  USE_MULTIVM_SERVER
 	int       world;
 #endif
 
@@ -222,7 +222,7 @@ typedef struct client_s {
 	int				gamestateMessageNum;	// netchan->outgoingSequence of gamestate
 	int				challenge;
 
-	usercmd_t		lastUsercmd;
+	usercmd_t		lastUsercmd[MAX_NUM_VMS];
 	int				lastMessageNum;		// for delta compression
 	int				lastClientCommand;	// reliable client message sequence
 	char			lastClientCommandString[MAX_STRING_CHARS];
@@ -433,7 +433,7 @@ extern	cvar_t	*sv_mvFileCount;
 extern	cvar_t	*sv_mvFolderSize;
 
 #endif // USE_MV
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 extern  cvar_t  *sv_mvWorld;
 extern  cvar_t  *sv_mvSyncPS;
 extern  cvar_t  *sv_mvSyncXYZ;
@@ -734,9 +734,9 @@ qboolean SV_CheckGameCommand( const char *cmd );
 qboolean SV_CheckConfigString( int cs_index, const char *cs_string );
 qboolean SV_CheckLastCmd( const char *cmd, qboolean onlyStore );
 void SV_DemoFilterClientUserinfo( const char *userinfo );
-char *SV_CleanFilename( char *str );
+const char *SV_CleanFilename( char *str );
 char *SV_CleanStrCmd( char *str );
-char *SV_GenerateDateTime(void);
+const char *SV_GenerateDateTime(void);
 
 void SV_DemoChangeMaxClients( void );
 void SV_CompleteDemoName( char *args, int argNum );
@@ -755,7 +755,7 @@ void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player )
 //
 // sv_bot.c
 //
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void    SV_SetAASgvm( int gvm );
 #endif
 void		SV_BotFrame( int time );

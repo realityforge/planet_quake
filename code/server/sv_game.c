@@ -253,7 +253,7 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 	if ( bufferSize < 1 ) {
 		Com_Error( ERR_DROP, "SV_GetServerinfo: bufferSize == %i", bufferSize );
 	}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cvar_Set("mapname", Cvar_VariableString(va("mapname_%i", gvm)));
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
 	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
@@ -310,7 +310,7 @@ static void SV_GetUsercmd( int clientNum, usercmd_t *cmd ) {
 	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
 		Com_Error( ERR_DROP, "SV_GetUsercmd: bad clientNum:%i", clientNum );
 	}
-	*cmd = svs.clients[clientNum].lastUsercmd;
+	*cmd = svs.clients[clientNum].lastUsercmd[gvm];
 }
 
 
@@ -365,7 +365,7 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 static const char *RenameMultiworld(char *name) {
 	const char *newName;
 	if(!Q_stricmp(name, "mapname")) {
@@ -411,7 +411,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		{
 			const char *name = RenameMultiworld(VMA(2));
 			Cvar_Register( VMA(1), name, VMA(3), args[4] ); 
@@ -424,7 +424,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Cvar_Update( VMA(1) );
 		return 0;
 	case G_CVAR_SET:
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		{
 			const char *name = RenameMultiworld(VMA(1));
 			Cvar_SetSafe( name, (const char *)VMA(2) );
@@ -434,7 +434,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		{
 			const char *name = RenameMultiworld(VMA(1));
 			return Cvar_VariableIntegerValue( name );
@@ -444,7 +444,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #endif
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvms[gvm], args[2], args[3] );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		{
 			const char *name = RenameMultiworld(VMA(1));
 			Cvar_VariableStringBufferSafe( name, VMA(2), args[3], gvms[gvm]->privateFlag );
@@ -631,7 +631,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		{
 			unsigned clientNum = args[1];
 			if ( clientNum < sv_maxclients->integer
-//#ifdef USE_MULTIVM
+//#ifdef USE_MULTIVM_SERVER
 //			 	&& svs.clients[ clientNum ].gameWorld == gvm
 //#endif
 			) {
@@ -1067,6 +1067,7 @@ Called every time a map changes
 ===============
 */
 void SV_ShutdownGameProgs( void ) {
+#ifdef USE_MULTIVM_SERVER
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		if ( !gvms[i] ) {
 			continue;
@@ -1074,13 +1075,22 @@ void SV_ShutdownGameProgs( void ) {
 		gvm = i;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
+#else
+;
+	if ( !gvms[gvm] ) {
+		return;
+	}
+#endif
+;
 		VM_Call( gvms[gvm], 1, GAME_SHUTDOWN, qfalse );
 		VM_Free( gvms[gvm] );
 		gvms[gvm] = NULL;
+#ifdef USE_MULTIVM_SERVER
 	}
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
+#endif
 	FS_VM_CloseFiles( H_QAGAME );
 }
 
@@ -1190,7 +1200,7 @@ See if the current console command is claimed by the game
 */
 qboolean SV_GameCommand( int igvm ) {
 	qboolean result;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	int prevGvm = gvm;
 	gvm = igvm;
 	CM_SwitchMap(gameWorlds[gvm]);
@@ -1225,7 +1235,7 @@ qboolean SV_GameCommand( int igvm ) {
 				|| Info_ValueForKey(client->userinfo, "cmd_connector"))
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		gvm = prevGvm;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
@@ -1235,7 +1245,7 @@ qboolean SV_GameCommand( int igvm ) {
 #else
 	result = VM_Call( gvms[gvm], 0, GAME_CONSOLE_COMMAND );
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = prevGvm;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);

@@ -384,7 +384,7 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
 ;
 	cgvm = 0;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	CM_SwitchMap(cgvm);
 #endif
 #ifdef USE_ABS_MOUSE
@@ -793,6 +793,17 @@ void CL_WritePacket( void ) {
 		return;
 	}
 
+#ifdef USE_MULTIVM_CLIENT
+	// TODO: make optional based on game setup, 
+	//   e.g. clone world with multiple simultaneous game types, 
+	//     deathmatch players are unaware they are also participating in CTF
+	//   e.g. dead world versus living world, like respawn in WoW, 
+	//     different enemies in dead world for powerups like in Prey
+	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(igvm > 0 && !cgvms[igvm]) continue;
+		cgvm = igvm;
+#endif
+
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 	oldcmd = &nullcmd;
 
@@ -812,7 +823,7 @@ void CL_WritePacket( void ) {
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	if(cl.snap[0].multiview || cl.snap[cgvm].multiview) {
 		MSG_WriteByte( &buf, cgvm );
 	}
@@ -829,12 +840,13 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
-#ifdef USE_MULTIVM
-	oldPacketNum = (clc.netchan.outgoingSequence - 11) & PACKET_MASK;
-#else
+//#ifdef USE_MULTIVM_CLIENT
+//	oldPacketNum = (clc.netchan.outgoingSequence - 1 - MAX_NUM_VMS - cl_packetdup->integer) & PACKET_MASK;
+//#else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
-#endif
+//#endif
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
+//Com_Printf("Sending commands %i\n", cgvm);
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
 		Com_Printf("MAX_PACKET_USERCMDS\n");
@@ -887,6 +899,10 @@ void CL_WritePacket( void ) {
 	}
 
 	CL_Netchan_Transmit( &clc.netchan, &buf );
+#ifdef USE_MULTIVM_CLIENT
+	}
+	cgvm = 0;
+#endif
 }
 
 
@@ -909,7 +925,17 @@ void CL_SendCmd( void ) {
 	}
 
 	// we create commands even if a demo is playing,
+#ifdef USE_MULTIVM_CLIENT
+	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(igvm > 0 && !cgvms[igvm]) continue;
+		cgvm = igvm;
+		CL_CreateNewCommands();
+	}
+#else
+;
 	CL_CreateNewCommands();
+#endif
+;
 
 	// don't send a packet if the last packet was sent too recently
 	if ( !CL_ReadyToSendPacket() ) {
@@ -919,21 +945,7 @@ void CL_SendCmd( void ) {
 		return;
 	}
 
-#ifdef USE_MULTIVM
-	// TODO: make optional based on game setup, 
-	//   e.g. clone world with multiple simultaneous game types, 
-	//     deathmatch players are unaware they are also participating in CTF
-	//   e.g. dead world versus living world, like respawn in WoW, 
-	//     different enemies in dead world for powerups like in Prey
-	for(int igvm = MAX_NUM_VMS - 1; igvm >= 0; igvm--) {
-		if(igvm > 0 && !cgvms[igvm]) continue;
-		cgvm = igvm;
-		CL_WritePacket();
-	}
-	cgvm = 0;
-#else
 	CL_WritePacket();
-#endif
 }
 
 

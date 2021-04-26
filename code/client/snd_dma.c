@@ -615,7 +615,7 @@ static void S_Base_StartSound( const vec3_t origin, int entityNum, int entchanne
 		}
 		ch = &s_channels[cgvm][chosen];
 		ch->allocTime = sfx->lastTimeUsed;
-		Com_DPrintf(S_COLOR_YELLOW "S_StartSound: No more channels free for (%i) ", strlen(sfx->soundName));
+		Com_DPrintf(S_COLOR_YELLOW "S_StartSound: No more channels free for ");
 		Com_DPrintf(S_COLOR_YELLOW " %s, dropping earliest sound: %s\n", sfx->soundName, ch->thesfx->soundName);
 	}
 

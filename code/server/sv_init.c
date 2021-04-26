@@ -130,10 +130,6 @@ void SV_SetConfigstring (int index, const char *val) {
 		SV_DemoWriteConfigString( index, val );
 	}
 
-if ( index == CS_SERVERINFO ) {
-	Com_Printf("Setting server info\n");
-}
-
 	// send it to all the clients if we aren't
 	// spawning a new server
 	if ( sv.state == SS_GAME || sv.restarting ) {
@@ -915,7 +911,7 @@ void SV_Init( void )
 
 	SV_LoadRecordCache();
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO);
 	Cvar_CheckRange( sv_mvWorld, "0", "1", CV_INTEGER );
 	Cvar_SetDescription(sv_mvWorld, "Micromanage the client view by sending world commands that update which camera view should be visible on screen. This gives servers/games/admins a more scripted control over client displays. Turn off to force clients to manage their own displays by using the `tile` or `popout` commands.\nDefault: 1");

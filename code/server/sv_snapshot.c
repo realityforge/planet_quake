@@ -133,7 +133,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 
 	// this is the snapshot we are creating
 	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	frame->world = gvm;
 #endif
 
@@ -230,7 +230,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		MSG_WriteByte( msg, gvm );
 #endif
 		
@@ -278,9 +278,11 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	SV_EmitPacketEntities( oldframe, frame, msg );
 #ifdef USE_MV
 	} // !client->MVProtocol
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
+#endif
 #endif
 
 	// padding for rate debugging
@@ -897,7 +899,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	Com_Memset( frame->psMask, 0, sizeof( frame->psMask ) );
 	frame->first_psf = svs.nextSnapshotPSF;
 	frame->num_psf = 0;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	frame->world = gvm;
 #endif
 #endif
@@ -1066,9 +1068,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	msg_t		msg;
 	int     headerBytes;
 	playerState_t	*ps;
-	int igvm;
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
+	int igvm;
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
@@ -1114,7 +1116,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 			}
 			svEnt = &sv.svEntities[gvm][ start ];
 			MSG_WriteByte( &msg, svc_baseline );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 			if(first) {
 				MSG_WriteByte( &msg, client->newWorld );
 				first = qfalse;
@@ -1142,7 +1144,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		continue;
 #else
 		return;
@@ -1157,7 +1159,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 	SV_SendMessageToClient( &msg, client );
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	}
 #endif
 }

@@ -388,45 +388,6 @@ void LoadVertToSrfVert(srfVert_t *s, vec3_t *d, float hdrVertColors[3], vec3_t *
 }
 
 
-/*
-===============
-ParseFace
-===============
-*/
-static void ParseFace( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  ) {
-	int			i;
-	srfBspSurface_t	*cv;
-	int			numVerts;
-
-	// get shader value
-	if ( r_singleShader->integer && !surf->shader->isSky ) {
-		surf->shader = tr.defaultShader;
-	}
-
-	numVerts = LittleLong(ds->numedges);
-	if (numVerts > MAX_FACE_POINTS) {
-		ri.Printf( PRINT_WARNING, "WARNING: MAX_FACE_POINTS exceeded: %i\n", numVerts);
-		numVerts = MAX_FACE_POINTS;
-		surf->shader = tr.defaultShader;
-	}
-
-	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
-	cv = (void *)surf->data;
-	cv->surfaceType = SF_FACE;
-
-	cv->numVerts = numVerts;
-	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
-
-	// copy vertexes
-	surf->cullinfo.type = CULLINFO_PLANE | CULLINFO_BOX;
-	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
-	verts += LittleLong(ds->firstedge);
-	for(i = 0; i < numVerts; i++)
-		LoadVertToSrfVert(&cv->verts[i], &verts[i], hdrVertColors ? hdrVertColors + (ds->firstedge + i) * 3 : NULL, surf->cullinfo.bounds);
-
-	surf->data = (surfaceType_t *)cv;
-}
-
 
 /*
 ===============
@@ -471,43 +432,6 @@ static void ParseMesh ( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msu
 	VectorCopy(grid->cullOrigin, surf->cullinfo.localOrigin);
 	surf->cullinfo.radius = grid->cullRadius;
 }
-
-/*
-===============
-ParseTriSurf
-===============
-*/
-static void ParseTriSurf( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes ) {
-	srfBspSurface_t *cv;
-	int             i;
-	int             numVerts;
-
-	// get shader
-	surf->shader = ShaderForShaderNum( ds->texinfo, LIGHTMAP_BY_VERTEX );
-	if ( r_singleShader->integer && !surf->shader->isSky ) {
-		surf->shader = tr.defaultShader;
-	}
-
-	numVerts = LittleLong(ds->numedges);
-
-	//cv = ri.Hunk_Alloc(sizeof(*cv), h_low);
-	cv = (void *)surf->data;
-	cv->surfaceType = SF_TRIANGLES;
-
-	cv->numVerts = numVerts;
-	cv->verts = ri.Hunk_Alloc(numVerts * sizeof(cv->verts[0]), h_low);
-
-	surf->data = (surfaceType_t *) cv;
-
-	// copy vertexes
-	surf->cullinfo.type = CULLINFO_BOX;
-	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
-	verts += LittleLong(ds->firstedge);
-	for(i = 0; i < numVerts; i++)
-		LoadVertToSrfVert(&cv->verts[i], &verts[i], hdrVertColors ? hdrVertColors + (ds->firstedge + i) * 3 : NULL, surf->cullinfo.bounds);
-
-}
-
 
 
 /*

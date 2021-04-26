@@ -59,7 +59,7 @@ int SV_BotAllocateClient( void ) {
 		return -1;
 	}
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	cl->newWorld = cl->gameWorld = gvm;
 #endif
 
@@ -124,7 +124,7 @@ void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *poin
 		if (!bot_highlightarea) bot_highlightarea = Cvar_Get("bot_highlightarea", "0", 0);
 		//
 		parm0 = 0;
-		if (svs.clients[0].lastUsercmd.buttons & BUTTON_ATTACK) parm0 |= 1;
+		if (svs.clients[0].lastUsercmd[0].buttons & BUTTON_ATTACK) parm0 |= 1;
 		if (bot_reachability->integer) parm0 |= 2;
 		if (bot_groundonly->integer) parm0 |= 4;
 		botlib_export->BotLibVarSet("bot_highlightarea", bot_highlightarea->string);
@@ -439,9 +439,9 @@ static void BotClientCommand( int client, const char *command ) {
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void SV_SetAASgvm(int gvm) {
-	if(botlib_export)
+	if(botlib_export && botlib_export->SetAASgvm)
 		botlib_export->SetAASgvm(gvm);
 }
 #endif

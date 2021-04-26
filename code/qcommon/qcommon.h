@@ -126,7 +126,7 @@ extern char *Sys_UpdateModel( void );
 char *Sys_UpdateShader( void );
 char *Sys_UpdateSound( void );
 char *Sys_UpdateModel( void );
-void Sys_FileReady(char *filename);
+void Sys_FileReady(const char *filename);
 #endif
 #endif
 

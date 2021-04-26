@@ -2282,7 +2282,8 @@ R_LoadEntities
 ================
 */
 void R_LoadEntities( lump_t *l ) {
-	char *p, *token, *s;
+	const char *p;
+	char *token, *s;
 	char keyname[MAX_TOKEN_CHARS];
 	char value[MAX_TOKEN_CHARS];
 	world_t	*w;
@@ -2370,7 +2371,7 @@ R_GetEntityToken
 qboolean R_GetEntityToken( char *buffer, int size ) {
 	const char	*s;
 
-	s = COM_Parse( &s_worldData[rw].entityParsePoint );
+	s = COM_Parse( (const char **)&s_worldData[rw].entityParsePoint );
 	Q_strncpyz( buffer, s, size );
 	if ( !s_worldData[rw].entityParsePoint && !s[0] ) {
 		s_worldData[rw].entityParsePoint = s_worldData[rw].entityString;
@@ -2749,7 +2750,7 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	int			i, id1, id2, j, empty = -1;
+	int			id1, id2;
 	dheader_t	*header;
 	union {
 		byte *b;
@@ -2757,7 +2758,8 @@ void RE_LoadWorldMap( const char *name ) {
 	} buffer;
 	byte		*startMarker;
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
+	int j, empty = -1;
 	for(j = 0; j < MAX_NUM_WORLDS; j++) {
 		if ( !Q_stricmp( s_worldData[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER

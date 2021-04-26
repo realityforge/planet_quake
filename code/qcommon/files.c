@@ -445,8 +445,8 @@ char *Sys_UpdateModel( void ) {
 	return nextFile;
 }
 
-void Sys_FileReady(char *filename) {
-	char *loading = Cvar_VariableString("r_loadingShader");
+void Sys_FileReady(const char *filename) {
+	const char *loading = Cvar_VariableString("r_loadingShader");
 	if(!loading[0]) {
 		loading = Cvar_VariableString("snd_loadingSound");
 		if(!loading[0]) {
@@ -507,8 +507,8 @@ FS_PakIsPure
 */
 static qboolean FS_PakIsPure( const pack_t *pack ) {
 #ifndef DEDICATED
-	int i;
 #if 0
+int i;
 	if ( fs_numServerPaks ) {
 		for ( i = 0 ; i < fs_numServerPaks ; i++ ) {
 			// FIXME: also use hashed file names
@@ -3496,6 +3496,7 @@ static int FS_AddFileToList( const char *name, char **list, int nfiles ) {
 }
 
 
+#if 0
 /*
 ===============
 FS_AllowListExternal
@@ -3517,6 +3518,7 @@ static qboolean FS_AllowListExternal( const char *extension )
 
 	return qtrue;
 }
+#endif
 
 static fnamecallback_f fnamecallback = NULL;
 

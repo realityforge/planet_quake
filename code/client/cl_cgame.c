@@ -471,7 +471,7 @@ rescan:
 	}
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	if ( !strcmp( cmd, "world" ) ) {
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
@@ -569,7 +569,7 @@ void CL_ShutdownCGame( void ) {
 		VM_Free( cgvms[cgvm] );
 		cgvms[cgvm] = NULL;
 	}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	numCGames = 0;
 #endif
 	cgvm = 0;
@@ -1128,7 +1128,7 @@ void CL_InitCGame( qboolean createNew ) {
 	// otherwise server commands sent just before a gamestate are dropped
 	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	if(createNew) {
 		cls.state = CA_PRIMED;
 		re.EndRegistration();
@@ -1225,25 +1225,29 @@ See if the current console command is claimed by the cgame
 */
 qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	int prevGvm = cgvm;
-	cgvm = igvm;
-	CM_SwitchMap(igvm);
-	if ( !cgvms[cgvm] ) {
+	if ( !cgvms[igvm] ) {
 		return qfalse;
 	}
+	cgvm = igvm;
+	CM_SwitchMap(igvm);
 #endif
 
 #ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command
 		// before the frame has resumed the vm
 		if (VM_IsSuspended(cgvms[cgvm])) {
+#ifdef USE_MULTIVM_CLIENT
+				cgvm = prevGvm;
+				CM_SwitchMap(cgvm);
+#endif
 			return qfalse;
 		}
 #endif
 
 	result = VM_Call( cgvms[cgvm], 0, CG_CONSOLE_COMMAND );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	cgvm = prevGvm;
 	CM_SwitchMap(cgvm);
 #endif
@@ -1439,7 +1443,7 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	CM_SwitchMap(0);
 	cgvm = 0;
 #endif
@@ -1478,7 +1482,7 @@ void CL_SetCGameTime( void ) {
 		return;
 	}
 
-#ifndef USE_MULTIVM
+#ifndef USE_MULTIVM_CLIENT
 	if ( cl.snap[cgvm].serverTime < cl.oldFrameServerTime && !clc.demoplaying ) {
 		Com_Error( ERR_DROP, "cl.snap.serverTime < cl.oldFrameServerTime" );
 	}

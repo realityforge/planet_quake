@@ -1014,7 +1014,7 @@ gotnewcl:
 	}
 #endif
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = newcl->gameWorld = newcl->newWorld = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -1103,7 +1103,7 @@ gotnewcl:
 	if(recentI == 1024) recentI = 0;
 #endif
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -1170,7 +1170,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	// disconnect from all worlds
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(!gvms[igvm]) continue;
@@ -1210,7 +1210,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		drop->state = CS_ZOMBIE;		// become free in a few seconds
 	}
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -1335,7 +1335,7 @@ static void SV_SendClientGameState( client_t *client ) {
 	if ( client->state != CS_PRIMED ) {
 		Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvm) ) );
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
 	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
@@ -1379,7 +1379,7 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// send the gamestate
 	MSG_WriteByte( &msg, svc_gamestate );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	if(client->multiview.protocol > 0) {
 		MSG_WriteByte( &msg, client->newWorld );
 	}
@@ -1465,9 +1465,9 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 	if(cmd)
-		memcpy(&client->lastUsercmd, cmd, sizeof(client->lastUsercmd));
+		memcpy(&client->lastUsercmd[gvm], cmd, sizeof(usercmd_t));
 	else
-		memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
+		memset(&client->lastUsercmd[gvm], '\0', sizeof(usercmd_t));
 
 	// call the game begin function
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, client - svs.clients );
@@ -1913,7 +1913,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 
 	Com_Printf("VerifyPaks: %s\n", Cmd_ArgsFrom(0));
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	if(cl->newWorld > 0) {
 		cl->gotCP = qtrue;
 		cl->pureAuthentic = qtrue;
@@ -2287,7 +2287,7 @@ void SV_PrintLocations_f( client_t *client ) {
 	}
 }
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void SV_LoadVM( client_t *cl ) {
 	char *mapname;
 	int checksum;
@@ -2446,7 +2446,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				}
 			}
 		}
-		//memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
 	}
 
 	//SV_UpdateConfigstrings( client );
@@ -2616,7 +2615,7 @@ static const ucmd_t ucmds[] = {
 	{"stopdl", SV_StopDownload_f},
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	{"load", SV_LoadVM},
 	{"tele", SV_Tele_f},
 	{"game", SV_Game_f},
@@ -2818,7 +2817,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		return qfalse;
 	}
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = cl->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -2862,7 +2861,7 @@ Also called by bot code
 ==================
 */
 void SV_ClientThink (client_t *cl, usercmd_t *cmd) {
-	cl->lastUsercmd = *cmd;
+	cl->lastUsercmd[gvm] = *cmd;
 
 	if ( cl->state != CS_ACTIVE ) {
 		return;		// may have been kicked during the last usercmd
@@ -2890,6 +2889,12 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	static const usercmd_t nullcmd = { 0 };
 	usercmd_t	cmds[MAX_PACKET_USERCMDS], *cmd;
 	const usercmd_t *oldcmd;
+
+#ifdef USE_MULTIVM_SERVER
+	if(!gvms[gvm]) {
+		return;
+	}
+#endif
 
 	if ( delta ) {
 		cl->deltaMessage = cl->messageAcknowledge;
@@ -2939,7 +2944,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
 	if ( cl->state == CS_PRIMED ) {
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		gvm = cl->newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
@@ -2947,7 +2952,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		if ( sv_pure->integer != 0 && !cl->gotCP ) {
 			// we didn't get a cp yet, don't assume anything and just send the gamestate all over again
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 )
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		 		&& cl->newWorld == cl->gameWorld
 #endif
 			) {
@@ -2956,12 +2961,12 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			}
 			return;
 		}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		if(cl->newWorld != cl->gameWorld) {
 			Com_Printf("Game world: %i (world %i -> %i)\n", (int)(cl - svs.clients), cl->gameWorld, cl->newWorld);
 			cl->gameWorld = cl->newWorld;
 			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(cl, "world %i", cl->newWorld);
 			}
@@ -2999,10 +3004,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		//}
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
-#ifdef USE_MULTIVM
-		if(0)
-#endif
-		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
+		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
 			continue;
 		}
 		SV_ClientThink (cl, &cmds[ i ]);
@@ -3026,7 +3028,7 @@ Parse a client packet
 ===================
 */
 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
-	int			c, igvm = 0;
+	int			c;
 	int			serverId;
 
 	MSG_Bitstream(msg);
@@ -3073,7 +3075,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	// but we still need to read the next message to move to next download or send gamestate
 	// I don't like this hack though, it must have been working fine at some point, suspecting the fix is somewhere else
 	if ( (serverId != sv.serverId 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		|| (cl->newWorld != cl->gameWorld && cl->state == CS_CONNECTED)
 #endif
 		) && !*cl->downloadName && !strstr(cl->lastClientCommandString, "nextdl") 
@@ -3088,7 +3090,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 				gvm = cl->newWorld;
 				CM_SwitchMap(gameWorlds[gvm]);
 				SV_SetAASgvm(gvm);
@@ -3096,9 +3098,11 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 				SV_SendClientGameState( cl );
 			}
 		}
+#ifdef USE_MULTIVM_SERVER
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
+#endif
 		return;
 	}
 
@@ -3109,7 +3113,8 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		cl->oldServerTime = 0;
 	}
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
+	int igvm;
 	if(cl->multiview.protocol > 0
 		&& cl->mvAck > 0 && cl->mvAck <= cl->messageAcknowledge
 	) {
@@ -3138,7 +3143,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	}
 #endif
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	if(cl->multiview.protocol > 0) {
 		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
@@ -3161,7 +3166,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 //	if ( msg->readcount != msg->cursize ) {
 //		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
 //	}
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);

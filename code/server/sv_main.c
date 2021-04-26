@@ -26,7 +26,7 @@ serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
 int       gvm = 0;
 vm_t			*gvms[MAX_NUM_VMS];		// game virtual machine
-//#ifdef USE_MULTIVM
+//#ifdef USE_MULTIVM_SERVER
 int       gameWorlds[MAX_NUM_VMS];
 //#endif
 
@@ -66,7 +66,7 @@ cvar_t  *sv_autoRecordThreshold;
 cvar_t	*sv_mvFileCount;
 cvar_t	*sv_mvFolderSize;
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 cvar_t  *sv_mvSyncPS; // synchronize player state between worlds
 cvar_t  *sv_mvSyncXYZ;
 cvar_t  *sv_mvWorld; // send world commands to manage view
@@ -257,7 +257,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	va_end( argptr );
 
 	if ( cl != NULL ) {
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 		if(cl->gameWorld != gvm) return;
 #endif
 		// outdated clients can't properly decode 1023-chars-long strings
@@ -282,7 +282,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 			if(client->gameWorld != gvm) continue;
 #endif
 			SV_AddServerCommand( client, message );
@@ -1358,7 +1358,7 @@ static void SV_CheckTimeouts( void ) {
 		if ( cl->state == CS_ZOMBIE && cl->lastPacketTime - zombiepoint < 0 ) {
 			// using the client id cause the cl->name is empty at this point
 			Com_DPrintf( "Going from CS_ZOMBIE to CS_FREE for client %d\n", i );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 			sharedEntity_t *ent;
 			int prevGvm = gvm;
 			for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
@@ -1579,7 +1579,7 @@ void SV_Frame( int msec ) {
 	SV_CheckInvoicesAndPayments();
 #endif
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
@@ -1603,7 +1603,7 @@ void SV_Frame( int msec ) {
 
 	sv.timeResidual += msec;
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!gvms[i]) continue;
 		gvm = i;
@@ -1654,7 +1654,7 @@ void SV_Frame( int msec ) {
 			for ( i = 0; i < sv_maxclients->integer; i++ ) {
 				if ( svs.clients[ i ].state < CS_CONNECTED )
 					continue;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 				for(int j = 0; j < MAX_NUM_VMS; j++) {
 					for ( n = 0; n < PACKET_BACKUP; n++ ) {
 						if ( svs.clients[ i ].frames[j][ n ].first_psf > svs.modSnapshotPSF )
@@ -1697,7 +1697,7 @@ void SV_Frame( int msec ) {
 	// update ping based on the all received frames
 	SV_CalcPings();
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!gvms[i]) continue;
 		gvm = i;
@@ -1723,16 +1723,21 @@ void SV_Frame( int msec ) {
 		sv.time += frameMsec;
 
 		// let everything in the world think and move
+#ifdef USE_MULTIVM_SERVER
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(!gvms[i]) continue;
 			gvm = i;
 			CM_SwitchMap(gameWorlds[gvm]);
 			SV_SetAASgvm(gvm);
+#endif
+;
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+#ifdef USE_MULTIVM_SERVER
 		}
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
+#endif
 		
 #ifdef USE_MV
 		svs.emptyFrame = qfalse; // ok, run recorder
@@ -1847,7 +1852,7 @@ void SV_Frame( int msec ) {
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);
 	
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);

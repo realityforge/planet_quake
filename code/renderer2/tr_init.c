@@ -811,7 +811,7 @@ void R_ExportCubemaps_f(void)
 
 //============================================================================
 static GLuint videoPBO[2] = {0, 0};
-static GLuint fbo = 0;
+//static GLuint fbo = 0;
 static int fboIndex = 0;
 GLuint depthrenderbuffer;
 void RB_FastCapture(byte *data)

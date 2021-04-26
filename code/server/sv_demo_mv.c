@@ -604,7 +604,7 @@ void SV_MV_SetSnapshotParams( void )
 	svs.numSnapshotPSF = sv_mvClients->integer * PACKET_BACKUP * MAX_CLIENTS;
 
 	// reserve 2 additional frames for recorder slot
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	svs.numSnapshotPSF += 2 * MAX_CLIENTS * MAX_NUM_VMS;
 #else
 	svs.numSnapshotPSF += 2 * MAX_CLIENTS;

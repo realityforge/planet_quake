@@ -137,13 +137,16 @@ If onlyStore is true, it will only store the new cmd, without checking.
 */
 qboolean SV_CheckLastCmd( const char *cmd, qboolean onlyStore )
 {
+	static char tmp[MAX_STRING_CHARS];
 	static char prevcmddata[MAX_STRING_CHARS];
 	static char *prevcmd = prevcmddata;
     char *cleanedprevcmd = malloc ( MAX_STRING_CHARS * sizeof * cleanedprevcmd );
     char *cleanedcmd = malloc ( MAX_STRING_CHARS * sizeof * cleanedcmd );
 
-	Q_strncpyz(cleanedprevcmd, SV_CleanStrCmd(va("%s", (char *)prevcmd)), MAX_STRING_CHARS);
-	Q_strncpyz(cleanedcmd, SV_CleanStrCmd(va("%s", (char *)cmd)), MAX_STRING_CHARS);
+	Q_strncpyz(tmp, va("%s", (char *)prevcmd), MAX_STRING_CHARS);
+	Q_strncpyz(cleanedprevcmd, SV_CleanStrCmd(tmp), MAX_STRING_CHARS);
+	Q_strncpyz(tmp, va("%s", (char *)cmd), MAX_STRING_CHARS);
+	Q_strncpyz(cleanedcmd, SV_CleanStrCmd(tmp), MAX_STRING_CHARS);
 
 	if ( !onlyStore && // if we only want to store, we skip any checking
 	    strlen(prevcmd) > 0 && !Q_stricmp(cleanedprevcmd, cleanedcmd) ) { // check that the previous cmd was different from the current cmd.
@@ -229,7 +232,7 @@ SV_CleanFilename
 Attempts to clean invalid characters from a filename that may prevent the demo to be stored on the filesystem
 ====================
 */
-char *SV_CleanFilename( char *string ) {
+const char *SV_CleanFilename( char *string ) {
 	char*	d;
 	char*	s;
 	int		c;
@@ -289,7 +292,7 @@ SV_GenerateDateTime
 Generate a full datetime (local and utc) from now
 ====================
 */
-char *SV_GenerateDateTime(void)
+const char *SV_GenerateDateTime(void)
 {
 	// Current local time
 	qtime_t now;
@@ -742,7 +745,7 @@ Read a configstring from a message and load it into memory
 */
 void SV_DemoReadConfigString( msg_t *msg )
 {
-	char	*configstring;
+	const char	*configstring;
 	int num;
 
 	//num = MSG_ReadLong(msg, MAX_CONFIGSTRINGS); FIXME: doesn't work, dunno why, but it would be better than a string to store a long int!
@@ -765,7 +768,7 @@ This function also manages demo clientbegin at connections and teamchange (which
 void SV_DemoReadClientConfigString( msg_t *msg )
 {
 	client_t *client;
-	char	*configstring;
+	const char	*configstring;
 	int num;
 	qboolean denied;
 
@@ -854,7 +857,7 @@ Note: this function also manage the initial team of democlients when demo record
 void SV_DemoReadClientUserinfo( msg_t *msg )
 {
 	client_t *client;
-	char	*userinfo; // = malloc( MAX_INFO_STRING * sizeof *userinfo);
+	const char	*userinfo; // = malloc( MAX_INFO_STRING * sizeof *userinfo);
 	int num;
 
 	// Save context
@@ -1234,20 +1237,22 @@ Note2: this function is called at MapRestart and SpawnServer (called in Map func
 */
 void SV_DemoAutoDemoRecord(void)
 {
+	char *tmp[MAX_QPATH];
 	qtime_t now;
 	Com_RealTime( &now );
     char *demoname = malloc ( MAX_QPATH * sizeof * demoname );
     
-
+	Q_strncpyz((char *)tmp, Cvar_VariableString( "mapname" ), MAX_QPATH);
+	Q_strncpyz(demoname, va("%s", sv_hostname->string), MAX_QPATH);
 	Q_strncpyz(demoname, va( "%s_%04d-%02d-%02d-%02d-%02d-%02d_%s",
-			SV_CleanFilename(va("%s", sv_hostname->string)),
+			SV_CleanFilename(demoname),
                         1900 + now.tm_year,
                         1 + now.tm_mon,
                         now.tm_mday,
                         now.tm_hour,
                         now.tm_min,
                         now.tm_sec,
-                        SV_CleanFilename(Cvar_VariableString( "mapname" )) ),
+                        SV_CleanFilename((char *)tmp) ),
                         MAX_QPATH);
 
 	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(Cvar_VariableString("fs_game")) ?  Cvar_VariableString("fs_game") : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
@@ -1549,7 +1554,7 @@ void SV_DemoStartPlayback(void)
 	char *fs = malloc( MAX_QPATH * sizeof *fs );
 	char *hostname = malloc( MAX_NAME_LENGTH * sizeof *hostname );
 	char *datetime = malloc( 1024 * sizeof *datetime ); // there's no limit in the whole engine specifically designed for dates and time...
-	char *metadata; // = malloc( 1024 * sizeof * metadata ); // used to store the current metadata index
+	const char *metadata; // = malloc( 1024 * sizeof * metadata ); // used to store the current metadata index
 
 	// Init vars with empty values (to avoid compilation warnings)
 	r = i = clients = fps = gametype = timelimit = fraglimit = capturelimit = 0;

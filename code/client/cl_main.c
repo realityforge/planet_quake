@@ -1351,7 +1351,7 @@ void CL_ClearMemory( void ) {
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
 #else
@@ -2846,7 +2846,7 @@ static void CL_DownloadsComplete( void ) {
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	Cmd_TokenizeString( "load cgame" );
 	CL_LoadVM_f();
 	Cmd_Clear();
@@ -3687,12 +3687,9 @@ A packet has arrived from the main event loop
 */
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
-
-#ifdef USE_MV
-	CM_SwitchMap(0);
 	cgvm = 0;
-#else
-	cgvm = 0;
+#ifdef USE_MULTIVM_CLIENT
+	CM_SwitchMap(cgvm);
 #endif
 
 	if ( msg->cursize < 5 ) {
@@ -3877,7 +3874,7 @@ void CL_Frame( int msec, int realMsec ) {
 	float frameDuration;
 
 	cgvm = 0;
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	CM_SwitchMap(cgvm);
 #endif
 
@@ -4076,10 +4073,10 @@ void CL_Frame( int msec, int realMsec ) {
 
 	Con_RunConsole();
 	
-	#ifdef USE_MULTIVM
-		CM_SwitchMap(0);
-		cgvm = 0;
-	#endif
+	cgvm = 0;
+#ifdef USE_MULTIVM_CLIENT
+	CM_SwitchMap(cgvm);
+#endif
 }
 
 
@@ -4847,7 +4844,7 @@ static void CL_InitGLimp_Cvars( void )
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 void CL_LoadVM_f( void ) {
 	char *name;
 	
@@ -4938,7 +4935,7 @@ void CL_World_f( void ) {
 void CL_Tile_f(void) {
 	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
 	if(Cmd_Argc() == 1 || Cmd_Argc() > 4
-	|| (atoi(&clc.world[0]) && !serverWorld)) {
+		|| (atoi(&clc.world[0]) && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientWorlds[i][0] > -1) {
@@ -5012,7 +5009,19 @@ void CL_Tile_f(void) {
 void CL_Dvr_f(void) {
 	char *xIn, *yIn, *wIn, *hIn;
 	int clientNum, argc = 1;
-	if(Cmd_Argc() < 5 || Cmd_Argc() > 6) {
+	if(Cmd_Argc() < 5 || Cmd_Argc() > 6
+		|| (atoi(&clc.world[0]) && !serverWorld)) {
+		if(Cmd_Argc() == 1) {
+			for(int i = 0; i < MAX_NUM_VMS; i++) {
+				if(clientWorlds[i][0] > -1) {
+					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientWorlds[i][0], clientWorlds[i][1],
+					 	clientWorlds[i][2], clientWorlds[i][3]);
+				}
+			}
+		} else if (atoi(&clc.world[0]) && !serverWorld) {
+			Com_Printf("In server world mode, no tiling.\n");
+			return; // silently disable on this server, world messages are sent
+		}
 		Com_Printf ("Usage: dvr [clientnum] [x y w h]\n");
 		return;
 	}
@@ -5301,7 +5310,7 @@ void CL_Init( void ) {
 	Cmd_SetDescription("mvfollow", "Follow a specific player in multiview\nUsage: mvfollow <playernumber>");
 #endif
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	Cmd_AddCommand( "load", CL_LoadVM_f );
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load [ui|cgame|game]");
 	Cmd_AddCommand ("tele", CL_Tele_f);
@@ -5405,7 +5414,7 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand( "mvleave" );
 	Cmd_RemoveCommand( "mvfollow" );
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	Cmd_RemoveCommand( "load" );
 #endif
 

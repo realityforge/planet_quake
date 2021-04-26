@@ -430,7 +430,7 @@ typedef struct botlib_export_s
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	//just for testing
 	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	void (*SetAASgvm)(int gvm);
 #endif
 } botlib_export_t;

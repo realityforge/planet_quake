@@ -858,15 +858,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
       memcpy(path, token, sizeof(path));
       token = COM_ParseExt( text, qfalse );
       if(token[0]) {
-        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( &path, 0, 0, 256, 256, (CIN_loop | CIN_shader));
+        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( (const char *)&path, 0, 0, 256, 256, (CIN_loop | CIN_shader));
       } else {
-        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( &path, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
+        stage->bundle[0].videoMapHandle = ri.CIN_PlayCinematic( (const char *)&path, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader));
       }
 			if (stage->bundle[0].videoMapHandle != -1) {
 				stage->bundle[0].isVideoMap = qtrue;
 				stage->bundle[0].image[0] = tr.scratchImage[stage->bundle[0].videoMapHandle];
 			} else {
-				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", &path, shader.name );
+				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", (char *)&path, shader.name );
 			}
 		}
 		//

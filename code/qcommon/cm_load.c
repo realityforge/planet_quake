@@ -618,6 +618,8 @@ unsigned CM_Checksum(dheader_t *header) {
 	return LittleLong(Com_BlockChecksum(checksums, 11 * 4));
 }
 
+
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 /*
 ==================
 CM_SwitchMap
@@ -634,6 +636,7 @@ int CM_SwitchMap( int world ) {
 	}
 	return prev;
 }
+#endif
 
 
 static void CM_MapList_f(void) {
@@ -647,6 +650,7 @@ static void CM_MapList_f(void) {
 	Com_Printf ("%i total maps\n", count);
 	Com_Printf ("------------------\n");
 }
+
 
 void LoadQ3Map(const char *name) {
 	dheader_t		header;
@@ -686,7 +690,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		int				*i;
 		void			*v;
 	} buf;
-	int				i, empty = -1;
 	int				length;
 	unsigned id1, id2;
 	dheader_t		header;
@@ -710,6 +713,8 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cmd_SetDescription("cmlist", "List the currently loaded clip maps\nUsage: maplist");
 #endif
 
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+	int				i, empty = -1;
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
 		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
 			*checksum = cms[i].checksum;
@@ -723,7 +728,11 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	}
 	cm = empty;
 	Com_DPrintf( "CM_LoadMap( %s, %i )\n", name, clientload );
-
+#else
+	if ( cms[0].name[0] != '\0' ) {
+		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", name, clientload );
+	}
+#endif
 	// free old stuff
 	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
 	CM_ClearLevelPatches();

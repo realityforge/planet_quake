@@ -400,7 +400,7 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		if ( client->state == CS_ACTIVE )
-			SV_ClientEnterWorld( client, &client->lastUsercmd );
+			SV_ClientEnterWorld( client, &client->lastUsercmd[0] );
 		else {
 			// If we don't reset client->lastUsercmd and are restarting during map load,
 			// the client will hang because we'll use the last Usercmd from the previous map,
@@ -1514,7 +1514,7 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void SV_SwitchGame_f ( void ) {
 	client_t *client;
 	int game;
@@ -1781,7 +1781,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
 	Cmd_SetDescription( "mvstop", "Stop a multiview recording\nUsage: mvstop" );
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_AddCommand ("switchgame", SV_SwitchGame_f);
 	Cmd_SetDescription( "switchgame", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
 	Cmd_AddCommand ("teleport", SV_Teleport_f);
@@ -1831,7 +1831,7 @@ void SV_AddDedicatedCommands( void )
 #endif
 	Cmd_AddCommand( "locations", SV_Locations_f );
 	Cmd_SetDescription( "locations", "Display a list of client locations from their country setting\nUsage: locations" );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_AddCommand( "load", SV_LoadVM_f );
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load");
 #endif
@@ -1851,7 +1851,7 @@ void SV_RemoveDedicatedCommands( void )
 	Cmd_RemoveCommand( "svsay" );
 #endif
 	Cmd_RemoveCommand( "locations" );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_RemoveCommand( "load" );
 #endif
 }
