@@ -1395,7 +1395,7 @@ void Key_WriteBindings( fileHandle_t f );
 void S_ClearSoundBuffer( void );
 // call before filesystem access
 
-void CL_SystemInfoChanged( qboolean onlyGame, int igvm );
+void CL_SystemInfoChanged( qboolean onlyGame, int igs );
 qboolean CL_GameSwitch( void );
 
 // AVI files have the start of pixel lines 4 byte-aligned

@@ -2853,8 +2853,14 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if(!cgvms[clc.currentView]) {
+	if(!cgvms[clc.currentView]
+		// server controls world view
+		&& (clc.currentView == 0 || !atoi(&clc.world[0]))
+		// TODO: client auto loads world, default autoload
+		// || cl_mvWorld->integer
+	) {
 		Cmd_TokenizeString( "load cgame" );
+		clientGames[clc.currentView] = clc.currentView;
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
@@ -4930,6 +4936,10 @@ static qboolean serverWorld = qfalse;
 void CL_World_f( void ) {
 	int i;
 	char world[10];
+	const char *w;
+	int clworld, clgame;
+	qboolean found = qfalse;
+	int empty = -1;
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
@@ -4938,48 +4948,50 @@ void CL_World_f( void ) {
 	Com_Printf( "Client switching world: %s\n", world );
 	// TODO: this format will be used by the server to send camera commands
 	//   so splines can be generated on the server basically by "following"
-	const char *w;
 	if((w = Q_stristr(world, ":"))) {
-		int clworld, clgame;
-		qboolean found = qfalse;
-		int empty = -1;
 		world[w - world] = '\0';
-		clworld = atoi(w + 1);
 		clgame = atoi(world);
-		// TODO: check if a client game with this address already exists
-		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if (!cgvms[i]) {
-				// open slot
-				empty = i;
-			} else {
-				// slot is taken
-				if(clientGames[i] == clgame) {
-					// TODO: if it a game exists and is unused it can switch clients
-					// e.g. clientGames[i] == -1
-					if(clientWorlds[i] == clworld) {
-						found = qtrue;
-						break;
-					} 
-				}
-			}
-		}
-		if(!found) {
-			if(empty == -1) {
-				Com_Error(ERR_DROP, "Too many worlds: \n");
-				return;
-			}
-			// use the empty slot and start a VM
-			clientGames[clc.currentView] = clgame;
-			clientWorlds[clc.currentView] = clworld;
-			Cbuf_ExecuteText( EXEC_NOW, "load cgame\n" );
-			i = clc.currentView = empty;
-		}
+		clworld = atoi(w + 1);
 	} else {
-		i = clc.currentView = atoi(world);
+		clgame = atoi(world);
+		clworld = clc.clientNum;
 	}
+
+	// TODO: check if a client game with this address already exists
+	for(i = 0; i < MAX_NUM_VMS; i++) {
+		if (!cgvms[i]) {
+			// open slot
+			if(empty == -1) // first only
+				empty = i;
+		} else {
+			// slot is taken
+			if(clientGames[i] == clgame) {
+				// TODO: if it a game exists and is unused it can switch clients
+				// e.g. clientGames[i] == -1
+				if(clientWorlds[i] == clworld) {
+					found = qtrue;
+					clc.currentView = i;
+					break;
+				} 
+			}
+		}
+	}
+	if(!found) {
+		if(empty == -1) {
+			Com_Error(ERR_DROP, "Too many worlds: \n");
+			return;
+		}
+		// use the empty slot and start a VM
+		clientGames[clc.currentView] = clgame;
+		clientWorlds[clc.currentView] = clworld;
+		Cbuf_ExecuteText( EXEC_APPEND, "load cgame\n" );
+		i = clc.currentView = empty;
+	}
+	serverWorld = qtrue;
 	Cbuf_ExecuteText(EXEC_APPEND, va("tile -1 -1 -1\n"));
 	Cbuf_ExecuteText(EXEC_APPEND, va("tile 0 0 %i\n", i));
 	Cbuf_Execute();
+	serverWorld = qfalse;
 }
 
 void CL_Tile_f( void ) {
