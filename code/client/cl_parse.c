@@ -567,13 +567,14 @@ new information out of it.  This will happen at every
 gamestate, and possibly during gameplay.
 ==================
 */
-void CL_SystemInfoChanged( qboolean onlyGame ) {
+void CL_SystemInfoChanged( qboolean onlyGame, int igvm ) {
 	const char		*systemInfo;
 	const char		*s, *t;
 	char			key[BIG_INFO_KEY];
 	char			value[BIG_INFO_VALUE];
+	int igs = clientGames[igvm > -1 ? igvm : cgvm];
 
-	systemInfo = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ CS_SYSTEMINFO ];
+	systemInfo = cl.gameState[igs].stringData + cl.gameState[igs].stringOffsets[ CS_SYSTEMINFO ];
 	// NOTE TTimo:
 	// when the serverId changes, any further messages we send to the server will use this new serverId
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
@@ -710,13 +711,14 @@ qboolean CL_GameSwitch( void )
 CL_ParseServerInfo
 ==================
 */
-void CL_ParseServerInfo( void )
+void CL_ParseServerInfo( int igvm )
 {
 	const char *serverInfo;
 	size_t	len;
+	int igs = clientGames[igvm];
 
-	serverInfo = cl.gameState[cgvm].stringData
-		+ cl.gameState[cgvm].stringOffsets[ CS_SERVERINFO ];
+	serverInfo = cl.gameState[igs].stringData
+		+ cl.gameState[igs].stringOffsets[ CS_SERVERINFO ];
 	Com_Printf("Gamestate (%i): %.*s\n", cgvm, (int)strlen(serverInfo), serverInfo);
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
@@ -845,7 +847,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_VariableStringBuffer( "fs_game", oldGame, sizeof( oldGame ) );
 
 	// parse useful values out of CS_SERVERINFO
-	CL_ParseServerInfo();
+	CL_ParseServerInfo(igvm);
 	
 #ifdef USE_LNBITS
 	Cvar_Set("cl_lnInvoice", "");
@@ -853,7 +855,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #endif
 
 	// parse serverId and other cvars
-	CL_SystemInfoChanged( qtrue );
+	CL_SystemInfoChanged( qtrue, igvm );
 
 	// stop recording now so the demo won't have an unnecessary level load at the end.
 	if ( cl_autoRecordDemo->integer && clc.demorecording ) {

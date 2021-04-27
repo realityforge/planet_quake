@@ -58,7 +58,8 @@ CL_GetGameState
 ====================
 */
 static void CL_GetGameState( gameState_t *gs ) {
-	*gs = cl.gameState[cgvm];
+	int igs = clientGames[cgvm];
+	*gs = cl.gameState[igs];
 }
 
 
@@ -79,33 +80,34 @@ CL_GetUserCmd
 */
 static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 	// cmds[cmdNumber] is the last properly generated command
+	int igs = clientGames[cgvm];
 
 	// can't return anything that we haven't created yet
-	if ( cmdNumber > cl.clCmdNumbers[cgvm] ) {
-		Com_Error( ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, cl.clCmdNumbers[cgvm] );
+	if ( cmdNumber > cl.clCmdNumbers[igs] ) {
+		Com_Error( ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, cl.clCmdNumbers[igs] );
 	}
 
 	// the usercmd has been overwritten in the wrapping
 	// buffer because it is too far out of date
-	if ( cmdNumber <= cl.clCmdNumbers[cgvm] - CMD_BACKUP ) {
+	if ( cmdNumber <= cl.clCmdNumbers[igs] - CMD_BACKUP ) {
 		return qfalse;
 	}
 
 #ifdef USE_MULTIVM_CLIENT0
-	if(cl.cmds[cgvm][cmdNumber & CMD_MASK ].serverTime == 0) {
+	if(cl.cmds[igs][cmdNumber & CMD_MASK ].serverTime == 0) {
 //Com_Printf("Invalid: \n");
-		for(int i = cmdNumber + 1; i <= cl.clCmdNumbers[cgvm]; i++) {
-			if(cl.cmds[cgvm][i & CMD_MASK ].serverTime) {
-				*ucmd = cl.cmds[cgvm][i & CMD_MASK ];
+		for(int i = cmdNumber + 1; i <= cl.clCmdNumbers[igs]; i++) {
+			if(cl.cmds[igs][i & CMD_MASK ].serverTime) {
+				*ucmd = cl.cmds[igs][i & CMD_MASK ];
 				break;
 			}
 		}
-		*ucmd = cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK ];
+		*ucmd = cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK ];
 	} else {
-		*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
+		*ucmd = cl.cmds[igs][cmdNumber & CMD_MASK ];
 	}
 #else
-	*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
+	*ucmd = cl.cmds[igs][cmdNumber & CMD_MASK ];
 #endif
 
 	return qtrue;
@@ -118,7 +120,8 @@ CL_GetCurrentCmdNumber
 ====================
 */
 static int CL_GetCurrentCmdNumber( void ) {
-	return cl.clCmdNumbers[cgvm];
+	int igs = clientGames[cgvm];
+	return cl.clCmdNumbers[igs];
 }
 
 
@@ -128,8 +131,9 @@ CL_GetCurrentSnapshotNumber
 ====================
 */
 static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) {
-	*snapshotNumber = cl.snap[cgvm].messageNum;
-	*serverTime = cl.snap[cgvm].serverTime;
+	int igs = clientGames[cgvm];
+	*snapshotNumber = cl.snap[igs].messageNum;
+	*serverTime = cl.snap[igs].serverTime;
 }
 
 
@@ -139,11 +143,11 @@ static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) 
 CL_GetParsedEntityIndexByID
 ====================
 */
-static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID, int startIndex, int *parsedIndex ) {
+static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID, int startIndex, int *parsedIndex, int igvm ) {
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[cgvm][ n ].number == entityID ) {
+		if ( cl.parseEntities[igvm][ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -161,23 +165,24 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
 	cl.updateSnap = 0;
+	int igs = clientGames[cgvm];
 
-	if ( snapshotNumber > cl.snap[cgvm].messageNum ) {
+	if ( snapshotNumber > cl.snap[igs].messageNum ) {
 		Com_Error( ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl.snapshot.messageNum" );
 	}
 
 	// if the frame has fallen out of the circular buffer, we can't return it
-	if ( cl.snap[cgvm].messageNum - snapshotNumber >= PACKET_BACKUP ) {
+	if ( cl.snap[igs].messageNum - snapshotNumber >= PACKET_BACKUP ) {
 		return qfalse;
 	}
 
 	// if the frame is not valid, we can't return it
-	clSnap = &cl.snapshots[cgvm][snapshotNumber & PACKET_MASK];
+	clSnap = &cl.snapshots[igs][snapshotNumber & PACKET_MASK];
 	if ( !clSnap->valid ) {
 #ifdef USE_MULTIVM_CLIENT
-		for(int i = snapshotNumber+1; i <= cl.snap[cgvm].messageNum; i++)  {
-			clSnap = &cl.snapshots[cgvm][i & PACKET_MASK];
-			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[cgvm][snapshotNumber & PACKET_MASK].serverTime) {
+		for(int i = snapshotNumber+1; i <= cl.snap[igs].messageNum; i++)  {
+			clSnap = &cl.snapshots[igs][i & PACKET_MASK];
+			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[igs][snapshotNumber & PACKET_MASK].serverTime) {
 				return qfalse;
 			} else {
 				break;
@@ -190,14 +195,14 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum[cgvm] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+	if ( cl.parseEntitiesNum[igs] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
 	}
 
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
 	snapshot->ping = clSnap->ping;
-	snapshot->serverTime = clSnap->serverTime; // - (cl.snap[cgvm].messageNum - snapshotNumber);
+	snapshot->serverTime = clSnap->serverTime; // - (cl.snap[igs].messageNum - snapshotNumber);
 
 //Com_Printf( "Snapshot %i: %i (%i)\n", snapshotNumber, cls.state, cgvm );
 
@@ -260,14 +265,14 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 				// skip own and spectated entity
 				if ( entityNum != cv && entityNum != snapshot->ps.clientNum )
 				{
-					startIndex = CL_GetParsedEntityIndexByID( clSnap, entityNum, startIndex, &parsedIndex );
+					startIndex = CL_GetParsedEntityIndexByID( clSnap, entityNum, startIndex, &parsedIndex, cgvm );
 					if ( startIndex >= 0 ) {
 						// should never happen but anyway:
 						if ( count >= MAX_ENTITIES_IN_SNAPSHOT ) {
 							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", cv );
 							break;
 						}
-						snapshot->entities[ count++ ] = cl.parseEntities[cgvm][ parsedIndex ];
+						snapshot->entities[ count++ ] = cl.parseEntities[igs][ parsedIndex ];
 					} else {
 						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvm );
 						break;
@@ -306,7 +311,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->numEntities = count;
 	for ( i = 0 ; i < count ; i++ ) {
 		snapshot->entities[i] = 
-			cl.parseEntities[cgvm][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+			cl.parseEntities[igs][ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
 	}
 
 	// FIXME: configstring changes and server commands!!!
@@ -321,7 +326,8 @@ CL_SetUserCmdValue
 =====================
 */
 static void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
-	cl.cgameUserCmdValue[cgvm] = userCmdValue;
+	int igs = clientGames[cgvm];
+	cl.cgameUserCmdValue[igs] = userCmdValue;
 	cl.cgameSensitivity = sensitivityScale;
 }
 
@@ -355,18 +361,19 @@ static void CL_ConfigstringModified( void ) {
 	// get everything after "cs <num>"
 	s = Cmd_ArgsFrom(2);
 
-	old = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ index ];
+	int igs = clientGames[cgvm];
+	old = cl.gameState[igs].stringData + cl.gameState[igs].stringOffsets[ index ];
 	if ( !strcmp( old, s ) ) {
 		return;		// unchanged
 	}
 
 	// build the new gameState_t
-	oldGs = cl.gameState[cgvm];
+	oldGs = cl.gameState[igs];
 
-	Com_Memset( &cl.gameState[cgvm], 0, sizeof( cl.gameState[cgvm] ) );
+	Com_Memset( &cl.gameState[igs], 0, sizeof( cl.gameState[igs] ) );
 
 	// leave the first 0 for uninitialized strings
-	cl.gameState[cgvm].dataCount = 1;
+	cl.gameState[igs].dataCount = 1;
 		
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
 		if ( i == index ) {
@@ -380,21 +387,21 @@ static void CL_ConfigstringModified( void ) {
 
 		len = strlen( dup );
 
-		if ( len + 1 + cl.gameState[cgvm].dataCount > MAX_GAMESTATE_CHARS ) {
+		if ( len + 1 + cl.gameState[igs].dataCount > MAX_GAMESTATE_CHARS ) {
 			Com_Error( ERR_DROP, "MAX_GAMESTATE_CHARS exceeded" );
 		}
 
 		// append it to the gameState string buffer
-		cl.gameState[cgvm].stringOffsets[ i ] = cl.gameState[cgvm].dataCount;
-		Com_Memcpy( cl.gameState[cgvm].stringData + cl.gameState[cgvm].dataCount, dup, len + 1 );
-		cl.gameState[cgvm].dataCount += len + 1;
+		cl.gameState[igs].stringOffsets[ i ] = cl.gameState[igs].dataCount;
+		Com_Memcpy( cl.gameState[igs].stringData + cl.gameState[igs].dataCount, dup, len + 1 );
+		cl.gameState[igs].dataCount += len + 1;
 	}
 
 	if ( index == CS_SYSTEMINFO ) {
 		// parse serverId and other cvars
-		CL_SystemInfoChanged( qfalse );
+		CL_SystemInfoChanged( qfalse, cgvm );
 	} else if (index == CS_SERVERINFO) {
-		CL_ParseServerInfo();
+		CL_ParseServerInfo(cgvm);
 	}
 }
 
@@ -1146,7 +1153,8 @@ void CL_InitCGame( int igvm ) {
 	Con_Close();
 
 	// find the current mapname
-	info = cl.gameState[igvm].stringData + cl.gameState[igvm].stringOffsets[ CS_SERVERINFO ];
+	int igs = clientGames[igvm];
+	info = cl.gameState[igs].stringData + cl.gameState[igs].stringOffsets[ CS_SERVERINFO ];
 	mapname = Info_ValueForKey( info, "mapname" );
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
@@ -1306,7 +1314,8 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.snap[cgvm].serverTime, stereo, clc.demoplaying );
+	int igs = clientGames[cgvm];
+	VM_Call( cgvms[cgvm], 3, CG_DRAW_ACTIVE_FRAME, cl.snap[igs].serverTime, stereo, clc.demoplaying );
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif
@@ -1346,13 +1355,14 @@ void CL_AdjustTimeDelta( void ) {
 		return;
 	}
 
-	newDelta = cl.snap[cgvm].serverTime - cls.realtime;
+	int igs = clientGames[cgvm];
+	newDelta = cl.snap[igs].serverTime - cls.realtime;
 	deltaDelta = abs( newDelta - cl.serverTimeDelta );
 
 	if ( deltaDelta > RESET_TIME ) {
 		cl.serverTimeDelta = newDelta;
-		cl.oldServerTime = cl.snap[cgvm].serverTime;	// FIXME: is this a problem for cgame?
-		cl.serverTime = cl.snap[cgvm].serverTime;
+		cl.oldServerTime = cl.snap[igs].serverTime;	// FIXME: is this a problem for cgame?
+		cl.serverTime = cl.snap[igs].serverTime;
 		if ( cl_showTimeDelta->integer ) {
 			Com_Printf( "<RESET> " );
 		}
@@ -1391,8 +1401,9 @@ CL_FirstSnapshot
 ==================
 */
 static void CL_FirstSnapshot( void ) {
+	int igs = clientGames[cgvm];
 	// ignore snapshots that don't have entities
-	if ( cl.snap[cgvm].snapFlags & SNAPFLAG_NOT_ACTIVE ) {
+	if ( cl.snap[igs].snapFlags & SNAPFLAG_NOT_ACTIVE ) {
 		return;
 	}
 	cls.state = CA_ACTIVE;
@@ -1401,10 +1412,10 @@ static void CL_FirstSnapshot( void ) {
 	CL_ResetOldGame();
 
 	// set the timedelta so we are exactly on this first frame
-	cl.serverTimeDelta = cl.snap[cgvm].serverTime - cls.realtime;
-	cl.oldServerTime = cl.snap[cgvm].serverTime;
+	cl.serverTimeDelta = cl.snap[igs].serverTime - cls.realtime;
+	cl.oldServerTime = cl.snap[igs].serverTime;
 
-	clc.timeDemoBaseTime = cl.snap[cgvm].serverTime;
+	clc.timeDemoBaseTime = cl.snap[igs].serverTime;
 
 	// if this is the first frame of active play,
 	// execute the contents of activeAction now
@@ -1432,10 +1443,11 @@ static float CL_AvgPing( void ) {
 	int count = 0;
 	int i, j, iTemp;
 	float result;
+	int igs = clientGames[cgvm];
 
 	for ( i = 0; i < PACKET_BACKUP; i++ ) {
-		if ( cl.snapshots[cgvm][i].ping > 0 && cl.snapshots[cgvm][i].ping < 999 ) {
-			ping[count] = cl.snapshots[cgvm][i].ping;
+		if ( cl.snapshots[igs][i].ping > 0 && cl.snapshots[igs][i].ping < 999 ) {
+			ping[count] = cl.snapshots[igs][i].ping;
 			count++;
 		}
 	}
@@ -1489,6 +1501,7 @@ CL_SetCGameTime
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
 #ifdef USE_MULTIVM_CLIENT
+	int igs = clientGames[cgvm];
 	cgvm = 0;
 	CM_SwitchMap(clientMaps[cgvm]);
 #endif
@@ -1517,7 +1530,7 @@ void CL_SetCGameTime( void ) {
 	}
 
 	// if we have gotten to this point, cl.snap is guaranteed to be valid
-	if ( !cl.snap[cgvm].valid ) {
+	if ( !cl.snap[igs].valid ) {
 		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid" );
 	}
 
@@ -1528,11 +1541,11 @@ void CL_SetCGameTime( void ) {
 	}
 
 #ifndef USE_MULTIVM_CLIENT
-	if ( cl.snap[cgvm].serverTime < cl.oldFrameServerTime && !clc.demoplaying ) {
+	if ( cl.snap[igs].serverTime < cl.oldFrameServerTime && !clc.demoplaying ) {
 		Com_Error( ERR_DROP, "cl.snap.serverTime < cl.oldFrameServerTime" );
 	}
 #endif
-	cl.oldFrameServerTime = cl.snap[cgvm].serverTime;
+	cl.oldFrameServerTime = cl.snap[igs].serverTime;
 
 	// get our current view of time
 	demoFreezed = clc.demoplaying && com_timescale->value == 0.0f;
@@ -1554,7 +1567,7 @@ void CL_SetCGameTime( void ) {
 
 		// note if we are almost past the latest frame (without timeNudge),
 		// so we will try and adjust back a bit when the next snapshot arrives
-		if ( cls.realtime + cl.serverTimeDelta >= cl.snap[cgvm].serverTime - 5 ) {
+		if ( cls.realtime + cl.serverTimeDelta >= cl.snap[igs].serverTime - 5 ) {
 			cl.extrapolatedSnapshot = qtrue;
 		}
 	}
@@ -1586,7 +1599,7 @@ void CL_SetCGameTime( void ) {
 		cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
 	}
 
-	while ( cl.serverTime >= cl.snap[cgvm].serverTime ) {
+	while ( cl.serverTime >= cl.snap[igs].serverTime ) {
 		// feed another messag, which should change
 		// the contents of cl.snap
 		CL_ReadDemoMessage();

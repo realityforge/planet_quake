@@ -607,14 +607,15 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_MV
-	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap[cgvm].multiview ) {
+	int igs = clientGames[clc.currentView];
+	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap[igs].multiview ) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )
 			d = 1;
 		//else
 		//	d = -1;
 		for ( id = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
-			if ( cl.snap[cgvm].clps[ id ].valid ) {
+			if ( cl.snap[igs].clps[ id ].valid ) {
 				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
 				clientWorlds[0] = id;
 				break;

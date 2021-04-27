@@ -3131,7 +3131,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #ifndef DEDICATED
 		// Reparse pure paks and update cvars before FS startup
 		if ( CL_GameSwitch() )
-			CL_SystemInfoChanged( qfalse );
+			CL_SystemInfoChanged( qfalse, -1 );
 #endif
 
 		FS_Restart( checksumFeed );

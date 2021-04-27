@@ -356,6 +356,7 @@ static void CL_WriteGamestate( qboolean initial )
 	int			len;
 	entityState_t	*ent;
 	entityState_t	nullstate;
+	int igs = clientGames[clc.currentView];
 
 	// write out the gamestate message
 	MSG_Init( &msg, bufData, MAX_MSGLEN );
@@ -378,10 +379,10 @@ static void CL_WriteGamestate( qboolean initial )
 
 	// configstrings
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		if ( !cl.gameState[clc.currentView].stringOffsets[i] ) {
+		if ( !cl.gameState[igs].stringOffsets[i] ) {
 			continue;
 		}
-		s = cl.gameState[clc.currentView].stringData + cl.gameState[clc.currentView].stringOffsets[i];
+		s = cl.gameState[igs].stringData + cl.gameState[igs].stringOffsets[i];
 		MSG_WriteByte( &msg, svc_configstring );
 		MSG_WriteShort( &msg, i );
 		MSG_WriteBigString( &msg, s );
@@ -390,9 +391,9 @@ static void CL_WriteGamestate( qboolean initial )
 	// baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		if ( !cl.baselineUsed[cgvm][ i ] )
+		if ( !cl.baselineUsed[igs][ i ] )
 			continue;
-		ent = &cl.entityBaselines[cgvm][ i ];
+		ent = &cl.entityBaselines[igs][ i ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, ent, qtrue );
 	}
@@ -435,6 +436,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 	int		oldindex, newindex;
 	int		oldnum, newnum;
 	int		from_num_entities;
+	int igs = clientGames[clc.currentView];
 
 	// generate the delta update
 	if ( !from ) {
@@ -451,14 +453,14 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 		if ( newindex >= to->numEntities ) {
 			newnum = MAX_GENTITIES+1;
 		} else {
-			newent = &cl.parseEntities[cgvm][(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
+			newent = &cl.parseEntities[igs][(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
 			newnum = newent->number;
 		}
 
 		if ( oldindex >= from_num_entities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			//oldent = &cl.parseEntities[cgvm][(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
+			//oldent = &cl.parseEntities[igs][(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
 			oldent = &oldents[ oldindex ];
 			oldnum = oldent->number;
 		}
@@ -475,7 +477,7 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[cgvm][newnum], newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[igs][newnum], newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -506,8 +508,9 @@ static void CL_WriteSnapshot( void ) {
 	byte	bufData[ MAX_MSGLEN_BUF ];
 	msg_t	msg;
 	int		i, len;
+	int igs = clientGames[clc.currentView];
 
-	snap = &cl.snapshots[cgvm][ cl.snap[cgvm].messageNum & PACKET_MASK ]; // current snapshot
+	snap = &cl.snapshots[igs][ cl.snap[igs].messageNum & PACKET_MASK ]; // current snapshot
 	//if ( !snap->valid ) // should never happen?
 	//	return;
 
@@ -555,7 +558,7 @@ static void CL_WriteSnapshot( void ) {
 
 	// save last sent state so if there any need - we can skip any further incoming messages
 	for ( i = 0; i < snap->numEntities; i++ )
-		saved_ents[ i ] = cl.parseEntities[cgvm][ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
+		saved_ents[ i ] = cl.parseEntities[0][ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
 
 	saved_snap = *snap;
 	saved_snap.parseEntitiesNum = 0;
@@ -861,9 +864,9 @@ void CL_ReadDemoIndex( void ) {
 					if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 						Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 					}
-					es = &cl.entityBaselines[cgvm][ newnum ];
+					es = &cl.entityBaselines[0][ newnum ];
 					MSG_ReadDeltaEntity( &buf, &nullstate, es, newnum );
-					cl.baselineUsed[cgvm][ newnum ] = 1;
+					cl.baselineUsed[0][ newnum ] = 1;
 				} else {
 					Com_Error( ERR_DROP, "CL_ParseGamestate: bad command byte" );
 				}
@@ -882,13 +885,13 @@ void CL_ReadDemoIndex( void ) {
 
 		} else if (s == svc_snapshot) {
 			CL_ParseSnapshot( &buf, qfalse );
-			int newcount = (cl.snap[cgvm].serverTime - demoStart) / 1000;
+			int newcount = (cl.snap[0].serverTime - demoStart) / 1000;
 			if(newcount > count) {
 				count = newcount;
-				clc.demoIndex[count].serverTime = cl.snap[cgvm].serverTime;
+				clc.demoIndex[count].serverTime = cl.snap[0].serverTime;
 				clc.demoIndex[count].offset = FS_FTell(clc.demofile) - buf.cursize - 8;
 				// TODO: merge entity with baseline, the same way ParseSnapshot does
-				memcpy(clc.demoIndex[count].entities, cl.entityBaselines[cgvm], MAX_GENTITIES * sizeof(entityState_t));
+				memcpy(clc.demoIndex[count].entities, cl.entityBaselines[0], MAX_GENTITIES * sizeof(entityState_t));
 			} else {
 			}
 		}
@@ -1089,9 +1092,9 @@ static void CL_Rewind_f( void ) {
 	}
 
 	//  find the nearest snapshot
-	int prevMessageNum = cl.snap[cgvm].messageNum;
-	int prevServerTime = cl.snap[cgvm].serverTime;
-	int nearest = (cl.snap[cgvm].serverTime - clc.demoIndex[0].serverTime) / 1000;
+	int prevMessageNum = cl.snap[0].messageNum;
+	int prevServerTime = cl.snap[0].serverTime;
+	int nearest = (cl.snap[0].serverTime - clc.demoIndex[0].serverTime) / 1000;
 	if(Q_stricmpn(Cmd_Argv(0), "rew", 3)==0) {
 		Com_Printf("DEMO: rewind %i seconds\n", seconds);
 		nearest -= seconds;
@@ -1123,13 +1126,13 @@ static void CL_Rewind_f( void ) {
 	for(int j = 0; j < 3; j++) {
 		CL_ReadDemoMessage();
 	}
-	messageShift = cl.snap[cgvm].messageNum - (prevMessageNum - messageShift) ;
-	serverShift = cl.snap[cgvm].serverTime - (prevServerTime - serverShift);
+	messageShift = cl.snap[0].messageNum - (prevMessageNum - messageShift) ;
+	serverShift = cl.snap[0].serverTime - (prevServerTime - serverShift);
 	Com_Printf("Message shift: %i (%i)\n", messageShift, serverShift);
 	// reset again to load the correct message shift
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
-	memcpy(cl.entityBaselines[cgvm], clc.demoIndex[nearest].entities, MAX_GENTITIES * sizeof(entityState_t));
-	cl.serverTime = cl.snap[cgvm].serverTime - serverShift;
+	memcpy(cl.entityBaselines[0], clc.demoIndex[nearest].entities, MAX_GENTITIES * sizeof(entityState_t));
+	cl.serverTime = cl.snap[0].serverTime - serverShift;
 	for(int j = 0; j < 3; j++) {
 		CL_ReadDemoMessage();
 	}
@@ -1570,7 +1573,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 #ifdef USE_LOCAL_DED
 	if(dropped || cls.postgame)
 #endif
-	if ( cgvms[cgvm] ) {
+	if ( cgvms[0] ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
 	}
@@ -1876,7 +1879,7 @@ void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
-		if ( (uivms[uivm] && uivms[uivm]->callLevel) || (cgvms[cgvm] && cgvms[cgvm]->callLevel) ) {
+		if ( (uivms[0] && uivms[0]->callLevel) || (cgvms[0] && cgvms[0]->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
 		} else {
 			// clear any previous "server full" type messages
@@ -2031,9 +2034,9 @@ static void CL_Connect_f( void ) {
 	}
 	// if we were already connected to the local server, don't reconnect
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
-		&& addr.type == NA_LOOPBACK && cgvms[cgvm]) {
+		&& addr.type == NA_LOOPBACK && cgvms[0]) {
 		cls.state = CA_PRIMED;
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+		VM_Call( uivms[0], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
 	}
 #endif
@@ -3085,7 +3088,7 @@ void CL_InitDownloads( void ) {
 		const char *info, *mapname, *bsp;
 
 		// get map name and BSP file name
-		info = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ CS_SERVERINFO ];
+		info = cl.gameState[0].stringData + cl.gameState[0].stringOffsets[ CS_SERVERINFO ];
 		mapname = Info_ValueForKey( info, "mapname" );
 		bsp = va( "maps/%s.bsp", mapname );
 
@@ -3694,9 +3697,9 @@ A packet has arrived from the main event loop
 */
 void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	int		headerBytes;
-	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(clientMaps[cgvm]);
+	cgvm = 0;
+	CM_SwitchMap(clientMaps[0]);
 #endif
 
 	if ( msg->cursize < 5 ) {
@@ -3880,9 +3883,9 @@ void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
 
-	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(clientMaps[cgvm]);
+	cgvm = 0;
+	CM_SwitchMap(clientMaps[0]);
 #endif
 
 #ifdef USE_CURL	
@@ -3910,17 +3913,6 @@ void CL_Frame( int msec, int realMsec ) {
 	// enabling the event loop to breath. we're checking here if it has
 	// been suspended, and resuming it if so now that we've successfully
 	// swapped buffers
-	if (cgvms[cgvm] && VM_IsSuspended(cgvms[cgvm])) {
-		unsigned result = VM_Resume(cgvms[cgvm]);
-
-		if (result == 0xDEADBEEF) {
-			return;
-		}
-
-		if (cls.state == CA_LOADING) {
-			CL_InitCGameFinished();
-		}
-	}
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
 		if(VM_IsSuspended(cgvms[i])) {
@@ -3928,6 +3920,9 @@ void CL_Frame( int msec, int realMsec ) {
 			result = VM_Resume(cgvms[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
+			}
+			if (cls.state == CA_LOADING) {
+				CL_InitCGameFinished();
 			}
 		}
 	}
@@ -3939,13 +3934,13 @@ void CL_Frame( int msec, int realMsec ) {
 	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
 	//   cl_lazyLoad 3 is force lazy loading everytime
 	if(cl_lazyLoad->integer > 0) {
-		if((uivms[uivm] || cgvms[cgvm]) && secondTimer > 20) {
+		if((uivms[0] || cgvms[0]) && secondTimer > 20) {
 			secondTimer = 0;
 			CL_UpdateShader();
 		} else {
 			secondTimer += msec;
 		}
-		if((uivms[uivm] || cgvms[cgvm]) && thirdTimer > 100) {
+		if((uivms[0] || cgvms[0]) && thirdTimer > 100) {
 			thirdTimer = 0;
 			if(cls.soundRegistered) { // && !cls.firstClick) {
 				CL_UpdateSound();
@@ -4080,9 +4075,9 @@ void CL_Frame( int msec, int realMsec ) {
 
 	Con_RunConsole();
 	
-	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(clientMaps[cgvm]);
+	cgvm = 0;
+	CM_SwitchMap(clientMaps[0]);
 #endif
 }
 
@@ -6567,13 +6562,14 @@ static void CL_Download_f( void )
 static qboolean GetConfigString( int index, char *buf, int size )
 {
 	int		offset;
+	int igs = clientGames[clc.currentView];
 
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
 		buf[0] = '\0';
 		return qfalse;
 	}
 
-	offset = cl.gameState[cgvm].stringOffsets[ index ];
+	offset = cl.gameState[igs].stringOffsets[ index ];
 	if ( !offset ) {
 		if ( size ) {
 			buf[0] = '\0';
@@ -6581,7 +6577,7 @@ static qboolean GetConfigString( int index, char *buf, int size )
 		return qfalse;
 	}
 
-	Q_strncpyz( buf, cl.gameState[cgvm].stringData + offset, size );
+	Q_strncpyz( buf, cl.gameState[igs].stringData + offset, size );
 
 	return qtrue;
 }
@@ -6614,8 +6610,9 @@ void CL_Multiview_f( void )
 void CL_MultiviewFollow_f( void )
 {
 	int clientNum;
+	int igs = clientGames[clc.currentView];
 
-	if ( !cl.snap[cgvm].multiview ) {
+	if ( !cl.snap[igs].multiview ) {
 		Com_Printf("Not a multiview snapshot.\n");
 		return;
 	}
@@ -6627,7 +6624,7 @@ void CL_MultiviewFollow_f( void )
 		return;
 	}
 
-	if ( GET_ABIT( cl.snap[cgvm].clientMask, clientNum ) )
+	if ( GET_ABIT( cl.snap[igs].clientMask, clientNum ) )
 		clientWorlds[0] = clientNum;
 	else 
 		Com_Printf("Multiview client not available.\n");

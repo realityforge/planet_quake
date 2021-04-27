@@ -89,7 +89,8 @@ static cvar_t *m_filter;
 static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[cgvm].ps.delta_angles[PITCH]);
+	int igs = clientGames[clc.currentView];
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[igs].ps.delta_angles[PITCH]);
 }
 
 static void IN_MLookDown( void ) {
@@ -597,19 +598,19 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 CL_FinishMove
 ==============
 */
-static void CL_FinishMove( usercmd_t *cmd ) {
+static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 	int		i;
 
 	// copy the state that the cgame is currently sending
-	cmd->weapon = cl.cgameUserCmdValue[cgvm];
+	cmd->weapon = cl.cgameUserCmdValue[igvm];
 //Com_Printf("Moving: %i (%i)\n", cmd->weapon, cgvm);
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
 	//cmd->serverTime = cl.serverTime;
-	// Good: cmd->serverTime = cl.snap[cgvm].serverTime + 20;
-	//cmd->serverTime = cl.serverTime + (cl.snap[cgvm].serverTime - cl.snap[0].serverTime);
-	cmd->serverTime = cl.snap[cgvm].serverTime;
+	// Good: cmd->serverTime = cl.snap[igs].serverTime + 20;
+	//cmd->serverTime = cl.serverTime + (cl.snap[igs].serverTime - cl.snap[0].serverTime);
+	cmd->serverTime = cl.snap[igvm].serverTime;
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -622,7 +623,7 @@ static void CL_FinishMove( usercmd_t *cmd ) {
 CL_CreateCmd
 =================
 */
-static usercmd_t CL_CreateCmd( void ) {
+static usercmd_t CL_CreateCmd( int igvm ) {
 	usercmd_t	cmd;
 	vec3_t		oldAngles;
 
@@ -652,7 +653,7 @@ static usercmd_t CL_CreateCmd( void ) {
 	} 
 
 	// store out the final values
-	CL_FinishMove( &cmd );
+	CL_FinishMove( &cmd, igvm );
 
 	// draw debug graphs of turning for mouse testing
 	if ( cl_debugMove->integer ) {
@@ -700,10 +701,11 @@ void CL_CreateNewCommands( void ) {
 
 
 	// generate a command for this frame
+	int igs = clientGames[cgvm];
 	cl.cmdNumber++;
-	cl.clCmdNumbers[cgvm] = cl.cmdNumber;
+	cl.clCmdNumbers[igs] = cl.cmdNumber;
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[cgvm][cmdNum] = CL_CreateCmd();
+	cl.cmds[igs][cmdNum] = CL_CreateCmd(cgvm);
 }
 
 
@@ -800,6 +802,7 @@ void CL_WritePacket( void ) {
 
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 
+	int igs = clientGames[cgvm];
 #ifdef USE_MULTIVM_CLIENT
 	// TODO: make optional based on game setup, 
 	//   e.g. clone world with multiple simultaneous game types, 
@@ -809,14 +812,14 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(igvm > 0 && !cgvms[igvm]) continue;
 		cgvm = igvm;
-		int oldCmdNum = cl.clCmdNumbers[cgvm];
+		int oldCmdNum = cl.clCmdNumbers[igs];
 		CL_CreateNewCommands();
 		if(cgvm > 0) {
-			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].forwardmove = 
+			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].forwardmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
-			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].rightmove = 
+			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].rightmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
-			cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK].upmove = 
+			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].upmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #endif
@@ -834,13 +837,13 @@ void CL_WritePacket( void ) {
 	// be used for delta compression, and is also used
 	// to tell if we dropped a gamestate
 	//MSG_WriteLong( &buf, clc.serverMessageSequence );
-	MSG_WriteLong( &buf, cl.snap[cgvm].messageNum );
+	MSG_WriteLong( &buf, cl.snap[igs].messageNum );
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
 	
 #ifdef USE_MULTIVM_CLIENT
-	if(cl.snap[0].multiview || cl.snap[cgvm].multiview) {
+	if(cl.snap[0].multiview || cl.snap[igs].multiview) {
 		MSG_WriteByte( &buf, cgvm );
 	}
 #endif
@@ -859,7 +862,7 @@ void CL_WritePacket( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
 	count = 2;
-//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[cgvm], cgvm);
+//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], cgvm);
 #else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
@@ -875,8 +878,8 @@ void CL_WritePacket( void ) {
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap[cgvm].valid || clc.demowaiting
-		//	|| clc.serverMessageSequence != cl.snap[cgvm].messageNum
+		if ( cl_nodelta->integer || !cl.snap[igs].valid || clc.demowaiting
+		//	|| clc.serverMessageSequence != cl.snap[igs].messageNum
 		) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
@@ -890,18 +893,18 @@ void CL_WritePacket( void ) {
 		key = clc.checksumFeed;
 		// also use the message acknowledge
 		//key ^= clc.serverMessageSequence;
-		key ^= cl.snap[cgvm].messageNum;
+		key ^= cl.snap[igs].messageNum;
 		// also use the last acknowledged server command in the key
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
-			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[cgvm]) & CMD_MASK;
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igs]) & CMD_MASK;
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
 #endif
-			cmd = &cl.cmds[cgvm][j];
+			cmd = &cl.cmds[igs][j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
 		}
@@ -913,7 +916,7 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
-	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[cgvm];
+	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igs];
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {
