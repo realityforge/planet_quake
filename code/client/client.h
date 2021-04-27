@@ -679,7 +679,7 @@ void CL_UpdateModel( void );
 #ifdef EMSCRIPTEN
 void CL_InitCGameFinished( void );
 #endif
-void CL_InitCGame( qboolean createNew );
+void CL_InitCGame( int igvm );
 void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( int igvm );
 void CL_CGameRendering( stereoFrame_t stereo );

@@ -522,7 +522,7 @@ rescan:
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
-		CL_World_f();
+		Cbuf_ExecuteText(EXEC_INSERT, va("world %s", Cmd_ArgsFrom(1)));
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -1134,7 +1134,7 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 static int				t1, t2;
-void CL_InitCGame( qboolean createNew ) {
+void CL_InitCGame( int igvm ) {
 	const char			*info;
 	const char			*mapname;
 	vmInterpret_t		interpret;
@@ -1146,7 +1146,7 @@ void CL_InitCGame( qboolean createNew ) {
 	Con_Close();
 
 	// find the current mapname
-	info = cl.gameState[cgvm].stringData + cl.gameState[cgvm].stringOffsets[ CS_SERVERINFO ];
+	info = cl.gameState[igvm].stringData + cl.gameState[igvm].stringOffsets[ CS_SERVERINFO ];
 	mapname = Info_ValueForKey( info, "mapname" );
 	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
@@ -1162,8 +1162,8 @@ void CL_InitCGame( qboolean createNew ) {
 			interpret = VMI_COMPILED;
 	}
 
-	cgvms[cgvm] = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
-	if ( !cgvms[cgvm] ) {
+	cgvms[igvm] = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
+	if ( !cgvms[igvm] ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
 	cls.state = CA_LOADING;
@@ -1171,10 +1171,10 @@ void CL_InitCGame( qboolean createNew ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	result = VM_Call( cgvms[cgvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	result = VM_Call( cgvms[igvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 #ifdef USE_MULTIVM_CLIENT
-	if(createNew) {
+	if(igvm > -1) {
 		cls.state = CA_ACTIVE;
 		re.EndRegistration();
 		Com_TouchMemory();

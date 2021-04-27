@@ -2533,7 +2533,7 @@ void CL_Vid_Restart_After_Restart( void ) {
 	// start the cgame if connected
 	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) || cls.startCgame ) {
 		cls.cgameStarted = qtrue;
-		CL_InitCGame(qfalse);
+		CL_InitCGame(-1);
 		// send pure checksums
 		CL_SendPureChecksums();
 	}
@@ -2858,7 +2858,7 @@ static void CL_DownloadsComplete( void ) {
 		cls.state = CA_ACTIVE;
 	}
 #else
-	CL_InitCGame(qfalse);
+	CL_InitCGame(-1);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
@@ -4882,7 +4882,7 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		re.SwitchWorld(cgvm);
-		CL_InitCGame(cgvms[0] != NULL); // createNew if cgvms[0] is already taken
+		CL_InitCGame(cgvm); // createNew if cgvms[0] is already taken
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
@@ -4970,19 +4970,18 @@ void CL_World_f( void ) {
 			// use the empty slot and start a VM
 			clientGames[clc.currentView] = clgame;
 			clientWorlds[clc.currentView] = clworld;
-			Cbuf_AddText( "load cgame\n" );
-			Cmd_Clear();			
-			i = clc.currentView = cgvm;
+			Cbuf_ExecuteText( EXEC_NOW, "load cgame\n" );
+			i = clc.currentView = empty;
 		}
 	} else {
 		i = clc.currentView = atoi(world);
 	}
-	serverWorld = qtrue;
-	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %i\n", i));
-	serverWorld = qfalse;
+	Cbuf_ExecuteText(EXEC_APPEND, va("tile -1 -1 -1\n"));
+	Cbuf_ExecuteText(EXEC_APPEND, va("tile 0 0 %i\n", i));
+	Cbuf_Execute();
 }
 
-void CL_Tile_f(void) {
+void CL_Tile_f( void ) {
 	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
 	if(Cmd_Argc() == 1 || Cmd_Argc() > 4
 		|| (atoi(&clc.world[0]) && !serverWorld)) {
