@@ -2818,16 +2818,17 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 	}
 	
 #ifdef USE_MULTIVM_SERVER
+	int prevGvm = gvm;
 	gvm = cl->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
-		gvm = 0;
+		gvm = prevGvm;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);
 		return qfalse;
 	}
-	gvm = 0;
+	gvm = prevGvm;
 	CM_SwitchMap(gameWorlds[gvm]);
 	SV_SetAASgvm(gvm);
 #else
@@ -2835,6 +2836,7 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 		return qfalse;
 	}
 #endif
+
 
 #ifdef USE_MV
 	if ( !cl->multiview.recorder && sv_demoFile != FS_INVALID_HANDLE && sv_demoClientID == (cl - svs.clients) ) {
@@ -3095,18 +3097,19 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			if ( !SVC_RateLimit( &cl->gamestate_rate, 4, 1000 ) ) {
 				Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
 #ifdef USE_MULTIVM_SERVER
+				int prevGvm = gvm;
 				gvm = cl->newWorld;
 				CM_SwitchMap(gameWorlds[gvm]);
 				SV_SetAASgvm(gvm);
-#endif
 				SV_SendClientGameState( cl );
+				gvm = prevGvm;
+				CM_SwitchMap(gameWorlds[gvm]);
+				SV_SetAASgvm(gvm);
+#else
+				SV_SendClientGameState( cl );
+#endif
 			}
 		}
-#ifdef USE_MULTIVM_SERVER
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
-#endif
 		return;
 	}
 
@@ -3118,11 +3121,18 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	}
 	
 #ifdef USE_MULTIVM_SERVER
-	int igvm;
+	int igvm = 0;
 	if(cl->multiview.protocol > 0
 		&& cl->mvAck > 0 && cl->mvAck <= cl->messageAcknowledge
 	) {
 		igvm = MSG_ReadByte( msg );
+		if(igvm > 9 || igvm < 0) {
+			Com_Printf("Error: %li (%i)\n", cl - svs.clients, gvm);
+#ifndef NDEBUG
+			SV_DropClient( cl, "DEBUG: illegible world message" );
+#endif
+			return;
+		}
 	}
 #endif
 
@@ -3148,7 +3158,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 #endif
 
 #ifdef USE_MULTIVM_SERVER
-	if(cl->multiview.protocol > 0) {
+	if(cl->state >= CS_CONNECTED && cl->multiview.protocol > 0) {
 		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvm);

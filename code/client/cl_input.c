@@ -810,14 +810,14 @@ void CL_WritePacket( void ) {
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 		if(igvm > 0 && (!cgvms[igvm] || clientGames[igvm] == -1)) continue;
 		int igs = clientGames[igvm];
-		int oldCmdNum = cl.clCmdNumbers[igs];
+		int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
 		if(igvm > 0) {
-			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].forwardmove = 
+			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
-			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].rightmove = 
+			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].rightmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
-			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].upmove = 
+			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #endif
@@ -860,7 +860,6 @@ void CL_WritePacket( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
 	count = 2;
-//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], igs);
 #else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
@@ -898,11 +897,11 @@ void CL_WritePacket( void ) {
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
-			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igs]) & CMD_MASK;
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
 #endif
-			cmd = &cl.cmds[igs][j];
+			cmd = &cl.cmds[igvm][j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
 		}
@@ -914,7 +913,7 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
-	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igs];
+	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {
@@ -923,6 +922,7 @@ void CL_WritePacket( void ) {
 
 	CL_Netchan_Transmit( &clc.netchan, &buf );
 #ifdef USE_MULTIVM_CLIENT
+//Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], igs);
 	}
 #endif
 }

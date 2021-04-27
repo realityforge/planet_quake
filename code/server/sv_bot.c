@@ -441,7 +441,7 @@ static void BotClientCommand( int client, const char *command ) {
 
 #ifdef USE_MULTIVM_SERVER
 void SV_SetAASgvm(int gvm) {
-	if(botlib_export && botlib_export->SetAASgvm)
+	if(botlib_export && bot_enable && botlib_export->SetAASgvm)
 		botlib_export->SetAASgvm(gvm);
 }
 #endif

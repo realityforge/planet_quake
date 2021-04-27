@@ -579,7 +579,9 @@ void CL_SystemInfoChanged( qboolean onlyGame, int igvm ) {
 	// when the serverId changes, any further messages we send to the server will use this new serverId
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
 	// in some cases, outdated cp commands might get sent with this news serverId
+	int oldId = cl.serverId;
 	cl.serverId = atoi( Info_ValueForKey( systemInfo, "sv_serverid" ) );
+	Com_Printf("New server id: %i -> %i (%i, %i, %i)\n", oldId, cl.serverId, igs, igvm, cgvm);
 
 	// don't set any vars when playing a demo
 	if ( clc.demoplaying ) {
@@ -711,15 +713,14 @@ qboolean CL_GameSwitch( void )
 CL_ParseServerInfo
 ==================
 */
-void CL_ParseServerInfo( int igvm )
+void CL_ParseServerInfo( int igs )
 {
 	const char *serverInfo;
 	size_t	len;
-	int igs = clientGames[igvm];
 
 	serverInfo = cl.gameState[igs].stringData
 		+ cl.gameState[igs].stringOffsets[ CS_SERVERINFO ];
-	Com_Printf("Gamestate (%i): %.*s\n", cgvm, (int)strlen(serverInfo), serverInfo);
+	Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
 		"sv_allowDownload"));
@@ -772,6 +773,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	} else {
 		if(cl.snap[0].multiview) {
 			clc.currentView = igvm = MSG_ReadByte( msg );
+			clientGames[clc.currentView] = clc.currentView;
 		}
 		if(igvm == 0) {
 			CL_ClearState();

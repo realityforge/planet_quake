@@ -81,34 +81,33 @@ CL_GetUserCmd
 */
 static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 	// cmds[cmdNumber] is the last properly generated command
-	int igs = clientGames[cgvm];
 
 	// can't return anything that we haven't created yet
-	if ( cmdNumber > cl.clCmdNumbers[igs] ) {
-		Com_Error( ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, cl.clCmdNumbers[igs] );
+	if ( cmdNumber > cl.clCmdNumbers[cgvm] ) {
+		Com_Error( ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, cl.clCmdNumbers[cgvm] );
 	}
 
 	// the usercmd has been overwritten in the wrapping
 	// buffer because it is too far out of date
-	if ( cmdNumber <= cl.clCmdNumbers[igs] - CMD_BACKUP ) {
+	if ( cmdNumber <= cl.clCmdNumbers[cgvm] - CMD_BACKUP ) {
 		return qfalse;
 	}
 
 #ifdef USE_MULTIVM_CLIENT0
-	if(cl.cmds[igs][cmdNumber & CMD_MASK ].serverTime == 0) {
+	if(cl.cmds[cgvm][cmdNumber & CMD_MASK ].serverTime == 0) {
 //Com_Printf("Invalid: \n");
-		for(int i = cmdNumber + 1; i <= cl.clCmdNumbers[igs]; i++) {
-			if(cl.cmds[igs][i & CMD_MASK ].serverTime) {
-				*ucmd = cl.cmds[igs][i & CMD_MASK ];
+		for(int i = cmdNumber + 1; i <= cl.clCmdNumbers[cgvm]; i++) {
+			if(cl.cmds[cgvm][i & CMD_MASK ].serverTime) {
+				*ucmd = cl.cmds[cgvm][i & CMD_MASK ];
 				break;
 			}
 		}
-		*ucmd = cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK ];
+		*ucmd = cl.cmds[cgvm][cl.clCmdNumbers[cgvm] & CMD_MASK ];
 	} else {
-		*ucmd = cl.cmds[igs][cmdNumber & CMD_MASK ];
+		*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
 	}
 #else
-	*ucmd = cl.cmds[igs][cmdNumber & CMD_MASK ];
+	*ucmd = cl.cmds[cgvm][cmdNumber & CMD_MASK ];
 #endif
 
 	return qtrue;
@@ -121,8 +120,7 @@ CL_GetCurrentCmdNumber
 ====================
 */
 static int CL_GetCurrentCmdNumber( void ) {
-	int igs = clientGames[cgvm];
-	return cl.clCmdNumbers[igs];
+	return cl.clCmdNumbers[cgvm];
 }
 
 
@@ -327,8 +325,7 @@ CL_SetUserCmdValue
 =====================
 */
 static void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
-	int igs = clientGames[cgvm];
-	cl.cgameUserCmdValue[igs] = userCmdValue;
+	cl.cgameUserCmdValue[cgvm] = userCmdValue;
 	cl.cgameSensitivity = sensitivityScale;
 }
 
@@ -402,7 +399,7 @@ static void CL_ConfigstringModified( void ) {
 		// parse serverId and other cvars
 		CL_SystemInfoChanged( qfalse, cgvm );
 	} else if (index == CS_SERVERINFO) {
-		CL_ParseServerInfo(cgvm);
+		CL_ParseServerInfo(igs);
 	}
 }
 
@@ -1184,7 +1181,7 @@ void CL_InitCGame( int igvm ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	if(igvm > -1) {
-		cls.state = CA_ACTIVE;
+		cls.state = CA_PRIMED;
 		re.EndRegistration();
 		Com_TouchMemory();
 		cls.lastVidRestart = Sys_Milliseconds();

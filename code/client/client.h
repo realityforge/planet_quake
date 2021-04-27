@@ -594,7 +594,7 @@ void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor,
 extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
-void CL_ParseServerInfo( int igvm );
+void CL_ParseServerInfo( int igs );
 void CL_ParseServerMessage( msg_t *msg );
 void CL_ParseSnapshot( msg_t *msg, qboolean multiview );
 

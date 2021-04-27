@@ -2855,7 +2855,6 @@ static void CL_DownloadsComplete( void ) {
 	// TODO: exec world 0:0 asynchronously
 	if(!cgvms[clc.currentView]) {
 		Cmd_TokenizeString( "load cgame" );
-		clientGames[clc.currentView] = clc.currentView;
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
