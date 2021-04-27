@@ -121,7 +121,6 @@ clientConnection_t	clc;
 clientStatic_t		cls;
 int   cgvm = 0;
 vm_t *cgvms[MAX_NUM_VMS];
-int   numCGames = 0;
 
 netadr_t			rcon_address;
 
@@ -4928,23 +4927,26 @@ void CL_Game_f ( void ) {
 
 static qboolean serverWorld = qfalse;
 void CL_World_f( void ) {
-	char world[10];
 	int i;
+	char world[10];
 	if ( Cmd_Argc() > 3 ) {
 		Com_Printf ("Usage: world [numworld]\n");
 		return;
 	}
-	strncpyz(world, Cmd_Argv(1), sizeof(world));
+	Q_strncpyz(world, Cmd_Argv(1), sizeof(world));
 	Com_Printf( "Client switching world: %s\n", world );
-	if((i = Q_stristr(world, ":"))) {
+	// TODO: this format will be used by the server to send camera commands
+	//   so splines can be generated on the server basically by "following"
+	const char *w;
+	if((w = Q_stristr(world, ":"))) {
 		int clworld, clgame;
 		qboolean found = qfalse;
 		int empty = -1;
-		world[i] = '\0';
-		clworld = atoi(&world[i+1]);
+		world[w - world] = '\0';
+		clworld = atoi(w + 1);
 		clgame = atoi(world);
 		// TODO: check if a client game with this address already exists
-		for(int i = 0; i < MAX_NUM_VMS; i++) {
+		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if (!cgvms[i]) {
 				// open slot
 				empty = i;
@@ -4955,7 +4957,6 @@ void CL_World_f( void ) {
 					// e.g. clientGames[i] == -1
 					if(clientWorlds[i] == clworld) {
 						found = qtrue;
-						clc.currentView = i;
 						break;
 					} 
 				}
@@ -4969,16 +4970,15 @@ void CL_World_f( void ) {
 			// use the empty slot and start a VM
 			clientGames[clc.currentView] = clgame;
 			clientWorlds[clc.currentView] = clworld;
-			Cmd_TokenizeString( "load cgame" );
-			CL_LoadVM_f();
+			Cbuf_AddText( "load cgame\n" );
 			Cmd_Clear();			
+			i = clc.currentView = cgvm;
 		}
 	} else {
 		i = clc.currentView = atoi(world);
 	}
 	serverWorld = qtrue;
-	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %s\n", i));
-	Cbuf_Execute();
+	Cbuf_AddText(va("tile -1 -1 -1\ntile 0 0 %i\n", i));
 	serverWorld = qfalse;
 }
 
@@ -5020,6 +5020,7 @@ void CL_Tile_f(void) {
 		// if it was disabled, now it won't be
 		if (clientNum >= 0 && clientScreens[clientNum][0] == -1) count++;
 	}
+
 	if(clientNum > MAX_NUM_VMS || clientNum < -1) {
 		Com_Printf("Must be between 0 and %i, given: %i\n", MAX_NUM_VMS, clientNum);
 		return;
@@ -5027,8 +5028,19 @@ void CL_Tile_f(void) {
 		Com_Printf("CGame not active on %i\n", clientNum);
 		return;
 	} else if(clientNum == -1) {
-		count = 0;
+		// display all in a grid
+		if(Cmd_Argc() == 2) {
+			count = 0;
+			for(i = 0; i < MAX_NUM_VMS; i++) {
+				if(!cgvms[i]) continue;
+				count++;
+			}
+		} else {
+			// hide all screens
+			count = 0;
+		}
 	}
+
 	xMaxVMs = ceil(sqrt(count));
 	yMaxVMs = round(sqrt(count));
 	if(Cmd_Argc() < 4) {
@@ -5039,8 +5051,12 @@ void CL_Tile_f(void) {
 	if(y > yMaxVMs) y = yMaxVMs - 1;
 	int s = clientNum == -1 ? 0 : clientNum;
 	int e = clientNum == -1 ? MAX_NUM_VMS : clientNum + 1;
-	for(; s < e; s++) {
-		if(x < 0 || y < 0) {
+	for(; s < (e > MAX_NUM_VMS ? MAX_NUM_VMS : e); s++) {
+		if(clientNum == -1 && Cmd_Argc() == 2) {
+			x = s / xMaxVMs;
+			y = s % xMaxVMs;
+		}
+		if(x < 0 || y < 0 || (clientNum == -1 && !cgvms[s])) {
 	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);
 			clientScreens[s][0] = 
 			clientScreens[s][1] = 

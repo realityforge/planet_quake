@@ -524,7 +524,7 @@ Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
 //		if(cl.snapshots[igvm][oldMessageNum & PACKET_MASK].valid)
-//Com_Printf("Invalidated (%i): %i == %i\n", igvm, oldMessageNum, numCGames);
+//Com_Printf("Invalidated (%i): %i == %i\n", igvm, oldMessageNum);
 		cl.snapshots[igvm][oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
@@ -773,9 +773,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		}
 		if(igvm == 0) {
 			CL_ClearState();
-		}
-		if(igvm > numCGames) {
-			numCGames = igvm;
 		}
 	}
 #endif

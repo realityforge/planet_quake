@@ -537,6 +537,9 @@ extern  cvar_t  *cl_snaps;
 //
 // cl_main
 //
+#ifdef USE_MULTIVM_CLIENT
+void CL_World_f( void );
+#endif
 void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd );
 
 void CL_StartHunkUsers( void );

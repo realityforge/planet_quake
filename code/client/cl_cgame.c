@@ -522,7 +522,7 @@ rescan:
 		clc.serverCommandsIgnore[ index ] = qtrue;
 		cls.lastVidRestart = Sys_Milliseconds();
 		cvar_modifiedFlags |= CVAR_USERINFO;
-		Cbuf_ExecuteText(EXEC_INSERT, va("world %s\n", Cmd_Argv(1)));
+		CL_World_f();
 		Cmd_Clear();
 		return qfalse;
 	}
@@ -615,9 +615,6 @@ void CL_ShutdownCGame( void ) {
 		VM_Free( cgvms[cgvm] );
 		cgvms[cgvm] = NULL;
 	}
-#ifdef USE_MULTIVM_CLIENT
-	numCGames = 0;
-#endif
 	cgvm = 0;
 	clientScreens[cgvm][0] = 
 	clientScreens[cgvm][1] = 0;
