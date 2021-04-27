@@ -610,7 +610,9 @@ static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 	//cmd->serverTime = cl.serverTime;
 	// Good: cmd->serverTime = cl.snap[igs].serverTime + 20;
 	//cmd->serverTime = cl.serverTime + (cl.snap[igs].serverTime - cl.snap[0].serverTime);
-	cmd->serverTime = cl.snap[igvm].serverTime;
+	// duh! snaps are gamestate based and commands are cgvm based
+	int igs = clientGames[igvm];
+	cmd->serverTime = cl.snap[igs].serverTime;
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -808,7 +810,9 @@ void CL_WritePacket( void ) {
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(igvm > 0 && (!cgvms[igvm] || clientGames[igvm] == -1)) continue;
+		if(igvm > 0 && (!cgvms[igvm]
+			|| clientGames[igvm] == -1
+			|| clientWorlds[igvm] != clc.clientNum)) continue;
 		int igs = clientGames[igvm];
 		int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
@@ -842,7 +846,7 @@ void CL_WritePacket( void ) {
 	
 #ifdef USE_MULTIVM_CLIENT
 	if(cl.snap[0].multiview || cl.snap[igs].multiview) {
-		MSG_WriteByte( &buf, igs == -1 ? 0 : igs );
+		MSG_WriteByte( &buf, igs );
 	}
 #endif
 
@@ -922,7 +926,7 @@ void CL_WritePacket( void ) {
 
 	CL_Netchan_Transmit( &clc.netchan, &buf );
 #ifdef USE_MULTIVM_CLIENT
-//Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], igs);
+//Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igvm], igs);
 	}
 #endif
 }

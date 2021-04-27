@@ -414,8 +414,8 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			MSG_ReadDeltaPlayerstate( msg, oldPs, &newSnap.clps[ clientNum ].ps );
 
 			// spectated (pramary?) playerstate ping
-			if ( clientNum == clientWorlds[0] ) // clc.clientNum?
-				commandTime = newSnap.clps[ clientNum ].ps.commandTime;
+			//if ( clientNum == clientWorlds[0] ) // clc.clientNum?
+			//	commandTime = newSnap.clps[ clientNum ].ps.commandTime;
 
 			// entity mask
 			SHOWNET( msg, "entity mask" );
@@ -433,11 +433,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #endif
 			newSnap.clps[ clientNum ].valid = qtrue;
 
-			if ( clientNum == clientWorlds[0] /* clc.clientNum */ ) {
+			//if ( clientNum == clientWorlds[0] /* clc.clientNum */ ) {
 				// copy data to primary playerstate
-				Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
-				Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
-			}
+				//Com_Memcpy( &newSnap.areamask, &newSnap.clps[ clientNum ].areamask, sizeof( newSnap.areamask ) );
+				//Com_Memcpy( &newSnap.ps, &newSnap.clps[ clientNum ].ps, sizeof( newSnap.ps ) );
+			//}
 		} // for [all clients]
 
 		// read packet entities
@@ -461,13 +461,10 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	{
 		// detect transition to non-multiview
 		if ( cl.snap[igvm].multiview ) {
-			clientWorlds[0] = clc.clientNum;
 			if ( old ) {
 				// invalidate state
 				memset( (void *)&old->clps, 0, sizeof( old->clps ) );
 				Com_DPrintf( S_COLOR_CYAN "transition from multiview to legacy stream\n" );
-				//old->ps = old->clps[ clientWorlds[0] ].ps;
-				//Com_Memcpy( old->areamask, old->clps[ clientWorlds[0] ].areamask, sizeof( old->areamask ) );
 			}
 		}
 #endif // USE_MV
@@ -836,12 +833,12 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	clc.eventMask |= EM_GAMESTATE;
 
-#ifdef USE_MV
-	clientWorlds[0] = clc.clientNum;
-	clc.zexpectDeltaSeq = 0; // that will reset compression context
-#endif
-
 	clc.clientNum = MSG_ReadLong(msg);
+	
+	#ifdef USE_MV
+		clc.zexpectDeltaSeq = 0; // that will reset compression context
+	#endif
+
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );
 

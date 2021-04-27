@@ -668,6 +668,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 void SCR_DrawCurrentView( void ) {
 	float	yf, wf;
 	float xadjust = 0;
+	return;
 	wf = SCREEN_WIDTH;
 	yf = SCREEN_HEIGHT;
 	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
@@ -681,7 +682,7 @@ void SCR_DrawCurrentView( void ) {
 	// bottom 
 	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][3] * yf - 2, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
 	// left
-	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, 2, clientScreens[cgvm][3] * wf, 0, 0, 1, 1, cls.whiteShader);
+	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, 2, clientScreens[cgvm][3] * yf, 0, 0, 1, 1, cls.whiteShader);
 }
 #endif
 

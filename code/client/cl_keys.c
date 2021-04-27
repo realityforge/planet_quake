@@ -614,10 +614,10 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			d = 1;
 		//else
 		//	d = -1;
-		for ( id = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
+		for ( id = (clientWorlds[clc.currentView] + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
 			if ( cl.snap[igs].clps[ id ].valid ) {
-				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
-				clientWorlds[0] = id;
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[clc.currentView], id );
+				clientWorlds[clc.currentView] = id;
 				break;
 			}
 		}

@@ -727,10 +727,6 @@ void GLimp_Init( glconfig_t *config )
 
 	Key_ClearStates();
 
-#ifndef EMSCRIPTEN
-	HandleEvents();
-#endif
-
 	// This depends on SDL_INIT_VIDEO, hence having it here
 	IN_Init();
 }

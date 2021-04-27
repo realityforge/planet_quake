@@ -207,18 +207,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 #ifdef USE_MV
 	int cv;
-#ifdef USE_0MULTIVM
-	// TODO: make a table and \mvassign command?
-	if(cgvm == 0) {
-		cv = clc.clientNum;
-	} else if (cgvm == 1) {
-		cv = clientWorlds[0];
-	} else {
-		cv = cgvm;
-	}
-#else
-	cv = clientWorlds[0];
-#endif
+	cv = clientWorlds[cgvm];
 	cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {
 		int		entityNum;
@@ -227,17 +216,16 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		byte	*entMask;
 
 		if ( clSnap->clps[ cv ].valid ) {
-			//clientView = clientWorlds[0];
 		} else {
 			// we need to select another POV
 			if ( clSnap->clps[ clc.clientNum ].valid ) {
-				Com_DPrintf( S_COLOR_CYAN "multiview: switch POV back from %d to %d\n", clientWorlds[0], clc.clientNum );
-				cv = clientWorlds[0] = clc.clientNum; // fixup to avoid glitches
+				Com_DPrintf( S_COLOR_CYAN "multiview: switch POV back from %d to %d\n", clientWorlds[cgvm], clc.clientNum );
+				cv = clientWorlds[cgvm] = clc.clientNum; // fixup to avoid glitches
 			} else { 
 				// invalid primary id? search for any valid
 				for ( i = 0; i < MAX_CLIENTS; i++ ) {
 					if ( clSnap->clps[ i ].valid ) {
-						/*clientView = */ cv = clc.clientNum = clientWorlds[0] = i;
+						cv = clc.clientNum = clientWorlds[cgvm] = i;
 						Com_Printf( S_COLOR_CYAN "multiview: set primary client id %d\n", clc.clientNum );
 						break;
 					}

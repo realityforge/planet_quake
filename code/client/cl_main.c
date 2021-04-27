@@ -2861,6 +2861,7 @@ static void CL_DownloadsComplete( void ) {
 	) {
 		Cmd_TokenizeString( "load cgame" );
 		clientGames[clc.currentView] = clc.currentView;
+		clientWorlds[clc.currentView] = clc.clientNum;
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
@@ -5001,7 +5002,9 @@ void CL_Tile_f( void ) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
-					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientScreens[i][0], clientScreens[i][1],
+					Com_Printf( "[%i] %i %i: %fx%f (%fx%f)\n", 
+						i, clientGames[i], clientWorlds[i], 
+						clientScreens[i][0], clientScreens[i][1],
 					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
@@ -5092,7 +5095,9 @@ void CL_Dvr_f(void) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
-					Com_Printf( "cl %i: %fx%f (%fx%f)\n", i, clientScreens[i][0], clientScreens[i][1],
+					Com_Printf( "[%i] %i %i: %fx%f (%fx%f)\n", 
+						i, clientGames[i], clientWorlds[i], 
+						clientScreens[i][0], clientScreens[i][1],
 					 	clientScreens[i][2], clientScreens[i][3]);
 				}
 			}
@@ -6643,7 +6648,7 @@ void CL_MultiviewFollow_f( void )
 	}
 
 	if ( GET_ABIT( cl.snap[igs].clientMask, clientNum ) )
-		clientWorlds[0] = clientNum;
+		clientWorlds[clc.currentView] = clientNum;
 	else 
 		Com_Printf("Multiview client not available.\n");
 }
