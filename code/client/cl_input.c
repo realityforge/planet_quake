@@ -384,8 +384,8 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
 ;
-	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
+	cgvm = 0;
 	CM_SwitchMap(clientMaps[cgvm]);
 #endif
 #ifdef USE_ABS_MOUSE
@@ -603,7 +603,7 @@ static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 
 	// copy the state that the cgame is currently sending
 	cmd->weapon = cl.cgameUserCmdValue[igvm];
-//Com_Printf("Moving: %i (%i)\n", cmd->weapon, cgvm);
+//Com_Printf("Moving: %i (%i)\n", cmd->weapon, igvm);
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
@@ -676,7 +676,7 @@ CL_CreateNewCommands
 Create a new usercmd_t structure for this frame
 =================
 */
-void CL_CreateNewCommands( void ) {
+static void CL_CreateNewCommands( int igvm ) {
 	int			cmdNum;
 
 	// no need to create usercmds until we have a gamestate
@@ -701,11 +701,10 @@ void CL_CreateNewCommands( void ) {
 
 
 	// generate a command for this frame
-	int igs = clientGames[cgvm];
 	cl.cmdNumber++;
-	cl.clCmdNumbers[igs] = cl.cmdNumber;
+	cl.clCmdNumbers[igvm] = cl.cmdNumber;
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[igs][cmdNum] = CL_CreateCmd(cgvm);
+	cl.cmds[igvm][cmdNum] = CL_CreateCmd(igvm);
 }
 
 
@@ -802,7 +801,6 @@ void CL_WritePacket( void ) {
 
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 
-	int igs = clientGames[cgvm];
 #ifdef USE_MULTIVM_CLIENT
 	// TODO: make optional based on game setup, 
 	//   e.g. clone world with multiple simultaneous game types, 
@@ -810,11 +808,11 @@ void CL_WritePacket( void ) {
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(igvm > 0 && !cgvms[igvm]) continue;
-		cgvm = igvm;
+		if(igvm > 0 && (!cgvms[igvm] || clientGames[igvm] == -1)) continue;
+		int igs = clientGames[igvm];
 		int oldCmdNum = cl.clCmdNumbers[igs];
-		CL_CreateNewCommands();
-		if(cgvm > 0) {
+		CL_CreateNewCommands(igvm);
+		if(igvm > 0) {
 			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].forwardmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
 			cl.cmds[igs][cl.clCmdNumbers[igs] & CMD_MASK].rightmove = 
@@ -844,7 +842,7 @@ void CL_WritePacket( void ) {
 	
 #ifdef USE_MULTIVM_CLIENT
 	if(cl.snap[0].multiview || cl.snap[igs].multiview) {
-		MSG_WriteByte( &buf, cgvm );
+		MSG_WriteByte( &buf, igs == -1 ? 0 : igs );
 	}
 #endif
 
@@ -862,11 +860,11 @@ void CL_WritePacket( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
 	count = 2;
-//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], cgvm);
+//	Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igs], igs);
 #else
 	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
-//	Com_Printf("Sending commands %i: %i -> %i (%i)\n", count, oldPacketNum, cl.cmdNumber, cgvm);
+//	Com_Printf("Sending commands %i: %i -> %i (%i)\n", count, oldPacketNum, cl.cmdNumber, igs);
 #endif
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
@@ -926,7 +924,6 @@ void CL_WritePacket( void ) {
 	CL_Netchan_Transmit( &clc.netchan, &buf );
 #ifdef USE_MULTIVM_CLIENT
 	}
-	cgvm = 0;
 #endif
 }
 
@@ -951,7 +948,7 @@ void CL_SendCmd( void ) {
 
 	// we create commands even if a demo is playing,
 #ifndef USE_MULTIVM_CLIENT
-	CL_CreateNewCommands();
+	CL_CreateNewCommands(0);
 #endif
 
 	// don't send a packet if the last packet was sent too recently

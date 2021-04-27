@@ -72,12 +72,12 @@ Parses deltas from the given base and adds the resulting entity
 to the current frame
 ==================
 */
-static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const entityState_t *old, qboolean unchanged, int igvm) {
+static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const entityState_t *old, qboolean unchanged, int igs) {
 	entityState_t	*state;
 
 	// save the parsed entity state into the big circular buffer so
 	// it can be used as the source for a later delta
-	state = &cl.parseEntities[igvm][cl.parseEntitiesNum[igvm] & (MAX_PARSE_ENTITIES-1)];
+	state = &cl.parseEntities[igs][cl.parseEntitiesNum[igs] & (MAX_PARSE_ENTITIES-1)];
 
 	if ( unchanged ) {
 		*state = *old;
@@ -88,7 +88,7 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 	if ( state->number == (MAX_GENTITIES-1) ) {
 		return;		// entity was delta removed
 	}
-	cl.parseEntitiesNum[igvm]++;
+	cl.parseEntitiesNum[igs]++;
 	frame->numEntities++;
 }
 
@@ -98,12 +98,12 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 CL_ParsePacketEntities
 ==================
 */
-static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, clSnapshot_t *newframe, int igvm ) {
+static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, clSnapshot_t *newframe, int igs ) {
 	const entityState_t	*oldstate;
 	int	newnum;
 	int	oldindex, oldnum;
 
-	newframe->parseEntitiesNum = cl.parseEntitiesNum[igvm];
+	newframe->parseEntitiesNum = cl.parseEntitiesNum[igs];
 	newframe->numEntities = 0;
 
 	// delta from the entities present in oldframe
@@ -115,7 +115,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[igvm][
+			oldstate = &cl.parseEntities[igs][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -138,14 +138,14 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  unchanged: %i\n", msg->readcount, oldnum);
 			}
-			CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igvm );
+			CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igs );
 			
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[igvm][
+				oldstate = &cl.parseEntities[igs][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -155,14 +155,14 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  delta: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, oldstate, qfalse, igvm );
+			CL_DeltaEntity( msg, newframe, newnum, oldstate, qfalse, igs );
 
 			oldindex++;
 
 			if ( oldindex >= oldframe->numEntities ) {
 				oldnum = MAX_GENTITIES+1;
 			} else {
-				oldstate = &cl.parseEntities[igvm][
+				oldstate = &cl.parseEntities[igs][
 					(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 				oldnum = oldstate->number;
 			}
@@ -174,7 +174,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 			if ( cl_shownet->integer == 3 ) {
 				Com_Printf ("%3i:  baseline: %i\n", msg->readcount, newnum);
 			}
-			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[igvm][newnum], qfalse, igvm );
+			CL_DeltaEntity( msg, newframe, newnum, &cl.entityBaselines[igs][newnum], qfalse, igs );
 			continue;
 		}
 
@@ -186,14 +186,14 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 		if ( cl_shownet->integer == 3 ) {
 			Com_Printf ("%3i:  unchanged: %i\n", msg->readcount, oldnum);
 		}
-		CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igvm );
+		CL_DeltaEntity( msg, newframe, oldnum, oldstate, qtrue, igs );
 		
 		oldindex++;
 
 		if ( oldindex >= oldframe->numEntities ) {
 			oldnum = MAX_GENTITIES+1;
 		} else {
-			oldstate = &cl.parseEntities[igvm][
+			oldstate = &cl.parseEntities[igs][
 				(oldframe->parseEntitiesNum + oldindex) & (MAX_PARSE_ENTITIES-1)];
 			oldnum = oldstate->number;
 		}
@@ -1287,15 +1287,15 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			{
 				entityState_t	nullstate;
 				entityState_t	*es;
-				int				newnum, currentWorld;
+				int				newnum, igvm;
 				qboolean firstBaseline = qtrue;
 				Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 
 				if(firstBaseline) {
-					currentWorld = MSG_ReadByte( msg );
-					memset(cl.entityBaselines[currentWorld], 0, sizeof(cl.entityBaselines[currentWorld]));
-					memset(cl.baselineUsed[currentWorld], 0, sizeof(cl.baselineUsed[currentWorld]));
-					Com_Printf("------------------ ents (%i) ----------------\n", currentWorld);
+					igvm = MSG_ReadByte( msg );
+					memset(cl.entityBaselines[igvm], 0, sizeof(cl.entityBaselines[igvm]));
+					memset(cl.baselineUsed[igvm], 0, sizeof(cl.baselineUsed[igvm]));
+					Com_Printf("------------------ ents (%i) ----------------\n", igvm);
 					firstBaseline = qfalse;
 				}
 				// parse baselines after a world change
@@ -1303,9 +1303,9 @@ void CL_ParseServerMessage( msg_t *msg ) {
 				if ( newnum < 0 || newnum >= MAX_GENTITIES ) {
 					Com_Error( ERR_DROP, "Baseline number out of range: %i", newnum );
 				}
-				es = &cl.entityBaselines[currentWorld][ newnum ];
+				es = &cl.entityBaselines[igvm][ newnum ];
 				MSG_ReadDeltaEntity( msg, &nullstate, es, newnum );
-				cl.baselineUsed[currentWorld][ newnum ] = 1;
+				cl.baselineUsed[igvm][ newnum ] = 1;
 			}
 			break;
 #endif

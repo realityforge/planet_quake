@@ -2425,7 +2425,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 			SV_SendClientSnapshot( client, qfalse );
-			client->state = CS_ACTIVE;
+			client->state = CS_CONNECTED;
 			client->gamestateMessageNum = -1; // send a new gamestate
 			return;
 		} else {
@@ -2958,14 +2958,20 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		}
 #ifdef USE_MULTIVM_SERVER
 		if(cl->newWorld != cl->gameWorld) {
+			int prevGvm = gvm; // hopefully it is the same but maybe not
+			gvm = cl->gameWorld = cl->newWorld;
+			CM_SwitchMap(gameWorlds[gvm]);
+			SV_SetAASgvm(gvm);
+			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(cl, "world %i", cl->newWorld);
 			}
+			gvm = prevGvm;
+			CM_SwitchMap(gameWorlds[gvm]);
+			SV_SetAASgvm(gvm);
 		} else 
 #endif
-		{
-			SV_ClientEnterWorld( cl, &cmds[0] );
-		}
+		SV_ClientEnterWorld( cl, &cmds[0] );
 		// the moves can be processed normally
 	}
 	
@@ -3001,7 +3007,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
 			continue;
 		}
-//Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
+Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
 		SV_ClientThink (cl, &cmds[ i ]);
 		thunk++;
 	}

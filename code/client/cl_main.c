@@ -2853,8 +2853,9 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if(!cgvms[0]) {
+	if(!cgvms[clc.currentView]) {
 		Cmd_TokenizeString( "load cgame" );
+		clientGames[clc.currentView] = clc.currentView;
 		CL_LoadVM_f();
 		Cmd_Clear();
 	} else {
@@ -3916,7 +3917,10 @@ void CL_Frame( int msec, int realMsec ) {
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvms[i]) continue;
 		if(VM_IsSuspended(cgvms[i])) {
+#ifdef USE_MULTIVM_CLIENT
 			cgvm = i;
+			CM_SwitchMap(clientMaps(cgvm));
+#endif
 			result = VM_Resume(cgvms[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
@@ -3926,7 +3930,10 @@ void CL_Frame( int msec, int realMsec ) {
 			}
 		}
 	}
+#ifdef USE_MULTIVM_CLIENT
 	cgvm = 0;
+	CM_SwitchMap(clientMaps(cgvm));
+#endif
 #endif
 
 #ifdef USE_LAZY_LOAD

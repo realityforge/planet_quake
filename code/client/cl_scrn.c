@@ -788,13 +788,13 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	}
 #endif
 
-	// console draws next
-	Con_DrawConsole ();
-	
 #ifdef USE_MULTIVM_CLIENT
 	// TODO: make optional
 	SCR_DrawCurrentView();
 #endif
+
+	// console draws next
+	Con_DrawConsole ();
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {

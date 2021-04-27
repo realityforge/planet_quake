@@ -59,6 +59,7 @@ CL_GetGameState
 */
 static void CL_GetGameState( gameState_t *gs ) {
 	int igs = clientGames[cgvm];
+Com_Printf("Get gamestate: %i -> %i\n", cgvm, igs);
 	*gs = cl.gameState[igs];
 }
 
@@ -143,11 +144,11 @@ static void CL_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime ) 
 CL_GetParsedEntityIndexByID
 ====================
 */
-static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID, int startIndex, int *parsedIndex, int igvm ) {
+static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID, int startIndex, int *parsedIndex, int igs ) {
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[igvm][ n ].number == entityID ) {
+		if ( cl.parseEntities[igs][ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -265,7 +266,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 				// skip own and spectated entity
 				if ( entityNum != cv && entityNum != snapshot->ps.clientNum )
 				{
-					startIndex = CL_GetParsedEntityIndexByID( clSnap, entityNum, startIndex, &parsedIndex, cgvm );
+					startIndex = CL_GetParsedEntityIndexByID( clSnap, entityNum, startIndex, &parsedIndex, igs );
 					if ( startIndex >= 0 ) {
 						// should never happen but anyway:
 						if ( count >= MAX_ENTITIES_IN_SNAPSHOT ) {
