@@ -4982,10 +4982,10 @@ void CL_World_f( void ) {
 			return;
 		}
 		// use the empty slot and start a VM
+		i = clc.currentView = empty;
 		clientGames[clc.currentView] = clgame;
 		clientWorlds[clc.currentView] = clworld;
 		Cbuf_ExecuteText( EXEC_APPEND, "load cgame\n" );
-		i = clc.currentView = empty;
 	}
 	serverWorld = qtrue;
 	Cbuf_ExecuteText(EXEC_APPEND, va("tile -1 -1 -1\n"));
@@ -5065,8 +5065,8 @@ void CL_Tile_f( void ) {
 	int e = clientNum == -1 ? MAX_NUM_VMS : clientNum + 1;
 	for(; s < (e > MAX_NUM_VMS ? MAX_NUM_VMS : e); s++) {
 		if(clientNum == -1 && Cmd_Argc() == 2) {
-			x = s / xMaxVMs;
-			y = s % xMaxVMs;
+			x = s % xMaxVMs;
+			y = s / xMaxVMs;
 		}
 		if(x < 0 || y < 0 || (clientNum == -1 && !cgvms[s])) {
 	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);

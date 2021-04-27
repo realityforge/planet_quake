@@ -1450,6 +1450,11 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvm );
 	client->state = CS_ACTIVE;
+#ifdef USE_MULTIVM_SERVER
+	if(sv_mvWorld->integer) {
+		SV_SendServerCommand(client, "world %i", client->newWorld);
+	}
+#endif
 
 	// resend all configstrings using the cs commands since these are
 	// no longer sent when the client is CS_PRIMED
@@ -2965,9 +2970,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			CM_SwitchMap(gameWorlds[gvm]);
 			SV_SetAASgvm(gvm);
 			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
-			if(sv_mvWorld->integer) {
-				SV_SendServerCommand(cl, "world %i", cl->newWorld);
-			}
 			gvm = prevGvm;
 			CM_SwitchMap(gameWorlds[gvm]);
 			SV_SetAASgvm(gvm);
