@@ -1250,7 +1250,6 @@ Q3OBJ = \
 	$(B)/client/surface_foliage.o \
 	$(B)/client/facebsp.o \
 	$(B)/client/bspfile.o \
-	$(B)/client/bspfile_abstract.o \
 	$(B)/client/brush.o \
 	$(B)/client/map.o \
 	$(B)/client/polylib.o \
@@ -1688,7 +1687,6 @@ Q3DOBJ = \
 	$(B)/ded/surface_foliage.o \
 	$(B)/ded/facebsp.o \
 	$(B)/ded/bspfile.o \
-	$(B)/ded/bspfile_abstract.o \
 	$(B)/ded/brush.o \
 	$(B)/ded/map.o \
 	$(B)/ded/polylib.o \

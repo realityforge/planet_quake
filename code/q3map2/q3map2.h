@@ -81,8 +81,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include "../qcommon/qfiles.h"
-#include "../qcommon/qcommon.h"
 
 
 /* -------------------------------------------------------------------------------
@@ -939,25 +937,7 @@ typedef enum
 }
 surfaceType_t;
 
-#ifdef Q3MAP2
-char            *surfaceTypes[ NUM_SURFACE_TYPES ]
-	=
-	{
-	"SURFACE_BAD",
-	"SURFACE_FACE",
-	"SURFACE_PATCH",
-	"SURFACE_TRIANGLES",
-	"SURFACE_FLARE",
-	"SURFACE_FOLIAGE",
-	"SURFACE_FORCED_META",
-	"SURFACE_META",
-	"SURFACE_FOGHULL",
-	"SURFACE_DECAL",
-	"SURFACE_SHADER"
-	};
-#else
 extern char *surfaceTypes[ NUM_SURFACE_TYPES ];
-#endif
 
 
 /* ydnar: this struct needs an overhaul (again, heh) */
@@ -1823,117 +1803,72 @@ void                        WriteRBSPFile( const char *filename );
 
    ------------------------------------------------------------------------------- */
 
-#ifdef Q3MAP2
-	#define Q_EXTERN
-	#define Q_ASSIGN( a )   = a
-#else
-	#define Q_EXTERN extern
-	#define Q_ASSIGN( a )
-#endif
-
 /* game support */
-Q_EXTERN game_t games[]
-#ifndef Q3MAP2
-;
-#else
-	=
-	{
-								#include "game_quake3.h"
-	,
-								#include "game_quakelive.h" /* most be after game_quake3.h as they share defines! */
-	,
-								#include "game_nexuiz.h" /* most be after game_quake3.h as they share defines! */
-	,
-								#include "game_tremulous.h" /*LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
-	,
-								#include "game_unvanquished.h" /* must be after game_tremulous.h as they share defines! */
-	,
-								#include "game_tenebrae.h"
-	,
-								#include "game_wolf.h"
-	,
-								#include "game_wolfet.h" /* most be after game_wolf.h as they share defines! */
-	,
-								#include "game_etut.h"
-	,
-								#include "game_ef.h"
-	,
-								#include "game_sof2.h"
-	,
-								#include "game_jk2.h"   /* most be after game_sof2.h as they share defines! */
-	,
-								#include "game_ja.h"    /* most be after game_jk2.h as they share defines! */
-	,
-								#include "game_qfusion.h"   /* qfusion game */
-	,
-								#include "game_reaction.h" /* must be after game_quake3.h */
-	,
-								#include "game__null.h" /* null game (must be last item) */
-	};
-#endif
-Q_EXTERN game_t             *game Q_ASSIGN( &games[ 0 ] );
+extern game_t games[];
+
+extern game_t             *game;
 
 
 /* general */
-Q_EXTERN int numImages Q_ASSIGN( 0 );
-Q_EXTERN image_t images[ MAX_IMAGES ];
+extern int numImages;
+extern image_t images[ MAX_IMAGES ];
 
-Q_EXTERN int numPicoModels Q_ASSIGN( 0 );
-Q_EXTERN picoModel_t        *picoModels[ MAX_MODELS ];
+extern int numPicoModels;
+extern picoModel_t        *picoModels[ MAX_MODELS ];
 
-Q_EXTERN shaderInfo_t       *shaderInfo Q_ASSIGN( NULL );
-Q_EXTERN int numShaderInfo Q_ASSIGN( 0 );
-Q_EXTERN int numVertexRemaps Q_ASSIGN( 0 );
+extern shaderInfo_t       *shaderInfo;
+extern int numShaderInfo;
+extern int numVertexRemaps;
 
-Q_EXTERN surfaceParm_t custSurfaceParms[ MAX_CUST_SURFACEPARMS ];
-Q_EXTERN int numCustSurfaceParms Q_ASSIGN( 0 );
+extern surfaceParm_t custSurfaceParms[ MAX_CUST_SURFACEPARMS ];
+extern int numCustSurfaceParms;
 
-Q_EXTERN char mapName[ MAX_QPATH ];                 /* ydnar: per-map custom shaders for larger lightmaps */
-Q_EXTERN char mapShaderFile[ 1024 ];
-Q_EXTERN qboolean warnImage Q_ASSIGN( qtrue );
+extern char mapName[ MAX_QPATH ];                 /* ydnar: per-map custom shaders for larger lightmaps */
+extern char mapShaderFile[ 1024 ];
+extern qboolean warnImage;
 
 /* ydnar: sinusoid samples */
-Q_EXTERN float jitters[ MAX_JITTERS ];
+extern float jitters[ MAX_JITTERS ];
 
 
 /* commandline arguments */
-Q_EXTERN qboolean verbose;
-Q_EXTERN qboolean verboseEntities Q_ASSIGN( qfalse );
-Q_EXTERN qboolean force Q_ASSIGN( qfalse );
-Q_EXTERN qboolean infoMode Q_ASSIGN( qfalse );
-Q_EXTERN qboolean useCustomInfoParms Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noprune Q_ASSIGN( qfalse );
-Q_EXTERN qboolean leaktest Q_ASSIGN( qfalse );
-Q_EXTERN qboolean nodetail Q_ASSIGN( qfalse );
-Q_EXTERN qboolean nosubdivide Q_ASSIGN( qfalse );
-Q_EXTERN qboolean notjunc Q_ASSIGN( qfalse );
-Q_EXTERN qboolean fulldetail Q_ASSIGN( qfalse );
-Q_EXTERN qboolean nowater Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noCurveBrushes Q_ASSIGN( qfalse );
-Q_EXTERN qboolean fakemap Q_ASSIGN( qfalse );
-Q_EXTERN qboolean coplanar Q_ASSIGN( qfalse );
-Q_EXTERN qboolean nofog Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noHint Q_ASSIGN( qfalse );                        /* ydnar */
-Q_EXTERN qboolean renameModelShaders Q_ASSIGN( qfalse );            /* ydnar */
-Q_EXTERN qboolean skyFixHack Q_ASSIGN( qfalse );                    /* ydnar */
-Q_EXTERN qboolean bspAlternateSplitWeights Q_ASSIGN( qfalse );      /* 27 */
-Q_EXTERN qboolean deepBSP Q_ASSIGN( qfalse );                       /* div0 */
+extern qboolean verbose;
+extern qboolean verboseEntities;
+extern qboolean force;
+extern qboolean infoMode;
+extern qboolean useCustomInfoParms;
+extern qboolean noprune;
+extern qboolean leaktest;
+extern qboolean nodetail;
+extern qboolean nosubdivide;
+extern qboolean notjunc;
+extern qboolean fulldetail;
+extern qboolean nowater;
+extern qboolean noCurveBrushes;
+extern qboolean fakemap;
+extern qboolean coplanar;
+extern qboolean nofog;
+extern qboolean noHint;                        /* ydnar */
+extern qboolean renameModelShaders;            /* ydnar */
+extern qboolean skyFixHack;                    /* ydnar */
+extern qboolean bspAlternateSplitWeights;      /* 27 */
+extern qboolean deepBSP;                       /* div0 */
 
-Q_EXTERN int patchSubdivisions Q_ASSIGN( 8 );                       /* ydnar: -patchmeta subdivisions */
+extern int patchSubdivisions;                       /* ydnar: -patchmeta subdivisions */
 
-Q_EXTERN int maxLMSurfaceVerts Q_ASSIGN( 64 );                      /* ydnar */
-Q_EXTERN int maxSurfaceVerts Q_ASSIGN( 999 );                       /* ydnar */
-Q_EXTERN int maxSurfaceIndexes Q_ASSIGN( 6000 );                    /* ydnar */
-Q_EXTERN float npDegrees Q_ASSIGN( 0.0f );                          /* ydnar: nonplanar degrees */
-Q_EXTERN int bevelSnap Q_ASSIGN( 0 );                               /* ydnar: bevel plane snap */
-Q_EXTERN int texRange Q_ASSIGN( 0 );
-Q_EXTERN qboolean flat Q_ASSIGN( qfalse );
-Q_EXTERN qboolean meta Q_ASSIGN( qfalse );
-Q_EXTERN qboolean patchMeta Q_ASSIGN( qfalse );
-Q_EXTERN qboolean emitFlares Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugSurfaces Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugInset Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugPortals Q_ASSIGN( qfalse );
+extern int maxLMSurfaceVerts;                      /* ydnar */
+extern int maxSurfaceVerts;                       /* ydnar */
+extern int maxSurfaceIndexes;                    /* ydnar */
+extern float npDegrees;                          /* ydnar: nonplanar degrees */
+extern int bevelSnap;                               /* ydnar: bevel plane snap */
+extern int texRange;
+extern qboolean flat;
+extern qboolean meta;
+extern qboolean patchMeta;
+extern qboolean emitFlares;
+extern qboolean debugSurfaces;
+extern qboolean debugInset;
+extern qboolean debugPortals;
 
 #if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
 // Increasing the normalEpsilon to compensate for new logic in SnapNormal(), where
@@ -1941,9 +1876,9 @@ Q_EXTERN qboolean debugPortals Q_ASSIGN( qfalse );
 // components.  Unfortunately, normalEpsilon is also used in PlaneEqual().  So changing
 // this will affect anything that calls PlaneEqual() as well (which are, at the time
 // of this writing, FindFloatPlane() and AddBrushBevels()).
-Q_EXTERN double normalEpsilon Q_ASSIGN( 0.00005 );
+extern double normalEpsilon;
 #else
-Q_EXTERN double normalEpsilon Q_ASSIGN( 0.00001 );
+extern double normalEpsilon;
 #endif
 
 #if Q3MAP2_EXPERIMENTAL_HIGH_PRECISION_MATH_FIXES
@@ -1955,88 +1890,65 @@ Q_EXTERN double normalEpsilon Q_ASSIGN( 0.00001 );
 // opinion.  The real fix for this problem is to have 64 bit distances and then make
 // this epsilon even smaller, or to constrain world coordinates to plus minus 2^15
 // (or even 2^14).
-Q_EXTERN double distanceEpsilon Q_ASSIGN( 0.005 );
+extern double distanceEpsilon;
 #else
-Q_EXTERN double distanceEpsilon Q_ASSIGN( 0.01 );
+extern double distanceEpsilon;
 #endif
 
 
 /* bsp */
-Q_EXTERN int numMapEntities Q_ASSIGN( 0 );
+extern int numMapEntities;
 
-Q_EXTERN int blockSize[ 3 ]                                 /* should be the same as in radiant */
-#ifndef Q3MAP2
-;
-#else
-	= { 1024, 1024, 1024 };
-#endif
+extern int blockSize[ 3 ];                                /* should be the same as in radiant */
 
-Q_EXTERN char name[ 1024 ];
-Q_EXTERN char source[ 1024 ];
-Q_EXTERN char outbase[ 32 ];
 
-Q_EXTERN int sampleSize;                                    /* lightmap sample size in units */
+extern char name[ 1024 ];
+extern char source[ 1024 ];
+extern char outbase[ 32 ];
 
-Q_EXTERN int mapEntityNum Q_ASSIGN( 0 );
+extern int sampleSize;                                    /* lightmap sample size in units */
 
-Q_EXTERN int entitySourceBrushes;
+extern int mapEntityNum;
 
-Q_EXTERN plane_t mapplanes[ MAX_MAP_PLANES ];               /* mapplanes[ num ^ 1 ] will always be the mirror or mapplanes[ num ] */
-Q_EXTERN int nummapplanes;                                  /* nummapplanes will always be even */
-Q_EXTERN int numMapPatches;
-Q_EXTERN vec3_t mapMins, mapMaxs;
+extern int entitySourceBrushes;
 
-Q_EXTERN int defaultFogNum Q_ASSIGN( -1 );                  /* ydnar: cleaner fog handling */
-Q_EXTERN int numMapFogs Q_ASSIGN( 0 );
-Q_EXTERN fog_t mapFogs[ MAX_MAP_FOGS ];
+extern plane_t mapplanes[ MAX_MAP_PLANES ];               /* mapplanes[ num ^ 1 ] will always be the mirror or mapplanes[ num ] */
+extern int nummapplanes;                                  /* nummapplanes will always be even */
+extern int numMapPatches;
+extern vec3_t mapMins, mapMaxs;
 
-Q_EXTERN bspEntity_t           *mapEnt;
-Q_EXTERN brush_t            *buildBrush;
-Q_EXTERN int numActiveBrushes;
-Q_EXTERN int g_bBrushPrimit;
+extern int defaultFogNum;                  /* ydnar: cleaner fog handling */
+extern int numMapFogs;
+extern fog_t mapFogs[ MAX_MAP_FOGS ];
 
-Q_EXTERN int numStrippedLights Q_ASSIGN( 0 );
+extern bspEntity_t           *mapEnt;
+extern brush_t            *buildBrush;
+extern int numActiveBrushes;
+extern int g_bBrushPrimit;
+
+extern int numStrippedLights;
 
 
 /* surface stuff */
-Q_EXTERN mapDrawSurface_t   *mapDrawSurfs Q_ASSIGN( NULL );
-Q_EXTERN int numMapDrawSurfs;
+extern mapDrawSurface_t   *mapDrawSurfs;
+extern int numMapDrawSurfs;
 
-Q_EXTERN int numSurfacesByType[ NUM_SURFACE_TYPES ];
-Q_EXTERN int numClearedSurfaces;
-Q_EXTERN int numStripSurfaces;
-Q_EXTERN int numFanSurfaces;
-Q_EXTERN int numMergedSurfaces;
-Q_EXTERN int numMergedVerts;
+extern int numSurfacesByType[ NUM_SURFACE_TYPES ];
+extern int numClearedSurfaces;
+extern int numStripSurfaces;
+extern int numFanSurfaces;
+extern int numMergedSurfaces;
+extern int numMergedVerts;
 
-Q_EXTERN int numRedundantIndexes;
+extern int numRedundantIndexes;
 
-Q_EXTERN int numSurfaceModels Q_ASSIGN( 0 );
+extern int numSurfaceModels;
 
-Q_EXTERN byte debugColors[ 12 ][ 3 ]
-#ifndef Q3MAP2
-;
-#else
-	=
-	{
-	{ 255, 0, 0 },
-	{ 192, 128, 128 },
-	{ 255, 255, 0 },
-	{ 192, 192, 128 },
-	{ 0, 255, 255 },
-	{ 128, 192, 192 },
-	{ 0, 0, 255 },
-	{ 128, 128, 192 },
-	{ 255, 0, 255 },
-	{ 192, 128, 192 },
-	{ 0, 255, 0 },
-	{ 128, 192, 128 }
-	};
-#endif
+extern byte debugColors[ 12 ][ 3 ];
 
-Q_EXTERN qboolean skyboxPresent Q_ASSIGN( qfalse );
-Q_EXTERN int skyboxArea Q_ASSIGN( -1 );
-Q_EXTERN m4x4_t skyboxTransform;
+extern qboolean skyboxPresent;
+extern int skyboxArea;
+extern m4x4_t skyboxTransform;
 
 
 
@@ -2047,48 +1959,48 @@ Q_EXTERN m4x4_t skyboxTransform;
    ------------------------------------------------------------------------------- */
 
 /* commandline arguments */
-Q_EXTERN qboolean			fastvis;
-Q_EXTERN qboolean			noPassageVis;
-Q_EXTERN qboolean			passageVisOnly;
-Q_EXTERN qboolean			mergevis;
-Q_EXTERN qboolean			mergevisportals;
-Q_EXTERN qboolean			nosort;
-Q_EXTERN qboolean			saveprt;
-Q_EXTERN qboolean			hint;	/* ydnar */
-Q_EXTERN char				inbase[ MAX_QPATH ];
-Q_EXTERN char				globalCelShader[ MAX_QPATH ];
+extern qboolean			fastvis;
+extern qboolean			noPassageVis;
+extern qboolean			passageVisOnly;
+extern qboolean			mergevis;
+extern qboolean			mergevisportals;
+extern qboolean			nosort;
+extern qboolean			saveprt;
+extern qboolean			hint;	/* ydnar */
+extern char				inbase[ MAX_QPATH ];
+extern char				globalCelShader[ MAX_QPATH ];
 
 /* other bits */
-Q_EXTERN int totalvis;
+extern int totalvis;
 
-Q_EXTERN float farPlaneDist;                /* rr2do2, rf, mre, ydnar all contributed to this one... */
+extern float farPlaneDist;                /* rr2do2, rf, mre, ydnar all contributed to this one... */
 
-Q_EXTERN int numportals;
-Q_EXTERN int portalclusters;
+extern int numportals;
+extern int portalclusters;
 
-Q_EXTERN vportal_t          *portals;
-Q_EXTERN leaf_t             *leafs;
+extern vportal_t          *portals;
+extern leaf_t             *leafs;
 
-Q_EXTERN vportal_t          *faces;
-Q_EXTERN leaf_t             *faceleafs;
+extern vportal_t          *faces;
+extern leaf_t             *faceleafs;
 
-Q_EXTERN int numfaces;
+extern int numfaces;
 
-Q_EXTERN int c_portaltest, c_portalpass, c_portalcheck;
-Q_EXTERN int c_portalskip, c_leafskip;
-Q_EXTERN int c_vistest, c_mighttest;
-Q_EXTERN int c_chains;
+extern int c_portaltest, c_portalpass, c_portalcheck;
+extern int c_portalskip, c_leafskip;
+extern int c_vistest, c_mighttest;
+extern int c_chains;
 
-Q_EXTERN byte               *vismap, *vismap_p, *vismap_end;
+extern byte               *vismap, *vismap_p, *vismap_end;
 
-Q_EXTERN int testlevel;
+extern int testlevel;
 
-Q_EXTERN byte               *uncompressed;
+extern byte               *uncompressed;
 
-Q_EXTERN int leafbytes, leaflongs;
-Q_EXTERN int portalbytes, portallongs;
+extern int leafbytes, leaflongs;
+extern int portalbytes, portallongs;
 
-Q_EXTERN vportal_t          *sorted_portals[ MAX_MAP_PORTALS * 2 ];
+extern vportal_t          *sorted_portals[ MAX_MAP_PORTALS * 2 ];
 
 
 
@@ -2099,213 +2011,208 @@ Q_EXTERN vportal_t          *sorted_portals[ MAX_MAP_PORTALS * 2 ];
    ------------------------------------------------------------------------------- */
 
 /* commandline arguments */
-Q_EXTERN qboolean wolfLight Q_ASSIGN( qfalse );
-Q_EXTERN qboolean loMem Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noStyles Q_ASSIGN( qfalse );
+extern qboolean wolfLight;
+extern qboolean loMem;
+extern qboolean noStyles;
 
-Q_EXTERN int sampleSize Q_ASSIGN( DEFAULT_LIGHTMAP_SAMPLE_SIZE );
-Q_EXTERN qboolean noVertexLighting Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noGridLighting Q_ASSIGN( qfalse );
+extern int sampleSize;
+extern qboolean noVertexLighting;
+extern qboolean noGridLighting;
 
-Q_EXTERN qboolean noTrace Q_ASSIGN( qfalse );
-Q_EXTERN qboolean noSurfaces Q_ASSIGN( qfalse );
-Q_EXTERN qboolean patchShadows Q_ASSIGN( qfalse );
-Q_EXTERN qboolean cpmaHack Q_ASSIGN( qfalse );
+extern qboolean noTrace;
+extern qboolean noSurfaces;
+extern qboolean patchShadows;
+extern qboolean cpmaHack;
 
-Q_EXTERN qboolean deluxemap Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugDeluxemap Q_ASSIGN( qfalse );
+extern qboolean deluxemap;
+extern qboolean debugDeluxemap;
 
-Q_EXTERN qboolean fast Q_ASSIGN( qfalse );
-Q_EXTERN qboolean faster Q_ASSIGN( qfalse );
-Q_EXTERN qboolean fastgrid Q_ASSIGN( qfalse );
-Q_EXTERN qboolean fastbounce Q_ASSIGN( qfalse );
-Q_EXTERN qboolean cheap Q_ASSIGN( qfalse );
-Q_EXTERN qboolean cheapgrid Q_ASSIGN( qfalse );
-Q_EXTERN int bounce Q_ASSIGN( 0 );
-Q_EXTERN qboolean bounceOnly Q_ASSIGN( qfalse );
-Q_EXTERN qboolean bouncing Q_ASSIGN( qfalse );
-Q_EXTERN qboolean bouncegrid Q_ASSIGN( qfalse );
-Q_EXTERN qboolean normalmap Q_ASSIGN( qfalse );
-Q_EXTERN qboolean trisoup Q_ASSIGN( qfalse );
-Q_EXTERN qboolean shade Q_ASSIGN( qfalse );
-Q_EXTERN float shadeAngleDegrees Q_ASSIGN( 0.0f );
-Q_EXTERN int superSample Q_ASSIGN( 0 );
-Q_EXTERN int lightSamples Q_ASSIGN( 1 );
-Q_EXTERN qboolean filter Q_ASSIGN( qfalse );
-Q_EXTERN qboolean dark Q_ASSIGN( qfalse );
-Q_EXTERN qboolean sunOnly Q_ASSIGN( qfalse );
-Q_EXTERN int approximateTolerance Q_ASSIGN( 0 );
-Q_EXTERN qboolean noCollapse Q_ASSIGN( qfalse );
-Q_EXTERN qboolean exportLightmaps Q_ASSIGN( qfalse );
-Q_EXTERN qboolean externalLightmaps Q_ASSIGN( qfalse );
-Q_EXTERN int lmCustomSize Q_ASSIGN( LIGHTMAP_WIDTH );
+extern qboolean fast;
+extern qboolean faster;
+extern qboolean fastgrid;
+extern qboolean fastbounce;
+extern qboolean cheap;
+extern qboolean cheapgrid;
+extern int bounce;
+extern qboolean bounceOnly;
+extern qboolean bouncing;
+extern qboolean bouncegrid;
+extern qboolean normalmap;
+extern qboolean trisoup;
+extern qboolean shade;
+extern float shadeAngleDegrees;
+extern int superSample;
+extern int lightSamples;
+extern qboolean filter;
+extern qboolean dark;
+extern qboolean sunOnly;
+extern int approximateTolerance;
+extern qboolean noCollapse;
+extern qboolean exportLightmaps;
+extern qboolean externalLightmaps;
+extern int lmCustomSize;
 
-Q_EXTERN qboolean dirty Q_ASSIGN( qfalse );
-Q_EXTERN qboolean dirtDebug Q_ASSIGN( qfalse );
-Q_EXTERN int dirtMode Q_ASSIGN( 0 );
-Q_EXTERN float dirtDepth Q_ASSIGN( 128.0f );
-Q_EXTERN float dirtScale Q_ASSIGN( 1.0f );
-Q_EXTERN float dirtGain Q_ASSIGN( 1.0f );
+extern qboolean dirty;
+extern qboolean dirtDebug;
+extern int dirtMode;
+extern float dirtDepth;
+extern float dirtScale;
+extern float dirtGain;
 
-Q_EXTERN qboolean debugnormals Q_ASSIGN( qfalse );
-Q_EXTERN qboolean floodlighty Q_ASSIGN( qfalse );
-Q_EXTERN qboolean floodlight_lowquality Q_ASSIGN( qfalse );
-Q_EXTERN vec3_t floodlightRGB;
-Q_EXTERN float floodlightIntensity Q_ASSIGN( 512 );
-Q_EXTERN float floodlightDistance Q_ASSIGN( 1024 );
+extern qboolean debugnormals;
+extern qboolean floodlighty;
+extern qboolean floodlight_lowquality;
+extern vec3_t floodlightRGB;
+extern float floodlightIntensity;
+extern float floodlightDistance;
 
-Q_EXTERN qboolean dump Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debug Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugUnused Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugAxis Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugCluster Q_ASSIGN( qfalse );
-Q_EXTERN qboolean debugOrigin Q_ASSIGN( qfalse );
-Q_EXTERN qboolean lightmapBorder Q_ASSIGN( qfalse );
+extern qboolean dump;
+extern qboolean debug;
+extern qboolean debugUnused;
+extern qboolean debugAxis;
+extern qboolean debugCluster;
+extern qboolean debugOrigin;
+extern qboolean lightmapBorder;
 
 /* longest distance across the map */
-Q_EXTERN float maxMapDistance Q_ASSIGN( 0 );
+extern float maxMapDistance;
 
 /* for run time tweaking of light sources */
-Q_EXTERN float pointScale Q_ASSIGN( 7500.0f );
-Q_EXTERN float areaScale Q_ASSIGN( 0.25f );
-Q_EXTERN float skyScale Q_ASSIGN( 1.0f );
-Q_EXTERN float bounceScale Q_ASSIGN( 0.25f );
+extern float pointScale;
+extern float areaScale;
+extern float skyScale;
+extern float bounceScale;
 
 /* ydnar: lightmap gamma/compensation */
-Q_EXTERN float lightmapGamma Q_ASSIGN( 1.0f );
-Q_EXTERN float lightmapExposure Q_ASSIGN( 0.0f );
-Q_EXTERN float lightmapCompensate Q_ASSIGN( 1.0f );
+extern float lightmapGamma;
+extern float lightmapExposure;
+extern float lightmapCompensate;
 
 /* ydnar: for runtime tweaking of falloff tolerance */
-Q_EXTERN float falloffTolerance Q_ASSIGN( 1.0f );
-Q_EXTERN qboolean exactPointToPolygon Q_ASSIGN( qtrue );
-Q_EXTERN float formFactorValueScale Q_ASSIGN( 3.0f );
-Q_EXTERN float linearScale Q_ASSIGN( 1.0f / 8000.0f );
+extern float falloffTolerance;
+extern qboolean exactPointToPolygon;
+extern float formFactorValueScale;
+extern float linearScale;
 
-Q_EXTERN light_t            *lights;
-Q_EXTERN int numPointLights;
-Q_EXTERN int numSpotLights;
-Q_EXTERN int numSunLights;
-Q_EXTERN int numAreaLights;
+extern light_t            *lights;
+extern int numPointLights;
+extern int numSpotLights;
+extern int numSunLights;
+extern int numAreaLights;
 
 /* ydnar: for luxel placement */
-Q_EXTERN int numSurfaceClusters, maxSurfaceClusters;
-Q_EXTERN int                *surfaceClusters;
+extern int numSurfaceClusters, maxSurfaceClusters;
+extern int                *surfaceClusters;
 
 /* ydnar: for radiosity */
-Q_EXTERN int numDiffuseLights;
-Q_EXTERN int numBrushDiffuseLights;
-Q_EXTERN int numTriangleDiffuseLights;
-Q_EXTERN int numPatchDiffuseLights;
+extern int numDiffuseLights;
+extern int numBrushDiffuseLights;
+extern int numTriangleDiffuseLights;
+extern int numPatchDiffuseLights;
 
 /* ydnar: general purpose extra copy of drawvert list */
-Q_EXTERN bspDrawVert_t      *yDrawVerts;
+extern bspDrawVert_t      *yDrawVerts;
 
 /* ydnar: for tracing statistics */
-Q_EXTERN int minSurfacesTested;
-Q_EXTERN int maxSurfacesTested;
-Q_EXTERN int totalSurfacesTested;
-Q_EXTERN int totalTraces;
+extern int minSurfacesTested;
+extern int maxSurfacesTested;
+extern int totalSurfacesTested;
+extern int totalTraces;
 
-Q_EXTERN FILE               *dumpFile;
+extern FILE               *dumpFile;
 
-Q_EXTERN int c_visible, c_occluded;
-Q_EXTERN int c_subsampled;                  /* ydnar */
+extern int c_visible, c_occluded;
+extern int c_subsampled;                  /* ydnar */
 
-Q_EXTERN int defaultLightSubdivide Q_ASSIGN( 999 );
+extern int defaultLightSubdivide;
 
-Q_EXTERN vec3_t ambientColor;
-Q_EXTERN vec3_t minLight, minVertexLight, minGridLight;
+extern vec3_t ambientColor;
+extern vec3_t minLight, minVertexLight, minGridLight;
 
-Q_EXTERN int                *entitySurface;
-Q_EXTERN vec3_t             *surfaceOrigin;
+extern int                *entitySurface;
+extern vec3_t             *surfaceOrigin;
 
-Q_EXTERN vec3_t sunDirection;
-Q_EXTERN vec3_t sunLight;
+extern vec3_t sunDirection;
+extern vec3_t sunLight;
 
 /* tracing */
-Q_EXTERN int c_totalTrace;
-Q_EXTERN int c_cullTrace, c_testTrace;
-Q_EXTERN int c_testFacets;
+extern int c_totalTrace;
+extern int c_cullTrace, c_testTrace;
+extern int c_testFacets;
 
 /* ydnar: light optimization */
-Q_EXTERN float subdivideThreshold Q_ASSIGN( DEFAULT_SUBDIVIDE_THRESHOLD );
+extern float subdivideThreshold;
 
-Q_EXTERN int numOpaqueBrushes, maxOpaqueBrush;
-Q_EXTERN byte               *opaqueBrushes;
+extern int numOpaqueBrushes, maxOpaqueBrush;
+extern byte               *opaqueBrushes;
 
-Q_EXTERN int numLights;
-Q_EXTERN int numCulledLights;
+extern int numLights;
+extern int numCulledLights;
 
-Q_EXTERN int gridBoundsCulled;
-Q_EXTERN int gridEnvelopeCulled;
+extern int gridBoundsCulled;
+extern int gridEnvelopeCulled;
 
-Q_EXTERN int lightsBoundsCulled;
-Q_EXTERN int lightsEnvelopeCulled;
-Q_EXTERN int lightsPlaneCulled;
-Q_EXTERN int lightsClusterCulled;
+extern int lightsBoundsCulled;
+extern int lightsEnvelopeCulled;
+extern int lightsPlaneCulled;
+extern int lightsClusterCulled;
 
 /* ydnar: radiosity */
-Q_EXTERN float diffuseSubdivide Q_ASSIGN( 256.0f );
-Q_EXTERN float minDiffuseSubdivide Q_ASSIGN( 64.0f );
-Q_EXTERN int numDiffuseSurfaces Q_ASSIGN( 0 );
+extern float diffuseSubdivide;
+extern float minDiffuseSubdivide;
+extern int numDiffuseSurfaces;
 
 /* ydnar: list of surface information necessary for lightmap calculation */
-Q_EXTERN surfaceInfo_t      *surfaceInfos Q_ASSIGN( NULL );
+extern surfaceInfo_t      *surfaceInfos;
 
 /* ydnar: sorted list of surfaces */
-Q_EXTERN int                *sortSurfaces Q_ASSIGN( NULL );
+extern int                *sortSurfaces;
 
 /* clumps of surfaces that share a raw lightmap */
-Q_EXTERN int numLightSurfaces Q_ASSIGN( 0 );
-Q_EXTERN int                *lightSurfaces Q_ASSIGN( NULL );
+extern int numLightSurfaces;
+extern int                *lightSurfaces;
 
 /* raw lightmaps */
-Q_EXTERN int numRawSuperLuxels Q_ASSIGN( 0 );
-Q_EXTERN int numRawLightmaps Q_ASSIGN( 0 );
-Q_EXTERN rawLightmap_t      *rawLightmaps Q_ASSIGN( NULL );
-Q_EXTERN int                *sortLightmaps Q_ASSIGN( NULL );
+extern int numRawSuperLuxels;
+extern int numRawLightmaps;
+extern rawLightmap_t      *rawLightmaps;
+extern int                *sortLightmaps;
 
 /* vertex luxels */
-Q_EXTERN float              *vertexLuxels[ MAX_LIGHTMAPS ];
-Q_EXTERN float              *radVertexLuxels[ MAX_LIGHTMAPS ];
+extern float              *vertexLuxels[ MAX_LIGHTMAPS ];
+extern float              *radVertexLuxels[ MAX_LIGHTMAPS ];
 
 /* bsp lightmaps */
-Q_EXTERN int numLightmapShaders Q_ASSIGN( 0 );
-Q_EXTERN int numSolidLightmaps Q_ASSIGN( 0 );
-Q_EXTERN int numOutLightmaps Q_ASSIGN( 0 );
-Q_EXTERN int numBSPLightmaps Q_ASSIGN( 0 );
-Q_EXTERN int numExtLightmaps Q_ASSIGN( 0 );
-Q_EXTERN outLightmap_t      *outLightmaps Q_ASSIGN( NULL );
+extern int numLightmapShaders;
+extern int numSolidLightmaps;
+extern int numOutLightmaps;
+extern int numBSPLightmaps;
+extern int numExtLightmaps;
+extern outLightmap_t      *outLightmaps;
 
 /* grid points */
-Q_EXTERN int numRawGridPoints Q_ASSIGN( 0 );
-Q_EXTERN rawGridPoint_t     *rawGridPoints Q_ASSIGN( NULL );
+extern int numRawGridPoints;
+extern rawGridPoint_t     *rawGridPoints;
 
-Q_EXTERN int numSurfsVertexLit Q_ASSIGN( 0 );
-Q_EXTERN int numSurfsVertexForced Q_ASSIGN( 0 );
-Q_EXTERN int numSurfsVertexApproximated Q_ASSIGN( 0 );
-Q_EXTERN int numSurfsLightmapped Q_ASSIGN( 0 );
-Q_EXTERN int numPlanarsLightmapped Q_ASSIGN( 0 );
-Q_EXTERN int numNonPlanarsLightmapped Q_ASSIGN( 0 );
-Q_EXTERN int numPatchesLightmapped Q_ASSIGN( 0 );
-Q_EXTERN int numPlanarPatchesLightmapped Q_ASSIGN( 0 );
+extern int numSurfsVertexLit;
+extern int numSurfsVertexForced;
+extern int numSurfsVertexApproximated;
+extern int numSurfsLightmapped;
+extern int numPlanarsLightmapped;
+extern int numNonPlanarsLightmapped;
+extern int numPatchesLightmapped;
+extern int numPlanarPatchesLightmapped;
 
-Q_EXTERN int numLuxels Q_ASSIGN( 0 );
-Q_EXTERN int numLuxelsMapped Q_ASSIGN( 0 );
-Q_EXTERN int numLuxelsOccluded Q_ASSIGN( 0 );
-Q_EXTERN int numLuxelsIlluminated Q_ASSIGN( 0 );
-Q_EXTERN int numVertsIlluminated Q_ASSIGN( 0 );
+extern int numLuxels;
+extern int numLuxelsMapped;
+extern int numLuxelsOccluded;
+extern int numLuxelsIlluminated;
+extern int numVertsIlluminated;
 
 /* lightgrid */
-Q_EXTERN vec3_t gridMins;
-Q_EXTERN int gridBounds[ 3 ];
-Q_EXTERN vec3_t gridSize
-#ifndef Q3MAP2
-;
-#else
-	= { 64, 64, 128 };
-#endif
+extern vec3_t gridMins;
+extern int gridBounds[ 3 ];
+extern vec3_t gridSize;
 
 
 
@@ -2315,66 +2222,66 @@ Q_EXTERN vec3_t gridSize
 
    ------------------------------------------------------------------------------- */
 
-Q_EXTERN int numEntities Q_ASSIGN( 0 );
-Q_EXTERN int numBSPEntities Q_ASSIGN( 0 );
-Q_EXTERN bspEntity_t entities[ MAX_MAP_ENTITIES ];
+extern int numEntities;
+extern int numBSPEntities;
+extern bspEntity_t entities[ MAX_MAP_ENTITIES ];
 
-Q_EXTERN int numBSPModels Q_ASSIGN( 0 );
-Q_EXTERN bspModel_t bspModels[ MAX_MAP_MODELS ];
+extern int numBSPModels;
+extern bspModel_t bspModels[ MAX_MAP_MODELS ];
 
-Q_EXTERN int numBSPShaders Q_ASSIGN( 0 );
-Q_EXTERN bspShader_t bspShaders[ MAX_MAP_MODELS ];
+extern int numBSPShaders;
+extern bspShader_t bspShaders[ MAX_MAP_MODELS ];
 
-Q_EXTERN int bspEntDataSize Q_ASSIGN( 0 );
-Q_EXTERN char bspEntData[ MAX_MAP_ENTSTRING ];
+extern int bspEntDataSize;
+extern char bspEntData[ MAX_MAP_ENTSTRING ];
 
-Q_EXTERN int numBSPLeafs Q_ASSIGN( 0 );
-Q_EXTERN bspLeaf_t bspLeafs[ MAX_MAP_LEAFS ];
+extern int numBSPLeafs;
+extern bspLeaf_t bspLeafs[ MAX_MAP_LEAFS ];
 
-Q_EXTERN int numBSPPlanes Q_ASSIGN( 0 );
-Q_EXTERN bspPlane_t bspPlanes[ MAX_MAP_PLANES ];
+extern int numBSPPlanes;
+extern bspPlane_t bspPlanes[ MAX_MAP_PLANES ];
 
-Q_EXTERN int numBSPNodes Q_ASSIGN( 0 );
-Q_EXTERN bspNode_t bspNodes[ MAX_MAP_NODES ];
+extern int numBSPNodes;
+extern bspNode_t bspNodes[ MAX_MAP_NODES ];
 
-Q_EXTERN int numBSPLeafSurfaces Q_ASSIGN( 0 );
-Q_EXTERN int bspLeafSurfaces[ MAX_MAP_LEAFFACES ];
+extern int numBSPLeafSurfaces;
+extern int bspLeafSurfaces[ MAX_MAP_LEAFFACES ];
 
-Q_EXTERN int numBSPLeafBrushes Q_ASSIGN( 0 );
-Q_EXTERN int bspLeafBrushes[ MAX_MAP_LEAFBRUSHES ];
+extern int numBSPLeafBrushes;
+extern int bspLeafBrushes[ MAX_MAP_LEAFBRUSHES ];
 
-Q_EXTERN int numBSPBrushes Q_ASSIGN( 0 );
-Q_EXTERN bspBrush_t bspBrushes[ MAX_MAP_BRUSHES ];
+extern int numBSPBrushes;
+extern bspBrush_t bspBrushes[ MAX_MAP_BRUSHES ];
 
-Q_EXTERN int numBSPBrushSides Q_ASSIGN( 0 );
-Q_EXTERN bspBrushSide_t bspBrushSides[ MAX_MAP_BRUSHSIDES ];
+extern int numBSPBrushSides;
+extern bspBrushSide_t bspBrushSides[ MAX_MAP_BRUSHSIDES ];
 
-Q_EXTERN int numBSPLightBytes Q_ASSIGN( 0 );
-Q_EXTERN byte *bspLightBytes Q_ASSIGN( NULL );
+extern int numBSPLightBytes;
+extern byte *bspLightBytes;
 
-//%	Q_EXTERN int				numBSPGridPoints Q_ASSIGN( 0 );
-//%	Q_EXTERN byte				*bspGridPoints Q_ASSIGN( NULL );
+//%	extern int				numBSPGridPoints;
+//%	extern byte				*bspGridPoints;
 
-Q_EXTERN int numBSPGridPoints Q_ASSIGN( 0 );
-Q_EXTERN bspGridPoint_t     *bspGridPoints Q_ASSIGN( NULL );
+extern int numBSPGridPoints;
+extern bspGridPoint_t     *bspGridPoints;
 
-Q_EXTERN int numBSPVisBytes Q_ASSIGN( 0 );
-Q_EXTERN byte bspVisBytes[ MAX_MAP_VISIBILITY ];
+extern int numBSPVisBytes;
+extern byte bspVisBytes[ MAX_MAP_VISIBILITY ];
 
-Q_EXTERN int numBSPDrawVerts Q_ASSIGN( 0 );
-Q_EXTERN bspDrawVert_t *bspDrawVerts Q_ASSIGN( NULL );
+extern int numBSPDrawVerts;
+extern bspDrawVert_t *bspDrawVerts;
 
-Q_EXTERN int numBSPDrawIndexes Q_ASSIGN( 0 );
-Q_EXTERN int bspDrawIndexes[ MAX_MAP_DRAW_INDEXES ];
+extern int numBSPDrawIndexes;
+extern int bspDrawIndexes[ MAX_MAP_DRAW_INDEXES ];
 
-Q_EXTERN int numBSPDrawSurfaces Q_ASSIGN( 0 );
-Q_EXTERN bspDrawSurface_t   *bspDrawSurfaces Q_ASSIGN( NULL );
+extern int numBSPDrawSurfaces;
+extern bspDrawSurface_t   *bspDrawSurfaces;
 
-Q_EXTERN int numBSPFogs Q_ASSIGN( 0 );
-Q_EXTERN bspFog_t bspFogs[ MAX_MAP_FOGS ];
+extern int numBSPFogs;
+extern bspFog_t bspFogs[ MAX_MAP_FOGS ];
 
-Q_EXTERN int numBSPAds Q_ASSIGN( 0 );
-Q_EXTERN bspAdvertisement_t bspAds[ MAX_MAP_ADVERTISEMENTS ];
+extern int numBSPAds;
+extern bspAdvertisement_t bspAds[ MAX_MAP_ADVERTISEMENTS ];
 
 
 /* end marker */

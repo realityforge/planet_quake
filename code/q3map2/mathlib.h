@@ -23,14 +23,24 @@
 #define __MATHLIB__
 
 // mathlib.h
-#include "../qcommon/q_shared.h"
 #include <math.h>
 #include <float.h>
+#include "../qcommon/q_shared.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+/*
+typedef enum { qfalse = 0, qtrue } qboolean;
+typedef unsigned char byte;
+typedef float vec_t;
+typedef vec_t vec2_t[2];
+typedef vec_t vec3_t[3];
+typedef vec_t vec4_t[4];
+*/
+
 
 // Smallest positive value for vec_t such that 1.0 + VEC_SMALLEST_EPSILON_AROUND_ONE != 1.0.
 // In the case of 32 bit floats (which is almost certainly the case), it's 0.00000011921.

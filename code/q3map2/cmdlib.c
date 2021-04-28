@@ -28,9 +28,11 @@
 // merging alpha branch into trunk
 // replaced qprintf with Com_Printf
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "cmdlib.h"
-//#include "mathlib.h"
-//#include "inout.h"
+#include "mathlib.h"
+#include "inout.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -642,6 +644,33 @@ void ExtractFileExtension( const char *path, char *dest ){
 }
 
 
+/*
+===============
+ParseHex
+===============
+*/
+static int	ParseHex( const char *text ) {
+	int		value;
+	int		c;
+
+	value = 0;
+	while ( ( c = *text++ ) != 0 ) {
+		if ( c >= '0' && c <= '9' ) {
+			value = value * 16 + c - '0';
+			continue;
+		}
+		if ( c >= 'a' && c <= 'f' ) {
+			value = value * 16 + 10 + c - 'a';
+			continue;
+		}
+		if ( c >= 'A' && c <= 'F' ) {
+			value = value * 16 + 10 + c - 'A';
+			continue;
+		}
+	}
+
+	return value;
+}
 
 int ParseNum( const char *str ){
 	if ( str[0] == '$' ) {

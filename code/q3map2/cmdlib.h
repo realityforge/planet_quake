@@ -57,9 +57,6 @@ void *safe_malloc_info( size_t size, char* info );
   #define Q_mkdir( a ) mkdir( a, 0755 )
 #endif
 
-#include "../qcommon/q_shared.h"
-#include "../qcommon/qcommon.h"
-
 void    DefaultPath( char *path, const char *basepath );
 void    StripFilename( char *path );
 void    StripExtension( char *path );

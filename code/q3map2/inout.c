@@ -26,6 +26,7 @@
 // deal with in/out tasks, for either stdin/stdout or network/XML stream
 //
 
+#include "../qcommon/q_shared.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "polylib.h"

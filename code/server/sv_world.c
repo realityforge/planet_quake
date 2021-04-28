@@ -22,8 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // world.c -- world query functions
 
 #include "server.h"
-#define Q3MAP2
-#include "../q3map2/q3map2.h"
+#include "../q3map2/bspfile.h"
 
 /*
 ================

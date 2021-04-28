@@ -20,6 +20,8 @@
  */
 
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "inout.h"
