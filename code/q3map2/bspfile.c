@@ -25,6 +25,7 @@
 #include "inout.h"
 #include "bspfile.h"
 #include "scriplib.h"
+#include "../qcommon/qcommon.h"
 
 void GetLeafNums( void );
 

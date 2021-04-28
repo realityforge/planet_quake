@@ -160,7 +160,7 @@ int ExportLightmapsMain( int argc, char **argv ){
 	/* do some path mangling */
 	strcpy( source, ExpandArg( argv[ argc - 1 ] ) );
 	StripExtension( source );
-	DefaultExtension( source, ".bsp" );
+	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* load the bsp */
 	Sys_Printf( "Loading %s\n", source );
@@ -195,7 +195,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 	/* do some path mangling */
 	strcpy( source, ExpandArg( argv[ argc - 1 ] ) );
 	StripExtension( source );
-	DefaultExtension( source, ".bsp" );
+	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* load the bsp */
 	Sys_Printf( "Loading %s\n", source );

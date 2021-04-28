@@ -481,7 +481,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 	/* load the BSP first */
 	strcpy( source, ExpandArg( argv[ argc - 1 ] ) );
 	StripExtension( source );
-	DefaultExtension( source, ".bsp" );
+	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 	Sys_Printf( "Loading %s\n", source );
 	LoadShaderInfo();
 	LoadBSPFile( source );

@@ -429,8 +429,11 @@ endif
 	
 #  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
 	
-#  BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-#  CLIENT_LDFLAGS += -llibRmlCore
+  LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2
+#BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
+  CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib
+#  CLIENT_LDFLAGS += -lRmlCore -lxml2
+#  CLIENT_LDFLAGS += 
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
@@ -1244,6 +1247,7 @@ Q3OBJ = \
 	$(B)/client/portals.o \
 	$(B)/client/surface.o \
 	$(B)/client/surface_meta.o \
+	$(B)/client/surface_foliage.o \
 	$(B)/client/facebsp.o \
 	$(B)/client/bspfile.o \
 	$(B)/client/bspfile_abstract.o \
@@ -1257,6 +1261,37 @@ Q3OBJ = \
 	$(B)/client/shaders.o \
 	$(B)/client/mathlib.o \
 	$(B)/client/brush_primit.o \
+	$(B)/client/mesh.o \
+	$(B)/client/tjunction.o \
+	$(B)/client/cmdlib.o \
+	$(B)/client/tree.o \
+	$(B)/client/image.o \
+	$(B)/client/l_net.o \
+	$(B)/client/jpeg.o \
+	$(B)/client/ddslib.o \
+	$(B)/client/leakfile.o \
+	$(B)/client/imagelib.o \
+	$(B)/client/decals.o \
+	$(B)/client/patch.o \
+	$(B)/client/picomodel.o \
+	$(B)/client/picointernal.o \
+	$(B)/client/picomodules.o \
+	$(B)/client/light_bounce.o \
+	$(B)/client/threads.o \
+	$(B)/client/surface_extra.o \
+	$(B)/client/m4x4.o \
+	$(B)/client/md5lib.o \
+	$(B)/client/pm_terrain.o \
+	$(B)/client/pm_md3.o \
+	$(B)/client/pm_ase.o \
+	$(B)/client/pm_3ds.o \
+	$(B)/client/pm_md2.o \
+	$(B)/client/pm_fm.o \
+	$(B)/client/pm_lwo.o \
+	$(B)/client/pm_mdc.o \
+	$(B)/client/pm_ms3d.o \
+	$(B)/client/pm_obj.o \
+	$(B)/client/vfs.o \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
@@ -1640,6 +1675,7 @@ Q3DOBJ = \
 	$(B)/ded/portals.o \
 	$(B)/ded/surface.o \
 	$(B)/ded/surface_meta.o \
+	$(B)/ded/surface_foliage.o \
 	$(B)/ded/facebsp.o \
 	$(B)/ded/bspfile.o \
 	$(B)/ded/bspfile_abstract.o \
@@ -1653,6 +1689,37 @@ Q3DOBJ = \
 	$(B)/ded/shaders.o \
 	$(B)/ded/mathlib.o \
 	$(B)/ded/brush_primit.o \
+	$(B)/ded/mesh.o \
+	$(B)/ded/tjunction.o \
+	$(B)/ded/cmdlib.o \
+	$(B)/ded/tree.o \
+	$(B)/ded/image.o \
+	$(B)/ded/l_net.o \
+	$(B)/ded/jpeg.o \
+	$(B)/ded/ddslib.o \
+	$(B)/ded/leakfile.o \
+	$(B)/ded/imagelib.o \
+	$(B)/ded/decals.o \
+	$(B)/ded/patch.o \
+	$(B)/ded/picomodel.o \
+	$(B)/ded/picointernal.o \
+	$(B)/ded/picomodules.o \
+	$(B)/ded/light_bounce.o \
+	$(B)/ded/threads.o \
+	$(B)/ded/surface_extra.o \
+	$(B)/ded/m4x4.o \
+	$(B)/ded/md5lib.o \
+	$(B)/ded/pm_terrain.o \
+	$(B)/ded/pm_md3.o \
+	$(B)/ded/pm_ase.o \
+	$(B)/ded/pm_3ds.o \
+	$(B)/ded/pm_md2.o \
+	$(B)/ded/pm_fm.o \
+	$(B)/ded/pm_lwo.o \
+	$(B)/ded/pm_mdc.o \
+	$(B)/ded/pm_ms3d.o \
+	$(B)/ded/pm_obj.o \
+	$(B)/ded/vfs.o \
   \
   $(B)/ded/cm_load.o \
 	$(B)/ded/cm_load_bsp2.o \
@@ -1709,7 +1776,11 @@ Q3DOBJ = \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o
-	
+
+ifneq ($(USE_SYSTEM_JPEG),1)
+  Q3DOBJ += $(JPGOBJ)
+endif
+
 ifeq ($(USE_CURL),1)
   Q3DOBJ += $(B)/ded/cl_curl.o
 endif
@@ -1778,6 +1849,12 @@ $(B)/client/%.o: $(Q3DIR)/md5lib/%.c
 	$(DO_CC)
 
 $(B)/client/%.o: $(Q3DIR)/picomodel/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/picomodel/lwo/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/imagepng/%.c
 	$(DO_CC)
 
 $(B)/client/%.o: $(CMDIR)/%.c
@@ -1890,6 +1967,13 @@ $(B)/ded/%.o: $(Q3DIR)/md5lib/%.c
 
 $(B)/ded/%.o: $(Q3DIR)/picomodel/%.c
 	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/picomodel/lwo/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/imagepng/%.c
+	$(DO_CC)
+
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)
 

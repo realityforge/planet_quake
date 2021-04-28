@@ -35,7 +35,7 @@
 
 /* dependencies */
 #include "q3map2.h"
-
+#include "cmdlib.h"
 
 
 /* FIXME: remove these vars */

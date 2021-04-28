@@ -40,23 +40,31 @@
 
 #define MAX_OS_PATH     1024
 
+#define SAFE_MALLOC
+#ifdef SAFE_MALLOC
+void *safe_malloc( size_t size );
+void *safe_malloc_info( size_t size, char* info );
+#else
+#define safe_malloc( a ) malloc( a )
+#endif /* SAFE_MALLOC */
+
 // some easy portability crap
 #ifdef _WIN32
   #include <direct.h>
-  #define Q_mkdir( a,b ) _mkdir( a )
+  #define Q_mkdir( a ) _mkdir( a )
 #else
   #include <sys/stat.h>
-  #define Q_mkdir( a,b ) mkdir( a,b )
+  #define Q_mkdir( a ) mkdir( a, 0755 )
 #endif
 
-void    DefaultExtension( char *path, char *extension );
-void    DefaultPath( char *path, char *basepath );
+void    DefaultPath( char *path, const char *basepath );
 void    StripFilename( char *path );
 void    StripExtension( char *path );
 void    ExtractFilePath( const char *path, char *dest );
 void    ExtractFileName( const char *path, char *dest );
 void    ExtractFileBase( const char *path, char *dest );
 void    ExtractFileExtension( const char *path, char *dest );
+double I_FloatTime( void );
 /*!
    \brief create all directories leading to a file path. if you pass a directory, terminate it with a '/'
  */

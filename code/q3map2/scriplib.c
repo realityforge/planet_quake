@@ -57,7 +57,7 @@ void AddScriptToStack( const char *filename, int index ){
 	if ( script == &scriptstack[MAX_INCLUDES] ) {
 		Com_Error(ERR_DROP, "script file exceeded MAX_INCLUDES" );
 	}
-	strcpy( script->filename, ExpandPath( filename ) );
+	strcpy( script->filename, filename );
 
 	size = vfsLoadFile( script->filename, &buffer, index );
 

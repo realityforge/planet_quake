@@ -53,7 +53,7 @@ extern "C"
 #include <limits.h>
 #include <math.h>
 
-#include "picomodel.h"
+#include "../picomodel.h"
 
 
 /* os dependant replacements */

@@ -30,6 +30,7 @@
 
 /* dependencies */
 #include "q3map2.h"
+#include "cmdlib.h"
 
 
 
@@ -65,7 +66,7 @@ int BSPInfoMain( int count, char **fileNames ){
 		if ( !Q_stricmp( ext, "map" ) ) {
 			StripExtension( source );
 		}
-		DefaultExtension( source, ".bsp" );
+		COM_DefaultExtension( source, sizeof(source), ".bsp" );
 		f = fopen( source, "rb" );
 		if ( f ) {
 			size = Q_filelength( f );

@@ -60,17 +60,16 @@
 
 #include "cmdlib.h"
 #include "mathlib.h"
-#include <glib.h>
 #include "inout.h"
 #include "vfs.h"
-#include "unzip.h"
+#include "../qcommon/unzip.h"
 
 typedef struct
 {
 	char*   name;
 	unz_s zipinfo;
 	unzFile zipfile;
-	guint32 size;
+	uint32_t size;
 } VFS_PAKFILE;
 
 // =============================================================================
@@ -80,7 +79,7 @@ static GSList*  g_unzFiles;
 static GSList*  g_pakFiles;
 static char g_strDirs[VFS_MAXDIRS][PATH_MAX];
 static int g_numDirs;
-static gboolean g_bUsePak = TRUE;
+static qboolean g_bUsePak = qtrue;
 
 // =============================================================================
 // Static functions
@@ -114,7 +113,7 @@ static void vfsFixDOSName( char *src ){
 static void vfsInitPakFile( const char *filename ){
 	unz_global_info gi;
 	unzFile uf;
-	guint32 i;
+	uint32_t i;
 	int err;
 
 	uf = unzOpen( filename );
@@ -213,8 +212,6 @@ static int vfsPakSort(const void *a, const void *b) {
 // reads all pak files from a dir
 void vfsInitDirectory( const char *path ){
 	char filename[PATH_MAX];
-	GSList *dirlist = NULL;
-	GDir *dir;
 
 	if ( g_numDirs == ( VFS_MAXDIRS - 1 ) ) {
 		return;
@@ -227,56 +224,6 @@ void vfsInitDirectory( const char *path ){
 	vfsAddSlash( g_strDirs[g_numDirs] );
 	g_numDirs++;
 
-	if ( g_bUsePak ) {
-		dir = g_dir_open( path, 0, NULL );
-
-		if ( dir != NULL ) {
-
-			while(1)
-			{
-				const char* name = g_dir_read_name(dir);
-				if (name == NULL) {
-					break;
-				}
-
-				char* direntry = g_strdup(name);
-				dirlist = g_slist_append(dirlist, direntry);
-			}
-
-			dirlist = g_slist_sort(dirlist, vfsPakSort);
-
-			while ( dirlist )
-			{
-				GSList *cur = dirlist;
-				char* name = (char*)cur->data;
-				if ( name == NULL ) {
-					break;
-				}
-
-				char *ext = strrchr(name, '.' );
-
-				if ( ext != NULL && ( !Q_stricmp( ext, ".pk3dir" ) || !Q_stricmp( ext, ".dpkdir" ) ) ) {
-					if ( g_numDirs == VFS_MAXDIRS ) {
-						continue;
-					}
-					snprintf( g_strDirs[g_numDirs], PATH_MAX, "%s/%s", path, name );
-					g_strDirs[g_numDirs][PATH_MAX-1] = '\0';
-					vfsFixDOSName( g_strDirs[g_numDirs] );
-					vfsAddSlash( g_strDirs[g_numDirs] );
-					++g_numDirs;
-				}
-
-				if ( ext != NULL && ( !Q_stricmp( ext, ".pk3" ) || !Q_stricmp( ext, ".dpk" )) ) {
-					sprintf(filename, "%s/%s", path, name);
-					vfsInitPakFile(filename);
-				}
-
-				dirlist = g_slist_remove(cur, name);
-				g_free(name);
-			}
-			g_dir_close( dir );
-		}
-	}
 }
 
 // frees all memory that we allocated

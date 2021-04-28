@@ -67,7 +67,7 @@ extern int numVisBytes;
 extern byte visBytes[MAX_MAP_VISIBILITY];
 
 void SetDrawVerts( int n );
-void IncDrawVerts();
+void IncDrawVerts( void );
 extern int numDrawVerts;
 extern drawVert_t  *drawVerts;
 
@@ -75,7 +75,7 @@ extern int numDrawIndexes;
 extern int drawIndexes[MAX_MAP_DRAW_INDEXES];
 
 void SetDrawSurfaces( int n );
-void SetDrawSurfacesBuffer();
+void SetDrawSurfacesBuffer( void );
 extern int numDrawSurfaces;
 extern dsurface_t  *drawSurfaces;
 

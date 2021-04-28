@@ -1427,8 +1427,6 @@ surfaceInfo_t;
    prototypes
 
    ------------------------------------------------------------------------------- */
-void *safe_malloc( size_t size );
-
 
 /* main.c */
 vec_t                       Random( void );
@@ -1443,6 +1441,7 @@ int                         FixAASMain( int argc, char **argv );
 
 
 /* bsp.c */
+void ProcessAdvertisements( void );
 void SetCloneModelNumbers( void );
 int                         BSPMain( int argc, char **argv );
 

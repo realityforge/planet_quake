@@ -887,7 +887,7 @@ typedef struct _TargaHeader {
 	unsigned char pixel_size, attributes;
 } TargaHeader;
 
-void TargaCom_Error(ERR_DROP, TargaHeader *t, const char *message ){
+void TargaError(TargaHeader *t, const char *message ){
 	Sys_Printf( "%s\n:TargaHeader:\nuint8 id_length = %i;\nuint8 colormap_type = %i;\nuint8 image_type = %i;\nuint16 colormap_index = %i;\nuint16 colormap_length = %i;\nuint8 colormap_size = %i;\nuint16 x_origin = %i;\nuint16 y_origin = %i;\nuint16 width = %i;\nuint16 height = %i;\nuint8 pixel_size = %i;\nuint8 attributes = %i;\n", message, t->id_length, t->colormap_type, t->image_type, t->colormap_index, t->colormap_length, t->colormap_size, t->x_origin, t->y_origin, t->width, t->height, t->pixel_size, t->attributes );
 }
 
@@ -937,11 +937,11 @@ void LoadTGABuffer( const byte *f, const byte *enddata, byte **pic, int *width, 
 	// the image data)
 	if ( targa_header.colormap_type ) {
 		if ( targa_header.colormap_length > 256 ) {
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: only up to 256 colormap_length supported\n" );
+			TargaError( &targa_header, "LoadTGA: only up to 256 colormap_length supported\n" );
 			return;
 		}
 		if ( targa_header.colormap_index ) {
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: colormap_index not supported\n" );
+			TargaError( &targa_header, "LoadTGA: colormap_index not supported\n" );
 			return;
 		}
 		if ( targa_header.colormap_size == 24 ) {
@@ -964,7 +964,7 @@ void LoadTGABuffer( const byte *f, const byte *enddata, byte **pic, int *width, 
 		}
 		else
 		{
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: Only 32 and 24 bit colormap_size supported\n" );
+			TargaError( &targa_header, "LoadTGA: Only 32 and 24 bit colormap_size supported\n" );
 			return;
 		}
 	}
@@ -972,37 +972,37 @@ void LoadTGABuffer( const byte *f, const byte *enddata, byte **pic, int *width, 
 	// check our pixel_size restrictions according to image_type
 	if ( targa_header.image_type == 2 || targa_header.image_type == 10 ) {
 		if ( targa_header.pixel_size != 24 && targa_header.pixel_size != 32 ) {
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: only 24bit and 32bit pixel sizes supported for type 2 and type 10 images\n" );
+			TargaError( &targa_header, "LoadTGA: only 24bit and 32bit pixel sizes supported for type 2 and type 10 images\n" );
 			return;
 		}
 	}
 	else if ( targa_header.image_type == 1 || targa_header.image_type == 9 ) {
 		if ( targa_header.pixel_size != 8 ) {
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: only 8bit pixel size for type 1, 3, 9, and 11 images supported\n" );
+			TargaError( &targa_header, "LoadTGA: only 8bit pixel size for type 1, 3, 9, and 11 images supported\n" );
 			return;
 		}
 	}
 	else if ( targa_header.image_type == 3 || targa_header.image_type == 11 ) {
 		if ( targa_header.pixel_size != 8 ) {
-			TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: only 8bit pixel size for type 1, 3, 9, and 11 images supported\n" );
+			TargaError( &targa_header, "LoadTGA: only 8bit pixel size for type 1, 3, 9, and 11 images supported\n" );
 			return;
 		}
 	}
 	else
 	{
-		TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: Only type 1, 2, 3, 9, 10, and 11 targa RGB images supported" );
+		TargaError( &targa_header, "LoadTGA: Only type 1, 2, 3, 9, 10, and 11 targa RGB images supported" );
 		return;
 	}
 
 	if ( targa_header.attributes & 0x10 ) {
-		TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: origin must be in top left or bottom left, top right and bottom right are not supported\n" );
+		TargaError( &targa_header, "LoadTGA: origin must be in top left or bottom left, top right and bottom right are not supported\n" );
 		return;
 	}
 
 	// number of attribute bits per pixel, we only support 0 or 8
 	alphabits = targa_header.attributes & 0x0F;
 	if ( alphabits != 8 && alphabits != 0 ) {
-		TargaCom_Error(ERR_DROP, &targa_header, "LoadTGA: only 0 or 8 attribute (alpha) bits supported\n" );
+		TargaError( &targa_header, "LoadTGA: only 0 or 8 attribute (alpha) bits supported\n" );
 		return;
 	}
 

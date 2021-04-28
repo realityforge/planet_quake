@@ -38,4 +38,9 @@ void vfsShutdown( void );
 int vfsGetFileCount( const char *filename );
 int vfsLoadFile( const char *filename, void **buffer, int index );
 
+typedef struct _GSList {
+    intptr_t data;
+  struct _GSList *next;
+} GSList;
+
 #endif // _VFS_H_

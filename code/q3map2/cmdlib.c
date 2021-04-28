@@ -139,6 +139,28 @@ void ExpandWildcards( int *argc, char ***argv ){
 }
 #endif
 
+void Q_getwd( char *out ){
+	int i = 0;
+
+#ifdef WIN32
+	_getcwd( out, 256 );
+	strcat( out, "\\" );
+#else
+	// Gef: Changed from getwd() to getcwd() to avoid potential buffer overflow
+	if ( !getcwd( out, 256 ) ) {
+		*out = 0;
+	}
+	strcat( out, "/" );
+#endif
+	while ( out[i] != 0 )
+	{
+		if ( out[i] == '\\' ) {
+			out[i] = '/';
+		}
+		i++;
+	}
+}
+
 /*
 
    qdir will hold the path up to the quake directory, including the slash
@@ -242,16 +264,6 @@ char *ExpandArg( const char *path ){
 	return full;
 }
 
-char *ExpandPath( const char *path ){
-	static char full[1024];
-	if ( path[0] == '/' || path[0] == '\\' || path[1] == ':' ) {
-		strcpy( full, path );
-		return full;
-	}
-	sprintf( full, "%s%s", qdir, path );
-	return full;
-}
-
 
 
 
@@ -283,43 +295,6 @@ double I_FloatTime( void ){
 #endif
 }
 
-void Q_getwd( char *out ){
-	int i = 0;
-
-#ifdef WIN32
-	_getcwd( out, 256 );
-	strcat( out, "\\" );
-#else
-	// Gef: Changed from getwd() to getcwd() to avoid potential buffer overflow
-	if ( !getcwd( out, 256 ) ) {
-		*out = 0;
-	}
-	strcat( out, "/" );
-#endif
-	while ( out[i] != 0 )
-	{
-		if ( out[i] == '\\' ) {
-			out[i] = '/';
-		}
-		i++;
-	}
-}
-
-
-void Q_mkdir( const char *path ){
-#ifdef WIN32
-	if ( _mkdir( path ) != -1 ) {
-		return;
-	}
-#else
-	if ( mkdir( path, 0777 ) != -1 ) {
-		return;
-	}
-#endif
-	if ( errno != EEXIST ) {
-		Com_Error(ERR_DROP, "mkdir %s: %s",path, strerror( errno ) );
-	}
-}
 
 /*
    ============
@@ -338,83 +313,6 @@ int FileTime( const char *path ){
 	return buf.st_mtime;
 }
 
-
-
-/*
-   ==============
-   COM_Parse
-
-   Parse a token out of a string
-   ==============
- */
-char *COM_Parse( char *data ){
-	int c;
-	int len;
-
-	len = 0;
-	com_token[0] = 0;
-
-	if ( !data ) {
-		return NULL;
-	}
-
-// skip whitespace
-skipwhite:
-	while ( ( c = *data ) <= ' ' )
-	{
-		if ( c == 0 ) {
-			com_eof = qtrue;
-			return NULL;            // end of file;
-		}
-		data++;
-	}
-
-// skip // comments
-	if ( c == '/' && data[1] == '/' ) {
-		while ( *data && *data != '\n' )
-			data++;
-		goto skipwhite;
-	}
-
-
-// handle quoted strings specially
-	if ( c == '\"' ) {
-		data++;
-		do
-		{
-			c = *data++;
-			if ( c == '\"' ) {
-				com_token[len] = 0;
-				return data;
-			}
-			com_token[len] = c;
-			len++;
-		} while ( 1 );
-	}
-
-// parse single characters
-	if ( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ':' ) {
-		com_token[len] = c;
-		len++;
-		com_token[len] = 0;
-		return data + 1;
-	}
-
-// parse a regular word
-	do
-	{
-		com_token[len] = c;
-		data++;
-		len++;
-		c = *data;
-		if ( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ':' ) {
-			break;
-		}
-	} while ( c > 32 );
-
-	com_token[len] = 0;
-	return data;
-}
 
 int Q_strncasecmp( const char *s1, const char *s2, int n ){
 	int c1, c2;
@@ -612,6 +510,7 @@ int    LoadFile( const char *filename, void **bufferptr ){
    -
    ==============
  */
+#define MEM_BLOCKSIZE 4096
 int    LoadFileBlock( const char *filename, void **bufferptr ){
 	FILE    *f;
 	int length, nBlock, nAllocSize;
@@ -676,26 +575,6 @@ void    SaveFile( const char *filename, const void *buffer, int count ){
 	fclose( f );
 }
 
-
-
-void DefaultExtension( char *path, const char *extension ){
-	char    *src;
-//
-// if path doesnt have a .EXT, append extension
-// (extension should include the .)
-//
-	src = path + strlen( path ) - 1;
-
-	while ( *src != '/' && *src != '\\' && src != path )
-	{
-		if ( *src == '.' ) {
-			return;                 // it has an extension
-		}
-		src--;
-	}
-
-	strcat( path, extension );
-}
 
 
 void DefaultPath( char *path, const char *basepath ){
@@ -855,49 +734,12 @@ int ParseNum( const char *str ){
 
 #ifdef __BIG_ENDIAN__
 
-short   LittleShort( short l ){
-	byte b1,b2;
-
-	b1 = l & 255;
-	b2 = ( l >> 8 ) & 255;
-
-	return ( b1 << 8 ) + b2;
-}
-
 short   BigShort( short l ){
 	return l;
 }
 
 
-int    LittleLong( int l ){
-	byte b1,b2,b3,b4;
-
-	b1 = l & 255;
-	b2 = ( l >> 8 ) & 255;
-	b3 = ( l >> 16 ) & 255;
-	b4 = ( l >> 24 ) & 255;
-
-	return ( (int)b1 << 24 ) + ( (int)b2 << 16 ) + ( (int)b3 << 8 ) + b4;
-}
-
 int    BigLong( int l ){
-	return l;
-}
-
-
-float   LittleFloat( float l ){
-	union {byte b[4]; float f; } in, out;
-
-	in.f = l;
-	out.b[0] = in.b[3];
-	out.b[1] = in.b[2];
-	out.b[2] = in.b[1];
-	out.b[3] = in.b[0];
-
-	return out.f;
-}
-
-float   BigFloat( float l ){
 	return l;
 }
 
@@ -914,10 +756,6 @@ short   BigShort( short l ){
 	return ( b1 << 8 ) + b2;
 }
 
-short   LittleShort( short l ){
-	return l;
-}
-
 
 int    BigLong( int l ){
 	byte b1,b2,b3,b4;
@@ -928,26 +766,6 @@ int    BigLong( int l ){
 	b4 = ( l >> 24 ) & 255;
 
 	return ( (int)b1 << 24 ) + ( (int)b2 << 16 ) + ( (int)b3 << 8 ) + b4;
-}
-
-int    LittleLong( int l ){
-	return l;
-}
-
-float   BigFloat( float l ){
-	union {byte b[4]; float f; } in, out;
-
-	in.f = l;
-	out.b[0] = in.b[3];
-	out.b[1] = in.b[2];
-	out.b[2] = in.b[1];
-	out.b[3] = in.b[0];
-
-	return out.f;
-}
-
-float   LittleFloat( float l ){
-	return l;
 }
 
 

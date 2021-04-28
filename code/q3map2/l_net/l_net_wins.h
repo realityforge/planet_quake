@@ -28,6 +28,7 @@
 // Tab Size:     3
 // Notes:
 //===========================================================================
+typedef unsigned char byte;
 
 int  WINS_Init( void );
 void WINS_Shutdown( void );

@@ -39,6 +39,7 @@
 extern "C" {
 #endif
 
+
 typedef struct address_s
 {
 	char ip[MAX_NETADDRESS];

@@ -2331,10 +2331,10 @@ int LightMain( int argc, char **argv ){
 	/* clean up map name */
 	strcpy( source, ExpandArg( argv[ i ] ) );
 	StripExtension( source );
-	DefaultExtension( source, ".bsp" );
+	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 	strcpy( mapSource, ExpandArg( argv[ i ] ) );
 	StripExtension( mapSource );
-	DefaultExtension( mapSource, ".map" );
+	COM_DefaultExtension( mapSource, sizeof(mapSource), ".map" );
 
 	/* ydnar: set default sample size */
 	SetDefaultSampleSize( sampleSize );

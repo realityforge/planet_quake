@@ -53,7 +53,7 @@
    1999-05-03 lpd Original version.
  */
 
-#include "md5lib.h" /* ydnar */
+#include "../md5lib.h" /* ydnar */
 #include <string.h>
 
 /* ydnar: gtkradiant endian picking */

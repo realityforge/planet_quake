@@ -159,36 +159,6 @@ int Q_filelength( FILE *f ){
 	return end;
 }
 
-void DefaultExtension( char *path, char *extension ){
-	char    *src;
-//
-// if path doesn't have a .EXT, append extension
-// (extension should include the .)
-//
-	src = path + strlen( path ) - 1;
-
-	while ( *src != PATHSEPERATOR && src != path )
-	{
-		if ( *src == '.' ) {
-			return;           // it has an extension
-		}
-		src--;
-	}
-
-	strcat( path, extension );
-}
-
-void DefaultPath( char *path, char *basepath ){
-	char temp[128];
-
-	if ( path[0] == PATHSEPERATOR ) {
-		return;               // absolute path location
-	}
-	strcpy( temp,path );
-	strcpy( path,basepath );
-	strcat( path,temp );
-}
-
 
 void    StripFilename( char *path ){
 	int length;
@@ -285,24 +255,6 @@ void ExtractFileBase( const char *path, char *dest ){
 	dest[length] = '\0';
 }
 
-void ExtractFileExtension( const char *path, char *dest ){
-	const char *src;
-
-	src = path + strlen( path ) - 1;
-
-//
-// back up until a . or the start
-//
-	while ( src != path && *( src - 1 ) != '.' )
-		src--;
-	if ( src == path ) {
-		*dest = 0; // no extension
-		return;
-	}
-
-	strcpy( dest,src );
-}
-
 
 void ConvertDOSToUnixName( char *dst, const char *src ){
 	while ( *src )
@@ -349,7 +301,7 @@ void CreateDirectoryPath( const char *path ) {
 			break;
 		}
 		back = *src; *src = '\0';
-		Q_mkdir( base, 0755 );
+		Q_mkdir( base );
 		*src = back; src++;
 	}
 }

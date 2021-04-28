@@ -49,7 +49,7 @@
    copies advertisement info into the BSP structures
  */
 
-static void ProcessAdvertisements( void ) {
+void ProcessAdvertisements( void ) {
 	int i;
 	const char*         className;
 	const char*         modelKey;

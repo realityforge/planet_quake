@@ -33,7 +33,9 @@
 typedef struct
 {
 	char filename[1024];
-	char    *buffer,*script_p,*end_p;
+	const char    *buffer;
+	char    *script_p;
+	char    *end_p;
 	int line;
 } script_t;
 
