@@ -921,6 +921,13 @@ void SV_Init( void )
 	sv_mvSyncXYZ = Cvar_Get("sv_mvSyncXYZ", "0", CVAR_ARCHIVE);
 	Cvar_CheckRange( sv_mvSyncXYZ, "0", "1", CV_INTEGER );
 	Cvar_SetDescription(sv_mvSyncXYZ, "Force players to occupy the same XYZ coordinates in every world. Useful in shadow/mirror dimension type games.\nDefault: 0");
+	sv_mvSyncMove = Cvar_Get("sv_mvSyncMove", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncMove, "0", "1", CV_INTEGER );
+	Cvar_SetDescription(sv_mvSyncMove, "Sync movement across multiple worlds, copy movement from the active screen.\nDefault: 0");
+	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvOmnipresent, "0", "1", CV_INTEGER );
+	Cvar_SetDescription(sv_mvOmnipresent, "Occupy an active player position in multiple worlds.\n 0 - disconnected except for one, 1 - active in all worlds automatically, 2 - spectator in other worlds, 3 - active in all worlds client has joined\nDefault: 0");
+	
 
 #endif
 

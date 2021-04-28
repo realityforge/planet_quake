@@ -1104,7 +1104,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
-	
+
 /*
 	if(includeBaselines) {
 		qboolean first = qtrue;

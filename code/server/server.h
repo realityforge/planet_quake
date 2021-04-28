@@ -437,6 +437,8 @@ extern	cvar_t	*sv_mvFolderSize;
 extern  cvar_t  *sv_mvWorld;
 extern  cvar_t  *sv_mvSyncPS;
 extern  cvar_t  *sv_mvSyncXYZ;
+extern  cvar_t  *sv_mvSyncMove;
+extern  cvar_t  *sv_mvOmnipresent;
 #endif
 
 extern	cvar_t	*sv_privateClients;

@@ -714,13 +714,13 @@ void S_PaintChannels( int endtime ) {
 			const int stop = (end < s_rawend) ? end : s_rawend;
 			for ( i = s_paintedtime; i < stop; i++ ) {
 				const int s = i&(MAX_RAW_SAMPLES-1);
-				paintbuffer[i-s_paintedtime].left += s_rawsamples[cgvm][s].left;
-				paintbuffer[i-s_paintedtime].right += s_rawsamples[cgvm][s].right;
+				paintbuffer[i-s_paintedtime].left += s_rawsamples[s].left;
+				paintbuffer[i-s_paintedtime].right += s_rawsamples[s].right;
 			}
 		}
 
 		// paint in the channels.
-		ch = s_channels[cgvm];
+		ch = s_channels;
 		for ( i = 0; i < MAX_CHANNELS ; i++, ch++ ) {
 			if ( !ch->thesfx || (!ch->leftvol && !ch->rightvol) ) {
 				continue;
@@ -753,8 +753,8 @@ void S_PaintChannels( int endtime ) {
 		}
 
 		// paint in the looped channels.
-		ch = loop_channels[cgvm];
-		for ( i = 0; i < numLoopChannels[cgvm] ; i++, ch++ ) {
+		ch = loop_channels;
+		for ( i = 0; i < numLoopChannels ; i++, ch++ ) {
 			if ( !ch->thesfx || (!ch->leftvol && !ch->rightvol )) {
 				continue;
 			}

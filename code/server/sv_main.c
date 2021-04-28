@@ -67,9 +67,11 @@ cvar_t	*sv_mvFileCount;
 cvar_t	*sv_mvFolderSize;
 #endif
 #ifdef USE_MULTIVM_SERVER
+cvar_t  *sv_mvWorld; // send world commands to manage view
 cvar_t  *sv_mvSyncPS; // synchronize player state between worlds
 cvar_t  *sv_mvSyncXYZ;
-cvar_t  *sv_mvWorld; // send world commands to manage view
+cvar_t  *sv_mvSyncMove;
+cvar_t  *sv_mvOmnipresent;
 
 #endif
 
