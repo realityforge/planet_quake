@@ -138,7 +138,7 @@ void ExportLightmaps( void ){
 	{
 		/* write a tga image out */
 		sprintf( filename, "%s/lightmap_%04d.tga", dirname, i );
-		Sys_Printf( "Writing %s\n", filename );
+		Com_Printf( "Writing %s\n", filename );
 		WriteTGA24( filename, lightmap, game->lightmapSize, game->lightmapSize, qfalse );
 	}
 }
@@ -153,7 +153,7 @@ void ExportLightmaps( void ){
 int ExportLightmapsMain( int argc, char **argv ){
 	/* arg checking */
 	if ( argc < 1 ) {
-		Sys_Printf( "Usage: q3map -export [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -export [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -163,7 +163,7 @@ int ExportLightmapsMain( int argc, char **argv ){
 	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* load the bsp */
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 	LoadBSPFile( source );
 
 	/* export the lightmaps */
@@ -188,7 +188,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 1 ) {
-		Sys_Printf( "Usage: q3map -import [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -import [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -198,7 +198,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* load the bsp */
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 	LoadBSPFile( source );
 
 	/* note it */
@@ -221,7 +221,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 	{
 		/* read a tga image */
 		sprintf( filename, "%s/lightmap_%04d.tga", dirname, i );
-		Sys_Printf( "Loading %s\n", filename );
+		Com_Printf( "Loading %s\n", filename );
 		buffer = NULL;
 		len = vfsLoadFile( filename, (void*) &buffer, -1 );
 		if ( len < 0 ) {
@@ -258,7 +258,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 	}
 
 	/* write the bsp */
-	Sys_Printf( "writing %s\n", source );
+	Com_Printf( "writing %s\n", source );
 	WriteBSPFile( source );
 
 	/* return to sender */
@@ -573,9 +573,9 @@ qboolean AddPatchToRawLightmap( int num, rawLightmap_t *lm ){
 	}
 
 	/* debug code: */
-	//%	Sys_Printf( "wrap S: %d wrap T: %d\n", lm->wrap[ 0 ], lm->wrap[ 1 ] );
+	//%	Com_Printf( "wrap S: %d wrap T: %d\n", lm->wrap[ 0 ], lm->wrap[ 1 ] );
 	//% if( lm->w > (ds->lightmapWidth & 0xFF) || lm->h > (ds->lightmapHeight & 0xFF) )
-	//%		Sys_Printf( "Patch lightmap: (%3d %3d) > (%3d, %3d)\n", lm->w, lm->h, ds->lightmapWidth & 0xFF, ds->lightmapHeight & 0xFF );
+	//%		Com_Printf( "Patch lightmap: (%3d %3d) > (%3d, %3d)\n", lm->w, lm->h, ds->lightmapWidth & 0xFF, ds->lightmapHeight & 0xFF );
 	//% ds->lightmapWidth = lm->w | (ds->lightmapWidth & 0xFFFF0000);
 	//% ds->lightmapHeight = lm->h | (ds->lightmapHeight & 0xFFFF0000);
 
@@ -1224,7 +1224,7 @@ void StitchSurfaceLightmaps( void ){
 	return;
 
 	/* note it */
-	Sys_Printf( "--- StitchSurfaceLightmaps ---\n" );
+	Com_Printf( "--- StitchSurfaceLightmaps ---\n" );
 
 	/* init pacifier */
 	fOld = -1;
@@ -1238,7 +1238,7 @@ void StitchSurfaceLightmaps( void ){
 		f = 10 * i / numRawLightmaps;
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_Printf( "%i...", f );
+			Com_Printf( "%i...", f );
 		}
 
 		/* get lightmap a */
@@ -1362,7 +1362,7 @@ void StitchSurfaceLightmaps( void ){
 	}
 
 	/* emit statistics */
-	Sys_Printf( " (%i)\n", (int) ( I_FloatTime() - start ) );
+	Com_Printf( " (%i)\n", (int) ( I_FloatTime() - start ) );
 	Sys_FPrintf( SYS_VRB, "%9d luxels stitched\n", numStitched );
 }
 
@@ -2343,7 +2343,7 @@ void StoreSurfaceLightmaps( void ){
 
 
 	/* note it */
-	Sys_Printf( "--- StoreSurfaceLightmaps ---\n" );
+	Com_Printf( "--- StoreSurfaceLightmaps ---\n" );
 
 	/* setup */
 	strcpy( dirname, source );
@@ -3172,9 +3172,9 @@ void StoreSurfaceLightmaps( void ){
 			//%	EmitVertexRemapShader( csi->shader, info->si->shader );
 
 			/* store it */
-			//%	Sys_Printf( "Emitting: %s (%d", csi->shader, strlen( csi->shader ) );
+			//%	Com_Printf( "Emitting: %s (%d", csi->shader, strlen( csi->shader ) );
 			ds->shaderNum = EmitShader( csi->shader, &bspShaders[ ds->shaderNum ].contentFlags, &bspShaders[ ds->shaderNum ].surfaceFlags );
-			//%	Sys_Printf( ")\n" );
+			//%	Com_Printf( ")\n" );
 		}
 
 		/* devise a custom shader for this surface (fixme: make this work with light styles) */
@@ -3190,9 +3190,9 @@ void StoreSurfaceLightmaps( void ){
 			csi = CustomShader( info->si, "$lightmap", lightmapName );
 
 			/* store it */
-			//%	Sys_Printf( "Emitting: %s (%d", csi->shader, strlen( csi->shader ) );
+			//%	Com_Printf( "Emitting: %s (%d", csi->shader, strlen( csi->shader ) );
 			ds->shaderNum = EmitShader( csi->shader, &bspShaders[ ds->shaderNum ].contentFlags, &bspShaders[ ds->shaderNum ].surfaceFlags );
-			//%	Sys_Printf( ")\n" );
+			//%	Com_Printf( ")\n" );
 		}
 
 		/* use the normal plain-jane shader */
@@ -3211,15 +3211,15 @@ void StoreSurfaceLightmaps( void ){
 				 : (float) numUsed / (float) numStored;
 
 	/* print stats */
-	Sys_Printf( "%9d luxels used\n", numUsed );
-	Sys_Printf( "%9d luxels stored (%3.2f percent efficiency)\n", numStored, efficiency * 100.0f );
-	Sys_Printf( "%9d solid surface lightmaps\n", numSolidLightmaps );
-	Sys_Printf( "%9d identical surface lightmaps, using %d luxels\n", numTwins, numTwinLuxels );
-	Sys_Printf( "%9d vertex forced surfaces\n", numSurfsVertexForced );
-	Sys_Printf( "%9d vertex approximated surfaces\n", numSurfsVertexApproximated );
-	Sys_Printf( "%9d BSP lightmaps\n", numBSPLightmaps );
-	Sys_Printf( "%9d total lightmaps\n", numOutLightmaps );
-	Sys_Printf( "%9d unique lightmap/shader combinations\n", numLightmapShaders );
+	Com_Printf( "%9d luxels used\n", numUsed );
+	Com_Printf( "%9d luxels stored (%3.2f percent efficiency)\n", numStored, efficiency * 100.0f );
+	Com_Printf( "%9d solid surface lightmaps\n", numSolidLightmaps );
+	Com_Printf( "%9d identical surface lightmaps, using %d luxels\n", numTwins, numTwinLuxels );
+	Com_Printf( "%9d vertex forced surfaces\n", numSurfsVertexForced );
+	Com_Printf( "%9d vertex approximated surfaces\n", numSurfsVertexApproximated );
+	Com_Printf( "%9d BSP lightmaps\n", numBSPLightmaps );
+	Com_Printf( "%9d total lightmaps\n", numOutLightmaps );
+	Com_Printf( "%9d unique lightmap/shader combinations\n", numLightmapShaders );
 
 	/* write map shader file */
 	WriteMapShaderFile();

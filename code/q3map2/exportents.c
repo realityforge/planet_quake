@@ -69,7 +69,7 @@ void ExportEntities( void ){
         }
 		
         /* write it */
-        Sys_Printf( "Writing %s\n", filename );
+        Com_Printf( "Writing %s\n", filename );
         Sys_FPrintf( SYS_VRB, "(%d bytes)\n", bspEntDataSize );
         file = fopen( filename, "w" );
 		
@@ -91,7 +91,7 @@ void ExportEntities( void ){
 int ExportEntitiesMain( int argc, char **argv ){
         /* arg checking */
         if ( argc < 1 ) {
-                Sys_Printf( "Usage: q3map -exportents [-v] <mapname>\n" );
+                Com_Printf( "Usage: q3map -exportents [-v] <mapname>\n" );
                 return 0;
         }
 		
@@ -101,7 +101,7 @@ int ExportEntitiesMain( int argc, char **argv ){
         COM_DefaultExtension( source, sizeof(source), ".bsp" );
 		
         /* load the bsp */
-        Sys_Printf( "Loading %s\n", source );
+        Com_Printf( "Loading %s\n", source );
         LoadBSPFile( source );
 		
         /* export the lightmaps */

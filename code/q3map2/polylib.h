@@ -18,7 +18,10 @@
    along with GtkRadiant; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+ #ifndef __POLYLIB__
+ #define __POLYLIB__
 
+#include "../qcommon/qfiles.h"
 
 typedef struct
 {
@@ -72,3 +75,5 @@ winding_accu_t  *BaseWindingForPlaneAccu( vec3_t normal, vec_t dist );
 void    ChopWindingInPlaceAccu( winding_accu_t **w, vec3_t normal, vec_t dist, vec_t epsilon );
 winding_t   *CopyWindingAccuToRegular( winding_accu_t *w );
 void    FreeWindingAccu( winding_accu_t *w );
+
+#endif

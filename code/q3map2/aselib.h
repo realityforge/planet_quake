@@ -20,7 +20,6 @@
  */
 
 
-#include "../common/cmdlib.h"
 #include "mathlib.h"
 #include "polyset.h"
 

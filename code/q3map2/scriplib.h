@@ -18,11 +18,14 @@
    along with GtkRadiant; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef __SCRIPLIB__
+#define __SCRIPLIB__
+
 
 // scriplib.h
 
 #ifndef __CMDLIB__
-#include "../common/cmdlib.h"
+#include "cmdlib.h"
 #endif
 #ifndef __MATHLIB__
 #include "mathlib.h"
@@ -34,19 +37,19 @@ typedef struct
 {
 	char filename[1024];
 	const char    *buffer;
-	char    *script_p;
-	char    *end_p;
+	const char    *script_p;
+	const char    *end_p;
 	int line;
-} script_t;
+} bspScript_t;
 
 extern char token[MAXTOKEN];
 extern char    *scriptbuffer,*script_p,*scriptend_p;
 extern int grabbed;
 extern int scriptline;
 extern qboolean endofscript;
-extern script_t *script;
+extern bspScript_t *script;
 
-void LoadScriptFile( const char *filename, int index );
+void Map_LoadScriptFile( const char *filename, int index );
 void ParseFromMemory( char *buffer, int size );
 
 qboolean GetToken( qboolean crossline );
@@ -58,3 +61,5 @@ void MatchToken( char *match );
 void Write1DMatrix( FILE *f, int x, vec_t *m );
 void Write2DMatrix( FILE *f, int y, int x, vec_t *m );
 void Write3DMatrix( FILE *f, int z, int y, int x, vec_t *m );
+
+#endif

@@ -124,12 +124,12 @@ void PrintMesh( mesh_t *m ) {
 
 	for ( i = 0 ; i < m->height ; i++ ) {
 		for ( j = 0 ; j < m->width ; j++ ) {
-			Sys_Printf( "(%5.2f %5.2f %5.2f) "
+			Com_Printf( "(%5.2f %5.2f %5.2f) "
 						, m->verts[i * m->width + j].xyz[0]
 						, m->verts[i * m->width + j].xyz[1]
 						, m->verts[i * m->width + j].xyz[2] );
 		}
-		Sys_Printf( "\n" );
+		Com_Printf( "\n" );
 	}
 }
 
@@ -297,7 +297,7 @@ void MakeMeshNormals( mesh_t in ){
 				count++;
 			}
 			if ( count == 0 ) {
-//Sys_Printf("bad normal\n");
+//Com_Printf("bad normal\n");
 				count = 1;
 			}
 			VectorNormalize2( sum, dv->normal );

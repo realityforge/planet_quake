@@ -630,7 +630,7 @@ static void SubdivideTraceNode_r( int nodeNum, int depth ){
 
 	/* runaway recursion check */
 	if ( depth >= MAX_TRACE_DEPTH ) {
-		//%	Sys_Printf( "Depth: (%d items)\n", node->numItems );
+		//%	Com_Printf( "Depth: (%d items)\n", node->numItems );
 		numTraceLeafNodes++;
 		return;
 	}
@@ -669,7 +669,7 @@ static void SubdivideTraceNode_r( int nodeNum, int depth ){
 	/* check triangle limit */
 	//%	if( node->numItems <= MAX_NODE_ITEMS )
 	if ( ( count - ( node->numItems * 2 ) ) < MAX_NODE_TRIANGLES ) {
-		//%	Sys_Printf( "Limit: (%d triangles)\n", (count - (node->numItems * 2)) );
+		//%	Com_Printf( "Limit: (%d triangles)\n", (count - (node->numItems * 2)) );
 		numTraceLeafNodes++;
 		return;
 	}
@@ -688,7 +688,7 @@ static void SubdivideTraceNode_r( int nodeNum, int depth ){
 
 	/* don't split small nodes */
 	if ( size[ type ] <= MIN_NODE_SIZE ) {
-		//%	Sys_Printf( "Limit: %f %f %f (%d items)\n", size[ 0 ], size[ 1 ], size[ 2 ], node->numItems );
+		//%	Com_Printf( "Limit: %f %f %f (%d items)\n", size[ 0 ], size[ 1 ], size[ 2 ], node->numItems );
 		numTraceLeafNodes++;
 		return;
 	}
@@ -1337,7 +1337,7 @@ void SetupTraceNodes( void ){
 		strcpy( filename, source );
 		StripExtension( filename );
 		strcat( filename, ".lin" );
-		Sys_Printf( "Opening light trace file %s...\n", filename );
+		Com_Printf( "Opening light trace file %s...\n", filename );
 		file = fopen( filename, "w" );
 		if ( file == NULL ) {
 			Com_Error(ERR_DROP, "Error opening %s for writing", filename );
@@ -1407,7 +1407,7 @@ qboolean TraceTriangle( traceInfo_t *ti, traceTriangle_t *tt, mapTrace_t *trace 
 		if ( ti->castShadows != 1 && abs( ti->castShadows ) != abs( trace->recvShadows ) ) {
 			return qfalse;
 		}
-		//%	Sys_Printf( "%d:%d ", tt->castShadows, trace->recvShadows );
+		//%	Com_Printf( "%d:%d ", tt->castShadows, trace->recvShadows );
 	}
 
 	/* receive shadows from the same group only (< 0) */

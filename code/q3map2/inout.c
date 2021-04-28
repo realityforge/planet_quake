@@ -104,9 +104,6 @@ void xml_SendNode( xmlNodePtr node ){
 			}
 			memcpy( xmlbuf, xml_buf->content + pos, size );
 			xmlbuf[size] = '\0';
-			NMSG_Clear( &msg );
-			NMSG_WriteString( &msg, xmlbuf );
-			Net_Send( brdcst_socket, &msg );
 			// now that the thing is sent prepare to loop again
 			pos += size;
 		}
@@ -227,37 +224,13 @@ void xml_Winding( char *msg, vec3_t p[], int numpoints, qboolean die ){
 	}
 	else
 	{
-		Sys_Printf( msg );
-		Sys_Printf( "\n" );
+		Com_Printf( "%s", msg );
+		Com_Printf( "\n" );
 	}
 }
 
 // in include
 #include "stream_version.h"
-
-void Broadcast_Setup( const char *dest ){
-	address_t address;
-	char sMsg[1024];
-
-	Net_Setup();
-	Net_StringToAddress( dest, &address );
-	brdcst_socket = Net_Connect( &address, 0 );
-	if ( brdcst_socket ) {
-		// send in a header
-		sprintf( sMsg, "<?xml version=\"1.0\"?><q3map_feedback version=\"" Q3MAP_STREAM_VERSION "\">" );
-		NMSG_Clear( &msg );
-		NMSG_WriteString( &msg, sMsg );
-		Net_Send( brdcst_socket, &msg );
-	}
-}
-
-void Broadcast_Shutdown(){
-	if ( brdcst_socket ) {
-		Sys_Printf( "Disconnecting\n" );
-		Net_Disconnect( brdcst_socket );
-		brdcst_socket = NULL;
-	}
-}
 
 // all output ends up through here
 void FPrintf( int flag, char *buf ){
@@ -318,15 +291,4 @@ void Sys_FPrintf( int flag, const char *format, ... ){
 	va_end( argptr );
 
 	FPrintf( flag, out_buffer );
-}
-
-void Sys_Printf( const char *format, ... ){
-	char out_buffer[4096];
-	va_list argptr;
-
-	va_start( argptr, format );
-	vsprintf( out_buffer, format, argptr );
-	va_end( argptr );
-
-	FPrintf( SYS_STD, out_buffer );
 }

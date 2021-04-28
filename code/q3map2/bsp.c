@@ -37,7 +37,6 @@
 #include "q3map2.h"
 
 
-
 /* -------------------------------------------------------------------------------
 
    functions
@@ -211,7 +210,7 @@ void SetCloneModelNumbers( void ){
    matches brushsides back to their appropriate drawsurface and shader
  */
 
-static void FixBrushSides( entity_t *e ){
+static void FixBrushSides( bspEntity_t *e ){
 	int i;
 	mapDrawSurface_t    *ds;
 	sideRef_t           *sideRef;
@@ -261,7 +260,7 @@ static void FixBrushSides( entity_t *e ){
 
 void ProcessWorldModel( void ){
 	int i, s;
-	entity_t    *e;
+	bspEntity_t    *e;
 	tree_t      *tree;
 	face_t      *faces;
 	qboolean ignoreLeaks, leaked;
@@ -287,7 +286,7 @@ void ProcessWorldModel( void ){
 			blockSize[ 2 ] = blockSize[ 0 ];
 		}
 	}
-	Sys_Printf( "block size = { %d %d %d }\n", blockSize[ 0 ], blockSize[ 1 ], blockSize[ 2 ] );
+	Com_Printf( "block size = { %d %d %d }\n", blockSize[ 0 ], blockSize[ 1 ], blockSize[ 2 ] );
 
 	/* sof2: ignore leaks? */
 	value = ValueForKey( &entities[ 0 ], "_ignoreleaks" );  /* ydnar */
@@ -353,7 +352,7 @@ void ProcessWorldModel( void ){
 		xmlSetProp( leaknode, (xmlChar*)"level", (xmlChar*)(char*) &level );
 		xml_SendNode( leaknode );
 		if ( leaktest ) {
-			Sys_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
+			Com_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
 			exit( 0 );
 		}
 		leaked = qtrue;
@@ -425,7 +424,7 @@ void ProcessWorldModel( void ){
 	/* ydnar: bug 645: do flares for lights */
 	for ( i = 0; i < numEntities && emitFlares; i++ )
 	{
-		entity_t    *light, *target;
+		bspEntity_t    *light, *target;
 		const char  *value, *flareShader;
 		vec3_t origin, targetOrigin, normal, color;
 		int lightStyle;
@@ -488,7 +487,7 @@ void ProcessWorldModel( void ){
  */
 
 void ProcessSubModel( void ){
-	entity_t    *e;
+	bspEntity_t    *e;
 	tree_t      *tree;
 	brush_t     *b, *bc;
 	node_t      *node;
@@ -573,7 +572,7 @@ void ProcessSubModel( void ){
 
 void ProcessModels( void ){
 	qboolean oldVerbose;
-	entity_t    *entity;
+	bspEntity_t    *entity;
 
 
 	/* preserve -v setting */
@@ -626,7 +625,7 @@ void OnlyEnts( void ){
 
 
 	/* note it */
-	Sys_Printf( "--- OnlyEnts ---\n" );
+	Com_Printf( "--- OnlyEnts ---\n" );
 
 	sprintf( out, "%s.bsp", source );
 	LoadBSPFile( out );

@@ -210,10 +210,10 @@ void AllocateLightmapForSurface( mapDrawSurface_t *ds ){
 	/* debug code */
 	#if 0
 	if ( ds->type == SURF_META && ds->planar == qfalse ) {
-		Sys_Printf( "NPMS: %3d vertexes, %s\n", ds->numVerts, ds->shaderInfo->shader );
+		Com_Printf( "NPMS: %3d vertexes, %s\n", ds->numVerts, ds->shaderInfo->shader );
 	}
 	else if ( ds->type == SURF_META && ds->planar == qtrue ) {
-		Sys_Printf( "PMS:  %3d vertexes, %s\n", ds->numVerts, ds->shaderInfo->shader );
+		Com_Printf( "PMS:  %3d vertexes, %s\n", ds->numVerts, ds->shaderInfo->shader );
 	}
 	#endif
 

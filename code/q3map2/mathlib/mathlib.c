@@ -24,8 +24,6 @@
 // we use memcpy and memset
 #include <memory.h>
 
-vec3_t vec3_origin = {0.0f,0.0f,0.0f};
-
 /*
    ================
    VectorIsOnAxis
@@ -121,9 +119,10 @@ vec_t ColorNormalize( const vec3_t in, vec3_t out ) {
 
 void VectorRotateOrigin( vec3_t vIn, vec3_t vRotation, vec3_t vOrigin, vec3_t out ){
 	vec3_t vTemp, vTemp2;
+	vec3_t in[3] = {{*vRotation, 0, 0}};
 
 	VectorSubtract( vIn, vOrigin, vTemp );
-	VectorRotate( vTemp, vRotation, vTemp2 );
+	VectorRotate( vTemp, in, vTemp2 );
 	VectorAdd( vTemp2, vOrigin, out );
 }
 
@@ -179,11 +178,6 @@ void _Vector53Copy( vec5_t in, vec3_t out ){
 	out[2] = in[2];
 }
 
-// NOTE: added these from Ritual's Q3Radiant
-void ClearBounds( vec3_t mins, vec3_t maxs ){
-	mins[0] = mins[1] = mins[2] = 99999;
-	maxs[0] = maxs[1] = maxs[2] = -99999;
-}
 
 #define PITCH               0       // up / down
 #define YAW                 1       // left / right
@@ -225,27 +219,6 @@ void VectorToAngles( vec3_t vec, vec3_t angles ){
 	angles[ 2 ] = 0;
 }
 
-/*
-   =====================
-   PlaneFromPoints
-
-   Returns false if the triangle is degenrate.
-   The normal will point out of the clock for clockwise ordered points
-   =====================
- */
-qboolean PlaneFromPoints( vec4_t plane, const vec3_t a, const vec3_t b, const vec3_t c ) {
-	vec3_t d1, d2;
-
-	VectorSubtract( b, a, d1 );
-	VectorSubtract( c, a, d2 );
-	CrossProduct( d2, d1, plane );
-	if ( VectorNormalize( plane ) == 0 ) {
-		return qfalse;
-	}
-
-	plane[3] = DotProduct( a, plane );
-	return qtrue;
-}
 
 /*
 ** NormalToLatLong
@@ -278,146 +251,6 @@ void NormalToLatLong( const vec3_t normal, byte bytes[2] ) {
 
 		bytes[0] = b;   // longitude
 		bytes[1] = a;   // lattitude
-	}
-}
-
-/*
-   ================
-   MatrixMultiply
-   ================
- */
-void MatrixMultiply( float in1[3][3], float in2[3][3], float out[3][3] ) {
-	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
-				in1[0][2] * in2[2][0];
-	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] +
-				in1[0][2] * in2[2][1];
-	out[0][2] = in1[0][0] * in2[0][2] + in1[0][1] * in2[1][2] +
-				in1[0][2] * in2[2][2];
-	out[1][0] = in1[1][0] * in2[0][0] + in1[1][1] * in2[1][0] +
-				in1[1][2] * in2[2][0];
-	out[1][1] = in1[1][0] * in2[0][1] + in1[1][1] * in2[1][1] +
-				in1[1][2] * in2[2][1];
-	out[1][2] = in1[1][0] * in2[0][2] + in1[1][1] * in2[1][2] +
-				in1[1][2] * in2[2][2];
-	out[2][0] = in1[2][0] * in2[0][0] + in1[2][1] * in2[1][0] +
-				in1[2][2] * in2[2][0];
-	out[2][1] = in1[2][0] * in2[0][1] + in1[2][1] * in2[1][1] +
-				in1[2][2] * in2[2][1];
-	out[2][2] = in1[2][0] * in2[0][2] + in1[2][1] * in2[1][2] +
-				in1[2][2] * in2[2][2];
-}
-
-void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal ){
-	float d;
-	vec3_t n;
-	float inv_denom;
-
-	inv_denom = 1.0F / DotProduct( normal, normal );
-
-	d = DotProduct( normal, p ) * inv_denom;
-
-	n[0] = normal[0] * inv_denom;
-	n[1] = normal[1] * inv_denom;
-	n[2] = normal[2] * inv_denom;
-
-	dst[0] = p[0] - d * n[0];
-	dst[1] = p[1] - d * n[1];
-	dst[2] = p[2] - d * n[2];
-}
-
-/*
-** assumes "src" is normalized
-*/
-void PerpendicularVector( vec3_t dst, const vec3_t src ){
-	int pos;
-	int i;
-	vec_t minelem = 1.0F;
-	vec3_t tempvec;
-
-	/*
-	** find the smallest magnitude axially aligned vector
-	*/
-	for ( pos = 0, i = 0; i < 3; i++ )
-	{
-		if ( fabs( src[i] ) < minelem ) {
-			pos = i;
-			minelem = (vec_t)fabs( src[i] );
-		}
-	}
-	tempvec[0] = tempvec[1] = tempvec[2] = 0.0F;
-	tempvec[pos] = 1.0F;
-
-	/*
-	** project the point onto the plane defined by src
-	*/
-	ProjectPointOnPlane( dst, tempvec, src );
-
-	/*
-	** normalize the result
-	*/
-	VectorNormalize( dst );
-}
-
-/*
-   ===============
-   RotatePointAroundVector
-
-   This is not implemented very well...
-   ===============
- */
-void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point,
-							  float degrees ) {
-	float m[3][3];
-	float im[3][3];
-	float zrot[3][3];
-	float tmpmat[3][3];
-	float rot[3][3];
-	int i;
-	vec3_t vr, vup, vf;
-	float rad;
-
-	vf[0] = dir[0];
-	vf[1] = dir[1];
-	vf[2] = dir[2];
-
-	PerpendicularVector( vr, dir );
-	CrossProduct( vr, vf, vup );
-
-	m[0][0] = vr[0];
-	m[1][0] = vr[1];
-	m[2][0] = vr[2];
-
-	m[0][1] = vup[0];
-	m[1][1] = vup[1];
-	m[2][1] = vup[2];
-
-	m[0][2] = vf[0];
-	m[1][2] = vf[1];
-	m[2][2] = vf[2];
-
-	memcpy( im, m, sizeof( im ) );
-
-	im[0][1] = m[1][0];
-	im[0][2] = m[2][0];
-	im[1][0] = m[0][1];
-	im[1][2] = m[2][1];
-	im[2][0] = m[0][2];
-	im[2][1] = m[1][2];
-
-	memset( zrot, 0, sizeof( zrot ) );
-	zrot[0][0] = zrot[1][1] = zrot[2][2] = 1.0F;
-
-	rad = DEG2RAD( degrees );
-	zrot[0][0] = (vec_t)cos( rad );
-	zrot[0][1] = (vec_t)sin( rad );
-	zrot[1][0] = (vec_t)-sin( rad );
-	zrot[1][1] = (vec_t)cos( rad );
-
-	MatrixMultiply( m, zrot, tmpmat );
-	MatrixMultiply( tmpmat, im, rot );
-
-	for ( i = 0; i < 3; i++ ) {
-		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 	}
 }
 

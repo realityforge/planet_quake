@@ -132,22 +132,22 @@ void PrintTree_r( node_t *node, int depth ){
 	brush_t *bb;
 
 	for ( i = 0 ; i < depth ; i++ )
-		Sys_Printf( "  " );
+		Com_Printf( "  " );
 	if ( node->planenum == PLANENUM_LEAF ) {
 		if ( !node->brushlist ) {
-			Sys_Printf( "NULL\n" );
+			Com_Printf( "NULL\n" );
 		}
 		else
 		{
 			for ( bb = node->brushlist ; bb ; bb = bb->next )
-				Sys_Printf( "%d ", bb->original->brushNum );
-			Sys_Printf( "\n" );
+				Com_Printf( "%d ", bb->original->brushNum );
+			Com_Printf( "\n" );
 		}
 		return;
 	}
 
 	plane = &mapplanes[node->planenum];
-	Sys_Printf( "#%d (%5.2f %5.2f %5.2f):%5.2f\n", node->planenum,
+	Com_Printf( "#%d (%5.2f %5.2f %5.2f):%5.2f\n", node->planenum,
 				plane->normal[0], plane->normal[1], plane->normal[2],
 				plane->dist );
 	PrintTree_r( node->children[0], depth + 1 );

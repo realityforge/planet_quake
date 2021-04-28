@@ -50,7 +50,7 @@ void PicoPrintFunc( int level, const char *str ){
 	switch ( level )
 	{
 	case PICO_NORMAL:
-		Sys_Printf( "%s\n", str );
+		Com_Printf( "%s\n", str );
 		break;
 
 	case PICO_VERBOSE:
@@ -183,13 +183,13 @@ picoModel_t *LoadModel( char *name, int frame ){
 		picoSurface_t   *ps;
 
 
-		Sys_Printf( "Model %s\n", name );
+		Com_Printf( "Model %s\n", name );
 		numSurfaces = PicoGetModelNumSurfaces( *pm );
 		for ( i = 0; i < numSurfaces; i++ )
 		{
 			ps = PicoGetModelSurface( *pm, i );
 			numVertexes = PicoGetSurfaceNumVertexes( ps );
-			Sys_Printf( "Surface %d has %d vertexes\n", i, numVertexes );
+			Com_Printf( "Surface %d has %d vertexes\n", i, numVertexes );
 		}
 	}
 	#endif
@@ -211,7 +211,7 @@ picoModel_t *LoadModel( char *name, int frame ){
  */
 
 void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shaderInfo_t *celShader, int eNum, int castShadows, int recvShadows, int spawnFlags, float lightmapScale ){
-	int i, j, k, s, numSurfaces;
+	int i, j, s, numSurfaces;
 	m4x4_t identity, nTransform;
 	picoModel_t         *model;
 	picoShader_t        *shader;
@@ -612,9 +612,9 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
    adds misc_model surfaces to the bsp
  */
 
-void AddTriangleModels( entity_t *e ){
+void AddTriangleModels( bspEntity_t *e ){
 	int num, frame, castShadows, recvShadows, spawnFlags;
-	entity_t        *e2;
+	bspEntity_t        *e2;
 	const char      *targetName;
 	const char      *target, *model, *value;
 	char shader[ MAX_QPATH ];

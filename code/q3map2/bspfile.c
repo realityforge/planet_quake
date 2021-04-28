@@ -25,7 +25,6 @@
 #include "inout.h"
 #include "bspfile.h"
 #include "scriplib.h"
-#include "../qcommon/qcommon.h"
 
 void GetLeafNums( void );
 
@@ -294,7 +293,7 @@ void SwapBSPFile( void ) {
    GetLumpElements
    =============
  */
-int GetLumpElements( dheader_t  *header, int lump, int size ) {
+int GetLumpElements( bspHeader_t  *header, int lump, int size ) {
 	int length = header->lumps[lump].filelen;
 
 	if ( length % size ) {
@@ -309,7 +308,7 @@ int GetLumpElements( dheader_t  *header, int lump, int size ) {
    CopyLump
    =============
  */
-int CopyLump( dheader_t *header, int lump, void *dest, int size ) {
+int CopyLump( bspHeader_t *header, int lump, void *dest, int size ) {
 	int length, ofs;
 
 	length = header->lumps[lump].filelen;
@@ -334,7 +333,7 @@ int CopyLump( dheader_t *header, int lump, void *dest, int size ) {
    =============
  */
 void    LoadBSPFile( const char *filename ) {
-	dheader_t   *header;
+	bspHeader_t   *header;
 
 	// load the file header
 	LoadFile( filename, (void **)&header );
@@ -392,8 +391,8 @@ void    LoadBSPFile( const char *filename ) {
    AddLump
    =============
  */
-void AddLump( FILE *bspfile, dheader_t *header, int lumpnum, const void *data, int len ) {
-	lump_t *lump;
+void AddLump( FILE *bspfile, bspHeader_t *header, int lumpnum, const void *data, int len ) {
+	bspLump_t *lump;
 
 	lump = &header->lumps[lumpnum];
 
@@ -410,11 +409,11 @@ void AddLump( FILE *bspfile, dheader_t *header, int lumpnum, const void *data, i
    =============
  */
 void    WriteBSPFile( const char *filename ) {
-	dheader_t outheader, *header;
+	bspHeader_t outheader, *header;
 	FILE        *bspfile;
 
 	header = &outheader;
-	memset( header, 0, sizeof( dheader_t ) );
+	memset( header, 0, sizeof( bspHeader_t ) );
 
 	SwapBSPFile();
 
@@ -422,7 +421,7 @@ void    WriteBSPFile( const char *filename ) {
 	header->version = LittleLong( bsp_version );
 
 	bspfile = SafeOpenWrite( filename );
-	SafeWrite( bspfile, header, sizeof( dheader_t ) );    // overwritten later
+	SafeWrite( bspfile, header, sizeof( bspHeader_t ) );    // overwritten later
 
 	AddLump( bspfile, header, LUMP_SHADERS, dshaders, numShaders * sizeof( dshader_t ) );
 	AddLump( bspfile, header, LUMP_PLANES, dplanes, numplanes * sizeof( dplane_t ) );
@@ -443,7 +442,7 @@ void    WriteBSPFile( const char *filename ) {
 	AddLump( bspfile, header, LUMP_DRAWINDEXES, drawIndexes, numDrawIndexes * sizeof( drawIndexes[0] ) );
 
 	fseek( bspfile, 0, SEEK_SET );
-	SafeWrite( bspfile, header, sizeof( dheader_t ) );
+	SafeWrite( bspfile, header, sizeof( bspHeader_t ) );
 	fclose( bspfile );
 }
 
@@ -461,40 +460,40 @@ void PrintBSPFileSizes( void ) {
 		ParseEntities();
 	}
 
-	Sys_Printf( "%6i models       %7i\n"
+	Com_Printf( "%6i models       %7i\n"
 				,nummodels, (int)( nummodels * sizeof( dmodel_t ) ) );
-	Sys_Printf( "%6i shaders      %7i\n"
+	Com_Printf( "%6i shaders      %7i\n"
 				,numShaders, (int)( numShaders * sizeof( dshader_t ) ) );
-	Sys_Printf( "%6i brushes      %7i\n"
+	Com_Printf( "%6i brushes      %7i\n"
 				,numbrushes, (int)( numbrushes * sizeof( dbrush_t ) ) );
-	Sys_Printf( "%6i brushsides   %7i\n"
+	Com_Printf( "%6i brushsides   %7i\n"
 				,numbrushsides, (int)( numbrushsides * sizeof( dbrushside_t ) ) );
-	Sys_Printf( "%6i fogs         %7i\n"
+	Com_Printf( "%6i fogs         %7i\n"
 				,numFogs, (int)( numFogs * sizeof( dfog_t ) ) );
-	Sys_Printf( "%6i planes       %7i\n"
+	Com_Printf( "%6i planes       %7i\n"
 				,numplanes, (int)( numplanes * sizeof( dplane_t ) ) );
-	Sys_Printf( "%6i entdata      %7i\n", num_entities, entdatasize );
+	Com_Printf( "%6i entdata      %7i\n", num_entities, entdatasize );
 
-	Sys_Printf( "\n" );
+	Com_Printf( "\n" );
 
-	Sys_Printf( "%6i nodes        %7i\n"
+	Com_Printf( "%6i nodes        %7i\n"
 				,numnodes, (int)( numnodes * sizeof( dnode_t ) ) );
-	Sys_Printf( "%6i leafs        %7i\n"
+	Com_Printf( "%6i leafs        %7i\n"
 				,numleafs, (int)( numleafs * sizeof( dleaf_t ) ) );
-	Sys_Printf( "%6i leafsurfaces %7i\n"
+	Com_Printf( "%6i leafsurfaces %7i\n"
 				,numleafsurfaces, (int)( numleafsurfaces * sizeof( dleafsurfaces[0] ) ) );
-	Sys_Printf( "%6i leafbrushes  %7i\n"
+	Com_Printf( "%6i leafbrushes  %7i\n"
 				,numleafbrushes, (int)( numleafbrushes * sizeof( dleafbrushes[0] ) ) );
-	Sys_Printf( "%6i drawverts    %7i\n"
+	Com_Printf( "%6i drawverts    %7i\n"
 				,numDrawVerts, (int)( numDrawVerts * sizeof( drawVerts[0] ) ) );
-	Sys_Printf( "%6i drawindexes  %7i\n"
+	Com_Printf( "%6i drawindexes  %7i\n"
 				,numDrawIndexes, (int)( numDrawIndexes * sizeof( drawIndexes[0] ) ) );
-	Sys_Printf( "%6i drawsurfaces %7i\n"
+	Com_Printf( "%6i drawsurfaces %7i\n"
 				,numDrawSurfaces, (int)( numDrawSurfaces * sizeof( drawSurfaces[0] ) ) );
 
-	Sys_Printf( "%6i lightmaps    %7i\n"
+	Com_Printf( "%6i lightmaps    %7i\n"
 				,numLightBytes / ( LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 ), numLightBytes );
-	Sys_Printf( "       visibility   %7i\n"
+	Com_Printf( "       visibility   %7i\n"
 				, numVisBytes );
 }
 
@@ -502,7 +501,7 @@ void PrintBSPFileSizes( void ) {
 //============================================
 
 int num_entities;
-entity_t entities[MAX_MAP_ENTITIES];
+bspEntity_t entities[MAX_MAP_ENTITIES];
 
 void StripTrailing( char *e ) {
 	char    *s;
@@ -552,7 +551,7 @@ epair_t *ParseEpair( void ) {
  */
 qboolean    ParseEntity( void ) {
 	epair_t     *e;
-	entity_t    *mapent;
+	bspEntity_t    *mapent;
 
 	if ( !GetToken( qtrue ) ) {
 		return qfalse;
@@ -647,17 +646,17 @@ void UnparseEntities( void ) {
 	entdatasize = end - buf + 1;
 }
 
-void PrintEntity( const entity_t *ent ) {
+void PrintEntity( const bspEntity_t *ent ) {
 	epair_t *ep;
 
-	Sys_Printf( "------- entity %p -------\n", ent );
+	Com_Printf( "------- entity %p -------\n", ent );
 	for ( ep = ent->epairs ; ep ; ep = ep->next ) {
-		Sys_Printf( "%s = %s\n", ep->key, ep->value );
+		Com_Printf( "%s = %s\n", ep->key, ep->value );
 	}
 
 }
 
-void    SetKeyValue( entity_t *ent, const char *key, const char *value ) {
+void    SetKeyValue( bspEntity_t *ent, const char *key, const char *value ) {
 	epair_t *ep;
 
 	for ( ep = ent->epairs ; ep ; ep = ep->next ) {
@@ -674,7 +673,7 @@ void    SetKeyValue( entity_t *ent, const char *key, const char *value ) {
 	ep->value = CopyString( value );
 }
 
-const char  *ValueForKey( const entity_t *ent, const char *key ) {
+const char  *ValueForKey( const bspEntity_t *ent, const char *key ) {
 	epair_t *ep;
 
 	for ( ep = ent->epairs ; ep ; ep = ep->next ) {
@@ -685,14 +684,14 @@ const char  *ValueForKey( const entity_t *ent, const char *key ) {
 	return "";
 }
 
-vec_t   FloatForKey( const entity_t *ent, const char *key ) {
+vec_t   FloatForKey( const bspEntity_t *ent, const char *key ) {
 	const char  *k;
 
 	k = ValueForKey( ent, key );
 	return atof( k );
 }
 
-void    GetVectorForKey( const entity_t *ent, const char *key, vec3_t vec ) {
+void    GetVectorForKey( const bspEntity_t *ent, const char *key, vec3_t vec ) {
 	const char  *k;
 	double v1, v2, v3;
 

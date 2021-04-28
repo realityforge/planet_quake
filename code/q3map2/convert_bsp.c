@@ -50,7 +50,7 @@ int ConvertBSPMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 1 ) {
-		Sys_Printf( "Usage: q3map -convert [-format <ase|map>] [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -convert [-format <ase|map>] [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -70,7 +70,7 @@ int ConvertBSPMain( int argc, char **argv ){
 			{
 				convertGame = GetGame( argv[ i ] );
 				if ( convertGame == NULL ) {
-					Sys_Printf( "Unknown conversion format \"%s\". Defaulting to ASE.\n", argv[ i ] );
+					Com_Printf( "Unknown conversion format \"%s\". Defaulting to ASE.\n", argv[ i ] );
 				}
 			}
 		}
@@ -83,7 +83,7 @@ int ConvertBSPMain( int argc, char **argv ){
 
 	LoadShaderInfo();
 
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 
 	/* ydnar: load surface file */
 	//%	LoadSurfaceExtraFile( source );
@@ -101,7 +101,7 @@ int ConvertBSPMain( int argc, char **argv ){
 		/* write bsp */
 		StripExtension( source );
 		COM_DefaultExtension( source, sizeof(source), "_c.bsp" );
-		Sys_Printf( "Writing %s\n", source );
+		Com_Printf( "Writing %s\n", source );
 		WriteBSPFile( source );
 
 		/* return to sender */

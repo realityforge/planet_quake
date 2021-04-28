@@ -65,7 +65,6 @@
 #define LUMP_LIGHTGRID      15
 #define LUMP_VISIBILITY     16
 #define LUMP_ADVERTISEMENTS 17
-#define HEADER_LUMPS        18
 
 
 /* types */
@@ -577,7 +576,7 @@ void WriteIBSPFile( const char *filename ){
 
 	/* emit bsp size */
 	size = ftell( file );
-	Sys_Printf( "Wrote %.1f MB (%d bytes)\n", (float) size / ( 1024 * 1024 ), size );
+	Com_Printf( "Wrote %.1f MB (%d bytes)\n", (float) size / ( 1024 * 1024 ), size );
 
 	/* write the completed header */
 	fseek( file, 0, SEEK_SET );

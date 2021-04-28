@@ -48,7 +48,7 @@ int BSPInfoMain( int count, char **fileNames ){
 
 	/* dummy check */
 	if ( count < 1 ) {
-		Sys_Printf( "No files to dump info for.\n" );
+		Com_Printf( "No files to dump info for.\n" );
 		return -1;
 	}
 
@@ -58,7 +58,7 @@ int BSPInfoMain( int count, char **fileNames ){
 	/* walk file list */
 	for ( i = 0; i < count; i++ )
 	{
-		Sys_Printf( "---------------------------------\n" );
+		Com_Printf( "---------------------------------\n" );
 
 		/* mangle filename and get size */
 		strcpy( source, fileNames[ i ] );
@@ -77,17 +77,17 @@ int BSPInfoMain( int count, char **fileNames ){
 		}
 
 		/* load the bsp file and print lump sizes */
-		Sys_Printf( "%s\n", source );
+		Com_Printf( "%s\n", source );
 		LoadBSPFile( source );
 		PrintBSPFileSizes();
 
 		/* print sizes */
-		Sys_Printf( "\n" );
-		Sys_Printf( "          total         %9d\n", size );
-		Sys_Printf( "                        %9d KB\n", size / 1024 );
-		Sys_Printf( "                        %9d MB\n", size / ( 1024 * 1024 ) );
+		Com_Printf( "\n" );
+		Com_Printf( "          total         %9d\n", size );
+		Com_Printf( "                        %9d KB\n", size / 1024 );
+		Com_Printf( "                        %9d MB\n", size / ( 1024 * 1024 ) );
 
-		Sys_Printf( "---------------------------------\n" );
+		Com_Printf( "---------------------------------\n" );
 	}
 
 	/* return count */

@@ -63,12 +63,8 @@
 
 /* general */
 #include <sys/types.h>
-#include "../qcommon/q_shared.h"
-#include "../qcommon/qcommon.h"
-#include "../qcommon/qfiles.h"
 #include "version.h"            /* ttimo: might want to guard that if built outside of the GtkRadiant tree */
 
-#include "cmdlib.h"
 #include "mathlib.h"
 #include "md5lib.h"
 #include "md4lib.h"
@@ -82,10 +78,11 @@
 #include "qthreads.h"
 #include "inout.h"
 #include "vfs.h"
-#include "png.h"
 
 #include <stddef.h>
 #include <stdlib.h>
+#include "../qcommon/qfiles.h"
+#include "../qcommon/qcommon.h"
 
 
 /* -------------------------------------------------------------------------------
@@ -99,16 +96,6 @@
 	#define MAC_STATIC          static
 #else
 	#define MAC_STATIC
-#endif
-
-#if 1
-	#ifdef WIN32
-		#define Q_stricmp           stricmp
-		#define Q_strncasecmp       strnicmp
-	#else
-		#define Q_stricmp           strcasecmp
-		#define Q_strncasecmp       strncasecmp
-	#endif
 #endif
 
 
@@ -327,17 +314,24 @@
 
 typedef void ( *bspFunc )( const char * );
 
+typedef struct epair_s
+{
+	struct epair_s      *next;
+	char                *key, *value;
+}
+epair_t;
 
 typedef struct
 {
-	int offset, length;
+	int32_t fileofs;
+	int32_t filelen;
 }
 bspLump_t;
 
 
 typedef struct
 {
-	char ident[ 4 ];
+	int ident;
 	int version;
 
 	bspLump_t lumps[ 100 ];     /* theoretical maximum # of bsp lumps */
@@ -905,6 +899,16 @@ typedef struct parseMesh_s
 }
 parseMesh_t;
 
+typedef struct {
+	vec3_t origin;
+	brush_t             *brushes, *lastBrush, *colorModBrushes;
+	parseMesh_t         *patches;
+	int mapEntityNum, firstDrawSurf;
+	int firstBrush, numBrushes;                     /* only valid during BSP compile */
+	epair_t             *epairs;
+} bspEntity_t;
+
+
 
 /*
     ydnar: the drawsurf struct was extended to allow for:
@@ -1041,26 +1045,6 @@ typedef struct metaTriangle_s
 metaTriangle_t;
 
 
-typedef struct epair_s
-{
-	struct epair_s      *next;
-	char                *key, *value;
-}
-epair_t;
-
-
-typedef struct
-{
-	vec3_t origin;
-	brush_t             *brushes, *lastBrush, *colorModBrushes;
-	parseMesh_t         *patches;
-	int mapEntityNum, firstDrawSurf;
-	int firstBrush, numBrushes;                     /* only valid during BSP compile */
-	epair_t             *epairs;
-}
-entity_t;
-
-
 typedef struct node_s
 {
 	/* both leafs and nodes */
@@ -1087,7 +1071,7 @@ typedef struct node_s
 	drawSurfRef_t       *drawSurfReferences;
 
 	int occupied;                       /* 1 or greater can reach entity */
-	entity_t            *occupant;      /* for leak file testing */
+	bspEntity_t            *occupant;      /* for leak file testing */
 
 	struct portal_s     *portals;       /* also on nodes during construction */
 
@@ -1429,6 +1413,7 @@ surfaceInfo_t;
    ------------------------------------------------------------------------------- */
 
 /* main.c */
+void FILE_WriteFloat( FILE *f, vec_t v );
 vec_t                       Random( void );
 
 /* path_init.c */
@@ -1441,6 +1426,9 @@ int                         FixAASMain( int argc, char **argv );
 
 
 /* bsp.c */
+
+void OnlyEnts( void );
+void ProcessModels( void );
 void ProcessAdvertisements( void );
 void SetCloneModelNumbers( void );
 int                         BSPMain( int argc, char **argv );
@@ -1485,8 +1473,8 @@ brush_t                     *BrushFromBounds( vec3_t mins, vec3_t maxs );
 vec_t                       BrushVolume( brush_t *brush );
 void                        WriteBSPBrushMap( char *name, brush_t *list );
 
-void                        FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree );
-void                        FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree );
+void                        FilterDetailBrushesIntoTree( bspEntity_t *e, tree_t *tree );
+void                        FilterStructuralBrushesIntoTree( bspEntity_t *e, tree_t *tree );
 
 qboolean                    WindingIsTiny( winding_t *w );
 
@@ -1532,7 +1520,7 @@ qboolean                    PortalPassable( portal_t *p );
 qboolean                    FloodEntities( tree_t *tree );
 void                        FillOutside( node_t *headnode );
 void                        FloodAreas( tree_t *tree );
-face_t                      *VisibleFaces( entity_t *e, tree_t *tree );
+face_t                      *VisibleFaces( bspEntity_t *e, tree_t *tree );
 void                        FreePortal( portal_t *p );
 
 void                        MakeTreePortals( tree_t *tree );
@@ -1559,7 +1547,7 @@ void                        EmitBrushes( brush_t *brushes, int *firstBrush, int 
 void                        EmitFogs( void );
 
 void                        BeginModel( void );
-void                        EndModel( entity_t *e, node_t *headnode );
+void                        EndModel( bspEntity_t *e, node_t *headnode );
 
 
 /* tree.c */
@@ -1572,16 +1560,16 @@ void                        FreeTreePortals_r( node_t *node );
 /* patch.c */
 void                        ParsePatch( qboolean onlyLights );
 mesh_t                      *SubdivideMesh( mesh_t in, float maxError, float minLength );
-void                        PatchMapDrawSurfs( entity_t *e );
+void                        PatchMapDrawSurfs( bspEntity_t *e );
 
 
 /* tjunction.c */
-void                        FixTJunctions( entity_t *e );
+void                        FixTJunctions( bspEntity_t *e );
 
 
 /* fog.c */
 winding_t                   *WindingFromDrawSurf( mapDrawSurface_t *ds );
-void                        FogDrawSurfaces( entity_t *e );
+void                        FogDrawSurfaces( bspEntity_t *e );
 int                         FogForPoint( vec3_t point, float epsilon );
 int                         FogForBounds( vec3_t mins, vec3_t maxs, float epsilon );
 void                        CreateMapFogs( void );
@@ -1599,7 +1587,7 @@ void                        PicoLoadFileFunc( const char *name, byte **buffer, i
 picoModel_t                 *FindModel( char *name, int frame );
 picoModel_t                 *LoadModel( char *name, int frame );
 void                        InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shaderInfo_t *celShader, int eNum, int castShadows, int recvShadows, int spawnFlags, float lightmapScale );
-void                        AddTriangleModels( entity_t *e );
+void                        AddTriangleModels( bspEntity_t *e );
 
 
 /* surface.c */
@@ -1609,24 +1597,24 @@ void                        StripFaceSurface( mapDrawSurface_t *ds );
 qboolean                    CalcSurfaceTextureRange( mapDrawSurface_t *ds );
 qboolean                    CalcLightmapAxis( vec3_t normal, vec3_t axis );
 void                        ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds );
-void                        ClassifyEntitySurfaces( entity_t *e );
-void                        TidyEntitySurfaces( entity_t *e );
+void                        ClassifyEntitySurfaces( bspEntity_t *e );
+void                        TidyEntitySurfaces( bspEntity_t *e );
 mapDrawSurface_t            *CloneSurface( mapDrawSurface_t *src, shaderInfo_t *si );
 mapDrawSurface_t            *MakeCelSurface( mapDrawSurface_t *src, shaderInfo_t *si );
 qboolean                    IsTriangleDegenerate( bspDrawVert_t *points, int a, int b, int c );
 void                        ClearSurface( mapDrawSurface_t *ds );
-void                        AddEntitySurfaceModels( entity_t *e );
-mapDrawSurface_t            *DrawSurfaceForSide( entity_t *e, brush_t *b, side_t *s, winding_t *w );
-mapDrawSurface_t            *DrawSurfaceForMesh( entity_t *e, parseMesh_t *p, mesh_t *mesh );
+void                        AddEntitySurfaceModels( bspEntity_t *e );
+mapDrawSurface_t            *DrawSurfaceForSide( bspEntity_t *e, brush_t *b, side_t *s, winding_t *w );
+mapDrawSurface_t            *DrawSurfaceForMesh( bspEntity_t *e, parseMesh_t *p, mesh_t *mesh );
 mapDrawSurface_t            *DrawSurfaceForFlare( int entNum, vec3_t origin, vec3_t normal, vec3_t color, const char *flareShader, int lightStyle );
 mapDrawSurface_t            *DrawSurfaceForShader( char *shader );
-void                        ClipSidesIntoTree( entity_t *e, tree_t *tree );
+void                        ClipSidesIntoTree( bspEntity_t *e, tree_t *tree );
 void                        MakeDebugPortalSurfs( tree_t *tree );
-void                        MakeFogHullSurfs( entity_t *e, tree_t *tree, char *shader );
-void                        SubdivideFaceSurfaces( entity_t *e, tree_t *tree );
-void                        AddEntitySurfaceModels( entity_t *e );
+void                        MakeFogHullSurfs( bspEntity_t *e, tree_t *tree, char *shader );
+void                        SubdivideFaceSurfaces( bspEntity_t *e, tree_t *tree );
+void                        AddEntitySurfaceModels( bspEntity_t *e );
 int                         AddSurfaceModels( mapDrawSurface_t *ds );
-void                        FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree );
+void                        FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree );
 
 
 /* surface_fur.c */
@@ -1640,7 +1628,7 @@ void                        Foliage( mapDrawSurface_t *src );
 /* ydnar: surface_meta.c */
 void                        ClearMetaTriangles( void );
 int                         FindMetaTriangle( metaTriangle_t *src, bspDrawVert_t *a, bspDrawVert_t *b, bspDrawVert_t *c, int planeNum );
-void                        MakeEntityMetaTriangles( entity_t *e );
+void                        MakeEntityMetaTriangles( bspEntity_t *e );
 void                        FixMetaTJunctions( void );
 void                        SmoothMetaTriangles( void );
 void                        MergeMetaTriangles( void );
@@ -1666,7 +1654,7 @@ void                        LoadSurfaceExtraFile( const char *path );
 
 /* decals.c */
 void                        ProcessDecals( void );
-void                        MakeEntityDecals( entity_t *e );
+void                        MakeEntityDecals( bspEntity_t *e );
 
 
 /* brush_primit.c */
@@ -1788,6 +1776,7 @@ shaderInfo_t                *ShaderInfoForShaderNull( const char *shader );
 
 
 /* bspfile_abstract.c */
+void StripTrailing( char *e );
 void                        SetGridPoints( int n );
 void                        SetDrawVerts( int n );
 void                        IncDrawVerts( void );
@@ -1800,23 +1789,21 @@ void                        SwapBlock( int *block, int size );
 int                         GetLumpElements( bspHeader_t *header, int lump, int size );
 void                        *GetLump( bspHeader_t *header, int lump );
 int                         CopyLump( bspHeader_t *header, int lump, void *dest, int size );
-void                        AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, int length );
-
-void                        LoadBSPFile( const char *filename );
+void                        AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, int length );void                        LoadBSPFile( const char *filename );
 void                        WriteBSPFile( const char *filename );
 void                        PrintBSPFileSizes( void );
 
 epair_t                     *ParseEPair( void );
 void                        ParseEntities( void );
 void                        UnparseEntities( void );
-void                        PrintEntity( const entity_t *ent );
-void                        SetKeyValue( entity_t *ent, const char *key, const char *value );
-const char                  *ValueForKey( const entity_t *ent, const char *key );
-int                         IntForKey( const entity_t *ent, const char *key );
-vec_t                       FloatForKey( const entity_t *ent, const char *key );
-void                        GetVectorForKey( const entity_t *ent, const char *key, vec3_t vec );
-entity_t                    *FindTargetEntity( const char *target );
-void                        GetEntityShadowFlags( const entity_t *ent, const entity_t *ent2, int *castShadows, int *recvShadows );
+void                        PrintEntity( const bspEntity_t *ent );
+void                        SetKeyValue( bspEntity_t *ent, const char *key, const char *value );
+const char                  *ValueForKey( const bspEntity_t *ent, const char *key );
+int                         IntForKey( const bspEntity_t *ent, const char *key );
+vec_t                       FloatForKey( const bspEntity_t *ent, const char *key );
+void                        GetVectorForKey( const bspEntity_t *ent, const char *key, vec3_t vec );
+bspEntity_t                    *FindTargetEntity( const char *target );
+void                        GetEntityShadowFlags( const bspEntity_t *ent, const bspEntity_t *ent2, int *castShadows, int *recvShadows );
 
 
 /* bspfile_ibsp.c */
@@ -2003,7 +1990,7 @@ Q_EXTERN int defaultFogNum Q_ASSIGN( -1 );                  /* ydnar: cleaner fo
 Q_EXTERN int numMapFogs Q_ASSIGN( 0 );
 Q_EXTERN fog_t mapFogs[ MAX_MAP_FOGS ];
 
-Q_EXTERN entity_t           *mapEnt;
+Q_EXTERN bspEntity_t           *mapEnt;
 Q_EXTERN brush_t            *buildBrush;
 Q_EXTERN int numActiveBrushes;
 Q_EXTERN int g_bBrushPrimit;
@@ -2330,7 +2317,7 @@ Q_EXTERN vec3_t gridSize
 
 Q_EXTERN int numEntities Q_ASSIGN( 0 );
 Q_EXTERN int numBSPEntities Q_ASSIGN( 0 );
-Q_EXTERN entity_t entities[ MAX_MAP_ENTITIES ];
+Q_EXTERN bspEntity_t entities[ MAX_MAP_ENTITIES ];
 
 Q_EXTERN int numBSPModels Q_ASSIGN( 0 );
 Q_EXTERN bspModel_t bspModels[ MAX_MAP_MODELS ];

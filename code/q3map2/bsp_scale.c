@@ -47,15 +47,15 @@ int ScaleBSPMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 2 ) {
-		Sys_Printf( "Usage: q3map -scale <value> [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -scale <value> [-v] <mapname>\n" );
 		return 0;
 	}
 
 	/* get scale */
 	scale = atof( argv[ argc - 2 ] );
 	if ( scale == 0.0f ) {
-		Sys_Printf( "Usage: q3map -scale <value> [-v] <mapname>\n" );
-		Sys_Printf( "Non-zero scale value required.\n" );
+		Com_Printf( "Usage: q3map -scale <value> [-v] <mapname>\n" );
+		Com_Printf( "Non-zero scale value required.\n" );
 		return 0;
 	}
 
@@ -65,12 +65,12 @@ int ScaleBSPMain( int argc, char **argv ){
 	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* load the bsp */
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 	LoadBSPFile( source );
 	ParseEntities();
 
 	/* note it */
-	Sys_Printf( "--- ScaleBSP ---\n" );
+	Com_Printf( "--- ScaleBSP ---\n" );
 	Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
 
 	/* scale entity keys */
@@ -135,7 +135,7 @@ int ScaleBSPMain( int argc, char **argv ){
 	UnparseEntities();
 	StripExtension( source );
 	COM_DefaultExtension( source, sizeof(source), "_s.bsp" );
-	Sys_Printf( "Writing %s\n", source );
+	Com_Printf( "Writing %s\n", source );
 	WriteBSPFile( source );
 
 	/* return to sender */

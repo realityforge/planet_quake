@@ -220,7 +220,7 @@ void SmoothNormals( void ){
 		f = 10 * i / numBSPDrawVerts;
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_Printf( "%i...", f );
+			Com_Printf( "%i...", f );
 		}
 
 		/* already smoothed? */
@@ -259,10 +259,10 @@ void SmoothNormals( void ){
 			}
 			testAngle = acos( dot ) + THETA_EPSILON;
 			if ( testAngle >= shadeAngle ) {
-				//Sys_Printf( "F(%3.3f >= %3.3f) ", RAD2DEG( testAngle ), RAD2DEG( shadeAngle ) );
+				//Com_Printf( "F(%3.3f >= %3.3f) ", RAD2DEG( testAngle ), RAD2DEG( shadeAngle ) );
 				continue;
 			}
-			//Sys_Printf( "P(%3.3f < %3.3f) ", RAD2DEG( testAngle ), RAD2DEG( shadeAngle ) );
+			//Com_Printf( "P(%3.3f < %3.3f) ", RAD2DEG( testAngle ), RAD2DEG( shadeAngle ) );
 
 			/* add to the list */
 			indexes[ numVerts++ ] = j;
@@ -307,7 +307,7 @@ void SmoothNormals( void ){
 	free( smoothed );
 
 	/* print time */
-	Sys_Printf( " (%i)\n", (int) ( I_FloatTime() - start ) );
+	Com_Printf( " (%i)\n", (int) ( I_FloatTime() - start ) );
 }
 
 
@@ -666,7 +666,7 @@ static int MapSingleLuxel( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t
 	}
 
 	/* debug code */
-	//%	Sys_Printf( "%f %f %f\n", origin[ 0 ], origin[ 1 ], origin[ 2 ] );
+	//%	Com_Printf( "%f %f %f\n", origin[ 0 ], origin[ 1 ], origin[ 2 ] );
 
 	/* do bumpmap calculations */
 	if ( stv ) {
@@ -1042,7 +1042,7 @@ void MapRawLightmap( int rawLightmapNum ){
 
 		/* bail if no lightmap to calculate */
 		if ( info->lm != lm ) {
-			Sys_Printf( "!" );
+			Com_Printf( "!" );
 			continue;
 		}
 
@@ -1085,7 +1085,7 @@ void MapRawLightmap( int rawLightmapNum ){
 			/* debug code */
 				#if 0
 			if ( lm->plane ) {
-				Sys_Printf( "Planar patch: [%1.3f %1.3f %1.3f] [%1.3f %1.3f %1.3f] [%1.3f %1.3f %1.3f]\n",
+				Com_Printf( "Planar patch: [%1.3f %1.3f %1.3f] [%1.3f %1.3f %1.3f] [%1.3f %1.3f %1.3f]\n",
 							lm->plane[ 0 ], lm->plane[ 1 ], lm->plane[ 2 ],
 							lm->vecs[ 0 ][ 0 ], lm->vecs[ 0 ][ 1 ], lm->vecs[ 0 ][ 2 ],
 							lm->vecs[ 1 ][ 0 ], lm->vecs[ 1 ][ 1 ], lm->vecs[ 1 ][ 2 ] );
@@ -1320,7 +1320,7 @@ void MapRawLightmap( int rawLightmapNum ){
 
 	/* debug code */
 	#if 0
-	Sys_Printf( "\n" );
+	Com_Printf( "\n" );
 	for ( y = 0; y < lm->sh; y++ )
 	{
 		for ( x = 0; x < lm->sw; x++ )
@@ -1359,7 +1359,7 @@ void MapRawLightmap( int rawLightmapNum ){
 			}
 
 			/* report bogus origin */
-			Sys_Printf( "%6d [%2d,%2d] (%4d): XYZ(%+4.1f %+4.1f %+4.1f) LO(%+4.1f %+4.1f %+4.1f) HI(%+4.1f %+4.1f %+4.1f) <%3.0f>\n",
+			Com_Printf( "%6d [%2d,%2d] (%4d): XYZ(%+4.1f %+4.1f %+4.1f) LO(%+4.1f %+4.1f %+4.1f) HI(%+4.1f %+4.1f %+4.1f) <%3.0f>\n",
 						rawLightmapNum, x, y, *cluster,
 						origin[ 0 ], origin[ 1 ], origin[ 2 ],
 						mins[ 0 ], mins[ 1 ], mins[ 2 ],
@@ -2033,7 +2033,7 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 
 		/* debugging code */
 		//%	if( trace.numLights <= 0 )
-		//%		Sys_Printf( "Lightmap %9d: 0 lights, axis: %.2f, %.2f, %.2f\n", rawLightmapNum, lm->axis[ 0 ], lm->axis[ 1 ], lm->axis[ 2 ] );
+		//%		Com_Printf( "Lightmap %9d: 0 lights, axis: %.2f, %.2f, %.2f\n", rawLightmapNum, lm->axis[ 0 ], lm->axis[ 1 ], lm->axis[ 2 ] );
 
 		/* walk light list */
 		for ( i = 0; i < trace.numLights; i++ )
@@ -2239,7 +2239,7 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 			/* set style */
 			if ( lightmapNum > 0 ) {
 				lm->styles[ lightmapNum ] = trace.light->style;
-				//%	Sys_Printf( "Surface %6d has lightstyle %d\n", rawLightmapNum, trace.light->style );
+				//%	Com_Printf( "Surface %6d has lightstyle %d\n", rawLightmapNum, trace.light->style );
 			}
 
 			/* copy to permanent luxels */
@@ -3596,7 +3596,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 			/* culled? */
 			if ( light->cluster < 0 || light->envelope <= 0.0f ) {
 				/* debug code */
-				//%	Sys_Printf( "Culling light: Cluster: %d Envelope: %f\n", light->cluster, light->envelope );
+				//%	Com_Printf( "Culling light: Cluster: %d Envelope: %f\n", light->cluster, light->envelope );
 
 				/* delete the light */
 				numCulledLights++;
@@ -3651,8 +3651,8 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 	}
 
 	/* emit some statistics */
-	Sys_Printf( "%9d total lights\n", numLights );
-	Sys_Printf( "%9d culled lights\n", numCulledLights );
+	Com_Printf( "%9d total lights\n", numLights );
+	Com_Printf( "%9d culled lights\n", numCulledLights );
 }
 
 
@@ -3675,7 +3675,7 @@ void CreateTraceLightsForBounds( vec3_t mins, vec3_t maxs, vec3_t normal, int nu
 	}
 
 	/* debug code */
-	//% Sys_Printf( "CTWLFB: (%4.1f %4.1f %4.1f) (%4.1f %4.1f %4.1f)\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	//% Com_Printf( "CTWLFB: (%4.1f %4.1f %4.1f) (%4.1f %4.1f %4.1f)\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
 
 	/* allocate the light list */
 	trace->lights = safe_malloc( sizeof( light_t* ) * ( numLights + 1 ) );
@@ -3901,13 +3901,13 @@ void SetupFloodLight( void ){
 		floodlightIntensity = v5;
 
 		floodlighty = qtrue;
-		Sys_Printf( "FloodLighting enabled via worldspawn _floodlight key.\n" );
+		Com_Printf( "FloodLighting enabled via worldspawn _floodlight key.\n" );
 	}
 	else
 	{
 		VectorSet( floodlightRGB,240,240,255 );
 		//floodlighty = qtrue;
-		//Sys_Printf( "FloodLighting enabled via worldspawn _floodlight key.\n" );
+		//Com_Printf( "FloodLighting enabled via worldspawn _floodlight key.\n" );
 	}
 	VectorNormalize( floodlightRGB );
 }

@@ -483,7 +483,7 @@ TODO
 2.3.29 (2002-11-03)
 
 - Merged with latest CVS, fixed minor issues with matrix order
-- Fixed minor Sys_FPrintf/Sys_Printf substitution typo in Q3Map2
+- Fixed minor Sys_FPrintf/Com_Printf substitution typo in Q3Map2
 - Expanded debug colors to 12 for debugging surface meshes
 - PicoModel: fixed ASE loader to support > 1 texture coordinate per-vertex,
   so more models supported correctly, also loading vertex normals

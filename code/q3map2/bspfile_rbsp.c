@@ -65,7 +65,6 @@
 #define LUMP_LIGHTGRID      15
 #define LUMP_VISIBILITY     16
 #define LUMP_LIGHTARRAY     17
-#define HEADER_LUMPS        18
 
 
 /* types */
@@ -131,7 +130,7 @@ static void AddLightGridLumps( FILE *file, rbspHeader_t *header ){
 	numGridArray = numBSPGridPoints;
 
 	/* for each bsp grid point, find an approximate twin */
-	Sys_Printf( "Storing lightgrid: %d points\n", numBSPGridPoints );
+	Com_Printf( "Storing lightgrid: %d points\n", numBSPGridPoints );
 	for ( i = 0; i < numGridArray; i++ )
 	{
 		/* get points */
@@ -329,7 +328,7 @@ void WriteRBSPFile( const char *filename ){
 
 	/* emit bsp size */
 	size = ftell( file );
-	Sys_Printf( "Wrote %.1f MB (%d bytes)\n", (float) size / ( 1024 * 1024 ), size );
+	Com_Printf( "Wrote %.1f MB (%d bytes)\n", (float) size / ( 1024 * 1024 ), size );
 
 	/* write the completed header */
 	fseek( file, 0, SEEK_SET );

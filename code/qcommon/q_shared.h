@@ -874,6 +874,14 @@ int Q_isalpha( int c );
 
 qboolean Q_streq( const char *s1, const char *s2 );
 
+#ifdef WIN32
+  #define Q_stricmp           stricmp
+  #define Q_strncasecmp       strnicmp
+#else
+  #define Q_stricmp           strcasecmp
+  #define Q_strncasecmp       strncasecmp
+#endif
+
 // portable case insensitive compare
 int		Q_stricmp (const char *s1, const char *s2);
 int		Q_strncmp (const char *s1, const char *s2, int n);

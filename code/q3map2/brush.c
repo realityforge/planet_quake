@@ -643,7 +643,7 @@ void WriteBSPBrushMap( char *name, brush_t *list ){
 
 
 	/* note it */
-	Sys_Printf( "Writing %s\n", name );
+	Com_Printf( "Writing %s\n", name );
 
 	/* open the map file */
 	f = fopen( name, "wb" );
@@ -735,7 +735,7 @@ int FilterBrushIntoTree_r( brush_t *b, node_t *node ){
    fragment all the detail brushes into the structural leafs
  */
 
-void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree ){
+void FilterDetailBrushesIntoTree( bspEntity_t *e, tree_t *tree ){
 	brush_t             *b, *newb;
 	int r;
 	int c_unique, c_clusters;
@@ -781,7 +781,7 @@ void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree ){
    Mark the leafs as opaque and areaportals
    =====================
  */
-void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree ) {
+void FilterStructuralBrushesIntoTree( bspEntity_t *e, tree_t *tree ) {
 	brush_t         *b, *newb;
 	int r;
 	int c_unique, c_clusters;

@@ -138,14 +138,14 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 			for ( w = 0 ; w < in->width - 1 ; w++ ) {
 				if ( ( d[h][w] < 0 ) != ( d[h][w + 1] < 0 ) ) {
 					if ( w != split ) {
-						Sys_Printf( "multiple crossing points for patch -- can't clip\n" );
+						Com_Printf( "multiple crossing points for patch -- can't clip\n" );
 						*front = in;
 						return;
 					}
 				}
 			}
 			if ( ( d[h][split] < 0 ) == ( d[h][split + 1] < 0 ) ) {
-				Sys_Printf( "differing crossing points for patch -- can't clip\n" );
+				Com_Printf( "differing crossing points for patch -- can't clip\n" );
 				*front = in;
 				return;
 			}
@@ -233,11 +233,11 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 
 	/*
 	   PrintMesh( in );
-	   Sys_Printf("\n");
+	   Com_Printf("\n");
 	   PrintMesh( f );
-	   Sys_Printf("\n");
+	   Com_Printf("\n");
 	   PrintMesh( b );
-	   Sys_Printf("\n");
+	   Com_Printf("\n");
 	 */
 
 	FreeMesh( in );
@@ -249,7 +249,7 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
    chops a patch up by a fog brush
  */
 
-qboolean ChopPatchSurfaceByBrush( entity_t *e, mapDrawSurface_t *ds, brush_t *b ){
+qboolean ChopPatchSurfaceByBrush( bspEntity_t *e, mapDrawSurface_t *ds, brush_t *b ){
 	int i, j;
 	side_t      *s;
 	plane_t     *plane;
@@ -310,7 +310,7 @@ qboolean ChopPatchSurfaceByBrush( entity_t *e, mapDrawSurface_t *ds, brush_t *b 
 	}
 
 	/* only rejigger this patch if it was chopped */
-	//%	Sys_Printf( "Inside: %d x %d\n", m->width, m->height );
+	//%	Com_Printf( "Inside: %d x %d\n", m->width, m->height );
 	if ( numOutside > 0 ) {
 		/* transpose and invert the chopped patch (fixes potential crash. fixme: why?) */
 		m = TransposeMesh( m );
@@ -373,7 +373,7 @@ winding_t *WindingFromDrawSurf( mapDrawSurface_t *ds ){
    chops up a face drawsurface by a fog brush, with a potential fragment left inside
  */
 
-qboolean ChopFaceSurfaceByBrush( entity_t *e, mapDrawSurface_t *ds, brush_t *b ){
+qboolean ChopFaceSurfaceByBrush( bspEntity_t *e, mapDrawSurface_t *ds, brush_t *b ){
 	int i, j;
 	side_t              *s;
 	plane_t             *plane;
@@ -472,7 +472,7 @@ qboolean ChopFaceSurfaceByBrush( entity_t *e, mapDrawSurface_t *ds, brush_t *b )
    call after the surface list has been pruned, before tjunction fixing
  */
 
-void FogDrawSurfaces( entity_t *e ){
+void FogDrawSurfaces( bspEntity_t *e ){
 	int i, j, k, fogNum;
 	fog_t               *fog;
 	mapDrawSurface_t    *ds;
@@ -622,7 +622,7 @@ int FogForPoint( vec3_t point, float epsilon ){
 
 		/* if inside, return the fog num */
 		if ( inside ) {
-			//%	Sys_Printf( "FogForPoint: %f, %f, %f in fog %d\n", point[ 0 ], point[ 1 ], point[ 2 ], i );
+			//%	Com_Printf( "FogForPoint: %f, %f, %f in fog %d\n", point[ 0 ], point[ 1 ], point[ 2 ], i );
 			return i;
 		}
 	}
@@ -713,7 +713,7 @@ int FogForBounds( vec3_t mins, vec3_t maxs, float epsilon ){
 
 void CreateMapFogs( void ){
 	int i;
-	entity_t    *entity;
+	bspEntity_t    *entity;
 	brush_t     *brush;
 	fog_t       *fog;
 	vec3_t invFogDir;
@@ -763,7 +763,7 @@ void CreateMapFogs( void ){
 				{
 					if ( VectorCompare( invFogDir, mapplanes[ brush->sides[ i ].planenum ].normal ) ) {
 						fog->visibleSide = i;
-						//%	Sys_Printf( "Brush num: %d Side num: %d\n", fog->brushNum, fog->visibleSide );
+						//%	Com_Printf( "Brush num: %d Side num: %d\n", fog->brushNum, fog->visibleSide );
 						break;
 					}
 				}

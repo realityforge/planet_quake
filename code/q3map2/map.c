@@ -109,7 +109,7 @@ int CreateNewFloatPlane( vec3_t normal, vec_t dist ){
 	plane_t *p, temp;
 
 	if ( VectorLength( normal ) < 0.5 ) {
-		Sys_Printf( "FloatPlane: bad normal\n" );
+		Com_Printf( "FloatPlane: bad normal\n" );
 		return -1;
 	}
 
@@ -187,7 +187,7 @@ qboolean SnapNormal( vec3_t normal ){
 	// results:
 
 	/*
-	   Sys_Printf("normalEpsilon is %f\n", normalEpsilon);
+	   Com_Printf("normalEpsilon is %f\n", normalEpsilon);
 	   for (i = 0;; i++)
 	   {
 	    normal[0] = 1.0;
@@ -195,7 +195,7 @@ qboolean SnapNormal( vec3_t normal ){
 	    normal[2] = i * 0.000001;
 	    VectorNormalize( normal );
 	    if (1.0 - normal[0] >= normalEpsilon) {
-	        Sys_Printf("(%f %f %f)\n", normal[0], normal[1], normal[2]);
+	        Com_Printf("(%f %f %f)\n", normal[0], normal[1], normal[2]);
 	        Com_Error(ERR_DROP,"SnapNormal: test completed");
 	    }
 	   }
@@ -654,7 +654,7 @@ void AddBrushBevels( void ){
 			}
 
 			/* debug code */
-			//%	Sys_Printf( "-------------\n" );
+			//%	Com_Printf( "-------------\n" );
 
 			// try the six possible slanted axials from this edge
 			for ( axis = 0; axis < 3; axis++ ) {
@@ -698,7 +698,7 @@ void AddBrushBevels( void ){
 
 						// if no points at the back then the winding is on the bevel plane
 						if ( minBack > -0.1f ) {
-							//%	Sys_Printf( "On bevel plane\n" );
+							//%	Com_Printf( "On bevel plane\n" );
 							break;
 						}
 					}
@@ -708,7 +708,7 @@ void AddBrushBevels( void ){
 					}
 
 					/* debug code */
-					//%	Sys_Printf( "n = %f %f %f\n", normal[ 0 ], normal[ 1 ], normal[ 2 ] );
+					//%	Com_Printf( "n = %f %f %f\n", normal[ 0 ], normal[ 1 ], normal[ 2 ] );
 
 					// add this plane
 					if ( buildBrush->numsides == MAX_BUILD_SIDES ) {
@@ -752,7 +752,7 @@ brush_t *FinishBrush( void ){
 		vec3_t origin;
 
 		if ( numEntities == 1 ) {
-			Sys_Printf( "Entity %i, Brush %i: origin brushes not allowed in world\n",
+			Com_Printf( "Entity %i, Brush %i: origin brushes not allowed in world\n",
 						mapEnt->mapEntityNum, entitySourceBrushes );
 			return NULL;
 		}
@@ -772,7 +772,7 @@ brush_t *FinishBrush( void ){
 	/* determine if the brush is an area portal */
 	if ( buildBrush->compileFlags & C_AREAPORTAL ) {
 		if ( numEntities != 1 ) {
-			Sys_Printf( "Entity %i, Brush %i: areaportals only allowed in world\n", numEntities - 1, entitySourceBrushes );
+			Com_Printf( "Entity %i, Brush %i: areaportals only allowed in world\n", numEntities - 1, entitySourceBrushes );
 			return NULL;
 		}
 	}
@@ -1220,7 +1220,7 @@ static void ParseBrush( qboolean onlyLights ){
    (used by func_group)
  */
 
-void MoveBrushesToWorld( entity_t *ent ){
+void MoveBrushesToWorld( bspEntity_t *ent ){
 	brush_t     *b, *next;
 	parseMesh_t *pm;
 
@@ -1275,7 +1275,7 @@ void MoveBrushesToWorld( entity_t *ent ){
    AdjustBrushesForOrigin()
  */
 
-void AdjustBrushesForOrigin( entity_t *ent ){
+void AdjustBrushesForOrigin( bspEntity_t *ent ){
 
 	int i;
 	side_t      *s;
@@ -1318,7 +1318,7 @@ void AdjustBrushesForOrigin( entity_t *ent ){
    finds the bounds of an entity's brushes (necessary for terrain-style generic metashaders)
  */
 
-void SetEntityBounds( entity_t *e ){
+void SetEntityBounds( bspEntity_t *e ){
 	int i;
 	brush_t *b;
 	parseMesh_t *p;
@@ -1371,7 +1371,7 @@ void SetEntityBounds( entity_t *e ){
    based on LoadAlphaMap() from terrain.c, a little more generic
  */
 
-void LoadEntityIndexMap( entity_t *e ){
+void LoadEntityIndexMap( bspEntity_t *e ){
 	int i, size, numLayers, w, h;
 	const char      *value, *indexMapFilename, *shader;
 	char ext[ MAX_QPATH ], offset[ 4096 ], *search, *space;
@@ -1404,13 +1404,13 @@ void LoadEntityIndexMap( entity_t *e ){
 	}
 	if ( value[ 0 ] == '\0' ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has missing \"_layers\" or \"layers\" key\n", indexMapFilename );
-		Sys_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
+		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
 	numLayers = atoi( value );
 	if ( numLayers < 1 ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has < 1 layer (%d)\n", indexMapFilename, numLayers );
-		Sys_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
+		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
 
@@ -1421,7 +1421,7 @@ void LoadEntityIndexMap( entity_t *e ){
 	}
 	if ( value[ 0 ] == '\0' ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has missing \"_shader\" or \"shader\" key\n", indexMapFilename );
-		Sys_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
+		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
 	shader = value;
@@ -1457,7 +1457,7 @@ void LoadEntityIndexMap( entity_t *e ){
 		Load256Image( indexMapFilename, &pixels, NULL, &w, &h );
 
 		/* debug code */
-		//%	Sys_Printf( "-------------------------------" );
+		//%	Com_Printf( "-------------------------------" );
 
 		/* fix up out-of-range values */
 		size = w * h;
@@ -1469,18 +1469,18 @@ void LoadEntityIndexMap( entity_t *e ){
 
 			/* debug code */
 			//%	if( (i % w) == 0 )
-			//%		Sys_Printf( "\n" );
-			//%	Sys_Printf( "%c", pixels[ i ] + '0' );
+			//%		Com_Printf( "\n" );
+			//%	Com_Printf( "%c", pixels[ i ] + '0' );
 		}
 
 		/* debug code */
-		//%	Sys_Printf( "\n-------------------------------\n" );
+		//%	Com_Printf( "\n-------------------------------\n" );
 	}
 
 	/* the index map must be at least 2x2 pixels */
 	if ( w < 2 || h < 2 ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" is smaller than 2x2 pixels\n", indexMapFilename );
-		Sys_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
+		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		free( pixels );
 		return;
 	}
@@ -1670,7 +1670,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 
 	/* worldspawn (and func_groups) default to cast/recv shadows in worldspawn group */
 	if ( funcGroup || mapEnt->mapEntityNum == 0 ) {
-		//%	Sys_Printf( "World:  %d\n", mapEnt->mapEntityNum );
+		//%	Com_Printf( "World:  %d\n", mapEnt->mapEntityNum );
 		castShadows = WORLDSPAWN_CAST_SHADOWS;
 		recvShadows = WORLDSPAWN_RECV_SHADOWS;
 	}
@@ -1678,7 +1678,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 	/* other entities don't cast any shadows, but recv worldspawn shadows */
 	else
 	{
-		//%	Sys_Printf( "Entity: %d\n", mapEnt->mapEntityNum );
+		//%	Com_Printf( "Entity: %d\n", mapEnt->mapEntityNum );
 		castShadows = ENTITY_CAST_SHADOWS;
 		recvShadows = ENTITY_RECV_SHADOWS;
 	}
@@ -1695,7 +1695,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 			lightmapScale = FloatForKey( mapEnt, "_lightmapscale" );
 		}
 		if ( lightmapScale > 0.0f ) {
-			Sys_Printf( "Entity %d (%s) has lightmap scale of %.4f\n", mapEnt->mapEntityNum, classname, lightmapScale );
+			Com_Printf( "Entity %d (%s) has lightmap scale of %.4f\n", mapEnt->mapEntityNum, classname, lightmapScale );
 		}
 	}
 	else{
@@ -1710,7 +1710,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 	if ( value[ 0 ] != '\0' ) {
 		sprintf( shader, "textures/%s", value );
 		celShader = ShaderInfoForShader( shader );
-		Sys_Printf( "Entity %d (%s) has cel shader %s\n", mapEnt->mapEntityNum, classname, celShader->shader );
+		Com_Printf( "Entity %d (%s) has cel shader %s\n", mapEnt->mapEntityNum, classname, celShader->shader );
 	}
 	else{
 		celShader = NULL;
@@ -1778,7 +1778,7 @@ void LoadMap( char *map, qboolean onlyLights ){
 
 	/* note it */
 	Sys_FPrintf( SYS_VRB, "--- LoadMapFile ---\n" );
-	Sys_Printf( "Loading from string %i\n", strlen(map) );
+	Com_Printf( "Loading from string %li\n", strlen(map) );
 
 	/* load the map file */
 	ParseFromMemory( map, strlen(map) );
@@ -1831,8 +1831,8 @@ void LoadMap( char *map, qboolean onlyLights ){
 		Sys_FPrintf( SYS_VRB, "%9d edgebevels\n", c_edgebevels );
 		Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
 		Sys_FPrintf( SYS_VRB, "%9d planes\n", nummapplanes );
-		Sys_Printf( "%9d areaportals\n", c_areaportals );
-		Sys_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
+		Com_Printf( "%9d areaportals\n", c_areaportals );
+		Com_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
 					mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ],
 					mapMaxs[ 0 ], mapMaxs[ 1 ], mapMaxs[ 2 ] );
 
@@ -1857,14 +1857,14 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 
 	/* note it */
 	Sys_FPrintf( SYS_VRB, "--- LoadMapFile ---\n" );
-	Sys_Printf( "Loading %s\n", filename );
+	Com_Printf( "Loading %s\n", filename );
 
 	/* hack */
 	file = SafeOpenRead( filename );
 	fclose( file );
 
 	/* load the map file */
-	LoadScriptFile( filename, -1 );
+	Map_LoadScriptFile( filename, -1 );
 
 	/* setup */
 	if ( onlyLights ) {
@@ -1914,8 +1914,8 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 		Sys_FPrintf( SYS_VRB, "%9d edgebevels\n", c_edgebevels );
 		Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
 		Sys_FPrintf( SYS_VRB, "%9d planes\n", nummapplanes );
-		Sys_Printf( "%9d areaportals\n", c_areaportals );
-		Sys_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
+		Com_Printf( "%9d areaportals\n", c_areaportals );
+		Com_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
 					mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ],
 					mapMaxs[ 0 ], mapMaxs[ 1 ], mapMaxs[ 2 ] );
 

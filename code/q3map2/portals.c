@@ -187,7 +187,7 @@ void PrintPortal( portal_t *p ){
 
 	w = p->winding;
 	for ( i = 0 ; i < w->numpoints ; i++ )
-		Sys_Printf( "(%5.0f,%5.0f,%5.0f)\n",w->p[i][0]
+		Com_Printf( "(%5.0f,%5.0f,%5.0f)\n",w->p[i][0]
 					, w->p[i][1], w->p[i][2] );
 }
 
@@ -520,8 +520,8 @@ void MakeTreePortals_r( node_t *node ){
 	CalcNodeBounds( node );
 	if ( node->mins[0] >= node->maxs[0] ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: node without a volume\n" );
-		Sys_Printf( "node has %d tiny portals\n", node->tinyportals );
-		Sys_Printf( "node reference point %1.2f %1.2f %1.2f\n", node->referencepoint[0],
+		Com_Printf( "node has %d tiny portals\n", node->tinyportals );
+		Com_Printf( "node reference point %1.2f %1.2f %1.2f\n", node->referencepoint[0],
 					node->referencepoint[1],
 					node->referencepoint[2] );
 	}
@@ -607,7 +607,7 @@ void FloodPortals_r( node_t *node, int dist, qboolean skybox ){
    =============
  */
 
-qboolean PlaceOccupant( node_t *headnode, vec3_t origin, entity_t *occupant, qboolean skybox ){
+qboolean PlaceOccupant( node_t *headnode, vec3_t origin, bspEntity_t *occupant, qboolean skybox ){
 	vec_t d;
 	node_t  *node;
 	plane_t *plane;
@@ -651,7 +651,7 @@ qboolean FloodEntities( tree_t *tree ){
 	vec3_t origin, offset, scale, angles;
 	qboolean r, inside, tripped, skybox;
 	node_t      *headnode;
-	entity_t    *e;
+	bspEntity_t    *e;
 	const char  *value;
 
 
@@ -969,7 +969,7 @@ void FillOutside( node_t *headnode ){
 	Sys_FPrintf( SYS_VRB,"--- FillOutside ---\n" );
 	FillOutside_r( headnode );
 	Sys_FPrintf( SYS_VRB,"%9d solid leafs\n", c_solid );
-	Sys_Printf( "%9d leafs filled\n", c_outside );
+	Com_Printf( "%9d leafs filled\n", c_outside );
 	Sys_FPrintf( SYS_VRB, "%9d inside leafs\n", c_inside );
 }
 

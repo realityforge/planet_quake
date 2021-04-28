@@ -18,9 +18,12 @@
    along with GtkRadiant; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+ 
+ 
+ #ifndef __BSPFILE__
+ #define __BSPFILE__
 
-#include "../qcommon/qfiles.h"
-#include "../qcommon/q_shared.h"
+#include "q3map2.h"
 #include "surfaceflags.h"
 
 extern int bsp_version;
@@ -89,33 +92,21 @@ void    PrintBSPFileSizes( void );
 //===============
 
 
-typedef struct epair_s {
-	struct epair_s  *next;
-	char    *key;
-	char    *value;
-} epair_t;
-
-typedef struct {
-	vec3_t origin;
-	struct bspbrush_s   *brushes;
-	struct parseMesh_s  *patches;
-	int firstDrawSurf;
-	epair_t     *epairs;
-} entity_t;
-
 extern int num_entities;
-extern entity_t entities[MAX_MAP_ENTITIES];
+extern bspEntity_t entities[MAX_MAP_ENTITIES];
 
 void    ParseEntities( void );
 void    UnparseEntities( void );
 
-void    SetKeyValue( entity_t *ent, const char *key, const char *value );
-const char  *ValueForKey( const entity_t *ent, const char *key );
+void    SetKeyValue( bspEntity_t *ent, const char *key, const char *value );
+const char  *ValueForKey( const bspEntity_t *ent, const char *key );
 // will return "" if not present
 
-vec_t   FloatForKey( const entity_t *ent, const char *key );
-void    GetVectorForKey( const entity_t *ent, const char *key, vec3_t vec );
+vec_t   FloatForKey( const bspEntity_t *ent, const char *key );
+void    GetVectorForKey( const bspEntity_t *ent, const char *key, vec3_t vec );
 
 epair_t *ParseEpair( void );
 
-void    PrintEntity( const entity_t *ent );
+void    PrintEntity( const bspEntity_t *ent );
+
+#endif

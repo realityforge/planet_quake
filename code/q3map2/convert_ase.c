@@ -298,13 +298,13 @@ int ConvertBSPToASE( char *bspName ){
 
 
 	/* note it */
-	Sys_Printf( "--- Convert BSP to ASE ---\n" );
+	Com_Printf( "--- Convert BSP to ASE ---\n" );
 
 	/* create the ase filename from the bsp name */
 	strcpy( name, bspName );
 	StripExtension( name );
 	strcat( name, ".ase" );
-	Sys_Printf( "writing %s\n", name );
+	Com_Printf( "writing %s\n", name );
 
 	ExtractFileBase( bspName, base );
 	strcat( base, ".bsp" );

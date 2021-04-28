@@ -224,13 +224,13 @@ void WriteSurfaceExtraFile( const char *path ){
 	}
 
 	/* note it */
-	Sys_Printf( "--- WriteSurfaceExtraFile ---\n" );
+	Com_Printf( "--- WriteSurfaceExtraFile ---\n" );
 
 	/* open the file */
 	strcpy( srfPath, path );
 	StripExtension( srfPath );
 	strcat( srfPath, ".srf" );
-	Sys_Printf( "Writing %s\n", srfPath );
+	Com_Printf( "Writing %s\n", srfPath );
 	sf = fopen( srfPath, "w" );
 	if ( sf == NULL ) {
 		Com_Error(ERR_DROP, "Error opening %s for writing", srfPath );
@@ -337,7 +337,7 @@ void LoadSurfaceExtraFile( const char *path ){
 	strcpy( srfPath, path );
 	StripExtension( srfPath );
 	strcat( srfPath, ".srf" );
-	Sys_Printf( "Loading %s\n", srfPath );
+	Com_Printf( "Loading %s\n", srfPath );
 	size = LoadFile( srfPath, (void**) &buffer );
 	if ( size <= 0 ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Unable to find surface file %s, using defaults.\n", srfPath );

@@ -629,7 +629,7 @@ int EdgeCompare( const void *elem1, const void *elem2 ) {
    call after the surface list has been pruned
  */
 
-void FixTJunctions( entity_t *ent ){
+void FixTJunctions( bspEntity_t *ent ){
 	int i;
 	mapDrawSurface_t    *ds;
 	shaderInfo_t        *si;

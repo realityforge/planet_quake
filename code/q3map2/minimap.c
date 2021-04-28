@@ -288,7 +288,7 @@ void MiniMapMakeMinsMaxs( vec3_t mins_in, vec3_t maxs_in, float border, qboolean
 	VectorCopy( maxs_in, maxs );
 
 	// line compatible to nexuiz mapinfo
-	Sys_Printf( "size %f %f %f %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2] );
+	Com_Printf( "size %f %f %f %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2] );
 
 	if ( keepaspect ) {
 		VectorSubtract( maxs, mins, extend );
@@ -316,7 +316,7 @@ void MiniMapMakeMinsMaxs( vec3_t mins_in, vec3_t maxs_in, float border, qboolean
 	VectorSubtract( maxs, mins, minimap.size );
 
 	// line compatible to nexuiz mapinfo
-	Sys_Printf( "size_texcoords %f %f %f %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2] );
+	Com_Printf( "size_texcoords %f %f %f %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2] );
 }
 
 /*
@@ -370,7 +370,7 @@ void MiniMapMakeSampleOffsets(){
 	int i, j, k, jj, kk;
 	float val, valj, valk, sx, sy, rx, ry;
 
-	Sys_Printf( "Generating good sample offsets (this may take a while)...\n" );
+	Com_Printf( "Generating good sample offsets (this may take a while)...\n" );
 
 	/* start with entirely random samples */
 	for ( i = 0; i < minimap.samples; ++i )
@@ -474,7 +474,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 2 ) {
-		Sys_Printf( "Usage: q3map [-v] -minimap [-size n] [-sharpen f] [-samples n | -random n] [-o filename.tga] [-minmax Xmin Ymin Zmin Xmax Ymax Zmax] <mapname>\n" );
+		Com_Printf( "Usage: q3map [-v] -minimap [-size n] [-sharpen f] [-samples n | -random n] [-o filename.tga] [-minmax Xmin Ymin Zmin Xmax Ymax Zmax] <mapname>\n" );
 		return 0;
 	}
 
@@ -482,7 +482,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 	strcpy( source, ExpandArg( argv[ argc - 1 ] ) );
 	StripExtension( source );
 	COM_DefaultExtension( source, sizeof(source), ".bsp" );
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 	LoadShaderInfo();
 	LoadBSPFile( source );
 
@@ -510,17 +510,17 @@ int MiniMapBSPMain( int argc, char **argv ){
 		if ( !strcmp( argv[ i ],  "-size" ) ) {
 			minimap.width = minimap.height = atoi( argv[i + 1] );
 			i++;
-			Sys_Printf( "Image size set to %i\n", minimap.width );
+			Com_Printf( "Image size set to %i\n", minimap.width );
 		}
 		else if ( !strcmp( argv[ i ],  "-sharpen" ) ) {
 			minimapSharpen = atof( argv[i + 1] );
 			i++;
-			Sys_Printf( "Sharpening coefficient set to %f\n", minimapSharpen );
+			Com_Printf( "Sharpening coefficient set to %f\n", minimapSharpen );
 		}
 		else if ( !strcmp( argv[ i ],  "-samples" ) ) {
 			minimap.samples = atoi( argv[i + 1] );
 			i++;
-			Sys_Printf( "Samples set to %i\n", minimap.samples );
+			Com_Printf( "Samples set to %i\n", minimap.samples );
 			if ( minimap.sample_offsets ) {
 				free( minimap.sample_offsets );
 			}
@@ -530,7 +530,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 		else if ( !strcmp( argv[ i ],  "-random" ) ) {
 			minimap.samples = atoi( argv[i + 1] );
 			i++;
-			Sys_Printf( "Random samples set to %i\n", minimap.samples );
+			Com_Printf( "Random samples set to %i\n", minimap.samples );
 			if ( minimap.sample_offsets ) {
 				free( minimap.sample_offsets );
 			}
@@ -539,20 +539,20 @@ int MiniMapBSPMain( int argc, char **argv ){
 		else if ( !strcmp( argv[ i ],  "-border" ) ) {
 			border = atof( argv[i + 1] );
 			i++;
-			Sys_Printf( "Border set to %f\n", border );
+			Com_Printf( "Border set to %f\n", border );
 		}
 		else if ( !strcmp( argv[ i ],  "-keepaspect" ) ) {
 			keepaspect = qtrue;
-			Sys_Printf( "Keeping aspect ratio by letterboxing\n", border );
+			Com_Printf( "Keeping aspect ratio by letterboxing\n", border );
 		}
 		else if ( !strcmp( argv[ i ],  "-nokeepaspect" ) ) {
 			keepaspect = qfalse;
-			Sys_Printf( "Not keeping aspect ratio\n", border );
+			Com_Printf( "Not keeping aspect ratio\n", border );
 		}
 		else if ( !strcmp( argv[ i ],  "-o" ) ) {
 			strcpy( minimapFilename, argv[i + 1] );
 			i++;
-			Sys_Printf( "Output file name set to %s\n", minimapFilename );
+			Com_Printf( "Output file name set to %s\n", minimapFilename );
 		}
 		else if ( !strcmp( argv[ i ],  "-minmax" ) && i < ( argc - 7 ) ) {
 			mins[0] = atof( argv[i + 1] );
@@ -562,42 +562,42 @@ int MiniMapBSPMain( int argc, char **argv ){
 			maxs[1] = atof( argv[i + 5] );
 			maxs[2] = atof( argv[i + 6] );
 			i += 6;
-			Sys_Printf( "Map mins/maxs overridden\n" );
+			Com_Printf( "Map mins/maxs overridden\n" );
 		}
 		else if ( !strcmp( argv[ i ],  "-gray" ) ) {
 			mode = MINIMAP_MODE_GRAY;
-			Sys_Printf( "Writing as white-on-black image\n" );
+			Com_Printf( "Writing as white-on-black image\n" );
 		}
 		else if ( !strcmp( argv[ i ],  "-black" ) ) {
 			mode = MINIMAP_MODE_BLACK;
-			Sys_Printf( "Writing as black alpha image\n" );
+			Com_Printf( "Writing as black alpha image\n" );
 		}
 		else if ( !strcmp( argv[ i ],  "-white" ) ) {
 			mode = MINIMAP_MODE_WHITE;
-			Sys_Printf( "Writing as white alpha image\n" );
+			Com_Printf( "Writing as white alpha image\n" );
 		}
 		else if ( !strcmp( argv[ i ],  "-boost" ) && i < ( argc - 2 ) ) {
 			minimap.boost = atof( argv[i + 1] );
 			i++;
-			Sys_Printf( "Contrast boost set to %f\n", minimap.boost );
+			Com_Printf( "Contrast boost set to %f\n", minimap.boost );
 		}
 		else if ( !strcmp( argv[ i ],  "-brightness" ) && i < ( argc - 2 ) ) {
 			minimap.brightness = atof( argv[i + 1] );
 			i++;
-			Sys_Printf( "Brightness set to %f\n", minimap.brightness );
+			Com_Printf( "Brightness set to %f\n", minimap.brightness );
 		}
 		else if ( !strcmp( argv[ i ],  "-contrast" ) && i < ( argc - 2 ) ) {
 			minimap.contrast = atof( argv[i + 1] );
 			i++;
-			Sys_Printf( "Contrast set to %f\n", minimap.contrast );
+			Com_Printf( "Contrast set to %f\n", minimap.contrast );
 		}
 		else if ( !strcmp( argv[ i ],  "-autolevel" ) ) {
 			autolevel = qtrue;
-			Sys_Printf( "Auto level enabled\n", border );
+			Com_Printf( "Auto level enabled\n", border );
 		}
 		else if ( !strcmp( argv[ i ],  "-noautolevel" ) ) {
 			autolevel = qfalse;
-			Sys_Printf( "Auto level disabled\n", border );
+			Com_Printf( "Auto level disabled\n", border );
 		}
 	}
 
@@ -608,7 +608,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 		ExtractFilePath( source, path );
 		sprintf( relativeMinimapFilename, game->miniMapNameFormat, basename );
 		MergeRelativePath( minimapFilename, path, relativeMinimapFilename );
-		Sys_Printf( "Output file name automatically set to %s\n", minimapFilename );
+		Com_Printf( "Output file name automatically set to %s\n", minimapFilename );
 	}
 	ExtractFilePath( minimapFilename, path );
 	Q_mkdir( path );
@@ -627,29 +627,29 @@ int MiniMapBSPMain( int argc, char **argv ){
 	MiniMapSetupBrushes();
 
 	if ( minimap.samples <= 1 ) {
-		Sys_Printf( "\n--- MiniMapNoSupersampling (%d) ---\n", minimap.height );
+		Com_Printf( "\n--- MiniMapNoSupersampling (%d) ---\n", minimap.height );
 		RunThreadsOnIndividual( minimap.height, qtrue, MiniMapNoSupersampling );
 	}
 	else
 	{
 		if ( minimap.sample_offsets ) {
-			Sys_Printf( "\n--- MiniMapSupersampled (%d) ---\n", minimap.height );
+			Com_Printf( "\n--- MiniMapSupersampled (%d) ---\n", minimap.height );
 			RunThreadsOnIndividual( minimap.height, qtrue, MiniMapSupersampled );
 		}
 		else
 		{
-			Sys_Printf( "\n--- MiniMapRandomlySupersampled (%d) ---\n", minimap.height );
+			Com_Printf( "\n--- MiniMapRandomlySupersampled (%d) ---\n", minimap.height );
 			RunThreadsOnIndividual( minimap.height, qtrue, MiniMapRandomlySupersampled );
 		}
 	}
 
 	if ( minimap.boost != 1.0 ) {
-		Sys_Printf( "\n--- MiniMapContrastBoost (%d) ---\n", minimap.height );
+		Com_Printf( "\n--- MiniMapContrastBoost (%d) ---\n", minimap.height );
 		RunThreadsOnIndividual( minimap.height, qtrue, MiniMapContrastBoost );
 	}
 
 	if ( autolevel ) {
-		Sys_Printf( "\n--- MiniMapAutoLevel (%d) ---\n", minimap.height );
+		Com_Printf( "\n--- MiniMapAutoLevel (%d) ---\n", minimap.height );
 		float mi = 1, ma = 0;
 		float s, o;
 
@@ -679,21 +679,21 @@ int MiniMapBSPMain( int argc, char **argv ){
 			minimap.brightness = minimap.brightness - minimap.contrast * o;
 			minimap.contrast *= s;
 
-			Sys_Printf( "Auto level: Brightness changed to %f\n", minimap.brightness );
-			Sys_Printf( "Auto level: Contrast changed to %f\n", minimap.contrast );
+			Com_Printf( "Auto level: Brightness changed to %f\n", minimap.brightness );
+			Com_Printf( "Auto level: Contrast changed to %f\n", minimap.contrast );
 		}
 		else{
-			Sys_Printf( "Auto level: failed because all pixels are the same value\n" );
+			Com_Printf( "Auto level: failed because all pixels are the same value\n" );
 		}
 	}
 
 	if ( minimap.brightness != 0 || minimap.contrast != 1 ) {
-		Sys_Printf( "\n--- MiniMapBrightnessContrast (%d) ---\n", minimap.height );
+		Com_Printf( "\n--- MiniMapBrightnessContrast (%d) ---\n", minimap.height );
 		RunThreadsOnIndividual( minimap.height, qtrue, MiniMapBrightnessContrast );
 	}
 
 	if ( minimap.sharpendata1f ) {
-		Sys_Printf( "\n--- MiniMapSharpen (%d) ---\n", minimap.height );
+		Com_Printf( "\n--- MiniMapSharpen (%d) ---\n", minimap.height );
 		RunThreadsOnIndividual( minimap.height, qtrue, MiniMapSharpen );
 		q = minimap.sharpendata1f;
 	}
@@ -702,7 +702,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 		q = minimap.data1f;
 	}
 
-	Sys_Printf( "\nConverting..." );
+	Com_Printf( "\nConverting..." );
 
 	switch ( mode )
 	{
@@ -722,7 +722,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 				b = v * 256;
 				*p++ = b;
 			}
-		Sys_Printf( " writing to %s...", minimapFilename );
+		Com_Printf( " writing to %s...", minimapFilename );
 		WriteTGAGray( minimapFilename, data4b, minimap.width, minimap.height );
 		break;
 	case MINIMAP_MODE_BLACK:
@@ -744,7 +744,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 				*p++ = 0;
 				*p++ = b;
 			}
-		Sys_Printf( " writing to %s...", minimapFilename );
+		Com_Printf( " writing to %s...", minimapFilename );
 		WriteTGA( minimapFilename, data4b, minimap.width, minimap.height );
 		break;
 	case MINIMAP_MODE_WHITE:
@@ -766,12 +766,12 @@ int MiniMapBSPMain( int argc, char **argv ){
 				*p++ = 255;
 				*p++ = b;
 			}
-		Sys_Printf( " writing to %s...", minimapFilename );
+		Com_Printf( " writing to %s...", minimapFilename );
 		WriteTGA( minimapFilename, data4b, minimap.width, minimap.height );
 		break;
 	}
 
-	Sys_Printf( " done.\n" );
+	Com_Printf( " done.\n" );
 
 	/* return to sender */
 	return 0;

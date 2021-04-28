@@ -31,7 +31,7 @@
 #define MAX_ASE_ANIMATIONS          32
 #define MAX_ASE_ANIMATION_FRAMES    512
 
-#define VERBOSE( x ) { if ( ase.verbose ) { Sys_Printf x ; } }
+#define VERBOSE( x ) { if ( ase.verbose ) { Com_Printf x ; } }
 
 typedef struct
 {
@@ -147,7 +147,7 @@ void ASE_Load( const char *filename, qboolean verbose, qboolean grabAnims ){
 
 	ase.curpos = ase.buffer = safe_malloc( ase.len );
 
-	Sys_Printf( "Processing '%s'\n", filename );
+	Com_Printf( "Processing '%s'\n", filename );
 
 	if ( fread( ase.buffer, ase.len, 1, fp ) != 1 ) {
 		fclose( fp );
@@ -466,7 +466,7 @@ static void ASE_KeyMAP_DIFFUSE( const char *token ){
 
 		if ( strstr( bitmap, gamedir ) ) {
 			strcpy( ase.materials[ase.numMaterials].name, strstr( bitmap, gamedir ) + strlen( gamedir ) );
-			Sys_Printf( "material name: \'%s\'\n", strstr( bitmap, gamedir ) + strlen( gamedir ) );
+			Com_Printf( "material name: \'%s\'\n", strstr( bitmap, gamedir ) + strlen( gamedir ) );
 		}
 		else
 		{
@@ -881,7 +881,7 @@ static void ASE_Process( void ){
 			}
 		}
 		else if ( s_token[0] ) {
-			Sys_Printf( "Unknown token '%s'\n", s_token );
+			Com_Printf( "Unknown token '%s'\n", s_token );
 		}
 	}
 

@@ -72,7 +72,7 @@ int FixAASMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 2 ) {
-		Sys_Printf( "Usage: q3map -fixaas [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -fixaas [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -82,14 +82,14 @@ int FixAASMain( int argc, char **argv ){
 	COM_DefaultExtension( source, sizeof(source), ".bsp" );
 
 	/* note it */
-	Sys_Printf( "--- FixAAS ---\n" );
+	Com_Printf( "--- FixAAS ---\n" );
 
 	/* load the bsp */
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 	length = LoadFile( source, &buffer );
 
 	/* create bsp checksum */
-	Sys_Printf( "Creating checksum...\n" );
+	Com_Printf( "Creating checksum...\n" );
 	checksum = LittleLong( MD4BlockChecksum( buffer, length ) );
 
 	/* write checksum to aas */
@@ -100,7 +100,7 @@ int FixAASMain( int argc, char **argv ){
 		strcpy( aas, source );
 		StripExtension( aas );
 		strcat( aas, *ext );
-		Sys_Printf( "Trying %s\n", aas );
+		Com_Printf( "Trying %s\n", aas );
 		ext++;
 
 		/* fix it */

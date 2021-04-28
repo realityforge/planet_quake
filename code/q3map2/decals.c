@@ -236,13 +236,13 @@ static qboolean MakeTextureMatrix( decalProjector_t *dp, vec4_t projection, bspD
 
 	/* debug code */
 	#if 1
-	Sys_Printf( "Mat: [ %f %f %f %f ] [ %f %f %f %f ] Theta: %f (%f)\n",
+	Com_Printf( "Mat: [ %f %f %f %f ] [ %f %f %f %f ] Theta: %f (%f)\n",
 				dp->texMat[ 0 ][ 0 ], dp->texMat[ 0 ][ 1 ], dp->texMat[ 0 ][ 2 ], dp->texMat[ 0 ][ 3 ],
 				dp->texMat[ 1 ][ 0 ], dp->texMat[ 1 ][ 1 ], dp->texMat[ 1 ][ 2 ], dp->texMat[ 1 ][ 3 ],
 				RAD2DEG( acos( DotProduct( dp->texMat[ 0 ], dp->texMat[ 1 ] ) ) ),
 				RAD2DEG( acos( DotProduct( axis[ 0 ], axis[ 1 ] ) ) ) );
 
-	Sys_Printf( "XYZ: %f %f %f ST: %f %f ST(t): %f %f\n",
+	Com_Printf( "XYZ: %f %f %f ST: %f %f ST(t): %f %f\n",
 				a->xyz[ 0 ], a->xyz[ 1 ], a->xyz[ 2 ],
 				a->st[ 0 ], a->st[ 1 ],
 				DotProduct( a->xyz, dp->texMat[ 0 ] ) + dp->texMat[ 0 ][ 3 ], DotProduct( a->xyz, dp->texMat[ 1 ] ) + dp->texMat[ 1 ][ 3 ] );
@@ -252,21 +252,21 @@ static qboolean MakeTextureMatrix( decalProjector_t *dp, vec4_t projection, bspD
 	s = DotProduct( a->xyz, dp->texMat[ 0 ] ) + dp->texMat[ 0 ][ 3 ];
 	t = DotProduct( a->xyz, dp->texMat[ 1 ] ) + dp->texMat[ 1 ][ 3 ];
 	if ( fabs( s - a->st[ 0 ] ) > 0.01 || fabs( t - a->st[ 1 ] ) > 0.01 ) {
-		Sys_Printf( "Bad texture matrix! (A) (%f, %f) != (%f, %f)\n",
+		Com_Printf( "Bad texture matrix! (A) (%f, %f) != (%f, %f)\n",
 					s, t, a->st[ 0 ], a->st[ 1 ] );
 		//%	return qfalse;
 	}
 	s = DotProduct( b->xyz, dp->texMat[ 0 ] ) + dp->texMat[ 0 ][ 3 ];
 	t = DotProduct( b->xyz, dp->texMat[ 1 ] ) + dp->texMat[ 1 ][ 3 ];
 	if ( fabs( s - b->st[ 0 ] ) > 0.01 || fabs( t - b->st[ 1 ] ) > 0.01 ) {
-		Sys_Printf( "Bad texture matrix! (B) (%f, %f) != (%f, %f)\n",
+		Com_Printf( "Bad texture matrix! (B) (%f, %f) != (%f, %f)\n",
 					s, t, b->st[ 0 ], b->st[ 1 ] );
 		//%	return qfalse;
 	}
 	s = DotProduct( c->xyz, dp->texMat[ 0 ] ) + dp->texMat[ 0 ][ 3 ];
 	t = DotProduct( c->xyz, dp->texMat[ 1 ] ) + dp->texMat[ 1 ][ 3 ];
 	if ( fabs( s - c->st[ 0 ] ) > 0.01 || fabs( t - c->st[ 1 ] ) > 0.01 ) {
-		Sys_Printf( "Bad texture matrix! (C) (%f, %f) != (%f, %f)\n",
+		Com_Printf( "Bad texture matrix! (C) (%f, %f) != (%f, %f)\n",
 					s, t, c->st[ 0 ], c->st[ 1 ] );
 		//%	return qfalse;
 	}
@@ -409,7 +409,7 @@ void ProcessDecals( void ){
 	float distance;
 	vec4_t projection, plane;
 	vec3_t origin, target, delta;
-	entity_t            *e, *e2;
+	bspEntity_t            *e, *e2;
 	parseMesh_t         *p;
 	mesh_t              *mesh, *subdivided;
 	bspDrawVert_t       *dv[ 4 ];
@@ -812,7 +812,7 @@ static void ProjectDecalOntoTriangles( decalProjector_t *dp, mapDrawSurface_t *d
    projects decals onto world surfaces
  */
 
-void MakeEntityDecals( entity_t *e ){
+void MakeEntityDecals( bspEntity_t *e ){
 	int i, j, k, f, fOld, start;
 	decalProjector_t dp;
 	mapDrawSurface_t    *ds;

@@ -36,8 +36,8 @@
  */
 
 #define MAX_INCLUDES    8
-script_t scriptstack[MAX_INCLUDES];
-script_t    *script;
+bspScript_t scriptstack[MAX_INCLUDES];
+bspScript_t    *script;
 int scriptline;
 
 char token[MAXTOKEN];
@@ -62,16 +62,16 @@ void AddScriptToStack( const char *filename, int index ){
 	size = vfsLoadFile( script->filename, &buffer, index );
 
 	if ( size == -1 ) {
-		Sys_Printf( "Script file %s was not found\n", script->filename );
+		Com_Printf( "Script file %s was not found\n", script->filename );
 		script--;
 	}
 	else
 	{
 		if ( index > 0 ) {
-			Sys_Printf( "entering %s (%d)\n", script->filename, index + 1 );
+			Com_Printf( "entering %s (%d)\n", script->filename, index + 1 );
 		}
 		else{
-			Sys_Printf( "entering %s\n", script->filename );
+			Com_Printf( "entering %s\n", script->filename );
 		}
 
 		script->buffer = buffer;
@@ -84,10 +84,10 @@ void AddScriptToStack( const char *filename, int index ){
 
 /*
    ==============
-   LoadScriptFile
+   Map_LoadScriptFile
    ==============
  */
-void LoadScriptFile( const char *filename, int index ){
+void Map_LoadScriptFile( const char *filename, int index ){
 	script = scriptstack;
 	AddScriptToStack( filename, index );
 
@@ -138,7 +138,7 @@ void UnGetToken( void ){
 }
 
 
-qboolean EndOfScript( qboolean crossline ){
+qboolean Map_EndOfScript( qboolean crossline ){
 	if ( !crossline ) {
 		Com_Error(ERR_DROP, "Line %i is incomplete\n",scriptline );
 	}
@@ -152,7 +152,7 @@ qboolean EndOfScript( qboolean crossline ){
 		Sys_FPrintf( SYS_WRN, "WARNING: Attempt to free already freed script buffer\n" );
 	}
 	else{
-		free( script->buffer );
+		free( (void *)script->buffer );
 	}
 	script->buffer = NULL;
 	if ( script == scriptstack + 1 ) {
@@ -161,7 +161,7 @@ qboolean EndOfScript( qboolean crossline ){
 	}
 	script--;
 	scriptline = script->line;
-	Sys_Printf( "returning to %s\n", script->filename );
+	Com_Printf( "returning to %s\n", script->filename );
 	return GetToken( crossline );
 }
 
@@ -185,7 +185,7 @@ qboolean GetToken( qboolean crossline ){
 	}
 
 	if ( ( script->script_p >= script->end_p ) || ( script->script_p == NULL ) ) {
-		return EndOfScript( crossline );
+		return Map_EndOfScript( crossline );
 	}
 
 //
@@ -195,7 +195,7 @@ skipspace:
 	while ( *script->script_p <= 32 )
 	{
 		if ( script->script_p >= script->end_p ) {
-			return EndOfScript( crossline );
+			return Map_EndOfScript( crossline );
 		}
 		if ( *script->script_p++ == '\n' ) {
 			if ( !crossline ) {
@@ -207,7 +207,7 @@ skipspace:
 	}
 
 	if ( script->script_p >= script->end_p ) {
-		return EndOfScript( crossline );
+		return Map_EndOfScript( crossline );
 	}
 
 	// ; # // comments
@@ -218,7 +218,7 @@ skipspace:
 		}
 		while ( *script->script_p++ != '\n' )
 			if ( script->script_p >= script->end_p ) {
-				return EndOfScript( crossline );
+				return Map_EndOfScript( crossline );
 			}
 		script->line++;
 		scriptline = script->line;
@@ -239,7 +239,7 @@ skipspace:
 			}
 			script->script_p++;
 			if ( script->script_p >= script->end_p ) {
-				return EndOfScript( crossline );
+				return Map_EndOfScript( crossline );
 			}
 		}
 		script->script_p += 2;

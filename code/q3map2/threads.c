@@ -63,7 +63,7 @@ int GetThreadWork( void ){
 	if ( f != oldf ) {
 		oldf = f;
 		if ( pacifier ) {
-			Sys_Printf( "%i...", f );
+			Com_Printf( "%i...", f );
 			fflush( stdout );   /* ydnar */
 		}
 	}
@@ -87,7 +87,7 @@ void ThreadWorkerFunction( int threadnum ){
 		if ( work == -1 ) {
 			break;
 		}
-//Sys_Printf ("thread %i, work %i\n", threadnum, work);
+//Com_Printf ("thread %i, work %i\n", threadnum, work);
 		workfunction( work );
 	}
 }
@@ -129,7 +129,7 @@ void ThreadSetDefault( void ){
 		}
 	}
 
-	Sys_Printf( "%i threads\n", numthreads );
+	Com_Printf( "%i threads\n", numthreads );
 }
 
 
@@ -206,7 +206,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 	threaded = qfalse;
 	end = I_FloatTime();
 	if ( pacifier ) {
-		Sys_Printf( " (%i)\n", end - start );
+		Com_Printf( " (%i)\n", end - start );
 	}
 }
 
@@ -313,7 +313,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 
 	end = I_FloatTime();
 	if ( pacifier ) {
-		Sys_Printf( " (%i)\n", end - start );
+		Com_Printf( " (%i)\n", end - start );
 	}
 }
 
@@ -344,7 +344,7 @@ void ThreadSetDefault( void ){
 	if ( numthreads == -1 ) {
 		numthreads = prctl( PR_MAXPPROCS );
 	}
-	Sys_Printf( "%i threads\n", numthreads );
+	Com_Printf( "%i threads\n", numthreads );
 	usconfig( CONF_INITUSERS, numthreads );
 }
 
@@ -400,7 +400,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 
 	end = I_FloatTime();
 	if ( pacifier ) {
-		Sys_Printf( " (%i)\n", end - start );
+		Com_Printf( " (%i)\n", end - start );
 	}
 }
 
@@ -428,7 +428,7 @@ void ThreadSetDefault( void ){
 	}
 
 	if ( numthreads > 1 ) {
-		Sys_Printf( "threads: %d\n", numthreads );
+		Com_Printf( "threads: %d\n", numthreads );
 	}
 }
 
@@ -570,7 +570,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 
 	end = I_FloatTime();
 	if ( pacifier ) {
-		Sys_Printf( " (%i)\n", end - start );
+		Com_Printf( " (%i)\n", end - start );
 	}
 }
 #endif // if defined( __linux__ ) || defined( __FreeBSD__ )
@@ -615,7 +615,7 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 
 	end = I_FloatTime();
 	if ( pacifier ) {
-		Sys_Printf( " (%i)\n", end - start );
+		Com_Printf( " (%i)\n", end - start );
 	}
 }
 

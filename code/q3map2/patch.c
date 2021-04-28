@@ -418,7 +418,7 @@ static void GrowGroup_r( parseMesh_t *pm, int patchNum, int patchCount, parseMes
    pull apart.
  */
 
-void PatchMapDrawSurfs( entity_t *e ){
+void PatchMapDrawSurfs( bspEntity_t *e ){
 	int i, j, k, l, c1, c2;
 	parseMesh_t             *pm;
 	parseMesh_t             *check, *scan;
@@ -519,7 +519,7 @@ void PatchMapDrawSurfs( entity_t *e ){
 		}
 
 		/* debug code */
-		//%	Sys_Printf( "Longest curve: %f Iterations: %d\n", scan->longestCurve, scan->maxIterations );
+		//%	Com_Printf( "Longest curve: %f Iterations: %d\n", scan->longestCurve, scan->maxIterations );
 
 		/* create drawsurf */
 		scan->grouped = qtrue;

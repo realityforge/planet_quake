@@ -165,7 +165,7 @@ Might be easier to grab latest from dockerhub:
 
 Add files to the container by attaching a volume containing pk3s:
 
-`docker run -ti -p 8080:8080 -p 27960:27960/udp -v quake3/baseq3:/tmp/baseq3 --name quake3e briancullinan/quake3e:full`
+`docker run -ti -p 8080:8080 -p 27960:27960/udp -v quake3/baseq3:/home/baseq3 --name quake3e briancullinan/quake3e:full`
 
 Then store the converted files for future runs:
 

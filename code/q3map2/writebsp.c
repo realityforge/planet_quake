@@ -166,7 +166,7 @@ void EmitLeaf( node_t *node ){
 			break;
 		}
 		//%	if( b->guard != 0xDEADBEEF )
-		//%		Sys_Printf( "Brush %6d: 0x%08X Guard: 0x%08X Next: 0x%08X Original: 0x%08X Sides: %d\n", b->brushNum, b, b, b->next, b->original, b->numsides );
+		//%		Com_Printf( "Brush %6d: 0x%08X Guard: 0x%08X Next: 0x%08X Original: 0x%08X Sides: %d\n", b->brushNum, b, b, b->next, b->original, b->numsides );
 
 		if ( numBSPLeafBrushes >= MAX_MAP_LEAFBRUSHES ) {
 			Com_Error(ERR_DROP, "MAX_MAP_LEAFBRUSHES" );
@@ -283,7 +283,7 @@ void SetLightStyles( void ){
 	qboolean keepLights;
 	qboolean noRadiosityLight;
 	const char  *t;
-	entity_t    *e;
+	bspEntity_t    *e;
 	epair_t     *ep, *next;
 	char value[ 10 ];
 	char lightTargets[ MAX_SWITCHED_LIGHTS ][ 64 ];
@@ -418,7 +418,7 @@ void EndBSPFile( void ){
 
 	/* write the bsp */
 	sprintf( path, "%s.bsp", source );
-	Sys_Printf( "Writing %s\n", path );
+	Com_Printf( "Writing %s\n", path );
 	WriteBSPFile( path );
 }
 
@@ -533,7 +533,7 @@ void EmitFogs( void ){
 			for ( j = 0; j < 6; j++ )
 			{
 				if ( mapFogs[ i ].brush->sides[ j ].visibleHull != NULL ) {
-					Sys_Printf( "Fog %d has visible side %d\n", i, j );
+					Com_Printf( "Fog %d has visible side %d\n", i, j );
 					bspFogs[ i ].visibleSide = j;
 					break;
 				}
@@ -552,7 +552,7 @@ void EmitFogs( void ){
 void BeginModel( void ){
 	bspModel_t  *mod;
 	brush_t     *b;
-	entity_t    *e;
+	bspEntity_t    *e;
 	vec3_t mins, maxs;
 	vec3_t lgMins, lgMaxs;          /* ydnar: lightgrid mins/maxs */
 	parseMesh_t *p;
@@ -626,7 +626,7 @@ void BeginModel( void ){
    finish a model's processing
  */
 
-void EndModel( entity_t *e, node_t *headnode ){
+void EndModel( bspEntity_t *e, node_t *headnode ){
 	bspModel_t  *mod;
 
 

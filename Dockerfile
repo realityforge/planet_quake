@@ -153,3 +153,10 @@ COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/code/xquakejs/li
 COPY --from=briancullinan/quake3e:build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
 COPY --from=briancullinan/quake3e:build-ded /tmp/planet_quake/build/release-linux-x86_64/quake3e* /tmp/planet_quake/build/release-linux-x86_64/
 COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
+
+# Run latest dockerhub image:
+# docker run -ti -p 8080:8080 -p 27960:27960/udp briancullinan/quake3e:full
+# Build an image to repack
+# docker build --target repack
+# Run repack image
+# docker run -ti -v /Applications/ioquake3/baseq3:/home/baseq3 --name quake3e briancullinan/quake3e:repack

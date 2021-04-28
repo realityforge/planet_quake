@@ -57,6 +57,9 @@ void *safe_malloc_info( size_t size, char* info );
   #define Q_mkdir( a ) mkdir( a, 0755 )
 #endif
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
+
 void    DefaultPath( char *path, const char *basepath );
 void    StripFilename( char *path );
 void    StripExtension( char *path );
@@ -80,6 +83,11 @@ void ConvertDOSToUnixName( char *dst, const char *src );
 char* StrDup( char* pStr );
 #endif
 char* StrDup( const char* pStr );
+int    LoadFile( const char *filename, void **bufferptr );
+FILE *SafeOpenWrite( const char *filename );
+void SafeWrite( FILE *f, const void *buffer, int count );
+FILE *SafeOpenRead( const char *filename );
+void    SaveFile( const char *filename, const void *buffer, int count );
 
 // TTimo started adding portability code:
 // return true if spawning was successful, false otherwise

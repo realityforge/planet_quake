@@ -1237,7 +1237,7 @@ picoMemStream_t *_pico_new_memstream( const picoByte_t *buffer, int bufSize ){
 
 	/* setup */
 	s->buffer   = buffer;
-	s->curPos   = buffer;
+	s->curPos   = (picoByte_t *)buffer;
 	s->bufSize  = bufSize;
 	s->flag     = 0;
 
@@ -1312,10 +1312,10 @@ int _pico_memstream_seek( picoMemStream_t *s, long offset, int origin ){
 	}
 
 	if ( origin == PICO_SEEK_SET ) {
-		s->curPos = s->buffer + offset;
+		s->curPos = (picoByte_t *)s->buffer + offset;
 		overflow = s->curPos - ( s->buffer + s->bufSize );
 		if ( overflow > 0 ) {
-			s->curPos = s->buffer + s->bufSize;
+			s->curPos = (picoByte_t *)s->buffer + s->bufSize;
 			return offset - overflow;
 		}
 		return 0;
@@ -1324,16 +1324,16 @@ int _pico_memstream_seek( picoMemStream_t *s, long offset, int origin ){
 		s->curPos += offset;
 		overflow = s->curPos - ( s->buffer + s->bufSize );
 		if ( overflow > 0 ) {
-			s->curPos = s->buffer + s->bufSize;
+			s->curPos = (picoByte_t *)s->buffer + s->bufSize;
 			return offset - overflow;
 		}
 		return 0;
 	}
 	else if ( origin == PICO_SEEK_END ) {
-		s->curPos = ( s->buffer + s->bufSize ) - offset;
+		s->curPos = (picoByte_t *)(( s->buffer + s->bufSize ) - offset);
 		overflow = s->buffer - s->curPos;
 		if ( overflow > 0 ) {
-			s->curPos = s->buffer;
+			s->curPos = (picoByte_t *)s->buffer;
 			return offset - overflow;
 		}
 		return 0;

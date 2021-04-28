@@ -55,7 +55,7 @@ int num_visclusters;                    // clusters the player can be in
 int num_visportals;
 int num_solidfaces;
 
-void WriteFloat( FILE *f, vec_t v ){
+void FILE_WriteFloat( FILE *f, vec_t v ){
 	if ( fabs( v - Q_rint( v ) ) < 0.001 ) {
 		fprintf( f,"%i ",(int)Q_rint( v ) );
 	}
@@ -68,8 +68,6 @@ void CountVisportals_r( node_t *node ){
 	int s;
 	portal_t    *p;
 	winding_t   *w;
-	vec3_t		normal;
-	vec_t		dist;
 
 	// decision node
 	if ( node->planenum != PLANENUM_LEAF ) {
@@ -160,9 +158,9 @@ void WritePortalFile_r( node_t *node ){
 			for ( i = 0 ; i < w->numpoints ; i++ )
 			{
 				fprintf( pf,"(" );
-				WriteFloat( pf, w->p[i][0] );
-				WriteFloat( pf, w->p[i][1] );
-				WriteFloat( pf, w->p[i][2] );
+				FILE_WriteFloat( pf, w->p[i][0] );
+				FILE_WriteFloat( pf, w->p[i][1] );
+				FILE_WriteFloat( pf, w->p[i][2] );
 				fprintf( pf,") " );
 			}
 			fprintf( pf,"\n" );
@@ -244,9 +242,9 @@ void WriteFaceFile_r( node_t *node ){
 				for ( i = 0 ; i < w->numpoints ; i++ )
 				{
 					fprintf( pf,"(" );
-					WriteFloat( pf, w->p[i][0] );
-					WriteFloat( pf, w->p[i][1] );
-					WriteFloat( pf, w->p[i][2] );
+					FILE_WriteFloat( pf, w->p[i][0] );
+					FILE_WriteFloat( pf, w->p[i][1] );
+					FILE_WriteFloat( pf, w->p[i][2] );
 					fprintf( pf,") " );
 				}
 				fprintf( pf,"\n" );
@@ -257,9 +255,9 @@ void WriteFaceFile_r( node_t *node ){
 				for ( i = w->numpoints - 1; i >= 0; i-- )
 				{
 					fprintf( pf,"(" );
-					WriteFloat( pf, w->p[i][0] );
-					WriteFloat( pf, w->p[i][1] );
-					WriteFloat( pf, w->p[i][2] );
+					FILE_WriteFloat( pf, w->p[i][0] );
+					FILE_WriteFloat( pf, w->p[i][1] );
+					FILE_WriteFloat( pf, w->p[i][2] );
 					fprintf( pf,") " );
 				}
 				fprintf( pf,"\n" );
@@ -369,7 +367,7 @@ void WritePortalFile( tree_t *tree ){
 
 	// write the file
 	sprintf( filename, "%s.prt", source );
-	Sys_Printf( "writing %s\n", filename );
+	Com_Printf( "writing %s\n", filename );
 	pf = fopen( filename, "w" );
 	if ( !pf ) {
 		Com_Error(ERR_DROP, "Error opening %s", filename );

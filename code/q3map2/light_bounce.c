@@ -508,8 +508,8 @@ static void RadSubdivideDiffuseLight( int lightmapNum, bspDrawSurface_t *ds, raw
 	}
 
 	/* debug code */
-	//%	Sys_Printf( "Size: %d %d %d\n", (int) (maxs[ 0 ] - mins[ 0 ]), (int) (maxs[ 1 ] - mins[ 1 ]), (int) (maxs[ 2 ] - mins[ 2 ]) );
-	//%	Sys_Printf( "Grad: %f %f %f\n", gradient[ 0 ], gradient[ 1 ], gradient[ 2 ] );
+	//%	Com_Printf( "Size: %d %d %d\n", (int) (maxs[ 0 ] - mins[ 0 ]), (int) (maxs[ 1 ] - mins[ 1 ]), (int) (maxs[ 2 ] - mins[ 2 ]) );
+	//%	Com_Printf( "Grad: %f %f %f\n", gradient[ 0 ], gradient[ 1 ], gradient[ 2 ] );
 
 	/* increment counts */
 	numDiffuseLights++;
@@ -623,7 +623,7 @@ static void RadSubdivideDiffuseLight( int lightmapNum, bspDrawSurface_t *ds, raw
 		light->flags |= LIGHT_TWOSIDED;
 	}
 
-	//%	Sys_Printf( "\nAL: C: (%6f, %6f, %6f) [%6f] N: (%6f, %6f, %6f) %s\n",
+	//%	Com_Printf( "\nAL: C: (%6f, %6f, %6f) [%6f] N: (%6f, %6f, %6f) %s\n",
 	//%		light->color[ 0 ], light->color[ 1 ], light->color[ 2 ], light->add,
 	//%		light->normal[ 0 ], light->normal[ 1 ], light->normal[ 2 ],
 	//%		light->si->shader );
@@ -923,7 +923,7 @@ void RadCreateDiffuseLights( void ){
 		sprintf( ext, "_bounce_%03d.map", iterations );
 		strcat( dumpName, ext );
 		file = fopen( dumpName, "wb" );
-		Sys_Printf( "Writing %s...\n", dumpName );
+		Com_Printf( "Writing %s...\n", dumpName );
 		if ( file ) {
 			for ( light = lights; light; light = light->next )
 			{
@@ -953,7 +953,7 @@ void RadCreateDiffuseLights( void ){
 	iterations++;
 
 	/* print counts */
-	Sys_Printf( "%8d diffuse surfaces\n", numDiffuseSurfaces );
+	Com_Printf( "%8d diffuse surfaces\n", numDiffuseSurfaces );
 	Sys_FPrintf( SYS_VRB, "%8d total diffuse lights\n", numDiffuseLights );
 	Sys_FPrintf( SYS_VRB, "%8d brush diffuse lights\n", numBrushDiffuseLights );
 	Sys_FPrintf( SYS_VRB, "%8d patch diffuse lights\n", numPatchDiffuseLights );

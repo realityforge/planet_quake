@@ -84,7 +84,7 @@ int AnalyzeBSPMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 1 ) {
-		Sys_Printf( "Usage: q3map -analyze [-lumpswap] [-v] <mapname>\n" );
+		Com_Printf( "Usage: q3map -analyze [-lumpswap] [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -93,19 +93,19 @@ int AnalyzeBSPMain( int argc, char **argv ){
 	{
 		/* -format map|ase|... */
 		if ( !strcmp( argv[ i ],  "-lumpswap" ) ) {
-			Sys_Printf( "Swapped lump structs enabled\n" );
+			Com_Printf( "Swapped lump structs enabled\n" );
 			lumpSwap = qtrue;
 		}
 	}
 
 	/* clean up map name */
 	strcpy( source, ExpandArg( argv[ i ] ) );
-	Sys_Printf( "Loading %s\n", source );
+	Com_Printf( "Loading %s\n", source );
 
 	/* load the file */
 	size = LoadFile( source, (void**) &header );
 	if ( size == 0 || header == NULL ) {
-		Sys_Printf( "Unable to load %s.\n", source );
+		Com_Printf( "Unable to load %s.\n", source );
 		return -1;
 	}
 
@@ -114,9 +114,9 @@ int AnalyzeBSPMain( int argc, char **argv ){
 	ident[ 4 ] = '\0';
 	version = LittleLong( header->version );
 
-	Sys_Printf( "Identity:      %s\n", ident );
-	Sys_Printf( "Version:       %d\n", version );
-	Sys_Printf( "---------------------------------------\n" );
+	Com_Printf( "Identity:      %s\n", ident );
+	Com_Printf( "Version:       %d\n", version );
+	Com_Printf( "---------------------------------------\n" );
 
 	/* analyze each lump */
 	for ( i = 0; i < 100; i++ )
@@ -142,24 +142,24 @@ int AnalyzeBSPMain( int argc, char **argv ){
 		lumpString[ 1023 ] = '\0';
 
 		/* print basic lump info */
-		Sys_Printf( "Lump:          %d\n", i );
-		Sys_Printf( "Offset:        %d bytes\n", offset );
-		Sys_Printf( "Length:        %d bytes\n", length );
+		Com_Printf( "Lump:          %d\n", i );
+		Com_Printf( "Offset:        %d bytes\n", offset );
+		Com_Printf( "Length:        %d bytes\n", length );
 
 		/* only operate on valid lumps */
 		if ( length > 0 ) {
 			/* print data in 4 formats */
-			Sys_Printf( "As hex:        %08X\n", lumpInt );
-			Sys_Printf( "As int:        %d\n", lumpInt );
-			Sys_Printf( "As float:      %f\n", lumpFloat );
-			Sys_Printf( "As string:     %s\n", lumpString );
+			Com_Printf( "As hex:        %08X\n", lumpInt );
+			Com_Printf( "As int:        %d\n", lumpInt );
+			Com_Printf( "As float:      %f\n", lumpFloat );
+			Com_Printf( "As string:     %s\n", lumpString );
 
 			/* guess lump type */
 			if ( lumpString[ 0 ] == '{' && lumpString[ 2 ] == '"' ) {
-				Sys_Printf( "Type guess:    IBSP LUMP_ENTITIES\n" );
+				Com_Printf( "Type guess:    IBSP LUMP_ENTITIES\n" );
 			}
 			else if ( strstr( lumpString, "textures/" ) ) {
-				Sys_Printf( "Type guess:    IBSP LUMP_SHADERS\n" );
+				Com_Printf( "Type guess:    IBSP LUMP_SHADERS\n" );
 			}
 			else
 			{
@@ -173,12 +173,12 @@ int AnalyzeBSPMain( int argc, char **argv ){
 					if ( count < lumpTest->minCount ) {
 						continue;
 					}
-					Sys_Printf( "Type guess:    %s (%d x %d)\n", lumpTest->name, count, lumpTest->radix );
+					Com_Printf( "Type guess:    %s (%d x %d)\n", lumpTest->name, count, lumpTest->radix );
 				}
 			}
 		}
 
-		Sys_Printf( "---------------------------------------\n" );
+		Com_Printf( "---------------------------------------\n" );
 
 		/* end of file */
 		if ( offset + length >= size ) {
@@ -187,8 +187,8 @@ int AnalyzeBSPMain( int argc, char **argv ){
 	}
 
 	/* last stats */
-	Sys_Printf( "Lump count:    %d\n", i + 1 );
-	Sys_Printf( "File size:     %d bytes\n", size );
+	Com_Printf( "Lump count:    %d\n", i + 1 );
+	Com_Printf( "File size:     %d bytes\n", size );
 
 	/* return to caller */
 	return 0;

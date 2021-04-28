@@ -1266,7 +1266,6 @@ Q3OBJ = \
 	$(B)/client/cmdlib.o \
 	$(B)/client/tree.o \
 	$(B)/client/image.o \
-	$(B)/client/l_net.o \
 	$(B)/client/jpeg.o \
 	$(B)/client/ddslib.o \
 	$(B)/client/leakfile.o \
@@ -1292,6 +1291,17 @@ Q3OBJ = \
 	$(B)/client/pm_ms3d.o \
 	$(B)/client/pm_obj.o \
 	$(B)/client/vfs.o \
+	$(B)/client/lwo2.o \
+	$(B)/client/pntspols.o \
+	$(B)/client/vmap.o \
+	$(B)/client/lwob.o \
+	$(B)/client/clip.o \
+	$(B)/client/lwio.o \
+	$(B)/client/lsurface.o \
+	$(B)/client/list.o \
+	$(B)/client/envelope.o \
+	$(B)/client/surface_fur.o \
+	$(B)/client/vecmath.o \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
@@ -1694,7 +1704,6 @@ Q3DOBJ = \
 	$(B)/ded/cmdlib.o \
 	$(B)/ded/tree.o \
 	$(B)/ded/image.o \
-	$(B)/ded/l_net.o \
 	$(B)/ded/jpeg.o \
 	$(B)/ded/ddslib.o \
 	$(B)/ded/leakfile.o \
@@ -1720,6 +1729,17 @@ Q3DOBJ = \
 	$(B)/ded/pm_ms3d.o \
 	$(B)/ded/pm_obj.o \
 	$(B)/ded/vfs.o \
+	$(B)/ded/lwo2.o \
+	$(B)/ded/pntspols.o \
+	$(B)/ded/vmap.o \
+	$(B)/ded/lwob.o \
+	$(B)/ded/clip.o \
+	$(B)/ded/lwio.o \
+	$(B)/ded/lsurface.o \
+	$(B)/ded/list.o \
+	$(B)/ded/envelope.o \
+	$(B)/ded/surface_fur.o \
+	$(B)/ded/vecmath.o \
   \
   $(B)/ded/cm_load.o \
 	$(B)/ded/cm_load_bsp2.o \
@@ -1839,9 +1859,6 @@ $(B)/client/%.o: $(Q3DIR)/cmdlib/%.c
 $(B)/client/%.o: $(Q3DIR)/ddslib/%.c
 	$(DO_CC)
 
-$(B)/client/%.o: $(Q3DIR)/l_net/%.c
-	$(DO_CC)
-
 $(B)/client/%.o: $(Q3DIR)/mathlib/%.c
 	$(DO_CC)
 
@@ -1951,28 +1968,25 @@ $(B)/ded/%.o: $(Q3DIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/cmdlib/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/ddslib/%.c
-	$(DO_CC)
-
-$(B)/ded/%.o: $(Q3DIR)/l_net/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/mathlib/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/md5lib/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/picomodel/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/picomodel/lwo/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/imagepng/%.c
-	$(DO_CC)
+	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)

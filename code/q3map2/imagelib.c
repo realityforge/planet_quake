@@ -888,7 +888,7 @@ typedef struct _TargaHeader {
 } TargaHeader;
 
 void TargaError(TargaHeader *t, const char *message ){
-	Sys_Printf( "%s\n:TargaHeader:\nuint8 id_length = %i;\nuint8 colormap_type = %i;\nuint8 image_type = %i;\nuint16 colormap_index = %i;\nuint16 colormap_length = %i;\nuint8 colormap_size = %i;\nuint16 x_origin = %i;\nuint16 y_origin = %i;\nuint16 width = %i;\nuint16 height = %i;\nuint8 pixel_size = %i;\nuint8 attributes = %i;\n", message, t->id_length, t->colormap_type, t->image_type, t->colormap_index, t->colormap_length, t->colormap_size, t->x_origin, t->y_origin, t->width, t->height, t->pixel_size, t->attributes );
+	Com_Printf( "%s\n:TargaHeader:\nuint8 id_length = %i;\nuint8 colormap_type = %i;\nuint8 image_type = %i;\nuint16 colormap_index = %i;\nuint16 colormap_length = %i;\nuint8 colormap_size = %i;\nuint16 x_origin = %i;\nuint16 y_origin = %i;\nuint16 width = %i;\nuint16 height = %i;\nuint8 pixel_size = %i;\nuint8 attributes = %i;\n", message, t->id_length, t->colormap_type, t->image_type, t->colormap_index, t->colormap_length, t->colormap_size, t->x_origin, t->y_origin, t->width, t->height, t->pixel_size, t->attributes );
 }
 
 /*
@@ -1008,7 +1008,7 @@ void LoadTGABuffer( const byte *f, const byte *enddata, byte **pic, int *width, 
 
 	image_rgba = safe_malloc( image_width * image_height * 4 );
 	if ( !image_rgba ) {
-		Sys_Printf( "LoadTGA: not enough memory for %i by %i image\n", image_width, image_height );
+		Com_Printf( "LoadTGA: not enough memory for %i by %i image\n", image_width, image_height );
 		return;
 	}
 
@@ -1171,8 +1171,6 @@ void WriteTGA( const char *filename, byte *data, int width, int height ) {
 
 void WriteTGAGray( const char *filename, byte *data, int width, int height ) {
 	byte buffer[18];
-	int i;
-	int c;
 	FILE *f;
 
 	memset( buffer, 0, 18 );

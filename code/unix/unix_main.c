@@ -93,7 +93,7 @@ static cvar_t *ttycon = NULL;
 // general flag to tell about tty console mode
 static qboolean ttycon_on = qfalse;
 
-// when printing general stuff to stdout stderr (Sys_Printf)
+// when printing general stuff to stdout stderr (Com_Printf)
 //   we need to disable the tty console stuff
 // this increments so we can recursively disable
 static int ttycon_hide = 0;

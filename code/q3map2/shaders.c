@@ -380,7 +380,7 @@ void WriteMapShaderFile( void ){
 
 		/* print it to the file */
 		fprintf( file, "%s%s\n", si->shader, si->shaderText );
-		//Sys_Printf( "%s%s\n", si->shader, si->shaderText ); /* FIXME: remove debugging code */
+		//Com_Printf( "%s%s\n", si->shader, si->shaderText ); /* FIXME: remove debugging code */
 
 		Sys_FPrintf( SYS_VRB, "." );
 	}
@@ -392,7 +392,7 @@ void WriteMapShaderFile( void ){
 	Sys_FPrintf( SYS_VRB, "\n" );
 
 	/* print some stats */
-	Sys_Printf( "%9d custom shaders emitted\n", num );
+	Com_Printf( "%9d custom shaders emitted\n", num );
 }
 
 
@@ -529,7 +529,7 @@ shaderInfo_t *CustomShader( shaderInfo_t *si, char *find, char *replace ){
 
 	/* make md5 hash of the shader text */
 	md5_init( &mh );
-	md5_append( &mh, shaderText, strlen( shaderText ) );
+	md5_append( &mh, (const unsigned char *)shaderText, strlen( shaderText ) );
 	md5_finish( &mh, digest );
 
 	/* mangle hash into a shader name */
@@ -582,7 +582,7 @@ void EmitVertexRemapShader( char *from, char *to ){
 
 	/* make md5 hash */
 	md5_init( &mh );
-	md5_append( &mh, value, strlen( value ) );
+	md5_append( &mh, (const unsigned char *)value, strlen( value ) );
 	md5_finish( &mh, digest );
 
 	/* make key (this is annoying, as vertexremapshader is precisely 17 characters,
@@ -936,7 +936,7 @@ static void ParseShaderFile( const char *filename ){
 	shaderText[ 0 ] = '\0';
 
 	/* load the shader */
-	LoadScriptFile( filename, 0 );
+	Map_LoadScriptFile( filename, 0 );
 
 	/* tokenize it */
 	while ( 1 )
@@ -947,7 +947,7 @@ static void ParseShaderFile( const char *filename ){
 			si->shaderText = safe_malloc( strlen( shaderText ) + 1 );
 			strcpy( si->shaderText, shaderText );
 			//%	if( VectorLength( si->vecs[ 0 ] ) )
-			//%		Sys_Printf( "%s\n", shaderText );
+			//%		Com_Printf( "%s\n", shaderText );
 		}
 
 		/* ydnar: clear shader text buffer */
@@ -1911,7 +1911,7 @@ static void ParseCustomInfoParms( void ){
 	}
 
 	/* load it */
-	LoadScriptFile( "scripts/custinfoparms.txt", 0 );
+	Map_LoadScriptFile( "scripts/custinfoparms.txt", 0 );
 
 	/* clear the array */
 	memset( custSurfaceParms, 0, sizeof( custSurfaceParms ) );
@@ -2004,7 +2004,7 @@ void LoadShaderInfo( void ){
 	{
 		/* load shader list */
 		sprintf( filename, "%s/shaderlist.txt", game->shaderPath );
-		LoadScriptFile( filename, i );
+		Map_LoadScriptFile( filename, i );
 
 		/* parse it */
 		while ( GetToken( qtrue ) )

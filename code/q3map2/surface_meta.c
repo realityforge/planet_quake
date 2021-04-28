@@ -273,7 +273,7 @@ static void SurfaceToMetaTriangles( mapDrawSurface_t *ds ){
 			if ( ds->indexes[ i ] == ds->indexes[ i + 1 ] ||
 				 ds->indexes[ i ] == ds->indexes[ i + 2 ] ||
 				 ds->indexes[ i + 1 ] == ds->indexes[ i + 2 ] ) {
-				//%	Sys_Printf( "%d! ", ds->numVerts );
+				//%	Com_Printf( "%d! ", ds->numVerts );
 				continue;
 			}
 
@@ -605,7 +605,7 @@ void StripFaceSurface( mapDrawSurface_t *ds ){
    builds meta triangles from brush faces (tristrips and fans)
  */
 
-void MakeEntityMetaTriangles( entity_t *e ){
+void MakeEntityMetaTriangles( bspEntity_t *e ){
 	int i, f, fOld, start;
 	mapDrawSurface_t    *ds;
 
@@ -1346,7 +1346,7 @@ static int AddMetaTriangleToSurface( mapDrawSurface_t *ds, metaTriangle_t *tri, 
 		 ( ds->indexes[ ds->numIndexes - 3 ] == ds->indexes[ ds->numIndexes - 2 ] ||
 		   ds->indexes[ ds->numIndexes - 3 ] == ds->indexes[ ds->numIndexes - 1 ] ||
 		   ds->indexes[ ds->numIndexes - 2 ] == ds->indexes[ ds->numIndexes - 1 ] ) ) {
-		Sys_Printf( "DEG:%d! ", ds->numVerts );
+		Com_Printf( "DEG:%d! ", ds->numVerts );
 	}
 
 	/* testing only? */

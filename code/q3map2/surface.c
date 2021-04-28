@@ -37,6 +37,15 @@
 #include "q3map2.h"
 
 
+/*
+   Random()
+   returns a pseudorandom number between 0 and 1
+ */
+
+vec_t Random( void ){
+	return (vec_t) rand() / RAND_MAX;
+}
+
 
 /*
    AllocDrawSurface()
@@ -295,7 +304,7 @@ void ClearSurface( mapDrawSurface_t *ds ){
    deletes all empty or bad surfaces from the surface list
  */
 
-void TidyEntitySurfaces( entity_t *e ){
+void TidyEntitySurfaces( bspEntity_t *e ){
 	int i, j, deleted;
 	mapDrawSurface_t    *out, *in = NULL;
 
@@ -621,7 +630,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
 			{
 				for ( i = 0; i < ds->numVerts && bestAxis < 6; i++ )
 				{
-					//% Sys_Printf( "Comparing %1.3f %1.3f %1.3f to %1.3f %1.3f %1.3f\n",
+					//% Com_Printf( "Comparing %1.3f %1.3f %1.3f to %1.3f %1.3f %1.3f\n",
 					//%     ds->verts[ i ].normal[ 0 ], ds->verts[ i ].normal[ 1 ], ds->verts[ i ].normal[ 2 ],
 					//%     axii[ bestAxis ][ 0 ], axii[ bestAxis ][ 1 ], axii[ bestAxis ][ 2 ] );
 					if ( DotProduct( ds->verts[ i ].normal, axii[ bestAxis ] ) < 0.25f ) { /* fixme: adjust this tolerance to taste */
@@ -637,13 +646,13 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
 			/* set axis if possible */
 			if ( bestAxis < 6 ) {
 				//% if( ds->type == SURFACE_PATCH )
-				//%     Sys_Printf( "Mapped axis %d onto patch\n", bestAxis );
+				//%     Com_Printf( "Mapped axis %d onto patch\n", bestAxis );
 				VectorCopy( axii[ bestAxis ], ds->lightmapAxis );
 			}
 
 			/* debug code */
 			//% if( ds->type == SURFACE_PATCH )
-			//%     Sys_Printf( "Failed to map axis %d onto patch\n", bestAxis );
+			//%     Com_Printf( "Failed to map axis %d onto patch\n", bestAxis );
 		}
 
 		/* get lightmap sample size */
@@ -672,7 +681,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
    classifies all surfaces in an entity
  */
 
-void ClassifyEntitySurfaces( entity_t *e ){
+void ClassifyEntitySurfaces( bspEntity_t *e ){
 	int i;
 
 
@@ -866,7 +875,7 @@ shaderInfo_t *GetIndexedShader( shaderInfo_t *parent, indexMap_t *im, int numPoi
 #define SNAP_FLOAT_TO_INT   8
 #define SNAP_INT_TO_FLOAT   ( 1.0 / SNAP_FLOAT_TO_INT )
 
-mapDrawSurface_t *DrawSurfaceForSide( entity_t *e, brush_t *b, side_t *s, winding_t *w ){
+mapDrawSurface_t *DrawSurfaceForSide( bspEntity_t *e, brush_t *b, side_t *s, winding_t *w ){
 	int i, j, k;
 	mapDrawSurface_t    *ds;
 	shaderInfo_t        *si, *parent;
@@ -903,7 +912,7 @@ mapDrawSurface_t *DrawSurfaceForSide( entity_t *e, brush_t *b, side_t *s, windin
 		{
 			shaderIndexes[ i ] = GetShaderIndexForPoint( b->im, b->eMins, b->eMaxs, w->p[ i ] );
 			offsets[ i ] = b->im->offsets[ shaderIndexes[ i ] ];
-			//%	Sys_Printf( "%f ", offsets[ i ] );
+			//%	Com_Printf( "%f ", offsets[ i ] );
 		}
 
 		/* get matching shader and set alpha */
@@ -1044,7 +1053,7 @@ qboolean VectorCompareExt( vec3_t n1, vec3_t n2, float epsilon ){
 	return qtrue;
 }
 
-mapDrawSurface_t *DrawSurfaceForMesh( entity_t *e, parseMesh_t *p, mesh_t *mesh ){
+mapDrawSurface_t *DrawSurfaceForMesh( bspEntity_t *e, parseMesh_t *p, mesh_t *mesh ){
 	int i, k, numVerts;
 	vec4_t plane;
 	qboolean planar;
@@ -1148,7 +1157,7 @@ mapDrawSurface_t *DrawSurfaceForMesh( entity_t *e, parseMesh_t *p, mesh_t *mesh 
 
 	/* spew forth errors */
 	if ( VectorLength( plane ) < 0.001f ) {
-		Sys_Printf( "DrawSurfaceForMesh: bogus plane\n" );
+		Com_Printf( "DrawSurfaceForMesh: bogus plane\n" );
 	}
 
 	/* test each vert */
@@ -1342,7 +1351,7 @@ static void AddSurfaceFlare( mapDrawSurface_t *ds, vec3_t entityOrigin ){
    subdivides a face surface until it is smaller than the specified size (subdivisions)
  */
 
-static void SubdivideFace_r( entity_t *e, brush_t *brush, side_t *side, winding_t *w, int fogNum, float subdivisions ){
+static void SubdivideFace_r( bspEntity_t *e, brush_t *brush, side_t *side, winding_t *w, int fogNum, float subdivisions ){
 	int i;
 	int axis;
 	vec3_t bounds[ 2 ];
@@ -1416,7 +1425,7 @@ static void SubdivideFace_r( entity_t *e, brush_t *brush, side_t *side, winding_
    ydnar: and subdivide surfaces that exceed specified texture coordinate range
  */
 
-void SubdivideFaceSurfaces( entity_t *e, tree_t *tree ){
+void SubdivideFaceSurfaces( bspEntity_t *e, tree_t *tree ){
 	int i, j, numBaseDrawSurfs, fogNum;
 	mapDrawSurface_t    *ds;
 	brush_t             *brush;
@@ -1632,7 +1641,7 @@ qboolean SideInBrush( side_t *side, brush_t *b ){
    culls obscured or buried brushsides from the map
  */
 
-void CullSides( entity_t *e ){
+void CullSides( bspEntity_t *e ){
 	int numPoints;
 	int i, j, k, l, first, second, dir;
 	winding_t   *w1, *w2;
@@ -1830,7 +1839,7 @@ void CullSides( entity_t *e ){
    to be trimmed off automatically.
  */
 
-void ClipSidesIntoTree( entity_t *e, tree_t *tree ){
+void ClipSidesIntoTree( bspEntity_t *e, tree_t *tree ){
 	brush_t     *b;
 	int i;
 	winding_t       *w;
@@ -2997,7 +3006,7 @@ void MakeDebugPortalSurfs( tree_t *tree ){
    generates drawsurfaces for a foghull (this MUST use a sky shader)
  */
 
-void MakeFogHullSurfs( entity_t *e, tree_t *tree, char *shader ){
+void MakeFogHullSurfs( bspEntity_t *e, tree_t *tree, char *shader ){
 	shaderInfo_t        *si;
 	mapDrawSurface_t    *ds;
 	vec3_t fogMins, fogMaxs;
@@ -3407,7 +3416,7 @@ int AddSurfaceModels( mapDrawSurface_t *ds ){
    adds surfacemodels to an entity's surfaces
  */
 
-void AddEntitySurfaceModels( entity_t *e ){
+void AddEntitySurfaceModels( bspEntity_t *e ){
 	int i;
 
 
@@ -3426,7 +3435,7 @@ void AddEntitySurfaceModels( entity_t *e ){
    applies brush/volumetric color/alpha modulation to vertexes
  */
 
-static void VolumeColorMods( entity_t *e, mapDrawSurface_t *ds ){
+static void VolumeColorMods( bspEntity_t *e, mapDrawSurface_t *ds ){
 	int i, j;
 	float d;
 	brush_t     *b;
@@ -3484,7 +3493,7 @@ static void VolumeColorMods( entity_t *e, mapDrawSurface_t *ds ){
    will have valid final indexes
  */
 
-void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
+void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 	int i, j;
 	mapDrawSurface_t    *ds;
 	shaderInfo_t        *si;

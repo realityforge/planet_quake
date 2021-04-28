@@ -211,7 +211,7 @@ game_t *GetGame( char *arg ){
 		 !Q_stricmp( arg, "dn3d" ) ||
 		 !Q_stricmp( arg, "dnf" ) ||
 		 !Q_stricmp( arg, "hl" ) ) {
-		Sys_Printf( "April fools, silly rabbit!\n" );
+		Com_Printf( "April fools, silly rabbit!\n" );
 		exit( 0 );
 	}
 
@@ -457,5 +457,5 @@ void InitPaths( int *argc, char **argv ){
 	}
 
 	/* done */
-	Sys_Printf( "\n" );
+	Com_Printf( "\n" );
 }
