@@ -181,6 +181,7 @@ BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 ADIR=$(MOUNT_DIR)/asm
 CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
+Q3DIR=$(MOUNT_DIR)/q3map2
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
 R2DIR=$(MOUNT_DIR)/renderer2
@@ -1234,6 +1235,28 @@ Q3OBJ = \
   $(B)/client/sv_net_chan.o \
   $(B)/client/sv_snapshot.o \
   $(B)/client/sv_world.o \
+	\
+	$(B)/client/bsp.o \
+	$(B)/client/inout.o \
+	$(B)/client/prtfile.o \
+	$(B)/client/bspfile_rbsp.o \
+	$(B)/client/bspfile_ibsp.o \
+	$(B)/client/portals.o \
+	$(B)/client/surface.o \
+	$(B)/client/surface_meta.o \
+	$(B)/client/facebsp.o \
+	$(B)/client/bspfile.o \
+	$(B)/client/bspfile_abstract.o \
+	$(B)/client/brush.o \
+	$(B)/client/map.o \
+	$(B)/client/polylib.o \
+	$(B)/client/fog.o \
+	$(B)/client/writebsp.o \
+	$(B)/client/scriplib.o \
+	$(B)/client/model.o \
+	$(B)/client/shaders.o \
+	$(B)/client/mathlib.o \
+	$(B)/client/brush_primit.o \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
@@ -1608,6 +1631,28 @@ Q3DOBJ = \
   $(B)/ded/sv_net_chan.o \
   $(B)/ded/sv_snapshot.o \
   $(B)/ded/sv_world.o \
+	\
+	$(B)/ded/bsp.o \
+	$(B)/ded/inout.o \
+	$(B)/ded/prtfile.o \
+	$(B)/ded/bspfile_rbsp.o \
+	$(B)/ded/bspfile_ibsp.o \
+	$(B)/ded/portals.o \
+	$(B)/ded/surface.o \
+	$(B)/ded/surface_meta.o \
+	$(B)/ded/facebsp.o \
+	$(B)/ded/bspfile.o \
+	$(B)/ded/bspfile_abstract.o \
+	$(B)/ded/brush.o \
+	$(B)/ded/map.o \
+	$(B)/ded/polylib.o \
+	$(B)/ded/fog.o \
+	$(B)/ded/writebsp.o \
+	$(B)/ded/scriplib.o \
+	$(B)/ded/model.o \
+	$(B)/ded/shaders.o \
+	$(B)/ded/mathlib.o \
+	$(B)/ded/brush_primit.o \
   \
   $(B)/ded/cm_load.o \
 	$(B)/ded/cm_load_bsp2.o \
@@ -1714,6 +1759,27 @@ $(B)/client/%.o: $(CDIR)/%.c
 $(B)/client/%.o: $(SDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/%.o: $(Q3DIR)/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/cmdlib/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/ddslib/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/l_net/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/mathlib/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/md5lib/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(Q3DIR)/picomodel/%.c
+	$(DO_CC)
+
 $(B)/client/%.o: $(CMDIR)/%.c
 	$(DO_CC)
 
@@ -1804,6 +1870,26 @@ $(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
+$(B)/ded/%.o: $(Q3DIR)/%.c
+	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/cmdlib/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/ddslib/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/l_net/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/mathlib/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/md5lib/%.c
+	$(DO_CC)
+
+$(B)/ded/%.o: $(Q3DIR)/picomodel/%.c
+	$(DO_CC)
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)
 

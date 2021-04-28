@@ -313,6 +313,8 @@ typedef struct {
 #define BSP2_VERSION       38
 #define BSP1_VERSION		   29
 #define BSPHL_VERSION		   30
+#define Q3_BSP_VERSION          46
+#define WOLF_BSP_VERSION        47
 
 
 // there shouldn't be any problem with increasing these values at the
@@ -470,7 +472,8 @@ typedef enum {
 	MST_PLANAR,
 	MST_PATCH,
 	MST_TRIANGLE_SOUP,
-	MST_FLARE
+	MST_FLARE,
+	MST_FOLIAGE
 } mapSurfaceType_t;
 
 typedef struct {

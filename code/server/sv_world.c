@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // world.c -- world query functions
 
 #include "server.h"
+#define Q3MAP2
+#include "../q3map2/q3map2.h"
 
 /*
 ================
@@ -682,4 +684,122 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 	}
 
 	return contents;
+}
+
+
+static char skybox[4096];
+char *SV_MakeSkybox( void ) {
+	vec3_t  vs[2];
+	int h = CM_InlineModel( 0, 2, gvm );
+	CM_ModelBounds( h, vs[0], vs[1] );
+
+	int  points[12][3] = {
+		{vs[0][0], vs[0][1], vs[0][2]-16},
+		{vs[1][0], vs[1][1], vs[0][2]},
+		
+		{vs[0][0]-16, vs[0][1], vs[0][2]},
+		{vs[0][0],    vs[1][1], vs[1][2]},
+		
+		{vs[0][0], vs[0][1]-16, vs[0][2]},
+		{vs[1][0], vs[0][1],    vs[1][2]},
+		
+		
+		{vs[0][0], vs[0][1], vs[1][2]},
+		{vs[1][0], vs[1][1], vs[1][2]+16},
+		
+		{vs[1][0],    vs[0][1], vs[0][2]},
+		{vs[1][0]+16, vs[1][1], vs[1][2]},
+		
+		{vs[0][0], vs[1][1],    vs[0][2]},
+		{vs[1][0], vs[1][1]+16, vs[1][2]}
+	};
+
+	for(int i = 0; i < 6; i++) {
+		int *p1 = points[i*2];
+		int *p2 = points[i*2+1];
+		Q_strcat(skybox, sizeof(skybox), "{ // brush 0");
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
+		));
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p2[0], p2[1], p2[2], p2[0], p2[1], p1[2], p2[0], p1[1], p1[2]
+		));
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p2[0], p1[1], p2[2], p2[0], p1[1], p1[2], p1[0], p1[1], p1[2]
+		));
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p1[0], p2[1], p2[2], p1[0], p2[1], p1[2], p2[0], p2[1], p1[2]
+		));
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p1[0], p2[1], p1[2], p1[0], p1[1], p1[2], p2[0], p1[1], p1[2]
+		));
+		Q_strcat(skybox, sizeof(skybox),
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			p1[0], p1[1], p2[2], p1[0], p2[1], p2[2], p2[0], p2[1], p2[2]
+		));
+		Q_strcat(skybox, sizeof(skybox), "}");
+	}
+	
+	return (char *)skybox;
+}
+
+
+int SV_MakeMap( void ) {
+	qboolean onlyents = qfalse;
+
+
+	/* note it */
+	Com_Printf( "--- BSP ---\n" );
+
+	SetDrawSurfacesBuffer();
+	mapDrawSurfs = safe_malloc( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
+	memset( mapDrawSurfs, 0, sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
+	numMapDrawSurfs = 0;
+
+	/* set standard game flags */
+	maxSurfaceVerts = game->maxSurfaceVerts;
+	maxSurfaceIndexes = game->maxSurfaceIndexes;
+	emitFlares = game->emitFlares;
+
+	/* ydnar: set default sample size */
+	SetDefaultSampleSize( sampleSize );
+
+	/* if onlyents, just grab the entites and resave */
+	if ( onlyents ) {
+		OnlyEnts();
+		return 0;
+	}
+
+	/* load shaders */
+	LoadShaderInfo();
+
+	char *skybox = SV_MakeSkybox();
+	LoadMap( skybox, qfalse );
+
+	/* ydnar: decal setup */
+	ProcessDecals();
+
+	/* ydnar: cloned brush model entities */
+	SetCloneModelNumbers();
+
+	/* process world and submodels */
+	ProcessModels();
+
+	/* set light styles from targetted light entities */
+	SetLightStyles();
+
+	/* process in game advertisements */
+	ProcessAdvertisements();
+
+	/* finish and write bsp */
+	EndBSPFile();
+
+	/* return to sender */
+	return 0;
+	// CM_LoadMap()
 }
