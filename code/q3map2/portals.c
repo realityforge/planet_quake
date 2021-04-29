@@ -722,7 +722,7 @@ qboolean FloodEntities( tree_t *tree ){
 			inside = qtrue;
 		}
 		if ( ( !r || tree->outside_node.occupied ) && !tripped ) {
-			xml_Select( "Entity leaked", e->mapEntityNum, 0, qfalse );
+			Com_Printf( "Entity leaked: %i\n", e->mapEntityNum );
 			tripped = qtrue;
 		}
 	}

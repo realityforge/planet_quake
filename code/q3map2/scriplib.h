@@ -48,7 +48,7 @@ extern int scriptline;
 extern qboolean endofscript;
 extern bspScript_t *script;
 
-void Map_LoadScriptFile( const char *filename, int index );
+void Map_LoadScriptFile( const char *filename );
 void ParseFromMemory( char *buffer, int size );
 
 qboolean GetToken( qboolean crossline );

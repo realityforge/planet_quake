@@ -38,7 +38,7 @@
 
 
 
-int c_faceLeafs;
+static int c_faceLeafs;
 
 
 /*
@@ -249,7 +249,6 @@ void BuildFaceTree_r( node_t *node, face_t *list ){
 	childLists[0] = NULL;
 	childLists[1] = NULL;
 
-	qboolean isstruct = 0;
 	for ( split = list; split; split = next )
 	{
 		/* set next */
@@ -261,16 +260,19 @@ void BuildFaceTree_r( node_t *node, face_t *list ){
 			continue;
 		}
 
-		if(!(split->compileFlags & C_DETAIL))
+#if 0
+		if ( !( split->compileFlags & C_DETAIL ) ) {
 			isstruct = 1;
+		}
+#endif
 
 		/* determine which side the face falls on */
 		side = WindingOnPlaneSide( split->w, plane->normal, plane->dist );
 
 		/* switch on side */
 		if ( side == SIDE_CROSS ) {
-			ClipWindingEpsilon( split->w, plane->normal, plane->dist, CLIP_EPSILON * 2,
-								&frontWinding, &backWinding );
+			ClipWindingEpsilonStrict( split->w, plane->normal, plane->dist, CLIP_EPSILON * 2,
+									  &frontWinding, &backWinding ); /* strict; if no winding is left, we have a "virtually identical" plane and don't want to split by it */
 			if ( frontWinding ) {
 				newFace = AllocBspFace();
 				newFace->w = frontWinding;

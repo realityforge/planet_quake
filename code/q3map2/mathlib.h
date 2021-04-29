@@ -48,11 +48,6 @@ typedef vec_t vec4_t[4];
 // because for example adding VEC_SMALLEST_EPSILON_AROUND_ONE to 1024.0 will have no effect.
 #define VEC_SMALLEST_EPSILON_AROUND_ONE FLT_EPSILON
 
-#define SIDE_FRONT      0
-#define SIDE_ON         2
-#define SIDE_BACK       1
-#define SIDE_CROSS      -2
-
 // plane types are used to speed some tests
 // 0-2 are axial planes
 #define PLANE_X         0

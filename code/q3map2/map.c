@@ -1619,11 +1619,9 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 
 		if ( !strcmp( token, "{" ) ) {
 			/* parse a brush or patch */
-Com_Printf("GetToken: %s\n", token);
 			if ( !GetToken( qtrue ) ) {
 				break;
 			}
-Com_Printf("GetToken: %s\n", token);
 
 			/* check */
 			if ( !strcmp( token, "patchDef2" ) ) {
@@ -1800,12 +1798,17 @@ void LoadMap( char *map, qboolean onlyLights ){
 	brush_t     *b;
 	int oldNumEntities = 0, numMapBrushes;
 
+	strcpy( source, "memory" );
 
 	/* note it */
 	Com_DPrintf( "--- LoadMapFile ---\n" );
-	Com_Printf( "Loading from string %li\n", strlen(map) );
+	Com_Printf( "Loading from string: %li bytes\n", strlen(map) );
 
 	/* load the map file */
+	FILE *bspfile = SafeOpenWrite( "memory.map" );
+	SafeWrite( bspfile, map, strlen(map) );    // overwritten later
+	fclose( bspfile );
+
 	ParseFromMemory( map, strlen(map) );
 
 	/* setup */
@@ -1889,7 +1892,7 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 	fclose( file );
 
 	/* load the map file */
-	Map_LoadScriptFile( filename, -1 );
+	Map_LoadScriptFile( filename );
 
 	/* setup */
 	if ( onlyLights ) {

@@ -305,38 +305,37 @@ winding_t	*ReverseWinding (winding_t *w)
 
 
 /*
-=============
-ClipWindingEpsilon
-=============
-*/
-void	ClipWindingEpsilon (winding_t *in, vec3_t normal, vec_t dist, 
-				vec_t epsilon, winding_t **front, winding_t **back)
-{
-	vec_t	dists[MAX_POINTS_ON_WINDING+4];
-	int		sides[MAX_POINTS_ON_WINDING+4];
-	int		counts[3];
-	double	dot;
-	int		i, j;
-	vec_t	*p1, *p2;
-	double	d1, d2;
-	vec3_t	mid;
-	winding_t	*f, *b;
-	int		maxpts;
-	
-	counts[0] = counts[1] = counts[2] = 0;
-	Com_Memset( dists, 0, sizeof( dists ) );
-	Com_Memset( sides, 0, sizeof( sides ) );
+   =============
+   ClipWindingEpsilon
+   =============
+ */
+void    ClipWindingEpsilonStrict( winding_t *in, vec3_t normal, vec_t dist,
+								  vec_t epsilon, winding_t **front, winding_t **back ){
+	vec_t dists[MAX_POINTS_ON_WINDING + 4];
+	int sides[MAX_POINTS_ON_WINDING + 4];
+	int counts[3];
+	static vec_t dot;           // VC 4.2 optimizer bug if not static
+	int i, j;
+	vec_t   *p1, *p2;
+	vec3_t mid;
+	winding_t   *f, *b;
+	int maxpts;
 
-	// determine sides for each point
-	for (i=0 ; i<in->numpoints ; i++)
+	counts[0] = counts[1] = counts[2] = 0;
+
+// determine sides for each point
+	for ( i = 0 ; i < in->numpoints ; i++ )
 	{
-		dot = DotProductDPf( in->p[i], normal ) - dist;
-		//dot -= dist;
+
+		dot = DotProduct( in->p[i], normal );
+		dot -= dist;
 		dists[i] = dot;
-		if (dot > epsilon)
+		if ( dot > epsilon ) {
 			sides[i] = SIDE_FRONT;
-		else if (dot < -epsilon)
+		}
+		else if ( dot < -epsilon ) {
 			sides[i] = SIDE_BACK;
+		}
 		else
 		{
 			sides[i] = SIDE_ON;
@@ -345,79 +344,87 @@ void	ClipWindingEpsilon (winding_t *in, vec3_t normal, vec_t dist,
 	}
 	sides[i] = sides[0];
 	dists[i] = dists[0];
-	
+
 	*front = *back = NULL;
 
-	if (!counts[0])
-	{
-		*back = CopyWinding (in);
+	if ( !counts[0] && !counts[1] ) {
 		return;
 	}
-	if (!counts[1])
-	{
-		*front = CopyWinding (in);
+	if ( !counts[0] ) {
+		*back = CopyWinding( in );
+		return;
+	}
+	if ( !counts[1] ) {
+		*front = CopyWinding( in );
 		return;
 	}
 
-	maxpts = in->numpoints+4;	// cant use counts[0]+2 because
-								// of fp grouping errors
+	maxpts = in->numpoints + 4;   // cant use counts[0]+2 because
+	                              // of fp grouping errors
 
-	*front = f = AllocWinding (maxpts);
-	*back = b = AllocWinding (maxpts);
-		
-	for (i=0 ; i<in->numpoints ; i++)
+	*front = f = AllocWinding( maxpts );
+	*back = b = AllocWinding( maxpts );
+
+	for ( i = 0 ; i < in->numpoints ; i++ )
 	{
 		p1 = in->p[i];
-		
-		if (sides[i] == SIDE_ON)
-		{
-			VectorCopy (p1, f->p[f->numpoints]);
+
+		if ( sides[i] == SIDE_ON ) {
+			VectorCopy( p1, f->p[f->numpoints] );
 			f->numpoints++;
-			VectorCopy (p1, b->p[b->numpoints]);
+			VectorCopy( p1, b->p[b->numpoints] );
 			b->numpoints++;
 			continue;
 		}
-	
-		if (sides[i] == SIDE_FRONT)
-		{
-			VectorCopy (p1, f->p[f->numpoints]);
+
+		if ( sides[i] == SIDE_FRONT ) {
+			VectorCopy( p1, f->p[f->numpoints] );
 			f->numpoints++;
 		}
-		if (sides[i] == SIDE_BACK)
-		{
-			VectorCopy (p1, b->p[b->numpoints]);
+		if ( sides[i] == SIDE_BACK ) {
+			VectorCopy( p1, b->p[b->numpoints] );
 			b->numpoints++;
 		}
 
-		if (sides[i+1] == SIDE_ON || sides[i+1] == sides[i])
+		if ( sides[i + 1] == SIDE_ON || sides[i + 1] == sides[i] ) {
 			continue;
-			
+		}
+
 		// generate a split point
-		p2 = in->p[(i+1)%in->numpoints];
-		d1 = dists[i]; d2 = dists[i+1];
-		dot = d1 / ( d1 - d2 );
-		for (j=0 ; j<3 ; j++)
-		{	// avoid round off error when possible
-			if (normal[j] == 1.0)
+		p2 = in->p[( i + 1 ) % in->numpoints];
+
+		dot = dists[i] / ( dists[i] - dists[i + 1] );
+		for ( j = 0 ; j < 3 ; j++ )
+		{   // avoid round off error when possible
+			if ( normal[j] == 1 ) {
 				mid[j] = dist;
-			else if (normal[j] == -1.0)
+			}
+			else if ( normal[j] == -1 ) {
 				mid[j] = -dist;
-			else {
-				d1 = p1[j]; d2 = p2[j];
-				mid[j] = d1 + dot * ( d2 - d1 );
+			}
+			else{
+				mid[j] = p1[j] + dot * ( p2[j] - p1[j] );
 			}
 		}
-			
-		VectorCopy (mid, f->p[f->numpoints]);
+
+		VectorCopy( mid, f->p[f->numpoints] );
 		f->numpoints++;
-		VectorCopy (mid, b->p[b->numpoints]);
+		VectorCopy( mid, b->p[b->numpoints] );
 		b->numpoints++;
 	}
-	
 	if (f->numpoints > maxpts || b->numpoints > maxpts)
 		Com_Error (ERR_DROP, "ClipWinding: points exceeded estimate");
 	if (f->numpoints > MAX_POINTS_ON_WINDING || b->numpoints > MAX_POINTS_ON_WINDING)
 		Com_Error (ERR_DROP, "ClipWinding: MAX_POINTS_ON_WINDING");
+}
+
+void    ClipWindingEpsilon( winding_t *in, vec3_t normal, vec_t dist,
+							vec_t epsilon, winding_t **front, winding_t **back ){
+	ClipWindingEpsilonStrict( in, normal, dist, epsilon, front, back );
+	/* apparently most code expects that in the winding-on-plane case, the back winding is the original winding */
+	if ( !*front && !*back ) {
+		*back = CopyWinding( in );
+	}
 }
 
 

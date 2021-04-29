@@ -253,20 +253,15 @@ static void FixBrushSides( bspEntity_t *e ){
 
 
 
-/*
-   ProcessWorldModel()
-   creates a full bsp + surfaces for the worldspawn entity
- */
-
-void ProcessWorldModel( void ){
+void ProcessWorldModel(){
 	int i, s;
 	bspEntity_t    *e;
 	tree_t      *tree;
 	face_t      *faces;
 	qboolean ignoreLeaks, leaked;
-	xmlNodePtr polyline, leaknode;
-	char level[ 2 ], shader[ 1024 ];
+	char shader[ 1024 ];
 	const char  *value;
+	int leakStatus;
 
 	/* sets integer blockSize from worldspawn "_blocksize" key if it exists */
 	value = ValueForKey( &entities[ 0 ], "_blocksize" );
@@ -318,47 +313,47 @@ void ProcessWorldModel( void ){
 	FilterStructuralBrushesIntoTree( e, tree );
 
 	/* see if the bsp is completely enclosed */
-	if ( FloodEntities( tree ) || ignoreLeaks ) {
+	leakStatus = FloodEntities( tree );
+	if ( ignoreLeaks ) {
+		if ( !leakStatus ) {
+			leakStatus = qtrue;
+		}
+	}
+
+	if ( leakStatus ) {
+		leaked = qfalse;
+	}
+	else
+	{
+		leaked = qtrue;
+
+		Com_Printf( "**********************\n" );
+		Com_Printf( "******* leaked *******\n" );
+		Com_Printf( "**********************\n" );
+		if ( leaktest ) {
+			Com_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
+			exit( 0 );
+		}
+	}
+
+	if ( !leakStatus ) { /* if no entities exist, this would accidentally the whole map, and that IS bad */
 		/* rebuild a better bsp tree using only the sides that are visible from the inside */
 		FillOutside( tree->headnode );
 
 		/* chop the sides to the convex hull of their visible fragments, giving us the smallest polygons */
 		ClipSidesIntoTree( e, tree );
 
-		/* build a visible face tree */
+		/* build a visible face tree (same thing as the initial bsp tree but after reducing the faces) */
 		faces = MakeVisibleBSPFaceList( entities[ 0 ].brushes );
 		FreeTree( tree );
 		tree = FaceBSP( faces );
 		MakeTreePortals( tree );
 		FilterStructuralBrushesIntoTree( e, tree );
-		leaked = qfalse;
 
 		/* ydnar: flood again for skybox */
 		if ( skyboxPresent ) {
 			FloodEntities( tree );
 		}
-	}
-	else
-	{
-		Com_Printf( "**********************\n" );
-		Com_Printf( "******* leaked *******\n" );
-		Com_Printf( "**********************\n" );
-		polyline = LeakFile( tree );
-		leaknode = xmlNewNode( NULL, (xmlChar*)"message" );
-		xmlNodeSetContent( leaknode, (xmlChar*)"MAP LEAKED\n" );
-		xmlAddChild( leaknode, polyline );
-		level[0] = (int) '0' + SYS_ERR;
-		level[1] = 0;
-		xmlSetProp( leaknode, (xmlChar*)"level", (xmlChar*)(char*) &level );
-		xml_SendNode( leaknode );
-		if ( leaktest ) {
-			Com_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
-			exit( 0 );
-		}
-		leaked = qtrue;
-
-		/* chop the sides to the convex hull of their visible fragments, giving us the smallest polygons */
-		ClipSidesIntoTree( e, tree );
 	}
 
 	/* save out information for visibility processing */
@@ -462,6 +457,14 @@ void ProcessWorldModel( void ){
 					VectorSet( normal, 0, 0, -1 );
 				}
 
+/*
+				if ( colorsRGB ) {
+					color[0] = Image_LinearFloatFromsRGBFloat( color[0] );
+					color[1] = Image_LinearFloatFromsRGBFloat( color[1] );
+					color[2] = Image_LinearFloatFromsRGBFloat( color[2] );
+				}
+*/
+
 				/* create the flare surface (note shader defaults automatically) */
 				DrawSurfaceForFlare( mapEntityNum, origin, normal, color, flareShader, lightStyle );
 			}
@@ -478,6 +481,7 @@ void ProcessWorldModel( void ){
 	EndModel( e, tree->headnode );
 	FreeTree( tree );
 }
+
 
 
 
@@ -799,10 +803,10 @@ void GetEntityShadowFlags( const bspEntity_t *ent, const bspEntity_t *ent2, int 
 		if ( value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent, "_cs" );
 		}
-		if ( value[ 0 ] == '\0' ) {
+		if ( ent2 && value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent2, "_castShadows" );
 		}
-		if ( value[ 0 ] == '\0' ) {
+		if ( ent2 && value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent2, "_cs" );
 		}
 		if ( value[ 0 ] != '\0' ) {
@@ -816,10 +820,10 @@ void GetEntityShadowFlags( const bspEntity_t *ent, const bspEntity_t *ent2, int 
 		if ( value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent, "_rs" );
 		}
-		if ( value[ 0 ] == '\0' ) {
+		if ( ent2 && value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent2, "_receiveShadows" );
 		}
-		if ( value[ 0 ] == '\0' ) {
+		if ( ent2 && value[ 0 ] == '\0' ) {
 			value = ValueForKey( ent2, "_rs" );
 		}
 		if ( value[ 0 ] != '\0' ) {

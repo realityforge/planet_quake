@@ -21,6 +21,8 @@
 
 // scriplib.c
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "mathlib.h"
 #include "inout.h"
 #include "scriplib.h"
@@ -48,9 +50,9 @@ qboolean tokenready;                     // only qtrue if UnGetToken was just ca
    AddScriptToStack
    ==============
  */
-void AddScriptToStack( const char *filename, int index ){
+static void AddScriptToStack( const char *filename ){
 	int size;
-	void* buffer;
+	fileHandle_t file;
 
 	script++;
 	if ( script == &scriptstack[MAX_INCLUDES] ) {
@@ -58,7 +60,7 @@ void AddScriptToStack( const char *filename, int index ){
 	}
 	strcpy( script->filename, filename );
 
-	size = vfsLoadFile( script->filename, &buffer, index );
+	size = FS_FOpenFileRead( va("scripts/%s", script->filename), &file, qfalse );
 
 	if ( size == -1 ) {
 		Com_Printf( "Script file %s was not found\n", script->filename );
@@ -66,14 +68,12 @@ void AddScriptToStack( const char *filename, int index ){
 	}
 	else
 	{
-		if ( index > 0 ) {
-			Com_Printf( "entering %s (%d)\n", script->filename, index + 1 );
-		}
-		else{
-			Com_Printf( "entering %s\n", script->filename );
-		}
+		script->buffer = safe_malloc( size + 1 );
+		size = FS_Read( (void *)script->buffer, size, file );
+		FS_FCloseFile(file);
 
-		script->buffer = buffer;
+		Com_Printf( "entering %s length %i\n", script->filename, size );
+
 		script->line = 1;
 		script->script_p = script->buffer;
 		script->end_p = script->buffer + size;
@@ -86,9 +86,9 @@ void AddScriptToStack( const char *filename, int index ){
    Map_LoadScriptFile
    ==============
  */
-void Map_LoadScriptFile( const char *filename, int index ){
+void Map_LoadScriptFile( const char *filename ){
 	script = scriptstack;
-	AddScriptToStack( filename, index );
+	AddScriptToStack( filename );
 
 	endofscript = qfalse;
 	tokenready = qfalse;
@@ -282,7 +282,7 @@ skipspace:
 
 	if ( !strcmp( token, "$include" ) ) {
 		GetToken( qfalse );
-		AddScriptToStack( token, 0 );
+		AddScriptToStack( token );
 		return GetToken( crossline );
 	}
 

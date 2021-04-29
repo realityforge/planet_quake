@@ -35,7 +35,7 @@
 
 /* dependencies */
 #include "q3map2.h"
-
+#include "../qcommon/q_shared.h"
 
 
 /*
@@ -936,7 +936,7 @@ static void ParseShaderFile( const char *filename ){
 	shaderText[ 0 ] = '\0';
 
 	/* load the shader */
-	Map_LoadScriptFile( filename, 0 );
+	Map_LoadScriptFile( filename );
 
 	/* tokenize it */
 	while ( 1 )
@@ -1911,7 +1911,7 @@ static void ParseCustomInfoParms( void ){
 	}
 
 	/* load it */
-	Map_LoadScriptFile( "scripts/custinfoparms.txt", 0 );
+	Map_LoadScriptFile( "scripts/custinfoparms.txt" );
 
 	/* clear the array */
 	memset( custSurfaceParms, 0, sizeof( custSurfaceParms ) );
@@ -1983,8 +1983,8 @@ static void ParseCustomInfoParms( void ){
 
 void LoadShaderInfo( void ){
 	int i, j, numShaderFiles, count;
-	char filename[ 1024 ];
 	char            *shaderFiles[ MAX_SHADER_FILES ];
+	char **files;
 
 
 	/* rr2do2: parse custom infoparms first */
@@ -1996,19 +1996,18 @@ void LoadShaderInfo( void ){
 	numShaderFiles = 0;
 
 	/* we can pile up several shader files, the one in baseq3 and ones in the mod dir or other spots */
-	sprintf( filename, "%s/shaderlist.txt", game->shaderPath );
-	count = vfsGetFileCount( filename );
+	files = FS_ListFilteredFiles("scripts", "shaderlist.txt", NULL, &count, FS_MATCH_ANY);
 
 	/* load them all */
 	for ( i = 0; i < count; i++ )
 	{
 		/* load shader list */
-		sprintf( filename, "%s/shaderlist.txt", game->shaderPath );
-		Map_LoadScriptFile( filename, i );
+		Map_LoadScriptFile( files[i] );
 
 		/* parse it */
 		while ( GetToken( qtrue ) )
 		{
+			
 			/* check for duplicate entries */
 			for ( j = 0; j < numShaderFiles; j++ )
 				if ( !strcmp( shaderFiles[ j ], token ) ) {
@@ -2032,8 +2031,7 @@ void LoadShaderInfo( void ){
 	/* parse the shader files */
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
-		sprintf( filename, "%s/%s.shader", game->shaderPath, shaderFiles[ i ] );
-		ParseShaderFile( filename );
+		ParseShaderFile( va("%s.shader", shaderFiles[ i ] ));
 		free( shaderFiles[ i ] );
 	}
 

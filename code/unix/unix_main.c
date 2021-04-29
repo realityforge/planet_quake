@@ -741,8 +741,8 @@ void Sys_Print( const char *msg )
 		tty_Hide();
 	}
   
-  if(com_dedicated && com_dedicated->integer)
-    fputs( "Dedicated: ", stderr );
+  //if(com_dedicated && com_dedicated->integer)
+  //  fputs( "Dedicated: ", stderr );
 
 	if ( ttycon_on && ttycon_color_on )
 	{

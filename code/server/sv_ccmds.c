@@ -171,6 +171,7 @@ static void SV_Map_f( void ) {
 	Com_sprintf( expanded, sizeof( expanded ), "maps/%s.bsp", map );
 	SV_MakeMap();
 	return;
+
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );

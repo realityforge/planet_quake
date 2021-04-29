@@ -282,8 +282,9 @@ void CMod_LoadLeafs( lump_t *l )
 
 	count = l->filelen / sizeof(*in);
 
-	if ( count < 1 )
+	if ( count < 1 ) {
 		Com_Error( ERR_DROP, "Map with no leafs" );
+	}
 
 	cms[cm].leafs = Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cms[cm].leafs ), h_high );
 	cms[cm].numLeafs = count;

@@ -686,7 +686,7 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 }
 
 
-static char skybox[4096];
+static char skybox[4096*1024];
 char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
 	if(!com_sv_running || !com_sv_running->integer) {
@@ -751,20 +751,13 @@ char *SV_MakeSkybox( void ) {
 		));
 		Q_strcat(skybox, sizeof(skybox), "}\n");
 	}
-	Q_strcat(skybox, sizeof(skybox), "}");
 	
-	return "{\n"
-	"\"classname\" \"worldspawn\"\n"
-	"{\n"
-	"( -96 -64 64 ) ( -96 -64 63 ) ( -96 -63 64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"( -96 -64 64 ) ( -95 -64 64 ) ( -96 -64 63 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"( -64 64 -64 ) ( -63 64 -64 ) ( -64 65 -64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"( -96 -64 64 ) ( -96 -63 64 ) ( -95 -64 64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"( -64 64 -64 ) ( -64 64 -65 ) ( -63 64 -64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"( -64 64 -64 ) ( -64 65 -64 ) ( -64 64 -65 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
-	"}\n"
-	"}\n";
-	
+	Q_strcat(skybox, sizeof(skybox), "}\n"
+		"{\n"
+		"\"classname\" \"info_player_start\"\n"
+		"\"origin\" \"16 64 -52\"\n"
+		"}\n");
+
 	return (char *)skybox;
 }
 
@@ -772,6 +765,26 @@ char *SV_MakeSkybox( void ) {
 int SV_MakeMap( void ) {
 	qboolean onlyents = qfalse;
 
+	/* init model library */
+	PicoInit();
+	PicoSetMallocFunc( safe_malloc );
+	PicoSetFreeFunc( free );
+	PicoSetPrintFunc( PicoPrintFunc );
+	PicoSetLoadFileFunc( PicoLoadFileFunc );
+	PicoSetFreeFileFunc( free );
+
+	/* set number of threads */
+	ThreadSetDefault();
+
+	/* generate sinusoid jitter table */
+	for ( int i = 0; i < MAX_JITTERS; i++ )
+	{
+		jitters[ i ] = sin( i * 139.54152147 );
+		//%	Sys_Printf( "Jitter %4d: %f\n", i, jitters[ i ] );
+	}
+
+	/* ydnar: new path initialization */
+	// TODO: InitPaths( &argc, argv );
 
 	/* note it */
 	Com_Printf( "--- BSP ---\n" );
@@ -785,6 +798,9 @@ int SV_MakeMap( void ) {
 	maxSurfaceVerts = game->maxSurfaceVerts;
 	maxSurfaceIndexes = game->maxSurfaceIndexes;
 	emitFlares = game->emitFlares;
+	
+	//game->shaderPath = "/Applications/ioquake3/baseq3/scripts";
+	meta = qtrue;
 
 	/* ydnar: set default sample size */
 	SetDefaultSampleSize( sampleSize );

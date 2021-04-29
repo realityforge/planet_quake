@@ -897,6 +897,7 @@ void	FS_Restart( int checksumFeed );
 
 void	FS_Reload( void );
 
+char	**FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags );
 char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles );
 // directory should not have either a leading or trailing /
 // if extension is "/", only subdirectories will be returned
