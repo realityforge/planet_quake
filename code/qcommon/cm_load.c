@@ -498,7 +498,7 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	cms[cm].entityString = Hunk_Alloc( l->filelen, h_high );
 	cms[cm].numEntityChars = l->filelen;
 	memcpy( cms[cm].entityString, cmod_base + l->fileofs, l->filelen );
-	if(cm_saveEnts->integer) {
+	if(cm_saveEnts->integer && name[0] != '\0') {
 		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
 	} else {
 		Com_Printf("Entities: %s\n", cms[cm].entityString);
@@ -676,6 +676,33 @@ void LoadQ3Map(const char *name) {
 	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
 	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
 
+}
+
+
+void CM_LoadMapFromMemory( dheader_t *header ) {
+
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+	int				i, empty = -1;
+	for(i = 0; i < MAX_NUM_MAPS; i++) {
+		if (cms[i].name[0] == '\0' && empty == -1) {
+			// fill the next empty clipmap slot
+			empty = i;
+		}
+	}
+	cm = empty;
+	Com_DPrintf( "CM_LoadMap( %s, %i )\n", "*memory", qfalse );
+#else
+	if ( cms[0].name[0] != '\0' ) {
+		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
+	}
+#endif
+	// free old stuff
+	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
+	CM_ClearLevelPatches();
+
+	cmod_base = (void *)header;
+
+	LoadQ3Map("\0");
 }
 
 

@@ -35,6 +35,9 @@ int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
 
+
+void CM_LoadMapFromMemory( dheader_t *header );
+
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );
 int			CM_TransformedPointContents( const vec3_t p, clipHandle_t model, const vec3_t origin, const vec3_t angles );

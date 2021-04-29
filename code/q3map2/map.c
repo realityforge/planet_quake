@@ -1798,8 +1798,6 @@ void LoadMap( char *map, qboolean onlyLights ){
 	brush_t     *b;
 	int oldNumEntities = 0, numMapBrushes;
 
-	strcpy( source, "memory" );
-
 	/* note it */
 	Com_DPrintf( "--- LoadMapFile ---\n" );
 	Com_Printf( "Loading from string: %li bytes\n", strlen(map) );

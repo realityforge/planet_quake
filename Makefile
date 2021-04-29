@@ -1238,6 +1238,7 @@ Q3OBJ = \
   $(B)/client/sv_net_chan.o \
   $(B)/client/sv_snapshot.o \
   $(B)/client/sv_world.o \
+	$(B)/client/sv_bsp.o \
 	\
 	$(B)/client/bsp.o \
 	$(B)/client/inout.o \
@@ -1674,6 +1675,7 @@ Q3DOBJ = \
   $(B)/ded/sv_net_chan.o \
   $(B)/ded/sv_snapshot.o \
   $(B)/ded/sv_world.o \
+	$(B)/ded/sv_bsp.o \
 	\
 	$(B)/ded/bsp.o \
 	$(B)/ded/inout.o \

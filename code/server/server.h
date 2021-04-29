@@ -846,5 +846,7 @@ void SV_AddFilter_f( void );
 void SV_AddFilterCmd_f( void );
 
 
-
-int SV_MakeMap( void );
+//
+// sv_bsp.c
+//
+void SV_MakeMap( void );
