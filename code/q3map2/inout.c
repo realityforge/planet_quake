@@ -27,7 +27,6 @@
 //
 
 #include "../qcommon/q_shared.h"
-#include "cmdlib.h"
 #include "mathlib.h"
 #include "polylib.h"
 #include "inout.h"
@@ -101,7 +100,7 @@ void xml_SendNode( xmlNodePtr node ){
 			( xml_buf->use - pos < MAX_NETMESSAGE - 10 ) ? ( size = xml_buf->use - pos ) : ( size = MAX_NETMESSAGE - 10 );
 			//++timo just a debug thing
 			if ( size == MAX_NETMESSAGE - 10 ) {
-				Sys_FPrintf( SYS_NOXML, "Got to split the buffer\n" );
+				Com_Printf( "Got to split the buffer\n" );
 			}
 			memcpy( xmlbuf, xml_buf->content + pos, size );
 			xmlbuf[size] = '\0';
@@ -122,9 +121,9 @@ void xml_SendNode( xmlNodePtr node ){
 			// if we send that we are probably gonna break the stream at the other end..
 			// and Error will call right there
 			//Com_Error(ERR_DROP, "MAX_NETMESSAGE exceeded for XML feedback stream in FPrintf (%d)\n", xml_buf->use);
-			Sys_FPrintf( SYS_NOXML, "MAX_NETMESSAGE exceeded for XML feedback stream in FPrintf (%d)\n", xml_buf->use );
+			Com_Printf( "MAX_NETMESSAGE exceeded for XML feedback stream in FPrintf (%d)\n", xml_buf->use );
 			xml_buf->content[xml_buf->use] = '\0'; //++timo this corrupts the buffer but we don't care it's for printing
-			Sys_FPrintf( SYS_NOXML, xml_buf->content );
+			Com_Printf( xml_buf->content );
 
 		}
 
@@ -164,7 +163,7 @@ void xml_Select( char *msg, int entitynum, int brushnum, qboolean bError ){
 		Com_Error(ERR_DROP, "%s\n", buf );
 	}
 	else{
-		Sys_FPrintf( SYS_NOXML, "%s\n", buf );
+		Com_Printf( "%s\n", buf );
 	}
 
 }
@@ -233,63 +232,9 @@ void xml_Winding( char *msg, vec3_t p[], int numpoints, qboolean die ){
 // in include
 #include "stream_version.h"
 
-// all output ends up through here
-void FPrintf( int flag, char *buf ){
-	xmlNodePtr node;
-	static qboolean bGotXML = qfalse;
-	char level[2];
-
-	printf( "%s", buf );
-
-	// the following part is XML stuff only.. but maybe we don't want that message to go down the XML pipe?
-	if ( flag == SYS_NOXML ) {
-		return;
-	}
-
-	// ouput an XML file of the run
-	// use the DOM interface to build a tree
-	/*
-	   <message level='flag'>
-	   message string
-	   .. various nodes to describe corresponding geometry ..
-	   </message>
-	 */
-	if ( !bGotXML ) {
-		// initialize
-		doc = xmlNewDoc( (xmlChar*)"1.0" );
-		doc->children = xmlNewDocRawNode( doc, NULL, (xmlChar*)"q3map_feedback", NULL );
-		bGotXML = qtrue;
-	}
-	node = xmlNewNode( NULL, (xmlChar*)"message" );
-	{
-		//gchar* utf8 = g_locale_to_utf8( buf, -1, NULL, NULL, NULL );
-		xmlNodeSetContent( node, (xmlChar*)buf );
-		//g_free( utf8 );
-	}
-	level[0] = (int)'0' + flag;
-	level[1] = 0;
-	xmlSetProp( node, (xmlChar*)"level", (xmlChar *)&level );
-
-	xml_SendNode( node );
-}
 
 #ifdef DBG_XML
 void DumpXML(){
 	xmlSaveFile( "XMLDump.xml", doc );
 }
 #endif
-
-void Sys_FPrintf( int flag, const char *format, ... ){
-	char out_buffer[4096];
-	va_list argptr;
-
-	if ( ( flag == SYS_VRB ) && ( verbose == qfalse ) ) {
-		return;
-	}
-
-	va_start( argptr, format );
-	vsprintf( out_buffer, format, argptr );
-	va_end( argptr );
-
-	FPrintf( flag, out_buffer );
-}

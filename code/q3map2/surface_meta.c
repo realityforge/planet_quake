@@ -611,7 +611,7 @@ void MakeEntityMetaTriangles( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeEntityMetaTriangles ---\n" );
+	Com_DPrintf( "--- MakeEntityMetaTriangles ---\n" );
 
 	/* init pacifier */
 	fOld = -1;
@@ -624,7 +624,7 @@ void MakeEntityMetaTriangles( bspEntity_t *e ){
 		f = 10 * ( i - e->firstDrawSurf ) / ( numMapDrawSurfs - e->firstDrawSurf );
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_FPrintf( SYS_VRB, "%d...", f );
+			Com_DPrintf( "%d...", f );
 		}
 
 		/* get surface */
@@ -671,16 +671,16 @@ void MakeEntityMetaTriangles( bspEntity_t *e ){
 
 	/* print time */
 	if ( ( numMapDrawSurfs - e->firstDrawSurf ) ) {
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) ( I_FloatTime() - start ) );
+		Com_DPrintf( " (%d)\n", (int) ( I_FloatTime() - start ) );
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d total meta surfaces\n", numMetaSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d stripped surfaces\n", numStripSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d fanned surfaces\n", numFanSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d patch meta surfaces\n", numPatchMetaSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d meta verts\n", numMetaVerts );
-	Sys_FPrintf( SYS_VRB, "%9d meta triangles\n", numMetaTriangles );
+	Com_DPrintf( "%9d total meta surfaces\n", numMetaSurfaces );
+	Com_DPrintf( "%9d stripped surfaces\n", numStripSurfaces );
+	Com_DPrintf( "%9d fanned surfaces\n", numFanSurfaces );
+	Com_DPrintf( "%9d patch meta surfaces\n", numPatchMetaSurfaces );
+	Com_DPrintf( "%9d meta verts\n", numMetaVerts );
+	Com_DPrintf( "%9d meta triangles\n", numMetaTriangles );
 
 	/* tidy things up */
 	TidyEntitySurfaces( e );
@@ -756,7 +756,7 @@ void FixMetaTJunctions( void ){
 	return;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FixMetaTJunctions ---\n" );
+	Com_DPrintf( "--- FixMetaTJunctions ---\n" );
 
 	/* init pacifier */
 	fOld = -1;
@@ -773,7 +773,7 @@ void FixMetaTJunctions( void ){
 		f = 10 * i / numMetaTriangles;
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_FPrintf( SYS_VRB, "%d...", f );
+			Com_DPrintf( "%d...", f );
 		}
 
 		/* attempt to early out */
@@ -916,10 +916,10 @@ void FixMetaTJunctions( void ){
 	}
 
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) ( I_FloatTime() - start ) );
+	Com_DPrintf( " (%d)\n", (int) ( I_FloatTime() - start ) );
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d T-junctions added\n", numTJuncs );
+	Com_DPrintf( "%9d T-junctions added\n", numTJuncs );
 }
 
 
@@ -944,7 +944,7 @@ void SmoothMetaTriangles( void ){
 	vec3_t votes[ MAX_SAMPLES ];
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SmoothMetaTriangles ---\n" );
+	Com_DPrintf( "--- SmoothMetaTriangles ---\n" );
 
 	/* allocate shade angle table */
 	shadeAngles = safe_malloc( numMetaVerts * sizeof( float ) );
@@ -987,7 +987,7 @@ void SmoothMetaTriangles( void ){
 
 	/* bail if no surfaces have a shade angle */
 	if ( maxShadeAngle <= 0 ) {
-		Sys_FPrintf( SYS_VRB, "No smoothing angles specified, aborting\n" );
+		Com_DPrintf( "No smoothing angles specified, aborting\n" );
 		free( shadeAngles );
 		free( smoothed );
 		return;
@@ -1005,7 +1005,7 @@ void SmoothMetaTriangles( void ){
 		f = 10 * i / numMetaVerts;
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_FPrintf( SYS_VRB, "%d...", f );
+			Com_DPrintf( "%d...", f );
 		}
 
 		/* already smoothed? */
@@ -1091,10 +1091,10 @@ void SmoothMetaTriangles( void ){
 	free( smoothed );
 
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) ( I_FloatTime() - start ) );
+	Com_DPrintf( " (%d)\n", (int) ( I_FloatTime() - start ) );
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d smoothed vertexes\n", numSmoothed );
+	Com_DPrintf( "%9d smoothed vertexes\n", numSmoothed );
 }
 
 
@@ -1312,7 +1312,7 @@ static int AddMetaTriangleToSurface( mapDrawSurface_t *ds, metaTriangle_t *tri, 
 			 ( bi == ds->indexes[ i ] && ci == ds->indexes[ i + 2 ] && ai == ds->indexes[ i + 1 ] ) ||
 			 ( ci == ds->indexes[ i ] && ai == ds->indexes[ i + 2 ] && bi == ds->indexes[ i + 1 ] ) ) {
 			/* warn about it */
-			Sys_FPrintf( SYS_WRN, "WARNING: Flipped triangle: (%6.0f %6.0f %6.0f) (%6.0f %6.0f %6.0f) (%6.0f %6.0f %6.0f)\n",
+			Com_Printf( S_COLOR_YELLOW "WARNING: Flipped triangle: (%6.0f %6.0f %6.0f) (%6.0f %6.0f %6.0f) (%6.0f %6.0f %6.0f)\n",
 						ds->verts[ ai ].xyz[ 0 ], ds->verts[ ai ].xyz[ 1 ], ds->verts[ ai ].xyz[ 2 ],
 						ds->verts[ bi ].xyz[ 0 ], ds->verts[ bi ].xyz[ 1 ], ds->verts[ bi ].xyz[ 2 ],
 						ds->verts[ ci ].xyz[ 0 ], ds->verts[ ci ].xyz[ 1 ], ds->verts[ ci ].xyz[ 2 ] );
@@ -1441,7 +1441,7 @@ static void MetaTrianglesToSurface( int numPossibles, metaTriangle_t *possibles,
 			f = 10 * *numAdded / numMetaTriangles;
 			if ( f > *fOld ) {
 				*fOld = f;
-				Sys_FPrintf( SYS_VRB, "%d...", f );
+				Com_DPrintf( "%d...", f );
 			}
 
 			/* reset best score */
@@ -1618,7 +1618,7 @@ void MergeMetaTriangles( void ){
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MergeMetaTriangles ---\n" );
+	Com_DPrintf( "--- MergeMetaTriangles ---\n" );
 
 	/* sort the triangles by shader major, fognum minor */
 	qsort( metaTriangles, numMetaTriangles, sizeof( metaTriangle_t ), CompareMetaTriangles );
@@ -1660,10 +1660,10 @@ void MergeMetaTriangles( void ){
 
 	/* print time */
 	if ( i ) {
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) ( I_FloatTime() - start ) );
+		Com_DPrintf( " (%d)\n", (int) ( I_FloatTime() - start ) );
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d surfaces merged\n", numMergedSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d vertexes merged\n", numMergedVerts );
+	Com_DPrintf( "%9d surfaces merged\n", numMergedSurfaces );
+	Com_DPrintf( "%9d vertexes merged\n", numMergedVerts );
 }

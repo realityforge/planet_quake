@@ -55,7 +55,7 @@ void ExportEntities( void ){
         FILE *file;
 		
         /* note it */
-        Sys_FPrintf( SYS_VRB, "--- ExportEntities ---\n" );
+        Com_DPrintf( "--- ExportEntities ---\n" );
 		
         /* do some path mangling */
         strcpy( filename, source );
@@ -64,13 +64,13 @@ void ExportEntities( void ){
 		
         /* sanity check */
         if ( bspEntDataSize == 0 ) {
-                Sys_FPrintf( SYS_WRN, "WARNING: No BSP entity data. aborting...\n" );
+                Com_Printf( S_COLOR_YELLOW "WARNING: No BSP entity data. aborting...\n" );
                 return;
         }
 		
         /* write it */
         Com_Printf( "Writing %s\n", filename );
-        Sys_FPrintf( SYS_VRB, "(%d bytes)\n", bspEntDataSize );
+        Com_DPrintf( "(%d bytes)\n", bspEntDataSize );
         file = fopen( filename, "w" );
 		
         if ( file == NULL ) {

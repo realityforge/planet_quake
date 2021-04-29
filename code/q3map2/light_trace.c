@@ -1283,7 +1283,7 @@ static void PopulateTraceNodes( void ){
 
 void SetupTraceNodes( void ){
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupTraceNodes ---\n" );
+	Com_DPrintf( "--- SetupTraceNodes ---\n" );
 
 	/* find nodraw bit */
 	noDrawContentFlags = noDrawSurfaceFlags = noDrawCompileFlags = 0;
@@ -1309,14 +1309,14 @@ void SetupTraceNodes( void ){
 	TriangulateTraceNode_r( skyboxNodeNum );
 
 	/* emit some stats */
-	//%	Sys_FPrintf( SYS_VRB, "%9d original triangles\n", numOriginalTriangles );
-	Sys_FPrintf( SYS_VRB, "%9d trace windings (%.2fMB)\n", numTraceWindings, (float) ( numTraceWindings * sizeof( *traceWindings ) ) / ( 1024.0f * 1024.0f ) );
-	Sys_FPrintf( SYS_VRB, "%9d trace triangles (%.2fMB)\n", numTraceTriangles, (float) ( numTraceTriangles * sizeof( *traceTriangles ) ) / ( 1024.0f * 1024.0f ) );
-	Sys_FPrintf( SYS_VRB, "%9d trace nodes (%.2fMB)\n", numTraceNodes, (float) ( numTraceNodes * sizeof( *traceNodes ) ) / ( 1024.0f * 1024.0f ) );
-	Sys_FPrintf( SYS_VRB, "%9d leaf nodes (%.2fMB)\n", numTraceLeafNodes, (float) ( numTraceLeafNodes * sizeof( *traceNodes ) ) / ( 1024.0f * 1024.0f ) );
-	//%	Sys_FPrintf( SYS_VRB, "%9d average triangles per leaf node\n", numTraceTriangles / numTraceLeafNodes );
-	Sys_FPrintf( SYS_VRB, "%9d average windings per leaf node\n", numTraceWindings / ( numTraceLeafNodes + 1 ) );
-	Sys_FPrintf( SYS_VRB, "%9d max trace depth\n", maxTraceDepth );
+	//%	Com_DPrintf( "%9d original triangles\n", numOriginalTriangles );
+	Com_DPrintf( "%9d trace windings (%.2fMB)\n", numTraceWindings, (float) ( numTraceWindings * sizeof( *traceWindings ) ) / ( 1024.0f * 1024.0f ) );
+	Com_DPrintf( "%9d trace triangles (%.2fMB)\n", numTraceTriangles, (float) ( numTraceTriangles * sizeof( *traceTriangles ) ) / ( 1024.0f * 1024.0f ) );
+	Com_DPrintf( "%9d trace nodes (%.2fMB)\n", numTraceNodes, (float) ( numTraceNodes * sizeof( *traceNodes ) ) / ( 1024.0f * 1024.0f ) );
+	Com_DPrintf( "%9d leaf nodes (%.2fMB)\n", numTraceLeafNodes, (float) ( numTraceLeafNodes * sizeof( *traceNodes ) ) / ( 1024.0f * 1024.0f ) );
+	//%	Com_DPrintf( "%9d average triangles per leaf node\n", numTraceTriangles / numTraceLeafNodes );
+	Com_DPrintf( "%9d average windings per leaf node\n", numTraceWindings / ( numTraceLeafNodes + 1 ) );
+	Com_DPrintf( "%9d max trace depth\n", maxTraceDepth );
 
 	/* free trace windings */
 	free( traceWindings );

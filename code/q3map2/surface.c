@@ -310,7 +310,7 @@ void TidyEntitySurfaces( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- TidyEntitySurfaces ---\n" );
+	Com_DPrintf( "--- TidyEntitySurfaces ---\n" );
 
 	/* walk the surface list */
 	deleted = 0;
@@ -346,7 +346,7 @@ void TidyEntitySurfaces( bspEntity_t *e ){
 	numMapDrawSurfs = i;
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d empty or malformed surfaces deleted\n", deleted );
+	Com_DPrintf( "%9d empty or malformed surfaces deleted\n", deleted );
 }
 
 
@@ -577,7 +577,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
 				if ( fabs( dist ) > PLANAR_EPSILON ) {
 					//%	if( ds->planeNum >= 0 )
 					//%	{
-					//%		Sys_FPrintf( SYS_WRN, "WARNING: Planar surface marked unplanar (%f > %f)\n", fabs( dist ), PLANAR_EPSILON );
+					//%		Com_Printf( S_COLOR_YELLOW "WARNING: Planar surface marked unplanar (%f > %f)\n", fabs( dist ), PLANAR_EPSILON );
 					//%		ds->verts[ i ].color[ 0 ][ 0 ] = ds->verts[ i ].color[ 0 ][ 2 ] = 0;
 					//%	}
 					ds->planar = qfalse;
@@ -598,7 +598,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
 			ds->planeNum = -1;
 			VectorClear( ds->lightmapVecs[ 2 ] );
 			//% if( ds->type == SURF_META || ds->type == SURF_FACE )
-			//%		Sys_FPrintf( SYS_WRN, "WARNING: Non-planar face (%d): %s\n", ds->planeNum, ds->shaderInfo->shader );
+			//%		Com_Printf( S_COLOR_YELLOW "WARNING: Non-planar face (%d): %s\n", ds->planeNum, ds->shaderInfo->shader );
 		}
 
 		/* -----------------------------------------------------------------
@@ -686,7 +686,7 @@ void ClassifyEntitySurfaces( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ClassifyEntitySurfaces ---\n" );
+	Com_DPrintf( "--- ClassifyEntitySurfaces ---\n" );
 
 	/* walk the surface list */
 	for ( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
@@ -925,7 +925,7 @@ mapDrawSurface_t *DrawSurfaceForSide( bspEntity_t *e, brush_t *b, side_t *s, win
 
 	/* ydnar: sky hack/fix for GL_CLAMP borders on ati cards */
 	if ( skyFixHack && si->skyParmsImageBase[ 0 ] != '\0' ) {
-		//%	Sys_FPrintf( SYS_VRB, "Enabling sky hack for shader %s using env %s\n", si->shader, si->skyParmsImageBase );
+		//%	Com_DPrintf( "Enabling sky hack for shader %s using env %s\n", si->shader, si->skyParmsImageBase );
 		sprintf( tempShader, "%s_lf", si->skyParmsImageBase );
 		DrawSurfaceForShader( tempShader );
 		sprintf( tempShader, "%s_rt", si->skyParmsImageBase );
@@ -1436,7 +1436,7 @@ void SubdivideFaceSurfaces( bspEntity_t *e, tree_t *tree ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SubdivideFaceSurfaces ---\n" );
+	Com_DPrintf( "--- SubdivideFaceSurfaces ---\n" );
 
 	/* walk the list of surfaces */
 	numBaseDrawSurfs = numMapDrawSurfs;
@@ -1650,7 +1650,7 @@ void CullSides( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- CullSides ---\n" );
+	Com_DPrintf( "--- CullSides ---\n" );
 
 	g_numHiddenFaces = 0;
 	g_numCoinFaces = 0;
@@ -1822,8 +1822,8 @@ void CullSides( bspEntity_t *e ){
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d hidden faces culled\n", g_numHiddenFaces );
-	Sys_FPrintf( SYS_VRB, "%9d coincident faces culled\n", g_numCoinFaces );
+	Com_DPrintf( "%9d hidden faces culled\n", g_numHiddenFaces );
+	Com_DPrintf( "%9d coincident faces culled\n", g_numCoinFaces );
 }
 
 
@@ -1851,7 +1851,7 @@ void ClipSidesIntoTree( bspEntity_t *e, tree_t *tree ){
 	CullSides( e );
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ClipSidesIntoTree ---\n" );
+	Com_DPrintf( "--- ClipSidesIntoTree ---\n" );
 
 	/* walk the brush list */
 	for ( b = e->brushes; b; b = b->next )
@@ -2459,7 +2459,7 @@ void EmitDrawIndexes( mapDrawSurface_t *ds, bspDrawSurface_t *out ){
 			/* validate the index */
 			if ( ds->type != SURFACE_PATCH ) {
 				if ( bspDrawIndexes[ numBSPDrawIndexes ] < 0 || bspDrawIndexes[ numBSPDrawIndexes ] >= ds->numVerts ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: %d %s has invalid index %d (%d)\n",
+					Com_Printf( S_COLOR_YELLOW "WARNING: %d %s has invalid index %d (%d)\n",
 								numBSPDrawSurfaces,
 								ds->shaderInfo->shader,
 								bspDrawIndexes[ numBSPDrawIndexes ],
@@ -2990,7 +2990,7 @@ void MakeDebugPortalSurfs( tree_t *tree ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeDebugPortalSurfs ---\n" );
+	Com_DPrintf( "--- MakeDebugPortalSurfs ---\n" );
 
 	/* get portal debug shader */
 	si = ShaderInfoForShader( "debugportals" );
@@ -3027,7 +3027,7 @@ void MakeFogHullSurfs( bspEntity_t *e, tree_t *tree, char *shader ){
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeFogHullSurfs ---\n" );
+	Com_DPrintf( "--- MakeFogHullSurfs ---\n" );
 
 	/* get hull bounds */
 	VectorCopy( mapMins, fogMins );
@@ -3421,7 +3421,7 @@ void AddEntitySurfaceModels( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- AddEntitySurfaceModels ---\n" );
+	Com_DPrintf( "--- AddEntitySurfaceModels ---\n" );
 
 	/* walk the surface list */
 	for ( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
@@ -3503,7 +3503,7 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FilterDrawsurfsIntoTree ---\n" );
+	Com_DPrintf( "--- FilterDrawsurfsIntoTree ---\n" );
 
 	/* filter surfaces into the tree */
 	numSurfs = 0;
@@ -3611,7 +3611,7 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 		case SURFACE_TRIANGLES:
 		case SURFACE_FORCED_META:
 		case SURFACE_META:
-			//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
+			//%	Com_DPrintf( "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
 			if ( refs == 0 ) {
 				refs = FilterTrianglesIntoTree( ds, tree );
 			}
@@ -3622,7 +3622,7 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 
 		/* handle foliage surfaces (splash damage/wolf et) */
 		case SURFACE_FOLIAGE:
-			//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
+			//%	Com_DPrintf( "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
 			if ( refs == 0 ) {
 				refs = FilterFoliageIntoTree( ds, tree );
 			}
@@ -3671,14 +3671,14 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 
 			/* emit extra surface data */
 			SetSurfaceExtra( ds, numBSPDrawSurfaces - 1 );
-			//%	Sys_FPrintf( SYS_VRB, "%d verts %d indexes\n", ds->numVerts, ds->numIndexes );
+			//%	Com_DPrintf( "%d verts %d indexes\n", ds->numVerts, ds->numIndexes );
 
 			/* one last sanity check */
 			{
 				bspDrawSurface_t    *out;
 				out = &bspDrawSurfaces[ numBSPDrawSurfaces - 1 ];
 				if ( out->numVerts == 3 && out->numIndexes > 3 ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: Potentially bad %s surface (%d: %d, %d)\n     %s\n",
+					Com_Printf( S_COLOR_YELLOW "WARNING: Potentially bad %s surface (%d: %d, %d)\n     %s\n",
 								surfaceTypes[ ds->type ],
 								numBSPDrawSurfaces - 1, out->numVerts, out->numIndexes, si->shader );
 				}
@@ -3693,14 +3693,14 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d references\n", numRefs );
-	Sys_FPrintf( SYS_VRB, "%9d (%d) emitted drawsurfs\n", numSurfs, numBSPDrawSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d stripped face surfaces\n", numStripSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d fanned face surfaces\n", numFanSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d surface models generated\n", numSurfaceModels );
-	Sys_FPrintf( SYS_VRB, "%9d skybox surfaces generated\n", numSkyboxSurfaces );
+	Com_DPrintf( "%9d references\n", numRefs );
+	Com_DPrintf( "%9d (%d) emitted drawsurfs\n", numSurfs, numBSPDrawSurfaces );
+	Com_DPrintf( "%9d stripped face surfaces\n", numStripSurfaces );
+	Com_DPrintf( "%9d fanned face surfaces\n", numFanSurfaces );
+	Com_DPrintf( "%9d surface models generated\n", numSurfaceModels );
+	Com_DPrintf( "%9d skybox surfaces generated\n", numSkyboxSurfaces );
 	for ( i = 0; i < NUM_SURFACE_TYPES; i++ )
-		Sys_FPrintf( SYS_VRB, "%9d %s surfaces\n", numSurfacesByType[ i ], surfaceTypes[ i ] );
+		Com_DPrintf( "%9d %s surfaces\n", numSurfacesByType[ i ], surfaceTypes[ i ] );
 
-	Sys_FPrintf( SYS_VRB, "%9d redundant indexes supressed, saving %d Kbytes\n", numRedundantIndexes, ( numRedundantIndexes * 4 / 1024 ) );
+	Com_DPrintf( "%9d redundant indexes supressed, saving %d Kbytes\n", numRedundantIndexes, ( numRedundantIndexes * 4 / 1024 ) );
 }

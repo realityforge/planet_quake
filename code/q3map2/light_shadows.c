@@ -79,7 +79,7 @@ void SetupShadows( void ){
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupShadows ---\n" );
+	Com_DPrintf( "--- SetupShadows ---\n" );
 
 	/* allocate a surface test list */
 	tested = safe_malloc( numDrawSurfaces / 8 + 1 );

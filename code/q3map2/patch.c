@@ -237,7 +237,7 @@ void ParsePatch( qboolean onlyLights ){
 	GetToken( qtrue );
 	strcpy( texture, token );
 
-	Parse1DMatrix( &script->buffer, 5, info );
+	Map_Parse1DMatrix( 5, info );
 	m.width = info[0];
 	m.height = info[1];
 	m.verts = verts = safe_malloc( m.width * m.height * sizeof( m.verts[0] ) );
@@ -252,7 +252,7 @@ void ParsePatch( qboolean onlyLights ){
 		MatchToken( "(" );
 		for ( i = 0; i < m.height ; i++ )
 		{
-			Parse1DMatrix( &script->buffer, 5, verts[ i * m.width + j ].xyz );
+			Map_Parse1DMatrix( 5, verts[ i * m.width + j ].xyz );
 
 			/* ydnar: fix colors */
 			for ( k = 0; k < MAX_LIGHTMAPS; k++ )
@@ -435,7 +435,7 @@ void PatchMapDrawSurfs( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- PatchMapDrawSurfs ---\n" );
+	Com_DPrintf( "--- PatchMapDrawSurfs ---\n" );
 
 	patchCount = 0;
 	for ( pm = e->patches ; pm ; pm = pm->next  ) {
@@ -529,6 +529,6 @@ void PatchMapDrawSurfs( bspEntity_t *e ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d patches\n", patchCount );
-	Sys_FPrintf( SYS_VRB, "%9d patch LOD groups\n", groupCount );
+	Com_DPrintf( "%9d patches\n", patchCount );
+	Com_DPrintf( "%9d patch LOD groups\n", groupCount );
 }

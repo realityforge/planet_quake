@@ -118,7 +118,7 @@ void ExportLightmaps( void ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ExportLightmaps ---\n" );
+	Com_DPrintf( "--- ExportLightmaps ---\n" );
 
 	/* do some path mangling */
 	strcpy( dirname, source );
@@ -126,7 +126,7 @@ void ExportLightmaps( void ){
 
 	/* sanity check */
 	if ( bspLightBytes == NULL ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: No BSP lightmap data\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: No BSP lightmap data\n" );
 		return;
 	}
 
@@ -202,7 +202,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 	LoadBSPFile( source );
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ImportLightmaps ---\n" );
+	Com_DPrintf( "--- ImportLightmaps ---\n" );
 
 	/* do some path mangling */
 	strcpy( dirname, source );
@@ -225,7 +225,7 @@ int ImportLightmapsMain( int argc, char **argv ){
 		buffer = NULL;
 		len = vfsLoadFile( filename, (void*) &buffer, -1 );
 		if ( len < 0 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Unable to load image %s\n", filename );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Unable to load image %s\n", filename );
 			continue;
 		}
 
@@ -236,11 +236,11 @@ int ImportLightmapsMain( int argc, char **argv ){
 
 		/* sanity check it */
 		if ( pixels == NULL ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Unable to load image %s\n", filename );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Unable to load image %s\n", filename );
 			continue;
 		}
 		if ( width != game->lightmapSize || height != game->lightmapSize ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Image %s is not the right size (%d, %d) != (%d, %d)\n",
+			Com_Printf( S_COLOR_YELLOW "WARNING: Image %s is not the right size (%d, %d) != (%d, %d)\n",
 						filename, width, height, game->lightmapSize, game->lightmapSize );
 		}
 
@@ -740,7 +740,7 @@ qboolean AddSurfaceToRawLightmap( int num, rawLightmap_t *lm ){
 
 	/* check for bogus axis */
 	if ( faxis[ axisNum ] == 0.0f ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: ProjectSurfaceLightmap: Chose a 0 valued axis\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: ProjectSurfaceLightmap: Chose a 0 valued axis\n" );
 		lm->w = lm->h = 0;
 		return qfalse;
 	}
@@ -767,7 +767,7 @@ qboolean AddSurfaceToRawLightmap( int num, rawLightmap_t *lm ){
 			verts[ i ].lightmap[ 0 ][ 1 ] = t * superSample;
 
 			if ( s > (float) lm->w || t > (float) lm->h ) {
-				Sys_FPrintf( SYS_VRB, "WARNING: Lightmap texture coords out of range: S %1.4f > %3d || T %1.4f > %3d\n",
+				Com_DPrintf( "WARNING: Lightmap texture coords out of range: S %1.4f > %3d || T %1.4f > %3d\n",
 							 s, lm->w, t, lm->h );
 			}
 		}
@@ -953,14 +953,14 @@ void SetupSurfaceLightmaps( void ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupSurfaceLightmaps ---\n" );
+	Com_DPrintf( "--- SetupSurfaceLightmaps ---\n" );
 
 	/* determine supersample amount */
 	if ( superSample < 1 ) {
 		superSample = 1;
 	}
 	else if ( superSample > 8 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Insane supersampling amount (%d) detected.\n", superSample );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Insane supersampling amount (%d) detected.\n", superSample );
 		superSample = 8;
 	}
 
@@ -1191,14 +1191,14 @@ void SetupSurfaceLightmaps( void ){
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d surfaces\n", numBSPDrawSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d raw lightmaps\n", numRawLightmaps );
-	Sys_FPrintf( SYS_VRB, "%9d surfaces vertex lit\n", numSurfsVertexLit );
-	Sys_FPrintf( SYS_VRB, "%9d surfaces lightmapped\n", numSurfsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d planar surfaces lightmapped\n", numPlanarsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d non-planar surfaces lightmapped\n", numNonPlanarsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d patches lightmapped\n", numPatchesLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d planar patches lightmapped\n", numPlanarPatchesLightmapped );
+	Com_DPrintf( "%9d surfaces\n", numBSPDrawSurfaces );
+	Com_DPrintf( "%9d raw lightmaps\n", numRawLightmaps );
+	Com_DPrintf( "%9d surfaces vertex lit\n", numSurfsVertexLit );
+	Com_DPrintf( "%9d surfaces lightmapped\n", numSurfsLightmapped );
+	Com_DPrintf( "%9d planar surfaces lightmapped\n", numPlanarsLightmapped );
+	Com_DPrintf( "%9d non-planar surfaces lightmapped\n", numNonPlanarsLightmapped );
+	Com_DPrintf( "%9d patches lightmapped\n", numPatchesLightmapped );
+	Com_DPrintf( "%9d planar patches lightmapped\n", numPlanarPatchesLightmapped );
 }
 
 
@@ -1363,7 +1363,7 @@ void StitchSurfaceLightmaps( void ){
 
 	/* emit statistics */
 	Com_Printf( " (%i)\n", (int) ( I_FloatTime() - start ) );
-	Sys_FPrintf( SYS_VRB, "%9d luxels stitched\n", numStitched );
+	Com_DPrintf( "%9d luxels stitched\n", numStitched );
 }
 
 
@@ -2356,7 +2356,7 @@ void StoreSurfaceLightmaps( void ){
 	   ----------------------------------------------------------------- */
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "Subsampling..." );
+	Com_DPrintf( "Subsampling..." );
 
 	/* walk the list of raw lightmaps */
 	numUsed = 0;
@@ -2698,7 +2698,7 @@ void StoreSurfaceLightmaps( void ){
 
 	if ( noCollapse == qfalse && deluxemap == qfalse ) {
 		/* note it */
-		Sys_FPrintf( SYS_VRB, "collapsing..." );
+		Com_DPrintf( "collapsing..." );
 
 		/* set all twin refs to null */
 		for ( i = 0; i < numRawLightmaps; i++ )
@@ -2767,7 +2767,7 @@ void StoreSurfaceLightmaps( void ){
 	   ----------------------------------------------------------------- */
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "sorting..." );
+	Com_DPrintf( "sorting..." );
 
 	/* allocate a new sorted list */
 	if ( sortLightmaps == NULL ) {
@@ -2784,7 +2784,7 @@ void StoreSurfaceLightmaps( void ){
 	   ----------------------------------------------------------------- */
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "allocating..." );
+	Com_DPrintf( "allocating..." );
 
 	/* kill all existing output lightmaps */
 	if ( outLightmaps != NULL ) {
@@ -2837,7 +2837,7 @@ void StoreSurfaceLightmaps( void ){
 	   ----------------------------------------------------------------- */
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "storing..." );
+	Com_DPrintf( "storing..." );
 
 	/* count the bsp lightmaps and allocate space */
 	if ( bspLightBytes != NULL ) {
@@ -2883,14 +2883,14 @@ void StoreSurfaceLightmaps( void ){
 
 			/* write lightmap */
 			sprintf( filename, "%s/" EXTERNAL_LIGHTMAP, dirname, numExtLightmaps );
-			Sys_FPrintf( SYS_VRB, "\nwriting %s", filename );
+			Com_DPrintf( "\nwriting %s", filename );
 			WriteTGA24( filename, olm->bspLightBytes, olm->customWidth, olm->customHeight, qtrue );
 			numExtLightmaps++;
 
 			/* write deluxemap */
 			if ( deluxemap ) {
 				sprintf( filename, "%s/" EXTERNAL_LIGHTMAP, dirname, numExtLightmaps );
-				Sys_FPrintf( SYS_VRB, "\nwriting %s", filename );
+				Com_DPrintf( "\nwriting %s", filename );
 				WriteTGA24( filename, olm->bspDirBytes, olm->customWidth, olm->customHeight, qtrue );
 				numExtLightmaps++;
 
@@ -2902,7 +2902,7 @@ void StoreSurfaceLightmaps( void ){
 	}
 
 	if ( numExtLightmaps > 0 ) {
-		Sys_FPrintf( SYS_VRB, "\n" );
+		Com_DPrintf( "\n" );
 	}
 
 	/* delete unused external lightmaps */
@@ -2923,7 +2923,7 @@ void StoreSurfaceLightmaps( void ){
 	   ----------------------------------------------------------------- */
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "projecting..." );
+	Com_DPrintf( "projecting..." );
 
 	/* walk the list of surfaces */
 	for ( i = 0; i < numBSPDrawSurfaces; i++ )
@@ -3202,7 +3202,7 @@ void StoreSurfaceLightmaps( void ){
 	}
 
 	/* finish */
-	Sys_FPrintf( SYS_VRB, "done.\n" );
+	Com_DPrintf( "done.\n" );
 
 	/* calc num stored */
 	numStored = numBSPLightBytes / 3;

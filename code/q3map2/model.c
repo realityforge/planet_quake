@@ -54,15 +54,15 @@ void PicoPrintFunc( int level, const char *str ){
 		break;
 
 	case PICO_VERBOSE:
-		Sys_FPrintf( SYS_VRB, "%s\n", str );
+		Com_DPrintf( "%s\n", str );
 		break;
 
 	case PICO_WARNING:
-		Sys_FPrintf( SYS_WRN, "WARNING: %s\n", str );
+		Com_Printf( S_COLOR_YELLOW "WARNING: %s\n", str );
 		break;
 
 	case PICO_ERROR:
-		Sys_FPrintf( SYS_ERR, "ERROR: %s\n", str );
+		Com_Error( ERR_DROP, "ERROR: %s\n", str );
 		break;
 
 	case PICO_FATAL:
@@ -249,7 +249,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 	/* create transform matrix for normals */
 	memcpy( nTransform, transform, sizeof( m4x4_t ) );
 	if ( m4x4_invert( nTransform ) ) {
-		Sys_FPrintf( SYS_VRB, "WARNING: Can't invert model transform matrix, using transpose instead\n" );
+		Com_DPrintf( "WARNING: Can't invert model transform matrix, using transpose instead\n" );
 	}
 	m4x4_transpose( nTransform );
 
@@ -260,7 +260,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 
 	/* each surface on the model will become a new map drawsurface */
 	numSurfaces = PicoGetModelNumSurfaces( model );
-	//%	Sys_FPrintf( SYS_VRB, "Model %s has %d surfaces\n", name, numSurfaces );
+	//%	Com_DPrintf( "Model %s has %d surfaces\n", name, numSurfaces );
 	for ( s = 0; s < numSurfaces; s++ )
 	{
 		/* get surface */
@@ -300,7 +300,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 				glob = rm;
 			}
 			else if ( !Q_stricmp( picoShaderName, rm->from ) ) {
-				Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", picoShaderName, rm->to );
+				Com_DPrintf( "Remapping %s to %s\n", picoShaderName, rm->to );
 				picoShaderName = rm->to;
 				glob = NULL;
 				break;
@@ -308,7 +308,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 		}
 
 		if ( glob != NULL ) {
-			Sys_FPrintf( SYS_VRB, "Globbing %s to %s\n", picoShaderName, glob->to );
+			Com_DPrintf( "Globbing %s to %s\n", picoShaderName, glob->to );
 			picoShaderName = glob->to;
 		}
 
@@ -437,7 +437,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 			{
 				/* overflow hack */
 				if ( ( nummapplanes + 64 ) >= ( MAX_MAP_PLANES >> 1 ) ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.\n",
+					Com_Printf( S_COLOR_YELLOW "WARNING: MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.\n",
 								MAX_MAP_PLANES, name );
 					break;
 				}
@@ -628,7 +628,7 @@ void AddTriangleModels( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- AddTriangleModels ---\n" );
+	Com_DPrintf( "--- AddTriangleModels ---\n" );
 
 	/* get current brush entity targetname */
 	if ( e == entities ) {
@@ -670,7 +670,7 @@ void AddTriangleModels( bspEntity_t *e ){
 		/* get model name */
 		model = ValueForKey( e2, "model" );
 		if ( model[ 0 ] == '\0' ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: misc_model at %i %i %i without a model key\n",
+			Com_Printf( S_COLOR_YELLOW "WARNING: misc_model at %i %i %i without a model key\n",
 						(int) origin[ 0 ], (int) origin[ 1 ], (int) origin[ 2 ] );
 			continue;
 		}
@@ -741,7 +741,7 @@ void AddTriangleModels( bspEntity_t *e ){
 				/* split the string */
 				split = strchr( remap->from, ';' );
 				if ( split == NULL ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: Shader _remap key found in misc_model without a ; character\n" );
+					Com_Printf( S_COLOR_YELLOW "WARNING: Shader _remap key found in misc_model without a ; character\n" );
 					free( remap );
 					remap = remap2;
 					continue;
@@ -752,7 +752,7 @@ void AddTriangleModels( bspEntity_t *e ){
 				strcpy( remap->to, ( split + 1 ) );
 
 				/* note it */
-				//%	Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", remap->from, remap->to );
+				//%	Com_DPrintf( "Remapping %s to %s\n", remap->from, remap->to );
 			}
 		}
 

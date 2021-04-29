@@ -338,7 +338,7 @@ tree_t *FaceBSP( face_t *list ) {
 	int i;
 	int count;
 
-	Sys_FPrintf( SYS_VRB, "--- FaceBSP ---\n" );
+	Com_DPrintf( "--- FaceBSP ---\n" );
 
 	tree = AllocTree();
 
@@ -351,7 +351,7 @@ tree_t *FaceBSP( face_t *list ) {
 			AddPointToBounds( face->w->p[ i ], tree->mins, tree->maxs );
 		}
 	}
-	Sys_FPrintf( SYS_VRB, "%9d faces\n", count );
+	Com_DPrintf( "%9d faces\n", count );
 
 	for ( i = 0; i < nummapplanes; i++ )
 	{
@@ -365,7 +365,7 @@ tree_t *FaceBSP( face_t *list ) {
 
 	BuildFaceTree_r( tree->headnode, list );
 
-	Sys_FPrintf( SYS_VRB, "%9d leafs\n", c_faceLeafs );
+	Com_DPrintf( "%9d leafs\n", c_faceLeafs );
 
 	return tree;
 }

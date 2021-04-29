@@ -123,7 +123,7 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 
 		if ( split == -1 ) {
 			if ( i == 1 ) {
-				Sys_FPrintf( SYS_VRB, "No crossing points in patch\n" );
+				Com_DPrintf( "No crossing points in patch\n" );
 				*front = in;
 				return;
 			}
@@ -482,7 +482,7 @@ void FogDrawSurfaces( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "----- FogDrawSurfs -----\n" );
+	Com_DPrintf( "----- FogDrawSurfs -----\n" );
 
 	/* reset counters */
 	numFogged = 0;
@@ -573,9 +573,9 @@ void FogDrawSurfaces( bspEntity_t *e ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d fog polygon fragments\n", numFogFragments );
-	Sys_FPrintf( SYS_VRB, "%9d fog patch fragments\n", numFogPatchFragments );
-	Sys_FPrintf( SYS_VRB, "%9d fogged drawsurfs\n", numFogged );
+	Com_DPrintf( "%9d fog polygon fragments\n", numFogFragments );
+	Com_DPrintf( "%9d fog patch fragments\n", numFogPatchFragments );
+	Com_DPrintf( "%9d fogged drawsurfs\n", numFogged );
 }
 
 
@@ -726,7 +726,7 @@ void CreateMapFogs( void ){
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- CreateMapFogs ---\n" );
+	Com_DPrintf( "--- CreateMapFogs ---\n" );
 
 	/* walk entities */
 	for ( i = 0; i < numEntities; i++ )
@@ -783,7 +783,7 @@ void CreateMapFogs( void ){
 		}
 
 		/* note it */
-		Sys_FPrintf( SYS_VRB, "Map has global fog shader %s\n", globalFog );
+		Com_DPrintf( "Map has global fog shader %s\n", globalFog );
 
 		/* set up fog */
 		fog = &mapFogs[ numMapFogs++ ];
@@ -803,5 +803,5 @@ void CreateMapFogs( void ){
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d fogs\n", numMapFogs );
+	Com_DPrintf( "%9d fogs\n", numMapFogs );
 }

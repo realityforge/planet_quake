@@ -68,7 +68,7 @@ void Fur( mapDrawSurface_t *ds ){
 	fade = ds->shaderInfo->furFade * 255.0f;
 
 	/* debug code */
-	//%	Sys_FPrintf( SYS_VRB, "Fur():  layers: %d  offset: %f   fade: %f  %s\n",
+	//%	Com_DPrintf( "Fur():  layers: %d  offset: %f   fade: %f  %s\n",
 	//%		numLayers, offset, fade, ds->shaderInfo->shader );
 
 	/* initial offset */

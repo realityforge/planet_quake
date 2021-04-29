@@ -28,7 +28,8 @@
 
 #include <stdint.h>
 
-#include "cmdlib.h"
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "mathlib.h"
 #include "inout.h"
 #include "qthreads.h"

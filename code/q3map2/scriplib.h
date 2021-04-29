@@ -25,7 +25,6 @@
 // scriplib.h
 
 #ifndef __CMDLIB__
-#include "cmdlib.h"
 #endif
 #ifndef __MATHLIB__
 #include "mathlib.h"

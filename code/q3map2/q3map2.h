@@ -82,6 +82,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "../qcommon/qcommon.h"
 
 /* -------------------------------------------------------------------------------
 
@@ -110,6 +111,8 @@
 #define Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX     1
 #define Q3MAP2_EXPERIMENTAL_SNAP_PLANE_FIX      1
 #define Q3MAP2_EXPERIMENTAL_MODEL_CLIPPING_FIX      1
+
+#define MAX_OS_PATH     1024
 
 /* general */
 #define MAX_QPATH               64
@@ -1483,6 +1486,8 @@ void                        PutMeshOnCurve( mesh_t in );
 
 
 /* map.c */
+void Map_Parse2DMatrix( int y, int x, vec_t *m );
+void Map_Parse1DMatrix( int x, vec_t *m );
 void                        LoadMap( char *map, qboolean onlyLights );
 void                        LoadMapFile( char *filename, qboolean onlyLights );
 int                         FindFloatPlane( vec3_t normal, vec_t dist, int numPoints, vec3_t *points );

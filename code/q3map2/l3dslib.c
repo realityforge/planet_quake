@@ -24,7 +24,6 @@
 //
 
 #include <stdio.h>
-#include "cmdlib.h"
 #include "mathlib.h"
 #include "trilib.h"
 #include "l3dslib.h"

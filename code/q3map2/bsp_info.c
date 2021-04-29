@@ -30,10 +30,6 @@
 
 /* dependencies */
 #include "q3map2.h"
-#include "cmdlib.h"
-
-
-
 /*
    BSPInfoMain()
    emits statistics about the bsp file

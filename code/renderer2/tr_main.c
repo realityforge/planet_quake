@@ -182,7 +182,7 @@ qboolean R_CalcTangentVectors(srfVert_t * dv[3])
 		R_VaoPackTangent(dv[i]->tangent, tangent);
 
 		// debug code
-		//% Sys_FPrintf( SYS_VRB, "%d S: (%f %f %f) T: (%f %f %f)\n", i,
+		//% Com_DPrintf( "%d S: (%f %f %f) T: (%f %f %f)\n", i,
 		//%     stv[ i ][ 0 ], stv[ i ][ 1 ], stv[ i ][ 2 ], ttv[ i ][ 0 ], ttv[ i ][ 1 ], ttv[ i ][ 2 ] );
 	}
 

@@ -358,7 +358,7 @@ void AllocateLightmapForSurface( mapDrawSurface_t *ds ){
 	VectorCopy( vecs[ 1 ], ds->lightmapVecs[ 1 ] );
 
 	/* ydnar: print some stats */
-	//Sys_FPrintf( SYS_VRB, "Lightmap block %3d (%3d, %3d) (%3d x %3d) emitted\n", (numLightmaps - 1), x, y, w, h );
+	//Com_DPrintf( "Lightmap block %3d (%3d, %3d) (%3d x %3d) emitted\n", (numLightmaps - 1), x, y, w, h );
 }
 
 
@@ -374,7 +374,7 @@ void AllocateLightmaps( entity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB,"--- AllocateLightmaps ---\n" );
+	Com_DPrintf( "--- AllocateLightmaps ---\n" );
 
 
 	/* sort all surfaces by shader so common shaders will usually be in the same lightmap */
@@ -466,7 +466,7 @@ void AllocateLightmaps( entity_t *e ){
 	}
 
 	/* tot up shader count */
-	Sys_FPrintf( SYS_VRB, "%9d unique shaders\n", numSortShaders );
+	Com_DPrintf( "%9d unique shaders\n", numSortShaders );
 
 	/* for each shader, allocate lightmaps for each surface */
 	for ( i = 0; i < numSortShaders; i++ )
@@ -488,9 +488,9 @@ void AllocateLightmaps( entity_t *e ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d exact lightmap texels\n", c_exactLightmap );
-	Sys_FPrintf( SYS_VRB, "%9d block lightmap texels\n", numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT );
-	Sys_FPrintf( SYS_VRB, "%9d non-planar or terrain lightmap texels\n", c_nonplanarLightmap );
-	Sys_FPrintf( SYS_VRB, "%9d planar patch lightmaps\n", c_planarPatch );
-	Sys_FPrintf( SYS_VRB, "%9d lightmap textures, size: %d Kbytes\n", numLightmaps, ( numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 ) / 1024 );
+	Com_DPrintf( "%9d exact lightmap texels\n", c_exactLightmap );
+	Com_DPrintf( "%9d block lightmap texels\n", numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT );
+	Com_DPrintf( "%9d non-planar or terrain lightmap texels\n", c_nonplanarLightmap );
+	Com_DPrintf( "%9d planar patch lightmaps\n", c_planarPatch );
+	Com_DPrintf( "%9d lightmap textures, size: %d Kbytes\n", numLightmaps, ( numLightmaps * LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT * 3 ) / 1024 );
 }

@@ -1262,7 +1262,6 @@ Q3OBJ = \
 	$(B)/client/brush_primit.o \
 	$(B)/client/mesh.o \
 	$(B)/client/tjunction.o \
-	$(B)/client/cmdlib.o \
 	$(B)/client/tree.o \
 	$(B)/client/image.o \
 	$(B)/client/jpeg.o \
@@ -1699,7 +1698,6 @@ Q3DOBJ = \
 	$(B)/ded/brush_primit.o \
 	$(B)/ded/mesh.o \
 	$(B)/ded/tjunction.o \
-	$(B)/ded/cmdlib.o \
 	$(B)/ded/tree.o \
 	$(B)/ded/image.o \
 	$(B)/ded/jpeg.o \
@@ -1851,9 +1849,6 @@ $(B)/client/%.o: $(SDIR)/%.c
 $(B)/client/%.o: $(Q3DIR)/%.c
 	$(DO_CC)
 
-$(B)/client/%.o: $(Q3DIR)/cmdlib/%.c
-	$(DO_CC)
-
 $(B)/client/%.o: $(Q3DIR)/ddslib/%.c
 	$(DO_CC)
 
@@ -1963,9 +1958,6 @@ $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/%.c
-	$(DO_DED_CC)
-
-$(B)/ded/%.o: $(Q3DIR)/cmdlib/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(Q3DIR)/ddslib/%.c

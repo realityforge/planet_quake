@@ -138,7 +138,7 @@ void SetSurfaceExtra( mapDrawSurface_t *ds, int num ){
 	VectorCopy( ds->lightmapAxis, se->lightmapAxis );
 
 	/* debug code */
-	//%	Sys_FPrintf( SYS_VRB, "SetSurfaceExtra(): entityNum = %d\n", ds->entityNum );
+	//%	Com_DPrintf( "SetSurfaceExtra(): entityNum = %d\n", ds->entityNum );
 }
 
 
@@ -340,7 +340,7 @@ void LoadSurfaceExtraFile( const char *path ){
 	Com_Printf( "Loading %s\n", srfPath );
 	size = LoadFile( srfPath, (void**) &buffer );
 	if ( size <= 0 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Unable to find surface file %s, using defaults.\n", srfPath );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Unable to find surface file %s, using defaults.\n", srfPath );
 		return;
 	}
 
@@ -429,7 +429,7 @@ void LoadSurfaceExtraFile( const char *path ){
 
 			/* lightmap axis vector */
 			else if ( !Q_stricmp( token, "lightmapAxis" ) ) {
-				Parse1DMatrix( &script->buffer, 3, se->lightmapAxis );
+				Map_Parse1DMatrix( 3, se->lightmapAxis );
 			}
 
 			/* ignore all other tokens on the line */

@@ -203,7 +203,7 @@ void ClusterMerge( int leafnum ){
 	numvis = LeafVectorFromPortalVector( portalvector, uncompressed );
 
 //	if (uncompressed[leafnum>>3] & (1<<(leafnum&7)))
-//		Sys_FPrintf( SYS_WRN, "WARNING: Leaf portals saw into leaf\n");
+//		Com_Printf( S_COLOR_YELLOW "WARNING: Leaf portals saw into leaf\n");
 
 //	uncompressed[leafnum>>3] |= (1<<(leafnum&7));
 
@@ -211,7 +211,7 @@ void ClusterMerge( int leafnum ){
 
 	totalvis += numvis;
 
-	Sys_FPrintf( SYS_VRB,"cluster %4i : %4i visible\n", leafnum, numvis );
+	Com_DPrintf( "cluster %4i : %4i visible\n", leafnum, numvis );
 
 	memcpy( bspVisBytes + VIS_HEADER_SIZE + leafnum * leafbytes, uncompressed, leafbytes );
 }
@@ -1121,7 +1121,7 @@ int VisMain( int argc, char **argv ){
 		}
 
 		else{
-			Sys_FPrintf( SYS_WRN, "WARNING: Unknown option \"%s\"\n", argv[ i ] );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Unknown option \"%s\"\n", argv[ i ] );
 		}
 	}
 

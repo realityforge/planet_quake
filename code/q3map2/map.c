@@ -35,9 +35,6 @@
 
 /* dependencies */
 #include "q3map2.h"
-#include "cmdlib.h"
-
-
 /* FIXME: remove these vars */
 
 /* undefine to make plane finding use linear sort (note: really slow) */
@@ -482,7 +479,7 @@ void SetBrushContents( brush_t *b ){
 
 	/* ydnar: getting rid of this stupid warning */
 	//%	if( mixed )
-	//%		Sys_FPrintf( SYS_VRB,"Entity %i, Brush %i: mixed face contentFlags\n", b->entitynum, b->brushnum );
+	//%		Com_DPrintf( "Entity %i, Brush %i: mixed face contentFlags\n", b->entitynum, b->brushnum );
 
 	/* check for detail & structural */
 	if ( ( compileFlags & C_DETAIL ) && ( compileFlags & C_STRUCTURAL ) ) {
@@ -935,6 +932,32 @@ void QuakeTextureVecs( plane_t *plane, vec_t shift[ 2 ], vec_t rotate, vec_t sca
 	mappingVecs[1][3] = shift[1];
 }
 
+void Map_Parse1DMatrix( int x, vec_t *m ) {
+	int i;
+
+	MatchToken( "(" );
+
+	for ( i = 0 ; i < x ; i++ ) {
+		GetToken( qfalse );
+		m[i] = atof( token );
+	}
+
+	MatchToken( ")" );
+}
+
+void Map_Parse2DMatrix( int y, int x, vec_t *m ) {
+	int i;
+
+	MatchToken( "(" );
+
+	for ( i = 0 ; i < y ; i++ ) {
+		Map_Parse1DMatrix( x, m + i * x );
+	}
+
+	MatchToken( ")" );
+}
+
+
 
 
 /*
@@ -1009,13 +1032,13 @@ static void ParseRawBrush( qboolean onlyLights ){
 		buildBrush->numsides++;
 
 		/* read the three point plane definition */
-		Parse1DMatrix( &script->buffer, 3, planePoints[ 0 ] );
-		Parse1DMatrix( &script->buffer, 3, planePoints[ 1 ] );
-		Parse1DMatrix( &script->buffer, 3, planePoints[ 2 ] );
+		Map_Parse1DMatrix( 3, planePoints[ 0 ] );
+		Map_Parse1DMatrix( 3, planePoints[ 1 ] );
+		Map_Parse1DMatrix( 3, planePoints[ 2 ] );
 
 		/* bp: read the texture matrix */
 		if ( g_bBrushPrimit == BPRIMIT_NEWBRUSHES ) {
-			Parse2DMatrix( &script->buffer, 2, 3, (float*) side->texMat );
+			Map_Parse2DMatrix( 2, 3, (float*) side->texMat );
 		}
 
 		/* read shader name */
@@ -1403,13 +1426,13 @@ void LoadEntityIndexMap( bspEntity_t *e ){
 		value = ValueForKey( e, "layers" );
 	}
 	if ( value[ 0 ] == '\0' ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has missing \"_layers\" or \"layers\" key\n", indexMapFilename );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Entity with index/alpha map \"%s\" has missing \"_layers\" or \"layers\" key\n", indexMapFilename );
 		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
 	numLayers = atoi( value );
 	if ( numLayers < 1 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has < 1 layer (%d)\n", indexMapFilename, numLayers );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Entity with index/alpha map \"%s\" has < 1 layer (%d)\n", indexMapFilename, numLayers );
 		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
@@ -1420,14 +1443,14 @@ void LoadEntityIndexMap( bspEntity_t *e ){
 		value = ValueForKey( e, "shader" );
 	}
 	if ( value[ 0 ] == '\0' ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" has missing \"_shader\" or \"shader\" key\n", indexMapFilename );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Entity with index/alpha map \"%s\" has missing \"_shader\" or \"shader\" key\n", indexMapFilename );
 		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		return;
 	}
 	shader = value;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "Entity %d (%s) has shader index map \"%s\"\n",  mapEnt->mapEntityNum, ValueForKey( e, "classname" ), indexMapFilename );
+	Com_DPrintf( "Entity %d (%s) has shader index map \"%s\"\n",  mapEnt->mapEntityNum, ValueForKey( e, "classname" ), indexMapFilename );
 
 	/* get index map file extension */
 	ExtractFileExtension( indexMapFilename, ext );
@@ -1479,7 +1502,7 @@ void LoadEntityIndexMap( bspEntity_t *e ){
 
 	/* the index map must be at least 2x2 pixels */
 	if ( w < 2 || h < 2 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Entity with index/alpha map \"%s\" is smaller than 2x2 pixels\n", indexMapFilename );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Entity with index/alpha map \"%s\" is smaller than 2x2 pixels\n", indexMapFilename );
 		Com_Printf( "Entity will not be textured properly. Check your keys/values.\n" );
 		free( pixels );
 		return;
@@ -1559,7 +1582,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 
 	/* conformance check */
 	if ( strcmp( token, "{" ) ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: ParseEntity: { not found, found %s on line %d - last entity was at: <%4.2f, %4.2f, %4.2f>...\n"
+		Com_Printf( S_COLOR_YELLOW "WARNING: ParseEntity: { not found, found %s on line %d - last entity was at: <%4.2f, %4.2f, %4.2f>...\n"
 					"Continuing to process map, but resulting BSP may be invalid.\n",
 					token, scriptline, entities[ numEntities ].origin[ 0 ], entities[ numEntities ].origin[ 1 ], entities[ numEntities ].origin[ 2 ] );
 		return qfalse;
@@ -1585,7 +1608,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 	{
 		/* get initial token */
 		if ( !GetToken( qtrue ) ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: ParseEntity: EOF without closing brace\n"
+			Com_Printf( S_COLOR_YELLOW "WARNING: ParseEntity: EOF without closing brace\n"
 						"Continuing to process map, but resulting BSP may be invalid.\n" );
 			return qfalse;
 		}
@@ -1596,9 +1619,11 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 
 		if ( !strcmp( token, "{" ) ) {
 			/* parse a brush or patch */
+Com_Printf("GetToken: %s\n", token);
 			if ( !GetToken( qtrue ) ) {
 				break;
 			}
+Com_Printf("GetToken: %s\n", token);
 
 			/* check */
 			if ( !strcmp( token, "patchDef2" ) ) {
@@ -1607,7 +1632,7 @@ static qboolean ParseMapEntity( qboolean onlyLights ){
 			}
 			else if ( !strcmp( token, "terrainDef" ) ) {
 				//% ParseTerrain();
-				Sys_FPrintf( SYS_WRN, "WARNING: Terrain entity parsing not supported in this build.\n" ); /* ydnar */
+				Com_Printf( S_COLOR_YELLOW "WARNING: Terrain entity parsing not supported in this build.\n" ); /* ydnar */
 			}
 			else if ( !strcmp( token, "brushDef" ) ) {
 				if ( g_bBrushPrimit == BPRIMIT_OLDBRUSHES ) {
@@ -1777,7 +1802,7 @@ void LoadMap( char *map, qboolean onlyLights ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- LoadMapFile ---\n" );
+	Com_DPrintf( "--- LoadMapFile ---\n" );
 	Com_Printf( "Loading from string %li\n", strlen(map) );
 
 	/* load the map file */
@@ -1805,7 +1830,7 @@ void LoadMap( char *map, qboolean onlyLights ){
 	/* light loading */
 	if ( onlyLights ) {
 		/* emit some statistics */
-		Sys_FPrintf( SYS_VRB, "%9d light entities\n", numEntities - oldNumEntities );
+		Com_DPrintf( "%9d light entities\n", numEntities - oldNumEntities );
 	}
 	else
 	{
@@ -1820,17 +1845,17 @@ void LoadMap( char *map, qboolean onlyLights ){
 		/* get brush counts */
 		numMapBrushes = CountBrushList( entities[ 0 ].brushes );
 		if ( (float) c_detail / (float) numMapBrushes < 0.10f && numMapBrushes > 500 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Over 90 percent structural map detected. Compile time may be adversely affected.\n" );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Over 90 percent structural map detected. Compile time may be adversely affected.\n" );
 		}
 
 		/* emit some statistics */
-		Sys_FPrintf( SYS_VRB, "%9d total world brushes\n", numMapBrushes );
-		Sys_FPrintf( SYS_VRB, "%9d detail brushes\n", c_detail );
-		Sys_FPrintf( SYS_VRB, "%9d patches\n", numMapPatches );
-		Sys_FPrintf( SYS_VRB, "%9d boxbevels\n", c_boxbevels );
-		Sys_FPrintf( SYS_VRB, "%9d edgebevels\n", c_edgebevels );
-		Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
-		Sys_FPrintf( SYS_VRB, "%9d planes\n", nummapplanes );
+		Com_DPrintf( "%9d total world brushes\n", numMapBrushes );
+		Com_DPrintf( "%9d detail brushes\n", c_detail );
+		Com_DPrintf( "%9d patches\n", numMapPatches );
+		Com_DPrintf( "%9d boxbevels\n", c_boxbevels );
+		Com_DPrintf( "%9d edgebevels\n", c_edgebevels );
+		Com_DPrintf( "%9d entities\n", numEntities );
+		Com_DPrintf( "%9d planes\n", nummapplanes );
 		Com_Printf( "%9d areaportals\n", c_areaportals );
 		Com_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
 					mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ],
@@ -1856,7 +1881,7 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- LoadMapFile ---\n" );
+	Com_DPrintf( "--- LoadMapFile ---\n" );
 	Com_Printf( "Loading %s\n", filename );
 
 	/* hack */
@@ -1888,7 +1913,7 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 	/* light loading */
 	if ( onlyLights ) {
 		/* emit some statistics */
-		Sys_FPrintf( SYS_VRB, "%9d light entities\n", numEntities - oldNumEntities );
+		Com_DPrintf( "%9d light entities\n", numEntities - oldNumEntities );
 	}
 	else
 	{
@@ -1903,17 +1928,17 @@ void LoadMapFile( char *filename, qboolean onlyLights ){
 		/* get brush counts */
 		numMapBrushes = CountBrushList( entities[ 0 ].brushes );
 		if ( (float) c_detail / (float) numMapBrushes < 0.10f && numMapBrushes > 500 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Over 90 percent structural map detected. Compile time may be adversely affected.\n" );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Over 90 percent structural map detected. Compile time may be adversely affected.\n" );
 		}
 
 		/* emit some statistics */
-		Sys_FPrintf( SYS_VRB, "%9d total world brushes\n", numMapBrushes );
-		Sys_FPrintf( SYS_VRB, "%9d detail brushes\n", c_detail );
-		Sys_FPrintf( SYS_VRB, "%9d patches\n", numMapPatches );
-		Sys_FPrintf( SYS_VRB, "%9d boxbevels\n", c_boxbevels );
-		Sys_FPrintf( SYS_VRB, "%9d edgebevels\n", c_edgebevels );
-		Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
-		Sys_FPrintf( SYS_VRB, "%9d planes\n", nummapplanes );
+		Com_DPrintf( "%9d total world brushes\n", numMapBrushes );
+		Com_DPrintf( "%9d detail brushes\n", c_detail );
+		Com_DPrintf( "%9d patches\n", numMapPatches );
+		Com_DPrintf( "%9d boxbevels\n", c_boxbevels );
+		Com_DPrintf( "%9d edgebevels\n", c_edgebevels );
+		Com_DPrintf( "%9d entities\n", numEntities );
+		Com_DPrintf( "%9d planes\n", nummapplanes );
 		Com_Printf( "%9d areaportals\n", c_areaportals );
 		Com_Printf( "Size: %5.0f, %5.0f, %5.0f to %5.0f, %5.0f, %5.0f\n",
 					mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ],

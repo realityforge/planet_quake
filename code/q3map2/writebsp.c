@@ -92,7 +92,7 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 
 	/* recursively emit any damage shaders */
 	if ( si->damageShader != NULL && si->damageShader[ 0 ] != '\0' ) {
-		Sys_FPrintf( SYS_VRB, "Shader %s has damage shader %s\n", si->shader, si->damageShader );
+		Com_DPrintf( "Shader %s has damage shader %s\n", si->shader, si->damageShader );
 		EmitShader( si->damageShader, NULL, NULL );
 	}
 
@@ -125,7 +125,7 @@ void EmitPlanes( void ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d BSP planes\n", numBSPPlanes );
+	Com_DPrintf( "%9d BSP planes\n", numBSPPlanes );
 }
 
 
@@ -162,7 +162,7 @@ void EmitLeaf( node_t *node ){
 	{
 		/* something is corrupting brushes */
 		if ( (size_t) b < 256 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Node brush list corrupted (0x%08X)\n", b );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Node brush list corrupted.\n" );
 			break;
 		}
 		//%	if( b->guard != 0xDEADBEEF )
@@ -363,7 +363,7 @@ void SetLightStyles( void ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d light entities stripped\n", numStrippedLights );
+	Com_DPrintf( "%9d light entities stripped\n", numStrippedLights );
 }
 
 
@@ -406,7 +406,7 @@ void EndBSPFile( void ){
 	char path[ 1024 ];
 
 
-	Sys_FPrintf( SYS_VRB, "--- EndBSPFile ---\n" );
+	Com_DPrintf( "--- EndBSPFile ---\n" );
 
 	EmitPlanes();
 
@@ -610,8 +610,8 @@ void BeginModel( void ){
 	}
 
 	/* note size */
-	Sys_FPrintf( SYS_VRB, "BSP bounds: { %f %f %f } { %f %f %f }\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
-	Sys_FPrintf( SYS_VRB, "Lightgrid bounds: { %f %f %f } { %f %f %f }\n", lgMins[ 0 ], lgMins[ 1 ], lgMins[ 2 ], lgMaxs[ 0 ], lgMaxs[ 1 ], lgMaxs[ 2 ] );
+	Com_DPrintf( "BSP bounds: { %f %f %f } { %f %f %f }\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	Com_DPrintf( "Lightgrid bounds: { %f %f %f } { %f %f %f }\n", lgMins[ 0 ], lgMins[ 1 ], lgMins[ 2 ], lgMaxs[ 0 ], lgMaxs[ 1 ], lgMaxs[ 2 ] );
 
 	/* set firsts */
 	mod->firstBSPSurface = numBSPDrawSurfaces;
@@ -631,7 +631,7 @@ void EndModel( bspEntity_t *e, node_t *headnode ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- EndModel ---\n" );
+	Com_DPrintf( "--- EndModel ---\n" );
 
 	/* emit the bsp */
 	mod = &bspModels[ numBSPModels ];

@@ -337,7 +337,7 @@ static int MakeDecalProjector( shaderInfo_t *si, vec4_t projection, float distan
 
 	/* limit check */
 	if ( numProjectors >= MAX_PROJECTORS ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: MAX_PROJECTORS (%d) exceeded, no more decal projectors available.\n", MAX_PROJECTORS );
+		Com_Printf( S_COLOR_YELLOW "WARNING: MAX_PROJECTORS (%d) exceeded, no more decal projectors available.\n", MAX_PROJECTORS );
 		return -2;
 	}
 
@@ -417,7 +417,7 @@ void ProcessDecals( void ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ProcessDecals ---\n" );
+	Com_DPrintf( "--- ProcessDecals ---\n" );
 
 	/* walk entity list */
 	for ( i = 0; i < numEntities; i++ )
@@ -431,7 +431,7 @@ void ProcessDecals( void ){
 
 		/* any patches? */
 		if ( e->patches == NULL ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Decal entity without any patch meshes, ignoring.\n" );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Decal entity without any patch meshes, ignoring.\n" );
 			e->epairs = NULL;   /* fixme: leak! */
 			continue;
 		}
@@ -442,7 +442,7 @@ void ProcessDecals( void ){
 
 		/* no target? */
 		if ( e2 == NULL ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Decal entity without a valid target, ignoring.\n" );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Decal entity without a valid target, ignoring.\n" );
 			continue;
 		}
 
@@ -537,7 +537,7 @@ void ProcessDecals( void ){
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d decal projectors\n", numProjectors );
+	Com_DPrintf( "%9d decal projectors\n", numProjectors );
 }
 
 
@@ -820,7 +820,7 @@ void MakeEntityDecals( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeEntityDecals ---\n" );
+	Com_DPrintf( "--- MakeEntityDecals ---\n" );
 
 	/* set entity origin */
 	VectorCopy( e->origin, entityOrigin );
@@ -839,7 +839,7 @@ void MakeEntityDecals( bspEntity_t *e ){
 		f = 10 * i / numProjectors;
 		if ( f != fOld ) {
 			fOld = f;
-			Sys_FPrintf( SYS_VRB, "%d...", f );
+			Com_DPrintf( "%d...", f );
 		}
 
 		/* get projector */
@@ -893,8 +893,8 @@ void MakeEntityDecals( bspEntity_t *e ){
 	}
 
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) ( I_FloatTime() - start ) );
+	Com_DPrintf( " (%d)\n", (int) ( I_FloatTime() - start ) );
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d decal surfaces\n", numDecalSurfaces );
+	Com_DPrintf( "%9d decal surfaces\n", numDecalSurfaces );
 }

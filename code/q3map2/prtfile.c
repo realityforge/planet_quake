@@ -343,16 +343,16 @@ void NumberClusters( tree_t *tree ) {
 	num_visportals = 0;
 	num_solidfaces = 0;
 
-	Sys_FPrintf( SYS_VRB,"--- NumberClusters ---\n" );
+	Com_DPrintf( "--- NumberClusters ---\n" );
 
 	// set the cluster field in every leaf and count the total number of portals
 	NumberLeafs_r( tree->headnode, -1 );
 	CountVisportals_r( tree->headnode );
 	CountSolidFaces_r( tree->headnode );
 
-	Sys_FPrintf( SYS_VRB, "%9d visclusters\n", num_visclusters );
-	Sys_FPrintf( SYS_VRB, "%9d visportals\n", num_visportals );
-	Sys_FPrintf( SYS_VRB, "%9d solidfaces\n", num_solidfaces );
+	Com_DPrintf( "%9d visclusters\n", num_visclusters );
+	Com_DPrintf( "%9d visportals\n", num_visportals );
+	Com_DPrintf( "%9d solidfaces\n", num_solidfaces );
 }
 
 /*
@@ -363,7 +363,7 @@ void NumberClusters( tree_t *tree ) {
 void WritePortalFile( tree_t *tree ){
 	char filename[1024];
 
-	Sys_FPrintf( SYS_VRB,"--- WritePortalFile ---\n" );
+	Com_DPrintf( "--- WritePortalFile ---\n" );
 
 	// write the file
 	sprintf( filename, "%s.prt", source );

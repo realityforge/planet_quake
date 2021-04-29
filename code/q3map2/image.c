@@ -67,13 +67,13 @@ static void LoadDDSBuffer( byte *buffer, int size, byte **pixels, int *width, in
 
 	/* get dds info */
 	if ( DDSGetInfo( (ddsBuffer_t*) buffer, &w, &h, &pf ) ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Invalid DDS texture\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Invalid DDS texture\n" );
 		return;
 	}
 
 	/* only certain types of dds textures are supported */
 	if ( pf != DDS_PF_ARGB8888 && pf != DDS_PF_DXT1 && pf != DDS_PF_DXT3 && pf != DDS_PF_DXT5 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Only DDS texture formats ARGB8888, DXT1, DXT3, and DXT5 are supported (%d)\n", pf );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Only DDS texture formats ARGB8888, DXT1, DXT3, and DXT5 are supported (%d)\n", pf );
 		return;
 	}
 
@@ -272,7 +272,7 @@ image_t *ImageLoad( const char *filename ){
 			size = vfsLoadFile( (const char*) name, (void**) &buffer, 0 );
 			if ( size > 0 ) {
 				if ( LoadJPGBuff( buffer, size, &image->pixels, &image->width, &image->height ) == -1 && image->pixels != NULL ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: LoadJPGBuff: %s\n", (unsigned char*) image->pixels );
+					Com_Printf( S_COLOR_YELLOW "WARNING: LoadJPGBuff: %s\n", (unsigned char*) image->pixels );
 				}
 			}
 			else

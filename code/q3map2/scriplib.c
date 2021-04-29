@@ -21,7 +21,6 @@
 
 // scriplib.c
 
-#include "cmdlib.h"
 #include "mathlib.h"
 #include "inout.h"
 #include "scriplib.h"
@@ -149,7 +148,7 @@ qboolean Map_EndOfScript( qboolean crossline ){
 	}
 
 	if ( script->buffer == NULL ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: Attempt to free already freed script buffer\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Attempt to free already freed script buffer\n" );
 	}
 	else{
 		free( (void *)script->buffer );

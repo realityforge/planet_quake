@@ -844,3 +844,7 @@ void SV_LoadFilters( const char *filename );
 const char *SV_RunFilters( const char *userinfo, const netadr_t *addr );
 void SV_AddFilter_f( void );
 void SV_AddFilterCmd_f( void );
+
+
+
+int SV_MakeMap( void );

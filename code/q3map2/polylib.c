@@ -21,7 +21,8 @@
 
 #include <stddef.h>
 
-#include "cmdlib.h"
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 #include "mathlib.h"
 #include "inout.h"
 #include "polylib.h"
@@ -354,7 +355,7 @@ void ChopWindingInPlaceAccu( winding_accu_t **inout, vec3_t normal, vec_t dist, 
 				Com_Error(ERR_DROP, "ChopWindingInPlaceAccu: MAX_POINTS_ON_WINDING" );
 			}
 			if ( f->numpoints >= maxpts ) { // This will probably never happen.
-				Sys_FPrintf( SYS_VRB, "WARNING: estimate on chopped winding size incorrect (no problem)\n" );
+				Com_DPrintf( "WARNING: estimate on chopped winding size incorrect (no problem)\n" );
 				f = CopyWindingAccuIncreaseSizeAndFreeOld( f );
 				maxpts++;
 			}
@@ -390,7 +391,7 @@ void ChopWindingInPlaceAccu( winding_accu_t **inout, vec3_t normal, vec_t dist, 
 			Com_Error(ERR_DROP, "ChopWindingInPlaceAccu: MAX_POINTS_ON_WINDING" );
 		}
 		if ( f->numpoints >= maxpts ) { // This will probably never happen.
-			Sys_FPrintf( SYS_VRB, "WARNING: estimate on chopped winding size incorrect (no problem)\n" );
+			Com_DPrintf( "WARNING: estimate on chopped winding size incorrect (no problem)\n" );
 			f = CopyWindingAccuIncreaseSizeAndFreeOld( f );
 			maxpts++;
 		}

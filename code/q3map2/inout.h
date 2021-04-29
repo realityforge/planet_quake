@@ -52,7 +52,6 @@ void Broadcast_Shutdown( void );
 #define SYS_NOXML 4 // don't send that down the XML stream
 
 extern qboolean verbose;
-void Sys_FPrintf( int flag, const char *text, ... );
 
 #ifdef _DEBUG
 #define DBG_XML 1

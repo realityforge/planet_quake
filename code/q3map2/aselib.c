@@ -216,7 +216,7 @@ polyset_t *ASE_GetSurfaceAnimation( int which, int *pNumFrames, int skipFrameSta
 	{
 		numFramesInAnimation = pObject->anim.numFrames;
 		if ( maxFrames != -1 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: ASE_GetSurfaceAnimation maxFrames > numFramesInAnimation\n" );
+			Com_Printf( S_COLOR_YELLOW "WARNING: ASE_GetSurfaceAnimation maxFrames > numFramesInAnimation\n" );
 		}
 	}
 
@@ -471,7 +471,7 @@ static void ASE_KeyMAP_DIFFUSE( const char *token ){
 		else
 		{
 			sprintf( ase.materials[ase.numMaterials].name, "(not converted: '%s')", bitmap );
-			Sys_FPrintf( SYS_WRN, "WARNING: illegal material name '%s'\n", bitmap );
+			Com_Printf( S_COLOR_YELLOW "WARNING: illegal material name '%s'\n", bitmap );
 		}
 	}
 	else

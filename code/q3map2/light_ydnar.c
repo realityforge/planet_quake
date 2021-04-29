@@ -369,7 +369,7 @@ static qboolean CalcTangentVectors( int numVerts, bspDrawVert_t **dv, vec3_t *st
 		VectorNormalize( ttv[ i ] );
 
 		/* debug code */
-		//%	Sys_FPrintf( SYS_VRB, "%d S: (%f %f %f) T: (%f %f %f)\n", i,
+		//%	Com_DPrintf( "%d S: (%f %f %f) T: (%f %f %f)\n", i,
 		//%		stv[ i ][ 0 ], stv[ i ][ 1 ], stv[ i ][ 2 ], ttv[ i ][ 0 ], ttv[ i ][ 1 ], ttv[ i ][ 2 ] );
 	}
 
@@ -1391,7 +1391,7 @@ void SetupDirt( void ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupDirt ---\n" );
+	Com_DPrintf( "--- SetupDirt ---\n" );
 
 	/* calculate angular steps */
 	angleStep = DEG2RAD( 360.0f / DIRT_NUM_ANGLE_STEPS );
@@ -1412,7 +1412,7 @@ void SetupDirt( void ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d dirtmap vectors\n", numDirtVectors );
+	Com_DPrintf( "%9d dirtmap vectors\n", numDirtVectors );
 }
 
 
@@ -1702,7 +1702,7 @@ static qboolean SubmapRawLuxel( rawLightmap_t *lm, int x, int y, float bx, float
 		origin2 = SUPER_ORIGIN( x, y );
 	}
 	else {
-		Sys_FPrintf( SYS_WRN, "WARNING: Spurious lightmap S vector\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Spurious lightmap S vector\n" );
 		VectorClear( originVecs[0] );
 		origin = originVecs[0];
 		origin2 = originVecs[0];
@@ -1724,7 +1724,7 @@ static qboolean SubmapRawLuxel( rawLightmap_t *lm, int x, int y, float bx, float
 		origin2 = SUPER_ORIGIN( x, y );
 	}
 	else {
-		Sys_FPrintf( SYS_WRN, "WARNING: Spurious lightmap T vector\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: Spurious lightmap T vector\n" );
 		VectorClear( originVecs[1] );
 		origin = originVecs[1];
 		origin2 = originVecs[1];
@@ -2052,7 +2052,7 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 
 			/* max of MAX_LIGHTMAPS (4) styles allowed to hit a surface/lightmap */
 			if ( lightmapNum >= MAX_LIGHTMAPS ) {
-				Sys_FPrintf( SYS_WRN, "WARNING: Hit per-surface style limit (%d)\n", MAX_LIGHTMAPS );
+				Com_Printf( S_COLOR_YELLOW "WARNING: Hit per-surface style limit (%d)\n", MAX_LIGHTMAPS );
 				continue;
 			}
 
@@ -2958,7 +2958,7 @@ void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned i
 	shaderInfo_t    *si;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupBrushes ---\n" );
+	Com_DPrintf( "--- SetupBrushes ---\n" );
 
 	/* allocate */
 	if ( opaqueBrushes == NULL ) {
@@ -3006,7 +3006,7 @@ void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned i
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d opaque brushes\n", numOpaqueBrushes );
+	Com_DPrintf( "%9d opaque brushes\n", numOpaqueBrushes );
 }
 void SetupBrushes( void ){
 	SetupBrushesFlags( C_TRANSLUCENT, 0, 0, 0 );
@@ -3363,7 +3363,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupEnvelopes%s ---\n", fastFlag ? " (fast)" : "" );
+	Com_DPrintf( "--- SetupEnvelopes%s ---\n", fastFlag ? " (fast)" : "" );
 
 	/* count lights */
 	numLights = 0;
@@ -3539,7 +3539,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 					for ( i = 0; i < 3; i++ )
 					{
 						if ( mins[ i ] > light->origin[ i ] || maxs[ i ] < light->origin[ i ] ) {
-							//% Sys_FPrintf( SYS_WRN, "WARNING: Light PVS bounds (%.0f, %.0f, %.0f) -> (%.0f, %.0f, %.0f)\ndo not encompass light %d (%f, %f, %f)\n",
+							//% Com_Printf( S_COLOR_YELLOW "WARNING: Light PVS bounds (%.0f, %.0f, %.0f) -> (%.0f, %.0f, %.0f)\ndo not encompass light %d (%f, %f, %f)\n",
 							//%     mins[ 0 ], mins[ 1 ], mins[ 2 ],
 							//%     maxs[ 0 ], maxs[ 1 ], maxs[ 2 ],
 							//%     numLights, light->origin[ 0 ], light->origin[ 1 ], light->origin[ 2 ] );
@@ -3573,10 +3573,10 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 					/* if this radius is smaller than the envelope, then set the envelope to it */
 					if ( radius < light->envelope ) {
 						light->envelope = radius;
-						//%	Sys_FPrintf( SYS_VRB, "PVS Cull (%d): culled\n", numLights );
+						//%	Com_DPrintf( "PVS Cull (%d): culled\n", numLights );
 					}
 					//%	else
-					//%		Sys_FPrintf( SYS_VRB, "PVS Cull (%d): failed (%8.0f > %8.0f)\n", numLights, radius, light->envelope );
+					//%		Com_DPrintf( "PVS Cull (%d): failed (%8.0f > %8.0f)\n", numLights, radius, light->envelope );
 				}
 
 				/* add grid/surface only check */
@@ -3849,7 +3849,7 @@ void SetupFloodLight( void ){
 	double v1,v2,v3,v4,v5;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupFloodLight ---\n" );
+	Com_DPrintf( "--- SetupFloodLight ---\n" );
 
 	/* calculate angular steps */
 	angleStep = DEG2RAD( 360.0f / FLOODLIGHT_NUM_ANGLE_STEPS );
@@ -3870,7 +3870,7 @@ void SetupFloodLight( void ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d numFloodVectors\n", numFloodVectors );
+	Com_DPrintf( "%9d numFloodVectors\n", numFloodVectors );
 
 	/* floodlight */
 	value = ValueForKey( &entities[ 0 ], "_floodlight" );

@@ -519,7 +519,7 @@ void MakeTreePortals_r( node_t *node ){
 
 	CalcNodeBounds( node );
 	if ( node->mins[0] >= node->maxs[0] ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: node without a volume\n" );
+		Com_Printf( S_COLOR_YELLOW "WARNING: node without a volume\n" );
 		Com_Printf( "node has %d tiny portals\n", node->tinyportals );
 		Com_Printf( "node reference point %1.2f %1.2f %1.2f\n", node->referencepoint[0],
 					node->referencepoint[1],
@@ -553,11 +553,11 @@ void MakeTreePortals_r( node_t *node ){
    ==================
  */
 void MakeTreePortals( tree_t *tree ){
-	Sys_FPrintf( SYS_VRB, "--- MakeTreePortals ---\n" );
+	Com_DPrintf( "--- MakeTreePortals ---\n" );
 	MakeHeadnodePortals( tree );
 	MakeTreePortals_r( tree->headnode );
-	Sys_FPrintf( SYS_VRB, "%9d tiny portals\n", c_tinyportals );
-	Sys_FPrintf( SYS_VRB, "%9d bad portals\n", c_badportals );  /* ydnar */
+	Com_DPrintf( "%9d tiny portals\n", c_tinyportals );
+	Com_DPrintf( "%9d bad portals\n", c_badportals );  /* ydnar */
 }
 
 /*
@@ -656,7 +656,7 @@ qboolean FloodEntities( tree_t *tree ){
 
 
 	headnode = tree->headnode;
-	Sys_FPrintf( SYS_VRB,"--- FloodEntities ---\n" );
+	Com_DPrintf( "--- FloodEntities ---\n" );
 	inside = qfalse;
 	tree->outside_node.occupied = 0;
 
@@ -727,13 +727,13 @@ qboolean FloodEntities( tree_t *tree ){
 		}
 	}
 
-	Sys_FPrintf( SYS_VRB, "%9d flooded leafs\n", c_floodedleafs );
+	Com_DPrintf( "%9d flooded leafs\n", c_floodedleafs );
 
 	if ( !inside ) {
-		Sys_FPrintf( SYS_VRB, "no entities in open -- no filling\n" );
+		Com_DPrintf( "no entities in open -- no filling\n" );
 	}
 	else if ( tree->outside_node.occupied ) {
-		Sys_FPrintf( SYS_VRB, "entity reached from outside -- no filling\n" );
+		Com_DPrintf( "entity reached from outside -- no filling\n" );
 	}
 
 	return (qboolean) ( inside && !tree->outside_node.occupied );
@@ -777,7 +777,7 @@ void FloodAreas_r( node_t *node ){
 
 		// note the current area as bounding the portal
 		if ( b->portalareas[ 1 ] != -1 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: areaportal brush %i touches > 2 areas\n", b->brushNum );
+			Com_Printf( S_COLOR_YELLOW "WARNING: areaportal brush %i touches > 2 areas\n", b->brushNum );
 			return;
 		}
 		if ( b->portalareas[ 0 ] != -1 ) {
@@ -864,7 +864,7 @@ void CheckAreas_r( node_t *node ){
 
 	if ( node->cluster != -1 ) {
 		if ( node->area == -1 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: cluster %d has area set to -1\n", node->cluster );
+			Com_Printf( S_COLOR_YELLOW "WARNING: cluster %d has area set to -1\n", node->cluster );
 		}
 	}
 	if ( node->areaportal ) {
@@ -872,7 +872,7 @@ void CheckAreas_r( node_t *node ){
 
 		// check if the areaportal touches two areas
 		if ( b->portalareas[0] == -1 || b->portalareas[1] == -1 ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: areaportal brush %i doesn't touch two areas\n", b->brushNum );
+			Com_Printf( S_COLOR_YELLOW "WARNING: areaportal brush %i doesn't touch two areas\n", b->brushNum );
 		}
 	}
 }
@@ -910,7 +910,7 @@ void FloodSkyboxArea_r( node_t *node ){
  */
 
 void FloodAreas( tree_t *tree ){
-	Sys_FPrintf( SYS_VRB,"--- FloodAreas ---\n" );
+	Com_DPrintf( "--- FloodAreas ---\n" );
 	FindAreas_r( tree->headnode );
 
 	/* ydnar: flood all skybox nodes */
@@ -920,7 +920,7 @@ void FloodAreas( tree_t *tree ){
 	/* ydnar: fix this rather than just silence the warnings */
 	//%	CheckAreas_r( tree->headnode );
 
-	Sys_FPrintf( SYS_VRB, "%9d areas\n", c_areas );
+	Com_DPrintf( "%9d areas\n", c_areas );
 }
 
 
@@ -966,11 +966,11 @@ void FillOutside( node_t *headnode ){
 	c_outside = 0;
 	c_inside = 0;
 	c_solid = 0;
-	Sys_FPrintf( SYS_VRB,"--- FillOutside ---\n" );
+	Com_DPrintf( "--- FillOutside ---\n" );
 	FillOutside_r( headnode );
-	Sys_FPrintf( SYS_VRB,"%9d solid leafs\n", c_solid );
+	Com_DPrintf( "%9d solid leafs\n", c_solid );
 	Com_Printf( "%9d leafs filled\n", c_outside );
-	Sys_FPrintf( SYS_VRB, "%9d inside leafs\n", c_inside );
+	Com_DPrintf( "%9d inside leafs\n", c_inside );
 }
 
 

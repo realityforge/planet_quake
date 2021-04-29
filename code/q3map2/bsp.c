@@ -37,7 +37,6 @@
 #include "../qcommon/q_shared.h"
 #include "bsp.h"
 
-
 /* -------------------------------------------------------------------------------
 
    functions
@@ -57,7 +56,7 @@ void ProcessAdvertisements( void ) {
 	bspModel_t*         adModel;
 	bspDrawSurface_t*   adSurface;
 
-	Sys_FPrintf( SYS_VRB, "--- ProcessAdvertisements ---\n" );
+	Com_DPrintf( "--- ProcessAdvertisements ---\n" );
 
 	for ( i = 0; i < numEntities; i++ ) {
 
@@ -115,7 +114,7 @@ void ProcessAdvertisements( void ) {
 		}
 	}
 
-	Sys_FPrintf( SYS_VRB, "%9d in-game advertisements\n", numBSPAds );
+	Com_DPrintf( "%9d in-game advertisements\n", numBSPAds );
 }
 
 /*
@@ -187,7 +186,7 @@ void SetCloneModelNumbers( void ){
 				/* get the model num */
 				value3 = ValueForKey( &entities[ j ], "model" );
 				if ( value3[ 0 ] == '\0' ) {
-					Sys_FPrintf( SYS_WRN, "WARNING: Cloned entity %s referenced entity without model\n", value2 );
+					Com_Printf( S_COLOR_YELLOW "WARNING: Cloned entity %s referenced entity without model\n", value2 );
 					continue;
 				}
 				models = atoi( &value2[ 1 ] );
@@ -219,7 +218,7 @@ static void FixBrushSides( bspEntity_t *e ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FixBrushSides ---\n" );
+	Com_DPrintf( "--- FixBrushSides ---\n" );
 
 	/* walk list of drawsurfaces */
 	for ( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
@@ -241,11 +240,11 @@ static void FixBrushSides( bspEntity_t *e ){
 
 			/* set drawsurface */
 			side->surfaceNum = ds->outputNum;
-			//%	Sys_FPrintf( SYS_VRB, "DS: %7d Side: %7d     ", ds->outputNum, sideRef->side->outputNum );
+			//%	Com_DPrintf( "DS: %7d Side: %7d     ", ds->outputNum, sideRef->side->outputNum );
 
 			/* set shader */
 			if ( strcmp( bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader ) ) {
-				//%	Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader );
+				//%	Com_DPrintf( "Remapping %s to %s\n", bspShaders[ side->shaderNum ].shader, ds->shaderInfo->shader );
 				side->shaderNum = EmitShader( ds->shaderInfo->shader, &ds->shaderInfo->contentFlags, &ds->shaderInfo->surfaceFlags );
 			}
 		}
@@ -341,9 +340,9 @@ void ProcessWorldModel( void ){
 	}
 	else
 	{
-		Sys_FPrintf( SYS_NOXML, "**********************\n" );
-		Sys_FPrintf( SYS_NOXML, "******* leaked *******\n" );
-		Sys_FPrintf( SYS_NOXML, "**********************\n" );
+		Com_Printf( "**********************\n" );
+		Com_Printf( "******* leaked *******\n" );
+		Com_Printf( "**********************\n" );
 		polyline = LeakFile( tree );
 		leaknode = xmlNewNode( NULL, (xmlChar*)"message" );
 		xmlNodeSetContent( leaknode, (xmlChar*)"MAP LEAKED\n" );
@@ -595,7 +594,7 @@ void ProcessModels( void ){
 		}
 
 		/* process the model */
-		Sys_FPrintf( SYS_VRB, "############### model %i ###############\n", numBSPModels );
+		Com_DPrintf( "############### model %i ###############\n", numBSPModels );
 		if ( mapEntityNum == 0 ) {
 			ProcessWorldModel();
 		}

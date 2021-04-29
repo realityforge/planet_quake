@@ -901,7 +901,7 @@ int iterations = 0;
 
 void RadCreateDiffuseLights( void ){
 	/* startup */
-	Sys_FPrintf( SYS_VRB, "--- RadCreateDiffuseLights ---\n" );
+	Com_DPrintf( "--- RadCreateDiffuseLights ---\n" );
 	numDiffuseSurfaces = 0;
 	numDiffuseLights = 0;
 	numBrushDiffuseLights = 0;
@@ -954,8 +954,8 @@ void RadCreateDiffuseLights( void ){
 
 	/* print counts */
 	Com_Printf( "%8d diffuse surfaces\n", numDiffuseSurfaces );
-	Sys_FPrintf( SYS_VRB, "%8d total diffuse lights\n", numDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d brush diffuse lights\n", numBrushDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d patch diffuse lights\n", numPatchDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d triangle diffuse lights\n", numTriangleDiffuseLights );
+	Com_DPrintf( "%8d total diffuse lights\n", numDiffuseLights );
+	Com_DPrintf( "%8d brush diffuse lights\n", numBrushDiffuseLights );
+	Com_DPrintf( "%8d patch diffuse lights\n", numPatchDiffuseLights );
+	Com_DPrintf( "%8d triangle diffuse lights\n", numTriangleDiffuseLights );
 }

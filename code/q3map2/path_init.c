@@ -328,7 +328,7 @@ void InitPaths( int *argc, char **argv ){
 	char temp[ MAX_OS_PATH ];
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- InitPaths ---\n" );
+	Com_DPrintf( "--- InitPaths ---\n" );
 
 	/* get the install path for backup */
 	LokiInitPaths( argv[ 0 ] );
@@ -404,7 +404,7 @@ void InitPaths( int *argc, char **argv ){
 			strcpy( temp, argv[ i ] );
 			CleanPath( temp );
 			len = strlen( temp );
-			Sys_FPrintf( SYS_VRB, "Searching for \"%s\" in \"%s\" (%d)...\n", game->magic, temp, i );
+			Com_DPrintf( "Searching for \"%s\" in \"%s\" (%d)...\n", game->magic, temp, i );
 
 			/* this is slow, but only done once */
 			for ( j = 0; j < ( len - len2 ); j++ )

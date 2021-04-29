@@ -117,7 +117,7 @@ void FreeBrush( brush_t *b ){
 
 	/* error check */
 	if ( *( (unsigned int*) b ) == 0xFEFEFEFE ) {
-		Sys_FPrintf( SYS_VRB, "WARNING: Attempt to free an already freed brush!\n" );
+		Com_DPrintf( "WARNING: Attempt to free an already freed brush!\n" );
 		return;
 	}
 
@@ -364,7 +364,7 @@ qboolean FixWinding( winding_t *w ){
 		dist = VectorLength( vec );
 		if ( dist < DEGENERATE_EPSILON ) {
 			valid = qfalse;
-			//Sys_FPrintf( SYS_VRB, "WARNING: Degenerate winding edge found, fixing...\n" );
+			//Com_DPrintf( "WARNING: Degenerate winding edge found, fixing...\n" );
 
 			/* create an average point (ydnar 2002-01-26: using nearest-integer weld preference) */
 			SnapWeldVector( w->p[ i ], w->p[ j ], vec );
@@ -743,7 +743,7 @@ void FilterDetailBrushesIntoTree( bspEntity_t *e, tree_t *tree ){
 
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB,  "--- FilterDetailBrushesIntoTree ---\n" );
+	Com_DPrintf( "--- FilterDetailBrushesIntoTree ---\n" );
 
 	/* walk the list of brushes */
 	c_unique = 0;
@@ -770,8 +770,8 @@ void FilterDetailBrushesIntoTree( bspEntity_t *e, tree_t *tree ){
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d detail brushes\n", c_unique );
-	Sys_FPrintf( SYS_VRB, "%9d cluster references\n", c_clusters );
+	Com_DPrintf( "%9d detail brushes\n", c_unique );
+	Com_DPrintf( "%9d cluster references\n", c_clusters );
 }
 
 /*
@@ -787,7 +787,7 @@ void FilterStructuralBrushesIntoTree( bspEntity_t *e, tree_t *tree ) {
 	int c_unique, c_clusters;
 	int i;
 
-	Sys_FPrintf( SYS_VRB, "--- FilterStructuralBrushesIntoTree ---\n" );
+	Com_DPrintf( "--- FilterStructuralBrushesIntoTree ---\n" );
 
 	c_unique = 0;
 	c_clusters = 0;
@@ -811,8 +811,8 @@ void FilterStructuralBrushesIntoTree( bspEntity_t *e, tree_t *tree ) {
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d structural brushes\n", c_unique );
-	Sys_FPrintf( SYS_VRB, "%9d cluster references\n", c_clusters );
+	Com_DPrintf( "%9d structural brushes\n", c_unique );
+	Com_DPrintf( "%9d cluster references\n", c_clusters );
 }
 
 
@@ -1015,7 +1015,7 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 	}
 
 	if ( WindingIsHuge( w ) ) {
-		Sys_FPrintf( SYS_VRB,"WARNING: huge winding\n" );
+		Com_DPrintf( "WARNING: huge winding\n" );
 	}
 
 	midwinding = w;
@@ -1060,7 +1060,7 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 	{
 		if ( b[i]->numsides < 3 || !BoundBrush( b[i] ) ) {
 			if ( b[i]->numsides >= 3 ) {
-				Sys_FPrintf( SYS_VRB,"bogus brush after clip\n" );
+				Com_DPrintf( "bogus brush after clip\n" );
 			}
 			FreeBrush( b[i] );
 			b[i] = NULL;
@@ -1069,10 +1069,10 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 
 	if ( !( b[0] && b[1] ) ) {
 		if ( !b[0] && !b[1] ) {
-			Sys_FPrintf( SYS_VRB,"split removed brush\n" );
+			Com_DPrintf( "split removed brush\n" );
 		}
 		else{
-			Sys_FPrintf( SYS_VRB,"split not on both sides\n" );
+			Com_DPrintf( "split not on both sides\n" );
 		}
 		if ( b[0] ) {
 			FreeBrush( b[0] );
@@ -1112,7 +1112,7 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 			if ( v1 < 1.0 ) {
 				FreeBrush( b[i] );
 				b[i] = NULL;
-				//			Sys_FPrintf (SYS_VRB,"tiny volume after clip\n");
+				//			Com_DPrintf( "tiny volume after clip\n");
 			}
 		}
 	}

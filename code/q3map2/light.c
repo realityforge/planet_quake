@@ -356,7 +356,7 @@ void CreateEntityLights( void ){
 		}
 
 		if ( light->style != LS_NORMAL ) {
-			Sys_FPrintf( SYS_WRN, "WARNING: Styled light found targeting %s\n **", target );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Styled light found targeting %s\n **", target );
 		}
 
 		/* set light intensity */
@@ -433,7 +433,7 @@ void CreateEntityLights( void ){
 			/* get target */
 			e2 = FindTargetEntity( target );
 			if ( e2 == NULL ) {
-				Sys_FPrintf( SYS_WRN, "WARNING: light at (%i %i %i) has missing target\n",
+				Com_Printf( S_COLOR_YELLOW "WARNING: light at (%i %i %i) has missing target\n",
 							(int) light->origin[ 0 ], (int) light->origin[ 1 ], (int) light->origin[ 2 ] );
 			}
 			else
@@ -551,14 +551,14 @@ void CreateSurfaceLights( void ){
 
 		/* sunlight? */
 		if ( si->sun != NULL && nss[ 0 ] != '1' ) {
-			Sys_FPrintf( SYS_VRB, "Sun: %s\n", si->shader );
+			Com_DPrintf( "Sun: %s\n", si->shader );
 			CreateSunLight( si->sun );
 			si->sun = NULL; /* FIXME: leak! */
 		}
 
 		/* sky light? */
 		if ( si->skyLightValue > 0.0f ) {
-			Sys_FPrintf( SYS_VRB, "Sky: %s\n", si->shader );
+			Com_DPrintf( "Sky: %s\n", si->shader );
 			CreateSkyLights( si->color, si->skyLightValue, si->skyLightIterations, si->lightFilterRadius, si->lightStyle );
 			si->skyLightValue = 0.0f;   /* FIXME: hack! */
 		}
@@ -1559,8 +1559,8 @@ void TraceGrid( int num ){
 
 	/* debug code */
 	#if 0
-	//%	Sys_FPrintf( SYS_VRB, "%10d %10d %10d ", &gp->ambient[ 0 ][ 0 ], &gp->ambient[ 0 ][ 1 ], &gp->ambient[ 0 ][ 2 ] );
-	Sys_FPrintf( SYS_VRB, "%9d Amb: (%03.1f %03.1f %03.1f) Dir: (%03.1f %03.1f %03.1f)\n",
+	//%	Com_DPrintf( "%10d %10d %10d ", &gp->ambient[ 0 ][ 0 ], &gp->ambient[ 0 ][ 1 ], &gp->ambient[ 0 ][ 2 ] );
+	Com_DPrintf( "%9d Amb: (%03.1f %03.1f %03.1f) Dir: (%03.1f %03.1f %03.1f)\n",
 				 num,
 				 gp->ambient[ 0 ][ 0 ], gp->ambient[ 0 ][ 1 ], gp->ambient[ 0 ][ 2 ],
 				 gp->directed[ 0 ][ 0 ], gp->directed[ 0 ][ 1 ], gp->directed[ 0 ][ 2 ] );
@@ -1631,7 +1631,7 @@ void SetupGrid( void ){
 	if ( !VectorCompare( gridSize, oldGridSize ) ) {
 		sprintf( temp, "%.0f %.0f %.0f", gridSize[ 0 ], gridSize[ 1 ], gridSize[ 2 ] );
 		SetKeyValue( &entities[ 0 ], "gridsize", (const char*) temp );
-		Sys_FPrintf( SYS_VRB, "Storing adjusted grid size\n" );
+		Com_DPrintf( "Storing adjusted grid size\n" );
 	}
 
 	/* 2nd variable. fixme: is this silly? */
@@ -1734,7 +1734,7 @@ void LightWorld( void ){
 	}
 
 	/* create world lights */
-	Sys_FPrintf( SYS_VRB, "--- CreateLights ---\n" );
+	Com_DPrintf( "--- CreateLights ---\n" );
 	CreateEntityLights();
 	CreateSurfaceLights();
 	Com_Printf( "%9d point lights\n", numPointLights );
@@ -1753,8 +1753,8 @@ void LightWorld( void ){
 					gridBounds[ 0 ], gridBounds[ 1 ], gridBounds[ 2 ], numBSPGridPoints );
 
 		/* ydnar: emit statistics on light culling */
-		Sys_FPrintf( SYS_VRB, "%9d grid points envelope culled\n", gridEnvelopeCulled );
-		Sys_FPrintf( SYS_VRB, "%9d grid points bounds culled\n", gridBoundsCulled );
+		Com_DPrintf( "%9d grid points envelope culled\n", gridEnvelopeCulled );
+		Com_DPrintf( "%9d grid points bounds culled\n", gridBoundsCulled );
 	}
 
 	/* slight optimization to remove a sqrt */
@@ -1799,10 +1799,10 @@ void LightWorld( void ){
 	Com_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
 	/* ydnar: emit statistics on light culling */
-	Sys_FPrintf( SYS_VRB, "%9d lights plane culled\n", lightsPlaneCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights envelope culled\n", lightsEnvelopeCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights bounds culled\n", lightsBoundsCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights cluster culled\n", lightsClusterCulled );
+	Com_DPrintf( "%9d lights plane culled\n", lightsPlaneCulled );
+	Com_DPrintf( "%9d lights envelope culled\n", lightsEnvelopeCulled );
+	Com_DPrintf( "%9d lights bounds culled\n", lightsBoundsCulled );
+	Com_DPrintf( "%9d lights cluster culled\n", lightsClusterCulled );
 
 	/* radiosity */
 	b = 1;
@@ -1840,8 +1840,8 @@ void LightWorld( void ){
 
 			Com_Printf( "--- BounceGrid ---\n" );
 			RunThreadsOnIndividual( numRawGridPoints, qtrue, TraceGrid );
-			Sys_FPrintf( SYS_VRB, "%9d grid points envelope culled\n", gridEnvelopeCulled );
-			Sys_FPrintf( SYS_VRB, "%9d grid points bounds culled\n", gridBoundsCulled );
+			Com_DPrintf( "%9d grid points envelope culled\n", gridEnvelopeCulled );
+			Com_DPrintf( "%9d grid points bounds culled\n", gridBoundsCulled );
 		}
 
 		/* light up my world */
@@ -1862,10 +1862,10 @@ void LightWorld( void ){
 		Com_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
 		/* ydnar: emit statistics on light culling */
-		Sys_FPrintf( SYS_VRB, "%9d lights plane culled\n", lightsPlaneCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights envelope culled\n", lightsEnvelopeCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights bounds culled\n", lightsBoundsCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights cluster culled\n", lightsClusterCulled );
+		Com_DPrintf( "%9d lights plane culled\n", lightsPlaneCulled );
+		Com_DPrintf( "%9d lights envelope culled\n", lightsEnvelopeCulled );
+		Com_DPrintf( "%9d lights bounds culled\n", lightsBoundsCulled );
+		Com_DPrintf( "%9d lights cluster culled\n", lightsClusterCulled );
 
 		/* interate */
 		bounce--;
@@ -2058,7 +2058,7 @@ int LightMain( int argc, char **argv ){
 
 			/* must be a power of 2 and greater than 2 */
 			if ( ( ( lmCustomSize - 1 ) & lmCustomSize ) || lmCustomSize < 2 ) {
-				Sys_FPrintf( SYS_WRN, "WARNING: Lightmap size must be a power of 2, greater or equal to 2 pixels.\n" );
+				Com_Printf( S_COLOR_YELLOW "WARNING: Lightmap size must be a power of 2, greater or equal to 2 pixels.\n" );
 				lmCustomSize = game->lightmapSize;
 			}
 			i++;
@@ -2323,7 +2323,7 @@ int LightMain( int argc, char **argv ){
 
 		/* unhandled args */
 		else{
-			Sys_FPrintf( SYS_WRN, "WARNING: Unknown argument \"%s\"\n", argv[ i ] );
+			Com_Printf( S_COLOR_YELLOW "WARNING: Unknown argument \"%s\"\n", argv[ i ] );
 		}
 
 	}

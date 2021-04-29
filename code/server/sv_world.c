@@ -689,8 +689,13 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 static char skybox[4096];
 char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
-	int h = CM_InlineModel( 0, 2, gvm );
-	CM_ModelBounds( h, vs[0], vs[1] );
+	if(!com_sv_running || !com_sv_running->integer) {
+		vs[0][0] = vs[0][1] = vs[0][2] = -1000;
+		vs[1][0] = vs[1][1] = vs[1][2] = 1000;
+	} else {
+		int h = CM_InlineModel( 0, 2, gvm );
+		CM_ModelBounds( h, vs[0], vs[1] );
+	}
 
 	int  points[12][3] = {
 		{vs[0][0], vs[0][1], vs[0][2]-16},
@@ -713,36 +718,52 @@ char *SV_MakeSkybox( void ) {
 		{vs[1][0], vs[1][1]+16, vs[1][2]}
 	};
 
+	Q_strcat(skybox, sizeof(skybox), "{\n"
+		"\"classname\" \"worldspawn\"\n");
+
 	for(int i = 0; i < 6; i++) {
 		int *p1 = points[i*2];
 		int *p2 = points[i*2+1];
-		Q_strcat(skybox, sizeof(skybox), "{ // brush 0");
+		Q_strcat(skybox, sizeof(skybox), "{\n");
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
 		));
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p2[0], p2[1], p2[2], p2[0], p2[1], p1[2], p2[0], p1[1], p1[2]
 		));
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p2[0], p1[1], p2[2], p2[0], p1[1], p1[2], p1[0], p1[1], p1[2]
 		));
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p1[0], p2[1], p2[2], p1[0], p2[1], p1[2], p2[0], p2[1], p1[2]
 		));
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p1[0], p2[1], p1[2], p1[0], p1[1], p1[2], p2[0], p1[1], p1[2]
 		));
 		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 			p1[0], p1[1], p2[2], p1[0], p2[1], p2[2], p2[0], p2[1], p2[2]
 		));
-		Q_strcat(skybox, sizeof(skybox), "}");
+		Q_strcat(skybox, sizeof(skybox), "}\n");
 	}
+	Q_strcat(skybox, sizeof(skybox), "}");
+	
+	return "{\n"
+	"\"classname\" \"worldspawn\"\n"
+	"{\n"
+	"( -96 -64 64 ) ( -96 -64 63 ) ( -96 -63 64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"( -96 -64 64 ) ( -95 -64 64 ) ( -96 -64 63 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"( -64 64 -64 ) ( -63 64 -64 ) ( -64 65 -64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"( -96 -64 64 ) ( -96 -63 64 ) ( -95 -64 64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"( -64 64 -64 ) ( -64 64 -65 ) ( -63 64 -64 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"( -64 64 -64 ) ( -64 65 -64 ) ( -64 64 -65 ) __TB_empty 0 0 0 0.5 0.5 0 0 0\n"
+	"}\n"
+	"}\n";
 	
 	return (char *)skybox;
 }
@@ -778,6 +799,7 @@ int SV_MakeMap( void ) {
 	LoadShaderInfo();
 
 	char *skybox = SV_MakeSkybox();
+	//Com_Printf("%s", skybox);
 	LoadMap( skybox, qfalse );
 
 	/* ydnar: decal setup */

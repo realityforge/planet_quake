@@ -71,7 +71,7 @@ int ScaleBSPMain( int argc, char **argv ){
 
 	/* note it */
 	Com_Printf( "--- ScaleBSP ---\n" );
-	Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
+	Com_DPrintf( "%9d entities\n", numEntities );
 
 	/* scale entity keys */
 	for ( i = 0; i < numBSPEntities && i < numEntities; i++ )
