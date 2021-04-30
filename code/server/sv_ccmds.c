@@ -169,8 +169,8 @@ static void SV_Map_f( void ) {
 	// make sure the level exists before trying to change, so that
 	// a typo at the server console won't end the game
 	Com_sprintf( expanded, sizeof( expanded ), "maps/%s.bsp", map );
-//	SV_MakeMap();
-//	return;
+	SV_MakeMap();
+	return;
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();

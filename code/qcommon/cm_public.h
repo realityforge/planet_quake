@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifndef __CM_PUBLIC_H__
+#define __CM_PUBLIC_H__
+
 #include "qfiles.h"
 
 
@@ -35,6 +38,36 @@ int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
 
+void CMod_LoadShaders( lump_t *l );
+void CMod_LoadLeafs( lump_t *l );
+void CMod_LoadLeafBrushes( const lump_t *l );
+void CMod_LoadLeafSurfaces( const lump_t *l );
+void CMod_LoadPlanes( const lump_t *l );
+void CMod_LoadBrushSides( lump_t *l );
+void CMod_LoadBrushes( lump_t *l );
+void CMod_LoadSubmodels( lump_t *l );
+void CMod_LoadNodes( lump_t *l );
+void CMod_LoadEntityString( lump_t *l, const char *name );
+void CMod_LoadVisibility( lump_t *l );
+void CMod_LoadPatches( lump_t *surfs, lump_t *verts );
+extern dmodel_t *dModels;
+extern dshader_t *dShaders;
+extern char *dEntData;
+extern dleaf_t *dLeafs;
+extern dplane_t *dPlanes;
+extern dnode_t *dNodes;
+extern int *dLeafSurfaces;
+extern int *dLeafBrushes;
+extern dbrush_t *dBrushes;
+extern dbrushside_t *dBrushSides;
+extern byte *dLightBytes;
+extern byte *dGridPoints;
+extern byte *dVisBytes;
+extern drawVert_t *dDrawVerts;
+extern int *dDrawIndexes;
+extern dsurface_t   *dDrawSurfaces;
+extern dfog_t *dFogs;
+//bspAdvertisement_t *dAds;
 
 void CM_LoadMapFromMemory( dheader_t *header );
 
@@ -69,3 +102,5 @@ int			CM_WriteAreaBits( byte *buffer, int area );
 
 // cm_patch.c
 void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, float *points) );
+
+#endif
