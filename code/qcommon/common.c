@@ -5182,27 +5182,6 @@ int b64_decode(const char *in, unsigned char *out, size_t outlen)
 	return 1;
 }
 
-void *safe_malloc( size_t size ){
-	void *p;
-
-	p = malloc( size );
-	if ( !p ) {
-		Com_Error(ERR_DROP, "safe_malloc failed on allocation of %li bytes", size );
-	}
-
-	return p;
-}
-
-void *safe_malloc_info( size_t size, char* info ){
-	void *p;
-
-	p = malloc( size );
-	if ( !p ) {
-		Com_Error(ERR_DROP, "%s: safe_malloc failed on allocation of %li bytes", info, size );
-	}
-
-	return p;
-}
 
 // set these before calling CheckParm
 int myargc;
@@ -5590,7 +5569,7 @@ int    LoadFile( const char *filename, void **bufferptr ){
 
 	f = SafeOpenRead( filename );
 	length = Q_filelength( f );
-	buffer = safe_malloc( length + 1 );
+	buffer = Z_Malloc( length + 1 );
 	( (char *)buffer )[length] = 0;
 	SafeRead( f, buffer, length );
 	fclose( f );
@@ -5621,7 +5600,7 @@ int    LoadFileBlock( const char *filename, void **bufferptr ){
 	if ( nBlock > 0 ) {
 		nAllocSize += MEM_BLOCKSIZE - nBlock;
 	}
-	buffer = safe_malloc( nAllocSize + 1 );
+	buffer = Z_Malloc( nAllocSize + 1 );
 	memset( buffer, 0, nAllocSize + 1 );
 	SafeRead( f, buffer, length );
 	fclose( f );
@@ -5650,7 +5629,7 @@ int    TryLoadFile( const char *filename, void **bufferptr ){
 		return -1;
 	}
 	length = Q_filelength( f );
-	buffer = safe_malloc( length + 1 );
+	buffer = Z_Malloc( length + 1 );
 	( (char *)buffer )[length] = 0;
 	SafeRead( f, buffer, length );
 	fclose( f );
@@ -5696,21 +5675,6 @@ void    StripFilename( char *path ){
 	path[length] = 0;
 }
 
-void    StripExtension( char *path ){
-	int length;
-
-	length = strlen( path ) - 1;
-	while ( length > 0 && path[length] != '.' )
-	{
-		length--;
-		if ( path[length] == '/' || path[ length ] == '\\' ) {
-			return;     // no extension
-		}
-	}
-	if ( length ) {
-		path[length] = 0;
-	}
-}
 
 
 /*
@@ -5751,24 +5715,6 @@ void ExtractFileBase( const char *path, char *dest ){
 		*dest++ = *src++;
 	}
 	*dest = 0;
-}
-
-void ExtractFileExtension( const char *path, char *dest ){
-	const char    *src;
-
-	src = path + strlen( path ) - 1;
-
-//
-// back up until a . or the start
-//
-	while ( src != path && *( src - 1 ) != '.' )
-		src--;
-	if ( src == path ) {
-		*dest = 0;  // no extension
-		return;
-	}
-
-	strcpy( dest,src );
 }
 
 

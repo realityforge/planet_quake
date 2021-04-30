@@ -755,30 +755,34 @@ void LoadQ3Map(const char *name) {
 }
 
 
-void CM_LoadMapFromMemory( dheader_t *header ) {
-	
-	#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-		int				i, empty = -1;
-		for(i = 0; i < MAX_NUM_MAPS; i++) {
-			if (cms[i].name[0] == '\0') {
-				// fill the next empty clipmap slot
-				empty = i;
-				break;
-			}
-		}
-		cm = empty;
-		Com_DPrintf( "CM_LoadMap( %s, %i )\n", "*memory", qfalse );
-	#else
-		if ( cms[0].name[0] != '\0' ) {
-			Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
-		}
-	#endif
-		// free old stuff
-		Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
-		CM_ClearLevelPatches();
+int CM_LoadMapFromMemory( dheader_t *header ) {
 
-		cmod_base = (void *)NULL;
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+	int				i, empty = -1;
+	for(i = 0; i < MAX_NUM_MAPS; i++) {
+		if (cms[i].name[0] == '\0') {
+			// fill the next empty clipmap slot
+			empty = i;
+			break;
+		}
+	}
+	cm = empty;
+	Com_DPrintf( "CM_LoadMap( %s, %i )\n", "*memory", qfalse );
+#else
+	if ( cms[0].name[0] != '\0' ) {
+		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
+	}
+#endif
+	// free old stuff
+	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
+	CM_ClearLevelPatches();
 
+	cmod_base = (void *)NULL;
+
+	// return the empty slot to be filled
+	Q_strncpyz( cms[cm].name, va("*memory%i", cm), sizeof( cms[cm].name ) );
+
+	return cm;
 }
 
 

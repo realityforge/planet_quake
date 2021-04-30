@@ -294,7 +294,7 @@ void SwapBSPFile( void ) {
    GetLumpElements
    =============
  */
-int GetLumpElements( bspHeader_t  *header, int lump, int size ) {
+int GetLumpElements( dheader_t  *header, int lump, int size ) {
 	int length = header->lumps[lump].filelen;
 
 	if ( length % size ) {
@@ -309,7 +309,7 @@ int GetLumpElements( bspHeader_t  *header, int lump, int size ) {
    CopyLump
    =============
  */
-int CopyLump( bspHeader_t *header, int lump, void *dest, int size ) {
+int CopyLump( dheader_t *header, int lump, void *dest, int size ) {
 	int length, ofs;
 
 	length = header->lumps[lump].filelen;
@@ -334,7 +334,7 @@ int CopyLump( bspHeader_t *header, int lump, void *dest, int size ) {
    =============
  */
 void    LoadBSPFile( const char *filename ) {
-	bspHeader_t   *header;
+	dheader_t   *header;
 
 	// load the file header
 	LoadFile( filename, (void **)&header );
@@ -392,8 +392,8 @@ void    LoadBSPFile( const char *filename ) {
    AddLump
    =============
  */
-void AddLump( FILE *bspfile, bspHeader_t *header, int lumpnum, const void *data, int len ) {
-	bspLump_t *lump;
+void AddLump( FILE *bspfile, dheader_t *header, int lumpnum, const void *data, int len ) {
+	lump_t *lump;
 
 	lump = &header->lumps[lumpnum];
 
@@ -410,11 +410,11 @@ void AddLump( FILE *bspfile, bspHeader_t *header, int lumpnum, const void *data,
    =============
  */
 void    WriteBSPFile( const char *filename ) {
-	bspHeader_t outheader, *header;
+	dheader_t outheader, *header;
 	FILE        *bspfile;
 
 	header = &outheader;
-	memset( header, 0, sizeof( bspHeader_t ) );
+	memset( header, 0, sizeof( dheader_t ) );
 
 	SwapBSPFile();
 
@@ -422,7 +422,7 @@ void    WriteBSPFile( const char *filename ) {
 	header->version = LittleLong( bsp_version );
 
 	bspfile = SafeOpenWrite( filename );
-	SafeWrite( bspfile, header, sizeof( bspHeader_t ) );    // overwritten later
+	SafeWrite( bspfile, header, sizeof( dheader_t ) );    // overwritten later
 
 	AddLump( bspfile, header, LUMP_SHADERS, dshaders, numShaders * sizeof( dshader_t ) );
 	AddLump( bspfile, header, LUMP_PLANES, dplanes, numplanes * sizeof( dplane_t ) );
@@ -443,7 +443,7 @@ void    WriteBSPFile( const char *filename ) {
 	AddLump( bspfile, header, LUMP_DRAWINDEXES, drawIndexes, numDrawIndexes * sizeof( drawIndexes[0] ) );
 
 	fseek( bspfile, 0, SEEK_SET );
-	SafeWrite( bspfile, header, sizeof( bspHeader_t ) );
+	SafeWrite( bspfile, header, sizeof( dheader_t ) );
 	fclose( bspfile );
 }
 

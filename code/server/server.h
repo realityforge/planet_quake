@@ -849,4 +849,4 @@ void SV_AddFilterCmd_f( void );
 //
 // sv_bsp.c
 //
-void SV_MakeMap( void );
+int SV_MakeMap( void );

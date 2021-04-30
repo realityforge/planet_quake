@@ -63,6 +63,18 @@
 
 /* general */
 #include <sys/types.h>
+
+#ifndef __Q_SHARED_H
+#include "../qcommon/qcommon.h"
+#endif
+
+#ifdef __Q_SHARED_H
+#ifdef MAIN_C
+
+#endif
+#endif
+
+#if defined(MAIN_C) || !defined(__Q_SHARED_H)
 #include "version.h"            /* ttimo: might want to guard that if built outside of the GtkRadiant tree */
 
 #include "mathlib.h"
@@ -81,8 +93,8 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#endif
 
-#include "../qcommon/qcommon.h"
 
 /* -------------------------------------------------------------------------------
 
@@ -324,8 +336,8 @@ epair_t;
 
 typedef struct
 {
-	int32_t fileofs;
-	int32_t filelen;
+	int32_t offset;
+	int32_t length;
 }
 bspLump_t;
 
@@ -1772,9 +1784,9 @@ void                        BSPFilesCleanup( void );
 void                        SwapBlock( int *block, int size );
 
 int                         GetLumpElements( bspHeader_t *header, int lump, int size );
-void                        *GetLump( bspHeader_t *header, int lump );
-int                         CopyLump( bspHeader_t *header, int lump, void *dest, int size );
-void                        AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, int length );void                        LoadBSPFile( const char *filename );
+void                        *GetLump( dheader_t *header, int lump );
+int                         CopyLump( dheader_t *header, int lump, void *dest, int size );
+void                        AddLump( FILE *file, dheader_t *header, int lumpNum, const void *data, int length );void                        LoadBSPFile( const char *filename );
 void                        WriteBSPFile( const char *filename );
 void                        PrintBSPFileSizes( void );
 

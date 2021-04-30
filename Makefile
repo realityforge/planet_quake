@@ -181,7 +181,7 @@ BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 ADIR=$(MOUNT_DIR)/asm
 CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
-Q3DIR=$(MOUNT_DIR)/q3map2
+TDIR=$(MOUNT_DIR)/tools
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
 R2DIR=$(MOUNT_DIR)/renderer2
@@ -834,6 +834,11 @@ $(echo_cmd) "CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
+define DO_TOOLS
+$(echo_cmd) "TOOLS $<"
+$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
+endef
+
 define DO_REND_CC
 $(echo_cmd) "REND_CC $<"
 $(Q)$(CC) $(RENDCFLAGS) $(CFLAGS) -o $@ -c $<
@@ -878,6 +883,10 @@ $(echo_cmd) "DED_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) -DDEDICATED $(CFLAGS) -o $@ -c $<
 endef
 
+define DO_DED_TOOLS
+$(echo_cmd) "DED_TOOLS $<"
+$(Q)$(CC) $(NOTSHLIBCFLAGS) -DDEDICATED $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
+endef
 define DO_WINDRES
 $(echo_cmd) "WINDRES $<"
 $(Q)$(WINDRES) -i $< -o $@
@@ -960,11 +969,13 @@ makedirs:
 	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
 	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
+	@if [ ! -d $(B)/client/libs ];then $(MKDIR) $(B)/client/libs;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
+	@if [ ! -d $(B)/ded/libs ];then $(MKDIR) $(B)/ded/libs;fi
 
 #############################################################################
 # CLIENT/SERVER
@@ -1245,6 +1256,7 @@ Q3OBJ = \
 	$(B)/client/prtfile.o \
 	$(B)/client/bspfile_rbsp.o \
 	$(B)/client/bspfile_ibsp.o \
+	$(B)/client/bspfile_abstract.o \
 	$(B)/client/portals.o \
 	$(B)/client/surface.o \
 	$(B)/client/surface_meta.o \
@@ -1259,48 +1271,48 @@ Q3OBJ = \
 	$(B)/client/scriplib.o \
 	$(B)/client/model.o \
 	$(B)/client/shaders.o \
-	$(B)/client/mathlib.o \
+	$(B)/client/libs/mathlib.o \
 	$(B)/client/brush_primit.o \
 	$(B)/client/mesh.o \
 	$(B)/client/tjunction.o \
 	$(B)/client/tree.o \
 	$(B)/client/image.o \
 	$(B)/client/jpeg.o \
-	$(B)/client/ddslib.o \
+	$(B)/client/libs/ddslib.o \
 	$(B)/client/leakfile.o \
 	$(B)/client/imagelib.o \
 	$(B)/client/decals.o \
 	$(B)/client/patch.o \
-	$(B)/client/picomodel.o \
-	$(B)/client/picointernal.o \
-	$(B)/client/picomodules.o \
+	$(B)/client/libs/picomodel.o \
+	$(B)/client/libs/picointernal.o \
+	$(B)/client/libs/picomodules.o \
 	$(B)/client/light_bounce.o \
 	$(B)/client/threads.o \
 	$(B)/client/surface_extra.o \
-	$(B)/client/m4x4.o \
-	$(B)/client/md5lib.o \
-	$(B)/client/pm_terrain.o \
-	$(B)/client/pm_md3.o \
-	$(B)/client/pm_ase.o \
-	$(B)/client/pm_3ds.o \
-	$(B)/client/pm_md2.o \
-	$(B)/client/pm_fm.o \
-	$(B)/client/pm_lwo.o \
-	$(B)/client/pm_mdc.o \
-	$(B)/client/pm_ms3d.o \
-	$(B)/client/pm_obj.o \
+	$(B)/client/libs/m4x4.o \
+	$(B)/client/libs/md5lib.o \
+	$(B)/client/libs/pm_terrain.o \
+	$(B)/client/libs/pm_md3.o \
+	$(B)/client/libs/pm_ase.o \
+	$(B)/client/libs/pm_3ds.o \
+	$(B)/client/libs/pm_md2.o \
+	$(B)/client/libs/pm_fm.o \
+	$(B)/client/libs/pm_lwo.o \
+	$(B)/client/libs/pm_mdc.o \
+	$(B)/client/libs/pm_ms3d.o \
+	$(B)/client/libs/pm_obj.o \
 	$(B)/client/vfs.o \
-	$(B)/client/lwo2.o \
-	$(B)/client/pntspols.o \
-	$(B)/client/vmap.o \
-	$(B)/client/lwob.o \
-	$(B)/client/clip.o \
-	$(B)/client/lwio.o \
-	$(B)/client/lsurface.o \
-	$(B)/client/list.o \
-	$(B)/client/envelope.o \
+	$(B)/client/libs/lwo2.o \
+	$(B)/client/libs/pntspols.o \
+	$(B)/client/libs/vmap.o \
+	$(B)/client/libs/lwob.o \
+	$(B)/client/libs/clip.o \
+	$(B)/client/libs/lwio.o \
+	$(B)/client/libs/surface.o \
+	$(B)/client/libs/list.o \
+	$(B)/client/libs/envelope.o \
 	$(B)/client/surface_fur.o \
-	$(B)/client/vecmath.o \
+	$(B)/client/libs/vecmath.o \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
@@ -1682,6 +1694,7 @@ Q3DOBJ = \
 	$(B)/ded/prtfile.o \
 	$(B)/ded/bspfile_rbsp.o \
 	$(B)/ded/bspfile_ibsp.o \
+	$(B)/ded/bspfile_abstract.o \
 	$(B)/ded/portals.o \
 	$(B)/ded/surface.o \
 	$(B)/ded/surface_meta.o \
@@ -1696,48 +1709,48 @@ Q3DOBJ = \
 	$(B)/ded/scriplib.o \
 	$(B)/ded/model.o \
 	$(B)/ded/shaders.o \
-	$(B)/ded/mathlib.o \
+	$(B)/ded/libs/mathlib.o \
 	$(B)/ded/brush_primit.o \
 	$(B)/ded/mesh.o \
 	$(B)/ded/tjunction.o \
 	$(B)/ded/tree.o \
 	$(B)/ded/image.o \
 	$(B)/ded/jpeg.o \
-	$(B)/ded/ddslib.o \
+	$(B)/ded/libs/ddslib.o \
 	$(B)/ded/leakfile.o \
 	$(B)/ded/imagelib.o \
 	$(B)/ded/decals.o \
 	$(B)/ded/patch.o \
-	$(B)/ded/picomodel.o \
-	$(B)/ded/picointernal.o \
-	$(B)/ded/picomodules.o \
+	$(B)/ded/libs/picomodel.o \
+	$(B)/ded/libs/picointernal.o \
+	$(B)/ded/libs/picomodules.o \
 	$(B)/ded/light_bounce.o \
 	$(B)/ded/threads.o \
 	$(B)/ded/surface_extra.o \
-	$(B)/ded/m4x4.o \
-	$(B)/ded/md5lib.o \
-	$(B)/ded/pm_terrain.o \
-	$(B)/ded/pm_md3.o \
-	$(B)/ded/pm_ase.o \
-	$(B)/ded/pm_3ds.o \
-	$(B)/ded/pm_md2.o \
-	$(B)/ded/pm_fm.o \
-	$(B)/ded/pm_lwo.o \
-	$(B)/ded/pm_mdc.o \
-	$(B)/ded/pm_ms3d.o \
-	$(B)/ded/pm_obj.o \
+	$(B)/ded/libs/m4x4.o \
+	$(B)/ded/libs/md5lib.o \
+	$(B)/ded/libs/pm_terrain.o \
+	$(B)/ded/libs/pm_md3.o \
+	$(B)/ded/libs/pm_ase.o \
+	$(B)/ded/libs/pm_3ds.o \
+	$(B)/ded/libs/pm_md2.o \
+	$(B)/ded/libs/pm_fm.o \
+	$(B)/ded/libs/pm_lwo.o \
+	$(B)/ded/libs/pm_mdc.o \
+	$(B)/ded/libs/pm_ms3d.o \
+	$(B)/ded/libs/pm_obj.o \
 	$(B)/ded/vfs.o \
-	$(B)/ded/lwo2.o \
-	$(B)/ded/pntspols.o \
-	$(B)/ded/vmap.o \
-	$(B)/ded/lwob.o \
-	$(B)/ded/clip.o \
-	$(B)/ded/lwio.o \
-	$(B)/ded/lsurface.o \
-	$(B)/ded/list.o \
-	$(B)/ded/envelope.o \
+	$(B)/ded/libs/lwo2.o \
+	$(B)/ded/libs/pntspols.o \
+	$(B)/ded/libs/vmap.o \
+	$(B)/ded/libs/lwob.o \
+	$(B)/ded/libs/clip.o \
+	$(B)/ded/libs/lwio.o \
+	$(B)/ded/libs/surface.o \
+	$(B)/ded/libs/list.o \
+	$(B)/ded/libs/envelope.o \
 	$(B)/ded/surface_fur.o \
-	$(B)/ded/vecmath.o \
+	$(B)/ded/libs/vecmath.o \
   \
   $(B)/ded/cm_load.o \
 	$(B)/ded/cm_load_bsp2.o \
@@ -1848,26 +1861,35 @@ $(B)/client/%.o: $(CDIR)/%.c
 $(B)/client/%.o: $(SDIR)/%.c
 	$(DO_CC)
 
-$(B)/client/%.o: $(Q3DIR)/%.c
-	$(DO_CC)
+$(B)/client/%.o: $(TDIR)/common/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/ddslib/%.c
-	$(DO_CC)
+$(B)/client/%.o: $(TDIR)/q3map2/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/mathlib/%.c
-	$(DO_CC)
+$(B)/client/%.o: $(TDIR)/q3data/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/md5lib/%.c
-	$(DO_CC)
+$(B)/client/libs/%.o: $(TDIR)/libs/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/picomodel/%.c
-	$(DO_CC)
+$(B)/client/libs/%.o: $(TDIR)/libs/mathlib/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/picomodel/lwo/%.c
-	$(DO_CC)
+$(B)/client/libs/%.o: $(TDIR)/libs/ddslib/%.c
+	$(DO_TOOLS)
 
-$(B)/client/%.o: $(Q3DIR)/imagepng/%.c
-	$(DO_CC)
+$(B)/client/libs/%.o: $(TDIR)/libs/md5lib/%.c
+	$(DO_TOOLS)
+
+$(B)/client/libs/%.o: $(TDIR)/libs/picomodel/%.c
+	$(DO_TOOLS)
+
+$(B)/client/libs/%.o: $(TDIR)/libs/picomodel/lwo/%.c
+	$(DO_TOOLS)
+
+$(B)/client/plugins/%.o: $(TDIR)/plugins/imagepng/%.c
+	$(DO_TOOLS)
 
 $(B)/client/%.o: $(CMDIR)/%.c
 	$(DO_CC)
@@ -1959,26 +1981,35 @@ $(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
-$(B)/ded/%.o: $(Q3DIR)/%.c
-	$(DO_DED_CC)
+$(B)/ded/%.o: $(TDIR)/common/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/ddslib/%.c
-	$(DO_DED_CC)
+$(B)/ded/%.o: $(TDIR)/q3map2/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/mathlib/%.c
-	$(DO_DED_CC)
+$(B)/ded/%.o: $(TDIR)/q3data/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/md5lib/%.c
-	$(DO_DED_CC)
+$(B)/ded/libs/%.o: $(TDIR)/libs/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/picomodel/%.c
-	$(DO_DED_CC)
+$(B)/ded/libs/%.o: $(TDIR)/libs/mathlib/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/picomodel/lwo/%.c
-	$(DO_DED_CC)
+$(B)/ded/libs/%.o: $(TDIR)/libs/ddslib/%.c
+	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(Q3DIR)/imagepng/%.c
-	$(DO_DED_CC)
+$(B)/ded/libs/%.o: $(TDIR)/libs/md5lib/%.c
+	$(DO_DED_TOOLS)
+
+$(B)/ded/libs/%.o: $(TDIR)/libs/picomodel/%.c
+	$(DO_DED_TOOLS)
+
+$(B)/ded/libs/%.o: $(TDIR)/libs/picomodel/lwo/%.c
+	$(DO_DED_TOOLS)
+
+$(B)/ded/plugins/%.o: $(TDIR)/plugins/imagepng/%.c
+	$(DO_DED_TOOLS)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)

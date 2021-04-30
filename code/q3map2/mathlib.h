@@ -25,7 +25,9 @@
 // mathlib.h
 #include <math.h>
 #include <float.h>
+#ifndef __Q_SHARED_H
 #include "../qcommon/q_shared.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"

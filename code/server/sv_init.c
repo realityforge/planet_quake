@@ -611,7 +611,12 @@ void SV_SpawnServer_After_Startup( void ) {
 ;
 
 	Sys_SetStatus( "Loading map %s", mapname );
-	gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+	if(mapname[0] == '*') {
+		checksum = 0;
+		gameWorlds[gvm] = SV_MakeMap();
+	} else {
+		gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+	}
 
 	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
 

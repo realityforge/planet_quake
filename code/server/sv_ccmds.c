@@ -169,8 +169,6 @@ static void SV_Map_f( void ) {
 	// make sure the level exists before trying to change, so that
 	// a typo at the server console won't end the game
 	Com_sprintf( expanded, sizeof( expanded ), "maps/%s.bsp", map );
-	SV_MakeMap();
-	return;
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
@@ -186,7 +184,7 @@ static void SV_Map_f( void ) {
 #endif
 	}
 #ifdef USE_LOCAL_DED
-	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
+	if ( len == -1 && Q_stricmp(map, "q3dm0") && map[0] != '*') {
 		Com_Printf("Error: Can't find map %s\n", expanded );
 		Cmd_Clear();
 		Cbuf_AddText("spmap q3dm0\n");

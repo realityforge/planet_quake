@@ -2,15 +2,17 @@
 
 #include "server.h"
 #include "../qcommon/cm_public.h"
-#include "../q3map2/q3map2.h"
-#include "../q3map2/bspfile.h"
+#define MAIN_C
+#include "../tools/q3map2/q3map2.h"
+#undef MAIN_C
 
 
 
 static char skybox[4096*1024];
 char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
-	if(!com_sv_running || !com_sv_running->integer) {
+	if(!com_sv_running || !com_sv_running->integer
+		|| sv.state != SS_GAME) {
 		vs[0][0] = vs[0][1] = vs[0][2] = -1000;
 		vs[1][0] = vs[1][1] = vs[1][2] = 1000;
 	} else {
@@ -243,7 +245,7 @@ static void AddLightGridLumps( dheader_t *header ){
 }
 
 
-void SV_LoadMapFromMemory( void ) {
+static int SV_LoadMapFromMemory( void ) {
   dheader_t header;
 	memset( &header, 0, sizeof( header ) );
   // TODO: do the same prep that multiworld `load game` command does
@@ -268,7 +270,9 @@ void SV_LoadMapFromMemory( void ) {
   dModels = (void *)bspModels;
   header.lumps[LUMP_MODELS].filelen = numBSPModels * sizeof( dmodel_t );
 	AddDrawVertsLump(&header);
-	AddDrawSurfacesLump(&header);
+	//AddDrawSurfacesLump(&header);
+	//dModels = (void *)drawSurfaces;
+	header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
   dVisBytes = (void *)bspVisBytes;
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
   dLightBytes = (void *)bspLightBytes;
@@ -281,7 +285,7 @@ void SV_LoadMapFromMemory( void ) {
   dDrawIndexes = (void *)bspDrawIndexes;
   header.lumps[LUMP_DRAWINDEXES].filelen = numBSPDrawIndexes * sizeof( int );
 
-	CM_LoadMapFromMemory(&header);
+	int result = CM_LoadMapFromMemory(&header);
 
 	// load into heap
 	CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
@@ -303,90 +307,16 @@ void SV_LoadMapFromMemory( void ) {
   // TODO: detect memory map from gamestate on client and download over UDP
   
   // TODO: make a copy of the map in memory in case a client requests, it can be sent
-
+	return result;
 }
 
 
 
-void SV_MakeMap( void ) {
-	qboolean onlyents = qfalse;
-
-	/* init model library */
-	PicoInit();
-	PicoSetMallocFunc( safe_malloc );
-	PicoSetFreeFunc( free );
-	PicoSetPrintFunc( PicoPrintFunc );
-	PicoSetLoadFileFunc( PicoLoadFileFunc );
-	PicoSetFreeFileFunc( free );
-
-	/* set number of threads */
-	ThreadSetDefault();
-
-	/* generate sinusoid jitter table */
-	for ( int i = 0; i < MAX_JITTERS; i++ )
-	{
-		jitters[ i ] = sin( i * 139.54152147 );
-		//%	Sys_Printf( "Jitter %4d: %f\n", i, jitters[ i ] );
-	}
-
-	/* ydnar: new path initialization */
-	// TODO: InitPaths( &argc, argv );
-
-	/* note it */
-	Com_Printf( "--- BSP ---\n" );
-
-	SetDrawSurfacesBuffer();
-	mapDrawSurfs = safe_malloc( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
-	memset( mapDrawSurfs, 0, sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
-	numMapDrawSurfs = 0;
-
-	/* set standard game flags */
-	maxSurfaceVerts = game->maxSurfaceVerts;
-	maxSurfaceIndexes = game->maxSurfaceIndexes;
-	emitFlares = game->emitFlares;
-	
-	//game->shaderPath = "/Applications/ioquake3/baseq3/scripts";
-	meta = qtrue;
-
-	/* ydnar: set default sample size */
-	SetDefaultSampleSize( sampleSize );
-
-	/* if onlyents, just grab the entites and resave */
-	if ( onlyents ) {
-		OnlyEnts();
-		return;
-	}
-
-	/* load shaders */
-	LoadShaderInfo();
+int SV_MakeMap( void ) {
 
 	char *skybox = SV_MakeSkybox();
-  
-	strcpy( source, "*memory" ); // give the map a special name so clients can download it
+	
+	BSPMemory(skybox);
 
-	LoadMap( skybox, qfalse );
-
-	/* ydnar: decal setup */
-	ProcessDecals();
-
-	/* ydnar: cloned brush model entities */
-	SetCloneModelNumbers();
-
-	/* process world and submodels */
-	ProcessModels();
-
-	/* set light styles from targetted light entities */
-	SetLightStyles();
-
-	/* process in game advertisements */
-	ProcessAdvertisements();
-
-	EmitPlanes();
-
-	numBSPEntities = numEntities;
-	UnparseIBSPEntities();
-
-	/* finish and write bsp */
-  //EndBSPFile();
-  SV_LoadMapFromMemory();
+  return SV_LoadMapFromMemory();
 }

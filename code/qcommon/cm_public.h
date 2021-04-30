@@ -69,7 +69,7 @@ extern dsurface_t   *dDrawSurfaces;
 extern dfog_t *dFogs;
 //bspAdvertisement_t *dAds;
 
-void CM_LoadMapFromMemory( dheader_t *header );
+int CM_LoadMapFromMemory( dheader_t *header );
 
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );

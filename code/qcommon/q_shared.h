@@ -268,6 +268,7 @@ float FloatSwap( const float *f );
 typedef unsigned char byte;
 
 typedef enum { qfalse = 0, qtrue } qboolean;
+#define __BYTEBOOL__
 
 typedef union floatint_u
 {
@@ -528,6 +529,8 @@ extern	vec4_t		colorDkGrey;
 #define S_COLOR_MAGENTA	"^6"
 #define S_COLOR_WHITE	"^7"
 
+#define S_COLOR_STRIP	S_COLOR_WHITE
+
 extern const vec4_t	g_color_table[ 64 ];
 extern int ColorIndexFromChar( char ccode );
 
@@ -787,6 +790,7 @@ void	COM_ParseWarning( char *format, ... ) __attribute__ ((format (printf, 1, 2)
 //int		COM_ParseInfos( char *buf, int max, char infos[][MAX_INFO_STRING] );
 
 char	*COM_ParseComplex( const char **data_p, qboolean allowLineBreak );
+char *ExpandArg( const char *path );
 
 typedef enum {
 	TK_GENEGIC = 0, // for single-char tokens

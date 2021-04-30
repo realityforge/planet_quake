@@ -261,7 +261,6 @@ void ProcessWorldModel(){
 	qboolean ignoreLeaks, leaked;
 	char shader[ 1024 ];
 	const char  *value;
-	int leakStatus;
 
 	/* sets integer blockSize from worldspawn "_blocksize" key if it exists */
 	value = ValueForKey( &entities[ 0 ], "_blocksize" );
@@ -313,20 +312,28 @@ void ProcessWorldModel(){
 	FilterStructuralBrushesIntoTree( e, tree );
 
 	/* see if the bsp is completely enclosed */
-	leakStatus = FloodEntities( tree );
-	if ( ignoreLeaks ) {
-		if ( !leakStatus ) {
-			leakStatus = qtrue;
-		}
-	}
+	if ( FloodEntities( tree ) || ignoreLeaks ) {
+		/* rebuild a better bsp tree using only the sides that are visible from the inside */
+		FillOutside( tree->headnode );
 
-	if ( leakStatus ) {
+		/* chop the sides to the convex hull of their visible fragments, giving us the smallest polygons */
+		ClipSidesIntoTree( e, tree );
+
+		/* build a visible face tree */
+		faces = MakeVisibleBSPFaceList( entities[ 0 ].brushes );
+		FreeTree( tree );
+		tree = FaceBSP( faces );
+		MakeTreePortals( tree );
+		FilterStructuralBrushesIntoTree( e, tree );
 		leaked = qfalse;
+
+		/* ydnar: flood again for skybox */
+		if ( skyboxPresent ) {
+			FloodEntities( tree );
+		}
 	}
 	else
 	{
-		leaked = qtrue;
-
 		Com_Printf( "**********************\n" );
 		Com_Printf( "******* leaked *******\n" );
 		Com_Printf( "**********************\n" );
@@ -334,26 +341,10 @@ void ProcessWorldModel(){
 			Com_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
 			exit( 0 );
 		}
-	}
-
-	if ( !leakStatus ) { /* if no entities exist, this would accidentally the whole map, and that IS bad */
-		/* rebuild a better bsp tree using only the sides that are visible from the inside */
-		FillOutside( tree->headnode );
+		leaked = qtrue;
 
 		/* chop the sides to the convex hull of their visible fragments, giving us the smallest polygons */
 		ClipSidesIntoTree( e, tree );
-
-		/* build a visible face tree (same thing as the initial bsp tree but after reducing the faces) */
-		faces = MakeVisibleBSPFaceList( entities[ 0 ].brushes );
-		FreeTree( tree );
-		tree = FaceBSP( faces );
-		MakeTreePortals( tree );
-		FilterStructuralBrushesIntoTree( e, tree );
-
-		/* ydnar: flood again for skybox */
-		if ( skyboxPresent ) {
-			FloodEntities( tree );
-		}
 	}
 
 	/* save out information for visibility processing */
@@ -456,14 +447,6 @@ void ProcessWorldModel(){
 					//%	VectorClear( normal );
 					VectorSet( normal, 0, 0, -1 );
 				}
-
-/*
-				if ( colorsRGB ) {
-					color[0] = Image_LinearFloatFromsRGBFloat( color[0] );
-					color[1] = Image_LinearFloatFromsRGBFloat( color[1] );
-					color[2] = Image_LinearFloatFromsRGBFloat( color[2] );
-				}
-*/
 
 				/* create the flare surface (note shader defaults automatically) */
 				DrawSurfaceForFlare( mapEntityNum, origin, normal, color, flareShader, lightStyle );

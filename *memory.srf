@@ -1,8 +1,0 @@
-default
-{
-	castShadows 1
-	receiveShadows 1
-	sampleSize 16
-	longestCurve 0.000000
-}
-
