@@ -245,6 +245,7 @@ static void AddLightGridLumps( dheader_t *header ){
 
 void SV_LoadMapFromMemory( void ) {
   dheader_t header;
+	memset( &header, 0, sizeof( header ) );
   // TODO: do the same prep that multiworld `load game` command does
   // load all the lumps as if they came from the file
   header.ident = BSP_IDENT;
@@ -268,12 +269,12 @@ void SV_LoadMapFromMemory( void ) {
   header.lumps[LUMP_MODELS].filelen = numBSPModels * sizeof( dmodel_t );
 	AddDrawVertsLump(&header);
 	AddDrawSurfacesLump(&header);
-  dVisBytes = bspVisBytes;
+  dVisBytes = (void *)bspVisBytes;
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
-  dLightBytes = bspLightBytes;
+  dLightBytes = (void *)bspLightBytes;
   header.lumps[LUMP_LIGHTMAPS].filelen = numBSPLightBytes;
 	AddLightGridLumps(&header);
-  dEntData = (void *)bspEntData;
+  dEntData = (void *)&bspEntData;
   header.lumps[LUMP_ENTITIES].filelen = bspEntDataSize;
   dFogs = (void *)bspFogs;
   header.lumps[LUMP_FOGS].filelen = numBSPFogs * sizeof( dfog_t );
@@ -295,7 +296,7 @@ void SV_LoadMapFromMemory( void ) {
 	CMod_LoadEntityString (&header.lumps[LUMP_ENTITIES], "\0");
 	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
 	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
-	
+
 	/* advertisements */
 	//AddLump( file, (bspHeader_t*) header, LUMP_ADVERTISEMENTS, bspAds, numBSPAds * sizeof( bspAdvertisement_t ) );
 
@@ -379,6 +380,11 @@ void SV_MakeMap( void ) {
 
 	/* process in game advertisements */
 	ProcessAdvertisements();
+
+	EmitPlanes();
+
+	numBSPEntities = numEntities;
+	UnparseIBSPEntities();
 
 	/* finish and write bsp */
   //EndBSPFile();

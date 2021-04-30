@@ -446,6 +446,77 @@ static void AddLightGridLumps( FILE *file, ibspHeader_t *header ){
 	free( buffer );
 }
 
+void UnparseIBSPEntities( void ){
+	int i;
+	char        *buf, *end;
+	epair_t     *ep;
+	char line[ 2048 ];
+	char key[ 1024 ], value[ 1024 ];
+	const char  *value2;
+
+
+	/* setup */
+	buf = bspEntData;
+	end = buf;
+	*end = 0;
+
+
+	/* run through entity list */
+	for ( i = 0; i < numBSPEntities && i < numEntities; i++ )
+	{
+		{
+			int sz = end - buf;
+			buf = bspEntData;
+			end = buf + sz;
+		}
+
+		/* get epair */
+		ep = entities[ i ].epairs;
+		if ( ep == NULL ) {
+			continue;   /* ent got removed */
+
+		}
+		/* ydnar: certain entities get stripped from bsp file */
+		value2 = ValueForKey( &entities[ i ], "classname" );
+		if ( !Q_stricmp( value2, "misc_model" ) ||
+			 !Q_stricmp( value2, "_decal" ) ||
+			 !Q_stricmp( value2, "_skybox" ) ) {
+			continue;
+		}
+
+		/* add beginning brace */
+		strcat( end, "{\n" );
+		end += 2;
+
+		/* walk epair list */
+		for ( ep = entities[ i ].epairs; ep != NULL; ep = ep->next )
+		{
+			/* copy and clean */
+			strcpy( key, ep->key );
+			StripTrailing( key );
+			strcpy( value, ep->value );
+			StripTrailing( value );
+
+			/* add to buffer */
+			sprintf( line, "\"%s\" \"%s\"\n", key, value );
+			strcat( end, line );
+			end += strlen( line );
+		}
+
+		/* add trailing brace */
+		strcat( end,"}\n" );
+		end += 2;
+
+		/* check for overflow */
+		if ( end > buf + sizeof(bspEntData) ) {
+			Com_Printf( "Entity text too long" );
+		}
+	}
+
+	/* set size */
+	bspEntDataSize = end - buf + 1;
+}
+
 /*
    LoadIBSPFile()
    loads a quake 3 bsp file into memory

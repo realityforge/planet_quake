@@ -537,31 +537,32 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	int entFileLen = 0;
 
 	// Attempt to load entities from an external .ent file if available
-	Q_strncpyz(entName, name, sizeof(entName));
-	entNameLen = strlen(entName);
-	entName[entNameLen - 3] = 'e';
-	entName[entNameLen - 2] = 'n';
-	entName[entNameLen - 1] = 't';
-	entFileLen = FS_FOpenFileRead( entName, &h, qtrue );
-	if (h && entFileLen > 0)
-	{
-		cms[cm].entityString = (char *)Hunk_Alloc(entFileLen + 1, h_high );
-		cms[cm].numEntityChars = entFileLen + 1;
-		FS_Read( cms[cm].entityString, entFileLen, h );
-		FS_FCloseFile(h);
-		cms[cm].entityString[entFileLen] = '\0';
-		Com_Printf( S_COLOR_CYAN "Loaded entities from %s\n", entName );
-		return;
+	if(name[0] != '\0' && l->fileofs != 0) { // don't do memory loading
+		Q_strncpyz(entName, name, sizeof(entName));
+		entNameLen = strlen(entName);
+		entName[entNameLen - 3] = 'e';
+		entName[entNameLen - 2] = 'n';
+		entName[entNameLen - 1] = 't';
+		entFileLen = FS_FOpenFileRead( entName, &h, qtrue );
+		if (h && entFileLen > 0)
+		{
+			cms[cm].entityString = (char *)Hunk_Alloc(entFileLen + 1, h_high );
+			cms[cm].numEntityChars = entFileLen + 1;
+			FS_Read( cms[cm].entityString, entFileLen, h );
+			FS_FCloseFile(h);
+			cms[cm].entityString[entFileLen] = '\0';
+			Com_Printf( S_COLOR_CYAN "Loaded entities from %s\n", entName );
+			return;
+		}
 	}
-
 	cms[cm].entityString = Hunk_Alloc( l->filelen, h_high );
 	cms[cm].numEntityChars = l->filelen;
-	if(cmod_base == 0) {
+	if(l->fileofs == 0) {
 		memcpy( cms[cm].entityString, dEntData, l->filelen );
 	} else {
 		memcpy( cms[cm].entityString, cmod_base + l->fileofs, l->filelen );
 	}
-	if(cm_saveEnts->integer && name[0] != '\0') {
+	if(cm_saveEnts && cm_saveEnts->integer && l->fileofs != 0) {
 		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
 	} else {
 		Com_Printf("Entities: %s\n", cms[cm].entityString);

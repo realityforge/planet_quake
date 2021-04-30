@@ -1799,7 +1799,8 @@ void                        WriteIBSPFile( const char *filename );
 /* bspfile_rbsp.c */
 void                        LoadRBSPFile( const char *filename );
 void                        WriteRBSPFile( const char *filename );
-
+void EmitPlanes( void );
+void UnparseIBSPEntities( void );
 
 
 /* -------------------------------------------------------------------------------
