@@ -36,7 +36,9 @@
 /* dependencies */
 #include "q3map2.h"
 
-
+#ifdef __Q_SHARED_H
+#define WriteFloat MAP_WriteFloat
+#endif
 
 /*
    ==============================================================================

@@ -401,9 +401,11 @@ image_t *ImageLoad( const char *filename ){
 			strcat( name, ".jpg" );
 			size = vfsLoadFile( (const char*) name, (void**) &buffer, 0 );
 			if ( size > 0 ) {
+#ifndef __Q_SHARED_H
 				if ( LoadJPGBuff( buffer, size, &image->pixels, &image->width, &image->height ) == -1 && image->pixels != NULL ) {
 					Sys_FPrintf( SYS_WRN, "WARNING: LoadJPGBuff: %s\n", (unsigned char*) image->pixels );
 				}
+#endif
 			}
 			else
 			{

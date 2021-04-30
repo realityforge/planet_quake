@@ -36,6 +36,32 @@
 /* dependencies */
 #include "q3map2.h"
 
+#ifdef __Q_SHARED_H
+const char                  *MAP_ValueForKey( const entity_t *ent, const char *key );
+void                        MAP_ParseEntities( void );
+//void                        UnparseEntities( void );
+#define PrintEntity MAP_PrintEntity
+#define ParseEntity MAP_ParseEntity
+#define FloatForKey MAP_FloatForKey
+#define GetVectorForKey MAP_GetVectorForKey
+#define ValueForKey MAP_ValueForKey
+#define SetDrawVerts MAP_SetDrawVerts
+#define IncDrawVerts MAP_IncDrawVerts
+#define GetLumpElements MAP_GetLumpElements
+#define PrintBSPFileSizes MAP_PrintBSPFileSizes
+#define UnparseEntities MAP_UnparseEntities
+#define ParseEntities MAP_ParseEntities
+#define SetDrawSurfaces MAP_SetDrawSurfaces
+#define SetDrawSurfacesBuffer MAP_SetDrawSurfacesBuffer
+#define CopyLump MAP_CopyLump
+#define AddLump MAP_AddLump
+#define SwapBlock MAP_SwapBlock
+#define StripTrailing MAP_StripTrailing
+#define SetKeyValue MAP_SetKeyValue
+#define SwapBSPFile MAP_SwapBSPFile
+#define WriteBSPFile MAP_WriteBSPFile
+#define LoadBSPFile MAP_LoadBSPFile
+#endif
 
 
 

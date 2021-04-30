@@ -58,6 +58,7 @@ qboolean tokenready;                     // only qtrue if UnGetToken was just ca
  */
  #ifdef __Q_SHARED_H
  #define ExpandPath
+ #define LoadScriptFile Map_LoadScriptFile
  #endif
  
 void AddScriptToStack( const char *filename, int index ){
@@ -149,7 +150,7 @@ void UnGetToken( void ){
 }
 
 
-qboolean EndOfScript( qboolean crossline ){
+static qboolean EndOfScript( qboolean crossline ){
 	if ( !crossline ) {
 		Error( "Line %i is incomplete\n",scriptline );
 	}

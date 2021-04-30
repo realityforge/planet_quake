@@ -1266,9 +1266,8 @@ Q3OBJ = \
   $(B)/client/unzip.o \
   $(B)/client/puff.o \
   $(B)/client/vm.o \
-  $(B)/client/vm_interpreted.o
-
-Q3BOT = \
+  $(B)/client/vm_interpreted.o \
+	\
   $(B)/client/be_aas_bspq3.o \
   $(B)/client/be_aas_cluster.o \
   $(B)/client/be_aas_debug.o \
@@ -1296,41 +1295,40 @@ Q3BOT = \
   $(B)/client/l_memory.o \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
-  $(B)/client/l_struct.o
-
-Q3M = \
+  $(B)/client/l_struct.o \
+	\
   $(B)/client/q3map2/bsp.o \
 	$(B)/client/tools/inout.o \
-	$(B)/client/tools/portals.o \
+	$(B)/client/q3map2/portals.o \
 	$(B)/client/q3map2/surface.o \
 	$(B)/client/q3map2/surface_meta.o \
 	$(B)/client/q3map2/surface_foliage.o \
 	$(B)/client/q3map2/facebsp.o \
-	$(B)/client/tools/brush.o \
+	$(B)/client/q3map2/brush.o \
 	$(B)/client/q3map2/map.o \
 	$(B)/client/tools/polylib.o \
-	$(B)/client/tools/fog.o \
+	$(B)/client/q3map2/fog.o \
 	$(B)/client/q3map2/writebsp.o \
 	$(B)/client/q3map2/model.o \
 	$(B)/client/q3map2/shaders.o \
 	$(B)/client/libs/mathlib.o \
-	$(B)/client/tools/brush_primit.o \
-	$(B)/client/tools/mesh.o \
-	$(B)/client/tools/tjunction.o \
-	$(B)/client/tools/tree.o \
-	$(B)/client/tools/image.o \
+	$(B)/client/q3map2/brush_primit.o \
+	$(B)/client/q3map2/mesh.o \
+	$(B)/client/q3map2/tjunction.o \
+	$(B)/client/q3map2/tree.o \
+	$(B)/client/q3map2/image.o \
 	$(B)/client/tools/jpeg.o \
 	$(B)/client/libs/ddslib.o \
-	$(B)/client/leakfile.o \
-	$(B)/client/imagelib.o \
-	$(B)/client/tools/decals.o \
-	$(B)/client/tools/patch.o \
+	$(B)/client/q3map2/leakfile.o \
+	$(B)/client/tools/imagelib.o \
+	$(B)/client/q3map2/decals.o \
+	$(B)/client/q3map2/patch.o \
 	$(B)/client/libs/picomodel.o \
 	$(B)/client/libs/picointernal.o \
 	$(B)/client/libs/picomodules.o \
-	$(B)/client/light_bounce.o \
+	$(B)/client/q3map2/light_bounce.o \
 	$(B)/client/tools/threads.o \
-	$(B)/client/tools/surface_extra.o \
+	$(B)/client/q3map2/surface_extra.o \
 	$(B)/client/libs/m4x4.o \
 	$(B)/client/libs/md5lib.o \
 	$(B)/client/libs/pm_terrain.o \
@@ -1353,20 +1351,14 @@ Q3M = \
 	$(B)/client/libs/surface.o \
 	$(B)/client/libs/list.o \
 	$(B)/client/libs/envelope.o \
-	$(B)/client/tools/surface_fur.o \
-	$(B)/client/libs/vecmath.o
-
-Q3MO = \
+	$(B)/client/q3map2/surface_fur.o \
+	$(B)/client/libs/vecmath.o \
+	$(B)/client/tools/bspfile.o \
 	$(B)/client/tools/scriplib.o \
-	$(B)/client/tools/prtfile.o
-
-Q3MA = \
+	$(B)/client/q3map2/prtfile.o \
+  $(B)/client/q3map2/bspfile_abstract.o \
 	$(B)/client/q3map2/bspfile_rbsp.o \
 	$(B)/client/q3map2/bspfile_ibsp.o \
-	$(B)/client/q3map2/bspfile_abstract.o
-
-Q3MC = \
-	$(B)/client/tools/bspfile.o
 
 
 ifneq ($(USE_SYSTEM_JPEG),1)
@@ -1732,9 +1724,8 @@ Q3DOBJ = \
   \
   $(B)/ded/unzip.o \
   $(B)/ded/vm.o \
-	$(B)/ded/vm_interpreted.o
-
-Q3DBOT = \
+	$(B)/ded/vm_interpreted.o \
+	\
   $(B)/ded/be_aas_bspq3.o \
   $(B)/ded/be_aas_cluster.o \
   $(B)/ded/be_aas_debug.o \
@@ -1762,9 +1753,8 @@ Q3DBOT = \
   $(B)/ded/l_memory.o \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
-  $(B)/ded/l_struct.o
-
-Q3DM = \
+  $(B)/ded/l_struct.o \
+	\
 	$(B)/ded/q3map2/bsp.o \
 	$(B)/ded/tools/inout.o \
 	$(B)/ded/q3map2/portals.o \
@@ -1819,25 +1809,13 @@ Q3DM = \
 	$(B)/ded/libs/list.o \
 	$(B)/ded/libs/envelope.o \
 	$(B)/ded/q3map2/surface_fur.o \
-	$(B)/ded/libs/vecmath.o
-
-Q3DMO = \
+	$(B)/ded/libs/vecmath.o \
+	$(B)/ded/tools/bspfile.o \
 	$(B)/ded/tools/scriplib.o \
-	$(B)/ded/q3map2/prtfile.o
-
-Q3DMA = \
+	$(B)/ded/q3map2/prtfile.o \
+	$(B)/ded/q3map2/bspfile_abstract.o \
 	$(B)/ded/q3map2/bspfile_rbsp.o \
-	$(B)/ded/q3map2/bspfile_ibsp.o \
-
-Q3DMC = \
-	$(B)/ded/tools/bspfile.o
-
-Q3DOBJ += \
-	$(Q3DM) \
-	$(Q3DMC) \
-	$(Q3DMO) \
-	$(B)/ded/q3map2/bspfile_abstract.o
-
+	$(B)/ded/q3map2/bspfile_ibsp.o
 
 ifeq ($(USE_CURL),1)
   Q3DOBJ += $(B)/ded/cl_curl.o
