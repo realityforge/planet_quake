@@ -47,10 +47,16 @@
 	strcpy(y, extpos);
 #define VectorNormalize VectorNormalize2
 #define DefaultExtension(x, y) COM_DefaultExtension(x, sizeof(x), y)
-#define safe_malloc(x) Z_Malloc(x)
-#define safe_malloc_info(x, y) Z_Malloc(x)
+#ifdef ZONE_DEBUG
+#define safe_malloc(size) Z_MallocDebug(size, #size, __FILE__, __LINE__)
+#define safe_malloc_info(size, y) Z_MallocDebug(size, #size, __FILE__, __LINE__)
+#else
+#define safe_malloc(x) Z_MallocDebug(x)
+#define safe_malloc_info(x, y) Z_MallocDebug(x)
+#endif
 #define _NO_GLIB
 #define MAX_OS_PATH     4096
+#define Random random
 #endif
 
 #ifndef __Q_SHARED_H

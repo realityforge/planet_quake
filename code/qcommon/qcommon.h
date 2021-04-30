@@ -1584,7 +1584,5 @@ void    SaveFile( const char *filename, const void *buffer, int count );
 FILE *SafeOpenWrite( const char *filename );
 void SafeWrite( FILE *f, const void *buffer, int count );
 FILE *SafeOpenRead( const char *filename );
-void *safe_malloc( size_t size );
-void *safe_malloc_info( size_t size, char* info );
 
 #endif // _QCOMMON_H_

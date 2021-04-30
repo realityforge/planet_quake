@@ -934,12 +934,22 @@ int BSPMain( int argc, char **argv ){
 	return 0;
 }
 
+#ifdef ZONE_DEBUG
+	static void *safe_malloc_debug(size_t size) {
+		return safe_malloc(size);
+	}
+#endif
+
 void BSPMemory(char *map) {
 	qboolean onlyents = qfalse;
 
 	/* init model library */
 	PicoInit();
-	PicoSetMallocFunc( safe_malloc );
+#ifdef ZONE_DEBUG
+	PicoSetMallocFunc( safe_malloc_debug );
+#else
+	PicoSetMallocFunc( Z_Malloc );
+#endif
 	PicoSetFreeFunc( free );
 	PicoSetPrintFunc( PicoPrintFunc );
 	PicoSetLoadFileFunc( PicoLoadFileFunc );

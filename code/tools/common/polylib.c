@@ -39,6 +39,7 @@ int c_winding_points;
 
 #define BOGUS_RANGE WORLD_SIZE
 
+#ifndef __Q_SHARED_H
 void pw( winding_t *w ){
 	int i;
 	for ( i = 0 ; i < w->numpoints ; i++ )
@@ -72,6 +73,7 @@ winding_t   *AllocWinding( int points ){
 	memset( w, 0, s );
 	return w;
 }
+#endif
 
 /*
    =============
@@ -101,6 +103,7 @@ winding_accu_t *AllocWindingAccu( int points ){
 	return w;
 }
 
+#ifndef __Q_SHARED_H
 /*
    =============
    FreeWinding
@@ -121,6 +124,7 @@ void FreeWinding( winding_t *w ){
 	}
 	free( w );
 }
+#endif
 
 /*
    =============
@@ -150,6 +154,7 @@ void FreeWindingAccu( winding_accu_t *w ){
  */
 int c_removed;
 
+#ifndef __Q_SHARED_H
 void    RemoveColinearPoints( winding_t *w ){
 	int i, j, k;
 	vec3_t v1, v2;
@@ -219,6 +224,7 @@ vec_t   WindingArea( winding_t *w ){
 	return total;
 }
 
+
 void    WindingBounds( winding_t *w, vec3_t mins, vec3_t maxs ){
 	vec_t v;
 	int i,j;
@@ -257,6 +263,8 @@ void    WindingCenter( winding_t *w, vec3_t center ){
 	scale = 1.0 / w->numpoints;
 	VectorScale( center, scale, center );
 }
+
+#endif
 
 /*
    =================
@@ -371,6 +379,8 @@ winding_accu_t *BaseWindingForPlaneAccu( vec3_t normal, vec_t dist ){
 	return w;
 }
 
+
+#ifndef __Q_SHARED_H
 /*
    =================
    BaseWindingForPlane
@@ -472,6 +482,7 @@ winding_t   *CopyWinding( winding_t *w ){
 	memcpy( c, w, size );
 	return c;
 }
+#endif
 
 /*
    ==================
@@ -518,6 +529,8 @@ winding_t   *CopyWindingAccuToRegular( winding_accu_t *w ){
 	return c;
 }
 
+
+#ifndef __Q_SHARED_H
 /*
    ==================
    ReverseWinding
@@ -650,6 +663,7 @@ void    ClipWindingEpsilon( winding_t *in, vec3_t normal, vec_t dist,
 		Error( "ClipWinding: MAX_POINTS_ON_WINDING" );
 	}
 }
+#endif
 
 
 /*
@@ -802,6 +816,8 @@ void ChopWindingInPlaceAccu( winding_accu_t **inout, vec3_t normal, vec_t dist, 
 	*inout = f;
 }
 
+
+#ifndef __Q_SHARED_H
 /*
    =============
    ChopWindingInPlace
@@ -907,7 +923,6 @@ void ChopWindingInPlace( winding_t **inout, vec3_t normal, vec_t dist, vec_t eps
 	FreeWinding( in );
 	*inout = f;
 }
-
 
 /*
    =================
@@ -1135,3 +1150,5 @@ void    AddWindingToConvexHull( winding_t *w, winding_t **hull, vec3_t normal ) 
 	*hull = w;
 	memcpy( w->p, hullPoints, numHullPoints * sizeof( vec3_t ) );
 }
+
+#endif

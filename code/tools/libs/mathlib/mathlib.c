@@ -26,9 +26,9 @@
 
 #ifdef __Q_SHARED_H
 #define VectorNormalize VectorNormalize2
-#endif
-
+#else
 vec3_t vec3_origin = {0.0f,0.0f,0.0f};
+#endif
 
 /*
    ================
@@ -343,13 +343,13 @@ void _Vector53Copy( vec5_t in, vec3_t out ){
 	out[2] = in[2];
 }
 
+#ifndef __Q_SHARED_H
 // NOTE: added these from Ritual's Q3Radiant
 void ClearBounds( vec3_t mins, vec3_t maxs ){
 	mins[0] = mins[1] = mins[2] = 99999;
 	maxs[0] = maxs[1] = maxs[2] = -99999;
 }
 
-#ifndef __Q_SHARED_H
 void AddPointToBounds( vec3_t v, vec3_t mins, vec3_t maxs ){
 	int i;
 	vec_t val;
@@ -441,6 +441,7 @@ void VectorToAngles( vec3_t vec, vec3_t angles ){
 	angles[ 2 ] = 0;
 }
 
+#ifndef __Q_SHARED_H
 /*
    =====================
    PlaneFromPoints
@@ -462,6 +463,7 @@ qboolean PlaneFromPoints( vec4_t plane, const vec3_t a, const vec3_t b, const ve
 	plane[3] = DotProduct( a, plane );
 	return qtrue;
 }
+#endif
 
 /*
 ** NormalToLatLong
@@ -516,13 +518,13 @@ int PlaneTypeForNormal( vec3_t normal ) {
 
 	return PLANE_NON_AXIAL;
 }
-#endif
 
 /*
    ================
    MatrixMultiply
    ================
  */
+ 
 void MatrixMultiply( float in1[3][3], float in2[3][3], float out[3][3] ) {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] +
 				in1[0][2] * in2[2][0];
@@ -562,6 +564,7 @@ void ProjectPointOnPlane( vec3_t dst, const vec3_t p, const vec3_t normal ){
 	dst[2] = p[2] - d * n[2];
 }
 
+
 /*
 ** assumes "src" is normalized
 */
@@ -594,6 +597,7 @@ void PerpendicularVector( vec3_t dst, const vec3_t src ){
 	*/
 	VectorNormalize( dst, dst );
 }
+
 
 /*
    ===============
@@ -657,6 +661,7 @@ void RotatePointAroundVector( vec3_t dst, const vec3_t dir, const vec3_t point,
 		dst[i] = rot[i][0] * point[0] + rot[i][1] * point[1] + rot[i][2] * point[2];
 	}
 }
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

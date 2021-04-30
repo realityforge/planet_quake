@@ -83,6 +83,7 @@
 #include "../common/qthreads.h"
 #include "../common/inout.h"
 #include "../common/vfs.h"
+#include "../../libpng/png.h"
 #endif
 #endif
 
@@ -1513,8 +1514,8 @@ surfaceInfo_t;
    ------------------------------------------------------------------------------- */
 
 /* main.c */
-vec_t                       Random( void );
 #ifndef __Q_SHARED_H
+vec_t                       Random( void );
 char                        *Q_strncpyz( char *dst, const char *src, size_t len );
 char                        *Q_strcat( char *dst, size_t dlen, const char *src );
 #endif

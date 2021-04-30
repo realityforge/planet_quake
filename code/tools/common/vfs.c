@@ -62,6 +62,14 @@
 
 #ifdef __Q_SHARED_H
 
+int vfsGetFileCount( const char *filename ) {
+	return 0;
+}
+
+int vfsLoadFile( const char *filename, void **bufferptr, int index ) {
+	return -1;
+}
+
 #else
 #include <glib.h>
 #include "mathlib.h"

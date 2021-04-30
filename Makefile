@@ -429,9 +429,9 @@ endif
 	
 #  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
 	
-  LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2
+  LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2 -lpng
 #BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-  CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib
+  CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib
 #  CLIENT_LDFLAGS += -lRmlCore -lxml2
 #  CLIENT_LDFLAGS += 
 
@@ -857,6 +857,11 @@ $(echo_cmd) "BOT_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) -DBOTLIB -o $@ -c $<
 endef
 
+define DO_DED_BOT_CC
+$(echo_cmd) "BOT_CC $<"
+$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) $(BOTCFLAGS) -DBOTLIB -o $@ -c $<
+endef
+
 ifeq ($(GENERATE_DEPENDENCIES),1)
   DO_QVM_DEP=cat $(@:%.o=%.d) | sed -e 's/\.o/\.asm/g' >> $(@:%.o=%.d)
 endif
@@ -969,6 +974,8 @@ makedirs:
 	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
 	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
+	@if [ ! -d $(B)/client/q3map2 ];then $(MKDIR) $(B)/client/q3map2;fi
+	@if [ ! -d $(B)/client/tools ];then $(MKDIR) $(B)/client/tools;fi
 	@if [ ! -d $(B)/client/libs ];then $(MKDIR) $(B)/client/libs;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
@@ -976,6 +983,8 @@ makedirs:
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
 	@if [ ! -d $(B)/ded/libs ];then $(MKDIR) $(B)/ded/libs;fi
+	@if [ ! -d $(B)/ded/q3map2 ];then $(MKDIR) $(B)/ded/q3map2;fi
+	@if [ ! -d $(B)/ded/tools ];then $(MKDIR) $(B)/ded/tools;fi
 
 #############################################################################
 # CLIENT/SERVER
@@ -1250,69 +1259,6 @@ Q3OBJ = \
   $(B)/client/sv_snapshot.o \
   $(B)/client/sv_world.o \
 	$(B)/client/sv_bsp.o \
-	\
-	$(B)/client/bsp.o \
-	$(B)/client/inout.o \
-	$(B)/client/prtfile.o \
-	$(B)/client/bspfile_rbsp.o \
-	$(B)/client/bspfile_ibsp.o \
-	$(B)/client/bspfile_abstract.o \
-	$(B)/client/portals.o \
-	$(B)/client/surface.o \
-	$(B)/client/surface_meta.o \
-	$(B)/client/surface_foliage.o \
-	$(B)/client/facebsp.o \
-	$(B)/client/bspfile.o \
-	$(B)/client/brush.o \
-	$(B)/client/map.o \
-	$(B)/client/polylib.o \
-	$(B)/client/fog.o \
-	$(B)/client/writebsp.o \
-	$(B)/client/scriplib.o \
-	$(B)/client/model.o \
-	$(B)/client/shaders.o \
-	$(B)/client/libs/mathlib.o \
-	$(B)/client/brush_primit.o \
-	$(B)/client/mesh.o \
-	$(B)/client/tjunction.o \
-	$(B)/client/tree.o \
-	$(B)/client/image.o \
-	$(B)/client/jpeg.o \
-	$(B)/client/libs/ddslib.o \
-	$(B)/client/leakfile.o \
-	$(B)/client/imagelib.o \
-	$(B)/client/decals.o \
-	$(B)/client/patch.o \
-	$(B)/client/libs/picomodel.o \
-	$(B)/client/libs/picointernal.o \
-	$(B)/client/libs/picomodules.o \
-	$(B)/client/light_bounce.o \
-	$(B)/client/threads.o \
-	$(B)/client/surface_extra.o \
-	$(B)/client/libs/m4x4.o \
-	$(B)/client/libs/md5lib.o \
-	$(B)/client/libs/pm_terrain.o \
-	$(B)/client/libs/pm_md3.o \
-	$(B)/client/libs/pm_ase.o \
-	$(B)/client/libs/pm_3ds.o \
-	$(B)/client/libs/pm_md2.o \
-	$(B)/client/libs/pm_fm.o \
-	$(B)/client/libs/pm_lwo.o \
-	$(B)/client/libs/pm_mdc.o \
-	$(B)/client/libs/pm_ms3d.o \
-	$(B)/client/libs/pm_obj.o \
-	$(B)/client/vfs.o \
-	$(B)/client/libs/lwo2.o \
-	$(B)/client/libs/pntspols.o \
-	$(B)/client/libs/vmap.o \
-	$(B)/client/libs/lwob.o \
-	$(B)/client/libs/clip.o \
-	$(B)/client/libs/lwio.o \
-	$(B)/client/libs/surface.o \
-	$(B)/client/libs/list.o \
-	$(B)/client/libs/envelope.o \
-	$(B)/client/surface_fur.o \
-	$(B)/client/libs/vecmath.o \
   \
   $(B)/client/q_math.o \
   $(B)/client/q_shared.o \
@@ -1320,8 +1266,9 @@ Q3OBJ = \
   $(B)/client/unzip.o \
   $(B)/client/puff.o \
   $(B)/client/vm.o \
-  $(B)/client/vm_interpreted.o \
-  \
+  $(B)/client/vm_interpreted.o
+
+Q3BOT = \
   $(B)/client/be_aas_bspq3.o \
   $(B)/client/be_aas_cluster.o \
   $(B)/client/be_aas_debug.o \
@@ -1350,6 +1297,77 @@ Q3OBJ = \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
+
+Q3M = \
+  $(B)/client/q3map2/bsp.o \
+	$(B)/client/tools/inout.o \
+	$(B)/client/tools/portals.o \
+	$(B)/client/q3map2/surface.o \
+	$(B)/client/q3map2/surface_meta.o \
+	$(B)/client/q3map2/surface_foliage.o \
+	$(B)/client/q3map2/facebsp.o \
+	$(B)/client/tools/brush.o \
+	$(B)/client/q3map2/map.o \
+	$(B)/client/tools/polylib.o \
+	$(B)/client/tools/fog.o \
+	$(B)/client/q3map2/writebsp.o \
+	$(B)/client/q3map2/model.o \
+	$(B)/client/q3map2/shaders.o \
+	$(B)/client/libs/mathlib.o \
+	$(B)/client/tools/brush_primit.o \
+	$(B)/client/tools/mesh.o \
+	$(B)/client/tools/tjunction.o \
+	$(B)/client/tools/tree.o \
+	$(B)/client/tools/image.o \
+	$(B)/client/tools/jpeg.o \
+	$(B)/client/libs/ddslib.o \
+	$(B)/client/leakfile.o \
+	$(B)/client/imagelib.o \
+	$(B)/client/tools/decals.o \
+	$(B)/client/tools/patch.o \
+	$(B)/client/libs/picomodel.o \
+	$(B)/client/libs/picointernal.o \
+	$(B)/client/libs/picomodules.o \
+	$(B)/client/light_bounce.o \
+	$(B)/client/tools/threads.o \
+	$(B)/client/tools/surface_extra.o \
+	$(B)/client/libs/m4x4.o \
+	$(B)/client/libs/md5lib.o \
+	$(B)/client/libs/pm_terrain.o \
+	$(B)/client/libs/pm_md3.o \
+	$(B)/client/libs/pm_ase.o \
+	$(B)/client/libs/pm_3ds.o \
+	$(B)/client/libs/pm_md2.o \
+	$(B)/client/libs/pm_fm.o \
+	$(B)/client/libs/pm_lwo.o \
+	$(B)/client/libs/pm_mdc.o \
+	$(B)/client/libs/pm_ms3d.o \
+	$(B)/client/libs/pm_obj.o \
+	$(B)/client/tools/vfs.o \
+	$(B)/client/libs/lwo2.o \
+	$(B)/client/libs/pntspols.o \
+	$(B)/client/libs/vmap.o \
+	$(B)/client/libs/lwob.o \
+	$(B)/client/libs/clip.o \
+	$(B)/client/libs/lwio.o \
+	$(B)/client/libs/surface.o \
+	$(B)/client/libs/list.o \
+	$(B)/client/libs/envelope.o \
+	$(B)/client/tools/surface_fur.o \
+	$(B)/client/libs/vecmath.o
+
+Q3MO = \
+	$(B)/client/tools/scriplib.o \
+	$(B)/client/tools/prtfile.o
+
+Q3MA = \
+	$(B)/client/q3map2/bspfile_rbsp.o \
+	$(B)/client/q3map2/bspfile_ibsp.o \
+	$(B)/client/q3map2/bspfile_abstract.o
+
+Q3MC = \
+	$(B)/client/tools/bspfile.o
+
 
 ifneq ($(USE_SYSTEM_JPEG),1)
   Q3OBJ += $(JPGOBJ)
@@ -1689,69 +1707,6 @@ Q3DOBJ = \
   $(B)/ded/sv_world.o \
 	$(B)/ded/sv_bsp.o \
 	\
-	$(B)/ded/bsp.o \
-	$(B)/ded/inout.o \
-	$(B)/ded/prtfile.o \
-	$(B)/ded/bspfile_rbsp.o \
-	$(B)/ded/bspfile_ibsp.o \
-	$(B)/ded/bspfile_abstract.o \
-	$(B)/ded/portals.o \
-	$(B)/ded/surface.o \
-	$(B)/ded/surface_meta.o \
-	$(B)/ded/surface_foliage.o \
-	$(B)/ded/facebsp.o \
-	$(B)/ded/bspfile.o \
-	$(B)/ded/brush.o \
-	$(B)/ded/map.o \
-	$(B)/ded/polylib.o \
-	$(B)/ded/fog.o \
-	$(B)/ded/writebsp.o \
-	$(B)/ded/scriplib.o \
-	$(B)/ded/model.o \
-	$(B)/ded/shaders.o \
-	$(B)/ded/libs/mathlib.o \
-	$(B)/ded/brush_primit.o \
-	$(B)/ded/mesh.o \
-	$(B)/ded/tjunction.o \
-	$(B)/ded/tree.o \
-	$(B)/ded/image.o \
-	$(B)/ded/jpeg.o \
-	$(B)/ded/libs/ddslib.o \
-	$(B)/ded/leakfile.o \
-	$(B)/ded/imagelib.o \
-	$(B)/ded/decals.o \
-	$(B)/ded/patch.o \
-	$(B)/ded/libs/picomodel.o \
-	$(B)/ded/libs/picointernal.o \
-	$(B)/ded/libs/picomodules.o \
-	$(B)/ded/light_bounce.o \
-	$(B)/ded/threads.o \
-	$(B)/ded/surface_extra.o \
-	$(B)/ded/libs/m4x4.o \
-	$(B)/ded/libs/md5lib.o \
-	$(B)/ded/libs/pm_terrain.o \
-	$(B)/ded/libs/pm_md3.o \
-	$(B)/ded/libs/pm_ase.o \
-	$(B)/ded/libs/pm_3ds.o \
-	$(B)/ded/libs/pm_md2.o \
-	$(B)/ded/libs/pm_fm.o \
-	$(B)/ded/libs/pm_lwo.o \
-	$(B)/ded/libs/pm_mdc.o \
-	$(B)/ded/libs/pm_ms3d.o \
-	$(B)/ded/libs/pm_obj.o \
-	$(B)/ded/vfs.o \
-	$(B)/ded/libs/lwo2.o \
-	$(B)/ded/libs/pntspols.o \
-	$(B)/ded/libs/vmap.o \
-	$(B)/ded/libs/lwob.o \
-	$(B)/ded/libs/clip.o \
-	$(B)/ded/libs/lwio.o \
-	$(B)/ded/libs/surface.o \
-	$(B)/ded/libs/list.o \
-	$(B)/ded/libs/envelope.o \
-	$(B)/ded/surface_fur.o \
-	$(B)/ded/libs/vecmath.o \
-  \
   $(B)/ded/cm_load.o \
 	$(B)/ded/cm_load_bsp2.o \
   $(B)/ded/cm_patch.o \
@@ -1777,8 +1732,9 @@ Q3DOBJ = \
   \
   $(B)/ded/unzip.o \
   $(B)/ded/vm.o \
-	$(B)/ded/vm_interpreted.o \
-  \
+	$(B)/ded/vm_interpreted.o
+
+Q3DBOT = \
   $(B)/ded/be_aas_bspq3.o \
   $(B)/ded/be_aas_cluster.o \
   $(B)/ded/be_aas_debug.o \
@@ -1808,9 +1764,80 @@ Q3DOBJ = \
   $(B)/ded/l_script.o \
   $(B)/ded/l_struct.o
 
-ifneq ($(USE_SYSTEM_JPEG),1)
-  Q3DOBJ += $(JPGOBJ)
-endif
+Q3DM = \
+	$(B)/ded/q3map2/bsp.o \
+	$(B)/ded/tools/inout.o \
+	$(B)/ded/q3map2/portals.o \
+	$(B)/ded/q3map2/surface.o \
+	$(B)/ded/q3map2/surface_meta.o \
+	$(B)/ded/q3map2/surface_foliage.o \
+	$(B)/ded/q3map2/facebsp.o \
+	$(B)/ded/q3map2/brush.o \
+	$(B)/ded/q3map2/map.o \
+	$(B)/ded/tools/polylib.o \
+	$(B)/ded/q3map2/fog.o \
+	$(B)/ded/q3map2/writebsp.o \
+	$(B)/ded/q3map2/model.o \
+	$(B)/ded/q3map2/shaders.o \
+	$(B)/ded/libs/mathlib.o \
+	$(B)/ded/q3map2/brush_primit.o \
+	$(B)/ded/q3map2/mesh.o \
+	$(B)/ded/q3map2/tjunction.o \
+	$(B)/ded/q3map2/tree.o \
+	$(B)/ded/q3map2/image.o \
+	$(B)/ded/libs/ddslib.o \
+	$(B)/ded/q3map2/leakfile.o \
+	$(B)/ded/tools/imagelib.o \
+	$(B)/ded/q3map2/decals.o \
+	$(B)/ded/q3map2/patch.o \
+	$(B)/ded/libs/picomodel.o \
+	$(B)/ded/libs/picointernal.o \
+	$(B)/ded/libs/picomodules.o \
+	$(B)/ded/q3map2/light_bounce.o \
+	$(B)/ded/tools/threads.o \
+	$(B)/ded/q3map2/surface_extra.o \
+	$(B)/ded/libs/m4x4.o \
+	$(B)/ded/libs/md5lib.o \
+	$(B)/ded/libs/pm_terrain.o \
+	$(B)/ded/libs/pm_md3.o \
+	$(B)/ded/libs/pm_ase.o \
+	$(B)/ded/libs/pm_3ds.o \
+	$(B)/ded/libs/pm_md2.o \
+	$(B)/ded/libs/pm_fm.o \
+	$(B)/ded/libs/pm_lwo.o \
+	$(B)/ded/libs/pm_mdc.o \
+	$(B)/ded/libs/pm_ms3d.o \
+	$(B)/ded/libs/pm_obj.o \
+	$(B)/ded/tools/vfs.o \
+	$(B)/ded/libs/lwo2.o \
+	$(B)/ded/libs/pntspols.o \
+	$(B)/ded/libs/vmap.o \
+	$(B)/ded/libs/lwob.o \
+	$(B)/ded/libs/clip.o \
+	$(B)/ded/libs/lwio.o \
+	$(B)/ded/libs/surface.o \
+	$(B)/ded/libs/list.o \
+	$(B)/ded/libs/envelope.o \
+	$(B)/ded/q3map2/surface_fur.o \
+	$(B)/ded/libs/vecmath.o
+
+Q3DMO = \
+	$(B)/ded/tools/scriplib.o \
+	$(B)/ded/q3map2/prtfile.o
+
+Q3DMA = \
+	$(B)/ded/q3map2/bspfile_rbsp.o \
+	$(B)/ded/q3map2/bspfile_ibsp.o \
+
+Q3DMC = \
+	$(B)/ded/tools/bspfile.o
+
+Q3DOBJ += \
+	$(Q3DM) \
+	$(Q3DMC) \
+	$(Q3DMO) \
+	$(B)/ded/q3map2/bspfile_abstract.o
+
 
 ifeq ($(USE_CURL),1)
   Q3DOBJ += $(B)/ded/cl_curl.o
@@ -1861,13 +1888,13 @@ $(B)/client/%.o: $(CDIR)/%.c
 $(B)/client/%.o: $(SDIR)/%.c
 	$(DO_CC)
 
-$(B)/client/%.o: $(TDIR)/common/%.c
+$(B)/client/tools/%.o: $(TDIR)/common/%.c
 	$(DO_TOOLS)
 
-$(B)/client/%.o: $(TDIR)/q3map2/%.c
+$(B)/client/q3map2/%.o: $(TDIR)/q3map2/%.c
 	$(DO_TOOLS)
 
-$(B)/client/%.o: $(TDIR)/q3data/%.c
+$(B)/client/tools/%.o: $(TDIR)/q3data/%.c
 	$(DO_TOOLS)
 
 $(B)/client/libs/%.o: $(TDIR)/libs/%.c
@@ -1981,13 +2008,13 @@ $(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 
-$(B)/ded/%.o: $(TDIR)/common/%.c
+$(B)/ded/tools/%.o: $(TDIR)/common/%.c
 	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(TDIR)/q3map2/%.c
+$(B)/ded/q3map2/%.o: $(TDIR)/q3map2/%.c
 	$(DO_DED_TOOLS)
 
-$(B)/ded/%.o: $(TDIR)/q3data/%.c
+$(B)/ded/tools/%.o: $(TDIR)/q3data/%.c
 	$(DO_DED_TOOLS)
 
 $(B)/ded/libs/%.o: $(TDIR)/libs/%.c
@@ -2015,7 +2042,7 @@ $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(BLIBDIR)/%.c
-	$(DO_BOT_CC)
+	$(DO_DED_BOT_CC)
 
 $(B)/ded/%.o: $(UDIR)/%.c
 	$(DO_DED_CC)
