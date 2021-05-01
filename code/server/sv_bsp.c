@@ -345,10 +345,13 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 	}
 
 	for(int i = 0; i < HEADER_LUMPS; i++) {
+		lump_t *lump = &header.lumps[lumpsStupidOrder[i]];
+		lump_t *prev = &header.lumps[lumpsStupidOrder[i - 1]];
 		if(i == 0)
-			header.lumps[lumpsStupidOrder[i]].fileofs = strlen(marker) + 1;
+			lump->fileofs = sizeof(dheader_t) + strlen(marker) + 1;
 		else
-			header.lumps[lumpsStupidOrder[i]].fileofs = header.lumps[i - 1].fileofs + header.lumps[i - 1].filelen;
+			lump->fileofs = prev->fileofs + prev->filelen;
+Com_Printf("Past %i, %i %i\n", lumpsStupidOrder[i], lump->fileofs, cl->downloadCount);
 	}
 
 	void *orderedLumpDatas[] = {
@@ -357,15 +360,15 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 		dLeafs,
 		dNodes,
 		dBrushes,
-		AddBrushSidesLump(),
+		dBrushSides,
 		dLeafSurfaces,
 		dLeafBrushes,
 		dModels,
-		AddDrawVertsLump(),
-		AddDrawSurfacesLump(),
+		dDrawVerts,
+		dDrawSurfaces,
 		dVisBytes,
 		dLightBytes,
-		AddLightGridLumps(),
+		dGridPoints,
 		dEntData,
 		dFogs,
 		dDrawIndexes
@@ -383,47 +386,52 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 			cl->downloadBlocks[curindex] = Z_Malloc( MAX_DOWNLOAD_BLKSIZE );
 		
 		for(int i = 0; i < HEADER_LUMPS; i++) {
-			if(header.lumps[i].fileofs < cl->downloadCount) {
-				if(header.lumps[i].fileofs + header.lumps[i].filelen < cl->downloadCount) {
-					continue;
-				}
-			}
-			
-			if(cl->downloadCurrentBlock == 0) {
-				memcpy(&cl->downloadBlocks[curindex], &header, sizeof(header));
-				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, header.lumps[i].fileofs);
+			lump_t *lump = &header.lumps[lumpsStupidOrder[i]];
+			void *data = &orderedLumpDatas[i];
+			if(lump->fileofs + lump->filelen < cl->downloadCount) {
+				// already past this lump in the download setup
+				continue;
 			}
 
-			if(header.lumps[i].fileofs + header.lumps[i].filelen > MAX_DOWNLOAD_BLKSIZE) {
-				if(cl->downloadCount >= header.lumps[i].fileofs) {
-					inBetween = qtrue;
-					cl->downloadBlockSize[curindex] = MAX_DOWNLOAD_BLKSIZE;
-				} else {
-					inBetween = qfalse;
-					cl->downloadBlockSize[curindex] += header.lumps[i].filelen - cl->downloadCount;
-				}
-			} else {
-				if(i == LUMP_LIGHTARRAY) {
-					cl->downloadCount = cl->downloadSize;
-					break;
-				}
-				inBetween = qfalse;
+			if(cl->downloadCurrentBlock == 0 && i == 0) {
+Com_Printf("Beginning header\n");
+				memcpy(&cl->downloadBlocks[curindex][0], &header, sizeof(header));
+				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, strlen(marker) + 1);
+				cl->downloadCount = lump->fileofs;
 			}
-			
-			if(inBetween) {
-				cl->downloadBlocks[curindex] = &orderedLumpDatas[i][cl->downloadCount - header.lumps[i].fileofs];
+
+			if(cl->downloadCount < lump->fileofs) {
+				Com_Error(ERR_DROP, "Should never happen because the previous loop should fill or break.");
 			} else {
-				memcpy(&cl->downloadBlocks[cl->downloadCount % MAX_DOWNLOAD_BLKSIZE],
-					 &orderedLumpDatas[i][cl->downloadCount - header.lumps[i].fileofs], cl->downloadBlockSize[curindex]);
+				if(lump->fileofs + lump->filelen > cl->downloadCount + MAX_DOWNLOAD_BLKSIZE) {
+					inBetween = qtrue;
+					// fill the whole block
+					cl->downloadBlockSize[curindex] = MAX_DOWNLOAD_BLKSIZE;
+					// diff from count because previous loop might have been a partial lump
+					int diffLength = MAX_DOWNLOAD_BLKSIZE - (cl->downloadCount % MAX_DOWNLOAD_BLKSIZE);
+					memcpy(&cl->downloadBlocks[curindex][cl->downloadCount], &data[cl->downloadCount - lump->fileofs], diffLength);
+					cl->downloadCount += diffLength;
+Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount);
+					break;
+				} else {
+					// fill partially with this lump, then loop and fill with next lump
+					int remainingLength = (lump->fileofs + lump->filelen) - cl->downloadCount;
+					cl->downloadBlockSize[curindex] += remainingLength;
+					memcpy(&cl->downloadBlocks[curindex][cl->downloadCount], &data[cl->downloadCount - lump->fileofs], remainingLength);
+					cl->downloadCount += remainingLength;
+					// loop back around and start on new lump
+Com_Printf("Lump end: %i, %i, %i\n", lumpsStupidOrder[i], remainingLength, cl->downloadCount);
+				}
 			}
 		}
 
-		cl->downloadCount += cl->downloadBlockSize[curindex];
-
 		// Load in next block
-		if(cl->downloadCount == cl->downloadSize
-			|| cl->downloadBlockSize[curindex] == MAX_DOWNLOAD_BLKSIZE) {
+		if(cl->downloadCount == cl->downloadSize) {
+			break;
+		} else if (cl->downloadBlockSize[curindex] == MAX_DOWNLOAD_BLKSIZE) {
 			cl->downloadCurrentBlock++;
+		} else {
+			Com_Error(ERR_DROP, "Should never happen because block should be filled with data\n");
 		}
 	}
 }
