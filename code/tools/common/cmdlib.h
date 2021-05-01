@@ -58,6 +58,14 @@
 #define _NO_GLIB
 #define MAX_OS_PATH     4096
 #define Random random
+#define SafeOpenRead(x) Sys_FOpen(x, "rb")
+#define SafeOpenWrite(x) Sys_FOpen(x, "wb")
+#define SafeWrite(f, buffer, count) fwrite( buffer, 1, count, f )
+#define SafeRead(f, buffer, count) fread( buffer, 1, count, f )
+#define LoadFile FS_ReadFile
+#define SaveFile FS_WriteFile
+#define ExpandArg 
+#define ExpandPath
 #endif
 
 #ifndef __Q_SHARED_H

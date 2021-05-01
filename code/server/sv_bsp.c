@@ -330,7 +330,6 @@ static void SV_LoadMapFromMemory( void ) {
 
 
 void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
-	time_t t;
 	char marker[ 1024 ];
 	int curindex;
 
@@ -339,8 +338,8 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 	if(cl->downloadClientBlock == 0) {
 		cl->downloadCurrentBlock = cl->downloadClientBlock = cl->downloadXmitBlock = 0;
 	}
-	time( &t );
-	sprintf( marker, "I LOVE QUAKE.GAMES %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
+	time_t time = I_FloatTime();
+	sprintf( marker, "I LOVE QUAKE.GAMES %s on %s)", Q3MAP_VERSION, asctime( localtime( &time ) ) );
 
 	for(int i = 0; i < HEADER_LUMPS; i++) {
 		lump_t *lump = &header.lumps[lumpsStupidOrder[i]];

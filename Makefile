@@ -249,6 +249,11 @@ endif
 
 BASE_CFLAGS =
 
+ifndef USE_MEMORY_MAPS
+  USE_MEMORY_MAPS = 1
+  BASE_CFLAGS += -DUSE_MEMORY_MAPS
+endif
+
 ifeq ($(USE_SYSTEM_JPEG),1)
   BASE_CFLAGS += -DUSE_SYSTEM_JPEG
 endif
@@ -835,7 +840,7 @@ $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_TOOLS
-$(echo_cmd) "TOOLS $<"
+$(echo_cmd) "TOOLS_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
 endef
 
@@ -889,7 +894,7 @@ $(Q)$(CC) $(NOTSHLIBCFLAGS) -DDEDICATED $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_DED_TOOLS
-$(echo_cmd) "DED_TOOLS $<"
+$(echo_cmd) "DED_TOOLS_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) -DDEDICATED $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
 endef
 define DO_WINDRES
@@ -1757,7 +1762,7 @@ Q3DOBJ = \
   $(B)/ded/l_struct.o
 
 ifeq ($(USE_MEMORY_MAPS),1)
-Q3OBJ += \
+Q3DOBJ += \
   $(B)/ded/q3map2/bsp.o \
 	$(B)/ded/tools/inout.o \
 	$(B)/ded/q3map2/portals.o \

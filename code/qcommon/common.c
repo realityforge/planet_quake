@@ -5181,3 +5181,31 @@ int b64_decode(const char *in, unsigned char *out, size_t outlen)
 
 	return 1;
 }
+
+/*
+   ================
+   I_FloatTime
+   ================
+ */
+long I_FloatTime( void ){
+	time_t t;
+
+	time( &t );
+
+	return t;
+#if 0
+// more precise, less portable
+	struct timeval tp;
+	struct timezone tzp;
+	static int secbase;
+
+	gettimeofday( &tp, &tzp );
+
+	if ( !secbase ) {
+		secbase = tp.tv_sec;
+		return tp.tv_usec / 1000000.0;
+	}
+
+	return ( tp.tv_sec - secbase ) + tp.tv_usec / 1000000.0;
+#endif
+}
