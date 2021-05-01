@@ -1,4 +1,5 @@
 
+#ifdef USE_MEMORY_MAPS
 
 #include "server.h"
 #include "../qcommon/cm_public.h"
@@ -445,3 +446,5 @@ int SV_MakeMap( void ) {
 	
 	return result;
 }
+
+#endif

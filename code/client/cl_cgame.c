@@ -59,6 +59,7 @@ CL_GetGameState
 */
 static void CL_GetGameState( gameState_t *gs ) {
 	int igs = clientGames[cgvm];
+Com_Printf("Get gamestate: %i -> %i\n", cgvm, igs);
 	*gs = cl.gameState[igs];
 }
 
@@ -162,7 +163,6 @@ CL_GetSnapshot
 qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
-	cl.updateSnap = 0;
 	int igs = clientGames[cgvm];
 
 	if ( snapshotNumber > cl.snap[igs].messageNum ) {
@@ -207,7 +207,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 #ifdef USE_MV
 	int cv;
 	cv = clientWorlds[cgvm];
-	cl.updateSnap = snapshot;
 	if ( clSnap->multiview ) {
 		int		entityNum;
 		int		startIndex;
@@ -684,129 +683,8 @@ CL_CgameSystemCalls
 The cgame module is making a system call
 ====================
 */
-typedef struct sysStrings_s {
-	int syscall;
-	char *name;
-} sysStrings_t;
-static sysStrings_t sysStrings[] = {
-{CG_PRINT, "CG_PRINT"},
-{CG_ERROR, "CG_ERROR"},
-{CG_MILLISECONDS, "CG_MILLISECONDS"},
-{CG_CVAR_REGISTER, "CG_CVAR_REGISTER"},
-{CG_CVAR_UPDATE, "CG_CVAR_UPDATE"},
-{CG_CVAR_SET, "CG_CVAR_SET"},
-{CG_CVAR_VARIABLESTRINGBUFFER, "CG_CVAR_VARIABLESTRINGBUFFER"},
-{CG_ARGC, "CG_ARGC"},
-{CG_ARGV, "CG_ARGV"},
-{CG_ARGS, "CG_ARGS"},
-{CG_FS_FOPENFILE, "CG_FS_FOPENFILE"},
-{CG_FS_READ, "CG_FS_READ"},
-{CG_FS_WRITE, "CG_FS_WRITE"},
-{CG_FS_FCLOSEFILE, "CG_FS_FCLOSEFILE"},
-{CG_SENDCONSOLECOMMAND, "CG_SENDCONSOLECOMMAND"},
-{CG_ADDCOMMAND, "CG_ADDCOMMAND"},
-{CG_SENDCLIENTCOMMAND, "CG_SENDCLIENTCOMMAND"},
-{CG_UPDATESCREEN, "CG_UPDATESCREEN"},
-{CG_CM_LOADMAP, "CG_CM_LOADMAP"},
-{CG_CM_NUMINLINEMODELS, "CG_CM_NUMINLINEMODELS"},
-{CG_CM_INLINEMODEL, "CG_CM_INLINEMODEL"},
-{CG_CM_LOADMODEL, "CG_CM_LOADMODEL"},
-{CG_CM_TEMPBOXMODEL, "CG_CM_TEMPBOXMODEL"},
-{CG_CM_POINTCONTENTS, "CG_CM_POINTCONTENTS"},
-{CG_CM_TRANSFORMEDPOINTCONTENTS, "CG_CM_TRANSFORMEDPOINTCONTENTS"},
-{CG_CM_BOXTRACE, "CG_CM_BOXTRACE"},
-{CG_CM_TRANSFORMEDBOXTRACE, "CG_CM_TRANSFORMEDBOXTRACE"},
-{CG_CM_MARKFRAGMENTS, "CG_CM_MARKFRAGMENTS"},
-{CG_S_STARTSOUND, "CG_S_STARTSOUND"},
-{CG_S_STARTLOCALSOUND, "CG_S_STARTLOCALSOUND"},
-{CG_S_CLEARLOOPINGSOUNDS, "CG_S_CLEARLOOPINGSOUNDS"},
-{CG_S_ADDLOOPINGSOUND, "CG_S_ADDLOOPINGSOUND"},
-{CG_S_UPDATEENTITYPOSITION, "CG_S_UPDATEENTITYPOSITION"},
-{CG_S_RESPATIALIZE, "CG_S_RESPATIALIZE"},
-{CG_S_REGISTERSOUND, "CG_S_REGISTERSOUND"},
-{CG_S_STARTBACKGROUNDTRACK, "CG_S_STARTBACKGROUNDTRACK"},
-{CG_R_LOADWORLDMAP, "CG_R_LOADWORLDMAP"},
-{CG_R_REGISTERMODEL, "CG_R_REGISTERMODEL"},
-{CG_R_REGISTERSKIN, "CG_R_REGISTERSKIN"},
-{CG_R_REGISTERSHADER, "CG_R_REGISTERSHADER"},
-{CG_R_CLEARSCENE, "CG_R_CLEARSCENE"},
-{CG_R_ADDREFENTITYTOSCENE, "CG_R_ADDREFENTITYTOSCENE"},
-{CG_R_ADDPOLYTOSCENE, "CG_R_ADDPOLYTOSCENE"},
-{CG_R_ADDLIGHTTOSCENE, "CG_R_ADDLIGHTTOSCENE"},
-{CG_R_RENDERSCENE, "CG_R_RENDERSCENE"},
-{CG_R_SETCOLOR, "CG_R_SETCOLOR"},
-{CG_R_DRAWSTRETCHPIC, "CG_R_DRAWSTRETCHPIC"},
-{CG_R_MODELBOUNDS, "CG_R_MODELBOUNDS"},
-{CG_R_LERPTAG, "CG_R_LERPTAG"},
-{CG_GETGLCONFIG, "CG_GETGLCONFIG"},
-{CG_GETGAMESTATE, "CG_GETGAMESTATE"},
-{CG_GETCURRENTSNAPSHOTNUMBER, "CG_GETCURRENTSNAPSHOTNUMBER"},
-{CG_GETSNAPSHOT, "CG_GETSNAPSHOT"},
-{CG_GETSERVERCOMMAND, "CG_GETSERVERCOMMAND"},
-{CG_GETCURRENTCMDNUMBER, "CG_GETCURRENTCMDNUMBER"},
-{CG_GETUSERCMD, "CG_GETUSERCMD"},
-{CG_SETUSERCMDVALUE, "CG_SETUSERCMDVALUE"},
-{CG_R_REGISTERSHADERNOMIP, "CG_R_REGISTERSHADERNOMIP"},
-{CG_MEMORY_REMAINING, "CG_MEMORY_REMAINING"},
-{CG_R_REGISTERFONT, "CG_R_REGISTERFONT"},
-{CG_KEY_ISDOWN, "CG_KEY_ISDOWN"},
-{CG_KEY_GETCATCHER, "CG_KEY_GETCATCHER"},
-{CG_KEY_SETCATCHER, "CG_KEY_SETCATCHER"},
-{CG_KEY_GETKEY, "CG_KEY_GETKEY"},
-{CG_PC_ADD_GLOBAL_DEFINE, "CG_PC_ADD_GLOBAL_DEFINE"},
-{CG_PC_LOAD_SOURCE, "CG_PC_LOAD_SOURCE"},
-{CG_PC_FREE_SOURCE, "CG_PC_FREE_SOURCE"},
-{CG_PC_READ_TOKEN, "CG_PC_READ_TOKEN"},
-{CG_PC_SOURCE_FILE_AND_LINE, "CG_PC_SOURCE_FILE_AND_LINE"},
-{CG_S_STOPBACKGROUNDTRACK, "CG_S_STOPBACKGROUNDTRACK"},
-{CG_REAL_TIME, "CG_REAL_TIME"},
-{CG_SNAPVECTOR, "CG_SNAPVECTOR"},
-{CG_REMOVECOMMAND, "CG_REMOVECOMMAND"},
-{CG_R_LIGHTFORPOINT, "CG_R_LIGHTFORPOINT"},
-{CG_CIN_PLAYCINEMATIC, "CG_CIN_PLAYCINEMATIC"},
-{CG_CIN_STOPCINEMATIC, "CG_CIN_STOPCINEMATIC"},
-{CG_CIN_RUNCINEMATIC, "CG_CIN_RUNCINEMATIC"},
-{CG_CIN_DRAWCINEMATIC, "CG_CIN_DRAWCINEMATIC"},
-{CG_CIN_SETEXTENTS, "CG_CIN_SETEXTENTS"},
-{CG_R_REMAP_SHADER, "CG_R_REMAP_SHADER"},
-{CG_S_ADDREALLOOPINGSOUND, "CG_S_ADDREALLOOPINGSOUND"},
-{CG_S_STOPLOOPINGSOUND, "CG_S_STOPLOOPINGSOUND"},
-{CG_CM_TEMPCAPSULEMODEL, "CG_CM_TEMPCAPSULEMODEL"},
-{CG_CM_CAPSULETRACE, "CG_CM_CAPSULETRACE"},
-{CG_CM_TRANSFORMEDCAPSULETRACE, "CG_CM_TRANSFORMEDCAPSULETRACE"},
-{CG_R_ADDADDITIVELIGHTTOSCENE, "CG_R_ADDADDITIVELIGHTTOSCENE"},
-{CG_GET_ENTITY_TOKEN, "CG_GET_ENTITY_TOKEN"},
-{CG_R_ADDPOLYSTOSCENE, "CG_R_ADDPOLYSTOSCENE"},
-{CG_R_INPVS, "CG_R_INPVS"},
-{CG_FS_SEEK, "CG_FS_SEEK"},
-{CG_FLOOR, "CG_FLOOR"},
-{CG_CEIL, "CG_CEIL"},
-{CG_TESTPRINTINT, "CG_TESTPRINTINT"},
-{CG_TESTPRINTFLOAT, "CG_TESTPRINTFLOAT"},
-{CG_ACOS, "CG_ACOS"},
-{CG_R_ADDREFENTITYTOSCENE2, "CG_R_ADDREFENTITYTOSCENE2"},
-{CG_R_FORCEFIXEDDLIGHTS, "CG_R_FORCEFIXEDDLIGHTS"},
-{CG_R_ADDLINEARLIGHTTOSCENE, "CG_R_ADDLINEARLIGHTTOSCENE"},
-{CG_IS_RECORDING_DEMO, "CG_IS_RECORDING_DEMO"},
-{CG_TRAP_GETVALUE, "CG_TRAP_GETVALUE"},
-{TRAP_MEMSET, "TRAP_MEMSET"},
-{TRAP_MEMCPY, "TRAP_MEMCPY"},
-{TRAP_STRNCPY, "TRAP_STRNCPY"},
-{TRAP_SIN, "TRAP_SIN"},
-{TRAP_COS, "TRAP_COS"},
-{TRAP_ATAN2, "TRAP_ATAN2"},
-{TRAP_SQRT, "TRAP_SQRT"}
-};
-
 static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	intptr_t result;
-	Com_Printf("CGame system %i: %i %i\n", cgvm, args[0], clientGames[cgvm]);
-	for(int i = 0; i < sizeof(sysStrings) / sizeof(sysStrings_t); i++) {
-		if(sysStrings[i].syscall == args[0]) {
-			Com_Printf("CGame system %i: %s, %i %i\n", cgvm, sysStrings[i], args[0], clientGames[cgvm]);
-			break;
-		}
-	}
 	switch( args[0] ) {
 	case CG_PRINT:
 		if(Q_stristr((const char*)VMA(1), "font image")) {
@@ -1247,11 +1125,12 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 static int				t1, t2;
-void CL_InitCGame( int igvm ) {
+void CL_InitCGame( int inVM ) {
 	const char			*info;
 	const char			*mapname;
 	vmInterpret_t		interpret;
 	unsigned result;
+	int igvm = inVM == -1 ? 0 : inVM;
 
 	t1 = Sys_Milliseconds();
 
@@ -1288,7 +1167,7 @@ void CL_InitCGame( int igvm ) {
 	result = VM_Call( cgvms[igvm], 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
 #ifdef USE_MULTIVM_CLIENT
-	if(igvm > -1) {
+	if(inVM > -1) {
 		cls.state = CA_PRIMED;
 		re.EndRegistration();
 		Com_TouchMemory();
@@ -1384,11 +1263,13 @@ See if the current console command is claimed by the cgame
 */
 qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
-#ifdef USE_MULTIVM_CLIENT
-	int prevGvm = cgvm;
+
 	if ( !cgvms[igvm] ) {
 		return qfalse;
 	}
+
+#ifdef USE_MULTIVM_CLIENT
+	int prevGvm = cgvm;
 	cgvm = igvm;
 	CM_SwitchMap(clientMaps[cgvm]);
 #endif
@@ -1606,12 +1487,10 @@ CL_SetCGameTime
 */
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
-#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[cgvm];
+#ifdef USE_MULTIVM_CLIENT
 	cgvm = 0;
 	CM_SwitchMap(clientMaps[cgvm]);
-#else
-	int igs = 0;
 #endif
 
 	// getting a valid frame message ends the connection process

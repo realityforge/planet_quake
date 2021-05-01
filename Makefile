@@ -1295,8 +1295,10 @@ Q3OBJ = \
   $(B)/client/l_memory.o \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
-  $(B)/client/l_struct.o \
-	\
+  $(B)/client/l_struct.o
+
+ifeq ($(USE_MEMORY_MAPS),1)
+Q3OBJ += \
   $(B)/client/q3map2/bsp.o \
 	$(B)/client/tools/inout.o \
 	$(B)/client/q3map2/portals.o \
@@ -1357,8 +1359,8 @@ Q3OBJ = \
 	$(B)/client/q3map2/prtfile.o \
   $(B)/client/q3map2/bspfile_abstract.o \
 	$(B)/client/q3map2/bspfile_rbsp.o \
-	$(B)/client/q3map2/bspfile_ibsp.o \
-
+	$(B)/client/q3map2/bspfile_ibsp.o
+endif
 
 ifneq ($(USE_SYSTEM_JPEG),1)
   Q3OBJ += $(JPGOBJ)
@@ -1752,9 +1754,11 @@ Q3DOBJ = \
   $(B)/ded/l_memory.o \
   $(B)/ded/l_precomp.o \
   $(B)/ded/l_script.o \
-  $(B)/ded/l_struct.o \
-	\
-	$(B)/ded/q3map2/bsp.o \
+  $(B)/ded/l_struct.o
+
+ifeq ($(USE_MEMORY_MAPS),1)
+Q3OBJ += \
+  $(B)/ded/q3map2/bsp.o \
 	$(B)/ded/tools/inout.o \
 	$(B)/ded/q3map2/portals.o \
 	$(B)/ded/q3map2/surface.o \
@@ -1814,6 +1818,7 @@ Q3DOBJ = \
 	$(B)/ded/q3map2/bspfile_abstract.o \
 	$(B)/ded/q3map2/bspfile_rbsp.o \
 	$(B)/ded/q3map2/bspfile_ibsp.o
+endif
 
 ifeq ($(USE_CURL),1)
   Q3DOBJ += $(B)/ded/cl_curl.o

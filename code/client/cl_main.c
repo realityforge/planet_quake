@@ -1370,7 +1370,7 @@ void CL_ClearMemory( void ) {
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_MEMORY)
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
 #else
@@ -1542,7 +1542,6 @@ This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
-	netadr_t	addr;
 	
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return cl_restarted;
@@ -1616,6 +1615,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 #ifdef USE_LOCAL_DED
 	{
+		netadr_t	addr;
 		NET_StringToAdr("localhost", &addr, NA_LOOPBACK);
 		if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK) {
 			//cls.state = CA_CONNECTED;
@@ -2908,6 +2908,8 @@ static void CL_DownloadsComplete( void ) {
 		cls.state = CA_ACTIVE;
 	}
 #else
+	clientGames[0] = 0;
+	clientWorlds[0] = clc.clientNum;
 	CL_InitCGame(-1);
 #endif
 

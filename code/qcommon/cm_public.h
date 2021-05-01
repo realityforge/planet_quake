@@ -38,6 +38,7 @@ int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
 
+#ifdef USE_MEMORY_MAPS
 void CMod_LoadShaders( lump_t *l );
 void CMod_LoadLeafs( lump_t *l );
 void CMod_LoadLeafBrushes( const lump_t *l );
@@ -70,6 +71,7 @@ extern dfog_t *dFogs;
 //bspAdvertisement_t *dAds;
 
 int CM_LoadMapFromMemory( void );
+#endif
 
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );

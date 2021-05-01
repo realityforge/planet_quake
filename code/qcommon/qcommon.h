@@ -1569,20 +1569,4 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex );
 int b64_encode(const unsigned char *in, char *out, size_t len);
 int b64_decode(const char *in, unsigned char *out, size_t outlen);
 
-#define BASEDIRNAME "quake"     // assumed to have a 2 or 3 following
-
-void    DefaultPath( char *path, const char *basepath );
-void    StripFilename( char *path );
-void    StripExtension( char *path );
-void    ExtractFilePath( const char *path, char *dest );
-void    ExtractFileName( const char *path, char *dest );
-void    ExtractFileBase( const char *path, char *dest );
-void    ExtractFileExtension( const char *path, char *dest );
-double I_FloatTime( void );
-int    LoadFile( const char *filename, void **bufferptr );
-void    SaveFile( const char *filename, const void *buffer, int count );
-FILE *SafeOpenWrite( const char *filename );
-void SafeWrite( FILE *f, const void *buffer, int count );
-FILE *SafeOpenRead( const char *filename );
-
 #endif // _QCOMMON_H_

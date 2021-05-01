@@ -481,21 +481,15 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 		return;
 	}
 
-
 	leafnum = CM_PointLeafnum (origin);
-	
 	clientarea = CM_LeafArea (leafnum);
-	
 	clientcluster = CM_LeafCluster (leafnum);
-	
 
 	// calculate the visible areas
 	pvs->areabytes = CM_WriteAreaBits( pvs->areabits, clientarea );
 
-	
 	clientpvs = CM_ClusterPVS (clientcluster);
 
-	
 	for ( e = 0 ; e < svs.currFrame[gvm]->count; e++ ) {
 		es = svs.currFrame[gvm]->ents[ e ];
 		ent = SV_GentityNum( es->number );
@@ -526,7 +520,6 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
 			continue;
 		}
-		
 
 		// broadcast entities are always sent
 		if ( ent->r.svFlags & SVF_BROADCAST ) {
@@ -558,7 +551,6 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			}
 		}
 
-		
 		// if we haven't found it to be visible,
 		// check overflow clusters that coudln't be stored
 		if ( i == svEnt->numClusters ) {
@@ -576,7 +568,6 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			}
 		}
 
-		
 		// add it
 		SV_AddIndexToSnapshot( svEnt, e, &pvs->numbers );
 
@@ -593,7 +584,6 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 			SV_AddEntitiesVisibleFromPoint( ent->s.origin2, pvs, portal );
 		}
 	}
-	
 
 	ent = SV_GentityNum( pvs->clientNum );
 	// merge second PVS at ent->r.s.origin2

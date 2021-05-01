@@ -790,7 +790,6 @@ void	COM_ParseWarning( char *format, ... ) __attribute__ ((format (printf, 1, 2)
 //int		COM_ParseInfos( char *buf, int max, char infos[][MAX_INFO_STRING] );
 
 char	*COM_ParseComplex( const char **data_p, qboolean allowLineBreak );
-char *ExpandArg( const char *path );
 
 typedef enum {
 	TK_GENEGIC = 0, // for single-char tokens
@@ -877,14 +876,6 @@ int Q_isupper( int c );
 int Q_isalpha( int c );
 
 qboolean Q_streq( const char *s1, const char *s2 );
-
-#ifdef WIN32
-  #define Q_stricmp           stricmp
-  #define Q_strncasecmp       strnicmp
-#else
-  #define Q_stricmp           strcasecmp
-  #define Q_strncasecmp       strncasecmp
-#endif
 
 // portable case insensitive compare
 int		Q_stricmp (const char *s1, const char *s2);

@@ -846,8 +846,10 @@ void SV_AddFilter_f( void );
 void SV_AddFilterCmd_f( void );
 
 
+#ifdef USE_MEMORY_MAPS
 //
 // sv_bsp.c
 //
 int SV_MakeMap( void );
 void SV_WriteMemoryMapToClient(client_t *cl, int slot);
+#endif

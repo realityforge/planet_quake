@@ -1742,31 +1742,33 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	}
 
 	// Perform any reads that we need to
+#ifdef USE_MEMORY_MAPS
 	if(cl->downloadName[0] == '*') {
 		SV_WriteMemoryMapToClient(cl, atoi(&cl->downloadName[6]));
-	} else {
-		while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
-			cl->downloadSize != cl->downloadCount) {
+	} else
+	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
+		cl->downloadSize != cl->downloadCount) {
 
-			curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
+		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
 
-			if (!cl->downloadBlocks[curindex])
-				cl->downloadBlocks[curindex] = Z_Malloc( MAX_DOWNLOAD_BLKSIZE );
+		if (!cl->downloadBlocks[curindex])
+			cl->downloadBlocks[curindex] = Z_Malloc( MAX_DOWNLOAD_BLKSIZE );
 
-			cl->downloadBlockSize[curindex] = FS_Read( cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download );
+		cl->downloadBlockSize[curindex] = FS_Read( cl->downloadBlocks[curindex], MAX_DOWNLOAD_BLKSIZE, cl->download );
 
-			if (cl->downloadBlockSize[curindex] < 0) {
-				// EOF right now
-				cl->downloadCount = cl->downloadSize;
-				break;
-			}
-
-			cl->downloadCount += cl->downloadBlockSize[curindex];
-
-			// Load in next block
-			cl->downloadCurrentBlock++;
+		if (cl->downloadBlockSize[curindex] < 0) {
+			// EOF right now
+			cl->downloadCount = cl->downloadSize;
+			break;
 		}
+
+		cl->downloadCount += cl->downloadBlockSize[curindex];
+
+		// Load in next block
+		cl->downloadCurrentBlock++;
 	}
+#endif
+
 
 	// Check to see if we have eof condition and add the EOF block
 	if (cl->downloadCount == cl->downloadSize &&

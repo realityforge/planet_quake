@@ -127,7 +127,6 @@ typedef struct {
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
 	clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
-	snapshot_t    *updateSnap;
 
 	int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards

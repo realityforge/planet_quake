@@ -92,7 +92,7 @@ static void IN_CenterView( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
 #else
-	int igs = 0;
+	int igs = clientGames[0];
 #endif
 	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[igs].ps.delta_angles[PITCH]);
 }
@@ -829,7 +829,8 @@ void CL_WritePacket( void ) {
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #else
-	int igs = 0;
+;
+	int igs = clientGames[0];
 #endif
 ;
 	oldcmd = &nullcmd;
