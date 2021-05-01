@@ -144,7 +144,8 @@ void FreeWindingAccu( winding_accu_t *w ){
 	if ( numthreads == 1 ) {
 		c_active_windings--;
 	}
-	free( w );
+	if(w)
+		free( w );
 }
 
 /*

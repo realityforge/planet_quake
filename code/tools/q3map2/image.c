@@ -282,7 +282,8 @@ void ImageFree( image_t *image ){
 			free( image->filename );
 		}
 		image->filename = NULL;
-		free( image->pixels );
+		if(image->pixels)
+			free( image->pixels );
 		image->width = 0;
 		image->height = 0;
 		numImages--;
@@ -435,13 +436,15 @@ image_t *ImageLoad( const char *filename ){
 	}
 
 	/* free file buffer */
-	free( buffer );
+	if(buffer)
+		free( buffer );
 
 	/* make sure everything's kosher */
 	if ( size <= 0 || image->width <= 0 || image->height <= 0 || image->pixels == NULL ) {
 		//%	Sys_Printf( "size = %d  width = %d  height = %d  pixels = 0x%08x (%s)\n",
 		//%		size, image->width, image->height, image->pixels, name );
-		free( image->name );
+		if(image->name)
+			free( image->name );
 		image->name = NULL;
 		return NULL;
 	}

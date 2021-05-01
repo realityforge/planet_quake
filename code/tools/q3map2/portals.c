@@ -669,6 +669,7 @@ qboolean FloodEntities( tree_t *tree ){
 
 		/* get origin */
 		GetVectorForKey( e, "origin", origin );
+		
 		if ( VectorCompare( origin, vec3_origin ) ) {
 			continue;
 		}

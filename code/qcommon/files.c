@@ -2251,9 +2251,11 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 		// is the element a pak file?
 		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
 			// disregard if it doesn't match one of the allowed pure pak files
+#ifndef USE_EMSCRIPTEN
 			//if ( !FS_PakIsPure( search->pack ) ) {
 			//	continue;
 			//}
+#endif
 			//
 			if ( search->pack->exclude ) {
 				continue;

@@ -270,9 +270,9 @@ static int SV_LoadMapFromMemory( void ) {
   dModels = (void *)bspModels;
   header.lumps[LUMP_MODELS].filelen = numBSPModels * sizeof( dmodel_t );
 	AddDrawVertsLump(&header);
-	//AddDrawSurfacesLump(&header);
+	AddDrawSurfacesLump(&header);
 	//dModels = (void *)drawSurfaces;
-	header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
+	//header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
   dVisBytes = (void *)bspVisBytes;
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
   dLightBytes = (void *)bspLightBytes;

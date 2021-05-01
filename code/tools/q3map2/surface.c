@@ -2754,6 +2754,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 	int i, temp;
 	bspDrawSurface_t        *out;
 
+
 	/* invert the surface if necessary */
 	if ( ds->backSide || ds->shaderInfo->invert ) {
 		/* walk the indexes, reverse the triangle order */
@@ -2772,6 +2773,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 		VectorScale( ds->lightmapVecs[ 2 ], -1.0f, ds->lightmapVecs[ 2 ] );
 	}
 
+	
 	/* allocate a new surface */
 	if ( numBSPDrawSurfaces == MAX_MAP_DRAW_SURFS ) {
 		Error( "MAX_MAP_DRAW_SURFS" );
@@ -2801,6 +2803,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 		out->surfaceType = MST_PLANAR;
 	}
 
+	
 	/* set it up */
 	if ( debugSurfaces ) {
 		out->shaderNum = EmitShader( "debugsurfaces", NULL, NULL );
@@ -2845,6 +2848,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 		}
 	}
 
+	
 	/* RBSP */
 	for ( i = 0; i < MAX_LIGHTMAPS; i++ )
 	{
@@ -2866,12 +2870,14 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 		VectorClear( out->lightmapVecs[ 2 ] );
 	}
 
+	
 	/* optimize the surface's triangles */
 	OptimizeTriangleSurface( ds );
 
 	/* emit the verts and indexes */
 	EmitDrawVerts( ds, out );
 	EmitDrawIndexes( ds, out );
+	
 
 	/* add to count */
 	numSurfacesByType[ ds->type ]++;

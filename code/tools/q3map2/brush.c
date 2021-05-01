@@ -132,7 +132,8 @@ void FreeBrush( brush_t *b ){
 	*( (unsigned int*) b ) = 0xFEFEFEFE;
 
 	/* free it */
-	free( b );
+	if(b)
+		free( b );
 	if ( numthreads == 1 ) {
 		numActiveBrushes--;
 	}

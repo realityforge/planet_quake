@@ -2784,7 +2784,7 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 	if ( numBSPDrawSurfaces == MAX_MAP_DRAW_SURFS ) {
 		Com_Error(ERR_DROP, "MAX_MAP_DRAW_SURFS" );
 	}
-	Com_Printf("Crash 3: %p, %i\n", bspDrawSurfaces, numBSPDrawSurfaces);
+	
 	out = &bspDrawSurfaces[ numBSPDrawSurfaces ];
 	ds->outputNum = numBSPDrawSurfaces;
 	numBSPDrawSurfaces++;
@@ -3585,7 +3585,7 @@ void FilterDrawsurfsIntoTree( bspEntity_t *e, tree_t *tree ){
 			ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
 		}
 
-Com_Printf("Crash 1\n");
+
 		/* ydnar: gs mods: handle the various types of surfaces */
 		switch ( ds->type )
 		{
@@ -3666,7 +3666,7 @@ Com_Printf("Crash 1\n");
 			break;
 		}
 
-Com_Printf("Crash 2\n");
+
 		/* tot up the references */
 		if ( refs > 0 ) {
 			/* tot up counts */

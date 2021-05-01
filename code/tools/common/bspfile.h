@@ -22,6 +22,11 @@
 #include "qfiles.h"
 #include "surfaceflags.h"
 
+#ifdef __Q_SHARED_H
+//#define epair_t bspEpair_t
+//#define entity_t bspEntity_t
+#endif
+
 
 extern int bsp_version;
 
@@ -89,6 +94,7 @@ void    PrintBSPFileSizes( void );
 //===============
 
 
+#ifndef __Q_SHARED_H
 typedef struct epair_s {
 	struct epair_s  *next;
 	char    *key;
@@ -102,6 +108,28 @@ typedef struct {
 	int firstDrawSurf;
 	epair_t     *epairs;
 } entity_t;
+#else
+
+
+typedef struct epair_s
+{
+	struct epair_s      *next;
+	char                *key, *value;
+}
+epair_t;
+
+
+typedef struct
+{
+	vec3_t origin;
+	struct bspbrush_s             *brushes, *lastBrush, *colorModBrushes;
+	struct parseMesh_s         *patches;
+	int mapEntityNum, firstDrawSurf;
+	int firstBrush, numBrushes;                     /* only valid during BSP compile */
+	epair_t             *epairs;
+}
+entity_t;
+#endif
 
 extern int num_entities;
 extern entity_t entities[MAX_MAP_ENTITIES];

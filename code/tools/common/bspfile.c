@@ -704,3 +704,10 @@ void    GetVectorForKey( const entity_t *ent, const char *key, vec3_t vec ) {
 	vec[1] = v2;
 	vec[2] = v3;
 }
+
+
+
+#ifdef __Q_SHARED_H
+#undef epair_t
+#undef entity_t
+#endif

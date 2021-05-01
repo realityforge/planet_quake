@@ -51,9 +51,10 @@
 #define safe_malloc(size) Z_MallocDebug(size, #size, __FILE__, __LINE__)
 #define safe_malloc_info(size, y) Z_MallocDebug(size, #size, __FILE__, __LINE__)
 #else
-#define safe_malloc(x) Z_MallocDebug(x)
-#define safe_malloc_info(x, y) Z_MallocDebug(x)
+#define safe_malloc(x) Z_Malloc(x)
+#define safe_malloc_info(x, y) Z_Malloc(x)
 #endif
+#define free Z_Free
 #define _NO_GLIB
 #define MAX_OS_PATH     4096
 #define Random random

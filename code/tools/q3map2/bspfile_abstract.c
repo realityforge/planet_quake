@@ -37,6 +37,7 @@
 #include "q3map2.h"
 
 #ifdef __Q_SHARED_H
+/*
 const char                  *MAP_ValueForKey( const entity_t *ent, const char *key );
 void                        MAP_ParseEntities( void );
 //void                        UnparseEntities( void );
@@ -61,6 +62,7 @@ void                        MAP_ParseEntities( void );
 #define SwapBSPFile MAP_SwapBSPFile
 #define WriteBSPFile MAP_WriteBSPFile
 #define LoadBSPFile MAP_LoadBSPFile
+*/
 #endif
 
 
@@ -798,7 +800,6 @@ vec_t FloatForKey( const entity_t *ent, const char *key ){
 void GetVectorForKey( const entity_t *ent, const char *key, vec3_t vec ){
 	const char  *k;
 	double v1, v2, v3;
-
 
 	/* get value */
 	k = ValueForKey( ent, key );

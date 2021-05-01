@@ -265,8 +265,11 @@ void ProcessWorldModel( void ){
 	tree_t      *tree;
 	face_t      *faces;
 	qboolean ignoreLeaks, leaked;
+#ifndef __Q_SHARED_H
 	xmlNodePtr polyline, leaknode;
-	char level[ 2 ], shader[ 1024 ];
+	char level[ 2 ];
+#endif
+ 	char shader[ 1024 ];
 	const char  *value;
 
 	/* sets integer blockSize from worldspawn "_blocksize" key if it exists */
@@ -344,6 +347,7 @@ void ProcessWorldModel( void ){
 		Sys_FPrintf( SYS_NOXML, "**********************\n" );
 		Sys_FPrintf( SYS_NOXML, "******* leaked *******\n" );
 		Sys_FPrintf( SYS_NOXML, "**********************\n" );
+#ifndef __Q_SHARED_H
 		polyline = LeakFile( tree );
 		leaknode = xmlNewNode( NULL, (xmlChar*)"message" );
 		xmlNodeSetContent( leaknode, (xmlChar*)"MAP LEAKED\n" );
@@ -352,6 +356,7 @@ void ProcessWorldModel( void ){
 		level[1] = 0;
 		xmlSetProp( leaknode, (xmlChar*)"level", (xmlChar*)(char*) &level );
 		xml_SendNode( leaknode );
+#endif
 		if ( leaktest ) {
 			Sys_Printf( "--- MAP LEAKED, ABORTING LEAKTEST ---\n" );
 			exit( 0 );
@@ -934,21 +939,15 @@ int BSPMain( int argc, char **argv ){
 	return 0;
 }
 
-#ifdef ZONE_DEBUG
-	static void *safe_malloc_debug(size_t size) {
-		return safe_malloc(size);
-	}
-#endif
-
 void BSPMemory(char *map) {
 	qboolean onlyents = qfalse;
 
 	/* init model library */
 	PicoInit();
 #ifdef ZONE_DEBUG
-	PicoSetMallocFunc( safe_malloc_debug );
+	PicoSetMallocFunc( (void *(*)(unsigned long))Z_MallocDebug );
 #else
-	PicoSetMallocFunc( Z_Malloc );
+	PicoSetMallocFunc( (void *(*)(unsigned long))Z_Malloc );
 #endif
 	PicoSetFreeFunc( free );
 	PicoSetPrintFunc( PicoPrintFunc );

@@ -1353,7 +1353,6 @@ Q3OBJ = \
 	$(B)/client/libs/envelope.o \
 	$(B)/client/q3map2/surface_fur.o \
 	$(B)/client/libs/vecmath.o \
-	$(B)/client/tools/bspfile.o \
 	$(B)/client/tools/scriplib.o \
 	$(B)/client/q3map2/prtfile.o \
   $(B)/client/q3map2/bspfile_abstract.o \
@@ -1810,7 +1809,6 @@ Q3DOBJ = \
 	$(B)/ded/libs/envelope.o \
 	$(B)/ded/q3map2/surface_fur.o \
 	$(B)/ded/libs/vecmath.o \
-	$(B)/ded/tools/bspfile.o \
 	$(B)/ded/tools/scriplib.o \
 	$(B)/ded/q3map2/prtfile.o \
 	$(B)/ded/q3map2/bspfile_abstract.o \
