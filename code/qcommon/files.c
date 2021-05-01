@@ -2251,11 +2251,9 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 		// is the element a pak file?
 		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
 			// disregard if it doesn't match one of the allowed pure pak files
-#ifndef USE_EMSCRIPTEN
 			//if ( !FS_PakIsPure( search->pack ) ) {
 			//	continue;
 			//}
-#endif
 			//
 			if ( search->pack->exclude ) {
 				continue;
@@ -4555,8 +4553,8 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 			continue;
 		}
 		
-		if(fs_excludeReference->string[0] 
-			&& Q_stristr(fs_excludeReference->string, fs_serverReferencedPakNames[i])) {
+		if(fs_excludeReference
+			&& Q_stristr(va("baseq3/pak8a %s", fs_excludeReference->string), fs_serverReferencedPakNames[i])) {
 			continue;
 		}
 
@@ -5459,7 +5457,7 @@ qboolean FS_ExcludeReference( void ) {
 	if ( fs_excludeReference->string[0] == '\0' )
 		return qfalse;
 
-	Cmd_TokenizeStringIgnoreQuotes( fs_excludeReference->string );
+	Cmd_TokenizeStringIgnoreQuotes( va("baseq3/pak8a %s", fs_excludeReference->string) );
 	nargs = Cmd_Argc();
 	x = qfalse;
 

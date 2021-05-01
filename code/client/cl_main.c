@@ -356,7 +356,11 @@ static void CL_WriteGamestate( qboolean initial )
 	int			len;
 	entityState_t	*ent;
 	entityState_t	nullstate;
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = clientGames[0];
+#endif
 
 	// write out the gamestate message
 	MSG_Init( &msg, bufData, MAX_MSGLEN );
@@ -436,7 +440,11 @@ static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *
 	int		oldindex, newindex;
 	int		oldnum, newnum;
 	int		from_num_entities;
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = clientGames[0];
+#endif
 
 	// generate the delta update
 	if ( !from ) {
@@ -508,7 +516,11 @@ static void CL_WriteSnapshot( void ) {
 	byte	bufData[ MAX_MSGLEN_BUF ];
 	msg_t	msg;
 	int		i, len;
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = clientGames[0];
+#endif
 
 	snap = &cl.snapshots[igs][ cl.snap[igs].messageNum & PACKET_MASK ]; // current snapshot
 	//if ( !snap->valid ) // should never happen?
@@ -844,7 +856,11 @@ void CL_ReadDemoIndex( void ) {
 			clc.serverCommandSequence = MSG_ReadLong( &buf );
 
 			// parse all the configstrings and baselines
+#ifdef USE_MULTIVM_CLIENT
 			cl.gameState[clc.currentView].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+#else
+			cl.gameState[0].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+#endif
 			while ( 1 ) {
 				cmd = MSG_ReadByte( &buf );
 
@@ -2618,11 +2634,19 @@ static void CL_Configstrings_f( void ) {
 	}
 
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
+#ifdef USE_MULTIVM_CLIENT
 		ofs = cl.gameState[clc.currentView].stringOffsets[ i ];
+#else
+		ofs = cl.gameState[0].stringOffsets[ i ];
+#endif
 		if ( !ofs ) {
 			continue;
 		}
+#ifdef USE_MULTIVM_CLIENT
 		Com_Printf( "%4i: %s\n", i, cl.gameState[clc.currentView].stringData + ofs );
+#else
+		Com_Printf( "%4i: %s\n", i, cl.gameState[0].stringData + ofs );
+#endif
 	}
 }
 
@@ -2650,12 +2674,20 @@ CL_Serverinfo_f
 static void CL_Serverinfo_f( void ) {
 	int		ofs;
 
-	ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SERVERINFO ];
+#ifdef USE_MULTIVM_CLIENT
+		ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SERVERINFO ];
+#else
+		ofs = cl.gameState[0].stringOffsets[ CS_SERVERINFO ];
+#endif
 	if ( !ofs )
 		return;
 
 	Com_Printf( "Server info settings:\n" );
+#ifdef USE_MULTIVM_CLIENT
 	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
+#else
+	Info_Print( cl.gameState[0].stringData + ofs );
+#endif
 }
 
 
@@ -2667,12 +2699,20 @@ CL_Systeminfo_f
 static void CL_Systeminfo_f( void ) {
 	int ofs;
 
+#ifdef USE_MULTIVM_CLIENT
 	ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SYSTEMINFO ];
+#else
+	ofs = cl.gameState[0].stringOffsets[ CS_SYSTEMINFO ];
+#endif
 	if ( !ofs )
 		return;
 
 	Com_Printf( "System info settings:\n" );
+#ifdef USE_MULTIVM_CLIENT
 	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
+#else
+	Info_Print( cl.gameState[0].stringData + ofs );
+#endif
 }
 
 
@@ -3065,12 +3105,12 @@ void CL_InitDownloads( void ) {
 		if( !(cl_allowDownload->integer & DLF_ENABLE) ) {
 			// NOTE TTimo I would rather have that printed as a modal message box
 			// but at this point while joining the game we don't know wether we will successfully join or not
-			Com_Printf( "\nWARNING: You are missing some files referenced by the server:\n%s"
+			Com_Printf( "\nWARNING: You are missing some files referenced by the server:\n"
 				"You might not be able to join the game\n"
-				"Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n", missingfiles );
+				"Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n");
 		}
 
-		Com_Printf( "Need paks: %s\n", clc.downloadList );
+		Com_Printf( "Need paks: %s\n", missingfiles );
 		
 		if ( missingfiles[0] ) {
 			strcpy(clc.downloadList, missingfiles);
@@ -6583,7 +6623,11 @@ static void CL_Download_f( void )
 static qboolean GetConfigString( int index, char *buf, int size )
 {
 	int		offset;
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = clientGames[0];
+#endif
 
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
 		buf[0] = '\0';
@@ -6631,7 +6675,11 @@ void CL_Multiview_f( void )
 void CL_MultiviewFollow_f( void )
 {
 	int clientNum;
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = clientGames[0];
+#endif
 
 	if ( !cl.snap[igs].multiview ) {
 		Com_Printf("Not a multiview snapshot.\n");
@@ -6646,7 +6694,11 @@ void CL_MultiviewFollow_f( void )
 	}
 
 	if ( GET_ABIT( cl.snap[igs].clientMask, clientNum ) )
+#ifdef USE_MULTIVM_CLIENT
 		clientWorlds[clc.currentView] = clientNum;
+#else
+		clientWorlds[0] = clientNum;
+#endif
 	else 
 		Com_Printf("Multiview client not available.\n");
 }

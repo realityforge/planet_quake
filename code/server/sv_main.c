@@ -61,11 +61,11 @@ cvar_t	*sv_mvClients;
 cvar_t	*sv_mvPassword;
 cvar_t	*sv_demoFlags;
 cvar_t	*sv_mvAutoRecord;
-cvar_t  *sv_autoRecordThreshold;
 
 cvar_t	*sv_mvFileCount;
 cvar_t	*sv_mvFolderSize;
 #endif
+cvar_t  *sv_autoRecordThreshold;
 #ifdef USE_MULTIVM_SERVER
 cvar_t  *sv_mvWorld; // send world commands to manage view
 cvar_t  *sv_mvSyncPS; // synchronize player state between worlds
@@ -1015,7 +1015,9 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	static rateLimit_t bucket;
 	qboolean	valid;
 	qboolean  limited;
+#ifdef USE_SERVER_ROLES
 	int role;
+#endif
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[1024 - 16];

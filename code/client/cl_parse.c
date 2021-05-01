@@ -978,7 +978,13 @@ static void CL_ParseDownload( msg_t *msg ) {
 
 	if (!*clc.downloadTempName) {
 		Com_Printf("Server sending download, but no download was requested\n");
-		CL_AddReliableCommand( "stopdl", qfalse );
+		// parse the rest of the download so we don't get illegible
+		if(!MSG_ReadShort ( msg )) {
+			MSG_ReadLong ( msg );
+		}
+		MSG_ReadData(msg, data, MSG_ReadShort ( msg ));
+		if(!Q_stristr(clc.reliableCommands[ clc.reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 ) ], "stopdl"))
+			CL_AddReliableCommand( "stopdl", qfalse );
 		return;
 	}
 
@@ -1021,7 +1027,7 @@ static void CL_ParseDownload( msg_t *msg ) {
 	// open the file if not opened yet
 	if ( clc.download == FS_INVALID_HANDLE ) 
 	{
-		if ( !CL_ValidPakSignature( data, size ) ) 
+		if ( clc.downloadName[0] != '*' && !CL_ValidPakSignature( data, size ) ) 
 		{
 			Com_Printf( S_COLOR_YELLOW "Invalid pak signature for %s\n", clc.downloadName );
 			CL_AddReliableCommand( "stopdl", qfalse );

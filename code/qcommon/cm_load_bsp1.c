@@ -693,21 +693,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		Com_Error( ERR_DROP, "CM_LoadMap: NULL name" );
 	}
 
-#ifndef BSPC
-	cm_noAreas = Cvar_Get ("cm_noAreas", "0", CVAR_CHEAT);
-	Cvar_SetDescription(cm_noAreas, "Create one giant area for the clipmap and don't use culling\nDefault: 0");
-	cm_noCurves = Cvar_Get ("cm_noCurves", "0", CVAR_CHEAT);
-	Cvar_SetDescription(cm_noCurves, "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
-	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
-	Cvar_SetDescription( cm_playerCurveClip, "Don't clip player bounding box around curves\nDefault: 1" );
-	cm_saveEnts = Cvar_Get ("cm_saveEnts", "0", 0);
-	Cvar_SetDescription(cm_saveEnts, "Export entities from the next map that is loaded by the same name with a .ent extension, usually in your fs_homepath/maps directory\nDefault: 0");
-#endif
-#ifdef USE_LAZY_MEMORY
-	Cmd_AddCommand("cmlist", CM_MapList_f);
-	Cmd_SetDescription("cmlist", "List the currently loaded clip maps\nUsage: maplist");
-#endif
-
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
 		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
 			*checksum = cms[i].checksum;

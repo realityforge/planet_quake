@@ -89,7 +89,11 @@ static cvar_t *m_filter;
 static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
+#else
+	int igs = 0;
+#endif
 	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[igs].ps.delta_angles[PITCH]);
 }
 
@@ -824,6 +828,8 @@ void CL_WritePacket( void ) {
 			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
+#else
+	int igs = 0;
 #endif
 ;
 	oldcmd = &nullcmd;
@@ -902,10 +908,11 @@ void CL_WritePacket( void ) {
 		for ( i = 0 ; i < count ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
 			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
+			cmd = &cl.cmds[igvm][j];
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
+			cmd = &cl.cmds[0][j];
 #endif
-			cmd = &cl.cmds[igvm][j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
 		}
@@ -917,7 +924,11 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
+#ifdef USE_MULTIVM_CLIENT
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
+#else
+	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[0];
+#endif
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {

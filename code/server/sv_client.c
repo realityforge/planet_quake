@@ -1554,8 +1554,10 @@ Downloads are finished
 ==================
 */
 static void SV_DoneDownload_f( client_t *cl ) {
-	if ( cl->state == CS_ACTIVE )
+	if ( cl->state == CS_ACTIVE ) {
+		Com_DPrintf( "clientDownload: %s: %i Done\n", cl->name, cl->state);
 		return;
+	}
 
 	Com_DPrintf( "clientDownload: %s Done\n", cl->name);
 
@@ -1636,7 +1638,8 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	if (!*cl->downloadName)
 		return 0;	// Nothing being downloaded
 
-	if ( cl->download == FS_INVALID_HANDLE ) {
+	if ( cl->download == FS_INVALID_HANDLE
+	 	&& cl->downloadName[0] != '*') {
 		qboolean idPack = qfalse;
 		qboolean missionPack = qfalse;
  		// Chop off filename extension.
@@ -1675,7 +1678,6 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 		cl->download = FS_INVALID_HANDLE;
 
 		// We open the file here
-		if (cl->downloadName[0] != '*')
 		if ( !(sv_allowDownload->integer & DLF_ENABLE) ||
 			(sv_allowDownload->integer & DLF_NO_UDP) ||
 			idPack || unreferenced ||
@@ -1807,7 +1809,7 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	if(cl->downloadBlockSize[curindex])
 		MSG_WriteData(msg, cl->downloadBlocks[curindex], cl->downloadBlockSize[curindex]);
 
-	Com_DPrintf( "clientDownload: %d : writing block %d\n", (int) (cl - svs.clients), cl->downloadXmitBlock );
+	Com_DPrintf( "clientDownload: %d : writing block %d, %d\n", (int) (cl - svs.clients), cl->downloadXmitBlock, cl->downloadBlockSize[curindex] );
 
 	// Move on to the next block
 	// It will get sent with next snap shot.  The rate will keep us in line.
@@ -2662,13 +2664,12 @@ Also called by bot code
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	const ucmd_t *ucmd;
 	qboolean bFloodProtect;
-	char		sv_outputbuf[1024 - 16];
-	int     ded;
 	
 	Cmd_TokenizeString( s );
 	
 	// TODO: check implied rconpassword from previous attempt by client
 #ifdef USE_CMD_CONNECTOR
+	char		sv_outputbuf[1024 - 16];
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server
 	if(cl->netchan.remoteAddress.type == NA_LOOPBACK) {
@@ -2681,13 +2682,17 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		
 		// in baseq3 game (not cgame or ui) the dedicated flag is used for
 		// say "server:" and other logging bs. hope this is sufficient?
-		ded = com_dedicated->integer;
+#ifndef DEDICATED
+		int ded = com_dedicated->integer;
 		Cvar_Set("dedicated", "0");
+#endif
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand(gvm);
 		}
+#ifndef DEDICATED
 		Cvar_Set("dedicated", va("%i", ded));
+#endif
 		Com_EndRedirect();
 	}
 #endif
@@ -3092,6 +3097,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		|| (cl->newWorld != cl->gameWorld && cl->state == CS_CONNECTED)
 #endif
 		) && !*cl->downloadName && !strstr(cl->lastClientCommandString, "nextdl") 
+		 && !strstr(cl->lastClientCommandString, "download") 
 	) {
 		if ( serverId >= sv.restartedServerId && serverId < sv.serverId ) { // TTimo - use a comparison here to catch multiple map_restart
 			// they just haven't caught the map_restart yet
