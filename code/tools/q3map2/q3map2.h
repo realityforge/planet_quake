@@ -1532,7 +1532,7 @@ int                         FixAASMain( int argc, char **argv );
 
 /* bsp.c */
 int                         BSPMain( int argc, char **argv );
-void BSPMemory(char *map);
+void BSPMemory(char *map, int slot);
 
 
 /* bsp_analyze.c */

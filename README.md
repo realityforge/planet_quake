@@ -58,6 +58,7 @@ Some of the major features currently implemented are:
   * Roles based rcon access. Set up to 24 rcon passwords each with a specific role assigned to it. Set the names of the roles with `sv_roles` (default: admin referee moderator). Role names must be alphanumeric with spaces in between, up to 24 names can be specified. Roles are set with `sv_roleName` where Name one of the role names set in `sv_roles`. Role capabilities are set with the name of the console command, e.g. `ban kick map`. Authorized users can access the entire command, that is, if they have `exec` permissions they can execute ANY script. If you want to limit executions to specific commands or combinations an alias has to be used and the alias would be listed in the `sv_roleName` instead of the command.
   * Event streaming. When specific things happen on the server, rcon can query the list of events and get a JSON style response of what happened since the last time it was checked. E.g. `{"type":1,"value":"q3dm1"}` where type `1` is SV_EVENT_MAPCHANGE. This is also used for the discord integration, and rankings. TODO: piped output for "pushing" events (as opposed to polling). TODO: add location information capable of making a heatmap
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
+  * Procedurally generated game content and maps, TODO: create voxelized model on server aka "destructible model" and stream to client, replace using z-index?
   * Many, many bug fixes
 
 Coming soon!
@@ -87,7 +88,6 @@ Coming soon!
   * Repacking-as-a-service, uploader for repacking game content
   * Mesh networking with geographically distributed and load balanced proxy servers, using dedicated server web-workers.
   * Push notifications through web browser for pickup matches
-  * Procedurally generated game content and maps, create voxelized model on server aka "destructible model" and stream to client, replace using z-index?
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies

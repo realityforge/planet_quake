@@ -733,10 +733,18 @@ void SV_SpawnServer_After_Startup( void ) {
 		// rebuild referenced paks list
 		p = FS_ReferencedPakNames();
 	}
-	Cvar_Set( "sv_referencedPakNames", p );
+	if(mapname[0] == '*') {
+		Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
+	} else {
+		Cvar_Set( "sv_referencedPakNames", p );
+	}
 
 	p = FS_ReferencedPakChecksums();
-	Cvar_Set( "sv_referencedPaks", p );
+	if(mapname[0] == '*') {
+		Cvar_Set( "sv_referencedPaks", va("%s 0", p) );
+	} else {
+		Cvar_Set( "sv_referencedPaks", p );
+	}
 
 	Cvar_Set( "sv_paks", "" );
 	Cvar_Set( "sv_pakNames", "" ); // not used on client-side

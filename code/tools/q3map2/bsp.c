@@ -939,7 +939,7 @@ int BSPMain( int argc, char **argv ){
 	return 0;
 }
 
-void BSPMemory(char *map) {
+void BSPMemory(char *map, int slot) {
 	qboolean onlyents = qfalse;
 
 	/* init model library */
@@ -995,7 +995,7 @@ void BSPMemory(char *map) {
 	/* load shaders */
 	LoadShaderInfo();
   
-	strcpy( source, "*memory" ); // give the map a special name so clients can download it
+	strcpy( source, va("*memory%i", slot) ); // give the map a special name so clients can download it
 
 	LoadMap( map, qfalse );
 

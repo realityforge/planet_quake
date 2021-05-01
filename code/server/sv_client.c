@@ -1675,6 +1675,7 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 		cl->download = FS_INVALID_HANDLE;
 
 		// We open the file here
+		if (cl->downloadName[0] != '*')
 		if ( !(sv_allowDownload->integer & DLF_ENABLE) ||
 			(sv_allowDownload->integer & DLF_NO_UDP) ||
 			idPack || unreferenced ||
@@ -1739,6 +1740,9 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	}
 
 	// Perform any reads that we need to
+	if(cl->downloadName[0] == '*') {
+		SV_WriteMemoryMapToClient(cl, atoi(&cl->downloadName[6]));
+	}
 	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
 		cl->downloadSize != cl->downloadCount) {
 

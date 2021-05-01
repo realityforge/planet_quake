@@ -8,6 +8,7 @@
 
 
 
+static dheader_t header;
 static char skybox[4096*1024];
 char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
@@ -85,7 +86,7 @@ char *SV_MakeSkybox( void ) {
 }
 
 
-static void AddDrawVertsLump( dheader_t *header ){
+static drawVert_t *AddDrawVertsLump( void ){
 	int i, size;
 	bspDrawVert_t   *in;
 	drawVert_t  *buffer, *out;
@@ -123,11 +124,13 @@ static void AddDrawVertsLump( dheader_t *header ){
 	}
 
 	dDrawVerts = buffer;
-  header->lumps[LUMP_DRAWVERTS].filelen = size;
+  header.lumps[LUMP_DRAWVERTS].filelen = size;
+	
+	return buffer;
 }
 
 
-static void AddBrushSidesLump( dheader_t *header )
+static dbrushside_t *AddBrushSidesLump( void )
 {
 	int i, size;
 	bspBrushSide_t  *in;
@@ -154,11 +157,13 @@ static void AddBrushSidesLump( dheader_t *header )
 	}
 
 	dBrushSides = buffer;
-  header->lumps[LUMP_BRUSHSIDES].filelen = size;
+  header.lumps[LUMP_BRUSHSIDES].filelen = size;
+	
+	return buffer;
 }
 
 
-static void AddDrawSurfacesLump( dheader_t *header ){
+static dsurface_t *AddDrawSurfacesLump( void ){
 	int i, size;
 	bspDrawSurface_t    *in;
 	dsurface_t   *buffer, *out;
@@ -204,11 +209,13 @@ static void AddDrawSurfacesLump( dheader_t *header ){
 	}
 
 	dDrawSurfaces = buffer;
-  header->lumps[LUMP_SURFACES].filelen = size;
+  header.lumps[LUMP_SURFACES].filelen = size;
+	
+	return buffer;
 }
 
 
-static void AddLightGridLumps( dheader_t *header ){
+static byte *AddLightGridLumps( void ){
 	int i;
 	bspGridPoint_t  *in;
 	byte *buffer, *out;
@@ -219,7 +226,7 @@ static void AddLightGridLumps( dheader_t *header ){
 
 	/* dummy check */
 	if ( bspGridPoints == NULL ) {
-		return;
+		return 0;
 	}
 
 	/* allocate temporary buffer */
@@ -241,18 +248,26 @@ static void AddLightGridLumps( dheader_t *header ){
 	}
 
 	dGridPoints = buffer;
-  header->lumps[LUMP_LIGHTGRID].filelen = numBSPGridPoints * sizeof( *out );
+  header.lumps[LUMP_LIGHTGRID].filelen = numBSPGridPoints * sizeof( *out );
+	
+	return buffer;
 }
 
+static int lumpsStupidOrder[] = {
+	LUMP_SHADERS, LUMP_PLANES, LUMP_LEAFS, LUMP_NODES,
+	LUMP_BRUSHES, LUMP_BRUSHSIDES, LUMP_LEAFSURFACES,
+	LUMP_LEAFBRUSHES, LUMP_MODELS, LUMP_DRAWVERTS,
+	LUMP_SURFACES, LUMP_VISIBILITY, LUMP_LIGHTMAPS, LUMP_LIGHTGRID,
+	LUMP_ENTITIES, LUMP_FOGS, LUMP_DRAWINDEXES, 
+};
 
-static int SV_LoadMapFromMemory( void ) {
-  dheader_t header;
+static void SV_AssignMemoryDatas( void ) {
 	memset( &header, 0, sizeof( header ) );
   // TODO: do the same prep that multiworld `load game` command does
   // load all the lumps as if they came from the file
   header.ident = BSP_IDENT;
   header.version = BSP3_VERSION;
-  dShaders = (void *)bspShaders;
+	dShaders = (void *)bspShaders;
   header.lumps[LUMP_SHADERS].filelen = numBSPShaders * sizeof( dshader_t );
 	dPlanes = (void *)bspPlanes;
   header.lumps[LUMP_PLANES].filelen = numBSPPlanes * sizeof( dplane_t );
@@ -262,30 +277,33 @@ static int SV_LoadMapFromMemory( void ) {
   header.lumps[LUMP_NODES].filelen = numBSPNodes * sizeof(dnode_t );
 	dBrushes = (void *)bspBrushes;
   header.lumps[LUMP_BRUSHES].filelen = numBSPBrushes * sizeof( dbrush_t );
-	AddBrushSidesLump(&header);
+	AddBrushSidesLump();
 	dLeafSurfaces = (void *)bspLeafSurfaces;
   header.lumps[LUMP_LEAFSURFACES].filelen = numBSPLeafSurfaces * sizeof( int );
   dLeafBrushes = (void *)bspLeafBrushes;
   header.lumps[LUMP_LEAFBRUSHES].filelen = numBSPLeafBrushes * sizeof( int );
   dModels = (void *)bspModels;
   header.lumps[LUMP_MODELS].filelen = numBSPModels * sizeof( dmodel_t );
-	AddDrawVertsLump(&header);
-	AddDrawSurfacesLump(&header);
+	AddDrawVertsLump();
+	AddDrawSurfacesLump();
 	//dModels = (void *)drawSurfaces;
 	//header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
   dVisBytes = (void *)bspVisBytes;
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
   dLightBytes = (void *)bspLightBytes;
   header.lumps[LUMP_LIGHTMAPS].filelen = numBSPLightBytes;
-	AddLightGridLumps(&header);
+	AddLightGridLumps();
   dEntData = (void *)&bspEntData;
   header.lumps[LUMP_ENTITIES].filelen = bspEntDataSize;
   dFogs = (void *)bspFogs;
   header.lumps[LUMP_FOGS].filelen = numBSPFogs * sizeof( dfog_t );
   dDrawIndexes = (void *)bspDrawIndexes;
   header.lumps[LUMP_DRAWINDEXES].filelen = numBSPDrawIndexes * sizeof( int );
+}
 
-	int result = CM_LoadMapFromMemory(&header);
+
+static void SV_LoadMapFromMemory( void ) {
+	SV_AssignMemoryDatas();
 
 	// load into heap
 	CMod_LoadShaders( &header.lumps[LUMP_SHADERS] );
@@ -307,16 +325,119 @@ static int SV_LoadMapFromMemory( void ) {
   // TODO: detect memory map from gamestate on client and download over UDP
   
   // TODO: make a copy of the map in memory in case a client requests, it can be sent
-	return result;
 }
 
+
+void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
+	time_t t;
+	char marker[ 1024 ];
+	int curindex;
+	// only use a buffer for the inbetween bytes so it writes length and offset then
+	// switch back to existing memory address
+	qboolean inBetween = qfalse;
+
+	SV_AssignMemoryDatas();
+	
+	if(cl->downloadCurrentBlock == 0) {
+		time( &t );
+		sprintf( marker, "I LOVE QUAKE.GAMES %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
+		inBetween = qfalse;
+	}
+
+	for(int i = 0; i < HEADER_LUMPS; i++) {
+		if(i == 0)
+			header.lumps[lumpsStupidOrder[i]].fileofs = strlen(marker) + 1;
+		else
+			header.lumps[lumpsStupidOrder[i]].fileofs = header.lumps[i - 1].fileofs + header.lumps[i - 1].filelen;
+	}
+
+	void *orderedLumpDatas[] = {
+		dShaders,
+		dPlanes,
+		dLeafs,
+		dNodes,
+		dBrushes,
+		AddBrushSidesLump(),
+		dLeafSurfaces,
+		dLeafBrushes,
+		dModels,
+		AddDrawVertsLump(),
+		AddDrawSurfacesLump(),
+		dVisBytes,
+		dLightBytes,
+		AddLightGridLumps(),
+		dEntData,
+		dFogs,
+		dDrawIndexes
+	};
+
+	cl->downloadSize = header.lumps[HEADER_LUMPS-1].fileofs + header.lumps[HEADER_LUMPS-1].filelen;
+	
+	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
+		cl->downloadSize != cl->downloadCount) {
+
+		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
+
+		// TODO: assign !isInbetween
+		if (!cl->downloadBlocks[curindex])
+			cl->downloadBlocks[curindex] = Z_Malloc( MAX_DOWNLOAD_BLKSIZE );
+		
+		for(int i = 0; i < HEADER_LUMPS; i++) {
+			if(header.lumps[i].fileofs < cl->downloadCount) {
+				if(header.lumps[i].fileofs + header.lumps[i].filelen < cl->downloadCount) {
+					continue;
+				}
+			}
+			
+			if(cl->downloadCurrentBlock == 0) {
+				memcpy(&cl->downloadBlocks[curindex], &header, sizeof(header));
+				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, header.lumps[i].fileofs);
+			}
+
+			if(header.lumps[i].fileofs + header.lumps[i].filelen > MAX_DOWNLOAD_BLKSIZE) {
+				if(cl->downloadCount >= header.lumps[i].fileofs) {
+					inBetween = qtrue;
+					cl->downloadBlockSize[curindex] = MAX_DOWNLOAD_BLKSIZE;
+				} else {
+					inBetween = qfalse;
+					cl->downloadBlockSize[curindex] += header.lumps[i].filelen - cl->downloadCount;
+				}
+			} else {
+				if(i == LUMP_LIGHTARRAY) {
+					cl->downloadCount = cl->downloadSize;
+					break;
+				}
+				inBetween = qfalse;
+			}
+			
+			if(inBetween) {
+				cl->downloadBlocks[curindex] = &orderedLumpDatas[i][cl->downloadCount - header.lumps[i].fileofs];
+			} else {
+				memcpy(&cl->downloadBlocks[cl->downloadCount % MAX_DOWNLOAD_BLKSIZE],
+					 &orderedLumpDatas[i][cl->downloadCount - header.lumps[i].fileofs], cl->downloadBlockSize[curindex]);
+			}
+		}
+
+		cl->downloadCount += cl->downloadBlockSize[curindex];
+
+		// Load in next block
+		if(cl->downloadCount == cl->downloadSize
+			|| cl->downloadBlockSize[curindex] == MAX_DOWNLOAD_BLKSIZE) {
+			cl->downloadCurrentBlock++;
+		}
+	}
+}
 
 
 int SV_MakeMap( void ) {
 
 	char *skybox = SV_MakeSkybox();
 	
-	BSPMemory(skybox);
+	int result = CM_LoadMapFromMemory();
 
-  return SV_LoadMapFromMemory();
+	BSPMemory(skybox, result);
+
+  SV_LoadMapFromMemory();
+	
+	return result;
 }

@@ -383,6 +383,7 @@ typedef struct {
 #define	LUMP_LIGHTMAPS		14
 #define	LUMP_LIGHTGRID		15
 #define	LUMP_VISIBILITY		16
+#define	LUMP_LIGHTARRAY		17
 #define	HEADER_LUMPS		17
 #define	HEADER_LUMPS_OPENJK		18
 

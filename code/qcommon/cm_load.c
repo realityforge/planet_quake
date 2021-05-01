@@ -787,7 +787,7 @@ void AddClipMapCommands() {
 }
 
 
-int CM_LoadMapFromMemory( dheader_t *header ) {
+int CM_LoadMapFromMemory( void ) {
 
 	AddClipMapCommands();
 
@@ -801,7 +801,7 @@ int CM_LoadMapFromMemory( dheader_t *header ) {
 		}
 	}
 	cm = empty;
-	Com_DPrintf( "CM_LoadMap( %s, %i )\n", "*memory", qfalse );
+	Com_DPrintf( "CM_LoadMap( %s, %i )\n", va("*memory%i", cm), qfalse );
 #else
 	if ( cms[0].name[0] != '\0' ) {
 		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
