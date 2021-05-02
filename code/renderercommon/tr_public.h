@@ -245,6 +245,9 @@ typedef struct {
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 #endif
+#ifdef USE_MEMORY_MAPS
+	int   (*FS_SV_FOpenFileRead)( const char *filename, fileHandle_t *fp );
+#endif
 	void (*Spy_CursorPosition)(float x, float y);
 	void (*Spy_Banner)(float x, float y);
 	void (*Sys_DownloadLocalFile)(char *fileName);

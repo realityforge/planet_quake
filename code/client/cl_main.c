@@ -4468,6 +4468,9 @@ static void CL_InitRef_After_Load2( void )
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
 #endif
+#ifdef USE_MEMORY_MAPS
+	rimp.FS_SV_FOpenFileRead = FS_SV_FOpenFileRead;
+#endif
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;

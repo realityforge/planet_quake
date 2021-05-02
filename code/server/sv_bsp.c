@@ -403,8 +403,10 @@ Com_Printf("Beginning header\n");
 					lump_t *lump = &header.lumps[j];
 					int filelen = (lump->filelen + 3) & ~3;
 					int fileofs = (lump->fileofs + 3) & ~3;
-					memcpy(&cl->downloadBlocks[curindex][8 + j * 8], &fileofs, sizeof(int));
-					memcpy(&cl->downloadBlocks[curindex][12 + j * 8], &filelen, sizeof(int));
+					//if(j != 15) {
+						memcpy(&cl->downloadBlocks[curindex][8 + j * 8], &fileofs, sizeof(int));
+						memcpy(&cl->downloadBlocks[curindex][12 + j * 8], &filelen, sizeof(int));
+					//}
 				}
 				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, strlen(marker) + 1);
 				cl->downloadCount = lump->fileofs;
