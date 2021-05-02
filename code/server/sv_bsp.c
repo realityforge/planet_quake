@@ -424,7 +424,7 @@ Com_Printf("Beginning header\n");
 					if(diffLength > 0) {
 						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], diffLength);
 					}
-					Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount - lump->fileofs);
+					//Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount - lump->fileofs);
 					cl->downloadCount += diffLength;
 					break;
 				} else {
@@ -434,7 +434,7 @@ Com_Printf("Beginning header\n");
 					if(remainingLength > 0) {
 						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], remainingLength);
 					}
-					Com_Printf("Lump end: %i, %i, %i\n", lumpsStupidOrder[i], remainingLength, cl->downloadCount - lump->fileofs);
+					//Com_Printf("Lump end: %i, %i, %i\n", lumpsStupidOrder[i], remainingLength, cl->downloadCount - lump->fileofs);
 					cl->downloadCount += remainingLength;
 					// loop back around and start on new lump
 				}
@@ -460,7 +460,7 @@ int SV_MakeMap( void ) {
 	
 	int result = CM_LoadMapFromMemory();
 
-	fileHandle_t mapfile = FS_SV_FOpenFileWrite( "memory.map" );
+	fileHandle_t mapfile = FS_SV_FOpenFileWrite( va("*memory%i.map", result) );
 	FS_Write( skybox, strlen(skybox), mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 

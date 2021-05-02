@@ -915,11 +915,8 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #ifdef USE_MEMORY_MAPS
 	if(name[5] == '*') {
 		fileHandle_t h;
-		char stripped[MAX_QPATH];
-		Q_strncpyz( stripped, &name[5], sizeof( stripped ) );
-		COM_StripExtension(stripped, stripped, sizeof(stripped));
-		length = FS_SV_FOpenFileRead( stripped, &h );
-		Com_Printf("Using memory map %i, %s\n", length, stripped);
+		length = FS_SV_FOpenFileRead( &name[5], &h );
+		Com_Printf("Using memory map %i, %s\n", length, &name[5]);
 		if(length > -1) {
 			buf.v = Hunk_AllocateTempMemory( length + 1 );
 			FS_Read( buf.v, length, h );

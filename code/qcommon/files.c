@@ -4593,7 +4593,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         Q_strcat( neededpaks, len, "@");
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
 #ifdef USE_MEMORY_MAPS
-				if(fs_serverReferencedPakNames[i][0] != '*')
+				if(fs_serverReferencedPakNames[i][0] == '*')
+					Q_strcat( neededpaks, len, ".bsp" );
+				else
 #endif
         Q_strcat( neededpaks, len, ".pk3" );
 
@@ -4615,7 +4617,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
 #ifdef USE_MEMORY_MAPS
-					if(fs_serverReferencedPakNames[i][0] != '*')
+					if(fs_serverReferencedPakNames[i][0] == '*')
+						Q_strcat( neededpaks, len, ".bsp" );
+					else
 #endif
           Q_strcat( neededpaks, len, ".pk3" );
         }
@@ -4632,7 +4636,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
       {
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
 #ifdef USE_MEMORY_MAPS
-				if(fs_serverReferencedPakNames[i][0] != '*')
+				if(fs_serverReferencedPakNames[i][0] == '*')
+					Q_strcat( neededpaks, len, ".bsp" );
+				else
 #endif
 			  Q_strcat( neededpaks, len, ".pk3" );
         // Do we have one with the same name?
