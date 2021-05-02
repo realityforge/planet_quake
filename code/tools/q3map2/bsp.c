@@ -995,7 +995,8 @@ void BSPMemory(char *map, int slot) {
 	/* load shaders */
 	LoadShaderInfo();
   
-	strcpy( source, va("*memory%i", slot) ); // give the map a special name so clients can download it
+	strcpy(source, FS_GetHomePath());
+	strcat(source, va("/*memory%i", slot)); // give the map a special name so clients can download it
 
 	LoadMap( map, qfalse );
 

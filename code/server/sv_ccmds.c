@@ -174,6 +174,7 @@ static void SV_Map_f( void ) {
 	FS_BypassPure();
 #ifdef USE_MEMORY_MAPS
 	if(map[0] == '*') {
+		map[7] = '0' + gvm;
 		len = 1;
 	} else
 #endif

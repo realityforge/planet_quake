@@ -433,7 +433,6 @@ This is NOT called for map_restart
 */
 qboolean killBots;
 static qboolean startingServer = qfalse;
-char map[MAX_CMD_LINE];
 void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	int			i;
 	int			checksum;
@@ -585,7 +584,9 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
-	Cvar_Set( "mapname_0", mapname );
+#ifdef USE_MULTIVM_SERVER
+	Cvar_Set( va("mapname_%i", gvm), mapname );
+#endif
 
 #ifdef EMSCRIPTEN
 	memcpy(&map, mapname, sizeof(map));
@@ -603,15 +604,13 @@ void SV_SpawnServer_After_Startup( void ) {
 	int			checksum;
 	qboolean	isBot;
 	const char	*p;
-	const char *mapname;
-	mapname = map;
+	const char *mapname = Cvar_VariableString("mapname");
 	FS_Restart_After_Async();
 	Cvar_Set("sv_running", "1");
 #endif
 ;
 
 	Sys_SetStatus( "Loading map %s", mapname );
-Com_Printf("MemoryMap: %s\n", mapname);
 #ifdef USE_MEMORY_MAPS
 	if(mapname[0] == '*') {
 		checksum = 0;
@@ -620,7 +619,7 @@ Com_Printf("MemoryMap: %s\n", mapname);
 #endif
 	gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
-	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
+	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;

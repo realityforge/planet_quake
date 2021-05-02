@@ -815,6 +815,7 @@ cmdsAdded = qtrue;
 }
 
 
+#ifdef USE_MEMORY_MAPS
 int CM_LoadMapFromMemory( void ) {
 
 	AddClipMapCommands();
@@ -846,6 +847,7 @@ int CM_LoadMapFromMemory( void ) {
 
 	return cm;
 }
+#endif
 
 
 /*

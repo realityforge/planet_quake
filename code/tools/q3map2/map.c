@@ -1780,10 +1780,6 @@ void LoadMap( char *map, qboolean onlyLights ){
 	Sys_FPrintf( SYS_VRB, "--- LoadMap (from memory) ---\n" );
 
 	/* load the map file */
-	FILE *bspfile = SafeOpenWrite( "memory.map" );
-	SafeWrite( bspfile, map, strlen(map) );    // overwritten later
-	fclose( bspfile );
-
 	ParseFromMemory( map, strlen(map) );
 
 	LoadMapAfter(onlyLights);
