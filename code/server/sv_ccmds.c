@@ -172,28 +172,31 @@ static void SV_Map_f( void ) {
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
+#ifdef USE_MEMORY_MAPS
+	if(map[0] == '*') {
+		len = 1;
+	} else
+#endif
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
 	FS_RestorePure();
 	if(len == -1) {
 #ifdef USE_LOCAL_DED
 		if(FS_InMapIndex(expanded)) {
 			len = 1;
+		} else if ( Q_stricmp(map, "q3dm0") && map[0] != '*') {
+			Com_Printf("Error: Can't find map %s\n", expanded );
+			Cmd_Clear();
+			Cbuf_AddText("spmap q3dm0\n");
+			Cbuf_Execute();
+			return;
 		}
+		// TODO: check if com_errorMessage, display it onscreen with
+		//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
 #else
-		return;
-#endif
-	}
-#ifdef USE_LOCAL_DED
-	if ( len == -1 && Q_stricmp(map, "q3dm0") && map[0] != '*') {
 		Com_Printf("Error: Can't find map %s\n", expanded );
-		Cmd_Clear();
-		Cbuf_AddText("spmap q3dm0\n");
-		Cbuf_Execute();
 		return;
-	}
-	// TODO: check if com_errorMessage, display it onscreen with
-	//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
 #endif
+	}
 
 	// force latched values to get set
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );

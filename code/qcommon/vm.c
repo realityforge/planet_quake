@@ -206,7 +206,7 @@ const char *opname[ 256 ] = {
 cvar_t	*vm_rtChecks;
 
 #ifdef DEBUG
-int		vm_debugLevel;
+int		vm_debugLevel = 0;
 #endif
 
 // used by Com_Error to get rid of running vm's before longjmp
@@ -216,9 +216,11 @@ static int vmIndex = 0;
 struct vm_s	vmTable[ VM_COUNT * MAX_NUM_VMS ];
 
 static const char *vmName[ VM_COUNT ] = {
-	"qagame",
-	"cgame",
+	"qagame"
+#ifndef DEDICATED
+	,"cgame",
 	"ui"
+#endif
 };
 
 static void VM_VmInfo_f( void );
@@ -1503,6 +1505,7 @@ static specificVM_t knownVMs[] = {
 	{VM_GAME, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
 	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
 
+#ifndef DEDICATED
 	{VM_CGAME, 0x2DD51C2A, 95182, 2122744, VMR_BASEQ3A, "BaseQ3a"},
 	{VM_CGAME, 0x0, 0, 0, VMR_OSP, "OSP"},
 	{VM_CGAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
@@ -1520,6 +1523,7 @@ static specificVM_t knownVMs[] = {
 	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
 	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
 	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
+#endif
 	{0, 0, 0, 0, 0, ""}
 };
 
@@ -1541,6 +1545,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 
 	Com_DPrintf( S_COLOR_GREEN "VMINFO [%s] crc: %08X, ic: %i, dl: %i\n", vm->name, vm->crc32sum, vm->instructionCount, vm->exactDataLength );
 
+#ifndef DEDICATED
 	//if ( vm->index == VM_CGAME ) {
 	// CPMA
 	if ( vmcmp(vm, VM_CGAME, VMR_CPMA1) ) {
@@ -1582,6 +1587,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		VM_IgnoreInstructions( ip, 0x5bd8 - 0x5bb9 );
 	} else
 	//}
+#endif
 
 	//if ( vm->index == VM_GAME ) {
 	// OSP
@@ -1607,9 +1613,10 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			//VM_IgnoreInstructions( &ip[0], 4 );
 			//VM_IgnoreInstructions( &ip[0], 1 );
 		}
-	} else
+	}
 	//}
 
+#ifndef DEDICATED
 	//if ( vm->index == VM_UI ) {
 	// fix OSP demo UI
 	if ( vmcmp(vm, VM_UI, VMR_OSP) ) {
@@ -1644,6 +1651,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 		//VM_IgnoreInstructions( &ip[2], 1 );
 	}
 	//}
+#endif
 }
 
 
@@ -1902,6 +1910,7 @@ void VM_Clear( void ) {
 	for ( i = 0; i < VM_COUNT * MAX_NUM_VMS; i++ ) {
 		VM_Free( &vmTable[ i ] );
 	}
+	vmIndex = 0;
 }
 
 
@@ -2035,10 +2044,12 @@ static vm_t *VM_NameToVM( const char *name )
 
 	if ( !Q_stricmp( name, "game" ) )
 		index = VM_GAME;
+#ifndef DEDICATED
 	else if ( !Q_stricmp( name, "cgame" ) )
 		index = VM_CGAME;
 	else if ( !Q_stricmp( name, "ui" ) )
 		index = VM_UI;
+#endif
 	else {
 		Com_Printf( " unknown VM name '%s'\n", name );
 		return NULL;

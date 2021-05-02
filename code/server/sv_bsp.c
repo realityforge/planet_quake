@@ -248,8 +248,8 @@ static byte *AddLightGridLumps( void ){
 		out++;
 	}
 
-	dGridPoints = buffer;
-  header.lumps[LUMP_LIGHTGRID].filelen = numBSPGridPoints * sizeof( *out );
+	//dGridPoints = buffer;
+  header.lumps[LUMP_LIGHTGRID].filelen = 0; //numBSPGridPoints * sizeof( *out );
 	
 	return buffer;
 }
@@ -290,6 +290,7 @@ static void SV_AssignMemoryDatas( void ) {
 	//dModels = (void *)drawSurfaces;
 	//header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
   dVisBytes = (void *)bspVisBytes;
+	Com_Printf("Vis bytes: %i\n", numBSPVisBytes);
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
   dLightBytes = (void *)bspLightBytes;
   header.lumps[LUMP_LIGHTMAPS].filelen = numBSPLightBytes;
@@ -300,6 +301,10 @@ static void SV_AssignMemoryDatas( void ) {
   header.lumps[LUMP_FOGS].filelen = numBSPFogs * sizeof( dfog_t );
   dDrawIndexes = (void *)bspDrawIndexes;
   header.lumps[LUMP_DRAWINDEXES].filelen = numBSPDrawIndexes * sizeof( int );
+
+	for(int i = 0; i < HEADER_LUMPS; i++) {
+		header.lumps[i].fileofs = 0;
+	}
 }
 
 
@@ -335,19 +340,17 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 
 	SV_AssignMemoryDatas();
 	
-	if(cl->downloadClientBlock == 0) {
-		cl->downloadCurrentBlock = cl->downloadClientBlock = cl->downloadXmitBlock = 0;
-	}
-	time_t time = I_FloatTime();
-	sprintf( marker, "I LOVE QUAKE.GAMES %s on %s)", Q3MAP_VERSION, asctime( localtime( &time ) ) );
+	time_t t = I_FloatTime();
+	//sprintf( marker, "I LOVE QUAKE.GAMES %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
+	sprintf( marker, "I LOVE MY Q3MAP2 %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
 
 	for(int i = 0; i < HEADER_LUMPS; i++) {
 		lump_t *lump = &header.lumps[lumpsStupidOrder[i]];
 		lump_t *prev = &header.lumps[lumpsStupidOrder[i - 1]];
 		if(i == 0)
-			lump->fileofs = sizeof(dheader_t) + strlen(marker) + 1;
+			lump->fileofs = ((sizeof(dheader_t) + strlen(marker) + 1) + 3) & ~3;
 		else
-			lump->fileofs = prev->fileofs + prev->filelen;
+			lump->fileofs = prev->fileofs + ((prev->filelen + 3) & ~3);
 	}
 
 	void *orderedLumpDatas[] = {
@@ -371,7 +374,9 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 	};
 
 	cl->downloadSize = header.lumps[lumpsStupidOrder[HEADER_LUMPS-1]].fileofs + header.lumps[lumpsStupidOrder[HEADER_LUMPS-1]].filelen;
-	
+	// regenerate entire file
+	//cl->downloadCurrentBlock = 0;
+	//cl->downloadCount = 0;
 	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
 		cl->downloadSize != cl->downloadCount) {
 
@@ -384,45 +389,59 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 
 		for(int i = 0; i < HEADER_LUMPS; i++) {
 			lump_t *lump = &header.lumps[lumpsStupidOrder[i]];
-			void *data = &orderedLumpDatas[i];
+			void *data = orderedLumpDatas[i];
 			if(lump->fileofs + lump->filelen < cl->downloadCount) {
 				// already past this lump in the download setup
 				continue;
 			}
 
-			if(cl->downloadCurrentBlock == 0 && i == 0) {
+			if(cl->downloadCurrentBlock == 0 && cl->downloadCount == 0 && i == 0) {
 Com_Printf("Beginning header\n");
-				memcpy(&cl->downloadBlocks[curindex][0], &header, sizeof(header));
+				memcpy(&cl->downloadBlocks[curindex][0], &header.ident, sizeof(int));
+				memcpy(&cl->downloadBlocks[curindex][4], &header.version, sizeof(int));
+				for(int j = 0; j < HEADER_LUMPS; j++) {
+					lump_t *lump = &header.lumps[j];
+					int filelen = (lump->filelen + 3) & ~3;
+					int fileofs = (lump->fileofs + 3) & ~3;
+					memcpy(&cl->downloadBlocks[curindex][8 + j * 8], &fileofs, sizeof(int));
+					memcpy(&cl->downloadBlocks[curindex][12 + j * 8], &filelen, sizeof(int));
+				}
 				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, strlen(marker) + 1);
 				cl->downloadCount = lump->fileofs;
 			}
 
-			if(cl->downloadCount < lump->fileofs) {
+			if(lump->fileofs - cl->downloadCount > 1) {
 				Com_Error(ERR_DROP, "Should never happen because the previous loop should fill or break.");
 			} else {
-				if(lump->fileofs + lump->filelen > cl->downloadCount + MAX_DOWNLOAD_BLKSIZE) {
+				int fillStart = (cl->downloadCount % MAX_DOWNLOAD_BLKSIZE);
+				if(lump->fileofs + lump->filelen > (cl->downloadCurrentBlock + 1) * MAX_DOWNLOAD_BLKSIZE) {
 					// fill the whole block
 					cl->downloadBlockSize[curindex] = MAX_DOWNLOAD_BLKSIZE;
 					// diff from count because previous loop might have been a partial lump
-					int diffLength = MAX_DOWNLOAD_BLKSIZE - (cl->downloadCount % MAX_DOWNLOAD_BLKSIZE);
-					//memcpy(&cl->downloadBlocks[curindex][cl->downloadCount], &data[cl->downloadCount - lump->fileofs], diffLength);
+					int diffLength = MAX_DOWNLOAD_BLKSIZE - fillStart;
+					if(diffLength > 0) {
+						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], diffLength);
+					}
+					Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount - lump->fileofs);
 					cl->downloadCount += diffLength;
-Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount);
 					break;
 				} else {
 					// fill partially with this lump, then loop and fill with next lump
 					int remainingLength = (lump->fileofs + lump->filelen) - cl->downloadCount;
 					cl->downloadBlockSize[curindex] += remainingLength;
-					//memcpy(&cl->downloadBlocks[curindex][cl->downloadCount], &data[cl->downloadCount - lump->fileofs], remainingLength);
+					if(remainingLength > 0) {
+						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], remainingLength);
+					}
+					Com_Printf("Lump end: %i, %i, %i\n", lumpsStupidOrder[i], remainingLength, cl->downloadCount - lump->fileofs);
 					cl->downloadCount += remainingLength;
 					// loop back around and start on new lump
-Com_Printf("Lump end: %i, %i, %i, %i\n", i, remainingLength, cl->downloadCount, cl->downloadSize);
 				}
 			}
 		}
 
 		// Load in next block
 		if(cl->downloadCount == cl->downloadSize) {
+			cl->downloadCurrentBlock++;
 			break;
 		} else if (cl->downloadBlockSize[curindex] == MAX_DOWNLOAD_BLKSIZE) {
 			cl->downloadCurrentBlock++;

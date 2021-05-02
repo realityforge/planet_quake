@@ -611,6 +611,7 @@ void SV_SpawnServer_After_Startup( void ) {
 ;
 
 	Sys_SetStatus( "Loading map %s", mapname );
+Com_Printf("MemoryMap: %s\n", mapname);
 #ifdef USE_MEMORY_MAPS
 	if(mapname[0] == '*') {
 		checksum = 0;

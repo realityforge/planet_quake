@@ -3077,6 +3077,9 @@ void CL_NextDownload( void )
 				CL_BeginDownload( localName, remoteName );
 			}
 		}
+#ifdef USE_MEMORY_MAPS
+		if(clc.downloadName[0] != '*')
+#endif
 		clc.downloadRestart = qtrue;
 
 		// move over the rest

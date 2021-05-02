@@ -4592,6 +4592,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Remote name
         Q_strcat( neededpaks, len, "@");
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
+#ifdef USE_MEMORY_MAPS
+				if(fs_serverReferencedPakNames[i][0] != '*')
+#endif
         Q_strcat( neededpaks, len, ".pk3" );
 
         // Local name
@@ -4611,6 +4614,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 #endif
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
+#ifdef USE_MEMORY_MAPS
+					if(fs_serverReferencedPakNames[i][0] != '*')
+#endif
           Q_strcat( neededpaks, len, ".pk3" );
         }
         
@@ -4625,6 +4631,9 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
       else
       {
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
+#ifdef USE_MEMORY_MAPS
+				if(fs_serverReferencedPakNames[i][0] != '*')
+#endif
 			  Q_strcat( neededpaks, len, ".pk3" );
         // Do we have one with the same name?
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )

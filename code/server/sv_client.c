@@ -1519,6 +1519,12 @@ static void SV_CloseDownload( client_t *cl ) {
 	}
 
 	*cl->downloadName = '\0';
+#ifdef USE_MEMORY_MAPS
+	cl->downloadXmitBlock =
+	cl->downloadClientBlock =
+	cl->downloadCurrentBlock =
+	cl->downloadCount = 0;
+#endif
 
 	// Free the temporary buffer space
 	for (i = 0; i < MAX_DOWNLOAD_WINDOW; i++) {
