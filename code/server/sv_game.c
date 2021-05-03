@@ -432,6 +432,12 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #else
 		Cvar_SetSafe( VMA(1), (const char *)VMA(2) );
 #endif
+// TODO: USE_PERSIST_CLIENT?
+#if 1
+		if(Q_stristr(VMA(1), "session")) {
+			SV_PersistClient(atoi(&(VMA(1)[8])));
+		}
+#endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
 #ifdef USE_MULTIVM_SERVER

@@ -441,6 +441,57 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
+void SV_PersistClient( int c ) {
+	client_t *cl = &svs.clients[c];
+	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
+	if(!cl_guid[0]) {
+		return;
+	}
+
+	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
+	playerState_t *ps = SV_GameClientNum( c );
+	int size = sizeof(playerState_t);
+	FS_Write(&size, sizeof(int), h);
+	FS_Write(ps, size, h);
+	size = strlen(cl->userinfo);
+	FS_Write(&size, sizeof(int), h);
+	FS_Write(cl->userinfo, size, h);
+	FS_FCloseFile(h);
+}
+
+
+void SV_RestoreClient( int c ) {
+	client_t *cl = &svs.clients[c];
+	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
+	if(!cl_guid[0]) {
+		return;
+	}
+
+	fileHandle_t h;
+	int size = FS_SV_FOpenFileRead( va("client_%s.session", cl_guid), &h );
+	playerState_t *ps = SV_GameClientNum( c );
+	void *buffer[sizeof(playerState_t) * 2];
+	FS_Read(buffer, sizeof(int), h);
+	memcpy(&size, buffer, sizeof(int));
+	FS_Read(buffer, size, h);
+	if(size != sizeof(playerState_t)) {
+		Com_Printf( S_COLOR_RED "SESSION ERROR: Player state sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
+	} else {
+		Com_Printf("Restoring client %i\n", c);
+		memcpy(ps, buffer, sizeof(playerState_t));
+	}
+	FS_Read(buffer, sizeof(int), h);
+	memcpy(&size, buffer, sizeof(int));
+	if(size > MAX_INFO_STRING) {
+		Com_Printf( S_COLOR_RED "SESSION ERROR: User info too long (%i != %lu).\n", size, sizeof(playerState_t));
+	} else {
+		FS_Read(buffer, size, h);
+	}
+	memcpy(cl->userinfo, buffer, sizeof(MAX_INFO_STRING));
+	FS_FCloseFile(h);
+}
+
+
 #ifdef USE_LNBITS
 #ifndef EMSCRIPTEN
 void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
@@ -1454,6 +1505,9 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	if(sv_mvWorld->integer) {
 		SV_SendServerCommand(client, "world %i", client->newWorld);
 	}
+#endif
+#if 1
+	SV_RestoreClient(client - svs.clients);
 #endif
 
 	// resend all configstrings using the cs commands since these are

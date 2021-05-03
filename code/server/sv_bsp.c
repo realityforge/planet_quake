@@ -15,8 +15,8 @@ char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
 	if(!com_sv_running || !com_sv_running->integer
 		|| sv.state != SS_GAME) {
-		vs[0][0] = vs[0][1] = vs[0][2] = -10000;
-		vs[1][0] = vs[1][1] = vs[1][2] = 10000;
+		vs[0][0] = vs[0][1] = vs[0][2] = -1000;
+		vs[1][0] = vs[1][1] = vs[1][2] = 1000;
 	} else {
 		int h = CM_InlineModel( 0, 2, gvm );
 		CM_ModelBounds( h, vs[0], vs[1] );

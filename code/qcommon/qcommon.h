@@ -1412,6 +1412,7 @@ void SV_Shutdown( const char *finalmsg );
 void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );
 void SV_PacketEvent( const netadr_t *from, msg_t *msg );
+void SV_PersistClient(int c);
 int SV_FrameMsec( void );
 qboolean SV_GameCommand( int igvm );
 int SV_SendQueuedPackets( void );
