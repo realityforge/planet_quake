@@ -1766,6 +1766,21 @@ void SV_Frame( int msec ) {
 	// reset current and build new snapshot on first query
 	SV_IssueNewSnapshot();
 
+#if 1
+	for( i = 0; i < sv_maxclients->integer; i++ ) 
+	{
+		client_t *c = &svs.clients[ i ];
+		if(c->persisted > -1
+			&& (sv.time < c->persisted || sv.time - c->persisted > 
+			// TODO: make this a cvar?
+			10000)) {
+			SV_PersistClient(i);
+		} /* else if (c->persisted == 0) {
+			SV_RestoreClient(i);
+		} */
+	}
+#endif
+
 #ifdef USE_RECENT_EVENTS
 	numConnected = 0;
 	for( i = 0; i < sv_maxclients->integer; i++ ) 

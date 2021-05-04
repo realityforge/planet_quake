@@ -441,21 +441,32 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
+#if 1
 void SV_PersistClient( int c ) {
 	client_t *cl = &svs.clients[c];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
-	if(!cl_guid[0]) {
+	if(!cl_guid[0] || cl->persisted == -1) { // client is too fresh, don't overwite session data
 		return;
 	}
-
-	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
 	playerState_t *ps = SV_GameClientNum( c );
+	gentity_t *ent = (void *)SV_GentityNum( c );
+	cl->persisted = sv.time;
+	Com_Printf("Persisting client: %i, %f x %f", ent->health, ps->origin[0], ps->origin[1]);
+	return;
+	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
 	int size = sizeof(playerState_t);
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(ps, size, h);
+
+	size = sizeof(gentity_t);
+	FS_Write(&size, sizeof(int), h);
+	FS_Write(ent, size, h);
+
 	size = strlen(cl->userinfo);
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(cl->userinfo, size, h);
+	
+	// TODO: leave open?  TODO: pipe?
 	FS_FCloseFile(h);
 }
 
@@ -466,9 +477,15 @@ void SV_RestoreClient( int c ) {
 	if(!cl_guid[0]) {
 		return;
 	}
+	cl->persisted = 0; // start saving again 
 
 	fileHandle_t h;
 	int size = FS_SV_FOpenFileRead( va("client_%s.session", cl_guid), &h );
+	if(size == -1) {
+		return;
+	}
+	Com_Printf("Restoring client %i\n", c);
+
 	playerState_t *ps = SV_GameClientNum( c );
 	void *buffer[sizeof(playerState_t) * 2];
 	FS_Read(buffer, sizeof(int), h);
@@ -477,9 +494,29 @@ void SV_RestoreClient( int c ) {
 	if(size != sizeof(playerState_t)) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player state sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
-		Com_Printf("Restoring client %i\n", c);
-		memcpy(ps, buffer, sizeof(playerState_t));
+		//memcpy(ps, buffer, sizeof(playerState_t));
+		memcpy(ps->origin, ((playerState_t*)buffer)->origin, sizeof(vec3_t));
+		memcpy(ps->viewangles, ((playerState_t*)buffer)->viewangles, sizeof(vec3_t));
 	}
+
+	
+	gentity_t *ent = (void *)SV_GentityNum( c );
+	FS_Read(buffer, sizeof(int), h);
+	memcpy(&size, buffer, sizeof(int));
+	FS_Read(buffer, size, h);
+	if(size != sizeof(gentity_t)) {
+		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
+	} else {
+		ent->health = ((gentity_t*)buffer)->health;
+		//memcpy(ps->origin, ps->origin, sizeof(vec3_t));
+		//memcpy(ps->viewangles, ps->viewangles, sizeof(vec3_t));
+		//ps->origin[2] = *newOrigin[2] + 9.0f;
+		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
+		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
+		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health, ps->origin[0], ps->origin[1]);
+}
+
+
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
 	if(size > MAX_INFO_STRING) {
@@ -488,8 +525,10 @@ void SV_RestoreClient( int c ) {
 		FS_Read(buffer, size, h);
 	}
 	memcpy(cl->userinfo, buffer, sizeof(MAX_INFO_STRING));
+
 	FS_FCloseFile(h);
 }
+#endif
 
 
 #ifdef USE_LNBITS
@@ -1124,6 +1163,9 @@ gotnewcl:
 	Com_DPrintf( "Going from CS_FREE to CS_CONNECTED for %s\n", newcl->name );
 
 	newcl->state = CS_CONNECTED;
+#if 1
+	newcl->persisted = -1; // don't save empty state until client has a change to join
+#endif
 	newcl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 	newcl->lastPacketTime = svs.time;
 	newcl->lastConnectTime = svs.time;
@@ -1252,6 +1294,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	drop->justConnected = qfalse;
 
 	drop->lastDisconnectTime = svs.time;
+
+#if 1
+	drop->persisted = -1;
+#endif
 
 	if ( isBot ) {
 		// bots shouldn't go zombie, as there's no real net connection.
@@ -1506,9 +1552,6 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		SV_SendServerCommand(client, "world %i", client->newWorld);
 	}
 #endif
-#if 1
-	SV_RestoreClient(client - svs.clients);
-#endif
 
 	// resend all configstrings using the cs commands since these are
 	// no longer sent when the client is CS_PRIMED
@@ -1536,7 +1579,12 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	    ( (client - svs.clients) >= sv_democlients->integer ) && ( (client - svs.clients) < sv_maxclients->integer ) ) { // check that it's a real player
 		SV_ExecuteClientCommand(client, "team spectator");
 	}
-	
+
+#if 1
+	client->persisted = 0;
+	SV_RestoreClient(client - svs.clients);
+#endif
+
 	// serverside demo
  	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT
 		&& !client->demoClient) { // don't record server side demo playbacks automatically
@@ -2514,6 +2562,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 				SV_SendServerCommand(client, "world %i", client->newWorld);
 			}
 			// send new baselines
+			// TODO: remove this because MV takes care of it? this was pre-MV integration
 			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
 				if(strlen(sv.configstrings[index]) > 0) {
 					client->csUpdated[index] = qtrue;

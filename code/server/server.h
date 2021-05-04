@@ -320,6 +320,9 @@ typedef struct client_s {
 	qboolean muted;
 	qboolean nofire;
 #endif
+#if 1
+	int persisted;
+#endif
 
 } client_t;
 
