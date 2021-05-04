@@ -449,9 +449,9 @@ void SV_PersistClient( int c ) {
 		return;
 	}
 	playerState_t *ps = SV_GameClientNum( c );
-	gentity_t *ent = (void *)SV_GentityNum( c );
+	gentity_t *ent = (void *)SV_GentityNum( c ); //->r.s;
 	cl->persisted = sv.time;
-	Com_Printf("Persisting client: %i, %f x %f", ent->health, ps->origin[0], ps->origin[1]);
+	Com_Printf("Persisting client: %i, %f x %f\n", ent->health, ps->origin[0], ps->origin[1]);
 	return;
 	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
 	int size = sizeof(playerState_t);
@@ -472,6 +472,7 @@ void SV_PersistClient( int c ) {
 
 
 void SV_RestoreClient( int c ) {
+	byte buffer[sizeof(gentity_t) * 2];
 	client_t *cl = &svs.clients[c];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
 	if(!cl_guid[0]) {
@@ -487,7 +488,6 @@ void SV_RestoreClient( int c ) {
 	Com_Printf("Restoring client %i\n", c);
 
 	playerState_t *ps = SV_GameClientNum( c );
-	void *buffer[sizeof(playerState_t) * 2];
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
 	FS_Read(buffer, size, h);
@@ -500,20 +500,36 @@ void SV_RestoreClient( int c ) {
 	}
 
 	
-	gentity_t *ent = (void *)SV_GentityNum( c );
+	// weird because the struct lists player state twice or something? In sharedEntity_t and in entityShared_t
+	int restoreOffset = sizeof(entityShared_t) - sizeof(entityState_t) + 4; // 4 for the ptr
+	byte *clientEnt = (void *)SV_GentityNum( c );
+	gentity_t *ent = (void *)&clientEnt[-restoreOffset]; //->r.s;
+
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
-	FS_Read(buffer, size, h);
+	memset(buffer, 0, sizeof(buffer));
+	FS_Read(&buffer[restoreOffset], size, h);
+	//FS_Read(buffer, size, h);
 	if(size != sizeof(gentity_t)) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
-		ent->health = ((gentity_t*)buffer)->health;
+		memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
+		//ent->health = ;
 		//memcpy(ps->origin, ps->origin, sizeof(vec3_t));
 		//memcpy(ps->viewangles, ps->viewangles, sizeof(vec3_t));
 		//ps->origin[2] = *newOrigin[2] + 9.0f;
+		//Com_Printf("%i", ((intptr_t)&ent->health - (intptr_t)ent));
+		/*
+		for(int j = 0; j < sizeof(buffer); j++) {
+			if((j % 8) == 0) Com_Printf("\n%02X: ", j);
+			Com_Printf("%02X ", (byte)buffer[j]);
+		}
+		Com_Printf("\n\n");
+		*/
+
 		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
 		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
-		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health, ps->origin[0], ps->origin[1]);
+		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
 }
 
 
