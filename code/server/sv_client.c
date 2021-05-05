@@ -442,18 +442,41 @@ static const char *SV_FindCountry( const char *tld ) {
 
 
 #if 1
+/*
+==================
+SetClientViewAngle
+==================
+*/
+static void SV_SetClientViewAngle( int c, vec3_t angle ) {
+	int	i, cmdAngle;
+	playerState_t *ps = SV_GameClientNum( c );
+	gentity_t *ent = (void *)SV_GentityNum( c ); //->r.s;
+
+	// set the delta angle
+	for (i = 0 ; i < 3 ; i++) {
+		cmdAngle = ANGLE2SHORT(angle[i]);
+		ps->delta_angles[i] = cmdAngle; // - client->pers.cmd.angles[i];
+	}
+	VectorCopy( angle, ent->s.angles );
+	VectorCopy( ent->s.angles, ps->viewangles );
+}
+
+
 void SV_PersistClient( int c ) {
 	client_t *cl = &svs.clients[c];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
-	if(!cl_guid[0] || cl->persisted == -1) { // client is too fresh, don't overwite session data
+	if(!cl_guid[0] || cl->state != CS_ACTIVE) { // client is too fresh, don't overwite session data
 		return;
 	}
 	playerState_t *ps = SV_GameClientNum( c );
 	gentity_t *ent = (void *)SV_GentityNum( c ); //->r.s;
 	cl->persisted = sv.time;
-	Com_Printf("Persisting client: %i, %f x %f\n", ent->health, ps->origin[0], ps->origin[1]);
-	return;
+	Com_Printf("Persisting client: %i, %f x %f\n", ent->health, ps->viewangles[0], ps->viewangles[1]);
+
 	fileHandle_t h = FS_SV_FOpenFileWrite( va("client_%s.session", cl_guid) );
+	time_t t = I_FloatTime();
+	FS_Write(&t, sizeof(long), h);
+
 	int size = sizeof(playerState_t);
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(ps, size, h);
@@ -466,7 +489,7 @@ void SV_PersistClient( int c ) {
 	FS_Write(&size, sizeof(int), h);
 	FS_Write(cl->userinfo, size, h);
 	
-	// TODO: leave open?  TODO: pipe?
+	// TODO: leave open? (PHP leaves them open with non-blocking read/non-exclusive write)  TODO: pipe?
 	FS_FCloseFile(h);
 }
 
@@ -475,7 +498,7 @@ void SV_RestoreClient( int c ) {
 	byte buffer[sizeof(gentity_t) * 2];
 	client_t *cl = &svs.clients[c];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
-	if(!cl_guid[0]) {
+	if(!cl_guid[0] || cl->state != CS_ACTIVE) {
 		return;
 	}
 	cl->persisted = 0; // start saving again 
@@ -485,7 +508,10 @@ void SV_RestoreClient( int c ) {
 	if(size == -1) {
 		return;
 	}
-	Com_Printf("Restoring client %i\n", c);
+	time_t t = 0;
+	FS_Read(&t, sizeof(long), h);
+	//  TODO: make this customizable
+	if(I_FloatTime() - t > 30000) return;
 
 	playerState_t *ps = SV_GameClientNum( c );
 	FS_Read(buffer, sizeof(int), h);
@@ -496,10 +522,9 @@ void SV_RestoreClient( int c ) {
 	} else {
 		//memcpy(ps, buffer, sizeof(playerState_t));
 		memcpy(ps->origin, ((playerState_t*)buffer)->origin, sizeof(vec3_t));
-		memcpy(ps->viewangles, ((playerState_t*)buffer)->viewangles, sizeof(vec3_t));
+		SV_SetClientViewAngle(c, ((playerState_t*)buffer)->viewangles);
 	}
 
-	
 	// weird because the struct lists player state twice or something? In sharedEntity_t and in entityShared_t
 	int restoreOffset = sizeof(entityShared_t) - sizeof(entityState_t) + 4; // 4 for the ptr
 	byte *clientEnt = (void *)SV_GentityNum( c );
@@ -509,29 +534,18 @@ void SV_RestoreClient( int c ) {
 	memcpy(&size, buffer, sizeof(int));
 	memset(buffer, 0, sizeof(buffer));
 	FS_Read(&buffer[restoreOffset], size, h);
-	//FS_Read(buffer, size, h);
 	if(size != sizeof(gentity_t)) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
 		memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
-		//ent->health = ;
-		//memcpy(ps->origin, ps->origin, sizeof(vec3_t));
-		//memcpy(ps->viewangles, ps->viewangles, sizeof(vec3_t));
-		//ps->origin[2] = *newOrigin[2] + 9.0f;
-		//Com_Printf("%i", ((intptr_t)&ent->health - (intptr_t)ent));
 		/*
-		for(int j = 0; j < sizeof(buffer); j++) {
-			if((j % 8) == 0) Com_Printf("\n%02X: ", j);
-			Com_Printf("%02X ", (byte)buffer[j]);
-		}
-		Com_Printf("\n\n");
+		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
+		memcpy(&ent->r.currentAngles, &ps->viewangles, sizeof(vec3_t));
+		memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
+		memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
 		*/
-
-		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
-		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
 		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
-}
-
+	}
 
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
@@ -1180,7 +1194,7 @@ gotnewcl:
 
 	newcl->state = CS_CONNECTED;
 #if 1
-	newcl->persisted = -1; // don't save empty state until client has a change to join
+	newcl->persisted = sv.time; // don't save empty state until client has a change to join
 #endif
 	newcl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 	newcl->lastPacketTime = svs.time;
@@ -1312,7 +1326,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	drop->lastDisconnectTime = svs.time;
 
 #if 1
-	drop->persisted = -1;
+	drop->persisted = 0;
 #endif
 
 	if ( isBot ) {

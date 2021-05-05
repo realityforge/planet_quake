@@ -145,7 +145,7 @@ void SV_Record( client_t	*cl, char *s ) {
  		return;
  	}
 
-//	if ( cl->state != CA_ACTIVE ) {
+//	if ( cl->state != CS_ACTIVE ) {
 //		Com_Printf ("You must be in a level to record.\n");
 //		return;
 //	}
