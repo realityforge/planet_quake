@@ -1611,8 +1611,10 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	}
 
 #ifdef USE_PERSIST_CLIENT
-	client->persisted = 0;
-	SV_RestoreClient(client - svs.clients);
+	if(sv_clSessions->integer != 0) {
+		client->persisted = 0;
+		SV_RestoreClient(client - svs.clients);
+	}
 #endif
 
 	// serverside demo

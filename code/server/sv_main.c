@@ -1770,16 +1770,18 @@ void SV_Frame( int msec ) {
 	SV_IssueNewSnapshot();
 
 #ifdef USE_PERSIST_CLIENT
-	for( i = 0; i < sv_maxclients->integer; i++ ) 
-	{
-		client_t *c = &svs.clients[ i ];
-		if(sv.time < c->persisted || sv.time - c->persisted > 
-			// TODO: make this a cvar?
-			10000) {
-			SV_PersistClient(i);
-		} /* else if (c->persisted == 0) {
-			SV_RestoreClient(i);
-		} */
+	if(sv_clSessions->integer != 0) {
+		for( i = 0; i < sv_maxclients->integer; i++ ) 
+		{
+			client_t *c = &svs.clients[ i ];
+			if(sv.time < c->persisted || sv.time - c->persisted > 
+				// TODO: make this a cvar?
+				10000) {
+				SV_PersistClient(i);
+			} /* else if (c->persisted == 0) {
+				SV_RestoreClient(i);
+			} */
+		}
 	}
 #endif
 

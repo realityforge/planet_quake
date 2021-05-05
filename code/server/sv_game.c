@@ -433,7 +433,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Cvar_SetSafe( VMA(1), (const char *)VMA(2) );
 #endif
 #ifdef USE_PERSIST_CLIENT
-		if(Q_stristr(VMA(1), "session")) {
+		if(sv_clSessions->integer != 0 && Q_stristr(VMA(1), "session")) {
 			SV_PersistClient(atoi(&(VMA(1)[8])));
 		}
 #endif
