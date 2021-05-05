@@ -88,6 +88,9 @@ cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 cvar_t  *sv_lock[2];
 cvar_t  *sv_frozen;
 #endif
+#ifdef USE_PERSIST_CLIENT
+cvar_t  *sv_clSessions;
+#endif
 cvar_t  *sv_activeAction;
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
@@ -1766,7 +1769,7 @@ void SV_Frame( int msec ) {
 	// reset current and build new snapshot on first query
 	SV_IssueNewSnapshot();
 
-#if 1
+#ifdef USE_PERSIST_CLIENT
 	for( i = 0; i < sv_maxclients->integer; i++ ) 
 	{
 		client_t *c = &svs.clients[ i ];

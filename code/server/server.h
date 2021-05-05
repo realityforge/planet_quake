@@ -320,7 +320,7 @@ typedef struct client_s {
 	qboolean muted;
 	qboolean nofire;
 #endif
-#if 1
+#ifdef USE_PERSIST_CLIENT
 	int persisted;
 #endif
 
@@ -498,6 +498,10 @@ extern	cvar_t  *sv_lnWallet;
 extern	cvar_t  *sv_lnKey;
 extern	cvar_t  *sv_lnAPI;
 extern	cvar_t  *sv_lnWithdraw;
+#endif
+
+#ifdef USE_PERSIST_CLIENT
+extern  cvar_t  *sv_clSessions;
 #endif
 
 

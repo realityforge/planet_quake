@@ -985,6 +985,12 @@ void SV_Init( void )
 	sv_lock[1] = Cvar_Get("sv_lockBlue", "0", CVAR_TEMP);
 #endif
 
+#ifdef USE_PERSIST_CLIENT
+	sv_clSessions = Cvar_Get("sv_clSessions", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_clSessions, "-1", NULL, CV_INTEGER );
+	Cvar_SetDescription(sv_clSessions, "Save client state in sessions files. Specify the number of seconds the session can be restored. -1 for forever, 0 for off, 30 for 30 seconds if a client gets disconnected.\nDefault: 0");
+#endif
+
 #ifdef USE_RECENT_EVENTS
 	sv_recentPassword = Cvar_Get ("recentPassword", "", CVAR_TEMP );
 	Cvar_SetDescription(sv_recentPassword, "Set the required to get a response of key events that happened on the server since the last check\nDefault: empty");

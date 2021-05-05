@@ -63,10 +63,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   as if masters were also used in LAN games instead of just broadcasting
 //   or to specific master servers that host games geographically nearby
 //#define USE_MASTER_LAN 1
-
 // adds roles to rcon access, each role has it's own password
 // each role can execute specific commands
 //#define USE_SERVER_ROLES 1
+// adds settings for saving and restoring client states, either giving clients
+//   30 seconds to reconnect and keep their score, or saving client states for
+//   days/weeks as a part of a long on going adventure game or campaign
+#define USE_PERSIST_CLIENT 1
+
 
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24

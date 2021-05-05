@@ -441,7 +441,7 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-#if 1
+#ifdef USE_PERSIST_CLIENT
 /*
 ==================
 SetClientViewAngle
@@ -511,7 +511,7 @@ void SV_RestoreClient( int c ) {
 	time_t t = 0;
 	FS_Read(&t, sizeof(long), h);
 	//  TODO: make this customizable
-	if(I_FloatTime() - t > 30000) return;
+	if(sv_clSessions->integer != -1 && I_FloatTime() - t > sv_clSessions->integer) return;
 
 	playerState_t *ps = SV_GameClientNum( c );
 	FS_Read(buffer, sizeof(int), h);
@@ -1193,7 +1193,7 @@ gotnewcl:
 	Com_DPrintf( "Going from CS_FREE to CS_CONNECTED for %s\n", newcl->name );
 
 	newcl->state = CS_CONNECTED;
-#if 1
+#ifdef USE_PERSIST_CLIENT
 	newcl->persisted = sv.time; // don't save empty state until client has a change to join
 #endif
 	newcl->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
@@ -1325,7 +1325,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	drop->lastDisconnectTime = svs.time;
 
-#if 1
+#ifdef USE_PERSIST_CLIENT
 	drop->persisted = 0;
 #endif
 
@@ -1610,7 +1610,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		SV_ExecuteClientCommand(client, "team spectator");
 	}
 
-#if 1
+#ifdef USE_PERSIST_CLIENT
 	client->persisted = 0;
 	SV_RestoreClient(client - svs.clients);
 #endif
