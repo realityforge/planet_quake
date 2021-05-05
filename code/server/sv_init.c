@@ -619,6 +619,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 	gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
+Com_Printf("ServerInit %i: %s\n", gvm, CM_EntityString());
 	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 
 	// serverid should be different each time

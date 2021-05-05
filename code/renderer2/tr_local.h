@@ -1849,6 +1849,9 @@ extern float dvrYScale;
 extern float dvrXOffset;
 extern float dvrYOffset;
 
+extern  cvar_t  *r_cursorShader;
+extern  cvar_t  *r_inputShader;
+
 //====================================================================
 
 static ID_INLINE qboolean ShaderRequiresCPUDeforms(const shader_t * shader)

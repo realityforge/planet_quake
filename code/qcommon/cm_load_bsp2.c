@@ -43,9 +43,6 @@ void CMod_LoadShaders2( lump_t *l ) {
 	int			i, count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in)) {
-		Com_Error (ERR_DROP, "CMod_LoadShaders: funny lump size");
-	}
 	count = l->filelen / sizeof(*in);
 
 	if (count < 1) {
@@ -179,9 +176,6 @@ void CMod_LoadLeafs2( lump_t *l )
 	int			count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
 	if ( count < 1 )
@@ -194,7 +188,7 @@ void CMod_LoadLeafs2( lump_t *l )
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
 		out->cluster = LittleLong( in->cluster );
-		//out->area = LittleLong( in->area );
+		out->area = 1;
 		out->firstLeafBrush = LittleLong( in->firstleafbrush );
 		out->numLeafBrushes = LittleLong( in->numleafbrushes );
 		out->firstLeafSurface = LittleLong( in->firstleafface );
@@ -214,10 +208,35 @@ void CMod_LoadLeafs2( lump_t *l )
 		if ( out->area >= cms[cm].numAreas )
 			cms[cm].numAreas = out->area + 1;
 	}
+}
 
+
+static void CMod_LoadAreas( lump_t *l )
+{
+	dZone_t 	*in;
+	int			count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	count = l->filelen / sizeof(*in);
+// this code is for Quake3 from gildor2,
+// so if quake 3 has no zones and its recreated,
+// maybe its ok without it?
+
+//!!	LoadZones(bsp->zones, bsp->numZones);
+//!!	LoadZonePortals(bsp->zoneportals, bsp->numZonePortals);
+	// Q3 zones: simulate loading (create 1 zone)
+
+/*
+	map_zones = new (dataChain) czone_t;
+	numZones  = 1;
+	numzoneportals = 0;
+*/
+
+	cms[cm].numAreas = 2;
 	cms[cm].areas = Hunk_Alloc( cms[cm].numAreas * sizeof( *cms[cm].areas ), h_high );
 	cms[cm].areaPortals = Hunk_Alloc( cms[cm].numAreas * cms[cm].numAreas * sizeof( *cms[cm].areaPortals ), h_high );
 }
+
 
 
 /*
@@ -323,9 +342,6 @@ void CMod_LoadLeafBrushes2( const lump_t *l )
 	int count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
 	cms[cm].leafbrushes = Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cms[cm].leafbrushes ), h_high );
@@ -352,9 +368,6 @@ void CMod_LoadLeafSurfaces2( const lump_t *l )
 	int count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
 	cms[cm].leafsurfaces = Hunk_Alloc( count * sizeof( *cms[cm].leafsurfaces ), h_high );
@@ -412,7 +425,7 @@ CMod_LoadEntityString
 */
 void CMod_LoadEntityString2( lump_t *l, const char *name ) {
 	CMod_LoadEntityString(l, name);
-	
+
 	// detect kingpin map entities
 	if (strstr(cms[cm].entityString, "\"classname\" \"junior\"") ||
 		strstr(cms[cm].entityString, "\"classname\" \"lightflare\"") ||
@@ -468,7 +481,7 @@ void CMod_LoadVisibility2( lump_t *l ) {
 	dBsp2Vis_t *in;
 	in = (void *)(cmod_base + l->fileofs);
 
-	len = l->filelen;
+	len = cms[cm].numClusters;
 	if ( !len ) {
 		cms[cm].numClusters = 1;
 		cms[cm].clusterBytes = ( cms[cm].numClusters + 31 ) & ~31;
@@ -478,12 +491,12 @@ void CMod_LoadVisibility2( lump_t *l ) {
 	}
 	buf = cmod_base + l->fileofs;
 
-	rowSize = (in->numClusters + 7) >> 3;
+	cms[cm].clusterBytes = rowSize = (cms[cm].numClusters + 7) >> 3;
 
 	cms[cm].vised = qtrue;
-	cms[cm].visibility = Hunk_Alloc( len, h_high );
-	cms[cm].numClusters = LittleLong( ((int *)buf)[0] );
-	cms[cm].clusterBytes = LittleLong( ((int *)buf)[1] );
+	cms[cm].visibility = Hunk_Alloc( rowSize * cms[cm].numClusters , h_high );
+	//cms[cm].numClusters = LittleLong( ((int *)buf)[0] );
+	//cms[cm].clusterBytes = LittleLong( ((int *)buf)[1] );
 	for (int i = 0; i < in->numClusters; i++, cms[cm].visibility += rowSize)
 		DecompressVis(cms[cm].visibility, in, in->bitOfs[i][PVS], rowSize);
 }
@@ -524,7 +537,6 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 		// FIXME: check for non-colliding patches
 
 		cms[cm].surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
-		Com_Printf( "Loading map ------------------\n" );
 
 		// load the full drawverts onto the stack
 		width = 5; //LittleLong( in->patchWidth );
@@ -576,6 +588,7 @@ static int CheckLump(lump_t *l, char *lumpName, int size)
 void LoadQ2Map(const char *name) {
 	dBsp2Hdr_t		header;
 
+	Com_DPrintf("CM_Load: Loading Quake 2 map.\n");
 	header = *(dBsp2Hdr_t *)cmod_base;
 
 #if !LITTLE_ENDIAN
@@ -616,7 +629,7 @@ void LoadQ2Map(const char *name) {
 	CMod_LoadEntityString2 (&header.lumps[LUMP_Q2_ENTITIES], name);
 	CMod_LoadVisibility2( &header.lumps[LUMP_Q2_VISIBILITY] );
 	// TODO: area portals and area mask stuff
-	//CMod_LoadAreas( &header.lumps[LUMP_Q2_ZONES] );
+	CMod_LoadAreas( &header.lumps[LUMP_Q2_ZONES] );
 	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
 	//
 	//;

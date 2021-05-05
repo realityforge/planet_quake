@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // tr_image.c
 #include "tr_local.h"
 
+
 #include "tr_dsa.h"
 
 static byte			 s_intensitytable[256];
@@ -2197,15 +2198,14 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 			byte *alphaPic = ri.Malloc(width * height * 4);
 			for (int y = 0; y < height; y++)
 			{
-				const byte *inbyte  = pic + y * width * 3;
-				byte       *outbyte = alphaPic + y * width * 4;
-
 				for (int x = 0; x < width; x++)
 				{
+					const byte *inbyte  = pic + y * width * 3 + x * 3;
+					byte       *outbyte = alphaPic + y * width * 4 + x * 4;
 					outbyte[0] = inbyte[0];
 					outbyte[1] = inbyte[1];
 					outbyte[2] = inbyte[2];
-					outbyte[3] = inbyte[3];
+					outbyte[3] = 128;
 					//outbyte[3] = 255;
 				}
 			}

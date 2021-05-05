@@ -1336,10 +1336,10 @@ qboolean UI_GameCommand( int igvm ) {
 	int prevGvm = uivm;
 	uivm = igvm;
 	CM_SwitchMap(clientMaps[uivm]);
+#endif
 	if ( !uivms[uivm] ) {
 		return qfalse;
 	}
-#endif
 
 	result = VM_Call( uivms[uivm], 1, UI_CONSOLE_COMMAND, cls.realtime );
 #ifdef USE_MULTIVM_CLIENT

@@ -526,6 +526,9 @@ var LibrarySysInput = {
 	Sys_SetClipboardData: function (field) {
     SYSI.field = field
 	},
+  Sys_FocusInput: function () {
+    
+  },
   Sys_EventMenuChanged: function (x, y) {
     var milli = _Sys_Milliseconds()
     if(milli - SYSI.bannerTime > 1000) {

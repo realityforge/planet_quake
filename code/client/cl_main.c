@@ -4524,6 +4524,7 @@ static void CL_InitRef_After_Load2( void )
 #endif
 
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
+	rimp.Spy_InputText = Spy_InputText;
 	rimp.Spy_Banner = Spy_Banner;
 #ifdef EMSCRIPTEN
 	rimp.Sys_DownloadLocalFile = Sys_DownloadLocalFile;

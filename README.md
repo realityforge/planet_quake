@@ -42,7 +42,7 @@ Some of the major features currently implemented are:
   * PNG support
   * Docker support, TODO: copy kubernetes support https://github.com/criticalstack/quake-kube
   * 2,500+ available maps on [lvlworld.com](https://lvlworld.com) and another 15,000+ planned, `cl_returnURL` for redirecting on quit and disconnect
-  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports. TODO: add optional variable for cursor spy shader name. TODO: setup and use home directory for drag and drop content, until it is uploaded and accepted by the package manager.
+  * Removed SDL inputs, touch support on mobile works, copy/paste, Drag and drop for sharing game content with the browser. .cfg file uploads/local imports. TODO: setup and use home directory for drag and drop content, until it is uploaded and accepted by the package manager.
   * Deferred (lazy) loading of all game content, entities, models, textures. New `cl_lazyLoad` cvar, 0 - turn off lazy loading, only load textures available on disk, 1 - load all textures available and fetch remotely as needed, 2 - set all to default and try to load from `sv_dlURL`, TODO: 3 - load textures only during INTERMISSION or dead or SPECTATING, 4 - set all to default and load during intermission (this is specifically for subordinate VMs in multiVM/multi-render modes). TODO: leave files open for changing mip levels (especially on DDS)? TODO: lazy loading file streaming out of pk3 on server over UDP or cURL interface.
   * Shader palettes for pre-rendering colors and TODO: changing the theme of maps
   * Offline mode for local and LAN games, just visit quake.games and run the command `\offline` in the console to cache all necessary files to local storage. [Google Reference](https://developers.google.com/web/fundamentals/codelabs/offline)
@@ -59,7 +59,7 @@ Some of the major features currently implemented are:
   * Event streaming. When specific things happen on the server, rcon can query the list of events and get a JSON style response of what happened since the last time it was checked. E.g. `{"type":1,"value":"q3dm1"}` where type `1` is SV_EVENT_MAPCHANGE. This is also used for the discord integration, and rankings. TODO: piped output for "pushing" events (as opposed to polling). TODO: add location information capable of making a heatmap
   * URL state management for accessing menus and for connecting to a server, i.e. https://quake.games?connect%20address using the [History API pushstate](https://caniuse.com/?search=pushstate)
   * Procedurally generated game content and maps, sv_bsp procedurally generates a map of any size and transfers to the client. Use `+map \*memory0` to see a generated skybox, the source `.map` and generated bsp file are stored in the game home path. TODO: connect game directories, TODO: create voxelized model on server aka "destructible model" and stream to client, replace using z-index? TODO: add checksum to skip download, also minimize download screen.
-  * Persistent client sessions.
+  * Persistent client sessions, that is, saving and restoring client score/health/location after a full disconnect and reconnect, use `sv_clSession` to specify how many seconds a session is valid to be restored.
   * Many, many bug fixes
 
 Coming soon!

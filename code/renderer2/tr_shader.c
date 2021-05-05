@@ -727,7 +727,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
         } else 
 #endif
         {
-          stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+          stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) );
         }
 
 				if ( !stage->bundle[0].image[0] )
@@ -780,7 +780,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
       } else 
 #endif
       {
-			  stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+			  stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) );
       }
 			if ( !stage->bundle[0].image[0] )
 			{
@@ -829,7 +829,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
           } else 
 #endif
           {
-            stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
+            stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) );
           }
 					if ( !stage->bundle[0].image[num] )
 					{
@@ -3834,7 +3834,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     } else 
 #endif
     {
-		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | (r_paletteMode->integer && lightmapIndex != LIGHTMAP_2D ?  : 0) );
+		  image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | (r_paletteMode->integer && lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) );
     }
 
 		if ( !image ) {
@@ -3897,6 +3897,10 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[1].rgbGen = CGEN_IDENTITY;
 		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
 	}
+  if(r_seeThroughWalls->integer) {
+    shader.contentFlags |= CONTENTS_TRANSLUCENT;
+    shader.surfaceFlags |= SURF_NOLIGHTMAP;
+  }
 
 	return FinishShader();
 }

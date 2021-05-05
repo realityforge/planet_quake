@@ -223,6 +223,9 @@ float dvrYScale = 1;
 float dvrXOffset = 0;
 float dvrYOffset = 0;
 
+cvar_t  *r_inputShader;
+cvar_t  *r_cursorShader;
+
 /*
 ** InitOpenGL
 **
@@ -1612,6 +1615,9 @@ void R_Register( void )
 	ri.Cvar_SetDescription(r_maxpolys, "Max number of polygons\nDefault: " XSTRING(MAX_POLYS));
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
 	ri.Cvar_SetDescription(r_maxpolyverts, "Max number of polygon vertices to display at a time\nDefault: " XSTRING(MAX_POLYVERTS));
+
+	r_cursorShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
+	r_inputShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

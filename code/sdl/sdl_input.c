@@ -1302,6 +1302,14 @@ static void IN_Restart( void )
 }
 
 
+void IN_ShowKeyboard ( void ) {
+	SDL_StartTextInput();
+#ifdef EMSCRIPTEN
+	Sys_FocusInput();
+#endif
+}
+
+
 /*
 ===============
 IN_Init

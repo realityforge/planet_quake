@@ -59,7 +59,6 @@ CL_GetGameState
 */
 static void CL_GetGameState( gameState_t *gs ) {
 	int igs = clientGames[cgvm];
-Com_Printf("Get gamestate: %i -> %i\n", cgvm, igs);
 	*gs = cl.gameState[igs];
 }
 

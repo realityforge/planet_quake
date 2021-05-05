@@ -587,7 +587,7 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	if(cm_saveEnts && cm_saveEnts->integer && l->fileofs != 0) {
 		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
 	} else {
-		Com_Printf("Entities: %s\n", cms[cm].entityString);
+		Com_Printf("Entities %i: %s\n", cm, cms[cm].entityString);
 	}
 }
 
@@ -995,7 +995,7 @@ CM_ClearMap
 ==================
 */
 void CM_ClearMap( void ) {
-	Com_Memset( &cms[cm], 0, sizeof( cms[0] ) );
+	Com_Memset( &cms, 0, sizeof( cms ) );
 	CM_ClearLevelPatches();
 }
 

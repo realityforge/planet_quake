@@ -27,53 +27,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../bspc/l_qfiles.h"
 
-void SetPlaneSignbits( cplane_t *out ) {
-	int	bits, j;
-
-	// for fast box on planeside test
-	bits = 0;
-	for ( j = 0; j < 3; j++) {
-		if ( out->normal[j] < 0 ) {
-			bits |= 1<<j;
-		}
-	}
-	out->signbits = bits;
-}
-#endif //BSPC
-
-// to allow boxes to be treated as brush models, we allocate
-// some extra indexes along with those needed by the map
-#define	BOX_BRUSHES		1
-#define	BOX_SIDES		6
-#define	BOX_LEAFS		2
-#define	BOX_PLANES		12
-
-#define	LL(x) x=LittleLong(x)
-
-clipMap_t	cms[MAX_NUM_MAPS];
-int     cm = 0;
-int			c_pointcontents;
-int			c_traces, c_brush_traces, c_patch_traces;
-
-
-byte		*cmod_base;
-
-#ifndef BSPC
-cvar_t		*cm_noAreas;
-cvar_t		*cm_noCurves;
-cvar_t		*cm_playerCurveClip;
-cvar_t    *cm_saveEnts;
-#endif
-
-cmodel_t	box_model[MAX_NUM_MAPS];
-cplane_t	*box_planes[MAX_NUM_MAPS];
-cbrush_t	*box_brush[MAX_NUM_MAPS];
-
-
-
-void	CM_InitBoxHull (void);
-void	CM_FloodAreaConnections (void);
-
 
 /*
 ===============================================================================
@@ -464,43 +417,6 @@ void CMod_LoadBrushSides (lump_t *l)
 	}
 }
 
-
-/*
-=================
-CMod_LoadEntityString
-=================
-*/
-void CMod_LoadEntityString( lump_t *l, const char *name ) {
-	fileHandle_t h;
-	char entName[MAX_QPATH];
-	size_t entNameLen = 0;
-	int entFileLen = 0;
-
-	// Attempt to load entities from an external .ent file if available
-	Q_strncpyz(entName, name, sizeof(entName));
-	entNameLen = strlen(entName);
-	entName[entNameLen - 3] = 'e';
-	entName[entNameLen - 2] = 'n';
-	entName[entNameLen - 1] = 't';
-	entFileLen = FS_FOpenFileRead( entName, &h, qtrue );
-	if (h && entFileLen > 0)
-	{
-		cms[cm].entityString = (char *)Hunk_Alloc(entFileLen + 1, h_high );
-		cms[cm].numEntityChars = entFileLen + 1;
-		FS_Read( cms[cm].entityString, entFileLen, h );
-		FS_FCloseFile(h);
-		cms[cm].entityString[entFileLen] = '\0';
-		Com_Printf( S_COLOR_CYAN "Loaded entities from %s\n", entName );
-		return;
-	}
-
-	cms[cm].entityString = Hunk_Alloc( l->filelen, h_high );
-	cms[cm].numEntityChars = l->filelen;
-	memcpy( cms[cm].entityString, cmod_base + l->fileofs, l->filelen );
-	if(cm_saveEnts->integer) {
-		FS_WriteFile(entName, cms[cm].entityString, cms[cm].numEntityChars);
-	}
-}
 
 
 /*

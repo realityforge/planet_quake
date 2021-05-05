@@ -75,7 +75,7 @@ static void (*CB_Frame_After)( void ) = NULL;
 void IN_Init (void);
 void IN_Frame (void);
 void IN_Shutdown (void);
-
+void IN_ShowKeyboard (void);
 extern char **Sys_CmdArgs( void );
 extern int Sys_CmdArgsC( void );
 
@@ -929,6 +929,7 @@ int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
 void Spy_CursorPosition(float x, float y);
+void Spy_InputText( void );
 void Spy_Banner(float x, float y);
 
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
