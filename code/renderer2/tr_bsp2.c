@@ -774,7 +774,61 @@ static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 	s_worldData[rw].fogs = ri.Hunk_Alloc ( s_worldData[rw].numfogs*sizeof(fog_t), h_low);
 }
 
+/*
 
+
+static surfaceBase_t *LoadFakePlanarSurface3(const dBsp3Face_t *surf, dBsp3Vert_t *verts, unsigned *indexes,
+	shader_t *shader)
+{
+	surfaceTrisurf_t *s = new (map.dataChain) surfaceTrisurf_t;
+	s->shader = shader;
+#if 1
+	if (shader->type != SHADERTYPE_SKY && shader->lightValue)
+		appWPrintf("Trisurf light: %s\n", *shader->Name);
+#endif
+
+	s->numVerts   = surf->numVerts;
+	s->verts      = new (map.dataChain) vertexNormal_t [surf->numVerts];
+	s->numIndexes = surf->numIndexes;
+	s->indexes    = new (map.dataChain) int [surf->numIndexes];
+	s->fogNum     = (surf->fogNum + 1) & 255;
+	// copy verts
+	vertexNormal_t *dst = s->verts;
+	s->bounds.Clear();
+	for (int j = 0; j < surf->numVerts; j++, verts++, dst++)
+	{
+		dst->xyz    = verts->v;
+		dst->st[0]  = verts->st[0];
+		dst->st[1]  = verts->st[1];
+		dst->lm[0]  = verts->lm[0];
+		dst->lm[1]  = verts->lm[1];
+		dst->c.rgba = verts->c.rgba;		//!! saturate
+		dst->normal = verts->normal;
+		s->bounds.Expand(dst->xyz);
+	}
+	// copy indexes
+	memcpy(s->indexes, indexes, surf->numIndexes * sizeof(int));
+	return s;
+}
+
+
+static surfaceBase_t *LoadPlanarSurface3(const dBsp3Face_t *surf, dBsp3Vert_t *verts, unsigned *indexes,
+	const dBsp3Shader_t *stex)
+{
+	unsigned sflags = SHADER_WALL;
+	shader_t *shader = CreateSurfShader3(sflags, stex, surf->lightmapNum);
+
+	if (surf->lightmapVecs[2][0] == 0 &&
+		surf->lightmapVecs[2][1] == 0 &&
+		surf->lightmapVecs[2][2] == 0)
+	{
+		// Third-party q3map2 compiler has special surface type: pre-tesselated patch.
+		// It is stored in bsp as planar surface, but really it is not planar. Create
+		// trisurf from it.
+		return LoadFakePlanarSurface3(surf, verts, indexes, shader);
+	}
+
+*/
 
 void LoadBsp2(const char *name) {
 	int i;

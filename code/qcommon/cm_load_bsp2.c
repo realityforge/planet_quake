@@ -518,40 +518,24 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 	int			c;
 	cPatch_t	*patch;
 	vec3_t		points[MAX_PATCH_VERTS];
-	int			width, height;
 	int			shaderNum;
 
 	in = (void *)(cmod_base + surfs->fileofs);
-	if (surfs->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
+
 	cms[cm].numSurfaces = count = surfs->filelen / sizeof(*in);
 	cms[cm].surfaces = Hunk_Alloc( cms[cm].numSurfaces * sizeof( cms[cm].surfaces[0] ), h_high );
 
 	dv = (void *)(cmod_base + verts->fileofs);
-	if (verts->filelen % sizeof(*dv))
-		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
 
-	// scan through all the surfaces, but only load patches,
-	// not planar faces
+	// scan through all the surfaces, but only load the bsp plane
 	for ( i = 0 ; i < count ; i++, in++ ) {
-		// FIXME: check for non-colliding patches
-
 		cms[cm].surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
 
 		// load the full drawverts onto the stack
-		width = 5; //LittleLong( in->patchWidth );
-		height = 5; //LittleLong( in->patchHeight );
 		c = LittleLong( in->numedges );
-		if(c == 6) {
-			width = 3;
-			height = 3;
-		}
 		if ( c > MAX_PATCH_VERTS ) {
 			Com_Error( ERR_DROP, "ParseMesh: MAX_PATCH_VERTS" );
 		}
-		if(!c) continue;
-		//Com_Printf("CMod_LoadPatches2: %i, %f x %f x %f\n", c, 
-		//	points[j][0], points[j][1], points[j][2]);
 
 		dv_p = dv + LittleLong( in->firstedge );
 		for ( j = 0 ; j < c ; j++, dv_p++ ) {
@@ -568,8 +552,139 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 			continue;
 		}
 
+/*
+
+		if (sflags & (SHADER_TRANS33|SHADER_TRANS66|SHADER_ALPHA|SHADER_TURB|SHADER_SKY))
+			numVerts = RemoveCollinearPoints(pverts, numVerts);
+
+		* numTriangles = numVerts - 2 (3 verts = 1 tri, 4 verts = 2 tri etc.)
+		 * numIndexes = numTriangles * 3
+		 * Indexes: (0 1 2) (0 2 3) (0 3 4) ... (here: 5 verts, 3 triangles, 9 indexes)
+		int numTris;
+		if (shader->tessSize)
+		{
+			numTris  = SubdividePlane(pverts, numVerts, shader->tessSize);
+			numVerts = subdivNumVerts;
+		}
+		else
+			numTris = numVerts - 2;
+
+		int numIndexes = numTris * 3;
+
+		----- Prepare for vertex generation ----------------
+		// alloc new surface
+		surfacePlanar_t *s = new (map.dataChain) surfacePlanar_t;
+		s->shader = shader;
+		map.faces[i] = s;
+		
+		
+		s->plane = bspfile.planes[surfs->planenum];
+		if (surfs->side)
+		{
+			// backface (needed for backface culling)
+			s->plane.normal.Negate();
+			s->plane.dist = -s->plane.dist;
+			s->plane.Setup();
+		}
+		s->numVerts   = numVerts;
+		s->verts      = new (map.dataChain) vertex_t [numVerts];
+		s->numIndexes = numIndexes;
+		s->indexes    = new (map.dataChain) int [numIndexes];
+
+		------------ Generate indexes ----------------------
+		if (shader->tessSize)
+			GetSubdivideIndexes(s->indexes);
+		else
+		{
+			int *pindex = s->indexes;
+			for (j = 0; j < numTris; j++)
+			{
+				*pindex++ = 0;
+				*pindex++ = j+1;
+				*pindex++ = j+2;
+			}
+		}
+
+		--------- Create surface vertexes ------------------
+		vertex_t *v = s->verts;
+		// ClearBounds2D(mins, maxs)
+		float mins[2], maxs[2];				// surface extents
+		mins[0] = mins[1] =  BIG_NUMBER;
+		maxs[0] = maxs[1] = -BIG_NUMBER;
+		// Enumerate vertexes, prepare data for lightmap
+		for (j = 0; j < numVerts; j++, v++)
+		{
+			v->xyz = *pverts[j];
+			if (sflags & SHADER_SKY) continue;
+
+			float v1 = dot(v->xyz, stex->vecs[0].vec) + stex->vecs[0].offset;
+			float v2 = dot(v->xyz, stex->vecs[1].vec) + stex->vecs[1].offset;
+			// Update bounds
+			EXPAND_BOUNDS(v1, mins[0], maxs[0]);
+			EXPAND_BOUNDS(v2, mins[1], maxs[1]);
+			// Texture coordinates
+			if (!(sflags & SHADER_TURB)) //?? (!shader->tessSize)
+			{
+				assert(shader->width > 0 && shader->height > 0);
+				v->st[0] = v1 / shader->width;
+				v->st[1] = v2 / shader->height;
+			}
+			else
+			{
+				v->st[0] = v1 - stex->vecs[0].offset;
+				v->st[1] = v2 - stex->vecs[1].offset;
+			}
+			// save intermediate data for lightmap texcoords
+			v->lm[0] = v1;
+			v->lm[1] = v2;
+			// Vertex color
+			v->c.rgba = RGBA(1,1,1,1);
+		}
+
+		--------------- Lightmap -------------------
+		s->lightmap = NULL;
+		if (needLightmap)
+			InitSurfaceLightmap2(surfs, s, mins, maxs);
+		// special case for q1/hl lightmap without data: dark lightmap
+		// (other map formats -- fullbright texture)
+		if (darkLightmap)
+		{
+			dynamicLightmap_t *lm = s->lightmap;
+			lm->w = 0;
+			lm->h = 0;
+			static byte dark[] = { 0, 0, 0 };
+			lm->source[0] = dark;		// hack: offset from lighting start
+			v = s->verts;
+			for (j = 0; j < numVerts; j++, v++)
+			{
+				v->lm[0] = v->lm[1] = 0.5f;
+				v->lm2[0] = v->lm2[1] = 0;
+			}
+			lm->externalSource = true;
+		}
+
+		BuildPlanarSurf(s);
+		if (stex->flags & SURF_LIGHT)		//!! + sky when ambient <> 0
+		{
+			static const color_t defColor = {96, 96, 96, 255};// {255, 255, 255, 255};
+
+			float area = GetSurfArea(s);
+			image_t *img = FindImage(va("textures/%s", stex->texture), IMAGE_MIPMAP);
+			BuildSurfLight(s, img ? &img->color : &defColor, area, stex->value, (stex->flags & SURF_SKY) != 0);
+			if (stex->flags & SURF_AUTOFLARE && !(stex->flags & SURF_SKY))
+				BuildSurfFlare(s, img ? &img->color : &defColor, area);
+		}
+
+		// free allocated poly
+		if (shader->tessSize)
+			FreeSubdividedPlane();
+	}
+*/
+
+
+
 		// create the internal facet structure
-		patch->pc = CM_GeneratePatchCollide( width, height, points );
+		//patch->pc = CM_GeneratePatchCollide( width, height, points );
 	}
 }
 
