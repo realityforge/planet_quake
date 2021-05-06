@@ -1918,6 +1918,7 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 			out->mins[j] = LittleLong (in->mins[j]);
 			out->maxs[j] = LittleLong (in->maxs[j]);
 		}
+		Com_Printf("Nodes: %f x %f\n", out->mins[0], out->maxs[1]);
 	
 		p = LittleLong(in->planeNum);
 		out->plane = s_worldData[rw].planes + p;
