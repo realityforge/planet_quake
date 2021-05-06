@@ -188,7 +188,7 @@ void CMod_LoadLeafs2( lump_t *l )
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
 		out->cluster = LittleLong( in->cluster );
-		out->area = 1;
+		out->area = 0;
 		out->firstLeafBrush = LittleLong( in->firstleafbrush );
 		out->numLeafBrushes = LittleLong( in->numleafbrushes );
 		out->firstLeafSurface = LittleLong( in->firstleafface );
@@ -564,12 +564,12 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 		patch->contents = cms[cm].shaders[shaderNum].contentFlags;
 		patch->surfaceFlags = cms[cm].shaders[shaderNum].surfaceFlags;
 		
-		//if(patch->surfaceFlags & SURF_SKY) {
-		//	continue;
-		//}
+		if(patch->surfaceFlags & SURF_SKY) {
+			continue;
+		}
 
 		// create the internal facet structure
-		//patch->pc = CM_GeneratePatchCollide( width, height, points );
+		patch->pc = CM_GeneratePatchCollide( width, height, points );
 	}
 }
 

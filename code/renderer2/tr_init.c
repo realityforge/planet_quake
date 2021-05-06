@@ -1538,7 +1538,7 @@ void R_Register( void )
 
 	r_nocurves = ri.Cvar_Get ("r_nocurves", "0", CVAR_CHEAT );
 	ri.Cvar_SetDescription(r_nocurves, "Map diagnostic command toggle the use of curved geometry\nDefault: 0");
-	r_drawworld = ri.Cvar_Get ("r_drawworld", "1", 0 );
+	r_drawworld = ri.Cvar_Get ("r_drawworld", "0", CVAR_CHEAT );
 	ri.Cvar_SetDescription(r_drawworld, "Toggle rendering of map architecture\nDefault: 1");
 	r_lightmap = ri.Cvar_Get ("r_lightmap", "0", 0 );
 	ri.Cvar_SetDescription(r_lightmap, "Toggle entire map to full brightness level all textures become blurred with light\nDefault: 0");

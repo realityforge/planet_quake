@@ -404,7 +404,7 @@ static void ParseMesh ( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msu
 	static surfaceType_t	skipData = SF_SKIP;
 
 	// get shader value
-	//surf->shader = ShaderForShaderNum( ds->texinfo, FatLightmap(realLightmapNum) );
+	surf->shader = ShaderForShaderNum( ds->texinfo, FatLightmap(0) );
 	if ( r_singleShader->integer && !surf->shader->isSky ) {
 		surf->shader = tr.defaultShader;
 	}
@@ -619,7 +619,6 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 			out->mins[j] = LittleLong (in->mins[j]);
 			out->maxs[j] = LittleLong (in->maxs[j]);
 		}
-		Com_Printf("Nodes: %f x %f\n", out->mins[0], out->maxs[1]);
 	
 		p = LittleLong(in->planeNum);
 		out->plane = s_worldData[rw].planes + p;
@@ -663,6 +662,7 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 
 //=============================================================================
 
+
 /*
 =================
 R_LoadShaders
@@ -682,11 +682,18 @@ static	void R_LoadShaders2( lump_t *l ) {
 	s_worldData[rw].shaders = out;
 	s_worldData[rw].numShaders = count;
 
-	Com_Memcpy( out, in, count*sizeof(*out) );
-
 	for ( i=0 ; i<count ; i++ ) {
-		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
-		out[i].contentFlags = LittleLong( out[i].contentFlags );
+		Com_Memcpy(out[i].shader, va("textures/%s", in[i].texture), sizeof(out[i].shader));
+
+		out[i].contentFlags |= CONTENTS_SOLID;
+		out[i].surfaceFlags |= (in[i].flags & Q2_SURF_ALPHA ? (SURF_ALPHASHADOW | SURF_NOLIGHTMAP) : 0);
+		out[i].contentFlags |= (in[i].flags & Q2_SURF_TRANS33 ? CONTENTS_TRANSLUCENT : 0);
+		out[i].contentFlags |= (in[i].flags & Q2_SURF_TRANS66 ? CONTENTS_TRANSLUCENT : 0);
+		out[i].surfaceFlags |= (in[i].flags & Q2_SURF_FLOWING ? SURF_SLICK : 0);
+		out[i].surfaceFlags |= (in[i].flags & Q2_SURF_SKY ? SURF_SKY : 0);
+		out[i].contentFlags |= (in[i].flags & Q2_SURF_WARP ? CONTENTS_TELEPORTER : 0);
+		out[i].contentFlags |= (in[i].flags & Q2_SURF_SPECULAR ? SURF_POINTLIGHT : 0);
+		out[i].surfaceFlags |= (in[i].flags & Q2_SURF_DIFFUSE ? SURF_LIGHTFILTER : 0);
 	}
 }
 
