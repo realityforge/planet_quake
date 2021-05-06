@@ -11,17 +11,46 @@
 
 static dheader_t header;
 static char skybox[4096*1024];
-char *SV_MakeSkybox( void ) {
-	vec3_t  vs[2];
-	if(!com_sv_running || !com_sv_running->integer
-		|| sv.state != SS_GAME) {
-		vs[0][0] = vs[0][1] = vs[0][2] = -1000;
-		vs[1][0] = vs[1][1] = vs[1][2] = 1000;
-	} else {
-		int h = CM_InlineModel( 0, 2, gvm );
-		CM_ModelBounds( h, vs[0], vs[1] );
-	}
 
+
+static char *SV_MakeWall( int p1[3], int p2[3] ) {
+	char *wall = &skybox[strlen(skybox)];
+	Q_strcat(wall, sizeof(wall), "{\n");
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
+	));
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p2[0], p2[1], p2[2], p2[0], p2[1], p1[2], p2[0], p1[1], p1[2]
+	));
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p2[0], p1[1], p2[2], p2[0], p1[1], p1[2], p1[0], p1[1], p1[2]
+	));
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p1[0], p2[1], p2[2], p1[0], p2[1], p1[2], p2[0], p2[1], p1[2]
+	));
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p1[0], p2[1], p1[2], p1[0], p1[1], p1[2], p2[0], p1[1], p1[2]
+	));
+	Q_strcat(wall, sizeof(wall),
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		p1[0], p1[1], p2[2], p1[0], p2[1], p2[2], p2[0], p2[1], p2[2]
+	));
+	Q_strcat(wall, sizeof(wall), "}\n");
+	return wall;
+}
+
+
+static char *SV_MakeBox( vec3_t min, vec3_t max ) {
+	char *box = &skybox[strlen(skybox)];
+	vec3_t  vs[2] = {
+		{*min, *max}
+	};
+	
 	int  points[12][3] = {
 		{vs[0][0], vs[0][1], vs[0][2]-16},
 		{vs[1][0], vs[1][1], vs[0][2]},
@@ -43,47 +72,52 @@ char *SV_MakeSkybox( void ) {
 		{vs[1][0], vs[1][1]+16, vs[1][2]}
 	};
 
-	Q_strcat(skybox, sizeof(skybox), "{\n"
-		"\"classname\" \"worldspawn\"\n");
-
 	for(int i = 0; i < 6; i++) {
 		int *p1 = points[i*2];
 		int *p2 = points[i*2+1];
-		Q_strcat(skybox, sizeof(skybox), "{\n");
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
-		));
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p2[0], p2[1], p2[2], p2[0], p2[1], p1[2], p2[0], p1[1], p1[2]
-		));
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p2[0], p1[1], p2[2], p2[0], p1[1], p1[2], p1[0], p1[1], p1[2]
-		));
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p1[0], p2[1], p2[2], p1[0], p2[1], p1[2], p2[0], p2[1], p1[2]
-		));
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p1[0], p2[1], p1[2], p1[0], p1[1], p1[2], p2[0], p1[1], p1[2]
-		));
-		Q_strcat(skybox, sizeof(skybox),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
-			p1[0], p1[1], p2[2], p1[0], p2[1], p2[2], p2[0], p2[1], p2[2]
-		));
-		Q_strcat(skybox, sizeof(skybox), "}\n");
+		SV_MakeWall(p1, p2);
 	}
+
+	return box;
+}
+
+
+static char *SV_MakeSkybox( void ) {
+	vec3_t  vs[2];
+	if(!com_sv_running || !com_sv_running->integer
+		|| sv.state != SS_GAME) {
+		vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+		vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+	} else {
+		int h = CM_InlineModel( 0, 2, gvm );
+		CM_ModelBounds( h, vs[0], vs[1] );
+	}
+
+	skybox[0] = '\0';
+	Q_strcat(skybox, sizeof(skybox), "{\n"
+		"\"classname\" \"worldspawn\"\n");
 	
-	Q_strcat(skybox, sizeof(skybox), "}\n"
+	SV_MakeBox(vs[0], vs[1]);
+	
+	Q_strcat(skybox, sizeof(skybox), 
+		"}\n"
 		"{\n"
 		"\"classname\" \"info_player_start\"\n"
 		"\"origin\" \"16 64 -52\"\n"
 		"}\n");
 
 	return (char *)skybox;
+}
+
+
+// TODO
+static char *SV_MakeMaze( void ) {
+	return "";
+}
+
+
+static char *SV_MakeHypercube( void ) {
+	return SV_MakeSkybox();
 }
 
 
