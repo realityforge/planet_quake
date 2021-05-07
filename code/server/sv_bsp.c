@@ -159,7 +159,7 @@ static char *SV_MakeMaze( void ) {
 static char *SV_MakeHypercube( void ) {
 	int width = 400;
 	int height = 400;
-	int spacing = 200;
+	int spacing = 300;
 	int rows = 3;
 	int cols = 3;
 	int totalWidth = width * cols + spacing * (cols - 1);
@@ -193,17 +193,26 @@ static char *SV_MakeHypercube( void ) {
 
 	Q_strcat(skybox, sizeof(skybox), "}\n");
 	
-	Q_strcat(skybox, sizeof(skybox), 
-		"{\n"
-		"\"classname\" \"info_player_start\"\n"
-		"\"origin\" \"16 64 -52\"\n"
-		"}\n");
+	for(int i = 0; i < rows * cols; i++) {
+		int y = i / cols;
+		int x = i % cols;
+	
+		Q_strcat(skybox, sizeof(skybox), 
+			va("{\n"
+			"\"classname\" \"info_player_start\"\n"
+			"\"origin\" \"%i %i %i\"\n"
+			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width / 2,
+			 -(totalHeight / 2) + (y * (height + spacing)) + height / 2,
+			 0));
+	}
 
 	Q_strcat(skybox, sizeof(skybox), 
 		va("{\n"
 		"\"classname\" \"info_player_start\"\n"
 		"\"origin\" \"%i %i %i\"\n"
-		"}\n", totalWidth, totalWidth, totalWidth));
+		"}\n", -width * 2,
+		 -height * 2,
+		 -width - height));
 
 	return skybox;
 }
