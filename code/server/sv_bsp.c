@@ -20,27 +20,27 @@ static char *SV_MakeWall( int p1[3], int p2[3] ) {
 	Q_strcat(wall, sizeof(wall), va("// brush %i\n"
 		"{\n", brushC));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
 	));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p2[0], p2[1], p2[2], p2[0], p2[1], p1[2], p2[0], p1[1], p1[2]
 	));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p2[0], p1[1], p2[2], p2[0], p1[1], p1[2], p1[0], p1[1], p1[2]
 	));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p1[0], p2[1], p2[2], p1[0], p2[1], p1[2], p2[0], p2[1], p1[2]
 	));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p1[0], p2[1], p1[2], p1[0], p1[1], p1[2], p2[0], p1[1], p1[2]
 	));
 	Q_strcat(wall, sizeof(wall),
-		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
+		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
 		p1[0], p1[1], p2[2], p1[0], p2[1], p2[2], p2[0], p2[1], p2[2]
 	));
 	Q_strcat(wall, sizeof(wall), "}\n");
@@ -100,8 +100,8 @@ static char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
 	if(!com_sv_running || !com_sv_running->integer
 		|| sv.state != SS_GAME) {
-		vs[0][0] = vs[0][1] = vs[0][2] = -100;
-		vs[1][0] = vs[1][1] = vs[1][2] = 100;
+		vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+		vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 	} else {
 		int h = CM_InlineModel( 0, 2, gvm );
 		CM_ModelBounds( h, vs[0], vs[1] );
@@ -157,26 +157,53 @@ static char *SV_MakeMaze( void ) {
 
 
 static char *SV_MakeHypercube( void ) {
+	int width = 400;
+	int height = 400;
+	int spacing = 200;
+	int rows = 3;
+	int cols = 3;
+	int totalWidth = width * cols + spacing * (cols - 1);
+	int totalHeight = height * rows + spacing * (rows - 1);
 	vec3_t  vs[2];
-	SV_MakeSkybox();
-	
-	Q_strcat(skybox, sizeof(skybox), "{\n"
-		"\"classname\" \"func_group\"\n");
-	
-	for(int i = 0; i < 9; i++) {
-		int y = i / 3;
-		int x = i % 3;
-		vs[0][0] = -450 + x;
-		vs[1][0] = -450 + x + 200;
 
-		vs[0][1] = -450 + y;
-		vs[1][1] = -450 + y + 200;
+	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 
-		vs[0][2] = -100;
-		vs[1][2] = 100;
+	brushC = 0;
+	skybox[0] = '\0';
+	Q_strcat(skybox, sizeof(skybox), "// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n");
+
+	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
+
+	for(int i = 0; i < rows * cols; i++) {
+		int y = i / cols;
+		int x = i % cols;
+		vs[0][0] = -(totalWidth / 2) + (x * (width + spacing));
+		vs[1][0] = -(totalWidth / 2) + (x * (width + spacing)) + width;
+
+		vs[0][1] = -(totalHeight / 2) + (y * (height + spacing));
+		vs[1][1] = -(totalHeight / 2) + (y * (height + spacing)) + height;
+
+		vs[0][2] = -(width / 2);
+		vs[1][2] = (height / 2);
 		Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
 	}
+
 	Q_strcat(skybox, sizeof(skybox), "}\n");
+	
+	Q_strcat(skybox, sizeof(skybox), 
+		"{\n"
+		"\"classname\" \"info_player_start\"\n"
+		"\"origin\" \"16 64 -52\"\n"
+		"}\n");
+
+	Q_strcat(skybox, sizeof(skybox), 
+		va("{\n"
+		"\"classname\" \"info_player_start\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", totalWidth, totalWidth, totalWidth));
 
 	return skybox;
 }
@@ -385,7 +412,6 @@ static void SV_AssignMemoryDatas( void ) {
 	//dModels = (void *)drawSurfaces;
 	//header.lumps[LUMP_SURFACES].filelen = numBSPDrawSurfaces * sizeof( dsurface_t );
   dVisBytes = (void *)bspVisBytes;
-	Com_Printf("Vis bytes: %i\n", numBSPVisBytes);
   header.lumps[LUMP_VISIBILITY].filelen = numBSPVisBytes;
   dLightBytes = (void *)bspLightBytes;
   header.lumps[LUMP_LIGHTMAPS].filelen = numBSPLightBytes;
@@ -446,6 +472,7 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 			lump->fileofs = ((sizeof(dheader_t) + strlen(marker) + 1) + 3) & ~3;
 		else
 			lump->fileofs = prev->fileofs + ((prev->filelen + 3) & ~3);
+//Com_Printf("Lump: %i - %i\n", lump->fileofs, lump->filelen);
 	}
 
 	void *orderedLumpDatas[] = {
@@ -472,13 +499,14 @@ void SV_WriteMemoryMapToClient(client_t *cl, int slot) {
 	// regenerate entire file
 	//cl->downloadCurrentBlock = 0;
 	//cl->downloadCount = 0;
+	Com_Printf("Download %i > %i\n", cl->downloadSize, cl->downloadCount);
 	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
-		cl->downloadSize != cl->downloadCount) {
+		cl->downloadSize > cl->downloadCount) {
 
 		curindex = (cl->downloadCurrentBlock % MAX_DOWNLOAD_WINDOW);
+		cl->downloadBlockSize[curindex] = 0;
 
 		if (!cl->downloadBlocks[curindex]) {
-			Com_Printf("Alloc %i\n", curindex);
 			cl->downloadBlocks[curindex] = Z_Malloc( MAX_DOWNLOAD_BLKSIZE );
 		}
 
@@ -496,18 +524,17 @@ Com_Printf("Beginning header\n");
 				memcpy(&cl->downloadBlocks[curindex][4], &header.version, sizeof(int));
 				for(int j = 0; j < HEADER_LUMPS; j++) {
 					lump_t *lump = &header.lumps[j];
-					int filelen = (lump->filelen + 3) & ~3;
-					int fileofs = (lump->fileofs + 3) & ~3;
 					//if(j != 15) {
-						memcpy(&cl->downloadBlocks[curindex][8 + j * 8], &fileofs, sizeof(int));
-						memcpy(&cl->downloadBlocks[curindex][12 + j * 8], &filelen, sizeof(int));
+						memcpy(&cl->downloadBlocks[curindex][8 + j * 8], &lump->fileofs, sizeof(int));
+						memcpy(&cl->downloadBlocks[curindex][12 + j * 8], &lump->filelen, sizeof(int));
 					//}
 				}
 				memcpy(&cl->downloadBlocks[curindex][sizeof(header)], marker, strlen(marker) + 1);
 				cl->downloadCount = lump->fileofs;
 			}
 
-			if(lump->fileofs - cl->downloadCount > 1) {
+			//Com_Printf("Lump ofs: %i, %i, %i\n", lumpsStupidOrder[i], lump->fileofs, cl->downloadCount - lump->fileofs);
+			if(lump->fileofs - cl->downloadCount > 3) {
 				Com_Error(ERR_DROP, "Should never happen because the previous loop should fill or break.");
 			} else {
 				int fillStart = (cl->downloadCount % MAX_DOWNLOAD_BLKSIZE);
@@ -519,7 +546,9 @@ Com_Printf("Beginning header\n");
 					if(diffLength > 0) {
 						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], diffLength);
 					}
-					//Com_Printf("Lump fill: %i, %i, %i\n", lumpsStupidOrder[i], diffLength, cl->downloadCount - lump->fileofs);
+					Com_Printf("Lump fill (%i, %i): %i, %i (%i left)\n", cl->downloadCurrentBlock, lumpsStupidOrder[i],
+					  cl->downloadBlockSize[curindex], lump->filelen,
+					  (lump->fileofs + lump->filelen) - (cl->downloadCurrentBlock + 1) * MAX_DOWNLOAD_BLKSIZE);
 					cl->downloadCount += diffLength;
 					break;
 				} else {
@@ -529,15 +558,22 @@ Com_Printf("Beginning header\n");
 					if(remainingLength > 0) {
 						memcpy(&cl->downloadBlocks[curindex][fillStart], &data[cl->downloadCount - lump->fileofs], remainingLength);
 					}
-					//Com_Printf("Lump end: %i, %i, %i\n", lumpsStupidOrder[i], remainingLength, cl->downloadCount - lump->fileofs);
+					Com_Printf("Lump end (%i, %i): %i, %i\n", cl->downloadCurrentBlock, lumpsStupidOrder[i],
+					 	cl->downloadBlockSize[curindex], lump->filelen);
 					cl->downloadCount += remainingLength;
 					// loop back around and start on new lump
+					if(cl->downloadBlockSize[curindex] >= MAX_DOWNLOAD_BLKSIZE) {
+						break;
+					}
 				}
 			}
 		}
+		if(cl->downloadClientBlock * MAX_DOWNLOAD_BLKSIZE > cl->downloadSize + MAX_DOWNLOAD_BLKSIZE) {
+			Com_Error(ERR_DROP, "Should never happen!\n");
+		}
 
 		// Load in next block
-		if(cl->downloadCount == cl->downloadSize) {
+		if(cl->downloadCount >= cl->downloadSize) {
 			cl->downloadCurrentBlock++;
 			break;
 		} else if (cl->downloadBlockSize[curindex] == MAX_DOWNLOAD_BLKSIZE) {
@@ -551,7 +587,7 @@ Com_Printf("Beginning header\n");
 
 int SV_MakeMap( void ) {
 
-	char *skybox = SV_MakeSkybox();
+	char *skybox = SV_MakeHypercube();
 	
 	int result = CM_LoadMapFromMemory();
 

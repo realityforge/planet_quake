@@ -1001,6 +1001,7 @@ static void CL_ParseDownload( msg_t *msg ) {
 		clc.downloadSize = MSG_ReadLong ( msg );
 
 		Cvar_SetIntegerValue( "cl_downloadSize", clc.downloadSize );
+		Com_Printf("Download size: %i\n", clc.downloadSize);
 
 		if (clc.downloadSize < 0)
 		{

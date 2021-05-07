@@ -69,7 +69,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // adds settings for saving and restoring client states, either giving clients
 //   30 seconds to reconnect and keep their score, or saving client states for
 //   days/weeks as a part of a long on going adventure game or campaign
-#define USE_PERSIST_CLIENT 1
+//#define USE_PERSIST_CLIENT 1
 
 
 #ifdef USE_SERVER_ROLES
