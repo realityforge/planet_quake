@@ -10,12 +10,15 @@
 
 
 static dheader_t header;
-static char skybox[4096*1024];
-
+static char skybox[4096*4096];
+static int brushC = 0;
 
 static char *SV_MakeWall( int p1[3], int p2[3] ) {
-	char *wall = &skybox[strlen(skybox)];
-	Q_strcat(wall, sizeof(wall), "{\n");
+	static char wall[4096];
+	wall[0] = '\0';
+	brushC++;
+	Q_strcat(wall, sizeof(wall), va("// brush %i\n"
+		"{\n", brushC));
 	Q_strcat(wall, sizeof(wall),
 		va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky1 0 0 0 1 1 0 0 0\n",
 		p1[0], p1[1], p2[2], p1[0], p1[1], p1[2], p1[0], p2[1], p1[2]
@@ -46,10 +49,16 @@ static char *SV_MakeWall( int p1[3], int p2[3] ) {
 
 
 static char *SV_MakeBox( vec3_t min, vec3_t max ) {
-	char *box = &skybox[strlen(skybox)];
-	vec3_t  vs[2] = {
-		{*min, *max}
-	};
+	static char box[4096*1024];
+	box[0] = '\0';
+
+	vec3_t  vs[2];
+	vs[0][0] = min[0];
+	vs[0][1] = min[1];
+	vs[0][2] = min[2];
+	vs[1][0] = max[0];
+	vs[1][1] = max[1];
+	vs[1][2] = max[2];
 	
 	int  points[12][3] = {
 		{vs[0][0], vs[0][1], vs[0][2]-16},
@@ -72,11 +81,16 @@ static char *SV_MakeBox( vec3_t min, vec3_t max ) {
 		{vs[1][0], vs[1][1]+16, vs[1][2]}
 	};
 
+	//Q_strcat(skybox, sizeof(skybox), "{\n"
+	//	"\"classname\" \"func_group\"\n");
+
 	for(int i = 0; i < 6; i++) {
 		int *p1 = points[i*2];
 		int *p2 = points[i*2+1];
-		SV_MakeWall(p1, p2);
+		Q_strcat(box, sizeof(box), SV_MakeWall(p1, p2));
 	}
+
+	//Q_strcat(skybox, sizeof(skybox), "}\n");
 
 	return box;
 }
@@ -86,27 +100,53 @@ static char *SV_MakeSkybox( void ) {
 	vec3_t  vs[2];
 	if(!com_sv_running || !com_sv_running->integer
 		|| sv.state != SS_GAME) {
-		vs[0][0] = vs[0][1] = vs[0][2] = -2000;
-		vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+		vs[0][0] = vs[0][1] = vs[0][2] = -100;
+		vs[1][0] = vs[1][1] = vs[1][2] = 100;
 	} else {
 		int h = CM_InlineModel( 0, 2, gvm );
 		CM_ModelBounds( h, vs[0], vs[1] );
 	}
 
+	brushC = 0;
 	skybox[0] = '\0';
-	Q_strcat(skybox, sizeof(skybox), "{\n"
+	Q_strcat(skybox, sizeof(skybox), "// entity 0\n"
+		"{\n"
 		"\"classname\" \"worldspawn\"\n");
 	
-	SV_MakeBox(vs[0], vs[1]);
+	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
+	
+	/*
+	// Game: Quake 3
+	// Format: Quake3 (legacy)
+	// entity 0
+	{
+	"classname" "worldspawn"
+	// brush 0
+	{
+	( -96 -80 32 ) ( -96 -79 32 ) ( -96 -80 33 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	( -96 -80 32 ) ( -96 -80 33 ) ( -95 -80 32 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	( -96 -80 32 ) ( -95 -80 32 ) ( -96 -79 32 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	( -48 128 48 ) ( -48 129 48 ) ( -47 128 48 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	( -48 128 48 ) ( -47 128 48 ) ( -48 128 49 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	( -48 128 48 ) ( -48 128 49 ) ( -48 129 48 ) __TB_empty 0 0 0 0.5 0.5 0 0 0
+	}
+	}
+	// entity 1
+	{
+	"classname" "info_player_start"
+	"origin" "16 64 -52"
+	}
+*/
+	
+	Q_strcat(skybox, sizeof(skybox), "}\n");
 	
 	Q_strcat(skybox, sizeof(skybox), 
-		"}\n"
 		"{\n"
 		"\"classname\" \"info_player_start\"\n"
 		"\"origin\" \"16 64 -52\"\n"
 		"}\n");
 
-	return (char *)skybox;
+	return skybox;
 }
 
 
@@ -117,7 +157,28 @@ static char *SV_MakeMaze( void ) {
 
 
 static char *SV_MakeHypercube( void ) {
-	return SV_MakeSkybox();
+	vec3_t  vs[2];
+	SV_MakeSkybox();
+	
+	Q_strcat(skybox, sizeof(skybox), "{\n"
+		"\"classname\" \"func_group\"\n");
+	
+	for(int i = 0; i < 9; i++) {
+		int y = i / 3;
+		int x = i % 3;
+		vs[0][0] = -450 + x;
+		vs[1][0] = -450 + x + 200;
+
+		vs[0][1] = -450 + y;
+		vs[1][1] = -450 + y + 200;
+
+		vs[0][2] = -100;
+		vs[1][2] = 100;
+		Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
+	}
+	Q_strcat(skybox, sizeof(skybox), "}\n");
+
+	return skybox;
 }
 
 
