@@ -224,7 +224,7 @@ int EmitDrawNode_r( node_t *node ){
 	VectorCopy( node->maxs, n->maxs );
 
 	if ( node->planenum & 1 ) {
-		Error( "WriteDrawNodes_r: odd planenum" );
+		Sys_Print( "WriteDrawNodes_r: odd planenum" );
 	}
 	n->planeNum = node->planenum;
 
