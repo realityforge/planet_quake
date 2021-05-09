@@ -174,7 +174,7 @@ static void SV_MakeCircle(int splits, int i, float radius, float width, float he
 	//splits = ((int)ceil(sqrt(splits))) ^ 2;
 	float angle = 360.0 / splits;
 	//float padX = (width - radius * 2) / 2;
-	float padY = (height - radius * 2) / 2;
+	float padY = radius;
 	float splitsPerSide = splits / 4.0; // sides
 	//float diff = splitsPerSide - floor(splits / 4.0);
 	float offset = floor(splits / 8.0);
@@ -234,7 +234,7 @@ static void SV_MakeCircle(int splits, int i, float radius, float width, float he
 
 static char *SV_MakePortal( float radius, vec3_t min, vec3_t max ) {
 	static char portal[4096*24];
-	float splits = 8.0;
+	float splits = 24.0;
 	float offset = floor(splits / 8.0);
 	portal[0] = '\0';
 	for(float i = -offset; i < ceil(splits - offset); i++) {
@@ -329,18 +329,18 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max ) {
 static int SV_MakeHypercube( void ) {
 	float radius = 100.0;
 	int offset = 0;
-	int width = 400;
-	int height = 400;
-	int spacing = 300;
-	int rows = 3;
-	int cols = 3;
+	int width = 1200;
+	int height = 1200;
+	int spacing = 400;
+	int rows = 2;
+	int cols = 2;
 	int totalWidth = width * cols + spacing * (cols - 1);
 	int totalHeight = height * rows + spacing * (rows - 1);
 	vec3_t  vs[2];
 	int padding = (width - radius * 2) / 2;
 
-	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
-	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+	vs[0][0] = vs[0][1] = vs[0][2] = -3000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 3000;
 
 	brushC = 0;
 	output[0] = '\0';
@@ -407,15 +407,15 @@ static int SV_MakeHypercube( void ) {
 			{vs[0][0] + padding, vs[1][1]+16,    vs[0][2] + padding},
 			{vs[1][0] - padding, vs[1][1]+32,    vs[1][2] - padding}
 		};
-
+		
 		for(int j = 0; j < 6; j++) {
 			int *p1 = wallMap[j*2];
 			int *p2 = wallMap[j*2+1];
 			strcpy(&output[offset], 
 				va("{\n"
 				"\"classname\" \"trigger_teleport\"\n"
-				"\"target\" \"%s\"\n",
-				 ""));
+				"\"target\" \"teleport_%i_%i\"\n",
+				 i, j));
 			offset += strlen(&output[offset]);
 
 			SV_SetStroke("e1u1/portal1");
@@ -426,8 +426,46 @@ static int SV_MakeHypercube( void ) {
 			offset += 2;
 		}
 	}
-	
-	
+
+	for(int i = 0; i < rows * cols; i++) {
+		int y = i / cols;
+		int x = i % cols;
+		vs[0][0] = -(totalWidth / 2) + (x * (width + spacing));
+		vs[1][0] = -(totalWidth / 2) + (x * (width + spacing)) + width;
+
+		vs[0][1] = -(totalHeight / 2) + (y * (height + spacing));
+		vs[1][1] = -(totalHeight / 2) + (y * (height + spacing)) + height;
+
+		vs[0][2] = -(width / 2);
+		vs[1][2] = (height / 2);
+		
+		int destinationOffsets[6][3] = {
+			{vs[1][0] - (width / 2), vs[1][1] - (height / 2), vs[0][2]+32},
+			{vs[0][0]+32,            vs[1][1] - (width / 2),  vs[1][2] - (height / 2)},
+			{vs[1][0] - (width / 2), vs[0][1]+32,             vs[1][2] - (height / 2)},
+
+			{vs[0][0] + (width / 2), vs[0][1] + (height / 2), vs[1][2]-32},
+			{vs[1][0]-32,            vs[0][1] + (width / 2),  vs[0][2] + (height / 2)},
+			{vs[0][0] + (width / 2), vs[1][1]-32,             vs[0][2] + (height / 2)}
+		};
+		
+		for(int j = 0; j < 6; j++) {
+			// add destinations
+			strcpy(&output[offset], 
+				va("{\n"
+				"\"classname\" \"misc_teleporter_dest\"\n"
+				"\"targetname\" \"teleport_%i_%i\"\n"
+				"\"origin\" \"%i %i %i\"\n"
+				"\"angle\" \"-90\"\n"
+				"}\n",
+				 (i+1)%(rows*cols), (j+1)%6, 
+				 destinationOffsets[j][0], 
+				 destinationOffsets[j][1], 
+				 destinationOffsets[j][2]));
+			offset += strlen(&output[offset]);
+		}
+	}
+
 	for(int i = 0; i < rows * cols; i++) {
 		int y = i / cols;
 		int x = i % cols;
@@ -436,6 +474,7 @@ static int SV_MakeHypercube( void ) {
 			va("{\n"
 			"\"classname\" \"info_player_start\"\n"
 			"\"origin\" \"%i %i %i\"\n"
+			"\"angle\" \"180\"\n"
 			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width - 32,
 			 -(totalHeight / 2) + (y * (height + spacing)) + height - 32,
 			 -(height / 2) + 32));
@@ -443,6 +482,7 @@ static int SV_MakeHypercube( void ) {
 		offset += strlen(&output[offset]);
 	}
 
+/*
 	int i = 0, j, y, x;
 	for ( j = 0 ; j < bg_numItems ; j++ ) {
 		if(!bg_itemlist[j].classname
@@ -496,6 +536,7 @@ static int SV_MakeHypercube( void ) {
 		i++;
 		offset += strlen(&output[offset]);
 	}
+*/
 
 	strcpy(&output[offset], 
 		va("{\n"

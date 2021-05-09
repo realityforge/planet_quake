@@ -76,10 +76,7 @@ void IncDrawVerts(){
 			numBSPDrawVertsBuffer = MAX_MAP_DRAW_VERTS;
 		}
 
-		if(bspDrawVerts)
 			newBspDrawVerts = realloc( bspDrawVerts, sizeof( bspDrawVert_t ) * numBSPDrawVertsBuffer );
-		else
-			newBspDrawVerts = malloc( sizeof( bspDrawVert_t ) * numBSPDrawVertsBuffer );
 
 		if ( !newBspDrawVerts ) {
 			free (bspDrawVerts);
