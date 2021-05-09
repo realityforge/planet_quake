@@ -1304,6 +1304,7 @@ Q3OBJ = \
 
 ifeq ($(USE_MEMORY_MAPS),1)
 Q3OBJ += \
+	$(B)/client/bg_misc.o \
   $(B)/client/q3map2/bsp.o \
 	$(B)/client/tools/inout.o \
 	$(B)/client/q3map2/portals.o \
@@ -1763,7 +1764,8 @@ Q3DOBJ = \
 
 ifeq ($(USE_MEMORY_MAPS),1)
 Q3DOBJ += \
-  $(B)/ded/q3map2/bsp.o \
+  $(B)/ded/bg_misc.o \
+	$(B)/ded/q3map2/bsp.o \
 	$(B)/ded/tools/inout.o \
 	$(B)/ded/q3map2/portals.o \
 	$(B)/ded/q3map2/surface.o \
@@ -1873,6 +1875,9 @@ $(B)/client/%.o: $(CDIR)/%.c
 
 $(B)/client/%.o: $(SDIR)/%.c
 	$(DO_CC)
+
+$(B)/client/%.o: $(MOUNT_DIR)/game/%.c
+	$(DO_TOOLS)
 
 $(B)/client/tools/%.o: $(TDIR)/common/%.c
 	$(DO_TOOLS)
@@ -1993,6 +1998,9 @@ $(B)/ded/cl_curl.o: $(CDIR)/cl_curl.c
 
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(MOUNT_DIR)/game/%.c
+	$(DO_TOOLS)
 
 $(B)/ded/tools/%.o: $(TDIR)/common/%.c
 	$(DO_DED_TOOLS)

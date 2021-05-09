@@ -3,18 +3,25 @@
 
 #include "server.h"
 #include "../qcommon/cm_public.h"
+#include "../game/bg_public.h"
 #define MAIN_C
 #include "../tools/q3map2/q3map2.h"
 #undef MAIN_C
 
 
 
+static char stroke[MAX_QPATH] = "";
+
+static char output[4096 * 128] = "";
 static dheader_t header;
-static char skybox[4096*4096];
 static int brushC = 0;
 
+static void SV_SetStroke( const char *path ) {
+	memcpy(stroke, path, sizeof(stroke));
+}
+
 static char *SV_MakeWall( int p1[3], int p2[3] ) {
-	static char wall[4096];
+	static char wall[4096*2];
 	int minMaxMap[6][3][3] = {
 		{{p1[0], p1[1], p2[2]}, {p1[0], p1[1], p1[2]}, {p1[0], p2[1], p1[2]}},
 		{{p2[0], p2[1], p2[2]}, {p2[0], p2[1], p1[2]}, {p2[0], p1[1], p1[2]}},
@@ -29,10 +36,11 @@ static char *SV_MakeWall( int p1[3], int p2[3] ) {
 		"{\n", brushC));
 	for(int i = 0; i < ARRAY_LEN(minMaxMap); i++) {
 		Q_strcat(wall, sizeof(wall),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) %s 0 0 0 1 1 0 0 0\n",
 			minMaxMap[i][0][0], minMaxMap[i][0][1], minMaxMap[i][0][2],
 			minMaxMap[i][1][0], minMaxMap[i][1][1], minMaxMap[i][1][2],
-			minMaxMap[i][2][0], minMaxMap[i][2][1], minMaxMap[i][2][2]
+			minMaxMap[i][2][0], minMaxMap[i][2][1], minMaxMap[i][2][2],
+			stroke
 		));
 	}
 	Q_strcat(wall, sizeof(wall), "}\n");
@@ -41,7 +49,7 @@ static char *SV_MakeWall( int p1[3], int p2[3] ) {
 
 
 static char *SV_MakeBox( vec3_t min, vec3_t max ) {
-	static char box[4096*1024];
+	static char box[4096];
 	box[0] = '\0';	
 	int  wallMap[12][3] = {
 		{min[0], min[1], min[2]-16},
@@ -64,22 +72,18 @@ static char *SV_MakeBox( vec3_t min, vec3_t max ) {
 		{max[0], max[1]+16, max[2]}
 	};
 
-	//Q_strcat(skybox, sizeof(skybox), "{\n"
-	//	"\"classname\" \"func_group\"\n");
-
 	for(int i = 0; i < 6; i++) {
 		int *p1 = wallMap[i*2];
 		int *p2 = wallMap[i*2+1];
 		Q_strcat(box, sizeof(box), SV_MakeWall(p1, p2));
 	}
 
-	//Q_strcat(skybox, sizeof(skybox), "}\n");
-
 	return box;
 }
 
 
-static char *SV_MakeSkybox( void ) {
+void SV_MakeSkybox( void ) {
+	char skybox[4096 * 2];
 	vec3_t  vs[2];
 	if(!com_sv_running || !com_sv_running->integer
 		|| sv.state != SS_GAME) {
@@ -98,6 +102,7 @@ static char *SV_MakeSkybox( void ) {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n");
 	
+	SV_SetStroke("e1u1/sky1");
 	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
 	
 	Q_strcat(skybox, sizeof(skybox), "}\n");
@@ -108,7 +113,7 @@ static char *SV_MakeSkybox( void ) {
 		"\"origin\" \"16 64 -52\"\n"
 		"}\n");
 
-	return skybox;
+	memcpy(output, skybox, sizeof(skybox));
 }
 
 
@@ -119,15 +124,17 @@ static char *SV_MakeMaze( void ) {
 
 
 // TODO: wall is just a square platform
-static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
+static char *SV_MakeCube(
+	vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4,
+	vec3_t p5, vec3_t p6, vec3_t p7, vec3_t p8) {
 	static char plat[4096];
 	int quadMap[6][3][3] = {
-		{{p4[0], p4[1], p4[2]+16}, {p1[0], p1[1], p1[2]+16}, {p1[0], p1[1], p1[2]}},
-		{{p4[0], p4[1], p4[2]},    {p3[0], p3[1], p3[2]},    {p3[0], p3[1], p3[2]+16}},
-		{{p4[0], p4[1], p4[2]+16}, {p3[0], p3[1], p3[2]+16}, {p2[0], p2[1], p2[2]+16}},
-		{{p2[0], p2[1], p2[2]},    {p3[0], p3[1], p3[2]},    {p4[0], p4[1], p4[2]}},
-		{{p2[0], p2[1], p2[2]+16}, {p2[0], p2[1], p2[2]},    {p1[0], p1[1], p1[2]}},
-		{{p3[0], p3[1], p3[2]+16}, {p3[0], p3[1], p3[2]},    {p2[0], p2[1], p2[2]}},
+		{{p8[0], p8[1], p8[2]}, {p5[0], p5[1], p5[2]}, {p1[0], p1[1], p1[2]}},
+		{{p4[0], p4[1], p4[2]}, {p3[0], p3[1], p3[2]}, {p7[0], p7[1], p7[2]}},
+		{{p8[0], p8[1], p8[2]}, {p7[0], p7[1], p7[2]}, {p6[0], p6[1], p6[2]}},
+		{{p2[0], p2[1], p2[2]}, {p3[0], p3[1], p3[2]}, {p4[0], p4[1], p4[2]}},
+		{{p6[0], p6[1], p6[2]}, {p2[0], p2[1], p2[2]}, {p1[0], p1[1], p1[2]}},
+		{{p7[0], p7[1], p7[2]}, {p3[0], p3[1], p3[2]}, {p2[0], p2[1], p2[2]}},
 	};
 	plat[0] = '\0';
 	brushC++;
@@ -135,10 +142,11 @@ static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 		"{\n", brushC));
 	for(int i = 0; i < ARRAY_LEN(quadMap); i++) {
 		Q_strcat(plat, sizeof(plat),
-			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) e1u1/sky10 0 0 0 1 1 0 0 0\n",
+			va("( %i %i %i ) ( %i %i %i ) ( %i %i %i ) %s 0 0 0 1 1 0 0 0\n",
 			quadMap[i][0][0], quadMap[i][0][1], quadMap[i][0][2],
 			quadMap[i][1][0], quadMap[i][1][1], quadMap[i][1][2],
-			quadMap[i][2][0], quadMap[i][2][1], quadMap[i][2][2]
+			quadMap[i][2][0], quadMap[i][2][1], quadMap[i][2][2],
+			stroke
 		));
 	}
 	Q_strcat(plat, sizeof(plat), "}\n");
@@ -146,66 +154,181 @@ static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 }
 
 
-static char *SV_MakePortal( float radius, int x, int y, int width, int height ) {
-	static char portal[4096*1024];
-	float splits = 18.0;
+// TODO: wall is just a square platform
+static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
+	static char plat[4096];
+	// TODO: make nice with edges like Edge of Oblivion on quake 3 space maps
+	return plat;
+}
+
+
+static char *SV_MakeShootsAndLadders(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
+	static char plat[4096];
+	// TODO: ramps and wind tunnels like Edge of Oblivion with different shaped pyramids and stuff in space
+	return plat;
+}
+
+
+static float circleCorners[8];
+static void SV_MakeCircle(int splits, int i, float radius, float width, float height) {
 	//splits = ((int)ceil(sqrt(splits))) ^ 2;
 	float angle = 360.0 / splits;
-	float padX = (width - radius * 2) / 2;
+	//float padX = (width - radius * 2) / 2;
 	float padY = (height - radius * 2) / 2;
 	float splitsPerSide = splits / 4.0; // sides
-	int offset = floor(splits / 8.0);
-	portal[0] = '\0';
-	for(int i = -offset; i < splits - offset; i++) {
-		// alternate which corners are used to form the circle as it goes around, this keeps the brush uniform
-		// start from the top left corner
-		int x1 = x + radius * sin(M_PI * 2 * (angle * (i - 0)) / 360.0);
-		int y1 = y - radius * (1.0 - cos(M_PI * 2 * (angle * (i - 0)) / 360.0)) + padY;
-		int x2 = x + radius * sin(M_PI * 2 * (angle * (i + 1)) / 360.0);
-		int y2 = y - radius * (1.0 - cos(M_PI * 2 * (angle * (i + 1)) / 360.0)) + padY;
-		int x3 = x + (width / splitsPerSide) * (i + 1);
-		int y3 = y + (height / 2);
-		int x4 = x + (width / splitsPerSide) * i;
-		int y4 = y + (height / 2);
-		
-		if(i > (splitsPerSide * 3.0 - offset)) {
-			x3 = x2;
-			y3 = y2;
-			x2 = x1;
-			y2 = y1;
-			x1 = x - (width / 2);
-			y1 = y + (height / splitsPerSide) * (i - (splitsPerSide * 3 + 0));
-			x4 = x - (width / 2);
-			y4 = y + (height / splitsPerSide) * (i - (splitsPerSide * 3 - 1));
-		} else if(i > (splitsPerSide * 2.0 - offset)) {
-			x3 = x1;
-			y3 = y1;
-			x4 = x2;
-			y4 = y2;
-			x1 = x + (width / splitsPerSide) * (splitsPerSide * 2 - 1 - i);
-			y1 = y - (height / 2);
-			x2 = x + (width / splitsPerSide) * (splitsPerSide * 2 - i);
-			y2 = y - (height / 2);
-		} else if(i > (splitsPerSide - offset)) {
-			x4 = x1;
-			y4 = y1;
-			x1 = x2;
-			y1 = y2;
-			x3 = x + (width / 2);
-			y3 = y + (height / splitsPerSide) * (splitsPerSide - i);
-			x2 = x + (width / 2);
-			y2 = y + (height / splitsPerSide) * (splitsPerSide - 1 - i);
-		} else {
-		}
-		Q_strcat(portal, sizeof(portal), SV_MakePlatform(
-			(vec3_t){x1, y1, 500}, (vec3_t){x2, y2, 500}, (vec3_t){x3, y3, 500}, (vec3_t){x4, y4, 500}
-		));
+	//float diff = splitsPerSide - floor(splits / 4.0);
+	float offset = floor(splits / 8.0);
+	// alternate which corners are used to form the circle as it goes around, this keeps the brush uniform
+	// start from the top left corner
+	float x1 = radius * sin(M_PI * 2.0 * (angle * i) / 360.0);
+	float y1 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * i) / 360.0)) + padY;
+	float x2 = radius * sin(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0);
+	float y2 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0)) + padY;
+	float x3 = (width / ceil(splitsPerSide)) * (i + 1.0);
+	float y3 = (height / 2.0);
+	float x4 = (width / ceil(splitsPerSide)) * (i - 0.0);
+	float y4 = (height / 2.0);
+	
+	if(i >= (splitsPerSide * 3.0 - offset)) {
+		x3 = x2;
+		y3 = y2;
+		x2 = x1;
+		y2 = y1;
+		int numSplits = splits - ceil(splitsPerSide * 3.0);
+		x1 = -(width / 2.0);
+		y1 = (height / numSplits) * (i - floor(splitsPerSide * 3.0) - 0.0);
+		x4 = -(width / 2.0);
+		y4 = (height / numSplits) * (i - floor(splitsPerSide * 3.0) + 1.0);
+	} else if(i >= (splitsPerSide * 2.0 - offset)) {
+		x3 = x1;
+		y3 = y1;
+		x4 = x2;
+		y4 = y2;
+		int numSplits = (splits - ceil(splitsPerSide * 2.0)) - (splits - ceil(splitsPerSide * 3.0));
+		x1 = (width / numSplits) * (floor(splitsPerSide * 2.0) - i - 1.0);
+		y1 = -(height / 2.0);
+		x2 = (width / numSplits) * (floor(splitsPerSide * 2.0) - i + 0.0);
+		y2 = -(height / 2.0);
+	} else if(i >= (splitsPerSide - offset)) {
+		x4 = x1;
+		y4 = y1;
+		x1 = x2;
+		y1 = y2;
+		int numSplits = round(splitsPerSide * 2.0 - splitsPerSide);
+		x3 = (width / 2.0);
+		y3 = (height / numSplits) * (round(splitsPerSide) - i + 0.0);
+		x2 = (width / 2.0);
+		y2 = (height / numSplits) * (round(splitsPerSide) - i - 1.0);
+	} else {
 	}
+	circleCorners[0] = x1 + (width / 2);
+	circleCorners[1] = y1 + (height / 2);
+	circleCorners[2] = x2 + (width / 2);
+	circleCorners[3] = y2 + (height / 2);
+	circleCorners[4] = x3 + (width / 2);
+	circleCorners[5] = y3 + (height / 2);
+	circleCorners[6] = x4 + (width / 2);
+	circleCorners[7] = y4 + (height / 2);
+}
+
+
+static char *SV_MakePortal( float radius, vec3_t min, vec3_t max ) {
+	static char portal[4096*24];
+	float splits = 8.0;
+	float offset = floor(splits / 8.0);
+	portal[0] = '\0';
+	for(float i = -offset; i < ceil(splits - offset); i++) {
+		SV_MakeCircle(splits, i, radius, max[0] - min[0], max[1] - min[1]);
+		float x1 = circleCorners[0];
+		float y1 = circleCorners[1];
+		float x2 = circleCorners[2];
+		float y2 = circleCorners[3];
+		float x3 = circleCorners[4];
+		float y3 = circleCorners[5];
+		float x4 = circleCorners[6];
+		float y4 = circleCorners[7];
+
+		
+		vec3_t  wallMap[48] = {
+			
+			{min[0] + x1, min[1] + y1, min[2] - 16},
+			{min[0] + x2, min[1] + y2, min[2] - 16},
+			{min[0] + x3, min[1] + y3, min[2] - 16},
+			{min[0] + x4, min[1] + y4, min[2] - 16},
+
+			{min[0] + x1, min[1] + y1, min[2]}, 
+			{min[0] + x2, min[1] + y2, min[2]}, 
+			{min[0] + x3, min[1] + y3, min[2]}, 
+			{min[0] + x4, min[1] + y4, min[2]},
+
+			{min[0] - 16, min[1] + x1, min[2] + y1},
+			{min[0] - 16, min[1] + x2, min[2] + y2},
+			{min[0] - 16, min[1] + x3, min[2] + y3},
+			{min[0] - 16, min[1] + x4, min[2] + y4},
+
+			{min[0], min[1] + x1, min[2] + y1}, 
+			{min[0], min[1] + x2, min[2] + y2}, 
+			{min[0], min[1] + x3, min[2] + y3}, 
+			{min[0], min[1] + x4, min[2] + y4},
+
+			{min[0] + x1, min[1], min[2] + y1}, 
+			{min[0] + x2, min[1], min[2] + y2}, 
+			{min[0] + x3, min[1], min[2] + y3}, 
+			{min[0] + x4, min[1], min[2] + y4},
+
+			{min[0] + x1, min[1] - 16, min[2] + y1}, 
+			{min[0] + x2, min[1] - 16, min[2] + y2}, 
+			{min[0] + x3, min[1] - 16, min[2] + y3}, 
+			{min[0] + x4, min[1] - 16, min[2] + y4},
+			
+			
+			{min[0] + x1, min[1] + y1, max[2]},
+			{min[0] + x2, min[1] + y2, max[2]},
+			{min[0] + x3, min[1] + y3, max[2]},
+			{min[0] + x4, min[1] + y4, max[2]},
+
+			{min[0] + x1, min[1] + y1, max[2] + 16}, 
+			{min[0] + x2, min[1] + y2, max[2] + 16}, 
+			{min[0] + x3, min[1] + y3, max[2] + 16}, 
+			{min[0] + x4, min[1] + y4, max[2] + 16},
+
+			{max[0], min[1] + x1, min[2] + y1},
+			{max[0], min[1] + x2, min[2] + y2},
+			{max[0], min[1] + x3, min[2] + y3},
+			{max[0], min[1] + x4, min[2] + y4},
+
+			{max[0] + 16, min[1] + x1, min[2] + y1}, 
+			{max[0] + 16, min[1] + x2, min[2] + y2}, 
+			{max[0] + 16, min[1] + x3, min[2] + y3}, 
+			{max[0] + 16, min[1] + x4, min[2] + y4},
+
+			{min[0] + x1, max[1] + 16, min[2] + y1}, 
+			{min[0] + x2, max[1] + 16, min[2] + y2}, 
+			{min[0] + x3, max[1] + 16, min[2] + y3}, 
+			{min[0] + x4, max[1] + 16, min[2] + y4},
+
+			{min[0] + x1, max[1], min[2] + y1}, 
+			{min[0] + x2, max[1], min[2] + y2}, 
+			{min[0] + x3, max[1], min[2] + y3}, 
+			{min[0] + x4, max[1], min[2] + y4}
+		};
+
+		for(int i = 0; i < 6; i++) {
+			Q_strcat(portal, sizeof(portal), SV_MakeCube(
+				wallMap[i * 8]    , wallMap[i * 8 + 1], wallMap[i * 8 + 2], wallMap[i * 8 + 3],
+				wallMap[i * 8 + 4], wallMap[i * 8 + 5], wallMap[i * 8 + 6], wallMap[i * 8 + 7]
+			));
+		}
+		
+	}
+
 	return portal;
 }
 
 
-static char *SV_MakeHypercube( void ) {
+static int SV_MakeHypercube( void ) {
+	float radius = 100.0;
+	int offset = 0;
 	int width = 400;
 	int height = 400;
 	int spacing = 300;
@@ -214,19 +337,23 @@ static char *SV_MakeHypercube( void ) {
 	int totalWidth = width * cols + spacing * (cols - 1);
 	int totalHeight = height * rows + spacing * (rows - 1);
 	vec3_t  vs[2];
+	int padding = (width - radius * 2) / 2;
 
 	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 
 	brushC = 0;
-	skybox[0] = '\0';
-	Q_strcat(skybox, sizeof(skybox), "// Game: Quake 3\n"
+	output[0] = '\0';
+	strcpy(output, "// Game: Quake 3\n"
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
 		"{\n"
 		"\"classname\" \"worldspawn\"\n");
+	offset += strlen(output);
 
-	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
+	SV_SetStroke("e1u1/sky1");
+	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+	offset += strlen(&output[offset]);
 
 	for(int i = 0; i < rows * cols; i++) {
 		int y = i / cols;
@@ -239,35 +366,149 @@ static char *SV_MakeHypercube( void ) {
 
 		vs[0][2] = -(width / 2);
 		vs[1][2] = (height / 2);
-		Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
+
+		SV_SetStroke(va("e1u1/cube%i", i));
+		strcpy(&output[offset], SV_MakePortal(radius, vs[0], vs[1]));
+		offset += strlen(&output[offset]);
 	}
 
-	Q_strcat(skybox, sizeof(skybox), SV_MakePortal(100.0, 0, 0, 400, 400));
+	strcpy(&output[offset], "}\n");
+	offset += 2;
 
-	Q_strcat(skybox, sizeof(skybox), "}\n");
+	for(int i = 0; i < rows * cols; i++) {
+		int y = i / cols;
+		int x = i % cols;
+		vs[0][0] = -(totalWidth / 2) + (x * (width + spacing));
+		vs[1][0] = -(totalWidth / 2) + (x * (width + spacing)) + width;
+
+		vs[0][1] = -(totalHeight / 2) + (y * (height + spacing));
+		vs[1][1] = -(totalHeight / 2) + (y * (height + spacing)) + height;
+
+		vs[0][2] = -(width / 2);
+		vs[1][2] = (height / 2);
+
+		int wallMap[12][3] = {
+			{vs[0][0] + padding, vs[0][1] + padding, vs[0][2]-32},
+			{vs[1][0] - padding, vs[1][1] - padding, vs[0][2]-16},
+			
+			{vs[0][0]-32,    vs[0][1] + padding, vs[0][2] + padding},
+			{vs[0][0]-16,    vs[1][1] - padding, vs[1][2] - padding},
+			
+			{vs[0][0] + padding, vs[0][1]-32,    vs[0][2] + padding},
+			{vs[1][0] - padding, vs[0][1]-16,    vs[1][2] - padding},
+			
+			
+			{vs[0][0] + padding, vs[0][1] + padding, vs[1][2]+16},
+			{vs[1][0] - padding, vs[1][1] - padding, vs[1][2]+32},
+			
+			{vs[1][0]+16,    vs[0][1] + padding, vs[0][2] + padding},
+			{vs[1][0]+32,    vs[1][1] - padding, vs[1][2] - padding},
+			
+			{vs[0][0] + padding, vs[1][1]+16,    vs[0][2] + padding},
+			{vs[1][0] - padding, vs[1][1]+32,    vs[1][2] - padding}
+		};
+
+		for(int j = 0; j < 6; j++) {
+			int *p1 = wallMap[j*2];
+			int *p2 = wallMap[j*2+1];
+			strcpy(&output[offset], 
+				va("{\n"
+				"\"classname\" \"trigger_teleport\"\n"
+				"\"target\" \"%s\"\n",
+				 ""));
+			offset += strlen(&output[offset]);
+
+			SV_SetStroke("e1u1/portal1");
+			//strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+			strcpy(&output[offset], SV_MakeWall(p1, p2));
+			offset += strlen(&output[offset]);
+			strcpy(&output[offset], "}\n");
+			offset += 2;
+		}
+	}
+	
 	
 	for(int i = 0; i < rows * cols; i++) {
 		int y = i / cols;
 		int x = i % cols;
 	
-		Q_strcat(skybox, sizeof(skybox), 
+		strcpy(&output[offset], 
 			va("{\n"
 			"\"classname\" \"info_player_start\"\n"
 			"\"origin\" \"%i %i %i\"\n"
-			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width / 2,
-			 -(totalHeight / 2) + (y * (height + spacing)) + height / 2,
-			 0));
+			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width - 32,
+			 -(totalHeight / 2) + (y * (height + spacing)) + height - 32,
+			 -(height / 2) + 32));
+
+		offset += strlen(&output[offset]);
 	}
 
-	Q_strcat(skybox, sizeof(skybox), 
+	int i = 0, j, y, x;
+	for ( j = 0 ; j < bg_numItems ; j++ ) {
+		if(!bg_itemlist[j].classname
+			|| !Q_stristr(bg_itemlist[j].classname, "weapon_")) {
+			continue;
+		}
+		y = i / cols;
+	  x = i % cols;
+
+		strcpy(&output[offset],
+		 va("{\n"
+		 "\"classname\" \"%s\"\n"
+		 "\"origin\" \"%i %i %i\"\n"
+		 "}\n", bg_itemlist[j].classname, 
+		 	-(totalWidth / 2) + (x * (width + spacing)) + 32,
+			-(totalHeight / 2) + (y * (height + spacing)) + height - 32,
+			-(height / 2) + 32));
+
+		i++;
+		offset += strlen(&output[offset]);
+	}
+
+	i = 0;
+	for ( j = 0 ; j < bg_numItems ; j++ ) {
+		if(!bg_itemlist[j].classname
+			|| !Q_stristr(bg_itemlist[j].classname, "ammo_")) {
+			continue;
+		}
+		y = i / cols;
+	  x = i % cols;
+
+		strcpy(&output[offset],
+		 va("{\n"
+		 "\"classname\" \"%s\"\n"
+		 "\"origin\" \"%i %i %i\"\n"
+		 "}\n", bg_itemlist[j].classname,
+		  -(totalWidth / 2) + (x * (width + spacing)) + width - 32,
+			-(totalHeight / 2) + (y * (height + spacing)) + 32,
+			-(height / 2) + 32));
+		offset += strlen(&output[offset]);
+
+		strcpy(&output[offset],
+		 va("{\n"
+		 "\"classname\" \"%s\"\n"
+		 "\"origin\" \"%i %i %i\"\n"
+		 "}\n", bg_itemlist[j].classname, 
+		 	-(totalWidth / 2) + (x * (width + spacing)) + 32,
+			-(totalHeight / 2) + (y * (height + spacing)) + 32,
+			-(height / 2) + 32));
+
+		i++;
+		offset += strlen(&output[offset]);
+	}
+
+	strcpy(&output[offset], 
 		va("{\n"
-		"\"classname\" \"info_player_start\"\n"
+		"\"classname\" \"misc_skybox\"\n"
 		"\"origin\" \"%i %i %i\"\n"
 		"}\n", -width * 2,
 		 -height * 2,
 		 -width - height));
+	offset += strlen(&output[offset]);
+	
+	// make teleporters
 
-	return skybox;
+	return offset;
 }
 
 
@@ -649,15 +890,15 @@ Com_Printf("Beginning header\n");
 
 int SV_MakeMap( void ) {
 
-	char *skybox = SV_MakeHypercube();
+	int length = SV_MakeHypercube();
 	
 	int result = CM_LoadMapFromMemory();
 
 	fileHandle_t mapfile = FS_SV_FOpenFileWrite( va("*memory%i.map", result) );
-	FS_Write( skybox, strlen(skybox), mapfile );    // overwritten later
+	FS_Write( output, length, mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 
-	BSPMemory(skybox, result);
+	BSPMemory(output, result);
 
   SV_LoadMapFromMemory();
 	

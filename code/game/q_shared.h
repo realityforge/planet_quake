@@ -103,6 +103,31 @@
 
 #endif
 
+// ================================ APPLE ===================================
+
+#ifdef __APPLE__
+
+#define stricmp strcasecmp
+
+#define ID_INLINE inline
+
+#define	PATH_SEP '/'
+
+#endif // __APPLE__
+
+//===============================EMSCRIPTEN=================================
+
+#ifdef EMSCRIPTEN
+
+#define stricmp strcasecmp
+
+#define ID_INLINE inline
+
+#define	PATH_SEP '/'
+
+#endif
+
+
 //======================= FreeBSD DEFINES =====================
 #ifdef __FreeBSD__ // rb010123
 
