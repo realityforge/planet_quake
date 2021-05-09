@@ -430,3 +430,8 @@ void Write3DMatrix( FILE *f, int z, int y, int x, vec_t *m ) {
 	}
 	fprintf( f, ")\n" );
 }
+
+
+#ifdef __Q_SHARED_H
+#undef LoadScriptFile
+#endif

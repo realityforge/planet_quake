@@ -37,6 +37,11 @@
 #include "q3map2.h"
 
 
+#ifdef __Q_SHARED_H
+#define LoadScriptFile Map_LoadScriptFile
+#endif
+
+
 
 /* FIXME: remove these vars */
 
@@ -1004,6 +1009,7 @@ static void ParseRawBrush( qboolean onlyLights ){
 		/* test side count */
 		if ( buildBrush->numsides >= MAX_BUILD_SIDES ) {
 			xml_Select( "MAX_BUILD_SIDES", buildBrush->entityNum, buildBrush->brushNum, qtrue );
+			return;
 		}
 
 		/* add side */
@@ -1880,3 +1886,7 @@ void LoadMapAfter( qboolean onlyLights ){
 		}
 	}
 }
+
+#ifdef __Q_SHARED_H
+#undef LoadScriptFile
+#endif

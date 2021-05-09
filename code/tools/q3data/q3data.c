@@ -27,6 +27,11 @@
 
 #include "vfs.h"
 
+#ifdef __Q_SHARED_H
+#define LoadScriptFile
+#endif
+
+
 qboolean g_verbose;
 qboolean g_stripify = qtrue;
 qboolean g_release;             // don't grab, copy output data to new tree
@@ -672,3 +677,7 @@ int main( int argc, char **argv ){
 
 	return 0;
 }
+
+#ifdef __Q_SHARED_H
+#undef LoadScriptFile
+#endif

@@ -966,9 +966,10 @@ void BSPMemory(char *map, int slot) {
 
 	/* ydnar: new path initialization */
 	// TODO: InitPaths( &argc, argv );
+	game = &games[ 0 ];
 
 	/* note it */
-	Com_Printf( "--- BSP ---\n" );
+	Com_Printf( "--- BSP --- \n" );
 
 	SetDrawSurfacesBuffer();
 	mapDrawSurfs = safe_malloc( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
@@ -980,7 +981,7 @@ void BSPMemory(char *map, int slot) {
 	maxSurfaceIndexes = game->maxSurfaceIndexes;
 	emitFlares = game->emitFlares;
 	
-	//game->shaderPath = "/Applications/ioquake3/baseq3/scripts";
+	//game->shaderPath = "scripts";
 	//meta = qtrue;
 
 	/* ydnar: set default sample size */

@@ -148,6 +148,15 @@ void xml_SendNode( xmlNodePtr node ){
 	}
 }
 
+
+#ifdef __Q_SHARED_H
+void xml_Select( char *msg, int entitynum, int brushnum, qboolean bError ){
+  char buf[1024];
+  sprintf( buf, "Entity %i, Brush %i: %s", entitynum, brushnum, msg );
+  Sys_FPrintf( SYS_NOXML, "%s\n", buf );
+}
+
+#else
 void xml_Select( char *msg, int entitynum, int brushnum, qboolean bError ){
 	xmlNodePtr node, select;
 	char buf[1024];
@@ -176,6 +185,7 @@ void xml_Select( char *msg, int entitynum, int brushnum, qboolean bError ){
 	}
 
 }
+#endif
 
 void xml_Point( char *msg, vec3_t pt ){
 	xmlNodePtr node, point;

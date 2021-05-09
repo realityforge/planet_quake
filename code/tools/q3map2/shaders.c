@@ -36,6 +36,9 @@
 /* dependencies */
 #include "q3map2.h"
 
+#ifdef __Q_SHARED_H
+#define LoadScriptFile Map_LoadScriptFile
+#endif
 
 
 /*
@@ -666,9 +669,14 @@ void FinishShader( shaderInfo_t *si ){
 	float st[ 2 ], o[ 2 ], dist, bestDist;
 	vec4_t color, bestColor, delta;
 
-
 	/* don't double-dip */
 	if ( si->finished ) {
+		return;
+	}
+	
+	if(!si->shaderImage) {
+		si->shaderWidth = 0;
+		si->shaderHeight = 0;
 		return;
 	}
 
@@ -802,6 +810,7 @@ static void LoadShaderImages( shaderInfo_t *si ){
  */
 
 shaderInfo_t *ShaderInfoForShaderNull( const char *shaderName ){
+Com_Printf("Shaderinfo: %s\n", shaderName);
 	if ( !strcmp( shaderName, "noshader" ) ) {
 		return NULL;
 	}
@@ -2040,3 +2049,8 @@ void LoadShaderInfo( void ){
 	/* emit some statistics */
 	Sys_FPrintf( SYS_VRB, "%9d shaderInfo\n", numShaderInfo );
 }
+
+
+#ifdef __Q_SHARED_H
+#undef LoadScriptFile
+#endif

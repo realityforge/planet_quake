@@ -340,7 +340,6 @@ image_t *ImageLoad( const char *filename ){
 	int size;
 	byte        *buffer = NULL;
 
-
 	/* init */
 	ImageInit();
 

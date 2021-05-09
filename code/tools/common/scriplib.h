@@ -28,6 +28,11 @@
 #include "mathlib.h"
 #endif
 
+#ifdef __Q_SHARED_H
+#define LoadScriptFile Map_LoadScriptFile
+#endif
+
+
 #define MAXTOKEN    1024
 
 extern char token[MAXTOKEN];
@@ -59,3 +64,7 @@ void Map_Parse3DMatrix( int z, int y, int x, vec_t *m );
 void Write1DMatrix( FILE *f, int x, vec_t *m );
 void Write2DMatrix( FILE *f, int y, int x, vec_t *m );
 void Write3DMatrix( FILE *f, int z, int y, int x, vec_t *m );
+
+#ifdef __Q_SHARED_H
+#undef LoadScriptFile
+#endif

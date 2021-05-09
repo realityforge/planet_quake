@@ -29,8 +29,8 @@
 
 
 /* marker */
-#ifndef Q3MAP2_H
-#define Q3MAP2_H
+#ifndef __Q3MAP2_H
+#define __Q3MAP2_H
 
 
 

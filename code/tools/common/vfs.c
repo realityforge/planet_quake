@@ -63,11 +63,50 @@
 #ifdef __Q_SHARED_H
 
 int vfsGetFileCount( const char *filename ) {
-	return 0;
+	// use the basename as the filter
+	int count = 0;
+	int length = strlen(filename);
+	int i;
+	for(i = length - 1; i >= 0; i--) {
+		if(filename[i] == '\\' || filename[i] == '/') {
+			break;
+		}
+	}
+	char **files = FS_ListFilteredFiles(va("%.*s", i, filename), &filename[i + 1], NULL, &count, FS_MATCH_ANY);
+	FS_FreeFileList( files );
+	return count;
 }
 
 int vfsLoadFile( const char *filename, void **bufferptr, int index ) {
-	return -1;
+	// use the basename as the filter
+	byte*			buf;
+	int count = 0;
+	int length = strlen(filename);
+	int i;
+	for(i = length - 1; i >= 0; i--) {
+		if(filename[i] == '\\' || filename[i] == '/') {
+			break;
+		}
+	}
+	char **files = FS_ListFilteredFiles(va("%.*s", i, filename), &filename[i + 1], NULL, &count, FS_MATCH_ANY);
+	if(index > count || count == 0) {
+		return -1;
+	}
+	// can't use  hunk_temporary
+	//int len = FS_ReadFile(va("%.*s/%s", i, filename, files[index]), bufferptr);
+	fileHandle_t h;
+	int len = FS_FOpenFileRead( va("%.*s/%s", i, filename, files[index]), &h, qfalse );
+	if(len == -1) {
+		return -1;
+	}
+	buf = safe_malloc( len + 1 );
+	*bufferptr = buf;
+	FS_Read( buf, len, h );
+	// guarantee that it will have a trailing 0 for string operations
+	buf[ len ] = '\0';
+	FS_FCloseFile( h );
+	FS_FreeFileList( files );
+	return len;
 }
 
 #else
