@@ -37,6 +37,11 @@
 #include "q3map2.h"
 
 
+#ifdef __Q_SHARED_H
+#define AllocWinding Map_AllocWinding
+#define FreeWinding Map_FreeWinding
+#endif
+
 
 /* functions */
 
@@ -952,3 +957,9 @@ void RadCreateDiffuseLights( void ){
 	Sys_FPrintf( SYS_VRB, "%8d patch diffuse lights\n", numPatchDiffuseLights );
 	Sys_FPrintf( SYS_VRB, "%8d triangle diffuse lights\n", numTriangleDiffuseLights );
 }
+
+
+#ifdef __Q_SHARED_H
+#undef AllocWinding
+#undef FreeWinding
+#endif

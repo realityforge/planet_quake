@@ -2403,18 +2403,21 @@ void LightMemory( void ) {
 	cheap = qtrue;
 	cheapgrid = qtrue;
 	floodlight_lowquality = qtrue;
+	subdivideThreshold = 4.0f;
+	approximateTolerance = 4;
+	//trisoup = qtrue;
+	lmCustomSize = 2;
+	bounce = 1;
 	lightSamples = 1;
-	subdivideThreshold = 2.0f;
-	approximateTolerance = 2;
-	trisoup = qtrue;
-	lmCustomSize = 16;
-	//bounce = 1;
 	//noTrace = qtrue;
+	//noGridLighting = qtrue;
 	//shade = qtrue;
 	//bouncegrid = qtrue;
-	//lightSamples = 0;
-	//noVertexLighting = qtrue;
+	noVertexLighting = qtrue;
 	//noSurfaces = qtrue;
+	//bounceOnly = qtrue;
+	bounceScale = 0.50f;
+	sampleSize = 1;
 	SetDefaultSampleSize( sampleSize );
 
 	/* set the entity/model origins and init yDrawVerts */

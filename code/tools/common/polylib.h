@@ -19,8 +19,13 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
- #include "../../qcommon/cm_polylib.h"
+#include "../../qcommon/cm_polylib.h"
 
+
+#ifdef __Q_SHARED_H
+#define AllocWinding Map_AllocWinding
+#define FreeWinding Map_FreeWinding
+#endif
 
 
 #ifndef  __Q_SHARED_H
@@ -85,3 +90,9 @@ winding_accu_t  *BaseWindingForPlaneAccu( vec3_t normal, vec_t dist );
 void    ChopWindingInPlaceAccu( winding_accu_t **w, vec3_t normal, vec_t dist, vec_t epsilon );
 winding_t   *CopyWindingAccuToRegular( winding_accu_t *w );
 void    FreeWindingAccu( winding_accu_t *w );
+
+
+#ifdef __Q_SHARED_H
+#undef AllocWinding
+#undef FreeWinding
+#endif

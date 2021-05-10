@@ -27,6 +27,11 @@
 #include "polylib.h"
 #include "qfiles.h"
 
+#ifdef __Q_SHARED_H
+#define AllocWinding Map_AllocWinding
+#define FreeWinding Map_FreeWinding
+#endif
+
 
 extern int numthreads;
 
@@ -40,12 +45,14 @@ int c_winding_points;
 #define BOGUS_RANGE WORLD_SIZE
 
 #ifndef __Q_SHARED_H
+
 void pw( winding_t *w ){
 	int i;
 	for ( i = 0 ; i < w->numpoints ; i++ )
 		Sys_Printf( "(%5.1f, %5.1f, %5.1f)\n",w->p[i][0], w->p[i][1],w->p[i][2] );
 }
 
+#endif
 
 /*
    =============
@@ -73,7 +80,6 @@ winding_t   *AllocWinding( int points ){
 	memset( w, 0, s );
 	return w;
 }
-#endif
 
 /*
    =============
@@ -103,7 +109,7 @@ winding_accu_t *AllocWindingAccu( int points ){
 	return w;
 }
 
-#ifndef __Q_SHARED_H
+
 /*
    =============
    FreeWinding
@@ -124,7 +130,7 @@ void FreeWinding( winding_t *w ){
 	}
 	free( w );
 }
-#endif
+
 
 /*
    =============
@@ -1152,4 +1158,9 @@ void    AddWindingToConvexHull( winding_t *w, winding_t **hull, vec3_t normal ) 
 	memcpy( w->p, hullPoints, numHullPoints * sizeof( vec3_t ) );
 }
 
+#endif
+
+#ifdef __Q_SHARED_H
+#undef AllocWinding
+#undef FreeWinding
 #endif

@@ -361,7 +361,9 @@ static int SV_MakeHypercube( void ) {
 		"\"_color\" \"1.000000 0.776471 0.776471\"\n"
 		"\"ambient\" \"5\"\n"
 		"\"_keepLights\" \"1\"\n"
-		"\"_sunlight\" \"3500\"\n");
+		"\"_sunlight\" \"3500\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+		"\"noradiosity\" \"1\"\n");
 	offset += strlen(output);
 
 	SV_SetStroke("e1u1/sky1");
