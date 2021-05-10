@@ -47,6 +47,7 @@
 	strcpy(y, extpos);
 #define VectorNormalize VectorNormalize2
 #define DefaultExtension(x, y) COM_DefaultExtension(x, sizeof(x), y)
+/*
 #ifdef ZONE_DEBUG
 #define safe_malloc(size) Z_MallocDebug(size, #size, __FILE__, __LINE__)
 #define safe_malloc_info(size, y) Z_MallocDebug(size, #size, __FILE__, __LINE__)
@@ -55,6 +56,10 @@
 #define safe_malloc_info(x, y) Z_Malloc(x)
 #endif
 #define free Z_Free
+*/
+#define safe_malloc malloc
+#define safe_malloc_info(x, y) malloc(x)
+
 #define _NO_GLIB
 #define MAX_OS_PATH     4096
 #define Random random
@@ -66,7 +71,7 @@
 #define SaveFile FS_WriteFile
 #define ExpandArg 
 #define ExpandPath
-#define FileExists(x) (Sys_FOpen(x, "rb") == -1)
+#define FileExists(x) FS_FileExists(x)
 #define Q_mkdir( a ) Sys_Mkdir( a )
 #endif
 

@@ -955,6 +955,7 @@ void BSPMemory(char *map, int slot) {
 	PicoSetFreeFileFunc( free );
 
 	/* set number of threads */
+	numthreads = 4;
 	ThreadSetDefault();
 
 	/* generate sinusoid jitter table */
@@ -984,9 +985,10 @@ void BSPMemory(char *map, int slot) {
 	//game->shaderPath = "scripts";
 	meta = qtrue;
 	deepBSP = qtrue;
-	nosubdivide = qtrue;
+	//nosubdivide = qtrue;
 	bevelSnap = 2;
-	notjunc = qtrue;
+	//notjunc = qtrue;
+	patchMeta = qtrue;
 
 	/* ydnar: set default sample size */
 	SetDefaultSampleSize( sampleSize );

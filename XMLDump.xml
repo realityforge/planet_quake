@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<q3map_feedback><message level="1">Q3Map         - v1.0r (c) 1999 Id Software Inc.
+</message><message level="1">Q3Map (ydnar) - v2.5.17
+</message><message level="1">GtkRadiant    - v1.6.5 Feb  1 2018 11:46:28
+</message><message level="1">We're still here
+</message><message level="1">VFS Init: /Users/briancullinan/.q3a/quake2-baseq2/
+</message><message level="1">VFS Init: /Users/briancullinan/planet_quake_data/quake2-baseq2/
+</message><message level="1">VFS Init: /Users/briancullinan/.q3a/baseq3/
+</message><message level="1">VFS Init: /Users/briancullinan/planet_quake_data/baseq3/
+</message><message level="1">
+</message><message level="1">--- Vis ---
+</message><message level="1">Loading /Users/briancullinan/.q3a/*memory0.bsp
+</message><message level="1">Loading /Users/briancullinan/.q3a/*memory0.prt
+</message><message level="3">************ ERROR ************
+LoadPortals: couldn't read /Users/briancullinan/.q3a/*memory0.prt
+
+</message></q3map_feedback>

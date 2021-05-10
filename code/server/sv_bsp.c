@@ -106,7 +106,16 @@ void SV_MakeSkybox( void ) {
 	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
 	
 	Q_strcat(skybox, sizeof(skybox), "}\n");
-	
+
+	Q_strcat(skybox, sizeof(skybox), 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+
 	Q_strcat(skybox, sizeof(skybox), 
 		"{\n"
 		"\"classname\" \"info_player_start\"\n"
@@ -379,6 +388,16 @@ static int SV_MakeHypercube( void ) {
 	strcpy(&output[offset], "}\n");
 	offset += 2;
 
+	strcpy(&output[offset], 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+ 	offset += strlen(&output[offset]);
+
 	for(int i = 0; i < rows * cols; i++) {
 		int y = i / cols;
 		int x = i % cols;
@@ -559,13 +578,6 @@ static int SV_MakeHypercube( void ) {
 	}
 */
 
-	strcpy(&output[offset], 
-		va("{\n"
-		"\"classname\" \"misc_skybox\"\n"
-		"\"origin\" \"%i %i %i\"\n"
-		"}\n", -width * 2,
-		 -height * 2,
-		 -width - height));
 	offset += strlen(&output[offset]);
 	
 	// make teleporters
