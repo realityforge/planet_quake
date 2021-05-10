@@ -111,6 +111,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#ifdef __Q_SHARED_H
+#define trace_t lightTrace_t
+#endif
+
 #ifndef __Q_SHARED_H
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -1349,7 +1353,6 @@ typedef struct light_s
 light_t;
 
 
-#ifndef __Q_SHARED_H
 typedef struct
 {
 	/* constant input */
@@ -1390,7 +1393,10 @@ typedef struct
 	int numTestNodes;
 	int testNodes[ MAX_TRACE_TEST_NODES ];
 }
+#ifndef __Q_SHARED_H
 trace_t;
+#else
+lightTrace_t;
 #endif
 
 
@@ -1693,8 +1699,8 @@ tree_t                      *FaceBSP( face_t *list );
 /* model.c */
 void                        PicoPrintFunc( int level, const char *str );
 void                        PicoLoadFileFunc( const char *name, byte **buffer, int *bufSize );
-picoModel_t                 *FindModel( char *name, int frame );
-picoModel_t                 *LoadModel( char *name, int frame );
+picoModel_t                 *FindModel( const char *name, int frame );
+picoModel_t                 *LoadModel( const char *name, int frame );
 void                        InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shaderInfo_t *celShader, int eNum, int castShadows, int recvShadows, int spawnFlags, float lightmapScale );
 void                        AddTriangleModels( entity_t *e );
 
@@ -1792,6 +1798,7 @@ int                         LightContributionToSample( trace_t *trace );
 void LightingAtSample( trace_t * trace, byte styles[ MAX_LIGHTMAPS ], vec3_t colors[ MAX_LIGHTMAPS ] );
 int                         LightContributionToPoint( trace_t *trace );
 int                         LightMain( int argc, char **argv );
+void                        LightMemory( void );
 
 
 /* light_trace.c */
@@ -2486,6 +2493,10 @@ Q_EXTERN bspFog_t bspFogs[ MAX_MAP_FOGS ];
 Q_EXTERN int numBSPAds Q_ASSIGN( 0 );
 Q_EXTERN bspAdvertisement_t bspAds[ MAX_MAP_ADVERTISEMENTS ];
 
+
+#ifdef __Q_SHARED_H
+#undef trace_t
+#endif
 
 /* end marker */
 #endif

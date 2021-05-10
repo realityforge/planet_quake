@@ -41,9 +41,15 @@
 #include "q3map2.h"
 
 
+#ifdef __Q_SHARED_H
+#define trace_t lightTrace_t
+#endif
+
 
 #define Vector2Copy( a, b )     ( ( b )[ 0 ] = ( a )[ 0 ], ( b )[ 1 ] = ( a )[ 1 ] )
+#ifndef __Q_SHARED_H
 #define Vector4Copy( a, b )     ( ( b )[ 0 ] = ( a )[ 0 ], ( b )[ 1 ] = ( a )[ 1 ], ( b )[ 2 ] = ( a )[ 2 ], ( b )[ 3 ] = ( a )[ 3 ] )
+#endif
 
 #define MAX_NODE_ITEMS          5
 #define MAX_NODE_TRIANGLES      5
@@ -1750,3 +1756,7 @@ float SetupTrace( trace_t *trace ){
 	VectorCopy( trace->origin, trace->hit );
 	return trace->distance;
 }
+
+#ifdef __Q_SHARED_H
+#undef trace_t
+#endif

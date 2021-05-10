@@ -810,7 +810,6 @@ static void LoadShaderImages( shaderInfo_t *si ){
  */
 
 shaderInfo_t *ShaderInfoForShaderNull( const char *shaderName ){
-Com_Printf("Shaderinfo: %s\n", shaderName);
 	if ( !strcmp( shaderName, "noshader" ) ) {
 		return NULL;
 	}

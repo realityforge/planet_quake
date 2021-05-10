@@ -261,15 +261,15 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max ) {
 			{min[0] + x3, min[1] + y3, min[2]}, 
 			{min[0] + x4, min[1] + y4, min[2]},
 
-			{min[0] - 16, min[1] + x1, min[2] + y1},
-			{min[0] - 16, min[1] + x2, min[2] + y2},
-			{min[0] - 16, min[1] + x3, min[2] + y3},
+			{min[0],      min[1] + x4, min[2] + y4},
 			{min[0] - 16, min[1] + x4, min[2] + y4},
+			{min[0] - 16, min[1] + x3, min[2] + y3},
+			{min[0],      min[1] + x3, min[2] + y3},
 
-			{min[0], min[1] + x1, min[2] + y1}, 
-			{min[0], min[1] + x2, min[2] + y2}, 
-			{min[0], min[1] + x3, min[2] + y3}, 
-			{min[0], min[1] + x4, min[2] + y4},
+			{min[0],      min[1] + x1, min[2] + y1}, 
+			{min[0] - 16, min[1] + x1, min[2] + y1}, 
+			{min[0] - 16, min[1] + x2, min[2] + y2}, 
+			{min[0],      min[1] + x2, min[2] + y2},
 
 			{min[0] + x1, min[1], min[2] + y1}, 
 			{min[0] + x2, min[1], min[2] + y2}, 
@@ -332,15 +332,15 @@ static int SV_MakeHypercube( void ) {
 	int width = 1200;
 	int height = 1200;
 	int spacing = 400;
-	int rows = 2;
-	int cols = 2;
+	int rows = 1;
+	int cols = 1;
 	int totalWidth = width * cols + spacing * (cols - 1);
 	int totalHeight = height * rows + spacing * (rows - 1);
 	vec3_t  vs[2];
-	int padding = (width - radius * 2) / 2;
+	int padding = (width - radius * 2) / 2 - 32;
 
-	vs[0][0] = vs[0][1] = vs[0][2] = -3000;
-	vs[1][0] = vs[1][1] = vs[1][2] = 3000;
+	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
 
 	brushC = 0;
 	output[0] = '\0';
@@ -348,7 +348,11 @@ static int SV_MakeHypercube( void ) {
 		"// Format: Quake3 (legacy)\n"
 		"// entity 0\n"
 		"{\n"
-		"\"classname\" \"worldspawn\"\n");
+		"\"classname\" \"worldspawn\"\n"
+		"\"_color\" \"1.000000 0.776471 0.776471\"\n"
+		"\"ambient\" \"5\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_sunlight\" \"3500\"\n");
 	offset += strlen(output);
 
 	SV_SetStroke("e1u1/sky1");
@@ -478,6 +482,23 @@ static int SV_MakeHypercube( void ) {
 			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width - 32,
 			 -(totalHeight / 2) + (y * (height + spacing)) + height - 32,
 			 -(height / 2) + 32));
+
+		offset += strlen(&output[offset]);
+	}
+
+	for(int i = 0; i < rows * cols; i++) {
+		int y = i / cols;
+		int x = i % cols;
+	
+		strcpy(&output[offset], 
+			va("{\n"
+			"\"classname\" \"light\"\n"
+			"\"origin\" \"%i %i %i\"\n"
+			"\"angle\" \"240\"\n"
+			"\"light\" \"1000\""
+			"}\n", -(totalWidth / 2) + (x * (width + spacing)) + width - 128,
+			 -(totalHeight / 2) + (y * (height + spacing)) + height - 128,
+			 (height / 2) - 128));
 
 		offset += strlen(&output[offset]);
 	}

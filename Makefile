@@ -1325,6 +1325,10 @@ Q3OBJ += \
 	$(B)/client/q3map2/tjunction.o \
 	$(B)/client/q3map2/tree.o \
 	$(B)/client/q3map2/image.o \
+	$(B)/client/q3map2/light.o \
+	$(B)/client/q3map2/light_ydnar.o \
+	$(B)/client/q3map2/light_trace.o \
+	$(B)/client/q3map2/lightmaps_ydnar.o \
 	$(B)/client/tools/jpeg.o \
 	$(B)/client/libs/ddslib.o \
 	$(B)/client/q3map2/leakfile.o \
@@ -1774,6 +1778,10 @@ Q3DOBJ += \
 	$(B)/ded/q3map2/facebsp.o \
 	$(B)/ded/q3map2/brush.o \
 	$(B)/ded/q3map2/map.o \
+	$(B)/ded/q3map2/light.o \
+	$(B)/ded/q3map2/light_ydnar.o \
+	$(B)/ded/q3map2/light_trace.o \
+	$(B)/ded/q3map2/lightmaps_ydnar.o \
 	$(B)/ded/tools/polylib.o \
 	$(B)/ded/q3map2/fog.o \
 	$(B)/ded/q3map2/writebsp.o \

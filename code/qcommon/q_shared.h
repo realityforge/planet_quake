@@ -271,8 +271,10 @@ float FloatSwap( const float *f );
 
 typedef unsigned char byte;
 
+#ifndef __BYTEBOOL__
 typedef enum { qfalse = 0, qtrue } qboolean;
 #define __BYTEBOOL__
+#endif
 
 typedef union floatint_u
 {

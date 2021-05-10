@@ -66,6 +66,8 @@
 #define SaveFile FS_WriteFile
 #define ExpandArg 
 #define ExpandPath
+#define FileExists(x) (Sys_FOpen(x, "rb") == -1)
+#define Q_mkdir( a ) Sys_Mkdir( a )
 #endif
 
 #ifndef __Q_SHARED_H

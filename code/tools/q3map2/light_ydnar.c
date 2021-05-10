@@ -37,6 +37,9 @@
 #include "q3map2.h"
 
 
+#ifdef __Q_SHARED_H
+#define trace_t lightTrace_t
+#endif
 
 
 /*
@@ -4156,3 +4159,7 @@ float FloodLightForSample( trace_t *trace ){
 	/* return to sender */
 	return outLight;
 }
+
+#ifdef __Q_SHARED_H
+#undef trace_t
+#endif

@@ -982,7 +982,11 @@ void BSPMemory(char *map, int slot) {
 	emitFlares = game->emitFlares;
 	
 	//game->shaderPath = "scripts";
-	//meta = qtrue;
+	meta = qtrue;
+	deepBSP = qtrue;
+	nosubdivide = qtrue;
+	bevelSnap = 2;
+	notjunc = qtrue;
 
 	/* ydnar: set default sample size */
 	SetDefaultSampleSize( sampleSize );
@@ -1012,6 +1016,7 @@ void BSPMemory(char *map, int slot) {
 
 	/* set light styles from targetted light entities */
 	SetLightStyles();
+	LightMemory();
 
 	/* process in game advertisements */
 	ProcessAdvertisements();

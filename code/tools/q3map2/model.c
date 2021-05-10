@@ -89,7 +89,7 @@ void PicoLoadFileFunc( const char *name, byte **buffer, int *bufSize ){
    finds an existing picoModel and returns a pointer to the picoModel_t struct or NULL if not found
  */
 
-picoModel_t *FindModel( char *name, int frame ){
+picoModel_t *FindModel( const char *name, int frame ){
 	int i;
 
 
@@ -124,7 +124,7 @@ picoModel_t *FindModel( char *name, int frame ){
    loads a picoModel and returns a pointer to the picoModel_t struct or NULL if not found
  */
 
-picoModel_t *LoadModel( char *name, int frame ){
+picoModel_t *LoadModel( const char *name, int frame ){
 	int i;
 	picoModel_t     *model, **pm;
 

@@ -37,6 +37,11 @@
 #include "q3map2.h"
 
 
+#ifdef __Q_SHARED_H
+#define trace_t lightTrace_t
+#endif
+
+
 
 /*
    CreateSunLight() - ydnar
@@ -2389,3 +2394,34 @@ int LightMain( int argc, char **argv ){
 	/* return to sender */
 	return 0;
 }
+
+void LightMemory( void ) {
+	faster = qtrue;
+	fast = qtrue;
+	fastgrid = qtrue;
+	fastbounce = qtrue;
+	floodlight_lowquality = qtrue;
+	noGridLighting = qtrue;
+
+	SetDefaultSampleSize( 8 );
+
+	/* set the entity/model origins and init yDrawVerts */
+	SetEntityOrigins();
+
+	/* ydnar: set up optimization */
+	SetupBrushes();
+	SetupDirt();
+	SetupFloodLight();
+	SetupSurfaceLightmaps();
+
+	/* initialize the surface facet tracing */
+	SetupTraceNodes();
+
+	/* light the world */
+	LightWorld();
+
+}
+
+#ifdef __Q_SHARED_H
+#undef trace_t
+#endif
