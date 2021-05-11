@@ -2407,17 +2407,17 @@ void LightMemory( void ) {
 	approximateTolerance = 4;
 	//trisoup = qtrue;
 	lmCustomSize = 2;
-	bounce = 1;
-	lightSamples = 1;
+	bounce = 2;
+	lightSamples = 2;
 	noTrace = qtrue;
   noGridLighting = qtrue;
-	//shade = qtrue;
+	shade = qtrue;
 	//bouncegrid = qtrue;
 	noVertexLighting = qtrue;
 	//noSurfaces = qtrue;
 	//bounceOnly = qtrue;
 	bounceScale = 0.25f;
-	sampleSize = 1;
+	sampleSize = 2;
 	SetDefaultSampleSize( sampleSize );
 
 	/* set the entity/model origins and init yDrawVerts */
