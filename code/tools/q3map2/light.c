@@ -2409,14 +2409,14 @@ void LightMemory( void ) {
 	lmCustomSize = 2;
 	bounce = 1;
 	lightSamples = 1;
-	//noTrace = qtrue;
-	//noGridLighting = qtrue;
+	noTrace = qtrue;
+  noGridLighting = qtrue;
 	//shade = qtrue;
 	//bouncegrid = qtrue;
 	noVertexLighting = qtrue;
 	//noSurfaces = qtrue;
 	//bounceOnly = qtrue;
-	bounceScale = 0.50f;
+	bounceScale = 0.25f;
 	sampleSize = 1;
 	SetDefaultSampleSize( sampleSize );
 

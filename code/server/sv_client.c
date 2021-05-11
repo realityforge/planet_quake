@@ -2606,7 +2606,8 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
 	ps = SV_GameClientNum( clientNum );
-	//ent->s.eFlags |= EF_TELEPORT_BIT;
+	ent->s.eFlags |= EF_TELEPORT_BIT;
+	ps->s.eFlags |= EF_TELEPORT_BIT;
 	ent->s.number = clientNum;
 	client->gentity = ent;
 	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
