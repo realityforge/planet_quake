@@ -344,8 +344,8 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 static int SV_MakeHypercube( void ) {
 	float radius = 200.0;
 	int offset = 0;
-	int width = 500;
-	int height = 500;
+	int width = 600;
+	int height = 600;
 	int spacing = 300;
 	int rows = 2;
 	int cols = 2;
@@ -476,21 +476,21 @@ static int SV_MakeHypercube( void ) {
 		
 		// make jump accelerators
 		int jumpMap[8][3] = {			
-			{vs[0][0] + (width - 64) / 2,      vs[0][1] + 100, vs[0][2]},
-			{vs[0][0] + (width - 64) / 2 + 64, vs[0][1] + 164, vs[0][2] + 16},
+			{vs[0][0] + (width - 64) / 2,      vs[0][1] + (height - radius) / 2,      vs[0][2]},
+			{vs[0][0] + (width - 64) / 2 + 64, vs[0][1] + (height - radius) / 2 + 64, vs[0][2] + 16},
 			
-			{vs[0][0] + padding, vs[0][1]-48,    vs[0][2] + 32},
-			{vs[1][0] - padding, vs[0][1]-32,    vs[0][2]},
+			{vs[0][0] + (width - radius) / 2,      vs[0][1] + (height - 64) / 2,      vs[0][2]},
+			{vs[0][0] + (width - radius) / 2 + 64, vs[0][1] + (height - 64) / 2 + 64, vs[0][2] + 16},
 			
+			// TODO: convert 100 and 164 to use radius or something?
+			{vs[1][0] - (width - 64) / 2,      vs[1][1] - (height - radius) / 2,      vs[0][2]},
+			{vs[1][0] - (width - 64) / 2 - 64, vs[1][1] - (height - radius) / 2 - 64, vs[0][2] + 16},
 			
-			{vs[1][0]+32,    vs[0][1] + padding, vs[0][2] + 32},
-			{vs[1][0]+48,    vs[1][1] - padding, vs[0][2]},
-			
-			{vs[0][0] + padding, vs[1][1]+32,    vs[0][2] + 32},
-			{vs[1][0] - padding, vs[1][1]+48,    vs[0][2]}
+			{vs[1][0] - (width - radius) / 2,      vs[1][1] - (height - 64) / 2,      vs[0][2]},
+			{vs[1][0] - (width - radius) / 2 - 64, vs[1][1] - (height - 64) / 2 - 64, vs[0][2] + 16},
 		};
 		
-		for(int j = 0; j < 1; j++) {
+		for(int j = 0; j < 4; j++) {
 			int *p1 = jumpMap[j*2];
 			int *p2 = jumpMap[j*2+1];
 			strcpy(&output[offset], 
@@ -531,6 +531,7 @@ static int SV_MakeHypercube( void ) {
 			{vs[0][0] + (width / 2), vs[1][1]-32,             vs[0][2] + 32}
 		};
 		
+		int v = 0;
 		for(int j = 0; j < 6; j++) {
 			// add destinations
 			strcpy(&output[offset], 
@@ -538,14 +539,30 @@ static int SV_MakeHypercube( void ) {
 				"\"classname\" \"misc_teleporter_dest\"\n"
 				"\"targetname\" \"teleport_%i_%i\"\n"
 				"\"origin\" \"%i %i %i\"\n"
-				"\"angle\" \"-45\"\n"
+				"\"angle\" \"%i\"\n"
 				"}\n",
-				 (i+1)%(rows*cols), (j+3)%6, // adding 3 reverses top and bottom
-				 destinationOffsets[j][0], 
-				 destinationOffsets[j][1], 
-				 destinationOffsets[j][2]));
+				(i+1)%(rows*cols), (j+3)%6, // adding 3 reverses top and bottom
+				destinationOffsets[j][0], 
+				destinationOffsets[j][1], 
+				destinationOffsets[j][2],
+			 j % 3 != 0 ? (v * 90) : 0));
+			if(j % 3 != 0) {
+				v++;
+			}
 			offset += strlen(&output[offset]);
 		}
+		
+		strcpy(&output[offset], 
+			va("{\n"
+			"\"classname\" \"info_notnull\"\n"
+			"\"targetname\" \"teleview_%i\"\n"
+			"\"origin\" \"%i %i %i\"\n"
+			"}\n",
+			i,
+			(int)(vs[0][0] + (width / 2)), 
+			(int)(vs[0][1] + (height / 2)), 
+			(int)(vs[0][2] + 32)));
+		offset += strlen(&output[offset]);
 		
 		// make jump accelerators
 		int jumpDestinationMap[4][3] = {			
@@ -653,12 +670,39 @@ static int SV_MakeHypercube( void ) {
 		"weapon_bfg"
 	};
 
+	char *ammoPowerups[7] = {
+		//"weapon_gauntlet",
+		"ammo_shells",
+		//"ammo_bullets",
+		"ammo_grenades",
+		"ammo_rockets",
+		"ammo_lightning",
+		"ammo_slugs",
+		"ammo_cells",
+		"ammo_bfg"
+	};
+
 	int corners[3][2] = {
 		{32, 32},
 		{32, height - 32},
 		{width - 32, 32},
 //		{width - 32, height - 32}
 	};
+	
+
+	int ammoCorners[12][2] = {
+		{64, 32},
+		{32, 64},
+		{64, 64},
+		{64, height - 32},
+		{32, height - 64},
+		{64, height - 64},
+		{width - 32, 64},
+		{width - 64, 32},
+		{width - 64, 64},
+//		{width - 32, height - 32}
+	};
+	
 	int w = 0;
 	for(int i = 0; i < rows * cols; i++) {
 		int y = i / cols;
@@ -675,57 +719,24 @@ static int SV_MakeHypercube( void ) {
 				-(totalHeight / 2) + (y * (height + spacing)) + corners[j][1],
 				-(height / 2) + 32));
 			offset += strlen(&output[offset]);
+
+			// make 3 ammos in every corner
+			char *ammo = ammoPowerups[w % ARRAY_LEN(weapons)];
+			for(int a = 0; a < 3; a++) {
+				strcpy(&output[offset],
+				 va("{\n"
+				 "\"classname\" \"%s\"\n"
+				 "\"origin\" \"%i %i %i\"\n"
+				 "}\n", ammo, 
+				 	-(totalWidth / 2) + (x * (width + spacing)) + ammoCorners[j * 3 + a][0],
+					-(totalHeight / 2) + (y * (height + spacing)) + ammoCorners[j * 3 + a][1],
+					-(height / 2) + 32));
+				offset += strlen(&output[offset]);
+			}
+
 			w++;
 		}
 	}
-
-/*
-
-	char *weapons[10] = {
-		"weapon_gauntlet",
-		"weapon_shotgun",
-		"weapon_machinegun",
-		"weapon_grenadelauncher",
-		"weapon_rocketlauncher",
-		"weapon_lightning",
-		"weapon_railgun",
-		"weapon_plasmagun",
-		"weapon_bfg",
-		0
-	};
-
-	i = 0;
-	for ( j = 0 ; j < bg_numItems ; j++ ) {
-		if(!bg_itemlist[j].classname
-			|| !Q_stristr(bg_itemlist[j].classname, "ammo_")) {
-			continue;
-		}
-		y = i / cols;
-	  x = i % cols;
-
-		strcpy(&output[offset],
-		 va("{\n"
-		 "\"classname\" \"%s\"\n"
-		 "\"origin\" \"%i %i %i\"\n"
-		 "}\n", bg_itemlist[j].classname,
-		  -(totalWidth / 2) + (x * (width + spacing)) + width - 32,
-			-(totalHeight / 2) + (y * (height + spacing)) + 32,
-			-(height / 2) + 32));
-		offset += strlen(&output[offset]);
-
-		strcpy(&output[offset],
-		 va("{\n"
-		 "\"classname\" \"%s\"\n"
-		 "\"origin\" \"%i %i %i\"\n"
-		 "}\n", bg_itemlist[j].classname, 
-		 	-(totalWidth / 2) + (x * (width + spacing)) + 32,
-			-(totalHeight / 2) + (y * (height + spacing)) + 32,
-			-(height / 2) + 32));
-
-		i++;
-		offset += strlen(&output[offset]);
-	}
-*/
 
 	offset += strlen(&output[offset]);
 	
