@@ -102,7 +102,7 @@ void SV_MakeSkybox( void ) {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n");
 	
-	SV_SetStroke("e1u1/sky1");
+	SV_SetStroke("sky1");
 	Q_strcat(skybox, sizeof(skybox), SV_MakeBox(vs[0], vs[1]));
 	
 	Q_strcat(skybox, sizeof(skybox), "}\n");
@@ -372,7 +372,7 @@ static int SV_MakeHypercube( void ) {
 		"\"noradiosity\" \"1\"\n");
 	offset += strlen(output);
 
-	SV_SetStroke("e1u1/sky1");
+	SV_SetStroke("sky1");
 	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 	offset += strlen(&output[offset]);
 
@@ -388,7 +388,7 @@ static int SV_MakeHypercube( void ) {
 		vs[0][2] = -(width / 2);
 		vs[1][2] = (height / 2);
 
-		SV_SetStroke(va("e1u1/cube%i", i));
+		SV_SetStroke(va("cube%i", i));
 		strcpy(&output[offset], SV_MakePortal(radius, vs[0], vs[1], -1, -1));
 		offset += strlen(&output[offset]);
 	}
@@ -405,7 +405,7 @@ static int SV_MakeHypercube( void ) {
 		vs[0][2] = -(width / 2) - 16;
 		vs[1][2] = (height / 2) + 16;
 
-		SV_SetStroke(va("e1u1/cube%i", i));
+		SV_SetStroke(va("cube%i", i));
 		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 2, 3));
 		offset += strlen(&output[offset]);
 	}
@@ -466,7 +466,7 @@ static int SV_MakeHypercube( void ) {
 				 i, j));
 			offset += strlen(&output[offset]);
 
-			SV_SetStroke("e1u1/portal1");
+			SV_SetStroke("portal1");
 			//strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 			strcpy(&output[offset], SV_MakeWall(p1, p2));
 			offset += strlen(&output[offset]);
@@ -500,7 +500,7 @@ static int SV_MakeHypercube( void ) {
 				 i, j));
 			offset += strlen(&output[offset]);
 
-			SV_SetStroke("e1u1/portal1");
+			SV_SetStroke("portal1");
 			strcpy(&output[offset], SV_MakeWall(p1, p2));
 			offset += strlen(&output[offset]);
 			strcpy(&output[offset], "}\n");
@@ -566,10 +566,10 @@ static int SV_MakeHypercube( void ) {
 		
 		// make jump accelerators
 		int jumpDestinationMap[4][3] = {			
-			{vs[0][0] + width / 2, vs[0][1],              vs[0][2] + radius},
-			{vs[0][0],             vs[0][1] + height / 2, vs[0][2] + radius},
-			{vs[1][0] - width / 2, vs[1][1],              vs[0][2] + radius},
-			{vs[1][0],             vs[1][1] - height / 2, vs[0][2] + radius}
+			{vs[0][0] + width / 2, vs[0][1],              vs[0][2] + height / 2 - 64},
+			{vs[0][0],             vs[0][1] + height / 2, vs[0][2] + height / 2 - 64},
+			{vs[1][0] - width / 2, vs[1][1],              vs[0][2] + height / 2 - 64},
+			{vs[1][0],             vs[1][1] - height / 2, vs[0][2] + height / 2 - 64}
 		};
 		
 		for(int j = 0; j < 4; j++) {

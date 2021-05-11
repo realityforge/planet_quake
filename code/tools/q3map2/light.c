@@ -2411,7 +2411,7 @@ void LightMemory( void ) {
 	lightSamples = 2;
 	noTrace = qtrue;
   noGridLighting = qtrue;
-	shade = qtrue;
+	//shade = qtrue;
 	//bouncegrid = qtrue;
 	noVertexLighting = qtrue;
 	//noSurfaces = qtrue;

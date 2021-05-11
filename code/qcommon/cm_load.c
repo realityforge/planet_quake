@@ -805,7 +805,7 @@ cmdsAdded = qtrue;
 	Cvar_SetDescription(cm_noCurves, "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
 	cm_playerCurveClip = Cvar_Get ("cm_playerCurveClip", "1", CVAR_ARCHIVE_ND|CVAR_CHEAT);
 	Cvar_SetDescription( cm_playerCurveClip, "Don't clip player bounding box around curves\nDefault: 1" );
-	cm_saveEnts = Cvar_Get ("cm_saveEnts", "0", 0);
+	cm_saveEnts = Cvar_Get ("cm_saveEnts", "0", CVAR_TEMP);
 	Cvar_SetDescription(cm_saveEnts, "Export entities from the next map that is loaded by the same name with a .ent extension, usually in your fs_homepath/maps directory\nDefault: 0");
 #endif
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
