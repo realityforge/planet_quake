@@ -347,8 +347,9 @@ static int SV_MakeHypercube( void ) {
 		"// entity 0\n"
 		"{\n"
 		"\"classname\" \"worldspawn\"\n"
-		"\"_color\" \"1.000000 0.776471 0.776471\"\n"
+		"\"_color\" \"1 1 1\"\n"
 		"\"ambient\" \"5\"\n"
+		"\"message\" \"Windows XP\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_sunlight\" \"3500\"\n"
 		"\"gridsize\" \"512.0 512.0 512.0\"\n"
@@ -735,6 +736,8 @@ static int SV_MakeMaze( void ) {
 	//   maybe add some nice windows that look like the skybox before impossibly going around the corridor
 	// something about recursive division seems beautiful relevent to square brushes
 	//   https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_division_method
+	int radius = 50;
+	int offset = 0;
 	int safety = 0;
 	int cellWidth = 200;
 	int cellHeight = 200;
@@ -742,6 +745,10 @@ static int SV_MakeMaze( void ) {
 	int gridCols = 16; // 17 x 17??
 	gridRows |= 1; // make odd or +1 so theres a wall on both sides
 	gridCols |= 1;
+	int wallWidth = 16;
+	int totalWidth = cellWidth * gridCols + wallWidth * (gridCols - 1);
+	int totalHeight = cellHeight * gridRows + wallWidth * (gridRows - 1);
+	vec3_t  vs[2];
 	// layout the maze just for debugging
 	char maze[gridCols][gridRows];
 	memset(maze, ' ', sizeof(maze));
@@ -759,6 +766,30 @@ static int SV_MakeMaze( void ) {
 	int minY;
 	int maxX;
 	int maxY;
+
+	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+
+	brushC = 0;
+	output[0] = '\0';
+	strcpy(output, "// Game: Quake 3\n"
+		"// Format: Quake3 (legacy)\n"
+		"// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n"
+		"\"_color\" \"1 1 1\"\n"
+		"\"ambient\" \"5\"\n"
+		"\"message\" \"Hypermaze\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_sunlight\" \"3500\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+		"\"noradiosity\" \"1\"\n");
+	offset += strlen(output);
+
+	SV_SetStroke("sky1");
+	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+	offset += strlen(&output[offset]);
+
 	// interesting, I could make this non-recursive by scanning the maze for spaces
 	//   to divide basically using the character grid as it's own virtual call stack
 	while(safety < (gridRows / 2) * (gridCols / 2)) {
@@ -822,6 +853,16 @@ static int SV_MakeMaze( void ) {
 			areaStack[stackI*4+3] = maxY;
 			stackI++;
 		}
+		
+		// make offsets for this cell
+		vs[0][0] = -(totalWidth / 2) + (minX * (cellWidth + wallWidth));
+		vs[1][0] = -(totalWidth / 2) + (maxX * (cellWidth + wallWidth)) + cellWidth;
+
+		vs[0][1] = -(totalHeight / 2) + (minY * (cellHeight + wallWidth));
+		vs[1][1] = -(totalHeight / 2) + (maxY * (cellHeight + wallWidth)) + cellHeight;
+
+		vs[0][2] = -(cellWidth / 2);
+		vs[1][2] = (cellHeight / 2);
 
 		for(int i = 0; i < 3; i++) {
 			// make 4 or 5 walls around 3 gaps dividing 4 spaces, 
@@ -853,6 +894,26 @@ static int SV_MakeMaze( void ) {
 					else 
 						maze[fillX][wallY*2] = '#';
 				}
+
+				int wall[2][3] = {
+					{vs[0][0],    
+					 vs[0][1] + (wallY - minY) * (cellHeight + wallWidth), 
+					 vs[0][2]},
+
+					{vs[0][0] + (gap / 2 - minX) * (cellWidth + wallWidth),
+					 vs[0][1] + (wallY - minY) * (cellHeight + wallWidth),
+					 vs[1][2]}
+				};
+				if(vs[0][1] >= 0) {
+					wall[1][1] += 16;
+				} else {
+					wall[0][1] -= 16;
+					int tmpX = wall[1][0];
+					wall[1][0] = wall[0][0];
+					wall[0][0] = tmpX;
+				}
+				strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+				offset += strlen(&output[offset]);
 				
 				// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
 			} else {
@@ -871,6 +932,27 @@ static int SV_MakeMaze( void ) {
 					else 
 						maze[wallX*2][fillY] = '#';
 				}
+
+				int wall[2][3] = {
+					{vs[0][0] + (wallX - minX) * (cellWidth + wallWidth),    
+					 vs[0][1], 
+					 vs[0][2]},
+
+					{vs[0][0] + (wallX - minX) * (cellWidth + wallWidth),
+					 vs[0][1] + (gap / 2 - minY) * (cellHeight + wallWidth),
+					 vs[1][2]}
+				};
+				if(vs[0][0] >= 0) {
+					wall[1][0] += 16;
+				} else {
+					wall[0][0] -= 16;
+					int tmpY = wall[1][1];
+					wall[1][1] = wall[0][1];
+					wall[0][1] = tmpY;
+				}
+				strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+				offset += strlen(&output[offset]);
+
 			}
 		}
 
@@ -885,10 +967,23 @@ static int SV_MakeMaze( void ) {
 		Com_Printf("\n");
 	}
 	Com_Printf("\n");
+
+	strcpy(&output[offset], "}\n");
+	offset += 2;
+
+	strcpy(&output[offset], 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+ 	offset += strlen(&output[offset]);
 	
 	Hunk_FreeTempMemory( areaStack );
 
-	return 0;
+	return offset;
 }
 
 
@@ -1287,9 +1382,6 @@ Com_Printf("Beginning header\n");
 int SV_MakeMap( void ) {
 
 	int length = SV_MakeMaze();
-	SV_MakeMaze();
-	SV_MakeMaze();
-	SV_MakeMaze();
 
 	int result = CM_LoadMapFromMemory();
 
@@ -1297,9 +1389,9 @@ int SV_MakeMap( void ) {
 	FS_Write( output, length, mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 
-	//BSPMemory(output, result);
+	BSPMemory(output, result);
 
-  //SV_LoadMapFromMemory();
+  SV_LoadMapFromMemory();
 	
 	return result;
 }
