@@ -730,7 +730,7 @@ static int SV_MakeHypercube( void ) {
 
 
 // TODO
-static char *SV_MakeMaze( void ) {
+static int SV_MakeMaze( void ) {
 	// TODO: create a 4D maze, actually just 4 colored mazes stacked, 
 	//   maybe add some nice windows that look like the skybox before impossibly going around the corridor
 	// something about recursive division seems beautiful relevent to square brushes
@@ -744,7 +744,7 @@ static char *SV_MakeMaze( void ) {
 	gridCols |= 1;
 	// layout the maze just for debugging
 	char maze[gridCols][gridRows];
-	memset(maze, '-', sizeof(maze));
+	memset(maze, ' ', sizeof(maze));
 	for(int x = 0; x < gridCols; x++) {
 		for(int y = 0; y < gridRows; y++) {
 			maze[0][y] = '#';
@@ -753,64 +753,76 @@ static char *SV_MakeMaze( void ) {
 			maze[x][gridRows-1] = '#';
 		}
 	}
+	int *areaStack = Hunk_AllocateTempMemory(gridRows * gridCols * 4 * sizeof(int));
+	int stackI = 0;
+	int minX;
+	int minY;
+	int maxX;
+	int maxY;
 	// interesting, I could make this non-recursive by scanning the maze for spaces
 	//   to divide basically using the character grid as it's own virtual call stack
-	while(safety < gridRows * gridCols) {
-		// find a large uninterrupted space
-		int minX;
-		int minY;
-		int maxX;
-		int maxY;
-		Com_Printf("wtf 4?\n");
-
-		// brute force?
-		qboolean found = qfalse;
-		for(int x = 1; x < gridCols / 2; x++) {
-			maxX = gridCols / 2;
-			minX = x;
-
-			for(int y = 1; y < gridRows / 2; y++) {
-				if(maze[x*2][y*2] == '#')
-					continue;
-
-				maxY = gridRows / 2;
-				minY = y;
-
-				// find biggest possible space from left to right, top to bottom
-				for(int xi = minX; xi < maxX; xi++) {
-					for(int yi = minY; yi < maxY; yi++) {
-						if(maze[xi*2][yi*2] != '-') {
-							maxY = yi;
-							maxX = xi;
-							break;
-						}
-					}
-				}
-
-				if(maxX-minX == 0 || maxY-minY == 0) {
-					continue;
-				} else {
-					found = qtrue;
-					break;
-				}
-			}
-			if(found)
-				break;
+	while(safety < (gridRows / 2) * (gridCols / 2)) {
+		// initialize the spaces with the entire maze
+		stackI--;
+		if(stackI == -1) {
+			minX = 1;
+			minY = 1;
+			maxX = (gridCols / 2);
+			maxY = (gridRows / 2);
+			stackI = 1;
 		}
-		
-		if(!found) {
-			Com_Printf("Maze finished\n");
+		else if(stackI == 0) {
 			break;
+		} else {
+			minX = areaStack[stackI*4+0];
+			minY = areaStack[stackI*4+1];
+			maxX = areaStack[stackI*4+2];
+			maxY = areaStack[stackI*4+3];
 		}
-	
-		Com_Printf("Maze block: %i x %i <> %i x %i\n", 
-			minX, minY, maxX, maxY);
+		//Com_Printf("Maze block: %i x %i <> %i x %i\n", minX, minY, maxX, maxY);
 		int whichDirection = rand() % 4;
 		int wallX = (rand() % (maxX - minX)) + minX;
 		int wallY = (rand() % (maxY - minY)) + minY;
-		Com_Printf("Maze walls: %i x %i\n", 
-			wallX, wallY);
-		
+
+		//Com_Printf("Maze walls: %i x %i\n", wallX, wallY);
+		// add the 4 walls to the stack for sub-dividing
+		if(wallX - minX > 1
+			&& wallY - minY > 1) {
+			//Com_Printf("Adding top, left: %i x %i <> %i x %i\n", minX, minY, wallX, wallY);
+			areaStack[stackI*4+0] = minX;
+			areaStack[stackI*4+1] = minY;
+			areaStack[stackI*4+2] = wallX;
+			areaStack[stackI*4+3] = wallY;
+			stackI++;
+		}
+		if(wallX - minX > 1
+			&& maxY - wallY > 1) {
+			//Com_Printf("Adding bottom, left: %i x %i <> %i x %i\n", minX, wallY, wallX, maxY);
+			areaStack[stackI*4+0] = minX;
+			areaStack[stackI*4+1] = wallY;
+			areaStack[stackI*4+2] = wallX;
+			areaStack[stackI*4+3] = maxY;
+			stackI++;
+		}
+		if(maxX - wallX > 1
+			&& wallY - minY > 1) {
+			//Com_Printf("Adding top, right: %i x %i <> %i x %i\n", wallX, minY, maxX, wallY);
+			areaStack[stackI*4+0] = wallX;
+			areaStack[stackI*4+1] = minY;
+			areaStack[stackI*4+2] = maxX;
+			areaStack[stackI*4+3] = wallY;
+			stackI++;
+		}
+		if(maxX - wallX > 1
+			&& maxY - wallY > 1) {
+			//Com_Printf("Adding bottom, right: %i x %i <> %i x %i\n", wallX, wallY, maxX, maxY);
+			areaStack[stackI*4+0] = wallX;
+			areaStack[stackI*4+1] = wallY;
+			areaStack[stackI*4+2] = maxX;
+			areaStack[stackI*4+3] = maxY;
+			stackI++;
+		}
+
 		for(int i = 0; i < 3; i++) {
 			// make 4 or 5 walls around 3 gaps dividing 4 spaces, 
 			//   guarunteed path to every edge
@@ -824,16 +836,15 @@ static char *SV_MakeMaze( void ) {
 			// this is probably degraded to rand() * 2 due to clustering in cheap time 
 			//   based rand(), most rand()s are subject to clustering
 			int gap;
+
 			if((whichDirection+i)%2==0) {
-				Com_Printf("wtf hori: %i? %i < %i < %i\n", i, minX, wallX, maxX);
 				if(i < 2) { // already place 2 walls must be on the other side
-					if(wallX == 1) continue;
-					gap = ((rand() % (wallX - minX)) + minX) * 2 + 1;
+					if(wallX - minX <= 1) gap = wallX * 2 - 1;
+					else gap = ((rand() % (wallX - minX)) + minX) * 2 + 1;
 				} else {
-					if(wallX == 7) continue;
-					gap = ((rand() % (maxX - wallX)) + wallX) * 2 + 1;
+					if(maxX - wallX <= 1) gap = wallX * 2 + 1;
+					else gap = ((rand() % (maxX - wallX)) + wallX) * 2 + 1;
 				}
-				Com_Printf("DoorX: %i x %i\n", gap, wallY * 2);
 				for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
 					if(maze[fillX][wallY*2] == '*') 
 						continue;
@@ -842,19 +853,16 @@ static char *SV_MakeMaze( void ) {
 					else 
 						maze[fillX][wallY*2] = '#';
 				}
-				Com_Printf("wtf 2?\n");
 				
 				// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
 			} else {
-				Com_Printf("wtf vert: %i? %i < %i < %i\n", i, minY, wallY, maxY);
 				if(i < 2) {
-					if(wallY == 1) continue;
-					gap = ((rand() % (wallY - minY)) + minY) * 2 + 1;
+					if(wallY - minY <= 1) gap = wallY * 2 - 1;
+					else gap = ((rand() % (wallY - minY)) + minY) * 2 + 1;
 				} else {
-					if(wallY == 7) continue;
-					gap = ((rand() % (maxY - wallY)) + wallY) * 2 + 1;
+					if(maxY - wallY <= 1) gap = wallY * 2 + 1;
+					else gap = ((rand() % (maxY - wallY)) + wallY) * 2 + 1;
 				}
-				Com_Printf("DoorY: %i x %i\n", wallX * 2, gap);
 				for(int fillY = (minY - 1) * 2; fillY <= maxY * 2; fillY++) {
 					if(maze[wallX*2][fillY] == '*') 
 						continue;
@@ -863,24 +871,24 @@ static char *SV_MakeMaze( void ) {
 					else 
 						maze[wallX*2][fillY] = '#';
 				}
-				Com_Printf("wtf?\n");
 			}
 		}
-
-		Com_Printf("Maze:\n");
-		for(int y = 0; y < gridRows; y++) {
-			for(int x = 0; x < gridCols; x++) {
-				Com_Printf("%c", maze[x][y]);
-			}
-			Com_Printf("\n");
-		}
-		Com_Printf("\n");
 
 		safety++;
 	} // end while
-	
 
-	return "";
+	Com_Printf("Maze:\n");
+	for(int y = 0; y < gridRows; y++) {
+		for(int x = 0; x < gridCols; x++) {
+			Com_Printf("%c", maze[x][y]);
+		}
+		Com_Printf("\n");
+	}
+	Com_Printf("\n");
+	
+	Hunk_FreeTempMemory( areaStack );
+
+	return 0;
 }
 
 
@@ -892,10 +900,10 @@ static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 }
 
 
-static char *SV_MakeShootsAndLadders(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
+static int SV_MakeShootsAndLadders(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 	static char plat[4096];
 	// TODO: ramps and wind tunnels like Edge of Oblivion with different shaped pyramids and stuff in space
-	return plat;
+	return 0;
 }
 
 
@@ -1279,7 +1287,10 @@ Com_Printf("Beginning header\n");
 int SV_MakeMap( void ) {
 
 	int length = SV_MakeMaze();
-	
+	SV_MakeMaze();
+	SV_MakeMaze();
+	SV_MakeMaze();
+
 	int result = CM_LoadMapFromMemory();
 
 	fileHandle_t mapfile = FS_SV_FOpenFileWrite( va("*memory%i.map", result) );
