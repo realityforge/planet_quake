@@ -2459,7 +2459,6 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 			}
 		}
 	}
-
 	// Try and find a suitable match using all
 	// the image formats supported
 	for( i = 0; i < numImageLoaders; i++ )
@@ -2488,8 +2487,24 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 				//ri.Printf( PRINT_DEVELOPER, "WARNING: %s not present, using %s instead\n",
 				//		name, altName );
 			}
+			return;
+		}
+	}
+	
+	if(!*pic) {
+		char ddsName[MAX_QPATH];
 
-			break;
+		COM_StripExtension(name, ddsName, MAX_QPATH);
+		Q_strcat(ddsName, MAX_QPATH, ".dds");
+#ifdef USE_LAZY_LOAD
+		if(checkOnly) {
+			if ( ri.FS_FOpenFileRead(va("dds/%s", ddsName), NULL, qfalse) > -1 ) {
+				return;
+			}
+		} else 
+#endif
+		{
+			R_LoadDDS(va("dds/%s", ddsName), pic, width, height, picFormat, numMips);
 		}
 	}
 }

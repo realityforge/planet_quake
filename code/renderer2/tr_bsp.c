@@ -755,7 +755,8 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 			if(tri[j] >= numVerts)
 			{
-				ri.Error(ERR_DROP, "Bad index in face surface");
+				ri.Printf(PRINT_WARNING, "Bad index in face surface");
+				tri[j] = 0;
 			}
 		}
 

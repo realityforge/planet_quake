@@ -1802,7 +1802,6 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 			dir = search->dir;
 
 			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
-Com_Printf("Searching: %s\n", netpath);
 
 			temp = Sys_FOpen( netpath, "rb" );
 			if ( temp == NULL ) {
