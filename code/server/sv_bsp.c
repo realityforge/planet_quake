@@ -880,59 +880,40 @@ static int SV_MakeMaze( void ) {
 
 			if((whichDirection+i)%2==0) {
 				if(i < 2) { // already place 2 walls must be on the other side
-					if(wallX - minX <= 1) gap = wallX * 2 - 1;
-					else gap = ((rand() % (wallX - minX)) + minX) * 2 + 1;
+					if(wallX - minX <= 1) gap = wallX - 1;
+					else gap = ((rand() % (wallX - minX)) + minX);
 				} else {
-					if(maxX - wallX <= 1) gap = wallX * 2 + 1;
-					else gap = ((rand() % (maxX - wallX)) + wallX) * 2 + 1;
+					if(maxX - wallX <= 1) gap = wallX;
+					else gap = ((rand() % (maxX - wallX)) + wallX);
 				}
 				for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
 					if(maze[fillX][wallY*2] == '*') 
 						continue;
-					else if(fillX == gap)
+					else if(fillX == gap * 2 + 1)
 						maze[fillX][wallY*2] = '*';
 					else 
 						maze[fillX][wallY*2] = '#';
 				}
-
-				int wall[2][3] = {
-					{vs[0][0],    
-					 vs[0][1] + (wallY - minY) * (cellHeight + wallWidth), 
-					 vs[0][2]},
-
-					{vs[0][0] + (gap / 2 - minX) * (cellWidth + wallWidth),
-					 vs[0][1] + (wallY - minY) * (cellHeight + wallWidth),
-					 vs[1][2]}
-				};
-				if(vs[0][1] >= 0) {
-					wall[1][1] += 16;
-				} else {
-					wall[0][1] -= 16;
-					int tmpX = wall[1][0];
-					wall[1][0] = wall[0][0];
-					wall[0][0] = tmpX;
-				}
-				strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-				offset += strlen(&output[offset]);
 				
 				// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
 			} else {
 				if(i < 2) {
-					if(wallY - minY <= 1) gap = wallY * 2 - 1;
-					else gap = ((rand() % (wallY - minY)) + minY) * 2 + 1;
+					if(wallY - minY <= 1) gap = wallY - 1;
+					else gap = ((rand() % (wallY - minY)) + minY);
 				} else {
-					if(maxY - wallY <= 1) gap = wallY * 2 + 1;
-					else gap = ((rand() % (maxY - wallY)) + wallY) * 2 + 1;
+					if(maxY - wallY <= 1) gap = wallY;
+					else gap = ((rand() % (maxY - wallY)) + wallY);
 				}
 				for(int fillY = (minY - 1) * 2; fillY <= maxY * 2; fillY++) {
 					if(maze[wallX*2][fillY] == '*') 
 						continue;
-					else if(fillY == gap)
+					else if(fillY == gap * 2 + 1)
 						maze[wallX*2][fillY] = '*';
 					else 
 						maze[wallX*2][fillY] = '#';
 				}
 
+/*
 				int wall[2][3] = {
 					{vs[0][0] + (wallX - minX) * (cellWidth + wallWidth),    
 					 vs[0][1], 
@@ -942,14 +923,18 @@ static int SV_MakeMaze( void ) {
 					 vs[0][1] + (gap / 2 - minY) * (cellHeight + wallWidth),
 					 vs[1][2]}
 				};
-				if(vs[0][0] >= 0) {
-					wall[1][0] += 16;
-				} else {
-					wall[0][0] -= 16;
-					int tmpY = wall[1][1];
-					wall[1][1] = wall[0][1];
-					wall[0][1] = tmpY;
-				}
+*/
+int wall[2][3] = {
+	{wallX * (cellWidth + wallWidth),    
+	 (minY - 1) * (cellHeight + wallWidth), 
+	 0},
+
+	{wallX * (cellWidth + wallWidth) + wallWidth,
+	 gap * (cellHeight + wallWidth),
+	 cellHeight}
+};
+Com_Printf("Drawing wall: %i x %i <> %i x %i\n", wall[0][0], wall[0][1],
+	wall[1][0], wall[1][1]);
 				strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
 				offset += strlen(&output[offset]);
 
