@@ -2350,7 +2350,6 @@ void Hunk_Clear( void ) {
 	hunk_temp = &hunk_high;
 
 	Com_Printf( "Hunk_Clear: reset the hunk ok\n" );
-	VM_Clear();
 #ifdef HUNK_DEBUG
 	hunkblocks = NULL;
 #endif

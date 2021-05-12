@@ -1767,8 +1767,14 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 
 	remaining = Hunk_MemoryRemaining();
 
+	for(int i = 0; i < (VM_COUNT * MAX_NUM_VMS); i++) {
+		if(!vmTable[i].name) {
+			vmIndex = i;
+		}
+	}
 	vm = &vmTable[ vmIndex ];
 
+#if 0
 	// see if we already have the VM
 	if ( vm->name ) {
 		if ( vm->index != index ) {
@@ -1777,6 +1783,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 		}
 		return vm;
 	}
+#endif
 
 	name = vmName[ index ];
 
@@ -1902,15 +1909,6 @@ void VM_Free( vm_t *vm ) {
 	}
 #endif
 	Com_Memset( vm, 0, sizeof( *vm ) );
-}
-
-
-void VM_Clear( void ) {
-	int i;
-	for ( i = 0; i < VM_COUNT * MAX_NUM_VMS; i++ ) {
-		VM_Free( &vmTable[ i ] );
-	}
-	vmIndex = 0;
 }
 
 
