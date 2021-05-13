@@ -741,21 +741,20 @@ static int SV_MakeMaze( void ) {
 	//   https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_division_method
 	int radius = 50;
 	int offset = 0;
-	int safety = 0;
 	int cellWidth = 200;
 	int cellHeight = 200;
 	int gridRows = 16; // do double so #### represents walls and space represent hallways
 	int gridCols = 16; // 17 x 17??
 	gridRows |= 1; // make odd or +1 so theres a wall on both sides
 	gridCols |= 1;
-	int wallWidth = 16;
-	int totalWidth = cellWidth * (gridCols / 2) + wallWidth * ((gridCols / 2) - 1);
-	int totalHeight = cellHeight * (gridRows / 2) + wallWidth * ((gridRows / 2) - 1);
+	int thickness = 16;
+	int spacing = 200;
+	int totalWidth = cellWidth * (gridCols / 2) + thickness * ((gridCols / 2) - 1);
+	int totalHeight = cellHeight * (gridRows / 2) + thickness * ((gridRows / 2) - 1);
 	vec3_t  vs[2];
+
 	// layout the maze just for debugging
 	char maze[gridCols][gridRows];
-	memset(maze, ' ', sizeof(maze));
-	/*
 	for(int x = 0; x < gridCols; x++) {
 		for(int y = 0; y < gridRows; y++) {
 			maze[0][y] = '#';
@@ -764,9 +763,7 @@ static int SV_MakeMaze( void ) {
 			maze[x][gridRows-1] = '#';
 		}
 	}
-	*/
 	int *areaStack = Hunk_AllocateTempMemory(gridRows * gridCols * 4 * sizeof(int));
-	int stackI = 0;
 	int minX;
 	int minY;
 	int maxX;
@@ -795,261 +792,267 @@ static int SV_MakeMaze( void ) {
 	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 	offset += strlen(&output[offset]);
 	
-	// make offsets for centering
-	vs[0][0] = -(totalWidth / 2);
-	vs[1][0] = +(totalWidth / 2);
+	for(int m = 0; m < 4; m++) {
+		int safety = 0;
+		int stackI = 0;
+		memset(maze, ' ', sizeof(maze));
 
-	vs[0][1] = -(totalHeight / 2);
-	vs[1][1] = +(totalHeight / 2);
+		// make offsets for centering
+		vs[0][0] = -(totalWidth / 2);
+		vs[1][0] = +(totalWidth / 2);
 
-	vs[0][2] = -(cellWidth / 2);
-	vs[1][2] = (cellHeight / 2);
-	
-	SV_SetStroke(va("cube%i", 0));
-	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
-	offset += strlen(&output[offset]);
+		vs[0][1] = -(totalHeight / 2);
+		vs[1][1] = +(totalHeight / 2);
 
-	// interesting, I could make this non-recursive by scanning the maze for spaces
-	//   to divide basically using the character grid as it's own virtual call stack
-	while(safety < 6) {
-		// initialize the spaces with the entire maze
-		stackI--;
-		if(stackI == -1) {
-			minX = 1;
-			minY = 1;
-			maxX = (gridCols / 2);
-			maxY = (gridRows / 2);
-			stackI = 1;
-		}
-		else if(stackI == 0) {
-			break;
-		} else {
-			minX = areaStack[stackI*4+0];
-			minY = areaStack[stackI*4+1];
-			maxX = areaStack[stackI*4+2];
-			maxY = areaStack[stackI*4+3];
-		}
-		Com_Printf("Maze block: %i x %i <> %i x %i\n", minX, minY, maxX, maxY);
-		int whichDirection = rand() % 4;
-		int wallX = (rand() % (maxX - minX)) + minX;
-		int wallY = (rand() % (maxY - minY)) + minY;
+		vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
+		vs[1][2] = vs[0][2] + cellHeight;
+		
+		SV_SetStroke(va("cube%i", 0));
+		strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+		offset += strlen(&output[offset]);
 
-		Com_Printf("Maze walls: %i x %i\n", wallX, wallY);
-		// add the 4 walls to the stack for sub-dividing
-		if(wallX - minX > 1
-			&& wallY - minY > 1) {
-			//Com_Printf("Adding top, left: %i x %i <> %i x %i\n", minX, minY, wallX, wallY);
-			areaStack[stackI*4+0] = minX;
-			areaStack[stackI*4+1] = minY;
-			areaStack[stackI*4+2] = wallX;
-			areaStack[stackI*4+3] = wallY;
-			stackI++;
-		}
-		if(wallX - minX > 1
-			&& maxY - wallY > 1) {
-			//Com_Printf("Adding bottom, left: %i x %i <> %i x %i\n", minX, wallY, wallX, maxY);
-			areaStack[stackI*4+0] = minX;
-			areaStack[stackI*4+1] = wallY + 1;
-			areaStack[stackI*4+2] = wallX;
-			areaStack[stackI*4+3] = maxY;
-			stackI++;
-		}
-		if(maxX - wallX > 1
-			&& wallY - minY > 1) {
-			//Com_Printf("Adding top, right: %i x %i <> %i x %i\n", wallX, minY, maxX, wallY);
-			areaStack[stackI*4+0] = wallX + 1;
-			areaStack[stackI*4+1] = minY;
-			areaStack[stackI*4+2] = maxX;
-			areaStack[stackI*4+3] = wallY;
-			stackI++;
-		}
-		if(maxX - wallX > 1
-			&& maxY - wallY > 1) {
-			//Com_Printf("Adding bottom, right: %i x %i <> %i x %i\n", wallX, wallY, maxX, maxY);
-			areaStack[stackI*4+0] = wallX + 1;
-			areaStack[stackI*4+1] = wallY + 1;
-			areaStack[stackI*4+2] = maxX;
-			areaStack[stackI*4+3] = maxY;
-			stackI++;
-		}
-
-		for(int i = 0; i < 3; i++) {
-			// make 4 or 5 walls around 3 gaps dividing 4 spaces, 
-			//   guarunteed path to every edge
-			
-			/* closest a wall can get to edge
-			# #  3 characters for border and hallway
-			# #      ##  Would just create a double thick wall
-			#        ##  
-			# #      ##
-			*/
-			// this is probably degraded to rand() * 2 due to clustering in cheap time 
-			//   based rand(), most rand()s are subject to clustering
-			int gap;
-
-			if((whichDirection+i)%2==0) {
-				if(i < 2) { // already place 2 walls must be on the other side
-					if(wallX - minX <= 1) gap = wallX - 1;
-					else gap = ((rand() % (wallX - minX)) + minX);
-
-					int wall[2][3] = {
-						{vs[0][0] + (minX - 1) * (cellWidth + wallWidth),    
-						 vs[0][1] + wallY * (cellHeight + wallWidth), 
-						 vs[0][2]},
-
-						{vs[0][0] + gap * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + wallY * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-					offset += strlen(&output[offset]);
-					int wall2[2][3] = {
-						{vs[0][0] + (gap + 1) * (cellWidth + wallWidth) - wallWidth,    
-						 vs[0][1] + wallY * (cellHeight + wallWidth), 
-						 vs[0][2]},
-
-						{vs[0][0] + (i == 1 
-							? maxX * (cellWidth + wallWidth)
-							: wallX * (cellWidth + wallWidth)),
-						 vs[0][1] + wallY * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-					offset += strlen(&output[offset]);
-				} else {
-					if(maxX - wallX <= 1) gap = wallX;
-					else gap = ((rand() % (maxX - wallX)) + wallX);
-
-					int wall[2][3] = {
-						{vs[0][0] + (i == 1
-							? (minX - 1) * (cellWidth + wallWidth)
-							: wallX * (cellWidth + wallWidth)),    
-						 vs[0][1] + wallY * (cellHeight + wallWidth), 
-						 vs[0][2]},
-
-						{vs[0][0] + gap * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + wallY * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-					offset += strlen(&output[offset]);
-					int wall2[2][3] = {
-						{vs[0][0] + (gap + 1) * (cellWidth + wallWidth) - wallWidth,    
-						 vs[0][1] + wallY * (cellHeight + wallWidth), 
-						 vs[0][2]},
-
-						{vs[0][0] + maxX * (cellWidth + wallWidth),
-						 vs[0][1] + wallY * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-					offset += strlen(&output[offset]);
-				}
-//Com_Printf("Maze door: %i x %i\n", gap * 2 + 1, wallY * 2);
-				for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
-					if(maze[fillX][wallY*2] == '*') 
-						continue;
-					else if(fillX == gap * 2 + 1)
-						maze[fillX][wallY*2] = '*';
-					else 
-						maze[fillX][wallY*2] = '#';
-				}
-				
-				// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
-			} else {
-				if(i < 2) {
-					if(wallY - minY <= 1) gap = wallY - 1;
-					else gap = ((rand() % (wallY - minY)) + minY);
-
-					int wall[2][3] = {
-						{vs[0][0] + wallX * (cellWidth + wallWidth),    
-						 vs[0][1] + (minY - 1) * (cellHeight + wallWidth), 
-						 vs[0][2]},
-
-						{vs[0][0] + wallX * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + gap * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-					offset += strlen(&output[offset]);
-					int wall2[2][3] = {
-						{vs[0][0] + wallX * (cellWidth + wallWidth),    
-						 vs[0][1] + (gap + 1) * (cellHeight + wallWidth) - wallWidth, 
-						 vs[0][2]},
-
-						{vs[0][0] + wallX * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + (i == 1 
-						 	? maxY * (cellHeight + wallWidth)
-						  : wallY * (cellHeight + wallWidth)),
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-					offset += strlen(&output[offset]);
-				} else {
-					if(maxY - wallY <= 1) gap = wallY;
-					else gap = ((rand() % (maxY - wallY)) + wallY);
-
-					int wall[2][3] = {
-						{vs[0][0] + wallX * (cellWidth + wallWidth),    
-						 vs[0][1] + (i == 1
-						 ? (minY - 1) * (cellHeight + wallWidth)
-						 : wallY * (cellHeight + wallWidth)), 
-						 vs[0][2]},
-
-						{vs[0][0] + wallX * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + gap * (cellHeight + wallWidth) + wallWidth,
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-					offset += strlen(&output[offset]);
-					int wall2[2][3] = {
-						{vs[0][0] + wallX * (cellWidth + wallWidth),    
-						 vs[0][1] + (gap + 1) * (cellHeight + wallWidth) - wallWidth, 
-						 vs[0][2]},
-
-						{vs[0][0] + wallX * (cellWidth + wallWidth) + wallWidth,
-						 vs[0][1] + maxY * (cellHeight + wallWidth),
-						 vs[1][2]}
-					};
-					strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-					offset += strlen(&output[offset]);
-				}
-//Com_Printf("Maze door: %i x %i\n", wallX * 2, gap * 2 + 1);
-				for(int fillY = (minY - 1) * 2; fillY <= maxY * 2; fillY++) {
-					if(maze[wallX*2][fillY] == '*') 
-						continue;
-					else if(fillY == gap * 2 + 1)
-						maze[wallX*2][fillY] = '*';
-					else 
-						maze[wallX*2][fillY] = '#';
-				}
-
-/*
-				int wall[2][3] = {
-					{vs[0][0] + (wallX - minX) * (cellWidth + wallWidth),    
-					 vs[0][1], 
-					 vs[0][2]},
-
-					{vs[0][0] + (wallX - minX) * (cellWidth + wallWidth),
-					 vs[0][1] + (gap / 2 - minY) * (cellHeight + wallWidth),
-					 vs[1][2]}
-				};
-*/
-
+		// interesting, I could make this non-recursive by scanning the maze for spaces
+		//   to divide basically using the character grid as it's own virtual call stack
+		while(safety < 6) {
+			// initialize the spaces with the entire maze
+			stackI--;
+			if(stackI == -1) {
+				minX = 1;
+				minY = 1;
+				maxX = (gridCols / 2);
+				maxY = (gridRows / 2);
+				stackI = 1;
 			}
-		}
+			else if(stackI == 0) {
+				break;
+			} else {
+				minX = areaStack[stackI*4+0];
+				minY = areaStack[stackI*4+1];
+				maxX = areaStack[stackI*4+2];
+				maxY = areaStack[stackI*4+3];
+			}
+			Com_Printf("Maze block: %i x %i <> %i x %i\n", minX, minY, maxX, maxY);
+			int whichDirection = rand() % 4;
+			int wallX = (rand() % (maxX - minX)) + minX;
+			int wallY = (rand() % (maxY - minY)) + minY;
 
-		safety++;
-	} // end while
+			Com_Printf("Maze walls: %i x %i\n", wallX, wallY);
+			// add the 4 walls to the stack for sub-dividing
+			if(wallX - minX > 1
+				&& wallY - minY > 1) {
+				//Com_Printf("Adding top, left: %i x %i <> %i x %i\n", minX, minY, wallX, wallY);
+				areaStack[stackI*4+0] = minX;
+				areaStack[stackI*4+1] = minY;
+				areaStack[stackI*4+2] = wallX;
+				areaStack[stackI*4+3] = wallY;
+				stackI++;
+			}
+			if(wallX - minX > 1
+				&& maxY - wallY > 1) {
+				//Com_Printf("Adding bottom, left: %i x %i <> %i x %i\n", minX, wallY, wallX, maxY);
+				areaStack[stackI*4+0] = minX;
+				areaStack[stackI*4+1] = wallY + 1;
+				areaStack[stackI*4+2] = wallX;
+				areaStack[stackI*4+3] = maxY;
+				stackI++;
+			}
+			if(maxX - wallX > 1
+				&& wallY - minY > 1) {
+				//Com_Printf("Adding top, right: %i x %i <> %i x %i\n", wallX, minY, maxX, wallY);
+				areaStack[stackI*4+0] = wallX + 1;
+				areaStack[stackI*4+1] = minY;
+				areaStack[stackI*4+2] = maxX;
+				areaStack[stackI*4+3] = wallY;
+				stackI++;
+			}
+			if(maxX - wallX > 1
+				&& maxY - wallY > 1) {
+				//Com_Printf("Adding bottom, right: %i x %i <> %i x %i\n", wallX, wallY, maxX, maxY);
+				areaStack[stackI*4+0] = wallX + 1;
+				areaStack[stackI*4+1] = wallY + 1;
+				areaStack[stackI*4+2] = maxX;
+				areaStack[stackI*4+3] = maxY;
+				stackI++;
+			}
 
-	Com_Printf("Maze:\n");
-	for(int y = 0; y < gridRows; y++) {
-		for(int x = 0; x < gridCols; x++) {
-			Com_Printf("%c", maze[x][y]);
+			for(int i = 0; i < 3; i++) {
+				// make 4 or 5 walls around 3 gaps dividing 4 spaces, 
+				//   guarunteed path to every edge
+				
+				/* closest a wall can get to edge
+				# #  3 characters for border and hallway
+				# #      ##  Would just create a double thick wall
+				#        ##  
+				# #      ##
+				*/
+				// this is probably degraded to rand() * 2 due to clustering in cheap time 
+				//   based rand(), most rand()s are subject to clustering
+				int gap;
+
+				if((whichDirection+i)%2==0) {
+					if((whichDirection+i)%2 < 2) { // already place 2 walls must be on the other side
+						if(wallX - minX <= 1) gap = wallX - 1;
+						else gap = ((rand() % (wallX - minX)) + minX);
+
+						int wall[2][3] = {
+							{vs[0][0] + (minX - 1) * (cellWidth + thickness),    
+							 vs[0][1] + wallY * (cellHeight + thickness), 
+							 vs[0][2]},
+
+							{vs[0][0] + gap * (cellWidth + thickness) + thickness,
+							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+						offset += strlen(&output[offset]);
+						int wall2[2][3] = {
+							{vs[0][0] + (gap + 1) * (cellWidth + thickness) - thickness,    
+							 vs[0][1] + wallY * (cellHeight + thickness), 
+							 vs[0][2]},
+
+							{vs[0][0] + (i == 1 
+								? maxX * (cellWidth + thickness)
+								: wallX * (cellWidth + thickness)),
+							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+						offset += strlen(&output[offset]);
+					} else {
+						if(maxX - wallX <= 1) gap = wallX;
+						else gap = ((rand() % (maxX - wallX)) + wallX);
+
+						int wall[2][3] = {
+							{vs[0][0] + (i == 1
+								? (minX - 1) * (cellWidth + thickness)
+								: wallX * (cellWidth + thickness)),    
+							 vs[0][1] + wallY * (cellHeight + thickness), 
+							 vs[0][2]},
+
+							{vs[0][0] + gap * (cellWidth + thickness) + thickness,
+							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+						offset += strlen(&output[offset]);
+						int wall2[2][3] = {
+							{vs[0][0] + (gap + 1) * (cellWidth + thickness) - thickness,    
+							 vs[0][1] + wallY * (cellHeight + thickness), 
+							 vs[0][2]},
+
+							{vs[0][0] + maxX * (cellWidth + thickness),
+							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+						offset += strlen(&output[offset]);
+					}
+	//Com_Printf("Maze door: %i x %i\n", gap * 2 + 1, wallY * 2);
+					for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
+						if(maze[fillX][wallY*2] == '*') 
+							continue;
+						else if(fillX == gap * 2 + 1)
+							maze[fillX][wallY*2] = '*';
+						else 
+							maze[fillX][wallY*2] = '#';
+					}
+					
+					// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
+				} else {
+					if((whichDirection+i)%2 < 2) {
+						if(wallY - minY <= 1) gap = wallY - 1;
+						else gap = ((rand() % (wallY - minY)) + minY);
+
+						int wall[2][3] = {
+							{vs[0][0] + wallX * (cellWidth + thickness),    
+							 vs[0][1] + (minY - 1) * (cellHeight + thickness), 
+							 vs[0][2]},
+
+							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
+							 vs[0][1] + gap * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+						offset += strlen(&output[offset]);
+						int wall2[2][3] = {
+							{vs[0][0] + wallX * (cellWidth + thickness),    
+							 vs[0][1] + (gap + 1) * (cellHeight + thickness) - thickness, 
+							 vs[0][2]},
+
+							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
+							 vs[0][1] + (i == 1 
+							 	? maxY * (cellHeight + thickness)
+							  : wallY * (cellHeight + thickness)),
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+						offset += strlen(&output[offset]);
+					} else {
+						if(maxY - wallY <= 1) gap = wallY;
+						else gap = ((rand() % (maxY - wallY)) + wallY);
+
+						int wall[2][3] = {
+							{vs[0][0] + wallX * (cellWidth + thickness),    
+							 vs[0][1] + (i == 1
+							 ? (minY - 1) * (cellHeight + thickness)
+							 : wallY * (cellHeight + thickness)), 
+							 vs[0][2]},
+
+							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
+							 vs[0][1] + gap * (cellHeight + thickness) + thickness,
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+						offset += strlen(&output[offset]);
+						int wall2[2][3] = {
+							{vs[0][0] + wallX * (cellWidth + thickness),    
+							 vs[0][1] + (gap + 1) * (cellHeight + thickness) - thickness, 
+							 vs[0][2]},
+
+							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
+							 vs[0][1] + maxY * (cellHeight + thickness),
+							 vs[1][2]}
+						};
+						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+						offset += strlen(&output[offset]);
+					}
+	//Com_Printf("Maze door: %i x %i\n", wallX * 2, gap * 2 + 1);
+					for(int fillY = (minY - 1) * 2; fillY <= maxY * 2; fillY++) {
+						if(maze[wallX*2][fillY] == '*') 
+							continue;
+						else if(fillY == gap * 2 + 1)
+							maze[wallX*2][fillY] = '*';
+						else 
+							maze[wallX*2][fillY] = '#';
+					}
+
+	/*
+					int wall[2][3] = {
+						{vs[0][0] + (wallX - minX) * (cellWidth + thickness),    
+						 vs[0][1], 
+						 vs[0][2]},
+
+						{vs[0][0] + (wallX - minX) * (cellWidth + thickness),
+						 vs[0][1] + (gap / 2 - minY) * (cellHeight + thickness),
+						 vs[1][2]}
+					};
+	*/
+
+				}
+			}
+
+			safety++;
+		} // end while
+
+		Com_Printf("Maze:\n");
+		for(int y = 0; y < gridRows; y++) {
+			for(int x = 0; x < gridCols; x++) {
+				Com_Printf("%c", maze[x][y]);
+			}
+			Com_Printf("\n");
 		}
 		Com_Printf("\n");
 	}
-	Com_Printf("\n");
 
 	strcpy(&output[offset], "}\n");
 	offset += 2;
