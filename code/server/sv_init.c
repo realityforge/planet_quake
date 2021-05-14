@@ -737,7 +737,13 @@ void SV_SpawnServer_After_Startup( void ) {
 
 #ifdef USE_MEMORY_MAPS
 	if(mapname[0] == '*') {
-		Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
+		if(Cvar_VariableString("fs_game")[0] == '\0') {
+			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
+			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, Cvar_VariableString("fs_basegame"), &mapname[1]) );
+		} else {
+			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
+			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, Cvar_VariableString("fs_game"), &mapname[1]) );
+		}
 	} else
 #endif
 	Cvar_Set( "sv_referencedPakNames", p );

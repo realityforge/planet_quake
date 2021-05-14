@@ -799,7 +799,7 @@ static int SV_MakeMaze( void ) {
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
 		"\"ambient\" \"5\"\n"
-		"\"message\" \"As Above So Below\"\n"
+		"\"message\" \"Deathmaze\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_sunlight\" \"3500\"\n"
 		"\"gridsize\" \"512.0 512.0 512.0\"\n"
@@ -949,9 +949,57 @@ static int SV_MakeMaze( void ) {
 		}
 		//strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 		//offset += strlen(&output[offset]);
+		
+		
+		// TODO: randomly select 3 holes in every maze, 
+		//   the top of the previous maze matches the bottom of the next maze
+		// sort the holes then draw the floors and ceilings inbetween.
+		int holes[3];
+		for(int h = 0; h < 3; h++) {
+			holes[h] = rand() % (gridCols * gridRows);
+		}
+		int min, max, med;//assume values are there for a b c
+		if( holes[0] > holes[1] ){
+		 if( holes[0] > holes[2] ){
+		  max = holes[0];
+		  if( holes[1] > holes[2] ){
+		   med = holes[1];
+		   min = holes[2];
+		  }else{
+		   med = holes[2];
+		   min = holes[1];
+		  }
+		 }else{
+		  med = holes[0];
+		  max = holes[2];
+		  min = holes[1];
+		 }
+		}else{
+		 if( holes[1] > holes[2] ){
+		  max = holes[1];
+		  if( holes[0] > holes[2] ){
+		   med = holes[0];
+		   min = holes[2];
+		  }else{
+		   med = holes[2];
+		   min = holes[0];
+		  }
+		 }else{
+		  med = holes[1];
+		  max = holes[2];
+		  min = holes[0];
+		 }
+		}
+		holes[0] = min;
+		holes[1] = med;
+		holes[2] = max;
+		for(int hi = 0; hi < 3; hi++) {
+			int x = holes[hi] % gridCols;
+			int y = holes[hi] / gridCols;
+			
+		}
 
-		// interesting, I could make this non-recursive by scanning the maze for spaces
-		//   to divide basically using the character grid as it's own virtual call stack
+		// build inner maze using a areaStack to list ever division, skips divisions that would be too small
 		while(safety < 6) {
 			// initialize the spaces with the entire maze
 			stackI--;
@@ -1015,6 +1063,7 @@ static int SV_MakeMaze( void ) {
 			}
 
 			for(int i = 0; i < 3; i++) {
+				//if(i == 1) continue;
 				// make 4 or 5 walls around 3 gaps dividing 4 spaces, 
 				//   guarunteed path to every edge
 				
@@ -1029,7 +1078,7 @@ static int SV_MakeMaze( void ) {
 				int gap;
 
 				if((whichDirection+i)%2==0) {
-					if((whichDirection+i)%2 < 2) { // already place 2 walls must be on the other side
+					if((whichDirection+i)%4 < 2) { // already place 2 walls must be on the other side
 						if(wallX - minX <= 1) gap = wallX - 1;
 						else gap = ((rand() % (wallX - minX)) + minX);
 
@@ -1106,7 +1155,7 @@ static int SV_MakeMaze( void ) {
 					
 					// TODO: SV_MakeWall once or twice depending on gap > min and < max - 2
 				} else {
-					if((whichDirection+i)%2 < 2) {
+					if((whichDirection+i)%4 < 2) {
 						if(wallY - minY <= 1) gap = wallY - 1;
 						else gap = ((rand() % (wallY - minY)) + minY);
 
@@ -1144,7 +1193,7 @@ static int SV_MakeMaze( void ) {
 
 						int wall[2][3] = {
 							{vs[0][0] + wallX * (cellWidth + thickness),    
-							 vs[0][1] + (i == 1
+							 vs[0][1] + (i == 1 // no gap across from it
 							 ? (minY - 1) * (cellHeight + thickness)
 							 : wallY * (cellHeight + thickness)), 
 							 vs[0][2]},
@@ -1180,19 +1229,6 @@ static int SV_MakeMaze( void ) {
 						else 
 							maze[wallX*2][fillY] = '#';
 					}
-
-	/*
-					int wall[2][3] = {
-						{vs[0][0] + (wallX - minX) * (cellWidth + thickness),    
-						 vs[0][1], 
-						 vs[0][2]},
-
-						{vs[0][0] + (wallX - minX) * (cellWidth + thickness),
-						 vs[0][1] + (gap / 2 - minY) * (cellHeight + thickness),
-						 vs[1][2]}
-					};
-	*/
-
 				}
 			}
 
@@ -1525,11 +1561,11 @@ static void SV_LoadMapFromMemory( void ) {
 	CMod_LoadVisibility( &header.lumps[LUMP_VISIBILITY] );
 	CMod_LoadPatches( &header.lumps[LUMP_SURFACES], &header.lumps[LUMP_DRAWVERTS] );
 
-	/* advertisements */
+	/* TODO Advertisements/Decals */
 	//AddLump( file, (bspHeader_t*) header, LUMP_ADVERTISEMENTS, bspAds, numBSPAds * sizeof( bspAdvertisement_t ) );
 
   // TODO: detect memory map from gamestate on client and download over UDP
-  
+
   // TODO: make a copy of the map in memory in case a client requests, it can be sent
 }
 
