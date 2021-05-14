@@ -223,16 +223,23 @@ static void SV_MakeCircle(int splits, int i, float radius, float width, float he
 	circleCorners[7] = y4 + (height / 2);
 }
 
+#define  SIDE_NORTH  1
+#define  SIDE_EAST   2
+#define  SIDE_SOUTH  4
+#define  SIDE_WEST   8
+#define  SIDE_TOP    16
+#define  SIDE_BOTTOM 32
+#define  SIDE_ALL    63 // ?
 
-static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment, int maxSegment ) {
+static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment, int maxSegment, int sides ) {
 	static char portal[4096*24];
 	int splits = 24.0;
 	int offset = floor(splits / 8.0);
 	portal[0] = '\0';
 	for(int i = -offset; i < ceil(splits - offset); i++) {
 		if((minSegment == -1 && maxSegment == -1) 
-			|| ((i + offset) % (splits / 4) <= maxSegment
-			&& (i + offset) % (splits / 4) >= minSegment)) {
+			|| ((i + offset) % splits <= maxSegment
+			&& (i + offset) % splits >= minSegment)) {
 			SV_MakeCircle(splits, i, radius, max[0] - min[0], max[1] - min[1]);
 		} else {
 			continue;
@@ -249,77 +256,83 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 		
 		vec3_t  wallMap[48] = {
 			
-			{min[0] + x1, min[1] + y1, min[2] - 16},
-			{min[0] + x2, min[1] + y2, min[2] - 16},
-			{min[0] + x3, min[1] + y3, min[2] - 16},
-			{min[0] + x4, min[1] + y4, min[2] - 16},
-
-			{min[0] + x1, min[1] + y1, min[2]}, 
-			{min[0] + x2, min[1] + y2, min[2]}, 
-			{min[0] + x3, min[1] + y3, min[2]}, 
+			{min[0] + x1, min[1] + y1, min[2]},
+			{min[0] + x2, min[1] + y2, min[2]},
+			{min[0] + x3, min[1] + y3, min[2]},
 			{min[0] + x4, min[1] + y4, min[2]},
 
-			{min[0],      min[1] + x4, min[2] + y4},
-			{min[0] - 16, min[1] + x4, min[2] + y4},
-			{min[0] - 16, min[1] + x3, min[2] + y3},
-			{min[0],      min[1] + x3, min[2] + y3},
+			{min[0] + x1, min[1] + y1, min[2] + 16}, 
+			{min[0] + x2, min[1] + y2, min[2] + 16}, 
+			{min[0] + x3, min[1] + y3, min[2] + 16}, 
+			{min[0] + x4, min[1] + y4, min[2] + 16},
 
+			{min[0] + 16, min[1] + x4, min[2] + y4},
+			{min[0],      min[1] + x4, min[2] + y4},
+			{min[0],      min[1] + x3, min[2] + y3},
+			{min[0] + 16, min[1] + x3, min[2] + y3},
+
+			{min[0] + 16, min[1] + x1, min[2] + y1}, 
 			{min[0],      min[1] + x1, min[2] + y1}, 
-			{min[0] - 16, min[1] + x1, min[2] + y1}, 
-			{min[0] - 16, min[1] + x2, min[2] + y2}, 
-			{min[0],      min[1] + x2, min[2] + y2},
+			{min[0],      min[1] + x2, min[2] + y2}, 
+			{min[0] + 16, min[1] + x2, min[2] + y2},
+
+			{min[0] + x1, min[1] + 16, min[2] + y1}, 
+			{min[0] + x2, min[1] + 16, min[2] + y2}, 
+			{min[0] + x3, min[1] + 16, min[2] + y3}, 
+			{min[0] + x4, min[1] + 16, min[2] + y4},
 
 			{min[0] + x1, min[1], min[2] + y1}, 
 			{min[0] + x2, min[1], min[2] + y2}, 
 			{min[0] + x3, min[1], min[2] + y3}, 
 			{min[0] + x4, min[1], min[2] + y4},
+			
+			
+			{min[0] + x1, min[1] + y1, max[2] - 16},
+			{min[0] + x2, min[1] + y2, max[2] - 16},
+			{min[0] + x3, min[1] + y3, max[2] - 16},
+			{min[0] + x4, min[1] + y4, max[2] - 16},
 
-			{min[0] + x1, min[1] - 16, min[2] + y1}, 
-			{min[0] + x2, min[1] - 16, min[2] + y2}, 
-			{min[0] + x3, min[1] - 16, min[2] + y3}, 
-			{min[0] + x4, min[1] - 16, min[2] + y4},
-			
-			
-			{min[0] + x1, min[1] + y1, max[2]},
-			{min[0] + x2, min[1] + y2, max[2]},
-			{min[0] + x3, min[1] + y3, max[2]},
+			{min[0] + x1, min[1] + y1, max[2]}, 
+			{min[0] + x2, min[1] + y2, max[2]}, 
+			{min[0] + x3, min[1] + y3, max[2]}, 
 			{min[0] + x4, min[1] + y4, max[2]},
 
-			{min[0] + x1, min[1] + y1, max[2] + 16}, 
-			{min[0] + x2, min[1] + y2, max[2] + 16}, 
-			{min[0] + x3, min[1] + y3, max[2] + 16}, 
-			{min[0] + x4, min[1] + y4, max[2] + 16},
+			{max[0] - 16, min[1] + x1, min[2] + y1},
+			{max[0] - 16, min[1] + x2, min[2] + y2},
+			{max[0] - 16, min[1] + x3, min[2] + y3},
+			{max[0] - 16, min[1] + x4, min[2] + y4},
 
-			{max[0], min[1] + x1, min[2] + y1},
-			{max[0], min[1] + x2, min[2] + y2},
-			{max[0], min[1] + x3, min[2] + y3},
+			{max[0], min[1] + x1, min[2] + y1}, 
+			{max[0], min[1] + x2, min[2] + y2}, 
+			{max[0], min[1] + x3, min[2] + y3}, 
 			{max[0], min[1] + x4, min[2] + y4},
-
-			{max[0] + 16, min[1] + x1, min[2] + y1}, 
-			{max[0] + 16, min[1] + x2, min[2] + y2}, 
-			{max[0] + 16, min[1] + x3, min[2] + y3}, 
-			{max[0] + 16, min[1] + x4, min[2] + y4},
-
-			{min[0] + x1, max[1] + 16, min[2] + y1}, 
-			{min[0] + x2, max[1] + 16, min[2] + y2}, 
-			{min[0] + x3, max[1] + 16, min[2] + y3}, 
-			{min[0] + x4, max[1] + 16, min[2] + y4},
 
 			{min[0] + x1, max[1], min[2] + y1}, 
 			{min[0] + x2, max[1], min[2] + y2}, 
 			{min[0] + x3, max[1], min[2] + y3}, 
-			{min[0] + x4, max[1], min[2] + y4}
+			{min[0] + x4, max[1], min[2] + y4},
+
+			{min[0] + x1, max[1] - 16, min[2] + y1}, 
+			{min[0] + x2, max[1] - 16, min[2] + y2}, 
+			{min[0] + x3, max[1] - 16, min[2] + y3}, 
+			{min[0] + x4, max[1] - 16, min[2] + y4}
 		};
 
 		for(int i = 0; i < 6; i++) {
+			if(!((i == 0 && sides & SIDE_TOP)
+				|| (i == 1 && sides & SIDE_WEST)
+				|| (i == 2 && sides & SIDE_SOUTH)
+				|| (i == 3 && sides & SIDE_TOP)
+				|| (i == 4 && sides & SIDE_EAST)
+				|| (i == 5 && sides & SIDE_NORTH)
+				))
+				continue;
 			Q_strcat(portal, sizeof(portal), SV_MakeCube(
 				wallMap[i * 8]    , wallMap[i * 8 + 1], wallMap[i * 8 + 2], wallMap[i * 8 + 3],
 				wallMap[i * 8 + 4], wallMap[i * 8 + 5], wallMap[i * 8 + 6], wallMap[i * 8 + 7]
 			));
 		}
-		
 	}
-
 	return portal;
 }
 
@@ -373,7 +386,7 @@ static int SV_MakeHypercube( void ) {
 		vs[1][2] = (height / 2);
 
 		SV_SetStroke(va("cube%i", i));
-		strcpy(&output[offset], SV_MakePortal(radius, vs[0], vs[1], -1, -1));
+		strcpy(&output[offset], SV_MakePortal(radius, vs[0], vs[1], -1, -1, SIDE_ALL));
 		offset += strlen(&output[offset]);
 	}
 
@@ -390,7 +403,13 @@ static int SV_MakeHypercube( void ) {
 		vs[1][2] = (height / 2) + 16;
 
 		SV_SetStroke(va("cube%i", i));
-		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 2, 3));
+		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 2, 3, SIDE_ALL));
+		offset += strlen(&output[offset]);
+		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 8, 9, SIDE_ALL));
+		offset += strlen(&output[offset]);
+		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 14, 15, SIDE_ALL));
+		offset += strlen(&output[offset]);
+		strcpy(&output[offset], SV_MakePortal(radius - 100, vs[0], vs[1], 20, 21, SIDE_ALL));
 		offset += strlen(&output[offset]);
 	}
 
@@ -739,7 +758,6 @@ static int SV_MakeMaze( void ) {
 	//   maybe add some nice windows that look like the skybox before impossibly going around the corridor
 	// something about recursive division seems beautiful relevent to square brushes
 	//   https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_division_method
-	int radius = 50;
 	int offset = 0;
 	int cellWidth = 200;
 	int cellHeight = 200;
@@ -781,7 +799,7 @@ static int SV_MakeMaze( void ) {
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
 		"\"ambient\" \"5\"\n"
-		"\"message\" \"Hypermaze\"\n"
+		"\"message\" \"As Above So Below\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_sunlight\" \"3500\"\n"
 		"\"gridsize\" \"512.0 512.0 512.0\"\n"
@@ -807,9 +825,130 @@ static int SV_MakeMaze( void ) {
 		vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
 		vs[1][2] = vs[0][2] + cellHeight;
 		
-		SV_SetStroke(va("cube%i", 0));
-		strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
-		offset += strlen(&output[offset]);
+		SV_SetStroke(va("cube%i", m));
+		for(int i = 0; i < 4; i++) {
+			if(i % 2 == 0) {
+				int start = (rand() % (gridCols / 2)); // + 2; // increase the chances of overlaping a corner by 2 ?
+				int end = (rand() % (gridCols / 2)); // + 2;
+				if(start > end) {
+					int tmp = start;
+					start = end;
+					end = tmp;
+				}
+				vec3_t windowOffsets[4] = {
+					{vs[0][0] + start * (cellWidth + thickness),             i == 2 ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight + thickness), vs[0][2]},
+					{vs[0][0] + start * (cellWidth + thickness) + cellWidth, i == 2 ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]},
+					
+					{vs[0][0] + end * (cellWidth + thickness),             i == 2 ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight) + thickness, vs[0][2]},
+					{vs[0][0] + end * (cellWidth + thickness) + cellWidth, i == 2 ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]}
+				};
+				int side = SIDE_NORTH;
+				if(i == 2) {
+					side = SIDE_SOUTH;
+				}
+				// TODO: something else instead of repeating  this?
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[0], windowOffsets[1], -3, 2, side));
+				offset += strlen(&output[offset]);
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[0], windowOffsets[1], 15, 23, side));
+				offset += strlen(&output[offset]);
+
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[2], windowOffsets[3], 3, 14, side));
+				offset += strlen(&output[offset]);
+				
+				int windowWalls[8][3] = {
+					{vs[0][0],                                   i == 2 ? (vs[0][1] - thickness) : vs[1][1], vs[0][2]},
+					{vs[0][0] + start * (cellWidth + thickness), i == 2 ? vs[0][1] : (vs[1][1] + thickness), vs[1][2]},
+					
+					// halfway from starting cell on top and bottom of radius
+					{vs[0][0] + start * (cellWidth + thickness) + (cellWidth / 2), 
+					 i == 2 ? (vs[0][1] - thickness) : vs[1][1], 
+					 vs[0][2]},
+					{vs[0][0] + end * (cellWidth + thickness) + (cellWidth / 2),   
+					 i == 2 ? vs[0][1] : (vs[1][1] + thickness), 
+					 vs[0][2] + (cellHeight - 100) / 2},
+					
+					{vs[0][0] + start * (cellWidth + thickness) + (cellWidth / 2), 
+					 i == 2 ? (vs[0][1] - thickness) : vs[1][1], 
+					 vs[1][2] - (cellHeight - 100) / 2},
+					{vs[0][0] + end * (cellWidth + thickness) + (cellWidth / 2),   
+					 i == 2 ? vs[0][1] : (vs[1][1] + thickness), 
+					 vs[1][2]},
+					
+					{vs[0][0] + (end + 1) * (cellWidth + thickness) - thickness,   i == 2 ? (vs[0][1] - thickness) : vs[1][1], vs[0][2]},
+					{vs[1][0],                                         i == 2 ? vs[0][1] : (vs[1][1] + thickness), vs[1][2]}
+				};
+				for(int j = 0; j < 4; j++) {
+					// skip side walls when spanning the whole length
+					if(start == 0 && j == 0) continue;
+					if(start == end && j > 0 && j < 3) continue;
+					if(end == gridCols/2 - 1 && j == 3) continue;
+
+					strcpy(&output[offset], SV_MakeWall(windowWalls[j*2], windowWalls[j*2+1]));
+					offset += strlen(&output[offset]);
+				}
+			} else {
+				int start = (rand() % (gridRows / 2)); // + 2; // increase the chances of overlaping a corner by 2 ?
+				int end = (rand() % (gridRows / 2)); // + 2;
+				if(start > end) {
+					int tmp = start;
+					start = end;
+					end = tmp;
+				}
+				vec3_t windowOffsets[4] = {
+					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth + thickness), vs[0][1] + start * (cellHeight + thickness),              vs[0][2]},
+					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             vs[0][1] + start * (cellHeight + thickness) + cellHeight, vs[1][2]},
+					
+					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth) + thickness, vs[0][1] + end * (cellHeight + thickness),              vs[0][2]},
+					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             vs[0][1] + end * (cellHeight + thickness) + cellHeight, vs[1][2]}
+				};
+				int side = SIDE_EAST;
+				if(i == 3) {
+					side = SIDE_WEST;
+				}
+				// TODO: something else instead of repeating  this?
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[0], windowOffsets[1], -3, 2, side));
+				offset += strlen(&output[offset]);
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[0], windowOffsets[1], 15, 23, side));
+				offset += strlen(&output[offset]);
+
+				strcpy(&output[offset], SV_MakePortal(50.0, windowOffsets[2], windowOffsets[3], 3, 14, side));
+				offset += strlen(&output[offset]);
+				
+				int windowWalls[8][3] = {
+					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], vs[0][1],                                    vs[0][2]},
+					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), vs[0][1] + start * (cellHeight + thickness), vs[1][2]},
+					
+					// halfway from starting cell on top and bottom of radius
+					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], 
+					 vs[0][1] + start * (cellHeight + thickness) + (cellHeight / 2), 
+  				 vs[0][2]},
+					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), 
+					 vs[0][1] + end * (cellHeight + thickness) + (cellHeight / 2),   
+  				 vs[0][2] + (cellHeight - 100) / 2},
+					
+					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], 
+					 vs[0][1] + start * (cellHeight + thickness) + (cellHeight / 2), 
+  				 vs[1][2] - (cellHeight - 100) / 2},
+					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), 
+					 vs[0][1] + end * (cellHeight + thickness) + (cellHeight / 2),   
+  				 vs[1][2]},
+					
+					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], vs[0][1] + (end + 1) * (cellWidth + thickness) - thickness,   vs[0][2]},
+					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), vs[1][1],                                                     vs[1][2]}
+				};
+				for(int j = 0; j < 4; j++) {
+					// skip side walls when spanning the whole length
+					if(start == 0 && j == 0) continue;
+					if(start == end && j > 0 && j < 3) continue;
+					if(end == gridRows/2 - 1 && j == 3) continue;
+
+					strcpy(&output[offset], SV_MakeWall(windowWalls[j*2], windowWalls[j*2+1]));
+					offset += strlen(&output[offset]);
+				}
+			}
+		}
+		//strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+		//offset += strlen(&output[offset]);
 
 		// interesting, I could make this non-recursive by scanning the maze for spaces
 		//   to divide basically using the character grid as it's own virtual call stack
@@ -899,14 +1038,16 @@ static int SV_MakeMaze( void ) {
 							 vs[0][1] + wallY * (cellHeight + thickness), 
 							 vs[0][2]},
 
-							{vs[0][0] + gap * (cellWidth + thickness) + thickness,
+							{vs[0][0] + gap * (cellWidth + thickness),
 							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-						offset += strlen(&output[offset]);
+						if(wall[1][0] != wall[0][0]) {
+							strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+							offset += strlen(&output[offset]);
+						}
 						int wall2[2][3] = {
-							{vs[0][0] + (gap + 1) * (cellWidth + thickness) - thickness,    
+							{vs[0][0] + (gap + 1) * (cellWidth + thickness),    
 							 vs[0][1] + wallY * (cellHeight + thickness), 
 							 vs[0][2]},
 
@@ -916,8 +1057,10 @@ static int SV_MakeMaze( void ) {
 							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-						offset += strlen(&output[offset]);
+						if(wall2[1][0] != wall2[0][0]) {
+							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+							offset += strlen(&output[offset]);
+						}
 					} else {
 						if(maxX - wallX <= 1) gap = wallX;
 						else gap = ((rand() % (maxX - wallX)) + wallX);
@@ -929,14 +1072,16 @@ static int SV_MakeMaze( void ) {
 							 vs[0][1] + wallY * (cellHeight + thickness), 
 							 vs[0][2]},
 
-							{vs[0][0] + gap * (cellWidth + thickness) + thickness,
+							{vs[0][0] + gap * (cellWidth + thickness),
 							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-						offset += strlen(&output[offset]);
+						if(wall[1][0] != wall[0][0]) {
+							strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+							offset += strlen(&output[offset]);
+						}
 						int wall2[2][3] = {
-							{vs[0][0] + (gap + 1) * (cellWidth + thickness) - thickness,    
+							{vs[0][0] + (gap + 1) * (cellWidth + thickness),    
 							 vs[0][1] + wallY * (cellHeight + thickness), 
 							 vs[0][2]},
 
@@ -944,8 +1089,10 @@ static int SV_MakeMaze( void ) {
 							 vs[0][1] + wallY * (cellHeight + thickness) + thickness,
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-						offset += strlen(&output[offset]);
+						if(wall2[1][0] != wall2[0][0]) {
+							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+							offset += strlen(&output[offset]);
+						}
 					}
 	//Com_Printf("Maze door: %i x %i\n", gap * 2 + 1, wallY * 2);
 					for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
@@ -969,14 +1116,16 @@ static int SV_MakeMaze( void ) {
 							 vs[0][2]},
 
 							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
-							 vs[0][1] + gap * (cellHeight + thickness) + thickness,
+							 vs[0][1] + gap * (cellHeight + thickness),
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-						offset += strlen(&output[offset]);
+						if(wall[1][1] != wall[0][1]) {
+							strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+							offset += strlen(&output[offset]);
+						}
 						int wall2[2][3] = {
 							{vs[0][0] + wallX * (cellWidth + thickness),    
-							 vs[0][1] + (gap + 1) * (cellHeight + thickness) - thickness, 
+							 vs[0][1] + (gap + 1) * (cellHeight + thickness), 
 							 vs[0][2]},
 
 							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
@@ -985,8 +1134,10 @@ static int SV_MakeMaze( void ) {
 							  : wallY * (cellHeight + thickness)),
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-						offset += strlen(&output[offset]);
+						if(wall2[1][1] != wall2[0][1]) {
+							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+							offset += strlen(&output[offset]);
+						}
 					} else {
 						if(maxY - wallY <= 1) gap = wallY;
 						else gap = ((rand() % (maxY - wallY)) + wallY);
@@ -999,22 +1150,26 @@ static int SV_MakeMaze( void ) {
 							 vs[0][2]},
 
 							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
-							 vs[0][1] + gap * (cellHeight + thickness) + thickness,
+							 vs[0][1] + gap * (cellHeight + thickness),
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
-						offset += strlen(&output[offset]);
+						if(wall[1][1] != wall[0][1]) {
+							strcpy(&output[offset], SV_MakeWall(wall[0], wall[1]));
+							offset += strlen(&output[offset]);
+						}
 						int wall2[2][3] = {
 							{vs[0][0] + wallX * (cellWidth + thickness),    
-							 vs[0][1] + (gap + 1) * (cellHeight + thickness) - thickness, 
+							 vs[0][1] + (gap + 1) * (cellHeight + thickness), 
 							 vs[0][2]},
 
 							{vs[0][0] + wallX * (cellWidth + thickness) + thickness,
 							 vs[0][1] + maxY * (cellHeight + thickness),
 							 vs[1][2]}
 						};
-						strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
-						offset += strlen(&output[offset]);
+						if(wall2[1][1] != wall2[0][1]) {
+							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
+							offset += strlen(&output[offset]);
+						}
 					}
 	//Com_Printf("Maze door: %i x %i\n", wallX * 2, gap * 2 + 1);
 					for(int fillY = (minY - 1) * 2; fillY <= maxY * 2; fillY++) {
@@ -1071,6 +1226,29 @@ static int SV_MakeMaze( void ) {
  	offset += strlen(&output[offset]);
 	
 	Hunk_FreeTempMemory( areaStack );
+	
+	for(int m = 0; m < 4; m++) {
+		// make offsets for centering
+		vs[0][0] = -(totalWidth / 2);
+		vs[1][0] = +(totalWidth / 2);
+
+		vs[0][1] = -(totalHeight / 2);
+		vs[1][1] = +(totalHeight / 2);
+
+		vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
+		vs[1][2] = vs[0][2] + cellHeight;
+		
+		// TODO: randomly place entry points
+		strcpy(&output[offset], 
+			va("{\n"
+			"\"classname\" \"info_player_start\"\n"
+			"\"origin\" \"%i %i %i\"\n"
+			"}\n", 
+			(int)(vs[0][0] + 64),
+			(int)(vs[0][1] + 64),
+			(int)(vs[0][2] + 32)));
+		offset += strlen(&output[offset]);
+	}
 
 	return offset;
 }
@@ -1084,9 +1262,27 @@ static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 }
 
 
-static int SV_MakeShootsAndLadders(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
-	static char plat[4096];
+static int SV_MakeShootsAndLadders() {
+	vec3_t  vs[2];
+	int cellWidth = 200;
+	int cellHeight = 200;
+	int m = 0;
+	int spacing = 200;
+	int totalWidth = 1000;
+	int totalHeight = 1000;
+
 	// TODO: ramps and wind tunnels like Edge of Oblivion with different shaped pyramids and stuff in space
+	vs[0][0] = -(totalWidth / 2);
+	vs[1][0] = +(totalWidth / 2);
+
+	vs[0][1] = -(totalHeight / 2);
+	vs[1][1] = +(totalHeight / 2);
+
+	vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
+	vs[1][2] = vs[0][2] + cellHeight;
+
+	SV_MakePlatform(vs[0], vs[1], vs[0], vs[1]);
+
 	return 0;
 }
 
@@ -1469,10 +1665,16 @@ Com_Printf("Beginning header\n");
 
 
 int SV_MakeMap( void ) {
-
-	int length = SV_MakeMaze();
-
+	int length = 0;
 	int result = CM_LoadMapFromMemory();
+
+	if(result == 0) {
+		length = SV_MakeMaze();
+	} else if (result == 1) {
+		length = SV_MakeHypercube();
+	} else if (result == 2) {
+		length = SV_MakeShootsAndLadders();
+	}
 
 	fileHandle_t mapfile = FS_SV_FOpenFileWrite( va("*memory%i.map", result) );
 	FS_Write( output, length, mapfile );    // overwritten later
