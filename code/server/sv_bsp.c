@@ -233,6 +233,7 @@ static void SV_MakeCircle(int splits, int i, float radius, float width, float he
 
 static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment, int maxSegment, int sides ) {
 	static char portal[4096*24];
+	int thickness = 16;
 	int splits = 24.0;
 	int offset = floor(splits / 8.0);
 	portal[0] = '\0';
@@ -261,25 +262,25 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x3, min[1] + y3, min[2]},
 			{min[0] + x4, min[1] + y4, min[2]},
 
-			{min[0] + x1, min[1] + y1, min[2] + 16}, 
-			{min[0] + x2, min[1] + y2, min[2] + 16}, 
-			{min[0] + x3, min[1] + y3, min[2] + 16}, 
-			{min[0] + x4, min[1] + y4, min[2] + 16},
+			{min[0] + x1, min[1] + y1, min[2] + thickness}, 
+			{min[0] + x2, min[1] + y2, min[2] + thickness}, 
+			{min[0] + x3, min[1] + y3, min[2] + thickness}, 
+			{min[0] + x4, min[1] + y4, min[2] + thickness},
 
-			{min[0] + 16, min[1] + x4, min[2] + y4},
+			{min[0] + thickness, min[1] + x4, min[2] + y4},
 			{min[0],      min[1] + x4, min[2] + y4},
 			{min[0],      min[1] + x3, min[2] + y3},
-			{min[0] + 16, min[1] + x3, min[2] + y3},
+			{min[0] + thickness, min[1] + x3, min[2] + y3},
 
-			{min[0] + 16, min[1] + x1, min[2] + y1}, 
+			{min[0] + thickness, min[1] + x1, min[2] + y1}, 
 			{min[0],      min[1] + x1, min[2] + y1}, 
 			{min[0],      min[1] + x2, min[2] + y2}, 
-			{min[0] + 16, min[1] + x2, min[2] + y2},
+			{min[0] + thickness, min[1] + x2, min[2] + y2},
 
-			{min[0] + x1, min[1] + 16, min[2] + y1}, 
-			{min[0] + x2, min[1] + 16, min[2] + y2}, 
-			{min[0] + x3, min[1] + 16, min[2] + y3}, 
-			{min[0] + x4, min[1] + 16, min[2] + y4},
+			{min[0] + x1, min[1] + thickness, min[2] + y1}, 
+			{min[0] + x2, min[1] + thickness, min[2] + y2}, 
+			{min[0] + x3, min[1] + thickness, min[2] + y3}, 
+			{min[0] + x4, min[1] + thickness, min[2] + y4},
 
 			{min[0] + x1, min[1], min[2] + y1}, 
 			{min[0] + x2, min[1], min[2] + y2}, 
@@ -287,20 +288,20 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x4, min[1], min[2] + y4},
 			
 			
-			{min[0] + x1, min[1] + y1, max[2] - 16},
-			{min[0] + x2, min[1] + y2, max[2] - 16},
-			{min[0] + x3, min[1] + y3, max[2] - 16},
-			{min[0] + x4, min[1] + y4, max[2] - 16},
+			{min[0] + x1, min[1] + y1, max[2] - thickness},
+			{min[0] + x2, min[1] + y2, max[2] - thickness},
+			{min[0] + x3, min[1] + y3, max[2] - thickness},
+			{min[0] + x4, min[1] + y4, max[2] - thickness},
 
 			{min[0] + x1, min[1] + y1, max[2]}, 
 			{min[0] + x2, min[1] + y2, max[2]}, 
 			{min[0] + x3, min[1] + y3, max[2]}, 
 			{min[0] + x4, min[1] + y4, max[2]},
 
-			{max[0] - 16, min[1] + x1, min[2] + y1},
-			{max[0] - 16, min[1] + x2, min[2] + y2},
-			{max[0] - 16, min[1] + x3, min[2] + y3},
-			{max[0] - 16, min[1] + x4, min[2] + y4},
+			{max[0] - thickness, min[1] + x1, min[2] + y1},
+			{max[0] - thickness, min[1] + x2, min[2] + y2},
+			{max[0] - thickness, min[1] + x3, min[2] + y3},
+			{max[0] - thickness, min[1] + x4, min[2] + y4},
 
 			{max[0], min[1] + x1, min[2] + y1}, 
 			{max[0], min[1] + x2, min[2] + y2}, 
@@ -312,10 +313,10 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x3, max[1], min[2] + y3}, 
 			{min[0] + x4, max[1], min[2] + y4},
 
-			{min[0] + x1, max[1] - 16, min[2] + y1}, 
-			{min[0] + x2, max[1] - 16, min[2] + y2}, 
-			{min[0] + x3, max[1] - 16, min[2] + y3}, 
-			{min[0] + x4, max[1] - 16, min[2] + y4}
+			{min[0] + x1, max[1] - thickness, min[2] + y1}, 
+			{min[0] + x2, max[1] - thickness, min[2] + y2}, 
+			{min[0] + x3, max[1] - thickness, min[2] + y3}, 
+			{min[0] + x4, max[1] - thickness, min[2] + y4}
 		};
 
 		for(int i = 0; i < 6; i++) {
@@ -951,14 +952,17 @@ static int SV_MakeMaze( void ) {
 		//offset += strlen(&output[offset]);
 		
 		
-		// TODO: randomly select 3 holes in every maze, 
+		// TODO: save holes higher up so teleporters and trigger_push can be added in seperate loops
 		//   the top of the previous maze matches the bottom of the next maze
-		// sort the holes then draw the floors and ceilings inbetween.
 		int holes[3];
+
+		// randomly select 3 holes in every maze, 
 		for(int h = 0; h < 3; h++) {
-			holes[h] = rand() % (gridCols * gridRows);
+			holes[h] = rand() % ((gridCols / 2) * (gridRows / 2));
 		}
-		int min, max, med;//assume values are there for a b c
+
+		// sort the holes
+		int min, max, med;
 		if( holes[0] > holes[1] ){
 		 if( holes[0] > holes[2] ){
 		  max = holes[0];
@@ -993,10 +997,65 @@ static int SV_MakeMaze( void ) {
 		holes[0] = min;
 		holes[1] = med;
 		holes[2] = max;
+
+		// draw the floors and ceilings inbetween
 		for(int hi = 0; hi < 3; hi++) {
-			int x = holes[hi] % gridCols;
-			int y = holes[hi] / gridCols;
+			int x = holes[hi] % (gridCols / 2);
+			int y = holes[hi] / (gridCols / 2);
+			int x0 = hi > 0 ? holes[hi-1] % (gridCols / 2) : 0;
+			int y0 = hi > 0 ? holes[hi-1] / (gridCols / 2) : 0;
+			int x2 = hi < 2 ? holes[hi+1] % (gridCols / 2) : 0;
+			int y2 = hi < 2 ? holes[hi+1] / (gridCols / 2) : 0;
 			
+
+			// make a hole in the floor, then fill it in 
+			int floorOffsets[8][3] = {
+				{vs[0][0], vs[0][1] + y * (cellHeight + thickness), vs[0][2]}, // fill in wide side
+				{vs[1][0], (hi == 0 ? vs[0][1] : (vs[0][1] + (y0 + 1) * (cellHeight + thickness))), vs[0][2] - thickness},
+
+				// fill in long sides, up to hole
+				{hi > 0 && y0 == y ? (vs[0][0] + (x0 + 1) * (cellWidth + thickness)) : vs[0][0], 
+				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
+				 vs[0][2]},
+				{vs[0][0] + x * (cellWidth + thickness), 
+				 vs[0][1] + y * (cellHeight + thickness), 
+				 vs[0][2] - thickness},
+				
+				{vs[0][0] + (x + 1) * (cellWidth + thickness), 
+				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
+				 vs[0][2]},
+				{hi < 2 && y2 == y ? (vs[0][0] + x2 * (cellWidth + thickness)) : vs[1][0], 
+				 vs[0][1] + y * (cellHeight + thickness), 
+				 vs[0][2] - thickness},
+
+				{vs[0][0], (hi == 2 ? vs[1][1] : (vs[0][1] + y2 * (cellHeight + thickness))), vs[0][2]},
+				{vs[1][0], vs[0][1] + (y + 1) * (cellHeight + thickness), vs[0][2] - thickness}, // fill in wide side
+				// TODO: add bottom or top of next floor here
+			};
+
+			for(int w = 0; w < 4; w++) {
+				if(y == 0 && w == 0) continue;
+				if(x == 0 && w == 1) continue;
+				if(x == (gridCols / 2) - 1 && w == 2) continue;
+				if(y == (gridRows / 2) - 1 && w == 3) continue;
+				// zero thickness walls just means one of the squares is on the same line or next to each other
+				if(floorOffsets[w*2][1] - floorOffsets[w*2+1][1] <= 0) continue;
+				if(floorOffsets[w*2+1][0] - floorOffsets[w*2][0] <= 0) continue;
+				/*
+				if(y0 == y && x0 + 1 == x && w > 0 && w < 3) continue;
+				if(y2 == y && x2 == x + 1 && w > 0 && w < 3) continue;
+				if(y0 == y && w == 3 && hi > 0 && hi < 3) continue;
+				if(y2 == y && w == 0 && hi > 0 && hi < 3) continue;
+				if(y0 + 1 == y && w == 3 && hi > 0 && hi < 3) continue;
+				if(y2 == y + 1 && w == 0 && hi > 0 && hi < 3) continue;
+				*/
+				// TODO: skip spacing floor if there is no space between holes
+				// continue;
+				//Com_Printf("Making wall: %i x %i <> %i x %i\n", floorOffsets[w*2][0], floorOffsets[w*2][1],
+				//	floorOffsets[w*2+1][0], floorOffsets[w*2+1][1]);
+				strcpy(&output[offset], SV_MakeWall(floorOffsets[w*2], floorOffsets[w*2+1]));
+				offset += strlen(&output[offset]);
+			}
 		}
 
 		// build inner maze using a areaStack to list ever division, skips divisions that would be too small
