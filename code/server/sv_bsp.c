@@ -1010,47 +1010,38 @@ static int SV_MakeMaze( void ) {
 
 			// make a hole in the floor, then fill it in 
 			int floorOffsets[8][3] = {
-				{vs[0][0], vs[0][1] + y * (cellHeight + thickness), vs[0][2]}, // fill in wide side
-				{vs[1][0], (hi == 0 ? vs[0][1] : (vs[0][1] + (y0 + 1) * (cellHeight + thickness))), vs[0][2] - thickness},
+				{vs[0][0], hi == 0 ? vs[0][1] : (vs[0][1] + (y0 + 1) * (cellHeight + thickness)), vs[0][2]}, // fill in wide side
+				{vs[1][0], vs[0][1] + y * (cellHeight + thickness), vs[0][2] + thickness},
 
 				// fill in long sides, up to hole
 				{hi > 0 && y0 == y ? (vs[0][0] + (x0 + 1) * (cellWidth + thickness)) : vs[0][0], 
-				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
+				 vs[0][1] + y * (cellHeight + thickness), 
 				 vs[0][2]},
 				{vs[0][0] + x * (cellWidth + thickness), 
-				 vs[0][1] + y * (cellHeight + thickness), 
-				 vs[0][2] - thickness},
+				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
+				 vs[0][2] + thickness},
 				
 				{vs[0][0] + (x + 1) * (cellWidth + thickness), 
-				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
-				 vs[0][2]},
-				{hi < 2 && y2 == y ? (vs[0][0] + x2 * (cellWidth + thickness)) : vs[1][0], 
 				 vs[0][1] + y * (cellHeight + thickness), 
-				 vs[0][2] - thickness},
+ 				 vs[0][2]},
+				{hi < 2 && y2 == y ? (vs[0][0] + x2 * (cellWidth + thickness)) : vs[1][0], 
+				 vs[0][1] + y * (cellHeight + thickness) + cellHeight + thickness, 
+ 				 vs[0][2] + thickness},
 
-				{vs[0][0], (hi == 2 ? vs[1][1] : (vs[0][1] + y2 * (cellHeight + thickness))), vs[0][2]},
-				{vs[1][0], vs[0][1] + (y + 1) * (cellHeight + thickness), vs[0][2] - thickness}, // fill in wide side
+				{vs[0][0], vs[0][1] + (y + 1) * (cellHeight + thickness), vs[0][2]},
+				{vs[1][0], hi == 2 ? vs[1][1] : (vs[0][1] + y2 * (cellHeight + thickness)), vs[0][2] + thickness}, // fill in wide side
 				// TODO: add bottom or top of next floor here
 			};
 
 			for(int w = 0; w < 4; w++) {
+				// skip spacing floor if there is no space between holes
 				if(y == 0 && w == 0) continue;
 				if(x == 0 && w == 1) continue;
 				if(x == (gridCols / 2) - 1 && w == 2) continue;
 				if(y == (gridRows / 2) - 1 && w == 3) continue;
 				// zero thickness walls just means one of the squares is on the same line or next to each other
-				if(floorOffsets[w*2][1] - floorOffsets[w*2+1][1] <= 0) continue;
+				if(floorOffsets[w*2+1][1] - floorOffsets[w*2][1] <= 0) continue;
 				if(floorOffsets[w*2+1][0] - floorOffsets[w*2][0] <= 0) continue;
-				/*
-				if(y0 == y && x0 + 1 == x && w > 0 && w < 3) continue;
-				if(y2 == y && x2 == x + 1 && w > 0 && w < 3) continue;
-				if(y0 == y && w == 3 && hi > 0 && hi < 3) continue;
-				if(y2 == y && w == 0 && hi > 0 && hi < 3) continue;
-				if(y0 + 1 == y && w == 3 && hi > 0 && hi < 3) continue;
-				if(y2 == y + 1 && w == 0 && hi > 0 && hi < 3) continue;
-				*/
-				// TODO: skip spacing floor if there is no space between holes
-				// continue;
 				//Com_Printf("Making wall: %i x %i <> %i x %i\n", floorOffsets[w*2][0], floorOffsets[w*2][1],
 				//	floorOffsets[w*2+1][0], floorOffsets[w*2+1][1]);
 				strcpy(&output[offset], SV_MakeWall(floorOffsets[w*2], floorOffsets[w*2+1]));
