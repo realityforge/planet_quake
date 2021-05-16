@@ -18,7 +18,7 @@ echo_cmd=@echo
 Q=@
 endif
 
--include local.make
+-include Makefile.local
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
   PLATFORM=mingw32
@@ -65,8 +65,3 @@ else
   endif
 endif
 export CROSS_COMPILING
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-	targets tools toolsclean mkdirs
-.DEFAULT_GOAL := instructions

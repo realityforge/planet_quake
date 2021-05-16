@@ -2,6 +2,7 @@ MKFILE      := $(lastword $(MAKEFILE_LIST))
 
 include make/platform.make
 include make/configure.make
+include make/platform_os.make
 
 RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(RENDERER_PREFIX)_opengl2_
@@ -51,12 +52,23 @@ define DO_REF_STR
 endef
 
 mkdirs:
+	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
+	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
 
 default:
 	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
 	$(MAKE) -f $(MKFILE) B=$(BD) $(TARGET)$(SHLIBNAME)
+
+#debug:
+#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
+#	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
+
+#release:
+#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
+#	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+
 
 $(B)/rend2/%.o: code/qcommon/%.c
 	$(DO_REND_CC)

@@ -229,3 +229,16 @@ ifeq ($(MINGW),1)
 endif
 endif
 endif
+
+#############################################################################
+# DEPENDENCIES
+#############################################################################
+
+.PHONY: all clean clean2 clean-debug clean-release copyfiles \
+	debug default dist distclean makedirs release \
+	targets tools toolsclean mkdirs
+
+.DEFAULT_GOAL := instructions
+
+instructions:
+	@echo "make -f make/game_baseq3a"
