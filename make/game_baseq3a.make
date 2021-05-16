@@ -8,9 +8,9 @@ ifndef MOD
 MOD=baseq3a
 endif
 
-QADIR=$(MOUNT_DIR)/../qvms/baseq3/code/game
-CGDIR=$(MOUNT_DIR)/../qvms/baseq3/code/cgame
-UIDIR=$(MOUNT_DIR)/../qvms/baseq3/code/q3_ui
+QADIR=$(MOUNT_DIR)/../qvms/baseq3a/code/game
+CGDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/cgame
+UIDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/q3_ui
 
 ifndef SHLIBNAME
   SHLIBNAME=$(ARCH).$(SHLIBEXT)

@@ -165,11 +165,13 @@ static cvarTable_t gameCvarTable[] = {
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
-	{ &g_rotation, "g_rotation", "", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_rotation, "g_rotation", "", CVAR_ARCHIVE, 0, qfalse }
 
-	{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "
-		"kick clientkick g_gametype g_unlagged g_warmup timelimit",
+#ifdef USE_SERVER_ROLES
+	,{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "
+		"kick clientkick g_gametype g_unlagged g_warmup timelimit"
 		"fraglimit capturelimit", CVAR_ARCHIVE, 0, qfalse}
+#endif
 };
 
 

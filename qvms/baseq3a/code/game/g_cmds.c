@@ -1295,6 +1295,7 @@ static const char *voteCommands[] = {
 ban, , ,, shuffle, mute, , , 
 */
 
+#ifdef USE_SERVER_ROLES
 static	char		props[BIG_INFO_STRING];
 char *TokenizeAlphanumeric(const char *text_in, int *count) {
 	int c = 0, r = 0, len = strlen(text_in);
@@ -1324,6 +1325,7 @@ char *TokenizeAlphanumeric(const char *text_in, int *count) {
 	}
 	return props;
 }
+#endif
 
 /*
 ==================
@@ -1356,6 +1358,7 @@ static qboolean ValidVoteCommand( int clientNum, char *command )
 	while ( *command == ' ' || *command == '\t' )
 		command++;
 		
+#ifdef USE_SERVER_ROLES
 	if(g_callvotable && g_callvotable.string[0]) {
 		int len, voteI;
 		char *votables = TokenizeAlphanumeric(g_callvotable.string, &int);
@@ -1369,7 +1372,9 @@ static qboolean ValidVoteCommand( int clientNum, char *command )
 			trap_SendServerCommand( clientNum, "print \"Invalid vote command.\nVote commands are: \n" );
 			return qfalse;
 		}
-	} else {
+	} else 
+#endif
+	{
 		for ( i = 0; i < ARRAY_LEN( voteCommands ); i++ ) {
 			if ( !Q_stricmp( buf, voteCommands[i] ) ) {
 				break;

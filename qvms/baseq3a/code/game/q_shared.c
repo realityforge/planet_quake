@@ -3,6 +3,10 @@
 // q_shared.c -- stateless support routines that are included in each code dll
 #include "q_shared.h"
 
+#ifdef USE_SERVER_ROLES
+#define MAX_CLIENT_ROLES 24
+#endif
+
 float Com_Clamp( float min, float max, float value ) {
 	if ( value < min ) {
 		return min;
