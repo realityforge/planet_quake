@@ -226,6 +226,42 @@ float dvrYOffset = 0;
 cvar_t  *r_inputShader;
 cvar_t  *r_cursorShader;
 
+// for modular renderer
+#ifdef USE_RENDERER_DLOPEN
+void QDECL Com_Error( errorParm_t code, const char *fmt, ... )
+{
+	char buf[ 4096 ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+	ri.Error( code, "%s", buf );
+}
+
+void QDECL Com_Printf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+
+	ri.Printf( PRINT_ALL, "%s", buf );
+}
+
+void QDECL Com_DPrintf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+
+	ri.Printf( PRINT_DEVELOPER, "%s", buf );
+}
+#endif
+
+
 /*
 ** InitOpenGL
 **

@@ -4421,7 +4421,7 @@ static void ScanAndLoadShaderFiles( void )
   
   const char *shaderText = FindShaderInShaderText("palettes/default");
 	if ( !shaderText ) {
-    Com_Printf("Error: parsing default palette\n");
+    ri.Printf(PRINT_WARNING, "Error: parsing default palette\n");
   } else {
     ParseShader( &shaderText );
   }

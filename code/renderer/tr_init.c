@@ -268,6 +268,17 @@ void QDECL Com_Printf( const char *fmt, ... )
 
 	ri.Printf( PRINT_ALL, "%s", buf );
 }
+
+void QDECL Com_DPrintf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+
+	ri.Printf( PRINT_DEVELOPER, "%s", buf );
+}
 #endif
 
 

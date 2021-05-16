@@ -75,11 +75,11 @@ endif
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),0)
-USE_VULKAN=1
+  USE_VULKAN=1
 endif
 
 ifneq ($(USE_VULKAN),0)
-USE_VULKAN_API=1
+  USE_VULKAN_API=1
 endif
 
 
@@ -226,5 +226,6 @@ ifeq ($(USE_CURL_DLOPEN),1)
 else
 ifeq ($(MINGW),1)
   BASE_CFLAGS += -DCURL_STATICLIB
+endif
 endif
 endif

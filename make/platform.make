@@ -68,5 +68,5 @@ export CROSS_COMPILING
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
 	debug default dist distclean makedirs release \
-	targets tools toolsclean
+	targets tools toolsclean mkdirs
 .DEFAULT_GOAL := instructions

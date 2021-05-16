@@ -1,7 +1,9 @@
-TARGET		:= botlib
-GIT_VERSION := $(shell git describe --abbrev=6 --dirty --always --tags)
-MKDIR=mkdir
 MKFILE=$(lastword $(MAKEFILE_LIST)) 
+
+include make/platform.make
+include make/configure.make
+
+TARGET		:= botlib
 
 SOURCES  := code/botlib
 INCLUDES := code/botlib
@@ -13,7 +15,7 @@ CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
 CPPFILES   := $(foreach dir,$(CPPSOURCES), $(wildcard $(dir)/*.cpp))
 BINFILES := $(foreach dir,$(DATA), $(wildcard $(dir)/*.bin))
 OBJS     := $(addsuffix .o,$(BINFILES)) $(CFILES:.c=.o) $(CPPFILES:.cpp=.o)
-Q3OBJ    := $(addprefix build/botlib/,$(notdir $(OBJS)))
+Q3OBJ    := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -35,16 +37,16 @@ define DO_BOTLIB_CC
 endef
 
 mkdirs:
-	@if [ ! -d build/botlib ];then $(MKDIR) build/botlib;fi
+	@if [ ! -d $(B)/botlib ];then $(MKDIR) $(B)/botlib;fi
 
 default:
-	$(MAKE) -f $(MKFILE) mkdirs
-	$(MAKE) -f $(MKFILE) "$(TARGET).$(SHLIBEXT)"
+	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) $(TARGET).$(SHLIBEXT)
 
-build/botlib/%.o: code/qcommon/%.c
+$(B)/botlib/%.o: code/qcommon/%.c
 	$(DO_BOTLIB_CC)
 
-build/botlib/%.o: code/botlib/%.c
+$(B)/botlib/%.o: code/botlib/%.c
 	$(DO_BOTLIB_CC)
 
 $(TARGET).$(SHLIBEXT): $(Q3OBJ) 
@@ -52,7 +54,7 @@ $(TARGET).$(SHLIBEXT): $(Q3OBJ)
 	@$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
 
 clean:
-	@rm -rf build/botlib
+	@rm -rf $(B)/botlib
 
 .PHONY: default
 .DEFAULT_GOAL := default
