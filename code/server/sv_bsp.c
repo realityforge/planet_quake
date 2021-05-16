@@ -948,8 +948,6 @@ static int SV_MakeMaze( void ) {
 				}
 			}
 		}
-		//strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
-		//offset += strlen(&output[offset]);
 		
 		
 		// TODO: save holes higher up so teleporters and trigger_push can be added in seperate loops
@@ -1338,6 +1336,8 @@ static int SV_MakeMaze( void ) {
 			(int)(vs[0][2] + 32)));
 		offset += strlen(&output[offset]);
 	}
+	
+	// TODO: jumppads / teleporters / pickups
 
 	return offset;
 }

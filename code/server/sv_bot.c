@@ -175,6 +175,10 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int ty
 			Com_Error(ERR_DROP, S_COLOR_RED "Exit: %s", str);
 			break;
 		}
+		case PRT_DEBUG: {
+			Com_Printf("%s", str);
+			break;
+		}
 		default: {
 			Com_Printf("unknown print type\n");
 			break;

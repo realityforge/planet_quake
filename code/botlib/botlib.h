@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * $Archive: /source/code/game/botai.h $
  *
  *****************************************************************************/
+#ifndef __BOTLIB_H__
+#define __BOTLIB_H__
+
 
 #define	BOTLIB_API_VERSION		2
 
@@ -58,6 +61,7 @@ struct weaponinfo_s;
 #define PRT_ERROR				3
 #define PRT_FATAL				4
 #define PRT_EXIT				5
+#define PRT_DEBUG				6
 
 //console message types
 #define CMS_NORMAL				0
@@ -521,3 +525,5 @@ name:						default:			module(s):			description:
 "max_levelitems"			"256"				be_ai_goal.c		maximum number of level items
 
 */
+
+#endif

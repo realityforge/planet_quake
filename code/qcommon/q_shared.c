@@ -23,6 +23,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.c -- stateless support routines that are included in each code dll
 #include "q_shared.h"
 
+#if defined(BOTLIB)
+#include "../botlib/botlib.h"
+#include "../botlib/be_interface.h"
+#endif
+
 float Com_Clamp( float min, float max, float value ) {
 	if ( value < min ) {
 		return min;
