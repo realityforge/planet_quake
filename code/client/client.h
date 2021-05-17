@@ -376,6 +376,7 @@ typedef struct {
 	qboolean  firstClick;
 	qboolean	soundRegistered;
 	qboolean	uiStarted;
+	qboolean	rmlStarted;
 	qboolean	cgameStarted;
 
 	int			framecount;

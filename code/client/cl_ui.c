@@ -1237,12 +1237,76 @@ void CL_ShutdownUI( void ) {
 	uivm = 0;
 	FS_VM_CloseFiles( H_Q3UI );
 
+	if(cls.rmlStarted)
+		Rml_Shutdown();
 #ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
 	cls.cursory = 0;
 	cls.uiGlConfig = NULL;
 	cls.numUiPatches = 0;
 #endif
+}
+
+static fileHandle_t CL_RmlOpen(const char * filename) {
+	fileHandle_t h;
+	Com_Printf("RmlOpen: %s\n", filename);
+	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
+	return h;
+}
+
+static void CL_RmlClose(fileHandle_t h) {
+	FS_FCloseFile( h );
+}
+
+static fileHandle_t CL_RmlRead(const char * filename) {
+	fileHandle_t h;
+	Com_Printf("RmlOpen: %s\n", filename);
+	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
+	return h;
+}
+
+static fileHandle_t CL_RmlSeek(const char * filename) {
+	fileHandle_t h;
+	Com_Printf("RmlOpen: %s\n", filename);
+	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
+	return h;
+}
+
+typedef enum 
+{
+  LT_ALWAYS = 0,
+  LT_ERROR,
+  LT_ASSERT,
+  LT_WARNING,
+  LT_INFO,
+  LT_DEBUG,
+  LT_MAX
+} rmlLog_t;
+
+static qboolean CL_RmlLogMessage(rmlLog_t type, const char *message) {
+	switch(type) {
+		case LT_ALWAYS:
+		Com_Printf("RMLUI: %s\n", message);
+		break;
+	  case LT_ERROR:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+		break;
+	  case LT_ASSERT:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+		break;
+	  case LT_WARNING:
+		Com_Printf(S_COLOR_YELLOW "RMLUI: %s\n", message);
+		break;
+	  case LT_INFO:
+		Com_Printf(S_COLOR_WHITE "RMLUI: %s\n", message);
+		break;
+	  case LT_DEBUG:
+		Com_DPrintf("RMLUI: %s\n", message);
+		break;
+	  case LT_MAX:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+	}
+	return qtrue;
 }
 
 
@@ -1311,12 +1375,32 @@ void CL_InitUI( qboolean loadNew ) {
 	}
 
 	RmlFileInterface files;
-	//RmlRenderInterface renderer;
-	//RmlSystemInterface system;
+	files.Open = CL_RmlOpen;
+	files.Close = CL_RmlClose;
+	RmlRenderInterface renderer;
+	RmlSystemInterface system;
+	system.LogMessage = CL_RmlLogMessage;
 	Rml_SetFileInterface(&files);
-	//Rml_SetRenderInterface(renderer);
-	//Rml_SetSystemInterface(system);
-	//Rml_Initialize();
+	Rml_SetRenderInterface(&renderer);
+	Rml_SetSystemInterface(&system);
+	if(!Rml_Initialize()) {
+		Com_Printf("RMLUI: Error initializing.");
+	}
+	cls.rmlStarted = qtrue;
+	int dimensions[2] = {cls.glconfig.vidWidth, cls.glconfig.vidWidth};
+	qhandle_t ctx = Rml_CreateContext("default", dimensions);
+	
+	qhandle_t doc = Rml_LoadDocument(ctx, "assets/demo.rml");
+
+	if (doc)
+	{
+		Rml_ShowDocument(doc);
+		Com_Printf("RMLUI: Document loaded\n");
+	}
+	else
+	{
+		Com_Printf("RMLUI: Document failed\n");
+	}
 
 	/*
 	
@@ -1338,7 +1422,98 @@ void CL_InitUI( qboolean loadNew ) {
 
 	if (!Rml::Initialise())
 		return 1;
+		struct FontFace {
+		Rml::String filename;
+		bool fallback_face;
+	};
+	
+	FontFace font_faces[] = {
+		{ "LatoLatin-Regular.ttf",    false },
+		{ "LatoLatin-Italic.ttf",     false },
+		{ "LatoLatin-Bold.ttf",       false },
+		{ "LatoLatin-BoldItalic.ttf", false },
+		{ "NotoEmoji-Regular.ttf",    true  },
+	};
+
+	for (const FontFace& face : font_faces)
+	{
+		Rml::LoadFontFace("assets/" + face.filename, face.fallback_face);
+	}
+
+		Rml::Context* Context = Rml::CreateContext(,
+			Rml::Vector2i(window_width, window_height));
+	
+		Rml::ElementDocument* Document = Context->LoadDocument("assets/demo.rml");
+				
+		if (Document)
+		{
+			Document->Show();
+			fprintf(stdout, "\nDocument loaded");
+		}
+		else
+		{
+			fprintf(stdout, "\nDocument is nullptr");
+		}
+
+		bool done = false;
+
+		while (!done)
+		{
+			SDL_Event event;
+
+			SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+			SDL_RenderClear(renderer);
+
+			Context->Render();
+			SDL_RenderPresent(renderer);
+
+			while (SDL_PollEvent(&event))
+			{
+				switch (event.type)
+				{
+				case SDL_QUIT:
+					done = true;
+					break;
+
+				case SDL_MOUSEMOTION:
+					Context->ProcessMouseMove(event.motion.x, event.motion.y, SystemInterface.GetKeyModifiers());
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					Context->ProcessMouseButtonDown(SystemInterface.TranslateMouseButton(event.button.button), SystemInterface.GetKeyModifiers());
+					break;
+
+				case SDL_MOUSEBUTTONUP:
+					Context->ProcessMouseButtonUp(SystemInterface.TranslateMouseButton(event.button.button), SystemInterface.GetKeyModifiers());
+					break;
+
+				case SDL_MOUSEWHEEL:
+					Context->ProcessMouseWheel(float(event.wheel.y), SystemInterface.GetKeyModifiers());
+					break;
+
+				case SDL_KEYDOWN:
+				{
+					// Intercept F8 key stroke to toggle RmlUi's visual debugger tool
+					if (event.key.keysym.sym == SDLK_F8)
+					{
+						Rml::Debugger::SetVisible(!Rml::Debugger::IsVisible());
+						break;
+					}
+
+					Context->ProcessKeyDown(SystemInterface.TranslateKey(event.key.keysym.sym), SystemInterface.GetKeyModifiers());
+					break;
+				}
+
+				default:
+					break;
+				}
+			}
+			Context->Update();
+		}
+
+		Rml::Shutdown();
+
 	*/
+	
 }
 
 

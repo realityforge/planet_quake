@@ -2092,11 +2092,13 @@ distclean: clean
 # DEPENDENCIES
 #############################################################################
 
-D_FILES=$(shell find . -name '*.d')
+ifdef B
+D_FILES=$(shell find $(B) -name '*.d')
+endif
 
-#ifneq ($(strip $(D_FILES)),)
- # include $(D_FILES)
-#endif
+ifneq ($(strip $(D_FILES)),)
+  include $(D_FILES)
+endif
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
 	debug default dist distclean makedirs release \
