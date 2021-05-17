@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 
 #include "../botlib/botlib.h"
+#include <RmlUi/Wrapper.h>
 
 extern	botlib_export_t	*botlib_export;
 
@@ -1308,6 +1309,36 @@ void CL_InitUI( qboolean loadNew ) {
 		// init for this gamestate
 		VM_Call( uivms[uivm], 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
+
+	RmlFileInterface files;
+	//RmlRenderInterface renderer;
+	//RmlSystemInterface system;
+	Rml_SetFileInterface(&files);
+	//Rml_SetRenderInterface(renderer);
+	//Rml_SetSystemInterface(system);
+	//Rml_Initialize();
+
+	/*
+	
+		struct MyClass* c = newMyClass();
+		MyClass_int_set(c, 3);
+		printf("%i\n", );
+		deleteMyClass(c);
+
+	RmlUiSDL2Renderer Renderer(renderer, screen);
+
+	RmlUiSDL2SystemInterface SystemInterface;
+
+	// Rml::String root = Shell::FindSamplesRoot();
+	// ShellFileInterface FileInterface(root);
+
+	Rml::SetFileInterface(&FileInterface);
+	Rml::SetRenderInterface(&Renderer);
+	Rml::SetSystemInterface(&SystemInterface);
+
+	if (!Rml::Initialise())
+		return 1;
+	*/
 }
 
 

@@ -434,9 +434,12 @@ endif
 	
 #  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
 	
-  LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2 -lpng
+BASE_CFLAGS += -I$(MOUNT_DIR)/RmlUi/Include
+  LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2 -lpng -lRmlCorex86_64 \
+		-L$(BD) -L$(BR)
 #BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-  CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib
+  CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
+		$(BD)/libRmlCorex86_64.dylib
 #  CLIENT_LDFLAGS += -lRmlCore -lxml2
 #  CLIENT_LDFLAGS += 
 

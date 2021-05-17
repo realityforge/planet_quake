@@ -21,11 +21,8 @@ export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 PREFIX  = 
 CC      = gcc
-CXX      = g++
 CFLAGS  = $(INCLUDE) -fsigned-char \
         -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
-CXXFLAGS  = $(CFLAGS) -fno-exceptions -std=gnu++11
-ASFLAGS = $(CFLAGS)
 
 SHLIBEXT=dylib
 SHLIBCFLAGS=-fPIC -fno-common

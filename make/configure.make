@@ -119,6 +119,8 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
   X11_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
   X11_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
+  FREETYPE_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
+  FREETYPE_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
 endif
 
 # supply some reasonable defaults for SDL/X11?
