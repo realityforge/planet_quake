@@ -4034,7 +4034,7 @@ void CL_Frame( int msec, int realMsec ) {
 		&& !com_sv_running->integer && uivms[uivm] ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -4951,7 +4951,7 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		CL_InitUI(qtrue);
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 		uivm = 0;
 		return;
 	}

@@ -820,7 +820,9 @@ void UI_SetActiveMenu( uiMenuCommand_t menu ) {
 		trap_Cvar_Set( "cl_paused", "1" );
 		UI_InGameMenu();
 		return;
-		
+	case 	UIMENU_MULTIPLAYER:
+		UI_ArenaServersMenu();
+		return;
 	// bk001204
 	case UIMENU_TEAM:
 	case UIMENU_POSTGAME:

@@ -5280,6 +5280,8 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 			Menus_ActivateByName("ingame");
 		  return;
 	  }
+		case 	UIMENU_MULTIPLAYER:
+			
   }
 }
 
@@ -5974,4 +5976,3 @@ static void UI_StartServerRefresh(qboolean full)
 		}
 	}
 }
-
