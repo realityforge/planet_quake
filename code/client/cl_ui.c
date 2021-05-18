@@ -1419,15 +1419,17 @@ void CL_InitUI( qboolean loadNew ) {
 	{
 		Rml_ShowDocument(doc);
 		Com_Printf("RMLUI: Document loaded\n");
+		
+		Rml_ContextRender(ctx);
+
+		Rml_ContextUpdate(ctx);
 	}
 	else
 	{
 		Com_Printf("RMLUI: Document failed\n");
+		Rml_Shutdown();
+		cls.rmlStarted = qfalse;
 	}
-	
-	Rml_ContextRender(ctx);
-
-	Rml_ContextUpdate(ctx);
 	/*
 	
 	RmlUiSDL2Renderer Renderer(renderer, screen);

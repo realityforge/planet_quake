@@ -103,17 +103,24 @@ async function unpackPk3s(project, outCombined, progress, noOverwrite, pk3dir) {
   //   an exception and write the files again.
   var overwriteFirstTime = Array.isArray(noOverwrite) ? noOverwrite : []
   // TODO: copy non-pk3 files first, in case of unpure modes
-  var notpk3s = glob.sync('**/*', {nodir: true, cwd: project, ignore: '*+(.pk3|.zip)', nocase: true})
+  var notpk3s = glob.sync('**/*', {
+      nodir:    true, cwd: project,
+      ignore:   '*+(.pk3|.zip)',
+      nocase:   true,
+  //    realpath: true // can't use here because it copies to new path
+  })
   var skipped = 0
   for(var j = 0; j < notpk3s.length; j++) {
     await progress([[1, j, notpk3s.length, `${notpk3s[j]}`]])
     if(notpk3s[j].match(/\.pk3$/i)) continue
+    inFile = path.join(project, notpk3s[j])
+    if(ufs.lstatSync(inFile).isSymbolicLink()) continue
     var newFile = path.join(outCombined, notpk3s[j])
     mkdirpSync(path.dirname(newFile))
     if(!noOverwrite || !ufs.existsSync(newFile)
       || overwriteFirstTime.includes(newFile)) {
       overwriteFirstTime.push(newFile)
-      ufs.copyFileSync(path.join(project, notpk3s[j]), newFile)
+      ufs.copyFileSync(inFile, newFile)
     } else {
       skipped++
     }

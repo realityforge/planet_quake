@@ -45,7 +45,7 @@ async function convertNonAlpha(inFile, project, output, noOverwrite, palette) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))
   }
   // if it is alpha
-  if(alphaCmd.match(/false/ig)) {
+  if(/* true || TODO: allAlpha? */ alphaCmd.match(/false/ig)) {
     // convert everything else to png to support transparency
     outFile = chroot(chext(inFile, '.png'), project, output)
   } else {
@@ -60,6 +60,7 @@ async function convertNonAlpha(inFile, project, output, noOverwrite, palette) {
   if(noOverwrite && ufs.existsSync(outFile)) return outFile
   // convert, baseq3 already includes jpg
   try {
+    // TODO: allAlpha? execSync(`convert "${inFile}" -alpha set -background none -channel A -evaluate multiply 0.5 +channel -auto-orient "${outFile}"`, {stdio : 'pipe'})
     execSync(`convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 20% -auto-orient "${inFile}" "${outFile}"`, {stdio : 'pipe'})
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))

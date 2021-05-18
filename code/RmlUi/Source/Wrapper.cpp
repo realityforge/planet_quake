@@ -113,13 +113,13 @@ namespace Rml {
   static Context *ctx;
   int Rml_CreateContext(const char *name, int width, int height) {
     ctx = Rml::CreateContext(name, Rml::Vector2i(width, height));
-    return 1;
+    return ctx != nullptr ? 1 : 0;
   }
   
   static ElementDocument *doc;
   int Rml_LoadDocument(int _, const char *document_path) {
     doc = ctx->LoadDocument(document_path);
-    return 1;
+    return doc != nullptr ? 1 : 0;
   }
   
   void Rml_ShowDocument(int document) {
