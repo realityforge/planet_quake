@@ -78,15 +78,18 @@ namespace Rml {
   }
   
   void StructuredRenderInterface::RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) {
-    
+    printf("Render:\n");
   }
   void StructuredRenderInterface::EnableScissorRegion(bool enable) {
-    
+    printf("Render:\n");
   }
   void StructuredRenderInterface::SetScissorRegion(int x, int y, int width, int height) {
-    
+    printf("Render:\n");
   }
-
+  bool StructuredRenderInterface::LoadTexture(TextureHandle& texture_handle, Vector2i& texture_dimensions, const String& source) {
+    texture_handle = renderer->LoadTexture(texture_dimensions, source.c_str());
+    return texture_handle > 0;
+  }
 
   void Rml_SetFileInterface(RmlFileInterface* file_interface) {
     static StructuredFileInterface fi(file_interface);
@@ -123,6 +126,14 @@ namespace Rml {
     doc->Show();
   }
   
+  void Rml_ContextRender( qhandle_t _ ) {
+    ctx->Render();
+  }
+
+  void Rml_ContextUpdate( qhandle_t _ ) {
+    ctx->Update();
+  }
+
   void Rml_Shutdown( void ) {
     Rml::Shutdown();
   }

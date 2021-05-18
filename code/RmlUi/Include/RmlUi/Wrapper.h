@@ -44,7 +44,7 @@ namespace Rml {
     /// Returns the current position of the file pointer.
     /// @param file The handle of the file to be queried.
     /// @return The number of bytes from the origin of the file.
-    size_t (*Tell)(fileHandle_t file);
+    int (*Tell)(fileHandle_t file);
 
     /// Returns the length of the file.
     /// The default implementation uses Seek & Tell.
@@ -108,13 +108,13 @@ namespace Rml {
   	/// @param[out] texture_dimensions The variable to write the dimensions of the loaded texture.
   	/// @param[in] source The application-defined image source, joined with the path of the referencing document.
   	/// @return True if the load attempt succeeded and the handle and dimensions are valid, false if not.
-  	qboolean (*LoadTexture)(qhandle_t texture_handle, int *texture_dimensions, const char *source);
+  	qhandle_t (*LoadTexture)(int texture_dimensions[2], const char *source);
   	/// Called by RmlUi when a texture is required to be built from an internally-generated sequence of pixels.
   	/// @param[out] texture_handle The handle to write the texture handle for the generated texture to.
   	/// @param[in] source The raw 8-bit texture data. Each pixel is made up of four 8-bit values, indicating red, green, blue and alpha in that order.
   	/// @param[in] source_dimensions The dimensions, in pixels, of the source data.
   	/// @return True if the texture generation succeeded and the handle is valid, false if not.
-  	qboolean (*GenerateTexture)(qhandle_t texture_handle, const byte* source, const int *source_dimensions);
+  	qhandle_t (*GenerateTexture)(const byte* source, const int *source_dimensions);
   	/// Called by RmlUi when a loaded texture is no longer required.
   	/// @param texture The texture handle to release.
   	void (*ReleaseTexture)(qhandle_t texture);
@@ -213,6 +213,7 @@ namespace Rml {
       void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) override;
       void EnableScissorRegion(bool enable) override;
       void SetScissorRegion(int x, int y, int width, int height) override;
+      bool LoadTexture(TextureHandle& texture_handle, Vector2i& texture_dimensions, const String& source) override;
     private:
       RmlRenderInterface *renderer;
   };
@@ -233,6 +234,10 @@ qhandle_t Rml_LoadDocument(qhandle_t ctx, const char *document_path);
 void Rml_ShowDocument(qhandle_t document);
 
 void Rml_Shutdown( void );
+
+void Rml_ContextRender( qhandle_t ctx );
+
+void Rml_ContextUpdate( qhandle_t ctx );
 
 #ifdef __cplusplus
 }

@@ -1249,8 +1249,7 @@ void CL_ShutdownUI( void ) {
 
 static fileHandle_t CL_RmlOpen(const char * filename) {
 	fileHandle_t h;
-	int size = FS_FOpenFileRead(filename, &h, qfalse);
-	Com_Printf("Rml Open: %s: %i\n", filename, size);
+	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
 	return h;
 }
 
@@ -1266,6 +1265,10 @@ static qboolean CL_RmlSeek(fileHandle_t file, long offset, int origin) {
 	return FS_Seek(file, offset, origin);
 }
 
+static int CL_RmlTell(fileHandle_t file) {
+	return FS_FTell(file);
+}
+
 static int CL_RmlLength(fileHandle_t h) {
 	int pos = FS_FTell( h );
 	FS_Seek( h, 0, FS_SEEK_END );
@@ -1276,6 +1279,7 @@ static int CL_RmlLength(fileHandle_t h) {
 
 int CL_RmlLoadFile( const char *qpath, char **buffer )
 {
+	Com_Printf("Load file: %s\n", qpath);
 	return FS_ReadFile(qpath, (void **)buffer);
 }
 
@@ -1316,10 +1320,13 @@ static qboolean CL_RmlLogMessage(int type, const char *message) {
 	return qtrue;
 }
 
-double CL_RmlGetElapsedTime( void ) {
+static double CL_RmlGetElapsedTime( void ) {
 	return Sys_Milliseconds() / 1000;
 }
 
+static qhandle_t CL_RmlLoadTexture(int dimensions[2], const char *source) {
+	return re.RegisterShader(source);
+}
 /*
 ====================
 CL_InitUI
@@ -1389,9 +1396,11 @@ void CL_InitUI( qboolean loadNew ) {
 	files.Close = CL_RmlClose;
 	files.Read = CL_RmlRead;
 	files.Seek = CL_RmlSeek;
+	files.Tell = CL_RmlTell;
 	files.Length = CL_RmlLength;
 	files.LoadFile = CL_RmlLoadFile;
 	static RmlRenderInterface renderer;
+	renderer.LoadTexture = CL_RmlLoadTexture;
 	static RmlSystemInterface system;
 	system.LogMessage = CL_RmlLogMessage;
 	system.GetElapsedTime = CL_RmlGetElapsedTime;
@@ -1415,14 +1424,12 @@ void CL_InitUI( qboolean loadNew ) {
 	{
 		Com_Printf("RMLUI: Document failed\n");
 	}
+	
+	Rml_ContextRender(ctx);
 
+	Rml_ContextUpdate(ctx);
 	/*
 	
-		struct MyClass* c = newMyClass();
-		MyClass_int_set(c, 3);
-		printf("%i\n", );
-		deleteMyClass(c);
-
 	RmlUiSDL2Renderer Renderer(renderer, screen);
 
 	RmlUiSDL2SystemInterface SystemInterface;
