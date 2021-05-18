@@ -278,6 +278,7 @@ void CON_SigTStp( int signum )
 // =============================================================
 
 // single exit point (regular exit or in case of signal fault)
+qboolean isAssertive = qfalse;
 void Sys_Exit( int code ) __attribute((noreturn));
 void Sys_Exit( int code )
 {
@@ -294,7 +295,10 @@ void Sys_Exit( int code )
 	_exit( code );
 #else
 	// Give me a backtrace on error exits.
-	assert( code == 0 );
+  if(!isAssertive) {
+    isAssertive = qtrue;    
+    assert( code == 0 );
+  }
 	exit( code );
 #endif
 }

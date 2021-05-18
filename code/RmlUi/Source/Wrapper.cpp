@@ -2,6 +2,7 @@
 #include "../Include/RmlUi/Core/Core.h"
 #include "../Include/RmlUi/Wrapper.h"
 #include "../Include/RmlUi/Core/SystemInterface.h"
+#include "../Include/RmlUi/Core/ElementDocument.h"
 
 extern "C" {
 
@@ -23,22 +24,35 @@ namespace Rml {
   
   void StructuredFileInterface::Close(FileHandle file)
   {
-    
+    return files->Close(file);
   }
 
   size_t StructuredFileInterface::Read(void* buffer, size_t size, FileHandle file)
   {
-    return 0;
+    return files->Read(buffer, size, file);
   }
 
   bool StructuredFileInterface::Seek(FileHandle file, long offset, int origin)
   {
-    return false;
+    return files->Seek(file, offset, origin);
   }
 
   size_t StructuredFileInterface::Tell(FileHandle file) 
   {
-    return 0;
+    return files->Tell(file);
+  }
+
+  size_t StructuredFileInterface::Length(FileHandle file) 
+  {
+    return files->Length(file);
+  }
+
+  bool StructuredFileInterface::LoadFile(const String& path, String& out_data) 
+  {
+    char *data;
+    int len = files->LoadFile(path.c_str(), &data);
+    out_data = std::string(data, len);
+    return len > -1;
   }
 
   StructuredSystemInterface::StructuredSystemInterface(RmlSystemInterface *sys)
@@ -93,16 +107,20 @@ namespace Rml {
     return Rml::Initialise();
   }
   
-  Context* Rml_CreateContext(const String& name, Vector2i dimensions) {
-    return Rml::CreateContext(name, dimensions);
+  static Context *ctx;
+  int Rml_CreateContext(const char *name, int width, int height) {
+    ctx = Rml::CreateContext(name, Rml::Vector2i(width, height));
+    return 1;
   }
   
-  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const char *document_path) {
-    return ctx->LoadDocument(document_path);
+  static ElementDocument *doc;
+  int Rml_LoadDocument(int _, const char *document_path) {
+    doc = ctx->LoadDocument(document_path);
+    return 1;
   }
   
-  void Rml_ShowDocument(Rml::ElementDocument* document) {
-    //document->Show();
+  void Rml_ShowDocument(int document) {
+    doc->Show();
   }
   
   void Rml_Shutdown( void ) {

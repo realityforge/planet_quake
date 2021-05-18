@@ -50,13 +50,13 @@ namespace Rml {
     /// The default implementation uses Seek & Tell.
     /// @param file The handle of the file to be queried.
     /// @return The length of the file in bytes.
-    size_t (*Length)(fileHandle_t file);
+    int (*Length)(fileHandle_t file);
 
     /// Load and return a file.
     /// @param path The path to the file to load.
     /// @param out_data The string contents of the file.
     /// @return True on success.
-    qboolean (*LoadFile)(const char *path, char *out_data);
+    int (*LoadFile)(const char *path, char **out_data);
   } RmlFileInterface;
 
 
@@ -181,33 +181,19 @@ namespace Rml {
 
 #ifdef __cplusplus
 
-  void Rml_SetSystemInterface(RmlSystemInterface *system);
-
-  bool Rml_Initialize();
-
-  void Rml_SetRenderInterface(RmlRenderInterface *renderer);
-
-  void Rml_SetFileInterface(RmlFileInterface *file_interface);
-
-  Context* Rml_CreateContext( const String& name, Vector2i dimensions );
-
-  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const char *document_path);
-
-  void Rml_ShowDocument(Rml::ElementDocument* document);
-
-  void Rml_Shutdown( void );
-
   class StructuredFileInterface : public Rml::FileInterface 
   {
     public:
       StructuredFileInterface(RmlFileInterface *file_interface);
       virtual ~StructuredFileInterface();
 
-      Rml::FileHandle Open(const Rml::String& path) override;
+      FileHandle Open(const Rml::String& path) override;
       void Close(FileHandle file) override;
       size_t Read(void* buffer, size_t size, FileHandle file) override;
       bool Seek(FileHandle file, long offset, int origin) override;
       size_t Tell(FileHandle file) override;
+      size_t Length(FileHandle file) override;
+      bool LoadFile(const String& path, String& out_data) override;
     private:
       RmlFileInterface *files;
   };
@@ -230,7 +216,7 @@ namespace Rml {
     private:
       RmlRenderInterface *renderer;
   };
-#else
+#endif // __cplusplus
 
 void Rml_SetSystemInterface(RmlSystemInterface *system);
 
@@ -240,16 +226,13 @@ void Rml_SetRenderInterface(RmlRenderInterface *renderer);
 
 void Rml_SetFileInterface(RmlFileInterface *file_interface);
 
-qhandle_t Rml_CreateContext( const char *name, int dimensions[2] );
+qhandle_t Rml_CreateContext( const char *name, int width, int height );
 
 qhandle_t Rml_LoadDocument(qhandle_t ctx, const char *document_path);
 
 void Rml_ShowDocument(qhandle_t document);
 
 void Rml_Shutdown( void );
-
-#endif // __cplusplus
-
 
 #ifdef __cplusplus
 }

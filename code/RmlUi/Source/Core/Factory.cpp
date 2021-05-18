@@ -47,7 +47,7 @@
 #include "../../Include/RmlUi/Core/Elements/ElementFormControlSelect.h"
 #include "../../Include/RmlUi/Core/Elements/ElementFormControlTextArea.h"
 #include "../../Include/RmlUi/Core/Elements/ElementTabSet.h"
-#include "../../Include/RmlUi/Core/Elements/ElementProgressBar.h"
+#include "../../Include/RmlUi/Core/Elements/ElementProgress.h"
 #include "../../Include/RmlUi/Core/Elements/ElementDataGrid.h"
 #include "../../Include/RmlUi/Core/Elements/ElementDataGridExpandButton.h"
 #include "../../Include/RmlUi/Core/Elements/ElementDataGridCell.h"
@@ -82,6 +82,7 @@
 #include "Elements/ElementLabel.h"
 #include "Elements/ElementTextSelection.h"
 #include "Elements/XMLNodeHandlerDataGrid.h"
+#include "Elements/XMLNodeHandlerSelect.h"
 #include "Elements/XMLNodeHandlerTabSet.h"
 #include "Elements/XMLNodeHandlerTextArea.h"
 
@@ -149,7 +150,7 @@ struct DefaultInstancers {
 	ElementInstancerGeneric<ElementTextSelection> selection;
 	ElementInstancerGeneric<ElementTabSet> tabset;
 
-	ElementInstancerGeneric<ElementProgressBar> progressbar;
+	ElementInstancerGeneric<ElementProgress> progress;
 
 	ElementInstancerGeneric<ElementDataGrid> datagrid;
 	ElementInstancerGeneric<ElementDataGridExpandButton> datagrid_expand;
@@ -242,7 +243,8 @@ bool Factory::Initialise()
 	RegisterElementInstancer("#selection", &default_instancers->selection);
 	RegisterElementInstancer("tabset", &default_instancers->tabset);
 
-	RegisterElementInstancer("progressbar", &default_instancers->progressbar);
+	RegisterElementInstancer("progress", &default_instancers->progress);
+	RegisterElementInstancer("progressbar", &default_instancers->progress);
 
 	RegisterElementInstancer("datagrid", &default_instancers->datagrid);
 	RegisterElementInstancer("datagridexpand", &default_instancers->datagrid_expand);
@@ -291,6 +293,7 @@ bool Factory::Initialise()
 	XMLParser::RegisterNodeHandler("datagrid", MakeShared<XMLNodeHandlerDataGrid>());
 	XMLParser::RegisterNodeHandler("tabset", MakeShared<XMLNodeHandlerTabSet>());
 	XMLParser::RegisterNodeHandler("textarea", MakeShared<XMLNodeHandlerTextArea>());
+	XMLParser::RegisterNodeHandler("select", MakeShared<XMLNodeHandlerSelect>());
 
 	return true;
 }
@@ -368,7 +371,6 @@ ElementPtr Factory::InstanceElement(Element* parent, const String& instancer_nam
 			element->SetInstancer(instancer);
 			element->SetAttributes(attributes);
 			ElementUtilities::BindEventAttributes(element.get());
-
 			PluginRegistry::NotifyElementCreate(element.get());
 		}
 
@@ -494,7 +496,6 @@ ElementPtr Factory::InstanceDocumentStream(Context* context, Stream* stream, con
 	}
 
 	document->context = context;
-
 	XMLParser parser(element.get());
 	parser.Parse(stream);
 

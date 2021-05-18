@@ -1249,8 +1249,8 @@ void CL_ShutdownUI( void ) {
 
 static fileHandle_t CL_RmlOpen(const char * filename) {
 	fileHandle_t h;
-	Com_Printf("RmlOpen: %s\n", filename);
-	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
+	int size = FS_FOpenFileRead(filename, &h, qfalse);
+	Com_Printf("Rml Open: %s: %i\n", filename, size);
 	return h;
 }
 
@@ -1258,18 +1258,25 @@ static void CL_RmlClose(fileHandle_t h) {
 	FS_FCloseFile( h );
 }
 
-static fileHandle_t CL_RmlRead(const char * filename) {
-	fileHandle_t h;
-	Com_Printf("RmlOpen: %s\n", filename);
-	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
-	return h;
+static size_t CL_RmlRead(void* buffer, size_t size, fileHandle_t file) {
+	return FS_Read(buffer, size, file);
 }
 
-static fileHandle_t CL_RmlSeek(const char * filename) {
-	fileHandle_t h;
-	Com_Printf("RmlOpen: %s\n", filename);
-	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
-	return h;
+static qboolean CL_RmlSeek(fileHandle_t file, long offset, int origin) {
+	return FS_Seek(file, offset, origin);
+}
+
+static int CL_RmlLength(fileHandle_t h) {
+	int pos = FS_FTell( h );
+	FS_Seek( h, 0, FS_SEEK_END );
+	int end = FS_FTell( h );
+	FS_Seek( h, pos, FS_SEEK_SET );
+	return end;
+}
+
+int CL_RmlLoadFile( const char *qpath, char **buffer )
+{
+	return FS_ReadFile(qpath, (void **)buffer);
 }
 
 typedef enum 
@@ -1309,6 +1316,9 @@ static qboolean CL_RmlLogMessage(int type, const char *message) {
 	return qtrue;
 }
 
+double CL_RmlGetElapsedTime( void ) {
+	return Sys_Milliseconds() / 1000;
+}
 
 /*
 ====================
@@ -1374,12 +1384,17 @@ void CL_InitUI( qboolean loadNew ) {
 		VM_Call( uivms[uivm], 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 
-	RmlFileInterface files;
+	static RmlFileInterface files;
 	files.Open = CL_RmlOpen;
 	files.Close = CL_RmlClose;
-	RmlRenderInterface renderer;
-	RmlSystemInterface system;
+	files.Read = CL_RmlRead;
+	files.Seek = CL_RmlSeek;
+	files.Length = CL_RmlLength;
+	files.LoadFile = CL_RmlLoadFile;
+	static RmlRenderInterface renderer;
+	static RmlSystemInterface system;
 	system.LogMessage = CL_RmlLogMessage;
+	system.GetElapsedTime = CL_RmlGetElapsedTime;
 	Rml_SetFileInterface(&files);
 	Rml_SetRenderInterface(&renderer);
 	Rml_SetSystemInterface(&system);
@@ -1387,8 +1402,7 @@ void CL_InitUI( qboolean loadNew ) {
 		Com_Printf("RMLUI: Error initializing.");
 	}
 	cls.rmlStarted = qtrue;
-	int dimensions[2] = {cls.glconfig.vidWidth, cls.glconfig.vidWidth};
-	qhandle_t ctx = Rml_CreateContext("default", dimensions);
+	qhandle_t ctx = Rml_CreateContext("default", cls.glconfig.vidWidth, cls.glconfig.vidWidth);
 	
 	qhandle_t doc = Rml_LoadDocument(ctx, "assets/demo.rml");
 

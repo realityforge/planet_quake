@@ -44,6 +44,7 @@ class RenderInterface;
 class SystemInterface;
 enum class DefaultActionPhase;
 
+
 /**
 	RmlUi library core API.
 

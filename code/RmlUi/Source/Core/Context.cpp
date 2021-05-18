@@ -67,7 +67,7 @@ Context::Context(const String& name) : name(name), dimensions(0, 0), density_ind
 	ElementDocument* cursor_proxy_document = rmlui_dynamic_cast< ElementDocument* >(cursor_proxy.get());
 	RMLUI_ASSERT(cursor_proxy_document);
 	cursor_proxy_document->context = this;
-		
+
 	enable_cursor = true;
 
 	document_focus_history.push_back(root.get());
