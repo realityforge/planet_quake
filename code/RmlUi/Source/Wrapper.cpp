@@ -48,7 +48,9 @@ namespace Rml {
 
   bool StructuredSystemInterface::LogMessage(Log::Type type, const String& message)
   {
-    return system->LogMessage(type, message.c_str());
+    if(system->LogMessage)
+      return system->LogMessage(type, message.c_str());
+    return false;
   }
 
   double StructuredSystemInterface::GetElapsedTime()
@@ -56,19 +58,35 @@ namespace Rml {
     return 0;
   }
 
+  StructuredRenderInterface::StructuredRenderInterface(RmlRenderInterface *rend)
+  {
+    renderer = rend;
+  }
+  
+  void StructuredRenderInterface::RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) {
+    
+  }
+  void StructuredRenderInterface::EnableScissorRegion(bool enable) {
+    
+  }
+  void StructuredRenderInterface::SetScissorRegion(int x, int y, int width, int height) {
+    
+  }
+
 
   void Rml_SetFileInterface(RmlFileInterface* file_interface) {
-    StructuredFileInterface fi = StructuredFileInterface(file_interface);
-    Rml::SetFileInterface(fi);
+    static StructuredFileInterface fi(file_interface);
+    Rml::SetFileInterface(&fi);
   }
 
   void Rml_SetRenderInterface(RmlRenderInterface* renderer) {
-    Rml::SetRenderInterface(renderer);
+    static StructuredRenderInterface rend(renderer);
+    Rml::SetRenderInterface(&rend);
   }
 
   void Rml_SetSystemInterface(RmlSystemInterface* system) {
-    StructuredSystemInterface sys = StructuredSystemInterface(system);
-    Rml::SetSystemInterface(sys);
+    static StructuredSystemInterface sys(system);
+    Rml::SetSystemInterface(&sys);
   }
 
   bool Rml_Initialize( void ) {
@@ -76,12 +94,10 @@ namespace Rml {
   }
   
   Context* Rml_CreateContext(const String& name, Vector2i dimensions) {
-    Log::Message(Log::LT_INFO, "Made it here!");
     return Rml::CreateContext(name, dimensions);
   }
   
-  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const String& document_path) {
-    Log::Message(Log::LT_INFO, "Made it here!");
+  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const char *document_path) {
     return ctx->LoadDocument(document_path);
   }
   

@@ -1283,7 +1283,7 @@ typedef enum
   LT_MAX
 } rmlLog_t;
 
-static qboolean CL_RmlLogMessage(rmlLog_t type, const char *message) {
+static qboolean CL_RmlLogMessage(int type, const char *message) {
 	switch(type) {
 		case LT_ALWAYS:
 		Com_Printf("RMLUI: %s\n", message);

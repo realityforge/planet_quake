@@ -178,10 +178,12 @@ namespace Rml {
     void (*DeactivateKeyboard)( void );
 
   } RmlSystemInterface;
-  
+
+#ifdef __cplusplus
+
   void Rml_SetSystemInterface(RmlSystemInterface *system);
 
-  qboolean Rml_Initialize( void );
+  bool Rml_Initialize();
 
   void Rml_SetRenderInterface(RmlRenderInterface *renderer);
 
@@ -189,13 +191,12 @@ namespace Rml {
 
   Context* Rml_CreateContext( const String& name, Vector2i dimensions );
 
-  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const String& document_path);
+  ElementDocument* Rml_LoadDocument(Rml::Context* ctx, const char *document_path);
 
   void Rml_ShowDocument(Rml::ElementDocument* document);
 
   void Rml_Shutdown( void );
 
-#ifdef __cplusplus
   class StructuredFileInterface : public Rml::FileInterface 
   {
     public:
@@ -204,7 +205,7 @@ namespace Rml {
 
       Rml::FileHandle Open(const Rml::String& path) override;
       void Close(FileHandle file) override;
-      size_t Read(void* buffer, size_t size, FileHandle file) override ;
+      size_t Read(void* buffer, size_t size, FileHandle file) override;
       bool Seek(FileHandle file, long offset, int origin) override;
       size_t Tell(FileHandle file) override;
     private:
@@ -218,6 +219,16 @@ namespace Rml {
       double GetElapsedTime() override;
     private:
       RmlSystemInterface *system;
+  };
+  class StructuredRenderInterface : public Rml::RenderInterface 
+  {
+    public:
+      StructuredRenderInterface(RmlRenderInterface *renderer);
+      void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) override;
+      void EnableScissorRegion(bool enable) override;
+      void SetScissorRegion(int x, int y, int width, int height) override;
+    private:
+      RmlRenderInterface *renderer;
   };
 #else
 
