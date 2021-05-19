@@ -4415,6 +4415,7 @@ void Com_Frame( qboolean noDelay ) {
 	}
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
 #ifndef USE_LOCAL_DED
 	if ( com_dedicated->modified ) {
 		// get the latched value
@@ -4442,6 +4443,7 @@ void Com_Frame( qboolean noDelay ) {
 		}
 	}
 #endif
+#endif // BUILD_SLIM_CLIENT
 
 #ifdef DEDICATED
 	if ( com_speeds->integer ) {

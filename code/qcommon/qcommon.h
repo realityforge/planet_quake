@@ -1404,6 +1404,8 @@ qboolean CL_GameSwitch( void );
 // AVI files have the start of pixel lines 4 byte-aligned
 #define AVI_LINE_PADDING 4
 
+#ifndef BUILD_SLIM_CLIENT
+#ifndef USE_LOCAL_DED
 //
 // server interface
 //
@@ -1422,6 +1424,8 @@ int SV_SendQueuedPackets( void );
 
 void SV_AddDedicatedCommands( void );
 void SV_RemoveDedicatedCommands( void );
+#endif
+#endif
 
 
 //

@@ -20,3 +20,53 @@ CFLAGS  = $(INCLUDE) -fsigned-char \
 
 clean:
 	@rm -rf $(TARGET).velf $(TARGET).elf $(OBJS) $(TARGET).elf.unstripped.elf $(TARGET).vpk build/$(TARGET).bin
+
+
+
+#	JPGOBJ = \
+  $(B)/client/jaricom.o \
+  $(B)/client/jcapimin.o \
+  $(B)/client/jcapistd.o \
+  $(B)/client/jcarith.o \
+  $(B)/client/jccoefct.o  \
+  $(B)/client/jccolor.o \
+  $(B)/client/jcdctmgr.o \
+  $(B)/client/jchuff.o   \
+  $(B)/client/jcinit.o \
+  $(B)/client/jcmainct.o \
+  $(B)/client/jcmarker.o \
+  $(B)/client/jcmaster.o \
+  $(B)/client/jcomapi.o \
+  $(B)/client/jcparam.o \
+  $(B)/client/jcprepct.o \
+  $(B)/client/jcsample.o \
+  $(B)/client/jctrans.o \
+  $(B)/client/jdapimin.o \
+  $(B)/client/jdapistd.o \
+  $(B)/client/jdarith.o \
+  $(B)/client/jdatadst.o \
+  $(B)/client/jdatasrc.o \
+  $(B)/client/jdcoefct.o \
+  $(B)/client/jdcolor.o \
+  $(B)/client/jddctmgr.o \
+  $(B)/client/jdhuff.o \
+  $(B)/client/jdinput.o \
+  $(B)/client/jdmainct.o \
+  $(B)/client/jdmarker.o \
+  $(B)/client/jdmaster.o \
+  $(B)/client/jdmerge.o \
+  $(B)/client/jdpostct.o \
+  $(B)/client/jdsample.o \
+  $(B)/client/jdtrans.o \
+  $(B)/client/jerror.o \
+  $(B)/client/jfdctflt.o \
+  $(B)/client/jfdctfst.o \
+  $(B)/client/jfdctint.o \
+  $(B)/client/jidctflt.o \
+  $(B)/client/jidctfst.o \
+  $(B)/client/jidctint.o \
+  $(B)/client/jmemmgr.o \
+  $(B)/client/jmemnobs.o \
+  $(B)/client/jquant1.o \
+  $(B)/client/jquant2.o \
+  $(B)/client/jutils.o

@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifdef USE_JPEG
+
 #include "client.h"
 //#include "../qcommon/q_shared.h"
 #include <setjmp.h>
@@ -475,3 +477,5 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 
 	Hunk_FreeTempMemory(out);
 }
+
+#endif

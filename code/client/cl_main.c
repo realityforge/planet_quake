@@ -2033,6 +2033,8 @@ static void CL_Connect_f( void ) {
 	clc.serverMessage[0] = '\0';
 
 #ifndef USE_LOCAL_DED
+#ifndef BUILD_SLIM_CLIENT
+
 	// if running a local server, kill it
 	if ( com_sv_running->integer && !strcmp( server, "localhost" ) ) {
 		SV_Shutdown( "Server quit" );
@@ -2042,6 +2044,7 @@ static void CL_Connect_f( void ) {
 	Cvar_Set( "sv_killserver", "1" );
 	SV_Frame( 0 );
 
+#endif
 #else
 
 	if(addr.type != NA_LOOPBACK && (!strcmp (server, "127.0.0.1")
@@ -4492,9 +4495,11 @@ static void CL_InitRef_After_Load2( void )
 	rimp.CIN_RunCinematic = CIN_RunCinematic;
 
 	rimp.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
+#ifdef USE_JPEG
 	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;
 	rimp.CL_SaveJPG = CL_SaveJPG;
 	rimp.CL_LoadJPG = CL_LoadJPG;
+#endif
 
 	rimp.CL_IsMinimized = CL_IsMininized;
 	rimp.CL_SetScaling = CL_SetScaling;
