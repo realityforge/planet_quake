@@ -7,10 +7,159 @@ include make/platform_os.make
 TARGET	         := $(CNAME)
 
 SOURCES  := $(MOUNT_DIR)/client
+
+CLIPMAP  := $(B)/client/cm_load.o \
+						$(B)/client/cm_load_bsp2.o \
+						$(B)/client/cm_patch.o \
+						$(B)/client/cm_polylib.o \
+						$(B)/client/cm_test.o \
+						$(B)/client/cm_trace.o
+
+QCOMMON  := $(B)/client/cmd.o \
+					  $(B)/client/common.o \
+					  $(B)/client/cvar.o \
+					  $(B)/client/files.o \
+					  $(B)/client/history.o \
+					  $(B)/client/keys.o \
+					  $(B)/client/md4.o \
+					  $(B)/client/md5.o \
+					  $(B)/client/msg.o \
+					  $(B)/client/net_chan.o \
+					  $(B)/client/net_ip.o \
+						$(B)/client/qrcodegen.o \
+					  $(B)/client/huffman.o \
+					  $(B)/client/huffman_static.o \
+						$(B)/client/q_math.o \
+					  $(B)/client/q_shared.o \
+					  $(B)/client/unzip.o \
+					  $(B)/client/puff.o
+
+SOUND    := $(B)/client/snd_adpcm.o \
+					  $(B)/client/snd_dma.o \
+					  $(B)/client/snd_mem.o \
+					  $(B)/client/snd_mix.o \
+					  $(B)/client/snd_wavelet.o \
+					  \
+					  $(B)/client/snd_main.o \
+					  $(B)/client/snd_codec.o \
+					  $(B)/client/snd_codec_wav.o \
+						$(B)/client/snd_codec_ogg.o \
+						$(B)/client/snd_codec_opus.o
+ifeq ($(ARCH),x86)
+ifndef MINGW
+  SOUND   += \
+					  $(B)/client/snd_mix_mmx.o \
+					  $(B)/client/snd_mix_sse.o
+endif
+endif
+	  
+VM   := \
+					$(B)/client/vm.o \
+					$(B)/client/vm_interpreted.o
+ifeq ($(HAVE_VM_COMPILED),true)
+ifeq ($(ARCH),x86)
+  VM += $(B)/client/vm_x86.o
+endif
+ifeq ($(ARCH),x86_64)
+  VM += $(B)/client/vm_x86.o
+endif
+ifeq ($(ARCH),arm)
+  VM += $(B)/client/vm_armv7l.o
+endif
+ifeq ($(ARCH),aarch64)
+  VM += $(B)/client/vm_aarch64.o
+endif
+endif
+
+CURL   :=
+ifeq ($(USE_CURL),1)
+  CURL += $(B)/client/cl_curl.o
+endif
+
+
+Q3OBJ   :=
+ifdef MINGW
+  Q3OBJ += \
+    $(B)/client/win_main.o \
+    $(B)/client/win_shared.o \
+    $(B)/client/win_syscon.o \
+    $(B)/client/win_resource.o
+
+ifeq ($(USE_SDL),1)
+ifneq ($(PLATFORM),js)
+  Q3OBJ += \
+    $(B)/client/sdl_glimp.o \
+    $(B)/client/sdl_gamma.o \
+    $(B)/client/sdl_input.o \
+    $(B)/client/sdl_snd.o
+endif
+
+else # !USE_SDL
+  Q3OBJ += \
+    $(B)/client/win_gamma.o \
+    $(B)/client/win_glimp.o \
+    $(B)/client/win_input.o \
+    $(B)/client/win_minimize.o \
+    $(B)/client/win_qgl.o \
+    $(B)/client/win_snd.o \
+    $(B)/client/win_wndproc.o
+ifeq ($(USE_VULKAN_API),1)
+  Q3OBJ += \
+      $(B)/client/win_qvk.o
+endif
+endif # !USE_SDL
+
+else # !MINGW
+ifeq ($(PLATFORM),js)
+  Q3OBJ += \
+		$(B)/client/sdl_glimp.o \
+		$(B)/client/sdl_gamma.o \
+		$(B)/client/sdl_snd.o \
+		$(B)/client/sys_main.o \
+		$(B)/client/sys_input.o
+
+else
+  Q3OBJ += \
+    $(B)/client/unix_main.o \
+    $(B)/client/unix_shared.o \
+    $(B)/client/linux_signals.o
+endif
+
+ifeq ($(USE_SDL),1)
+ifneq ($(PLATFORM),js)
+  Q3OBJ += \
+    $(B)/client/sdl_glimp.o \
+    $(B)/client/sdl_gamma.o \
+    $(B)/client/sdl_input.o \
+    $(B)/client/sdl_snd.o
+endif
+else # !USE_SDL
+  Q3OBJ += \
+    $(B)/client/linux_glimp.o \
+    $(B)/client/linux_qgl.o \
+    $(B)/client/linux_snd.o \
+    $(B)/client/x11_dga.o \
+    $(B)/client/x11_randr.o \
+    $(B)/client/x11_vidmode.o
+
+ifeq ($(USE_VULKAN_API),1)
+  Q3OBJ += \
+      $(B)/client/linux_qvk.o
+endif
+endif # !USE_SDL
+endif
+
+
 INCLUDES := 
 
 #LIBS = -l
-CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c))
+CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
+									$(CLIPMAP) \
+									$(QCOMMON) \
+									$(SOUND) \
+									$(VM) \
+									$(CURL) \
+									$(Q3OBJ)
 OBJS          := $(CFILES:.c=.o) 
 Q3OBJ         := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
@@ -20,7 +169,7 @@ PREFIX   =
 CC       = gcc
 CFLAGS   = $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD
+						 -MMD -DUSE_SYSTEM_JPEG
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 #SHLIBEXT     = dylib
@@ -45,11 +194,17 @@ $(echo_cmd) "TOOLS_CC $<"
 $(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
 endef
 
+define DO_WINDRES
+$(echo_cmd) "WINDRES $<"
+$(Q)$(WINDRES) -i $< -o $@
+endef
+
 mkdirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
 # TODO: make all these dylibs
+#	@if [ ! -d $(B)/client/asm ];then $(MKDIR) $(B)/client/asm;fi
 #	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
 #	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 #	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
@@ -73,83 +228,23 @@ default:
 $(B)/client/%.o: code/client/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: $(ADIR)/%.s
-	$(DO_AS)
+$(B)/client/%.o: code/unix/%.c
+	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: $(CDIR)/%.c
-	$(DO_CC)
+$(B)/client/%.o: code/win32/%.c
+	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: $(SDIR)/%.c
-	$(DO_CC)
+$(B)/client/%.o: code/macosx/%.c
+	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: $(MOUNT_DIR)/game/%.c
-	$(DO_TOOLS)
+$(B)/client/%.o: code/sdl/%.c
+	$(DO_CLIENT_CC)
 
-$(B)/client/tools/%.o: $(TDIR)/common/%.c
-	$(DO_TOOLS)
-
-$(B)/client/q3map2/%.o: $(TDIR)/q3map2/%.c
-	$(DO_TOOLS)
-
-$(B)/client/tools/%.o: $(TDIR)/q3data/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/mathlib/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/ddslib/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/md5lib/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/picomodel/%.c
-	$(DO_TOOLS)
-
-$(B)/client/libs/%.o: $(TDIR)/libs/picomodel/lwo/%.c
-	$(DO_TOOLS)
-
-$(B)/client/plugins/%.o: $(TDIR)/plugins/imagepng/%.c
-	$(DO_TOOLS)
-
-$(B)/client/%.o: $(CMDIR)/%.c
-	$(DO_CC)
-
-$(B)/client/%.o: $(BLIBDIR)/%.c
-	$(DO_BOT_CC)
-
-$(B)/client/%.o: $(JPDIR)/%.c
-	$(DO_CC)
-
-$(B)/client/ogg/%.o: $(OGGDIR)/%.c
-	$(DO_CC)
-
-$(B)/client/vorbis/%.o: $(VORBISDIR)/%.c
-	$(DO_CC)
-
-$(B)/client/opus/%.o: $(OPUSDIR)/src/%.c
-	$(DO_CC)
-
-$(B)/client/opus/%.o: $(OPUSDIR)/celt/%.c
-	$(DO_CC)
-
-$(B)/client/opus/%.o: $(OPUSDIR)/silk/%.c
-	$(DO_CC)
-
-$(B)/client/opus/%.o: $(OPUSDIR)/silk/float/%.c
-	$(DO_CC)
-
-$(B)/client/%.o: $(OPUSFILEDIR)/src/%.c
-	$(DO_CC)
-
-$(B)/client/%.o: $(SDLDIR)/%.c
-	$(DO_CC)
+$(B)/client/%.o: code/qcommon/%.c
+	$(DO_CLIENT_CC)
 
 	
-	JPGOBJ = \
+#	JPGOBJ = \
 	  $(B)/client/jaricom.o \
 	  $(B)/client/jcapimin.o \
 	  $(B)/client/jcapistd.o \
@@ -197,58 +292,7 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/jquant2.o \
 	  $(B)/client/jutils.o
 
-	Q3OBJ = \
-	  $(B)/client/cl_cgame.o \
-	  $(B)/client/cl_cin.o \
-		$(B)/client/cl_cin_roq.o \
-		$(B)/client/cl_cin_ogm.o \
-		$(B)/client/cl_cin_vpx.o \
-	  $(B)/client/cl_console.o \
-	  $(B)/client/cl_input.o \
-	  $(B)/client/cl_keys.o \
-	  $(B)/client/cl_main.o \
-	  $(B)/client/cl_net_chan.o \
-	  $(B)/client/cl_parse.o \
-	  $(B)/client/cl_scrn.o \
-	  $(B)/client/cl_ui.o \
-	  $(B)/client/cl_avi.o \
-	  $(B)/client/cl_jpeg.o \
-	  \
-	  $(B)/client/cm_load.o \
-		$(B)/client/cm_load_bsp2.o \
-	  $(B)/client/cm_patch.o \
-	  $(B)/client/cm_polylib.o \
-	  $(B)/client/cm_test.o \
-	  $(B)/client/cm_trace.o \
-	  \
-	  $(B)/client/cmd.o \
-	  $(B)/client/common.o \
-	  $(B)/client/cvar.o \
-	  $(B)/client/files.o \
-	  $(B)/client/history.o \
-	  $(B)/client/keys.o \
-	  $(B)/client/md4.o \
-	  $(B)/client/md5.o \
-	  $(B)/client/msg.o \
-	  $(B)/client/net_chan.o \
-	  $(B)/client/net_ip.o \
-		$(B)/client/qrcodegen.o \
-	  $(B)/client/huffman.o \
-	  $(B)/client/huffman_static.o \
-	  \
-	  $(B)/client/snd_adpcm.o \
-	  $(B)/client/snd_dma.o \
-	  $(B)/client/snd_mem.o \
-	  $(B)/client/snd_mix.o \
-	  $(B)/client/snd_wavelet.o \
-	  \
-	  $(B)/client/snd_main.o \
-	  $(B)/client/snd_codec.o \
-	  $(B)/client/snd_codec_wav.o \
-		$(B)/client/snd_codec_ogg.o \
-		$(B)/client/snd_codec_opus.o \
-	  \
-	  $(B)/client/sv_bot.o \
+#SPSERVER := $(B)/client/sv_bot.o \
 	  $(B)/client/sv_ccmds.o \
 	  $(B)/client/sv_client.o \
 	  $(B)/client/sv_filter.o \
@@ -262,17 +306,9 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/sv_net_chan.o \
 	  $(B)/client/sv_snapshot.o \
 	  $(B)/client/sv_world.o \
-		$(B)/client/sv_bsp.o \
-	  \
-	  $(B)/client/q_math.o \
-	  $(B)/client/q_shared.o \
-	  \
-	  $(B)/client/unzip.o \
-	  $(B)/client/puff.o \
-	  $(B)/client/vm.o \
-	  $(B)/client/vm_interpreted.o \
-		\
-	  $(B)/client/be_aas_bspq3.o \
+		$(B)/client/sv_bsp.o
+
+#SPBOTS   := $(B)/client/be_aas_bspq3.o \
 	  $(B)/client/be_aas_cluster.o \
 	  $(B)/client/be_aas_debug.o \
 	  $(B)/client/be_aas_entity.o \
@@ -301,8 +337,7 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/l_script.o \
 	  $(B)/client/l_struct.o
 
-	ifeq ($(USE_MEMORY_MAPS),1)
-	Q3OBJ += \
+# Q3MAP2 += \
 		$(B)/client/bg_misc.o \
 	  $(B)/client/q3map2/bsp.o \
 		$(B)/client/tools/inout.o \
@@ -369,15 +404,8 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/q3map2/bspfile_abstract.o \
 		$(B)/client/q3map2/bspfile_rbsp.o \
 		$(B)/client/q3map2/bspfile_ibsp.o
-	endif
 
-	ifneq ($(USE_SYSTEM_JPEG),1)
-	  Q3OBJ += $(JPGOBJ)
-	endif
-
-	ifneq ($(USE_LOCAL_HEADERS),0)
-	ifneq ($(USE_CODEC_VORBIS),0)
-	Q3OBJ += \
+# VORBIS += \
 	  $(B)/client/ogg/bitwise.o \
 	  $(B)/client/ogg/framing.o \
 	  \
@@ -404,12 +432,8 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/vorbis/vorbisenc.o \
 	  $(B)/client/vorbis/vorbisfile.o \
 	  $(B)/client/vorbis/window.o
-	endif
-	endif
 
-	ifneq (,$(findstring release,$(B)))
-	ifneq ($(USE_CODEC_OPUS),0)
-	Q3OBJ += \
+# OPUS += \
 		$(B)/client/opus/analysis.o \
 		$(B)/client/opus/mlp.o \
 		$(B)/client/opus/mlp_data.o \
@@ -553,117 +577,7 @@ $(B)/client/%.o: $(SDLDIR)/%.c
 	  $(B)/client/opusfile.o \
 	  $(B)/client/stream.o \
 	  $(B)/client/wincerts.o
-	endif
-	endif
 
-	ifeq ($(USE_RENDERER_DLOPEN),0)
-	ifeq ($(USE_VULKAN),1)
-	  Q3OBJ += $(Q3RENDVOBJ)
-	else
-	ifeq ($(BUILD_RENDERER_OPENGL2),1)
-	  Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
-	else
-	  Q3OBJ += $(Q3REND1OBJ)
-	endif
-
-	endif # use vulcan
-	endif # no dlopen
-
-	ifeq ($(ARCH),x86)
-	ifndef MINGW
-	  Q3OBJ += \
-	    $(B)/client/snd_mix_mmx.o \
-	    $(B)/client/snd_mix_sse.o
-	endif
-	endif
-
-	ifeq ($(HAVE_VM_COMPILED),true)
-	  ifeq ($(ARCH),x86)
-	    Q3OBJ += $(B)/client/vm_x86.o
-	  endif
-	  ifeq ($(ARCH),x86_64)
-	    Q3OBJ += $(B)/client/vm_x86.o
-	  endif
-	  ifeq ($(ARCH),arm)
-	    Q3OBJ += $(B)/client/vm_armv7l.o
-	  endif
-	  ifeq ($(ARCH),aarch64)
-	    Q3OBJ += $(B)/client/vm_aarch64.o
-	  endif
-	endif
-
-	ifeq ($(USE_CURL),1)
-	  Q3OBJ += $(B)/client/cl_curl.o
-	endif
-
-	ifdef MINGW
-
-	  Q3OBJ += \
-	    $(B)/client/win_main.o \
-	    $(B)/client/win_shared.o \
-	    $(B)/client/win_syscon.o \
-	    $(B)/client/win_resource.o
-
-	ifeq ($(USE_SDL),1)
-	ifneq ($(PLATFORM),js)
-	    Q3OBJ += \
-	        $(B)/client/sdl_glimp.o \
-	        $(B)/client/sdl_gamma.o \
-	        $(B)/client/sdl_input.o \
-	        $(B)/client/sdl_snd.o
-	endif
-	else # !USE_SDL
-	    Q3OBJ += \
-	        $(B)/client/win_gamma.o \
-	        $(B)/client/win_glimp.o \
-	        $(B)/client/win_input.o \
-	        $(B)/client/win_minimize.o \
-	        $(B)/client/win_qgl.o \
-	        $(B)/client/win_snd.o \
-	        $(B)/client/win_wndproc.o
-	ifeq ($(USE_VULKAN_API),1)
-	    Q3OBJ += \
-	        $(B)/client/win_qvk.o
-	endif
-	endif # !USE_SDL
-
-	else # !MINGW
-	ifeq ($(PLATFORM),js)
-	Q3OBJ += \
-		$(B)/client/sdl_glimp.o \
-		$(B)/client/sdl_gamma.o \
-		$(B)/client/sdl_snd.o \
-		$(B)/client/sys_main.o \
-		$(B)/client/sys_input.o
-
-	else
-	  Q3OBJ += \
-	    $(B)/client/unix_main.o \
-	    $(B)/client/unix_shared.o \
-	    $(B)/client/linux_signals.o
-	endif
-
-	ifeq ($(USE_SDL),1)
-	ifneq ($(PLATFORM),js)
-	    Q3OBJ += \
-	        $(B)/client/sdl_glimp.o \
-	        $(B)/client/sdl_gamma.o \
-	        $(B)/client/sdl_input.o \
-	        $(B)/client/sdl_snd.o
-	endif
-	else # !USE_SDL
-	    Q3OBJ += \
-	        $(B)/client/linux_glimp.o \
-	        $(B)/client/linux_qgl.o \
-	        $(B)/client/linux_snd.o \
-	        $(B)/client/x11_dga.o \
-	        $(B)/client/x11_randr.o \
-	        $(B)/client/x11_vidmode.o
-	ifeq ($(USE_VULKAN_API),1)
-	    Q3OBJ += \
-	        $(B)/client/linux_qvk.o
-	endif
-	endif # !USE_SDL
 
 
 $(B)/$(TARGET): $(Q3OBJ) 
