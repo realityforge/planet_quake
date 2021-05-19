@@ -133,6 +133,7 @@ cvar_t  *sv_lnAPI;
 cvar_t  *sv_lnWithdraw;
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
 /*
 =============================================================================
 
@@ -2000,3 +2001,5 @@ int SV_SendQueuedPackets( void )
 
 	return timeVal;
 }
+
+#endif

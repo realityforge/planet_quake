@@ -380,10 +380,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 	if ( code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT ) {
 		VM_Forced_Unload_Start();
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( "Server disconnected" );
+#endif
 		Com_EndRedirect();
 #ifndef DEDICATED
 		CL_Disconnect( qfalse, qtrue );
@@ -400,10 +402,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		Com_Printf( "********************\nERROR: %s\n********************\n", 
 			com_errorMessage );
 		VM_Forced_Unload_Start();
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( va( "Server crashed: %s",  com_errorMessage ) );
+#endif
 		Com_EndRedirect();
 #ifndef DEDICATED
 		CL_Disconnect( qfalse, qtrue );
@@ -416,10 +420,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 
 		longjmp( abortframe, -1 );
 	} else if ( code == ERR_NEED_CD ) {
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( "Server didn't have CD" );
+#endif
 		Com_EndRedirect();
 #ifndef DEDICATED
 		if ( com_cl_running && com_cl_running->integer ) {
@@ -444,10 +450,12 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 #endif
 		CL_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ), qtrue );
 #endif
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( va( "Server fatal crashed: %s", com_errorMessage ) );
+#endif
 		Com_EndRedirect();
 		VM_Forced_Unload_Done();
 	}
@@ -476,10 +484,12 @@ void Com_Quit_f( void ) {
 		// Sys_Quit will kill this process anyways, so
 		// a corrupt call stack makes no difference
 		VM_Forced_Unload_Start();
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		SV_Shutdown( p[0] ? p : "Server quit" );
+#endif
 #ifndef DEDICATED
 		CL_Shutdown( p[0] ? p : "Client quit", qtrue );
 #endif
@@ -2332,7 +2342,9 @@ void Hunk_Clear( void ) {
 	CL_ShutdownCGame();
 	CL_ShutdownUI();
 #endif
+#ifndef BUILD_SLIM_CLIENT
 	SV_ShutdownGameProgs();
+#endif
 #ifndef DEDICATED
 	CIN_CloseAllVideos();
 #endif
@@ -2858,6 +2870,7 @@ static sysEvent_t Com_GetEvent( void ) {
 }
 
 
+#ifndef BUILD_SLIM_CLIENT
 /*
 =================
 Com_RunAndTimeServerPacket
@@ -2882,6 +2895,7 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 		}
 	}
 }
+#endif
 
 
 /*
@@ -2913,6 +2927,7 @@ int Com_EventLoop( void ) {
 				CL_PacketEvent( &evFrom, &buf );
 			}
 #endif
+#ifndef BUILD_SLIM_CLIENT
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
 				// if the server just shut down, flush the events
 #ifdef USE_LOCAL_DED
@@ -2922,6 +2937,7 @@ int Com_EventLoop( void ) {
 					Com_RunAndTimeServerPacket( &evFrom, &buf );
 				}
 			}
+#endif
 
 			return ev.evTime;
 		}
@@ -3109,14 +3125,17 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		}
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 		if(com_dedicated->integer)
 #endif
 		// Kill server if we have one
 		if ( com_sv_running->integer )
 			SV_Shutdown( "Game directory changed" );
+#endif
 
 		// Reset console command history
+		// TODO: make this an option
 		Con_ResetHistory();
 
 #ifndef EMSCRIPTEN
@@ -4304,13 +4323,16 @@ void Com_Frame( qboolean noDelay ) {
 		timeBeforeFirstEvents = Sys_Milliseconds();
 	}
 	
+#ifndef BUILD_SLIM_CLIENT
 	// we may want to spin here if things are going too fast
 	if ( com_dedicated->integer ) {
 		minMsec = SV_FrameMsec();
 #ifndef DEDICATED
 		bias = 0;
 #endif
-	} else {
+	} else 
+#endif
+	{
 #ifndef DEDICATED
 		if ( noDelay ) {
 			minMsec = 0;
@@ -4340,6 +4362,7 @@ void Com_Frame( qboolean noDelay ) {
 	// waiting for incoming packets
 	if ( noDelay == qfalse )
 	do {
+#ifndef BUILD_SLIM_CLIENT
 		if ( 
 #ifdef USE_LOCAL_DED
 			com_dedicated->integer &&
@@ -4350,7 +4373,9 @@ void Com_Frame( qboolean noDelay ) {
 			timeVal = Com_TimeVal( minMsec );
 			if ( timeValSV < timeVal )
 				timeVal = timeValSV;
-		} else {
+		} else 
+#endif
+		{
 			timeVal = Com_TimeVal( minMsec );
 		}
 		sleepMsec = timeVal;
@@ -4400,10 +4425,12 @@ void Com_Frame( qboolean noDelay ) {
 		timeBeforeServer = Sys_Milliseconds();
 	}
 
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 	if(com_dedicated->integer)
 #endif
 	SV_Frame( msec );
+#endif
 
 	// if "dedicated" has been modified, start up
 	// or shut down the client system.

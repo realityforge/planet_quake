@@ -1141,6 +1141,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
 	}
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
 	if (com_dedicated->integer)
 #endif
@@ -1148,6 +1149,7 @@ qboolean Cmd_ExecuteString( const char *text, qboolean noServer, int tag ) {
 	if ( !noServer && com_sv_running && com_sv_running->integer && SV_GameCommand(tag) ) {
 		return qtrue;
 	}
+#endif
 
 #ifndef DEDICATED
 	// check ui commands

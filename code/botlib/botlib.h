@@ -31,6 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __BOTLIB_H__
 #define __BOTLIB_H__
 
+#include "../qcommon/q_shared.h"
 
 #define	BOTLIB_API_VERSION		2
 
@@ -442,7 +443,11 @@ typedef struct botlib_export_s
 extern int   aasgvm;
 
 //linking of bot library
+#ifdef USE_BOTLIB_DLOPEN
+typedef	botlib_export_t* (QDECL *GetBotLibAPI_t) (int apiVersion, botlib_import_t *import);
+#else
 botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
+#endif
 
 /* Library variables:
 

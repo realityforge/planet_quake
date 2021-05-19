@@ -4,6 +4,7 @@ include make/platform.make
 include make/configure.make
 include make/platform_os.make
 
+RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(CNAME)
 
 SOURCES  := $(MOUNT_DIR)/client
@@ -32,7 +33,11 @@ QCOMMON  := $(B)/client/cmd.o \
 						$(B)/client/q_math.o \
 					  $(B)/client/q_shared.o \
 					  $(B)/client/unzip.o \
-					  $(B)/client/puff.o
+					  $(B)/client/puff.o \
+						$(B)/client/sv_init.o \
+						$(B)/client/sv_main.o \
+						$(B)/client/sv_bot.o \
+						$(B)/client/sv_game.o
 
 SOUND    := $(B)/client/snd_adpcm.o \
 					  $(B)/client/snd_dma.o \
@@ -165,17 +170,25 @@ Q3OBJ         := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX   = 
-CC       = gcc
-CFLAGS   = $(INCLUDE) -fsigned-char \
+PREFIX   := 
+CC       := gcc
+CFLAGS   := $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD -DUSE_SYSTEM_JPEG -DBUILD_SLIM_CLIENT
+						 -MMD -DUSE_SYSTEM_JPEG -DBUILD_SLIM_CLIENT \
+						 -DUSE_RENDERER_DLOPEN \
+						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\" \
+						 -DUSE_SYSTEM_JPEG
+#LDFLAGS  := -L$(MOUNT_DIR)/macosx -lxml2 -lpng \
+						$(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
+						-L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
+LDFLAGS  := -L$(BD) -ljpeg \
+						$(BD)/quake3e_libbots_x86_64.dylib
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 #SHLIBEXT     = dylib
 #SHLIBCFLAGS  = -fPIC -fno-common \
 							 -DUSE_RENDERER_DLOPEN \
-							 -DRENDERER_PREFIX=\\"$(RENDERER_PREFIX)\\"
+							 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
 #SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
 #SHLIBNAME    = $(ARCH).$(SHLIBEXT)
 
@@ -241,6 +254,9 @@ $(B)/client/%.o: code/sdl/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/qcommon/%.c
+	$(DO_CLIENT_CC)
+
+$(B)/client/%.o: code/server/%.c
 	$(DO_CLIENT_CC)
 
 #SPSERVER := $(B)/client/sv_bot.o \
@@ -533,7 +549,7 @@ $(B)/client/%.o: code/qcommon/%.c
 
 $(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SDL_LIBS) -o $@
+	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(LDFLAGS) $(SDL_LIBS) -o $@
 
 clean:
 	@rm -rf $(BD)/client

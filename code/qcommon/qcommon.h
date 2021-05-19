@@ -1404,12 +1404,12 @@ qboolean CL_GameSwitch( void );
 // AVI files have the start of pixel lines 4 byte-aligned
 #define AVI_LINE_PADDING 4
 
-#ifndef BUILD_SLIM_CLIENT
-#ifndef USE_LOCAL_DED
 //
 // server interface
 //
 void SV_Init( void );
+#ifndef BUILD_SLIM_CLIENT
+#ifndef USE_LOCAL_DED
 void SV_BotInitCvars( void );
 void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );

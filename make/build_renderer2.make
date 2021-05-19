@@ -8,7 +8,7 @@ RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(RENDERER_PREFIX)_opengl2_
 
 SOURCES  := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
-INCLUDES := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
+INCLUDES := 
 
 #LIBS = -l
 GLSLFFALLBACKS := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.glsl))
@@ -23,18 +23,18 @@ Q3OBJ         := $(addprefix $(B)/rend2/,$(notdir $(OBJS))) \
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX   = 
-CC       = gcc
-CFLAGS   = $(INCLUDE) -fsigned-char \
+PREFIX   := 
+CC       := gcc
+CFLAGS   := $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
 						 -MMD
 
-SHLIBEXT     = dylib
-SHLIBCFLAGS  = -fPIC -fno-common \
-							 -DUSE_RENDERER_DLOPEN \
-							 -DRENDERER_PREFIX=\\"$(RENDERER_PREFIX)\\"
-SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
-SHLIBNAME    = $(ARCH).$(SHLIBEXT)
+SHLIBEXT     := dylib
+SHLIBCFLAGS  := -fPIC -fno-common \
+							  -DUSE_RENDERER_DLOPEN \
+							  -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
+SHLIBLDFLAGS := -dynamiclib $(LDFLAGS)
+SHLIBNAME    := $(ARCH).$(SHLIBEXT)
 
 define DO_REND_CC
 	$(echo_cmd) "REND_CC $<"
@@ -53,11 +53,11 @@ mkdirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
-	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
+	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
 
 default:
 	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
-	$(MAKE) -f $(MKFILE) B=$(BD) $(B)/$(TARGET)$(SHLIBNAME)
+	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
 
 #debug:
 #	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
@@ -80,7 +80,7 @@ $(B)/rend2/%.o: code/renderer2/%.c
 $(B)/rend2/glsl/%.c: code/renderer2/glsl/%.glsl
 	$(DO_REF_STR)
 
-$(B)/rend2/glsl/%.o: $(B)/renderer2/glsl/%.c
+$(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 	$(DO_REND_CC)
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
@@ -88,4 +88,13 @@ $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ)
 	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SDL_LIBS) $(SHLIBLDFLAGS) -o $@
 
 clean:
-	@rm -rf $(B)/rend2
+	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
+
+
+.PHONY: all clean clean2 clean-debug clean-release copyfiles \
+	debug default dist distclean makedirs release \
+  targets tools toolsclean mkdirs \
+	$(D_FILES)
+
+.DEFAULT_GOAL := default

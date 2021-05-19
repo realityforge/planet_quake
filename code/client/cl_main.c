@@ -1900,11 +1900,13 @@ void CL_Disconnect_f( void ) {
 		} else {
 			// clear any previous "server full" type messages
 			clc.serverMessage[0] = '\0';
+#ifndef BUILD_SLIM_CLIENT
 #ifndef USE_LOCAL_DED
 			if ( com_sv_running && com_sv_running->integer ) {
 				// if running a local server, kill it
 				SV_Shutdown( "Disconnected from server" );
 			} else 
+#endif
 #endif
 			{
 				Com_Printf( "Disconnected from %s\n", cls.servername );
@@ -4379,6 +4381,7 @@ static void CL_InitRef( void ) {
 #endif // __linux__
 #endif // EMSCRIPTEN
 
+// TODO: make this a fancy list of renderers we recognize
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
 #ifdef EMSCRIPTEN
@@ -4495,11 +4498,9 @@ static void CL_InitRef_After_Load2( void )
 	rimp.CIN_RunCinematic = CIN_RunCinematic;
 
 	rimp.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
-#ifdef USE_JPEG
 	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;
 	rimp.CL_SaveJPG = CL_SaveJPG;
 	rimp.CL_LoadJPG = CL_LoadJPG;
-#endif
 
 	rimp.CL_IsMinimized = CL_IsMininized;
 	rimp.CL_SetScaling = CL_SetScaling;

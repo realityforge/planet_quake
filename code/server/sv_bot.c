@@ -39,6 +39,7 @@ extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
 
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 SV_BotAllocateClient
@@ -77,6 +78,7 @@ int SV_BotAllocateClient( void ) {
 	Com_Printf("Allocating: %i (%i)\n", i, gvm);
 	return i;
 }
+#endif
 
 
 /*
@@ -186,6 +188,8 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int ty
 	}
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 BotImport_Trace
@@ -256,6 +260,8 @@ BotImport_inPVS
 static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
 	return SV_inPVS (p1, p2);
 }
+#endif
+
 
 /*
 ==================
@@ -433,6 +439,8 @@ static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int colo
 	BotImport_DebugPolygonShow(line, color, 4, points);
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 SV_BotClientCommand
@@ -462,6 +470,8 @@ void SV_BotFrame( int time ) {
 	if (!gvms[gvm]) return;
 	VM_Call( gvms[gvm], 1, BOTAI_START_FRAME, time );
 }
+#endif
+
 
 /*
 ===============
@@ -550,13 +560,15 @@ void SV_BotInitBotLib(void) {
 	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
 
 	botlib_import.Print = BotImport_Print;
+#ifndef BUILD_SLIM_CLIENT
 	botlib_import.Trace = BotImport_Trace;
 	botlib_import.EntityTrace = BotImport_EntityTrace;
 	botlib_import.PointContents = BotImport_PointContents;
 	botlib_import.inPVS = BotImport_inPVS;
+	botlib_import.BotClientCommand = BotClientCommand;
+#endif
 	botlib_import.BSPEntityData = BotImport_BSPEntityData;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = BotClientCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;

@@ -2016,9 +2016,11 @@ static void NET_Event( const fd_set *fdr )
 #ifdef DEDICATED
 			Com_RunAndTimeServerPacket( &from, &netmsg );
 #else
+#ifndef BUILD_SLIM_CLIENT
 			if ( com_sv_running->integer || com_dedicated->integer )
 				Com_RunAndTimeServerPacket( &from, &netmsg );
 			else
+#endif
 				CL_PacketEvent( &from, &netmsg );
 #endif
 		}

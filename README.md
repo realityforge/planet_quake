@@ -63,6 +63,7 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
+  * Option for persistent console Con_ResetHistory()
   * Serverless client mode for web, automatically skip to multiplayer menu and that connects to first available command server that we can request a map command. Remove the autoconnect code from javascript. Replace the menu address with an API call.
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
   * TODO: Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, bots? sound? 

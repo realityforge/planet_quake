@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 botlib_export_t	*botlib_export;
 
+#ifndef BUILD_SLIM_CLIENT
+
 // these functions must be used instead of pointer arithmetic, because
 // the game allocates gentities with private information after the server shared part
 int	SV_NumForGentity( sharedEntity_t *ent ) {
@@ -1257,3 +1259,5 @@ qboolean SV_GameCommand( int igvm ) {
 #endif
 	return result;
 }
+
+#endif

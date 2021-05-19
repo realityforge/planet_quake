@@ -1965,7 +1965,7 @@ $(B)/rend1/%.o: $(CMDIR)/%.c
 $(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl
 	$(DO_REF_STR)
 
-$(B)/rend2/glsl/%.o: $(B)/renderer2/glsl/%.c
+$(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 	$(DO_REND_CC)
 
 $(B)/rend2/%.o: $(RCDIR)/%.c

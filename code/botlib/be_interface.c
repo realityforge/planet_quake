@@ -841,7 +841,11 @@ void SetAASgvm(int gvm) {
 GetBotLibAPI
 ============
 */
+#ifdef USE_BOTLIB_DLOPEN
+Q_EXPORT botlib_export_t* QDECL GetBotLibAPI ( int apiVersion, botlib_import_t *import ) {
+#else
 botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
+#endif
 	assert(import);
 	botimport = *import;
 	assert(botimport.Print);

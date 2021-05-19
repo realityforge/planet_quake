@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean svShuttingDown = qfalse;
 
+#ifndef BUILD_SLIM_CLIENT
 /*
 ===============
 SV_SendConfigstring
@@ -857,6 +858,7 @@ void SV_InitUserRoles (void) {
 #endif
 
 
+#endif // BUILD_SLIM_CLIENT
 /*
 ===============
 SV_Init
@@ -868,6 +870,7 @@ void SV_Init( void )
 {
 	int index;
 
+#ifndef BUILD_SLIM_CLIENT
 #if defined(USE_CMD_CONNECTOR) && defined(USE_LOCAL_DED)
 	// if using a local dedicated server and these commands are not present, 
 	//   then they will automatically be forwarded to the local dedicated server
@@ -881,6 +884,7 @@ void SV_Init( void )
 
 	if ( com_dedicated->integer )
 		SV_AddDedicatedCommands();
+#endif
 #endif
 
 	// serverinfo vars
@@ -1132,12 +1136,24 @@ void SV_Init( void )
 	Cvar_SetGroup( sv_maxRate, CVG_SERVER );
 	Cvar_SetGroup( sv_fps, CVG_SERVER );
 
+#ifndef BUILD_SLIM_CLIENT
+#ifdef USE_LOCAL_DED
+	if(com_dedicated->integer)
+	{
+#endif
+;
 	// force initial check
 	SV_TrackCvarChanges();
 
 	SV_InitChallenger();
+#ifdef USE_LOCAL_DED
+	}
+#endif
+#endif
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 
 /*
 ==================
@@ -1312,3 +1328,5 @@ void SV_Shutdown( const char *finalmsg ) {
 	Cbuf_AddText(va("spmap q3dm0\n"));
 #endif
 }
+
+#endif
