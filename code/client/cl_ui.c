@@ -23,7 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 
 #include "../botlib/botlib.h"
+
+#ifdef USE_RMLUI
 #include <RmlUi/Wrapper.h>
+#endif
 
 extern	botlib_export_t	*botlib_export;
 
@@ -1237,8 +1240,10 @@ void CL_ShutdownUI( void ) {
 	uivm = 0;
 	FS_VM_CloseFiles( H_Q3UI );
 
+#ifdef USE_RMLUI
 	if(cls.rmlStarted)
 		Rml_Shutdown();
+#endif
 #ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
 	cls.cursory = 0;
@@ -1247,6 +1252,7 @@ void CL_ShutdownUI( void ) {
 #endif
 }
 
+#ifdef USE_RMLUI
 static fileHandle_t CL_RmlOpen(const char * filename) {
 	fileHandle_t h;
 	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
@@ -1327,6 +1333,8 @@ static double CL_RmlGetElapsedTime( void ) {
 static qhandle_t CL_RmlLoadTexture(int dimensions[2], const char *source) {
 	return re.RegisterShader(source);
 }
+#endif
+
 /*
 ====================
 CL_InitUI
@@ -1391,6 +1399,7 @@ void CL_InitUI( qboolean loadNew ) {
 		VM_Call( uivms[uivm], 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 
+#ifdef USE_RMLUI
 	static RmlFileInterface files;
 	files.Open = CL_RmlOpen;
 	files.Close = CL_RmlClose;
@@ -1430,6 +1439,8 @@ void CL_InitUI( qboolean loadNew ) {
 		Rml_Shutdown();
 		cls.rmlStarted = qfalse;
 	}
+#endif
+
 	/*
 	
 	RmlUiSDL2Renderer Renderer(renderer, screen);

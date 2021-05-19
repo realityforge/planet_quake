@@ -1372,6 +1372,7 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 	{
 		RoQ_init();
 //		FS_Read (cin.file, cinTable[currentHandle].RoQFrameSize+8, cinTable[currentHandle].iFile);
+		//RoQ_MakeIndex();
 
 		cinTable[currentHandle].status = FMV_PLAY;
 		Com_DPrintf("trFMV::play(), playing %s\n", name);

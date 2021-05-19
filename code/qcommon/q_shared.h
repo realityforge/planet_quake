@@ -48,43 +48,47 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#ifdef BUILD_EXPERIMENTAL
 // referee commands include things like: 
 // server-side pause/freeze
 // disciplinary actions such as mute/nofire
 // lock and unlock for team joining
-//#define USE_REFEREE_CMDS 1
+#define USE_REFEREE_CMDS 1
 // start a dedicated server even for single player mode, automatically join a match
-//#define USE_LOCAL_DED 1
+#define USE_LOCAL_DED 1
 // allow loading graphics after the BSP and world has been entered
-//#define USE_LAZY_LOAD 1
+#define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts
-//#define USE_LAZY_MEMORY 1
+#define USE_LAZY_MEMORY 1
 // set specific master servers to be used in the Local LAN game list, 
 //   as if masters were also used in LAN games instead of just broadcasting
 //   or to specific master servers that host games geographically nearby
-//#define USE_MASTER_LAN 1
+#define USE_MASTER_LAN 1
 // adds roles to rcon access, each role has it's own password
 // each role can execute specific commands
-//#define USE_SERVER_ROLES 1
+#define USE_SERVER_ROLES 1
 // adds settings for saving and restoring client states, either giving clients
 //   30 seconds to reconnect and keep their score, or saving client states for
 //   days/weeks as a part of a long on going adventure game or campaign
-//#define USE_PERSIST_CLIENT 1
+#define USE_PERSIST_CLIENT 1
+// recent event are for server status trackers to get previous match results
+//   it's also used for the Discord chat bot connector
+#define USE_RECENT_EVENTS 1
+// Cyrax's Multiview  is what makes multiworld possible.
+#define USE_MV				  // multiview enabled
+//#define USE_MV_ZCMD		// command compression
+// RmlUi adds supplementary initerfaces written in HTML.
+#define USE_RMLUI
+
+#endif
 
 
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
 #endif
 
-// recent event are for server status trackers to get previous match results
-//   it's also used for the Discord chat bot connector
-//#define USE_RECENT_EVENTS 1
-
-#define MV_PROTOCOL_VERSION	1 // multiview protocol version
-//#define USE_MV				  // multiview enabled
-//#define USE_MV_ZCMD		// command compression
-
 #ifdef USE_MV
+#define MV_PROTOCOL_VERSION	1 // multiview protocol version
 // enable loading multiple QVM images
 //#define USE_MULTIVM_CLIENT 1
 //#define USE_MULTIVM_SERVER 1
@@ -101,6 +105,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 #endif
 
+// TODO: move this into make file
 #ifdef EMSCRIPTEN
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
 #define USE_VID_FAST 1
