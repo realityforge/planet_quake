@@ -507,7 +507,6 @@ FS_PakIsPure
 */
 static qboolean FS_PakIsPure( const pack_t *pack ) {
 #ifndef DEDICATED
-#if 0
 int i;
 	if ( fs_numServerPaks ) {
 		for ( i = 0 ; i < fs_numServerPaks ; i++ ) {
@@ -520,7 +519,6 @@ int i;
 		}
 		return qfalse;	// not on the pure server pak list
 	}
-#endif
 #endif
 	return qtrue;
 }
@@ -1088,7 +1086,6 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 			fd->handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 		}
 
-#ifndef EMSCRIPTEN
 		// Check fs_steampath too
 		if ( !fd->handleFiles.file.o && fs_steampath->string[0] )
 		{
@@ -1102,7 +1099,6 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 
 			fd->handleFiles.file.o = Sys_FOpen( ospath, "rb" );
 		}
-#endif
 	}
 
 	if( fd->handleFiles.file.o != NULL ) {
@@ -1931,63 +1927,6 @@ int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file )
 
 	*file = FS_INVALID_HANDLE;
 	return -1;
-}
-
-
-/*
-=================
-FS_Home_ListFilteredFiles
-=================
-*/
-char **FS_Home_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles ) {
-
-	const char *netpath;
-
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
-
-	if ( !path ) {
-		*numfiles = 0;
-		return NULL;
-	}
-
-	if ( !extension ) {
-		extension = "";
-	}
-
-	netpath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, path );
-
-	return Sys_ListFiles( netpath, extension, filter, numfiles, qfalse );
-}
-
-
-/*
-=================
-FS_Home_FileSize
-=================
-*/
-int FS_Home_FileSize( const char *name ) {
-
-	const char *ospath;
-	int length;
-	FILE *f;
-
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
-
-	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, name );
-
-	f = Sys_FOpen( ospath, "rb" );
-	if ( f ) {
-		length = FS_FileLength( f );
-		fclose( f );
-	} else {
-		length = -1;
-	}
-
-	return length;
 }
 
 
@@ -3384,7 +3323,7 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 		return qtrue;
 #else
 	if ( !thepak )
-		return qtrue;
+		return qfalse;
 #endif
 	
 	checksum = thepak->checksum;
@@ -3555,13 +3494,11 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, const char
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-#if 0
 	if  ( fs_numServerPaks && !( flags & FS_MATCH_STICK ) ) {
 		flags &= ~FS_MATCH_UNPURE;
 		if ( !FS_AllowListExternal( extension ) )
 			flags &= ~FS_MATCH_EXTERN;
 	}
-#endif
 
 	if ( !path ) {
 		*numfiles = 0;
@@ -3888,11 +3825,7 @@ static int FS_GetModList( char *listbuf, int bufsize ) {
 	qboolean bDrop = qfalse;
 
 	// paths to search for mods
-	cvar_t *const *paths[] = { &fs_basepath, &fs_homepath
-#ifndef EMSCRIPTEN
-		, &fs_steampath 
-#endif
-	};
+	cvar_t *const *paths[] = { &fs_basepath, &fs_homepath, &fs_steampath };
 
 	*listbuf = '\0';
 	nMods = nTotal = 0;
@@ -4359,13 +4292,10 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 	pakfilesi = 0;
 	pakdirsi = 0;
 
-#if 0
 	if ( fs_numServerPaks ) {
 		numdirs = 0;
 		pakdirs = NULL;
-	} else 
-#endif
-	{
+	} else {
 		// Get top level directories (we'll filter them later since the Sys_ListFiles filtering is terrible)
 		pakdirs = Sys_ListFiles( curpath, "/", NULL, &numdirs, qfalse );
 		if ( numdirs >= 2 ) {

@@ -121,7 +121,9 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+#ifdef USE_MULTIVM_CLIENT
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
+#endif
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);

@@ -1874,12 +1874,15 @@ void RE_EndRegistration( void ) {
 	}
 }
 
+
+#ifdef USE_MULTIVM_CLIENT
 void RE_SetDvrFrame(float x, float y, float width, float height) {
 	dvrXScale = width;
 	dvrYScale = height;
 	dvrXOffset = x;
 	dvrYOffset = y;
 }
+#endif
 
 
 /*
@@ -1953,7 +1956,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
+#ifdef USE_MULTIVM_CLIENT
 	re.SetDvrFrame = RE_SetDvrFrame;
+#endif
 	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;

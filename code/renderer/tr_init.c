@@ -268,17 +268,6 @@ void QDECL Com_Printf( const char *fmt, ... )
 
 	ri.Printf( PRINT_ALL, "%s", buf );
 }
-
-void QDECL Com_DPrintf( const char *fmt, ... )
-{
-	char buf[ MAXPRINTMSG ];
-	va_list	argptr;
-	va_start( argptr, fmt );
-	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
-	va_end( argptr );
-
-	ri.Printf( PRINT_DEVELOPER, "%s", buf );
-}
 #endif
 
 
@@ -633,6 +622,22 @@ static void InitOpenGL( void )
 	else
 	{
 		QGL_SetRenderScale( qfalse );
+	}
+
+	if ( !qglViewport ) // might happen after REF_KEEP_WINDOW
+	{
+		const char *err = R_ResolveSymbols( core_procs, ARRAY_LEN( core_procs ) );
+		if ( err )
+			ri.Error( ERR_FATAL, "Error resolving core OpenGL function '%s'", err );
+
+		R_InitExtensions();
+
+		QGL_InitARB();
+
+		// print info
+		GfxInfo();
+
+		gls.initTime = ri.Milliseconds();
 	}
 
 	VarInfo();

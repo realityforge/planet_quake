@@ -32,7 +32,7 @@ static void SV_CreateRecordCache( void )
 	mv_total_size = 0;
 
 	Com_Memset( mvrecords, 0, sizeof( mvrecords ) );
-	list = FS_Home_ListFilteredFiles( "demos", ".dm_71", MV_FILTER, &nfiles );
+	list = FS_ListFilteredFiles( "demos", ".dm_71", MV_FILTER, &nfiles );
 	for ( i = 0; i < nfiles; i++ ) 
 	{
 		name = list[i];
@@ -42,7 +42,7 @@ static void SV_CreateRecordCache( void )
 		if ( len < 22 || len >= sizeof( mvr->name ) )
 			continue;
 
-		size = FS_Home_FileSize( va( "demos/%s", name ) );
+		size = FS_SV_FOpenFileRead( va( "demos/%s", name ) );
 		if ( size <= 0 )
 			continue;
 
@@ -79,7 +79,7 @@ void SV_LoadRecordCache( void )
 	mv_insert_index = 0;
 	mv_total_size = 0;
 
-	fileSize = FS_Home_FOpenFileRead( MV_CACHE_FILE, &fh );
+	fileSize = FS_SV_FOpenFileRead( MV_CACHE_FILE, &fh );
 	if ( fh == FS_INVALID_HANDLE )
 	{
 		SV_CreateRecordCache();

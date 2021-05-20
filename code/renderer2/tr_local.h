@@ -2549,7 +2549,9 @@ void RE_TakeVideoFrame( int width, int height,
 
 void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );
+#ifdef USE_MULTIVM_CLIENT
 void RE_SetDvrFrame( float x, float y, float width, float height );
+#endif
 void RB_FastCapture(byte *data);
 void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer);
 qboolean RE_CanMinimize( void );
