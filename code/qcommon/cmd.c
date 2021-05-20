@@ -174,45 +174,6 @@ static void Cbuf_ExecuteInternal( cbufExec_t exec_when, const char *text )
 
 /*
 ============
-Cbuf_ExecuteText
-============
-*/
-void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
-{
-	if(cmd_text[insCmdI].filtered == qfalse) {
-		// use same buffer
-	} else {
-		insCmdI++;
-		if(insCmdI == 32) {
-			insCmdI = 0;
-		}
-	}
-	cmd_text[insCmdI].filtered = qfalse;
-	cmd_text[insCmdI].tag = 0;
-	Cbuf_ExecuteInternal( exec_when, text );
-}
-
-
-void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag )
-{
-	if(cmd_text[insCmdI].filtered == qtrue
-		&& cmd_text[insCmdI].tag == tag) {
-		// use same buffer
-	} else {
-		insCmdI++;
-		if(insCmdI == 32) {
-			insCmdI = 0;
-		}
-	}
-	cmd_text[insCmdI].filtered = qtrue;
-	cmd_text[insCmdI].tag = tag;
-Com_Printf("Inserting: %s (%i)\n", text, cmd_text[insCmdI].tag);
-	Cbuf_ExecuteInternal( exec_when, text );
-}
-
-
-/*
-============
 Cbuf_Execute
 ============
 */
@@ -470,30 +431,6 @@ typedef struct cmdContext_s
 
 static cmdContext_t		cmd;
 static cmdContext_t		savedCmd;
-
-/*
-============
-Cmd_SaveCmdContext
-
-Save the tokenized strings and cmd so that later we can restore them and the engine will continue its usual processing normally
-============
-*/
-void Cmd_SaveCmdContext( void )
-{
-	Com_Memcpy( &savedCmd, &cmd, sizeof( cmdContext_t ) );
-}
-
-/*
-============
-Cmd_RestoreCmdContext
-
-Restore the tokenized strings and cmd saved previously so that the engine can continue its usual processing
-============
-*/
-void Cmd_RestoreCmdContext( void )
-{
-	Com_Memcpy( &cmd, &savedCmd, sizeof( cmdContext_t ) );
-}
 
 /*
 ============
@@ -803,94 +740,6 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 
 
 /*
-=====================
-Cmd_SetDescription
-=====================
-*/
-void Cmd_SetDescription( const char *cmd_name, char *cmd_description )
-{
-	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
-	if(!cmd) return;
-
-	if( cmd_description && cmd_description[0] != '\0' )
-	{
-		if( cmd->description != NULL )
-		{
-			Z_Free( cmd->description );
-		}
-		cmd->description = CopyString( cmd_description );
-	}
-}
-
-
-/*
-============
-Cmd_Help
-
-Prints the value, default, and latched string of the given variable
-============
-*/
-static void Cmd_Help( const cmd_function_t *cmd ) {	
-	Com_Printf ("\"%s\" " S_COLOR_WHITE "",
-		cmd->name );
-
-	Com_Printf (" autocomplete:\"%s" S_COLOR_WHITE "\"",
-		cmd->complete ? "yes" : "no" );
-
-	Com_Printf ("\n");
-
-	if ( cmd->description ) {
-		Com_Printf( "%s\n", cmd->description );
-	}
-}
-
-
-/*
-============
-Cmd_Help_f
-
-Prints the contents of a cvar 
-(preferred over Cvar_Command where cvar names and commands conflict)
-============
-*/
-static void Cmd_Help_f( void )
-{
-	char *name;
-	cmd_function_t *cmd;
-
-	if(Cmd_Argc() != 2)
-	{
-		Com_Printf ("List all commands using \\cmdlist\nUsage: help <command>\n");
-		return;
-	}
-
-	name = CopyString(Cmd_Argv(1));
-
-	if(!Q_stricmp("all", name)) {
-		for( cmd = cmd_functions; cmd; cmd = cmd->next ) {
-			Cmd_Help(cmd);
-		}
-		return;
-	}
-
-	Cmd_TokenizeString(name);
-	if(Cvar_Command()) {
-		Z_Free(name);
-		return;
-	}
-	
-	cmd = Cmd_FindCommand( name );
-	
-	if(cmd)
-		Cmd_Help(cmd);
-	else
-		Com_Printf ("Command %s does not exist.\n", name);
-
-	Z_Free(name);
-}
-
-
-/*
 ============
 Cmd_SetCommandCompletionFunc
 ============
@@ -1020,71 +869,6 @@ qboolean Cmd_CompleteArgument( const char *command, char *args, int argNum ) {
 
 	return qfalse;
 }
-
-
-#ifdef USE_SERVER_ROLES
-static qboolean limited;
-
-qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
-	limited = qtrue;
-	qboolean result = Cmd_ExecuteString(text, noServer, 0);
-	limited = qfalse;
-	return result;
-}
-
-
-static	char		props[BIG_INFO_STRING];
-char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
-	int c = 0, r = 0, len = strlen(text_in);
-	props[0] = 0;
-	while(c < len) {
-		if((text_in[c] >= 'a' && text_in[c] <= 'z')
-			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
-			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
-			props[r] = text_in[c];
-			r++;
-		} else {
-			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
-				props[r] = 0;
-				(*count)++;
-				r++;
-			}
-		}
-		c++;
-	}
-	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
-		props[r] = 0;
-		(*count)++;
-		r++;
-	}
-	if(*count == MAX_CLIENT_ROLES) {
-		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
-	}
-	return props;
-}
-
-
-void Cmd_FilterLimited(char *commandList) {
-	cmd_function_t *cmd, **prev;
-	int cmdCount = 0;
-	// force 3 roles to be available?
-	char *cmds = Cmd_TokenizeAlphanumeric(commandList, &cmdCount);
-	// loop through each command and mark it  as limited
-	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
-		cmd = *prev;
-		cmd->limited = qfalse;
-		// check if command  is in  command whitelist for the role
-		for(int i = 0; i < cmdCount; i++) {
-			if(Q_stricmp(&cmds[i], cmd->name)==0) {
-				cmd->limited = qtrue;
-			}
-			cmds = &cmds[strlen(cmds)+1];
-		}
-	}
-	
-}
-
-#endif
 
 
 /*
@@ -1256,4 +1040,221 @@ void Cmd_Init( void ) {
 	Cvar_SetDescription(cl_execTimeout, "Minimum milliseconds between executions to reset overflow detection\nDefault: 2000");
 	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);
 	Cvar_SetDescription( cl_execOverflow, "Maximum milliseconds an execution can take before it becomes overflowed\nDefault: 200" );
+}
+
+
+/*
+============
+Cbuf_ExecuteText
+============
+*/
+void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text )
+{
+	if(cmd_text[insCmdI].filtered == qfalse) {
+		// use same buffer
+	} else {
+		insCmdI++;
+		if(insCmdI == 32) {
+			insCmdI = 0;
+		}
+	}
+	cmd_text[insCmdI].filtered = qfalse;
+	cmd_text[insCmdI].tag = 0;
+	Cbuf_ExecuteInternal( exec_when, text );
+}
+
+
+void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag )
+{
+	if(cmd_text[insCmdI].filtered == qtrue
+		&& cmd_text[insCmdI].tag == tag) {
+		// use same buffer
+	} else {
+		insCmdI++;
+		if(insCmdI == 32) {
+			insCmdI = 0;
+		}
+	}
+	cmd_text[insCmdI].filtered = qtrue;
+	cmd_text[insCmdI].tag = tag;
+Com_Printf("Inserting: %s (%i)\n", text, cmd_text[insCmdI].tag);
+	Cbuf_ExecuteInternal( exec_when, text );
+}
+
+
+/*
+============
+Cmd_SaveCmdContext
+
+Save the tokenized strings and cmd so that later we can restore them and the engine will continue its usual processing normally
+============
+*/
+void Cmd_SaveCmdContext( void )
+{
+	Com_Memcpy( &savedCmd, &cmd, sizeof( cmdContext_t ) );
+}
+
+/*
+============
+Cmd_RestoreCmdContext
+
+Restore the tokenized strings and cmd saved previously so that the engine can continue its usual processing
+============
+*/
+void Cmd_RestoreCmdContext( void )
+{
+	Com_Memcpy( &cmd, &savedCmd, sizeof( cmdContext_t ) );
+}
+
+
+/*
+=====================
+Cmd_SetDescription
+=====================
+*/
+void Cmd_SetDescription( const char *cmd_name, char *cmd_description )
+{
+	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
+	if(!cmd) return;
+
+	if( cmd_description && cmd_description[0] != '\0' )
+	{
+		if( cmd->description != NULL )
+		{
+			Z_Free( cmd->description );
+		}
+		cmd->description = CopyString( cmd_description );
+	}
+}
+
+
+/*
+============
+Cmd_Help
+
+Prints the value, default, and latched string of the given variable
+============
+*/
+static void Cmd_Help( const cmd_function_t *cmd ) {	
+	Com_Printf ("\"%s\" " S_COLOR_WHITE "",
+		cmd->name );
+
+	Com_Printf (" autocomplete:\"%s" S_COLOR_WHITE "\"",
+		cmd->complete ? "yes" : "no" );
+
+	Com_Printf ("\n");
+
+	if ( cmd->description ) {
+		Com_Printf( "%s\n", cmd->description );
+	}
+}
+
+
+#ifdef USE_SERVER_ROLES
+static qboolean limited;
+
+qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
+	limited = qtrue;
+	qboolean result = Cmd_ExecuteString(text, noServer, 0);
+	limited = qfalse;
+	return result;
+}
+
+
+static	char		props[BIG_INFO_STRING];
+char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
+	int c = 0, r = 0, len = strlen(text_in);
+	props[0] = 0;
+	while(c < len) {
+		if((text_in[c] >= 'a' && text_in[c] <= 'z')
+			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
+			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
+			props[r] = text_in[c];
+			r++;
+		} else {
+			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+				props[r] = 0;
+				(*count)++;
+				r++;
+			}
+		}
+		c++;
+	}
+	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+		props[r] = 0;
+		(*count)++;
+		r++;
+	}
+	if(*count == MAX_CLIENT_ROLES) {
+		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
+	}
+	return props;
+}
+
+
+void Cmd_FilterLimited(char *commandList) {
+	cmd_function_t *cmd, **prev;
+	int cmdCount = 0;
+	// force 3 roles to be available?
+	char *cmds = Cmd_TokenizeAlphanumeric(commandList, &cmdCount);
+	// loop through each command and mark it  as limited
+	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
+		cmd = *prev;
+		cmd->limited = qfalse;
+		// check if command  is in  command whitelist for the role
+		for(int i = 0; i < cmdCount; i++) {
+			if(Q_stricmp(&cmds[i], cmd->name)==0) {
+				cmd->limited = qtrue;
+			}
+			cmds = &cmds[strlen(cmds)+1];
+		}
+	}
+	
+}
+
+#endif
+
+
+/*
+============
+Cmd_Help_f
+
+Prints the contents of a cvar 
+(preferred over Cvar_Command where cvar names and commands conflict)
+============
+*/
+static void Cmd_Help_f( void )
+{
+	char *name;
+	cmd_function_t *cmd;
+
+	if(Cmd_Argc() != 2)
+	{
+		Com_Printf ("List all commands using \\cmdlist\nUsage: help <command>\n");
+		return;
+	}
+
+	name = CopyString(Cmd_Argv(1));
+
+	if(!Q_stricmp("all", name)) {
+		for( cmd = cmd_functions; cmd; cmd = cmd->next ) {
+			Cmd_Help(cmd);
+		}
+		return;
+	}
+
+	Cmd_TokenizeString(name);
+	if(Cvar_Command()) {
+		Z_Free(name);
+		return;
+	}
+	
+	cmd = Cmd_FindCommand( name );
+	
+	if(cmd)
+		Cmd_Help(cmd);
+	else
+		Com_Printf ("Command %s does not exist.\n", name);
+
+	Z_Free(name);
 }
