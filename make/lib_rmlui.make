@@ -38,7 +38,6 @@ CFLAGS   = $(INCLUDE) \
 CXXFLAGS  = $(CFLAGS)  -std=c++14
 # -fno-exceptions
 
-SHLIBEXT     = dylib
 SHLIBCFLAGS  = -fPIC -fno-common \
 							 -DRMLUI_NO_THIRDPARTY_CONTAINERS
 SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)

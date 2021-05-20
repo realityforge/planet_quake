@@ -174,10 +174,10 @@ PREFIX   :=
 CC       := gcc
 CFLAGS   := $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD -DUSE_SYSTEM_JPEG -DBUILD_SLIM_CLIENT \
+						 -MMD -DBUILD_SLIM_CLIENT \
 						 -DUSE_RENDERER_DLOPEN \
-						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\" \
-						 -DUSE_SYSTEM_JPEG
+						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
+#						 -DUSE_SYSTEM_JPEG
 #LDFLAGS  := -L$(MOUNT_DIR)/macosx -lxml2 -lpng \
 						$(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
 						-L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
@@ -185,7 +185,6 @@ LDFLAGS  := -L$(BD) -ljpeg \
 						$(BD)/quake3e_libbots_x86_64.dylib
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
-#SHLIBEXT     = dylib
 #SHLIBCFLAGS  = -fPIC -fno-common \
 							 -DUSE_RENDERER_DLOPEN \
 							 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"

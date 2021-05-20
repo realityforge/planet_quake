@@ -29,7 +29,6 @@ CFLAGS   := $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
 						 -MMD
 
-SHLIBEXT     := dylib
 SHLIBCFLAGS  := -fPIC -fno-common \
 							  -DUSE_RENDERER_DLOPEN \
 							  -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
@@ -91,6 +90,14 @@ clean:
 	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
 	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
 
+
+ifdef B
+D_FILES=$(shell find $(BD)/rend2 -name '*.d')
+endif
+
+ifneq ($(strip $(D_FILES)),)
+include $(D_FILES)
+endif
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
 	debug default dist distclean makedirs release \
