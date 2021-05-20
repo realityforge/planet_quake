@@ -1,3 +1,4 @@
+CC       := gcc
 
 BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
 
@@ -6,7 +7,7 @@ BASE_CFLAGS += -Wno-unused-result
 OPTIMIZE = -O2 -fvisibility=hidden
 
 SHLIBEXT = dylib
-SHLIBCFLAGS = -fPIC -fvisibility=hidden
+SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common
 SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
 
 LDFLAGS =

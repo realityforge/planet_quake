@@ -18,15 +18,9 @@ Q3OBJ    := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX  := 
-CC      := gcc
 CFLAGS  := $(INCLUDE) -fsigned-char \
-          -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
-
-SHLIBCFLAGS  := -fPIC -fno-common
-SHLIBLDFLAGS := -dynamiclib $(LDFLAGS) \
-							  -DUSE_BOTLIB_DLOPEN
-SHLIBNAME    := $(ARCH).$(SHLIBEXT)
+          -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
+					-DUSE_BOTLIB_DLOPEN
 
 define DO_BOTLIB_CC
 	@echo "BOTLIB_CC $<"
@@ -50,7 +44,7 @@ $(B)/botlib/%.o: code/botlib/%.c
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	@$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
 
 clean:
 	@rm -rf $(B)/botlib

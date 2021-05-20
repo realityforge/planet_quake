@@ -1,4 +1,4 @@
-EMSDK=$(MOUNT_DIR)/xquakejs/lib/emsdk
+EMSDK=libs/emsdk
 NODE_JS=$(EMSDK)/node/12.9.1_64bit/bin/node
 BINARYEN_ROOT=$(EMSDK)/upstream
 EMSCRIPTEN=$(EMSDK)/upstream/emscripten
@@ -12,7 +12,7 @@ endif
 CC=$(EMSCRIPTEN)/emcc
 RANLIB=$(EMSCRIPTEN)/emranlib
 ARCH=js
-BINEXT=.js
+BINEXT=.wasm
 STRIP=echo
 
 DEBUG=0

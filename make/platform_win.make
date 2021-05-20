@@ -60,7 +60,7 @@ ifeq ($(ARCH),x86)
 endif
 
 SHLIBEXT = dll
-SHLIBCFLAGS = -fPIC -fvisibility=hidden
+SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common
 SHLIBLDFLAGS = -shared $(LDFLAGS)
 
 BINEXT = .exe

@@ -11,3 +11,5 @@ include make/platform_unix.make
 endif
 endif
 endif
+
+SHLIBNAME    = $(ARCH).$(SHLIBEXT)

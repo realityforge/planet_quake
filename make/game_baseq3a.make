@@ -12,10 +12,6 @@ QADIR=$(MOUNT_DIR)/../qvms/baseq3a/code/game
 CGDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/cgame
 UIDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/q3_ui
 
-ifndef SHLIBNAME
-  SHLIBNAME=$(ARCH).$(SHLIBEXT)
-endif
-
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
   BASE_CFLAGS += -Qunused-arguments
 endif

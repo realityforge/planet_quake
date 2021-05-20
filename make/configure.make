@@ -87,27 +87,6 @@ endif
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
-ADIR=$(MOUNT_DIR)/asm
-CDIR=$(MOUNT_DIR)/client
-SDIR=$(MOUNT_DIR)/server
-TDIR=$(MOUNT_DIR)/tools
-RCDIR=$(MOUNT_DIR)/renderercommon
-R1DIR=$(MOUNT_DIR)/renderer
-R2DIR=$(MOUNT_DIR)/renderer2
-RVDIR=$(MOUNT_DIR)/renderervk
-SDLDIR=$(MOUNT_DIR)/sdl
-
-OGGDIR=$(MOUNT_DIR)/ogg
-VORBISDIR=$(MOUNT_DIR)/vorbis
-OPUSDIR=$(MOUNT_DIR)/opus-1.2.1
-OPUSFILEDIR=$(MOUNT_DIR)/opusfile-0.9
-CMDIR=$(MOUNT_DIR)/qcommon
-UDIR=$(MOUNT_DIR)/unix
-W32DIR=$(MOUNT_DIR)/win32
-QUAKEJS=$(MOUNT_DIR)/xquakejs
-BLIBDIR=$(MOUNT_DIR)/botlib
-UIDIR=$(MOUNT_DIR)/ui
-JPDIR=$(MOUNT_DIR)/libjpeg
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -231,6 +210,7 @@ ifeq ($(MINGW),1)
 endif
 endif
 endif
+
 
 #############################################################################
 # DEPENDENCIES

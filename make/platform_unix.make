@@ -27,7 +27,7 @@ ifeq ($(ARCH),aarch64)
 endif
 
 SHLIBEXT = so
-SHLIBCFLAGS = -fPIC -fvisibility=hidden
+SHLIBCFLAGS = -fPIC -fvisibility=hidden -fno-common
 SHLIBLDFLAGS = -shared $(LDFLAGS)
 
 LDFLAGS=-lm

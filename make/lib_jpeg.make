@@ -10,36 +10,29 @@ INCLUDES    :=
 
 #LIBS = -l
 
-COMOBJECTS    = jaricom.o jcomapi.o jutils.o jerror.o jmemmgr.o jmemnobs.o $(SYSDEPMEM)
+COMOBJECTS   := jaricom.o jcomapi.o jutils.o jerror.o jmemmgr.o jmemnobs.o $(SYSDEPMEM)
 # compression library object files
-CLIBOBJECTS   = jcapimin.o jcapistd.o jcarith.o jctrans.o jcparam.o \
+CLIBOBJECTS  := jcapimin.o jcapistd.o jcarith.o jctrans.o jcparam.o \
 				        jdatadst.o jcinit.o jcmaster.o jcmarker.o jcmainct.o jcprepct.o \
 				        jccoefct.o jccolor.o jcsample.o jchuff.o jcdctmgr.o jfdctfst.o \
 				        jfdctflt.o jfdctint.o
 # decompression library object files
-DLIBOBJECTS   = jdapimin.o jdapistd.o jdarith.o jdtrans.o jdatasrc.o \
+DLIBOBJECTS  := jdapimin.o jdapistd.o jdarith.o jdtrans.o jdatasrc.o \
 				        jdmaster.o jdinput.o jdmarker.o jdhuff.o jdmainct.o \
 				        jdcoefct.o jdpostct.o jddctmgr.o jidctfst.o jidctflt.o \
 				        jidctint.o jdsample.o jdcolor.o jquant1.o jquant2.o jdmerge.o
-# SYSDEPOBJECTS = jmemansi.o jmemname.o jmemdos.o jmemmac.o
 # These objectfiles are included in libjpeg.a
-LIBOBJECTS= $(CLIBOBJECTS) $(DLIBOBJECTS) $(COMOBJECTS) $(SYSDEPOBJECTS)
+LIBOBJECTS := $(CLIBOBJECTS) $(DLIBOBJECTS) $(COMOBJECTS)
 
 Q3OBJ    := $(addprefix $(B)/libjpeg/,$(notdir $(LIBOBJECTS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX  := 
-CC      := gcc
 CFLAGS  := $(INCLUDE) -fsigned-char -MMD \
           -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
 
-SHLIBCFLAGS  := -fPIC -fno-common
-SHLIBLDFLAGS := -dynamiclib $(LDFLAGS)
-SHLIBNAME    := $(ARCH).$(SHLIBEXT)
-
 define DO_JPEG_CC
-	@echo "DO_JPEG_CC $<"
+	@echo "JPEG_CC $<"
 	@$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
@@ -62,7 +55,7 @@ $(B)/libjpeg/%.o: libs/jpeg-9d/%.c
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	@$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
 
 D_FILES=$(shell find $(B)/libjpeg -name '*.d')
 endif

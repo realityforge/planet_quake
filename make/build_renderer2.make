@@ -23,17 +23,11 @@ Q3OBJ         := $(addprefix $(B)/rend2/,$(notdir $(OBJS))) \
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX   := 
-CC       := gcc
 CFLAGS   := $(INCLUDE) -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD
-
-SHLIBCFLAGS  := -fPIC -fno-common \
-							  -DUSE_RENDERER_DLOPEN \
-							  -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
-SHLIBLDFLAGS := -dynamiclib $(LDFLAGS)
-SHLIBNAME    := $(ARCH).$(SHLIBEXT)
+						 -MMD \
+						 -DUSE_RENDERER_DLOPEN \
+						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
 
 define DO_REND_CC
 	$(echo_cmd) "REND_CC $<"

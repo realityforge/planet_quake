@@ -25,7 +25,6 @@ Q3OBJ      := $(addprefix $(B)/rmlui/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-PREFIX  = 
 CXX      = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
 # -fsigned-char \
              -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
@@ -34,14 +33,9 @@ CFLAGS   = $(INCLUDE) \
 						 -DBUILD_FREETYPE $(FREETYPE_CFLAGS) \
 						 -DRmlCore_EXPORTS \
 						 -isysroot $(SYSROOT) \
-						 -MMD
+						 -MMD \
+						 -DRMLUI_NO_THIRDPARTY_CONTAINERS
 CXXFLAGS  = $(CFLAGS)  -std=c++14
-# -fno-exceptions
-
-SHLIBCFLAGS  = -fPIC -fno-common \
-							 -DRMLUI_NO_THIRDPARTY_CONTAINERS
-SHLIBLDFLAGS = -dynamiclib $(LDFLAGS)
-SHLIBNAME    = $(ARCH).$(SHLIBEXT)
 
 define DO_RMLUI_CXX
 	$(echo_cmd) "RMLUI_CC $<"
