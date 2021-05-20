@@ -9,8 +9,8 @@ output/
 # emscripten
 ####################
 base
-code/xquakejs/lib/emsdk
-code/xquakejs/lib/emsdk/node_modules/
+libs/emsdk
+code/xquakejs/node_modules/
 node_modules
 .resources
 data

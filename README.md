@@ -63,6 +63,7 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 Coming soon!
+  * Move more features like the http downloading, file-system journaling, drag and drop, EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
   * Option for persistent console Con_ResetHistory()
   * Serverless client mode for web, automatically skip to multiplayer menu and that connects to first available command server that we can request a map command. Remove the autoconnect code from javascript. Replace the menu address with an API call.
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
