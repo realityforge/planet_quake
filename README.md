@@ -75,7 +75,7 @@ Coming soon!
   * SSE/SIMD support in vm_js.js Com_SnapVectors(), https://emscripten.org/docs/porting/simd.html
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
-  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay
+  * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay, consolidate all VM UIs scoreboard/postgame/HUD/menus in to 1 UI system
   * Use com_journal instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with compression
   * HTML and CSS menu renderer

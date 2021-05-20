@@ -49,6 +49,7 @@ $(B)/botlib/%.o: code/botlib/%.c
 	$(DO_BOTLIB_CC)
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+	$(echo_cmd) "LD $@"
 	@$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
 
 clean:
