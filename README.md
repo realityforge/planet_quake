@@ -118,9 +118,9 @@ git submodule update --init
 ```
 then
 ```
-./code/xquakejs/lib/emsdk/emsdk install latest-upstream
-./code/xquakejs/lib/emsdk/emsdk activate latest
-./code/xquakejs/lib/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib
+./libs/emsdk/emsdk install latest-upstream
+./libs/emsdk/emsdk activate latest
+./libs/emsdk/upstream/emscripten/embuilder.py build sdl2 vorbis ogg zlib
 make PLATFORM=js
 ```
 

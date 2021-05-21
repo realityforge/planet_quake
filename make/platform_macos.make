@@ -1,8 +1,8 @@
 CC       := gcc
 
-BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes -pipe
-
-BASE_CFLAGS += -Wno-unused-result
+BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit \
+               -Wstrict-prototypes -pipe \
+               -Wno-unused-result
 
 OPTIMIZE = -O2 -fvisibility=hidden
 

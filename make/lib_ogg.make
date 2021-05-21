@@ -1,9 +1,8 @@
 MKFILE   := $(lastword $(MAKEFILE_LIST))
 WORKDIR  := libogg
 
-include make/platform.make
 include make/configure.make
-include make/platform_os.make
+include make/platform.make
 
 TARGET	    := libogg
 SOURCES     := libs/libogg-1.3.4/src
@@ -26,12 +25,12 @@ define DO_OGG_CC
 endef
 
 mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
+  @if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
+  @if [ ! -d $(B) ];then $(MKDIR) $(B);fi
+  @if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
 
 default:
-	@echo "MAKE $(TARGET)"
+  @echo "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
 

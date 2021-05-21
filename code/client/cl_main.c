@@ -1631,6 +1631,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 				Cbuf_Execute();
 			}
 		}
+    clc.serverAddress = addr;
 	}
 #ifdef EMSCRIPTEN
 	if(showMainMenu && cl_returnURL->string[0]) {
@@ -1676,9 +1677,6 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 
 	cl_disconnecting = qfalse;
 
-#ifdef USE_LOCAL_DED
-	clc.serverAddress = addr;
-#endif
 	return cl_restarted;
 }
 
@@ -3975,7 +3973,7 @@ void CL_Frame( int msec, int realMsec ) {
 			cgvm = i;
 			CM_SwitchMap(clientMaps(cgvm));
 #endif
-			result = VM_Resume(cgvms[i]);
+			unsigned int result = VM_Resume(cgvms[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
 			}

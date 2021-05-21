@@ -1,8 +1,7 @@
 MKFILE   := $(lastword $(MAKEFILE_LIST)) 
 
-include make/platform.make
 include make/configure.make
-include make/platform_os.make
+include make/platform.make
 
 TARGET	    := libjpeg
 SOURCES     := libs/jpeg-9d

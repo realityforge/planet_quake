@@ -1,66 +1,68 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
 
-include make/platform.make
 include make/configure.make
-include make/platform_os.make
+include make/platform.make
 
 RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(CNAME)
 
 SOURCES  := $(MOUNT_DIR)/client
 
-CLIPMAP  := $(B)/client/cm_load.o \
-						$(B)/client/cm_load_bsp2.o \
-						$(B)/client/cm_patch.o \
-						$(B)/client/cm_polylib.o \
-						$(B)/client/cm_test.o \
-						$(B)/client/cm_trace.o
+CLIPMAP  := \
+  $(B)/client/cm_load.o \
+  $(B)/client/cm_load_bsp2.o \
+  $(B)/client/cm_patch.o \
+  $(B)/client/cm_polylib.o \
+  $(B)/client/cm_test.o \
+  $(B)/client/cm_trace.o
 
-QCOMMON  := $(B)/client/cmd.o \
-					  $(B)/client/common.o \
-					  $(B)/client/cvar.o \
-					  $(B)/client/files.o \
-					  $(B)/client/history.o \
-					  $(B)/client/keys.o \
-					  $(B)/client/md4.o \
-					  $(B)/client/md5.o \
-					  $(B)/client/msg.o \
-					  $(B)/client/net_chan.o \
-					  $(B)/client/net_ip.o \
-						$(B)/client/qrcodegen.o \
-					  $(B)/client/huffman.o \
-					  $(B)/client/huffman_static.o \
-						$(B)/client/q_math.o \
-					  $(B)/client/q_shared.o \
-					  $(B)/client/unzip.o \
-					  $(B)/client/puff.o \
-						$(B)/client/sv_init.o \
-						$(B)/client/sv_main.o \
-						$(B)/client/sv_bot.o \
-						$(B)/client/sv_game.o
+QCOMMON  := \
+  $(B)/client/cmd.o \
+  $(B)/client/common.o \
+  $(B)/client/cvar.o \
+  $(B)/client/files.o \
+  $(B)/client/history.o \
+  $(B)/client/keys.o \
+  $(B)/client/md4.o \
+  $(B)/client/md5.o \
+  $(B)/client/msg.o \
+  $(B)/client/net_chan.o \
+  $(B)/client/net_ip.o \
+  $(B)/client/qrcodegen.o \
+  $(B)/client/huffman.o \
+  $(B)/client/huffman_static.o \
+  $(B)/client/q_math.o \
+  $(B)/client/q_shared.o \
+  $(B)/client/unzip.o \
+  $(B)/client/puff.o \
+  $(B)/client/sv_init.o \
+  $(B)/client/sv_main.o \
+  $(B)/client/sv_bot.o \
+  $(B)/client/sv_game.o
 
-SOUND    := $(B)/client/snd_adpcm.o \
-					  $(B)/client/snd_dma.o \
-					  $(B)/client/snd_mem.o \
-					  $(B)/client/snd_mix.o \
-					  $(B)/client/snd_wavelet.o \
-					  \
-					  $(B)/client/snd_main.o \
-					  $(B)/client/snd_codec.o \
-					  $(B)/client/snd_codec_wav.o \
-						$(B)/client/snd_codec_ogg.o \
-						$(B)/client/snd_codec_opus.o
+SOUND    := \
+  $(B)/client/snd_adpcm.o \
+  $(B)/client/snd_dma.o \
+  $(B)/client/snd_mem.o \
+  $(B)/client/snd_mix.o \
+  $(B)/client/snd_wavelet.o \
+  \
+  $(B)/client/snd_main.o \
+  $(B)/client/snd_codec.o \
+  $(B)/client/snd_codec_wav.o \
+  $(B)/client/snd_codec_ogg.o \
+  $(B)/client/snd_codec_opus.o
+
 ifeq ($(ARCH),x86)
 ifndef MINGW
   SOUND   += \
-					  $(B)/client/snd_mix_mmx.o \
-					  $(B)/client/snd_mix_sse.o
+  $(B)/client/snd_mix_mmx.o \
+  $(B)/client/snd_mix_sse.o
 endif
 endif
-	  
-VM   := \
-					$(B)/client/vm.o \
-					$(B)/client/vm_interpreted.o
+  VM   := \
+  $(B)/client/vm.o \
+  $(B)/client/vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
   VM += $(B)/client/vm_x86.o
@@ -117,11 +119,11 @@ endif # !USE_SDL
 else # !MINGW
 ifeq ($(PLATFORM),js)
   Q3OBJ += \
-		$(B)/client/sdl_glimp.o \
-		$(B)/client/sdl_gamma.o \
-		$(B)/client/sdl_snd.o \
-		$(B)/client/sys_main.o \
-		$(B)/client/sys_input.o
+  $(B)/client/sdl_glimp.o \
+  $(B)/client/sdl_gamma.o \
+  $(B)/client/sdl_snd.o \
+  $(B)/client/sys_main.o \
+  $(B)/client/sys_input.o
 
 else
   Q3OBJ += \
@@ -155,31 +157,31 @@ endif # !USE_SDL
 endif
 
 
-INCLUDES       := 
-#LIBS          := -l
-CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-									$(CLIPMAP) \
-									$(QCOMMON) \
-									$(SOUND) \
-									$(VM) \
-									$(CURL) \
-									$(Q3OBJ)
-OBJS           := $(CFILES:.c=.o) 
-Q3OBJ          := $(addprefix $(B)/client/,$(notdir $(OBJS)))
+INCLUDES   := 
+#LIBS      := -l
+CFILES     := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
+		          $(CLIPMAP) \
+		          $(QCOMMON) \
+		          $(SOUND) \
+		          $(VM) \
+		          $(CURL) \
+		          $(Q3OBJ)
+OBJS       := $(CFILES:.c=.o) 
+Q3OBJ      := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char \
-             -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD -DBUILD_SLIM_CLIENT \
-						 -DUSE_RENDERER_DLOPEN \
-						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
+  -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
+  -MMD -DBUILD_SLIM_CLIENT \
+  -DUSE_RENDERER_DLOPEN \
+  -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
 #						 -DUSE_SYSTEM_JPEG
 #LDFLAGS  := -L$(MOUNT_DIR)/macosx -lxml2 -lpng \
-						$(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
-						-L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
+  $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
+  -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
 LDFLAGS  := -L$(BD) -ljpeg \
-						$(BD)/quake3e_libbots_x86_64.dylib
+  $(BD)/quake3e_libbots_x86_64.dylib
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
@@ -195,7 +197,7 @@ endef
 
 define DO_TOOLS
 $(echo_cmd) "TOOLS_CC $<"
-$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -I$(TDIR)/libs -I$(TDIR)/include -I$(TDIR)/common -o $@ -c $<
+$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_WINDRES
@@ -217,16 +219,13 @@ mkdirs:
 #	@if [ ! -d $(B)/client/libs ];then $(MKDIR) $(B)/client/libs;fi
 
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
-	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)
+	@echo $(DEBUG_CFLAGS)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
-#debug:
-#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-#	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
-
-#release:
-#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-#	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+release:
+  @$(MAKE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" V=$(V) $(BD)/$(TARGET)
 
 clean:
 	@rm -rf $(BD)/client

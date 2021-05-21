@@ -1,8 +1,7 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
 
-include make/platform.make
 include make/configure.make
-include make/platform_os.make
+include make/platform.make
 
 RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(RENDERER_PREFIX)_opengl2_
