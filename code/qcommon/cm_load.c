@@ -793,7 +793,7 @@ void LoadQ3Map(const char *name) {
 
 
 static qboolean cmdsAdded = qfalse;
-void AddClipMapCommands() {
+void AddClipMapCommands( void ) {
 	if(cmdsAdded) {
 		return;
 	}

@@ -40,6 +40,7 @@ byte   cmd_text_buf[32][MAX_CMD_BUFFER];
 int    insCmdI;
 int    execCmdI;
 
+static void Cmd_Help_f( void );
 
 //=============================================================================
 

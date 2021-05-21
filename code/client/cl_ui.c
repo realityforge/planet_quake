@@ -805,11 +805,11 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 
 	case UI_CVAR_REGISTER:
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
+		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivms[uivm]->privateFlag ); 
 		return 0;
 
 	case UI_CVAR_UPDATE:
-		Cvar_Update( VMA(1) );
+		Cvar_Update( VMA(1), uivms[uivm]->privateFlag );
 		return 0;
 
 	case UI_CVAR_SET:
@@ -833,7 +833,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_CVAR_CREATE:
-		Cvar_Register( NULL, VMA(1), VMA(2), args[3] );
+		Cvar_Register( NULL, VMA(1), VMA(2), args[3], uivms[uivm]->privateFlag );
 		return 0;
 
 	case UI_CVAR_INFOSTRINGBUFFER:

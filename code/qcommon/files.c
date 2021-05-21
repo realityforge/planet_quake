@@ -3435,7 +3435,6 @@ static int FS_AddFileToList( const char *name, char **list, int nfiles ) {
 }
 
 
-#if 0
 /*
 ===============
 FS_AllowListExternal
@@ -3457,7 +3456,7 @@ static qboolean FS_AllowListExternal( const char *extension )
 
 	return qtrue;
 }
-#endif
+
 
 static fnamecallback_f fnamecallback = NULL;
 

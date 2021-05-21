@@ -897,7 +897,11 @@ static void CL_ParseGamestate( msg_t *msg ) {
 }
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
+#ifdef USE_MULTIVM_CLIENT
 	Cvar_Set("mapname", Info_ValueForKey( cl.gameState[cl.currentView].stringData + cl.gameState[cl.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
+#else
+  Cvar_Set("mapname", Info_ValueForKey( cl.gameState[0].stringData + cl.gameState[0].stringOffsets[ CS_SERVERINFO ], "mapname" ));
+#endif
 	FS_Startup();
 	if(*clc.sv_dlURL) {
 		Cvar_Set( "sv_dlURL", clc.sv_dlURL );

@@ -706,11 +706,11 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 			cls.cgameFirstCvar = cvar;
 		}
 #endif
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
+		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], cgvms[cgvm]->privateFlag ); 
 		return 0;
 	}
 	case CG_CVAR_UPDATE:
-		Cvar_Update( VMA(1) );
+		Cvar_Update( VMA(1), cgvms[cgvm]->privateFlag );
 		return 0;
 	case CG_CVAR_SET:
 		Cvar_SetSafe( VMA(1), VMA(2) );

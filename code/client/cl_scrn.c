@@ -675,7 +675,8 @@ void SCR_DrawCurrentView( void ) {
 	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
 	
 	// TODO: duh re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
-	// top
+	// TODO: draw a box around the edge of the screen but SetDvrFrame right before so its just the edge of the box
+  // top
 	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
 	// right
 	re.DrawStretchPic( clientScreens[cgvm][2] * wf - 2, 0, 2, clientScreens[cgvm][3] * yf, 0, 0, 1, 1, cls.whiteShader );
@@ -726,7 +727,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
+#ifdef USE_MULTIVM_CLIENT
 		re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
+#endif
 
 		// don't switch renderer or clipmap when updated from VM
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -751,8 +754,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		if(!cgvms[cgvm] && !uivms[uivm]) continue;
 
-		re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
 #ifdef USE_MULTIVM_CLIENT
+    re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
 		CM_SwitchMap(clientMaps[cgvm]);
 		re.SwitchWorld(clientMaps[cgvm]);
 #endif
@@ -776,9 +779,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #ifdef USE_MULTIVM_CLIENT
 	CM_SwitchMap(clientMaps[cgvm]);
 	re.SwitchWorld(clientMaps[cgvm]);
+  re.SetDvrFrame(0, 0, 1, 1);
 #endif
-
-	re.SetDvrFrame(0, 0, 1, 1);
 
 #ifdef USE_LNBITS
 	int igs = clientGames[cgvm];

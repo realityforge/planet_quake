@@ -3,6 +3,7 @@ MKFILE      := $(lastword $(MAKEFILE_LIST))
 include make/configure.make
 include make/platform.make
 
+LIB_PREFIX       := $(CNAME)
 RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(CNAME)
 
@@ -181,7 +182,7 @@ CFLAGS   := $(INCLUDE) -fsigned-char \
   $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
   -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
 LDFLAGS  := -L$(BD) -ljpeg \
-  $(BD)/quake3e_libbots_x86_64.dylib
+  $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
@@ -243,6 +244,9 @@ $(B)/client/%.o: code/win32/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/macosx/%.c
+	$(DO_CLIENT_CC)
+
+$(B)/client/%.o: code/wasm/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/sdl/%.c
