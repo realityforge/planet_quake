@@ -59,7 +59,7 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
-extern void Sys_NET_MulticastLocal( int sock, int length, int *data );
+extern void Sys_NET_MulticastLocal( int sock, int length, const int *data );
 
 /*
 ===============

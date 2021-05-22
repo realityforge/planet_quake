@@ -1,11 +1,14 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
+#mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+#mkfile_dir := $(dir $(mkfile_path))
+#current_dir := $(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 
 include make/configure.make
 include make/platform.make
 
 LIB_PREFIX       := $(CNAME)
 RENDERER_PREFIX  := $(CNAME)
-TARGET	         := $(CNAME)
+TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
 
 SOURCES  := $(MOUNT_DIR)/client
 
@@ -85,9 +88,9 @@ ifeq ($(USE_CURL),1)
 endif
 
 
-Q3OBJ   :=
+SYSTEM :=
 ifdef MINGW
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/win_main.o \
     $(B)/client/win_shared.o \
     $(B)/client/win_syscon.o \
@@ -95,7 +98,7 @@ ifdef MINGW
 
 ifeq ($(USE_SDL),1)
 ifneq ($(PLATFORM),js)
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/sdl_glimp.o \
     $(B)/client/sdl_gamma.o \
     $(B)/client/sdl_input.o \
@@ -103,7 +106,7 @@ ifneq ($(PLATFORM),js)
 endif
 
 else # !USE_SDL
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/win_gamma.o \
     $(B)/client/win_glimp.o \
     $(B)/client/win_input.o \
@@ -112,22 +115,23 @@ else # !USE_SDL
     $(B)/client/win_snd.o \
     $(B)/client/win_wndproc.o
 ifeq ($(USE_VULKAN_API),1)
-  Q3OBJ += \
+  SYSTEM += \
       $(B)/client/win_qvk.o
 endif
 endif # !USE_SDL
 
 else # !MINGW
 ifeq ($(PLATFORM),js)
-  Q3OBJ += \
-  $(B)/client/sdl_glimp.o \
-  $(B)/client/sdl_gamma.o \
-  $(B)/client/sdl_snd.o \
-  $(B)/client/sys_main.o \
-  $(B)/client/sys_input.o
+  SYSTEM += \
+	  $(B)/client/sdl_glimp.o \
+	  $(B)/client/sdl_gamma.o \
+	  $(B)/client/sdl_snd.o \
+	  $(B)/client/sys_main.o \
+	  $(B)/client/sys_input.o \
+		$(B)/client/unix_shared.o
 
 else
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/unix_main.o \
     $(B)/client/unix_shared.o \
     $(B)/client/linux_signals.o
@@ -135,14 +139,14 @@ endif
 
 ifeq ($(USE_SDL),1)
 ifneq ($(PLATFORM),js)
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/sdl_glimp.o \
     $(B)/client/sdl_gamma.o \
     $(B)/client/sdl_input.o \
     $(B)/client/sdl_snd.o
 endif
 else # !USE_SDL
-  Q3OBJ += \
+  SYSTEM += \
     $(B)/client/linux_glimp.o \
     $(B)/client/linux_qgl.o \
     $(B)/client/linux_snd.o \
@@ -151,22 +155,22 @@ else # !USE_SDL
     $(B)/client/x11_vidmode.o
 
 ifeq ($(USE_VULKAN_API),1)
-  Q3OBJ += \
+  SYSTEM += \
       $(B)/client/linux_qvk.o
 endif
 endif # !USE_SDL
 endif
 
 
-INCLUDES   := 
+INCLUDES   := $(MOUNT_DIR)/qcommon
 #LIBS      := -l
-CFILES     := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
+CFILES     := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
 		          $(CLIPMAP) \
 		          $(QCOMMON) \
 		          $(SOUND) \
 		          $(VM) \
 		          $(CURL) \
-		          $(Q3OBJ)
+		          $(SYSTEM)
 OBJS       := $(CFILES:.c=.o) 
 Q3OBJ      := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
@@ -181,8 +185,11 @@ CFLAGS   := $(INCLUDE) -fsigned-char \
 #LDFLAGS  := -L$(MOUNT_DIR)/macosx -lxml2 -lpng \
   $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
   -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-LDFLAGS  := -L$(BD) -ljpeg \
-  $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
+#LDFLAGS  := -L$(BD) -ljpeg
+#LDFLAGS  := -L$(BD) -ljpeg
+#ifdef USE_SYSTEM_BOTLIB
+#  LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
+#endif
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
@@ -220,13 +227,12 @@ mkdirs:
 #	@if [ ! -d $(B)/client/libs ];then $(MKDIR) $(B)/client/libs;fi
 
 default:
-	@echo $(DEBUG_CFLAGS)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 
 release:
-  @$(MAKE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" V=$(V) $(BD)/$(TARGET)
+  @$(MAKE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" V=$(V) $(BD)/$(TARGET_CLIENT)
 
 clean:
 	@rm -rf $(BD)/client
@@ -258,11 +264,11 @@ $(B)/client/%.o: code/qcommon/%.c
 $(B)/client/%.o: code/server/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(TARGET): $(Q3OBJ) 
+$(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(LDFLAGS) $(SDL_LIBS) -o $@
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
 
-D_FILES=$(shell find $(BD)/client -name '*.d')
+D_FILES=$(@shell find $(BD)/client -name '*.d')
 endif
 
 ifneq ($(strip $(D_FILES)),)

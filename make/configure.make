@@ -3,6 +3,12 @@ BUILD_CLIENT     = 1
 BUILD_SERVER     = 1
 BUILD_GAMES      = 0
 BUILD_LIBS       = 0
+BUILD_GAME_QVM   = 0
+BUILD_GAME_SO    = 0
+BUILD_RENDERER_OPENGL=0
+BUILD_RENDERER_JS=0
+BUILD_RENDERER_OPENGL2=1
+BUILD_RENDERER_OPENGLES=0
 
 USE_SDL          = 1
 USE_CURL         = 1
@@ -11,7 +17,24 @@ USE_VULKAN       = 0
 USE_SYSTEM_JPEG  = 0
 USE_VULKAN_API   = 1
 
-USE_RENDERER_DLOPEN = 1
+USE_Q3KEY        = 0
+USE_IPV6         = 0
+USE_SDL          = 1
+USE_VULKAN       = 0
+USE_CURL         = 0
+USE_CURL_DLOPEN  = 0
+USE_CODEC_VORBIS = 0
+USE_CODEC_OPUS   = 0
+USE_FREETYPE     = 0
+USE_MUMBLE       = 0
+USE_VOIP         = 0
+SDL_LOADSO_DLOPEN= 0
+USE_OPENAL_DLOPEN= 0
+USE_RENDERER_DLOPEN=1
+USE_LOCAL_HEADERS=0
+GL_EXT_direct_state_access=1
+GL_ARB_ES2_compatibility=1
+GL_GLEXT_PROTOTYPES=1
 
 ifndef COPYDIR
 COPYDIR="/usr/local/games/quake3"
@@ -211,7 +234,6 @@ endif
 endif
 endif
 
-
 #############################################################################
 # DEPENDENCIES
 #############################################################################
@@ -220,7 +242,7 @@ endif
 	debug default dist distclean makedirs release \
 	targets tools toolsclean mkdirs
 
-.DEFAULT_GOAL := instructions
+.DEFAULT_GOAL := help
 
-instructions:
-	@echo "make -f make/game_baseq3a"
+help:
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)

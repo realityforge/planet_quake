@@ -88,6 +88,11 @@ extern void Sys_FS_Startup( void );
 extern void Sys_FS_Shutdown( void );
 extern void Sys_BeginDownload( void );
 
+extern void Sys_Debug(void);
+extern float Math_rand(void);
+extern void Sys_SetClipboardData( void *field );
+extern void Sys_EventMenuChanged( float x, float y );
+
 void FS_Startup( void );
 void FS_Startup_After_Async( void );
 void Com_Init_After_Filesystem( void );
@@ -1482,12 +1487,7 @@ char	*Sys_ConsoleInput( void );
 
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
-#ifdef EMSCRIPTEN
-extern void Sys_Debug(void);
-extern float Math_rand(void);
-void Sys_SetClipboardData( void *field );
-void Sys_EventMenuChanged( float x, float y );
-#endif
+
 void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );

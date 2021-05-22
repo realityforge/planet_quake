@@ -1,5 +1,5 @@
 var LibraryVM = {
-	$VM__deps: ['$SYSC', 'Cvar_VariableString'],
+	$VM__deps: ['Cvar_VariableString'],
 	$VM: {
 		vmHeader_t: {
 			__size__: 36,
@@ -948,7 +948,7 @@ var LibraryVM = {
 		},
 	},
 	VM_Compile__sig: 'vii',
-	VM_Compile__deps: ['$SYSC', '$VM', 'VM_Destroy'],
+	VM_Compile__deps: ['$VM', 'VM_Destroy'],
 	VM_Compile: function (vmp, headerp) {
 		//var current = _VM_GetCurrent();
 		var name = UTF8ToString({{{ makeGetValue('vmp', 'VM.vm_t.name', 'i32') }}});
@@ -987,7 +987,7 @@ var LibraryVM = {
 		delete VM.vms[handle];
 	},
 	VM_CallCompiled__sig: 'iiii',
-	VM_CallCompiled__deps: ['$SYSC', '$VM', 'VM_SuspendCompiled'],
+	VM_CallCompiled__deps: ['$VM', 'VM_SuspendCompiled'],
 	VM_CallCompiled: function (vmp, nargs, args) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
@@ -1051,7 +1051,7 @@ var LibraryVM = {
 		// return value is at the top of the stack still
 		return result;
 	},
-	VM_IsSuspendedCompiled__deps: ['$SYSC'],
+	VM_IsSuspendedCompiled__deps: [],
 	VM_IsSuspendedCompiled: function (vmp) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
 		var vm = VM.vms[handle];
@@ -1063,7 +1063,7 @@ var LibraryVM = {
 
 		return vm.suspended;
 	},
-	VM_SuspendCompiled__deps: ['$SYSC'],
+	VM_SuspendCompiled__deps: [],
 	VM_SuspendCompiled__sig: 'vii',
 	VM_SuspendCompiled: function (vmp, stackOnEntry) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
@@ -1077,7 +1077,7 @@ var LibraryVM = {
 		vm.suspended = true;
 		vm.stackOnEntry = stackOnEntry;
 	},
-	VM_ResumeCompiled__deps: ['$SYSC', 'VM_SuspendCompiled'],
+	VM_ResumeCompiled__deps: ['VM_SuspendCompiled'],
 	VM_ResumeCompiled__sig: 'vii',
 	VM_ResumeCompiled: function (vmp) {
 		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
