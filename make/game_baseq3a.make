@@ -255,22 +255,3 @@ clean2:
 
 distclean: clean
 	@rm -rf $(BUILD_DIR)
-
-#############################################################################
-# DEPENDENCIES
-#############################################################################
-
-ifdef B
-D_FILES=$(shell find $(B) -name '*.d')
-endif
-
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-	$(D_FILES)
-
-.DEFAULT_GOAL := release

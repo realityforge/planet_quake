@@ -106,8 +106,6 @@ endif
 #   -s SDL2_IMAGE_FORMATS='["bmp","png","xpm"]' \
 #    -s INITIAL_MEMORY=56MB \
 			-s GL_UNSAFE_OPTS=0 \
-			-s USE_SDL=2 \
-			-s USE_SDL_MIXER=2 \
 			-s USE_VORBIS=1 \
 			-s USE_OGG=1 \
 			-s USE_PTHREADS=0 
@@ -122,7 +120,8 @@ CLIENT_LDFLAGS += \
           -s AUTO_JS_LIBRARIES=0 \
           -s INITIAL_MEMORY=256MB \
           --memory-init-file 0 \
-          \
+					-s USE_SDL=2 \
+					-s USE_SDL_MIXER=2 \
           -s DISABLE_EXCEPTION_CATCHING=0 \
           -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
           -s ERROR_ON_UNDEFINED_SYMBOLS=1 \

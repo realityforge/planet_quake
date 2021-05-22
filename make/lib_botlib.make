@@ -26,15 +26,11 @@ define DO_BOTLIB_CC
 	@$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
 endef
 
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/botlib ];then $(MKDIR) $(B)/botlib;fi
-
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=botlib mkdirs
 	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
 
+ifdef B
 $(B)/botlib/%.o: code/qcommon/%.c
 	$(DO_BOTLIB_CC)
 
@@ -44,22 +40,7 @@ $(B)/botlib/%.o: code/botlib/%.c
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+endif
 
 clean:
 	@rm -rf $(B)/botlib
-
-
-ifdef B
-D_FILES=$(shell find $(BD)/botlib -name '*.d')
-endif
-
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-	$(D_FILES)
-
-.DEFAULT_GOAL := default

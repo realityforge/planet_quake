@@ -1,7 +1,4 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
-#mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-#mkfile_dir := $(dir $(mkfile_path))
-#current_dir := $(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 
 include make/configure.make
 include make/platform.make
@@ -163,7 +160,6 @@ endif
 
 
 INCLUDES   := $(MOUNT_DIR)/qcommon
-#LIBS      := -l
 CFILES     := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
 		          $(CLIPMAP) \
 		          $(QCOMMON) \
@@ -178,18 +174,11 @@ export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char \
   -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-  -MMD -DBUILD_SLIM_CLIENT \
-  -DUSE_RENDERER_DLOPEN \
-  -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
-#						 -DUSE_SYSTEM_JPEG
-#LDFLAGS  := -L$(MOUNT_DIR)/macosx -lxml2 -lpng \
-  $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib \
-  -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-#LDFLAGS  := -L$(BD) -ljpeg
-#LDFLAGS  := -L$(BD) -ljpeg
-#ifdef USE_SYSTEM_BOTLIB
-#  LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
-#endif
+  -MMD -DBUILD_SLIM_CLIENT
+
+ifdef USE_SYSTEM_BOTLIB
+  LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
+endif
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
@@ -213,21 +202,9 @@ $(echo_cmd) "WINDRES $<"
 $(Q)$(WINDRES) -i $< -o $@
 endef
 
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
-# TODO: make all these dylibs
-#	@if [ ! -d $(B)/client/asm ];then $(MKDIR) $(B)/client/asm;fi
-#	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
-#	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
-#	@if [ ! -d $(B)/client/opus ];then $(MKDIR) $(B)/client/opus;fi
-#	@if [ ! -d $(B)/client/q3map2 ];then $(MKDIR) $(B)/client/q3map2;fi
-#	@if [ ! -d $(B)/client/tools ];then $(MKDIR) $(B)/client/tools;fi
-#	@if [ ! -d $(B)/client/libs ];then $(MKDIR) $(B)/client/libs;fi
-
 default:
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) mkdirs
+	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=client mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 
@@ -239,7 +216,6 @@ clean:
 	@rm -rf $(BR)/client
 
 ifdef B
-
 $(B)/client/%.o: code/client/%.c
 	$(DO_CLIENT_CC)
 
@@ -267,17 +243,4 @@ $(B)/client/%.o: code/server/%.c
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
-
-D_FILES=$(@shell find $(BD)/client -name '*.d')
 endif
-
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-	$(D_FILES)
-
-.DEFAULT_GOAL := default

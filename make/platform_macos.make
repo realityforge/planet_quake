@@ -20,13 +20,5 @@ else
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 endif
 
-#  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
-
-LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2 -lpng
-#BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include
-CLIENT_LDFLAGS += $(MOUNT_DIR)/macosx/libxml2.2.dylib $(MOUNT_DIR)/macosx/libpng.dylib
-#  CLIENT_LDFLAGS += -lRmlCore -lxml2
-#  CLIENT_LDFLAGS += 
-
 DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)

@@ -419,7 +419,9 @@ Send sound to device if buffer isn't really the dma buffer
 */
 void SNDDMA_Submit( void )
 {
+#ifndef EMSCRIPTEN
 	SDL_UnlockAudioDevice( sdlPlaybackDevice );
+#endif
 }
 
 
@@ -430,7 +432,9 @@ SNDDMA_BeginPainting
 */
 void SNDDMA_BeginPainting( void )
 {
+#ifndef EMSCRIPTEN
 	SDL_LockAudioDevice( sdlPlaybackDevice );
+#endif
 }
 
 

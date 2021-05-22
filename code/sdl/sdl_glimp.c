@@ -884,6 +884,7 @@ void VKimp_Shutdown( qboolean unloadDLL )
 #endif // USE_VULKAN_API
 
 
+#ifndef EMSCRIPTEN
 /*
 ===============
 Sys_GetClipboardData
@@ -912,6 +913,7 @@ char *Sys_GetClipboardData( void )
 	return data;
 #endif
 }
+#endif
 
 
 /*

@@ -35,13 +35,8 @@ define DO_JPEG_CC
 	@$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/libjpeg ];then $(MKDIR) $(B)/libjpeg;fi
-
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=libjpeg mkdirs
 	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
 
 clean:
@@ -55,17 +50,4 @@ $(B)/libjpeg/%.o: libs/jpeg-9d/%.c
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
-
-D_FILES=$(shell find $(B)/libjpeg -name '*.d')
 endif
-
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-	$(D_FILES)
-
-.DEFAULT_GOAL := default

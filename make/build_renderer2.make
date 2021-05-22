@@ -41,14 +41,9 @@ define DO_REF_STR
 	$(Q)echo ";" >> $@
 endef
 
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
-	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
-
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=rend2 mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=rend2/glsl mkdirs
 	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
 
 #debug:
@@ -82,19 +77,3 @@ $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ)
 clean:
 	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
 	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
-
-
-ifdef B
-D_FILES=$(shell find $(BD)/rend2 -name '*.d')
-endif
-
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-	$(D_FILES)
-
-.DEFAULT_GOAL := default
