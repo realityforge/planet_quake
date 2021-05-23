@@ -3,6 +3,7 @@ CNAME            = quake3e
 DNAME            = quake3e.ded
 
 BUILD_CLIENT     = 1
+BUILD_SLIM_CLIENT= 1
 BUILD_SERVER     = 1
 BUILD_GAMES      = 0
 BUILD_LIBS       = 0
@@ -171,6 +172,10 @@ endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
+endif
+
+ifndef RENDERER_PREFIX
+  RENDERER_PREFIX  := $(CNAME)
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),0)

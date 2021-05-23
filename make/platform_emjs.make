@@ -13,7 +13,7 @@ BINEXT           := .js
 SHLIBEXT         := wasm
 
 DEBUG            := 0
-EMCC_DEBUG       := 1
+EMCC_DEBUG       := 0
 
 HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
@@ -36,7 +36,7 @@ CLIENT_LIBS    := -lbrowser.js \
 									--pre-js $(MOUNT_DIR)/wasm/sys_polyfill.js \
 									--post-js $(MOUNT_DIR)/wasm/sys_overrides.js
 
-BASE_CFLAGS    += \
+BASE_CFLAGS    += $(SDL_INCLUDE)\
 				          -Wall -Wno-unused-variable -fno-strict-aliasing \
 				          -Wimplicit -Wstrict-prototypes \
 				          -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
@@ -44,6 +44,7 @@ BASE_CFLAGS    += \
 				          -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN
 
 DEBUG_CFLAGS   := $(BASE_CFLAGS) \
+									-DNDEBUG \
 									-O3 -Oz \
 								  -frtti \
 								  -flto \
@@ -57,21 +58,45 @@ RELEASE_CFLAGS := $(BASE_CFLAGS) \
 									-fPIC \
 									--em-config $(EMJS_CONFIG_PATH)
 
-SHLIBCFLAGS    += \
-				          -DEMSCRIPTEN \
+SHLIBCFLAGS    += -DNDEBUG \
+									-O3 -Oz \
+									-flto \
+									-fPIC \
 				          -s STRICT=1 \
 									--em-config $(EMJS_CONFIG_PATH)
 
-SHLIBLDFLAGS   += \
-									-s MODULARIZE=1 \
+SHLIBLDFLAGS   += --no-entry \
 									-s STRICT=1 \
-									-s EXPORTED_FUNCTIONS="['_GetBotLibAPI']" \
+									-s AUTO_JS_LIBRARIES=0 \
 									-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
-									-s MODULARIZE=1 \
-									-s SIDE_MODULE=1 \
-									-s RELOCATABLE=1 \
-				          -s LINKABLE=1 \
+									-s INCLUDE_FULL_LIBRARY=0 \
+									-s MODULARIZE=0 \
+									-s STANDALONE_WASM=1 \
+									-s SIDE_MODULE=0 \
+									-s RELOCATABLE=0 \
+				          -s LINKABLE=0 \
+									-s USE_PTHREADS=0 \
+									-s INVOKE_RUN=0 \
 									--em-config $(EMJS_CONFIG_PATH)
+
+ifeq ($(BUILD_BOTLIB),1)
+SHLIBLDFLAGS   += -s EXPORTED_FUNCTIONS="['_GetBotLibAPI', '_free']"
+endif
+ifeq ($(BUILD_RENDERER_OPENGL2),1)
+SHLIBLDFLAGS   += -s EXPORTED_FUNCTIONS="['_GetRefAPI', '_free']" \
+									-s USE_SDL=1 \
+									-s USE_SDL_IMAGE=1 \
+				          -lwebgl.js \
+				          -lwebgl2.js \
+									-s GL_UNSAFE_OPTS=0 \
+				          -s LEGACY_GL_EMULATION=0 \
+				          -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+				          -s MIN_WEBGL_VERSION=1 \
+				          -s MAX_WEBGL_VERSION=3 \
+				          -s USE_WEBGL2=1 \
+				          -s FULL_ES2=1 \
+				          -s FULL_ES3=1
+endif
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
 # -DDEBUG -D_DEBUG
@@ -85,7 +110,6 @@ SHLIBLDFLAGS   += \
 			-s GL_UNSAFE_OPTS=0 \
 			-s USE_VORBIS=1 \
 			-s USE_OGG=1 \
-			-s USE_PTHREADS=0 
 
 
 CLIENT_LDFLAGS += \
@@ -121,27 +145,6 @@ CLIENT_LDFLAGS += \
 									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="['GetBotLibAPI']" \
 									-s INCLUDE_FULL_LIBRARY=0
 
-ifeq ($(USE_RENDERER_DLOPEN),1)
-# CLIENT_LDFLAGS += \
-					-s EXPORT_ALL=1 \
-					-s DECLARE_ASM_MODULE_EXPORTS=1 \
-					-s LINKABLE=1 \
-					-s INCLUDE_FULL_LIBRARY=1
-endif
-
-ifeq ($(BUILD_RENDERER_OPENGL2),1)
-# CLIENT_LDFLAGS += \
-          -lwebgl.js \
-          -lwebgl2.js \
-          -s LEGACY_GL_EMULATION=0 \
-          -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
-          -s MIN_WEBGL_VERSION=1 \
-          -s MAX_WEBGL_VERSION=3 \
-          -s USE_WEBGL2=1 \
-          -s FULL_ES2=1 \
-          -s FULL_ES3=1
-endif
-
 ifeq ($(BUILD_RENDERER_OPENGL),1)
 # CLIENT_LDFLAGS += \
           -lglemu.js \
@@ -166,7 +169,7 @@ CLIENT_LDFLAGS += \
           -s SINGLE_FILE=1
 else
 CLIENT_LDFLAGS += \
-          -s WASM=1 \
+          -s WASM=0 \
           -s MODULARIZE=0 \
           -s SAFE_HEAP=0 \
           -s DEMANGLE_SUPPORT=0 \

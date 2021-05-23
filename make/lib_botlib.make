@@ -1,6 +1,7 @@
 MKFILE   := $(lastword $(MAKEFILE_LIST)) 
 
 include make/configure.make
+BUILD_BOTLIB=1
 include make/platform.make
 
 LIB_PREFIX  := $(CNAME)

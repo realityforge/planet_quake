@@ -2810,22 +2810,7 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.worldMapLoaded = qtrue;
 
 	// load it
-#ifdef USE_MEMORY_MAPS
-	if(name[5] == '*') {
-		fileHandle_t h;
-		int length = ri.FS_SV_FOpenFileRead( &name[5], &h );
-		Com_Printf("Using memory map %i, %s\n", length, &name[5]);
-		if(length > -1) {
-			buffer.v = Hunk_AllocateTempMemory( length + 1 );
-			FS_Read( buffer.v, length, h );
-			FS_FCloseFile(h);
-		} else {
-			buffer.b = 0;
-		}
-	}
-	else
-#endif
-    ri.FS_ReadFile( name, &buffer.v );
+  ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}

@@ -4,7 +4,6 @@ include make/configure.make
 include make/platform.make
 
 LIB_PREFIX       := $(CNAME)
-RENDERER_PREFIX  := $(CNAME)
 TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
 
 SOURCES  := $(MOUNT_DIR)/client
@@ -172,9 +171,13 @@ Q3OBJ      := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS   := $(INCLUDE) -fsigned-char \
-  -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-  -MMD -DBUILD_SLIM_CLIENT -DUSE_RENDERER_DLOPEN
+CFLAGS   := $(INCLUDE) -fsigned-char -O2 -ftree-vectorize -g \
+						-ffast-math -fno-short-enums -MMD
+
+ifdef BUILD_SLIM_CLIENT
+CFLAGS   += -DBUILD_SLIM_CLIENT
+endif
+
 
 ifdef USE_SYSTEM_BOTLIB
   LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
@@ -184,7 +187,7 @@ endif
 
 define DO_CLIENT_CC
 	$(echo_cmd) "CLIENT_CC $<"
-	$(Q)$(CC) $(CFLAGS) $(SDL_INCLUDE) -o $@ -c $<
+	$(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_AS

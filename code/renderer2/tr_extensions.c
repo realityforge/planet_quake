@@ -47,6 +47,12 @@ QGL_EXT_direct_state_access_PROCS;
 int qglMajorVersion = 2, qglMinorVersion = 0;
 int qglesMajorVersion, qglesMinorVersion;
 
+#ifdef EMSCRIPTEN
+void glPolygonMode(GLenum face, GLenum mode) {
+  // TODO
+}
+#endif
+
 /*
 ** GLimp_HaveExtension
 */

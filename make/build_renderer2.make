@@ -1,15 +1,14 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
 
 include make/configure.make
+BUILD_RENDERER_OPENGL2 = 1
 include make/platform.make
 
-RENDERER_PREFIX  := $(CNAME)
 TARGET	         := $(RENDERER_PREFIX)_opengl2_
 
 SOURCES  := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
 INCLUDES := 
 
-#LIBS = -l
 GLSLFFALLBACKS := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.glsl))
 GLSLFILES      := $(addprefix glsl/,$(notdir $(GLSLFFALLBACKS)))
 CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
@@ -22,15 +21,12 @@ Q3OBJ         := $(addprefix $(B)/rend2/,$(notdir $(OBJS))) \
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS   := $(INCLUDE) -fsigned-char \
-             -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-						 -MMD \
-						 -DUSE_RENDERER_DLOPEN \
-						 -DRENDERER_PREFIX=\"$(RENDERER_PREFIX)\"
+CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
+            -ffast-math -fno-short-enums -MMD
 
 define DO_REND_CC
 	$(echo_cmd) "REND_CC $<"
-	$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(SDL_INCLUDE) -o $@ -c $<
+	$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_REF_STR
@@ -42,9 +38,10 @@ define DO_REF_STR
 endef
 
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=rend2 mkdirs
-	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=rend2/glsl mkdirs
-	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2 mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
 #debug:
 #	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
@@ -72,7 +69,7 @@ $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SDL_LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 
 clean:
 	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)

@@ -497,7 +497,7 @@ static void GLSL_ShowProgramUniforms(GLuint program)
 #ifdef EMSCRIPTEN
 	// This function is rather expensive in WebGL, let's completely
 	// avoid it if not a developer.
-	if(!Cvar_VariableIntegerValue("developer"))
+	if(!ri.Cvar_VariableIntegerValue("developer"))
 	{
 		return;
 	}

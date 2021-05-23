@@ -221,6 +221,7 @@ var LibrarySysCommon = {
 			console.log(e)
 		}
 	},
+  glPolygonMode: function(){}, // TODO
 };
 
 autoAddDeps(LibrarySysCommon, '$SYSC');
