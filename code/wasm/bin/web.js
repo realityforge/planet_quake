@@ -35,7 +35,7 @@ Add websocket piping back in for quakejs servers
 e.g. npm run proxy -- --max 10
 `
 
-var ports = [1081, 80]
+var ports = [1081, 80, 8080]
 var masterServer = false
 var specifyPorts = false
 var forwardIP = ''

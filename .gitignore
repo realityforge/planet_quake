@@ -10,7 +10,7 @@ output/
 ####################
 base
 libs/emsdk
-code/xquakejs/node_modules/
+code/wasm/node_modules/
 node_modules
 .resources
 data

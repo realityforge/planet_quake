@@ -12,7 +12,7 @@ ARCH             := js
 BINEXT           := .js
 SHLIBEXT         := wasm
 
-DEBUG            := 0
+DEBUG            := 1
 EMCC_DEBUG       := 0
 
 HAVE_VM_COMPILED := true
@@ -44,18 +44,11 @@ BASE_CFLAGS    += $(SDL_INCLUDE)\
 				          -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN
 
 DEBUG_CFLAGS   := $(BASE_CFLAGS) \
-									-DNDEBUG \
-									-O3 -Oz \
-								  -frtti \
-								  -flto \
-									-fPIC \
+									-DDEBUG -D_DEBUG -O0 -g -g4 \
 								  --em-config $(EMJS_CONFIG_PATH)
 					
 RELEASE_CFLAGS := $(BASE_CFLAGS) \
-								  -DNDEBUG \
-								  -O3 -Oz \
-								  -flto \
-									-fPIC \
+								  -DNDEBUG -O3 -Oz -flto -fPIC \
 									--em-config $(EMJS_CONFIG_PATH)
 
 SHLIBLDFLAGS   += --no-entry \
@@ -67,7 +60,7 @@ SHLIBLDFLAGS   += --no-entry \
 									-s STANDALONE_WASM=1 \
 									-s SIDE_MODULE=0 \
 									-s RELOCATABLE=0 \
-				          -s LINKABLE=0 \
+				          -s LINKABLE=1 \
 									-s USE_PTHREADS=0 \
 									-s INVOKE_RUN=0 \
 									--em-config $(EMJS_CONFIG_PATH)
@@ -120,56 +113,62 @@ endif
 			-s USE_OGG=1 \
 
 
-CLIENT_LDFLAGS += \
-									$(CLIENT_LIBS) \
-									--em-config $(EMJS_CONFIG_PATH) \
-									-s INITIAL_MEMORY=56MB \
-									-s MAIN_MODULE=0 \
-									-s RELOCATABLE=0 \
-				          -s STRICT=1 \
-				          -s AUTO_JS_LIBRARIES=0 \
-									-s ALLOW_TABLE_GROWTH=1 \
-				          --memory-init-file 0 \
-									-s USE_SDL=2 \
-									-s USE_SDL_MIXER=2 \
-				          -s DISABLE_EXCEPTION_CATCHING=0 \
-				          -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
-				          -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
-				          -s INVOKE_RUN=1 \
-				          -s EXIT_RUNTIME=1 \
-				          -s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
-										'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'dynCall']" \
-				          -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', \
-										'_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', \
-										'_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', \
-										'_S_DisableSounds', '_CL_GetClientState', '_Com_Printf', \
-										'_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', \
-										'_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Malloc', '_Z_Free', \
-										'_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
-										'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
-										'_Cbuf_AddText', '_Field_CharEvent']" \
-				          -s FORCE_FILESYSTEM=1 \
-								  -s SDL2_IMAGE_FORMATS='[]' \
-									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="['GetBotLibAPI']" \
-									-s INCLUDE_FULL_LIBRARY=0
-
-ifeq ($(DEBUG), 1)
+ifeq ($(DEBUG),1)
 CLIENT_LDFLAGS += \
           -s WASM=1 \
           -s MODULARIZE=0 \
           -s SAFE_HEAP=1 \
           -s DEMANGLE_SUPPORT=1 \
           -s ASSERTIONS=2 \
-          -s SINGLE_FILE=1
+          -s SINGLE_FILE=1 \
+					-DDEBUG -D_DEBUG \
+					-O0 -g -g4 -gsource-map
+EXTRA_EXPORTS:=, '_Z_MallocDebug'
 else
 CLIENT_LDFLAGS += \
-          -s WASM=0 \
+          -s WASM=1 \
           -s MODULARIZE=0 \
-          -s SAFE_HEAP=0 \
+          -s SAFE_HEAP=1 \
           -s DEMANGLE_SUPPORT=0 \
           -s ASSERTIONS=0 \
           -s SINGLE_FILE=1
+EXTRA_EXPORTS:=, '_Z_Malloc'
 endif
+
+CLIENT_LDFLAGS += \
+									$(CLIENT_LIBS) \
+									--em-config $(EMJS_CONFIG_PATH) \
+									-s INITIAL_MEMORY=56MB \
+									-s ALLOW_MEMORY_GROWTH=1 \
+									-s USE_SDL=2 \
+									-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+									-s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
+										'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'dynCall']" \
+				          -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', \
+										'_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', \
+										'_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', \
+										'_S_DisableSounds', '_CL_GetClientState', '_Com_Printf', \
+										'_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', \
+										'_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', \
+										'_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
+										'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
+										'_Cbuf_AddText', '_Field_CharEvent' $(EXTRA_EXPORTS)]" \
+									-s FORCE_FILESYSTEM=1 \
+								  -s SDL2_IMAGE_FORMATS='[]' \
+									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
+									-s INCLUDE_FULL_LIBRARY=0
+#									-s MAIN_MODULE=0 \
+									-s RELOCATABLE=0 \
+									-s LINKABLE=0 \
+  			          -s STRICT=1 \
+				          -s AUTO_JS_LIBRARIES=0 \
+									-s ALLOW_TABLE_GROWTH=1 \
+				          --memory-init-file 0 \
+									-s USE_SDL_MIXER=2 \
+				          -s DISABLE_EXCEPTION_CATCHING=0 \
+				          -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
+				          -s INVOKE_RUN=1 \
+				          -s EXIT_RUNTIME=1
 
 ifdef B
 pre-build:

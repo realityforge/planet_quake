@@ -24,6 +24,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "server.h"
 #include "../botlib/botlib.h"
 
+#ifdef USE_BOTLIB_DLOPEN
+static void	*botLib;
+#endif
+
 typedef struct bot_debugpoly_s
 {
 	int inuse;
@@ -554,6 +558,10 @@ SV_BotInitBotLib
 */
 void SV_BotInitBotLib(void) {
 	botlib_import_t	botlib_import;
+  #ifdef USE_RENDERER_DLOPEN
+  	GetBotLibAPI_t		GetBotLibAPI;
+  	char			dllName[ MAX_OSPATH ];
+  #endif
 
 	if (debugpolygons) Z_Free(debugpolygons);
 	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
@@ -593,6 +601,35 @@ void SV_BotInitBotLib(void) {
 	botlib_import.DebugPolygonDelete = BotImport_DebugPolygonDelete;
 
 	botlib_import.Sys_Milliseconds = Sys_Milliseconds;
+  
+#ifdef USE_RENDERER_DLOPEN
+
+#ifdef EMSCRIPTEN
+#define REND_ARCH_STRING "js"
+#else
+#if defined (__linux__) && defined(__i386__)
+#define REND_ARCH_STRING "x86"
+#else
+#define REND_ARCH_STRING ARCH_STRING
+#endif // __linux__
+#endif // EMSCRIPTEN
+
+  // TODO: make this a fancy list of renderers we recognize
+	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
+	botLib = FS_LoadLibrary( dllName );
+
+	if ( !botLib )
+	{
+		Com_Error( ERR_FATAL, "Failed to load botlib %s", dllName );
+	}
+
+	GetBotLibAPI = Sys_LoadFunction( botLib, "GetBotLibAPI" );
+	if( !GetBotLibAPI )
+	{
+		Com_Error( ERR_FATAL, "Can't load symbol GetRefAPI" );
+		return;
+	}
+#endif // USE_BOTLIB_DLOPEN
 
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.

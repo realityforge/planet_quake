@@ -170,7 +170,8 @@ function pathToAbsolute(virtualPath) {
       result = path.join(mountPoints[i][1],
         virtualPath.replace(mountPoints[i][0], ''))
       if(ufs.existsSync(result)) {
-        if(ufs.readdirSync(result).length === 0) {
+        if(ufs.statSync(result).isDirectory()
+          && ufs.readdirSync(result).length === 0) {
           return -1
         }
         return result

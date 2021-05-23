@@ -285,7 +285,7 @@ var LibrarySysMain = {
 
     if(SYS.dedicated) return
 
-    if('Worker' in window) {
+    if(false && 'Worker' in window) {
       window.serverWorker = new Worker('server-worker.js')
       window.serverWorker.onmessage = SYS.onWorkerMessage
       window.serverWorker.postMessage(['init', SYSM.getQueryCommands()])

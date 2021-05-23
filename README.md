@@ -102,7 +102,7 @@ The map editor and associated compiling tools are not included. We suggest you
 use a modern copy from http://icculus.org/gtkradiant/.
 
 # Compilation and installation
-See [QuakeJS README](https://github.com/briancullinan/planet_quake/tree/master/code/xquakejs#quakejs) for more build instructions.
+See [QuakeJS README](https://github.com/briancullinan/planet_quake/tree/master/code/wasm#quakejs) for more build instructions.
 
 As a prerequisite, you will need to install the dependencies specific to your
  operating system from ioq3 https://github.com/ioquake/ioq3#compilation-and-installation

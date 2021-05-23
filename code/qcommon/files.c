@@ -819,7 +819,12 @@ FS_AllowedExtension
 */
 qboolean FS_AllowedExtension( const char *fileName, qboolean allowPk3s, const char **ext ) 
 {
-	static const char *extlist[] =	{ "dll", "exe", "so", "dylib", "qvm", "pk3" };
+	static const char *extlist[] =	{ 
+    "dll", "exe", "so", "dylib", "qvm", "pk3" 
+#ifdef EMSCRIPTEN
+    , "wasm"
+#endif
+  };
 	const char *e;
 	int i, n;
 
@@ -1065,7 +1070,7 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	// search homepath
 	ospath = FS_BuildOSPath( fs_homepath->string, filename, NULL );
 
-	if ( fs_debug->integer ) {
+	if ( fs_debug && fs_debug->integer ) {
 		Com_Printf( "FS_SV_FOpenFileRead (fs_homepath): %s\n", ospath );
 	}
 
@@ -1073,7 +1078,7 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	if ( !fd->handleFiles.file.o )
 	{
 		// NOTE TTimo on non *nix systems, fs_homepath == fs_basepath, might want to avoid
-		if ( Q_stricmp( fs_homepath->string, fs_basepath->string ) != 0 )
+		if ( fs_homepath && Q_stricmp( fs_homepath->string, fs_basepath->string ) != 0 )
 		{
 			// search basepath
 			ospath = FS_BuildOSPath( fs_basepath->string, filename, NULL );
@@ -1087,7 +1092,7 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 		}
 
 		// Check fs_steampath too
-		if ( !fd->handleFiles.file.o && fs_steampath->string[0] )
+		if ( fs_steampath && !fd->handleFiles.file.o && fs_steampath->string[0] )
 		{
 			// search steampath
 			ospath = FS_BuildOSPath( fs_steampath->string, filename, NULL );

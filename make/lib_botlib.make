@@ -4,8 +4,7 @@ include make/configure.make
 BUILD_BOTLIB=1
 include make/platform.make
 
-LIB_PREFIX  := $(CNAME)
-TARGET	    := $(LIB_PREFIX)_libbots_
+TARGET	    := $(BOTLIB_PREFIX)_libbots_
 SOURCES     := code/botlib
 INCLUDES    := 
 CFILES      := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \

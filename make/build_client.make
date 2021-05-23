@@ -171,16 +171,11 @@ Q3OBJ      := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS   := $(INCLUDE) -fsigned-char -O2 -ftree-vectorize -g \
+CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize -g \
 						-ffast-math -fno-short-enums -MMD
 
 ifdef BUILD_SLIM_CLIENT
 CFLAGS   += -DBUILD_SLIM_CLIENT
-endif
-
-
-ifdef USE_SYSTEM_BOTLIB
-  LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)
 endif
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
