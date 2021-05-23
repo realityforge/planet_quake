@@ -1,7 +1,7 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
 
 include make/configure.make
-BUILD_RENDERER_OPENGL2 = 1
+BUILD_RENDERER_OPENGL2:=1
 include make/platform.make
 
 TARGET	         := $(RENDERER_PREFIX)_opengl2_
@@ -14,10 +14,10 @@ GLSLFILES      := $(addprefix glsl/,$(notdir $(GLSLFFALLBACKS)))
 CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
 	                $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
 							    $(MOUNT_DIR)/qcommon/puff.c
-OBJS          := $(CFILES:.c=.o) 
-Q3R2STRINGOBJ := $(GLSLFILES:.glsl=.o)
-Q3OBJ         := $(addprefix $(B)/rend2/,$(notdir $(OBJS))) \
-								 $(addprefix $(B)/rend2/glsl/,$(notdir $(Q3R2STRINGOBJ)))
+OBJS           := $(CFILES:.c=.o) 
+Q3R2STRINGOBJ  := $(GLSLFILES:.glsl=.o)
+Q3OBJ          := $(addprefix $(B)/rend2/,$(notdir $(OBJS))) \
+								  $(addprefix $(B)/rend2/glsl/,$(notdir $(Q3R2STRINGOBJ)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -67,7 +67,8 @@ $(B)/rend2/glsl/%.c: code/renderer2/glsl/%.glsl
 $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 	$(DO_REND_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ)
+	@echo $()
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 

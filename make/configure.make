@@ -11,7 +11,7 @@ BUILD_GAME_QVM   = 0
 BUILD_GAME_SO    = 0
 BUILD_RENDERER_OPENGL=0
 BUILD_RENDERER_JS=0
-BUILD_RENDERER_OPENGL2=1
+BUILD_RENDERER_OPENGL2=0
 BUILD_RENDERER_OPENGLES=0
 
 USE_SDL          = 1
@@ -238,6 +238,8 @@ ifeq ($(MINGW),1)
 endif
 endif
 endif
+
+-include Makefile.local
 
 #############################################################################
 # DEPENDENCIES

@@ -8,7 +8,7 @@ EMJS_CONFIG_PATH := $(ABSOLUTE_PATH)/build/.emscripten
 
 CC               := $(EMSDK)/upstream/emscripten/emcc
 RANLIB           := $(EMSDK)/upstream/emscripten/emranlib
-ARCH             := wasm
+ARCH             := js
 BINEXT           := .js
 SHLIBEXT         := wasm
 
@@ -58,13 +58,6 @@ RELEASE_CFLAGS := $(BASE_CFLAGS) \
 									-fPIC \
 									--em-config $(EMJS_CONFIG_PATH)
 
-SHLIBCFLAGS    += -DNDEBUG \
-									-O3 -Oz \
-									-flto \
-									-fPIC \
-				          -s STRICT=1 \
-									--em-config $(EMJS_CONFIG_PATH)
-
 SHLIBLDFLAGS   += --no-entry \
 									-s STRICT=1 \
 									-s AUTO_JS_LIBRARIES=0 \
@@ -82,6 +75,7 @@ SHLIBLDFLAGS   += --no-entry \
 ifeq ($(BUILD_BOTLIB),1)
 SHLIBLDFLAGS   += -s EXPORTED_FUNCTIONS="['_GetBotLibAPI', '_free']"
 endif
+
 ifeq ($(BUILD_RENDERER_OPENGL2),1)
 SHLIBLDFLAGS   += -s EXPORTED_FUNCTIONS="['_GetRefAPI', '_free']" \
 									-s USE_SDL=1 \
@@ -96,6 +90,20 @@ SHLIBLDFLAGS   += -s EXPORTED_FUNCTIONS="['_GetRefAPI', '_free']" \
 				          -s USE_WEBGL2=1 \
 				          -s FULL_ES2=1 \
 				          -s FULL_ES3=1
+endif
+
+ifeq ($(BUILD_RENDERER_OPENGL),1)
+# CLIENT_LDFLAGS += \
+          -lglemu.js \
+          -lwebgl.js \
+          -DUSE_CLOSURE_COMPILER \
+          -s LEGACY_GL_EMULATION=1 \
+          -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
+          -s MIN_WEBGL_VERSION=1 \
+          -s MAX_WEBGL_VERSION=3 \
+          -s USE_WEBGL2=1 \
+          -s FULL_ES2=0 \
+          -s FULL_ES3=0
 endif
 
 # debug optimize flags: --closure 0 --minify 0 -g -g4 || -O1 --closure 0 --minify 0 -g -g3
@@ -144,20 +152,6 @@ CLIENT_LDFLAGS += \
 								  -s SDL2_IMAGE_FORMATS='[]' \
 									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="['GetBotLibAPI']" \
 									-s INCLUDE_FULL_LIBRARY=0
-
-ifeq ($(BUILD_RENDERER_OPENGL),1)
-# CLIENT_LDFLAGS += \
-          -lglemu.js \
-          -lwebgl.js \
-          -DUSE_CLOSURE_COMPILER \
-          -s LEGACY_GL_EMULATION=1 \
-          -s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1 \
-          -s MIN_WEBGL_VERSION=1 \
-          -s MAX_WEBGL_VERSION=3 \
-          -s USE_WEBGL2=1 \
-          -s FULL_ES2=0 \
-          -s FULL_ES3=0
-endif
 
 ifeq ($(DEBUG), 1)
 CLIENT_LDFLAGS += \

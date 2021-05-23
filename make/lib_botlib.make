@@ -15,17 +15,17 @@ Q3OBJ       := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS  := $(INCLUDE) -fsigned-char \
-          -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-					-DUSE_BOTLIB_DLOPEN
+CFLAGS  := $(INCLUDE) -fsigned-char -O2 -ftree-vectorize -g \
+          -ffast-math -fno-short-enums -DUSE_BOTLIB_DLOPEN
 
 define DO_BOTLIB_CC
 	@echo "BOTLIB_CC $<"
-	@$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
+	$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
 endef
 
 default:
 	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=botlib mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
 ifdef B

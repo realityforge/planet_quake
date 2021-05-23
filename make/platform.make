@@ -18,8 +18,6 @@ echo_cmd=@echo
 Q=@
 endif
 
--include Makefile.local
-
 ifeq ($(COMPILE_PLATFORM),cygwin)
   PLATFORM=mingw32
 endif
