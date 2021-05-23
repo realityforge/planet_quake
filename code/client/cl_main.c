@@ -135,11 +135,7 @@ download_t			download;
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
 #ifdef USE_RENDERER_DLOPEN
-#ifdef EMSCRIPTEN
-static int rendererLib;
-#else
 static void	*rendererLib;
-#endif
 #endif
 
 ping_t	cl_pinglist[MAX_PINGREQUESTS];

@@ -174,7 +174,7 @@ export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char \
   -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-  -MMD -DBUILD_SLIM_CLIENT
+  -MMD -DBUILD_SLIM_CLIENT -DUSE_RENDERER_DLOPEN
 
 ifdef USE_SYSTEM_BOTLIB
   LDFLAGS += $(BD)/$(LIB_PREFIX)_libbots_$(SHLIBNAME)

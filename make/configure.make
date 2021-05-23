@@ -18,12 +18,10 @@ USE_CURL         = 1
 USE_LOCAL_HEADERS= 0
 USE_VULKAN       = 0
 USE_SYSTEM_JPEG  = 0
-USE_VULKAN_API   = 1
-
+USE_VULKAN_API   = 0
 USE_Q3KEY        = 0
 USE_IPV6         = 0
 USE_SDL          = 1
-USE_VULKAN       = 0
 USE_CURL         = 0
 USE_CURL_DLOPEN  = 0
 USE_CODEC_VORBIS = 0
@@ -38,6 +36,8 @@ USE_LOCAL_HEADERS=0
 GL_EXT_direct_state_access=1
 GL_ARB_ES2_compatibility=1
 GL_GLEXT_PROTOTYPES=1
+
+USE_SYSTEM_BOTLIB=1
 
 ifndef COPYDIR
 COPYDIR="/usr/local/games/quake3"
@@ -101,7 +101,7 @@ endif
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),0)
-  USE_VULKAN=1
+#  USE_VULKAN=1
 endif
 
 ifneq ($(USE_VULKAN),0)
@@ -110,9 +110,6 @@ endif
 
 
 #############################################################################
-
-BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
-BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -245,9 +242,6 @@ help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 D_FILES :=
-
-pre-build:
-	@
 
 ifdef WORKDIR
 

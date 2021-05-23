@@ -7,13 +7,10 @@ LIB_PREFIX  := $(CNAME)
 TARGET	    := $(LIB_PREFIX)_libbots_
 SOURCES     := code/botlib
 INCLUDES    := 
-
-#LIBS = -l
-
-CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-	          code/qcommon/q_math.c code/qcommon/q_shared.c 
-OBJS     := $(CFILES:.c=.o)
-Q3OBJ    := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
+CFILES      := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
+	             code/qcommon/q_math.c code/qcommon/q_shared.c 
+OBJS        := $(CFILES:.c=.o)
+Q3OBJ       := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -27,8 +24,8 @@ define DO_BOTLIB_CC
 endef
 
 default:
-	$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=botlib mkdirs
-	$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=botlib mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
 ifdef B
 $(B)/botlib/%.o: code/qcommon/%.c
@@ -39,8 +36,9 @@ $(B)/botlib/%.o: code/botlib/%.c
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif
 
 clean:
-	@rm -rf $(B)/botlib
+	@rm -rf $(BD)/botlib $(BD)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BR)/botlib $(BR)/$(TARGET)$(SHLIBNAME)

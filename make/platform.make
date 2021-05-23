@@ -79,4 +79,7 @@ endif
 endif
 endif
 
+
+BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
+BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 SHLIBNAME    = $(ARCH).$(SHLIBEXT)
