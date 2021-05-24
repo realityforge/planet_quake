@@ -117,7 +117,7 @@ LDEXPORTS := '_main', '_malloc', '_free', '_atof', \
 	'_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', \
 	'_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
 	'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
-	'_Cbuf_AddText', '_Field_CharEvent'
+	'_Cbuf_AddText', '_Field_CharEvent', '_FS_AllowedExtension'
 
 DEBUG_LDFLAGS += \
           -s WASM=1 \

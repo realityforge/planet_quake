@@ -6078,6 +6078,10 @@ Tries to load libraries within known searchpaths
 */
 void *FS_LoadLibrary( const char *name )
 {
+#ifdef EMSCRIPTEN
+  return Sys_LoadLibrary( FS_BuildOSPath( fs_basepath->string, name, NULL ) );
+#else
+
 	const searchpath_t *sp = fs_searchpaths;
 	void *libHandle = NULL;
 	char *fn;
@@ -6103,6 +6107,7 @@ void *FS_LoadLibrary( const char *name )
 	}
 
 	return libHandle;
+#endif
 }
 
 void FS_SetMapIndex(const char *mapname) {

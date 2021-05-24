@@ -465,6 +465,7 @@ LOAD/UNLOAD DLL
 static int dll_err_count = 0;
 
 
+#ifndef EMSCRIPTEN
 /*
 =================
 Sys_LoadLibrary
@@ -483,6 +484,7 @@ void *Sys_LoadLibrary( const char *name )
 	handle = dlopen( name, RTLD_NOW );
 	return handle;
 }
+#endif
 
 
 /*

@@ -733,7 +733,7 @@ var LibraryDLOpen = {
     var jsflags = {
       global:   Boolean(flags & {{{ cDefine('RTLD_GLOBAL') }}}),
       nodelete: Boolean(flags & {{{ cDefine('RTLD_NODELETE') }}}),
-
+      loadAsync: true,
       fs: FS, // load libraries from provided filesystem
     }
 
@@ -839,9 +839,22 @@ var LibraryDLOpen = {
     {{{ makeSetValue('info', Runtime.QUANTUM_SIZE*3, '0', 'i32') }}};
     return 1;
   },
+  Sys_LoadLibrary: function (name) {
+  	if ( _FS_AllowedExtension( name, false, void 0 ) )
+  	{
+  		SYSC.Error( ERR_FATAL, "Sys_LoadLibrary: Unable to load library with '%s' extension", ext )
+  	}
+
+  	var loader = _dlopen.bind(null, name, {{{ cDefine('RTLD_NOW') }}} )
+    setTimeout(loader, 10)
+    // no return because async
+  }
 };
 
 
+autoAddDeps(LibraryDLOpen, 'dlclose')
+autoAddDeps(LibraryDLOpen, 'dlopen')
+autoAddDeps(LibraryDLOpen, '$relocateExports')
 autoAddDeps(LibraryDLOpen, '$GOTHandler')
 autoAddDeps(LibraryDLOpen, '$getMemory')
 autoAddDeps(LibraryDLOpen, '$getDylinkMetadata')
