@@ -145,6 +145,7 @@ CLIENT_LDFLAGS += \
 									--em-config $(EMJS_CONFIG_PATH) \
 									-s INITIAL_MEMORY=56MB \
 									-s ALLOW_MEMORY_GROWTH=1 \
+									-s ALLOW_TABLE_GROWTH=1 \
 									-s USE_SDL=2 \
 									-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 									-s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
@@ -158,7 +159,6 @@ CLIENT_LDFLAGS += \
 									-s LINKABLE=0 \
   			          -s STRICT=1 \
 				          -s AUTO_JS_LIBRARIES=0 \
-									-s ALLOW_TABLE_GROWTH=1 \
 				          --memory-init-file 0 \
 									-s USE_SDL_MIXER=2 \
 				          -s DISABLE_EXCEPTION_CATCHING=0 \

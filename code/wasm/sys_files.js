@@ -18,6 +18,8 @@ var LibrarySysFiles = {
       'quakejs-noborder-transparent.png',
       'quake3e.js',
       'quake3e.wasm',
+      'quake3e_opengl2_js.wasm',
+      'quake3e_libbots_js.wasm',
       'assets/baseq3-cc/index.json',
       'server-worker.js',
     ],

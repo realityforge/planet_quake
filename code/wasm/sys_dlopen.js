@@ -346,12 +346,12 @@ var LibraryDLOpen = {
   // promise that resolves to its exports if the loadAsync flag is set.
 
   $loadWebAssemblyModule: function(binary, flags) {
-    var metadata = getDylinkMetadata(binary);
-    var memorySize = metadata.memorySize;
-    var memoryAlign = metadata.memoryAlign;
-    var tableSize = metadata.tableSize;
-    var tableAlign = metadata.tableAlign;
-    var neededDynlibs = metadata.neededDynlibs;
+    //var metadata = getDylinkMetadata(binary);
+    var memorySize = 8000000;
+    var memoryAlign = 1024;
+    var tableSize = 1;
+    var tableAlign = 0;
+    var neededDynlibs = [];
 
     // loadModule loads the wasm module after all its dependencies have been loaded.
     // can be called both sync/async.
@@ -841,6 +841,10 @@ var LibraryDLOpen = {
   },
 };
 
+
+autoAddDeps(LibraryDLOpen, '$GOTHandler')
+autoAddDeps(LibraryDLOpen, '$getMemory')
+autoAddDeps(LibraryDLOpen, '$getDylinkMetadata')
 autoAddDeps(LibraryDLOpen, '$loadWebAssemblyModule')
 autoAddDeps(LibraryDLOpen, '$loadDynamicLibrary')
 autoAddDeps(LibraryDLOpen, '$GOT')
