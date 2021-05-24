@@ -11,10 +11,10 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
 endif
 
 ifeq ($(V),1)
-echo_cmd=@:
+echo_cmd=@echo
 Q=
 else
-echo_cmd=@echo
+echo_cmd=@:
 Q=@
 endif
 

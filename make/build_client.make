@@ -204,6 +204,7 @@ default:
 	$(echo_cmd) "MAKE $(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=client mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+#	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 
 release:

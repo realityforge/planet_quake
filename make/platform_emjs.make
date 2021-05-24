@@ -12,9 +12,6 @@ ARCH             := js
 BINEXT           := .js
 SHLIBEXT         := wasm
 
-DEBUG            := 1
-EMCC_DEBUG       := 0
-
 HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
@@ -25,6 +22,7 @@ CLIENT_SYSTEM  := sys_common.js \
 									sys_net.js \
 									sys_files.js \
 									sys_input.js \
+									sys_dlopen.js \
 									sys_main.js
 
 CLIENT_LIBS    := -lbrowser.js \
@@ -41,15 +39,14 @@ BASE_CFLAGS    += $(SDL_INCLUDE)\
 				          -Wimplicit -Wstrict-prototypes \
 				          -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
 				          -DGL_EXT_direct_state_access=1 \
-				          -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN
+				          -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN \
+								  --em-config $(EMJS_CONFIG_PATH)
 
 DEBUG_CFLAGS   := $(BASE_CFLAGS) \
-									-DDEBUG -D_DEBUG -O0 -g -g4 \
-								  --em-config $(EMJS_CONFIG_PATH)
+									-DDEBUG -D_DEBUG -O0 -g -g4
 					
 RELEASE_CFLAGS := $(BASE_CFLAGS) \
-								  -DNDEBUG -O3 -Oz -flto -fPIC \
-									--em-config $(EMJS_CONFIG_PATH)
+								  -DNDEBUG -O3 -Oz -flto -fPIC
 
 SHLIBLDFLAGS   += --no-entry \
 									-s STRICT=1 \
@@ -60,7 +57,7 @@ SHLIBLDFLAGS   += --no-entry \
 									-s STANDALONE_WASM=1 \
 									-s SIDE_MODULE=0 \
 									-s RELOCATABLE=0 \
-				          -s LINKABLE=1 \
+				          -s LINKABLE=0 \
 									-s USE_PTHREADS=0 \
 									-s INVOKE_RUN=0 \
 									--em-config $(EMJS_CONFIG_PATH)
@@ -110,11 +107,19 @@ endif
 #    -s INITIAL_MEMORY=56MB \
 			-s GL_UNSAFE_OPTS=0 \
 			-s USE_VORBIS=1 \
-			-s USE_OGG=1 \
+			-s USE_OGG=1
 
+LDEXPORTS := '_main', '_malloc', '_free', '_atof', \
+	'_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', \
+	'_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', \
+	'_S_DisableSounds', '_CL_GetClientState', '_Com_Printf', \
+	'_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', \
+	'_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', \
+	'_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
+	'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
+	'_Cbuf_AddText', '_Field_CharEvent'
 
-ifeq ($(DEBUG),1)
-CLIENT_LDFLAGS += \
+DEBUG_LDFLAGS += \
           -s WASM=1 \
           -s MODULARIZE=0 \
           -s SAFE_HEAP=1 \
@@ -122,18 +127,18 @@ CLIENT_LDFLAGS += \
           -s ASSERTIONS=2 \
           -s SINGLE_FILE=1 \
 					-DDEBUG -D_DEBUG \
-					-O0 -g -g4 -gsource-map
-EXTRA_EXPORTS:=, '_Z_MallocDebug'
-else
-CLIENT_LDFLAGS += \
+					--emit-symbol-map \
+					-O0 -g -g4 -gsource-map \
+					-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug']\"
+
+RELEASE_LDFLAGS += \
           -s WASM=1 \
           -s MODULARIZE=0 \
           -s SAFE_HEAP=1 \
           -s DEMANGLE_SUPPORT=0 \
           -s ASSERTIONS=0 \
-          -s SINGLE_FILE=1
-EXTRA_EXPORTS:=, '_Z_Malloc'
-endif
+          -s SINGLE_FILE=1 \
+					-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc']\"
 
 CLIENT_LDFLAGS += \
 									$(CLIENT_LIBS) \
@@ -144,15 +149,6 @@ CLIENT_LDFLAGS += \
 									-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 									-s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
 										'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'dynCall']" \
-				          -s EXPORTED_FUNCTIONS="['_main', '_malloc', '_free', '_atof', \
-										'_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', \
-										'_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', \
-										'_S_DisableSounds', '_CL_GetClientState', '_Com_Printf', \
-										'_CL_Outside_NextDownload', '_NET_SendLoopPacket', '_SOCKS_Frame_Proxy', \
-										'_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', \
-										'_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
-										'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
-										'_Cbuf_AddText', '_Field_CharEvent' $(EXTRA_EXPORTS)]" \
 									-s FORCE_FILESYSTEM=1 \
 								  -s SDL2_IMAGE_FORMATS='[]' \
 									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
