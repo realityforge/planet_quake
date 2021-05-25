@@ -48,8 +48,14 @@ int qglMajorVersion = 2, qglMinorVersion = 0;
 int qglesMajorVersion, qglesMinorVersion;
 
 #ifdef EMSCRIPTEN
-void glPolygonMode(GLenum face, GLenum mode) {
+void glPolygonMode( GLenum face, GLenum mode ) {
   // TODO
+}
+void glDrawBuffer( GLenum mode ) {
+  // TODO
+}
+void eglGetProcAddress(const char *procname) {
+  
 }
 #endif
 

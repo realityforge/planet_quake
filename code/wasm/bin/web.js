@@ -112,10 +112,23 @@ async function serveUnionFs(req, res, next) {
     sendCompressed(absolute, res, req.headers['accept-encoding'])
   } else if (req.url.includes('version.json')) {
     var mtime
-    if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')))
-      mtime = ufs.statSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')).mtime
-    if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
-      mtime = ufs.statSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')).mtime
+    var buildDirectories = [
+      'release-js-js',
+      'debug-js-js'
+    ]
+    buildDirectories.forEach(dir => {
+      if(ufs.existsSync(path.join(__dirname, '../../../build', dir)))
+        ufs.readdirSync(path.join(__dirname, '../../../build', dir))
+        .forEach(name => {
+          if(name.includes('.wasm') || name.includes('.js')) {
+            var statTime = ufs.statSync(path.join(__dirname, '../../../build', dir, name)).mtime
+            if(!mtime || statTime.getTime() > mtime.getTime()) {
+              mtime = statTime
+            }
+          }
+        })
+    })
+
     // only return version file if there is an index present, otherwise the client won't look on quake.games
     if(mtime && absolute !== -1) {
       var versionString = JSON.stringify([mtime, mtime])
@@ -134,23 +147,26 @@ async function serveUnionFs(req, res, next) {
 	}
 }
 
+function setCrossOriginHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+}
+
 if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js')))
   app.use(serveStatic(path.join(__dirname, '../../../build/release-js-js'), {
-    setHeaders: (res, path) => {
-      res.setHeader('Access-Control-Allow-Origin', '*')
-    }
+    setHeaders: setCrossOriginHeaders
   }))
+
 if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
   app.use(serveStatic(path.join(__dirname, '../../../build/debug-js-js'), {
-    setHeaders: (res, path) => {
-      res.setHeader('Access-Control-Allow-Origin', '*')
-    }
+    setHeaders: setCrossOriginHeaders
   }))
+
 app.use(serveStatic(path.join(__dirname), {
-  setHeaders: (res, path) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-  }
+  setHeaders: setCrossOriginHeaders
 }))
+
 app.use(serveUnionFs)
 
 if(ports.includes(1080)) {

@@ -846,9 +846,11 @@ Q_EXPORT botlib_export_t* QDECL GetBotLibAPI ( int apiVersion, botlib_import_t *
 #else
 botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 #endif
+
+  printf("-------------------- Initializing Botlib ----------------------\n");
 	assert(import);
-	botimport = *import;
-	assert(botimport.Print);
+  botimport = *import;
+  assert(botimport.Print);
 
 	Com_Memset( &be_botlib_export, 0, sizeof( be_botlib_export ) );
 

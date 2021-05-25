@@ -105,6 +105,8 @@ var LibraryDLOpen = {
 #endif
         } else if (typeof value === 'number') {
           GOT[symName].value = value;
+        } else if (typeof value === 'object') {
+          GOT[symName].value = value;
         } else {
           err("unhandled export type for `" + symName + "`: " + (typeof value));
         }
@@ -415,7 +417,16 @@ var LibraryDLOpen = {
           env[x] = Module[x];
         }
       }
-
+      /*
+      env['__stack_pointer'] = new WebAssembly.Global({value: 'i32', mutable: true});
+      //env['memory'] = wasmMemory; 
+      env['memory'] = new WebAssembly.Memory({
+        'initial': INITIAL_MEMORY / {{{ WASM_PAGE_SIZE }}},
+        'maximum': INITIAL_MEMORY / {{{ WASM_PAGE_SIZE }}},
+        'shared': true
+      });
+      */
+      env['__indirect_function_table'] = new WebAssembly.Table({initial: 10, element:"anyfunc"});
       // TODO kill ↓↓↓ (except "symbols local to this module", it will likely be
       // not needed if we require that if A wants symbols from B it has to link
       // to B explicitly: similarly to -Wl,--no-undefined)
@@ -429,12 +440,19 @@ var LibraryDLOpen = {
       // be to inspect the binary directly).
       var proxyHandler = {
         'get': function(obj, prop) {
+          console.log('getting ' + prop)
           // symbols that should be local to this module
           switch (prop) {
             case '__memory_base':
               return memoryBase;
             case '__table_base':
               return tableBase;
+            case '__stack_pointer':
+              return new WebAssembly.Global({value: 'i32', mutable: true});
+            case 'memory':
+              return wasmMemory
+            case '__indirect_function_table':
+              return wasmTable //return new WebAssembly.Table({initial: 10, element:"anyfunc"});
           }
           if (prop in obj) {
             return obj[prop]; // already present
@@ -473,12 +491,14 @@ var LibraryDLOpen = {
             functionsInTableMap.set(item, tableBase + i);
           }
         }
+        //updateGOT(instance.exports)
+        //moduleExports = instance.exports
         moduleExports = relocateExports(instance.exports, memoryBase);
         if (!flags.allowUndefined) {
           reportUndefinedSymbols();
         }
 #if STACK_OVERFLOW_CHECK >= 2
-        moduleExports['__set_stack_limits']({{{ STACK_BASE }}} , {{{ STACK_MAX }}});
+//        moduleExports['__set_stack_limits']({{{ STACK_BASE }}} , {{{ STACK_MAX }}});
 #endif
         // initialize the module
         var init = moduleExports['__post_instantiate'];
@@ -734,11 +754,12 @@ var LibraryDLOpen = {
       global:   Boolean(flags & {{{ cDefine('RTLD_GLOBAL') }}}),
       nodelete: Boolean(flags & {{{ cDefine('RTLD_NODELETE') }}}),
       loadAsync: true,
+      allowUndefined: true,
       fs: FS, // load libraries from provided filesystem
     }
 
     try {
-      return loadDynamicLibrary(filename, jsflags)
+      return loadDynamicLibrary(filename, jsflags).then(SYSC.ProxyCallback)
     } catch (e) {
 #if ASSERTIONS
       err('Error in loading dynamic library ' + filename + ": " + e);
@@ -789,7 +810,7 @@ var LibraryDLOpen = {
         DLFCN.errorMsg = 'Tried to dlsym() from an unopened handle: ' + handle;
         return 0;
       }
-      if (!lib.module.hasOwnProperty(symbol)) {
+      if (typeof lib.module[symbol] == 'undefined') {
         DLFCN.errorMsg = 'Tried to lookup unknown symbol "' + symbol + '" in dynamic lib: ' + lib.name;
         return 0;
       }
@@ -845,19 +866,21 @@ var LibraryDLOpen = {
   		SYSC.Error( ERR_FATAL, "Sys_LoadLibrary: Unable to load library with '%s' extension", ext )
   	}
 
-  	var loader = _dlopen.bind(null, name, {{{ cDefine('RTLD_NOW') }}} )
-    setTimeout(loader, 10)
-    // no return because async
+    var handle = _dlopen(name, {{{ cDefine('RTLD_NOW') }}})
+    return handle
   }
 };
 
 
+autoAddDeps(LibraryDLOpen, '$relocateExports')
+autoAddDeps(LibraryDLOpen, '$resolveGlobalSymbol')
+autoAddDeps(LibraryDLOpen, '$reportUndefinedSymbols')
+autoAddDeps(LibraryDLOpen, '$isInternalSym')
 autoAddDeps(LibraryDLOpen, 'dlclose')
 autoAddDeps(LibraryDLOpen, 'dlopen')
-autoAddDeps(LibraryDLOpen, '$relocateExports')
 autoAddDeps(LibraryDLOpen, '$GOTHandler')
+autoAddDeps(LibraryDLOpen, '$updateGOT')
 autoAddDeps(LibraryDLOpen, '$getMemory')
-autoAddDeps(LibraryDLOpen, '$getDylinkMetadata')
 autoAddDeps(LibraryDLOpen, '$loadWebAssemblyModule')
 autoAddDeps(LibraryDLOpen, '$loadDynamicLibrary')
 autoAddDeps(LibraryDLOpen, '$GOT')

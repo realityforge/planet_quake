@@ -43,23 +43,30 @@ BASE_CFLAGS    += $(SDL_INCLUDE)\
 								  --em-config $(EMJS_CONFIG_PATH)
 
 DEBUG_CFLAGS   := $(BASE_CFLAGS) \
-									-DDEBUG -D_DEBUG -O0 -g -g4
+									-DDEBUG -D_DEBUG -fPIC -O0 -g -g4
 					
 RELEASE_CFLAGS := $(BASE_CFLAGS) \
 								  -DNDEBUG -O3 -Oz -flto -fPIC
 
+# TODO: IMPORTED_MEMORY
 SHLIBLDFLAGS   += --no-entry \
+									-O0 -g -g4 -gsource-map \
+									-s WASM=1 \
 									-s STRICT=1 \
 									-s AUTO_JS_LIBRARIES=0 \
+									-s ALLOW_MEMORY_GROWTH=1 \
 									-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
 									-s INCLUDE_FULL_LIBRARY=0 \
 									-s MODULARIZE=0 \
 									-s STANDALONE_WASM=1 \
+									-s IMPORTED_MEMORY=1 \
 									-s SIDE_MODULE=0 \
 									-s RELOCATABLE=0 \
 				          -s LINKABLE=0 \
 									-s USE_PTHREADS=0 \
 									-s INVOKE_RUN=0 \
+									--shared-memory \
+									--enable-threads \
 									--em-config $(EMJS_CONFIG_PATH)
 
 ifeq ($(BUILD_BOTLIB),1)
@@ -119,52 +126,54 @@ LDEXPORTS := '_main', '_malloc', '_free', '_atof', \
 	'_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
 	'_Cbuf_AddText', '_Field_CharEvent', '_FS_AllowedExtension'
 
-DEBUG_LDFLAGS += \
-          -s WASM=1 \
-          -s MODULARIZE=0 \
-          -s SAFE_HEAP=1 \
-          -s DEMANGLE_SUPPORT=1 \
-          -s ASSERTIONS=2 \
-          -s SINGLE_FILE=1 \
-					-DDEBUG -D_DEBUG \
-					--emit-symbol-map \
-					-O0 -g -g4 -gsource-map \
-					-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug']\"
+DEBUG_LDFLAGS    += \
+					          -s WASM=1 \
+					          -s MODULARIZE=0 \
+					          -s SAFE_HEAP=1 \
+					          -s DEMANGLE_SUPPORT=1 \
+					          -s ASSERTIONS=2 \
+					          -s SINGLE_FILE=1 \
+										-DDEBUG -D_DEBUG \
+										--emit-symbol-map \
+										-O0 -g -g4 -gsource-map \
+										-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_MallocDebug']\"
 
-RELEASE_LDFLAGS += \
-          -s WASM=1 \
-          -s MODULARIZE=0 \
-          -s SAFE_HEAP=1 \
-          -s DEMANGLE_SUPPORT=0 \
-          -s ASSERTIONS=0 \
-          -s SINGLE_FILE=1 \
-					-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc']\"
+RELEASE_LDFLAGS  += \
+					          -s WASM=1 \
+					          -s MODULARIZE=0 \
+					          -s SAFE_HEAP=1 \
+					          -s DEMANGLE_SUPPORT=0 \
+					          -s ASSERTIONS=0 \
+					          -s SINGLE_FILE=1 \
+										-s EXPORTED_FUNCTIONS=\"[$(LDEXPORTS), '_Z_Malloc']\"
 
-CLIENT_LDFLAGS += \
-									$(CLIENT_LIBS) \
-									--em-config $(EMJS_CONFIG_PATH) \
-									-s INITIAL_MEMORY=56MB \
-									-s ALLOW_MEMORY_GROWTH=1 \
-									-s ALLOW_TABLE_GROWTH=1 \
-									-s USE_SDL=2 \
-									-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
-									-s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
-										'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', 'dynCall']" \
-									-s FORCE_FILESYSTEM=1 \
-								  -s SDL2_IMAGE_FORMATS='[]' \
-									-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
-									-s INCLUDE_FULL_LIBRARY=0
-#									-s MAIN_MODULE=0 \
-									-s RELOCATABLE=0 \
-									-s LINKABLE=0 \
-  			          -s STRICT=1 \
-				          -s AUTO_JS_LIBRARIES=0 \
-				          --memory-init-file 0 \
-									-s USE_SDL_MIXER=2 \
-				          -s DISABLE_EXCEPTION_CATCHING=0 \
-				          -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
-				          -s INVOKE_RUN=1 \
-				          -s EXIT_RUNTIME=1
+CLIENT_LDFLAGS   += \
+										$(CLIENT_LIBS) \
+										--em-config $(EMJS_CONFIG_PATH) \
+										-s INITIAL_MEMORY=56MB \
+										-s ALLOW_MEMORY_GROWTH=1 \
+										-s ALLOW_TABLE_GROWTH=1 \
+										-s USE_SDL=2 \
+										-s SDL2_IMAGE_FORMATS='[]' \
+										-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+										-s EXTRA_EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
+											'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', \
+											'dynCall', 'UTF8ToString']" \
+										-s FORCE_FILESYSTEM=1 \
+										-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
+										-s INCLUDE_FULL_LIBRARY=0 \
+										-s MAIN_MODULE=0 \
+										-s RELOCATABLE=0 \
+										-s LINKABLE=0 \
+	  			          -s STRICT=1 \
+					          -s AUTO_JS_LIBRARIES=0 \
+					          --memory-init-file 0 \
+					          -s DISABLE_EXCEPTION_CATCHING=0 \
+					          -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
+					          -s INVOKE_RUN=1 \
+					          -s EXIT_RUNTIME=1
+#										-s USE_SDL_MIXER=2
+
 
 ifdef B
 pre-build:

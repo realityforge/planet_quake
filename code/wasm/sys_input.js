@@ -556,6 +556,7 @@ var LibrarySysInput = {
       }
     }
   },
+  /*
   eglGetProcAddress: function (){},
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},
@@ -567,6 +568,7 @@ var LibrarySysInput = {
   SDL_uclibc_log10: function(){},
   __cxa_find_matching_catch_3: function (){},
   __cxa_find_matching_catch_2: function (){},
+  */
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

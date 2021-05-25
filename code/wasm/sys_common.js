@@ -76,9 +76,9 @@ var LibrarySysCommon = {
 			// drop current stack frame and bubble out
 			throw new Error(errMsg)
 		},
-		ProxyCallback: function () {
+		ProxyCallback: function (handle) {
 			try {
-				_Com_Frame_Proxy();
+				_Com_Frame_Proxy(handle || 0);
 			} catch (e) {
 				if (e instanceof ExitStatus) {
 					return;
@@ -221,7 +221,6 @@ var LibrarySysCommon = {
 			console.log(e)
 		}
 	},
-  glPolygonMode: function(){}, // TODO
 };
 
 autoAddDeps(LibrarySysCommon, '$SYSC');

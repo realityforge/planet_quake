@@ -43,14 +43,13 @@ default:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
-#debug:
-#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-#	  OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
+debug: default
 
-#release:
-#	@$(MAKE) -f $(MKFILE) $(TARGETS) B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-#	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
-
+release:
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2 mkdirs
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
 
 $(B)/rend2/%.o: code/qcommon/%.c
 	$(DO_REND_CC)

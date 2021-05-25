@@ -136,6 +136,9 @@ download_t			download;
 refexport_t	re;
 #ifdef USE_RENDERER_DLOPEN
 static void	*rendererLib;
+#ifdef EMSCRIPTEN
+static char dllName[ MAX_OSPATH ];
+#endif
 #endif
 
 ping_t	cl_pinglist[MAX_PINGREQUESTS];
@@ -2757,7 +2760,7 @@ void CL_DownloadsComplete_After_Shutdown( void ) {
 void CL_Outside_NextDownload( void )
 {
 	Com_Frame_Callback(NULL, CL_NextDownload);
-	Com_Frame_Proxy();
+	Com_Frame_Proxy(0);
 }
 
 static void CL_em_BeginDownload( const char *localName, const char *remoteName ) {
@@ -4339,8 +4342,8 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 
 #ifdef EMSCRIPTEN
 #ifdef USE_RENDERER_DLOPEN
-static void CL_InitRef_After_Load( void );
-static void CL_InitRef_After_Load2( void );
+static void CL_InitRef_After_Load( void *handle );
+static void CL_InitRef_After_Load2( void *handle );
 #endif
 static void CL_InitRenderer( void );
 #endif
@@ -4356,7 +4359,9 @@ static void CL_InitRef( void ) {
 	refexport_t	*ret;
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
+#ifndef EMSCRIPTEN
 	char			dllName[ MAX_OSPATH ];
+#endif
 #endif
 
 	CL_InitGLimp_Cvars();
@@ -4379,18 +4384,14 @@ static void CL_InitRef( void ) {
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
 #ifdef EMSCRIPTEN
-	Com_Frame_Callback(NULL, CL_InitRef_After_Load);
+	Com_Frame_RentryHandle(CL_InitRef_After_Load);
 }
 
-void CL_InitRef_After_Load_Callback( int handle )
-{
-	rendererLib = handle;
-	Com_Frame_Proxy();
-}
-
-static void CL_InitRef_After_Load( void )
+static void CL_InitRef_After_Load( void *handle )
 {
 	char			dllName[ MAX_OSPATH ];
+  Com_Printf("ERROR: How the hell does this work?");
+  rendererLib = handle;
 #endif
 
 	if ( !rendererLib )
@@ -4401,13 +4402,13 @@ static void CL_InitRef_After_Load( void )
 #ifdef EMSCRIPTEN
 	}
 	else {
-		CL_InitRef_After_Load2();
+		CL_InitRef_After_Load2(handle);
 		return;
 	}
-	Com_Frame_Callback(NULL, CL_InitRef_After_Load2);
+	Com_Frame_RentryHandle(CL_InitRef_After_Load2);
 }
 
-static void CL_InitRef_After_Load2( void )
+static void CL_InitRef_After_Load2( void *handle )
 {
 	refimport_t	rimp;
 	refexport_t	*ret;
@@ -4555,6 +4556,9 @@ static void CL_InitRef_After_Load2( void )
 		CL_InitUI(qfalse);
 	}
 #endif
+#endif
+#ifdef EMSCRIPTEN
+  Com_Init_After_CL_Init();
 #endif
 }
 

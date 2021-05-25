@@ -26,6 +26,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_BOTLIB_DLOPEN
 static void	*botLib;
+#ifdef EMSCRIPTEN
+static char dllName[ MAX_OSPATH ];
+#endif
 #endif
 
 typedef struct bot_debugpoly_s
@@ -42,6 +45,12 @@ int bot_maxdebugpolys;
 extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
+#ifdef EMSCRIPTEN
+#ifdef USE_BOTLIB_DLOPEN
+static void SV_BotInitBotLib_After_Load( void *handle );
+#endif
+void SV_BotInitBotLib( void );
+#endif
 
 #ifndef BUILD_SLIM_CLIENT
 /*
@@ -557,11 +566,51 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
+#ifndef EMSCRIPTEN
 	botlib_import_t	botlib_import;
-  #ifdef USE_RENDERER_DLOPEN
-  	GetBotLibAPI_t		GetBotLibAPI;
-  	char			dllName[ MAX_OSPATH ];
-  #endif
+#endif
+#ifdef USE_BOTLIB_DLOPEN
+	GetBotLibAPI_t		GetBotLibAPI;
+#ifndef EMSCRIPTEN
+	char			dllName[ MAX_OSPATH ];
+#endif
+
+#ifdef EMSCRIPTEN
+#define REND_ARCH_STRING "js"
+#else
+#if defined (__linux__) && defined(__i386__)
+#define REND_ARCH_STRING "x86"
+#else
+#define REND_ARCH_STRING ARCH_STRING
+#endif // __linux__
+#endif // EMSCRIPTEN
+
+  // TODO: make this a fancy list of renderers we recognize
+	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
+	botLib = FS_LoadLibrary( dllName );
+#ifdef EMSCRIPTEN
+	Com_Frame_RentryHandle(SV_BotInitBotLib_After_Load);
+}
+
+static void SV_BotInitBotLib_After_Load( void *handle )
+{
+  botlib_import_t	botlib_import;
+  GetBotLibAPI_t		GetBotLibAPI;
+  botLib = handle;
+#endif
+;
+	if ( !botLib )
+	{
+		Com_Error( ERR_FATAL, "Failed to load botlib %s", dllName );
+	}
+
+	GetBotLibAPI = Sys_LoadFunction( botLib, "GetBotLibAPI" );
+	if( !GetBotLibAPI )
+	{
+		Com_Error( ERR_FATAL, "Can't load symbol GetBotLibAPI" );
+		return;
+	}
+#endif // USE_BOTLIB_DLOPEN
 
 	if (debugpolygons) Z_Free(debugpolygons);
 	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
@@ -602,37 +651,11 @@ void SV_BotInitBotLib(void) {
 
 	botlib_import.Sys_Milliseconds = Sys_Milliseconds;
   
-#ifdef USE_RENDERER_DLOPEN
-
-#ifdef EMSCRIPTEN
-#define REND_ARCH_STRING "js"
-#else
-#if defined (__linux__) && defined(__i386__)
-#define REND_ARCH_STRING "x86"
-#else
-#define REND_ARCH_STRING ARCH_STRING
-#endif // __linux__
-#endif // EMSCRIPTEN
-
-  // TODO: make this a fancy list of renderers we recognize
-	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
-	botLib = FS_LoadLibrary( dllName );
-
-	if ( !botLib )
-	{
-		Com_Error( ERR_FATAL, "Failed to load botlib %s", dllName );
-	}
-
-	GetBotLibAPI = Sys_LoadFunction( botLib, "GetBotLibAPI" );
-	if( !GetBotLibAPI )
-	{
-		Com_Error( ERR_FATAL, "Can't load symbol GetRefAPI" );
-		return;
-	}
-#endif // USE_BOTLIB_DLOPEN
-
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
+#ifdef EMSCRIPTEN
+  Com_Init_After_SV_Init();
+#endif
 }
 
 

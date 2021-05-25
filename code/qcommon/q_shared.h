@@ -972,15 +972,9 @@ int Info_RemoveKey( char *s, const char *key );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void Com_Outside_Error(int level, char *msg);
-#if defined(BOTLIB) && defined(USE_BOTLIB_DLOPEN)
-#define Com_DPrintf(x, args...) botimport.Print(PRT_DEBUG, x, ##args)
-#define Com_Error(err, x, args...) botimport.Print(PRT_ERROR, x, ##args)
-#define Com_Printf(x, args...) botimport.Print(PRT_MESSAGE, x, ##args)
-#else
 void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
 void	QDECL Com_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void	QDECL Com_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
-#endif
 
 
 

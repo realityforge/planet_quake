@@ -3955,7 +3955,12 @@ void Com_Init_After_Filesystem( void ) {
 
 	VM_Init();
 	SV_Init();
+#ifdef EMSCRIPTEN
+}
 
+void Com_Init_After_SV_Init( void ) {
+#endif
+;
 	com_dedicated->modified = qfalse;
 
 #ifndef DEDICATED
@@ -3964,6 +3969,15 @@ void Com_Init_After_Filesystem( void ) {
 		// Sys_ShowConsole( com_viewlog->integer, qfalse ); // moved down
 	}
 #endif
+#ifdef EMSCRIPTEN
+  else {
+    Com_Init_After_CL_Init();
+  }
+}
+
+void Com_Init_After_CL_Init( void ) {
+#endif
+;
 
 	// add + commands from command line
 	if ( !Com_AddStartupCommands() ) {
@@ -4167,6 +4181,14 @@ static int Com_TimeVal( int minMsec )
 
 #ifdef EMSCRIPTEN
 qboolean invokeFrameAfter = qfalse;
+void Com_Frame_RentryHandle(void (*af)( void *handle )) {
+  if(!CB_Frame_After || !CB_Frame_AfterParameter) {
+		CB_Frame_AfterParameter = af;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling back to frame." );
+	}
+}
+
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 	Com_Printf( "--------- Frame Setup (%p) --------\n", &cb);
 	invokeFrameAfter = qfalse;
@@ -4175,16 +4197,19 @@ void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 	} else {
 		Com_Error( ERR_FATAL, "Already calling a frame proxy." );
 	}
-	if(!CB_Frame_After) {
+	if(!CB_Frame_After || !CB_Frame_AfterParameter) {
 		CB_Frame_After = af;
 	} else {
 		Com_Error( ERR_FATAL, "Already calling back to frame." );
 	}
 }
 
-void Com_Frame_Proxy( void ) {
+void Com_Frame_Proxy( void *handle ) {
+  invokeFrameAfter = qtrue;
 	if(CB_Frame_After) {
-		invokeFrameAfter = qtrue;
+    rentryHandle = NULL;
+  } else if (CB_Frame_AfterParameter) {
+    rentryHandle = handle;
 	}
 }
 
@@ -4243,6 +4268,7 @@ void Com_Frame( qboolean noDelay ) {
 		outsideMsg = 0;
 		CB_Frame_Proxy = NULL;
 		CB_Frame_After = NULL;
+    CB_Frame_AfterParameter = NULL;
 		invokeFrameAfter = qfalse;
 		if(!FS_Initialized()) {
 			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
@@ -4291,6 +4317,19 @@ void Com_Frame( qboolean noDelay ) {
 		void (*cb)( void ) = CB_Frame_After;
 		CB_Frame_After = NULL; // start frame runner again
 		(*cb)();
+		return;
+	}
+  
+	if(CB_Frame_AfterParameter) {
+		if(!invokeFrameAfter) {
+			return;			
+		}
+		invokeFrameAfter = qfalse;
+		Com_Printf( "--------- Frame After Parameterized (%p) --------\n", &CB_Frame_AfterParameter);
+		void (*cb)( void *handle ) = CB_Frame_AfterParameter;
+		CB_Frame_AfterParameter = NULL; // start frame runner again
+		(*cb)(rentryHandle);
+    rentryHandle = NULL;
 		return;
 	}
 #endif
@@ -4403,7 +4442,7 @@ void Com_Frame( qboolean noDelay ) {
 		return;
 	}
 
-	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 		return;
 	}
 #endif
@@ -4437,7 +4476,7 @@ void Com_Frame( qboolean noDelay ) {
 	// Do this after the server may have started,
 	// but before the client tries to auto-connect
 #ifdef EMSCRIPTEN
-	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 		return;
 	}
 #endif
@@ -4494,7 +4533,7 @@ void Com_Frame( qboolean noDelay ) {
 		Cbuf_Execute();
 #ifdef EMSCRIPTEN
 		// if filesystem was restarted as a part of a command
-		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 			return;
 		}
 #endif

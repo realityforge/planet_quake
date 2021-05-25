@@ -61,8 +61,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
+void Com_Frame_RentryHandle( void (*af)( void *handle ) );
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void Com_Frame_Proxy( void );
+void Com_Frame_Proxy( void *handle );
 
 void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
 void SOCKS_Frame_Proxy( void );
@@ -71,6 +72,8 @@ static void (*SOCKS_After)( void ) = NULL;
 
 static void (*CB_Frame_Proxy)( void ) = NULL;
 static void (*CB_Frame_After)( void ) = NULL;
+static void (*CB_Frame_AfterParameter)( void *handle ) = NULL;
+static void *rentryHandle = NULL;
 
 void IN_Init (void);
 void IN_Frame (void);
@@ -96,6 +99,8 @@ extern void Sys_EventMenuChanged( float x, float y );
 void FS_Startup( void );
 void FS_Startup_After_Async( void );
 void Com_Init_After_Filesystem( void );
+void Com_Init_After_SV_Init( void );
+void Com_Init_After_CL_Init( void );
 void FS_Restart_After_Async( void );
 void CL_ParseGamestate_After_Restart( void );
 void Com_GameRestart_After_Restart( void );
@@ -1146,11 +1151,9 @@ void		Info_Print( const char *s );
 void		Com_BeginRedirect (char *buffer, int buffersize, void (*flush)(const char *));
 void		Com_EndRedirect( void );
 void Com_Outside_Error(int level, char *msg);
-#if !defined(BOTLIB) || !defined(USE_BOTLIB_DLOPEN)
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
-#endif
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 

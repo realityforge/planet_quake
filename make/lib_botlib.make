@@ -27,6 +27,13 @@ default:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
+debug: default
+
+release:
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=botlib mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+
 ifdef B
 $(B)/botlib/%.o: code/qcommon/%.c
 	$(DO_BOTLIB_CC)
