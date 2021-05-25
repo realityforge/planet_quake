@@ -425,8 +425,11 @@ var LibraryDLOpen = {
         'maximum': INITIAL_MEMORY / {{{ WASM_PAGE_SIZE }}},
         'shared': true
       });
+      env['__indirect_function_table'] = new WebAssembly.Table({
+       initial: 10,
+       element: "anyfunc"
+      });
       */
-      env['__indirect_function_table'] = new WebAssembly.Table({initial: 10, element:"anyfunc"});
       // TODO kill ↓↓↓ (except "symbols local to this module", it will likely be
       // not needed if we require that if A wants symbols from B it has to link
       // to B explicitly: similarly to -Wl,--no-undefined)
@@ -452,7 +455,7 @@ var LibraryDLOpen = {
             case 'memory':
               return wasmMemory
             case '__indirect_function_table':
-              return wasmTable //return new WebAssembly.Table({initial: 10, element:"anyfunc"});
+              return wasmTable; //return new WebAssembly.Table({initial: 10, element:"anyfunc"});
           }
           if (prop in obj) {
             return obj[prop]; // already present

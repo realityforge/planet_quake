@@ -230,7 +230,7 @@ cvar_t  *r_cursorShader;
 #ifdef USE_RENDERER_DLOPEN
 void QDECL Com_Error( errorParm_t code, const char *fmt, ... )
 {
-	char buf[ 4096 ];
+	char buf[ MAXPRINTMSG ];
 	va_list	argptr;
 	va_start( argptr, fmt );
 	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );

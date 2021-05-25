@@ -62,6 +62,40 @@ int botDeveloper;
 //qtrue if the library is setup
 int botlibsetup = qfalse;
 
+#ifdef USE_BOTLIB_DLOPEN
+#define MAXPRINTMSG 8192
+void QDECL Com_Error( errorParm_t code, const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+	botimport.Print( PRT_ERROR, "%s", buf );
+  exit(1);
+}
+
+void QDECL Com_Printf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+	botimport.Print( PRT_MESSAGE, "%s", buf );
+}
+
+void QDECL Com_DPrintf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+	botimport.Print( PRT_DEBUG, "%s", buf );
+}
+#endif
+
 //===========================================================================
 //
 // several functions used by the exported functions
@@ -847,9 +881,10 @@ Q_EXPORT botlib_export_t* QDECL GetBotLibAPI ( int apiVersion, botlib_import_t *
 botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 #endif
 
-  printf("-------------------- Initializing Botlib ----------------------\n");
 	assert(import);
   botimport = *import;
+  botimport.Print(PRT_MESSAGE, "-------------------- Initializing Botlib ----------------------\n");
+  return NULL;
   assert(botimport.Print);
 
 	Com_Memset( &be_botlib_export, 0, sizeof( be_botlib_export ) );
