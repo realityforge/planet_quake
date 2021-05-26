@@ -2873,6 +2873,7 @@ static void CL_DownloadsComplete( void ) {
 	// if this is a local client then only the client part of the hunk
 	// will be cleared, note that this is done after the hunk mark has been set
 	//if ( !com_sv_running->integer )
+  
 #ifdef USE_LAZY_MEMORY
 	S_DisableSounds();
 	re.ReloadShaders(qtrue);
@@ -4390,7 +4391,6 @@ static void CL_InitRef( void ) {
 static void CL_InitRef_After_Load( void *handle )
 {
 	char			dllName[ MAX_OSPATH ];
-  Com_Printf("ERROR: How the hell does this work?");
   rendererLib = handle;
 #endif
 
@@ -4558,7 +4558,7 @@ static void CL_InitRef_After_Load2( void *handle )
 #endif
 #endif
 #ifdef EMSCRIPTEN
-  Com_Init_After_CL_Init();
+  CL_Init_After_InitRef();
 #endif
 }
 
@@ -5434,6 +5434,11 @@ void CL_Init( void ) {
 	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nUsage: modelist");
 
 	CL_InitRef();
+#ifdef EMSCRIPTEN
+}
+
+void CL_Init_After_InitRef( void ) {
+#endif
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
@@ -5476,6 +5481,9 @@ void CL_Init( void ) {
 #endif
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
+#ifdef EMSCRIPTEN
+  Com_Init_After_CL_Init();
+#endif
 }
 
 

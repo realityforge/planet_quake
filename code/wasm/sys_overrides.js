@@ -1,3 +1,7 @@
+
+// this synchronizes all files both ways instead. since our game is good at 
+//   deciding what it needs, no deletions necessary, adds and updates only
+
 if(typeof IDBFS != 'undefined') {
   IDBFS.loadRemoteEntry = function (store, path, callback) {
     var req = store.get(path)

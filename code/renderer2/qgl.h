@@ -40,10 +40,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #elif defined(EMSCRIPTEN)
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
-#include <SDL_opengles.h>
-#include <SDL_opengles2.h>
-#include <SDL_opengles2_gl2.h>
-#include <SDL_opengles2_gl2ext.h>
 #undef GL_RGBA8
 #define GL_RGBA8 GL_RGBA
 #undef GL_RGB8

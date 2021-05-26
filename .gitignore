@@ -9,7 +9,6 @@ output/
 # emscripten
 ####################
 base
-libs/emsdk
 code/wasm/node_modules/
 node_modules
 .resources

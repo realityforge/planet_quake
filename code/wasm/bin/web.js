@@ -158,7 +158,7 @@ if(ufs.existsSync(path.join(__dirname, '../../../build/release-js-js/quake3e.js'
     setHeaders: setCrossOriginHeaders
   }))
 
-if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
+else if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js')))
   app.use(serveStatic(path.join(__dirname, '../../../build/debug-js-js'), {
     setHeaders: setCrossOriginHeaders
   }))
@@ -166,6 +166,11 @@ if(ufs.existsSync(path.join(__dirname, '../../../build/debug-js-js/quake3e.js'))
 app.use(serveStatic(path.join(__dirname), {
   setHeaders: setCrossOriginHeaders
 }))
+
+if(ufs.existsSync(path.join(__dirname, '../../../code')))
+  app.use('/code', serveStatic(path.join(__dirname, '../../../code'), {
+    setHeaders: setCrossOriginHeaders
+  }))
 
 app.use(serveUnionFs)
 

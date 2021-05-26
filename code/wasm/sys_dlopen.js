@@ -348,9 +348,9 @@ var LibraryDLOpen = {
   // promise that resolves to its exports if the loadAsync flag is set.
 
   $loadWebAssemblyModule: function(binary, flags) {
-    //var metadata = getDylinkMetadata(binary);
+    var metadata = getDylinkMetadata(binary);
     var memorySize = 8000000;
-    var memoryAlign = 1024;
+    var memoryAlign = 4;
     var tableSize = 1;
     var tableAlign = 0;
     var neededDynlibs = [];
@@ -450,12 +450,22 @@ var LibraryDLOpen = {
               return memoryBase;
             case '__table_base':
               return tableBase;
+            /*
             case '__stack_pointer':
               return new WebAssembly.Global({value: 'i32', mutable: true});
             case 'memory':
               return wasmMemory
             case '__indirect_function_table':
+              return new WebAssembly.Table({initial: tableBase + 10, element:"anyfunc"});
+            case '__heap_base':
+              return {{{ HEAP_BASE }}}
+            case '__indirect_function_table':
+              return wasmTable;
+            case 'memory':
+              return wasmMemory
+            case '__indirect_function_table':
               return wasmTable; //return new WebAssembly.Table({initial: 10, element:"anyfunc"});
+            */
           }
           if (prop in obj) {
             return obj[prop]; // already present
@@ -762,7 +772,7 @@ var LibraryDLOpen = {
     }
 
     try {
-      return loadDynamicLibrary(filename, jsflags).then(SYSC.ProxyCallback)
+      return loadDynamicLibrary(filename, jsflags)
     } catch (e) {
 #if ASSERTIONS
       err('Error in loading dynamic library ' + filename + ": " + e);
@@ -863,6 +873,7 @@ var LibraryDLOpen = {
     {{{ makeSetValue('info', Runtime.QUANTUM_SIZE*3, '0', 'i32') }}};
     return 1;
   },
+  Sys_LoadLibrary__sig: 'ii',
   Sys_LoadLibrary: function (name) {
   	if ( _FS_AllowedExtension( name, false, void 0 ) )
   	{
@@ -875,6 +886,8 @@ var LibraryDLOpen = {
 };
 
 
+autoAddDeps(LibraryDLOpen, '$asmjsMangle')
+autoAddDeps(LibraryDLOpen, '$getDylinkMetadata')
 autoAddDeps(LibraryDLOpen, '$relocateExports')
 autoAddDeps(LibraryDLOpen, '$resolveGlobalSymbol')
 autoAddDeps(LibraryDLOpen, '$reportUndefinedSymbols')

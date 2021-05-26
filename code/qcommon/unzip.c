@@ -1178,6 +1178,7 @@ static int unzlocal_getLong (FILE *fin, uLong *pX)
 }
 
 
+#ifndef EMSCRIPTEN
 static int unzlocal_getData( FILE *fin, byte *buf, int size )
 {
 	if ( fread( buf, size, 1, fin ) != 1 )
@@ -1187,6 +1188,7 @@ static int unzlocal_getData( FILE *fin, byte *buf, int size )
 
 	return UNZ_OK;
 }
+#endif
 
 
 /* My own strcmpi / strcasecmp */

@@ -5039,7 +5039,7 @@ void FS_Startup_After_Async( void )
 }
 
 
-#ifndef STANDALONE
+#if !defined(STANDALONE) && !defined(EMSCRIPTEN)
 static void FS_PrintSearchPaths( void )
 {
 	searchpath_t *path = fs_searchpaths;

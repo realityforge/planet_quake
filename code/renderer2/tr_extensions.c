@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define SDL_GL_GetProcAddress( a ) ri.GL_GetProcAddress( a )
 
+#include <stdlib.h>
 #include "tr_local.h"
 #include "tr_dsa.h"
 
@@ -46,18 +47,6 @@ QGL_EXT_direct_state_access_PROCS;
 
 int qglMajorVersion = 2, qglMinorVersion = 0;
 int qglesMajorVersion, qglesMinorVersion;
-
-#ifdef EMSCRIPTEN
-void glPolygonMode( GLenum face, GLenum mode ) {
-  // TODO
-}
-void glDrawBuffer( GLenum mode ) {
-  // TODO
-}
-void eglGetProcAddress(const char *procname) {
-  
-}
-#endif
 
 /*
 ** GLimp_HaveExtension

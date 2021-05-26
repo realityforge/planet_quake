@@ -327,6 +327,7 @@ var LibrarySysNet = {
 		},
   },
   Sys_BeginDownload__deps: ['$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
+  Sys_BeginDownload__sig: 'v',
   Sys_BeginDownload: function () {
     var cl_downloadName = SYSC.Cvar_VariableString('cl_downloadName')
     SYSN.LoadingDescription('')
@@ -374,6 +375,7 @@ var LibrarySysNet = {
     })
   },
   Sys_SocksConnect__deps: ['$Browser', '$SOCKFS'],
+  Sys_SocksConnect__sig: 'v',
   Sys_SocksConnect: function () {
     SYSN.socksfd = 0
     SYSN.socksConnect = setTimeout(function () {
@@ -430,6 +432,7 @@ var LibrarySysNet = {
     //})
   },
   Sys_SocksMessage__deps: ['$Browser', '$SOCKFS'],
+  Sys_SocksMessage__sig: 'v',
   Sys_SocksMessage: function () {},
   Sys_NET_MulticastLocal: function (net, length, data) {
     // prevent recursion because NET_SendLoopPacket will call here again

@@ -101,6 +101,7 @@ void FS_Startup_After_Async( void );
 void Com_Init_After_Filesystem( void );
 void Com_Init_After_SV_Init( void );
 void Com_Init_After_CL_Init( void );
+void CL_Init_After_InitRef( void );
 void FS_Restart_After_Async( void );
 void CL_ParseGamestate_After_Restart( void );
 void Com_GameRestart_After_Restart( void );

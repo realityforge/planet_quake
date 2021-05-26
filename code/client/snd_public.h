@@ -54,8 +54,6 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin );
 
 void S_Update( int msec );
 
-void S_DisableSounds( void );
-
 #ifdef USE_LAZY_LOAD
 void S_UpdateSound( char *name, qboolean compressed );
 #endif

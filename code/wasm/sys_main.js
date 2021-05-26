@@ -380,7 +380,7 @@ var LibrarySysMain = {
 		return allocate(intArrayFromString('player'), ALLOC_STACK)
 	},
   Sys_Dialog: function (type, message, title) {
-    SYSC.Error('SYS_Dialog not implemented')
+
   },
   Sys_ErrorDialog: function (error) {
     var errorStr = UTF8ToString(error)
@@ -417,6 +417,7 @@ var LibrarySysMain = {
       window.serverWorker.postMessage(['status', args])
     }
   },
+  Sys_CmdArgs__deps: ['$SYSM'],
   Sys_CmdArgs: function () {
     var argv = ['ioq3'].concat(SYSM.getQueryCommands())
     var argc = argv.length
@@ -429,9 +430,12 @@ var LibrarySysMain = {
     HEAP32[(list >> 2) + argc] = 0
     return list
   },
+  Sys_CmdArgsC__deps: ['$SYSM'],
   Sys_CmdArgsC: function () {
     return SYSM.getQueryCommands().length + 1
   },
+  Sys_DownloadLocalFile__deps: ['$SYSF', '$PATH'],
+  Sys_DownloadLocalFile__sig: 'vi',
   Sys_DownloadLocalFile: function (fileName) {
     // used to download screenshots to the computer after they are taken
     fileName = PATH.join(SYSF.fs_basepath, SYSF.fs_game, UTF8ToString(fileName))
@@ -445,6 +449,32 @@ var LibrarySysMain = {
     setTimeout(function () {
       if(popout) popout.close()
     }, 1000)
+  },
+  Sys_LoadLibrary__deps: ['$SYSM', 'dlopen'],
+  Sys_LoadLibrary__sig: 'ii',
+  Sys_LoadLibrary: function (filenameAddr) {
+    if ( _FS_AllowedExtension( filenameAddr, false, void 0 ) )
+    {
+      SYSC.Error( 'fatal', 'Sys_LoadLibrary: Unable to load library with ' + ext + ' extension' )
+    }
+    var filename = UTF8ToString(filenameAddr);
+    console.log('Loading library: ' + filename)
+
+    var jsflags = {
+      global:   false,
+      nodelete: false,
+      loadAsync: true,
+      fs: FS, // load libraries from provided filesystem
+    }
+
+    try {
+      return loadDynamicLibrary(filename, jsflags)
+        .then(SYSC.ProxyCallback)
+    } catch (e) {
+      SYSC.Error( 'fatal', 'Sys_LoadLibrary: Could not load dynamic lib: ' + filename + '\n' + e );
+      SYSC.ProxyCallback(0)
+    }
+    return 0
   }
 }
 autoAddDeps(LibrarySysMain, '$SYSM')

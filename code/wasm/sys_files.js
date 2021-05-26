@@ -247,8 +247,9 @@ var LibrarySysFiles = {
     },
   },
   Sys_FS_Startup__deps: ['$SYS', '$Browser', '$FS', '$PATH', '$IDBFS', '$SYSC'],
-  Sys_FS_Startup: function (cb) {
-    if(!cb) cb = SYSF.downloadImmediately.bind(null, SYSF.downloadsDone)
+  Sys_FS_Startup__sig: 'v',
+  Sys_FS_Startup: function () {
+    var callback = SYSF.downloadImmediately.bind(null, SYSF.downloadsDone)
     SYSF.fs_replace = []
     SYSF.fs_replace.push(new RegExp('\/\/', 'ig'))
     SYSF.cl_lazyLoad = SYSC.Cvar_Get('cl_lazyLoad')
@@ -383,7 +384,7 @@ var LibrarySysFiles = {
         } else {
           SYSN.downloadTries = SYSN.downloadAlternates
           SYSF.filterDownloads(mapname, modelname)
-          cb()
+          callback()
         }
       }
       SYSF.checkForUpdates(download)
@@ -446,7 +447,11 @@ var LibrarySysFiles = {
     }
     return handle
   },
+#if ASSERTIONS
+  Sys_ListFiles__deps: ['$PATH', 'Z_MallocDebug', 'S_MallocDebug'],
+#else
   Sys_ListFiles__deps: ['$PATH', 'Z_Malloc', 'S_Malloc'],
+#endif
   Sys_ListFiles: function (directory, ext, filter, numfiles, dironly) {
     directory = UTF8ToString(directory);
     ext = UTF8ToString(ext);
@@ -533,7 +538,8 @@ var LibrarySysFiles = {
     return list;
   },
   Sys_FS_Shutdown__deps: ['$Browser', '$FS', '$SYSC'],
-  Sys_FS_Shutdown: function (cb) {
+  Sys_FS_Shutdown__sig: 'v',
+  Sys_FS_Shutdown: function () {
     /*
     if(SYSF.pathname) {
       _free(SYSF.pathname)
@@ -552,15 +558,18 @@ var LibrarySysFiles = {
         return
       }
       
-      SYSC.ProxyCallback(cb)
+      SYSC.ProxyCallback()
     })
   },
+  Sys_DefaultBasePath__sig: 'i',
   Sys_DefaultBasePath: function () {
 		return allocate(intArrayFromString('/base'), ALLOC_STACK)
 	},
+  Sys_Pwd__sig: 'i',
 	Sys_Pwd: function () {
 		return allocate(intArrayFromString('/base'), ALLOC_STACK)
 	},
+  Sys_FS_Offline__sig: 'v',
   Sys_FS_Offline: function () {
     // call startup, it's idempotent and won't hurt to call multiple times in a row
     _Sys_Startup(function () {

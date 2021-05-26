@@ -212,7 +212,7 @@ release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=client mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
 
 clean:
 	@rm -rf $(BD)/client $(BD)/$(TARGET_CLIENT)

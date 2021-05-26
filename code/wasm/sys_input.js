@@ -474,7 +474,7 @@ var LibrarySysInput = {
       ev.preventDefault();
     },
   },
-	Sys_GLimpInit__deps: ['$SDL', '$SYS'],
+	Sys_GLimpInit__deps: ['$SDL', '$SYS', 'S_DisableSounds', 'glBindTexture'],
 	Sys_GLimpInit: function () {
     if(!SYSI.inputHeap)
       SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
@@ -556,19 +556,6 @@ var LibrarySysInput = {
       }
     }
   },
-  /*
-  eglGetProcAddress: function (){},
-  glPolygonMode: function(){}, // TODO
-  glDrawBuffer: function(){},
-  glActiveTextureARB: function(){ return _glActiveTexture.apply(null, Array.from(arguments)) },
-  glBindBufferARB: function(){ return _glBindBuffer.apply(null, Array.from(arguments)) },
-  glDeleteProgramsARB: function(){}, // TODO
-  SDL_uclibc_exp: function(){},
-  SDL_uclibc_fmod: function(){},
-  SDL_uclibc_log10: function(){},
-  __cxa_find_matching_catch_3: function (){},
-  __cxa_find_matching_catch_2: function (){},
-  */
 }
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)
