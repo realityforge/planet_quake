@@ -1,16 +1,17 @@
-MKFILE   := $(lastword $(MAKEFILE_LIST)) 
+MKFILE      := $(lastword $(MAKEFILE_LIST)) 
+WORKDIR     := botlib
 
 include make/configure.make
-BUILD_BOTLIB=1
+BUILD_BOTLIB:= 1
 include make/platform.make
 
 TARGET	    := $(BOTLIB_PREFIX)_libbots_
 SOURCES     := code/botlib
 INCLUDES    := 
 CFILES      := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-	             code/qcommon/q_math.c code/qcommon/q_shared.c 
+               code/qcommon/q_math.c code/qcommon/q_shared.c 
 OBJS        := $(CFILES:.c=.o)
-Q3OBJ       := $(addprefix $(B)/botlib/,$(notdir $(OBJS)))
+Q3OBJ       := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -18,34 +19,34 @@ CFLAGS  := $(INCLUDE) -fsigned-char -O2 -ftree-vectorize -g \
           -ffast-math -fno-short-enums -DUSE_BOTLIB_DLOPEN
 
 define DO_BOTLIB_CC
-	@echo "BOTLIB_CC $<"
-	$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
+  $(echo_cmd) "BOTLIB_CC $<"
+  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -DBOTLIB -o $@ -c $<
 endef
 
-default:
-	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=botlib mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
-
-debug: default
+debug:
+  $(echo_cmd) "MAKE $(TARGET)"
+  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR) mkdirs
+  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
 release:
-	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=botlib mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
-
-ifdef B
-$(B)/botlib/%.o: code/qcommon/%.c
-	$(DO_BOTLIB_CC)
-
-$(B)/botlib/%.o: code/botlib/%.c
-	$(DO_BOTLIB_CC)
-
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
-endif
+  $(echo_cmd) "MAKE $(TARGET)"
+  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR) mkdirs
+  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
 
 clean:
-	@rm -rf $(BD)/botlib $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/botlib $(BR)/$(TARGET)$(SHLIBNAME)
+  @rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
+  @rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+
+ifdef B
+$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
+  $(DO_BOTLIB_CC)
+
+$(B)/$(WORKDIR)/%.o: code/botlib/%.c
+  $(DO_BOTLIB_CC)
+
+$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+  $(echo_cmd) "LD $@"
+  $(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+endif

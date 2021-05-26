@@ -40,29 +40,29 @@ endef
 #############################################################################
 
 debug:
-	@$(MAKE) -f $(MKFILE) makedirs \
-	  $(BD)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BD)/$(MOD)/qagame$(SHLIBNAME) \
-	  $(BD)/$(MOD)/ui$(SHLIBNAME)\
-		B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-		OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
+  @$(MAKE) -f $(MKFILE) makedirs \
+    $(BD)/$(MOD)/cgame$(SHLIBNAME) \
+    $(BD)/$(MOD)/qagame$(SHLIBNAME) \
+    $(BD)/$(MOD)/ui$(SHLIBNAME)\
+    B=$(BD) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
+    OPTIMIZE="$(DEBUG_CFLAGS)" V=$(V)
 
 release:
-	@$(MAKE) -f $(MKFILE) makedirs \
-	  $(BR)/$(MOD)/cgame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/qagame$(SHLIBNAME) \
-	  $(BR)/$(MOD)/ui$(SHLIBNAME) \
-	 	B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
-	  OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
+  @$(MAKE) -f $(MKFILE) makedirs \
+    $(BR)/$(MOD)/cgame$(SHLIBNAME) \
+    $(BR)/$(MOD)/qagame$(SHLIBNAME) \
+    $(BR)/$(MOD)/ui$(SHLIBNAME) \
+     B=$(BR) CFLAGS="$(CFLAGS) $(BASE_CFLAGS)" \
+    OPTIMIZE="-DNDEBUG $(OPTIMIZE)" V=$(V)
 
 makedirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(MOD) ];then $(MKDIR) $(B)/$(MOD);fi
-	@if [ ! -d $(B)/$(MOD)/cgame ];then $(MKDIR) $(B)/$(MOD)/cgame;fi
-	@if [ ! -d $(B)/$(MOD)/game ];then $(MKDIR) $(B)/$(MOD)/game;fi
-	@if [ ! -d $(B)/$(MOD)/ui ];then $(MKDIR) $(B)/$(MOD)/ui;fi
-	@if [ ! -d $(B)/$(MOD)/vm ];then $(MKDIR) $(B)/$(MOD)/vm;fi
+  @if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
+  @if [ ! -d $(B) ];then $(MKDIR) $(B);fi
+  @if [ ! -d $(B)/$(MOD) ];then $(MKDIR) $(B)/$(MOD);fi
+  @if [ ! -d $(B)/$(MOD)/cgame ];then $(MKDIR) $(B)/$(MOD)/cgame;fi
+  @if [ ! -d $(B)/$(MOD)/game ];then $(MKDIR) $(B)/$(MOD)/game;fi
+  @if [ ! -d $(B)/$(MOD)/ui ];then $(MKDIR) $(B)/$(MOD)/ui;fi
+  @if [ ! -d $(B)/$(MOD)/vm ];then $(MKDIR) $(B)/$(MOD)/vm;fi
 
 #############################################################################
 ## BASEQ3 CGAME
@@ -99,8 +99,8 @@ CGOBJ_ = \
 CGOBJ = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 
 $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(CGOBJ)
+  $(echo_cmd) "LD $@"
+  $(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(CGOBJ)
 
 #############################################################################
 ## BASEQ3 GAME
@@ -147,8 +147,8 @@ QAOBJ_ = \
 QAOBJ = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
 
 $(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(QAOBJ)
+  $(echo_cmd) "LD $@"
+  $(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(QAOBJ)
 
 #############################################################################
 ## BASEQ3 UI
@@ -203,8 +203,8 @@ UIOBJ_ = \
 UIOBJ = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 
 $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(UIOBJ)
+  $(echo_cmd) "LD $@"
+  $(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(UIOBJ)
 
 #$(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 #	$(echo_cmd) "Q3ASM $@"
@@ -215,22 +215,22 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 #############################################################################
 
 $(B)/$(MOD)/cgame/bg_%.o: $(QADIR)/bg_%.c
-	$(DO_CGAME_CC)
+  $(DO_CGAME_CC)
 
 $(B)/$(MOD)/cgame/q_%.o: $(QADIR)/q_%.c
-	$(DO_CGAME_CC)
+  $(DO_CGAME_CC)
 
 $(B)/$(MOD)/cgame/%.o: $(CGDIR)/%.c
-	$(DO_CGAME_CC)
+  $(DO_CGAME_CC)
 
 $(B)/$(MOD)/game/%.o: $(QADIR)/%.c
-	$(DO_GAME_CC)
+  $(DO_GAME_CC)
 
 $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
-	$(DO_UI_CC)
+  $(DO_UI_CC)
 
 $(B)/$(MOD)/ui/%.o: $(UIDIR)/%.c
-	$(DO_UI_CC)
+  $(DO_UI_CC)
 
 #############################################################################
 # MISC
@@ -241,17 +241,17 @@ OBJ = $(QAOBJ) $(CGOBJ) $(UIOBJ)
 clean: clean-debug clean-release
 
 clean-debug:
-	@$(MAKE) clean2 B=$(BD)
+  @$(MAKE) clean2 B=$(BD)
 
 clean-release:
-	@$(MAKE) clean2 B=$(BR)
+  @$(MAKE) clean2 B=$(BR)
 
 clean2:
-	@echo "CLEAN $(B)"
-	@rm -f $(OBJ)
-	@rm -f $(B)/$(MOD)/cgame$(SHLIBNAME)
-	@rm -f $(B)/$(MOD)/qagame$(SHLIBNAME)
-	@rm -f $(B)/$(MOD)/ui$(SHLIBNAME)
+  @echo "CLEAN $(B)"
+  @rm -f $(OBJ)
+  @rm -f $(B)/$(MOD)/cgame$(SHLIBNAME)
+  @rm -f $(B)/$(MOD)/qagame$(SHLIBNAME)
+  @rm -f $(B)/$(MOD)/ui$(SHLIBNAME)
 
 distclean: clean
-	@rm -rf $(BUILD_DIR)
+  @rm -rf $(BUILD_DIR)

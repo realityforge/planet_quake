@@ -1,4 +1,5 @@
 CC       := gcc
+CXX      := /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
 
 BASE_CFLAGS += -Wall -fno-strict-aliasing -Wimplicit \
                -Wstrict-prototypes -pipe \
@@ -20,5 +21,11 @@ else
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 endif
 
-DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
+DEBUG_CFLAGS   = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
+USE_SDL        = 1
+
+ifdef B
+pre-build:
+	@:
+endif

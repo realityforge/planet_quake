@@ -10,11 +10,12 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
   endif
 endif
 
+# echo_cmd is silent in verbose mode, makes sense
 ifeq ($(V),1)
-echo_cmd=@echo
+echo_cmd=@:
 Q=
 else
-echo_cmd=@:
+echo_cmd=@echo
 Q=@
 endif
 

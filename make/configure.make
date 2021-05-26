@@ -2,44 +2,53 @@
 CNAME            = quake3e
 DNAME            = quake3e.ded
 
-BUILD_CLIENT     = 1
-BUILD_SLIM_CLIENT= 1
-BUILD_SERVER     = 1
+BUILD_CLIENT     = 0
+BUILD_SLIM_CLIENT= 0
+BUILD_SERVER     = 0
 BUILD_GAMES      = 0
 BUILD_LIBS       = 0
 BUILD_GAME_QVM   = 0
 BUILD_GAME_SO    = 0
 BUILD_RENDERER_OPENGL=0
-BUILD_RENDERER_JS=0
+BUILD_RENDERER_JS= 0
 BUILD_RENDERER_OPENGL2=0
 BUILD_RENDERER_OPENGLES=0
 
-USE_SDL          = 1
-USE_CURL         = 1
+USE_GAME_DLOPEN  = 0
+USE_CURL_DLOPEN  = 0
+USE_RENDERER_DLOPEN=0
+USE_BOTLIB_DLOPEN= 0
+SDL_LOADSO_DLOPEN= 0
+USE_OPENAL_DLOPEN= 0
+USE_RMLUI_DLOPEN = 0
+USE_OPUS_DLOPEN  = 0
+USE_FREETYPE_DLOPEN= 0
+
+USE_SDL          = 0
+USE_CURL         = 0
 USE_LOCAL_HEADERS= 0
 USE_VULKAN       = 0
-USE_SYSTEM_JPEG  = 0
+USE_JPEG         = 0
 USE_VULKAN_API   = 0
 USE_Q3KEY        = 0
 USE_IPV6         = 0
-USE_SDL          = 1
 USE_CURL         = 0
-USE_CURL_DLOPEN  = 0
 USE_CODEC_VORBIS = 0
 USE_CODEC_OPUS   = 0
 USE_FREETYPE     = 0
 USE_MUMBLE       = 0
 USE_VOIP         = 0
-SDL_LOADSO_DLOPEN= 0
-USE_OPENAL_DLOPEN= 0
-USE_RENDERER_DLOPEN=1
-USE_BOTLIB_DLOPEN= 1
 USE_LOCAL_HEADERS= 0
 GL_EXT_direct_state_access=1
 GL_ARB_ES2_compatibility=1
 GL_GLEXT_PROTOTYPES=1
 
-USE_SYSTEM_BOTLIB=1
+USE_SYSTEM_CURL  = 0
+USE_SYSTEM_JPEG  = 0
+USE_SYSTEM_BOTLIB= 0
+USE_SYSTEM_OGG   = 0
+USE_SYSTEM_OPUS  = 0
+USE_SYSTEM_FREETPYE= 0
 
 ifndef COPYDIR
 COPYDIR="/usr/local/games/quake3"
@@ -118,6 +127,7 @@ bin_path=$(shell which $(1) 2> /dev/null)
 STRIP ?= strip
 PKG_CONFIG ?= pkg-config
 
+# TODO: if USE_INTERNAL_* is requested, add this to prebuild steps
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
   SDL_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
   SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
@@ -125,7 +135,23 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   X11_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
   FREETYPE_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
   FREETYPE_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
+  OPUS_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags opusfile opus || true)
+  OPUS_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs opusfile opus || echo -lopusfile -lopus)
+  VORBIS_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags vorbisfile vorbis || true)
+  VORBIS_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs vorbisfile vorbis || echo -lvorbisfile -lvorbis)
+  OGG_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ogg vorbis || true)
+  OGG_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs ogg vorbis || echo -logg -lvorbis)
+  OPENSSL_CFLAGS ?= -I/usr/local/Cellar/openssl@1.1/1.1.1g/include
+  OPENSSL_LIBS ?= -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lssl \
+									-L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lcrypto \
+									-lz
+  SSH_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ssh2 || true)
+  SSH_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs ssh2 || echo -lssh2)
+
 endif
+
+#SYSROOT      := $(shell xcrun --show-sdk-path)
+SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk
 
 # supply some reasonable defaults for SDL/X11?
 ifeq ($(X11_INCLUDE),)
@@ -140,7 +166,7 @@ endif
 
 # extract version info
 VERSION=$(shell grep "\#define Q3_VERSION" $(CMDIR)/q_shared.h | \
-  sed -e 's/.*"[^" ]* \([^" ]*\)\( MV\)*"/\1/')
+          sed -e 's/.*"[^" ]* \([^" ]*\)\( MV\)*"/\1/')
 
 # common qvm definition
 ifeq ($(ARCH),x86_64)
@@ -268,15 +294,16 @@ mkdirs:
 	@if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
 
 D_FILES := $(@shell find $(BD)/$(WORKDIR) -name '*.d') \
-					 $(@shell find $(BR)/$(WORKDIR) -name '*.d')
+           $(@shell find $(BR)/$(WORKDIR) -name '*.d')
 ifneq ($(strip $(D_FILES)),)
 include $(D_FILES)
 endif
 endif
 
 .PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-	targets tools toolsclean mkdirs \
-		$(D_FILES)
+  debug default dist distclean makedirs release \
+  targets tools toolsclean mkdirs \
+    $(D_FILES)
 
-.DEFAULT_GOAL := default
+.DEFAULT_GOAL := release
+.RECIPEPREFIX +=

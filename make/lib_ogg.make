@@ -1,7 +1,8 @@
-MKFILE   := $(lastword $(MAKEFILE_LIST))
-WORKDIR  := libogg
+MKFILE      := $(lastword $(MAKEFILE_LIST))
+WORKDIR     := libogg
 
 include make/configure.make
+BUILD_LIBOGG:= 1
 include make/platform.make
 
 TARGET	    := libogg
@@ -9,25 +10,32 @@ SOURCES     := libs/libogg-1.3.4/src
 INCLUDES    := 
 LIBS 				:=
 
-OGGOBJS  := src/bitwise.o \
-						src/framing.o
+OGGOBJS     := src/bitwise.o \
+               src/framing.o
 
-Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OGGOBJS)))
+Q3OBJ       := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OGGOBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS  := $(INCLUDE) -fsigned-char -MMD \
-           -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
+CFLAGS      := $(INCLUDE) -fsigned-char -MMD \
+               -O2 -ftree-vectorize -ffast-math -fno-short-enums
 
 define DO_OGG_CC
-	@echo "OGG_CC $<"
-	@$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  @echo "OGG_CC $<"
+  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
-default:
-  $(echo_cmd) "MAKE $(TARGET)"
+debug:
+	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+
+release:
+	$(echo_cmd) "MAKE $(TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) $(BR)/$(TARGET)$(SHLIBNAME)
 
 clean:
 	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
@@ -39,5 +47,5 @@ $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif

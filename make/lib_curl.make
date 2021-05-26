@@ -1,203 +1,68 @@
-libcurl.dir/altsvc.c.o
-libcurl.dir/amigaos.c.o
-libcurl.dir/asyn-ares.c.o
-libcurl.dir/asyn-thread.c.o
-libcurl.dir/base64.c.o
-libcurl.dir/bufref.c.o
-libcurl.dir/c-hyper.c.o
-libcurl.dir/conncache.c.o
-libcurl.dir/connect.c.o
-libcurl.dir/content_encoding.c.o
-libcurl.dir/cookie.c.o
-libcurl.dir/curl_addrinfo.c.o
-libcurl.dir/curl_ctype.c.o
-libcurl.dir/curl_des.c.o
-libcurl.dir/curl_endian.c.o
-libcurl.dir/curl_fnmatch.c.o
-libcurl.dir/curl_get_line.c.o
-libcurl.dir/curl_gethostname.c.o
-libcurl.dir/curl_gssapi.c.o
-libcurl.dir/curl_memrchr.c.o
-libcurl.dir/curl_multibyte.c.o
-libcurl.dir/curl_ntlm_core.c.o
-libcurl.dir/curl_ntlm_wb.c.o
-libcurl.dir/curl_path.c.o
-libcurl.dir/curl_range.c.o
-libcurl.dir/curl_rtmp.c.o
-libcurl.dir/curl_sasl.c.o
-libcurl.dir/curl_sspi.c.o
-libcurl.dir/curl_threads.c.o
-libcurl.dir/dict.c.o
-libcurl.dir/doh.c.o
-libcurl.dir/dotdot.c.o
-libcurl.dir/dynbuf.c.o
-libcurl.dir/easy.c.o
-libcurl.dir/easygetopt.c.o
-libcurl.dir/easyoptions.c.o
-libcurl.dir/escape.c.o
-libcurl.dir/file.c.o
-libcurl.dir/fileinfo.c.o
-libcurl.dir/formdata.c.o
-libcurl.dir/ftp.c.o
-libcurl.dir/ftplistparser.c.o
-libcurl.dir/getenv.c.o
-libcurl.dir/getinfo.c.o
-libcurl.dir/gopher.c.o
-libcurl.dir/hash.c.o
-libcurl.dir/hmac.c.o
-libcurl.dir/hostasyn.c.o
-libcurl.dir/hostcheck.c.o
-libcurl.dir/hostip.c.o
-libcurl.dir/hostip4.c.o
-libcurl.dir/hostip6.c.o
-libcurl.dir/hostsyn.c.o
-libcurl.dir/hsts.c.o
-libcurl.dir/http.c.o
-libcurl.dir/http2.c.o
-libcurl.dir/http_chunks.c.o
-libcurl.dir/http_digest.c.o
-libcurl.dir/http_negotiate.c.o
-libcurl.dir/http_ntlm.c.o
-libcurl.dir/http_proxy.c.o
-libcurl.dir/http_aws_sigv4.c.o
-libcurl.dir/idn_win32.c.o
-libcurl.dir/if2ip.c.o
-libcurl.dir/imap.c.o
-libcurl.dir/inet_ntop.c.o
-libcurl.dir/inet_pton.c.o
-libcurl.dir/krb5.c.o
-libcurl.dir/ldap.c.o
-libcurl.dir/llist.c.o
-libcurl.dir/md4.c.o
-libcurl.dir/md5.c.o
-libcurl.dir/memdebug.c.o
-libcurl.dir/mime.c.o
-libcurl.dir/mprintf.c.o
-libcurl.dir/mqtt.c.o
-libcurl.dir/multi.c.o
-libcurl.dir/netrc.c.o
-libcurl.dir/non-ascii.c.o
-libcurl.dir/nonblock.c.o
-libcurl.dir/openldap.c.o
-libcurl.dir/parsedate.c.o
-libcurl.dir/pingpong.c.o
-libcurl.dir/pop3.c.o
-libcurl.dir/progress.c.o
-libcurl.dir/psl.c.o
-libcurl.dir/rand.c.o
-libcurl.dir/rename.c.o
-libcurl.dir/rtsp.c.o
-libcurl.dir/select.c.o
-libcurl.dir/sendf.c.o
-libcurl.dir/setopt.c.o
-libcurl.dir/sha256.c.o
-libcurl.dir/share.c.o
-libcurl.dir/slist.c.o
-libcurl.dir/smb.c.o
-libcurl.dir/smtp.c.o
-libcurl.dir/socketpair.c.o
-libcurl.dir/socks.c.o
-libcurl.dir/socks_gssapi.c.o
-libcurl.dir/socks_sspi.c.o
-libcurl.dir/speedcheck.c.o
-libcurl.dir/splay.c.o
-libcurl.dir/strcase.c.o
-libcurl.dir/strdup.c.o
-libcurl.dir/strerror.c.o
-libcurl.dir/strtok.c.o
-libcurl.dir/strtoofft.c.o
-libcurl.dir/system_win32.c.o
-libcurl.dir/telnet.c.o
-libcurl.dir/tftp.c.o
-libcurl.dir/timeval.c.o
-libcurl.dir/transfer.c.o
-libcurl.dir/url.c.o
-libcurl.dir/urlapi.c.o
-libcurl.dir/version.c.o
-libcurl.dir/version_win32.c.o
-libcurl.dir/warnless.c.o
-libcurl.dir/wildcard.c.o
-libcurl.dir/x509asn1.c.o
-libcurl.dir/vauth/cleartext.c.o
-libcurl.dir/vauth/cram.c.o
-libcurl.dir/vauth/digest.c.o
-libcurl.dir/vauth/digest_sspi.c.o
-libcurl.dir/vauth/gsasl.c.o
-libcurl.dir/vauth/krb5_gssapi.c.o
-libcurl.dir/vauth/krb5_sspi.c.o
-libcurl.dir/vauth/ntlm.c.o
-libcurl.dir/vauth/ntlm_sspi.c.o
-libcurl.dir/vauth/oauth2.c.o
-libcurl.dir/vauth/spnego_gssapi.c.o
-libcurl.dir/vauth/spnego_sspi.c.o
-libcurl.dir/vauth/vauth.c.o
-libcurl.dir/vtls/bearssl.c.o
-libcurl.dir/vtls/gskit.c.o
-libcurl.dir/vtls/gtls.c.o
-libcurl.dir/vtls/keylog.c.o
-libcurl.dir/vtls/mbedtls.c.o
-libcurl.dir/vtls/mbedtls_threadlock.c.o
-libcurl.dir/vtls/mesalink.c.o
-libcurl.dir/vtls/nss.c.o
-libcurl.dir/vtls/openssl.c.o
-libcurl.dir/vtls/rustls.c.o
-libcurl.dir/vtls/schannel.c.o
-libcurl.dir/vtls/schannel_verify.c.o
-libcurl.dir/vtls/sectransp.c.o
-libcurl.dir/vtls/vtls.c.o
-libcurl.dir/vtls/wolfssl.c.o
-libcurl.dir/vquic/ngtcp2.c.o
-libcurl.dir/vquic/quiche.c.o
-libcurl.dir/vquic/vquic.c.o
-libcurl.dir/vssh/libssh.c.o
-libcurl.dir/vssh/libssh2.c.o
-libcurl.dir/vssh/wolfssh.c.o
+MKFILE       := $(lastword $(MAKEFILE_LIST))
+WORKDIR      := libcurl
+CURLDIR      := libs/curl-7.76.1
 
-curl.dir/slist_wc.c.o
-curl.dir/tool_binmode.c.o
-curl.dir/tool_bname.c.o
-curl.dir/tool_cb_dbg.c.o
-curl.dir/tool_cb_hdr.c.o
-curl.dir/tool_cb_prg.c.o
-curl.dir/tool_cb_rea.c.o
-curl.dir/tool_cb_see.c.o
-curl.dir/tool_cb_wrt.c.o
-curl.dir/tool_cfgable.c.o
-curl.dir/tool_convert.c.o
-curl.dir/tool_dirhie.c.o
-curl.dir/tool_doswin.c.o
-curl.dir/tool_easysrc.c.o
-curl.dir/tool_filetime.c.o
-curl.dir/tool_formparse.c.o
-curl.dir/tool_getparam.c.o
-curl.dir/tool_getpass.c.o
-curl.dir/tool_help.c.o
-curl.dir/tool_helpers.c.o
-curl.dir/tool_homedir.c.o
-curl.dir/tool_hugehelp.c.o
-curl.dir/tool_libinfo.c.o
-curl.dir/tool_main.c.o
-curl.dir/tool_metalink.c.o
-curl.dir/tool_msgs.c.o
-curl.dir/tool_operate.c.o
-curl.dir/tool_operhlp.c.o
-curl.dir/tool_panykey.c.o
-curl.dir/tool_paramhlp.c.o
-curl.dir/tool_parsecfg.c.o
-curl.dir/tool_progress.c.o
-curl.dir/tool_strdup.c.o
-curl.dir/tool_setopt.c.o
-curl.dir/tool_sleep.c.o
-curl.dir/tool_urlglob.c.o
-curl.dir/tool_util.c.o
-curl.dir/tool_vms.c.o
-curl.dir/tool_writeout.c.o
-curl.dir/tool_writeout_json.c.o
-curl.dir/tool_xattr.c.o
-curl.dir/__/lib/strtoofft.c.o
-curl.dir/__/lib/nonblock.c.o
-curl.dir/__/lib/warnless.c.o
-curl.dir/__/lib/curl_ctype.c.o
-curl.dir/__/lib/curl_multibyte.c.o
-curl.dir/__/lib/version_win32.c.o
-curl.dir/__/lib/dynbuf.c.o
+include make/configure.make
+BUILD_LIBCURL:= 1
+include make/platform.make
+
+TARGET	     := libcurl
+SOURCES      := $(CURLDIR)/lib $(CURLDIR)/lib/vauth $(CURLDIR)/lib/vtls $(CURLDIR)/lib/vquic $(CURLDIR)/lib/vssh
+INCLUDES     := $(CURLDIR)/lib $(CURLDIR)/include /usr/local/include
+LIBS 				 := $(OPENSSL_LIBS) $(SSH_LIBS)
+
+CURLFILES    := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c))
+CURLOBJS     := $(CURLFILES:.c=.o)
+Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(CURLOBJS)))
+
+export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
+
+CFLAGS      := $(INCLUDE) -fsigned-char -O3 \
+							 -isystem /opt/local/include \
+							 -isysroot $(SYSROOT) -MMD \
+							 $(OPENSSL_CFLAGS) $(SSH_CFLAGS) \
+               -ftree-vectorize -ffast-math -fno-short-enums \
+							 -DBUILDING_LIBCURL -DCURL_HIDDEN_SYMBOLS -DHAVE_CONFIG_H \
+							 -Dlibcurl_EXPORTS
+
+define DO_CURL_CC
+  @echo "CURL_CC $<"
+  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+endef
+
+debug:
+	$(echo_cmd) "MAKE $(TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+
+release:
+	$(echo_cmd) "MAKE $(TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) $(BR)/$(TARGET)$(SHLIBNAME)
+
+clean:
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+
+ifdef B
+$(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/%.c
+	$(DO_CURL_CC)
+
+$(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vauth/%.c
+	$(DO_CURL_CC)
+
+$(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vtls/%.c
+	$(DO_CURL_CC)
+
+$(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vquic/%.c
+	$(DO_CURL_CC)
+
+$(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vssh/%.c
+	$(DO_CURL_CC)
+
+$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
+endif

@@ -78,7 +78,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_MV				  // multiview enabled
 //#define USE_MV_ZCMD		// command compression
 // RmlUi adds supplementary initerfaces written in HTML.
-#define USE_RMLUI
+#define USE_RMLUI 1
 
 #endif
 
