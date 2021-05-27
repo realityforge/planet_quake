@@ -7,7 +7,7 @@ include make/configure.make
 BUILD_LIBOPUS:= 1
 include make/platform.make
 
-TARGET	     := libopus
+TARGET	     := libopus_
 SOURCES      := $(OPUSDIR)/src $(OPUSDIR)/silk $(OPUSDIR)/celt \
                 $(OPUSDIR)/silk/float $(OPUSFILEDIR)/src
 INCLUDES     := $(OPUSDIR)/include \

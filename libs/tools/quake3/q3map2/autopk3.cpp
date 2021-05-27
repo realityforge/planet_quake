@@ -247,7 +247,8 @@ int pk3BSPMain( int argc, char **argv ){
 	/* extract map name */
 	const CopiedString nameOFmap( PathFilename( source ) );
 
-	bool drawsurfSHs[numBSPShaders] = { 0 };
+	bool drawsurfSHs[numBSPShaders];
+  memset( drawsurfSHs, 0, numBSPShaders*sizeof(int) );
 
 	for ( i = 0; i < numBSPDrawSurfaces; ++i ){
 		drawsurfSHs[ bspDrawSurfaces[i].shaderNum ] = true;
@@ -919,7 +920,8 @@ int repackBSPMain( int argc, char **argv ){
 		/* extract map name */
 		const CopiedString nameOFmap( PathFilename( source ) );
 
-		bool drawsurfSHs[numBSPShaders] = { 0 };
+		bool drawsurfSHs[numBSPShaders];
+    memset( drawsurfSHs, 0, numBSPShaders*sizeof(int) );
 
 		for ( i = 0; i < numBSPDrawSurfaces; ++i ){
 			drawsurfSHs[ bspDrawSurfaces[i].shaderNum ] = true;
@@ -1445,4 +1447,3 @@ int repackBSPMain( int argc, char **argv ){
 	/* return to sender */
 	return 0;
 }
-

@@ -129,24 +129,36 @@ PKG_CONFIG ?= pkg-config
 
 # TODO: if USE_INTERNAL_* is requested, add this to prebuild steps
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
-  SDL_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
-  SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
-  X11_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
-  X11_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
-  FREETYPE_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
-  FREETYPE_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
-  OPUS_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags opusfile opus || true)
-  OPUS_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs opusfile opus || echo -lopusfile -lopus)
-  VORBIS_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags vorbisfile vorbis || true)
-  VORBIS_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs vorbisfile vorbis || echo -lvorbisfile -lvorbis)
-  OGG_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ogg vorbis || true)
-  OGG_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs ogg vorbis || echo -logg -lvorbis)
-  OPENSSL_CFLAGS ?= -I/usr/local/Cellar/openssl@1.1/1.1.1g/include
-  OPENSSL_LIBS ?= -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lssl \
-									-L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lcrypto \
-									-lz
-  SSH_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ssh2 || true)
-  SSH_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs ssh2 || echo -lssh2)
+  SDL_INCLUDE      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
+  SDL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
+  X11_INCLUDE      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
+  X11_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
+  FREETYPE_CFLAGS  ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
+  FREETYPE_LIBS    ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
+  OPUS_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags opusfile opus || true)
+  OPUS_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs opusfile opus || echo -lopusfile -lopus)
+  VORBIS_CFLAGS    ?= $(shell $(PKG_CONFIG) --silence-errors --cflags vorbisfile vorbis || true)
+  VORBIS_LIBS      ?= $(shell $(PKG_CONFIG) --silence-errors --libs vorbisfile vorbis || echo -lvorbisfile -lvorbis)
+  OGG_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ogg vorbis || true)
+  OGG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs ogg vorbis || echo -logg -lvorbis)
+  OPENSSL_CFLAGS   ?= -I/usr/local/Cellar/openssl@1.1/1.1.1g/include
+  OPENSSL_LIBS     ?= -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lssl \
+                      -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lcrypto \
+                      -lz
+  SSH_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ssh2 || true)
+  SSH_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs ssh2 || echo -lssh2)
+  GLIB_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags glib-2.0 || true)
+  GLIB_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs glib-2.0 || echo -lg)
+  XML_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libxml-2.0 || true) \
+                      -I/usr/include/libxml2
+  XML_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libxml-2.0 || echo -lxml2) \
+                      -L/usr/local/opt/libxml2/lib
+  STD_CFLAGS       ?= 
+  STD_LIBS         ?= -lstdc++
+  JPEG_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libjpeg || true)
+  JPEG_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs libjpeg || echo -ljpeg)
+  PNG_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libpng || true)
+  PNG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libpng || echo -lpng)
 
 endif
 
@@ -206,6 +218,10 @@ ifndef RENDERER_PREFIX
 endif
 
 ifndef BOTLIB_PREFIX
+  BOTLIB_PREFIX    := $(CNAME)
+endif
+
+ifndef Q3MAP2_PREFIX
   BOTLIB_PREFIX    := $(CNAME)
 endif
 

@@ -6,7 +6,7 @@ include make/configure.make
 BUILD_LIBCURL:= 1
 include make/platform.make
 
-TARGET	     := libcurl
+TARGET	     := libcurl_
 SOURCES      := $(CURLDIR)/lib $(CURLDIR)/lib/vauth $(CURLDIR)/lib/vtls $(CURLDIR)/lib/vquic $(CURLDIR)/lib/vssh
 INCLUDES     := $(CURLDIR)/lib $(CURLDIR)/include /usr/local/include
 LIBS 				 := $(OPENSSL_LIBS) $(SSH_LIBS)

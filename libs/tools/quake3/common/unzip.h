@@ -319,3 +319,4 @@ extern int unzGetLocalExtrafield( unzFile file, void* buf, unsigned len );
    the return value is the number of unsigned chars copied in buf, or (if <0)
     the error code
  */
+ 

@@ -2515,7 +2515,6 @@ static const uLong crc_table[256] = {
 /* =========================================================================
  * This function can be used by asm versions of crc32()
  */
-#ifndef __APPLE__
 const uLong * get_crc_table()
 {
 #ifdef DYNAMIC_CRC_TABLE
@@ -2523,7 +2522,6 @@ const uLong * get_crc_table()
 #endif
   return (const uLong *)crc_table;
 }
-#endif
 
 /* ========================================================================= */
 #define DO1(buf) crc = crc_table[((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
@@ -2532,7 +2530,6 @@ const uLong * get_crc_table()
 #define DO8(buf)  DO4(buf); DO4(buf);
 
 /* ========================================================================= */
-#ifndef __APPLE__
 uLong crc32(uLong crc, const Byte *buf, uInt len)
 {
     if (buf == Z_NULL) return 0L;
@@ -2551,7 +2548,6 @@ uLong crc32(uLong crc, const Byte *buf, uInt len)
     } while (--len);
     return crc ^ 0xffffffffL;
 }
-#endif
 
 /* infblock.h -- header to use infblock.c
  * Copyright (C) 1995-1998 Mark Adler
@@ -2832,7 +2828,6 @@ extern int inflate_flush OF((
  */
 
 
-#ifndef __APPLE__
 void inflate_blocks_reset(inflate_blocks_statef *s, z_streamp z, uLong *c)
 {
   if (c != Z_NULL)
@@ -2849,9 +2844,7 @@ void inflate_blocks_reset(inflate_blocks_statef *s, z_streamp z, uLong *c)
     z->adler = s->check = (*s->checkfn)(0L, (const Byte *)Z_NULL, 0);
   Tracev(("inflate:   blocks reset\n"));
 }
-#endif
 
-#ifndef __APPLE__
 inflate_blocks_statef *inflate_blocks_new(z_streamp z, check_func c, uInt w)
 {
   inflate_blocks_statef *s;
@@ -2878,9 +2871,7 @@ inflate_blocks_statef *inflate_blocks_new(z_streamp z, check_func c, uInt w)
   inflate_blocks_reset(s, z, Z_NULL);
   return s;
 }
-#endif
 
-#ifndef __APPLE__
 int inflate_blocks(inflate_blocks_statef *s, z_streamp z, int r)
 {
   uInt t;               /* temporary storage */
@@ -3123,9 +3114,7 @@ int inflate_blocks(inflate_blocks_statef *s, z_streamp z, int r)
       LEAVE
   }
 }
-#endif
 
-#ifndef __APPLE__
 int inflate_blocks_free(inflate_blocks_statef *s, z_streamp z)
 {
   inflate_blocks_reset(s, z, Z_NULL);
@@ -3135,26 +3124,21 @@ int inflate_blocks_free(inflate_blocks_statef *s, z_streamp z)
   Tracev(("inflate:   blocks freed\n"));
   return Z_OK;
 }
-#endif
 
-#ifndef __APPLE__
 void inflate_set_dictionary(inflate_blocks_statef *s, const Byte *d, uInt n)
 {
   zmemcpy(s->window, d, n);
   s->read = s->write = s->window + n;
 }
-#endif
 
 /* Returns true if inflate is currently at the end of a block generated
  * by Z_SYNC_FLUSH or Z_FULL_FLUSH. 
  * IN assertion: s != Z_NULL
  */
-#ifndef __APPLE__
 int inflate_blocks_sync_point(inflate_blocks_statef *s)
 {
   return s->mode == LENS;
 }
-#endif
 
 /* And'ing with mask[n] masks the lower n bits */
 uInt inflate_mask[17] = {
@@ -3164,7 +3148,6 @@ uInt inflate_mask[17] = {
 };
 
 /* copy as much as possible from the sliding window to the output area */
-#ifndef __APPLE__
 int inflate_flush(inflate_blocks_statef *s, z_streamp z, int r)
 {
   uInt n;
@@ -3227,17 +3210,14 @@ int inflate_flush(inflate_blocks_statef *s, z_streamp z, int r)
   /* done */
   return r;
 }
-#endif
 
 /* inftrees.c -- generate Huffman trees for efficient decoding
  * Copyright (C) 1995-1998 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
-#ifndef __APPLE__
 const char inflate_copyright[] =
    " inflate 1.1.3 Copyright 1995-1998 Mark Adler ";
-#endif
 
 /*
   If you use the zlib library in a product, an acknowledgment is welcome
@@ -3517,7 +3497,6 @@ static int huft_build(uInt *b, uInt n, uInt s, const uInt *d, const uInt *e, inf
 }
 
 
-#ifndef __APPLE__
 int inflate_trees_bits(uInt *c, uInt *bb, inflate_huft * *tb, inflate_huft *hp, z_streamp z)
 //uInt *c;               /* 19 code lengths */
 //uInt *bb;              /* bits tree desired/actual depth */
@@ -3543,9 +3522,7 @@ int inflate_trees_bits(uInt *c, uInt *bb, inflate_huft * *tb, inflate_huft *hp, 
   ZFREE(z, v);
   return r;
 }
-#endif
 
-#ifndef __APPLE__
 int inflate_trees_dynamic(uInt nl, uInt nd, uInt *c, uInt *bl, uInt *bd, inflate_huft * *tl, inflate_huft * *td, inflate_huft *hp, z_streamp z)
 //uInt nl;                /* number of literal/length codes */
 //uInt nd;                /* number of distance codes */
@@ -3762,7 +3739,6 @@ static inflate_huft fixed_td[] = {
     {{{82,5}},13}, {{{90,5}},3073}, {{{86,5}},193}, {{{192,5}},24577}
   };
 
-#ifndef __APPLE__
 int inflate_trees_fixed(uInt *bl, uInt *bd, inflate_huft * *tl, inflate_huft * *td, z_streamp z)
 //uInt *bl;               /* literal desired/actual bit depth */
 //uInt *bd;               /* distance desired/actual bit depth */
@@ -3776,7 +3752,6 @@ int inflate_trees_fixed(uInt *bl, uInt *bd, inflate_huft * *tl, inflate_huft * *
   *td = fixed_td;
   return Z_OK;
 }
-#endif
 
 /* simplify the use of the inflate_huft type with some defines */
 #define exop word.what.Exop
@@ -3791,7 +3766,6 @@ int inflate_trees_fixed(uInt *bl, uInt *bd, inflate_huft * *tl, inflate_huft * *
    at least ten.  The ten bytes are six bytes for the longest length/
    distance pair plus four bytes for overloading the bit buffer. */
 
-#ifndef __APPLE__
 int inflate_fast(uInt bl, uInt bd, inflate_huft *tl, inflate_huft *td, inflate_blocks_statef *s, z_streamp z)
 {
   inflate_huft *t;      /* temporary pointer */
@@ -3930,7 +3904,6 @@ int inflate_fast(uInt bl, uInt bd, inflate_huft *tl, inflate_huft *td, inflate_b
   UPDATE
   return Z_OK;
 }
-#endif
 
 /* infcodes.c -- process literals and length/distance pairs
  * Copyright (C) 1995-1998 Mark Adler
@@ -3982,7 +3955,6 @@ struct inflate_codes_state {
 
 };
 
-#ifndef __APPLE__
 inflate_codes_statef *inflate_codes_new(uInt bl, uInt bd, inflate_huft *tl, inflate_huft *td, z_streamp z)
 {
   inflate_codes_statef *c;
@@ -3999,9 +3971,8 @@ inflate_codes_statef *inflate_codes_new(uInt bl, uInt bd, inflate_huft *tl, infl
   }
   return c;
 }
-#endif
 
-#ifndef __APPLE__
+
 int inflate_codes(inflate_blocks_statef *s, z_streamp z, int r)
 {
   uInt j;               /* temporary storage */
@@ -4169,13 +4140,11 @@ int inflate_codes(inflate_blocks_statef *s, z_streamp z, int r)
 }
 #endif
 
-#ifndef __APPLE__
 void inflate_codes_free(inflate_codes_statef *c, z_streamp z)
 {
   ZFREE(z, c);
   Tracev(("inflate:       codes free\n"));
 }
-#endif
 
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-1998 Mark Adler
@@ -4198,7 +4167,6 @@ void inflate_codes_free(inflate_codes_statef *c, z_streamp z)
 #define DO16(buf)   DO8(buf,0); DO8(buf,8);
 
 /* ========================================================================= */
-#ifndef __APPLE__
 uLong adler32(uLong adler, const Byte *buf, uInt len)
 {
     unsigned long s1 = adler & 0xffff;
@@ -4224,7 +4192,6 @@ uLong adler32(uLong adler, const Byte *buf, uInt len)
     }
     return (s2 << 16) | s1;
 }
-#endif
 
 
 /* infblock.h -- header to use infblock.c
@@ -4306,7 +4273,6 @@ struct internal_state {
 };
 
 
-#ifndef __APPLE__
 int inflateReset(z_streamp z)
 {
   if (z == Z_NULL || z->state == Z_NULL)
@@ -4318,9 +4284,7 @@ int inflateReset(z_streamp z)
   Tracev(("inflate: reset\n"));
   return Z_OK;
 }
-#endif
 
-#ifndef __APPLE__
 int inflateEnd(z_streamp z)
 {
   if (z == Z_NULL || z->state == Z_NULL || z->zfree == Z_NULL)
@@ -4332,9 +4296,7 @@ int inflateEnd(z_streamp z)
   Tracev(("inflate: end\n"));
   return Z_OK;
 }
-#endif
 
-#ifndef __APPLE__
 int inflateInit2_(z_streamp z, int w, const char *version, int stream_size)
 {
   if (version == Z_NULL || version[0] != ZLIB_VERSION[0] ||
@@ -4386,19 +4348,15 @@ int inflateInit2_(z_streamp z, int w, const char *version, int stream_size)
   inflateReset(z);
   return Z_OK;
 }
-#endif
 
-#ifndef __APPLE__
 int inflateInit_(z_streamp z, const char *version, int stream_size)
 {
   return inflateInit2_(z, DEF_WBITS, version, stream_size);
 }
-#endif
 
 #define iNEEDBYTE {if(z->avail_in==0)return r;r=f;}
 #define iNEXTBYTE (z->avail_in--,z->total_in++,*z->next_in++)
 
-#ifndef __APPLE__
 int inflate(z_streamp z, int f)
 {
   int r;
@@ -4523,9 +4481,7 @@ int inflate(z_streamp z, int f)
   return Z_STREAM_ERROR;  /* Some dumb compilers complain without this */
 #endif
 }
-#endif
 
-#ifndef __APPLE__
 int inflateSetDictionary(z_streamp z, const Byte *dictionary, uInt dictLength)
 {
   uInt length = dictLength;
@@ -4545,9 +4501,7 @@ int inflateSetDictionary(z_streamp z, const Byte *dictionary, uInt dictLength)
   z->state->mode = imBLOCKS;
   return Z_OK;
 }
-#endif
 
-#ifndef __APPLE__
 int inflateSync(z_streamp z)
 {
   uInt n;       /* number of bytes to look at */
@@ -4596,7 +4550,6 @@ int inflateSync(z_streamp z)
   z->state->mode = imBLOCKS;
   return Z_OK;
 }
-#endif
 
 /* Returns true if inflate is currently at the end of a block generated
  * by Z_SYNC_FLUSH or Z_FULL_FLUSH. This function is used by one PPP
@@ -4605,16 +4558,13 @@ int inflateSync(z_streamp z)
  * decompressing, PPP checks that at the end of input packet, inflate is
  * waiting for these length bytes.
  */
-#ifndef __APPLE__
 int inflateSyncPoint(z_streamp z)
 {
   if (z == Z_NULL || z->state == Z_NULL || z->state->blocks == Z_NULL)
     return Z_STREAM_ERROR;
   return inflate_blocks_sync_point(z->state->blocks);
 }
-#endif
 
-#ifndef __APPLE__
 voidp zcalloc (voidp opaque, unsigned items, unsigned size)
 {
     if (opaque) items += size - size; /* make compiler happy */

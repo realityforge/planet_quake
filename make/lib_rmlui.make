@@ -6,7 +6,7 @@ include make/configure.make
 BUILD_RMLUI   := 1
 include make/platform.make
 
-TARGET		    := libRmlCore
+TARGET		    := libRmlCore_
 CPPSOURCES    := $(RMLUIDIR) \
                  $(RMLUIDIR)/Core \
                  $(RMLUIDIR)/Core/Elements \
@@ -37,13 +37,13 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
 
 clean:
 	@rm -rf $(BD)/$(WORKDIR)

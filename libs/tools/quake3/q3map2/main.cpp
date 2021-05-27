@@ -214,7 +214,6 @@ int main( int argc, char **argv ){
 	/* vlight */
 	else if ( striEqual( argv[ 1 ], "-vlight" ) ) {
 		Sys_Warning( "VLight is no longer supported, defaulting to -light -fast instead\n\n" );
-		argv[ 1 ] = "-fast";    /* eek a hack */
 		r = LightMain( argc, argv );
 	}
 

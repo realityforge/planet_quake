@@ -87,6 +87,8 @@
 #include "stream/stringstream.h"
 #include "bitflags.h"
 #include <list>
+#include <array>
+#include <algorithm>
 #include "qmath.h"
 
 #include <stddef.h>

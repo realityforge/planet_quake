@@ -2126,7 +2126,7 @@ int LightMain( int argc, char **argv ){
 			Sys_Printf( "The -smooth argument is deprecated, use \"-samples 2\" instead\n" );
 		}
 
-		else if ( !strcmp( argv[ i ], "-fast" ) ) {
+		else if ( !strcmp( argv[ i ], "-fast" ) || !strcmp( argv[ i ], "-vlight" ) ) {
 			fast = qtrue;
 			fastgrid = qtrue;
 			fastbounce = qtrue;

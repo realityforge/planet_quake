@@ -5,7 +5,7 @@ include make/configure.make
 BUILD_LIBOGG:= 1
 include make/platform.make
 
-TARGET	    := libogg
+TARGET	    := libogg_
 SOURCES     := libs/libogg-1.3.4/src
 INCLUDES    := 
 LIBS 				:=
