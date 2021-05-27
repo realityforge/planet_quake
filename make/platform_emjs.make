@@ -1,4 +1,8 @@
-ABSOLUTE_PATH    := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))..
+USE_RENDERER_DLOPEN := 1
+USE_BOTLIB_DLOPEN   := 1
+
+include make/configure.make
+
 EMSDK            := $(ABSOLUTE_PATH)/libs/emsdk
 ifndef EM_CACHE_LOCATION
 EM_CACHE_LOCATION:= $(HOME)/.emscripten_cache
@@ -23,12 +27,12 @@ CLIENT_SYSTEM  := sys_common.js \
                   sys_files.js \
                   sys_input.js \
                   sys_webgl.js \
+									sys_sdl.js \
                   sys_main.js
 
 CLIENT_LIBS    := -lbrowser.js \
                   -lasync.js \
                   -lidbfs.js \
-                  -lsdl.js \
                   -ldylink.js \
                   $(addprefix --js-library $(MOUNT_DIR)/wasm/,$(notdir $(CLIENT_SYSTEM))) \
                   --js-library $(MOUNT_DIR)/qcommon/vm_js.js \
@@ -97,6 +101,10 @@ ifeq ($(BUILD_RENDERER_OPENGL),1)
           -s FULL_ES3=0
 endif
 
+SYSEXPORTS := , '_Sys_BeginDownload', '_Sys_SocksConnect', '_Sys_SocksMessage', \
+							'_Sys_NET_MulticastLocal', '_Sys_LoadLibrary', '_Sys_DownloadLocalFile', \
+							'_Sys_CmdArgsC', '_Sys_CmdArgs', '_Sys_SetStatus'
+
 LDEXPORTS := '_main', '_malloc', '_free', '_atof', '_sin', '_powf', '_rand', \
   '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_dlopen', '_vsprintf', \
   '_Com_WriteConfigToFile', '_IN_PushInit', '_IN_PushEvent', '_sscanf', \
@@ -105,7 +113,7 @@ LDEXPORTS := '_main', '_malloc', '_free', '_atof', '_sin', '_powf', '_rand', \
   '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', \
   '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cvar_VariableString', \
   '_Cvar_VariableIntegerValue', '_Cbuf_ExecuteText', '_Cbuf_Execute', \
-  '_Cbuf_AddText', '_Field_CharEvent', '_FS_AllowedExtension'
+  '_Cbuf_AddText', '_Field_CharEvent', '_FS_AllowedExtension' $(SYSEXPORTS)
 
 DEBUG_LDFLAGS    += \
                     -O0 -g -gsource-map \
@@ -136,7 +144,6 @@ CLIENT_LDFLAGS   += \
                     -s INITIAL_MEMORY=56MB \
                     -s ALLOW_MEMORY_GROWTH=1 \
                     -s ALLOW_TABLE_GROWTH=1 \
-                    -s SDL2_IMAGE_FORMATS='[]' \
                     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
                     -s EXPORTED_RUNTIME_METHODS="['FS', 'SYS', 'SYSC',  \
                       'SYSF', 'SYSN', 'SYSM', 'ccall', 'callMain', 'addFunction', \
@@ -144,7 +151,7 @@ CLIENT_LDFLAGS   += \
                     -s FORCE_FILESYSTEM=1 \
                     -s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE="[]" \
                     -s INCLUDE_FULL_LIBRARY=0 \
-                    -s MAIN_MODULE=2 \
+                    -s MAIN_MODULE=1 \
                     -s RELOCATABLE=1 \
                     -s EXPORT_ALL=0 \
                     -s LINKABLE=0 \
@@ -154,10 +161,7 @@ CLIENT_LDFLAGS   += \
                     -s DISABLE_EXCEPTION_CATCHING=0 \
                     -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 \
                     -s INVOKE_RUN=1 \
-                    -s EXIT_RUNTIME=1 \
-                    -s USE_SDL=2 \
-                    -s USE_SDL_IMAGE=2 \
-                    -s USE_SDL_MIXER=2
+                    -s EXIT_RUNTIME=1
 
 #ifeq ($(USE_BOTLIB_DLOPEN),1)
 #CLIENT_LDFLAGS += $(B)/$(BOTLIB_PREFIX)_libbots_$(SHLIBNAME)

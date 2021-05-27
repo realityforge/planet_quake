@@ -1,6 +1,6 @@
-MKFILE      := $(lastword $(MAKEFILE_LIST)) 
+MKFILE       := $(lastword $(MAKEFILE_LIST)) 
 
-include make/configure.make
+BUILD_BASEQ3A:=1
 include make/platform.make
 
 ifndef MOD
@@ -15,10 +15,10 @@ ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
   BASE_CFLAGS += -Qunused-arguments
 endif
 
-BASE_CFLAGS += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
-BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
-BASE_CFLAGS += -Wdisabled-optimization
-BASE_CFLAGS += -Werror-implicit-function-declaration
+BASE_CFLAGS   += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral
+BASE_CFLAGS   += -Wstrict-aliasing=2 -Wmissing-format-attribute
+BASE_CFLAGS   += -Wdisabled-optimization
+BASE_CFLAGS   += -Werror-implicit-function-declaration
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"

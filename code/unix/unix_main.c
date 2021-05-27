@@ -894,46 +894,6 @@ void Sys_PlatformInit2( void ) {
   char *exec_argv[] = { (char *)argv0, cmdline3, " +set dedicated 0 +set rconpassword \"password123!\" ", 0 };
   execv(argv0, exec_argv);
 }
-
-/*
-void Sys_PlatformInit( void ) {
-  Cvar_Set("dedicated", "1");
-  Cvar_Set("ttycon", "0");
-
-	// get the initial time base
-	Sys_Milliseconds();
-
-	Com_Init( cmdline2 );
-	NET_Init();
-
-	Com_Printf( "Working directory: %s\n", Sys_Pwd() );
-
-#ifdef DEDICATED
-	// init here for dedicated, as we don't have GLimp_Init
-	InitSig();
-#endif
-
-	while (1)
-	{
-#ifndef NOFPU
-#ifdef __linux__
-		Sys_ConfigureFPU();
-#endif
-#endif
-
-#ifdef DEDICATED
-		// run the game
-		Com_Frame( qfalse );
-#else
-		// check for other input devices
-		IN_Frame();
-		// run the game
-		Com_Frame( CL_NoDelay() );
-#endif
-	}
-}
-*/
-
 #endif
 
 

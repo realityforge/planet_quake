@@ -1,16 +1,17 @@
-MKFILE      := $(lastword $(MAKEFILE_LIST))
-WORKDIR     := libogg
-WORKDIR2    := libvorbis
+MKFILE       := $(lastword $(MAKEFILE_LIST))
+WORKDIR      := libogg
+WORKDIR2     := libvorbis
 
-include make/configure.make
+BUILD_VORBIS := 1
+BUILD_OGG    := 1
 include make/platform.make
 
-TARGET	    := libogg_
-TARGET2	    := libvorbis_
-SOURCES     := libs/libogg-1.3.4/src
-SOURCES2    := libs/libvorbis-1.3.7/lib
-INCLUDES    := 
-LIBS 				:=
+TARGET	     := libogg_
+TARGET2	     := libvorbis_
+SOURCES      := libs/libogg-1.3.4/src
+SOURCES2     := libs/libvorbis-1.3.7/lib
+INCLUDES     := 
+LIBS 				 :=
 
 OGGOBJS     := bitwise.o \
                framing.o

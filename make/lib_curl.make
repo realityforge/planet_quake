@@ -1,19 +1,18 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST))
-WORKDIR      := libcurl
-CURLDIR      := libs/curl-7.76.1
+MKFILE        := $(lastword $(MAKEFILE_LIST))
+WORKDIR       := libcurl
+CURLDIR       := libs/curl-7.76.1
 
-include make/configure.make
-BUILD_LIBCURL:= 1
+BUILD_LIBCURL := 1
 include make/platform.make
 
-TARGET	     := libcurl_
-SOURCES      := $(CURLDIR)/lib $(CURLDIR)/lib/vauth $(CURLDIR)/lib/vtls $(CURLDIR)/lib/vquic $(CURLDIR)/lib/vssh
-INCLUDES     := $(CURLDIR)/lib $(CURLDIR)/include /usr/local/include
-LIBS 				 := $(OPENSSL_LIBS) $(SSH_LIBS)
+TARGET	      := libcurl_$(SHLIBNAME)
+SOURCES       := $(CURLDIR)/lib $(CURLDIR)/lib/vauth $(CURLDIR)/lib/vtls $(CURLDIR)/lib/vquic $(CURLDIR)/lib/vssh
+INCLUDES      := $(CURLDIR)/lib $(CURLDIR)/include /usr/local/include
+LIBS 				  := $(OPENSSL_LIBS) $(SSH_LIBS)
 
-CURLFILES    := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c))
-CURLOBJS     := $(CURLFILES:.c=.o)
-Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(CURLOBJS)))
+CURLFILES     := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c))
+CURLOBJS      := $(CURLFILES:.c=.o)
+Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(CURLOBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -34,17 +33,17 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/%.c
@@ -62,7 +61,7 @@ $(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vquic/%.c
 $(B)/$(WORKDIR)/%.o: $(CURLDIR)/lib/vssh/%.c
 	$(DO_CURL_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
 endif

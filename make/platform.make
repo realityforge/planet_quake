@@ -1,3 +1,4 @@
+ABSOLUTE_PATH       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))..
 #mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 #mkfile_dir := $(dir $(mkfile_path))
 #current_dir := $(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
@@ -77,7 +78,6 @@ include make/platform_unix.make
 endif
 endif
 endif
-
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)

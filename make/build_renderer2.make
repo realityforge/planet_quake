@@ -1,10 +1,9 @@
 MKFILE         := $(lastword $(MAKEFILE_LIST)) 
 
-include make/configure.make
 BUILD_RENDERER_OPENGL2:=1
 include make/platform.make
 
-TARGET         := $(RENDERER_PREFIX)_opengl2_
+TARGET         := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
 
 SOURCES        := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
 INCLUDES       := 
@@ -42,7 +41,7 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2 mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
 
 release:
@@ -50,12 +49,12 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2 mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
 
 clean:
-	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)
+	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
 
@@ -78,7 +77,7 @@ $(B)/rend2/glsl/%.o_clean: code/renderer2/glsl/%.glsl
 $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
 	$(DO_REND_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ)
+$(B)/$(TARGET): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
   

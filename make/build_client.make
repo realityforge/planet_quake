@@ -1,6 +1,5 @@
 MKFILE      := $(lastword $(MAKEFILE_LIST)) 
 
-include make/configure.make
 BUILD_CLIENT:=1
 include make/platform.make
 

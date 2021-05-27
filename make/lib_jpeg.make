@@ -1,13 +1,12 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST)) 
-WORKDIR      := libjpeg
+MKFILE        := $(lastword $(MAKEFILE_LIST)) 
+WORKDIR       := libjpeg
 
-include make/configure.make
-BUILD_LIBJPEG:= 1
+BUILD_LIBJPEG := 1
 include make/platform.make
 
-TARGET	     := libjpeg_
-SOURCES      := libs/jpeg-9d
-INCLUDES     := 
+TARGET	      := libjpeg_$(SHLIBNAME)
+SOURCES       := libs/jpeg-9d
+INCLUDES      := 
 
 #LIBS = -l
 
@@ -41,23 +40,23 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: libs/jpeg-9d/%.c
 	$(DO_JPEG_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
 endif

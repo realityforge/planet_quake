@@ -2,7 +2,6 @@ MKFILE        := $(lastword $(MAKEFILE_LIST))
 WORKDIR       := rmlui
 RMLUIDIR      := libs/RmlUI/Source
 
-include make/configure.make
 BUILD_RMLUI   := 1
 include make/platform.make
 

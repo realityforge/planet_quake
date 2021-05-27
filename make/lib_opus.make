@@ -1,22 +1,20 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST))
-WORKDIR      := libopus
-OPUSDIR      := libs/opus-1.3.1
-OPUSFILEDIR  := libs/opusfile-0.12
+MKFILE        := $(lastword $(MAKEFILE_LIST))
+WORKDIR       := libopus
+OPUSDIR       := libs/opus-1.3.1
+OPUSFILEDIR   := libs/opusfile-0.12
 
-include make/configure.make
-BUILD_LIBOPUS:= 1
+BUILD_LIBOPUS := 1
 include make/platform.make
 
-TARGET	     := libopus_
-SOURCES      := $(OPUSDIR)/src $(OPUSDIR)/silk $(OPUSDIR)/celt \
-                $(OPUSDIR)/silk/float $(OPUSFILEDIR)/src
-INCLUDES     := $(OPUSDIR)/include \
-                $(OPUSDIR)/celt \
-                $(OPUSDIR)/silk \
-                $(OPUSDIR)/silk/float \
-                $(OPUSFILEDIR)/include 
-
-LIBS 				 := $(OGG_LIBS)
+TARGET	      := libopus_$(SHLIBNAME)
+SOURCES       := $(OPUSDIR)/src $(OPUSDIR)/silk $(OPUSDIR)/celt \
+                 $(OPUSDIR)/silk/float $(OPUSFILEDIR)/src
+INCLUDES      := $(OPUSDIR)/include \
+                 $(OPUSDIR)/celt \
+                 $(OPUSDIR)/silk \
+                 $(OPUSDIR)/silk/float \
+                 $(OPUSFILEDIR)/include 
+LIBS 				  := $(OGG_LIBS)
 
 OPUSOBJS     := src/analysis.o \
                 src/mlp.o \
@@ -182,17 +180,17 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(OPUSDIR)/src/%.c
@@ -210,7 +208,7 @@ $(B)/$(WORKDIR)/%.o: $(OPUSDIR)/silk/float/%.c
 $(B)/$(WORKDIR)/%.o: $(OPUSFILEDIR)/src/%.c
 	$(DO_OPUS_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
 endif

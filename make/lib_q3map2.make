@@ -1,19 +1,18 @@
-MKFILE         := $(lastword $(MAKEFILE_LIST)) 
-WORKDIR        := q3map2
-Q3MAP2DIR      := libs/tools/quake3
-Q3MAP_VERSION  := 2.5.17n
-RADIANT_VERSION:= 1.5.0n
+MKFILE          := $(lastword $(MAKEFILE_LIST)) 
+WORKDIR         := q3map2
+Q3MAP2DIR       := libs/tools/quake3
+Q3MAP_VERSION   := 2.5.17n
+RADIANT_VERSION := 1.5.0n
 RADIANT_MAJOR_VERSION:=5
 RADIANT_MINOR_VERSION:=0
 
-include make/configure.make
-BUILD_RMLUI    := 1
+BUILD_RMLUI     := 1
 include make/platform.make
 
-TARGET		     := $(Q3MAP2_PREFIX)_q3map2_
-CPPSOURCES     := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/q3map2 
-INCLUDES       := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/../libs $(Q3MAP2DIR)/../include
-LIBS           := $(XML_LIBS) $(GLIB_LIBS) $(STD_LIBS) $(JPEG_LIBS) $(PNG_LIBS)
+TARGET		      := $(Q3MAP2_PREFIX)_q3map2_
+CPPSOURCES      := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/q3map2 
+INCLUDES        := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/../libs $(Q3MAP2DIR)/../include
+LIBS            := $(XML_LIBS) $(GLIB_LIBS) $(STD_LIBS) $(JPEG_LIBS) $(PNG_LIBS)
 
 Q3MAP2         := common/cmdlib.o \
                   common/imagelib.o \

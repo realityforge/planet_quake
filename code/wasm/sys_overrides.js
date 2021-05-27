@@ -197,44 +197,7 @@ if(typeof IDBFS != 'undefined') {
     */
   }
 }
-if(typeof GL != 'undefined') {
-  GL.createContext = function(canvas, webGLContextAttributes) {
-    webGLContextAttributes.failIfMajorPerformanceCaveat = true
-    var ctx = (webGLContextAttributes.majorVersion > 1)
-      ? canvas.getContext("webgl2", webGLContextAttributes)
-      : (canvas.getContext("webgl", webGLContextAttributes)
-        || canvas.getContext('experimental-webgl'))
-    if (!ctx) return 0
-    var handle = GL.registerContext(ctx, webGLContextAttributes)
-    return handle
-  }
-}
-if(typeof GLEmulation != 'undefined') {
-  GLEmulation.glDrawElements = _emscripten_glDrawElements = _glDrawElements = function(mode, count, type, indices) {
-    var buf;
-    if (!GL.currElementArrayBuffer) {
-      var size = GL.calcBufLength(1, type, 0, count);
-      buf = GL.getTempIndexBuffer(size);
-      GLctx.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, buf);
-      GLctx.bufferSubData(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/,
-                               0,
-                               HEAPU8.subarray(indices, indices + size));
-      // the index is now 0
-      indices = 0;
-    }
 
-    // bind any client-side buffers
-    GL.preDrawHandleClientVertexAttribBindings(count);
-
-    GLctx.drawElements(mode, count, type, indices);
-
-    GL.postDrawHandleClientVertexAttribBindings(count);
-
-    if (!GL.currElementArrayBuffer) {
-      GLctx.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, null);
-    }
-  }
-}
 /*
 if(typeof JSEvents != 'undefined') {
   var oldRegistration = JSEvents.registerOrRemoveHandler
