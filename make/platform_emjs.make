@@ -15,6 +15,7 @@ HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
 BUILD_CLIENT     := 1
+USE_SDL          := 1
 
 CLIENT_SYSTEM  := sys_common.js \
                   sys_browser.js \
@@ -171,9 +172,9 @@ export EM_CACHE=$(EM_CACHE_LOCATION)
 
 ifdef B
 pre-build:
-  @echo "" > $(EMJS_CONFIG_PATH)
-  @echo "LLVM_ROOT         = '$(EMSDK)/upstream/bin';\\n"                >> $(EMJS_CONFIG_PATH)
-  @echo "NODE_JS           = '$(EMSDK)/node/14.15.5_64bit/bin/node';\\n" >> $(EMJS_CONFIG_PATH)
-  @echo "BINARYEN_ROOT     = '$(EMSDK)/upstream';\\n"                    >> $(EMJS_CONFIG_PATH)
-  @echo "EMSCRIPTEN_ROOT   = '$(EMSDK)/upstream/emscripten';"            >> $(EMJS_CONFIG_PATH)
+	@echo "" > $(EMJS_CONFIG_PATH)
+	@echo "LLVM_ROOT         = '$(EMSDK)/upstream/bin';\\n"                >> $(EMJS_CONFIG_PATH)
+	@echo "NODE_JS           = '$(EMSDK)/node/14.15.5_64bit/bin/node';\\n" >> $(EMJS_CONFIG_PATH)
+	@echo "BINARYEN_ROOT     = '$(EMSDK)/upstream';\\n"                    >> $(EMJS_CONFIG_PATH)
+	@echo "EMSCRIPTEN_ROOT   = '$(EMSDK)/upstream/emscripten';"            >> $(EMJS_CONFIG_PATH)
 endif

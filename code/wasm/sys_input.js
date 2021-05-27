@@ -557,5 +557,6 @@ var LibrarySysInput = {
     }
   },
 }
+autoAddDeps(LibrarySysInput, 'Sys_GLimpInit')
 autoAddDeps(LibrarySysInput, '$SYSI')
 mergeInto(LibraryManager.library, LibrarySysInput)

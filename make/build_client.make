@@ -134,14 +134,13 @@ else
             $(B)/client/linux_signals.o
 endif
 
-ifeq ($(USE_SDL),1)
 ifneq ($(PLATFORM),js)
+ifeq ($(USE_SDL),1)
   SYSTEM += \
             $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
-endif
 else # !USE_SDL
   SYSTEM += \
             $(B)/client/linux_glimp.o \
@@ -150,6 +149,7 @@ else # !USE_SDL
             $(B)/client/x11_dga.o \
             $(B)/client/x11_randr.o \
             $(B)/client/x11_vidmode.o
+endif
 
 ifeq ($(USE_VULKAN_API),1)
   SYSTEM += \
@@ -170,7 +170,7 @@ CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
-export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
+export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
             -ffast-math -fno-short-enums -MMD
@@ -202,47 +202,47 @@ $(Q)$(WINDRES) -i $< -o $@
 endef
 
 debug:
-  $(echo_cmd) "MAKE $(BD)/$(TARGET_CLIENT)"
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=client mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
+	$(echo_cmd) "MAKE $(BD)/$(TARGET_CLIENT)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=client mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 
 release:
-  $(echo_cmd) "MAKE $(BR)/$(TARGET_CLIENT)"
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=client mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
+	$(echo_cmd) "MAKE $(BR)/$(TARGET_CLIENT)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=client mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
 
 clean:
-  @rm -rf $(BD)/client $(BD)/$(TARGET_CLIENT)
-  @rm -rf $(BR)/client $(BR)/$(TARGET_CLIENT)
+	@rm -rf $(BD)/client $(BD)/$(TARGET_CLIENT)
+	@rm -rf $(BR)/client $(BR)/$(TARGET_CLIENT)
 
 ifdef B
 $(B)/client/%.o: code/client/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/unix/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/win32/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/macosx/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/wasm/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/sdl/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/qcommon/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/client/%.o: code/server/%.c
-  $(DO_CLIENT_CC)
+	$(DO_CLIENT_CC)
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
-  $(echo_cmd) "LD $@"
-  $(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
 endif

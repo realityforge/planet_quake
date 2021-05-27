@@ -4,7 +4,7 @@ include make/configure.make
 BUILD_RENDERER_OPENGL2:=1
 include make/platform.make
 
-TARGET	       := $(RENDERER_PREFIX)_opengl2_
+TARGET         := $(RENDERER_PREFIX)_opengl2_
 
 SOURCES        := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
 INCLUDES       := 
@@ -38,49 +38,49 @@ define DO_REF_STR
 endef
 
 debug:
-  $(echo_cmd) "MAKE $(TARGET)"
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2 mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2/glsl mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
+	$(echo_cmd) "MAKE $(TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2 mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=rend2/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
 
 release:
-  $(echo_cmd) "MAKE $(TARGET)"
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2 mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2/glsl mkdirs
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
+	$(echo_cmd) "MAKE $(TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2 mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=rend2/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
 
 clean:
-  @rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
-  @rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
-  @$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
-  @$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
+	@rm -rf $(BD)/rend2 $(BD)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BR)/rend2 $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
 
 ifdef B
 $(B)/rend2/%.o: code/qcommon/%.c
-  $(DO_REND_CC)
+	$(DO_REND_CC)
 
 $(B)/rend2/%.o: code/renderercommon/%.c
-  $(DO_REND_CC)
+	$(DO_REND_CC)
 
 $(B)/rend2/%.o: code/renderer2/%.c
-  $(DO_REND_CC)
+	$(DO_REND_CC)
 
 $(B)/rend2/glsl/%.c: code/renderer2/glsl/%.glsl
-  $(DO_REF_STR)
+	$(DO_REF_STR)
 
 $(B)/rend2/glsl/%.o_clean: code/renderer2/glsl/%.glsl
-  @rm -f $@
+	@rm -f $@
 
 $(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
-  $(DO_REND_CC)
+	$(DO_REND_CC)
 
 $(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ)
-  $(echo_cmd) "LD $@"
-  $(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
   
 $(TARGET)_clean: $(Q3R2STRCLEAN)
 endif
