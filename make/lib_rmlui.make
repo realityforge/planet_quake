@@ -5,7 +5,7 @@ RMLUIDIR      := libs/RmlUI/Source
 BUILD_RMLUI   := 1
 include make/platform.make
 
-TARGET		    := libRmlCore_
+TARGET		    := libRmlCore_$(SHLIBNAME)
 CPPSOURCES    := $(RMLUIDIR) \
                  $(RMLUIDIR)/Core \
                  $(RMLUIDIR)/Core/Elements \
@@ -36,19 +36,17 @@ debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR)
-	@rm -rf $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/$(WORKDIR)
-	@rm -rf $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/%.cpp
@@ -63,7 +61,7 @@ $(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/Core/Elements/%.cpp
 $(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/Core/FontEngineDefault/%.cpp
 	$(DO_RMLUI_CXX)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
+	$(Q)$(CXX) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
 endif

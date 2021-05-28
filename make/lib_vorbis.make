@@ -6,8 +6,8 @@ BUILD_VORBIS := 1
 BUILD_OGG    := 1
 include make/platform.make
 
-TARGET	     := libogg_
-TARGET2	     := libvorbis_
+TARGET	     := libogg_$(SHLIBNAME)
+TARGET2	     := libvorbis_$(SHLIBNAME)
 SOURCES      := libs/libogg-1.3.4/src
 SOURCES2     := libs/libvorbis-1.3.7/lib
 INCLUDES     := 
@@ -61,20 +61,20 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR2) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBOGG=1 $(BD)/$(TARGET)$(SHLIBNAME)
-	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBVORBIS=1 $(BD)/$(TARGET2)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBOGG=1 $(BD)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBVORBIS=1 $(BD)/$(TARGET2)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR2) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBOGG=1 $(BR)/$(TARGET)$(SHLIBNAME)
-	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBVORBIS=1 $(BR)/$(TARGET2)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBOGG=1 $(BR)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBVORBIS=1 $(BR)/$(TARGET2)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)$(SHLIBNAME)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
@@ -83,11 +83,11 @@ $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
 $(B)/$(WORKDIR2)/%.o: $(SOURCES2)/%.c
 	$(DO_VORBIS_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 
-$(B)/$(TARGET2)$(SHLIBNAME): $(Q3OBJ2) 
+$(B)/$(TARGET2): $(Q3OBJ2) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif

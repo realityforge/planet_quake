@@ -124,7 +124,7 @@ typedef struct {
 #ifdef USE_MULTIVM_CLIENT
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
 #endif
-	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*UpdateMode)(glconfig_t *glconfigOut);

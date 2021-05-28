@@ -91,50 +91,50 @@ namespace Rml {
     return texture_handle > 0;
   }
 
-  void Rml_SetFileInterface(RmlFileInterface* file_interface) {
+  Q_EXPORT void Rml_SetFileInterface(RmlFileInterface* file_interface) {
     static StructuredFileInterface fi(file_interface);
     Rml::SetFileInterface(&fi);
   }
 
-  void Rml_SetRenderInterface(RmlRenderInterface* renderer) {
+  Q_EXPORT void Rml_SetRenderInterface(RmlRenderInterface* renderer) {
     static StructuredRenderInterface rend(renderer);
     Rml::SetRenderInterface(&rend);
   }
 
-  void Rml_SetSystemInterface(RmlSystemInterface* system) {
+  Q_EXPORT void Rml_SetSystemInterface(RmlSystemInterface* system) {
     static StructuredSystemInterface sys(system);
     Rml::SetSystemInterface(&sys);
   }
 
-  bool Rml_Initialize( void ) {
+  Q_EXPORT bool Rml_Initialize( void ) {
     return Rml::Initialise();
   }
   
   static Context *ctx;
-  int Rml_CreateContext(const char *name, int width, int height) {
+  Q_EXPORT int Rml_CreateContext(const char *name, int width, int height) {
     ctx = Rml::CreateContext(name, Rml::Vector2i(width, height));
     return ctx != nullptr ? 1 : 0;
   }
   
   static ElementDocument *doc;
-  int Rml_LoadDocument(int _, const char *document_path) {
+  Q_EXPORT int Rml_LoadDocument(int _, const char *document_path) {
     doc = ctx->LoadDocument(document_path);
     return doc != nullptr ? 1 : 0;
   }
   
-  void Rml_ShowDocument(int document) {
+  Q_EXPORT void Rml_ShowDocument(int document) {
     doc->Show();
   }
   
-  void Rml_ContextRender( qhandle_t _ ) {
+  Q_EXPORT void Rml_ContextRender( qhandle_t _ ) {
     ctx->Render();
   }
 
-  void Rml_ContextUpdate( qhandle_t _ ) {
+  Q_EXPORT void Rml_ContextUpdate( qhandle_t _ ) {
     ctx->Update();
   }
 
-  void Rml_Shutdown( void ) {
+  Q_EXPORT void Rml_Shutdown( void ) {
     Rml::Shutdown();
   }
 }

@@ -28,6 +28,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <RmlUi/Wrapper.h>
 #endif
 
+#ifdef USE_RMLUI_DLOPEN
+static void	*rmlLib;
+static char dllName[ MAX_OSPATH ];
+#endif
+
 extern	botlib_export_t	*botlib_export;
 
 int  uivm = 0;
@@ -1241,6 +1246,9 @@ void CL_ShutdownUI( void ) {
 	FS_VM_CloseFiles( H_Q3UI );
 
 #ifdef USE_RMLUI
+#ifdef USE_RMLUI_DLOPEN
+  Rml_Shutdown_t Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
+#endif
 	if(cls.rmlStarted)
 		Rml_Shutdown();
 #endif
@@ -1333,6 +1341,30 @@ static double CL_RmlGetElapsedTime( void ) {
 static qhandle_t CL_RmlLoadTexture(int dimensions[2], const char *source) {
 	return re.RegisterShader(source);
 }
+
+static int imgCount = 0;
+static qhandle_t CL_RmlGenerateTexture(const byte* source, const int *source_dimensions) {
+	return re.CreateShaderFromImageBytes(va("rml_%i", ++imgCount), source, source_dimensions[0], source_dimensions[1]);
+}
+
+static void CL_RmlRenderGeometry(int *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation)
+{
+  polyVert_t verts[num_vertices];
+  for(int  i = 0; i < num_vertices; i++) {
+    verts[i].xyz[0] = vertices[i*6+0];
+    verts[i].xyz[1] = vertices[i*6+1];
+    verts[i].st[0] = vertices[i*6+2];
+    verts[i].st[1] = vertices[i*6+3];
+    verts[i].modulate[0] = vertices[i*6+4] >> 24 & 0xFF;
+    verts[i].modulate[1] = vertices[i*6+4] >> 16 & 0xFF;
+    verts[i].modulate[2] = vertices[i*6+4] >> 8 & 0xFF;
+    verts[i].modulate[3] = vertices[i*6+4] & 0xFF;
+  }
+
+  re.AddPolyToScene(texture, num_vertices, verts, 1);
+}
+
 #endif
 
 /*
@@ -1400,6 +1432,51 @@ void CL_InitUI( qboolean loadNew ) {
 	}
 
 #ifdef USE_RMLUI
+#ifdef USE_RMLUI_DLOPEN
+
+#ifdef EMSCRIPTEN
+#define REND_ARCH_STRING "js"
+#else
+#if defined (__linux__) && defined(__i386__)
+#define REND_ARCH_STRING "x86"
+#else
+#define REND_ARCH_STRING ARCH_STRING
+#endif // __linux__
+#endif // EMSCRIPTEN
+
+	Com_sprintf( dllName, sizeof( dllName ), "libRmlCore_" REND_ARCH_STRING DLL_EXT );
+	rmlLib = FS_LoadLibrary( dllName );
+#ifdef EMSCRIPTEN
+	Com_Frame_RentryHandle(CL_InitUI_After_Load);
+}
+
+static void CL_InitUI_After_Load( void *handle )
+{
+  rmlLib = handle;
+#endif
+;
+	if ( !rmlLib )
+	{
+		Com_Error( ERR_FATAL, "Failed to load rmlui %s", dllName );
+	}
+
+	Rml_SetFileInterface_t Rml_SetFileInterface = Sys_LoadFunction( rmlLib, "Rml_SetFileInterface" );
+	if( !Rml_SetFileInterface )
+	{
+		Com_Error( ERR_FATAL, "Can't load symbol Rml_SetFileInterface" );
+		return;
+	}
+  Rml_SetSystemInterface_t Rml_SetSystemInterface = Sys_LoadFunction( rmlLib, "Rml_SetSystemInterface" );
+  Rml_Initialize_t Rml_Initialize = Sys_LoadFunction( rmlLib, "Rml_Initialize" );
+  Rml_SetRenderInterface_t Rml_SetRenderInterface = Sys_LoadFunction( rmlLib, "Rml_SetRenderInterface" );
+  Rml_CreateContext_t Rml_CreateContext = Sys_LoadFunction( rmlLib, "Rml_CreateContext" );
+  Rml_LoadDocument_t Rml_LoadDocument = Sys_LoadFunction( rmlLib, "Rml_LoadDocument" );
+  Rml_ShowDocument_t Rml_ShowDocument = Sys_LoadFunction( rmlLib, "Rml_ShowDocument" );
+  Rml_Shutdown_t Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
+  Rml_ContextRender_t Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
+  Rml_ContextUpdate_t Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
+#endif // USE_BOTLIB_DLOPEN
+
 	static RmlFileInterface files;
 	files.Open = CL_RmlOpen;
 	files.Close = CL_RmlClose;
@@ -1410,6 +1487,8 @@ void CL_InitUI( qboolean loadNew ) {
 	files.LoadFile = CL_RmlLoadFile;
 	static RmlRenderInterface renderer;
 	renderer.LoadTexture = CL_RmlLoadTexture;
+  renderer.GenerateTexture = CL_RmlGenerateTexture;
+  renderer.RenderGeometry = CL_RmlRenderGeometry;
 	static RmlSystemInterface system;
 	system.LogMessage = CL_RmlLogMessage;
 	system.GetElapsedTime = CL_RmlGetElapsedTime;

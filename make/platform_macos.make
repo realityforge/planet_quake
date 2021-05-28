@@ -22,6 +22,17 @@ else
   CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 endif
 
+ifeq ($(USE_RMLUI),1)
+ifeq ($(USE_RMLUI_DLOPEN),0)
+ifeq ($(USE_SYSTEM_RMLUI),1)
+  CLIENT_LDFLAGS += -L$(B) -lRmlCore_x86_64
+else
+  CLIENT_LDFLAGS += $(B)/libRmlCore_x86_64.dylib
+# -L$(B) -lRmlCore_x86_64
+endif
+endif
+endif
+
 BASE_CFLAGS     += -I/usr/include -I/usr/local/include
 DEBUG_CFLAGS     = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS   = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)

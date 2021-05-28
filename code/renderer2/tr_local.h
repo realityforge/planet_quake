@@ -2022,7 +2022,7 @@ shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
-qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height);
 #ifdef USE_LAZY_MEMORY
 void		RE_ReloadShaders( qboolean createNew );
 #endif

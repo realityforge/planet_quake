@@ -26,9 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_BOTLIB_DLOPEN
 static void	*botLib;
-#ifdef EMSCRIPTEN
 static char dllName[ MAX_OSPATH ];
-#endif
 #endif
 
 typedef struct bot_debugpoly_s
@@ -571,9 +569,6 @@ void SV_BotInitBotLib(void) {
 #endif
 #ifdef USE_BOTLIB_DLOPEN
 	GetBotLibAPI_t		GetBotLibAPI;
-#ifndef EMSCRIPTEN
-	char			dllName[ MAX_OSPATH ];
-#endif
 
 #ifdef EMSCRIPTEN
 #define REND_ARCH_STRING "js"

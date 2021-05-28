@@ -4450,7 +4450,7 @@ static void CreateInternalShaders( void ) {
 }
 
 
-qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height) {
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height) {
   shader_t	*sh;
   image_t *image;
   image = R_CreateImage(name, pic, width, height, IMGTYPE_NORMAL, IMGFLAG_NONE, 0 );

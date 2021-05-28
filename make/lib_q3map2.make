@@ -9,7 +9,7 @@ RADIANT_MINOR_VERSION:=0
 BUILD_RMLUI     := 1
 include make/platform.make
 
-TARGET		      := $(Q3MAP2_PREFIX)_q3map2_
+TARGET		      := $(Q3MAP2_PREFIX)_q3map2_$(SHLIBNAME)
 CPPSOURCES      := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/q3map2 
 INCLUDES        := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/../libs $(Q3MAP2DIR)/../include
 LIBS            := $(XML_LIBS) $(GLIB_LIBS) $(STD_LIBS) $(JPEG_LIBS) $(PNG_LIBS)
@@ -133,20 +133,20 @@ debug:
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIR=$(WORKDIR)/picomodel mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIR=$(WORKDIR)/picomodel mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)$(SHLIBNAME)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
 	@rm -rf $(BD)/$(WORKDIR)
-	@rm -rf $(BD)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BD)/$(TARGET)
 	@rm -rf $(BR)/$(WORKDIR)
-	@rm -rf $(BR)/$(TARGET)$(SHLIBNAME)
+	@rm -rf $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(Q3MAP2DIR)/common/%.cpp
@@ -170,7 +170,7 @@ $(B)/$(WORKDIR)/picomodel/%.o: $(Q3MAP2DIR)/../libs/picomodel/%.c
 $(B)/$(WORKDIR)/picomodel/%.o: $(Q3MAP2DIR)/../libs/picomodel/lwo/%.c
 	$(DO_Q3MAP2_CC)
 
-$(B)/$(TARGET)$(SHLIBNAME): $(Q3OBJ) 
+$(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
 endif

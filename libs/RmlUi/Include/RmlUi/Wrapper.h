@@ -2,6 +2,29 @@
 #ifndef __WRAPPER_H
 #define __WRAPPER_H
 
+//Ignore __attribute__ on non-gcc/clang platforms
+#if !defined(__GNUC__) && !defined(__clang__)
+#ifndef __attribute__
+#define __attribute__(x)
+#endif
+#endif
+
+#ifdef __GNUC__
+#define UNUSED_VAR __attribute__((unused))
+#else
+#define UNUSED_VAR
+#endif
+
+#if (defined _MSC_VER)
+#define Q_EXPORT __declspec(dllexport)
+#elif (defined __SUNPRO_C)
+#define Q_EXPORT __global
+#elif ((__GNUC__ >= 3) && (!__EMX__) && (!sun))
+#define Q_EXPORT __attribute__((visibility("default")))
+#else
+#define Q_EXPORT
+#endif
+
 #ifdef __cplusplus
 
 #include "./Core/Core.h"
@@ -73,7 +96,7 @@ namespace Rml {
   	/// @param[in] num_indices The number of indices passed to the function. This will always be a multiple of three.
   	/// @param[in] texture The texture to be applied to the geometry. This may be nullptr, in which case the geometry is untextured.
   	/// @param[in] translation The translation to apply to the geometry.
-  	void (*RenderGeometry)(byte *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture, const vec2_t *translation);
+  	void (*RenderGeometry)(int *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture, const vec2_t translation);
 
   	/// Called by RmlUi when it wants to compile geometry it believes will be static for the forseeable future.
   	/// If supported, this should return a handle to an optimised, application-specific version of the data. If
@@ -84,7 +107,7 @@ namespace Rml {
   	/// @param[in] num_indices The number of indices passed to the function. This will always be a multiple of three.
   	/// @param[in] texture The texture to be applied to the geometry. This may be nullptr, in which case the geometry is untextured.
   	/// @return The application-specific compiled geometry. Compiled geometry will be stored and rendered using RenderCompiledGeometry() in future calls, and released with ReleaseCompiledGeometry() when it is no longer needed.
-  	qhandle_t (*CompileGeometry)(byte *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture);
+  	qhandle_t (*CompileGeometry)(int *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture);
   	/// Called by RmlUi when it wants to render application-compiled geometry.
   	/// @param[in] geometry The application-specific compiled geometry to render.
   	/// @param[in] translation The translation to apply to the geometry.
@@ -219,25 +242,30 @@ namespace Rml {
   };
 #endif // __cplusplus
 
+#if defined(USE_BOTLIB_DLOPEN) && !defined(__cplusplus)
+typedef	void      (QDECL *Rml_SetSystemInterface_t) (RmlSystemInterface *system);
+typedef	qboolean  (QDECL *Rml_Initialize_t)         ( void );
+typedef	void      (QDECL *Rml_SetRenderInterface_t) (RmlRenderInterface *renderer);
+typedef	void      (QDECL *Rml_SetFileInterface_t)   (RmlFileInterface *file_interface);
+typedef	qhandle_t (QDECL *Rml_CreateContext_t)      ( const char *name, int width, int height );
+typedef	qhandle_t (QDECL *Rml_LoadDocument_t)       (qhandle_t ctx, const char *document_path);
+typedef	void      (QDECL *Rml_ShowDocument_t)       (qhandle_t document);
+typedef	void      (QDECL *Rml_Shutdown_t)           ( void );
+typedef	void      (QDECL *Rml_ContextRender_t)      ( qhandle_t ctx );
+typedef	void      (QDECL *Rml_ContextUpdate_t)      ( qhandle_t ctx );
+#else
 void Rml_SetSystemInterface(RmlSystemInterface *system);
-
 qboolean Rml_Initialize( void );
-
 void Rml_SetRenderInterface(RmlRenderInterface *renderer);
-
 void Rml_SetFileInterface(RmlFileInterface *file_interface);
-
 qhandle_t Rml_CreateContext( const char *name, int width, int height );
-
 qhandle_t Rml_LoadDocument(qhandle_t ctx, const char *document_path);
-
 void Rml_ShowDocument(qhandle_t document);
-
 void Rml_Shutdown( void );
-
 void Rml_ContextRender( qhandle_t ctx );
-
 void Rml_ContextUpdate( qhandle_t ctx );
+#endif
+
 
 #ifdef __cplusplus
 }

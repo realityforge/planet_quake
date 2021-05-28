@@ -429,12 +429,12 @@ ifneq ($(SDL_INCLUDE),)
     CLIENT_LDFLAGS = $(SDL_LIBS)
 else
     BASE_CFLAGS += -I/Library/Frameworks/SDL2.framework/Headers
-  CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
+    CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
 endif
 	
 #  SERVER_LDFLAGS = -DUSE_MULTIVM_SERVER
 	
-BASE_CFLAGS += -I$(MOUNT_DIR)/RmlUi/Include
+  BASE_CFLAGS += -I$(MOUNT_DIR)/RmlUi/Include
   LDFLAGS += -L$(MOUNT_DIR)/macosx -lxml2 -lpng -lRmlCorex86_64 \
 		-L$(BD) -L$(BR)
 #BASE_CFLAGS += -L$(MOUNT_DIR)/macosx -I$(MOUNT_DIR)/RmlUi/Include

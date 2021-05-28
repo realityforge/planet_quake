@@ -86,30 +86,26 @@ endif
 
 SYSTEM   :=
 ifeq ($(PLATFORM),js)
-  SYSTEM += \
-            $(B)/client/sys_glimp.o \
+  SYSTEM += $(B)/client/sys_glimp.o \
             $(B)/client/sys_main.o \
             $(B)/client/sys_input.o \
             $(B)/client/unix_shared.o
 
 else
 ifdef MINGW
-  SYSTEM += \
-            $(B)/client/win_main.o \
+  SYSTEM += $(B)/client/win_main.o \
             $(B)/client/win_shared.o \
             $(B)/client/win_syscon.o \
             $(B)/client/win_resource.o
 
 ifeq ($(USE_SDL),1)
-  SYSTEM += \
-            $(B)/client/sdl_glimp.o \
+  SYSTEM += $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
 
 else # !USE_SDL
-  SYSTEM += \
-            $(B)/client/win_gamma.o \
+  SYSTEM += $(B)/client/win_gamma.o \
             $(B)/client/win_glimp.o \
             $(B)/client/win_input.o \
             $(B)/client/win_minimize.o \
@@ -117,26 +113,22 @@ else # !USE_SDL
             $(B)/client/win_snd.o \
             $(B)/client/win_wndproc.o
 ifeq ($(USE_VULKAN_API),1)
-  SYSTEM += \
-            $(B)/client/win_qvk.o
+  SYSTEM += $(B)/client/win_qvk.o
 endif
 endif # !USE_SDL
 
 else # !MINGW
-  SYSTEM += \
-            $(B)/client/unix_main.o \
+  SYSTEM += $(B)/client/unix_main.o \
             $(B)/client/unix_shared.o \
             $(B)/client/linux_signals.o
 
 ifeq ($(USE_SDL),1)
-  SYSTEM += \
-            $(B)/client/sdl_glimp.o \
+  SYSTEM += $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
 else # !USE_SDL
-  SYSTEM += \
-            $(B)/client/linux_glimp.o \
+  SYSTEM += $(B)/client/linux_glimp.o \
             $(B)/client/linux_qgl.o \
             $(B)/client/linux_snd.o \
             $(B)/client/x11_dga.o \
@@ -145,21 +137,20 @@ else # !USE_SDL
 endif
 
 ifeq ($(USE_VULKAN_API),1)
-  SYSTEM += \
-            $(B)/client/linux_qvk.o
+  SYSTEM += $(B)/client/linux_qvk.o
 endif
 endif # !USE_SDL
 endif
 
 
 INCLUDES := $(MOUNT_DIR)/qcommon
+ifeq ($(USE_RMLUI),1)
+  INCLUDES += $(MOUNT_DIR)/../libs/RmlUi/Include
+endif
+
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
-            $(CLIPMAP) \
-            $(QCOMMON) \
-            $(SOUND) \
-            $(VM) \
-            $(CURL) \
-            $(SYSTEM)
+            $(CLIPMAP) $(QCOMMON) $(SOUND) \
+            $(VM) $(CURL) $(SYSTEM)
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/client/,$(notdir $(OBJS)))
 
