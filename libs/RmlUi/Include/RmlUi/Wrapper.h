@@ -15,6 +15,9 @@
 #define UNUSED_VAR
 #endif
 
+
+#ifdef __cplusplus
+
 #if (defined _MSC_VER)
 #define Q_EXPORT __declspec(dllexport)
 #elif (defined __SUNPRO_C)
@@ -24,8 +27,6 @@
 #else
 #define Q_EXPORT
 #endif
-
-#ifdef __cplusplus
 
 #include "./Core/Core.h"
 #include "./Core/FileInterface.h"
@@ -242,7 +243,7 @@ namespace Rml {
   };
 #endif // __cplusplus
 
-#if defined(USE_BOTLIB_DLOPEN) && !defined(__cplusplus)
+#if defined(USE_RMLUI_DLOPEN) && !defined(__cplusplus)
 typedef	void      (QDECL *Rml_SetSystemInterface_t) (RmlSystemInterface *system);
 typedef	qboolean  (QDECL *Rml_Initialize_t)         ( void );
 typedef	void      (QDECL *Rml_SetRenderInterface_t) (RmlRenderInterface *renderer);

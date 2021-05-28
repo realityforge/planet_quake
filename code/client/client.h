@@ -692,6 +692,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 // cl_ui.c
 //
 void CL_InitUI( qboolean createNew );
+void CL_UIContextRender(void);
 void CL_ShutdownUI( void );
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );

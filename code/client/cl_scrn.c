@@ -772,6 +772,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
 			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
 		}
+    
+#ifdef USE_RMLUI
+    if(cls.rmlStarted)
+      CL_UIContextRender();
+#endif
 	}
 
 	cgvm = 0;

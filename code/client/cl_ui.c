@@ -31,6 +31,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef USE_RMLUI_DLOPEN
 static void	*rmlLib;
 static char dllName[ MAX_OSPATH ];
+Rml_ContextRender_t Rml_ContextRender;
+Rml_ContextUpdate_t Rml_ContextUpdate;
 #endif
 
 extern	botlib_export_t	*botlib_export;
@@ -1350,6 +1352,7 @@ static qhandle_t CL_RmlGenerateTexture(const byte* source, const int *source_dim
 static void CL_RmlRenderGeometry(int *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture, const vec2_t translation)
 {
+  Com_Printf("Render:\n");
   polyVert_t verts[num_vertices];
   for(int  i = 0; i < num_vertices; i++) {
     verts[i].xyz[0] = vertices[i*6+0];
@@ -1363,6 +1366,10 @@ static void CL_RmlRenderGeometry(int *vertices, int num_vertices, int* indices,
   }
 
   re.AddPolyToScene(texture, num_vertices, verts, 1);
+}
+
+void CL_UIContextRender(void) {
+  Rml_ContextRender(0);
 }
 
 #endif
@@ -1473,8 +1480,8 @@ static void CL_InitUI_After_Load( void *handle )
   Rml_LoadDocument_t Rml_LoadDocument = Sys_LoadFunction( rmlLib, "Rml_LoadDocument" );
   Rml_ShowDocument_t Rml_ShowDocument = Sys_LoadFunction( rmlLib, "Rml_ShowDocument" );
   Rml_Shutdown_t Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
-  Rml_ContextRender_t Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
-  Rml_ContextUpdate_t Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
+  Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
+  Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
 #endif // USE_BOTLIB_DLOPEN
 
 	static RmlFileInterface files;
