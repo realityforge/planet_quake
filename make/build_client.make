@@ -85,6 +85,15 @@ endif
 
 
 SYSTEM   :=
+ifeq ($(PLATFORM),js)
+  SYSTEM += \
+            $(B)/client/sys_glimp.o \
+            $(B)/client/sdl_snd.o \
+            $(B)/client/sys_main.o \
+            $(B)/client/sys_input.o \
+            $(B)/client/unix_shared.o
+
+else
 ifdef MINGW
   SYSTEM += \
             $(B)/client/win_main.o \
@@ -93,13 +102,11 @@ ifdef MINGW
             $(B)/client/win_resource.o
 
 ifeq ($(USE_SDL),1)
-ifneq ($(PLATFORM),js)
   SYSTEM += \
             $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
-endif
 
 else # !USE_SDL
   SYSTEM += \
@@ -117,23 +124,11 @@ endif
 endif # !USE_SDL
 
 else # !MINGW
-ifeq ($(PLATFORM),js)
-  SYSTEM += \
-            $(B)/client/sdl_glimp.o \
-            $(B)/client/sdl_gamma.o \
-            $(B)/client/sdl_snd.o \
-            $(B)/client/sys_main.o \
-            $(B)/client/sys_input.o \
-            $(B)/client/unix_shared.o
-
-else
   SYSTEM += \
             $(B)/client/unix_main.o \
             $(B)/client/unix_shared.o \
             $(B)/client/linux_signals.o
-endif
 
-ifneq ($(PLATFORM),js)
 ifeq ($(USE_SDL),1)
   SYSTEM += \
             $(B)/client/sdl_glimp.o \

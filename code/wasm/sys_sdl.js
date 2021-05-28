@@ -19,10 +19,6 @@ var LibrarySDL = {
   SDL_SetVideoMode__proxy: 'sync',
   SDL_SetVideoMode__sig: 'iiiii',
   SDL_SetVideoMode: function(width, height, depth, flags) {
-    ['touchstart', 'touchend', 'touchmove', 'mousedown', 'mouseup', 'mousemove', 'DOMMouseScroll', 'mousewheel', 'wheel', 'mouseout'].forEach(function(event) {
-      Module['canvas'].addEventListener(event, SDL.receiveEvent, true);
-    });
-
     var canvas = Module['canvas'];
 
     // (0,0) means 'use fullscreen' in native; in Emscripten, use the current canvas size.
@@ -53,7 +49,65 @@ var LibrarySDL = {
     return GL3.createContext
   },
 
+  SDL_DestroyWindow__sig: 'vi',
+  SDL_DestroyWindow: function (window) {},
+  SDL_QuitSubSystem__sig: 'vi',
+  SDL_QuitSubSystem: function (flags) {},
+  SDL_MinimizeWindow__sig: 'vi',
+  SDL_MinimizeWindow: function (window) {
+    window.fullscreen = false
+  },
+
+  SDL_GL_SetAttribute__proxy: 'sync',
+  SDL_GL_SetAttribute__sig: 'iii',
+  SDL_GL_SetAttribute: function(attr, value) {
+    if (!(attr in SDL.glAttributes)) {
+      abort('Unknown SDL GL attribute (' + attr + '). Please check if your SDL version is supported.');
+    }
+
+    SDL.glAttributes[attr] = value;
+  },
+
+  SDL_GL_GetAttribute__proxy: 'sync',
+  SDL_GL_GetAttribute__sig: 'iii',
+  SDL_GL_GetAttribute: function(attr, value) {
+    if (!(attr in SDL.glAttributes)) {
+      abort('Unknown SDL GL attribute (' + attr + '). Please check if your SDL version is supported.');
+    }
+
+    if (value) {{{ makeSetValue('value', '0', 'SDL.glAttributes[attr]', 'i32') }}};
+
+    return 0;
+  },
+
+  SDL_GetWindowDisplayIndex__sig: 'ii',
+  SDL_GetWindowDisplayIndex: function () {
+    return 0
+  },
+
+  SDL_GetError__proxy: 'sync',
+  SDL_GetError__sig: 'i',
+  SDL_GetError: function() {
+    if (!SDL.errorMessage) {
+      SDL.errorMessage = allocate(intArrayFromString("unknown SDL-emscripten error"), ALLOC_NORMAL);
+    }
+    return SDL.errorMessage;
+  },
+
+  SDL_SetError__sig: 'vi',
+  SDL_SetError: function(err) {},
+
+  SDL_GetDesktopDisplayMode__sig: 'iii',
+  SDL_GetDesktopDisplayMode: function () {
+    throw new Error('TODO: return window sizes')
+  },
   
+  SDL_CreateWindow__sig: 'iiiiiii',
+  SDL_CreateWindow: function (title, x, y, w, h, flags) {
+    // TODO: this will be really cool with multiworld and Movie Maker Edition
+    //   Make the whole engine capable of rendering multiple windows so 2 people
+    //   Can use the same machine to play on 2 displays, true PC multiplayer
+  }
 };
 
 autoAddDeps(LibrarySDL, '$SDL');

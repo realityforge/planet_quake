@@ -95,6 +95,15 @@ extern void Sys_Debug(void);
 extern float Math_rand(void);
 extern void Sys_SetClipboardData( void *field );
 extern void Sys_EventMenuChanged( float x, float y );
+extern void SDL_MinimizeWindow( void *window );
+extern int SDL_GetWindowDisplayIndex(void *window);
+extern void SDL_GL_DeleteContext(void *ctx);
+extern char *SDL_GetError( void );
+extern int SDL_GetDesktopDisplayMode(int displayIndex, void* mode);
+extern int SDL_GL_SetAttribute(int attr, int value);
+extern void *SDL_CreateWindow(const char *title,
+                              int x, int y, int w,
+                              int h, uint32_t flags);
 
 void FS_Startup( void );
 void FS_Startup_After_Async( void );
