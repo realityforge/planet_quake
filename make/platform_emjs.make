@@ -19,7 +19,6 @@ HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
 BUILD_CLIENT     := 1
-USE_SDL          := 1
 
 CLIENT_SYSTEM  := sys_common.js \
                   sys_browser.js \
@@ -39,8 +38,7 @@ CLIENT_LIBS    := -lbrowser.js \
                   --pre-js $(MOUNT_DIR)/wasm/sys_polyfill.js \
                   --post-js $(MOUNT_DIR)/wasm/sys_overrides.js
 
-BASE_CFLAGS    += $(SDL_INCLUDE)\
-                  -Wall -Wno-unused-variable -fno-strict-aliasing \
+BASE_CFLAGS    += -Wall -Wno-unused-variable -fno-strict-aliasing \
                   -Wimplicit -Wstrict-prototypes \
                   -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                   -DGL_EXT_direct_state_access=1 \
@@ -71,6 +69,7 @@ SHLIBLDFLAGS   += --no-entry \
                   -s RELOCATABLE=1 \
                   -s LINKABLE=0 \
                   -s USE_PTHREADS=0 \
+									-s USE_SDL=0 \
                   -s INVOKE_RUN=0 \
                   --shared-memory \
                   --enable-threads \

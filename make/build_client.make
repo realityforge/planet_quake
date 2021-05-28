@@ -88,7 +88,6 @@ SYSTEM   :=
 ifeq ($(PLATFORM),js)
   SYSTEM += \
             $(B)/client/sys_glimp.o \
-            $(B)/client/sdl_snd.o \
             $(B)/client/sys_main.o \
             $(B)/client/sys_input.o \
             $(B)/client/unix_shared.o

@@ -33,24 +33,6 @@ void HandleEvents( void );
 
 //#define USE_JOYSTICK
 
-typedef struct
-{
-	FILE *log_fp;
-
-	qboolean isFullscreen;
-
-	glconfig_t *config; // feedback to renderer module
-
-	int desktop_width;
-	int desktop_height;
-
-	int window_width;
-	int window_height;
-
-	int monitorCount;
-
-} glwstate_t;
-
 extern SDL_Window *SDL_window;
 extern glwstate_t glw_state;
 

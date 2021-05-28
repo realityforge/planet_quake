@@ -212,6 +212,26 @@ typedef struct {
 	qboolean				smpActive;		// UNUSED, present for compatibility
 } glconfig_t;
 
+typedef struct
+{
+	FILE *log_fp;
+
+	qboolean isFullscreen;
+
+	glconfig_t *config; // feedback to renderer module
+
+	int desktop_width;
+	int desktop_height;
+
+	int window_width;
+	int window_height;
+
+	int monitorCount;
+
+} glwstate_t;
+
+extern glwstate_t glw_state;
+
 #define	myftol(x) ((int)(x))
 
 #if defined(_WIN32)

@@ -63,6 +63,9 @@ typedef enum
   SDL_WINDOW_FULLSCREEN = 0x00000001,         /**< fullscreen window */
 } SDL_WindowFlags;
 
+/**
+ *  \brief OpenGL configuration attributes
+ */
 typedef enum
 {
     SDL_GL_RED_SIZE,
@@ -83,8 +86,31 @@ typedef enum
     SDL_GL_ACCELERATED_VISUAL,
     SDL_GL_RETAINED_BACKING,
     SDL_GL_CONTEXT_MAJOR_VERSION,
-    SDL_GL_CONTEXT_MINOR_VERSION
+    SDL_GL_CONTEXT_MINOR_VERSION,
+    SDL_GL_CONTEXT_EGL,
+    SDL_GL_CONTEXT_FLAGS,
+    SDL_GL_CONTEXT_PROFILE_MASK,
+    SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
+    SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+    SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
+    SDL_GL_CONTEXT_RESET_NOTIFICATION,
+    SDL_GL_CONTEXT_NO_ERROR
 } SDL_GLattr;
+
+typedef enum
+{
+    SDL_GL_CONTEXT_PROFILE_CORE           = 0x0001,
+    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY  = 0x0002,
+    SDL_GL_CONTEXT_PROFILE_ES             = 0x0004 /**< GLX_CONTEXT_ES2_PROFILE_BIT_EXT */
+} SDL_GLprofile;
+
+#define SDL_INIT_TIMER          0x00000001
+#define SDL_INIT_AUDIO          0x00000010
+#define SDL_INIT_VIDEO          0x00000020
+#define SDL_INIT_JOYSTICK       0x00000200
+#define SDL_INIT_HAPTIC         0x00001000
+#define SDL_INIT_NOPARACHUTE    0x00100000      /**< Don't catch fatal signals */
+#define SDL_INIT_EVERYTHING     0x0000FFFF
 
 glwstate_t glw_state;
 
@@ -157,7 +183,6 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
   int display;
   int x;
   int y;
-  uint32_t flags;
 
   Com_Printf( "Initializing OpenGL display\n");
 
@@ -215,13 +240,6 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 
   gw_active = qfalse;
   gw_minimized = qtrue;
-
-  if ( fullscreen )
-  {
-    flags |= SDL_WINDOW_FULLSCREEN;
-  }
-
-  //flags |= SDL_WINDOW_ALLOW_HIGHDPI;
 
   colorBits = r_colorbits->value;
 
@@ -345,7 +363,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
         SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
     }
 
-    if ( ( SDL_window = SDL_CreateWindow( cl_title, x, y, config->vidWidth, config->vidHeight, flags ) ) == NULL )
+    if ( ( SDL_window = SDL_CreateWindow( cl_title, x, y, config->vidWidth, config->vidHeight, fullscreen ? SDL_WINDOW_FULLSCREEN : 0 ) ) == NULL )
     {
       Com_DPrintf( "SDL_CreateWindow failed: %s\n", SDL_GetError() );
       continue;
@@ -357,8 +375,8 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
 
       switch ( testColorBits )
       {
-        case 16: mode.format = SDL_PIXELFORMAT_RGB565; break;
-        case 24: mode.format = SDL_PIXELFORMAT_RGB24;  break;
+        case 16: mode.format = 16; break;
+        case 24: mode.format = 24;  break;
         default: Com_DPrintf( "testColorBits is %d, can't fullscreen\n", testColorBits ); continue;
       }
 
@@ -574,8 +592,6 @@ void GLimp_Init( glconfig_t *config )
   r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
   Cvar_SetDescription( r_stereoEnabled, "Enable stereo rendering for use with virtual reality headsets\nDefault: 0");
 
-  Sys_GLimpInit();
-
   // Create the window and set up the context
   err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qtrue );
   if ( err != RSERR_OK )
@@ -589,7 +605,7 @@ void GLimp_Init( glconfig_t *config )
     // instead of changing r_mode, which is just the default resolution,
     //   we try a different opengl version
     Com_Printf( "Setting \\r_mode %d failed, falling back on \\r_mode %d\n", r_mode->integer, 3 );
-    if ( GLimp_StartDriverAndSetMode( r_mode->integer, "", r_fullscreen->integer, qfalse, qfalse ) != RSERR_OK )
+    if ( GLimp_StartDriverAndSetMode( r_mode->integer, "", r_fullscreen->integer, qfalse ) != RSERR_OK )
     {
       // Nothing worked, give up
       Com_Error( ERR_FATAL, "GLimp_Init() - could not load OpenGL subsystem" );
@@ -625,19 +641,6 @@ void GLimp_EndFrame( void )
   {
     SDL_GL_SwapWindow( SDL_window );
   }
-}
-
-
-/*
-===============
-GL_GetProcAddress
-
-Used by opengl renderers to resolve all qgl* function pointers
-===============
-*/
-void *GL_GetProcAddress( const char *symbol )
-{
-  return SDL_GL_GetProcAddress( symbol );
 }
 
 

@@ -4254,7 +4254,9 @@ void Com_Frame( qboolean noDelay ) {
 	int	msec, realMsec, minMsec;
 	int	sleepMsec;
 	int	timeVal;
+#ifndef BUILD_SLIM_CLIENT
 	int	timeValSV;
+#endif
 
 	int	timeBeforeFirstEvents;
 	int	timeBeforeServer;

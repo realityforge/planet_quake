@@ -107,7 +107,69 @@ var LibrarySDL = {
     // TODO: this will be really cool with multiworld and Movie Maker Edition
     //   Make the whole engine capable of rendering multiple windows so 2 people
     //   Can use the same machine to play on 2 displays, true PC multiplayer
-  }
+  },
+  
+  SDL_SetDisplayModeForDisplay__sig: 'iii',
+  SDL_SetDisplayModeForDisplay: function () {
+    throw new Error('TODO: just keep track of this or something')
+  },
+
+  SDL_GL_SetSwapInterval__sig: 'ii',
+  SDL_GL_SetSwapInterval: function (interval) {
+    throw new Error('TODO: GL_SetSwapInterval')
+  },
+
+  SDL_GL_GetDrawableSize__sig: 'viii',
+  SDL_GL_GetDrawableSize: function () {
+    throw new Error('TODO: GL_GetDrawableSize')
+  },
+
+  SDL_WarpMouseInWindow__sig: 'viii',
+  SDL_WarpMouseInWindow: function () {
+    // doesn't work in javascript, which causes a stupid error where if the
+    //   console is up when GRABMOUSE() is called it will get stuck outside
+    throw new Error('TODO: SDL_WarpMouseInWindow')
+  },
+
+  SDL_WasInit__deps: ['SDL_Init'],
+  SDL_WasInit__proxy: 'sync',
+  SDL_WasInit__sig: 'i',
+  SDL_WasInit: function() {
+    if (SDL.startTime === null) {
+      _SDL_Init();
+    }
+    return 1;
+  },
+
+  SDL_Init__deps: ['_Sys_GLimpInit'],
+  SDL_Init__proxy: 'sync',
+  SDL_Init__sig: 'ii',
+  SDL_Init__docs: '/** @param{number=} initFlags */', 
+  SDL_Init: function(initFlags) {
+    SDL.startTime = Date.now();
+    SDL.initFlags = initFlags;
+    
+    _Sys_GLimpInit();
+  },
+
+  SDL_GetCurrentVideoDriver__sig: 'i',
+  SDL_GetCurrentVideoDriver: function () {
+    throw new Error('SDL_GetCurrentVideoDriver: emscripten')
+  },
+
+  SDL_GL_SwapWindow__sig: 'vi',
+  SDL_GL_SwapWindow: function (window) {
+    throw new Error('TODO: GL_SwapWindow')
+  },
+
+  SDL_StartTextInput__sig: 'v',
+  SDL_StartTextInput: function () {
+    
+  },
+  SDL_StopTextInput__sig: 'v',
+  SDL_StopTextInput: function () {
+    
+  },
 };
 
 autoAddDeps(LibrarySDL, '$SDL');
