@@ -78,16 +78,32 @@ namespace Rml {
   }
   
   void StructuredRenderInterface::RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) {
-    printf("Render:\n");
+    if(renderer->RenderGeometry) {
+      //printf("Render1: %f x %f\n", vertices[0].position[0], vertices[0].position[1]);
+      //printf("Render2: %f x %f\n", vertices[1].position[0], vertices[1].position[1]);
+      //printf("Render3: %f x %f\n", vertices[2].position[0], vertices[2].position[1]);
+      //printf("Render4: %f x %f\n", vertices[3].position[0], vertices[3].position[1]);
+      renderer->RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
+    }
   }
   void StructuredRenderInterface::EnableScissorRegion(bool enable) {
-    printf("Render:\n");
+    //printf("Render:\n");
   }
+
   void StructuredRenderInterface::SetScissorRegion(int x, int y, int width, int height) {
-    printf("Render:\n");
+    //printf("Render:\n");
   }
+
+  bool StructuredRenderInterface::GenerateTexture(TextureHandle& texture_handle, const byte* source, const Vector2i& source_dimensions) {
+    texture_handle = renderer->GenerateTexture(source, source_dimensions);
+    return texture_handle > 0;
+  }
+
   bool StructuredRenderInterface::LoadTexture(TextureHandle& texture_handle, Vector2i& texture_dimensions, const String& source) {
-    texture_handle = renderer->LoadTexture(texture_dimensions, source.c_str());
+    int dimen[2];
+    texture_handle = renderer->LoadTexture(dimen, source.c_str());
+    texture_dimensions.x = dimen[0];
+    texture_dimensions.y = dimen[1];    
     return texture_handle > 0;
   }
 

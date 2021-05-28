@@ -927,7 +927,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_R_DRAWSTRETCHPIC:
-		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
+		//re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
 		return 0;
 
 	case UI_R_MODELBOUNDS:
@@ -1340,8 +1340,9 @@ static double CL_RmlGetElapsedTime( void ) {
 	return Sys_Milliseconds() / 1000;
 }
 
-static qhandle_t CL_RmlLoadTexture(int dimensions[2], const char *source) {
-	return re.RegisterShader(source);
+static qhandle_t CL_RmlLoadTexture(int *dimensions, const char *source) {
+  qhandle_t result = re.RegisterImage(dimensions, source);
+  return result;
 }
 
 static int imgCount = 0;
@@ -1349,21 +1350,42 @@ static qhandle_t CL_RmlGenerateTexture(const byte* source, const int *source_dim
 	return re.CreateShaderFromImageBytes(va("rml_%i", ++imgCount), source, source_dimensions[0], source_dimensions[1]);
 }
 
-static void CL_RmlRenderGeometry(int *vertices, int num_vertices, int* indices, 
+static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture, const vec2_t translation)
 {
-  Com_Printf("Render:\n");
+  int *sourceVerts = (int *)vertices;
   polyVert_t verts[num_vertices];
   for(int  i = 0; i < num_vertices; i++) {
-    verts[i].xyz[0] = vertices[i*6+0];
-    verts[i].xyz[1] = vertices[i*6+1];
-    verts[i].st[0] = vertices[i*6+2];
-    verts[i].st[1] = vertices[i*6+3];
-    verts[i].modulate[0] = vertices[i*6+4] >> 24 & 0xFF;
-    verts[i].modulate[1] = vertices[i*6+4] >> 16 & 0xFF;
-    verts[i].modulate[2] = vertices[i*6+4] >> 8 & 0xFF;
-    verts[i].modulate[3] = vertices[i*6+4] & 0xFF;
+    vec2_t pos;
+    memcpy(&pos, &sourceVerts[i*5+0], sizeof(vec2_t));
+    vec2_t size;
+    memcpy(&size, &sourceVerts[i*5+3], sizeof(vec2_t));
+    verts[i].xyz[0] = pos[0];
+    verts[i].xyz[1] = 1000;
+    verts[i].xyz[2] = pos[1];
+    verts[i].st[0] = size[0] * 512;
+    verts[i].st[1] = size[1] * 512;
+    //Com_Printf("%f x %f <-> %f x %f\n", verts[i].xyz[0],
+    //  verts[i].xyz[1], verts[i].st[0], verts[i].st[1]);
+    verts[i].modulate[0] = //sourceVerts[i*5+2] >> 24 & 0xFF;
+    verts[i].modulate[1] = //sourceVerts[i*5+2] >> 16 & 0xFF;
+    verts[i].modulate[2] = //sourceVerts[i*5+2] >> 8 & 0xFF;
+    verts[i].modulate[3] = 255; //sourceVerts[i*5+2] & 0xFF;
   }
+
+  /*
+  for(int  i = 0; i < num_vertices / 4; i++) {
+    vec2_t pos;
+    memcpy(&pos, &sourceVerts[(i*4)*5+0], sizeof(vec2_t));
+    vec2_t size;
+    memcpy(&size, &sourceVerts[(i*4)*5+3], sizeof(vec2_t));
+    vec2_t pos2;
+    memcpy(&pos2, &sourceVerts[(i*4+2)*5+0], sizeof(vec2_t));
+    vec2_t size2;
+    memcpy(&size2, &sourceVerts[(i*4+2)*5+3], sizeof(vec2_t));
+    re.DrawStretchPic( pos[0], pos[1], pos2[0], pos2[1], size[0], size[1], size2[0], size2[1], texture );
+  }
+  */
 
   re.AddPolyToScene(texture, num_vertices, verts, 1);
 }
@@ -1483,7 +1505,7 @@ static void CL_InitUI_After_Load( void *handle )
   Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
   Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
 #endif // USE_BOTLIB_DLOPEN
-
+;
 	static RmlFileInterface files;
 	files.Open = CL_RmlOpen;
 	files.Close = CL_RmlClose;

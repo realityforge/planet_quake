@@ -56,6 +56,7 @@ typedef struct {
 	qhandle_t (*RegisterModel)( const char *name );
 	qhandle_t (*RegisterSkin)( const char *name );
 	qhandle_t (*RegisterShader)( const char *name );
+  qhandle_t (*RegisterImage)( int *dimensions, const char *name );
 	qhandle_t (*RegisterShaderNoMip)( const char *name );
 	void	(*LoadWorld)( const char *name );
 

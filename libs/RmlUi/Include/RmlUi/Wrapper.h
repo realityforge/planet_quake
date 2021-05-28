@@ -97,7 +97,7 @@ namespace Rml {
   	/// @param[in] num_indices The number of indices passed to the function. This will always be a multiple of three.
   	/// @param[in] texture The texture to be applied to the geometry. This may be nullptr, in which case the geometry is untextured.
   	/// @param[in] translation The translation to apply to the geometry.
-  	void (*RenderGeometry)(int *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture, const vec2_t translation);
+  	void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture, const vec2_t translation);
 
   	/// Called by RmlUi when it wants to compile geometry it believes will be static for the forseeable future.
   	/// If supported, this should return a handle to an optimised, application-specific version of the data. If
@@ -108,7 +108,7 @@ namespace Rml {
   	/// @param[in] num_indices The number of indices passed to the function. This will always be a multiple of three.
   	/// @param[in] texture The texture to be applied to the geometry. This may be nullptr, in which case the geometry is untextured.
   	/// @return The application-specific compiled geometry. Compiled geometry will be stored and rendered using RenderCompiledGeometry() in future calls, and released with ReleaseCompiledGeometry() when it is no longer needed.
-  	qhandle_t (*CompileGeometry)(int *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture);
+  	qhandle_t (*CompileGeometry)(void *vertices, int num_vertices, int* indices, int num_indices, qhandle_t texture);
   	/// Called by RmlUi when it wants to render application-compiled geometry.
   	/// @param[in] geometry The application-specific compiled geometry to render.
   	/// @param[in] translation The translation to apply to the geometry.
@@ -132,7 +132,7 @@ namespace Rml {
   	/// @param[out] texture_dimensions The variable to write the dimensions of the loaded texture.
   	/// @param[in] source The application-defined image source, joined with the path of the referencing document.
   	/// @return True if the load attempt succeeded and the handle and dimensions are valid, false if not.
-  	qhandle_t (*LoadTexture)(int texture_dimensions[2], const char *source);
+  	qhandle_t (*LoadTexture)(int *texture_dimensions, const char *source);
   	/// Called by RmlUi when a texture is required to be built from an internally-generated sequence of pixels.
   	/// @param[out] texture_handle The handle to write the texture handle for the generated texture to.
   	/// @param[in] source The raw 8-bit texture data. Each pixel is made up of four 8-bit values, indicating red, green, blue and alpha in that order.
@@ -237,6 +237,7 @@ namespace Rml {
       void RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) override;
       void EnableScissorRegion(bool enable) override;
       void SetScissorRegion(int x, int y, int width, int height) override;
+      bool GenerateTexture(TextureHandle& texture_handle, const byte* source, const Vector2i& source_dimensions) override;
       bool LoadTexture(TextureHandle& texture_handle, Vector2i& texture_dimensions, const String& source) override;
     private:
       RmlRenderInterface *renderer;

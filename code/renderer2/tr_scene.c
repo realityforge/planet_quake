@@ -147,6 +147,8 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 
+    ri.Printf(PRINT_ALL, "AddPolyToScene: %i - %f x %f\n", numVerts, verts[1].xyz[0], verts[1].xyz[1]);
+
 		if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
 			poly->verts->modulate[0] = 255;
 			poly->verts->modulate[1] = 255;

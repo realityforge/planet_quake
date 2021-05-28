@@ -4084,6 +4084,18 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	return sh->index;
 }
 
+qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
+  qhandle_t result = RE_RegisterShader(name);
+  if(tr.shaders[result] 
+    && tr.shaders[result]->stages[0]
+    && tr.shaders[result]->stages[0]->bundle[0].image[0]) {
+    image_t *image = tr.shaders[result]->stages[0]->bundle[0].image[0];
+    dimensions[0] = image->width;
+    dimensions[1] = image->height;
+  }
+  return result;
+}
+
 
 /*
 ====================
@@ -4453,7 +4465,7 @@ static void CreateInternalShaders( void ) {
 qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height) {
   shader_t	*sh;
   image_t *image;
-  image = R_CreateImage(name, pic, width, height, IMGTYPE_NORMAL, IMGFLAG_NONE, 0 );
+  image = R_CreateImage(name, (byte *)pic, width, height, IMGTYPE_NORMAL, IMGFLAG_NONE, 0 );
   InitShader( name, LIGHTMAP_NONE );
   stages[0].bundle[0].image[0] = image;
   stages[0].active = qtrue;
