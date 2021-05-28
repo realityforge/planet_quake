@@ -40,7 +40,7 @@ namespace Rml {
   //typedef Context* qhandle_t;
   typedef bool qboolean;
   typedef int qhandle_t;
-  typedef Vector2f vec2_t;
+  typedef float vec2_t[2];
   typedef int fileHandle_t;
 #endif
 ;
@@ -266,6 +266,7 @@ void Rml_ShowDocument(qhandle_t document);
 void Rml_Shutdown( void );
 void Rml_ContextRender( qhandle_t ctx );
 void Rml_ContextUpdate( qhandle_t ctx );
+void Rml_LoadFontFace(const char *name, qboolean fallback);
 #endif
 
 

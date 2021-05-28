@@ -79,11 +79,14 @@ namespace Rml {
   
   void StructuredRenderInterface::RenderGeometry(Vertex* vertices, int num_vertices, int* indices, int num_indices, TextureHandle texture, const Vector2f& translation) {
     if(renderer->RenderGeometry) {
+      float trans[2];
+      trans[0] = translation.x;
+      trans[1] = translation.y;
       //printf("Render1: %f x %f\n", vertices[0].position[0], vertices[0].position[1]);
       //printf("Render2: %f x %f\n", vertices[1].position[0], vertices[1].position[1]);
       //printf("Render3: %f x %f\n", vertices[2].position[0], vertices[2].position[1]);
       //printf("Render4: %f x %f\n", vertices[3].position[0], vertices[3].position[1]);
-      renderer->RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
+      renderer->RenderGeometry(vertices, num_vertices, indices, num_indices, texture, trans);
     }
   }
   void StructuredRenderInterface::EnableScissorRegion(bool enable) {
@@ -121,6 +124,11 @@ namespace Rml {
     static StructuredSystemInterface sys(system);
     Rml::SetSystemInterface(&sys);
   }
+
+  Q_EXPORT void Rml_LoadFontFace(const char *name, qboolean fallback) {
+    Rml::LoadFontFace(name, fallback);
+  }
+
 
   Q_EXPORT bool Rml_Initialize( void ) {
     return Rml::Initialise();

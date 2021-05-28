@@ -1360,9 +1360,9 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
     memcpy(&pos, &sourceVerts[i*5+0], sizeof(vec2_t));
     vec2_t size;
     memcpy(&size, &sourceVerts[i*5+3], sizeof(vec2_t));
-    verts[i].xyz[0] = pos[0];
-    verts[i].xyz[1] = 1000;
-    verts[i].xyz[2] = pos[1];
+    verts[i].xyz[0] = pos[0] + translation[0];
+    verts[i].xyz[2] = 1;
+    verts[i].xyz[1] = pos[1] + translation[1];
     verts[i].st[0] = size[0] * 512;
     verts[i].st[1] = size[1] * 512;
     //Com_Printf("%f x %f <-> %f x %f\n", verts[i].xyz[0],
@@ -1372,8 +1372,7 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
     verts[i].modulate[2] = //sourceVerts[i*5+2] >> 8 & 0xFF;
     verts[i].modulate[3] = 255; //sourceVerts[i*5+2] & 0xFF;
   }
-
-  /*
+  
   for(int  i = 0; i < num_vertices / 4; i++) {
     vec2_t pos;
     memcpy(&pos, &sourceVerts[(i*4)*5+0], sizeof(vec2_t));
@@ -1383,11 +1382,18 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
     memcpy(&pos2, &sourceVerts[(i*4+2)*5+0], sizeof(vec2_t));
     vec2_t size2;
     memcpy(&size2, &sourceVerts[(i*4+2)*5+3], sizeof(vec2_t));
-    re.DrawStretchPic( pos[0], pos[1], pos2[0], pos2[1], size[0], size[1], size2[0], size2[1], texture );
+    re.DrawStretchPic( pos[0] + translation[0], pos[1] + translation[1], pos2[0] + translation[0], pos2[1] + translation[1], size[0], size[1], size2[0], size2[1], texture );
   }
-  */
+  
 
-  re.AddPolyToScene(texture, num_vertices, verts, 1);
+  //re.AddPolyToScene(texture, num_vertices, verts, 1);
+  //re.DrawElements(num_indices, indices);
+}
+
+static qhandle_t CL_RmlCompileGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture)
+{
+  return 0;
 }
 
 void CL_UIContextRender(void) {
@@ -1518,6 +1524,7 @@ static void CL_InitUI_After_Load( void *handle )
 	renderer.LoadTexture = CL_RmlLoadTexture;
   renderer.GenerateTexture = CL_RmlGenerateTexture;
   renderer.RenderGeometry = CL_RmlRenderGeometry;
+  renderer.CompileGeometry = CL_RmlCompileGeometry;
 	static RmlSystemInterface system;
 	system.LogMessage = CL_RmlLogMessage;
 	system.GetElapsedTime = CL_RmlGetElapsedTime;
@@ -1528,6 +1535,26 @@ static void CL_InitUI_After_Load( void *handle )
 		Com_Printf("RMLUI: Error initializing.");
 	}
 	cls.rmlStarted = qtrue;
+  
+  
+	struct FontFace {
+		char *filename;
+		qboolean fallback_face;
+	};
+	struct FontFace font_faces[] = {
+		{ "LatoLatin-Regular.ttf",    qfalse },
+		{ "LatoLatin-Italic.ttf",     qfalse },
+		{ "LatoLatin-Bold.ttf",       qfalse },
+		{ "LatoLatin-BoldItalic.ttf", qfalse },
+		{ "NotoEmoji-Regular.ttf",    qtrue  },
+	};
+
+	for (int i = 0; i < ARRAY_LEN(font_faces); i++)
+	{
+		Rml_LoadFontFace(va("assets/%s", font_faces[i].filename), font_faces[i].fallback_face);
+	}
+
+  
 	qhandle_t ctx = Rml_CreateContext("default", cls.glconfig.vidWidth, cls.glconfig.vidWidth);
 	
 	qhandle_t doc = Rml_LoadDocument(ctx, "assets/demo.rml");
