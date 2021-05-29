@@ -46,10 +46,8 @@ static void GetClientState( uiClientState_t *state ) {
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
-#else
-	int igs = clientGames[0];
 #endif
-	state->clientNum = cl.snap[igs].ps.clientNum;
+	state->clientNum = cl.snap.ps.clientNum;
 }
 
 
@@ -725,7 +723,7 @@ static int GetConfigString(int index, char *buf, int size)
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 		return qfalse;
 
-	offset = cl.gameState[cgvm].stringOffsets[index];
+	offset = cl.gameState.stringOffsets[index];
 	if (!offset) {
 		if( size ) {
 			buf[0] = 0;
@@ -733,7 +731,7 @@ static int GetConfigString(int index, char *buf, int size)
 		return qfalse;
 	}
 
-	Q_strncpyz( buf, cl.gameState[cgvm].stringData+offset, size);
+	Q_strncpyz( buf, cl.gameState.stringData+offset, size);
  
 	return qtrue;
 }

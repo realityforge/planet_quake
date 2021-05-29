@@ -126,7 +126,12 @@ typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
-	clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
+#ifdef USE_MULTIVM_CLIENT
+  clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
+#define snap snapWorlds[igs]
+#else
+	clSnapshot_t	snap;			// latest received from server
+#endif
 
 	int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards
@@ -137,24 +142,48 @@ typedef struct {
 									// cleared when CL_AdjustTimeDelta looks at it
 	qboolean	newSnapshots;		// set on parse of any valid packet
 
+#ifdef USE_MULTIVM_CLIENT
 	gameState_t	gameState[MAX_NUM_VMS];			// configstrings
+#define gameState gameState[igs]
+#else
+  gameState_t	gameState;			// configstrings
+#endif
 	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
+#ifdef USE_MULTIVM_CLIENT
 	int			parseEntitiesNum[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
+#define parseEntitiesNum parseEntitiesNum[igs] // `igs` because it is based on number of server worlds
+#else
+  int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
+#endif
 
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
 	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 	// cgame communicates a few values to the client system
+#ifdef USE_MULTIVM_CLIENT
 	int			cgameUserCmdValue[MAX_NUM_VMS];	// current weapon to add to usercmd_t
+#define cgameUserCmdValue cgameUserCmdValue[igvm]
+#else
+  int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+#endif
+
 	float		cgameSensitivity;
 
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
+#ifdef USE_MULTIVM_CLIENT
 	usercmd_t	cmds[MAX_NUM_VMS][CMD_BACKUP];	// each mesage will send several old cmds
-	int			cmdNumber;			// incremented each frame, because multiple
-	int     clCmdNumbers[MAX_NUM_VMS];
+#define cmds         cmds[igvm]  // `igvm` because it is based on number of client VMs, not server worlds
+  int			cmdNumber;			// incremented each frame, because multiple
+  int     clCmdNumbers[MAX_NUM_VMS];
+#define clCmdNumbers clCmdNumbers[igvm]
+#else
+  usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
+  int			cmdNumber;			// incremented each frame, because multiple
+  int     clCmdNumbers;
+#endif
 									// frames may need to be packed into a single packet
 
 	outPacket_t	outPackets[PACKET_BACKUP];	// information about each packet we have sent out
@@ -169,13 +198,24 @@ typedef struct {
 	int			serverId;			// included in each client message so the server
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
+#ifdef USE_MULTIVM_CLIENT
 	clSnapshot_t	snapshots[MAX_NUM_VMS][PACKET_BACKUP];
-
+#define snapshots snapshotWorlds[igs] // `igs` because it is based on number of server worlds, not cgames
 	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
-
+#define entityBaselines entityBaselines[igs]
 	entityState_t	parseEntities[MAX_NUM_VMS][MAX_PARSE_ENTITIES];
-
+#define parseEntities parseEntities[igs]
 	byte			baselineUsed[MAX_NUM_VMS][MAX_GENTITIES];
+#define baselineUsed baselineUsed[igs]
+#else
+  clSnapshot_t	snapshots[PACKET_BACKUP];
+
+  entityState_t	entityBaselines[MAX_GENTITIES];	// for delta compression when not in previous frame
+
+  entityState_t	parseEntities[MAX_PARSE_ENTITIES];
+
+  byte			baselineUsed[MAX_GENTITIES];
+#endif
 } clientActive_t;
 
 extern	clientActive_t		cl;

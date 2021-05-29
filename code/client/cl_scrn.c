@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qrcodegen.h"
 #endif
 
+// TODO: uncomment this when the rest is working
+
 qboolean	scr_initialized;		// ready to draw
 
 cvar_t		*cl_timegraph;
@@ -626,10 +628,10 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if(cgvms[cgvm]
+			if(cgvm
 #ifdef EMSCRIPTEN
 				// skip drawing until VM is ready
-				&& !VM_IsSuspended(cgvms[cgvm])
+				&& !VM_IsSuspended( cgvm )
 #endif
 			) {
 				CL_CGameRendering( stereoFrame );
@@ -644,10 +646,10 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			if( cgvms[cgvm] 
+			if( cgvm
 #ifdef EMSCRIPTEN
 				// skip drawing until VM is ready
-				&& !VM_IsSuspended(cgvms[cgvm])
+				&& !VM_IsSuspended( cgvm )
 #endif
 			) {
 				CL_CGameRendering( stereoFrame );
@@ -668,22 +670,21 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 void SCR_DrawCurrentView( void ) {
 	float	yf, wf;
 	float xadjust = 0;
-	return;
 	wf = SCREEN_WIDTH;
 	yf = SCREEN_HEIGHT;
 	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
 	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
 	
-	// TODO: duh re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
+	// TODO: duh re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
 	// TODO: draw a box around the edge of the screen but SetDvrFrame right before so its just the edge of the box
   // top
-	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
 	// right
-	re.DrawStretchPic( clientScreens[cgvm][2] * wf - 2, 0, 2, clientScreens[cgvm][3] * yf, 0, 0, 1, 1, cls.whiteShader );
+	re.DrawStretchPic( clientScreens[cgvmi][2] * wf - 2, 0, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader );
 	// bottom 
-	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][3] * yf - 2, clientScreens[cgvm][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][3] * yf - 2, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
 	// left
-	re.DrawStretchPic( clientScreens[cgvm][0] * wf, clientScreens[cgvm][1] * yf, 2, clientScreens[cgvm][3] * yf, 0, 0, 1, 1, cls.whiteShader);
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader);
 }
 #endif
 
@@ -728,7 +729,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 	if(fromVM) {
 #ifdef USE_MULTIVM_CLIENT
-		re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
+		re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
 #endif
 
 		// don't switch renderer or clipmap when updated from VM
@@ -743,8 +744,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	}
 
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		cgvm = i;
 #ifdef USE_MULTIVM_CLIENT
+    cgvmi = i;
 		uivmi = i;
 #endif
 		
@@ -754,12 +755,12 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		//	continue;
 		//}
 		
-		if(!cgvms[cgvm] && !uivm) continue;
+		if(!cgvm && !uivm) continue;
 
 #ifdef USE_MULTIVM_CLIENT
-    re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
-		CM_SwitchMap(clientMaps[cgvm]);
-		re.SwitchWorld(clientMaps[cgvm]);
+    re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+		CM_SwitchMap(clientMaps[cgvmi]);
+		re.SwitchWorld(clientMaps[cgvmi]);
 #endif
 
 		// if running in stereo, we need to draw the frame twice
@@ -781,18 +782,16 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #endif
 	}
 
-	cgvm = 0;
 #ifdef USE_MULTIVM_CLIENT
+  cgvmi = 0;
 	uivmi = 0;
-#endif
-#ifdef USE_MULTIVM_CLIENT
-	CM_SwitchMap(clientMaps[cgvm]);
-	re.SwitchWorld(clientMaps[cgvm]);
+	CM_SwitchMap(clientMaps[cgvmi]);
+	re.SwitchWorld(clientMaps[cgvmi]);
   re.SetDvrFrame(0, 0, 1, 1);
 #endif
 
 #ifdef USE_LNBITS
-	int igs = clientGames[cgvm];
+	int igs = clientGames[cgvmi];
 	if((cl.snap[igs].ps.pm_type == PM_INTERMISSION
 		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
 		&& cl_lnInvoice->string[0]) {

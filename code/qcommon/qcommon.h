@@ -351,7 +351,11 @@ NET
 
 #define	MAX_PACKET_USERCMDS		32		// max number of usercmd_t in a packet
 
+#ifdef USE_MV
+#define	MAX_SNAPSHOT_ENTITIES	MAX_GENTITIES
+#else
 #define	MAX_SNAPSHOT_ENTITIES	256
+#endif
 
 #define	PORT_ANY			-1
 

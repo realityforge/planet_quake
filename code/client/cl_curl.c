@@ -63,6 +63,7 @@ const char *(*qcurl_multi_strerror)(CURLMcode);
 
 #ifndef DEDICATED
 static void *cURLLib = NULL;
+
 /*
 =================
 GPA

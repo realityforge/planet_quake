@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static unsigned frame_msec;
 static int old_com_frameTime;
 
+
 /*
 ===============================================================================
 
@@ -91,10 +92,8 @@ static qboolean in_mlooking;
 static void IN_CenterView( void ) {
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
-#else
-	int igs = clientGames[0];
 #endif
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[igs].ps.delta_angles[PITCH]);
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
 }
 
 static void IN_MLookDown( void ) {
@@ -398,8 +397,8 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
 ;
 #ifdef USE_MULTIVM_CLIENT
-	cgvm = 0;
-	CM_SwitchMap(clientMaps[cgvm]);
+	cgvmi = 0;
+	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
@@ -417,7 +416,7 @@ void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		VM_Call( cgvms[cgvm], 2, CG_MOUSE_EVENT, dx, dy );
+		VM_Call( cgvm, 2, CG_MOUSE_EVENT, dx, dy );
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
@@ -615,17 +614,19 @@ static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 	int		i;
 
 	// copy the state that the cgame is currently sending
-	cmd->weapon = cl.cgameUserCmdValue[igvm];
+	cmd->weapon = cl.cgameUserCmdValue;
 //Com_Printf("Moving: %i (%i)\n", cmd->weapon, igvm);
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
 	//cmd->serverTime = cl.serverTime;
-	// Good: cmd->serverTime = cl.snap[igs].serverTime + 20;
-	//cmd->serverTime = cl.serverTime + (cl.snap[igs].serverTime - cl.snap[0].serverTime);
+	// Good: cmd->serverTime = cl.snap.serverTime + 20;
+	//cmd->serverTime = cl.serverTime + (cl.snap.serverTime - cl.snap[0].serverTime);
 	// duh! snaps are gamestate based and commands are cgvm based
+#ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[igvm];
-	cmd->serverTime = cl.snap[igs].serverTime;
+#endif
+	cmd->serverTime = cl.snap.serverTime;
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -717,9 +718,9 @@ static void CL_CreateNewCommands( int igvm ) {
 
 	// generate a command for this frame
 	cl.cmdNumber++;
-	cl.clCmdNumbers[igvm] = cl.cmdNumber;
+	cl.clCmdNumbers = cl.cmdNumber;
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[igvm][cmdNum] = CL_CreateCmd(igvm);
+	cl.cmds[cmdNum] = CL_CreateCmd(igvm);
 }
 
 
@@ -823,23 +824,20 @@ void CL_WritePacket( void ) {
 	//   e.g. dead world versus living world, like respawn in WoW, 
 	//     different enemies in dead world for powerups like in Prey
 	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(igvm > 0 && (!cgvms[igvm]
+		if(igvm > 0 && (!cgvmWorlds[igvm]
 			|| clientGames[igvm] == -1
 			|| clientWorlds[igvm] != clc.clientNum)) continue;
 		int igs = clientGames[igvm];
-		int oldCmdNum = cl.clCmdNumbers[igvm];
+		int oldCmdNum = cl.clCmdNumbers;
 		CL_CreateNewCommands(igvm);
 		if(igvm > 0) {
-			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
+			cl.cmds[cl.clCmdNumbers & CMD_MASK].forwardmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
-			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].rightmove = 
+			cl.cmds[cl.clCmdNumbers & CMD_MASK].rightmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
-			cl.cmds[igvm][cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
+			cl.cmds[cl.clCmdNumbers & CMD_MASK].upmove = 
 				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
-#else
-;
-	int igs = clientGames[0];
 #endif
 ;
 	oldcmd = &nullcmd;
@@ -855,13 +853,13 @@ void CL_WritePacket( void ) {
 	// be used for delta compression, and is also used
 	// to tell if we dropped a gamestate
 	//MSG_WriteLong( &buf, clc.serverMessageSequence );
-	MSG_WriteLong( &buf, cl.snap[igs].messageNum );
+	MSG_WriteLong( &buf, cl.snap.messageNum );
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
 	
 #ifdef USE_MULTIVM_CLIENT
-	if(cl.snap[0].multiview || cl.snap[igs].multiview) {
+	if(cl.snapWorlds[0].multiview || cl.snap.multiview) {
 		MSG_WriteByte( &buf, igs );
 	}
 #endif
@@ -895,8 +893,8 @@ void CL_WritePacket( void ) {
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap[igs].valid || clc.demowaiting
-		//	|| clc.serverMessageSequence != cl.snap[igs].messageNum
+		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
+		//	|| clc.serverMessageSequence != cl.snap.messageNum
 		) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
@@ -910,19 +908,18 @@ void CL_WritePacket( void ) {
 		key = clc.checksumFeed;
 		// also use the message acknowledge
 		//key ^= clc.serverMessageSequence;
-		key ^= cl.snap[igs].messageNum;
+		key ^= cl.snap.messageNum;
 		// also use the last acknowledged server command in the key
 		key ^= MSG_HashKey(clc.serverCommands[ clc.serverCommandSequence & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
-			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
-			cmd = &cl.cmds[igvm][j];
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers) & CMD_MASK;
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
-			cmd = &cl.cmds[0][j];
 #endif
+      cmd = &cl.cmds[j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
 		}
@@ -934,11 +931,7 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
-#ifdef USE_MULTIVM_CLIENT
-	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
-#else
-	cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[0];
-#endif
+  cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers;
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {
@@ -947,7 +940,7 @@ void CL_WritePacket( void ) {
 
 	CL_Netchan_Transmit( &clc.netchan, &buf );
 #ifdef USE_MULTIVM_CLIENT
-//Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers[igvm], igs);
+//Com_Printf("Sending commands %i: %i, %i (%i)\n", count, oldCmdNum, cl.clCmdNumbers, igs);
 	}
 #endif
 }

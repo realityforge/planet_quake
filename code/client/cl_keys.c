@@ -33,6 +33,7 @@ qboolean	chat_team;
 
 int			chat_playerNum;
 
+
 //static void Field_CharEvent( field_t *edit, int ch );
 
 /*
@@ -610,7 +611,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[clc.currentView];
 #else
-	int igs = clientGames[0];
+	int igs = 0;
 #endif
 	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap[igs].multiview ) {
 		int id, n, d;
@@ -661,13 +662,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			if(cgvms[cgvm])
-				VM_Call( cgvms[cgvm], 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvm)
+				VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( cgvms[cgvm] && cls.state == CA_ACTIVE && !clc.demoplaying ) {
+			if ( cgvm && cls.state == CA_ACTIVE && !clc.demoplaying ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
@@ -723,8 +724,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvms[cgvm] ) {
-			VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qtrue );
+		if ( cgvm ) {
+			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qtrue );
 		} 
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		Message_Key( key );
@@ -772,8 +773,8 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 
 	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
 		VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvms[cgvm] ) {
-		VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qfalse );
+	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
+		VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
 	}
 }
 
