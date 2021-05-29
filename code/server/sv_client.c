@@ -1043,7 +1043,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 //			// disconnect the client from the game first so any flags the
 //			// player might have are dropped
-//			VM_Call( gvms[gvm], GAME_CLIENT_DISCONNECT, 1, newcl - svs.clients );
+//			VM_Call( gvm, GAME_CLIENT_DISCONNECT, 1, newcl - svs.clients );
 			//
 			goto gotnewcl;
 		}
@@ -1137,7 +1137,7 @@ gotnewcl:
 #ifdef USE_MULTIVM_SERVER
 	gvm = newcl->gameWorld = newcl->newWorld = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 	//TODO: add new clients to all worlds
 #endif
 
@@ -1166,7 +1166,7 @@ gotnewcl:
 	}
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
+	denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
 		// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
 		const char *str = GVM_ArgPtr( denied );
@@ -1229,7 +1229,7 @@ gotnewcl:
 #ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 #endif
 }
 
@@ -1299,14 +1299,14 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		if(!gvms[igvm]) continue;
 		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
-		VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+		SV_SetAASgvm(gvmi);
+		VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 	}
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 #else	
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+	VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 #endif
 
 	// add the disconnect command
@@ -1340,7 +1340,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 #ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 #endif
 
 	if ( !reason ) {
@@ -1412,10 +1412,10 @@ int SV_RemainingGameState( void )
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		if ( !sv.baselineUsed[gvm][ start ] ) {
+		if ( !sv.baselineUsed[ start ] ) {
 			continue;
 		}
-		svEnt = &sv.svEntities[gvm][ start ];
+		svEnt = &sv.svEntities[ start ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 	}
@@ -1525,10 +1525,10 @@ static void SV_SendClientGameState( client_t *client ) {
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-		if ( !sv.baselineUsed[gvm][ start ] ) {
+		if ( !sv.baselineUsed[ start ] ) {
 			continue;
 		}
-		svEnt = &sv.svEntities[gvm][ start ];
+		svEnt = &sv.svEntities[ start ];
 		MSG_WriteByte( &msg, svc_baseline );
 		MSG_WriteDeltaEntity( &msg, &nullstate, &svEnt->baseline, qtrue );
 	}
@@ -1575,7 +1575,11 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	int		clientNum;
 	sharedEntity_t *ent;
 
-	Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvm );
+#ifdef USE_MULTIVM_SERVER
+  Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvmi );
+#else
+  Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
+#endif
 	client->state = CS_ACTIVE;
 #ifdef USE_MULTIVM_SERVER
 	if(sv_mvWorld->integer) {
@@ -1597,12 +1601,12 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 	if(cmd)
-		memcpy(&client->lastUsercmd[gvm], cmd, sizeof(usercmd_t));
+		memcpy(&client->lastUsercmd, cmd, sizeof(usercmd_t));
 	else
-		memset(&client->lastUsercmd[gvm], '\0', sizeof(usercmd_t));
+		memset(&client->lastUsercmd, '\0', sizeof(usercmd_t));
 
 	// call the game begin function
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, client - svs.clients );
+	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
 
 	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
 	if (sv.demoState == DS_PLAYBACK &&
@@ -2301,7 +2305,7 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 	// name for C code
 	val = Info_ValueForKey( cl->userinfo, "name" );
 	// truncate if it is too long as it may cause memory corruption in OSP mod
-	if ( gvms[gvm]->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
+	if ( gvm->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
 		Q_strncpyz( buf, val, sizeof( buf ) );
 		Info_SetValueForKey( cl->userinfo, "name", buf );
 		val = buf;
@@ -2364,7 +2368,7 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
 	// call prog code to allow overrides
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
+	VM_Call( gvm, 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
 
 extern int SV_Strlen( const char *str );
@@ -2470,12 +2474,12 @@ void SV_LoadVM( client_t *cl ) {
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
 	SV_ClearWorld();
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
 	for ( i = 4; i > 1; i-- )
 	{
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time - i * 100 );
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		SV_BotFrame( sv.time - i * 100 );
 	}
 	
@@ -2490,18 +2494,18 @@ void SV_LoadVM( client_t *cl ) {
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( svs.clients[i].state >= CS_CONNECTED
 		 	&& svs.clients[i].netchan.remoteAddress.type == NA_BOT) {
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qtrue, qfalse );
+			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qtrue, qfalse );
 		}
 	}
 	*/
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 	SV_RemainingGameState();
 	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvm);
 
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 }
 
 typedef enum {
@@ -2525,7 +2529,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	clientNum = client - svs.clients;
 	gvm = client->gameWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 	ps = SV_GameClientNum( clientNum );
 	memcpy(&oldps, ps, sizeof(playerState_t));
 
@@ -2549,7 +2553,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	if(client->gameWorld != newWorld) {
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 		ent = SV_GentityNum( clientNum );
 		// keep the same origin in the new world as if you've switched worlds
 		//   but haven't moved, default behavior
@@ -2563,13 +2567,13 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		// remove from old world?
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 		//SV_ExecuteClientCommand(client, "team spectator");
-		//VM_Call( gvms[gvm], 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+		//VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
 
 		gvm = newWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 		client->newWorld = newWorld;
 		if(ent->s.eType == 0) {
 			// if the client is new to the world, the only option is SPAWNORIGIN
@@ -2578,7 +2582,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
+			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse );	// firstTime = qfalse
 			// if this is the first time they are entering a world, send a gamestate
 			client->deltaMessage = -1;
 			client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
@@ -2589,7 +2593,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		} else {
 			// above must come before this because there is a filter 
 			//   to only send commands from a game to the client of the same world
-			VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
+			VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qfalse, qfalse );	// firstTime = qfalse
 			// not the first time they have entered, automatically connect
 			client->gameWorld = newWorld;
 			//client->deltaMessage = -1;
@@ -2614,7 +2618,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	ps->s.eFlags |= EF_TELEPORT_BIT;
 	ent->s.number = clientNum;
 	client->gentity = ent;
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, clientNum );
+	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, clientNum );
 
 	// if copy, keeping the original/same, or moving origins,
 	//   we need to reset a few things
@@ -2674,7 +2678,7 @@ void SV_Tele_f( client_t *client ) {
 		clientNum = client - svs.clients;
 		gvm = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 		ps = SV_GameClientNum( clientNum );
 
 		for(i = 0; i < 3; i++) {
@@ -2699,7 +2703,7 @@ void SV_Tele_f( client_t *client ) {
 
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 }
 
 void SV_Game_f( client_t *client ) {
@@ -2835,7 +2839,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		Cvar_Set("dedicated", "0");
 #endif
 		if(com_sv_running && com_sv_running->integer) {
-			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 			SV_GameCommand(gvm);
 		}
 #ifndef DEDICATED
@@ -2941,7 +2945,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 				if(recentI == 1024) recentI = 0;
 			}
 #endif
-			VM_Call( gvms[gvm], 1, GAME_CLIENT_COMMAND, cl - svs.clients );
+			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );
 #ifdef USE_MV
 			cl->multiview.lastSentTime = svs.time;
 #endif
@@ -2984,16 +2988,16 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 	int prevGvm = gvm;
 	gvm = cl->newWorld;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		gvm = prevGvm;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 		return qfalse;
 	}
 	gvm = prevGvm;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 #else
 	if ( !SV_ExecuteClientCommand( cl, s ) ) {
 		return qfalse;
@@ -3026,13 +3030,13 @@ Also called by bot code
 ==================
 */
 void SV_ClientThink (client_t *cl, usercmd_t *cmd) {
-	cl->lastUsercmd[gvm] = *cmd;
+	cl->lastUsercmd = *cmd;
 
 	if ( cl->state != CS_ACTIVE ) {
 		return;		// may have been kicked during the last usercmd
 	}
 
-	VM_Call( gvms[gvm], 1, GAME_CLIENT_THINK, cl - svs.clients );
+	VM_Call( gvm, 1, GAME_CLIENT_THINK, cl - svs.clients );
 }
 
 
@@ -3056,7 +3060,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	const usercmd_t *oldcmd;
 
 #ifdef USE_MULTIVM_SERVER
-	if(!gvms[gvm]) {
+	if(!gvm) {
 		return;
 	}
 #endif
@@ -3102,8 +3106,8 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	}
 
 	// save time for ping calculation
-	if ( cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked == 0 ) {
-		cl->frames[gvm][ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
+	if ( cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked == 0 ) {
+		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
 	}
 
 	// if this is the first usercmd we have received
@@ -3126,11 +3130,11 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 			int prevGvm = gvm; // hopefully it is the same but maybe not
 			gvm = cl->gameWorld = cl->newWorld;
 			CM_SwitchMap(gameWorlds[gvm]);
-			SV_SetAASgvm(gvm);
+			SV_SetAASgvm(gvmi);
 			SV_ClientEnterWorld( cl, &cmds[0] ); // NULL );
 			gvm = prevGvm;
 			CM_SwitchMap(gameWorlds[gvm]);
-			SV_SetAASgvm(gvm);
+			SV_SetAASgvm(gvmi);
 		} else 
 #endif
 		SV_ClientEnterWorld( cl, &cmds[0] );
@@ -3166,7 +3170,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 //#ifdef USE_MULTIVM_SERVER
 //		if(0)
 //#endif
-		if ( cmds[i].serverTime <= cl->lastUsercmd[gvm].serverTime ) {
+		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
 			continue;
 		}
 //Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
@@ -3261,11 +3265,11 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 				int prevGvm = gvm;
 				gvm = cl->newWorld;
 				CM_SwitchMap(gameWorlds[gvm]);
-				SV_SetAASgvm(gvm);
+				SV_SetAASgvm(gvmi);
 				SV_SendClientGameState( cl );
 				gvm = prevGvm;
 				CM_SwitchMap(gameWorlds[gvm]);
-				SV_SetAASgvm(gvm);
+				SV_SetAASgvm(gvmi);
 #else
 				SV_SendClientGameState( cl );
 #endif
@@ -3322,11 +3326,11 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	if(cl->state >= CS_CONNECTED && cl->multiview.protocol > 0) {
 		gvm = igvm;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 	} else {
 		gvm = 0;
 		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		SV_SetAASgvm(gvmi);
 	}
 #endif
 
@@ -3344,6 +3348,6 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 #ifdef USE_MULTIVM_SERVER
 	gvm = 0;
 	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	SV_SetAASgvm(gvmi);
 #endif
 }

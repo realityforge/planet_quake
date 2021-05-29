@@ -12,10 +12,10 @@ ifeq ($(USE_MULTIVM_SERVER),1)
 TARGET       := $(BOTLIB_PREFIX)_libbots_mw_$(SHLIBNAME)
 endif
 
-SOURCES      := code/botlib
+SOURCES      := $(MOUNT_DIR)/botlib
 INCLUDES     := 
 CFILES       := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-               code/qcommon/q_math.c code/qcommon/q_shared.c 
+               $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c 
 OBJS         := $(CFILES:.c=.o)
 Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
@@ -46,10 +46,10 @@ clean:
 	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_BOTLIB_CC)
 
-$(B)/$(WORKDIR)/%.o: code/botlib/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOTLIB_CC)
 
 $(B)/$(TARGET): $(Q3OBJ) 

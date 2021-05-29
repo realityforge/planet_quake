@@ -44,13 +44,13 @@ clean:
 	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: code/renderercommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: code/renderer/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer/%.c
 	$(DO_REND_CC)
 
 $(B)/$(TARGET): $(Q3OBJ)

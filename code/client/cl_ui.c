@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern	botlib_export_t	*botlib_export;
 
 #ifdef USE_MULTIVM_CLIENT
-int  uivmi = 0;
+int   uivmi = 0;
 vm_t *uivmWorlds[MAX_NUM_VMS];
 #else
 vm_t *uivm = NULL;

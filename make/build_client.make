@@ -9,16 +9,14 @@ TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
 
 SOURCES  := $(MOUNT_DIR)/client
 
-CLIPMAP  := \
-            $(B)/client/cm_load.o \
+CLIPMAP  := $(B)/client/cm_load.o \
             $(B)/client/cm_load_bsp2.o \
             $(B)/client/cm_patch.o \
             $(B)/client/cm_polylib.o \
             $(B)/client/cm_test.o \
             $(B)/client/cm_trace.o
 
-QCOMMON  := \
-            $(B)/client/cmd.o \
+QCOMMON  := $(B)/client/cmd.o \
             $(B)/client/common.o \
             $(B)/client/cvar.o \
             $(B)/client/files.o \
@@ -41,8 +39,7 @@ QCOMMON  := \
             $(B)/client/sv_bot.o \
             $(B)/client/sv_game.o
 
-SOUND    := \
-            $(B)/client/snd_adpcm.o \
+SOUND    := $(B)/client/snd_adpcm.o \
             $(B)/client/snd_dma.o \
             $(B)/client/snd_mem.o \
             $(B)/client/snd_mix.o \
@@ -56,13 +53,13 @@ SOUND    := \
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
-  SOUND  += \
-            $(B)/client/snd_mix_mmx.o \
+  SOUND  += $(B)/client/snd_mix_mmx.o \
             $(B)/client/snd_mix_sse.o
 endif
 endif
-  VM     := \
-            $(B)/client/vm.o \
+
+
+VM       := $(B)/client/vm.o \
             $(B)/client/vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
@@ -171,20 +168,21 @@ define DO_CLIENT_CC
   $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
-define DO_AS
-$(echo_cmd) "AS $<"
-$(Q)$(CC) $(CFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
-endef
+# TODO: use these
+#define DO_AS
+#$(echo_cmd) "AS $<"
+#$(Q)$(CC) $(CFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
+#endef
 
-define DO_TOOLS
-$(echo_cmd) "TOOLS_CC $<"
-$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
-endef
+#define DO_TOOLS
+#$(echo_cmd) "TOOLS_CC $<"
+#$(Q)$(CC) $(NOTSHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+#endef
 
-define DO_WINDRES
-$(echo_cmd) "WINDRES $<"
-$(Q)$(WINDRES) -i $< -o $@
-endef
+#define DO_WINDRES
+#$(echo_cmd) "WINDRES $<"
+#$(Q)$(WINDRES) -i $< -o $@
+#endef
 
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_CLIENT)"
@@ -203,28 +201,28 @@ clean:
 	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: code/client/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/client/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/unix/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/unix/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/win32/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/win32/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/macosx/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/macosx/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/wasm/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/wasm/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/sdl/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/sdl/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/$(WORKDIR)/%.o: code/server/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)

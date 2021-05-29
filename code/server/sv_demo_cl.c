@@ -227,7 +227,7 @@ void SV_Record( client_t	*cl, char *s ) {
  	// write the baselines
  	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
  	for ( i = 0 ; i < MAX_GENTITIES; i++ ) {
- 		ent = &sv.svEntities[gvm][i].baseline;
+ 		ent = &sv.svEntities[i].baseline;
  		if ( !ent->number ) {
  			continue;
  		}

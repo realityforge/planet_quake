@@ -63,19 +63,19 @@ clean:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: code/renderercommon/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: code/renderer2/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer2/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/glsl/%.c: code/renderer2/glsl/%.glsl
+$(B)/$(WORKDIR)/glsl/%.c: $(MOUNT_DIR)/renderer2/glsl/%.glsl
 	$(DO_REF_STR)
 
-$(B)/$(WORKDIR)/glsl/%.o_clean: code/renderer2/glsl/%.glsl
+$(B)/$(WORKDIR)/glsl/%.o_clean: $(MOUNT_DIR)/renderer2/glsl/%.glsl
 	@rm -f $@
 
 $(B)/$(WORKDIR)/glsl/%.o: $(B)/$(WORKDIR)/glsl/%.c

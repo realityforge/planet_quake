@@ -5,7 +5,7 @@
 #include "../qcommon/cm_public.h"
 #include "../game/bg_public.h"
 #define MAIN_C
-#include "../tools/q3map2/q3map2.h"
+#include <q3map2.h>
 #undef MAIN_C
 
 

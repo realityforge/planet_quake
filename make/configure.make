@@ -202,8 +202,7 @@ endif
 
 BASE_CFLAGS =
 
-ifndef USE_MEMORY_MAPS
-  USE_MEMORY_MAPS = 1
+ifeq ($(USE_MEMORY_MAPS),1)
   BASE_CFLAGS += -DUSE_MEMORY_MAPS
 endif
 
@@ -247,6 +246,10 @@ endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
+
+ifeq ($(USE_DEDICATED),1)
+  BASE_CFLAGS += -DDEDICATED
 endif
 
 ifeq ($(USE_RMLUI),1)

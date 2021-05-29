@@ -216,13 +216,14 @@ extern  int       uivmi;
 extern	vm_t		 *cgvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
 extern  int       cgvmi;
 #define cgvm      cgvmWorlds[cgvmi]
+extern	vm_t		 *gvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
+extern  int       gvmi;
+#define gvm       gvmWorlds[gvmi]
 #else
 extern  vm_t     *uivm;
 extern  vm_t     *cgvm;
+extern  vm_t     *gvm;
 #endif
-
-extern  int       gvm;
-extern	vm_t		 *gvms[MAX_NUM_VMS];				// game virtual machine
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );

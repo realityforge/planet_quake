@@ -35,7 +35,11 @@ be returned, otherwise a custom box tree will be constructed.
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
 	if ( ent->r.bmodel ) {
 		// explicit hulls in the BSP model
-		return CM_InlineModel( ent->s.modelindex, 3, gvm );
+#ifdef USE_MULTIVM_SERVER
+    return CM_InlineModel( ent->s.modelindex, 3, gvmi );
+#else
+		return CM_InlineModel( ent->s.modelindex, 3, 0 );
+#endif
 	}
 	if ( ent->r.svFlags & SVF_CAPSULE ) {
 		// create a temp capsule from bounding box sizes
@@ -71,8 +75,15 @@ typedef struct worldSector_s {
 #define	AREA_DEPTH	4
 #define	AREA_NODES	64
 
+#ifdef USE_MULTIVM_SERVER
 worldSector_t	sv_worldSectors[MAX_NUM_VMS][AREA_NODES];
-int			sv_numworldSectors[MAX_NUM_VMS];
+int			      sv_numworldSectors[MAX_NUM_VMS];
+#define sv_worldSectors    sv_worldSectors[gvmi]
+#define sv_numworldSectors sv_numworldSectors[gvmi]
+#else
+worldSector_t	sv_worldSectors[AREA_NODES];
+int			sv_numworldSectors;
+#endif
 
 
 /*
@@ -86,7 +97,7 @@ void SV_SectorList_f( void ) {
 	svEntity_t		*ent;
 
 	for ( i = 0 ; i < AREA_NODES ; i++ ) {
-		sec = &sv_worldSectors[gvm][i];
+		sec = &sv_worldSectors[i];
 
 		c = 0;
 		for ( ent = sec->entities ; ent ; ent = ent->nextEntityInWorldSector ) {
@@ -108,8 +119,8 @@ static worldSector_t *SV_CreateworldSector( int depth, vec3_t mins, vec3_t maxs 
 	vec3_t		size;
 	vec3_t		mins1, maxs1, mins2, maxs2;
 
-	anode = &sv_worldSectors[gvm][sv_numworldSectors[gvm]];
-	sv_numworldSectors[gvm]++;
+	anode = &sv_worldSectors[sv_numworldSectors];
+	sv_numworldSectors++;
 
 	if (depth == AREA_DEPTH) {
 		anode->axis = -1;
@@ -148,11 +159,15 @@ void SV_ClearWorld( void ) {
 	clipHandle_t	h;
 	vec3_t			mins, maxs;
 
-	Com_Memset( sv_worldSectors[gvm], 0, sizeof(sv_worldSectors[gvm]) );
-	sv_numworldSectors[gvm] = 0;
+	Com_Memset( sv_worldSectors, 0, sizeof(sv_worldSectors) );
+	sv_numworldSectors = 0;
 
 	// get world map bounds
-	h = CM_InlineModel( 0, 2, gvm );
+#ifdef USE_MULTIVM_SERVER
+  h = CM_InlineModel( 0, 2, gvmi );
+#else
+	h = CM_InlineModel( 0, 2, 0 );
+#endif
 	CM_ModelBounds( h, mins, maxs );
 	SV_CreateworldSector( 0, mins, maxs );
 }
@@ -333,7 +348,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	gEnt->r.linkcount++;
 
 	// find the first world sector node that the ent's box crosses
-	node = sv_worldSectors[gvm];
+	node = sv_worldSectors;
 	while (1)
 	{
 		if (node->axis == -1)
@@ -401,7 +416,7 @@ static void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
 			return;
 		}
 
-		ap->list[ap->count] = check - sv.svEntities[gvm];
+		ap->list[ap->count] = check - sv.svEntities;
 		ap->count++;
 	}
 	
@@ -432,7 +447,7 @@ int SV_AreaEntities( const vec3_t mins, const vec3_t maxs, int *entityList, int 
 	ap.count = 0;
 	ap.maxcount = maxcount;
 
-	SV_AreaEntities_r( sv_worldSectors[gvm], &ap );
+	SV_AreaEntities_r( sv_worldSectors, &ap );
 
 	return ap.count;
 }

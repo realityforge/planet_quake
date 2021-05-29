@@ -86,7 +86,11 @@ int SV_BotAllocateClient( void ) {
 	cl->tld[0] = '\0';
 	cl->country = "BOT";
 
-	Com_Printf("Allocating: %i (%i)\n", i, gvm);
+#ifdef USE_MULTIVM_SERVER
+	Com_Printf("Allocating: %i (%i)\n", i, gvmi);
+#else
+  Com_Printf("Allocating: %i\n", i);
+#endif
 	return i;
 }
 #endif
@@ -137,7 +141,7 @@ void BotDrawDebugPolygons(void (*drawPoly)(int color, int numPoints, float *poin
 		if (!bot_highlightarea) bot_highlightarea = Cvar_Get("bot_highlightarea", "0", 0);
 		//
 		parm0 = 0;
-		if (svs.clients[0].lastUsercmd[0].buttons & BUTTON_ATTACK) parm0 |= 1;
+		if (svs.clients[0].lastUsercmd.buttons & BUTTON_ATTACK) parm0 |= 1;
 		if (bot_reachability->integer) parm0 |= 2;
 		if (bot_groundonly->integer) parm0 |= 4;
 		botlib_export->BotLibVarSet("bot_highlightarea", bot_highlightarea->string);
@@ -294,7 +298,11 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 	float max;
 	int	i;
 
-	h = CM_InlineModel(modelnum, 5, gvm);
+#ifdef USE_MULTIVM_SERVER
+	h = CM_InlineModel(modelnum, 5, gvmi);
+#else
+  h = CM_InlineModel(modelnum, 5, 0);
+#endif
 	CM_ModelBounds(h, mins, maxs);
 	//if the model is rotated
 	if ((angles[0] || angles[1] || angles[2])) {
@@ -478,8 +486,8 @@ SV_BotFrame
 void SV_BotFrame( int time ) {
 	if (!bot_enable) return;
 	//NOTE: maybe the game is already shutdown
-	if (!gvms[gvm]) return;
-	VM_Call( gvms[gvm], 1, BOTAI_START_FRAME, time );
+	if (!gvm) return;
+	VM_Call( gvm, 1, BOTAI_START_FRAME, time );
 }
 #endif
 
@@ -719,7 +727,7 @@ int SV_BotGetSnapshotEntity( int client, int sequence ) {
 	clientSnapshot_t	*frame;
 
 	cl = &svs.clients[client];
-	frame = &cl->frames[gvm][cl->netchan.outgoingSequence & PACKET_MASK];
+	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;
 	}

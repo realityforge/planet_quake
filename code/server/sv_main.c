@@ -24,11 +24,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
-int       gvm = 0;
-vm_t			*gvms[MAX_NUM_VMS];		// game virtual machine
-//#ifdef USE_MULTIVM_SERVER
+
+#ifdef USE_MULTIVM_CLIENT
+int   gvmi = 0;
+vm_t *gvmWorlds[MAX_NUM_VMS];
+#else
+vm_t			*gvm = NULL;		// game virtual machine
+#endif
+
 int       gameWorlds[MAX_NUM_VMS];
-//#endif
 
 #ifdef USE_RECENT_EVENTS
 char recentEvents[1024][MAX_INFO_STRING+400];
@@ -949,8 +953,8 @@ static void SVC_Info( const netadr_t *from ) {
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv(1) );
 
+	Info_SetValueForKey( infostring, "protocol", com_protocol->string );
 	Info_SetValueForKey( infostring, "gamename", com_gamename->string );
-	Info_SetValueForKey( infostring, "protocol", va("%i", PROTOCOL_VERSION) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
@@ -1127,7 +1131,11 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 				Cmd_ExecuteLimitedString( cmd_aux, qfalse, role );
 			} else
 #endif
-			Cmd_ExecuteString( cmd_aux, qfalse, gvm );
+#ifdef USE_MULTIVM_SERVER
+      Cmd_ExecuteString( cmd_aux, qfalse, gvmi );
+#else
+			Cmd_ExecuteString( cmd_aux, qfalse, 0 );
+#endif
 		}
 	}
 
@@ -1304,16 +1312,12 @@ static void SV_CalcPings( void ) {
 		count = 0;
 		for ( j = 0 ; j < PACKET_BACKUP ; j++ ) {
 #ifdef USE_MV
-			if ( cl->frames[cl->gameWorld][j].messageAcked == 0 ) {
-				continue;
-			}
-			delta = cl->frames[cl->gameWorld][j].messageAcked - cl->frames[cl->gameWorld][j].messageSent;
-#else
-			if ( cl->frames[0][j].messageAcked == 0 ) {
-				continue;
-			}
-			delta = cl->frames[0][j].messageAcked - cl->frames[0][j].messageSent;
+      gvmi = cl->gameWorld;
 #endif
+      if ( cl->frames[j].messageAcked == 0 ) {
+        continue;
+      }
+      delta = cl->frames[j].messageAcked - cl->frames[j].messageSent;
 			count++;
 			total += delta;
 		}
@@ -1372,14 +1376,14 @@ static void SV_CheckTimeouts( void ) {
 			for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 				if(!gvms[igvm]) continue;
 				gvm = igvm;
-				CM_SwitchMap(gameWorlds[gvm]);
-				SV_SetAASgvm(gvm);
+				CM_SwitchMap(gameWorlds[gvmi]);
+				SV_SetAASgvm(gvmi);
 				ent = SV_GentityNum( i );
 				ent->s.eType = 0;
 			}
 			gvm = prevGvm;
-			CM_SwitchMap(gameWorlds[gvm]);
-			SV_SetAASgvm(gvm);
+			CM_SwitchMap(gameWorlds[gvmi]);
+			SV_SetAASgvm(gvmi);
 #endif
 			cl->state = CS_FREE;	// can now be reused
 			continue;
@@ -1589,8 +1593,8 @@ void SV_Frame( int msec ) {
 
 #ifdef USE_MULTIVM_SERVER
 	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #endif
 
 	// allow pause if only the local client is connected
@@ -1615,14 +1619,14 @@ void SV_Frame( int msec ) {
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!gvms[i]) continue;
 		gvm = i;
-		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
 		if ( !com_dedicated->integer )
 			SV_BotFrame( sv.time + sv.timeResidual );
 	}
 	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #else
 	if ( !com_dedicated->integer )
 		SV_BotFrame( sv.time + sv.timeResidual );
@@ -1709,13 +1713,13 @@ void SV_Frame( int msec ) {
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if(!gvms[i]) continue;
 		gvm = i;
-		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
 		if (com_dedicated->integer) SV_BotFrame (sv.time);
 	}
 	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #else
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 #endif
@@ -1735,16 +1739,16 @@ void SV_Frame( int msec ) {
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(!gvms[i]) continue;
 			gvm = i;
-			CM_SwitchMap(gameWorlds[gvm]);
-			SV_SetAASgvm(gvm);
+			CM_SwitchMap(gameWorlds[gvmi]);
+			SV_SetAASgvm(gvmi);
 #endif
 ;
-			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 #ifdef USE_MULTIVM_SERVER
 		}
 		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
-		SV_SetAASgvm(gvm);
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
 #endif
 		
 #ifdef USE_MV
@@ -1792,14 +1796,14 @@ void SV_Frame( int msec ) {
 	{
 		client_t *c = &svs.clients[ i ];
 		playerState_t *ps = SV_GameClientNum( i );
-		clientSnapshot_t	*frame = &c->frames[0][ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
+		clientSnapshot_t	*frame = &c->frames[ c->netchan.outgoingSequence - 1 & PACKET_MASK ];
 
 		if(c->netchan.remoteAddress.type != NA_BOT) {
 			numConnected++;
 		}
 		//ps = &frame->ps;
 		for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
-			if ( j >= c->frames[0][ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
+			if ( j >= c->frames[ c->netchan.outgoingSequence - 2 & PACKET_MASK ].ps.eventSequence ) {
 				int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
 				//if(j >= ps.eventSequence) {
 //					if(event > 1) // footsteps and none
@@ -1878,8 +1882,8 @@ void SV_Frame( int msec ) {
 	
 #ifdef USE_MULTIVM_SERVER
 	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
-	SV_SetAASgvm(gvm);
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
 #endif
 }
 

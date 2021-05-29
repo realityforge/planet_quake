@@ -230,7 +230,7 @@ void SV_CreateBaseline( void ) {
 	sharedEntity_t *ent;
 	int				entnum;	
 
-	for ( entnum = 0; entnum < sv.num_entities[gvm] ; entnum++ ) {
+	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
 		ent = SV_GentityNum( entnum );
 		if ( !ent->r.linked ) {
 			continue;
@@ -240,8 +240,8 @@ void SV_CreateBaseline( void ) {
 		//
 		// take current state as baseline
 		//
-		sv.svEntities[gvm][ entnum ].baseline = ent->s;
-		sv.baselineUsed[gvm][ entnum ] = 1;
+		sv.svEntities[ entnum ].baseline = ent->s;
+		sv.baselineUsed[ entnum ] = 1;
 	}
 }
 
@@ -615,10 +615,18 @@ void SV_SpawnServer_After_Startup( void ) {
 #ifdef USE_MEMORY_MAPS
 	if(mapname[0] == '*') {
 		checksum = 0;
-		gameWorlds[gvm] = SV_MakeMap();
+#ifdef USE_MULTIVM_SERVER
+		gameWorlds[gvmi] = SV_MakeMap();
+#else
+    gameWorlds[0] = SV_MakeMap();
+#endif
 	} else
 #endif
-	gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#ifdef USE_MULTIVM_SERVER
+	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#else
+  gameWorlds[0] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#endif
 
 	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 
@@ -651,7 +659,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	for ( i = 0; i < 3; i++ )
 	{
 		sv.time += 100;
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 		SV_BotFrame( sv.time );
 	}
 
@@ -683,7 +691,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 
 			// connect the client again
-			denied = GVM_ArgPtr( VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
+			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
 			if ( denied ) {
 				// this generally shouldn't happen, because the client
 				// was connected before the level change
@@ -707,7 +715,7 @@ void SV_SpawnServer_After_Startup( void ) {
 					client->deltaMessage = -1;
 					client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
-					VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, i );
+					VM_Call( gvm, 1, GAME_CLIENT_BEGIN, i );
 				}
 			}
 		}
@@ -715,7 +723,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 	svs.time += 100;
 
@@ -820,7 +828,9 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 #endif
 
+#ifdef USE_MULTIVM_SERVER
 	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvm);
+#endif
 	
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;

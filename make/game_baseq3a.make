@@ -7,9 +7,10 @@ ifndef MOD
 MOD=baseq3a
 endif
 
-QADIR=$(MOUNT_DIR)/../qvms/baseq3a/code/game
-CGDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/cgame
-UIDIR=$(MOUNT_DIR)/../qvms/baseq3a/code/q3_ui
+GAMEDIR       := $(MOUNT_DIR)/../qvms/baseq3a/code
+QADIR         := $(GAMEDIR)/game
+CGDIR         := $(GAMEDIR)/cgame
+UIDIR         := $(GAMEDIR)/q3_ui
 
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
   BASE_CFLAGS += -Qunused-arguments

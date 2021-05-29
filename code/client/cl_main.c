@@ -2624,6 +2624,7 @@ handles will be invalid
 static void CL_Snd_Restart_f( void )
 {
 	CL_Snd_Shutdown();
+
 	// sound will be reinitialized by vid_restart
 	S_Init();
 	cls.soundStarted = qtrue;
@@ -2632,6 +2633,7 @@ static void CL_Snd_Restart_f( void )
 	S_BeginRegistration();
 	//CL_Vid_Restart();
 }
+
 
 /*
 ==================
@@ -5746,6 +5748,7 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 					type = 0;
 					break;
 			}
+
 			Info_SetValueForKey( cl_pinglist[i].info, "nettype", va("%d", type) );
 			if(from->type == NA_LOOPBACK) {
  				CL_SetServerInfoByAddress(&addr, infoString, cl_pinglist[i].time);

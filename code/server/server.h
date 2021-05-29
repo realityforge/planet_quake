@@ -94,23 +94,43 @@ typedef struct {
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
 	char			*configstrings[MAX_CONFIGSTRINGS];
+#ifdef USE_MULTIVM_SERVER
 	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
-
-	const char		*entityParsePoint;	// used during game VM init
-
-	// the game virtual machine will update these on init and changes
+#define svEntities svEntities[gvmi]
+	const char		*entityParsePoint; // TODO: need parse points in case loading 2 at the same time?
 	sharedEntity_t	*gentities[MAX_NUM_VMS];
+#define gentities gentities[gvmi]
 	int				gentitySize[MAX_NUM_VMS];
-	int				num_entities[MAX_NUM_VMS];		// current number, <= MAX_GENTITIES
-
+#define gentitySize gentitySize[gvmi]
+	int				num_entities[MAX_NUM_VMS];
+#define num_entities num_entities[gvmi]
 	playerState_t	*gameClients[MAX_NUM_VMS];
-	int				gameClientSize[MAX_NUM_VMS];		// will be > sizeof(playerState_t) due to game private data
-
+#define gameClients gameClients[gvmi] // these are all just pointers with players join so it's OK to duplicate
+	int				gameClientSize[MAX_NUM_VMS];
+#define gameClientSize gameClientSize[gvmi]
 	int				restartTime;
-	int				time;
-
+	int				time; // TODO: keep track of times seperately?
 	byte			baselineUsed[MAX_NUM_VMS][ MAX_GENTITIES ];
-	
+#define baselineUsed baselineUsed[gvmi]
+#else
+  svEntity_t		svEntities[MAX_GENTITIES];
+
+  const char		*entityParsePoint;	// used during game VM init
+
+  // the game virtual machine will update these on init and changes
+  sharedEntity_t	*gentities;
+  int				gentitySize;
+  int				num_entities;		// current number, <= MAX_GENTITIES
+
+  playerState_t	*gameClients;
+  int				gameClientSize;		// will be > sizeof(playerState_t) due to game private data
+
+  int				restartTime;
+  int				time;
+
+  byte			baselineUsed[ MAX_GENTITIES ];
+#endif
+
 	// serverside demo recording
 	fileHandle_t		demoFile;
 	demoState_t	demoState;
@@ -126,7 +146,11 @@ typedef struct {
 	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	playerState_t	ps;
 	int				num_entities;
-	
+#if 0
+	int				first_entity;		// into the circular sv_packet_entities[]
+										// the entities MUST be in increasing state number
+										// order, otherwise the delta compression will fail
+#endif
 #ifdef USE_MV
 	qboolean		multiview;
 	int				version;
@@ -222,7 +246,12 @@ typedef struct client_s {
 	int				gamestateMessageNum;	// netchan->outgoingSequence of gamestate
 	int				challenge;
 
+#ifdef USE_MULTIVM_SERVER
 	usercmd_t		lastUsercmd[MAX_NUM_VMS];
+#define lastUsercmd lastUsercmd[gvmi]
+#else
+  usercmd_t		lastUsercmd;
+#endif
 	int				lastMessageNum;		// for delta compression
 	int				lastClientCommand;	// reliable client message sequence
 	char			lastClientCommandString[MAX_STRING_CHARS];
@@ -258,7 +287,12 @@ typedef struct client_s {
 	int				lastSnapshotTime;	// svs.time of last sent snapshot
 	qboolean		rateDelayed;		// true if nextSnapshotTime was set based on rate instead of snapshotMsec
 	int				timeoutCount;		// must timeout a few frames in a row so debugging doesn't break
-	clientSnapshot_t	frames[MAX_NUM_VMS][PACKET_BACKUP];	// updates can be delta'd from here
+#ifdef USE_MULTIVM_SERVER
+  clientSnapshot_t	frames[MAX_NUM_VMS][PACKET_BACKUP];	// updates can be delta'd from here
+#define frames frames[gvmi]
+#else
+	clientSnapshot_t	frames[PACKET_BACKUP];	// updates can be delta'd from here
+#endif
 	int				ping;
 	int				rate;				// bytes / second, 0 - unlimited
 	int				snapshotMsec;		// requests a snapshot every snapshotMsec unless rate choked
@@ -353,7 +387,12 @@ typedef struct {
 	int			currentSnapshotFrame;	// for initializing empty frames
 	int			lastValidFrame;			// updated with each snapshot built
 	snapshotFrame_t	snapFrames[ NUM_SNAPSHOT_FRAMES ];
-	snapshotFrame_t	*currFrame[MAX_NUM_VMS]; // current frame that clients can refer
+#ifdef USE_MULTIVM_SERVER
+  snapshotFrame_t	*currFrameWorlds[MAX_NUM_VMS]; // current frame that clients can refer
+#define currFrame  currFrameWorlds[gvmi]
+#else
+	snapshotFrame_t	*currFrame; // current frame that clients can refer
+#endif
 
 #ifdef USE_MV	
 	int			numSnapshotPSF;				// sv_democlients->integer*PACKET_BACKUP*MAX_CLIENTS
