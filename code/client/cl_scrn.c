@@ -705,8 +705,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	if ( !scr_initialized )
 		return; // not initialized yet
 
-	int ms = Sys_Milliseconds();
 	if ( framecount == cls.framecount ) {
+	int ms = Sys_Milliseconds();
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
 		} else {
@@ -750,9 +750,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		if(ms - cls.lastVidRestart <= 5) {
-			continue;
-		}
+		//if(ms - cls.lastVidRestart <= 5) {
+		//	continue;
+		//}
 		
 		if(!cgvms[cgvm] && !uivm) continue;
 
@@ -782,7 +782,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	}
 
 	cgvm = 0;
-	uivm = 0;
+#ifdef USE_MULTIVM_CLIENT
+	uivmi = 0;
+#endif
 #ifdef USE_MULTIVM_CLIENT
 	CM_SwitchMap(clientMaps[cgvm]);
 	re.SwitchWorld(clientMaps[cgvm]);

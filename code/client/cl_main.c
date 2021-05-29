@@ -4928,7 +4928,7 @@ void CL_LoadVM_f( void ) {
 	char *name;
 	
 	if ( Cmd_Argc() < 2 ) {
-		Com_Printf( "Usage: %s <game|cgame|ui> [mapname]\n", Cmd_Argv( 0 ) );
+		Com_Printf( "Usage: %s <game|cgame|ui|demo> [mapname]\n", Cmd_Argv( 0 ) );
 		return;
 	}
 
@@ -4940,7 +4940,7 @@ void CL_LoadVM_f( void ) {
 		return;
 	} else if ( !Q_stricmp( name, "cgame" ) ) {
 		if(Cmd_Argc() > 3) {
-			Com_Printf( "Usage: %s <game|cgame|ui> [numclient]\n", Cmd_Argv( 0 ) );
+			Com_Printf( "Usage: %s <game|cgame|ui|demo> [numclient]\n", Cmd_Argv( 0 ) );
 			return;
 		}
 
@@ -4962,17 +4962,18 @@ void CL_LoadVM_f( void ) {
 		for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(uivms[i]) count++;
 			else {
-				uivm = i;
+				uivmi = i; // this looks like it isn't used until compiler templates run
+                   //   and everything past this point uses it like uivms[uivmi]
 				break;
 			}
 		}
 		count++;
 		CL_InitUI(qtrue);
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
-		uivm = 0;
+		uivmi = 0;
 		return;
-	}
-	else {
+  } else if ( !Q_stricmp( name, "demo" ) ) {
+	} else {
 		Com_Printf( " unknown VM name '%s'\n", name );
 		return;
 	}

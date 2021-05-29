@@ -932,8 +932,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_UPDATESCREEN:
-		if(uivm == 0)
-			SCR_UpdateScreen(qtrue);
+		SCR_UpdateScreen(qtrue);
 		return 0;
 
 	case UI_CM_LERPTAG:
@@ -980,8 +979,10 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 	case UI_KEY_SETCATCHER:
 		// Don't allow the ui module to close the console
-		if(uivm == 0)
-			Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
+#ifdef USE_MULTIVM_CLIENT
+		if(uivm == cls.currentView)
+#endif
+		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
 		return 0;
 
 	case UI_GETCLIPBOARDDATA:
@@ -1243,7 +1244,9 @@ void CL_ShutdownUI( void ) {
 		VM_Free( uivm );
 		uivm = NULL;
 	}
-	uivm = 0;
+#ifdef USE_MULTIVM_CLIENT
+	uivmi = 0;
+#endif
 	FS_VM_CloseFiles( H_Q3UI );
 
 #ifdef USE_RMLUI
@@ -1280,9 +1283,11 @@ void CL_InitUI( qboolean loadNew ) {
 			interpret = VMI_COMPILED;
 	}
 	
+#ifdef USE_MULTIVM_CLIENT
 	if(loadNew && uivm != NULL) {
-		uivm++;
+		uivmi++;
 	}
+#endif
 	uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 	if ( !uivm ) {
 		if ( cl_connectedToPureServer && CL_GameSwitch() ) {

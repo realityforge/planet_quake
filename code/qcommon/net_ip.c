@@ -1768,6 +1768,7 @@ static qboolean NET_GetCvars( void ) {
 #endif
 		);
 
+	Cvar_CheckRange( net_enabled, NULL, NULL, CV_INTEGER );
 	modified = net_enabled->modified;
 	net_enabled->modified = qfalse;
 
@@ -1788,6 +1789,7 @@ static qboolean NET_GetCvars( void ) {
 #endif
 
 	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
+  Cvar_CheckRange( net_port, "0", "65535", CV_INTEGER );
   Cvar_SetDescription(net_port, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port->modified;
 	net_port->modified = qfalse;
@@ -1799,6 +1801,7 @@ static qboolean NET_GetCvars( void ) {
 	net_ip6->modified = qfalse;
 
 	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
+  Cvar_CheckRange( net_port6, "0", "65535", CV_INTEGER );
   Cvar_SetDescription(net_port6, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
@@ -1820,6 +1823,7 @@ static qboolean NET_GetCvars( void ) {
 #endif // USE_IPV6
 
 	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( net_socksEnabled, "0", "1", CV_INTEGER );
   Cvar_SetDescription(net_socksEnabled, "Toggle the use of network socks 5 protocol enabling firewall access\nDefault: 0");
 	modified += net_socksEnabled->modified;
 	net_socksEnabled->modified = qfalse;
@@ -1830,6 +1834,7 @@ static qboolean NET_GetCvars( void ) {
 	net_socksServer->modified = qfalse;
 
 	net_socksPort = Cvar_Get( "net_socksPort", "1080", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( net_socksPort, "0", "65535", CV_INTEGER );
   Cvar_SetDescription( net_socksPort, "Set proxy and/or firewall port default is 1080\nDefault: 1080");
 	modified += net_socksPort->modified;
 	net_socksPort->modified = qfalse;

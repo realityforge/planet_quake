@@ -100,7 +100,6 @@ cvar_t	*com_skipIdLogo;
 cvar_t	*cl_paused;
 cvar_t	*cl_packetdelay;
 cvar_t	*com_cl_running;
-cvar_t  *com_cl_shownet;
 #endif
 
 cvar_t	*com_gamename;
@@ -3873,8 +3872,6 @@ void Com_Init_After_Filesystem( void ) {
 	Cvar_SetDescription(cl_packetdelay, "Stream network packets to the server instead of trying to send immediately\nDefault: 0");
 	com_cl_running = Cvar_Get( "cl_running", "0", CVAR_ROM | CVAR_NOTABCOMPLETE );
 	Cvar_SetDescription( com_cl_running, "Shows whether or not a client game is running or weather we are in server/client mode\nDefault: 0");
-	com_cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
-	Cvar_SetDescription( com_cl_shownet, "Display network quality info\nDefault: 0" );
 #endif
 
 	sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
