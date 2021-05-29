@@ -37,12 +37,10 @@ void GLimp_InitGamma( glconfig_t *config )
 {
 	config->deviceSupportsGamma = qfalse;
 
-#ifndef EMSCRIPTEN
 	if ( SDL_GetWindowGammaRamp( SDL_window, r, g, b ) == 0 )
 	{
 		config->deviceSupportsGamma = SDL_SetWindowBrightness( SDL_window, 1.0f ) >= 0 ? qtrue : qfalse;
 	}
-#endif
 }
 
 
@@ -109,12 +107,10 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 		}
 	}
 
-#ifndef EMSCRIPTEN
 	if ( SDL_SetWindowGammaRamp( SDL_window, table[0], table[1], table[2] ) < 0 )
 	{
 		Com_DPrintf( "SDL_SetWindowGammaRamp() failed: %s\n", SDL_GetError() );
 	}
-#endif
 }
 
 

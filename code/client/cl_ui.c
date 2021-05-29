@@ -1342,17 +1342,21 @@ static double CL_RmlGetElapsedTime( void ) {
 
 static qhandle_t CL_RmlLoadTexture(int *dimensions, const char *source) {
   qhandle_t result = re.RegisterImage(dimensions, source);
+  //dimensions[0] = dimensions[0] * (640/480);
+	//dimensions[1] = dimensions[1] * (480/640);
   return result;
 }
 
 static int imgCount = 0;
-static qhandle_t CL_RmlGenerateTexture(const byte* source, const int *source_dimensions) {
-	return re.CreateShaderFromImageBytes(va("rml_%i", ++imgCount), source, source_dimensions[0], source_dimensions[1]);
+static qhandle_t CL_RmlGenerateTexture(const byte *source, const int *source_dimensions) {
+	return re.CreateShaderFromRaw(va("rml_%i", ++imgCount), source, source_dimensions[0], source_dimensions[1]);
 }
 
 static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture, const vec2_t translation)
 {
+  re.RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
+  /*
   int *sourceVerts = (int *)vertices;
   polyVert_t verts[num_vertices];
   for(int  i = 0; i < num_vertices; i++) {
@@ -1363,8 +1367,8 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
     verts[i].xyz[0] = pos[0] + translation[0];
     verts[i].xyz[2] = 1;
     verts[i].xyz[1] = pos[1] + translation[1];
-    verts[i].st[0] = size[0] * 512;
-    verts[i].st[1] = size[1] * 512;
+    verts[i].st[0] = size[0];
+    verts[i].st[1] = size[1];
     //Com_Printf("%f x %f <-> %f x %f\n", verts[i].xyz[0],
     //  verts[i].xyz[1], verts[i].st[0], verts[i].st[1]);
     verts[i].modulate[0] = //sourceVerts[i*5+2] >> 24 & 0xFF;
@@ -1382,9 +1386,19 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
     memcpy(&pos2, &sourceVerts[(i*4+2)*5+0], sizeof(vec2_t));
     vec2_t size2;
     memcpy(&size2, &sourceVerts[(i*4+2)*5+3], sizeof(vec2_t));
-    re.DrawStretchPic( pos[0] + translation[0], pos[1] + translation[1], pos2[0] + translation[0], pos2[1] + translation[1], size[0], size[1], size2[0], size2[1], texture );
+    pos[0] = pos[0] * (640.0 / cls.glconfig.vidWidth) + translation[0] * (640.0 / cls.glconfig.vidWidth);
+    pos[1] = pos[1] * (480.0 / cls.glconfig.vidHeight) + translation[1] * (480.0 / cls.glconfig.vidHeight);
+    //pos[0] = pos[0] * (640 / cls.glconfig.vidWidth) + translation[0];
+    //pos[1] = pos[1] * (480 / cls.glconfig.vidHeight) + translation[1];
+    pos2[0] = pos2[0] * (640.0 / cls.glconfig.vidWidth)  + translation[0] * (640.0 / cls.glconfig.vidWidth);
+    pos2[1] = pos2[1] * (480.0 / cls.glconfig.vidHeight)  + translation[1] * (480.0 / cls.glconfig.vidHeight);
+    size[0] = size[0] ;
+    size[1] = size[1] ;
+    size2[0] = size2[0] ;
+    size2[1] = size2[1] ;
+    re.DrawStretchPic( pos[0], pos[1], pos2[0], pos2[1], size[0], size[1], size2[0], size2[1], texture );
   }
-  
+  */
 
   //re.AddPolyToScene(texture, num_vertices, verts, 1);
   //re.DrawElements(num_indices, indices);
@@ -1466,6 +1480,7 @@ void CL_InitUI( qboolean loadNew ) {
 		VM_Call( uivms[uivm], 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 
+/*
 #ifdef USE_RMLUI
 #ifdef USE_RMLUI_DLOPEN
 
@@ -1554,7 +1569,7 @@ static void CL_InitUI_After_Load( void *handle )
 		Rml_LoadFontFace(va("assets/%s", font_faces[i].filename), font_faces[i].fallback_face);
 	}
 
-  
+  //qhandle_t ctx = Rml_CreateContext("default", 640, 480);
 	qhandle_t ctx = Rml_CreateContext("default", cls.glconfig.vidWidth, cls.glconfig.vidWidth);
 	
 	qhandle_t doc = Rml_LoadDocument(ctx, "assets/demo.rml");
@@ -1575,6 +1590,7 @@ static void CL_InitUI_After_Load( void *handle )
 		cls.rmlStarted = qfalse;
 	}
 #endif
+*/
 
 	/*
 	

@@ -137,7 +137,7 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
       return;
     }
   }
-  Com_Printf("Remapping shader: %s -> %s\n", shaderName, newShaderName);
+  ri.Printf(PRINT_DEVELOPER, "Remapping shader: %s -> %s\n", shaderName, newShaderName);
   R_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }
 #endif
@@ -4084,18 +4084,6 @@ qhandle_t RE_RegisterShader( const char *name ) {
 	return sh->index;
 }
 
-qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
-  qhandle_t result = RE_RegisterShader(name);
-  if(tr.shaders[result] 
-    && tr.shaders[result]->stages[0]
-    && tr.shaders[result]->stages[0]->bundle[0].image[0]) {
-    image_t *image = tr.shaders[result]->stages[0]->bundle[0].image[0];
-    dimensions[0] = image->width;
-    dimensions[1] = image->height;
-  }
-  return result;
-}
-
 
 /*
 ====================
@@ -4474,7 +4462,43 @@ qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int w
   return sh->index;
 }
 
+qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height) {
+  shader_t	*sh;
+  image_t *image = R_CreateImage(name, (byte *)pic, width, height, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE, 0 );
+  InitShader( name, LIGHTMAP_2D );
+  stages[0].bundle[0].image[0] = image;
+  stages[0].active = qtrue;
+  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
+      GLS_SRCBLEND_SRC_ALPHA |
+      GLS_DSTBLEND_SRC_ALPHA;
+  stages[0].bundle[0].image[0] = image;
+  stages[0].rgbGen = CGEN_VERTEX;
+  stages[0].alphaGen = AGEN_VERTEX;
+  sh = FinishShader();
+  return sh->index;
+}
 
+
+
+qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
+  shader_t	*sh;
+  //shader_t *result = R_FindShader(name, LIGHTMAP_2D, qfalse);
+  image_t *image = R_FindImageFile( name, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE );
+  dimensions[0] = image->width;
+  dimensions[1] = image->height;
+  InitShader( name, LIGHTMAP_2D );
+  shader.contentFlags |= CONTENTS_TRANSLUCENT;
+  stages[0].bundle[0].image[0] = image;
+  stages[0].active = qtrue;
+  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
+      GLS_SRCBLEND_SRC_ALPHA |
+      GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+  stages[0].bundle[0].image[0] = image;
+  stages[0].rgbGen = CGEN_VERTEX;
+  stages[0].alphaGen = AGEN_VERTEX;
+  sh = FinishShader();
+  return sh->index;
+}
 
 /*
 ====================

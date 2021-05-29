@@ -204,8 +204,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Q_EXPORT
 #endif
 
-
-
 /**********************************************************************
   VM Considerations
 
@@ -291,6 +289,12 @@ typedef union floatint_u
 	byte b[4];
 }
 floatint_t;
+
+typedef union {
+	byte rgba[4];
+	uint32_t u32;
+} color4ub_t;
+
 
 typedef int		qhandle_t;
 typedef int		sfxHandle_t;

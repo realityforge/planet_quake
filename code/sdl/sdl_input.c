@@ -325,7 +325,17 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 	if( in_keyboardDebug->integer )
 		IN_PrintKey( keysym, key, down );
 
-	if( IN_IsConsoleKey( key, 0 ) )
+	if ( keysym->scancode == SDL_SCANCODE_GRAVE )
+	{
+		//SDL_Keycode translated = SDL_GetKeyFromScancode( SDL_SCANCODE_GRAVE );
+
+		//if ( translated == SDLK_CARET )
+		{
+			// Console keys can't be bound or generate characters
+			key = K_CONSOLE;
+		}
+	}
+	else if ( IN_IsConsoleKey( key, 0 ) )
 	{
 		// Console keys can't be bound or generate characters
 		key = K_CONSOLE;
@@ -1299,11 +1309,6 @@ static void IN_Restart( void )
 #endif
 	IN_Shutdown();
 	IN_Init();
-}
-
-
-void IN_ShowKeyboard ( void ) {
-	SDL_StartTextInput();
 }
 
 

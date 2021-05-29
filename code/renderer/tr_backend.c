@@ -964,7 +964,7 @@ Stretches a raw 32 bit power of 2 bitmap image over the given screen rectangle.
 Used for cinematics.
 =============
 */
-void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty ) {
+void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
 	int			i, j;
 	int			start, end;
 
@@ -998,12 +998,12 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data, 
 }
 
 
-void RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty ) {
+void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
 
 	image_t *image;
 
 	if ( !tr.scratchImage[ client ] ) {
-		tr.scratchImage[ client ] = R_CreateImage( va( "*scratch%i", client ), NULL, data, cols, rows, IMGFLAG_CLAMPTOEDGE | IMGFLAG_RGB | IMGFLAG_NOSCALE );
+		tr.scratchImage[ client ] = R_CreateImage( va( "*scratch%i", client ), NULL, (byte *)data, cols, rows, IMGFLAG_CLAMPTOEDGE | IMGFLAG_RGB | IMGFLAG_NOSCALE );
 	}
 
 	image = tr.scratchImage[ client ];
@@ -1621,4 +1621,75 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			return;
 		}
 	}
+}
+
+// TODO: add this to cmd buffer so it works with buffering
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation)
+{
+  // SDL uses shaders that we need to disable here  
+  qglBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
+  qglPushMatrix();
+  //qglTranslatef(translation[0], translation[1], 0);
+
+  vec2_t     verts[num_vertices];
+  int        colors[num_vertices];
+  vec2_t     coords[num_vertices];
+
+  float texw = 0.0f;
+  float texh = 0.0f;
+  if(texture)
+  {
+    texw = tr.shaders[texture]->stages[0]->bundle[0].image[0]->width;
+    texh = tr.shaders[texture]->stages[0]->bundle[0].image[0]->height;
+    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    qglBindTexture(GL_TEXTURE_2D, texture);
+  }
+
+  for(int  i = 0; i < num_vertices; i++) {
+    memcpy(&verts[i], &vertices[(i*4)*5+0], sizeof(vec2_t));
+    memcpy(&colors[i], &vertices[(i*4)*5+2], sizeof(int));
+    memcpy(&coords[i], &vertices[(i*4)*5+3], sizeof(vec2_t));
+    if (texture) {
+      memcpy(&coords[i], &vertices[(i*4)*5+3], sizeof(vec2_t));
+      coords[i][0] *= texw;
+      coords[i][1] *= texh;
+      //TexCoords[i].x = vertices[i].tex_coord.x * texw;
+      //TexCoords[i].y = vertices[i].tex_coord.y * texh;
+    } else {
+      memcpy(&coords[i], &vertices[(i*4)*5+3], sizeof(vec2_t));
+      //TexCoords[i] = vertices[i].tex_coord;
+    }
+  };
+
+  qglEnableClientState(GL_VERTEX_ARRAY);
+  qglEnableClientState(GL_COLOR_ARRAY);
+  qglVertexPointer(2, GL_FLOAT, 0, &verts);
+  qglColorPointer(4, GL_UNSIGNED_BYTE, 0, &colors);
+  qglTexCoordPointer(2, GL_FLOAT, 0, &coords);
+  
+  //glVertexPointer( 3, GL_FLOAT, sizeof( PointVertex ), &m_vertices.data()->vertex );
+  //glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( PointVertex ), &m_vertices.data()->colour );
+  //glDrawArrays( GL_LINES, 0, m_vertices.size() );
+
+  qglTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  qglEnable(GL_BLEND);
+  qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  qglDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, indices);
+  qglDisableClientState(GL_VERTEX_ARRAY);
+  qglDisableClientState(GL_COLOR_ARRAY);
+
+  if (texture) {
+      qglActiveTextureARB( GL_TEXTURE0_ARB );
+      qglDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  qglColor4f(1.0, 1.0, 1.0, 1.0);
+  qglPopMatrix();
+  /* Reset blending and draw a fake point just outside the screen to let SDL know that it needs to reset its state in case it wants to render a texture */
+  qglDisable(GL_BLEND);
+  glState.faceCulling = -1;
+  //qglBlendFunc( srcFactor, dstFactor );
+  //SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_NONE);
+  //SDL_RenderDrawPoint(mRenderer, -1, -1);
 }

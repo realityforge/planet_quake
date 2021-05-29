@@ -378,7 +378,7 @@ void Spy_InputText( void ) {
 	int milli = Sys_Milliseconds();
 	if(milli - keyboardLastShown < 1000) return;
 	keyboardLastShown = milli;
-	IN_ShowKeyboard();
+	//IN_ShowKeyboard();
 }
 
 void Spy_Banner(float x, float y) {

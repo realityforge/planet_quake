@@ -1962,6 +1962,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.SetDvrFrame = RE_SetDvrFrame;
 #endif
 	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
+  re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
+  re.RenderGeometry = RE_RenderGeometry;
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif

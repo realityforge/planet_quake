@@ -1,4 +1,5 @@
-MKFILE      := $(lastword $(MAKEFILE_LIST)) 
+MKFILE      := $(lastword $(MAKEFILE_LIST))
+WORKDIR     := client
 
 BUILD_CLIENT:=1
 include make/platform.make
@@ -152,7 +153,7 @@ CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(SOUND) \
             $(VM) $(CURL) $(SYSTEM)
 OBJS     := $(CFILES:.c=.o) 
-Q3OBJ    := $(addprefix $(B)/client/,$(notdir $(OBJS)))
+Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -187,43 +188,43 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_CLIENT)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=client mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_CLIENT)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=client mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
 
 clean:
-	@rm -rf $(BD)/client $(BD)/$(TARGET_CLIENT)
-	@rm -rf $(BR)/client $(BR)/$(TARGET_CLIENT)
+	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET_CLIENT)
+	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
 
 ifdef B
-$(B)/client/%.o: code/client/%.c
+$(B)/$(WORKDIR)/%.o: code/client/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/unix/%.c
+$(B)/$(WORKDIR)/%.o: code/unix/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/win32/%.c
+$(B)/$(WORKDIR)/%.o: code/win32/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/macosx/%.c
+$(B)/$(WORKDIR)/%.o: code/macosx/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/wasm/%.c
+$(B)/$(WORKDIR)/%.o: code/wasm/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/sdl/%.c
+$(B)/$(WORKDIR)/%.o: code/sdl/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/qcommon/%.c
+$(B)/$(WORKDIR)/%.o: code/qcommon/%.c
 	$(DO_CLIENT_CC)
 
-$(B)/client/%.o: code/server/%.c
+$(B)/$(WORKDIR)/%.o: code/server/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)

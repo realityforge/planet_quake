@@ -127,6 +127,9 @@ typedef struct {
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
 #endif
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
+  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
+  void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
+    int num_indices, qhandle_t texture, const vec2_t translation);
   void (*FastCapture)(byte *data);
 	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*UpdateMode)(glconfig_t *glconfigOut);

@@ -851,7 +851,6 @@ SURFACES
 
 ==============================================================================
 */
-typedef byte color4ub_t[4];
 
 // any changes in surfaceType must be mirrored in rb_surfaceTable[]
 typedef enum {
@@ -1143,6 +1142,62 @@ typedef struct {
 	int			numSurfaces;
 } bmodel_t;
 
+typedef struct {
+	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
+	char		baseName[MAX_QPATH];	// ie: tim_dm2
+
+	int			dataSize;
+
+	int			numShaders;
+	dshader_t	*shaders;
+
+	int			numBModels;
+	bmodel_t	*bmodels;
+
+	int			numplanes;
+	cplane_t	*planes;
+
+	int			numnodes;		// includes leafs
+	int			numDecisionNodes;
+	mnode_t		*nodes;
+
+	int         numWorldSurfaces;
+
+	int			numsurfaces;
+	msurface_t	*surfaces;
+	int         *surfacesViewCount;
+	int         *surfacesDlightBits;
+	int			*surfacesPshadowBits;
+
+	int			nummarksurfaces;
+	int         *marksurfaces;
+
+	int			numfogs;
+	fog_t		*fogs;
+
+	vec3_t		lightGridOrigin;
+	vec3_t		lightGridSize;
+	vec3_t		lightGridInverseSize;
+	int			lightGridBounds[3];
+	byte		*lightGridData;
+	uint16_t	*lightGrid16;
+
+
+	int			numClusters;
+	int			clusterBytes;
+	const byte	*vis;			// may be passed in by CM_LoadMap to save space
+
+	char		*entityString;
+	char		*entityParsePoint;
+	
+	// backup lightmaps so they can be reapplied when the world changes
+	int						numLightmaps;
+	int						lightmapSize;
+	image_t				**lightmaps;
+	model_t				*models[MAX_MOD_KNOWN];
+	int						numModels;
+
+} world_t;
 
 /*
 ==============================================================================
@@ -1260,63 +1315,6 @@ void		R_Modellist_f (void);
 
 #define	MAX_DRAWSURFS			0x10000
 #define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
-
-typedef struct {
-	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
-	char		baseName[MAX_QPATH];	// ie: tim_dm2
-
-	int			dataSize;
-
-	int			numShaders;
-	dshader_t	*shaders;
-
-	int			numBModels;
-	bmodel_t	*bmodels;
-
-	int			numplanes;
-	cplane_t	*planes;
-
-	int			numnodes;		// includes leafs
-	int			numDecisionNodes;
-	mnode_t		*nodes;
-
-	int         numWorldSurfaces;
-
-	int			numsurfaces;
-	msurface_t	*surfaces;
-	int         *surfacesViewCount;
-	int         *surfacesDlightBits;
-	int			*surfacesPshadowBits;
-
-	int			nummarksurfaces;
-	int         *marksurfaces;
-
-	int			numfogs;
-	fog_t		*fogs;
-
-	vec3_t		lightGridOrigin;
-	vec3_t		lightGridSize;
-	vec3_t		lightGridInverseSize;
-	int			lightGridBounds[3];
-	byte		*lightGridData;
-	uint16_t	*lightGrid16;
-
-
-	int			numClusters;
-	int			clusterBytes;
-	const byte	*vis;			// may be passed in by CM_LoadMap to save space
-
-	char		*entityString;
-	char		*entityParsePoint;
-	
-	// backup lightmaps so they can be reapplied when the world changes
-	int						numLightmaps;
-	int						lightmapSize;
-	image_t				**lightmaps;
-	model_t				*models[MAX_MOD_KNOWN];
-	int						numModels;
-
-} world_t;
 
 /*
 
@@ -2023,6 +2021,7 @@ void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
 qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height);
+qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height);
 #ifdef USE_LAZY_MEMORY
 void		RE_ReloadShaders( qboolean createNew );
 #endif
@@ -2380,6 +2379,8 @@ RENDERER BACK END FUNCTIONS
 */
 
 void RB_ExecuteRenderCommands( const void *data );
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation);
 
 /*
 =============================================================
