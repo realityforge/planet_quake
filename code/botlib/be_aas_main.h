@@ -31,7 +31,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef AASINTERN
 
-extern aas_t aasworld[MAX_NUM_VMS];
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+extern int   aasgvm;
+extern aas_t aasWorlds[MAX_NUM_VMS];
+#define aasworld aasWorlds[aasgvm]
+#else
+extern aas_t aasworld;
+#endif
 
 //AAS error message
 void QDECL AAS_Error(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));

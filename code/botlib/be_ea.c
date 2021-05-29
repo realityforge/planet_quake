@@ -41,7 +41,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_USERMOVE				400
 #define MAX_COMMANDARGUMENTS		10
 
-bot_input_t *botinputs[MAX_NUM_VMS];
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+bot_input_t *botinputsWorlds[MAX_NUM_VMS];
+#define botinputs botinputsWorlds[aasgvm];
+#else
+bot_input_t *botinputs;
+#endif
 
 //===========================================================================
 //
@@ -123,7 +128,7 @@ void EA_Gesture(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_GESTURE;
 } //end of the function EA_Gesture
@@ -147,7 +152,7 @@ void EA_SelectWeapon(int client, int weapon)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->weapon = weapon;
 } //end of the function EA_SelectWeapon
@@ -161,7 +166,7 @@ void EA_Attack(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_ATTACK;
 } //end of the function EA_Attack
@@ -175,7 +180,7 @@ void EA_Talk(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_TALK;
 } //end of the function EA_Talk
@@ -189,7 +194,7 @@ void EA_Use(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_USE;
 } //end of the function EA_Use
@@ -203,7 +208,7 @@ void EA_Respawn(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_RESPAWN;
 } //end of the function EA_Respawn
@@ -217,7 +222,7 @@ void EA_Jump(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	if (bi->actionflags & ACTION_JUMPEDLASTFRAME)
 	{
@@ -238,7 +243,7 @@ void EA_DelayedJump(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	if (bi->actionflags & ACTION_JUMPEDLASTFRAME)
 	{
@@ -259,7 +264,7 @@ void EA_Crouch(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_CROUCH;
 } //end of the function EA_Crouch
@@ -273,7 +278,7 @@ void EA_Walk(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_WALK;
 } //end of the function EA_Walk
@@ -287,7 +292,7 @@ void EA_Action(int client, int action)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= action;
 } //end of function EA_Action
@@ -301,7 +306,7 @@ void EA_MoveUp(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVEUP;
 } //end of the function EA_MoveUp
@@ -315,7 +320,7 @@ void EA_MoveDown(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVEDOWN;
 } //end of the function EA_MoveDown
@@ -329,7 +334,7 @@ void EA_MoveForward(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVEFORWARD;
 } //end of the function EA_MoveForward
@@ -343,7 +348,7 @@ void EA_MoveBack(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVEBACK;
 } //end of the function EA_MoveBack
@@ -357,7 +362,7 @@ void EA_MoveLeft(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVELEFT;
 } //end of the function EA_MoveLeft
@@ -371,7 +376,7 @@ void EA_MoveRight(int client)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->actionflags |= ACTION_MOVERIGHT;
 } //end of the function EA_MoveRight
@@ -385,7 +390,7 @@ void EA_Move(int client, vec3_t dir, float speed)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	VectorCopy(dir, bi->dir);
 	//cap speed
@@ -403,7 +408,7 @@ void EA_View(int client, vec3_t viewangles)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	VectorCopy(viewangles, bi->viewangles);
 } //end of the function EA_View
@@ -426,7 +431,7 @@ void EA_GetInput(int client, float thinktime, bot_input_t *input)
 {
 	bot_input_t *bi;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 	bi->thinktime = thinktime;
 	Com_Memcpy(input, bi, sizeof(bot_input_t));
 } //end of the function EA_GetInput
@@ -441,7 +446,7 @@ void EA_ResetInput(int client)
 	bot_input_t *bi;
 	int jumped;
 
-	bi = &botinputs[aasgvm][client];
+	bi = &botinputs[client];
 
 	bi->thinktime = 0;
 	VectorClear(bi->dir);
@@ -459,7 +464,7 @@ void EA_ResetInput(int client)
 int EA_Setup(void)
 {
 	//initialize the bot inputs
-	botinputs[aasgvm] = (bot_input_t *) GetClearedHunkMemory(
+	botinputs = (bot_input_t *) GetClearedHunkMemory(
 									botlibglobals.maxclients * sizeof(bot_input_t));
 	return BLERR_NOERROR;
 } //end of the function EA_Setup
@@ -471,6 +476,6 @@ int EA_Setup(void)
 //===========================================================================
 void EA_Shutdown(void)
 {
-	FreeMemory(botinputs[aasgvm]);
-	botinputs[aasgvm] = NULL;
+	FreeMemory(botinputs);
+	botinputs = NULL;
 } //end of the function EA_Shutdown

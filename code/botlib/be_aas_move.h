@@ -30,7 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 #ifdef AASINTERN
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 extern aas_settings_t aassettings[MAX_NUM_VMS];
+#else
+extern aas_settings_t aassettings;
+#endif
 #endif //AASINTERN
 
 //movement prediction

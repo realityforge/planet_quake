@@ -440,8 +440,6 @@ typedef struct botlib_export_s
 #endif
 } botlib_export_t;
 
-extern int   aasgvm;
-
 //linking of bot library
 #ifdef USE_BOTLIB_DLOPEN
 typedef	botlib_export_t* (QDECL *GetBotLibAPI_t) (int apiVersion, botlib_import_t *import);

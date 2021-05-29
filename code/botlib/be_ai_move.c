@@ -114,7 +114,12 @@ libvar_t *cmd_grappleon;
 //type of model, func_plat or func_bobbing
 int modeltypes[MAX_MODELS];
 
-bot_movestate_t *botmovestates[MAX_NUM_VMS][MAX_CLIENTS+1];
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+bot_movestate_t *botmovestatesWorlds[MAX_NUM_VMS][MAX_CLIENTS+1];
+#define botmovestates botmovestatesWorlds[aasgvm]
+#else
+bot_movestate_t *botmovestates[MAX_CLIENTS+1];
+#endif
 
 //========================================================================
 //
@@ -128,9 +133,9 @@ int BotAllocMoveState(void)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (!botmovestates[aasgvm][i])
+		if (!botmovestates[i])
 		{
-			botmovestates[aasgvm][i] = GetClearedMemory(sizeof(bot_movestate_t));
+			botmovestates[i] = GetClearedMemory(sizeof(bot_movestate_t));
 			return i;
 		} //end if
 	} //end for
@@ -149,13 +154,13 @@ void BotFreeMoveState(int handle)
 		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
 		return;
 	} //end if
-	if (!botmovestates[aasgvm][handle])
+	if (!botmovestates[handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
 		return;
 	} //end if
-	FreeMemory(botmovestates[aasgvm][handle]);
-	botmovestates[aasgvm][handle] = NULL;
+	FreeMemory(botmovestates[handle]);
+	botmovestates[handle] = NULL;
 } //end of the function BotFreeMoveState
 //========================================================================
 //
@@ -170,12 +175,12 @@ bot_movestate_t *BotMoveStateFromHandle(int handle)
 		botimport.Print(PRT_FATAL, "move state handle %d out of range\n", handle);
 		return NULL;
 	} //end if
-	if (!botmovestates[aasgvm][handle])
+	if (!botmovestates[handle])
 	{
 		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
 		return NULL;
 	} //end if
-	return botmovestates[aasgvm][handle];
+	return botmovestates[handle];
 } //end of the function BotMoveStateFromHandle
 //========================================================================
 //
@@ -3549,10 +3554,12 @@ void BotShutdownMoveAI(void)
 
 	for (i = 1; i <= MAX_CLIENTS; i++)
 	{
-		if (botmovestates[aasgvm][i])
+		if (botmovestates[i])
 		{
-			FreeMemory(botmovestates[aasgvm][i]);
-			botmovestates[aasgvm][i] = NULL;
+			FreeMemory(botmovestates[i]);
+			botmovestates[i] = NULL;
 		} //end if
 	} //end for
 } //end of the function BotShutdownMoveAI
+
+
