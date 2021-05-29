@@ -56,7 +56,6 @@ typedef struct {
 	qhandle_t (*RegisterModel)( const char *name );
 	qhandle_t (*RegisterSkin)( const char *name );
 	qhandle_t (*RegisterShader)( const char *name );
-  qhandle_t (*RegisterImage)( int *dimensions, const char *name );
 	qhandle_t (*RegisterShaderNoMip)( const char *name );
 	void	(*LoadWorld)( const char *name );
 
@@ -73,7 +72,6 @@ typedef struct {
 	void	(*ClearScene)( void );
 	void	(*AddRefEntityToScene)( const refEntity_t *re, qboolean intShaderTime );
 	void	(*AddPolyToScene)( qhandle_t hShader, int numVerts, const polyVert_t *verts, int num );
-  void  (*DrawElements)( int numIndexes, void *firstIndex);
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
 	void	(*AddAdditiveLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
@@ -142,6 +140,8 @@ typedef struct {
 #endif
 	void (*ResetBannerSpy)( void );
 	void (*SwitchWorld)(int world);
+  qhandle_t (*RegisterImage)( int *dimensions, const char *name );
+  void  (*DrawElements)( int numIndexes, void *firstIndex);
 
 } refexport_t;
 
@@ -192,7 +192,6 @@ typedef struct {
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
-	void	(*Cmd_SetDescription)( const char *name, char *description );
 
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
@@ -236,7 +235,6 @@ typedef struct {
 	// platform-dependent functions
 	void	(*GLimp_Init)( glconfig_t *config );
 	void	(*GLimp_Shutdown)( qboolean unloadDLL );
-	void  (*GLimp_UpdateMode)( glconfig_t *config );
 	void	(*GLimp_EndFrame)( void );
 	void	(*GLimp_InitGamma)( glconfig_t *config );
 	void	(*GLimp_SetGamma)( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
@@ -249,6 +247,8 @@ typedef struct {
 	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
+  void	(*Cmd_SetDescription)( const char *name, char *description );
+	void  (*GLimp_UpdateMode)( glconfig_t *config );
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 #endif

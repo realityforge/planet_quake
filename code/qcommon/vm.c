@@ -1912,6 +1912,14 @@ void VM_Free( vm_t *vm ) {
 }
 
 
+void VM_Clear( void ) {
+	int i;
+	for ( i = 0; i < VM_COUNT; i++ ) {
+		VM_Free( &vmTable[ i ] );
+	}
+}
+
+
 void VM_Forced_Unload_Start(void) {
 	forced_unload = 1;
 }

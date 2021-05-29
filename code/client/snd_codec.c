@@ -154,6 +154,7 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
+
 #ifdef USE_CODEC_OPUS
 	S_CodecRegister(&opus_codec);
 #endif

@@ -211,10 +211,18 @@ struct vm_s {
 
 extern  int       gvm;
 extern  int       cgvm;
-extern  int       uivm;
-extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
-extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
-extern	vm_t			*gvms[MAX_NUM_VMS];				// game virtual machine
+
+#ifdef USE_MULTIVM_CLIENT
+extern	vm_t		 *uivmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
+extern  int       uivmi;
+#define uivm      uivmWorlds[uivmi]
+#else
+extern  vm_t     *uivm;
+#endif
+
+extern	vm_t		 *cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
+extern	vm_t		 *uivms[MAX_NUM_VMS];	// interface to ui dll or vm
+extern	vm_t		 *gvms[MAX_NUM_VMS];				// game virtual machine
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );

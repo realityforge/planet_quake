@@ -1596,8 +1596,8 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	S_StopAllSounds();
 	Key_ClearStates();
 
-	if ( uivms[uivm] && showMainMenu ) {
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if ( uivm && showMainMenu ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 	}
 
 	// Remove pure paks
@@ -1892,7 +1892,7 @@ void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
-		if ( (uivms[0] && uivms[0]->callLevel) || (cgvms[0] && cgvms[0]->callLevel) ) {
+		if ( (uivm && uivm->callLevel) || (cgvms[0] && cgvms[0]->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
 		} else {
 			// clear any previous "server full" type messages
@@ -1914,8 +1914,8 @@ void CL_Disconnect_f( void ) {
 				CL_FlushMemory();
 #endif
 			}
-			if ( uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if ( uivm ) {
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 		}
 	}
@@ -2054,7 +2054,7 @@ static void CL_Connect_f( void ) {
 	if(cls.state >= CA_CONNECTED && clc.serverAddress.type == NA_LOOPBACK
 		&& addr.type == NA_LOOPBACK && cgvms[0]) {
 		cls.state = CA_PRIMED;
-		VM_Call( uivms[0], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 		return;
 	}
 #endif
@@ -2260,6 +2260,225 @@ static void CL_ResetPureClientAtServer( void ) {
 }
 
 
+#ifdef USE_VID_FAST
+/*
+=================
+CL_Vid_Restart_Fast
+*/
+static void CL_Vid_Restart_Fast() {
+	const float MATCH_EPSILON = 0.001f;
+	const char *arg = Cmd_Argv(1);
+	// WARNING this is absolutely terrible
+	//
+	// we unfortunately can't update the the cgame / ui modules, so instead
+	// we're reaching in and brute force scanning their address space to update
+	// known values on resize to make the world a better place
+
+	// NOTE while we could reference exact offsets (derived from cg_local.h /
+	// ui_local.h), mods may have changed the layout slightly so we're scanning
+	// a reasonable range to uh.. be safe
+	//VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+	re.UpdateMode(&cls.glconfig);
+
+	if (cls.uiGlConfig) {
+		glconfig_t old = *cls.uiGlConfig;
+
+		*cls.uiGlConfig = cls.glconfig;
+Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
+	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
+
+		float oldXScale = old.vidWidth * (1.0 / 640.0);
+		float oldYScale = old.vidHeight * (1.0 / 480.0);
+		float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
+
+		float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
+		float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
+		float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
+
+		if (!cls.numUiPatches) {
+			// having tested a few mods and UI configurations, these
+			// scale values are often layed out different in memory.
+			// we're scanning a large range here to catch both old UI
+			// and new UI values
+			void *current = (void *)cls.uiGlConfig - sizeof(cachedAssets_t) - 128;
+			void *stop = (void *)cls.uiGlConfig + sizeof(glconfig_t) + 128;
+			qboolean valid = qfalse;
+			float xScale = 0.0;
+			float yScale = 0.0;
+			float bias = 0.0;
+			int i, j, l;
+
+			patch_type_t layouts[][3] = {
+				{ PATCH_XSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+				{ PATCH_YSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
+				{ PATCH_YSCALE, PATCH_XSCALE, PATCH_BIAS },  // new UI
+				{ PATCH_YSCALE, PATCH_BIAS,   PATCH_NONE }   // CPMA
+			};
+
+			do {
+				for (i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
+					patch_type_t *layout = layouts[i];
+
+					valid = qtrue;
+					xScale = 0.0;
+					yScale = 0.0;
+					bias = 0.0;
+
+					for (j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
+						patch_type_t type = layout[j];
+
+						switch (type) {
+							case PATCH_NONE:
+							break;
+
+							case PATCH_XSCALE:
+								memcpy(&xScale, current+j, 4);
+								if (fabs(xScale - oldXScale) >= MATCH_EPSILON) {
+									valid = qfalse;
+								}
+							break;
+
+							case PATCH_YSCALE:
+								memcpy(&yScale, current+j, 4);
+								if (fabs(yScale - oldYScale) >= MATCH_EPSILON) {
+									valid = qfalse;
+								}
+							break;
+
+							case PATCH_BIAS:
+								memcpy(&bias, current+j, 4);
+								if (fabs(bias - oldBias) >= MATCH_EPSILON) {
+									valid = qfalse;
+								}
+							break;
+						}
+					}
+				}
+			} while (!valid && ++current != stop);
+
+			if (valid) {
+				if (xScale) {
+					cls.uiPatches[cls.numUiPatches].type = PATCH_XSCALE;
+					cls.uiPatches[cls.numUiPatches].addr = current+j;
+					cls.numUiPatches++;
+					Com_Printf("Found ui xscale offset at 0x%08x\n", (int)xScale);
+				}
+
+				if (yScale) {
+					cls.uiPatches[cls.numUiPatches].type = PATCH_YSCALE;
+					cls.uiPatches[cls.numUiPatches].addr = current+j;
+					cls.numUiPatches++;
+					Com_Printf("Found ui yscale offset at 0x%08x\n", (int)yScale);
+				}
+
+				if (bias) {
+					cls.uiPatches[cls.numUiPatches].type = PATCH_BIAS;
+					cls.uiPatches[cls.numUiPatches].addr = current+j;
+					cls.numUiPatches++;
+					Com_Printf("Found ui bias offset at 0x%08x\n", (int)bias);
+				}
+			}
+		}
+
+		if (cls.numUiPatches) {
+			for (int i = 0; i < cls.numUiPatches; i++) {
+				patch_t *p = &cls.uiPatches[i];
+
+				switch (p->type) {
+					case PATCH_XSCALE:
+						memcpy((float*)p->addr, &newXScale, 4);
+					break;
+
+					case PATCH_YSCALE:
+						memcpy((float*)p->addr, &newYScale, 4);
+					break;
+
+					case PATCH_BIAS:
+						memcpy((float*)p->addr, &newBias, 4);
+					break;
+
+					default:
+						Com_Error(ERR_FATAL, "bad ui patch type");
+					break;
+				}
+			}
+		} else {
+			Com_Printf(S_COLOR_RED "ERROR: Failed to patch ui resolution\n");
+		}
+	}
+
+	if (cls.cgameGlConfig) {
+		glconfig_t old = *cls.cgameGlConfig;
+
+		*cls.cgameGlConfig = cls.glconfig;
+
+Com_Printf( "Cgame Old Scale: %i x %i -> New Scale: %i x %i\n",
+	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
+		float oldXScale = old.vidWidth / 640.0;
+		float oldYScale = old.vidHeight / 480.0;
+
+		float newXScale = cls.glconfig.vidWidth / 640.0;
+		float newYScale = cls.glconfig.vidHeight / 480.0;
+
+		// as if this hack couldn't get worse, CPMA decided to store the
+		// scale values additionally in a second internal structure (and
+		// uses both). due to this, we're now scanning between
+		// cgs.glconfig <-> first vmCvar registered
+		if (!cls.numCgamePatches) {
+			void *current = (void *)cls.cgameGlConfig + sizeof(glconfig_t);
+			void *stop = current + 128;
+			if (stop < (void *)cls.cgameFirstCvar) {
+				stop = cls.cgameFirstCvar;
+			}
+
+			do {
+				float *xScale = (float*)current;
+				float *yScale = ((float*)current)+1;
+
+				if (fabs(*xScale - oldXScale) < MATCH_EPSILON) {
+					cls.cgamePatches[cls.numCgamePatches].type = PATCH_XSCALE;
+					cls.cgamePatches[cls.numCgamePatches].addr = xScale;
+					cls.numCgamePatches++;
+					Com_Printf("Found cgame xscale offset at 0x%08x\n", (int)xScale);
+				}
+				
+				if (fabs(*yScale - oldYScale) < MATCH_EPSILON) {
+					cls.cgamePatches[cls.numCgamePatches].type = PATCH_YSCALE;
+					cls.cgamePatches[cls.numCgamePatches].addr = yScale;
+					cls.numCgamePatches++;
+					Com_Printf("Found cgame yscale offset at 0x%08x\n", (int)yScale);
+				}
+				
+				current += 1;
+			} while (++current != stop);
+		}
+
+		if (cls.numCgamePatches) {
+			for (int i = 0; i < cls.numCgamePatches; i++) {
+				patch_t *p = &cls.cgamePatches[i];
+
+				switch (p->type) {
+					case PATCH_XSCALE:
+						*(float*)(p->addr) = newXScale;
+					break;
+
+					case PATCH_YSCALE:
+						*(float*)(p->addr) = newYScale;
+					break;
+
+					default:
+						Com_Error(ERR_FATAL, "bad cgame patch type");
+					break;
+				}
+			}
+		} else {
+			Com_Printf(S_COLOR_RED "ERROR: Failed to patch cgame resolution\n");
+		}
+	}
+}
+#endif
+
+
 /*
 =================
 CL_Vid_Restart
@@ -2270,223 +2489,17 @@ we also have to reload the UI and CGame because the renderer
 doesn't know what graphics to reload
 =================
 */
+
+
+
 static void CL_Vid_Restart( qboolean keepWindow ) {
 
+
 #ifdef USE_VID_FAST
-	const float MATCH_EPSILON = 0.001f;
-	const char *arg = Cmd_Argv(1);
-
-	if (!strcmp(arg, "fast")) {
-		// WARNING this is absolutely terrible
-		//
-		// we unfortunately can't update the the cgame / ui modules, so instead
-		// we're reaching in and brute force scanning their address space to update
-		// known values on resize to make the world a better place
-
-		// NOTE while we could reference exact offsets (derived from cg_local.h /
-		// ui_local.h), mods may have changed the layout slightly so we're scanning
-		// a reasonable range to uh.. be safe
-		//VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-		re.UpdateMode(&cls.glconfig);
-
-		if (cls.uiGlConfig) {
-			glconfig_t old = *cls.uiGlConfig;
-
-			*cls.uiGlConfig = cls.glconfig;
-Com_Printf( "UI Old Scale: %i x %i -> New Scale: %i x %i\n",
- 	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
-
-			float oldXScale = old.vidWidth * (1.0 / 640.0);
-			float oldYScale = old.vidHeight * (1.0 / 480.0);
-			float oldBias =  old.vidWidth * 480 > old.vidHeight * 640 ? 0.5 * (old.vidWidth - (old.vidHeight * (640.0 / 480.0))) : 0.0;
-
-			float newXScale = cls.glconfig.vidWidth * (1.0 / 640.0);
-			float newYScale = cls.glconfig.vidHeight * (1.0 / 480.0);
-			float newBias = cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ? 0.5 * (cls.glconfig.vidWidth - (cls.glconfig.vidHeight * (640.0 / 480.0))) : 0.0;
-
-			if (!cls.numUiPatches) {
-				// having tested a few mods and UI configurations, these
-				// scale values are often layed out different in memory.
-				// we're scanning a large range here to catch both old UI
-				// and new UI values
-				void *current = (void *)cls.uiGlConfig - sizeof(cachedAssets_t) - 128;
-				void *stop = (void *)cls.uiGlConfig + sizeof(glconfig_t) + 128;
-				qboolean valid = qfalse;
-				float xScale = 0.0;
-				float yScale = 0.0;
-				float bias = 0.0;
-				int i, j, l;
-
-				patch_type_t layouts[][3] = {
-					{ PATCH_XSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
-					{ PATCH_YSCALE, PATCH_YSCALE, PATCH_BIAS },  // old UI
-					{ PATCH_YSCALE, PATCH_XSCALE, PATCH_BIAS },  // new UI
-					{ PATCH_YSCALE, PATCH_BIAS,   PATCH_NONE }   // CPMA
-				};
-
-				do {
-					for (i = 0, l = sizeof(layouts) / sizeof(layouts[0]); i < l && !valid; i++) {
-						patch_type_t *layout = layouts[i];
-
-						valid = qtrue;
-						xScale = 0.0;
-						yScale = 0.0;
-						bias = 0.0;
-
-						for (j = 0; j < sizeof(layouts[0]) / sizeof(layouts[0][0]) && valid; j++) {
-							patch_type_t type = layout[j];
-
-							switch (type) {
-								case PATCH_NONE:
-								break;
-
-								case PATCH_XSCALE:
-									memcpy(&xScale, current+j, 4);
-									if (fabs(xScale - oldXScale) >= MATCH_EPSILON) {
-										valid = qfalse;
-									}
-								break;
-
-								case PATCH_YSCALE:
-									memcpy(&yScale, current+j, 4);
-									if (fabs(yScale - oldYScale) >= MATCH_EPSILON) {
-										valid = qfalse;
-									}
-								break;
-
-								case PATCH_BIAS:
-									memcpy(&bias, current+j, 4);
-									if (fabs(bias - oldBias) >= MATCH_EPSILON) {
-										valid = qfalse;
-									}
-								break;
-							}
-						}
-					}
-				} while (!valid && ++current != stop);
-
-				if (valid) {
-					if (xScale) {
-						cls.uiPatches[cls.numUiPatches].type = PATCH_XSCALE;
-						cls.uiPatches[cls.numUiPatches].addr = current+j;
-						cls.numUiPatches++;
-						Com_Printf("Found ui xscale offset at 0x%08x\n", (int)xScale);
-					}
-
-					if (yScale) {
-						cls.uiPatches[cls.numUiPatches].type = PATCH_YSCALE;
-						cls.uiPatches[cls.numUiPatches].addr = current+j;
-						cls.numUiPatches++;
-						Com_Printf("Found ui yscale offset at 0x%08x\n", (int)yScale);
-					}
-
-					if (bias) {
-						cls.uiPatches[cls.numUiPatches].type = PATCH_BIAS;
-						cls.uiPatches[cls.numUiPatches].addr = current+j;
-						cls.numUiPatches++;
-						Com_Printf("Found ui bias offset at 0x%08x\n", (int)bias);
-					}
-				}
-			}
-
-			if (cls.numUiPatches) {
-				for (int i = 0; i < cls.numUiPatches; i++) {
-					patch_t *p = &cls.uiPatches[i];
-
-					switch (p->type) {
-						case PATCH_XSCALE:
-							memcpy((float*)p->addr, &newXScale, 4);
-						break;
-
-						case PATCH_YSCALE:
-							memcpy((float*)p->addr, &newYScale, 4);
-						break;
-
-						case PATCH_BIAS:
-							memcpy((float*)p->addr, &newBias, 4);
-						break;
-
-						default:
-							Com_Error(ERR_FATAL, "bad ui patch type");
-						break;
-					}
-				}
-			} else {
-				Com_Printf(S_COLOR_RED "ERROR: Failed to patch ui resolution\n");
-			}
-		}
-
-		if (cls.cgameGlConfig) {
-			glconfig_t old = *cls.cgameGlConfig;
-
-			*cls.cgameGlConfig = cls.glconfig;
-
-Com_Printf( "Cgame Old Scale: %i x %i -> New Scale: %i x %i\n",
- 	old.vidWidth, old.vidHeight, cls.glconfig.vidWidth, cls.glconfig.vidHeight);
-			float oldXScale = old.vidWidth / 640.0;
-			float oldYScale = old.vidHeight / 480.0;
-
-			float newXScale = cls.glconfig.vidWidth / 640.0;
-			float newYScale = cls.glconfig.vidHeight / 480.0;
-
-			// as if this hack couldn't get worse, CPMA decided to store the
-			// scale values additionally in a second internal structure (and
-			// uses both). due to this, we're now scanning between
-			// cgs.glconfig <-> first vmCvar registered
-			if (!cls.numCgamePatches) {
-				void *current = (void *)cls.cgameGlConfig + sizeof(glconfig_t);
-				void *stop = current + 128;
-				if (stop < (void *)cls.cgameFirstCvar) {
-					stop = cls.cgameFirstCvar;
-				}
-
-				do {
-					float *xScale = (float*)current;
-					float *yScale = ((float*)current)+1;
-
-					if (fabs(*xScale - oldXScale) < MATCH_EPSILON) {
-						cls.cgamePatches[cls.numCgamePatches].type = PATCH_XSCALE;
-						cls.cgamePatches[cls.numCgamePatches].addr = xScale;
-						cls.numCgamePatches++;
-						Com_Printf("Found cgame xscale offset at 0x%08x\n", (int)xScale);
-					}
-					
-					if (fabs(*yScale - oldYScale) < MATCH_EPSILON) {
-						cls.cgamePatches[cls.numCgamePatches].type = PATCH_YSCALE;
-						cls.cgamePatches[cls.numCgamePatches].addr = yScale;
-						cls.numCgamePatches++;
-						Com_Printf("Found cgame yscale offset at 0x%08x\n", (int)yScale);
-					}
-					
-					current += 1;
-				} while (++current != stop);
-			}
-
-			if (cls.numCgamePatches) {
-				for (int i = 0; i < cls.numCgamePatches; i++) {
-					patch_t *p = &cls.cgamePatches[i];
-
-					switch (p->type) {
-						case PATCH_XSCALE:
-							*(float*)(p->addr) = newXScale;
-						break;
-
-						case PATCH_YSCALE:
-							*(float*)(p->addr) = newYScale;
-						break;
-
-						default:
-							Com_Error(ERR_FATAL, "bad cgame patch type");
-						break;
-					}
-				}
-			} else {
-				Com_Printf(S_COLOR_RED "ERROR: Failed to patch cgame resolution\n");
-			}
-		}
-
-		return;
-	}
+  if (!strcmp(arg, "fast")) {
+    CL_Vid_Restart_Fast();
+    return;
+  }
 #endif
 
 	// Settings may have changed so stop recording now
@@ -2806,8 +2819,8 @@ Called when all downloading has been completed
 static void CL_DownloadsComplete( void ) {
 
 	Com_Printf("Downloads complete\n");
-	if(uivms[uivm])
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
+	if(uivm)
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
 #ifdef EMSCRIPTEN
 	if(clc.dlDisconnect) {
@@ -3811,8 +3824,8 @@ static void CL_CheckTimeout_After_Startup ( void ) {
 	FS_Restart_After_Async();
 	CL_UpdateGUID( NULL, 0 );
 	CL_FlushMemory();
-	if ( uivms[uivm] ) {
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	if ( uivm ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 }
 
@@ -3841,8 +3854,8 @@ static void CL_CheckTimeout( void ) {
 			if ( !CL_Disconnect( qfalse, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
 			}
-			if ( FS_Initialized() && uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if ( FS_Initialized() && uivm ) {
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 #ifdef EMSCRIPTEN
 			if(!FS_Initialized()) {
@@ -3993,13 +4006,13 @@ void CL_Frame( int msec, int realMsec ) {
 	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
 	//   cl_lazyLoad 3 is force lazy loading everytime
 	if(cl_lazyLoad->integer > 0) {
-		if((uivms[0] || cgvms[0]) && secondTimer > 20) {
+		if((uivm || cgvms[0]) && secondTimer > 20) {
 			secondTimer = 0;
 			CL_UpdateShader();
 		} else {
 			secondTimer += msec;
 		}
-		if((uivms[0] || cgvms[0]) && thirdTimer > 100) {
+		if((uivm || cgvms[0]) && thirdTimer > 100) {
 			thirdTimer = 0;
 			if(cls.soundRegistered) { // && !cls.firstClick) {
 				CL_UpdateSound();
@@ -4032,12 +4045,12 @@ void CL_Frame( int msec, int realMsec ) {
 	if ( cls.cddialog ) {
 		// bring up the cd error dialog if needed
 		cls.cddialog = qfalse;
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_NEED_CD );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NEED_CD );
 	} else	if ( cls.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI )
-		&& !com_sv_running->integer && uivms[uivm] ) {
+		&& !com_sv_running->integer && uivm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -4955,7 +4968,7 @@ void CL_LoadVM_f( void ) {
 		}
 		count++;
 		CL_InitUI(qtrue);
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 		uivm = 0;
 		return;
 	}

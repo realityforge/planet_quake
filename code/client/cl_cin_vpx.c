@@ -415,9 +415,9 @@ int CIN_PlayVPX( const char *name, int x, int y, int w, int h, int systemBits )
   if (cinTable[currentHandle].alterGameState)
   {
     // close the menu
-    if (uivms[uivm])
+    if (uivm)
     {
-      VM_Call(uivms[uivm], UI_SET_ACTIVE_MENU, UIMENU_NONE);
+      VM_Call(uivm, UI_SET_ACTIVE_MENU, UIMENU_NONE);
     }
   }
   else

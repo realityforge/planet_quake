@@ -77,6 +77,7 @@ cvar_t	*com_dedicated;
 cvar_t	*com_timescale;
 cvar_t	*com_fixedtime;
 cvar_t	*com_journal;
+cvar_t	*com_protocol;
 #ifndef DEDICATED
 cvar_t	*com_maxfps;
 cvar_t	*com_maxfpsUnfocused;
@@ -103,8 +104,6 @@ cvar_t  *com_cl_shownet;
 #endif
 
 cvar_t	*com_gamename;
-cvar_t	*com_protocol;
-
 cvar_t	*sv_paused;
 cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
@@ -397,7 +396,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, -1 );
+		longjmp( abortframe, 1 );
 	} else if ( code == ERR_DROP ) {
 		Com_Printf( "********************\nERROR: %s\n********************\n", 
 			com_errorMessage );
@@ -418,7 +417,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, -1 );
+		longjmp( abortframe, 1 );
 	} else if ( code == ERR_NEED_CD ) {
 #ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
@@ -441,7 +440,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, -1 );
+		longjmp( abortframe, 1 );
 	} else {
 		VM_Forced_Unload_Start();
 #ifndef DEDICATED
@@ -671,21 +670,20 @@ be after execing the config and default.
 */
 void Com_StartupVariable( const char *match ) {
 	int		i;
-	char	*s;
+	const char *name;
 
 	for (i=0 ; i < com_numConsoleLines ; i++) {
 		Cmd_TokenizeString( com_consoleLines[i] );
-		if ( strcmp( Cmd_Argv(0), "set" ) ) {
+		if ( Q_stricmp( Cmd_Argv( 0 ), "set" ) ) {
 			continue;
 		}
 
-		s = Cmd_Argv(1);
-		if( !match || !strcmp( s, match ) )
-		{
-			if ( Cvar_Flags( s ) == CVAR_NONEXISTENT )
-				Cvar_Get( s, Cmd_ArgsFrom( 2 ), CVAR_USER_CREATED );
+		name = Cmd_Argv( 1 );
+		if ( !match || Q_stricmp( name, match ) == 0 ) {
+			if ( Cvar_Flags( name ) == CVAR_NONEXISTENT )
+				Cvar_Get( name, Cmd_ArgsFrom( 2 ), CVAR_USER_CREATED );
 			else
-				Cvar_Set2( s, Cmd_ArgsFrom( 2 ), qfalse );
+				Cvar_Set2( name, Cmd_ArgsFrom( 2 ), qfalse );
 		}
 	}
 }
@@ -2362,6 +2360,7 @@ void Hunk_Clear( void ) {
 	hunk_temp = &hunk_high;
 
 	Com_Printf( "Hunk_Clear: reset the hunk ok\n" );
+	VM_Clear();
 #ifdef HUNK_DEBUG
 	hunkblocks = NULL;
 #endif
@@ -3643,11 +3642,11 @@ __asm {
 #endif // id386
 
 #if arm64
-void Sys_SnapVector( vec3_t vec )
+void Sys_SnapVector( float *vector )
 {
-	vec[0] = rint( vec[0] );
-	vec[1] = rint( vec[1] );
-	vec[2] = rint( vec[2] );
+	vector[0] = rint( vector[0] );
+	vector[1] = rint( vector[1] );
+	vector[2] = rint( vector[2] );
 }
 #endif
 
@@ -3661,7 +3660,7 @@ void Sys_SnapVector( vec3_t vec )
 	"fildl " src "\n" \
 	"fstps " src "\n"
 
-void Sys_SnapVector( vec3_t vector )
+void Sys_SnapVector( float *vector )
 {
 	static const unsigned short cw037F = 0x037F;
 	unsigned short cwCurr;
@@ -3682,11 +3681,11 @@ void Sys_SnapVector( vec3_t vector )
 
 #else // idx64, non-x86
 
-void Sys_SnapVector( vec3_t vec )
+void Sys_SnapVector( float *vector )
 {
-	vec[0] = rint(vec[0]);
-	vec[1] = rint(vec[1]);
-	vec[2] = rint(vec[2]);
+	vector[0] = rint( vector[0] );
+	vector[1] = rint( vector[1] );
+	vector[2] = rint( vector[2] );
 }
 
 #endif
@@ -3765,6 +3764,12 @@ void Com_Init( char *commandLine ) {
 	Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT );
 	Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
 	Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
+
+	com_protocol = Cvar_Get( "protocol", XSTRING( PROTOCOL_VERSION ), 0 );
+	Cvar_CheckRange( com_protocol, "0", NULL, CV_INTEGER );
+  Cvar_SetDescription(com_protocol, "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
+	com_protocol->flags &= ~CVAR_USER_CREATED;
+	com_protocol->flags |= CVAR_SERVERINFO | CVAR_ROM;
 
 	// done early so bind command exists
 	Com_InitKeyCommands();
@@ -3925,8 +3930,6 @@ void Com_Init_After_Filesystem( void ) {
 	Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients\nDefault: " XSTRING(Q3_VERSION));
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
 	Cvar_SetDescription(com_gamename, "Set the name of the game played, usually this is set by the mod.\nDefault: " XSTRING(GAMENAME_FOR_MASTER));
-	com_protocol = Cvar_Get("com_protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_INIT);
-	Cvar_SetDescription(com_protocol, "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
 
 	// this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM | CVAR_NOTABCOMPLETE );
@@ -4022,7 +4025,7 @@ void Com_Init_After_CL_Init( void ) {
 
 //==================================================================
 
-void Com_WriteConfigToFile( const char *filename ) {
+static void Com_WriteConfigToFile( const char *filename ) {
 	fileHandle_t	f;
 
 	f = FS_FOpenFileWrite( filename );

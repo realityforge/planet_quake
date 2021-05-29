@@ -1089,8 +1089,8 @@ static void CL_ParseDownload( msg_t *msg ) {
 static void CL_ParseCommand_After_Startup ( void ) {
 	FS_Restart_After_Async();
 	CL_FlushMemory();
-	if ( uivms[uivm] ) {
-		VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+	if ( uivm ) {
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 }
 

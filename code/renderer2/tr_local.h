@@ -1142,6 +1142,9 @@ typedef struct {
 	int			numSurfaces;
 } bmodel_t;
 
+#define	MAX_MOD_KNOWN	1024
+typedef struct model_s model_t;
+
 typedef struct {
 	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
 	char		baseName[MAX_QPATH];	// ie: tim_dm2
@@ -1296,7 +1299,6 @@ typedef struct model_s {
 } model_t;
 
 
-#define	MAX_MOD_KNOWN	1024
 extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 
 void		R_ModelInit (void);
@@ -1486,8 +1488,14 @@ typedef struct {
 	qboolean    depthFill;
 } backEndState_t;
 
-extern world_t s_worldData[MAX_NUM_WORLDS];
-extern int     rw;
+
+#ifdef USE_MULTIVM_CLIENT
+extern world_t s_worldDatas[MAX_NUM_WORLDS];
+extern int     rwi;
+#define s_worldData s_worldDatas[rwi]
+#else
+extern world_t s_worldData;
+#endif
 
 /*
 ** trGlobals_t 

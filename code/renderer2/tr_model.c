@@ -211,11 +211,11 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
 
 	// out of range gets the defualt model
-	if ( index < 1 || index >= s_worldData[rw].numModels ) {
-		return s_worldData[rw].models[0];
+	if ( index < 1 || index >= s_worldData.numModels ) {
+		return s_worldData.models[0];
 	}
 
-	mod = s_worldData[rw].models[index];
+	mod = s_worldData.models[index];
 
 	return mod;
 }
@@ -228,7 +228,7 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 model_t *R_AllocModel( void ) {
 	model_t		*mod = NULL;
 
-	if ( s_worldData[rw].numModels == MAX_MOD_KNOWN ) {
+	if ( s_worldData.numModels == MAX_MOD_KNOWN ) {
 		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
@@ -244,9 +244,9 @@ model_t *R_AllocModel( void ) {
 	}
 	if(mod == NULL) return NULL;
 
-	mod->index = s_worldData[rw].numModels;
-	s_worldData[rw].models[s_worldData[rw].numModels] = mod;
-	s_worldData[rw].numModels++;
+	mod->index = s_worldData.numModels;
+	s_worldData.models[s_worldData.numModels] = mod;
+	s_worldData.numModels++;
 
 	return mod;
 }
@@ -295,13 +295,13 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		mod = worldModels[hModel];
 		if ( mod && !strcmp( mod->name, name )
 			// make sure brush models are referenced properly
-		 	&& (name[0] != '*' || s_worldData[rw].models[mod->index] == mod) ) {
+		 	&& (name[0] != '*' || s_worldData.models[mod->index] == mod) ) {
 			found = qtrue;
 			// check it is loaded in world models
-			if(s_worldData[rw].models[mod->index] != mod) {
-				mod->index = s_worldData[rw].numModels;
-				s_worldData[rw].models[s_worldData[rw].numModels] = mod;
-				s_worldData[rw].numModels++;
+			if(s_worldData.models[mod->index] != mod) {
+				mod->index = s_worldData.numModels;
+				s_worldData.models[s_worldData.numModels] = mod;
+				s_worldData.numModels++;
 			}
 			if( mod->type != MOD_BAD ) {
 				return mod->index;
@@ -1261,17 +1261,25 @@ void R_ModelInit( void ) {
 	model_t		*mod = NULL;
 
 	// leave a space for NULL model
-	rw = 0;
-	s_worldData[0].numModels = 0;
+#ifdef USE_MULTIVM_CLIENT
+  // TODO: move this up?
+  rwi = 0;
+#endif
+	s_worldData.numModels = 0;
 	memset(worldModels, 0, sizeof(worldModels));
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
 
+  // make default model reference available to all worlds, so there is no confusion,
+  //   subsequent worlds will just continue to load new models in addition
+  //   this is just a few pointers afterall
+#ifdef USE_MULTIVM_CLIENT
 	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
 		s_worldData[i].models[0] = mod;
 		s_worldData[i].numModels = 1;
 	}
+#endif
 }
 
 

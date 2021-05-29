@@ -615,6 +615,7 @@ vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 
 void	VM_Free( vm_t *vm );
+void	VM_Clear(void);
 void	VM_Forced_Unload_Start(void);
 void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart( vm_t *vm );
@@ -683,6 +684,7 @@ void Cbuf_Init( void );
 
 void Cbuf_AddText( const char *text );
 // Adds command text at the end of the buffer, does NOT add a final \n
+
 void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag );
 void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
@@ -1542,7 +1544,7 @@ void	Sys_SetAffinityMask( int mask );
 int		Sys_Milliseconds( void );
 int64_t	Sys_Microseconds( void );
 
-void	Sys_SnapVector( float *v );
+void	Sys_SnapVector( float *vector );
 
 qboolean Sys_RandomBytes( byte *string, int len );
 

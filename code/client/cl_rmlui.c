@@ -1,7 +1,166 @@
 
-
 #ifdef USE_RMLUI
+#include "client.h"
+#include <RmlUi/Wrapper.h>
 
+#ifdef USE_RMLUI_DLOPEN
+static void	*rmlLib;
+static char dllName[ MAX_OSPATH ];
+Rml_ContextRender_t Rml_ContextRender = NULL;
+Rml_ContextUpdate_t Rml_ContextUpdate = NULL;
+Rml_Shutdown_t      Rml_Shutdown      = NULL;
+#endif
+
+static fileHandle_t CL_RmlOpen(const char * filename) {
+	fileHandle_t h;
+	/*int size = */ FS_FOpenFileRead(filename, &h, qfalse);
+	return h;
+}
+
+static void CL_RmlClose(fileHandle_t h) {
+	FS_FCloseFile( h );
+}
+
+static size_t CL_RmlRead(void* buffer, size_t size, fileHandle_t file) {
+	return FS_Read(buffer, size, file);
+}
+
+static qboolean CL_RmlSeek(fileHandle_t file, long offset, int origin) {
+	return FS_Seek(file, offset, origin);
+}
+
+static int CL_RmlTell(fileHandle_t file) {
+	return FS_FTell(file);
+}
+
+static int CL_RmlLength(fileHandle_t h) {
+	int pos = FS_FTell( h );
+	FS_Seek( h, 0, FS_SEEK_END );
+	int end = FS_FTell( h );
+	FS_Seek( h, pos, FS_SEEK_SET );
+	return end;
+}
+
+int CL_RmlLoadFile( const char *qpath, char **buffer )
+{
+	Com_Printf("Load file: %s\n", qpath);
+	return FS_ReadFile(qpath, (void **)buffer);
+}
+
+typedef enum 
+{
+  LT_ALWAYS = 0,
+  LT_ERROR,
+  LT_ASSERT,
+  LT_WARNING,
+  LT_INFO,
+  LT_DEBUG,
+  LT_MAX
+} rmlLog_t;
+
+static qboolean CL_RmlLogMessage(int type, const char *message) {
+	switch(type) {
+		case LT_ALWAYS:
+		Com_Printf("RMLUI: %s\n", message);
+		break;
+	  case LT_ERROR:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+		break;
+	  case LT_ASSERT:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+		break;
+	  case LT_WARNING:
+		Com_Printf(S_COLOR_YELLOW "RMLUI: %s\n", message);
+		break;
+	  case LT_INFO:
+		Com_Printf(S_COLOR_WHITE "RMLUI: %s\n", message);
+		break;
+	  case LT_DEBUG:
+		Com_DPrintf("RMLUI: %s\n", message);
+		break;
+	  case LT_MAX:
+		Com_Error(ERR_FATAL, "RMLUI: %s\n", message);
+	}
+	return qtrue;
+}
+
+static double CL_RmlGetElapsedTime( void ) {
+	return Sys_Milliseconds() / 1000;
+}
+
+static qhandle_t CL_RmlLoadTexture(int *dimensions, const char *source) {
+  qhandle_t result = re.RegisterImage(dimensions, source);
+  //dimensions[0] = dimensions[0] * (640/480);
+	//dimensions[1] = dimensions[1] * (480/640);
+  return result;
+}
+
+static int imgCount = 0;
+static qhandle_t CL_RmlGenerateTexture(const byte *source, const int *source_dimensions) {
+	return re.CreateShaderFromRaw(va("rml_%i", ++imgCount), source, source_dimensions[0], source_dimensions[1]);
+}
+
+static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation)
+{
+  re.RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
+  /*
+  int *sourceVerts = (int *)vertices;
+  polyVert_t verts[num_vertices];
+  for(int  i = 0; i < num_vertices; i++) {
+    vec2_t pos;
+    memcpy(&pos, &sourceVerts[i*5+0], sizeof(vec2_t));
+    vec2_t size;
+    memcpy(&size, &sourceVerts[i*5+3], sizeof(vec2_t));
+    verts[i].xyz[0] = pos[0] + translation[0];
+    verts[i].xyz[2] = 1;
+    verts[i].xyz[1] = pos[1] + translation[1];
+    verts[i].st[0] = size[0];
+    verts[i].st[1] = size[1];
+    //Com_Printf("%f x %f <-> %f x %f\n", verts[i].xyz[0],
+    //  verts[i].xyz[1], verts[i].st[0], verts[i].st[1]);
+    verts[i].modulate[0] = //sourceVerts[i*5+2] >> 24 & 0xFF;
+    verts[i].modulate[1] = //sourceVerts[i*5+2] >> 16 & 0xFF;
+    verts[i].modulate[2] = //sourceVerts[i*5+2] >> 8 & 0xFF;
+    verts[i].modulate[3] = 255; //sourceVerts[i*5+2] & 0xFF;
+  }
+  
+  for(int  i = 0; i < num_vertices / 4; i++) {
+    vec2_t pos;
+    memcpy(&pos, &sourceVerts[(i*4)*5+0], sizeof(vec2_t));
+    vec2_t size;
+    memcpy(&size, &sourceVerts[(i*4)*5+3], sizeof(vec2_t));
+    vec2_t pos2;
+    memcpy(&pos2, &sourceVerts[(i*4+2)*5+0], sizeof(vec2_t));
+    vec2_t size2;
+    memcpy(&size2, &sourceVerts[(i*4+2)*5+3], sizeof(vec2_t));
+    pos[0] = pos[0] * (640.0 / cls.glconfig.vidWidth) + translation[0] * (640.0 / cls.glconfig.vidWidth);
+    pos[1] = pos[1] * (480.0 / cls.glconfig.vidHeight) + translation[1] * (480.0 / cls.glconfig.vidHeight);
+    //pos[0] = pos[0] * (640 / cls.glconfig.vidWidth) + translation[0];
+    //pos[1] = pos[1] * (480 / cls.glconfig.vidHeight) + translation[1];
+    pos2[0] = pos2[0] * (640.0 / cls.glconfig.vidWidth)  + translation[0] * (640.0 / cls.glconfig.vidWidth);
+    pos2[1] = pos2[1] * (480.0 / cls.glconfig.vidHeight)  + translation[1] * (480.0 / cls.glconfig.vidHeight);
+    size[0] = size[0] ;
+    size[1] = size[1] ;
+    size2[0] = size2[0] ;
+    size2[1] = size2[1] ;
+    re.DrawStretchPic( pos[0], pos[1], pos2[0], pos2[1], size[0], size[1], size2[0], size2[1], texture );
+  }
+  */
+
+  //re.AddPolyToScene(texture, num_vertices, verts, 1);
+  //re.DrawElements(num_indices, indices);
+}
+
+static qhandle_t CL_RmlCompileGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture)
+{
+  return 0;
+}
+
+void CL_UIContextRender(void) {
+  Rml_ContextRender(0);
+}
 
 
 void CL_InitRmlUi( void ) {
@@ -48,6 +207,7 @@ static void CL_InitRmlUi_After_Load( void *handle )
   Rml_Shutdown_t Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
   Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
   Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
+  Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
 #endif // USE_BOTLIB_DLOPEN
 ;
 	static RmlFileInterface files;
@@ -113,7 +273,13 @@ static void CL_InitRmlUi_After_Load( void *handle )
 		cls.rmlStarted = qfalse;
 	}
 }
-#endif
+
+
+void CL_ShutdownRmlUi(void) {
+	if(cls.rmlStarted)
+		Rml_Shutdown();
+}
+
 
 /*
 
@@ -221,3 +387,4 @@ for (const FontFace& face : font_faces)
 	Rml::Shutdown();
 
 */
+#endif

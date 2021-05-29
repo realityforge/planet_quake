@@ -583,8 +583,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	re.BeginFrame( stereoFrame );
 
-	if(uivms[uivm]) {
-		uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
+	if(uivm) {
+		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
 	}
 
 	// wide aspect ratio screens need to have the sides cleared
@@ -610,17 +610,17 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_DISCONNECTED:
 			// force menu up
 			S_StopAllSounds();
-			if( uivms[uivm] )
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if( uivm )
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			if( uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
 			}
 			break;
 		case CA_LOADING:
@@ -637,9 +637,9 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			if( uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
 			}
 			break;
 		case CA_ACTIVE:
@@ -744,7 +744,9 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		cgvm = i;
-		uivm = i;
+#ifdef USE_MULTIVM_CLIENT
+		uivmi = i;
+#endif
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
@@ -752,7 +754,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 			continue;
 		}
 		
-		if(!cgvms[cgvm] && !uivms[uivm]) continue;
+		if(!cgvms[cgvm] && !uivm) continue;
 
 #ifdef USE_MULTIVM_CLIENT
     re.SetDvrFrame(clientScreens[cgvm][0], clientScreens[cgvm][1], clientScreens[cgvm][2], clientScreens[cgvm][3]);
@@ -769,8 +771,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		}
 		
 		// the menu draws next
-		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
-			VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
+		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
+			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 		}
     
 #ifdef USE_RMLUI

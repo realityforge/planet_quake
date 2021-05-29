@@ -67,7 +67,7 @@ static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 	// we are about to upload textures
 	R_IssuePendingRenderCommands();
 
-	s_worldData[rw].lightmapSize = tr.lightmapSize = DEFAULT_LIGHTMAP_SIZE;
+	s_worldData.lightmapSize = tr.lightmapSize = DEFAULT_LIGHTMAP_SIZE;
 	numLightmaps = len / (tr.lightmapSize * tr.lightmapSize * 3);
 
 	// check for deluxe mapping
@@ -111,14 +111,14 @@ static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 		tr.fatLightmapRows  = lightmapRows;
 		numLightmapsPerPage = lightmapCols * lightmapRows;
 
-		s_worldData[rw].numLightmaps = tr.numLightmaps = (numLightmaps + (numLightmapsPerPage - 1)) / numLightmapsPerPage;
+		s_worldData.numLightmaps = tr.numLightmaps = (numLightmaps + (numLightmapsPerPage - 1)) / numLightmapsPerPage;
 	}
 	else
 	{
-		s_worldData[rw].numLightmaps = tr.numLightmaps = numLightmaps;
+		s_worldData.numLightmaps = tr.numLightmaps = numLightmaps;
 	}
 
-	s_worldData[rw].lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	s_worldData.lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 
 	if (tr.worldDeluxeMapping)
 		tr.deluxemaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
@@ -129,7 +129,7 @@ static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 		// Check for the first hdr lightmap, if it exists, use GL_RGBA16 for textures.
 		char filename[MAX_QPATH];
 
-		Com_sprintf(filename, sizeof(filename), "maps/%s/lm_0000.hdr", s_worldData[rw].baseName);
+		Com_sprintf(filename, sizeof(filename), "maps/%s/lm_0000.hdr", s_worldData.baseName);
 		if (ri.FS_FileExists(filename))
 			textureInternalFormat = GL_RGBA16;
 	}
@@ -172,7 +172,7 @@ static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 			// look for hdr lightmaps
 			if (textureInternalFormat == GL_RGBA16)
 			{
-				Com_sprintf( filename, sizeof( filename ), "maps/%s/lm_%04d.hdr", s_worldData[rw].baseName, i * (tr.worldDeluxeMapping ? 2 : 1) );
+				Com_sprintf( filename, sizeof( filename ), "maps/%s/lm_%04d.hdr", s_worldData.baseName, i * (tr.worldDeluxeMapping ? 2 : 1) );
 				//ri.Printf(PRINT_ALL, "looking for %s\n", filename);
 
 				size = ri.FS_ReadFile(filename, (void **)&hdrLightmap);
@@ -304,7 +304,11 @@ static	void R_LoadLightmaps2( lump_t *l, lump_t *surfs ) {
 			if (r_mergeLightmaps->integer)
 				R_UpdateSubImage(tr.lightmaps[lightmapnum], image, xoff, yoff, tr.lightmapSize, tr.lightmapSize, textureInternalFormat);
 			else
-				s_worldData[rw].lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rw, i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
+#ifdef USE_MULTIVM_CLIENT
+  			s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
+#else
+        s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d", i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
+#endif
 
 			if (hdrLightmap)
 				ri.FS_FreeFile(hdrLightmap);
@@ -360,19 +364,19 @@ static	void R_LoadVisibility2( lump_t *l ) {
 	}
 	buf = fileBase + l->fileofs;
 
-	s_worldData[rw].numClusters = LittleLong( ((int *)buf)[0] );
-	s_worldData[rw].clusterBytes = LittleLong( ((int *)buf)[1] );
+	s_worldData.numClusters = LittleLong( ((int *)buf)[0] );
+	s_worldData.clusterBytes = LittleLong( ((int *)buf)[1] );
 
 	// CM_Load should have given us the vis data to share, so
 	// we don't need to allocate another copy
 	if ( tr.externalVisData ) {
-		s_worldData[rw].vis = tr.externalVisData;
+		s_worldData.vis = tr.externalVisData;
 	} else {
 		byte	*dest;
 
 		dest = ri.Hunk_Alloc( len - 8, h_low );
 		Com_Memcpy( dest, buf + 8, len - 8 );
-		s_worldData[rw].vis = dest;
+		s_worldData.vis = dest;
 	}
 }
 
@@ -411,7 +415,7 @@ static void ParseMesh ( dBspFace_t *ds, vec3_t *verts, float *hdrVertColors, msu
 
 	// we may have a nodraw surface, because they might still need to
 	// be around for movement clipping
-	if ( s_worldData[rw].shaders[ LittleLong( ds->texinfo ) ].surfaceFlags & SURF_NODRAW ) {
+	if ( s_worldData.shaders[ LittleLong( ds->texinfo ) ].surfaceFlags & SURF_NODRAW ) {
 		surf->data = &skipData;
 		return;
 	}
@@ -455,26 +459,26 @@ static	void R_LoadSurfaces2( lump_t *surfs, lump_t *verts ) {
 	numFlares = 0;
 
 	if (surfs->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData.name);
 	count = surfs->filelen / sizeof(*in);
 
 	dv = (void *)(fileBase + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))
-		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSurfaces2: funny lump size in %s",s_worldData.name);
 
 /*
 	indexes = (void *)(fileBase + indexLump->fileofs);
 	if ( indexLump->filelen % sizeof(*indexes))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
 */
 
 	out = ri.Hunk_Alloc ( count * sizeof(*out), h_low );	
 
-	s_worldData[rw].surfaces = out;
-	s_worldData[rw].numsurfaces = count;
-	s_worldData[rw].surfacesViewCount = ri.Hunk_Alloc ( count * sizeof(*s_worldData[rw].surfacesViewCount), h_low );
-	s_worldData[rw].surfacesDlightBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData[rw].surfacesDlightBits), h_low );
-	s_worldData[rw].surfacesPshadowBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData[rw].surfacesPshadowBits), h_low );
+	s_worldData.surfaces = out;
+	s_worldData.numsurfaces = count;
+	s_worldData.surfacesViewCount = ri.Hunk_Alloc ( count * sizeof(*s_worldData.surfacesViewCount), h_low );
+	s_worldData.surfacesDlightBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData.surfacesDlightBits), h_low );
+	s_worldData.surfacesPshadowBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData.surfacesPshadowBits), h_low );
 
 	// load hdr vertex colors
 	if (r_hdr->integer)
@@ -482,7 +486,7 @@ static	void R_LoadSurfaces2( lump_t *surfs, lump_t *verts ) {
 		char filename[MAX_QPATH];
 		int size;
 
-		Com_sprintf( filename, sizeof( filename ), "maps/%s/vertlight.raw", s_worldData[rw].baseName);
+		Com_sprintf( filename, sizeof( filename ), "maps/%s/vertlight.raw", s_worldData.baseName);
 		//ri.Printf(PRINT_ALL, "looking for %s\n", filename);
 
 		size = ri.FS_ReadFile(filename, (void **)&hdrVertColors);
@@ -500,13 +504,13 @@ static	void R_LoadSurfaces2( lump_t *surfs, lump_t *verts ) {
 	// This ensures surfaces are close together to reduce L2 cache misses when using VAOs,
 	// which don't actually use the verts and indexes
 	in = (void *)(fileBase + surfs->fileofs);
-	out = s_worldData[rw].surfaces;
+	out = s_worldData.surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
 		out->data = ri.Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
 	}
 
 	in = (void *)(fileBase + surfs->fileofs);
-	out = s_worldData[rw].surfaces;
+	out = s_worldData.surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
 		ParseMesh ( in, dv, hdrVertColors, out );
 		numMeshes++;
@@ -545,11 +549,11 @@ static	void R_LoadSubmodels2( lump_t *l ) {
 
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "R_LoadSubmodels2: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadSubmodels2: funny lump size in %s",s_worldData.name);
 	count = l->filelen / sizeof(*in);
 
-	s_worldData[rw].numBModels = count;
-	s_worldData[rw].bmodels = out = ri.Hunk_Alloc( count * sizeof(*out), h_low );
+	s_worldData.numBModels = count;
+	s_worldData.bmodels = out = ri.Hunk_Alloc( count * sizeof(*out), h_low );
 
 	for ( i=0 ; i<count ; i++, in++, out++ ) {
 		model_t *model;
@@ -576,7 +580,7 @@ static	void R_LoadSubmodels2( lump_t *l ) {
 		if(i == 0)
 		{
 			// Add this for limiting VAO surface creation
-			s_worldData[rw].numWorldSurfaces = out->numSurfaces;
+			s_worldData.numWorldSurfaces = out->numSurfaces;
 		}
 	}
 }
@@ -600,16 +604,16 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 	in = (void *)(fileBase + nodeLump->fileofs);
 	if (nodeLump->filelen % sizeof(dBsp2Node_t) ||
 		leafLump->filelen % sizeof(dBsp2Leaf_t) ) {
-		ri.Error (ERR_DROP, "R_LoadNodesAndLeafs: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadNodesAndLeafs: funny lump size in %s",s_worldData.name);
 	}
 	numNodes = nodeLump->filelen / sizeof(dBsp2Node_t);
 	numLeafs = leafLump->filelen / sizeof(dBsp2Leaf_t);
 
 	out = ri.Hunk_Alloc ( (numNodes + numLeafs) * sizeof(*out), h_low);	
 
-	s_worldData[rw].nodes = out;
-	s_worldData[rw].numnodes = numNodes + numLeafs;
-	s_worldData[rw].numDecisionNodes = numNodes;
+	s_worldData.nodes = out;
+	s_worldData.numnodes = numNodes + numLeafs;
+	s_worldData.numDecisionNodes = numNodes;
 
 	// load nodes
 	for ( i=0 ; i<numNodes; i++, in++, out++)
@@ -621,7 +625,7 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 		}
 	
 		p = LittleLong(in->planeNum);
-		out->plane = s_worldData[rw].planes + p;
+		out->plane = s_worldData.planes + p;
 
 		out->contents = CONTENTS_NODE;	// differentiate from leafs
 
@@ -629,9 +633,9 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 		{
 			p = LittleLong (in->children[j]);
 			if (p >= 0)
-				out->children[j] = s_worldData[rw].nodes + p;
+				out->children[j] = s_worldData.nodes + p;
 			else
-				out->children[j] = s_worldData[rw].nodes + numNodes + (-1 - p);
+				out->children[j] = s_worldData.nodes + numNodes + (-1 - p);
 		}
 	}
 	
@@ -648,8 +652,8 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 		out->cluster = LittleLong(inLeaf->cluster);
 		out->area = LittleLong(inLeaf->zone);
 
-		if ( out->cluster >= s_worldData[rw].numClusters ) {
-			s_worldData[rw].numClusters = out->cluster + 1;
+		if ( out->cluster >= s_worldData.numClusters ) {
+			s_worldData.numClusters = out->cluster + 1;
 		}
 
 		out->firstmarksurface = LittleLong(inLeaf->firstleafface);
@@ -657,7 +661,7 @@ static	void R_LoadNodesAndLeafs2 (lump_t *nodeLump, lump_t *leafLump) {
 	}	
 
 	// chain descendants
-	R_SetParent (s_worldData[rw].nodes, NULL);
+	R_SetParent (s_worldData.nodes, NULL);
 }
 
 //=============================================================================
@@ -675,12 +679,12 @@ static	void R_LoadShaders2( lump_t *l ) {
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "R_LoadShaders2: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadShaders2: funny lump size in %s",s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low );
 
-	s_worldData[rw].shaders = out;
-	s_worldData[rw].numShaders = count;
+	s_worldData.shaders = out;
+	s_worldData.numShaders = count;
 
 	for ( i=0 ; i<count ; i++ ) {
 		Com_Memcpy(out[i].shader, va("textures/%s", in[i].texture), sizeof(out[i].shader));
@@ -711,12 +715,12 @@ static	void R_LoadMarksurfaces2 (lump_t *l)
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low);	
 
-	s_worldData[rw].marksurfaces = out;
-	s_worldData[rw].nummarksurfaces = count;
+	s_worldData.marksurfaces = out;
+	s_worldData.nummarksurfaces = count;
 
 	for ( i=0 ; i<count ; i++)
 	{
@@ -739,12 +743,12 @@ static	void R_LoadPlanes2( lump_t *l ) {
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "R_LoadPlanes: funny lump size in %s",s_worldData[rw].name);
+		ri.Error (ERR_DROP, "R_LoadPlanes: funny lump size in %s",s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*2*sizeof(*out), h_low);	
 	
-	s_worldData[rw].planes = out;
-	s_worldData[rw].numplanes = count;
+	s_worldData.planes = out;
+	s_worldData.numplanes = count;
 
 	for ( i=0 ; i<count ; i++, in++, out++) {
 		bits = 0;
@@ -770,8 +774,8 @@ R_LoadFogs
 static	void R_LoadFogs2( lump_t *brushesLump, lump_t *sidesLump ) {
 	int			count;
 	count = 0;
-	s_worldData[rw].numfogs = count + 1;
-	s_worldData[rw].fogs = ri.Hunk_Alloc ( s_worldData[rw].numfogs*sizeof(fog_t), h_low);
+	s_worldData.numfogs = count + 1;
+	s_worldData.fogs = ri.Hunk_Alloc ( s_worldData.numfogs*sizeof(fog_t), h_low);
 }
 
 /*

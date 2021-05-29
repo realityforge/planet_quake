@@ -183,8 +183,14 @@ typedef struct {
 #define	SURFACE_CLIP_EPSILON	(0.125)
 #define MAX_NUM_MAPS MAX_NUM_VMS
 
-extern	clipMap_t	cms[MAX_NUM_MAPS];
-extern  int       cm;
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define cm cmWorlds[cmi]
+extern	clipMap_t	cmWorlds[MAX_NUM_MAPS];
+extern  int       cmi;
+#else
+extern	clipMap_t	cm;
+#endif
+
 extern	int			c_pointcontents;
 extern	int			c_traces, c_brush_traces, c_patch_traces;
 extern	cvar_t		*cm_noAreas;
@@ -192,9 +198,20 @@ extern	cvar_t		*cm_noCurves;
 extern	cvar_t		*cm_playerCurveClip;
 extern  cvar_t    *cm_saveEnts;
 extern  byte	  	*cmod_base;
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 extern  cmodel_t	box_model[MAX_NUM_MAPS];
 extern  cplane_t	*box_planes[MAX_NUM_MAPS];
 extern  cbrush_t	*box_brush[MAX_NUM_MAPS];
+#define box_model box_modelWorlds[cmi]
+#define box_planes box_planesWorlds[cmi]
+#define box_brush box_brushWorlds[cmi]
+#else
+extern  cmodel_t	box_model;
+extern  cplane_t	*box_planes;
+extern  cbrush_t	*box_brush;
+#endif
+
 
 
 // cm_test.c
