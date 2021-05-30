@@ -2450,7 +2450,7 @@ static qboolean ParseShader( const char **text )
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
-			continue;
+			return qfalse;
 		}
 	}
 
@@ -2840,9 +2840,8 @@ static int CollapseStagesToGLSL(void)
 		{
 			shaderStage_t *pStage = &stages[i];
 
-			if (!pStage->active) {
+			if (!pStage->active)
         continue;
-      }
 
 			//if (pStage->adjustColorsForFog)
 			//{

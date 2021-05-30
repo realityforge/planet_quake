@@ -111,6 +111,7 @@ cvar_t *r_customheight;
 cvar_t *r_customPixelAspect;
 
 cvar_t *r_colorbits;
+cvar_t *r_debug;
 // these also shared with renderers:
 cvar_t *cl_stencilbits;
 cvar_t *cl_depthbits;
@@ -4172,7 +4173,7 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 
 	switch ( level ) {
 		default: Com_Printf( "%s", msg ); break;
-		case PRINT_DEVELOPER: /* Com_DPrintf( "%s", msg ); */ break;
+		case PRINT_DEVELOPER: if(r_debug->integer) Com_DPrintf( "%s", msg ); break;
 		case PRINT_WARNING: Com_DPrintf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
 	}
@@ -4381,7 +4382,7 @@ static void CL_InitRef( void ) {
 
 	CL_InitGLimp_Cvars();
 
-	Com_Printf( "----- Initializing Renderer ----\n" );
+	Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
 
 #ifdef USE_RENDERER_DLOPEN
 
@@ -4902,6 +4903,10 @@ static void CL_InitGLimp_Cvars( void )
 	r_colorbits = Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( r_colorbits, "0", "32", CV_INTEGER );
 	Cvar_SetDescription( r_colorbits, "Set number of bits used for each color from 0 to 32 bit, usually set by SDL\nDefault: 0" );
+  
+  r_debug = Cvar_Get( "r_debug", com_developer->string, CVAR_ARCHIVE );
+	Cvar_CheckRange( r_debug, "0", "1", CV_INTEGER );
+	Cvar_SetDescription( r_debug, "Show renderer debug messages\nDefault: 0" );
 
 	// shared with renderer:
 	cl_stencilbits = Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );

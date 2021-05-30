@@ -4,10 +4,15 @@ WORKDIR     := client
 BUILD_CLIENT:=1
 include make/platform.make
 
-LIB_PREFIX       := $(CNAME)
 TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+TARGET_CLIENT    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
+endif
 
 SOURCES  := $(MOUNT_DIR)/client
+ifneq ($(BUILD_SLIM_CLIENT),1)
+SOURCES  += $(MOUNT_DIR)/server
+endif
 
 CLIPMAP  := $(B)/client/cm_load.o \
             $(B)/client/cm_load_bsp2.o \
@@ -33,11 +38,14 @@ QCOMMON  := $(B)/client/cmd.o \
             $(B)/client/q_math.o \
             $(B)/client/q_shared.o \
             $(B)/client/unzip.o \
-            $(B)/client/puff.o \
-            $(B)/client/sv_init.o \
+            $(B)/client/puff.o
+# couple extra server files needed for cvars and botlib for reading files
+ifeq ($(BUILD_SLIM_CLIENT),1)
+QCOMMON  += $(B)/client/sv_init.o \
             $(B)/client/sv_main.o \
             $(B)/client/sv_bot.o \
             $(B)/client/sv_game.o
+endif
 
 SOUND    := $(B)/client/snd_adpcm.o \
             $(B)/client/snd_dma.o \
@@ -149,6 +157,9 @@ endif
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(SOUND) \
             $(VM) $(CURL) $(SYSTEM)
+ifneq ($(BUILD_SLIM_CLIENT),1)
+CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
+endif
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
@@ -156,10 +167,6 @@ export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
             -ffast-math -fno-short-enums -MMD
-
-ifdef BUILD_SLIM_CLIENT
-CFLAGS   += -DBUILD_SLIM_CLIENT
-endif
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 

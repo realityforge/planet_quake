@@ -1876,7 +1876,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
-  re.RenderGeometry = RE_RenderGeometry;
+  re.RenderGeometry = RE_AddIndexedGeometries;
 	re.AddPolyToScene = RE_AddPolyToScene;
 	re.LightForPoint = R_LightForPoint;
 	re.AddLightToScene = RE_AddLightToScene;

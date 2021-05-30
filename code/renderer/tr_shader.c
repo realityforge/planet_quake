@@ -1924,6 +1924,23 @@ static qboolean ParseShader( const char **text )
 
 			continue;
 		}
+    else if ( !Q_stricmp( token, "dpoffsetmapping" )
+      || !Q_stricmp(token, "dp_refract")) {
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      COM_ParseExt( text, qfalse );
+      continue;
+    }
+    else if ( !Q_stricmp( token, "dpglossexponentmod" )
+      || !Q_stricmp(token, "dpglossintensitymod")) {
+      COM_ParseExt( text, qfalse );
+      continue;
+    }
+    else if ( !Q_stricmp( token, "dp_camera" )
+      || !Q_stricmp(token, "nolightmap")) {
+      continue;
+    }
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );

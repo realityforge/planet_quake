@@ -224,6 +224,11 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 
 	len = l->filelen;
 	if ( !len ) {
+    tr.worldDeluxeMapping = qfalse;
+    r_mergeLightmaps->integer = 0;
+    r_deluxeMapping->integer = 0;
+    r_normalMapping->integer = 0;
+    r_specularMapping->integer = 0;
 		return;
 	}
 	buf = fileBase + l->fileofs;

@@ -1575,58 +1575,13 @@ static const void *RB_SwapBuffers( const void *data ) {
 }
 
 
-/*
-====================
-RB_ExecuteRenderCommands
-====================
-*/
-void RB_ExecuteRenderCommands( const void *data ) {
-
-	backEnd.pc.msec = ri.Milliseconds();
-
-	while ( 1 ) {
-		data = PADP(data, sizeof(void *));
-
-		switch ( *(const int *)data ) {
-		case RC_SET_COLOR:
-			data = RB_SetColor( data );
-			break;
-		case RC_STRETCH_PIC:
-			data = RB_StretchPic( data );
-			break;
-		case RC_DRAW_SURFS:
-			data = RB_DrawSurfs( data );
-			break;
-		case RC_DRAW_BUFFER:
-			data = RB_DrawBuffer( data );
-			break;
-		case RC_SWAP_BUFFERS:
-			data = RB_SwapBuffers( data );
-			break;
-		case RC_FINISHBLOOM:
-			data = RB_FinishBloom(data);
-			break;
-		case RC_COLORMASK:
-			data = RB_ColorMask(data);
-			break;
-		case RC_CLEARDEPTH:
-			data = RB_ClearDepth(data);
-			break;
-		case RC_CLEARCOLOR:
-			data = RB_ClearColor(data);
-			break;
-		case RC_END_OF_LIST:
-		default:
-			// stop rendering
-			return;
-		}
-	}
-}
-
 // TODO: add this to cmd buffer so it works with buffering
-void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
-  int num_indices, qhandle_t texture, const vec2_t translation)
+static const void *RB_AddGeometry( const void *data )
 {
+  const addIndexedCommand_t *cmd;
+
+	cmd = (const addIndexedCommand_t *)data;
+  /*
   // SDL uses shaders that we need to disable here  
   qglBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
   qglPushMatrix();
@@ -1686,10 +1641,63 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
 
   qglColor4f(1.0, 1.0, 1.0, 1.0);
   qglPopMatrix();
+  */
   /* Reset blending and draw a fake point just outside the screen to let SDL know that it needs to reset its state in case it wants to render a texture */
-  qglDisable(GL_BLEND);
-  glState.faceCulling = -1;
+  //qglDisable(GL_BLEND);
+  //glState.faceCulling = -1;
   //qglBlendFunc( srcFactor, dstFactor );
   //SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_NONE);
   //SDL_RenderDrawPoint(mRenderer, -1, -1);
+  return (const void *)(cmd + 1);
+}
+
+/*
+====================
+RB_ExecuteRenderCommands
+====================
+*/
+void RB_ExecuteRenderCommands( const void *data ) {
+
+	backEnd.pc.msec = ri.Milliseconds();
+
+	while ( 1 ) {
+		data = PADP(data, sizeof(void *));
+
+		switch ( *(const int *)data ) {
+		case RC_SET_COLOR:
+			data = RB_SetColor( data );
+			break;
+		case RC_STRETCH_PIC:
+			data = RB_StretchPic( data );
+			break;
+		case RC_DRAW_SURFS:
+			data = RB_DrawSurfs( data );
+			break;
+		case RC_DRAW_BUFFER:
+			data = RB_DrawBuffer( data );
+			break;
+		case RC_SWAP_BUFFERS:
+			data = RB_SwapBuffers( data );
+			break;
+		case RC_FINISHBLOOM:
+			data = RB_FinishBloom(data);
+			break;
+		case RC_COLORMASK:
+			data = RB_ColorMask(data);
+			break;
+		case RC_CLEARDEPTH:
+			data = RB_ClearDepth(data);
+			break;
+		case RC_CLEARCOLOR:
+			data = RB_ClearColor(data);
+			break;
+    case RC_ADD_GEOMETRY:
+      data = RB_AddGeometry(data);
+      break;
+		case RC_END_OF_LIST:
+		default:
+			// stop rendering
+			return;
+		}
+	}
 }

@@ -205,6 +205,7 @@ static void CL_InitRmlUi_After_Load( void *handle )
   Rml_LoadDocument_t Rml_LoadDocument = Sys_LoadFunction( rmlLib, "Rml_LoadDocument" );
   Rml_ShowDocument_t Rml_ShowDocument = Sys_LoadFunction( rmlLib, "Rml_ShowDocument" );
   Rml_Shutdown_t Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
+  Rml_LoadFontFace_t Rml_LoadFontFace = Sys_LoadFunction( rmlLib, "Rml_LoadFontFace" );
   Rml_ContextRender = Sys_LoadFunction( rmlLib, "Rml_ContextRender" );
   Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
   Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
@@ -222,7 +223,7 @@ static void CL_InitRmlUi_After_Load( void *handle )
 	renderer.LoadTexture = CL_RmlLoadTexture;
   renderer.GenerateTexture = CL_RmlGenerateTexture;
   renderer.RenderGeometry = CL_RmlRenderGeometry;
-  renderer.CompileGeometry = CL_RmlCompileGeometry;
+  //renderer.CompileGeometry = CL_RmlCompileGeometry;
 	static RmlSystemInterface system;
 	system.LogMessage = CL_RmlLogMessage;
 	system.GetElapsedTime = CL_RmlGetElapsedTime;
@@ -231,9 +232,7 @@ static void CL_InitRmlUi_After_Load( void *handle )
 	Rml_SetSystemInterface(&system);
 	if(!Rml_Initialize()) {
 		Com_Printf("RMLUI: Error initializing.");
-	}
-	cls.rmlStarted = qtrue;
-  
+	}  
   
 	struct FontFace {
 		char *filename;
@@ -261,6 +260,7 @@ static void CL_InitRmlUi_After_Load( void *handle )
 	{
 		Rml_ShowDocument(doc);
 		Com_Printf("RMLUI: Document loaded\n");
+    cls.rmlStarted = qtrue;
 		
 		Rml_ContextRender(ctx);
 
@@ -276,8 +276,8 @@ static void CL_InitRmlUi_After_Load( void *handle )
 
 
 void CL_ShutdownRmlUi(void) {
-	if(cls.rmlStarted)
-		Rml_Shutdown();
+	//if(cls.rmlStarted)
+	//	Rml_Shutdown();
 }
 
 

@@ -67,6 +67,9 @@ Some of the major features currently implemented are:
 New game features:
 
   * Automatically skip to multiplayer menu TODO: and that connects to first available command server that we can request a map command. TODO: Remove the autoconnect code from javascript.
+  * Configurable vote options based on roles.
+  * Launch a program like opening a web page from a map trigger.
+  * More configurable physics.
 
 Coming soon!
   * Move more features like the http downloading, file-system journaling, drag and drop, EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.

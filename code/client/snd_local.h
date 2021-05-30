@@ -190,6 +190,7 @@ extern	dma_t	dma;
 #define	MAX_RAW_SAMPLES	16384
 extern	portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 
+extern cvar_t *s_debug;
 extern cvar_t *s_volume;
 extern cvar_t *s_musicVolume;
 extern cvar_t *s_doppler;

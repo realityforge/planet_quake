@@ -605,7 +605,7 @@ typedef struct litSurf_s {
 } litSurf_t;
 #endif
 
-#define	MAX_FACE_POINTS		64
+#define	MAX_FACE_POINTS		256
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory
@@ -1741,7 +1741,7 @@ RENDERER BACK END FUNCTIONS
 */
 
 void RB_ExecuteRenderCommands( const void *data );
-void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+void RE_AddIndexedGeometries(void *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture, const vec2_t translation);
 
 /*
@@ -1822,6 +1822,17 @@ typedef struct
 	qboolean colorMask;
 } clearColorCommand_t;
 
+typedef struct
+{
+  int commandId;
+  polyVert_t *verts;
+  int        numverts;
+  int        *indexes;
+  int        numIndexes;
+  shader_t   *shader;
+  int         translation[2];
+} addIndexedCommand_t;
+
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -1832,7 +1843,8 @@ typedef enum {
 	RC_FINISHBLOOM,
 	RC_COLORMASK,
 	RC_CLEARDEPTH,
-	RC_CLEARCOLOR
+	RC_CLEARCOLOR,
+  RC_ADD_GEOMETRY
 } renderCommand_t;
 
 

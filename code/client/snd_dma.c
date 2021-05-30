@@ -33,6 +33,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 #include "client.h"
 
+#ifdef _MSC_VER
+#define Com_Printf(x, ...) if(s_debug && s_debug->integer) \
+  Com_Printf(x, __VA_ARGS__)
+#define Com_DPrintf(x, ...) if(s_debug && s_debug->integer) \
+  Com_Printf(x, __VA_ARGS__)
+#else
+#define Com_Printf(x, args...) if(s_debug && s_debug->integer) \
+  Com_Printf( x, ##args )
+#define Com_DPrintf(x, args...) if(s_debug && s_debug->integer) \
+  Com_Printf( x, ##args )
+#endif
+
 static void S_Update_( int msec );
 static void S_UpdateBackgroundTrack( void );
 static void S_Base_StopAllSounds( void );
@@ -404,7 +416,7 @@ void S_memoryLoad( sfx_t *sfx ) {
 	} else
 #endif
 	if (!S_LoadSound ( sfx ) ) {
-		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
+		Com_Printf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
 	} else {
@@ -776,7 +788,8 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+		Com_Printf( S_COLOR_YELLOW "%s has length 0", sfx->soundName );
+    return;
 	}
 
 	VectorCopy( origin, loopSounds[entityNum].origin );
@@ -840,7 +853,8 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Error( ERR_DROP, "%s has length 0", sfx->soundName );
+		Com_Printf( S_COLOR_YELLOW "%s has length 0\n", sfx->soundName );
+    return;
 	}
 	VectorCopy( origin, loopSounds[entityNum].origin );
 	VectorCopy( velocity, loopSounds[entityNum].velocity );
@@ -1630,3 +1644,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 
 	return qtrue;
 }
+
+#undef Com_Printf
+#undef Com_DPrintf

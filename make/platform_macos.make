@@ -19,9 +19,11 @@ ifneq ($(SDL_INCLUDE),)
   CLIENT_LDFLAGS = $(SDL_LIBS)
 else
   BASE_CFLAGS   += -I/Library/Frameworks/SDL2.framework/Headers
-  CLIENT_LDFLAGS =  -F/Library/Frameworks -framework SDL2
+  CLIENT_LDFLAGS = -F/Library/Frameworks -framework SDL2
 endif
-
+ifeq ($(USE_SYSTEM_JPEG),1)
+CLIENT_LDFLAGS  += $(JPEG_LIBS)
+endif
 ifeq ($(USE_RMLUI),1)
 ifeq ($(USE_RMLUI_DLOPEN),0)
 ifeq ($(USE_SYSTEM_RMLUI),1)

@@ -238,6 +238,63 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime ) {
 }
 
 
+void RE_AddIndexedGeometries(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation) {
+  srfPoly_t	*poly;
+  addIndexedCommand_t *cmd;
+  
+  /*
+  if ( !tr.registered ) {
+    return;
+  }
+  cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+  if ( !cmd ) {
+    return;
+  }
+  cmd->commandId = RC_ADD_GEOMETRY;
+  */
+  
+
+  poly = &backEndData->polys[r_numpolys];
+  poly->surfaceType = SF_POLY;
+  poly->hShader = texture;
+  poly->numVerts = num_vertices;
+  poly->verts = &backEndData->polyVerts[r_numpolyverts];
+  poly->fogIndex = 0;
+  
+  for(int  i = 0; i < num_vertices; i++) {
+    memcpy(&poly->verts[i].xyz, &vertices[i*5+0], sizeof(float) * 2);
+    memcpy(&poly->verts[i].st, &vertices[i*5+3], sizeof(float) * 2);
+    if (texture) {
+      int texw = tr.shaders[texture]->stages[0]->bundle[0].image[0]->width;
+      int texh = tr.shaders[texture]->stages[0]->bundle[0].image[0]->height;
+      //coords[i][0] *= texw;
+      //coords[i][1] *= texh;
+    }
+  };
+
+  /*
+  Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
+
+  cmd->verts = &backEndData->polyVerts[r_numpolyverts];
+	cmd->numverts = num_vertices;
+	memcpy( cmd->verts, verts, sizeof( polyVert_t ) * numverts );
+	cmd->shader = R_GetShaderByHandle( hShader );
+  // &backEndData->polys[r_numpolys]
+	cmd->indexes = &backEndData[ tr.smpFrame ]->polyIndexes[ r_numPolyIndexes ];
+	memcpy( cmd->indexes, indexes, sizeof( int ) * numindexes );
+	cmd->numIndexes = num_indices;
+  */
+  //cmd->translation[ 0 ] = translation[0];
+	//cmd->translation[ 1 ] = translation[1];
+
+	r_numpolyverts += num_vertices;
+  r_numpolys++;
+  
+  //RB_SurfacePolychain(poly);
+}
+
+
 /*
 =====================
 RE_AddDynamicLightToScene

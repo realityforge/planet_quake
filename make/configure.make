@@ -252,6 +252,10 @@ ifeq ($(USE_DEDICATED),1)
   BASE_CFLAGS += -DDEDICATED
 endif
 
+ifeq ($(BUILD_SLIM_CLIENT),1)
+CFLAGS   += -DBUILD_SLIM_CLIENT
+endif
+
 ifeq ($(USE_RMLUI),1)
   BASE_CFLAGS += -DUSE_RMLUI=1
 endif

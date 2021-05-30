@@ -31,6 +31,7 @@ cvar_t *s_musicVolume;
 cvar_t *s_doppler;
 cvar_t *s_muteWhenMinimized;
 cvar_t *s_muteWhenUnfocused;
+cvar_t *s_debug;
 
 static soundInterface_t si;
 
@@ -410,7 +411,8 @@ void S_Init( void )
 	qboolean	started = qfalse;
 
 	Com_Printf( "------ Initializing Sound ------\n" );
-
+  s_debug = Cvar_Get( "s_debug", com_developer->string, CVAR_ARCHIVE );
+  Cvar_SetDescription(s_debug, "Show error and status messages from sound\nDefault: 0");
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );
 	Cvar_SetDescription(s_volume, "Sound FX volume\nDefault: 0.8");
 	s_musicVolume = Cvar_Get( "s_musicvolume", "0.25", CVAR_ARCHIVE );

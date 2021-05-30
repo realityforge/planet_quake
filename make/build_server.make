@@ -5,8 +5,10 @@ BUILD_SERVER     :=1
 USE_DEDICATED    :=1
 include make/platform.make
 
-LIB_PREFIX       := $(CNAME)
-TARGET_SERVER    := $(CNAME)$(ARCHEXT)$(BINEXT)
+TARGET_SERVER    := $(DNAME)$(ARCHEXT)$(BINEXT)
+ifeq ($(USE_MULTIVM_CLIENT),1)
+TARGET_SERVER    := $(DNAME)_mw$(ARCHEXT)$(BINEXT)
+endif
 
 SOURCES  := $(MOUNT_DIR)/server $(MOUNT_DIR)/botlib
 

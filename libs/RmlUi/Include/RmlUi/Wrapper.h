@@ -253,6 +253,7 @@ typedef	qhandle_t (QDECL *Rml_CreateContext_t)      ( const char *name, int widt
 typedef	qhandle_t (QDECL *Rml_LoadDocument_t)       (qhandle_t ctx, const char *document_path);
 typedef	void      (QDECL *Rml_ShowDocument_t)       (qhandle_t document);
 typedef	void      (QDECL *Rml_Shutdown_t)           ( void );
+typedef	void      (QDECL *Rml_LoadFontFace_t)       ( const char *name, qboolean fallback );
 typedef	void      (QDECL *Rml_ContextRender_t)      ( qhandle_t ctx );
 typedef	void      (QDECL *Rml_ContextUpdate_t)      ( qhandle_t ctx );
 #else
@@ -266,7 +267,7 @@ void Rml_ShowDocument(qhandle_t document);
 void Rml_Shutdown( void );
 void Rml_ContextRender( qhandle_t ctx );
 void Rml_ContextUpdate( qhandle_t ctx );
-void Rml_LoadFontFace(const char *name, qboolean fallback);
+void Rml_LoadFontFace( const char *name, qboolean fallback );
 #endif
 
 

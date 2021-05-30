@@ -902,11 +902,15 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_R_ADDREFENTITYTOSCENE:
+#ifndef USE_RMLUI
 		re.AddRefEntityToScene( VMA(1), qfalse );
+#endif
 		return 0;
 
 	case UI_R_ADDPOLYTOSCENE:
+#ifndef USE_RMLUI
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
+#endif
 		return 0;
 
 	case UI_R_ADDLIGHTTOSCENE:
@@ -922,7 +926,9 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_R_DRAWSTRETCHPIC:
+#ifndef USE_RMLUI
 		re.DrawStretchPic( VMF(1), VMF(2), VMF(3), VMF(4), VMF(5), VMF(6), VMF(7), VMF(8), args[9] );
+#endif
 		return 0;
 
 	case UI_R_MODELBOUNDS:
@@ -1248,7 +1254,7 @@ void CL_ShutdownUI( void ) {
 	FS_VM_CloseFiles( H_Q3UI );
 
 #ifdef USE_RMLUI
-  CL_RmlUiShutdown();
+  CL_ShutdownRmlUi();
 #endif
 #ifdef USE_ABS_MOUSE
 	cls.cursorx = 0;
@@ -1325,7 +1331,7 @@ void CL_InitUI( qboolean loadNew ) {
 	}
 
 #ifdef USE_RMLUI
-  CL_RmlUiInit();
+  CL_InitRmlUi();
 #endif
 }
 
