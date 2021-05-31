@@ -957,7 +957,7 @@ qboolean FS_FileExists( const char *file );
 
 char   *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
-char *FS_DescribeGameFile(char *filename, int *demos);
+const char *FS_DescribeGameFile(const char *filename, int *demos);
 qboolean FS_CompareZipChecksum( const char *zipfile );
 int		FS_GetZipChecksum( const char *zipfile );
 

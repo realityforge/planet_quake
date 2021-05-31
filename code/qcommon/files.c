@@ -3286,13 +3286,28 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 }
 
 
-char *FS_DescribeGameFile(char *filename, int *demos) {
-  const char	*ext;
+const char *FS_DescribeGameFile(const char *filename, int *demos) {
+  const char *ext;
+  const char *basename;
+
+	// extract basename from path
+	basename = strrchr( filename, PATH_SEP );
+	if ( basename == NULL )
+		basename = filename;
+	else
+		basename++;
+
   ext = COM_GetExtension( filename );
   if(Q_stristr(ext, "dm_")) {
     (*demos)++;
+    return va("demos/%s", basename);
+  } else if (Q_stristr(ext, "pk3")) {
+    pack_t *pak = FS_LoadZipFile(filename);
+    // temporarily add it so we can scan what's inside
+    
+    FS_RemoveFromCache(pak);
+    FS_FreePak(pak);
   }
-  FS_LoadZipFile(filename);
   return "";
 }
 
