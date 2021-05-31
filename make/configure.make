@@ -58,14 +58,6 @@ ifndef DESTDIR
 DESTDIR=/usr/local/games/quake3
 endif
 
-ifndef MOUNT_DIR
-MOUNT_DIR=code
-endif
-
-ifndef BUILD_DIR
-BUILD_DIR=build
-endif
-
 ifndef GENERATE_DEPENDENCIES
 GENERATE_DEPENDENCIES=1
 endif
@@ -281,9 +273,6 @@ ifeq ($(GENERATE_DEPENDENCIES),1)
 endif
 
 ## Defaults
-INSTALL=install
-MKDIR=mkdir
-
 ARCHEXT=
 
 CLIENT_EXTRA_FILES=

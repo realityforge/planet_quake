@@ -1,9 +1,6 @@
 ABSOLUTE_PATH       := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))..
-#mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-#mkfile_dir := $(dir $(mkfile_path))
-#current_dir := $(notdir $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
-COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
-COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
+COMPILE_PLATFORM    := $(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
+COMPILE_ARCH        := $(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
 ifeq ($(COMPILE_PLATFORM),mingw32)
   ifeq ($(COMPILE_ARCH),i386)
@@ -78,6 +75,11 @@ include make/platform_unix.make
 endif
 endif
 endif
+
+INSTALL   ?= install
+MKDIR     ?= mkdir
+MOUNT_DIR ?= code
+BUILD_DIR ?= build
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
