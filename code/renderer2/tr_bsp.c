@@ -37,22 +37,15 @@ void RE_LoadWorldMap( const char *name );
 
 */
 
-#ifdef USE_MULTIVM_CLIENT
-world_t		s_worldDatas[MAX_NUM_WORLDS];
-int       rwi; // render world, should match number of loaded clip maps, 
-              //   since they are reusable
-#else
-world_t		s_worldData;
-#endif
-
-byte		*fileBase;
+static	world_t		s_worldData;
+static	byte		*fileBase;
 
 int			c_subdivisions;
 int			c_gridVerts;
 
 //===============================================================================
 
-void HSVtoRGB( float h, float s, float v, float rgb[3] )
+static void HSVtoRGB( float h, float s, float v, float rgb[3] )
 {
 	int i;
 	float f;
@@ -108,7 +101,7 @@ R_ColorShiftLightingBytes
 
 ===============
 */
-void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
+static	void R_ColorShiftLightingBytes( byte in[4], byte out[4] ) {
 	int		shift, r, g, b;
 
 	// shift the color data based on overbright range
@@ -143,7 +136,7 @@ R_ColorShiftLightingFloats
 
 ===============
 */
-void R_ColorShiftLightingFloats(float in[4], float out[4])
+static void R_ColorShiftLightingFloats(float in[4], float out[4])
 {
 	float	r, g, b;
 	float   scale = (1 << (r_mapOverBrightBits->integer - tr.overbrightBits)) / 255.0f;
@@ -224,11 +217,6 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 
 	len = l->filelen;
 	if ( !len ) {
-    tr.worldDeluxeMapping = qfalse;
-    r_mergeLightmaps->integer = 0;
-    r_deluxeMapping->integer = 0;
-    r_normalMapping->integer = 0;
-    r_specularMapping->integer = 0;
 		return;
 	}
 	buf = fileBase + l->fileofs;
@@ -236,7 +224,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 	// we are about to upload textures
 	R_IssuePendingRenderCommands();
 
-	s_worldData.lightmapSize = tr.lightmapSize = DEFAULT_LIGHTMAP_SIZE;
+	tr.lightmapSize = DEFAULT_LIGHTMAP_SIZE;
 	numLightmaps = len / (tr.lightmapSize * tr.lightmapSize * 3);
 
 	// check for deluxe mapping
@@ -280,14 +268,14 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		tr.fatLightmapRows  = lightmapRows;
 		numLightmapsPerPage = lightmapCols * lightmapRows;
 
-		s_worldData.numLightmaps = tr.numLightmaps = (numLightmaps + (numLightmapsPerPage - 1)) / numLightmapsPerPage;
+		tr.numLightmaps = (numLightmaps + (numLightmapsPerPage - 1)) / numLightmapsPerPage;
 	}
 	else
 	{
-		s_worldData.numLightmaps = tr.numLightmaps = numLightmaps;
+		tr.numLightmaps = numLightmaps;
 	}
 
-	s_worldData.lightmaps = tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
 
 	if (tr.worldDeluxeMapping)
 		tr.deluxemaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
@@ -473,11 +461,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 			if (r_mergeLightmaps->integer)
 				R_UpdateSubImage(tr.lightmaps[lightmapnum], image, xoff, yoff, tr.lightmapSize, tr.lightmapSize, textureInternalFormat);
 			else
-#ifdef USE_MULTIVM_CLIENT
-				s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d_%d", rwi, i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
-#else
-        s_worldData.lightmaps[i] = tr.lightmaps[i] = R_CreateImage(va("*lightmap_%d", i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
-#endif
+				tr.lightmaps[i] = R_CreateImage(va("*lightmap%d", i), image, tr.lightmapSize, tr.lightmapSize, IMGTYPE_COLORALPHA, imgFlags, textureInternalFormat );
 
 			if (hdrLightmap)
 				ri.FS_FreeFile(hdrLightmap);
@@ -518,7 +502,7 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 }
 
 
-float FatPackU(float input, int lightmapnum)
+static float FatPackU(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return input;
@@ -535,7 +519,7 @@ float FatPackU(float input, int lightmapnum)
 	return input;
 }
 
-float FatPackV(float input, int lightmapnum)
+static float FatPackV(float input, int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return input;
@@ -553,7 +537,7 @@ float FatPackV(float input, int lightmapnum)
 }
 
 
-int FatLightmap(int lightmapnum)
+static int FatLightmap(int lightmapnum)
 {
 	if (lightmapnum < 0)
 		return lightmapnum;
@@ -619,7 +603,7 @@ static	void R_LoadVisibility( lump_t *l ) {
 ShaderForShaderNum
 ===============
 */
-shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
+static shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 	shader_t	*shader;
 	dshader_t	*dsh;
 
@@ -642,8 +626,7 @@ shader_t *ShaderForShaderNum( int shaderNum, int lightmapNum ) {
 
 	// if the shader had errors, just use default shader
 	if ( shader->defaultShader ) {
-		//return tr.defaultShader;
-		shader->remappedShader = tr.defaultShader;
+		return tr.defaultShader;
 	}
 
 	return shader;
@@ -770,8 +753,7 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 			if(tri[j] >= numVerts)
 			{
-				ri.Printf(PRINT_WARNING, "Bad index in face surface");
-				tri[j] = 0;
+				ri.Error(ERR_DROP, "Bad index in face surface");
 			}
 		}
 
@@ -1891,7 +1873,7 @@ static	void R_LoadSubmodels( lump_t *l ) {
 R_SetParent
 =================
 */
-void R_SetParent (mnode_t *node, mnode_t *parent)
+static	void R_SetParent (mnode_t *node, mnode_t *parent)
 {
 	node->parent = parent;
 	if (node->contents != -1)
@@ -2118,8 +2100,7 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 		out->originalBrushNumber = LittleLong( fogs->brushNum );
 
 		if ( (unsigned)out->originalBrushNumber >= brushesCount ) {
-			ri.Printf( PRINT_WARNING, "fog brushNumber out of range" );
-			continue;
+			ri.Error( ERR_DROP, "fog brushNumber out of range" );
 		}
 		brush = brushes + out->originalBrushNumber;
 
@@ -2298,8 +2279,7 @@ R_LoadEntities
 ================
 */
 void R_LoadEntities( lump_t *l ) {
-	const char *p;
-	char *token, *s;
+	char *p, *token, *s;
 	char keyname[MAX_TOKEN_CHARS];
 	char value[MAX_TOKEN_CHARS];
 	world_t	*w;
@@ -2387,7 +2367,7 @@ R_GetEntityToken
 qboolean R_GetEntityToken( char *buffer, int size ) {
 	const char	*s;
 
-	s = COM_Parse( (const char **)&s_worldData.entityParsePoint );
+	s = COM_Parse( &s_worldData.entityParsePoint );
 	Q_strncpyz( buffer, s, size );
 	if ( !s_worldData.entityParsePoint && !s[0] ) {
 		s_worldData.entityParsePoint = s_worldData.entityString;
@@ -2720,46 +2700,6 @@ void R_CalcVertexLightDirs( void )
 }
 
 
-#ifdef USE_MULTIVM_CLIENT
-void RE_SwitchWorld(int w) {
-	R_IssuePendingRenderCommands();
-//ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
-	rwi = w;
-	tr.world = &s_worldData;
-	// reassign bmodels to same position as server entities
-	tr.numLightmaps = s_worldData.numLightmaps;
-	tr.lightmaps = s_worldData.lightmaps;
-	//GLSL_InitGPUShaders();
-}
-#endif
-
-
-void LoadBsp3(const char *name) {
-	int i;
-	dheader_t	*header;
-	header = (dheader_t *)fileBase;
-
-	// swap all the lumps
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
-	}
-
-	// load into heap
-	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
-	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
-	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
-	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
-	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
-	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
-	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
-	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
-	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
-	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
-	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
-
-}
-
-
 /*
 =================
 RE_LoadWorldMap
@@ -2768,7 +2708,7 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	int			id1, id2;
+	int			i;
 	dheader_t	*header;
 	union {
 		byte *b;
@@ -2776,30 +2716,9 @@ void RE_LoadWorldMap( const char *name ) {
 	} buffer;
 	byte		*startMarker;
 
-#ifdef USE_MULTIVM_CLIENT
-	int j, empty = -1;
-	for(j = 0; j < MAX_NUM_WORLDS; j++) {
-		if ( !Q_stricmp( s_worldData[j].name, name ) ) {
-			// TODO: PRINT_DEVELOPER
-			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
-			RE_SwitchWorld(j);
-			return;
-		} else if (s_worldData[j].name[0] == '\0' && empty == -1) {
-			// load additional world in to next slot
-			empty = j;
-		}
-	}
-	rw = empty;
-	// TODO: if (empty == -1) FreeOldestClipmap
-#else
 	if ( tr.worldMapLoaded ) {
-#ifdef USE_LAZY_MEMORY
-		ri.Printf( PRINT_WARNING, "ERROR: attempted to redundantly load world map\n" );
-#else
-		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map\n" );
-#endif
+		ri.Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
 	}
-#endif
 
 	// set default map light scale
 	tr.sunShadowScale = 0.5f;
@@ -2827,7 +2746,7 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.worldMapLoaded = qtrue;
 
 	// load it
-  ri.FS_ReadFile( name, &buffer.v );
+    ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
@@ -2848,35 +2767,29 @@ void RE_LoadWorldMap( const char *name ) {
 	header = (dheader_t *)buffer.b;
 	fileBase = (byte *)header;
 
-	id1 = LittleLong(header->ident);
-	id2 = LittleLong(header->version);
-
-	switch (id1)
-	{
-	case BSP_IDENT:
-		switch (id2)
-		{
-		case BSP2_VERSION:
-			LoadBsp2(name);
-			break;
-		case BSP_VERSION_QLIVE:
-		case BSP_VERSION_OPENJK:
-		case BSP3_VERSION:
-			LoadBsp3(name);
-			break;
-		default:
-			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
-				name, id1, BSP_VERSION);
-		}
-		break;
-	case BSP1_VERSION:
-	case BSPHL_VERSION:
-		LoadBsp1(name);
-		break;
-	default:
+	i = LittleLong (header->version);
+	if ( i != BSP_VERSION ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
-			name, id1, BSP_VERSION);
+			name, i, BSP_VERSION);
 	}
+
+	// swap all the lumps
+	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
+		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+	}
+
+	// load into heap
+	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
+	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
+	R_LoadLightmaps( &header->lumps[LUMP_LIGHTMAPS], &header->lumps[LUMP_SURFACES] );
+	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
+	R_LoadFogs( &header->lumps[LUMP_FOGS], &header->lumps[LUMP_BRUSHES], &header->lumps[LUMP_BRUSHSIDES] );
+	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
+	R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
+	R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
+	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
+	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
+	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
 
 	// determine vertex light directions
 	R_CalcVertexLightDirs();

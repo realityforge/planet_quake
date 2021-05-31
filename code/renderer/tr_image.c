@@ -911,23 +911,25 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 	{
 		char ddsName[MAX_QPATH];
     GLenum picFormat;
-    int numMips;
+    int numMips = r_simpleMipMaps->integer;
     picFormat = GL_RGBA8;
   	numMips = 0;
 
 		COM_StripExtension(name, ddsName, MAX_QPATH);
 		Q_strcat(ddsName, MAX_QPATH, ".dds");
 
-		//R_LoadDDS(localName, pic, width, height, &picFormat, &numMips);
+/*
+		R_LoadDDS(ddsName, pic, width, height, &picFormat, &numMips);
 
 		// If loaded, we're done.
 		if (*pic)
 			return localName;
     else {
-      //R_LoadDDS(va("dds/%s", ddsName), pic, width, height, &picFormat, &numMips);
+      R_LoadDDS(va("dds/%s", ddsName), pic, width, height, &picFormat, &numMips);
       if (*pic)
   			return va("dds/%s", ddsName);
     }
+*/
 	}
 
 	ext = COM_GetExtension( localName );

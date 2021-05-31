@@ -319,26 +319,5 @@ endif
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-D_FILES :=
-
-ifdef WORKDIR
-
-mkdirs:
-	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
-	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
-
-D_FILES := $(@shell find $(BD)/$(WORKDIR) -name '*.d') \
-           $(@shell find $(BR)/$(WORKDIR) -name '*.d')
-ifneq ($(strip $(D_FILES)),)
-include $(D_FILES)
-endif
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-  debug default dist distclean makedirs release \
-  targets tools toolsclean mkdirs \
-    $(D_FILES)
-
 .DEFAULT_GOAL := release
 .RECIPEPREFIX +=

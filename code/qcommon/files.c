@@ -3286,6 +3286,17 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 }
 
 
+char *FS_DescribeGameFile(char *filename, int *demos) {
+  const char	*ext;
+  ext = COM_GetExtension( filename );
+  if(Q_stristr(ext, "dm_")) {
+    (*demos)++;
+  }
+  FS_LoadZipFile(filename);
+  return "";
+}
+
+
 /*
 =================
 FS_FreePak

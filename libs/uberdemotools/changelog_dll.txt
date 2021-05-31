@@ -1,0 +1,265 @@
+1.3.1 (02.06.2018)
+ADD: Support for CPMA 1.50+ 1v1/hm end-game stats commands
+FIX: Flag possession time stats in CPMA demos
+
+1.3.0 (22.07.2016)
+ADD: A new scores analysis plug-in: udtParserPlugInScores
+ADD: New API functions: udtGetIdMagicNumber, udtGetUDTMagicNumber, udtPlayerStateToEntityState
+CHG: Allocators and arrays are now lazy-initialized, which can save some memory adress space in a few scenarios
+FIX: Player (dis)connection detection in udtParserPlugInGameState
+FIX: udtCustomParsingPlugIn was using a pointer to an out-of-scope snapshot instance
+FIX: A long-standing memory leak in DestroyContextGroup
+FIX: The network fields idPlayerStateBase::stats are now read as signed numbers
+REM: Got rid of a snapshot instance that wasn't strictly needed, therefore removing a needless memcpy
+FIX: udtCuSnapshotMessage::ChangedEntities/EntityCount would get out of sync when an event duplicate was removed
+FIX: All but the first demo in time-shift batches were broken because the write buffer wasn't cleared
+
+1.2.1 (01.05.2016)
+FIX: Divide by 0 exception when no memory was committed or the total job duration is less than 1 ms
+
+1.2.0 (30.04.2016)
+ADD: Searching for patterns with udtFindPatternsInDemoFiles
+ADD: Custom parsing API to help develop other analysis tools (or a 2D viewer?)
+ADD: PGO-enabled builds for Visual C++ (PGO: Profile-Guided Optimizations)
+CHG: Many performance and memory usage improvements, parsing is now roughly 2x faster
+CHG: The flag captures analyzer now obtains its data in much more reliable ways (supporting QL, CPMA and OSP)
+CHG: The cut/search by pattern functions can now have several rules for selecting the player index by name
+CHG: The cut/search by pattern player tracking based on names is more robust (doesn't give up the search after a gamestate, handles disconnects)
+CHG: UDT_captures: will output the same JSON data no matter the number of threads used
+CHG: UDT_captures: -b=N now keeps the captures of the top N times, not the top N captures
+CHG: The default thread count is now 1 in all command-line tools because we can't rely on all users having SSDs
+FIX: Not reserving enough memory address space is no longer going to trigger a fatal error anywhere
+FIX: Flick rail false positives when teleporting before a rail frag
+FIX: Fixed a few errors in the way performance stats were collected and merged
+FIX: Unsuccessful calls to malloc will now invoke the fatal error handler instead of having the library crash later
+FIX: Can now build the command-line tools with MingW GCC (wmain entry point support)
+FIX: The udtMergeDemoFiles function was returning incorrect error codes
+FIX: All sorts of bugs and vulnerabilities
+
+1.1.0b (23.11.2015)
+FIX: Reserving more address space for the raw commands' array allocator
+
+1.1.0a (13.11.2015)
+FIX: Cut by Time performance was bad due to excessive progress callback invocations
+
+1.1.0 (10.11.2015)
+ADD: UDT_converter command-line tool to convert demos to different protocol versions
+ADD: dm_73 to dm_91 and dm_90 to dm_91 demo converters
+REM: dm_90 to dm_68 and dm_73 to dm_90 demo converters
+
+1.0.1 (01.11.2015)
+FIX: Multiple parsing errors occurring with dm_90 and dm_91 demos because of previous overflow handling changes
+FIX: When a job was large enough to get split into multiple batches, some demos ended up not being processed
+FIX: Forfeits being wrongly detected in dm_91 demos when the config string for the 2nd place player's name was cleared at match start
+
+1.0.0 (24.10.2015)
+ADD: Options to allow/disallow base/non-base flag pickups in the Flag Captures cut filter
+ADD: The flag captures plug-in udtParserPlugInCaptures
+ADD: A new command-line tool called UDT_captures to build a single-file JSON "database" of demo-taker captures
+ADD: UDT_cutter now supports "Cut by Matches"
+ADD: Windows builds of the command-line tools can display their progress in the command prompt's title bar: can see the progress when the console is minimized
+CHG: All command-line tools will now split big jobs into smaller batches to maintain low memory usage
+CHG: Unified the interface of command-line tools for: arguments, help text, stdout/stderr selection, return values (0 is success, 1 is error, 666 is fatal error)
+CHG: Now printing the linear allocator's name whenever there is a fatal error in one
+CHG: One unified C89-compatible header file for library users: uberdemotools.h
+CHG: Improved error handling for demo message I/O (overflows and others)
+CHG: Demo message I/O errors can no longer be fatal (there were 10 instances of that), they will cancel parsing of the current demo instead
+CHG: Demo message I/O errors now always print the file's name
+FIX: Recursive file search in all command-line tools
+FIX: Making sure UDT_json never outputs anything else to stdout that the JSON data when -c is active
+FIX: Cut by Flag: Checking if a flag is taken in the playerstate by testing the end time against 0 instead of INT_MAX
+FIX: Cut by Flag: Got rid of false positives where pickups and captures get detected during the very first snapshot
+
+0.9.2 (01.10.2015)
+ADD: The "Matches" cut filter
+ADD: Stats analyzer: time/score/frag/capture/round limit, game state index
+ADD: Stats analyzer: server times for match start and end, count-down start and intermission end
+ADD: The option to print the JSON data to stdout in UDT_json
+CHG: Improved match duration output
+FIX: The time-out server time ranges of CPMA demos were broken
+
+0.9.1 (21.09.2015)
+ADD: dm3 to dm_68 and dm_48 to dm_68 demo converters
+ADD: Tracking match start dates in QL demos
+FIX: Config string commands that are too large get written as split bcs0/bcs1/bcs2 commands
+
+0.9.0 (17.09.2015)
+ADD: UDT_json command-line tool to export analysis data to JSON files
+ADD: New stats parser plug-in: udtParserPlugInStats
+ADD: The parser now reads "big config string" commands ("bcs0", "bcs1" and "bcs2")
+ADD: The chat analyzer now stores team chat messages as well
+ADD: New raw commands parser plug-in: udtParserPlugInRawCommands
+ADD: "Cut by Chat" can now search team chat messages
+ADD: Unicode file and directory paths support for the library and all the command-line tools on Windows
+ADD: New raw config strings parser plug-in: udtParserPlugInRawConfigStrings
+CHG: Performance stats are returned through the API and the library no longer invokes the user-supplied Log function to print them
+FIX: "Cut by Chat" now searches the messages themselves, not the raw commands
+FIX: Potential crash in multi-threaded batch jobs
+FIX: Player names extraction from Quake 3 chat messages
+FIX: Incorrect pointer arithmetic when iterating the thread's allocators
+
+0.8.0a (30.07.2015)
+FIX: Cut by Flag Captures now works with dm_91 demos
+
+0.8.0 (30.07.2015)
+ADD: Full parse/write support of demo protocols 66, 67 (Quake 3) and 91 (Quake Live)
+ADD: Full parse support of demo protocols 3 and 48 (Quake 3)
+FIX: Potential crash in the game state analyzer when a player index is out of bounds
+FIX: Now cleaning up the long OSP color codes (^X followed by 6 hex chars, case insensitive)
+
+0.7.0 (19.07.2015)
+FIX: The command-line cutter would crash if one of the demo return codes was not None
+ADD: Demo time shifting (a sort of anti-lag so you can see something similar to what the player saw)
+ADD: Demo merging (creating an augmented demo from multiple input demos of the same match)
+ADD: UDT_timeshifter: A command-line tool for time shifting demos
+ADD: UDT_merger: A command-line tool for merging demos
+
+0.6.3 (19.06.2015)
+ADD: Added an option to enable or disable the merging of overlapping cut sections matched by different pattern types
+FIX: The cut section merging code was using the same (temp) allocator for 2 different arrays leading to less events being cut in many cases
+
+0.6.2a (23.04.2015)
+FIX: The "Flick Rails" cut filter would find invalid matches if the snapshot count was 4
+
+0.6.2 (17.04.2015)
+ADD: Added the "Flick Rails" cut filter
+
+0.6.1 (23.02.2015)
+FIX: 73 to 90 converter: the pm_flags player state field is now kept instead of being zeroed
+FIX: 90 to 68 converter: keeping the LG fire events that won't repeat in q3mme
+FIX: 90 to 68 converter: no longer breaking player state angles by shifting them as if they were positions
+FIX: 90 to 68 converter: now converting the mean of death id in obituary events
+
+0.6.0 (12.02.2015)
+ADD: New protocol conversion system, 68 to 90 conversion support (refer to ConversionRules90to68.xml for known issues)
+CHG: String and path manipulation code overhaul (udtString, udtPath)
+FIX: ParseConfigStringValueString was failing when the variable looked for was the last one in the list
+FIX: udtProtocolConverter73to90::ConvertConfigString: the "protocol" value in config string 0 is now set to "90" instead of keeping "73"
+FIX: Parsing a demo with plug-ins twice with the same context would crash (the plug-in pointer array was not cleared in udtParserContext::ResetForNextDemo)
+
+0.5.1a (23.01.2015)
+FIX: Demo analysis will no longer crash trying to convert the demo(s) (debug/testing code that was supposed to be removed)
+
+0.5.1 (22.01.2015)
+ADD: New in the analyzer plug-in: generic info extraction, player tracking, demo taker name and index
+ADD: An API function to batch convert QL *.dm_73 demos to QL *.dm_90 demos
+CHG: Slightly bumped up the amount of memory reserved for string data in the chat plug-in
+FIX: Now using the peak used byte count instead of the currently used byte count in memory allocatotion stats
+
+0.5.0 (17.01.2015)
+CHG: New memory allocation strategy
+ADD: Memory allocators tracking
+CHG: The most frequent parsing errors cancel the operation for the current file instead of calling the crash handler
+CHG: Most parsing errors will now print the file name
+FIX: Cut merging in the Cut by Pattern plug-in wasn't setting the udtCutSection::VeryShortDesc member, resulting in a crash
+REM: Removed the "Processing demo for pattern analysis" message as it cluttered the log with useless data
+
+0.4.1 (08.01.2015)
+CHG: Replaced id's Huffman codec by my own to improve performance
+
+0.4.0 (03.01.2015)
+ADD: Added a new unified "Cut by Pattern" system with gloabl player selection/tracking settings; see the udtCutDemoFileByPattern and udtCutDemoFilesByPattern API functions
+ADD: Added the "Mid-Air Frags" cut filter
+ADD: Added the "Multi-Frag Rails" cut filter
+ADD: Now adding a very small file name suffix specifying the type of pattern that was matched for the cut (if sections get merged, the first match's description is used)
+FIX: The obituaries analyzer will now find some events that it didn't before; this change affects the frag sequence cut analyzer too
+REM: Removed "Cut by Awards"
+
+0.3.4a (22.12.2014)
+CHG: Bumped up the maximum thread count in batch processing jobs to 8
+FIX: Cut by Frag was ignoring the "Time Between Frags" filter!
+FIX: The award analyzer will only accept the persistent counter going up as an event (as opposed to just changing)
+
+0.3.4 (21.12.2014)
+ADD: Cut by Awards (udtCutDemoFile(s)ByAward API functions)
+CHG: Improved API functions argument checking
+FIX: Cut by Frag was merging cut sections based on a cut "half-duration" instead of the entire duration
+FIX: Some API functions were returning OperationFailed even when successful
+
+0.3.3 (15.12.2014)
+ADD: udtGetStringArray
+FIX: udtObituariesAnalyzer now tracks player teams
+CHG: udtObituariesAnalyzer: simpler way of detecting the player index of the recording player
+FIX: ParseConfigStringValueInt and ParseConfigStringValueString would match variable names at invalid spots
+FIX: The input server time wasn't reset, leading to invalid output cut ranges
+FIX: Avoiding entity event doubling by tracking the last event time for each entity
+ADD: Cut by Frag: allow self-kills/team-kills/any death options
+ADD: Cut by Frag: automatic or manual player index selection
+ADD: Cut by Frag: Means of Death filters
+
+0.3.2 (11.12.2014)
+ADD: Obituaries analyzer and plug-in
+ADD: Cut by Frag API functions: udtCutDemoFileByFrag and udtCutDemoFilesByFrag
+ADD: UDT_cutter will now output error strings for any operation that fails
+FIX: udtContext::LogErrorAndCrash now invokes FatalError instead of the local (and uninitialized) crash handler
+FIX: Removed redundant calls to udtGetProtocolByFilePath
+FIX: Always closing open output file handles when done with cutting jobs
+FIX: UDT_cutter now supplies the output error codes, like it was supposed to
+
+0.3.1 (09.12.2014)
+FIX: If the VM linear allocator's reserve size isn't a multiple of the commit granularity (which itself is a page size multiple), it's made to become one
+FIX: Reserving enough address space for config string descriptors
+FIX: Reserving enough address space for file descriptors in the batch process thread function
+CHG: Reserving a lot more address space for server command descriptors
+FIX: When the input demo is truncated, parsing doesn't fail anymore
+CHG: A warning message is sent when a demo file is truncated
+CHG: In batch operations, you must now supply an array of error codes
+CHG: If operations on one or more demos fail in a batch process, it won't stop/invalidate everything
+CHG: In udtParseDemoFiles, if some demos can't be parsed, you can still access all the data for those where it succeeded
+CHG: Drop a fatal error when reserving address space from the linear allocator isn't possible (might happen easily in the x86 build)
+
+0.3.0 (05.12.2014)
+CHG: New codebase!
+ADD: Support for demo protocol 90
+FIX: Cut demos having weird grenade trails and bounce issues, elevator and door animations, etc
+FIX: Operation canceling
+ADD: Support for multi-threaded batch processing
+ADD: Context re-use, custom fatal error handler, demo splitting, ...
+ADD: A parser plug-in system for configurable analysis and data extraction tasks
+
+0.2.1 (06.12.2012)
+FIX: The message sequence numbers of output demos were wrong, creating super weird 'bugs' when playing them back in Q3/QL
+
+0.2.0m (04.07.2012)
+FIX: Parsing strings for variables would find non-variables and return the default value
+
+0.2.0f (10.02.2012)
+FIX: The names of players connecting after the demo record start time are now recognized
+
+0.2.0e (10.02.2012)
+FIX: Memory leak in udtDestroy
+CHG: Changed the obitaries' analysis system and re-enabled it for QL
+
+0.2.0d (09.02.2012)
+ADD: Quake Live support!
+
+0.1.9m (04.02.2012)
+FIX: All config string changes sent via server commands are now applied!
+
+0.1.9l (03.02.2012)
+FIX: The demo starts with the correct scores
+
+0.1.9k (03.02.2012)
+FIX: Power-up runs durations
+FIX: Power-up runs PU detection
+
+0.1.9h (02.02.2012)
+ADD: Power-up runs
+
+0.1.9g (01.02.2012)
+ADD: Obituary events
+FIX: API argument check could crash
+
+0.1.9f (29.01.2012)
+CHG: Changed the way tw and ts (config string 672) are read and modified
+
+0.1.9e (27.01.2012)
+FIX: 'delta frame invalid' is no longer a fatal error
+FIX: 'delta frame too old' is no longer a fatal error
+FIX: 'delta parseEntitiesNum too old' is no longer a fatal error
+
+0.1.9d (27.01.2012)
+FIX: Buffer overflow risks
+
+0.1.9c (27.01.2012)
+1st: First 'good enough for the public' release

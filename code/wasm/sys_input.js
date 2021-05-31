@@ -417,7 +417,7 @@ var LibrarySysInput = {
 		},
     dropHandler: function (ev) {
       var files = []
-      // Prevent default behavior (Prevent file from being opened)
+      // Prevent default behavior (Prevent file from being opened in a new tab)
       ev.preventDefault();
       var handleFile
       handleFile = function (file, done) {

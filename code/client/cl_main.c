@@ -3237,8 +3237,13 @@ static void CL_CheckForResend( void ) {
 			notOverflowed = qtrue;
 		}
 
+		if ( com_protocol->integer != PROTOCOL_VERSION ) {
+			notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "protocol",
+				com_protocol->string );
+		} else {
 		notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "protocol",
-			va( "%i", clc.compat ? PROTOCOL_VERSION : NEW_PROTOCOL_VERSION ) );
+				clc.compat ? XSTRING( PROTOCOL_VERSION ) : XSTRING( NEW_PROTOCOL_VERSION ) );
+		}
 		
 		notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "qport",
 			va( "%i", port ) );

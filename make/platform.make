@@ -82,3 +82,23 @@ endif
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
 BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
 SHLIBNAME    = $(ARCH).$(SHLIBEXT)
+
+D_FILES :=
+
+ifdef WORKDIR
+mkdirs:
+	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
+	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
+	@if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
+
+D_FILES := $(shell find $(BD)/$(WORKDIR) -name '*.d' 2>/dev/null) \
+           $(shell find $(BR)/$(WORKDIR) -name '*.d' 2>/dev/null)
+ifneq ($(strip $(D_FILES)),)
+include $(D_FILES)
+endif
+endif
+
+.PHONY: all clean clean2 clean-debug clean-release copyfiles \
+  debug default dist distclean makedirs release \
+  targets tools toolsclean mkdirs \
+    $(D_FILES)
