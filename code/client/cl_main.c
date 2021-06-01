@@ -5500,7 +5500,6 @@ void CL_Init_After_InitRef( void ) {
 	Cmd_SetDescription( "tile", "Display multiview renderings in a grid\nUsage: tile [+/-] [x y] [clientnum]" );
 	Cmd_AddCommand ("dvr", CL_Dvr_f);
 	Cmd_SetDescription( "dvr", "Change where the screen output is drawn using percentages\nUsage: dvr [clientnum] x y w h" );
-	
 #endif
 
 	SCR_Init();

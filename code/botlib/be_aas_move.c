@@ -45,7 +45,6 @@ extern botlib_import_t botimport;
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 aas_settings_t aassettingsWorlds[MAX_NUM_VMS];
-#define aassettings aassettingsWorlds[aasgvm]
 #else
 aas_settings_t aassettings;
 #endif

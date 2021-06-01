@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 bot_input_t *botinputsWorlds[MAX_NUM_VMS];
-#define botinputs botinputsWorlds[aasgvm];
+#define      botinputs botinputsWorlds[aasgvm]
 #else
 bot_input_t *botinputs;
 #endif

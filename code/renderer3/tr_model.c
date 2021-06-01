@@ -1276,8 +1276,8 @@ void R_ModelInit( void ) {
   //   this is just a few pointers afterall
 #ifdef USE_MULTIVM_CLIENT
 	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
-		s_worldData[i].models[0] = mod;
-		s_worldData[i].numModels = 1;
+		s_worldDatas[i].models[0] = mod;
+		s_worldDatas[i].numModels = 1;
 	}
 #endif
 }

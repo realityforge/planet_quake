@@ -33,6 +33,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+extern int   aasgvm;
+#endif
+
 #define	BOTLIB_API_VERSION		2
 
 struct aas_clientmove_s;

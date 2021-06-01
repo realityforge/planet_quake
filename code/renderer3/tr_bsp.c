@@ -2779,17 +2779,17 @@ void RE_LoadWorldMap( const char *name ) {
 #ifdef USE_MULTIVM_CLIENT
 	int j, empty = -1;
 	for(j = 0; j < MAX_NUM_WORLDS; j++) {
-		if ( !Q_stricmp( s_worldData[j].name, name ) ) {
+		if ( !Q_stricmp( s_worldDatas[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER
 			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
 			RE_SwitchWorld(j);
 			return;
-		} else if (s_worldData[j].name[0] == '\0' && empty == -1) {
+		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot
 			empty = j;
 		}
 	}
-	rw = empty;
+	rwi = empty;
 	// TODO: if (empty == -1) FreeOldestClipmap
 #else
 	if ( tr.worldMapLoaded ) {
