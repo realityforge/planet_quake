@@ -753,7 +753,7 @@ FS_CopyFile
 Copy a fully specified file from one place to another
 =================
 */
-static void FS_CopyFile( const char *fromOSPath, const char *toOSPath ) {
+void FS_CopyFile( const char *fromOSPath, const char *toOSPath ) {
 	FILE	*f;
 	size_t	len;
 	byte	*buf;
@@ -3285,30 +3285,71 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	return pack;
 }
 
+void FS_AddZipFile( const char *zipfile ) {
+Com_Printf("zip!!! %s\n", zipfile);
+  searchpath_t	*search;
+  pack_t *pak = FS_LoadZipFile( zipfile );
+  pak->pakGamename = FS_GetCurrentGameDir();
 
-const char *FS_DescribeGameFile(const char *filename, int *demos) {
+  pak->index = fs_packCount;
+  pak->referenced = 0;
+  pak->exclude = qfalse;
+
+  fs_packFiles += pak->numfiles;
+  fs_packCount++;
+
+  search = Z_TagMalloc( sizeof( *search ), TAG_SEARCH_PACK );
+  Com_Memset( search, 0, sizeof( *search ) );
+  search->pack = pak;
+
+  search->next = fs_searchpaths;
+  fs_searchpaths = search;
+}
+
+
+const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images) {
   const char *ext;
   const char *basename;
+  const char *newName = "";
 
 	// extract basename from path
 	basename = strrchr( filename, PATH_SEP );
-	if ( basename == NULL )
-		basename = filename;
-	else
-		basename++;
-
+  basename = basename == NULL ? filename : (basename + 1);
   ext = COM_GetExtension( filename );
+
   if(Q_stristr(ext, "dm_")) {
     (*demos)++;
-    return va("demos/%s", basename);
+    newName = va("%s/demos/%s", FS_GetCurrentGameDir(), basename);
+  } if(Q_stristr(ext, "bsp")) {
+    (*maps)++;
+    return va("%s/maps/%s", FS_GetCurrentGameDir(), basename);
+  } if(Q_stristr(ext, "jpeg") || Q_stristr(ext, "jpg") || Q_stristr(ext, "png")
+    || Q_stristr(ext, "bmp") || Q_stristr(ext, "dds") || Q_stristr(ext, "tga")
+    || Q_stristr(ext, "pcx")) {
+    (*images)++;
+    newName = va("%s/textures/%s", FS_GetCurrentGameDir(), basename);
   } else if (Q_stristr(ext, "pk3")) {
     pack_t *pak = FS_LoadZipFile(filename);
-    // temporarily add it so we can scan what's inside
-    
-    FS_RemoveFromCache(pak);
-    FS_FreePak(pak);
+    for (int i = 0; i < pak->numfiles; i++) {
+      FS_DescribeGameFile(pak->buildBuffer[i].name, demos, maps, images);
+    }
+
+    newName = va("%s/%s", FS_GetCurrentGameDir(), basename);
+    if(FS_SV_FileExists(newName)) {
+      char dirname[MAX_QPATH];
+      ext = COM_GetExtension( newName );
+      memcpy(&dirname, newName, ext - newName);
+      dirname[ext - newName - 1] = '\0';
+      newName = va("%s.%08x.%s", dirname, pak->checksum, ext);
+    }
+
+    unzClose( pak->handle );
+		pak->handle = NULL;
   }
-  return "";
+  if(FS_SV_FileExists(newName)) {
+    return "";
+  }
+  return newName;
 }
 
 
@@ -3574,6 +3615,7 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, const char
 
 				// check for directory match
 				name = buildBuffer[i].name;
+
 				//
 				if ( filter ) {
 					// case insensitive
@@ -4552,11 +4594,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Remote name
         Q_strcat( neededpaks, len, "@");
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
-#ifdef USE_MEMORY_MAPS
-				if(fs_serverReferencedPakNames[i][0] == '*')
-					Q_strcat( neededpaks, len, ".bsp" );
-				else
-#endif
         Q_strcat( neededpaks, len, ".pk3" );
 
         // Local name
@@ -4576,11 +4613,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 #endif
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
-#ifdef USE_MEMORY_MAPS
-					if(fs_serverReferencedPakNames[i][0] == '*')
-						Q_strcat( neededpaks, len, ".bsp" );
-					else
-#endif
           Q_strcat( neededpaks, len, ".pk3" );
         }
         
@@ -4595,11 +4627,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
       else
       {
         Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
-#ifdef USE_MEMORY_MAPS
-				if(fs_serverReferencedPakNames[i][0] == '*')
-					Q_strcat( neededpaks, len, ".bsp" );
-				else
-#endif
 			  Q_strcat( neededpaks, len, ".pk3" );
         // Do we have one with the same name?
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
@@ -5873,6 +5900,16 @@ int FS_FTell( fileHandle_t f ) {
 void FS_Flush( fileHandle_t f ) 
 {
 	fflush( fsh[f].handleFiles.file.o );
+}
+
+
+const char *FS_SimpleFilename(const char *filename) {
+  Com_Printf("pak!!! %s\n", filename);
+  static char normalName[MAX_OSPATH];
+  const char *basename = strrchr( filename, PATH_SEP );
+  basename = basename == NULL ? filename : (basename + 1);
+  COM_StripExtension(basename, normalName, MAX_QPATH);
+  return normalName;
 }
 
 
