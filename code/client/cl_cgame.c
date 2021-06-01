@@ -803,7 +803,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #ifdef USE_MULTIVM_CLIENT
 			Cbuf_ExecuteTagged( EXEC_APPEND, VMA(1), cgvmi );
 #else
-      Cbuf_ExecuteTagged( EXEC_APPEND, VMA(1), 0 );
+      Cbuf_ExecuteText( EXEC_APPEND, VMA(1) );
 #endif
 		}
 		return 0;

@@ -3285,8 +3285,11 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	return pack;
 }
 
+static void FS_ReorderSearchPaths( void );
+
 void FS_AddZipFile( const char *zipfile ) {
   searchpath_t	*search;
+  /*
   pack_t *pak = FS_LoadZipFile( zipfile );
   pak->pakGamename = FS_GetCurrentGameDir();
 
@@ -3303,8 +3306,8 @@ void FS_AddZipFile( const char *zipfile ) {
 
   search->next = fs_searchpaths;
   fs_searchpaths = search;
-  unzClose( pak->handle );
-  pak->handle = NULL;
+  FS_ReorderSearchPaths();
+  */
 }
 
 

@@ -860,7 +860,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 #ifdef USE_MULTIVM_CLIENT
     Cbuf_ExecuteTagged( args[1], VMA(2), uivm );
 #else
-		Cbuf_ExecuteTagged( args[1], VMA(2), 0 );
+		Cbuf_ExecuteText( args[1], VMA(2) );
 #endif
 		return 0;
 

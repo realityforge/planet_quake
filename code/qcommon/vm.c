@@ -1534,6 +1534,7 @@ static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
 			&& knownVMs[i].exactDataLength == vm->exactDataLength
 			&& knownVMs[i].index == index
 			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
+      Com_Printf("Found VM! %s\n", knownVMs[i].name);
 			return knownVMs[i].knownVM;
 		}
 	}
@@ -1607,10 +1608,10 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	} else
 	
 	if ( vmcmp(vm, VM_GAME, VMR_SMOKIN) ) {
-		ip = buf + 0x1c5c8;
-		if(ip[2].op == OP_LEAVE && ip[2].value == 0x444) {
-			ip[0].op = OP_EQ;
-			//VM_IgnoreInstructions( &ip[0], 4 );
+		ip = buf + 0x1c5c9;
+		if(ip[0].op == OP_CONST && ip[0].value == 31648) {
+			//ip[0].op = OP_EQ;
+			VM_IgnoreInstructions( &ip[0], 2 );
 			//VM_IgnoreInstructions( &ip[0], 1 );
 		}
 	}

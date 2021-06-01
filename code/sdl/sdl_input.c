@@ -1274,14 +1274,14 @@ void HandleEvents( void )
             if(cl_dropAction->integer == 1) {
               FS_CopyFile( file, to_ospath );
               // helper add the pak so we can run a map right away
-              //FS_AddZipFile(to_ospath);
+              FS_AddZipFile(to_ospath);
             } else if (cl_dropAction->integer == 2) {
               if ( rename( file, to_ospath ) ) {
                 // Failed, try copying it and deleting the original
                 FS_CopyFile( file, to_ospath );
                 FS_Remove( file );
               }
-              //FS_AddZipFile(to_ospath);
+              FS_AddZipFile(to_ospath);
             } // else // do nothing
           }
         }

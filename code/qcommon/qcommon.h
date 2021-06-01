@@ -573,8 +573,8 @@ VIRTUAL MACHINE
 ==============================================================
 */
 typedef enum {
-	VMR_UNKNOWN = -1,
-	VMR_BASEQ3A = 0,
+	VMR_UNKNOWN = 0,
+	VMR_BASEQ3A,
 	VMR_OSP,
 	VMR_DEFRAG,
 	VMR_URT,
