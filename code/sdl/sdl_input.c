@@ -1249,6 +1249,7 @@ void HandleEvents( void )
       case SDL_DROPCOMPLETE:
       {
         static char file[MAX_OSPATH];
+        static char command[MAX_OSPATH];
         static int demos;
         static int maps;
         static int images;
@@ -1260,25 +1261,28 @@ void HandleEvents( void )
           demos = 0;
           maps = 0;
           images = 0;
+          command[0] = '\0';
           Com_Printf("Dropping files:\n");
         }
         if(e.type == SDL_DROPFILE) {
           // show the contents of the dropped file and offer to load something
           Com_Printf("%s\n", e.drop.file);
           Q_strncpyz(file, e.drop.file, MAX_OSPATH);
-          const char *to = FS_DescribeGameFile(file, &demos, &maps, &images);
+          const char *to = FS_DescribeGameFile(file, &demos, &maps, &images, command);
           if(to[0] != '\0') {
             char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
             if(cl_dropAction->integer == 1) {
               FS_CopyFile( file, to_ospath );
+              // helper add the pak so we can run a map right away
+              //FS_AddZipFile(to_ospath);
             } else if (cl_dropAction->integer == 2) {
               if ( rename( file, to_ospath ) ) {
                 // Failed, try copying it and deleting the original
                 FS_CopyFile( file, to_ospath );
                 FS_Remove( file );
               }
+              //FS_AddZipFile(to_ospath);
             } // else // do nothing
-            memcpy(&file, to_ospath, sizeof(file));
           }
         }
         if(e.type == SDL_DROPCOMPLETE) {
@@ -1290,19 +1294,7 @@ void HandleEvents( void )
             // TODO: list images based on the percent they exist over other file types
           }
           Con_ClearNotify();
-          if(maps == 1) {
-            if(Q_stristr(COM_GetExtension(file), "pk3")) {
-              int numMaps;
-              FS_AddZipFile(file);
-              char **filelist = FS_ListFiles( "quake3-baseq3/aguawoods.pk3/", ".bsp", &numMaps );
-              Com_Printf("Num maps: %i\n", numMaps);
-              memcpy(&g_consoleField.buffer, va("\\map %s", FS_SimpleFilename(filelist[0])), sizeof(g_consoleField.buffer));
-            } else {
-              memcpy(&g_consoleField.buffer, va("\\map %s", FS_SimpleFilename(file)), sizeof(g_consoleField.buffer));
-            }
-          } else if (demos == 1) {
-            memcpy(&g_consoleField.buffer, va("\\demo %s", FS_SimpleFilename(file)), sizeof(g_consoleField.buffer));
-          }
+          memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
           Field_AutoComplete( &g_consoleField );
           g_consoleField.cursor = strlen(g_consoleField.buffer);
         }

@@ -957,7 +957,7 @@ qboolean FS_FileExists( const char *file );
 
 char   *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
-const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images);
+const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images, char *command);
 const char *FS_SimpleFilename(const char *filename);
 void FS_AddZipFile( const char *zipfile );
 void FS_CopyFile( const char *fromOSPath, const char *toOSPath );

@@ -3286,7 +3286,6 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 }
 
 void FS_AddZipFile( const char *zipfile ) {
-Com_Printf("zip!!! %s\n", zipfile);
   searchpath_t	*search;
   pack_t *pak = FS_LoadZipFile( zipfile );
   pak->pakGamename = FS_GetCurrentGameDir();
@@ -3304,10 +3303,12 @@ Com_Printf("zip!!! %s\n", zipfile);
 
   search->next = fs_searchpaths;
   fs_searchpaths = search;
+  unzClose( pak->handle );
+  pak->handle = NULL;
 }
 
 
-const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images) {
+const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images, char *command) {
   const char *ext;
   const char *basename;
   const char *newName = "";
@@ -3320,9 +3321,13 @@ const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int
   if(Q_stristr(ext, "dm_")) {
     (*demos)++;
     newName = va("%s/demos/%s", FS_GetCurrentGameDir(), basename);
+    const char *cmd = va("\\demo %s", FS_SimpleFilename(newName));
+    memcpy(command, cmd, strlen(cmd) + 1);
   } if(Q_stristr(ext, "bsp")) {
     (*maps)++;
-    return va("%s/maps/%s", FS_GetCurrentGameDir(), basename);
+    newName = va("%s/maps/%s", FS_GetCurrentGameDir(), basename);
+    const char *cmd = va("\\map %s", FS_SimpleFilename(newName));
+    memcpy(command, cmd, strlen(cmd) + 1);
   } if(Q_stristr(ext, "jpeg") || Q_stristr(ext, "jpg") || Q_stristr(ext, "png")
     || Q_stristr(ext, "bmp") || Q_stristr(ext, "dds") || Q_stristr(ext, "tga")
     || Q_stristr(ext, "pcx")) {
@@ -3331,7 +3336,7 @@ const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int
   } else if (Q_stristr(ext, "pk3")) {
     pack_t *pak = FS_LoadZipFile(filename);
     for (int i = 0; i < pak->numfiles; i++) {
-      FS_DescribeGameFile(pak->buildBuffer[i].name, demos, maps, images);
+      FS_DescribeGameFile(pak->buildBuffer[i].name, demos, maps, images, command);
     }
 
     newName = va("%s/%s", FS_GetCurrentGameDir(), basename);
@@ -5904,7 +5909,6 @@ void FS_Flush( fileHandle_t f )
 
 
 const char *FS_SimpleFilename(const char *filename) {
-  Com_Printf("pak!!! %s\n", filename);
   static char normalName[MAX_OSPATH];
   const char *basename = strrchr( filename, PATH_SEP );
   basename = basename == NULL ? filename : (basename + 1);
