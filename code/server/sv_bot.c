@@ -72,7 +72,7 @@ int SV_BotAllocateClient( void ) {
 	}
 	
 #ifdef USE_MULTIVM_SERVER
-	cl->newWorld = cl->gameWorld = gvm;
+	cl->newWorld = cl->gameWorld = gvmi;
 #endif
 
 	cl->gentity = SV_GentityNum( i );
@@ -471,9 +471,9 @@ static void BotClientCommand( int client, const char *command ) {
 
 
 #ifdef USE_MULTIVM_SERVER
-void SV_SetAASgvm(int gvm) {
+void SV_SetAASgvm(int gvmi) {
 	if(botlib_export && bot_enable && botlib_export->SetAASgvm)
-		botlib_export->SetAASgvm(gvm);
+		botlib_export->SetAASgvm(gvmi);
 }
 #endif
 
@@ -707,7 +707,11 @@ int EntityInPVS( int client, int entityNum ) {
 	int					i;
 
 	cl = &svs.clients[client];
-	frame = &cl->frames[0][cl->netchan.outgoingSequence & PACKET_MASK];
+#ifdef USE_MULTIVM_SERVER
+  frame = &cl->frames[gvmi][cl->netchan.outgoingSequence & PACKET_MASK];
+#else
+	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
+#endif
 	for ( i = 0; i < frame->num_entities; i++ )	{
 		if ( svs.snapshotEntities[(frame->first_entity + i) % svs.numSnapshotEntities].number == entityNum ) {
 			return qtrue;
@@ -727,7 +731,11 @@ int SV_BotGetSnapshotEntity( int client, int sequence ) {
 	clientSnapshot_t	*frame;
 
 	cl = &svs.clients[client];
-	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
+#ifdef USE_MULTIVM_SERVER
+	frame = &cl->frames[gvmi][cl->netchan.outgoingSequence & PACKET_MASK];
+#else
+  frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
+#endif
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;
 	}

@@ -436,7 +436,7 @@ typedef struct botlib_export_s
 	//just for testing
 	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 #ifdef USE_MULTIVM_SERVER
-	void (*SetAASgvm)(int gvm);
+	void (*SetAASgvm)(int gvmi);
 #endif
 } botlib_export_t;
 

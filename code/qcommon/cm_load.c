@@ -77,8 +77,8 @@ void SetPlaneSignbits( cplane_t *out ) {
 
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-aas_t cmWorlds[MAX_NUM_VMS];
-int   cmi = 0;
+clipMap_t cmWorlds[MAX_NUM_VMS];
+int       cmi = 0;
 #else
 clipMap_t	cm;
 #endif
@@ -97,9 +97,9 @@ cvar_t    *cm_saveEnts;
 #endif
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-cmodel_t	box_model[MAX_NUM_MAPS];
-cplane_t	*box_planes[MAX_NUM_MAPS];
-cbrush_t	*box_brush[MAX_NUM_MAPS];
+cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
+cplane_t	*box_planesWorlds[MAX_NUM_MAPS];
+cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
 #else
 cmodel_t	box_model;
 cplane_t	*box_planes;
@@ -739,13 +739,13 @@ CM_SwitchMap
 ==================
 */
 int CM_SwitchMap( int world ) {
-	int prev = cm;
-	if(!cms[world].name[0]) {
+	int prev = cmi;
+	if(!cmWorlds[world].name[0]) {
 		return 0;
 	}
-	if(world != cm) {
+	if(world != cmi) {
 		//Com_Printf("Switching maps: %i -> %i\n", cm, world);
-		cm = world;
+		cmi = world;
 	}
 	return prev;
 }
@@ -755,9 +755,9 @@ static void CM_MapList_f(void) {
 	int count = 0;
 	Com_Printf ("-----------------------\n");
 	for(int i = 0; i < MAX_NUM_MAPS; i++) {
-		if(!cms[i].name[0]) break;
+		if(!cmWorlds[i].name[0]) break;
 		count++;
-		Com_Printf("%s\n", cms[i].name);
+		Com_Printf("%s\n", cmWorlds[i].name);
 	}
 	Com_Printf ("%i total maps\n", count);
 	Com_Printf ("------------------\n");
@@ -815,6 +815,7 @@ cmdsAdded = qtrue;
 
 
 #ifdef USE_MEMORY_MAPS
+// TODO: remove this, just write it to disk for simplicity and focus on dynamic zips
 int CM_LoadMapFromMemory( void ) {
 
 	AddClipMapCommands();
@@ -822,14 +823,14 @@ int CM_LoadMapFromMemory( void ) {
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	int				i, empty = -1;
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
-		if (cms[i].name[0] == '\0') {
+		if (cmWorlds[i].name[0] == '\0') {
 			// fill the next empty clipmap slot
 			empty = i;
 			break;
 		}
 	}
-	cm = empty;
-	Com_DPrintf( "CM_LoadMap( %s, %i )\n", va("*memory%i", cm), qfalse );
+	cmi = empty;
+	Com_DPrintf( "CM_LoadMap( %s, %i )\n", va("*memory%i", cmi), qfalse );
 #else
 	if ( cm.name[0] != '\0' ) {
 		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
@@ -879,18 +880,18 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	int				i, empty = -1;
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
-		if ( !strcmp( cms[i].name, name ) /* && clientload */ ) {
-			*checksum = cms[i].checksum;
+		if ( !strcmp( cmWorlds[i].name, name ) /* && clientload */ ) {
+			*checksum = cmWorlds[i].checksum;
 			CM_SwitchMap(i);
 			Com_DPrintf( "CM_LoadMap( %s, %i ) already loaded\n", name, clientload );
 			return cmi;
-		} else if (cms[i].name[0] == '\0' && empty == -1) {
+		} else if (cmWorlds[i].name[0] == '\0' && empty == -1) {
 			// fill the next empty clipmap slot
 			empty = i;
 		}
 
 	}
-	cm = empty;
+	cmi = empty;
   Com_DPrintf( "%s( '%s', %i )\n", __func__, name, clientload );
 #else
 	//if ( cms[0].name[0] != '\0' ) {
@@ -1046,7 +1047,7 @@ CM_InlineModel
 clipHandle_t CM_InlineModel( int index, int client, int world ) {
 	if ( index < 0 || index >= cm.numSubModels ) {
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-		Com_Error (ERR_DROP, "CM_InlineModel: bad number %i in %i (client: %i, world: %i)", index, cm, client, world);
+		Com_Error (ERR_DROP, "CM_InlineModel: bad number %i in %i (client: %i, world: %i)", index, cmi, client, world);
 #else
     Com_Error (ERR_DROP, "CM_InlineModel: bad number %i (client: %i, world: %i)", index, client, world);
 #endif

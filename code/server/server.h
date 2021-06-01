@@ -98,12 +98,9 @@ typedef struct {
 	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
 #define svEntities svEntities[gvmi]
 	const char		*entityParsePoint; // TODO: need parse points in case loading 2 at the same time?
-	sharedEntity_t	*gentities[MAX_NUM_VMS];
-#define gentities gentities[gvmi]
+	sharedEntity_t	*gentitiesWorlds[MAX_NUM_VMS];
 	int				gentitySize[MAX_NUM_VMS];
-#define gentitySize gentitySize[gvmi]
-	int				num_entities[MAX_NUM_VMS];
-#define num_entities num_entities[gvmi]
+	int				num_entitiesWorlds[MAX_NUM_VMS];
 	playerState_t	*gameClients[MAX_NUM_VMS];
 #define gameClients gameClients[gvmi] // these are all just pointers with players join so it's OK to duplicate
 	int				gameClientSize[MAX_NUM_VMS];
@@ -289,7 +286,6 @@ typedef struct client_s {
 	int				timeoutCount;		// must timeout a few frames in a row so debugging doesn't break
 #ifdef USE_MULTIVM_SERVER
   clientSnapshot_t	frames[MAX_NUM_VMS][PACKET_BACKUP];	// updates can be delta'd from here
-#define frames frames[gvmi]
 #else
 	clientSnapshot_t	frames[PACKET_BACKUP];	// updates can be delta'd from here
 #endif
@@ -804,7 +800,7 @@ void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player )
 // sv_bot.c
 //
 #ifdef USE_MULTIVM_SERVER
-void    SV_SetAASgvm( int gvm );
+void    SV_SetAASgvm( int gvmi );
 #endif
 void		SV_BotFrame( int time );
 int			SV_BotAllocateClient(void);

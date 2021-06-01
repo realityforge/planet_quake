@@ -34,7 +34,11 @@ botlib_export_t	*botlib_export;
 int	SV_NumForGentity( sharedEntity_t *ent ) {
 	int		num;
 
+#ifdef USE_MULTIVM_SERVER
+  num = ( (byte *)ent - (byte *)sv.gentitiesWorlds[gvmi] ) / sv.gentitySize[gvmi];
+#else
 	num = ( (byte *)ent - (byte *)sv.gentities ) / sv.gentitySize;
+#endif
 
 	return num;
 }
@@ -43,7 +47,11 @@ int	SV_NumForGentity( sharedEntity_t *ent ) {
 sharedEntity_t *SV_GentityNum( int num ) {
 	sharedEntity_t *ent;
 
-	ent = (sharedEntity_t *)((byte *)sv.gentities + sv.gentitySize*(num));
+#ifdef USE_MULTIVM_SERVER
+	ent = (sharedEntity_t *)((byte *)sv.gentitiesWorlds[gvmi] + sv.gentitySize[gvmi]*(num));
+#else
+  ent = (sharedEntity_t *)((byte *)sv.gentities + sv.gentitySize*(num));
+#endif
 
 	return ent;
 }
@@ -260,7 +268,7 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 		Com_Error( ERR_DROP, "SV_GetServerinfo: bufferSize == %i", bufferSize );
 	}
 #ifdef USE_MULTIVM_SERVER
-	Cvar_Set("mapname", Cvar_VariableString(va("mapname_%i", gvm)));
+	Cvar_Set("mapname", Cvar_VariableString(va("mapname_%i", gvmi)));
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
 	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
 #endif
@@ -298,9 +306,15 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 		}
 	}
 
-	sv.gentities = gEnts;
-	sv.gentitySize = sizeofGEntity_t;
+#ifdef USE_MULTIVM_SERVER
+  sv.gentitiesWorlds[gvmi] = gEnts;
+  sv.gentitySize[gvmi] = sizeofGEntity_t;
+  sv.num_entitiesWorlds[gvmi] = numGEntities;
+#else
+  sv.gentities = gEnts;
+  sv.gentitySize = sizeofGEntity_t;
 	sv.num_entities = numGEntities;
+#endif
 
 	sv.gameClients = clients;
 	sv.gameClientSize = sizeofGameClient;
@@ -375,13 +389,13 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 static const char *RenameMultiworld(char *name) {
 	const char *newName;
 	if(!Q_stricmp(name, "mapname")) {
-		newName = va("mapname_%i", gvm);
+		newName = va("mapname_%i", gvmi);
 	}
 	else if(!Q_stricmp(name, "session")) {
-		newName = va("session_%i", gvm);
+		newName = va("session_%i", gvmi);
 	}
 	else if(Q_stristr(name, "session") == name) {
-		newName = va("session_%i_%s", gvm, &name[7]);
+		newName = va("session_%i_%s", gvmi, &name[7]);
 	}
 	else
 		newName = name;
@@ -1083,7 +1097,7 @@ Called every time a map changes
 void SV_ShutdownGameProgs( void ) {
 #ifdef USE_MULTIVM_SERVER
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		if ( !gvms[i] ) {
+		if ( !gvmWorlds[i] ) {
 			continue;
 		}
 		gvmi = i;
@@ -1215,7 +1229,7 @@ See if the current console command is claimed by the game
 qboolean SV_GameCommand( int igvm ) {
 	qboolean result;
 #ifdef USE_MULTIVM_SERVER
-	int prevGvm = gvm;
+	int prevGvm = gvmi;
 	gvmi = igvm;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
@@ -1260,8 +1274,8 @@ qboolean SV_GameCommand( int igvm ) {
 	result = VM_Call( gvm, 0, GAME_CONSOLE_COMMAND );
 #endif
 #ifdef USE_MULTIVM_SERVER
-	gvm = prevGvm;
-	CM_SwitchMap(gameWorlds[gvm]);
+	gvmi = prevGvm;
+	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif
 	return result;

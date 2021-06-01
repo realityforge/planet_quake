@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 serverStatic_t	svs;				// persistant server info
 server_t		sv;					// local server
 
-#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_SERVER
 int   gvmi = 0;
 vm_t *gvmWorlds[MAX_NUM_VMS];
 #else
@@ -268,7 +268,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 
 	if ( cl != NULL ) {
 #ifdef USE_MULTIVM_SERVER
-		if(cl->gameWorld != gvm) return;
+		if(cl->gameWorld != gvmi) return;
 #endif
 		// outdated clients can't properly decode 1023-chars-long strings
 		// http://aluigi.altervista.org/adv/q3msgboom-adv.txt
@@ -293,7 +293,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		if ( len <= 1022 || client->longstr ) {
 #ifdef USE_MULTIVM_SERVER
-			if(client->gameWorld != gvm) continue;
+			if(client->gameWorld != gvmi) continue;
 #endif
 			SV_AddServerCommand( client, message );
 		}
@@ -1314,10 +1314,17 @@ static void SV_CalcPings( void ) {
 #ifdef USE_MV
       gvmi = cl->gameWorld;
 #endif
+#ifdef USE_MULTIVM_SERVER
+      if ( cl->frames[cl->gameWorld][j].messageAcked == 0 ) {
+        continue;
+      }
+      delta = cl->frames[cl->gameWorld][j].messageAcked - cl->frames[cl->gameWorld][j].messageSent;
+#else
       if ( cl->frames[j].messageAcked == 0 ) {
         continue;
       }
       delta = cl->frames[j].messageAcked - cl->frames[j].messageSent;
+#endif
 			count++;
 			total += delta;
 		}
@@ -1372,16 +1379,16 @@ static void SV_CheckTimeouts( void ) {
 			Com_DPrintf( "Going from CS_ZOMBIE to CS_FREE for client %d\n", i );
 #ifdef USE_MULTIVM_SERVER
 			sharedEntity_t *ent;
-			int prevGvm = gvm;
+			int prevGvm = gvmi;
 			for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-				if(!gvms[igvm]) continue;
-				gvm = igvm;
+				if(!gvmWorlds[igvm]) continue;
+				gvmi = igvm;
 				CM_SwitchMap(gameWorlds[gvmi]);
 				SV_SetAASgvm(gvmi);
 				ent = SV_GentityNum( i );
 				ent->s.eType = 0;
 			}
-			gvm = prevGvm;
+			gvmi = prevGvm;
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
 #endif
@@ -1592,7 +1599,7 @@ void SV_Frame( int msec ) {
 #endif
 
 #ifdef USE_MULTIVM_SERVER
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif
@@ -1617,14 +1624,14 @@ void SV_Frame( int msec ) {
 
 #ifdef USE_MULTIVM_SERVER
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		if(!gvms[i]) continue;
-		gvm = i;
+		if(!gvmWorlds[i]) continue;
+		gvmi = i;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		if ( !com_dedicated->integer )
 			SV_BotFrame( sv.time + sv.timeResidual );
 	}
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #else
@@ -1668,15 +1675,14 @@ void SV_Frame( int msec ) {
 					continue;
 #ifdef USE_MULTIVM_SERVER
 				for(int j = 0; j < MAX_NUM_VMS; j++) {
-					for ( n = 0; n < PACKET_BACKUP; n++ ) {
-						if ( svs.clients[ i ].frames[j][ n ].first_psf > svs.modSnapshotPSF )
-							svs.clients[ i ].frames[j][ n ].first_psf -= svs.modSnapshotPSF;
-					}
-				}
-#else
+#define frames frames[j]
+#endif
 				for ( n = 0; n < PACKET_BACKUP; n++ ) {
-					if ( svs.clients[ i ].frames[0][ n ].first_psf > svs.modSnapshotPSF )
-						svs.clients[ i ].frames[0][ n ].first_psf -= svs.modSnapshotPSF;
+					if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
+						svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
+				}
+#ifdef USE_MULTIVM_SERVER
+#undef frames
 				}
 #endif
 			}
@@ -1711,13 +1717,13 @@ void SV_Frame( int msec ) {
 
 #ifdef USE_MULTIVM_SERVER
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		if(!gvms[i]) continue;
-		gvm = i;
+		if(!gvmWorlds[i]) continue;
+		gvmi = i;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		if (com_dedicated->integer) SV_BotFrame (sv.time);
 	}
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #else
@@ -1737,8 +1743,8 @@ void SV_Frame( int msec ) {
 		// let everything in the world think and move
 #ifdef USE_MULTIVM_SERVER
 		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(!gvms[i]) continue;
-			gvm = i;
+			if(!gvmWorlds[i]) continue;
+			gvmi = i;
 			CM_SwitchMap(gameWorlds[gvmi]);
 			SV_SetAASgvm(gvmi);
 #endif
@@ -1746,7 +1752,7 @@ void SV_Frame( int msec ) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 #ifdef USE_MULTIVM_SERVER
 		}
-		gvm = 0;
+		gvmi = 0;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 #endif
@@ -1881,7 +1887,7 @@ void SV_Frame( int msec ) {
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);
 	
 #ifdef USE_MULTIVM_SERVER
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif

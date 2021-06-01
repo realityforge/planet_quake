@@ -127,7 +127,7 @@ typedef struct {
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
 #ifdef USE_MULTIVM_CLIENT
-  clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
+  clSnapshot_t	snapWorlds[MAX_NUM_VMS];			// latest received from server
 #define snap snapWorlds[igs]
 #else
 	clSnapshot_t	snap;			// latest received from server
@@ -143,16 +143,15 @@ typedef struct {
 	qboolean	newSnapshots;		// set on parse of any valid packet
 
 #ifdef USE_MULTIVM_CLIENT
-	gameState_t	gameState[MAX_NUM_VMS];			// configstrings
-#define gameState gameState[igs]
+	gameState_t	gameStates[MAX_NUM_VMS];			// configstrings
+#define gameState gameStates[igs]
 #else
   gameState_t	gameState;			// configstrings
 #endif
 	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
 #ifdef USE_MULTIVM_CLIENT
-	int			parseEntitiesNum[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
-#define parseEntitiesNum parseEntitiesNum[igs] // `igs` because it is based on number of server worlds
+	int			parseEntitiesNumWorlds[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
 #else
   int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 #endif
@@ -174,11 +173,11 @@ typedef struct {
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
 #ifdef USE_MULTIVM_CLIENT
-	usercmd_t	cmds[MAX_NUM_VMS][CMD_BACKUP];	// each mesage will send several old cmds
-#define cmds         cmds[igvm]  // `igvm` because it is based on number of client VMs, not server worlds
+	usercmd_t	cmdWorlds[MAX_NUM_VMS][CMD_BACKUP];	// each mesage will send several old cmds
+#define cmds         cmdWorlds[igvm]  // `igvm` because it is based on number of client VMs, not server worlds
   int			cmdNumber;			// incremented each frame, because multiple
-  int     clCmdNumbers[MAX_NUM_VMS];
-#define clCmdNumbers clCmdNumbers[igvm]
+  int     clCmdNumberWorlds[MAX_NUM_VMS];
+#define clCmdNumbers clCmdNumberWorlds[igvm]
 #else
   usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
   int			cmdNumber;			// incremented each frame, because multiple
@@ -199,7 +198,7 @@ typedef struct {
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
 #ifdef USE_MULTIVM_CLIENT
-	clSnapshot_t	snapshots[MAX_NUM_VMS][PACKET_BACKUP];
+	clSnapshot_t	snapshotWorlds[MAX_NUM_VMS][PACKET_BACKUP];
 #define snapshots snapshotWorlds[igs] // `igs` because it is based on number of server worlds, not cgames
 	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
 #define entityBaselines entityBaselines[igs]

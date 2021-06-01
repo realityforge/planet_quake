@@ -230,7 +230,11 @@ void SV_CreateBaseline( void ) {
 	sharedEntity_t *ent;
 	int				entnum;	
 
+#ifdef USE_MULTIVM_SERVER
+  for ( entnum = 0; entnum < sv.num_entitiesWorlds[gvmi] ; entnum++ ) {
+#else
 	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
+#endif
 		ent = SV_GentityNum( entnum );
 		if ( !ent->r.linked ) {
 			continue;
@@ -586,7 +590,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
 #ifdef USE_MULTIVM_SERVER
-	Cvar_Set( va("mapname_%i", gvm), mapname );
+	Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
 
 #ifdef EMSCRIPTEN
@@ -829,7 +833,7 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 
 #ifdef USE_MULTIVM_SERVER
-	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvm);
+	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvmi);
 #endif
 	
 	Sys_SetStatus( "Running map %s", mapname );

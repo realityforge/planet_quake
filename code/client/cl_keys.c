@@ -613,7 +613,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #else
 	int igs = 0;
 #endif
-	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap[igs].multiview ) {
+	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )
 			d = 1;
@@ -625,7 +625,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		int from = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS;
 #endif
 		for ( id = from, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
-			if ( cl.snap[igs].clps[ id ].valid ) {
+			if ( cl.snap.clps[ id ].valid ) {
 #ifdef USE_MULTIVM_CLIENT
 				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[clc.currentView], id );
 				clientWorlds[clc.currentView] = id;

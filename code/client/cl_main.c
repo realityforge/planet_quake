@@ -513,7 +513,7 @@ static void CL_WriteSnapshot( void ) {
 	static	clSnapshot_t saved_snap;
 	static entityState_t saved_ents[ MAX_SNAPSHOT_ENTITIES ]; 
 
-	clSnapshot_t *snap, *oldSnap; 
+	clSnapshot_t *clSnap, *oldSnap; 
 	byte	bufData[ MAX_MSGLEN_BUF ];
 	msg_t	msg;
 	int		i, len;
@@ -521,7 +521,7 @@ static void CL_WriteSnapshot( void ) {
 	int igs = clientGames[clc.currentView];
 #endif
 
-	snap = &cl.snapshots[ cl.snap.messageNum & PACKET_MASK ]; // current snapshot
+	clSnap = &cl.snapshots[ cl.snap.messageNum & PACKET_MASK ]; // current snapshot
 	//if ( !snap->valid ) // should never happen?
 	//	return;
 
@@ -541,17 +541,17 @@ static void CL_WriteSnapshot( void ) {
 	CL_WriteServerCommands( &msg );
 	
 	MSG_WriteByte( &msg, svc_snapshot );
-	MSG_WriteLong( &msg, snap->serverTime ); // sv.time
+	MSG_WriteLong( &msg, clSnap->serverTime ); // sv.time
 	MSG_WriteByte( &msg, clc.demoDeltaNum ); // 0 or 1
-	MSG_WriteByte( &msg, snap->snapFlags );  // snapFlags
-	MSG_WriteByte( &msg, snap->areabytes );  // areabytes
-	MSG_WriteData( &msg, snap->areamask, snap->areabytes );
+	MSG_WriteByte( &msg, clSnap->snapFlags );  // snapFlags
+	MSG_WriteByte( &msg, clSnap->areabytes );  // areabytes
+	MSG_WriteData( &msg, clSnap->areamask, clSnap->areabytes );
 	if ( oldSnap )
-		MSG_WriteDeltaPlayerstate( &msg, &oldSnap->ps, &snap->ps );
+		MSG_WriteDeltaPlayerstate( &msg, &oldSnap->ps, &clSnap->ps );
 	else
-		MSG_WriteDeltaPlayerstate( &msg, NULL, &snap->ps );
+		MSG_WriteDeltaPlayerstate( &msg, NULL, &clSnap->ps );
 
-	CL_EmitPacketEntities( oldSnap, snap, &msg, saved_ents );
+	CL_EmitPacketEntities( oldSnap, clSnap, &msg, saved_ents );
 
 	// finished writing the client packet
 	MSG_WriteByte( &msg, svc_EOF );
@@ -568,10 +568,10 @@ static void CL_WriteSnapshot( void ) {
 	FS_Write( msg.data, msg.cursize, clc.recordfile );
 
 	// save last sent state so if there any need - we can skip any further incoming messages
-	for ( i = 0; i < snap->numEntities; i++ )
-		saved_ents[ i ] = cl.parseEntities[ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
+	for ( i = 0; i < clSnap->numEntities; i++ )
+		saved_ents[ i ] = cl.parseEntities[ (clSnap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
 
-	saved_snap = *snap;
+	saved_snap = *clSnap;
 	saved_snap.parseEntitiesNum = 0;
 
 	clc.demoMessageSequence++;
@@ -771,7 +771,10 @@ void CL_ReadDemoIndex( void ) {
 	entityState_t	*es;
 	entityState_t	nullstate;
 	const int SIMPLE_READ_SIZE = 24;
-	
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
+
 	startTime = Sys_Milliseconds();
 	
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
@@ -856,7 +859,7 @@ void CL_ReadDemoIndex( void ) {
 
 			// parse all the configstrings and baselines
 #ifdef USE_MULTIVM_CLIENT
-			cl.gameState[clc.currentView].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
+			cl.gameStates[clc.currentView].dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
 #else
 			cl.gameState.dataCount = 1;	// leave a 0 at the beginning for uninitialized configstrings
 #endif
@@ -1091,7 +1094,10 @@ static void CL_Play_f( void ) {
 
 static void CL_Rewind_f( void ) {
 	int seconds = 10;
-	
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
+
 	if(!clc.demoplaying) {
 		Com_Printf("Demo not playing.");
 		return;
@@ -1413,6 +1419,10 @@ memory on the hunk from cgame, ui, and renderer
 =====================
 */
 void CL_MapLoading( void ) {
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
+
 	if ( com_dedicated->integer ) {
 		cls.state = CA_DISCONNECTED;
  		Key_SetCatcher( KEYCATCH_CONSOLE );
@@ -2652,7 +2662,7 @@ static void CL_Configstrings_f( void ) {
 
 	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
-		ofs = cl.gameState[clc.currentView].stringOffsets[ i ];
+		ofs = cl.gameStates[clc.currentView].stringOffsets[ i ];
 #else
 		ofs = cl.gameState.stringOffsets[ i ];
 #endif
@@ -2660,7 +2670,7 @@ static void CL_Configstrings_f( void ) {
 			continue;
 		}
 #ifdef USE_MULTIVM_CLIENT
-		Com_Printf( "%4i: %s\n", i, cl.gameState[clc.currentView].stringData + ofs );
+		Com_Printf( "%4i: %s\n", i, cl.gameStates[clc.currentView].stringData + ofs );
 #else
 		Com_Printf( "%4i: %s\n", i, cl.gameState.stringData + ofs );
 #endif
@@ -2692,7 +2702,7 @@ static void CL_Serverinfo_f( void ) {
 	int		ofs;
 
 #ifdef USE_MULTIVM_CLIENT
-		ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SERVERINFO ];
+		ofs = cl.gameStates[clc.currentView].stringOffsets[ CS_SERVERINFO ];
 #else
 		ofs = cl.gameState.stringOffsets[ CS_SERVERINFO ];
 #endif
@@ -2701,7 +2711,7 @@ static void CL_Serverinfo_f( void ) {
 
 	Com_Printf( "Server info settings:\n" );
 #ifdef USE_MULTIVM_CLIENT
-	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
+	Info_Print( cl.gameStates[clc.currentView].stringData + ofs );
 #else
 	Info_Print( cl.gameState.stringData + ofs );
 #endif
@@ -2717,7 +2727,7 @@ static void CL_Systeminfo_f( void ) {
 	int ofs;
 
 #ifdef USE_MULTIVM_CLIENT
-	ofs = cl.gameState[clc.currentView].stringOffsets[ CS_SYSTEMINFO ];
+	ofs = cl.gameStates[clc.currentView].stringOffsets[ CS_SYSTEMINFO ];
 #else
 	ofs = cl.gameState.stringOffsets[ CS_SYSTEMINFO ];
 #endif
@@ -2726,7 +2736,7 @@ static void CL_Systeminfo_f( void ) {
 
 	Com_Printf( "System info settings:\n" );
 #ifdef USE_MULTIVM_CLIENT
-	Info_Print( cl.gameState[clc.currentView].stringData + ofs );
+	Info_Print( cl.gameStates[clc.currentView].stringData + ofs );
 #else
 	Info_Print( cl.gameState.stringData + ofs );
 #endif
@@ -2911,7 +2921,7 @@ static void CL_DownloadsComplete( void ) {
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
 	// TODO: exec world 0:0 asynchronously
-	if(!cgvms[clc.currentView]
+	if(!cgvmWorlds[clc.currentView]
 		// server controls world view
 		&& (clc.currentView == 0 || !atoi(&clc.world[0]))
 		// TODO: client auto loads world, default autoload
@@ -4949,7 +4959,8 @@ void CL_LoadVM_f( void ) {
 		CL_AddReliableCommand( va("load %s", Cmd_ArgsFrom(1)), qfalse );
 		//CL_ForwardCommandToServer("load game");
 		return;
-	} else if ( !Q_stricmp( name, "cgame" ) ) {
+	} else if ( !Q_stricmp( name, "cgame" )
+    || !Q_stricmp( name, "demo" )) {
 		if(Cmd_Argc() > 3) {
 			Com_Printf( "Usage: %s <game|cgame|ui|demo> [numclient]\n", Cmd_Argv( 0 ) );
 			return;
@@ -4957,21 +4968,24 @@ void CL_LoadVM_f( void ) {
 
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(cgvms[i]) count++;
+			if(cgvmWorlds[i]) count++;
 			else {
-				cgvm = i;
+				cgvmi = i;
 				break;
 			}
 		}
 		count++;
-		re.SwitchWorld(cgvm);
-		CL_InitCGame(cgvm); // createNew if cgvmWorlds[cgvmi] is already taken
+		re.SwitchWorld(cgvmi);
+		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
+    if(!Q_stricmp( name, "demo" )) {
+      // TODO: start demo
+    }
 		cgvm = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
 		int i, count = 0;
 		for(i = 0; i < MAX_NUM_VMS; i++) {
-			if(uivms[i]) count++;
+			if(uivmWorlds[i]) count++;
 			else {
 				uivmi = i; // this looks like it isn't used until compiler templates run
                    //   and everything past this point uses it like uivms[uivmi]
@@ -4983,8 +4997,7 @@ void CL_LoadVM_f( void ) {
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 		uivmi = 0;
 		return;
-  } else if ( !Q_stricmp( name, "demo" ) ) {
-	} else {
+  } else {
 		Com_Printf( " unknown VM name '%s'\n", name );
 		return;
 	}
@@ -5036,7 +5049,7 @@ void CL_World_f( void ) {
 
 	// TODO: check if a client game with this address already exists
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		if (!cgvms[i]) {
+		if (!cgvmWorlds[i]) {
 			// open slot
 			if(empty == -1) // first only
 				empty = i;
@@ -5092,7 +5105,7 @@ void CL_Tile_f( void ) {
 		return;
 	}
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		if(!cgvms[i]) continue;
+		if(!cgvmWorlds[i]) continue;
 		if(clientScreens[i][0] > -1) count++;
 	}
 	if(Cmd_Argc() == 3 || Cmd_Argc() == 4) {
@@ -5115,7 +5128,7 @@ void CL_Tile_f( void ) {
 	if(clientNum > MAX_NUM_VMS || clientNum < -1) {
 		Com_Printf("Must be between 0 and %i, given: %i\n", MAX_NUM_VMS, clientNum);
 		return;
-	} else if(clientNum >= 0 && !cgvms[clientNum]) {
+	} else if(clientNum >= 0 && !cgvmWorlds[clientNum]) {
 		Com_Printf("CGame not active on %i\n", clientNum);
 		return;
 	} else if(clientNum == -1) {
@@ -5123,7 +5136,7 @@ void CL_Tile_f( void ) {
 		if(Cmd_Argc() == 2) {
 			count = 0;
 			for(i = 0; i < MAX_NUM_VMS; i++) {
-				if(!cgvms[i]) continue;
+				if(!cgvmWorlds[i]) continue;
 				count++;
 			}
 		} else {
@@ -5147,7 +5160,7 @@ void CL_Tile_f( void ) {
 			x = s % xMaxVMs;
 			y = s / xMaxVMs;
 		}
-		if(x < 0 || y < 0 || (clientNum == -1 && !cgvms[s])) {
+		if(x < 0 || y < 0 || (clientNum == -1 && !cgvmWorlds[s])) {
 	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);
 			clientScreens[s][0] = 
 			clientScreens[s][1] = 

@@ -268,7 +268,6 @@ void Cbuf_Execute( void )
 
 		// execute the command line
 		if(cmd_text[execCmdI].filtered) {
-Com_Printf("Executing: %s (%i)\n", line, cmd_text[execCmdI].tag);
 			Cmd_ExecuteString( line, qfalse, cmd_text[execCmdI].tag );
 		} else {
 			Cmd_ExecuteString( line, qfalse, 0 );
@@ -1078,7 +1077,6 @@ void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag )
 	}
 	cmd_text[insCmdI].filtered = qtrue;
 	cmd_text[insCmdI].tag = tag;
-Com_Printf("Inserting: %s (%i)\n", text, cmd_text[insCmdI].tag);
 	Cbuf_ExecuteInternal( exec_when, text );
 }
 

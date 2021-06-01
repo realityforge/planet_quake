@@ -32,7 +32,7 @@ static void SV_CreateRecordCache( void )
 	mv_total_size = 0;
 
 	Com_Memset( mvrecords, 0, sizeof( mvrecords ) );
-	list = FS_ListFilteredFiles( "demos", ".dm_71", MV_FILTER, &nfiles );
+	list = FS_ListFilteredFiles( "demos", ".dm_71", MV_FILTER, &nfiles, FS_MATCH_ANY );
 	for ( i = 0; i < nfiles; i++ ) 
 	{
 		name = list[i];
@@ -42,7 +42,7 @@ static void SV_CreateRecordCache( void )
 		if ( len < 22 || len >= sizeof( mvr->name ) )
 			continue;
 
-		size = FS_SV_FOpenFileRead( va( "demos/%s", name ) );
+		size = FS_SV_FOpenFileRead( va( "demos/%s", name ), NULL );
 		if ( size <= 0 )
 			continue;
 
@@ -229,7 +229,7 @@ static void SV_InsertFileRecord( const char *name )
 		return;
 	}
 
-	size = FS_Home_FileSize( va( "demos/%s", name ) );
+	size = FS_SV_FOpenFileWrite( va( "demos/%s", name ) );
 	if ( size <= 0 ) {
 		return;
 	}
@@ -432,8 +432,8 @@ void SV_MultiViewRecord_f( void )
 	// write the baselines
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	for ( i = 0 ; i < MAX_GENTITIES; i++ ) {
-		base = &sv.svEntities[gvm][ i ].baseline;
-		if ( !sv.baselineUsed[gvm][ i ] ) {
+		base = &sv.svEntities[ i ].baseline;
+		if ( !sv.baselineUsed[ i ] ) {
 			continue;
 		}
 		MSG_WriteByte( &msg, svc_baseline );
@@ -627,11 +627,11 @@ int SV_GetMergeMaskEntities( clientSnapshot_t *snap )
 	skipMask = 0;
 	psf = NULL;
 
-	if ( !svs.currFrame[gvm] )
+	if ( !svs.currFrame )
 		return skipMask;
 	
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
-		ent = svs.currFrame[gvm]->ents[ i ];
+		ent = svs.currFrame->ents[ i ];
 		if ( ent->number >= sv_maxclients->integer )
 			break;
 		for ( /*n = 0 */; n < snap->num_psf; n++ ) {

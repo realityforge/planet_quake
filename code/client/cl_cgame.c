@@ -81,6 +81,9 @@ CL_GetUserCmd
 ====================
 */
 static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
+#ifdef USE_MULTIVM_CLIENT
+  int igvm = cgvmi;
+#endif
 	// cmds[cmdNumber] is the last properly generated command
 
 	// can't return anything that we haven't created yet
@@ -122,6 +125,9 @@ CL_GetCurrentCmdNumber
 ====================
 */
 static int CL_GetCurrentCmdNumber( void ) {
+#ifdef USE_MULTIVM_CLIENT
+  int igvm = cgvmi;
+#endif
 	return cl.clCmdNumbers;
 }
 
@@ -150,7 +156,7 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 	int index, n;
 	for ( index = startIndex; index < clSnap->numEntities; ++index ) {
 		n = ( clSnap->parseEntitiesNum + index ) & (MAX_PARSE_ENTITIES-1);
-		if ( cl.parseEntities[igs][ n ].number == entityID ) {
+		if ( cl.parseEntities[ n ].number == entityID ) {
 			*parsedIndex = n;
 			return index;
 		}
@@ -199,9 +205,15 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the entities in the frame have fallen out of their
 	// circular buffer, we can't return it
-	if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+#ifdef USE_MULTIVM_CLIENT
+	if ( cl.parseEntitiesNumWorlds[igs] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
 		return qfalse;
 	}
+#else
+  if ( cl.parseEntitiesNum - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+    return qfalse;
+  }
+#endif
 
 	snapshot->snapFlags = clSnap->snapFlags;
 	snapshot->serverCommandSequence = clSnap->serverCommandNum;
@@ -263,9 +275,9 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 							Com_Error( ERR_DROP, "snapshot entities count overflow for %i", cv );
 							break;
 						}
-						snapshot->entities[ count++ ] = cl.parseEntities[igs][ parsedIndex ];
+						snapshot->entities[ count++ ] = cl.parseEntities[ parsedIndex ];
 					} else {
-						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvm );
+						Com_Error( ERR_DROP, "packet entity not found in snapshot: %i (%i)", entityNum, cgvmi );
 						break;
 					}
 				}
@@ -415,6 +427,9 @@ static qboolean CL_GetServerCommand( int serverCommandNumber ) {
 	const char *cmd;
 	static char bigConfigString[BIG_INFO_STRING];
 	int argc, index;
+#ifdef USE_MULTIVM_CLIENT
+  int igvm = cgvmi;
+#endif
 
 	// if we have irretrievably lost a reliable command, drop the connection
 	if ( serverCommandNumber <= clc.serverCommandSequence - MAX_RELIABLE_COMMANDS ) {
@@ -1169,8 +1184,8 @@ static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 	result = CL_CgameSystemCalls( &arg );
 #endif
 #ifdef USE_MULTIVM_CLIENT
-	if(cgvm != prev) {
-		Com_Error( ERR_DROP, "Cgame changed while in callback %i -> %i\n", prev, cgvm );
+	if(cgvmi != prev) {
+		Com_Error( ERR_DROP, "Cgame changed while in callback %i -> %i\n", prev, cgvmi );
 	}
 #endif
 	return result;
@@ -1335,7 +1350,7 @@ qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
 
 #ifdef USE_MULTIVM_CLIENT
-	int prevGvm = cgvm;
+	int prevGvm = cgvmi;
 	cgvmi = igvm;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif

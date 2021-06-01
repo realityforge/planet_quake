@@ -831,12 +831,13 @@ void CL_WritePacket( void ) {
 		int oldCmdNum = cl.clCmdNumbers;
 		CL_CreateNewCommands(igvm);
 		if(igvm > 0) {
+      // TODO: choose which client to extract movement commands from, cl.currentView?
 			cl.cmds[cl.clCmdNumbers & CMD_MASK].forwardmove = 
-				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
+				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].forwardmove;
 			cl.cmds[cl.clCmdNumbers & CMD_MASK].rightmove = 
-				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
+				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].rightmove;
 			cl.cmds[cl.clCmdNumbers & CMD_MASK].upmove = 
-				cl.cmds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
+				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].upmove;
 		}
 #endif
 ;

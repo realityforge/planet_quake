@@ -77,7 +77,11 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 
 	// save the parsed entity state into the big circular buffer so
 	// it can be used as the source for a later delta
+#ifdef USE_MULTIVM_CLIENT
+  state = &cl.parseEntities[cl.parseEntitiesNumWorlds[igs] & (MAX_PARSE_ENTITIES-1)];
+#else  
 	state = &cl.parseEntities[cl.parseEntitiesNum & (MAX_PARSE_ENTITIES-1)];
+#endif
 
 	if ( unchanged ) {
 		*state = *old;
@@ -88,7 +92,11 @@ static void CL_DeltaEntity( msg_t *msg, clSnapshot_t *frame, int newnum, const e
 	if ( state->number == (MAX_GENTITIES-1) ) {
 		return;		// entity was delta removed
 	}
-	cl.parseEntitiesNum++;
+#ifdef USE_MULTIVM_CLIENT
+	cl.parseEntitiesNumWorlds[igs]++;
+#else
+  cl.parseEntitiesNum++;
+#endif
 	frame->numEntities++;
 }
 
@@ -103,7 +111,11 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 	int	newnum;
 	int	oldindex, oldnum;
 
+#ifdef USE_MULTIVM_CLIENT
+  newframe->parseEntitiesNum = cl.parseEntitiesNumWorlds[igs];
+#else
 	newframe->parseEntitiesNum = cl.parseEntitiesNum;
+#endif
 	newframe->numEntities = 0;
 
 	// delta from the entities present in oldframe
@@ -217,8 +229,10 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	int			oldMessageNum;
 	int			i, packetNum;
 	int			commandTime;
-	int     igvm = 0;
 #ifdef USE_MV
+#ifdef USE_MULTIVM_CLIENT
+  int     igs = clientWorlds[cgvmi];
+#endif
 	int			clientNum;
 	entityState_t	*es;
 	const playerState_t *oldPs;
@@ -278,7 +292,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
 				Com_Printf ("Delta frame too old.\n");
-		} else if ( cl.parseEntitiesNum - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
+#ifdef USE_MULTIVM_CLIENT
+      } else if ( cl.parseEntitiesNumWorlds[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
+#else
+		  } else if ( cl.parseEntitiesNum - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
+#endif
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
 				newSnap.valid = qtrue;	// valid delta parse
@@ -321,7 +339,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		}
 
 #ifdef USE_MULTIVM_CLIENT
-		cgvmi = igvm = newSnap.world = MSG_ReadByte( msg );
+		igs = newSnap.world = MSG_ReadByte( msg );
 		if ( newSnap.deltaNum <= 0 ) {
 			newSnap.valid = qtrue;
 			old = NULL;
@@ -335,7 +353,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
 				Com_Printf ("Delta frame too old.\n");
-			} else if ( cl.parseEntitiesNum[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - maxEntities ) {
+			} else if ( cl.parseEntitiesNumWorlds[igs] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
 				if(old && old->multiview) {
@@ -438,12 +456,12 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 		// read packet entities
 		SHOWNET( msg, "packet entities" );
-		CL_ParsePacketEntities( msg, old, &newSnap, igvm );
+		CL_ParsePacketEntities( msg, old, &newSnap, igs );
 
 		// apply skipmask to player entities
 		if ( newSnap.mergeMask ) {
 			for ( i = 0; i < newSnap.numEntities; i++ ) {
-				es = &cl.parseEntities[igvm][ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
+				es = &cl.parseEntities[ (newSnap.parseEntitiesNum + i) & (MAX_PARSE_ENTITIES-1)];
 				if ( es->number >= MAX_CLIENTS )
 					break;
 				if ( newSnap.clps[ es->number ].valid ) {
@@ -489,7 +507,11 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 
 	// read packet entities
 	SHOWNET( msg, "packet entities" );
-	CL_ParsePacketEntities( msg, old, &newSnap, igvm );
+#ifdef USE_MULTIVM_CLIENT
+  CL_ParsePacketEntities( msg, old, &newSnap, igs );
+#else
+	CL_ParsePacketEntities( msg, old, &newSnap, 0 );
+#endif
 
 #ifdef USE_MV
 	} // !extended snapshot
@@ -747,7 +769,10 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	const char		*s;
 	char			oldGame[ MAX_QPATH ];
 	qboolean		gamedirModified;
-	
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
+
 	Con_Close();
 
 	clc.connectPacketCount = 0;
@@ -1234,6 +1259,9 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
 
 	if ( cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);

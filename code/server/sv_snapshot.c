@@ -132,9 +132,10 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 	int					snapFlags;
 
 	// this is the snapshot we are creating
-	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
 #ifdef USE_MULTIVM_SERVER
-	frame->world = gvm;
+  frame = &client->frames[gvmi][ client->netchan.outgoingSequence & PACKET_MASK ];
+#else
+  frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
 #endif
 
 	// try to use a previous frame as the source for delta compressing the snapshot
@@ -150,7 +151,11 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 		lastframe = 0;
 	} else {
 		// we have a valid snapshot to delta from
-		oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+#ifdef USE_MULTIVM_SERVER
+		oldframe = &client->frames[gvmi][ client->deltaMessage & PACKET_MASK ];
+#else
+    oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+#endif
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
@@ -213,11 +218,8 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 
 #ifdef USE_MV
 	if ( frame->multiview ) {
-		int newmask;
 		int oldmask;
 		int	oldversion;
-
-		frame->version = MV_PROTOCOL_VERSION;
 
 		if ( !oldframe || !oldframe->multiview ) {
 			oldversion = 0;
@@ -235,23 +237,19 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 #ifdef USE_MULTIVM_SERVER
-		MSG_WriteByte( msg, gvm );
+		MSG_WriteByte( msg, gvmi );
 #endif
-		
-		newmask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
 
 		// emit skip-merge mask
-		if ( oldmask != newmask ) {
+		if ( oldmask != frame->mergeMask ) {
 			MSG_WriteBits( msg, 1, 1 );
-			MSG_WriteBits( msg, newmask, SM_BITS );
+			MSG_WriteBits( msg, frame->mergeMask, SM_BITS );
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 
-		frame->mergeMask = newmask;
-
-		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, newmask );
-		MSG_entMergeMask = newmask; // emit packet entities with skipmask
+		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, frame->mergeMask );
+		MSG_entMergeMask = frame->mergeMask; // emit packet entities with skipmask
 		SV_EmitPacketEntities( oldframe, frame, msg );
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else {
@@ -283,8 +281,8 @@ static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
 #ifdef USE_MV
 	} // !client->MVProtocol
 #ifdef USE_MULTIVM_SERVER
-	gvm = 0;
-	CM_SwitchMap(gameWorlds[gvm]);
+	gvmi = 0;
+	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif
 #endif
@@ -633,11 +631,7 @@ This should be called before any new client snaphot built
 */
 void SV_IssueNewSnapshot( void ) 
 {
-#ifdef USE_MULTIVM_SERVER
-  Com_Memset(svs.currFrame, 0, sizeof(svs.currFrameWorlds[0]));
-#else
   svs.currFrame = NULL;
-#endif
 	
 	// value that clients can use even for their empty frames
 	// as it will not increment on new snapshot built
@@ -669,7 +663,11 @@ static void SV_BuildCommonSnapshot( void )
 
 	// gather all linked entities
 	if ( sv.state != SS_DEAD ) {
-		for ( num = 0 ; num < sv.num_entities ; num++ ) {
+#ifdef USE_MULTIVM_SERVER
+		for ( num = 0 ; num < sv.num_entitiesWorlds[gvmi] ; num++ ) {
+#else
+    for ( num = 0 ; num < sv.num_entities ; num++ ) {
+#endif
 			ent = SV_GentityNum( num );
 
 			// never send entities that aren't linked in
@@ -884,7 +882,11 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	clientPVS_t					*pvs;
 
 	// this is the frame we are creating
-	frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+#ifdef USE_MULTIVM_SERVER
+	frame = &client->frames[gvmi][ client->netchan.outgoingSequence & PACKET_MASK ];
+#else
+  frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+#endif
 	cl = client - svs.clients;
 
 	// clear everything in this snapshot
@@ -898,6 +900,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 #ifdef USE_MV
 	if ( client->multiview.protocol > 0 ) {
 		frame->multiview = qtrue;
+		frame->version = MV_PROTOCOL_VERSION;
 		if(client->mvAck == 0)
 			client->mvAck = client->messageAcknowledge;
 		// select primary client slot
@@ -912,7 +915,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	frame->first_psf = svs.nextSnapshotPSF;
 	frame->num_psf = 0;
 #ifdef USE_MULTIVM_SERVER
-	frame->world = gvm;
+	frame->world = gvmi;
 #endif
 #endif
 	
@@ -992,6 +995,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		for ( i = 0 ; i < frame->num_entities ; i++ ) {
 			frame->ents[ i ] = svs.currFrame->ents[ i ];
 		}
+		frame->mergeMask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
 
 #ifdef USE_MV_ZCMD
 		// some extras
@@ -1058,9 +1062,15 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 #endif // USE_MV
 
 	// record information about the message
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#ifdef USE_MULTIVM_SERVER
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#else
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#endif
 
 	// send the datagram
 	SV_Netchan_Transmit( client, msg );
@@ -1082,13 +1092,13 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	playerState_t	*ps;
 
 #ifdef USE_MULTIVM_SERVER
-	int igvm;©
+	int igvm;
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 
 	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
-		if(!gvms[igvm]) continue;
+		if(!gvmWorlds[igvm]) continue;
 		gvmi = igvm; // TODO remove need for gvmi and pass igvm
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);

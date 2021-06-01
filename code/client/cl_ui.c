@@ -719,6 +719,9 @@ GetConfigString
 static int GetConfigString(int index, char *buf, int size)
 {
 	int		offset;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
 
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)
 		return qfalse;
@@ -858,7 +861,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 			args[1] = EXEC_INSERT;
 		}
 #ifdef USE_MULTIVM_CLIENT
-    Cbuf_ExecuteTagged( args[1], VMA(2), uivm );
+    Cbuf_ExecuteTagged( args[1], VMA(2), uivmi );
 #else
 		Cbuf_ExecuteText( args[1], VMA(2) );
 #endif
@@ -984,7 +987,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_KEY_SETCATCHER:
 		// Don't allow the ui module to close the console
 #ifdef USE_MULTIVM_CLIENT
-		if(uivm == cls.currentView)
+		if(uivmi == clc.currentView)
 #endif
 		Key_SetCatcher( args[1] | ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) );
 		return 0;

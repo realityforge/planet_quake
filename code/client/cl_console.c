@@ -651,6 +651,9 @@ void Con_DrawNotify( void )
 	int		skip;
 	int		currentColorIndex;
 	int		colorIndex;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientWorlds[cgvmi];
+#endif
 
 	currentColorIndex = ColorIndex( COLOR_WHITE );
 	re.SetColor( g_color_table[ currentColorIndex ] );
