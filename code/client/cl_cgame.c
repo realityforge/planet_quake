@@ -188,6 +188,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the frame has fallen out of the circular buffer, we can't return it
 	if ( cl.snap.messageNum - snapshotNumber >= PACKET_BACKUP ) {
+Com_Printf("not valid\n");
 		return qfalse;
 	}
 
@@ -198,6 +199,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		for(int i = snapshotNumber+1; i <= cl.snap.messageNum; i++)  {
 			clSnap = &cl.snapshots[i & PACKET_MASK];
 			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[snapshotNumber & PACKET_MASK].serverTime) {
+        Com_Printf("not valid\n");
 				return qfalse;
 			} else {
 				break;
@@ -212,6 +214,7 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	// circular buffer, we can't return it
 #ifdef USE_MULTIVM_CLIENT
 	if ( cl.parseEntitiesNumWorlds[igs] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
+    Com_Printf("not valid\n");
 		return qfalse;
 	}
 #else

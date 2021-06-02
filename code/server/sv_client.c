@@ -3199,7 +3199,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
 			continue;
 		}
-//Com_Printf("Moving: %i (%i)\n", cmds[ i ].serverTime, gvm);
+//Com_Printf("Moving: %i (%i) > %i\n", cmds[ i ].serverTime, gvmi, cmd->forwardmove);
 		SV_ClientThink (cl, &cmds[ i ]);
 		thunk++;
 	}

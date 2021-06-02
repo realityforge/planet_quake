@@ -631,7 +631,12 @@ This should be called before any new client snaphot built
 */
 void SV_IssueNewSnapshot( void ) 
 {
-  svs.currFrame = NULL;
+#ifdef USE_MULTIVM_SERVER
+  // do the entire frame because this is called only once, then checked is its zero when updating
+  Com_Memset(svs.currFrameWorlds, 0, sizeof(svs.currFrameWorlds));
+#else
+  Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
+#endif
 	
 	// value that clients can use even for their empty frames
 	// as it will not increment on new snapshot built

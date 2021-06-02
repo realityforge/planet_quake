@@ -389,16 +389,21 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 
 
 static const cvar_t *SV_Cvar_Get(const char *name, int tagged) {
+  cvar_t *unTagged;
+  cvar_t *cvTagged;
   // always return tagged for these
   if(!Q_stricmp(name, "mapname") || !Q_stricmp(name, "session")
     || Q_stristr(name, "session") == name) {
-    return Cvar_Get(va("%s_%i", name, tagged), "", 0);
+    cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
   }
-	cvar_t *cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
-  if(cvTagged->tagged != -1) {
+  unTagged = Cvar_Get(name, "", 0);
+  cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
+  cvTagged->flags &= ~CVAR_ARCHIVE;
+  cvTagged->flags &= ~CVAR_ARCHIVE_ND;
+  if(cvTagged->tagged) {
     return cvTagged;
   }
-  return Cvar_Get(name, "", 0);
+  return unTagged;
 }
 
 static void SV_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged ) {
@@ -1243,6 +1248,9 @@ qboolean SV_GameCommand( int igvm ) {
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 	if ( !gvm ) {
+    gvmi = prevGvm;
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
 		return qfalse;
 	}
 #endif
@@ -1274,7 +1282,7 @@ qboolean SV_GameCommand( int igvm ) {
 		}
 #ifdef USE_MULTIVM_SERVER
 		gvmi = prevGvm;
-		CM_SwitchMap(gameWorlds[gvm]);
+		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 #endif
 		return qtrue;

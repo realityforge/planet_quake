@@ -1,5 +1,5 @@
 MKFILE         := $(lastword $(MAKEFILE_LIST))
-WORKDIR        := rend2
+WORKDIR        := rend3
 
 BUILD_RENDERER_OPENGL2:=1
 include make/platform.make

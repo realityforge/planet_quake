@@ -2038,8 +2038,12 @@ void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 
 	vmCvar->handle = cv - cvar_indexes;
 	vmCvar->modificationCount = -1;
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+  cv->flags &= ~CVAR_ARCHIVE;
+  cv->flags &= ~CVAR_ARCHIVE_ND;
   cv->tagged = qtrue;
   cv->tag    = tagged;
+#endif
 
 	Cvar_Update( vmCvar, 0 );
 }
