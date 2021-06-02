@@ -1791,22 +1791,24 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	// add vm-created cvars
 	for ( i = 0; i < vm_count; i++ )
 	{
+    var = vm_vars[ i ];
 #ifdef USE_MULTIVM_CLIENT
     if(var->tagged) {
       cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
-      if(otherVar->tagged) { // both names should be tagged because of this test
+      if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
+        // this check also prevents e.g. mapname_1_1
         allSet &= Info_SetValueForKey( info, var->name, otherVar->string );
         continue; // prefer the other vars value
       }
     }
 #endif
-		var = vm_vars[ i ];
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
 
 	// add user-created cvars
 	for ( i = 0; i < user_count; i++ )
 	{
+// TODO: tagged vars for railgun color
 		var = user_vars[ i ];
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
@@ -1846,7 +1848,7 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 #ifdef USE_MULTIVM_CLIENT
       if(var->tagged) {
         cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
-        if(otherVar->tagged) { // both names should be tagged because of this test
+        if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
           allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, otherVar->string );
           continue; // prefer the other vars value
         }
