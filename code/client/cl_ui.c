@@ -806,11 +806,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 
 	case UI_CVAR_REGISTER:
-#ifdef USE_MULTIVM_CLIENT
-    Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag, uivmi ); 
-#else
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag ); 
-#endif
+    Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag ); 
 		return 0;
 
 	case UI_CVAR_UPDATE:
@@ -838,11 +834,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_CVAR_CREATE:
-#ifdef USE_MULTIVM_CLIENT
-    Cvar_Register( NULL, VMA(1), VMA(2), args[3], uivm->privateFlag, uivmi );
-#else
-		Cvar_Register( NULL, VMA(1), VMA(2), args[3], uivm->privateFlag );
-#endif
+    Cvar_Register( NULL, VMA(1), VMA(2), args[3], uivm->privateFlag );
 		return 0;
 
 	case UI_CVAR_INFOSTRINGBUFFER:

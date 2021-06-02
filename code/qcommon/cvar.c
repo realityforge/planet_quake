@@ -1792,8 +1792,9 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	for ( i = 0; i < vm_count; i++ )
 	{
     var = vm_vars[ i ];
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
     if(var->tagged) {
+Com_Printf("Reading tagged: %s\n", var->name);
       cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
       if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
         // this check also prevents e.g. mapname_1_1
@@ -1845,7 +1846,7 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 	for ( var = cvar_vars; var; var = var->next )
 	{
 		if ( var->name && (var->flags & bit) ) {
-#ifdef USE_MULTIVM_CLIENT
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
       if(var->tagged) {
         cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
         if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
@@ -1994,11 +1995,7 @@ basically a slightly modified Cvar_Get for the interpreted modules
 =====================
 */
 #define INVALID_FLAGS ( CVAR_USER_CREATED | CVAR_SERVER_CREATED | CVAR_PROTECTED | CVAR_PRIVATE | CVAR_MODIFIED | CVAR_NONEXISTENT )
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged )
-#else
 void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag )
-#endif
 {
 	cvar_t	*cv;
 
@@ -2038,12 +2035,6 @@ void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 
 	vmCvar->handle = cv - cvar_indexes;
 	vmCvar->modificationCount = -1;
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-  cv->flags &= ~CVAR_ARCHIVE;
-  cv->flags &= ~CVAR_ARCHIVE_ND;
-  cv->tagged = qtrue;
-  cv->tag    = tagged;
-#endif
 
 	Cvar_Update( vmCvar, 0 );
 }

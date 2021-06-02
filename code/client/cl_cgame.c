@@ -750,11 +750,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 			cls.cgameFirstCvar = cvar;
 		}
 #endif
-#ifdef USE_MULTIVM_CLIENT
-    Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], cgvm->privateFlag, cgvmi ); 
-#else
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], cgvm->privateFlag ); 
-#endif
+    Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], cgvm->privateFlag ); 
 		return 0;
 	}
 	case CG_CVAR_UPDATE:

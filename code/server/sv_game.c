@@ -386,42 +386,46 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 
 
 #ifdef USE_MULTIVM_SERVER
-
-
-static const cvar_t *SV_Cvar_Get(const char *name, int tagged) {
+static cvar_t *SV_Cvar_Get(const char *name, const char *defaultValue, int tagged) {
   cvar_t *unTagged;
   cvar_t *cvTagged;
   // always return tagged for these
+  unTagged = Cvar_Get(name, defaultValue, 0);
   if(!Q_stricmp(name, "mapname") || !Q_stricmp(name, "session")
     || Q_stristr(name, "session") == name) {
-    cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
-  }
-  unTagged = Cvar_Get(name, "", 0);
-  cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
-  cvTagged->flags &= ~CVAR_ARCHIVE;
-  cvTagged->flags &= ~CVAR_ARCHIVE_ND;
-  if(cvTagged->tagged) {
+    cvTagged = Cvar_Get(va("%s_%i", name, tagged), unTagged->resetString, 0);
+    cvTagged->flags &= ~CVAR_ARCHIVE;
+    cvTagged->flags &= ~CVAR_ARCHIVE_ND;
+    cvTagged->tagged = qtrue;
+    cvTagged->tag    = tagged;
     return cvTagged;
   }
-  return unTagged;
+  cvTagged = Cvar_Get(va("%s_%i", name, tagged), unTagged->resetString, 0);
+  cvTagged->flags &= ~CVAR_ARCHIVE;
+  cvTagged->flags &= ~CVAR_ARCHIVE_ND;
+  cvTagged->tagged = qtrue;
+  cvTagged->tag    = tagged;
+  return cvTagged;
 }
 
 static void SV_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged ) {
-  const cvar_t *cvTagged = SV_Cvar_Get(varName, tagged);
-  Cvar_Register(vmCvar, cvTagged->name, defaultValue, flags, privateFlag, tagged);
-  if(Q_stricmp(varName, cvTagged->name)) {
-    Cvar_Register(vmCvar, varName, defaultValue, flags, privateFlag, tagged);
-  }
+  cvar_t *cvTagged = SV_Cvar_Get(varName, defaultValue, tagged);
+  Cvar_Register(vmCvar, cvTagged->name, defaultValue, flags, privateFlag);
+  vmCvar_t notCvar;
+  cvar_t *unTagged = Cvar_Get(varName, defaultValue, 0);
+  Cvar_Register(&notCvar, varName, defaultValue, flags, privateFlag);
+  unTagged->tagged = qtrue;
+  unTagged->tag    = -1;
 }
 static void SV_Cvar_SetSafe( const char *var_name, const char *value, int tagged ) {
-  const cvar_t *cvTagged = SV_Cvar_Get(var_name, tagged);
+  const cvar_t *cvTagged = SV_Cvar_Get(var_name, "", tagged);
   Cvar_SetSafe(cvTagged->name, value);
 }
 static int  SV_Cvar_VariableIntegerValue( const char *var_name, int tagged ) {
-  return SV_Cvar_Get(var_name, tagged)->integer;
+  return SV_Cvar_Get(var_name, "", tagged)->integer;
 }
 static void SV_Cvar_VariableStringBufferSafe( const char *var_name, char *buffer, int bufsize, int flag, int tagged ) {
-  const cvar_t *cvTagged = SV_Cvar_Get(var_name, tagged);
+  const cvar_t *cvTagged = SV_Cvar_Get(var_name, "", tagged);
   Cvar_VariableStringBufferSafe(cvTagged->name, buffer, bufsize, flag);
 }
 #endif
@@ -435,10 +439,10 @@ The module is making a system call
 ====================
 */
 static intptr_t SV_GameSystemCalls( intptr_t *args ) {
-		switch( args[0] ) {
+	switch( args[0] ) {
 	case G_PRINT:
 		Com_Printf( "%s", (const char*)VMA(1) );
-				return 0;
+		return 0;
 	case G_ERROR:
     // TODO: find real fixes for these
 		// excessive plus checking if it is installed correctly
@@ -456,21 +460,21 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
-#ifdef USE_MULTIVM_SERVER
-    SV_Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag, gvmi ); 
-#else
+//#ifdef USE_MULTIVM_SERVER
+//    SV_Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag, gvmi ); 
+//#else
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag ); 
-#endif
+//#endif
 		return 0;
 	case G_CVAR_UPDATE:
 		Cvar_Update( VMA(1), gvm->privateFlag );
 		return 0;
 	case G_CVAR_SET:
-#ifdef USE_MULTIVM_SERVER
-		SV_Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2), gvmi );
-#else
+//#ifdef USE_MULTIVM_SERVER
+//		SV_Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2), gvmi );
+//#else
     Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
-#endif
+//#endif
 #ifdef USE_PERSIST_CLIENT
 		if(sv_clSessions->integer != 0 && Q_stristr(VMA(1), "session")) {
 			SV_PersistClient(atoi(&(VMA(1)[8])));
@@ -478,18 +482,18 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
-#ifdef USE_MULTIVM_SERVER
-    return SV_Cvar_VariableIntegerValue( (const char *)VMA(1), gvmi );
-#else
+//#ifdef USE_MULTIVM_SERVER
+//    return SV_Cvar_VariableIntegerValue( (const char *)VMA(1), gvmi );
+//#else
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
-#endif
+//#endif
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
-#ifdef USE_MULTIVM_SERVER
-    SV_Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag, gvmi );
-#else
+//#ifdef USE_MULTIVM_SERVER
+//    SV_Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag, gvmi );
+//#else
 		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag );
-#endif
+//#endif
 		return 0;
 	case G_ARGC:
 		return Cmd_Argc();
