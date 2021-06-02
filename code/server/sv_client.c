@@ -2304,6 +2304,7 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 
 	// name for C code
 	val = Info_ValueForKey( cl->userinfo, "name" );
+
 	// truncate if it is too long as it may cause memory corruption in OSP mod
 	if ( gvm->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
 		Q_strncpyz( buf, val, sizeof( buf ) );
@@ -2367,6 +2368,7 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 	Q_strncpyz( cl->userinfo, info, sizeof( cl->userinfo ) );
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
+
 	// call prog code to allow overrides
 	VM_Call( gvm, 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
@@ -3352,7 +3354,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 //		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
 //	}
 #ifdef USE_MULTIVM_SERVER
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif

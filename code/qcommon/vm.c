@@ -1534,7 +1534,6 @@ static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
 			&& knownVMs[i].exactDataLength == vm->exactDataLength
 			&& knownVMs[i].index == index
 			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
-      Com_Printf("Found VM! %s\n", knownVMs[i].name);
 			return knownVMs[i].knownVM;
 		}
 	}

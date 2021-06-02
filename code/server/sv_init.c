@@ -468,17 +468,11 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	CL_MapLoading();
 
 	// make sure all the client stuff is unloaded
-#ifndef USE_LAZY_MEMORY
 	CL_ShutdownAll();
-#else
-	S_DisableSounds();
-#endif
 #endif
 
-#ifndef USE_LAZY_MEMORY
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
-#endif
 
 	// clear collision map data
 	CM_ClearMap();
@@ -853,7 +847,6 @@ void SV_SpawnServer_After_Startup( void ) {
 	if ( sv_autoDemo->integer ) {
 		SV_DemoAutoDemoRecord();
 	}
-
 }
 
 

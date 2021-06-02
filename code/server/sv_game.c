@@ -1115,7 +1115,7 @@ void SV_ShutdownGameProgs( void ) {
 		gvm = NULL;
 #ifdef USE_MULTIVM_SERVER
 	}
-	gvm = 0;
+	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 #endif
@@ -1264,7 +1264,7 @@ qboolean SV_GameCommand( int igvm ) {
 				SV_SendServerCommand( client, "%s", Cmd_ArgsFrom(0) );
 		}
 #ifdef USE_MULTIVM_SERVER
-		gvm = prevGvm;
+		gvmi = prevGvm;
 		CM_SwitchMap(gameWorlds[gvm]);
 		SV_SetAASgvm(gvmi);
 #endif

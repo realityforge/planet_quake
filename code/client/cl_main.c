@@ -1375,7 +1375,7 @@ void CL_ClearMemory( void ) {
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_LAZY_MEMORY)
+#ifdef USE_LAZY_MEMORY
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
 #else
