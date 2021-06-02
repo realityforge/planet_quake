@@ -792,7 +792,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 #ifdef USE_LNBITS
 	int igs = clientGames[cgvmi];
-	if((cl.snap[igs].ps.pm_type == PM_INTERMISSION
+	if((cl.snap.ps.pm_type == PM_INTERMISSION
 		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
 		&& cl_lnInvoice->string[0]) {
 		SCR_DrawQRCode();

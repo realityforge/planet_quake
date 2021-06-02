@@ -5,13 +5,6 @@ BUILD_BOTLIB := 1
 include make/platform.make
 
 TARGET       := $(BOTLIB_PREFIX)_libbots_$(SHLIBNAME)
-ifeq ($(USE_MULTIVM_CLIENT),1)
-TARGET       := $(BOTLIB_PREFIX)_libbots_mw_$(SHLIBNAME)
-endif
-ifeq ($(USE_MULTIVM_SERVER),1)
-TARGET       := $(BOTLIB_PREFIX)_libbots_mw_$(SHLIBNAME)
-endif
-
 SOURCES      := $(MOUNT_DIR)/botlib
 INCLUDES     := 
 CFILES       := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \

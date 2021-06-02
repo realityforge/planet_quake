@@ -1960,6 +1960,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 #ifdef USE_MULTIVM_CLIENT
 	re.SetDvrFrame = RE_SetDvrFrame;
+  re.SwitchWorld = RE_SwitchWorld;
 #endif
 	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
@@ -1971,7 +1972,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.FastCaptureOld = RB_FastCaptureOld;
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders = RE_ReloadShaders;
-	re.SwitchWorld = RE_SwitchWorld;
 #endif
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;

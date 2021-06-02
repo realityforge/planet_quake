@@ -28,7 +28,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern	botlib_export_t	*botlib_export;
 
 // connect virtual machines to the correct map, reusing for duplicate loads
-int clientMaps[MAX_NUM_VMS];
+int clientMaps[MAX_NUM_VMS] = {
+  0
+#if USE_MULTIVM_CLIENT
+	,0,0,0,0,0,0,0,0,0
+#endif
+};
 
 // connect a specific virtual machine to a gamestate/world from server 0-9
 int clientGames[MAX_NUM_VMS] = {
@@ -1349,15 +1354,15 @@ See if the current console command is claimed by the cgame
 qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
 
+	if ( !cgvm ) {
+		return qfalse;
+	}
+
 #ifdef USE_MULTIVM_CLIENT
 	int prevGvm = cgvmi;
 	cgvmi = igvm;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
-
-	if ( !cgvm ) {
-		return qfalse;
-	}
 
 #ifdef EMSCRIPTEN
 		// it's possible (and happened in Q3F) that the game executes a console command

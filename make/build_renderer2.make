@@ -5,10 +5,6 @@ BUILD_RENDERER_OPENGL2:=1
 include make/platform.make
 
 TARGET         := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
-# TODO: change WORKDIR so both version can be build without overlapping
-ifeq ($(USE_MULTIVM_CLIENT),1)
-TARGET         := $(BOTLIB_PREFIX)_opengl2_mw_$(SHLIBNAME)
-endif
 SOURCES        := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
 INCLUDES       := 
 

@@ -3997,13 +3997,13 @@ void CL_Frame( int msec, int realMsec ) {
 	// been suspended, and resuming it if so now that we've successfully
 	// swapped buffers
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
-		if(!cgvms[i]) continue;
+		if(!cgvmWorlds[i]) continue;
 		if(VM_IsSuspended(cgvms[i])) {
 #ifdef USE_MULTIVM_CLIENT
-			cgvm = i;
+			cgvmi = i;
 			CM_SwitchMap(clientMaps[cgvmi]));
 #endif
-			unsigned int result = VM_Resume(cgvms[i]);
+			unsigned int result = VM_Resume(cgvmWorlds[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
 			}
@@ -4165,7 +4165,7 @@ void CL_Frame( int msec, int realMsec ) {
 	Con_RunConsole();
 	
 #ifdef USE_MULTIVM_CLIENT
-	cgvm = 0;
+	cgvmi = 0;
 	CM_SwitchMap(clientMaps[0]);
 #endif
 }
@@ -4980,7 +4980,7 @@ void CL_LoadVM_f( void ) {
     if(!Q_stricmp( name, "demo" )) {
       // TODO: start demo
     }
-		cgvm = 0;
+		cgvmi = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
 		int i, count = 0;
