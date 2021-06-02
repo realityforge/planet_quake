@@ -765,7 +765,12 @@ void SV_RecentStatus(recentEvent_t type) {
 	char *cl_guid;
 	char *s;
 	i = 0;
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL ), MAX_INFO_STRING)), MAX_INFO_STRING);
+#ifdef USE_MULTIVM_SERVER
+  char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), MAX_INFO_STRING);
+#else
+  char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL ), MAX_INFO_STRING);
+#endif
+	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, info), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 makestatus:
 	s = &status[1];
@@ -857,7 +862,11 @@ static void SVC_Status( const netadr_t *from ) {
 	if ( strlen( Cmd_Argv( 1 ) ) > 128 )
 		return;
 
+#ifdef USE_MULTIVM_SERVER
+  Q_strncpyz( infostring, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), sizeof( infostring ) );
+#else
 	Q_strncpyz( infostring, Cvar_InfoString( CVAR_SERVERINFO, NULL ), sizeof( infostring ) );
+#endif
 
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
@@ -956,7 +965,11 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "protocol", com_protocol->string );
 	Info_SetValueForKey( infostring, "gamename", com_gamename->string );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
+#ifdef USE_MULTIVM_SERVER
+  Info_SetValueForKey( infostring, "mapname", Cvar_VariableString(va("mapname_%i", gvmi)) );
+#else
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
+#endif
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
 	Info_SetValueForKey(infostring, "g_humanplayers", va("%i", humans));
 	Info_SetValueForKey( infostring, "sv_maxclients", 
@@ -1697,14 +1710,25 @@ void SV_Frame( int msec ) {
 	}
 
 	// update infostrings if anything has been changed
+#ifdef USE_MULTIVM_SERVER
 	if ( cvar_modifiedFlags & CVAR_SERVERINFO ) {
-		SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+		SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
 		cvar_modifiedFlags &= ~CVAR_SERVERINFO;
 	}
 	if ( cvar_modifiedFlags & CVAR_SYSTEMINFO ) {
-		SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+		SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
 		cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 	}
+#else
+  if ( cvar_modifiedFlags & CVAR_SERVERINFO ) {
+    SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+    cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+  }
+  if ( cvar_modifiedFlags & CVAR_SYSTEMINFO ) {
+    SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+    cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+  }
+#endif
 
 	if ( com_speeds->integer ) {
 		startTime = Sys_Milliseconds();

@@ -93,8 +93,9 @@ typedef struct {
 	int				snapshotCounter;	// incremented for each snapshot built
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
-	char			*configstrings[MAX_CONFIGSTRINGS];
 #ifdef USE_MULTIVM_SERVER
+  char			*configstrings[MAX_NUM_VMS][MAX_CONFIGSTRINGS];
+#define configstrings configstrings[gvmi]
 	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
 #define svEntities svEntities[gvmi]
 	const char		*entityParsePoint; // TODO: need parse points in case loading 2 at the same time?
@@ -110,6 +111,7 @@ typedef struct {
 	byte			baselineUsed[MAX_NUM_VMS][ MAX_GENTITIES ];
 #define baselineUsed baselineUsed[gvmi]
 #else
+  char			*configstrings[MAX_CONFIGSTRINGS];
   svEntity_t		svEntities[MAX_GENTITIES];
 
   const char		*entityParsePoint;	// used during game VM init

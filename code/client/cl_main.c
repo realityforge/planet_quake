@@ -2688,7 +2688,11 @@ static void CL_Clientinfo_f( void ) {
 	Com_Printf( "state: %i\n", cls.state );
 	Com_Printf( "Server: %s\n", cls.servername );
 	Com_Printf ("User info settings:\n");
+#ifdef USE_MULTIVM_CLIENT
+  Info_Print( Cvar_InfoString( CVAR_USERINFO, NULL, clc.currentView ) );
+#else
 	Info_Print( Cvar_InfoString( CVAR_USERINFO, NULL ) );
+#endif
 	Com_Printf( "--------------------------------------\n" );
 }
 
@@ -3232,7 +3236,11 @@ static void CL_CheckForResend( void ) {
 		port = Cvar_VariableIntegerValue( "net_qport" );
 
 		infoTruncated = qfalse;
+#ifdef USE_MULTIVM_CLIENT
+    Q_strncpyz( info, Cvar_InfoString( CVAR_USERINFO, &infoTruncated, cgvmi ), sizeof( info ) );
+#else
 		Q_strncpyz( info, Cvar_InfoString( CVAR_USERINFO, &infoTruncated ), sizeof( info ) );
+#endif
 
 		// remove some non-important keys that may cause overflow during connection
 		if ( strlen( info ) > MAX_USERINFO_LENGTH - 64 ) {
@@ -3943,7 +3951,11 @@ static void CL_CheckUserinfo( void ) {
 
 		cvar_modifiedFlags &= ~CVAR_USERINFO;
 
-		info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated );
+#ifdef USE_MULTIVM_CLIENT
+		info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated, cgvmi );
+#else
+    info = Cvar_InfoString( CVAR_USERINFO, &infoTruncated );
+#endif
 		if ( strlen( info ) > MAX_USERINFO_LENGTH || infoTruncated ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: oversize userinfo, you might be not able to play on remote server!\n" );
 		}

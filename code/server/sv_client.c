@@ -1393,13 +1393,21 @@ int SV_RemainingGameState( void )
 		if ( start == CS_SERVERINFO ) {
 			MSG_WriteByte( &msg, svc_configstring );
 			MSG_WriteShort( &msg, start );
-			MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+#ifdef USE_MULTIVM_SERVER
+			MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
+#else
+      MSG_WriteBigString( &msg, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+#endif
 			continue;
 		}
 		if ( start == CS_SYSTEMINFO ) {
 			MSG_WriteByte( &msg, svc_configstring );
 			MSG_WriteShort( &msg, start );
+#ifdef USE_MULTIVM_SERVER
+      MSG_WriteBigString( &msg, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
+#else
 			MSG_WriteBigString( &msg, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+#endif
 			continue;
 		}
 		if ( sv.configstrings[start][0] ) {
@@ -1462,12 +1470,7 @@ static void SV_SendClientGameState( client_t *client ) {
 	if ( client->state != CS_PRIMED ) {
 		Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	}
-#ifdef USE_MULTIVM_SERVER
-	Cvar_Set( "mapname", Cvar_VariableString( va("mapname_%i", gvmi) ) );
-	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
-	//SV_RemainingGameState();
-#endif
+
 	client->state = CS_PRIMED;
 
 	client->pureAuthentic = qfalse;
@@ -2465,17 +2468,26 @@ void SV_LoadVM( client_t *cl ) {
 			break;
 		}
 	}
+
+  for ( i = 0 ; i < MAX_CONFIGSTRINGS; i++ ) {
+    sv.configstrings[i] = CopyString("");
+  }
+
+  // load clip map
 	mapname = Cmd_Argv(2);
 	if(mapname[0] == '\0') {
 		gameWorlds[gvmi] = previous;
 		CM_SwitchMap(gameWorlds[gvmi]);
 	} else {
-		Cvar_Set( va("mapname_%i", gvmi), mapname );
 		Sys_SetStatus( "Loading map %s", mapname );
+    Cvar_Set( va("mapname_%i", gvmi), mapname );
 		gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
 	}
+  
+  // settle the new map
 	SV_ClearWorld();
+  sv.state = SS_LOADING;
 	SV_SetAASgvm(gvmi);
 	SV_InitGameProgs(qtrue);
 	// catch up with current VM
@@ -2484,12 +2496,18 @@ void SV_LoadVM( client_t *cl ) {
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time - i * 100 );
 		SV_BotFrame( sv.time - i * 100 );
 	}
-	
+
+  SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
+  cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+
+  SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
+  cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+
 	// ------------- TODO: add that stuff with reconnecting clients and bots here
 	//   make it a cvar like a game dynamic if players should auutomatically have presence everywhere
 	//   like in the game mode with a mirror dimension with synchronized coords
 	
-	
+  sv.state = SS_GAME;	
 	Sys_SetStatus( "Running map %s", mapname );
 	SV_CreateBaseline();
 	/*
@@ -2503,7 +2521,7 @@ void SV_LoadVM( client_t *cl ) {
 	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 	SV_RemainingGameState();
-	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvmi);
+	Com_Printf ("---------------- Finished Starting Map (%i: %s) -------------------\n", gvmi, mapname);
 
 	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);

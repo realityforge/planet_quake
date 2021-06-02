@@ -123,13 +123,21 @@ void SV_SetConfigstring (int index, const char *val) {
 	}
 
 	// change the string in sv
-	Z_Free( sv.configstrings[index] );
+  if(sv.configstrings[index])
+    Z_Free( sv.configstrings[index] );
 	sv.configstrings[index] = CopyString( val );
 
 	// save config strings to demo
 	if (sv.demoState == DS_RECORDING) {
 		SV_DemoWriteConfigString( index, val );
 	}
+
+#ifdef USE_MULTIVM_SERVER
+  if(sv.gentitySize[gvmi] == 0) {
+    // still starting up
+    return;
+  }
+#endif
 
 	// send it to all the clients if we aren't
 	// spawning a new server
@@ -588,7 +596,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #endif
 
 #ifdef EMSCRIPTEN
-	memcpy(&map, mapname, sizeof(map));
 	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }
@@ -775,7 +782,11 @@ void SV_SpawnServer_After_Startup( void ) {
 
 		pakslen = strlen( p ) + 9; // + strlen( "\\sv_paks\\" )
 		freespace = SV_RemainingGameState();
+#ifdef USE_MULTIVM_SERVER
+    infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated, gvmi ) );
+#else
 		infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated ) );
+#endif
 
 		if ( infoTruncated ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: truncated systeminfo!\n" );
@@ -798,11 +809,19 @@ void SV_SpawnServer_After_Startup( void ) {
 	}
 
 	// save systeminfo and serverinfo strings
-	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+#ifdef USE_MULTIVM_SERVER
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
 	cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#else
+  SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+  cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+
+  SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+  cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#endif
 
 	// any media configstring setting now should issue a warning
 	// and any configstring changes should be reliably transmitted

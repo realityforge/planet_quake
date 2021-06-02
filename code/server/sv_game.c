@@ -267,13 +267,13 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 	if ( bufferSize < 1 ) {
 		Com_Error( ERR_DROP, "SV_GetServerinfo: bufferSize == %i", bufferSize );
 	}
-#ifdef USE_MULTIVM_SERVER
-	Cvar_Set("mapname", Cvar_VariableString(va("mapname_%i", gvmi)));
-	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
-#endif
+
 	if ( sv.state != SS_GAME || !sv.configstrings[ CS_SERVERINFO ] ) {
-		Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL ), bufferSize );
+#ifdef USE_MULTIVM_SERVER
+		Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), bufferSize );
+#else
+    Q_strncpyz( buffer, Cvar_InfoString( CVAR_SERVERINFO, NULL ), bufferSize );
+#endif
 	} else {
 		Q_strncpyz( buffer, sv.configstrings[ CS_SERVERINFO ], bufferSize );
 	}
@@ -386,20 +386,38 @@ static qboolean SV_GetValue( char* value, int valueSize, const char* key )
 
 
 #ifdef USE_MULTIVM_SERVER
-static const char *RenameMultiworld(char *name) {
-	const char *newName;
-	if(!Q_stricmp(name, "mapname")) {
-		newName = va("mapname_%i", gvmi);
-	}
-	else if(!Q_stricmp(name, "session")) {
-		newName = va("session_%i", gvmi);
-	}
-	else if(Q_stristr(name, "session") == name) {
-		newName = va("session_%i_%s", gvmi, &name[7]);
-	}
-	else
-		newName = name;
-	return newName;
+
+
+static const cvar_t *SV_Cvar_Get(const char *name, int tagged) {
+  // always return tagged for these
+  if(!Q_stricmp(name, "mapname") || !Q_stricmp(name, "session")
+    || Q_stristr(name, "session") == name) {
+    return Cvar_Get(va("%s_%i", name, tagged), "", 0);
+  }
+	cvar_t *cvTagged = Cvar_Get(va("%s_%i", name, tagged), "", 0);
+  if(cvTagged->tagged != -1) {
+    return cvTagged;
+  }
+  return Cvar_Get(name, "", 0);
+}
+
+static void SV_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged ) {
+  const cvar_t *cvTagged = SV_Cvar_Get(varName, tagged);
+  Cvar_Register(vmCvar, cvTagged->name, defaultValue, flags, privateFlag, tagged);
+  if(Q_stricmp(varName, cvTagged->name)) {
+    Cvar_Register(vmCvar, varName, defaultValue, flags, privateFlag, tagged);
+  }
+}
+static void SV_Cvar_SetSafe( const char *var_name, const char *value, int tagged ) {
+  const cvar_t *cvTagged = SV_Cvar_Get(var_name, tagged);
+  Cvar_SetSafe(cvTagged->name, value);
+}
+static int  SV_Cvar_VariableIntegerValue( const char *var_name, int tagged ) {
+  return SV_Cvar_Get(var_name, tagged)->integer;
+}
+static void SV_Cvar_VariableStringBufferSafe( const char *var_name, char *buffer, int bufsize, int flag, int tagged ) {
+  const cvar_t *cvTagged = SV_Cvar_Get(var_name, tagged);
+  Cvar_VariableStringBufferSafe(cvTagged->name, buffer, bufsize, flag);
 }
 #endif
 
@@ -417,9 +435,12 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Com_Printf( "%s", (const char*)VMA(1) );
 				return 0;
 	case G_ERROR:
+    // TODO: find real fixes for these
 		// excessive plus checking if it is installed correctly
 		if(Q_stristr((const char*)VMA(1), "seems broken")
+    // cpma
 			|| Q_stristr((const char*)VMA(1), "missing or corrupt")
+    // RTCW
 			|| Q_stristr((const char*)VMA(1), "no free entities")) {
 			Com_Printf( "%s", (const char*)VMA(1) );
 						Cvar_Set("bot_enable", "1");
@@ -431,10 +452,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
 #ifdef USE_MULTIVM_SERVER
-		{
-			const char *name = RenameMultiworld(VMA(2));
-			Cvar_Register( VMA(1), name, VMA(3), args[4], gvm->privateFlag ); 
-		}
+    SV_Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag, gvmi ); 
 #else
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag ); 
 #endif
@@ -444,10 +462,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_CVAR_SET:
 #ifdef USE_MULTIVM_SERVER
-		{
-			const char *name = RenameMultiworld(VMA(1));
-			Cvar_SetSafe( name, (const char *)VMA(2) );
-		}
+		SV_Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2), gvmi );
 #else
     Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
 #endif
@@ -459,20 +474,14 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
 #ifdef USE_MULTIVM_SERVER
-		{
-			const char *name = RenameMultiworld(VMA(1));
-			return Cvar_VariableIntegerValue( name );
-		}
+    return SV_Cvar_VariableIntegerValue( (const char *)VMA(1), gvmi );
 #else
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 #endif
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
 #ifdef USE_MULTIVM_SERVER
-		{
-			const char *name = RenameMultiworld(VMA(1));
-			Cvar_VariableStringBufferSafe( name, VMA(2), args[3], gvm->privateFlag );
-		}
+    SV_Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag, gvmi );
 #else
 		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag );
 #endif
@@ -487,7 +496,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef USE_MULTIVM_SERVER
 		Cbuf_ExecuteTagged( args[1], VMA(2), gvmi );
 #else
-    Cbuf_ExecuteTagged( args[1], VMA(2), 0 );
+    Cbuf_ExecuteText( args[1], VMA(2) );
 #endif
 		return 0;
 

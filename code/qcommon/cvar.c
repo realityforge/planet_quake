@@ -1742,7 +1742,11 @@ static void Cvar_Trim_f( void )
 Cvar_InfoString
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+const char *Cvar_InfoString( int bit, qboolean *truncated, int tagged )
+#else
 const char *Cvar_InfoString( int bit, qboolean *truncated )
+#endif
 {
 	static char	info[ MAX_INFO_STRING ];
 	const cvar_t *user_vars[ MAX_CVARS ];
@@ -1787,6 +1791,15 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	// add vm-created cvars
 	for ( i = 0; i < vm_count; i++ )
 	{
+#ifdef USE_MULTIVM_CLIENT
+    if(var->tagged) {
+      cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
+      if(otherVar->tagged) { // both names should be tagged because of this test
+        allSet &= Info_SetValueForKey( info, var->name, otherVar->string );
+        continue; // prefer the other vars value
+      }
+    }
+#endif
 		var = vm_vars[ i ];
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
@@ -1814,7 +1827,11 @@ Cvar_InfoString_Big
   handles large info strings ( CS_SYSTEMINFO )
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+const char *Cvar_InfoString_Big( int bit, qboolean *truncated, int tagged )
+#else
 const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
+#endif
 {
 	static char	info[BIG_INFO_STRING];
 	const cvar_t *var;
@@ -1825,8 +1842,18 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 
 	for ( var = cvar_vars; var; var = var->next )
 	{
-		if ( var->name && (var->flags & bit) )
+		if ( var->name && (var->flags & bit) ) {
+#ifdef USE_MULTIVM_CLIENT
+      if(var->tagged) {
+        cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
+        if(otherVar->tagged) { // both names should be tagged because of this test
+          allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, otherVar->string );
+          continue; // prefer the other vars value
+        }
+      }
+#endif
 			allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, var->string );
+    }
 	}
 
 	if ( truncated )
@@ -1843,9 +1870,15 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 Cvar_InfoStringBuffer
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+void Cvar_InfoStringBuffer( int bit, char* buff, int buffsize, int tagged ) {
+  Q_strncpyz( buff, Cvar_InfoString( bit, NULL, tagged ), buffsize );
+}
+#else
 void Cvar_InfoStringBuffer( int bit, char* buff, int buffsize ) {
 	Q_strncpyz( buff, Cvar_InfoString( bit, NULL ), buffsize );
 }
+#endif
 
 
 /*
@@ -1959,7 +1992,11 @@ basically a slightly modified Cvar_Get for the interpreted modules
 =====================
 */
 #define INVALID_FLAGS ( CVAR_USER_CREATED | CVAR_SERVER_CREATED | CVAR_PROTECTED | CVAR_PRIVATE | CVAR_MODIFIED | CVAR_NONEXISTENT )
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag, int tagged )
+#else
 void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag )
+#endif
 {
 	cvar_t	*cv;
 
@@ -1999,6 +2036,8 @@ void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 
 	vmCvar->handle = cv - cvar_indexes;
 	vmCvar->modificationCount = -1;
+  cv->tagged = qtrue;
+  cv->tag    = tagged;
 
 	Cvar_Update( vmCvar, 0 );
 }

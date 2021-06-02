@@ -1074,6 +1074,10 @@ struct cvar_s {
 	cvar_t		*hashPrev;
 	int			hashIndex;
 	cvarGroup_t	group;				// to track changes
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+  qboolean   tagged;
+  int        tag;
+#endif
 };
 
 #define	MAX_CVAR_VALUE_STRING	256
