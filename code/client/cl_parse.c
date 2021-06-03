@@ -769,9 +769,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	const char		*s;
 	char			oldGame[ MAX_QPATH ];
 	qboolean		gamedirModified;
-#ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
-#endif
 
 	Con_Close();
 
@@ -787,17 +784,17 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifndef USE_MULTIVM_CLIENT
 	CL_ClearState();
 #else
+int igs = 0;
 	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
 		if(cl.snapWorlds[0].multiview) {
-			clc.currentView = igvm = MSG_ReadByte( msg );
-      // TODO: fix this accept multiple gamestates without messing up client VMs
-      clientGames[clc.currentView] = clc.currentView;
+			clc.currentView = igvm = igs = MSG_ReadByte( msg );
 		}
 		if(igvm == 0) {
 			CL_ClearState();
 		}
+    Com_Printf("Received new gamestate: %i\n", igvm);    
 	}
 #endif
 
@@ -837,7 +834,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 					len + 1 + cl.gameState.dataCount );
 			}
 
-Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
+//Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
 			// append it to the gameState string buffer
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );
