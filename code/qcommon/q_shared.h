@@ -1034,6 +1034,10 @@ default values.
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define CVAR_TAGGED_SPECIFIC 0x40000
+#define CVAR_TAGGED_ORIGINAL 0x80000
+#endif
 
 typedef enum {
 	CV_NONE = 0,
@@ -1075,7 +1079,6 @@ struct cvar_s {
 	int			hashIndex;
 	cvarGroup_t	group;				// to track changes
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-  qboolean   tagged;
   int        tag;
 #endif
 };

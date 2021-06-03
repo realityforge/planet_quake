@@ -2480,9 +2480,11 @@ void SV_LoadVM( client_t *cl ) {
 		CM_SwitchMap(gameWorlds[gvmi]);
 	} else {
 		Sys_SetStatus( "Loading map %s", mapname );
+    Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
     Cvar_Set( va("mapname_%i", gvmi), mapname );
 		gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
-		Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
+		Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
+    Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
 	}
   
   // settle the new map

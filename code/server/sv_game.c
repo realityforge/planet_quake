@@ -390,21 +390,15 @@ static cvar_t *SV_Cvar_Get(const char *name, const char *defaultValue, int tagge
   cvar_t *unTagged;
   cvar_t *cvTagged;
   // always return tagged for these
-  unTagged = Cvar_Get(name, defaultValue, 0);
-  if(!Q_stricmp(name, "mapname") || !Q_stricmp(name, "session")
-    || Q_stristr(name, "session") == name) {
-    cvTagged = Cvar_Get(va("%s_%i", name, tagged), unTagged->resetString, 0);
-    cvTagged->flags &= ~CVAR_ARCHIVE;
-    cvTagged->flags &= ~CVAR_ARCHIVE_ND;
-    cvTagged->tagged = qtrue;
-    cvTagged->tag    = tagged;
-    return cvTagged;
-  }
-  cvTagged = Cvar_Get(va("%s_%i", name, tagged), unTagged->resetString, 0);
+  unTagged = Cvar_Get(name, defaultValue, CVAR_TAGGED_ORIGINAL);
+  if(defaultValue[0] == '\0') // not intending to set the default, only read
+    cvTagged = Cvar_Get(va("%s_%i", name, tagged), unTagged->resetString, CVAR_TAGGED_SPECIFIC);
+  else
+    cvTagged = Cvar_Get(va("%s_%i", name, tagged), defaultValue, CVAR_TAGGED_SPECIFIC);
   cvTagged->flags &= ~CVAR_ARCHIVE;
   cvTagged->flags &= ~CVAR_ARCHIVE_ND;
-  cvTagged->tagged = qtrue;
   cvTagged->tag    = tagged;
+  Com_Printf("Reading tagged: %s -> %s = %s\n", cvTagged->name, unTagged->string, cvTagged->string);
   return cvTagged;
 }
 
@@ -412,10 +406,8 @@ static void SV_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char 
   cvar_t *cvTagged = SV_Cvar_Get(varName, defaultValue, tagged);
   Cvar_Register(vmCvar, cvTagged->name, defaultValue, flags, privateFlag);
   vmCvar_t notCvar;
-  cvar_t *unTagged = Cvar_Get(varName, defaultValue, 0);
   Cvar_Register(&notCvar, varName, defaultValue, flags, privateFlag);
-  unTagged->tagged = qtrue;
-  unTagged->tag    = -1;
+  Cvar_Get(varName, defaultValue, CVAR_TAGGED_ORIGINAL);
 }
 static void SV_Cvar_SetSafe( const char *var_name, const char *value, int tagged ) {
   const cvar_t *cvTagged = SV_Cvar_Get(var_name, "", tagged);
@@ -460,21 +452,21 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
-//#ifdef USE_MULTIVM_SERVER
-//    SV_Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag, gvmi ); 
-//#else
+#ifdef USE_MULTIVM_SERVER
+    SV_Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag, gvmi ); 
+#else
 		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag ); 
-//#endif
+#endif
 		return 0;
 	case G_CVAR_UPDATE:
 		Cvar_Update( VMA(1), gvm->privateFlag );
 		return 0;
 	case G_CVAR_SET:
-//#ifdef USE_MULTIVM_SERVER
-//		SV_Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2), gvmi );
-//#else
+#ifdef USE_MULTIVM_SERVER
+		SV_Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2), gvmi );
+#else
     Cvar_SetSafe( (const char *)VMA(1), (const char *)VMA(2) );
-//#endif
+#endif
 #ifdef USE_PERSIST_CLIENT
 		if(sv_clSessions->integer != 0 && Q_stristr(VMA(1), "session")) {
 			SV_PersistClient(atoi(&(VMA(1)[8])));
@@ -482,18 +474,18 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case G_CVAR_VARIABLE_INTEGER_VALUE:
-//#ifdef USE_MULTIVM_SERVER
-//    return SV_Cvar_VariableIntegerValue( (const char *)VMA(1), gvmi );
-//#else
+#ifdef USE_MULTIVM_SERVER
+    return SV_Cvar_VariableIntegerValue( (const char *)VMA(1), gvmi );
+#else
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
-//#endif
+#endif
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
-//#ifdef USE_MULTIVM_SERVER
-//    SV_Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag, gvmi );
-//#else
+#ifdef USE_MULTIVM_SERVER
+    SV_Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag, gvmi );
+#else
 		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag );
-//#endif
+#endif
 		return 0;
 	case G_ARGC:
 		return Cmd_Argc();

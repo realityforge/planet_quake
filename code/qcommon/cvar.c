@@ -1773,6 +1773,18 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	{
 		if ( var->name && ( var->flags & bit ) )
 		{
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+      if(var->flags & CVAR_TAGGED_ORIGINAL) {
+        cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
+        // this check also prevents e.g. mapname_1_1
+        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) { // both names should be tagged because of this test
+          allSet &= Info_SetValueForKey( info, var->name, otherVar->string );
+          continue; // prefer the other vars value
+        }
+      }
+      if(var->flags & CVAR_TAGGED_SPECIFIC)
+        continue;
+#endif
 			// put vm/user-created cvars to the end
 			if ( var->flags & ( CVAR_USER_CREATED | CVAR_VM_CREATED ) )
 			{
@@ -1792,17 +1804,6 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	for ( i = 0; i < vm_count; i++ )
 	{
     var = vm_vars[ i ];
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-    if(var->tagged) {
-Com_Printf("Reading tagged: %s\n", var->name);
-      cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
-      if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
-        // this check also prevents e.g. mapname_1_1
-        allSet &= Info_SetValueForKey( info, var->name, otherVar->string );
-        continue; // prefer the other vars value
-      }
-    }
-#endif
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
 
@@ -1847,13 +1848,15 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 	{
 		if ( var->name && (var->flags & bit) ) {
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-      if(var->tagged) {
+      if(var->flags & CVAR_TAGGED_ORIGINAL) {
         cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
-        if(otherVar && otherVar->tagged) { // both names should be tagged because of this test
+        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) { // both names should be tagged because of this test
           allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, otherVar->string );
           continue; // prefer the other vars value
         }
       }
+      if(var->flags & CVAR_TAGGED_SPECIFIC)
+        continue;
 #endif
 			allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, var->string );
     }

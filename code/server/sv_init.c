@@ -592,7 +592,8 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
 #ifdef USE_MULTIVM_SERVER
-	Cvar_Set( va("mapname_%i", gvmi), mapname );
+  Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
+  Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
 
 #ifdef EMSCRIPTEN
@@ -924,6 +925,9 @@ void SV_Init( void )
 	Cvar_SetDescription(Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM),
 		"Holds the network protocol version\nDefault: " XSTRING(PROTOCOL_VERSION));
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
+#ifdef USE_MULTIVM_SERVER
+  sv_mapname->flags |= CVAR_TAGGED_ORIGINAL;
+#endif
 	Cvar_SetDescription(sv_mapname, "Holds the name of the current map\nDefault: nomap");
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
 	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
@@ -1079,6 +1083,9 @@ void SV_Init( void )
 	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
 	Cvar_SetDescription(sv_killserver, "Set to a one the server goes down\nDefault: 0");
 	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
+#ifdef USE_MULTIVM_SERVER
+  sv_mapChecksum->flags |= CVAR_TAGGED_ORIGINAL;
+#endif
 	Cvar_SetDescription(sv_mapChecksum, "Allows clients to compare the map checksum\nDefault: empty");
 	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
 	Cvar_SetDescription( sv_lanForceRate, "Force clients to use the same packet rate as the server\nDefault: 1" );
