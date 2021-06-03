@@ -103,6 +103,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #undef MV_PROTOCOL_VERSION
 #define MV_MULTIWORLD_VERSION 2
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
+// TODO: make compatible with legacy clients but sending gamestate and 
+//   switching level like normal, I think another engine mod/ioq3? did this
+#define USE_LAZY_MEMORY
+#define USE_LAZY_LOAD
 #endif
 
 // TODO: move this into make file

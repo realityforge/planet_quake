@@ -1211,13 +1211,13 @@ void CL_InitCGame( int inVM ) {
 	vmInterpret_t		interpret;
 	unsigned result;
 #ifdef USE_MULTIVM_CLIENT
-  int prev = cgvmi; // must use this pattern here because of compiler template
+//  int prev = cgvmi; // must use this pattern here because of compiler template
   if(inVM == -1) {
     cgvmi = 0;
   } else {
     cgvmi = inVM;
   }
-  int igs = clientGames[cgvmi];
+  int igs = cgvmi;
 #endif
 
 	t1 = Sys_Milliseconds();
@@ -1253,19 +1253,24 @@ void CL_InitCGame( int inVM ) {
 	// otherwise server commands sent just before a gamestate are dropped
 	result = VM_Call( cgvm, 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
 
+  // do not allow vid_restart for first time
+	cls.lastVidRestart = Sys_Milliseconds();
+
 #ifdef USE_MULTIVM_CLIENT
 	if(inVM > -1) {
 		cls.state = CA_PRIMED;
 		re.EndRegistration();
 		Com_TouchMemory();
 		cls.lastVidRestart = Sys_Milliseconds();
+//    cgvmi = prev; // set to previous in case this was called from a GameCommand()
+//    re.SwitchWorld(cgvmi);
 		return;
 	}
 #endif
 
 #ifdef EMSCRIPTEN
-	// do not allow vid_restart for first time
-	cls.lastVidRestart = Sys_Milliseconds();
+//  cgvmi = prev; // set to previous in case this was called from a GameCommand()
+//  re.SwitchWorld(cgvmi);
 
 	// if the VM was suspended during initialization, we'll finish initialization later
 	if (result == 0xDEADBEEF) {
@@ -1313,9 +1318,10 @@ void CL_InitCGameFinished() {
 
 	// do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();
-#ifdef USE_MULTIVM_CLIENT
-  cgvmi = prev; // set to previous in case this was called from a GameCommand()
-#endif
+//#ifdef USE_MULTIVM_CLIENT
+//  cgvmi = prev; // set to previous in case this was called from a GameCommand()
+//  re.SwitchWorld(cgvmi);
+//#endif
 }
 
 
