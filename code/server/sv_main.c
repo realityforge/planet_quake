@@ -1391,15 +1391,15 @@ static void SV_CheckTimeouts( void ) {
 			// using the client id cause the cl->name is empty at this point
 			Com_DPrintf( "Going from CS_ZOMBIE to CS_FREE for client %d\n", i );
 #ifdef USE_MULTIVM_SERVER
-			sharedEntity_t *ent;
 			int prevGvm = gvmi;
 			for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
 				if(!gvmWorlds[igvm]) continue;
 				gvmi = igvm;
 				CM_SwitchMap(gameWorlds[gvmi]);
 				SV_SetAASgvm(gvmi);
-				ent = SV_GentityNum( i );
-				ent->s.eType = 0;
+        // also clear the entity type because this is how multiworld 
+        //   figures out of a client has been there before to send gamestates
+				SV_GentityNum( i )->s.eType = 0;
 			}
 			gvmi = prevGvm;
 			CM_SwitchMap(gameWorlds[gvmi]);

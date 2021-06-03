@@ -398,7 +398,6 @@ static cvar_t *SV_Cvar_Get(const char *name, const char *defaultValue, int tagge
   cvTagged->flags &= ~CVAR_ARCHIVE;
   cvTagged->flags &= ~CVAR_ARCHIVE_ND;
   cvTagged->tag    = tagged;
-  Com_Printf("Reading tagged: %s -> %s = %s\n", cvTagged->name, unTagged->string, cvTagged->string);
   return cvTagged;
 }
 

@@ -5356,8 +5356,8 @@ int getAltChecksum(const char *pakName, int *altChecksum) {
 					alt->headerLongs[0] = LittleLong( fs_checksumFeed );
 					useChecksum = Com_BlockChecksum( alt->headerLongs, sizeof( alt->headerLongs[0] ) * alt->numHeaderLongs );
 					useChecksum2 = Com_BlockChecksum( alt->headerLongs + 1, sizeof( alt->headerLongs[0] ) * (alt->numHeaderLongs - 1) );
-					Com_Printf( "FS_ReferencedPakPureChecksums: (%i) %i == %i (pure: %i, feed: %i)\n",
-					 	alt->numHeaderLongs, alt->altChecksum, useChecksum2, useChecksum, fs_checksumFeed);
+					//Com_Printf( "FS_ReferencedPakPureChecksums: (%i) %i == %i (pure: %i, feed: %i)\n",
+					// 	alt->numHeaderLongs, alt->altChecksum, useChecksum2, useChecksum, fs_checksumFeed);
 					break;
 				}
 			}
@@ -5402,6 +5402,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
 				int useChecksum = search->pack->pure_checksum;
+#ifdef USE_ALTCHECKSUM
 				int altChecksum = 0;
 				// send the pure checksum instead of real pak checksum
 				found = getAltChecksum(search->pack->pakFilename, &altChecksum);
@@ -5410,7 +5411,8 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 					found = getAltChecksum("pak8.pk3", &altChecksum);
 					if(found) useChecksum = altChecksum;
 				}
-				
+#endif
+
 				s = Q_stradd( s, va( "%i ", useChecksum ) );
 				if ( s > max ) // client-side overflow
 					break;
@@ -5421,6 +5423,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 				numPaks++;
 			}
 		}
+#ifdef USE_ALTCHECKSUM
 		if(!found) {
 			// must find at least 1 pak in  every  category
 			//   if this doesn't happen, forge a pak out of the mod directory
@@ -5438,6 +5441,7 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 				}
 			}
 		}
+#endif
 	}
 
 	// last checksum is the encoded number of referenced pk3s

@@ -1448,7 +1448,7 @@ void CL_MapLoading( void ) {
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
-#ifndef EMSCRIPTEN
+#ifndef USE_LOCAL_DED
 		CL_Disconnect( qtrue, qfalse );
 #endif
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );

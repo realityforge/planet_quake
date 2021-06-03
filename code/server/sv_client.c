@@ -1301,6 +1301,8 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
 		VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+    //SV_GentityNum( clientNum )->s.eType = 0;
+    // happens in SV_CheckTimeouts
 	}
 	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
@@ -1579,9 +1581,9 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	sharedEntity_t *ent;
 
 #ifdef USE_MULTIVM_SERVER
-  Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvmi );
+  Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s (world %i)\n", client->name, gvmi );
 #else
-  Com_Printf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
+  Com_DPrintf( "Going from CS_PRIMED to CS_ACTIVE for %s\n", client->name );
 #endif
 	client->state = CS_ACTIVE;
 #ifdef USE_MULTIVM_SERVER
@@ -2625,11 +2627,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 			// send new baselines
 			// TODO: remove this because MV takes care of it? this was pre-MV integration
-			for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
-				if(strlen(sv.configstrings[index]) > 0) {
-					client->csUpdated[index] = qtrue;
-				}
-			}
+			//for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
+			//	if(strlen(sv.configstrings[index]) > 0) {
+			//		client->csUpdated[index] = qtrue;
+			//	}
+			//}
 		}
 	}
 

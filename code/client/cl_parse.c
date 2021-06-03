@@ -792,6 +792,8 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	} else {
 		if(cl.snapWorlds[0].multiview) {
 			clc.currentView = igvm = MSG_ReadByte( msg );
+      // TODO: fix this accept multiple gamestates without messing up client VMs
+      clientGames[clc.currentView] = clc.currentView;
 		}
 		if(igvm == 0) {
 			CL_ClearState();
@@ -835,6 +837,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 					len + 1 + cl.gameState.dataCount );
 			}
 
+Com_Printf("cs %i (%i,%i): %s\n", i, igs, cgvmi, s);
 			// append it to the gameState string buffer
 			cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
 			Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, s, len + 1 );

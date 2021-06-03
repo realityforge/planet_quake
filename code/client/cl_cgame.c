@@ -188,7 +188,6 @@ qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 
 	// if the frame has fallen out of the circular buffer, we can't return it
 	if ( cl.snap.messageNum - snapshotNumber >= PACKET_BACKUP ) {
-Com_Printf("not valid\n");
 		return qfalse;
 	}
 
@@ -199,7 +198,6 @@ Com_Printf("not valid\n");
 		for(int i = snapshotNumber+1; i <= cl.snap.messageNum; i++)  {
 			clSnap = &cl.snapshots[i & PACKET_MASK];
 			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[snapshotNumber & PACKET_MASK].serverTime) {
-        Com_Printf("not valid\n");
 				return qfalse;
 			} else {
 				break;
@@ -214,7 +212,6 @@ Com_Printf("not valid\n");
 	// circular buffer, we can't return it
 #ifdef USE_MULTIVM_CLIENT
 	if ( cl.parseEntitiesNumWorlds[igs] - clSnap->parseEntitiesNum >= MAX_PARSE_ENTITIES ) {
-    Com_Printf("not valid\n");
 		return qfalse;
 	}
 #else
@@ -1620,7 +1617,7 @@ void CL_SetCGameTime( void ) {
 
 	// if we have gotten to this point, cl.snap is guaranteed to be valid
 	if ( !cl.snap.valid ) {
-		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid" );
+		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid (%i)", igs );
 	}
 
 	// allow pause in single player

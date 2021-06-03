@@ -919,6 +919,8 @@ void SV_Init( void )
 	Cvar_Get ("fraglimit", "20", CVAR_SERVERINFO);
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
+	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
+	//Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
 	Cvar_SetDescription(sv_gametype, "Holds the game style for the current match included in server info\nDefault: 0");
 	Cvar_SetDescription(Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO),
 		"Holds the search string entered in the internet connection menu\nDefault: empty");
