@@ -1916,7 +1916,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
 	re.RegisterSkin = RE_RegisterSkin;
-  re.RegisterImage = RE_RegisterImage;
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
 	re.LoadWorld = RE_LoadWorldMap;
@@ -1933,7 +1932,11 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;
 	re.AddPolyToScene = RE_AddPolyToScene;
+#ifdef USE_RMLUI
+  re.RegisterImage = RE_RegisterImage;
   re.DrawElements = RE_DrawElements;
+  re.RenderGeometry = RE_RenderGeometry;
+#endif
 	re.LightForPoint = R_LightForPoint;
 	re.AddLightToScene = RE_AddLightToScene;
 	re.AddAdditiveLightToScene = RE_AddAdditiveLightToScene;
@@ -1964,12 +1967,14 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #endif
 	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
-  re.RenderGeometry = RE_RenderGeometry;
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif
+#ifdef BUILD_EXPERIMENTAL
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
+  re.ResetBannerSpy = RE_ResetBannerSpy;
+#endif
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders = RE_ReloadShaders;
 #endif
@@ -1977,7 +1982,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
 #endif
-	re.ResetBannerSpy = RE_ResetBannerSpy;
 
 	return &re;
 }

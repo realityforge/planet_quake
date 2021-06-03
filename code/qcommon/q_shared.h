@@ -106,7 +106,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // TODO: make compatible with legacy clients but sending gamestate and 
 //   switching level like normal, I think another engine mod/ioq3? did this
 #define USE_LAZY_MEMORY
-#define USE_LAZY_LOAD
+//#define USE_LAZY_LOAD
 #endif
 
 // TODO: move this into make file

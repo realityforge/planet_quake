@@ -121,28 +121,33 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
+  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
+#ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
 #endif
-	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
-  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
-  void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
-    int num_indices, qhandle_t texture, const vec2_t translation);
-  void (*FastCapture)(byte *data);
-	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
-	void (*UpdateMode)(glconfig_t *glconfigOut);
-#ifdef USE_LAZY_MEMORY
-	void	(*ReloadShaders)( qboolean createNew );
+	void (*ReloadShaders)( qboolean createNew );
+  void (*SwitchWorld)(int world);
 #endif
 #ifdef USE_LAZY_LOAD
 	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
 #endif
-	void (*ResetBannerSpy)( void );
-	void (*SwitchWorld)(int world);
+#ifdef USE_RMLUI
   qhandle_t (*RegisterImage)( int *dimensions, const char *name );
-  void  (*DrawElements)( int numIndexes, void *firstIndex);
-
+  void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
+                          int num_indices, qhandle_t texture, const vec2_t translation);
+  void  (*DrawElements)(int numIndexes, void *firstIndex);
+#endif
+#ifdef USE_VID_FAST
+  void (*UpdateMode)(glconfig_t *glconfigOut);
+#endif
+#ifdef BUILD_EXPERIMENTAL
+  void (*FastCapture)(byte *data);
+  void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
+	void (*ResetBannerSpy)( void );
+#endif
 } refexport_t;
 
 //
