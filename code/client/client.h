@@ -724,8 +724,6 @@ void CL_ShutdownCGame( void );
 qboolean CL_GameCommand( int igvm );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
-void CL_AdjustTimeDelta( void );
-qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 
 //
 // cl_ui.c

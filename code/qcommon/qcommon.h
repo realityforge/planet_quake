@@ -1541,7 +1541,9 @@ char	*Sys_ConsoleInput( void );
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
 
+#ifdef EMSCRIPTEN
 void Field_CharEvent( field_t *edit, int ch );
+#endif
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 

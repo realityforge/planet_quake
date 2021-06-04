@@ -21,6 +21,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 // tr_map.c
 
+#ifdef USE_BSP1
+
+
 #include "tr_local.h"
 
 
@@ -618,3 +621,5 @@ void LoadBsp1(const char *name) {
 	//R_LoadLightGrid1( &header->lumps[LUMP_LIGHTGRID] );
 
 }
+
+#endif

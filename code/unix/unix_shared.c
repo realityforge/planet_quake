@@ -71,6 +71,20 @@ int Sys_Milliseconds( void )
 	return curtime;
 }
 
+
+char *strlwr( char *s ) {
+  if ( s==NULL ) { // bk001204 - paranoia
+    assert(0);
+    return s;
+  }
+  while (*s) {
+    *s = tolower(*s);
+    s++;
+  }
+  return s; // bk001204 - duh
+}
+
+
 /*
 ==================
 Sys_RandomBytes
@@ -465,7 +479,6 @@ LOAD/UNLOAD DLL
 static int dll_err_count = 0;
 
 
-#ifndef EMSCRIPTEN
 /*
 =================
 Sys_LoadLibrary
@@ -484,7 +497,6 @@ void *Sys_LoadLibrary( const char *name )
 	handle = dlopen( name, RTLD_NOW );
 	return handle;
 }
-#endif
 
 
 /*

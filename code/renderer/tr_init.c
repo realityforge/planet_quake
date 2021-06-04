@@ -268,17 +268,6 @@ void QDECL Com_Printf( const char *fmt, ... )
 
 	ri.Printf( PRINT_ALL, "%s", buf );
 }
-
-void QDECL Com_DPrintf( const char *fmt, ... )
-{
-	char buf[ MAXPRINTMSG ];
-	va_list	argptr;
-	va_start( argptr, fmt );
-	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
-	va_end( argptr );
-
-	ri.Printf( PRINT_DEVELOPER, "%s", buf );
-}
 #endif
 
 
@@ -1859,7 +1848,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.BeginRegistration = RE_BeginRegistration;
 	re.RegisterModel = RE_RegisterModel;
 	re.RegisterSkin = RE_RegisterSkin;
-  re.RegisterImage = RE_RegisterImage;
 	re.RegisterShader = RE_RegisterShader;
 	re.RegisterShaderNoMip = RE_RegisterShaderNoMip;
 	re.LoadWorld = RE_LoadWorldMap;
@@ -1875,8 +1863,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;
-  re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
-  re.RenderGeometry = RE_AddIndexedGeometries;
 	re.AddPolyToScene = RE_AddPolyToScene;
 	re.LightForPoint = R_LightForPoint;
 	re.AddLightToScene = RE_AddLightToScene;

@@ -956,7 +956,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		switch (id2)
 		{
 		case BSP2_VERSION:
-			LoadQ2Map(name);
+			//LoadQ2Map(name);
 			break;
 		case BSP_VERSION_QLIVE:
 		case BSP_VERSION_OPENJK:

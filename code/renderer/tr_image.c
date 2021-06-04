@@ -862,7 +862,6 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 }
 
 //===================================================================
-void R_LoadDDS(const char *filename, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips);
 
 typedef struct
 {
@@ -905,32 +904,6 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 	*height = 0;
 
 	Q_strncpyz( localName, name, sizeof( localName ) );
-
-	// If compressed textures are enabled, try loading a DDS first, it'll load fastest
-	if (r_ext_compressed_textures->integer)
-	{
-		char ddsName[MAX_QPATH];
-    GLenum picFormat;
-    int numMips = r_simpleMipMaps->integer;
-    picFormat = GL_RGBA8;
-  	numMips = 0;
-
-		COM_StripExtension(name, ddsName, MAX_QPATH);
-		Q_strcat(ddsName, MAX_QPATH, ".dds");
-
-/*
-		R_LoadDDS(ddsName, pic, width, height, &picFormat, &numMips);
-
-		// If loaded, we're done.
-		if (*pic)
-			return localName;
-    else {
-      R_LoadDDS(va("dds/%s", ddsName), pic, width, height, &picFormat, &numMips);
-      if (*pic)
-  			return va("dds/%s", ddsName);
-    }
-*/
-	}
 
 	ext = COM_GetExtension( localName );
 	if ( *ext )

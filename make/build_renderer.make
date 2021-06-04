@@ -28,14 +28,12 @@ endef
 debug:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR)/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR)/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)
 

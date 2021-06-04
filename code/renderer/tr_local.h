@@ -605,7 +605,7 @@ typedef struct litSurf_s {
 } litSurf_t;
 #endif
 
-#define	MAX_FACE_POINTS		256
+#define	MAX_FACE_POINTS		64
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory
@@ -1387,8 +1387,8 @@ void	GL_Cull( cullType_t cullType );
 #define CLS_TEXCOORD_ARRAY						0x00000002
 #define CLS_NORMAL_ARRAY						0x00000004
 
-void		RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
-void		RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
+void		RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
+void		RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
@@ -1429,7 +1429,6 @@ shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t	*R_FindShaderByName( const char *name );
-qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height);
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void		RE_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
@@ -1741,8 +1740,6 @@ RENDERER BACK END FUNCTIONS
 */
 
 void RB_ExecuteRenderCommands( const void *data );
-void RE_AddIndexedGeometries(void *vertices, int num_vertices, int* indices, 
-  int num_indices, qhandle_t texture, const vec2_t translation);
 
 /*
 =============================================================
@@ -1822,17 +1819,6 @@ typedef struct
 	qboolean colorMask;
 } clearColorCommand_t;
 
-typedef struct
-{
-  int commandId;
-  polyVert_t *verts;
-  int        numverts;
-  int        *indexes;
-  int        numIndexes;
-  shader_t   *shader;
-  int         translation[2];
-} addIndexedCommand_t;
-
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -1843,8 +1829,7 @@ typedef enum {
 	RC_FINISHBLOOM,
 	RC_COLORMASK,
 	RC_CLEARDEPTH,
-	RC_CLEARCOLOR,
-  RC_ADD_GEOMETRY
+	RC_CLEARCOLOR
 } renderCommand_t;
 
 

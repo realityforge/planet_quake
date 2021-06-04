@@ -58,7 +58,6 @@ typedef struct image_s image_t;
 #define LIGHTMAP_WHITEIMAGE -2
 #define LIGHTMAP_NONE       -1
 
-extern	refimport_t		ri;
 extern glconfig_t	glConfig;		// outside of TR since it shouldn't be cleared during ref re-init
 
 // These variables should live inside glConfig but can't because of
@@ -104,7 +103,6 @@ void R_UploadSubImage( byte *data, int x, int y, int width, int height, image_t 
 
 void R_IssuePendingRenderCommands( void );
 qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex );
-qhandle_t RE_RegisterImage( int *dimensions, const char *name );
 qhandle_t RE_RegisterShader( const char *name );
 qhandle_t RE_RegisterShaderNoMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage);

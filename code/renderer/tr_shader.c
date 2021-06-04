@@ -1924,23 +1924,6 @@ static qboolean ParseShader( const char **text )
 
 			continue;
 		}
-    else if ( !Q_stricmp( token, "dpoffsetmapping" )
-      || !Q_stricmp(token, "dp_refract")) {
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      COM_ParseExt( text, qfalse );
-      continue;
-    }
-    else if ( !Q_stricmp( token, "dpglossexponentmod" )
-      || !Q_stricmp(token, "dpglossintensitymod")) {
-      COM_ParseExt( text, qfalse );
-      continue;
-    }
-    else if ( !Q_stricmp( token, "dp_camera" )
-      || !Q_stricmp(token, "nolightmap")) {
-      continue;
-    }
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
@@ -3596,44 +3579,6 @@ static void CreateInternalShaders( void ) {
 	tr.cinematicShader = FinishShader();
 }
 
-
-qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height) {
-  shader_t	*sh;
-  image_t *image = R_CreateImage(name, NULL, (byte *)pic, width, height, 0 );
-  InitShader( name, LIGHTMAP_2D );
-  stages[0].bundle[0].image[0] = image;
-  stages[0].active = qtrue;
-  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-      GLS_SRCBLEND_SRC_ALPHA |
-      GLS_DSTBLEND_SRC_ALPHA;
-  stages[0].bundle[0].image[0] = image;
-  stages[0].rgbGen = CGEN_VERTEX;
-  stages[0].alphaGen = AGEN_VERTEX;
-  sh = FinishShader();
-  return sh->index;
-}
-
-
-
-qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
-  shader_t	*sh;
-  //shader_t *result = R_FindShader(name, LIGHTMAP_2D, qfalse);
-  image_t *image = R_FindImageFile( name, IMGFLAG_CLAMPTOEDGE | IMGFLAG_NOLIGHTSCALE );
-  dimensions[0] = image->width;
-  dimensions[1] = image->height;
-  InitShader( name, LIGHTMAP_2D );
-  shader.contentFlags |= CONTENTS_TRANSLUCENT;
-  stages[0].bundle[0].image[0] = image;
-  stages[0].active = qtrue;
-  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-      GLS_SRCBLEND_SRC_ALPHA |
-      GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-  stages[0].bundle[0].image[0] = image;
-  stages[0].rgbGen = CGEN_VERTEX;
-  stages[0].alphaGen = AGEN_VERTEX;
-  sh = FinishShader();
-  return sh->index;
-}
 
 /*
 ====================

@@ -71,7 +71,7 @@ typedef struct {
 	// Nothing is drawn until R_RenderScene is called.
 	void	(*ClearScene)( void );
 	void	(*AddRefEntityToScene)( const refEntity_t *re, qboolean intShaderTime );
-	void	(*AddPolyToScene)( qhandle_t hShader, int numVerts, const polyVert_t *verts, int num );
+	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
 	void	(*AddAdditiveLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
@@ -260,10 +260,14 @@ typedef struct {
 #ifdef USE_MEMORY_MAPS
 	int   (*FS_SV_FOpenFileRead)( const char *filename, fileHandle_t *fp );
 #endif
+#ifdef BUILD_EXPERIMENTAL
 	void (*Spy_CursorPosition)(float x, float y);
 	void (*Spy_InputText)( void );
 	void (*Spy_Banner)(float x, float y);
+#endif
+#ifdef EMSCRIPTEN
 	void (*Sys_DownloadLocalFile)(char *fileName);
+#endif
 } refimport_t;
 
 extern	refimport_t	ri;

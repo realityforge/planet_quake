@@ -346,9 +346,11 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
+#ifndef USE_MULTIVM_SERVER
 	if( Hunk_CheckMark() ) {
-	//	Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
 	}
+#endif
 	return Hunk_Alloc( size, h_high );
 }
 

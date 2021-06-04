@@ -10,8 +10,14 @@ TARGET_CLIENT    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
 endif
 
 SOURCES  := $(MOUNT_DIR)/client
+ifneq ($(USE_RENDERER_DLOPEN),1)
+RSOURCES := $(MOUNT_DIR)/renderer $(MOUNT_DIR)/renderercommon
+endif
 ifneq ($(BUILD_SLIM_CLIENT),1)
 SOURCES  += $(MOUNT_DIR)/server
+endif
+ifneq ($(USE_BOTLIB_DLOPEN),1)
+SOURCES  += $(MOUNT_DIR)/botlib
 endif
 
 CLIPMAP  := $(B)/client/cm_load.o \
@@ -39,6 +45,7 @@ QCOMMON  := $(B)/client/cmd.o \
             $(B)/client/q_shared.o \
             $(B)/client/unzip.o \
             $(B)/client/puff.o
+
 # couple extra server files needed for cvars and botlib for reading files
 ifeq ($(BUILD_SLIM_CLIENT),1)
 QCOMMON  += $(B)/client/sv_init.o \
@@ -61,7 +68,7 @@ SOUND    := $(B)/client/snd_adpcm.o \
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
-  SOUND  += $(B)/client/snd_mix_mmx.o \
+SOUND    += $(B)/client/snd_mix_mmx.o \
             $(B)/client/snd_mix_sse.o
 endif
 endif
@@ -71,47 +78,47 @@ VM       := $(B)/client/vm.o \
             $(B)/client/vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
-  VM     += $(B)/client/vm_x86.o
+VM       += $(B)/client/vm_x86.o
 endif
 ifeq ($(ARCH),x86_64)
-  VM     += $(B)/client/vm_x86.o
+VM       += $(B)/client/vm_x86.o
 endif
 ifeq ($(ARCH),arm)
-  VM     += $(B)/client/vm_armv7l.o
+VM       += $(B)/client/vm_armv7l.o
 endif
 ifeq ($(ARCH),aarch64)
-  VM     += $(B)/client/vm_aarch64.o
+VM       += $(B)/client/vm_aarch64.o
 endif
 endif
 
 CURL     :=
 ifeq ($(USE_CURL),1)
-  CURL   += $(B)/client/cl_curl.o
+CURL     += $(B)/client/cl_curl.o
 endif
 
 
 SYSTEM   :=
 ifeq ($(PLATFORM),js)
-  SYSTEM += $(B)/client/sys_glimp.o \
+SYSTEM   += $(B)/client/sys_glimp.o \
             $(B)/client/sys_main.o \
             $(B)/client/sys_input.o \
             $(B)/client/unix_shared.o
 
 else
 ifdef MINGW
-  SYSTEM += $(B)/client/win_main.o \
+SYSTEM   += $(B)/client/win_main.o \
             $(B)/client/win_shared.o \
             $(B)/client/win_syscon.o \
             $(B)/client/win_resource.o
 
 ifeq ($(USE_SDL),1)
-  SYSTEM += $(B)/client/sdl_glimp.o \
+SYSTEM   += $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
 
 else # !USE_SDL
-  SYSTEM += $(B)/client/win_gamma.o \
+SYSTEM   += $(B)/client/win_gamma.o \
             $(B)/client/win_glimp.o \
             $(B)/client/win_input.o \
             $(B)/client/win_minimize.o \
@@ -119,22 +126,21 @@ else # !USE_SDL
             $(B)/client/win_snd.o \
             $(B)/client/win_wndproc.o
 ifeq ($(USE_VULKAN_API),1)
-  SYSTEM += $(B)/client/win_qvk.o
+SYSTEM   += $(B)/client/win_qvk.o
 endif
 endif # !USE_SDL
-
 else # !MINGW
-  SYSTEM += $(B)/client/unix_main.o \
+SYSTEM   += $(B)/client/unix_main.o \
             $(B)/client/unix_shared.o \
             $(B)/client/linux_signals.o
 
 ifeq ($(USE_SDL),1)
-  SYSTEM += $(B)/client/sdl_glimp.o \
+SYSTEM   += $(B)/client/sdl_glimp.o \
             $(B)/client/sdl_gamma.o \
             $(B)/client/sdl_input.o \
             $(B)/client/sdl_snd.o
 else # !USE_SDL
-  SYSTEM += $(B)/client/linux_glimp.o \
+SYSTEM   += $(B)/client/linux_glimp.o \
             $(B)/client/linux_qgl.o \
             $(B)/client/linux_snd.o \
             $(B)/client/x11_dga.o \
@@ -143,7 +149,7 @@ else # !USE_SDL
 endif
 
 ifeq ($(USE_VULKAN_API),1)
-  SYSTEM += $(B)/client/linux_qvk.o
+SYSTEM   += $(B)/client/linux_qvk.o
 endif
 endif # !USE_SDL
 endif
@@ -151,13 +157,21 @@ endif
 
 INCLUDES := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_RMLUI),1)
-  INCLUDES += $(MOUNT_DIR)/../libs/RmlUi/Include
+INCLUDES += $(MOUNT_DIR)/../libs/RmlUi/Include
 endif
 
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(SOUND) \
             $(VM) $(CURL) $(SYSTEM)
+ifneq ($(USE_RENDERER_DLOPEN),1)
+CFILES   += $(foreach dir,$(RSOURCES), $(wildcard $(dir)/*.c))
+endif
+ifneq ($(USE_BOTLIB_DLOPEN),1)
+CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
+						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+endif
 ifneq ($(BUILD_SLIM_CLIENT),1)
+#CFILES   += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
 CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
 endif
 OBJS     := $(CFILES:.c=.o) 
@@ -172,6 +186,21 @@ CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
 
 define DO_CLIENT_CC
   $(echo_cmd) "CLIENT_CC $<"
+  $(Q)$(CC) -o $@ $(CFLAGS) -c $<
+endef
+
+define DO_BOT_CC
+	$(echo_cmd) "BOT_CC $<"
+	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
+endef
+
+define DO_REND_CC
+	$(echo_cmd) "REND_CC $<"
+	$(Q)$(CC)  -o $@ $(CFLAGS) -c $<
+endef
+
+define DO_SERVER_CC
+  $(echo_cmd) "SERVER_CC $<"
   $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
@@ -230,7 +259,16 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_CLIENT_CC)
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
-	$(DO_CLIENT_CC)
+	$(DO_SERVER_CC)
+
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
+	$(DO_BOT_CC)
+
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
+	$(DO_REND_CC)
+
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer/%.c
+	$(DO_REND_CC)
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"

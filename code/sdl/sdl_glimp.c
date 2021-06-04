@@ -636,7 +636,7 @@ void GLimp_Init( glconfig_t *config )
 
 	Key_ClearStates();
 
-	//HandleEvents();
+	HandleEvents();
 
 	// This depends on SDL_INIT_VIDEO, hence having it here
 	IN_Init();
@@ -735,7 +735,7 @@ void VKimp_Init( glconfig_t *config )
 
 	Key_ClearStates();
 
-	//HandleEvents();
+	HandleEvents();
 
 	// This depends on SDL_INIT_VIDEO, hence having it here
 	IN_Init();

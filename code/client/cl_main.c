@@ -4079,7 +4079,7 @@ void CL_Frame( int msec, int realMsec ) {
 		&& !com_sv_running->integer && uivm ) {
 		// if disconnected, bring up the menu
 		S_StopAllSounds();
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 	}
 
 	// if recording an avi, lock to a fixed fps
@@ -4409,7 +4409,11 @@ static void CL_InitRef( void ) {
 
 	CL_InitGLimp_Cvars();
 
-	Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
+#ifdef USE_RENDERER_DLOPEN
+  Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
+#else
+	Com_Printf( "----- Initializing Renderer ----\n" );
+#endif
 
 #ifdef USE_RENDERER_DLOPEN
 
@@ -4566,9 +4570,14 @@ static void CL_InitRef_After_Load2( void *handle )
 	rimp.VK_CreateSurface = VK_CreateSurface;
 #endif
 
+#ifdef USE_VID_FAST
+	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
+#endif
+#ifdef BUILD_EXPERIMENTAL
 	rimp.Spy_CursorPosition = Spy_CursorPosition;
 	rimp.Spy_InputText = Spy_InputText;
 	rimp.Spy_Banner = Spy_Banner;
+#endif
 #ifdef EMSCRIPTEN
 	rimp.Sys_DownloadLocalFile = Sys_DownloadLocalFile;
 #endif
