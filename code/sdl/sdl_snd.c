@@ -199,17 +199,9 @@ qboolean SNDDMA_Init( void )
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 	int tmp;
-	SDL_AudioDeviceID tmpPlayback;
 
-#ifndef EMSCRIPTEN
 	if ( snd_inited )
 		return qtrue;
-#else
-	if(snd_inited) {
-		SNDDMA_Shutdown();
-	}
-#endif
-
 
 	//if ( !s_sdlBits )
 	{
@@ -268,24 +260,12 @@ qboolean SNDDMA_Init( void )
 	desired.channels = s_sdlChannels->integer;
 	desired.callback = SNDDMA_AudioCallback;
 
-	tmpPlayback = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
-	if ( tmpPlayback == 0 )
+	sdlPlaybackDevice = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
+	if ( sdlPlaybackDevice == 0 )
 	{
-#ifndef EMSCRIPTEN
 		Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
 		SDL_QuitSubSystem( SDL_INIT_AUDIO );
 		return qfalse;
-#else
-		const char *message = SDL_GetError();
-		if(!Q_stristr(message, "already open")) {
-			Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", message );
-			return qfalse;
-		} else {
-			sdlPlaybackDevice = tmpPlayback;
-		}
-#endif
-	} else {
-		sdlPlaybackDevice = tmpPlayback;
 	}
 
 	SNDDMA_PrintAudiospec( "SDL_AudioSpec", &obtained );
@@ -398,10 +378,7 @@ void SNDDMA_Shutdown( void )
 	}
 #endif
 
-#ifndef EMSCRIPTEN
-	// audio can't restart in emscripten, so skip it here
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
-#endif
 	free(dma.buffer);
 	dma.buffer = NULL;
 	dmapos = dmasize = 0;
@@ -419,9 +396,7 @@ Send sound to device if buffer isn't really the dma buffer
 */
 void SNDDMA_Submit( void )
 {
-#ifndef EMSCRIPTEN
 	SDL_UnlockAudioDevice( sdlPlaybackDevice );
-#endif
 }
 
 
@@ -432,9 +407,7 @@ SNDDMA_BeginPainting
 */
 void SNDDMA_BeginPainting( void )
 {
-#ifndef EMSCRIPTEN
 	SDL_LockAudioDevice( sdlPlaybackDevice );
-#endif
 }
 
 

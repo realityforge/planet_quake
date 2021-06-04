@@ -1623,7 +1623,11 @@ void CL_SetCGameTime( void ) {
 
 	// if we have gotten to this point, cl.snap is guaranteed to be valid
 	if ( !cl.snap.valid ) {
-		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid (%i)", igs );
+#ifdef USE_MULTIVM_CLIENT
+    Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid (%i)", igs );
+#else
+		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid");
+#endif
 	}
 
 	// allow pause in single player

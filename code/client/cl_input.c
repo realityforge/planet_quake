@@ -26,7 +26,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static unsigned frame_msec;
 static int old_com_frameTime;
 
-
 /*
 ===============================================================================
 
@@ -895,8 +894,7 @@ void CL_WritePacket( void ) {
 
 		// begin a client move command
 		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
-		//	|| clc.serverMessageSequence != cl.snap.messageNum
-		) {
+			|| clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
 			MSG_WriteByte (&buf, clc_move);
@@ -932,7 +930,11 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
-  cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers;
+#ifdef USE_MULTIVM_CLIENT
+  cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumberWorlds[igvm];
+#else
+	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;
+#endif
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {

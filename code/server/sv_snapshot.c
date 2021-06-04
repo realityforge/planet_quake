@@ -635,7 +635,7 @@ void SV_IssueNewSnapshot( void )
   // do the entire frame because this is called only once, then checked is its zero when updating
   Com_Memset(svs.currFrameWorlds, 0, sizeof(svs.currFrameWorlds));
 #else
-  Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
+  svs.currFrame = NULL;
 #endif
 	
 	// value that clients can use even for their empty frames

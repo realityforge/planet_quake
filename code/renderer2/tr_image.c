@@ -2583,11 +2583,13 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
+/*
 	if((flags & IMGFLAG_PALETTE) && name[0] != '*') {
 		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
     if(!r_paletteMode->integer) return NULL;
 		return R_FindPalette(name);
 	}
+*/
 
 	hash = generateHashValue(name);
 
@@ -3411,5 +3413,3 @@ void	R_SkinList_f( void ) {
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
-
-

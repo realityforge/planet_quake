@@ -735,8 +735,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				if ( !stage->bundle[0].image[0] )
 				{
 					ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-					//return qfalse;
-          stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
+					return qfalse;
+          //stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
 				}
 			}
 		}
@@ -787,8 +787,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			if ( !stage->bundle[0].image[0] )
 			{
 				ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-				//return qfalse;
-        stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
+				return qfalse;
+        //stage->bundle[0].image[0] = R_FindImageFile( token, type, flags | IMGFLAG_PALETTE );
 			}
 		}
 		//
@@ -836,8 +836,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if ( !stage->bundle[0].image[num] )
 					{
 						ri.Printf( PRINT_DEVELOPER, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
-						//return qfalse;
-            stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
+						return qfalse;
+            //stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
 					}
 					stage->bundle[0].numImageAnimations++;
 				}
@@ -1672,7 +1672,7 @@ static void ParseSkyParms( const char **text ) {
       }
 
 			if ( !shader.sky.outerbox[i] ) {
-				shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE | IMGFLAG_PALETTE );
+				//shader.sky.outerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_CLAMPTOEDGE | IMGFLAG_PALETTE );
 			}
 		}
 	}
@@ -1708,7 +1708,7 @@ static void ParseSkyParms( const char **text ) {
         shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags );
       }
 			if ( !shader.sky.innerbox[i] ) {
-				shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_PALETTE );
+				//shader.sky.innerbox[i] = R_FindImageFile( ( char * ) pathname, IMGTYPE_COLORALPHA, imgFlags | IMGFLAG_PALETTE );
 			}
 		}
 	}
@@ -2066,10 +2066,9 @@ static qboolean ParseShader( const char **text )
 
 			if ( !ParseStage( &stages[s], text ) )
 			{
-        stages[s].active = qfalse;
-			} else {
-  			stages[s].active = qtrue;
+				return qfalse;
 			}
+  			stages[s].active = qtrue;
 			s++;
 
 			continue;
@@ -2570,7 +2569,7 @@ static void ComputeVertexAttribs(void)
 
 		if ( !pStage->active ) 
 		{
-			continue;
+			break;
 		}
 
 		if (pStage->glslShaderGroup == tr.lightallShader)
@@ -2842,9 +2841,8 @@ static int CollapseStagesToGLSL(void)
 		{
 			shaderStage_t *pStage = &stages[i];
 
-			if (!pStage->active) {
+			if (!pStage->active)
         continue;
-      }
 
 			//if (pStage->adjustColorsForFog)
 			//{
@@ -3858,9 +3856,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 
 		if ( !image ) {
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-      image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
-			//shader.defaultShader = qtrue;
-			//return FinishShader();
+      //image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags | IMGFLAG_PALETTE );
+			shader.defaultShader = qtrue;
+			return FinishShader();
 		} else {
       shader.defaultShader = qfalse;
 		}

@@ -33,7 +33,6 @@ qboolean	chat_team;
 
 int			chat_playerNum;
 
-
 //static void Field_CharEvent( field_t *edit, int ch );
 
 /*
