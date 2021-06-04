@@ -1080,6 +1080,7 @@ static void CL_Pause_f( void ) {
 		return;
 	}
 
+  Cvar_Set("timescale", "0");
 	Cvar_Set("cl_paused", "1");
 }
 
@@ -4409,6 +4410,7 @@ static void CL_InitRef( void ) {
 
 	CL_InitGLimp_Cvars();
 
+  Com_Printf("Couldn't load renderer %s\n", cl_renderer->string);
 #ifdef USE_RENDERER_DLOPEN
   Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
 #else

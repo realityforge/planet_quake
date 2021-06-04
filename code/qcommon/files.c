@@ -4757,7 +4757,8 @@ static void FS_ReorderSearchPaths( void ) {
 		if ( path->pack || path->policy != DIR_STATIC ) {
 			paks[npaks++] = path;
 		} else {
-			dirs[ndirs++] = path;
+      paks[npaks++] = path;
+			//dirs[ndirs++] = path;
 		}
 		path = path->next;
 	}

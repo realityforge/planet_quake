@@ -10,8 +10,8 @@ CINEMATICS_INTRO       = 0
 
 USE_RMLUI              = 0
 USE_RMLUI_DLOPEN       = 0
-USE_MULTIVM_SERVER     = 0
-USE_MULTIVM_CLIENT     = 0
+USE_MULTIVM_SERVER     = 1
+USE_MULTIVM_CLIENT     = 1
 USE_FREETYPE           = 0
 USE_VULKAN             = 0
 

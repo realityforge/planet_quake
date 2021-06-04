@@ -1500,9 +1500,10 @@ static specificVM_t knownVMs[] = {
 	{VM_GAME, 0x5AAE0ACC, 251521, 1872720, VMR_OSP, "OSP"},
 	{VM_GAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
 	{VM_GAME, 0x0, 0, 0, VMR_URT, "Urban Terror"},
-	{VM_GAME, 0x9e8dc0c1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
+	{VM_GAME, 0x9E8DC0C1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
 	{VM_GAME, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
-	{VM_GAME, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
+  // this might be CPMA 3
+	{VM_GAME, 0xFF9DEF19, 272443, 4156444, VMR_CPMA2, "CPMA"},
 	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
 
 #ifndef DEDICATED
@@ -1513,6 +1514,7 @@ static specificVM_t knownVMs[] = {
 	{VM_CGAME, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
 	{VM_CGAME, 0x3E93FC1A, 123596, 2007536, VMR_CPMA1, "CPMA"},
 	{VM_CGAME, 0xF0F1AE90, 123552, 2007520, VMR_CPMA2, "CPMA"},
+  //VMR_CPMA3? 8E028120, ic: 138536, dl: 2090780
 	{VM_CGAME, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
 
 	{VM_UI, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
@@ -1522,6 +1524,7 @@ static specificVM_t knownVMs[] = {
 	{VM_UI, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
 	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
 	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
+  //CPMA 3 ? D8BCD4FA, ic: 80745, dl: 865156
 	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
 #endif
 	{0, 0, 0, 0, 0, ""}
@@ -1589,6 +1592,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	//}
 #endif
 
+#ifndef BUILD_SLIM_CLIENT
 	//if ( vm->index == VM_GAME ) {
 	// OSP
 	if ( vmcmp(vm, VM_GAME, VMR_OSP) ) {
@@ -1599,10 +1603,9 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	
 	// excessive plus checking if it is installed correctly
 	if ( vmcmp(vm, VM_GAME, VMR_EPLUS) ) {
-		ip = buf + 0xAD0 - 2; 
-		if ( ip[2].op == OP_JUMP && ip[2].value == 0xca1 ) {
-		//	ip[0].op = OP_JUMP;
-			VM_IgnoreInstructions( &ip[1], 2 );
+    ip = buf + 0xac5;
+    if ( ip[0].op == OP_CONST && ip[0].value == 0xa40 ) {
+      VM_IgnoreInstructions( &ip[0], 8 );
 		}
 	} else
 	
@@ -1614,7 +1617,15 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 			//VM_IgnoreInstructions( &ip[0], 1 );
 		}
 	}
+  
+	if ( vmcmp(vm, VM_GAME, VMR_CPMA2) ) {
+		ip = buf + 0x38ea4;
+		if(ip[0].op == OP_CONST && ip[0].value == 0xdc97) {
+			VM_IgnoreInstructions( &ip[0], 8 );
+		}
+	}
 	//}
+#endif
 
 #ifndef DEDICATED
 	//if ( vm->index == VM_UI ) {
