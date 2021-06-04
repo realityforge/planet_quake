@@ -116,7 +116,7 @@ vao_t *R_CreateVao(const char *name, byte *vertexes, int vertexesSize, byte *ind
 			break;
 
 		default:
-			ri.Error(ERR_FATAL, "bad vaoUsage_t given: %i", usage);
+			Com_Error(ERR_FATAL, "bad vaoUsage_t given: %i", usage);
 			return NULL;
 	}
 

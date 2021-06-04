@@ -1,11 +1,12 @@
 MKFILE         := $(lastword $(MAKEFILE_LIST))
 WORKDIR        := rend3
+SOURCEDIR      := renderer2
 
 BUILD_RENDERER_OPENGL2:=1
 include make/platform.make
 
 TARGET         := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
-SOURCES        := $(MOUNT_DIR)/renderer3 $(MOUNT_DIR)/renderer3/glsl $(MOUNT_DIR)/renderercommon
+SOURCES        := $(MOUNT_DIR)/$(SOURCEDIR) $(MOUNT_DIR)/$(SOURCEDIR)/glsl $(MOUNT_DIR)/renderercommon
 INCLUDES       := 
 
 GLSLFFALLBACKS := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.glsl))
@@ -65,13 +66,13 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer3/%.c
+$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/$(SOURCEDIR)/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/glsl/%.c: $(MOUNT_DIR)/renderer3/glsl/%.glsl
+$(B)/$(WORKDIR)/glsl/%.c: $(MOUNT_DIR)/$(SOURCEDIR)/glsl/%.glsl
 	$(DO_REF_STR)
 
-$(B)/$(WORKDIR)/glsl/%.o_clean: $(MOUNT_DIR)/renderer3/glsl/%.glsl
+$(B)/$(WORKDIR)/glsl/%.o_clean: $(MOUNT_DIR)/$(SOURCEDIR)/glsl/%.glsl
 	@rm -f $@
 
 $(B)/$(WORKDIR)/glsl/%.o: $(B)/$(WORKDIR)/glsl/%.c

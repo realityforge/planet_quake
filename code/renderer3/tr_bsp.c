@@ -2720,6 +2720,7 @@ void R_CalcVertexLightDirs( void )
 }
 
 
+#ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 void RE_SwitchWorld(int w) {
 	R_IssuePendingRenderCommands();
@@ -2731,6 +2732,7 @@ void RE_SwitchWorld(int w) {
 	tr.lightmaps = s_worldData.lightmaps;
 	//GLSL_InitGPUShaders();
 }
+#endif
 #endif
 
 
@@ -2782,7 +2784,9 @@ void RE_LoadWorldMap( const char *name ) {
 		if ( !Q_stricmp( s_worldDatas[j].name, name ) ) {
 			// TODO: PRINT_DEVELOPER
 			ri.Printf( PRINT_ALL, "RE_LoadWorldMap( Already loaded %s )\n", name );
+#ifdef USE_LAZY_MEMORY
 			RE_SwitchWorld(j);
+#endif
 			return;
 		} else if (s_worldDatas[j].name[0] == '\0' && empty == -1) {
 			// load additional world in to next slot

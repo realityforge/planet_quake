@@ -4987,7 +4987,9 @@ void CL_LoadVM_f( void ) {
 			}
 		}
 		count++;
+#ifdef USE_LAZY_MEMORY
 		re.SwitchWorld(cgvmi);
+#endif
 		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
     if(!Q_stricmp( name, "demo" )) {
       // TODO: start demo

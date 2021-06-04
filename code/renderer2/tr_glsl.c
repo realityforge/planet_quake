@@ -241,6 +241,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	dest[0] = '\0';
 
 	// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
+#ifndef EMSCRIPTEN
 	if(glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
 	{
 		if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 50))
@@ -269,6 +270,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 		Q_strcat(dest, size, "#version 120\n");
 		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
+#else
+	Q_strcat(dest, size, "precision mediump float;\n");
+#endif
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	//Q_strcat(dest, size,
@@ -333,6 +337,12 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 								AGEN_LIGHTING_SPECULAR,
 								AGEN_PORTAL));
 
+	if(glConfig.vidWidth <= 0) {
+		glConfig.vidWidth = 640;
+	}
+	if(glConfig.vidHeight <= 0) {
+		glConfig.vidHeight = 480;
+	}
 	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth);
 	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight);
 	Q_strcat(dest, size,
@@ -383,7 +393,7 @@ static int GLSL_CompileGPUShader(GLuint program, GLuint *prevShader, const GLcha
 	{
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_SOURCE, qfalse);
 		GLSL_PrintLog(shader, GLSL_PRINTLOG_SHADER_INFO, qfalse);
-		ri.Error(ERR_DROP, "Couldn't compile shader");
+		ri.Printf(PRINT_WARNING, "Couldn't compile shader");
 		return 0;
 	}
 
@@ -484,6 +494,15 @@ static void GLSL_ShowProgramUniforms(GLuint program)
 	GLenum			type;
 	char            uniformName[1000];
 
+#ifdef EMSCRIPTEN
+	// This function is rather expensive in WebGL, let's completely
+	// avoid it if not a developer.
+	if(!ri.Cvar_VariableIntegerValue("developer"))
+	{
+		return;
+	}
+#endif
+
 	// query the number of active uniforms
 	qglGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
 
@@ -503,6 +522,11 @@ static int GLSL_InitGPUShader2(shaderProgram_t * program, const char *name, int 
 	if(strlen(name) >= MAX_QPATH)
 	{
 		ri.Error(ERR_DROP, "GLSL_InitGPUShader2: \"%s\" is too long", name);
+	}
+	
+	if(program->program) {
+		ri.Printf(PRINT_DEVELOPER, "GLSL_InitGPUShader2: \"%s\" shader already exists\n", name);
+		return 1;
 	}
 
 	Q_strncpyz(program->name, name, sizeof(program->name));
@@ -1213,6 +1237,7 @@ void GLSL_InitGPUShaders(void)
 		numLightShaders++;
 	}
 
+#ifndef EMSCRIPTEN
 	for (i = 0; i < SHADOWMAPDEF_COUNT; i++)
 	{
 		if ((i & SHADOWMAPDEF_USE_VERTEX_ANIMATION) && (i & SHADOWMAPDEF_USE_BONE_ANIMATION))
@@ -1247,6 +1272,7 @@ void GLSL_InitGPUShaders(void)
 
 		numEtcShaders++;
 	}
+#endif
 
 	attribs = ATTR_POSITION | ATTR_NORMAL;
 	extradefines[0] = '\0';
@@ -1358,6 +1384,7 @@ void GLSL_InitGPUShaders(void)
 	Q_strcat(extradefines, 1024, va("#define r_shadowCascadeZFar %f\n", r_shadowCascadeZFar->value));
 
 
+#ifndef EMSCRIPTEN
 	if (!GLSL_InitGPUShader(&tr.shadowmaskShader, "shadowmask", attribs, qtrue, extradefines, qtrue, fallbackShader_shadowmask_vp, fallbackShader_shadowmask_fp))
 	{
 		ri.Error(ERR_FATAL, "Could not load shadowmask shader!");
@@ -1421,6 +1448,7 @@ void GLSL_InitGPUShaders(void)
 
 		numEtcShaders++;
 	}
+#endif
 
 #if 0
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;

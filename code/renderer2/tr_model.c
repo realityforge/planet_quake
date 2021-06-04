@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
+
 #define	LL(x) x=LittleLong(x)
 
 static qboolean R_LoadMD3(model_t *mod, int lod, void *buffer, int bufferSize, const char *modName);
@@ -209,11 +211,11 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 	model_t		*mod;
 
 	// out of range gets the defualt model
-	if ( index < 1 || index >= tr.numModels ) {
-		return tr.models[0];
+	if ( index < 1 || index >= s_worldData.numModels ) {
+		return s_worldData.models[0];
 	}
 
-	mod = tr.models[index];
+	mod = s_worldData.models[index];
 
 	return mod;
 }
@@ -224,16 +226,27 @@ model_t	*R_GetModelByHandle( qhandle_t index ) {
 ** R_AllocModel
 */
 model_t *R_AllocModel( void ) {
-	model_t		*mod;
+	model_t		*mod = NULL;
 
-	if ( tr.numModels == MAX_MOD_KNOWN ) {
+	if ( s_worldData.numModels == MAX_MOD_KNOWN ) {
+		// TODO: same pattern as images, find oldest and free/replace
 		return NULL;
 	}
 
-	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
-	mod->index = tr.numModels;
-	tr.models[tr.numModels] = mod;
-	tr.numModels++;
+	for(int i = 0; i < ARRAY_LEN(worldModels); i++) {
+		if(!worldModels[i]) {
+			mod = worldModels[i] = ri.Hunk_Alloc( sizeof( model_t ), h_low );
+			break;
+		} else if (i > 0 && !worldModels[i]->name[0]) {
+			mod = worldModels[i];
+			break;
+		}
+	}
+	if(mod == NULL) return NULL;
+
+	mod->index = s_worldData.numModels;
+	s_worldData.models[s_worldData.numModels] = mod;
+	s_worldData.numModels++;
 
 	return mod;
 }
@@ -250,10 +263,15 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
+#else
 qhandle_t RE_RegisterModel( const char *name ) {
-	model_t		*mod;
-	qhandle_t	hModel;
-	qboolean	orgNameFailed = qfalse;
+#endif
+;
+	model_t		*mod = NULL;
+	qhandle_t	hModel = 0;
+	qboolean	orgNameFailed = qfalse, found = qfalse;
 	int			orgLoader = -1;
 	int			i;
 	char		localName[ MAX_QPATH ];
@@ -273,19 +291,29 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	//
 	// search the currently loaded models
 	//
-	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
-		mod = tr.models[hModel];
-		if ( !strcmp( mod->name, name ) ) {
-			if( mod->type == MOD_BAD ) {
-				return 0;
+	for ( hModel = 1 ; hModel < ARRAY_LEN(worldModels); hModel++ ) {
+		mod = worldModels[hModel];
+		if ( mod && !strcmp( mod->name, name )
+			// make sure brush models are referenced properly
+		 	&& (name[0] != '*' || s_worldData.models[mod->index] == mod) ) {
+			found = qtrue;
+			// check it is loaded in world models
+			if(s_worldData.models[mod->index] != mod) {
+				mod->index = s_worldData.numModels;
+				s_worldData.models[s_worldData.numModels] = mod;
+				s_worldData.numModels++;
 			}
-			return hModel;
+			if( mod->type != MOD_BAD ) {
+				return mod->index;
+			} else {
+				break;
+			}
 		}
 	}
 
 	// allocate a new model_t
 
-	if ( ( mod = R_AllocModel() ) == NULL ) {
+	if ( !found && ( mod = R_AllocModel() ) == NULL ) {
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
@@ -303,6 +331,8 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	// load the files
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
+	
+	ri.Cvar_Set("r_loadingModel", name);
 
 	ext = COM_GetExtension( localName );
 
@@ -314,7 +344,16 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			if( !Q_stricmp( ext, modelLoaders[ i ].ext ) )
 			{
 				// Load
-				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+#ifdef USE_LAZY_LOAD
+				if ( !updateModels ) {
+					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
+						hModel = 0;
+					}
+				} else 
+#endif
+				{
+					hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+				}
 				break;
 			}
 		}
@@ -332,6 +371,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			}
 			else
 			{
+				ri.Cvar_Set("r_loadingModel", "");
 				// Something loaded
 				return mod->index;
 			}
@@ -348,7 +388,16 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, modelLoaders[ i ].ext );
 
 		// Load
-		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+#ifdef USE_LAZY_LOAD
+		if ( !updateModels ) {
+			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
+				hModel = 0;
+			}
+		} else 
+#endif
+		{
+			hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+		}
 
 		if( hModel )
 		{
@@ -361,9 +410,22 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			break;
 		}
 	}
+	
+	ri.Cvar_Set("r_loadingModel", "");
 
-	return hModel;
+	return mod->index;
 }
+
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel( const char *name ) {
+	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
+}
+
+void R_UpdateModel( const char *name )
+{
+	RE_RegisterModel_Internal( name, qtrue );
+}
+#endif
 
 /*
 =================
@@ -535,12 +597,13 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, int bufferSize, 
 			sh = R_FindShader(md3Shader->name, LIGHTMAP_NONE, qtrue);
 			if(sh->defaultShader)
 			{
+				sh->remappedShader = tr.defaultShader;
 				*shaderIndex = 0;
 			}
-			else
-			{
+			//else
+			//{
 				*shaderIndex = sh->index;
-			}
+			//}
 		}
 
 		// swap all the triangles
@@ -1039,10 +1102,12 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
+				sh->remappedShader = tr.defaultShader;
 				surf->shaderIndex = 0;
-			} else {
-				surf->shaderIndex = sh->index;
 			}
+			//} else {
+				surf->shaderIndex = sh->index;
+			//}
 			
 			// now copy the vertexes.
 			v = (mdrVertex_t *) (surf + 1);
@@ -1165,6 +1230,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
 	int	i;
+	tr.lastRegistrationTime = ri.Milliseconds();
 
 	R_Init();
 
@@ -1192,13 +1258,28 @@ R_ModelInit
 ===============
 */
 void R_ModelInit( void ) {
-	model_t		*mod;
+	model_t		*mod = NULL;
 
 	// leave a space for NULL model
-	tr.numModels = 0;
+#ifdef USE_MULTIVM_CLIENT
+  // TODO: move this up?
+  rwi = 0;
+#endif
+	s_worldData.numModels = 0;
+	memset(worldModels, 0, sizeof(worldModels));
 
 	mod = R_AllocModel();
 	mod->type = MOD_BAD;
+
+  // make default model reference available to all worlds, so there is no confusion,
+  //   subsequent worlds will just continue to load new models in addition
+  //   this is just a few pointers afterall
+#ifdef USE_MULTIVM_CLIENT
+	for(int i = 1; i < MAX_NUM_WORLDS; i++) {
+		s_worldDatas[i].models[0] = mod;
+		s_worldDatas[i].numModels = 1;
+	}
+#endif
 }
 
 
@@ -1214,8 +1295,9 @@ void R_Modellist_f( void ) {
 	int		lods;
 
 	total = 0;
-	for ( i = 1 ; i < tr.numModels; i++ ) {
-		mod = tr.models[i];
+	for ( i = 0 ; i < ARRAY_LEN(worldModels); i++ ) {
+		mod = worldModels[i];
+		if(!mod) continue;
 		lods = 1;
 		for ( j = 1 ; j < MD3_MAX_LODS ; j++ ) {
 			if ( mod->mdv[j] && mod->mdv[j] != mod->mdv[j-1] ) {

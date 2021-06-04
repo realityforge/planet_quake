@@ -540,17 +540,10 @@ void RE_RenderScene( const refdef_t *fd ) {
 	// convert to GL's 0-at-the-bottom space
 	//
 	Com_Memset( &parms, 0, sizeof( parms ) );
-#ifndef USE_MULTIVM_CLIENT
 	parms.viewportX = tr.refdef.x;
 	parms.viewportY = glConfig.vidHeight - ( tr.refdef.y + tr.refdef.height );
 	parms.viewportWidth = tr.refdef.width;
 	parms.viewportHeight = tr.refdef.height;
-#else
-	parms.viewportX = tr.refdef.x * dvrXScale + (dvrXOffset * glConfig.vidWidth);
-	parms.viewportY = glConfig.vidHeight - ( (tr.refdef.y * dvrYScale + (dvrYOffset * glConfig.vidHeight)) + (tr.refdef.height * dvrYScale) );
-	parms.viewportWidth = tr.refdef.width * dvrXScale;
-	parms.viewportHeight = tr.refdef.height * dvrYScale;
-#endif
 	parms.isPortal = qfalse;
 
 	parms.fovX = tr.refdef.fov_x;

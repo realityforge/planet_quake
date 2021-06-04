@@ -32,6 +32,7 @@ int		gl_filter_max = GL_LINEAR;
 
 #define FILE_HASH_SIZE		1024
 static	image_t*		hashTable[FILE_HASH_SIZE];
+static	palette_t*		paletteTable[FILE_HASH_SIZE];
 
 /*
 ** R_GammaCorrect
@@ -215,7 +216,9 @@ void R_ImageList_f( void ) {
 				estSize *= 8;
 				break;
 			case GL_RGBA4:
+#ifndef EMSCRIPTEN
 			case GL_RGBA8:
+#endif
 			case GL_RGBA:
 				format = "RGBA   ";
 				// 4 bytes per pixel
@@ -227,7 +230,9 @@ void R_ImageList_f( void ) {
 				// 1 byte per pixel?
 				break;
 			case GL_RGB5:
+#ifndef EMSCRIPTEN
 			case GL_RGB8:
+#endif
 			case GL_RGB:
 				format = "RGB    ";
 				// 3 bytes per pixel?
@@ -1647,7 +1652,9 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 	qboolean forceNoCompression = (flags & IMGFLAG_NO_COMPRESSION);
 	qboolean normalmap = (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT);
 
+#ifndef EMSCRIPTEN
 	if (picFormat != GL_RGBA8)
+#endif
 		return picFormat;
 
 	if(normalmap)
@@ -1955,6 +1962,11 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
 	dataType = picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
+#ifdef EMSCRIPTEN
+	// HULK-SMASH! GLES requires that the internal format matches the data format.
+	internalFormat = dataFormat;
+#endif
+
 	miplevel = 0;
 	do
 	{
@@ -2088,6 +2100,39 @@ static void Upload32(byte *data, int x, int y, int width, int height, GLenum pic
 
 
 /*
+======================
+S_FreeOldestSound
+======================
+*/
+image_t *R_FreeOldestImage( void ) {
+	int	i, oldest, used;
+	image_t	*image;
+
+	oldest = ri.Milliseconds();
+	used = 0;
+
+	for ( i = 1 ; i < tr.numImages ; i++ ) {
+		image = tr.images[i];
+		if ( (!image->lastTimeUsed || !image->texnum || image->lastTimeUsed - oldest < 0)
+			&& image->imgName[0] != '*'
+		 	&& image->lastTimeUsed < tr.lastRegistrationTime) {
+			used = i;
+			oldest = image->lastTimeUsed;
+		}
+	}
+
+	image = tr.images[used];
+	
+	ri.Printf(PRINT_DEVELOPER, "R_FreeOldestImage: freeing image %s\n", image->imgName);
+	
+	if(image->texnum)
+		qglDeleteTextures( 1, &image->texnum );
+	Com_Memset(image, 0, sizeof( *image ));
+	
+	return image;
+}
+
+/*
 ================
 R_CreateImage2
 
@@ -2118,10 +2163,13 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	}
 
 	if ( tr.numImages == MAX_DRAWIMAGES ) {
-		ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit");
-	}
-
-	image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
+		image = R_FreeOldestImage();
+		if(!image) {
+			ri.Printf( PRINT_WARNING, "R_CreateImage: MAX_DRAWIMAGES hit");
+			return NULL;
+		}
+	} else
+		image = tr.images[tr.numImages] = ri.Hunk_Alloc( sizeof( *image ) + namelen + 1, h_low );
 	qglGenTextures(1, &image->texnum);
 	tr.numImages++;
 
@@ -2141,7 +2189,44 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 	if (!internalFormat)
 		internalFormat = RawImage_GetFormat(pic, width * height, picFormat, isLightmap, image->type, image->flags);
 
+	image->lastTimeUsed = tr.lastRegistrationTime;
 	image->internalFormat = internalFormat;
+
+	if(!cubemap && !isLightmap && r_seeThroughWalls->integer) {
+		if(internalFormat == GL_RGB) {
+			byte *alphaPic = ri.Malloc(width * height * 4);
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					const byte *inbyte  = pic + y * width * 3 + x * 3;
+					byte       *outbyte = alphaPic + y * width * 4 + x * 4;
+					outbyte[0] = inbyte[0];
+					outbyte[1] = inbyte[1];
+					outbyte[2] = inbyte[2];
+					outbyte[3] = 128;
+					//outbyte[3] = 255;
+				}
+			}
+			//picFormat = GL_RGB8;
+			//pic = alphaPic;
+			internalFormat = GL_RGBA;
+		}
+		
+		if(internalFormat == GL_RGBA) {
+			// copy in to out
+			for (int y = 0; y < height; y++)
+			{
+				const byte *inbyte  = pic + y * width * 4;
+				byte       *outbyte = pic + y * width * 4;
+
+				for (int x = 0; x < width; x++)
+				{
+					outbyte[1] = inbyte[1] * 0.5;
+				}
+			}
+		}
+	}
 
 	// Possibly scale image before uploading.
 	// if not rgba8 and uploading an image, skip picmips.
@@ -2287,7 +2372,7 @@ Loads any of the supported image types into a canonical
 32 bit format.
 =================
 */
-void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips )
+void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips, qboolean checkOnly )
 {
 	qboolean orgNameFailed = qfalse;
 	int orgLoader = -1;
@@ -2296,6 +2381,9 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 	const char *ext;
 	const char *altName;
 
+	if(!name || strlen(name) == 0) {
+		return;
+	}
 	*pic = NULL;
 	*width = 0;
 	*height = 0;
@@ -2314,16 +2402,20 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		COM_StripExtension(name, ddsName, MAX_QPATH);
 		Q_strcat(ddsName, MAX_QPATH, ".dds");
 
-		R_LoadDDS(ddsName, pic, width, height, picFormat, numMips);
+#ifdef USE_LAZY_LOAD
+		if(checkOnly) {
+			if ( ri.FS_FOpenFileRead(ddsName, NULL, qfalse) > -1 ) {
+				return;
+			}
+		} else 
+#endif
+		{
+			R_LoadDDS(ddsName, pic, width, height, picFormat, numMips);
+		}
 
 		// If loaded, we're done.
 		if (*pic)
 			return;
-    else {
-      R_LoadDDS(va("dds/%s", ddsName), pic, width, height, picFormat, numMips);
-      if (*pic)
-  			return;
-    }
 	}
 
 	if( *ext )
@@ -2334,7 +2426,16 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 			if( !Q_stricmp( ext, imageLoaders[ i ].ext ) )
 			{
 				// Load
-				imageLoaders[ i ].ImageLoader( localName, pic, width, height );
+#ifdef USE_LAZY_LOAD
+				if(checkOnly) {
+					if ( ri.FS_FOpenFileRead(localName, NULL, qfalse) > -1 ) {
+						return;
+					}
+				} else
+#endif
+				{
+					imageLoaders[ i ].ImageLoader( localName, pic, width, height );
+				}
 				break;
 			}
 		}
@@ -2368,7 +2469,16 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
 
 		// Load
-		imageLoaders[ i ].ImageLoader( altName, pic, width, height );
+#ifdef USE_LAZY_LOAD
+		if(checkOnly) {
+			if ( ri.FS_FOpenFileRead(altName, NULL, qfalse) > -1 ) {
+				return;
+			}
+		} else 
+#endif
+		{
+			imageLoaders[ i ].ImageLoader( altName, pic, width, height );
+		}
 
 		if( *pic )
 		{
@@ -2376,11 +2486,78 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 			{
 				ri.Printf( PRINT_DEVELOPER, "WARNING: %s not present, using %s instead\n",
 						name, altName );
-			}
+	    }
 
 			break;
+    }
+  }
+/*
+	if(!*pic) {
+		char ddsName[MAX_QPATH];
+
+		COM_StripExtension(name, ddsName, MAX_QPATH);
+		Q_strcat(ddsName, MAX_QPATH, ".dds");
+#ifdef USE_LAZY_LOAD
+		if(checkOnly) {
+			if ( ri.FS_FOpenFileRead(va("dds/%s", ddsName), NULL, qfalse) > -1 ) {
+				return;
+			}
+		} else 
+#endif
+		{
+			R_LoadDDS(va("dds/%s", ddsName), pic, width, height, picFormat, numMips);
 		}
 	}
+  */
+}
+
+void R_AddPalette(const char *name, int a, int r, int g, int b) {
+	int hash;
+	palette_t *palette;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	int namelen = strlen(normalName);
+	palette = ri.Hunk_Alloc( sizeof( *palette ) + namelen + 1, h_low );
+	palette->imgName = (char *)( palette + 1 );
+	strcpy( palette->imgName, normalName );
+	hash = generateHashValue(normalName);
+	palette->a = a;
+	palette->r = r;
+	palette->g = g;
+	palette->b = b;
+	palette->next = paletteTable[hash];
+	paletteTable[hash] = palette;
+}
+
+
+image_t *R_FindPalette(const char *name) {
+	palette_t *palette;
+	long	hash;
+	char normalName[MAX_QPATH];
+	COM_StripExtension(name, normalName, MAX_QPATH);
+	hash = generateHashValue(normalName);
+	for (palette=paletteTable[hash]; palette; palette=palette->next) {
+		if ( !strcmp( normalName, palette->imgName ) ) {
+			if(!palette->image) {
+				byte	data[16][16][4];
+				for(int x = 0; x < 16; x++) {
+					for(int y = 0; y < 16; y++) {
+						if(r_seeThroughWalls->integer) {
+							data[x][y][3] = palette->a * 0.5;
+						} else {
+							data[x][y][3] = palette->a;
+						}
+						data[x][y][2] = palette->b;
+						data[x][y][1] = palette->g;
+						data[x][y][0] = palette->r;
+					}
+				}
+				palette->image = R_CreateImage("*pal%i-%i-%i", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+			}
+			return palette->image;
+		}
+	}
+	return tr.defaultImage;
 }
 
 
@@ -2402,8 +2579,14 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	long	hash;
 	imgFlags_t checkFlagsTrue, checkFlagsFalse;
 
-	if (!name) {
+	if (!name || !name[0]) {
 		return NULL;
+	}
+
+	if((flags & IMGFLAG_PALETTE) && name[0] != '*') {
+		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
+    if(!r_paletteMode->integer) return NULL;
+		return R_FindPalette(name);
 	}
 
 	hash = generateHashValue(name);
@@ -2419,6 +2602,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 					ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
 				}
 			}
+			image->lastTimeUsed = tr.lastRegistrationTime;
 			return image;
 		}
 	}
@@ -2426,7 +2610,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
-	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
+	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qfalse );
 	if ( pic == NULL ) {
 		return NULL;
 	}
@@ -2909,7 +3093,9 @@ R_InitImages
 ===============
 */
 void R_InitImages( void ) {
+	Com_Memset(paletteTable, 0, sizeof(paletteTable));
 	Com_Memset(hashTable, 0, sizeof(hashTable));
+
 	// build brightness translation tables
 	R_SetColorMappings();
 
@@ -3225,3 +3411,5 @@ void	R_SkinList_f( void ) {
 	}
 	ri.Printf (PRINT_ALL, "------------------\n");
 }
+
+

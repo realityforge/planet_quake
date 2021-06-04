@@ -728,8 +728,10 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
+#ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 		re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+#endif
 #endif
 
 		// don't switch renderer or clipmap when updated from VM
@@ -758,9 +760,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		if(!cgvm && !uivm) continue;
 
 #ifdef USE_MULTIVM_CLIENT
-    re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
 		CM_SwitchMap(clientMaps[cgvmi]);
+#ifdef USE_LAZY_MEMORY
 		re.SwitchWorld(clientMaps[cgvmi]);
+    re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+#endif
 #endif
 
 		// if running in stereo, we need to draw the frame twice
@@ -785,9 +789,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #ifdef USE_MULTIVM_CLIENT
   cgvmi = 0;
 	uivmi = 0;
-	CM_SwitchMap(clientMaps[cgvmi]);
-	re.SwitchWorld(clientMaps[cgvmi]);
+  CM_SwitchMap(clientMaps[cgvmi]);
+#ifdef USE_LAZY_MEMORY
+  re.SwitchWorld(clientMaps[cgvmi]);
   re.SetDvrFrame(0, 0, 1, 1);
+#endif
 #endif
 
 #ifdef USE_LNBITS
