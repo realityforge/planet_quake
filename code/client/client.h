@@ -176,12 +176,10 @@ typedef struct {
 	usercmd_t	cmdWorlds[MAX_NUM_VMS][CMD_BACKUP];	// each mesage will send several old cmds
 #define cmds         cmdWorlds[igvm]  // `igvm` because it is based on number of client VMs, not server worlds
   int			cmdNumber;			// incremented each frame, because multiple
-  int     clCmdNumberWorlds[MAX_NUM_VMS];
-#define clCmdNumbers clCmdNumberWorlds[igvm]
+  int     clCmdNumbers[MAX_NUM_VMS];
 #else
   usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
   int			cmdNumber;			// incremented each frame, because multiple
-  int     clCmdNumbers;
 #endif
 									// frames may need to be packed into a single packet
 

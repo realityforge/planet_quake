@@ -690,6 +690,9 @@ static void CL_CreateNewCommands( int igvm ) {
 
 	// generate a command for this frame
 	cl.cmdNumber++;
+#ifdef USE_MULTIVM_CLIENT
+	cl.clCmdNumbers[igvm] = cl.cmdNumber;
+#endif
 	cmdNum = cl.cmdNumber & CMD_MASK;
 	cl.cmds[cmdNum] = CL_CreateCmd(igvm);
 }
@@ -799,16 +802,16 @@ void CL_WritePacket( void ) {
 			|| clientGames[igvm] == -1
 			|| clientWorlds[igvm] != clc.clientNum)) continue;
 		int igs = clientGames[igvm];
-		int oldCmdNum = cl.clCmdNumbers;
+		int oldCmdNum = cl.clCmdNumbers[igvm];
 		CL_CreateNewCommands(igvm);
 		if(igvm > 0) {
       // TODO: choose which client to extract movement commands from, cl.currentView?
-			cl.cmds[cl.clCmdNumbers & CMD_MASK].forwardmove = 
-				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].forwardmove;
-			cl.cmds[cl.clCmdNumbers & CMD_MASK].rightmove = 
-				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].rightmove;
-			cl.cmds[cl.clCmdNumbers & CMD_MASK].upmove = 
-				cl.cmdWorlds[0][cl.clCmdNumberWorlds[0] & CMD_MASK].upmove;
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].rightmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #endif
 ;
@@ -883,7 +886,7 @@ void CL_WritePacket( void ) {
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
 #ifdef USE_MULTIVM_CLIENT
-			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers) & CMD_MASK;
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
 #else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
 #endif
@@ -899,7 +902,11 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
+#ifdef USE_MULTIVM_CLIENT
+  cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
+#else
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;
+#endif
 	clc.lastPacketSentTime = cls.realtime;
 
 	if ( cl_showSend->integer ) {

@@ -116,8 +116,10 @@ CL_GetCurrentCmdNumber
 static int CL_GetCurrentCmdNumber( void ) {
 #ifdef USE_MULTIVM_CLIENT
   int igvm = cgvmi;
+  return cl.clCmdNumbers[igvm];
+#else
+  return cl.cmdNumber;
 #endif
-	return cl.clCmdNumbers;
 }
 
 
