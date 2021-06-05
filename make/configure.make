@@ -115,6 +115,9 @@ endif
 -include Makefile.local
 
 #############################################################################
+CC              := gcc
+CXX             := c++
+GXX             := g++
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -157,7 +160,7 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
 endif
 
 #SYSROOT      := $(shell xcrun --show-sdk-path)
-SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk
+SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 
 # supply some reasonable defaults for SDL/X11?
 ifeq ($(X11_INCLUDE),)

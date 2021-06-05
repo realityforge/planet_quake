@@ -1,7 +1,8 @@
 ﻿#pragma once
 
 #define SWGLAPI extern "C"
-#define STDCALL __stdcall
+#define STDCALL
+//#define STDCALL __stdcall
 #define ADDRESS_OF(X) reinterpret_cast<const void *>(&X)
 
 #ifdef __MINGW32__
@@ -10,7 +11,8 @@
 #define _aligned_malloc __mingw_aligned_malloc
 #define _aligned_free __mingw_aligned_free
 #else
-#define INLINED __forceinline
+#define INLINED 
+//#define INLINED __forceinline
 #define PACKED(decl) __pragma(pack(push, 1)) decl __pragma(pack(pop))
 #endif
 

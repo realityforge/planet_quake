@@ -33,7 +33,7 @@ CFLAGS       := $(INCLUDE) -fsigned-char -MMD \
 
 define DO_JPEG_CC
   @echo "JPEG_CC $<"
-  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  @$(CC) -o $@ $(SHLIBCFLAGS) $(CFLAGS) -c $<
 endef
 
 debug:
@@ -58,5 +58,5 @@ $(B)/$(WORKDIR)/%.o: libs/jpeg-9d/%.c
 
 $(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) $(CFLAGS) $^ $(LIBS) $(SHLIBLDFLAGS) -o $@
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS) 
 endif

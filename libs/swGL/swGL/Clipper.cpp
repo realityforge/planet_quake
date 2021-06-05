@@ -1,5 +1,7 @@
 ﻿#include <vector>
+#ifdef _MSC_VER
 #include <intrin.h>
+#endif
 #include "Vertex.h"
 #include "Triangle.h"
 #include "Clipper.h"

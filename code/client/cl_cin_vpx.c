@@ -230,7 +230,7 @@ static qboolean loadFrame(void)
 */
 //TODO: vorbis/theora-header&init in sub-functions
 //TODO: "clean" error-returns ...
-int Cin_OGM_Init(const char *filename)
+int Cin_VPX_Init(const char *filename)
 {
 	int             status;
 	ogg_page        og;
@@ -284,7 +284,7 @@ int Cin_VPX_Run(int time)
   Gives a Pointer to the current Output-Buffer
   and the Resolution
 */
-unsigned char  *Cin_OGM_GetOutput(int *outWidth, int *outHeight)
+unsigned char  *Cin_VPX_GetOutput(int *outWidth, int *outHeight)
 {
 }
 
@@ -390,13 +390,13 @@ int CIN_PlayVPX( const char *name, int x, int y, int w, int h, int systemBits )
 
   if (Cin_OGM_Init(cinTable[currentHandle].fileName))
   {
-    Com_DPrintf("starting ogm-playback failed(%s)\n", name);
+    Com_DPrintf("starting vpx-playback failed(%s)\n", name);
     cinTable[currentHandle].fileName[0] = 0;
     Cin_VPX_Shutdown();
     return -1;
   }
 
-  cinTable[currentHandle].fileType = FT_OGM;
+  cinTable[currentHandle].fileType = FT_VPX;
 
   CIN_SetExtents(currentHandle, x, y, w, h);
   CIN_SetLooping(currentHandle, (systemBits & CIN_loop) != 0);
