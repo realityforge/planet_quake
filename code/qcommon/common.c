@@ -3153,7 +3153,6 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		FS_Restart( checksumFeed );
 		
 #ifdef EMSCRIPTEN
-		com_gameRestarting = qtrue;
 	}
 }
 
@@ -3172,9 +3171,7 @@ void Com_GameRestart_After_Restart( void )
 			CL_StartHunkUsers();
 #endif
 		
-#ifndef EMSCRIPTEN
 		com_gameRestarting = qfalse;
-#endif
 	}
 }
 
@@ -4015,6 +4012,7 @@ void Com_Init_After_CL_Init( void ) {
 
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 #ifdef EMSCRIPTEN
+  // init again because first time it triggers the async websocket
 	NET_Init( );
 #endif
 }

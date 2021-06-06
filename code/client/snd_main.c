@@ -411,6 +411,7 @@ void S_Init( void )
 	qboolean	started = qfalse;
 
 	Com_Printf( "------ Initializing Sound ------\n" );
+
   s_debug = Cvar_Get( "s_debug", com_developer->string, CVAR_ARCHIVE );
   Cvar_SetDescription(s_debug, "Show error and status messages from sound\nDefault: 0");
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );

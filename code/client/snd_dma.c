@@ -89,7 +89,7 @@ int   		s_paintedtime; 		// sample PAIRS
 // MAX_SFX may be larger than MAX_SOUNDS because
 // of custom player sounds
 #define		MAX_SFX			4096
-sfx_t		s_knownSfx[MAX_SFX * MAX_NUM_SNDS];
+sfx_t		s_knownSfx[MAX_SFX];
 int			s_numSfx = 0;
 
 #define		LOOP_HASH		128
@@ -283,7 +283,7 @@ static sfx_t *S_FindName( const char *name ) {
 	}
 
 	if (i == s_numSfx) {
-		if (s_numSfx >= MAX_SFX * MAX_NUM_SNDS) {
+		if (s_numSfx >= MAX_SFX) {
 			Com_Error (ERR_FATAL, "S_FindName: out of sfx_t");
 		}
 		s_numSfx++;
@@ -970,7 +970,7 @@ static void S_Base_RawSamples( int samples, int rate, int width, int n_channels,
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
-
+  
 	intVolume = 256 * volume;
 
 	if ( s_rawend - s_soundtime < 0 ) {
@@ -1080,20 +1080,23 @@ S_Respatialize
 Change the volumes of all the playing sounds for changes in their positions
 ============
 */
+extern int				CL_ScaledMilliseconds( void );
 int prevTime;
 void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
 	int			i;
 	channel_t	*ch;
 	vec3_t		origin;
-	int 		newTime = Sys_Milliseconds();
-  if(newTime - prevTime < 10) { // limit to 30 frames per second
-		return;
-  }
-  prevTime = newTime;
+	int 		newTime = CL_ScaledMilliseconds();
   
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
+
+  if(newTime - prevTime < 13) { // limit to 30 frames per second
+    S_AddLoopSounds ();
+		return;
+  }
+  prevTime = newTime;
 
 	listener_number = entityNum;
 	VectorCopy(head, listener_origin);
@@ -1479,7 +1482,9 @@ void S_FreeOldestSound( void ) {
 	sfx_t	*sfx;
 	sndBuffer	*buffer, *nbuffer;
 
-	oldest = s_soundtime; // Com_Milliseconds();
+	// all sounds may be loaded with (s_soundtime + 1) at this moment
+	// so we need to trigger match condition at least once
+	oldest = s_soundtime + 2; // Com_Milliseconds();
 
 	used = 0;
 
@@ -1570,6 +1575,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	s_mixahead = Cvar_Get( "s_mixAhead", "0.2", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( s_mixahead, "0.001", "0.5", CV_FLOAT );
 	Cvar_SetDescription(s_mixahead, "Mix sounds together because they are used to reduce skipping\nDefault: 0.2 seconds");
+
 	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE_ND | CVAR_DEVELOPER );
 	Cvar_CheckRange( s_mixOffset, "0", "0.5", CV_FLOAT );
 

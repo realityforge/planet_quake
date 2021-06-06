@@ -104,6 +104,8 @@ Coming soon!
   * Many mod support, compiling and playing lots of different game types, capture the flag with 3+ teams
   * Many BSP formats (Quake 1, Quake 2, Quake 4, Doom 1, Doom 2, Doom 3, Hexen maps) support and cross compatibility with other game content like Call of Duty, Half-Life, and Savage XR
   * Campaign mode, playing older engine content and playing as enemy characters, new AI for old enemies
+  * New weapons mod that includes guns from every game, weapon switching is controlled by new EV_ events, that count the number of alternate weapon modes, and also count the number of classes. 
+  e.g. EV_WEAPON_RESET + EV_WEAPON_COUNT + EV_WEAPON_COUNT would translate to the second mode for the current weapon, this would occur right after a EV_WEAPON_CHANGE event. So the cgame and qagame can match states without having to modify the number of bits used to describe the weapon 0-10. Similarly, an entire weapon class can be swapped out with a EV_CLASS_RESET + EV_CLASS_COUNT + EV_CLASS_COUNT would switch to the 2nd class of weapons. Both ends, cgame, and qagame have a known list of available weapons, and adding a "counter" instead of taking up bits, means we don't have to change the network model to accomodate more models/weapons/effects.  Same thing can be done for powerups/projectiles.
   * Updated WebGL renderer
 
 The map editor and associated compiling tools are not included. We suggest you

@@ -641,6 +641,10 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 
 	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
+#ifdef USE_MULTIVM_SERVER
+  Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
+  Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
+#endif
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;

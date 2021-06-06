@@ -1080,6 +1080,7 @@ void RoQReset( void ) {
 	
 	if (currentHandle < 0) return;
 
+  Com_Printf("Resetting frame\n");
 	FS_FCloseFile( cinTable[currentHandle].iFile );
 	FS_FOpenFileRead( cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue );
 	FS_Read( cin.file, 16, cinTable[currentHandle].iFile );
@@ -1096,16 +1097,25 @@ void RoQReset( void ) {
 *
 ******************************************************************************/
 
-static void RoQInterrupt(void)
+static void RoQInterrupt(qboolean bigJump)
 {
-	byte				*framedata;
-        short		sbuf[32768];
-        int		ssize;
+	byte	*framedata;
+  short	 sbuf[32768];
+  int		 ssize;
         
 	if (currentHandle < 0) return;
 
-	FS_Read( cin.file, cinTable[currentHandle].RoQFrameSize + 8, cinTable[currentHandle].iFile );
-	if ( cinTable[currentHandle].RoQPlayed >= cinTable[currentHandle].ROQSize ) { 
+  if(cinTable[currentHandle].roq_id == ROQ_QUAD_INFO
+    && cinTable[currentHandle].numQuads == -1)
+    bigJump = qfalse;
+
+  if(bigJump) {
+    FS_Seek( cinTable[currentHandle].iFile, cinTable[currentHandle].RoQFrameSize, FS_SEEK_CUR );
+    FS_Read( cin.file, 8, cinTable[currentHandle].iFile );
+  } else {
+    FS_Read( cin.file, cinTable[currentHandle].RoQFrameSize + 8, cinTable[currentHandle].iFile );
+	}
+  if ( cinTable[currentHandle].RoQPlayed >= cinTable[currentHandle].ROQSize ) { 
 		if (cinTable[currentHandle].holdAtEnd==qfalse) {
 			if (cinTable[currentHandle].looping) {
 				RoQReset();
@@ -1119,6 +1129,9 @@ static void RoQInterrupt(void)
 	}
 
 	framedata = cin.file;
+  if(bigJump) {
+    goto bigjump;
+  }
 //
 // new frame is ready
 //
@@ -1149,7 +1162,7 @@ redump:
 		case	ZA_SOUND_MONO:
 			if (!cinTable[currentHandle].silent) {
 				ssize = RllDecodeMonoToStereo( framedata, sbuf, cinTable[currentHandle].RoQFrameSize, 0, (unsigned short)cinTable[currentHandle].roq_flags);
-					S_RawSamples( ssize, 22050, 2, 1, (byte *)sbuf, s_volume->value );
+				S_RawSamples( ssize, 22050, 2, 1, (byte *)sbuf, s_volume->value );
 			}
 			break;
 		case	ZA_SOUND_STEREO:
@@ -1160,14 +1173,15 @@ redump:
 					//s_rawend = s_soundtime;
 				}
 				ssize = RllDecodeStereoToStereo( framedata, sbuf, cinTable[currentHandle].RoQFrameSize, 0, (unsigned short)cinTable[currentHandle].roq_flags);
-					S_RawSamples( ssize, 22050, 2, 2, (byte *)sbuf, s_volume->value );
+				S_RawSamples( ssize, 22050, 2, 2, (byte *)sbuf, s_volume->value );
 			}
 			break;
 		case	ROQ_QUAD_INFO:
 			if (cinTable[currentHandle].numQuads == -1) {
 				readQuadInfo( framedata );
 				setupQuad( 0, 0 );
-				cinTable[currentHandle].startTime = cinTable[currentHandle].lastTime = CL_ScaledMilliseconds() * com_timescale->value;
+        Com_Printf("Catching up: %u\n", cinTable[currentHandle].lastTime);
+				cinTable[currentHandle].startTime = cinTable[currentHandle].lastTime = CL_ScaledMilliseconds();
 			}
 			if (cinTable[currentHandle].numQuads != 1) cinTable[currentHandle].numQuads = 0;
 			break;
@@ -1183,7 +1197,9 @@ redump:
 		default:
 			cinTable[currentHandle].status = FMV_EOF;
 			break;
-	}	
+	}
+
+bigjump:
 //
 // read in next frame data
 //
@@ -1200,12 +1216,14 @@ redump:
 		return; 
 	}
 	
-	framedata		 += cinTable[currentHandle].RoQFrameSize;
-	cinTable[currentHandle].roq_id		 = framedata[0] + framedata[1]*256;
+  if(!bigJump) {
+    framedata	+= cinTable[currentHandle].RoQFrameSize;
+  } // else we're already there
+	cinTable[currentHandle].roq_id		   = framedata[0] + framedata[1]*256;
 	cinTable[currentHandle].RoQFrameSize = framedata[2] + framedata[3]*256 + framedata[4]*65536;
-	cinTable[currentHandle].roq_flags	 = framedata[6] + framedata[7]*256;
-	cinTable[currentHandle].roqF0		 = (signed char)framedata[7];
-	cinTable[currentHandle].roqF1		 = (signed char)framedata[6];
+	cinTable[currentHandle].roq_flags	   = framedata[6] + framedata[7]*256;
+	cinTable[currentHandle].roqF0		     = (signed char)framedata[7];
+	cinTable[currentHandle].roqF1		     = (signed char)framedata[6];
 
 	if (cinTable[currentHandle].RoQFrameSize>65536||cinTable[currentHandle].roq_id==0x1084) {
 		Com_DPrintf("roq_size>65536||roq_id==0x1084\n");
@@ -1239,7 +1257,7 @@ redump:
 
 static void RoQ_init( void )
 {
-	cinTable[currentHandle].startTime = cinTable[currentHandle].lastTime = CL_ScaledMilliseconds() * com_timescale->value;
+	cinTable[currentHandle].startTime = cinTable[currentHandle].lastTime = CL_ScaledMilliseconds();
 
 	cinTable[currentHandle].RoQPlayed = 24;
 
@@ -1274,33 +1292,40 @@ e_status CIN_RunROQ(int handle)
 {
 	int	start = 0;
 	int thisTime = 0;
+  qboolean bigJump = qfalse;
 
 	//FIXME? CL_ScaledMilliseconds already uses com_timescale (so I can't see that the com_timescale in here makes any sense at all O_o)
 	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-	thisTime = CL_ScaledMilliseconds()*com_timescale->value;
+	thisTime = CL_ScaledMilliseconds();
 	if (cinTable[currentHandle].shader && (abs(thisTime - cinTable[currentHandle].lastTime))>100) {
-		//Com_Printf("--------------------------------------- Reading sound: \n");
-		RoQReset();
+		//RoQReset();
 		// TODO: synchronize with server sending when a looping sound should reset?
 		// TODO: run video in the background outside of the frame renderer when it is not in view
 		// TODO: this causes the slowness we are seeing on Mac, it's like it has to reload a bunch of data to catch up
 		//cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
 		//cinTable[currentHandle].numQuads = -1;
-	}
+    bigJump = qtrue;
+	} else {
+    bigJump = qfalse;
+  }
 	// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-	cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime)*3)/100);
+	cinTable[currentHandle].tfps = (((CL_ScaledMilliseconds()
+                                 - cinTable[currentHandle].startTime)*3)/100);
 
 	start = cinTable[currentHandle].startTime;
 	while(  (cinTable[currentHandle].tfps != cinTable[currentHandle].numQuads)
 		&& (cinTable[currentHandle].status == FMV_PLAY) ) 
 	{
-		RoQInterrupt();
+		RoQInterrupt(bigJump);
 		if (start != cinTable[currentHandle].startTime) {
 			// we need to use CL_ScaledMilliseconds because of the smp mode calls from the renderer
-		  cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value)
-							  - cinTable[currentHandle].startTime)*3)/100);
+		  cinTable[currentHandle].tfps = (((CL_ScaledMilliseconds()
+							                       - cinTable[currentHandle].startTime)*3)/100);
 			start = cinTable[currentHandle].startTime;
-		}
+		} else
+    //if(bigJump && (abs(thisTime - cinTable[currentHandle].lastTime))<100) {
+      bigJump = qfalse;
+    //}
 	}
 
 	cinTable[currentHandle].lastTime = thisTime;
@@ -1311,9 +1336,9 @@ e_status CIN_RunROQ(int handle)
 
 	if (cinTable[currentHandle].status == FMV_EOF) {
 	  if (cinTable[currentHandle].looping) {
-		RoQReset();
+	    RoQReset();
 	  } else {
-		CIN_Shutdown();
+	    CIN_Shutdown();
 	  }
 	}
 
@@ -1371,8 +1396,6 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 	if (RoQID == 0x1084)
 	{
 		RoQ_init();
-//		FS_Read (cin.file, cinTable[currentHandle].RoQFrameSize+8, cinTable[currentHandle].iFile);
-		//RoQ_MakeIndex();
 
 		cinTable[currentHandle].status = FMV_PLAY;
 		Com_DPrintf("trFMV::play(), playing %s\n", name);

@@ -4097,8 +4097,8 @@ void CL_Frame( int msec, int realMsec ) {
 
 			CL_TakeVideoFrame();
 
-			//msec = (int)frameDuration;
-			clc.aviVideoFrameRemainder = frameDuration - (int)frameDuration;
+			msec = (int)frameDuration;
+			clc.aviVideoFrameRemainder = frameDuration - msec;
 		}
 	}
 	
@@ -4410,7 +4410,6 @@ static void CL_InitRef( void ) {
 
 	CL_InitGLimp_Cvars();
 
-  Com_Printf("Couldn't load renderer %s\n", cl_renderer->string);
 #ifdef USE_RENDERER_DLOPEN
   Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
 #else
@@ -4886,8 +4885,7 @@ static void CL_ModeList_f( void )
 #ifdef USE_RENDERER_DLOPEN
 static qboolean isValidRenderer( const char *s ) {
 	while ( *s ) {
-		if ( !((*s >= 'a' && *s <= 'z') || (*s >= 'A' && *s <= 'Z')
-	 		|| (*s >= '0' && *s <= '9')))
+		if ( !((*s >= 'a' && *s <= 'z') || (*s >= 'A' && *s <= 'Z') || (*s >= '1' && *s <= '9')) )
 			return qfalse;
 		++s;
 	}

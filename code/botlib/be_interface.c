@@ -884,7 +884,6 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	assert(import);
   botimport = *import;
   assert(botimport.Print);
-  botimport.Print(PRT_MESSAGE, "-------------------- Initializing Botlib ----------------------\n");
 
 	Com_Memset( &be_botlib_export, 0, sizeof( be_botlib_export ) );
 
