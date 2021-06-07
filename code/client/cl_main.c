@@ -4537,7 +4537,7 @@ static void CL_InitRef_After_Load2( void *handle )
 
 	rimp.CIN_UploadCinematic = CIN_UploadCinematic;
 	rimp.CIN_PlayCinematic = CIN_PlayCinematic;
-	rimp.CIN_RunCinematic = CIN_RunCinematic;
+	rimp.CIN_RunCinematic = CIN_RunCinematic_Fake;
 
 	rimp.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;

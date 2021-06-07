@@ -252,6 +252,10 @@ ifeq ($(USE_CODEC_VORBIS),1)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
 endif
 
+ifeq ($(USE_CIN_VPX),1)
+  BASE_CFLAGS += -DUSE_CIN_VPX=1
+endif
+
 ifeq ($(USE_DEDICATED),1)
   BASE_CFLAGS += -DDEDICATED
 endif

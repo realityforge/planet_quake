@@ -21,7 +21,7 @@ extern void RoQReset( void );
 extern e_status CIN_RunROQ(int handle);
 extern int CIN_PlayROQ(const char *arg, int x, int y, int w, int h, int systemBits );
 
-#ifdef USE_CODEC_VPX
+#ifdef USE_CIN_VPX
 extern void Cin_VPX_Shutdown(void);
 extern int CIN_PlayVPX(const char *arg, int x, int y, int w, int h, int systemBits );
 extern e_status CIN_RunVPX(int handle);
@@ -33,8 +33,9 @@ extern int CIN_PlayOGM(const char *arg, int x, int y, int w, int h, int systemBi
 extern e_status CIN_RunOGM(int handle);
 #endif
 
+
 static videoapi_t cinematicLoaders[ ] = {
-#ifdef USE_CODEC_VPX
+#ifdef USE_CIN_VPX
 	{FT_VPX, "webm", CIN_PlayVPX, CIN_RunVPX, Cin_VPX_Shutdown},
 #endif
 #if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
@@ -144,6 +145,12 @@ CIN_RunCinematic
 Fetch and decompress the pending frame
 ==================
 */
+e_status CIN_RunCinematic_Fake (int handle)
+{
+  if (handle < 0 || handle>= MAX_VIDEO_HANDLES || cinTable[handle].status == FMV_EOF) return FMV_EOF;
+  return cinTable[currentHandle].status;
+}
+
 
 
 e_status CIN_RunCinematic (int handle)
@@ -409,9 +416,14 @@ void SCR_DrawCinematic( void ) {
 
 
 void SCR_RunCinematic( void ) {
-	if (CL_handle >= 0 && CL_handle < MAX_VIDEO_HANDLES) {
-		CIN_RunCinematic(CL_handle);
-	}
+	//if (CL_handle >= 0 && CL_handle < MAX_VIDEO_HANDLES) {
+	//	CIN_RunCinematic(CL_handle);
+	//}
+  for ( int i = 0 ; i < MAX_VIDEO_HANDLES ; i++ ) {
+    if ( cinTable[i].fileName[0] != '\0' ) {
+      CIN_RunCinematic(i);
+    }
+  }
 }
 
 

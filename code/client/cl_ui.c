@@ -1172,7 +1172,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return CIN_StopCinematic(args[1]);
 
 	case UI_CIN_RUNCINEMATIC:
-		return CIN_RunCinematic(args[1]);
+		return CIN_RunCinematic_Fake(args[1]);
 
 	case UI_CIN_DRAWCINEMATIC:
 		CIN_DrawCinematic(args[1]);

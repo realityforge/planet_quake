@@ -1,7 +1,7 @@
 MKFILE        := $(lastword $(MAKEFILE_LIST)) 
 WORKDIR       := libwebm
 
-BUILD_LIBJPEG := 1
+BUILD_LIBWEBM := 1
 include make/platform.make
 
 TARGET	      := libwebm_$(SHLIBNAME)

@@ -1042,7 +1042,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return CIN_StopCinematic(args[1]);
 
 	case CG_CIN_RUNCINEMATIC:
-		return CIN_RunCinematic(args[1]);
+		return CIN_RunCinematic_Fake(args[1]);
 
 	case CG_CIN_DRAWCINEMATIC:
 		CIN_DrawCinematic(args[1]);

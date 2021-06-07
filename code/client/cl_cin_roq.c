@@ -1080,7 +1080,6 @@ void RoQReset( void ) {
 	
 	if (currentHandle < 0) return;
 
-  Com_Printf("Resetting frame\n");
 	FS_FCloseFile( cinTable[currentHandle].iFile );
 	FS_FOpenFileRead( cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue );
 	FS_Read( cin.file, 16, cinTable[currentHandle].iFile );
@@ -1180,7 +1179,6 @@ redump:
 			if (cinTable[currentHandle].numQuads == -1) {
 				readQuadInfo( framedata );
 				setupQuad( 0, 0 );
-        Com_Printf("Catching up: %u\n", cinTable[currentHandle].lastTime);
 				cinTable[currentHandle].startTime = cinTable[currentHandle].lastTime = CL_ScaledMilliseconds();
 			}
 			if (cinTable[currentHandle].numQuads != 1) cinTable[currentHandle].numQuads = 0;
@@ -1322,10 +1320,7 @@ e_status CIN_RunROQ(int handle)
 		  cinTable[currentHandle].tfps = (((CL_ScaledMilliseconds()
 							                       - cinTable[currentHandle].startTime)*3)/100);
 			start = cinTable[currentHandle].startTime;
-		} else
-    //if(bigJump && (abs(thisTime - cinTable[currentHandle].lastTime))<100) {
-      bigJump = qfalse;
-    //}
+		} else bigJump = qfalse;
 	}
 
 	cinTable[currentHandle].lastTime = thisTime;

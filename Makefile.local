@@ -8,6 +8,8 @@ USE_RENDERER_DLOPEN    = 1
 CINEMATICS_LOGO        = 0
 CINEMATICS_INTRO       = 0
 
+USE_CIN_VPX            = 1
+
 USE_RMLUI              = 0
 USE_RMLUI_DLOPEN       = 0
 USE_MULTIVM_SERVER     = 1

@@ -990,7 +990,7 @@ e_status CIN_RunOGM(int handle)
   int	start = 0;
 	int     thisTime = 0;
 
-  if (Cin_OGM_Run(cinTable[currentHandle].startTime == 0 ? 0 : (CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime))
+  if (Cin_OGM_Run(cinTable[currentHandle].startTime == 0 ? 0 : CL_ScaledMilliseconds() - cinTable[currentHandle].startTime))
     cinTable[currentHandle].status = FMV_EOF;
   else
   {
@@ -1034,7 +1034,7 @@ e_status CIN_RunOGM(int handle)
   }
 
   if (!cinTable[currentHandle].startTime)
-    cinTable[currentHandle].startTime = CL_ScaledMilliseconds()*com_timescale->value;
+    cinTable[currentHandle].startTime = CL_ScaledMilliseconds();
 
   if (cinTable[currentHandle].status == FMV_EOF)
   {
@@ -1053,7 +1053,6 @@ e_status CIN_RunOGM(int handle)
     else
     {
       CIN_Shutdown();
-//              Cin_OGM_Shutdown();
     }
   }
 
