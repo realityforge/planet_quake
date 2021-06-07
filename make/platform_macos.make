@@ -35,7 +35,7 @@ endif
 endif
 endif
 
-BASE_CFLAGS     += -I/usr/include -I/usr/local/include
+BASE_CFLAGS     += -I/usr/include -I/usr/local/include -isysroot $(SYSROOT)
 DEBUG_CFLAGS     = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS   = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 USE_SDL          = 1

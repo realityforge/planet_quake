@@ -18,7 +18,7 @@ export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS      := $(INCLUDE) -fsigned-char -O3 \
 							 -isystem /opt/local/include \
-							 -isysroot $(SYSROOT) -MMD \
+							 -MMD \
 							 $(OPENSSL_CFLAGS) $(SSH_CFLAGS) \
                -ftree-vectorize -ffast-math -fno-short-enums \
 							 -DBUILDING_LIBCURL -DCURL_HIDDEN_SYMBOLS -DHAVE_CONFIG_H \

@@ -118,6 +118,7 @@ endif
 CC              := gcc
 CXX             := c++
 GXX             := g++
+ASM             := yasm
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -156,6 +157,8 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   JPEG_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs libjpeg || echo -ljpeg)
   PNG_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libpng || true)
   PNG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libpng || echo -lpng)
+  VPX_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libvpx libwebm || true)
+  VPX_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libvpx libwebm || echo -lvpx -lwebm)
 
 endif
 

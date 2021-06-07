@@ -6,22 +6,29 @@ include make/platform.make
 
 TARGET	      := libvpx_$(SHLIBNAME)
 SOURCES       := libs/libvpx-1.10
-INCLUDES      := $(SOURCES)
+INCLUDES      := $(SOURCES) \
+								 libs/libvorbis-1.3.7/include \
+								 libs/opus-1.3.1/include \
+								 libs/libogg-1.3.4/include \
+								 libs/libvpx-1.10/third_party/libwebm
+LIBS          := $(VPX_LIBS)
 
-WEBMOBJS      := mkvmuxer/mkvmuxer.o mkvmuxer/mkvmuxerutil.o mkvmuxer/mkvwriter.o
-WEBMOBJS      += mkvparser/mkvparser.o mkvparser/mkvreader.o
-WEBMOBJS      += common/file_util.o common/hdr_util.o
-Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(WEBMOBJS)))
+CFILES        := webmdec.cc
+VPXOBJS       := 
+VPXOBJS       += 
+OBJS          := $(CFILES:.cc=.o)
+Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS        := $(INCLUDE) -fsigned-char -MMD \
-                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
-CXXFLAGS      := $(CFLAGS) -std=c++11
+                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
+								 $(VPX_CFLAGS)
+GXXFLAGS      := $(CFLAGS) -std=gnu++11
 
-define DO_WEBM_GXX
-  @echo "WEBM_GXX $<"
-  @$(GXX) -o $@ $(SHLIBCFLAGS) $(CXXFLAGS) -c $<
+define DO_VPX_GXX
+  $(echo_cmd) "VPX_GXX $<"
+  $(Q)$(GXX) -o $@ $(SHLIBCFLAGS) $(GXXFLAGS) -c $<
 endef
 
 debug:
@@ -42,16 +49,7 @@ clean:
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.cc
-	$(DO_WEBM_GXX)
-
-$(B)/$(WORKDIR)/%.o: $(SOURCES)/common/%.cc
-	$(DO_WEBM_GXX)
-	
-$(B)/$(WORKDIR)/%.o: $(SOURCES)/mkvmuxer/%.cc
-	$(DO_WEBM_GXX)
-
-$(B)/$(WORKDIR)/%.o: $(SOURCES)/mkvparser/%.cc
-	$(DO_WEBM_GXX)
+	$(DO_VPX_GXX)
 
 $(B)/$(TARGET): $(Q3OBJ) 
 	$(echo_cmd) "LD $@"

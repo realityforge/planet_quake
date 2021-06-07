@@ -27,10 +27,25 @@ struct WebmInputContext {
   const void *block;
   int block_frame_index;
   int video_track_index;
+  int audio_track_index;
   uint64_t timestamp_ns;
   int is_key_frame;
   int reached_eos;
 };
+
+
+
+struct VorbisDecoder
+{
+	vorbis_info info;
+	vorbis_dsp_state dspState;
+	vorbis_block block;
+	ogg_packet op;
+
+	bool hasDSPState, hasBlock;
+};
+
+
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so
 // that webm_read_frame can be called to retrieve a video frame.

@@ -172,8 +172,8 @@ CFLAGS      := $(INCLUDE) -fsigned-char -MMD -O3 \
                -DOPUS_BUILD -DHAVE_LRINTF -DFLOATING_POINT -DFLOAT_APPROX -DUSE_ALLOCA
 
 define DO_OPUS_CC
-  @echo "OPUS_CC $<"
-  @$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(echo_cmd) "OPUS_CC $<"
+  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
 endef
 
 debug:

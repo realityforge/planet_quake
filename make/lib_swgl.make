@@ -39,7 +39,7 @@ export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS       := $(INCLUDE) -fsigned-char -MMD \
                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-								-isysroot $(SYSROOT) -msse2
+								-msse2 -lcstd++
 CXXFLAGS      := $(CFLAGS) -std=c++17
 
 define DO_SWGL_CXX
