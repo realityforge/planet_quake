@@ -20,8 +20,10 @@
 #include <cstring>
 #include <cstdio>
 
-#include "third_party/libwebm/mkvparser/mkvparser.h"
-#include "third_party/libwebm/mkvparser/mkvreader.h"
+#include <mkvparser/mkvparser.h>
+#include <mkvparser/mkvreader.h>
+
+extern "C" {
 
 namespace {
 
@@ -178,12 +180,11 @@ void rewind_and_reset(struct WebmInputContext *const webm_ctx,
   reset(webm_ctx, m_vorbis, m_opus);
 }
 
-}  // namespace
-
-int file_is_webm(struct WebmInputContext *webm_ctx,
+Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
                  struct VpxInputContext *vpx_ctx,
                  struct VorbisDecoder *m_vorbis,
                  struct OpusDecoder *m_opus) {
+  printf("islinked!\n");
   m_vorbis = NULL;
   m_opus = NULL;
   mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
@@ -272,7 +273,7 @@ int file_is_webm(struct WebmInputContext *webm_ctx,
   return 1;
 }
 
-int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
+Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
                     size_t *buffer_size) {
   // This check is needed for frame parallel decoding, in which case this
   // function could be called even after it has reached end of input stream.
@@ -377,9 +378,13 @@ int webm_guess_framerate(struct WebmInputContext *webm_ctx,
   return 0;
 }
 
-void webm_free(struct WebmInputContext *const webm_ctx,
+Q_EXPORT void webm_free(struct WebmInputContext *const webm_ctx,
                struct VpxInputContext *const vpx_ctx,
                struct VorbisDecoder *const m_vorbis,
                struct OpusDecoder *const m_opus) { 
   reset(webm_ctx, m_vorbis, m_opus); 
+}
+
+}  // namespace
+
 }

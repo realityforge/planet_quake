@@ -9,6 +9,7 @@ ifeq ($(USE_MULTIVM_CLIENT),1)
 TARGET_CLIENT    := $(CNAME)_mw$(ARCHEXT)$(BINEXT)
 endif
 
+INCLUDES := $(MOUNT_DIR)/qcommon
 SOURCES  := $(MOUNT_DIR)/client
 ifneq ($(USE_RENDERER_DLOPEN),1)
 RSOURCES := $(MOUNT_DIR)/renderer $(MOUNT_DIR)/renderercommon
@@ -154,14 +155,24 @@ endif
 endif # !USE_SDL
 endif
 
+VIDEO    :=
+# TODO static linking? have to switch to gnu++
+#ifeq ($(USE_CIN_VPX),1)
+#VIDEO    += $(B)/client/webmdec.o
+#LIBS     += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
+#INCLUDES += libs/libvpx-1.10 \
+					  libs/libvorbis-1.3.7/include \
+					  libs/opus-1.3.1/include \
+					  libs/libogg-1.3.4/include \
+					  libs/libvpx-1.10/third_party/libwebm
+#endif
 
-INCLUDES := $(MOUNT_DIR)/qcommon
 ifeq ($(USE_RMLUI),1)
 INCLUDES += $(MOUNT_DIR)/../libs/RmlUi/Include
 endif
 
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
-            $(CLIPMAP) $(QCOMMON) $(SOUND) \
+            $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) \
             $(VM) $(CURL) $(SYSTEM)
 ifneq ($(USE_RENDERER_DLOPEN),1)
 CFILES   += $(foreach dir,$(RSOURCES), $(wildcard $(dir)/*.c))
@@ -181,6 +192,7 @@ export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
             -ffast-math -fno-short-enums -MMD
+#GXXFLAGS := $(CFLAGS) -std=gnu++11
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
@@ -203,6 +215,11 @@ define DO_SERVER_CC
   $(echo_cmd) "SERVER_CC $<"
   $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
+
+#define DO_VPX_GXX
+#  $(echo_cmd) "VPX_GXX $<"
+#  $(Q)$(GXX) -o $@ $(GXXFLAGS) -c $<
+#endef
 
 # TODO: use these
 #define DO_AS
@@ -237,6 +254,9 @@ clean:
 	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
 
 ifdef B
+$(B)/$(WORKDIR)/%.o: libs/libvpx-1.10/%.cc
+	$(DO_VPX_GXX)
+
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/client/%.c
 	$(DO_CLIENT_CC)
 

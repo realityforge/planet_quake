@@ -95,6 +95,8 @@ struct VpxInputContext {
   uint32_t height;
   struct VpxRational pixel_aspect_ratio;
   vpx_img_fmt_t fmt;
+  vpx_codec_ctx_t *dcodec;
+  vpx_codec_ctx_t *ecodec;
   vpx_bit_depth_t bit_depth;
   int only_i420;
   uint32_t fourcc;
@@ -133,7 +135,7 @@ int read_yuv_frame(struct VpxInputContext *input_ctx, vpx_image_t *yuv_frame);
 typedef struct VpxInterface {
   const char *const name;
   const uint32_t fourcc;
-  vpx_codec_iface_t *(*const codec_interface)();
+  vpx_codec_iface_t *(*const codec_interface)(void);
 } VpxInterface;
 
 int get_vpx_encoder_count(void);

@@ -11,7 +11,7 @@ INCLUDES      := $(SOURCES) \
 								 libs/opus-1.3.1/include \
 								 libs/libogg-1.3.4/include \
 								 libs/libvpx-1.10/third_party/libwebm
-LIBS          := $(VPX_LIBS)
+LIBS          := $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
 
 CFILES        := webmdec.cc
 VPXOBJS       := 
@@ -22,8 +22,7 @@ Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS        := $(INCLUDE) -fsigned-char -MMD \
-                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums \
-								 $(VPX_CFLAGS)
+                 -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
 GXXFLAGS      := $(CFLAGS) -std=gnu++11
 
 define DO_VPX_GXX

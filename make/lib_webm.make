@@ -7,21 +7,23 @@ include make/platform.make
 TARGET	      := libwebm_$(SHLIBNAME)
 SOURCES       := libs/libwebm-1.0
 INCLUDES      := $(SOURCES)
+LIBS          := 
 
 WEBMOBJS      := mkvmuxer/mkvmuxer.o mkvmuxer/mkvmuxerutil.o mkvmuxer/mkvwriter.o
 WEBMOBJS      += mkvparser/mkvparser.o mkvparser/mkvreader.o
 WEBMOBJS      += common/file_util.o common/hdr_util.o
+WEBMOBJS      += webmdec.o
 Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(WEBMOBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS        := $(INCLUDE) -fsigned-char -MMD \
                  -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
-CXXFLAGS      := $(CFLAGS) -std=c++11
+CXXFLAGS      := $(CFLAGS) -std=gnu++11
 
 define DO_WEBM_GXX
-  @echo "WEBM_GXX $<"
-  @$(GXX) -o $@ $(SHLIBCFLAGS) $(CXXFLAGS) -c $<
+  $(echo_cmd) "WEBM_GXX $<"
+  $(Q)$(GXX) -o $@ $(SHLIBCFLAGS) $(CXXFLAGS) -c $<
 endef
 
 debug:

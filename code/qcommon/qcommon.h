@@ -50,6 +50,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #endif
 
+#if defined(__APPLE__)
+#undef FD_ISSET
+#undef FD_SET
+#define FD_SET(x, y)
+#define FD_ISSET(x, y) qtrue
+#endif
+
 // stringify macro
 #define XSTRING(x)	STRING(x)
 #define STRING(x)	#x

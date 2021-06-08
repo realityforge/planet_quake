@@ -35,6 +35,10 @@ USE_IPV6            ?= 0
 USE_CURL            ?= 0
 USE_CODEC_VORBIS    ?= 0
 USE_CODEC_OPUS      ?= 0
+USE_CIN_THEORA      ?= 0
+USE_CIN_XVID        ?= 0
+USE_CIN_VPX         ?= 0
+
 USE_FREETYPE        ?= 0
 USE_MUMBLE          ?= 0
 USE_VOIP            ?= 0
@@ -66,26 +70,6 @@ ifndef USE_CCACHE
 USE_CCACHE=0
 endif
 export USE_CCACHE
-
-ifndef USE_CODEC_VORBIS
-USE_CODEC_VORBIS=0
-endif
-
-ifndef USE_CODEC_OPUS
-USE_CODEC_OPUS=0
-endif
-
-ifndef USE_CIN_THEORA
-USE_CIN_THEORA=0
-endif
-
-ifndef USE_CIN_XVID
-USE_CIN_THEORA=0
-endif
-
-ifndef USE_CIN_VPX
-USE_CIN_THEORA=0
-endif
 
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
