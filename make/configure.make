@@ -32,7 +32,6 @@ USE_JPEG            ?= 0
 USE_VULKAN_API      ?= 0
 USE_Q3KEY           ?= 0
 USE_IPV6            ?= 0
-USE_CURL            ?= 0
 USE_CODEC_VORBIS    ?= 0
 USE_CODEC_OPUS      ?= 0
 USE_CIN_THEORA      ?= 0
@@ -73,10 +72,6 @@ export USE_CCACHE
 
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
-endif
-
-ifndef USE_CURL
-USE_CURL=1
 endif
 
 ifndef USE_CURL_DLOPEN
@@ -146,8 +141,8 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
 
 endif
 
-#SYSROOT      := $(shell xcrun --show-sdk-path)
-SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
+SYSROOT      := $(shell xcrun --show-sdk-path)
+#SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 
 # supply some reasonable defaults for SDL/X11?
 ifeq ($(X11_INCLUDE),)
@@ -248,7 +243,7 @@ ifeq ($(USE_DEDICATED),1)
 endif
 
 ifeq ($(BUILD_SLIM_CLIENT),1)
-CFLAGS   += -DBUILD_SLIM_CLIENT
+  BASE_CFLAGS += -DBUILD_SLIM_CLIENT
 endif
 
 ifeq ($(USE_RMLUI),1)

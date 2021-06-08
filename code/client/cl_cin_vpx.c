@@ -299,13 +299,24 @@ CIN_PlayCinematic
 int CIN_PlayVPX( const char *name, int x, int y, int w, int h, int systemBits ) 
 {
   Q_strncpyz( cinTable[currentHandle].fileName, name, sizeof( cinTable[currentHandle].fileName ) );
+  cinTable[currentHandle].ROQSize = FS_FOpenFileRead( cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue );
+
+	if (cinTable[currentHandle].ROQSize<=0) {
+		Com_DPrintf("play(%s), VPXSize<=0\n", name);
+		cinTable[currentHandle].fileName[0] = '\0';
+		if ( cinTable[currentHandle].iFile != FS_INVALID_HANDLE ) {
+			FS_FCloseFile( cinTable[currentHandle].iFile );
+			cinTable[currentHandle].iFile = FS_INVALID_HANDLE;
+		}
+		return 0;
+	}
 
   if (Cin_VPX_Init(cinTable[currentHandle].fileName))
   {
     Com_DPrintf("starting vpx-playback failed(%s)\n", name);
     cinTable[currentHandle].fileName[0] = 0;
     Cin_VPX_Shutdown();
-    return -1;
+    return 0;
   }
 
   cinTable[currentHandle].fileType = FT_VPX;

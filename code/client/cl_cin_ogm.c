@@ -1075,7 +1075,7 @@ int CIN_PlayOGM( const char *name, int x, int y, int w, int h, int systemBits )
     Com_DPrintf("starting ogm-playback failed(%s)\n", name);
     cinTable[currentHandle].fileName[0] = 0;
     Cin_OGM_Shutdown();
-    return -1;
+    return 0;
   }
 
   cinTable[currentHandle].fileType = FT_OGM;

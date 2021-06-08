@@ -184,7 +184,7 @@ void Cbuf_Execute( void )
 	char *text;
 	char line[MAX_CMD_LINE];
 	int quotes;
-	
+
 	insCmdI++;
 	if(insCmdI == 32) {
 		insCmdI = 0;
