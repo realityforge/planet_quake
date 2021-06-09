@@ -36,7 +36,7 @@
 
 extern "C" {
 
-namespace Rml {
+namespace {
   //typedef Context* qhandle_t;
   typedef bool qboolean;
   typedef int qhandle_t;
@@ -209,7 +209,6 @@ namespace Rml {
   {
     public:
       StructuredFileInterface(RmlFileInterface *file_interface);
-      virtual ~StructuredFileInterface();
 
       FileHandle Open(const Rml::String& path) override;
       void Close(FileHandle file) override;
@@ -219,6 +218,7 @@ namespace Rml {
       size_t Length(FileHandle file) override;
       bool LoadFile(const String& path, String& out_data) override;
     private:
+      ~StructuredFileInterface() override;
       RmlFileInterface *files;
   };
   class StructuredSystemInterface : public Rml::SystemInterface 

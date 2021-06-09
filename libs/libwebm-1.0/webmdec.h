@@ -9,6 +9,20 @@
  */
 #ifndef VPX_WEBMDEC_H_
 #define VPX_WEBMDEC_H_
+
+//Ignore __attribute__ on non-gcc/clang platforms
+#if !defined(__GNUC__) && !defined(__clang__)
+#ifndef __attribute__
+#define __attribute__(x)
+#endif
+#endif
+
+#ifdef __GNUC__
+#define UNUSED_VAR __attribute__((unused))
+#else
+#define UNUSED_VAR
+#endif
+
 #ifdef USE_CODEC_VORBIS
 #include <vorbis/codec.h>
 #endif
@@ -27,10 +41,17 @@
 #define Q_EXPORT
 #endif
 
-extern "C" {
-#endif
+#include <mkvparser/mkvparser.h>
 
-struct VpxInputContext;
+extern "C" {
+
+namespace {
+
+  typedef bool qboolean;
+  typedef int fileHandle_t;
+
+#endif
+;
 
 struct WebmInputContext {
   void *reader;
@@ -76,6 +97,37 @@ typedef struct OpusDecoder
 } OpusDecoder;
 #endif
 
+typedef enum {
+	FS_SEEK_CUR,
+	FS_SEEK_END,
+	FS_SEEK_SET
+} fsOrigin_t;
+
+
+typedef struct {
+  void (*__new)( void );
+
+  qboolean (*Seek)(fileHandle_t file, long offset, int origin);
+  size_t (*Read)(void* buffer, size_t size, fileHandle_t file);
+  int (*Length)(fileHandle_t file);
+  fileHandle_t fp;
+} MkvReaderInterface;
+
+
+#ifdef __cplusplus
+class StructuredMkvReader : public mkvparser::IMkvReader 
+{
+ public:
+  StructuredMkvReader(MkvReaderInterface *reader_interface);
+
+  int Read(long long position, long length, unsigned char* buffer) override;
+  int Length(long long* total, long long* available) override;
+
+ private:
+  ~StructuredMkvReader() override;
+  MkvReaderInterface *reader;
+};
+#endif
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so
 // that webm_read_frame can be called to retrieve a video frame.
@@ -113,6 +165,8 @@ void webm_free(struct WebmInputContext *const webm_ctx,
                OpusDecoder *const m_opus);
 
 #ifdef __cplusplus
+} // namespace
+
 }  // extern "C"
 #endif
 

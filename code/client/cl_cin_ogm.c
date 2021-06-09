@@ -58,8 +58,6 @@ theora:
 
 typedef struct
 {
-	fileHandle_t    ogmFile;
-
 	ogg_sync_state  oy;			/* sync and verify incoming physical bitstream */
 	//ogg_stream_state os; /* take physical pages, weld into a logical stream of packets */
 	ogg_stream_state os_audio;
@@ -213,10 +211,10 @@ static int loadBlockToSync(void)
 	char           *buffer;
 	int             bytes;
 
-	if(g_ogm.ogmFile)
+	if(cinTable[currentHandle].iFile)
 	{
 		buffer = ogg_sync_buffer(&g_ogm.oy, OGG_BUFFER_SIZE);
-		bytes = FS_Read(buffer, OGG_BUFFER_SIZE, g_ogm.ogmFile);
+		bytes = FS_Read(buffer, OGG_BUFFER_SIZE, cinTable[currentHandle].iFile);
 		ogg_sync_wrote(&g_ogm.oy, bytes);
 
 		r = (bytes == 0);
@@ -691,7 +689,7 @@ int Cin_OGM_Init(const char *filename)
 	ogg_packet      op;
 	int             i;
 
-	if(g_ogm.ogmFile)
+	if(cinTable[currentHandle].iFile)
 	{
 		Com_Printf(S_COLOR_YELLOW "WARNING: it seams there was already a ogm running, it will be killed to start %s\n", filename);
 		Cin_OGM_Shutdown();
@@ -699,8 +697,8 @@ int Cin_OGM_Init(const char *filename)
 
 	memset(&g_ogm, 0, sizeof(cin_ogm_t));
 
-	FS_FOpenFileRead(filename, &g_ogm.ogmFile, qtrue);
-	if(!g_ogm.ogmFile)
+	cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, cinTable[currentHandle].iFile, qtrue);
+	if(!cinTable[currentHandle].iFile)
 	{
 		Com_Printf(S_COLOR_YELLOW "WARNING: Can't open ogm-file for reading (%s)\n", filename);
 		return -1;
@@ -972,8 +970,8 @@ void Cin_OGM_Shutdown(void)
 
 	ogg_sync_clear(&g_ogm.oy);
 
-	FS_FCloseFile(g_ogm.ogmFile);
-	g_ogm.ogmFile = 0;
+	FS_FCloseFile(cinTable[currentHandle].iFile);
+	cinTable[currentHandle].iFile = 0;
 }
 
 /*

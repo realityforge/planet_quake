@@ -27,6 +27,25 @@ extern "C" {
 
 namespace {
 
+
+StructuredMkvReader::StructuredMkvReader(MkvReaderInterface *reader_interface)
+{
+  reader = reader_interface;
+}
+
+StructuredMkvReader::~StructuredMkvReader() {}
+
+int StructuredMkvReader::Read(long long position, long length, unsigned char* buffer) 
+{
+  reader->Seek(reader->fp, position, FS_SEEK_SET);
+  return reader->Read(buffer, length, reader->fp);
+}
+int StructuredMkvReader::Length(long long* total, long long* available) 
+{
+  return reader->Length(reader->fp);
+}
+
+
 void reset(struct WebmInputContext *const webm_ctx,
             struct VorbisDecoder *const m_vorbis,
             struct OpusDecoder *const m_opus) {

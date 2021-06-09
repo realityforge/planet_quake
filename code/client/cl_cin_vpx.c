@@ -162,35 +162,10 @@ enum IMAGE_ERROR VPXDecoder_getImage(Image *image)
 
 int Cin_VPX_Init(const char *filename)
 {
-  struct WebmInputContext webm;
-  struct VpxInputContext vpx;
-  g_vpx.webm_ctx = &webm;
-  g_vpx.vpx_ctx = &vpx;
-  //char *ospath = FS_BuildOSPath( Cvar_VariableString("fs_basepath"), 
-  //    FS_GetCurrentGameDir(), filename );
-  
-  int numFiles = 1;
-  char **files = {
-    &((char *){"/Users/briancullinan/planet_quake/games/testing/roycovideo.pk3dir/video/intro.webm"})
-  }; //FS_ListFilteredFiles("", "webm", filename, &numFiles, FS_MATCH_ANY);
-  if(numFiles < 1) {
-    Com_DPrintf("play(%s), notfound\n", filename);
-    return 0;
-  }
-  
-  //cinTable[currentHandle].ROQSize = 
-  //  FS_FOpenFileRead( cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue );
-  vpx.file = Sys_FOpen(files[0], "rb");
-  if(vpx.file == NULL) {
-    Com_DPrintf("play(%s), VPXFile=NULL\n", files[0]);
-    return 0;
-  }
+  memset(&g_vpx, 0, sizeof(cin_vpx_t));
 
-  size_t pos = ftell( vpx.file );
-  fseek( vpx.file, 0, SEEK_END );
-  cinTable[currentHandle].ROQSize = ftell( vpx.file );
-  fseek( vpx.file, pos, SEEK_SET );
-  
+  cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, &g_vpx.ogmFile, qtrue);
+
 	if (cinTable[currentHandle].ROQSize<=0) {
 		Com_DPrintf("play(%s), VPXSize<=0\n", filename);
 		cinTable[currentHandle].fileName[0] = '\0';

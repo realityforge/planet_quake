@@ -6,7 +6,7 @@
 
 extern "C" {
 
-namespace Rml {
+namespace {
 
   StructuredFileInterface::StructuredFileInterface(RmlFileInterface *file_interface)
   {
