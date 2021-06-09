@@ -13,7 +13,7 @@
 #include <vorbis/codec.h>
 #endif
 
-#include "./tools_common.h"
+#include <tools_common.h>
 
 #ifdef __cplusplus
 

@@ -75,6 +75,7 @@ static qboolean	winsockInitialized = qfalse;
 #		define _BSD_SOCKLEN_T_
 #	endif
 
+# include <netinet/tcp.h>
 #	include <sys/socket.h>
 #	include <errno.h>
 #	include <netdb.h>
@@ -179,7 +180,13 @@ static cvar_t	*net_dropsim;
 static sockaddr_t socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
+#ifdef EMSCRIPTEN
+// maybe on desktop we have the luxury of maintaining separate connections
+//  but the web browser is limit to 3 per thread
+#define socks_socket ip_socket
+#else
 static SOCKET	socks_socket = INVALID_SOCKET;
+#endif
 
 #ifdef USE_IPV6
 static SOCKET	ip6_socket = INVALID_SOCKET;
@@ -575,7 +582,7 @@ const char *NET_AdrToString( const netadr_t *a )
 	static char s[NET_ADDRSTRMAXLEN];
 
 	if (a->type == NA_LOOPBACK)
-		strcpy( s, "loopback" );
+		strcpy( s, "localhost" );
 	else if (a->type == NA_BOT)
 		strcpy( s, "bot" );
 #ifdef USE_IPV6
@@ -598,7 +605,7 @@ const char *NET_AdrToStringwPort( const netadr_t *a )
 	static char s[NET_ADDRSTRMAXLEN];
 
 	if (a->type == NA_LOOPBACK)
-		strcpy( s, "loopback" );
+		strcpy( s, "localhost" );
 	else if (a->type == NA_BOT)
 		strcpy( s, "bot" );
 	else if(a->type == NA_IP)
@@ -825,6 +832,23 @@ void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
 	NetadrToSockadr( to, &addr );
 
 	if ( usingSocks && to->type == NA_IP ) {
+		char socksBuf[ 4096 ];
+		socksBuf[0] = 0;	// reserved
+		socksBuf[1] = 0;
+		socksBuf[2] = 0;	// fragment (not fragmented)
+    socksBuf[3] = 3;	// address type: IPV4 TODO: add websocket protocol
+    // let socks server do the translation
+    if(!Q_stricmpn(to->protocol, "ws", 2) || !Q_stricmpn(to->protocol, "wss", 3)) {
+      socksBuf[1] = 4; // special connect command indicating web sockets
+    }
+    if(to->name[0] == '\0') {
+      Q_strncpyz((char *)to->name, NET_AdrToString(to), sizeof(to->name));
+    }
+    socksBuf[4] = strlen(to->name) + 1;
+    Q_strncpyz( &socksBuf[5], to->name, socksBuf[4] );
+		*(short *)&socksBuf[5 + socksBuf[4]] = ((struct sockaddr_in *)&addr)->sin_port;
+		memcpy( &socksBuf[5 + socksBuf[4] + 2], data, length );
+    ret = sendto( ip_socket, socksBuf, length+5+socksBuf[4]+2, 0, (struct sockaddr *) &socksRelayAddr, sizeof(struct sockaddr_in) );
 		socks5_udp_request_t cmd;
 
 		if ( length <= sizeof( cmd.s.u.v4.data ) ) {
@@ -1007,6 +1031,8 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		Com_Printf( "WARNING: NET_IPSocket: socket: %s\n", NET_ErrorString() );
 		return newsocket;
 	}
+
+#ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1019,6 +1045,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 	}
+#endif
 
 	if( !net_interface || !net_interface[0]) {
 		address.sin_family = AF_INET;
@@ -1081,6 +1108,7 @@ static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockadd
 		return newsocket;
 	}
 
+#ifndef EMSCRIPTEN
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IP6Socket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1088,6 +1116,7 @@ static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockadd
 		closesocket(newsocket);
 		return INVALID_SOCKET;
 	}
+#endif
 
 #ifdef IPV6_V6ONLY
 	{
@@ -1248,14 +1277,26 @@ void NET_LeaveMulticast6( void )
 NET_OpenSocks
 ====================
 */
+int porto;
 static void NET_OpenSocks( int port ) {
 	struct sockaddr_in	address;
 	struct hostent		*h;
 	int					len;
 	unsigned char		buf[4 + 255 * 2];
 	socks5_request_t	cmd;
+  int i;
 
 	usingSocks = qfalse;
+#ifdef EMSCRIPTEN
+  if(!Cvar_VariableIntegerValue("net_socksLoading")
+    && strcmp(Cmd_Argv(0), "net_restart")) {
+    Cvar_Set("net_socksLoading", "0");
+    Cvar_Set("net_socksLoading", "1");
+    SOCKS_Frame_Callback(NULL, NET_OpenIP);
+    return;
+  }
+  SOCKS_After = NULL;
+#endif
 
 	Com_Printf( "Opening connection to SOCKS server.\n" );
 
@@ -1264,7 +1305,14 @@ static void NET_OpenSocks( int port ) {
 		return;
 	}
 
-	h = gethostbyname( net_socksServer->string );
+#ifndef EMSCRIPTEN
+	// set no delay
+	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
+		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
+	}
+#endif
+  
+  h = gethostbyname( NET_ParseProtocol(net_socksServer->string, 0));
 	if ( h == NULL ) {
 		Com_Printf( "WARNING: NET_OpenSocks: gethostbyname: %s\n", NET_ErrorString() );
 		return;
@@ -1278,11 +1326,36 @@ static void NET_OpenSocks( int port ) {
 	address.sin_addr.s_addr = *(uint32_t *)h->h_addr_list[0];
 	address.sin_port = htons( net_socksPort->integer );
 
-	if ( connect( socks_socket, ( struct sockaddr * )&address, sizeof( struct sockaddr_in ) ) == SOCKET_ERROR ) {
-		Com_Printf( "%s: connect: %s\n", __func__, NET_ErrorString() );
-		return;
-	}
+	if ( connect( socks_socket, (struct sockaddr *)&address, sizeof( address ) ) == SOCKET_ERROR ) {
+#ifndef EMSCRIPTEN
+    Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+    return;
+#else
+    if(Q_stricmp(NET_ErrorString(), "Operation in progress") != 0) {
+      Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
+      Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
+    	if ( connect( socks_socket, ( struct sockaddr * )&address, sizeof( struct sockaddr_in ) ) == SOCKET_ERROR ) {
+    		Com_Printf( "%s: connect: %s\n", __func__, NET_ErrorString() );
+    		return;
+    	}
+    }
+    porto = port;
+    Cvar_Set("net_socksLoading", "1");
+    Sys_SocksConnect(); // don't wait until next frame to attach to websocket events
+    SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Connect);
+  }
+}
 
+void NET_OpenSocks_After_Connect( void ) {
+  int					port;
+  int					len;
+	qboolean			rfc1929;
+	unsigned char		buf[64];
+  {
+    port = porto;
+#endif
+	}
 	buf[0] = 5;	// SOCKS version
 
 	if ( *net_socksUsername->string || *net_socksPassword->string ) {
@@ -1298,17 +1371,39 @@ static void NET_OpenSocks( int port ) {
 	}
 
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
+		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
+#ifdef EMSCRIPTEN
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
+#endif
 		Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
 
+#ifdef EMSCRIPTEN
+  porto = port;
+  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Method);
+}
+
+void NET_OpenSocks_After_Method( void ) {
+  int 			  port;
+  int					len;
+  unsigned char		buf[64];
+  port = porto;
+#endif
+;
+
 	// get the response
 	len = recv( socks_socket, (void *)buf, 32, 0 );
 	if ( len == SOCKET_ERROR ) {
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
 	if ( len != 2 || buf[0] != 5 ) {
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: bad auth.method response\n", __func__ );
 		return;
 	}
@@ -1318,6 +1413,7 @@ static void NET_OpenSocks( int port ) {
 		case 2: // username/password authentication
 			break;
 		default:
+    Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: unsupported auth.method\n", __func__ );
 			return;
 	}
@@ -1348,6 +1444,8 @@ static void NET_OpenSocks( int port ) {
 
 		// send it
 		if ( send( socks_socket, (void *)buf, 3 + ulen + plen, 0 ) == SOCKET_ERROR ) {
+      Cvar_Set("net_socksLoading", "0");
+      socks_socket = INVALID_SOCKET;
 			Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 			return;
 		}
@@ -1355,16 +1453,20 @@ static void NET_OpenSocks( int port ) {
 		// get the response
 		len = recv( socks_socket, (void *)buf, 64, 0 );
 		if ( len == SOCKET_ERROR ) {
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 			return;
 		}
 		if ( len != 2 || buf[0] != 1 ) {
+      socks_socket = INVALID_SOCKET;
+      Cvar_Set("net_socksLoading", "0");
 			Com_Printf( "%s: bad auth response\n", __func__ );
 			return;
 		}
 	}
 
 	// send the UDP associate request
+  Cvar_Set("net_socksLoading", "0");
 	cmd.version = 5;  // SOCKS version
 	cmd.command = 3;  // UDP associate
 	cmd.reserved = 0; // reserved
@@ -1376,22 +1478,41 @@ static void NET_OpenSocks( int port ) {
 		return;
 	}
 
+#ifdef EMSCRIPTEN
+  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Listen);
+}
+
+void NET_OpenSocks_After_Listen( void ) {
+  int					len;
+  unsigned char		buf[64];
+  struct hostent		*h;
+  // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
+#endif
+;
+
 	// get the response
 	len = recv( socks_socket, (void *)&cmd, sizeof( cmd ), 0 );
 	if ( len == SOCKET_ERROR ) {
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 		Com_Printf( "%s: recv: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 	if ( len < 10 || cmd.version != 5 ) {
 		Com_Printf( "%s: bad response\n", __func__ );
 		return;
 	}
 
 	// check completion code
+    Cvar_Set("net_socksLoading", "0");
 	if ( cmd.command != 0 ) {
 		Com_Printf( "%s: request denied: %i\n", __func__, cmd.command );
 		return;
 	}
+    Cvar_Set("net_socksLoading", "0");
+    socks_socket = INVALID_SOCKET;
 	if ( cmd.addrtype != 1 ) {
 		Com_Printf( "%s: relay address is not IPV4: %i\n", __func__, cmd.addrtype );
 		return;
@@ -1403,6 +1524,15 @@ static void NET_OpenSocks( int port ) {
 	socksRelayAddr.v4.sin_addr.s_addr = cmd.u.v4.addr.s_addr;
 	socksRelayAddr.v4.sin_port = cmd.u.v4.port;
 
+  Com_Printf( "NET_OpenSocks: SOCKS relay configured: %i.%i.%i.%i:%hu\n",
+    socksRelayAddr.v4.sin_addr.s_addr & 0xFF,
+    socksRelayAddr.v4.sin_addr.s_addr >> 8 & 0xFF,
+    socksRelayAddr.v4.sin_addr.s_addr >> 16 & 0xFF,
+    socksRelayAddr.v4.sin_addr.s_addr >> 24 & 0xFF,
+    socksRelayAddr.v4.sin_port);
+#ifdef EMSCRIPTEN
+  Cvar_Set("net_socksLoading", "0");
+#endif
 	usingSocks = qtrue;
 }
 
@@ -1594,6 +1724,10 @@ static void NET_OpenIP( void ) {
 
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
+#ifdef EMSCRIPTEN
+        else // for blocking Com_Frame until net is setup
+          Cvar_Set("net_socksLoading", "0");
+#endif
 
 				break;
 			}
@@ -1620,6 +1754,7 @@ NET_GetCvars
 */
 static qboolean NET_GetCvars( void ) {
 	int modified;
+  int port;
 
 #if defined (DEDICATED) || !defined (USE_IPV6)
 	// I want server owners to explicitly turn on ipv6 support.
@@ -1644,26 +1779,42 @@ static qboolean NET_GetCvars( void ) {
 	net_enabled->modified = qfalse;
 
 	net_ip = Cvar_Get( "net_ip", "0.0.0.0", CVAR_LATCH );
+  Cvar_SetDescription(net_ip, "The IP of the local machine, supplied by the OS\nDefault: 0.0.0.0 (bind all)");
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+#ifdef EMSCRIPTEN
+  //if(!com_dedicated->integer) {
+  	Com_RandomBytes((byte*)&port, sizeof(int));
+  	port &= 0xffff;
+  //} else {
+  //  port = PORT_SERVER;
+  //}
+#else
+	port = PORT_SERVER;
+#endif
+
+	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	Cvar_CheckRange( net_port, "0", "65535", CV_INTEGER );
+  Cvar_SetDescription(net_port, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
 #ifdef USE_IPV6
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
+  Cvar_SetDescription(net_ip6, "The IPv6 of the local machine\nDefault: :: (bind all)");
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
 
-	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	Cvar_CheckRange( net_port6, "0", "65535", CV_INTEGER );
+  Cvar_SetDescription(net_port6, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 
 	// Some cvars for configuring multicast options which facilitates scanning for servers on local subnets.
 	net_mcast6addr = Cvar_Get( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE_ND );
+  Cvar_SetDescription(net_mcast6addr, "The IPv6 multicast address\nDefault: " XSTRING(NET_MULTICAST_IP6));
 	modified += net_mcast6addr->modified;
 	net_mcast6addr->modified = qfalse;
 
@@ -1674,31 +1825,38 @@ static qboolean NET_GetCvars( void ) {
 #endif
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
+  Cvar_SetDescription(net_mcast6iface, "IPv6 multicast interface\nDefault: empty");
 #endif // USE_IPV6
 
 	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( net_socksEnabled, "0", "1", CV_INTEGER );
+  Cvar_SetDescription(net_socksEnabled, "Toggle the use of network socks 5 protocol enabling firewall access\nDefault: 0");
 	modified += net_socksEnabled->modified;
 	net_socksEnabled->modified = qfalse;
 
 	net_socksServer = Cvar_Get( "net_socksServer", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+  Cvar_SetDescription(net_socksServer, "Set the address (name or IP number) of the SOCKS server\nDefault: empty");
 	modified += net_socksServer->modified;
 	net_socksServer->modified = qfalse;
 
 	net_socksPort = Cvar_Get( "net_socksPort", "1080", CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( net_socksPort, "0", "65535", CV_INTEGER );
+  Cvar_SetDescription( net_socksPort, "Set proxy and/or firewall port default is 1080\nDefault: 1080");
 	modified += net_socksPort->modified;
 	net_socksPort->modified = qfalse;
 
 	net_socksUsername = Cvar_Get( "net_socksUsername", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+  Cvar_SetDescription(net_socksUsername, "Username for socks firewall supports no authentication and username/password authentication method\nDefault: empty");
 	modified += net_socksUsername->modified;
 	net_socksUsername->modified = qfalse;
 
 	net_socksPassword = Cvar_Get( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+  Cvar_SetDescription(net_socksPassword, "Password for socks firewall access supports no authentication and username/password authentication method\nDefault: empty");
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
 
 	net_dropsim = Cvar_Get( "net_dropsim", "", CVAR_TEMP );
+  Cvar_SetDescription(net_dropsim, "Simulate packet dropping events for debugging purposes in percent\nDefault: empty");
 
 	return modified ? qtrue : qfalse;
 }
@@ -1722,9 +1880,11 @@ static void NET_Config( qboolean enableNetworking ) {
 	}
 
 	// if enable state is the same and no cvars were modified, we have nothing to do
+#ifndef EMSCRIPTEN
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
 	}
+#endif
 
 	if( enableNetworking == networkingEnabled ) {
 		if( enableNetworking ) {
@@ -1809,6 +1969,7 @@ void NET_Init( void ) {
 	NET_Config( qtrue );
 	
 	Cmd_AddCommand( "net_restart", NET_Restart_f );
+  Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nUsage: net_restart");
 }
 
 
@@ -1856,6 +2017,12 @@ static void NET_Event( const fd_set *fdr )
 				if ( rand() < (int) (((double) RAND_MAX) / 100.0 * (double) net_dropsim->value) )
 					continue; // drop this packet
 			}
+
+      if(netmsg.readcount > 0) {
+        memcpy(netmsg.data, &bufData[netmsg.readcount], netmsg.cursize - netmsg.readcount);
+        netmsg.cursize = netmsg.cursize - netmsg.readcount;
+        netmsg.readcount = 0;
+      }
 
 #ifdef DEDICATED
 			Com_RunAndTimeServerPacket( &from, &netmsg );
@@ -1912,8 +2079,30 @@ qboolean NET_Sleep( int timeout )
 	}
 #endif
 
+#ifdef EMSCRIPTEN
+  if(SOCKS_Proxy) {
+    Com_Printf( "--------- SOCKS Callback (%p) --------\n", &SOCKS_Proxy);
+    void (*cb)( void ) = SOCKS_Proxy;
+    SOCKS_Proxy = NULL;
+    (*cb)();
+    return qtrue;
+  }
+
+  if(SOCKS_After) {
+    if(invokeSOCKSAfter) {
+      invokeSOCKSAfter = qfalse;
+      Com_Printf( "--------- SOCKS After (%p) --------\n", &SOCKS_After);
+      void (*cb)( void ) = SOCKS_After;
+      SOCKS_After = NULL; // start frame runner again
+      (*cb)();
+      return qtrue;
+    }
+  }
+#endif
+
 	if ( highestfd == INVALID_SOCKET )
 	{
+#ifndef EMSCRIPTEN
 #ifdef _WIN32
 		// windows ain't happy when select is called without valid FDs
 		Sleep( timeout / 1000 );
@@ -1921,6 +2110,9 @@ qboolean NET_Sleep( int timeout )
 #else
 		usleep( timeout );
 		return qtrue;
+#endif
+#else
+    return qtrue;
 #endif
 	}
 
@@ -1932,7 +2124,17 @@ qboolean NET_Sleep( int timeout )
 	if ( retval > 0 ) {
 		NET_Event( &fdr );
 		return qfalse;
+	} else if (usingSocks && socks_socket != INVALID_SOCKET) {
+    // alternate between the two sockets
+    FD_SET( socks_socket, &fdr );
+
+    retval = select( socks_socket + 1, &fdr, NULL, NULL, &tv );
+    
+	if ( retval > 0 ) {
+		NET_Event( &fdr );
+		return qfalse;
 	}
+  }
 
 	if ( retval == SOCKET_ERROR ) {
 #ifndef _WIN32
@@ -1955,3 +2157,25 @@ static void NET_Restart_f( void )
 {
 	NET_Config( qtrue );
 }
+
+#ifdef EMSCRIPTEN
+void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
+	invokeSOCKSAfter = qfalse;
+	if(!SOCKS_Proxy) {
+		SOCKS_Proxy = cb;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling a frame SOCKS proxy." );
+	}
+	if(!SOCKS_After) {
+		SOCKS_After = af;
+	} else {
+		Com_Error( ERR_FATAL, "Already calling back to SOCKS frame." );
+	}
+}
+
+void SOCKS_Frame_Proxy( void ) {
+	if(SOCKS_After) {
+		invokeSOCKSAfter = qtrue;
+	}
+}
+#endif

@@ -1,4 +1,4 @@
-BUILD_SLIM_CLIENT      = 1
+BUILD_SLIM_CLIENT      = 0
 BUILD_STANDALONE       = 1
 BUILD_RENDERER_OPENGL2 = 0
 BUILD_FREETYPE         = 0
@@ -8,7 +8,7 @@ USE_RENDERER_DLOPEN    = 1
 CINEMATICS_LOGO        = 0
 CINEMATICS_INTRO       = 0
 
-USE_CIN_VPX            = 0
+USE_CIN_VPX            = 1
 
 USE_RMLUI              = 0
 USE_RMLUI_DLOPEN       = 0
@@ -18,4 +18,4 @@ USE_FREETYPE           = 0
 USE_VULKAN             = 0
 
 USE_SYSTEM_RMLUI       = 0
-USE_SYSTEM_JPEG        = 0
+USE_SYSTEM_JPEG        = 1

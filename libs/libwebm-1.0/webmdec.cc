@@ -184,7 +184,6 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
                  struct VpxInputContext *vpx_ctx,
                  struct VorbisDecoder *m_vorbis,
                  struct OpusDecoder *m_opus) {
-  printf("islinked!\n");
   m_vorbis = NULL;
   m_opus = NULL;
   mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
@@ -218,12 +217,10 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
     if (track->GetType() == mkvparser::Track::kVideo) {
       video_track = static_cast<const mkvparser::VideoTrack *>(track);
       webm_ctx->video_track_index = static_cast<int>(track->GetNumber());
-      break;
     }
     else if (track->GetType() == mkvparser::Track::kAudio) {
       audio_track = static_cast<const mkvparser::AudioTrack *>(track);
       webm_ctx->audio_track_index = static_cast<int>(track->GetNumber());
-      break;
     }
   }
 
@@ -233,10 +230,17 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
     return 0; // nothing to do
   }
 
-  if (!strncmp(video_track->GetCodecId(), "V_VP8", 5)) {
-    vpx_ctx->fourcc = VP8_FOURCC;
-  } else if (!strncmp(video_track->GetCodecId(), "V_VP9", 5)) {
-    vpx_ctx->fourcc = VP9_FOURCC;
+  if(video_track != nullptr) {
+    if (!strncmp(video_track->GetCodecId(), "V_VP8", 5)) {
+      vpx_ctx->fourcc = VP8_FOURCC;
+    } else if (!strncmp(video_track->GetCodecId(), "V_VP9", 5)) {
+      vpx_ctx->fourcc = VP9_FOURCC;
+    }
+  
+    vpx_ctx->framerate.denominator = 0;
+    vpx_ctx->framerate.numerator = 0;
+    vpx_ctx->width = static_cast<uint32_t>(video_track->GetWidth());
+    vpx_ctx->height = static_cast<uint32_t>(video_track->GetHeight());
   }
   
   if (!strncmp(audio_track->GetCodecId(), "A_VORBIS", 8)) {
@@ -257,18 +261,13 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
 #endif
   }
   
-  
   if(!vpx_ctx->fourcc && !(m_vorbis || m_opus)) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
 
-  vpx_ctx->framerate.denominator = 0;
-  vpx_ctx->framerate.numerator = 0;
-  vpx_ctx->width = static_cast<uint32_t>(video_track->GetWidth());
-  vpx_ctx->height = static_cast<uint32_t>(video_track->GetHeight());
-
-  get_first_cluster(webm_ctx);
+  if(audio_track || video_track)
+    get_first_cluster(webm_ctx);
 
   return 1;
 }

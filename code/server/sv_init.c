@@ -978,7 +978,9 @@ void SV_Init( void )
 	Cvar_CheckRange( sv_mvFolderSize, "0", "2048", CV_INTEGER );
 	Cvar_SetDescription(sv_mvFolderSize, "Set the multiview folder size for automatic recordings, rotate when maxed out\nDefault: 768");
 
+#ifndef BUILD_SLIM_CLIENT
 	SV_LoadRecordCache();
+#endif
 #endif
 #ifdef USE_MULTIVM_SERVER
 	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO);
