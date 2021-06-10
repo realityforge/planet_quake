@@ -68,9 +68,9 @@ void webm_reset(struct WebmInputContext *const webm_ctx,
             struct VorbisDecoder *const m_vorbis,
             struct OpusDecoder *const m_opus) {
   if (webm_ctx->reader != nullptr) {
-    mkvparser::MkvReader *const reader =
-        reinterpret_cast<mkvparser::MkvReader *>(webm_ctx->reader);
-    delete reader;
+    //mkvparser::MkvReader *const reader =
+    //    reinterpret_cast<mkvparser::MkvReader *>(webm_ctx->reader);
+    //delete reader;
   }
   if (webm_ctx->segment != nullptr) {
     mkvparser::Segment *const segment =
@@ -228,7 +228,6 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
   }
   webm_ctx->reached_eos = 0;
 
-  printf("crash 1\n");
   mkvparser::EBMLHeader header;
   long long pos = 0;
   if (header.Parse((mkvparser::IMkvReader *)webm_ctx->reader, pos) < 0) {
@@ -236,7 +235,6 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
     return 0;
   }
 
-  printf("crash 2\n");
   mkvparser::Segment *segment;
   if (mkvparser::Segment::CreateInstance((mkvparser::IMkvReader *)webm_ctx->reader, pos, segment)) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
@@ -343,7 +341,7 @@ Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer
       }
       status = cluster->GetFirst(block_entry);
       block_entry_eos = false;
-      get_new_block = true;
+      get_new_block = true;      printf("crash cunt\n");
     } else if (block == nullptr ||
                webm_ctx->block_frame_index == block->GetFrameCount() ||
                (block->GetTrackNumber() != webm_ctx->video_track_index
@@ -374,8 +372,10 @@ Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer
   const mkvparser::Block::Frame &frame =
       block->GetFrame(webm_ctx->block_frame_index);
   ++webm_ctx->block_frame_index;
-  if (frame.len > static_cast<long>(*buffer_size)) {
-    delete[] * buffer;
+  if (!*buffer || frame.len > static_cast<long>(*buffer_size)) {
+    if(*buffer != nullptr) {
+      delete[] *buffer;
+    }
     *buffer = new uint8_t[frame.len];
     if (*buffer == nullptr) {
       return -1;
@@ -386,9 +386,7 @@ Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer
   webm_ctx->timestamp_ns = block->GetTime(cluster);
   webm_ctx->is_key_frame = block->IsKey();
 
-  mkvparser::MkvReader *const reader =
-      reinterpret_cast<mkvparser::MkvReader *>(webm_ctx->reader);
-  return frame.Read(reader, *buffer) ? block->GetTrackNumber() : 0;
+  return frame.Read((mkvparser::IMkvReader *)webm_ctx->reader, *buffer) ? block->GetTrackNumber() : 0;
 }
 
 int webm_guess_framerate(struct WebmInputContext *webm_ctx,

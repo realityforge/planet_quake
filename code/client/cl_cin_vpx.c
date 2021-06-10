@@ -181,8 +181,11 @@ int Cin_VPX_Init(const char *filename)
 {
   memset(&g_vpx, 0, sizeof(cin_vpx_t));
   g_vpx.webm_ctx = malloc(sizeof(struct WebmInputContext));
+  memset(g_vpx.webm_ctx, 0, sizeof(struct WebmInputContext));
   g_vpx.vpx_ctx = malloc(sizeof(struct VpxInputContext));
+  memset(g_vpx.vpx_ctx, 0, sizeof(struct VpxInputContext));
   g_vpx.reader = malloc(sizeof(MkvReaderInterface));
+  memset(g_vpx.reader, 0, sizeof(MkvReaderInterface));
   g_vpx.reader->Tell = FS_FTell;
   g_vpx.reader->Read = CL_CIN_FileRead;
   g_vpx.reader->Seek = FS_Seek;
@@ -217,8 +220,8 @@ int Cin_VPX_Run(int time)
 {
 	g_vpx.currentTime = time;
 
-  size_t bufferSize;
-  uint8_t *buffer;
+  size_t bufferSize = 0;
+  uint8_t *buffer = NULL;
   int track = webm_read_frame(g_vpx.webm_ctx, &buffer, &bufferSize);
   if(track == g_vpx.webm_ctx->video_track_index)
   {
