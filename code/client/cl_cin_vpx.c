@@ -30,6 +30,7 @@ typedef struct
   struct VpxInputContext *vpx_ctx;
   struct VorbisDecoder *m_vorbis;
   struct OpusDecoder *m_opus;
+  MkvReaderInterface *reader;
   int m_last_space;
   short *pcm;
   int currentTime;
@@ -159,12 +160,37 @@ enum IMAGE_ERROR VPXDecoder_getImage(Image *image)
   return err;
 }
 
+int CL_CIN_FileLength(fileHandle_t file) {
+  int		pos;
+  int		end;
+
+  pos = FS_FTell( file );
+  FS_Seek( file, 0, FS_SEEK_END );
+  end = FS_FTell( file );
+  FS_Seek( file, pos, FS_SEEK_SET );
+
+  return end;
+}
+
+int CL_CIN_FileRead( void *buffer, int len, fileHandle_t f ) {
+  
+  int result = FS_Read(buffer, len, f);
+  return result;
+}
 
 int Cin_VPX_Init(const char *filename)
 {
   memset(&g_vpx, 0, sizeof(cin_vpx_t));
-
-  cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, &g_vpx.ogmFile, qtrue);
+  g_vpx.webm_ctx = malloc(sizeof(struct WebmInputContext));
+  g_vpx.vpx_ctx = malloc(sizeof(struct VpxInputContext));
+  g_vpx.reader = malloc(sizeof(MkvReaderInterface));
+  g_vpx.reader->Tell = FS_FTell;
+  g_vpx.reader->Read = CL_CIN_FileRead;
+  g_vpx.reader->Seek = FS_Seek;
+  g_vpx.reader->Length = CL_CIN_FileLength;
+  g_vpx.webm_ctx->reader = webm_new_reader(g_vpx.reader);
+  cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, &cinTable[currentHandle].iFile, qtrue);
+  g_vpx.reader->fp = cinTable[currentHandle].iFile;
 
 	if (cinTable[currentHandle].ROQSize<=0) {
 		Com_DPrintf("play(%s), VPXSize<=0\n", filename);
@@ -223,8 +249,15 @@ int Cin_VPX_Run(int time)
 void Cin_VPX_Shutdown(void)
 {
   webm_free(g_vpx.webm_ctx, g_vpx.vpx_ctx, g_vpx.m_vorbis, g_vpx.m_opus);
-  free(g_vpx.pcm);
+  if(g_vpx.pcm)
+    free(g_vpx.pcm);
   g_vpx.pcm = NULL;
+  if(g_vpx.webm_ctx) {
+    free(g_vpx.webm_ctx);
+  }
+  if(g_vpx.vpx_ctx) {
+    free(g_vpx.vpx_ctx);
+  }
 }
 
 /*

@@ -20,12 +20,38 @@
 #include <cstring>
 #include <cstdio>
 
-#include "third_party/libwebm/mkvparser/mkvparser.h"
-#include "third_party/libwebm/mkvparser/mkvreader.h"
+#include <mkvparser/mkvparser.h>
+#include <mkvparser/mkvreader.h>
+
+extern "C" {
 
 namespace {
 
-void reset(struct WebmInputContext *const webm_ctx,
+
+StructuredMkvReader::StructuredMkvReader(MkvReaderInterface *reader_interface)
+{
+  reader = reader_interface;
+}
+
+StructuredMkvReader::~StructuredMkvReader() {}
+
+int StructuredMkvReader::Read(long long position, long length, unsigned char* buffer) 
+{
+  reader->Seek(reader->fp, position, FS_SEEK_SET);
+  return reader->Read(buffer, length, reader->fp);
+}
+int StructuredMkvReader::Length(long long* total, long long* available) 
+{
+  *available = reader->Tell(reader->fp);
+  *total = reader->Length(reader->fp);
+  return *total;
+}
+
+Q_EXPORT void *webm_new_reader(MkvReaderInterface* reader_interface) {
+  return new StructuredMkvReader(reader_interface);
+}
+
+void webm_reset(struct WebmInputContext *const webm_ctx,
             struct VorbisDecoder *const m_vorbis,
             struct OpusDecoder *const m_opus) {
   if (webm_ctx->reader != nullptr) {
@@ -174,31 +200,32 @@ void rewind_and_reset(struct WebmInputContext *const webm_ctx,
                       struct VpxInputContext *const vpx_ctx,
                       struct VorbisDecoder *const m_vorbis,
                       struct OpusDecoder *const m_opus) {
-  rewind(vpx_ctx->file);
-  reset(webm_ctx, m_vorbis, m_opus);
+  webm_reset(webm_ctx, m_vorbis, m_opus);
 }
 
-}  // namespace
-
-int file_is_webm(struct WebmInputContext *webm_ctx,
+Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
                  struct VpxInputContext *vpx_ctx,
                  struct VorbisDecoder *m_vorbis,
                  struct OpusDecoder *m_opus) {
   m_vorbis = NULL;
   m_opus = NULL;
-  mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
-  webm_ctx->reader = reader;
+  if(!webm_ctx->reader) {
+    mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
+    webm_ctx->reader = reader;
+  }
   webm_ctx->reached_eos = 0;
 
   mkvparser::EBMLHeader header;
   long long pos = 0;
-  if (header.Parse(reader, pos) < 0) {
+  printf("crash 1\n");
+  if (header.Parse((mkvparser::IMkvReader *)webm_ctx->reader, pos) < 0) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
 
+  printf("crash 2\n");
   mkvparser::Segment *segment;
-  if (mkvparser::Segment::CreateInstance(reader, pos, segment)) {
+  if (mkvparser::Segment::CreateInstance((mkvparser::IMkvReader *)webm_ctx->reader, pos, segment)) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
@@ -217,12 +244,10 @@ int file_is_webm(struct WebmInputContext *webm_ctx,
     if (track->GetType() == mkvparser::Track::kVideo) {
       video_track = static_cast<const mkvparser::VideoTrack *>(track);
       webm_ctx->video_track_index = static_cast<int>(track->GetNumber());
-      break;
     }
     else if (track->GetType() == mkvparser::Track::kAudio) {
       audio_track = static_cast<const mkvparser::AudioTrack *>(track);
       webm_ctx->audio_track_index = static_cast<int>(track->GetNumber());
-      break;
     }
   }
 
@@ -232,10 +257,17 @@ int file_is_webm(struct WebmInputContext *webm_ctx,
     return 0; // nothing to do
   }
 
-  if (!strncmp(video_track->GetCodecId(), "V_VP8", 5)) {
-    vpx_ctx->fourcc = VP8_FOURCC;
-  } else if (!strncmp(video_track->GetCodecId(), "V_VP9", 5)) {
-    vpx_ctx->fourcc = VP9_FOURCC;
+  if(video_track != nullptr) {
+    if (!strncmp(video_track->GetCodecId(), "V_VP8", 5)) {
+      vpx_ctx->fourcc = VP8_FOURCC;
+    } else if (!strncmp(video_track->GetCodecId(), "V_VP9", 5)) {
+      vpx_ctx->fourcc = VP9_FOURCC;
+    }
+  
+    vpx_ctx->framerate.denominator = 0;
+    vpx_ctx->framerate.numerator = 0;
+    vpx_ctx->width = static_cast<uint32_t>(video_track->GetWidth());
+    vpx_ctx->height = static_cast<uint32_t>(video_track->GetHeight());
   }
   
   if (!strncmp(audio_track->GetCodecId(), "A_VORBIS", 8)) {
@@ -256,23 +288,18 @@ int file_is_webm(struct WebmInputContext *webm_ctx,
 #endif
   }
   
-  
   if(!vpx_ctx->fourcc && !(m_vorbis || m_opus)) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
 
-  vpx_ctx->framerate.denominator = 0;
-  vpx_ctx->framerate.numerator = 0;
-  vpx_ctx->width = static_cast<uint32_t>(video_track->GetWidth());
-  vpx_ctx->height = static_cast<uint32_t>(video_track->GetHeight());
-
-  get_first_cluster(webm_ctx);
+  if(audio_track || video_track)
+    get_first_cluster(webm_ctx);
 
   return 1;
 }
 
-int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
+Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
                     size_t *buffer_size) {
   // This check is needed for frame parallel decoding, in which case this
   // function could be called even after it has reached end of input stream.
@@ -377,9 +404,13 @@ int webm_guess_framerate(struct WebmInputContext *webm_ctx,
   return 0;
 }
 
-void webm_free(struct WebmInputContext *const webm_ctx,
+Q_EXPORT void webm_free(struct WebmInputContext *const webm_ctx,
                struct VpxInputContext *const vpx_ctx,
                struct VorbisDecoder *const m_vorbis,
                struct OpusDecoder *const m_opus) { 
-  reset(webm_ctx, m_vorbis, m_opus); 
+  webm_reset(webm_ctx, m_vorbis, m_opus); 
+}
+
+}  // namespace
+
 }

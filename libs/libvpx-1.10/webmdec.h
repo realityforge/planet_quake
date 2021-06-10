@@ -9,17 +9,56 @@
  */
 #ifndef VPX_WEBMDEC_H_
 #define VPX_WEBMDEC_H_
+
+//Ignore __attribute__ on non-gcc/clang platforms
+#if !defined(__GNUC__) && !defined(__clang__)
+#ifndef __attribute__
+#define __attribute__(x)
+#endif
+#endif
+
+#ifdef __GNUC__
+#define UNUSED_VAR __attribute__((unused))
+#else
+#define UNUSED_VAR
+#endif
+
 #ifdef USE_CODEC_VORBIS
 #include <vorbis/codec.h>
 #endif
 
-#include "./tools_common.h"
+#include <tools_common.h>
 
 #ifdef __cplusplus
-extern "C" {
+
+#if (defined _MSC_VER)
+#define Q_EXPORT __declspec(dllexport)
+#elif (defined __SUNPRO_C)
+#define Q_EXPORT __global
+#elif ((__GNUC__ >= 3) && (!__EMX__) && (!sun))
+#define Q_EXPORT __attribute__((visibility("default")))
+#else
+#define Q_EXPORT
 #endif
 
-struct VpxInputContext;
+#include <mkvparser/mkvparser.h>
+
+extern "C" {
+
+namespace {
+
+  typedef bool qboolean;
+  typedef int fileHandle_t;
+  
+  typedef enum {
+  	FS_SEEK_CUR,
+  	FS_SEEK_END,
+  	FS_SEEK_SET
+  } fsOrigin_t;
+
+
+#endif
+;
 
 struct WebmInputContext {
   void *reader;
@@ -51,6 +90,7 @@ typedef struct VorbisDecoder
 #else
 typedef struct VorbisDecoder
 {
+  int __pad;
 } VorbisDecoder;
 #endif
 
@@ -60,9 +100,37 @@ typedef struct OpusDecoder OpusDecoder;
 #else
 typedef struct OpusDecoder
 {
+  int __pad;
 } OpusDecoder;
 #endif
 
+typedef struct {
+  void (*__new)( void );
+  
+  int (*Tell)( fileHandle_t f );
+  int (*Seek)(fileHandle_t file, long offset, fsOrigin_t origin);
+  int (*Read)(void* buffer, int size, fileHandle_t file);
+  int (*Length)(fileHandle_t file);
+  fileHandle_t fp;
+} MkvReaderInterface;
+
+
+#ifdef __cplusplus
+class StructuredMkvReader : public mkvparser::IMkvReader 
+{
+ public:
+  StructuredMkvReader(MkvReaderInterface *reader_interface);
+
+  int Read(long long position, long length, unsigned char* buffer) override;
+  int Length(long long* total, long long* available) override;
+
+ private:
+  ~StructuredMkvReader() override;
+  MkvReaderInterface *reader;
+};
+#endif
+
+void *webm_new_reader(MkvReaderInterface* reader_interface);
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so
 // that webm_read_frame can be called to retrieve a video frame.
@@ -100,6 +168,8 @@ void webm_free(struct WebmInputContext *const webm_ctx,
                OpusDecoder *const m_opus);
 
 #ifdef __cplusplus
+} // namespace
+
 }  // extern "C"
 #endif
 

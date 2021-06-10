@@ -49,6 +49,13 @@ namespace {
 
   typedef bool qboolean;
   typedef int fileHandle_t;
+  
+  typedef enum {
+  	FS_SEEK_CUR,
+  	FS_SEEK_END,
+  	FS_SEEK_SET
+  } fsOrigin_t;
+
 
 #endif
 ;
@@ -97,18 +104,12 @@ typedef struct OpusDecoder
 } OpusDecoder;
 #endif
 
-typedef enum {
-	FS_SEEK_CUR,
-	FS_SEEK_END,
-	FS_SEEK_SET
-} fsOrigin_t;
-
-
 typedef struct {
   void (*__new)( void );
-
-  qboolean (*Seek)(fileHandle_t file, long offset, int origin);
-  size_t (*Read)(void* buffer, size_t size, fileHandle_t file);
+  
+  int (*Tell)( fileHandle_t f );
+  int (*Seek)(fileHandle_t file, long offset, fsOrigin_t origin);
+  int (*Read)(void* buffer, int size, fileHandle_t file);
   int (*Length)(fileHandle_t file);
   fileHandle_t fp;
 } MkvReaderInterface;
@@ -128,6 +129,8 @@ class StructuredMkvReader : public mkvparser::IMkvReader
   MkvReaderInterface *reader;
 };
 #endif
+
+void *webm_new_reader(MkvReaderInterface* reader_interface);
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so
 // that webm_read_frame can be called to retrieve a video frame.

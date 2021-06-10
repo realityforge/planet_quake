@@ -38,15 +38,21 @@ StructuredMkvReader::~StructuredMkvReader() {}
 int StructuredMkvReader::Read(long long position, long length, unsigned char* buffer) 
 {
   reader->Seek(reader->fp, position, FS_SEEK_SET);
-  return reader->Read(buffer, length, reader->fp);
+  int len = reader->Read(buffer, length, reader->fp);
+  return len;
 }
 int StructuredMkvReader::Length(long long* total, long long* available) 
 {
-  return reader->Length(reader->fp);
+  *available = reader->Length(reader->fp);
+  *total = reader->Length(reader->fp);
+  return *total;
 }
 
+Q_EXPORT void *webm_new_reader(MkvReaderInterface* reader_interface) {
+  return new StructuredMkvReader(reader_interface);
+}
 
-void reset(struct WebmInputContext *const webm_ctx,
+void webm_reset(struct WebmInputContext *const webm_ctx,
             struct VorbisDecoder *const m_vorbis,
             struct OpusDecoder *const m_opus) {
   if (webm_ctx->reader != nullptr) {
@@ -195,8 +201,7 @@ void rewind_and_reset(struct WebmInputContext *const webm_ctx,
                       struct VpxInputContext *const vpx_ctx,
                       struct VorbisDecoder *const m_vorbis,
                       struct OpusDecoder *const m_opus) {
-  rewind(vpx_ctx->file);
-  reset(webm_ctx, m_vorbis, m_opus);
+  webm_reset(webm_ctx, m_vorbis, m_opus);
 }
 
 Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
@@ -205,19 +210,23 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
                  struct OpusDecoder *m_opus) {
   m_vorbis = NULL;
   m_opus = NULL;
-  mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
-  webm_ctx->reader = reader;
+  if(!webm_ctx->reader) {
+    mkvparser::MkvReader *const reader = new mkvparser::MkvReader(vpx_ctx->file);
+    webm_ctx->reader = reader;
+  }
   webm_ctx->reached_eos = 0;
 
+  printf("crash 1\n");
   mkvparser::EBMLHeader header;
   long long pos = 0;
-  if (header.Parse(reader, pos) < 0) {
+  if (header.Parse((mkvparser::IMkvReader *)webm_ctx->reader, pos) < 0) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
 
+  printf("crash 2\n");
   mkvparser::Segment *segment;
-  if (mkvparser::Segment::CreateInstance(reader, pos, segment)) {
+  if (mkvparser::Segment::CreateInstance((mkvparser::IMkvReader *)webm_ctx->reader, pos, segment)) {
     rewind_and_reset(webm_ctx, vpx_ctx, m_vorbis, m_opus);
     return 0;
   }
@@ -400,7 +409,7 @@ Q_EXPORT void webm_free(struct WebmInputContext *const webm_ctx,
                struct VpxInputContext *const vpx_ctx,
                struct VorbisDecoder *const m_vorbis,
                struct OpusDecoder *const m_opus) { 
-  reset(webm_ctx, m_vorbis, m_opus); 
+  webm_reset(webm_ctx, m_vorbis, m_opus); 
 }
 
 }  // namespace
