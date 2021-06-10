@@ -213,6 +213,11 @@ void rewind_and_reset(struct WebmInputContext *const webm_ctx,
                       struct VpxInputContext *const vpx_ctx,
                       struct VorbisDecoder *const m_vorbis,
                       struct OpusDecoder *const m_opus) {
+  if (vpx_ctx->dcodec)
+  {
+    vpx_codec_destroy(vpx_ctx->dcodec);
+    delete vpx_ctx->dcodec;
+  }
   webm_reset(webm_ctx, m_vorbis, m_opus);
 }
 
@@ -269,16 +274,26 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
   }
 
   if(video_track != nullptr) {
+    vpx_codec_iface_t *codecIface = NULL;
     if (!strncmp(video_track->GetCodecId(), "V_VP8", 5)) {
       vpx_ctx->fourcc = VP8_FOURCC;
+      codecIface = vpx_codec_vp8_dx();
     } else if (!strncmp(video_track->GetCodecId(), "V_VP9", 5)) {
       vpx_ctx->fourcc = VP9_FOURCC;
+      codecIface = vpx_codec_vp9_dx();
     }
-  
+
     vpx_ctx->framerate.denominator = 0;
     vpx_ctx->framerate.numerator = 0;
     vpx_ctx->width = static_cast<uint32_t>(video_track->GetWidth());
     vpx_ctx->height = static_cast<uint32_t>(video_track->GetHeight());
+    const vpx_codec_dec_cfg_t codecCfg = {8 /*threads*/, 0, 0};
+    vpx_ctx->dcodec = new vpx_codec_ctx_t;
+    if (vpx_codec_dec_init(vpx_ctx->dcodec, codecIface, &codecCfg, VPX_CODEC_USE_FRAME_THREADING))
+    {
+      delete vpx_ctx->dcodec;
+      vpx_ctx->dcodec = NULL;
+    }
   }
   
   if (!strncmp(audio_track->GetCodecId(), "A_VORBIS", 8)) {
@@ -308,6 +323,67 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
     get_first_cluster(webm_ctx);
 
   return 1;
+}
+
+// this is a HUGE bottleneck here ..
+// Shaders would be ideal
+// MMX would be nice
+// but this is what we've got .. and it will work anywhere .. slowly.
+Q_EXPORT void webm_yuv_to_rgb(unsigned char **dataOut, vpx_image_t *imageIn) {
+  if (!imageIn) { return; }
+  
+  const int w = imageIn->d_w;
+  const int w2 = w/2;
+  const int pstride = w*3;
+  const int h = imageIn->d_h;
+  const int h2 = h/2;
+  if (!*dataOut) {
+      *dataOut = (unsigned char *)new uint8_t[w*h * 3];
+  }
+  
+  const int strideY = imageIn->stride[0];
+  const int strideU = imageIn->stride[1];
+  const int strideV = imageIn->stride[2];
+
+  for (int posy = 0; posy < h2; posy++) {
+    unsigned char *dst = *dataOut + pstride * (posy * 2);
+    unsigned char *dst2 = *dataOut + pstride * (posy * 2 + 1);
+    const unsigned char *srcY = imageIn->planes[0] + strideY * posy * 2;
+    const unsigned char *srcY2 = imageIn->planes[0] + strideY * (posy * 2 + 1);
+    const unsigned char *srcU = imageIn->planes[1] + strideU * posy;
+    const unsigned char *srcV = imageIn->planes[2] + strideV * posy;
+        
+    for (int posx = 0; posx < w2; posx++) {
+      unsigned char Y,U,V;
+      short R,G,B;
+      short iR,iG,iB;
+      
+      U = *(srcU++); V = *(srcV++);
+      iR = (351 * (V-128)) / 256;
+      iG = - (179 * (V-128)) / 256 - (86 * (U-128)) / 256;
+      iB = (444 * (U-128)) / 256;
+      
+      Y = *(srcY++); 
+      R = Y + iR ; G = Y + iG ; B = Y + iB ;
+      R = (R<0?0:(R>255?255:R)); G = (G<0?0:(G>255?255:G)); B = (B<0?0:(B>255?255:B));
+      *(dst++) = R; *(dst++) = G; *(dst++) = B;
+      
+      Y = *(srcY2++);
+      R = Y + iR ; G = Y + iG ; B = Y + iB ;
+      R = (R<0?0:(R>255?255:R)); G = (G<0?0:(G>255?255:G)); B = (B<0?0:(B>255?255:B));
+      *(dst2++) = R; *(dst2++) = G; *(dst2++) = B;
+      
+      Y = *(srcY++) ;
+      R = Y + iR ; G = Y + iG ; B = Y + iB ;
+      R = (R<0?0:(R>255?255:R)); G = (G<0?0:(G>255?255:G)); B = (B<0?0:(B>255?255:B));
+      *(dst++) = R; *(dst++) = G; *(dst++) = B;
+      
+      Y = *(srcY2++);
+      R = Y + iR ; G = Y + iG ; B = Y + iB ;
+      R = (R<0?0:(R>255?255:R)); G = (G<0?0:(G>255?255:G)); B = (B<0?0:(B>255?255:B));
+      *(dst2++) = R; *(dst2++) = G; *(dst2++) = B;
+    }
+  }
 }
 
 Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer,
@@ -385,8 +461,8 @@ Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer
   *buffer_size = frame.len;
   webm_ctx->timestamp_ns = block->GetTime(cluster);
   webm_ctx->is_key_frame = block->IsKey();
-
-  return frame.Read((mkvparser::IMkvReader *)webm_ctx->reader, *buffer) ? block->GetTrackNumber() : 0;
+  const long status = frame.Read((mkvparser::IMkvReader *)webm_ctx->reader, *buffer);
+  return status ? -1 : block->GetTrackNumber();
 }
 
 int webm_guess_framerate(struct WebmInputContext *webm_ctx,

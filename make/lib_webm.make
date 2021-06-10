@@ -7,7 +7,7 @@ include make/platform.make
 TARGET	      := libwebm_$(SHLIBNAME)
 SOURCES       := libs/libwebm-1.0
 INCLUDES      := $(SOURCES) libs/vpx-1.10
-LIBS          := 
+LIBS          := $(VPX_LIBS) 
 
 WEBMOBJS      := mkvmuxer/mkvmuxer.o mkvmuxer/mkvmuxerutil.o mkvmuxer/mkvwriter.o
 WEBMOBJS      += mkvparser/mkvparser.o mkvparser/mkvreader.o

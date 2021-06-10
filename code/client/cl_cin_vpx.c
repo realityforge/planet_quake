@@ -1,6 +1,7 @@
 /*
 Brian Cullinan (2021) 100% free, no obligations, no guaruntees, it works on my machine
 loosely based on https://github.com/zaps166/libsimplewebm
+and https://www.philhassey.com/blog/2012/02/02/how-to-create-and-play-ivf-vp8-webm-libvpx-video-in-opengl/
 inspiration from cl_cin_ogm.c and Zach "ZTM" Middleton with Spearmint engine
 inspiration from ZaRR and persistent cattle prodding to get me to write this
 
@@ -34,16 +35,9 @@ typedef struct
   int m_last_space;
   short *pcm;
   int currentTime;
+  byte *buffer;
+  void *iter;
 } cin_vpx_t;
-
-typedef struct
-{
-	int w, h;
-	int cs;
-	int chromaShiftW, chromaShiftH;
-	unsigned char *planes[3];
-	int linesize[3];
-} Image;
 
 
 static cin_vpx_t g_vpx;
@@ -52,13 +46,6 @@ extern cinematics_t cin;
 extern cin_cache		cinTable[MAX_VIDEO_HANDLES];
 extern int          currentHandle;
 extern int CL_ScaledMilliseconds( void );
-
-enum IMAGE_ERROR
-{
-  UNSUPPORTED_FRAME = -1,
-  NO_ERROR,
-  NO_FRAME
-};
 
 
 qboolean OpusVorbisDecoder_getPCMS16(uint8_t *outBuffer, int *numOutSamples, short *inBuffer, size_t bufferSize)
@@ -114,51 +101,6 @@ qboolean OpusVorbisDecoder_getPCMS16(uint8_t *outBuffer, int *numOutSamples, sho
 	return qfalse;
 }
 
-
-//The data is NOT copied! Only 3-plane, 8-bit images are supported.
-enum IMAGE_ERROR VPXDecoder_getImage(Image *image)
-{
-  const void *m_iter;
-  vpx_image_t *img;
-  enum IMAGE_ERROR err = NO_FRAME;
-  if ((img = vpx_codec_get_frame(g_vpx.vpx_ctx->dcodec, &m_iter)))
-  {
-    // It seems to be a common problem that UNKNOWN comes up a lot, yet FFMPEG is somehow getting accurate colour-space information.
-    // After checking FFMPEG code, *they're* getting colour-space information, so I'm assuming something like this is going on.
-    // It appears to work, at least.
-    if (img->cs != VPX_CS_UNKNOWN)
-      g_vpx.m_last_space = img->cs;
-    if ((img->fmt & VPX_IMG_FMT_PLANAR) && !(img->fmt & (VPX_IMG_FMT_HAS_ALPHA | VPX_IMG_FMT_HIGHBITDEPTH)))
-    {
-      if (img->stride[0] && img->stride[1] && img->stride[2])
-      {
-        const int uPlane = !!(img->fmt & VPX_IMG_FMT_UV_FLIP) + 1;
-        const int vPlane =  !(img->fmt & VPX_IMG_FMT_UV_FLIP) + 1;
-
-        image->w = img->d_w;
-        image->h = img->d_h;
-        image->cs = g_vpx.m_last_space;
-        image->chromaShiftW = img->x_chroma_shift;
-        image->chromaShiftH = img->y_chroma_shift;
-
-        image->planes[0] = img->planes[0];
-        image->planes[1] = img->planes[uPlane];
-        image->planes[2] = img->planes[vPlane];
-
-        image->linesize[0] = img->stride[0];
-        image->linesize[1] = img->stride[uPlane];
-        image->linesize[2] = img->stride[vPlane];
-
-        err = NO_ERROR;
-      }
-    }
-    else
-    {
-      err = UNSUPPORTED_FRAME;
-    }
-  }
-  return err;
-}
 
 int CL_CIN_FileLength(fileHandle_t file) {
   int		pos;
@@ -228,10 +170,10 @@ int Cin_VPX_Run(int time)
     if (vpx_codec_decode(g_vpx.vpx_ctx->dcodec, buffer, bufferSize, NULL, 0))
       Com_Error(ERR_DROP, "Failed to decode frame.");
 
-    Image image;
-    if (VPXDecoder_getImage(&image) == NO_ERROR)
+    vpx_image_t *img = vpx_codec_get_frame(g_vpx.vpx_ctx->dcodec, g_vpx.iter);
+    if (img)
     {
-      
+      webm_yuv_to_rgb(&g_vpx.buffer, img);
       return 1;
     }
   }
@@ -278,6 +220,8 @@ e_status CIN_RunVPX(int handle)
   else
   {
     qboolean	resolutionChange = qfalse;
+
+    cinTable[currentHandle].buf = g_vpx.buffer;
 
     if (g_vpx.vpx_ctx->width != cinTable[currentHandle].CIN_WIDTH)
     {

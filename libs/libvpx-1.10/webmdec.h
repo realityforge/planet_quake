@@ -28,6 +28,8 @@
 #endif
 
 #include <tools_common.h>
+#include <vpx/vpx_decoder.h>
+#include <vpx/vp8dx.h>
 
 #ifdef __cplusplus
 
@@ -131,6 +133,7 @@ class StructuredMkvReader : public mkvparser::IMkvReader
 #endif
 
 void *webm_new_reader(MkvReaderInterface* reader_interface);
+void webm_yuv_to_rgb(unsigned char **dataOut, vpx_image_t *imageIn);
 
 // Checks if the input is a WebM file. If so, initializes WebMInputContext so
 // that webm_read_frame can be called to retrieve a video frame.
