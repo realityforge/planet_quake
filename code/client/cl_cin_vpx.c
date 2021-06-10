@@ -173,7 +173,6 @@ int CL_CIN_FileLength(fileHandle_t file) {
 }
 
 int CL_CIN_FileRead( void *buffer, int len, fileHandle_t f ) {
-  
   int result = FS_Read(buffer, len, f);
   return result;
 }

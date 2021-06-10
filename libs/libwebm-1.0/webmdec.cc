@@ -35,11 +35,23 @@ StructuredMkvReader::StructuredMkvReader(MkvReaderInterface *reader_interface)
 
 StructuredMkvReader::~StructuredMkvReader() {}
 
-int StructuredMkvReader::Read(long long position, long length, unsigned char* buffer) 
+int StructuredMkvReader::Read(long long offset, long len, unsigned char* buffer) 
 {
-  reader->Seek(reader->fp, position, FS_SEEK_SET);
-  int len = reader->Read(buffer, length, reader->fp);
-  return len;
+  if (offset < 0)
+    return -1;
+
+  if (len < 0)
+    return -1;
+
+  if (len == 0)
+    return 0;
+
+  reader->Seek(reader->fp, offset, FS_SEEK_SET);
+  int size = reader->Read(buffer, len, reader->fp);
+  if (size < size_t(len))
+    return -1;  // error
+
+  return 0;  // success
 }
 int StructuredMkvReader::Length(long long* total, long long* available) 
 {
