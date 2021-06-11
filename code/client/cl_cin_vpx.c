@@ -173,7 +173,28 @@ int Cin_VPX_Run(int time)
     vpx_image_t *img = vpx_codec_get_frame(g_vpx.vpx_ctx->dcodec, &iter);
     if (img)
     {
-      webm_yuv_to_rgb(&g_vpx.buffer, img);
+      /*
+			yWShift = findSizeShift(g_ogm.th_yuvbuffer.y_width, g_ogm.th_info.width);
+			uvWShift = findSizeShift(g_ogm.th_yuvbuffer.uv_width, g_ogm.th_info.width);
+			yHShift = findSizeShift(g_ogm.th_yuvbuffer.y_height, g_ogm.th_info.height);
+			uvHShift = findSizeShift(g_ogm.th_yuvbuffer.uv_height, g_ogm.th_info.height);
+
+			if(yWShift < 0 || uvWShift < 0 || yHShift < 0 || uvHShift < 0)
+			{
+				Com_Printf("[Theora] unexpected resolution in a yuv-Frame\n");
+				r = -1;
+			}
+			else
+			{
+
+				Frame_yuv_to_rgb24(g_ogm.th_yuvbuffer.y, g_ogm.th_yuvbuffer.u, g_ogm.th_yuvbuffer.v,
+								   g_ogm.th_info.width, g_ogm.th_info.height, 
+                   img->stride[0], img->stride[1], 
+                   yWShift, uvWShift, yHShift, uvHShift,
+								   (unsigned int *)g_vpx.buffer);
+      }
+      */
+      //webm_yuv_to_rgb(&g_vpx.buffer, img);
       return 0;
     }
   }
@@ -311,6 +332,8 @@ int CIN_PlayVPX( const char *name, int x, int y, int w, int h, int systemBits )
   CIN_SetExtents(currentHandle, x, y, w, h);
   CIN_SetLooping(currentHandle, (systemBits & CIN_loop) != 0);
 
+  cinTable[currentHandle].CIN_HEIGHT = DEFAULT_CIN_HEIGHT;
+	cinTable[currentHandle].CIN_WIDTH  =  DEFAULT_CIN_WIDTH;
   cinTable[currentHandle].holdAtEnd = (systemBits & CIN_hold) != 0;
   cinTable[currentHandle].alterGameState = (systemBits & CIN_system) != 0;
   cinTable[currentHandle].playonwalls = 1;

@@ -200,7 +200,8 @@ RE_AddRefEntityToScene
 
 =====================
 */
-void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime ) {
+extern model_t *handModel;
+void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 	vec3_t cross;
 
 	if ( !tr.registered ) {
@@ -221,6 +222,18 @@ void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime ) {
 	if ( (int)ent->reType < 0 || ent->reType >= RT_MAX_REF_ENTITY_TYPE ) {
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
 	}
+
+  vec3_t additionalOrigin = {
+    0, 0, 0
+  };
+  if((ent->renderfx & RF_FIRST_PERSON)) {
+    additionalOrigin[0] = -5;
+    additionalOrigin[1] = 2;
+    additionalOrigin[2] = 0;
+    for ( int i = 0 ; i < 3 ; i++ ) {
+      ent->origin[i] += additionalOrigin[i];
+    }
+  }
 
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;

@@ -417,7 +417,7 @@ Q_EXPORT int webm_read_frame(struct WebmInputContext *webm_ctx, uint8_t **buffer
       }
       status = cluster->GetFirst(block_entry);
       block_entry_eos = false;
-      get_new_block = true;      printf("crash cunt\n");
+      get_new_block = true;
     } else if (block == nullptr ||
                webm_ctx->block_frame_index == block->GetFrameCount() ||
                (block->GetTrackNumber() != webm_ctx->video_track_index

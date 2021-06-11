@@ -2310,7 +2310,7 @@ SCENE GENERATION
 void R_InitNextFrame( void );
 
 void RE_ClearScene( void );
-void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime );
+void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime );
 void RE_AddPolyToScene( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b );
 void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, float g, float b );
