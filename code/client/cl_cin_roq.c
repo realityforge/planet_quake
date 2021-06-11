@@ -1393,7 +1393,7 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 		RoQ_init();
 
 		cinTable[currentHandle].status = FMV_PLAY;
-		Com_DPrintf("trFMV::play(), playing %s\n", name);
+		Com_DPrintf("%s: playing %s\n", __func__, name);
 
 		if (cinTable[currentHandle].alterGameState) {
 			cls.state = CA_CINEMATIC;
@@ -1407,7 +1407,7 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 
 		return currentHandle;
 	}
-	Com_DPrintf("trFMV::play(), invalid RoQ ID\n");
+	Com_DPrintf("%s: invalid RoQ ID\n", __func__);
 
 	CIN_Shutdown();
 	return -1;

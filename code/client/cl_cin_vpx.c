@@ -36,7 +36,6 @@ typedef struct
   short *pcm;
   int currentTime;
   byte *buffer;
-  void *iter;
 } cin_vpx_t;
 
 
@@ -170,11 +169,12 @@ int Cin_VPX_Run(int time)
     if (vpx_codec_decode(g_vpx.vpx_ctx->dcodec, buffer, bufferSize, NULL, 0))
       Com_Error(ERR_DROP, "Failed to decode frame.");
 
-    vpx_image_t *img = vpx_codec_get_frame(g_vpx.vpx_ctx->dcodec, g_vpx.iter);
+    vpx_codec_iter_t iter = NULL;
+    vpx_image_t *img = vpx_codec_get_frame(g_vpx.vpx_ctx->dcodec, &iter);
     if (img)
     {
       webm_yuv_to_rgb(&g_vpx.buffer, img);
-      return 1;
+      return 0;
     }
   }
   else if (track == g_vpx.webm_ctx->audio_track_index)
@@ -183,7 +183,7 @@ int Cin_VPX_Run(int time)
     if (OpusVorbisDecoder_getPCMS16(buffer, &outSize, g_vpx.pcm, bufferSize))
     {
       
-      return 1;
+      return 0;
     }
   }
 	return 0;
@@ -215,8 +215,9 @@ Fetch and decompress the pending frame
 
 e_status CIN_RunVPX(int handle) 
 {
-  if (Cin_VPX_Run(cinTable[currentHandle].startTime == 0 ? 0 : CL_ScaledMilliseconds() - cinTable[currentHandle].startTime))
+  if (Cin_VPX_Run(cinTable[currentHandle].startTime == 0 ? 0 : CL_ScaledMilliseconds() - cinTable[currentHandle].startTime)) {
     cinTable[currentHandle].status = FMV_EOF;
+  }
   else
   {
     qboolean	resolutionChange = qfalse;
@@ -233,6 +234,8 @@ e_status CIN_RunVPX(int handle)
       cinTable[currentHandle].CIN_HEIGHT = g_vpx.vpx_ctx->height;
       resolutionChange = qtrue;
     }
+    
+    /*
 
     if (resolutionChange)
     {
@@ -252,6 +255,7 @@ e_status CIN_RunVPX(int handle)
         }
       }
     }
+    */
 
     cinTable[currentHandle].status = FMV_PLAY;
     cinTable[currentHandle].dirty = qtrue;
@@ -292,13 +296,14 @@ CIN_PlayCinematic
 
 int CIN_PlayVPX( const char *name, int x, int y, int w, int h, int systemBits ) 
 {
+  Com_Printf("%s\n", __func__);
   Q_strncpyz( cinTable[currentHandle].fileName, name, sizeof( cinTable[currentHandle].fileName ) );
   if (!Cin_VPX_Init(cinTable[currentHandle].fileName))
   {
     Com_DPrintf("starting vpx-playback failed(%s)\n", name);
     cinTable[currentHandle].fileName[0] = 0;
     Cin_VPX_Shutdown();
-    return 0;
+    return -1;
   }
 
   cinTable[currentHandle].fileType = FT_VPX;

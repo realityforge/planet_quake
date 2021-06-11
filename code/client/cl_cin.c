@@ -228,24 +228,24 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
   ext = COM_GetExtension(name);
 	for(i = 0; i < numCinematicLoaders; i++) {
 		if(!Q_stricmp(ext, cinematicLoaders[i].ext)) {
-			if((result = cinematicLoaders[i].Play(name, x, y, w, h, systemBits)))
+			if((result = cinematicLoaders[i].Play(name, x, y, w, h, systemBits)) > -1)
 				return result;
 		}
 	}
 
-  if((result = CIN_PlayROQ(name, x, y, w, h, systemBits)))
+  if((result = CIN_PlayROQ(name, x, y, w, h, systemBits)) > -1)
     return result;
   
   COM_StripExtension(name, altName, sizeof(altName));
 	for(i = 0; i < numCinematicLoaders; i++) {
-		if((result = cinematicLoaders[i].Play(va("%s.%s", altName, cinematicLoaders[i].ext), x, y, w, h, systemBits))) {
+		if((result = cinematicLoaders[i].Play(va("%s.%s", altName, cinematicLoaders[i].ext), x, y, w, h, systemBits)) > -1) {
 			Com_DPrintf( "WARNING: %s not present, using %s.%s instead\n",
 					name, altName, cinematicLoaders[i].ext );
 		  return result;
 		}
 	}
 
-  return 0;
+  return -1;
 }
 
 void CIN_SetExtents( int handle, int x, int y, int w, int h ) {
