@@ -28,6 +28,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdarg.h>
 #include <string.h>
 
+#define	QDECL
+#define Q_EXPORT __attribute__((visibility("default")))
+
 typedef unsigned char 		byte;
 
 typedef enum {qfalse, qtrue}	qboolean;
@@ -35,6 +38,7 @@ typedef enum {qfalse, qtrue}	qboolean;
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
+
 
 #define Com_Memset memset
 #define Com_Memcpy memcpy
@@ -89,6 +93,8 @@ typedef struct {
 	huff_t		decompressor;
 } huffman_t;
 
+
+//typedef	void (QDECL *MSG_initHuffman) (void);
 
 void MSG_initHuffman( void );
 void	Huff_Compress(msg_t *buf, int offset);
@@ -1015,7 +1021,7 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex )
 	return (int)(entry >> 8);
 }
 
-void MSG_initHuffman( void ) {
+Q_EXPORT void QDECL MSG_initHuffman( void ) {
 	int i,j;
 
 	msgInit = qtrue;

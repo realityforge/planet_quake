@@ -15,7 +15,7 @@ BINEXT           := .js
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
 #LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
-LDFLAGS          := 
+LDFLAGS          := --import-memory --export-dynamic --strip-all
 SHLIBLDFLAGS     := --no-entry $(LDFLAGS)
 
 BASE_CFLAGS       += -Wall --target=wasm32 -Wno-unused-variable -fno-strict-aliasing \
