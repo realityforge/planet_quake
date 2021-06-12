@@ -1,23 +1,6 @@
 var LibrarySysCommon = {
 	$SYSC__deps: ['$Browser', '$FS', '$PATH', '$SYS', 'Com_Printf', 'Com_Outside_Error'],
 	$SYSC: {
-		// next free handle to use for a loaded dso.
-		// (handle=0 is avoided as it means "error" in dlopen)
-		nextHandle: 1,
-		loadedLibs: {         // handle -> dso [refcount, name, module, global]
-			// program itself
-			// XXX uglifyjs fails on "[-1]: {"
-			'-1': {
-				refcount: Infinity,   // = nodelete
-				name:     '__self__',
-				global:   true
-			}
-		},
-
-		loadedLibNames: {     // name   -> handle
-			// program itself
-			'__self__': -1
-		},
 		varStr: 0,
 		oldDLURL: null,
 		newDLURL: null,

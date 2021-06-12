@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/client.h"
 #include "../renderercommon/tr_public.h"
+#include "./sys_glw.h"
 
 typedef enum {
 RSERR_OK,
@@ -31,90 +32,9 @@ RSERR_FATAL_ERROR,
 RSERR_UNKNOWN
 } rserr_t;
 
-typedef struct
-{
-	FILE *log_fp;
-
-	qboolean isFullscreen;
-
-	glconfig_t *config; // feedback to renderer module
-
-	int desktop_width;
-	int desktop_height;
-
-	int window_width;
-	int window_height;
-
-	int monitorCount;
-
-} glwstate_t;
-
-typedef struct
-{
-  uint32_t format;              /**< pixel format */
-  int w;                      /**< width */
-  int h;                      /**< height */
-  int refresh_rate;           /**< refresh rate (or zero for unspecified) */
-  void *driverdata;           /**< driver-specific data, initialize to 0 */
-} SDL_DisplayMode;
-
-typedef enum
-{
-  SDL_WINDOW_FULLSCREEN = 0x00000001,         /**< fullscreen window */
-} SDL_WindowFlags;
-
-/**
- *  \brief OpenGL configuration attributes
- */
-typedef enum
-{
-    SDL_GL_RED_SIZE,
-    SDL_GL_GREEN_SIZE,
-    SDL_GL_BLUE_SIZE,
-    SDL_GL_ALPHA_SIZE,
-    SDL_GL_BUFFER_SIZE,
-    SDL_GL_DOUBLEBUFFER,
-    SDL_GL_DEPTH_SIZE,
-    SDL_GL_STENCIL_SIZE,
-    SDL_GL_ACCUM_RED_SIZE,
-    SDL_GL_ACCUM_GREEN_SIZE,
-    SDL_GL_ACCUM_BLUE_SIZE,
-    SDL_GL_ACCUM_ALPHA_SIZE,
-    SDL_GL_STEREO,
-    SDL_GL_MULTISAMPLEBUFFERS,
-    SDL_GL_MULTISAMPLESAMPLES,
-    SDL_GL_ACCELERATED_VISUAL,
-    SDL_GL_RETAINED_BACKING,
-    SDL_GL_CONTEXT_MAJOR_VERSION,
-    SDL_GL_CONTEXT_MINOR_VERSION,
-    SDL_GL_CONTEXT_EGL,
-    SDL_GL_CONTEXT_FLAGS,
-    SDL_GL_CONTEXT_PROFILE_MASK,
-    SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
-    SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-    SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
-    SDL_GL_CONTEXT_RESET_NOTIFICATION,
-    SDL_GL_CONTEXT_NO_ERROR
-} SDL_GLattr;
-
-typedef enum
-{
-    SDL_GL_CONTEXT_PROFILE_CORE           = 0x0001,
-    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY  = 0x0002,
-    SDL_GL_CONTEXT_PROFILE_ES             = 0x0004 /**< GLX_CONTEXT_ES2_PROFILE_BIT_EXT */
-} SDL_GLprofile;
-
-#define SDL_INIT_TIMER          0x00000001
-#define SDL_INIT_AUDIO          0x00000010
-#define SDL_INIT_VIDEO          0x00000020
-#define SDL_INIT_JOYSTICK       0x00000200
-#define SDL_INIT_HAPTIC         0x00001000
-#define SDL_INIT_NOPARACHUTE    0x00100000      /**< Don't catch fatal signals */
-#define SDL_INIT_EVERYTHING     0x0000FFFF
-
 glwstate_t glw_state;
 
-void *SDL_window = NULL;
+SDL_Window *SDL_window = NULL;
 void *SDL_glContext = NULL;
 
 cvar_t *r_stereoEnabled;
@@ -641,6 +561,16 @@ void GLimp_EndFrame( void )
   {
     SDL_GL_SwapWindow( SDL_window );
   }
+}
+
+
+void GLimp_InitGamma( glconfig_t *config )
+{
+}
+
+
+void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] )
+{
 }
 
 

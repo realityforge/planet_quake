@@ -263,7 +263,6 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
-model_t *handModel = NULL;
 #ifdef USE_LAZY_LOAD
 qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
 #else
@@ -321,9 +320,6 @@ qhandle_t RE_RegisterModel( const char *name ) {
 
 	// only set the name after the model has been successfully loaded
 	Q_strncpyz( mod->name, name, sizeof( mod->name ) );
-  if(Q_stristr(mod->name, "shotgun_hand")) {
-    handModel = mod;
-  }
 
 	R_IssuePendingRenderCommands();
 

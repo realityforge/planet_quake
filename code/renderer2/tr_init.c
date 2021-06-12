@@ -217,6 +217,8 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+cvar_t  *rf_firstPersonXYZ;
+vec3_t  rf_firstPersonOffset;
 
 float dvrXScale = 1;
 float dvrYScale = 1;
@@ -1654,6 +1656,18 @@ void R_Register( void )
 
 	r_cursorShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
 	r_inputShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
+
+  rf_firstPersonXYZ = ri.Cvar_Get( "rf_firstPersonXYZ", "0 0 0", 0);
+	ri.Cvar_SetDescription(rf_firstPersonXYZ, "Offset first person models (e.g. gun, barrel, hand) by a specific amount.\nDefault: 0 0 0");
+  rf_firstPersonXYZ->modified = qtrue;
+  // TODO: put this somewhere it can be adjusted without restarting?
+  int len, voteI;
+  char *rfOffsets = TokenizeAlphanumeric(g_callvotable.string, &len);
+  for( int i = 0; i < len && i < 3; i++) {
+    rf_firstPersonOffset[i] = atof(rfOffsets);
+    rfOffsets = rfOffsets[strlen(rfOffsets) + 1];
+  }
+  rf_firstPersonXYZ->modified = qfalse;
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

@@ -374,6 +374,12 @@ static void Field_CharEvent( field_t *edit, int ch ) {
 }
 
 
+#ifdef EMSCRIPTEN
+void JS_Field_CharEvent( field_t *edit, int ch ) {
+  Field_CharEvent(edit, ch);
+}
+#endif
+
 /*
 =============================================================================
 

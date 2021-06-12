@@ -556,8 +556,9 @@ rescan:
 	}
 #endif
 
-	// we may want to put a "connect to other server" command here
 #ifdef USE_CMD_CONNECTOR
+  // TODO: we may want to put a "connect to other server" command here
+
 	// if it came from the server it was meant for cgame
 	if( Q_stristr(cmd, "print") ) {
 		return qtrue;
@@ -565,7 +566,11 @@ rescan:
 
 	// pass server commands through to client like postgame
   // skip sending to server since that where it came from
-	if(Cmd_ExecuteString(s, qtrue, cgvm)) {
+#ifdef USE_MULTIVM_CLIENT
+	if(Cmd_ExecuteString(s, qtrue, cgvmi)) {
+#else
+  if(Cmd_ExecuteString(s, qtrue, 0)) {
+#endif
 		Cmd_Clear();
 		return qfalse;
 	}

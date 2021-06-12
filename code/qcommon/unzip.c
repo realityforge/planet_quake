@@ -1525,7 +1525,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	file_info.external_fa = LittleLong( *(int*)(buf+38) );
 	file_info_internal.offset_curfile = LittleLong( *(int*)(buf+42) );
 #else
-
+  unsigned long uMagic;
 	/* we check the magic */
 	if (err==UNZ_OK) {
 		if (unzlocal_getLong(s->file,&uMagic) != UNZ_OK)

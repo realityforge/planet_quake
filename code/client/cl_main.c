@@ -2507,6 +2507,7 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 
 
 #ifdef USE_VID_FAST
+  char *arg = Cmd_Argv(0);
   if (!strcmp(arg, "fast")) {
     CL_Vid_Restart_Fast();
     return;
@@ -4009,13 +4010,19 @@ void CL_Frame( int msec, int realMsec ) {
 	// enabling the event loop to breath. we're checking here if it has
 	// been suspended, and resuming it if so now that we've successfully
 	// swapped buffers
+#ifndef USE_MULTIVM_CLIENT
+  if(cgvm && VM_IsSuspended(cgvm)) {
+    unsigned int result = VM_Resume(cgvm);
+    if (result != 0xDEADBEEF) {
+      CL_InitCGameFinished();
+    }
+  }
+#else
 	for(int i = 0; i < MAX_NUM_VMS; i++) {
 		if(!cgvmWorlds[i]) continue;
-		if(VM_IsSuspended(cgvms[i])) {
-#ifdef USE_MULTIVM_CLIENT
+		if(VM_IsSuspended(cgvmWorlds[i])) {
 			cgvmi = i;
 			CM_SwitchMap(clientMaps[cgvmi]));
-#endif
 			unsigned int result = VM_Resume(cgvmWorlds[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
@@ -4025,7 +4032,6 @@ void CL_Frame( int msec, int realMsec ) {
 			}
 		}
 	}
-#ifdef USE_MULTIVM_CLIENT
 	cgvmi = 0;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif

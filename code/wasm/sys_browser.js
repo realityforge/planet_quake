@@ -1,5 +1,5 @@
 var LibrarySys = {
-	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL', '$VM', '$Browser'],
+	$SYS__deps: ['$SYSC', '$SYSF', '$SYSM', '$SYSN', '$SYSI', '$SDL2', '$VM', '$Browser'],
 	$SYS: {
 		serviceProgress: [0, 0],
 		previousProgress: [0, 0],

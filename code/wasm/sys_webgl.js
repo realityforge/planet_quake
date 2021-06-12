@@ -1,12 +1,14 @@
 var LibraryWebGL3 = {
   $GL3__postset: 'var GLctx;',
   $GL3__deps: [
+    /*
     '_webgl_enable_ANGLE_instanced_arrays',
     '_webgl_enable_OES_vertex_array_object',
     '_webgl_enable_WEBGL_draw_buffers',
     '_webgl_enable_WEBGL_draw_instanced_base_vertex_base_instance',
     '_webgl_enable_WEBGL_multi_draw_instanced_base_vertex_base_instance',
     '_webgl_enable_WEBGL_multi_draw',
+    */
     ],
   $GL3: {
 #if GL_DEBUG
@@ -273,7 +275,27 @@ var LibraryWebGL3 = {
       GLctx.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, null);
     }
   },
-
+  
+  GL_GetProcAddress__sig: 'ii',
+  GL_GetProcAddress: function () {
+    
+  },
+  SDL_GetWindowDisplayMode__sig: 'iii',
+  SDL_GetWindowDisplayMode: function () {
+    
+  },
+  SDL_SetWindowGrab__sig: 'vii',
+  SDL_SetWindowGrab: function () {
+    
+  },
+  SDL_SetRelativeMouseMode__sig: 'ii',
+  SDL_SetRelativeMouseMode: function () {
+    
+  },
+  SDL_SetWindowDisplayMode__sig: 'iii',
+  SDL_SetWindowDisplayMode: function () {
+    
+  },
   /*
   glPolygonMode: function(){}, // TODO
   glDrawBuffer: function(){},

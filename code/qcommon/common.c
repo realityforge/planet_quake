@@ -3158,6 +3158,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 
 void Com_GameRestart_After_Restart( void )
 {
+  qboolean com_gameRestarting = qtrue;
 	qboolean clientRestart = qtrue;
 	{
 #endif

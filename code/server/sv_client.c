@@ -2864,7 +2864,11 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 #endif
 		if(com_sv_running && com_sv_running->integer) {
 			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-			SV_GameCommand(gvm);
+#ifdef USE_MULTIVM_SERVER
+			SV_GameCommand(gvmi);
+#else
+      SV_GameCommand(0);
+#endif
 		}
 #ifndef DEDICATED
 		Cvar_Set("dedicated", va("%i", ded));

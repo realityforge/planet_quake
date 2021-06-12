@@ -181,6 +181,13 @@ static sockaddr_t socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
 #ifdef EMSCRIPTEN
+static qboolean invokeSOCKSAfter = qfalse;
+extern void Sys_SocksMessage( void );
+extern void Sys_SocksConnect( void );
+void NET_OpenSocks_After_Connect( void );
+void NET_OpenSocks_After_Method( void );
+void NET_OpenSocks_After_Listen( void );
+static void NET_OpenIP( void );
 // maybe on desktop we have the luxury of maintaining separate connections
 //  but the web browser is limit to 3 per thread
 #define socks_socket ip_socket
@@ -1389,6 +1396,7 @@ void NET_OpenSocks_After_Method( void ) {
   int 			  port;
   int					len;
   unsigned char		buf[64];
+  socks5_request_t	cmd;
   port = porto;
 #endif
 ;
@@ -1486,6 +1494,7 @@ void NET_OpenSocks_After_Listen( void ) {
   int					len;
   unsigned char		buf[64];
   struct hostent		*h;
+  socks5_request_t	cmd;
   // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
 #endif
 ;

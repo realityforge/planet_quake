@@ -52,6 +52,19 @@ ARCH=js
 endif
 export ARCH
 
+####################################################################
+
+INSTALL   ?= install
+MKDIR     ?= mkdir
+MOUNT_DIR ?= code
+BUILD_DIR ?= build
+
+BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
+BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
+SHLIBNAME    = $(ARCH).$(SHLIBEXT)
+
+####################################################################
+
 ifneq ($(PLATFORM),$(COMPILE_PLATFORM))
   CROSS_COMPILING=1
 else
@@ -69,21 +82,12 @@ ifeq ($(PLATFORM),darwin)
 include make/platform_macos.make
 else
 ifeq ($(PLATFORM),js)
-include make/platform_emjs.make
+include make/platform_wasm.make
 else
 include make/platform_unix.make
 endif
 endif
 endif
-
-INSTALL   ?= install
-MKDIR     ?= mkdir
-MOUNT_DIR ?= code
-BUILD_DIR ?= build
-
-BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
-BR=$(BUILD_DIR)/release-$(PLATFORM)-$(ARCH)
-SHLIBNAME    = $(ARCH).$(SHLIBEXT)
 
 D_FILES :=
 

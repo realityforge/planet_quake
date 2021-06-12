@@ -1358,7 +1358,7 @@ static qboolean ValidVoteCommand( int clientNum, char *command )
 		
 	if(g_callvotable && g_callvotable.string[0]) {
 		int len, voteI;
-		char *votables = TokenizeAlphanumeric(g_callvotable.string, &int);
+		char *votables = TokenizeAlphanumeric(g_callvotable.string, &len);
 		for( int i = 0; i < len; i++) {
 			if ( !Q_stricmp( buf, votables ) ) {
 				break;

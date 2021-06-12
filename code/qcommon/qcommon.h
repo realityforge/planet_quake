@@ -96,38 +96,6 @@ extern float Math_rand(void);
 extern void  Sys_SetClipboardData( void *field );
 extern void  Sys_EventMenuChanged( float x, float y );
 
-extern void   *SDL_window;
-extern cvar_t *in_nograb;
-
-extern void  SDL_MinimizeWindow( void *window );
-extern int   SDL_GetWindowDisplayIndex(void *window);
-extern void  SDL_GL_DeleteContext(void *ctx);
-extern char *SDL_GetError( void );
-extern int   SDL_GetDesktopDisplayMode(int displayIndex, void* mode);
-extern int   SDL_GL_SetAttribute(int attr, int value);
-extern void *SDL_CreateWindow(const char *title,
-                              int x, int y, int w,
-                              int h, uint32_t flags);
-extern int   SDL_SetWindowDisplayMode(void *window, const void *mode);
-extern int   SDL_GetWindowDisplayMode(void *window, void *mode);
-extern void *SDL_GL_CreateContext(void *window);
-extern void  SDL_DestroyWindow(void *window);
-extern int   GL_SetSwapInterval(int interval);
-extern void  SDL_GL_GetDrawableSize(void *window, int *w, int *h);
-extern void  SDL_WarpMouseInWindow(void *window, int x, int y);
-extern const char *SDL_GetCurrentVideoDriver(void);
-extern int   SDL_GL_SetSwapInterval(int interval);
-extern uint32_t SDL_WasInit(uint32_t flags);
-extern int   SDL_Init(uint32_t flags);
-extern void  SDL_GL_SwapWindow(void *window);
-extern void *Sys_LoadLibrary(const char *f);
-extern int   SDL_ShowCursor(int toggle);
-extern void  SDL_SetWindowGrab(void *window, qboolean grabbed);
-extern int   SDL_SetRelativeMouseMode(qboolean enabled);
-extern uint32_t SDL_GetWindowFlags(void *window);
-extern void  SDL_StartTextInput(void);
-extern void  SDL_StopTextInput(void);
-
 void FS_Startup( void );
 void FS_Startup_After_Async( void );
 void Com_Init_After_Filesystem( void );
@@ -1467,7 +1435,6 @@ qboolean CL_GameSwitch( void );
 //
 void SV_Init( void );
 #ifndef BUILD_SLIM_CLIENT
-#ifndef USE_LOCAL_DED
 void SV_BotInitCvars( void );
 void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );
@@ -1482,7 +1449,6 @@ int SV_SendQueuedPackets( void );
 
 void SV_AddDedicatedCommands( void );
 void SV_RemoveDedicatedCommands( void );
-#endif
 #endif
 
 
@@ -1542,7 +1508,7 @@ void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (
 void	Sys_Quit (void) __attribute__ ((noreturn));
 
 #ifdef EMSCRIPTEN
-void Field_CharEvent( field_t *edit, int ch );
+void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );

@@ -1,18 +1,15 @@
-var LibrarySDL = {
+var LibrarySDL2 = {
   // TRIM this way down BECAUSE! Q3 has it's own internal event queue, so by 
   //   Using SDLs event queue, we are double queuing. Instead, we just inject
   //   events directly into the games event stack, since JS must have some sort
   //   of memory semaphore built in, we don't need to worry about similar pthread(mutexes)
   //   DROP SDL input support all together and use sys_input.js, this stuff is for n00bz
 
-  $SDL__deps: [
-#if FILESYSTEM
-    '$FS',
-#endif
-    '$PATH', '$Browser', 'SDL_GetTicks', 'SDL_LockSurface',
-    '$SDL_unicode', '$SDL_ttfContext', '$SDL_audio'
+  $SDL2__deps: [
+    '$FS', '$PATH', '$Browser', 'SDL_GetTicks', 'SDL_LockSurface',
+    //'$SDL_unicode', '$SDL_ttfContext', '$SDL_audio'
   ],
-  $SDL: {
+  $SDL2: {
   },
 
   SDL_SetVideoMode__deps: ['$GL3'],
@@ -141,7 +138,7 @@ var LibrarySDL = {
     return 1;
   },
 
-  SDL_Init__deps: ['_Sys_GLimpInit'],
+  SDL_Init__deps: ['Sys_GLimpInit'],
   SDL_Init__proxy: 'sync',
   SDL_Init__sig: 'ii',
   SDL_Init__docs: '/** @param{number=} initFlags */', 
@@ -172,5 +169,5 @@ var LibrarySDL = {
   },
 };
 
-autoAddDeps(LibrarySDL, '$SDL');
-mergeInto(LibraryManager.library, LibrarySDL);
+autoAddDeps(LibrarySDL, '$SDL2');
+mergeInto(LibraryManager.library, LibrarySDL2);

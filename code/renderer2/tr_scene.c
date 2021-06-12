@@ -200,7 +200,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-extern model_t *handModel;
+extern vec3_t rfOffsets;
 void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 	vec3_t cross;
 
@@ -223,15 +223,9 @@ void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
 	}
 
-  vec3_t additionalOrigin = {
-    0, 0, 0
-  };
   if((ent->renderfx & RF_FIRST_PERSON)) {
-    additionalOrigin[0] = -5;
-    additionalOrigin[1] = 2;
-    additionalOrigin[2] = 0;
     for ( int i = 0 ; i < 3 ; i++ ) {
-      ent->origin[i] += additionalOrigin[i];
+      ent->origin[i] += rfOffsets[i];
     }
   }
 

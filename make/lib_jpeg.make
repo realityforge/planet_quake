@@ -7,8 +7,7 @@ include make/platform.make
 TARGET	      := libjpeg_$(SHLIBNAME)
 SOURCES       := libs/jpeg-9d
 INCLUDES      := 
-
-#LIBS = -l
+LIBS          :=
 
 COMOBJECTS   := jaricom.o jcomapi.o jutils.o jerror.o jmemmgr.o jmemnobs.o $(SYSDEPMEM)
 # compression library object files

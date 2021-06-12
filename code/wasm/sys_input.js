@@ -1,5 +1,5 @@
 var LibrarySysInput = {
-  $SYSI__deps: ['$SDL'],
+  $SYSI__deps: ['$SDL2'],
   $SYSI: {
     menus: {
       'baseq3': {
@@ -59,7 +59,6 @@ var LibrarySysInput = {
     field: 0,
     //inputCount: 0,
     captureClipBoard: function () {
-      var process = _Field_CharEvent
       // this is the same method I used on StudySauce
       var text = document.createElement('TEXTAREA')
       text.style.opacity = 0
@@ -75,7 +74,7 @@ var LibrarySysInput = {
         Module.viewport.focus()
         if(SYSI.field) {
           SYSI.paste.split('').forEach(function (k) {
-            process(SYSI.field, k.charCodeAt(0))
+            _JS_Field_CharEvent(SYSI.field, k.charCodeAt(0))
           })
           SYSI.paste = ''
           SYSI.field = 0
@@ -474,7 +473,7 @@ var LibrarySysInput = {
       ev.preventDefault();
     },
   },
-	Sys_GLimpInit__deps: ['$SDL', '$SYS', 'S_DisableSounds', 'glBindTexture'],
+	Sys_GLimpInit__deps: ['$SDL2', '$SYS', 'S_DisableSounds', 'glBindTexture'],
 	Sys_GLimpInit: function () {
     if(!SYSI.inputHeap)
       SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
