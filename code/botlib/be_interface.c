@@ -43,6 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_aas_def.h"
 #include "be_interface.h"
 
+#ifndef BUILD_SLIM_CLIENT
 #include "be_ea.h"
 #include "be_ai_weight.h"
 #include "be_ai_goal.h"
@@ -51,6 +52,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_ai_chat.h"
 #include "be_ai_char.h"
 #include "be_ai_gen.h"
+#endif
 
 //library globals in a structure
 botlib_globals_t botlibglobals;
@@ -112,6 +114,8 @@ int Sys_MilliSeconds(void)
 {
 	return clock() * 1000 / CLOCKS_PER_SEC;
 } //end of the function Sys_MilliSeconds
+
+#ifndef BUILD_SLIM_CLIENT
 //===========================================================================
 //
 // Parameter:				-
@@ -128,6 +132,7 @@ static qboolean ValidEntityNumber(int num, const char *str)
 	} //end if
 	return qtrue;
 } //end of the function BotValidateClientNumber
+
 //===========================================================================
 //
 // Parameter:				-
@@ -143,6 +148,7 @@ static qboolean BotLibSetup(const char *str)
 	} //end if
 	return qtrue;
 } //end of the function BotLibSetup
+#endif
 
 //===========================================================================
 //
@@ -152,8 +158,10 @@ static qboolean BotLibSetup(const char *str)
 //===========================================================================
 int Export_BotLibSetup( void )
 {
+#ifndef BUILD_SLIM_CLIENT
 	int		errnum;
-	
+#endif
+
 	botDeveloper = LibVarGetValue( "bot_developer" );
  	memset( &botlibglobals, 0, sizeof( botlibglobals ) );
 
@@ -170,6 +178,7 @@ int Export_BotLibSetup( void )
 	botlibglobals.maxclients = (int) LibVarValue( "maxclients", "64" );
 	botlibglobals.maxentities = (int) LibVarValue( "maxentities", "1024" );
 
+#ifndef BUILD_SLIM_CLIENT
 	errnum = AAS_Setup();			//be_aas_main.c
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();			//be_ea.c
@@ -182,6 +191,7 @@ int Export_BotLibSetup( void )
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) return errnum;
+#endif
 
 	botlibsetup = qtrue;
 	botlibglobals.botlibsetup = qtrue;
@@ -201,6 +211,7 @@ int Export_BotLibShutdown(void)
 #ifndef DEMO
 	//DumpFileCRCs();
 #endif //DEMO
+#ifndef BUILD_SLIM_CLIENT
 	//
 	BotShutdownChatAI();		//be_ai_chat.c
 	BotShutdownMoveAI();		//be_ai_move.c
@@ -212,6 +223,7 @@ int Export_BotLibShutdown(void)
 	AAS_Shutdown();
 	//shut down bot elemantary actions
 	EA_Shutdown();
+#endif
 	//free all libvars
 	LibVarDeAllocAll();
 	//remove all global defines from the pre compiler
@@ -257,6 +269,8 @@ int Export_BotLibVarGet( const char *var_name, char *value, int size )
 	Q_strncpyz( value, varvalue, size );
 	return BLERR_NOERROR;
 } //end of the function Export_BotLibVarGet
+
+#ifndef BUILD_SLIM_CLIENT
 //===========================================================================
 //
 // Parameter:				-
@@ -268,6 +282,8 @@ int Export_BotLibStartFrame(float time)
 	if (!BotLibSetup("BotStartFrame")) return BLERR_LIBRARYNOTSETUP;
 	return AAS_StartFrame(time);
 } //end of the function Export_BotLibStartFrame
+
+
 //===========================================================================
 //
 // Parameter:				-
@@ -869,6 +885,7 @@ void SetAASgvm(int gvm) {
 
 #endif
 
+#endif // BUILD_SLIM_CLIENT
 
 /*
 ============
@@ -892,9 +909,11 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 		return NULL;
 	}
 
+#ifndef BUILD_SLIM_CLIENT
 	Init_AAS_Export(&be_botlib_export.aas);
 	Init_EA_Export(&be_botlib_export.ea);
 	Init_AI_Export(&be_botlib_export.ai);
+#endif
 
 	be_botlib_export.BotLibSetup = Export_BotLibSetup;
 	be_botlib_export.BotLibShutdown = Export_BotLibShutdown;
@@ -907,12 +926,14 @@ botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
 	be_botlib_export.PC_ReadTokenHandle = PC_ReadTokenHandle;
 	be_botlib_export.PC_SourceFileAndLine = PC_SourceFileAndLine;
 
+#ifndef BUILD_SLIM_CLIENT
 	be_botlib_export.BotLibStartFrame = Export_BotLibStartFrame;
 	be_botlib_export.BotLibLoadMap = Export_BotLibLoadMap;
 	be_botlib_export.BotLibUpdateEntity = Export_BotLibUpdateEntity;
 	be_botlib_export.Test = BotExportTest;
 #ifdef USE_MULTIVM_SERVER
 	be_botlib_export.SetAASgvm = SetAASgvm;
+#endif
 #endif
 
 	return &be_botlib_export;

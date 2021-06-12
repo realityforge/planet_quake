@@ -21,12 +21,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #ifdef USE_CURL
-#ifndef DEDICATED
 #include "client.h"
-#else
-#include "../server/server.h"
-#endif
-
 cvar_t *cl_cURLLib;
 
 #define ALLOWED_PROTOCOLS ( CURLPROTO_HTTP | CURLPROTO_HTTPS | CURLPROTO_FTP | CURLPROTO_FTPS )
@@ -61,7 +56,6 @@ CURLMsg *(*qcurl_multi_info_read)(CURLM *multi_handle,
                                                 int *msgs_in_queue);
 const char *(*qcurl_multi_strerror)(CURLMcode);
 
-#ifndef DEDICATED
 static void *cURLLib = NULL;
 
 /*
@@ -83,13 +77,10 @@ static void *GPA(char *str)
 	else
 	{
 		Com_DPrintf("Loaded symbol %s (0x%p)\n", str, rv);
-        return rv;
+		return rv;
 	}
 }
-#endif /* !DEDICATED */
 #endif /* USE_CURL_DLOPEN */
-
-#ifndef DEDICATED
 
 /*
 =================
@@ -258,7 +249,6 @@ static size_t CL_cURL_CallbackWrite( void *buffer, size_t size, size_t nmemb, vo
 	FS_Write( buffer, size*nmemb, ((fileHandle_t*)stream)[0] );
 	return size*nmemb;
 }
-#endif
 
 
 CURLcode qcurl_easy_setopt_warn(CURL *curl, CURLoption option, ...)
@@ -286,8 +276,6 @@ CURLcode qcurl_easy_setopt_warn(CURL *curl, CURLoption option, ...)
 
 	return result;
 }
-
-#ifndef DEDICATED
 
 static void CL_cURL_CloseDownload( void ) 
 {
@@ -412,12 +400,11 @@ void CL_cURL_PerformDownload( void )
 			code, clc.downloadURL);
 	}
 
-  CL_NextDownload();
+	CL_NextDownload();
 }
-#endif
 
 
-/*  
+/*
 ==================================
 
 Common CURL downloading functions
@@ -433,12 +420,12 @@ stristr
 case-insensitive sub-string search
 ==================================
 */
-const char* stristr( const char *source, const char *target ) 
+const char* stristr( const char *source, const char *target )
 {
 	const char *p0, *p1, *p2, *pn;
 	char c1, c2;
 
-	if ( *target == '\0' )  
+	if ( *target == '\0' )
 	{
 		return source;
 	}
@@ -446,19 +433,19 @@ const char* stristr( const char *source, const char *target )
 	pn = source;
 	p1 = source;
 	p2 = target;
-	
+
 	while ( *++p2 )
 	{
-	    pn++;
+		pn++;
 	}
 
 	while ( *pn != '\0' ) 
 	{
 
-    	p0 = p1;
-	    p2 = target;
+		p0 = p1;
+		p2 = target;
 
-    	while ( (c1 = *p1) != '\0' && (c2 = *p2) != '\0' )
+		while ( (c1 = *p1) != '\0' && (c2 = *p2) != '\0' )
 		{
 				if ( c1 <= 'Z' && c1 >= 'A' )
 					c1 += ('a' - 'A');
@@ -466,7 +453,7 @@ const char* stristr( const char *source, const char *target )
 				if ( c2 <= 'Z' && c2 >= 'A' )
 					c2 += ('a' - 'A');
 
-				if ( c1 != c2 ) 
+				if ( c1 != c2 )
 				{
 					break;
 				}
@@ -475,16 +462,16 @@ const char* stristr( const char *source, const char *target )
 				p2++;
 		}
 
-		if ( *p2 == '\0' )  
+		if ( *p2 == '\0' )
 		{
 			return p0;
 		}
 
 		p1 = p0 + 1;
-	    pn++;
-  }
+		pn++;
+	}
 
-  return NULL;
+	return NULL;
 }
 
 
@@ -493,7 +480,7 @@ const char* stristr( const char *source, const char *target )
 replace1
 ==================================
 */
-int replace1( const char src, const char dst, char *str ) 
+int replace1( const char src, const char dst, char *str )
 {
 	int count;
 
@@ -502,9 +489,9 @@ int replace1( const char src, const char dst, char *str )
 
 	count = 0;
 
-	while ( *str != '\0' ) 
+	while ( *str != '\0' )
 	{
-		if ( *str == src )	
+		if ( *str == src )
 		{
 			*str = dst;
 			count++;
@@ -537,11 +524,8 @@ Com_DL_Init
 */
 qboolean Com_DL_Init( download_t *dl )
 {
-  // clear temp storage on init instead of on clean so we have a moment to copy it
-  dl->TempStore[0] = '\0';
-  
 #ifdef USE_CURL_DLOPEN
-	Com_DPrintf( "Loading \"%s\"...", cl_cURLLib->string );
+	Com_Printf( "Loading \"%s\"...", cl_cURLLib->string );
 	if( ( dl->func.lib = Sys_LoadLibrary( cl_cURLLib->string ) ) == NULL )
 	{
 #ifdef _WIN32
@@ -571,9 +555,8 @@ qboolean Com_DL_Init( download_t *dl )
 	Sys_LoadFunctionErrors(); // reset error count;
 
 	dl->func.version = Sys_LoadFunction( dl->func.lib, "curl_version" );
-  
-  dl->func.slist_append = Sys_LoadFunction( dl->func.lib, "curl_slist_append" );
-  dl->func.slist_free_all = Sys_LoadFunction( dl->func.lib, "curl_slist_free_all" );
+	dl->func.easy_escape = Sys_LoadFunction( dl->func.lib, "curl_easy_escape" );
+	dl->func.free = Sys_LoadFunction( dl->func.lib, "curl_free" );
 
 	dl->func.easy_init = Sys_LoadFunction( dl->func.lib, "curl_easy_init" );
 	dl->func.easy_setopt = Sys_LoadFunction( dl->func.lib, "curl_easy_setopt" );
@@ -597,7 +580,7 @@ qboolean Com_DL_Init( download_t *dl )
 		return qfalse;
 	}
 
-	Com_DPrintf( "OK\n" );
+	Com_Printf( "OK\n" );
 
 	return qtrue;
 #else
@@ -605,10 +588,9 @@ qboolean Com_DL_Init( download_t *dl )
 	dl->func.lib = NULL;
 
 	dl->func.version = curl_version;
+	dl->func.easy_escape = curl_easy_escape;
+	dl->func.free = (void (*)(char *))curl_free; // cast to silence warning
 
-  dl->func.slist_append = curl_slist_append;
-  dl->func.slist_free_all = curl_slist_free_all;
-  
 	dl->func.easy_init = curl_easy_init;
 	dl->func.easy_setopt = curl_easy_setopt;
 	dl->func.easy_perform = curl_easy_perform;
@@ -650,9 +632,9 @@ Com_DL_Cleanup
 */
 void Com_DL_Cleanup( download_t *dl )
 {
-	if( dl->cURLM ) 
+	if( dl->cURLM )
 	{
-		if ( dl->cURL ) 
+		if ( dl->cURL )
 		{
 			dl->func.multi_remove_handle( dl->cURLM, dl->cURL );
 			dl->func.easy_cleanup( dl->cURL );
@@ -661,12 +643,12 @@ void Com_DL_Cleanup( download_t *dl )
 		dl->cURLM = NULL;
 		dl->cURL = NULL;
 	}
-	else if( dl->cURL ) 
+	else if( dl->cURL )
 	{
 		dl->func.easy_cleanup( dl->cURL );
 		dl->cURL = NULL;
 	}
-	if ( dl->fHandle != FS_INVALID_HANDLE ) 
+	if ( dl->fHandle != FS_INVALID_HANDLE )
 	{
 		FS_FCloseFile( dl->fHandle );
 		dl->fHandle = FS_INVALID_HANDLE;
@@ -693,7 +675,6 @@ void Com_DL_Cleanup( download_t *dl )
 	dl->progress[0] = '\0';
 	dl->headerCheck = qfalse;
 	dl->mapAutoDownload = qfalse;
-  dl->HeaderList = NULL;
 
 	Com_DL_Done( dl );
 }
@@ -722,11 +703,10 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 {
 	double percentage, speed;
 	download_t *dl = (download_t *)data;
-	
+
 	dl->Size = (int)dltotal;
 	dl->Count = (int)dlnow;
 
-#ifndef DEDICATED
 	if ( dl->mapAutoDownload && cls.state == CA_CONNECTED )
 	{
 		if ( Key_IsDown( K_ESCAPE ) )
@@ -737,7 +717,6 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 		Cvar_Set( "cl_downloadSize", va( "%i", dl->Size ) );
 		Cvar_Set( "cl_downloadCount", va( "%i", dl->Count ) );
 	}
-#endif
 
 	if ( dl->Size ) {
 		percentage = ( dlnow / dltotal ) * 100.0;
@@ -764,26 +743,15 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 	download_t *dl;
 
 	dl = (download_t *)userdata;
-  
-  if( !dl->Name[0] ) {
-    int maxWrite = (size*nmemb) >= 2047 ? 2047 : size*nmemb;
-    // copy to temporary for small requests
-    memcpy(dl->TempStore, ptr, maxWrite);
-    dl->TempStore[maxWrite] = '\0';
-    
-    return (size * nmemb);
-  }
 
 	if ( dl->fHandle == FS_INVALID_HANDLE )
 	{
-#ifndef DEDICATED
 		if ( !CL_ValidPakSignature( ptr, size*nmemb ) ) 
 		{
-			Com_Printf( S_COLOR_YELLOW "Com_DL_CallbackWrite(): invalid pak signature for %s.\n", 
+			Com_Printf( S_COLOR_YELLOW "Com_DL_CallbackWrite(): invalid pak signature for %s.\n",
 				dl->Name );
 			return (size_t)-1;
 		}
-#endif
 
 		dl->fHandle = FS_SV_FOpenFileWrite( dl->TempName );
 		if ( dl->fHandle == FS_INVALID_HANDLE ) 
@@ -795,31 +763,6 @@ static size_t Com_DL_CallbackWrite( void *ptr, size_t size, size_t nmemb, void *
 	FS_Write( ptr, size*nmemb, dl->fHandle );
 
 	return (size * nmemb);
-}
-
-
-/*
-=================
-Com_DL_CallbackRead
-=================
-*/
-static size_t Com_DL_CallbackRead(void *dest, size_t size, size_t nmemb, void *userp)
-{
-  downloadReader_t *wt = (downloadReader_t *)userp;
-  size_t buffer_size = size*nmemb;
-  if(wt->sizeleft) {
-    /* copy as much as possible from the source to the destination */ 
-    size_t copy_this_much = wt->sizeleft;
-    if(copy_this_much > buffer_size)
-      copy_this_much = buffer_size;
-    memcpy(dest, wt->readptr, copy_this_much);
- 
-    wt->readptr += copy_this_much;
-    wt->sizeleft -= copy_this_much;
-    return copy_this_much; /* we copied this many bytes */ 
-  }
-
-  return 0; /* no more data left to deliver */ 
 }
 
 
@@ -847,14 +790,14 @@ qboolean Com_DL_ValidFileName( const char *fileName )
 Com_DL_HeaderCallback
 =================
 */
-static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void *userdata ) 
+static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void *userdata )
 {
 	char name[MAX_OSPATH];
 	char header[1024], *s, quote, *d;
 	download_t *dl;
 	int len;
 
-	if ( size*nmemb >= sizeof( header ) ) 
+	if ( size*nmemb >= sizeof( header ) )
 	{
 		Com_Printf( S_COLOR_RED "Com_DL_HeaderCallback: header is too large." );
 		return (size_t)-1;
@@ -870,7 +813,7 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 	s = (char*)stristr( header, "content-disposition:" );
 	if ( s ) 
 	{
-		s += 20; // strlen( "content-disposition:" )	
+		s += 20; // strlen( "content-disposition:" )
 		s = (char*)stristr( s, "filename=" );
 		if ( s ) 
 		{
@@ -881,7 +824,7 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 			replace1( '\n', '\0', s );
 
 			// prevent overflow
-			if ( strlen( s ) >= sizeof( name ) ) 
+			if ( strlen( s ) >= sizeof( name ) )
 				s[ sizeof( name ) - 1 ] = '\0';
 
 			if ( *s == '\'' || *s == '"' )
@@ -909,131 +852,10 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 			strcpy( dl->Name, name );
 		}
 	}
-	
+
 	return size*nmemb;
 }
 
-
-
-/*
-===============================================================
-Com_DL_BeginPost()
-
-Start downloading file from remoteURL and save it under fs_game/localName
-==============================================================
-*/
-qboolean Com_DL_BeginPost( download_t *dl, const char *localName, const char *remoteURL )
-{
-  int count;
-	char *s;
-
-	if ( Com_DL_InProgress( dl ) )
-	{
-		Com_Printf( S_COLOR_YELLOW " already downloading %s\n", dl->Name );
-		return qfalse;
-	}
-
-	Com_DL_Cleanup( dl );
-
-	if ( !Com_DL_Init( dl ) ) 
-	{
-		Com_Printf( S_COLOR_YELLOW "Error initializing cURL library\n" );		
-		return qfalse;
-	}
-
-	dl->cURL = dl->func.easy_init();
-	if ( !dl->cURL ) 
-	{
-		Com_Printf( S_COLOR_RED "Com_DL_Begin: easy_init() failed\n" );
-		Com_DL_Cleanup( dl );
-		return qfalse;
-	}
-
-	Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
-
-	if ( cl_dlDirectory->integer ) {
-		Q_strncpyz( dl->gameDir, FS_GetBaseGameDir(), sizeof( dl->gameDir ) );
-	} else {
-		Q_strncpyz( dl->gameDir, FS_GetCurrentGameDir(), sizeof( dl->gameDir ) );
-	}
-
-	// try to extract game path from localName
-	// dl->Name should contain only pak name without game dir and extension
-  if(dl->Name[0]) {
-  	s = strrchr( localName, '/' );
-  	if ( s ) 
-  		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
-  	else
-  		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
-
-    if(Q_stristr(dl->Name, ".pk3")) {
-      dl->isPak = qtrue;
-    }
-  	FS_StripExt( dl->Name, ".pk3" );
-  	if ( !dl->Name[0] )
-  	{
-  		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
-  		return qfalse;
-  	}
-  
-  	//dl->headerCheck = qtrue;
-
-  	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
-  		"%s/%s.%08x.tmp", dl->gameDir, dl->Name, rand() | (rand() << 16) );
-  }
-
-	if ( com_developer->integer )
-		dl->func.easy_setopt( dl->cURL, CURLOPT_VERBOSE, com_developer->integer ? 1 : 0 );
-
-	dl->func.easy_setopt( dl->cURL, CURLOPT_URL, dl->URL );
-  dl->func.easy_setopt( dl->cURL, CURLOPT_POST, dl->isPost ? 1 : 0 );
-  for(count=0;count<dl->headers.sizeleft;) {
-    dl->HeaderList = dl->func.slist_append(dl->HeaderList, &dl->headers.readptr[count]);
-    if(!dl->HeaderList) return qfalse;
-    count += strlen(&dl->headers.readptr[count]) + 1;
-  }
-  dl->func.easy_setopt( dl->cURL, CURLOPT_HTTPHEADER, dl->HeaderList);
-  dl->func.easy_setopt( dl->cURL, CURLOPT_TRANSFERTEXT, 0 );
-	//dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, "q3a://127.0.0.1" );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_REFERER, dl->URL );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_USERAGENT, Q3_VERSION );
-  dl->func.easy_setopt( dl->cURL, CURLOPT_READFUNCTION, Com_DL_CallbackRead );
-  dl->func.easy_setopt( dl->cURL, CURLOPT_READDATA, &dl->data );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEFUNCTION, Com_DL_CallbackWrite );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEDATA, dl );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERFUNCTION, Com_DL_HeaderCallback );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERDATA, dl );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_NOPROGRESS, 0 );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSFUNCTION, Com_DL_CallbackProgress );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_PROGRESSDATA, dl );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_FAILONERROR, 1 );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_FOLLOWLOCATION, 1 );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_MAXREDIRS, 5 );
-	dl->func.easy_setopt( dl->cURL, CURLOPT_PROTOCOLS, ALLOWED_PROTOCOLS );
-
-	dl->cURLM = dl->func.multi_init();
-
-	if ( !dl->cURLM ) 
-	{
-		Com_DL_Cleanup( dl );	
-		Com_Printf( S_COLOR_RED "Com_DL_Begin: multi_init() failed\n" );
-		return qfalse;
-	}
-
-	if ( dl->func.multi_add_handle( dl->cURLM, dl->cURL ) != CURLM_OK ) 
-	{
-		Com_DL_Cleanup( dl );
-		Com_Printf( S_COLOR_RED "Com_DL_Begin: multi_add_handle() failed\n" );
-		return qfalse;
-	}
-
-	Cvar_Set( "cl_downloadName", dl->Name );
-	Cvar_Set( "cl_downloadSize", "0" );
-	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_Set( "cl_downloadTime", va( "%i", cls.realtime ) );
-
-	return qtrue;
-}
 
 /*
 ===============================================================
@@ -1056,7 +878,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 	if ( !Com_DL_Init( dl ) ) 
 	{
-		Com_Printf( S_COLOR_YELLOW "Error initializing cURL library\n" );		
+		Com_Printf( S_COLOR_YELLOW "Error initializing cURL library\n" );
 		return qfalse;
 	}
 
@@ -1077,7 +899,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 			return qfalse;
 		}
 
-	Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
+		Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
 
 		if ( !Q_replace( "%1", escapedName, dl->URL, sizeof( dl->URL ) ) )
 		{
@@ -1101,20 +923,20 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		Q_strncpyz( dl->gameDir, FS_GetCurrentGameDir(), sizeof( dl->gameDir ) );
 	}
 
-  	// try to extract game path from localName
-  	// dl->Name should contain only pak name without game dir and extension
-  	s = strrchr( localName, '/' );
-  	if ( s ) 
-  		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
-  	else
-  		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
+	// try to extract game path from localName
+	// dl->Name should contain only pak name without game dir and extension
+	s = strrchr( localName, '/' );
+	if ( s ) 
+		Q_strncpyz( dl->Name, s+1, sizeof( dl->Name ) );
+	else
+		Q_strncpyz( dl->Name, localName, sizeof( dl->Name ) );
 
-  	FS_StripExt( dl->Name, ".pk3" );
-  	if ( !dl->Name[0] )
-  	{
-  		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
-  		return qfalse;
-  	}
+	FS_StripExt( dl->Name, ".pk3" );
+	if ( !dl->Name[0] )
+	{
+		Com_Printf( S_COLOR_YELLOW " empty filename after extension strip.\n" );
+		return qfalse;
+	}
 
 	Com_sprintf( dl->TempName, sizeof( dl->TempName ), 
 		"%s%c%s.%08x.tmp", dl->gameDir, PATH_SEP, dl->Name, rand() | (rand() << 16) );
@@ -1144,9 +966,9 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 
 	dl->cURLM = dl->func.multi_init();
 
-	if ( !dl->cURLM ) 
+	if ( !dl->cURLM )
 	{
-		Com_DL_Cleanup( dl );	
+		Com_DL_Cleanup( dl );
 		Com_Printf( S_COLOR_RED "Com_DL_Begin: multi_init() failed\n" );
 		return qfalse;
 	}
@@ -1210,31 +1032,26 @@ qboolean Com_DL_Perform( download_t *dl )
 
 	if ( msg->msg == CURLMSG_DONE && msg->data.result == CURLE_OK )
 	{
-#ifndef DEDICATED
 		qboolean autoDownload = dl->mapAutoDownload;
-#endif
 
-    if(dl->Name[0]) {
-  		Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.pk3" : "%s%c%s", dl->gameDir, PATH_SEP, dl->Name );
+		Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->Name );
 
-  		if ( !FS_SV_FileExists( name ) )
-  		{
-  			FS_SV_Rename( dl->TempName, name );
-  		}
-  		else
-  		{
-  			n = FS_GetZipChecksum( name );
-  			Com_sprintf( name, sizeof( name ), dl->isPak ? "%s%c%s.%08x.pk3" : "%s%c%s.%08x", dl->gameDir, PATH_SEP, dl->Name, n );
+		if ( !FS_SV_FileExists( name ) )
+		{
+			FS_SV_Rename( dl->TempName, name );
+		}
+		else
+		{
+			n = FS_GetZipChecksum( name );
+			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
 
-  			if ( FS_SV_FileExists( name ) )
-  				FS_Remove( name );
+			if ( FS_SV_FileExists( name ) )
+				FS_Remove( name );
 
-  			FS_SV_Rename( dl->TempName, name );
-  		}
-    }
+			FS_SV_Rename( dl->TempName, name );
+		}
 
 		Com_DL_Cleanup( dl );
-#ifndef DEDICATED
 		FS_Reload(); //clc.downloadRestart = qtrue;
 		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
 		if ( autoDownload )
@@ -1250,8 +1067,7 @@ qboolean Com_DL_Perform( download_t *dl )
 				Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 			}
 		}
-#endif
-	  return qfalse;
+		return qfalse;
 	}
 	else
 	{
@@ -1261,21 +1077,17 @@ qboolean Com_DL_Perform( download_t *dl )
 			dl->func.easy_strerror( msg->data.result ), code );
 		strcpy( name, dl->TempName );
 		Com_DL_Cleanup( dl );
-    if ( name[0] )
-		  FS_Remove( name );
+		FS_Remove( name );
 		if ( autoDownload )
 		{
-#ifndef DEDICATED
 			if ( cls.state == CA_CONNECTED )
 			{
 				Com_Error( ERR_DROP, "%s\n", "download error" );
 			}
-#endif
 		}
 	}
 
 	return qtrue;
 }
-
 
 #endif /* USE_CURL */

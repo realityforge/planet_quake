@@ -200,7 +200,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-extern vec3_t rfOffsets;
+extern vec3_t rf_firstPersonOffset;
 void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 	vec3_t cross;
 
@@ -225,7 +225,7 @@ void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 
   if((ent->renderfx & RF_FIRST_PERSON)) {
     for ( int i = 0 ; i < 3 ; i++ ) {
-      ent->origin[i] += rfOffsets[i];
+      ent->origin[i] += rf_firstPersonOffset[i];
     }
   }
 

@@ -5331,7 +5331,7 @@ void CL_Init( void ) {
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 	Cvar_SetDescription(cl_returnURL, "Set the return URL to go to when the client disconnects from the server\nDefault: empty");
 #endif
-	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
+	cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
 	Cvar_SetDescription(cl_allowDownload, "Toggle automatic downloading of maps, models, sounds, and textures\n1 - allow downloads\n2 - disallow redirects, must download from the same server\n4 - Disallow UDP downloads\n8 - don't disconnect clients while they are downloading\nDefault: 1");
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );

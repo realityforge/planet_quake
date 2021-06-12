@@ -14,8 +14,8 @@ SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
 LDFLAGS          :=
 SHLIBLDFLAGS     := -dynamiclib $(LDFLAGS)
 
-ifneq ($(SDL_INCLUDE),)
-  BASE_CFLAGS    += $(SDL_INCLUDE)
+ifneq ($(SDL_CFLAGS),)
+  BASE_CFLAGS    += $(SDL_CFLAGS)
   CLIENT_LDFLAGS += $(SDL_LIBS)
 else
   BASE_CFLAGS    += -I/Library/Frameworks/SDL2.framework/Headers

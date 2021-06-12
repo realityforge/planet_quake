@@ -106,9 +106,9 @@ PKG_CONFIG ?= pkg-config
 
 # TODO: if USE_INTERNAL_* is requested, add this to prebuild steps
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
-  SDL_INCLUDE      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
+  SDL_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
   SDL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
-  X11_INCLUDE      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
+  X11_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
   X11_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
   FREETYPE_CFLAGS  ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
   FREETYPE_LIBS    ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
@@ -138,6 +138,8 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   PNG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libpng || echo -lpng)
   VPX_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libvpx libwebm || true)
   VPX_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libvpx libwebm || echo -lvpx -lwebm)
+  CURL_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libcurl || true)
+  CURL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libcurl || echo -lcurl)
 
 endif
 
@@ -145,8 +147,8 @@ SYSROOT      := $(shell xcrun --show-sdk-path)
 #SYSROOT       := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk
 
 # supply some reasonable defaults for SDL/X11?
-ifeq ($(X11_INCLUDE),)
-X11_INCLUDE = -I/usr/X11R6/include
+ifeq ($(X11_CFLAGS),)
+X11_CFLAGS = -I/usr/X11R6/include
 endif
 ifeq ($(X11_LIBS),)
 X11_LIBS = -lX11

@@ -94,7 +94,11 @@ endif
 
 CURL     :=
 ifeq ($(USE_CURL),1)
-CURL     += $(B)/client/cl_curl.o
+#CURL     += $(B)/client/cl_curl.o
+ifneq ($(USE_CURL_DLOPEN),1)
+CLIENT_LDFLAGS += $(CURL_LIBS)
+BASE_CFLAGS    += $(CURL_CFLAGS)
+endif
 endif
 
 
@@ -177,13 +181,16 @@ CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
 ifneq ($(USE_RENDERER_DLOPEN),1)
 CFILES   += $(foreach dir,$(RSOURCES), $(wildcard $(dir)/*.c))
 endif
+ifneq ($(BUILD_SLIM_CLIENT),1)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
 CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
 						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
-ifneq ($(BUILD_SLIM_CLIENT),1)
 #CFILES   += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
 CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
+else
+CFILES   += $(MOUNT_DIR)/botlib/be_interface.c \
+						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
