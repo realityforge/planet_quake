@@ -1,10 +1,10 @@
-MKFILE       := $(lastword $(MAKEFILE_LIST)) 
+MKFILE        := $(lastword $(MAKEFILE_LIST)) 
 
-BUILD_BASEQ3A:=1
+BUILD_BASEQ3A := 1
 include make/platform.make
 
 ifndef MOD
-MOD=baseq3a
+MOD           := baseq3a
 endif
 
 GAMEDIR       := $(MOUNT_DIR)/../qvms/baseq3a/code
@@ -12,7 +12,7 @@ QADIR         := $(GAMEDIR)/game
 CGDIR         := $(GAMEDIR)/cgame
 UIDIR         := $(GAMEDIR)/q3_ui
 
-ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
+ifeq ($(CC), $(findstring $(CC), "clang" "clang++"))
   BASE_CFLAGS += -Qunused-arguments
 endif
 
@@ -70,34 +70,33 @@ makedirs:
 #############################################################################
 # $(B)/$(MOD)/cgame/cg_particles.o \
 
-CGOBJ_ = \
-  $(B)/$(MOD)/cgame/cg_main.o \
-  $(B)/$(MOD)/cgame/bg_lib.o \
-  $(B)/$(MOD)/cgame/bg_misc.o \
-  $(B)/$(MOD)/cgame/bg_pmove.o \
-  $(B)/$(MOD)/cgame/bg_slidemove.o \
-  $(B)/$(MOD)/cgame/cg_consolecmds.o \
-  $(B)/$(MOD)/cgame/cg_draw.o \
-  $(B)/$(MOD)/cgame/cg_drawtools.o \
-  $(B)/$(MOD)/cgame/cg_effects.o \
-  $(B)/$(MOD)/cgame/cg_ents.o \
-  $(B)/$(MOD)/cgame/cg_event.o \
-  $(B)/$(MOD)/cgame/cg_info.o \
-  $(B)/$(MOD)/cgame/cg_localents.o \
-  $(B)/$(MOD)/cgame/cg_marks.o \
-  $(B)/$(MOD)/cgame/cg_players.o \
-  $(B)/$(MOD)/cgame/cg_playerstate.o \
-  $(B)/$(MOD)/cgame/cg_predict.o \
-  $(B)/$(MOD)/cgame/cg_scoreboard.o \
-  $(B)/$(MOD)/cgame/cg_servercmds.o \
-  $(B)/$(MOD)/cgame/cg_snapshot.o \
-  $(B)/$(MOD)/cgame/cg_view.o \
-  $(B)/$(MOD)/cgame/cg_weapons.o \
-  \
-  $(B)/$(MOD)/game/q_math.o \
-  $(B)/$(MOD)/game/q_shared.o
+CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
+				  $(B)/$(MOD)/cgame/bg_lib.o \
+				  $(B)/$(MOD)/cgame/bg_misc.o \
+				  $(B)/$(MOD)/cgame/bg_pmove.o \
+				  $(B)/$(MOD)/cgame/bg_slidemove.o \
+				  $(B)/$(MOD)/cgame/cg_consolecmds.o \
+				  $(B)/$(MOD)/cgame/cg_draw.o \
+				  $(B)/$(MOD)/cgame/cg_drawtools.o \
+				  $(B)/$(MOD)/cgame/cg_effects.o \
+				  $(B)/$(MOD)/cgame/cg_ents.o \
+				  $(B)/$(MOD)/cgame/cg_event.o \
+				  $(B)/$(MOD)/cgame/cg_info.o \
+				  $(B)/$(MOD)/cgame/cg_localents.o \
+				  $(B)/$(MOD)/cgame/cg_marks.o \
+				  $(B)/$(MOD)/cgame/cg_players.o \
+				  $(B)/$(MOD)/cgame/cg_playerstate.o \
+				  $(B)/$(MOD)/cgame/cg_predict.o \
+				  $(B)/$(MOD)/cgame/cg_scoreboard.o \
+				  $(B)/$(MOD)/cgame/cg_servercmds.o \
+				  $(B)/$(MOD)/cgame/cg_snapshot.o \
+				  $(B)/$(MOD)/cgame/cg_view.o \
+				  $(B)/$(MOD)/cgame/cg_weapons.o \
+				  \
+				  $(B)/$(MOD)/game/q_math.o \
+				  $(B)/$(MOD)/game/q_shared.o
 
-CGOBJ = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
+CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 
 $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
   $(echo_cmd) "LD $@"
@@ -107,45 +106,44 @@ $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
 ## BASEQ3 GAME
 #############################################################################
 
-QAOBJ_ = \
-  $(B)/$(MOD)/game/g_main.o \
-  $(B)/$(MOD)/game/ai_chat.o \
-  $(B)/$(MOD)/game/ai_cmd.o \
-  $(B)/$(MOD)/game/ai_dmnet.o \
-  $(B)/$(MOD)/game/ai_dmq3.o \
-  $(B)/$(MOD)/game/ai_main.o \
-  $(B)/$(MOD)/game/ai_team.o \
-  $(B)/$(MOD)/game/ai_vcmd.o \
-  $(B)/$(MOD)/game/bg_lib.o \
-  $(B)/$(MOD)/game/bg_misc.o \
-  $(B)/$(MOD)/game/bg_pmove.o \
-  $(B)/$(MOD)/game/bg_slidemove.o \
-  $(B)/$(MOD)/game/g_active.o \
-  $(B)/$(MOD)/game/g_arenas.o \
-  $(B)/$(MOD)/game/g_bot.o \
-  $(B)/$(MOD)/game/g_client.o \
-  $(B)/$(MOD)/game/g_cmds.o \
-  $(B)/$(MOD)/game/g_combat.o \
-  $(B)/$(MOD)/game/g_items.o \
-  $(B)/$(MOD)/game/g_mem.o \
-  $(B)/$(MOD)/game/g_misc.o \
-  $(B)/$(MOD)/game/g_missile.o \
-  $(B)/$(MOD)/game/g_mover.o \
-  $(B)/$(MOD)/game/g_rotation.o \
-  $(B)/$(MOD)/game/g_session.o \
-  $(B)/$(MOD)/game/g_spawn.o \
-  $(B)/$(MOD)/game/g_svcmds.o \
-  $(B)/$(MOD)/game/g_target.o \
-  $(B)/$(MOD)/game/g_team.o \
-  $(B)/$(MOD)/game/g_trigger.o \
-  $(B)/$(MOD)/game/g_utils.o \
-  $(B)/$(MOD)/game/g_unlagged.o \
-  $(B)/$(MOD)/game/g_weapon.o \
-  \
-  $(B)/$(MOD)/game/q_math.o \
-  $(B)/$(MOD)/game/q_shared.o
+QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
+				  $(B)/$(MOD)/game/ai_chat.o \
+				  $(B)/$(MOD)/game/ai_cmd.o \
+				  $(B)/$(MOD)/game/ai_dmnet.o \
+				  $(B)/$(MOD)/game/ai_dmq3.o \
+				  $(B)/$(MOD)/game/ai_main.o \
+				  $(B)/$(MOD)/game/ai_team.o \
+				  $(B)/$(MOD)/game/ai_vcmd.o \
+				  $(B)/$(MOD)/game/bg_lib.o \
+				  $(B)/$(MOD)/game/bg_misc.o \
+				  $(B)/$(MOD)/game/bg_pmove.o \
+				  $(B)/$(MOD)/game/bg_slidemove.o \
+				  $(B)/$(MOD)/game/g_active.o \
+				  $(B)/$(MOD)/game/g_arenas.o \
+				  $(B)/$(MOD)/game/g_bot.o \
+				  $(B)/$(MOD)/game/g_client.o \
+				  $(B)/$(MOD)/game/g_cmds.o \
+				  $(B)/$(MOD)/game/g_combat.o \
+				  $(B)/$(MOD)/game/g_items.o \
+				  $(B)/$(MOD)/game/g_mem.o \
+				  $(B)/$(MOD)/game/g_misc.o \
+				  $(B)/$(MOD)/game/g_missile.o \
+				  $(B)/$(MOD)/game/g_mover.o \
+				  $(B)/$(MOD)/game/g_rotation.o \
+				  $(B)/$(MOD)/game/g_session.o \
+				  $(B)/$(MOD)/game/g_spawn.o \
+				  $(B)/$(MOD)/game/g_svcmds.o \
+				  $(B)/$(MOD)/game/g_target.o \
+				  $(B)/$(MOD)/game/g_team.o \
+				  $(B)/$(MOD)/game/g_trigger.o \
+				  $(B)/$(MOD)/game/g_utils.o \
+				  $(B)/$(MOD)/game/g_unlagged.o \
+				  $(B)/$(MOD)/game/g_weapon.o \
+				  \
+				  $(B)/$(MOD)/game/q_math.o \
+				  $(B)/$(MOD)/game/q_shared.o
 
-QAOBJ = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
+QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
 
 $(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
   $(echo_cmd) "LD $@"
@@ -155,53 +153,52 @@ $(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
 ## BASEQ3 UI
 #############################################################################
 
-UIOBJ_ = \
-  $(B)/$(MOD)/ui/ui_main.o \
-  $(B)/$(MOD)/ui/bg_misc.o \
-  $(B)/$(MOD)/ui/bg_lib.o \
-  $(B)/$(MOD)/ui/ui_addbots.o \
-  $(B)/$(MOD)/ui/ui_atoms.o \
-  $(B)/$(MOD)/ui/ui_cdkey.o \
-  $(B)/$(MOD)/ui/ui_cinematics.o \
-  $(B)/$(MOD)/ui/ui_confirm.o \
-  $(B)/$(MOD)/ui/ui_connect.o \
-  $(B)/$(MOD)/ui/ui_controls2.o \
-  $(B)/$(MOD)/ui/ui_credits.o \
-  $(B)/$(MOD)/ui/ui_demo2.o \
-  $(B)/$(MOD)/ui/ui_display.o \
-  $(B)/$(MOD)/ui/ui_gameinfo.o \
-  $(B)/$(MOD)/ui/ui_ingame.o \
-  $(B)/$(MOD)/ui/ui_loadconfig.o \
-  $(B)/$(MOD)/ui/ui_menu.o \
-  $(B)/$(MOD)/ui/ui_mfield.o \
-  $(B)/$(MOD)/ui/ui_mods.o \
-  $(B)/$(MOD)/ui/ui_network.o \
-  $(B)/$(MOD)/ui/ui_options.o \
-  $(B)/$(MOD)/ui/ui_playermodel.o \
-  $(B)/$(MOD)/ui/ui_players.o \
-  $(B)/$(MOD)/ui/ui_playersettings.o \
-  $(B)/$(MOD)/ui/ui_preferences.o \
-  $(B)/$(MOD)/ui/ui_qmenu.o \
-  $(B)/$(MOD)/ui/ui_removebots.o \
-  $(B)/$(MOD)/ui/ui_saveconfig.o \
-  $(B)/$(MOD)/ui/ui_serverinfo.o \
-  $(B)/$(MOD)/ui/ui_servers2.o \
-  $(B)/$(MOD)/ui/ui_setup.o \
-  $(B)/$(MOD)/ui/ui_sound.o \
-  $(B)/$(MOD)/ui/ui_sparena.o \
-  $(B)/$(MOD)/ui/ui_specifyserver.o \
-  $(B)/$(MOD)/ui/ui_splevel.o \
-  $(B)/$(MOD)/ui/ui_sppostgame.o \
-  $(B)/$(MOD)/ui/ui_spskill.o \
-  $(B)/$(MOD)/ui/ui_startserver.o \
-  $(B)/$(MOD)/ui/ui_team.o \
-  $(B)/$(MOD)/ui/ui_teamorders.o \
-  $(B)/$(MOD)/ui/ui_video.o \
-  \
-  $(B)/$(MOD)/game/q_math.o \
-  $(B)/$(MOD)/game/q_shared.o
+UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
+				  $(B)/$(MOD)/ui/bg_misc.o \
+				  $(B)/$(MOD)/ui/bg_lib.o \
+				  $(B)/$(MOD)/ui/ui_addbots.o \
+				  $(B)/$(MOD)/ui/ui_atoms.o \
+				  $(B)/$(MOD)/ui/ui_cdkey.o \
+				  $(B)/$(MOD)/ui/ui_cinematics.o \
+				  $(B)/$(MOD)/ui/ui_confirm.o \
+				  $(B)/$(MOD)/ui/ui_connect.o \
+				  $(B)/$(MOD)/ui/ui_controls2.o \
+				  $(B)/$(MOD)/ui/ui_credits.o \
+				  $(B)/$(MOD)/ui/ui_demo2.o \
+				  $(B)/$(MOD)/ui/ui_display.o \
+				  $(B)/$(MOD)/ui/ui_gameinfo.o \
+				  $(B)/$(MOD)/ui/ui_ingame.o \
+				  $(B)/$(MOD)/ui/ui_loadconfig.o \
+				  $(B)/$(MOD)/ui/ui_menu.o \
+				  $(B)/$(MOD)/ui/ui_mfield.o \
+				  $(B)/$(MOD)/ui/ui_mods.o \
+				  $(B)/$(MOD)/ui/ui_network.o \
+				  $(B)/$(MOD)/ui/ui_options.o \
+				  $(B)/$(MOD)/ui/ui_playermodel.o \
+				  $(B)/$(MOD)/ui/ui_players.o \
+				  $(B)/$(MOD)/ui/ui_playersettings.o \
+				  $(B)/$(MOD)/ui/ui_preferences.o \
+				  $(B)/$(MOD)/ui/ui_qmenu.o \
+				  $(B)/$(MOD)/ui/ui_removebots.o \
+				  $(B)/$(MOD)/ui/ui_saveconfig.o \
+				  $(B)/$(MOD)/ui/ui_serverinfo.o \
+				  $(B)/$(MOD)/ui/ui_servers2.o \
+				  $(B)/$(MOD)/ui/ui_setup.o \
+				  $(B)/$(MOD)/ui/ui_sound.o \
+				  $(B)/$(MOD)/ui/ui_sparena.o \
+				  $(B)/$(MOD)/ui/ui_specifyserver.o \
+				  $(B)/$(MOD)/ui/ui_splevel.o \
+				  $(B)/$(MOD)/ui/ui_sppostgame.o \
+				  $(B)/$(MOD)/ui/ui_spskill.o \
+				  $(B)/$(MOD)/ui/ui_startserver.o \
+				  $(B)/$(MOD)/ui/ui_team.o \
+				  $(B)/$(MOD)/ui/ui_teamorders.o \
+				  $(B)/$(MOD)/ui/ui_video.o \
+				  \
+				  $(B)/$(MOD)/game/q_math.o \
+				  $(B)/$(MOD)/game/q_shared.o
 
-UIOBJ = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
+UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 
 $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
   $(echo_cmd) "LD $@"

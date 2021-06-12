@@ -574,7 +574,7 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
-#ifndef EMSCRIPTEN
+#if !defined(USE_BOTLIB_DLOPEN) || !defined(EMSCRIPTEN)
 	botlib_import_t	botlib_import;
 #endif
 #ifdef USE_BOTLIB_DLOPEN

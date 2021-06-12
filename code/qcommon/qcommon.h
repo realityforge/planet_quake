@@ -60,7 +60,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //============================================================================
 
 #ifdef EMSCRIPTEN
-#include <emscripten.h>
 void Com_Frame_RentryHandle( void (*af)( void *handle ) );
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
 void Com_Frame_Proxy( void *handle );

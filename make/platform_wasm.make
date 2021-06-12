@@ -2,6 +2,8 @@ HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
 BUILD_CLIENT     := 1
+USE_CURL         := 0
+USE_SYSTEM_JPEG  := 0
 export LDFLAGS="-L/usr/local/opt/llvm/lib"
 export CPPFLAGS="-I/usr/local/opt/llvm/include"
 
@@ -28,16 +30,17 @@ BASE_CFLAGS       += -Wall --target=wasm32 -Wno-unused-variable -fno-strict-alia
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g \
-										-Ilibs/musl-1.2.2/arch/wasm \
+										-Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
-										-Ilibs/musl-1.2.2/include
+										-Ilibs/musl-1.2.2/arch/wasm
 
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -DNDEBUG -O3 -Oz -flto -fPIC
 
-export INCLUDE	 := -Ilibs/musl-1.2.2/arch/wasm \
+export INCLUDE	 := -Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
-										-Ilibs/musl-1.2.2/include
+										-Ilibs/musl-1.2.2/arch/wasm
+										
 
 #CLIENT_SYSTEM    := sys_common.js \
                     sys_browser.js \
