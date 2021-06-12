@@ -11,9 +11,19 @@ endif
 
 INCLUDES := $(MOUNT_DIR)/qcommon
 SOURCES  := $(MOUNT_DIR)/client
+
 ifneq ($(USE_RENDERER_DLOPEN),1)
-RSOURCES := $(MOUNT_DIR)/renderer $(MOUNT_DIR)/renderercommon
+ifneq ($(USE_OPENGL2),1)
+include make/build_renderer.make
+else
+ifneq ($(USE_VULKAN),1)
+include make/build_renderer2.make
+else
+include make/build_renderervk.make
 endif
+endif
+endif
+
 ifneq ($(BUILD_SLIM_CLIENT),1)
 SOURCES  += $(MOUNT_DIR)/server
 endif
@@ -178,9 +188,6 @@ endif
 CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
             $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) \
             $(VM) $(CURL) $(SYSTEM)
-ifneq ($(USE_RENDERER_DLOPEN),1)
-CFILES   += $(foreach dir,$(RSOURCES), $(wildcard $(dir)/*.c))
-endif
 ifneq ($(BUILD_SLIM_CLIENT),1)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
 CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
@@ -194,6 +201,18 @@ CFILES   += $(MOUNT_DIR)/botlib/be_interface.c \
 endif
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+
+ifneq ($(USE_RENDERER_DLOPEN),1)
+ifneq ($(USE_OPENGL2),1)
+
+else
+ifneq ($(USE_VULKAN),1)
+Q3OBJ    += $(REND_Q3OBJ)
+else
+
+endif
+endif
+endif
 
 export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
@@ -290,12 +309,6 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
-	$(DO_REND_CC)
-
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer/%.c
-	$(DO_REND_CC)
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"

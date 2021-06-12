@@ -1661,11 +1661,11 @@ void R_Register( void )
 	ri.Cvar_SetDescription(rf_firstPersonXYZ, "Offset first person models (e.g. gun, barrel, hand) by a specific amount.\nDefault: 0 0 0");
   rf_firstPersonXYZ->modified = qtrue;
   // TODO: put this somewhere it can be adjusted without restarting?
-  int len, voteI;
-  char *rfOffsets = TokenizeAlphanumeric(g_callvotable.string, &len);
-  for( int i = 0; i < len && i < 3; i++) {
+  COM_BeginParseSession( "rf_first_person" );
+  const char *p = rf_firstPersonXYZ->string;
+  for( int i = 0; i < 3; i++) {
+    char *rfOffsets = COM_ParseExt( &p, qtrue );
     rf_firstPersonOffset[i] = atof(rfOffsets);
-    rfOffsets = rfOffsets[strlen(rfOffsets) + 1];
   }
   rf_firstPersonXYZ->modified = qfalse;
 

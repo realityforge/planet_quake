@@ -1,28 +1,30 @@
-MKFILE         := $(lastword $(MAKEFILE_LIST))
-WORKDIR        := rend2
+REND_WORKDIR   := rend2
+REND_SOURCE    := renderer2
 
 BUILD_RENDERER_OPENGL2:=1
+ifndef BUILD_CLIENT
+MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
+endif
 
-TARGET         := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
-SOURCES        := $(MOUNT_DIR)/renderer2 $(MOUNT_DIR)/renderer2/glsl $(MOUNT_DIR)/renderercommon
-INCLUDES       := 
+REND_TARGET    := $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
+REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl $(MOUNT_DIR)/renderercommon
 
-GLSLFFALLBACKS := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.glsl))
+GLSLFFALLBACKS := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.glsl))
 GLSLFILES      := $(addprefix glsl/,$(notdir $(GLSLFFALLBACKS)))
-CFILES         := $(foreach dir,$(SOURCES), $(wildcard $(dir)/*.c)) \
-                  $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
+CFILES         := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
+ifeq ($(USE_RENDERER_DLOPEN),1)
+CFILES         := $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
                   $(MOUNT_DIR)/qcommon/puff.c
-OBJS           := $(CFILES:.c=.o) 
+endif
+REND_OBJS      := $(CFILES:.c=.o) 
 Q3R2STRINGOBJ  := $(GLSLFILES:.glsl=.o)
-Q3OBJ          := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS))) \
-                  $(addprefix $(B)/$(WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ)))
-Q3R2STRCLEAN   := $(addsuffix _clean,$(addprefix $(B)/$(WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ))))
+REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS))) \
+                  $(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ)))
+Q3R2STRCLEAN   := $(addsuffix _clean,$(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ))))
 
-export INCLUDE := $(foreach dir,$(INCLUDES),-I$(dir))
-
-CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
-            -ffast-math -fno-short-enums -MMD
+CFLAGS         ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
+                  -ffast-math -fno-short-enums -MMD
 
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
@@ -36,50 +38,52 @@ define DO_REF_STR
   $(Q)echo ";" >> $@
 endef
 
+ifndef BUILD_CLIENT
 debug:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIR=$(WORKDIR)/glsl mkdirs
+	$(echo_cmd) "MAKE $(REND_TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) REND_WORKDIR=$(REND_WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) REND_WORKDIR=$(REND_WORKDIR)/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
 
 release:
-	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIR=$(WORKDIR)/glsl mkdirs
+	$(echo_cmd) "MAKE $(REND_TARGET)"
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) REND_WORKDIR=$(REND_WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) REND_WORKDIR=$(REND_WORKDIR)/glsl mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(TARGET)
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(TARGET)_clean
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(TARGET)_clean
+	@rm -rf $(BD)/$(REND_WORKDIR) $(BD)/$(REND_TARGET)
+	@rm -rf $(BR)/$(REND_WORKDIR) $(BR)/$(REND_TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
+endif
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
+$(B)/$(REND_WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
+$(B)/$(REND_WORKDIR)/%.o: $(MOUNT_DIR)/renderercommon/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/renderer2/%.c
+$(B)/$(REND_WORKDIR)/%.o: $(MOUNT_DIR)/$(REND_SOURCE)/%.c
 	$(DO_REND_CC)
 
-$(B)/$(WORKDIR)/glsl/%.c: $(MOUNT_DIR)/renderer2/glsl/%.glsl
+$(B)/$(REND_WORKDIR)/glsl/%.c: $(MOUNT_DIR)/$(REND_SOURCE)/glsl/%.glsl
 	$(DO_REF_STR)
 
-$(B)/$(WORKDIR)/glsl/%.o_clean: $(MOUNT_DIR)/renderer2/glsl/%.glsl
+$(B)/$(REND_WORKDIR)/glsl/%.o_clean: $(MOUNT_DIR)/$(REND_SOURCE)/glsl/%.glsl
 	@rm -f $@
 
-$(B)/$(WORKDIR)/glsl/%.o: $(B)/$(WORKDIR)/glsl/%.c
+$(B)/$(REND_WORKDIR)/glsl/%.o: $(B)/$(REND_WORKDIR)/glsl/%.c
 	$(DO_REND_CC)
 
-$(B)/$(TARGET): $(Q3OBJ)
+$(B)/$(REND_TARGET): $(REND_Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(REND_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
   
-$(TARGET)_clean: $(Q3R2STRCLEAN)
+$(REND_TARGET)_clean: $(Q3R2STRCLEAN)
 endif
