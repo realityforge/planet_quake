@@ -421,7 +421,7 @@ function asmFunc(env) {
  var global$0 = 5306448;
  var global$2 = 0;
  var i64toi32_i32$HIGH_BITS = 0;
- // EMSCRIPTEN_START_FUNCS
+ // __WASM___START_FUNCS
 ;
  function $0() {
   global$2 = 5306448;
@@ -1255,7 +1255,7 @@ function asmFunc(env) {
   HEAP32[$0_1 + 4 >> 2] = $3_1;
  }
  
- // EMSCRIPTEN_END_FUNCS
+ // __WASM___END_FUNCS
 ;
  bufferView = HEAPU8;
  initActiveSegments(env);

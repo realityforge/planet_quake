@@ -451,7 +451,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	Com_Memset (net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
 /*
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// TODO: server to server communication, multiple server
 	// also send queued messages to local client if running in dedicated thread
 	if(sock == NS_CLIENT && com_dedicated->integer) {
@@ -477,7 +477,7 @@ void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
 	
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Sys_NET_MulticastLocal(sock, length, data);
 #endif
 }

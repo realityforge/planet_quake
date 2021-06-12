@@ -216,7 +216,7 @@ void R_ImageList_f( void ) {
 				estSize *= 8;
 				break;
 			case GL_RGBA4:
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 			case GL_RGBA8:
 #endif
 			case GL_RGBA:
@@ -230,7 +230,7 @@ void R_ImageList_f( void ) {
 				// 1 byte per pixel?
 				break;
 			case GL_RGB5:
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 			case GL_RGB8:
 #endif
 			case GL_RGB:
@@ -1652,7 +1652,7 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, GLenum picForm
 	qboolean forceNoCompression = (flags & IMGFLAG_NO_COMPRESSION);
 	qboolean normalmap = (type == IMGTYPE_NORMAL || type == IMGTYPE_NORMALHEIGHT);
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (picFormat != GL_RGBA8)
 #endif
 		return picFormat;
@@ -1962,7 +1962,7 @@ static void RawImage_UploadTexture(GLuint texture, byte *data, int x, int y, int
 	dataFormat = PixelDataFormatFromInternalFormat(internalFormat);
 	dataType = picFormat == GL_RGBA16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// HULK-SMASH! GLES requires that the internal format matches the data format.
 	internalFormat = dataFormat;
 #endif

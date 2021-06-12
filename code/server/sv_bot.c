@@ -43,7 +43,7 @@ int bot_maxdebugpolys;
 extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 #ifdef USE_BOTLIB_DLOPEN
 static void SV_BotInitBotLib_After_Load( void *handle );
 #endif
@@ -574,13 +574,13 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
-#if !defined(USE_BOTLIB_DLOPEN) || !defined(EMSCRIPTEN)
+#if !defined(USE_BOTLIB_DLOPEN) || !defined(__WASM__)
 	botlib_import_t	botlib_import;
 #endif
 #ifdef USE_BOTLIB_DLOPEN
 	GetBotLibAPI_t		GetBotLibAPI;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 #define REND_ARCH_STRING "js"
 #else
 #if defined (__linux__) && defined(__i386__)
@@ -588,12 +588,12 @@ void SV_BotInitBotLib(void) {
 #else
 #define REND_ARCH_STRING ARCH_STRING
 #endif // __linux__
-#endif // EMSCRIPTEN
+#endif // __WASM__
 
   // TODO: make this a fancy list of renderers we recognize
 	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
 	botLib = FS_LoadLibrary( dllName );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Com_Frame_RentryHandle(SV_BotInitBotLib_After_Load);
 }
 
@@ -658,7 +658,7 @@ static void SV_BotInitBotLib_After_Load( void *handle )
   
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   Com_Init_After_SV_Init();
 #endif
 }

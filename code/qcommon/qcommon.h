@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #if defined (_WIN32) || defined(__linux__)
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #define USE_AFFINITY_MASK
 #else
 #undef USE_AFFINITY_MASK
@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //============================================================================
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void Com_Frame_RentryHandle( void (*af)( void *handle ) );
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
 void Com_Frame_Proxy( void *handle );
@@ -128,7 +128,7 @@ void CL_DemoCompleted_After_Shutdown( void );
 #endif
 
 #ifdef USE_LAZY_LOAD
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 extern char *Sys_UpdateShader( void );
 extern char *Sys_UpdateSound( void );
 extern char *Sys_UpdateModel( void );
@@ -296,7 +296,7 @@ NET
 
 ==============================================================
 */
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #define USE_IPV6
 #else
 #ifdef USE_IPV6
@@ -1506,7 +1506,7 @@ char	*Sys_ConsoleInput( void );
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...

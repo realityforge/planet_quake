@@ -2222,7 +2222,7 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 }
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 qboolean VM_IsSuspended(vm_t * vm) {
 #ifndef NO_VM_COMPILED
 		if (vm->compiled) {

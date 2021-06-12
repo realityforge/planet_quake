@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/cl_curl.h"
 //#define	USE_LNBITS	1
 #else
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 //#define	USE_LNBITS	1
 #else
 #ifdef USE_LNBITS

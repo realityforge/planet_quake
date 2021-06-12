@@ -629,7 +629,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
 			if(cgvm
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 				// skip drawing until VM is ready
 				&& !VM_IsSuspended( cgvm )
 #endif
@@ -647,7 +647,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
 			if( cgvm
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 				// skip drawing until VM is ready
 				&& !VM_IsSuspended( cgvm )
 #endif

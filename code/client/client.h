@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef USE_CURL
 //#define	USE_LNBITS	1
 #else
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 //#define	USE_LNBITS	1
 #else
 #ifdef USE_LNBITS
@@ -293,7 +293,7 @@ typedef struct {
 	int			downloadCount;	// how many bytes we got
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[BIG_INFO_STRING]; // list of paks we need to download
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	qboolean  dlDisconnect;
 #endif
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
@@ -588,7 +588,7 @@ extern int serverShift;
 void CL_StopRecord_f( void );
 
 void CL_InitDownloads( void );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void CL_Outside_NextDownload( void );
 #endif
 void CL_NextDownload( void );
@@ -715,7 +715,7 @@ void CL_UpdateShader( void );
 void CL_UpdateSound( void );
 void CL_UpdateModel( void );
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void CL_InitCGameFinished( void );
 #endif
 void CL_InitCGame( int igvm );

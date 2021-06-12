@@ -2,7 +2,7 @@ REND_WORKDIR   := rend2
 REND_SOURCE    := renderer2
 
 BUILD_RENDERER_OPENGL2:=1
-ifndef BUILD_CLIENT
+ifneq ($(BUILD_CLIENT),1)
 MKFILE         := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
@@ -26,9 +26,13 @@ Q3R2STRCLEAN   := $(addsuffix _clean,$(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(no
 CFLAGS         ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
                   -ffast-math -fno-short-enums -MMD
 
+ifneq ($(BUILD_CLIENT),1)
+CFLAGS         += $(SHLIBCFLAGS)
+endif
+
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
-  $(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) -o $@ -c $<
+  $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_REF_STR
@@ -38,7 +42,7 @@ define DO_REF_STR
   $(Q)echo ";" >> $@
 endef
 
-ifndef BUILD_CLIENT
+ifneq ($(BUILD_CLIENT),1)
 debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) REND_WORKDIR=$(REND_WORKDIR) mkdirs

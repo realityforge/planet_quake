@@ -169,7 +169,7 @@ Field_Paste
 ================
 */
 static void Field_Paste( field_t *edit ) {
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   Sys_SetClipboardData(edit);
   return;
 #else
@@ -374,7 +374,7 @@ static void Field_CharEvent( field_t *edit, int ch ) {
 }
 
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void JS_Field_CharEvent( field_t *edit, int ch ) {
   Field_CharEvent(edit, ch);
 }
@@ -692,7 +692,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
 				}
 #endif
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 #else
 				if(!FS_Initialized()) {
@@ -713,7 +713,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		return;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// only process touch events for 3rd device which is hidden on screen
 	//   this simulates tapping on the menu screen
 	// TODO: use second finger as K_MOUSE2 for zooming on weapons?

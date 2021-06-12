@@ -142,7 +142,7 @@ download_t			download;
 refexport_t	re;
 #ifdef USE_RENDERER_DLOPEN
 static void	*rendererLib;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 static char dllName[ MAX_OSPATH ];
 #endif
 #endif
@@ -737,7 +737,7 @@ static void CL_DemoCompleted( void ) {
 	}
 
 	CL_Disconnect( qtrue, qtrue );
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	CL_NextDemo();
 
 #else
@@ -1356,7 +1356,7 @@ void CL_ShutdownAll( void ) {
 	cls.cgameStarted = qfalse;
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	cls.firstClick = qtrue;
 #endif
 }
@@ -1402,7 +1402,7 @@ void CL_FlushMemory( void ) {
 
 	CL_ClearMemory();
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(!FS_Initialized()) return;
 #endif
 
@@ -1643,7 +1643,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 		}
     clc.serverAddress = addr;
 	}
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(showMainMenu && cl_returnURL->string[0]) {
 		Cbuf_AddText("quit\n");
 	}
@@ -1672,7 +1672,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	// not connected to a pure server anymore
 	cl_connectedToPureServer = 0;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(FS_Initialized())
 		CL_UpdateGUID( NULL, 0 );
 #endif
@@ -1933,7 +1933,7 @@ void CL_Disconnect_f( void ) {
 }
 
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void CL_Reconnect_After_Startup( void ) {
 	FS_Restart_After_Async();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
@@ -1964,7 +1964,7 @@ static void CL_Reconnect_f( void ) {
 CL_Connect_f
 ================
 */
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 netadrtype_t familyo = NA_UNSPEC;
 #endif
 static void CL_Connect_f( void ) {
@@ -2079,7 +2079,7 @@ static void CL_Connect_f( void ) {
 	// copy resolved address 
 	clc.serverAddress = addr;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Cvar_Set( "cl_reconnectArgs", args );
 	Cvar_Set( "cl_currentServerAddress", server );
 	familyo = family;
@@ -2138,7 +2138,7 @@ void CL_Connect_After_Restart( void ) {
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 	clc.connectPacketCount = 0;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	Cvar_Set( "cl_reconnectArgs", args );
 
 	// server connection string
@@ -2548,7 +2548,7 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 
 	CL_ClearMemory();
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(!FS_Initialized()) {
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
 	} else {
@@ -2764,7 +2764,7 @@ static void CL_CompleteCallvote( char *args, int argNum )
 
 //====================================================================
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 
 void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
 	FS_Restart_After_Async();
@@ -2840,7 +2840,7 @@ static void CL_DownloadsComplete( void ) {
 	if(uivm)
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(clc.dlDisconnect) {
 		if(clc.downloadRestart) {
 			FS_Restart(clc.checksumFeed);
@@ -2874,7 +2874,7 @@ static void CL_DownloadsComplete( void ) {
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_After_Shutdown);
 		return;
 #endif
@@ -2911,7 +2911,7 @@ static void CL_DownloadsComplete( void ) {
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	cls.whiteShader = re.RegisterShader( "white" );
 	cls.consoleShader = re.RegisterShader( "console" );
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
 #else
@@ -3072,7 +3072,7 @@ void CL_NextDownload( void )
 		}
 #endif /* USE_CURL */
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 // TODO: add check for HTTP only using strcmp
 		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
 			if(clc.sv_allowDownload & DLF_NO_REDIRECT) {
@@ -3098,7 +3098,7 @@ void CL_NextDownload( void )
 				"configuration (cl_allowDownload is %d)\n",
 				cl_allowDownload->integer);
 		}
-#endif /* EMSCRIPTEN */
+#endif /* __WASM__ */
 		if( !useCURL ) {
 			if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
@@ -3846,7 +3846,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	}
 }
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 static void CL_CheckTimeout_After_Startup ( void ) {
 	FS_Restart_After_Async();
 	CL_UpdateGUID( NULL, 0 );
@@ -3884,7 +3884,7 @@ static void CL_CheckTimeout( void ) {
 			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 			if(!FS_Initialized()) {
 				Com_Frame_Callback(Sys_FS_Shutdown, CL_CheckTimeout_After_Shutdown);
 			}
@@ -3997,7 +3997,7 @@ void CL_Frame( int msec, int realMsec ) {
 
 	// save the msec before checking pause
 	cls.realFrametime = realMsec;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// quake3's loading process is entirely synchronous. throughout this
 	// process it will call trap_UpdateScreen to force an immediate buffer
 	// swap. however, in WebGL we can't force an immediate buffer swap,
@@ -4390,7 +4390,7 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 }
 
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 #ifdef USE_RENDERER_DLOPEN
 static void CL_InitRef_After_Load( void *handle );
 static void CL_InitRef_After_Load2( void *handle );
@@ -4409,7 +4409,7 @@ static void CL_InitRef( void ) {
 	refexport_t	*ret;
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	char			dllName[ MAX_OSPATH ];
 #endif
 #endif
@@ -4424,7 +4424,7 @@ static void CL_InitRef( void ) {
 
 #ifdef USE_RENDERER_DLOPEN
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 #define REND_ARCH_STRING "js"
 #else
 #if defined (__linux__) && defined(__i386__)
@@ -4432,12 +4432,12 @@ static void CL_InitRef( void ) {
 #else
 #define REND_ARCH_STRING ARCH_STRING
 #endif // __linux__
-#endif // EMSCRIPTEN
+#endif // __WASM__
 
 // TODO: make this a fancy list of renderers we recognize
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitRef_After_Load);
 }
 
@@ -4452,7 +4452,7 @@ static void CL_InitRef_After_Load( void *handle )
 		Cvar_ForceReset( "cl_renderer" );
 		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	}
 	else {
 		CL_InitRef_After_Load2(handle);
@@ -4585,7 +4585,7 @@ static void CL_InitRef_After_Load2( void *handle )
 	rimp.Spy_InputText = Spy_InputText;
 	rimp.Spy_Banner = Spy_Banner;
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	rimp.Sys_DownloadLocalFile = Sys_DownloadLocalFile;
 #endif
 
@@ -4602,7 +4602,7 @@ static void CL_InitRef_After_Load2( void *handle )
 	// unpause so the cgame definitely gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
 #ifdef USE_RENDERER_DLOPEN
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
  	// because starting dlopen is async have to rerun this code
 	if(!cls.rendererStarted) {
 		cls.rendererStarted = qtrue;
@@ -4615,7 +4615,7 @@ static void CL_InitRef_After_Load2( void *handle )
 	}
 #endif
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   CL_Init_After_InitRef();
 #endif
 }
@@ -5327,7 +5327,7 @@ void CL_Init( void ) {
 	in_mouseAbsolute = Cvar_Get("in_mouseAbsolute", "1", CVAR_ARCHIVE);
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 	Cvar_SetDescription(cl_returnURL, "Set the return URL to go to when the client disconnects from the server\nDefault: empty");
 #endif
@@ -5383,7 +5383,7 @@ void CL_Init( void ) {
 		"1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
 #else
 	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/maps/download/%1", CVAR_ARCHIVE_ND );
@@ -5501,7 +5501,7 @@ void CL_Init( void ) {
 	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nUsage: modelist");
 
 	CL_InitRef();
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 }
 
 void CL_Init_After_InitRef( void ) {
@@ -5547,7 +5547,7 @@ void CL_Init_After_InitRef( void ) {
 #endif
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   Com_Init_After_CL_Init();
 #endif
 }

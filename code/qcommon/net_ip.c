@@ -180,7 +180,7 @@ static cvar_t	*net_dropsim;
 static sockaddr_t socksRelayAddr;
 
 static SOCKET	ip_socket = INVALID_SOCKET;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 static qboolean invokeSOCKSAfter = qfalse;
 extern void Sys_SocksMessage( void );
 extern void Sys_SocksConnect( void );
@@ -1039,7 +1039,7 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 		return newsocket;
 	}
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1115,7 +1115,7 @@ static SOCKET NET_IP6Socket( const char *net_interface, int port, struct sockadd
 		return newsocket;
 	}
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IP6Socket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1294,7 +1294,7 @@ static void NET_OpenSocks( int port ) {
   int i;
 
 	usingSocks = qfalse;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   if(!Cvar_VariableIntegerValue("net_socksLoading")
     && strcmp(Cmd_Argv(0), "net_restart")) {
     Cvar_Set("net_socksLoading", "0");
@@ -1312,7 +1312,7 @@ static void NET_OpenSocks( int port ) {
 		return;
 	}
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	// set no delay
 	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
@@ -1334,7 +1334,7 @@ static void NET_OpenSocks( int port ) {
 	address.sin_port = htons( net_socksPort->integer );
 
 	if ( connect( socks_socket, (struct sockaddr *)&address, sizeof( address ) ) == SOCKET_ERROR ) {
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
     Com_Printf( "NET_OpenSocks: connect: %s\n", NET_ErrorString() );
     return;
 #else
@@ -1379,7 +1379,7 @@ void NET_OpenSocks_After_Connect( void ) {
 
 	if ( send( socks_socket, (void *)buf, len, 0 ) == SOCKET_ERROR ) {
 		Com_Printf( "NET_OpenSocks: send: %s\n", NET_ErrorString() );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
     Cvar_Set("net_socksLoading", "0");
     socks_socket = INVALID_SOCKET;
 #endif
@@ -1387,7 +1387,7 @@ void NET_OpenSocks_After_Connect( void ) {
 		return;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   porto = port;
   SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Method);
 }
@@ -1486,7 +1486,7 @@ void NET_OpenSocks_After_Method( void ) {
 		return;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Listen);
 }
 
@@ -1539,7 +1539,7 @@ void NET_OpenSocks_After_Listen( void ) {
     socksRelayAddr.v4.sin_addr.s_addr >> 16 & 0xFF,
     socksRelayAddr.v4.sin_addr.s_addr >> 24 & 0xFF,
     socksRelayAddr.v4.sin_port);
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   Cvar_Set("net_socksLoading", "0");
 #endif
 	usingSocks = qtrue;
@@ -1733,7 +1733,7 @@ static void NET_OpenIP( void ) {
 
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
         else // for blocking Com_Frame until net is setup
           Cvar_Set("net_socksLoading", "0");
 #endif
@@ -1792,7 +1792,7 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   //if(!com_dedicated->integer) {
   	Com_RandomBytes((byte*)&port, sizeof(int));
   	port &= 0xffff;
@@ -1889,7 +1889,7 @@ static void NET_Config( qboolean enableNetworking ) {
 	}
 
 	// if enable state is the same and no cvars were modified, we have nothing to do
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if( enableNetworking == networkingEnabled && !modified ) {
 		return;
 	}
@@ -2088,7 +2088,7 @@ qboolean NET_Sleep( int timeout )
 	}
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   if(SOCKS_Proxy) {
     Com_Printf( "--------- SOCKS Callback (%p) --------\n", &SOCKS_Proxy);
     void (*cb)( void ) = SOCKS_Proxy;
@@ -2111,7 +2111,7 @@ qboolean NET_Sleep( int timeout )
 
 	if ( highestfd == INVALID_SOCKET )
 	{
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #ifdef _WIN32
 		// windows ain't happy when select is called without valid FDs
 		Sleep( timeout / 1000 );
@@ -2167,7 +2167,7 @@ static void NET_Restart_f( void )
 	NET_Config( qtrue );
 }
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 	invokeSOCKSAfter = qfalse;
 	if(!SOCKS_Proxy) {

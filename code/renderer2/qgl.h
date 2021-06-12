@@ -37,9 +37,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 #include <windows.h>
 #include <GL/gl.h>
-#elif defined(EMSCRIPTEN)
-#include <SDL_opengl.h>
-#include <SDL_opengl_glext.h>
+#elif defined(__WASM__)
+#include <GL/gl.h>
+#include <GL/glx.h>
 #undef GL_RGBA8
 #define GL_RGBA8 GL_RGBA
 #undef GL_RGB8
@@ -48,8 +48,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <GL/gl.h>
 #include <GL/glx.h>
 #elif defined(__APPLE__) || defined(__APPLE_CC__)
-#include <SDL_opengl.h>
-#include <SDL_opengl_glext.h>
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+//#include <SDL_opengl.h>
+//#include <SDL_opengl_glext.h>
 #endif
 
 #ifndef APIENTRY

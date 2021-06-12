@@ -41,7 +41,7 @@ BASE_CFLAGS      += -Wall -Wno-unused-variable -fno-strict-aliasing \
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
-                    -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN \
+                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
                     --em-config $(EMJS_CONFIG_PATH)
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
@@ -175,5 +175,5 @@ pre-build:
 	@echo "LLVM_ROOT         = '$(EMSDK)/upstream/bin';\\n"                >> $(EMJS_CONFIG_PATH)
 	@echo "NODE_JS           = '$(EMSDK)/node/14.15.5_64bit/bin/node';\\n" >> $(EMJS_CONFIG_PATH)
 	@echo "BINARYEN_ROOT     = '$(EMSDK)/upstream';\\n"                    >> $(EMJS_CONFIG_PATH)
-	@echo "EMSCRIPTEN_ROOT   = '$(EMSDK)/upstream/emscripten';"            >> $(EMJS_CONFIG_PATH)
+	@echo "__WASM___ROOT   = '$(EMSDK)/upstream/emscripten';"            >> $(EMJS_CONFIG_PATH)
 endif

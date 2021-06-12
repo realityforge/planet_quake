@@ -908,7 +908,7 @@ extern "C" {
  *    "#canvas"      - the WebGL canvas element
  *    any other string without a leading # sign applies to the element on the page with that ID.
  */
-#define SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT   "SDL_EMSCRIPTEN_KEYBOARD_ELEMENT"
+#define SDL_HINT___WASM___KEYBOARD_ELEMENT   "SDL___WASM___KEYBOARD_ELEMENT"
 
 /**
  *  \brief Tell SDL not to catch the SIGINT or SIGTERM signals.

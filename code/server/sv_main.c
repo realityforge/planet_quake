@@ -370,7 +370,7 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string );
 			}
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #ifdef USE_IPV6
 			if(netenabled & NET_ENABLEV6)
 			{
@@ -1593,7 +1593,7 @@ void SV_Frame( int msec ) {
 		{
 			// Block indefinitely until something interesting happens
 			// on STDIN.
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 			Sys_Sleep( -1 );
 #endif
 		}

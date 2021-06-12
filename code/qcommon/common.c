@@ -33,7 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifdef _DEBUG
-#ifndef  EMSCRIPTEN
+#ifndef  __WASM__
 #include <execinfo.h>
 #endif
 #include <stdio.h>
@@ -108,7 +108,7 @@ cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
 
 cvar_t	*com_cameraMode;
-#if (defined(_WIN32) && defined(_DEBUG)) || (defined(EMSCRIPTEN) && defined(_DEBUG))
+#if (defined(_WIN32) && defined(_DEBUG)) || (defined(__WASM__) && defined(_DEBUG))
 cvar_t	*com_noErrorInterrupt;
 #endif
 
@@ -310,7 +310,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		}
 	}
 #else
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
 		if (!com_noErrorInterrupt->integer) {
 			Sys_Debug();
@@ -495,7 +495,7 @@ void Com_Quit_f( void ) {
 		Com_Shutdown();
 		FS_Shutdown( qtrue );
 	}
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	Sys_Quit ();
 #else
 	Com_Frame_Callback(Sys_FS_Shutdown, Sys_Quit);
@@ -3136,7 +3136,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// TODO: make this an option
 		Con_ResetHistory();
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
@@ -3152,7 +3152,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 
 		FS_Restart( checksumFeed );
 		
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	}
 }
 
@@ -3190,7 +3190,7 @@ static void Com_GameRestart_f( void )
 
 	Com_GameRestart( 0, qtrue );
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
 }
 
@@ -3402,7 +3402,7 @@ out:
 **
 ** --------------------------------------------------------------------------------
 */
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 
 static void Sys_GetProcessorId( char *vendor )
 {
@@ -3574,7 +3574,7 @@ static void Sys_GetProcessorId( char *vendor )
 #endif // !_WIN32
 
 #endif // non-x86
-#endif // EMSCRIPTEN
+#endif // __WASM__
 
 /*
 ================
@@ -3711,7 +3711,7 @@ void Com_Init( char *commandLine ) {
 	Com_InitSmallZoneMemory();
 	Cvar_Init();
 
-#if (defined(_WIN32) && defined(_DEBUG)) || (defined(EMSCRIPTEN) && defined(_DEBUG))
+#if (defined(_WIN32) && defined(_DEBUG)) || (defined(__WASM__) && defined(_DEBUG))
 	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
 	Cvar_SetDescription(com_noErrorInterrupt, "No interrupt with a debug break when an error occurs\nDefault: 0");
 #endif
@@ -3773,7 +3773,7 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
 }
 
@@ -3953,7 +3953,7 @@ void Com_Init_After_Filesystem( void ) {
 
 	VM_Init();
 	SV_Init();
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 }
 
 void Com_Init_After_SV_Init( void ) {
@@ -3967,7 +3967,7 @@ void Com_Init_After_SV_Init( void ) {
 		// Sys_ShowConsole( com_viewlog->integer, qfalse ); // moved down
 	}
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   else {
     Com_Init_After_CL_Init();
   }
@@ -4012,7 +4012,7 @@ void Com_Init_After_CL_Init( void ) {
 	com_fullyInitialized = qtrue;
 
 	Com_Printf( "--- Common Initialization Complete ---\n" );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
   // init again because first time it triggers the async websocket
 	NET_Init( );
 #endif
@@ -4181,7 +4181,7 @@ static int Com_TimeVal( int minMsec )
 	return timeVal;
 }
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 qboolean invokeFrameAfter = qfalse;
 void Com_Frame_RentryHandle(void (*af)( void *handle )) {
   if(!CB_Frame_After || !CB_Frame_AfterParameter) {
@@ -4267,7 +4267,7 @@ void Com_Frame( qboolean noDelay ) {
 	int	timeAfter;
 
 	if ( setjmp( abortframe ) ) {
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		outsideError = 0;
 		outsideMsg = 0;
 		CB_Frame_Proxy = NULL;
@@ -4291,7 +4291,7 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeClient = 0;
 	timeAfter = 0;
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// call error function from Com_Frame so we have the benefit of setjmp
 	//   in place to catch it and recover
 	if(outsideMsg) {
@@ -4428,7 +4428,7 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 		NET_Sleep( sleepMsec * 1000 - 500 );
 	} while( Com_TimeVal( minMsec ) );
 
@@ -4479,7 +4479,7 @@ void Com_Frame( qboolean noDelay ) {
 	// or shut down the client system.
 	// Do this after the server may have started,
 	// but before the client tries to auto-connect
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 		return;
 	}
@@ -4535,7 +4535,7 @@ void Com_Frame( qboolean noDelay ) {
 		}
 		Com_EventLoop();
 		Cbuf_Execute();
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		// if filesystem was restarted as a part of a command
 		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 			return;

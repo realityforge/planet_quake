@@ -496,7 +496,7 @@ void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 	ri.FS_WriteFile(fileName, buffer, memcount + 18);
 
 	ri.Hunk_FreeTempMemory(allbuf);
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	ri.Sys_DownloadLocalFile(fileName);
 #endif
 }
@@ -522,7 +522,7 @@ void RB_TakeScreenshotJPEG(int x, int y, int width, int height, char *fileName)
 
 	ri.CL_SaveJPG(fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen);
 	ri.Hunk_FreeTempMemory(buffer);
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	ri.Sys_DownloadLocalFile(fileName);
 #endif
 }
@@ -554,7 +554,7 @@ const void *RB_TakeScreenshotCmd( const void *data ) {
 R_TakeScreenshot
 ==================
 */
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void R_TakeScreenshot( int x, int y, int width, int height, char *name, qboolean jpeg, qboolean downloadAfter ) {
 #else
 void R_TakeScreenshot( int x, int y, int width, int height, char *name, qboolean jpeg ) {
@@ -753,7 +753,7 @@ void R_ScreenShot_f (void) {
 		lastNumber++;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qfalse, qtrue );
 #else
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qfalse );
@@ -810,7 +810,7 @@ void R_ScreenShotJPEG_f (void) {
 		lastNumber++;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qtrue, qtrue );
 #else
 	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, qtrue );

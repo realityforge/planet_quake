@@ -602,7 +602,7 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
   Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
 }

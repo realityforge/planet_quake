@@ -481,7 +481,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				}
 
 				{
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 					GLenum DrawBuffers[1] = {GL_NONE};
 #else
 					GLenum DrawBuffers[1] = {GL_FRONT};
@@ -548,7 +548,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 				cmd->buffer = (int)GL_NONE;
 #else
 				cmd->buffer = (int)GL_FRONT;

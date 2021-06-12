@@ -486,7 +486,7 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	cls.firstClick = qtrue;
 #endif
 

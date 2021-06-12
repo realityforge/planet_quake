@@ -326,7 +326,7 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	sfx_t	*sfx;
 
 	compressed = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (!s_soundStarted) {
 		return 0;
 	}
@@ -372,7 +372,7 @@ S_BeginRegistration
 static void S_Base_BeginRegistration( void ) {
 	s_soundMuted = qfalse;		// we can play again
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if ( s_numSfx )
 		return;
 #else
@@ -410,7 +410,7 @@ static void S_Base_BeginRegistration( void ) {
 void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(cls.firstClick) {
 		sfx->inMemory = qfalse;
 	} else
@@ -1592,7 +1592,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		S_COLOR_YELLOW " Please note that only mono/stereo devices are acceptable.\n" );
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	r = qfalse;
 	if(cls.firstClick) {
 		S_Base_StopAllSounds();
@@ -1605,7 +1605,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		s_soundMuted = qtrue;
 //		s_numSfx = 0;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 #endif
 
@@ -1622,7 +1622,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 			memset( dma_buffer2, 0, dma.samples * dma.samplebits/8 );
 		}
 	} else {
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 		return qfalse;
 #endif
 	}

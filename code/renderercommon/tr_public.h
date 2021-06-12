@@ -265,7 +265,7 @@ typedef struct {
 	void (*Spy_InputText)( void );
 	void (*Spy_Banner)(float x, float y);
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	void (*Sys_DownloadLocalFile)(char *fileName);
 #endif
 } refimport_t;

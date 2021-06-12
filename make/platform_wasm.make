@@ -1,6 +1,7 @@
 HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
+# always build client because we haven't figured out dylinks yet
 BUILD_CLIENT     := 1
 USE_CURL         := 0
 USE_SYSTEM_JPEG  := 0
@@ -24,8 +25,8 @@ BASE_CFLAGS       += -Wall --target=wasm32 -Wno-unused-variable -fno-strict-alia
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
-                    -DUSE_Q3KEY -DUSE_MD5 -DEMSCRIPTEN \
-										-D__EMSCRIPTEN__ -D_ALL_SOURCE=700 \
+                    -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
+										-D____WASM____ -D_ALL_SOURCE=700 \
 										-std=c99 -ffreestanding -nostdinc $(IMPH)
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \

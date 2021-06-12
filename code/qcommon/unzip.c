@@ -1178,7 +1178,7 @@ static int unzlocal_getLong (FILE *fin, uLong *pX)
 }
 
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 static int unzlocal_getData( FILE *fin, byte *buf, int size )
 {
 	if ( fread( buf, size, 1, fin ) != 1 )
@@ -1498,7 +1498,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	if (fseek(s->file,s->pos_in_central_dir+s->byte_before_the_zipfile,SEEK_SET)!=0)
 		err=UNZ_ERRNO;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 //#if 1 // try ro reduce fread() overhead
 	if ( unzlocal_getData( s->file, buf, 46 ) != UNZ_OK )
 		return UNZ_ERRNO;

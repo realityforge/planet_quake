@@ -562,7 +562,7 @@ void SV_RestoreClient( int c ) {
 
 
 #ifdef USE_LNBITS
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 void SV_CheckInvoiceStatus(invoice_t *updateInvoice) {
 	// extract key
 	int i;
@@ -650,7 +650,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 	if(!maxInvoices) return;
 
 	// don't even bother if a request is already in progress
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	if(svDownload)
 #else
 	if(svDownload.cURL)
@@ -684,7 +684,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 	if(requestInvoice) {
 		qboolean wasntPaid = !requestInvoice->paid;
 		// update the oldest invoice before finding a new one
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 		if(svDownload.TempStore[0]) {
 			SV_CheckInvoiceStatus(requestInvoice);
 		}
@@ -714,7 +714,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
 		requestInvoice = oldestInvoice;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		svDownload = qtrue;
 		//Sys_BeginDownload();
 #else
@@ -736,7 +736,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
 		requestInvoice = oldestInvoice;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		svDownload = qtrue;
 		//Sys_BeginDownload();
 #else
@@ -767,7 +767,7 @@ void SV_CheckInvoicesAndPayments( void ) {
 			sizeof( invoicePostHeaders ) - strlen( invoicePostHeaders ) - 1,
 			"Content-type: application/json");
 		requestInvoice = oldestInvoice;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		svDownload = qtrue;
 		//Sys_BeginDownload();
 #else
@@ -3349,7 +3349,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 	} while ( 1 );
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// skip user move commands if server is restarting because of the command above
 	if(!FS_Initialized()) {
 		return;

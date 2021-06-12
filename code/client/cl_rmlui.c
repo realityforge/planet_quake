@@ -166,7 +166,7 @@ void CL_UIContextRender(void) {
 void CL_InitRmlUi( void ) {
 #ifdef USE_RMLUI_DLOPEN
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 #define REND_ARCH_STRING "js"
 #else
 #if defined (__linux__) && defined(__i386__)
@@ -174,11 +174,11 @@ void CL_InitRmlUi( void ) {
 #else
 #define REND_ARCH_STRING ARCH_STRING
 #endif // __linux__
-#endif // EMSCRIPTEN
+#endif // __WASM__
 
 	Com_sprintf( dllName, sizeof( dllName ), "libRmlCore_" REND_ARCH_STRING DLL_EXT );
 	rmlLib = FS_LoadLibrary( dllName );
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitUI_After_Load);
 }
 

@@ -241,7 +241,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	dest[0] = '\0';
 
 	// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if(glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
 	{
 		if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 50))
@@ -494,7 +494,7 @@ static void GLSL_ShowProgramUniforms(GLuint program)
 	GLenum			type;
 	char            uniformName[1000];
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// This function is rather expensive in WebGL, let's completely
 	// avoid it if not a developer.
 	if(!ri.Cvar_VariableIntegerValue("developer"))
@@ -1237,7 +1237,7 @@ void GLSL_InitGPUShaders(void)
 		numLightShaders++;
 	}
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	for (i = 0; i < SHADOWMAPDEF_COUNT; i++)
 	{
 		if ((i & SHADOWMAPDEF_USE_VERTEX_ANIMATION) && (i & SHADOWMAPDEF_USE_BONE_ANIMATION))
@@ -1384,7 +1384,7 @@ void GLSL_InitGPUShaders(void)
 	Q_strcat(extradefines, 1024, va("#define r_shadowCascadeZFar %f\n", r_shadowCascadeZFar->value));
 
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (!GLSL_InitGPUShader(&tr.shadowmaskShader, "shadowmask", attribs, qtrue, extradefines, qtrue, fallbackShader_shadowmask_vp, fallbackShader_shadowmask_fp))
 	{
 		ri.Error(ERR_FATAL, "Could not load shadowmask shader!");

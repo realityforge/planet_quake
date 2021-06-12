@@ -1,7 +1,7 @@
-MKFILE      := $(lastword $(MAKEFILE_LIST))
-WORKDIR     := client
+MKFILE           := $(lastword $(MAKEFILE_LIST))
+WORKDIR          := client
 
-BUILD_CLIENT:=1
+BUILD_CLIENT     := 1
 include make/platform.make
 
 TARGET_CLIENT    := $(CNAME)$(ARCHEXT)$(BINEXT)
@@ -230,11 +230,6 @@ endef
 define DO_BOT_CC
 	$(echo_cmd) "BOT_CC $<"
 	$(Q)$(CC) -o $@ $(CFLAGS) -DBOTLIB -c $<
-endef
-
-define DO_REND_CC
-	$(echo_cmd) "REND_CC $<"
-	$(Q)$(CC)  -o $@ $(CFLAGS) -c $<
 endef
 
 define DO_SERVER_CC

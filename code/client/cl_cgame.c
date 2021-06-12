@@ -621,7 +621,7 @@ void CL_ShutdownCGame( void ) {
 			continue;
 		}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		while (VM_IsSuspended(cgvm)) {
 			VM_Resume(cgvm);
 	}
@@ -1218,7 +1218,7 @@ void CL_InitCGame( int inVM ) {
 	}
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 //  cgvmi = prev; // set to previous in case this was called from a GameCommand()
 //  re.SwitchWorld(cgvmi);
 
@@ -1320,7 +1320,7 @@ qboolean CL_GameCommand( int igvm ) {
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 		// it's possible (and happened in Q3F) that the game executes a console command
 		// before the frame has resumed the vm
 		if (VM_IsSuspended(cgvm)) {

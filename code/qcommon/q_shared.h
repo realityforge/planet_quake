@@ -110,7 +110,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 // TODO: move this into make file
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
 #define USE_VID_FAST 1
 // allow touch events to set exact cursor position using "cursor spy"
@@ -133,7 +133,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   allows repacking files, and still sending original checksum to pure servers
 #define USE_SPOOF_CHECKSUM 1
 //
-#endif // EMSCRIPTEN
+#endif // __WASM__
 
 
 #ifdef USE_LOCAL_DED

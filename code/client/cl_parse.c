@@ -894,7 +894,7 @@ int igs = 0;
 	// try to keep gamestate and connection state during game switch
 	cls.gameSwitch = gamedirModified;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	// reinitialize the filesystem if the game directory has changed
 	FS_ConditionalRestart( clc.checksumFeed, gamedirModified );
 
@@ -1106,7 +1106,7 @@ static void CL_ParseDownload( msg_t *msg ) {
 }
 
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 static void CL_ParseCommand_After_Startup ( void ) {
 	FS_Restart_After_Async();
 	CL_FlushMemory();
@@ -1170,7 +1170,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			Com_Printf( "%s\n", text );
 			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 				if(!FS_Initialized()) {
 					Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseCommand_After_Shutdown);
 				}
