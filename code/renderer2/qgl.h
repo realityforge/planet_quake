@@ -48,11 +48,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <GL/gl.h>
 #include <GL/glx.h>
 #elif defined(__APPLE__) || defined(__APPLE_CC__)
-#include <OpenGL/gl3.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-//#include <SDL_opengl.h>
-//#include <SDL_opengl_glext.h>
+//#include <OpenGL/gl3.h>
+//#include <OpenGL/gl.h>
+//#include <OpenGL/glu.h>
+#include <SDL_opengl.h>
+#include <SDL_opengl_glext.h>
 #endif
 
 #ifndef APIENTRY

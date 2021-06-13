@@ -35,7 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
 #include "../renderercommon/tr_public.h"
-#include "../renderercommon/tr_common.h"
+#include "./tr_common.h"
 #include "../renderercommon/iqm.h"
 #include "../renderercommon/qgl.h"
 

@@ -1,6 +1,8 @@
 
-CNAME            = quake3e
-DNAME            = quake3e.ded
+-include Makefile.local
+
+CNAME               ?= quake3e
+DNAME               ?= quake3e.ded
 
 BUILD_CLIENT        ?= 0
 BUILD_SLIM_CLIENT   ?= 0
@@ -90,10 +92,8 @@ ifneq ($(USE_VULKAN),0)
   USE_VULKAN_API=1
 endif
 
-
--include Makefile.local
-
 #############################################################################
+
 CC              := gcc
 CXX             := c++
 GXX             := g++

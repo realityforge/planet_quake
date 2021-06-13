@@ -91,12 +91,24 @@ endif
 
 D_FILES :=
 
-ifdef WORKDIR
+ifdef WORKDIRS
+ifndef MAKEDIR
+mkdirs:
+	@for i in $(WORKDIRS); \
+	do \
+	$(MAKE) -f $(MKFILE) MAKEDIR="$$i" mkdirs; \
+	done
+endif
+endif
+
+ifdef MAKEDIR
 mkdirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(WORKDIR) ];then $(MKDIR) $(B)/$(WORKDIR);fi
+	@if [ ! -d $(B)/$(MAKEDIR) ];then $(MKDIR) $(B)/$(MAKEDIR);fi
+endif
 
+ifdef WORKDIR
 D_FILES := $(shell find $(BD)/$(WORKDIR) -name '*.d' 2>/dev/null) \
            $(shell find $(BR)/$(WORKDIR) -name '*.d' 2>/dev/null)
 ifneq ($(strip $(D_FILES)),)
