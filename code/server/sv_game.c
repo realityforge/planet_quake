@@ -1076,6 +1076,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 /*
 ====================
 SV_DllSyscall
@@ -1098,6 +1099,7 @@ static intptr_t QDECL SV_DllSyscall( intptr_t arg, ... ) {
 	return SV_GameSystemCalls( &arg );
 #endif
 }
+#endif
 
 
 /*

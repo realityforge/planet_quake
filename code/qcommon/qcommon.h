@@ -580,19 +580,33 @@ typedef enum {
 	VM_COUNT
 } vmIndex_t;
 
-void	VM_Init( void );
+#ifdef BUILD_GAME_STATIC
+vm_t	*VM_Create2( vmIndex_t index, syscall_t systemCalls );
+#define VM_Create(x, y, z, deltaprime) VM_Create2(x, y)
+#define VM_CHECKBOUNDS(vm,a,b)
+#define VM_CHECKBOUNDS2(vm,a,b,c)
+#define VM_Forced_Unload_Done()
+#define VM_Debug(x)
+#define VM_Forced_Unload_Start()
+#define VM_Init()
+#else
 vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscalls, vmInterpret_t interpret );
+#endif
 
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 
 void	VM_Free( vm_t *vm );
 void	VM_Clear(void);
+#ifndef BUILD_GAME_STATIC
+void	VM_Init( void );
 void	VM_Forced_Unload_Start(void);
 void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart( vm_t *vm );
+#endif
 
 intptr_t	QDECL VM_Call( vm_t *vm, int nargs, int callNum, ... );
 
+#ifndef BUILD_GAME_STATIC
 void	VM_Debug( int level );
 void	VM_CheckBounds( const vm_t *vm, unsigned int address, unsigned int length );
 void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, unsigned int length );
@@ -603,6 +617,7 @@ void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, un
 #else // for performance evaluation purposes
 #define VM_CHECKBOUNDS(vm,a,b)
 #define VM_CHECKBOUNDS2(vm,a,b,c)
+#endif
 #endif
 
 void	*GVM_ArgPtr( intptr_t intValue );
@@ -625,6 +640,9 @@ typedef struct {
 } ui_hack;
 
 byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker);
+#endif
+
+#ifdef __WASM__
 qboolean VM_IsSuspended(vm_t *vm);
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp);
 int VM_Resume(vm_t *vm);

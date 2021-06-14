@@ -1903,6 +1903,7 @@ int BG_stricmp( const char *s1, const char *s2 ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 char *Q_stristr( const char * str1, const char * str2 )
 {
 	char *cp = (char *) str1;
@@ -1930,6 +1931,7 @@ char *Q_stristr( const char * str1, const char * str2 )
 
 	return( NULL );
 }
+#endif
 
 
 /*

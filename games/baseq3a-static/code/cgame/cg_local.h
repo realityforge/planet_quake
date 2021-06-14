@@ -1278,6 +1278,8 @@ extern const char		*eventnames[EV_MAX];
 //
 // cg_main.c
 //
+intptr_t CG_Call( int command, int arg0, int arg1, int arg2 );
+
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
 

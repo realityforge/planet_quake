@@ -415,68 +415,6 @@ Common CURL downloading functions
 
 /*
 ==================================
-stristr
-
-case-insensitive sub-string search
-==================================
-*/
-const char* stristr( const char *source, const char *target )
-{
-	const char *p0, *p1, *p2, *pn;
-	char c1, c2;
-
-	if ( *target == '\0' )
-	{
-		return source;
-	}
-
-	pn = source;
-	p1 = source;
-	p2 = target;
-
-	while ( *++p2 )
-	{
-		pn++;
-	}
-
-	while ( *pn != '\0' ) 
-	{
-
-		p0 = p1;
-		p2 = target;
-
-		while ( (c1 = *p1) != '\0' && (c2 = *p2) != '\0' )
-		{
-				if ( c1 <= 'Z' && c1 >= 'A' )
-					c1 += ('a' - 'A');
-
-				if ( c2 <= 'Z' && c2 >= 'A' )
-					c2 += ('a' - 'A');
-
-				if ( c1 != c2 )
-				{
-					break;
-				}
-
-				p1++;
-				p2++;
-		}
-
-		if ( *p2 == '\0' )
-		{
-			return p0;
-		}
-
-		p1 = p0 + 1;
-		pn++;
-	}
-
-	return NULL;
-}
-
-
-/*
-==================================
 replace1
 ==================================
 */
@@ -810,11 +748,11 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 
 	//Com_Printf( "h: %s\n--------------------------\n", header );
 
-	s = (char*)stristr( header, "content-disposition:" );
+	s = (char*)Q_stristr( header, "content-disposition:" );
 	if ( s ) 
 	{
 		s += 20; // strlen( "content-disposition:" )
-		s = (char*)stristr( s, "filename=" );
+		s = (char*)Q_stristr( s, "filename=" );
 		if ( s ) 
 		{
 			s += 9; // strlen( "filename=" )
@@ -839,7 +777,7 @@ static size_t Com_DL_HeaderCallback( void *ptr, size_t size, size_t nmemb, void 
 			*d++ = '\0';
 
 			// validate
-			if ( len < 5 || !stristr( name + len - 4, ".pk3" ) || !Com_DL_ValidFileName( name ) )
+			if ( len < 5 || !Q_stristr( name + len - 4, ".pk3" ) || !Com_DL_ValidFileName( name ) )
 			{
 				Com_Printf( S_COLOR_RED "Com_DL_HeaderCallback: bad file name '%s'\n", name );
 				return (size_t)-1;

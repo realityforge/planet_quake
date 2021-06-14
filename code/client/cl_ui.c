@@ -1212,6 +1212,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 /*
 ====================
 UI_DllSyscall
@@ -1234,6 +1235,7 @@ static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
 	return CL_UISystemCalls( &arg );
 #endif
 }
+#endif
 
 
 /*

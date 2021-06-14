@@ -36,6 +36,10 @@ and one exported function: Perform
 
 #include "vm_local.h"
 
+#ifdef BUILD_GAME_STATIC
+#include <cgame/cg_local.h>
+#endif
+
 opcode_info_t ops[ OP_MAX ] = 
 {
 	// size, stack, nargs, flags
@@ -209,9 +213,6 @@ cvar_t	*vm_rtChecks;
 int		vm_debugLevel = 0;
 #endif
 
-// used by Com_Error to get rid of running vm's before longjmp
-static int forced_unload;
-
 static int vmIndex = 0;
 struct vm_s	vmTable[ VM_COUNT * MAX_NUM_VMS ];
 
@@ -223,14 +224,84 @@ static const char *vmName[ VM_COUNT ] = {
 #endif
 };
 
-static void VM_VmInfo_f( void );
-static void VM_VmProfile_f( void );
+
+/*
+=================
+VM_ReplaceInstructions
+=================
+*/
+
+typedef struct {
+	vmIndex_t index;
+	uint32_t crc32sum;
+	int instructionCount;
+	unsigned int exactDataLength;
+	recognizedVM_t knownVM;
+	char *name;
+} specificVM_t;
+
+static specificVM_t knownVMs[] = {
+	{VM_GAME, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_GAME, 0x5AAE0ACC, 251521, 1872720, VMR_OSP, "OSP"},
+	{VM_GAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
+	{VM_GAME, 0x0, 0, 0, VMR_URT, "Urban Terror"},
+	{VM_GAME, 0x9E8DC0C1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
+	{VM_GAME, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
+  // this might be CPMA 3
+	{VM_GAME, 0xFF9DEF19, 272443, 4156444, VMR_CPMA2, "CPMA"},
+	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
+
+#ifndef DEDICATED
+	{VM_CGAME, 0x2DD51C2A, 95182, 2122744, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_CGAME, 0x0, 0, 0, VMR_OSP, "OSP"},
+	{VM_CGAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
+	{VM_CGAME, 0x051D4668, 267812, 38064376, VMR_URT, "Urban Terror"},
+	{VM_CGAME, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
+	{VM_CGAME, 0x3E93FC1A, 123596, 2007536, VMR_CPMA1, "CPMA"},
+	{VM_CGAME, 0xF0F1AE90, 123552, 2007520, VMR_CPMA2, "CPMA"},
+  //VMR_CPMA3? 8E028120, ic: 138536, dl: 2090780
+	{VM_CGAME, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
+
+	{VM_UI, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_UI, 0xCA84F31D, 78585, 542180, VMR_OSP, "OSP Demo"},
+	{VM_UI, 0x6E51985F, 125942, 1334788, VMR_DEFRAG, "Defrag"},
+	{VM_UI, 0xe771cdf9, 101585, 9162280, VMR_URT, "Urban Terror"},
+	{VM_UI, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
+	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
+	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
+  //CPMA 3 ? D8BCD4FA, ic: 80745, dl: 865156
+	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
+#endif
+	{0, 0, 0, 0, 0, ""}
+};
+
+static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
+	for(int i = 0; i < ARRAY_LEN(knownVMs); i++) {
+		if(knownVMs[i].crc32sum == vm->crc32sum
+			&& knownVMs[i].instructionCount == vm->instructionCount
+			&& knownVMs[i].exactDataLength == vm->exactDataLength
+			&& knownVMs[i].index == index
+			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
+			return knownVMs[i].knownVM;
+		}
+	}
+	return VMR_UNKNOWN;
+}
+
+#ifndef BUILD_GAME_STATIC
 
 #ifdef DEBUG
 void VM_Debug( int level ) {
 	vm_debugLevel = level;
 }
 #endif
+
+
+// used by Com_Error to get rid of running vm's before longjmp
+static int forced_unload;
+
+static void VM_VmInfo_f( void );
+static void VM_VmProfile_f( void );
 
 /*
 ==============
@@ -1480,69 +1551,6 @@ __noJTS:
 }
 
 
-/*
-=================
-VM_ReplaceInstructions
-=================
-*/
-
-typedef struct {
-	vmIndex_t index;
-	uint32_t crc32sum;
-	int instructionCount;
-	unsigned int exactDataLength;
-	recognizedVM_t knownVM;
-	char *name;
-} specificVM_t;
-
-static specificVM_t knownVMs[] = {
-	{VM_GAME, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_GAME, 0x5AAE0ACC, 251521, 1872720, VMR_OSP, "OSP"},
-	{VM_GAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
-	{VM_GAME, 0x0, 0, 0, VMR_URT, "Urban Terror"},
-	{VM_GAME, 0x9E8DC0C1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
-	{VM_GAME, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
-  // this might be CPMA 3
-	{VM_GAME, 0xFF9DEF19, 272443, 4156444, VMR_CPMA2, "CPMA"},
-	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
-
-#ifndef DEDICATED
-	{VM_CGAME, 0x2DD51C2A, 95182, 2122744, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_CGAME, 0x0, 0, 0, VMR_OSP, "OSP"},
-	{VM_CGAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
-	{VM_CGAME, 0x051D4668, 267812, 38064376, VMR_URT, "Urban Terror"},
-	{VM_CGAME, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
-	{VM_CGAME, 0x3E93FC1A, 123596, 2007536, VMR_CPMA1, "CPMA"},
-	{VM_CGAME, 0xF0F1AE90, 123552, 2007520, VMR_CPMA2, "CPMA"},
-  //VMR_CPMA3? 8E028120, ic: 138536, dl: 2090780
-	{VM_CGAME, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
-
-	{VM_UI, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_UI, 0xCA84F31D, 78585, 542180, VMR_OSP, "OSP Demo"},
-	{VM_UI, 0x6E51985F, 125942, 1334788, VMR_DEFRAG, "Defrag"},
-	{VM_UI, 0xe771cdf9, 101585, 9162280, VMR_URT, "Urban Terror"},
-	{VM_UI, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
-	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
-	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
-  //CPMA 3 ? D8BCD4FA, ic: 80745, dl: 865156
-	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
-#endif
-	{0, 0, 0, 0, 0, ""}
-};
-
-static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
-	for(int i = 0; i < ARRAY_LEN(knownVMs); i++) {
-		if(knownVMs[i].crc32sum == vm->crc32sum
-			&& knownVMs[i].instructionCount == vm->instructionCount
-			&& knownVMs[i].exactDataLength == vm->exactDataLength
-			&& knownVMs[i].index == index
-			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
-			return knownVMs[i].knownVM;
-		}
-	}
-	return VMR_UNKNOWN;
-}
-
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	instruction_t *ip;
 
@@ -2257,4 +2265,149 @@ int VM_Resume(vm_t *vm) {
 		Com_Error(ERR_FATAL, "VM_ResumeInterpreted not implemented");
 
 }
+#endif
+
+
+#else
+
+
+/*
+================
+VM_Create
+
+If image ends in .qvm it will be interpreted, otherwise
+it will attempt to load as a system dll
+================
+*/
+vm_t *VM_Create2( vmIndex_t index, syscall_t systemCalls ) {
+	int			remaining;
+	const char	*name;
+	vm_t		*vm;
+
+	if ( !systemCalls ) {
+		Com_Error( ERR_FATAL, "VM_Create: bad parms" );
+	}
+
+	if ( (unsigned)index >= VM_COUNT ) {
+		Com_Error( ERR_DROP, "VM_Create: bad vm index %i", index );	
+	}
+
+	remaining = Hunk_MemoryRemaining();
+
+	for(int i = 0; i < (VM_COUNT * MAX_NUM_VMS); i++) {
+		if(!vmTable[i].name) {
+			vmIndex = i;
+		}
+	}
+	vm = &vmTable[ vmIndex ];
+
+#if 0
+	// see if we already have the VM
+	if ( vm->name ) {
+		if ( vm->index != index ) {
+			Com_Error( ERR_DROP, "VM_Create: bad allocated vm index %i", vm->index );
+			return NULL;
+		}
+		return vm;
+	}
+#endif
+
+	name = vmName[ index ];
+
+	vm->name = name;
+	vm->index = index;
+	vm->vmIndex = vmIndex;
+	vm->systemCall = systemCalls;
+	vm->privateFlag = CVAR_PRIVATE;
+	vm->compiled = qfalse;
+	vm->knownVM = vmcmp(vm, index, VMR_UNKNOWN);
+
+	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
+
+	vmIndex++;
+	return vm;
+}
+
+/*
+==============
+VM_Call
+
+================
+*/
+intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... )
+{
+	//vm_t	*oldVM;
+	intptr_t r = 0;
+	int i;
+
+	if ( !vm ) {
+		Com_Error( ERR_FATAL, "VM_Call with NULL vm" );
+	}
+
+#ifdef DEBUG
+	if ( vm_debugLevel ) {
+	  Com_Printf( "VM_Call( %d )\n", callnum );
+	}
+
+	if ( nargs >= MAX_VMMAIN_CALL_ARGS ) {
+		Com_Error( ERR_DROP, "VM_Call: nargs >= MAX_VMMAIN_CALL_ARGS" );
+	}
+#endif
+
+	++vm->callLevel;
+	// if we have a dll loaded, call it directly
+	//rcg010207 -  see dissertation at top of VM_DllSyscall() in this file.
+	int args[MAX_VMMAIN_CALL_ARGS-1];
+	va_list ap;
+	va_start( ap, callnum );
+	for ( i = 0; i < nargs; i++ ) {
+		args[i] = va_arg( ap, int );
+	}
+	va_end(ap);
+
+	// add more arguments if you're changed MAX_VMMAIN_CALL_ARGS:
+  if(vm->index == VM_CGAME) {
+    r = CG_Call( callnum, args[0], args[1], args[2] );
+  } else if (vm->index == VM_UI) {
+    //r = UI_Call( vm, nargs+1, (int*)&callnum );
+  } else if (vm->index == VM_GAME) {
+    //r = G_Call( vm, nargs+1, (int*)&callnum );
+  }
+	--vm->callLevel;
+
+	return r;
+}
+
+
+void VM_Clear( void ) {
+	int i;
+	for ( i = 0; i < VM_COUNT; i++ ) {
+		VM_Free( &vmTable[ i ] );
+	}
+}
+
+
+/*
+==============
+VM_Free
+==============
+*/
+void VM_Free( vm_t *vm ) {
+
+	if( !vm ) {
+		return;
+	}
+
+	if ( vm->callLevel ) {
+		Com_Printf( "forcefully unloading %s vm\n", vm->name );
+	}
+
+	if ( vm->destroy )
+		vm->destroy( vm );
+
+  // TODO: call reset functions?
+
+	Com_Memset( vm, 0, sizeof( *vm ) );
+}
+
 #endif

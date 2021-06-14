@@ -1,6 +1,9 @@
 ifndef MOD
 MOD           := baseq3a
 endif
+ifeq ($(BUILD_CLIENT),1)
+MOD           := baseq3a-static
+endif
 
 BUILD_BASEQ3A := 1
 ifneq ($(BUILD_CLIENT),1)
@@ -8,12 +11,12 @@ MKFILE        := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
-GAMEDIR       := $(MOUNT_DIR)/../games/baseq3a/code
+GAMEDIR       := $(MOUNT_DIR)/../games/$(MOD)/code
 QADIR         := $(GAMEDIR)/game
 CGDIR         := $(GAMEDIR)/cgame
 UIDIR         := $(GAMEDIR)/q3_ui
 
-GAME_CFLAGS   ?= $(CFLAGS)
+GAME_CFLAGS   := $(BASE_CFLAGS)
 ifeq ($(CC), $(findstring $(CC), "clang" "clang++"))
 GAME_CFLAGS   += -Qunused-arguments
 endif
@@ -25,6 +28,8 @@ GAME_CFLAGS   += -Werror-implicit-function-declaration
 
 ifneq ($(BUILD_CLIENT),1)
 GAME_CFLAGS   += $(SHLIBCFLAGS)
+else
+export GAME_INCLUDE := -I$(MOUNT_DIR)/../games/$(MOD)/code
 endif
 
 define DO_GAME_CC
@@ -99,10 +104,12 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
 				  $(B)/$(MOD)/cgame/cg_servercmds.o \
 				  $(B)/$(MOD)/cgame/cg_snapshot.o \
 				  $(B)/$(MOD)/cgame/cg_view.o \
-				  $(B)/$(MOD)/cgame/cg_weapons.o \
-				  \
-				  $(B)/$(MOD)/game/q_math.o \
+				  $(B)/$(MOD)/cgame/cg_weapons.o
+
+ifneq ($(BUILD_CLIENT),1)
+CGOBJ_  = $(B)/$(MOD)/game/q_math.o \
 				  $(B)/$(MOD)/game/q_shared.o
+endif
 
 CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 
@@ -118,10 +125,6 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
 				  $(B)/$(MOD)/game/ai_main.o \
 				  $(B)/$(MOD)/game/ai_team.o \
 				  $(B)/$(MOD)/game/ai_vcmd.o \
-				  $(B)/$(MOD)/game/bg_lib.o \
-				  $(B)/$(MOD)/game/bg_misc.o \
-				  $(B)/$(MOD)/game/bg_pmove.o \
-				  $(B)/$(MOD)/game/bg_slidemove.o \
 				  $(B)/$(MOD)/game/g_active.o \
 				  $(B)/$(MOD)/game/g_arenas.o \
 				  $(B)/$(MOD)/game/g_bot.o \
@@ -142,10 +145,16 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
 				  $(B)/$(MOD)/game/g_trigger.o \
 				  $(B)/$(MOD)/game/g_utils.o \
 				  $(B)/$(MOD)/game/g_unlagged.o \
-				  $(B)/$(MOD)/game/g_weapon.o \
-				  \
-				  $(B)/$(MOD)/game/q_math.o \
-				  $(B)/$(MOD)/game/q_shared.o
+				  $(B)/$(MOD)/game/g_weapon.o
+
+ifneq ($(BUILD_CLIENT),1)
+QAOBJ_ += $(B)/$(MOD)/game/bg_lib.o \
+					$(B)/$(MOD)/game/bg_misc.o \
+					$(B)/$(MOD)/game/bg_pmove.o \
+				  $(B)/$(MOD)/game/bg_slidemove.o \
+					$(B)/$(MOD)/game/q_math.o \
+					$(B)/$(MOD)/game/q_shared.o
+endif
 
 QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
 
@@ -154,8 +163,6 @@ QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
 #############################################################################
 
 UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
-				  $(B)/$(MOD)/ui/bg_misc.o \
-				  $(B)/$(MOD)/ui/bg_lib.o \
 				  $(B)/$(MOD)/ui/ui_addbots.o \
 				  $(B)/$(MOD)/ui/ui_atoms.o \
 				  $(B)/$(MOD)/ui/ui_cdkey.o \
@@ -193,10 +200,14 @@ UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
 				  $(B)/$(MOD)/ui/ui_startserver.o \
 				  $(B)/$(MOD)/ui/ui_team.o \
 				  $(B)/$(MOD)/ui/ui_teamorders.o \
-				  $(B)/$(MOD)/ui/ui_video.o \
-				  \
-				  $(B)/$(MOD)/game/q_math.o \
-				  $(B)/$(MOD)/game/q_shared.o
+				  $(B)/$(MOD)/ui/ui_video.o
+
+ifneq ($(BUILD_CLIENT),1)
+UIOBJ_ += $(B)/$(MOD)/ui/bg_misc.o \
+					$(B)/$(MOD)/ui/bg_lib.o \
+					$(B)/$(MOD)/game/q_math.o \
+					$(B)/$(MOD)/game/q_shared.o
+endif
 
 UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 

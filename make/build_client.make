@@ -230,6 +230,10 @@ export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
             -ffast-math -fno-short-enums -MMD
+ifeq ($(BUILD_GAME_STATIC),1)
+CFLAGS   += $(GAME_INCLUDE)
+endif
+
 #GXXFLAGS := $(CFLAGS) -std=gnu++11
 
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?

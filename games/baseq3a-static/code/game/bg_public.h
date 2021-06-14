@@ -748,8 +748,6 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 int BG_sprintf( char *buf, const char *format, ... );
 int ED_vsprintf( char *buffer, const char *fmt, va_list argptr );
 
-char *Q_stristr( const char * str1, const char * str2 );
-
 char *strtok( char *strToken, const char *strDelimit );
 char *EncodedString( const char *str );
 char *DecodedString( const char *str );

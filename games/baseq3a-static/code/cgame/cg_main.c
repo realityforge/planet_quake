@@ -33,13 +33,12 @@ int dll_trap_R_AddLinearLightToScene;
 #endif
 
 #ifdef BUILD_GAME_STATIC
-vm_t *CG_ResetGlobals(void) {
+void CG_ResetGlobals(void) {
   static int instance = 0;
   instance++;
   
   
   
-  return instance;
 }
 #endif
 
@@ -51,7 +50,12 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .q3vm file
 ================
 */
-DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 ) {
+#ifdef BUILD_GAME_STATIC
+intptr_t CG_Call( int command, int arg0, int arg1, int arg2 )
+#else
+DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
+#endif
+{
 
 	switch ( command ) {
 	case CG_INIT:
