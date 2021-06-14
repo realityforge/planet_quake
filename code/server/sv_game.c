@@ -562,7 +562,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case G_SET_CONFIGSTRING:
 		// Don't allow the game to overwrite demo configstrings (unless it modifies the normal spectator clients configstrings, this exception allows for player connecting during a demo playback to be correctly rendered, else they will get an empty configstring so no icon, no name, nothing...)
-		if ( (sv_democlients->integer > 0 && args[1] >= CS_PLAYERS + sv_democlients->integer && args[1] < CS_PLAYERS + sv_maxclients->integer) || sv.demoState != DS_PLAYBACK ) { // ATTENTION: sv.demoState check must be placed LAST! Else, it will short-circuit and prevent normal players configstrings from being set!
+#ifdef USE_DEMO_SERVER
+		if ( (sv_democlients->integer > 0 && args[1] >= CS_PLAYERS + sv_democlients->integer && args[1] < CS_PLAYERS + sv_maxclients->integer) || sv.demoState != DS_PLAYBACK )
+#endif
+    { // ATTENTION: sv.demoState check must be placed LAST! Else, it will short-circuit and prevent normal players configstrings from being set!
 			SV_SetConfigstring( args[1], VMA(2) );
 		}
 		return 0;

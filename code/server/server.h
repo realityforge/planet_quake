@@ -130,6 +130,7 @@ typedef struct {
   byte			baselineUsed[ MAX_GENTITIES ];
 #endif
 
+#ifdef USE_DEMO_SERVER
 	// serverside demo recording
 	fileHandle_t		demoFile;
 	demoState_t	demoState;
@@ -138,6 +139,7 @@ typedef struct {
 	// serverside demo recording - previous frame for delta compression
 	sharedEntity_t	demoEntities[MAX_GENTITIES];
 	playerState_t	demoPlayerStates[MAX_CLIENTS];
+#endif
 } server_t;
 
 typedef struct {
@@ -257,14 +259,17 @@ typedef struct client_s {
 	sharedEntity_t	*gentity;			// SV_GentityNum(clientnum)
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
+#ifdef USE_DEMO_SERVER
 	// serverside demo information
 	qboolean  demoClient; // is this a demoClient?
  	char		  demoName[MAX_QPATH];
+#endif
+#ifdef USE_DEMO_CLIENTS
  	qboolean	demorecording;
  	qboolean	demowaiting;	// don't record until a non-delta message is received
  	fileHandle_t	demofile;
  	qboolean	savedemo; // qtrue iff the demo should be saved in any case (qfalse and sv_autorecord 1 --> the score decides)
-
+#endif
 
 	// downloading
 	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
@@ -728,6 +733,7 @@ qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 void SV_GameSendServerCommand( int clientNum, const char *text );
 
 
+#ifdef USE_DEMO_CLIENTS
 //
 // sv_demo_client.c
 //
@@ -737,8 +743,10 @@ void SV_StopRecord( client_t	*cl );
 void SV_StopRecord_f( void );
 void SV_SaveRecord_f( void );
 void SV_WriteDemoMessage (client_t *cl, msg_t *msg, int headerBytes );
+#endif
 
 
+#ifdef USE_DEMO_SERVER
 //
 // sv_demo.c
 //
@@ -797,6 +805,8 @@ void SV_Demo_Record_f( void );
 int SV_GentityGetHealthField( sharedEntity_t * gent );
 void SV_GentitySetHealthField( sharedEntity_t * gent, int value );
 void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player );
+#endif
+
 
 //
 // sv_bot.c

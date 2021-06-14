@@ -996,14 +996,18 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, SV_EscapeStr(drop->userinfo, sizeof(drop->userinfo))), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
 #endif
-	
+
+#ifdef USE_DEMO_CLIENTS
 	if(drop->demorecording) {
 		SV_StopRecord(drop);
 	}
+#endif
 
+#ifdef USE_DEMO_SERVER
 	if ( drop->state == CS_ZOMBIE || drop->demoClient ) {
 		return;		// already dropped
 	}
+#endif
 
 	isBot = drop->netchan.remoteAddress.type == NA_BOT;
 
@@ -1083,7 +1087,12 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	// to the master so it is known the server is empty
 	// send a heartbeat now so the master will get up to date info
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
-		if ( svs.clients[i].state >= CS_CONNECTED && !svs.clients[i].demoClient ) {
+#ifdef USE_DEMO_SERVER
+    if( svs.clients[i].demoClient )
+      continue;
+#endif
+
+		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			break;
 		}
 	}
@@ -1274,12 +1283,14 @@ static void SV_SendClientGameState( client_t *client ) {
 
 	// write the checksum feed
 	MSG_WriteLong( &msg, sv.checksumFeed );
-	
+
+#ifdef USE_DEMO_CLIENTS
 	if ( client->demorecording && !client->demowaiting) {
 		msg_t copyMsg;
 		Com_Memcpy(&copyMsg, &msg, sizeof(msg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
  	}
+#endif
 
 	// it is important to handle gamestate overflow
 	// but at this stage client can't process any reliable commands
@@ -1343,11 +1354,13 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	// call the game begin function
 	VM_Call( gvm, 1, GAME_CLIENT_BEGIN, client - svs.clients );
 
+#ifdef USE_DEMO_SERVER
 	// server-side demo playback: prevent players from joining the game when a demo is replaying (particularly if the gametype is non-team based, by default the gamecode force players to join in)
 	if (sv.demoState == DS_PLAYBACK &&
 	    ( (client - svs.clients) >= sv_democlients->integer ) && ( (client - svs.clients) < sv_maxclients->integer ) ) { // check that it's a real player
 		SV_ExecuteClientCommand(client, "team spectator");
 	}
+#endif
 
 #ifdef USE_PERSIST_CLIENT
 	if(sv_clSessions->integer != 0) {
@@ -1357,13 +1370,18 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 #endif
 
 	// serverside demo
- 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT
-		&& !client->demoClient) { // don't record server side demo playbacks automatically
+#ifdef USE_DEMO_CLIENTS
+#ifdef USE_DEMO_SERVER
+  if( !client->demoClient )
+#endif
+ 	if (sv_autoRecord->integer && client->netchan.remoteAddress.type != NA_BOT) { 
+  // don't record server side demo playbacks automatically
  		if (client->demorecording) {
  			SV_StopRecord( client );
  		}
- 		SV_Record(client, 0);
+    SV_Record(client, 0);
  	}
+#endif
 }
 
 
@@ -1485,10 +1503,12 @@ SV_BeginDownload_f
 ==================
 */
 static void SV_BeginDownload_f( client_t *cl ) {
+#ifdef USE_DEMO_CLIENTS
  	// Stop serverside demo from this client
   if (sv_autoRecord->integer && cl->demorecording) {
   	SV_StopRecord( cl );
  	}
+#endif
 
 	// Kill any existing download
 	SV_CloseDownload( cl );
@@ -1722,8 +1742,13 @@ int SV_SendQueuedMessages( void )
 	{
 		cl = &svs.clients[i];
 
-		if ( cl->state && !cl->demoClient )
-		{
+#ifdef USE_DEMO_SERVER
+    if( cl->demoClient )
+      continue;
+#endif
+
+		if ( cl->state )
+    {
 			nextFragT = SV_RateMsec(cl);
 
 			if(!nextFragT)
@@ -2088,10 +2113,12 @@ SV_UpdateUserinfo_f
 void SV_UpdateUserinfo_f( client_t *cl ) {
 	const char *info;
 
+#ifdef USE_DEMO_SERVER
 	// Save userinfo changes to demo (also in SV_SetUserinfo() in sv_init.c)
 	if ( sv.demoState == DS_RECORDING ) {
 		SV_DemoWriteClientUserinfo( cl, Cmd_Argv(1) );
 	}
+#endif
 
 	info = Cmd_Argv( 1 );
 
@@ -2644,7 +2671,12 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 		Com_DPrintf( "client text ignored for %s: %s\n", cl->name, Cmd_Argv(0) );
 	} else {
 		// pass unknown strings to the game
-		if (!ucmd->name && sv.state == SS_GAME && (cl->state == CS_ACTIVE || cl->state == CS_PRIMED || cl->demoClient)) { // accept democlients, else you won't be able to make democlients join teams nor say messages!
+		if (!ucmd->name && sv.state == SS_GAME && (cl->state == CS_ACTIVE || cl->state == CS_PRIMED
+#ifdef USE_DEMO_SERVER
+       || cl->demoClient // accept democlients, else you won't be able to make democlients join teams nor say messages!
+#endif
+    )) {
+#ifdef USE_DEMO_SERVER
 			if ( sv.demoState == DS_RECORDING ) { // if demo is recording, we store this command and clientid
 				SV_DemoWriteClientCommand( cl, s );
 			} else if ( sv.demoState == DS_PLAYBACK &&
@@ -2655,6 +2687,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 				Cmd_Clear();
 				return qtrue;
 			}
+#endif
 			if(strcmp(Cmd_Argv(0), "say") && strcmp(Cmd_Argv(0), "say_team")
 		 		&& strcmp(Cmd_Argv(0), "tell"))
 				Cmd_Args_Sanitize("\n\r;"); //remove \n, \r and ; from string. We don't do that for say-commands because it makes people mad (understandebly)

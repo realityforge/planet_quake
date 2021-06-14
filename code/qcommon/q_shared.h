@@ -79,7 +79,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_MV_ZCMD		// command compression
 // RmlUi adds supplementary initerfaces written in HTML.
 #define USE_RMLUI 1
-
+// TheDoctors method of recording a demo file for every single client
+#define USE_DEMO_CLIENTS 1
+// lrq3000 method of server side demos, sending entity states to every client while spectating
+#define USE_DEMO_SERVER 1
 #endif
 
 
@@ -1545,6 +1548,7 @@ typedef enum _flag_status {
 } flagStatus_t;
 
 
+#ifdef USE_DEMO_SERVER
 typedef enum {
 	DS_NONE,
 
@@ -1556,6 +1560,7 @@ typedef enum {
 
 	DS_NUM_DEMO_STATES
 } demoState_t;
+#endif
 
 
 #define	MAX_GLOBAL_SERVERS				4096

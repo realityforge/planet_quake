@@ -158,8 +158,6 @@ static void SV_Map_f( void ) {
 	char		expanded[MAX_QPATH];
 	char		mapname[MAX_QPATH];
 	int			len;
-	int			i;
- 	client_t	*cl;
 
 	map = Cmd_Argv(1);
 	if ( !map || !*map || strlen(map) == 0 ) {
@@ -229,12 +227,17 @@ static void SV_Map_f( void ) {
 		}
 	}
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+#endif
 
+#ifdef USE_DEMO_CLIENTS
+  client_t	*cl;
+  int i;
 	if (sv_autoRecord->integer && svs.initialized) {
  		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
  			if (cl->state >= CS_CONNECTED && cl->demorecording) {
@@ -242,6 +245,7 @@ static void SV_Map_f( void ) {
  			}
  		}
  	}
+#endif
 
 	// save the map name here cause on a map restart we reload the q3config.cfg
 	// and thus nuke the arguments of the map command
@@ -304,11 +308,13 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+#endif
 
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
@@ -420,10 +426,12 @@ static void SV_MapRestart_f( void ) {
 	svs.time += 100;
 	
 	
+#ifdef USE_DEMO_SERVER
 	// start recording a demo
   if ( sv_autoDemo->integer ) {
     SV_DemoAutoDemoRecord();
   }
+#endif
 }
 
 
@@ -1215,7 +1223,11 @@ static void SV_Status_f( void ) {
 	// first pass: save and determine max.legths of name/address fields
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ )
 	{
+#ifdef USE_DEMO_SERVER
 		if ( cl->state == CS_FREE && !cl->demoClient )
+#else
+    if ( cl->state == CS_FREE )
+#endif
 			continue;
 
 		l = strlen( cl->name ) + 1;
@@ -1763,6 +1775,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );
 	Cmd_SetDescription( "filtercmd", "Run a command while filtering\nUsage: %s <filter format string>" );
 
+#ifdef USE_DEMO_SERVER
 	Cmd_AddCommand ("demo_record", SV_Demo_Record_f);
 	Cmd_SetDescription( "demo_record", "Record a server-side demo\nUsage: demo_record [filename]" );
 	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
@@ -1770,13 +1783,16 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_SetDescription( "demo_play", "Play a server-side demo\nUsage: demo_play <filename>" );
 	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
 	Cmd_SetDescription( "demo_stop", "Stop playing a server-side demo\nUsage: demo_stop" );
+#endif
 
+#ifdef USE_DEMO_CLIENTS
   Cmd_AddCommand ("cl_record", SV_Record_f);
 	Cmd_SetDescription( "cl_record", "Record a demo file for a client\nUsage: cl_record <client #>" );
   Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
 	Cmd_SetDescription( "cl_stoprecord", "Stop recording a client demo\nUsage: cl_stoprecord" );
   Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
 	Cmd_SetDescription( "cl_saverecord", "Save a client recording regardless of score\nUsage: cl_saverecord <filename>" );
+#endif
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );

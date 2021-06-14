@@ -681,7 +681,10 @@ static void SV_BuildCommonSnapshot( void )
 			}
 	
 			if ( ent->s.number != num
-				&& !(sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK) ) {
+#ifdef USE_DEMO_SERVER
+				&& !(sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK) 
+#endif
+      ) {
 				Com_DPrintf( "FIXING ENT->S.NUMBER %i => %i\n", ent->s.number, num );
 				ent->s.number = num;
 			}
@@ -1094,7 +1097,6 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
 	int     headerBytes;
-	playerState_t	*ps;
 
 #ifdef USE_MULTIVM_SERVER
 	int igvm;
@@ -1166,7 +1168,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
 
- 	if ( client->demorecording ) {
+#ifdef USE_DEMO_CLIENTS
+  playerState_t	*ps;
+	if ( client->demorecording ) {
 		msg_t copyMsg;
 		Com_Memcpy(&copyMsg, &msg, sizeof(copyMsg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
@@ -1175,6 +1179,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
  			SV_StopRecord( client );
  		}
  	}
+#endif
 
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
@@ -1230,8 +1235,14 @@ void SV_SendClientMessages( void )
 	{
 		c = &svs.clients[ i ];
 		
-		if ( c->state == CS_FREE || c->demoClient ) // do not send a packet to a democlient, this will cause the engine to crash
+		if ( c->state == CS_FREE ) 
 			continue;		// not connected
+
+#ifdef USE_DEMO_SERVER
+    // do not send a packet to a democlient, this will cause the engine to crash
+    if(c->demoClient) // demo clients only exist in networking, not in qagame
+      continue;
+#endif
 
 		if ( *c->downloadName )
 			continue;		// Client is downloading, don't send snapshots

@@ -283,11 +283,13 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 		Com_Printf( "broadcast: %s\n", SV_ExpandNewlines( message ) );
 	}
 
+#ifdef USE_DEMO_SERVER
 	// save broadcasts to demo
 	// note: in the case a command is only issued to a specific client, it is NOT recorded (see above when cl != NULL). If you want to record them, just place this code above, but be warned that it may be dangerous (such as "disconnect" command) because server commands will be replayed to every connected clients!
 	if ( sv.demoState == DS_RECORDING ) {
 		SV_DemoWriteServerCommand( (char *)message );
 	}
+#endif
 
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
@@ -1785,6 +1787,7 @@ void SV_Frame( int msec ) {
 		svs.emptyFrame = qfalse; // ok, run recorder
 #endif
 
+#ifdef USE_DEMO_SERVER
 		// play/record demo frame (if enabled)
 		if (sv.demoState == DS_RECORDING) // Record the frame
 			SV_DemoWriteFrame();
@@ -1792,6 +1795,7 @@ void SV_Frame( int msec ) {
 			SV_DemoRestartPlayback();
 		else if (sv.demoState == DS_PLAYBACK) // Play the next demo frame
 			SV_DemoReadFrame();
+#endif
 	}
 
 	if ( com_speeds->integer ) {

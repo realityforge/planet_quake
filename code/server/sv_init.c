@@ -127,10 +127,12 @@ void SV_SetConfigstring (int index, const char *val) {
     Z_Free( sv.configstrings[index] );
 	sv.configstrings[index] = CopyString( val );
 
+#ifdef USE_DEMO_SERVER
 	// save config strings to demo
 	if (sv.demoState == DS_RECORDING) {
 		SV_DemoWriteConfigString( index, val );
 	}
+#endif
 
 #ifdef USE_MULTIVM_SERVER
   if(sv.gentitySize[gvmi] == 0) {
@@ -197,10 +199,12 @@ void SV_SetUserinfo( int index, const char *val ) {
 		val = "";
 	}
 
+#ifdef USE_DEMO_SERVER
 	// Save userinfo changes to demo (also in SV_UpdateUserinfo_f() in sv_client.c)
 	if ( sv.demoState == DS_RECORDING ) {
 		SV_DemoWriteClientUserinfo( &svs.clients[index], val );
 	}
+#endif
 
 	Q_strncpyz( svs.clients[index].userinfo, val, sizeof( svs.clients[ index ].userinfo ) );
 	Q_strncpyz( svs.clients[index].name, Info_ValueForKey( val, "name" ), sizeof(svs.clients[index].name) );
@@ -503,15 +507,17 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	} else {
 		// check for maxclients change
 #ifdef USE_MV
-		if ( sv_maxclients->modified || sv_mvClients->modified ) {
+		if ( sv_maxclients->modified || sv_mvClients->modified )
 #else
-		if ( sv_maxclients->modified ) {
+		if ( sv_maxclients->modified )
 #endif
-;
+    {
+#ifdef USE_DEMO_SERVER
 			// If we are playing/waiting to play/waiting to stop a demo, we use a specialized function that will move real clients slots (so that democlients will be put to their original slots they were affected at the time of the real game)
 			if (sv.demoState == DS_WAITINGPLAYBACK || sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGSTOP)
 				SV_DemoChangeMaxClients();
 			else
+#endif
 				SV_ChangeMaxClients();
 		}
 	}
@@ -873,10 +879,12 @@ void SV_SpawnServer_After_Startup( void ) {
 		Cvar_Set( "activeAction", "" );
 	}
 
+#ifdef USE_DEMO_SERVER
 	// start recording a demo
 	if ( sv_autoDemo->integer ) {
 		SV_DemoAutoDemoRecord();
 	}
+#endif
 }
 
 
@@ -1220,10 +1228,12 @@ void SV_FinalMessage( const char *message ) {
 	for ( j = 0 ; j < 2 ; j++ ) {
 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
 			if (cl->state >= CS_CONNECTED ) {
+#ifdef USE_DEMO_SERVER
  				// serverside demo
   			if (cl->demorecording) {
   				SV_StopRecord( cl );
  				}
+#endif
 #ifdef USE_LOCAL_DED
 				if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
 					SV_SendServerCommand( cl, "reconnect\nprint \"%s\n\"\n", message );
@@ -1254,8 +1264,6 @@ before Sys_Quit or Sys_Error
 ================
 */
 void SV_Shutdown( const char *finalmsg ) {
-	int		i;
- 	client_t	*cl;
 
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
@@ -1269,17 +1277,23 @@ void SV_Shutdown( const char *finalmsg ) {
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
-		
+#endif
+
+#ifdef USE_DEMO_CLIENTS
+  int		i;
+  client_t	*cl;
 	for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
 		if (cl->state >= CS_CONNECTED && cl->demorecording) {
 			SV_StopRecord( cl );
 		}
 	}
+#endif
 
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();
