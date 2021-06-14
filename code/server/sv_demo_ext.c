@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifdef USE_DEMO_CLIENTS
+
 // sv_demo_ext.c -- Server side demo recording (supplementary functions)
 
 #include "../qcommon/q_shared.h"
@@ -86,3 +88,5 @@ void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player )
 
     return;
 }
+
+#endif

@@ -148,10 +148,10 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 
 		if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
-			poly->verts->modulate.rgba[0] = 255;
-			poly->verts->modulate.rgba[1] = 255;
-			poly->verts->modulate.rgba[2] = 255;
-			poly->verts->modulate.rgba[3] = 255;
+			poly->verts->modulate[0] = 255;
+			poly->verts->modulate[1] = 255;
+			poly->verts->modulate[2] = 255;
+			poly->verts->modulate[3] = 255;
 		}
 		// done.
 		r_numpolys++;
@@ -200,8 +200,7 @@ RE_AddRefEntityToScene
 
 =====================
 */
-extern vec3_t rf_firstPersonOffset;
-void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
+void RE_AddRefEntityToScene( const refEntity_t *ent, qboolean intShaderTime ) {
 	vec3_t cross;
 
 	if ( !tr.registered ) {
@@ -222,12 +221,6 @@ void RE_AddRefEntityToScene( refEntity_t *ent, qboolean intShaderTime ) {
 	if ( (int)ent->reType < 0 || ent->reType >= RT_MAX_REF_ENTITY_TYPE ) {
 		ri.Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
 	}
-
-  if((ent->renderfx & RF_FIRST_PERSON)) {
-    for ( int i = 0 ; i < 3 ; i++ ) {
-      ent->origin[i] += rf_firstPersonOffset[i];
-    }
-  }
 
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;

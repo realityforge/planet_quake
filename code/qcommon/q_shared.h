@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define Q3_VERSION            "Q3 1.32e MV"
+#define Q3_VERSION            "Q3 1.32e"
 #ifndef SVN_VERSION
   #define SVN_VERSION Q3_VERSION
 #endif
@@ -74,7 +74,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // recent event are for server status trackers to get previous match results
 //   it's also used for the Discord chat bot connector
 #define USE_RECENT_EVENTS 1
-// Cyrax's Multiview  is what makes multiworld possible.
+// Cyrax's Multiview is what makes multiworld possible.
 #define USE_MV				  // multiview enabled
 //#define USE_MV_ZCMD		// command compression
 // RmlUi adds supplementary initerfaces written in HTML.
@@ -85,6 +85,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
+#endif
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+// Cyrax's Multiview is what makes multiworld possible.
+#define USE_MV
 #endif
 
 #ifdef USE_MV
@@ -100,7 +105,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif // USE_MV
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#undef Q3_VERSION
 #undef MV_PROTOCOL_VERSION
+#define Q3_VERSION            "Q3 1.32e MV"
 #define MV_MULTIWORLD_VERSION 2
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 // TODO: make compatible with legacy clients but sending gamestate and 
@@ -297,11 +304,6 @@ typedef union floatint_u
 	byte b[4];
 }
 floatint_t;
-
-typedef union {
-	byte rgba[4];
-	uint32_t u32;
-} color4ub_t;
 
 
 typedef int		qhandle_t;

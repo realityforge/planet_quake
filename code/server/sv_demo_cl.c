@@ -1,4 +1,6 @@
 
+#ifdef USE_DEMO_CLIENTS
+
 #include "server.h"
 
 
@@ -319,3 +321,5 @@ void SV_SaveRecord_f( void ) {
  	cl->savedemo = qtrue;
 	Com_Printf ("Saverecord: %li\n", cl - svs.clients);
 }
+
+#endif

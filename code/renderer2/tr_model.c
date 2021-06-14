@@ -330,7 +330,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	// load the files
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
-	
+
 	ri.Cvar_Set("r_loadingModel", name);
 
 	ext = COM_GetExtension( localName );
@@ -351,7 +351,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 				} else 
 #endif
 				{
-					hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
 				}
 				break;
 			}
@@ -395,7 +395,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		} else 
 #endif
 		{
-			hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
 		}
 
 		if( hModel )
@@ -409,7 +409,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			break;
 		}
 	}
-	
+
 	ri.Cvar_Set("r_loadingModel", "");
 
 	return mod->index;
@@ -1400,7 +1400,6 @@ int R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFram
 	model_t		*model;
 
 	model = R_GetModelByHandle( handle );
-
 	if ( !model->mdv[0] )
 	{
 		if(model->type == MOD_MDR)

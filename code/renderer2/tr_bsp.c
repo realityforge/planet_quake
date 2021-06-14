@@ -691,19 +691,19 @@ void LoadDrawVertToSrfVert(srfVert_t *s, drawVert_t *d, int realLightmapNum, flo
 		//hack: convert LDR vertex colors to HDR
 		if (r_hdr->integer)
 		{
-			v[0] = MAX(d->color.rgba[0] / 255.0f, 0.499f);
-			v[1] = MAX(d->color.rgba[1] / 255.0f, 0.499f);
-			v[2] = MAX(d->color.rgba[2] / 255.0f, 0.499f);
+			v[0] = MAX(d->color[0], 0.499f);
+			v[1] = MAX(d->color[1], 0.499f);
+			v[2] = MAX(d->color[2], 0.499f);
 		}
 		else
 		{
-			v[0] = d->color.rgba[0] / 255.0f;
-			v[1] = d->color.rgba[1] / 255.0f;
-			v[2] = d->color.rgba[2] / 255.0f;
+			v[0] = d->color[0];
+			v[1] = d->color[1];
+			v[2] = d->color[2];
 		}
 
 	}
-	v[3] = d->color.rgba[3] / 255.0f;
+	v[3] = d->color[3] / 255.0f;
 
 	R_ColorShiftLightingFloats(v, v);
 	R_VaoPackColor(s->color, v);
@@ -2831,7 +2831,7 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.worldMapLoaded = qtrue;
 
 	// load it
-  ri.FS_ReadFile( name, &buffer.v );
+    ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
@@ -2869,9 +2869,9 @@ void RE_LoadWorldMap( const char *name ) {
 			LoadBsp3(name);
 			break;
 		default:
-			ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
+		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
 				name, id1, BSP_VERSION);
-		}
+	}
 		break;
 	case BSP1_VERSION:
 	case BSPHL_VERSION:

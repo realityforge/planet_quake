@@ -56,7 +56,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 typedef struct {
 	vec3_t		xyz;
 	float		st[2];
-	color4ub_t	modulate;
+	byte		modulate[4];
 } polyVert_t;
 
 typedef struct poly_s {
@@ -104,7 +104,7 @@ typedef struct {
 	qhandle_t	customShader;		// use one image for the entire thing
 
 	// misc
-	color4ub_t	shader;
+	byte		shaderRGBA[4];		// colors used by rgbgen entity shaders
 	float		shaderTexCoord[2];	// texture coordinates used by tcMod entity modifiers
 
 	// subtracted from refdef time to control effect start times

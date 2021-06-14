@@ -48,7 +48,6 @@ cvar_t	*r_ignore;
 cvar_t	*r_detailTextures;
 
 cvar_t	*r_znear;
-cvar_t	*r_zfar;
 cvar_t	*r_zproj;
 cvar_t	*r_stereoSeparation;
 
@@ -57,8 +56,6 @@ cvar_t	*r_skipBackEnd;
 cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
-cvar_t  *r_paletteMode;
-cvar_t  *r_seeThroughWalls;
 
 cvar_t	*r_ignorehwgamma;
 cvar_t	*r_measureOverdraw;
@@ -70,9 +67,6 @@ cvar_t	*r_dlightBacks;
 
 cvar_t	*r_lodbias;
 cvar_t	*r_lodscale;
-#ifdef USE_LAZY_LOAD
-cvar_t	*r_lazyLoad;
-#endif
 
 cvar_t	*r_norefresh;
 cvar_t	*r_drawentities;
@@ -217,6 +211,13 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+
+#ifdef USE_LAZY_LOAD
+cvar_t	*r_lazyLoad;
+#endif
+cvar_t  *r_paletteMode;
+cvar_t  *r_seeThroughWalls;
+cvar_t	*r_zfar;
 cvar_t  *rf_firstPersonXYZ;
 vec3_t  rf_firstPersonOffset;
 
@@ -1976,9 +1977,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
   re.RegisterImage = RE_RegisterImage;
   re.DrawElements = RE_DrawElements;
   re.RenderGeometry = RE_RenderGeometry;
-#endif
-	re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
+  re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
+#endif
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif

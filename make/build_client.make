@@ -35,7 +35,6 @@ SOURCES  += $(MOUNT_DIR)/botlib
 endif
 
 CLIPMAP  := $(B)/client/cm_load.o \
-            $(B)/client/cm_load_bsp2.o \
             $(B)/client/cm_patch.o \
             $(B)/client/cm_polylib.o \
             $(B)/client/cm_test.o \
@@ -274,8 +273,13 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET_CLIENT)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
+	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET_CLIENT)
+	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
+	@for i in $(CLEANS); \
+	do \
+	rm -r "./$(BD)/$$i" 2> /dev/null || true; \
+	rm -r "./$(BR)/$$i" 2> /dev/null || true; \
+	done
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: libs/libvpx-1.10/%.cc

@@ -21,6 +21,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifdef USE_DEMO_SERVER
+
+
 // sv_demo.c -- Server side demo recording
 
 #include "server.h"
@@ -2099,3 +2102,5 @@ void SV_CompleteDemoName( char *args, int argNum )
 		Field_CompleteFilename( "svdemos", demoExt, qtrue, qtrue );
 	}
 }
+
+#endif

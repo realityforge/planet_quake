@@ -91,12 +91,14 @@ Sends a command string to a client
 */
 void SV_GameSendServerCommand( int clientNum, const char *text ) {
 
+#ifdef USE_DEMO_SERVER
 	// record the game server commands in demos
 	if ( sv.demoState == DS_RECORDING ) {
 		SV_DemoWriteGameCommand( clientNum, text );
 	} else if ( sv.demoState == DS_PLAYBACK ) {
 		SV_CheckLastCmd( text, qtrue ); // store the new game command, so when replaying a demo message, we can check for duplicates: maybe this message was already submitted (because of the events simulation, an event may trigger a message), and so we want to avoid those duplicates: if an event already triggered a message, no need to issue the one stored in the demo
 	}
+#endif
 
 	if ( clientNum == -1 ) {
 		SV_SendServerCommand( NULL, "%s", text );
