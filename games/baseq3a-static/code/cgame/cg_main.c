@@ -484,7 +484,7 @@ void QDECL CG_Error( const char *msg, ... ) {
 	trap_Error( text );
 }
 
-#ifndef CGAME_HARD_LINKED
+#ifndef BUILD_GAME_STATIC
 // this is only here so the functions in q_shared.c and bg_*.c can link (FIXME)
 
 void QDECL Com_Error( int level, const char *error, ... ) {

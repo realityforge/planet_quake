@@ -665,9 +665,15 @@ char *Q_CleanStr( char *string );
 
 //=============================================
 
+#ifndef BUILD_GAME_STATIC
 typedef intptr_t (*syscall_t)( intptr_t *parms );
 typedef intptr_t (QDECL *dllSyscall_t)( intptr_t callNum, ... );
 typedef void (QDECL *dllEntry_t)( dllSyscall_t syscallptr );
+#else
+intptr_t UI_DllSyscall( intptr_t callNum, ... );
+intptr_t CL_DllSyscall( intptr_t callNum, ... );
+intptr_t SV_DllSyscall( intptr_t callNum, ... );
+#endif
 
 //=============================================
 

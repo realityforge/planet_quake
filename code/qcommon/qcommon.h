@@ -589,6 +589,10 @@ vm_t	*VM_Create2( vmIndex_t index, syscall_t systemCalls );
 #define VM_Debug(x)
 #define VM_Forced_Unload_Start()
 #define VM_Init()
+
+void	*GVM_ArgPtr( intptr_t intValue );
+
+#define	VMA(x) (void *)(args[x])
 #else
 vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscalls, vmInterpret_t interpret );
 #endif
@@ -618,11 +622,12 @@ void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, un
 #define VM_CHECKBOUNDS(vm,a,b)
 #define VM_CHECKBOUNDS2(vm,a,b,c)
 #endif
-#endif
 
 void	*GVM_ArgPtr( intptr_t intValue );
 
 #define	VMA(x) VM_ArgPtr(args[x])
+#endif
+
 static ID_INLINE float _vmf(intptr_t x)
 {
 	floatint_t v;

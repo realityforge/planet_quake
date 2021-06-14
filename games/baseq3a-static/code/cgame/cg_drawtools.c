@@ -945,6 +945,7 @@ void CG_ColorForHealth( vec4_t hcolor ) {
 
 
 
+#ifndef BUILD_GAME_STATIC
 // bk001205 - code below duplicated in q3_ui/ui-atoms.c
 // bk001205 - FIXME: does this belong in ui_shared.c?
 // bk001205 - FIXME: HARD_LINKED flags not visible here
@@ -1099,6 +1100,7 @@ static int propMapB[26][3] = {
 #define PROPB_GAP_WIDTH		4
 #define PROPB_SPACE_WIDTH	12
 #define PROPB_HEIGHT		36
+
 
 /*
 =================
@@ -1333,4 +1335,7 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 
 	UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
 }
+
 #endif // Q3STATIC
+
+#endif

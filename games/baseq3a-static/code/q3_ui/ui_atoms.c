@@ -10,9 +10,9 @@
 uiStatic_t		uis;
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
-// these are here so the functions in q_shared.c can link
-#ifndef UI_HARD_LINKED
 
+#ifndef BUILD_GAME_STATIC
+// these are here so the functions in q_shared.c can link
 void QDECL Com_Error( int level, const char *fmt, ... ) {
 	va_list		argptr;
 	char		text[2048];
@@ -34,8 +34,8 @@ void QDECL Com_Printf( const char *fmt, ... ) {
 
 	trap_Print( text );
 }
-
 #endif
+
 
 /*
 =================
@@ -1062,16 +1062,21 @@ UI_Init
 =================
 */
 void UI_Init( void ) {
+printf("fucked 1");
 	UI_RegisterCvars();
 
+printf("fucked 2");
 	UI_InitGameinfo();
 
 	// cache redundant calulations
+printf("fucked 3");
 	UI_VideoCheck( -99999 );
 
 	// initialize the menu system
+printf("fucked 4");
 	Menu_Cache();
 
+printf("fucked 5");
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
 }

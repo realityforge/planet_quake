@@ -895,6 +895,91 @@ void UI_SPSkillMenu_Cache( void );
 //
 // ui_syscalls.c
 //
+#ifdef BUILD_GAME_STATIC
+#define trap_Print trapui_Print
+#define trap_Error trapui_Error
+#define trap_Milliseconds trapui_Milliseconds
+#define trap_Cvar_Register trapui_Cvar_Register
+#define trap_Cvar_Update trapui_Cvar_Update
+#define trap_Cvar_Set trapui_Cvar_Set
+#define trap_Cvar_VariableValue trapui_Cvar_VariableValue
+#define trap_Cvar_VariableStringBuffer trapui_Cvar_VariableStringBuffer
+#define trap_Cvar_SetValue trapui_Cvar_SetValue
+#define trap_Cvar_Reset trapui_Cvar_Reset
+#define trap_Cvar_Create trapui_Cvar_Create
+#define trap_Cvar_InfoStringBuffer trapui_Cvar_InfoStringBuffer
+#define trap_Argc trapui_Argc
+#define trap_Argv trapui_Argv
+#define trap_Cmd_ExecuteText trapui_Cmd_ExecuteText
+#define trap_FS_FOpenFile trapui_FS_FOpenFile
+#define trap_FS_Read trapui_FS_Read
+#define trap_FS_Write trapui_FS_Write
+#define trap_FS_FCloseFile trapui_FS_FCloseFile
+#define trap_FS_GetFileList trapui_FS_GetFileList
+#define trap_FS_Seek trapui_FS_Seek
+#define trap_R_RegisterModel trapui_R_RegisterModel
+#define trap_R_RegisterSkin trapui_R_RegisterSkin
+#define trap_R_RegisterShaderNoMip trapui_R_RegisterShaderNoMip
+#define trap_R_ClearScene trapui_R_ClearScene
+#define trap_R_AddRefEntityToScene trapui_R_AddRefEntityToScene
+#define trap_R_AddPolyToScene trapui_R_AddPolyToScene
+#define trap_R_AddLightToScene trapui_R_AddLightToScene
+#define trap_R_RenderScene trapui_R_RenderScene
+#define trap_R_SetColor trapui_R_SetColor
+#define trap_R_DrawStretchPic trapui_R_DrawStretchPic
+#define trap_R_ModelBounds trapui_R_ModelBounds
+#define trap_UpdateScreen trapui_UpdateScreen
+#define trap_CM_LerpTag trapui_CM_LerpTag
+#define trap_S_StartLocalSound trapui_S_StartLocalSound
+#define trap_S_RegisterSound trapui_S_RegisterSound
+#define trap_Key_KeynumToStringBuf trapui_Key_KeynumToStringBuf
+#define trap_Key_GetBindingBuf trapui_Key_GetBindingBuf
+#define trap_Key_SetBinding trapui_Key_SetBinding
+#define trap_Key_IsDown trapui_Key_IsDown
+#define trap_Key_GetOverstrikeMode trapui_Key_GetOverstrikeMode
+#define trap_Key_SetOverstrikeMode trapui_Key_SetOverstrikeMode
+#define trap_Key_ClearStates trapui_Key_ClearStates
+#define trap_Key_GetCatcher trapui_Key_GetCatcher
+#define trap_Key_SetCatcher trapui_Key_SetCatcher
+#define trap_GetClipboardData trapui_GetClipboardData
+#define trap_GetClientState trapui_GetClientState
+#define trap_GetGlconfig trapui_GetGlconfig
+#define trap_GetConfigString trapui_GetConfigString
+#define trap_LAN_GetServerCount trapui_LAN_GetServerCount
+#define trap_LAN_GetServerAddressString trapui_LAN_GetServerAddressString
+#define trap_LAN_GetServerInfo trapui_LAN_GetServerInfo
+#define trap_LAN_GetServerPing trapui_LAN_GetServerPing
+#define trap_LAN_GetPingQueueCount trapui_LAN_GetPingQueueCount
+#define trap_LAN_ClearPing trapui_LAN_ClearPing
+#define trap_LAN_GetPing trapui_LAN_GetPing
+#define trap_LAN_GetPingInfo trapui_LAN_GetPingInfo
+#define trap_LAN_LoadCachedServers trapui_LAN_LoadCachedServers
+#define trap_LAN_SaveCachedServers trapui_LAN_SaveCachedServers
+#define trap_LAN_MarkServerVisible trapui_LAN_MarkServerVisible
+#define trap_LAN_ServerIsVisible trapui_LAN_ServerIsVisible
+#define trap_LAN_UpdateVisiblePings trapui_LAN_UpdateVisiblePings
+#define trap_LAN_AddServer trapui_LAN_AddServer
+#define trap_LAN_RemoveServer trapui_LAN_RemoveServer
+#define trap_LAN_ResetPings trapui_LAN_ResetPings
+#define trap_LAN_ServerStatus trapui_LAN_ServerStatus
+#define trap_LAN_CompareServers trapui_LAN_CompareServers
+#define trap_MemoryRemaining trapui_MemoryRemaining
+#define trap_GetCDKey trapui_GetCDKey
+#define trap_SetCDKey trapui_SetCDKey
+#define trap_R_RegisterFont trapui_R_RegisterFont
+#define trap_S_StopBackgroundTrack trapui_S_StopBackgroundTrack
+#define trap_S_StartBackgroundTrack trapui_S_StartBackgroundTrack
+#define trap_CIN_PlayCinematic trapui_CIN_PlayCinematic
+#define trap_CIN_StopCinematic trapui_CIN_StopCinematic
+#define trap_CIN_RunCinematic  trapui_CIN_RunCinematic 
+#define trap_CIN_DrawCinematic  trapui_CIN_DrawCinematic 
+#define trap_CIN_SetExtents  trapui_CIN_SetExtents 
+#define trap_RealTime trapui_RealTime
+#define trap_R_RemapShader trapui_R_RemapShader
+#define trap_VerifyCDKey trapui_VerifyCDKey
+#define trap_SetPbClStatus trapui_SetPbClStatus
+#endif
+
 void			trap_Print( const char *string );
 void			trap_Error( const char *string );
 int				trap_Milliseconds( void );

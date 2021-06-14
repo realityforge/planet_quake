@@ -752,6 +752,7 @@ static int FloatAsInt( float f ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 /*
 ====================
 VM_ArgPtr
@@ -767,6 +768,7 @@ static void *VM_ArgPtr( intptr_t intValue ) {
 	else
 		return (void *)(uivm->dataBase + (intValue & uivm->dataMask));
 }
+#endif
 
 
 static qboolean UI_GetValue( char* value, int valueSize, const char* key ) {
@@ -806,6 +808,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 
 	case UI_CVAR_REGISTER:
+    Com_Printf("Is this working!>? %li %s\n", args[0], VMA(2));
     Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag ); 
 		return 0;
 
@@ -1212,13 +1215,12 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 }
 
 
-#ifndef BUILD_GAME_STATIC
 /*
 ====================
 UI_DllSyscall
 ====================
 */
-static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
+intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
 #if !id386 || defined __clang__
 	intptr_t	args[10]; // max.count for UI
 	va_list	ap;
@@ -1235,7 +1237,6 @@ static intptr_t QDECL UI_DllSyscall( intptr_t arg, ... ) {
 	return CL_UISystemCalls( &arg );
 #endif
 }
-#endif
 
 
 /*

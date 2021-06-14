@@ -993,6 +993,7 @@ extern	vmCvar_t	g_proxMineTimeout;
 #define trap_GeneticParentsAndChildSelection trapg_GeneticParentsAndChildSelection
 #define trap_SnapVector trapg_SnapVector
 #define trap_GetValue trapg_GetValue
+#define dll_com_trapGetValue g_trapGetValue
 #endif
 
 void	trap_Print( const char *text );

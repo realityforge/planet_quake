@@ -211,6 +211,7 @@ maplocation_t *maplocations = NULL;
 //camp spots
 campspot_t *campspots = NULL;
 //the game type
+#define g_gametype bot_gametype
 int g_gametype = 0;
 //additional dropped item weight
 libvar_t *droppedweight = NULL;

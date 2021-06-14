@@ -20,7 +20,12 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .qvm file
 ================
 */
-DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1 ) {
+#ifdef BUILD_GAME_STATIC
+intptr_t UI_Call( int command, int arg0, int arg1, int arg2 )
+#else
+DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
+#endif
+{
 	switch ( command ) {
 	case UI_GETAPIVERSION:
 		return UI_API_VERSION;

@@ -657,6 +657,7 @@ static int FloatAsInt( float f ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 static void *VM_ArgPtr( intptr_t intValue ) {
 
 	if ( !intValue || cgvm == NULL )
@@ -667,6 +668,7 @@ static void *VM_ArgPtr( intptr_t intValue ) {
 	else
 		return (void *)(cgvm->dataBase + (intValue & cgvm->dataMask));
 }
+#endif
 
 
 static qboolean CL_GetValue( char* value, int valueSize, const char* key ) {
@@ -1112,13 +1114,12 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 }
 
 
-#ifndef BUILD_GAME_STATIC
 /*
 ====================
 CL_DllSyscall
 ====================
 */
-static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
+intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 #ifdef USE_MULTIVM_CLIENT
 	int prev = cgvmi;
 #endif
@@ -1146,7 +1147,6 @@ static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 #endif
 	return result;
 }
-#endif
 
 
 /*

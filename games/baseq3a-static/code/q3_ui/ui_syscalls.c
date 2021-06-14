@@ -8,11 +8,15 @@
 #error "Do not use in VM build"
 #endif
 
+#ifndef BUILD_GAME_STATIC
 static dllSyscall_t syscall = (dllSyscall_t)-1;
 
 DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 	syscall = syscallptr;
 }
+#else
+#define syscall UI_DllSyscall
+#endif
 
 int PASSFLOAT( float x ) {
 	float	floatTemp;
@@ -33,7 +37,7 @@ int trap_Milliseconds( void ) {
 }
 
 void trap_Cvar_Register( vmCvar_t *cvar, const char *var_name, const char *value, int flags ) {
-	syscall( UI_CVAR_REGISTER, cvar, var_name, value, flags );
+  syscall( UI_CVAR_REGISTER, cvar, var_name, value, flags );
 }
 
 void trap_Cvar_Update( vmCvar_t *cvar ) {
@@ -379,3 +383,7 @@ qboolean trap_VerifyCDKey( const char *key, const char *chksum) {
 void trap_SetPbClStatus( int status ) {
 	syscall( UI_SET_PBCLSTATUS, status );
 }
+
+#ifdef BUILD_GAME_STATIC
+#undef syscall
+#endif

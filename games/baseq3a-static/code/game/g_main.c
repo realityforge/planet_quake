@@ -198,7 +198,12 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .q3vm file
 ================
 */
-DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 ) {
+#ifdef BUILD_GAME_STATIC
+intptr_t G_Call( int command, int arg0, int arg1, int arg2 )
+#else
+DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
+#endif
+{
 	switch ( command ) {
 	case GAME_INIT:
 		G_InitGame( arg0, arg1, arg2 );
@@ -666,7 +671,7 @@ static void G_ShutdownGame( int restart )
 
 //===================================================================
 
-#ifndef GAME_HARD_LINKED
+#ifndef BUILD_GAME_STATIC
 // this is only here so the functions in q_shared.c and bg_*.c can link
 
 void QDECL Com_Error( int level, const char *fmt, ... ) {

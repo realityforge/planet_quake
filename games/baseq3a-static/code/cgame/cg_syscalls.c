@@ -8,13 +8,20 @@
 
 #include "cg_local.h"
 
+#ifndef BUILD_GAME_STATIC
 static dllSyscall_t syscall = (dllSyscall_t)-1;
 
 DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 	syscall = syscallptr;
 }
+#else
+#define syscall CL_DllSyscall
+#endif
 
 
+#ifdef BUILD_GAME_STATIC
+#define PASSFLOAT CGPASSFLOAT
+#endif
 int PASSFLOAT( float x ) {
 	float	floatTemp;
 	floatTemp = x;
@@ -340,6 +347,8 @@ int trap_Key_GetKey( const char *binding ) {
 	return syscall( CG_KEY_GETKEY, binding );
 }
 
+
+#ifndef BUILD_GAME_STATIC
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
 }
@@ -359,6 +368,8 @@ int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
+#endif
+
 
 void	trap_S_StopBackgroundTrack( void ) {
 	syscall( CG_S_STOPBACKGROUNDTRACK );
@@ -436,3 +447,8 @@ void trap_R_AddRefEntityToScene2( const refEntity_t *re ) {
 void trap_R_AddLinearLightToScene( const vec3_t start, const vec3_t end, float intensity, float r, float g, float b ) {
 	syscall( dll_trap_R_AddLinearLightToScene, start, end, intensity, r, g, b );
 }
+
+#ifdef BUILD_GAME_STATIC
+#undef PASSFLOAT
+#undef syscall
+#endif

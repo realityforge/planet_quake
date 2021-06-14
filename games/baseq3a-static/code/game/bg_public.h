@@ -4,6 +4,8 @@
 
 // because games can change separately from the main system version, we need a
 // second version that must match between game and cgame
+#ifndef __BG_PUBLIC_H
+#define __BG_PUBLIC_H
 
 #define	GAME_VERSION		"baseq3-1"
 
@@ -744,6 +746,11 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 #define KAMI_SHOCKWAVE2_MAXRADIUS		704
 
 // custom functions
+#ifdef BUILD_GAME_STATIC
+intptr_t CG_Call( int command, int arg0, int arg1, int arg2 );
+intptr_t G_Call( int command, int arg0, int arg1, int arg2 );
+intptr_t UI_Call( int command, int arg0, int arg1, int arg2 );
+#endif
 
 int BG_sprintf( char *buf, const char *format, ... );
 int ED_vsprintf( char *buffer, const char *fmt, va_list argptr );
@@ -763,4 +770,4 @@ qboolean replace1( const char match, const char replace, char *str );
 
 qboolean  BigEndian( void );
 
-//#endif // __BG_PUBLIC_H
+#endif // __BG_PUBLIC_H

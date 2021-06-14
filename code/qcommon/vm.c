@@ -37,7 +37,7 @@ and one exported function: Perform
 #include "vm_local.h"
 
 #ifdef BUILD_GAME_STATIC
-#include <cgame/cg_local.h>
+#include <game/bg_public.h>
 #endif
 
 opcode_info_t ops[ OP_MAX ] = 
@@ -2322,8 +2322,6 @@ vm_t *VM_Create2( vmIndex_t index, syscall_t systemCalls ) {
 	vm->compiled = qfalse;
 	vm->knownVM = vmcmp(vm, index, VMR_UNKNOWN);
 
-	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
-
 	vmIndex++;
 	return vm;
 }
@@ -2369,9 +2367,9 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... )
   if(vm->index == VM_CGAME) {
     r = CG_Call( callnum, args[0], args[1], args[2] );
   } else if (vm->index == VM_UI) {
-    //r = UI_Call( vm, nargs+1, (int*)&callnum );
+    r = UI_Call( callnum, args[0], args[1], args[2] );
   } else if (vm->index == VM_GAME) {
-    //r = G_Call( vm, nargs+1, (int*)&callnum );
+    r = G_Call( callnum, args[0], args[1], args[2] );
   }
 	--vm->callLevel;
 
