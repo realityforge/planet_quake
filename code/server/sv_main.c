@@ -1438,7 +1438,7 @@ SV_CheckPaused
 */
 static qboolean SV_CheckPaused( void ) {
 
-#ifdef DEDICATED
+#if defined(DEDICATED) && !defined(USE_REFEREE_CMDS)
 	// can't pause on dedicated servers
 	return qfalse;
 #else
