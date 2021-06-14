@@ -290,6 +290,7 @@ SV_LocateGameData
 */
 static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int sizeofGEntity_t, playerState_t *clients, int sizeofGameClient ) {
 
+#ifndef BUILD_GAME_STATIC
 	if ( !gvm->entryPoint ) {
 		if ( numGEntities > MAX_GENTITIES ) {
 			Com_Error( ERR_DROP, "%s: bad entity count %i", __func__, numGEntities );
@@ -307,6 +308,7 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 			Com_Error( ERR_DROP, "%s: clients located out of data segment", __func__ );
 		}
 	}
+#endif
 
 #ifdef USE_MULTIVM_SERVER
   sv.gentitiesWorlds[gvmi] = gEnts;
@@ -361,7 +363,6 @@ static void *VM_ArgPtr( intptr_t intValue ) {
 	else
 		return (void *)(gvm->dataBase + (intValue & gvm->dataMask));
 }
-#endif
 
 
 /*
@@ -375,6 +376,7 @@ void *GVM_ArgPtr( intptr_t intValue )
 {
 	return VM_ArgPtr( intValue );
 }
+#endif
 
 
 static qboolean SV_GetValue( char* value, int valueSize, const char* key )

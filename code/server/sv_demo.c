@@ -809,7 +809,11 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
 		if ( denied ) {
 			// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
+#ifndef BUILD_GAME_STATIC
 			const char *str = GVM_ArgPtr( denied );
+#else
+      const char *str = (void *)denied;
+#endif
 			Com_DPrintf( "DEMO: Game rejected a connection: %s.\n", str );
 			return;
 		}

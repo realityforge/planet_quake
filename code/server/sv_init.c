@@ -713,7 +713,11 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 
 			// connect the client again
+#ifndef BUILD_GAME_STATIC
 			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
+#else
+      denied = (void *)VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot );	// firstTime = qfalse
+#endif
 			if ( denied ) {
 				// this generally shouldn't happen, because the client
 				// was connected before the level change

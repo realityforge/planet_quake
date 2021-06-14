@@ -808,7 +808,6 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Sys_Milliseconds();
 
 	case UI_CVAR_REGISTER:
-    Com_Printf("Is this working!>? %li %s\n", args[0], VMA(2));
     Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag ); 
 		return 0;
 

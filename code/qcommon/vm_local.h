@@ -152,6 +152,7 @@ typedef union vmFunc_u {
 	void (*func)(void);
 } vmFunc_t;
 
+#ifndef BUILD_GAME_STATIC
 struct vm_s {
 
 	syscall_t	systemCall;
@@ -208,6 +209,18 @@ struct vm_s {
 	int			privateFlag;
 	recognizedVM_t knownVM;
 };
+#else
+struct vm_s {
+  syscall_t	systemCall;
+  const char	*name;
+	vmIndex_t	index;
+	int       vmIndex;
+  qboolean	compiled;
+  int			callLevel;
+  int			privateFlag;
+};
+#endif
+
 
 #ifdef USE_MULTIVM_CLIENT
 extern	vm_t		 *uivmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm

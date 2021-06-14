@@ -224,70 +224,6 @@ static const char *vmName[ VM_COUNT ] = {
 #endif
 };
 
-
-/*
-=================
-VM_ReplaceInstructions
-=================
-*/
-
-typedef struct {
-	vmIndex_t index;
-	uint32_t crc32sum;
-	int instructionCount;
-	unsigned int exactDataLength;
-	recognizedVM_t knownVM;
-	char *name;
-} specificVM_t;
-
-static specificVM_t knownVMs[] = {
-	{VM_GAME, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_GAME, 0x5AAE0ACC, 251521, 1872720, VMR_OSP, "OSP"},
-	{VM_GAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
-	{VM_GAME, 0x0, 0, 0, VMR_URT, "Urban Terror"},
-	{VM_GAME, 0x9E8DC0C1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
-	{VM_GAME, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
-  // this might be CPMA 3
-	{VM_GAME, 0xFF9DEF19, 272443, 4156444, VMR_CPMA2, "CPMA"},
-	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
-
-#ifndef DEDICATED
-	{VM_CGAME, 0x2DD51C2A, 95182, 2122744, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_CGAME, 0x0, 0, 0, VMR_OSP, "OSP"},
-	{VM_CGAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
-	{VM_CGAME, 0x051D4668, 267812, 38064376, VMR_URT, "Urban Terror"},
-	{VM_CGAME, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
-	{VM_CGAME, 0x3E93FC1A, 123596, 2007536, VMR_CPMA1, "CPMA"},
-	{VM_CGAME, 0xF0F1AE90, 123552, 2007520, VMR_CPMA2, "CPMA"},
-  //VMR_CPMA3? 8E028120, ic: 138536, dl: 2090780
-	{VM_CGAME, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
-
-	{VM_UI, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
-	{VM_UI, 0xCA84F31D, 78585, 542180, VMR_OSP, "OSP Demo"},
-	{VM_UI, 0x6E51985F, 125942, 1334788, VMR_DEFRAG, "Defrag"},
-	{VM_UI, 0xe771cdf9, 101585, 9162280, VMR_URT, "Urban Terror"},
-	{VM_UI, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
-	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
-	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
-  //CPMA 3 ? D8BCD4FA, ic: 80745, dl: 865156
-	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
-#endif
-	{0, 0, 0, 0, 0, ""}
-};
-
-static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
-	for(int i = 0; i < ARRAY_LEN(knownVMs); i++) {
-		if(knownVMs[i].crc32sum == vm->crc32sum
-			&& knownVMs[i].instructionCount == vm->instructionCount
-			&& knownVMs[i].exactDataLength == vm->exactDataLength
-			&& knownVMs[i].index == index
-			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
-			return knownVMs[i].knownVM;
-		}
-	}
-	return VMR_UNKNOWN;
-}
-
 #ifndef BUILD_GAME_STATIC
 
 #ifdef DEBUG
@@ -1551,6 +1487,69 @@ __noJTS:
 }
 
 
+typedef struct {
+	vmIndex_t index;
+	uint32_t crc32sum;
+	int instructionCount;
+	unsigned int exactDataLength;
+	recognizedVM_t knownVM;
+	char *name;
+} specificVM_t;
+
+static specificVM_t knownVMs[] = {
+	{VM_GAME, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_GAME, 0x5AAE0ACC, 251521, 1872720, VMR_OSP, "OSP"},
+	{VM_GAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
+	{VM_GAME, 0x0, 0, 0, VMR_URT, "Urban Terror"},
+	{VM_GAME, 0x9E8DC0C1, 306441, 7998664, VMR_EPLUS, "Excessive+"},
+	{VM_GAME, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
+  // this might be CPMA 3
+	{VM_GAME, 0xFF9DEF19, 272443, 4156444, VMR_CPMA2, "CPMA"},
+	{VM_GAME, 0x89688376, 202902, 2910444, VMR_SMOKIN, "Smokin' Guns"},
+
+#ifndef DEDICATED
+	{VM_CGAME, 0x2DD51C2A, 95182, 2122744, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_CGAME, 0x0, 0, 0, VMR_OSP, "OSP"},
+	{VM_CGAME, 0x0, 0, 0, VMR_DEFRAG, "Defrag"},
+	{VM_CGAME, 0x051D4668, 267812, 38064376, VMR_URT, "Urban Terror"},
+	{VM_CGAME, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
+	{VM_CGAME, 0x3E93FC1A, 123596, 2007536, VMR_CPMA1, "CPMA"},
+	{VM_CGAME, 0xF0F1AE90, 123552, 2007520, VMR_CPMA2, "CPMA"},
+  //VMR_CPMA3? 8E028120, ic: 138536, dl: 2090780
+	{VM_CGAME, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
+
+	{VM_UI, 0x0, 0, 0, VMR_BASEQ3A, "BaseQ3a"},
+	{VM_UI, 0xCA84F31D, 78585, 542180, VMR_OSP, "OSP Demo"},
+	{VM_UI, 0x6E51985F, 125942, 1334788, VMR_DEFRAG, "Defrag"},
+	{VM_UI, 0xe771cdf9, 101585, 9162280, VMR_URT, "Urban Terror"},
+	{VM_UI, 0x0, 0, 0, VMR_EPLUS, "Excessive+"},
+	{VM_UI, 0x0, 0, 0, VMR_CPMA1, "CPMA"},
+	{VM_UI, 0x0, 0, 0, VMR_CPMA2, "CPMA"},
+  //CPMA 3 ? D8BCD4FA, ic: 80745, dl: 865156
+	{VM_UI, 0x0, 0, 0, VMR_SMOKIN, "Smokin' Guns"},
+#endif
+	{0, 0, 0, 0, 0, ""}
+};
+
+static recognizedVM_t vmcmp(vm_t *vm, vmIndex_t index, recognizedVM_t knownVM) {
+	for(int i = 0; i < ARRAY_LEN(knownVMs); i++) {
+		if(knownVMs[i].crc32sum == vm->crc32sum
+			&& knownVMs[i].instructionCount == vm->instructionCount
+			&& knownVMs[i].exactDataLength == vm->exactDataLength
+			&& knownVMs[i].index == index
+			&& (knownVM == VMR_UNKNOWN || knownVMs[i].knownVM == knownVM)) {
+			return knownVMs[i].knownVM;
+		}
+	}
+	return VMR_UNKNOWN;
+}
+
+
+/*
+=================
+VM_ReplaceInstructions
+=================
+*/
 void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	instruction_t *ip;
 
@@ -2320,7 +2319,6 @@ vm_t *VM_Create2( vmIndex_t index, syscall_t systemCalls ) {
 	vm->systemCall = systemCalls;
 	vm->privateFlag = CVAR_PRIVATE;
 	vm->compiled = qfalse;
-	vm->knownVM = vmcmp(vm, index, VMR_UNKNOWN);
 
 	vmIndex++;
 	return vm;
@@ -2399,9 +2397,6 @@ void VM_Free( vm_t *vm ) {
 	if ( vm->callLevel ) {
 		Com_Printf( "forcefully unloading %s vm\n", vm->name );
 	}
-
-	if ( vm->destroy )
-		vm->destroy( vm );
 
   // TODO: call reset functions?
 

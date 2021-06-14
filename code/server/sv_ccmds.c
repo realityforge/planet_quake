@@ -401,7 +401,11 @@ static void SV_MapRestart_f( void ) {
 		SV_AddServerCommand( client, "map_restart\n" );
 
 		// connect the client again, without the firstTime flag
+#ifndef BUILD_GAME_STATIC
 		denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
+#else
+    denied = (void *)VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot );
+#endif
 		if ( denied ) {
 			// this generally shouldn't happen, because the client
 			// was connected before the level change

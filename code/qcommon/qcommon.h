@@ -589,9 +589,6 @@ vm_t	*VM_Create2( vmIndex_t index, syscall_t systemCalls );
 #define VM_Debug(x)
 #define VM_Forced_Unload_Start()
 #define VM_Init()
-
-void	*GVM_ArgPtr( intptr_t intValue );
-
 #define	VMA(x) (void *)(args[x])
 #else
 vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscalls, vmInterpret_t interpret );

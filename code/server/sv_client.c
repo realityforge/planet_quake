@@ -899,7 +899,11 @@ gotnewcl:
 	denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
 	if ( denied ) {
 		// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
+#ifndef BUILD_GAME_STATIC
 		const char *str = GVM_ArgPtr( denied );
+#else
+    const char *str = (void *)denied;
+#endif
 
 		NET_OutOfBandPrint( NS_SERVER, from, "print\n%s\n", str );
 		Com_DPrintf( "Game rejected a connection: %s.\n", str );
@@ -2001,7 +2005,6 @@ into a more C friendly form.
 =================
 */
 void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilter ) {
-	char buf[ MAX_NAME_LENGTH ];
 	const char *val;
 	const char *ip;
 	int	i;
@@ -2066,11 +2069,14 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 	val = Info_ValueForKey( cl->userinfo, "name" );
 
 	// truncate if it is too long as it may cause memory corruption in OSP mod
+#ifndef BUILD_GAME_STATIC
 	if ( gvm->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
+    char buf[ MAX_NAME_LENGTH ];
 		Q_strncpyz( buf, val, sizeof( buf ) );
 		Info_SetValueForKey( cl->userinfo, "name", buf );
 		val = buf;
 	}
+#endif
 	Q_strncpyz( cl->name, val, sizeof( cl->name ) );
 
 	val = Info_ValueForKey( cl->userinfo, "handicap" );
