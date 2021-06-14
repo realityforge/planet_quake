@@ -15,6 +15,10 @@ endif
 INCLUDES := $(MOUNT_DIR)/qcommon
 SOURCES  := $(MOUNT_DIR)/client
 
+ifeq ($(BUILD_GAME_STATIC),1)
+include make/game_baseq3a.make
+endif
+
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
 include make/build_renderer.make
@@ -87,8 +91,9 @@ endif
 endif
 
 
-VM       := $(B)/client/vm.o \
-            $(B)/client/vm_interpreted.o
+VM       := $(B)/client/vm.o
+ifneq ($(BUILD_GAME_STATIC),1)
+VM       += $(B)/client/vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
 VM       += $(B)/client/vm_x86.o
@@ -101,6 +106,7 @@ VM       += $(B)/client/vm_armv7l.o
 endif
 ifeq ($(ARCH),aarch64)
 VM       += $(B)/client/vm_aarch64.o
+endif
 endif
 endif
 
@@ -203,6 +209,10 @@ CFILES   += $(MOUNT_DIR)/botlib/be_interface.c \
 endif
 OBJS     := $(CFILES:.c=.o) 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+
+ifeq ($(BUILD_GAME_STATIC),1)
+Q3OBJ    += $(GAME_OBJ)
+endif
 
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)

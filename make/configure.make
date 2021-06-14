@@ -7,6 +7,7 @@ DNAME               ?= quake3e.ded
 BUILD_CLIENT        ?= 0
 BUILD_SLIM_CLIENT   ?= 0
 BUILD_SERVER        ?= 0
+BUILD_GAME_STATIC   ?= 0
 BUILD_GAMES         ?= 0
 BUILD_LIBS          ?= 0
 BUILD_GAME_QVM      ?= 0
@@ -180,6 +181,10 @@ ifeq ($(ARCH),aarch64)
 endif
 
 BASE_CFLAGS =
+
+ifeq ($(BUILD_GAME_STATIC),1)
+BASE_CFLAGS += -DBUILD_GAME_STATIC
+endif
 
 ifeq ($(USE_MEMORY_MAPS),1)
   BASE_CFLAGS += -DUSE_MEMORY_MAPS

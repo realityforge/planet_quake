@@ -1112,6 +1112,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 /*
 ====================
 CL_DllSyscall
@@ -1145,6 +1146,7 @@ static intptr_t QDECL CL_DllSyscall( intptr_t arg, ... ) {
 #endif
 	return result;
 }
+#endif
 
 
 /*
@@ -1196,6 +1198,7 @@ void CL_InitCGame( int inVM ) {
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
+
 	cls.state = CA_LOADING;
 
 	// init for this gamestate
