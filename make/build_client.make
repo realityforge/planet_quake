@@ -328,5 +328,5 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 
 $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
 endif

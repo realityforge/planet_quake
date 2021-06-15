@@ -13,34 +13,38 @@ include make/configure.make
 LD               := /usr/local/opt/llvm/bin/wasm-ld
 CC               := /usr/local/opt/llvm/bin/clang
 CXX              := /usr/local/opt/llvm/bin/clang++
-BINEXT           := .js
+BINEXT           := .wasm
 
 SHLIBEXT         := wasm
-SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
+SHLIBCFLAGS      := --export-dynamic --strip-all
 #LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
-LDFLAGS          := --import-memory --export-dynamic --strip-all
-SHLIBLDFLAGS     := --no-entry $(LDFLAGS)
+LDFLAGS          := --import-memory --entry=main
+CLIENT_LDFLAGS   := --export-all
+SHLIBLDFLAGS     := $(LDFLAGS)
 
 BASE_CFLAGS       += -Wall --target=wasm32 -Wno-unused-variable -fno-strict-aliasing \
                     -Wimplicit -Wstrict-prototypes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
-										-D____WASM____ -D_ALL_SOURCE=700 \
-										-std=c99 -ffreestanding -nostdinc $(IMPH)
+										-D__WASM__ -D_ALL_SOURCE=700 \
+										-fno-common -fvisibility=hidden \
+										-std=c11 -ffreestanding -nostdinc $(IMPH)
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g \
 										-Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
-										-Ilibs/musl-1.2.2/arch/wasm
+										-Ilibs/musl-1.2.2/arch/wasm \
+										-Ilibs/emsdk/upstream/emscripten/system/include
 
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -DNDEBUG -O3 -Oz -flto -fPIC
 
 export INCLUDE	 := -Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
-										-Ilibs/musl-1.2.2/arch/wasm
+										-Ilibs/musl-1.2.2/arch/wasm \
+										-Ilibs/emsdk/upstream/emscripten/system/include
 										
 
 #CLIENT_SYSTEM    := sys_common.js \

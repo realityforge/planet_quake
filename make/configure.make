@@ -99,6 +99,7 @@ CC              := gcc
 CXX             := c++
 GXX             := g++
 ASM             := yasm
+LD              := $(CC)
 
 bin_path=$(shell which $(1) 2> /dev/null)
 

@@ -2070,6 +2070,7 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 
 	// truncate if it is too long as it may cause memory corruption in OSP mod
 #ifndef BUILD_GAME_STATIC
+  char buf[ MAX_NAME_LENGTH ];
 	if ( gvm->forceDataMask && strlen( val ) >= sizeof( buf ) ) {
     char buf[ MAX_NAME_LENGTH ];
 		Q_strncpyz( buf, val, sizeof( buf ) );

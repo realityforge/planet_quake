@@ -1203,7 +1203,7 @@ void GfxInfo_f( void )
 		GLint numExtensions;
 		int i;
 
-		qglGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
+		qglGetIntegerv( 0, &numExtensions );
 		for ( i = 0; i < numExtensions; i++ )
 		{
 			ri.Printf( PRINT_ALL, "%s ", qglGetStringi( GL_EXTENSIONS, i ) );

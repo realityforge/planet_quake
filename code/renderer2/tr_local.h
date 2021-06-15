@@ -1144,64 +1144,6 @@ typedef struct {
 } bmodel_t;
 
 #define	MAX_MOD_KNOWN	1024
-typedef struct model_s model_t;
-
-typedef struct {
-	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
-	char		baseName[MAX_QPATH];	// ie: tim_dm2
-
-	int			dataSize;
-
-	int			numShaders;
-	dshader_t	*shaders;
-
-	int			numBModels;
-	bmodel_t	*bmodels;
-
-	int			numplanes;
-	cplane_t	*planes;
-
-	int			numnodes;		// includes leafs
-	int			numDecisionNodes;
-	mnode_t		*nodes;
-
-	int         numWorldSurfaces;
-
-	int			numsurfaces;
-	msurface_t	*surfaces;
-	int         *surfacesViewCount;
-	int         *surfacesDlightBits;
-	int			*surfacesPshadowBits;
-
-	int			nummarksurfaces;
-	int         *marksurfaces;
-
-	int			numfogs;
-	fog_t		*fogs;
-
-	vec3_t		lightGridOrigin;
-	vec3_t		lightGridSize;
-	vec3_t		lightGridInverseSize;
-	int			lightGridBounds[3];
-	byte		*lightGridData;
-	uint16_t	*lightGrid16;
-
-
-	int			numClusters;
-	int			clusterBytes;
-	const byte	*vis;			// may be passed in by CM_LoadMap to save space
-
-	char		*entityString;
-	char		*entityParsePoint;
-	
-	// backup lightmaps so they can be reapplied when the world changes
-	int						numLightmaps;
-	int						lightmapSize;
-	image_t				**lightmaps;
-	model_t				*models[MAX_MOD_KNOWN];
-	int						numModels;
-
-} world_t;
 
 /*
 ==============================================================================
@@ -1299,6 +1241,63 @@ typedef struct model_s {
 	int			 numLods;
 } model_t;
 
+
+typedef struct {
+	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
+	char		baseName[MAX_QPATH];	// ie: tim_dm2
+
+	int			dataSize;
+
+	int			numShaders;
+	dshader_t	*shaders;
+
+	int			numBModels;
+	bmodel_t	*bmodels;
+
+	int			numplanes;
+	cplane_t	*planes;
+
+	int			numnodes;		// includes leafs
+	int			numDecisionNodes;
+	mnode_t		*nodes;
+
+	int         numWorldSurfaces;
+
+	int			numsurfaces;
+	msurface_t	*surfaces;
+	int         *surfacesViewCount;
+	int         *surfacesDlightBits;
+	int			*surfacesPshadowBits;
+
+	int			nummarksurfaces;
+	int         *marksurfaces;
+
+	int			numfogs;
+	fog_t		*fogs;
+
+	vec3_t		lightGridOrigin;
+	vec3_t		lightGridSize;
+	vec3_t		lightGridInverseSize;
+	int			lightGridBounds[3];
+	byte		*lightGridData;
+	uint16_t	*lightGrid16;
+
+
+	int			numClusters;
+	int			clusterBytes;
+	const byte	*vis;			// may be passed in by CM_LoadMap to save space
+
+	char		*entityString;
+	char		*entityParsePoint;
+	
+	// backup lightmaps so they can be reapplied when the world changes
+	int						numLightmaps;
+	int						lightmapSize;
+	image_t				**lightmaps;
+	model_t				*models[MAX_MOD_KNOWN];
+	int						numModels;
+
+} world_t;
 
 extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
 

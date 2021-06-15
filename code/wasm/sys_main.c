@@ -41,9 +41,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <dlfcn.h>
 
-// FIXME TTimo should we gard this? most *nix system should comply?
-#include <termios.h>
-
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
@@ -84,8 +81,6 @@ static int ttycon_hide = 0;
 // TTimo NOTE: I'm not sure how relevant this is
 static int tty_erase;
 static int tty_eof;
-
-static struct termios tty_tc;
 
 static field_t tty_con;
 
@@ -147,12 +142,8 @@ void Sys_In_Restart_f( void )
 // FIXME TTimo relevant?
 static void tty_FlushIn( void )
 {
-#if 1
-	tcflush( STDIN_FILENO, TCIFLUSH );
-#else
-	char key;
+  char key;
 	while ( read( STDIN_FILENO, &key, 1 ) > 0 );
-#endif
 }
 
 
@@ -223,7 +214,6 @@ void Sys_ConsoleInputShutdown( void )
 	{
 //		Com_Printf( "Shutdown tty console\n" ); // -EC-
 		tty_Back(); // delete "]" ? -EC-
-		tcsetattr( STDIN_FILENO, TCSADRAIN, &tty_tc );
 	}
 
 	// Restore blocking to stdin reads
@@ -282,7 +272,6 @@ void Sys_Exit( int code )
 	Sys_ConsoleInputShutdown();
 
 	Sys_PlatformExit( );
-	emscripten_cancel_main_loop();
 #ifdef NDEBUG // regular behavior
 	// We can't do this 
 	//  as long as GL DLL's keep installing with atexit...
@@ -363,7 +352,6 @@ void floating_point_exception_handler( int whatever )
 // warning: might be called from signal handler
 tty_err Sys_ConsoleInputInit( void )
 {
-	struct termios tc;
 	const char* term;
 
 	// TTimo
@@ -407,28 +395,6 @@ tty_err Sys_ConsoleInputInit( void )
 	}
 
 	Field_Clear( &tty_con );
-	tcgetattr( STDIN_FILENO, &tty_tc );
-	tty_erase = tty_tc.c_cc[ VERASE ];
-	tty_eof = tty_tc.c_cc[ VEOF ];
-	tc = tty_tc;
-
-	/*
-		ECHO: don't echo input characters
-		ICANON: enable canonical mode.  This  enables  the  special
-			characters  EOF,  EOL,  EOL2, ERASE, KILL, REPRINT,
-			STATUS, and WERASE, and buffers by lines.
-		ISIG: when any of the characters  INTR,  QUIT,  SUSP,  or
-			DSUSP are received, generate the corresponding signal
-	*/
-	tc.c_lflag &= ~(ECHO | ICANON);
-	/*
-		ISTRIP strip off bit 8
-		INPCK enable input parity checking
-	*/
-	tc.c_iflag &= ~(ISTRIP | INPCK);
-	tc.c_cc[VMIN] = 1;
-	tc.c_cc[VTIME] = 0;
-	tcsetattr( STDIN_FILENO, TCSADRAIN, &tc );
 
 	if ( ttycon_ansicolor && ttycon_ansicolor->integer )
 	{
@@ -1020,7 +986,6 @@ int main( int argc, char* argv[] )
 		}
 	}
 
-	emscripten_set_main_loop(Sys_Frame, 160, 0);
-	emscripten_exit_with_live_runtime();
+	//emscripten_set_main_loop(Sys_Frame, 160, 0);
 	return 0;
 }

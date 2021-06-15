@@ -18,7 +18,7 @@ UIDIR         := $(GAMEDIR)/q3_ui
 
 GAME_CFLAGS   := $(BASE_CFLAGS)
 ifeq ($(CC), $(findstring $(CC), "clang" "clang++"))
-GAME_CFLAGS   += -Qunused-arguments
+GAME_CFLAGS   += -Wno-unused-arguments
 endif
 
 GAME_CFLAGS   += -Wformat=2 -Wno-format-zero-length -Wformat-security -Wno-format-nonliteral

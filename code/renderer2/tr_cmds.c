@@ -296,11 +296,11 @@ void RE_StretchPic ( float x, float y, float w, float h,
 		// TODO: use Sys_EventMenuChanged to find blinker character
 		ri.Spy_InputText();
 	}
-#endif
 #ifdef USE_ABS_MOUSE
 	if(r_cursorShader->string[0] && Q_stristr(r_cursorShader->string, cmd->shader->name)) {
 		ri.Spy_CursorPosition(x, y);
 	}
+#endif
 #endif
 }
 

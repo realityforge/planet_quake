@@ -1,3 +1,6 @@
+#define __BYTE_ORDER 1234
+#define __LONG_MAX 0x7fffffffL
+
 #define _Addr __PTRDIFF_TYPE__
 #define _Int64 __INT64_TYPE__
 #define _Reg __PTRDIFF_TYPE__
