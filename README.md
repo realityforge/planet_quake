@@ -72,6 +72,7 @@ New game features:
   * More configurable physics.
 
 Coming soon!
+  * IN PROGRESS: removing Emscripten and compiling only to wasm with clang. Restore tr_shader.c multiworld functions, replace with smarter compiler templates for lazyLoad ri.FS_FOpen calls and client async_callback with precompiler templates.
   * Move more features like the http downloading, file-system journaling, drag and drop, EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
   * Option for persistent console Con_ResetHistory()
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
@@ -94,7 +95,7 @@ Coming soon!
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server UDP downloads
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
-  * IN PROGRESS: webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
+  * IN FAILURE: webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. .Gif support with automatic frame binding in animMap
   * Event history with demo streaming as a service in the browser for splicing all those sweet frags, SQS/Message Queue
   * Ported IQM and MD5 bone structures from spearmint engine
   * Synchronized server/AI for offline and connection interruptions

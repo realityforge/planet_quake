@@ -2583,13 +2583,15 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 		return NULL;
 	}
 
-/*
-	if((flags & IMGFLAG_PALETTE) && name[0] != '*') {
+
+	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
 		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
-    if(!r_paletteMode->integer) return NULL;
-		return R_FindPalette(name);
+    if(pic == NULL && !(flags & IMGFLAG_PALETTE)) return NULL;
+		return R_FindPalette(name); // try to use palette in lazy loading mode as backup
+  } else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
+    && name[0] != '*') {
+    return R_FindPalette(name);
 	}
-*/
 
 	hash = generateHashValue(name);
 
