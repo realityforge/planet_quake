@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 #include "tr_local.h"
+#include "tr_dsa.h"
 
 // tr_shader.c -- this file deals with the parsing and definition of shaders
 
@@ -3432,7 +3433,7 @@ Will always return a valid shader, but it might be the
 default shader if the real one can't be found.
 ==================
 */
-shader_t *R_FindShaderByName( const char *name ) {
+shader_t *R_FindShaderByNameInternal( const char *name, qboolean isDefault ) {
 	char		strippedName[MAX_QPATH];
 	int			hash;
 	shader_t	*sh;
@@ -3462,6 +3463,15 @@ shader_t *R_FindShaderByName( const char *name ) {
 	return tr.defaultShader;
 }
 
+shader_t *R_FindShaderByName( const char *name ) {
+  return R_FindShaderByNameInternal(name, qfalse);
+}
+
+#ifdef USE_LAZY_LOAD
+shader_t *R_FindDefaultShaderByName( const char *name ) {
+  return R_FindShaderByNameInternal(name, qtrue);
+}
+#endif
 
 /*
 ===============
@@ -4194,6 +4204,47 @@ static void CreateExternalShaders( void ) {
 	}
 
 }
+
+
+#ifdef USE_LAZY_LOAD
+void RE_UpdateShader(char *shaderName, int lightmapIndex) {
+  mapShaders = qtrue;
+
+  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex );
+  
+  mapShaders = qfalse;
+}
+#endif
+
+
+#ifdef USE_LAZY_MEMORY
+void RE_ReloadShaders( qboolean createNew ) {
+  int i;
+  tr.lastRegistrationTime = ri.Milliseconds();
+
+  R_IssuePendingRenderCommands();
+  
+  GLSL_InitGPUShaders();
+
+  // remove lightmaps
+  if(!createNew) {
+    // Gets reassigned on subsequent loads
+    for(i=0;i<tr.numLightmaps;i++) {
+      image_t *img = tr.lightmaps[i];
+      if(img->texnum)
+        qglDeleteTextures( 1, &img->texnum );
+      Com_Memset(img, 0, sizeof( *img ));
+    }
+    tr.lightmaps = NULL;
+    tr.numLightmaps = 0;
+  }
+
+  GL_BindNullTextures();
+
+  ScanAndLoadShaderFiles();
+}
+#endif
+
 
 /*
 ==================

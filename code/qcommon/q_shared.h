@@ -119,6 +119,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_LAZY_LOAD
 #endif
 
+#ifdef BUILD_GAME_STATIC
+#define USE_LAZY_MEMORY
+#endif
+
 // TODO: move this into make file
 #ifdef __WASM__
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game

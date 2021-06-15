@@ -1062,21 +1062,16 @@ UI_Init
 =================
 */
 void UI_Init( void ) {
-printf("fucked 1");
 	UI_RegisterCvars();
 
-printf("fucked 2");
 	UI_InitGameinfo();
 
 	// cache redundant calulations
-printf("fucked 3");
 	UI_VideoCheck( -99999 );
 
 	// initialize the menu system
-printf("fucked 4");
 	Menu_Cache();
 
-printf("fucked 5");
 	uis.activemenu = NULL;
 	uis.menusp     = 0;
 }

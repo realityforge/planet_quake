@@ -757,7 +757,7 @@ extern	gentity_t		g_entities[MAX_GENTITIES];
 
 extern	vmCvar_t	g_gametype;
 extern	vmCvar_t	g_mapname;
-extern	vmCvar_t	sv_fps;
+extern	vmCvar_t	g_fps;
 extern	vmCvar_t	g_dedicated;
 extern	vmCvar_t	g_cheats;
 //extern vmCvar_t	g_maxclients;			// allow this many total, including spectators
@@ -810,7 +810,6 @@ extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 
 #ifdef BUILD_GAME_STATIC
-
 
 #define trap_Print trapg_Print
 #define trap_Error trapg_Error

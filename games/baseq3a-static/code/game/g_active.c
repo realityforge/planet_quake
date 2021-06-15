@@ -1194,7 +1194,7 @@ void ClientEndFrame( gentity_t *ent ) {
 	}
 
 	if ( frames > 0 && g_smoothClients.integer ) {
-		G_PredictPlayerMove( ent, (float)frames / sv_fps.value );
+		G_PredictPlayerMove( ent, (float)frames / g_fps.value );
 		SnapVector( ent->s.pos.trBase );
 	}
 

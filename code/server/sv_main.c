@@ -1457,11 +1457,11 @@ static qboolean SV_CheckPaused( void ) {
 		}
 	}
 
-	if ( !cl_paused->integer ) {
+	if ( cl_paused && !cl_paused->integer ) {
 		return qfalse;
 	}
 
-	if ( count > 1 ) {
+  if ( count > 1 ) {
 		// don't pause
 		if (sv_paused->integer)
 			Cvar_Set("sv_paused", "0");
@@ -1623,9 +1623,9 @@ void SV_Frame( int msec ) {
 	if ( SV_CheckPaused() ) {
 		return;
 	}
-
 	// if it isn't time for the next frame, do nothing
 
+  printf("fucked %i\n", sv_fps);
 	frameMsec = 1000 / sv_fps->integer * com_timescale->value;
 	// don't let it scale below 1ms
 	if(frameMsec < 1)
