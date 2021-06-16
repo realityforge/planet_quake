@@ -12,8 +12,8 @@ ifeq ($(BUILD_SLIM_CLIENT),1)
 TARGET_CLIENT    := $(CNAME)_slim$(ARCHEXT)$(BINEXT)
 endif
 
-INCLUDES := $(MOUNT_DIR)/qcommon
-SOURCES  := $(MOUNT_DIR)/client
+INCLUDES         := $(MOUNT_DIR)/qcommon
+SOURCES          := $(MOUNT_DIR)/client
 
 ifeq ($(BUILD_GAME_STATIC),1)
 include make/game_baseq3a.make
@@ -32,155 +32,101 @@ endif
 endif
 
 ifneq ($(BUILD_SLIM_CLIENT),1)
-SOURCES  += $(MOUNT_DIR)/server
+SOURCES          += $(MOUNT_DIR)/server
 endif
 ifneq ($(USE_BOTLIB_DLOPEN),1)
-SOURCES  += $(MOUNT_DIR)/botlib
+SOURCES          += $(MOUNT_DIR)/botlib
 endif
 
-CLIPMAP  := $(B)/client/cm_load.o \
-            $(B)/client/cm_patch.o \
-            $(B)/client/cm_polylib.o \
-            $(B)/client/cm_test.o \
-            $(B)/client/cm_trace.o
+CLIPMAP          := cm_load.o cm_patch.o cm_polylib.o cm_test.o cm_trace.o
 
-QCOMMON  := $(B)/client/cmd.o \
-            $(B)/client/common.o \
-            $(B)/client/cvar.o \
-            $(B)/client/files.o \
-            $(B)/client/history.o \
-            $(B)/client/keys.o \
-            $(B)/client/md4.o \
-            $(B)/client/md5.o \
-            $(B)/client/msg.o \
-            $(B)/client/net_chan.o \
-            $(B)/client/net_ip.o \
-            $(B)/client/qrcodegen.o \
-            $(B)/client/huffman.o \
-            $(B)/client/huffman_static.o \
-            $(B)/client/q_math.o \
-            $(B)/client/q_shared.o \
-            $(B)/client/unzip.o \
-            $(B)/client/puff.o
+QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o md5.o \
+				            msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
+				            huffman_static.o q_math.o q_shared.o unzip.o puff.o
 
 # couple extra server files needed for cvars and botlib for reading files
 ifeq ($(BUILD_SLIM_CLIENT),1)
-QCOMMON  += $(B)/client/sv_init.o \
-            $(B)/client/sv_main.o \
-            $(B)/client/sv_bot.o \
-            $(B)/client/sv_game.o
+QCOMMON          += sv_init.o sv_main.o sv_bot.o sv_game.o
 endif
 
-SOUND    := $(B)/client/snd_adpcm.o \
-            $(B)/client/snd_dma.o \
-            $(B)/client/snd_mem.o \
-            $(B)/client/snd_mix.o \
-            $(B)/client/snd_wavelet.o \
-            \
-            $(B)/client/snd_main.o \
-            $(B)/client/snd_codec.o \
-            $(B)/client/snd_codec_wav.o \
-            $(B)/client/snd_codec_ogg.o \
-            $(B)/client/snd_codec_opus.o
+SOUND            := snd_adpcm.o snd_dma.o snd_mem.o snd_mix.o snd_wavelet.o \
+						        snd_main.o snd_codec.o snd_codec_wav.o snd_codec_ogg.o \
+						        snd_codec_opus.o
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
-SOUND    += $(B)/client/snd_mix_mmx.o \
-            $(B)/client/snd_mix_sse.o
+SOUND            += snd_mix_mmx.o snd_mix_sse.o
 endif
 endif
 
 
-VM       := $(B)/client/vm.o
+VM               := vm.o
 ifneq ($(BUILD_GAME_STATIC),1)
-VM       += $(B)/client/vm_interpreted.o
+VM               += vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
-VM       += $(B)/client/vm_x86.o
+VM               += vm_x86.o
 endif
 ifeq ($(ARCH),x86_64)
-VM       += $(B)/client/vm_x86.o
+VM               += vm_x86.o
 endif
 ifeq ($(ARCH),arm)
-VM       += $(B)/client/vm_armv7l.o
+VM               += vm_armv7l.o
 endif
 ifeq ($(ARCH),aarch64)
-VM       += $(B)/client/vm_aarch64.o
+VM               += vm_aarch64.o
 endif
 endif
 endif
 
-CURL     :=
+CURL             :=
 ifeq ($(USE_CURL),1)
-#CURL     += $(B)/client/cl_curl.o
+#CURL     += cl_curl.o
 ifneq ($(USE_CURL_DLOPEN),1)
-CLIENT_LDFLAGS += $(CURL_LIBS)
-BASE_CFLAGS    += $(CURL_CFLAGS)
+CLIENT_LDFLAGS   += $(CURL_LIBS)
+BASE_CFLAGS      += $(CURL_CFLAGS)
 endif
 endif
 
 
-SYSTEM   :=
+SYSTEM           := 
+
 ifeq ($(PLATFORM),js)
-SYSTEM   += $(B)/client/sys_glimp.o \
-            $(B)/client/sys_main.o \
-            $(B)/client/sys_input.o \
-            $(B)/client/unix_shared.o
+SYSTEM           += sys_glimp.o sys_main.o sys_input.o unix_shared.o sys_math.o
+endif
 
-else
+ifneq ($(PLATFORM),js)
 ifdef MINGW
-SYSTEM   += $(B)/client/win_main.o \
-            $(B)/client/win_shared.o \
-            $(B)/client/win_syscon.o \
-            $(B)/client/win_resource.o
-
-ifeq ($(USE_SDL),1)
-SYSTEM   += $(B)/client/sdl_glimp.o \
-            $(B)/client/sdl_gamma.o \
-            $(B)/client/sdl_input.o \
-            $(B)/client/sdl_snd.o
-
-else # !USE_SDL
-SYSTEM   += $(B)/client/win_gamma.o \
-            $(B)/client/win_glimp.o \
-            $(B)/client/win_input.o \
-            $(B)/client/win_minimize.o \
-            $(B)/client/win_qgl.o \
-            $(B)/client/win_snd.o \
-            $(B)/client/win_wndproc.o
-ifeq ($(USE_VULKAN_API),1)
-SYSTEM   += $(B)/client/win_qvk.o
+SYSTEM           += win_main.o win_shared.o win_syscon.o win_resource.o
+ifneq ($(USE_SDL),1)
+SYSTEM           += win_gamma.o win_glimp.o win_input.o win_minimize.o \
+                    win_qgl.o win_snd.o win_wndproc.o
 endif
-endif # !USE_SDL
-else # !MINGW
-SYSTEM   += $(B)/client/unix_main.o \
-            $(B)/client/unix_shared.o \
-            $(B)/client/linux_signals.o
+ifeq ($(USE_VULKAN_API),1)
+SYSTEM           += win_qvk.o
+endif
+endif
+ifndef MINGW
+SYSTEM           += unix_main.o unix_shared.o linux_signals.o
+ifneq ($(USE_SDL),1)
+SYSTEM           += linux_glimp.o linux_qgl.o linux_snd.o \
+                    x11_dga.o x11_randr.o x11_vidmode.o
+endif
+endif
+endif
 
 ifeq ($(USE_SDL),1)
-SYSTEM   += $(B)/client/sdl_glimp.o \
-            $(B)/client/sdl_gamma.o \
-            $(B)/client/sdl_input.o \
-            $(B)/client/sdl_snd.o
-else # !USE_SDL
-SYSTEM   += $(B)/client/linux_glimp.o \
-            $(B)/client/linux_qgl.o \
-            $(B)/client/linux_snd.o \
-            $(B)/client/x11_dga.o \
-            $(B)/client/x11_randr.o \
-            $(B)/client/x11_vidmode.o
+SYSTEM           += sdl_glimp.o sdl_gamma.o sdl_input.o sdl_snd.o
 endif
 
 ifeq ($(USE_VULKAN_API),1)
-SYSTEM   += $(B)/client/linux_qvk.o
-endif
-endif # !USE_SDL
+SYSTEM           += linux_qvk.o
 endif
 
-VIDEO    :=
+VIDEO            :=
 # TODO static linking? have to switch to gnu++
 #ifeq ($(USE_CIN_VPX),1)
-#VIDEO    += $(B)/client/webmdec.o
+#VIDEO    += webmdec.o
 #LIBS     += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
 #INCLUDES += libs/libvpx-1.10 \
 					  libs/libvorbis-1.3.7/include \
@@ -190,29 +136,30 @@ VIDEO    :=
 #endif
 
 ifeq ($(USE_RMLUI),1)
-INCLUDES += $(MOUNT_DIR)/../libs/RmlUi/Include
+INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include
 endif
 
-CFILES   := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
-            $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) \
-            $(VM) $(CURL) $(SYSTEM)
+CFILES           := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
+                    $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) $(VM) \
+										$(CURL) $(SYSTEM)
+            
 ifneq ($(BUILD_SLIM_CLIENT),1)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
-CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
-						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
+						        $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 #CFILES   += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
-CFILES   += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
+CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
 else
-CFILES   += $(MOUNT_DIR)/botlib/be_interface.c \
-						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+CFILES           += $(MOUNT_DIR)/botlib/be_interface.c \
+						        $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
-OBJS     := $(CFILES:.c=.o) 
-LIBOBJ   ?= 
-Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+OBJS             := $(CFILES:.c=.o) 
+LIBOBJ           ?= 
+Q3OBJ            := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 ifeq ($(BUILD_GAME_STATIC),1)
-Q3OBJ    += $(GAME_OBJ)
+Q3OBJ            += $(GAME_OBJ)
 endif
 
 ifneq ($(USE_RENDERER_DLOPEN),1)
@@ -220,19 +167,19 @@ ifneq ($(USE_OPENGL2),1)
 
 else
 ifneq ($(USE_VULKAN),1)
-Q3OBJ    += $(REND_Q3OBJ)
+Q3OBJ            += $(REND_Q3OBJ)
 else
 
 endif
 endif
 endif
 
-export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
+export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS   := $(INCLUDE) -fsigned-char -ftree-vectorize \
-            -ffast-math -fno-short-enums -MMD
+CFLAGS           := $(INCLUDE) -fsigned-char -ftree-vectorize -ffast-math \
+									  -fno-short-enums -MMD
 ifeq ($(BUILD_GAME_STATIC),1)
-CFLAGS   += $(GAME_INCLUDE)
+CFLAGS           += $(GAME_INCLUDE)
 endif
 
 #GXXFLAGS := $(CFLAGS) -std=gnu++11
@@ -330,12 +277,15 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 ifeq ($(PLATFORM),js)
 $(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"
-	#$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
-	#$(Q)opt -Os $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
-	#$(Q)llc -O3 -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
-	#$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS) $(LDFLAGS)
 	$(Q)$(LD) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
-	#$(Q)wasm-opt -Os -o $@ $@
+	
+#$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
+#	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
+#	$(Q)opt -Os $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
+#	$(Q)llc -O3 -march=wasm32 -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
+#	$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS) $(LDFLAGS)
+#	$(Q)wasm-opt -Os --no-validation -o $@ $@
+
 else
 $(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"

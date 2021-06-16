@@ -1,6 +1,15 @@
+#pragma once
+
 #include <wasi/api.h>
 #include <wasi/wasi-helpers.h>
-#include <emscripten/emscripten.h>
+
+#define EMSCRIPTEN_KEEPALIVE __attribute__((used))
+
+#ifdef __WASM__
+#define EM_IMPORT(NAME) __attribute__((import_module("env"), import_name(#NAME)))
+#else
+#define EM_IMPORT(NAME)
+#endif
 
 #define __SYSCALL_LL_E(x) \
 ((union { long long ll; long l[2]; }){ .ll = x }).l[0], \
@@ -14,6 +23,11 @@ extern "C" {
 /* Causes the final import in the wasm binary be named "env.sys_<name>" */
 #define SYS_IMPORT(NAME) EM_IMPORT(__sys_##NAME)
 
+static inline long __syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6)
+{
+  return 0;
+}
+/*
 long SYS_IMPORT(exit) __syscall1(long exit_code);
 long SYS_IMPORT(open) __syscall5(long path, long flags, ...); // mode is optional
 long SYS_IMPORT(link) __syscall9(long oldpath, long newpath);
@@ -137,6 +151,7 @@ long SYS_IMPORT(sendmsg) __syscall370(long sockfd, long level, long optname, lon
 long SYS_IMPORT(recvfrom) __syscall371(long sockfd, long level, long optname, long optval, long optlen, long dummy);
 long SYS_IMPORT(recvmsg) __syscall372(long sockfd, long level, long optname, long optval, long optlen, long dummy);
 long SYS_IMPORT(shutdown) __syscall373(long sockfd, long level, long optname, long optval, long optlen, long dummy);
+*/
 
 #ifdef __cplusplus
 }

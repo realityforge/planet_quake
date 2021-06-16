@@ -50,6 +50,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/client.h"
 #endif
 
+#ifdef Q_EXPORT
+#define Q_EXPORT __attribute__((visibility("default")))
+#endif
+
 unsigned sys_frame_time;
 
 qboolean stdin_active = qfalse;
@@ -921,7 +925,7 @@ void Sys_Frame( void ) {
 	Com_Frame( CL_NoDelay() );
 }
 
-int main( int argc, char* argv[] )
+Q_EXPORT int main( int argc, char* argv[] )
 {
 	char con_title[ MAX_CVAR_VALUE_STRING ];
 	int xpos, ypos;
