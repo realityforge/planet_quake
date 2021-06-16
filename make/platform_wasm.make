@@ -19,44 +19,54 @@ SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
 #LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
 LDFLAGS          := --import-memory --entry=main
-CLIENT_LDFLAGS   := $(LDFLAGS) --warn-unresolved-symbols
-SHLIBLDFLAGS     := $(LDFLAGS) --export-dynamic --strip-all
-
-BASE_CFLAGS      += -Wall -Ofast -emit-llvm --target=wasm32 \
-		    -Wno-unused-variable -c -S \
+CLIENT_LDFLAGS   := --warn-unresolved-symbols
+SHLIBLDFLAGS     := --export-dynamic --strip-all
+#  -emit-llvm
+BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
+										-Wno-unused-variable -c -S -Dweak_alias\(x,\ y\)="" \
                     -Wimplicit -Wstrict-prototypes -fno-strict-aliasing \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 -D__WASM__ \
-										-D__WASM__ -D_ALL_SOURCE=700 \
+										-D__WASM__ \
 										-fno-common -fvisibility=hidden \
-										-std=c11 -ffreestanding -nostdinc $(IMPH) \
+										-ffreestanding \
 										-Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
 										-Ilibs/musl-1.2.2/arch/wasm \
+										-Ilibs/musl-1.2.2/src/internal \
 										-Ilibs/emsdk/upstream/emscripten/system/include
+MUSL_CFLAGS      := -std=c99 -nostdinc -pedantic -D_XOPEN_SOURCE=600 \
+										-D_ALL_SOURCE=700 -Wvariadic-macros
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
-                    -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
+                    -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
 
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
-                    -DNDEBUG -O3 -Oz -flto -fPIC
+                    -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
 
 export INCLUDE	 := -Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
 										-Ilibs/musl-1.2.2/arch/wasm \
-										-Ilibs/emsdk/upstream/emscripten/system/include
+										-Ilibs/emsdk/upstream/emscripten/system/include \
+										libs/musl-1.2.2/src/internal/stdio_impl.h \
+										libs/musl-1.2.2/src/internal/pthread_impl.h \
+										libs/musl-1.2.2/src/internal/locale_impl.h \
+										libs/musl-1.2.2/src/internal/libc.h
 
 WORKDIRS         += musl
-CLEANS           += musl
+CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 LIBOBJ           := $(B)/musl/memset.o $(B)/musl/memcpy.o $(B)/musl/strlen.o \
 										$(B)/musl/strncpy.o $(B)/musl/strcmp.o $(B)/musl/strcat.o \
 										$(B)/musl/strchr.o $(B)/musl/memmove.o $(B)/musl/sprintf.o \
-										$(B)/musl/strcpy.o 
+										$(B)/musl/strcpy.o $(B)/musl/stpncpy.o $(B)/musl/strchrnul.o \
+										$(B)/musl/vsnprintf.o
+										
 
 define DO_MUSL_CC
+	@echo $(CFLAGS)
   $(echo_cmd) "MUSL_CC $<"
-  $(Q)$(CC) -o $@ $(CFLAGS) -c $<
+  $(Q)$(GCC) -o $@ $(BASE_CFLAGS) $(MUSL_CFLAGS) -c $<
 endef
 
 ifdef B

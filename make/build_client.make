@@ -330,10 +330,12 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 ifeq ($(PLATFORM),js)
 $(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
-	$(Q)opt -O3 $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
-	$(Q)llc -O -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
-	$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS)
+	#$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
+	#$(Q)opt -Os $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
+	#$(Q)llc -O3 -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
+	#$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS) $(LDFLAGS)
+	$(Q)$(LD) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
+	#$(Q)wasm-opt -Os -o $@ $@
 else
 $(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"
