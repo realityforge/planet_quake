@@ -9,7 +9,7 @@ SOURCES       := $(MOUNT_DIR)/wasm/lib
 INCLUDES      := 
 LIBS          := 
 
-COMOBJECTS    := huffman.o memset.o
+COMOBJECTS    := huffman.o string/memset.o
 Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(COMOBJECTS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
@@ -39,9 +39,6 @@ clean:
 	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: libs/musl-1.2.2/src/string/%.c
-	$(DO_HUFFMAN_CC)
-
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
 	$(DO_HUFFMAN_CC)
 

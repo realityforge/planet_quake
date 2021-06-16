@@ -208,6 +208,7 @@ CFILES   += $(MOUNT_DIR)/botlib/be_interface.c \
 						$(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 OBJS     := $(CFILES:.c=.o) 
+LIBOBJ   ?= 
 Q3OBJ    := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 ifeq ($(BUILD_GAME_STATIC),1)
@@ -326,7 +327,16 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/server/%.c
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
-$(B)/$(TARGET_CLIENT): $(Q3OBJ)
+ifeq ($(PLATFORM),js)
+$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
+	$(Q)opt -O3 $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
+	$(Q)llc -O -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
+	$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS)
+else
+$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+endif
 endif
