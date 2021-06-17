@@ -20,8 +20,8 @@ SHLIBCFLAGS      :=
 #LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
 LDFLAGS          := --import-memory
 # --entry=_main
-CLIENT_LDFLAGS   := --warn-unresolved-symbols --export-dynamic --no-entry --strip-all 
-SHLIBLDFLAGS     := --export-dynamic --no-entry --strip-all
+CLIENT_LDFLAGS   := --warn-unresolved-symbols --export-dynamic --no-entry --export-all
+SHLIBLDFLAGS     := --unresolved-symbols=ignore-all --export-dynamic --no-entry --strip-all
 # -emit-llvm -c -S
 BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
 										-Wno-unused-variable \
@@ -42,6 +42,7 @@ MUSL_CFLAGS      := -Wall -Ofast --target=wasm32 -fvisibility=hidden \
 										-D_XOPEN_SOURCE=600 -D_ALL_SOURCE=700 \
 										-fno-common -std=c99 -ffreestanding -nostdinc -pedantic \
 										-Wno-unused-variable -Wvariadic-macros -Wno-extra-semi \
+										-Wno-shift-op-parentheses \
 										-Ilibs/musl-1.2.2/arch/generic \
 										-Ilibs/musl-1.2.2/arch/wasm \
 										-Ilibs/musl-1.2.2/src/include \
@@ -60,11 +61,11 @@ export INCLUDE	 := -Ilibs/musl-1.2.2/include \
 
 WORKDIRS         += musl
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
-LOBJ             := memset.o memcpy.o strlen.o \
-										strncpy.o strcmp.o strcat.o \
-										strchr.o memmove.o sprintf.o \
-										strcpy.o stpncpy.o strchrnul.o \
-										vsnprintf.o gethostbyname.o
+LOBJ             := memset.o memcpy.o memmove.o memcmp.o memchr.o \
+										strncpy.o strcmp.o strcat.o strchr.o sprintf.o strncmp.o \
+										strcpy.o stpncpy.o strchrnul.o strlen.o strncat.o strtod.o \
+										fprintf.o vsnprintf.o vfprintf.o atoi.o atof.o strstr.o \
+										tolower.o gethostbyname.o strrchr.o strnlen.o
 
 LIBOBJ           += $(addprefix $(B)/musl/,$(notdir $(LOBJ)))
 										
@@ -75,6 +76,12 @@ define DO_MUSL_CC
 endef
 
 ifdef B
+$(B)/musl/%.o: libs/musl-1.2.2/src/ctype/%.c
+	$(DO_MUSL_CC)
+
+$(B)/musl/%.o: libs/musl-1.2.2/src/stdlib/%.c
+	$(DO_MUSL_CC)
+
 $(B)/musl/%.o: libs/musl-1.2.2/src/network/%.c
 	$(DO_MUSL_CC)
 

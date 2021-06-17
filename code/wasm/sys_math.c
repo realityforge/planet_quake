@@ -68,5 +68,11 @@ CALL_JS_1_IMPL_TRIPLE(rint,  {
   return (x - Math.floor(x) != .5) ? round(x) : round(x / 2) * 2;
 })
 
+EM_JS(int, JS_rand, (void), { return Math.random(x) });
+int rand(void) { return JS_rand(); }
+
+EM_JS(int, JS_abs, (double x), { return Math.abs(x) });
+int abs(int x) { return JS_abs((int)x); }
+
 double nearbyint(double x) { return rint(x); }
 float nearbyintf(float x) { return rintf(x); }
