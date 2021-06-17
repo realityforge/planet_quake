@@ -727,7 +727,7 @@ void SV_DirectConnect( const netadr_t *from ) {
   // TODO: probably just use sv_filter for this
   char *uncheat = Info_ValueForKey( userinfo, "cl_uncheat" );
   int cheatCount;
-  char *bannedCheats = "\0";
+  const char *bannedCheats = "\0";
   char *cheats = Cmd_TokenizeAlphanumeric(uncheat, &cheatCount);
   for(int i = 0; i < cheatCount && i < 128; i++) {
     // check if the banned cheat value is set on the client

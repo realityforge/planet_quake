@@ -21,3 +21,4 @@ USE_OPENGL2            = 1
 USE_CURL              ?= 1
 USE_SYSTEM_RMLUI       = 0
 USE_SYSTEM_JPEG       ?= 1
+USE_CVAR_UNCHEAT       = 1

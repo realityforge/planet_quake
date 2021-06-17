@@ -1149,17 +1149,6 @@ static void Cmd_Help( const cmd_function_t *cmd ) {
 }
 
 
-#ifdef USE_SERVER_ROLES
-static qboolean limited;
-
-qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
-	limited = qtrue;
-	qboolean result = Cmd_ExecuteString(text, noServer, 0);
-	limited = qfalse;
-	return result;
-}
-
-
 static	char		props[BIG_INFO_STRING];
 char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 	int c = 0, r = 0, len = strlen(text_in);
@@ -1171,7 +1160,7 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 			props[r] = text_in[c];
 			r++;
 		} else {
-			if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+			if(r > 0 && props[r-1] != 0) {
 				props[r] = 0;
 				(*count)++;
 				r++;
@@ -1179,17 +1168,23 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 		}
 		c++;
 	}
-	if(r > 0 && *count < MAX_CLIENT_ROLES && props[r-1] != 0) {
+	if(r > 0 && props[r-1] != 0) {
 		props[r] = 0;
 		(*count)++;
 		r++;
 	}
-	if(*count == MAX_CLIENT_ROLES) {
-		Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
-	}
 	return props;
 }
 
+#ifdef USE_SERVER_ROLES
+static qboolean limited;
+
+qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
+	limited = qtrue;
+	qboolean result = Cmd_ExecuteString(text, noServer, 0);
+	limited = qfalse;
+	return result;
+}
 
 void Cmd_FilterLimited(char *commandList) {
 	cmd_function_t *cmd, **prev;

@@ -544,7 +544,7 @@ extern	cvar_t  *sv_lnWithdraw;
 
 #ifdef USE_CVAR_UNCHEAT
 extern  cvar_t  *sv_banCheats;
-extern  cvar_t  *svUncheats[128];
+extern  char    *svUncheats[128];
 #endif
 
 

@@ -898,7 +898,10 @@ void SV_InitUserRoles (void) {
 	int roleCount = 0;
 	// force 3 roles to be available?
 	char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);
-	for(int i = 0; i < roleCount; i++) {
+  if(roleCount > MAX_CLIENT_ROLES) {
+    Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
+  }
+  for(int i = 0; i < roleCount; i++) {
 		sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
 		sv_rolePassword[i] = Cvar_Get(va("%sPassword", roles), "", CVAR_TEMP);
 		roles = &roles[strlen(roles)+1];

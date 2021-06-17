@@ -738,8 +738,8 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 // Takes a null terminated string.  Does not need to be /n terminated.
 // breaks the string up into arg tokens.
 
+char     *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 #ifdef USE_SERVER_ROLES
-char      *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
 void      Cmd_FilterLimited(char *commandList);
 #endif
