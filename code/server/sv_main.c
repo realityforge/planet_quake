@@ -137,6 +137,11 @@ cvar_t  *sv_lnAPI;
 cvar_t  *sv_lnWithdraw;
 #endif
 
+#ifdef USE_CVAR_UNCHEAT
+cvar_t  *sv_banCheats;
+cvar_t  *svUncheats[128];
+#endif
+
 #ifndef BUILD_SLIM_CLIENT
 /*
 =============================================================================

@@ -542,6 +542,12 @@ extern	cvar_t  *sv_lnAPI;
 extern	cvar_t  *sv_lnWithdraw;
 #endif
 
+#ifdef USE_CVAR_UNCHEAT
+extern  cvar_t  *sv_banCheats;
+extern  cvar_t  *svUncheats[128];
+#endif
+
+
 #ifdef USE_PERSIST_CLIENT
 extern  cvar_t  *sv_clSessions;
 #endif

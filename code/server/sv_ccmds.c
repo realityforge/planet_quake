@@ -1568,7 +1568,7 @@ void SV_Teleport_f (void) {
 
 }
 
-void SV_LoadVM_f() {
+void SV_LoadVM_f(void) {
 	SV_LoadVM(NULL);
 }
 #endif

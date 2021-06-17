@@ -760,6 +760,9 @@ void CL_ParseServerInfo( int igs )
 CL_ParseGamestate
 ==================
 */
+#ifdef __WASM__
+int gigs;
+#endif
 static void CL_ParseGamestate( msg_t *msg ) {
 	int				i;
 	entityState_t	*es;
@@ -784,7 +787,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #ifndef USE_MULTIVM_CLIENT
 	CL_ClearState();
 #else
-int igs = 0;
+  int igs = 0;
 	if(clc.demoplaying) {
 		CL_ClearState();
 	} else {
@@ -900,7 +903,7 @@ int igs = 0;
 
 	cls.gameSwitch = qfalse;
 #else
-
+  gigs = igs;
 	if(FS_ConditionalRestart(clc.checksumFeed, qfalse)) {
 		cls.gameSwitch = qfalse;
 		if(!FS_Initialized()) {
@@ -919,7 +922,8 @@ int igs = 0;
 
 void CL_ParseGamestate_Game_After_Shutdown( void ) {
 #ifdef USE_MULTIVM_CLIENT
-	Cvar_Set("mapname", Info_ValueForKey( cl.gameState[cl.currentView].stringData + cl.gameState[cl.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
+  int igs = gigs;
+	Cvar_Set("mapname", Info_ValueForKey( cl.gameStates[clc.currentView].stringData + cl.gameStates[clc.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
 #else
   Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
 #endif

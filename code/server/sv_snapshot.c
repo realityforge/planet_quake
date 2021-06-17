@@ -1109,7 +1109,7 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		gvmi = igvm; // TODO remove need for gvmi and pass igvm
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		ps = SV_GameClientNum( client - svs.clients );
+		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
 		// TODO: remove this line when MULTIIVM is working
@@ -1169,12 +1169,11 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	SV_WriteSnapshotToClient( client, &msg );
 
 #ifdef USE_DEMO_CLIENTS
-  playerState_t	*ps;
 	if ( client->demorecording ) {
 		msg_t copyMsg;
 		Com_Memcpy(&copyMsg, &msg, sizeof(copyMsg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
- 		ps = SV_GameClientNum( client - svs.clients);
+ 		playerState_t	*ps = SV_GameClientNum( client - svs.clients);
  		if (ps->pm_type == PM_INTERMISSION) {
  			SV_StopRecord( client );
  		}

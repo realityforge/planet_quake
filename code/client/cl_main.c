@@ -38,12 +38,6 @@ cvar_t	*cl_renderer;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
-#ifdef USE_ABS_MOUSE
-cvar_t  *in_mouseAbsolute;
-#endif
-#ifdef USE_MASTER_LAN
-cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
-#endif
 
 cvar_t	*cl_timeout;
 cvar_t	*cl_autoNudge;
@@ -62,15 +56,6 @@ cvar_t	*cl_activeAction;
 
 cvar_t	*cl_motdString;
 
-#ifdef USE_MV
-void CL_Multiview_f( void );
-void CL_MultiviewFollow_f( void );
-#endif
-
-#ifdef USE_LNBITS
-cvar_t  *cl_lnInvoice;
-#endif
-cvar_t  *cl_returnURL;
 cvar_t	*cl_allowDownload;
 #ifdef USE_CURL
 cvar_t	*cl_mapAutoDownload;
@@ -89,10 +74,6 @@ cvar_t	*cl_dlURL;
 cvar_t	*cl_dlDirectory;
 
 cvar_t	*cl_reconnectArgs;
-cvar_t  *cl_snaps;
-#ifdef USE_LAZY_LOAD
-cvar_t  *cl_lazyLoad;
-#endif
 
 // common cvars for GLimp modules
 cvar_t	*vid_xpos;			// X coordinate of window position
@@ -111,7 +92,6 @@ cvar_t *r_customheight;
 cvar_t *r_customPixelAspect;
 
 cvar_t *r_colorbits;
-cvar_t *r_debug;
 // these also shared with renderers:
 cvar_t *cl_stencilbits;
 cvar_t *cl_depthbits;
@@ -120,6 +100,34 @@ cvar_t *cl_drawBuffer;
 clientActive_t		cl;
 clientConnection_t	clc;
 clientStatic_t		cls;
+
+cvar_t  *r_debug;
+cvar_t  *cl_snaps;
+
+#ifdef USE_ABS_MOUSE
+cvar_t  *in_mouseAbsolute;
+#endif
+
+#ifdef USE_MASTER_LAN
+cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
+#endif
+
+#ifdef USE_LNBITS
+cvar_t  *cl_lnInvoice;
+#endif
+
+#ifdef __WASM__
+cvar_t  *cl_returnURL;
+#endif
+
+#ifdef USE_CVAR_UNCHEAT
+cvar_t  *cl_uncheat;
+cvar_t  *clUncheats[128];
+#endif
+
+#ifdef USE_LAZY_LOAD
+cvar_t  *cl_lazyLoad;
+#endif
 
 #ifdef USE_MULTIVM_CLIENT
 int   cgvmi = 0;
@@ -179,6 +187,11 @@ static void CL_ShutdownRef( refShutdownCode_t code );
 static void CL_InitGLimp_Cvars( void );
 
 static void CL_NextDemo( void );
+
+#ifdef USE_MV
+void CL_Multiview_f( void );
+void CL_MultiviewFollow_f( void );
+#endif
 
 /*
 ===============
@@ -3136,6 +3149,9 @@ and determine if we need to download them
 */
 void CL_InitDownloads( void ) {
 	char missingfiles[ MAXPRINTMSG ];
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clc.currentView;
+#endif
 
 	if ( FS_ComparePaks( missingfiles, sizeof( missingfiles ) , qtrue ) ) {
 
@@ -4022,7 +4038,7 @@ void CL_Frame( int msec, int realMsec ) {
 		if(!cgvmWorlds[i]) continue;
 		if(VM_IsSuspended(cgvmWorlds[i])) {
 			cgvmi = i;
-			CM_SwitchMap(clientMaps[cgvmi]));
+			CM_SwitchMap(clientMaps[cgvmi]);
 			unsigned int result = VM_Resume(cgvmWorlds[i]);
 			if (result == 0xDEADBEEF) {
 				continue;
@@ -5331,6 +5347,19 @@ void CL_Init( void ) {
 	cl_returnURL = Cvar_Get("cl_returnURL", "", CVAR_TEMP);
 	Cvar_SetDescription(cl_returnURL, "Set the return URL to go to when the client disconnects from the server\nDefault: empty");
 #endif
+
+#ifdef USE_CVAR_UNCHEAT
+  cl_uncheat = Cvar_Get("cl_uncheat", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE | CVAR_USERINFO);
+  Cvar_SetDescription(cl_uncheat, "Remove the CVAR_CHEAT flag from any cvar, shares this info with server for banning\nit also shares the cheat value so server administrators can see and log it\nDefault: cg_gun cg_gunX cg_gunY cg_gunZ");
+  int cheatCount;
+  char *cheats = Cmd_TokenizeAlphanumeric(cl_uncheat->string, &cheatCount);
+  for(int i = 0; i < cheatCount && i < 128; i++) {
+    // set userinfo on all the cheated values
+    clUncheats[i] = Cvar_Get(cheats, "", CVAR_USERINFO);
+    cheats = &cheats[strlen(cheats)+1];
+  }
+#endif
+
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
 	Cvar_SetDescription(cl_allowDownload, "Toggle automatic downloading of maps, models, sounds, and textures\n1 - allow downloads\n2 - disallow redirects, must download from the same server\n4 - Disallow UDP downloads\n8 - don't disconnect clients while they are downloading\nDefault: 1");
 #ifdef USE_CURL

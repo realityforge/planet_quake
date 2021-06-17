@@ -92,7 +92,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 // Cyrax's Multiview is what makes multiworld possible.
+#ifndef USE_MV
 #define USE_MV
+#endif
 #endif
 
 #ifdef USE_MV
@@ -1008,45 +1010,49 @@ default values.
 ==========================================================
 */
 
-#define	CVAR_ARCHIVE		0x0001	// set to cause it to be saved to vars.rc
+#define	CVAR_ARCHIVE           0x0001 // set to cause it to be saved to vars.rc
 					// used for system variables, not for player
 					// specific configurations
-#define	CVAR_USERINFO		0x0002	// sent to server on connect or change
-#define	CVAR_SERVERINFO		0x0004	// sent in response to front end requests
-#define	CVAR_SYSTEMINFO		0x0008	// these cvars will be duplicated on all clients
-#define	CVAR_INIT			0x0010	// don't allow change from console at all,
+#define	CVAR_USERINFO          0x0002	// sent to server on connect or change
+#define	CVAR_SERVERINFO        0x0004	// sent in response to front end requests
+#define	CVAR_SYSTEMINFO        0x0008	// these cvars will be duplicated on all clients
+#define	CVAR_INIT              0x0010	// don't allow change from console at all,
 					// but can be set from the command line
-#define	CVAR_LATCH			0x0020	// will only change when C code next does
+#define	CVAR_LATCH             0x0020	// will only change when C code next does
 					// a Cvar_Get(), so it can't be changed
 					// without proper initialization.  modified
 					// will be set, even though the value hasn't
 					// changed yet
-#define	CVAR_ROM			0x0040	// display only, cannot be set by user at all
-#define	CVAR_USER_CREATED	0x0080	// created by a set command
-#define	CVAR_TEMP			0x0100	// can be set even when cheats are disabled, but is not archived
-#define CVAR_CHEAT			0x0200	// can not be changed if cheats are disabled
-#define CVAR_NORESTART		0x0400	// do not clear when a cvar_restart is issued
+#define	CVAR_ROM               0x0040	// display only, cannot be set by user at all
+#define	CVAR_USER_CREATED      0x0080	// created by a set command
+#define	CVAR_TEMP              0x0100	// can be set even when cheats are disabled, but is not archived
+#define CVAR_CHEAT             0x0200	// can not be changed if cheats are disabled
+#define CVAR_NORESTART         0x0400	// do not clear when a cvar_restart is issued
 
-#define CVAR_SERVER_CREATED	0x0800	// cvar was created by a server the client connected to.
-#define CVAR_VM_CREATED		0x1000	// cvar was created exclusively in one of the VMs.
-#define CVAR_PROTECTED		0x2000	// prevent modifying this var from VMs or the server
+#define CVAR_SERVER_CREATED    0x0800	// cvar was created by a server the client connected to.
+#define CVAR_VM_CREATED        0x1000	// cvar was created exclusively in one of the VMs.
+#define CVAR_PROTECTED         0x2000	// prevent modifying this var from VMs or the server
 
-#define CVAR_NODEFAULT		0x4000	// do not write to config if matching with default value
+#define CVAR_NODEFAULT         0x4000	// do not write to config if matching with default value
 
-#define CVAR_PRIVATE		0x8000	// can't be read from VM
+#define CVAR_PRIVATE           0x8000	// can't be read from VM
 
-#define CVAR_DEVELOPER		0x10000 // can be set only in developer mode
-#define CVAR_NOTABCOMPLETE	0x20000 // no tab completion in console
+#define CVAR_DEVELOPER         0x10000 // can be set only in developer mode
+#define CVAR_NOTABCOMPLETE     0x20000 // no tab completion in console
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define CVAR_TAGGED_SPECIFIC   0x40000
+#define CVAR_TAGGED_ORIGINAL   0x80000
+#endif
+#ifdef USE_CVAR_UNCHEAT
+//#define CVAR_UNCHEATED         0x100000
+#endif
 
 #define CVAR_ARCHIVE_ND		(CVAR_ARCHIVE | CVAR_NODEFAULT)
 
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
-#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
-#define CVAR_TAGGED_SPECIFIC 0x40000
-#define CVAR_TAGGED_ORIGINAL 0x80000
-#endif
 
 typedef enum {
 	CV_NONE = 0,

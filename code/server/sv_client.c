@@ -721,6 +721,30 @@ void SV_DirectConnect( const netadr_t *from ) {
 		}
 		return;
 	}
+  
+#ifdef USE_CVAR_UNCHEAT
+  // check cheat cvars from client, make sure none of them are disabled
+  // TODO: probably just use sv_filter for this
+  char *uncheat = Info_ValueForKey( userinfo, "cl_uncheat" );
+  int cheatCount;
+  char *bannedCheats = "\0";
+  char *cheats = Cmd_TokenizeAlphanumeric(uncheat, &cheatCount);
+  for(int i = 0; i < cheatCount && i < 128; i++) {
+    // check if the banned cheat value is set on the client
+    for(int j = 0; j < ARRAY_LEN(svUncheats); j++) {
+      if(!Q_stricmp(svUncheats[j], cheats)) {
+        bannedCheats = va("%s %s", bannedCheats, cheats);
+      }
+    }
+    if(bannedCheats[0] != '\0') {
+      // kick the user with instructions
+      NET_OutOfBandPrint( NS_SERVER, from, "print\nUsing banned cheat settings.  "
+        "Try clearing cl_uncheat, specifically: %s\n", bannedCheats );
+    }
+    cheats = &cheats[strlen(cheats)+1];
+  }
+
+#endif
 
 	// run userinfo filter
 	SV_SetTLD( tld, from, Sys_IsLANAddress( from ) );
