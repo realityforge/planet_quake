@@ -2074,7 +2074,7 @@ qboolean Info_SetValueForKey_s( char *s, int slen, const char *key, const char *
 	}
 
 	if ( !key || !Info_ValidateKeyValue( key ) || *key == '\0' ) {
-		Com_Printf( S_COLOR_YELLOW "Invalid key name: '%s'\n", key );
+		Com_Error( ERR_FATAL, S_COLOR_YELLOW "Invalid key name: '%s'\n", key );
 		return qfalse;
 	}
 

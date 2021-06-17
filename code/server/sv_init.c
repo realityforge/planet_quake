@@ -902,6 +902,7 @@ void SV_InitUserRoles (void) {
     Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
   }
   for(int i = 0; i < roleCount; i++) {
+    if(roles[0] == '\0') continue;
 		sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
 		sv_rolePassword[i] = Cvar_Get(va("%sPassword", roles), "", CVAR_TEMP);
 		roles = &roles[strlen(roles)+1];

@@ -70,7 +70,7 @@ static qboolean Cvar_ValidateName( const char *name ) {
 	const char *s;
 	int c;
 	
-	if ( !name ) {
+	if ( !name || !name[0] ) {
 		return qfalse;
 	}
 
@@ -355,7 +355,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	}
 
 	if ( !Cvar_ValidateName( var_name ) ) {
-		Com_Printf( "invalid cvar name string: %s\n", var_name );
+		Com_Error( ERR_FATAL, "invalid cvar name string: %s\n", var_name );
 		var_name = "BADNAME";
 	}
 

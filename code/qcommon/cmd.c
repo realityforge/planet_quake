@@ -1152,11 +1152,13 @@ static void Cmd_Help( const cmd_function_t *cmd ) {
 static	char		props[BIG_INFO_STRING];
 char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 	int c = 0, r = 0, len = strlen(text_in);
+  *count = 0;
 	props[0] = 0;
 	while(c < len) {
 		if((text_in[c] >= 'a' && text_in[c] <= 'z')
 			|| (text_in[c] >= 'A' && text_in[c] <= 'Z')
-			|| (text_in[c] >= '0' && text_in[c] <= '9')) {
+			|| (text_in[c] >= '0' && text_in[c] <= '9')
+      || text_in[c] == '_') {
 			props[r] = text_in[c];
 			r++;
 		} else {
@@ -1168,7 +1170,7 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 		}
 		c++;
 	}
-	if(r > 0 && props[r-1] != 0) {
+	if(*count == 0 && r > 0 && props[r-1] != 0) {
 		props[r] = 0;
 		(*count)++;
 		r++;
