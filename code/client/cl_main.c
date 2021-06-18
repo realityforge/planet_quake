@@ -780,7 +780,7 @@ void CL_ReadDemoIndex( void ) {
 	entityState_t	nullstate;
 	const int SIMPLE_READ_SIZE = 24;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	startTime = Sys_Milliseconds();
@@ -987,7 +987,7 @@ void CL_ReadDemoMessage( void ) {
 		return;
 	}
 	if ( buf.cursize > buf.maxsize ) {
-		Com_Error (ERR_DROP, "CL_ReadDemoMessage: demoMsglen > MAX_MSGLEN");
+		Com_Error (ERR_DROP, "%s: demoMsglen > MAX_MSGLEN", __func__);
 	}
 	r = FS_Read( buf.data, buf.cursize, clc.demofile );
 	if ( r != buf.cursize ) {
@@ -1104,7 +1104,7 @@ static void CL_Play_f( void ) {
 static void CL_Rewind_f( void ) {
 	int seconds = 10;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	if(!clc.demoplaying) {
@@ -1431,7 +1431,7 @@ memory on the hunk from cgame, ui, and renderer
 */
 void CL_MapLoading( void ) {
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	if ( com_dedicated->integer ) {

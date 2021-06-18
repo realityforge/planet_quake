@@ -652,7 +652,7 @@ void Con_DrawNotify( void )
 	int		currentColorIndex;
 	int		colorIndex;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	currentColorIndex = ColorIndex( COLOR_WHITE );

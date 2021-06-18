@@ -720,7 +720,7 @@ static int GetConfigString(int index, char *buf, int size)
 {
 	int		offset;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	if (index < 0 || index >= MAX_CONFIGSTRINGS)

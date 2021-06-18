@@ -231,7 +231,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	int			commandTime;
 #ifdef USE_MV
 #ifdef USE_MULTIVM_CLIENT
-  int     igs = clientWorlds[cgvmi];
+  int     igs = clientGames[cgvmi];
 #endif
 	int			clientNum;
 	entityState_t	*es;
@@ -532,7 +532,7 @@ Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 	}
 	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
 //		if(cl.snapshots[oldMessageNum & PACKET_MASK].valid)
-//Com_Printf("Invalidated (%i): %i == %i\n", igvm, oldMessageNum);
+//Com_Printf("Invalidated (%i): %i == %i\n", cgvmi, igs, clientGames[cgvmi]);
 		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
 	}
 
@@ -1251,7 +1251,7 @@ CL_ParseServerMessage
 void CL_ParseServerMessage( msg_t *msg ) {
 	int			cmd;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientWorlds[cgvmi];
+  int igs = clientGames[cgvmi];
 #endif
 
 	if ( cl_shownet->integer == 1 ) {
