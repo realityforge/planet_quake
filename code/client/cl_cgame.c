@@ -93,7 +93,7 @@ static qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 
 	// can't return anything that we haven't created yet
 	if ( cmdNumber > cl.cmdNumber ) {
-		Com_Error( ERR_DROP, "CL_GetUserCmd: %i >= %i", cmdNumber, cl.cmdNumber );
+		Com_Error( ERR_DROP, "%s: %i >= %i", __func__, cmdNumber, cl.cmdNumber );
 	}
 
 	// the usercmd has been overwritten in the wrapping
@@ -169,7 +169,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 #endif
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
-		Com_Error( ERR_DROP, "CL_GetSnapshot: snapshotNumber > cl.snapshot.messageNum" );
+		Com_Error( ERR_DROP, "%s: snapshotNumber > cl.snapshot.messageNum", __func__ );
 	}
 
 	// if the frame has fallen out of the circular buffer, we can't return it
@@ -288,7 +288,9 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	//				break;
 			}
 			if(event == EV_CHANGE_WEAPON) {
+#ifdef USE_MULTIVM_CLIENT
 	Com_Printf( "Weapon change event\n" );
+#endif
 			}
 		}
 	}
@@ -297,7 +299,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->ps = clSnap->ps;
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
-		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
+		Com_DPrintf( "%s: truncated %i entities to %i\n", __func__, count, MAX_ENTITIES_IN_SNAPSHOT );
 		count = MAX_ENTITIES_IN_SNAPSHOT;
 	}
 	snapshot->numEntities = count;
@@ -350,7 +352,7 @@ static void CL_ConfigstringModified( void ) {
 
 	index = atoi( Cmd_Argv(1) );
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
-		Com_Error( ERR_DROP, "CL_ConfigstringModified: bad index %i", index );
+		Com_Error( ERR_DROP, "%s: bad index %i", __func__, index );
 	}
 	// get everything after "cs <num>"
 	s = Cmd_ArgsFrom(2);
@@ -428,12 +430,12 @@ static qboolean CL_GetServerCommand( int serverCommandNumber ) {
 			Cmd_Clear();
 			return qfalse;
 		}
-		Com_Error( ERR_DROP, "CL_GetServerCommand: a reliable command was cycled out" );
+		Com_Error( ERR_DROP, "%s: a reliable command was cycled out", __func__ );
 		return qfalse;
 	}
 
 	if ( serverCommandNumber > clc.serverCommandSequence ) {
-		Com_Error( ERR_DROP, "CL_GetServerCommand: requested a command not received" );
+		Com_Error( ERR_DROP, "%s: requested a command not received", __func__ );
 		return qfalse;
 	}
 
@@ -1255,7 +1257,7 @@ void CL_InitCGameFinished() {
 
 	t2 = Sys_Milliseconds();
 
-	Com_Printf( "CL_InitCGame: %5.2f seconds\n", (t2-t1)/1000.0 );
+	Com_Printf( "%s: %5.2f seconds\n", __func__, (t2-t1)/1000.0 );
 
 	// have the renderer touch all its images, so they are present
 	// on the card even if the driver does deferred loading
@@ -1574,9 +1576,9 @@ void CL_SetCGameTime( void ) {
 	// if we have gotten to this point, cl.snap is guaranteed to be valid
 	if ( !cl.snap.valid ) {
 #ifdef USE_MULTIVM_CLIENT
-    Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid (%i)", igs );
+    Com_Error( ERR_DROP, "%s: !cl.snap.valid (%i)", __func__, igs );
 #else
-		Com_Error( ERR_DROP, "CL_SetCGameTime: !cl.snap.valid" );
+		Com_Error( ERR_DROP, "%s: !cl.snap.valid", __func__ );
 #endif
 	}
 

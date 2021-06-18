@@ -3324,7 +3324,7 @@ const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int
   if(Q_stristr(ext, "dm_")) {
     (*demos)++;
     newName = va("%s/demos/%s", FS_GetCurrentGameDir(), basename);
-    const char *cmd = va("\\demo %s", FS_SimpleFilename(newName));
+    const char *cmd = va("\\demo \"%s\"", FS_SimpleFilename(newName));
     memcpy(command, cmd, strlen(cmd) + 1);
   } if(Q_stristr(ext, "bsp")) {
     (*maps)++;

@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // cl_main.c  -- client main loop
-
 #include "client.h"
 #include <limits.h>
 
@@ -759,14 +758,10 @@ static void CL_DemoCompleted( void ) {
 	} else {
 		CL_NextDemo();
 	}
-}
-
-void CL_DemoCompleted_After_Startup( void ) {
+  WASM_ASYNC(CL_DemoCompleted_After_Startup);
 	FS_Restart_After_Async();
 	CL_NextDemo();
-}
-
-void CL_DemoCompleted_After_Shutdown( void ) {
+  WASM_ASYNC(CL_DemoCompleted_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_DemoCompleted_After_Startup);	
 #endif
@@ -1277,6 +1272,7 @@ static void CL_PlayDemo_f( void ) {
 
 	cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
+  clc.currentView = 0;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
 	if ( protocol < NEW_PROTOCOL_VERSION )
@@ -1286,10 +1282,11 @@ static void CL_PlayDemo_f( void ) {
 
 	// read demo messages until connected
 #ifdef USE_CURL
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() && !Com_DL_InProgress( &download ) ) {
+	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() && !Com_DL_InProgress( &download ) )
 #else
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() ) {
+	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED && FS_Initialized() )
 #endif
+  {
 		CL_ReadDemoMessage();
 	}
 
@@ -1946,19 +1943,6 @@ void CL_Disconnect_f( void ) {
 }
 
 
-#ifdef __WASM__
-void CL_Reconnect_After_Startup( void ) {
-	FS_Restart_After_Async();
-	Cvar_Set( "ui_singlePlayerActive", "0" );
-	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs->string ) );
-}
-
-void CL_Reconnect_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_Reconnect_After_Startup);
-}
-#endif
-
 /*
 ================
 CL_Reconnect_f
@@ -2102,22 +2086,15 @@ static void CL_Connect_f( void ) {
 	} else {
 		CL_Connect_After_Restart();
 	}
-}
-
-void CL_Connect_After_Shutdown( void ) {
+  WASM_ASYNC(CL_Connect_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_Connect_After_Startup);
-}
-
-void CL_Connect_After_Startup( void ) {
+  WASM_ASYNC(CL_Connect_After_Startup);
 	FS_Restart_After_Async();
 	CL_Connect_After_Restart();
-}
-
-void CL_Connect_After_Restart( void ) {
+  WASM_ASYNC(CL_Connect_After_Restart);
 	const char	*serverString;
 #endif
-;
 
 	if (clc.serverAddress.port == 0) {
 		clc.serverAddress.port = BigShort( PORT_SERVER );
@@ -2567,21 +2544,14 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	} else {
 		CL_Vid_Restart_After_Restart();
 	}
-}
-
-void CL_Vid_Restart_After_Shutdown( void ) {
+  WASM_ASYNC(CL_Vid_Restart_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
-}
-
-void CL_Vid_Restart_After_Startup( void ) {
+  WASM_ASYNC(CL_Vid_Restart_After_Startup);
 	FS_Restart_After_Async();
 	CL_Vid_Restart_After_Restart();
-}
-
-void CL_Vid_Restart_After_Restart( void ) {
+  WASM_ASYNC(CL_Vid_Restart_After_Restart);
 #endif
-;
 
 	// initialize the renderer interface
 	CL_InitRef();
@@ -2778,7 +2748,7 @@ static void CL_CompleteCallvote( char *args, int argNum )
 //====================================================================
 
 #ifdef __WASM__
-
+// TODO: use WASM_ASYNC here but need to add function definitions above
 void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
 	FS_Restart_After_Async();
 	clc.dlDisconnect = qfalse;
@@ -4455,10 +4425,7 @@ static void CL_InitRef( void ) {
 	rendererLib = FS_LoadLibrary( dllName );
 #ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitRef_After_Load);
-}
-
-static void CL_InitRef_After_Load( void *handle )
-{
+  WASM_ASYNC(CL_InitRef_After_Load);
 	char			dllName[ MAX_OSPATH ];
   rendererLib = handle;
 #endif
@@ -4468,28 +4435,24 @@ static void CL_InitRef_After_Load( void *handle )
 		Cvar_ForceReset( "cl_renderer" );
 		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
+	} else {
 #ifdef __WASM__
-	}
-	else {
 		CL_InitRef_After_Load2(handle);
 		return;
+#endif
 	}
+#ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitRef_After_Load2);
-}
-
-static void CL_InitRef_After_Load2( void *handle )
-{
+  WASM_ASYNC(CL_InitRef_After_Load2);
 	refimport_t	rimp;
 	refexport_t	*ret;
 	GetRefAPI_t		GetRefAPI;
 	char			dllName[ MAX_OSPATH ];
-	{
 #endif
 
-		if ( !rendererLib )
-		{
-			Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
-		}
+	if ( !rendererLib )
+	{
+		Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
 	}
 
 	GetRefAPI = Sys_LoadFunction( rendererLib, "GetRefAPI" );

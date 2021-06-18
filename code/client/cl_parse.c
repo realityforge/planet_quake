@@ -282,9 +282,9 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 #else
     old = &cl.snapshotWorlds[0][newSnap.deltaNum & PACKET_MASK];
-		if ( !multiview ) {
+		if ( !multiview )
 #endif
-;
+    {
 			if ( !old->valid ) {
 				// should never happen
 				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
@@ -301,10 +301,8 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 			} else {
 				newSnap.valid = qtrue;	// valid delta parse
 			}
-#ifdef USE_MULTIVM_CLIENT
 		}
-#endif
-;
+
 		if(clc.demoplaying) {
 			newSnap.valid = qtrue;
 		}
@@ -472,7 +470,9 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		}
 	}
 	else // !multiview
+#endif // USE_MV
 	{
+#ifdef USE_MV
 		// detect transition to non-multiview
 		if ( cl.snap.multiview ) {
 			if ( old ) {
@@ -481,8 +481,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				Com_DPrintf( S_COLOR_CYAN "transition from multiview to legacy stream\n" );
 			}
 		}
-#endif // USE_MV
-;
+#endif
 
 	// read areamask
 	newSnap.areabytes = MSG_ReadByte( msg );
@@ -513,9 +512,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	CL_ParsePacketEntities( msg, old, &newSnap, 0 );
 #endif
 
-#ifdef USE_MV
-	} // !extended snapshot
-#endif
+  } // USE_MV !extended snapshot
 
 	// if not valid, dump the entire thing now that it has
 	// been properly read
@@ -918,9 +915,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	}
 	// always assume restart fs? should be low cost with a web-worker and new content server
 	CL_ParseGamestate_After_Restart();
-}
-
-void CL_ParseGamestate_Game_After_Shutdown( void ) {
+  WASM_ASYNC(CL_ParseGamestate_Game_After_Shutdown);
 #ifdef USE_MULTIVM_CLIENT
   int igs = gigs;
 	Cvar_Set("mapname", Info_ValueForKey( cl.gameStates[clc.currentView].stringData + cl.gameStates[clc.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
@@ -932,25 +927,17 @@ void CL_ParseGamestate_Game_After_Shutdown( void ) {
 		Cvar_Set( "sv_dlURL", clc.sv_dlURL );
 	}
 	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_Game_After_Startup);
-}
-
-void CL_ParseGamestate_Game_After_Startup( void ) {
+  WASM_ASYNC(CL_ParseGamestate_Game_After_Startup);
 	FS_Restart_After_Async();
 	Com_GameRestart_After_Restart();
 	CL_ParseGamestate_After_Restart();
-}
-
-void CL_ParseGamestate_After_Shutdown( void ) {
+  WASM_ASYNC(CL_ParseGamestate_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_After_Startup);
-}
-
-void CL_ParseGamestate_After_Startup( void ) {
+  WASM_ASYNC(CL_ParseGamestate_After_Startup);
 	FS_Restart_After_Async();
 	CL_ParseGamestate_After_Restart();
-}
-
-void CL_ParseGamestate_After_Restart( void ) {
+  WASM_ASYNC(CL_ParseGamestate_After_Restart);
 #endif
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the

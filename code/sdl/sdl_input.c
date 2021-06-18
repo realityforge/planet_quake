@@ -39,6 +39,7 @@ static SDL_Joystick *stick = NULL;
 static qboolean mouseAvailable = qfalse;
 static qboolean mouseActive = qfalse;
 
+static cvar_t *cl_dropAction;
 static cvar_t *in_mouse;
 
 #ifdef USE_JOYSTICK
@@ -1240,8 +1241,65 @@ void HandleEvents( void )
 					// mouse focus:
 					case SDL_WINDOWEVENT_ENTER: mouse_focus = qtrue; break;
 					case SDL_WINDOWEVENT_LEAVE: if ( glw_state.isFullscreen ) mouse_focus = qfalse; break;
+          
 				}
 				break;
+      case SDL_DROPBEGIN:
+      case SDL_DROPFILE:
+      case SDL_DROPCOMPLETE:
+      {
+        static char file[MAX_OSPATH];
+        static char command[MAX_OSPATH];
+        static int demos;
+        static int maps;
+        static int images;
+        if(e.type == SDL_DROPBEGIN) {
+          // TODO: show the full console
+          if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
+            Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
+
+          demos = 0;
+          maps = 0;
+          images = 0;
+          command[0] = '\0';
+          Com_Printf("Dropping files:\n");
+        }
+        if(e.type == SDL_DROPFILE) {
+          // show the contents of the dropped file and offer to load something
+          Com_Printf("%s\n", e.drop.file);
+          Q_strncpyz(file, e.drop.file, MAX_OSPATH);
+          const char *to = FS_DescribeGameFile(file, &demos, &maps, &images, command);
+          if(to[0] != '\0') {
+            char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
+            if(cl_dropAction->integer == 1) {
+              FS_CopyFile( file, to_ospath );
+              // helper add the pak so we can run a map right away
+              FS_AddZipFile(to_ospath);
+            } else if (cl_dropAction->integer == 2) {
+              if ( rename( file, to_ospath ) ) {
+                // Failed, try copying it and deleting the original
+                FS_CopyFile( file, to_ospath );
+                FS_Remove( file );
+              }
+              FS_AddZipFile(to_ospath);
+            } // else // do nothing
+          }
+        }
+        if(e.type == SDL_DROPCOMPLETE) {
+          if(demos) {
+            Com_Printf("Demos: %i\n", demos);
+          }
+          if(maps) {
+            Com_Printf("Maps: %i\n", maps);
+            // TODO: list images based on the percent they exist over other file types
+        }
+          Con_ClearNotify();
+          memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
+          Field_AutoComplete( &g_consoleField );
+          g_consoleField.cursor = strlen(g_consoleField.buffer);
+				}
+				break;
+      }
 			default:
 				break;
 		}
@@ -1332,6 +1390,9 @@ void IN_Init( void )
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
 	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
+  cl_dropAction = Cvar_Get( "cl_dropAction", "1", CVAR_ARCHIVE );
+  Cvar_CheckRange( cl_dropAction, "0", "2", CV_INTEGER );
+  Cvar_SetDescription(cl_dropAction, "What to do when a file is dropped in to the client\n0 - just read it and list whats inside, 1 - copy the file to the homepath like downloaded files, and recommend the command to run, 2 - move the file to the home and automatically open it\nDefault: 1");
 
 #ifdef USE_JOYSTICK
 	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE|CVAR_LATCH );
@@ -1370,7 +1431,9 @@ void IN_Init( void )
 #endif
 
 	Cmd_AddCommand( "minimize", IN_Minimize );
+	Cmd_SetDescription( "minimize", "Toggle minimizing the game\nUsage: minimize" );
 	Cmd_AddCommand( "in_restart", IN_Restart );
+	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
 
 	Com_DPrintf( "------------------------------------\n" );
 }
