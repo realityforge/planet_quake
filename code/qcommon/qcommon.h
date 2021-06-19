@@ -1388,6 +1388,10 @@ void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
 qboolean CL_GameCommand( int igvm );
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
+#ifdef USE_DRAGDROP
+void CL_DropComplete(void);
+void CL_DropFile( void );
+#endif
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control

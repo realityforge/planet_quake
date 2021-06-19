@@ -785,6 +785,53 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 }
 
 
+#ifdef USE_DRAGDROP
+static char file[MAX_OSPATH];
+static char command[MAX_OSPATH];
+static int demos = 0;
+static int maps = 0;
+static int images = 0;
+
+void CL_DropComplete( void ) {
+  if(demos) {
+    Com_Printf("Demos: %i\n", demos);
+  }
+  if(maps) {
+    Com_Printf("Maps: %i\n", maps);
+    // TODO: list images based on the percent they exist over other file types
+  }
+  Con_ClearNotify();
+  memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
+  Field_AutoComplete( &g_consoleField );
+  g_consoleField.cursor = strlen(g_consoleField.buffer);
+}
+
+void CL_DropFile( char *file, int len ) {
+  // show the contents of the dropped file and offer to load something
+  memset(&command, 0, sizeof(command))
+  demos = 0;
+  maps = 0;
+  images = 0;
+  const char *to = FS_DescribeGameFile(file, &demos, &maps, &images, command);
+  if(to[0] != '\0') {
+    char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
+    if(cl_dropAction->integer == 1) {
+      FS_CopyFile( file, to_ospath );
+      // helper add the pak so we can run a map right away
+      FS_AddZipFile(to_ospath);
+    } else if (cl_dropAction->integer == 2) {
+      if ( rename( file, to_ospath ) ) {
+        // Failed, try copying it and deleting the original
+        FS_CopyFile( file, to_ospath );
+        FS_Remove( file );
+      }
+      FS_AddZipFile(to_ospath);
+    } // else // do nothing
+  }
+}
+#endif
+
+
 /*
 ===================
 CL_KeyEvent

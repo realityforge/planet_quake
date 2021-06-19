@@ -529,6 +529,9 @@ extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 
+#ifdef USE_DRAGDROP
+extern  cvar_t  *cl_dropAction;
+#endif
 #ifdef USE_ABS_MOUSE
 extern  cvar_t  *in_mouseAbsolute;
 #endif

@@ -721,7 +721,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 		}
 		return;
 	}
-  
+
 #ifdef USE_CVAR_UNCHEAT
   // check cheat cvars from client, make sure none of them are disabled
   // TODO: probably just use sv_filter for this

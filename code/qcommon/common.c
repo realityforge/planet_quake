@@ -2696,6 +2696,7 @@ void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int
 		// we are discarding an event, but don't leak memory
 		if ( ev->evPtr ) {
 			Z_Free( ev->evPtr );
+      ev->evPtr = NULL;
 		}
 		eventTail++;
 	}
@@ -2952,6 +2953,15 @@ int Com_EventLoop( void ) {
 			break;
 #endif
 		case SE_KEY:
+#ifdef USE_DRAGDROP
+      if(ev.evValue == K_DROPFILE) {
+        if(ev.evValue2 == qfalse) {
+          CL_DropComplete()
+        } else {
+          CL_DropFile(ev.evPtr, ev.ptrLength);
+        }
+      }
+#endif
 			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime, 0 );
 			break;
 		case SE_CHAR:
@@ -2985,6 +2995,7 @@ int Com_EventLoop( void ) {
 		// free any block data
 		if ( ev.evPtr ) {
 			Z_Free( ev.evPtr );
+      ev.evPtr = NULL; // don't free twice
 		}
 	}
 

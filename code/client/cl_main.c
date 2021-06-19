@@ -96,12 +96,12 @@ cvar_t *cl_stencilbits;
 cvar_t *cl_depthbits;
 cvar_t *cl_drawBuffer;
 
-clientActive_t		cl;
-clientConnection_t	clc;
-clientStatic_t		cls;
-
 cvar_t  *r_debug;
 cvar_t  *cl_snaps;
+
+#ifdef USE_DRAGDROP
+cvar_t  *cl_dropAction;
+#endif
 
 #ifdef USE_ABS_MOUSE
 cvar_t  *in_mouseAbsolute;
@@ -127,6 +127,10 @@ cvar_t  *clUncheats[128];
 #ifdef USE_LAZY_LOAD
 cvar_t  *cl_lazyLoad;
 #endif
+
+clientActive_t		cl;
+clientConnection_t	clc;
+clientStatic_t		cls;
 
 #ifdef USE_MULTIVM_CLIENT
 int   cgvmi = 0;
@@ -5300,6 +5304,12 @@ void CL_Init( void ) {
 	
 	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ )
 		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
+#endif
+
+#ifdef USE_DRAGDROP
+  cl_dropAction = Cvar_Get( "cl_dropAction", "1", CVAR_ARCHIVE );
+  Cvar_CheckRange( cl_dropAction, "0", "2", CV_INTEGER );
+  Cvar_SetDescription(cl_dropAction, "What to do when a file is dropped in to the client\n0 - just read it and list whats inside, 1 - copy the file to the homepath like downloaded files, and recommend the command to run, 2 - move the file to the home and automatically open it\nDefault: 1");
 #endif
 
 #ifdef USE_ABS_MOUSE
