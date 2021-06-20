@@ -2956,10 +2956,11 @@ int Com_EventLoop( void ) {
 #ifdef USE_DRAGDROP
       if(ev.evValue == K_DROPFILE) {
         if(ev.evValue2 == qfalse) {
-          CL_DropComplete()
+          CL_DropComplete();
         } else {
-          CL_DropFile(ev.evPtr, ev.ptrLength);
+          CL_DropFile(ev.evPtr, ev.evPtrLength);
         }
+        break;
       }
 #endif
 			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime, 0 );

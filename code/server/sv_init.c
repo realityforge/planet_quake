@@ -889,6 +889,15 @@ void SV_SpawnServer_After_Startup( void ) {
 		SV_DemoAutoDemoRecord();
 	}
 #endif
+
+#ifndef DEDICATED
+  // Brian "megamind" Cullinan - if on the off chance there is a server error
+  //   preventing a connection for single player in SV_DirectConnect gamestate
+  //   will never be sent and won't restart client after shutdown above
+  if(!com_dedicated->integer) {
+    CL_StartHunkUsers();
+  }
+#endif
 }
 
 
@@ -907,6 +916,26 @@ void SV_InitUserRoles (void) {
 		sv_rolePassword[i] = Cvar_Get(va("%sPassword", roles), "", CVAR_TEMP);
 		roles = &roles[strlen(roles)+1];
 	}
+  sv_roles->modified = qfalse;
+}
+#endif
+
+
+#ifdef USE_CVAR_UNCHEAT
+void SV_InitBanCheats( void ) {
+  int cheatCount;
+  char *cheats = Cmd_TokenizeAlphanumeric(sv_banCheats->string, &cheatCount);
+  for(int i = 0; i < ARRAY_LEN(svUncheats); i++) {
+    // set userinfo on all the cheated values
+    if(svUncheats[i]) {
+      Z_Free(svUncheats[i]);
+      svUncheats[i] = NULL;
+    }
+    if(i >= cheatCount || cheats[0] == '\0') continue;
+    svUncheats[i] = CopyString(cheats);
+    cheats = &cheats[strlen(cheats)+1];
+  }
+  sv_banCheats->modified = qfalse;
 }
 #endif
 
@@ -1124,13 +1153,7 @@ void SV_Init( void )
   // TODO: set default to all client values with CVAR_CHEAT
   sv_banCheats = Cvar_Get("sv_banCheats", "", CVAR_ARCHIVE | CVAR_USERINFO);
   Cvar_SetDescription(sv_banCheats, "Ban specific cheat values allowed by cl_uncheat setting\ne.g. cg_fov used to see behind you\nDefault: empty");
-  int cheatCount;
-  char *cheats = Cmd_TokenizeAlphanumeric(sv_banCheats->string, &cheatCount);
-  for(int i = 0; i < cheatCount && i < 128; i++) {
-    // set userinfo on all the cheated values
-    svUncheats[i] = CopyString(cheats);
-    cheats = &cheats[strlen(cheats)+1];
-  }
+  SV_InitBanCheats();
 #endif
 
 #ifdef USE_BANS

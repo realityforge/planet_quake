@@ -951,9 +951,9 @@ int main( int argc, const char* argv[] )
       Sys_PlatformInit2();
       return 0;
     }
-    Sys_PlatformInit();    
+    Sys_PlatformInit();
+    return 0;
   }
-  Com_Printf("Launching: %s\n", cmdline);
 #endif
 #endif
 

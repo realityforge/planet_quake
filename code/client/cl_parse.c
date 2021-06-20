@@ -745,6 +745,14 @@ void CL_ParseServerInfo( int igs )
 	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
 #endif
 
+  int max = atoi(Info_ValueForKey( serverInfo, "sv_maxclients" ));
+  for ( int i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
+		if ( i > CS_PLAYERS && i < CS_PLAYERS + max ) {
+      // TODO: fix missing models before demo loads
+      Com_Printf("Config: %s\n", cl.gameState.stringData + cl.gameState.stringOffsets[ i ]);
+    }
+  }
+
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
 	if ( len > 0 &&  clc.sv_dlURL[len-1] == '/' )

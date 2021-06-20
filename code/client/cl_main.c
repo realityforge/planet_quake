@@ -122,6 +122,7 @@ cvar_t  *cl_returnURL;
 #ifdef USE_CVAR_UNCHEAT
 cvar_t  *cl_uncheat;
 cvar_t  *clUncheats[128];
+void CL_InitUncheat(void);
 #endif
 
 #ifdef USE_LAZY_LOAD
@@ -4151,6 +4152,12 @@ void CL_Frame( int msec, int realMsec ) {
 	if ( !clc.demoplaying ) {
 		CL_CheckTimeout();
 	}
+  
+#ifdef USE_CVAR_UNCHEAT
+  if(cl_uncheat->modified) {
+    CL_InitUncheat();
+  }
+#endif
 
 	// send intentions now
 	CL_SendCmd();
@@ -5227,6 +5234,22 @@ void CL_Dvr_f(void) {
 #endif
 
 
+#ifdef USE_CVAR_UNCHEAT
+void CL_InitUncheat(void) {
+  int cheatCount = 0;
+  char *cheats = Cmd_TokenizeAlphanumeric(cl_uncheat->string, &cheatCount);
+  for(int i = 0; i < ARRAY_LEN(clUncheats); i++) {
+    clUncheats[i] = NULL;
+    if(i >= cheatCount || cheats[0] == '\0') continue;
+    // set userinfo on all the cheated values
+    clUncheats[i] = Cvar_Get(cheats, "", CVAR_USERINFO);
+    cheats = &cheats[strlen(cheats)+1];
+  }
+  cl_uncheat->modified = qfalse;
+}
+#endif
+
+
 /*
 ====================
 CL_Init
@@ -5324,14 +5347,7 @@ void CL_Init( void ) {
 #ifdef USE_CVAR_UNCHEAT
   cl_uncheat = Cvar_Get("cl_uncheat", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE | CVAR_USERINFO);
   Cvar_SetDescription(cl_uncheat, "Remove the CVAR_CHEAT flag from any cvar, shares this info with server for banning\nit also shares the cheat value so server administrators can see and log it\nDefault: cg_gun cg_gunX cg_gunY cg_gunZ");
-  int cheatCount = 0;
-  char *cheats = Cmd_TokenizeAlphanumeric(cl_uncheat->string, &cheatCount);
-  for(int i = 0; i < cheatCount && i < 128; i++) {
-    if(cheats[0] == '\0') continue;
-    // set userinfo on all the cheated values
-    clUncheats[i] = Cvar_Get(cheats, "", CVAR_USERINFO);
-    cheats = &cheats[strlen(cheats)+1];
-  }
+  CL_InitUncheat();
 #endif
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );

@@ -786,11 +786,11 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_DRAGDROP
-static char file[MAX_OSPATH];
 static char command[MAX_OSPATH];
 static int demos = 0;
 static int maps = 0;
 static int images = 0;
+
 
 void CL_DropComplete( void ) {
   if(demos) {
@@ -806,9 +806,10 @@ void CL_DropComplete( void ) {
   g_consoleField.cursor = strlen(g_consoleField.buffer);
 }
 
+
 void CL_DropFile( char *file, int len ) {
   // show the contents of the dropped file and offer to load something
-  memset(&command, 0, sizeof(command))
+  memset(&command, 0, sizeof(command));
   demos = 0;
   maps = 0;
   images = 0;

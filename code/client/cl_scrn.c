@@ -741,7 +741,12 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
-		
+
+#ifdef USE_RMLUI
+    if(cls.rmlStarted)
+      CL_UIContextRender();
+#endif
+
 		goto donewithupdate;
 	}
 
@@ -779,7 +784,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
 			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
 		}
-    
+
 #ifdef USE_RMLUI
     if(cls.rmlStarted)
       CL_UIContextRender();
@@ -795,6 +800,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
   re.SetDvrFrame(0, 0, 1, 1);
 #endif
 #endif
+
+donewithupdate:
 
 #ifdef USE_LNBITS
 	int igs = clientGames[cgvmi];
@@ -817,8 +824,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
 		SCR_DrawDebugGraph ();
 	}
-
-donewithupdate:
 
 	if ( com_speeds->integer ) {
 		re.EndFrame( &time_frontend, &time_backend );

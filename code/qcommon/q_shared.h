@@ -83,6 +83,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_DEMO_CLIENTS 1
 // lrq3000 method of server side demos, sending entity states to every client while spectating
 #define USE_DEMO_SERVER 1
+// allow files like pk3s to be dragged into the client for easy loading
+#define USE_DRAGDROP 1
+
 #endif
 
 

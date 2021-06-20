@@ -1249,10 +1249,17 @@ void HandleEvents( void )
         if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
           Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
         break;
+      case SDL_DROPTEXT:
+        Com_DPrintf("%s: Dropping text \"%s\"\n", __func__, e.drop.file);          
+        char *text = CopyString(e.drop.file);
+        Com_QueueEvent( in_eventTime, SE_KEY, K_DROPFILE, qtrue, strlen(text)+1, text );
+        free(e.drop.file);
+        break;
       case SDL_DROPFILE:
         Com_DPrintf("%s: Dropping file \"%s\"\n", __func__, e.drop.file);          
         char *file = CopyString(e.drop.file);
         Com_QueueEvent( in_eventTime, SE_KEY, K_DROPFILE, qtrue, strlen(file)+1, file );
+        free(e.drop.file);
         break;
       case SDL_DROPCOMPLETE:
       {
@@ -1379,6 +1386,8 @@ void IN_Init( void )
 
 	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
 
+  SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+  SDL_EventState(SDL_DROPTEXT, SDL_ENABLE);
 	SDL_StartTextInput();
 
 	//IN_DeactivateMouse();
