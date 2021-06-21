@@ -559,7 +559,7 @@ rescan:
 #endif
 
 #ifdef USE_CMD_CONNECTOR
-  // TODO: we may want to put a "connect to other server" command here
+  // TODO: we may want to put a "connect to other server" command here for load balancing
 
 	// if it came from the server it was meant for cgame
 	if( Q_stristr(cmd, "print") ) {
@@ -1314,10 +1314,19 @@ See if the current console command is claimed by the cgame
 */
 qboolean CL_GameCommand( int igvm ) {
 	qboolean result;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[igvm];
+#endif
 
 	if ( !cgvm ) {
 		return qfalse;
 	}
+
+  if ( Q_stricmp( Cmd_Argv(0), "callvote" ) == 0
+    && clc.demofile != FS_INVALID_HANDLE ) {
+    Com_Printf("Voting during demo playback is disabled\n");
+    return qfalse;
+  }
 
 #ifdef USE_MULTIVM_CLIENT
 	int prevGvm = cgvmi;

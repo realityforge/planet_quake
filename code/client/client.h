@@ -318,7 +318,12 @@ typedef struct {
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
+#ifdef USE_MULTIVM_CLIENT
+  fileHandle_t	demofiles[MAX_NUM_VMS];
+#define demofile demofiles[igs]
+#else
 	fileHandle_t	demofile;
+#endif
 	fileHandle_t	recordfile;
 	int			      numDemoIndex;
 	demoIndex_t   *demoIndex;

@@ -749,6 +749,11 @@ void CL_ParseServerInfo( int igs )
   for ( int i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
 		if ( i > CS_PLAYERS && i < CS_PLAYERS + max ) {
       // TODO: fix missing models before demo loads
+      // TODO: generalized solution would be to use demoCS0-100 and replace values
+      // TODO: or demoPlayerCS0-100 to replace player settings
+      // TODO: or demoOverrideCS0-100 to override with scripts during playback
+      //   since this is for demo playback it's basically cosmetic
+      //   how does OSP do the thing with replacing models with ultrabrights?
       Com_Printf("Config: %s\n", cl.gameState.stringData + cl.gameState.stringOffsets[ i ]);
     }
   }

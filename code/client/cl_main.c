@@ -957,6 +957,9 @@ void CL_ReadDemoMessage( void ) {
 	msg_t		buf;
 	byte		bufData[ MAX_MSGLEN_BUF ];
 	int			s;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[cgvmi];
+#endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		CL_DemoCompleted();
@@ -1109,7 +1112,7 @@ static void CL_Play_f( void ) {
 static void CL_Rewind_f( void ) {
 	int seconds = 10;
 #ifdef USE_MULTIVM_CLIENT
-  int igs = clientGames[cgvmi];
+  int igs = clientGames[clc.currentView];
 #endif
 
 	if(!clc.demoplaying) {
@@ -1190,6 +1193,9 @@ static void CL_PlayDemo_f( void ) {
 	char		retry[MAX_OSPATH];
 	const char	*shortname, *slash;
 	fileHandle_t hFile;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[cgvmi];
+#endif
 
 	if ( Cmd_Argc() != 2 ) {
 		Com_Printf( "demo <demoname>\n" );
@@ -1584,10 +1590,17 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	}
 
 	// Stop demo playback
+#ifndef USE_MULTIVM_CLIENT
 	if ( clc.demofile != FS_INVALID_HANDLE ) {
 		FS_FCloseFile( clc.demofile );
 		clc.demofile = FS_INVALID_HANDLE;
 	}
+#else
+  if ( clc.demofiles[clc.currentView] != FS_INVALID_HANDLE ) {
+    FS_FCloseFile( clc.demofiles[clc.currentView] );
+    clc.demofiles[clc.currentView] = FS_INVALID_HANDLE;
+  }
+#endif
 
 	// Finish downloads
 	if ( clc.download != FS_INVALID_HANDLE ) {
@@ -2935,12 +2948,6 @@ static void CL_DownloadsComplete( void ) {
 	CL_InitCGame(-1);
 #endif
 
-	if ( clc.demofile == FS_INVALID_HANDLE ) {
-		Cmd_AddCommand( "callvote", NULL );
-		Cmd_SetCommandCompletionFunc( "callvote", CL_CompleteCallvote );
-		Cmd_SetDescription("callvote", "Caller automatically votes yes vote has a 30 second timeout each client can only call 3 votes a level vote is displayed on screen with totals\nvote commands are: map_restart, nextmap, map, g_gametype and kick\nUsage: callvote <command> vote <y/n>");
-	}
-
 	// set pure checksums
 	CL_SendPureChecksums();
 
@@ -3913,6 +3920,9 @@ CL_NoDelay
 */
 qboolean CL_NoDelay( void )
 {
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[cgvmi];
+#endif
 	extern cvar_t *com_timedemo;
 	if ( CL_VideoRecording() || ( com_timedemo && com_timedemo->integer && clc.demofile != FS_INVALID_HANDLE ) )
 		return qtrue;
@@ -5509,6 +5519,9 @@ void CL_Init( void ) {
 	Cmd_SetDescription("serverinfo", "Gives information about local server from the console of that server\nUsage: serverinfo");
 	Cmd_AddCommand ("systeminfo", CL_Systeminfo_f );
 	Cmd_SetDescription("systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nUsage: systeminfo");
+	Cmd_AddCommand( "callvote", NULL );
+	Cmd_SetCommandCompletionFunc( "callvote", CL_CompleteCallvote );
+	Cmd_SetDescription("callvote", "Caller automatically votes yes vote has a 30 second timeout each client can only call 3 votes a level vote is displayed on screen with totals\nvote commands are: map_restart, nextmap, map, g_gametype and kick\nUsage: callvote <command> vote <y/n>");
 
 #ifdef USE_CURL
 	Cmd_AddCommand( "download", CL_Download_f );
