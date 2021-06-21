@@ -736,6 +736,9 @@ CL_DemoCompleted
 =================
 */
 static void CL_DemoCompleted( void ) {
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[cgvmi];
+#endif
 	Com_Printf("DEMO: ended.\n");
 	if(clc.demoIndex) {
 		messageShift = 0;
@@ -1283,7 +1286,6 @@ static void CL_PlayDemo_f( void ) {
 
 	cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
-  clc.currentView = 0;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
 	if ( protocol < NEW_PROTOCOL_VERSION )

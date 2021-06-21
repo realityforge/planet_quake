@@ -1391,6 +1391,7 @@ void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
 #ifdef USE_DRAGDROP
 void CL_DropComplete(void);
 void CL_DropFile( char *file, int len );
+void CL_DropStart(void);
 #endif
 
 void CL_CharEvent( int key );

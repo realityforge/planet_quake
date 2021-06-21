@@ -857,12 +857,15 @@ void SV_SpawnServer_After_Startup( void ) {
 #ifdef USE_LOCAL_DED
 	svShuttingDown = qfalse;
 #else
+  // Brian "megamind" Cullinan - if on the off chance there is a server error
+  //   preventing a connection for single player in SV_DirectConnect gamestate
+  //   will never be sent and won't restart client after shutdown above
 #ifndef DEDICATED
-	if ( com_dedicated->integer ) {
-		// restart renderer in order to show console for dedicated servers
-		// launched through the regular binary
-		CL_StartHunkUsers( );
-	}
+	//if ( com_dedicated->integer ) {
+	// restart renderer in order to show console for dedicated servers
+	// launched through the regular binary
+	CL_StartHunkUsers( );
+	//}
 #endif
 #endif
 
@@ -888,15 +891,6 @@ void SV_SpawnServer_After_Startup( void ) {
 	if ( sv_autoDemo->integer ) {
 		SV_DemoAutoDemoRecord();
 	}
-#endif
-
-#ifndef DEDICATED
-  // Brian "megamind" Cullinan - if on the off chance there is a server error
-  //   preventing a connection for single player in SV_DirectConnect gamestate
-  //   will never be sent and won't restart client after shutdown above
-  if(!com_dedicated->integer) {
-    CL_StartHunkUsers();
-  }
 #endif
 }
 

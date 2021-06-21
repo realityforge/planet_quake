@@ -321,12 +321,16 @@ typedef struct {
 #ifdef USE_MULTIVM_CLIENT
   fileHandle_t	demofiles[MAX_NUM_VMS];
 #define demofile demofiles[igs]
+  int			      numDemoIndexes[MAX_NUM_VMS];
+#define numDemoIndex numDemoIndexes[igs]
+  demoIndex_t  *demoIndexes[MAX_NUM_VMS];
+#define demoIndex demoIndexes[igs]
 #else
 	fileHandle_t	demofile;
+  int			      numDemoIndex;
+	demoIndex_t  *demoIndex;
 #endif
 	fileHandle_t	recordfile;
-	int			      numDemoIndex;
-	demoIndex_t   *demoIndex;
 
 	int		timeDemoFrames;		// counter of rendered frames
 	int		timeDemoStart;		// cls.realtime before first frame

@@ -791,7 +791,6 @@ static int demos = 0;
 static int maps = 0;
 static int images = 0;
 
-
 void CL_DropComplete( void ) {
   if(demos) {
     Com_Printf("Demos: %i\n", demos);
@@ -801,18 +800,18 @@ void CL_DropComplete( void ) {
     // TODO: list images based on the percent they exist over other file types
   }
   Con_ClearNotify();
-  memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
-  Field_AutoComplete( &g_consoleField );
-  g_consoleField.cursor = strlen(g_consoleField.buffer);
+  if (cl_dropAction->integer == 1) {
+    memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
+    Field_AutoComplete( &g_consoleField );
+    g_consoleField.cursor = strlen(g_consoleField.buffer);
+  } else if (cl_dropAction->integer == 2) {
+    Cbuf_ExecuteText( EXEC_APPEND, &command[1] );
+  }
 }
 
 
 void CL_DropFile( char *file, int len ) {
   // show the contents of the dropped file and offer to load something
-  memset(&command, 0, sizeof(command));
-  demos = 0;
-  maps = 0;
-  images = 0;
   const char *to = FS_DescribeGameFile(file, &demos, &maps, &images, command);
   if(to[0] != '\0') {
     char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
@@ -820,6 +819,7 @@ void CL_DropFile( char *file, int len ) {
       FS_CopyFile( file, to_ospath );
       // helper add the pak so we can run a map right away
       FS_AddZipFile(to_ospath);
+    /*
     } else if (cl_dropAction->integer == 2) {
       if ( rename( file, to_ospath ) ) {
         // Failed, try copying it and deleting the original
@@ -827,8 +827,18 @@ void CL_DropFile( char *file, int len ) {
         FS_Remove( file );
       }
       FS_AddZipFile(to_ospath);
+    */
     } // else // do nothing
   }
+}
+
+void CL_DropStart( void ) {
+  memset(&command, 0, sizeof(command));
+  demos = 0;
+  maps = 0;
+  images = 0;
+  if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
+    Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
 }
 #endif
 

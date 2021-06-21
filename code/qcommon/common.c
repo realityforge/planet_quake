@@ -2957,6 +2957,8 @@ int Com_EventLoop( void ) {
       if(ev.evValue == K_DROPFILE) {
         if(ev.evValue2 == qfalse) {
           CL_DropComplete();
+        } else if (ev.evPtrLength == 0) {
+          CL_DropStart();
         } else {
           CL_DropFile(ev.evPtr, ev.evPtrLength);
         }
