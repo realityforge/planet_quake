@@ -790,6 +790,15 @@ static char command[MAX_OSPATH];
 static int demos = 0;
 static int maps = 0;
 static int images = 0;
+static int videos = 0;
+static int sounds = 0;
+static int pk3s = 0;
+static char *demoNames;
+static char *mapNames;
+static char *imageNames;
+static char *soundNames;
+static char *videoNames;
+static char *pk3Names;
 
 void CL_DropComplete( void ) {
   if(demos) {
@@ -807,15 +816,42 @@ void CL_DropComplete( void ) {
   } else if (cl_dropAction->integer == 2) {
     Cbuf_ExecuteText( EXEC_APPEND, &command[1] );
   }
+  command[0] = '\0';
 }
 
 
 void CL_DropFile( char *file, int len ) {
   // show the contents of the dropped file and offer to load something
-  const char *to = FS_DescribeGameFile(file, &demos, &maps, &images, command);
+  const char *to = FS_DescribeGameFile(file, &demoNames, &demos, &mapNames, 
+    &maps, &imageNames, &images, &videoNames, &videos, &soundNames, &sounds, 
+    &pk3Names, &pk3s);
+
+  // TODO: make an autocomplete for drop files
+  if(command[0] == '\0') {
+    if(demos) {
+#ifdef USE_MULTIVM_CLIENT
+      if(clc.demoplaying) {
+        memcpy(command, va("\\load demo \"%s\"", &demoNames[0]), sizeof(command));
+      }
+      else
+#endif
+      memcpy(command, va("\\demo \"%s\"", &demoNames[0]), sizeof(command));
+    } else if (maps) {
+#ifdef USE_MULTIVM_CLIENT
+      if(clc.state == CA_ACTIVE) {
+        memcpy(command, va("\\load game \"%s\"", &mapNames[0]), sizeof(command));
+      }
+      else
+#endif
+      memcpy(command, va("\\map %s", &mapNames[0]), sizeof(command));
+    } else if (images) {
+      memcpy(command, va("\\r_showImages %s", &imageNames[0]), sizeof(command));
+    }
+  }
+
   if(to[0] != '\0') {
     char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
-    if(cl_dropAction->integer == 1) {
+    if(cl_dropAction->integer) {
       FS_CopyFile( file, to_ospath );
       // helper add the pak so we can run a map right away
       FS_AddZipFile(to_ospath);
@@ -832,11 +868,14 @@ void CL_DropFile( char *file, int len ) {
   }
 }
 
+
 void CL_DropStart( void ) {
-  memset(&command, 0, sizeof(command));
   demos = 0;
   maps = 0;
   images = 0;
+  videos = 0;
+  sounds = 0;
+  pk3s = 0;
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
     Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
 }

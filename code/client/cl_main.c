@@ -5009,7 +5009,8 @@ void CL_LoadVM_f( void ) {
 #endif
 		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
     if(!Q_stricmp( name, "demo" )) {
-      // TODO: start demo
+      Cmd_TokenizeString(Cmd_ArgsFrom(1));
+      CL_PlayDemo_f();
     }
 		cgvmi = 0;
 		return;

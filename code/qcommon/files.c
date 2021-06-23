@@ -3287,6 +3287,9 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 
 static void FS_ReorderSearchPaths( void );
 
+
+#ifdef USE_DRAGDROP
+static char fileNames[5*6][MAX_QPATH];
 void FS_AddZipFile( const char *zipfile ) {
   searchpath_t	*search;
   /*
@@ -3311,7 +3314,10 @@ void FS_AddZipFile( const char *zipfile ) {
 }
 
 
-const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images, char *command) {
+const char *FS_DescribeGameFile(const char *filename, char **demoNames, 
+  int *demos, char **mapNames, int *maps, char **imageNames, int *images, 
+  char **videoNames, int *videos, char **soundNames, int *sounds, 
+  char **pk3Names, int *pk3s) {
   const char *ext;
   const char *basename;
   const char *newName = "";
@@ -3320,29 +3326,57 @@ const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int
 	basename = strrchr( filename, PATH_SEP );
   basename = basename == NULL ? filename : (basename + 1);
   ext = COM_GetExtension( filename );
+  *demoNames = fileNames[0];
+  *mapNames = fileNames[5];
+  *imageNames = fileNames[10];
+  *videoNames = fileNames[15];
+  *soundNames = fileNames[20];
+  *pk3Names = fileNames[25];
 
   if(Q_stristr(ext, "dm_")) {
-    (*demos)++;
     newName = va("%s/demos/%s", FS_GetCurrentGameDir(), basename);
-    const char *cmd = va("\\demo \"%s\"", FS_SimpleFilename(newName));
-    memcpy(command, cmd, strlen(cmd) + 1);
+    if(*demos < 5) {
+      memcpy(demoNames[*demos], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*demos)++;
   } if(Q_stristr(ext, "bsp")) {
-    (*maps)++;
     newName = va("%s/maps/%s", FS_GetCurrentGameDir(), basename);
-    const char *cmd = va("\\map %s", FS_SimpleFilename(newName));
-    memcpy(command, cmd, strlen(cmd) + 1);
+    if(*maps < 5) {
+      memcpy(mapNames[*maps], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*maps)++;
   } if(Q_stristr(ext, "jpeg") || Q_stristr(ext, "jpg") || Q_stristr(ext, "png")
     || Q_stristr(ext, "bmp") || Q_stristr(ext, "dds") || Q_stristr(ext, "tga")
     || Q_stristr(ext, "pcx")) {
-    (*images)++;
     newName = va("%s/textures/%s", FS_GetCurrentGameDir(), basename);
+    if(*images < 5) {
+      memcpy(imageNames[*images], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*images)++;
+  } if(Q_stristr(ext, "ogm") || Q_stristr(ext, "vpx") || Q_stristr(ext, "roq")
+    || Q_stristr(ext, "xvid")) {
+    newName = va("%s/videos/%s", FS_GetCurrentGameDir(), basename);
+    if(*videos < 5) {
+      memcpy(videoNames[*videos], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*images)++;
+  } if(Q_stristr(ext, "wav") || Q_stristr(ext, "mp3") || Q_stristr(ext, "ogg")
+    || Q_stristr(ext, "opus")) {
+    newName = va("%s/sounds/%s", FS_GetCurrentGameDir(), basename);
+    if(*videos < 5) {
+      memcpy(soundNames[*sounds], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*images)++;
   } else if (Q_stristr(ext, "pk3")) {
+    newName = va("%s/%s", FS_GetCurrentGameDir(), basename);
+    if(*pk3s < 5) {
+      memcpy(pk3Names[*pk3s], FS_SimpleFilename(newName), MAX_QPATH);
+    }
+    (*pk3s)++;
     pack_t *pak = FS_LoadZipFile(filename);
     for (int i = 0; i < pak->numfiles; i++) {
-      FS_DescribeGameFile(pak->buildBuffer[i].name, demos, maps, images, command);
+      FS_DescribeGameFile(pak->buildBuffer[i].name, demoNames, demos, mapNames, maps, imageNames, images, videoNames, videos, soundNames, sounds, pk3Names, pk3s);
     }
-
-    newName = va("%s/%s", FS_GetCurrentGameDir(), basename);
     if(FS_SV_FileExists(newName)) {
       char dirname[MAX_QPATH];
       ext = COM_GetExtension( newName );
@@ -3359,6 +3393,7 @@ const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int
   }
   return newName;
 }
+#endif
 
 
 /*

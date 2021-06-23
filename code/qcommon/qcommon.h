@@ -950,7 +950,10 @@ qboolean FS_FileExists( const char *file );
 
 char   *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
-const char *FS_DescribeGameFile(const char *filename, int *demos, int *maps, int *images, char *command);
+const char *FS_DescribeGameFile(const char *filename, char **demoNames, 
+  int *demos, char **mapNames, int *maps, char **imageNames, int *images, 
+  char **videoNames, int *videos, char **soundNames, int *sounds, 
+  char **pk3Names, int *pk3s);
 const char *FS_SimpleFilename(const char *filename);
 void FS_AddZipFile( const char *zipfile );
 void FS_CopyFile( const char *fromOSPath, const char *toOSPath );
