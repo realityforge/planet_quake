@@ -3289,7 +3289,7 @@ static void FS_ReorderSearchPaths( void );
 
 
 #ifdef USE_DRAGDROP
-static char fileNames[5*6][MAX_QPATH];
+static char fileNames[6][MAX_QPATH*5];
 void FS_AddZipFile( const char *zipfile ) {
   searchpath_t	*search;
   /*
@@ -3327,11 +3327,11 @@ const char *FS_DescribeGameFile(const char *filename, char **demoNames,
   basename = basename == NULL ? filename : (basename + 1);
   ext = COM_GetExtension( filename );
   *demoNames = fileNames[0];
-  *mapNames = fileNames[5];
-  *imageNames = fileNames[10];
-  *videoNames = fileNames[15];
-  *soundNames = fileNames[20];
-  *pk3Names = fileNames[25];
+  *mapNames = fileNames[1];
+  *imageNames = fileNames[2];
+  *videoNames = fileNames[3];
+  *soundNames = fileNames[4];
+  *pk3Names = fileNames[5];
 
   if(Q_stristr(ext, "dm_")) {
     newName = va("%s/demos/%s", FS_GetCurrentGameDir(), basename);

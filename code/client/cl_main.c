@@ -962,6 +962,7 @@ void CL_ReadDemoMessage( void ) {
 	int			s;
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
+Com_Printf("Reading demo: %i\n", igs);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
@@ -1196,10 +1197,20 @@ static void CL_PlayDemo_f( void ) {
 	char		retry[MAX_OSPATH];
 	const char	*shortname, *slash;
 	fileHandle_t hFile;
+
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
-#endif
 
+	if ( Cmd_Argc() != 2 && Cmd_Argc() != 3 && !Q_stricmp(Cmd_Argv(0), "load") ) {
+		Com_Printf( "demo <demoname>\n" );
+		return;
+	}
+  if(!Q_stricmp(Cmd_Argv(0), "load")) {
+    arg = Cmd_Argv( 2 );
+  } else {
+    arg = Cmd_Argv( 1 );
+  }
+#else
 	if ( Cmd_Argc() != 2 ) {
 		Com_Printf( "demo <demoname>\n" );
 		return;
@@ -1207,6 +1218,7 @@ static void CL_PlayDemo_f( void ) {
 
 	// open the demo file
 	arg = Cmd_Argv( 1 );
+#endif
 
 	// check for an extension .dm_?? (?? is protocol)
 	// check for an extension .DEMOEXT_?? (?? is protocol)
@@ -1261,11 +1273,13 @@ static void CL_PlayDemo_f( void ) {
 	FS_FCloseFile( hFile ); 
 	hFile = FS_INVALID_HANDLE;
 
+#ifndef USE_MULTIVM_CLIENT
 	// make sure a local server is killed
 	// 2 means don't force disconnect of local client
 	Cvar_Set( "sv_killserver", "2" );
 
 	CL_Disconnect( qtrue, qfalse );
+#endif
 
 	// clc.demofile will be closed during CL_Disconnect so reopen it
 	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 ) 
@@ -5007,11 +5021,13 @@ void CL_LoadVM_f( void ) {
 #ifdef USE_LAZY_MEMORY
 		re.SwitchWorld(cgvmi);
 #endif
-		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
     if(!Q_stricmp( name, "demo" )) {
-      Cmd_TokenizeString(Cmd_ArgsFrom(1));
+      clc.currentView = cgvmi;
+      clientGames[clc.currentView] = clc.currentView;
+      // load gamestate first, then start cgame
       CL_PlayDemo_f();
     }
+		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
 		cgvmi = 0;
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {

@@ -831,21 +831,21 @@ void CL_DropFile( char *file, int len ) {
     if(demos) {
 #ifdef USE_MULTIVM_CLIENT
       if(clc.demoplaying) {
-        memcpy(command, va("\\load demo \"%s\"", &demoNames[0]), sizeof(command));
+        memcpy(command, va("\\load demo \"%s\"", demoNames), sizeof(command));
       }
       else
 #endif
-      memcpy(command, va("\\demo \"%s\"", &demoNames[0]), sizeof(command));
+      memcpy(command, va("\\demo \"%s\"", demoNames), sizeof(command));
     } else if (maps) {
 #ifdef USE_MULTIVM_CLIENT
-      if(clc.state == CA_ACTIVE) {
-        memcpy(command, va("\\load game \"%s\"", &mapNames[0]), sizeof(command));
+      if(cls.state == CA_ACTIVE) {
+        memcpy(command, va("\\load game \"%s\"", mapNames), sizeof(command));
       }
       else
 #endif
-      memcpy(command, va("\\map %s", &mapNames[0]), sizeof(command));
+      memcpy(command, va("\\map %s", mapNames), sizeof(command));
     } else if (images) {
-      memcpy(command, va("\\r_showImages %s", &imageNames[0]), sizeof(command));
+      memcpy(command, va("\\r_showImages %s", imageNames), sizeof(command));
     }
   }
 
