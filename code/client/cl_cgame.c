@@ -1211,42 +1211,18 @@ void CL_InitCGame( int inVM ) {
   // do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();
 
-#ifdef USE_MULTIVM_CLIENT
-	if(inVM > -1) {
-		cls.state = CA_PRIMED;
-		re.EndRegistration();
-		Com_TouchMemory();
-		cls.lastVidRestart = Sys_Milliseconds();
-//    cgvmi = prev; // set to previous in case this was called from a GameCommand()
-//    re.SwitchWorld(cgvmi);
-		return;
-	}
-#endif
-
 #ifdef __WASM__
-//  cgvmi = prev; // set to previous in case this was called from a GameCommand()
-//  re.SwitchWorld(cgvmi);
+  //cgvmi = prev; // set to previous in case this was called from a GameCommand()
+  //re.SwitchWorld(cgvmi);
 
 	// if the VM was suspended during initialization, we'll finish initialization later
 	if (result == 0xDEADBEEF) {
 		return;
 	}
 
-	CL_InitCGameFinished();
-}
-
-int CL_GetClientState( void ) {
-	return cls.state;
-}
-
-/*
-====================
-CL_InitCGameFinished
-====================
-*/
-void CL_InitCGameFinished() {
+  WASM_ASYNC(CL_InitCGameFinished);
 #endif
-;
+
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )
 		Cvar_SetCheatState();
@@ -1257,7 +1233,11 @@ void CL_InitCGameFinished() {
 
 	t2 = Sys_Milliseconds();
 
-	Com_Printf( "%s: %5.2f seconds\n", __func__, (t2-t1)/1000.0 );
+#ifdef USE_MULTIVM_CLIENT
+	Com_Printf( "%s (%i): %5.2f seconds\n", __func__, cgvmi, (t2-t1)/1000.0 );
+#else
+  Com_Printf( "%s: %5.2f seconds\n", __func__, (t2-t1)/1000.0 );
+#endif
 
 	// have the renderer touch all its images, so they are present
 	// on the card even if the driver does deferred loading
@@ -1269,6 +1249,9 @@ void CL_InitCGameFinished() {
 	}
 
 	// clear anything that got printed
+#ifdef USE_MULTIVM_CLIENT
+	if(inVM == -1)
+#endif
 	Con_ClearNotify ();
 
 	// do not allow vid_restart for first time
@@ -1660,16 +1643,21 @@ void CL_SetCGameTime( void ) {
     if(!cgvmWorlds[i]) continue;
     cgvmi = i;
     igs = clientGames[cgvmi];
-#endif
-	while ( cl.serverTime >= cl.snap.serverTime ) {
-		// feed another messag, which should change
-		// the contents of cl.snap
-		CL_ReadDemoMessage();
-		if ( cls.state != CA_ACTIVE ) {
-			return; // end of demo
-		}
-	}
-#ifdef USE_MULTIVM_CLIENT
+    //while ( cl.serverTime >= cl.snapWorlds[0].serverTime ) {
+      CL_ReadDemoMessage();
+      if ( cls.state != CA_ACTIVE ) {
+        continue; // end of demo
+      }
+    //}
+  }
+#else
+  while ( cl.serverTime >= cl.snap.serverTime ) {
+    // feed another messag, which should change
+    // the contents of cl.snap
+    CL_ReadDemoMessage();
+    if ( cls.state != CA_ACTIVE ) {
+      return; // end of demo
+    }
   }
 #endif
 }

@@ -197,6 +197,12 @@ void CL_Multiview_f( void );
 void CL_MultiviewFollow_f( void );
 #endif
 
+#ifdef __WASM__
+int CL_GetClientState( void ) {
+	return cls.state;
+}
+#endif
+
 /*
 ===============
 CL_CDDialog
@@ -960,7 +966,6 @@ void CL_ReadDemoMessage( void ) {
 	int			s;
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
-//Com_Printf("Reading demo: %i\n", igs);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
@@ -2939,6 +2944,7 @@ static void CL_DownloadsComplete( void ) {
 
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
+
 #ifdef USE_MULTIVM_CLIENT
 	// force the client to load a new VM using sv_mvWorld
 	// this only loads a VM the first time, decoupling game state from loading
@@ -5025,9 +5031,9 @@ void CL_LoadVM_f( void ) {
       clientGames[clc.currentView] = clc.currentView;
       // load gamestate first, then start cgame
       CL_PlayDemo_f();
-    }
-		CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
-		cgvmi = 0;
+    } else {
+		  CL_InitCGame(cgvmi); // createNew if cgvmWorlds[cgvmi] is already taken
+		}
 		return;
 	} else if ( !Q_stricmp( name, "ui" ) ) {
 		int i, count = 0;

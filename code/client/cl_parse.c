@@ -287,7 +287,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
     {
 			if ( !old->valid ) {
 				// should never happen
-				Com_Printf ("Delta from invalid frame (not supposed to happen! %i).\n", igs);
+				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
 			} else if ( old->messageNum != newSnap.deltaNum ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
@@ -793,10 +793,11 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_Set( "com_errorMessage", "" );
 
 	// wipe local client state
-  int igs = clientGames[cgvmi];
 #ifndef USE_MULTIVM_CLIENT
+  int igs = 0;
 	CL_ClearState();
 #else
+  int igs = clientGames[cgvmi];
 	if(cl.snapWorlds[0].multiview) {
 		clc.currentView = cgvmi = igs = MSG_ReadByte( msg );
 	}
