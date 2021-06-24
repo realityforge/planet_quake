@@ -129,15 +129,23 @@ typedef struct {
 #ifdef USE_MULTIVM_CLIENT
   clSnapshot_t	snapWorlds[MAX_NUM_VMS];			// latest received from server
 #define snap snapWorlds[igs]
+int			serverTimes[MAX_NUM_VMS];
+// can't use pre-compile because serverTime also exists in cl.snap.serverTime
+int			oldServerTimes[MAX_NUM_VMS];
+#define oldServerTime oldServerTimes[igs]
+int			oldFrameServerTimes[MAX_NUM_VMS];
+#define oldFrameServerTime oldFrameServerTimes[igs]
+int			serverTimeDeltas[MAX_NUM_VMS];
+#define serverTimeDelta serverTimeDeltas[igs]
 #else
 	clSnapshot_t	snap;			// latest received from server
-#endif
-
-	int			serverTime;			// may be paused during play
+  int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards
 	int			oldFrameServerTime;	// to check tournament restarts
 	int			serverTimeDelta;	// cl.serverTime = cls.realtime + cl.serverTimeDelta
 									// this value changes as net lag varies
+#endif
+
 	qboolean	extrapolatedSnapshot;	// set if any cgame frame has been forced to extrapolate
 									// cleared when CL_AdjustTimeDelta looks at it
 	qboolean	newSnapshots;		// set on parse of any valid packet

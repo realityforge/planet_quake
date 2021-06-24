@@ -1344,7 +1344,11 @@ CL_CGameRendering
 =====================
 */
 void CL_CGameRendering( stereoFrame_t stereo ) {
-	VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+#ifdef USE_MULTIVM_CLIENT
+  VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTimes[clientGames[cgvmi]], stereo, clc.demoplaying );
+#else
+  VM_Call( cgvm, 3, CG_DRAW_ACTIVE_FRAME, cl.serverTime, stereo, clc.demoplaying );
+#endif
 #ifdef DEBUG
 	VM_Debug( 0 );
 #endif
@@ -1393,7 +1397,11 @@ static void CL_AdjustTimeDelta( void ) {
 	if ( deltaDelta > RESET_TIME ) {
 		cl.serverTimeDelta = newDelta;
 		cl.oldServerTime = cl.snap.serverTime;	// FIXME: is this a problem for cgame?
-		cl.serverTime = cl.snap.serverTime;
+#ifdef USE_MULTIVM_CLIENT
+		cl.serverTimes[igs] = cl.snap.serverTime;
+#else
+    cl.serverTime = cl.snap.serverTime;
+#endif
 		if ( cl_showTimeDelta->integer ) {
 			Com_Printf( "<RESET> " );
 		}
@@ -1595,6 +1603,13 @@ void CL_SetCGameTime( void ) {
 		// cl_timeNudge is a user adjustable cvar that allows more
 		// or less latency to be added in the interest of better
 		// smoothness or better responsiveness.
+#ifdef USE_MULTIVM_CLIENT
+    cl.serverTimes[igs] = cls.realtime + cl.serverTimeDelta - CL_TimeNudge();
+		if ( cl.serverTimes[igs] < cl.oldServerTime ) {
+			cl.serverTimes[igs] = cl.oldServerTime;
+		}
+		cl.oldServerTime = cl.serverTimes[igs];
+#else
 		cl.serverTime = cls.realtime + cl.serverTimeDelta - CL_TimeNudge();
 
 		// guarantee that time will never flow backwards, even if
@@ -1603,6 +1618,7 @@ void CL_SetCGameTime( void ) {
 			cl.serverTime = cl.oldServerTime;
 		}
 		cl.oldServerTime = cl.serverTime;
+#endif
 
 		// note if we are almost past the latest frame (without timeNudge),
 		// so we will try and adjust back a bit when the next snapshot arrives
@@ -1630,27 +1646,28 @@ void CL_SetCGameTime( void ) {
 	// no matter what speed machine it is run on,
 	// while a normal demo may have different time samples
 	// each time it is played back
-	if ( com_timedemo->integer ) {
-		if ( !clc.timeDemoStart ) {
-			clc.timeDemoStart = Sys_Milliseconds();
-		}
-		clc.timeDemoFrames++;
-		cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
-	}
-
 #ifdef USE_MULTIVM_CLIENT
   for(int i = 0; i < MAX_NUM_VMS; i++) {
     if(!cgvmWorlds[i]) continue;
     cgvmi = i;
     igs = clientGames[cgvmi];
-    //while ( cl.serverTime >= cl.snapWorlds[0].serverTime ) {
+Com_Printf("%s %i: %i >= %i\n", __func__, igs, cl.serverTimes[igs], cl.snapWorlds[igs].serverTime);
+    while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime ) {
       CL_ReadDemoMessage();
       if ( cls.state != CA_ACTIVE ) {
         continue; // end of demo
       }
-    //}
+    }
   }
 #else
+  if ( com_timedemo->integer ) {
+    if ( !clc.timeDemoStart ) {
+      clc.timeDemoStart = Sys_Milliseconds();
+    }
+    clc.timeDemoFrames++;
+    cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
+  }
+
   while ( cl.serverTime >= cl.snap.serverTime ) {
     // feed another messag, which should change
     // the contents of cl.snap

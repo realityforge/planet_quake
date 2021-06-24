@@ -966,6 +966,7 @@ void CL_ReadDemoMessage( void ) {
 	int			s;
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
+//Com_Printf("%s: %i\n", __func__, igs);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
@@ -1171,7 +1172,11 @@ static void CL_Rewind_f( void ) {
 	// reset again to load the correct message shift
 	FS_Seek(clc.demofile, clc.demoIndex[nearest].offset, FS_SEEK_SET);
 	memcpy(cl.entityBaselines, clc.demoIndex[nearest].entities, MAX_GENTITIES * sizeof(entityState_t));
+#ifdef USE_MULTIVM_CLIENT
+  cl.serverTimes[igs] = cl.snap.serverTime - serverShift;
+#else
 	cl.serverTime = cl.snap.serverTime - serverShift;
+#endif
 	for(int j = 0; j < 3; j++) {
 		CL_ReadDemoMessage();
 	}

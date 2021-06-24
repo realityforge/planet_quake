@@ -810,11 +810,12 @@ void CL_DropComplete( void ) {
   }
   Con_ClearNotify();
   if (cl_dropAction->integer == 1) {
-    memcpy(&g_consoleField.buffer, &command, sizeof(g_consoleField.buffer));
+    g_consoleField.buffer[1] = '\\';
+    memcpy(&g_consoleField.buffer[1], &command, sizeof(g_consoleField.buffer) - 1);
     Field_AutoComplete( &g_consoleField );
     g_consoleField.cursor = strlen(g_consoleField.buffer);
   } else if (cl_dropAction->integer == 2) {
-    Cbuf_ExecuteText( EXEC_APPEND, &command[1] );
+    Cbuf_ExecuteText( EXEC_APPEND, command );
   }
   command[0] = '\0';
 }
@@ -831,21 +832,21 @@ void CL_DropFile( char *file, int len ) {
     if(demos) {
 #ifdef USE_MULTIVM_CLIENT
       if(clc.demoplaying) {
-        memcpy(command, va("\\load demo \"%s\"", demoNames), sizeof(command));
+        memcpy(command, va("load demo \"%s\"; tile 1 0 1; tile 0 0 0;", demoNames), sizeof(command));
       }
       else
 #endif
-      memcpy(command, va("\\demo \"%s\"", demoNames), sizeof(command));
+      memcpy(command, va("demo \"%s\"", demoNames), sizeof(command));
     } else if (maps) {
 #ifdef USE_MULTIVM_CLIENT
       if(cls.state == CA_ACTIVE) {
-        memcpy(command, va("\\load game \"%s\"", mapNames), sizeof(command));
+        memcpy(command, va("load game \"%s\"", mapNames), sizeof(command));
       }
       else
 #endif
-      memcpy(command, va("\\map %s", mapNames), sizeof(command));
+      memcpy(command, va("map %s", mapNames), sizeof(command));
     } else if (images) {
-      memcpy(command, va("\\r_showImages %s", imageNames), sizeof(command));
+      memcpy(command, va("r_showImages %s", imageNames), sizeof(command));
     }
   }
 

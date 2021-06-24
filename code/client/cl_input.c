@@ -598,7 +598,11 @@ static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
+#ifdef USE_MULTIVM_CLIENT
+  cmd->serverTime = cl.serverTimes[igvm];
+#else
 	cmd->serverTime = cl.serverTime;
+#endif
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
