@@ -281,21 +281,21 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #ifndef USE_MULTIVM_CLIENT
 		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 #else
-    old = &cl.snapshotWorlds[0][newSnap.deltaNum & PACKET_MASK];
+    old = &cl.snapshotWorlds[igs][newSnap.deltaNum & PACKET_MASK];
 		if ( !multiview )
 #endif
     {
 			if ( !old->valid ) {
 				// should never happen
-				Com_Printf ("Delta from invalid frame (not supposed to happen!).\n");
+				Com_Printf ("Delta from invalid frame (not supposed to happen! %i).\n", igs);
 			} else if ( old->messageNum != newSnap.deltaNum ) {
 				// The frame that the server did the delta from
 				// is too old, so we can't reconstruct it properly.
 				Com_Printf ("Delta frame too old.\n");
 #ifdef USE_MULTIVM_CLIENT
-      } else if ( cl.parseEntitiesNumWorlds[0] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
+      } else if ( cl.parseEntitiesNumWorlds[igs] - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
 #else
-		  } else if ( cl.parseEntitiesNum - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
+      } else if ( cl.parseEntitiesNum - old->parseEntitiesNum > MAX_PARSE_ENTITIES - MAX_SNAPSHOT_ENTITIES ) {
 #endif
 				Com_Printf ("Delta parseEntitiesNum too old.\n");
 			} else {
@@ -332,7 +332,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 		if ( MSG_ReadBits( msg, 1 ) ) {
 			newSnap.version = MSG_ReadByte( msg );
 			newSnap.valid = qtrue;
-//Com_Printf("Multiview: %i (%i)\n", clc.serverMessageSequence, igvm);
+//Com_Printf("Multiview: %i (%i)\n", clc.serverMessageSequence, cgvmi);
 			old = NULL;
 		}
 
@@ -364,7 +364,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 				}
 			}
 		}
-//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", igvm, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
+//Com_Printf("Parsing world: %i (%i -> %i -> %i)\n", cgvmi, deltaNum, newSnap.messageNum, clc.reliableAcknowledge);
 #endif
 
 		// from here we can start version-dependent snapshot parsing
@@ -793,22 +793,17 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_Set( "com_errorMessage", "" );
 
 	// wipe local client state
-	int igvm = 0;
+  int igs = clientGames[cgvmi];
 #ifndef USE_MULTIVM_CLIENT
 	CL_ClearState();
 #else
-  int igs = 0;
-	if(clc.demoplaying) {
-		CL_ClearState();
-	} else {
-		if(cl.snapWorlds[0].multiview) {
-			clc.currentView = igvm = igs = MSG_ReadByte( msg );
-		}
-		if(igvm == 0) {
-			CL_ClearState();
-		}
-    Com_Printf("Received new gamestate: %i\n", igvm);    
+	if(cl.snapWorlds[0].multiview) {
+		clc.currentView = cgvmi = igs = MSG_ReadByte( msg );
 	}
+	if(cgvmi == 0) {
+		CL_ClearState();
+	}
+  Com_Printf("Received new gamestate: %i\n", cgvmi);    
 #endif
 
 	// all configstring updates received before new gamestate must be discarded
@@ -880,7 +875,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cvar_VariableStringBuffer( "fs_game", oldGame, sizeof( oldGame ) );
 
 	// parse useful values out of CS_SERVERINFO
-	CL_ParseServerInfo(igvm);
+	CL_ParseServerInfo(igs);
 	
 #ifdef USE_LNBITS
 	Cvar_Set("cl_lnInvoice", "");
@@ -888,7 +883,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 #endif
 
 	// parse serverId and other cvars
-	CL_SystemInfoChanged( qtrue, igvm );
+	CL_SystemInfoChanged( qtrue, igs );
 
 	// stop recording now so the demo won't have an unnecessary level load at the end.
 	if ( cl_autoRecordDemo->integer && clc.demorecording ) {

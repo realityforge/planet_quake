@@ -1554,7 +1554,6 @@ CL_SetCGameTime
 void CL_SetCGameTime( void ) {
 	qboolean demoFreezed;
 #ifdef USE_MULTIVM_CLIENT
-	cgvmi = 0;
   int igs = clientGames[cgvmi];
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
@@ -1656,6 +1655,12 @@ void CL_SetCGameTime( void ) {
 		cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
 	}
 
+#ifdef USE_MULTIVM_CLIENT
+  for(int i = 0; i < MAX_NUM_VMS; i++) {
+    if(!cgvmWorlds[i]) continue;
+    cgvmi = i;
+    igs = clientGames[cgvmi];
+#endif
 	while ( cl.serverTime >= cl.snap.serverTime ) {
 		// feed another messag, which should change
 		// the contents of cl.snap
@@ -1664,4 +1669,7 @@ void CL_SetCGameTime( void ) {
 			return; // end of demo
 		}
 	}
+#ifdef USE_MULTIVM_CLIENT
+  }
+#endif
 }

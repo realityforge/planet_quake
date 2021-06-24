@@ -945,8 +945,6 @@ void CL_ReadDemoIndex( void ) {
 	
 	
 	FS_Seek(clc.demofile, 0, FS_SEEK_SET);
-	CL_ClearState();
-
 }
 
 
@@ -962,18 +960,12 @@ void CL_ReadDemoMessage( void ) {
 	int			s;
 #ifdef USE_MULTIVM_CLIENT
   int igs = clientGames[cgvmi];
-Com_Printf("Reading demo: %i\n", igs);
+//Com_Printf("Reading demo: %i\n", igs);
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
 		CL_DemoCompleted();
 		return;
-	}
-	
-	if(FS_FTell(clc.demofile)==0) {
-		messageShift = 0;
-		serverShift = 0;
-		CL_ReadDemoIndex();
 	}
 
 	// get the sequence number
@@ -1306,6 +1298,13 @@ static void CL_PlayDemo_f( void ) {
 		clc.compat = qtrue;
 	else
 		clc.compat = qfalse;
+  
+	//if(FS_FTell(clc.demofile)==0) {
+	//	messageShift = 0;
+	//	serverShift = 0;
+	//	CL_ReadDemoIndex();
+  //  CL_ClearState();
+	//}
 
 	// read demo messages until connected
 #ifdef USE_CURL
