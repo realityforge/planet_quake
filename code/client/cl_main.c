@@ -4202,7 +4202,16 @@ void CL_Frame( int msec, int realMsec ) {
 	CL_CheckForResend();
 
 	// decide on the serverTime to render
-	CL_SetCGameTime();
+#ifdef USE_MULTIVM_CLIENT
+  for(int i = 0; i < MAX_NUM_VMS; i++) {
+    if(!cgvmWorlds[i]) continue;
+    cgvmi = i;
+    int igs = clientGames[cgvmi];
+    CL_SetCGameTime();
+  }
+#else
+  CL_SetCGameTime();
+#endif
 
 	// update the screen
 	cls.framecount++;

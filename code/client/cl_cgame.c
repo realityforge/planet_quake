@@ -1647,16 +1647,10 @@ void CL_SetCGameTime( void ) {
 	// while a normal demo may have different time samples
 	// each time it is played back
 #ifdef USE_MULTIVM_CLIENT
-  for(int i = 0; i < MAX_NUM_VMS; i++) {
-    if(!cgvmWorlds[i]) continue;
-    cgvmi = i;
-    igs = clientGames[cgvmi];
-Com_Printf("%s %i: %i >= %i\n", __func__, igs, cl.serverTimes[igs], cl.snapWorlds[igs].serverTime);
-    while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime ) {
-      CL_ReadDemoMessage();
-      if ( cls.state != CA_ACTIVE ) {
-        continue; // end of demo
-      }
+  while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime ) {
+    CL_ReadDemoMessage();
+    if ( cls.state != CA_ACTIVE ) {
+      continue; // end of demo
     }
   }
 #else
