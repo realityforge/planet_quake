@@ -335,7 +335,7 @@ void OutputFile( const quakefile_t *qf, const char *outputpath, const char *exte
 	} //end if
 	//
 	ExtractFileExtension(qf->filename, ext);
-	if (!Q_stricmp(ext, "pk3") || !Q_stricmp(ext, "pak") || !Q_stricmp(ext, "sin"))
+	if (!stricmp(ext, "pk3") || !stricmp(ext, "pak") || !stricmp(ext, "sin"))
 	{
 		strcpy(filename, qf->filename);
 		while(strlen(filename) &&
@@ -436,7 +436,7 @@ void CreateAASFilesForAllBSPFiles(char *quakepath)
 				for (qf2 = aasfiles; qf2; qf2 = qf2->next)
 				{
 					sprintf(buf, "%s/%s", qf2->pakfile, qf2->origname);
-					if (!Q_stricmp(aasfile, buf))
+					if (!stricmp(aasfile, buf))
 					{
 						Log_Print("found %s\n", buf);
 						break;
@@ -521,174 +521,164 @@ int main (int argc, char **argv)
 	DefaultCfg();
 	for (i = 1; i < argc; i++)
 	{
-		if (!Q_stricmp(argv[i],"-threads"))
+		if (!stricmp(argv[i],"-threads"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			numthreads = atoi(argv[++i]);
 			Log_Print("threads = %d\n", numthreads);
 		} //end if
-		else if (!Q_stricmp(argv[i], "-noverbose"))
+		else if (!stricmp(argv[i], "-noverbose"))
 		{
 			Log_Print("verbose = false\n");
 			verbose = false;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-nocsg"))
+		else if (!stricmp(argv[i], "-nocsg"))
 		{
 			Log_Print("nocsg = true\n");
 			nocsg = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-optimize"))
+		else if (!stricmp(argv[i], "-optimize"))
 		{
 			Log_Print("optimize = true\n");
 			optimize = true;
 		} //end else if
 		/*
-		else if (!Q_stricmp(argv[i],"-glview"))
+		else if (!stricmp(argv[i],"-glview"))
 		{
 			glview = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-draw"))
+		else if (!stricmp(argv[i], "-draw"))
 		{
 			Log_Print("drawflag = true\n");
 			drawflag = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-noweld"))
+		else if (!stricmp(argv[i], "-noweld"))
 		{
 			Log_Print("noweld = true\n");
 			noweld = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-noshare"))
+		else if (!stricmp(argv[i], "-noshare"))
 		{
 			Log_Print("noshare = true\n");
 			noshare = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-notjunc"))
+		else if (!stricmp(argv[i], "-notjunc"))
 		{
 			Log_Print("notjunc = true\n");
 			notjunc = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-nowater"))
+		else if (!stricmp(argv[i], "-nowater"))
 		{
 			Log_Print("nowater = true\n");
 			nowater = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-noprune"))
+		else if (!stricmp(argv[i], "-noprune"))
 		{
 			Log_Print("noprune = true\n");
 			noprune = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-nomerge"))
+		else if (!stricmp(argv[i], "-nomerge"))
 		{
 			Log_Print("nomerge = true\n");
 			nomerge = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-nosubdiv"))
+		else if (!stricmp(argv[i], "-nosubdiv"))
 		{
 			Log_Print("nosubdiv = true\n");
 			nosubdiv = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-nodetail"))
+		else if (!stricmp(argv[i], "-nodetail"))
 		{
 			Log_Print("nodetail = true\n");
 			nodetail = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-fulldetail"))
+		else if (!stricmp(argv[i], "-fulldetail"))
 		{
 			Log_Print("fulldetail = true\n");
 			fulldetail = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-onlyents"))
+		else if (!stricmp(argv[i], "-onlyents"))
 		{
 			Log_Print("onlyents = true\n");
 			onlyents = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-micro"))
+		else if (!stricmp(argv[i], "-micro"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			microvolume = atof(argv[++i]);
 			Log_Print("microvolume = %f\n", microvolume);
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-leaktest"))
+		else if (!stricmp(argv[i], "-leaktest"))
 		{
 			Log_Print("leaktest = true\n");
 			leaktest = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-verboseentities"))
+		else if (!stricmp(argv[i], "-verboseentities"))
 		{
 			Log_Print("verboseentities = true\n");
 			verboseentities = true;
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-chop"))
+		else if (!stricmp(argv[i], "-chop"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			subdivide_size = atof(argv[++i]);
 			Log_Print("subdivide_size = %f\n", subdivide_size);
 		} //end else if
-		else if (!Q_stricmp (argv[i], "-tmpout"))
+		else if (!stricmp (argv[i], "-tmpout"))
 		{
 			strcpy (outbase, "/tmp");
 			Log_Print("temp output\n");
 		} //end else if
 		*/
 #ifdef ME
-		else if (!Q_stricmp(argv[i], "-freetree"))
+		else if (!stricmp(argv[i], "-freetree"))
 		{
 			freetree = true;
 			Log_Print("freetree = true\n");
 		} //end else if
-<<<<<<< Updated upstream
 		else if (!stricmp(argv[i], "-grapplereach"))
-=======
-#if 0
-		else if (!Q_stricmp(argv[i], "-grapplereach"))
->>>>>>> Stashed changes
 		{
 			calcgrapplereach = true;
 			Log_Print("grapplereach = true\n");
 		} //end else if
-<<<<<<< Updated upstream
 		else if (!stricmp(argv[i], "-nobrushmerge"))
-=======
-#endif
-		else if (!Q_stricmp(argv[i], "-nobrushmerge"))
->>>>>>> Stashed changes
 		{
 			nobrushmerge = true;
 			Log_Print("nobrushmerge = true\n");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-noliquids"))
+		else if (!stricmp(argv[i], "-noliquids"))
 		{
 			noliquids = true;
 			Log_Print("noliquids = true\n");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-forcesidesvisible"))
+		else if (!stricmp(argv[i], "-forcesidesvisible"))
 		{
 			forcesidesvisible = true;
 			Log_Print("forcesidesvisible = true\n");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-output"))
+		else if (!stricmp(argv[i], "-output"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			if (access(argv[i+1], 0x04)) Warning("the folder %s does not exist", argv[i+1]);
 			strcpy(outputpath, argv[++i]);
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-breadthfirst"))
+		else if (!stricmp(argv[i], "-breadthfirst"))
 		{
 			use_nodequeue = true;
 			Log_Print("breadthfirst = true\n");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-capsule"))
+		else if (!stricmp(argv[i], "-capsule"))
 		{
 			capsule_collision = true;
 			Log_Print("capsule_collision = true\n");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-cfg"))
+		else if (!stricmp(argv[i], "-cfg"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			if (!LoadCfgFile(argv[++i]))
 				exit(0);
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-texinfo"))
+		else if (!stricmp(argv[i], "-texinfo"))
 		{
 			if (i + 1 >= argc)
 			{
@@ -699,7 +689,7 @@ int main (int argc, char **argv)
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		}                           //end else if
 
-		else if (!Q_stricmp(argv[i], "-entlist"))
+		else if (!stricmp(argv[i], "-entlist"))
 		{
 			if (i + 1 >= argc)
 			{
@@ -710,53 +700,45 @@ int main (int argc, char **argv)
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		}                           //end else if
 
-		else if (!Q_stricmp(argv[i], "-bsp2map") || !Q_stricmp(argv[i], "-bsp2map220"))
+		else if (!stricmp(argv[i], "-bsp2map") || !stricmp(argv[i], "-bsp2map220"))
 		{
-			g_bsp2map220 = !Q_stricmp(argv[i], "-bsp2map220");
+			g_bsp2map220 = !stricmp(argv[i], "-bsp2map220");
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_BSP2MAP;
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-bsp2aas"))
+		else if (!stricmp(argv[i], "-bsp2aas"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_BSP2AAS;
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		} //end else if
-<<<<<<< Updated upstream
 #if 0 // is not functioning
 		else if (!stricmp(argv[i], "-aasall"))
-=======
-		else if (!Q_stricmp(argv[i], "-aasall"))
->>>>>>> Stashed changes
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			CreateAASFilesForAllBSPFiles(argv[++i]);
 		} //end else if
-<<<<<<< Updated upstream
 #endif
 		else if (!stricmp(argv[i], "-reach"))
-=======
-		else if (!Q_stricmp(argv[i], "-reach"))
->>>>>>> Stashed changes
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_REACH;
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-cluster"))
+		else if (!stricmp(argv[i], "-cluster"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_CLUSTER;
 			qfiles = GetArgumentFiles(argc, argv, &i, "bsp");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-aasinfo"))
+		else if (!stricmp(argv[i], "-aasinfo"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_AASINFO;
 			qfiles = GetArgumentFiles(argc, argv, &i, "aas");
 		} //end else if
-		else if (!Q_stricmp(argv[i], "-aasopt"))
+		else if (!stricmp(argv[i], "-aasopt"))
 		{
 			if (i + 1 >= argc) {i = 0; break;}
 			comp = COMP_AASOPTIMIZE;
@@ -1102,4 +1084,3 @@ int main (int argc, char **argv)
 	Log_Close();						//close the log file
 	return 0;
 } //end of the function main
-

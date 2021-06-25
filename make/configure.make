@@ -220,7 +220,11 @@ ifndef BOTLIB_PREFIX
 endif
 
 ifndef Q3MAP2_PREFIX
-  BOTLIB_PREFIX    := $(CNAME)
+  Q3MAP2_PREFIX    := $(CNAME)
+endif
+
+ifndef MBSPC_PREFIX
+  MBSPC_PREFIX     := $(CNAME)
 endif
 
 ifeq ($(USE_MULTIVM_CLIENT),1)

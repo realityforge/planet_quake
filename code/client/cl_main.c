@@ -4206,7 +4206,6 @@ void CL_Frame( int msec, int realMsec ) {
   for(int i = 0; i < MAX_NUM_VMS; i++) {
     if(!cgvmWorlds[i]) continue;
     cgvmi = i;
-    int igs = clientGames[cgvmi];
     CL_SetCGameTime();
   }
 #else

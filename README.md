@@ -48,7 +48,7 @@ Some of the major features currently implemented are:
   * Web-worker dedicated local server for mesh networked gaming, game sharing over localized Socks proxy network. TODO: authenticated clients
   * Rcon auto-complete, sends a `complete` command to server and response with an `autocomplete` key in an `infoResponse` which is an easy way to intercept messages without adding a command.
   * Server-side demos, recording for every client, [TheDoctor's method](http://openarena.ws/board/index.php?topic=4437.0). Server-side demos, [lrq3000 implementation](https://github.com/lrq3000/ioq3-server-side-demos) recording entire server state and spectating playback. [Cyrax' multiview protocol](http://edawn-mod.org/forum/viewtopic.php?f=6&t=7) for viewing all clients from one demo file. MultiVM command `\load <ui,cgame,game>; \mvjoin`. `\mvtile` display views in a grid. TODO: playing back dm_68/mv-demo files for all players. TODO: fast forward, rewind 10 seconds using baseline indexes in demo files.
-  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"`. `dvr [clientnum] x y h w` command for setting a view in a specific location. Multiworld working with bots and sounds. TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: Drag and drop for multiQVM views. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: connect to multiple servers at the same time.
+  * Multiple map loader in parallel with teleport switch. Multiple QVM loading for supplemental UIs and multiview. Multiview for movie making, example `+spdevmap q3dm1 +activeAction "+wait 1000 +load cgame +wait +world 0 +tile -1 -1 +tile 0 +tile 1 +tile 0 0 0 +wait 100 +mvjoin"`  Multiple worlds at once `+devmap q3dm1 +wait +load game q3dm2 +set activeAction "+wait 500 +game 1 +wait 500 +game 0 +wait 100 +tile -1 -1 0 +tile 0 0 0 +tile 1 0 1 +tile 0 0 0"`. `dvr [clientnum] x y h w` command for setting a view in a specific location. Multiworld working with bots and sounds, multi-world-demos. Drag and drop for multiQVM views. TODO: use scripting in kiosk mode multiple demo files at once.  TODO: fix SAMEORIGIN spawn type location works but camera angles change. TODO: add filesystem switching mask so multiple mods can be loaded at the same time. TODO: connect to multiple servers at the same time, closer with demo work.
   * Heavily modified "Local" multiplayer page that lists specific masters server using `cl_master1-24` as opposed to `sv_master1-24` like on the "Internet" page of the multiplayer menu, if admins want to list servers by geographically nearby.
   * Lightning Network bitcoin transactions, see `sv_ln*` settings for more information. QR code generation by [Nayuki](https://www.nayuki.io/page/qr-code-generator-library).
   * Admin monitoring of cmd stream, Huffman decoding for proxy, Man-In-The-Middle proof-of-concept.
@@ -71,6 +71,7 @@ New game features:
   * More configurable physics.
 
 Coming soon!
+  * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux
   * IN PROGRESS: removing Emscripten and compiling only to wasm with clang. Replace with smarter compiler templates client async_callback with precompiler templates.
   * Move more features like the http downloading, file-system journaling, drag and drop, EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
   * Option for persistent console Con_ResetHistory()
@@ -94,7 +95,9 @@ Coming soon!
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server UDP downloads
   * Asynchronous rendering for portals, mirrors, demos, videos, etc
-  * IN FAILURE: webm/VPX/vorbis video format, "demoMap" surface parm which renders demos to an arbitrary surface. TODO: .Gif support with automatic frame binding in animMap
+  * IN FAILURE: webm/VPX/vorbis video format
+  * "demoMap" surface parm which renders demos to an arbitrary surface. 
+  * .Gif support with automatic frame binding in animMap
   * Event history with demo streaming as a service in the browser for splicing all those sweet frags, SQS/Message Queue
   * Ported IQM and MD5 bone structures from spearmint engine
   * Synchronized server/AI for offline and connection interruptions

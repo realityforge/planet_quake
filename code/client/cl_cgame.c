@@ -1646,23 +1646,24 @@ void CL_SetCGameTime( void ) {
 	// no matter what speed machine it is run on,
 	// while a normal demo may have different time samples
 	// each time it is played back
-#ifdef USE_MULTIVM_CLIENT
-  while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime ) {
-    CL_ReadDemoMessage();
-    if ( cls.state != CA_ACTIVE ) {
-      continue; // end of demo
-    }
-  }
-#else
   if ( com_timedemo->integer ) {
     if ( !clc.timeDemoStart ) {
       clc.timeDemoStart = Sys_Milliseconds();
     }
     clc.timeDemoFrames++;
+#ifdef USE_MULTIVM_CLIENT
+    cl.serverTimes[igs] = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
+#else
     cl.serverTime = clc.timeDemoBaseTime + clc.timeDemoFrames * 50;
+#endif
   }
 
-  while ( cl.serverTime >= cl.snap.serverTime ) {
+#ifdef USE_MULTIVM_CLIENT
+  while ( cl.serverTimes[igs] >= cl.snapWorlds[igs].serverTime )
+#else
+  while ( cl.serverTime >= cl.snap.serverTime )
+#endif
+  {
     // feed another messag, which should change
     // the contents of cl.snap
     CL_ReadDemoMessage();
@@ -1670,5 +1671,4 @@ void CL_SetCGameTime( void ) {
       return; // end of demo
     }
   }
-#endif
 }

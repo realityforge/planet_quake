@@ -46,19 +46,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Com_Memcpy  memcpy
 #define Q_vsnprintf vsnprintf
 #define Com_sprintf sprintf
-<<<<<<< Updated upstream
 #if defined ( __linux__ ) || defined ( __APPLE__ )
-=======
-#if defined __linux__ || defined __APPLE__
->>>>>>> Stashed changes
-  #define stricmp strcasecmp
+#define stricmp strcasecmp
 #endif
 // _ML_ added end
 
 #define BSPC_VERSION		"2.2"  // _ML_ modified
 
 #define ME
-#define DEBUG
 #define NODELIST
 #define SIN
 

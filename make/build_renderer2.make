@@ -45,16 +45,14 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) MAKEDIR=$(REND_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) MAKEDIR=$(REND_WORKDIR)/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/glsl" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
 
 release:
 	$(echo_cmd) "MAKE $(REND_TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) MAKEDIR=$(REND_WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) MAKEDIR=$(REND_WORKDIR)/glsl mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(REND_WORKDIR) $(REND_WORKDIR)/glsl" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
