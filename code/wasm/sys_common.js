@@ -110,10 +110,6 @@ function Sys_mkdirp (p) {
   }
 }
 
-function Sys_DefaultHomePath () {
-	return 0;
-}
-
 function Sys_RandomBytes (string, len) {
 	if(typeof crypto != 'undefined') {
 		crypto.getRandomValues(HEAP8.subarray(string, string+len))

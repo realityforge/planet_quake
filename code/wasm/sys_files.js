@@ -2,7 +2,7 @@ var global = window || global
 global['SYSM'] = {
   index: {},
   fs_replace: [],
-  fs_homepath: '',
+  fs_homepath: '/base/home',
   fs_basepath: '/base',
   fs_basegame: 'baseq3',
   fs_game: 'baseq3',
@@ -565,14 +565,6 @@ function Sys_FS_Shutdown () {
     
     ProxyCallback()
   })
-}
-
-function Sys_DefaultBasePath () {
-	return allocate(intArrayFromString('/base'), ALLOC_STACK)
-}
-
-function Sys_Pwd () {
-	return allocate(intArrayFromString('/base'), ALLOC_STACK)
 }
 
 function Sys_FS_Offline () {

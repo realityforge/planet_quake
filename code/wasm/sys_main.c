@@ -129,20 +129,6 @@ void CON_SigTStp( int signum )
 
 // single exit point (regular exit or in case of signal fault)
 void Sys_Exit( int code ) __attribute((noreturn));
-void Sys_Exit( int code )
-{
-	Sys_PlatformExit( );
-#ifdef NDEBUG // regular behavior
-	// We can't do this 
-	//  as long as GL DLL's keep installing with atexit...
-	//exit(ex);
-	_exit( code );
-#else
-	// Give me a backtrace on error exits.
-	assert( code == 0 );
-	exit( code );
-#endif
-}
 
 
 void Sys_Quit( void )
@@ -433,9 +419,6 @@ void Sys_Print( const char *msg )
 }
 
 
-extern void QDECL Sys_SetStatus( const char *format, ... );
-
-
 void Sys_ConfigureFPU( void )  // bk001213 - divide by zero
 {
 #ifdef __linux__
@@ -570,18 +553,11 @@ Q_EXPORT int main( int argc, char* argv[] )
 
 	/*useXYpos = */ Com_EarlyParseCmdLine( cmdline, con_title, sizeof( con_title ), &xpos, &ypos );
 
-	// bk000306 - clear queues
-//	memset( &eventQue[0], 0, sizeof( eventQue ) );
-//	memset( &sys_packetReceived[0], 0, sizeof( sys_packetReceived ) );
-	Sys_PlatformInit( );
-
 	// get the initial time base
 	Sys_Milliseconds();
 
 	Com_Init( cmdline );
 	NET_Init();
-
-	Com_Printf( "Working directory: %s\n", Sys_Pwd() );
 
 	// JavaScript console doesn't report input
   Cvar_Set( "ttycon", "0" );
@@ -592,6 +568,16 @@ Q_EXPORT int main( int argc, char* argv[] )
 
 
 char *Sys_ConsoleInput( void ) { return NULL; }
+
+void Sys_Mkdir( const char *path ) { mkdir( path, 0750 ); }
+
+const char *Sys_DefaultBasePath( void ) { return "/base"; }
+
+const char *Sys_Pwd( void ) { return "/base"; }
+
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
+
+const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
 
 
 /*
@@ -614,6 +600,45 @@ qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t 
 	}
 }
 
+
+/*
+=================
+Sys_FreeFileList
+=================
+*/
+void Sys_FreeFileList( char **list ) {
+	int		i;
+
+	if ( !list ) {
+		return;
+	}
+
+	for ( i = 0 ; list[i] ; i++ ) {
+		Z_Free( list[i] );
+	}
+
+	Z_Free( list );
+}
+
+
+
+EM_JS(qboolean, SYS_Main_RandomBytes, ( byte *string, int len ), 
+{ return Sys_RandomBytes(string, len) });
+qboolean Sys_RandomBytes( byte *string, int len )
+{ return SYS_Main_RandomBytes(string, len); }
+
+EM_JS(void, SYS_Main_SetStatus, ( const char *format, intptr_t *args ), 
+{ Sys_SetStatus.apply(null, [format].concat(args)) });
+void QDECL Sys_SetStatus( const char *format, ... )
+{ 
+  intptr_t	args[14]; // max.count for qagame
+  va_list	ap;
+	va_start( ap, format );
+	for (int i = 0; i < ARRAY_LEN( args ); i++ )
+		args[ i ] = va_arg( ap, intptr_t );
+	va_end( ap );
+  SYS_Main_SetStatus(format, args); 
+}
 
 EM_JS(char **, SYS_FS_List, ( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs ), 
 { return Sys_ListFiles(directory, extension, filter, numfiles, wantsubs) });

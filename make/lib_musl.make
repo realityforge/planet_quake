@@ -62,6 +62,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     signal/signal.o      signal/sigaddset.o signal/sigemptyset.o \
                     signal/sigprocmask.o signal/sigaction.o signal/block.o \
+										signal/raise.o \
                     errno/strerror.o errno/__errno_location.o \
                     \
                     math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
@@ -74,7 +75,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     unistd/lseek.o  unistd/pipe2.o \
                     unistd/gethostname.o \
                     \
-                    exit/assert.o exit/abort_lock.o \
+                    exit/assert.o exit/abort_lock.o exit/exit.o exit/_Exit.o \
+										exit/abort.o \
                     \
                     time/ctime.o       time/time.o           time/localtime.o \
                     time/asctime_r.o   time/gettimeofday.o   time/clock.o \
