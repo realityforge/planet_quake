@@ -9,7 +9,6 @@
 FILE *__fdopen(int fd, const char *mode)
 {
 	FILE *f;
-	struct winsize wsz;
 
 	/* Check for valid initial mode character */
 	if (!strchr("rwa", *mode)) {
@@ -41,10 +40,13 @@ FILE *__fdopen(int fd, const char *mode)
 	f->buf = (unsigned char *)f + sizeof *f + UNGET;
 	f->buf_size = BUFSIZ;
 
+  f->lbf = EOF;
+#ifndef __WASM__
 	/* Activate line buffered mode for terminals */
-	f->lbf = EOF;
+  struct winsize wsz;
 	if (!(f->flags & F_NOWR) && !__syscall(SYS_ioctl, fd, TIOCGWINSZ, &wsz))
 		f->lbf = '\n';
+#endif
 
 	/* Initialize op ptrs. No problem if some are unneeded. */
 	f->read = __stdio_read;
