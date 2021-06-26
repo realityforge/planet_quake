@@ -2,30 +2,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#ifdef __cplusplus
-#define _EM_JS_CPP_BEGIN extern "C" {
-#define _EM_JS_CPP_END   }
-#else // __cplusplus
-#define _EM_JS_CPP_BEGIN
-#define _EM_JS_CPP_END
-#endif // __cplusplus
-
-#define EM_JS(ret, name, params, ...)                                                              \
-  _EM_JS_CPP_BEGIN                                                                                 \
-  ret name params EM_IMPORT(name);                                                                 \
-  EMSCRIPTEN_KEEPALIVE                                                                             \
-  __attribute__((section("em_js"), aligned(1))) char __em_js__##name[] =                           \
-    #params "<::>" #__VA_ARGS__;                                                                   \
-  _EM_JS_CPP_END
-
-#define CALL_JS_1(cname, jsname, type, casttype) \
-  EM_JS(type, JS_##cname, (type x), { return jsname(x) }); \
-  type cname(type x) { return JS_##cname((casttype)x); }
-
-#define CALL_JS_1_TRIPLE(cname, jsname) \
-  CALL_JS_1(cname, jsname, double, double) \
-  CALL_JS_1(cname##f, jsname, float, float)
-
 CALL_JS_1_TRIPLE(cos, Math.cos)
 CALL_JS_1_TRIPLE(sin, Math.sin)
 CALL_JS_1_TRIPLE(tan, Math.tan)
@@ -39,24 +15,8 @@ CALL_JS_1_TRIPLE(fabs, Math.abs)
 CALL_JS_1_TRIPLE(ceil, Math.ceil)
 CALL_JS_1_TRIPLE(floor, Math.floor)
 
-#define CALL_JS_2(cname, jsname, type, casttype) \
-  EM_JS(type, JS_##cname, (type x, type y), { return jsname(x, y) }); \
-  type cname(type x, type y) { return JS_##cname((casttype)x, (casttype)y); }
-
-#define CALL_JS_2_TRIPLE(cname, jsname) \
-  CALL_JS_2(cname, jsname, double, double) \
-  CALL_JS_2(cname##f, jsname, float, float)
-
 CALL_JS_2_TRIPLE(atan2, Math.atan2)
 CALL_JS_2_TRIPLE(pow, Math.pow)
-
-#define CALL_JS_1_IMPL(cname, type, casttype, impl) \
-  EM_JS(type, JS_##cname, (type x), impl); \
-  type cname(type x) { return JS_##cname((casttype)x); }
-
-#define CALL_JS_1_IMPL_TRIPLE(cname, impl) \
-  CALL_JS_1_IMPL(cname, double, double, impl) \
-  CALL_JS_1_IMPL(cname##f, float, float, impl)
 
 CALL_JS_1_IMPL_TRIPLE(round, {
   return x >= 0 ? Math.floor(x + 0.5) : Math.ceil(x - 0.5);
@@ -70,6 +30,9 @@ CALL_JS_1_IMPL_TRIPLE(rint,  {
 
 EM_JS(int, JS_rand, (void), { return Math.random(x) });
 int rand(void) { return JS_rand(); }
+
+EM_JS(void, JS_srand, (unsigned s), {  });
+void srand(unsigned s) { return JS_srand(s); }
 
 EM_JS(int, JS_abs, (double x), { return Math.abs(x) });
 int abs(int x) { return JS_abs((int)x); }

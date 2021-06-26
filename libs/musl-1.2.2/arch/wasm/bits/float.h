@@ -1,4 +1,4 @@
-#define FLT_ROUNDS 1
+//#define FLT_ROUNDS 1
 #define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
 
 #define LDBL_TRUE_MIN __LDBL_DENORM_MIN__

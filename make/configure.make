@@ -142,6 +142,8 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   VPX_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libvpx libwebm || echo -lvpx -lwebm)
   CURL_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libcurl || true)
   CURL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libcurl || echo -lcurl)
+  ZLIB_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags zlib || true)
+  ZLIB_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs zlib || echo -lz)
 
 endif
 

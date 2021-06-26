@@ -143,5 +143,5 @@ int fstatat(int fd, const char *restrict path, struct stat *restrict st, int fla
 }
 
 #if !_REDIR_TIME64
-weak_alias(fstatat, fstatat64);
+//weak_alias(fstatat, fstatat64);
 #endif

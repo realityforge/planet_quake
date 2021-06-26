@@ -364,6 +364,7 @@ var LibrarySysMain = {
     }
   },
   Sys_Milliseconds: function () {
+    // https://developers.google.com/web/updates/2012/05/requestAnimationFrame-API-now-with-sub-millisecond-precision
 		if (!SYSM.timeBase) {
 			SYSM.timeBase = Date.now()
 		}

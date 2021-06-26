@@ -8,6 +8,7 @@
 #ifndef __wasi_emscripten_helpers_h
 #define __wasi_emscripten_helpers_h
 
+#pragma once
 #ifdef __cplusplus
 extern "C" {
 #endif

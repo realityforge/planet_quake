@@ -7,5 +7,5 @@ int stat(const char *restrict path, struct stat *restrict buf)
 }
 
 #if !_REDIR_TIME64
-weak_alias(stat, stat64);
+//weak_alias(stat, stat64);
 #endif

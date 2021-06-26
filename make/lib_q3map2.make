@@ -13,7 +13,8 @@ Q3MAP2_TARGET    := $(Q3MAP2_PREFIX)_q3map2
 CPPSOURCES       := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/q3map2 
 INCLUDES         := $(Q3MAP2DIR)/common $(Q3MAP2DIR)/../libs \
 										$(Q3MAP2DIR)/../include libs/libpng-1.6.37
-LIBS             := $(XML_LIBS) $(GLIB_LIBS) $(STD_LIBS) $(JPEG_LIBS) $(PNG_LIBS)
+LIBS             := $(ZLIB_LIBS) $(XML_LIBS) $(GLIB_LIBS) \
+										$(STD_LIBS) $(JPEG_LIBS) $(PNG_LIBS)
 
 Q3MAP2           := common/cmdlib.o \
 	                  common/imagelib.o \
