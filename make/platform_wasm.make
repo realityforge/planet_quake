@@ -18,12 +18,13 @@ BINEXT           := .wasm
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
 #LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
-LDFLAGS          := --import-memory
+LDFLAGS          := --target=wasm32 -Wl,--import-memory
+
 # --entry=_main
-CLIENT_LDFLAGS   := --warn-unresolved-symbols --export-dynamic --no-entry --export-all
-SHLIBLDFLAGS     := --unresolved-symbols=ignore-all --export-dynamic --no-entry --strip-all
+CLIENT_LDFLAGS   := --warn-unresolved-symbols -Wl,--export-dynamic -Wl,--no-entry
+SHLIBLDFLAGS     := --unresolved-symbols=ignore-all -Wl,--export-dynamic -Wl,--no-entry -Wl,--strip-all
 # -emit-llvm -c -S
-BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
+BASE_CFLAGS      += -Wall -Ofast \
 										-Wno-unused-variable \
                     -Wimplicit -Wstrict-prototypes -fno-strict-aliasing \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
@@ -35,12 +36,14 @@ BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
 										-Icode/wasm/include \
 										-Ilibs/musl-1.2.2/include \
 										-Ilibs/musl-1.2.2/arch/generic \
-										-Ilibs/musl-1.2.2/arch/wasm
+										-Ilibs/musl-1.2.2/arch/wasm \
+										--no-standard-libraries \
+										-isysroot libs/wasi-libc/sysroot \
 
 # -emit-llvm -c -S 
 MUSL_CFLAGS      := -Wall -Ofast --target=wasm32 -fvisibility=hidden \
-										-D_XOPEN_SOURCE=600 -D_ALL_SOURCE=700 \
-										-D__WASM__ \
+										-D__WASM__ -D_XOPEN_SOURCE=600 -D_ALL_SOURCE=700 \
+										\
 										-fno-common -std=c99 -ffreestanding -nostdinc -pedantic \
 										-Wno-unused-variable -Wvariadic-macros -Wno-extra-semi \
 										-Wno-shift-op-parentheses -Wno-c11-extensions \
@@ -70,7 +73,7 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
 										musl/internal musl/time   musl/locale musl/network   \
 										musl/select   musl/stat   musl/dirent musl/misc      \
 										musl/fcntl    musl/ctype  musl/exit   musl/env       \
-										musl/thread   musl/mman               musl/multibyte \
+										musl/thread   musl/mman               musl/multibyte
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										string/memmove.o string/memcmp.o  string/memchr.o    \
@@ -80,9 +83,10 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										string/strlen.o  string/strncat.o string/strspn.o    \
 										string/strstr.o  string/strrchr.o string/strnlen.o   \
 										string/strcspn.o string/strpbrk.o string/strdup.o    \
+										string/wcsnlen.o string/wmemchr.o \
 										\
 										internal/shgetc.o    internal/syscall_ret.o internal/intscan.o \
-										internal/floatscan.o \
+										internal/floatscan.o internal/libc.o \
 										\
 										stdio/sprintf.o  stdio/fprintf.o   stdio/vsnprintf.o \
 										stdio/vfprintf.o stdio/fwrite.o    stdio/sscanf.o    \
@@ -94,6 +98,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										stdio/rename.o   stdio/pclose.o    stdio/popen.o     \
 										stdio/ofl.o      stdio/fgets.o     stdio/getc.o      \
 										stdio/ofl_add.o  stdio/vfwprintf.o stdio/fputwc.o    \
+										stdio/fwide.o \
 										stdio/__lockfile.o    stdio/__fclose_ca.o      \
 										stdio/__fdopen.o      stdio/__stdout_write.o   \
 										stdio/__stdio_close.o stdio/__stdio_seek.o     \
@@ -101,16 +106,17 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										stdio/__stdio_write.o stdio/__toread.o         \
 										stdio/__stdio_read.o  stdio/__uflow.o          \
 										stdio/__stdio_exit.o  stdio/__towrite.o        \
-										\
+										stdio/__overflow.o \
 										\
 										stdlib/atoi.o   stdlib/atof.o   stdlib/strtod.o \
-										stdlib/qsort.o  stdlib/strtol.o \
+										stdlib/qsort.o  stdlib/strtol.o stdlib/labs.o \
 										\
 										ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
 										ctype/isdigit.o ctype/iswdigit.o \
 										\
 										signal/signal.o      signal/sigaddset.o signal/sigemptyset.o \
 										signal/sigprocmask.o signal/sigaction.o signal/block.o \
+										signal/kill.o \
 										errno/strerror.o errno/__errno_location.o \
 										\
 										math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
@@ -118,11 +124,13 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										math/frexpl.o \
 										\
 										unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
-										unistd/read.o   unistd/write.o  unistd/close.o \
-										unistd/lseek.o  unistd/pipe2.o \
+										unistd/read.o   unistd/write.o  unistd/close.o    \
+										unistd/lseek.o  unistd/pipe2.o  unistd/pipe.o     \
+										unistd/_exit.o \
 										unistd/gethostname.o \
 										\
-										exit/assert.o exit/abort_lock.o \
+										exit/assert.o exit/abort_lock.o exit/abort.o exit/_Exit.o \
+										exit/exit.o \
 										\
 										time/ctime.o       time/time.o           time/localtime.o \
 										time/asctime_r.o   time/gettimeofday.o   time/clock.o \
@@ -168,8 +176,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 										multibyte/mbsrtowcs.o multibyte/wcrtomb.o  multibyte/mbsinit.o \
 										multibyte/mbtowc.o    multibyte/btowc.o \
 										
-
-LIBOBJ           += $(addprefix $(B)/musl/,$(MUSL_LOBJ))
+LIBOBJ           := 
+#LIBOBJ           += $(addprefix $(B)/musl/,$(MUSL_LOBJ))
 										
 
 define DO_MUSL_CC

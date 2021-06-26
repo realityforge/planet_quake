@@ -296,7 +296,7 @@ endif
 ARCHEXT=
 
 CLIENT_EXTRA_FILES=
-GIT_VERSION := $(shell git describe --abbrev=6 --dirty --always --tags)
+#GIT_VERSION := $(shell git describe --abbrev=6 --dirty --always --tags)
 
 ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED

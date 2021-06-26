@@ -277,7 +277,7 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 ifeq ($(PLATFORM),js)
 $(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(LD) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
 	
 #$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
 #	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
