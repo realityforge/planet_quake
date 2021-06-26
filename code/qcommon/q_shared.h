@@ -261,6 +261,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <ctype.h>
 #include <limits.h>
 
+#ifdef __WASM__
+#include <syscall_arch.h>
+#endif
+
 #endif
 
 //endianness

@@ -30,4 +30,4 @@ FILE *fopen(const char *restrict filename, const char *restrict mode)
 	return 0;
 }
 
-//weak_alias(fopen, fopen64);
+weak_alias(fopen, fopen64);

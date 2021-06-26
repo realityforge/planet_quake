@@ -24,22 +24,21 @@ CLIENT_LDFLAGS   := --warn-unresolved-symbols -Wl,--export-dynamic -Wl,--no-entr
 SHLIBLDFLAGS     := --unresolved-symbols=ignore-all -Wl,--export-dynamic -Wl,--no-entry -Wl,--strip-all
 # -emit-llvm -c -S
 BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
-										-Wno-unused-variable \
+                    -Wno-unused-variable \
                     -Wimplicit -Wstrict-prototypes -fno-strict-aliasing \
-										-Wno-shift-op-parentheses \
-										-Wno-bitwise-op-parentheses \
-										-Wno-unknown-attributes \
+                    -Wno-shift-op-parentheses \
+                    -Wno-bitwise-op-parentheses \
+                    -Wno-unknown-attributes \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \
-										-D__WASM__ -D__wasi__ \
-										-D_XOPEN_SOURCE \
-										-fvisibility=hidden \
-										--no-standard-libraries \
-										-Icode/wasm/include \
-										-Ilibs/wasi-sysroot/include \
-										-Ilibs/musl-1.2.2/include \
-										-isysroot libs/wasi-sysroot \
+                    -D__WASM__ -D__wasi__ \
+                    -fvisibility=hidden \
+                    -D_XOPEN_SOURCE=600 \
+                    -D_ALL_SOURCE=700 \
+                    --no-standard-libraries \
+                    -Icode/wasm/include \
+                    -Ilibs/musl-1.2.2/include \
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
@@ -47,9 +46,8 @@ DEBUG_CFLAGS     := $(BASE_CFLAGS) \
 RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
 
-export INCLUDE	 := -Icode/wasm/include \
-										-Ilibs/wasi-sysroot/include \
-										-Ilibs/musl-1.2.2/include \
+export INCLUDE   := -Icode/wasm/include \
+                    -Ilibs/musl-1.2.2/include \
 
 
 #CLIENT_SYSTEM    := sys_common.js \
@@ -58,12 +56,12 @@ export INCLUDE	 := -Icode/wasm/include \
                     sys_files.js \
                     sys_input.js \
                     sys_webgl.js \
-									  sys_sdl.js \
+                    sys_sdl.js \
                     sys_main.js
 
 #SYSEXPORTS := , '_Sys_BeginDownload', '_Sys_SocksConnect', '_Sys_SocksMessage', \
-							'_Sys_NET_MulticastLocal', '_Sys_LoadLibrary', '_Sys_DownloadLocalFile', \
-							'_Sys_CmdArgsC', '_Sys_CmdArgs'
+              '_Sys_NET_MulticastLocal', '_Sys_LoadLibrary', '_Sys_DownloadLocalFile', \
+              '_Sys_CmdArgsC', '_Sys_CmdArgs'
 
 #LDEXPORTS := '_main', '_malloc', '_free', '_atof', '_sin', '_powf', '_rand', \
   '_strncpy', '_memset', '_memcpy', '_fopen', '_fseek', '_dlopen', '_vsprintf', \
@@ -73,7 +71,7 @@ export INCLUDE	 := -Icode/wasm/include \
   '_Com_Frame_Proxy', '_Com_Outside_Error', '_Z_Free', '_Cbuf_Execute', \
   '_Cvar_Set', '_Cvar_SetValue', '_Cvar_Get', '_Cbuf_ExecuteText', \
   '_Cvar_VariableIntegerValue', '_Cbuf_AddText', '_JS_Field_CharEvent', \
-	'_FS_AllowedExtension' $(SYSEXPORTS)
+  '_FS_AllowedExtension' $(SYSEXPORTS)
 
 
 ifdef B

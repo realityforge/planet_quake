@@ -1,28 +1,59 @@
-#define _Addr long
-#define _Int64 long long
-#define _Reg long long
+#define __LITTLE_ENDIAN 1234
+#define __BIG_ENDIAN 4321
 
-#define __BYTE_ORDER __BYTE_ORDER__
+#define __BYTE_ORDER __LITTLE_ENDIAN
+#define __LONG_MAX 0x7fffffffL
 
-#define __LONG_MAX __LONG_MAX__
+#define _Addr __PTRDIFF_TYPE__
+#define _Int64 __INT64_TYPE__
+#define _Reg __PTRDIFF_TYPE__
 
-/*
- * Rather than define everything ourselves here in the musl layer, for
- * WASI, reference the definitions in the lower layers.
- */
+#if __GNUC__ >= 3
+#if defined(__NEED_va_list) && !defined(__DEFINED_va_list)
+typedef __builtin_va_list va_list;
+#define __DEFINED_va_list
+#endif
 
+#if defined(__NEED___isoc_va_list) && !defined(__DEFINED___isoc_va_list)
+typedef __builtin_va_list __isoc_va_list;
+#define __DEFINED___isoc_va_list
+#endif
+
+#else
+#if defined(__NEED_va_list) && !defined(__DEFINED_va_list)
+typedef struct __va_list * va_list;
+#define __DEFINED_va_list
+#endif
+
+#if defined(__NEED___isoc_va_list) && !defined(__DEFINED___isoc_va_list)
+typedef struct __va_list * __isoc_va_list;
+#define __DEFINED___isoc_va_list
+#endif
+
+#endif
+
+#ifndef __cplusplus
+#ifdef __WCHAR_TYPE__
 #if defined(__NEED_wchar_t) && !defined(__DEFINED_wchar_t)
-#define __need_wchar_t
-#include <stddef.h>
+typedef __WCHAR_TYPE__ wchar_t;
 #define __DEFINED_wchar_t
 #endif
 
+#else
+#if defined(__NEED_wchar_t) && !defined(__DEFINED_wchar_t)
+typedef long wchar_t;
+#define __DEFINED_wchar_t
+#endif
+
+#endif
+#endif
 #if defined(__NEED_wint_t) && !defined(__DEFINED_wint_t)
-#define __need_wint_t
-#include <stddef.h>
+typedef unsigned wint_t;
 #define __DEFINED_wint_t
 #endif
 
+
+#if defined(__FLT_EVAL_METHOD__) && __FLT_EVAL_METHOD__ == 0
 #if defined(__NEED_float_t) && !defined(__DEFINED_float_t)
 typedef float float_t;
 #define __DEFINED_float_t
@@ -33,40 +64,66 @@ typedef double double_t;
 #define __DEFINED_double_t
 #endif
 
-
-#if defined(__NEED_max_align_t) && !defined(__DEFINED_max_align_t)
-#define __need_max_align_t
-#include <stddef.h>
-#define __DEFINED_max_align_t
+#else
+#if defined(__NEED_float_t) && !defined(__DEFINED_float_t)
+typedef long double float_t;
+#define __DEFINED_float_t
 #endif
 
-#if defined(__NEED_time_t) && !defined(__DEFINED_time_t)
-#include <__typedef_time_t.h>
-#define __DEFINED_time_t
+#if defined(__NEED_double_t) && !defined(__DEFINED_double_t)
+typedef long double double_t;
+#define __DEFINED_double_t
+#endif
+
 #endif
 
 #if defined(__NEED_suseconds_t) && !defined(__DEFINED_suseconds_t)
-#include <__typedef_suseconds_t.h>
+typedef long suseconds_t;
 #define __DEFINED_suseconds_t
 #endif
 
-#if defined(__NEED_clockid_t) && !defined(__DEFINED_clockid_t)
-#include <__typedef_clockid_t.h>
-#define __DEFINED_clockid_t
+
+#if defined(__NEED_pthread_attr_t) && !defined(__DEFINED_pthread_attr_t)
+#ifdef __EMSCRIPTEN__
+// For canvas transfer implementation in Emscripten, use an extra 11th control field
+// to pass a pointer to a string denoting the WebGL canvases to transfer.
+typedef struct { union { int __i[11]; volatile int __vi[11]; unsigned __s[11]; } __u; } pthread_attr_t;
+#else
+typedef struct { union { int __i[10]; volatile int __vi[10]; unsigned __s[10]; } __u; } pthread_attr_t;
+#endif
+#define __DEFINED_pthread_attr_t
 #endif
 
-#if defined(__NEED_sigset_t) && !defined(__DEFINED_sigset_t)
-#include <__typedef_sigset_t.h>
-#define __DEFINED_sigset_t
+#if defined(__NEED_pthread_mutex_t) && !defined(__DEFINED_pthread_mutex_t)
+typedef struct { union { int __i[7]; volatile int __vi[7]; volatile void *__p[7]; } __u; } pthread_mutex_t;
+#define __DEFINED_pthread_mutex_t
 #endif
 
-#if defined(__NEED_clock_t) && !defined(__DEFINED_clock_t)
-#include <__typedef_clock_t.h>
-#define __DEFINED_clock_t
+#if defined(__NEED_mtx_t) && !defined(__DEFINED_mtx_t)
+typedef struct { union { int __i[7]; volatile int __vi[7]; volatile void *__p[7]; } __u; } mtx_t;
+#define __DEFINED_mtx_t
 #endif
-#define __LITTLE_ENDIAN 1234
-#define __BIG_ENDIAN 4321
-#define __USE_TIME_BITS64 1
+
+#if defined(__NEED_pthread_cond_t) && !defined(__DEFINED_pthread_cond_t)
+typedef struct { union { int __i[12]; volatile int __vi[12]; void *__p[12]; } __u; } pthread_cond_t;
+#define __DEFINED_pthread_cond_t
+#endif
+
+#if defined(__NEED_cnd_t) && !defined(__DEFINED_cnd_t)
+typedef struct { union { int __i[12]; volatile int __vi[12]; void *__p[12]; } __u; } cnd_t;
+#define __DEFINED_cnd_t
+#endif
+
+#if defined(__NEED_pthread_rwlock_t) && !defined(__DEFINED_pthread_rwlock_t)
+typedef struct { union { int __i[8]; volatile int __vi[8]; void *__p[8]; } __u; } pthread_rwlock_t;
+#define __DEFINED_pthread_rwlock_t
+#endif
+
+#if defined(__NEED_pthread_barrier_t) && !defined(__DEFINED_pthread_barrier_t)
+typedef struct { union { int __i[5]; volatile int __vi[5]; void *__p[5]; } __u; } pthread_barrier_t;
+#define __DEFINED_pthread_barrier_t
+#endif
+
 
 #if defined(__NEED_size_t) && !defined(__DEFINED_size_t)
 typedef unsigned _Addr size_t;
@@ -103,28 +160,6 @@ typedef _Reg register_t;
 #define __DEFINED_register_t
 #endif
 
-#ifdef __wasilibc_unmodified_upstream /* Use alternate WASI libc headers */
-#if defined(__NEED_time_t) && !defined(__DEFINED_time_t)
-typedef _Int64 time_t;
-#define __DEFINED_time_t
-#endif
-
-#if defined(__NEED_suseconds_t) && !defined(__DEFINED_suseconds_t)
-typedef _Int64 suseconds_t;
-#define __DEFINED_suseconds_t
-#endif
-
-#else
-#if defined(__NEED_time_t) && !defined(__DEFINED_time_t)
-#include <__typedef_time_t.h>
-#define __DEFINED_time_t
-#endif
-
-#if defined(__NEED_suseconds_t) && !defined(__DEFINED_suseconds_t)
-#include <__typedef_suseconds_t.h>
-#define __DEFINED_suseconds_t
-#endif
-#endif
 
 #if defined(__NEED_int8_t) && !defined(__DEFINED_int8_t)
 typedef signed char     int8_t;
@@ -132,22 +167,22 @@ typedef signed char     int8_t;
 #endif
 
 #if defined(__NEED_int16_t) && !defined(__DEFINED_int16_t)
-typedef signed short    int16_t;
+typedef short           int16_t;
 #define __DEFINED_int16_t
 #endif
 
 #if defined(__NEED_int32_t) && !defined(__DEFINED_int32_t)
-typedef signed int      int32_t;
+typedef int             int32_t;
 #define __DEFINED_int32_t
 #endif
 
 #if defined(__NEED_int64_t) && !defined(__DEFINED_int64_t)
-typedef signed _Int64   int64_t;
+typedef _Int64          int64_t;
 #define __DEFINED_int64_t
 #endif
 
 #if defined(__NEED_intmax_t) && !defined(__DEFINED_intmax_t)
-typedef signed _Int64   intmax_t;
+typedef _Int64          intmax_t;
 #define __DEFINED_intmax_t
 #endif
 
@@ -187,11 +222,6 @@ typedef unsigned mode_t;
 #define __DEFINED_mode_t
 #endif
 
-#if defined(__NEED_nlink_t) && !defined(__DEFINED_nlink_t)
-typedef unsigned _Reg nlink_t;
-#define __DEFINED_nlink_t
-#endif
-
 #if defined(__NEED_off_t) && !defined(__DEFINED_off_t)
 typedef _Int64 off_t;
 #define __DEFINED_off_t
@@ -202,31 +232,20 @@ typedef unsigned _Int64 ino_t;
 #define __DEFINED_ino_t
 #endif
 
-#if defined(__NEED_dev_t) && !defined(__DEFINED_dev_t)
-typedef unsigned _Int64 dev_t;
-#define __DEFINED_dev_t
-#endif
-
 #if defined(__NEED_blksize_t) && !defined(__DEFINED_blksize_t)
 typedef long blksize_t;
 #define __DEFINED_blksize_t
 #endif
 
-#if defined(__NEED_blkcnt_t) && !defined(__DEFINED_blkcnt_t)
-typedef _Int64 blkcnt_t;
-#define __DEFINED_blkcnt_t
-#endif
-
 #if defined(__NEED_fsblkcnt_t) && !defined(__DEFINED_fsblkcnt_t)
-typedef unsigned _Int64 fsblkcnt_t;
+typedef unsigned int fsblkcnt_t;
 #define __DEFINED_fsblkcnt_t
 #endif
 
 #if defined(__NEED_fsfilcnt_t) && !defined(__DEFINED_fsfilcnt_t)
-typedef unsigned _Int64 fsfilcnt_t;
+typedef unsigned int fsfilcnt_t;
 #define __DEFINED_fsfilcnt_t
 #endif
-
 
 #if defined(__NEED_wint_t) && !defined(__DEFINED_wint_t)
 typedef unsigned wint_t;
@@ -244,31 +263,21 @@ typedef void * timer_t;
 #define __DEFINED_timer_t
 #endif
 
-#if defined(__NEED_clockid_t) && !defined(__DEFINED_clockid_t)
-typedef int clockid_t;
-#define __DEFINED_clockid_t
-#endif
-
 #if defined(__NEED_clock_t) && !defined(__DEFINED_clock_t)
 typedef long clock_t;
 #define __DEFINED_clock_t
 #endif
 
-#ifdef __wasilibc_unmodified_upstream /* Use alternate WASI libc headers */
+#if defined(__NEED_max_align_t) && !defined(__DEFINED_max_align_t)
+typedef struct { long long __ll; long double __ld; } max_align_t;
+#define __DEFINED_max_align_t
+#endif
+
 #if defined(__NEED_struct_timeval) && !defined(__DEFINED_struct_timeval)
 struct timeval { time_t tv_sec; suseconds_t tv_usec; };
 #define __DEFINED_struct_timeval
 #endif
 
-#if defined(__NEED_struct_timespec) && !defined(__DEFINED_struct_timespec)
-struct timespec { time_t tv_sec; int :8*(sizeof(time_t)-sizeof(long))*(__BYTE_ORDER==4321); long tv_nsec; int :8*(sizeof(time_t)-sizeof(long))*(__BYTE_ORDER!=4321); };
-#define __DEFINED_struct_timespec
-#endif
-
-#else
-#include <__struct_timeval.h>
-#include <__struct_timespec.h>
-#endif
 
 #if defined(__NEED_pid_t) && !defined(__DEFINED_pid_t)
 typedef int pid_t;
@@ -350,27 +359,9 @@ typedef struct { unsigned __attr[2]; } pthread_rwlockattr_t;
 #endif
 
 
-#ifdef __wasilibc_unmodified_upstream /* WASI doesn't need to define FILE as a complete type */
-#if defined(__NEED_struct__IO_FILE) && !defined(__DEFINED_struct__IO_FILE)
-struct _IO_FILE { char __x; };
-#define __DEFINED_struct__IO_FILE
-#endif
-
-#endif
 #if defined(__NEED_FILE) && !defined(__DEFINED_FILE)
 typedef struct _IO_FILE FILE;
 #define __DEFINED_FILE
-#endif
-
-
-#if defined(__NEED_va_list) && !defined(__DEFINED_va_list)
-typedef __builtin_va_list va_list;
-#define __DEFINED_va_list
-#endif
-
-#if defined(__NEED___isoc_va_list) && !defined(__DEFINED___isoc_va_list)
-typedef __builtin_va_list __isoc_va_list;
-#define __DEFINED___isoc_va_list
 #endif
 
 
@@ -392,15 +383,11 @@ typedef struct __sigset_t { unsigned long __bits[128/sizeof(long)]; } sigset_t;
 #endif
 
 
-#ifdef __wasilibc_unmodified_upstream /* Use alternate WASI libc headers */
 #if defined(__NEED_struct_iovec) && !defined(__DEFINED_struct_iovec)
 struct iovec { void *iov_base; size_t iov_len; };
 #define __DEFINED_struct_iovec
 #endif
 
-#else
-#include <__struct_iovec.h>
-#endif
 
 #if defined(__NEED_socklen_t) && !defined(__DEFINED_socklen_t)
 typedef unsigned socklen_t;
@@ -410,42 +397,6 @@ typedef unsigned socklen_t;
 #if defined(__NEED_sa_family_t) && !defined(__DEFINED_sa_family_t)
 typedef unsigned short sa_family_t;
 #define __DEFINED_sa_family_t
-#endif
-
-
-#if defined(__NEED_pthread_attr_t) && !defined(__DEFINED_pthread_attr_t)
-typedef struct { union { int __i[sizeof(long)==8?14:9]; volatile int __vi[sizeof(long)==8?14:9]; unsigned long __s[sizeof(long)==8?7:9]; } __u; } pthread_attr_t;
-#define __DEFINED_pthread_attr_t
-#endif
-
-#if defined(__NEED_pthread_mutex_t) && !defined(__DEFINED_pthread_mutex_t)
-typedef struct { union { int __i[sizeof(long)==8?10:6]; volatile int __vi[sizeof(long)==8?10:6]; volatile void *volatile __p[sizeof(long)==8?5:6]; } __u; } pthread_mutex_t;
-#define __DEFINED_pthread_mutex_t
-#endif
-
-#if defined(__NEED_mtx_t) && !defined(__DEFINED_mtx_t)
-typedef struct { union { int __i[sizeof(long)==8?10:6]; volatile int __vi[sizeof(long)==8?10:6]; volatile void *volatile __p[sizeof(long)==8?5:6]; } __u; } mtx_t;
-#define __DEFINED_mtx_t
-#endif
-
-#if defined(__NEED_pthread_cond_t) && !defined(__DEFINED_pthread_cond_t)
-typedef struct { union { int __i[12]; volatile int __vi[12]; void *__p[12*sizeof(int)/sizeof(void*)]; } __u; } pthread_cond_t;
-#define __DEFINED_pthread_cond_t
-#endif
-
-#if defined(__NEED_cnd_t) && !defined(__DEFINED_cnd_t)
-typedef struct { union { int __i[12]; volatile int __vi[12]; void *__p[12*sizeof(int)/sizeof(void*)]; } __u; } cnd_t;
-#define __DEFINED_cnd_t
-#endif
-
-#if defined(__NEED_pthread_rwlock_t) && !defined(__DEFINED_pthread_rwlock_t)
-typedef struct { union { int __i[sizeof(long)==8?14:8]; volatile int __vi[sizeof(long)==8?14:8]; void *__p[sizeof(long)==8?7:8]; } __u; } pthread_rwlock_t;
-#define __DEFINED_pthread_rwlock_t
-#endif
-
-#if defined(__NEED_pthread_barrier_t) && !defined(__DEFINED_pthread_barrier_t)
-typedef struct { union { int __i[sizeof(long)==8?8:5]; volatile int __vi[sizeof(long)==8?8:5]; void *__p[sizeof(long)==8?4:5]; } __u; } pthread_barrier_t;
-#define __DEFINED_pthread_barrier_t
 #endif
 
 

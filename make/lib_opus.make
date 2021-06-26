@@ -6,7 +6,7 @@ OPUSFILEDIR   := libs/opusfile-0.12
 BUILD_LIBOPUS := 1
 include make/platform.make
 
-TARGET	      := libopus_$(SHLIBNAME)
+TARGET        := libopus_$(SHLIBNAME)
 SOURCES       := $(OPUSDIR)/src $(OPUSDIR)/silk $(OPUSDIR)/celt \
                  $(OPUSDIR)/silk/float $(OPUSFILEDIR)/src
 INCLUDES      := $(OPUSDIR)/include \
@@ -14,7 +14,7 @@ INCLUDES      := $(OPUSDIR)/include \
                  $(OPUSDIR)/silk \
                  $(OPUSDIR)/silk/float \
                  $(OPUSFILEDIR)/include 
-LIBS 				  := $(OGG_LIBS)
+LIBS          := $(OGG_LIBS)
 
 OPUSOBJS     := src/analysis.o \
                 src/mlp.o \
@@ -164,7 +164,7 @@ LIBOBJECTS   := $(OPUSOBJS) $(CELTOBJS) $(SILKOBJS) $(SILKFLOATOBJS)
 Q3OBJ        := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(LIBOBJECTS))) \
                 $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OPUSFILEOBJS)))
 
-export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
+export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS      := $(INCLUDE) -fsigned-char -MMD -O3 \
                -ftree-vectorize -ffast-math -fno-short-enums \

@@ -40,4 +40,4 @@ int fseek(FILE *f, long off, int whence)
 
 weak_alias(__fseeko, fseeko);
 
-//weak_alias(fseeko, fseeko64);
+weak_alias(fseeko, fseeko64);

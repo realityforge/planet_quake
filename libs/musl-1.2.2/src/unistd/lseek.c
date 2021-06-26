@@ -12,4 +12,4 @@ off_t __lseek(int fd, off_t offset, int whence)
 }
 
 weak_alias(__lseek, lseek);
-//weak_alias(__lseek, lseek64);
+weak_alias(__lseek, lseek64);
