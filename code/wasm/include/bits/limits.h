@@ -4,5 +4,6 @@
 #define LONG_BIT 32
 #endif
 
-//#define LONG_MAX  0x7fffffffL
+#undef LONG_MAX
+#define LONG_MAX  0x7fffffffL
 #define LLONG_MAX  0x7fffffffffffffffLL

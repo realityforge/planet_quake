@@ -1,12 +1,11 @@
-#define __LITTLE_ENDIAN 1234
-#define __BIG_ENDIAN 4321
-
-#define __BYTE_ORDER __LITTLE_ENDIAN
-#define __LONG_MAX 0x7fffffffL
-
 #define _Addr __PTRDIFF_TYPE__
 #define _Int64 __INT64_TYPE__
 #define _Reg __PTRDIFF_TYPE__
+
+#define __PDP_ENDIAN 3412
+#define __LITTLE_ENDIAN 1234
+#define __BIG_ENDIAN 4321
+#define __BYTE_ORDER __LITTLE_ENDIAN
 
 #if __GNUC__ >= 3
 #if defined(__NEED_va_list) && !defined(__DEFINED_va_list)
@@ -17,6 +16,11 @@ typedef __builtin_va_list va_list;
 #if defined(__NEED___isoc_va_list) && !defined(__DEFINED___isoc_va_list)
 typedef __builtin_va_list __isoc_va_list;
 #define __DEFINED___isoc_va_list
+#endif
+
+#if defined(__NEED_struct_winsize) && !defined(__DEFINED_struct_winsize)
+typedef struct winsize { unsigned short ws_row, ws_col, ws_xpixel, ws_ypixel; } winsize;
+#define __DEFINED_struct_winsize
 #endif
 
 #else
@@ -75,6 +79,11 @@ typedef long double double_t;
 #define __DEFINED_double_t
 #endif
 
+#endif
+
+#if defined(__NEED_time_t) && !defined(__DEFINED_time_t)
+typedef long time_t;
+#define __DEFINED_time_t
 #endif
 
 #if defined(__NEED_suseconds_t) && !defined(__DEFINED_suseconds_t)
@@ -222,6 +231,11 @@ typedef unsigned mode_t;
 #define __DEFINED_mode_t
 #endif
 
+#if defined(__NEED_nlink_t) && !defined(__DEFINED_nlink_t)
+typedef unsigned _Reg nlink_t;
+#define __DEFINED_nlink_t
+#endif
+
 #if defined(__NEED_off_t) && !defined(__DEFINED_off_t)
 typedef _Int64 off_t;
 #define __DEFINED_off_t
@@ -232,9 +246,19 @@ typedef unsigned _Int64 ino_t;
 #define __DEFINED_ino_t
 #endif
 
+#if defined(__NEED_dev_t) && !defined(__DEFINED_dev_t)
+typedef unsigned int dev_t;
+#define __DEFINED_dev_t
+#endif
+
 #if defined(__NEED_blksize_t) && !defined(__DEFINED_blksize_t)
 typedef long blksize_t;
 #define __DEFINED_blksize_t
+#endif
+
+#if defined(__NEED_blkcnt_t) && !defined(__DEFINED_blkcnt_t)
+typedef int blkcnt_t;
+#define __DEFINED_blkcnt_t
 #endif
 
 #if defined(__NEED_fsblkcnt_t) && !defined(__DEFINED_fsblkcnt_t)
@@ -263,6 +287,11 @@ typedef void * timer_t;
 #define __DEFINED_timer_t
 #endif
 
+#if defined(__NEED_clockid_t) && !defined(__DEFINED_clockid_t)
+typedef int clockid_t;
+#define __DEFINED_clockid_t
+#endif
+
 #if defined(__NEED_clock_t) && !defined(__DEFINED_clock_t)
 typedef long clock_t;
 #define __DEFINED_clock_t
@@ -276,6 +305,11 @@ typedef struct { long long __ll; long double __ld; } max_align_t;
 #if defined(__NEED_struct_timeval) && !defined(__DEFINED_struct_timeval)
 struct timeval { time_t tv_sec; suseconds_t tv_usec; };
 #define __DEFINED_struct_timeval
+#endif
+
+#if defined(__NEED_struct_timespec) && !defined(__DEFINED_struct_timespec)
+struct timespec { time_t tv_sec; long tv_nsec; };
+#define __DEFINED_struct_timespec
 #endif
 
 

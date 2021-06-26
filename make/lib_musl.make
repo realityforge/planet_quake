@@ -1,15 +1,18 @@
-MKFILE           := $(lastword $(MAKEFILE_LIST))
-WORKDIR          := libmusl
-OPUSDIR          := libs/musl-1.2.2
+MUSL_WORKDIR     := libmusl
+MUSL_SOURCE      := libs/musl-1.2.2
 
 BUILD_LIBMUSL    := 1
+ifneq ($(BUILD_CLIENT),1)
+MKFILE           := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
+endif
 
-MUSL_TARGET      := libmusl_$(SHLIBNAME)
-SOURCES          := 
-INCLUDES         := 
-LIBS             := 
+MUSL_TARGET      := $(CNAME)_libmusl_$(SHLIBNAME)
+MUSL_SOURCES     := 
+MUSL_INCLUDES    := 
+MUSL_LIBS        := 
 
+ifeq ($(BUILD_CLIENT),1)
 WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/signal   musl/errno  musl/math   musl/unistd    \
                     musl/internal musl/time   musl/locale musl/network   \
@@ -17,7 +20,9 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/fcntl    musl/ctype  musl/exit   musl/env       \
                     musl/thread   musl/mman               musl/multibyte
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
-MUSL_OBJ         := string/stpcpy.o  string/memset.o  string/memcpy.o    \
+endif
+
+MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/memmove.o string/memcmp.o  string/memchr.o    \
                     string/memrchr.o string/strncpy.o string/strcmp.o    \
                     string/strcat.o  string/strchr.o  string/strncmp.o   \
@@ -115,43 +120,50 @@ MUSL_OBJ         := string/stpcpy.o  string/memset.o  string/memcpy.o    \
 
 
 MUSL_OBJ         += $(addprefix $(B)/musl/,$(MUSL_LOBJ))
-MUSL_CFLAGS      := -Wall -Ofast --target=wasm32 -fvisibility=hidden \
-                    -D_XOPEN_SOURCE=600 -D_ALL_SOURCE=700 \
+MUSL_CFLAGS      := -Ofast --target=wasm32 -fvisibility=hidden \
+                    -D_XOPEN_SOURCE=700 \
                     -D__WASM__ \
-                    -fno-common -std=c99 -ffreestanding -nostdinc -pedantic \
+										-fno-common -ffreestanding -nostdinc -pedantic \
+										--no-standard-libraries \
+										-std=c11 \
+										-Wall \
                     -Wno-unused-variable -Wvariadic-macros -Wno-extra-semi \
                     -Wno-shift-op-parentheses -Wno-c11-extensions \
                     -Wno-dollar-in-identifier-extension -Wno-unused-function \
                     -Wno-incompatible-pointer-types -Wno-logical-op-parentheses \
                     -Wno-bitwise-op-parentheses -Wno-int-conversion \
                     -Wno-tautological-constant-out-of-range-compare \
-                    -Wno-string-plus-int \
+                    -Wno-string-plus-int -Wno-unsupported-visibility \
+										-Wno-shift-op-parentheses -Wno-strict-prototypes  \
+                    -Wno-bitwise-op-parentheses -Wno-gnu-include-next \
+                    -Wno-unknown-attributes -Wno-ignored-attributes \
+										-Icode/wasm/include \
                     -Ilibs/musl-1.2.2/arch/generic \
-                    -Ilibs/musl-1.2.2/arch/wasm \
                     -Ilibs/musl-1.2.2/src/include \
-                    -Ilibs/musl-1.2.2/src/internal \
+                    -Ilibs/musl-1.2.2/src/internal
 
-DEBUG_CFLAGS     := $(BASE_CFLAGS) \
+#DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
 
-RELEASE_CFLAGS   := $(BASE_CFLAGS) \
+#RELEASE_CFLAGS   := $(BASE_CFLAGS) \
                     -std=c11 -DNDEBUG -O3 -Oz -flto -fPIC
-
-export INCLUDE   := -Ilibs/musl-1.2.2/arch/generic \
-                    -Ilibs/musl-1.2.2/arch/wasm \
+MUSL_INCLUDE     := -Icode/wasm/include \
+										-Ilibs/musl-1.2.2/arch/generic \
                     -Ilibs/musl-1.2.2/src/include \
-                    -Ilibs/musl-1.2.2/src/internal \
+                    -Ilibs/musl-1.2.2/src/internal
+
+export MUSL_INCLUDE
 
 define DO_MUSL_CC
 	$(echo_cmd) "MUSL_CC $<"
-	$(Q)$(CC) -o $@ $(MUSL_CFLAGS) -c $<
+	$(Q)$(CC) -o $@ $(MUSL_INCLUDE) $(CFLAGS) $(MUSL_CFLAGS) -c $<
 endef
 
 ifdef B
-$(B)/musl/%.o: libs/musl-1.2.2/src/%.c
+$(B)/musl/%.o: $(MUSL_SOURCE)/src/%.c
 	$(DO_MUSL_CC)
 
-$(B)/$(REND_TARGET): $(REND_Q3OBJ)
+$(B)/$(MUSL_TARGET): $(MUSL_Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(REND_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
+	$(Q)$(CC) -o $@ $(MUSL_Q3OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 endif

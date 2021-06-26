@@ -92,20 +92,13 @@ endif
 D_FILES :=
 
 ifdef WORKDIRS
-ifndef MAKEDIR
-mkdirs:
-	@for i in $(WORKDIRS); \
-	do \
-	$(MAKE) -f $(MKFILE) MAKEDIR="$$i" mkdirs; \
-	done
-endif
-endif
-
-ifdef MAKEDIR
 mkdirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
-	@if [ ! -d $(B)/$(MAKEDIR) ];then $(MKDIR) $(B)/$(MAKEDIR);fi
+	@for dir in $(WORKDIRS); \
+	do \
+	if [ ! -d "./$(B)/$$dir" ];then $(MKDIR) "./$(B)/$$dir";fi; \
+	done
 endif
 
 ifdef WORKDIR

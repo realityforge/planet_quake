@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include <syscall_arch.h>
 
-#define a_clz_l __builtin_clz
-#define a_ctz_l __builtin_ctz
-#define a_clz_64 __builtin_clzll
-#define a_ctz_64 __builtin_ctzll
+//#define a_clz_l __builtin_clz
+//#define a_ctz_l __builtin_ctz
+//#define a_clz_64 __builtin_clzll
+//#define a_ctz_64 __builtin_ctzll
 
 #define a_and_64 a_and_64
 static inline void a_and_64(volatile uint64_t *p, uint64_t v)

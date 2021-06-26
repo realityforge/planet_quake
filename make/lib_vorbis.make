@@ -58,16 +58,16 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) MAKEDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BD) MAKEDIR=$(WORKDIR2) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR2) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBOGG=1 $(BD)/$(TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BD) BUILD_LIBVORBIS=1 $(BD)/$(TARGET2)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) MAKEDIR=$(WORKDIR) mkdirs
-	@$(MAKE) -f $(MKFILE) B=$(BR) MAKEDIR=$(WORKDIR2) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR2) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBOGG=1 $(BR)/$(TARGET)
 	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBVORBIS=1 $(BR)/$(TARGET2)

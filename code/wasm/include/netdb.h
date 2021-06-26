@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#define IFF_UP	0x1
+
 /* The musl includes only define these things for old sources or
    when certain flags are activated. We want these available
    all of the time for now. */

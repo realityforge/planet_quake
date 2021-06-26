@@ -3,6 +3,10 @@ BUILD_STANDALONE       = 1
 BUILD_FREETYPE         = 0
 BUILD_GAME_STATIC      = 0
 
+USE_SYSTEM_LIBC       ?= 1
+USE_SYSTEM_RMLUI       = 0
+USE_SYSTEM_JPEG       ?= 1
+
 USE_RENDERER_DLOPEN    = 0
 USE_CURL_DLOPEN        = 0
 
@@ -19,7 +23,5 @@ USE_FREETYPE           = 0
 USE_VULKAN             = 0
 USE_OPENGL2            = 1
 USE_CURL              ?= 1
-USE_SYSTEM_RMLUI       = 0
-USE_SYSTEM_JPEG       ?= 1
 USE_CVAR_UNCHEAT       = 0
 USE_DRAGDROP           = 0

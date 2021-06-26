@@ -49,6 +49,7 @@ GL_EXT_direct_state_access ?=1
 GL_ARB_ES2_compatibility ?=1
 GL_GLEXT_PROTOTYPES ?= 1
 
+USE_SYSTEM_LIBC     ?= 1
 USE_SYSTEM_CURL     ?= 0
 USE_SYSTEM_JPEG     ?= 0
 USE_SYSTEM_BOTLIB   ?= 0

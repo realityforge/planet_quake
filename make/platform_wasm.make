@@ -1,44 +1,46 @@
 HAVE_VM_COMPILED := true
 BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
-# always build client because we haven't figured out dylinks yet
+USE_SYSTEM_JPEG  := 0
+USE_SYSTEM_LIBC  := 0
+
+# always build client because we haven't figured out wasm dylinks yet
 BUILD_CLIENT     := 1
 USE_CURL         := 0
-USE_SYSTEM_JPEG  := 0
 export LDFLAGS="-L/usr/local/opt/llvm/lib"
 export CPPFLAGS="-I/usr/local/opt/llvm/include"
 
 include make/configure.make
 
+LD               := libs/$(COMPILE_PLATFORM)/wasi-sdk-12.0/bin/wasm-ld
 CC               := libs/$(COMPILE_PLATFORM)/wasi-sdk-12.0/bin/clang
 CXX              := libs/$(COMPILE_PLATFORM)/wasi-sdk-12.0/bin/clang++
 BINEXT           := .wasm
 
 SHLIBEXT         := wasm
 SHLIBCFLAGS      := 
-#LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
-LDFLAGS          := --target=wasm32 -Wl,--import-memory
+#LDFLAGS="-L/usr/local/opt/llvm/lib -rpath,/usr/local/opt/llvm/lib"
+LDFLAGS          := --import-memory -error-limit=0
 
 # --entry=_main
-CLIENT_LDFLAGS   := --warn-unresolved-symbols -Wl,--export-dynamic -Wl,--no-entry
-SHLIBLDFLAGS     := --unresolved-symbols=ignore-all -Wl,--export-dynamic -Wl,--no-entry -Wl,--strip-all
+CLIENT_LDFLAGS   := --export-dynamic --no-entry
+SHLIBLDFLAGS     := --unresolved-symbols=ignore-all --export-dynamic --no-entry --strip-all
 # -emit-llvm -c -S
 BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
-                    -Wno-unused-variable \
-                    -Wimplicit -Wstrict-prototypes -fno-strict-aliasing \
-                    -Wno-shift-op-parentheses \
-                    -Wno-bitwise-op-parentheses \
-                    -Wno-unknown-attributes \
+                    -Wimplicit -fstrict-aliasing \
+										-Wno-bitwise-op-parentheses \
+										-Wno-shift-op-parentheses \
+										-Wno-unused-variable \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \
-                    -D__WASM__ -D__wasi__ \
                     -fvisibility=hidden \
-                    -D_XOPEN_SOURCE=600 \
-                    -D_ALL_SOURCE=700 \
+										-D_XOPEN_SOURCE=700 \
+                    -D__WASM__ \
                     --no-standard-libraries \
                     -Icode/wasm/include \
                     -Ilibs/musl-1.2.2/include \
+										-Ilibs/musl-1.2.2/arch/generic \
 
 DEBUG_CFLAGS     := $(BASE_CFLAGS) \
                     -std=c11 -DDEBUG -D_DEBUG -frtti -fPIC -O0 -g
@@ -48,6 +50,7 @@ RELEASE_CFLAGS   := $(BASE_CFLAGS) \
 
 export INCLUDE   := -Icode/wasm/include \
                     -Ilibs/musl-1.2.2/include \
+										-Ilibs/musl-1.2.2/arch/generic
 
 
 #CLIENT_SYSTEM    := sys_common.js \

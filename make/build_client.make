@@ -18,7 +18,9 @@ SOURCES          := $(MOUNT_DIR)/client
 ifeq ($(BUILD_GAME_STATIC),1)
 include make/game_baseq3a.make
 endif
-
+ifeq ($(USE_SYSTEM_LIBC),0)
+include make/lib_musl.make
+endif
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
 include make/build_renderer.make
@@ -41,8 +43,8 @@ endif
 CLIPMAP          := cm_load.o cm_patch.o cm_polylib.o cm_test.o cm_trace.o
 
 QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o md5.o \
-				            msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
-				            huffman_static.o q_math.o q_shared.o unzip.o puff.o
+                    msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
+                    huffman_static.o q_math.o q_shared.o unzip.o puff.o
 
 # couple extra server files needed for cvars and botlib for reading files
 ifeq ($(BUILD_SLIM_CLIENT),1)
@@ -50,8 +52,8 @@ QCOMMON          += sv_init.o sv_main.o sv_bot.o sv_game.o
 endif
 
 SOUND            := snd_adpcm.o snd_dma.o snd_mem.o snd_mix.o snd_wavelet.o \
-						        snd_main.o snd_codec.o snd_codec_wav.o snd_codec_ogg.o \
-						        snd_codec_opus.o
+                    snd_main.o snd_codec.o snd_codec_wav.o snd_codec_ogg.o \
+                    snd_codec_opus.o
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
@@ -129,10 +131,10 @@ VIDEO            :=
 #VIDEO    += webmdec.o
 #LIBS     += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
 #INCLUDES += libs/libvpx-1.10 \
-					  libs/libvorbis-1.3.7/include \
-					  libs/opus-1.3.1/include \
-					  libs/libogg-1.3.4/include \
-					  libs/libvpx-1.10/third_party/libwebm
+            libs/libvorbis-1.3.7/include \
+            libs/opus-1.3.1/include \
+            libs/libogg-1.3.4/include \
+            libs/libvpx-1.10/third_party/libwebm
 #endif
 
 ifeq ($(USE_RMLUI),1)
@@ -141,27 +143,28 @@ endif
 
 CFILES           := $(foreach dir,$(SOURCES), $(wildcard $(dir)/cl_*.c)) \
                     $(CLIPMAP) $(QCOMMON) $(SOUND) $(VIDEO) $(VM) \
-										$(CURL) $(SYSTEM)
+                    $(CURL) $(SYSTEM)
             
 ifneq ($(BUILD_SLIM_CLIENT),1)
 ifneq ($(USE_BOTLIB_DLOPEN),1)
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
-						        $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+                    $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 #CFILES   += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
 else
 CFILES           += $(MOUNT_DIR)/botlib/be_interface.c \
-						        $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
+                    $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
 OBJS             := $(CFILES:.c=.o) 
-LIBOBJ           ?= 
 Q3OBJ            := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
 
 ifeq ($(BUILD_GAME_STATIC),1)
 Q3OBJ            += $(GAME_OBJ)
 endif
-
+ifeq ($(USE_SYSTEM_LIBC),0)
+Q3OBJ            += $(MUSL_OBJ)
+endif
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
 
@@ -177,7 +180,7 @@ endif
 export INCLUDE   := $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS           := $(INCLUDE) -fsigned-char -ftree-vectorize -ffast-math \
-									  -fno-short-enums -MMD
+                    -fno-short-enums -MMD
 ifeq ($(BUILD_GAME_STATIC),1)
 CFLAGS           += $(GAME_INCLUDE)
 endif
@@ -187,8 +190,8 @@ endif
 # TODO build quake 3 as a library that can be use for rendering embedded in other apps?
 
 define DO_CLIENT_CC
-  $(echo_cmd) "CLIENT_CC $<"
-  $(Q)$(CC) -o $@ $(CFLAGS) -c $<
+	$(echo_cmd) "CLIENT_CC $<"
+	$(Q)$(CC) -o $@ $(CFLAGS) -c $<
 endef
 
 define DO_BOT_CC
@@ -197,8 +200,8 @@ define DO_BOT_CC
 endef
 
 define DO_SERVER_CC
-  $(echo_cmd) "SERVER_CC $<"
-  $(Q)$(CC) $(CFLAGS) -o $@ -c $<
+	$(echo_cmd) "SERVER_CC $<"
+	$(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
 #define DO_VPX_GXX
@@ -275,20 +278,20 @@ $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/botlib/%.c
 	$(DO_BOT_CC)
 
 ifeq ($(PLATFORM),js)
-$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
+$(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
+	$(Q)$(LD) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS)
 	
-#$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
-#	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) $(LIBOBJ)
+#$(B)/$(TARGET_CLIENT): $(Q3OBJ) 
+#	$(Q)llvm-link -o $(B)/$(CNAME)$(ARCHEXT).bc $(Q3OBJ) 
 #	$(Q)opt -Os $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).bc
 #	$(Q)llc -O3 -march=wasm32 -filetype=obj $(B)/$(CNAME)$(ARCHEXT).bc -o $(B)/$(CNAME)$(ARCHEXT).o
 #	$(Q)$(LD) -o $@ $(B)/$(CNAME)$(ARCHEXT).o $(CLIENT_LDFLAGS) $(LDFLAGS)
 #	$(Q)wasm-opt -Os --no-validation -o $@ $@
 
 else
-$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(LIBOBJ)
+$(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(LIBOBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) $(LDFLAGS) 
 endif
 endif

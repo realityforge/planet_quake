@@ -203,6 +203,7 @@ typedef struct _IO_cookie_io_functions_t {
 FILE *fopencookie(void *, const char *, cookie_io_functions_t);
 #endif
 
+#ifndef __WASM__
 #if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
 #define tmpfile64 tmpfile
 #define fopen64 fopen
@@ -213,6 +214,7 @@ FILE *fopencookie(void *, const char *, cookie_io_functions_t);
 #define fsetpos64 fsetpos
 #define fpos64_t fpos_t
 #define off64_t off_t
+#endif
 #endif
 
 #ifdef __cplusplus

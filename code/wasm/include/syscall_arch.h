@@ -286,26 +286,27 @@ static inline long __syscall6(long n, long a1, long a2, long a3, long a4, long a
   return 0;
 }
 
+/*
 long SYS_IMPORT(exit) __sys_exit(long exit_code) {
-  return __syscall(SYS_exit, long exit_code);
+  return __syscall(SYS_exit, exit_code);
 }
-long SYS_IMPORT(open) __sys_open(long path, long flags, ...) {
-  return __syscall(SYS_open, long path, long flags, ...);
+long SYS_IMPORT(open) __sys_open(long path, flags, ...) {
+  return __syscall(SYS_open, path, flags, ...);
 } // mode is optional
-long SYS_IMPORT(link) __sys_link(long oldpath, long newpath) {
-  return __syscall(SYS_link, long oldpath, long newpath);
+long SYS_IMPORT(link) __sys_link(long oldpath, newpath) {
+  return __syscall(SYS_link, oldpath, newpath);
 }
 long SYS_IMPORT(unlink) __sys_unlink(long path) {
-  return __syscall(SYS_unlink, long path);
+  return __syscall(SYS_unlink, path);
 }
 long SYS_IMPORT(chdir) __sys_chdir(long path) {
-  return __syscall(SYS_chdir, long path);
+  return __syscall(SYS_chdir, path);
 }
-long SYS_IMPORT(mknod) __sys_mknod(long path, long mode, long dev) {
-  return __syscall(SYS_mknod, long path, long mode, long dev);
+long SYS_IMPORT(mknod) __sys_mknod(long path, mode, dev) {
+  return __syscall(SYS_mknod, path, mode, dev);
 }
-long SYS_IMPORT(chmod) __sys_chmod(long path, long mode) {
-  return __syscall(SYS_chmod, long path, long mode);
+long SYS_IMPORT(chmod) __sys_chmod(long path, mode) {
+  return __syscall(SYS_chmod, path, mode);
 }
 long SYS_IMPORT(getpid) __sys_getpid(void) {
   return __syscall(SYS_getpid, void);
@@ -313,44 +314,44 @@ long SYS_IMPORT(getpid) __sys_getpid(void) {
 long SYS_IMPORT(pause) __sys_pause(void) {
   return __syscall(SYS_pause, void);
 }
-long SYS_IMPORT(access) __sys_access(long path, long amode) {
-  return __syscall(SYS_access, long path, long amode);
+long SYS_IMPORT(access) __sys_access(long path, amode) {
+  return __syscall(SYS_access, path, amode);
 }
 long SYS_IMPORT(nice) __sys_nice(long inc) {
-  return __syscall(SYS_nice, long inc);
+  return __syscall(SYS_nice, inc);
 }
 long SYS_IMPORT(sync) __sys_sync(void) {
   return __syscall(SYS_sync, void);
 }
-long SYS_IMPORT(rename) __sys_rename(long old_path, long new_path) {
-  return __syscall(SYS_rename, long old_path, long new_path);
+long SYS_IMPORT(rename) __sys_rename(long old_path, new_path) {
+  return __syscall(SYS_rename, old_path, new_path);
 }
-long SYS_IMPORT(mkdir) __sys_mkdir(long path, long mode) {
-  return __syscall(SYS_mkdir, long path, long mode);
+long SYS_IMPORT(mkdir) __sys_mkdir(long path, mode) {
+  return __syscall(SYS_mkdir, path, mode);
 }
 long SYS_IMPORT(rmdir) __sys_rmdir(long path) {
-  return __syscall(SYS_rmdir, long path);
+  return __syscall(SYS_rmdir, path);
 }
 long SYS_IMPORT(dup) __sys_dup(long fd) {
-  return __syscall(SYS_dup, long fd);
+  return __syscall(SYS_dup, fd);
 }
 long SYS_IMPORT(pipe) __sys_pipe(long fd) {
-  return __syscall(SYS_pipe, long fd);
+  return __syscall(SYS_pipe, fd);
 }
 long SYS_IMPORT(acct) __sys_acct(long filename) {
-  return __syscall(SYS_acct, long filename);
+  return __syscall(SYS_acct, filename);
 }
-long SYS_IMPORT(ioctl) __sys_ioctl(long fd, long request, ...) {
-  return __syscall(SYS_ioctl, long fd, long request, ...);
+long SYS_IMPORT(ioctl) __sys_ioctl(long fd, request, ...) {
+  return __syscall(SYS_ioctl, fd, request, ...);
 }
-long SYS_IMPORT(setpgid) __sys_setpgid(long pid, long gpid) {
-  return __syscall(SYS_setpgid, long pid, long gpid);
+long SYS_IMPORT(setpgid) __sys_setpgid(long pid, gpid) {
+  return __syscall(SYS_setpgid, pid, gpid);
 }
 long SYS_IMPORT(umask) __sys_umask(long mask) {
-  return __syscall(SYS_umask, long mask);
+  return __syscall(SYS_umask, mask);
 }
-long SYS_IMPORT(dup2) __sys_dup2(long oldfd, long newfd) {
-  return __syscall(SYS_dup2, long oldfd, long newfd);
+long SYS_IMPORT(dup2) __sys_dup2(long oldfd, newfd) {
+  return __syscall(SYS_dup2, oldfd, newfd);
 }
 long SYS_IMPORT(getppid) __sys_getppid(void) {
   return __syscall(SYS_getppid, void);
@@ -361,113 +362,113 @@ long SYS_IMPORT(getpgrp) __sys_getpgrp(void) {
 long SYS_IMPORT(setsid) __sys_setsid(void) {
   return __syscall(SYS_setsid, void);
 }
-long SYS_IMPORT(setrlimit) __sys_setrlimit(long resource, long limit) {
-  return __syscall(SYS_setrlimit, long resource, long limit);
+long SYS_IMPORT(setrlimit) __sys_setrlimit(long resource, limit) {
+  return __syscall(SYS_setrlimit, resource, limit);
 }
-long SYS_IMPORT(getrusage) __sys_getrusage(long who, long usage) {
-  return __syscall(SYS_getrusage, long who, long usage);
+long SYS_IMPORT(getrusage) __sys_getrusage(long who, usage) {
+  return __syscall(SYS_getrusage, who, usage);
 }
-long SYS_IMPORT(symlink) __sys_symlink(long target, long linkpath) {
-  return __syscall(SYS_symlink, long target, long linkpath);
+long SYS_IMPORT(symlink) __sys_symlink(long target, linkpath) {
+  return __syscall(SYS_symlink, target, linkpath);
 }
-long SYS_IMPORT(readlink) __sys_readlink(long path, long buf, long bufsize) {
-  return __syscall(SYS_readlink, long path, long buf, long bufsize);
+long SYS_IMPORT(readlink) __sys_readlink(long path, buf, bufsize) {
+  return __syscall(SYS_readlink, path, buf, bufsize);
 }
-long SYS_IMPORT(munmap) __sys_munmap(long addr, long len) {
-  return __syscall(SYS_munmap, long addr, long len);
+long SYS_IMPORT(munmap) __sys_munmap(long addr, len) {
+  return __syscall(SYS_munmap, addr, len);
 }
-long SYS_IMPORT(fchmod) __sys_fchmod(long fd, long mode) {
-  return __syscall(SYS_fchmod, long fd, long mode);
+long SYS_IMPORT(fchmod) __sys_fchmod(long fd, mode) {
+  return __syscall(SYS_fchmod, fd, mode);
 }
-long SYS_IMPORT(getpriority) __sys_getpriority(long which, long who) {
-  return __syscall(SYS_getpriority, long which, long who);
+long SYS_IMPORT(getpriority) __sys_getpriority(long which, who) {
+  return __syscall(SYS_getpriority, which, who);
 }
-long SYS_IMPORT(setpriority) __sys_setpriority(long which, long who, long prio) {
-  return __syscall(SYS_setpriority, long which, long who, long prio);
+long SYS_IMPORT(setpriority) __sys_setpriority(long which, who, prio) {
+  return __syscall(SYS_setpriority, which, who, prio);
 }
-long SYS_IMPORT(socketcall) __sys_socketcall(long call, long args) {
-  return __syscall(SYS_socketcall, long call, long args);
+long SYS_IMPORT(socketcall) __sys_socketcall(long call, args) {
+  return __syscall(SYS_socketcall, call, args);
 }
-long SYS_IMPORT(setitimer) __sys_setitimer(long which, long new_value, long old_value) {
-  return __syscall(SYS_setitimer, long which, long new_value, long old_value);
+long SYS_IMPORT(setitimer) __sys_setitimer(long which, new_value, old_value) {
+  return __syscall(SYS_setitimer, which, new_value, old_value);
 }
-long SYS_IMPORT(wait4) __sys_wait4(long pid, long wstatus, long options, long rusage) {
-  return __syscall(SYS_wait4, long pid, long wstatus, long options, long rusage);
+long SYS_IMPORT(wait4) __sys_wait4(long pid, wstatus, options, rusage) {
+  return __syscall(SYS_wait4, pid, wstatus, options, rusage);
 }
-long SYS_IMPORT(setdomainname) __sys_setdomainname(long name, long size) {
-  return __syscall(SYS_setdomainname, long name, long size);
+long SYS_IMPORT(setdomainname) __sys_setdomainname(long name, size) {
+  return __syscall(SYS_setdomainname, name, size);
 }
 long SYS_IMPORT(uname) __sys_uname(long buf) {
-  return __syscall(SYS_uname, long buf);
+  return __syscall(SYS_uname, buf);
 }
-long SYS_IMPORT(mprotect) __sys_mprotect(long addr, long len, long size) {
-  return __syscall(SYS_mprotect, long addr, long len, long size);
+long SYS_IMPORT(mprotect) __sys_mprotect(long addr, len, size) {
+  return __syscall(SYS_mprotect, addr, len, size);
 }
 long SYS_IMPORT(getpgid) __sys_getpgid(long pid) {
-  return __syscall(SYS_getpgid, long pid);
+  return __syscall(SYS_getpgid, pid);
 }
 long SYS_IMPORT(fchdir) __sys_fchdir(long fd) {
-  return __syscall(SYS_fchdir, long fd);
+  return __syscall(SYS_fchdir, fd);
 }
-long SYS_IMPORT(_newselect) __sys__newselect(long nfds, long readfds, long writefds, long exceptfds, long timeout) {
-  return __syscall(SYS__newselect, long nfds, long readfds, long writefds, long exceptfds, long timeout);
+long SYS_IMPORT(_newselect) __sys__newselect(long nfds, readfds, writefds, exceptfds, timeout) {
+  return __syscall(SYS__newselect, nfds, readfds, writefds, exceptfds, timeout);
 }
-long SYS_IMPORT(msync) __sys_msync(long addr, long len, long flags) {
-  return __syscall(SYS_msync, long addr, long len, long flags);
+long SYS_IMPORT(msync) __sys_msync(long addr, len, flags) {
+  return __syscall(SYS_msync, addr, len, flags);
 }
 long SYS_IMPORT(getsid) __sys_getsid(long pid) {
-  return __syscall(SYS_getsid, long pid);
+  return __syscall(SYS_getsid, pid);
 }
 long SYS_IMPORT(fdatasync) __sys_fdatasync(long fd) {
-  return __syscall(SYS_fdatasync, long fd);
+  return __syscall(SYS_fdatasync, fd);
 }
-long SYS_IMPORT(mlock) __sys_mlock(long addr, long len) {
-  return __syscall(SYS_mlock, long addr, long len);
+long SYS_IMPORT(mlock) __sys_mlock(long addr, len) {
+  return __syscall(SYS_mlock, addr, len);
 }
-long SYS_IMPORT(munlock) __sys_munlock(long addr, long len) {
-  return __syscall(SYS_munlock, long addr, long len);
+long SYS_IMPORT(munlock) __sys_munlock(long addr, len) {
+  return __syscall(SYS_munlock, addr, len);
 }
 long SYS_IMPORT(mlockall) __sys_mlockall(long flags) {
-  return __syscall(SYS_mlockall, long flags);
+  return __syscall(SYS_mlockall, flags);
 }
 long SYS_IMPORT(munlockall) __sys_munlockall(void) {
   return __syscall(SYS_munlockall, void);
 }
-long SYS_IMPORT(mremap) __sys_mremap(long old_addr, long old_size, long new_size, long flags, long new_addr) {
-  return __syscall(SYS_mremap, long old_addr, long old_size, long new_size, long flags, long new_addr);
+long SYS_IMPORT(mremap) __sys_mremap(long old_addr, old_size, new_size, flags, new_addr) {
+  return __syscall(SYS_mremap, old_addr, old_size, new_size, flags, new_addr);
 }
-long SYS_IMPORT(poll) __sys_poll(long fds, long nfds, long timeout) {
-  return __syscall(SYS_poll, long fds, long nfds, long timeout);
+long SYS_IMPORT(poll) __sys_poll(long fds, nfds, timeout) {
+  return __syscall(SYS_poll, fds, nfds, timeout);
 }
-long SYS_IMPORT(rt_sigqueueinfo) __sys_rt_sigqueueinfo(long tgid, long sig, long uinfo) {
-  return __syscall(SYS_rt_sigqueueinfo, long tgid, long sig, long uinfo);
+long SYS_IMPORT(rt_sigqueueinfo) __sys_rt_sigqueueinfo(long tgid, sig, uinfo) {
+  return __syscall(SYS_rt_sigqueueinfo, tgid, sig, uinfo);
 }
-long SYS_IMPORT(getcwd) __sys_getcwd(long buf, long size) {
-  return __syscall(SYS_getcwd, long buf, long size);
+long SYS_IMPORT(getcwd) __sys_getcwd(long buf, size) {
+  return __syscall(SYS_getcwd, buf, size);
 }
-long SYS_IMPORT(ugetrlimit) __sys_ugetrlimit(long resource, long rlim) {
-  return __syscall(SYS_ugetrlimit, long resource, long rlim);
+long SYS_IMPORT(ugetrlimit) __sys_ugetrlimit(long resource, rlim) {
+  return __syscall(SYS_ugetrlimit, resource, rlim);
 }
-long SYS_IMPORT(mmap2) __sys_mmap2(long addr, long len, long prot, long flags, long fd, long off) {
-  return __syscall(SYS_mmap2, long addr, long len, long prot, long flags, long fd, long off);
+long SYS_IMPORT(mmap2) __sys_mmap2(long addr, len, prot, flags, fd, off) {
+  return __syscall(SYS_mmap2, addr, len, prot, flags, fd, off);
 }
-long SYS_IMPORT(truncate64) __sys_truncate64(long path, long zero, long low, long high) {
-  return __syscall(SYS_truncate64, long path, long zero, long low, long high);
+long SYS_IMPORT(truncate64) __sys_truncate64(long path, zero, low, high) {
+  return __syscall(SYS_truncate64, path, zero, low, high);
 }
-long SYS_IMPORT(ftruncate64) __sys_ftruncate64(long fd, long zero, long low, long high) {
-  return __syscall(SYS_ftruncate64, long fd, long zero, long low, long high);
+long SYS_IMPORT(ftruncate64) __sys_ftruncate64(long fd, zero, low, high) {
+  return __syscall(SYS_ftruncate64, fd, zero, low, high);
 }
-long SYS_IMPORT(stat64) __sys_stat64(long path, long buf) {
-  return __syscall(SYS_stat64, long path, long buf);
+long SYS_IMPORT(stat64) __sys_stat64(long path, buf) {
+  return __syscall(SYS_stat64, path, buf);
 }
-long SYS_IMPORT(lstat64) __sys_lstat64(long path, long buf) {
-  return __syscall(SYS_lstat64, long path, long buf);
+long SYS_IMPORT(lstat64) __sys_lstat64(long path, buf) {
+  return __syscall(SYS_lstat64, path, buf);
 }
-long SYS_IMPORT(fstat64) __sys_fstat64(long fd, long buf) {
-  return __syscall(SYS_fstat64, long fd, long buf);
+long SYS_IMPORT(fstat64) __sys_fstat64(long fd, buf) {
+  return __syscall(SYS_fstat64, fd, buf);
 }
-long SYS_IMPORT(lchown32) __sys_lchown32(long path, long owner, long group) {
-  return __syscall(SYS_lchown32, long path, long owner, long group);
+long SYS_IMPORT(lchown32) __sys_lchown32(long path, owner, group) {
+  return __syscall(SYS_lchown32, path, owner, group);
 }
 long SYS_IMPORT(getuid32) __sys_getuid32(void) {
   return __syscall(SYS_getuid32, void);
@@ -481,168 +482,169 @@ long SYS_IMPORT(geteuid32) __sys_geteuid32(void) {
 long SYS_IMPORT(getegid32) __sys_getegid32(void) {
   return __syscall(SYS_getegid32, void);
 }
-long SYS_IMPORT(setreuid32) __sys_setreuid32(long ruid, long euid) {
-  return __syscall(SYS_setreuid32, long ruid, long euid);
+long SYS_IMPORT(setreuid32) __sys_setreuid32(long ruid, euid) {
+  return __syscall(SYS_setreuid32, ruid, euid);
 }
-long SYS_IMPORT(setregid32) __sys_setregid32(long rgid, long egid) {
-  return __syscall(SYS_setregid32, long rgid, long egid);
+long SYS_IMPORT(setregid32) __sys_setregid32(long rgid, egid) {
+  return __syscall(SYS_setregid32, rgid, egid);
 }
-long SYS_IMPORT(getgroups32) __sys_getgroups32(long size, long list) {
-  return __syscall(SYS_getgroups32, long size, long list);
+long SYS_IMPORT(getgroups32) __sys_getgroups32(long size, list) {
+  return __syscall(SYS_getgroups32, size, list);
 }
-long SYS_IMPORT(fchown32) __sys_fchown32(long fd, long owner, long group) {
-  return __syscall(SYS_fchown32, long fd, long owner, long group);
+long SYS_IMPORT(fchown32) __sys_fchown32(long fd, owner, group) {
+  return __syscall(SYS_fchown32, fd, owner, group);
 }
-long SYS_IMPORT(setresuid32) __sys_setresuid32(long ruid, long euid, long suid) {
-  return __syscall(SYS_setresuid32, long ruid, long euid, long suid);
+long SYS_IMPORT(setresuid32) __sys_setresuid32(long ruid, euid, suid) {
+  return __syscall(SYS_setresuid32, ruid, euid, suid);
 }
-long SYS_IMPORT(getresuid32) __sys_getresuid32(long ruid, long euid, long suid) {
-  return __syscall(SYS_getresuid32, long ruid, long euid, long suid);
+long SYS_IMPORT(getresuid32) __sys_getresuid32(long ruid, euid, suid) {
+  return __syscall(SYS_getresuid32, ruid, euid, suid);
 }
-long SYS_IMPORT(setresgid32) __sys_setresgid32(long rgid, long egid, long sgid) {
-  return __syscall(SYS_setresgid32, long rgid, long egid, long sgid);
+long SYS_IMPORT(setresgid32) __sys_setresgid32(long rgid, egid, sgid) {
+  return __syscall(SYS_setresgid32, rgid, egid, sgid);
 }
-long SYS_IMPORT(getresgid32) __sys_getresgid32(long rgid, long egid, long sgid) {
-  return __syscall(SYS_getresgid32, long rgid, long egid, long sgid);
+long SYS_IMPORT(getresgid32) __sys_getresgid32(long rgid, egid, sgid) {
+  return __syscall(SYS_getresgid32, rgid, egid, sgid);
 }
-long SYS_IMPORT(chown32) __sys_chown32(long path, long owner, long group) {
-  return __syscall(SYS_chown32, long path, long owner, long group);
+long SYS_IMPORT(chown32) __sys_chown32(long path, owner, group) {
+  return __syscall(SYS_chown32, path, owner, group);
 }
 long SYS_IMPORT(setuid32) __sys_setuid32(long uid) {
-  return __syscall(SYS_setuid32, long uid);
+  return __syscall(SYS_setuid32, uid);
 }
 long SYS_IMPORT(setgid32) __sys_setgid32(long uid) {
-  return __syscall(SYS_setgid32, long uid);
+  return __syscall(SYS_setgid32, uid);
 }
-long SYS_IMPORT(mincore) __sys_mincore(long addr, long length, long vec) {
-  return __syscall(SYS_mincore, long addr, long length, long vec);
+long SYS_IMPORT(mincore) __sys_mincore(long addr, length, vec) {
+  return __syscall(SYS_mincore, addr, length, vec);
 }
-long SYS_IMPORT(madvise1) __sys_madvise1(long addr, long length, long advice) {
-  return __syscall(SYS_madvise1, long addr, long length, long advice);
+long SYS_IMPORT(madvise1) __sys_madvise1(long addr, length, advice) {
+  return __syscall(SYS_madvise1, addr, length, advice);
 }
-long SYS_IMPORT(getdents64) __sys_getdents64(long fd, long dirp, long count) {
-  return __syscall(SYS_getdents64, long fd, long dirp, long count);
+long SYS_IMPORT(getdents64) __sys_getdents64(long fd, dirp, count) {
+  return __syscall(SYS_getdents64, fd, dirp, count);
 }
-long SYS_IMPORT(fcntl64) __sys_fcntl64(long fd, long cmd, ...) {
-  return __syscall(SYS_fcntl64, long fd, long cmd, ...);
+long SYS_IMPORT(fcntl64) __sys_fcntl64(long fd, cmd, ...) {
+  return __syscall(SYS_fcntl64, fd, cmd, ...);
 }
 long SYS_IMPORT(exit_group) __sys_exit_group(long status) {
-  return __syscall(SYS_exit_group, long status);
+  return __syscall(SYS_exit_group, status);
 }
-long SYS_IMPORT(statfs64) __sys_statfs64(long path, long size, long buf) {
-  return __syscall(SYS_statfs64, long path, long size, long buf);
+long SYS_IMPORT(statfs64) __sys_statfs64(long path, size, buf) {
+  return __syscall(SYS_statfs64, path, size, buf);
 }
-long SYS_IMPORT(fstatfs64) __sys_fstatfs64(long fd, long size, long buf) {
-  return __syscall(SYS_fstatfs64, long fd, long size, long buf);
+long SYS_IMPORT(fstatfs64) __sys_fstatfs64(long fd, size, buf) {
+  return __syscall(SYS_fstatfs64, fd, size, buf);
 }
-long SYS_IMPORT(fadvise64_64) __sys_fadvise64_64(long fd, long zero, long low, long high, long low2, long high2, long advice) {
-  return __syscall(SYS_fadvise64_64, long fd, long zero, long low, long high, long low2, long high2, long advice);
+long SYS_IMPORT(fadvise64_64) __sys_fadvise64_64(long fd, zero, low, high, low2, high2, advice) {
+  return __syscall(SYS_fadvise64_64, fd, zero, low, high, low2, high2, advice);
 }
-long SYS_IMPORT(openat) __sys_openat(long dirfd, long path, long flags, ...) {
-  return __syscall(SYS_openat, long dirfd, long path, long flags, ...);
+long SYS_IMPORT(openat) __sys_openat(long dirfd, path, flags, ...) {
+  return __syscall(SYS_openat, dirfd, path, flags, ...);
 }
-long SYS_IMPORT(mkdirat) __sys_mkdirat(long dirfd, long path, long mode) {
-  return __syscall(SYS_mkdirat, long dirfd, long path, long mode);
+long SYS_IMPORT(mkdirat) __sys_mkdirat(long dirfd, path, mode) {
+  return __syscall(SYS_mkdirat, dirfd, path, mode);
 }
-long SYS_IMPORT(mknodat) __sys_mknodat(long dirfd, long path, long mode, long dev) {
-  return __syscall(SYS_mknodat, long dirfd, long path, long mode, long dev);
+long SYS_IMPORT(mknodat) __sys_mknodat(long dirfd, path, mode, dev) {
+  return __syscall(SYS_mknodat, dirfd, path, mode, dev);
 }
-long SYS_IMPORT(fchownat) __sys_fchownat(long dirfd, long path, long owner, long group, long flags) {
-  return __syscall(SYS_fchownat, long dirfd, long path, long owner, long group, long flags);
+long SYS_IMPORT(fchownat) __sys_fchownat(long dirfd, path, owner, group, flags) {
+  return __syscall(SYS_fchownat, dirfd, path, owner, group, flags);
 }
-long SYS_IMPORT(fstatat64) __sys_fstatat64(long dirfd, long path, long buf, long flags) {
-  return __syscall(SYS_fstatat64, long dirfd, long path, long buf, long flags);
+long SYS_IMPORT(fstatat64) __sys_fstatat64(long dirfd, path, buf, flags) {
+  return __syscall(SYS_fstatat64, dirfd, path, buf, flags);
 }
-long SYS_IMPORT(unlinkat) __sys_unlinkat(long dirfd, long path, long flags) {
-  return __syscall(SYS_unlinkat, long dirfd, long path, long flags);
+long SYS_IMPORT(unlinkat) __sys_unlinkat(long dirfd, path, flags) {
+  return __syscall(SYS_unlinkat, dirfd, path, flags);
 }
-long SYS_IMPORT(renameat) __sys_renameat(long olddirfd, long oldpath, long newdirfd, long newpath) {
-  return __syscall(SYS_renameat, long olddirfd, long oldpath, long newdirfd, long newpath);
+long SYS_IMPORT(renameat) __sys_renameat(long olddirfd, oldpath, newdirfd, newpath) {
+  return __syscall(SYS_renameat, olddirfd, oldpath, newdirfd, newpath);
 }
-long SYS_IMPORT(linkat) __sys_linkat(long olddirfd, long oldpath, long newdirfd, long newpath, long flags) {
-  return __syscall(SYS_linkat, long olddirfd, long oldpath, long newdirfd, long newpath, long flags);
+long SYS_IMPORT(linkat) __sys_linkat(long olddirfd, oldpath, newdirfd, newpath, flags) {
+  return __syscall(SYS_linkat, olddirfd, oldpath, newdirfd, newpath, flags);
 }
-long SYS_IMPORT(symlinkat) __sys_symlinkat(long target, long newdirfd, long linkpath) {
-  return __syscall(SYS_symlinkat, long target, long newdirfd, long linkpath);
+long SYS_IMPORT(symlinkat) __sys_symlinkat(long target, newdirfd, linkpath) {
+  return __syscall(SYS_symlinkat, target, newdirfd, linkpath);
 }
-long SYS_IMPORT(readlinkat) __sys_readlinkat(long dirfd, long path, long bug, long bufsize) {
-  return __syscall(SYS_readlinkat, long dirfd, long path, long bug, long bufsize);
+long SYS_IMPORT(readlinkat) __sys_readlinkat(long dirfd, path, bug, bufsize) {
+  return __syscall(SYS_readlinkat, dirfd, path, bug, bufsize);
 }
-long SYS_IMPORT(fchmodat) __sys_fchmodat(long dirfd, long path, long mode, ...) {
-  return __syscall(SYS_fchmodat, long dirfd, long path, long mode, ...);
+long SYS_IMPORT(fchmodat) __sys_fchmodat(long dirfd, path, mode, ...) {
+  return __syscall(SYS_fchmodat, dirfd, path, mode, ...);
 }
-long SYS_IMPORT(faccessat) __sys_faccessat(long dirfd, long path, long amode, long flags) {
-  return __syscall(SYS_faccessat, long dirfd, long path, long amode, long flags);
+long SYS_IMPORT(faccessat) __sys_faccessat(long dirfd, path, amode, flags) {
+  return __syscall(SYS_faccessat, dirfd, path, amode, flags);
 }
-long SYS_IMPORT(pselect6) __sys_pselect6(long nfds, long readfds, long writefds, long exceptfds, long timeout, long sigmaks) {
-  return __syscall(SYS_pselect6, long nfds, long readfds, long writefds, long exceptfds, long timeout, long sigmaks);
+long SYS_IMPORT(pselect6) __sys_pselect6(long nfds, readfds, writefds, exceptfds, timeout, sigmaks) {
+  return __syscall(SYS_pselect6, nfds, readfds, writefds, exceptfds, timeout, sigmaks);
 }
-long SYS_IMPORT(utimensat) __sys_utimensat(long dirfd, long path, long times, long flags) {
-  return __syscall(SYS_utimensat, long dirfd, long path, long times, long flags);
+long SYS_IMPORT(utimensat) __sys_utimensat(long dirfd, path, times, flags) {
+  return __syscall(SYS_utimensat, dirfd, path, times, flags);
 }
-long SYS_IMPORT(fallocate) __sys_fallocate(long fd, long mode, long off_low, long off_high, long len_low, long len_high) {
-  return __syscall(SYS_fallocate, long fd, long mode, long off_low, long off_high, long len_low, long len_high);
+long SYS_IMPORT(fallocate) __sys_fallocate(long fd, mode, off_low, off_high, len_low, len_high) {
+  return __syscall(SYS_fallocate, fd, mode, off_low, off_high, len_low, len_high);
 }
-long SYS_IMPORT(dup3) __sys_dup3(long fd, long suggestfd, long flags) {
-  return __syscall(SYS_dup3, long fd, long suggestfd, long flags);
+long SYS_IMPORT(dup3) __sys_dup3(long fd, suggestfd, flags) {
+  return __syscall(SYS_dup3, fd, suggestfd, flags);
 }
-long SYS_IMPORT(pipe2) __sys_pipe2(long fds, long flags) {
-  return __syscall(SYS_pipe2, long fds, long flags);
+long SYS_IMPORT(pipe2) __sys_pipe2(long fds, flags) {
+  return __syscall(SYS_pipe2, fds, flags);
 }
-long SYS_IMPORT(recvmmsg) __sys_recvmmsg(long sockfd, long msgvec, long vlen, long flags, ...) {
-  return __syscall(SYS_recvmmsg, long sockfd, long msgvec, long vlen, long flags, ...);
+long SYS_IMPORT(recvmmsg) __sys_recvmmsg(long sockfd, msgvec, vlen, flags, ...) {
+  return __syscall(SYS_recvmmsg, sockfd, msgvec, vlen, flags, ...);
 }
-long SYS_IMPORT(prlimit64) __sys_prlimit64(long pid, long resource, long new_limit, long old_limit) {
-  return __syscall(SYS_prlimit64, long pid, long resource, long new_limit, long old_limit);
+long SYS_IMPORT(prlimit64) __sys_prlimit64(long pid, resource, new_limit, old_limit) {
+  return __syscall(SYS_prlimit64, pid, resource, new_limit, old_limit);
 }
-long SYS_IMPORT(sendmmsg) __sys_sendmmsg(long sockfd, long msgvec, long vlen, long flags, ...) {
-  return __syscall(SYS_sendmmsg, long sockfd, long msgvec, long vlen, long flags, ...);
+long SYS_IMPORT(sendmmsg) __sys_sendmmsg(long sockfd, msgvec, vlen, flags, ...) {
+  return __syscall(SYS_sendmmsg, sockfd, msgvec, vlen, flags, ...);
 }
-long SYS_IMPORT(socket) __sys_socket(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_socket, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(socket) __sys_socket(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_socket, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(socketpair) __sys_socketpair(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_socketpair, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(socketpair) __sys_socketpair(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_socketpair, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(bind) __sys_bind(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_bind, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(bind) __sys_bind(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_bind, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(connect) __sys_connect(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_connect, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(connect) __sys_connect(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_connect, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(listen) __sys_listen(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_listen, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(listen) __sys_listen(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_listen, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(accept4) __sys_accept4(long sockfd, long addr, long addrlen, long flags, long dummy1, long dummy2) {
-  return __syscall(SYS_accept4, long sockfd, long addr, long addrlen, long flags, long dummy1, long dummy2);
+long SYS_IMPORT(accept4) __sys_accept4(long sockfd, addr, addrlen, flags, dummy1, dummy2) {
+  return __syscall(SYS_accept4, sockfd, addr, addrlen, flags, dummy1, dummy2);
 }
-long SYS_IMPORT(getsockopt) __sys_getsockopt(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_getsockopt, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(getsockopt) __sys_getsockopt(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_getsockopt, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(setsockopt) __sys_setsockopt(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_setsockopt, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(setsockopt) __sys_setsockopt(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_setsockopt, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(getsockname) __sys_getsockname(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_getsockname, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(getsockname) __sys_getsockname(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_getsockname, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(getpeername) __sys_getpeername(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_getpeername, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(getpeername) __sys_getpeername(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_getpeername, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(sendto) __sys_sendto(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_sendto, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(sendto) __sys_sendto(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_sendto, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(sendmsg) __sys_sendmsg(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_sendmsg, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(sendmsg) __sys_sendmsg(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_sendmsg, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(recvfrom) __sys_recvfrom(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_recvfrom, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(recvfrom) __sys_recvfrom(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_recvfrom, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(recvmsg) __sys_recvmsg(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_recvmsg, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(recvmsg) __sys_recvmsg(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_recvmsg, sockfd, level, optname, optval, optlen, dummy);
 }
-long SYS_IMPORT(shutdown) __sys_shutdown(long sockfd, long level, long optname, long optval, long optlen, long dummy) {
-  return __syscall(SYS_shutdown, long sockfd, long level, long optname, long optval, long optlen, long dummy);
+long SYS_IMPORT(shutdown) __sys_shutdown(long sockfd, level, optname, optval, optlen, dummy) {
+  return __syscall(SYS_shutdown, sockfd, level, optname, optval, optlen, dummy);
 }
+*/
 
 
 #ifdef __cplusplus
