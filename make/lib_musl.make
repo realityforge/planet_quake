@@ -57,7 +57,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     stdlib/qsort.o  stdlib/strtol.o \
                     \
                     ctype/tolower.o ctype/isalnum.o  ctype/isspace.o \
-                    ctype/isdigit.o ctype/iswdigit.o \
+                    ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
+										ctype/isalpha.o \
                     \
                     signal/signal.o      signal/sigaddset.o signal/sigemptyset.o \
                     signal/sigprocmask.o signal/sigaction.o signal/block.o \
@@ -65,7 +66,8 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
-                    math/frexpl.o \
+                    math/frexpl.o       math/scalbn.o        math/copysignl.o \
+										math/scalbnl.o      math/fmodl.o         math/fabsl.o \
                     \
                     unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
                     unistd/read.o   unistd/write.o  unistd/close.o \

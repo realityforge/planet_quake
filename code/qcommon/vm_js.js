@@ -72,15 +72,15 @@ var LibraryVM = {
 			U4: 3
 		},
 		Constant4: function (state) {
-			var v = ({{{ makeGetValue('state.codeBase', 'state.pc', 'i8') }}} & 0xff) |
-				(({{{ makeGetValue('state.codeBase', 'state.pc+1', 'i8') }}} & 0xff) << 8) |
-				(({{{ makeGetValue('state.codeBase', 'state.pc+2', 'i8') }}} & 0xff) << 16) |
-				(({{{ makeGetValue('state.codeBase', 'state.pc+3', 'i8') }}} & 0xff) << 24 );
+			var v = (HEAP8[(state.codeBase+state.pc)>>0]&255 & 0xff) |
+				((HEAP8[(state.codeBase+state.pc+1)>>0]&255 & 0xff) << 8) |
+				((HEAP8[(state.codeBase+state.pc+2)>>0]&255 & 0xff) << 16) |
+				((HEAP8[(state.codeBase+state.pc+3)>>0]&255 & 0xff) << 24 );
 			state.pc += 4;
 			return v;
 		},
 		Constant1: function (state) {
-			var v = {{{ makeGetValue('state.codeBase', 'state.pc', 'i8') }}};
+			var v = HEAP8[(state.codeBase+state.pc)>>0]&255;
 			state.pc += 1;
 			return v;
 		},
@@ -89,7 +89,7 @@ var LibraryVM = {
 
 			var op, lastop;
 			for (state.instr = 0, state.pc = 0; state.instr < state.instructionCount; state.instr++) {
-				op = {{{ makeGetValue('state.codeBase', 'state.pc', 'i8') }}};
+				op = HEAP8[(state.codeBase+state.pc)>>0]&255;
 
 				state.pc++;
 
@@ -109,7 +109,7 @@ var LibraryVM = {
 
 					case 8 /* OP_CONST */:
 						var value = VM.Constant4(state);
-						var nextop = {{{ makeGetValue('state.codeBase', 'state.pc', 'i8') }}};
+						var nextop = HEAP8[(state.codeBase+state.pc)>>0]&255;
 						if (nextop === 10 /* OP_JUMP */) {
 							labels[value] = true;
 						}
@@ -210,7 +210,7 @@ var LibraryVM = {
 					if (expr instanceof LOAD4) {
 						// by default, every pointer value is loaded from HEAP32
 						// don't use the scratch array if we can load directly from HEAPF32
-						return CAST_STR(type, '{{{ makeGetValue("' + OFFSET_STR(expr.addr) + '", 0, "float") }}}');
+						return CAST_STR(type, 'HEAPF32[(' + OFFSET_STR(expr.addr) + '+0)>>2]');
 					}
 
 					return CAST_STR(type, 'i32[0] = ' + expr + ', f32[0]');
@@ -277,7 +277,7 @@ var LibraryVM = {
 					};
 					ctor.prototype = Object.create(LOAD4.prototype);
 					ctor.prototype.toString = function () {
-						return '{{{ makeGetValue("' + OFFSET_STR(this.addr) + '", 0, "i32") }}}';
+						return 'HEAP32[(' + OFFSET_STR(this.addr) + '+0)>>2]';
 					};
 				}
 				return new ctor(addr);
@@ -459,7 +459,7 @@ var LibraryVM = {
 
 			function EmitLeave(frameSize, ret) {
 				// leave the return value on the stack
-				EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(frameSize - 4)) + '", 0, "' + ret + '", "i32") }}};');
+				EmitStatement('HEAP32[(' + OFFSET_STR(LOCAL(frameSize - 4)) + '+0)>>2] = ' + ret + ';');
 				EmitStatement('STACKTOP += ' + frameSize + ';');
 				EmitStatement('return;');
 
@@ -527,43 +527,43 @@ var LibraryVM = {
 				if (translation) {
 					switch (translation) {
 						case 'memset':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "_memset(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ')", "i32") }}};');
+							EmitStatement('HEAP32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>2] = _memset(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ');');
 						break;
 
 						case 'memcpy':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "_memcpy(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + state.dataBase + '+' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ')", "i32") }}};');
+							EmitStatement('HEAP32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>2] = _memcpy(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + state.dataBase + '+' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ');');
 						break;
 
 						case 'strncpy':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "_strncpy(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + state.dataBase + '+' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ')", "i32") }}};');
+							EmitStatement('HEAP32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>2] = _strncpy(' + state.dataBase + '+' + LOAD4(LOCAL(8)) + ', ' + state.dataBase + '+' + LOAD4(LOCAL(12)) + ', ' + LOAD4(LOCAL(16)) + ');');
 						break;
 
 						case 'sin':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.sin(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.sin(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 
 						case 'cos':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.cos(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.cos(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 
 						case 'atan2':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.atan2(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ', ' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(12)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.atan2(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ', ' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(12)))) + ');');
 						break;
 
 						case 'sqrt':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.sqrt(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.sqrt(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 
 						case 'floor':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.floor(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.floor(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 
 						case 'ceil':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.ceil(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.ceil(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 
 						case 'acos':
-							EmitStatement('{{{ makeSetValue("' + OFFSET_STR(LOCAL(-4)) + '", 0, "Math.acos(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ')", "float") }}};');
+							EmitStatement('HEAPF32[(' + OFFSET_STR(LOCAL(-4)) + '+0)>>1] = Math.acos(' + (BITCAST_STR(VM.TYPE.F4, LOAD4(LOCAL(8)))) + ');');
 						break;
 					}
 				} else {
@@ -602,22 +602,22 @@ var LibraryVM = {
 
 			function EmitStore4(addr, value) {
 				if (value.type === VM.TYPE.F4) {
-					EmitStatement('{{{ makeSetValue("' + OFFSET_STR(addr) + '", 0, "' + value + '", "float") }}};');
+					EmitStatement('HEAPF32[(' + OFFSET_STR(addr) + '+0)>>1] = ' + value + ';');
 				} else {
-					EmitStatement('{{{ makeSetValue("' + OFFSET_STR(addr) + '", 0, "' + value + '", "i32") }}};');
+					EmitStatement('HEAP32[(' + OFFSET_STR(addr) + '+0)>>2] = ' + value + ';');
 				}
 			}
 
 			function EmitStore2(addr, value) {
-				EmitStatement('{{{ makeSetValue("' + OFFSET_STR(addr) + '", 0, "' + value + '", "i16") }}};');
+				EmitStatement('HEAP16[(' + OFFSET_STR(addr) + '+0)>>1] = ' + value + ';');
 			}
 
 			function EmitStore1(addr, value) {
-				EmitStatement('{{{ makeSetValue("' + OFFSET_STR(addr) + '", 0, "' + value + '", "i8") }}};');
+				EmitStatement('HEAP8[(' + OFFSET_STR(addr) + '+0)] = ' + value + ';');
 			}
 
 			function EmitBlockCopy(dest, src, bytes) {
-				EmitStatement('{{{ makeCopyValues("' + OFFSET_STR(dest) + '", "' + OFFSET_STR(src) + '", "' + bytes + '", "i8") }}};');
+        EmitStatement("(_memcpy(" + OFFSET_STR(dest) + ", " + OFFSET_STR(src) + ", " + bytes + ")|0);");
 			}
 
 			EmitStatement('(function () {');
@@ -631,22 +631,22 @@ var LibraryVM = {
 			EmitStatement('\t// save the current vm');
 			//EmitStatement('\tvar savedVM = _VM_GetCurrent();');
 			EmitStatement('\tvar stackOnEntry = STACKTOP;');
-			EmitStatement('\tvar image = {{{ makeGetValue("vmp", "VM.vm_t.dataBase", "i32") }}};');
+			EmitStatement('\tvar image = HEAP32[(vmp+VM.vm_t.dataBase)>>2];');
 			EmitStatement('\t// store the callnum in the return address space');
-			EmitStatement('\tvar returnAddr = {{{ makeGetValue("image", "stackOnEntry + 4", "i32") }}};');
-			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry + 4", "callnum", "i32") }}};');
+			EmitStatement('\tvar returnAddr = HEAP32[(image+stackOnEntry + 4)>>2];');
+			EmitStatement('\tHEAP32[(image+stackOnEntry + 4)>>2] = callnum;');
 
 			EmitStatement('\t// modify VM stack pointer for recursive VM entry');
 			EmitStatement('\tSTACKTOP -= 4;')
-			EmitStatement('\t{{{ makeSetValue("vmp", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
+			EmitStatement('\tHEAP32[(vmp+VM.vm_t.programStack)>>2] = STACKTOP;');
 			EmitStatement('\t// call into the client');
-			EmitStatement('\tvar systemCall = {{{ makeGetValue("vmp", "VM.vm_t.systemCall", "i32*") }}};');
+			EmitStatement('\tvar systemCall = HEAP32[(vmp+VM.vm_t.systemCall)>>2];');
 			EmitStatement('\tvar ret = dynCall("ii", systemCall, [image + stackOnEntry + 4]);');
-			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry + 4", "returnAddr", "i32") }}};');
+			EmitStatement('\tHEAP32[(image+stackOnEntry + 4)>>2] = returnAddr;');
 			EmitStatement('\t// leave the return value on the stack');
-			EmitStatement('\t{{{ makeSetValue("image", "stackOnEntry - 4", "ret", "i32") }}};');
+			EmitStatement('\tHEAP32[(image+stackOnEntry - 4)>>2] = ret;');
 			EmitStatement('\tSTACKTOP = stackOnEntry;');
-			EmitStatement('\t{{{ makeSetValue("vmp", "VM.vm_t.programStack", "STACKTOP", "i32") }}};');
+			EmitStatement('\tHEAP32[(vmp+VM.vm_t.programStack)>>2] = STACKTOP;');
 			//EmitStatement('\t_VM_SetCurrent(savedVM);');
 			// intercept trap_UpdateScreen calls coming from cgame and suspend the VM
 			if (name === 'cgame') {
@@ -673,7 +673,7 @@ var LibraryVM = {
 
 			var lastop1, lastop2;
 			for (state.instr = 0, state.pc = 0; state.instr < state.instructionCount; state.instr++) {
-				var op = {{{ makeGetValue('state.codeBase', 'state.pc', 'i8') }}};
+				var op = HEAP8[(state.codeBase+state.pc)>>0]&255;
 
 				state.pc++;
 
@@ -951,10 +951,10 @@ var LibraryVM = {
 	VM_Compile__deps: ['$VM', 'VM_Destroy'],
 	VM_Compile: function (vmp, headerp) {
 		//var current = _VM_GetCurrent();
-		var name = UTF8ToString({{{ makeGetValue('vmp', 'VM.vm_t.name', 'i32') }}});
-		var dataBase = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i8*') }}};
-		var codeOffset = {{{ makeGetValue('headerp', 'VM.vmHeader_t.codeOffset', 'i32') }}};
-		var instructionCount = {{{ makeGetValue('headerp', 'VM.vmHeader_t.instructionCount', 'i32') }}};
+		var name = UTF8ToString(HEAP32[(vmp+VM.vm_t.name)>>2]);
+		var dataBase = HEAP8[(vmp+VM.vm_t.dataBase)>>0]&255;
+		var codeOffset = HEAP32[(headerp+VM.vmHeader_t.codeOffset)>>2];
+		var instructionCount = HEAP32[(headerp+VM.vmHeader_t.instructionCount)>>2];
 
 		var vm;
 		try {
@@ -963,38 +963,38 @@ var LibraryVM = {
 			var module = VM.CompileModule(vmp, name, instructionCount, headerp + codeOffset, dataBase);
 			vm = eval(module)();
 
-			SYSC.Print('VM file ' + name + ' compiled in ' + (Date.now() - start) + ' milliseconds');
+			Sys_Print('VM file ' + name + ' compiled in ' + (Date.now() - start) + ' milliseconds');
 		} catch (e) {
 			if (e.longjmp || e === 'longjmp') {
 				throw e;
 			}
-			SYSC.Error('fatal', e);
+			Sys_Error('fatal', e);
 		}
 
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 		VM.vms[handle] = vm;
 
 		if (!VM.DestroyPtr) {
 			VM.DestroyPtr = addFunction(_VM_Destroy ,'vi');
 		}
 
-		{{{ makeSetValue('vmp', 'VM.vm_t.destroy', 'VM.DestroyPtr', 'void*') }}};
+    HEAP32[vmp + VM.vm_t.destroy >> 2] = VM.DestroyPtr;
 		return true;
 	},
 	VM_Destroy: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 
 		delete VM.vms[handle];
 	},
 	VM_CallCompiled__sig: 'iiii',
 	VM_CallCompiled__deps: ['$VM', 'VM_SuspendCompiled'],
 	VM_CallCompiled: function (vmp, nargs, args) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 		var vm = VM.vms[handle];
 
 		// we can't re-enter the vm until it's been resumed
 		if (vm.suspended) {
-			SYSC.Error('drop', 'attempted to re-enter suspended vm');
+			Sys_Error('drop', 'attempted to re-enter suspended vm');
 		}
 
 		// set the current vm
@@ -1002,18 +1002,18 @@ var LibraryVM = {
 		//_VM_SetCurrent(vmp);
 
 		// save off the stack pointer
-		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
+		var image = HEAP32[(vmp+VM.vm_t.dataBase)>>2];
 
 		// set up the stack frame
-		var stackOnEntry = {{{ makeGetValue('vmp', 'VM.vm_t.programStack', 'i32') }}};
+		var stackOnEntry = HEAP32[(vmp+VM.vm_t.programStack)>>2];
 		var stackTop = stackOnEntry - VM.ENTRY_FRAME_SIZE;
 
-		{{{ makeSetValue('image', 'stackTop', '-1', 'i32') }}};
-		{{{ makeSetValue('image', 'stackTop + 4', '0', 'i32') }}};
+		HEAP32[(image+stackTop)>>2] = -1;
+		HEAP32[(image+stackTop + 4)>>2] = 0;
 
 		for (var i = 0; i < nargs; i++) {
-			var arg = {{{ makeGetValue('args', 'i * 4', 'i32' )}}};
-			{{{ makeSetValue('image', 'stackTop + 8 + i * 4', 'arg', 'i32') }}};
+			var arg = HEAP32[(args+i * 4)>>2];
+			HEAP32[(image+stackTop + 8 + i * 4)>>2] = arg;
 		}
 
 		// call into the entry point
@@ -1027,19 +1027,19 @@ var LibraryVM = {
 			entryPoint();
 
 			if (vm.STACKTOP !== (stackOnEntry - VM.ENTRY_FRAME_SIZE)) {
-				SYSC.Error('fatal', 'program stack corrupted, is ' + vm.STACKTOP + ', expected ' + (stackOnEntry - VM.ENTRY_FRAME_SIZE));
+				Sys_Error('fatal', 'program stack corrupted, is ' + vm.STACKTOP + ', expected ' + (stackOnEntry - VM.ENTRY_FRAME_SIZE));
 			}
 
-			result = {{{ makeGetValue('image', 'vm.STACKTOP - 4', 'i32') }}};
+			result = HEAP32[(image+vm.STACKTOP - 4)>>2];
 
-			{{{ makeSetValue('vmp', 'VM.vm_t.programStack', 'stackOnEntry', 'i32') }}};
+			HEAP32[(vmp+VM.vm_t.programStack)>>2] = stackOnEntry;
 		} catch (e) {
 			if (e.longjmp || e === 'longjmp') {
 				throw e;
 			}
 
 			if (!e.suspend) {
-				SYSC.Error('fatal', e);
+				Sys_Error('fatal', e);
 				return;
 			}
 
@@ -1053,11 +1053,11 @@ var LibraryVM = {
 	},
 	VM_IsSuspendedCompiled__deps: [],
 	VM_IsSuspendedCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 		var vm = VM.vms[handle];
 
 		if (!vm) {
-			SYSC.Error('drop', 'invalid vm handle');
+			Sys_Error('drop', 'invalid vm handle');
 			return;
 		}
 
@@ -1066,11 +1066,11 @@ var LibraryVM = {
 	VM_SuspendCompiled__deps: [],
 	VM_SuspendCompiled__sig: 'vii',
 	VM_SuspendCompiled: function (vmp, stackOnEntry) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 		var vm = VM.vms[handle];
 
 		if (!vm) {
-			SYSC.Error('drop', 'invalid vm handle');
+			Sys_Error('drop', 'invalid vm handle');
 			return;
 		}
 
@@ -1080,15 +1080,15 @@ var LibraryVM = {
 	VM_ResumeCompiled__deps: ['VM_SuspendCompiled'],
 	VM_ResumeCompiled__sig: 'vii',
 	VM_ResumeCompiled: function (vmp) {
-		var handle = {{{ makeGetValue('vmp', 'VM.vm_t.vmIndex', 'i32') }}};
+		var handle = HEAP32[(vmp+VM.vm_t.vmIndex)>>2];
 		var vm = VM.vms[handle];
 
 		if (!vm) {
-			SYSC.Error('drop', 'invalid vm handle');
+			Sys_Error('drop', 'invalid vm handle');
 			return;
 		}
 
-		var image = {{{ makeGetValue('vmp', 'VM.vm_t.dataBase', 'i32') }}};
+		var image = HEAP32[(vmp+VM.vm_t.dataBase)>>2];
 		var stackOnEntry = vm.stackOnEntry;
 		var result;
 
@@ -1097,8 +1097,8 @@ var LibraryVM = {
 		try {
 			while (true) {
 				// grab the last return address off the stack top and resume execution
-				var fninstr = {{{ makeGetValue('image', 'vm.STACKTOP', 'i32') }}};
-				var opinstr = {{{ makeGetValue('image', 'vm.STACKTOP + 4', 'i32') }}};
+				var fninstr = HEAP32[(image+vm.STACKTOP)>>2];
+				var opinstr = HEAP32[(image+vm.STACKTOP + 4)>>2];
 
 				if (fninstr === -1) {
 					// we're done unwinding
@@ -1111,20 +1111,20 @@ var LibraryVM = {
 			}
 
 			if (vm.STACKTOP !== (stackOnEntry - VM.ENTRY_FRAME_SIZE)) {
-				SYSC.Error('drop', 'program stack corrupted, is ' + vm.STACKTOP + ', expected ' + (stackOnEntry - VM.ENTRY_FRAME_SIZE));
+				Sys_Error('drop', 'program stack corrupted, is ' + vm.STACKTOP + ', expected ' + (stackOnEntry - VM.ENTRY_FRAME_SIZE));
 				return;
 			}
 
-			result = {{{ makeGetValue('image', 'vm.STACKTOP - 4', 'i32') }}};
+			result = HEAP32[(image+vm.STACKTOP - 4)>>2];
 
-			{{{ makeSetValue('vmp', 'VM.vm_t.programStack', 'stackOnEntry', 'i32') }}};
+			HEAP32[(vmp+VM.vm_t.programStack)>>2] = stackOnEntry;
 		} catch (e) {
 			if (e.longjmp || e === 'longjmp') {
 				throw e;
 			}
 
 			if (!e.suspend) {
-				SYSC.Error('drop', e);
+				Sys_Error('drop', e);
 				return;
 			}
 

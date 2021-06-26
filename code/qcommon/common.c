@@ -4205,6 +4205,8 @@ void Com_Frame_RentryHandle(void (*af)( void *handle )) {
 	}
 }
 
+// TODO use event system for callbacks instead, using evPtr to point to functions
+
 void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
 	Com_Printf( "--------- Frame Setup (%p) --------\n", &cb);
 	invokeFrameAfter = qfalse;

@@ -589,3 +589,50 @@ Q_EXPORT int main( int argc, char* argv[] )
 	//emscripten_set_main_loop(Sys_Frame, 160, 0);
 	return 0;
 }
+
+
+char *Sys_ConsoleInput( void ) { return NULL; }
+
+
+/*
+=============
+Sys_GetFileStats
+=============
+*/
+qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime ) {
+	struct stat s;
+
+	if ( stat( filename, &s ) == 0 ) {
+		*size = (fileOffset_t)s.st_size;
+		*mtime = (fileTime_t)s.st_mtime;
+		*ctime = (fileTime_t)s.st_ctime;
+		return qtrue;
+	} else {
+		*size = 0;
+		*mtime = *ctime = 0;
+		return qfalse;
+	}
+}
+
+
+EM_JS(char **, SYS_FS_List, ( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs ), 
+{ return Sys_ListFiles(directory, extension, filter, numfiles, wantsubs) });
+char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs )
+{ return SYS_FS_List(directory, extension, filter, numfiles, wantsubs); }
+
+EM_JS(FILE *, SYS_FS_FOpen, (const char *ospath, const char *mode), 
+{ return Sys_FOpen(ospath, mode) });
+FILE *Sys_FOpen( const char *ospath, const char *mode )
+{ return SYS_FS_FOpen(ospath, mode); }
+
+EM_JS(void, SYS_FS_Shutdown, (void), { Sys_FS_Shutdown() });
+void Sys_FS_Shutdown(void) { return SYS_FS_Shutdown(); }
+
+EM_JS(void, SYS_FS_Startup, (void), { Sys_FS_Startup() });
+void Sys_FS_Startup(void) { return SYS_FS_Startup(); }
+
+EM_JS(void, SYS_SetClipboardData, (void *field), { Sys_Input_SetClipboardData(field) });
+void Sys_SetClipboardData(void *field) { return SYS_SetClipboardData(field); }
+
+EM_JS(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
+int Sys_Milliseconds(void) { return SYS_Milliseconds(); }
