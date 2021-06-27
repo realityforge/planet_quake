@@ -502,6 +502,9 @@ Q_EXPORT int main( int argc, char* argv[] )
 	// JavaScript console doesn't report input
   Cvar_Set( "ttycon", "0" );
 
+  //Browser.requestAnimationFrame(_Sys_Frame);
+  //var timeUntilNextTick = Math.max(0, Browser.mainLoop.tickStartTime + value - Sys_Milliseconds)|0;
+
 	//emscripten_set_main_loop(Sys_Frame, 160, 0);
 	return 0;
 }

@@ -51,20 +51,50 @@ EM_JS(int, SYS_SDL_Init, ( uint32_t flags ),
 int SDL_Init(uint32_t flags)
 { return SYS_SDL_Init(flags); }
 
+EM_JS(char *, SYS_SDL_GetError, ( void ), 
+{ return SDL_GetError() });
+char *SDL_GetError( void )
+{ return SYS_SDL_GetError(); }
+
+EM_JS(int, SYS_DisplayMode, ( int displayIndex, SDL_DisplayMode *mode ), 
+{ return Sys_GetDisplayMode(displayIndex, mode) });
+int SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode *mode)
+{ return SYS_DisplayMode(displayIndex, mode); }
+
+EM_JS(int, SYS_GetWindowDisplayMode, ( void *window, SDL_DisplayMode *mode ), 
+{ return Sys_GetDisplayMode(window, mode) });
+int SDL_GetWindowDisplayMode(void *window, SDL_DisplayMode *mode)
+{ return SYS_GetWindowDisplayMode(window, mode); }
+
+EM_JS(int, SYS_GL_SetAttribute, ( int attr, int value ), 
+{ return Sys_GL_SetAttribute(attr, value) });
+int SDL_GL_SetAttribute(int attr, int value)
+{ return SYS_GL_SetAttribute(attr, value); }
+
+EM_JS(void *, SYS_SDL_CreateWindow, ( const char *title,
+                              int x, int y, int w,
+                              int h, uint32_t flags ), 
+{ return SDL_CreateWindow(title, x, y, w, h, flags) });
+void *SDL_CreateWindow(const char *title,
+                              int x, int y, int w,
+                              int h, uint32_t flags)
+{ return SYS_SDL_CreateWindow(title, x, y, w, h, flags); }
+
+EM_JS(int, SYS_SetDisplay, ( void *window, const SDL_DisplayMode *mode ), 
+{ return SDL_SetWindowDisplayMode(window, mode) });
+int SDL_SetWindowDisplayMode(void *window, const SDL_DisplayMode *mode)
+{ return SYS_SetDisplay(window, mode); }
+
+EM_JS(void, SYS_GetDrawable, ( void *window, int *w, int *h ), 
+{ SDL_GL_GetDrawableSize(window, w, h) });
+void SDL_GL_GetDrawableSize(void *window, int *w, int *h)
+{ SYS_GetDrawable(window, w, h); }
+
+EM_JS(uint32_t, SYS_WasInit, ( uint32_t flags ), 
+{ return SDL_WasInit(flags) });
+uint32_t SDL_WasInit(uint32_t flags)
+{ return SYS_WasInit(flags); }
 /*
-SDL_GetWindowDisplayIndex
-SDL_GetError
-SDL_GetDesktopDisplayMode
-SDL_GL_DeleteContext
-SDL_GL_SetAttribute
-SDL_CreateWindow
-SDL_SetWindowDisplayMode
-SDL_GL_CreateContext
-SDL_DestroyWindow
-SDL_GL_SetSwapInterval
-SDL_GL_GetDrawableSize
-SDL_WarpMouseInWindow
-SDL_WasInit
 SDL_GetCurrentVideoDriver
 SDL_GL_SwapWindow
 SDL_ShowCursor
@@ -74,6 +104,22 @@ SDL_GetWindowFlags
 SDL_StopTextInput
 */
 
+void  SDL_WarpMouseInWindow(void *window, int x, int y) {
+  // Javascript can't do this yet
+}
+
+int SDL_GL_SetSwapInterval(int interval) {
+  // set values for request animation frame?
+  return 0;
+}
+
+void SDL_DestroyWindow(void *window) {
+  // destroy window?
+}
+
+void SDL_GL_DeleteContext(void *context) {
+  // delete context?  we don't currently do this because of lazy mode
+}
 
 void *GL_GetProcAddress( const char *name ) { return NULL; }
 
@@ -147,11 +193,7 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
   // If a window exists, note its display index
   if ( SDL_window != NULL )
   {
-    display = SDL_GetWindowDisplayIndex( SDL_window );
-    if ( display < 0 )
-    {
-      Com_DPrintf( "SDL_GetWindowDisplayIndex() failed: %s\n", SDL_GetError() );
-    }
+    display = 0;
   }
   else
   {

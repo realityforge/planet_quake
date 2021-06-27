@@ -12,14 +12,13 @@ global['SYS'] = {
 }
 
 function quitGameOnUnload (e) {
-  if(Module['canvas']) {
+  if(SYSI.canvas) {
     _Cbuf_AddText(allocate(intArrayFromString('quit;'), ALLOC_STACK));
-    Module['canvas'].remove()
-    Module['canvas'] = null
+    SYSI.canvas.remove()
+    SYSI.canvas = null
   }
   return false
 }
-
 
 function onWorkerMessage (e) {
   if(typeof Module != 'undefined' 

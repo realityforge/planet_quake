@@ -37,9 +37,9 @@ function registerContext (ctx, webGLContextAttributes) {
 function Sys_GL_CreateContext(canvas, webGLContextAttributes) {
   webGLContextAttributes.failIfMajorPerformanceCaveat = true
   var ctx = (webGLContextAttributes.majorVersion > 1)
-    ? canvas.getContext("webgl2", webGLContextAttributes)
-    : (canvas.getContext("webgl", webGLContextAttributes)
-      || canvas.getContext('experimental-webgl'))
+    ? SYSI.canvas.getContext("webgl2", webGLContextAttributes)
+    : (SYSI.canvas.getContext("webgl", webGLContextAttributes)
+      || SYSI.canvas.getContext('experimental-webgl'))
   if (!ctx) return 0
   var handle = GL3.registerContext(ctx, webGLContextAttributes)
   return handle
@@ -201,9 +201,6 @@ function glDrawBuffer (mode) {
 }
 
 function glBindTexture (target, texture) {
-#if GL_ASSERTIONS
-  GL3.validateGLObjectID(GL3.textures, texture, 'glBindTexture', 'texture');
-#endif
   GLctx.bindTexture(target, GL3.textures[texture]);
 }
 
@@ -216,9 +213,6 @@ function glGetStringi (name, index) {
   if (stringiCache) {
     if (index < 0 || index >= stringiCache.length) {
       GL3.recordError(0x501/*GL_INVALID_VALUE*/);
-#if GL_ASSERTIONS
-      err('GL_INVALID_VALUE in glGetStringi: index out of range (' + index + ')!');
-#endif
       return 0;
     }
     return stringiCache[index];
@@ -226,25 +220,16 @@ function glGetStringi (name, index) {
   switch (name) {
     case 0x1F03 /* GL_EXTENSIONS */:
       var exts = GLctx.getSupportedExtensions() || []; // .getSupportedExtensions() can return null if context is lost, so coerce to empty array.
-#if GL_EXTENSIONS_IN_PREFIXED_FORMAT
-      exts = exts.concat(exts.map(function(e) { return "GL_" + e; }));
-#endif
       exts = exts.map(function(e) { return stringToNewUTF8(e); });
 
       stringiCache = GL3.stringiCache[name] = exts;
       if (index < 0 || index >= stringiCache.length) {
         GL3.recordError(0x501/*GL_INVALID_VALUE*/);
-#if GL_ASSERTIONS
-        err('GL_INVALID_VALUE in glGetStringi: index out of range (' + index + ') in a call to GL_EXTENSIONS!');
-#endif
         return 0;
       }
       return stringiCache[index];
     default:
       GL3.recordError(0x500/*GL_INVALID_ENUM*/);
-#if GL_ASSERTIONS
-      err('GL_INVALID_ENUM in glGetStringi: Unknown parameter ' + name + '!');
-#endif
       return 0;
   }
 }

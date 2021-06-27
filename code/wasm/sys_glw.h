@@ -120,13 +120,13 @@ extern void  SDL_MinimizeWindow( void *window );
 extern int   SDL_GetWindowDisplayIndex(void *window);
 extern void  SDL_GL_DeleteContext(void *ctx);
 extern char *SDL_GetError( void );
-extern int   SDL_GetDesktopDisplayMode(int displayIndex, void* mode);
+extern int   SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode *mode);
 extern int   SDL_GL_SetAttribute(int attr, int value);
 extern void *SDL_CreateWindow(const char *title,
                               int x, int y, int w,
                               int h, uint32_t flags);
-extern int   SDL_SetWindowDisplayMode(void *window, const void *mode);
-extern int   SDL_GetWindowDisplayMode(void *window, void *mode);
+extern int   SDL_SetWindowDisplayMode(void *window, const SDL_DisplayMode *mode);
+extern int   SDL_GetWindowDisplayMode(void *window, SDL_DisplayMode *mode);
 extern void *SDL_GL_CreateContext(void *window);
 extern void  SDL_DestroyWindow(void *window);
 extern int   GL_SetSwapInterval(int interval);

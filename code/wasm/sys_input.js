@@ -57,7 +57,7 @@ global['SYSI'] = {
   paste: '',
   field: 0,
   //inputCount: 0,
-  
+  canvas: null,
 }
 
 function captureClipBoard () {
@@ -241,8 +241,8 @@ function InputPushTouchEvent (joystick, id, evt, data) {
     }
   }
 
-  var w = Module['canvas'].width;
-  var h = Module['canvas'].height;
+  var w = SYSI.canvas.width;
+  var h = SYSI.canvas.height;
   var dx = data.angle ? (Math.cos(data.angle.radian) * data.distance) : 0
   var dy = data.angle ? (Math.sin(data.angle.radian) * data.distance) : 0
   var x = data.angle ? dx : Math.round(data.position.x)
@@ -341,9 +341,9 @@ function InputInit () {
   window.addEventListener('keypress', SYSI.InputPushTextEvent, false)
   window.addEventListener('mouseout', SYSI.InputPushMovedEvent, false)
 
-  Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
-  Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
-  Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
+  SYSI.canvas.addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
+  SYSI.canvas.addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
+  SYSI.canvas.addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
   
   document.addEventListener('mousewheel', SYSI.InputPushWheelEvent, {capture: false, passive: true})
   document.addEventListener('visibilitychange', SYSI.InputPushFocusEvent, false)
@@ -353,10 +353,10 @@ function InputInit () {
   //document.addEventListener('pointerlockchange', SYSI.InputPushFocusEvent, false);
   /*
   let nipple handle touch events
-  Module['canvas'].addEventListener('touchstart', SYSI.InputPushTouchEvent, false)
-  Module['canvas'].addEventListener('touchend', SYSI.InputPushTouchEvent, false)
-  Module['canvas'].addEventListener('touchmove', SYSI.InputPushTouchEvent, false)
-  Module['canvas'].addEventListener('touchcancel', SYSI.InputPushTouchEvent, false)
+  SYSI.canvas.addEventListener('touchstart', SYSI.InputPushTouchEvent, false)
+  SYSI.canvas.addEventListener('touchend', SYSI.InputPushTouchEvent, false)
+  SYSI.canvas.addEventListener('touchmove', SYSI.InputPushTouchEvent, false)
+  SYSI.canvas.addEventListener('touchcancel', SYSI.InputPushTouchEvent, false)
   */
 }
 
@@ -400,31 +400,30 @@ function InitNippleJoysticks () {
 }
 
 function updateVideoCmd () {
-  var oldHeight = canvas.getAttribute('height')
-  var oldWidth = canvas.getAttribute('width')
+  if(!SYSI.canvas) return
+  var oldHeight = SYSI.canvas.getAttribute('height')
+  var oldWidth = SYSI.canvas.getAttribute('width')
   // only update size if the canvas changes by more than 0.1
-  if(!((canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
-    || (canvas.clientWidth / canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
+  if(!((SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) - (oldWidth / oldHeight) > 0.1
+    || (SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) - (oldWidth / oldHeight) < -0.1))
     return
-  canvas.setAttribute('width', canvas.clientWidth)
-  canvas.setAttribute('height', canvas.clientHeight)
+  SYSI.canvas.setAttribute('width', canvas.clientWidth)
+  SYSI.canvas.setAttribute('height', canvas.clientHeight)
   var update = 'set r_fullscreen %fs; set r_mode -1;'
     + ' set r_customWidth %w; set r_customHeight %h;'
     + ' set cg_gunX %i; cg_gunZ %i; vid_restart;'
     .replace('%fs', window.fullscreen ? '1' : '0')
-    .replace('%w', canvas.clientWidth)
-    .replace('%h', canvas.clientHeight)
-    .replace('%i', (canvas.clientWidth / canvas.clientHeight) < 0.8
+    .replace('%w', SYSI.canvas.clientWidth)
+    .replace('%h', SYSI.canvas.clientHeight)
+    .replace('%i', (SYSI.canvas.clientWidth / SYSI.canvas.clientHeight) < 0.8
       ? -5 : 0)
 
   _Cbuf_AddText(allocate(intArrayFromString(update), ALLOC_STACK))
 }
 
 function resizeViewport () {
-  if (!Module['canvas']) {
-    // ignore if the canvas hasn't yet initialized
-    return
-  }
+  // ignore if the canvas hasn't yet initialized
+  if(!SYSI.canvas) return
 
   if (SYSI.resizeDelay) clearTimeout(SYSI.resizeDelay)
   SYSI.resizeDelay = setTimeout(SYSI.updateVideoCmd, 100);
@@ -502,12 +501,12 @@ function Sys_GLimpInit (initFlags) {
 
 	var viewport = document.getElementById('viewport-frame')
 	// create a canvas element at this point if one doesnt' already exist
-	if (!Module['canvas']) {
-		var canvas = document.createElement('canvas')
-		canvas.id = 'canvas'
-		canvas.width = viewport.offsetWidth
-		canvas.height = viewport.offsetHeight
-		Module['canvas'] = viewport.appendChild(canvas)
+	if (!SYSI.canvas) {
+		SYSI.canvas = document.createElement('canvas')
+		SYSI.canvas.id = 'canvas'
+		SYSI.canvas.width = viewport.offsetWidth
+		SYSI.canvas.height = viewport.offsetHeight
+		viewport.appendChild(SYSI.canvas)
 	}
   window.addEventListener('beforeunload', function (e) {
     _S_DisableSounds();

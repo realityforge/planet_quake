@@ -351,20 +351,12 @@ function Sys_Main_PlatformExit () {
     document.removeEventListener('dragenter', SYSI.dragEnterHandler)
     document.removeEventListener('dragover', SYSI.dragOverHandler)    
   }
-  
-  //Module['canvas'].addEventListener('mousemove', SYSI.InputPushMouseEvent, false)
-  //Module['canvas'].addEventListener('mousedown', SYSI.InputPushMouseEvent, false)
-  //Module['canvas'].addEventListener('mouseup', SYSI.InputPushMouseEvent, false)
-  //Module['canvas'].addEventListener('mousewheel', SYSI.InputPushWheelEvent, false)
 
-  if (Module['canvas']) {
-    Module['canvas'].remove()
+  if (SYSI.canvas) {
+    SYSI.canvas.remove()
   }
   if(SYSC.returnURL) {
     window.location = SYSC.returnURL
-  }
-  if(typeof Module.exitHandler != 'undefined') {
-    Module.exitHandler()
   }
 }
 
