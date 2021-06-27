@@ -1538,6 +1538,9 @@ size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_f
 extern void*     sbrk(ptrdiff_t);
 #endif /* FreeBSD etc */
 #endif /* LACKS_UNISTD_H */
+#ifdef __WASM__
+extern void*     sbrk(ptrdiff_t);
+#endif
 
 /* Declarations for locking */
 #if USE_LOCKS

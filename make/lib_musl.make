@@ -130,7 +130,7 @@ MUSL_CFLAGS      := -Ofast --target=wasm32 -fvisibility=hidden \
                     -D__WASM__ \
 										-fno-common -ffreestanding -nostdinc -pedantic \
 										--no-standard-libraries \
-										-std=c11 \
+										-std=gnu11 \
 										-Wall \
                     -Wno-unused-variable -Wvariadic-macros -Wno-extra-semi \
                     -Wno-shift-op-parentheses -Wno-c11-extensions \
