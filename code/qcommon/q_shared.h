@@ -126,6 +126,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // TODO: move this into make file
 #ifdef __WASM__
+#define WASM_ASYNCP(x, y) } void x( y ) {
 #define WASM_ASYNC(x) } void x( void ) {
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
 #define USE_VID_FAST 1

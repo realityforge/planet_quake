@@ -4480,7 +4480,7 @@ static void CL_InitRef( void ) {
 	rendererLib = FS_LoadLibrary( dllName );
 #ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitRef_After_Load);
-  WASM_ASYNC(CL_InitRef_After_Load);
+  WASM_ASYNCP(CL_InitRef_After_Load, void *handle);
 	char			dllName[ MAX_OSPATH ];
   rendererLib = handle;
 #endif
@@ -4498,7 +4498,7 @@ static void CL_InitRef( void ) {
 	}
 #ifdef __WASM__
 	Com_Frame_RentryHandle(CL_InitRef_After_Load2);
-  WASM_ASYNC(CL_InitRef_After_Load2);
+  WASM_ASYNCP(CL_InitRef_After_Load2, void *handle);
 	refimport_t	rimp;
 	refexport_t	*ret;
 	GetRefAPI_t		GetRefAPI;

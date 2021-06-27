@@ -18,7 +18,8 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/internal musl/time   musl/locale musl/network   \
                     musl/select   musl/stat   musl/dirent musl/misc      \
                     musl/fcntl    musl/ctype  musl/exit   musl/env       \
-                    musl/thread   musl/mman               musl/multibyte
+                    musl/thread   musl/mman   musl/multibyte
+
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 endif
 
