@@ -94,7 +94,7 @@ endif
 SYSTEM           := 
 
 ifeq ($(PLATFORM),js)
-SYSTEM           += sys_glimp.o sys_main.o sys_input.o sys_math.o
+SYSTEM           += sys_sdl.o sys_main.o sys_input.o sys_math.o
 endif
 
 ifneq ($(PLATFORM),js)

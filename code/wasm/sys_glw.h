@@ -116,6 +116,83 @@ typedef enum
 #define SDL_INIT_NOPARACHUTE    0x00100000      /**< Don't catch fatal signals */
 #define SDL_INIT_EVERYTHING     0x0000FFFF
 
+
+#define SDL_AUDIO_MASK_BITSIZE       (0xFF)
+#define SDL_AUDIO_MASK_DATATYPE      (1<<8)
+#define SDL_AUDIO_MASK_ENDIAN        (1<<12)
+#define SDL_AUDIO_MASK_SIGNED        (1<<15)
+#define SDL_AUDIO_BITSIZE(x)         (x & SDL_AUDIO_MASK_BITSIZE)
+#define SDL_AUDIO_ISFLOAT(x)         (x & SDL_AUDIO_MASK_DATATYPE)
+#define SDL_AUDIO_ISBIGENDIAN(x)     (x & SDL_AUDIO_MASK_ENDIAN)
+#define SDL_AUDIO_ISSIGNED(x)        (x & SDL_AUDIO_MASK_SIGNED)
+#define SDL_AUDIO_ISINT(x)           (!SDL_AUDIO_ISFLOAT(x))
+#define SDL_AUDIO_ISLITTLEENDIAN(x)  (!SDL_AUDIO_ISBIGENDIAN(x))
+#define SDL_AUDIO_ISUNSIGNED(x)      (!SDL_AUDIO_ISSIGNED(x))
+
+#define SDL_AUDIO_ALLOW_FREQUENCY_CHANGE    0x00000001
+#define SDL_AUDIO_ALLOW_FORMAT_CHANGE       0x00000002
+#define SDL_AUDIO_ALLOW_CHANNELS_CHANGE     0x00000004
+#define SDL_AUDIO_ALLOW_SAMPLES_CHANGE      0x00000008
+#define SDL_AUDIO_ALLOW_ANY_CHANGE          (SDL_AUDIO_ALLOW_FREQUENCY_CHANGE|SDL_AUDIO_ALLOW_FORMAT_CHANGE|SDL_AUDIO_ALLOW_CHANNELS_CHANGE|SDL_AUDIO_ALLOW_SAMPLES_CHANGE)
+
+
+#define AUDIO_U8        0x0008  /**< Unsigned 8-bit samples */
+#define AUDIO_S8        0x8008  /**< Signed 8-bit samples */
+#define AUDIO_U16LSB    0x0010  /**< Unsigned 16-bit samples */
+#define AUDIO_S16LSB    0x8010  /**< Signed 16-bit samples */
+#define AUDIO_U16MSB    0x1010  /**< As above, but big-endian byte order */
+#define AUDIO_S16MSB    0x9010  /**< As above, but big-endian byte order */
+#define AUDIO_U16       AUDIO_U16LSB
+#define AUDIO_S16       AUDIO_S16LSB
+
+#define AUDIO_F32LSB    0x8120  /**< 32-bit floating point samples */
+#define AUDIO_F32MSB    0x9120  /**< As above, but big-endian byte order */
+#define AUDIO_F32       AUDIO_F32LSB
+
+/**
+ *  \name Native audio byte ordering
+ */
+/* @{ */
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+#define AUDIO_U16SYS    AUDIO_U16LSB
+#define AUDIO_S16SYS    AUDIO_S16LSB
+#define AUDIO_S32SYS    AUDIO_S32LSB
+#define AUDIO_F32SYS    AUDIO_F32LSB
+#else
+#define AUDIO_U16SYS    AUDIO_U16MSB
+#define AUDIO_S16SYS    AUDIO_S16MSB
+#define AUDIO_S32SYS    AUDIO_S32MSB
+#define AUDIO_F32SYS    AUDIO_F32MSB
+#endif
+
+/**
+ *  The calculated values in this structure are calculated by SDL_OpenAudio().
+ *
+ *  For multi-channel audio, the default SDL channel mapping is:
+ *  2:  FL FR                       (stereo)
+ *  3:  FL FR LFE                   (2.1 surround)
+ *  4:  FL FR BL BR                 (quad)
+ *  5:  FL FR FC BL BR              (quad + center)
+ *  6:  FL FR FC LFE SL SR          (5.1 surround - last two can also be BL BR)
+ *  7:  FL FR FC LFE BC SL SR       (6.1 surround)
+ *  8:  FL FR FC LFE BL BR SL SR    (7.1 surround)
+ */
+typedef unsigned short SDL_AudioFormat;
+typedef void (*SDL_AudioCallback) (void *userdata, uint8_t * stream, int len);
+
+typedef struct SDL_AudioSpec
+{
+    int freq;                   /**< DSP frequency -- samples per second */
+    SDL_AudioFormat format;     /**< Audio data format */
+    uint8_t channels;             /**< Number of channels: 1 mono, 2 stereo */
+    uint8_t silence;              /**< Audio buffer silence value (calculated) */
+    uint16_t samples;             /**< Audio buffer size in sample FRAMES (total samples divided by channel count) */
+    uint16_t padding;             /**< Necessary for some compile environments */
+    uint32_t size;                /**< Audio buffer size in bytes (calculated) */
+    SDL_AudioCallback callback; /**< Callback that feeds the audio device (NULL to use SDL_QueueAudio()). */
+    void *userdata;             /**< Userdata passed to callback (ignored for NULL callbacks). */
+} SDL_AudioSpec;
+
 extern void  SDL_MinimizeWindow( void *window );
 extern int   SDL_GetWindowDisplayIndex(void *window);
 extern void  SDL_GL_DeleteContext(void *ctx);
@@ -169,6 +246,8 @@ typedef struct
 
 extern SDL_Window *SDL_window;
 extern glwstate_t glw_state;
+
+typedef uint32_t SDL_AudioDeviceID;
 
 extern cvar_t *in_nograb;
 

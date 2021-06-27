@@ -87,6 +87,19 @@ function SDL_ShowCursor (toggle) {
   }
 }
 
+function SDL_GetWindowFlags (x, y) {
+  if (Browser.isFullscreen) {
+     return 1;
+  }
+
+  return 0;
+}
+
+function SDL_SetWindowGrab (window, grabbed) {
+  // set the window to do the grabbing, when ungrabbing this doesn't really matter
+  SDL_ShowCursor(grabbed)
+}
+
 function SDL_GetError () {
   if (!SDL.errorMessage) {
     SDL.errorMessage = allocate(intArrayFromString("unknown SDL-emscripten error"), ALLOC_NORMAL);
@@ -163,9 +176,9 @@ function SDL_GL_SwapWindow (window) {
 }
 
 function SDL_StartTextInput () {
-  
+  SDL.textInput = true;
 }
 
 function SDL_StopTextInput () {
-  
+  SDL.textInput = false;
 }
