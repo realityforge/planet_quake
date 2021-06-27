@@ -1,0 +1,7 @@
+SNDDMA_Init
+SNDDMA_BeginPainting
+SNDDMA_Submit
+SNDDMA_Shutdown
+SNDDMA_BeginPainting
+SNDDMA_Submit
+SNDDMA_Get

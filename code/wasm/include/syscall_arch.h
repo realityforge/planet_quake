@@ -13,13 +13,11 @@ extern "C" {
 
 // C++ needs the nothrow attribute so -O0 doesn't lower these calls as invokes.
 __attribute__((nothrow))
-int emscripten_asm_const_int(const char* code, const char* arg_sigs, ...);
+int asm_const_int(const char* code, const char* arg_sigs, ...);
+
 __attribute__((nothrow))
 double emscripten_asm_const_double(const char* code, const char* arg_sigs, ...);
 
-__attribute__((nothrow))
-int emscripten_asm_const_int_sync_on_main_thread(
-  const char* code, const char* arg_sigs, ...);
 __attribute__((nothrow))
 double emscripten_asm_const_double_sync_on_main_thread(
   const char* code, const char* arg_sigs, ...);
@@ -202,33 +200,14 @@ const char __em_asm_sig_builder<__em_asm_type_tuple<Args...> >::buffer[] = { __e
   }))
 
 // Runs the given JavaScript code on the calling thread (synchronously), and returns no value back.
-#define EM_ASM0(code) ((void)emscripten_asm_const_int(CODE_EXPR(#code), 'v'))
-#define EM_ASM(code, ...) ((void)emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__)))
+#define EM_ASM0(code) ((void)asm_const_int(CODE_EXPR(#code), 'v'))
+#define EM_ASM(code, ...) ((void)asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__)))
 
 // Runs the given JavaScript code on the calling thread (synchronously), and returns an integer back.
-#define EM_ASM_INT(code, ...) emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+#define EM_ASM_INT(code, ...) asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
 
 // Runs the given JavaScript code on the calling thread (synchronously), and returns a double back.
 #define EM_ASM_DOUBLE(code, ...) emscripten_asm_const_double(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
-
-// Runs the given JavaScript code synchronously on the main browser thread, and returns no value back.
-// Call this function for example to access DOM elements in a pthread when building with -s USE_PTHREADS=1.
-// Avoid calling this function in performance sensitive code, because this will effectively sleep the
-// calling thread until the main browser thread is able to service the proxied function call. If you have
-// multiple MAIN_THREAD_EM_ASM() code blocks to call in succession, it will likely be much faster to
-// coalesce all the calls to a single MAIN_THREAD_EM_ASM() block. If you do not need synchronization nor
-// a return value back, consider using the function MAIN_THREAD_ASYNC_EM_ASM() instead, which will not block.
-// In single-threaded builds (including proxy-to-worker), MAIN_THREAD_EM_ASM*()
-// functions are direct aliases to the corresponding EM_ASM*() family of functions.
-#define MAIN_THREAD_EM_ASM(code, ...) ((void)emscripten_asm_const_int_sync_on_main_thread(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__)))
-
-// Runs the given JavaScript code synchronously on the main browser thread, and returns an integer back.
-// The same considerations apply as with MAIN_THREAD_EM_ASM().
-#define MAIN_THREAD_EM_ASM_INT(code, ...) emscripten_asm_const_int_sync_on_main_thread(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
-
-// Runs the given JavaScript code synchronously on the main browser thread, and returns a double back.
-// The same considerations apply as with MAIN_THREAD_EM_ASM().
-#define MAIN_THREAD_EM_ASM_DOUBLE(code, ...) emscripten_asm_const_double_sync_on_main_thread(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
 
 // Asynchronously dispatches the given JavaScript code to be run on the main browser thread.
 // If the calling thread is the main browser thread, then the specified JavaScript code is executed
@@ -239,8 +218,8 @@ const char __em_asm_sig_builder<__em_asm_type_tuple<Args...> >::buffer[] = { __e
 // Old forms for compatibility, no need to use these.
 // Replace EM_ASM_, EM_ASM_ARGS and EM_ASM_INT_V with EM_ASM_INT,
 // and EM_ASM_DOUBLE_V with EM_ASM_DOUBLE.
-#define EM_ASM_(code, ...) emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
-#define EM_ASM_ARGS(code, ...) emscripten_asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+#define EM_ASM_(code, ...) asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
+#define EM_ASM_ARGS(code, ...) asm_const_int(CODE_EXPR(#code) _EM_ASM_PREP_ARGS(__VA_ARGS__))
 #define EM_ASM_INT_V(code) EM_ASM_INT(code)
 #define EM_ASM_DOUBLE_V(code) EM_ASM_DOUBLE(code)
 

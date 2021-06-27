@@ -1352,9 +1352,7 @@ static void NET_OpenSocks( int port ) {
     Sys_SocksConnect(); // don't wait until next frame to attach to websocket events
     SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Connect);
   }
-}
-
-void NET_OpenSocks_After_Connect( void ) {
+  WASM_ASYNC(NET_OpenSocks_After_Connect);
   int					port;
   int					len;
 	qboolean			rfc1929;
@@ -1389,17 +1387,14 @@ void NET_OpenSocks_After_Connect( void ) {
 
 #ifdef __WASM__
   porto = port;
-  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Method);
-}
-
-void NET_OpenSocks_After_Method( void ) {
+  SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Method);
+  WASM_ASYNC(NET_OpenSocks_After_Method);
   int 			  port;
   int					len;
   unsigned char		buf[64];
   socks5_request_t	cmd;
   port = porto;
 #endif
-;
 
 	// get the response
 	len = recv( socks_socket, (void *)buf, 32, 0 );
@@ -1487,17 +1482,14 @@ void NET_OpenSocks_After_Method( void ) {
 	}
 
 #ifdef __WASM__
-  SOCKS_Frame_Callback(Sys_SocksMessage, NET_OpenSocks_After_Listen);
-}
-
-void NET_OpenSocks_After_Listen( void ) {
+  SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Listen);
+  WASM_ASYNC(NET_OpenSocks_After_Listen);
   int					len;
   unsigned char		buf[64];
   struct hostent		*h;
   socks5_request_t	cmd;
   // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
 #endif
-;
 
 	// get the response
 	len = recv( socks_socket, (void *)&cmd, sizeof( cmd ), 0 );

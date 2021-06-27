@@ -552,6 +552,48 @@ qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
 const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
 
 
+#define VA_ARGS(numargs, pointer) \
+intptr_t	args[numargs]; \
+va_list	ap; \
+va_start( ap, pointer ); \
+for (int i = 0; i < ARRAY_LEN( args ); i++ ) \
+  args[ i ] = va_arg( ap, intptr_t ); \
+va_end( ap );
+
+
+__attribute__((nothrow))
+EM_JS(int, ASM_const_int, ( const char* code, const char* arg_sigs, intptr_t *args ), 
+{ return asm_const_int(code, arg_sigs, args) });
+int asm_const_int(const char* code, const char* arg_sigs, ...)
+{
+  VA_ARGS(14, arg_sigs);
+  return ASM_const_int(code, arg_sigs, args); 
+}
+
+EM_JS(void, SYS_SocksConnect, ( void ), 
+{ Sys_SocksConnect() });
+void Sys_SocksConnect( void )
+{ SYS_SocksConnect(); }
+
+EM_JS(void, SYS_NET_MulticastLocal, ( int sock, int length, const int *data ), 
+{ return SYS_NET_MulticastLocal(sock, length, data) });
+void Sys_NET_MulticastLocal( int sock, int length, const int *data )
+{ return SYS_NET_MulticastLocal(sock, length, data); }
+
+EM_JS(void *, SYS_LoadFunction, ( void *handle, const char *name ), 
+{ return Sys_LoadFunction(handle, name) });
+void *Sys_LoadFunction( void *handle, const char *name )
+{ return SYS_LoadFunction(handle, name); }
+
+EM_JS(void, SYS_UnloadLibrary, ( void *handle ), 
+{ return Sys_UnloadLibrary(handle) });
+void Sys_UnloadLibrary( void *handle )
+{ return SYS_UnloadLibrary(handle); }
+
+EM_JS(void *, SYS_LoadLibrary, ( const char *name ), 
+{ return Sys_LoadLibrary(name) });
+void *Sys_LoadLibrary( const char *name )
+{ return SYS_LoadLibrary(name); }
 
 EM_JS(char **, SYS_CmdArgs, ( void ), 
 { return Sys_Main_CmdArgs() });
@@ -601,13 +643,8 @@ qboolean Sys_RandomBytes( byte *string, int len )
 EM_JS(void, SYS_Main_SetStatus, ( const char *format, intptr_t *args ), 
 { Sys_SetStatus.apply(null, [format].concat(args)) });
 void QDECL Sys_SetStatus( const char *format, ... )
-{ 
-  intptr_t	args[14]; // max.count for qagame
-  va_list	ap;
-	va_start( ap, format );
-	for (int i = 0; i < ARRAY_LEN( args ); i++ )
-		args[ i ] = va_arg( ap, intptr_t );
-	va_end( ap );
+{
+  VA_ARGS(14, format);
   SYS_Main_SetStatus(format, args); 
 }
 

@@ -42,16 +42,3 @@ TableEntry* saveSetjmp(uint32_t* env, uint32_t label, TableEntry* table, uint32_
   setTempRet0(size); // FIXME: unneeded?
   return table;
 }
-
-uint32_t testSetjmp(uint32_t id, TableEntry* table, uint32_t size) {
-  uint32_t i = 0, curr;
-  while (i < size) {
-    uint32_t curr = table[i].id;
-    if (curr == 0) break;
-    if (curr == id) {
-      return table[i].label;
-    }
-    i++;
-  }
-  return 0;
-}

@@ -7,6 +7,29 @@ global['SYSC'] = {
   
 }
 
+function readAsmConstArgs (sigPtr, buf) {
+  readAsmConstArgsArray.length = 0;
+  var ch;
+  // Most arguments are i32s, so shift the buffer pointer so it is a plain
+  // index into HEAP32.
+  buf >>= 2;
+  while (ch = HEAPU8[sigPtr++]) {
+    // A double takes two 32-bit slots, and must also be aligned - the backend
+    // will emit padding to avoid that.
+    var double = ch < 105;
+    if (double && (buf & 1)) buf++;
+    readAsmConstArgsArray.push(double ? HEAPF64[buf++ >> 1] : HEAP32[buf]);
+    ++buf;
+  }
+  return readAsmConstArgsArray;
+}
+
+function asm_const_int (code, sigPtr, argbuf) {
+  code -= {{{ GLOBAL_BASE }}};
+  var args = readAsmConstArgs(sigPtr, argbuf);
+  return ASM_CONSTS[code].apply(null, args);
+}
+
 function Cvar_VariableString (str) {
   intArrayFromString(str).forEach(function (c, i) { HEAP8[(SYSC.varStr+i)] = c })
   HEAP8[(SYSC.varStr+str.length)] = 0

@@ -443,8 +443,6 @@ function Sys_SocksConnect () {
   //})
 }
 
-function Sys_SocksMessage () {}
-
 function Sys_NET_MulticastLocal (net, length, data) {
   // prevent recursion because NET_SendLoopPacket will call here again
   if(SYSN.multicasting

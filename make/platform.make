@@ -102,8 +102,11 @@ mkdirs:
 endif
 
 ifdef WORKDIR
+D_DIRS  := $(addprefix $(BD)/,$(notdir $(WORKDIRS))) \
+					 $(addprefix $(BR)/,$(notdir $(WORKDIRS)))
 D_FILES := $(shell find $(BD)/$(WORKDIR) -name '*.d' 2>/dev/null) \
-           $(shell find $(BR)/$(WORKDIR) -name '*.d' 2>/dev/null)
+           $(shell find $(BR)/$(WORKDIR) -name '*.d' 2>/dev/null) \
+					 $(shell find $(D_DIRS) -name '*.d' 2>/dev/null)
 ifneq ($(strip $(D_FILES)),)
 include $(D_FILES)
 endif

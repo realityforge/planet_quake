@@ -492,6 +492,9 @@ function dragOverHandler (ev) {
 }
 
 function Sys_GLimpInit () {
+  var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
+  var developer = SYSC.Cvar_VariableIntegerValue('developer')
+
   if(!SYSI.inputHeap)
     SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
 
@@ -515,17 +518,14 @@ function Sys_GLimpInit () {
     }
   })
   window.addEventListener('resize', SYSI.resizeViewport)
-}
 
-function Sys_GLContextCreated () {
-  var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
-  var developer = SYSC.Cvar_VariableIntegerValue('developer')
   if(in_joystick) {
     SYSI.InitNippleJoysticks()
   }
-	SYSI.InputInit()
+  SYSI.InputInit()
   
-  //if(!developer) return
+  if(!developer) return
+  
   function throwOnGLError(err, funcName, args) {
     //console.error(WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName)
   }
@@ -534,6 +534,7 @@ function Sys_GLContextCreated () {
         WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")") 
   }
   //GLctx = WebGLDebugUtils.makeDebugContext(GLctx, throwOnGLError /*, logGLCall */)
+
 }
 
 function Sys_GLimpSafeInit () {

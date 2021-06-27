@@ -40,6 +40,33 @@ void *SDL_glContext = NULL;
 cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
+
+SDL_GetWindowDisplayIndex
+SDL_GetError
+SDL_GetDesktopDisplayMode
+SDL_GL_DeleteContext
+SDL_GL_SetAttribute
+SDL_CreateWindow
+SDL_SetWindowDisplayMode
+SDL_GL_CreateContext
+SDL_DestroyWindow
+SDL_GL_SetSwapInterval
+SDL_GL_GetDrawableSize
+SDL_WarpMouseInWindow
+SDL_WasInit
+SDL_Init
+SDL_GetCurrentVideoDriver
+SDL_GL_SwapWindow
+SDL_ShowCursor
+SDL_SetWindowGrab
+SDL_SetRelativeMouseMode
+SDL_GetWindowFlags
+SDL_StopTextInput
+
+
+void *GL_GetProcAddress( const char *name ) { return NULL; }
+
+
 /*
 ===============
 GLimp_Shutdown
@@ -532,9 +559,6 @@ void GLimp_Init( glconfig_t *config )
       return;
     }
   }
-
-  Sys_GLContextCreated();
-
 
   // These values force the UI to disable driver selection
   config->driverType = GLDRV_ICD;
