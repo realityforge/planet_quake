@@ -122,14 +122,7 @@ void CON_SigTStp( int signum )
 	kill( getpid(),  SIGTSTP );
 }
 
-
-// =============================================================
-// general sys routines
-// =============================================================
-
-// single exit point (regular exit or in case of signal fault)
 void Sys_Exit( int code ) __attribute((noreturn));
-
 
 void Sys_Quit( void )
 {
@@ -188,20 +181,11 @@ void floating_point_exception_handler( int whatever )
 }
 
 
-/*
-=================
-Sys_SendKeyEvents
-
-Platform-dependent event handling
-=================
-*/
 void Sys_SendKeyEvents( void )
 {
 
 }
 
-
-/*****************************************************************************/
 
 char *do_dlerror( void )
 {
@@ -209,11 +193,6 @@ char *do_dlerror( void )
 }
 
 
-/*
-=================
-Sys_UnloadDll
-=================
-*/
 void Sys_UnloadDll( void *dllHandle ) {
 
 	if ( !dllHandle )
@@ -232,18 +211,6 @@ void Sys_UnloadDll( void *dllHandle ) {
 }
 
 
-/*
-=================
-Sys_LoadDll
-
-Used to load a development dll instead of a virtual machine
-TTimo:
-changed the load procedure to match VFS logic, and allow developer use
-#1 look down current path
-#2 look in fs_homepath
-#3 look in fs_basepath
-=================
-*/
 static void* try_dlopen( const char* base, const char* gamedir, const char* fname )
 {
 	void* libHandle;
@@ -336,8 +303,6 @@ void *Sys_LoadDll( const char *name, dllSyscall_t *entryPoint, dllSyscall_t syst
 
 	return libHandle;
 }
-
-/*****************************************************************************/
 
 
 static struct Q3ToAnsiColorTable_s
@@ -463,36 +428,11 @@ void Sys_PrintBinVersion( const char* name )
 }
 
 
-/*
-=================
-Sys_BinName
-
-This resolves any symlinks to the binary. It's disabled for debug
-builds because there are situations where you are likely to want
-to symlink to binaries and /not/ have the links resolved.
-=================
-*/
 const char *Sys_BinName( const char *arg0 )
 {
 	static char   dst[ PATH_MAX ];
 
-#ifdef NDEBUG
-
-#ifdef __linux__
-	int n = readlink( "/proc/self/exe", dst, PATH_MAX - 1 );
-
-	if ( n >= 0 && n < PATH_MAX )
-		dst[ n ] = '\0';
-	else
-		Q_strncpyz( dst, arg0, PATH_MAX );
-#else
-#warning Sys_BinName not implemented
 	Q_strncpyz( dst, arg0, PATH_MAX );
-#endif
-
-#else
-	Q_strncpyz( dst, arg0, PATH_MAX );
-#endif
 
 	return dst;
 }
@@ -567,24 +507,6 @@ Q_EXPORT int main( int argc, char* argv[] )
 }
 
 
-char *Sys_ConsoleInput( void ) { return NULL; }
-
-void Sys_Mkdir( const char *path ) { mkdir( path, 0750 ); }
-
-const char *Sys_DefaultBasePath( void ) { return "/base"; }
-
-const char *Sys_Pwd( void ) { return "/base"; }
-
-qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
-
-const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
-
-
-/*
-=============
-Sys_GetFileStats
-=============
-*/
 qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t *mtime, fileTime_t *ctime ) {
 	struct stat s;
 
@@ -601,11 +523,6 @@ qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t 
 }
 
 
-/*
-=================
-Sys_FreeFileList
-=================
-*/
 void Sys_FreeFileList( char **list ) {
 	int		i;
 
@@ -620,7 +537,61 @@ void Sys_FreeFileList( char **list ) {
 	Z_Free( list );
 }
 
+void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) { }
 
+char *Sys_ConsoleInput( void ) { return NULL; }
+
+void Sys_Mkdir( const char *path ) { mkdir( path, 0750 ); }
+
+const char *Sys_DefaultBasePath( void ) { return "/base"; }
+
+const char *Sys_Pwd( void ) { return "/base"; }
+
+qboolean Sys_ResetReadOnlyAttribute( const char *ospath ) { return qfalse; }
+
+const char *Sys_DefaultHomePath( void ) { return "/base/home"; }
+
+
+
+EM_JS(char **, SYS_CmdArgs, ( void ), 
+{ return Sys_Main_CmdArgs() });
+char **Sys_CmdArgs( void )
+{ return SYS_CmdArgs(); }
+
+EM_JS(int, SYS_CmdArgsC, ( void ), 
+{ return Sys_Main_CmdArgsC() });
+int Sys_CmdArgsC( void )
+{ return SYS_CmdArgsC(); }
+
+EM_JS(void, SYS_FS_Offline, ( void ), 
+{ Sys_FS_Offline() });
+void Sys_FS_Offline( void )
+{ SYS_FS_Offline(); }
+
+EM_JS(void, SYS_Debug, ( void ), 
+{ return Sys_Debug() });
+void Sys_Debug( void )
+{ return SYS_Debug(); }
+
+EM_JS(char *, SYS_GetClipboardData, ( void ), 
+{ return Sys_GetClipboardData() });
+char *Sys_GetClipboardData( void )
+{ return SYS_GetClipboardData(); }
+
+EM_JS(void, SYS_BeginDownload, ( void ), 
+{ Sys_BeginDownload() });
+void Sys_BeginDownload( void )
+{ SYS_BeginDownload(); }
+
+EM_JS(void, SYS_DownloadLocalFile, ( char *fileName ), 
+{ return Sys_Main_DownloadLocalFile(fileName) });
+void Sys_DownloadLocalFile( char *fileName )
+{ return SYS_DownloadLocalFile(fileName); }
+
+EM_JS(void, SYS_Main_PlatformExit, ( int code ), 
+{ Sys_PlatformExit(code) });
+void Sys_Exit( int code )
+{ SYS_Main_PlatformExit(code); exit(code); }
 
 EM_JS(qboolean, SYS_Main_RandomBytes, ( byte *string, int len ), 
 { return Sys_RandomBytes(string, len) });

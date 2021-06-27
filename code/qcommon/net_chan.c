@@ -477,7 +477,7 @@ void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
 	
-#ifdef __WASM__
+#ifdef USE_LOCAL_DED
 	Sys_NET_MulticastLocal(sock, length, data);
 #endif
 }
