@@ -139,6 +139,31 @@ EM_JS(void, SYS_StopTextInput, ( void ),
 void SDL_StopTextInput(void)
 { SYS_StopTextInput(); }
 
+EM_JS(SDL_AudioDeviceID, SYS_OpenAudio, ( const char *device, int iscapture,
+                    const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
+                    int allowed_changes ), 
+{ return SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes) });
+SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device, int iscapture,
+                    const SDL_AudioSpec * desired, SDL_AudioSpec * obtained,
+                    int allowed_changes)
+{ return SYS_OpenAudio(device, iscapture, desired, obtained, allowed_changes); }
+
+EM_JS(void, SYS_PauseAudio, ( SDL_AudioDeviceID dev, int pause_on ), 
+{ SDL_PauseAudioDevice(dev, pause_on) });
+void SDL_PauseAudioDevice(SDL_AudioDeviceID dev, int pause_on)
+{ SYS_PauseAudio(dev, pause_on); }
+
+EM_JS(void, SYS_CloseAudio, ( SDL_AudioDeviceID dev ), 
+{ SDL_CloseAudioDevice(dev) });
+void SDL_CloseAudioDevice(SDL_AudioDeviceID dev)
+{ SYS_CloseAudio(dev); }
+
+void SDL_LockAudioDevice(SDL_AudioDeviceID dev) { }
+
+void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev) { }
+
+void SDL_QuitSubSystem(uint32_t flags) { }
+
 int SDL_SetRelativeMouseMode(qboolean enabled) { return 0; }
 
 void SDL_GL_SwapWindow(void *window) {
