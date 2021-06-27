@@ -41,6 +41,17 @@ cvar_t *r_stereoEnabled;
 cvar_t *in_nograb;
 
 
+EM_JS(void *, SYS_CreateContext, ( void *window ), 
+{ return Sys_GL_CreateContext(window) });
+void *SDL_GL_CreateContext(void *window)
+{ return SYS_CreateContext(window); }
+
+EM_JS(int, SYS_SDL_Init, ( uint32_t flags ), 
+{ return Sys_GLimpInit(flags) });
+int SDL_Init(uint32_t flags)
+{ return SYS_SDL_Init(flags); }
+
+/*
 SDL_GetWindowDisplayIndex
 SDL_GetError
 SDL_GetDesktopDisplayMode
@@ -54,7 +65,6 @@ SDL_GL_SetSwapInterval
 SDL_GL_GetDrawableSize
 SDL_WarpMouseInWindow
 SDL_WasInit
-SDL_Init
 SDL_GetCurrentVideoDriver
 SDL_GL_SwapWindow
 SDL_ShowCursor
@@ -62,6 +72,7 @@ SDL_SetWindowGrab
 SDL_SetRelativeMouseMode
 SDL_GetWindowFlags
 SDL_StopTextInput
+*/
 
 
 void *GL_GetProcAddress( const char *name ) { return NULL; }

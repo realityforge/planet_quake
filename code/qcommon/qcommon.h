@@ -81,7 +81,6 @@ void IN_ShowKeyboard (void);
 extern char **Sys_CmdArgs( void );
 extern int Sys_CmdArgsC( void );
 
-extern void	Sys_GLimpInit( void );
 extern void Sys_DownloadLocalFile( char *fileName );
 extern void Sys_FS_Offline( void );
 extern void Sys_FS_Startup( void );

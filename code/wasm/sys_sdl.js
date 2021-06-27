@@ -3,6 +3,8 @@
 //   events directly into the games event stack, since JS must have some sort
 //   of memory semaphore built in, we don't need to worry about similar pthread(mutexes)
 //   DROP SDL input support all together and use sys_input.js, this stuff is for n00bz
+var global = window || global
+global['SDL'] = {}
 
 function SDL_SetVideoMode (width, height, depth, flags) {
   var canvas = Module['canvas'];
@@ -28,10 +30,6 @@ function SDL_SetVideoMode (width, height, depth, flags) {
   SDL.screen = SDL.makeSurface(width, height, flags, true, 'screen');
 
   return SDL.screen;
-}
-
-function SDL_GL_CreateContext (window) {
-  return GL3.createContext
 }
 
 function SDL_DestroyWindow (window) {}
@@ -103,16 +101,9 @@ function SDL_WarpMouseInWindow () {
 
 function SDL_WasInit () {
   if (SDL.startTime === null) {
-    _SDL_Init();
+    Sys_GLimpInit();
   }
   return 1;
-}
-
-function SDL_Init (initFlags) {
-  SDL.startTime = Date.now();
-  SDL.initFlags = initFlags;
-  
-  _Sys_GLimpInit();
 }
 
 function SDL_GetCurrentVideoDriver () {

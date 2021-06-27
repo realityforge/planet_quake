@@ -1,4 +1,40 @@
-function createContext(canvas, webGLContextAttributes) {
+
+function registerContext (ctx, webGLContextAttributes) {
+  // with pthreads a context is a location in memory with some synchronized data between threads
+  var handle = _malloc(8);
+  HEAP32[handle>>2] = webGLContextAttributes.explicitSwapControl
+  HEAP32[(handle+4)>>2] = _pthread_self()
+  //var handle = GL.getNewId(GL.contexts);
+
+  var context = {
+    handle: handle,
+    attributes: webGLContextAttributes,
+    version: webGLContextAttributes.majorVersion,
+    GLctx: ctx
+  };
+
+  // Store the created context object so that we can access the context given a canvas without having to pass the parameters again.
+  if (ctx.canvas) ctx.canvas.GLctxObject = context;
+  GL.contexts[handle] = context;
+  if (typeof webGLContextAttributes.enableExtensionsByDefault === 'undefined' || webGLContextAttributes.enableExtensionsByDefault) {
+  //  GL.initExtensions(context);
+  }
+
+  context.maxVertexAttribs = context.GLctx.getParameter(0x8869 /*GL_MAX_VERTEX_ATTRIBS*/);
+  context.clientBuffers = [];
+  for (var i = 0; i < context.maxVertexAttribs; i++) {
+    context.clientBuffers[i] = { enabled: false, clientside: false, size: 0, type: 0, normalized: 0, stride: 0, ptr: 0, vertexAttribPointerAdaptor: null };
+  }
+
+  GL.generateTempBuffers(false, context);
+
+  if (webGLContextAttributes.renderViaOffscreenBackBuffer)
+    GL.createOffscreenFramebuffer(context);
+
+  return handle;
+}
+
+function Sys_GL_CreateContext(canvas, webGLContextAttributes) {
   webGLContextAttributes.failIfMajorPerformanceCaveat = true
   var ctx = (webGLContextAttributes.majorVersion > 1)
     ? canvas.getContext("webgl2", webGLContextAttributes)
@@ -33,7 +69,7 @@ function emscriptenWebGLGetBufferBinding (target) {
   else return 0;
 }
 
-function $emscriptenWebGLValidateMapBufferTarget (target) {
+function emscriptenWebGLValidateMapBufferTarget (target) {
   switch (target) {
     case 0x8892: // GL_ARRAY_BUFFER
     case 0x8893: // GL_ELEMENT_ARRAY_BUFFER
@@ -240,10 +276,6 @@ function glDrawElements (mode, count, type, indices) {
   if (!GL3.currElementArrayBuffer) {
     GLctx.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, null);
   }
-}
-
-function GL_GetProcAddress () {
-  
 }
 
 function SDL_GetWindowDisplayMode () {

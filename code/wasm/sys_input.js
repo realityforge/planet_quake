@@ -491,9 +491,11 @@ function dragOverHandler (ev) {
   ev.preventDefault();
 }
 
-function Sys_GLimpInit () {
+function Sys_GLimpInit (initFlags) {
   var in_joystick = SYSC.Cvar_VariableIntegerValue('in_joystick')
   var developer = SYSC.Cvar_VariableIntegerValue('developer')
+  SDL.startTime = Date.now();
+  SDL.initFlags = initFlags;
 
   if(!SYSI.inputHeap)
     SYSI.inputHeap = allocate(new Int32Array(60>>2), ALLOC_NORMAL)
