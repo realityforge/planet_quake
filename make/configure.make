@@ -37,9 +37,9 @@ USE_Q3KEY           ?= 0
 USE_IPV6            ?= 0
 USE_CODEC_VORBIS    ?= 0
 USE_CODEC_OPUS      ?= 0
-USE_CIN_THEORA      ?= 0
-USE_CIN_XVID        ?= 0
-USE_CIN_VPX         ?= 0
+USE_VIDEO_THEORA    ?= 0
+USE_CIN_OGM         ?= 0
+USE_CIN_WEBM        ?= 0
 
 USE_FREETYPE        ?= 0
 USE_MUMBLE          ?= 0
@@ -257,12 +257,20 @@ ifeq ($(USE_CODEC_VORBIS),1)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
 endif
 
-ifeq ($(USE_CIN_THEORA),1)
-  BASE_CFLAGS += -DUSE_CIN_THEORA=1
+ifeq ($(USE_CIN_WEBM),1)
+  BASE_CFLAGS += -DUSE_CIN_WEBM=1
 endif
 
-ifeq ($(USE_CIN_XVID),1)
-  BASE_CFLAGS += -DUSE_CIN_XVID=1
+ifeq ($(USE_CIN_OGM),1)
+  BASE_CFLAGS += -DUSE_CIN_OGM=1
+endif
+
+ifeq ($(USE_VIDEO_THEORA),1)
+  BASE_CFLAGS += -DUSE_VIDEO_THEORA=1
+endif
+
+ifeq ($(USE_VIDEO_XVID),1)
+  BASE_CFLAGS += -DUSE_VIDEO_XVID=1
 endif
 
 ifeq ($(USE_CIN_VPX),1)

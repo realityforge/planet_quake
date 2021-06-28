@@ -13,9 +13,10 @@ USE_CURL_DLOPEN        = 0
 CINEMATICS_LOGO        = 0
 CINEMATICS_INTRO       = 0
 
-USE_CODEC_VORBIS       = 1
-USE_CIN_THEORA         = 1
-USE_CIN_XVID           = 1
+USE_CODEC_VORBIS       = 0
+USE_CIN_OGM            = 1
+USE_VIDEO_THEORA       = 1
+USE_VIDEO_XVID         = 1
 USE_CIN_VPX            = 0
 
 USE_RMLUI              = 0

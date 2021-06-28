@@ -7,7 +7,7 @@ inspiration from ZaRR and persistent cattle prodding to get me to write this
 
 */
 
-#ifdef USE_CIN_VPX
+#ifdef USE_CIN_WEBM
 #include "cl_cin.h"
 #include <webmdec.h>
 #include <vpx/vpx_decoder.h>

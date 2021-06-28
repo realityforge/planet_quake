@@ -298,7 +298,7 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
   
   if (!strncmp(audio_track->GetCodecId(), "A_VORBIS", 8)) {
 #ifndef USE_CODEC_VORBIS
-    printf("WARNING: WebM has vorbis encoded audio but, but Vorbis support was not compiled, set USE_CODEC_VORBIS during compile.");
+    printf("WARNING: WebM has vorbis encoded audio, but Vorbis support was not compiled, set USE_CODEC_VORBIS during compile.");
     m_vorbis = NULL;
 #else
     if(!init_vorbis(audio_track, m_vorbis))
@@ -306,7 +306,7 @@ Q_EXPORT int file_is_webm(struct WebmInputContext *webm_ctx,
 #endif
   } else if (!strncmp(audio_track->GetCodecId(), "A_OPUS", 6)) {
 #ifndef USE_CODEC_OPUS
-    printf("WARNING: WebM has Opus encoded audio but, but Opus support was not compiled, set USE_CODEC_OPUS during compile.");
+    printf("WARNING: WebM has Opus encoded audio, but Opus support was not compiled, set USE_CODEC_OPUS during compile.");
     m_opus = NULL;
 #else
     if(!init_opus(audio_track, m_opus))

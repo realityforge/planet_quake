@@ -143,12 +143,12 @@ VIDEO            :=
             libs/libvpx-1.10/third_party/libwebm
 #endif
 
-ifeq ($(USE_CIN_XVID),1)
+ifeq ($(USE_VIDEO_XVID),1)
 BASE_CFLAGS    += $(XVID_CFLAGS)
 CLIENT_LDFLAGS += $(XVID_LIBS)
 endif
 
-ifeq ($(USE_CIN_THEORA),1)
+ifeq ($(USE_VIDEO_THEORA),1)
 BASE_CFLAGS    += $(THEORA_CFLAGS)
 CLIENT_LDFLAGS += $(THEORA_LIBS)
 endif

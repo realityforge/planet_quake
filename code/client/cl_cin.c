@@ -21,13 +21,13 @@ extern void RoQReset( void );
 extern e_status CIN_RunROQ(int handle);
 extern int CIN_PlayROQ(const char *arg, int x, int y, int w, int h, int systemBits );
 
-#ifdef USE_CIN_VPX
+#ifdef USE_CIN_WEBM
 extern void Cin_VPX_Shutdown(void);
 extern int CIN_PlayVPX(const char *arg, int x, int y, int w, int h, int systemBits );
 extern e_status CIN_RunVPX(int handle);
 #endif
 
-#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+#ifdef USE_CIN_OGM
 extern void Cin_OGM_Shutdown(void);
 extern int CIN_PlayOGM(const char *arg, int x, int y, int w, int h, int systemBits );
 extern e_status CIN_RunOGM(int handle);
@@ -35,14 +35,14 @@ extern e_status CIN_RunOGM(int handle);
 
 
 static videoapi_t cinematicLoaders[ ] = {
-#ifdef USE_CIN_VPX
+#ifdef USE_CIN_WEBM
 	{FT_VPX, "webm", CIN_PlayVPX, CIN_RunVPX, Cin_VPX_Shutdown},
 #endif
-#if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
+#ifdef USE_CIN_OGM
 	{FT_OGM, "ogm", CIN_PlayOGM, CIN_RunOGM, Cin_OGM_Shutdown},
 	{FT_OGM, "ogv", CIN_PlayOGM, CIN_RunOGM, Cin_OGM_Shutdown},
 #endif
-	{FT_ROQ, "roq", CIN_PlayROQ, CIN_RunROQ, }
+	{FT_ROQ, "roq", CIN_PlayROQ, CIN_RunROQ, },
 };
 
 static int numCinematicLoaders = ARRAY_LEN(cinematicLoaders);
