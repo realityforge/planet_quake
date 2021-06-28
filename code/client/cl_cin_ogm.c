@@ -39,6 +39,7 @@ theora:
  * theora doxygen docs (1.0beta1)
 */
 
+
 #if defined(USE_CODEC_VORBIS) && (defined(USE_CIN_XVID) || defined(USE_CIN_THEORA))
 #include "cl_cin.h"
 #include <ogg/ogg.h>
@@ -697,7 +698,7 @@ int Cin_OGM_Init(const char *filename)
 
 	memset(&g_ogm, 0, sizeof(cin_ogm_t));
 
-	cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, cinTable[currentHandle].iFile, qtrue);
+	cinTable[currentHandle].ROQSize = FS_FOpenFileRead(filename, &cinTable[currentHandle].iFile, qtrue);
 	if(!cinTable[currentHandle].iFile)
 	{
 		Com_Printf(S_COLOR_YELLOW "WARNING: Can't open ogm-file for reading (%s)\n", filename);
@@ -851,6 +852,7 @@ int Cin_OGM_Init(const char *filename)
 		theora_info_init(&g_ogm.th_info);
 		theora_comment_init(&g_ogm.th_comment);
 
+    Com_Printf("haters 14\n");
 		i = 0;
 		while(i < 3)
 		{
@@ -880,6 +882,7 @@ int Cin_OGM_Init(const char *filename)
 			}
 		}
 
+    Com_Printf("haters 15\n");
 		theora_decode_init(&g_ogm.th_state, &g_ogm.th_info);
 
 		if(!isPowerOf2(g_ogm.th_info.width))
@@ -892,6 +895,7 @@ int Cin_OGM_Init(const char *filename)
 			Com_Printf(S_COLOR_YELLOW "WARNING: VideoHeight of the ogm-file isn't a power of 2 value (%s)\n", filename);
 			return -6;
 		}
+    Com_Printf("haters 16\n");
 
 		g_ogm.Vtime_unit = ((ogg_int64_t) g_ogm.th_info.fps_denominator * 1000 * 10000 / g_ogm.th_info.fps_numerator);
 	}
@@ -985,9 +989,6 @@ Fetch and decompress the pending frame
 
 e_status CIN_RunOGM(int handle) 
 {
-  int	start = 0;
-	int     thisTime = 0;
-
   if (Cin_OGM_Run(cinTable[currentHandle].startTime == 0 ? 0 : CL_ScaledMilliseconds() - cinTable[currentHandle].startTime))
     cinTable[currentHandle].status = FMV_EOF;
   else
@@ -1073,7 +1074,7 @@ int CIN_PlayOGM( const char *name, int x, int y, int w, int h, int systemBits )
     Com_DPrintf("starting ogm-playback failed(%s)\n", name);
     cinTable[currentHandle].fileName[0] = 0;
     Cin_OGM_Shutdown();
-    return 0;
+    return -1;
   }
 
   cinTable[currentHandle].fileType = FT_OGM;

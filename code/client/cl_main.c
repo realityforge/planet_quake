@@ -1094,7 +1094,7 @@ static void CL_CompleteDemoName( char *args, int argNum )
 
 static void CL_Pause_f( void ) {
 	if(!clc.demoplaying) {
-		Com_Printf("Demo not playing.");
+		Com_Printf("Demo not playing.\n");
 		return;
 	}
 
@@ -1104,7 +1104,7 @@ static void CL_Pause_f( void ) {
 
 static void CL_Play_f( void ) {
 	if(!clc.demoplaying) {
-		Com_Printf("Demo not playing.");
+		Com_Printf("Demo not playing.\n");
 		return;
 	}
 
@@ -1118,7 +1118,7 @@ static void CL_Rewind_f( void ) {
 #endif
 
 	if(!clc.demoplaying) {
-		Com_Printf("Demo not playing.");
+		Com_Printf("Demo not playing.\n");
 		return;
 	}
 
@@ -5513,14 +5513,14 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
 	Cmd_SetDescription("demo", "Play a demo\nUsage: demo <demoname>");
-	Cmd_AddCommand("pause", CL_Pause_f);
-	Cmd_SetDescription("pause", "Pause the demo playing\nUsage: pause");
+	Cmd_AddCommand("demo_pause", CL_Pause_f);
+	Cmd_SetDescription("demo_pause", "Pause the demo playing\nUsage: pause");
 	Cmd_AddCommand("rewind", CL_Rewind_f);
 	Cmd_SetDescription("rewind", "Rewind demo playback\nUsage: rewind (10|<seconds>)");
 	Cmd_AddCommand("forward", CL_Rewind_f);
 	Cmd_SetDescription("forward", "Fast forward demo playback\nUsage: forward (10|<seconds>)");
-	Cmd_AddCommand("play", CL_Play_f);
-	Cmd_SetDescription("play", "Unpause and continue playing\nUsage: play");
+	Cmd_AddCommand("demo_play", CL_Play_f);
+	Cmd_SetDescription("demo_play", "Unpause and continue playing\nUsage: play");
 	
 	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
 	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nUsage: cinematic <videofile>");

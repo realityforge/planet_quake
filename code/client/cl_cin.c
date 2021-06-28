@@ -226,18 +226,21 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 	cin.currentHandle = currentHandle;
 
   ext = COM_GetExtension(name);
-	for(i = 0; i < numCinematicLoaders; i++) {
-		if(!Q_stricmp(ext, cinematicLoaders[i].ext)) {
-			if((result = cinematicLoaders[i].Play(name, x, y, w, h, systemBits)) > -1)
-				return result;
-		}
-	}
+  if(ext[0] != '\0') {
+  	for(i = 0; i < numCinematicLoaders; i++) {
+  		if(!Q_stricmp(ext, cinematicLoaders[i].ext)) {
+  			if((result = cinematicLoaders[i].Play(name, x, y, w, h, systemBits)) > -1)
+  				return result;
+  		}
+  	}
+  }
 
   if((result = CIN_PlayROQ(name, x, y, w, h, systemBits)) > -1)
     return result;
   
   COM_StripExtension(name, altName, sizeof(altName));
 	for(i = 0; i < numCinematicLoaders; i++) {
+    Com_DPrintf("%s: Searching for cinematic %s.%s\n", __func__, altName, cinematicLoaders[i].ext);
 		if((result = cinematicLoaders[i].Play(va("%s.%s", altName, cinematicLoaders[i].ext), x, y, w, h, systemBits)) > -1) {
 			Com_DPrintf( "WARNING: %s not present, using %s.%s instead\n",
 					name, altName, cinematicLoaders[i].ext );
@@ -382,12 +385,12 @@ void CL_PlayCinematic_f( void ) {
 	char	*arg, *s;
 	int bits = CIN_system;
 
-	Com_DPrintf("CL_PlayCinematic_f\n");
 	if (cls.state == CA_CINEMATIC) {
 		SCR_StopCinematic();
 	}
 
 	arg = Cmd_Argv( 1 );
+  Com_DPrintf("%s: %s\n", __func__, arg);
 	s = Cmd_Argv(2);
 
 	if ((s && s[0] == '1') || Q_stricmp(arg,"demoend.roq")==0 || Q_stricmp(arg,"end.roq")==0) {

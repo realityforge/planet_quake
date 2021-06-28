@@ -12,12 +12,12 @@ REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl $
 
 GLSLFFALLBACKS := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.glsl))
 GLSLFILES      := $(addprefix glsl/,$(notdir $(GLSLFFALLBACKS)))
-CFILES         := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
+REND_CFILES         := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
 ifeq ($(USE_RENDERER_DLOPEN),1)
-CFILES         := $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
+REND_CFILES         += $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
                   $(MOUNT_DIR)/qcommon/puff.c
 endif
-REND_OBJS      := $(CFILES:.c=.o) 
+REND_OBJS      := $(REND_CFILES:.c=.o) 
 Q3R2STRINGOBJ  := $(GLSLFILES:.glsl=.o)
 REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS))) \
                   $(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ)))

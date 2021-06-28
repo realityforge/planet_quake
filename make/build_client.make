@@ -61,6 +61,11 @@ SOUND            += snd_mix_mmx.o snd_mix_sse.o
 endif
 endif
 
+ifeq ($(USE_CODEC_VORBIS),1)
+BASE_CFLAGS    += $(VORBIS_CFLAGS) $(OGG_CFLAGS)
+CLIENT_LDFLAGS += $(VORBIS_LIBS) $(OGG_LIBS)
+endif
+
 
 VM               := vm.o
 ifneq ($(BUILD_GAME_STATIC),1)
@@ -137,6 +142,16 @@ VIDEO            :=
             libs/libogg-1.3.4/include \
             libs/libvpx-1.10/third_party/libwebm
 #endif
+
+ifeq ($(USE_CIN_XVID),1)
+BASE_CFLAGS    += $(XVID_CFLAGS)
+CLIENT_LDFLAGS += $(XVID_LIBS)
+endif
+
+ifeq ($(USE_CIN_THEORA),1)
+BASE_CFLAGS    += $(THEORA_CFLAGS)
+CLIENT_LDFLAGS += $(THEORA_LIBS)
+endif
 
 ifeq ($(USE_RMLUI),1)
 INCLUDES         += $(MOUNT_DIR)/../libs/RmlUi/Include

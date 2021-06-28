@@ -35,6 +35,7 @@ endif
 endif
 endif
 
+
 ifeq ($(USE_CIN_VPX),1)
 BASE_CFLAGS    += -Ilibs/libvpx-1.10
 CLIENT_LDFLAGS += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)

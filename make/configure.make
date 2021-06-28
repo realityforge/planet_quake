@@ -1,5 +1,5 @@
 
--include Makefile.local
+include Makefile.local
 
 CNAME               ?= quake3e
 DNAME               ?= quake3e.ded
@@ -109,12 +109,16 @@ PKG_CONFIG ?= pkg-config
 
 # TODO: if USE_INTERNAL_* is requested, add this to prebuild steps
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
-  SDL_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
+  SDL_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
   SDL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
-  X11_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
+  X11_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
   X11_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
   FREETYPE_CFLAGS  ?= $(shell $(PKG_CONFIG) --silence-errors --cflags freetype2 || true)
   FREETYPE_LIBS    ?= $(shell $(PKG_CONFIG) --silence-errors --libs freetype2 || echo -lfreetype)
+  THEORA_CFLAGS    ?= $(shell $(PKG_CONFIG) --silence-errors --cflags theora || true)
+  THEORA_LIBS      ?= $(shell $(PKG_CONFIG) --silence-errors --libs theora || echo -ltheora)
+  XVID_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags xvidcore || true)
+  XVID_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs xvidcore || echo -lxvidcore)
   OPUS_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags opusfile opus || true)
   OPUS_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs opusfile opus || echo -lopusfile -lopus)
   VORBIS_CFLAGS    ?= $(shell $(PKG_CONFIG) --silence-errors --cflags vorbisfile vorbis || true)
@@ -141,10 +145,10 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   PNG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libpng || echo -lpng)
   VPX_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libvpx libwebm || true)
   VPX_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libvpx libwebm || echo -lvpx -lwebm)
-  CURL_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libcurl || true)
-  CURL_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs libcurl || echo -lcurl)
-  ZLIB_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags zlib || true)
-  ZLIB_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs zlib || echo -lz)
+  CURL_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags libcurl || true)
+  CURL_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs libcurl || echo -lcurl)
+  ZLIB_CFLAGS      ?= $(shell $(PKG_CONFIG) --silence-errors --cflags zlib || true)
+  ZLIB_LIBS        ?= $(shell $(PKG_CONFIG) --silence-errors --libs zlib || echo -lz)
 
 endif
 
@@ -184,10 +188,10 @@ ifeq ($(ARCH),aarch64)
   HAVE_VM_COMPILED = true
 endif
 
-BASE_CFLAGS =
+BASE_CFLAGS   :=
 
 ifeq ($(BUILD_GAME_STATIC),1)
-BASE_CFLAGS += -DBUILD_GAME_STATIC
+  BASE_CFLAGS += -DBUILD_GAME_STATIC
 endif
 
 ifeq ($(USE_MEMORY_MAPS),1)
@@ -251,6 +255,14 @@ endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
+
+ifeq ($(USE_CIN_THEORA),1)
+  BASE_CFLAGS += -DUSE_CIN_THEORA=1
+endif
+
+ifeq ($(USE_CIN_XVID),1)
+  BASE_CFLAGS += -DUSE_CIN_XVID=1
 endif
 
 ifeq ($(USE_CIN_VPX),1)
