@@ -72,6 +72,20 @@ fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are writte
 
 cvar_t	*com_viewlog;
 cvar_t	*com_speeds;
+#ifdef USE_CON_DEBUG
+// set developer to a string or number to match the combination you seek
+//   using the following conversion table aligning to the bits above
+typedef struct {
+  char  name[20];
+  int   flags;
+} con_debug_t;
+con_debug_t developer_modes[] = {
+  {"dev", PR_DEVELOPER}
+};
+
+#define NUM_DEV_MODES ARRAY_LEN(developer_modes);
+#endif
+
 cvar_t	*com_developer;
 cvar_t	*com_dedicated;
 cvar_t	*com_timescale;

@@ -96,6 +96,74 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 #ifdef USE_CON_DEBUG
+// this is the default mode, it shows console messages naturally
+#define PR_DEFAULT     0x0
+// this is a special case, it shows only the messages you might expect an
+//   average player to understand, it is replaced with a combination of
+//   PR_NO_* and PR_* and also specific cases in the code, most like
+//   PR_USER_ONLY at the bottom of the list
+#define PR_RELEASE    -0x1
+// another special case, PR_DEVELOPER is most like `set developer 1`
+//   because of the other PR_NO_* and PR_* settings it is replaced with
+//   PR_DEVELOPER_ORIG at the bottom to simulate original developer mode
+//   there are also special cases inline using com_developer->integer
+#define PR_DEVELOPER   0x1
+// the first half of these will proactively silence specific messages from 
+//   specific components
+// disable all sound
+#define PR_NO_SOUND    0x2
+// disable all renderer
+#define PR_NO_REND     0x4
+// disable all server
+#define PR_NO_SERVER   0x8
+// disable all file system
+#define PR_NO_FILES    0x10
+// these do not work on DLL files as those messages are always printed to 
+//   console
+// disable all cgame module
+#define PR_NO_CGAME    0x20
+// disable all ui module
+#define PR_NO_UI       0x40
+// disable all qa game server module
+#define PR_NO_QAGAME   0x80
+
+// now it gets a bit more specific, with allowing certain messages through
+//   but not others
+// turn off all engine init messages including VMs
+#define PR_NO_INIT     0x100
+#define PR_NO_INIT_CG  0x200
+// disable all ui module
+#define PR_NO_INIT_UI  0x400
+// disable all qa game server module
+#define PR_NO_INIT_QA  0x800
+#define PR_NO_INIT_COM 0x1000
+// init messages are especially annoying, these allow you to disable by module
+#define PR_NO_INIT_S   0x2000
+#define PR_NO_INIT_R   0x4000
+#define PR_NO_INIT_SVR 0x8000
+#define PR_NO_INIT_FS  0x10000
+// disable botlib messages
+#define PR_NO_BOTLIB   0x20000
+#define PR_NO_INIT_BOT 0x40000
+// this is a flag for disabling all q3history output
+#define PR_NO_Q3LOG    0x80000
+// this is a flag to disabling all console output
+#define PR_NO_CONSOLE  0x100000
+
+// the second half of these will allow specific messages from specific 
+//   components or specific combinations
+// do display init messages, then return to normal operation
+#define PR_INIT        0x200000 | PR_DEVELOPER
+// only display initialization, then be quiet
+#define PR_INIT_ONLY   0x200000 | PR_NO_CONSOLE
+// show all renderer messages
+#define PR_REND        0x400000
+// show all server
+#define PR_SERVER      0x800000
+// show all file system
+#define PR_FILES       0x1000000
+// show all file system
+#define PR_SOUND       0x2000000
 
 #endif
 
