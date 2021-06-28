@@ -85,6 +85,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_DEMO_SERVER 1
 // allow files like pk3s to be dragged into the client for easy loading
 #define USE_DRAGDROP 1
+// use pre-compile templates to filter annoying debug messages
+#define USE_CON_DEBUG 1
+// remove console drop down in game functionality altogether
+#define USE_NO_CONSOLE 1
+// persist console messages between games and also between launches
+#define USE_PERSIST_CONSOLE 1
+#endif
+
+
+
+#ifdef USE_CON_DEBUG
 
 #endif
 

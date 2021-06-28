@@ -3206,15 +3206,10 @@ static void Com_GameRestart_f( void )
 
 #ifdef __WASM__
 	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
-}
-
-void Com_GameRestart_User_After_Shutdown( void )
-{
+  WASM_ASYNC(Com_GameRestart_User_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, Com_GameRestart_User_After_Startup);
-}
-
-void Com_GameRestart_User_After_Startup( void ) {
+  WASM_ASYNC(Com_GameRestart_User_After_Startup);
 	FS_Restart_After_Async();
 	Com_GameRestart_After_Restart();
 #endif

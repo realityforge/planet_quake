@@ -190,6 +190,18 @@ endif
 
 BASE_CFLAGS   :=
 
+ifeq ($(USE_CON_DEBUG),1)
+  BASE_CFLAGS += -DUSE_CON_DEBUG
+endif
+
+ifeq ($(USE_PERSIST_CONSOLE),1)
+  BASE_CFLAGS += -DUSE_PERSIST_CONSOLE
+endif
+
+ifeq ($(USE_NO_CONSOLE),1)
+  BASE_CFLAGS += -DUSE_NO_CONSOLE
+endif
+
 ifeq ($(BUILD_GAME_STATIC),1)
   BASE_CFLAGS += -DBUILD_GAME_STATIC
 endif
@@ -212,10 +224,6 @@ endif
 
 ifeq ($(USE_SYSTEM_JPEG),1)
   BASE_CFLAGS += -DUSE_SYSTEM_JPEG
-endif
-
-ifneq ($(HAVE_VM_COMPILED),true)
-  BASE_CFLAGS += -DNO_VM_COMPILED
 endif
 
 ifndef RENDERER_PREFIX

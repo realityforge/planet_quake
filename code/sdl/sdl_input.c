@@ -1240,7 +1240,6 @@ void HandleEvents( void )
 					// mouse focus:
 					case SDL_WINDOWEVENT_ENTER: mouse_focus = qtrue; break;
 					case SDL_WINDOWEVENT_LEAVE: if ( glw_state.isFullscreen ) mouse_focus = qfalse; break;
-          
 				}
 				break;
 #ifdef USE_DRAGDROP

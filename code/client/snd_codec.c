@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include "snd_codec.h"
 
-static snd_codec_t *codecs;
+snd_codec_t *codecs;
 
 #ifdef USE_LAZY_LOAD
 qboolean updateSound = qfalse;
@@ -133,15 +133,15 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		{
 			if( orgNameFailed )
 			{
-				//Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
-				//		filename, altName );
+				Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
+						filename, altName );
 			}
 
 			return rtn;
 		}
 	}
 
-	//Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
+	Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
 
 	return NULL;
 }
@@ -280,15 +280,4 @@ void S_CodecUtilClose(snd_stream_t **stream)
 	FS_FCloseFile((*stream)->file);
 	Z_Free(*stream);
 	*stream = NULL;
-}
-
-void S_CodecInfo(void) {
-	int count;
-	snd_codec_t *codec;
-	Com_Printf("Codecs: ");
-	for( count = 0, codec = codecs; codec; count++, codec = codec->next )
-	{		
-		Com_Printf("%s%s", count > 0 ? ", " : "", codec->ext);
-	}
-	Com_Printf("\n");
 }

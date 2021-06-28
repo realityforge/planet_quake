@@ -37,18 +37,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Com_Printf(x, ...) if(s_debug && s_debug->integer) \
   Com_Printf(x, __VA_ARGS__)
 #define Com_DPrintf(x, ...) if(s_debug && s_debug->integer) \
-  Com_Printf(x, __VA_ARGS__)
+  Com_DPrintf(x, __VA_ARGS__)
 #else
 #define Com_Printf(x, args...) if(s_debug && s_debug->integer) \
   Com_Printf( x, ##args )
 #define Com_DPrintf(x, args...) if(s_debug && s_debug->integer) \
-  Com_Printf( x, ##args )
+  Com_DPrintf( x, ##args )
 #endif
 
 static void S_Update_( int msec );
 static void S_UpdateBackgroundTrack( void );
 static void S_Base_StopAllSounds( void );
 static void S_Base_StopBackgroundTrack( void );
+static void S_memoryLoad( sfx_t *sfx );
 
 snd_stream_t	*s_backgroundStream = NULL;
 static char		s_backgroundLoop[MAX_QPATH];
@@ -344,8 +345,8 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 
 	if ( sfx->soundData ) {
 		if ( sfx->defaultSound ) {
-			//Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
-			//return 0;
+			Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
+			return 0;
 		}
 		return sfx - s_knownSfx;
 	}
@@ -356,8 +357,8 @@ static sfxHandle_t S_Base_RegisterSound( const char *name, qboolean compressed )
 	S_memoryLoad( sfx );
 
 	if ( sfx->defaultSound ) {
-		//Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
-		//return 0;
+		Com_Printf( S_COLOR_YELLOW "WARNING: could not find %s - using default\n", sfx->soundName );
+		return 0;
 	}
 
 	return sfx - s_knownSfx;
@@ -407,7 +408,7 @@ static void S_Base_BeginRegistration( void ) {
 }
 
 
-void S_memoryLoad( sfx_t *sfx ) {
+static void S_memoryLoad( sfx_t *sfx ) {
 
 	// load the sound file
 #ifdef __WASM__
@@ -416,7 +417,7 @@ void S_memoryLoad( sfx_t *sfx ) {
 	} else
 #endif
 	if (!S_LoadSound ( sfx ) ) {
-		Com_Printf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
+		Com_DPrintf( S_COLOR_YELLOW "WARNING: couldn't load sound: %s\n", sfx->soundName );
 		sfx->defaultSound = qtrue;
 		sfx->inMemory = qfalse;
 	} else {

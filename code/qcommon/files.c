@@ -3077,7 +3077,7 @@ static void FS_LoadCache( void )
 
 	fs_cacheLoaded = qtrue;
 
-	Com_Printf( "...found %i cached paks\n", fs_paksCached );
+	Com_DPrintf( "...found %i cached paks\n", fs_paksCached );
 }
 
 #endif // USE_PK3_CACHE_FILE
@@ -4962,7 +4962,7 @@ void FS_Startup( void ) {
 #endif
 ;
 
-	Com_Printf( "----- FS_Startup -----\n" );
+	Com_DPrintf( "----- FS_Startup -----\n" );
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	Cvar_SetDescription(fs_debug, "Toggle filesystem debug logging, every file open is shown\nDefault: 0");
@@ -5106,10 +5106,10 @@ void FS_Startup_After_Async( void )
 
 	// print the current search paths
 	//FS_Path_f();
-	Com_Printf( "...loaded in %i milliseconds\n", end - start );
+	Com_DPrintf( "...loaded in %i milliseconds\n", end - start );
 
-	Com_Printf( "----------------------\n" );
-	Com_Printf( "%d files in %d pk3 files\n", fs_packFiles, fs_packCount );
+	Com_DPrintf( "----------------------\n" );
+	Com_DPrintf( "%d files in %d pk3 files\n", fs_packFiles, fs_packCount );
 
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 

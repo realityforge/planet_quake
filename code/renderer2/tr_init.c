@@ -1203,7 +1203,7 @@ void GfxInfo_f( void )
 		GLint numExtensions;
 		int i;
 
-		qglGetIntegerv( 0, &numExtensions );
+		qglGetIntegerv( GL_NUM_EXTENSIONS, &numExtensions );
 		for ( i = 0; i < numExtensions; i++ )
 		{
 			ri.Printf( PRINT_ALL, "%s ", qglGetStringi( GL_EXTENSIONS, i ) );
@@ -1243,7 +1243,7 @@ void GfxInfo_f( void )
 	
 	if ( r_finish->integer ) {
 		ri.Printf( PRINT_ALL, "Forcing glFinish\n" );
-	}
+}
 }
 
 

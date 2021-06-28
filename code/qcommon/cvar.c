@@ -614,6 +614,7 @@ static void Cvar_Print( const cvar_t *v ) {
 	}
 }
 
+
 #ifndef DEDICATED
 #ifdef USE_CVAR_UNCHEAT
 extern cvar_t *clUncheats[128];

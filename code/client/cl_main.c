@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // cl_main.c  -- client main loop
+
 #include "client.h"
 #include <limits.h>
 
@@ -4248,7 +4249,11 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL CL_RefPrintf( printPar
 
 	switch ( level ) {
 		default: Com_Printf( "%s", msg ); break;
-		case PRINT_DEVELOPER: if(r_debug->integer) Com_DPrintf( "%s", msg ); break;
+		case PRINT_DEVELOPER:
+#ifdef USE_CON_DEBUG
+      if(r_debug->integer)
+#endif
+      Com_DPrintf( "%s", msg ); break;
 		case PRINT_WARNING: Com_DPrintf( S_COLOR_YELLOW "%s", msg ); break;
 		case PRINT_ERROR: Com_Printf( S_COLOR_RED "%s", msg ); break;
 	}
@@ -4458,9 +4463,9 @@ static void CL_InitRef( void ) {
 	CL_InitGLimp_Cvars();
 
 #ifdef USE_RENDERER_DLOPEN
-  Com_Printf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
+  Com_DPrintf( "----- Initializing Renderer (%s) ----\n", cl_renderer->string );
 #else
-	Com_Printf( "----- Initializing Renderer ----\n" );
+	Com_DPrintf( "----- Initializing Renderer ----\n" );
 #endif
 
 #ifdef USE_RENDERER_DLOPEN
@@ -4886,10 +4891,6 @@ qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, int mode,
 		*height = dh;
 		pixelAspect = r_customPixelAspect->value;
 	} else if ( mode == -1 ) { // custom resolution
-		r_customwidth = Cvar_Get("r_customWidth", "", 0);
-		r_customheight = Cvar_Get("r_customHeight", "", 0);
-Com_Printf( "New Scale: %i x %i\n",
- 	r_customwidth->integer, r_customheight->integer);
 		*width = r_customwidth->integer;
 		*height = r_customheight->integer;
 		pixelAspect = r_customPixelAspect->value;

@@ -3167,7 +3167,7 @@ static shader_t *GeneratePermanentShader( void ) {
 	int			size, hash;
 
 	if ( tr.numShaders >= MAX_SHADERS ) {
-		ri.Printf( PRINT_DEVELOPER, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
+		ri.Printf( PRINT_WARNING, "WARNING: GeneratePermanentShader - MAX_SHADERS hit\n");
 		return tr.defaultShader;
 	}
 
@@ -3422,7 +3422,7 @@ static shader_t *FinishShader( void ) {
 
 		// check for a missing texture
 		if ( !pStage->bundle[0].image[0] ) {
-			ri.Printf( PRINT_DEVELOPER, "Shader %s has a stage with no image\n", shader.name );
+			ri.Printf( PRINT_WARNING, "Shader %s has a stage with no image\n", shader.name );
 			pStage->active = qfalse;
 			stage++;
 			continue;

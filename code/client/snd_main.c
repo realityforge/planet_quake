@@ -305,13 +305,21 @@ void S_ClearSoundBuffer( void )
 S_SoundInfo
 =================
 */
+extern snd_codec_t *codecs;
 static void S_SoundInfo( void )
 {
 	if( si.SoundInfo ) {
 		si.SoundInfo();
 	}
-}
+  Com_Printf("Codecs: ");
+  snd_codec_t *codec = codecs;
+  for( int count = 0; codec; count++, codec = codec->next )
+  {		
+    Com_Printf("%s%s", count > 0 ? ", " : "", codec->ext);
+  }
+  Com_Printf("\n");
 
+}
 
 /*
 =================
@@ -468,7 +476,6 @@ void S_Init( void )
 			}
 
 			S_SoundInfo();
-			S_CodecInfo();
 			Com_Printf( "Sound initialization successful.\n" );
 		} else {
 			Com_Printf( "Sound initialization failed.\n" );

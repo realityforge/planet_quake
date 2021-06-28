@@ -55,7 +55,7 @@ void GL_BindToTMU( image_t *image, int tmu )
 	}
 	else
 	{
-		ri.Printf(PRINT_DEVELOPER, "GL_BindToTMU: NULL image\n");
+		ri.Printf(PRINT_WARNING, "GL_BindToTMU: NULL image\n");
 	}
 
 	GL_BindMultiTexture(GL_TEXTURE0_ARB + tmu, target, texture);
