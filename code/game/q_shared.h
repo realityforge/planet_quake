@@ -681,8 +681,13 @@ void Info_NextPair( const char **s, char *key, char *value );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void	QDECL Com_Error( int level, const char *fmt, ... );
+#ifdef USE_PRINT_CONSOLE
+void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... );
+void	QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... );
+#else
 void	QDECL Com_Printf( const char *fmt, ... );
 void	QDECL Com_DPrintf( const char *fmt, ... );
+#endif
 
 /*
 ==========================================================

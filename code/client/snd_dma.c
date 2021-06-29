@@ -33,16 +33,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 #include "client.h"
 
-#ifdef _MSC_VER
-#define Com_Printf(x, ...) if(s_debug && s_debug->integer) \
-  Com_Printf(x, __VA_ARGS__)
-#define Com_DPrintf(x, ...) if(s_debug && s_debug->integer) \
-  Com_DPrintf(x, __VA_ARGS__)
-#else
-#define Com_Printf(x, args...) if(s_debug && s_debug->integer) \
-  Com_Printf( x, ##args )
-#define Com_DPrintf(x, args...) if(s_debug && s_debug->integer) \
-  Com_DPrintf( x, ##args )
+#ifdef USE_PRINT_CONSOLE
+#define Com_Printf(fmt, ...) Com_PrintfReal(__FILE__, __LINE__, PRINT_SOUND, 0 | PRINT_FLAGS, fmt, __VA_ARGS__) 
+#define Com_DPrintf(fmt, ...) Com_DPrintfReal(__FILE__, __LINE__, PRINT_SOUND, 0 | PRINT_FLAGS, fmt, __VA_ARGS__) 
+#define PRINT_FLAGS 
 #endif
 
 static void S_Update_( int msec );

@@ -72,7 +72,7 @@ fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are writte
 
 cvar_t	*com_viewlog;
 cvar_t	*com_speeds;
-#ifdef USE_CON_DEBUG
+#ifdef USE_PRINT_CONSOLE
 // set developer to a string or number to match the combination you seek
 //   using the following conversion table aligning to the bits above
 typedef struct {
@@ -197,7 +197,12 @@ to the appropriate place.
 A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 =============
 */
-void QDECL Com_Printf( const char *fmt, ... ) {
+#ifdef USE_PRINT_CONSOLE
+void QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... )
+#else
+void QDECL Com_Printf( const char *fmt, ... )
+#endif
+{
 	static qboolean opening_qconsole = qfalse;
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
@@ -285,10 +290,15 @@ Com_DPrintf
 A Com_Printf that only shows up if the "developer" cvar is set
 ================
 */
-void QDECL Com_DPrintf( const char *fmt, ...) {
+#ifdef USE_PRINT_CONSOLE
+void QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ...)
+#else
+void QDECL Com_DPrintf( const char *fmt, ...)
+#endif
+{
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
-		
+
 	if ( !com_developer || !com_developer->integer ) {
 		return;			// don't confuse non-developers with techie stuff...
 	}

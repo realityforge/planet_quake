@@ -86,7 +86,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // allow files like pk3s to be dragged into the client for easy loading
 #define USE_DRAGDROP 1
 // use pre-compile templates to filter annoying debug messages
-#define USE_CON_DEBUG 1
+#define USE_PRINT_CONSOLE 1
 // remove console drop down in game functionality altogether
 #define USE_NO_CONSOLE 1
 // persist console messages between games and also between launches
@@ -95,76 +95,115 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 
-#ifdef USE_CON_DEBUG
+#ifdef USE_PRINT_CONSOLE
+// these define where the print message is coming from for broad filtering with
+//   cl_developer, sv_developer, com_developer, bot_developer, r_developer,
+//   s_developer, cg_developer, net_developer, ui_developer, g_developer
+#define PC_CLIENT         0x1
+#define PC_SERVER         0x2
+#define PC_COMMON         0x3
+#define PC_BOTLIB         0x4
+#define PC_RENDER         0x5
+#define PC_CGAME          0x6
+#define PC_UI             0x7
+#define PC_GAME           0x8
+#define PC_NET            0x9
+#define PC_SOUND          0xA
+
 // this is the default mode, it shows console messages naturally
-#define PR_DEFAULT     0x0
+#define PC_OFF            0x0
 // this is a special case, it shows only the messages you might expect an
 //   average player to understand, it is replaced with a combination of
-//   PR_NO_* and PR_* and also specific cases in the code, most like
-//   PR_USER_ONLY at the bottom of the list
-#define PR_RELEASE    -0x1
-// another special case, PR_DEVELOPER is most like `set developer 1`
-//   because of the other PR_NO_* and PR_* settings it is replaced with
-//   PR_DEVELOPER_ORIG at the bottom to simulate original developer mode
+//   PC_NO_* and PC_* and also specific cases in the code, most like
+//   PC_USER_ONLY at the bottom of the list
+#define PC_RELEASE       -0x1
+// another special case, PC_DEVELOPER is most like `set developer 1`
+//   because of the other PC_NO_* and PC_* settings it is replaced with
+//   PC_DEVELOPER_ORIG at the bottom to simulate original developer mode
 //   there are also special cases inline using com_developer->integer
-#define PR_DEVELOPER   0x1
+#define PC_DEVELOPER      0x1
 // the first half of these will proactively silence specific messages from 
 //   specific components
 // disable all sound
-#define PR_NO_SOUND    0x2
+#define PC_NO_SOUND       0x2
 // disable all renderer
-#define PR_NO_REND     0x4
+#define PC_NO_REND        0x4
 // disable all server
-#define PR_NO_SERVER   0x8
+#define PC_NO_SERVER      0x8
 // disable all file system
-#define PR_NO_FILES    0x10
+#define PC_NO_FILES       0x10
 // these do not work on DLL files as those messages are always printed to 
 //   console
 // disable all cgame module
-#define PR_NO_CGAME    0x20
+#define PC_NO_CGAME       0x20
 // disable all ui module
-#define PR_NO_UI       0x40
+#define PC_NO_UI          0x40
 // disable all qa game server module
-#define PR_NO_QAGAME   0x80
+#define PC_NO_GAME      0x80
 
 // now it gets a bit more specific, with allowing certain messages through
 //   but not others
 // turn off all engine init messages including VMs
-#define PR_NO_INIT     0x100
-#define PR_NO_INIT_CG  0x200
+#define PC_NO_INIT        0x100
+#define PC_NO_INIT_CGAME  0x200
 // disable all ui module
-#define PR_NO_INIT_UI  0x400
+#define PC_NO_INIT_UI     0x400
 // disable all qa game server module
-#define PR_NO_INIT_QA  0x800
-#define PR_NO_INIT_COM 0x1000
+#define PC_NO_INIT_GAME 0x800
+// disable common messages
+#define PC_NO_COM         0x1000
+#define PC_NO_INIT_COM    0x2000
 // init messages are especially annoying, these allow you to disable by module
-#define PR_NO_INIT_S   0x2000
-#define PR_NO_INIT_R   0x4000
-#define PR_NO_INIT_SVR 0x8000
-#define PR_NO_INIT_FS  0x10000
+#define PC_NO_INIT_SOUND  0x4000
+#define PC_NO_INIT_REND   0x8000
+#define PC_NO_INIT_SERVER 0x10000
+#define PC_NO_INIT_FILES  0x20000
 // disable botlib messages
-#define PR_NO_BOTLIB   0x20000
-#define PR_NO_INIT_BOT 0x40000
+#define PC_NO_BOTLIB      0x40000
+// disable net messages
+#define PC_NO_NET         0x80000
+// disable all q3 console messages
+#define PC_QUIET PC_NO_INIT | PC_NO_INIT_CG | PC_NO_INIT_UI \
+  PC_NO_INIT_QA | PC_NO_INIT_COM | PC_NO_INIT_S | PC_NO_INIT_R \
+  PC_NO_INIT_SVR | PC_NO_INIT_FS | PC_NO_BOTLIB | PC_NO_NET
 // this is a flag for disabling all q3history output
-#define PR_NO_Q3LOG    0x80000
+#define PC_NO_Q3LOG       0x100000
 // this is a flag to disabling all console output
-#define PR_NO_CONSOLE  0x100000
+#define PC_NO_CONSOLE     0x200000
 
 // the second half of these will allow specific messages from specific 
 //   components or specific combinations
 // do display init messages, then return to normal operation
-#define PR_INIT        0x200000 | PR_DEVELOPER
+#define PC_SHOW_INIT      0x300000
 // only display initialization, then be quiet
-#define PR_INIT_ONLY   0x200000 | PR_NO_CONSOLE
+#define PC_SHOW_INIT_ONLY 0x400000 | PC_NO_CONSOLE
 // show all renderer messages
-#define PR_REND        0x400000
+#define PC_SHOW_REND      0x800000
 // show all server
-#define PR_SERVER      0x800000
+#define PC_SHOW_SERVER    0x1000000
 // show all file system
-#define PR_FILES       0x1000000
+#define PC_SHOW_FILES     0x2000000
 // show all file system
-#define PR_SOUND       0x2000000
+#define PC_SHOW_SOUND     0x4000000
+// show all botlib
+#define PC_SHOW_BOTLIB    0x8000000
+// limit q3history to the same as selected messages
+#define PC_Q3LOG          0x10000000
+// limit console to the same as selected output
+#define PC_CONSOLE        0x20000000
+// print all selected messages for video markering
+#define PC_MARKERS        0x40000000
+// print developer
+#define PC_DEVELOPER_ORIG PC_SHOW_INIT | PC_SHOW_REND | PC_SHOW_SERVER \
+  | PC_SHOW_SOUND | PC_SHOW_BOTLIB | PC_SHOW_FILES \
+  | PC_Q3LOG | PC_CONSOLE
+#define PC_SHOW_USER_ONLY      0x80000000 \
+  | PC_NO_SOUND | PC_NO_REND | PC_NO_INIT | PC_NO_SERVER \
+  | PC_NO_BOTLIB | PC_NO_FILES | PC_Q3LOG 
 
+// these are a few compiler templates to make including easy
+//#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
+//#define DPRINTF(flags, format, ...) Com_ 
 #endif
 
 
@@ -1079,12 +1118,14 @@ int Info_RemoveKey( char *s, const char *key );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void Com_Outside_Error(int level, char *msg);
-#ifndef BUILD_BOTLIB
 void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
+#ifdef USE_PRINT_CONSOLE
+void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));
+void	QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));
+#else
 void	QDECL Com_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void	QDECL Com_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 #endif
-
 
 
 /*

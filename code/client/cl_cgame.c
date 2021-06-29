@@ -20,7 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // cl_cgame.c  -- client system interaction with client game
-
+#ifdef USE_PRINT_CONSOLE
+#endif
 #include "client.h"
 
 #include "../botlib/botlib.h"

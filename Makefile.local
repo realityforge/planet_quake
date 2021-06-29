@@ -21,7 +21,7 @@ USE_CIN_VPX            = 0
 
 USE_PERSIST_CONSOLE    = 1
 USE_NO_CONSOLE         = 1
-USE_CON_DEBUG          = 1
+USE_PRINT_CONSOLE      = 1
 USE_RMLUI              = 0
 USE_RMLUI_DLOPEN       = 0
 USE_MULTIVM_SERVER     = 0
