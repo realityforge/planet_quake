@@ -80,7 +80,7 @@ typedef struct {
   int   flags;
 } con_debug_t;
 con_debug_t developer_modes[] = {
-  {"dev", PR_DEVELOPER}
+  {"dev", PC_DEVELOPER}
 };
 
 #define NUM_DEV_MODES ARRAY_LEN(developer_modes);

@@ -23,13 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include "snd_local.h"
 
-#ifdef USE_PRINT_CONSOLE
-#define Com_Printf CL_Printf
-#define Com_DPrintf CL_DPrintf
-#define CL_AVI_FLAGS 0
-#define PRINT_FLAGS CL_AVI_FLAGS
-#endif
-
 #define INDEX_FILE_EXTENSION ".index.dat"
 
 #define MAX_RIFF_CHUNKS 16

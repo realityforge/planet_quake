@@ -209,12 +209,54 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define PC_DPrintf(source, fmt, ...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
 #define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
 #define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
+#define SV_Printf(fmt, ...) PC_Printf(PC_SERVER, fmt, __VA_ARGS__)
+#define SV_DPrintf(fmt, ...) PC_DPrintf(PC_SERVER, fmt, __VA_ARGS__)
+#define COM_Printf(fmt, ...) PC_Printf(PC_COMMON, fmt, __VA_ARGS__)
+#define COM_DPrintf(fmt, ...) PC_DPrintf(PC_COMMON, fmt, __VA_ARGS__)
+#define Bot_Printf(fmt, ...) PC_Printf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define Bot_DPrintf(fmt, ...) PC_DPrintf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define R_Printf(fmt, ...) PC_Printf(PC_RENDER, fmt, __VA_ARGS__)
+#define R_DPrintf(fmt, ...) PC_DPrintf(PC_RENDER, fmt, __VA_ARGS__)
+#define CG_Printf(fmt, ...) PC_Printf(PC_CGAME, fmt, __VA_ARGS__)
+#define CG_DPrintf(fmt, ...) PC_DPrintf(PC_CGAME, fmt, __VA_ARGS__)
+#define UI_Printf(fmt, ...) PC_Printf(PC_UI, fmt, __VA_ARGS__)
+#define UI_DPrintf(fmt, ...) PC_DPrintf(PC_UI, fmt, __VA_ARGS__)
+#define G_Printf(fmt, ...) PC_Printf(PC_GAME, fmt, __VA_ARGS__)
+#define G_DPrintf(fmt, ...) PC_DPrintf(PC_GAME, fmt, __VA_ARGS__)
+#define Net_Printf(fmt, ...) PC_Printf(PC_NET, fmt, __VA_ARGS__)
+#define Net_DPrintf(fmt, ...) PC_DPrintf(PC_NET, fmt, __VA_ARGS__)
+#define S_Printf(fmt, ...) PC_Printf(PC_SOUND, fmt, __VA_ARGS__)
+#define S_DPrintf(fmt, ...) PC_DPrintf(PC_SOUND, fmt, __VA_ARGS__)
 #else
 #define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
 #define PC_DPrintf(source, fmt, args...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
 #define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
 #define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
+#define SV_Printf(fmt, args...) PC_Printf(PC_SERVER, fmt, ##args)
+#define SV_DPrintf(fmt, args...) PC_DPrintf(PC_SERVER, fmt, ##args)
+#define COM_Printf(fmt, args...) PC_Printf(PC_COMMON, fmt, ##args)
+#define COM_DPrintf(fmt, args...) PC_DPrintf(PC_COMMON, fmt, ##args)
+#define Bot_Printf(fmt, args...) PC_Printf(PC_BOTLIB, fmt, ##args)
+#define Bot_DPrintf(fmt, args...) PC_DPrintf(PC_BOTLIB, fmt, ##args)
+#define R_Printf(fmt, args...) PC_Printf(PC_RENDER, fmt, ##args)
+#define R_DPrintf(fmt, args...) PC_DPrintf(PC_RENDER, fmt, ##args)
+#define CG_Printf(fmt, args...) PC_Printf(PC_CGAME, fmt, ##args)
+#define CG_DPrintf(fmt, args...) PC_DPrintf(PC_CGAME, fmt, ##args)
+#define UI_Printf(fmt, args...) PC_Printf(PC_UI, fmt, ##args)
+#define UI_DPrintf(fmt, args...) PC_DPrintf(PC_UI, fmt, ##args)
+#define G_Printf(fmt, args...) PC_Printf(PC_GAME, fmt, ##args)
+#define G_DPrintf(fmt, args...) PC_DPrintf(PC_GAME, fmt, ##args)
+#define Net_Printf(fmt, args...) PC_Printf(PC_NET, fmt, ##args)
+#define Net_DPrintf(fmt, args...) PC_DPrintf(PC_NET, fmt, ##args)
+#define S_Printf(fmt, args...) PC_Printf(PC_SOUND, fmt, ##args)
+#define S_DPrintf(fmt, args...) PC_DPrintf(PC_SOUND, fmt, ##args)
 #endif
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf COM_Printf
+#define Com_DPrintf COM_DPrintf
+#define PC_COMMON_FLAGS 0
+#define PRINT_FLAGS PC_COMMON_FLAGS
 #endif
 
 
