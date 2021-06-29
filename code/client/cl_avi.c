@@ -24,13 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_local.h"
 
 #ifdef USE_PRINT_CONSOLE
-#ifdef _MSC_VER
-#define Com_Printf(fmt, ...) Com_PrintfReal(__FILE__, __LINE__, PC_CLIENT, PRINT_FLAGS, fmt, __VA_ARGS__) 
-#define Com_DPrintf(fmt, ...) Com_DPrintfReal(__FILE__, __LINE__, PC_CLIENT, PRINT_FLAGS, fmt, __VA_ARGS__) 
-#else
-#define Com_Printf(fmt, args...) Com_PrintfReal(__FILE__, __LINE__, PC_CLIENT, PRINT_FLAGS, fmt, ##args) 
-#define Com_DPrintf(fmt, args...) Com_DPrintfReal(__FILE__, __LINE__, PC_CLIENT, PRINT_FLAGS, fmt, ##args) 
-#endif
+#define Com_Printf CL_Printf
+#define Com_DPrintf CL_DPrintf
 #define CL_AVI_FLAGS 0
 #define PRINT_FLAGS CL_AVI_FLAGS
 #endif

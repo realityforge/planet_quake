@@ -204,6 +204,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // these are a few compiler templates to make including easy
 //#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
 //#define DPRINTF(flags, format, ...) Com_ 
+#ifdef _MSC_VER
+#define PC_Printf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
+#define PC_DPrintf(source, fmt, ...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
+#define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
+#define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
+#else
+#define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
+#define PC_DPrintf(source, fmt, args...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
+#define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
+#define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
+#endif
 #endif
 
 
