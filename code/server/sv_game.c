@@ -23,6 +23,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf G_Printf
+#define Com_DPrintf G_DPrintf
+#endif
+
 #include "../botlib/botlib.h"
 
 botlib_export_t	*botlib_export;

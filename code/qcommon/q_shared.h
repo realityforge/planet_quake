@@ -99,16 +99,22 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // these define where the print message is coming from for broad filtering with
 //   cl_developer, sv_developer, com_developer, bot_developer, r_developer,
 //   s_developer, cg_developer, net_developer, ui_developer, g_developer
-#define PC_CLIENT         0x1
-#define PC_SERVER         0x2
-#define PC_COMMON         0x3
-#define PC_BOTLIB         0x4
-#define PC_RENDER         0x5
-#define PC_CGAME          0x6
-#define PC_UI             0x7
-#define PC_GAME           0x8
-#define PC_NET            0x9
-#define PC_SOUND          0xA
+// these are used in code to mark different sections, the variables below are
+// used in cvar configurations to filter out different sections
+#define PC_DEVELOPER      0x1
+#define PC_CLIENT         0x20
+#define PC_SERVER         0x30
+#define PC_COMMON         0x40
+#define PC_BOTLIB         0x50
+#define PC_RENDER         0x60
+#define PC_CGAME          0x70
+#define PC_UI             0x80
+#define PC_GAME           0x90
+#define PC_NET            0xA0
+#define PC_SOUND          0xB0
+#define PC_FILES          0xC0
+#define PC_INIT           0x400000
+#define PC_USER           0x80000000
 
 // this is the default mode, it shows console messages naturally
 #define PC_OFF            0x0
@@ -124,69 +130,36 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define PC_DEVELOPER      0x1
 // the first half of these will proactively silence specific messages from 
 //   specific components
-// disable all sound
-#define PC_NO_SOUND       0x2
-// disable all renderer
-#define PC_NO_REND        0x4
-// disable all server
-#define PC_NO_SERVER      0x8
-// disable all file system
-#define PC_NO_FILES       0x10
-// these do not work on DLL files as those messages are always printed to 
-//   console
-// disable all cgame module
-#define PC_NO_CGAME       0x20
-// disable all ui module
-#define PC_NO_UI          0x40
-// disable all qa game server module
-#define PC_NO_GAME      0x80
+
+// disable specific console messages
+#define PC_NO_CLIENT      0x2000
+#define PC_NO_SERVER      0x3000
+#define PC_NO_COMMON      0x4000
+#define PC_NO_BOTLIB      0x5000
+#define PC_NO_REND        0x6000
+#define PC_NO_CGAME       0x7000
+#define PC_NO_UI          0x8000
+#define PC_NO_GAME        0x9000
+#define PC_NO_NET         0xA000
+#define PC_NO_SOUND       0xB000
+#define PC_NO_FILES       0xC000
+
 
 // now it gets a bit more specific, with allowing certain messages through
 //   but not others
 // turn off all engine init messages including VMs
-#define PC_NO_INIT        0x100
-#define PC_NO_INIT_CGAME  0x200
-// disable all ui module
-#define PC_NO_INIT_UI     0x400
-// disable all qa game server module
-#define PC_NO_INIT_GAME 0x800
-// disable common messages
-#define PC_NO_COM         0x1000
-#define PC_NO_INIT_COM    0x2000
-// init messages are especially annoying, these allow you to disable by module
-#define PC_NO_INIT_SOUND  0x4000
-#define PC_NO_INIT_REND   0x8000
-#define PC_NO_INIT_SERVER 0x10000
-#define PC_NO_INIT_FILES  0x20000
-// disable botlib messages
-#define PC_NO_BOTLIB      0x40000
-// disable net messages
-#define PC_NO_NET         0x80000
-// disable all q3 console messages
-#define PC_QUIET PC_NO_INIT | PC_NO_INIT_CG | PC_NO_INIT_UI \
-  PC_NO_INIT_QA | PC_NO_INIT_COM | PC_NO_INIT_S | PC_NO_INIT_R \
-  PC_NO_INIT_SVR | PC_NO_INIT_FS | PC_NO_BOTLIB | PC_NO_NET
-// this is a flag for disabling all q3history output
-#define PC_NO_Q3LOG       0x100000
-// this is a flag to disabling all console output
-#define PC_NO_CONSOLE     0x200000
+#define PC_NO_INIT        0x400000
+// this would be a good place to add more
+
 
 // the second half of these will allow specific messages from specific 
 //   components or specific combinations
-// do display init messages, then return to normal operation
-#define PC_SHOW_INIT      0x300000
-// only display initialization, then be quiet
-#define PC_SHOW_INIT_ONLY 0x400000 | PC_NO_CONSOLE
-// show all renderer messages
-#define PC_SHOW_REND      0x800000
-// show all server
-#define PC_SHOW_SERVER    0x1000000
-// show all file system
-#define PC_SHOW_FILES     0x2000000
-// show all file system
-#define PC_SHOW_SOUND     0x4000000
-// show all botlib
-#define PC_SHOW_BOTLIB    0x8000000
+// disable all q3 console messages
+#define PC_QUIET          0x800000 | 0xFF000 | PC_NO_Q3LOG | PC_NO_CONSOLE
+// this is a flag for disabling all q3history output
+#define PC_NO_Q3LOG       0x4000000
+// this is a flag to disabling all console output
+#define PC_NO_CONSOLE     0x8000000
 // limit q3history to the same as selected messages
 #define PC_Q3LOG          0x10000000
 // limit console to the same as selected output
@@ -194,19 +167,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // print all selected messages for video markering
 #define PC_MARKERS        0x40000000
 // print developer
-#define PC_DEVELOPER_ORIG PC_SHOW_INIT | PC_SHOW_REND | PC_SHOW_SERVER \
-  | PC_SHOW_SOUND | PC_SHOW_BOTLIB | PC_SHOW_FILES \
-  | PC_Q3LOG | PC_CONSOLE
-#define PC_SHOW_USER_ONLY      0x80000000 \
-  | PC_NO_SOUND | PC_NO_REND | PC_NO_INIT | PC_NO_SERVER \
-  | PC_NO_BOTLIB | PC_NO_FILES | PC_Q3LOG 
+#define PC_DEVELOPER_ORIG PC_Q3LOG | PC_CONSOLE
+#define PC_SHOW_USER_ONLY 0x80000000 | PC_Q3LOG | PC_QUIET
+
+
 
 // these are a few compiler templates to make including easy
 //#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
 //#define DPRINTF(flags, format, ...) Com_ 
 #ifdef _MSC_VER
 #define PC_Printf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
-#define PC_DPrintf(source, fmt, ...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
+#define PC_DPrintf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS, fmt, __VA_ARGS__) 
 #define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
 #define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
 #define SV_Printf(fmt, ...) PC_Printf(PC_SERVER, fmt, __VA_ARGS__)
@@ -227,9 +198,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Net_DPrintf(fmt, ...) PC_DPrintf(PC_NET, fmt, __VA_ARGS__)
 #define S_Printf(fmt, ...) PC_Printf(PC_SOUND, fmt, __VA_ARGS__)
 #define S_DPrintf(fmt, ...) PC_DPrintf(PC_SOUND, fmt, __VA_ARGS__)
+#define FS_Com_Printf(fmt, ...) PC_Printf(PC_FILES, fmt, __VA_ARGS__)
+#define FS_Com_DPrintf(fmt, ...) PC_DPrintf(PC_FILES, fmt, __VA_ARGS__)
 #else
 #define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
-#define PC_DPrintf(source, fmt, args...) Com_DPrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
+#define PC_DPrintf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS, fmt, ##args) 
 #define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
 #define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
 #define SV_Printf(fmt, args...) PC_Printf(PC_SERVER, fmt, ##args)
@@ -250,6 +223,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Net_DPrintf(fmt, args...) PC_DPrintf(PC_NET, fmt, ##args)
 #define S_Printf(fmt, args...) PC_Printf(PC_SOUND, fmt, ##args)
 #define S_DPrintf(fmt, args...) PC_DPrintf(PC_SOUND, fmt, ##args)
+#define FS_Com_Printf(fmt, args...) PC_Printf(PC_FILES, fmt, ##args)
+#define FS_Com_DPrintf(fmt, args...) PC_DPrintf(PC_FILES, fmt, ##args)
 #endif
 #undef Com_Printf
 #undef Com_DPrintf

@@ -24,6 +24,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "server.h"
 #include "../botlib/botlib.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf Bot_Printf
+#define Com_DPrintf Bot_DPrintf
+#endif
+
 #ifdef USE_BOTLIB_DLOPEN
 static void	*botLib;
 static char dllName[ MAX_OSPATH ];

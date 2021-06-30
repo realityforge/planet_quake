@@ -325,6 +325,8 @@ void Con_CheckResize( void )
 		con.linewidth = width;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		con.vispage = vispage;
+    if(oldtotallines <= 0) oldtotallines = 1;
+    if(con.totallines <= 0) con.totallines = 1;
 
 		old_vispage = vispage;
 		old_width = width;

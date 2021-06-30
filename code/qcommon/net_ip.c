@@ -23,6 +23,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf Net_Printf
+#define Com_DPrintf Net_DPrintf
+#endif
+
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <ws2tcpip.h>
@@ -1671,6 +1678,11 @@ static void NET_GetLocalAddress( void ) {
 #endif // _WIN32
 
 
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_INIT
+#endif
+
 /*
 ====================
 NET_OpenIP
@@ -1746,7 +1758,6 @@ static void NET_OpenIP( void ) {
 
 
 //===================================================================
-
 
 /*
 ====================
@@ -1972,6 +1983,11 @@ void NET_Init( void ) {
 	Cmd_AddCommand( "net_restart", NET_Restart_f );
   Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nUsage: net_restart");
 }
+
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_COMMON_FLAGS
+#endif
 
 
 /*

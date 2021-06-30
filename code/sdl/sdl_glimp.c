@@ -37,6 +37,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "sdl_glw.h"
 #include "sdl_icon.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf R_Printf
+#define Com_DPrintf R_DPrintf
+#endif
+
 typedef enum {
 	RSERR_OK,
 	RSERR_INVALID_FULLSCREEN,

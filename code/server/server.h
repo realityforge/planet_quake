@@ -27,6 +27,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../game/g_public.h"
 #include "../game/bg_public.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf SV_Printf
+#define Com_DPrintf SV_DPrintf
+#endif
+
 #ifdef USE_CURL
 #include "../client/cl_curl.h"
 //#define	USE_LNBITS	1

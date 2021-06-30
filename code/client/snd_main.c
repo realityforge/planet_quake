@@ -407,6 +407,10 @@ static void S_StopMusic_f( void )
 
 
 //=============================================================================
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_INIT
+#endif
 
 /*
 =================
@@ -484,6 +488,11 @@ void S_Init( void )
 
 	Com_Printf( "--------------------------------\n");
 }
+
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_COMMON_FLAGS
+#endif
 
 
 /*

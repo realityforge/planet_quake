@@ -80,10 +80,25 @@ typedef struct {
   int   flags;
 } con_debug_t;
 con_debug_t developer_modes[] = {
-  {"dev", PC_DEVELOPER}
+  {"dev", PC_DEVELOPER},
+  {"quiet", PC_QUIET},
+  {"user", PC_SHOW_USER_ONLY},
+  
 };
 
-#define NUM_DEV_MODES ARRAY_LEN(developer_modes);
+#define NUM_DEV_MODES 3
+
+cvar_t  *cl_developer;
+cvar_t  *sv_developer;
+cvar_t  *developer;
+cvar_t  *bot_developer;
+cvar_t  *r_developer;
+cvar_t  *cg_developer;
+cvar_t  *ui_developer;
+cvar_t  *g_developer;
+cvar_t  *net_developer;
+cvar_t  *s_developer;
+cvar_t  *fs_developer;
 #endif
 
 cvar_t	*com_developer;
@@ -147,6 +162,7 @@ qboolean	gw_minimized = qfalse; // this will be always true for dedicated server
 #ifndef DEDICATED
 qboolean	gw_active = qtrue;
 #endif
+
 
 static char com_errorMessage[ MAXPRINTMSG ];
 
@@ -212,6 +228,7 @@ void QDECL Com_Printf( const char *fmt, ... )
 	len = Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
 
+  // TODO: unify this buffer with q3 console and tty and q3history
 	if ( rd_buffer && !rd_flushing ) {
 		if ( len + (int)strlen( rd_buffer ) > ( rd_buffersize - 1 ) ) {
 			rd_flushing = qtrue;
@@ -226,15 +243,79 @@ void QDECL Com_Printf( const char *fmt, ... )
 		return;
 	}
 
+#ifdef USE_PRINT_CONSOLE
+  qboolean skipped = qfalse;
+  /*
+  #define PC_NO_CLIENT      0x2000
+  #define PC_NO_SERVER      0x3000
+  #define PC_NO_COMMON      0x4000
+  #define PC_NO_BOTLIB      0x5000
+  #define PC_NO_REND        0x6000
+  #define PC_NO_CGAME       0x7000
+  #define PC_NO_UI          0x8000
+  #define PC_NO_GAME        0x9000
+  #define PC_NO_NET         0xA000
+  #define PC_NO_SOUND       0xB000
+  #define PC_NO_FILES       0xC000
+  */
+  
+  if((qfalse)
+    || ((source & 0xFF0) == PC_CLIENT
+    && (com_developer && com_developer->integer & PC_NO_CLIENT))
+    || ((source & 0xFF0) == PC_SOUND
+    && (com_developer && com_developer->integer & PC_NO_SOUND))
+    || ((source & 0xFF0) == PC_RENDER
+    && (com_developer && com_developer->integer & PC_NO_REND))
+    || ((source & 0xFF0) == PC_SERVER
+    && (com_developer && com_developer->integer & PC_NO_SERVER))
+    || ((source & 0xFF0) == PC_CGAME
+    && (com_developer && com_developer->integer & PC_NO_CGAME))
+    || ((source & 0xFF0) == PC_UI
+    && (com_developer && com_developer->integer & PC_NO_UI))
+    || ((source & 0xFF0) == PC_BOTLIB
+    && (com_developer && com_developer->integer & PC_NO_BOTLIB))
+    || ((source & 0xFF0) == PC_GAME
+    && (com_developer && com_developer->integer & PC_NO_GAME))
+    || ((source & 0xFF0) == PC_NET
+    && (com_developer && com_developer->integer & PC_NO_NET))
+    || ((source & 0xFF0) == PC_COMMON
+    && (com_developer && com_developer->integer & PC_NO_COMMON))
+    || ((source & 0xFF0) == PC_FILES
+    && (com_developer && com_developer->integer & PC_NO_FILES))
+  ) {
+    skipped = qtrue;
+    goto skipconsole;
+  }
+
+#endif
 #ifndef DEDICATED
 	// echo to client console if we're not a dedicated server
-	if ( !com_dedicated || !com_dedicated->integer ) {
+	if ( com_dedicated && !com_dedicated->integer ) {
 		CL_ConsolePrint( msg );
 	}
+#endif
+#ifdef USE_PRINT_CONSOLE
+skipconsole:
+  if(com_developer
+    && (com_developer->integer & PC_NO_CONSOLE
+    || (com_developer->integer & PC_CONSOLE && skipped)))
+  {
+    goto skip_system;
+  }
 #endif
 
 	// echo to dedicated console and early console
 	Sys_Print( msg );
+
+#ifdef USE_PRINT_CONSOLE
+skip_system:
+  if(com_developer
+    && (com_developer->integer & PC_NO_Q3LOG
+    || (com_developer->integer & PC_Q3LOG && skipped)))
+  {
+    return;
+  }
+#endif
 
 	// logfile
 	if ( com_logfile && com_logfile->integer ) {
@@ -292,9 +373,18 @@ A Com_Printf that only shows up if the "developer" cvar is set
 */
 #ifdef USE_PRINT_CONSOLE
 void QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ...)
+{
+  va_list		argptr;
+	char		msg[MAXPRINTMSG];
+
+  va_start( argptr,fmt );
+	Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
+	va_end( argptr );
+
+  Com_PrintfReal( file, line, source | PC_DEVELOPER, flags, S_COLOR_CYAN "%s", msg );
+}
 #else
 void QDECL Com_DPrintf( const char *fmt, ...)
-#endif
 {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
@@ -309,6 +399,7 @@ void QDECL Com_DPrintf( const char *fmt, ...)
 
 	Com_Printf( S_COLOR_CYAN "%s", msg );
 }
+#endif
 
 
 /*
@@ -1321,7 +1412,7 @@ static void Z_ClearZone( memzone_t *zone, memzone_t *head, int size, int segnum 
 	if ( minfragment < min_fragment ) {
 		// in debug mode size of memblock_t may exceed MINFRAGMENT
 		minfragment = PAD( min_fragment, sizeof( intptr_t ) );
-		Com_DPrintf( "zone.minfragment adjusted to %i bytes\n", minfragment );
+		//Com_DPrintf( "zone.minfragment adjusted to %i bytes\n", minfragment );
 	}
 
 	// set the entire zone to one free block
@@ -3728,6 +3819,11 @@ void Sys_SnapVector( float *vector )
 Com_Init
 =================
 */
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_INIT
+#endif
+
 void Com_Init( char *commandLine ) {
 	const char *s;
 	int	qport;
@@ -3768,13 +3864,53 @@ void Com_Init( char *commandLine ) {
 
 	// get the developer cvar set as early as possible
 	Com_StartupVariable( "developer" );
+#ifndef USE_PRINT_CONSOLE
 #ifdef _DEBUG
 	com_developer = Cvar_Get( "developer", "1", CVAR_TEMP );
 #else
 	com_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
 #endif
 	Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
-	Cvar_SetDescription(com_developer, "Set developer mode that includes extra logging information\nDefault: 0");
+#else
+  com_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
+  //Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
+  qboolean devfound = qfalse;
+  for(int i = 0; i < NUM_DEV_MODES; i++)
+  {
+    if(!Q_stricmpn(com_developer->string, developer_modes[i].name, strlen(developer_modes[i].name)))
+    {
+      com_developer->string =
+      com_developer->resetString = CopyString(va("%i", developer_modes[i].flags));
+      com_developer->integer = developer_modes[i].flags;
+      devfound = qtrue;
+    }
+  }
+  Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
+
+  cl_developer = Cvar_Get( "cl_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( cl_developer, "Show client debug messages\nDefault: 0" );
+  sv_developer = Cvar_Get( "sv_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( sv_developer, "Show server debug messages\nDefault: 0" );
+  bot_developer = Cvar_Get( "bot_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( bot_developer, "Show bot debug messages\nDefault: 0" );
+  bot_developer = Cvar_Get( "bot_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( bot_developer, "Show bot debug messages\nDefault: 0" );
+  r_developer = Cvar_Get( "r_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( r_developer, "Show renderer debug messages\nDefault: 0" );
+  cg_developer = Cvar_Get( "cg_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( cg_developer, "Show cgame debug messages\nDefault: 0" );
+  ui_developer = Cvar_Get( "ui_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( ui_developer, "Show UI debug messages\nDefault: 0" );
+  g_developer = Cvar_Get( "g_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( g_developer, "Show game debug messages\nDefault: 0" );
+  net_developer = Cvar_Get( "net_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( net_developer, "Show net debug messages\nDefault: 0" );
+  s_developer = Cvar_Get( "s_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( s_developer, "Show sound debug messages\nDefault: 0" );
+  fs_developer = Cvar_Get( "fs_developer", com_developer->string, CVAR_ARCHIVE );
+	Cvar_SetDescription( fs_developer, "Show file debug messages\nDefault: 0" );
+#endif
+  Cvar_SetDescription(com_developer, "Set developer mode that includes extra logging information\nDefault: 0");
 
 	Com_StartupVariable( "vm_rtChecks" );
 	vm_rtChecks = Cvar_Get( "vm_rtChecks", "15", CVAR_INIT | CVAR_PROTECTED );
@@ -3808,9 +3944,7 @@ void Com_Init( char *commandLine ) {
 
 #ifdef __WASM__
 	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
-}
-
-void Com_Init_After_Filesystem( void ) {
+  WASM_ASYNC(Com_Init_After_Filesystem);
 	const char	*s;
 	int	qport;
 	// TODO: starting to see a pattern, split up every function in the tree to make asynchronous
@@ -3987,11 +4121,9 @@ void Com_Init_After_Filesystem( void ) {
 	VM_Init();
 	SV_Init();
 #ifdef __WASM__
-}
-
-void Com_Init_After_SV_Init( void ) {
+  WASM_ASYNC(Com_Init_After_SV_Init);
 #endif
-;
+
 	com_dedicated->modified = qfalse;
 
 #ifndef DEDICATED
@@ -3999,16 +4131,13 @@ void Com_Init_After_SV_Init( void ) {
 		CL_Init();
 		// Sys_ShowConsole( com_viewlog->integer, qfalse ); // moved down
 	}
-#endif
 #ifdef __WASM__
   else {
     Com_Init_After_CL_Init();
   }
-}
-
-void Com_Init_After_CL_Init( void ) {
+  WASM_ASYNC(Com_Init_After_CL_Init);
 #endif
-;
+#endif
 
 	// add + commands from command line
 	if ( !Com_AddStartupCommands() ) {
@@ -4050,6 +4179,11 @@ void Com_Init_After_CL_Init( void ) {
 	NET_Init( );
 #endif
 }
+
+#ifdef USE_PRINT_CONSOLE
+#undef PRINT_FLAGS
+#define PRINT_FLAGS PC_COMMON_FLAGS
+#endif
 
 
 //==================================================================
