@@ -1502,11 +1502,9 @@ static void R_Register( void )
 
 	r_picmip = ri.Cvar_Get( "r_picmip", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_picmip, "0", "16", CV_INTEGER );
-	ri.Cvar_SetDescription( r_picmip, "Set texture quality, lower is better" );
 
 	r_nomip = ri.Cvar_Get( "r_nomip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_nomip, "0", "1", CV_INTEGER );
-	ri.Cvar_SetDescription( r_nomip, "Apply picmip only on worldspawn textures" );
 
 	r_neatsky = ri.Cvar_Get( "r_neatsky", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_roundImagesDown = ri.Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1532,7 +1530,6 @@ static void R_Register( void )
 	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_lodCurveError, "-1", "8192", CV_FLOAT );
-	ri.Cvar_SetDescription( r_lodCurveError, "Level of detail error on curved surface grids." );
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE_ND );
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE_ND );
 	r_znear = ri.Cvar_Get( "r_znear", "4", CVAR_CHEAT );
@@ -1580,11 +1577,9 @@ static void R_Register( void )
 
 	r_dither = ri.Cvar_Get( "r_dither", "0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dither, "0", "1", CV_INTEGER );
-	ri.Cvar_SetDescription(r_dither, "Set dithering mode:\n 0 - disabled\n 1 - ordered\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
 
 	r_presentBits = ri.Cvar_Get( "r_presentBits", "24", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_presentBits, "16", "30", CV_INTEGER );
-	ri.Cvar_SetDescription( r_presentBits, "Select color bits used for presentation surfaces\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
 
 	//
 	// temporary variables that can change at any time
@@ -1661,10 +1656,6 @@ static void R_Register( void )
 #ifdef USE_VULKAN
 	r_device = ri.Cvar_Get( "r_device", "-1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_device, "-2", NULL, CV_INTEGER );
-	ri.Cvar_SetDescription( r_device, "Select physical device to render:\n" \
-		" 0+ - use explicit device index\n" \
-		" -1 - first discrete GPU\n" \
-		" -2 - first integrated GPU" );
 	r_device->modified = qfalse;
 
 	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1694,12 +1685,6 @@ static void R_Register( void )
 
 	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_renderScale, "0", "4", CV_INTEGER );
-	ri.Cvar_SetDescription( r_renderScale, "Scaling mode to be used with custom render resolution:\n"
-		" 0 - disabled\n"
-		" 1 - nearest filtering, stretch to full size\n"
-		" 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
-		" 3 - linear filtering, stretch to full size\n"
-		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
 #endif // USE_VULKAN
 }
 

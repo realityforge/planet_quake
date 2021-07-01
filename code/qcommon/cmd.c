@@ -1037,9 +1037,7 @@ void Cmd_Init( void ) {
 	Cmd_SetDescription("help", "Display helpful description for any console command\nUsage: help <command>");
 
 	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CVAR_ARCHIVE | CV_INTEGER);
-	Cvar_SetDescription(cl_execTimeout, "Minimum milliseconds between executions to reset overflow detection\nDefault: 2000");
 	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);
-	Cvar_SetDescription( cl_execOverflow, "Maximum milliseconds an execution can take before it becomes overflowed\nDefault: 200" );
 }
 
 

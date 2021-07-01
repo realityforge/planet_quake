@@ -656,15 +656,11 @@ void GLimp_Init( glconfig_t *config )
   glw_state.config = config; // feedback renderer configuration
 
   in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
-  Cvar_SetDescription(in_nograb, "Don't grab mouse when client in not in fullscreen mode\nDefault: 0");
 
   r_allowSoftwareGL = Cvar_Get( "r_allowSoftwareGL", "0", CVAR_LATCH );
-  Cvar_SetDescription(r_allowSoftwareGL, "Toggle the use of the default software OpenGL driver\nDefault: 0");
 
   r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
-  Cvar_SetDescription( r_swapInterval, "Toggle frame swapping\nDefault: 0" );
   r_stereoEnabled = Cvar_Get( "r_stereoEnabled", "0", CVAR_ARCHIVE | CVAR_LATCH );
-  Cvar_SetDescription( r_stereoEnabled, "Enable stereo rendering for use with virtual reality headsets\nDefault: 0");
 
   // Create the window and set up the context
   err = GLimp_StartDriverAndSetMode( r_mode->integer, r_modeFullscreen->string, r_fullscreen->integer, qtrue );

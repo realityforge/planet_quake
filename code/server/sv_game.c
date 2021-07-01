@@ -1217,7 +1217,6 @@ void SV_InitGameProgs( qboolean createNew ) {
 	extern int	bot_enable;
 
 	var = Cvar_Get( "bot_enable", "1", CVAR_LATCH );
-	Cvar_SetDescription(var, "Enable and disable adding of bots to the map/game\nDefault: 1");
 	if ( var ) {
 		bot_enable = var->integer;
 	}

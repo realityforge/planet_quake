@@ -2051,17 +2051,13 @@ void IN_Init( void )
 	Com_DPrintf( "\n------- Input Initialization -------\n" );
 
 	in_keyboardDebug = Cvar_Get( "in_keyboardDebug", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription(in_keyboardDebug, "Show keyboard debug messages for every key press\nDefault: 0");
 
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
 	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
-	Cvar_SetDescription(in_mouse, "Toggle initialization of the mouse as an input device\nDefault: 1");
 
 	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_joystick, "Toggle the initialization of the joystick\nDefault: 0" );
 	in_joystickThreshold = Cvar_Get( "joy_threshold", "0.15", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_joystickThreshold, "Set the maximum value of joystick in every direction\nDefault: 0.15" );
 #ifdef USE_JOYSTICK
 	j_pitch =        Cvar_Get( "j_pitch",        "0.022", CVAR_ARCHIVE_ND );
 	j_yaw =          Cvar_Get( "j_yaw",          "-0.022", CVAR_ARCHIVE_ND );
@@ -2084,7 +2080,6 @@ void IN_Init( void )
 
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE );
-	Cvar_SetDescription(cl_consoleKeys, "Set the characters that toggle the in game console\nDefault: ~ `");
 
 	// TODO: activate text input for text fields
 	//SDL_StartTextInput();

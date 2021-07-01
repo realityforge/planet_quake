@@ -387,9 +387,7 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
-	Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
-	Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
@@ -917,7 +915,7 @@ void Con_RunConsole( void )
 		con.finalFrac = 0.5;	// half screen
 	else
 		con.finalFrac = 0.0;	// none visible
-	
+
 	// scroll towards the destination height
 	if ( con.finalFrac < con.displayFrac )
 	{

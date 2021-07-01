@@ -4972,23 +4972,15 @@ void FS_Startup( void ) {
 	Com_DPrintf( "----- FS_Startup -----\n" );
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
-	Cvar_SetDescription(fs_debug, "Toggle filesystem debug logging, every file open is shown\nDefault: 0");
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
-	Cvar_SetDescription(fs_copyfiles, "Toggle if files can be copied after downloading from the server\nDefault: 0");
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
-	Cvar_SetDescription(fs_basepath, "Set the path of the engine where files can be downloaded\nDefault: varies by operating system");
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
-	Cvar_SetDescription(fs_basegame, "Set the base game for the engine, baseq3, baseoa, baseef\nDefault: " XSTRING(BASEGAME));
 #ifndef __WASM__
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
-	Cvar_SetDescription(fs_steampath, "The search path for Steam data when the engine is downloaded through Steam");
 #endif
 
 #ifndef USE_HANDLE_CACHE
 	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
-	Cvar_SetDescription( fs_locked, "Set file handle policy for pk3 files:\n"
-		" 0 - release after use, unlimited number of pk3 files can be loaded\n"
-		" 1 - keep file handle locked, more consistent, total pk3 files count limited to ~1k-4k\n" );
 #endif
 
 	if ( !fs_basegame->string[0] )
@@ -5000,11 +4992,9 @@ void FS_Startup( void ) {
 	}
 
 	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
-	Cvar_SetDescription( fs_homepath, "Directory to store user configuration and downloaded files." );
 
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
-	Cvar_SetDescription(fs_gamedirvar, "Set gamedir set the game folder/dir default is baseq3 in addition to the fs_basegame\nDefault: empty");
 
 #ifdef __WASM__
 	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
@@ -5024,9 +5014,6 @@ void FS_Startup_After_Async( void )
 #else
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
-	Cvar_SetDescription( fs_excludeReference,
-		"Exclude specified pak files from download list on client side.\n"
-		"Format is <moddir>/<pakname> (without .pk3 suffix), you may list multiple entries separated by space." );
 
 	start = Sys_Milliseconds();
 

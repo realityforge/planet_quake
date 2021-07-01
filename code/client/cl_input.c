@@ -1055,64 +1055,43 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
-	Cvar_SetDescription( cl_nodelta, "Disable delta compression (slows net performance, not recommended)\nDefault: 0" );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
-	Cvar_SetDescription( cl_debugMove, "Used for debugging movement, shown in debug graph\nDefault: 0" );
 
 	cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
-	Cvar_SetDescription( cl_showSend, "Show network packets as they are sent\nDefault: 0" );
 
 	cl_yawspeed = Cvar_Get( "cl_yawspeed", "140", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_yawspeed, "Set the yaw rate when +left and/or +right are active\nDefault: 140" );
 	cl_pitchspeed = Cvar_Get( "cl_pitchspeed", "140", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_pitchspeed, "Set the pitch rate when +lookup and/or +lookdown are active\nDefault: 140" );
 	cl_anglespeedkey = Cvar_Get( "cl_anglespeedkey", "1.5", 0 );
-	Cvar_SetDescription( cl_anglespeedkey, "Set the speed that the direction keys (not mouse) change the view angle\nDefault: 1.5" );
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "60", CVAR_ARCHIVE );
 	Cvar_CheckRange( cl_maxpackets, "15", "125", CV_INTEGER );
-	Cvar_SetDescription(cl_maxpackets, "Set the transmission packet size or how many packets are sent to client\nDefault: 60");
 	cl_packetdup = Cvar_Get( "cl_packetdup", "1", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_packetdup, "0", "5", CV_INTEGER );
-	Cvar_SetDescription(cl_packetdup, "How many times should a packet try to resend to the server\nDefault: 1");
 
 	cl_run = Cvar_Get( "cl_run", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(cl_run, "Default to player running instead of walking\nDefault: 1");
 	cl_sensitivity = Cvar_Get( "sensitivity", "5", CVAR_ARCHIVE );
-	Cvar_SetDescription(cl_sensitivity, "Set how far your mouse moves in relation to travel on the mouse pad\nDefault: 5");
 	cl_mouseAccel = Cvar_Get( "cl_mouseAccel", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_mouseAccel, "Toggle the use of mouse acceleration\nDefault: 0");
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_freelook, "Toggle the use of freelook with the mouse, looking up or down\nDefault: 1");
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
 	cl_mouseAccelStyle = Cvar_Get( "cl_mouseAccelStyle", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_mouseAccelStyle, "Change the style of mouse acceleration in a given direction\n1 - the mouse speeds up\n2 - becomes more sensitive as it continues in one direction\nDefault 0");
 	// offset for the power function (for style 1, ignored otherwise)
 	// this should be set to the max rate value
 	cl_mouseAccelOffset = Cvar_Get( "cl_mouseAccelOffset", "5", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_mouseAccelOffset, "0.001", "50000", CV_FLOAT );
-	Cvar_SetDescription(cl_mouseAccelOffset, "Mouse acceleration aplifier\nDefault: 0.001");
 
 	cl_showMouseRate = Cvar_Get( "cl_showmouserate", "0", 0 );
-	Cvar_SetDescription(cl_showMouseRate, "Show the mouse rate of mouse samples per frame\nDefault: 0");
 
 	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_pitch, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.022");
 	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_yaw, "Set the speed at which the player's screen moves left and right while using the mouse\nDefault: 0.022");
 	m_forward = Cvar_Get( "m_forward", "0.25", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_forward, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 	m_side = Cvar_Get( "m_side", "0.25", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_side, "Set the strafe movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 #ifdef MACOS_X
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get( "m_filter", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 1");
 #else
 	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 0");
 #endif
 }
 

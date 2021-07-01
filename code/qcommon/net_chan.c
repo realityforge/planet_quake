@@ -77,11 +77,8 @@ Netchan_Init
 void Netchan_Init( int port ) {
 	port &= 0xffff;
 	showpackets = Cvar_Get ("showpackets", "0", CVAR_TEMP );
-	Cvar_SetDescription(showpackets, "Toggle display of all packets sent and received\nDefault: 0");
 	showdrop = Cvar_Get ("showdrop", "0", CVAR_TEMP );
-	Cvar_SetDescription(showdrop, "Toggle display of dropped packets\nDefault: 0");
 	qport = Cvar_Get ("net_qport", va("%i", port), CVAR_INIT );
-	Cvar_SetDescription(qport, "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
 }
 
 

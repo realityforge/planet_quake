@@ -1777,21 +1777,12 @@ static qboolean NET_GetCvars( void ) {
 	net_enabled = Cvar_Get( "net_enabled", "3", CVAR_LATCH | CVAR_ARCHIVE_ND | CVAR_NORESTART );
 #endif
 
-	Cvar_SetDescription( net_enabled, "Networking options, bitmask:\n"
-		" 1 - enable IPv4\n"
-#ifdef USE_IPV6
-		" 2 - enable IPv6\n"
-		" 4 - prioritize IPv6 connections over IPv4\n"
-		" 8 - disable IPv6 multicast"
-#endif
-		);
 
 	Cvar_CheckRange( net_enabled, NULL, NULL, CV_INTEGER );
 	modified = net_enabled->modified;
 	net_enabled->modified = qfalse;
 
 	net_ip = Cvar_Get( "net_ip", "0.0.0.0", CVAR_LATCH );
-  Cvar_SetDescription(net_ip, "The IP of the local machine, supplied by the OS\nDefault: 0.0.0.0 (bind all)");
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
@@ -1808,25 +1799,21 @@ static qboolean NET_GetCvars( void ) {
 
 	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	Cvar_CheckRange( net_port, "0", "65535", CV_INTEGER );
-  Cvar_SetDescription(net_port, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port->modified;
 	net_port->modified = qfalse;
 	
 #ifdef USE_IPV6
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
-  Cvar_SetDescription(net_ip6, "The IPv6 of the local machine\nDefault: :: (bind all)");
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
 
 	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
 	Cvar_CheckRange( net_port6, "0", "65535", CV_INTEGER );
-  Cvar_SetDescription(net_port6, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 
 	// Some cvars for configuring multicast options which facilitates scanning for servers on local subnets.
 	net_mcast6addr = Cvar_Get( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE_ND );
-  Cvar_SetDescription(net_mcast6addr, "The IPv6 multicast address\nDefault: " XSTRING(NET_MULTICAST_IP6));
 	modified += net_mcast6addr->modified;
 	net_mcast6addr->modified = qfalse;
 
@@ -1837,38 +1824,31 @@ static qboolean NET_GetCvars( void ) {
 #endif
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
-  Cvar_SetDescription(net_mcast6iface, "IPv6 multicast interface\nDefault: empty");
 #endif // USE_IPV6
 
 	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( net_socksEnabled, "0", "1", CV_INTEGER );
-  Cvar_SetDescription(net_socksEnabled, "Toggle the use of network socks 5 protocol enabling firewall access\nDefault: 0");
 	modified += net_socksEnabled->modified;
 	net_socksEnabled->modified = qfalse;
 
 	net_socksServer = Cvar_Get( "net_socksServer", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
-  Cvar_SetDescription(net_socksServer, "Set the address (name or IP number) of the SOCKS server\nDefault: empty");
 	modified += net_socksServer->modified;
 	net_socksServer->modified = qfalse;
 
 	net_socksPort = Cvar_Get( "net_socksPort", "1080", CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( net_socksPort, "0", "65535", CV_INTEGER );
-  Cvar_SetDescription( net_socksPort, "Set proxy and/or firewall port default is 1080\nDefault: 1080");
 	modified += net_socksPort->modified;
 	net_socksPort->modified = qfalse;
 
 	net_socksUsername = Cvar_Get( "net_socksUsername", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
-  Cvar_SetDescription(net_socksUsername, "Username for socks firewall supports no authentication and username/password authentication method\nDefault: empty");
 	modified += net_socksUsername->modified;
 	net_socksUsername->modified = qfalse;
 
 	net_socksPassword = Cvar_Get( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
-  Cvar_SetDescription(net_socksPassword, "Password for socks firewall access supports no authentication and username/password authentication method\nDefault: empty");
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
 
 	net_dropsim = Cvar_Get( "net_dropsim", "", CVAR_TEMP );
-  Cvar_SetDescription(net_dropsim, "Simulate packet dropping events for debugging purposes in percent\nDefault: empty");
 
 	return modified ? qtrue : qfalse;
 }
