@@ -1398,8 +1398,10 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 		if (cinTable[currentHandle].alterGameState) {
 			cls.state = CA_CINEMATIC;
 		}
-		
+
+#ifndef USE_NO_CONSOLE
 		Con_Close();
+#endif
 
 		if ( !cinTable[currentHandle].silent ) {
 			//s_rawend = s_soundtime;

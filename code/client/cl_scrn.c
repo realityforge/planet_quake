@@ -817,8 +817,10 @@ donewithupdate:
 	SCR_DrawCurrentView();
 #endif
 
+#ifndef USE_NO_CONSOLE
 	// console draws next
 	Con_DrawConsole ();
+#endif
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {

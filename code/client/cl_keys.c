@@ -433,11 +433,13 @@ static void Console_Key( int key ) {
 			}
 		}
 
+#ifndef USE_NO_CONSOLE
 		// copy line to history buffer
 		Con_SaveField( &g_consoleField );
 
 		Field_Clear( &g_consoleField );
 		g_consoleField.widthInChars = g_console_field_width;
+#endif
 
 		if ( cls.state == CA_DISCONNECTED ) {
 			SCR_UpdateScreen (qfalse);	// force an update, because the command
@@ -462,6 +464,7 @@ static void Console_Key( int key ) {
 		return;
 	}
 
+#ifndef USE_NO_CONSOLE
 	// command history (ctrl-p ctrl-n for unix style)
 
 	if ( (key == K_MWHEELUP && keys[K_SHIFT].down) || ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
@@ -511,6 +514,7 @@ static void Console_Key( int key ) {
 
 	// pass to the normal editline routine
 	Field_KeyDownEvent( &g_consoleField, key );
+#endif
 }
 
 //============================================================================
@@ -584,6 +588,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 #endif
 
+#ifndef USE_NO_CONSOLE
 	// console key is hardcoded, so the user can never unbind it
 	if( key == K_CONSOLE || ( keys[K_SHIFT].down && key == K_ESCAPE ) )
 	{
@@ -591,6 +596,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		Key_ClearStates();
 		return;
 	}
+#endif
 
 	// hardcoded screenshot key
 	if ( key == K_PRINT ) {
@@ -653,11 +659,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			Com_DL_Cleanup( &download );
 		}
 #endif
+#ifndef USE_NO_CONSOLE
 		if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 			// escape always closes console
 			Con_ToggleConsole_f();
 			Key_ClearStates();
 		}
+#endif
 
 		if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 			// clear message mode
@@ -808,13 +816,16 @@ void CL_DropComplete( void ) {
     Com_Printf("Maps: %i\n", maps);
     // TODO: list images based on the percent they exist over other file types
   }
+#ifndef USE_NO_CONSOLE
   Con_ClearNotify();
   if (cl_dropAction->integer == 1) {
     g_consoleField.buffer[1] = '\\';
     memcpy(&g_consoleField.buffer[1], &command, sizeof(g_consoleField.buffer) - 1);
     Field_AutoComplete( &g_consoleField );
     g_consoleField.cursor = strlen(g_consoleField.buffer);
-  } else if (cl_dropAction->integer == 2) {
+  } else 
+#endif
+  if (cl_dropAction->integer == 2) {
     Cbuf_ExecuteText( EXEC_APPEND, command );
   }
   command[0] = '\0';

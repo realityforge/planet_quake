@@ -783,7 +783,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	char			oldGame[ MAX_QPATH ];
 	qboolean		gamedirModified;
 
+#ifndef USE_NO_CONSOLE
 	Con_Close();
+#endif
 
 	clc.connectPacketCount = 0;
 

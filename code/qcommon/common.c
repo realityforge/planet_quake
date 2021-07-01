@@ -288,12 +288,16 @@ void QDECL Com_Printf( const char *fmt, ... )
   }
 
 #endif
+
+#ifndef USE_NO_CONSOLE
 #ifndef DEDICATED
 	// echo to client console if we're not a dedicated server
 	if ( com_dedicated && !com_dedicated->integer ) {
 		CL_ConsolePrint( msg );
 	}
 #endif
+#endif
+
 #ifdef USE_PRINT_CONSOLE
 skipconsole:
   if(com_developer
@@ -3261,9 +3265,11 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 			SV_Shutdown( "Game directory changed" );
 #endif
 
+#ifndef USE_NO_CONSOLE
 		// Reset console command history
 		// TODO: make this an option
 		Con_ResetHistory();
+#endif
 
 #ifndef __WASM__
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars

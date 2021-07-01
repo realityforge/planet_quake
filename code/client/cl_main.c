@@ -1298,7 +1298,9 @@ static void CL_PlayDemo_f( void ) {
 
 	Q_strncpyz( clc.demoName, shortname, sizeof( clc.demoName ) );
 
+#ifndef USE_NO_CONSOLE
 	Con_Close();
+#endif
 
 	cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
@@ -1480,7 +1482,9 @@ void CL_MapLoading( void ) {
 		return;
 	}
 
+#ifndef USE_NO_CONSOLE
 	Con_Close();
+#endif
 	Key_SetCatcher( 0 );
 
 	// if we are already connected to the local host, stay connected
@@ -2112,7 +2116,9 @@ static void CL_Connect_f( void ) {
 	noGameRestart = qtrue;
 	CL_Disconnect( qfalse, qtrue );
 
+#ifndef USE_NO_CONSOLE
 	Con_Close();
+#endif
 
 	Q_strncpyz( cls.servername, server, sizeof( cls.servername ) );
 
@@ -4099,7 +4105,9 @@ void CL_Frame( int msec, int realMsec ) {
 			cls.framecount++;
 			SCR_UpdateScreen(qfalse);
 			S_Update( realMsec );
+#ifndef USE_NO_CONSOLE
 			Con_RunConsole();
+#endif
 			return;
 		}
 	}
@@ -4222,7 +4230,9 @@ void CL_Frame( int msec, int realMsec ) {
 	// advance local effects for next frame
 	SCR_RunCinematic();
 
+#ifndef USE_NO_CONSOLE
 	Con_RunConsole();
+#endif
 	
 #ifdef USE_MULTIVM_CLIENT
 	cgvmi = 0;
@@ -4310,9 +4320,11 @@ static void CL_InitRenderer( void ) {
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	cls.whiteShader = re.RegisterShader( "white" );
+#ifndef USE_NO_CONSOLE
 	cls.consoleShader = re.RegisterShader( "console" );
 	g_console_field_width = cls.glconfig.vidWidth / smallchar_width - 2;
 	g_consoleField.widthInChars = g_console_field_width;
+#endif
 
 	// for 640x480 virtualized screen
 	cls.biasY = 0;
@@ -5314,7 +5326,9 @@ void CL_Init( void ) {
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
+#ifndef USE_NO_CONSOLE
 	Con_Init();
+#endif
 
 	CL_ClearState();
 	cls.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
@@ -5658,7 +5672,9 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 
 	CL_ShutdownRef( quit ? REF_UNLOAD_DLL : REF_DESTROY_WINDOW );
 
+#ifndef USE_NO_CONSOLE
 	Con_Shutdown();
+#endif
 
 	Cmd_RemoveCommand ("cmd");
 	Cmd_RemoveCommand ("configstrings");

@@ -30,10 +30,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define  CON_TEXTSIZE   65536
 
-int bigchar_width;
-int bigchar_height;
-int smallchar_width;
-int smallchar_height;
+int bigchar_width = BIGCHAR_WIDTH;
+int bigchar_height = BIGCHAR_HEIGHT;
+int smallchar_width = SMALLCHAR_WIDTH;
+int smallchar_height = SMALLCHAR_HEIGHT;
+
+#ifndef USE_NO_CONSOLE
 
 typedef struct {
 	qboolean	initialized;
@@ -983,3 +985,5 @@ void Con_Close( void )
 	con.finalFrac = 0.0;			// none visible
 	con.displayFrac = 0.0;
 }
+
+#endif

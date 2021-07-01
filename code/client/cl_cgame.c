@@ -505,7 +505,9 @@ rescan:
 	if ( !strcmp( cmd, "map_restart" ) ) {
 		// clear notify lines and outgoing commands before passing
 		// the restart to the cgame
+#ifndef USE_NO_CONSOLE
 		Con_ClearNotify();
+#endif
 		// reparse the string, because Con_ClearNotify() may have done another Cmd_TokenizeString()
 		Cmd_TokenizeString( s );
 		Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
@@ -525,8 +527,11 @@ rescan:
 		if ( !com_sv_running->integer ) {
 			return qfalse;
 		}
+#ifndef USE_NO_CONSOLE
 		// close the console
 		Con_Close();
+#endif
+
 		// take a special screenshot next frame
 		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot\n" );
 		return qtrue;
@@ -1182,8 +1187,10 @@ void CL_InitCGame( int inVM ) {
 
 	t1 = Sys_Milliseconds();
 
+#ifndef USE_NO_CONSOLE
 	// put away the console
 	Con_Close();
+#endif
 
 	// find the current mapname
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
@@ -1258,7 +1265,9 @@ void CL_InitCGame( int inVM ) {
 #ifdef USE_MULTIVM_CLIENT
 	if(inVM == -1)
 #endif
+#ifndef USE_NO_CONSOLE
 	Con_ClearNotify ();
+#endif
 
 	// do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();
