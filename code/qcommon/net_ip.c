@@ -234,6 +234,8 @@ typedef struct
 static nip_localaddr_t localIP[MAX_IPS];
 static int numIP;
 
+extern void Cvar_SetNetDescriptions( void );
+
 static void	NET_Restart_f( void );
 
 //=============================================================================
@@ -1960,6 +1962,8 @@ void NET_Init( void ) {
 
 	NET_Config( qtrue );
 	
+  Cvar_SetNetDescriptions();
+  
 	Cmd_AddCommand( "net_restart", NET_Restart_f );
   Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nUsage: net_restart");
 }

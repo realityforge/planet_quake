@@ -174,6 +174,7 @@ typedef struct serverStatus_s
 serverStatus_t cl_serverStatusList[MAX_SERVERSTATUSREQUESTS];
 
 extern void  Cvar_SetClientDescriptions( void );
+extern void  Cvar_SetRendererDescriptions( void );
 
 static void CL_CheckForResend( void );
 static void CL_ShowIP_f( void );
@@ -4368,6 +4369,7 @@ void CL_StartHunkUsers( void ) {
 	if ( re.BeginRegistration && !cls.rendererStarted ) {
 		cls.rendererStarted = qtrue;
 		CL_InitRenderer();
+    Cvar_SetRendererDescriptions();
 	}
 
 	if ( !cls.soundStarted ) {

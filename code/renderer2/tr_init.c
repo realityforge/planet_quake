@@ -218,8 +218,6 @@ cvar_t	*r_lazyLoad;
 cvar_t  *r_paletteMode;
 cvar_t  *r_seeThroughWalls;
 cvar_t	*r_zfar;
-cvar_t  *rf_firstPersonXYZ;
-vec3_t  rf_firstPersonOffset;
 
 float dvrXScale = 1;
 float dvrYScale = 1;
@@ -1512,19 +1510,12 @@ void R_Register( void )
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
 
+#ifdef USE_ABS_MOUSE
 	r_cursorShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
+#endif
+#ifdef BUILD_EXPERIMENTAL
 	r_inputShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);
-
-  rf_firstPersonXYZ = ri.Cvar_Get( "rf_firstPersonXYZ", "0 0 0", 0);
-  rf_firstPersonXYZ->modified = qtrue;
-  // TODO: put this somewhere it can be adjusted without restarting?
-  COM_BeginParseSession( "rf_first_person" );
-  const char *p = rf_firstPersonXYZ->string;
-  for( int i = 0; i < 3; i++) {
-    char *rfOffsets = COM_ParseExt( &p, qtrue );
-    rf_firstPersonOffset[i] = atof(rfOffsets);
-  }
-  rf_firstPersonXYZ->modified = qfalse;
+#endif
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

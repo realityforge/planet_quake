@@ -3391,7 +3391,9 @@ static shader_t *FinishShader( void ) {
 	qboolean		hasLightmapStage;
 	qboolean		vertexLightmap;
 
+#ifdef USE_LAZY_LOAD
   ri.Cvar_Set("r_loadingShader", "");
+#endif
 
 	hasLightmapStage = qfalse;
 	vertexLightmap = qfalse;
@@ -3723,7 +3725,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		}
 	}
 
+#ifdef USE_LAZY_LOAD
   ri.Cvar_Set( "r_loadingShader", va("%12i;%s", lightmapIndex, name) );
+#endif
 
 	InitShader( strippedName, lightmapIndex );
 

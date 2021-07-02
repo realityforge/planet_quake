@@ -201,9 +201,13 @@ S_CodecLoad
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
 	void *result;
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", filename );	
+#endif
 	result = S_CodecGetSound(filename, info);
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", "" );	
+#endif
 
 	return result;
 }
@@ -216,9 +220,13 @@ S_CodecOpenStream
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
 	snd_stream_t *result;
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", filename );	
+#endif
 	result = S_CodecGetSound(filename, NULL);
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", "" );	
+#endif
 
 	return result;
 }

@@ -1968,7 +1968,7 @@ void Cvar_CheckRange( cvar_t *var, const char *mins, const char *maxs, cvarValid
 Cvar_SetDescription
 =====================
 */
-void Cvar_SetDescription( char *var, const char *var_description )
+void Cvar_SetDescription( const char *var, const char *var_description )
 {
   cvar_t *cv = Cvar_FindVar( var );
   if(!cv) {

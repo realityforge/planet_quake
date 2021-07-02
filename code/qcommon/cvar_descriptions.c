@@ -109,11 +109,16 @@ void Cvar_SetSoundDescriptions( void ) {
   Cvar_SetDescription( "s_muteWhenMinimized", "Mute the sound when the window is minimized\nDefault: 1");
   Cvar_SetDescription( "s_initsound", "Use sounds, or disable them entirely\nDefault: 1");
   Cvar_SetDescription( "com_soundMegs", "The megabytes to allocate for sound can be adjusted to provide better performance on systems with more than 64mb of memory\nDefault: 8");
+  Cvar_SetDescription( "s_sdlBits", "Number of bits to use for SDL sound" );
+  Cvar_SetDescription( "s_sdlChannels", "Number of channels to use for SDL sound" );
+  Cvar_SetDescription( "s_sdlDevSamps", "Number of samples to use for SDL sound development" );
+  Cvar_SetDescription( "s_sdlMixSamps", "Number of samples to use for SDL sound" );
 
 }
 
 void Cvar_SetCommonDescriptions( void ) {
   Cvar_SetDescription( "//trap_GetValue", "Entry point for VM cvars to shortcut API for better speed");
+  Cvar_SetDescription( "sys_cpustring", "Hold the CPU descriptor\nDefault: detect" );
   Cvar_SetDescription( "cm_noAreas", "Create one giant area for the clipmap and don't use culling\nDefault: 0");
   Cvar_SetDescription( "cm_noCurves", "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
   Cvar_SetDescription( "cm_playerCurveClip", "Don't clip player bounding box around curves\nDefault: 1" );
@@ -138,9 +143,7 @@ void Cvar_SetCommonDescriptions( void ) {
   Cvar_SetDescription( "developer", "Set developer mode that includes extra logging information\nDefault: 0");
   Cvar_SetDescription( "vm_rtChecks", "Runtime checks in compiled vm code, bitmask:\n 1 - program stack overflow\n" \
 		" 2 - opcode stack overflow\n 4 - jump target range\n 8 - data read/write range" );
-if ( com_journal->integer ) {
-	Cvar_SetDescription( "com_journal", "Use a detailed journal.dat file for many events\nDefault: 0");
-}
+	Cvar_SetDescription( "journal", "Use a detailed journal.dat file for many events\nDefault: 0");
   Cvar_SetDescription( "protocol", "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
   Cvar_SetDescription( "dedicated", "Start a server in dedicated mode, no graphics or gameplay, only server process\n1 - Server is dedicated and unlisted\n2 - Server is public and updated in master list\nDefault: 1" );
   Cvar_SetDescription( "com_maxfps", "Set the max number of frames per second across the whole system, client and server\nDefault: 125");
@@ -207,7 +210,6 @@ void Cvar_SetInputDescriptions( void ) {
   Cvar_SetDescription( "m_side", "Set the strafe movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
   Cvar_SetDescription( "m_filter", "Toggle use of mouse smoothing\nDefault: 1");
   Cvar_SetDescription( "m_filter", "Toggle use of mouse smoothing\nDefault: 0");
-  //Cvar_SetDescription( "ttycon", "Turn console interactiveness on or off\nDefault: 1" );
   Cvar_SetDescription( "in_keyboardDebug", "Show keyboard debug messages for every key press\nDefault: 0");
 	Cvar_SetDescription( "in_mouse", "Toggle initialization of the mouse as an input device\nDefault: 1");
 #ifdef USE_JOYSTICK
@@ -254,7 +256,7 @@ void Cvar_SetFilesDescriptions( void ) {
 void Cvar_SetNetDescriptions( void ) {
   Cvar_SetDescription( "showpackets", "Toggle display of all packets sent and received\nDefault: 0");
   Cvar_SetDescription( "showdrop", "Toggle display of dropped packets\nDefault: 0");
-  Cvar_SetDescription( "qport", "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
+  Cvar_SetDescription( "net_qport", "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
   Cvar_SetDescription( "net_enabled", "Networking options, bitmask:\n"
 		" 1 - enable IPv4\n"
 #ifdef USE_IPV6
@@ -284,8 +286,9 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_stencilbits", "Stencil buffer size (0, 8bit, and 16bit)\nDefault: 8" );
   Cvar_SetDescription( "r_depthbits", "Set the number of depth bits\nDefault: 0");
   Cvar_SetDescription( "r_drawBuffer", "Set which frame buffer to draw into using framebuffers\nDefault: GL_BACK");
+#ifdef USE_RENDERER_DLOPEN
   Cvar_SetDescription( "cl_renderer", "Set the name of the dynamically linked renderer\nDefault: opengl2");
-
+#endif
   Cvar_SetDescription( "r_allowSoftwareGL", "Toggle the use of the default software OpenGL driver\nDefault: 0" );
   Cvar_SetDescription( "r_swapInterval", "Toggle frame swapping\nDefault: 0" );
   Cvar_SetDescription( "r_glDriver", "Used OpenGL driver by name\nDefault: opengl32" );
@@ -301,10 +304,7 @@ void Cvar_SetRendererDescriptions( void ) {
 	Cvar_SetDescription( "r_customheight", "Custom height to use with \\r_mode -1" );
   Cvar_SetDescription( "r_colorbits", "Set number of bits used for each color from 0 to 32 bit, usually set by SDL\nDefault: 0" );
   Cvar_SetDescription( "r_picmip", "Set texture quality, lower is better" );
-  Cvar_SetDescription( "r_nomip", "Apply picmip only on worldspawn textures" );
-  Cvar_SetDescription( "r_lodCurveError", "Level of detail error on curved surface grids." );
-  Cvar_SetDescription( "r_dither", "Set dithering mode:\n 0 - disabled\n 1 - ordered\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
-  Cvar_SetDescription( "r_presentBits", "Select color bits used for presentation surfaces\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
+#ifdef USE_VULKAN
   Cvar_SetDescription( "r_device", "Select physical device to render:\n" \
     " 0+ - use explicit device index\n" \
     " -1 - first discrete GPU\n" \
@@ -315,15 +315,14 @@ void Cvar_SetRendererDescriptions( void ) {
     " 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
     " 3 - linear filtering, stretch to full size\n"
     " 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
+#endif
   Cvar_SetDescription( "r_picmip", "Set texture quality, lower is better" );
+  // TODO: if renderer1
+#if 0
+  Cvar_SetDescription( "r_presentBits", "Select color bits used for presentation surfaces\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
+  Cvar_SetDescription( "r_dither", "Set dithering mode:\n 0 - disabled\n 1 - ordered\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
 	Cvar_SetDescription( "r_nomip", "Apply picmip only on worldspawn textures" );
-	Cvar_SetDescription( "r_lodCurveError", "Level of detail error on curved surface grids." );
-	Cvar_SetDescription( "r_renderScale", "Scaling mode to be used with custom render resolution:\n"
-		" 0 - disabled\n"
-		" 1 - nearest filtering, stretch to full size\n"
-		" 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
-		" 3 - linear filtering, stretch to full size\n"
-		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
+#endif
   Cvar_SetDescription( "r_allowExtensions", "Use all of the OpenGL extensions the card is capable of\nDefault: 1");
 	Cvar_SetDescription( "r_ext_compressed_textures", "Compress textures as they are loaded\nDefault: 1");
 	Cvar_SetDescription( "r_ext_multitexture", "Enable multitexture, not used\nDefault: 1");
@@ -375,32 +374,32 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_cubemapSize", "Set the cube mapping size\nDefault: 128");
 	Cvar_SetDescription( "r_deluxeSpecular", "Enable delux specular mapping for lighting\nDefault: 0.3");
 	Cvar_SetDescription( "r_pbr", "Enable physics based renderering\nDefault: 0");
-	//Cvar_SetDescription(r_pbr);
-  //Cvar_SetDescription(r_baseNormalY);
-	//Cvar_SetDescription(r_baseParallax);
-  //Cvar_SetDescription(r_baseSpecular);
-  //Cvar_SetDescription(r_baseGloss);
-  //Cvar_SetDescription(r_glossType);
-  //Cvar_SetDescription(r_dlightMode);
-  //Cvar_SetDescription(r_pshadowDist);
-  //Cvar_SetDescription(r_mergeLightmaps);
-  //Cvar_SetDescription(r_imageUpsample);
-  //Cvar_SetDescription(r_imageUpsampleMaxSize);
-	//Cvar_SetDescription(r_imageUpsampleType);
-  //Cvar_SetDescription(r_genNormalMaps);
-  //Cvar_SetDescription(r_forceSun);
-	//Cvar_SetDescription(r_forceSunLightScale);
-	//Cvar_SetDescription(r_forceSunAmbientScale);
-	//Cvar_SetDescription(r_drawSunRays);
-  //Cvar_SetDescription(r_sunlightMode);
-  //Cvar_SetDescription(r_sunShadows);
-	//Cvar_SetDescription(r_shadowFilter);
-	//Cvar_SetDescription(r_shadowBlur);
-	//Cvar_SetDescription(r_shadowMapSize);
-  //Cvar_SetDescription(r_shadowCascadeZNear);
-  //Cvar_SetDescription(r_shadowCascadeZFar);
-  //Cvar_SetDescription(r_shadowCascadeZBias);
-  //Cvar_SetDescription(r_ignoreDstAlpha);
+  Cvar_SetDescription( "r_baseNormalX", "lighting setting");
+  Cvar_SetDescription( "r_baseNormalY", "lighting setting");
+	Cvar_SetDescription( "r_baseParallax", "lighting setting");
+  Cvar_SetDescription( "r_baseSpecular", "lighting setting");
+  Cvar_SetDescription( "r_baseGloss", "lighting setting");
+  Cvar_SetDescription( "r_glossType", "lighting setting");
+  Cvar_SetDescription( "r_dlightMode", "lighting setting");
+  Cvar_SetDescription( "r_pshadowDist", "lighting setting");
+  Cvar_SetDescription( "r_mergeLightmaps", "lighting setting");
+  Cvar_SetDescription( "r_imageUpsample", "lighting setting");
+  Cvar_SetDescription( "r_imageUpsampleMaxSize", "lighting setting");
+	Cvar_SetDescription( "r_imageUpsampleType", "lighting setting");
+  Cvar_SetDescription( "r_genNormalMaps", "lighting setting");
+  Cvar_SetDescription( "r_forceSun", "lighting setting");
+	Cvar_SetDescription( "r_forceSunLightScale", "lighting setting");
+	Cvar_SetDescription( "r_forceSunAmbientScale", "lighting setting");
+	Cvar_SetDescription( "r_drawSunRays", "lighting setting");
+  Cvar_SetDescription( "r_sunlightMode", "lighting setting");
+  Cvar_SetDescription( "r_sunShadows", "lighting setting");
+	Cvar_SetDescription( "r_shadowFilter", "lighting setting");
+	Cvar_SetDescription( "r_shadowBlur", "lighting setting");
+	Cvar_SetDescription( "r_shadowMapSize", "lighting setting");
+  Cvar_SetDescription( "r_shadowCascadeZNear", "lighting setting");
+  Cvar_SetDescription( "r_shadowCascadeZFar", "lighting setting");
+  Cvar_SetDescription( "r_shadowCascadeZBias", "lighting setting");
+  Cvar_SetDescription( "r_ignoreDstAlpha", "lighting setting");
   Cvar_SetDescription( "r_fullbright", "Toggle textures to full brightness level\nDefault: 0");
 	Cvar_SetDescription( "r_mapOverBrightBits", "Set intensity level of lights reflected from textures\nDefault: 2");
 	Cvar_SetDescription( "r_intensity", "Increase brightness of texture colors\nDefault: 1");
@@ -412,7 +411,7 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_flares", "Toggle projectile flare and lighting effect\nDefault: 0");
   Cvar_SetDescription( "r_znear", "Set how close objects can be to the player before they're clipped out of the scene, so you can't see your nose or shoulders\nDefault: 0.001");
 	Cvar_SetDescription( "r_zfar", "Set how far objects are before they are clipped out, usually automatically calculated based on map size, 0 - infinity, 2048 - used for menus\nDefault: 0 infinity" );
-	//Cvar_SetDescription(r_zproj);
+	Cvar_SetDescription( "r_zproj", "distance of observer camera to projection plane" );
 	Cvar_SetDescription( "r_stereoSeparation", "Set the distance between stereo frame renders, as if your eyes are separated\nDefault: 64");
 	Cvar_SetDescription( "r_ignoreGLErrors", "Ignores OpenGL errors that occur\nDefault: 1");
 	Cvar_SetDescription( "r_fastsky", "Toggle fast rendering of sky if set to 1, also disables portals\nDefault: 0");
@@ -462,14 +461,14 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_drawBuffer", "Set which frame buffer to draw into while simultaneously showing the GL_FRONT buffer\nDefault: GL_BACK");
   Cvar_SetDescription( "r_lockpvs", "Disable update to PVS table as player moves through map (new areas not rendered) for debugging\nDefault: 0");
   Cvar_SetDescription( "r_noportals", "Do not render portals\nDefault: 0");
-  Cvar_SetDescription( "r_shadows", "Render player shadows\nDefault: 1");
+  Cvar_SetDescription( "cg_shadows", "Render player shadows\nDefault: 1");
 	Cvar_SetDescription( "r_marksOnTriangleMeshes", "Show marks on triangle meshes for debugging\nDefault: 0");
 	Cvar_SetDescription( "r_aviMotionJpegQuality", "Sets the quality for the AVI video recording\nDefault: 90");
   Cvar_SetDescription( "r_screenshotJpegQuality", "Sets the quality for the JPEG video recording\nDefault: 90");
   Cvar_SetDescription( "r_maxpolys", "Max number of polygons\nDefault: " XSTRING(MAX_POLYS));
 	Cvar_SetDescription( "r_maxpolyverts", "Max number of polygon vertices to display at a time\nDefault: " XSTRING(MAX_POLYVERTS));
-  Cvar_SetDescription( "rf_firstPersonXYZ", "Offset first person models (e.g. gun, barrel, hand) by a specific amount.\nDefault: 0 0 0");
-
+  Cvar_SetDescription( "r_paletteMode", "Replace missing images with plain color maps, and import colors from pallete.shader file" );
+  Cvar_SetDescription( "r_seeThroughWalls", "Make all shaders partially transparent" );
 }
 
 void Cvar_SetBotDescriptions( void ) {
@@ -538,6 +537,9 @@ void Cvar_SetServerDescriptions( void ) {
 	Cvar_SetDescription( "sv_serverid", "Hold the server ID sent to clients");
   Cvar_SetDescription( "sv_pure", "Make sure clients load the same pak files as the server, disallow native VMs\nDefault: 1");
   Cvar_SetDescription( "sv_referencedPakNames", "Holds the names of paks referenced by the server for comparison client-side\nDefault: empty");
+  Cvar_SetDescription( "sv_referencedPaks", "Holds the crc hash of paks referenced by the server for comparison client-side\nDefault: empty");
+  Cvar_SetDescription( "sv_pakNames", "Holds the names of paks referenced by the server for transmission client-side\nDefault: empty");
+  Cvar_SetDescription( "sv_paks", "Holds the crc hash of paks referenced by the server for transmission client-side\nDefault: empty");
 #ifdef USE_SERVER_ROLES
 	Cvar_SetDescription( "sv_roles", "Space seperated list of roles to configure\nDefault: referee moderator admin");
 #endif
@@ -554,9 +556,11 @@ void Cvar_SetServerDescriptions( void ) {
   Cvar_SetDescription( "sv_fps", "Set the max frames per second the server sends the client\nDefault: 20");
 	Cvar_SetDescription( "sv_timeout", "Seconds without any message before automatic client disconnect" );
 	Cvar_SetDescription( "sv_zombietime", "Seconds to sink messages after disconnect" );
+  Cvar_SetDescription( "nextmap", "Holds the value for the script to execute at the end of a match\nDefault: empty" );
 	Cvar_SetDescription( "sv_allowDownload", "Toggle the ability for clients to download files maps from server\nDefault: 1" );
 	Cvar_SetDescription( "sv_dlURL", "Set the download URL for clients to download content\nDefault: empty");
-  Cvar_SetDescription( "sv_master1", "Set URL or address to master server\nDefault: empty");
+  for(int i = 1; i < 25; i++)
+    Cvar_SetDescription( va("sv_master%i", i), va("Set URL or address to master server %i\nDefault: empty", i) );
   Cvar_SetDescription( "sv_reconnectlimit", "Number of times a disconnected client can come back and reconnect\nDefault: 12");
   Cvar_SetDescription( "sv_padPackets", "Toggles the padding of network packets\nDefault: 0" );
   Cvar_SetDescription( "sv_killserver", "Set to a one the server goes down\nDefault: 0");
@@ -592,7 +596,7 @@ void Cvar_SetServerDescriptions( void ) {
 	Cvar_SetDescription( "sv_demoTolerant", "Tolerance mode for recorded serve-side demos, ignore when a message doesn't work\nDefault: 0" );
   Cvar_SetDescription( "sv_levelTimeReset", "Reset the clock in between matches\nDefault: 0");
   Cvar_SetDescription( "sv_filter", "Set the ban filter file\nDefault: filter.txt");
-
+  Cvar_SetDescription( "sv_cheats", "enable cheating commands (give all)" );
 }
 
 void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
@@ -603,8 +607,25 @@ void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
     Cvar_SetDescription( "cg_drawCrosshair", "10 crosshairs to select from (cg_drawCrosshair 1 - 10)\nDefault: 4");
     Cvar_SetDescription( "cg_drawCrosshairNames", "toggle displaying of the name of the player you're aiming at\nDefault: 1");
     Cvar_SetDescription( "cg_marks", "toggle the marks the projectiles leave on the wall (bullet holes, etc)\nDefault: 1");
-
     Cvar_SetDescription( "cg_shadows", "set shadow detail level\nDefault: 1" );
+    Cvar_SetDescription( "g_arenasFile", "sets the file name to use for map rotation and bot names and game type for each arena\nDefault: scripts/arenas.txt" );
+    Cvar_SetDescription( "g_botsFile", "sets the file name to use for setting up the bots configuration and characters for each bot\nDefault: scripts/bots.txt" );
+    Cvar_SetDescription( "g_spAwards", "variable holds the names of the award icons that have been earned in the tier levels in single player mode");
+    Cvar_SetDescription( "g_spScores1", "holds your scores on skill level 1 in single player games" );
+    Cvar_SetDescription( "g_spScores2", "holds your scores on skill level 2 in single player games" );
+    Cvar_SetDescription( "g_spScores3", "holds your scores on skill level 3 in single player games" );
+    Cvar_SetDescription( "g_spScores4", "holds your scores on skill level 4 in single player games" );
+    Cvar_SetDescription( "g_spScores5", "holds your scores on skill level 5 in single player games" );
+    Cvar_SetDescription( "g_spSkill", "holds your current skill level for single player 1 - I can win, 2 - bring it on, 3 - hurt me plenty 4 - hardcore and 5 - nightmare" );
+    Cvar_SetDescription( "g_spVideos", "	variable holds the names of the cinematic videos that are unlocked at the end of each tier completion" );
+    for(int i = 1; i < 17; i++)
+      Cvar_SetDescription( va("server%i", i), va("Favorited server %i", i) );
+    Cvar_SetDescription( "ui_browserMaster", "Holds UI multiplayer browser master server being queried" );
+    Cvar_SetDescription( "ui_browserGameType", "Holds UI multiplayer menu game type selected" );
+    Cvar_SetDescription( "ui_browserSortKey", "Holds UI multiplayer sort direction" );
+    Cvar_SetDescription( "ui_browserShowFull", "Holds UI multiplayer menu full setting" );
+    Cvar_SetDescription( "ui_browserShowEmpty", "Holds UI multiplayer menu empty setting" );
+    Cvar_SetDescription( "ui_cdkeychecked", "Holds UI value indicating if the user has been prompted for a CD key");
 /*
     { &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
     { &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
