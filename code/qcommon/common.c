@@ -167,6 +167,9 @@ qboolean	gw_active = qtrue;
 
 static char com_errorMessage[ MAXPRINTMSG ];
 
+extern void  Cvar_SetCommonDescriptions( void );
+extern void  AddClipMapCommands( void );
+
 static void Com_Shutdown( void );
 static void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
@@ -2243,7 +2246,7 @@ static void Com_InitZoneMemory( void ) {
 	// configure the memory manager.
 
 	// allocate the random block zone
-	cv = Cvar_Get( "", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
+	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
 
 #ifndef USE_MULTI_SEGMENT
@@ -3894,7 +3897,6 @@ void Com_Init( char *commandLine ) {
   cl_developer = Cvar_Get( "cl_developer", com_developer->string, CVAR_ARCHIVE );
   sv_developer = Cvar_Get( "sv_developer", com_developer->string, CVAR_ARCHIVE );
   bot_developer = Cvar_Get( "bot_developer", com_developer->string, CVAR_ARCHIVE );
-  bot_developer = Cvar_Get( "bot_developer", com_developer->string, CVAR_ARCHIVE );
   r_developer = Cvar_Get( "r_developer", com_developer->string, CVAR_ARCHIVE );
   cg_developer = Cvar_Get( "cg_developer", com_developer->string, CVAR_ARCHIVE );
   ui_developer = Cvar_Get( "ui_developer", com_developer->string, CVAR_ARCHIVE );
@@ -4074,6 +4076,7 @@ void Com_Init( char *commandLine ) {
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
 	Netchan_Init( qport & 0xffff );
 
+  AddClipMapCommands();
 	VM_Init();
 	SV_Init();
 #ifdef __WASM__
@@ -4128,7 +4131,8 @@ void Com_Init( char *commandLine ) {
 #endif
 
 	com_fullyInitialized = qtrue;
-
+  
+  Cvar_SetCommonDescriptions();
 	Com_Printf( "--- Common Initialization Complete ---\n" );
 #ifdef __WASM__
   // init again because first time it triggers the async websocket

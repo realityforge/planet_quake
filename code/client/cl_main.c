@@ -173,6 +173,8 @@ typedef struct serverStatus_s
 
 serverStatus_t cl_serverStatusList[MAX_SERVERSTATUSREQUESTS];
 
+extern void  Cvar_SetClientDescriptions( void );
+
 static void CL_CheckForResend( void );
 static void CL_ShowIP_f( void );
 static void CL_ServerStatus_f( void );
@@ -4591,7 +4593,6 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_Set = Cvar_Set;
 	rimp.Cvar_SetValue = Cvar_SetValue;
 	rimp.Cvar_CheckRange = Cvar_CheckRange;
-	rimp.Cvar_SetDescription = Cvar_SetDescription;
 	rimp.Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 	rimp.Cvar_VariableString = Cvar_VariableString;
 	rimp.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
@@ -5391,12 +5392,12 @@ void CL_Init( void ) {
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
 	cl_conColor = Cvar_Get( "cl_conColor", "", 0 );
 
-#ifdef MACOS_X
+//#ifdef MACOS_X
 	// In game video is REALLY slow in Mac OS X right now due to driver slowness
 	cl_inGameVideo = Cvar_Get( "r_inGameVideo", "0", CVAR_ARCHIVE_ND );
-#else
+//#else
 	cl_inGameVideo = Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE_ND );
-#endif
+//#endif
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
@@ -5537,9 +5538,7 @@ void CL_Init( void ) {
 
 	CL_InitRef();
 #ifdef __WASM__
-}
-
-void CL_Init_After_InitRef( void ) {
+  ASYNC_WASM(CL_Init_After_InitRef);
 #endif
 
 #ifdef USE_MV
@@ -5579,6 +5578,8 @@ void CL_Init_After_InitRef( void ) {
 #ifdef USE_LNBITS
 	cl_lnInvoice = Cvar_Get( "cl_lnInvoice", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 #endif
+
+  Cvar_SetClientDescriptions();
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
 #ifdef __WASM__

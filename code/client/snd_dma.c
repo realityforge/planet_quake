@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 #include "client.h"
 
+extern void Cvar_SetSoundDescriptions( void );
 
 static void S_Update_( int msec );
 static void S_UpdateBackgroundTrack( void );
@@ -1572,6 +1573,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 #if defined(__linux__) && !defined(USE_SDL)
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
+  Cvar_Get( "com_soundMegs", "", 0 );
 
 #ifdef __WASM__
 	r = qfalse;
@@ -1629,6 +1631,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->SoundInfo = S_Base_SoundInfo;
 	si->SoundList = S_Base_SoundList;
 
+  Cvar_SetSoundDescriptions();
 	return qtrue;
 }
 

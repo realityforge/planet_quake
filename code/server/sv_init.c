@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 qboolean svShuttingDown = qfalse;
 
 #ifndef BUILD_SLIM_CLIENT
+extern void Cvar_SetServerDescriptions( void );
+extern void Cvar_SetBotDescriptions( void );
+
 /*
 ===============
 SV_SendConfigstring
@@ -1077,6 +1080,7 @@ void SV_Init( void )
 	Cvar_Get ("nextmap", "", CVAR_TEMP );
 
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
+	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
 	// moved to Com_Init()
 	//sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT | CVAR_ARCHIVE_ND );
@@ -1139,9 +1143,11 @@ void SV_Init( void )
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
 
 	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
+  Cvar_SetServerDescriptions();
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
+  Cvar_SetBotDescriptions();
 
 	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();

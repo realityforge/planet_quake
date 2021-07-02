@@ -1,28 +1,32 @@
 
+#include "../qcommon/q_shared.h"
+#include "../qcommon/qcommon.h"
 
-extern void Cvar_SetDescription( char *var, const char *var_description );
+void Cvar_SetUserinfoDescriptions( void ) {
+  Cvar_SetDescription( "name", "Player name\nDefault: Commander Keen" );
+  Cvar_SetDescription( "rate", "modem speed/rate of data transfer\nDefault: 25000" );
+  Cvar_SetDescription( "model", "display the name of current player model if no parameters are given\nDefault: sarge" );
+  Cvar_SetDescription( "headmodel", "changes only the head of the model to another model\nDefault: sarge" );
+  Cvar_SetDescription( "team_model", "set player model that will only be used during team game play\nDefault: sarge" );
+  Cvar_SetDescription( "team_headmodel", "set head of team_model to a head that will only be used during team game play\nDefault: sarge" );
+//	Cvar_SetDescription( "g_redTeam", "Stroggs", CVAR_SERVERINFO | CVAR_ARCHIVE);
+//	Cvar_SetDescription( "g_blueTeam", "Pagans", CVAR_SERVERINFO | CVAR_ARCHIVE);
+  Cvar_SetDescription( "color1", "spiral rail trail color spiral core\nDefault: 4" );
+  Cvar_SetDescription( "color2", "spiral rail trail color spiral ring\nDefault: 5" );
+  Cvar_SetDescription( "handicap", "set player handicap (max health), valid values 1 - 99\nDefault: 100" );
+//	Cvar_SetDescription( "teamtask", "0" );
+  Cvar_SetDescription( "sex", "Sex of model characteristics (sounds, obituary's, etc)\nDefault: male" );
+  Cvar_SetDescription( "cl_anonymous", "possibly to toggle anonymous connection to a server\nDefault: 0" );
+  Cvar_SetDescription( "password", "set password for entering a password protected server\nDefault: empty");
+  Cvar_SetDescription( "cg_predictItems", "toggle client-side item prediction. 0 option to not do local prediction of item pickup\nDefault: 1" );
+  Cvar_SetDescription( "cg_viewsize", "changes view port size 30 - 100\nDefault: 100" );
+  Cvar_SetDescription( "cg_stereoSeparation", "the amount of stereo separation\nDefault: 0" );
 
-void Cvar_SetClientDescriptions() {
+}
+
+void Cvar_SetClientDescriptions( void ) {
   Cvar_SetDescription( "con_notifytime", "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
-  Cvar_SetDescription( "con_conspeed", "Set how fast the console goes up and down\nDefault: 3 seconds" );
-  Cvar_SetDescription( "r_allowSoftwareGL", "Toggle the use of the default software OpenGL driver\nDefault: 0" );
-  Cvar_SetDescription( "r_swapInterval", "Toggle frame swapping\nDefault: 0" );
-  Cvar_SetDescription( "r_glDriver", "Used OpenGL driver by name\nDefault: opengl32" );
-  Cvar_SetDescription( "r_displayRefresh", "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
-  Cvar_SetDescription( "vid_xpos", "Set the window x starting position on the screen\nDefault: 3" );
-  Cvar_SetDescription( "vid_xpos", "Set the window y starting position on the screen\nDefault: 22" );
-  Cvar_SetDescription( "r_noborder", "Set window borderless mode usually set by SDL and fullscreen mode\nDefault: 0" );
-  Cvar_SetDescription( "r_mode", "Set video mode:\n -2 - use current desktop resolution\n -1 - use \\r_customWidth and \\r_customHeight\n  0..N - enter \\modelist for details" );
-	Cvar_SetDescription( "r_modeFullscreen", "Dedicated fullscreen mode, set to \"\" to use \\r_mode in all cases" );
-  Cvar_SetDescription( "r_fullscreen", "Set fullscreen mode on startup\nDefault: 1" );
-  Cvar_SetDescription( "r_customPixelAspect", "Custom pixel aspect to use with \\r_mode -1\nDefault: 1" );
-  Cvar_SetDescription( "r_customwidth", "Custom width to use with \\r_mode -1" );
-	Cvar_SetDescription( "r_customheight", "Custom height to use with \\r_mode -1" );
-  Cvar_SetDescription( "r_colorbits", "Set number of bits used for each color from 0 to 32 bit, usually set by SDL\nDefault: 0" );
-  Cvar_SetDescription( "cl_stencilbits", "Stencil buffer size (0, 8bit, and 16bit)\nDefault: 8" );
-  Cvar_SetDescription( "cl_depthbits", "Set the number of depth bits\nDefault: 0");
-  Cvar_SetDescription( "cl_drawBuffer", "Set which frame buffer to draw into using framebuffers\nDefault: GL_BACK");
-  Cvar_SetDescription( "cl_renderer", "Set the name of the dynamically linked renderer\nDefault: opengl2");
+  Cvar_SetDescription( "scr_conspeed", "Set how fast the console goes up and down\nDefault: 3 seconds" );
   Cvar_SetDescription( "cl_noprint", "Don't printout messages to your screen, only the console\nDefault: 0");
   Cvar_SetDescription( "cl_motd", "Show the message of the day from the server\nDefault: 1");
   Cvar_SetDescription( "cl_timeout", "Seconds to wait before client drops from the server after a timeout\nDefault: 10 seconds");
@@ -30,53 +34,73 @@ void Cvar_SetClientDescriptions() {
   Cvar_SetDescription( "cl_timeNudge", "Effectively adds local lag to interpolate movement instead of skipping (try 100 for a really laggy server)\nDefault: 0");
   Cvar_SetDescription( "cl_shownet", "Display network quality info\nDefault: 0" );
 	Cvar_SetDescription( "cl_showTimeDelta", "Display time delta between server updates\nDefault: 0" );
-	Cvar_SetDescription( "rcon_client_password", "Set the rcon password when connecting to a passworded server\nDefault: empty" );
-	Cvar_SetDescription( "cl_activeAction", "Variable holds a command to be executed upon connecting to a server\nDefault: empty" );
+	Cvar_SetDescription( "rconPassword", "Set the rcon password when connecting to a passworded server\nDefault: empty" );
+	Cvar_SetDescription( "activeAction", "Variable holds a command to be executed upon connecting to a server\nDefault: empty" );
   Cvar_SetDescription( "cl_autoRecordDemo", "Automatically start a demo recording when the game start\nDefault: 0" );
   Cvar_SetDescription( "cl_aviFrameRate", "Frame rate for AVI video capture\nDefault: 1000" );
   Cvar_SetDescription( "cl_aviMotionJpeg", "Use the motion JPEG format for AVI video capture\nDefault: 1" );
   Cvar_SetDescription( "cl_forceavidemo", "Force the use of AVI video format for demo capture\nDefault: 0" );
   Cvar_SetDescription( "cl_aviPipeFormat", "Extra flags send to the AVI encoding pipeline\nDefault: -preset medium -r:a ...");
 	Cvar_SetDescription( "rconAddress", "Set the server address for rcon commands, rcon can be used without being connected to a game\nDefault: empty");
-	Cvar_SetDescription( "cl_master[0]", "Set the URL of a master server used in the Local LAN list, for nearby servers\nDefault: empty");
+#ifdef USE_MASTER_LAN
+	Cvar_SetDescription( "cl_master1", "Set the URL of a master server used in the Local LAN list, for nearby servers\nDefault: empty");
+#endif
+#ifdef USE_DRAGDROP
   Cvar_SetDescription( "cl_dropAction", "What to do when a file is dropped in to the client\n0 - just read it and list whats inside, 1 - copy the file to the homepath like downloaded files, and recommend the command to run, 2 - move the file to the home and automatically open it\nDefault: 1");
+#endif
+#ifdef __WASM__
 	Cvar_SetDescription( "cl_returnURL", "Set the return URL to go to when the client disconnects from the server\nDefault: empty");
+#endif
+#ifdef USE_CVAR_UNCHEAT
   Cvar_SetDescription( "cl_uncheat", "Remove the CVAR_CHEAT flag from any cvar, shares this info with server for banning\nit also shares the cheat value so server administrators can see and log it\nDefault: cg_gun cg_gunX cg_gunY cg_gunZ");
+#endif
   Cvar_SetDescription( "cl_allowDownload", "Toggle automatic downloading of maps, models, sounds, and textures\n1 - allow downloads\n2 - disallow redirects, must download from the same server\n4 - Disallow UDP downloads\n8 - don't disconnect clients while they are downloading\nDefault: 1");
   Cvar_SetDescription( "cl_mapAutoDownload", "Automatically download map files\nDefault: 0" );
+#ifdef USE_CURL_DLOPEN
   Cvar_SetDescription( "cl_cURLLib", "Name of the cURL library to link\nDefault: libcurl");
+#endif
   Cvar_SetDescription( "cl_conXOffset", "Offset the console message display\n0 - top lef\n999 - extreme top right\nDefault: 0");
   Cvar_SetDescription( "cl_conColor", "Set the console background color, instead of the default animated\nDefault: empty");
-	Cvar_SetDescription( "cl_inGameVideo", "Controls whether in game video should be drawn\nDefault: 1" );
 	Cvar_SetDescription( "cl_serverStatusResendTime", "The rate of the heartbeats to the master server, or check server status\nDefault: 750 seconds" );
-	Cvar_SetDescription( "cl_motdString", "Holds the message of the day variable from the server\nDefault: empty");
+  Cvar_SetDescription( "cg_autoswitch", "	auto-switch weapons (on pick-up)\nDefault: 1");
+  Cvar_SetDescription( "cl_maxPing", "Set the maximum ping of servers to list\nDefault: 800" );
+  Cvar_SetDescription( "cl_motdString", "Holds the message of the day variable from the server\nDefault: empty");
   Cvar_SetDescription( "cl_lanForcePackets", "Send packets over LAN every frame whether the client state changes or not\nDefault: 1" );
   Cvar_SetDescription( "cl_guidServerUniq", "Generate a unique GUID for every server, based on server ID and Q3 key (more secure)\nDefault: 1" );
+#ifdef USE_LAZY_LOAD
   Cvar_SetDescription( "cl_lazyLoad", "Download graphics over the network after the level loads\n"
     "1 - Load available graphics immediately, and missing graphics as they become available\n2 - Don't load any graphics immediately\n4 - Only load graphics during downtimes, intermission, respawn timeout, while spectating\nDefault: 0" );
+#endif
 	Cvar_SetDescription( "cl_dlURL", "Set the download URL for the client in case it isn't set by the server\nDefault: http://ws.q3df.org/getpk3bymapname.php/%1");
 	Cvar_SetDescription( "cl_dlDirectory", va( "Save downloads initiated by \\dlmap and \\download commands in:\n"
 		" 0 - current game directory\n"
 		" 1 - fs_basegame (%s) directory\n", FS_GetBaseGameDir() ) );
+  Cvar_SetDescription( "cl_reconnectArgs", "Holds the previous connection so \\reconnect command can be used\nDefault: empty" );
+  Cvar_SetDescription( "snaps", "set the number of snapshots sever will send to a client\nDefault: 40" );
+  Cvar_SetDescription( "cl_guid", "Holds the guid from the client to identify the client\nDefault: empty" );
+#ifdef USE_LNBITS
   Cvar_SetDescription( "cl_lnInvoice", "The previous LNBits invoice code sent by the server requesting payment\nDefault: empty");
-  Cvar_SetDescription( "cl_timegraph", "Display the time graph\nDefault: 0");
-	Cvar_SetDescription( "cl_debuggraph", "Display the debug graph\nDefault: 0");
-  Cvar_SetDescription( "cl_graphheight", "Set the height of the graph\nDefault: 32");
-  Cvar_SetDescription( "cl_graphscale", "Set the scale of the size\nDefault: 1");
-  Cvar_SetDescription( "cl_graphshift", "Set the shift of the graph\nDefault: 0");
-
+#endif
+  Cvar_SetDescription( "timegraph", "Display the time graph\nDefault: 0");
+	Cvar_SetDescription( "debuggraph", "Display the debug graph\nDefault: 0");
+  Cvar_SetDescription( "graphheight", "Set the height of the graph\nDefault: 32");
+  Cvar_SetDescription( "graphscale", "Set the scale of the size\nDefault: 1");
+  Cvar_SetDescription( "graphshift", "Set the shift of the graph\nDefault: 0");
+  Cvar_SetUserinfoDescriptions();
 }
 
-void Cvar_SetSoundDescriptions() {
+void Cvar_SetSoundDescriptions( void ) {
   Cvar_SetDescription( "s_khz", "Set the sampling frequency of sounds\nlower=performance higher=quality\nDefault: 22" );
   Cvar_SetDescription( "s_mixahead", "Mix sounds together because they are used to reduce skipping\nDefault: 0.2 seconds");
   Cvar_SetDescription( "s_mixOffset", "Mix sounds ahead of time to prevent delays while loading\nDefault: 0.05");
   Cvar_SetDescription( "s_show", "Display filenames of sounds while they are being played\nDefault: 0");
   Cvar_SetDescription( "s_testsound", "Toggle a test tone to test sound system\nDefault: 0" );
+#if defined(__linux__) && !defined(USE_SDL)
   Cvar_SetDescription( "s_device", "Set ALSA output device\n"
     " Use \"default\", \"sysdefault\", \"front\", etc.\n"
     " Enter " S_COLOR_CYAN "aplay -L "S_COLOR_WHITE"in your shell to see all options.\n"
     S_COLOR_YELLOW " Please note that only mono/stereo devices are acceptable.\n" );
+#endif
   Cvar_SetDescription( "s_debug", "Show error and status messages from sound\nDefault: 0");
 	Cvar_SetDescription( "s_volume", "Sound FX volume\nDefault: 0.8");
   Cvar_SetDescription( "s_musicVolume", "Music volume level\nDefault: 0.25");
@@ -88,7 +112,8 @@ void Cvar_SetSoundDescriptions() {
 
 }
 
-void Cvar_SetCommonDescriptions() {
+void Cvar_SetCommonDescriptions( void ) {
+  Cvar_SetDescription( "//trap_GetValue", "Entry point for VM cvars to shortcut API for better speed");
   Cvar_SetDescription( "cm_noAreas", "Create one giant area for the clipmap and don't use culling\nDefault: 0");
   Cvar_SetDescription( "cm_noCurves", "Exclude curves from clipmap, make all vertices triangular\nDefault: 0");
   Cvar_SetDescription( "cm_playerCurveClip", "Don't clip player bounding box around curves\nDefault: 1" );
@@ -97,10 +122,11 @@ void Cvar_SetCommonDescriptions() {
 	Cvar_SetDescription( "cl_execOverflow", "Maximum milliseconds an execution can take before it becomes overflowed\nDefault: 200" );
   Cvar_SetDescription( "com_zoneMegs", "Set zoneMegs on the command line, the maximum size for each zone\nDefault: 25");
   Cvar_SetDescription( "com_hunkMegs", "The size of the hunk memory segment" );
+#if (defined(_WIN32) && defined(_DEBUG)) || (defined(__WASM__) && defined(_DEBUG))
   Cvar_SetDescription( "com_noErrorInterrupt", "No interrupt with a debug break when an error occurs\nDefault: 0");
+#endif
   Cvar_SetDescription( "cl_developer", "Show client debug messages\nDefault: 0" );
 	Cvar_SetDescription( "sv_developer", "Show server debug messages\nDefault: 0" );
-  Cvar_SetDescription( "bot_developer", "Show bot debug messages\nDefault: 0" );
   Cvar_SetDescription( "bot_developer", "Show bot debug messages\nDefault: 0" );
   Cvar_SetDescription( "r_developer", "Show renderer debug messages\nDefault: 0" );
   Cvar_SetDescription( "cg_developer", "Show cgame debug messages\nDefault: 0" );
@@ -109,48 +135,57 @@ void Cvar_SetCommonDescriptions() {
   Cvar_SetDescription( "net_developer", "Show net debug messages\nDefault: 0" );
   Cvar_SetDescription( "s_developer", "Show sound debug messages\nDefault: 0" );
   Cvar_SetDescription( "fs_developer", "Show file debug messages\nDefault: 0" );
-  Cvar_SetDescription( "com_developer", "Set developer mode that includes extra logging information\nDefault: 0");
+  Cvar_SetDescription( "developer", "Set developer mode that includes extra logging information\nDefault: 0");
   Cvar_SetDescription( "vm_rtChecks", "Runtime checks in compiled vm code, bitmask:\n 1 - program stack overflow\n" \
 		" 2 - opcode stack overflow\n 4 - jump target range\n 8 - data read/write range" );
+if ( com_journal->integer ) {
 	Cvar_SetDescription( "com_journal", "Use a detailed journal.dat file for many events\nDefault: 0");
-  Cvar_SetDescription( "com_protocol", "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
-  Cvar_SetDescription( "com_dedicated", "Start a server in dedicated mode, no graphics or gameplay, only server process\n1 - Server is dedicated and unlisted\n2 - Server is public and updated in master list\nDefault: 1" );
+}
+  Cvar_SetDescription( "protocol", "Override the protocol indication sent to the server\nDefault: " XSTRING(PROTOCOL_VERSION));
+  Cvar_SetDescription( "dedicated", "Start a server in dedicated mode, no graphics or gameplay, only server process\n1 - Server is dedicated and unlisted\n2 - Server is public and updated in master list\nDefault: 1" );
   Cvar_SetDescription( "com_maxfps", "Set the max number of frames per second across the whole system, client and server\nDefault: 125");
 	Cvar_SetDescription( "com_maxfpsUnfocused", "Set the max number of frames per second when the client is minimized or not in the background\nDefault: 60");
 	Cvar_SetDescription( "com_yieldCPU", "Use CPU yield inbetween frames to allow other background processes to run (more efficient)\nDefault: 1");
+#ifdef USE_AFFINITY_MASK
 	Cvar_SetDescription( "com_affinityMask", "Set the processor affinity for multi-CPU systems\nDefault: 0");
+#endif
   Cvar_SetDescription( "com_blood", "Toggle the blood mist effect in gib animations\nDefault: 1");
-	Cvar_SetDescription( "com_logfile", "System console logging:\n"
+	Cvar_SetDescription( "logfile", "System console logging:\n"
 		" 0 - disabled\n"
 		" 1 - overwrite mode, buffered\n"
 		" 2 - overwrite mode, synced\n"
 		" 3 - append mode, buffered\n"
 		" 4 - append mode, synced\n" );
-  Cvar_SetDescription( "com_timescale", "Set the ratio between game time and real time\nDefault: 1");
-	Cvar_SetDescription( "com_fixedtime", "Toggle the rendering of each frame completely, before sending the next frame\nDefault: 0");
+  Cvar_SetDescription( "timescale", "Set the ratio between game time and real time\nDefault: 1");
+	Cvar_SetDescription( "fixedtime", "Toggle the rendering of each frame completely, before sending the next frame\nDefault: 0");
   Cvar_SetDescription( "com_showtrace", "Toggle the display of packet tracing\nDefault: 0");
-  Cvar_SetDescription( "com_viewlog", "Toggle the display of the startup console window over the game screen\nDefault: 0");
+  Cvar_SetDescription( "viewlog", "Toggle the display of the startup console window over the game screen\nDefault: 0");
   Cvar_SetDescription( "com_speeds", "Toggle display of frame counter, all, sv, cl, gm\nDefault: 0");
   Cvar_SetDescription( "com_cameraMode", "Toggle the view of your player model off and on when in 3D camera view\nDefault: 0");
-  Cvar_SetDescription( "com_timedemo", "Times a demo and returns frames per second like a benchmark\nDefault: 0");
+  Cvar_SetDescription( "timedemo", "Times a demo and returns frames per second like a benchmark\nDefault: 0");
 	Cvar_SetDescription( "cl_paused", "Holds the status of the paused flag on the client side\nDefault: 0");
   Cvar_SetDescription( "cl_packetdelay", "Stream network packets to the server instead of trying to send immediately\nDefault: 0");
-  Cvar_SetDescription( "com_cl_running", "Shows whether or not a client game is running or weather we are in server/client mode\nDefault: 0");
+  Cvar_SetDescription( "cl_running", "Shows whether or not a client game is running or weather we are in server/client mode\nDefault: 0");
 	Cvar_SetDescription( "sv_paused", "Holds the status of the paused flag on the server side\nDefault: 0");
   Cvar_SetDescription( "sv_packetdelay", "Stream network packets to the client instead of sending immediately\nDefault: 0");
-  Cvar_SetDescription( "com_sv_running", "Variable flag tells the console weather or not a local server is running\nDefault: 0" );
+  Cvar_SetDescription( "sv_running", "Variable flag tells the console weather or not a local server is running\nDefault: 0" );
   Cvar_SetDescription( "com_buildScript", "Set whether the game is being automated as a part of test build script\nDefault: 0" );
+  Cvar_SetDescription( "com_errorMessage", "Holds the previous error message\nDefault: empty" );
 	Cvar_SetDescription( "com_introPlayed", "Toggle displaying of intro cinematic once it has been seen this variable keeps it from playing each time\nDefault: 0" );
   Cvar_SetDescription( "com_skipIdLogo", "Toggle skip playing the intro logo cinematic for the game\nDefault: 0");
-  Cvar_SetDescription( "com_version", "Set the engine verion so it can be distinguished from similar clients\nDefault: " XSTRING(Q3_VERSION));
+  Cvar_SetDescription( "version", "Set the engine verion so it can be distinguished from similar clients\nDefault: " XSTRING(Q3_VERSION));
 	Cvar_SetDescription( "com_gamename", "Set the name of the game played, usually this is set by the mod.\nDefault: " XSTRING(GAMENAME_FOR_MASTER));
-  Cvar_SetDescription( "cv", "Attempt to load the UI QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
-	Cvar_SetDescription( "cv", "Attempt to load the CGame QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
-	Cvar_SetDescription( "cv", "Attempt to load the Game QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
-
+#ifndef DEDICATED
+  Cvar_SetDescription( "vm_ui", "Attempt to load the UI QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
+	Cvar_SetDescription( "vm_cgame", "Attempt to load the CGame QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
+#endif
+#ifndef BUILD_SLIM_CLIENT
+	Cvar_SetDescription( "vm_game", "Attempt to load the Game QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
+#endif
+  Cvar_SetDescription( "arch", "Architechure the game was compiled on\nDefault: " OS_STRING " " ARCH_STRING);
 }
 
-void Cvar_SetInputDescriptions() {
+void Cvar_SetInputDescriptions( void ) {
   Cvar_SetDescription( "cl_nodelta", "Disable delta compression (slows net performance, not recommended)\nDefault: 0" );
   Cvar_SetDescription( "cl_debugMove", "Used for debugging movement, shown in debug graph\nDefault: 0" );
   Cvar_SetDescription( "cl_showSend", "Show network packets as they are sent\nDefault: 0" );
@@ -160,7 +195,7 @@ void Cvar_SetInputDescriptions() {
   Cvar_SetDescription( "cl_maxpackets", "Set the transmission packet size or how many packets are sent to client\nDefault: 60");
 	Cvar_SetDescription( "cl_packetdup", "How many times should a packet try to resend to the server\nDefault: 1");
 	Cvar_SetDescription( "cl_run", "Default to player running instead of walking\nDefault: 1");
-	Cvar_SetDescription( "cl_sensitivity", "Set how far your mouse moves in relation to travel on the mouse pad\nDefault: 5");
+	Cvar_SetDescription( "sensitivity", "Set how far your mouse moves in relation to travel on the mouse pad\nDefault: 5");
 	Cvar_SetDescription( "cl_mouseAccel", "Toggle the use of mouse acceleration\nDefault: 0");
 	Cvar_SetDescription( "cl_freelook", "Toggle the use of freelook with the mouse, looking up or down\nDefault: 1");
   Cvar_SetDescription( "cl_mouseAccelStyle", "Change the style of mouse acceleration in a given direction\n1 - the mouse speeds up\n2 - becomes more sensitive as it continues in one direction\nDefault 0");
@@ -172,11 +207,13 @@ void Cvar_SetInputDescriptions() {
   Cvar_SetDescription( "m_side", "Set the strafe movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
   Cvar_SetDescription( "m_filter", "Toggle use of mouse smoothing\nDefault: 1");
   Cvar_SetDescription( "m_filter", "Toggle use of mouse smoothing\nDefault: 0");
-  Cvar_SetDescription( "ttycon", "Turn console interactiveness on or off\nDefault: 1" );
+  //Cvar_SetDescription( "ttycon", "Turn console interactiveness on or off\nDefault: 1" );
   Cvar_SetDescription( "in_keyboardDebug", "Show keyboard debug messages for every key press\nDefault: 0");
 	Cvar_SetDescription( "in_mouse", "Toggle initialization of the mouse as an input device\nDefault: 1");
+#ifdef USE_JOYSTICK
 	Cvar_SetDescription( "in_joystick", "Toggle the initialization of the joystick\nDefault: 0" );
 	Cvar_SetDescription( "in_joystickThreshold", "Set the maximum value of joystick in every direction\nDefault: 0.15" );
+#endif
 	Cvar_SetDescription( "cl_consoleKeys", "Set the characters that toggle the in game console\nDefault: ~ `");
   Cvar_SetDescription( "in_nograb", "Don't grab mouse when client in not in fullscreen mode\nDefault: 0");
   Cvar_SetDescription( "r_allowSoftwareGL", "Toggle the use of the default software OpenGL driver\nDefault: 0");
@@ -186,32 +223,35 @@ void Cvar_SetInputDescriptions() {
 		"  0 - disable mouse input\n" \
 		"  1 - di/raw mouse\n" \
 		" -1 - win32 mouse" );
+#ifdef _WIN32
 	Cvar_SetDescription( "in_lagged", "Mouse movement processing order:\n" \
 		" 0 - before rendering\n" \
 		" 1 - before framerate limiter" );
   Cvar_SetDescription( "s_driver", "Specify sound subsystem in win32 environment:\n"
 		" dsound - DirectSound\n"
 		" wasapi - WASAPI\n" );
-
+#endif
 }
 
-void Cvar_SetFilesDescriptions() {
+void Cvar_SetFilesDescriptions( void ) {
   Cvar_SetDescription( "fs_debug", "Toggle filesystem debug logging, every file open is shown\nDefault: 0");
   Cvar_SetDescription( "fs_copyfiles", "Toggle if files can be copied after downloading from the server\nDefault: 0");
   Cvar_SetDescription( "fs_basepath", "Set the path of the engine where files can be downloaded\nDefault: varies by operating system");
   Cvar_SetDescription( "fs_basegame", "Set the base game for the engine, baseq3, baseoa, baseef\nDefault: " XSTRING(BASEGAME));
   Cvar_SetDescription( "fs_steampath", "The search path for Steam data when the engine is downloaded through Steam");
+#if 0
   Cvar_SetDescription( "fs_locked", "Set file handle policy for pk3 files:\n"
     " 0 - release after use, unlimited number of pk3 files can be loaded\n"
     " 1 - keep file handle locked, more consistent, total pk3 files count limited to ~1k-4k\n" );
+#endif
   Cvar_SetDescription( "fs_homepath", "Directory to store user configuration and downloaded files." );
-	Cvar_SetDescription( "fs_gamedirvar", "Set gamedir set the game folder/dir default is baseq3 in addition to the fs_basegame\nDefault: empty");
+	Cvar_SetDescription( "fs_game", "Set gamedir set the game folder/dir default is baseq3 in addition to the fs_basegame\nDefault: empty");
   Cvar_SetDescription( "fs_excludeReference", "Exclude specified pak files from download list on client side.\n"
 		"Format is <moddir>/<pakname> (without .pk3 suffix), you may list multiple entries separated by space." );
 
 }
 
-void Cvar_SetNetDescriptions() {
+void Cvar_SetNetDescriptions( void ) {
   Cvar_SetDescription( "showpackets", "Toggle display of all packets sent and received\nDefault: 0");
   Cvar_SetDescription( "showdrop", "Toggle display of dropped packets\nDefault: 0");
   Cvar_SetDescription( "qport", "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
@@ -238,7 +278,28 @@ void Cvar_SetNetDescriptions() {
 
 }
 
-void Cvar_SetRendererDescriptions() {
+void Cvar_SetRendererDescriptions( void ) {
+  // also in client
+  Cvar_SetDescription( "r_inGameVideo", "Controls whether in game video should be drawn\nDefault: 1" );
+  Cvar_SetDescription( "r_stencilbits", "Stencil buffer size (0, 8bit, and 16bit)\nDefault: 8" );
+  Cvar_SetDescription( "r_depthbits", "Set the number of depth bits\nDefault: 0");
+  Cvar_SetDescription( "r_drawBuffer", "Set which frame buffer to draw into using framebuffers\nDefault: GL_BACK");
+  Cvar_SetDescription( "cl_renderer", "Set the name of the dynamically linked renderer\nDefault: opengl2");
+
+  Cvar_SetDescription( "r_allowSoftwareGL", "Toggle the use of the default software OpenGL driver\nDefault: 0" );
+  Cvar_SetDescription( "r_swapInterval", "Toggle frame swapping\nDefault: 0" );
+  Cvar_SetDescription( "r_glDriver", "Used OpenGL driver by name\nDefault: opengl32" );
+  Cvar_SetDescription( "r_displayRefresh", "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
+  Cvar_SetDescription( "vid_xpos", "Set the window x starting position on the screen\nDefault: 3" );
+  Cvar_SetDescription( "vid_xpos", "Set the window y starting position on the screen\nDefault: 22" );
+  Cvar_SetDescription( "r_noborder", "Set window borderless mode usually set by SDL and fullscreen mode\nDefault: 0" );
+  Cvar_SetDescription( "r_mode", "Set video mode:\n -2 - use current desktop resolution\n -1 - use \\r_customWidth and \\r_customHeight\n  0..N - enter \\modelist for details" );
+	Cvar_SetDescription( "r_modeFullscreen", "Dedicated fullscreen mode, set to \"\" to use \\r_mode in all cases" );
+  Cvar_SetDescription( "r_fullscreen", "Set fullscreen mode on startup\nDefault: 1" );
+  Cvar_SetDescription( "r_customPixelAspect", "Custom pixel aspect to use with \\r_mode -1\nDefault: 1" );
+  Cvar_SetDescription( "r_customwidth", "Custom width to use with \\r_mode -1" );
+	Cvar_SetDescription( "r_customheight", "Custom height to use with \\r_mode -1" );
+  Cvar_SetDescription( "r_colorbits", "Set number of bits used for each color from 0 to 32 bit, usually set by SDL\nDefault: 0" );
   Cvar_SetDescription( "r_picmip", "Set texture quality, lower is better" );
   Cvar_SetDescription( "r_nomip", "Apply picmip only on worldspawn textures" );
   Cvar_SetDescription( "r_lodCurveError", "Level of detail error on curved surface grids." );
@@ -411,21 +472,55 @@ void Cvar_SetRendererDescriptions() {
 
 }
 
-void Cvar_SetServerDescriptions() {
-  Cvar_SetDescription( "var", "Enable and disable adding of bots to the map/game\nDefault: 1");
-  Cvar_SetDescription( "sv_gametype", "Holds the game style for the current match included in server info\nDefault: 0");
-	Cvar_SetDescription( "Cvar_Get ("sv_keywords"", "", CVAR_SERVERINFO),
-		"Holds the search string entered in the internet connection menu\nDefault: empty");
-	Cvar_SetDescription( "Cvar_Get ("protocol"", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM),
-		"Holds the network protocol version\nDefault: " XSTRING(PROTOCOL_VERSION));
-  Cvar_SetDescription( "sv_mapname", "Holds the name of the current map\nDefault: nomap");
+void Cvar_SetBotDescriptions( void ) {
+  Cvar_SetDescription( "bot_enable", "Enable and disable adding of bots to the map/game\nDefault: 1");
+  Cvar_SetDescription( "bot_developer", "Show bot debug messages\nDefault: 0" );
+  Cvar_SetDescription( "bot_debug", "Show bot debug information\nDefault: 0" );
+  Cvar_SetDescription( "bot_maxdebugpolys", "Maximum number of bot debug polys\nDefault: 2" );
+  Cvar_SetDescription( "bot_groundonly", "Only show ground faces of areas\nDefault: 1" );
+  Cvar_SetDescription( "bot_reachability", "show all reachabilities to other areas\nDefault: 0" );
+	Cvar_SetDescription( "bot_visualizejumppads", "show jumppads\nDefault: 0" );
+	Cvar_SetDescription( "bot_forceclustering", "force cluster calculations\nDefault: 0" );
+	Cvar_SetDescription( "bot_forcereachability", "force reachability calculations\nDefault: 0" );
+	Cvar_SetDescription( "bot_forcewrite", "force writing aas file\nDefault: 0" );
+	Cvar_SetDescription( "bot_aasoptimize", "no aas file optimisation\nDefault: 0" );
+	Cvar_SetDescription( "bot_saveroutingcache", "save routing cache\nDefault: 0" );
+	Cvar_SetDescription( "bot_thinktime", "msec the bots thinks\nDefault: 100" );
+	Cvar_SetDescription( "bot_reloadcharacters", "reload the bot characters each time\nDefault: 0" );
+	Cvar_SetDescription( "bot_testichat", "test ichats\nDefault: 0" );
+	Cvar_SetDescription( "bot_testrchat", "test rchats\nDefault: 0" );
+	Cvar_SetDescription( "bot_testsolid", "test for solid areas\nDefault: 0" );
+	Cvar_SetDescription( "bot_testclusters", "test the AAS clusters\nDefault: 0" );
+	Cvar_SetDescription( "bot_fastchat", "fast chatting bots\nDefault: 0" );
+	Cvar_SetDescription( "bot_nochat", "disable chats\nDefault: 0" );
+	Cvar_SetDescription( "bot_pause", "pause the bots thinking\nDefault: 0" );
+	Cvar_SetDescription( "bot_report", "get a full report in ctf\nDefault: 0" );
+	Cvar_SetDescription( "bot_grapple", "enable grapple\nDefault: 0" );
+	Cvar_SetDescription( "bot_rocketjump", "enable rocket jumping\nDefault: 1" );
+	Cvar_SetDescription( "bot_challenge", "challenging bot\nDefault: 0" );
+	Cvar_SetDescription( "bot_minplayers", "minimum players in a team or the game\nDefault: 0" );
+	Cvar_SetDescription( "bot_interbreedchar", "bot character used for interbreeding\nDefault: " );
+	Cvar_SetDescription( "bot_interbreedbots", "number of bots used for interbreeding\nDefault: 10" );
+	Cvar_SetDescription( "bot_interbreedcycle", "bot interbreeding cycle\nDefault: 20" );
+	Cvar_SetDescription( "bot_interbreedwrite", "write interbreeded bots to this file\nDefault: " );
+}
+
+void Cvar_SetServerDescriptions( void ) {
+  Cvar_SetDescription( "dmflags", "set deathmatch flags\nDefault: 0" );
+	Cvar_SetDescription( "fraglimit", "set fraglimit on a server\nDefault: 20" );
+	Cvar_SetDescription( "timelimit", "amount of time before new map loads or next match begins, 0 - unlimited\nDefault: 0" );
+  Cvar_SetDescription( "g_gametype", "Holds the game style for the current match included in server info\nDefault: 0");
+	Cvar_SetDescription( "sv_keywords", "Holds the search string entered in the internet connection menu\nDefault: empty");
+	Cvar_SetDescription( "protocol", "Holds the network protocol version\nDefault: " XSTRING(PROTOCOL_VERSION));
+  Cvar_SetDescription( "mapname", "Holds the name of the current map\nDefault: nomap");
 	Cvar_SetDescription( "sv_privateClients", "The number of spots, out of sv_maxclients, reserved for players with the server password\nDefault: 0");
 	Cvar_SetDescription( "sv_hostname", "Set the name of the server\nDefault: noname");
 	Cvar_SetDescription( "sv_maxclients", "Maximum number of people allowed to join the server\nDefault: 8");
   Cvar_SetDescription( "sv_maxclientsPerIP", "Limits number of simultaneous connections from the same IP address.\nDefault: 3" );
 	Cvar_SetDescription( "sv_clientTLD", "Include client locations in status and demo recordings\nDefault: 0");
+#ifdef USE_MV
 	Cvar_SetDescription( "sv_mvAutoRecord", "Automatically record a multiview demo\nDefault: 0");
-	Cvar_SetDescription( "sv_demoFlags", "Record scoring in the multiview demo\nDefault: 3");
+	Cvar_SetDescription( "sv_mvFlags", "Record scoring in the multiview demo\nDefault: 3");
   Cvar_SetDescription( "sv_mvClients", "Number of multiview clients allowed\nDefault: 8");
   Cvar_SetDescription( "sv_mvPassword", "Set the password for multiview clients\nDefault: empty");
   Cvar_SetDescription( "sv_mvFileCount", "Set the maximum number of multiview recordings before it reuses numeric names\nDefault: 1024");
@@ -435,6 +530,7 @@ void Cvar_SetServerDescriptions() {
 	Cvar_SetDescription( "sv_mvSyncXYZ", "Force players to occupy the same XYZ coordinates in every world. Useful in shadow/mirror dimension type games.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvSyncMove", "Sync movement across multiple worlds, copy movement from the active screen.\nDefault: 0");
 	Cvar_SetDescription( "sv_mvOmnipresent", "Occupy an active player position in multiple worlds.\n 0 - disconnected except for one, 1 - active in all worlds automatically, 2 - spectator in other worlds, 3 - active in all worlds client has joined\nDefault: 0");
+#endif
   Cvar_SetDescription( "sv_minRate", "Force clients to play with a minimum latency\nDefault: 0");
 	Cvar_SetDescription( "sv_maxRate", "Force all clients to play with a max rate, limit an advantage for having a low latency\nDefault: 0");
   Cvar_SetDescription( "sv_dlRate", "Set the maximum rate for server downloads\nDefault: 100");
@@ -442,25 +538,35 @@ void Cvar_SetServerDescriptions() {
 	Cvar_SetDescription( "sv_serverid", "Hold the server ID sent to clients");
   Cvar_SetDescription( "sv_pure", "Make sure clients load the same pak files as the server, disallow native VMs\nDefault: 1");
   Cvar_SetDescription( "sv_referencedPakNames", "Holds the names of paks referenced by the server for comparison client-side\nDefault: empty");
+#ifdef USE_SERVER_ROLES
 	Cvar_SetDescription( "sv_roles", "Space seperated list of roles to configure\nDefault: referee moderator admin");
+#endif
+#ifdef USE_PERSIST_CLIENT
 	Cvar_SetDescription( "sv_clSessions", "Save client state in sessions files. Specify the number of seconds the session can be restored. -1 for forever, 0 for off, 30 for 30 seconds if a client gets disconnected.\nDefault: 0");
+#endif
+#ifdef USE_RECENT_EVENTS
 	Cvar_SetDescription( "sv_recentPassword", "Set the required to get a response of key events that happened on the server since the last check\nDefault: empty");
-	Cvar_SetDescription( "sv_rconPassword", "Set the rcon password required to send the server commands\nDefault: empty");
+#endif
+#ifdef DEDICATED
+	Cvar_SetDescription( "rconPassword", "Set the rcon password required to send the server commands\nDefault: empty");
+#endif
   Cvar_SetDescription( "sv_privatePassword", "Set password for private clients to login\nDefault: empty");
   Cvar_SetDescription( "sv_fps", "Set the max frames per second the server sends the client\nDefault: 20");
 	Cvar_SetDescription( "sv_timeout", "Seconds without any message before automatic client disconnect" );
 	Cvar_SetDescription( "sv_zombietime", "Seconds to sink messages after disconnect" );
 	Cvar_SetDescription( "sv_allowDownload", "Toggle the ability for clients to download files maps from server\nDefault: 1" );
-	Cvar_SetDescription( "Cvar_Get ("sv_dlURL"", "", CVAR_SERVERINFO | CVAR_ARCHIVE), 
-		"Set the download URL for clients to download content\nDefault: empty");
-  Cvar_SetDescription( "sv_master[0]", "Set URL or address to master server\nDefault: empty");
+	Cvar_SetDescription( "sv_dlURL", "Set the download URL for clients to download content\nDefault: empty");
+  Cvar_SetDescription( "sv_master1", "Set URL or address to master server\nDefault: empty");
   Cvar_SetDescription( "sv_reconnectlimit", "Number of times a disconnected client can come back and reconnect\nDefault: 12");
   Cvar_SetDescription( "sv_padPackets", "Toggles the padding of network packets\nDefault: 0" );
   Cvar_SetDescription( "sv_killserver", "Set to a one the server goes down\nDefault: 0");
 	Cvar_SetDescription( "sv_mapChecksum", "Allows clients to compare the map checksum\nDefault: empty");
   Cvar_SetDescription( "sv_lanForceRate", "Force clients to use the same packet rate as the server\nDefault: 1" );
+#ifdef USE_CVAR_UNCHEAT
   Cvar_SetDescription( "sv_banCheats", "Ban specific cheat values allowed by cl_uncheat setting\ne.g. cg_fov used to see behind you\nDefault: empty");
 	Cvar_SetDescription( "sv_banFile", "Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
+#endif
+#ifdef USE_LNBITS
 	Cvar_SetDescription( "sv_lnMatchPrice", "Set the LNBits price for the match, each player must pay this amount to enter\nDefault: 0 (free)");
   Cvar_SetDescription( "sv_lnMatchCut", "Set how much from each payment is withheld in the wallet, not included in the reward\nDefault: 0");
   Cvar_SetDescription( "sv_lnMatchReward", "Holds the match reward amount calculated during the match when all the players have paid and connected\nDefault: 0");
@@ -470,6 +576,7 @@ void Cvar_SetServerDescriptions() {
 	Cvar_SetDescription( "sv_lnWithdraw", "The LNBits withdraw API URL\nDefault: https://lnbits.com/withdraw/api/v1");
 	Cvar_SetDescription( "cl_dlDirectory", "Save downloads initiated by \\dlmap and \\download commands\nDefault: 0");
 	Cvar_SetDescription( "cl_cURLLib", "Name of the cURL library to link\nDefault: libcurl");
+#endif
   Cvar_SetDescription( "sv_demoState", "Hold the state of server-side demos\n"
 		"0 - none, no demo started\n"
 		"1 - await playback, playback is starting\n"
@@ -489,5 +596,72 @@ void Cvar_SetServerDescriptions() {
 }
 
 void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
-  
+  if(index == VM_CGAME) {
+    Cvar_SetDescription( "capturelimit", "set # of times a team must grab the others flag before the win is declared\nDefault: 8" );
+  } else if (index == VM_UI) {
+    Cvar_SetDescription( "cg_brassTime", "the amount of time it takes to eject brass from the machine gun\nDefault 2500");
+    Cvar_SetDescription( "cg_drawCrosshair", "10 crosshairs to select from (cg_drawCrosshair 1 - 10)\nDefault: 4");
+    Cvar_SetDescription( "cg_drawCrosshairNames", "toggle displaying of the name of the player you're aiming at\nDefault: 1");
+    Cvar_SetDescription( "cg_marks", "toggle the marks the projectiles leave on the wall (bullet holes, etc)\nDefault: 1");
+
+    Cvar_SetDescription( "cg_shadows", "set shadow detail level\nDefault: 1" );
+/*
+    { &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
+    { &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
+
+    { &ui_tourney_fraglimit, "ui_tourney_fraglimit", "0", CVAR_ARCHIVE },
+    { &ui_tourney_timelimit, "ui_tourney_timelimit", "15", CVAR_ARCHIVE },
+
+    { &ui_team_fraglimit, "ui_team_fraglimit", "0", CVAR_ARCHIVE },
+    { &ui_team_timelimit, "ui_team_timelimit", "20", CVAR_ARCHIVE },
+    { &ui_team_friendly, "ui_team_friendly",  "1", CVAR_ARCHIVE },
+
+    { &ui_ctf_capturelimit, "ui_ctf_capturelimit", "8", CVAR_ARCHIVE },
+    { &ui_ctf_timelimit, "ui_ctf_timelimit", "30", CVAR_ARCHIVE },
+    { &ui_ctf_friendly, "ui_ctf_friendly",  "0", CVAR_ARCHIVE },
+
+    { &ui_arenasFile, "g_arenasFile", "", CVAR_INIT|CVAR_ROM },
+    { &ui_botsFile, "g_botsFile", "", CVAR_ARCHIVE|CVAR_LATCH },
+    { &ui_spScores1, "g_spScores1", "", CVAR_ARCHIVE },
+    { &ui_spScores2, "g_spScores2", "", CVAR_ARCHIVE },
+    { &ui_spScores3, "g_spScores3", "", CVAR_ARCHIVE },
+    { &ui_spScores4, "g_spScores4", "", CVAR_ARCHIVE },
+    { &ui_spScores5, "g_spScores5", "", CVAR_ARCHIVE },
+    { &ui_spAwards, "g_spAwards", "", CVAR_ARCHIVE },
+    { &ui_spVideos, "g_spVideos", "", CVAR_ARCHIVE },
+    { &ui_spSkill, "g_spSkill", "2", CVAR_ARCHIVE | CVAR_LATCH },
+
+    { &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
+
+    { &ui_browserMaster, "ui_browserMaster", "0", CVAR_ARCHIVE },
+    { &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
+    { &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
+    { &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
+    { &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
+
+    { &ui_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
+    { &ui_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
+    { &ui_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE },
+    { &ui_marks, "cg_marks", "1", CVAR_ARCHIVE },
+
+    { &ui_server1, "server1", "", CVAR_ARCHIVE },
+    { &ui_server2, "server2", "", CVAR_ARCHIVE },
+    { &ui_server3, "server3", "", CVAR_ARCHIVE },
+    { &ui_server4, "server4", "", CVAR_ARCHIVE },
+    { &ui_server5, "server5", "", CVAR_ARCHIVE },
+    { &ui_server6, "server6", "", CVAR_ARCHIVE },
+    { &ui_server7, "server7", "", CVAR_ARCHIVE },
+    { &ui_server8, "server8", "", CVAR_ARCHIVE },
+    { &ui_server9, "server9", "", CVAR_ARCHIVE },
+    { &ui_server10, "server10", "", CVAR_ARCHIVE },
+    { &ui_server11, "server11", "", CVAR_ARCHIVE },
+    { &ui_server12, "server12", "", CVAR_ARCHIVE },
+    { &ui_server13, "server13", "", CVAR_ARCHIVE },
+    { &ui_server14, "server14", "", CVAR_ARCHIVE },
+    { &ui_server15, "server15", "", CVAR_ARCHIVE },
+    { &ui_server16, "server16", "", CVAR_ARCHIVE },
+
+    { &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM }
+*/
+  }
 }

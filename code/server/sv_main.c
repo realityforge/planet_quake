@@ -1628,6 +1628,7 @@ void SV_Frame( int msec ) {
 	if ( SV_CheckPaused() ) {
 		return;
 	}
+
 	// if it isn't time for the next frame, do nothing
 
 	frameMsec = 1000 / sv_fps->integer * com_timescale->value;

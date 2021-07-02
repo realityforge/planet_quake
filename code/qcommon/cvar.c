@@ -1481,7 +1481,11 @@ static void Cvar_List_f( void ) {
 			Com_Printf(" ");
 		}
 
-		Com_Printf (" %s \"%s\"\n", var->name, var->string);
+    if(!var->description || var->description[0] == '\0') {
+      Com_Error(ERR_FATAL, "Cvar description not set: %s\n", var->name);
+    }
+
+		Com_Printf (" %s \"%s\" - %s\n", var->name, var->string, var->description);
 	}
 
 	Com_Printf ("\n%i total cvars\n", i);

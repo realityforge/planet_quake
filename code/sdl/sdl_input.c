@@ -66,6 +66,8 @@ static cvar_t *cl_consoleKeys;
 static int in_eventTime = 0;
 static qboolean mouse_focus;
 
+extern void  Cvar_SetInputDescriptions( void );
+
 #define CTRL(a) ((a)-'a'+1)
 
 /*
@@ -1399,6 +1401,7 @@ void IN_Init( void )
 	Cmd_AddCommand( "in_restart", IN_Restart );
 	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
 
+  Cvar_SetInputDescriptions();
 	Com_DPrintf( "------------------------------------\n" );
 }
 

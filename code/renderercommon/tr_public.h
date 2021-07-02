@@ -185,7 +185,6 @@ typedef struct {
 	void	(*Cvar_Set)( const char *name, const char *value );
 	void	(*Cvar_SetValue) (const char *name, float value);
 	void	(*Cvar_CheckRange)( cvar_t *cv, const char *minVal, const char *maxVal, cvarValidator_t type );
-	void	(*Cvar_SetDescription)( cvar_t *cv, const char *description );
 
 	void	(*Cvar_SetGroup)( cvar_t *var, cvarGroup_t group );
 	int		(*Cvar_CheckGroup)( cvarGroup_t group );

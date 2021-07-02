@@ -42,9 +42,10 @@ endif
 
 CLIPMAP          := cm_load.o cm_patch.o cm_polylib.o cm_test.o cm_trace.o
 
-QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o md5.o \
-                    msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
-                    huffman_static.o q_math.o q_shared.o unzip.o puff.o
+QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
+                    md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
+                    huffman_static.o q_math.o q_shared.o unzip.o puff.o \
+										cvar_descriptions.o
 
 # couple extra server files needed for cvars and botlib for reading files
 ifeq ($(BUILD_SLIM_CLIENT),1)
@@ -245,13 +246,21 @@ debug:
 	$(echo_cmd) "MAKE $(BD)/$(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) \
+		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
+		CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" \
+		$(BD)/$(TARGET_CLIENT)
 
 release:
 	$(echo_cmd) "MAKE $(BR)/$(TARGET_CLIENT)"
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) WORKDIRS="$(WORKDIR) $(WORKDIRS)" mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_CLIENT)
+	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) \
+		WORKDIRS="$(WORKDIR) $(WORKDIRS)" \
+		CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" \
+		$(BR)/$(TARGET_CLIENT)
 
 clean:
 	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET_CLIENT)

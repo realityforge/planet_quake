@@ -814,8 +814,6 @@ cmdsAdded = qtrue;
 // TODO: remove this, just write it to disk for simplicity and focus on dynamic zips
 int CM_LoadMapFromMemory( void ) {
 
-	AddClipMapCommands();
-
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	int				i, empty = -1;
 	for(i = 0; i < MAX_NUM_MAPS; i++) {
@@ -870,8 +868,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	if ( !name || !name[0] ) {
 		Com_Error( ERR_DROP, "%s: NULL name", __func__ );
 	}
-
-	AddClipMapCommands();
 
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
 	int				i, empty = -1;

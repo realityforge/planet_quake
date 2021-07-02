@@ -284,7 +284,9 @@ void VM_Init( void ) {
 	cv = Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
 	cv = Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
 #endif
+#ifndef BUILD_SLIM_CLIENT
 	cv = Cvar_Get( "vm_game", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
+#endif
 
 	Cmd_AddCommand( "vmprofile", VM_VmProfile_f );
 	Cmd_SetDescription( "vmprofile", "Show VM profiling information\nUsage: vmprofile <game|cgame|ui>" );

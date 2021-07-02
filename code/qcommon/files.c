@@ -398,6 +398,8 @@ int	fs_lastPakIndex;
 FILE*		missingFiles = NULL;
 #endif
 
+extern void Cvar_SetFilesDescriptions( void );
+
 void Com_AppendCDKey( const char *filename );
 void Com_ReadCDKey( const char *filename );
 
@@ -4998,10 +5000,7 @@ void FS_Startup( void ) {
 
 #ifdef __WASM__
 	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
-}
-
-void FS_Startup_After_Async( void )
-{
+  WASM_ASYNC(FS_Startup_After_Async);
 	int start, end;
 #endif
 ;
@@ -5014,6 +5013,8 @@ void FS_Startup_After_Async( void )
 #else
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
 #endif
+  
+  Cvar_SetFilesDescriptions();
 
 	start = Sys_Milliseconds();
 

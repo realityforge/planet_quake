@@ -40,6 +40,8 @@ vm_t *uivmWorlds[MAX_NUM_VMS];
 vm_t *uivm = NULL;
 #endif
 
+extern void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM);
+
 /*
 ====================
 GetClientState
@@ -1345,6 +1347,8 @@ void CL_InitUI( qboolean loadNew ) {
 		// init for this gamestate
 		VM_Call( uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
+
+  Cvar_SetKnownDescriptions(VM_UI, uivm->knownVM);
 
 #ifdef USE_RMLUI
   CL_InitRmlUi();
