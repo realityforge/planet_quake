@@ -186,6 +186,7 @@ void Cvar_SetCommonDescriptions( void ) {
 	Cvar_SetDescription( "vm_game", "Attempt to load the Game QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 #endif
   Cvar_SetDescription( "arch", "Architechure the game was compiled on\nDefault: " OS_STRING " " ARCH_STRING);
+  Cvar_SetDescription( "ui_singlePlayerActive", "Holds a value indicating the server should run in single player mode" );
 }
 
 void Cvar_SetInputDescriptions( void ) {
@@ -294,7 +295,7 @@ void Cvar_SetRendererDescriptions( void ) {
   Cvar_SetDescription( "r_glDriver", "Used OpenGL driver by name\nDefault: opengl32" );
   Cvar_SetDescription( "r_displayRefresh", "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
   Cvar_SetDescription( "vid_xpos", "Set the window x starting position on the screen\nDefault: 3" );
-  Cvar_SetDescription( "vid_xpos", "Set the window y starting position on the screen\nDefault: 22" );
+  Cvar_SetDescription( "vid_ypos", "Set the window y starting position on the screen\nDefault: 22" );
   Cvar_SetDescription( "r_noborder", "Set window borderless mode usually set by SDL and fullscreen mode\nDefault: 0" );
   Cvar_SetDescription( "r_mode", "Set video mode:\n -2 - use current desktop resolution\n -1 - use \\r_customWidth and \\r_customHeight\n  0..N - enter \\modelist for details" );
 	Cvar_SetDescription( "r_modeFullscreen", "Dedicated fullscreen mode, set to \"\" to use \\r_mode in all cases" );
@@ -617,6 +618,7 @@ void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
     Cvar_SetDescription( "g_spScores4", "holds your scores on skill level 4 in single player games" );
     Cvar_SetDescription( "g_spScores5", "holds your scores on skill level 5 in single player games" );
     Cvar_SetDescription( "g_spSkill", "holds your current skill level for single player 1 - I can win, 2 - bring it on, 3 - hurt me plenty 4 - hardcore and 5 - nightmare" );
+    Cvar_SetDescription( "ui_spSelection", "Holds a value indicating the user selected single player skirmish menu" );
     Cvar_SetDescription( "g_spVideos", "	variable holds the names of the cinematic videos that are unlocked at the end of each tier completion" );
     for(int i = 1; i < 17; i++)
       Cvar_SetDescription( va("server%i", i), va("Favorited server %i", i) );
@@ -626,63 +628,72 @@ void Cvar_SetKnownDescriptions(vmIndex_t index, recognizedVM_t knownVM) {
     Cvar_SetDescription( "ui_browserShowFull", "Holds UI multiplayer menu full setting" );
     Cvar_SetDescription( "ui_browserShowEmpty", "Holds UI multiplayer menu empty setting" );
     Cvar_SetDescription( "ui_cdkeychecked", "Holds UI value indicating if the user has been prompted for a CD key");
+    Cvar_SetDescription( "ui_ffa_fraglimit", "Holds free-for-all fraglimit" );
+    Cvar_SetDescription( "ui_ffa_timelimit", "Holds free-for-all timelimit" );
+    Cvar_SetDescription( "ui_tourney_fraglimit", "Holds tournament fraglimit" );
+    Cvar_SetDescription( "ui_tourney_timelimit", "Holds tournament timelimit" );
+    Cvar_SetDescription( "ui_team_fraglimit", "Holds team-play fraglimit" );
+    Cvar_SetDescription( "ui_team_timelimit", "Holds team-play timelimit" );
+    Cvar_SetDescription( "ui_team_friendly", "Holds team-play friendly-fire setting" );
+    Cvar_SetDescription( "ui_ctf_capturelimit", "Holds ctf capturelimit" );
+    Cvar_SetDescription( "ui_ctf_timelimit", "Holds ctf timelimit" );
+    Cvar_SetDescription( "ui_ctf_friendly", "Holds ctf friendly-fire setting" );
+
 /*
-    { &ui_ffa_fraglimit, "ui_ffa_fraglimit", "20", CVAR_ARCHIVE },
-    { &ui_ffa_timelimit, "ui_ffa_timelimit", "0", CVAR_ARCHIVE },
-
-    { &ui_tourney_fraglimit, "ui_tourney_fraglimit", "0", CVAR_ARCHIVE },
-    { &ui_tourney_timelimit, "ui_tourney_timelimit", "15", CVAR_ARCHIVE },
-
-    { &ui_team_fraglimit, "ui_team_fraglimit", "0", CVAR_ARCHIVE },
-    { &ui_team_timelimit, "ui_team_timelimit", "20", CVAR_ARCHIVE },
-    { &ui_team_friendly, "ui_team_friendly",  "1", CVAR_ARCHIVE },
-
-    { &ui_ctf_capturelimit, "ui_ctf_capturelimit", "8", CVAR_ARCHIVE },
-    { &ui_ctf_timelimit, "ui_ctf_timelimit", "30", CVAR_ARCHIVE },
-    { &ui_ctf_friendly, "ui_ctf_friendly",  "0", CVAR_ARCHIVE },
-
-    { &ui_arenasFile, "g_arenasFile", "", CVAR_INIT|CVAR_ROM },
-    { &ui_botsFile, "g_botsFile", "", CVAR_ARCHIVE|CVAR_LATCH },
-    { &ui_spScores1, "g_spScores1", "", CVAR_ARCHIVE },
-    { &ui_spScores2, "g_spScores2", "", CVAR_ARCHIVE },
-    { &ui_spScores3, "g_spScores3", "", CVAR_ARCHIVE },
-    { &ui_spScores4, "g_spScores4", "", CVAR_ARCHIVE },
-    { &ui_spScores5, "g_spScores5", "", CVAR_ARCHIVE },
-    { &ui_spAwards, "g_spAwards", "", CVAR_ARCHIVE },
-    { &ui_spVideos, "g_spVideos", "", CVAR_ARCHIVE },
-    { &ui_spSkill, "g_spSkill", "2", CVAR_ARCHIVE | CVAR_LATCH },
-
-    { &ui_spSelection, "ui_spSelection", "", CVAR_ROM },
-
-    { &ui_browserMaster, "ui_browserMaster", "0", CVAR_ARCHIVE },
-    { &ui_browserGameType, "ui_browserGameType", "0", CVAR_ARCHIVE },
-    { &ui_browserSortKey, "ui_browserSortKey", "4", CVAR_ARCHIVE },
-    { &ui_browserShowFull, "ui_browserShowFull", "1", CVAR_ARCHIVE },
-    { &ui_browserShowEmpty, "ui_browserShowEmpty", "1", CVAR_ARCHIVE },
-
-    { &ui_brassTime, "cg_brassTime", "2500", CVAR_ARCHIVE },
-    { &ui_drawCrosshair, "cg_drawCrosshair", "4", CVAR_ARCHIVE },
-    { &ui_drawCrosshairNames, "cg_drawCrosshairNames", "1", CVAR_ARCHIVE },
-    { &ui_marks, "cg_marks", "1", CVAR_ARCHIVE },
-
-    { &ui_server1, "server1", "", CVAR_ARCHIVE },
-    { &ui_server2, "server2", "", CVAR_ARCHIVE },
-    { &ui_server3, "server3", "", CVAR_ARCHIVE },
-    { &ui_server4, "server4", "", CVAR_ARCHIVE },
-    { &ui_server5, "server5", "", CVAR_ARCHIVE },
-    { &ui_server6, "server6", "", CVAR_ARCHIVE },
-    { &ui_server7, "server7", "", CVAR_ARCHIVE },
-    { &ui_server8, "server8", "", CVAR_ARCHIVE },
-    { &ui_server9, "server9", "", CVAR_ARCHIVE },
-    { &ui_server10, "server10", "", CVAR_ARCHIVE },
-    { &ui_server11, "server11", "", CVAR_ARCHIVE },
-    { &ui_server12, "server12", "", CVAR_ARCHIVE },
-    { &ui_server13, "server13", "", CVAR_ARCHIVE },
-    { &ui_server14, "server14", "", CVAR_ARCHIVE },
-    { &ui_server15, "server15", "", CVAR_ARCHIVE },
-    { &ui_server16, "server16", "", CVAR_ARCHIVE },
-
-    { &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM }
+    Cvar_SetDescription( "ui_new", "Holds value indicating the UI menu system was just loaded" );
+    Cvar_SetDescription( "ui_debug", "Show UI debug messages" );
+    Cvar_SetDescription( "ui_initialized", "Holds value indicating the UI is fully initialized" );
+    Cvar_SetDescription( "ui_teamName", "Name of your team" );
+    Cvar_SetDescription( "ui_opponentName", "Name of opponents team" );
+    Cvar_SetDescription( "ui_redteam", "Name of red team" );
+    Cvar_SetDescription( "ui_blueteam", "Name of blue team" );
+    Cvar_SetDescription( "ui_dedicated", "Holds setting for starting a dedicated server" );
+    Cvar_SetDescription( "ui_gametype", "Holds a value for the selected gametype" );
+    Cvar_SetDescription( "ui_joinGametype", "Holds a value for the gametype joined from the multiplayer menu" );
+    Cvar_SetDescription( "ui_netGametype", "Holds a value for the selected net gametype filter setting" );
+    Cvar_SetDescription( "ui_actualNetGametype", "Holds a value for the selected gametype" );
+    for(int i = 1; i < 6; i++)
+      Cvar_SetDescription( va("ui_redteam%i", i), "Holds value for alternate team names" );
+    for(int i = 1; i < 6; i++)
+      Cvar_SetDescription( va("ui_blueteam%i", i), "Holds value for alternate team names" );
+    Cvar_SetDescription( "ui_netSource", "Holds a value for the current multiplayer network screen" );
+    Cvar_SetDescription( "ui_menuFiles", "Name of the file that list mod menu files\nDefault: ui/menus.txt" );
+    Cvar_SetDescription( "ui_currentTier", "Holds a value indicating the highest single player tier reached" );
+    Cvar_SetDescription( "ui_currentMap", "" );
+    Cvar_SetDescription( "ui_currentNetMap", "" );
+    Cvar_SetDescription( "ui_mapIndex", "" );
+    Cvar_SetDescription( "ui_currentOpponent", "" );
+    Cvar_SetDescription( "cg_selectedPlayer", "" );
+    Cvar_SetDescription( "cg_selectedPlayerName", "" );
+    for(int i = 0; i < 4; i++)
+      Cvar_SetDescription( va("ui_lastServerRefresh_%i", i), "Holds the value from the last server retrieved from multiplayer refresh" );
+    Cvar_SetDescription( "ui_scoreAccuracy", "Indicates how many Accuracy awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreImpressives", "Indicates how many Impressive awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreExcellents", "Indicates how many Excellent awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreCaptures", "Indicates how many Capture awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreDefends", "Indicates how many Defence awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreAssists", "Indicates how many Assist awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreGauntlets", "Indicates how many Gauntlet awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreScore", "Indicates the player score from the previous match" );
+    Cvar_SetDescription( "ui_scorePerfect", "Indicates how many Perfect awards were given in the previous match" );
+    Cvar_SetDescription( "ui_scoreTeam", "The total team score for the previous match" );
+    Cvar_SetDescription( "ui_scoreBase", "The base time for scoring the previous match" );
+    Cvar_SetDescription( "ui_scoreTime", "When the last match was scored" );
+    Cvar_SetDescription( "ui_scoreTimeBonus", "The amount of bonus time overrun" );
+    Cvar_SetDescription( "ui_scoreSkillBonus", "Skill bonus points" );
+    Cvar_SetDescription( "ui_scoreShutoutBonus", "The number of shoutout bonus points" );
+    Cvar_SetDescription( "ui_fragLimit", "The selected capture limit configuring a server\n10" );
+    Cvar_SetDescription( "ui_captureLimit", "The selected capture limit configuring a server\nDefault: 5" );
+    Cvar_SetDescription( "ui_smallFont", "The scaling for small fonts\nDefault: 0.25" );
+    Cvar_SetDescription( "ui_bigFont", "The scaling for big fonts\nDefault: 0.4" );
+    Cvar_SetDescription( "ui_findPlayer", "Search for this player model or something is wrong\nDefault: Sarge" );
+    Cvar_SetDescription( "ui_q3model", "The default selected player model" );
+    Cvar_SetDescription( "cg_hudFiles", "A list of files with extra HUD layout definitions\nDefault: ui/hud.txt" );
+    Cvar_SetDescription( "ui_recordSPDemo", "Should record a demo file even in single player mode" );
+    Cvar_SetDescription( "ui_teamArenaFirstRun", "Indicates if this is the first time Team Arena has been run" );
+    Cvar_SetDescription( "g_warmup", "The warmup time before a match starts\nDefault: 20" );
+    Cvar_SetDescription( "capturelimit", "The default capturelimit for CTF mode\nDefault: 8" );
+    Cvar_SetDescription( "ui_serverStatusTimeOut", "How long the UI should wait for a response from a remote server\nDefault: 7000" );
 */
   }
 }
