@@ -890,6 +890,7 @@ void CL_DropStart( void ) {
   pk3s = 0;
   if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
     Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
+  con.displayFrac = 1.0
 }
 #endif
 

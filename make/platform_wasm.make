@@ -3,6 +3,12 @@ BUILD_SERVER     := 0
 BUILD_STANDALONE := 1
 USE_SYSTEM_JPEG  := 0
 USE_SYSTEM_LIBC  := 0
+USE_VID_FAST     := 1
+USE_ABS_MOUSE    := 1
+USE_LOCAL_DED    := 1
+USE_LAZY_LOAD    := 1
+USE_LAZY_MEMORY  := 1
+USE_MASTER_LAN   := 1
 
 # always build client because we haven't figured out wasm dylinks yet
 BUILD_CLIENT     := 1

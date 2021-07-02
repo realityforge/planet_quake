@@ -562,6 +562,9 @@ extern  cvar_t  *cl_dropAction;
 #ifdef USE_ABS_MOUSE
 extern  cvar_t  *in_mouseAbsolute;
 #endif
+#ifdef USE_MULTIVM_CLIENT
+extern  cvar_t  *cl_mvHighlight;
+#endif
 #ifdef USE_LNBITS
 extern  cvar_t	*cl_lnInvoice;
 #endif

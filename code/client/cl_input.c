@@ -796,7 +796,7 @@ void CL_WritePacket( void ) {
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 
 #ifdef USE_MULTIVM_CLIENT
-	// TODO: make optional based on game setup, 
+	// TODO: make optional based on game setup, multiple game controllers on one computer
 	//   e.g. clone world with multiple simultaneous game types, 
 	//     deathmatch players are unaware they are also participating in CTF
 	//   e.g. dead world versus living world, like respawn in WoW, 

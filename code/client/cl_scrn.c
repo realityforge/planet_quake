@@ -27,8 +27,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qrcodegen.h"
 #endif
 
-// TODO: uncomment this when the rest is working
-
 qboolean	scr_initialized;		// ready to draw
 
 cvar_t		*cl_timegraph;
@@ -808,8 +806,8 @@ donewithupdate:
 #endif
 
 #ifdef USE_MULTIVM_CLIENT
-	// TODO: make optional
-	SCR_DrawCurrentView();
+	if(cl_mvHighlight && cl_mvHighlight->integer)
+	 SCR_DrawCurrentView();
 #endif
 
 #ifndef USE_NO_CONSOLE

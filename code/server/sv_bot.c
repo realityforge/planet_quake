@@ -597,7 +597,7 @@ void SV_BotInitBotLib(void) {
 #endif // __linux__
 #endif // __WASM__
 
-  // TODO: make this a fancy list of renderers we recognize
+  // TODO: make this a fancy list of botlibs we recognize
 	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
 	botLib = FS_LoadLibrary( dllName );
 #ifdef __WASM__

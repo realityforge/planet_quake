@@ -307,7 +307,22 @@ static const char *Cvar_Validate( cvar_t *var, const char *value, qboolean warn 
 			}
 		} // Q_isanumber
 	} // CV_INTEGER || CV_FLOAT
-	// TODO: stringlist
+  else if ( var->validator == CV_ENUM ) {
+    int count;
+    qboolean found = qfalse;
+    char *enums = Cmd_TokenizeAlphanumeric(var->mins, &count);
+    for(int i = 0; i < count; i++) {
+      // var->maxs as safety string length?
+      if(Q_stricmp(value, enums) == 0) {
+        found = qtrue;
+        break;
+      }
+      enums = &enums[strlen(enums)+1];
+    }
+    if(!found) {
+      Com_Printf( "WARNING: cvar '%s' must be one of (%s)", var->name, var->mins );
+    }
+  } // CV_ENUM
 	else if ( var->validator == CV_FSPATH ) {
 		// check for directory traversal patterns
 		if ( FS_InvalidGameDir( value ) ) {
@@ -1482,7 +1497,7 @@ static void Cvar_List_f( void ) {
 		}
 
     if(!var->description || var->description[0] == '\0') {
-      Com_Error(ERR_FATAL, "Cvar description not set: %s\n", var->name);
+    //  Com_Error(ERR_FATAL, "Cvar description not set: %s\n", var->name);
     }
 
 		Com_Printf (" %s \"%s\" - %s\n", var->name, var->string, var->description);

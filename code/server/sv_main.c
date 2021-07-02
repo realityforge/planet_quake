@@ -128,6 +128,7 @@ cvar_t	*cl_freezeDemo; // to freeze server-side demos
 cvar_t	*sv_demoTolerant;
 
 #ifdef USE_LNBITS
+cvar_t  *sv_lnPerMatch;
 cvar_t  *sv_lnMatchPrice;
 cvar_t  *sv_lnMatchCut;
 cvar_t  *sv_lnMatchReward;

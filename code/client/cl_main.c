@@ -107,6 +107,10 @@ cvar_t  *cl_dropAction;
 cvar_t  *in_mouseAbsolute;
 #endif
 
+#ifdef USE_MULTIVM_CLIENT
+cvar_t  *cl_mvHighlight;
+#endif
+
 #ifdef USE_MASTER_LAN
 cvar_t	*cl_master[MAX_MASTER_SERVERS];		// master server ip address
 #endif
@@ -5117,7 +5121,7 @@ void CL_World_f( void ) {
 		clworld = clc.clientNum;
 	}
 
-	// TODO: check if a client game with this address already exists
+	// check if a client game with this address already exists
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 		if (!cgvmWorlds[i]) {
 			// open slot
@@ -5126,13 +5130,13 @@ void CL_World_f( void ) {
 		} else {
 			// slot is taken
 			if(clientGames[i] == clgame) {
-				// TODO: if it a game exists and is unused it can switch clients
-				// e.g. clientGames[i] == -1
-				if(clientWorlds[i] == clworld) {
+				// if it a game exists and is unused it can switch clients
+				if(clientWorlds[i] == clworld
+          || clientWorlds[i] == -1) {
 					found = qtrue;
 					clc.currentView = i;
 					break;
-				} 
+				}
 			}
 		}
 	}
@@ -5382,7 +5386,10 @@ void CL_Init( void ) {
   cl_uncheat = Cvar_Get("cl_uncheat", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE | CVAR_USERINFO);
   CL_InitUncheat();
 #endif
-
+#ifdef USE_MULTIVM_CLIENT
+  cl_mvHighlight = Cvar_Get("cl_mvHighlight", "1", CVAR_ARCHIVE);
+  Cvar_CheckRange( cl_mvHighlight, "0", "1", CV_INTEGER );
+#endif
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );

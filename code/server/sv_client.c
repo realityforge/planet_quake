@@ -510,8 +510,12 @@ void SV_RestoreClient( int c ) {
 	}
 	time_t t = 0;
 	FS_Read(&t, sizeof(long), h);
-	//  TODO: make this customizable
-	if(sv_clSessions->integer != -1 && I_FloatTime() - t > sv_clSessions->integer) return;
+  
+  // don't restore client is certain time has passed
+	if(sv_clSessions->integer != -1 && I_FloatTime() - t > sv_clSessions->integer) {
+    Com_DPrintf("Client %i not restored because session expired after %i seconds\n", c, I_FloatTime() - t);
+    return;
+  }
 
 	playerState_t *ps = SV_GameClientNum( c );
 	FS_Read(buffer, sizeof(int), h);
@@ -538,12 +542,6 @@ void SV_RestoreClient( int c ) {
 		Com_Printf( S_COLOR_RED "SESSION ERROR: Player entity sizes do not match (%i != %lu).\n", size, sizeof(playerState_t));
 	} else {
 		memcpy(&ent->health, &((gentity_t*)buffer)->health, sizeof(int));
-		/*
-		memcpy(&ent->r.currentOrigin, &ps->origin, sizeof(vec3_t));
-		memcpy(&ent->r.currentAngles, &ps->viewangles, sizeof(vec3_t));
-		memcpy(&ent->s.pos.trBase, &ps->origin, sizeof(vec3_t));
-		memset(&ent->s.pos.trDelta, 0, sizeof(vec3_t));
-		*/
 		Com_Printf("Restoring client %i: %i, %f x %f\n", c, ent->health /*sizeof(playerState_t) + ((intptr_t)&ent->health - (intptr_t)ent)*/, ps->origin[0], ps->origin[1]);
 	}
 
@@ -2295,14 +2293,14 @@ void SV_LoadVM( client_t *cl ) {
 
   SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
   cvar_modifiedFlags &= ~CVAR_SERVERINFO;
-
-	// ------------- TODO: add that stuff with reconnecting clients and bots here
-	//   make it a cvar like a game dynamic if players should auutomatically have presence everywhere
-	//   like in the game mode with a mirror dimension with synchronized coords
 	
   sv.state = SS_GAME;	
 	Sys_SetStatus( "Running map %s", mapname );
 	SV_CreateBaseline();
+
+	// ------------- TODO: add that stuff with reconnecting clients and bots here
+	//   make it a cvar like a game dynamic if players should auutomatically have presence everywhere
+	//   like in the game mode with a mirror dimension with synchronized coords
 	/*
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( svs.clients[i].state >= CS_CONNECTED
@@ -2414,13 +2412,6 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			if(sv_mvWorld->integer) {
 				SV_SendServerCommand(client, "world %i", client->newWorld);
 			}
-			// send new baselines
-			// TODO: remove this because MV takes care of it? this was pre-MV integration
-			//for(int index = 0; index < MAX_CONFIGSTRINGS; index++) {
-			//	if(strlen(sv.configstrings[index]) > 0) {
-			//		client->csUpdated[index] = qtrue;
-			//	}
-			//}
 		}
 	}
 
@@ -2444,9 +2435,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
 		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
 		// keep the same view angles if changing origins
-		ps->delta_angles[0] = oldDelta[0];
-		ps->delta_angles[1] = oldDelta[1];
-		ps->delta_angles[2] = oldDelta[2];
+    SV_SetClientViewAngle(c, ((playerState_t*)ps)->viewangles);
 	}
 
 	// restore player stats
@@ -2496,7 +2485,6 @@ void SV_Tele_f( client_t *client ) {
 
 		for(i = 0; i < 3; i++) {
 			if(userOrigin[i][0] != '\0') {
-				// TODO: calculate direction change relative to oldAngles
 				if(userOrigin[i][0] == '-') {
 					newOrigin[i] = ps->origin[i] - atoi(&userOrigin[i][1]);
 				} else if (userOrigin[i][0] == '+') {
@@ -2632,8 +2620,8 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	
 	Cmd_TokenizeString( s );
 	
-	// TODO: check implied rconpassword from previous attempt by client
 #ifdef USE_CMD_CONNECTOR
+  // TODO: check implied rconpassword (cl_guid) from previous attempt by client
 	char		sv_outputbuf[1024 - 16];
 	// Execute client strings as local commands, 
 	// in case of running a web-worker dedicated server

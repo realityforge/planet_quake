@@ -2481,7 +2481,7 @@ void VM_Free( vm_t *vm ) {
 		Com_Printf( "forcefully unloading %s vm\n", vm->name );
 	}
 
-  // TODO: call reset functions?
+  // TODO: call game code reset functions?
 
 	Com_Memset( vm, 0, sizeof( *vm ) );
 }

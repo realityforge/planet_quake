@@ -1246,7 +1246,6 @@ void HandleEvents( void )
 				break;
 #ifdef USE_DRAGDROP
       case SDL_DROPBEGIN:
-        // TODO: show the full console
         Com_QueueEvent( in_eventTime, SE_KEY, K_DROPFILE, qtrue, 0, NULL );
         break;
       case SDL_DROPTEXT:

@@ -552,8 +552,8 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 
 #ifdef USE_LNBITS
 	// reset invoice array so clients have to pay again in between matches
-	// TODO: make this a setting? make this a command?
-	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+  if(sv_lnPerMatch->integer)
+    Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 #endif
 
 	// toggle the server bit so clients can detect that a
@@ -899,7 +899,6 @@ void SV_SpawnServer_After_Startup( void ) {
 
 
 #ifdef USE_SERVER_ROLES
-// TODO: sv_roles->modified on every use connect? Need to run this loop again
 void SV_InitUserRoles (void) {
 	int roleCount = 0;
 	// force 3 roles to be available?
@@ -1112,6 +1111,7 @@ void SV_Init( void )
 #endif
 
 #ifdef USE_LNBITS
+  sv_lnPerMatch = Cvar_Get("sv_lnPerMatch", "1", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE)
 	sv_lnMatchPrice = Cvar_Get("sv_lnMatchPrice", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
 	sv_lnMatchCut = Cvar_Get("sv_lnMatchCut", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
 	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP);

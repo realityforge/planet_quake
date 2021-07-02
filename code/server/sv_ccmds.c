@@ -189,8 +189,9 @@ static void SV_Map_f( void ) {
 			Cbuf_Execute();
 			return;
 		}
-		// TODO: check if com_errorMessage, display it onscreen with
-		//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
+		// check if com_errorMessage, display it onscreen with
+    if(com_errorMessage && com_errorMessage->string[0] != "\0")
+		  SV_SendServerCommand(cl, "cp \"%s\"", com_errorMessage->string);
 #else
 		Com_Printf("Error: Can't find map %s\n", expanded );
 		return;
@@ -217,7 +218,7 @@ static void SV_Map_f( void ) {
 	else {
 		if ( !Q_stricmp( cmd, "devmap" ) ) {
 			cheat = qtrue;
-			killBots = qtrue;
+			killBots = Cvar_VariableIntegerValue("bot_enable") > 2 ? qfalse : qtrue;
 		} else {
 			cheat = qfalse;
 			killBots = qfalse;
@@ -252,7 +253,7 @@ static void SV_Map_f( void ) {
 	Q_strncpyz(mapname, map, sizeof(mapname));
 
 	// start up the map
-	SV_SpawnServer( mapname, killBots ); // TODO: make bots on devmaps a Cvar bot_devmapEnable
+	SV_SpawnServer( mapname, killBots );
 
 	// set the cheat value
 	// if the level was started with "map <levelname>", then
@@ -386,12 +387,14 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		if ( client->netchan.remoteAddress.type == NA_BOT ) {
+#ifdef USE_LOCAL_DED
 			// drop bots on map restart because they will be re-added by arena config
 			// TODO: only drop bots on single-player mode?
 			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
 				SV_DropClient( client, NULL );
 				continue;
 			}
+#endif
 			isBot = qtrue;
 		} else {
 			isBot = qfalse;

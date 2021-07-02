@@ -1112,9 +1112,9 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
-		// TODO: remove this line when MULTIIVM is working
 		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
 		if(gvmi != 0 && (client->mvAck == 0 || client->mvAck >= client->messageAcknowledge)) continue;
+    // remove this line when MULTIIVM is working
 		//if(gvmi != 0) continue;
 		//if(gvmi != client->gameWorld) continue;
 #endif

@@ -457,6 +457,7 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 /*
 #ifdef __WASM__
 	// TODO: server to server communication, multiple server
+  // replicate server states inside qagame
 	// also send queued messages to local client if running in dedicated thread
 	if(sock == NS_CLIENT && com_dedicated->integer) {
 		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);

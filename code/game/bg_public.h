@@ -379,7 +379,7 @@ typedef enum {
 	EV_NOAMMO,
 	EV_CHANGE_WEAPON,
 /*
-  TODO: make a weapon mod with infinite classes using an even counter,
+  TODO: make a weapon mod with infinite classes using an event counter,
   EV_WEAPON_RESET
   EV_WEAPON_COUNT
   EV_CLASS_RESET
