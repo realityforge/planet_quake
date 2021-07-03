@@ -928,7 +928,7 @@ qboolean	FS_InMapIndex ( const char *filename );
 void	FS_SetMapIndex ( const char *mapname );
 void	FS_Shutdown( qboolean closemfp );
 
-qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart );
+qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart, int igvm );
 
 void	FS_Restart( int checksumFeed );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect

@@ -3290,11 +3290,8 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		FS_Restart( checksumFeed );
 		
 #ifdef __WASM__
+    WASM_ASYNC(Com_GameRestart_After_Restart);
 	}
-}
-
-void Com_GameRestart_After_Restart( void )
-{
   qboolean com_gameRestarting = qtrue;
 	qboolean clientRestart = qtrue;
 	{

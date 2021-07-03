@@ -40,6 +40,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define Com_DPrintf FS_Com_DPrintf
 #endif
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define USE_MULTIFS 1
+#else
+#undef USE_MULTIFS
+#endif
+
 /*
 =============================================================================
 
@@ -319,6 +325,9 @@ typedef struct searchpath_s {
 	pack_t		*pack;		// only one of pack / dir will be non NULL
 	directory_t	*dir;
 	dirPolicy_t	policy;
+#ifdef USE_MULTIFS
+  int16_t worldPolicy; // allows up to 16 worlds as a bit flag
+#endif
 } searchpath_t;
 
 static	char		fs_gamedir[MAX_OSPATH];	// this will be a single file name with no separators
@@ -3302,6 +3311,7 @@ static char fileNames[6][MAX_QPATH*5];
 void FS_AddZipFile( const char *zipfile ) {
   searchpath_t	*search;
   /*
+  Causes crash for some reason
   pack_t *pak = FS_LoadZipFile( zipfile );
   pak->pakGamename = FS_GetCurrentGameDir();
 
@@ -5850,10 +5860,18 @@ FS_ConditionalRestart
 restart if necessary
 =================
 */
-qboolean FS_ConditionalRestart( int checksumFeed, qboolean clientRestart )
+qboolean FS_ConditionalRestart( int checksumFeed, qboolean clientRestart, int igvm )
 {
 	if ( fs_gamedirvar->modified )
 	{
+#ifdef USE_MULTIFS
+    if(igvm != 0) {
+      // add the game directory instead of replacing them, 
+      //   because it will filter automatically using world policy
+      FS_AddGameDirectory(fs_basepath->string, fs_gamedirvar->string);
+      fs_gamedirvar->modified = qfalse;
+    } else
+#endif
 		Com_GameRestart( checksumFeed, clientRestart );
 		return qtrue;
 	}

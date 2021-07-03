@@ -1589,7 +1589,7 @@ static qboolean CL_RestoreOldGame( void )
 	{
 		cl_oldGameSet = qfalse;
 		Cvar_Set( "fs_game", cl_oldGame );
-		FS_ConditionalRestart( clc.checksumFeed, qtrue );
+		FS_ConditionalRestart( clc.checksumFeed, qtrue, 0 );
 		return qtrue;
 	}
 	return qfalse;
@@ -2581,7 +2581,7 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
 	// reinitialize the filesystem if the game directory or checksum has changed
 	if ( !clc.demoplaying ) // -EC-
-		FS_ConditionalRestart( clc.checksumFeed, qfalse );
+		FS_ConditionalRestart( clc.checksumFeed, qfalse, 0 );
 
 	cls.rendererStarted = qfalse;
 	cls.uiStarted = qfalse;

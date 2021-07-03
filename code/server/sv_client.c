@@ -2299,7 +2299,7 @@ void SV_LoadVM( client_t *cl ) {
 	SV_CreateBaseline();
 
 	// ------------- TODO: add that stuff with reconnecting clients and bots here
-	//   make it a cvar like a game dynamic if players should auutomatically have presence everywhere
+	//   make it a cvar like a game dynamic if players should automatically have presence everywhere
 	//   like in the game mode with a mirror dimension with synchronized coords
 	/*
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {

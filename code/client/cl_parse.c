@@ -907,12 +907,12 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 #ifndef __WASM__
 	// reinitialize the filesystem if the game directory has changed
-	FS_ConditionalRestart( clc.checksumFeed, gamedirModified );
+	FS_ConditionalRestart( clc.checksumFeed, gamedirModified, clc.currentView );
 
 	cls.gameSwitch = qfalse;
 #else
   gigs = igs;
-	if(FS_ConditionalRestart(clc.checksumFeed, qfalse)) {
+	if(FS_ConditionalRestart(clc.checksumFeed, qfalse, clc.currentView)) {
 		cls.gameSwitch = qfalse;
 		if(!FS_Initialized()) {
 			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_Game_After_Shutdown);

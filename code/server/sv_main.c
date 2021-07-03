@@ -1917,6 +1917,11 @@ void SV_Frame( int msec ) {
     SV_InitUserRoles();
   }
 #endif
+#ifdef USE_MULTIVM_SERVER
+  if ( fs_gamedirvar->modified ) {
+    FS_ConditionalRestart( 0, qfalse, sv.currentWorld );
+  }
+#endif
 
 #ifdef USE_MV
 	svs.emptyFrame = qfalse;

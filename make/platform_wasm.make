@@ -41,6 +41,8 @@ BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \
+										-DUSE_VID_FAST -DUSE_ABS_MOUSE -DUSE_LOCAL_DED \
+										-DUSE_LAZY_LOAD -DUSE_LAZY_MEMORY -DUSE_MASTER_LAN \
                     -fvisibility=hidden \
 										-D_XOPEN_SOURCE=700 \
                     -D__WASM__ \
