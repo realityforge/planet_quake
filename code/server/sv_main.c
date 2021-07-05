@@ -1907,23 +1907,6 @@ void SV_Frame( int msec ) {
 	// send messages back to the clients
 	SV_SendClientMessages();
 
-#ifdef USE_CVAR_UNCHEAT
-  if(sv_banCheats->modified) {
-    SV_InitBanCheats();
-  }
-#endif
-
-#ifdef USE_SERVER_ROLES
-  if(sv_roles->modified) {
-    SV_InitUserRoles();
-  }
-#endif
-#ifdef USE_MULTIVM_SERVER
-  if ( sv_gamedir->modified ) {
-    FS_ConditionalRestart( 0, qfalse, sv.currentWorld );
-  }
-#endif
-
 #ifdef USE_MV
 	svs.emptyFrame = qfalse;
 	if ( sv_mvAutoRecord->integer > 0 || sv_mvAutoRecord->integer == -1 ) {

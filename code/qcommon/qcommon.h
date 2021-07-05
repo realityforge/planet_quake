@@ -806,6 +806,7 @@ void	Cvar_SetValueSafe( const char *var_name, float value );
 // expands value to a string and calls Cvar_Set/Cvar_SetSafe
 
 qboolean Cvar_SetModified( const char *var_name, qboolean modified );
+void Cvar_SetModifiedFunc(cvar_t *var, modifiedFunc_t modified);
 
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );

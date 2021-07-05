@@ -4969,6 +4969,13 @@ static void FS_ReferencedPK3List_f( void ) {
 }
 
 
+void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
+  Com_Printf("fs_game changed, but you probably need to run fs_restart or vid_restart\n");
+  
+}
+
+
+
 /*
 ================
 FS_Startup
@@ -5010,6 +5017,7 @@ void FS_Startup( void ) {
 
 	fs_gamedirvar = Cvar_Get( "fs_game", "", CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
+  Cvar_SetModifiedFunc(fs_gamedirvar, Com_GamedirModified);
 
 #ifdef __WASM__
 	//Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);

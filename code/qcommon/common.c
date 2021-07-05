@@ -145,6 +145,13 @@ cvar_t	*com_noErrorInterrupt;
 cvar_t *cl_execOverflow;
 cvar_t *cl_execTimeout;
 
+#ifdef USE_CVAR_UNCHEAT
+cvar_t  *com_uncheat;
+cvar_t  *comUncheats[128];
+void Com_InitUncheat(void);
+void Com_UncheatModified(char *oldValue, char *newValue, cvar_t *cv);
+#endif
+
 // com_speeds times
 int		time_game;
 int		time_frontend;		// renderer frontend time
@@ -3983,6 +3990,12 @@ void Com_Init( char *commandLine ) {
 	Cvar_CheckRange( com_yieldCPU, "0", "16", CV_INTEGER );
 #endif
 
+#ifdef USE_CVAR_UNCHEAT
+  com_uncheat = Cvar_Get("uncheats", "cg_gun cg_gunX cg_gunY cg_gunZ", CVAR_ARCHIVE | CVAR_USERINFO);
+  Cvar_SetModifiedFunc(com_uncheat, Com_UncheatModified);
+  Com_InitUncheat();
+#endif
+
 #ifdef USE_AFFINITY_MASK
 	com_affinityMask = Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE_ND );
 	com_affinityMask->modified = qfalse;
@@ -4610,16 +4623,16 @@ void Com_Frame( qboolean noDelay ) {
 	SV_Frame( msec );
 #endif
 
-	// if "dedicated" has been modified, start up
-	// or shut down the client system.
-	// Do this after the server may have started,
-	// but before the client tries to auto-connect
 #ifdef __WASM__
 	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
 		return;
 	}
 #endif
 
+	// if "dedicated" has been modified, start up
+	// or shut down the client system.
+	// Do this after the server may have started,
+	// but before the client tries to auto-connect
 #ifndef BUILD_SLIM_CLIENT
 #ifndef USE_LOCAL_DED
 	if ( com_dedicated->modified ) {
@@ -5246,6 +5259,26 @@ void Com_SortFileList( char **list, int nfiles, int fastSort )
 		} while( flag );
 	}
 }
+
+
+#ifdef USE_CVAR_UNCHEAT
+void Com_UncheatModified(char *oldValue, char *newValue, cvar_t *cv) {
+  Com_InitUncheat();
+}
+
+void Com_InitUncheat(void) {
+  int cheatCount = 0;
+  char *cheats = Cmd_TokenizeAlphanumeric(com_uncheat->string, &cheatCount);
+  for(int i = 0; i < ARRAY_LEN(comUncheats); i++) {
+    comUncheats[i] = NULL;
+    if(i >= cheatCount || cheats[0] == '\0') continue;
+    // set userinfo on all the cheated values
+    comUncheats[i] = Cvar_Get(cheats, "", CVAR_USERINFO);
+    cheats = &cheats[strlen(cheats)+1];
+  }
+  com_uncheat->modified = qfalse;
+}
+#endif
 
 
 size_t b64_encoded_size(size_t inlen)

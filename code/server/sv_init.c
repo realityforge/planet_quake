@@ -914,6 +914,12 @@ void SV_InitUserRoles (void) {
 	}
   sv_roles->modified = qfalse;
 }
+
+
+void SV_UserRolesModified(char *oldValue, char *newValue, cvar_t *cv) {
+  SV_InitUserRoles();
+}
+
 #endif
 
 
@@ -932,6 +938,10 @@ void SV_InitBanCheats( void ) {
     cheats = &cheats[strlen(cheats)+1];
   }
   sv_banCheats->modified = qfalse;
+}
+
+void SV_BanCheatsModified(char *oldValue, char *newValue, cvar_t *cv) {
+  SV_InitBanCheats();
 }
 #endif
 
@@ -1041,6 +1051,7 @@ void SV_Init( void )
 		sv_clientRoles[index] = Cvar_Get(va("sv_role%d", index + 1), "", CVAR_ARCHIVE);
 	sv_role[0] = Cvar_Get( "sv_referee", "ban kick restart map", CVAR_ARCHIVE);
 	sv_role[1] = Cvar_Get( "sv_moderator", "kick ban timelimit fraglimit capturelimit shuffle mute map nextmap map_restart", CVAR_ARCHIVE);
+  Cvar_SetModifiedFunc(sv_roles, SV_UserRolesModified);
 	SV_InitUserRoles();
 #endif
 
@@ -1104,6 +1115,7 @@ void SV_Init( void )
 #ifdef USE_CVAR_UNCHEAT
   // TODO: set default to all client values with CVAR_CHEAT
   sv_banCheats = Cvar_Get("sv_banCheats", "", CVAR_ARCHIVE | CVAR_USERINFO);
+  Cvar_SetModifiedFunc(sv_banCheats, SV_BanCheatsModified);
   SV_InitBanCheats();
 #endif
 

@@ -1233,6 +1233,7 @@ typedef enum {
 
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s cvar_t;
+typedef void (*modifiedFunc_t)( char *oldValue, char *newValue, cvar_t *cv );
 
 struct cvar_s {
 	char		*name;
@@ -1241,6 +1242,8 @@ struct cvar_s {
 	char		*latchedString;		// for CVAR_LATCH vars
 	int			flags;
 	qboolean	modified;			// set each time the cvar is changed
+  modifiedFunc_t modifiedFunc;
+  
 	int			modificationCount;	// incremented each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )

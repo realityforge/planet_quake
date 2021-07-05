@@ -632,7 +632,7 @@ static void Cvar_Print( const cvar_t *v ) {
 
 #ifndef DEDICATED
 #ifdef USE_CVAR_UNCHEAT
-extern cvar_t *clUncheats[128];
+extern cvar_t *comUncheats[128];
 #endif
 #endif
 /*
@@ -673,8 +673,8 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 #ifndef DEDICATED
 #ifdef USE_CVAR_UNCHEAT
   if(var->flags & CVAR_CHEAT) {
-    for(int i = 0; i < ARRAY_LEN(clUncheats); i++) {
-      if(clUncheats[i] == var) {
+    for(int i = 0; i < ARRAY_LEN(comUncheats); i++) {
+      if(comUncheats[i] == var) {
         var->flags &= ~CVAR_CHEAT;
         var->flags |= CVAR_USERINFO;
         //var->flags |= CVAR_UNCHEATED;
@@ -684,8 +684,9 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 #endif
 #endif
 
-	if ( var->flags & (CVAR_ROM | CVAR_INIT | CVAR_CHEAT | CVAR_DEVELOPER) && !force )
-	{
+	if ( var->flags & (CVAR_ROM | CVAR_INIT | CVAR_CHEAT | CVAR_DEVELOPER) 
+    && !force && !var->modifiedFunc )
+	{    
 		if (var->flags & CVAR_ROM)
 		{
 			Com_Printf ("%s is read only.\n", var_name);
@@ -738,11 +739,13 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	{
 		if (var->flags & CVAR_LATCH)
 		{
+      char *oldValue = NULL;
 			if (var->latchedString)
 			{
 				if (strcmp(value, var->latchedString) == 0)
 					return var;
-				Z_Free (var->latchedString);
+				//Z_Free (var->latchedString);
+        oldValue = var->latchedString;
 			}
 			else
 			{
@@ -750,11 +753,17 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 					return var;
 			}
 
-			Com_Printf ("%s will be changed upon restarting.\n", var_name);
+      if(!var->modifiedFunc)
+			   Com_Printf ("%s will be changed upon restarting.\n", var_name);
 			var->latchedString = CopyString(value);
 			var->modified = qtrue;
 			var->modificationCount++;
 			cvar_group[ var->group ] = 1;
+      if(var->modifiedFunc) {
+        var->modifiedFunc(oldValue ? oldValue : var->string, var->latchedString, var);
+      }
+      if(oldValue)
+        Z_Free (oldValue);
 			return var;
 		}
 	}
@@ -774,12 +783,17 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 	var->modificationCount++;
 	cvar_group[ var->group ] = 1;
 	
-	Z_Free (var->string);	// free the old value string
+  char *oldValue = var->string;
+  //Z_Free (var->string);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = Q_atof( var->string );
 	var->integer = atoi (var->string);
 
+  if(var->modifiedFunc) {
+    var->modifiedFunc(oldValue, var->string, var);
+  }
+  Z_Free (oldValue);
 	return var;
 }
 
@@ -945,8 +959,8 @@ void Cvar_SetCheatState(void)
 #ifndef DEDICATED
 #ifdef USE_CVAR_UNCHEAT
       qboolean found = qfalse;
-      for(int i = 0; i < ARRAY_LEN(clUncheats); i++) {
-        if(clUncheats[i] == var) {
+      for(int i = 0; i < ARRAY_LEN(comUncheats); i++) {
+        if(comUncheats[i] == var) {
           var->flags &= ~CVAR_CHEAT;
           var->flags |= CVAR_USERINFO;
           //var->flags |= CVAR_UNCHEATED;
@@ -2001,6 +2015,12 @@ void Cvar_SetDescriptionByName( const char *var, const char *var_description )
   cvar_t *cv = Cvar_FindVar(var);
   if(!cv) return;
   Cvar_SetDescription( cv, var_description );
+}
+
+
+void Cvar_SetModifiedFunc(cvar_t *var, modifiedFunc_t modified)
+{
+  var->modifiedFunc = modified;
 }
 
 
