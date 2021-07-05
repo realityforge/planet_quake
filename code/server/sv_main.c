@@ -43,6 +43,7 @@ static int numConnected = 0;
 static byte numScored[128];
 #endif
 
+cvar_t  *sv_gamedir;
 cvar_t	*sv_fps;				// time rate for running non-clients
 cvar_t	*sv_timeout;			// seconds without any message
 cvar_t	*sv_zombietime;			// seconds to sink messages after disconnect
@@ -1918,7 +1919,7 @@ void SV_Frame( int msec ) {
   }
 #endif
 #ifdef USE_MULTIVM_SERVER
-  if ( fs_gamedirvar->modified ) {
+  if ( sv_gamedir->modified ) {
     FS_ConditionalRestart( 0, qfalse, sv.currentWorld );
   }
 #endif

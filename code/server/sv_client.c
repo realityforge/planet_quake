@@ -22,7 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // sv_client.c -- server code for dealing with clients
 
 #include "server.h"
-//#include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
+#if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER)
+#include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
+#endif
 
 #ifdef USE_CURL
 download_t			svDownload;
@@ -441,16 +443,16 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-#ifdef USE_PERSIST_CLIENT
+#if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER)
 /*
 ==================
 SetClientViewAngle
 ==================
 */
-static void SV_SetClientViewAngle( int c, vec3_t angle ) {
+static void SV_SetClientViewAngle( int clientNum, vec3_t angle ) {
 	int	i, cmdAngle;
-	playerState_t *ps = SV_GameClientNum( c );
-	gentity_t *ent = (void *)SV_GentityNum( c ); //->r.s;
+	playerState_t *ps = SV_GameClientNum( clientNum );
+	gentity_t *ent = (void *)SV_GentityNum( clientNum ); //->r.s;
 
 	// set the delta angle
 	for (i = 0 ; i < 3 ; i++) {
@@ -460,8 +462,10 @@ static void SV_SetClientViewAngle( int c, vec3_t angle ) {
 	VectorCopy( angle, ent->s.angles );
 	VectorCopy( ent->s.angles, ps->viewangles );
 }
+#endif
 
 
+#ifdef USE_PERSIST_CLIENT
 void SV_PersistClient( int c ) {
 	client_t *cl = &svs.clients[c];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
@@ -494,9 +498,9 @@ void SV_PersistClient( int c ) {
 }
 
 
-void SV_RestoreClient( int c ) {
+void SV_RestoreClient( int clientNum ) {
 	byte buffer[sizeof(gentity_t) * 2];
-	client_t *cl = &svs.clients[c];
+	client_t *cl = &svs.clients[clientNum];
 	char *cl_guid = Info_ValueForKey(cl->userinfo, "cl_guid");
 	if(!cl_guid[0] || cl->state != CS_ACTIVE) {
 		return;
@@ -513,11 +517,12 @@ void SV_RestoreClient( int c ) {
   
   // don't restore client is certain time has passed
 	if(sv_clSessions->integer != -1 && I_FloatTime() - t > sv_clSessions->integer) {
-    Com_DPrintf("Client %i not restored because session expired after %i seconds\n", c, I_FloatTime() - t);
+    Com_DPrintf("Client %i not restored because session expired after %i seconds\n", 
+      clientNum, I_FloatTime() - t);
     return;
   }
 
-	playerState_t *ps = SV_GameClientNum( c );
+	playerState_t *ps = SV_GameClientNum( clientNum );
 	FS_Read(buffer, sizeof(int), h);
 	memcpy(&size, buffer, sizeof(int));
 	FS_Read(buffer, size, h);
@@ -526,12 +531,12 @@ void SV_RestoreClient( int c ) {
 	} else {
 		//memcpy(ps, buffer, sizeof(playerState_t));
 		memcpy(ps->origin, ((playerState_t*)buffer)->origin, sizeof(vec3_t));
-		SV_SetClientViewAngle(c, ((playerState_t*)buffer)->viewangles);
+		SV_SetClientViewAngle(clientNum, ((playerState_t*)buffer)->viewangles);
 	}
 
 	// weird because the struct lists player state twice or something? In sharedEntity_t and in entityShared_t
 	int restoreOffset = sizeof(entityShared_t) - sizeof(entityState_t) + 4; // 4 for the ptr
-	byte *clientEnt = (void *)SV_GentityNum( c );
+	byte *clientEnt = (void *)SV_GentityNum( clientNum );
 	gentity_t *ent = (void *)&clientEnt[-restoreOffset]; //->r.s;
 
 	FS_Read(buffer, sizeof(int), h);
@@ -2435,7 +2440,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		memcpy(ent->r.currentOrigin, ps->origin, sizeof(vec3_t));
 		memcpy(ent->r.currentAngles, ps->viewangles, sizeof(vec3_t));
 		// keep the same view angles if changing origins
-    SV_SetClientViewAngle(c, ((playerState_t*)ps)->viewangles);
+    SV_SetClientViewAngle(clientNum, ((playerState_t*)ps)->viewangles);
 	}
 
 	// restore player stats

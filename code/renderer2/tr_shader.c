@@ -4498,6 +4498,9 @@ void RE_ReloadShaders( qboolean createNew ) {
     tr.lightmaps = NULL;
     tr.numLightmaps = 0;
   }
+  
+  // TODO: keep separate lists of images in case they have the same name
+  //   but from different gamedir sources
 
   GL_BindNullTextures();
 

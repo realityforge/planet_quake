@@ -4387,7 +4387,8 @@ void CL_StartHunkUsers( void ) {
 		S_BeginRegistration();
 	}
 
-	if ( re.BeginRegistration && !cls.uiStarted ) {
+	if ( re.BeginRegistration && !cls.uiStarted
+    && !Cvar_VariableIntegerValue("skipLoadUI")) {
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
 	}
@@ -4599,6 +4600,7 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_Set = Cvar_Set;
 	rimp.Cvar_SetValue = Cvar_SetValue;
 	rimp.Cvar_CheckRange = Cvar_CheckRange;
+	rimp.Cvar_SetDescription = Cvar_SetDescription;
 	rimp.Cvar_VariableStringBuffer = Cvar_VariableStringBuffer;
 	rimp.Cvar_VariableString = Cvar_VariableString;
 	rimp.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;

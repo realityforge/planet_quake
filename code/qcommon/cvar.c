@@ -1983,21 +1983,24 @@ void Cvar_CheckRange( cvar_t *var, const char *mins, const char *maxs, cvarValid
 Cvar_SetDescription
 =====================
 */
-void Cvar_SetDescription( const char *var, const char *var_description )
+void Cvar_SetDescription( cvar_t *var, const char *var_description )
 {
-  cvar_t *cv = Cvar_FindVar( var );
-  if(!cv) {
-    Com_Error(ERR_FATAL, "Cvar not found: %s\n", var);
-  }
-
 	if( var_description && var_description[0] != '\0' )
 	{
-		if( cv->description != NULL )
+		if( var->description != NULL )
 		{
-			Z_Free( cv->description );
+			Z_Free( var->description );
 		}
-		cv->description = CopyString( var_description );
+		var->description = CopyString( var_description );
 	}
+}
+
+
+void Cvar_SetDescriptionByName( const char *var, const char *var_description )
+{
+  cvar_t *cv = Cvar_FindVar(var);
+  if(!cv) return;
+  Cvar_SetDescription( cv, var_description );
 }
 
 

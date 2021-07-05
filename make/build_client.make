@@ -145,13 +145,13 @@ VIDEO            :=
 #endif
 
 ifeq ($(USE_VIDEO_XVID),1)
-BASE_CFLAGS    += $(XVID_CFLAGS)
-CLIENT_LDFLAGS += $(XVID_LIBS)
+BASE_CFLAGS      += $(XVID_CFLAGS)
+CLIENT_LDFLAGS   += $(XVID_LIBS)
 endif
 
 ifeq ($(USE_VIDEO_THEORA),1)
-BASE_CFLAGS    += $(THEORA_CFLAGS)
-CLIENT_LDFLAGS += $(THEORA_LIBS)
+BASE_CFLAGS      += $(THEORA_CFLAGS)
+CLIENT_LDFLAGS   += $(THEORA_LIBS)
 endif
 
 ifeq ($(USE_RMLUI),1)
@@ -184,7 +184,7 @@ Q3OBJ            += $(MUSL_OBJ)
 endif
 ifneq ($(USE_RENDERER_DLOPEN),1)
 ifneq ($(USE_OPENGL2),1)
-
+Q3OBJ            += $(REND_Q3OBJ)
 else
 ifneq ($(USE_VULKAN),1)
 Q3OBJ            += $(REND_Q3OBJ)

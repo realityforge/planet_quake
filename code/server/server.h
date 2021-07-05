@@ -101,7 +101,8 @@ typedef struct {
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
 #ifdef USE_MULTIVM_SERVER
-  char			*configstrings[MAX_NUM_VMS][MAX_CONFIGSTRINGS];
+  int       currentWorld;
+  char		 *configstrings[MAX_NUM_VMS][MAX_CONFIGSTRINGS];
 #define configstrings configstrings[gvmi]
 	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
 #define svEntities svEntities[gvmi]
@@ -457,6 +458,7 @@ void SV_RecentStatus(recentEvent_t type);
 const char *SV_EscapeStr(const char *str, int len);
 #endif
 
+extern  cvar_t  *sv_gamedir;
 extern	cvar_t	*sv_fps;
 extern	cvar_t	*sv_timeout;
 extern	cvar_t	*sv_zombietime;

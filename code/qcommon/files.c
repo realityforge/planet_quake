@@ -4365,7 +4365,7 @@ Sets fs_gamedir, adds the directory to the head of the path,
 then loads the zip headers
 ================
 */
-static void FS_AddGameDirectory( const char *path, const char *dir ) {
+static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	const searchpath_t *sp;
 	int				len;
 	searchpath_t	*search;
@@ -4402,6 +4402,9 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 	search = Z_TagMalloc( len, TAG_SEARCH_PATH );
 	Com_Memset( search, 0, len );
+#ifdef USE_MULTIFS
+  search->worldPolicy = igvm;
+#endif
 	search->dir = (directory_t*)( search + 1 );
 	search->dir->path = (char*)( search->dir + 1 );
 	search->dir->gamedir = (char*)( search->dir->path + path_len );
@@ -5009,7 +5012,7 @@ void FS_Startup( void ) {
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
 
 #ifdef __WASM__
-	Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
+	//Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
   WASM_ASYNC(FS_Startup_After_Async);
 	int start, end;
 #endif
@@ -5037,32 +5040,32 @@ void FS_Startup( void ) {
 	// add search path elements in reverse priority order
 #ifndef __WASM__
 	if ( fs_steampath->string[0] ) {
-		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string );
+		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string, 0 );
 	}
 #endif
 
 	if ( fs_basepath->string[0] ) {
-		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
+		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string, 0 );
 	}
 
 	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	// NOTE: same filtering below for mods and basegame
 	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) ) {
-		FS_AddGameDirectory( fs_homepath->string, fs_basegame->string );
+		FS_AddGameDirectory( fs_homepath->string, fs_basegame->string, 0 );
 	}
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, fs_basegame->string ) ) {
 #ifndef __WASM__
 		if ( fs_steampath->string[0] ) {
-			FS_AddGameDirectory( fs_steampath->string, fs_gamedirvar->string );
+			FS_AddGameDirectory( fs_steampath->string, fs_gamedirvar->string, 0 );
 		}
 #endif
 		if ( fs_basepath->string[0] ) {
-			FS_AddGameDirectory( fs_basepath->string, fs_gamedirvar->string );
+			FS_AddGameDirectory( fs_basepath->string, fs_gamedirvar->string, 0 );
 		}
 		if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) ) {
-			FS_AddGameDirectory( fs_homepath->string, fs_gamedirvar->string );
+			FS_AddGameDirectory( fs_homepath->string, fs_gamedirvar->string, 0 );
 		}
 	}
 
@@ -5868,9 +5871,10 @@ qboolean FS_ConditionalRestart( int checksumFeed, qboolean clientRestart, int ig
     if(igvm != 0) {
       // add the game directory instead of replacing them, 
       //   because it will filter automatically using world policy
-      FS_AddGameDirectory(fs_basepath->string, fs_gamedirvar->string);
+      FS_AddGameDirectory( fs_basepath->string, fs_gamedirvar->string, igvm );
       fs_gamedirvar->modified = qfalse;
-    } else
+      return qtrue;
+    }
 #endif
 		Com_GameRestart( checksumFeed, clientRestart );
 		return qtrue;

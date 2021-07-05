@@ -775,12 +775,12 @@ void SV_SpawnServer_After_Startup( void ) {
 
 #ifdef USE_MEMORY_MAPS
 	if(mapname[0] == '*') {
-		if(Cvar_VariableString("fs_game")[0] == '\0') {
+		if(sv_gamedir->string[0] == '\0') {
 			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
 			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, Cvar_VariableString("fs_basegame"), &mapname[1]) );
 		} else {
 			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
-			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, Cvar_VariableString("fs_game"), &mapname[1]) );
+			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, sv_gamedir->string, &mapname[1]) );
 		}
 	} else
 #endif
@@ -1066,6 +1066,7 @@ void SV_Init( void )
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
+  sv_gamedir = Cvar_Get("fs_game", "", 0);
 #ifdef USE_MULTIVM_SERVER
 	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_TEMP | CVAR_SYSTEMINFO );
 #else

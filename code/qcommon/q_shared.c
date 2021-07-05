@@ -23,11 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.c -- stateless support routines that are included in each code dll
 #include "q_shared.h"
 
-#if defined(BOTLIB)
-#include "../botlib/botlib.h"
-#include "../botlib/be_interface.h"
-#endif
-
 float Com_Clamp( float min, float max, float value ) {
 	if ( value < min ) {
 		return min;
@@ -2074,7 +2069,7 @@ qboolean Info_SetValueForKey_s( char *s, int slen, const char *key, const char *
 	}
 
 	if ( !key || !Info_ValidateKeyValue( key ) || *key == '\0' ) {
-		Com_Error( ERR_FATAL, S_COLOR_YELLOW "Invalid key name: '%s'\n", key );
+		Com_Printf( S_COLOR_YELLOW "Invalid key name: '%s'\n", key );
 		return qfalse;
 	}
 

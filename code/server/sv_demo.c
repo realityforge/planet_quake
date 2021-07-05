@@ -1279,7 +1279,7 @@ void SV_DemoAutoDemoRecord(void)
                         SV_CleanFilename((char *)tmp) ),
                         MAX_QPATH);
 
-	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(Cvar_VariableString("fs_game")) ?  Cvar_VariableString("fs_game") : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
+	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(sv_gamedir->string) ?  sv_gamedir->string : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
 
 	Cbuf_AddText( va("demo_record %s\n", demoname ) );
 
@@ -1318,7 +1318,7 @@ void SV_DemoStartRecord(void)
 	MSG_WriteLong(&msg, sv_gametype->integer);
 	// Write fs_game (mod name)
 	MSG_WriteString(&msg, "fs_game");
-	MSG_WriteString(&msg, Cvar_VariableString("fs_game"));
+	MSG_WriteString(&msg, sv_gamedir->string);
 	// Write map name
 	MSG_WriteString(&msg, "map");
 	MSG_WriteString(&msg, sv_mapname->string);
@@ -1762,7 +1762,7 @@ void SV_DemoStartPlayback(void)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
 
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
-	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
+	    Q_stricmp(sv_gamedir->string, fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
 	    (time < sv.time && !keepSaved) || // if the demo initial time is below server time AND we didn't already restart for demo playback, then we must restart to reinit the server time (because else, it might happen that the server time is still above demo time if the demo was recorded during a warmup time, in this case we won't restart the demo playback but just iterate a few demo frames in the void to catch up the server time, see below the else statement)
 	    sv_maxclients->modified ||
@@ -1780,12 +1780,12 @@ void SV_DemoStartPlayback(void)
 		Cvar_SetValue("sv_autoDemo", 0); // disable sv_autoDemo else it will start a recording before we can replay a demo (since we restart the map)
 
 		// **** Automatic mod (fs_game) switching management ****
-		if ( ( Q_stricmp(Cvar_VariableString("fs_game"), fs) && strlen(fs) ) ||
-		    (!strlen(fs) && Q_stricmp(Cvar_VariableString("fs_game"), fs) && Q_stricmp(fs, BASEGAME) ) ) { // change the game mod only if necessary - if it's different from the current gamemod and the new is not empty, OR the new is empty but it's not BASEGAME and it's different (we're careful because it will restart the game engine and so probably every client will get disconnected)
+		if ( ( Q_stricmp(sv_gamedir->string, fs) && strlen(fs) ) ||
+		    (!strlen(fs) && Q_stricmp(sv_gamedir->string, fs) && Q_stricmp(fs, BASEGAME) ) ) { // change the game mod only if necessary - if it's different from the current gamemod and the new is not empty, OR the new is empty but it's not BASEGAME and it's different (we're careful because it will restart the game engine and so probably every client will get disconnected)
 
 			// Memorize the current mod (only if we are indeed switching mod, otherwise we will save basegame instead of empty strings and force a mod switching when stopping the demo when we haven't changed mod in the first place!)
-			if (strlen(Cvar_VariableString("fs_game"))) { // if fs_game is not "", we save it
-				Q_strncpyz(savedFsGame, (const char*)Cvar_VariableString("fs_game"), MAX_QPATH);
+			if (strlen(sv_gamedir->string)) { // if fs_game is not "", we save it
+				Q_strncpyz(savedFsGame, (const char*)sv_gamedir->string, MAX_QPATH);
 			} else { // else, it's equal to "", and this means that we were playing in the basegame mod, but we need to have a non-empty string, else we can't use game_restart!
 				Q_strncpyz(savedFsGame, BASEGAME, MAX_QPATH);
 			}

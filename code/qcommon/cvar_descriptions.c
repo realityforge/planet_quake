@@ -2,6 +2,8 @@
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#define Cvar_SetDescription Cvar_SetDescriptionByName
+
 void Cvar_SetUserinfoDescriptions( void ) {
   Cvar_SetDescription( "name", "Player name\nDefault: Commander Keen" );
   Cvar_SetDescription( "rate", "modem speed/rate of data transfer\nDefault: 25000" );

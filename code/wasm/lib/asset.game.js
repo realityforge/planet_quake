@@ -56,7 +56,7 @@ async function loadDefaultDirectories() {
       //if(whitelist.keys().filter(w => f.includes(w)).length === 0) return
       mountPoints.push(path.join(TEMP_DIR, f))
       var baseModFiles = glob.sync('**/*', {cwd: path.join(TEMP_DIR, f)})
-      fs.writeFileSync(path.join(__dirname, '../graphs', f + '-filelist.json'), JSON.stringify(baseModFiles, null, 2))
+      fs.writeFileSync(path.join(__dirname, '../../../games/graphs', f + '-filelist.json'), JSON.stringify(baseModFiles, null, 2))
       var shaders = await graphShaders(path.join(TEMP_DIR, f))
       var scriptShaders = Object.keys(shaders)
         .reduce((obj, k) => {

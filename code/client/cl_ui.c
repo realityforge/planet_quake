@@ -1304,12 +1304,7 @@ void CL_InitUI( qboolean loadNew ) {
 		if ( interpret != VMI_COMPILED && interpret != VMI_BYTECODE )
 			interpret = VMI_COMPILED;
 	}
-	
-#ifdef USE_MULTIVM_CLIENT
-	if(loadNew && uivm != NULL) {
-		uivmi++;
-	}
-#endif
+
 	uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 	if ( !uivm ) {
 		if ( cl_connectedToPureServer && CL_GameSwitch() ) {

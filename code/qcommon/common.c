@@ -155,6 +155,7 @@ int			com_frameTime;
 int			com_frameMsec;
 int			com_frameNumber;
 
+qboolean  com_skipLoadUI = qfalse;
 qboolean	com_errorEntered = qfalse;
 qboolean	com_fullyInitialized = qfalse;
 
@@ -750,6 +751,12 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 			Q_strncpyz( rconPassword2, Cmd_Argv( 2 ), sizeof( rconPassword2 ) );
 			continue;
 		}
+    if( !strcmp(Cmd_Argv(0), "map")
+      || !strcmp(Cmd_Argv(0), "devmap")
+      || !strcmp(Cmd_Argv(0), "spmap")
+      || !strcmp(Cmd_Argv(0), "spdevmap") ) {
+      com_skipLoadUI = qtrue;
+    }
 	}
 
 	return (flags == 3) ? qtrue : qfalse ;
@@ -4097,18 +4104,20 @@ void Com_Init( char *commandLine ) {
 
 	// add + commands from command line
 	if ( !Com_AddStartupCommands() ) {
+#ifndef DEDICATED
 		// if the user didn't give any commands, run default action
 		if ( !com_dedicated->integer ) {
-#ifndef DEDICATED
 			if ( !com_skipIdLogo || !com_skipIdLogo->integer )
 				Cbuf_AddText( "cinematic idlogo.RoQ\n" );
 			if( !com_introPlayed->integer ) {
 				Cvar_Set( com_introPlayed->name, "1" );
 				Cvar_Set( "nextmap", "cinematic intro.RoQ" );
 			}
-#endif
 		}
-	}
+#endif    
+  } else if (com_skipLoadUI) {
+    Cvar_Set("skipLoadUI", "1");
+  }
 
 #ifndef DEDICATED
 	CL_StartHunkUsers();
