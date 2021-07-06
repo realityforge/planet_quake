@@ -16,8 +16,6 @@
 #endif
 
 
-#ifdef __cplusplus
-
 #if (defined _MSC_VER)
 #define Q_EXPORT __declspec(dllexport)
 #elif (defined __SUNPRO_C)
@@ -27,6 +25,9 @@
 #else
 #define Q_EXPORT
 #endif
+
+
+#ifdef __cplusplus
 
 #include "./Core/Core.h"
 #include "./Core/FileInterface.h"

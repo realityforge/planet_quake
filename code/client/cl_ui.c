@@ -1292,6 +1292,9 @@ CL_InitUI
 void CL_InitUI( qboolean loadNew ) {
 	int		v;
 	vmInterpret_t		interpret;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	// disallow vl.collapse for UI elements
 	re.VertexLighting( qfalse );
@@ -1345,6 +1348,9 @@ void CL_InitUI( qboolean loadNew ) {
 
   Cvar_SetKnownDescriptions(VM_UI, uivm->knownVM);
 
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 #ifdef USE_RMLUI
   CL_InitRmlUi();
 #endif

@@ -920,6 +920,5 @@ void SV_AddFilterCmd_f( void );
 //
 // sv_bsp.c
 //
-int SV_MakeMap( void );
-void SV_WriteMemoryMapToClient(client_t *cl, int slot);
+int SV_MakeMap( char *memoryMap );
 #endif

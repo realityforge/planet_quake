@@ -38,40 +38,6 @@ int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
 
-#ifdef USE_MEMORY_MAPS
-void CMod_LoadShaders( lump_t *l );
-void CMod_LoadLeafs( lump_t *l );
-void CMod_LoadLeafBrushes( const lump_t *l );
-void CMod_LoadLeafSurfaces( const lump_t *l );
-void CMod_LoadPlanes( const lump_t *l );
-void CMod_LoadBrushSides( lump_t *l );
-void CMod_LoadBrushes( lump_t *l );
-void CMod_LoadSubmodels( lump_t *l );
-void CMod_LoadNodes( lump_t *l );
-void CMod_LoadEntityString( lump_t *l, const char *name );
-void CMod_LoadVisibility( lump_t *l );
-void CMod_LoadPatches( lump_t *surfs, lump_t *verts );
-extern dmodel_t *dModels;
-extern dshader_t *dShaders;
-extern char *dEntData;
-extern dleaf_t *dLeafs;
-extern dplane_t *dPlanes;
-extern dnode_t *dNodes;
-extern int *dLeafSurfaces;
-extern int *dLeafBrushes;
-extern dbrush_t *dBrushes;
-extern dbrushside_t *dBrushSides;
-extern byte *dLightBytes;
-extern byte *dGridPoints;
-extern byte *dVisBytes;
-extern drawVert_t *dDrawVerts;
-extern int *dDrawIndexes;
-extern dsurface_t   *dDrawSurfaces;
-extern dfog_t *dFogs;
-//bspAdvertisement_t *dAds;
-
-int CM_LoadMapFromMemory( void );
-#endif
 
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );

@@ -34,11 +34,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf
 #undef Com_DPrintf
-#undef PRINT_FLAGS
 #define Com_Printf CL_Printf
 #define Com_DPrintf CL_DPrintf
-#define PC_CLIENT_FLAGS 0
-#define PRINT_FLAGS PC_CLIENT_FLAGS
 #endif
 
 #ifdef USE_CURL

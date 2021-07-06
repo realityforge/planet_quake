@@ -675,8 +675,12 @@ void OnlyEnts( void ){
    BSPMain() - ydnar
    handles creation of a bsp from a map file
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int BSPMain( int argc, char **argv ){
+
+Q_EXPORT int BSPMain( int argc, char **argv ) {
 	int i;
 	char tempSource[ 1024 ];
 	bool onlyents = false;
@@ -1024,3 +1028,7 @@ int BSPMain( int argc, char **argv ){
 	/* return to sender */
 	return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

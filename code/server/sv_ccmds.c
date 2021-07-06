@@ -170,12 +170,6 @@ static void SV_Map_f( void ) {
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
-#ifdef USE_MEMORY_MAPS
-	if(map[0] == '*') {
-		map[7] = '0' + gvm;
-		len = 1;
-	} else
-#endif
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
 	FS_RestorePure();
 	if(len == -1) {

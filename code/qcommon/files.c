@@ -4982,14 +4982,16 @@ FS_Startup
 ================
 */
 #ifndef __WASM__
-static void FS_Startup( void ) {
-	const char *homePath;
-	int start, end;
-#else
-void FS_Startup( void ) {
-	const char *homePath;
+static 
 #endif
-;
+void FS_Startup( void ) {
+  const char *homePath;
+#ifndef __WASM__
+	int start, end;
+#endif
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	Com_DPrintf( "----- FS_Startup -----\n" );
 
@@ -5148,6 +5150,9 @@ void FS_Startup( void ) {
 #ifdef USE_PK3_CACHE_FILE
 	FS_SaveCache();
 #endif
+#endif
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
 #endif
 }
 

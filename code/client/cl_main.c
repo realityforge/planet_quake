@@ -3139,9 +3139,6 @@ void CL_NextDownload( void )
 				CL_BeginDownload( localName, remoteName );
 			}
 		}
-#ifdef USE_MEMORY_MAPS
-		if(clc.downloadName[0] != '*')
-#endif
 		clc.downloadRestart = qtrue;
 
 		// move over the rest
@@ -4309,8 +4306,14 @@ CL_InitRenderer
 ============
 */
 static void CL_InitRenderer( void ) {
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
@@ -4478,6 +4481,9 @@ static void CL_InitRef( void ) {
 	char			dllName[ MAX_OSPATH ];
 #endif
 #endif
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	CL_InitGLimp_Cvars();
 
@@ -4580,9 +4586,6 @@ static void CL_InitRef( void ) {
 #ifdef USE_LAZY_LOAD
 	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
 #endif
-#ifdef USE_MEMORY_MAPS
-	rimp.FS_SV_FOpenFileRead = FS_SV_FOpenFileRead;
-#endif
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;
@@ -4656,6 +4659,9 @@ static void CL_InitRef( void ) {
 	}
 
 	re = *ret;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 
 	// unpause so the cgame definitely gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
@@ -5285,6 +5291,9 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
@@ -5516,6 +5525,9 @@ void CL_Init( void ) {
 	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nUsage: modelist");
 
 	CL_InitRef();
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 #ifdef __WASM__
   ASYNC_WASM(CL_Init_After_InitRef);
 #endif
@@ -5560,7 +5572,11 @@ void CL_Init( void ) {
 
   Cvar_SetClientDescriptions();
 
-	Com_Printf( "----- Client Initialization Complete -----\n" );
+  Com_Printf( "----- Client Initialization Complete -----\n" );
+
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 #ifdef __WASM__
   Com_Init_After_CL_Init();
 #endif

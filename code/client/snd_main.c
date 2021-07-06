@@ -262,7 +262,13 @@ S_BeginRegistration
 void S_BeginRegistration( void )
 {
 	if( si.BeginRegistration ) {
+#ifdef USE_PRINT_CONSOLE
+    Com_PrintFlags(PC_INIT);
+#endif
 		si.BeginRegistration();
+#ifdef USE_PRINT_CONSOLE
+    Com_PrintClear();
+#endif
 	}
 }
 
@@ -407,10 +413,6 @@ static void S_StopMusic_f( void )
 
 
 //=============================================================================
-#ifdef USE_PRINT_CONSOLE
-#undef PRINT_FLAGS
-#define PRINT_FLAGS PC_INIT
-#endif
 
 /*
 =================
@@ -421,6 +423,9 @@ void S_Init( void )
 {
 	cvar_t		*cv;
 	qboolean	started = qfalse;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	Com_Printf( "------ Initializing Sound ------\n" );
 
@@ -480,12 +485,10 @@ void S_Init( void )
 	}
 
 	Com_Printf( "--------------------------------\n");
-}
-
 #ifdef USE_PRINT_CONSOLE
-#undef PRINT_FLAGS
-#define PRINT_FLAGS PC_COMMON_FLAGS
+  Com_PrintClear();
 #endif
+}
 
 
 /*

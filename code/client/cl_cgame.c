@@ -1176,6 +1176,9 @@ void CL_InitCGame( int inVM ) {
 	const char			*mapname;
 	vmInterpret_t		interpret;
 	unsigned result;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 #ifdef USE_MULTIVM_CLIENT
 //  int prev = cgvmi; // must use this pattern here because of compiler template
   if(inVM == -1) {
@@ -1276,6 +1279,9 @@ void CL_InitCGame( int inVM ) {
 //  cgvmi = prev; // set to previous in case this was called from a GameCommand()
 //  re.SwitchWorld(cgvmi);
 //#endif
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 }
 
 

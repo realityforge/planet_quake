@@ -49,6 +49,23 @@
 
    ------------------------------------------------------------------------------- */
 
+#if (defined _MSC_VER)
+#define Q_EXPORT __declspec(dllexport)
+#elif (defined __SUNPRO_C)
+#define Q_EXPORT __global
+#elif ((__GNUC__ >= 3) && (!__EMX__) && (!sun))
+#define Q_EXPORT __attribute__((visibility("default")))
+#else
+#define Q_EXPORT __attribute__((visibility("default")))
+#endif
+
+#ifdef _WIN32
+#define QDECL __cdecl
+#else
+#define QDECL
+#endif
+
+
 /* platform-specific */
 #if defined( __linux__ ) || defined( __APPLE__ )
 	#define Q_UNIX
@@ -1513,6 +1530,7 @@ struct surfaceInfo_t
 	int firstSurfaceCluster, numSurfaceClusters;
 };
 
+
 /* -------------------------------------------------------------------------------
 
    prototypes
@@ -1532,9 +1550,16 @@ game_t                      *GetGame( char *arg );
 void                        InitPaths( int *argc, char **argv );
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* bsp.c */
 int                         BSPMain( int argc, char **argv );
 
+#ifdef __cplusplus
+}
+#endif
 
 /* minimap.c */
 int                         MiniMapBSPMain( int argc, char **argv );

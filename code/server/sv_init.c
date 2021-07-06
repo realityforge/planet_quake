@@ -633,16 +633,6 @@ void SV_SpawnServer_After_Startup( void ) {
 ;
 
 	Sys_SetStatus( "Loading map %s", mapname );
-#ifdef USE_MEMORY_MAPS
-	if(mapname[0] == '*') {
-		checksum = 0;
-#ifdef USE_MULTIVM_SERVER
-		gameWorlds[gvmi] = SV_MakeMap();
-#else
-    gameWorlds[0] = SV_MakeMap();
-#endif
-	} else
-#endif
 #ifdef USE_MULTIVM_SERVER
 	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 #else
@@ -773,25 +763,9 @@ void SV_SpawnServer_After_Startup( void ) {
 		p = FS_ReferencedPakNames();
 	}
 
-#ifdef USE_MEMORY_MAPS
-	if(mapname[0] == '*') {
-		if(sv_gamedir->string[0] == '\0') {
-			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
-			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, Cvar_VariableString("fs_basegame"), &mapname[1]) );
-		} else {
-			Cvar_Set( "sv_referencedPakNames", va("%s %s", p, mapname) );
-			//Cvar_Set( "sv_referencedPakNames", va("%s %s/%s", p, sv_gamedir->string, &mapname[1]) );
-		}
-	} else
-#endif
 	Cvar_Set( "sv_referencedPakNames", p );
 
 	p = FS_ReferencedPakChecksums();
-#ifdef USE_MEMORY_MAPS
-	if(mapname[0] == '*') {
-		Cvar_Set( "sv_referencedPaks", va("%s 0", p) );
-	} else
-#endif
 	Cvar_Set( "sv_referencedPaks", p );
 
 	Cvar_Set( "sv_paks", "" );

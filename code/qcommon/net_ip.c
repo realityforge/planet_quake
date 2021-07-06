@@ -1959,6 +1959,9 @@ void NET_Init( void ) {
 	winsockInitialized = qtrue;
 	Com_DPrintf( "Winsock Initialized\n" );
 #endif
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	NET_Config( qtrue );
 	
@@ -1966,6 +1969,9 @@ void NET_Init( void ) {
   
 	Cmd_AddCommand( "net_restart", NET_Restart_f );
   Cmd_SetDescription( "net_restart", "Reset all the network related variables like rate\nUsage: net_restart");
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 }
 
 #ifdef USE_PRINT_CONSOLE

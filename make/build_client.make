@@ -91,8 +91,8 @@ CURL             :=
 ifeq ($(USE_CURL),1)
 #CURL     += cl_curl.o
 ifneq ($(USE_CURL_DLOPEN),1)
-CLIENT_LDFLAGS   += $(CURL_LIBS)
 BASE_CFLAGS      += $(CURL_CFLAGS)
+CLIENT_LDFLAGS   += $(CURL_LIBS)
 endif
 endif
 
@@ -152,6 +152,10 @@ endif
 ifeq ($(USE_VIDEO_THEORA),1)
 BASE_CFLAGS      += $(THEORA_CFLAGS)
 CLIENT_LDFLAGS   += $(THEORA_LIBS)
+endif
+
+ifeq ($(USE_MEMORY_MAPS),1)
+CLIENT_LDFLAGS   += $(B)/$(Q3MAP2_PREFIX)_q3map2_$(SHLIBNAME)
 endif
 
 ifeq ($(USE_RMLUI),1)

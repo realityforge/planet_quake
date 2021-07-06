@@ -1,5 +1,5 @@
 MKFILE        := $(lastword $(MAKEFILE_LIST)) 
-WORKDIR       := rmlui
+RMLUI_WORKDIR := rmlui
 RMLUIDIR      := libs/RmlUI/Source
 
 BUILD_RMLUI   := 1
@@ -11,57 +11,58 @@ CPPSOURCES    := $(RMLUIDIR) \
                  $(RMLUIDIR)/Core/Elements \
                  $(RMLUIDIR)/Core/FontEngineDefault
 INCLUDES      := 
-LIBS          := $(FREETYPE_LIBS)
-
-CPPFILES      := $(foreach dir,$(CPPSOURCES), $(wildcard $(dir)/*.cpp))
-OBJS          := $(CPPFILES:.cpp=.o)
-Q3OBJ         := $(addprefix $(B)/$(WORKDIR)/,$(notdir $(OBJS)))
+RMLUI_LIBS    := $(FREETYPE_LIBS)
+RMLUI_FILES   := $(foreach dir,$(CPPSOURCES), $(wildcard $(dir)/*.cpp))
+RMLUI_OBJS    := $(RMLUI_FILES:.cpp=.o)
+RMLUI_Q3OBJ   := $(addprefix $(B)/$(RMLUI_WORKDIR)/,$(notdir $(RMLUI_OBJS)))
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
-CFLAGS        := $(INCLUDE) \
+RMLUI_CFLAGS  := $(INCLUDE) \
                  -DRMLUI_NO_THIRDPARTY_CONTAINERS \
                  -DBUILD_FREETYPE $(FREETYPE_CFLAGS) \
                  -DRmlCore_EXPORTS \
                  -isysroot $(SYSROOT) -MMD \
                  -DRMLUI_NO_THIRDPARTY_CONTAINERS
-CXXFLAGS      := $(CFLAGS) -std=c++14
+RMLUI_CXXFLAGS := $(RMLUI_CFLAGS) -std=c++14
 
 define DO_RMLUI_CXX
   $(echo_cmd) "RMLUI_CXX $<"
-  $(Q)$(CXX) $(SHLIBCFLAGS) $(CXXFLAGS) -o $@ -c $<
+  $(Q)$(CXX) $(SHLIBCFLAGS) $(RMLUI_CXXFLAGS) -o $@ -c $<
 endef
 
 debug:
 	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) RMLUI_WORKDIRS=$(RMLUI_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(CFLAGS) $(DEBUG_CFLAGS)" LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(RMLUI_CFLAGS) $(DEBUG_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)
 
 release:
 	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BR) WORKDIRS=$(RMLUI_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) pre-build
-	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
+	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(RMLUI_CFLAGS) $(RELEASE_CFLAGS)" \
+		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
+	@rm -rf $(BD)/$(RMLUI_WORKDIR) $(BD)/$(TARGET)
+	@rm -rf $(BR)/$(RMLUI_WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
-$(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/%.cpp
+$(B)/$(RMLUI_WORKDIR)/%.o: $(RMLUIDIR)/%.cpp
 	$(DO_RMLUI_CXX)
 
-$(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/Core/%.cpp
+$(B)/$(RMLUI_WORKDIR)/%.o: $(RMLUIDIR)/Core/%.cpp
 	$(DO_RMLUI_CXX)
 
-$(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/Core/Elements/%.cpp
+$(B)/$(RMLUI_WORKDIR)/%.o: $(RMLUIDIR)/Core/Elements/%.cpp
 	$(DO_RMLUI_CXX)
 
-$(B)/$(WORKDIR)/%.o: $(RMLUIDIR)/Core/FontEngineDefault/%.cpp
+$(B)/$(RMLUI_WORKDIR)/%.o: $(RMLUIDIR)/Core/FontEngineDefault/%.cpp
 	$(DO_RMLUI_CXX)
 
-$(B)/$(TARGET): $(Q3OBJ) 
+$(B)/$(TARGET): $(RMLUI_Q3OBJ) 
 	$(echo_cmd) "LD $@"
-	$(Q)$(CXX) -o $@ $(Q3OBJ) $(LIBS) $(SHLIBLDFLAGS)
+	$(Q)$(CXX) -o $@ $(RMLUI_Q3OBJ) $(RMLUI_LIBS) $(SHLIBLDFLAGS)
 endif

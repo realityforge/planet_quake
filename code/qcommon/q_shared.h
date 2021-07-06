@@ -94,147 +94,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 
-
-#ifdef USE_PRINT_CONSOLE
-// these define where the print message is coming from for broad filtering with
-//   cl_developer, sv_developer, com_developer, bot_developer, r_developer,
-//   s_developer, cg_developer, net_developer, ui_developer, g_developer
-// these are used in code to mark different sections, the variables below are
-// used in cvar configurations to filter out different sections
-#define PC_DEVELOPER      0x1
-#define PC_CLIENT         0x20
-#define PC_SERVER         0x30
-#define PC_COMMON         0x40
-#define PC_BOTLIB         0x50
-#define PC_RENDER         0x60
-#define PC_CGAME          0x70
-#define PC_UI             0x80
-#define PC_GAME           0x90
-#define PC_NET            0xA0
-#define PC_SOUND          0xB0
-#define PC_FILES          0xC0
-#define PC_INIT           0x400000
-#define PC_USER           0x80000000
-
-// this is the default mode, it shows console messages naturally
-#define PC_OFF            0x0
-// this is a special case, it shows only the messages you might expect an
-//   average player to understand, it is replaced with a combination of
-//   PC_NO_* and PC_* and also specific cases in the code, most like
-//   PC_USER_ONLY at the bottom of the list
-#define PC_RELEASE       -0x1
-// another special case, PC_DEVELOPER is most like `set developer 1`
-//   because of the other PC_NO_* and PC_* settings it is replaced with
-//   PC_DEVELOPER_ORIG at the bottom to simulate original developer mode
-//   there are also special cases inline using com_developer->integer
-#define PC_DEVELOPER      0x1
-// the first half of these will proactively silence specific messages from 
-//   specific components
-
-// disable specific console messages
-#define PC_NO_CLIENT      0x2000
-#define PC_NO_SERVER      0x3000
-#define PC_NO_COMMON      0x4000
-#define PC_NO_BOTLIB      0x5000
-#define PC_NO_REND        0x6000
-#define PC_NO_CGAME       0x7000
-#define PC_NO_UI          0x8000
-#define PC_NO_GAME        0x9000
-#define PC_NO_NET         0xA000
-#define PC_NO_SOUND       0xB000
-#define PC_NO_FILES       0xC000
-
-
-// now it gets a bit more specific, with allowing certain messages through
-//   but not others
-// turn off all engine init messages including VMs
-#define PC_NO_INIT        0x400000
-// this would be a good place to add more
-
-
-// the second half of these will allow specific messages from specific 
-//   components or specific combinations
-// disable all q3 console messages
-#define PC_QUIET          0x800000 | 0xFF000 | PC_NO_Q3LOG | PC_NO_CONSOLE
-// this is a flag for disabling all q3history output
-#define PC_NO_Q3LOG       0x4000000
-// this is a flag to disabling all console output
-#define PC_NO_CONSOLE     0x8000000
-// limit q3history to the same as selected messages
-#define PC_Q3LOG          0x10000000
-// limit console to the same as selected output
-#define PC_CONSOLE        0x20000000
-// print all selected messages for video markering
-#define PC_MARKERS        0x40000000
-// print developer
-#define PC_DEVELOPER_ORIG PC_Q3LOG | PC_CONSOLE
-#define PC_SHOW_USER_ONLY 0x80000000 | PC_Q3LOG | PC_NO_INIT
-
-
-
-// these are a few compiler templates to make including easy
-//#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
-//#define DPRINTF(flags, format, ...) Com_ 
-#ifdef _MSC_VER
-#define PC_Printf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, __VA_ARGS__) 
-#define PC_DPrintf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS, fmt, __VA_ARGS__) 
-#define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
-#define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
-#define SV_Printf(fmt, ...) PC_Printf(PC_SERVER, fmt, __VA_ARGS__)
-#define SV_DPrintf(fmt, ...) PC_DPrintf(PC_SERVER, fmt, __VA_ARGS__)
-#define COM_Printf(fmt, ...) PC_Printf(PC_COMMON, fmt, __VA_ARGS__)
-#define COM_DPrintf(fmt, ...) PC_DPrintf(PC_COMMON, fmt, __VA_ARGS__)
-#define Bot_Printf(fmt, ...) PC_Printf(PC_BOTLIB, fmt, __VA_ARGS__)
-#define Bot_DPrintf(fmt, ...) PC_DPrintf(PC_BOTLIB, fmt, __VA_ARGS__)
-#define R_Printf(fmt, ...) PC_Printf(PC_RENDER, fmt, __VA_ARGS__)
-#define R_DPrintf(fmt, ...) PC_DPrintf(PC_RENDER, fmt, __VA_ARGS__)
-#define CG_Printf(fmt, ...) PC_Printf(PC_CGAME, fmt, __VA_ARGS__)
-#define CG_DPrintf(fmt, ...) PC_DPrintf(PC_CGAME, fmt, __VA_ARGS__)
-#define UI_Printf(fmt, ...) PC_Printf(PC_UI, fmt, __VA_ARGS__)
-#define UI_DPrintf(fmt, ...) PC_DPrintf(PC_UI, fmt, __VA_ARGS__)
-#define G_Printf(fmt, ...) PC_Printf(PC_GAME, fmt, __VA_ARGS__)
-#define G_DPrintf(fmt, ...) PC_DPrintf(PC_GAME, fmt, __VA_ARGS__)
-#define Net_Printf(fmt, ...) PC_Printf(PC_NET, fmt, __VA_ARGS__)
-#define Net_DPrintf(fmt, ...) PC_DPrintf(PC_NET, fmt, __VA_ARGS__)
-#define S_Printf(fmt, ...) PC_Printf(PC_SOUND, fmt, __VA_ARGS__)
-#define S_DPrintf(fmt, ...) PC_DPrintf(PC_SOUND, fmt, __VA_ARGS__)
-#define FS_Com_Printf(fmt, ...) PC_Printf(PC_FILES, fmt, __VA_ARGS__)
-#define FS_Com_DPrintf(fmt, ...) PC_DPrintf(PC_FILES, fmt, __VA_ARGS__)
-#else
-#define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS, fmt, ##args) 
-#define PC_DPrintf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS, fmt, ##args) 
-#define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
-#define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
-#define SV_Printf(fmt, args...) PC_Printf(PC_SERVER, fmt, ##args)
-#define SV_DPrintf(fmt, args...) PC_DPrintf(PC_SERVER, fmt, ##args)
-#define COM_Printf(fmt, args...) PC_Printf(PC_COMMON, fmt, ##args)
-#define COM_DPrintf(fmt, args...) PC_DPrintf(PC_COMMON, fmt, ##args)
-#define Bot_Printf(fmt, args...) PC_Printf(PC_BOTLIB, fmt, ##args)
-#define Bot_DPrintf(fmt, args...) PC_DPrintf(PC_BOTLIB, fmt, ##args)
-#define R_Printf(fmt, args...) PC_Printf(PC_RENDER, fmt, ##args)
-#define R_DPrintf(fmt, args...) PC_DPrintf(PC_RENDER, fmt, ##args)
-#define CG_Printf(fmt, args...) PC_Printf(PC_CGAME, fmt, ##args)
-#define CG_DPrintf(fmt, args...) PC_DPrintf(PC_CGAME, fmt, ##args)
-#define UI_Printf(fmt, args...) PC_Printf(PC_UI, fmt, ##args)
-#define UI_DPrintf(fmt, args...) PC_DPrintf(PC_UI, fmt, ##args)
-#define G_Printf(fmt, args...) PC_Printf(PC_GAME, fmt, ##args)
-#define G_DPrintf(fmt, args...) PC_DPrintf(PC_GAME, fmt, ##args)
-#define Net_Printf(fmt, args...) PC_Printf(PC_NET, fmt, ##args)
-#define Net_DPrintf(fmt, args...) PC_DPrintf(PC_NET, fmt, ##args)
-#define S_Printf(fmt, args...) PC_Printf(PC_SOUND, fmt, ##args)
-#define S_DPrintf(fmt, args...) PC_DPrintf(PC_SOUND, fmt, ##args)
-#define FS_Com_Printf(fmt, args...) PC_Printf(PC_FILES, fmt, ##args)
-#define FS_Com_DPrintf(fmt, args...) PC_DPrintf(PC_FILES, fmt, ##args)
-#endif
-#undef Com_Printf
-#undef Com_DPrintf
-#define Com_Printf COM_Printf
-#define Com_DPrintf COM_DPrintf
-#define PC_COMMON_FLAGS 0
-#define PRINT_FLAGS PC_COMMON_FLAGS
-#endif
-
-
 #ifdef USE_SERVER_ROLES
 #define MAX_CLIENT_ROLES 24
 #endif
@@ -447,6 +306,152 @@ float FloatSwap( const float *f );
 		#define Q_vsnprintf vsnprintf
 	#endif
 #endif
+
+
+#ifdef USE_PRINT_CONSOLE
+// these define where the print message is coming from for broad filtering with
+//   cl_developer, sv_developer, com_developer, bot_developer, r_developer,
+//   s_developer, cg_developer, net_developer, ui_developer, g_developer
+// these are used in code to mark different sections, the variables below are
+// used in cvar configurations to filter out different sections
+#define PC_DEVELOPER      0x1
+#define PC_CLIENT         0x20
+#define PC_SERVER         0x30
+#define PC_COMMON         0x40
+#define PC_BOTLIB         0x50
+#define PC_RENDER         0x60
+#define PC_CGAME          0x70
+#define PC_UI             0x80
+#define PC_GAME           0x90
+#define PC_NET            0xA0
+#define PC_SOUND          0xB0
+#define PC_FILES          0xC0
+#define PC_INIT           0x400000
+#define PC_USER           0x80000000
+
+// this is the default mode, it shows console messages naturally
+#define PC_OFF            0x0
+// this is a special case, it shows only the messages you might expect an
+//   average player to understand, it is replaced with a combination of
+//   PC_NO_* and PC_* and also specific cases in the code, most like
+//   PC_USER_ONLY at the bottom of the list
+#define PC_RELEASE       -0x1
+// another special case, PC_DEVELOPER is most like `set developer 1`
+//   because of the other PC_NO_* and PC_* settings it is replaced with
+//   PC_DEVELOPER_ORIG at the bottom to simulate original developer mode
+//   there are also special cases inline using com_developer->integer
+#define PC_DEVELOPER      0x1
+// the first half of these will proactively silence specific messages from 
+//   specific components
+
+// disable specific console messages
+#define PC_NO_CLIENT      0x2000
+#define PC_NO_SERVER      0x3000
+#define PC_NO_COMMON      0x4000
+#define PC_NO_BOTLIB      0x5000
+#define PC_NO_REND        0x6000
+#define PC_NO_CGAME       0x7000
+#define PC_NO_UI          0x8000
+#define PC_NO_GAME        0x9000
+#define PC_NO_NET         0xA000
+#define PC_NO_SOUND       0xB000
+#define PC_NO_FILES       0xC000
+
+
+// now it gets a bit more specific, with allowing certain messages through
+//   but not others
+#define PC_SHOW_SOURCE    0x200000
+// turn off all engine init messages including VMs
+#define PC_NO_INIT        0x400000
+// this would be a good place to add more
+
+
+// the second half of these will allow specific messages from specific 
+//   components or specific combinations
+// disable all q3 console messages
+#define PC_QUIET          0x800000 | 0xFF000 | PC_NO_Q3LOG | PC_NO_CONSOLE
+// this is a flag for disabling all q3history output
+#define PC_NO_Q3LOG       0x4000000
+// this is a flag to disabling all console output
+#define PC_NO_CONSOLE     0x8000000
+// limit q3history to the same as selected messages
+#define PC_Q3LOG          0x10000000
+// limit console to the same as selected output
+#define PC_CONSOLE        0x20000000
+// print all selected messages for video markering
+#define PC_MARKERS        0x40000000
+// print developer
+#define PC_DEVELOPER_ORIG PC_Q3LOG | PC_CONSOLE
+#define PC_SHOW_USER_ONLY PC_USER | PC_Q3LOG | PC_NO_INIT | PC_SHOW_SOURCE
+
+
+
+// these are a few compiler templates to make including easy
+//#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
+//#define DPRINTF(flags, format, ...) Com_ 
+extern uint32_t com_printFlags;
+void Com_PrintFlags(uint32_t flags);
+void Com_PrintClear(void);
+#ifdef _MSC_VER
+#define PC_Printf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS | com_printFlags, fmt, __VA_ARGS__) 
+#define PC_DPrintf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS | com_printFlags, fmt, __VA_ARGS__) 
+#define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
+#define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
+#define SV_Printf(fmt, ...) PC_Printf(PC_SERVER, fmt, __VA_ARGS__)
+#define SV_DPrintf(fmt, ...) PC_DPrintf(PC_SERVER, fmt, __VA_ARGS__)
+#define COM_Printf(fmt, ...) PC_Printf(PC_COMMON, fmt, __VA_ARGS__)
+#define COM_DPrintf(fmt, ...) PC_DPrintf(PC_COMMON, fmt, __VA_ARGS__)
+#define Bot_Printf(fmt, ...) PC_Printf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define Bot_DPrintf(fmt, ...) PC_DPrintf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define R_Printf(fmt, ...) PC_Printf(PC_RENDER, fmt, __VA_ARGS__)
+#define R_DPrintf(fmt, ...) PC_DPrintf(PC_RENDER, fmt, __VA_ARGS__)
+#define CG_Printf(fmt, ...) PC_Printf(PC_CGAME, fmt, __VA_ARGS__)
+#define CG_DPrintf(fmt, ...) PC_DPrintf(PC_CGAME, fmt, __VA_ARGS__)
+#define UI_Printf(fmt, ...) PC_Printf(PC_UI, fmt, __VA_ARGS__)
+#define UI_DPrintf(fmt, ...) PC_DPrintf(PC_UI, fmt, __VA_ARGS__)
+#define G_Printf(fmt, ...) PC_Printf(PC_GAME, fmt, __VA_ARGS__)
+#define G_DPrintf(fmt, ...) PC_DPrintf(PC_GAME, fmt, __VA_ARGS__)
+#define Net_Printf(fmt, ...) PC_Printf(PC_NET, fmt, __VA_ARGS__)
+#define Net_DPrintf(fmt, ...) PC_DPrintf(PC_NET, fmt, __VA_ARGS__)
+#define S_Printf(fmt, ...) PC_Printf(PC_SOUND, fmt, __VA_ARGS__)
+#define S_DPrintf(fmt, ...) PC_DPrintf(PC_SOUND, fmt, __VA_ARGS__)
+#define FS_Com_Printf(fmt, ...) PC_Printf(PC_FILES, fmt, __VA_ARGS__)
+#define FS_Com_DPrintf(fmt, ...) PC_DPrintf(PC_FILES, fmt, __VA_ARGS__)
+#else
+#define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS | com_printFlags, fmt, ##args) 
+#define PC_DPrintf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS | com_printFlags, fmt, ##args) 
+#define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
+#define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
+#define SV_Printf(fmt, args...) PC_Printf(PC_SERVER, fmt, ##args)
+#define SV_DPrintf(fmt, args...) PC_DPrintf(PC_SERVER, fmt, ##args)
+#define COM_Printf(fmt, args...) PC_Printf(PC_COMMON, fmt, ##args)
+#define COM_DPrintf(fmt, args...) PC_DPrintf(PC_COMMON, fmt, ##args)
+#define Bot_Printf(fmt, args...) PC_Printf(PC_BOTLIB, fmt, ##args)
+#define Bot_DPrintf(fmt, args...) PC_DPrintf(PC_BOTLIB, fmt, ##args)
+#define R_Printf(fmt, args...) PC_Printf(PC_RENDER, fmt, ##args)
+#define R_DPrintf(fmt, args...) PC_DPrintf(PC_RENDER, fmt, ##args)
+#define CG_Printf(fmt, args...) PC_Printf(PC_CGAME, fmt, ##args)
+#define CG_DPrintf(fmt, args...) PC_DPrintf(PC_CGAME, fmt, ##args)
+#define UI_Printf(fmt, args...) PC_Printf(PC_UI, fmt, ##args)
+#define UI_DPrintf(fmt, args...) PC_DPrintf(PC_UI, fmt, ##args)
+#define G_Printf(fmt, args...) PC_Printf(PC_GAME, fmt, ##args)
+#define G_DPrintf(fmt, args...) PC_DPrintf(PC_GAME, fmt, ##args)
+#define Net_Printf(fmt, args...) PC_Printf(PC_NET, fmt, ##args)
+#define Net_DPrintf(fmt, args...) PC_DPrintf(PC_NET, fmt, ##args)
+#define S_Printf(fmt, args...) PC_Printf(PC_SOUND, fmt, ##args)
+#define S_DPrintf(fmt, args...) PC_DPrintf(PC_SOUND, fmt, ##args)
+#define FS_Com_Printf(fmt, args...) PC_Printf(PC_FILES, fmt, ##args)
+#define FS_Com_DPrintf(fmt, args...) PC_DPrintf(PC_FILES, fmt, ##args)
+#endif
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf COM_Printf
+#define Com_DPrintf COM_DPrintf
+#define PC_COMMON_FLAGS 0
+#define PRINT_FLAGS PC_COMMON_FLAGS
+#endif
+
+
 
 typedef unsigned char byte;
 

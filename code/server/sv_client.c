@@ -1442,13 +1442,6 @@ static void SV_CloseDownload( client_t *cl ) {
 	}
 
 	*cl->downloadName = '\0';
-#ifdef USE_MEMORY_MAPS
-	// clear these hear so the algorithm knows when to start build blocks again
-	cl->downloadXmitBlock =
-	cl->downloadClientBlock =
-	cl->downloadCurrentBlock =
-	cl->downloadCount = 0;
-#endif
 
 	// Free the temporary buffer space
 	for (i = 0; i < MAX_DOWNLOAD_WINDOW; i++) {
@@ -1674,13 +1667,6 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	}
 
 	// Perform any reads that we need to
-#ifdef USE_MEMORY_MAPS
-	const char *name;
-	if(cl->downloadName[0] == '*') {
-		SV_WriteMemoryMapToClient(cl, atoi(&cl->downloadName[6]));
-	} else if ((name = Q_stristr(cl->downloadName, "/memory"))) {
-		SV_WriteMemoryMapToClient(cl, atoi(&cl->downloadName[6]));
-	} else
 	while (cl->downloadCurrentBlock - cl->downloadClientBlock < MAX_DOWNLOAD_WINDOW &&
 		cl->downloadSize != cl->downloadCount) {
 
@@ -1702,8 +1688,6 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 		// Load in next block
 		cl->downloadCurrentBlock++;
 	}
-#endif
-
 
 	// Check to see if we have eof condition and add the EOF block
 	if (cl->downloadCount == cl->downloadSize &&

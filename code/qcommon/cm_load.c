@@ -24,29 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cm_local.h"
 #include "cm_public.h"
 
-#ifdef USE_MEMORY_MAPS
-dmodel_t *dModels = NULL;
-dshader_t *dShaders = NULL;
-char *dEntData = NULL;
-dleaf_t *dLeafs = NULL;
-dplane_t *dPlanes = NULL;
-dnode_t *dNodes = NULL;
-int *dLeafSurfaces = NULL;
-int *dLeafBrushes = NULL;
-dbrush_t *dBrushes = NULL;
-dbrushside_t *dBrushSides = NULL;
-byte *dLightBytes = NULL;
-byte *dGridPoints = NULL;
-byte *dVisBytes = NULL;
-drawVert_t *dDrawVerts = NULL;
-int *dDrawIndexes = NULL;
-dsurface_t   *dDrawSurfaces = NULL;
-dfog_t *dFogs = NULL;
-
-//int numBSPAds = 0;
-//dAdvertisement_t *dAds;
-#endif
-
 
 #ifdef BSPC
 
@@ -129,11 +106,6 @@ void CMod_LoadShaders( lump_t *l ) {
 	dshader_t	*in, *out;
 	int			i, count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dShaders;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if (l->filelen % sizeof(*in)) {
 		Com_Error (ERR_DROP, "%s: funny lump size", __func__ );
@@ -167,11 +139,6 @@ void CMod_LoadSubmodels( lump_t *l ) {
 	int			i, j, count;
 	int			*indexes;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dModels;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -230,11 +197,6 @@ void CMod_LoadNodes( lump_t *l ) {
 	cNode_t	*out;
 	int		i, j, count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dNodes;
-	} else
-#endif
   in = (dnode_t *)(cmod_base + l->fileofs);
 	if (l->filelen % sizeof(*in))
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -289,11 +251,6 @@ void CMod_LoadBrushes( lump_t *l ) {
 	cbrush_t	*out;
 	int			i, count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dBrushes;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -333,11 +290,6 @@ void CMod_LoadLeafs( lump_t *l )
 	dleaf_t 	*in;
 	int			count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dLeafs;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -383,11 +335,6 @@ void CMod_LoadPlanes( const lump_t *l )
 	int			count;
 	int			bits;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dPlanes;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -430,11 +377,6 @@ void CMod_LoadLeafBrushes( const lump_t *l )
 	int *in;
 	int count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dLeafBrushes;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -464,11 +406,6 @@ void CMod_LoadLeafSurfaces( const lump_t *l )
 	int *in;
 	int count;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dLeafSurfaces;
-	} else
-#endif
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -517,11 +454,6 @@ void CMod_LoadBrushSides (lump_t *l)
 	int				count;
 	int				num;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dBrushSides;
-	} else
-#endif
   in = (dbrushside_t *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) ) {
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -577,11 +509,6 @@ void CMod_LoadEntityString( lump_t *l, const char *name ) {
 	}
 	cm.entityString = Hunk_Alloc( l->filelen, h_high );
 	cm.numEntityChars = l->filelen;
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		memcpy( cm.entityString, dEntData, l->filelen );
-	} else
-#endif
 	memcpy( cm.entityString, cmod_base + l->fileofs, l->filelen );
 
 	if(cm_saveEnts && cm_saveEnts->integer && l->fileofs != 0) {
@@ -610,11 +537,6 @@ void CMod_LoadVisibility( lump_t *l ) {
 		return;
 	}
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		buf = dVisBytes;
-	} else
-#endif
 	buf = cmod_base + l->fileofs;
 
 	cm.vised = qtrue;
@@ -644,11 +566,6 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 	int			width, height;
 	int			shaderNum;
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		in = (void *)dDrawSurfaces;
-	} else
-#endif
 	in = (void *)(cmod_base + surfs->fileofs);
 	if (surfs->filelen % sizeof(*in))
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -656,11 +573,6 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 	cm.numSurfaces = count = surfs->filelen / sizeof(*in);
 	cm.surfaces = Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
 
-#ifdef USE_MEMORY_MAPS
-	if(cmod_base == 0) {
-		dv = (void *)dDrawVerts;
-	} else
-#endif
 	dv = (void *)(cmod_base + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))
 		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
@@ -810,44 +722,6 @@ cmdsAdded = qtrue;
 }
 
 
-#ifdef USE_MEMORY_MAPS
-// TODO: remove this, just write it to disk for simplicity and focus on dynamic zips
-int CM_LoadMapFromMemory( void ) {
-
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-	int				i, empty = -1;
-	for(i = 0; i < MAX_NUM_MAPS; i++) {
-		if (cmWorlds[i].name[0] == '\0') {
-			// fill the next empty clipmap slot
-			empty = i;
-			break;
-		}
-	}
-	cmi = empty;
-	Com_DPrintf( "CM_LoadMap( %s, %i )\n", va("*memory%i", cmi), qfalse );
-#else
-	if ( cm.name[0] != '\0' ) {
-		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", "memory*", qfalse );
-	}
-#endif
-
-	// free old stuff
-	Com_Memset( &cm, 0, sizeof( cm ) );
-	CM_ClearLevelPatches();
-
-	cmod_base = (void *)NULL;
-
-	// return the empty slot to be filled
-#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-	Q_strncpyz( cm.name, va("*memory%i", cmi), sizeof( cmWorlds[cmi].name ) );
-  return cmi;
-#else
-  Q_strncpyz( cm.name, "*memory", sizeof( cm.name ) );
-  return 0;
-#endif
-}
-#endif
-
 
 /*
 ==================
@@ -910,21 +784,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	//
 	// load the file
 	//
-#ifdef USE_MEMORY_MAPS
-	if(name[5] == '*') {
-		fileHandle_t h;
-		length = FS_SV_FOpenFileRead( &name[5], &h );
-		Com_Printf("Using memory map %i, %s\n", length, &name[5]);
-		if(length > -1) {
-			buf.v = Hunk_AllocateTempMemory( length + 1 );
-			FS_Read( buf.v, length, h );
-			FS_FCloseFile(h);
-		} else {
-			buf.i = 0;
-		}
-	}
-	else
-#endif
 #ifndef BSPC
 	length = FS_ReadFile( name, &buf.v );
 #else

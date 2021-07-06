@@ -226,6 +226,16 @@ A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 =============
 */
 #ifdef USE_PRINT_CONSOLE
+uint32_t com_printFlags;
+void Com_PrintFlags(uint32_t flags)
+{
+  com_printFlags |= flags;
+}
+void Com_PrintClear(void)
+{
+  com_printFlags = 0;
+}
+
 void QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... )
 #else
 void QDECL Com_Printf( const char *fmt, ... )
@@ -234,10 +244,11 @@ void QDECL Com_Printf( const char *fmt, ... )
 	static qboolean opening_qconsole = qfalse;
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
+  const char *msgStr;
 	int			len;
 
 	va_start( argptr, fmt );
-	len = Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
+  len = Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
 
   // TODO: unify this buffer with q3 console and tty and q3history
@@ -255,6 +266,7 @@ void QDECL Com_Printf( const char *fmt, ... )
 		return;
 	}
 
+  msgStr = &msg[0];
 #ifdef USE_PRINT_CONSOLE
   qboolean skipped = qfalse;
   /*
@@ -270,7 +282,36 @@ void QDECL Com_Printf( const char *fmt, ... )
   #define PC_NO_SOUND       0xB000
   #define PC_NO_FILES       0xC000
   */
-  
+
+  if(com_developer && com_developer->integer & PC_SHOW_SOURCE)
+  {
+    if((source & 0xFF0) == PC_CLIENT)
+    msgStr = va( "%s: %s", "CLIENT", msg );
+    else if ((source & 0xFF0) == PC_SOUND)
+    msgStr = va( "%s: %s", "SOUND", msg );
+    else if ((source & 0xFF0) == PC_RENDER)
+    msgStr = va( "%s: %s", "RENDER", msg );
+    else if ((source & 0xFF0) == PC_SERVER)
+    msgStr = va( "%s: %s", "SERVER", msg );
+    else if ((source & 0xFF0) == PC_CGAME)
+    msgStr = va( "%s: %s", "CGAME", msg );
+    else if ((source & 0xFF0) == PC_UI)
+    msgStr = va( "%s: %s", "UI", msg );
+    else if ((source & 0xFF0) == PC_BOTLIB)
+    msgStr = va( "%s: %s", "BOTLIB", msg );
+    else if ((source & 0xFF0) == PC_GAME)
+    msgStr = va( "%s: %s", "GAME", msg );
+    else if ((source & 0xFF0) == PC_NET)
+    msgStr = va( "%s: %s", "NET", msg );
+    else if ((source & 0xFF0) == PC_COMMON)
+    msgStr = va( "%s: %s", "COMMON", msg );
+    else if ((source & 0xFF0) == PC_FILES)
+    msgStr = va( "%s: %s", "FILES", msg );
+    
+    if (flags & PC_INIT)
+    msgStr = va( "%s-%s", "INIT", msgStr );
+    len = strlen(msgStr) + 1;
+  }
   if((qfalse)
     || ((source & 0xFF0) == PC_CLIENT
     && (com_developer && com_developer->integer & PC_NO_CLIENT))
@@ -294,6 +335,8 @@ void QDECL Com_Printf( const char *fmt, ... )
     && (com_developer && com_developer->integer & PC_NO_COMMON))
     || ((source & 0xFF0) == PC_FILES
     && (com_developer && com_developer->integer & PC_NO_FILES))
+    || ((flags & PC_INIT)
+    && (com_developer && com_developer->integer & PC_NO_INIT))
   ) {
     skipped = qtrue;
     goto skipconsole;
@@ -305,7 +348,7 @@ void QDECL Com_Printf( const char *fmt, ... )
 #ifndef DEDICATED
 	// echo to client console if we're not a dedicated server
 	if ( com_dedicated && !com_dedicated->integer ) {
-		CL_ConsolePrint( msg );
+		CL_ConsolePrint( msgStr );
 	}
 #endif
 #endif
@@ -321,7 +364,7 @@ skipconsole:
 #endif
 
 	// echo to dedicated console and early console
-	Sys_Print( msg );
+	Sys_Print( msgStr );
 
 #ifdef USE_PRINT_CONSOLE
 skip_system:
@@ -369,12 +412,12 @@ skip_system:
 			{
 				Com_Printf( "Opening qconsole.log failed!\n" );
 				Cvar_Set( "logfile", "0" );
-			}
+      }
 
 			opening_qconsole = qfalse;
 		}
 		if ( logfile != FS_INVALID_HANDLE && FS_Initialized() ) {
-			FS_Write( msg, len, logfile );
+			FS_Write( msgStr, len, logfile );
 		}
 	}
 }
@@ -3846,6 +3889,9 @@ Com_Init
 void Com_Init( char *commandLine ) {
 	const char *s;
 	int	qport;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	Com_Printf( "%s %s %s\n", SVN_VERSION, PLATFORM_STRING, __DATE__ );
 
@@ -3941,6 +3987,9 @@ void Com_Init( char *commandLine ) {
 	Com_InitKeyCommands();
 
 	FS_InitFilesystem();
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 #ifdef __WASM__
 	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
@@ -4003,8 +4052,37 @@ void Com_Init( char *commandLine ) {
 
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE_ND );
 
+#ifdef USE_PERSIST_CONSOLE
+  com_logfile = Cvar_Get( "logfile", "4", CVAR_TEMP );
+  char previousLog[1024];
+  int prevLine = 0;
+  fileHandle_t prevLogFile = FS_INVALID_HANDLE;
+  int logLen = FS_FOpenFileRead( "qconsole.log", &prevLogFile, qtrue );
+  if ( prevLogFile != FS_INVALID_HANDLE )
+  {
+    int r;
+    char *line;
+    do {
+      r = FS_Read( &previousLog[prevLine], sizeof(previousLog) - prevLine, prevLogFile );
+      line = &previousLog[0];
+      for(int i = 0; i < r; i++) {
+        if(previousLog[i] == '\n') {
+          //previousLog[i] = '\0';
+          CL_ConsolePrint(line);
+          line = &previousLog[i+2];
+        }
+      }
+      if(line - previousLog > 0) {
+        
+      }
+    } while(r);
+    CL_ConsolePrint(S_COLOR_STRIP "\n");
+    FS_FCloseFile(prevLogFile);
+  }
+#else
 	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
-	Cvar_CheckRange( com_logfile, "0", "4", CV_INTEGER );
+#endif
+  Cvar_CheckRange( com_logfile, "0", "4", CV_INTEGER );
 
 	com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( com_timescale, "0", NULL, CV_FLOAT );
@@ -4153,6 +4231,10 @@ void Com_Init( char *commandLine ) {
   
   Cvar_SetCommonDescriptions();
 	Com_Printf( "--- Common Initialization Complete ---\n" );
+
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 #ifdef __WASM__
   // init again because first time it triggers the async websocket
 	NET_Init( );
