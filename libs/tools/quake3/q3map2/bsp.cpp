@@ -680,7 +680,7 @@ extern "C" {
 #endif
 
 
-Q_EXPORT int BSPMain( int argc, char **argv ) {
+int BSPMain( int argc, char **argv ) {
 	int i;
 	char tempSource[ 1024 ];
 	bool onlyents = false;

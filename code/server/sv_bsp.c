@@ -1380,7 +1380,13 @@ static int SV_MakeShutesAndLadders() {
 }
 
 
-extern int BSPMain( int argc, char **argv );
+static int SV_MakeMonacoF1() {
+  return 0;
+}
+
+
+extern int Q3MAP2Main( int argc, char **argv );
+
 int SV_MakeMap( char *memoryMap ) {
 	int length = 0;
 
@@ -1390,6 +1396,8 @@ int SV_MakeMap( char *memoryMap ) {
 		length = SV_MakeHypercube();
 	} else if (Q_stristr(memoryMap, "megashutes")) {
 		length = SV_MakeShutesAndLadders();
+	} else if (Q_stristr(memoryMap, "megaf1")) {
+		length = SV_MakeMonacoF1();
 	} else {
     return 0;
   }
@@ -1404,17 +1412,19 @@ int SV_MakeMap( char *memoryMap ) {
     Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
   char *compileMap[] = {
     "q3map2",
-    "-bsp",
+//    "-bsp",
     "-meta",
     "-patchmeta",
     "-v",
     "-fs_basepath",
     (char *)Cvar_VariableString("fs_basepath"),
     "-game",
-    "baseq3",
+    "quake3",
     mapPath
   };
-	BSPMain(sizeof(compileMap), compileMap);
+  Cvar_Set( "buildingMap", memoryMap );
+	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
+
 	return length;
 }
 

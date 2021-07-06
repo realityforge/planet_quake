@@ -614,14 +614,10 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 #ifdef __WASM__
 	Cvar_Set("sv_running", "0");
 	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
-}
-
-void SV_SpawnServer_After_Shutdown( void ) {
+  WASM_ASYNC(SV_SpawnServer_After_Shutdown);
 	FS_Startup();
 	Com_Frame_Callback(Sys_FS_Startup, SV_SpawnServer_After_Startup);
-}
-
-void SV_SpawnServer_After_Startup( void ) {
+  WASM_ASYNC(SV_SpawnServer_After_Startup);
 	int			i;
 	int			checksum;
 	qboolean	isBot;

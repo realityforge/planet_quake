@@ -52,13 +52,20 @@ static void ExitQ3Map( void ){
 }
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
    main()
    q3map mojo...
  */
-
-int main( int argc, char **argv ){
+#ifdef LINKABLE
+Q_EXPORT int Q3MAP2Main( int argc, char **argv )
+#else
+int main( int argc, char **argv )
+#endif
+{
 	int i, r;
 	double start, end;
 
@@ -274,3 +281,7 @@ int main( int argc, char **argv ){
 	/* return any error code */
 	return r;
 }
+
+#ifdef __cplusplus
+}
+#endif

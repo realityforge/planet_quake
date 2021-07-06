@@ -170,6 +170,10 @@ static void SV_Map_f( void ) {
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
+#ifdef USE_MEMORY_MAPS
+  // TODO: make this asynchronous where the console and server waits for it to compile
+  SV_MakeMap(map); // make the BSP and then it will load normally
+#endif
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
 	FS_RestorePure();
 	if(len == -1) {
