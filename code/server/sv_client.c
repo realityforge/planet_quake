@@ -1563,8 +1563,7 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 	if (!*cl->downloadName)
 		return 0;	// Nothing being downloaded
 
-	if ( cl->download == FS_INVALID_HANDLE
-	 	&& cl->downloadName[0] != '*') {
+	if ( cl->download == FS_INVALID_HANDLE) {
 		qboolean idPack = qfalse;
 		qboolean missionPack = qfalse;
  		// Chop off filename extension.

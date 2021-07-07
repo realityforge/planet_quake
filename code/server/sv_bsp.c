@@ -759,7 +759,7 @@ static int SV_MakeHypercube( void ) {
 
 // TODO
 static int SV_MakeMaze( void ) {
-	// TODO: create a 4D maze, actually just 4 colored mazes stacked, 
+	// create a 4D maze, actually just 4 colored mazes stacked, 
 	//   maybe add some nice windows that look like the skybox before impossibly going around the corridor
 	// something about recursive division seems beautiful relevent to square brushes
 	//   https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_division_method
@@ -1381,6 +1381,7 @@ static int SV_MakeShutesAndLadders() {
 
 
 static int SV_MakeMonacoF1() {
+  
   return 0;
 }
 
@@ -1389,6 +1390,9 @@ extern int Q3MAP2Main( int argc, char **argv );
 
 int SV_MakeMap( char *memoryMap ) {
 	int length = 0;
+
+  if(FS_FileExists(va("maps/%s.map", memoryMap)))
+    return 1;
 
 	if(Q_stristr(memoryMap, "megamaze")) {
 		length = SV_MakeMaze();
@@ -1412,7 +1416,7 @@ int SV_MakeMap( char *memoryMap ) {
     Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
   char *compileMap[] = {
     "q3map2",
-//    "-bsp",
+//  "-bsp",
     "-meta",
     "-patchmeta",
     "-v",
