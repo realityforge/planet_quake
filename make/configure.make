@@ -49,6 +49,7 @@ GL_EXT_direct_state_access ?=1
 GL_ARB_ES2_compatibility ?=1
 GL_GLEXT_PROTOTYPES ?= 1
 
+USE_SYSTEM_ZLIB     ?= 0
 USE_SYSTEM_LIBC     ?= 1
 USE_SYSTEM_CURL     ?= 0
 USE_SYSTEM_JPEG     ?= 0
@@ -206,6 +207,10 @@ ifeq ($(BUILD_GAME_STATIC),1)
   BASE_CFLAGS += -DBUILD_GAME_STATIC
 endif
 
+ifeq ($(USE_ASYNCHRONOUS),1)
+  BASE_CFLAGS += -DUSE_ASYNCHRONOUS
+endif
+
 ifeq ($(USE_MEMORY_MAPS),1)
   BASE_CFLAGS += -DUSE_MEMORY_MAPS
 endif
@@ -224,6 +229,18 @@ endif
 
 ifeq ($(USE_SYSTEM_JPEG),1)
   BASE_CFLAGS += -DUSE_SYSTEM_JPEG
+endif
+
+ifeq ($(USE_DYNAMIC_ZIP),1)
+  BASE_CFLAGS += -DUSE_DYNAMIC_ZIP
+endif
+
+ifeq ($(USE_DEMO_CLIENTS),1)
+  BASE_CFLAGS += -DUSE_DEMO_CLIENTS
+endif
+
+ifeq ($(USE_DEMO_SERVER),1)
+  BASE_CFLAGS += -DUSE_DEMO_CLIENTS
 endif
 
 ifndef RENDERER_PREFIX

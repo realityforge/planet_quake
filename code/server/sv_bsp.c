@@ -1390,9 +1390,12 @@ extern int Q3MAP2Main( int argc, char **argv );
 
 int SV_MakeMap( char *memoryMap ) {
 	int length = 0;
+  fileHandle_t mapfile;
 
-  if(FS_FileExists(va("maps/%s.map", memoryMap)))
-    return 1;
+  if((length = FS_FOpenFileRead( va("maps/%s.map", memoryMap), &mapfile, qtrue )) > -1) {
+    FS_FCloseFile(mapfile);
+    return length;
+  }
 
 	if(Q_stristr(memoryMap, "megamaze")) {
 		length = SV_MakeMaze();
@@ -1405,8 +1408,10 @@ int SV_MakeMap( char *memoryMap ) {
 	} else {
     return 0;
   }
+  
+  // TODO: overwrite if make-time is greater than 1 min?
 
-	fileHandle_t mapfile = FS_FOpenFileWrite( va("maps/%s.map", memoryMap) );
+	mapfile = FS_FOpenFileWrite( va("maps/%s.map", memoryMap) );
 	FS_Write( output, length, mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 

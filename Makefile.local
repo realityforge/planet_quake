@@ -3,6 +3,7 @@ BUILD_STANDALONE       = 1
 BUILD_FREETYPE         = 0
 BUILD_GAME_STATIC      = 0
 
+USE_SYSTEM_ZLIB       ?= 0
 USE_SYSTEM_LIBC       ?= 1
 USE_SYSTEM_RMLUI       = 0
 USE_SYSTEM_JPEG       ?= 1
@@ -19,6 +20,10 @@ USE_VIDEO_THEORA       = 1
 USE_VIDEO_XVID         = 1
 USE_CIN_VPX            = 0
 
+USE_ASYNCHRONOUS       = 1
+USE_DEMO_SERVER        = 0
+USE_DEMO_CLIENTS       = 0
+USE_DYNAMIC_ZIP        = 1
 USE_MEMORY_MAPS        = 1
 USE_PERSIST_CONSOLE    = 1
 USE_NO_CONSOLE         = 0

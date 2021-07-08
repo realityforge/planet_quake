@@ -91,6 +91,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_NO_CONSOLE 1
 // persist console messages between games and also between launches
 #define USE_PERSIST_CONSOLE 1
+// dynamically build zip files to transer to clients using lazyLoading
+#define USE_DYNAMIC_ZIP 1
+// 
 #endif
 
 
@@ -127,6 +130,24 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   switching level like normal, I think another engine mod/ioq3? did this
 #define USE_LAZY_MEMORY
 //#define USE_LAZY_LOAD
+#endif
+
+#ifdef USE_ASYNCHRONOUS
+#define ASYNCP(x, y) \
+Sys_QueEvent(Sys_Milliseconds(), SE_ASYNCP, y, 0, sizeof(intptr_t), &x); \
+return; \
+x##_After_Async: \
+
+#define ASYNC(x) \
+Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
+return; \
+x##_After_Async: \
+
+#define ASYNCR(x) \
+if(Com_PreviousEventPtr() == &x) { \
+  goto x##_After_Async; \
+} \
+
 #endif
 
 #ifdef __WASM__

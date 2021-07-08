@@ -1597,6 +1597,13 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 					}
 				}
 			}
+      else {
+#ifdef USE_DYNAMIC_ZIP
+        if(FS_FileExists(cl->downloadName)) {
+          unreferenced = 0;
+        }
+#endif
+      }
 		}
 
 		cl->download = FS_INVALID_HANDLE;

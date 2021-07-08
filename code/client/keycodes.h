@@ -237,8 +237,6 @@ typedef enum {
 
 	// Pseudo-key that brings the console down
 	K_CONSOLE,
-  // Pseudo-key that reads files and pk3s dragged into the window for playing
-  K_DROPFILE,
 
 	MAX_KEYS
 } keyNum_t;

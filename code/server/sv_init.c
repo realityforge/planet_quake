@@ -611,22 +611,9 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
   Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
 
-#ifdef __WASM__
-	Cvar_Set("sv_running", "0");
-	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
-  WASM_ASYNC(SV_SpawnServer_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, SV_SpawnServer_After_Startup);
-  WASM_ASYNC(SV_SpawnServer_After_Startup);
-	int			i;
-	int			checksum;
-	qboolean	isBot;
-	const char	*p;
-	const char *mapname = Cvar_VariableString("mapname");
-	FS_Restart_After_Async();
-	Cvar_Set("sv_running", "1");
+#ifdef USE_ASYNCHRONOUS
+  // TODO: something more graceful than restarting filesystem above
 #endif
-;
 
 	Sys_SetStatus( "Loading map %s", mapname );
 #ifdef USE_MULTIVM_SERVER

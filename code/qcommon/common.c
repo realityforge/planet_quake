@@ -3075,6 +3075,14 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 #endif
 
 
+#ifdef USE_ASYNCHRONOUS
+void *Com_PreviousEventPtr( void )
+{
+  return eventQue[ ( eventTail-1 ) & MASK_QUED_EVENTS ].evPtr;
+}
+#endif
+
+
 /*
 =================
 Com_EventLoop
@@ -3130,19 +3138,18 @@ int Com_EventLoop( void ) {
 			CL_KeyEvent( ev.evValue, qfalse, ev.evTime, ev.evValue2 );
 			break;
 #endif
-		case SE_KEY:
 #ifdef USE_DRAGDROP
-      if(ev.evValue == K_DROPFILE) {
-        if(ev.evValue2 == qfalse) {
-          CL_DropComplete();
-        } else if (ev.evPtrLength == 0) {
-          CL_DropStart();
-        } else {
-          CL_DropFile(ev.evPtr, ev.evPtrLength);
-        }
-        break;
-      }
+    case SE_DROPBEGIN:
+      CL_DropStart();
+      break;
+    case SE_DROPCOMPLETE
+      CL_DropComplete();
+      break;
+    case SE_DROPFILE:
+      CL_DropFile(ev.evPtr, ev.evPtrLength);
+      break;
 #endif
+		case SE_KEY:
 			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime, 0 );
 			break;
 		case SE_CHAR:
@@ -3892,6 +3899,9 @@ void Com_Init( char *commandLine ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
+#ifdef USE_ASYNCHRONOUS
+  ASYNCR(Com_Init);
+#endif
 
 	Com_Printf( "%s %s %s\n", SVN_VERSION, PLATFORM_STRING, __DATE__ );
 
@@ -3987,21 +3997,12 @@ void Com_Init( char *commandLine ) {
 	Com_InitKeyCommands();
 
 	FS_InitFilesystem();
+#ifdef USE_ASYNCHRONOUS
+  ASYNC(Com_Init);
+#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
-
-#ifdef __WASM__
-	Com_Frame_Callback(Sys_FS_Startup, Com_Init_After_Filesystem);
-  WASM_ASYNC(Com_Init_After_Filesystem);
-	const char	*s;
-	int	qport;
-	// TODO: starting to see a pattern, split up every function in the tree to make asynchronous
-	//   Then call the leafs from the top function in the same order
-	FS_Startup_After_Async();
-	FS_Restart_After_Async();
-#endif
-;
 
 	Com_InitJournaling();
 
@@ -4057,7 +4058,7 @@ void Com_Init( char *commandLine ) {
   char previousLog[1024];
   int prevLine = 0;
   fileHandle_t prevLogFile = FS_INVALID_HANDLE;
-  int logLen = FS_FOpenFileRead( "qconsole.log", &prevLogFile, qtrue );
+  /* int logLen = */ FS_FOpenFileRead( "qconsole.log", &prevLogFile, qtrue );
   if ( prevLogFile != FS_INVALID_HANDLE )
   {
     int r;
@@ -4174,9 +4175,6 @@ void Com_Init( char *commandLine ) {
   AddClipMapCommands();
 	VM_Init();
 	SV_Init();
-#ifdef __WASM__
-  WASM_ASYNC(Com_Init_After_SV_Init);
-#endif
 
 	com_dedicated->modified = qfalse;
 
@@ -4185,12 +4183,6 @@ void Com_Init( char *commandLine ) {
 		CL_Init();
 		// Sys_ShowConsole( com_viewlog->integer, qfalse ); // moved down
 	}
-#ifdef __WASM__
-  else {
-    Com_Init_After_CL_Init();
-  }
-  WASM_ASYNC(Com_Init_After_CL_Init);
-#endif
 #endif
 
 	// add + commands from command line

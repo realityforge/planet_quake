@@ -1201,6 +1201,9 @@ void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 
 int			Com_EventLoop( void );
+#ifdef USE_ASYNCHRONOUS
+void *Com_PreviousEventPtr( void );
+#endif
 int			Com_Milliseconds( void );	// will be journaled properly
 
 // MD4 functions
@@ -1519,6 +1522,16 @@ typedef enum {
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
 	SE_MAX,
+#ifdef USE_DRAGDROP
+  SE_DROPBEGIN,
+  SE_DROPCOMPLETE,
+  SE_DROPFILE,
+  SE_DROPTEXT,
+#endif
+#ifdef USE_ASYNCHRONOUS
+  SE_ASYNC,
+  SE_ASYNCP,
+#endif
 } sysEventType_t;
 
 typedef struct {
@@ -1561,6 +1574,11 @@ int64_t	Sys_Microseconds( void );
 void	Sys_SnapVector( float *vector );
 
 qboolean Sys_RandomBytes( byte *string, int len );
+
+#ifdef USE_ASYNCHRONOUS
+void Sys_Download(char *downloadName);
+void Sys_Offline( void );
+#endif
 
 // the system console is shown when a dedicated server is running
 void	Sys_DisplaySystemConsole( qboolean show );

@@ -7,6 +7,8 @@
  *
  *****************************************************************************/
 
+#ifndef USE_SYSTEM_ZLIB
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "unzip.h"
@@ -4348,3 +4350,4 @@ void  zcfree (voidp opaque, voidp ptr)
     Z_Free(ptr);
     if (opaque) return; /* make compiler happy */
 }
+#endif

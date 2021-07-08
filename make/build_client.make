@@ -44,8 +44,11 @@ CLIPMAP          := cm_load.o cm_patch.o cm_polylib.o cm_test.o cm_trace.o
 
 QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
                     md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
-                    huffman_static.o q_math.o q_shared.o unzip.o puff.o \
+                    huffman_static.o q_math.o q_shared.o puff.o \
 										cvar_descriptions.o
+ifeq ($(USE_SYSTEM_ZLIB),0)
+QCOMMON          += unzip.o
+endif
 
 # couple extra server files needed for cvars and botlib for reading files
 ifeq ($(BUILD_SLIM_CLIENT),1)
@@ -171,7 +174,7 @@ ifneq ($(USE_BOTLIB_DLOPEN),1)
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/be_*.c)) \
                     $(foreach dir,$(SOURCES), $(wildcard $(dir)/l_*.c))
 endif
-#CFILES   += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
+#CFILES           += $(filter-out $(wildcard $(MOUNT_DIR)/server/sv_demo*.c),$(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c)))
 CFILES           += $(foreach dir,$(SOURCES), $(wildcard $(dir)/sv_*.c))
 else
 CFILES           += $(MOUNT_DIR)/botlib/be_interface.c \

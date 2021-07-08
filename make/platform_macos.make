@@ -39,16 +39,24 @@ endif
 ifeq ($(USE_CIN_VPX),1)
 BASE_CFLAGS    += -Ilibs/libvpx-1.10
 CLIENT_LDFLAGS += $(VPX_LIBS) $(VORBIS_LIBS) $(OPUS_LIBS)
-ifeq ($(USE_SYSTEM_VPX),1)
-else
+ifeq ($(USE_SYSTEM_VPX),0)
 CLIENT_LDFLAGS += $(B)/libwebm_$(SHLIBNAME)
 endif
 endif
+
+ifeq ($(USE_SYSTEM_ZLIB),1)
+  BASE_CFLAGS    += -Ilibs/zlib/contrib/minizip -DUSE_SYSTEM_ZLIB
+  CLIENT_LDFLAGS += $(ZLIB_LIBS)
+else
+#  CLIENT_LDFLAGS += $(B)/libz_$(SHLIBNAME)
+endif
+
 
 BASE_CFLAGS      += -I/usr/include -I/usr/local/include -isysroot $(SYSROOT)
 DEBUG_CFLAGS      = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
 RELEASE_CFLAGS    = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 USE_SDL           = 1
+
 
 ifdef B
 pre-build:

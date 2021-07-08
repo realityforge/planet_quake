@@ -37,7 +37,6 @@ BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \
 										-Wno-bitwise-op-parentheses \
 										-Wno-shift-op-parentheses \
-										-Wno-unused-variable \
                     -DGL_GLEXT_PROTOTYPES=1 -DGL_ARB_ES2_compatibility=1\
                     -DGL_EXT_direct_state_access=1 \
                     -DUSE_Q3KEY -DUSE_MD5 \

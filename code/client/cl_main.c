@@ -3099,34 +3099,6 @@ void CL_NextDownload( void )
 				cl_allowDownload->integer);
 		}
 #endif /* USE_CURL */
-
-#ifdef __WASM__
-// TODO: add check for HTTP only using strcmp
-		if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)) {
-			if(clc.sv_allowDownload & DLF_NO_REDIRECT) {
-				Com_Printf("WARNING: server does not "
-					"allow download redirection "
-					"(sv_allowDownload is %d)\n",
-					clc.sv_allowDownload);
-			}
-			else {
-				if(!*clc.sv_dlURL) {
-					Com_Printf("WARNING: server allows "
-						"download redirection, but does not "
-						"have sv_dlURL set\n");
-				}
-				Cvar_Set( "sv_dlURL", clc.sv_dlURL );
-				CL_em_BeginDownload( localName, remoteName );
-				useCURL = qtrue;
-			}
-		}
-		else if(!(clc.sv_allowDownload & DLF_NO_REDIRECT)) {
-			Com_Printf("WARNING: server allows download "
-				"redirection, but it disabled by client "
-				"configuration (cl_allowDownload is %d)\n",
-				cl_allowDownload->integer);
-		}
-#endif /* __WASM__ */
 		if( !useCURL ) {
 			if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
@@ -3136,7 +3108,11 @@ void CL_NextDownload( void )
 				return;	
 			}
 			else {
+#ifdef __WASM__
+        CL_em_BeginDownload( localName, remoteName );
+#else
 				CL_BeginDownload( localName, remoteName );
+#endif
 			}
 		}
 		clc.downloadRestart = qtrue;
@@ -3149,6 +3125,15 @@ void CL_NextDownload( void )
 
 	CL_DownloadsComplete();
 }
+
+
+#ifdef USE_ASYNCHRONOUS
+void CL_AppendDownload(char *downloadName)
+{
+  int len = strlen(clc.downloadList);
+  strcpy(&clc.downloadList[len], va(len > 1 ? " %s" : "%s", downloadName));
+}
+#endif
 
 
 /*

@@ -31,7 +31,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include "qcommon.h"
+#ifdef USE_SYSTEM_ZLIB
+#include <unzip.h>
+#else
 #include "unzip.h"
+#endif
 
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf
@@ -414,15 +418,12 @@ void Com_ReadCDKey( const char *filename );
 
 static qboolean FS_IsExt( const char *filename, const char *ext, size_t namelen );
 static int FS_GetModList( char *listbuf, int bufsize );
-#ifndef __WASM__
 #ifndef STANDALONE
 static void FS_CheckIdPaks( void );
-#endif
 #endif
 void FS_Reload( void );
 
 #ifdef USE_LAZY_LOAD
-#ifndef __WASM__
 char *modelCallback[1024*5]; // MAX_MOD_KNOWN
 int modelCallbacki = 0;
 char *soundCallback[1024*5]; // 
@@ -503,7 +504,6 @@ void Sys_FileReady(const char *filename) {
 			shaderCallback[shaderCallbacki] = FS_CopyString(loading);
 	}
 }
-#endif
 #endif
 
 
@@ -1746,9 +1746,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 						// found it!
 #ifdef USE_LAZY_LOAD
-#ifndef __WASM__
 						Sys_FileReady(filename);
-#endif
 #endif
 						return pakFile->size; 
 					}
@@ -1762,9 +1760,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 					length = FS_FileLength( temp );
 					fclose( temp );
 #ifdef USE_LAZY_LOAD
-#ifndef __WASM__
 					Sys_FileReady(netpath);
-#endif
 #endif
 					return length;
 				}
@@ -1808,9 +1804,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
 					// found it!
 #ifdef USE_LAZY_LOAD
-#ifndef __WASM__
 					Sys_FileReady(filename);
-#endif
 #endif
 					return FS_OpenFileInPak( file, pak, pakFile, uniqueFILE );
 				}
@@ -1827,9 +1821,7 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 				continue;
 			}
 #ifdef USE_LAZY_LOAD
-#ifndef __WASM__
 			Sys_FileReady(netpath);
-#endif
 #endif
 
 			*file = FS_HandleForFile();
@@ -4547,6 +4539,9 @@ qboolean FS_idPak(const char *pak, const char *base, int numPaks)
 			break;
 		}
 	}
+  if(!FS_FilenameCompare(pak, "baseq3/pak8a")) {
+    return qtrue;
+  }
 	if (i < numPaks) {
 		return qtrue;
 	}
@@ -4664,7 +4659,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
         // Local name
         Q_strcat( neededpaks, len, "@");
         // Do we have one with the same name?
-#ifndef __WASM__
 				// TODO: remove this requirement, if a file already exists in Sys_BeginDownload
 				//   then append the checksum to the file, need to add TempName handling
         if ( FS_SV_FileExists( va( "%s.pk3", fs_serverReferencedPakNames[i] ) ) )
@@ -4675,7 +4669,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
           Com_sprintf( st, sizeof( st ), "%s.%08x.pk3", fs_serverReferencedPakNames[i], fs_serverReferencedPaks[i] );
           Q_strcat( neededpaks, len, st );
         } else
-#endif
         {
           Q_strcat( neededpaks, len, fs_serverReferencedPakNames[i] );
           Q_strcat( neededpaks, len, ".pk3" );
@@ -4981,16 +4974,14 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
 FS_Startup
 ================
 */
-#ifndef __WASM__
-static 
-#endif
-void FS_Startup( void ) {
+static void FS_Startup( void ) {
   const char *homePath;
-#ifndef __WASM__
 	int start, end;
-#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
+#endif
+#ifdef USE_ASYNCHRONOUS
+  ASYNCR(FS_Startup);
 #endif
 
 	Com_DPrintf( "----- FS_Startup -----\n" );
@@ -4999,9 +4990,7 @@ void FS_Startup( void ) {
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
-#ifndef __WASM__
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
-#endif
 
 #ifndef USE_HANDLE_CACHE
 	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
@@ -5021,23 +5010,18 @@ void FS_Startup( void ) {
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
   Cvar_SetModifiedFunc(fs_gamedirvar, Com_GamedirModified);
 
-#ifdef __WASM__
-	//Cvar_Get("fs_cdn", "content.quakejs.com", CVAR_INIT | CVAR_SERVERINFO);
-  WASM_ASYNC(FS_Startup_After_Async);
-	int start, end;
-#endif
-;
 	if ( !Q_stricmp( fs_basegame->string, fs_gamedirvar->string ) ) {
 		Cvar_ForceReset( "fs_game" );
 	}
 
-#ifdef __WASM__
-	fs_excludeReference = Cvar_Get( "fs_excludeReference", "baseq3/pak8a", CVAR_ARCHIVE_ND | CVAR_LATCH );
-#else
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
-#endif
   
   Cvar_SetFilesDescriptions();
+
+#ifdef USE_ASYNCHRONOUS
+  Sys_Download("q3cache.dat");
+  ASYNC(FS_Startup);
+#endif
 
 	start = Sys_Milliseconds();
 
@@ -5048,11 +5032,9 @@ void FS_Startup( void ) {
 #endif
 
 	// add search path elements in reverse priority order
-#ifndef __WASM__
 	if ( fs_steampath->string[0] ) {
 		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string, 0 );
 	}
-#endif
 
 	if ( fs_basepath->string[0] ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string, 0 );
@@ -5066,11 +5048,9 @@ void FS_Startup( void ) {
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] && Q_stricmp( fs_gamedirvar->string, fs_basegame->string ) ) {
-#ifndef __WASM__
 		if ( fs_steampath->string[0] ) {
 			FS_AddGameDirectory( fs_steampath->string, fs_gamedirvar->string, 0 );
 		}
-#endif
 		if ( fs_basepath->string[0] ) {
 			FS_AddGameDirectory( fs_basepath->string, fs_gamedirvar->string, 0 );
 		}
@@ -5113,8 +5093,8 @@ void FS_Startup( void ) {
 	Cmd_SetDescription( "which", "Show the full path of a file\nUsage: which <file>");
 	Cmd_AddCommand( "fs_restart", FS_Reload );
 	Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nUsage: fs_restart");
-#ifdef __WASM__
-	Cmd_AddCommand( "offline", Sys_FS_Offline );
+#ifdef USE_ASYNCHRONOUS
+	Cmd_AddCommand( "offline", Sys_Offline );
 	Cmd_SetDescription( "offline", "Download all the files needed to play offline without an internet connection\nUsage: offline");
 #endif
 	Cmd_AddCommand ("fs_openedList", FS_OpenedPK3List_f );
@@ -5131,12 +5111,10 @@ void FS_Startup( void ) {
 
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
-#ifndef __WASM__
 #ifndef STANDALONE
 	// check original q3a files
 	if ( !Q_stricmp( fs_basegame->string, BASEGAME ) || !Q_stricmp( fs_basegame->string, BASEDEMO ) )
 		FS_CheckIdPaks();
-#endif
 #endif
 
 #ifdef FS_MISSING
@@ -5157,7 +5135,7 @@ void FS_Startup( void ) {
 }
 
 
-#if !defined(STANDALONE) && !defined(__WASM__)
+#ifndef STANDALONE
 static void FS_PrintSearchPaths( void )
 {
 	searchpath_t *path = fs_searchpaths;
@@ -5454,7 +5432,9 @@ const char *FS_ReferencedPakPureChecksums( int maxlen ) {
 			if ( s > max ) // client-side overflow
 				break;
 		}
+#ifdef USE_ALTCHECKSUM
 		qboolean found = qfalse;
+#endif
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
@@ -5775,11 +5755,6 @@ void FS_InitFilesystem( void ) {
 
 	// try to start up normally
 	FS_Restart( 0 );
-#ifdef __WASM__
-	// normally this would be called, but because of async, we don't need to wait for
-	//   a shutdown callback the first time around
-	FS_Startup();
-#endif
 }
 
 
@@ -5796,25 +5771,22 @@ void FS_Restart( int checksumFeed ) {
 
 	static qboolean execConfig = qfalse;
 
+#ifdef USE_ASYNCHRONOUS
+  ASYNCR(FS_Restart);
+#endif
+
 	// free anything we currently have loaded
 	FS_Shutdown( qfalse );
 
 	// set the checksum feed
 	fs_checksumFeed = checksumFeed;
 
-#ifndef __WASM__
 	// try to start up normally
 	FS_Startup();
-#else
-}
-
-void FS_Restart_After_Async( void ) {
-	static char lastValidBase[MAX_OSPATH];
-	static char lastValidGame[MAX_OSPATH];
-	static qboolean execConfig = qfalse;
-	FS_Startup_After_Async();
+#ifdef USE_ASYNCHRONOUS
+  ASYNCP(FS_Restart, checksumFeed);
 #endif
-;
+
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
@@ -5849,13 +5821,6 @@ void FS_Restart_After_Async( void ) {
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
 }
 
-#ifdef __WASM__
-void FS_Reload_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, FS_Restart_After_Async);
-}
-#endif
-
 /*
 =================
 FS_Reload
@@ -5864,9 +5829,6 @@ FS_Reload
 void FS_Reload( void ) 
 {
 	FS_Restart( fs_checksumFeed );
-#ifdef __WASM__
-	Com_Frame_Callback(Sys_FS_Shutdown, FS_Reload_After_Shutdown);
-#endif
 }
 
 
@@ -6169,12 +6131,10 @@ fileHandle_t FS_PipeOpenWrite( const char *cmd, const char *filename ) {
 		return FS_INVALID_HANDLE;
 	}
 
-#ifndef __WASM__
 #ifdef _WIN32
 	fd->handleFiles.file.o = _popen( cmd, "wb" );
 #else
 	fd->handleFiles.file.o = popen( cmd, "w" );
-#endif
 #endif
 
 	if ( fd->handleFiles.file.o == NULL ) {
@@ -6218,10 +6178,6 @@ Tries to load libraries within known searchpaths
 */
 void *FS_LoadLibrary( const char *name )
 {
-#ifdef __WASM__
-  return Sys_LoadLibrary( FS_BuildOSPath( fs_basepath->string, name, NULL ) );
-#else
-
 	const searchpath_t *sp = fs_searchpaths;
 	void *libHandle = NULL;
 	char *fn;
@@ -6247,7 +6203,6 @@ void *FS_LoadLibrary( const char *name )
 	}
 
 	return libHandle;
-#endif
 }
 
 void FS_SetMapIndex(const char *mapname) {
