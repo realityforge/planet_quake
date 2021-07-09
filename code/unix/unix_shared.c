@@ -113,18 +113,18 @@ qboolean Sys_RandomBytes( byte *string, int len )
 //============================================
 
 #ifdef USE_ASYNCHRONOUS
-extern void CL_AppendDownload(char *downloadName);
-
 void Sys_Download(char *downloadName)
 {
 #ifndef DEDICATED
-  if(!com_dedicated->integer) {
-    CL_AppendDownload(downloadName);
+  if(!com_dedicated || !com_dedicated->integer) {
+    Sys_QueEvent( Sys_Milliseconds(), SE_DOWNLOAD, 0, 0, strlen(downloadName), CopyString(downloadName) );
   }
 #endif
 // TODO: something else for server and dedicated, perhaps download from 
 //   list of CDN sources, repacking?
 }
+
+
 void Sys_Offline( void )
 {
   // TODO: read q3cache and download all files

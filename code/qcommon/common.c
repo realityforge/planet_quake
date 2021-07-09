@@ -3064,6 +3064,9 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 
 
 #ifdef USE_ASYNCHRONOUS
+extern void CL_NextDownload( void );
+extern void CL_AppendDownload( char *downloadName );
+
 void *Com_PreviousEventPtr( void )
 {
   return eventQue[ ( eventTail-1 ) & MASK_QUED_EVENTS ].evPtr;
@@ -3163,9 +3166,23 @@ int Com_EventLoop( void ) {
 			Cbuf_AddText( (char *)ev.evPtr );
 			Cbuf_AddText( "\n" );
 			break;
-			default:
-				Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
-			break;
+#ifdef USE_ASYNCHRONOUS
+    case SE_ASYNC:
+      ev.evPtr = NULL; // function pointer, no free
+      break;
+    case SE_ASYNCP:
+      ev.evPtr = NULL; // function pointer, no free
+      break;
+    case SE_DOWNLOAD:
+#ifndef DEDICATED
+      CL_AppendDownload(ev.evPtr);
+      CL_NextDownload();
+#endif
+      break;
+#endif
+		default:
+			Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
+  		break;
 		}
 
 		// free any block data
@@ -4422,6 +4439,13 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeEvents = 0;
 	timeBeforeClient = 0;
 	timeAfter = 0;
+  
+#ifdef USE_ASYNCHRONOUS
+  if(!com_fullyInitialized) {
+    Com_EventLoop();
+    return;
+  }
+#endif
 
 	// write config file if anything changed
 #ifndef DELAY_WRITECONFIG

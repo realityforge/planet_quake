@@ -3044,7 +3044,7 @@ void CL_NextDownload( void )
 void CL_AppendDownload(char *downloadName)
 {
   int len = strlen(clc.downloadList);
-  strcpy(&clc.downloadList[len], va(len > 1 ? " %s" : "%s", downloadName));
+  strcpy(&clc.downloadList[len], va("@%s@%s", downloadName, downloadName));
 }
 #endif
 

@@ -1299,6 +1299,7 @@ void CL_UpdateShader( void ) {
 	//if(!strcmp(&lazyShader[13], "console"))
 	//	Com_Printf("Error: CL_UpdateShader: %s, %i\n", &lazyShader[13], atoi(&lazyShader[0]));
 	re.UpdateShader(&lazyShader[13], atoi(&lazyShader[0]));
+  Z_Free(lazyShader);
 }
 
 
@@ -1306,6 +1307,7 @@ void CL_UpdateSound( void ) {
 	char *lazySound = Sys_UpdateSound();
 	if(!lazySound || strlen(lazySound) == 0) return;
 	S_UpdateSound(lazySound, qtrue);
+  Z_Free(lazySound);
 }
 
 
@@ -1313,6 +1315,7 @@ void CL_UpdateModel( void ) {
 	char *lazyModel = Sys_UpdateModel();
 	if(!lazyModel || strlen(lazyModel) == 0) return;
 	re.UpdateModel(lazyModel);
+  Z_Free(lazyModel);
 }
 #endif
 
