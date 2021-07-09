@@ -286,7 +286,6 @@ function Sys_FS_Startup () {
   var mapname = Cvar_VariableString('mapname')
   var modelname = Cvar_VariableString('model')
   var playername = Cvar_VariableString('name')
-  var clcState = _CL_GetClientState()
   var blankFile = new Uint8Array(4)
   
   LoadingDescription('Loading Game UI...')

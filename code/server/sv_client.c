@@ -2085,7 +2085,6 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 
 	// name for C code
 	val = Info_ValueForKey( cl->userinfo, "name" );
-
 	// truncate if it is too long as it may cause memory corruption in OSP mod
 #ifndef BUILD_GAME_STATIC
   char buf[ MAX_NAME_LENGTH ];
@@ -2155,7 +2154,6 @@ void SV_UpdateUserinfo_f( client_t *cl ) {
 	Q_strncpyz( cl->userinfo, info, sizeof( cl->userinfo ) );
 
 	SV_UserinfoChanged( cl, qtrue, qtrue ); // update userinfo, run filter
-
 	// call prog code to allow overrides
 	VM_Call( gvm, 1, GAME_CLIENT_USERINFO_CHANGED, cl - svs.clients );
 }
@@ -2575,6 +2573,7 @@ static const ucmd_t ucmds[] = {
 	{"stopdl", SV_StopDownload_f},
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
+
 #ifdef USE_MULTIVM_SERVER
 	{"load", SV_LoadVM},
 	{"tele", SV_Tele_f},
@@ -2967,7 +2966,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// usually, the first couple commands will be duplicates
 	// of ones we have previously received, but the servertimes
 	// in the commands will cause them to be immediately discarded
-	int thunk = 0;
 	for ( i =  0 ; i < cmdCount ; i++ ) {
 		// if this is a cmd from before a map_restart ignore it
 		if ( cmds[i].serverTime > cmds[cmdCount-1].serverTime ) {
@@ -2979,18 +2977,11 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		//}
 		// don't execute if this is an old cmd which is already executed
 		// these old cmds are included when cl_packetdup > 0
-//#ifdef USE_MULTIVM_SERVER
-//		if(0)
-//#endif
 		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
 			continue;
 		}
-//Com_Printf("Moving: %i (%i) > %i\n", cmds[ i ].serverTime, gvmi, cmd->forwardmove);
 		SV_ClientThink (cl, &cmds[ i ]);
-		thunk++;
 	}
-//	if(thunk)
-//		Com_Printf("---\n");
 }
 
 
@@ -3127,7 +3118,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 	} while ( 1 );
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 	// skip user move commands if server is restarting because of the command above
 	if(!FS_Initialized()) {
 		return;

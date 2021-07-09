@@ -700,15 +700,10 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
 				}
 #endif
-#ifndef __WASM__
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-#else
-				if(!FS_Initialized()) {
-					Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
-				} else {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-			}
+#ifdef USE_ASYNCHRONOUS
+        if(FS_Initialized())
 #endif
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
 			return;
 		}

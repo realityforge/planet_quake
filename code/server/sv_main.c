@@ -249,7 +249,6 @@ void SV_AddServerCommand( client_t *client, const char *cmd ) {
 		return;
 	}
 	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
-
 	Q_strncpyz( client->reliableCommands[ index ], cmd, sizeof( client->reliableCommands[ index ] ) );
 }
 
@@ -379,7 +378,6 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv4 address.\n", sv_master[i]->string );
 			}
-#ifndef __WASM__
 #ifdef USE_IPV6
 			if(netenabled & NET_ENABLEV6)
 			{
@@ -397,7 +395,6 @@ static void SV_MasterHeartbeat( const char *message )
 				else
 					Com_Printf( "%s has no IPv6 address.\n", sv_master[i]->string );
 			}
-#endif
 #endif
 		}
 

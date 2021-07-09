@@ -2318,40 +2318,20 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 }
 #endif
 
-#ifdef __WASM__
-qboolean VM_IsSuspended(vm_t * vm) {
-#ifndef NO_VM_COMPILED
-		if (vm->compiled) {
-			return VM_IsSuspendedCompiled(vm);
-		}
-#endif
-		// return VM_IsSuspendedInterpreted(vm);
-		return qfalse;
+#ifdef USE_ASYNCHRONOUS
+qboolean VM_IsSuspended(vm_t *vm) {
+	return vm->suspended;
 }
 
 
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp) {
-#ifndef NO_VM_COMPILED
-		if (vm->compiled) {
-			VM_SuspendCompiled(vm, pc, sp);
-			return;
-		}
-#endif
-		// VM_SuspendInterpreted(vm, pc, sp);
-		// return;
-		Com_Error(ERR_FATAL, "VM_SuspendInterpreted not implemented");
+  vm->suspended = qtrue;
 }
 
 
 int VM_Resume(vm_t *vm) {
-#ifndef NO_VM_COMPILED
-		if (vm->compiled) {
-			return VM_ResumeCompiled(vm);
-		}
-#endif
-		// return VM_ResumeInterpreted(vm);
-		Com_Error(ERR_FATAL, "VM_ResumeInterpreted not implemented");
-
+  vm->suspended = qfalse;
+  // TODO: continue VM execution
 }
 #endif
 

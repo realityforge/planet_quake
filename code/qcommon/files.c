@@ -3583,7 +3583,6 @@ static qboolean FS_AllowListExternal( const char *extension )
 	return qtrue;
 }
 
-
 static fnamecallback_f fnamecallback = NULL;
 
 void FS_SetFilenameCallback( fnamecallback_f func ) 
@@ -3669,7 +3668,6 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, const char
 
 				// check for directory match
 				name = buildBuffer[i].name;
-
 				//
 				if ( filter ) {
 					// case insensitive
@@ -4611,12 +4609,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 
 		// never autodownload any of the id paks
 		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEGAME, NUM_ID_PAKS) || FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS) ) {
-			// TODO: expand this to exclude base QuakeJS paks
-			continue;
-		}
-		
-		if(fs_excludeReference
-			&& Q_stristr(va("baseq3/pak8a %s", fs_excludeReference->string), fs_serverReferencedPakNames[i])) {
 			continue;
 		}
 
@@ -4807,7 +4799,6 @@ static void FS_ReorderSearchPaths( void ) {
 		if ( path->pack || path->policy != DIR_STATIC ) {
 			paks[npaks++] = path;
 		} else {
-      //paks[npaks++] = path;
 			dirs[ndirs++] = path;
 		}
 		path = path->next;
@@ -4984,7 +4975,7 @@ static void FS_Startup( void ) {
   ASYNCR(FS_Startup);
 #endif
 
-	Com_DPrintf( "----- FS_Startup -----\n" );
+	Com_Printf( "----- FS_Startup -----\n" );
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
@@ -5019,8 +5010,7 @@ static void FS_Startup( void ) {
   Cvar_SetFilesDescriptions();
 
 #ifdef USE_ASYNCHRONOUS
-  Sys_Download("q3cache.dat");
-  ASYNC(FS_Startup);
+  ASYNCF(FS_Startup, "q3cache.dat");
 #endif
 
 	start = Sys_Milliseconds();
@@ -5104,10 +5094,10 @@ static void FS_Startup( void ) {
 
 	// print the current search paths
 	//FS_Path_f();
-	Com_DPrintf( "...loaded in %i milliseconds\n", end - start );
+	Com_Printf( "...loaded in %i milliseconds\n", end - start );
 
-	Com_DPrintf( "----------------------\n" );
-	Com_DPrintf( "%d files in %d pk3 files\n", fs_packFiles, fs_packCount );
+	Com_Printf( "----------------------\n" );
+	Com_Printf( "%d files in %d pk3 files\n", fs_packFiles, fs_packCount );
 
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
@@ -5508,7 +5498,7 @@ qboolean FS_ExcludeReference( void ) {
 	if ( fs_excludeReference->string[0] == '\0' )
 		return qfalse;
 
-	Cmd_TokenizeStringIgnoreQuotes( va("baseq3/pak8a %s", fs_excludeReference->string) );
+	Cmd_TokenizeStringIgnoreQuotes( fs_excludeReference->string );
 	nargs = Cmd_Argc();
 	x = qfalse;
 
@@ -5784,7 +5774,7 @@ void FS_Restart( int checksumFeed ) {
 	// try to start up normally
 	FS_Startup();
 #ifdef USE_ASYNCHRONOUS
-  ASYNCP(FS_Restart, checksumFeed);
+  ASYNCPF(FS_Restart, checksumFeed, va("%s/default.cfg", fs_gamedirvar->string));
 #endif
 
 	// if we can't find default.cfg, assume that the paths are
@@ -5820,6 +5810,7 @@ void FS_Restart( int checksumFeed ) {
 	Q_strncpyz( lastValidBase, fs_basepath->string, sizeof( lastValidBase ) );
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
 }
+
 
 /*
 =================

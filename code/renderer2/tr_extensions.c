@@ -140,8 +140,6 @@ void GLimp_InitExtraExtensions( void )
 
 #ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.framebufferObject = !!r_ext_framebuffer_object->integer;
@@ -165,8 +163,6 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.vertexArrayObject = qfalse;
 #ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		if (q_gl_version_at_least_3_0)
@@ -193,8 +189,6 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.textureFloat = qfalse;
 #ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.textureFloat = !!r_ext_texture_float->integer;
@@ -211,8 +205,6 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.depthClamp = qfalse;
 #ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.depthClamp = qtrue;
@@ -229,8 +221,6 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.seamlessCubeMap = qfalse;
 #ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.seamlessCubeMap = !!r_arb_seamless_cube_map->integer;
@@ -295,8 +285,6 @@ void GLimp_InitExtraExtensions( void )
 	extension = "GL_ARB_texture_compression_rgtc";
 #ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		qboolean useRgtc = r_ext_compressed_textures->integer >= 1;
@@ -317,8 +305,6 @@ void GLimp_InitExtraExtensions( void )
 	extension = "GL_ARB_texture_compression_bptc";
 #ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		qboolean useBptc = r_ext_compressed_textures->integer >= 2;
@@ -338,8 +324,6 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.directStateAccess = qfalse;
 #ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		glRefConfig.directStateAccess = !!r_ext_direct_state_access->integer;

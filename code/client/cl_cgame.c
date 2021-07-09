@@ -635,7 +635,7 @@ void CL_ShutdownCGame( void ) {
 			continue;
 		}
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 		while (VM_IsSuspended(cgvm)) {
 			VM_Resume(cgvm);
 	}
@@ -1188,6 +1188,9 @@ void CL_InitCGame( int inVM ) {
   }
   int igs = cgvmi;
 #endif
+#ifdef USE_ASYNCHRONOUS
+  ASYNCR(CL_InitCGame);
+#endif
 
 	t1 = Sys_Milliseconds();
 
@@ -1217,7 +1220,6 @@ void CL_InitCGame( int inVM ) {
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
-
 	cls.state = CA_LOADING;
 
 	// init for this gamestate
@@ -1228,7 +1230,7 @@ void CL_InitCGame( int inVM ) {
   // do not allow vid_restart for first time
 	cls.lastVidRestart = Sys_Milliseconds();
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
   //cgvmi = prev; // set to previous in case this was called from a GameCommand()
   //re.SwitchWorld(cgvmi);
 
@@ -1237,7 +1239,11 @@ void CL_InitCGame( int inVM ) {
 		return;
 	}
 
-  WASM_ASYNC(CL_InitCGameFinished);
+#ifdef USE_MULTIVM_CLIENT
+  ASYNCP(CL_InitCGame, inVM);
+#else
+  ASYNCP(CL_InitCGame, 0);
+#endif
 #endif
 
 	// reset any CVAR_CHEAT cvars registered by cgame
@@ -1339,16 +1345,16 @@ qboolean CL_GameCommand( int igvm ) {
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
-#ifdef __WASM__
-		// it's possible (and happened in Q3F) that the game executes a console command
-		// before the frame has resumed the vm
-		if (VM_IsSuspended(cgvm)) {
+#ifdef USE_ASYNCHRONOUS
+	// it's possible (and happened in Q3F) that the game executes a console command
+	// before the frame has resumed the vm
+	if (VM_IsSuspended(cgvm)) {
 #ifdef USE_MULTIVM_CLIENT
-				cgvmi = prevGvm;
-				CM_SwitchMap(cgvmi);
+			cgvmi = prevGvm;
+			CM_SwitchMap(cgvmi);
 #endif
-			return qfalse;
-		}
+		return qfalse;
+	}
 #endif
 
 	result = VM_Call( cgvm, 0, CG_CONSOLE_COMMAND );

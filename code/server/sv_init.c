@@ -417,7 +417,6 @@ void SV_ChangeMaxClients( void ) {
 }
 
 
-
 /*
 ================
 SV_ClearServer
@@ -451,9 +450,8 @@ clients along with it.
 This is NOT called for map_restart
 ================
 */
-qboolean killBots;
 static qboolean startingServer = qfalse;
-void SV_SpawnServer( const char *mapname, qboolean kb ) {
+void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	int			i;
 	int			checksum;
 	qboolean	isBot;
@@ -463,7 +461,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 		return;
 	}
 	startingServer = qtrue;
-	killBots = kb;
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
@@ -745,7 +742,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 		// rebuild referenced paks list
 		p = FS_ReferencedPakNames();
 	}
-
 	Cvar_Set( "sv_referencedPakNames", p );
 
 	p = FS_ReferencedPakChecksums();
@@ -783,7 +779,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 			// load pk3s also loaded at the server
 			Cvar_Set( "sv_paks", p );
 			if ( *p == '\0' ) {
-				sv_pure->integer = 0;
 				Com_Printf( S_COLOR_YELLOW "WARNING: sv_pure set but no PK3 files loaded\n" );
 			}
 		}
@@ -984,8 +979,6 @@ void SV_Init( void )
 	Cvar_CheckRange( sv_mvSyncMove, "0", "1", CV_INTEGER );
 	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE);
 	Cvar_CheckRange( sv_mvOmnipresent, "0", "1", CV_INTEGER );
-	
-
 #endif
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
@@ -1206,7 +1199,6 @@ before Sys_Quit or Sys_Error
 ================
 */
 void SV_Shutdown( const char *finalmsg ) {
-
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}

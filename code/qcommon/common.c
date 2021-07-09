@@ -477,17 +477,10 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 	int			currentTime;
 
 #ifdef _DEBUG
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__WASM__)
 	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
 		if (!com_noErrorInterrupt->integer) {
 			DebugBreak();
-		}
-	}
-#else
-#ifdef __WASM__
-	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
-		if (!com_noErrorInterrupt->integer) {
-			Sys_Debug();
 		}
 	}
 #else
@@ -498,7 +491,6 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		backtrace_symbols_fd( syms, size, STDERR_FILENO );
 	}
 #endif // linux
-#endif // emscripten
 #endif // win32
 #endif // _DEBUG
 
@@ -669,11 +661,7 @@ void Com_Quit_f( void ) {
 		Com_Shutdown();
 		FS_Shutdown( qtrue );
 	}
-#ifndef __WASM__
 	Sys_Quit ();
-#else
-	Com_Frame_Callback(Sys_FS_Shutdown, Sys_Quit);
-#endif
 }
 
 
@@ -3337,13 +3325,11 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		Con_ResetHistory();
 #endif
 
-#ifndef __WASM__
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qfalse );
 
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
-#endif
 
 #ifndef DEDICATED
 		// Reparse pure paks and update cvars before FS startup
@@ -3353,12 +3339,12 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 
 		FS_Restart( checksumFeed );
 		
-#ifdef __WASM__
-    WASM_ASYNC(Com_GameRestart_After_Restart);
-	}
-  qboolean com_gameRestarting = qtrue;
-	qboolean clientRestart = qtrue;
-	{
+#ifdef USE_ASYNCHRONOUS
+  com_gameRestarting = qfalse;
+  ASYNCE(Com_ExecuteCfg);
+  if(clientRestart) {
+    ASYNCV(CL_StartHunkUsers);
+  } else return;
 #endif
 		// Load new configuration
 		Com_ExecuteCfg();
@@ -3387,16 +3373,6 @@ static void Com_GameRestart_f( void )
 	Cvar_Set( "fs_game", Cmd_Argv( 1 ) );
 
 	Com_GameRestart( 0, qtrue );
-
-#ifdef __WASM__
-	Com_Frame_Callback(Sys_FS_Shutdown, Com_GameRestart_User_After_Shutdown);
-  WASM_ASYNC(Com_GameRestart_User_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, Com_GameRestart_User_After_Startup);
-  WASM_ASYNC(Com_GameRestart_User_After_Startup);
-	FS_Restart_After_Async();
-	Com_GameRestart_After_Restart();
-#endif
 }
 
 
@@ -3599,6 +3575,7 @@ out:
 
 static void Sys_GetProcessorId( char *vendor )
 {
+  Com_sprintf( vendor, 3, "v8" );
 }
 
 #else
@@ -4227,10 +4204,6 @@ void Com_Init( char *commandLine ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintClear();
 #endif
-#ifdef __WASM__
-  // init again because first time it triggers the async websocket
-	NET_Init( );
-#endif
 }
 
 #ifdef USE_PRINT_CONSOLE
@@ -4401,59 +4374,8 @@ static int Com_TimeVal( int minMsec )
 	return timeVal;
 }
 
+
 #ifdef __WASM__
-qboolean invokeFrameAfter = qfalse;
-void Com_Frame_RentryHandle(void (*af)( void *handle )) {
-  if(!CB_Frame_After || !CB_Frame_AfterParameter) {
-		CB_Frame_AfterParameter = af;
-	} else {
-		Com_Error( ERR_FATAL, "Already calling back to frame." );
-	}
-}
-
-// TODO use event system for callbacks instead, using evPtr to point to functions
-
-void Com_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
-	Com_Printf( "--------- Frame Setup (%p) --------\n", &cb);
-	invokeFrameAfter = qfalse;
-	if(!CB_Frame_Proxy) {
-		CB_Frame_Proxy = cb;
-	} else {
-		Com_Error( ERR_FATAL, "Already calling a frame proxy." );
-	}
-	if(!CB_Frame_After || !CB_Frame_AfterParameter) {
-		CB_Frame_After = af;
-	} else {
-		Com_Error( ERR_FATAL, "Already calling back to frame." );
-	}
-}
-
-void Com_Frame_Proxy( void *handle ) {
-  invokeFrameAfter = qtrue;
-	if(CB_Frame_After) {
-    rentryHandle = NULL;
-  } else if (CB_Frame_AfterParameter) {
-    rentryHandle = handle;
-	}
-}
-
-void Com_Frame_After_Startup() {
-	FS_Restart_After_Async();
-	if(!FS_Initialized()) {
-		Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);		
-	} else {
-		VM_Forced_Unload_Start();
-		CL_FlushMemory();
-		VM_Forced_Unload_Done();
-		Com_GameRestart_After_Restart();
-	}
-}
-
-void Com_Frame_After_Shutdown() {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, Com_Frame_After_Startup);
-}
-
 
 int outsideError;
 char *outsideMsg;
@@ -4462,7 +4384,6 @@ void Com_Outside_Error(int level, char *message)
 	outsideError = level;
 	outsideMsg = message;
 }
-
 
 #endif
 /*
@@ -4489,17 +4410,6 @@ void Com_Frame( qboolean noDelay ) {
 	int	timeAfter;
 
 	if ( setjmp( abortframe ) ) {
-#ifdef __WASM__
-		outsideError = 0;
-		outsideMsg = 0;
-		CB_Frame_Proxy = NULL;
-		CB_Frame_After = NULL;
-    CB_Frame_AfterParameter = NULL;
-		invokeFrameAfter = qfalse;
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
-		}
-#endif
 		return;			// an ERR_DROP was thrown
 	}
 
@@ -4512,53 +4422,6 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeEvents = 0;
 	timeBeforeClient = 0;
 	timeAfter = 0;
-
-#ifdef __WASM__
-	// call error function from Com_Frame so we have the benefit of setjmp
-	//   in place to catch it and recover
-	if(outsideMsg) {
-		int err = outsideError;
-		char *msg = outsideMsg;
-		outsideError = 0;
-		outsideMsg = 0;
-		Com_Error(err, "%s\n", msg);
-		return;
-	}
-
-	// used by cl_parsegamestate/cl_initcgame
-	if(CB_Frame_Proxy) {
-		Com_Printf( "--------- Frame Callback (%p) --------\n", &CB_Frame_Proxy);
-		void (*cb)( void ) = CB_Frame_Proxy;
-		CB_Frame_Proxy = NULL;
-		(*cb)();
-		return;
-	}
-	
-	if(CB_Frame_After) {
-		if(!invokeFrameAfter) {
-			return;			
-		}
-		invokeFrameAfter = qfalse;
-		Com_Printf( "--------- Frame After (%p) --------\n", &CB_Frame_After);
-		void (*cb)( void ) = CB_Frame_After;
-		CB_Frame_After = NULL; // start frame runner again
-		(*cb)();
-		return;
-	}
-  
-	if(CB_Frame_AfterParameter) {
-		if(!invokeFrameAfter) {
-			return;			
-		}
-		invokeFrameAfter = qfalse;
-		Com_Printf( "--------- Frame After Parameterized (%p) --------\n", &CB_Frame_AfterParameter);
-		void (*cb)( void *handle ) = CB_Frame_AfterParameter;
-		CB_Frame_AfterParameter = NULL; // start frame runner again
-		(*cb)(rentryHandle);
-    rentryHandle = NULL;
-		return;
-	}
-#endif
 
 	// write config file if anything changed
 #ifndef DELAY_WRITECONFIG
@@ -4650,29 +4513,12 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-#ifndef __WASM__
+#ifdef USE_ASYNCHRONOUS
+    break;
+#endif
 		NET_Sleep( sleepMsec * 1000 - 500 );
 	} while( Com_TimeVal( minMsec ) );
 
-#else
-;
-		NET_Sleep( com_yieldCPU->integer );
-	} while( 0 );
-
-	if(Cvar_VariableIntegerValue("net_socksLoading")) {
-		if(Sys_Milliseconds() - com_frameTime > 5000) {
-			SOCKS_Frame_Proxy();
-		} else if (Sys_Milliseconds() - com_frameTime < 100) {
-			Com_Printf( "--- SOCKS Loading ---\n" );
-		}
-		return;
-	}
-
-	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
-		return;
-	}
-#endif
-;
 
 	lastTime = com_frameTime;
 	com_frameTime = Com_EventLoop();
@@ -4695,12 +4541,6 @@ void Com_Frame( qboolean noDelay ) {
 	if(com_dedicated->integer)
 #endif
 	SV_Frame( msec );
-#endif
-
-#ifdef __WASM__
-	if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
-		return;
-	}
 #endif
 
 	// if "dedicated" has been modified, start up
@@ -4757,12 +4597,6 @@ void Com_Frame( qboolean noDelay ) {
 		}
 		Com_EventLoop();
 		Cbuf_Execute();
-#ifdef __WASM__
-		// if filesystem was restarted as a part of a command
-		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After || CB_Frame_AfterParameter) {
-			return;
-		}
-#endif
 
 		//
 		// client side

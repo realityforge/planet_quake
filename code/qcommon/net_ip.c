@@ -1788,18 +1788,11 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
-#ifdef __WASM__
-  //if(!com_dedicated->integer) {
-  	Com_RandomBytes((byte*)&port, sizeof(int));
-  	port &= 0xffff;
-  //} else {
-  //  port = PORT_SERVER;
-  //}
-#else
-	port = PORT_SERVER;
-#endif
-
-	net_port = Cvar_Get( "net_port", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
+	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+  if(net_port->integer == -1) {
+    Com_RandomBytes((byte*)&port, sizeof(int));
+  	Cvar_Set("net_port", va("%i", port &= 0xffff));
+  }
 	Cvar_CheckRange( net_port, "0", "65535", CV_INTEGER );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
@@ -1809,7 +1802,11 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
 
-	net_port6 = Cvar_Get( "net_port6", va( "%i", port ), CVAR_LATCH | CVAR_NORESTART );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+  if(net_port6->integer == -1) {
+    Com_RandomBytes((byte*)&port, sizeof(int));
+  	Cvar_Set("net_port6", va("%i", port &= 0xffff));
+  }
 	Cvar_CheckRange( net_port6, "0", "65535", CV_INTEGER );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
@@ -2164,25 +2161,3 @@ static void NET_Restart_f( void )
 {
 	NET_Config( qtrue );
 }
-
-#ifdef __WASM__
-void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void )) {
-	invokeSOCKSAfter = qfalse;
-	if(!SOCKS_Proxy) {
-		SOCKS_Proxy = cb;
-	} else {
-		Com_Error( ERR_FATAL, "Already calling a frame SOCKS proxy." );
-	}
-	if(!SOCKS_After) {
-		SOCKS_After = af;
-	} else {
-		Com_Error( ERR_FATAL, "Already calling back to SOCKS frame." );
-	}
-}
-
-void SOCKS_Frame_Proxy( void ) {
-	if(SOCKS_After) {
-		invokeSOCKSAfter = qtrue;
-	}
-}
-#endif

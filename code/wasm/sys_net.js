@@ -382,7 +382,7 @@ function (err, data) {
           alreadyDownloaded: true,
         }
       }
-      FS.syncfs(SYS.servicable, _CL_Outside_NextDownload)
+      FS.syncfs(SYS.servicable, _CL_NextDownload)
     })
   })
 }

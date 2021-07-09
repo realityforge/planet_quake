@@ -133,14 +133,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #ifdef USE_ASYNCHRONOUS
-#define ASYNCP(x, y) \
+
+#define ASYNCEP(x, y) \
 Sys_QueEvent(Sys_Milliseconds(), SE_ASYNCP, y, 0, sizeof(intptr_t), &x); \
+
+#define ASYNCE(x) \
+Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
+
+#define ASYNCVP(x, y) \
+ASYNCEP(x, y); \
 return; \
+
+#define ASYNCV(x) \
+ASYNCE(x); \
+return; \
+
+#define ASYNCP(x, y) \
+ASYNCVP(x, y); \
 x##_After_Async: \
 
 #define ASYNC(x) \
-Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
-return; \
+ASYNCV(x); \
 x##_After_Async: \
 
 #define ASYNCR(x) \
@@ -148,11 +161,24 @@ if(Com_PreviousEventPtr() == &x) { \
   goto x##_After_Async; \
 } \
 
+#define ASYNCF(x, f) \
+Sys_Download(#f); \
+x##_Requeue: \
+ASYNC(x); \
+if(!FS_FileExists(f)) \
+goto x##_Requeue; \
+
+#define ASYNCPF(x, y, f) \
+Sys_Download(#f); \
+x##_Requeue: \
+ASYNCP(x, y); \
+if(!FS_FileExists(f)) \
+goto x##_Requeue; \
+
+
 #endif
 
 #ifdef __WASM__
-#define WASM_ASYNCP(x, y) } void x( y ) {
-#define WASM_ASYNC(x) } void x( void ) {
 // vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
 #define USE_VID_FAST 1
 // allow touch events to set exact cursor position using "cursor spy"
@@ -167,15 +193,18 @@ if(Com_PreviousEventPtr() == &x) { \
 //   as if masters were also used in LAN games instead of just broadcasting
 //   or to specific master servers that host games geographically nearby
 #define USE_MASTER_LAN 1
+// make the engine asynchronous, required by wasm build
+#define USE_ASYNCHRONOUS 1
 // 
-#endif
+#endif // __WASM__
+
 
 #ifdef USE_LAZY_LOAD
 // because of the nature of loading files lazily, spoofing checksums 
 //   allows repacking files, and still sending original checksum to pure servers
 #define USE_SPOOF_CHECKSUM 1
 //
-#endif // __WASM__
+#endif
 
 
 #ifdef USE_LOCAL_DED

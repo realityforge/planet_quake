@@ -50,13 +50,6 @@ int bot_maxdebugpolys;
 extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
-#ifdef __WASM__
-#ifdef USE_BOTLIB_DLOPEN
-static void SV_BotInitBotLib_After_Load( void *handle );
-#endif
-void SV_BotInitBotLib( void );
-#endif
-
 #ifndef BUILD_SLIM_CLIENT
 /*
 ==================
@@ -581,36 +574,21 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
-#if !defined(USE_BOTLIB_DLOPEN) || !defined(__WASM__)
+#ifndef USE_BOTLIB_DLOPEN
 	botlib_import_t	botlib_import;
-#endif
-#ifdef USE_BOTLIB_DLOPEN
+#else
 	GetBotLibAPI_t		GetBotLibAPI;
 
-#ifdef __WASM__
-#define REND_ARCH_STRING "js"
-#else
 #if defined (__linux__) && defined(__i386__)
 #define REND_ARCH_STRING "x86"
 #else
 #define REND_ARCH_STRING ARCH_STRING
 #endif // __linux__
-#endif // __WASM__
 
   // TODO: make this a fancy list of botlibs we recognize
 	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
 	botLib = FS_LoadLibrary( dllName );
-#ifdef __WASM__
-	Com_Frame_RentryHandle(SV_BotInitBotLib_After_Load);
-}
 
-static void SV_BotInitBotLib_After_Load( void *handle )
-{
-  botlib_import_t	botlib_import;
-  GetBotLibAPI_t		GetBotLibAPI;
-  botLib = handle;
-#endif
-;
 	if ( !botLib )
 	{
 		Com_Error( ERR_FATAL, "Failed to load botlib %s", dllName );
@@ -665,9 +643,6 @@ static void SV_BotInitBotLib_After_Load( void *handle )
   
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
-#ifdef __WASM__
-  Com_Init_After_SV_Init();
-#endif
 }
 
 

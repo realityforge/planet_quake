@@ -215,6 +215,9 @@ struct vm_s {
 
 	int			privateFlag;
 	recognizedVM_t knownVM;
+#ifdef USE_ASYNCHRONOUS
+  qboolean suspended;
+#endif
 };
 #else
 struct vm_s {
@@ -279,7 +282,7 @@ extern opcode_info_t ops[ OP_MAX ];
 
 #endif // VM_LOCAL_H
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 extern qboolean VM_IsSuspendedCompiled(vm_t *vm);
 extern void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
 extern int VM_ResumeCompiled(vm_t *vm);

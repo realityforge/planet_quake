@@ -152,9 +152,6 @@ download_t			download;
 refexport_t	re;
 #ifdef USE_RENDERER_DLOPEN
 static void	*rendererLib;
-#ifdef __WASM__
-static char dllName[ MAX_OSPATH ];
-#endif
 #endif
 
 ping_t	cl_pinglist[MAX_PINGREQUESTS];
@@ -196,12 +193,6 @@ static void CL_NextDemo( void );
 #ifdef USE_MV
 void CL_Multiview_f( void );
 void CL_MultiviewFollow_f( void );
-#endif
-
-#ifdef __WASM__
-int CL_GetClientState( void ) {
-	return cls.state;
-}
 #endif
 
 /*
@@ -764,22 +755,12 @@ static void CL_DemoCompleted( void ) {
 	}
 
 	CL_Disconnect( qtrue, qtrue );
-#ifndef __WASM__
-	CL_NextDemo();
-
-#else
-	if(!FS_Initialized()) {
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_DemoCompleted_After_Shutdown);
-	} else {
-		CL_NextDemo();
-	}
-  WASM_ASYNC(CL_DemoCompleted_After_Startup);
-	FS_Restart_After_Async();
-	CL_NextDemo();
-  WASM_ASYNC(CL_DemoCompleted_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_DemoCompleted_After_Startup);	
+#ifdef USE_ASYNCHRONOUS
+  if(!FS_Initialized()) {
+    ASYNCV(CL_NextDemo);
+  }
 #endif
+	CL_NextDemo();
 }
 
 void CL_ReadDemoIndex( void ) {
@@ -1451,7 +1432,7 @@ void CL_FlushMemory( void ) {
 
 	CL_ClearMemory();
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 	if(!FS_Initialized()) return;
 #endif
 
@@ -1730,7 +1711,7 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	// not connected to a pure server anymore
 	cl_connectedToPureServer = 0;
 
-#ifdef __WASM__
+#ifdef USE_LOCAL_DED
 	if(FS_Initialized())
 		CL_UpdateGUID( NULL, 0 );
 #endif
@@ -2009,9 +1990,6 @@ static void CL_Reconnect_f( void ) {
 CL_Connect_f
 ================
 */
-#ifdef __WASM__
-netadrtype_t familyo = NA_UNSPEC;
-#endif
 static void CL_Connect_f( void ) {
 	netadrtype_t family;
 	netadr_t	addr;
@@ -2126,26 +2104,6 @@ static void CL_Connect_f( void ) {
 	// copy resolved address 
 	clc.serverAddress = addr;
 
-#ifdef __WASM__
-	Cvar_Set( "cl_reconnectArgs", args );
-	Cvar_Set( "cl_currentServerAddress", server );
-	familyo = family;
-	
-	if(!FS_Initialized()) {
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_Connect_After_Shutdown);
-	} else {
-		CL_Connect_After_Restart();
-	}
-  WASM_ASYNC(CL_Connect_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_Connect_After_Startup);
-  WASM_ASYNC(CL_Connect_After_Startup);
-	FS_Restart_After_Async();
-	CL_Connect_After_Restart();
-  WASM_ASYNC(CL_Connect_After_Restart);
-	const char	*serverString;
-#endif
-
 	if (clc.serverAddress.port == 0) {
 		clc.serverAddress.port = BigShort( PORT_SERVER );
 	}
@@ -2178,12 +2136,10 @@ static void CL_Connect_f( void ) {
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 	clc.connectPacketCount = 0;
 
-#ifndef __WASM__
 	Cvar_Set( "cl_reconnectArgs", args );
 
 	// server connection string
 	Cvar_Set( "cl_currentServerAddress", server );
-#endif
 }
 
 #define MAX_RCON_MESSAGE (MAX_STRING_CHARS+4)
@@ -2540,11 +2496,10 @@ we also have to reload the UI and CGame because the renderer
 doesn't know what graphics to reload
 =================
 */
-
-
-
 static void CL_Vid_Restart( qboolean keepWindow ) {
-
+#ifdef USE_ASYNCHRONOUS
+  ASYNCR(CL_Vid_Restart);
+#endif
 
 #ifdef USE_VID_FAST
   char *arg = Cmd_Argv(0);
@@ -2588,19 +2543,10 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 
 	CL_ClearMemory();
 
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 	if(!FS_Initialized()) {
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_Vid_Restart_After_Shutdown);
-	} else {
-		CL_Vid_Restart_After_Restart();
+		ASYNCP(CL_Vid_Restart, keepWindow);
 	}
-  WASM_ASYNC(CL_Vid_Restart_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_Vid_Restart_After_Startup);
-  WASM_ASYNC(CL_Vid_Restart_After_Startup);
-	FS_Restart_After_Async();
-	CL_Vid_Restart_After_Restart();
-  WASM_ASYNC(CL_Vid_Restart_After_Restart);
 #endif
 
 	// initialize the renderer interface
@@ -2798,34 +2744,6 @@ static void CL_CompleteCallvote( char *args, int argNum )
 //====================================================================
 
 #ifdef __WASM__
-// TODO: use WASM_ASYNC here but need to add function definitions above
-void CL_DownloadsComplete_Disconnected_After_Startup( void ) {
-	FS_Restart_After_Async();
-	clc.dlDisconnect = qfalse;
-	Cvar_Set( "ui_singlePlayerActive", "0" );
-	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs->string ) );
-}
-
-void CL_DownloadsComplete_Disconnected_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_Disconnected_After_Startup);
-}
-
-void CL_DownloadsComplete_After_Startup( void ) {
-	FS_Restart_After_Async();
-	CL_AddReliableCommand("donedl", qfalse);
-}
-
-void CL_DownloadsComplete_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_DownloadsComplete_After_Startup);
-}
-
-void CL_Outside_NextDownload( void )
-{
-	Com_Frame_Callback(NULL, CL_NextDownload);
-	Com_Frame_Proxy(0);
-}
 
 static void CL_em_BeginDownload( const char *localName, const char *remoteName ) {
 
@@ -2878,7 +2796,6 @@ static void CL_DownloadsComplete( void ) {
 		if(clc.downloadRestart) {
 			FS_Restart(clc.checksumFeed);
 			clc.downloadRestart = qfalse;
-			Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_Disconnected_After_Shutdown);
 		}
 		return;
 	}
@@ -2906,11 +2823,6 @@ static void CL_DownloadsComplete( void ) {
 		clc.downloadRestart = qfalse;
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
-#ifdef __WASM__
-		Com_Frame_Callback(Sys_FS_Shutdown, CL_DownloadsComplete_After_Shutdown);
-		return;
-#endif
 
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand( "donedl", qfalse );
@@ -3099,6 +3011,7 @@ void CL_NextDownload( void )
 				cl_allowDownload->integer);
 		}
 #endif /* USE_CURL */
+
 		if( !useCURL ) {
 			if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
 				Com_Error(ERR_DROP, "UDP Downloads are "
@@ -3859,21 +3772,6 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	}
 }
 
-#ifdef __WASM__
-static void CL_CheckTimeout_After_Startup ( void ) {
-	FS_Restart_After_Async();
-	CL_UpdateGUID( NULL, 0 );
-	CL_FlushMemory();
-	if ( uivm ) {
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-	}
-}
-
-static void CL_CheckTimeout_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_CheckTimeout_After_Startup);
-}
-#endif
 
 /*
 ==================
@@ -3897,9 +3795,9 @@ static void CL_CheckTimeout( void ) {
 			if ( FS_Initialized() && uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 			if(!FS_Initialized()) {
-				Com_Frame_Callback(Sys_FS_Shutdown, CL_CheckTimeout_After_Shutdown);
+				ASYNCE(CL_FlushMemory);
 			}
 #endif
 			return;
@@ -4013,7 +3911,7 @@ void CL_Frame( int msec, int realMsec ) {
 
 	// save the msec before checking pause
 	cls.realFrametime = realMsec;
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 	// quake3's loading process is entirely synchronous. throughout this
 	// process it will call trap_UpdateScreen to force an immediate buffer
 	// swap. however, in WebGL we can't force an immediate buffer swap,
@@ -4030,7 +3928,7 @@ void CL_Frame( int msec, int realMsec ) {
   if(cgvm && VM_IsSuspended(cgvm)) {
     unsigned int result = VM_Resume(cgvm);
     if (result != 0xDEADBEEF) {
-      CL_InitCGameFinished();
+      ASYNCEP(CL_InitCGame, 0);
     }
   }
 #else
@@ -4044,7 +3942,7 @@ void CL_Frame( int msec, int realMsec ) {
 				continue;
 			}
 			if (cls.state == CA_LOADING) {
-				CL_InitCGameFinished();
+        ASYNCEP(CL_InitCGame, cgvmi);
 			}
 		}
 	}
@@ -4443,15 +4341,6 @@ static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
 }
 
 
-#ifdef __WASM__
-#ifdef USE_RENDERER_DLOPEN
-static void CL_InitRef_After_Load( void *handle );
-static void CL_InitRef_After_Load2( void *handle );
-#endif
-static void CL_InitRenderer( void );
-#endif
-
-
 /*
 ============
 CL_InitRef
@@ -4462,9 +4351,7 @@ static void CL_InitRef( void ) {
 	refexport_t	*ret;
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
-#ifndef __WASM__
 	char			dllName[ MAX_OSPATH ];
-#endif
 #endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
@@ -4480,49 +4367,24 @@ static void CL_InitRef( void ) {
 
 #ifdef USE_RENDERER_DLOPEN
 
-#ifdef __WASM__
-#define REND_ARCH_STRING "js"
-#else
 #if defined (__linux__) && defined(__i386__)
 #define REND_ARCH_STRING "x86"
 #else
 #define REND_ARCH_STRING ARCH_STRING
-#endif // __linux__
-#endif // __WASM__
+#endif
 
 // TODO: make this a fancy list of renderers we recognize
 	Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 	rendererLib = FS_LoadLibrary( dllName );
-#ifdef __WASM__
-	Com_Frame_RentryHandle(CL_InitRef_After_Load);
-  WASM_ASYNCP(CL_InitRef_After_Load, void *handle);
-	char			dllName[ MAX_OSPATH ];
-  rendererLib = handle;
-#endif
-
 	if ( !rendererLib )
 	{
 		Cvar_ForceReset( "cl_renderer" );
 		Com_sprintf( dllName, sizeof( dllName ), RENDERER_PREFIX "_%s_" REND_ARCH_STRING DLL_EXT, cl_renderer->string );
 		rendererLib = FS_LoadLibrary( dllName );
-	} else {
-#ifdef __WASM__
-		CL_InitRef_After_Load2(handle);
-		return;
-#endif
-	}
-#ifdef __WASM__
-	Com_Frame_RentryHandle(CL_InitRef_After_Load2);
-  WASM_ASYNCP(CL_InitRef_After_Load2, void *handle);
-	refimport_t	rimp;
-	refexport_t	*ret;
-	GetRefAPI_t		GetRefAPI;
-	char			dllName[ MAX_OSPATH ];
-#endif
-
 	if ( !rendererLib )
 	{
 		Com_Error( ERR_FATAL, "Failed to load renderer %s", dllName );
+	}
 	}
 
 	GetRefAPI = Sys_LoadFunction( rendererLib, "GetRefAPI" );
@@ -4533,7 +4395,7 @@ static void CL_InitRef( void ) {
 	}
 
 	cl_renderer->modified = qfalse;
-#endif // USE_RENDERER_DLOPEN
+#endif
 
 	Com_Memset( &rimp, 0, sizeof( rimp ) );
 
@@ -4650,23 +4512,6 @@ static void CL_InitRef( void ) {
 
 	// unpause so the cgame definitely gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
-#ifdef USE_RENDERER_DLOPEN
-#ifdef __WASM__
- 	// because starting dlopen is async have to rerun this code
-	if(!cls.rendererStarted) {
-		cls.rendererStarted = qtrue;
-		CL_InitRenderer();
-	}
-
-	if(!cls.uiStarted) {
-		cls.uiStarted = qtrue;
-		CL_InitUI(qfalse);
-	}
-#endif
-#endif
-#ifdef __WASM__
-  CL_Init_After_InitRef();
-#endif
 }
 
 
@@ -5365,12 +5210,7 @@ void CL_Init( void ) {
 	cl_conXOffset = Cvar_Get ("cl_conXOffset", "0", 0);
 	cl_conColor = Cvar_Get( "cl_conColor", "", 0 );
 
-//#ifdef MACOS_X
-	// In game video is REALLY slow in Mac OS X right now due to driver slowness
-	cl_inGameVideo = Cvar_Get( "r_inGameVideo", "0", CVAR_ARCHIVE_ND );
-//#else
 	cl_inGameVideo = Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE_ND );
-//#endif
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
@@ -5513,9 +5353,6 @@ void CL_Init( void ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
-#ifdef __WASM__
-  ASYNC_WASM(CL_Init_After_InitRef);
-#endif
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvjoin", CL_Multiview_f );
@@ -5561,9 +5398,6 @@ void CL_Init( void ) {
 
 #ifdef USE_PRINT_CONSOLE
   Com_PrintClear();
-#endif
-#ifdef __WASM__
-  Com_Init_After_CL_Init();
 #endif
 }
 

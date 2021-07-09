@@ -272,9 +272,9 @@ void Cbuf_Execute( void )
 		} else {
 			Cmd_ExecuteString( line, qfalse, 0 );
 		}
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 		// if an execution invoked a callback event like `\fs_restart`, run the rest next frame
-		if(!FS_Initialized() || CB_Frame_Proxy || CB_Frame_After) {
+		if(!FS_Initialized()) {
 			return;
 		}
 #endif

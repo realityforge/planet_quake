@@ -770,9 +770,6 @@ void CL_ParseServerInfo( int igs )
 CL_ParseGamestate
 ==================
 */
-#ifdef __WASM__
-int gigs;
-#endif
 static void CL_ParseGamestate( msg_t *msg ) {
 	int				i;
 	entityState_t	*es;
@@ -905,50 +902,14 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	// try to keep gamestate and connection state during game switch
 	cls.gameSwitch = gamedirModified;
 
-#ifndef __WASM__
 	// reinitialize the filesystem if the game directory has changed
 	FS_ConditionalRestart( clc.checksumFeed, gamedirModified, igs );
 
 	cls.gameSwitch = qfalse;
-#else
-  gigs = igs;
-	if(FS_ConditionalRestart(clc.checksumFeed, qfalse, igs)) {
-		cls.gameSwitch = qfalse;
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_Game_After_Shutdown);
-			return;
-		}
-	} else {
-		if(!FS_Initialized()) {
-			Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseGamestate_After_Shutdown);
-			return;
-		}
-	}
-	// always assume restart fs? should be low cost with a web-worker and new content server
-	CL_ParseGamestate_After_Restart();
-  WASM_ASYNC(CL_ParseGamestate_Game_After_Shutdown);
-#ifdef USE_MULTIVM_CLIENT
-  int igs = gigs;
-	Cvar_Set("mapname", Info_ValueForKey( cl.gameStates[clc.currentView].stringData + cl.gameStates[clc.currentView].stringOffsets[ CS_SERVERINFO ], "mapname" ));
-#else
-  Cvar_Set("mapname", Info_ValueForKey( cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ], "mapname" ));
-#endif
-	FS_Startup();
-	if(*clc.sv_dlURL) {
-		Cvar_Set( "sv_dlURL", clc.sv_dlURL );
-	}
-	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_Game_After_Startup);
-  WASM_ASYNC(CL_ParseGamestate_Game_After_Startup);
-	FS_Restart_After_Async();
-	Com_GameRestart_After_Restart();
-	CL_ParseGamestate_After_Restart();
-  WASM_ASYNC(CL_ParseGamestate_After_Shutdown);
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_ParseGamestate_After_Startup);
-  WASM_ASYNC(CL_ParseGamestate_After_Startup);
-	FS_Restart_After_Async();
-	CL_ParseGamestate_After_Restart();
-  WASM_ASYNC(CL_ParseGamestate_After_Restart);
+#ifdef USE_ASYNCHRONOUS
+  if(!FS_Initialized()) {
+    ASYNCV(CL_InitDownloads);
+  }
 #endif
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
@@ -1028,7 +989,6 @@ static void CL_ParseDownload( msg_t *msg ) {
 		clc.downloadSize = MSG_ReadLong ( msg );
 
 		Cvar_SetIntegerValue( "cl_downloadSize", clc.downloadSize );
-		Com_Printf("Download size: %i\n", clc.downloadSize);
 
 		if (clc.downloadSize < 0)
 		{
@@ -1108,22 +1068,6 @@ static void CL_ParseDownload( msg_t *msg ) {
 }
 
 
-#ifdef __WASM__
-static void CL_ParseCommand_After_Startup ( void ) {
-	FS_Restart_After_Async();
-	CL_FlushMemory();
-	if ( uivm ) {
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-	}
-}
-
-static void CL_ParseCommand_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, CL_ParseCommand_After_Startup);
-}
-#endif
-
-
 /*
 =====================
 CL_ParseCommandString
@@ -1172,9 +1116,9 @@ static void CL_ParseCommandString( msg_t *msg ) {
 			Com_Printf( "%s\n", text );
 			if ( !CL_Disconnect( qtrue, qtrue ) ) { // restart client if not done already
 				CL_FlushMemory();
-#ifdef __WASM__
+#ifdef USE_ASYNCHRONOUS
 				if(!FS_Initialized()) {
-					Com_Frame_Callback(Sys_FS_Shutdown, CL_ParseCommand_After_Shutdown);
+					ASYNCV(CL_StartHunkUsers);
 				}
 #endif
 			}
