@@ -3075,6 +3075,7 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 #ifdef USE_ASYNCHRONOUS
 extern cvar_t *cl_dlURL;
 extern cvar_t *cl_allowDownload;
+extern void CL_Download_f( void );
 extern void CL_Connect_f( void );
 
 void *Com_PreviousEventPtr( void )
@@ -3996,6 +3997,7 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 #ifdef USE_ASYNCHRONOUS
+  Cmd_AddCommand( "directdl", CL_Download_f );
   Cmd_AddCommand( "connect", CL_Connect_f );
   Cmd_AddCommand( "quit", Com_Quit_f );
   // TODO: won't act differently when server-to-server is ready
@@ -4005,7 +4007,7 @@ void Com_Init( char *commandLine ) {
   cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
 #endif
   if(com_earlyConnect[0] != '\0') {
-    Cbuf_AddText( va("connect %s\n", com_earlyConnect) );
+    Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
   }
   ASYNC(Com_Init);
 #endif

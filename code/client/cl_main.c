@@ -177,8 +177,12 @@ static void CL_ServerStatus_f( void );
 static void CL_ServerStatusResponse( const netadr_t *from, msg_t *msg );
 static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg );
 
+#ifdef USE_ASYNCHRONOUS
+void CL_Download_f( void );
+#else
 #ifdef USE_CURL
 static void CL_Download_f( void );
+#endif
 #endif
 static void CL_LocalServers_f( void );
 static void CL_GlobalServers_f( void );
@@ -2746,40 +2750,6 @@ static void CL_CompleteCallvote( char *args, int argNum )
 
 //====================================================================
 
-#ifdef __WASM__
-
-static void CL_em_BeginDownload( const char *localName, const char *remoteName ) {
-
-	Com_DPrintf("***** CL_BeginDownload *****\n"
-				"Localname: %s\n"
-				"Remotename: %s\n"
-				"****************************\n", localName, remoteName);
-
-	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
-	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
-
-	// Set so UI gets access to it
-	Cvar_Set( "cl_downloadName", remoteName );
-	Cvar_Set( "cl_downloadSize", "0" );
-	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
-
-	clc.downloadBlock = 0; // Starting new file
-	clc.downloadCount = 0;
-
-	Sys_BeginDownload();
-	if(!(clc.sv_allowDownload & DLF_NO_DISCONNECT) &&
-		!clc.dlDisconnect) {
-
-		CL_AddReliableCommand("disconnect", qtrue);
-		CL_WritePacket();
-		CL_WritePacket();
-		CL_WritePacket();
-		clc.dlDisconnect = qtrue;
-	}
-}
-
-#endif
 
 /*
 =================
@@ -2932,7 +2902,11 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
 
+#ifdef __WASM__
+  Sys_BeginDownload();
+#else
 	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
+#endif
 }
 
 
@@ -3024,11 +2998,7 @@ void CL_NextDownload( void )
 				return;	
 			}
 			else {
-#ifdef __WASM__
-        CL_em_BeginDownload( localName, remoteName );
-#else
 				CL_BeginDownload( localName, remoteName );
-#endif
 			}
 		}
 		clc.downloadRestart = qtrue;
@@ -6541,13 +6511,18 @@ qboolean CL_Download( const char *cmd, const char *pakname, qboolean autoDownloa
 	return Com_DL_Begin( &download, pakname, cl_dlURL->string, autoDownload );
 }
 
+#endif // USE_CURL
+
 
 /*
 ==================
 CL_Download_f
 ==================
 */
-static void CL_Download_f( void )
+#ifndef USE_ASYNCHRONOUS
+static 
+#endif
+void CL_Download_f( void )
 {
 	if ( Cmd_Argc() < 2 || *Cmd_Argv( 1 ) == '\0' )
 	{
@@ -6555,6 +6530,39 @@ static void CL_Download_f( void )
 		return;
 	}
 
+#ifdef USE_ASYNCHRONOUS
+  char *downloadName = Cmd_Argv( 1 );
+  if ( !Q_stricmp( Cmd_Argv( 0 ), "directdl" ) )
+  {
+    qboolean useCURL = qfalse;
+    qboolean dlStart = qfalse;
+    if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)
+      && cl_dlURL->string[0] != '\0'
+      && Com_DL_ValidFileName( downloadName )) {
+      CL_cURL_BeginDownload(downloadName, va("%s/%s",
+        cl_dlURL->string, downloadName));
+      useCURL = qtrue;
+      dlStart = qtrue;
+    }
+    if(!useCURL && !(cl_allowDownload->integer & DLF_NO_UDP)
+      && clc.serverAddress.type != NA_BAD) {
+      CL_BeginDownload( downloadName, downloadName );
+      dlStart = qtrue;
+    }
+    if(!dlStart) {
+      Com_Printf("WARNING: cannot start download, "
+				"check cl_allowDownload and cl_dlURL "
+				"configuration (cl_allowDownload is %d "
+        "and cl_dlURL is \"%s\")\n",
+        cl_allowDownload->integer,
+        cl_dlURL->string);
+    }
+    return;
+  }
+#endif
+
+
+#ifdef USE_CURL
 	if ( !strcmp( Cmd_Argv(1), "-" ) )
 	{
 		Com_DL_Cleanup( &download );
@@ -6562,8 +6570,9 @@ static void CL_Download_f( void )
 	}
 
 	CL_Download( Cmd_Argv( 0 ), Cmd_Argv( 1 ), qfalse );
+#endif
 }
-#endif // USE_CURL
+
 
 #ifdef USE_MV
 
