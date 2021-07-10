@@ -3064,6 +3064,8 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 
 
 #ifdef USE_ASYNCHRONOUS
+extern cvar_t *cl_dlURL;
+extern cvar_t *cl_allowDownload;
 extern void CL_NextDownload( void );
 extern void CL_AppendDownload( char *downloadName );
 
@@ -3176,7 +3178,6 @@ int Com_EventLoop( void ) {
     case SE_DOWNLOAD:
 #ifndef DEDICATED
       CL_AppendDownload(ev.evPtr);
-      CL_NextDownload();
 #endif
       break;
 #endif
@@ -3992,6 +3993,11 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 #ifdef USE_ASYNCHRONOUS
+  Cmd_AddCommand( "quit", Com_Quit_f );
+#ifndef DEDICATED
+  cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
+  cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
+#endif
   ASYNC(Com_Init);
 #endif
 #ifdef USE_PRINT_CONSOLE
@@ -4127,7 +4133,9 @@ void Com_Init( char *commandLine ) {
 		Cmd_SetDescription( "freeze", "Create an artificial freeze for testing\nUsage: freeze" );
 	}
 
+#ifndef USE_ASYNCHRONOUS
 	Cmd_AddCommand( "quit", Com_Quit_f );
+#endif
 	Cmd_SetDescription( "quit", "Quit arena and quit Quake 3 Arena and return to your OS\nUsage: quit" );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
 	Cmd_SetDescription( "changeVectors", "Change to vector defined by FIND_NEW_CHANGE_VECTORS as in vector graphics\nUsage: changevectors" );
@@ -4443,6 +4451,9 @@ void Com_Frame( qboolean noDelay ) {
 #ifdef USE_ASYNCHRONOUS
   if(!com_fullyInitialized) {
     Com_EventLoop();
+    CL_Frame(0, 0);
+    NET_FlushPacketQueue();
+    Cbuf_Execute();
     return;
   }
 #endif

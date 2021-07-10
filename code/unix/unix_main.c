@@ -479,7 +479,10 @@ char *Sys_ConsoleInput( void )
 				if (key == '\n')
 				{
 					// push it in history
-					Con_SaveField( &tty_con );
+#ifdef USE_ASYNCHRONOUS
+          if(FS_Initialized())
+#endif
+          Con_SaveField( &tty_con );
 					s = tty_con.buffer;
 					while ( *s == '\\' || *s == '/' ) // skip leading slashes
 						s++;
@@ -509,6 +512,9 @@ char *Sys_ConsoleInput( void )
 							switch (key)
 							{
 							case 'A':
+#ifdef USE_ASYNCHRONOUS
+                if(FS_Initialized())
+#endif
 								if ( Con_HistoryGetPrev( &history ) )
 								{
 									tty_Hide();
@@ -519,6 +525,9 @@ char *Sys_ConsoleInput( void )
 								return NULL;
 								break;
 							case 'B':
+#ifdef USE_ASYNCHRONOUS
+                if(FS_Initialized())
+#endif
 								if ( Con_HistoryGetNext( &history ) )
 								{
 									tty_Hide();

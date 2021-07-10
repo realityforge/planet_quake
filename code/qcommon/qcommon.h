@@ -1507,7 +1507,7 @@ void	Sys_SnapVector( float *vector );
 qboolean Sys_RandomBytes( byte *string, int len );
 
 #ifdef USE_ASYNCHRONOUS
-void Sys_Download(char *downloadName);
+void Sys_Download(const char *downloadName);
 void Sys_Offline( void );
 #endif
 

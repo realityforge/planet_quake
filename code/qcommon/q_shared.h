@@ -162,14 +162,14 @@ if(Com_PreviousEventPtr() == &x) { \
 } \
 
 #define ASYNCF(x, f) \
-Sys_Download(#f); \
+Sys_Download(f); \
 x##_Requeue: \
 ASYNC(x); \
 if(!FS_FileExists(f)) \
 goto x##_Requeue; \
 
 #define ASYNCPF(x, y, f) \
-Sys_Download(#f); \
+Sys_Download(f); \
 x##_Requeue: \
 ASYNCP(x, y); \
 if(!FS_FileExists(f)) \
@@ -197,6 +197,15 @@ goto x##_Requeue; \
 #define USE_ASYNCHRONOUS 1
 // 
 #endif // __WASM__
+
+
+// TODO: when asynchronous is working
+/*
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
+#define USE_ASYNCHRONOUS 1
+#define USE_LAZY_LOAD 1
+#endif
+*/
 
 
 #ifdef USE_LAZY_LOAD

@@ -3045,6 +3045,10 @@ void CL_AppendDownload(char *downloadName)
 {
   int len = strlen(clc.downloadList);
   strcpy(&clc.downloadList[len], va("@%s@%s", downloadName, downloadName));
+  if(!*clc.downloadName
+    && clc.download == FS_INVALID_HANDLE) {
+    CL_NextDownload();
+  }
 }
 #endif
 
@@ -3894,15 +3898,26 @@ void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
 
+#ifdef USE_ASYNCHRONOUS
+  if(!com_cl_running) {
+    if(clc.downloadCURLM) {
+      CL_cURL_PerformDownload();
+    }
+    return;
+  }
+#endif
+
 #ifdef USE_MULTIVM_CLIENT
 	cgvmi = 0;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
+#if 0
 #ifdef USE_CURL	
 	if ( download.cURL ) {
 		Com_DL_Perform( &download );
 	}
+#endif
 #endif
 
 	if ( !com_cl_running->integer ) {
@@ -5199,6 +5214,7 @@ void CL_Init( void ) {
   cl_mvHighlight = Cvar_Get("cl_mvHighlight", "1", CVAR_ARCHIVE);
   Cvar_CheckRange( cl_mvHighlight, "0", "1", CV_INTEGER );
 #endif
+
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );

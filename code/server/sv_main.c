@@ -1606,6 +1606,7 @@ void SV_Frame( int msec ) {
 		return;
 	}
 
+#ifdef USE_LNBITS
 #ifdef USE_CURL	
 	if ( svDownload.cURL ) 
 	{
@@ -1613,7 +1614,6 @@ void SV_Frame( int msec ) {
 	}
 #endif
 
-#ifdef USE_LNBITS
 	SV_CheckInvoicesAndPayments();
 #endif
 

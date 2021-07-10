@@ -1015,7 +1015,7 @@ static void CL_ParseDownload( msg_t *msg ) {
 	// open the file if not opened yet
 	if ( clc.download == FS_INVALID_HANDLE ) 
 	{
-		if ( clc.downloadName[0] != '*' && !CL_ValidPakSignature( data, size ) ) 
+		if ( !CL_ValidPakSignature( data, size ) ) 
 		{
 			Com_Printf( S_COLOR_YELLOW "Invalid pak signature for %s\n", clc.downloadName );
 			CL_AddReliableCommand( "stopdl", qfalse );

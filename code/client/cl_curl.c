@@ -932,6 +932,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 }
 
 
+#if 0
 qboolean Com_DL_Perform( download_t *dl )
 {
 	char name[ sizeof( dl->TempName ) ];
@@ -1027,5 +1028,6 @@ qboolean Com_DL_Perform( download_t *dl )
 
 	return qtrue;
 }
+#endif // Com_DL_Perform no longer needed
 
 #endif /* USE_CURL */
