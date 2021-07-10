@@ -117,7 +117,8 @@ void Sys_Download(const char *downloadName)
 {
 #ifndef DEDICATED
   if(!com_dedicated || !com_dedicated->integer) {
-    Sys_QueEvent( Sys_Milliseconds(), SE_DOWNLOAD, 0, 0, strlen(downloadName), CopyString(downloadName) );
+    Com_DL_Begin( &download, CopyString(downloadName), cl_dlURL->string, qfalse );
+    CL_AddReliableCommand( va("download %s", downloadName), qfalse );
   }
 #endif
 // TODO: something else for server and dedicated, perhaps download from 

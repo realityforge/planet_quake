@@ -1461,7 +1461,6 @@ typedef enum {
 #ifdef USE_ASYNCHRONOUS
   SE_ASYNC,
   SE_ASYNCP,
-  SE_DOWNLOAD,
 #endif
 } sysEventType_t;
 

@@ -974,7 +974,7 @@ void Con_Bottom( void )
 
 void Con_Close( void )
 {
-	if ( !com_cl_running->integer )
+	if ( !com_cl_running || !com_cl_running->integer )
 		return;
 
 	Field_Clear( &g_consoleField );

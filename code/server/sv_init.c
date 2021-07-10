@@ -899,6 +899,7 @@ void SV_BanCheatsModified(char *oldValue, char *newValue, cvar_t *cv) {
 
 
 #endif // BUILD_SLIM_CLIENT
+
 /*
 ===============
 SV_Init

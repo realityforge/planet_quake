@@ -1990,7 +1990,10 @@ static void CL_Reconnect_f( void ) {
 CL_Connect_f
 ================
 */
-static void CL_Connect_f( void ) {
+#ifndef USE_ASYNCHRONOUS
+static 
+#endif
+void CL_Connect_f( void ) {
 	netadrtype_t family;
 	netadr_t	addr;
 	char	buffer[ sizeof(cls.servername) ];  // same length as cls.servername
@@ -2069,7 +2072,7 @@ static void CL_Connect_f( void ) {
 #ifndef BUILD_SLIM_CLIENT
 
 	// if running a local server, kill it
-	if ( com_sv_running->integer && !strcmp( server, "localhost" ) ) {
+	if ( com_sv_running && com_sv_running->integer && !strcmp( server, "localhost" ) ) {
 		SV_Shutdown( "Server quit" );
 	}
 
@@ -2112,7 +2115,7 @@ static void CL_Connect_f( void ) {
 
 	Com_Printf( "%s resolved to %s\n", cls.servername, serverString );
 
-	if ( cl_guidServerUniq->integer )
+	if ( cl_guidServerUniq && cl_guidServerUniq->integer )
 		CL_UpdateGUID( serverString, strlen( serverString ) );
 	else
 		CL_UpdateGUID( NULL, 0 );
@@ -3038,19 +3041,6 @@ void CL_NextDownload( void )
 
 	CL_DownloadsComplete();
 }
-
-
-#ifdef USE_ASYNCHRONOUS
-void CL_AppendDownload(char *downloadName)
-{
-  int len = strlen(clc.downloadList);
-  strcpy(&clc.downloadList[len], va("@%s@%s", downloadName, downloadName));
-  if(!*clc.downloadName
-    && clc.download == FS_INVALID_HANDLE) {
-    CL_NextDownload();
-  }
-}
-#endif
 
 
 /*
@@ -5322,7 +5312,9 @@ void CL_Init( void ) {
 	Cmd_SetDescription("cinematic", "Play a video or RoQ file\nUsage: cinematic <videofile>");
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_SetDescription("stoprecord", "Stop recording a demo\nUsage: stoprecord");
+#ifndef USE_ASYNCHRONOUS
 	Cmd_AddCommand ("connect", CL_Connect_f);
+#endif
 	Cmd_SetDescription("connect", "Connect to a server\nUsage: connect ([-4|-6]) <serveraddress>");
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f);
 	Cmd_SetDescription("reconnect", "Reinitialize the connection to the last server you were connected to\nUsage: reconnect");

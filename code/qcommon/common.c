@@ -165,6 +165,9 @@ int			com_frameNumber;
 qboolean  com_skipLoadUI = qfalse;
 qboolean	com_errorEntered = qfalse;
 qboolean	com_fullyInitialized = qfalse;
+#ifdef USE_ASYNCHRONOUS
+char com_earlyConnect[MAX_OSPATH];
+#endif
 
 // renderer window states
 qboolean	gw_minimized = qfalse; // this will be always true for dedicated servers
@@ -795,6 +798,12 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
       || !strcmp(Cmd_Argv(0), "spdevmap") ) {
       com_skipLoadUI = qtrue;
     }
+#ifdef USE_ASYNCHRONOUS
+    if( !strcmp(Cmd_Argv(0), "connect") ) {
+      com_consoleLines[i][0] = '\0';
+      Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
+    }
+#endif
 	}
 
 	return (flags == 3) ? qtrue : qfalse ;
@@ -3066,8 +3075,7 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 #ifdef USE_ASYNCHRONOUS
 extern cvar_t *cl_dlURL;
 extern cvar_t *cl_allowDownload;
-extern void CL_NextDownload( void );
-extern void CL_AppendDownload( char *downloadName );
+extern void CL_Connect_f( void );
 
 void *Com_PreviousEventPtr( void )
 {
@@ -3174,11 +3182,6 @@ int Com_EventLoop( void ) {
       break;
     case SE_ASYNCP:
       ev.evPtr = NULL; // function pointer, no free
-      break;
-    case SE_DOWNLOAD:
-#ifndef DEDICATED
-      CL_AppendDownload(ev.evPtr);
-#endif
       break;
 #endif
 		default:
@@ -3993,11 +3996,17 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 #ifdef USE_ASYNCHRONOUS
+  Cmd_AddCommand( "connect", CL_Connect_f );
   Cmd_AddCommand( "quit", Com_Quit_f );
+  // TODO: won't act differently when server-to-server is ready
+  //   because server will also act like a client to another server
 #ifndef DEDICATED
   cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
   cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
 #endif
+  if(com_earlyConnect[0] != '\0') {
+    Cbuf_AddText( va("connect %s\n", com_earlyConnect) );
+  }
   ASYNC(Com_Init);
 #endif
 #ifdef USE_PRINT_CONSOLE
@@ -4451,9 +4460,9 @@ void Com_Frame( qboolean noDelay ) {
 #ifdef USE_ASYNCHRONOUS
   if(!com_fullyInitialized) {
     Com_EventLoop();
-    CL_Frame(0, 0);
     NET_FlushPacketQueue();
     Cbuf_Execute();
+    CL_Frame(0, 0);
     return;
   }
 #endif

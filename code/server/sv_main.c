@@ -1570,6 +1570,8 @@ static void SV_Restart( const char *reason ) {
 }
 
 
+extern qboolean		com_fullyInitialized;
+
 /*
 ==================
 SV_Frame
@@ -1582,6 +1584,10 @@ void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
 	int		i, n;
+
+  if(!com_fullyInitialized) {
+    return;
+  }
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
