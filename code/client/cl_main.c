@@ -3873,6 +3873,8 @@ void CL_Frame( int msec, int realMsec ) {
   if(!com_cl_running || !com_cl_running->integer) {
     CL_SendCmd();
     CL_CheckForResend();
+    cls.frametime = msec;
+  	cls.realtime += msec;
     return;
   }
 #endif

@@ -1598,8 +1598,8 @@ static int SV_WriteDownloadToClient( client_t *cl, msg_t *msg )
 				}
 			}
       else {
-#ifdef USE_DYNAMIC_ZIP
-        if(FS_FileExists(cl->downloadName)) {
+#if defined(USE_DYNAMIC_ZIP) || defined(USE_ASYNCHRONOUS)
+        if(FS_SV_FileExists(cl->downloadName)) {
           unreferenced = 0;
         }
 #endif

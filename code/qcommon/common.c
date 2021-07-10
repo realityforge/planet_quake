@@ -4012,6 +4012,8 @@ void Com_Init( char *commandLine ) {
   com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
   cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
   com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
+  com_fixedtime = Cvar_Get ("fixedtime", "0", CVAR_CHEAT);
+  com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
   cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
   cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM | CVAR_USERINFO);
 #endif
@@ -4397,7 +4399,7 @@ static int Com_ModifyMsec( int msec ) {
 
 		clampTime = 5000;
 	} else 
-	if ( !com_sv_running->integer ) {
+	if ( !com_sv_running || !com_sv_running->integer ) {
 		// clients of remote servers do not want to clamp time, because
 		// it would skew their view of the server's time temporarily
 		clampTime = 5000;
@@ -4489,8 +4491,12 @@ void Com_Frame( qboolean noDelay ) {
     Com_EventLoop();
     NET_FlushPacketQueue();
     NET_Sleep( 500 ); // if we got here we're probably syncing file-system
-    Cbuf_Execute();
-    CL_Frame(0, 0);
+    lastTime = com_frameTime;
+  	com_frameTime = Com_EventLoop();
+  	realMsec = com_frameTime - lastTime;
+  	Cbuf_Execute();
+  	msec = Com_ModifyMsec( realMsec );
+    CL_Frame(msec, realMsec);
     return;
   }
 #endif
