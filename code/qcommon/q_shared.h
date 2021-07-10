@@ -132,6 +132,43 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_LAZY_LOAD
 #endif
 
+
+#ifdef __WASM__
+// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
+#define USE_VID_FAST 1
+// allow touch events to set exact cursor position using "cursor spy"
+#define USE_ABS_MOUSE 1
+// start a dedicated server even for single player mode, automatically join a match
+#define USE_LOCAL_DED 1
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+// minimize the number of times the renderer restarts
+#define USE_LAZY_MEMORY 1
+// set specific master servers to be used in the Local LAN game list, 
+//   as if masters were also used in LAN games instead of just broadcasting
+//   or to specific master servers that host games geographically nearby
+#define USE_MASTER_LAN 1
+// make the engine asynchronous, required by wasm build
+#define USE_ASYNCHRONOUS 1
+// 
+#endif // __WASM__
+
+
+#ifdef DEDICATED
+#undef USE_ASYNCHRONOUS
+#undef USE_LAZY_LOAD
+#endif
+
+
+// TODO: when asynchronous is working
+/*
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
+#define USE_ASYNCHRONOUS 1
+#define USE_LAZY_LOAD 1
+#endif
+*/
+
+
 #ifdef USE_ASYNCHRONOUS
 
 #define ASYNCEP(x, y) \
@@ -175,37 +212,7 @@ ASYNCP(x, y); \
 if(!FS_FileExists(f)) \
 goto x##_Requeue; \
 
-
 #endif
-
-#ifdef __WASM__
-// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
-#define USE_VID_FAST 1
-// allow touch events to set exact cursor position using "cursor spy"
-#define USE_ABS_MOUSE 1
-// start a dedicated server even for single player mode, automatically join a match
-#define USE_LOCAL_DED 1
-// allow loading graphics after the BSP and world has been entered
-#define USE_LAZY_LOAD 1
-// minimize the number of times the renderer restarts
-#define USE_LAZY_MEMORY 1
-// set specific master servers to be used in the Local LAN game list, 
-//   as if masters were also used in LAN games instead of just broadcasting
-//   or to specific master servers that host games geographically nearby
-#define USE_MASTER_LAN 1
-// make the engine asynchronous, required by wasm build
-#define USE_ASYNCHRONOUS 1
-// 
-#endif // __WASM__
-
-
-// TODO: when asynchronous is working
-/*
-#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
-#define USE_ASYNCHRONOUS 1
-#define USE_LAZY_LOAD 1
-#endif
-*/
 
 
 #ifdef USE_LAZY_LOAD

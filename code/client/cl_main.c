@@ -1366,7 +1366,7 @@ CL_ShutdownAll
 void CL_ShutdownAll( void ) {
 
 #ifdef USE_CURL
-	CL_cURL_Shutdown();
+	Com_DL_Cleanup(&download);
 #endif
 	// clear sounds
 	S_DisableSounds();
@@ -1420,7 +1420,6 @@ void CL_ClearMemory( void ) {
 }
 
 
-extern qboolean		com_fullyInitialized;
 /*
 =================
 CL_FlushMemory
@@ -1438,7 +1437,7 @@ void CL_FlushMemory( void ) {
 	CL_ClearMemory();
 
 #ifdef USE_ASYNCHRONOUS
-	if(!com_fullyInitialized || !FS_Initialized()) return;
+	if(!com_cl_running || !com_cl_running->integer || !FS_Initialized()) return;
 #endif
 
 	CL_StartHunkUsers();
@@ -2779,7 +2778,7 @@ static void CL_DownloadsComplete( void ) {
 	// if we downloaded with cURL
 	if(clc.cURLUsed) { 
 		clc.cURLUsed = qfalse;
-		CL_cURL_Shutdown();
+		Com_DL_Cleanup(&download);
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
 				FS_Restart(clc.checksumFeed);
@@ -2972,15 +2971,12 @@ void CL_NextDownload( void )
 					"download redirection, but does not "
 					"have sv_dlURL set\n");
 			}
-			else if(!CL_cURL_Init()) {
-				Com_Printf("WARNING: could not load "
-					"cURL library\n");
-			}
-			else {
-				CL_cURL_BeginDownload(localName, va("%s/%s",
-					clc.sv_dlURL, remoteName));
-				useCURL = qtrue;
-			}
+			else if (!Com_DL_Begin( &download, remoteName, clc.sv_dlURL, qfalse )) {
+        Com_Printf("WARNING: could not load download with curl\n");
+				useCURL = qfalse;
+			} else {
+        useCURL = qtrue;
+      }
 		}
 		else if(!(clc.sv_allowDownload & DLF_NO_REDIRECT)) {
 			Com_Printf("WARNING: server allows download "
@@ -3686,6 +3682,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
+printf("goddamnit\n");
 	if ( msg->cursize < 5 ) {
 		Com_DPrintf( "%s: Runt packet\n", NET_AdrToStringwPort( from ) );
 		return;
@@ -3724,10 +3721,12 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	// client messages, allowing the server to detect a dropped
 	// gamestate
 	clc.serverMessageSequence = LittleLong( *(int *)msg->data );
+  printf("goddamnit 2\n");
 
 	clc.lastPacketTime = cls.realtime;
 	CL_ParseServerMessage( msg );
 
+  printf("goddamnit 3\n");
 	//
 	// we don't know if it is ok to save a demo message until
 	// after we have parsed the frame
@@ -3859,26 +3858,22 @@ void CL_Frame( int msec, int realMsec ) {
 	float fps;
 	float frameDuration;
 
-#ifdef USE_ASYNCHRONOUS
-  if(!com_cl_running) {
-    if(clc.downloadCURLM) {
-      CL_cURL_PerformDownload();
-    }
-    return;
-  }
-#endif
-
 #ifdef USE_MULTIVM_CLIENT
 	cgvmi = 0;
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
-#if 0
 #ifdef USE_CURL	
 	if ( download.cURL ) {
 		Com_DL_Perform( &download );
 	}
 #endif
+#ifdef USE_ASYNCHRONOUS
+  if(!com_cl_running || !com_cl_running->integer) {
+    CL_SendCmd();
+    CL_CheckForResend();
+    return;
+  }
 #endif
 
 	if ( !com_cl_running->integer ) {
@@ -3952,7 +3947,7 @@ void CL_Frame( int msec, int realMsec ) {
 
 #ifdef USE_CURL
 	if ( clc.downloadCURLM ) {
-		CL_cURL_PerformDownload();
+		Com_DL_Perform(&download);
 		// we can't process frames normally when in disconnected
 		// download mode since the ui vm expects cls.state to be
 		// CA_CONNECTED
@@ -6535,28 +6530,10 @@ void CL_Download_f( void )
   char *downloadName = Cmd_Argv( 1 );
   if ( !Q_stricmp( Cmd_Argv( 0 ), "directdl" ) )
   {
-    qboolean useCURL = qfalse;
-    qboolean dlStart = qfalse;
-    if(!(cl_allowDownload->integer & DLF_NO_REDIRECT)
-      && cl_dlURL->string[0] != '\0'
-      && Com_DL_ValidFileName( downloadName )) {
-      CL_cURL_BeginDownload(downloadName, va("%s/%s",
-        cl_dlURL->string, downloadName));
-      useCURL = qtrue;
-      dlStart = qtrue;
-    }
-    if(!useCURL && !(cl_allowDownload->integer & DLF_NO_UDP)
-      && clc.serverAddress.type != NA_BAD) {
-      CL_BeginDownload( downloadName, downloadName );
-      dlStart = qtrue;
-    }
-    if(!dlStart) {
-      Com_Printf("WARNING: cannot start download, "
-				"check cl_allowDownload and cl_dlURL "
-				"configuration (cl_allowDownload is %d "
-        "and cl_dlURL is \"%s\")\n",
-        cl_allowDownload->integer,
-        cl_dlURL->string);
+    Q_strcat( clc.downloadList, sizeof( clc.downloadList ), va("@%s@%s", downloadName, downloadName) );
+    if(!Com_DL_InProgress(&download)
+      && !(*clc.downloadName)) {
+      CL_NextDownload();
     }
     return;
   }

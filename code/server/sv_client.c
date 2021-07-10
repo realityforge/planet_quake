@@ -2613,7 +2613,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 	qboolean bFloodProtect;
 	
 	Cmd_TokenizeString( s );
-	
+
 #ifdef USE_CMD_CONNECTOR
   // TODO: check implied rconpassword (cl_guid) from previous attempt by client
 	char		sv_outputbuf[1024 - 16];

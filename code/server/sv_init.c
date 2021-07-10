@@ -608,10 +608,6 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
   Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
 
-#ifdef USE_ASYNCHRONOUS
-  // TODO: something more graceful than restarting filesystem above
-#endif
-
 	Sys_SetStatus( "Loading map %s", mapname );
 #ifdef USE_MULTIVM_SERVER
 	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );

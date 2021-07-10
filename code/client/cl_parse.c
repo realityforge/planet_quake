@@ -50,7 +50,7 @@ static const char *svc_strings[256] = {
 };
 
 void SHOWNET( msg_t *msg, const char *s ) {
-	if ( cl_shownet->integer >= 2) {
+	if ( cl_shownet && cl_shownet->integer >= 2) {
 		Com_Printf ("%3i:%s\n", msg->readcount-1, s);
 	}
 }
@@ -550,7 +550,7 @@ Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 	// save the frame off in the backup array for later delta comparisons
 	cl.snapshots[cl.snap.messageNum & PACKET_MASK] = cl.snap;
 
-	if (cl_shownet->integer == 3) {
+	if (cl_shownet && cl_shownet->integer == 3) {
 		Com_Printf( "   snapshot:%i  delta:%i  ping:%i\n", cl.snap.messageNum,
 		cl.snap.deltaNum, cl.snap.ping );
 	}
@@ -886,7 +886,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	CL_SystemInfoChanged( qtrue, igs );
 
 	// stop recording now so the demo won't have an unnecessary level load at the end.
-	if ( cl_autoRecordDemo->integer && clc.demorecording ) {
+	if ( cl_autoRecordDemo && cl_autoRecordDemo->integer && clc.demorecording ) {
 		if ( !clc.demoplaying ) {
 			CL_StopRecord_f();
 		}
@@ -964,6 +964,8 @@ static void CL_ParseDownload( msg_t *msg ) {
 	unsigned char data[ MAX_MSGLEN ];
 	uint16_t block;
 
+printf("download 1\n");
+
 	if (!*clc.downloadTempName) {
 		Com_Printf("Server sending download, but no download was requested\n");
 		// parse the rest of the download so we don't get illegible
@@ -1034,8 +1036,10 @@ static void CL_ParseDownload( msg_t *msg ) {
 		}
 	}
 
+printf("write problem 1\n");
 	if (size)
 		FS_Write( data, size, clc.download );
+    printf("write problem 2\n");
 
 	CL_AddReliableCommand( va("nextdl %d", clc.downloadBlock), qfalse );
 	clc.downloadBlock++;
@@ -1065,6 +1069,7 @@ static void CL_ParseDownload( msg_t *msg ) {
 		// get another file if needed
 		CL_NextDownload();
 	}
+  printf("download 2\n");
 }
 
 
@@ -1209,9 +1214,9 @@ void CL_ParseServerMessage( msg_t *msg ) {
   int igs = clientGames[cgvmi];
 #endif
 
-	if ( cl_shownet->integer == 1 ) {
+	if ( cl_shownet && cl_shownet->integer == 1 ) {
 		Com_Printf ("%i ",msg->cursize);
-	} else if ( cl_shownet->integer >= 2 ) {
+	} else if ( cl_shownet && cl_shownet->integer >= 2 ) {
 		Com_Printf ("------------------\n");
 	}
 
@@ -1236,19 +1241,28 @@ void CL_ParseServerMessage( msg_t *msg ) {
 
 		cmd = MSG_ReadByte( msg );
 
+printf("wtf? %i\n", cmd);
 		if ( cmd == svc_EOF) {
 			SHOWNET( msg, "END OF MESSAGE" );
 			break;
 		}
 
-		if ( cl_shownet->integer >= 2 ) {
+		if ( cl_shownet && cl_shownet->integer >= 2 ) {
 			if ( (cmd < 0) || (!svc_strings[cmd]) ) {
 				Com_Printf( "%3i:BAD CMD %i\n", msg->readcount-1, cmd );
 			} else {
 				SHOWNET( msg, svc_strings[cmd] );
 			}
 		}
-	
+
+#ifdef USE_ASYNCHRONOUS
+    if(!com_cl_running || !com_cl_running->integer) {
+      if(cmd != svc_nop && cmd != svc_download) {
+//        break;
+      }
+    }
+#endif
+
 		// other commands
 		switch ( cmd ) {
 		default:

@@ -742,13 +742,13 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	}
 
 	// send every frame for LAN
-	if ( cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
+	if ( cl_lanForcePackets && cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
 		return qtrue;
 	}
 
 	oldPacketNum = (clc.netchan.outgoingSequence - 1) & PACKET_MASK;
 	delta = cls.realtime -  cl.outPackets[ oldPacketNum ].p_realtime;
-	if ( delta < 1000 / cl_maxpackets->integer ) {
+	if ( cl_maxpackets && delta < 1000 / cl_maxpackets->integer ) {
 		// the accumulated commands will go out in the next packet
 		return qfalse;
 	}
@@ -844,6 +844,7 @@ void CL_WritePacket( void ) {
 
 	// write any unacknowledged clientCommands
 	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
+printf("writing command\n");
 		MSG_WriteByte( &buf, clc_clientCommand );
 		MSG_WriteLong( &buf, i );
 		MSG_WriteString( &buf, clc.reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
@@ -941,7 +942,8 @@ void CL_SendCmd( void ) {
 	}
 
 	// don't send commands if paused
-	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
+	if ( com_sv_running && com_sv_running->integer 
+    && sv_paused->integer && cl_paused->integer ) {
 		return;
 	}
 
@@ -952,7 +954,7 @@ void CL_SendCmd( void ) {
 
 	// don't send a packet if the last packet was sent too recently
 	if ( !CL_ReadyToSendPacket() ) {
-		if ( cl_showSend->integer ) {
+		if ( cl_showSend && cl_showSend->integer ) {
 			Com_Printf( ". " );
 		}
 		return;

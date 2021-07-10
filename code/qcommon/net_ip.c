@@ -2014,7 +2014,7 @@ static void NET_Event( const fd_set *fdr )
 	byte bufData[ MAX_MSGLEN_BUF ];
 	netadr_t from;
 	msg_t netmsg;
-	
+  
 	while( 1 )
 	{
 		MSG_Init( &netmsg, bufData, MAX_MSGLEN );
@@ -2038,7 +2038,7 @@ static void NET_Event( const fd_set *fdr )
 			Com_RunAndTimeServerPacket( &from, &netmsg );
 #else
 #ifndef BUILD_SLIM_CLIENT
-			if ( com_sv_running->integer || com_dedicated->integer )
+			if ( (com_sv_running && com_sv_running->integer) || com_dedicated->integer )
 				Com_RunAndTimeServerPacket( &from, &netmsg );
 			else
 #endif
@@ -2087,27 +2087,6 @@ qboolean NET_Sleep( int timeout )
 		if ( highestfd == INVALID_SOCKET || ip6_socket > highestfd )
 			highestfd = ip6_socket;
 	}
-#endif
-
-#ifdef __WASM__
-  if(SOCKS_Proxy) {
-    Com_Printf( "--------- SOCKS Callback (%p) --------\n", &SOCKS_Proxy);
-    void (*cb)( void ) = SOCKS_Proxy;
-    SOCKS_Proxy = NULL;
-    (*cb)();
-    return qtrue;
-  }
-
-  if(SOCKS_After) {
-    if(invokeSOCKSAfter) {
-      invokeSOCKSAfter = qfalse;
-      Com_Printf( "--------- SOCKS After (%p) --------\n", &SOCKS_After);
-      void (*cb)( void ) = SOCKS_After;
-      SOCKS_After = NULL; // start frame runner again
-      (*cb)();
-      return qtrue;
-    }
-  }
 #endif
 
 	if ( highestfd == INVALID_SOCKET )

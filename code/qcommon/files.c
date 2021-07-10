@@ -5010,7 +5010,9 @@ static void FS_Startup( void ) {
   Cvar_SetFilesDescriptions();
 
 #ifdef USE_ASYNCHRONOUS
-  ASYNCF(FS_Startup, CACHE_FILE_NAME);
+  if(!com_dedicated->integer) {
+    ASYNCF(FS_Startup, CACHE_FILE_NAME);
+  }
 #endif
 
 	start = Sys_Milliseconds();
@@ -5774,11 +5776,13 @@ void FS_Restart( int checksumFeed ) {
 	// try to start up normally
 	FS_Startup();
 #ifdef USE_ASYNCHRONOUS
-  const char *downloadFile = va("%s/default.cfg", fs_gamedirvar->string);
-  if(fs_gamedirvar->string[0] == '\0') {
-    downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
+  if(!com_dedicated->integer) {
+    const char *downloadFile = va("%s/default.cfg", fs_gamedirvar->string);
+    if(fs_gamedirvar->string[0] == '\0') {
+      downloadFile = va("%s/default.cfg", FS_GetBaseGameDir());
+    }
+    ASYNCPF(FS_Restart, checksumFeed, downloadFile);
   }
-  ASYNCPF(FS_Restart, checksumFeed, downloadFile);
 #endif
 
 	// if we can't find default.cfg, assume that the paths are

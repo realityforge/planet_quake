@@ -3075,6 +3075,7 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 #ifdef USE_ASYNCHRONOUS
 extern cvar_t *cl_dlURL;
 extern cvar_t *cl_allowDownload;
+extern cvar_t *cl_shownet;
 extern void CL_Download_f( void );
 extern void CL_Connect_f( void );
 
@@ -3113,6 +3114,9 @@ int Com_EventLoop( void ) {
 #endif
 				CL_PacketEvent( &evFrom, &buf );
 			}
+#endif
+#ifdef USE_ASYNCHRONOUS
+      if(com_fullyInitialized)
 #endif
 #ifndef BUILD_SLIM_CLIENT
 			while ( NET_GetLoopPacket( NS_SERVER, &evFrom, &buf ) ) {
@@ -3997,21 +4001,34 @@ void Com_Init( char *commandLine ) {
 	// done early so bind command exists
 	Com_InitKeyCommands();
 
+#ifdef USE_ASYNCHRONOUS
+// TODO: won't act differently when server-to-server is ready
+//   because server will also act like a client to another server
+#ifndef DEDICATED
+  com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
+  Cvar_CheckRange( com_dedicated, "0", "2", CV_INTEGER );
+  cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
+  cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
+  com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
+  cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
+  com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
+  cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
+  cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM | CVAR_USERINFO);
+#endif
+#endif
+
 	FS_InitFilesystem();
+
 #ifdef USE_ASYNCHRONOUS
   Cmd_AddCommand( "directdl", CL_Download_f );
   Cmd_AddCommand( "connect", CL_Connect_f );
   Cmd_AddCommand( "quit", Com_Quit_f );
-  // TODO: won't act differently when server-to-server is ready
-  //   because server will also act like a client to another server
-#ifndef DEDICATED
-  cl_allowDownload = Cvar_Get( "cl_allowDownload", XSTRING(DLF_ENABLE), CVAR_ARCHIVE_ND );
-  cl_dlURL = Cvar_Get( "cl_dlURL", "http://quake.games/assets", CVAR_ARCHIVE_ND );
-#endif
-  if(com_earlyConnect[0] != '\0') {
-    Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
+  if(!com_dedicated->integer) {
+    if(com_earlyConnect[0] != '\0') {
+      Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
+    }
+    ASYNC(Com_Init);
   }
-  ASYNC(Com_Init);
 #endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
@@ -4029,8 +4046,10 @@ void Com_Init( char *commandLine ) {
 	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
 	Cvar_CheckRange( com_dedicated, "1", "2", CV_INTEGER );
 #else
+#ifndef USE_ASYNCHRONOUS
 	com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
 	Cvar_CheckRange( com_dedicated, "0", "2", CV_INTEGER );
+#endif
 #endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
@@ -4160,7 +4179,9 @@ void Com_Init( char *commandLine ) {
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
+#ifndef USE_ASYNCHRONOUS
 	com_gamename = Cvar_Get("com_gamename", GAMENAME_FOR_MASTER, CVAR_SERVERINFO | CVAR_INIT);
+#endif
 
 	// this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM | CVAR_NOTABCOMPLETE );
@@ -4467,6 +4488,7 @@ void Com_Frame( qboolean noDelay ) {
   if(!com_fullyInitialized) {
     Com_EventLoop();
     NET_FlushPacketQueue();
+    NET_Sleep( 500 ); // if we got here we're probably syncing file-system
     Cbuf_Execute();
     CL_Frame(0, 0);
     return;
@@ -4543,6 +4565,7 @@ void Com_Frame( qboolean noDelay ) {
 #ifndef BUILD_SLIM_CLIENT
 		if ( 
 #ifdef USE_LOCAL_DED
+      // because local dedicated uses sv_running as a flag that it's properly connected
 			com_dedicated->integer &&
 #endif
 			com_sv_running->integer 
@@ -4556,6 +4579,7 @@ void Com_Frame( qboolean noDelay ) {
 		{
 			timeVal = Com_TimeVal( minMsec );
 		}
+
 		sleepMsec = timeVal;
 #ifndef DEDICATED
 		if ( !gw_minimized && timeVal > com_yieldCPU->integer )
@@ -4563,8 +4587,8 @@ void Com_Frame( qboolean noDelay ) {
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
-#ifdef USE_ASYNCHRONOUS
-    break;
+#ifdef __WASM__
+    break; // break out of frame here because requestAnimationFrame sleeps enough
 #endif
 		NET_Sleep( sleepMsec * 1000 - 500 );
 	} while( Com_TimeVal( minMsec ) );
