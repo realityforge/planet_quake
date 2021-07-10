@@ -906,11 +906,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	FS_ConditionalRestart( clc.checksumFeed, gamedirModified, igs );
 
 	cls.gameSwitch = qfalse;
-#ifdef USE_ASYNCHRONOUS
-  if(!FS_Initialized()) {
-    ASYNCV(CL_InitDownloads);
-  }
-#endif
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
 	// cgame
@@ -963,8 +958,6 @@ static void CL_ParseDownload( msg_t *msg ) {
 	int		size;
 	unsigned char data[ MAX_MSGLEN ];
 	uint16_t block;
-
-printf("download 1\n");
 
 	if (!*clc.downloadTempName) {
 		Com_Printf("Server sending download, but no download was requested\n");
@@ -1241,7 +1234,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 
 		cmd = MSG_ReadByte( msg );
 
-printf("wtf? %i\n", cmd);
 		if ( cmd == svc_EOF) {
 			SHOWNET( msg, "END OF MESSAGE" );
 			break;

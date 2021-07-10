@@ -4537,9 +4537,9 @@ qboolean FS_idPak(const char *pak, const char *base, int numPaks)
 			break;
 		}
 	}
-  if(!FS_FilenameCompare(pak, "baseq3/pak8a")) {
-    return qtrue;
-  }
+  //if(!FS_FilenameCompare(pak, "baseq3/pak8a")) {
+  //  return qtrue;
+  //}
 	if (i < numPaks) {
 		return qtrue;
 	}

@@ -1368,6 +1368,8 @@ void CL_ShutdownAll( void ) {
 #ifdef USE_CURL
 	Com_DL_Cleanup(&download);
 #endif
+  clc.downloadList[0] = '\0';
+
 	// clear sounds
 	S_DisableSounds();
 
@@ -3039,18 +3041,20 @@ void CL_InitDownloads( void ) {
 		Com_Printf( "Need paks: %s\n", missingfiles );
 		
 		if ( missingfiles[0] ) {
-			strcpy(clc.downloadList, missingfiles);
+			//strcpy(clc.downloadList, missingfiles);
+      Q_strcat( clc.downloadList, sizeof( clc.downloadList ), missingfiles );
 
 			// if autodownloading is not enabled on the server
 			cls.state = CA_CONNECTED;
 
 			*clc.downloadTempName = *clc.downloadName = '\0';
 			Cvar_Set( "cl_downloadName", "" );
+    }
+  }
 
-			CL_NextDownload();
-			return;
-		}
-
+  if(clc.downloadList[0]) {
+		CL_NextDownload();
+		return;
 	}
 
 #ifdef USE_CURL
@@ -3682,7 +3686,6 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 
-printf("goddamnit\n");
 	if ( msg->cursize < 5 ) {
 		Com_DPrintf( "%s: Runt packet\n", NET_AdrToStringwPort( from ) );
 		return;
@@ -3721,12 +3724,10 @@ printf("goddamnit\n");
 	// client messages, allowing the server to detect a dropped
 	// gamestate
 	clc.serverMessageSequence = LittleLong( *(int *)msg->data );
-  printf("goddamnit 2\n");
 
 	clc.lastPacketTime = cls.realtime;
 	CL_ParseServerMessage( msg );
 
-  printf("goddamnit 3\n");
 	//
 	// we don't know if it is ok to save a demo message until
 	// after we have parsed the frame
@@ -6532,7 +6533,8 @@ void CL_Download_f( void )
   {
     Q_strcat( clc.downloadList, sizeof( clc.downloadList ), va("@%s@%s", downloadName, downloadName) );
     if(!Com_DL_InProgress(&download)
-      && !(*clc.downloadName)) {
+      && !(*clc.downloadName)
+      && cls.state > CA_PRIMED) {
       CL_NextDownload();
     }
     return;

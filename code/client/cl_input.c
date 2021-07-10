@@ -843,8 +843,8 @@ void CL_WritePacket( void ) {
 #endif
 
 	// write any unacknowledged clientCommands
+  printf("writing command\n");
 	for ( i = clc.reliableAcknowledge + 1 ; i <= clc.reliableSequence ; i++ ) {
-printf("writing command\n");
 		MSG_WriteByte( &buf, clc_clientCommand );
 		MSG_WriteLong( &buf, i );
 		MSG_WriteString( &buf, clc.reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );

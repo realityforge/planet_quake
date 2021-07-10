@@ -1262,6 +1262,7 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	MSG_ReadLong( msg ); // sequence number
 	qport = MSG_ReadShort( msg ) & 0xffff;
 
+
 	// find which client the message is from
 	for (i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if (cl->state == CS_FREE) {
