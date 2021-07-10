@@ -1403,7 +1403,7 @@ CL_ClearMemory
 */
 void CL_ClearMemory( void ) {
 	// if not running a server clear the whole hunk
-	if ( !com_sv_running->integer ) {
+	if ( !com_sv_running || !com_sv_running->integer ) {
 		// clear the whole hunk
 		Hunk_Clear();
 		// clear collision map data
@@ -1420,6 +1420,7 @@ void CL_ClearMemory( void ) {
 }
 
 
+extern qboolean		com_fullyInitialized;
 /*
 =================
 CL_FlushMemory
@@ -1437,7 +1438,7 @@ void CL_FlushMemory( void ) {
 	CL_ClearMemory();
 
 #ifdef USE_ASYNCHRONOUS
-	if(!FS_Initialized()) return;
+	if(!com_fullyInitialized || !FS_Initialized()) return;
 #endif
 
 	CL_StartHunkUsers();

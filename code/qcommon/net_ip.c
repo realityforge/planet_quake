@@ -1959,6 +1959,12 @@ void NET_Init( void ) {
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
+#ifdef USE_ASYNCHRONOUS
+  int	qport;
+  // Pick a random port value
+  Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
+  Netchan_Init( qport & 0xffff );
+#endif
 
 	NET_Config( qtrue );
 	

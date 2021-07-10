@@ -3894,7 +3894,9 @@ Com_Init
 
 void Com_Init( char *commandLine ) {
 	const char *s;
+#ifndef USE_ASYNCHRONOUS
 	int	qport;
+#endif
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
@@ -4181,9 +4183,11 @@ void Com_Init( char *commandLine ) {
 		Sys_SetAffinityMask( com_affinityMask->integer );
 #endif
 
+#ifndef USE_ASYNCHRONOUS
 	// Pick a random port value
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
 	Netchan_Init( qport & 0xffff );
+#endif
 
   AddClipMapCommands();
 	VM_Init();
