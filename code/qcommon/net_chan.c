@@ -148,7 +148,7 @@ void Netchan_TransmitNextFragment( netchan_t *chan ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets->integer ) {
+	if ( showpackets && showpackets->integer ) {
 		Com_Printf ("%s send %4i : s=%i fragment=%i,%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize
@@ -220,7 +220,7 @@ void Netchan_Transmit( netchan_t *chan, int length, const byte *data ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets->integer ) {
+	if ( showpackets && showpackets->integer ) {
 		Com_Printf( "%s send %4i : s=%i ack=%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize

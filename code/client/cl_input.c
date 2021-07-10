@@ -857,7 +857,10 @@ void CL_WritePacket( void ) {
 	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
 	count = 2;
 #else
-	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
+  if(!cl_packetdup)
+    oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
+  else
+	  oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
 #endif
 	if ( count > MAX_PACKET_USERCMDS ) {
@@ -865,12 +868,12 @@ void CL_WritePacket( void ) {
 		Com_Printf("MAX_PACKET_USERCMDS\n");
 	}
 	if ( count >= 1 ) {
-		if ( cl_showSend->integer ) {
+		if ( cl_showSend && cl_showSend->integer ) {
 			Com_Printf( "(%i)", count );
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
+		if ( !cl_nodelta || cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
 			|| clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
@@ -913,7 +916,7 @@ void CL_WritePacket( void ) {
 #endif
 	clc.lastPacketSentTime = cls.realtime;
 
-	if ( cl_showSend->integer ) {
+	if ( cl_showSend && cl_showSend->integer ) {
 		Com_Printf( "%i ", buf.cursize );
 	}
 
