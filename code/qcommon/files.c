@@ -507,6 +507,10 @@ void Sys_FileReady(const char *filename) {
 #endif
 
 
+#ifdef USE_ASYNCHRONOUS
+extern qboolean		com_fullyInitialized;
+#endif
+
 
 /*
 ==============
@@ -514,7 +518,11 @@ FS_Initialized
 ==============
 */
 qboolean FS_Initialized( void ) {
+#ifdef USE_ASYNCHRONOUS
+  return ( com_fullyInitialized && fs_searchpaths != NULL );
+#else
 	return ( fs_searchpaths != NULL );
+#endif
 }
 
 
@@ -1691,7 +1699,6 @@ Used for streaming data out of either a
 separate file or a ZIP file.
 ===========
 */
-extern qboolean		com_fullyInitialized;
 
 int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueFILE ) {
 	searchpath_t	*search;
@@ -4345,6 +4352,57 @@ static void FS_Which_f( void ) {
 }
 
 
+
+
+#ifdef USE_ASYNCHRONOUS
+
+static void FS_AddGamePath( const char *path, const char *dir, int igvm ) {
+  searchpath_t *sp;
+  int				len;
+  searchpath_t	*search;
+  int				path_len;
+	int				dir_len;
+
+  for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
+		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
+			return;	// we've already got this one
+		}
+	}
+
+  Q_strncpyz( fs_gamedir, dir, sizeof( fs_gamedir ) );
+
+  //
+  // add the directory to the search path
+  //
+  path_len = (int) strlen( path ) + 1;
+  path_len = PAD( path_len, sizeof( int ) );
+  dir_len = (int) strlen( dir ) + 1;
+  dir_len = PAD( dir_len, sizeof( int ) );
+  len = sizeof( *search ) + sizeof( *search->dir ) + path_len + dir_len;
+
+  search = Z_TagMalloc( len, TAG_SEARCH_PATH );
+  Com_Memset( search, 0, len );
+#ifdef USE_MULTIFS
+  search->worldPolicy = igvm;
+#endif
+  search->dir = (directory_t*)( search + 1 );
+  search->dir->path = (char*)( search->dir + 1 );
+  search->dir->gamedir = (char*)( search->dir->path + path_len );
+
+  strcpy( search->dir->path, path );
+  strcpy( search->dir->gamedir, dir );
+
+  search->next = fs_searchpaths;
+  fs_searchpaths = search;
+  fs_dirCount++;
+  
+  // TODO: something here for __WASM__ like mount
+}
+
+#endif
+
+
+
 //===========================================================================
 
 /*
@@ -4356,7 +4414,7 @@ then loads the zip headers
 ================
 */
 static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
-	const searchpath_t *sp;
+  searchpath_t *sp;
 	int				len;
 	searchpath_t	*search;
 	const char		*gamedir;
@@ -4373,11 +4431,28 @@ static void FS_AddGameDirectory( const char *path, const char *dir, int igvm ) {
 	int				path_len;
 	int				dir_len;
 
+#ifndef USE_ASYNCHRONOUS
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
 		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
 			return;	// we've already got this one
 		}
 	}
+#else
+  searchpath_t *sprev;
+  // but it could just be the path marker with no pk3s in it yet
+  for ( sp = fs_searchpaths ; sp ; sp = sp->next, sprev = sp ) {
+		if ( sp->dir && !Q_stricmp( sp->dir->path, path ) && !Q_stricmp( sp->dir->gamedir, dir )) {
+      if ( sp->pack )
+  		{
+        FS_FreePak(sp->pack);
+      }
+      
+      sprev->next = sp->next; // remove from linked list
+      Z_Free(sp);
+      fs_dirCount--;
+		}
+	}
+#endif
 	
 	Q_strncpyz( fs_gamedir, dir, sizeof( fs_gamedir ) );
 
@@ -5011,6 +5086,13 @@ static void FS_Startup( void ) {
 
 #ifdef USE_ASYNCHRONOUS
   if(!com_dedicated->integer) {
+    // setup paths for downloading to use
+    if ( fs_steampath->string[0] )
+  		FS_AddGamePath( fs_steampath->string, fs_basegame->string, 0 );
+  	if ( fs_basepath->string[0] )
+  		FS_AddGamePath( fs_basepath->string, fs_basegame->string, 0 );
+  	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) )
+  		FS_AddGamePath( fs_homepath->string, fs_basegame->string, 0 );
     ASYNCF(FS_Startup, CACHE_FILE_NAME);
   }
 #endif

@@ -1010,7 +1010,8 @@ static void CL_ParseDownload( msg_t *msg ) {
 	// open the file if not opened yet
 	if ( clc.download == FS_INVALID_HANDLE ) 
 	{
-		if ( !CL_ValidPakSignature( data, size ) ) 
+		if (Q_stristr(clc.downloadName, ".pk3") &&
+      !CL_ValidPakSignature( data, size ) ) 
 		{
 			Com_Printf( S_COLOR_YELLOW "Invalid pak signature for %s\n", clc.downloadName );
 			CL_AddReliableCommand( "stopdl", qfalse );
@@ -1029,10 +1030,8 @@ static void CL_ParseDownload( msg_t *msg ) {
 		}
 	}
 
-printf("write problem 1\n");
 	if (size)
 		FS_Write( data, size, clc.download );
-    printf("write problem 2\n");
 
 	CL_AddReliableCommand( va("nextdl %d", clc.downloadBlock), qfalse );
 	clc.downloadBlock++;
@@ -1062,7 +1061,6 @@ printf("write problem 1\n");
 		// get another file if needed
 		CL_NextDownload();
 	}
-  printf("download 2\n");
 }
 
 

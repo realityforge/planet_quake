@@ -77,9 +77,9 @@ New game features:
 Coming soon!
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux
   * IN PROGRESS: removing Emscripten and compiling only to wasm with clang.
-  * Move more features like the http downloading, file-system journaling, EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
+  * Move more features like EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
-  * TODO: Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, bots? sound? 
+  * TODO: Stop crash after loading 10 maps with use_lazy_memory. Fix in cm_load, vm_create, renderer2, clear old bots? sound uses FindOldest? 
   * (Short term tasks) Stop local server from dropping, kickall bots, quit a server if all human clients disconnect, cl_lazyLoad 2 and 3 for only loading during network downtimes (warmup and between matches and during respawn timeout), add websockets to native dedicated server instead of relying on proxy https://github.com/rohanrhu/cebsocket, run without dedicated server worker in single thread on mobile (bring back r_smp 1 for dedicated server feature, r_smp 2 for renderer features, r_smp 0 for mobile/off), bring back download commands for grabbing new content, pre-download content like the repack graph mode sets up so less is downloaded in game, use lvlworld.cfg and autoconfig after so people can save their settings (need a way to exit "preview mode" and play the game with networking, simple menu items in preview mode "start game" option), move console background image API to server-side with console instead of mod side like in e+/freon.
   * Popup keyboard on mobile, somehow detecting a text box from UIVM, might not work on all mods. 
   * Fix r_fbo and add pixel buffer objects for recordings. Send PBO to a worker thread to encode to VPX-wasm for live streaming.
@@ -89,7 +89,6 @@ Coming soon!
   * Compile baseq3a from EC directly to WASM and load asynchronously, https://github.com/emscripten-core/emscripten/wiki/Linking
   * Switching renderers to WebGL 1/OpenGL 1/ES 1+2, closer with dlopen work
   * Extra UI menus with multiQVM, for voting on maps and bitcoin setup, Instant replay, consolidate all VM UIs scoreboard/postgame/HUD/menus in to 1 UI system, replace the menu address with an API call.
-  * Use q3cache.dat instead of index.json (or manifest.json in quakejs)
   * Download files using offsets out of pk3 files, like streaming a part of the zip file, add this to native dedicated server and UDP downloads, this won't work on Google CDN because there is no accept-ranges support with brotli compression, https://cloud.google.com/storage/docs/xml-api/get-object-download service in front of that needs to re-encode the individual file based on the offset provided with brotli.
   * IN FAILURE: HTML and CSS menu renderer
   * r_smp 2 Software renderer for rendering far distances in a web-worker, WebGL if OffscreenCanvas is available, low resolution software GL is not available
