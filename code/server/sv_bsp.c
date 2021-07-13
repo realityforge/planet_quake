@@ -369,7 +369,7 @@ static int SV_MakeHypercube( void ) {
 		"\"message\" \"Windows XP\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_ambient\" \"10\"\n"
-		"\"gridsize\" \"256.0 256.0 256.0\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
   );
 	offset += strlen(output);
 
@@ -809,7 +809,7 @@ static int SV_MakeMaze( void ) {
 		"\"message\" \"Deathmaze\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_ambient\" \"10\"\n"
-		"\"gridsize\" \"256.0 256.0 256.0\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
   );
 	offset += strlen(output);
 
@@ -1435,8 +1435,64 @@ static int SV_MakeShutesAndLadders() {
 
 
 static int SV_MakeMonacoF1() {
-  
-  return 0;
+  vec3_t  vs[2];
+  int offset = 0;
+
+	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+
+	brushC = 0;
+	output[0] = '\0';
+	strcpy(output, "// Game: Quake 3\n"
+		"// Format: Quake3 (legacy)\n"
+		"// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n"
+		"\"_color\" \"1 1 1\"\n"
+		"\"message\" \"MonacoF1\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+  );
+	offset += strlen(output);
+
+	SV_SetStroke("sky1");
+	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+	offset += strlen(&output[offset]);
+
+  int i = 1;
+  SV_SetStroke(va("cube%i", i));
+  char *road = SV_MakeCube((vec3_t){-1000, 500, 132}, (vec3_t){-1100, 600, 132}, (vec3_t){-800, 900, 164}, (vec3_t){-700, 800, 164},
+    (vec3_t){-1000, 500, 100}, (vec3_t){-1100, 600, 100}, (vec3_t){-800, 900, 132}, (vec3_t){-700, 800, 132});
+  strcpy(&output[offset], road);
+  offset += strlen(&output[offset]);
+
+
+	strcpy(&output[offset], "}\n");
+	offset += 2;
+
+  strcpy(&output[offset], 
+    va("{\n"
+    "\"classname\" \"info_player_start\"\n"
+    "\"origin\" \"%i %i %i\"\n"
+    "\"angle\" \"180\"\n"
+    "}\n", -1050, 550, 200));
+  offset += strlen(&output[offset]);
+
+	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
+	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
+
+	strcpy(&output[offset], 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+ 	offset += strlen(&output[offset]);
+	
+  return offset;
 }
 
 
@@ -1486,7 +1542,6 @@ int SV_MakeMap( char *memoryMap ) {
   };
 	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
 
-
   char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
     Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
   char *compileLight[] = {
@@ -1503,7 +1558,6 @@ int SV_MakeMap( char *memoryMap ) {
     bspPath
   };
   Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
-
 
   Cvar_Set( "buildingMap", "" );
 	return length;
