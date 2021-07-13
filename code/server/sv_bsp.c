@@ -1447,70 +1447,198 @@ static int SV_MakeShutesAndLadders() {
 }
 
 
-
-void RGBToHSL( int R, int G, int B, int *H, int *S, int *L )
+double deg2Rad(const double deg)
 {
-  float fR = R / 255.0;
-  float fG = G / 255.0;
-  float fB = B / 255.0;
-
-
-  float fCMin = fR;
-  if (fG < fCMin)
-  {
-      fCMin = fG;
-  }
-  if (fB < fCMin)
-  {
-      fCMin = fB;
-  }
-
-  float fCMax = fR;
-  if (fG > fCMax)
-  {
-      fCMax = fG;
-  }
-  if (fB > fCMax)
-  {
-      fCMax = fB;
-  }
-
-
-  *L = (int)(50.0 * (fCMin + fCMax));
-
-  if (fCMin == fCMax)
-  {
-      *S = 0;
-      *H = 0;
-      return;
-
-  }
-  else if (*L < 50)
-  {
-      *S = (int)(100.0 * (fCMax - fCMin) / (fCMax + fCMin));
-  }
-  else
-  {
-      *S = (int)(100.0 * (fCMax - fCMin) / (2.0 - fCMax - fCMin));
-  }
-
-  if (fCMax == fR)
-  {
-      *H = (int)(60.0 * (fG - fB) / (fCMax - fCMin));
-  }
-  if (fCMax == fG)
-  {
-      *H = (int)(60.0 * (fB - fR) / (fCMax - fCMin) + 120.0);
-  }
-  if (fCMax == fB)
-  {
-      *H = (int)(60.0 * (fR - fG) / (fCMax - fCMin) + 240.0);
-  }
-  if (*H < 0)
-  {
-      *H = (int)(*H + 360.0);
-  }
+	return (deg * (M_PI / 180.0));
 }
+
+
+// source: https://github.com/gfiumara/CIEDE2000/blob/master/CIEDE2000.cpp
+float CIEDE2000(double l1, double a1, double b1, double l2, double a2, double b2)
+{
+	/* 
+	 * "For these and all other numerical/graphical 􏰀delta E00 values
+	 * reported in this article, we set the parametric weighting factors
+	 * to unity(i.e., k_L = k_C = k_H = 1.0)." (Page 27).
+	 */
+	const double k_L = 1.0, k_C = 1.0, k_H = 1.0;
+	const double deg360InRad = deg2Rad(360.0);
+	const double deg180InRad = deg2Rad(180.0);
+	const double pow25To7 = 6103515625.0; /* pow(25, 7) */
+	
+	/*
+	 * Step 1 
+	 */
+	/* Equation 2 */
+	double C1 = sqrt((a1 * a1) + (b1 * b1));
+	double C2 = sqrt((a2 * a2) + (b2 * b2));
+	/* Equation 3 */
+	double barC = (C1 + C2) / 2.0;
+	/* Equation 4 */
+	double G = 0.5 * (1 - sqrt(pow(barC, 7) / (pow(barC, 7) + pow25To7)));
+	/* Equation 5 */
+	double a1Prime = (1.0 + G) * a1;
+	double a2Prime = (1.0 + G) * a2;
+	/* Equation 6 */
+	double CPrime1 = sqrt((a1Prime * a1Prime) + (b1 * b1));
+	double CPrime2 = sqrt((a2Prime * a2Prime) + (b2 * b2));
+	/* Equation 7 */
+	double hPrime1;
+	if (b1 == 0 && a1Prime == 0)
+		hPrime1 = 0.0;
+	else {
+		hPrime1 = atan2(b1, a1Prime);
+		/* 
+		 * This must be converted to a hue angle in degrees between 0 
+		 * and 360 by addition of 2􏰏 to negative hue angles.
+		 */
+		if (hPrime1 < 0)
+			hPrime1 += deg360InRad;
+	}
+	double hPrime2;
+	if (b2 == 0 && a2Prime == 0)
+		hPrime2 = 0.0;
+	else {
+		hPrime2 = atan2(b2, a2Prime);
+		/* 
+		 * This must be converted to a hue angle in degrees between 0 
+		 * and 360 by addition of 2􏰏 to negative hue angles.
+		 */
+		if (hPrime2 < 0)
+			hPrime2 += deg360InRad;
+	}
+	
+	/*
+	 * Step 2
+	 */
+	/* Equation 8 */
+	double deltaLPrime = l2 - l1;
+	/* Equation 9 */
+	double deltaCPrime = CPrime2 - CPrime1;
+	/* Equation 10 */
+	double deltahPrime;
+	double CPrimeProduct = CPrime1 * CPrime2;
+	if (CPrimeProduct == 0)
+		deltahPrime = 0;
+	else {
+		/* Avoid the fabs() call */
+		deltahPrime = hPrime2 - hPrime1;
+		if (deltahPrime < -deg180InRad)
+			deltahPrime += deg360InRad;
+		else if (deltahPrime > deg180InRad)
+			deltahPrime -= deg360InRad;
+	}
+	/* Equation 11 */
+	double deltaHPrime = 2.0 * sqrt(CPrimeProduct) *
+	    sin(deltahPrime / 2.0);
+	
+	/*
+	 * Step 3
+	 */
+	/* Equation 12 */
+	double barLPrime = (l1 + l2) / 2.0;
+	/* Equation 13 */
+	double barCPrime = (CPrime1 + CPrime2) / 2.0;
+	/* Equation 14 */
+	double barhPrime, hPrimeSum = hPrime1 + hPrime2;
+	if (CPrime1 * CPrime2 == 0) {
+		barhPrime = hPrimeSum;
+	} else {
+		if (fabs(hPrime1 - hPrime2) <= deg180InRad)
+			barhPrime = hPrimeSum / 2.0;
+		else {
+			if (hPrimeSum < deg360InRad)
+				barhPrime = (hPrimeSum + deg360InRad) / 2.0;
+			else
+				barhPrime = (hPrimeSum - deg360InRad) / 2.0;
+		}
+	}
+	/* Equation 15 */
+	double T = 1.0 - (0.17 * cos(barhPrime - deg2Rad(30.0))) +
+	    (0.24 * cos(2.0 * barhPrime)) +
+	    (0.32 * cos((3.0 * barhPrime) + deg2Rad(6.0))) - 
+	    (0.20 * cos((4.0 * barhPrime) - deg2Rad(63.0)));
+	/* Equation 16 */
+	double deltaTheta = deg2Rad(30.0) *
+	    exp(-pow((barhPrime - deg2Rad(275.0)) / deg2Rad(25.0), 2.0));
+	/* Equation 17 */
+	double R_C = 2.0 * sqrt(pow(barCPrime, 7.0) /
+	    (pow(barCPrime, 7.0) + pow25To7));
+	/* Equation 18 */
+	double S_L = 1 + ((0.015 * pow(barLPrime - 50.0, 2.0)) /
+	    sqrt(20 + pow(barLPrime - 50.0, 2.0)));
+	/* Equation 19 */
+	double S_C = 1 + (0.045 * barCPrime);
+	/* Equation 20 */
+	double S_H = 1 + (0.015 * barCPrime * T);
+	/* Equation 21 */
+	double R_T = (-sin(2.0 * deltaTheta)) * R_C;
+	
+	/* Equation 22 */
+	double deltaE = sqrt(
+	    pow(deltaLPrime / (k_L * S_L), 2.0) +
+	    pow(deltaCPrime / (k_C * S_C), 2.0) +
+	    pow(deltaHPrime / (k_H * S_H), 2.0) + 
+	    (R_T * (deltaCPrime / (k_C * S_C)) * (deltaHPrime / (k_H * S_H))));
+	
+	return (deltaE);
+}
+
+
+double F(double input) // function f(...), which is used for defining L, a and b changes within [4/29,1]
+{
+    if (input > 0.008856)
+        return (pow(input, 0.333333333)); // maximum 1
+    else
+        return ((841/108)*input + 4/29);  //841/108 = 29*29/36*16
+}
+
+
+void XYZtoLab(double X, double Y, double Z, double *L, double *a, double *b)
+{
+  // TODO: make sure these are correct
+    const double Xo = 244.66128; // reference white
+    const double Yo = 255.0;
+    const double Zo = 277.63227;
+    *L = 116 * F(Y / Yo) - 16; // maximum L = 100
+    *a = 500 * (F(X / Xo) - F(Y / Yo)); // maximum 
+    *b = 200 * (F(Y / Yo) - F(Z / Zo));
+}
+
+
+// source http://www.easyrgb.com/en/math.php
+void RGBtoXYZ(double R, double G, double B, double *X, double *Y, double *Z) {
+  // Assume RGB has the type invariance satisfied, i.e., channels \in [0,255]
+  float var_R = R / 255.0;
+  float var_G = G / 255.0;
+  float var_B = B / 255.0;
+
+  var_R = (var_R > 0.04045) ? pow((var_R + 0.055) / 1.055, 2.4)
+                            : var_R / 12.92;
+  var_G = (var_G > 0.04045) ? pow((var_G + 0.055) / 1.055, 2.4)
+                            : var_G / 12.92;
+  var_B = (var_B > 0.04045) ? pow((var_B + 0.055) / 1.055, 2.4)
+                            : var_B / 12.92;
+
+  var_R *= 100;
+  var_G *= 100;
+  var_B *= 100;
+
+  *X = var_R * 0.4124 + var_G * 0.3576 +
+       var_B * 0.1805;
+  *Y = var_R * 0.2126 + var_G * 0.7152 +
+       var_B * 0.0722;
+  *Z = var_R * 0.0193 + var_G * 0.1192 +
+       var_B * 0.9505;
+}
+
+
+void rgb2lab(int R, int G, int B, double *L, double *a, double *b){
+  double X, Y, Z;
+  RGBtoXYZ(R, G, B, &X, &Y, &Z);
+  XYZtoLab(X, Y, Z, L, a, b);
+}
+
 
 
 qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
@@ -1533,9 +1661,29 @@ qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
 }
 
 
+double deltaE(double l1, double a1, double b1, double l2, double a2, double b2){
+  double deltaL = l1 - l2;
+  double deltaA = a1 - a2;
+  double deltaB = b1 - b2;
+  double c1 = sqrt(a1 * a1 + b1 * b1);
+  double c2 = sqrt(a2 * a2 + b2 * b2);
+  double deltaC = c1 - c2;
+  double deltaH = deltaA * deltaA + deltaB * deltaB - deltaC * deltaC;
+  deltaH = deltaH < 0 ? 0 : sqrt(deltaH);
+  double sc = 1.0 + 0.045 * c1;
+  double sh = 1.0 + 0.015 * c1;
+  double deltaLKlsl = deltaL / (1.0);
+  double deltaCkcsc = deltaC / (sc);
+  double deltaHkhsh = deltaH / (sh);
+  double i = deltaLKlsl * deltaLKlsl + deltaCkcsc * deltaCkcsc + deltaHkhsh * deltaHkhsh;
+  return i < 0 ? 0 : sqrt(i);
+}
+
+
 extern void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height );
 static int SV_MakeMonacoF1() {
-  int R, G, B, H, S, L;
+  int R, G, B;
+  double L1, A1, B1, L2, A2, B2;
   qboolean isRoad = qfalse;
   qboolean skipArea = qfalse;
   vec3_t  vs[2];
@@ -1544,6 +1692,7 @@ static int SV_MakeMonacoF1() {
   int a1, a2, a3, w, h, x, y, bx, by;
   int pixel, xBase, yBase;
   int MAX_BRUSHES = 2000;
+  int AREA_BLOCK = 256;
 
 	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
@@ -1572,6 +1721,12 @@ static int SV_MakeMonacoF1() {
   int height, width;
   CL_LoadJPG("maps/monaco-track-map-1.jpg", &pic, &width, &height);
   
+  // road color
+  rgb2lab(34, 187, 255, &L1, &A1, &B1);
+  // should be 70.90 -20.84 -44.99
+  // source https://www.nixsensor.com/free-color-converter/
+  printf("L: %f, A: %f, B: %f\n", L1, A1, B1);
+  
   // loop through image and make "bricks" wherever there are certain colors, 
   // TODO: we'll figure out height later
   // the biggest a road section can get is 64 by 64, so make a buffer 256x256x2
@@ -1582,30 +1737,32 @@ static int SV_MakeMonacoF1() {
   //   because if we searched a 64x64 for 64x64 size blocks we will probably,
   //   only fit 32x32 or smaller because the roads/buildings will be broken up 
   //   along the edges of each area unless it's a perfect fit
-  vec2_t *areaStack = Hunk_AllocateTempMemory(256 * 256 * sizeof(vec2_t));
+  vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(byte));
+  vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t));
   int areaCount = 0;
   // because we are trying to minimize the number of blocks, this algorithm is
   //   very greedy, which means it will take a lot of extra processing
-  int areaHor = ceil(width / 256.0);
-  int areaVer = ceil(height / 256.0);
+  int areaHor = ceil(width / AREA_BLOCK);
+  int areaVer = ceil(height / AREA_BLOCK);
   for(a1 = 0; a1 < areaHor; a1++) {
     for(a2 = 0; a2 < areaVer; a2++) {
       // TODO: make as few cubes as possible by decimating/
       //   checking if cube is inside a bigger cube that still fits along a spline
       //   probably going to need a stack for this, in order to form the splines
-      memset(areaStack, 0, 256 * 256 * sizeof(vec2_t));
+      memset(areaStack, 0, AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t));
       areaCount = 0;
       // on the last loop, don't go past the edge of the image, only scan remaining area
-      maxWidth = 256;
+      maxWidth = AREA_BLOCK;
       if(a1 + 1 == areaHor) {
-        maxWidth = width % 256;
+        maxWidth = width % AREA_BLOCK;
       }
-      maxHeight = 256;
+      maxHeight = AREA_BLOCK;
       if(a2 + 1 == areaVer) {
-        maxHeight = height % 256;
+        maxHeight = height % AREA_BLOCK;
       }
+
       // start by fitting the largest possible cube of uninterrupted road
-      // TODO: remove the lower limit restriction when it works
+      // removed the lower limit restriction when it works
       for(w = 6; w > 0; w--) {
         for(h = 6; h > 0; h--) {
       //for(int w = 64; w > 1; w--) {
@@ -1631,36 +1788,43 @@ static int SV_MakeMonacoF1() {
               
               
               /*
-              pixel = (a2 * 256 * width * 4) // area rows
-                + (a1 * 256 * 4) // area columns
-                + (y * width * 4 + x * 4); // x and y inside area
+              pixel = (a2 * AREA_BLOCK * width * 4) // area rows
+                    + (a1 * AREA_BLOCK * 4) // area columns
+                    + (y * width * 4 + x * 4); // x and y inside area
               R = pic[pixel + 0];
               G = pic[pixel + 1];
               B = pic[pixel + 2];
               //RGBToHSL(R, G, B, &H, &S, &L);
-              //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * 256 + x, a2 * 256 + y, R, G, B);
-              printf("x: %i, y: %i, H: %i, S: %i, L: %i\n", a1 * 256 + x, a2 * 256 + y, H, S, L);
+              //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, R, G, B);
+              rgb2lab(R, G, B, &L2, &A2, &B2);
+              double diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
+              //double diff = deltaE(L1, A1, B1, L2, A2, B2);
+              printf("x: %i, y: %i, diff: %f\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, diff);
               */
+              
               
               // finally scan the whole space for blue
               isRoad = qtrue;
+              // TODO: store the diff values for making blocks
               for(bx = x; bx < x + w; bx++) {
                 for(by = y; by < y + h; by++) {
                   // this is in rgb format already, look for anything within 5% of blue
                   //   we do this by converting to HSL and comparing hue with a factor of 
                   //   S (saturation) and L (luminosity)
-                  pixel = (a2 * 256 * width * 4) // area rows
-                    + (a1 * 256 * 4) // area columns
-                    + (by * width * 4 + bx * 4); // x and y inside area
+                  pixel = (a2 * AREA_BLOCK * width * 4) // area rows
+                        + (a1 * AREA_BLOCK * 4) // area columns
+                        + (by * width * 4 + bx * 4); // x and y inside area
                   R = pic[pixel + 0];
                   G = pic[pixel + 1];
                   B = pic[pixel + 2];
                   // RGB: 33, 179, 236
                   // HSL: 197, 86, 93
-                  RGBToHSL(R, G, B, &H, &S, &L);
+                  // not accurate enough
+                  rgb2lab(R, G, B, &L2, &A2, &B2);
+                  float diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
+                  //RGBToHSL(R, G, B, &H, &S, &L);
                   //printf("H: %i, S: %i, L: %i\n", H, S, L);
-                  if(H > 180 && H < 220
-                    && S > 50 && L > 40) {
+                  if(diff < 10.0) {
                   //if(abs(H - 197) / 360 < 0.05 ) {
                   } else {
                     isRoad = qfalse;
@@ -1670,7 +1834,7 @@ static int SV_MakeMonacoF1() {
                 if(!isRoad) break; // exit early because it's not a road
               } // bx
               
-              if(isRoad && areaCount < 128) {
+              if(isRoad && areaCount < AREA_BLOCK / 2) {
                 // we finally found a good block
                 // make a road voxel at the position on blue pixels
                 areaStack[areaCount*2][0] = x;
@@ -1679,8 +1843,8 @@ static int SV_MakeMonacoF1() {
                 areaStack[areaCount*2+1][1] = y + h;
                 areaCount++;
                 SV_SetStroke("cube1");
-                xBase = a1 * 256 + x;
-                yBase = a2 * 256 + y;
+                xBase = a1 * AREA_BLOCK + x;
+                yBase = a2 * AREA_BLOCK + y;
                 //printf("fitted!: a1: %i, a2: %i, x: %i, y: %i\n", a1, a2, xBase, yBase);
                 char *road = SV_MakeCube(
                   (vec3_t){xBase,   yBase,   4}, 
