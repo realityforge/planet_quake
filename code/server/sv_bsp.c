@@ -9,7 +9,7 @@
 
 static char stroke[MAX_QPATH] = "";
 
-static char output[4096 * 128] = "";
+static char output[4096 * 256] = "";
 static int brushC = 0;
 
 
@@ -847,11 +847,15 @@ static int SV_MakeMaze( void ) {
 					end = tmp;
 				}
 				vec3_t windowOffsets[4] = {
-					{vs[0][0] + start * (cellWidth + thickness),             i == 2 ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight + thickness), vs[0][2]},
-					{vs[0][0] + start * (cellWidth + thickness) + cellWidth, i == 2 ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]},
+					{vs[0][0] + start * (cellWidth + thickness),             i == 2 
+            ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight + thickness), vs[0][2]},
+					{vs[0][0] + start * (cellWidth + thickness) + cellWidth, i == 2 
+            ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]},
 					
-					{vs[0][0] + end * (cellWidth + thickness),             i == 2 ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight) + thickness, vs[0][2]},
-					{vs[0][0] + end * (cellWidth + thickness) + cellWidth, i == 2 ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]}
+					{vs[0][0] + end * (cellWidth + thickness),             i == 2 
+            ? (vs[0][1] - thickness)              : (vs[1][1] - cellHeight) + thickness, vs[0][2]},
+					{vs[0][0] + end * (cellWidth + thickness) + cellWidth, i == 2 
+            ? (vs[0][1] + cellHeight - thickness) : (vs[1][1] + thickness), vs[1][2]}
 				};
 				int side = SIDE_NORTH;
 				if(i == 2) {
@@ -885,8 +889,10 @@ static int SV_MakeMaze( void ) {
 					 i == 2 ? vs[0][1] : (vs[1][1] + thickness), 
 					 vs[1][2]},
 					
-					{vs[0][0] + (end + 1) * (cellWidth + thickness) - thickness,   i == 2 ? (vs[0][1] - thickness) : vs[1][1], vs[0][2]},
-					{vs[1][0],                                         i == 2 ? vs[0][1] : (vs[1][1] + thickness), vs[1][2]}
+					{vs[0][0] + (end + 1) * (cellWidth + thickness) - thickness,   i == 2 
+            ? (vs[0][1] - thickness) : vs[1][1], vs[0][2]},
+					{vs[1][0],                                         i == 2 
+            ? vs[0][1] : (vs[1][1] + thickness), vs[1][2]}
 				};
 				for(int j = 0; j < 4; j++) {
 					// skip side walls when spanning the whole length
@@ -906,11 +912,15 @@ static int SV_MakeMaze( void ) {
 					end = tmp;
 				}
 				vec3_t windowOffsets[4] = {
-					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth + thickness), vs[0][1] + start * (cellHeight + thickness),              vs[0][2]},
-					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             vs[0][1] + start * (cellHeight + thickness) + cellHeight, vs[1][2]},
+					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth + thickness), 
+            vs[0][1] + start * (cellHeight + thickness),              vs[0][2]},
+					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             
+            vs[0][1] + start * (cellHeight + thickness) + cellHeight, vs[1][2]},
 					
-					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth) + thickness, vs[0][1] + end * (cellHeight + thickness),              vs[0][2]},
-					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             vs[0][1] + end * (cellHeight + thickness) + cellHeight, vs[1][2]}
+					{i == 3 ? (vs[0][0] - thickness)             : (vs[1][0] - cellWidth) + thickness, 
+            vs[0][1] + end * (cellHeight + thickness),              vs[0][2]},
+					{i == 3 ? (vs[0][0] + cellWidth - thickness) : (vs[1][0] + thickness),             
+            vs[0][1] + end * (cellHeight + thickness) + cellHeight, vs[1][2]}
 				};
 				int side = SIDE_EAST;
 				if(i == 3) {
@@ -944,8 +954,10 @@ static int SV_MakeMaze( void ) {
 					 vs[0][1] + end * (cellHeight + thickness) + (cellHeight / 2),   
   				 vs[1][2]},
 					
-					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], vs[0][1] + (end + 1) * (cellWidth + thickness) - thickness,   vs[0][2]},
-					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), vs[1][1],                                                     vs[1][2]}
+					{i == 3 ? (vs[0][0] - thickness) : vs[1][0], vs[0][1] + (end + 1) * (cellWidth + thickness) - thickness,   
+            vs[0][2]},
+					{i == 3 ? vs[0][0] : (vs[1][0] + thickness), vs[1][1],                                                     
+            vs[1][2]}
 				};
 				for(int j = 0; j < 4; j++) {
 					// skip side walls when spanning the whole length
@@ -1018,7 +1030,8 @@ static int SV_MakeMaze( void ) {
 
 			// make a hole in the floor, then fill it in 
 			int floorOffsets[8][3] = {
-				{vs[0][0], hi == 0 ? vs[0][1] : (vs[0][1] + (y0 + 1) * (cellHeight + thickness)), vs[0][2] - thickness}, // fill in wide side
+        // fill in wide side
+				{vs[0][0], hi == 0 ? vs[0][1] : (vs[0][1] + (y0 + 1) * (cellHeight + thickness)), vs[0][2] - thickness}, 
 				{vs[1][0], vs[0][1] + y * (cellHeight + thickness), vs[0][2]},
 
 				// fill in long sides, up to hole
@@ -1365,8 +1378,8 @@ static int SV_MakeMaze( void ) {
     vs[1][2] = vs[0][2] + cellHeight;
     
 
-    for(int x = 0; x < floor(gridCols / 4); x++) {
-      for(int y = 0; y < floor(gridRows / 4); y++) {
+    for(int x = 0; x < floor(gridCols / 4.0); x++) {
+      for(int y = 0; y < floor(gridRows / 4.0); y++) {
         strcpy(&output[offset], 
           va("{\n"
           "\"classname\" \"light\"\n"
@@ -1434,9 +1447,103 @@ static int SV_MakeShutesAndLadders() {
 }
 
 
+
+void RGBToHSL( int R, int G, int B, int *H, int *S, int *L )
+{
+  float fR = R / 255.0;
+  float fG = G / 255.0;
+  float fB = B / 255.0;
+
+
+  float fCMin = fR;
+  if (fG < fCMin)
+  {
+      fCMin = fG;
+  }
+  if (fB < fCMin)
+  {
+      fCMin = fB;
+  }
+
+  float fCMax = fR;
+  if (fG > fCMax)
+  {
+      fCMax = fG;
+  }
+  if (fB > fCMax)
+  {
+      fCMax = fB;
+  }
+
+
+  *L = (int)(50.0 * (fCMin + fCMax));
+
+  if (fCMin == fCMax)
+  {
+      *S = 0;
+      *H = 0;
+      return;
+
+  }
+  else if (*L < 50)
+  {
+      *S = (int)(100.0 * (fCMax - fCMin) / (fCMax + fCMin));
+  }
+  else
+  {
+      *S = (int)(100.0 * (fCMax - fCMin) / (2.0 - fCMax - fCMin));
+  }
+
+  if (fCMax == fR)
+  {
+      *H = (int)(60.0 * (fG - fB) / (fCMax - fCMin));
+  }
+  if (fCMax == fG)
+  {
+      *H = (int)(60.0 * (fB - fR) / (fCMax - fCMin) + 120.0);
+  }
+  if (fCMax == fB)
+  {
+      *H = (int)(60.0 * (fR - fG) / (fCMax - fCMin) + 240.0);
+  }
+  if (*H < 0)
+  {
+      *H = (int)(*H + 360.0);
+  }
+}
+
+
+qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
+{
+    if (l1[0] == r1[0] || l1[1] == r1[1] || l2[0] == r2[0]
+        || l2[1] == r2[1]) {
+        // the line cannot have positive overlap
+        return qfalse;
+    }
+ 
+    // If one rectangle is on left side of other
+    if (l1[0] >= r2[0] || l2[0] >= r1[0])
+        return qfalse;
+ 
+    // If one rectangle is above other
+    if (l1[1] >= r2[1] || l2[1] >= r1[1])
+        return qfalse;
+ 
+    return qtrue;
+}
+
+
+extern void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height );
 static int SV_MakeMonacoF1() {
+  int R, G, B, H, S, L;
+  qboolean isRoad = qfalse;
+  qboolean skipArea = qfalse;
   vec3_t  vs[2];
   int offset = 0;
+  int maxWidth, maxHeight;
+  int a1, a2, a3, w, h, x, y, bx, by;
+  int pixel, xBase, yBase;
+  int MAX_BRUSHES = 2000;
 
 	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
@@ -1460,16 +1567,158 @@ static int SV_MakeMonacoF1() {
 	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 	offset += strlen(&output[offset]);
 
-  int i = 1;
-  SV_SetStroke(va("cube%i", i));
-  char *road = SV_MakeCube((vec3_t){-1000, 500, 132}, (vec3_t){-1100, 600, 132}, (vec3_t){-800, 900, 164}, (vec3_t){-700, 800, 164},
-    (vec3_t){-1000, 500, 100}, (vec3_t){-1100, 600, 100}, (vec3_t){-800, 900, 132}, (vec3_t){-700, 800, 132});
-  strcpy(&output[offset], road);
-  offset += strlen(&output[offset]);
+  // try some simple edge detection on the monaco satallite view
+  unsigned char *pic;
+  int height, width;
+  CL_LoadJPG("maps/monaco-track-map-1.jpg", &pic, &width, &height);
+  
+  // loop through image and make "bricks" wherever there are certain colors, 
+  // TODO: we'll figure out height later
+  // the biggest a road section can get is 64 by 64, so make a buffer 256x256x2
+  // since of scanning the image left to right, top to bottom in single rows, 
+  //   instead we have to scan in 256x256 size chunks, so the stack can minimize
+  //   the number of cubes generated
+  // we search a 256x256 space to maximize the likelyhood that a 64x64 block fits
+  //   because if we searched a 64x64 for 64x64 size blocks we will probably,
+  //   only fit 32x32 or smaller because the roads/buildings will be broken up 
+  //   along the edges of each area unless it's a perfect fit
+  vec2_t *areaStack = Hunk_AllocateTempMemory(256 * 256 * sizeof(vec2_t));
+  int areaCount = 0;
+  // because we are trying to minimize the number of blocks, this algorithm is
+  //   very greedy, which means it will take a lot of extra processing
+  int areaHor = ceil(width / 256.0);
+  int areaVer = ceil(height / 256.0);
+  for(a1 = 0; a1 < areaHor; a1++) {
+    for(a2 = 0; a2 < areaVer; a2++) {
+      // TODO: make as few cubes as possible by decimating/
+      //   checking if cube is inside a bigger cube that still fits along a spline
+      //   probably going to need a stack for this, in order to form the splines
+      memset(areaStack, 0, 256 * 256 * sizeof(vec2_t));
+      areaCount = 0;
+      // on the last loop, don't go past the edge of the image, only scan remaining area
+      maxWidth = 256;
+      if(a1 + 1 == areaHor) {
+        maxWidth = width % 256;
+      }
+      maxHeight = 256;
+      if(a2 + 1 == areaVer) {
+        maxHeight = height % 256;
+      }
+      // start by fitting the largest possible cube of uninterrupted road
+      // TODO: remove the lower limit restriction when it works
+      for(w = 6; w > 0; w--) {
+        for(h = 6; h > 0; h--) {
+      //for(int w = 64; w > 1; w--) {
+      //  for(int h = 64; h > 1; h--) {
+          // cube can fit anywhere between the edges of the area so subtract the
+          //   width/height from the traversable x and y position
+          for(x = 0; x < maxWidth - w; x++) {
+            for(y = 0; y < maxHeight - h; y++) {
+              // since we can only get smaller skip the cubes that are already formed
+              skipArea = qfalse;
+              for(a3 = 0; a3 < areaCount; a3++) {
+                // check if any of the corners intersect with another block
+                if(isOverlapping((vec2_t){x, y}, (vec2_t){x + w, y + h}, 
+                  areaStack[a3 * 2], areaStack[a3 * 2 + 1])) {
+                  skipArea = qtrue;
+                  break;
+                }
+              }
+              if(skipArea) {
+                isRoad = qfalse;
+                continue;
+              }
+              
+              
+              /*
+              pixel = (a2 * 256 * width * 4) // area rows
+                + (a1 * 256 * 4) // area columns
+                + (y * width * 4 + x * 4); // x and y inside area
+              R = pic[pixel + 0];
+              G = pic[pixel + 1];
+              B = pic[pixel + 2];
+              //RGBToHSL(R, G, B, &H, &S, &L);
+              //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * 256 + x, a2 * 256 + y, R, G, B);
+              printf("x: %i, y: %i, H: %i, S: %i, L: %i\n", a1 * 256 + x, a2 * 256 + y, H, S, L);
+              */
+              
+              // finally scan the whole space for blue
+              isRoad = qtrue;
+              for(bx = x; bx < x + w; bx++) {
+                for(by = y; by < y + h; by++) {
+                  // this is in rgb format already, look for anything within 5% of blue
+                  //   we do this by converting to HSL and comparing hue with a factor of 
+                  //   S (saturation) and L (luminosity)
+                  pixel = (a2 * 256 * width * 4) // area rows
+                    + (a1 * 256 * 4) // area columns
+                    + (by * width * 4 + bx * 4); // x and y inside area
+                  R = pic[pixel + 0];
+                  G = pic[pixel + 1];
+                  B = pic[pixel + 2];
+                  // RGB: 33, 179, 236
+                  // HSL: 197, 86, 93
+                  RGBToHSL(R, G, B, &H, &S, &L);
+                  //printf("H: %i, S: %i, L: %i\n", H, S, L);
+                  if(H > 180 && H < 220
+                    && S > 50 && L > 40) {
+                  //if(abs(H - 197) / 360 < 0.05 ) {
+                  } else {
+                    isRoad = qfalse;
+                    break;
+                  }
+                } // by
+                if(!isRoad) break; // exit early because it's not a road
+              } // bx
+              
+              if(isRoad && areaCount < 128) {
+                // we finally found a good block
+                // make a road voxel at the position on blue pixels
+                areaStack[areaCount*2][0] = x;
+                areaStack[areaCount*2][1] = y;
+                areaStack[areaCount*2+1][0] = x + w;
+                areaStack[areaCount*2+1][1] = y + h;
+                areaCount++;
+                SV_SetStroke("cube1");
+                xBase = a1 * 256 + x;
+                yBase = a2 * 256 + y;
+                //printf("fitted!: a1: %i, a2: %i, x: %i, y: %i\n", a1, a2, xBase, yBase);
+                char *road = SV_MakeCube(
+                  (vec3_t){xBase,   yBase,   4}, 
+                  (vec3_t){xBase,   yBase+h, 4}, 
+                  (vec3_t){xBase+w, yBase+h, 4}, 
+                  (vec3_t){xBase+w, yBase,   4},
 
+                  (vec3_t){xBase,   yBase,   0}, 
+                  (vec3_t){xBase,   yBase+h, 0}, 
+                  (vec3_t){xBase+w, yBase+h, 0}, 
+                  (vec3_t){xBase+w, yBase,   0}
+                );
+                strcpy(&output[offset], road);
+                offset += strlen(&output[offset]);
+              }
+              
+              if(brushC >= MAX_BRUSHES) break;
+            } // y
+            if(brushC >= MAX_BRUSHES) break;
+          } // x
+
+
+          if(brushC >= MAX_BRUSHES) break;
+        } // h
+        if(brushC >= MAX_BRUSHES) break;
+      } // w
+
+      
+      if(brushC >= MAX_BRUSHES) break;
+      // TODO: make some buildings and side roads and barriers and z-height
+    } // a2
+    if(brushC >= MAX_BRUSHES) break;
+  } // a1
 
 	strcpy(&output[offset], "}\n");
 	offset += 2;
+  
+  Hunk_FreeTempMemory( areaStack );
 
   strcpy(&output[offset], 
     va("{\n"
@@ -1532,6 +1781,7 @@ int SV_MakeMap( char *memoryMap ) {
     Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
   char *compileMap[] = {
     "q3map2",
+    "-v",
     "-fs_basepath",
     (char *)Cvar_VariableString("fs_basepath"),
     "-game",
@@ -1542,6 +1792,7 @@ int SV_MakeMap( char *memoryMap ) {
   };
 	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
 
+/*
   char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
     Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
   char *compileLight[] = {
@@ -1558,6 +1809,7 @@ int SV_MakeMap( char *memoryMap ) {
     bspPath
   };
   Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+*/
 
   Cvar_Set( "buildingMap", "" );
 	return length;
