@@ -82,8 +82,10 @@ int main( int argc, char **argv )
 	/* this was changed to emit version number over the network */
 	printf( Q3MAP_VERSION "\n" );
 
+#ifndef LINKABLE
 	/* set exit call */
 	atexit( ExitQ3Map );
+#endif
 
 	/* read general options first */
 	for ( i = 1; i < argc; i++ )

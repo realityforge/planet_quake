@@ -266,7 +266,7 @@ Explanation: Server starts on map q3dm1, the activeAction is added and launches 
 
 Client cl_nodelta is required for the time-being, deltas work but it causes server errors. Binds set the DVR for q3dm1 to `g` key, and q3dm2 to `h` key. Level only needs to load first time it's used.
 
-TODO: fix deltas, add game options like switching maps at the end of round, moving around in other maps or moving to spectator or disconnecting. Options for transferring game stats between worlds.
+TODO: add game options like switching maps at the end of round, moving around in other maps or moving to spectator or disconnecting. Options for transferring game stats between worlds.
 
 # Contributing
 

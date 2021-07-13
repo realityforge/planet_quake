@@ -682,8 +682,14 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		}
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( cgvm && cls.state == CA_ACTIVE && !clc.demoplaying ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+			if ( cls.state == CA_ACTIVE && !clc.demoplaying ) {
+        if(uivm)
+				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+        else {
+          cls.uiStarted = qtrue;
+      		CL_InitUI(qfalse);
+          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+        }
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 #if 0
@@ -703,7 +709,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #ifdef USE_ASYNCHRONOUS
         if(FS_Initialized())
 #endif
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+        if(uivm)
+				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+        else {
+          cls.uiStarted = qtrue;
+      		CL_InitUI(qfalse);
+          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+        }
 			}
 			return;
 		}
@@ -712,7 +724,8 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			return;
 		}
 
-		VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+    if(uivm)
+		  VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
 		return;
 	}
 

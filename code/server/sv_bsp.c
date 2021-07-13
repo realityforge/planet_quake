@@ -366,12 +366,11 @@ static int SV_MakeHypercube( void ) {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
-		"\"ambient\" \"5\"\n"
 		"\"message\" \"Windows XP\"\n"
 		"\"_keepLights\" \"1\"\n"
-		"\"_sunlight\" \"3500\"\n"
-		"\"gridsize\" \"512.0 512.0 512.0\"\n"
-		"\"noradiosity\" \"1\"\n");
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"256.0 256.0 256.0\"\n"
+  );
 	offset += strlen(output);
 
 	SV_SetStroke("sky1");
@@ -630,6 +629,8 @@ static int SV_MakeHypercube( void ) {
 				"\"classname\" \"light\"\n"
 				"\"origin\" \"%i %i %i\"\n"
 				"\"light\" \"400\"\n"
+        "\"radius\" \"128\"\n"
+        "\"scale\" \"5\"\n"
 				"\"target\" \"light_%i_L\"\n"
 				"}\n", -(totalWidth / 2) + (x * (width + spacing)) + lightCorners[j][0],
 				 -(totalHeight / 2) + (y * (height + spacing)) + lightCorners[j][1],
@@ -641,6 +642,8 @@ static int SV_MakeHypercube( void ) {
 				"\"classname\" \"light\"\n"
 				"\"origin\" \"%i %i %i\"\n"
 				"\"light\" \"400\"\n"
+        "\"radius\" \"128\"\n"
+        "\"scale\" \"5\"\n"
 				"\"target\" \"light_%i_H\"\n"
 				"}\n", -(totalWidth / 2) + (x * (width + spacing)) + lightCorners[j][0],
 				 -(totalHeight / 2) + (y * (height + spacing)) + lightCorners[j][1],
@@ -803,18 +806,19 @@ static int SV_MakeMaze( void ) {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
-		"\"ambient\" \"5\"\n"
 		"\"message\" \"Deathmaze\"\n"
 		"\"_keepLights\" \"1\"\n"
-		"\"_sunlight\" \"3500\"\n"
-		"\"gridsize\" \"512.0 512.0 512.0\"\n"
-		"\"noradiosity\" \"1\"\n");
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"256.0 256.0 256.0\"\n"
+  );
 	offset += strlen(output);
 
 	SV_SetStroke("sky1");
 	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 	offset += strlen(&output[offset]);
 	
+  
+  // make 4 maze floors stacked
 	for(int m = 0; m < 4; m++) {
 		int safety = 0;
 		int stackI = 0;
@@ -830,6 +834,8 @@ static int SV_MakeMaze( void ) {
 		vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
 		vs[1][2] = vs[0][2] + cellHeight;
 		
+    // make outside walls of the maze
+    
 		SV_SetStroke(va("cube%i", m));
 		for(int i = 0; i < 4; i++) {
 			if(i % 2 == 0) {
@@ -1054,7 +1060,7 @@ static int SV_MakeMaze( void ) {
 			}
 		}
 
-		// build inner maze using a areaStack to list ever division, skips divisions that would be too small
+		// build inner maze using a areaStack to list every division, skips divisions that would be too small
 		while(safety < 6) {
 			// initialize the spaces with the entire maze
 			stackI--;
@@ -1165,6 +1171,7 @@ static int SV_MakeMaze( void ) {
 							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
 							offset += strlen(&output[offset]);
 						}
+            
 					} else {
 						if(maxX - wallX <= 1) gap = wallX;
 						else gap = ((rand() % (maxX - wallX)) + wallX);
@@ -1197,6 +1204,8 @@ static int SV_MakeMaze( void ) {
 							strcpy(&output[offset], SV_MakeWall(wall2[0], wall2[1]));
 							offset += strlen(&output[offset]);
 						}
+            
+            
 					}
 	//Com_Printf("Maze door: %i x %i\n", gap * 2 + 1, wallY * 2);
 					for(int fillX = (minX - 1) * 2; fillX <= maxX * 2; fillX++) {
@@ -1284,6 +1293,8 @@ static int SV_MakeMaze( void ) {
 						else 
 							maze[wallX*2][fillY] = '#';
 					}
+          
+          
 				}
 			}
 
@@ -1340,7 +1351,50 @@ static int SV_MakeMaze( void ) {
 			(int)(vs[0][2] + 32)));
 		offset += strlen(&output[offset]);
 	}
-	
+  
+  // make a grid of lights
+  for(int m = 0; m < 4; m++) {
+    // make offsets for centering
+    vs[0][0] = -(totalWidth / 2);
+    vs[1][0] = +(totalWidth / 2);
+
+    vs[0][1] = -(totalHeight / 2);
+    vs[1][1] = +(totalHeight / 2);
+
+    vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
+    vs[1][2] = vs[0][2] + cellHeight;
+    
+
+    for(int x = 0; x < floor(gridCols / 4); x++) {
+      for(int y = 0; y < floor(gridRows / 4); y++) {
+        strcpy(&output[offset], 
+          va("{\n"
+          "\"classname\" \"light\"\n"
+          "\"origin\" \"%i %i %i\"\n"
+          "\"light\" \"400\"\n"
+          "\"radius\" \"128\"\n"
+          "\"scale\" \"5\"\n"
+          "\"target\" \"light_%i_%i_%i\"\n"
+          "}\n", 
+           (int)(vs[0][0] + (x * 2 + 1) * (cellWidth + thickness)),
+           (int)(vs[0][1] + (y * 2 + 1) * (cellHeight + thickness)),
+           (int)(vs[1][2] + 32),
+           m, x, y));
+        offset += strlen(&output[offset]);
+        strcpy(&output[offset], 
+          va("{\n"
+    			"\"classname\" \"info_notnull\"\n"
+    			"\"targetname\" \"light_%i_%i_%i\"\n"
+    			"\"origin\" \"%i %i %i\"\n"
+    			"}\n", m, x, y, 
+           (int)(vs[0][0] + (x * 2 + 1) * (cellWidth + thickness)),
+           (int)(vs[0][1] + (y * 2 + 1) * (cellHeight + thickness)),
+           (int)(vs[0][2] + 32)));
+        offset += strlen(&output[offset]);
+      }
+    }
+  }
+
 	// TODO: jumppads / teleporters / pickups
 
 	return offset;
@@ -1397,13 +1451,13 @@ int SV_MakeMap( char *memoryMap ) {
     return length;
   }
 
-	if(Q_stristr(memoryMap, "megamaze")) {
+	if(Q_stricmp(memoryMap, "megamaze") == 0) {
 		length = SV_MakeMaze();
-	} else if (Q_stristr(memoryMap, "megacube")) {
+	} else if (Q_stricmp(memoryMap, "megacube") == 0) {
 		length = SV_MakeHypercube();
-	} else if (Q_stristr(memoryMap, "megashutes")) {
+	} else if (Q_stricmp(memoryMap, "megashutes") == 0) {
 		length = SV_MakeShutesAndLadders();
-	} else if (Q_stristr(memoryMap, "megaf1")) {
+	} else if (Q_stricmp(memoryMap, "megaf1") == 0) {
 		length = SV_MakeMonacoF1();
 	} else {
     return 0;
@@ -1417,23 +1471,41 @@ int SV_MakeMap( char *memoryMap ) {
 
   //gamedir = Cvar_VariableString( "fs_game" );
 	//basegame = Cvar_VariableString( "fs_basegame" );
+  Cvar_Set( "buildingMap", memoryMap );
   char *mapPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
     Cvar_VariableString("fs_game"), va("maps/%s.map", memoryMap) );
   char *compileMap[] = {
     "q3map2",
-//  "-bsp",
-    "-meta",
-    "-patchmeta",
-    "-v",
     "-fs_basepath",
     (char *)Cvar_VariableString("fs_basepath"),
     "-game",
     "quake3",
+    "-meta",
+    "-patchmeta",
     mapPath
   };
-  Cvar_Set( "buildingMap", memoryMap );
 	Q3MAP2Main(ARRAY_LEN(compileMap), compileMap);
 
+
+  char *bspPath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), 
+    Cvar_VariableString("fs_game"), va("maps/%s.bsp", memoryMap) );
+  char *compileLight[] = {
+    "q3map2",
+    "-light",
+    "-fs_basepath",
+    (char *)Cvar_VariableString("fs_basepath"),
+    "-game",
+    "quake3",
+    "-faster",
+    "-cheap",
+    "-bounce",
+    "1",
+    bspPath
+  };
+  Q3MAP2Main(ARRAY_LEN(compileLight), compileLight);
+
+
+  Cvar_Set( "buildingMap", "" );
 	return length;
 }
 
