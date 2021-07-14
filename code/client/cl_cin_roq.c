@@ -1354,7 +1354,7 @@ int CIN_PlayROQ( const char *name, int x, int y, int w, int h, int systemBits )
 	cinTable[currentHandle].ROQSize = FS_FOpenFileRead( cinTable[currentHandle].fileName, &cinTable[currentHandle].iFile, qtrue );
 
 	if (cinTable[currentHandle].ROQSize<=0) {
-		Com_DPrintf("play(%s), ROQSize<=0\n", name);
+		Com_DPrintf("Can't play(%s), ROQSize<=0\n", name);
 		cinTable[currentHandle].fileName[0] = '\0';
 		if ( cinTable[currentHandle].iFile != FS_INVALID_HANDLE ) {
 			FS_FCloseFile( cinTable[currentHandle].iFile );

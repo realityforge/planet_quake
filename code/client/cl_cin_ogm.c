@@ -460,16 +460,17 @@ static int loadVideoFrameTheora(void)
 
 		th_frame = theora_granule_frame(&g_ogm.th_state, g_ogm.th_state.granulepos);
 
-		if(!(op.packet[0] & 0x80) /* data packet */ &&
-       !(op.packet[0] & 0x40) /* intra frame */
-      //(g_ogm.VFrameCount < th_frame && th_frame >= nextNeededVFrame()) || !g_ogm.outputBuffer
+		if( // !(op.packet[0] & 0x80) /* data packet */ &&
+        // !(op.packet[0] & 0x40) /* intra frame */
+      (g_ogm.VFrameCount < th_frame && th_frame >= nextNeededVFrame()) || !g_ogm.outputBuffer
 		) {
 //          int i,j;
 			int             yWShift, uvWShift;
 			int             yHShift, uvHShift;
 
-			if(theora_decode_YUVout(&g_ogm.th_state, &g_ogm.th_yuvbuffer))
-				continue;
+			if(!theora_decode_YUVout(&g_ogm.th_state, &g_ogm.th_yuvbuffer)) {
+        continue;
+      }
 
 			if(g_ogm.outputWidth != g_ogm.th_info.width || g_ogm.outputHeight != g_ogm.th_info.height)
 			{
@@ -502,6 +503,7 @@ static int loadVideoFrameTheora(void)
 			yHShift = findSizeShift(g_ogm.th_yuvbuffer.y_height, g_ogm.th_info.height);
 			uvHShift = findSizeShift(g_ogm.th_yuvbuffer.uv_height, g_ogm.th_info.height);
 
+      Com_Printf("video playing %i\n", g_ogm.outputBuffer);
 			if(yWShift < 0 || uvWShift < 0 || yHShift < 0 || uvHShift < 0)
 			{
 				Com_Printf("[Theora] unexpected resolution in a yuv-Frame\n");
@@ -514,7 +516,6 @@ static int loadVideoFrameTheora(void)
 								   g_ogm.th_info.width, g_ogm.th_info.height, g_ogm.th_yuvbuffer.y_stride,
 								   g_ogm.th_yuvbuffer.uv_stride, yWShift, uvWShift, yHShift, uvHShift,
 								   (unsigned int *)g_ogm.outputBuffer);
-
 /*				unsigned char*	pixelPtr = g_ogm.outputBuffer;
 				unsigned int*	pixPtr;
 				pixPtr = (unsigned int*)g_ogm.outputBuffer;
