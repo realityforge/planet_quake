@@ -467,8 +467,22 @@ char *Sys_ConsoleInput( void )
 				if (tty_con.cursor > 0)
 				{
 					tty_con.cursor--;
-					tty_con.buffer[tty_con.cursor] = '\0';
-					tty_Back();
+          int len = strlen(tty_con.buffer);
+          if(tty_con.cursor < len) {
+            memcpy(&tty_con.buffer[tty_con.cursor], &tty_con.buffer[tty_con.cursor+1], len - tty_con.cursor);
+            tty_con.buffer[len] = '\0';
+            tty_Back();
+            //write( STDOUT_FILENO, "\033[s", 3);
+            write( STDOUT_FILENO, &tty_con.buffer[tty_con.cursor], len - tty_con.cursor );
+            write( STDOUT_FILENO, " ", 1); // rewrite the difference
+            const char *diff = va("%i", len - tty_con.cursor);
+            //write( STDOUT_FILENO, "\033[u", 3);
+            // move back to where cursor was
+            write( STDOUT_FILENO, va("\033[%sD", diff), 3 + strlen(diff) );
+          } else {
+            tty_con.buffer[tty_con.cursor] = '\0';
+            tty_Back();
+          }
 				}
 				return NULL;
 			}
@@ -538,9 +552,25 @@ char *Sys_ConsoleInput( void )
 								return NULL;
 								break;
 							case 'C': // right
+                if(tty_con.cursor < strlen(tty_con.buffer)) {
+                  write( STDOUT_FILENO, "\033[1C", 4 );
+                  tty_con.cursor++;
+                }
+                return NULL;
+                break;
 							case 'D': // left
+                if(tty_con.cursor > 0) {
+                  write( STDOUT_FILENO, "\033[1D", 4 );
+                  tty_con.cursor--;
+                }
+                return NULL;
+                break;
 							//case 'H': // home
-							//case 'F': // end
+              //  write( STDOUT_FILENO, "\033[a", 3 );
+              //  break;
+  						//case 'F': // end
+              //  write( STDOUT_FILENO, "\033[e", 3 );
+              //  break;
 								return NULL;
 							}
 						}

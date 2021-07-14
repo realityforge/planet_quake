@@ -1692,7 +1692,7 @@ static int SV_MakeMonacoF1() {
   int a1, a2, a3, w, h, x, y, bx, by;
   int pixel, xBase, yBase;
   int MAX_BRUSHES = 2000;
-  int AREA_BLOCK = 256;
+  int AREA_BLOCK = 64;
 
 	vs[0][0] = vs[0][1] = vs[0][2] = -2000;
 	vs[1][0] = vs[1][1] = vs[1][2] = 2000;
@@ -1737,13 +1737,13 @@ static int SV_MakeMonacoF1() {
   //   because if we searched a 64x64 for 64x64 size blocks we will probably,
   //   only fit 32x32 or smaller because the roads/buildings will be broken up 
   //   along the edges of each area unless it's a perfect fit
-  vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(byte));
-  vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t));
+  float  *diffStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(float));
+  vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t) * 2);
   int areaCount = 0;
   // because we are trying to minimize the number of blocks, this algorithm is
   //   very greedy, which means it will take a lot of extra processing
-  int areaHor = ceil(width / AREA_BLOCK);
-  int areaVer = ceil(height / AREA_BLOCK);
+  int areaHor = ceil(width * 1.0 / AREA_BLOCK);
+  int areaVer = ceil(height * 1.0 / AREA_BLOCK);
   for(a1 = 0; a1 < areaHor; a1++) {
     for(a2 = 0; a2 < areaVer; a2++) {
       // TODO: make as few cubes as possible by decimating/
@@ -1760,11 +1760,39 @@ static int SV_MakeMonacoF1() {
       if(a2 + 1 == areaVer) {
         maxHeight = height % AREA_BLOCK;
       }
+      
+      
+      for(x = 0; x < maxWidth; x++) {
+        for(y = 0; y < maxHeight; y++) {
+          // this is in rgb format already, look for anything within 5% of blue
+          //   we do this by converting to HSL and comparing hue with a factor of 
+          //   S (saturation) and L (luminosity)
+          pixel = (a2 * AREA_BLOCK * width * 4) // area rows
+                + (a1 * AREA_BLOCK * 4) // area columns
+                + (y * width * 4 + x * 4); // x and y inside area
+          R = pic[pixel + 0];
+          G = pic[pixel + 1];
+          B = pic[pixel + 2];
+          // RGB: 33, 179, 236
+          // HSL: 197, 86, 93
+          // not accurate enough
+          rgb2lab(R, G, B, &L2, &A2, &B2);
+          float diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
+          /*
+          //RGBToHSL(R, G, B, &H, &S, &L);
+          //printf("H: %i, S: %i, L: %i\n", H, S, L);
+          //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, R, G, B);
+          //double diff = deltaE(L1, A1, B1, L2, A2, B2);
+          printf("x: %i, y: %i, diff: %f\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, diff);
+          */
+          diffStack[y * AREA_BLOCK + x] = diff;
+        }
+      }      
 
       // start by fitting the largest possible cube of uninterrupted road
       // removed the lower limit restriction when it works
-      for(w = 6; w > 0; w--) {
-        for(h = 6; h > 0; h--) {
+      for(w = 8; w > 0; w--) {
+        for(h = 8; h > 0; h--) {
       //for(int w = 64; w > 1; w--) {
       //  for(int h = 64; h > 1; h--) {
           // cube can fit anywhere between the edges of the area so subtract the
@@ -1786,45 +1814,12 @@ static int SV_MakeMonacoF1() {
                 continue;
               }
               
-              
-              /*
-              pixel = (a2 * AREA_BLOCK * width * 4) // area rows
-                    + (a1 * AREA_BLOCK * 4) // area columns
-                    + (y * width * 4 + x * 4); // x and y inside area
-              R = pic[pixel + 0];
-              G = pic[pixel + 1];
-              B = pic[pixel + 2];
-              //RGBToHSL(R, G, B, &H, &S, &L);
-              //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, R, G, B);
-              rgb2lab(R, G, B, &L2, &A2, &B2);
-              double diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
-              //double diff = deltaE(L1, A1, B1, L2, A2, B2);
-              printf("x: %i, y: %i, diff: %f\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, diff);
-              */
-              
-              
               // finally scan the whole space for blue
               isRoad = qtrue;
               // TODO: store the diff values for making blocks
               for(bx = x; bx < x + w; bx++) {
                 for(by = y; by < y + h; by++) {
-                  // this is in rgb format already, look for anything within 5% of blue
-                  //   we do this by converting to HSL and comparing hue with a factor of 
-                  //   S (saturation) and L (luminosity)
-                  pixel = (a2 * AREA_BLOCK * width * 4) // area rows
-                        + (a1 * AREA_BLOCK * 4) // area columns
-                        + (by * width * 4 + bx * 4); // x and y inside area
-                  R = pic[pixel + 0];
-                  G = pic[pixel + 1];
-                  B = pic[pixel + 2];
-                  // RGB: 33, 179, 236
-                  // HSL: 197, 86, 93
-                  // not accurate enough
-                  rgb2lab(R, G, B, &L2, &A2, &B2);
-                  float diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
-                  //RGBToHSL(R, G, B, &H, &S, &L);
-                  //printf("H: %i, S: %i, L: %i\n", H, S, L);
-                  if(diff < 10.0) {
+                  if(diffStack[by * AREA_BLOCK + bx] < 10.0) {
                   //if(abs(H - 197) / 360 < 0.05 ) {
                   } else {
                     isRoad = qfalse;
@@ -1834,7 +1829,7 @@ static int SV_MakeMonacoF1() {
                 if(!isRoad) break; // exit early because it's not a road
               } // bx
               
-              if(isRoad && areaCount < AREA_BLOCK / 2) {
+              if(isRoad && areaCount < AREA_BLOCK * AREA_BLOCK) {
                 // we finally found a good block
                 // make a road voxel at the position on blue pixels
                 areaStack[areaCount*2][0] = x;
@@ -1842,6 +1837,8 @@ static int SV_MakeMonacoF1() {
                 areaStack[areaCount*2+1][0] = x + w;
                 areaStack[areaCount*2+1][1] = y + h;
                 areaCount++;
+                
+                /*
                 SV_SetStroke("cube1");
                 xBase = a1 * AREA_BLOCK + x;
                 yBase = a2 * AREA_BLOCK + y;
@@ -1859,24 +1856,32 @@ static int SV_MakeMonacoF1() {
                 );
                 strcpy(&output[offset], road);
                 offset += strlen(&output[offset]);
+                */
               }
               
-              if(brushC >= MAX_BRUSHES) break;
+              //if(brushC >= MAX_BRUSHES) break;
             } // y
-            if(brushC >= MAX_BRUSHES) break;
+            //if(brushC >= MAX_BRUSHES) break;
           } // x
 
 
-          if(brushC >= MAX_BRUSHES) break;
+          //if(brushC >= MAX_BRUSHES) break;
         } // h
-        if(brushC >= MAX_BRUSHES) break;
+        //if(brushC >= MAX_BRUSHES) break;
       } // w
 
+
+      // we've completed an entire area, now average thickness of the road
+      // since our maximum brush size if 8, dump down the points by dividing them
+      //   then create line lines across the entire area of where the road should be
+      //   remove outliers by looking at previous and next areas and connecting the dots
       
-      if(brushC >= MAX_BRUSHES) break;
+      
+      
+      //if(brushC >= MAX_BRUSHES) break;
       // TODO: make some buildings and side roads and barriers and z-height
     } // a2
-    if(brushC >= MAX_BRUSHES) break;
+    //if(brushC >= MAX_BRUSHES) break;
   } // a1
 
 	strcpy(&output[offset], "}\n");
