@@ -198,7 +198,7 @@ SV_CheckConfigString
 Check that the configstring is OK (or if we relay to ClientConfigString)
 ====================
 */
-qboolean SV_CheckConfigString( int cs_index, const char *cs_string )
+static qboolean SV_CheckConfigString( int cs_index, const char *cs_string )
 {
 	if ( cs_index >= CS_PLAYERS && cs_index < CS_PLAYERS + sv_maxclients->integer ) { // if this is a player, we save the configstring as a clientconfigstring
 		SV_DemoWriteClientConfigString( cs_index - CS_PLAYERS, cs_string );

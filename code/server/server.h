@@ -801,7 +801,6 @@ void SV_DemoWriteAllEntityShared(void);
 qboolean SV_CheckClientCommand( client_t *client, const char *cmd );
 qboolean SV_CheckServerCommand( const char *cmd );
 qboolean SV_CheckGameCommand( const char *cmd );
-qboolean SV_CheckConfigString( int cs_index, const char *cs_string );
 qboolean SV_CheckLastCmd( const char *cmd, qboolean onlyStore );
 void SV_DemoFilterClientUserinfo( const char *userinfo );
 const char *SV_CleanFilename( char *str );

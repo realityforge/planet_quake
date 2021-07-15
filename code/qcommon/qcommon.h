@@ -291,6 +291,11 @@ typedef struct {
 #endif
 	char name[MAX_STRING_CHARS];
 	char protocol[10];
+#ifdef USE_MULTIVM_SERVER
+  // the socket the connection came in on, 
+  //   so we know which world to join based on port number
+  int  netWorld; 
+#endif
 } netadr_t;
 
 void		NET_Init( void );

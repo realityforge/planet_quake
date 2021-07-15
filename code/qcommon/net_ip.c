@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+#define USE_MULTI_IP 1
+#endif
+
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf
 #undef Com_DPrintf
@@ -186,7 +190,16 @@ static cvar_t	*net_dropsim;
 
 static sockaddr_t socksRelayAddr;
 
+#ifdef USE_MULTI_IP
+#define ip_socket ip_sockets[igvm];
+static SOCKET	ip_sockets[MAX_NUM_VMS] = {
+  INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
+  INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
+  INVALID_SOCKET, INVALID_SOCKET
+};
+#else
 static SOCKET	ip_socket = INVALID_SOCKET;
+#endif
 #ifdef __WASM__
 static qboolean invokeSOCKSAfter = qfalse;
 extern void Sys_SocksMessage( void );

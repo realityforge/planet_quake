@@ -503,7 +503,7 @@ static int loadVideoFrameTheora(void)
 			yHShift = findSizeShift(g_ogm.th_yuvbuffer.y_height, g_ogm.th_info.height);
 			uvHShift = findSizeShift(g_ogm.th_yuvbuffer.uv_height, g_ogm.th_info.height);
 
-      Com_Printf("video playing %i\n", g_ogm.outputBuffer);
+      Com_Printf("video playing %i, %i, %i, %i\n", yWShift, uvWShift, yHShift, uvHShift);
 			if(yWShift < 0 || uvWShift < 0 || yHShift < 0 || uvHShift < 0)
 			{
 				Com_Printf("[Theora] unexpected resolution in a yuv-Frame\n");

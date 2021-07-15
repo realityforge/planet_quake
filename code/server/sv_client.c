@@ -896,7 +896,6 @@ gotnewcl:
 	gvmi = newcl->gameWorld = newcl->newWorld = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
-	//TODO: add new clients to all worlds
 #endif
 
 	// save the challenge
@@ -937,6 +936,22 @@ gotnewcl:
 		Com_DPrintf( "Game rejected a connection: %s.\n", str );
 		return;
 	}
+#ifdef USE_MULTIVM_SERVER
+  // add new clients to all worlds
+  else if(sv_mvOmnipresent->integer == 1) {
+    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+  		if(!gvmWorlds[igvm]) continue;
+      if(igvm == newcl->gameWorld) continue; // already joined above
+  		gvmi = igvm;
+  		CM_SwitchMap(gameWorlds[gvmi]);
+  		SV_SetAASgvm(gvmi);
+      denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, clientNum, qtrue, qfalse ); // firstTime = qtrue
+      if ( denied ) {
+        Com_Printf("WARNING: client (%i) denied on subsequent worlds using sv_mvOmnipresent.", clientNum);
+      }
+    }
+  }
+#endif
 
 	if ( sv_clientTLD->integer ) {
 		SV_InjectLocation( newcl->tld, newcl->country );
@@ -2372,8 +2387,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		gvmi = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
-		//SV_ExecuteClientCommand(client, "team spectator");
-		//VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+    if(sv_mvOmnipresent->integer == 0) {
+      VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, clientNum );	// firstTime = qfalse
+    } else if (sv_mvOmnipresent->integer == -1) {
+      SV_ExecuteClientCommand(client, "team spectator");
+    }
 
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);

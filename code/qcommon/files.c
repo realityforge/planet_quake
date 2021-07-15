@@ -1186,7 +1186,12 @@ void FS_Rename( const char *from, const char *to ) {
 	const char *from_ospath, *to_ospath;
 	FILE *f;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+  {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1305,7 +1310,12 @@ on files returned by FS_FOpenFile...
 void FS_FCloseFile( fileHandle_t f ) {
 	fileHandleData_t *fd;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+  {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1366,7 +1376,12 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	fileHandle_t	f;
 	fileHandleData_t *fd;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+  {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1418,7 +1433,12 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	fileHandleData_t *fd;
 	fileHandle_t	f;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+  {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1712,7 +1732,12 @@ int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueF
 	int				length;
 	fileHandleData_t *f;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+  {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1917,7 +1942,12 @@ int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file )
 	fileHandleData_t *fd;
 	fileHandle_t f;	
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1965,7 +1995,12 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 	byte	*buf;
 	int		tries;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2020,7 +2055,12 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	int		tries;
 	FILE	*f;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2081,7 +2121,12 @@ FS_Seek
 int FS_Seek( fileHandle_t f, long offset, fsOrigin_t origin ) {
 	int		_origin;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
 	}
@@ -2183,7 +2228,12 @@ qboolean FS_FileIsInPAK( const char *filename, int *pChecksum, char *pakName ) {
 	long			hash;
 	long			fullHash;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2256,7 +2306,12 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	qboolean		isConfig;
 	long			len;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2366,7 +2421,12 @@ FS_FreeFile
 =============
 */
 void FS_FreeFile( void *buffer ) {
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 	if ( !buffer ) {
@@ -2393,7 +2453,12 @@ Filename are relative to the quake search path
 void FS_WriteFile( const char *qpath, const void *buffer, int size ) {
 	fileHandle_t f;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -3003,7 +3068,11 @@ static qboolean FS_SaveCache( void )
 	const searchpath_t *sp;
 	FILE *f;
 
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
 	if ( !fs_searchpaths )
+#endif
 		return qfalse;
 
 	if ( !fs_cacheLoaded )
@@ -3621,7 +3690,12 @@ char **FS_ListFilteredFiles( const char *path, const char *extension, const char
 	qboolean		hasPatterns;
 	const char		*x;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -3783,7 +3857,12 @@ FS_FreeFileList
 void FS_FreeFileList( char **list ) {
 	int		i;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -6192,7 +6271,12 @@ fileHandle_t FS_PipeOpenWrite( const char *cmd, const char *filename ) {
 	fileHandle_t f;
 	const char *ospath;
 
-	if ( !fs_searchpaths ) {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
+	if ( !fs_searchpaths )
+#endif
+	{
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -6232,7 +6316,11 @@ fileHandle_t FS_PipeOpenWrite( const char *cmd, const char *filename ) {
 
 void FS_PipeClose( fileHandle_t f )
 {
+#ifdef USE_ASYNCHRONOUS
+  if ( !com_fullyInitialized || !fs_searchpaths )
+#else
 	if ( !fs_searchpaths )
+#endif
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 
 	if ( fsh[f].zipFile )

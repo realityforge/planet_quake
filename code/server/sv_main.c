@@ -77,7 +77,7 @@ cvar_t  *sv_mvSyncPS; // synchronize player state between worlds
 cvar_t  *sv_mvSyncXYZ;
 cvar_t  *sv_mvSyncMove;
 cvar_t  *sv_mvOmnipresent;
-
+cvar_t  *sv_mvKingOTW;
 #endif
 
 cvar_t	*sv_privateClients;		// number of clients reserved for password
