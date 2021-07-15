@@ -789,7 +789,7 @@ static int SV_MakeMaze( void ) {
 			maze[x][gridRows-1] = '#';
 		}
 	}
-	int *areaStack = Hunk_AllocateTempMemory(gridRows * gridCols * 4 * sizeof(int));
+	int *roadStack = Hunk_AllocateTempMemory(gridRows * gridCols * 4 * sizeof(int));
 	int minX;
 	int minY;
 	int maxX;
@@ -1073,7 +1073,7 @@ static int SV_MakeMaze( void ) {
 			}
 		}
 
-		// build inner maze using a areaStack to list every division, skips divisions that would be too small
+		// build inner maze using a roadStack to list every division, skips divisions that would be too small
 		while(safety < 6) {
 			// initialize the spaces with the entire maze
 			stackI--;
@@ -1087,10 +1087,10 @@ static int SV_MakeMaze( void ) {
 			else if(stackI == 0) {
 				break;
 			} else {
-				minX = areaStack[stackI*4+0];
-				minY = areaStack[stackI*4+1];
-				maxX = areaStack[stackI*4+2];
-				maxY = areaStack[stackI*4+3];
+				minX = roadStack[stackI*4+0];
+				minY = roadStack[stackI*4+1];
+				maxX = roadStack[stackI*4+2];
+				maxY = roadStack[stackI*4+3];
 			}
 			Com_Printf("Maze block: %i x %i <> %i x %i\n", minX, minY, maxX, maxY);
 			int whichDirection = rand() % 4;
@@ -1102,37 +1102,37 @@ static int SV_MakeMaze( void ) {
 			if(wallX - minX > 1
 				&& wallY - minY > 1) {
 				//Com_Printf("Adding top, left: %i x %i <> %i x %i\n", minX, minY, wallX, wallY);
-				areaStack[stackI*4+0] = minX;
-				areaStack[stackI*4+1] = minY;
-				areaStack[stackI*4+2] = wallX;
-				areaStack[stackI*4+3] = wallY;
+				roadStack[stackI*4+0] = minX;
+				roadStack[stackI*4+1] = minY;
+				roadStack[stackI*4+2] = wallX;
+				roadStack[stackI*4+3] = wallY;
 				stackI++;
 			}
 			if(wallX - minX > 1
 				&& maxY - wallY > 1) {
 				//Com_Printf("Adding bottom, left: %i x %i <> %i x %i\n", minX, wallY, wallX, maxY);
-				areaStack[stackI*4+0] = minX;
-				areaStack[stackI*4+1] = wallY + 1;
-				areaStack[stackI*4+2] = wallX;
-				areaStack[stackI*4+3] = maxY;
+				roadStack[stackI*4+0] = minX;
+				roadStack[stackI*4+1] = wallY + 1;
+				roadStack[stackI*4+2] = wallX;
+				roadStack[stackI*4+3] = maxY;
 				stackI++;
 			}
 			if(maxX - wallX > 1
 				&& wallY - minY > 1) {
 				//Com_Printf("Adding top, right: %i x %i <> %i x %i\n", wallX, minY, maxX, wallY);
-				areaStack[stackI*4+0] = wallX + 1;
-				areaStack[stackI*4+1] = minY;
-				areaStack[stackI*4+2] = maxX;
-				areaStack[stackI*4+3] = wallY;
+				roadStack[stackI*4+0] = wallX + 1;
+				roadStack[stackI*4+1] = minY;
+				roadStack[stackI*4+2] = maxX;
+				roadStack[stackI*4+3] = wallY;
 				stackI++;
 			}
 			if(maxX - wallX > 1
 				&& maxY - wallY > 1) {
 				//Com_Printf("Adding bottom, right: %i x %i <> %i x %i\n", wallX, wallY, maxX, maxY);
-				areaStack[stackI*4+0] = wallX + 1;
-				areaStack[stackI*4+1] = wallY + 1;
-				areaStack[stackI*4+2] = maxX;
-				areaStack[stackI*4+3] = maxY;
+				roadStack[stackI*4+0] = wallX + 1;
+				roadStack[stackI*4+1] = wallY + 1;
+				roadStack[stackI*4+2] = maxX;
+				roadStack[stackI*4+3] = maxY;
 				stackI++;
 			}
 
@@ -1340,7 +1340,7 @@ static int SV_MakeMaze( void ) {
 		 (int)(vs[1][2] - 64)));
  	offset += strlen(&output[offset]);
 	
-	Hunk_FreeTempMemory( areaStack );
+	Hunk_FreeTempMemory( roadStack );
 	
 	for(int m = 0; m < 4; m++) {
 		// make offsets for centering
@@ -1679,24 +1679,215 @@ double deltaE(double l1, double a1, double b1, double l2, double a2, double b2){
   return i < 0 ? 0 : sqrt(i);
 }
 
+ 
+void bubbleSort(float *arr, int n, vec2_t *arr2)
+{
+  int i, j;
+  for (i = 0; i < n-1; i++) {
+    for (j = 0; j < n-i-1; j++) {
+      if (arr[j] > arr[j+1]) {
+        float temp = arr[j];
+        arr[j] = arr[j+1];
+        arr[j+1] = temp;
+        vec2_t temp2;
+        temp2[0] = arr2[j][0];
+        temp2[1] = arr2[j][1];
+        arr2[j][0] = arr2[j+1][0];
+        arr2[j][1] = arr2[j+1][1];
+        arr2[j+1][0] = temp2[0];
+        arr2[j+1][1] = temp2[1];
+      }
+    }
+  }
+}
 
-extern void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height );
-static int SV_MakeMonacoF1() {
-  int R, G, B;
-  double L1, A1, B1, L2, A2, B2;
-  vec3_t  vs[2];
-  int offset = 0;
-  int maxWidth, maxHeight;
-  int a1, a2, x, y, px, py;
-  int pixel;
+
+void SV_GetAreaBlocks(
+  int areaX, int areaY,
+  int AREA_BLOCK, 
+  int maxWidth, int maxHeight, 
+  float *diffStack, 
+  vec2_t *blockStack, int *blockCount,
+  int pointsTotal)
+{
+  int MAX_BLOCK = 32;
+  int a3;
+  int w, h, x, y;
+  int bx, by;
+  qboolean skipArea;
+  double sumArea;
+  int sumTotal;
+  // start by fitting the largest possible cube of uninterrupted road
+  // removed the lower limit restriction when it works
+  for(w = MAX_BLOCK; w > 8; w-=8) {
+    for(h = MAX_BLOCK; h > 8; h-=8) {
+  //for(int w = AREA_BLOCK; w > 0; w--) {
+  //  for(int h = AREA_BLOCK; h > 0; h--) {
+      // cube can fit anywhere between the edges of the area so subtract the
+      //   width/height from the traversable x and y position
+      for(x = 0; x < maxWidth - w; x+=8) {
+        for(y = 0; y < maxHeight - h; y+=8) {
+          // since we can only get smaller skip the cubes that are already formed
+          skipArea = qfalse;
+          for(a3 = 0; a3 < *blockCount; a3++) {
+            // check if any of the corners intersect with another block
+            if(isOverlapping(
+              (vec2_t){areaX * AREA_BLOCK + x,     areaY * AREA_BLOCK + y}, 
+              (vec2_t){areaX * AREA_BLOCK + x + w, areaY * AREA_BLOCK + y + h}, 
+              blockStack[a3 * 2], blockStack[a3 * 2 + 1])) {
+              skipArea = qtrue;
+              break;
+            }
+          }
+          if(skipArea) {
+            continue;
+          }
+          
+          // finally scan the whole space for average diff
+          sumArea = 0;
+          sumTotal = 0;
+          for(bx = x; bx < x + w; bx++) {
+            for(by = y; by < y + h; by++) {
+              sumArea += diffStack[by * AREA_BLOCK + bx];
+              sumTotal++;
+            } // by
+          } // bx
+          
+          if(sumArea / sumTotal < 10 && *blockCount < pointsTotal) {
+            // we finally found a good block
+            // make a road voxel at the position on blue pixels
+            blockStack[(*blockCount)*2][0] = areaX * AREA_BLOCK + x;
+            blockStack[(*blockCount)*2][1] = areaY * AREA_BLOCK + y;
+            blockStack[(*blockCount)*2+1][0] = areaX * AREA_BLOCK + x + w;
+            blockStack[(*blockCount)*2+1][1] = areaY * AREA_BLOCK + y + h;
+            (*blockCount)++;
+          }
+          
+          if(*blockCount >= pointsTotal) break;
+        } // y
+        if(*blockCount >= pointsTotal) break;
+      } // x
+
+
+      if(*blockCount >= pointsTotal) break;
+    } // h
+    if(*blockCount >= pointsTotal) break;
+  } // w
+
+}
+
+
+void SV_GetAreaPaths(
+  int areaX, int areaY,
+  int AREA_BLOCK, int PATH_WIDTH,
+  int maxWidth, int maxHeight, 
+  float *diffStack, 
+  vec2_t *roadStack, int *roadCount,
+  int pointsTotal)
+{
+  int x, y, px, py;
   uint64_t totalPointX = 0;
   uint64_t totalPointY = 0;
   int countPoint = 0;
+  // dumb down the path by averaging blue road match pixels and saving center
+  // since the path is no more than 8 pixels wide, there can be no more
+  //   than 16x16 points per area if every square was filled with street
+  //   probably there are no more than 32 points if the road circles back 
+  //   around and crosses the same area
+  for(x = 0; x <= maxWidth - PATH_WIDTH; x += PATH_WIDTH) {
+    for(y = 0; y <= maxHeight - PATH_WIDTH; y += PATH_WIDTH) {
+      totalPointX = 0;
+      totalPointY = 0;
+      countPoint = 0;
+
+      for(px = x; px < x + PATH_WIDTH; px++) {
+        for(py = y; py < y + PATH_WIDTH; py++) {
+          // make an average of point locations to get the center
+          if(diffStack[py * AREA_BLOCK + px] < 10.0) {
+            totalPointX += px;
+            totalPointY += py;
+            countPoint++;
+          }
+        } // py
+      } // px
+
+
+      if(*roadCount >= pointsTotal) {
+        Com_Printf("WARNING: exceeded total possible points.");
+      } else if (countPoint > 0) {
+        roadStack[*roadCount][0] = areaX * AREA_BLOCK + totalPointX / countPoint;
+        roadStack[*roadCount][1] = areaY * AREA_BLOCK + totalPointY / countPoint;
+        (*roadCount)++;
+      }
+      if(*roadCount >= pointsTotal) break;
+    } // y
+    if(*roadCount >= pointsTotal) break;
+  } // x
+
+}
+
+
+
+void SV_GetAreaColors(int AREA_BLOCK, 
+  int R, int G, int B,
+  int areaX, int areaY,
+  int maxWidth, int maxHeight, 
+  unsigned char *pic, int picWidth,
+  float *diffStack)
+{
+  int pixel;
+  double L1, A1, B1, L2, A2, B2;
+  int x, y;
+  // road color
+  //rgb2lab(34, 187, 255, &L1, &A1, &B1);
+  // should be 70.90 -20.84 -44.99
+  // source https://www.nixsensor.com/free-color-converter/
+  //printf("L: %f, A: %f, B: %f\n", L1, A1, B1);
+  rgb2lab(R, G, B, &L1, &A1, &B1);
+  for(x = 0; x < maxWidth; x++) {
+    for(y = 0; y < maxHeight; y++) {
+      // this is in rgb format already, look for anything within 5% of blue
+      //   we do this by converting to HSL and comparing hue with a factor of 
+      //   S (saturation) and L (luminosity)
+      pixel = (areaY * AREA_BLOCK * picWidth * 4) // area rows
+            + (areaX * AREA_BLOCK * 4) // area columns
+            + (y * picWidth * 4 + x * 4); // x and y inside area
+      R = pic[pixel + 0];
+      G = pic[pixel + 1];
+      B = pic[pixel + 2];
+      // RGB: 33, 179, 236
+      // HSL: 197, 86, 93
+      // not accurate enough
+      rgb2lab(R, G, B, &L2, &A2, &B2);
+      float diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
+      /*
+      //RGBToHSL(R, G, B, &H, &S, &L);
+      //printf("H: %i, S: %i, L: %i\n", H, S, L);
+      //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, R, G, B);
+      //double diff = deltaE(L1, A1, B1, L2, A2, B2);
+      printf("x: %i, y: %i, diff: %f\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, diff);
+      */
+      diffStack[y * AREA_BLOCK + x] = diff;
+    }
+  }
+
+}
+
+
+
+extern void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height );
+
+static int SV_MakeMonacoF1() {
+  vec3_t  vs[2];
+  int offset = 0;
+  int maxWidth, maxHeight;
+  int a1, a2;
   int SCALE = 16;
   int MAX_BRUSHES = 2000;
   int AREA_BLOCK = 64;
   int PATH_WIDTH = 8;
-  int POINTS_PER = (AREA_BLOCK / PATH_WIDTH) * (AREA_BLOCK / PATH_WIDTH);
+  int POINTS_SEG = AREA_BLOCK / PATH_WIDTH;
+  int POINTS_PER = POINTS_SEG * POINTS_SEG;
 
 	brushC = 0;
 	output[0] = '\0';
@@ -1719,11 +1910,6 @@ static int SV_MakeMonacoF1() {
   int height, width;
   CL_LoadJPG("maps/monaco-track-map-1.jpg", &pic, &width, &height);
   
-  // road color
-  rgb2lab(34, 187, 255, &L1, &A1, &B1);
-  // should be 70.90 -20.84 -44.99
-  // source https://www.nixsensor.com/free-color-converter/
-  printf("L: %f, A: %f, B: %f\n", L1, A1, B1);
   
   // loop through image and make "bricks" wherever there are certain colors, 
   // TODO: we'll figure out height later
@@ -1736,22 +1922,26 @@ static int SV_MakeMonacoF1() {
   //   only fit 32x32 or smaller because the roads/buildings will be broken up 
   //   along the edges of each area unless it's a perfect fit
   float  *diffStack = Z_Malloc(AREA_BLOCK * AREA_BLOCK * sizeof(float));
-  //vec2_t *areaStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t) * 2);
+  //vec2_t *roadStack = Hunk_AllocateTempMemory(AREA_BLOCK * AREA_BLOCK * sizeof(vec2_t) * 2);
   // because we are trying to minimize the number of blocks, this algorithm is
   //   very greedy, which means it will take a lot of extra processing
   int areaHor = ceil(width * 1.0 / AREA_BLOCK);
   int areaVer = ceil(height * 1.0 / AREA_BLOCK);
   int pointsTotal = areaHor * areaVer * POINTS_PER;
   Com_Printf("Allocating enough memory to store %i total path points.\n", pointsTotal);
-  vec2_t *areaStack = Z_Malloc(pointsTotal * sizeof(vec2_t));
-  int areaCount = 0;
-  
+  int *nearestStack = Z_Malloc(POINTS_SEG * sizeof(int));
+  vec2_t *closeStack = Z_Malloc(POINTS_SEG * sizeof(vec2_t));
+  vec2_t *roadStack = Z_Malloc(pointsTotal * sizeof(vec2_t));
+  vec2_t *blockStack = Z_Malloc(pointsTotal * sizeof(vec2_t) * 2);
+  int roadCount = 0;
+  int blockCount = 0;
+
   for(a1 = 0; a1 < areaHor; a1++) {
     for(a2 = 0; a2 < areaVer; a2++) {
       // TODO: make as few cubes as possible by decimating/
       //   checking if cube is inside a bigger cube that still fits along a spline
       //   probably going to need a stack for this, in order to form the splines
-      //memset(areaStack, 0, pointsTotal * sizeof(vec2_t));
+      //memset(roadStack, 0, pointsTotal * sizeof(vec2_t));
       memset(diffStack, 0, AREA_BLOCK * AREA_BLOCK * sizeof(float));
 
       // on the last loop, don't go past the edge of the image, only scan remaining area
@@ -1763,164 +1953,68 @@ static int SV_MakeMonacoF1() {
       if(a2 + 1 == areaVer) {
         maxHeight = height % AREA_BLOCK;
       }
+
+/*
+      SV_GetAreaColors(
+        AREA_BLOCK,
+        34, 187, 255, 
+        a1, a2,
+        maxWidth, maxHeight, 
+        pic, width, 
+        diffStack);
+      SV_GetAreaPaths(
+        a1, a2, 
+        AREA_BLOCK, PATH_WIDTH, 
+        maxWidth, maxHeight, 
+        diffStack, 
+        roadStack, &roadCount, 
+        pointsTotal);
+*/
+
+
+      SV_GetAreaColors(
+        AREA_BLOCK,
+        75, 75, 83, 
+        a1, a2,
+        maxWidth, maxHeight, 
+        pic, width, 
+        diffStack);
+      SV_GetAreaBlocks(
+        a1, a2, 
+        AREA_BLOCK,
+        maxWidth, maxHeight,
+        diffStack, 
+        blockStack, &blockCount, 
+        pointsTotal
+      );
       
-      
-      for(x = 0; x < maxWidth; x++) {
-        for(y = 0; y < maxHeight; y++) {
-          // this is in rgb format already, look for anything within 5% of blue
-          //   we do this by converting to HSL and comparing hue with a factor of 
-          //   S (saturation) and L (luminosity)
-          pixel = (a2 * AREA_BLOCK * width * 4) // area rows
-                + (a1 * AREA_BLOCK * 4) // area columns
-                + (y * width * 4 + x * 4); // x and y inside area
-          R = pic[pixel + 0];
-          G = pic[pixel + 1];
-          B = pic[pixel + 2];
-          // RGB: 33, 179, 236
-          // HSL: 197, 86, 93
-          // not accurate enough
-          rgb2lab(R, G, B, &L2, &A2, &B2);
-          float diff = CIEDE2000(L1, A1, B1, L2, A2, B2);
-          /*
-          //RGBToHSL(R, G, B, &H, &S, &L);
-          //printf("H: %i, S: %i, L: %i\n", H, S, L);
-          //printf("x: %i, y: %i, R: %i, G: %i, B: %i\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, R, G, B);
-          //double diff = deltaE(L1, A1, B1, L2, A2, B2);
-          printf("x: %i, y: %i, diff: %f\n", a1 * AREA_BLOCK + x, a2 * AREA_BLOCK + y, diff);
-          */
-          diffStack[y * AREA_BLOCK + x] = diff;
-        }
-      }
-
-      // dumb down the path by averaging blue road match pixels and saving center
-      // since the path is no more than 8 pixels wide, there can be no more
-      //   than 16x16 points per area if every square was filled with street
-      //   probably there are no more than 32 points if the road circles back 
-      //   around and crosses the same area
-      for(x = 0; x <= maxWidth - PATH_WIDTH; x += PATH_WIDTH) {
-        for(y = 0; y <= maxHeight - PATH_WIDTH; y += PATH_WIDTH) {
-          totalPointX = 0;
-          totalPointY = 0;
-          countPoint = 0;
-
-          for(px = x; px < x + PATH_WIDTH; px++) {
-            for(py = y; py < y + PATH_WIDTH; py++) {
-              // make an average of point locations to get the center
-              if(diffStack[py * AREA_BLOCK + px] < 10.0) {
-                totalPointX += px;
-                totalPointY += py;
-                countPoint++;
-              }
-            } // py
-          } // px
-
-
-          if(areaCount >= pointsTotal) {
-            Com_Printf("WARNING: exceeded total possible points.");
-          } else if (countPoint > 0) {
-            areaStack[areaCount][0] = a1 * AREA_BLOCK + totalPointX / countPoint;
-            areaStack[areaCount][1] = a2 * AREA_BLOCK + totalPointY / countPoint;
-            areaCount++;
-          }
-          if(areaCount >= pointsTotal) break;
-        } // y
-        if(areaCount >= pointsTotal) break;
-      } // x
-        
-      // we've completed an entire area, now average thickness of the road
-      // since our maximum brush size if 8, dump down the points by dividing them
-      //   then create line lines across the entire area of where the road should be
-      //   remove outliers by looking at previous and next areas and connecting the dots
-      
-      
-      /*
-      // start by fitting the largest possible cube of uninterrupted road
-      // removed the lower limit restriction when it works
-      for(w = 8; w > 0; w--) {
-        for(h = 8; h > 0; h--) {
-      //for(int w = AREA_BLOCK; w > 0; w--) {
-      //  for(int h = AREA_BLOCK; h > 0; h--) {
-          // cube can fit anywhere between the edges of the area so subtract the
-          //   width/height from the traversable x and y position
-          for(x = 0; x < maxWidth - w; x++) {
-            for(y = 0; y < maxHeight - h; y++) {
-              // since we can only get smaller skip the cubes that are already formed
-              skipArea = qfalse;
-              for(a3 = 0; a3 < areaCount; a3++) {
-                // check if any of the corners intersect with another block
-                if(isOverlapping((vec2_t){x, y}, (vec2_t){x + w, y + h}, 
-                  areaStack[a3 * 2], areaStack[a3 * 2 + 1])) {
-                  skipArea = qtrue;
-                  break;
-                }
-              }
-              if(skipArea) {
-                isRoad = qfalse;
-                continue;
-              }
-              
-              // finally scan the whole space for blue
-              isRoad = qtrue;
-              // TODO: store the diff values for making blocks
-              for(bx = x; bx < x + w; bx++) {
-                for(by = y; by < y + h; by++) {
-                  if(diffStack[by * AREA_BLOCK + bx] < 10.0) {
-                  //if(abs(H - 197) / 360 < 0.05 ) {
-                  } else {
-                    isRoad = qfalse;
-                    break;
-                  }
-                } // by
-                if(!isRoad) break; // exit early because it's not a road
-              } // bx
-              
-              if(isRoad && areaCount < AREA_BLOCK * AREA_BLOCK) {
-                // we finally found a good block
-                // make a road voxel at the position on blue pixels
-                areaStack[areaCount*2][0] = x;
-                areaStack[areaCount*2][1] = y;
-                areaStack[areaCount*2+1][0] = x + w;
-                areaStack[areaCount*2+1][1] = y + h;
-                areaCount++;
-                
-                SV_SetStroke("cube1");
-                xBase = a1 * AREA_BLOCK + x;
-                yBase = a2 * AREA_BLOCK + y;
-                //printf("fitted!: a1: %i, a2: %i, x: %i, y: %i\n", a1, a2, xBase, yBase);
-                char *road = SV_MakeCube(
-                  (vec3_t){xBase,   yBase,   4}, 
-                  (vec3_t){xBase,   yBase+h, 4}, 
-                  (vec3_t){xBase+w, yBase+h, 4}, 
-                  (vec3_t){xBase+w, yBase,   4},
-
-                  (vec3_t){xBase,   yBase,   0}, 
-                  (vec3_t){xBase,   yBase+h, 0}, 
-                  (vec3_t){xBase+w, yBase+h, 0}, 
-                  (vec3_t){xBase+w, yBase,   0}
-                );
-                strcpy(&output[offset], road);
-                offset += strlen(&output[offset]);
-              }
-              
-              if(brushC >= MAX_BRUSHES) break;
-            } // y
-            if(brushC >= MAX_BRUSHES) break;
-          } // x
-
-
-          if(brushC >= MAX_BRUSHES) break;
-        } // h
-        if(brushC >= MAX_BRUSHES) break;
-      } // w
-      */
-
-      
-      
-      //if(brushC >= MAX_BRUSHES) break;
-      // TODO: make some buildings and side roads and barriers and z-height
     } // a2
-    //if(brushC >= MAX_BRUSHES) break;
   } // a1
+  
+  
+  // make some buildings and side roads and barriers and z-height
+  int b, bx, by, bw, bh;
+  for(b = 0; b < blockCount; b++) {
+    bx = blockStack[b*2][0];
+    by = blockStack[b*2][1];
+    bw = blockStack[b*2+1][0];
+    bh = blockStack[b*2+1][1];
+    SV_SetStroke("cube1");
+    char *road = SV_MakeCube(
+      (vec3_t){bx, by, 100}, 
+      (vec3_t){bx, bh, 100}, 
+      (vec3_t){bw, bh, 100}, 
+      (vec3_t){bw, by, 100},
+
+      (vec3_t){bx, by, 0}, 
+      (vec3_t){bx, bh, 0}, 
+      (vec3_t){bw, bh, 0}, 
+      (vec3_t){bw, by, 0}
+    );
+    strcpy(&output[offset], road);
+    offset += strlen(&output[offset]);
+    if(brushC >= MAX_BRUSHES) break;
+  }
   
   
   // divide up by 64x64 again, draw the lines seperately, for each area
@@ -1929,53 +2023,76 @@ static int SV_MakeMonacoF1() {
   //   connect to the main track loop, and also allow us to get rid of
   //   any outliers
   
-  float length;
-  // use nearest to find the angle of the previous and next closest points
-  float nearest1 = 0x7FFFFFFF;
-  float nearest2 = 0x7FFFFFFF;
-  int nearestI1 = -1;
-  int nearestI2 = -1;
   float sumX, sumY, sumXY, sumX2, slope;
   char *road;
   int x1, x2, x3, x4, y1, y2, y3, y4;
-  for(int i = 0; i < areaCount; i++) {
-    nearest1 = 0x7FFFFFFF;
-    nearest2 = 0x7FFFFFFF;
-    for(int j = 0; j < areaCount; j++) {
-      if(j == i) continue;
-      length = sqrt(pow(areaStack[j][0] - areaStack[i][0], 2)
-        + pow(areaStack[j][1] - areaStack[i][1], 2));
-      if(length < nearest1 && fabsf(length) > PATH_WIDTH * 2) {
-        nearest1 = length;
-        nearestI1 = j;
+  float radians, length;
+  float nearestLength = 0x7FFFFFFF;
+  qboolean alreadyAdded = qfalse;
+  int i, j, k, n;
+  for(i = 0; i < roadCount; i++) {
+    // find the closest 16 points on a line, find 2 then average and
+    //   find 2 more that are neither of the first 2, and repeat
+    nearestStack[0] = i;
+    closeStack[0][0] = roadStack[i][0];
+    closeStack[0][1] = roadStack[i][1];
+    for(j = 1; j < POINTS_SEG; j++) {
+      // TODO: find the closest point to any point on the line
+      nearestLength = 0x7FFFFFFF;
+      for(k = 0; k < roadCount; k++) {
+        alreadyAdded = qfalse;
+        for(n = 0; n < j; n++) {
+          if(nearestStack[n] == k) {
+            alreadyAdded = qtrue;
+            break;
+          }
+        }
+        if(alreadyAdded) continue;
+        length = sqrt(pow(closeStack[j-1][0] - roadStack[k][0], 2)
+          + pow(closeStack[j-1][1] - roadStack[k][1], 2));
+        if(fabsf(length) < nearestLength && fabsf(length) < AREA_BLOCK * 2) {
+          nearestLength = fabsf(length);
+          nearestStack[j] = k;
+        }
       }
-    }
-    for(int j = 0; j < areaCount; j++) {
-      if(j == i || j == nearestI1) continue;
-      length = sqrt(pow(areaStack[j][0] - areaStack[nearestI1][0], 2)
-        + pow(areaStack[j][1] - areaStack[nearestI1][1], 2));
-      if(length < nearest2 && fabsf(length) > PATH_WIDTH * 4) {
-        nearest2 = length;
-        nearestI2 = j;
+      if(nearestLength == 0x7FFFFFFF) {
+        Com_Error(ERR_FATAL, "nothing this close!");
       }
+      closeStack[j][0] = roadStack[nearestStack[j]][0];
+      closeStack[j][1] = roadStack[nearestStack[j]][1];
     }
     
-    if(nearest2 > PATH_WIDTH * 8 || nearest1 > PATH_WIDTH * 8) {
-      Com_Error(ERR_FATAL, "length too far apart? %f", nearest2);
-    }
 
-    // find the slope for 3 points so we know which way to connect each segment of track
+    sumX = 0;
+    sumY = 0;
+    sumXY = 0;
+    sumX2 = 0;
+    for(j = 0; j < POINTS_SEG; j++) {
+      sumX += closeStack[j][0];
+      sumY += closeStack[j][1];
+    }
+    sumX /= POINTS_SEG;
+    sumY /= POINTS_SEG;
+
+    // find the slope for 16 points so we know which way to connect each segment of track
     // since every point looks for the next closest point we should end up with a continuous
     //   set of brushes
-    sumX = (areaStack[i][0] + areaStack[nearestI1][0] + areaStack[nearestI2][0]) / 3.0;
-    sumY = (areaStack[i][1] + areaStack[nearestI1][1] + areaStack[nearestI2][1]) / 3.0;
-    sumXY = (areaStack[i][0] - sumX)         * (areaStack[i][1] - sumY)
-          + (areaStack[nearestI1][0] - sumX) * (areaStack[nearestI1][1] - sumY)
-          + (areaStack[nearestI2][0] - sumX) * (areaStack[nearestI2][1] - sumY);
-    sumX2 = pow(areaStack[i][0] - sumX, 2)
-          + pow(areaStack[nearestI1][0] - sumX, 2)
-          + pow(areaStack[nearestI2][0] - sumX, 2);
+    for(j = 0; j < POINTS_SEG; j++) {
+      sumXY += (closeStack[j][0] - sumX) * (closeStack[j][1] - sumY);
+      sumX2 += pow(closeStack[j][0] - sumX, 2);
+    }
     slope = sumXY / sumX2;
+
+    /*
+    if(roadStack[i][0] > 7 * AREA_BLOCK && roadStack[i][0] < 8 * AREA_BLOCK
+      && roadStack[i][1] > 3 * AREA_BLOCK && roadStack[i][1] > 4 * AREA_BLOCK) {
+      for(j = 0; j < POINTS_PER; j++) {
+        printf("i: %i, x: %f, y: %f\n", nearestStack[j], closeStack[j][0], closeStack[j][1]);
+      }
+      printf("slope: %f\n", slope);
+      break;
+    }
+    */
 
     // draw the next cube in the sequence to simplify so we know both sides of
     //   of 4 corners to draw, average the distance between the first "cube"
@@ -1983,16 +2100,6 @@ static int SV_MakeMonacoF1() {
     //   connect based on the slope, 45 degrees, -45 degrees, etc
     // this decides which sides are connected so we don't accidentally flip verts
     //   and end up with a brush that is backwards/invisible
-    x1 = areaStack[i][0]*SCALE - 32;
-    x2 = areaStack[i][0]*SCALE - 32;
-    x3 = areaStack[i][0]*SCALE + 32;
-    x4 = areaStack[i][0]*SCALE + 32;
-    
-    y1 = areaStack[i][1]*SCALE - 32;
-    y2 = areaStack[i][1]*SCALE + 32;
-    y3 = areaStack[i][1]*SCALE + 32;
-    y4 = areaStack[i][1]*SCALE - 32;
-
     
     if(fabsf(slope) < 1) {
       /*
@@ -2003,12 +2110,25 @@ static int SV_MakeMonacoF1() {
       */
       // bottom-left, top-left, top-right, bottom-right
       /*
-      if(areaStack[nearestI2][0] < x1) {
-        x1 = x2 = areaStack[nearestI2][0];
+      if(roadStack[nearestI2][0] < x1) {
+        x1 = x2 = roadStack[nearestI2][0];
       } else {
-        x3 = x4 = areaStack[nearestI2][0];
+        x3 = x4 = roadStack[nearestI2][0];
       }
       */
+      radians = atan(slope); // always work on absolute so our points don't get reversed
+      //printf("atan: %f\n", radians);
+      x1 = roadStack[i][0]*SCALE;
+      y1 = roadStack[i][1]*SCALE;
+
+      x2 = roadStack[i][0]*SCALE;
+      y2 = roadStack[i][1]*SCALE + PATH_WIDTH * SCALE * 2;
+
+      x4 = roadStack[i][0]*SCALE + PATH_WIDTH * SCALE * 2 * cos(radians);
+      y4 = roadStack[i][1]*SCALE + PATH_WIDTH * SCALE * 2 * sin(radians);
+
+      x3 = x4;
+      y3 = y4 + PATH_WIDTH * SCALE * 2;
 
       if(slope < 0)
         SV_SetStroke("cube3");
@@ -2033,12 +2153,26 @@ static int SV_MakeMonacoF1() {
         +
       */
       /*
-      if(areaStack[nearestI2][1] < y1) {
-        y1 = y4 = areaStack[nearestI2][1];
+      if(roadStack[nearestI2][1] < y1) {
+        y1 = y4 = roadStack[nearestI2][1];
       } else {
-        y2 = y3 = areaStack[nearestI2][1];
+        y2 = y3 = roadStack[nearestI2][1];
       }
       */
+      int mult = PATH_WIDTH * SCALE * 2;
+      if(slope < 0) mult = -PATH_WIDTH * SCALE * 2;
+      radians = atan(slope); // always work on absolute so our points don't get reversed
+      x1 = roadStack[i][0]*SCALE;
+      y1 = roadStack[i][1]*SCALE;
+
+      x2 = roadStack[i][0]*SCALE + mult * cos(radians);
+      y2 = roadStack[i][1]*SCALE + mult * sin(radians);
+
+      x4 = roadStack[i][0]*SCALE + PATH_WIDTH * SCALE * 2;
+      y4 = roadStack[i][1]*SCALE;
+
+      x3 = x2 + PATH_WIDTH * SCALE * 2;
+      y3 = y2;
 
       if(slope < 0)
         SV_SetStroke("cube1");
@@ -2063,18 +2197,18 @@ static int SV_MakeMonacoF1() {
   }
 
   int minX = 0, maxX = 0, minY = 0, maxY = 0;
-  for(int i = 0; i < areaCount; i++) {
-    if(areaStack[i][0]*SCALE < minX) {
-      minX = areaStack[i][0]*SCALE;
+  for(int i = 0; i < roadCount; i++) {
+    if(roadStack[i][0]*SCALE < minX) {
+      minX = roadStack[i][0]*SCALE;
     }
-    if(areaStack[i][1]*SCALE < minY) {
-      minY = areaStack[i][1]*SCALE;
+    if(roadStack[i][1]*SCALE < minY) {
+      minY = roadStack[i][1]*SCALE;
     }
-    if(areaStack[i][0]*SCALE > maxX) {
-      maxX = areaStack[i][0]*SCALE;
+    if(roadStack[i][0]*SCALE > maxX) {
+      maxX = roadStack[i][0]*SCALE;
     }
-    if(areaStack[i][1]*SCALE > maxY) {
-      maxY = areaStack[i][1]*SCALE;
+    if(roadStack[i][1]*SCALE > maxY) {
+      maxY = roadStack[i][1]*SCALE;
     }
   }
   
@@ -2091,7 +2225,10 @@ static int SV_MakeMonacoF1() {
 	strcpy(&output[offset], "}\n");
 	offset += 2;
   
-  Z_Free( areaStack );
+  Z_Free( roadStack );
+  Z_Free( blockStack );
+  Z_Free( nearestStack );
+  Z_Free( closeStack );
   Z_Free( diffStack );
   
 	strcpy(&output[offset], 
