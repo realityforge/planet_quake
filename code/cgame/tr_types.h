@@ -186,4 +186,3 @@ typedef struct {
 } glconfig_t;
 
 #endif	// __TR_TYPES_H
-

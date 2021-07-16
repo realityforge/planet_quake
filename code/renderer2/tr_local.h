@@ -799,7 +799,8 @@ typedef struct {
 	int			originalBrushNumber;
 	vec3_t		bounds[2];
 
-	unsigned	colorInt;				// in packed byte format
+	color4ub_t	colorInt;				// in packed byte format
+  vec4_t		color;
 	float		tcScale;				// texture coordinate vector scales
 	fogParms_t	parms;
 
@@ -851,7 +852,6 @@ SURFACES
 
 ==============================================================================
 */
-typedef byte color4ub_t[4];
 
 // any changes in surfaceType must be mirrored in rb_surfaceTable[]
 typedef enum {
@@ -2063,6 +2063,7 @@ typedef struct stageVars
 
 typedef struct shaderCommands_s 
 {
+  #pragma pack(push,16)
 	glIndex_t	indexes[SHADER_MAX_INDEXES] QALIGN(16);
 	vec4_t		xyz[SHADER_MAX_VERTEXES] QALIGN(16);
 	int16_t		normal[SHADER_MAX_VERTEXES][4] QALIGN(16);
@@ -2078,9 +2079,11 @@ typedef struct shaderCommands_s
 	qboolean    useInternalVao;
 	qboolean    useCacheVao;
 
+  color4ub_t	vertexColors[SHADER_MAX_VERTEXES] QALIGN(16);
 	stageVars_t	svars QALIGN(16);
 
-	//color4ub_t	constantColor255[SHADER_MAX_VERTEXES] QALIGN(16);
+	color4ub_t	constantColor255[SHADER_MAX_VERTEXES] QALIGN(16);
+  #pragma pack(pop)
 
 	shader_t	*shader;
 	double		shaderTime;	// -EC- set to double for frameloss fix

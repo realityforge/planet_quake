@@ -691,19 +691,19 @@ void LoadDrawVertToSrfVert(srfVert_t *s, drawVert_t *d, int realLightmapNum, flo
 		//hack: convert LDR vertex colors to HDR
 		if (r_hdr->integer)
 		{
-			v[0] = MAX(d->color[0], 0.499f);
-			v[1] = MAX(d->color[1], 0.499f);
-			v[2] = MAX(d->color[2], 0.499f);
+			v[0] = MAX(d->color.rgba[0], 0.499f);
+			v[1] = MAX(d->color.rgba[1], 0.499f);
+			v[2] = MAX(d->color.rgba[2], 0.499f);
 		}
 		else
 		{
-			v[0] = d->color[0];
-			v[1] = d->color[1];
-			v[2] = d->color[2];
+			v[0] = d->color.rgba[0];
+			v[1] = d->color.rgba[1];
+			v[2] = d->color.rgba[2];
 		}
 
 	}
-	v[3] = d->color[3] / 255.0f;
+	v[3] = d->color.rgba[3] / 255.0f;
 
 	R_ColorShiftLightingFloats(v, v);
 	R_VaoPackColor(s->color, v);
@@ -2159,9 +2159,10 @@ static	void R_LoadFogs( lump_t *l, lump_t *brushesLump, lump_t *sidesLump ) {
 
 		out->parms = shader->fogParms;
 
-		out->colorInt = ColorBytes4 ( shader->fogParms.color[0],
-			                          shader->fogParms.color[1],
-			                          shader->fogParms.color[2], 1.0 );
+    out->colorInt.rgba[0] = ( shader->fogParms.color[0] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[1] = ( shader->fogParms.color[1] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[2] = ( shader->fogParms.color[2] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[3] = 255;
 
 		d = shader->fogParms.depthForOpaque < 1 ? 1 : shader->fogParms.depthForOpaque;
 		out->tcScale = 1.0f / ( d * 8 );

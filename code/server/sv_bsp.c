@@ -1801,6 +1801,7 @@ void SV_GetAreaPaths(
       totalPointY = 0;
       countPoint = 0;
 
+      // TODO: try the average algorithm here instead
       for(px = x; px < x + PATH_WIDTH; px++) {
         for(py = y; py < y + PATH_WIDTH; py++) {
           // make an average of point locations to get the center
@@ -2036,7 +2037,9 @@ static int SV_MakeMonacoF1() {
     closeStack[0][0] = roadStack[i][0];
     closeStack[0][1] = roadStack[i][1];
     for(j = 1; j < POINTS_SEG; j++) {
-      // TODO: find the closest point to any point on the line
+
+      // TODO: find the closest point to any point on the line, making a longer line
+      //   then use the long line instead of PATH_WIDTH * SCALE * 2 below
       nearestLength = 0x7FFFFFFF;
       for(k = 0; k < roadCount; k++) {
         alreadyAdded = qfalse;
