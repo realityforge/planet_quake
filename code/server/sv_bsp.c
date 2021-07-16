@@ -9,7 +9,7 @@
 
 static char stroke[MAX_QPATH] = "";
 
-static char output[4096 * 256] = "";
+static char output[4096 * 512] = "";
 static int brushC = 0;
 
 
@@ -1711,6 +1711,7 @@ void SV_GetAreaBlocks(
   int pointsTotal)
 {
   int MAX_BLOCK = 32;
+  int BLOCK_SIZE = 4;
   int a3;
   int w, h, x, y;
   int bx, by;
@@ -1719,14 +1720,14 @@ void SV_GetAreaBlocks(
   int sumTotal;
   // start by fitting the largest possible cube of uninterrupted road
   // removed the lower limit restriction when it works
-  for(w = MAX_BLOCK; w > 8; w-=8) {
-    for(h = MAX_BLOCK; h > 8; h-=8) {
+  for(w = MAX_BLOCK; w > BLOCK_SIZE; w-=BLOCK_SIZE) {
+    for(h = MAX_BLOCK; h > BLOCK_SIZE; h-=BLOCK_SIZE) {
   //for(int w = AREA_BLOCK; w > 0; w--) {
   //  for(int h = AREA_BLOCK; h > 0; h--) {
       // cube can fit anywhere between the edges of the area so subtract the
       //   width/height from the traversable x and y position
-      for(x = 0; x < maxWidth - w; x+=8) {
-        for(y = 0; y < maxHeight - h; y+=8) {
+      for(x = 0; x < maxWidth - w; x+=BLOCK_SIZE) {
+        for(y = 0; y < maxHeight - h; y+=BLOCK_SIZE) {
           // since we can only get smaller skip the cubes that are already formed
           skipArea = qfalse;
           for(a3 = 0; a3 < *blockCount; a3++) {
@@ -1753,7 +1754,7 @@ void SV_GetAreaBlocks(
             } // by
           } // bx
           
-          if(sumArea / sumTotal < 10 && *blockCount < pointsTotal) {
+          if(sumArea / sumTotal < 1 && *blockCount < pointsTotal) {
             // we finally found a good block
             // make a road voxel at the position on blue pixels
             blockStack[(*blockCount)*2][0] = areaX * AREA_BLOCK + x;
@@ -1803,7 +1804,7 @@ void SV_GetAreaPaths(
       for(px = x; px < x + PATH_WIDTH; px++) {
         for(py = y; py < y + PATH_WIDTH; py++) {
           // make an average of point locations to get the center
-          if(diffStack[py * AREA_BLOCK + px] < 10.0) {
+          if(diffStack[py * AREA_BLOCK + px] < 8.0) {
             totalPointX += px;
             totalPointY += py;
             countPoint++;
@@ -1813,7 +1814,7 @@ void SV_GetAreaPaths(
 
 
       if(*roadCount >= pointsTotal) {
-        Com_Printf("WARNING: exceeded total possible points.");
+        Com_Printf("WARNING: exceeded total possible points.\n");
       } else if (countPoint > 0) {
         roadStack[*roadCount][0] = areaX * AREA_BLOCK + totalPointX / countPoint;
         roadStack[*roadCount][1] = areaY * AREA_BLOCK + totalPointY / countPoint;
@@ -1883,9 +1884,9 @@ static int SV_MakeMonacoF1() {
   int maxWidth, maxHeight;
   int a1, a2;
   int SCALE = 16;
-  int MAX_BRUSHES = 2000;
+  int MAX_BRUSHES = 3000;
   int AREA_BLOCK = 64;
-  int PATH_WIDTH = 8;
+  int PATH_WIDTH = 4;
   int POINTS_SEG = AREA_BLOCK / PATH_WIDTH;
   int POINTS_PER = POINTS_SEG * POINTS_SEG;
 
@@ -1954,7 +1955,6 @@ static int SV_MakeMonacoF1() {
         maxHeight = height % AREA_BLOCK;
       }
 
-/*
       SV_GetAreaColors(
         AREA_BLOCK,
         34, 187, 255, 
@@ -1969,7 +1969,6 @@ static int SV_MakeMonacoF1() {
         diffStack, 
         roadStack, &roadCount, 
         pointsTotal);
-*/
 
 
       SV_GetAreaColors(
@@ -1995,10 +1994,10 @@ static int SV_MakeMonacoF1() {
   // make some buildings and side roads and barriers and z-height
   int b, bx, by, bw, bh;
   for(b = 0; b < blockCount; b++) {
-    bx = blockStack[b*2][0];
-    by = blockStack[b*2][1];
-    bw = blockStack[b*2+1][0];
-    bh = blockStack[b*2+1][1];
+    bx = blockStack[b*2][0] * SCALE;
+    by = blockStack[b*2][1] * SCALE;
+    bw = blockStack[b*2+1][0] * SCALE;
+    bh = blockStack[b*2+1][1] * SCALE;
     SV_SetStroke("cube1");
     char *road = SV_MakeCube(
       (vec3_t){bx, by, 100}, 
@@ -2211,7 +2210,22 @@ static int SV_MakeMonacoF1() {
       maxY = roadStack[i][1]*SCALE;
     }
   }
-  
+
+  for(int i = 0; i < blockCount; i++) {
+    if(blockStack[i][0]*SCALE < minX) {
+      minX = blockStack[i][0]*SCALE;
+    }
+    if(blockStack[i][1]*SCALE < minY) {
+      minY = blockStack[i][1]*SCALE;
+    }
+    if(blockStack[i][0]*SCALE > maxX) {
+      maxX = blockStack[i][0]*SCALE;
+    }
+    if(blockStack[i][1]*SCALE > maxY) {
+      maxY = blockStack[i][1]*SCALE;
+    }
+  }
+
 	vs[0][0] = minX - 200;
   vs[0][1] = minY - 200;
   vs[0][2] = -2000;
@@ -2230,6 +2244,10 @@ static int SV_MakeMonacoF1() {
   Z_Free( nearestStack );
   Z_Free( closeStack );
   Z_Free( diffStack );
+  
+  if(brushC >= MAX_BRUSHES) {
+    Com_Printf("WARNING: exceeded max brushes.\n");
+  }
   
 	strcpy(&output[offset], 
 		va("{\n"
