@@ -4871,6 +4871,19 @@ void CL_LoadVM_f( void ) {
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 		uivmi = 0;
 		return;
+  } else if (FS_FileExists(va("maps/%s.bsp", name))) {
+    int i, count = 0;
+    for(i = 0; i < MAX_NUM_VMS; i++) {
+			if(clientWorlds[i] > -1) count++;
+      else {
+#ifdef USE_LAZY_MEMORY
+        re.SwitchWorld(count);
+#endif
+        re.LoadWorld( name );
+        break;
+      }
+    }
+    return;
   } else {
 		Com_Printf( " unknown VM name '%s'\n", name );
 		return;

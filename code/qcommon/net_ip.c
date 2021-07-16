@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 
 #if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
-#define USE_MULTI_IP 1
+#define USE_MULTI_PORT 1
 #endif
 
 #ifdef USE_PRINT_CONSOLE
@@ -190,8 +190,8 @@ static cvar_t	*net_dropsim;
 
 static sockaddr_t socksRelayAddr;
 
-#ifdef USE_MULTI_IP
-#define ip_socket ip_sockets[igvm];
+#ifdef USE_MULTI_PORT
+#define ip_socket ip_sockets[igvm]
 static SOCKET	ip_sockets[MAX_NUM_VMS] = {
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
   INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET, INVALID_SOCKET,
@@ -705,7 +705,11 @@ NET_GetPacket
 Receive one packet
 ==================
 */
+#ifdef USE_MULTI_PORT
+static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr, int igvm )
+#else
 static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_set *fdr )
+#endif
 {
 	int 	ret;
 	sockaddr_t	from;
@@ -827,7 +831,12 @@ static qboolean NET_GetPacket( netadr_t *net_from, msg_t *net_message, const fd_
 Sys_SendPacket
 ==================
 */
-void Sys_SendPacket( int length, const void *data, const netadr_t *to ) {
+#ifdef USE_MULTI_PORT
+void Sys_SendPacket( int length, const void *data, const netadr_t *to, int igvm )
+#else
+void Sys_SendPacket( int length, const void *data, const netadr_t *to )
+#endif
+{
 	int ret = SOCKET_ERROR;
 	sockaddr_t addr;
 
@@ -1710,6 +1719,9 @@ static void NET_OpenIP( void ) {
 #ifdef USE_IPV6
 	int		port6;
 #endif
+#ifdef USE_MULTI_PORT
+  int igvm = 0;
+#endif
 
 	port = net_port->integer;
 #ifdef USE_IPV6
@@ -1913,6 +1925,9 @@ static void NET_Config( qboolean enableNetworking ) {
 	}
 
 	if( stop ) {
+#ifdef USE_MULTI_PORT
+    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++)
+#endif
 		if ( ip_socket != INVALID_SOCKET ) {
 			closesocket( ip_socket );
 			ip_socket = INVALID_SOCKET;
@@ -2022,7 +2037,11 @@ NET_Event
 Called from NET_Sleep which uses select() to determine which sockets have seen action.
 ====================
 */
+#ifdef USE_MULTI_PORT
+static void NET_Event( const fd_set *fdr, int igvm )
+#else
 static void NET_Event( const fd_set *fdr )
+#endif
 {
 	byte bufData[ MAX_MSGLEN_BUF ];
 	netadr_t from;
@@ -2032,7 +2051,11 @@ static void NET_Event( const fd_set *fdr )
 	{
 		MSG_Init( &netmsg, bufData, MAX_MSGLEN );
 
-		if ( NET_GetPacket( &from, &netmsg, fdr ) )
+#ifdef USE_MULTI_PORT
+		if ( NET_GetPacket( &from, &netmsg, fdr, igvm ) )
+#else
+    if ( NET_GetPacket( &from, &netmsg, fdr ) )
+#endif
 		{
 			if ( net_dropsim->value > 0.0f && net_dropsim->value <= 100.0f )
 			{
@@ -2085,6 +2108,9 @@ qboolean NET_Sleep( int timeout )
 
 	FD_ZERO( &fdr );
 
+#ifdef USE_MULTI_PORT
+  for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++)
+#endif
 	if ( ip_socket != INVALID_SOCKET )
 	{
 		FD_SET( ip_socket, &fdr );
@@ -2124,7 +2150,15 @@ qboolean NET_Sleep( int timeout )
 	retval = select( highestfd + 1, &fdr, NULL, NULL, &tv );
 
 	if ( retval > 0 ) {
-		NET_Event( &fdr );
+#ifdef USE_MULTI_PORT
+    for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+      if(highestfd == ip_sockets[igvm]) {
+        NET_Event( &fdr, igvm );
+      }
+    }
+#else
+    NET_Event( &fdr );
+#endif
 		return qfalse;
 	} else if (usingSocks && socks_socket != INVALID_SOCKET) {
     // alternate between the two sockets
@@ -2132,10 +2166,14 @@ qboolean NET_Sleep( int timeout )
 
     retval = select( socks_socket + 1, &fdr, NULL, NULL, &tv );
     
-	if ( retval > 0 ) {
-		NET_Event( &fdr );
-		return qfalse;
-	}
+  	if ( retval > 0 ) {
+#ifdef USE_MULTI_PORT
+      NET_Event( &fdr, 0 );
+#else
+  		NET_Event( &fdr );
+#endif
+  		return qfalse;
+  	}
   }
 
 	if ( retval == SOCKET_ERROR ) {

@@ -449,8 +449,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_ERROR:
     /*
-    // cpma
-			|| Q_stristr((const char*)VMA(1), "missing or corrupt")
     // RTCW
 			|| Q_stristr((const char*)VMA(1), "no free entities")) {
 			Com_Printf( "%s", (const char*)VMA(1) );

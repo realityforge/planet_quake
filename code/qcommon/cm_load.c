@@ -819,10 +819,12 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 				"(%i should be %i)", name, header.version, BSP_VERSION );
 		}
 		break;
+#ifdef USE_BSP1
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		//LoadQ1Map();
+		LoadQ1Map();
 		break;
+#endif
 	default:
 		Com_Error (ERR_DROP, "CM_LoadMap: %s has wrong version number "
 			"(%i should be %i)", name, header.version, BSP_VERSION );

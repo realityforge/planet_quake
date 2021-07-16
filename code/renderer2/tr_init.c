@@ -1830,11 +1830,13 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif
+
 #ifdef BUILD_EXPERIMENTAL
 	re.FastCapture = RB_FastCapture;
 	re.FastCaptureOld = RB_FastCaptureOld;
   re.ResetBannerSpy = RE_ResetBannerSpy;
 #endif
+
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 	re.SetDvrFrame = RE_SetDvrFrame;
@@ -1842,6 +1844,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 #endif
 	re.ReloadShaders = RE_ReloadShaders;
 #endif
+
 #ifdef USE_LAZY_LOAD
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;

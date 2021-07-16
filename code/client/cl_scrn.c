@@ -760,8 +760,12 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #ifdef USE_MULTIVM_CLIENT
 		CM_SwitchMap(clientMaps[cgvmi]);
 #ifdef USE_LAZY_MEMORY
-		re.SwitchWorld(clientMaps[cgvmi]);
-    re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+    if(!re.SwitchWorld) {
+      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
+    } else {
+  		re.SwitchWorld(clientMaps[cgvmi]);
+      re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+    }
 #endif
 #endif
 

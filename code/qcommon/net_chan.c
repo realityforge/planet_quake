@@ -537,7 +537,7 @@ void NET_FlushPacketQueue( void )
 		now = Sys_Milliseconds();
 		if ( packetQueue->release - now >= 0 )
 			break;
-		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to );
+		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to, packetQueue->to.netWorld );
 		last = packetQueue;
 		packetQueue = packetQueue->next;
 		Z_Free( last->data );
@@ -573,7 +573,7 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 		NET_QueuePacket( length, data, to, sv_packetdelay->integer );
 	}
 	else {
-		Sys_SendPacket( length, data, to );
+		Sys_SendPacket( length, data, to, to->netWorld );
 	}
 }
 

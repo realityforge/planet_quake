@@ -12,6 +12,7 @@ REND_SOURCES   := $(MOUNT_DIR)/$(REND_SOURCE) $(MOUNT_DIR)/$(REND_SOURCE)/glsl \
 									$(MOUNT_DIR)/renderercommon
 GLSLFFALLBACKS := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.glsl))
 GLSLFILES      := $(addprefix glsl/,$(notdir $(GLSLFFALLBACKS)))
+# TODO: switch this when other map formats are working
 REND_CFILES    := $(foreach dir,$(REND_SOURCES), $(wildcard $(dir)/*.c))
 ifeq ($(USE_RENDERER_DLOPEN),1)
 REND_CFILES    += $(MOUNT_DIR)/qcommon/q_math.c $(MOUNT_DIR)/qcommon/q_shared.c \
@@ -23,16 +24,16 @@ REND_Q3OBJ     := $(addprefix $(B)/$(REND_WORKDIR)/,$(notdir $(REND_OBJS))) \
                   $(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ)))
 Q3R2STRCLEAN   := $(addsuffix _clean,$(addprefix $(B)/$(REND_WORKDIR)/glsl/,$(notdir $(Q3R2STRINGOBJ))))
 
-REND_CFLAGS    ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
+CFLAGS    ?= $(INCLUDE) -fsigned-char -ftree-vectorize \
                   -ffast-math -fno-short-enums -MMD
 
 ifneq ($(BUILD_CLIENT),1)
-REND_CFLAGS    += $(SHLIBCFLAGS)
+CFLAGS    += $(SHLIBCFLAGS)
 endif
 
 define DO_REND_CC
   $(echo_cmd) "REND_CC $<"
-  $(Q)$(CC) $(REND_CFLAGS) -o $@ -c $<
+  $(Q)$(CC) $(CFLAGS) -o $@ -c $<
 endef
 
 define DO_REF_STR

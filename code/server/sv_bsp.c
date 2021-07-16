@@ -2274,6 +2274,12 @@ static int SV_MakeMonacoF1() {
 }
 
 
+// slice up a BSP and resave it without recompiling.
+void SV_SpliceBSP() {
+  
+}
+
+
 extern int Q3MAP2Main( int argc, char **argv );
 
 int SV_MakeMap( char *memoryMap ) {

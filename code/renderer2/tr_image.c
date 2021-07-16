@@ -2181,6 +2181,13 @@ image_t *R_CreateImage2( const char *name, byte *pic, int width, int height, GLe
 
 	image->width = width;
 	image->height = height;
+
+	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
+		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
+		//image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+		image->flags |= IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE;
+	}
+  
 	if (flags & IMGFLAG_CLAMPTOEDGE)
 		glWrapClampMode = GL_CLAMP_TO_EDGE;
 	else
@@ -2416,6 +2423,21 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 		// If loaded, we're done.
 		if (*pic)
 			return;
+    else {
+#ifdef USE_LAZY_LOAD
+  		if(checkOnly) {
+  			if ( ri.FS_FOpenFileRead(va("dds/%s", ddsName), NULL, qfalse) > -1 ) {
+  				return;
+  			}
+  		} else 
+#endif
+  		{
+  			R_LoadDDS(va("dds/%s", ddsName), pic, width, height, picFormat, numMips);
+  		}
+      
+      if (*pic)
+        return;
+  	}
 	}
 
 	if( *ext )
@@ -2491,24 +2513,6 @@ void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum 
 			break;
     }
   }
-/*
-	if(!*pic) {
-		char ddsName[MAX_QPATH];
-
-		COM_StripExtension(name, ddsName, MAX_QPATH);
-		Q_strcat(ddsName, MAX_QPATH, ".dds");
-#ifdef USE_LAZY_LOAD
-		if(checkOnly) {
-			if ( ri.FS_FOpenFileRead(va("dds/%s", ddsName), NULL, qfalse) > -1 ) {
-				return;
-			}
-		} else 
-#endif
-		{
-			R_LoadDDS(va("dds/%s", ddsName), pic, width, height, picFormat, numMips);
-		}
-	}
-  */
 }
 
 void R_AddPalette(const char *name, int a, int r, int g, int b) {

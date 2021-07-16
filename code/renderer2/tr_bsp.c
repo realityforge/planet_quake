@@ -303,6 +303,8 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 			textureInternalFormat = GL_RGBA16;
 	}
 
+  // TODO: add external lightmaps as if it came from inside
+
 	if (r_mergeLightmaps->integer)
 	{
 		int width  = tr.fatLightmapCols * tr.lightmapSize;
@@ -1709,7 +1711,7 @@ void R_MovePatchSurfacesToHunk(void) {
 R_LoadSurfaces
 ===============
 */
-static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
+void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	dsurface_t	*in;
 	msurface_t	*out;
 	drawVert_t	*dv;
@@ -1839,7 +1841,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 R_LoadSubmodels
 =================
 */
-static	void R_LoadSubmodels( lump_t *l ) {
+void R_LoadSubmodels( lump_t *l ) {
 	dmodel_t	*in;
 	bmodel_t	*out;
 	int			i, j, count;
@@ -1982,7 +1984,7 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 R_LoadShaders
 =================
 */
-static	void R_LoadShaders( lump_t *l ) {	
+void R_LoadShaders( lump_t *l ) {	
 	int		i, count;
 	dshader_t	*in, *out;
 	
@@ -2037,7 +2039,7 @@ static	void R_LoadMarksurfaces (lump_t *l)
 R_LoadPlanes
 =================
 */
-static	void R_LoadPlanes( lump_t *l ) {
+void R_LoadPlanes( lump_t *l ) {
 	int			i, j;
 	cplane_t	*out;
 	dplane_t 	*in;
@@ -2724,8 +2726,8 @@ void R_CalcVertexLightDirs( void )
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 void RE_SwitchWorld(int w) {
+  //ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rwi, w );
 	R_IssuePendingRenderCommands();
-//ri.Printf( PRINT_ALL, "Switching renderers %i -> %i\n", rw, w );
 	rwi = w;
 	tr.world = &s_worldData;
 	// reassign bmodels to same position as server entities
@@ -2874,10 +2876,12 @@ void RE_LoadWorldMap( const char *name ) {
 				name, id1, BSP_VERSION);
 	}
 		break;
+#ifdef USE_BSP1
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		//LoadBsp1(name);
+		LoadBsp1(name);
 		break;
+#endif
 	default:
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
 			name, id1, BSP_VERSION);

@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // cmodel.c -- model loading
+#ifdef USE_BSP1
 
 #include "cm_local.h"
 
@@ -508,3 +509,5 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 		patch->pc = CM_GeneratePatchCollide( width, height, points );
 	}
 }
+
+#endif
