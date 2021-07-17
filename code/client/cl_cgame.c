@@ -60,6 +60,9 @@ int clientWorlds[MAX_NUM_VMS] = {
 // default cameras to an entity viewpoint instead of same location
 vec3_t clientCameras[MAX_NUM_VMS];
 
+#ifdef USE_MULTIVM_CLIENT
+extern refdef_t views[MAX_NUM_VMS];
+#endif
 //extern qboolean loadCamera(const char *name);
 //extern void startCamera(int time);
 //extern qboolean getCameraInfo(int time, vec3_t *origin, vec3_t *angles);
@@ -932,6 +935,26 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_R_RENDERSCENE:
 #ifdef USE_MULTIVM_CLIENT
+    if(views[cgvmi].fov_x == 0) {
+      memcpy(&views[cgvmi], VMA(1), sizeof(refdef_t));
+      Com_Printf(
+        "fov_x: %f, fov_y: %f\n"
+        "x: %i, y: %i\n"
+        "originX: %f, originY: %f, originZ: %f\n"
+        "axisX: %f, axisY: %f, axisZ: %f\n"
+        "axisX: %f, axisY: %f, axisZ: %f\n"
+        "axisX: %f, axisY: %f, axisZ: %f\n"
+        "width: %i, height: %i\n"
+        "time: %i\n", 
+        views[cgvmi].fov_x, views[cgvmi].fov_y,
+        views[cgvmi].x, views[cgvmi].y,
+        views[cgvmi].vieworg[0], views[cgvmi].vieworg[1], views[cgvmi].vieworg[2],
+        views[cgvmi].viewaxis[0][0], views[cgvmi].viewaxis[0][1], views[cgvmi].viewaxis[0][2],
+        views[cgvmi].viewaxis[1][0], views[cgvmi].viewaxis[1][1], views[cgvmi].viewaxis[1][2],
+        views[cgvmi].viewaxis[2][0], views[cgvmi].viewaxis[2][1], views[cgvmi].viewaxis[2][2],
+        views[cgvmi].width, views[cgvmi].height,
+        views[cgvmi].time);
+    }
 		if(clientScreens[cgvmi][0] > -1)
 #endif
 		re.RenderScene( VMA(1) );

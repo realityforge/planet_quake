@@ -790,29 +790,6 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       CL_UIContextRender();
 #endif
 	}
-  
-#ifdef USE_MULTIVM_CLIENT
-#ifdef USE_LAZY_MEMORY
-  for(i = 0; i < MAX_NUM_VMS; i++) {
-    if(cgvmWorlds[i]) continue; // already drew, looking for worlds to draw, not games
-    if(clientWorlds[i] == -1) continue;
-    if(!re.SwitchWorld) {
-      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
-    } else {
-  		re.SwitchWorld(clientMaps[i]);
-      re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
-      views[i].fov_x = 30;
-    	views[i].fov_y = 30;
-    	views[i].x = 0;
-    	views[i].y = 0;
-    	views[i].width = cls.glconfig.vidWidth;
-    	views[i].height = cls.glconfig.vidHeight;
-    	views[i].time = 1;
-      re.RenderScene(&views[i]);
-    }
-  }
-#endif
-#endif
 
 #ifdef USE_MULTIVM_CLIENT
   cgvmi = 0;
@@ -821,6 +798,36 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 #ifdef USE_LAZY_MEMORY
   re.SwitchWorld(clientMaps[cgvmi]);
   re.SetDvrFrame(0, 0, 1, 1);
+#endif
+#endif
+
+#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_LAZY_MEMORY
+  for(i = 0; i < MAX_NUM_VMS; i++) {
+    if(cgvmWorlds[i]) continue; // already drew, looking for worlds to draw, not games
+    if(clientWorlds[i] == -1) continue;
+    if(!re.SwitchWorld) {
+      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
+    } else {
+      re.BeginFrame( STEREO_CENTER );
+  		re.SwitchWorld(clientMaps[i]);
+      //re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
+      views[i].vieworg[0] = -1148;
+      views[i].vieworg[1] = -974;
+      views[i].vieworg[2] = 50;
+      views[i].viewaxis[0][1] = -1;
+      views[i].viewaxis[1][0] = 1;
+      views[i].viewaxis[2][2] = 1;
+      views[i].fov_x = 100;
+    	views[i].fov_y = 100;
+    	views[i].x = 0;
+    	views[i].y = 0;
+    	views[i].width = cls.glconfig.vidWidth;
+    	views[i].height = cls.glconfig.vidHeight;
+    	views[i].time = Sys_Milliseconds();
+      re.RenderScene(&views[i]);
+    }
+  }
 #endif
 #endif
 
