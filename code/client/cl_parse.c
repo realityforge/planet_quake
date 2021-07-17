@@ -742,6 +742,7 @@ void CL_ParseServerInfo( int igs )
 		sizeof(clc.sv_dlURL));
 
 #ifdef USE_MULTIVM_CLIENT
+  if(clc.world) Z_Free(clc.world);
 	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
 #endif
 

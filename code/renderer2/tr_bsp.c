@@ -1907,7 +1907,7 @@ void R_SetParent (mnode_t *node, mnode_t *parent)
 R_LoadNodesAndLeafs
 =================
 */
-static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
+void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 	int			i, j, p;
 	dnode_t		*in;
 	dleaf_t		*inLeaf;
@@ -2739,6 +2739,7 @@ void RE_SwitchWorld(int w) {
 #endif
 
 extern void LoadBspMin(const char *name);
+
 void LoadBsp3(const char *name) {
 	int i;
 	dheader_t	*header;
@@ -2869,7 +2870,7 @@ void RE_LoadWorldMap( const char *name ) {
 		case BSP_VERSION_QLIVE:
 		case BSP_VERSION_OPENJK:
 		case BSP3_VERSION:
-			LoadBspMin(name);
+			LoadBsp3(name);
 			break;
 		default:
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 

@@ -4881,6 +4881,8 @@ void CL_LoadVM_f( void ) {
 #endif
         re.LoadWorld( va("maps/%s.bsp", name) );
         clientWorlds[i] = count;
+        clientMaps[i] = count;
+        Com_Printf("World loaded on %i\n", i);
         break;
       }
     }
@@ -4974,8 +4976,8 @@ void CL_World_f( void ) {
 
 void CL_Tile_f( void ) {
 	int clientNum, i, x, y, xMaxVMs, yMaxVMs, count = 0;
-	if(Cmd_Argc() == 1 || Cmd_Argc() > 4
-		|| (atoi(&clc.world[0]) && !serverWorld)) {
+	if(Cmd_Argc() == 1 || Cmd_Argc() > 4 || (clc.world 
+    && clc.world[0] != '\0' && atoi(&clc.world[0]) && !serverWorld)) {
 		if(Cmd_Argc() == 1) {
 			for(int i = 0; i < MAX_NUM_VMS; i++) {
 				if(clientScreens[i][0] > -1) {
@@ -5016,7 +5018,8 @@ void CL_Tile_f( void ) {
 	if(clientNum > MAX_NUM_VMS || clientNum < -1) {
 		Com_Printf("Must be between 0 and %i, given: %i\n", MAX_NUM_VMS, clientNum);
 		return;
-	} else if(clientNum >= 0 && !cgvmWorlds[clientNum]) {
+	} else if(clientNum >= 0 && !cgvmWorlds[clientNum] 
+    && clientWorlds[clientNum] == -1) {
 		Com_Printf("CGame not active on %i\n", clientNum);
 		return;
 	} else if(clientNum == -1) {
@@ -5049,13 +5052,15 @@ void CL_Tile_f( void ) {
 			y = s / xMaxVMs;
 		}
 		if(x < 0 || y < 0 || (clientNum == -1 && !cgvmWorlds[s])) {
-	Com_DPrintf("Tiling subtracting: %i x %i (client: %i, total: %i)\n", x, y, s, count);
+	    Com_DPrintf("Tiling subtracting: %i x %i "
+        "(client: %i, total: %i)\n", x, y, s, count);
 			clientScreens[s][0] = 
 			clientScreens[s][1] = 
 			clientScreens[s][2] = 
-			clientScreens[s][3] = -1;	
+			clientScreens[s][3] = -1;
 		} else {
-	Com_DPrintf("Tiling adding: %i x %i (client: %i, total: %i)\n", x, y, s, count);
+	    Com_DPrintf("Tiling adding: %i x %i "
+        "(client: %i, total: %i)\n", x, y, s, count);
 			clientScreens[s][0] = (1.0f * (x % xMaxVMs)) / xMaxVMs;
 			clientScreens[s][1] = (1.0f * (y % yMaxVMs)) / yMaxVMs;
 			clientScreens[s][2] = 1.0f / xMaxVMs;

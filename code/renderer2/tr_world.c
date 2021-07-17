@@ -675,7 +675,6 @@ static void R_MarkLeaves (void) {
 
 	// if the cluster is the same and the area visibility matrix
 	// hasn't changed, we don't need to mark everything again
-
 	for(i = 0; i < MAX_VISCOUNTS; i++)
 	{
 		// if the areamask or r_showcluster was modified, invalidate all visclusters
@@ -699,11 +698,26 @@ static void R_MarkLeaves (void) {
 	tr.visCounts[tr.visIndex]++;
 	tr.visClusters[tr.visIndex] = cluster;
 
+  // if r_showcluster was just turned on, remark everything 
+	if ( tr.viewCluster == cluster && !tr.refdef.areamaskModified 
+		&& !r_showcluster->modified ) {
+		return;
+	}
+
 	if ( r_showcluster->modified || r_showcluster->integer ) {
 		r_showcluster->modified = qfalse;
 		if ( r_showcluster->integer ) {
 			ri.Printf( PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area );
 		}
+	}
+
+	if ( r_novis->integer || tr.viewCluster == -1 ) {
+		for (i=0 ; i<tr.world->numnodes ; i++) {
+			if (tr.world->nodes[i].contents != CONTENTS_SOLID) {
+				tr.world->nodes[i].visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
+			}
+		}
+		return;
 	}
 
 	vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);

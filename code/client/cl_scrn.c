@@ -799,7 +799,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
     if(!re.SwitchWorld) {
       Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
     } else {
-  		re.SwitchWorld(clientWorlds[i]);
+  		re.SwitchWorld(clientMaps[i]);
       re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
       views[i].fov_x = 30;
     	views[i].fov_y = 30;
