@@ -37,7 +37,7 @@ extern	botlib_export_t	*botlib_export;
 // connect virtual machines to the correct map, reusing for duplicate loads
 int clientMaps[MAX_NUM_VMS] = {
   0
-#if USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 	,0,0,0,0,0,0,0,0,0
 #endif
 };
@@ -45,15 +45,15 @@ int clientMaps[MAX_NUM_VMS] = {
 // connect a specific virtual machine to a gamestate/world from server 0-9
 int clientGames[MAX_NUM_VMS] = {
 	0
-#if USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 	,-1,-1,-1,-1,-1,-1,-1,-1,-1
 #endif
 };
 
 // connect a specific screen to a client inside a game
 int clientWorlds[MAX_NUM_VMS] = {
-	0
-#if USE_MULTIVM_CLIENT
+	-1
+#ifdef USE_MULTIVM_CLIENT
 	,-1,-1,-1,-1,-1,-1,-1,-1,-1
 #endif
 };

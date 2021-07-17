@@ -37,7 +37,7 @@ cvar_t		*cl_graphshift;
 
 float clientScreens[MAX_NUM_VMS][4] = {
 	{0,0,0,0}
-#if USE_MULTIVM_CLIENT
+#ifdef USE_MULTIVM_CLIENT
 	,{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
@@ -46,6 +46,9 @@ float clientScreens[MAX_NUM_VMS][4] = {
 #endif
 };
 
+#ifdef USE_MULTIVM_CLIENT
+refdef_t views[MAX_NUM_VMS];
+#endif
 /*
 ================
 SCR_DrawNamedPic
@@ -787,6 +790,29 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       CL_UIContextRender();
 #endif
 	}
+  
+#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_LAZY_MEMORY
+  for(i = 0; i < MAX_NUM_VMS; i++) {
+    if(cgvmWorlds[i]) continue; // already drew, looking for worlds to draw, not games
+    if(clientWorlds[i] == -1) continue;
+    if(!re.SwitchWorld) {
+      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
+    } else {
+  		re.SwitchWorld(clientWorlds[i]);
+      re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
+      views[i].fov_x = 30;
+    	views[i].fov_y = 30;
+    	views[i].x = 0;
+    	views[i].y = 0;
+    	views[i].width = cls.glconfig.vidWidth;
+    	views[i].height = cls.glconfig.vidHeight;
+    	views[i].time = 1;
+      re.RenderScene(&views[i]);
+    }
+  }
+#endif
+#endif
 
 #ifdef USE_MULTIVM_CLIENT
   cgvmi = 0;

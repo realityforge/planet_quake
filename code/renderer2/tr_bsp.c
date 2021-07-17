@@ -2738,7 +2738,7 @@ void RE_SwitchWorld(int w) {
 #endif
 #endif
 
-
+extern void LoadBspMin(const char *name);
 void LoadBsp3(const char *name) {
 	int i;
 	dheader_t	*header;
@@ -2869,7 +2869,7 @@ void RE_LoadWorldMap( const char *name ) {
 		case BSP_VERSION_QLIVE:
 		case BSP_VERSION_OPENJK:
 		case BSP3_VERSION:
-			LoadBsp3(name);
+			LoadBspMin(name);
 			break;
 		default:
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 

@@ -4871,7 +4871,7 @@ void CL_LoadVM_f( void ) {
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MULTIPLAYER );
 		uivmi = 0;
 		return;
-  } else if (FS_FileExists(va("maps/%s.bsp", name))) {
+  } else if (FS_SV_FOpenFileRead(va("maps/%s.bsp", name), NULL)) {
     int i, count = 0;
     for(i = 0; i < MAX_NUM_VMS; i++) {
 			if(clientWorlds[i] > -1) count++;
@@ -4879,7 +4879,8 @@ void CL_LoadVM_f( void ) {
 #ifdef USE_LAZY_MEMORY
         re.SwitchWorld(count);
 #endif
-        re.LoadWorld( name );
+        re.LoadWorld( va("maps/%s.bsp", name) );
+        clientWorlds[i] = count;
         break;
       }
     }
