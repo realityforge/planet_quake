@@ -6,15 +6,11 @@
 
 extern "C" {
 
-namespace {
+namespace Rml {
 
   StructuredFileInterface::StructuredFileInterface(RmlFileInterface *file_interface)
   {
     files = file_interface;
-  }
-
-  StructuredFileInterface::~StructuredFileInterface()
-  {
   }
 
   Rml::FileHandle StructuredFileInterface::Open(const Rml::String& filepath)

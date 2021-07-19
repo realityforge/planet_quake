@@ -812,9 +812,14 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       re.BeginFrame( STEREO_CENTER );
   		re.SwitchWorld(clientMaps[i]);
       //re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
+      /* q3dm0
       views[i].vieworg[0] = -1148;
       views[i].vieworg[1] = -974;
       views[i].vieworg[2] = 50;
+      */
+      views[i].vieworg[0] = 480;
+      views[i].vieworg[1] = -352;
+      views[i].vieworg[2] = 108;
       views[i].viewaxis[0][1] = -1;
       views[i].viewaxis[1][0] = 1;
       views[i].viewaxis[2][2] = 1;

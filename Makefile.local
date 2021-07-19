@@ -20,6 +20,7 @@ USE_VIDEO_THEORA       = 1
 USE_VIDEO_XVID         = 1
 USE_CIN_VPX            = 0
 
+USE_BSP1               = 1
 USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0
 USE_DEMO_CLIENTS       = 0

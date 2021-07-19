@@ -33,7 +33,7 @@ endef
 
 debug:
 	$(echo_cmd) "MAKE $(TARGET)"
-	@$(MAKE) -f $(MKFILE) B=$(BD) RMLUI_WORKDIRS=$(RMLUI_WORKDIR) mkdirs
+	@$(MAKE) -f $(MKFILE) B=$(BD) WORKDIRS=$(RMLUI_WORKDIR) mkdirs
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) pre-build
 	@$(MAKE) -f $(MKFILE) B=$(BD) CFLAGS="$(RMLUI_CFLAGS) $(DEBUG_CFLAGS)" \
 		LDFLAGS="$(LDFLAGS) $(DEBUG_LDFLAGS)" $(BD)/$(TARGET)

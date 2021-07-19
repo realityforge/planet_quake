@@ -27,6 +27,7 @@ extern void R_LoadPlanes( lump_t *l );
 extern void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump );
 extern void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump);
 extern void R_LoadSubmodels( lump_t *l );
+extern void R_LoadMarksurfaces (lump_t *l);
 
 // load as few things as possible
 void LoadBspMin(const char *name) {
@@ -44,6 +45,7 @@ void LoadBspMin(const char *name) {
 	R_LoadShaders( &header->lumps[LUMP_SHADERS] );
 	R_LoadPlanes (&header->lumps[LUMP_PLANES]);
 	R_LoadSurfaces( &header->lumps[LUMP_SURFACES], &header->lumps[LUMP_DRAWVERTS], &header->lumps[LUMP_DRAWINDEXES] );
+  R_LoadMarksurfaces (&header->lumps[LUMP_LEAFSURFACES]);
   R_LoadNodesAndLeafs (&header->lumps[LUMP_NODES], &header->lumps[LUMP_LEAFS]);
 	R_LoadSubmodels (&header->lumps[LUMP_MODELS]);
 }

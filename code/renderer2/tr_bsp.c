@@ -717,7 +717,7 @@ void LoadDrawVertToSrfVert(srfVert_t *s, drawVert_t *d, int realLightmapNum, flo
 ParseFace
 ===============
 */
-static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  ) {
+void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  ) {
 	int			i, j;
 	srfBspSurface_t	*cv;
 	glIndex_t  *tri;
@@ -1727,16 +1727,16 @@ void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	numFlares = 0;
 
 	if (surfs->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	count = surfs->filelen / sizeof(*in);
 
 	dv = (void *)(fileBase + verts->fileofs);
 	if (verts->filelen % sizeof(*dv))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 
 	indexes = (void *)(fileBase + indexLump->fileofs);
 	if ( indexLump->filelen % sizeof(*indexes))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 
 	out = ri.Hunk_Alloc ( count * sizeof(*out), h_low );	
 
@@ -1821,13 +1821,13 @@ void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	}
 
 #ifdef PATCH_STITCHING
-	R_StitchAllPatches();
+	//R_StitchAllPatches();
 #endif
 
 	R_FixSharedVertexLodError();
 
 #ifdef PATCH_STITCHING
-	R_MovePatchSurfacesToHunk();
+	//R_MovePatchSurfacesToHunk();
 #endif
 
 	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
@@ -1848,7 +1848,7 @@ void R_LoadSubmodels( lump_t *l ) {
 
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	count = l->filelen / sizeof(*in);
 
 	s_worldData.numBModels = count;
@@ -1917,7 +1917,7 @@ void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 	in = (void *)(fileBase + nodeLump->fileofs);
 	if (nodeLump->filelen % sizeof(dnode_t) ||
 		leafLump->filelen % sizeof(dleaf_t) ) {
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	}
 	numNodes = nodeLump->filelen / sizeof(dnode_t);
 	numLeafs = leafLump->filelen / sizeof(dleaf_t);
@@ -1990,7 +1990,7 @@ void R_LoadShaders( lump_t *l ) {
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low );
 
@@ -2011,7 +2011,7 @@ void R_LoadShaders( lump_t *l ) {
 R_LoadMarksurfaces
 =================
 */
-static	void R_LoadMarksurfaces (lump_t *l)
+void R_LoadMarksurfaces (lump_t *l)
 {	
 	int		i, j, count;
 	int		*in;
@@ -2019,7 +2019,7 @@ static	void R_LoadMarksurfaces (lump_t *l)
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*sizeof(*out), h_low);	
 
@@ -2048,7 +2048,7 @@ void R_LoadPlanes( lump_t *l ) {
 	
 	in = (void *)(fileBase + l->fileofs);
 	if (l->filelen % sizeof(*in))
-		ri.Error (ERR_DROP, "LoadMap: funny lump size in %s",s_worldData.name);
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 	count = l->filelen / sizeof(*in);
 	out = ri.Hunk_Alloc ( count*2*sizeof(*out), h_low);	
 	
@@ -2319,6 +2319,7 @@ void R_LoadEntities( lump_t *l ) {
 	strcpy( w->entityString, p );
 	w->entityParsePoint = w->entityString;
 
+  //Com_Printf("Entities: %s\n", w->entityString);
 	token = COM_ParseExt( &p, qtrue );
 	if (!*token || *token != '{') {
 		return;
@@ -2739,6 +2740,9 @@ void RE_SwitchWorld(int w) {
 #endif
 
 extern void LoadBspMin(const char *name);
+#ifdef USE_BSP1
+void LoadBsp1(const char *name);
+#endif
 
 void LoadBsp3(const char *name) {
 	int i;
@@ -2864,20 +2868,22 @@ void RE_LoadWorldMap( const char *name ) {
 	case BSP_IDENT:
 		switch (id2)
 		{
-		case BSP2_VERSION:
-			//LoadBsp2(name);
-			break;
-		case BSP_VERSION_QLIVE:
-		case BSP_VERSION_OPENJK:
-		case BSP3_VERSION:
-			LoadBsp3(name);
-			break;
-		default:
-		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
-				name, id1, BSP_VERSION);
-	}
+  		case BSP2_VERSION:
+  			//LoadBsp2(name);
+  			break;
+  		case BSP_VERSION_QLIVE:
+  		case BSP_VERSION_OPENJK:
+  		case BSP3_VERSION:
+  			LoadBsp3(name);
+        //LoadBspMin(name);
+  			break;
+  		default:
+  		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
+  				name, id1, BSP_VERSION);
+  	}
 		break;
 #ifdef USE_BSP1
+  // quake 1 doesn't use ident, only version
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
 		LoadBsp1(name);

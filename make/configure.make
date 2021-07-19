@@ -126,9 +126,9 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   VORBIS_LIBS      ?= $(shell $(PKG_CONFIG) --silence-errors --libs vorbisfile vorbis || echo -lvorbisfile -lvorbis)
   OGG_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ogg vorbis || true)
   OGG_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs ogg vorbis || echo -logg -lvorbis)
-  OPENSSL_CFLAGS   ?= -I/usr/local/Cellar/openssl@1.1/1.1.1g/include
-  OPENSSL_LIBS     ?= -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lssl \
-                      -L/usr/local/Cellar/openssl@1.1/1.1.1g/lib -lcrypto \
+  OPENSSL_CFLAGS   ?= -I/usr/local/Cellar/openssl@1.1/1.1.1k/include
+  OPENSSL_LIBS     ?= -L/usr/local/Cellar/openssl@1.1/1.1.1k/lib -lssl \
+                      -L/usr/local/Cellar/openssl@1.1/1.1.1k/lib -lcrypto \
                       -lz
   SSH_CFLAGS       ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ssh2 || true)
   SSH_LIBS         ?= $(shell $(PKG_CONFIG) --silence-errors --libs ssh2 || echo -lssh2)
@@ -280,6 +280,10 @@ endif
 
 ifeq ($(USE_CODEC_VORBIS),1)
   BASE_CFLAGS += -DUSE_CODEC_VORBIS=1
+endif
+
+ifeq ($(USE_BSP1),1)
+  BASE_CFLAGS += -DUSE_BSP1
 endif
 
 ifeq ($(USE_CIN_WEBM),1)

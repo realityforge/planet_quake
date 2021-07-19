@@ -822,7 +822,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #ifdef USE_BSP1
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		LoadQ1Map();
+		//LoadQ1Map();
 		break;
 #endif
 	default:
