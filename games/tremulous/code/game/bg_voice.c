@@ -28,13 +28,19 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #include "bg_public.h"
 #include "bg_local.h"
 
-#ifdef Q3_VM
+#if 1
   #define FS_FOpenFileByMode trap_FS_FOpenFile
   #define FS_GetFileList trap_FS_GetFileList
   #define Parse_LoadSourceHandle trap_Parse_LoadSource
   #define Parse_FreeSourceHandle trap_Parse_FreeSource
   #define Parse_ReadTokenHandle trap_Parse_ReadToken
   #define Parse_SourceFileAndLine trap_Parse_SourceFileAndLine
+  extern int FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
+  extern int FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );
+  extern int Parse_LoadSourceHandle( const char *filename );
+  extern int Parse_FreeSourceHandle( int handle );
+  extern int Parse_ReadTokenHandle( int handle, pc_token_t *pc_token );
+  extern int Parse_SourceFileAndLine( int handle, char *filename, int *line );
 #else
   int FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
   int FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );

@@ -80,10 +80,15 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_animation.o \
           $(B)/$(MOD)/cgame/cg_attachment.o \
           $(B)/$(MOD)/cgame/cg_buildable.o \
           $(B)/$(MOD)/cgame/cg_main.o \
+					$(B)/$(MOD)/cgame/bg_alloc.o \
+					$(B)/$(MOD)/cgame/bg_game_modes.o \
+					$(B)/$(MOD)/cgame/bg_entities.o \
           $(B)/$(MOD)/cgame/bg_lib.o \
+					$(B)/$(MOD)/cgame/bg_list.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
+					$(B)/$(MOD)/cgame/bg_voice.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \
           $(B)/$(MOD)/cgame/cg_draw.o \
           $(B)/$(MOD)/cgame/cg_drawtools.o \
@@ -100,7 +105,8 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_animation.o \
           $(B)/$(MOD)/cgame/cg_trails.o \
           $(B)/$(MOD)/cgame/cg_tutorial.o \
           $(B)/$(MOD)/cgame/cg_view.o \
-          $(B)/$(MOD)/cgame/cg_weapons.o
+          $(B)/$(MOD)/cgame/cg_weapons.o \
+					$(B)/$(MOD)/cgame/ui_shared.o
 
 CGOBJ_ += $(B)/$(MOD)/cgame/q_math.o \
           $(B)/$(MOD)/cgame/q_shared.o
@@ -226,6 +232,9 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 $(B)/$(MOD)/cgame/%.o: $(QCOMM)/%.c
 	$(DO_CGAME_CC)
 
+$(B)/$(MOD)/cgame/ui_%.o: $(UIDIR)/ui_%.c
+	$(DO_CGAME_CC)
+
 $(B)/$(MOD)/cgame/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_CGAME_CC)
 
@@ -247,7 +256,7 @@ $(B)/$(MOD)/ui/%.o: $(QCOMM)/%.c
 $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_UI_CC)
 
-$(B)/$(MOD)/ui/%.o: $(UIDIR)/%.c
+$(B)/$(MOD)/ui/%.o: $(UIDIR)/ui_%.c
 	$(DO_UI_CC)
 endif
 

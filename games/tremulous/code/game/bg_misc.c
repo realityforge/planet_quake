@@ -27,6 +27,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #include "../qcommon/q_shared.h"
 #include "bg_public.h"
 
+#if 1
+  #define FS_FOpenFileByMode trap_FS_FOpenFile
+  #define FS_GetFileList trap_FS_GetFileList
+  extern int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
+  extern int  FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
+#endif
 /*
 ============
 BG_HP2SU

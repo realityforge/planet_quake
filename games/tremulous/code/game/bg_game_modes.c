@@ -25,7 +25,7 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #include "../qcommon/q_shared.h"
 #include "bg_public.h"
 
-#ifdef Q3_VM
+#if 1
   #define FS_FOpenFileByMode trap_FS_FOpenFile
   #define FS_Read2 trap_FS_Read
   #define FS_Write trap_FS_Write
@@ -33,6 +33,10 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
   #define FS_Seek trap_FS_Seek
   #define FS_GetFileList trap_FS_GetFileList
   #define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+  extern int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
+  extern int  FS_Read2( void *buffer, int len, fileHandle_t f );
+  extern void FS_FCloseFile( fileHandle_t f );
+  extern int  FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
 #else
   int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
   int  FS_Read2( void *buffer, int len, fileHandle_t f );
