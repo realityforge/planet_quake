@@ -1,0 +1,222 @@
+# perl highlighting
+
+LIBC       = shared
+#MAPFILES   = 1
+CONSOLE    = 1
+
+!if !defined($OPTIMIZE)		# allow overriding of OPTIMIZE in parent project
+OPTIMIZE   = size
+!endif
+
+PDB        = 2				# keep enabled, executable is almost the same, except embedded link to pdb file
+
+!if !defined($OLDCRT)		# allow overriding of OLDCRT in parent project
+OLDCRT     = 1				# set to 0 (or comment the line) to use "native" compiler's CRT
+!endif
+
+!if defined(TRACY)
+OLDCRT     = 0				# tracy requires some new C++ features which aren't available with msvcrt.dll
+!endif
+
+#------------------------------------------------
+#	Compiler-specific options
+#------------------------------------------------
+
+STDDEFS    =				# common defines
+WARNINGS   =				# warnings for our source code (i.e. excluding thirs-parties), empty by default
+
+USE_SYSTEM_LIBS = 0
+
+CPP_STD = c++14				# allow modern C++ features
+							#!! todo: add standard option for that
+
+!if "$COMPILER" eq "VisualC"
+	!if !defined($CPP_EXCEPT)
+		CPP_EXCEPT = 0									# used with WIN32_USE_SEH in Core.h
+	!endif
+	WINXP      = 1										# we're not using any modern Win32 features, so allow to worn at WinXP
+	OPTIONS = -GS- -GR-
+#	WARNINGS += -W4										# maximal warning level for Visual C++
+	WDKCRT = $R/../Libs/msvcrt
+	!if "$OLDCRT" eq "1" && -e "$WDKCRT/msvcrt.project"
+		STDDEFS += OLDCRT								# used in code to distinguish which functions are available
+		STDDEFS += _NO_CRT_STDIO_INLINE					# UCRT (VS 2015+): without that, all printf functions will use some "common" function
+		!include $WDKCRT/msvcrt.project
+		!if "$VC_VER" >= 2015							# support for OLDCRT with modern compliers
+			OPTIONS += -fp:fast
+			OPTIONS += -Zc:threadSafeInit-				# disable calls to C++11 thread-safe static object initializers
+			STDDEFS += _ACRTIMP_ALT=					# remove dllimport from some CRT functions (there're just a few)
+		!endif
+	!endif
+	LINKFLAGS += -largeaddressaware						# allow 32-bit build to use more than 2Gb or RAM
+	OPTIONS += -std:$CPP_STD
+!endif
+
+!if "$COMPILER" eq "GnuC"
+	# linux/cygwin + GCC
+	STDLIBS   = m stdc++	 							# libm for math.h functions
+	!if "$PLATFORM" ne "cygwin"
+		STDLIBS += dl	# dlopen() and friends
+		STDLIBS += pthread
+	!endif
+	!if "$PLATFORM" ne "osx"
+		STDLIBS += GL
+	!endif
+
+	LIBC      = shared
+	OPTIONS   = -msse2									# enable SSE instructions
+	OPTIONS   += -fno-strict-aliasing					# required for our uint_cast()-based FP hacks (check!! taken from my Quake2)
+	OPTIONS   += -fno-stack-protector					# this will remove GLIBC_2.4 dependency
+	OPTIONS   += {
+		# enable some warnings
+#		-Wsuggest-override								# enforce use of 'override' keyword for virtual methods
+		-Wunused-value									# warning about expression which is occasionally typed in code and not used anywhare
+	}
+	CPP_OPTIONS += -std=$CPP_STD
+	CPP_OPTIONS += -Wno-invalid-offsetof
+	USE_SYSTEM_LIBS = 1
+!endif
+
+# GCC debug build
+!if ("$COMPILER" eq "GnuC") && 0
+	#!! should disable "-s" option from linker command
+	OPTIONS += -g3 -fno-omit-frame-pointer -funwind-tables -fstack-protector -fno-optimize-sibling-calls
+	LINKFLAGS += -rdynamic
+!endif
+
+
+DEFINES = $STDDEFS
+#OPTIONS += -analyze
+
+#------------------------------------------------
+#	Third-party libraries
+#------------------------------------------------
+
+LIBINCLUDES = $R/libs/include $R/libs
+
+OBJDIR = $R/obj/libs-$PLATFORM
+
+!if ("$OLDCRT" eq "1") && ("$COMPILER" eq "VisualC")
+	OBJDIR = $R/obj/libs-$PLATFORM-msvcrt
+!endif
+
+push(INCLUDES)
+push(OPTIMIZE)
+INCLUDES = $R/libs/nvtt
+LIBINCLUDES += $R/libs/nvtt
+OPTIMIZE = speed
+
+sources(NV_LIBS) = {
+#	$R/libs/nvtt/nvcore/*.cpp
+	$R/libs/nvtt/nvimage/*.cpp
+#	$R/libs/nvtt/nvmath/*.cpp
+#	$R/libs/nvtt/nvtt/bc6h/*.cpp
+#	$R/libs/nvtt/nvtt/bc7/*.cpp
+}
+
+pop(OPTIMIZE)
+pop(INCLUDES)
+
+
+# defines for smaller zlib
+push(DEFINES)
+push(INCLUDES)
+
+DEFINES = $STDDEFS DYNAMIC_CRC_TABLE BUILDFIXED NO_GZIP
+INCLUDES = $R/libs/include
+
+# compression libraries
+sources(COMP_LIBS) = {
+	# ... lzo for compressed UE3 packages
+	$R/libs/lzo/lzo_init.c
+	$R/libs/lzo/lzo1x_d2.c
+	# ... lzx for compressed XBox360 UE3 packages
+	$R/libs/mspack/lzxd.c
+	# ... lz4 for Gears of War 4
+	$R/libs/lz4/lz4.c
+}
+
+!if "$USE_SYSTEM_LIBS" eq "0"
+	# ... zlib for compressed UE3/UE4 packages
+	# zlib.h location: used from zlib source code and from UModel code.
+	# Default location for Linux is <zlib.h>
+	LIBINCLUDES += $R/libs/zlib		# for using zlib in source code
+	INCLUDES += $R/libs/zlib		# for building zlib itself
+	sources(COMP_LIBS) = {
+		$R/libs/zlib/*.c
+	}
+	# ... PNG for compressed source textures
+	LIBINCLUDES += $R/libs/libpng
+	DEFINES = $STDDEFS PNG_USER_CONFIG
+	sources(IMG_LIBS) = {
+		$R/libs/libpng/*.c
+	}
+!else
+	STDLIBS += z png
+	!if !-e "/usr/include/png.h"
+		# Probably "png.h" include will fail, add "libpng" subdirectory to include paths
+		LIBINCLUDES += /usr/include/libpng
+	!endif
+!endif
+
+pop(INCLUDES)
+pop(DEFINES)
+
+!if -e "$R/libs/oodle/kraken.cpp"
+	DEFINES += HAS_OODLE
+	sources(COMP_LIBS) = {
+		$R/libs/oodle/*.cpp
+	}
+!endif
+
+sources(MOBILE_LIBS) = {
+	$R/libs/PowerVR/*.cpp
+	$R/libs/astc/*.cpp
+}
+LIBINCLUDES += $R/libs/PowerVR
+
+
+LIBINCLUDES += $R/libs/detex
+sources(IMG_LIBS) = {
+	$R/libs/detex/*.cpp
+}
+
+LIBINCLUDES += $R/libs/rijndael
+sources(UE4_LIBS) = {
+	$R/libs/rijndael/*.c
+}
+
+
+#------------------------------------------------
+#	Project-specific options
+#------------------------------------------------
+
+OBJDIR     = $R/obj/$PRJ-$PLATFORM
+!if "$PLATFORM" ne "osx"
+STDLIBS   += SDL2		# disabled in macOS build
+!endif
+INCLUDES  += . $R/Core $R/Unreal $LIBINCLUDES
+OPTIONS   += $WARNINGS
+
+!if defined($DEBUG)
+	DEFINES += MAX_DEBUG
+	OBJDIR  = $OBJDIR-debug
+	OPTIMIZE = none
+!endif
+
+!if defined(TRACY)
+	DEFINES += TRACY_ENABLE
+	OBJDIR  = $OBJDIR-profile
+	STDLIBS += advapi32.lib
+	sources(MAIN) = {
+		libs/tracy/TracyClient.cpp
+	}
+!endif
+
+!if "$PLATFORM" eq "win32"
+	INCLUDES += $R/libs/includewin32
+	LIBRARIES = $R/libs/SDL2/x86
+!elif "$PLATFORM" eq "win64"
+	INCLUDES += $R/libs/includewin32
+	LIBRARIES = $R/libs/SDL2/x64
+!endif

@@ -48,6 +48,21 @@ define DO_UI_CC
 	$(Q)$(CC) $(MOD_CFLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
+define DO_GAME_LCC
+	$(echo_cmd) "GAME_LCC $<"
+	$(Q)$(Q3LCC) $(MOD_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+endef
+
+define DO_CGAME_LCC
+	$(echo_cmd) "CGAME_LCC $<"
+	$(Q)$(Q3LCC) $(MOD_CFLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+endef
+
+define DO_UI_LCC
+	$(echo_cmd) "UI_LCC $<"
+	$(Q)$(Q3LCC) $(MOD_CFLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+endef
+
 #############################################################################
 # MAIN TARGETS
 #############################################################################
@@ -227,6 +242,8 @@ UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 #############################################################################
 
 ifdef B
+# native libs
+
 $(B)/$(MOD)/cgame$(SHLIBNAME): $(CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(CGOBJ)
@@ -238,6 +255,40 @@ $(B)/$(MOD)/qagame$(SHLIBNAME): $(QAOBJ)
 $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(UIOBJ)
+
+# qvms
+
+ifndef BUILD_Q3LCC
+
+$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(B)/$(MOD)/cgame/cg_syscalls.asm $(Q3ASM)
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(CGVMOBJ) $(B)/$(MOD)/cgame/cg_syscalls.asm
+
+$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm $(Q3ASM)
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
+
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm $(Q3ASM)
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+
+else
+
+$(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(B)/$(MOD)/cgame/cg_syscalls.asm
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(CGVMOBJ) $(B)/$(MOD)/cgame/cg_syscalls.asm
+
+$(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
+
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+	$(echo_cmd) "Q3ASM $@"
+	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+
+endif
+
+# game codes
 
 $(B)/$(MOD)/cgame/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_CGAME_CC)
@@ -256,6 +307,48 @@ $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
 
 $(B)/$(MOD)/ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC)
+
+ifneq ($(BUILD_GAME_QVM),0)
+ifndef BUILD_Q3LCC
+$(B)/$(MOD)/cgame/bg_%.asm: $(QADIR)/bg_%.c
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/cgame/q_%.asm: $(QADIR)/q_%.c
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/cgame/%.asm: $(CGDIR)/%.c
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/game/%.asm: $(QADIR)/%.c
+	$(DO_GAME_LCC)
+
+$(B)/$(MOD)/ui/bg_%.asm: $(QADIR)/bg_%.c
+	$(DO_UI_LCC)
+
+$(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c
+	$(DO_UI_LCC)
+
+else
+
+$(B)/$(MOD)/cgame/bg_%.asm: $(QADIR)/bg_%.c $(Q3LCC)
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/cgame/q_%.asm: $(QADIR)/q_%.c $(Q3LCC)
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
+	$(DO_CGAME_LCC)
+
+$(B)/$(MOD)/game/%.asm: $(QADIR)/%.c $(Q3LCC)
+	$(DO_GAME_LCC)
+
+$(B)/$(MOD)/ui/bg_%.asm: $(QADIR)/bg_%.c $(Q3LCC)
+	$(DO_UI_LCC)
+
+$(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
+	$(DO_UI_LCC)
+endif
+endif
 endif
 
 #############################################################################
