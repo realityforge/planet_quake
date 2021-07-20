@@ -29,10 +29,25 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #if 1
   #define FS_FOpenFileByMode trap_FS_FOpenFile
+  #define FS_Read2 trap_FS_Read
+  #define FS_Write trap_FS_Write
+  #define FS_FCloseFile trap_FS_FCloseFile
+  #define FS_Seek trap_FS_Seek
+  #define FS_GetFileList trap_FS_GetFileList
+  #define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+  #define FS_FOpenFileByMode trap_FS_FOpenFile
   #define FS_GetFileList trap_FS_GetFileList
   extern int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
   extern int  FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
+  extern void Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+#else
+  int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
+  int  FS_Read2( void *buffer, int len, fileHandle_t f );
+  void FS_FCloseFile( fileHandle_t f );
+  int  FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
+  void Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 #endif
+
 /*
 ============
 BG_HP2SU
@@ -67,21 +82,6 @@ int BG_SU2HP( int healthSubUnits )
 
   return healthPoints;
 }
-
-#ifdef Q3_VM
-  #define FS_FOpenFileByMode trap_FS_FOpenFile
-  #define FS_Read2 trap_FS_Read
-  #define FS_Write trap_FS_Write
-  #define FS_FCloseFile trap_FS_FCloseFile
-  #define FS_Seek trap_FS_Seek
-  #define FS_GetFileList trap_FS_GetFileList
-  #define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
-#else
-  int  FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
-  int  FS_Read2( void *buffer, int len, fileHandle_t f );
-  void FS_FCloseFile( fileHandle_t f );
-  int  FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
-#endif
 
 static const teamAttributes_t bg_teamList[ ] =
 {
@@ -6038,8 +6038,6 @@ BG_AddPredictableEventToPlayerstate
 Handles the sequence numbers
 ===============
 */
-
-void  Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 
 void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps )
 {

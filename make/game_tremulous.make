@@ -8,6 +8,7 @@ BUILD_TREMULOUS := 1
 include make/platform.make
 
 GAMEDIR       := $(MOUNT_DIR)/../games/$(MOD)/code
+QASMD         := $(GAMEDIR)/asm
 QCOMM         := $(GAMEDIR)/qcommon
 QADIR         := $(GAMEDIR)/game
 CGDIR         := $(GAMEDIR)/cgame
@@ -105,11 +106,12 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_animation.o \
           $(B)/$(MOD)/cgame/cg_trails.o \
           $(B)/$(MOD)/cgame/cg_tutorial.o \
           $(B)/$(MOD)/cgame/cg_view.o \
-          $(B)/$(MOD)/cgame/cg_weapons.o \
-					$(B)/$(MOD)/cgame/ui_shared.o
+          $(B)/$(MOD)/cgame/cg_weapons.o
 
 CGOBJ_ += $(B)/$(MOD)/cgame/q_math.o \
-          $(B)/$(MOD)/cgame/q_shared.o
+          $(B)/$(MOD)/cgame/q_shared.o \
+					$(B)/$(MOD)/cgame/ui_shared.o \
+					$(B)/$(MOD)/cgame/snapvector.o
 
 CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 
@@ -118,25 +120,22 @@ CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
 #############################################################################
 
 QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
-          $(B)/$(MOD)/game/ai_chat.o \
-          $(B)/$(MOD)/game/ai_cmd.o \
-          $(B)/$(MOD)/game/ai_dmnet.o \
-          $(B)/$(MOD)/game/ai_dmq3.o \
-          $(B)/$(MOD)/game/ai_main.o \
-          $(B)/$(MOD)/game/ai_team.o \
-          $(B)/$(MOD)/game/ai_vcmd.o \
           $(B)/$(MOD)/game/g_active.o \
-          $(B)/$(MOD)/game/g_arenas.o \
-          $(B)/$(MOD)/game/g_bot.o \
+          $(B)/$(MOD)/game/g_admin.o \
+					$(B)/$(MOD)/game/g_buildable.o \
           $(B)/$(MOD)/game/g_client.o \
           $(B)/$(MOD)/game/g_cmds.o \
           $(B)/$(MOD)/game/g_combat.o \
-          $(B)/$(MOD)/game/g_items.o \
-          $(B)/$(MOD)/game/g_mem.o \
+          $(B)/$(MOD)/game/g_maprotation.o \
           $(B)/$(MOD)/game/g_misc.o \
           $(B)/$(MOD)/game/g_missile.o \
           $(B)/$(MOD)/game/g_mover.o \
-          $(B)/$(MOD)/game/g_rotation.o \
+					$(B)/$(MOD)/game/g_namelog.o \
+					$(B)/$(MOD)/game/g_physics.o \
+					$(B)/$(MOD)/game/g_playmap.o \
+					$(B)/$(MOD)/game/g_playermodel.o \
+					$(B)/$(MOD)/game/g_portal.o \
+          $(B)/$(MOD)/game/g_scrim.o \
           $(B)/$(MOD)/game/g_session.o \
           $(B)/$(MOD)/game/g_spawn.o \
           $(B)/$(MOD)/game/g_svcmds.o \
@@ -147,14 +146,30 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_unlagged.o \
           $(B)/$(MOD)/game/g_weapon.o
 
-QAOBJ_ += $(B)/$(MOD)/game/bg_lib.o \
+ifdef TREM_BOTS
+QAOBJ_ += $(B)/$(MOD)/game/g_bot.o \
+					$(B)/$(MOD)/game/ai_chat.o \
+					$(B)/$(MOD)/game/ai_cmd.o \
+					$(B)/$(MOD)/game/ai_dmnet.o \
+					$(B)/$(MOD)/game/ai_dmq3.o \
+					$(B)/$(MOD)/game/ai_main.o \
+					$(B)/$(MOD)/game/ai_team.o \
+					$(B)/$(MOD)/game/ai_vcmd.o
+endif
+
+QAOBJ_ += $(B)/$(MOD)/game/bg_alloc.o \
+					$(B)/$(MOD)/game/bg_list.o \
+					$(B)/$(MOD)/game/bg_lib.o \
+					$(B)/$(MOD)/game/bg_entities.o \
           $(B)/$(MOD)/game/bg_misc.o \
           $(B)/$(MOD)/game/bg_pmove.o \
           $(B)/$(MOD)/game/bg_slidemove.o \
+					$(B)/$(MOD)/game/bg_game_modes.o \
+					$(B)/$(MOD)/game/bg_voice.o \
           $(B)/$(MOD)/game/q_math.o \
           $(B)/$(MOD)/game/q_shared.o
 
-QAOBJ   = $(QAOBJ_) $(B)/$(MOD)/game/g_syscalls.o
+QAOBJ   = $(QAOBJ_) # $(B)/$(MOD)/game/g_syscalls.o
 
 #############################################################################
 ## TREMULOUS UI
@@ -228,6 +243,9 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 	$(Q)$(CC) $(GAME_CFLAGS) $(GAME_LDFLAGS) -o $@ $(UIOBJ)
 
 # c files
+
+$(B)/$(MOD)/cgame/snapvector.o: $(QASMD)/snapvector.c
+	$(DO_CGAME_CC)
 
 $(B)/$(MOD)/cgame/%.o: $(QCOMM)/%.c
 	$(DO_CGAME_CC)
