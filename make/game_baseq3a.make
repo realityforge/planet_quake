@@ -11,6 +11,12 @@ MKFILE        := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
+
+ifndef Q3LCC
+include make/lib_q3lcc.make
+endif
+
+
 GAMEDIR       := $(MOUNT_DIR)/../games/$(MOD)/code
 QADIR         := $(GAMEDIR)/game
 CGDIR         := $(GAMEDIR)/cgame
@@ -233,10 +239,6 @@ endif
 
 UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
 
-#$(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
-#	$(echo_cmd) "Q3ASM $@"
-#	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm
-
 #############################################################################
 ## GAME MODULE RULES
 #############################################################################
@@ -258,6 +260,7 @@ $(B)/$(MOD)/ui$(SHLIBNAME): $(UIOBJ)
 
 # qvms
 
+ifneq ($(BUILD_GAME_QVM),0)
 ifndef BUILD_Q3LCC
 
 $(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(B)/$(MOD)/cgame/cg_syscalls.asm $(Q3ASM)
@@ -268,9 +271,9 @@ $(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
 
-$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm $(Q3ASM)
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/ui_syscalls.asm
 
 else
 
@@ -282,10 +285,11 @@ $(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(QAVMOBJ) $(B)/$(MOD)/game/g_syscalls.asm
 
-$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+$(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(B)/$(MOD)/ui/ui_syscalls.asm
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(B)/$(MOD)/ui/ui_syscalls.asm
 
+endif
 endif
 
 # game codes
@@ -349,6 +353,7 @@ $(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_LCC)
 endif
 endif
+
 endif
 
 #############################################################################

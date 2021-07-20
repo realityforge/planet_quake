@@ -58,6 +58,10 @@ USE_SYSTEM_OGG      ?= 0
 USE_SYSTEM_OPUS     ?= 0
 USE_SYSTEM_FREETPYE ?= 0
 
+ifndef TEMPDIR
+TEMPDIR=/tmp
+endif
+
 ifndef COPYDIR
 COPYDIR="/usr/local/games/quake3"
 endif

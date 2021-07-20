@@ -19,6 +19,8 @@ int	Mflag;	/* only print active include files */
 char	*objname; /* "src.$O: " */
 int	Cplusplus = 1;
 
+extern void setup_kwtab(void);
+
 void
 setup(int argc, char **argv)
 {
@@ -101,6 +103,7 @@ char *basepath( char *fname )
 	return dp;
 }
 
+#ifndef __APPLE__
 /* memmove is defined here because some vendors don't provide it at
    all and others do a terrible job (like calling malloc) */
 void *
@@ -125,3 +128,4 @@ memmove(void *dp, const void *sp, size_t n)
 	}
 	return dp;
 }
+#endif

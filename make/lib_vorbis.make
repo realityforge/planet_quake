@@ -73,8 +73,8 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) BUILD_LIBVORBIS=1 $(BR)/$(TARGET2)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET)
-	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET)
+	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c

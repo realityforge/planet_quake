@@ -61,8 +61,8 @@ release:
 clean:
 	@$(MAKE) -f $(MKFILE) B=$(BD) V=$(V) $(REND_TARGET)_clean
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) $(REND_TARGET)_clean
-	@rm -rf ./$(BD)/$(REND_WORKDIR) $(BD)/$(REND_TARGET)
-	@rm -rf ./$(BR)/$(REND_WORKDIR) $(BR)/$(REND_TARGET)
+	@rm -rf ./$(BD)/$(REND_WORKDIR) ./$(BD)/$(REND_TARGET)
+	@rm -rf ./$(BR)/$(REND_WORKDIR) ./$(BR)/$(REND_TARGET)
 else
 WORKDIRS += $(REND_WORKDIR) $(REND_WORKDIR)/glsl
 CLEANS 	 += $(REND_WORKDIR) $(REND_TARGET)

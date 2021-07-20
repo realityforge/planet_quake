@@ -270,8 +270,8 @@ release:
 		$(BR)/$(TARGET_CLIENT)
 
 clean:
-	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET_CLIENT)
-	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET_CLIENT)
+	@rm -rf ./$(BD)/$(WORKDIR) ./$(BD)/$(TARGET_CLIENT)
+	@rm -rf ./$(BR)/$(WORKDIR) ./$(BR)/$(TARGET_CLIENT)
 	@for i in $(CLEANS); \
 	do \
 	rm -r "./$(BD)/$$i" 2> /dev/null || true; \
