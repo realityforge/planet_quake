@@ -107,10 +107,10 @@ release:
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(MBSPC_TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR)
-	@rm -rf $(BD)/$(MBSPC_TARGET)
-	@rm -rf $(BR)/$(WORKDIR)
-	@rm -rf $(BR)/$(MBSPC_TARGET)
+	@rm -rf ./$(BD)/$(WORKDIR)
+	@rm -rf ./$(BD)/$(MBSPC_TARGET)
+	@rm -rf ./$(BR)/$(WORKDIR)
+	@rm -rf ./$(BR)/$(MBSPC_TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(MBSPCDIR)/qcommon/%.c

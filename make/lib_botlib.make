@@ -35,8 +35,8 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(MOUNT_DIR)/qcommon/%.c

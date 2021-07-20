@@ -43,8 +43,8 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_CFLAGS)" $(BR)/$(REND_TARGET)
 
 clean:
-	@rm -rf $(BD)/$(REND_WORKDIR) $(BD)/$(REND_TARGET)
-	@rm -rf $(BR)/$(REND_WORKDIR) $(BR)/$(REND_TARGET)
+	@rm -rf ./$(BD)/$(REND_WORKDIR) $(BD)/$(REND_TARGET)
+	@rm -rf ./$(BR)/$(REND_WORKDIR) $(BR)/$(REND_TARGET)
 endif
 
 ifdef B

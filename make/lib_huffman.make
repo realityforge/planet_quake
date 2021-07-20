@@ -33,10 +33,10 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET)
-	@rm -rf $(BD)/musl $(BR)/$(TARGET)
-	@rm -rf $(BR)/musl $(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET)
+	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET)
+	@rm -rf ./$(BD)/musl $(BR)/$(TARGET)
+	@rm -rf ./$(BR)/musl $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c

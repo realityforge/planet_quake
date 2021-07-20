@@ -154,10 +154,10 @@ release:
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(Q3MAP2_TARGET)
 
 clean:
-	@rm -rf $(BD)/$(Q3MAP2_WORKDIR)
-	@rm -rf $(BD)/$(Q3MAP2_TARGET)
-	@rm -rf $(BR)/$(Q3MAP2_WORKDIR)
-	@rm -rf $(BR)/$(Q3MAP2_TARGET)
+	@rm -rf ./$(BD)/$(Q3MAP2_WORKDIR)
+	@rm -rf ./$(BD)/$(Q3MAP2_TARGET)
+	@rm -rf ./$(BR)/$(Q3MAP2_WORKDIR)
+	@rm -rf ./$(BR)/$(Q3MAP2_TARGET)
 
 ifdef B
 $(B)/$(Q3MAP2_WORKDIR)/%.o: $(Q3MAP2DIR)/common/%.cpp

@@ -115,8 +115,8 @@ release:
 	@$(MAKE) -f $(MKFILE) B=$(BR) V=$(V) CFLAGS="$(CFLAGS) $(RELEASE_CFLAGS)" LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET_SERVER)
 
 clean:
-	@rm -rf $(BD)/$(WORKDIR) $(BD)/$(TARGET_SERVER)
-	@rm -rf $(BR)/$(WORKDIR) $(BR)/$(TARGET_SERVER)
+	@rm -rf ./$(BD)/$(WORKDIR) $(BD)/$(TARGET_SERVER)
+	@rm -rf ./$(BR)/$(WORKDIR) $(BR)/$(TARGET_SERVER)
 
 ifdef B
 # TODO: cl_curl for server downloads, still need to fix sync lag

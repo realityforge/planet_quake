@@ -48,6 +48,10 @@ float clientScreens[MAX_NUM_VMS][4] = {
 
 #ifdef USE_MULTIVM_CLIENT
 refdef_t views[MAX_NUM_VMS];
+qboolean viewsUpdated[MAX_NUM_VMS] = {
+  qtrue, qtrue, qtrue, qtrue, qtrue,
+  qtrue, qtrue, qtrue, qtrue, qtrue
+};
 #endif
 /*
 ================
@@ -817,6 +821,16 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       views[i].vieworg[1] = -974;
       views[i].vieworg[2] = 50;
       */
+      int prevLock = Cvar_VariableIntegerValue("r_lockpvs");
+      if(!viewsUpdated[i]) {
+        Cvar_Set("r_lockpvs", "1");
+      }
+      // 480 -352 88
+      /*
+      views[i].vieworg[0] = 0;
+      views[i].vieworg[1] = 0;
+      views[i].vieworg[2] = 0;
+      */
       views[i].vieworg[0] = 480;
       views[i].vieworg[1] = -352;
       views[i].vieworg[2] = 108;
@@ -824,13 +838,17 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       views[i].viewaxis[1][0] = 1;
       views[i].viewaxis[2][2] = 1;
       views[i].fov_x = 100;
-    	views[i].fov_y = 100;
+    	views[i].fov_y = 78;
     	views[i].x = 0;
     	views[i].y = 0;
     	views[i].width = cls.glconfig.vidWidth;
     	views[i].height = cls.glconfig.vidHeight;
     	views[i].time = Sys_Milliseconds();
       re.RenderScene(&views[i]);
+      if(viewsUpdated[i]) {
+        viewsUpdated[i] = qfalse;
+      }
+      Cvar_Set("r_lockpvs", va("%i", prevLock));
     }
   }
 #endif

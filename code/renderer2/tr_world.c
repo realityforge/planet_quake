@@ -710,6 +710,7 @@ static void R_MarkLeaves (void) {
 			ri.Printf( PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area );
 		}
 	}
+  printf("showing world: i:%i, c: %i\n", tr.visIndex, tr.visCounts[tr.visIndex]);
 
 	if ( r_novis->integer || tr.viewCluster == -1 ) {
 		for (i=0 ; i<tr.world->numnodes ; i++) {

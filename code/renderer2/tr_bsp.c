@@ -772,7 +772,7 @@ void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurfac
 
 			if(tri[j] >= numVerts)
 			{
-				ri.Printf(PRINT_WARNING, "Bad index in face surface");
+				ri.Printf(PRINT_WARNING, "Bad index in face surface\n");
 				tri[j] = 0;
 			}
 		}
@@ -1821,13 +1821,13 @@ void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 	}
 
 #ifdef PATCH_STITCHING
-	//R_StitchAllPatches();
+	R_StitchAllPatches();
 #endif
 
 	R_FixSharedVertexLodError();
 
 #ifdef PATCH_STITCHING
-	//R_MovePatchSurfacesToHunk();
+	R_MovePatchSurfacesToHunk();
 #endif
 
 	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
@@ -2001,6 +2001,7 @@ void R_LoadShaders( lump_t *l ) {
 
 	for ( i=0 ; i<count ; i++ ) {
 		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
+    printf("flags: %i\n", out[i].surfaceFlags);
 		out[i].contentFlags = LittleLong( out[i].contentFlags );
 	}
 }

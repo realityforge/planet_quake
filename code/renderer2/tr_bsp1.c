@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 #include "../qcommon/cm_load_bsp1.h"
 
+extern void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  );
 extern void R_LoadSubmodels( lump_t *l );
 
 
@@ -47,7 +48,6 @@ void R_LoadShaders1( lump_t *l ) {
 	s_worldData.shaders = out;
 	s_worldData.numShaders = count;
 
-  Com_Printf("shader: %i\n", l->fileofs);
 	for ( i=0 ; i<count ; i++ ) {
     if (in->dataofs[i] == -1) {
       continue;
@@ -55,9 +55,23 @@ void R_LoadShaders1( lump_t *l ) {
 
     mt = (miptex_t *)((byte *)in + in->dataofs[i]);
     memcpy(out[i].shader, mt->name, 16);
-    Com_Printf("text: %s\n", out[i].shader);
-		//out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
+		out[i].surfaceFlags = 0;
 		//out[i].contentFlags = LittleLong( out[i].contentFlags );
+    if (strstr(mt->name, "water") || strstr(mt->name, "mwat")) {
+      out[i].contentFlags = CONTENTS_WATER;
+    }
+    else if (strstr(mt->name, "slime")) {
+      out[i].contentFlags = CONTENTS_SLIME;
+    }
+    else if (strstr(mt->name, "lava")) {
+      out[i].contentFlags = CONTENTS_LAVA;
+    }
+    //else if (strstr(mt->name, "tele")) {
+    //  out[i].contentFlags = TEXTURE_TURB_TELE;
+    //} 
+    //else {
+    //  out[i].contentFlags = CONTENTS_SOLID;
+    //}
 
     /* TODO:
     if()
@@ -120,18 +134,21 @@ void R_LoadPlanes1( lump_t *l ) {
 R_LoadSurfaces
 ===============
 */
-void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *textures ) {
+void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *edgesLump, 
+  lump_t *surfEdgesLump, lump_t *textures ) {
+
 	dBsp1Face_t *in;
   texinfo_t *texinfo;
 	msurface_t	*out;
-	vec3_t	*dv, *dverts;
-	int			*indexes;
+	vec3_t	*dv;
+  dedge_t *edges;
+	int			*surfEdges;
 	int			count;
-	int			numFaces, badTriangles;
+	int			numFaces;
 	int			i, j;
 	float *hdrVertColors = NULL;
-  srfBspSurface_t	*cv;
-  glIndex_t  *tri;
+  drawVert_t pverts[MAX_POLYVERTS];
+  int pindex[MAX_POLYVERTS];
 
 	numFaces = 0;
 
@@ -143,12 +160,16 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
 	if (verts->filelen % sizeof(*dv))
 		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 
-	indexes = (void *)(fileBase + indexLump->fileofs);
-	if ( indexLump->filelen % sizeof(*indexes))
+	surfEdges = (void *)(fileBase + surfEdgesLump->fileofs);
+	if ( surfEdgesLump->filelen % sizeof(*surfEdges))
 		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 
 	texinfo = (void *)(fileBase + textures->fileofs);
 	if ( textures->filelen % sizeof(*texinfo))
+		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
+
+	edges = (void *)(fileBase + edgesLump->fileofs);
+	if ( edgesLump->filelen % sizeof(*edges))
 		ri.Error (ERR_DROP, "%s: funny lump size in %s", __func__, s_worldData.name);
 
 	out = ri.Hunk_Alloc ( count * sizeof(*out), h_low );	
@@ -159,9 +180,6 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
 	s_worldData.surfacesDlightBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData.surfacesDlightBits), h_low );
 	s_worldData.surfacesPshadowBits = ri.Hunk_Alloc ( count * sizeof(*s_worldData.surfacesPshadowBits), h_low );
 
-	// Two passes, allocate surfaces first, then load them full of data
-	// This ensures surfaces are close together to reduce L2 cache misses when using VAOs,
-	// which don't actually use the verts and indexes
 	in = (void *)(fileBase + surfs->fileofs);
 	out = s_worldData.surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
@@ -171,6 +189,7 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
 	in = (void *)(fileBase + surfs->fileofs);
 	out = s_worldData.surfaces;
 	for ( i = 0 ; i < count ; i++, in++, out++ ) {
+    /*
     //int realLightmapNum = LittleLong( in->lightofs );
     //texinfo_t *texture = (void *)&texinfo[in->texinfo];
     out->shader = tr.defaultShader; //ShaderForShaderNum( texture.nummiptex, FatLightmap(realLightmapNum) );
@@ -181,7 +200,7 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
     cv->numIndexes = (in->numedges - 2) * 3;
     cv->indexes = ri.Hunk_Alloc(cv->numIndexes * sizeof(cv->indexes[0]), h_low);
 
-    cv->numVerts = in->numedges - 2;
+    cv->numVerts = in->numedges;
     cv->verts = ri.Hunk_Alloc(cv->numVerts * sizeof(cv->verts[0]), h_low);
 
     if (cv->numVerts > MAX_FACE_POINTS) {
@@ -191,14 +210,24 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
 
     out->cullinfo.type = CULLINFO_PLANE | CULLINFO_BOX;
     ClearBounds(out->cullinfo.bounds[0], out->cullinfo.bounds[1]);
-    dverts = dv + LittleLong(in->firstedge);
+    int firstEdge = LittleLong(in->firstedge);
     for(j = 0; j < cv->numVerts; j++) {
-      vec4_t v;
+      int edge = surfEdges[firstEdge + j];
+      if (edge >= 0) {
+        dverts = dv + edges[edge].v[0];
+      } else {
+        dverts = dv + edges[-edge].v[1];
+      }
       //LoadDrawVertToSrfVert(&cv->verts[i], &dverts[i], realLightmapNum, hdrVertColors ? hdrVertColors + (in->firstedge + i) * 3 : NULL, out->cullinfo.bounds);
       cv->verts[j].xyz[0] = LittleFloat(dverts[j][0]);
       cv->verts[j].xyz[1] = LittleFloat(dverts[j][1]);
       cv->verts[j].xyz[2] = LittleFloat(dverts[j][2]);
+      printf("x: %f, y: %f, z: %f\n", 
+        cv->verts[j].xyz[0],
+        cv->verts[j].xyz[1],
+        cv->verts[j].xyz[2]);
       AddPointToBounds(cv->verts[j].xyz, out->cullinfo.bounds[0], out->cullinfo.bounds[1]);
+      vec4_t v;
       v[0] = LittleFloat(s_worldData.planes[in->planenum].normal[0]);
       v[1] = LittleFloat(s_worldData.planes[in->planenum].normal[1]);
       v[2] = LittleFloat(s_worldData.planes[in->planenum].normal[2]);
@@ -207,17 +236,15 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
 
   	// copy triangles
   	badTriangles = 0;
-  	//indexes += LittleLong(in->firstedge);
-    printf("first: %i\n", LittleLong(in->firstedge));
-  	for(i = 0, tri = cv->indexes; i < cv->numIndexes; i += 3, tri += 3)
+  	for(h = 0, tri = cv->indexes; h < cv->numIndexes; h += 3, tri += 3)
   	{
   		for(j = 0; j < 3; j++)
   		{
-  			tri[j] = LittleLong(indexes[i + j]);
+        tri[j] = j;
 
   			if(tri[j] >= cv->numVerts)
   			{
-  				ri.Printf(PRINT_WARNING, "Bad index in face surface");
+  				ri.Printf(PRINT_WARNING, "Bad index in face surface\n");
   				tri[j] = 0;
   			}
   		}
@@ -234,7 +261,55 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *indexLump, lump_t *t
   		ri.Printf(PRINT_WARNING, "Face has bad triangles, originally shader %s %d tris %d verts, now %d tris\n", out->shader->name, cv->numIndexes / 3, cv->numVerts, cv->numIndexes / 3 - badTriangles);
   		cv->numIndexes -= badTriangles * 3;
   	}
+    */
+    // void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, msurface_t *surf, int *indexes  )
+    dsurface_t ds;
+    memset(&ds, 0, sizeof(ds));
+    ds.shaderNum = texinfo[in->texinfo].miptex;
+    ds.fogNum = -1;
+    ds.surfaceType = MST_PLANAR;
 
+    ds.firstVert = 0;
+    ds.numVerts = in->numedges;
+    
+    ds.firstIndex = 0;
+    ds.numIndexes = (ds.numVerts - 2) * 3;
+    
+    ds.lightmapNum = 0;
+    ds.lightmapVecs[2][0] = s_worldData.planes[in->planenum].normal[0];
+    ds.lightmapVecs[2][1] = s_worldData.planes[in->planenum].normal[1];
+    ds.lightmapVecs[2][2] = s_worldData.planes[in->planenum].normal[2];
+
+    int firstEdge = LittleLong(in->firstedge);
+    for(j = 0; j < ds.numVerts; j++) {
+      int edge = surfEdges[firstEdge + j];
+      if (edge >= 0) {
+        pverts[j].xyz[0] = dv[edges[edge].v[0]][0];
+        pverts[j].xyz[1] = dv[edges[edge].v[0]][1];
+        pverts[j].xyz[2] = dv[edges[edge].v[0]][2];
+      } else {
+        pverts[j].xyz[0] = dv[edges[-edge].v[1]][0];
+        pverts[j].xyz[1] = dv[edges[-edge].v[1]][1];
+        pverts[j].xyz[2] = dv[edges[-edge].v[1]][2];
+      }
+      pverts[j].st[0] = 1;
+      pverts[j].st[1] = 1;
+      /*
+      printf("x: %f, y: %f, z: %f\n", 
+        pverts[j].xyz[0],
+        pverts[j].xyz[1],
+        pverts[j].xyz[2]);
+      */
+    }
+
+		for (j = 0; j < ds.numVerts - 2; j++)
+		{
+			pindex[j*3+0] = 0;
+			pindex[j*3+1] = j+1;
+			pindex[j*3+2] = j+2;
+		}
+
+    ParseFace( &ds, pverts, hdrVertColors, out, pindex );
     numFaces++;
 	}
 
@@ -256,7 +331,7 @@ R_LoadMarksurfaces
 */
 void R_LoadMarksurfaces1 (lump_t *l)
 {	
-	int		i, j, count;
+	int		i, count;
 	short		*in;
 	int     *out;
 	
@@ -271,8 +346,7 @@ void R_LoadMarksurfaces1 (lump_t *l)
 
 	for ( i=0 ; i<count ; i++)
 	{
-		j = LittleLong(in[i]);
-		out[i] = j;
+		out[i] = in[i];
 	}
 }
 
@@ -308,8 +382,8 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->mins[j] = LittleLong (in->mins[j]);
-			out->maxs[j] = LittleLong (in->maxs[j]);
+			out->mins[j] = in->mins[j];
+			out->maxs[j] = in->maxs[j];
 		}
 	
 		p = LittleLong(in->planenum);
@@ -319,7 +393,7 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 
 		for (j=0 ; j<2 ; j++)
 		{
-			p = LittleLong (in->children[j]);
+			p = in->children[j];
 			if (p >= 0)
 				out->children[j] = s_worldData.nodes + p;
 			else
@@ -333,19 +407,19 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 	{
 		for (j=0 ; j<3 ; j++)
 		{
-			out->mins[j] = LittleLong (inLeaf->mins[j]);
-			out->maxs[j] = LittleLong (inLeaf->maxs[j]);
+			out->mins[j] = inLeaf->mins[j];
+			out->maxs[j] = inLeaf->maxs[j];
 		}
 
-		out->cluster = LittleLong(inLeaf->contents);
+		out->cluster = -1; //LittleLong(inLeaf->contents);
 		out->area = -1; //LittleLong(inLeaf->visofs);
 
-		if ( out->contents >= s_worldData.numClusters ) {
-			s_worldData.numClusters = out->contents + 1;
+		if ( out->cluster >= s_worldData.numClusters ) {
+			s_worldData.numClusters = out->cluster + 1;
 		}
 
-		out->firstmarksurface = LittleLong(inLeaf->firstmarksurface);
-		out->nummarksurfaces = LittleLong(inLeaf->nummarksurfaces);
+		out->firstmarksurface = inLeaf->firstmarksurface;
+		out->nummarksurfaces = inLeaf->nummarksurfaces;
 	}	
 
 	// chain descendants
@@ -437,10 +511,14 @@ void LoadBsp1(const char *name) {
 	R_LoadEntities( &header->lumps[LUMP_Q1_ENTITIES] );
 	R_LoadShaders1( &header->lumps[LUMP_Q1_TEXTURES] );
 	R_LoadPlanes1( &header->lumps[LUMP_Q1_PLANES] );
-	R_LoadSurfaces1( &header->lumps[LUMP_Q1_FACES], &header->lumps[LUMP_Q1_VERTEXES], 
-    &header->lumps[LUMP_Q1_SURFEDGES], &header->lumps[LUMP_Q1_TEXINFO] );
+	R_LoadSurfaces1( &header->lumps[LUMP_Q1_FACES], 
+    &header->lumps[LUMP_Q1_VERTEXES],
+    &header->lumps[LUMP_Q1_EDGES],
+    &header->lumps[LUMP_Q1_SURFEDGES], 
+    &header->lumps[LUMP_Q1_TEXINFO] );
   R_LoadMarksurfaces1 (&header->lumps[LUMP_Q1_MARKSURFACES]);
-  R_LoadNodesAndLeafs1 (&header->lumps[LUMP_Q1_NODES], &header->lumps[LUMP_Q1_LEAFS]);
+  R_LoadNodesAndLeafs1 (&header->lumps[LUMP_Q1_NODES], 
+    &header->lumps[LUMP_Q1_LEAFS]);
 	R_LoadSubmodels1 (&header->lumps[LUMP_Q1_MODELS]);
 }
 

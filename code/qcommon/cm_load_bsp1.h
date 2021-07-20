@@ -61,6 +61,10 @@ typedef struct
 	int         type;             // PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
 } dBsp1Plane_t;
 
+typedef struct {
+	unsigned short	v[2];           // vertex numbers
+} dedge_t;
+
 #define	MAXLIGHTMAPS	4
 typedef struct dBsp1Face_s
 {

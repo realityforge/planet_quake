@@ -508,7 +508,7 @@ clean2:
 	@rm -f $(TARGETS)
 
 distclean: clean
-	@rm -rf $(BUILD_DIR)
+	@rm -rf ./$(BUILD_DIR)
 
 #############################################################################
 # DEPENDENCIES

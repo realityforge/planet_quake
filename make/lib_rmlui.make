@@ -46,8 +46,8 @@ release:
 		LDFLAGS="$(LDFLAGS) $(RELEASE_LDFLAGS)" $(BR)/$(TARGET)
 
 clean:
-	@rm -rf $(BD)/$(RMLUI_WORKDIR) $(BD)/$(TARGET)
-	@rm -rf $(BR)/$(RMLUI_WORKDIR) $(BR)/$(TARGET)
+	@rm -rf ./$(BD)/$(RMLUI_WORKDIR) $(BD)/$(TARGET)
+	@rm -rf ./$(BR)/$(RMLUI_WORKDIR) $(BR)/$(TARGET)
 
 ifdef B
 $(B)/$(RMLUI_WORKDIR)/%.o: $(RMLUIDIR)/%.cpp
