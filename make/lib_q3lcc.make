@@ -65,7 +65,7 @@ debug:
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_LBURG)
+	  $(BD)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 
 release:
 	$(echo_cmd) "MAKE Q3LCC"
@@ -79,7 +79,7 @@ release:
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3LCC) \
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3RCC) \
 	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_Q3CPP) \
-	  $(BD)/$(Q3LCC_WORKDIR)/$(TARGET_LBURG)
+	  $(BD)/$(Q3LCC_WORKDIR)/lburg/$(TARGET_LBURG)
 
 
 clean:
