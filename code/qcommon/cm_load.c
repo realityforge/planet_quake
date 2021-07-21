@@ -676,6 +676,7 @@ static void CM_MapList_f(void) {
 }
 #endif
 
+extern void LoadQ1Map(const char *name);
 
 void LoadQ3Map(const char *name) {
 	dheader_t		header;
@@ -822,7 +823,7 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #ifdef USE_BSP1
 	case BSP1_VERSION:
 	case BSPHL_VERSION:
-		//LoadQ1Map();
+		LoadQ1Map(name);
 		break;
 #endif
 	default:

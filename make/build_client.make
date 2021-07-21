@@ -41,6 +41,9 @@ SOURCES          += $(MOUNT_DIR)/botlib
 endif
 
 CLIPMAP          := cm_load.o cm_patch.o cm_polylib.o cm_test.o cm_trace.o
+ifeq ($(USE_BSP1),1)
+CLIPMAP          += cm_load_bsp1.o
+endif
 
 QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
                     md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \

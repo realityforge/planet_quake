@@ -692,7 +692,7 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 static int CheckLump(lump_t *l, char *lumpName, int size)
 {
 	if (l->filelen % size)
-		Com_Error(ERR_DROP, "LoadBSPFile: incorrect lump size (%s)", lumpName);
+		Com_Error(ERR_DROP, "%s: incorrect lump size (%s)", __func__, lumpName);
 
 	//*ptr = (void *)(cmod_base + l->fileofs);
 
