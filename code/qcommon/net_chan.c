@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "q_shared.h"
 #include "qcommon.h"
 
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+#define USE_MULTI_PORT 1
+#endif
+
 #ifdef USE_PRINT_CONSOLE
 #undef Com_Printf
 #undef Com_DPrintf
@@ -537,7 +541,11 @@ void NET_FlushPacketQueue( void )
 		now = Sys_Milliseconds();
 		if ( packetQueue->release - now >= 0 )
 			break;
+#ifdef USE_MULTI_PORT
 		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to, packetQueue->to.netWorld );
+#else
+    Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to );
+#endif
 		last = packetQueue;
 		packetQueue = packetQueue->next;
 		Z_Free( last->data );
@@ -573,7 +581,11 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 		NET_QueuePacket( length, data, to, sv_packetdelay->integer );
 	}
 	else {
+#ifdef USE_MULTI_PORT
 		Sys_SendPacket( length, data, to, to->netWorld );
+#else
+    Sys_SendPacket( length, data, to );
+#endif
 	}
 }
 

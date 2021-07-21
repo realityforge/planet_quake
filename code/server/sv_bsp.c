@@ -2286,7 +2286,7 @@ int SV_MakeMap( char *memoryMap ) {
 	int length = 0;
   fileHandle_t mapfile;
 
-  if((length = FS_FOpenFileRead( va("maps/%s.map", memoryMap), &mapfile, qtrue )) > -1) {
+  if((length = FS_FOpenFileRead( va("maps/%s.bsp", memoryMap), &mapfile, qtrue )) > -1) {
     FS_FCloseFile(mapfile);
     return length;
   }
@@ -2299,7 +2299,9 @@ int SV_MakeMap( char *memoryMap ) {
 		length = SV_MakeShutesAndLadders();
 	} else if (Q_stricmp(memoryMap, "megaf1") == 0) {
 		length = SV_MakeMonacoF1();
-	} else {
+	} else if (Q_stricmp(memoryMap, "test") == 0) {
+    goto skipgenerate;
+	} {
     return 0;
   }
   
@@ -2309,6 +2311,7 @@ int SV_MakeMap( char *memoryMap ) {
 	FS_Write( output, length, mapfile );    // overwritten later
 	FS_FCloseFile( mapfile );
 
+skipgenerate:
   //gamedir = Cvar_VariableString( "fs_game" );
 	//basegame = Cvar_VariableString( "fs_basegame" );
   Cvar_Set( "buildingMap", memoryMap );
@@ -2320,7 +2323,7 @@ int SV_MakeMap( char *memoryMap ) {
     "-fs_basepath",
     (char *)Cvar_VariableString("fs_basepath"),
     "-game",
-    "quake3",
+    "quake1",
     "-meta",
     "-patchmeta",
     mapPath

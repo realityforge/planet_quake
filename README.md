@@ -75,7 +75,7 @@ New game features:
   * More configurable physics.
 
 Coming soon!
-  * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux
+  * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?
   * IN PROGRESS: removing Emscripten and compiling only to wasm with clang.
   * Move more features like EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
   * Add touch and mobile controls that look like this (https://jayanam.com/ugui-unity-mobile-touch-control/) but are actually generated from brushes and look in the direction they are being pulled like a 3D model like the head. Make all numbers and HUD controls 3D models. Since RMLUI will be simple we can focus on advanced HUD  features like resizing on demand. Player controls for video and demos https://www.google.com/search?q=simple+html+media+player+controls
