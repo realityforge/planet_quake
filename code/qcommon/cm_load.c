@@ -590,6 +590,7 @@ void CMod_LoadPatches( lump_t *surfs, lump_t *verts ) {
 		// load the full drawverts onto the stack
 		width = LittleLong( in->patchWidth );
 		height = LittleLong( in->patchHeight );
+
 		c = width * height;
 		if ( c > MAX_PATCH_VERTS ) {
 			Com_Error( ERR_DROP, "%s: MAX_PATCH_VERTS", __func__ );

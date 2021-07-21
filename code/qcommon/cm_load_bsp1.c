@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cm_load_bsp1.h"
 
 extern void CMod_LoadEntityString( lump_t *l, const char *name );
+extern void CM_InitBoxHull( void );
+extern void	CM_FloodAreaConnections (void);
 
 #define	BOX_BRUSHES		1
 #define	BOX_SIDES		6
@@ -309,6 +311,28 @@ void CMod_LoadNodes1( lump_t *l ) {
 }
 
 
+void CMod_LoadPatches1( lump_t *surfs, lump_t *verts )
+{
+  dBsp1Face_t *in;
+  int			count;
+
+	in = (void *)(cmod_base + surfs->fileofs);
+
+	cm.numSurfaces = count = surfs->filelen / sizeof(*in);
+	cm.surfaces = Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
+  
+	if(cmod_base == 0) {
+		// finalize memory map
+		CMod_CheckLeafBrushes();
+
+		CM_InitBoxHull();
+
+		CM_FloodAreaConnections();
+	}
+
+}
+
+
 /*
 ===============================================================================
 
@@ -376,7 +400,7 @@ void LoadQ1Map(const char *name) {
 	// TODO: area portals and area mask stuff
 	//CMod_LoadAreas( &header.lumps[LUMP_Q1_ZONES] );
 	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
-	//CMod_LoadPatches1( &header.lumps[LUMP_Q1_FACES], &header.lumps[LUMP_Q1_VERTEXES] );
+	CMod_LoadPatches1( &header.lumps[LUMP_Q1_FACES], &header.lumps[LUMP_Q1_VERTEXES] );
 
 }
 
