@@ -25,6 +25,117 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cm_local.h"
 #include "cm_load_bsp1.h"
 
+#define	BOX_BRUSHES		1
+#define	BOX_SIDES		6
+#define	BOX_LEAFS		2
+#define	BOX_PLANES		12
+
+void CMod_LoadShaders1( lump_t *l ) {	
+	int		i, count;
+  dBsp1Miptex_t *in;
+	dshader_t	*out;
+  miptex_t *mt;
+	
+	in = (void *)(cmod_base + l->fileofs);
+  count = LittleLong ( in->nummiptex );
+	out = Hunk_Alloc ( count*sizeof(*out), h_low );
+
+	cm.shaders = out;
+	cm.numShaders = count;
+
+	for ( i=0 ; i<count ; i++ ) {
+    if (in->dataofs[i] == -1) {
+      continue;
+    }
+
+    mt = (miptex_t *)((byte *)in + in->dataofs[i]);
+    memcpy(out[i].shader, mt->name, 16);
+		out[i].surfaceFlags = 0;
+    if (strstr(mt->name, "water") || strstr(mt->name, "mwat")) {
+      out[i].contentFlags = CONTENTS_WATER;
+    }
+    else if (strstr(mt->name, "slime")) {
+      out[i].contentFlags = CONTENTS_SLIME;
+    }
+    else if (strstr(mt->name, "lava")) {
+      out[i].contentFlags = CONTENTS_LAVA;
+    }
+  }
+}
+
+
+/*
+=================
+CMod_LoadLeafs
+=================
+*/
+void CMod_LoadLeafs1( lump_t *l )
+{
+	int			i;
+	cLeaf_t		*out;
+	dBsp1Leaf_t 	*in;
+	int			count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if ( l->filelen % sizeof(*in) )
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+	if ( count < 1 )
+		Com_Error( ERR_DROP, "%s: map with no leafs", __func__ );
+
+	cm.leafs = Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cm.leafs ), h_high );
+	cm.numLeafs = count;
+
+	out = cm.leafs;
+	for ( i = 0; i < count; i++, in++, out++ )
+	{
+		out->cluster = -1; //LittleLong( in->cluster );
+		out->area = -1; //LittleLong( in->area );
+		//out->firstLeafBrush = LittleLong( in->firstLeafBrush );
+		//out->numLeafBrushes = LittleLong( in->numLeafBrushes );
+		out->firstLeafSurface = in->firstmarksurface;
+		out->numLeafSurfaces = in->nummarksurfaces;
+
+		if ( out->cluster >= cm.numClusters )
+			cm.numClusters = out->cluster + 1;
+		if ( out->area >= cm.numAreas )
+			cm.numAreas = out->area + 1;
+	}
+
+	cm.areas = Hunk_Alloc( cm.numAreas * sizeof( *cm.areas ), h_high );
+	cm.areaPortals = Hunk_Alloc( cm.numAreas * cm.numAreas * sizeof( *cm.areaPortals ), h_high );
+}
+
+
+/*
+=================
+CMod_LoadLeafBrushes
+=================
+*/
+void CMod_LoadLeafBrushes1( const lump_t *l )
+{
+	int i;
+	int *out;
+	short *in;
+	int count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if ( l->filelen % sizeof(*in) )
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+
+	cm.leafbrushes = Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cm.leafbrushes ), h_high );
+	cm.numLeafBrushes = count;
+
+	out = cm.leafbrushes;
+
+	for ( i = 0; i < count; i++, in++, out++ ) {
+		*out = *in;
+	}
+}
+
 
 /*
 ===============================================================================
@@ -58,27 +169,30 @@ void LoadQ1Map(const char *name) {
 
 #define C(num,field,count,type) \
 	CheckLump(&header.lumps[LUMP_Q1_##num], XSTRING(num), sizeof(type))
+  C(PLANES, planes2, numPlanes, dBsp1Plane_t);
+  C(TEXTURES, texinfo2, numTexinfo, dBsp1Miptex_t);
+  C(VERTEXES, vertexes2, numVertexes, vec3_t);
+  //C(VISIBILITY, brushes2, numBrushes, dBsp2Brush_t);
+  C(NODES, nodes2, numNodes, dBsp1Node_t);
+  C(TEXINFO, texinfo2, numTexinfo, dBsp1Texinfo_t);
+  C(FACES, faces2, numFaces, dBsp1Face_t);
 	C(LIGHTING, lighting, lightDataSize, byte);
-	C(VERTEXES, vertexes2, numVertexes, vec3_t);
-	C(PLANES, planes2, numPlanes, dBsp2Plane_t);
-	C(LEAFS, leafs2, numLeafs, dBsp2Leaf_t);
-	C(NODES, nodes2, numNodes, dBsp2Node_t);
-	C(TEXINFO, texinfo2, numTexinfo, dBsp2Texinfo_t);
-	C(FACES, faces2, numFaces, dBspFace_t);
-	C(LEAFFACES, leaffaces2, numLeaffaces, unsigned short);
-	C(LEAFBRUSHES, leafbrushes2, numLeafbrushes, unsigned short);
+  C(CLIPNODES, leafbrushes2, numLeafbrushes, unsigned short);
+	C(LEAFS, leafs2, numLeafs, dBsp1Leaf_t);
+	C(MARKSURFACES, leaffaces2, numLeaffaces, unsigned short);
+  C(EDGES, edges, numEdges, short[2]);
 	C(SURFEDGES, surfedges, numSurfedges, int);
-	C(EDGES, edges, numEdges, short[2]);
-	C(BRUSHES, brushes2, numBrushes, dBsp2Brush_t);
-	C(BRUSHSIDES, brushsides2, numBrushSides, dBsp2Brushside_t);
-	C(ZONES, zones, numZones, dZone_t);
-	C(ZONEPORTALS, zonePortals, numZonePortals, dZonePortal_t);
-	C(MODELS, models2, numModels, dBsp2Model_t);
+	//C(BRUSHES, brushes2, numBrushes, dBsp2Brush_t);
+	//C(BRUSHSIDES, brushsides2, numBrushSides, dBsp2Brushside_t);
+	//C(ZONES, zones, numZones, dZone_t);
+	//C(ZONEPORTALS, zonePortals, numZonePortals, dZonePortal_t);
+	C(MODELS, models2, numModels, dBsp1Model_t);
 #undef C
+
 	// load into heap
 	CMod_LoadShaders1( &header.lumps[LUMP_Q1_TEXTURES] );
 	CMod_LoadLeafs1 (&header.lumps[LUMP_Q1_LEAFS]);
-	CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_LEAFBRUSHES]);
+	CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_MARKSURFACES]);
 	CMod_LoadLeafSurfaces1 (&header.lumps[LUMP_Q1_LEAFFACES]);
 	CMod_LoadPlanes1 (&header.lumps[LUMP_Q1_PLANES]);
 	CMod_LoadBrushSides1 (&header.lumps[LUMP_Q1_BRUSHSIDES]);

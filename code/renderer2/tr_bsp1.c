@@ -37,7 +37,7 @@ R_LoadShaders
 */
 void R_LoadShaders1( lump_t *l ) {	
 	int		i, count;
-  dBsp1Texinfo_t *in;
+  dBsp1Miptex_t *in;
 	dshader_t	*out;
   miptex_t *mt;
 	
@@ -138,7 +138,7 @@ void R_LoadSurfaces1( lump_t *surfs, lump_t *verts, lump_t *edgesLump,
   lump_t *surfEdgesLump, lump_t *textures ) {
 
 	dBsp1Face_t *in;
-  texinfo_t *texinfo;
+  dBsp1Texinfo_t *texinfo;
 	msurface_t	*out;
 	vec3_t	*dv;
   dedge_t *edges;

@@ -37,7 +37,7 @@ typedef struct
 {
 	int         nummiptex;
 	int         dataofs[4];                  // [nummiptex]
-} dBsp1Texinfo_t;
+} dBsp1Miptex_t;
 
 #define	MIPLEVELS	4
 typedef struct miptex_s
@@ -52,7 +52,7 @@ typedef struct texinfo_s
 	float		vecs[2][4];         // [s/t][xyz offset]
 	int			miptex;
 	int			flags;
-} texinfo_t;
+} dBsp1Texinfo_t;
 
 typedef struct
 {
