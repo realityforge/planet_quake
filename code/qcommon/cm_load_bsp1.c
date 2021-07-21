@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "cm_local.h"
 #include "cm_load_bsp1.h"
 
+extern void CMod_LoadEntityString( lump_t *l, const char *name );
+
 #define	BOX_BRUSHES		1
 #define	BOX_SIDES		6
 #define	BOX_LEAFS		2
@@ -138,6 +140,176 @@ void CMod_LoadLeafBrushes1( const lump_t *l )
 
 
 /*
+=================
+CMod_LoadLeafSurfaces
+=================
+*/
+void CMod_LoadLeafSurfaces1( const lump_t *l )
+{
+	int i;
+	int *out;
+	short *in;
+	int count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if ( l->filelen % sizeof(*in) )
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+
+	cm.leafsurfaces = Hunk_Alloc( count * sizeof( *cm.leafsurfaces ), h_high );
+	cm.numLeafSurfaces = count;
+
+	out = cm.leafsurfaces;
+
+	for ( i = 0; i < count; i++, in++, out++ ) {
+		*out = *in;
+	}
+}
+
+
+/*
+=================
+CMod_LoadPlanes
+=================
+*/
+void CMod_LoadPlanes1( const lump_t *l )
+{
+	int			i, j;
+	cplane_t	*out;
+	dBsp1Plane_t 	*in;
+	int			count;
+	int			bits;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if ( l->filelen % sizeof(*in) )
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+	if ( count < 1 )
+		Com_Error( ERR_DROP, "%s: map with no planes", __func__ );
+
+	cm.planes = Hunk_Alloc( ( BOX_PLANES + count ) * sizeof( *cm.planes ), h_high );
+	cm.numPlanes = count;
+
+	out = cm.planes;
+
+	for ( i = 0; i < count; i++, in++, out++ )
+	{
+		bits = 0;
+		for ( j = 0; j < 3; j++ )
+		{
+			out->normal[j] = LittleFloat( in->normal[j] );
+			if ( out->normal[j] < 0 )
+				bits |= 1<<j;
+		}
+
+		out->dist = LittleFloat( in->dist );
+		out->type = PlaneTypeForNormal( out->normal );
+		out->signbits = bits;
+	}
+}
+
+
+/*
+=================
+CMod_LoadSubmodels
+=================
+*/
+void CMod_LoadSubmodels1( lump_t *l ) {
+	dBsp1Model_t	*in;
+	cmodel_t	*out;
+	int			i, j, count;
+	int			*indexes;
+
+	in = (void *)(cmod_base + l->fileofs);
+	if (l->filelen % sizeof(*in))
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+	if ( count < 1 )
+		Com_Error( ERR_DROP, "%s: map with no models", __func__ );
+
+	cm.cmodels = Hunk_Alloc( count * sizeof( *cm.cmodels ), h_high );
+	cm.numSubModels = count;
+
+	if ( count > MAX_SUBMODELS )
+		Com_Error( ERR_DROP, "%s: MAX_SUBMODELS exceeded", __func__ );
+
+	for ( i=0 ; i<count ; i++, in++)
+	{
+		out = &cm.cmodels[i];
+
+		for (j=0 ; j<3 ; j++)
+		{	// spread the mins / maxs by a pixel
+			out->mins[j] = LittleFloat (in->mins[j]) - 1;
+			out->maxs[j] = LittleFloat (in->maxs[j]) + 1;
+		}
+
+		if ( i == 0 ) {
+			continue;	// world model doesn't need other info
+		}
+
+    /*
+    TODO: MAX_MAP_HULLS? headnode?
+		// make a "leaf" just to hold the model's brushes and surfaces
+		out->leaf.numLeafBrushes = LittleLong( in->numBrushes );
+		indexes = Hunk_Alloc( out->leaf.numLeafBrushes * 4, h_high );
+		out->leaf.firstLeafBrush = indexes - cm.leafbrushes;
+		for ( j = 0 ; j < out->leaf.numLeafBrushes ; j++ ) {
+			indexes[j] = LittleLong( in->firstBrush ) + j;
+		}
+    */
+
+		out->leaf.numLeafSurfaces = LittleLong( in->numfaces );
+		indexes = Hunk_Alloc( out->leaf.numLeafSurfaces * 4, h_high );
+		out->leaf.firstLeafSurface = indexes - cm.leafsurfaces;
+		for ( j = 0 ; j < out->leaf.numLeafSurfaces ; j++ ) {
+			indexes[j] = LittleLong( in->firstface ) + j;
+		}
+	}
+}
+
+
+/*
+=================
+CMod_LoadNodes
+
+=================
+*/
+void CMod_LoadNodes1( lump_t *l ) {
+	dBsp1Node_t	*in;
+	int		child;
+	cNode_t	*out;
+	int		i, j, count;
+
+  in = (dBsp1Node_t *)(cmod_base + l->fileofs);
+	if (l->filelen % sizeof(*in))
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	count = l->filelen / sizeof(*in);
+	if ( count < 1 )
+		Com_Error( ERR_DROP, "%s: map has no nodes", __func__ );
+
+	cm.nodes = Hunk_Alloc( count * sizeof( *cm.nodes ), h_high );
+	cm.numNodes = count;
+
+	out = cm.nodes;
+
+	for ( i = 0; i < count; i++, out++, in++ )
+	{
+		out->plane = cm.planes + LittleLong( in->planenum );
+		for ( j = 0; j < 2; j++ )
+		{
+			child = in->children[j];
+			out->children[j] = child;
+		}
+	}
+
+}
+
+
+/*
 ===============================================================================
 
 					MAP LOADING
@@ -170,7 +342,7 @@ void LoadQ1Map(const char *name) {
 #define C(num,field,count,type) \
 	CheckLump(&header.lumps[LUMP_Q1_##num], XSTRING(num), sizeof(type))
   C(PLANES, planes2, numPlanes, dBsp1Plane_t);
-  C(TEXTURES, texinfo2, numTexinfo, dBsp1Miptex_t);
+  //C(TEXTURES, texinfo2, numTexinfo, dBsp1Miptex_t);
   C(VERTEXES, vertexes2, numVertexes, vec3_t);
   //C(VISIBILITY, brushes2, numBrushes, dBsp2Brush_t);
   C(NODES, nodes2, numNodes, dBsp1Node_t);
@@ -192,21 +364,19 @@ void LoadQ1Map(const char *name) {
 	// load into heap
 	CMod_LoadShaders1( &header.lumps[LUMP_Q1_TEXTURES] );
 	CMod_LoadLeafs1 (&header.lumps[LUMP_Q1_LEAFS]);
-	CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_MARKSURFACES]);
-	CMod_LoadLeafSurfaces1 (&header.lumps[LUMP_Q1_LEAFFACES]);
+	CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_CLIPNODES]);
+	CMod_LoadLeafSurfaces1 (&header.lumps[LUMP_Q1_MARKSURFACES]);
 	CMod_LoadPlanes1 (&header.lumps[LUMP_Q1_PLANES]);
-	CMod_LoadBrushSides1 (&header.lumps[LUMP_Q1_BRUSHSIDES]);
-	CMod_LoadBrushes1 (&header.lumps[LUMP_Q1_BRUSHES]);
+	//CMod_LoadBrushSides1 (&header.lumps[LUMP_Q1_BRUSHSIDES]);
+	//CMod_LoadBrushes1 (&header.lumps[LUMP_Q1_BRUSHES]);
 	CMod_LoadSubmodels1 (&header.lumps[LUMP_Q1_MODELS]);
 	CMod_LoadNodes1 (&header.lumps[LUMP_Q1_NODES]);
 	CMod_LoadEntityString (&header.lumps[LUMP_Q1_ENTITIES], name);
-	CMod_LoadVisibility1( &header.lumps[LUMP_Q1_VISIBILITY] );
+	//CMod_LoadVisibility1( &header.lumps[LUMP_Q1_VISIBILITY] );
 	// TODO: area portals and area mask stuff
-	CMod_LoadAreas( &header.lumps[LUMP_Q1_ZONES] );
+	//CMod_LoadAreas( &header.lumps[LUMP_Q1_ZONES] );
 	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
-	//
-	//;
-	CMod_LoadPatches1( &header.lumps[LUMP_Q1_FACES], &header.lumps[LUMP_Q1_VERTEXES] );
+	//CMod_LoadPatches1( &header.lumps[LUMP_Q1_FACES], &header.lumps[LUMP_Q1_VERTEXES] );
 
 }
 

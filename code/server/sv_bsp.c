@@ -2323,7 +2323,7 @@ skipgenerate:
     "-fs_basepath",
     (char *)Cvar_VariableString("fs_basepath"),
     "-game",
-    "quake1",
+    "quake3",
     "-meta",
     "-patchmeta",
     mapPath
