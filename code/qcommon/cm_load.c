@@ -836,7 +836,6 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 
 	// we are NOT freeing the file, because it is cached for the ref
 	FS_FreeFile( buf.v );
-
 	CM_InitBoxHull();
 
 	CM_FloodAreaConnections();

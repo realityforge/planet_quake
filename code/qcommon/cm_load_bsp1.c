@@ -73,12 +73,13 @@ void CMod_LoadShaders1( lump_t *l ) {
 CMod_LoadLeafs
 =================
 */
-void CMod_LoadLeafs1( lump_t *l )
+void CMod_LoadLeafs1( lump_t *l, lump_t *nodeLump )
 {
 	int			i;
 	cLeaf_t		*out;
 	dBsp1Leaf_t 	*in;
-	int			count;
+  dBsp1Node_t   *nodes;
+	int			count, countNodes, numSolidLeafs;
 
 	in = (void *)(cmod_base + l->fileofs);
 	if ( l->filelen % sizeof(*in) )
@@ -88,16 +89,33 @@ void CMod_LoadLeafs1( lump_t *l )
 	if ( count < 1 )
 		Com_Error( ERR_DROP, "%s: map with no leafs", __func__ );
 
-	cm.leafs = Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cm.leafs ), h_high );
-	cm.numLeafs = count;
+	nodes = (void *)(cmod_base + nodeLump->fileofs);
+	if ( nodeLump->filelen % sizeof(*in) )
+		Com_Error( ERR_DROP, "%s: funny lump size", __func__ );
+
+	countNodes = nodeLump->filelen / sizeof(*nodes);
+	if ( count < 1 )
+		Com_Error( ERR_DROP, "%s: map with no leafs", __func__ );
+
+  numSolidLeafs = 0;
+  for ( i = 0; i < countNodes; i++, nodes++ )
+	{
+    if(nodes->children[0] == -1
+      || nodes->children[1] == -1) {
+      numSolidLeafs++;
+    }
+  }
+
+  cm.numLeafs = count + numSolidLeafs;
+	cm.leafs = Hunk_Alloc( ( BOX_LEAFS + cm.numLeafs ) * sizeof( *cm.leafs ), h_high );
 
 	out = cm.leafs;
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
-		out->cluster = -1; //LittleLong( in->cluster );
-		out->area = -1; //LittleLong( in->area );
-		//out->firstLeafBrush = LittleLong( in->firstLeafBrush );
-		//out->numLeafBrushes = LittleLong( in->numLeafBrushes );
+		out->cluster = in->contents == CONTENTS_Q1_SOLID ? -1 : (i-1); //LittleLong( in->cluster );
+		out->area = 0; //LittleLong( in->area );
+		out->firstLeafBrush = 0;
+		out->numLeafBrushes = 0;
 		out->firstLeafSurface = in->firstmarksurface;
 		out->numLeafSurfaces = in->nummarksurfaces;
 
@@ -106,6 +124,15 @@ void CMod_LoadLeafs1( lump_t *l )
 		if ( out->area >= cm.numAreas )
 			cm.numAreas = out->area + 1;
 	}
+
+  for(i = 0; i < numSolidLeafs; i++, out++) {
+    out->cluster = -1;
+    out->area = 0;
+    out->firstLeafBrush = 0;
+		out->numLeafBrushes = 0;
+    out->firstLeafSurface = 0;
+		out->numLeafSurfaces = 0;
+  }
 
 	cm.areas = Hunk_Alloc( cm.numAreas * sizeof( *cm.areas ), h_high );
 	cm.areaPortals = Hunk_Alloc( cm.numAreas * cm.numAreas * sizeof( *cm.areaPortals ), h_high );
@@ -281,7 +308,6 @@ CMod_LoadNodes
 */
 void CMod_LoadNodes1( lump_t *l ) {
 	dBsp1Node_t	*in;
-	int		child;
 	cNode_t	*out;
 	int		i, j, count;
 
@@ -303,9 +329,10 @@ void CMod_LoadNodes1( lump_t *l ) {
 		out->plane = cm.planes + LittleLong( in->planenum );
 		for ( j = 0; j < 2; j++ )
 		{
-			child = in->children[j];
-			out->children[j] = child;
+			out->children[j] = in->children[j];
 		}
+    
+    
 	}
 
 }
@@ -330,6 +357,70 @@ void CMod_LoadPatches1( lump_t *surfs, lump_t *verts )
 		CM_FloodAreaConnections();
 	}
 
+}
+
+
+/*
+=================
+CMod_LoadVisibility
+=================
+*/
+
+
+static void DecompressVis(byte *dst, void *vis, int pos, int rowSize)
+{
+	if (pos == -1)
+	{
+		memset(dst, 0xFF, rowSize);	// all visible
+		dst += rowSize;
+		return;
+	}
+
+	byte *src = (byte*)vis + pos;
+	// decompress vis
+	for (int j = rowSize; j; /*empty*/)
+	{
+		byte c = *src++;
+		if (c)
+		{	// non-zero byte
+			*dst++ = c;
+			j--;
+		}
+		else
+		{	// zero byte -- decompress RLE data (with filler 0)
+			c = *src++;				// count
+			c = MIN(c, j);			// should not be, but ...
+			j -= c;
+			while (c--)
+				*dst++ = 0;
+		}
+	}
+}
+
+
+void CMod_LoadVisibility1( lump_t *l, lump_t *leafLump ) {
+	int		len;
+	byte	*buf;
+  dBsp1Leaf_t 	*in;
+
+	len = l->filelen;
+	if ( !len ) {
+		cm.clusterBytes = ( cm.numClusters + 31 ) & ~31;
+		cm.visibility = Hunk_Alloc( cm.clusterBytes, h_high );
+		Com_Memset( cm.visibility, 255, cm.clusterBytes );
+		return;
+	}
+
+	buf = cmod_base + l->fileofs;
+  in = (void *)(cmod_base + leafLump->fileofs);
+
+	cm.vised = qtrue;
+  cm.numClusters = cm.numLeafs;
+	cm.clusterBytes = (cm.numClusters + 7) >> 3; // rowSize
+  cm.visibility = Hunk_Alloc( cm.numClusters * cm.clusterBytes, h_high );
+  byte *dst = cm.visibility;
+  for (int i = 1; i < cm.numClusters; i++, dst += cm.clusterBytes)
+		DecompressVis(dst, buf, in[i].visofs, cm.clusterBytes);
 }
 
 
@@ -387,8 +478,8 @@ void LoadQ1Map(const char *name) {
 
 	// load into heap
 	CMod_LoadShaders1( &header.lumps[LUMP_Q1_TEXTURES] );
-	CMod_LoadLeafs1 (&header.lumps[LUMP_Q1_LEAFS]);
-	CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_CLIPNODES]);
+	CMod_LoadLeafs1 (&header.lumps[LUMP_Q1_LEAFS], &header.lumps[LUMP_Q1_NODES]);
+	//CMod_LoadLeafBrushes1 (&header.lumps[LUMP_Q1_CLIPNODES]);
 	CMod_LoadLeafSurfaces1 (&header.lumps[LUMP_Q1_MARKSURFACES]);
 	CMod_LoadPlanes1 (&header.lumps[LUMP_Q1_PLANES]);
 	//CMod_LoadBrushSides1 (&header.lumps[LUMP_Q1_BRUSHSIDES]);
@@ -396,7 +487,7 @@ void LoadQ1Map(const char *name) {
 	CMod_LoadSubmodels1 (&header.lumps[LUMP_Q1_MODELS]);
 	CMod_LoadNodes1 (&header.lumps[LUMP_Q1_NODES]);
 	CMod_LoadEntityString (&header.lumps[LUMP_Q1_ENTITIES], name);
-	//CMod_LoadVisibility1( &header.lumps[LUMP_Q1_VISIBILITY] );
+	CMod_LoadVisibility1( &header.lumps[LUMP_Q1_VISIBILITY], &header.lumps[LUMP_Q1_LEAFS] );
 	// TODO: area portals and area mask stuff
 	//CMod_LoadAreas( &header.lumps[LUMP_Q1_ZONES] );
 	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
