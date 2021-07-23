@@ -222,6 +222,10 @@ void trap_UnlinkEntity( gentity_t *ent )
   syscall( G_UNLINKENTITY, ent );
 }
 
+int trap_SV_AreaEntities( const vec3_t mins, const vec3_t maxs, const content_mask_t *bs, int *list, int maxcount )
+{
+  return syscall( G_ENTITIES_IN_BOX, mins, maxs, list, maxcount );
+}
 
 int trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount )
 {

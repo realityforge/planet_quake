@@ -24,6 +24,10 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cvar_VariableIntegerValue trap_Cvar_VariableIntegerValue
+
+extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
+
 //==========================================================
 
 /*QUAKED target_delay (1 0 0) (-8 -8 -8) (8 8 8)

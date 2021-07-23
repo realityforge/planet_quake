@@ -4,6 +4,10 @@
 
 #include "g_local.h"
 
+#define FS_GetFilteredFiles trap_FS_GetFilteredFiles
+
+extern int  trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize );
+
 //-------------------------------------------------------------------------
 // Player models
 //-------------------------------------------------------------------------

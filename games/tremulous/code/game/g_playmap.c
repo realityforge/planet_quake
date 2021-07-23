@@ -29,12 +29,29 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cbuf_ExecuteText trap_SendConsoleCommand
+#define Cvar_SetSafe trap_Cvar_Set
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_Read2 trap_FS_Read
+#define FS_Write trap_FS_Write
+
+extern void	trap_SendConsoleCommand( int exec_when, const char *text );
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern int  trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize );
+extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
+extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
+
+#if 0
 /*
  * external utilities
  */
 
 int  FS_Read2( void *buffer, int len, fileHandle_t f );
 void FS_Write( const void *buffer, int len, fileHandle_t f );
+#endif
 
 /*
  * globals

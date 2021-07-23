@@ -24,6 +24,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_AdjustAreaPortalState trap_AdjustAreaPortalState
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern void trap_AdjustAreaPortalState( gentity_t *ent, qboolean open );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 typedef enum mover_block_s
 {
   MBLCK_NONE = 0, //not blocked
@@ -649,7 +655,7 @@ static void G_Clear_Riding_Stack_Collisions(gentity_t *ent) {
     gentity_t *stack_rider = &g_entities[i];
 
     if(
-      pushes.type[ent->s.number][i] != MPUSH_RIDING_STACK_HIT ||
+      pushes.type[ent->s.number][i] != MPUSH_RIDING_STACK_HIT &&
       pushes.type[ent->s.number][i] != MPUSH_RIDE) {
       continue;
     }

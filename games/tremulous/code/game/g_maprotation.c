@@ -26,6 +26,20 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cbuf_ExecuteText trap_SendConsoleCommand
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_Update trap_Cvar_Update
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_Read2 trap_FS_Read
+
+extern void	trap_SendConsoleCommand( int exec_when, const char *text );
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_Cvar_Update( vmCvar_t *cvar );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
+
 #define MAX_MAP_ROTATIONS       64
 #define MAX_MAP_ROTATION_MAPS   256
 

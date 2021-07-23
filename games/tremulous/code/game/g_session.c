@@ -24,6 +24,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+
 
 /*
 =======================================================================

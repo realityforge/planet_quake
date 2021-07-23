@@ -7452,3 +7452,299 @@ scrim_team_t BG_Scrim_Team_From_Playing_Team(scrim_t *scrim, team_t playing_team
 
   return SCRIM_TEAM_NONE;
 }
+
+#define ALT			0x00000001		/* alternate form */
+#define HEXPREFIX	0x00000002		/* add 0x or 0X prefix */
+#define LADJUST		0x00000004		/* left adjustment */
+#define LONGDBL		0x00000008		/* long double */
+#define LONGINT		0x00000010		/* long integer */
+#define QUADINT		0x00000020		/* quad integer */
+#define SHORTINT	0x00000040		/* short integer */
+#define ZEROPAD		0x00000080		/* zero (as opposed to blank) pad */
+#define FPT			0x00000100		/* floating point number */
+#define REDUCE		0x00000200		/* extension: do not emit anything if value is zero */
+
+#define to_digit(c)		((c) - '0')
+#define is_digit(c)		((unsigned)to_digit(c) <= 9)
+#define to_char(n)		((n) + '0')
+
+int Q_strlen( const char *s ) 
+{
+	const char *b = s;
+	while ( *s != '\0' ) 
+		s++;
+	return s - b;
+}
+
+
+static void AddInt( char **buf_p, int val, int width, int flags ) {
+	char	text[32];
+	int		digits;
+	int		signedVal;
+	char	*buf;
+
+	if ( flags & REDUCE && val == 0 )
+		return;
+
+	digits = 0;
+	signedVal = val;
+	if ( val < 0 ) {
+		val = -val;
+	}
+	do {
+		text[digits] = '0' + val % 10;
+		digits++;
+		val /= 10;
+	} while ( val );
+
+	if ( signedVal < 0 ) {
+		text[digits] = '-';
+		digits++;
+	}
+
+	buf = *buf_p;
+
+	if( !( flags & LADJUST ) ) {
+		while ( digits < width ) {
+			*buf = ( flags & ZEROPAD ) ? '0' : ' ';
+			buf++;
+			width--;
+		}
+	}
+
+	while ( digits-- > 0 ) {
+		*buf = text[digits]; buf++;
+		width--;
+	}
+
+	if( flags & LADJUST ) {
+		while ( width > 0 ) {
+			*buf = ( flags & ZEROPAD ) ? '0' : ' ';
+			buf++;
+			width--;
+		}
+	}
+
+	*buf_p = buf;
+}
+
+static void AddFloat( char **buf_p, float fval, int width, int prec, int reduce ) {
+	char	text[32];
+	int		digits;
+	float	signedVal;
+	char	*buf;
+	int		val;
+
+	if ( reduce && fval == 0.0f )
+		return;
+
+	// get the sign
+	signedVal = fval;
+	if ( fval < 0 ) {
+		fval = -fval;
+	}
+
+	// write the float number
+	digits = 0;
+	val = (int)fval;
+	do {
+		text[digits] = '0' + val % 10;
+		digits++;
+		val /= 10;
+	} while ( val );
+
+	if ( signedVal < 0 ) {
+		text[digits] = '-';
+		digits++;
+	}
+
+	buf = *buf_p;
+
+	// fix precisiion
+	if ( prec < 0 ) {
+		prec = 6;
+	}
+
+	if ( prec ) {
+		width -= prec + 1;
+	}
+	// end
+
+	while ( digits < width ) {
+		*buf = ' ';	buf++;
+		width--;
+	}
+
+	while ( digits-- > 0 ) {
+		*buf = text[digits]; buf++;
+	}
+
+	*buf_p = buf;
+
+	// write the fraction
+	digits = 0;
+	while (digits < prec) {
+		fval -= (int) fval;
+		fval *= 10.0;
+		val = (int) fval;
+		text[digits] = '0' + val % 10;
+		digits++;
+	}
+
+	if (digits > 0) {
+		buf = *buf_p;
+		*buf = '.';	buf++;
+		for (prec = 0; prec < digits; prec++) {
+			*buf = text[prec]; buf++;
+		}
+		*buf_p = buf;
+	}
+}
+
+
+static void AddString( char **buf_p, const char *string, int width, int prec ) {
+	int		size;
+	char	*buf;
+
+	buf = *buf_p;
+
+	if ( string == NULL ) {
+		string = "(null)";
+		prec = -1;
+	}
+
+	if ( prec >= 0 ) {
+		for( size = 0; size < prec; size++ ) {
+			if( string[size] == '\0' ) {
+				break;
+			}
+		}
+	}
+	else {
+		size = Q_strlen( string );
+	}
+
+	width -= size;
+
+	while( size-- ) {
+		*buf = *string;
+		buf++; string++;
+	}
+
+	while( width-- > 0 ) {
+		*buf = ' '; buf++;
+	}
+
+	*buf_p = buf;
+}
+
+
+/*
+ED_vsprintf
+
+I'm not going to support a bunch of the more arcane stuff in here
+just to keep it simpler.  For example, the '$' is not
+currently supported.  I've tried to make it so that it will just
+parse and ignore formats we don't support.
+
+returns: number of char written without ending '\0'
+*/
+int ED_vsprintf( char *buffer, const char *fmt, va_list ap ) {
+	char	*buf_p;
+	char	ch;
+	int		flags;
+	int		width;
+	int		prec;
+	int		n;
+
+	buf_p = buffer;
+
+	while( qtrue ) {
+		// run through the format string until we hit a '%' or '\0'
+		for ( /*ch = *fmt */; (ch = *fmt) != '\0' && ch != '%'; fmt++ ) {
+			*buf_p = ch; buf_p++;
+		}
+		if ( ch == '\0' ) {
+			break;
+		}
+
+		// skip over the '%'
+		fmt++;
+
+		// reset formatting state
+		flags = 0;
+		width = 0;
+		prec = -1;
+rflag:
+		ch = *fmt; fmt++;
+reswitch:
+		switch( ch ) {
+		//case ' ':
+		case '-':
+			flags |= LADJUST;
+			goto rflag;
+		case '.':
+			if ( *fmt == '*' ) {
+				fmt++;
+				n = va_arg( ap, int );
+				prec = n < 0 ? -1 : n;
+				goto rflag;
+			} else {
+				n = 0;
+				while( is_digit( ( ch = *fmt++ ) ) ) {
+					n = 10 * n + ( ch - '0' );
+				}
+				prec = n < 0 ? -1 : n;
+				goto reswitch;
+			}
+		case '0':
+			flags |= ZEROPAD;
+			goto rflag;
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			n = 0;
+			do {
+				n = 10 * n + ( ch - '0' );
+				ch = *fmt; fmt++;
+			} while( is_digit( ch ) );
+			width = n;
+			goto reswitch;
+		case '*':
+			width = va_arg( ap, int );
+			goto rflag;
+		case 'c':
+			*buf_p = va_arg( ap, int ); buf_p++;
+			break;
+		case 'd':
+		case 'i':
+			AddInt( &buf_p, va_arg( ap, int ), width, flags );
+			break;
+		case 'f':
+			AddFloat( &buf_p, va_arg( ap, double ), width, prec, flags & REDUCE );
+			break;
+		case 's':
+			AddString( &buf_p, va_arg( ap, char * ), width, prec );
+			break;
+		case '%':
+			*buf_p = ch; buf_p++;
+			break;
+		 // edawn extension:
+		case 'R':
+			flags |= REDUCE;
+			goto rflag;
+		default:
+			*buf_p = va_arg( ap, int ); buf_p++;
+			break;
+		} // switch ( ch )
+	} // while ( qtrue )
+
+	*buf_p = '\0';
+	return buf_p - buffer;
+}

@@ -26,9 +26,31 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #define Cmd_Argc trap_Argc
 #define Cbuf_ExecuteText trap_SendConsoleCommand
+#define Com_RealTime trap_RealTime
+#define Cvar_Register trap_Cvar_Register
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_Update trap_Cvar_Update
+#define Cvar_VariableIntegerValue trap_Cvar_VariableIntegerValue
+#define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_Write trap_FS_Write
+#define SV_AreaEntities trap_SV_AreaEntities
 
-extern int   trap_Argc( void );
+extern int  trap_Argc( void );
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
+extern int  trap_RealTime( qtime_t *qtime );
+extern void trap_Cvar_Register( vmCvar_t *cvar, const char *var_name, const char *value, int flags );
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_Cvar_Update( vmCvar_t *cvar );
+extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
+extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern int  trap_SV_AreaEntities( const vec3_t mins, const vec3_t maxs, const content_mask_t *bs, int *list, int maxcount );
+#define trap_SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(z, y, w, v)
 
 level_locals_t  level;
 
@@ -436,6 +458,33 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 {
   Com_Printf( "WARNING: vmMain should not be used!\n" );
   return -1;
+}
+
+
+extern void  trap_Error( const char *fmt );
+extern void  trap_Print( const char *fmt );
+extern int ED_vsprintf( char *buffer, const char *fmt, va_list ap );
+void QDECL Com_Error( int level, const char *fmt, ... ) {
+	va_list		argptr;
+	char		text[4096];
+
+	va_start( argptr, fmt );
+	ED_vsprintf( text, fmt, argptr );
+	va_end( argptr );
+
+	trap_Error( text );
+}
+
+
+void QDECL Com_Printf( const char *fmt, ... ) {
+	va_list		argptr;
+	char		text[4096];
+
+	va_start( argptr, fmt );
+	ED_vsprintf( text, fmt, argptr );
+	va_end( argptr );
+
+	trap_Print( text );
 }
 
 /*

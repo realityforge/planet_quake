@@ -24,6 +24,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cvar_SetSafe trap_Cvar_Set
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 /*
 ===============
 G_DamageFeedback

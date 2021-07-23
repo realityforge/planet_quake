@@ -26,6 +26,21 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cbuf_ExecuteText trap_SendConsoleCommand
+#define Cmd_AddCommand(x, y) 
+#define Cmd_Argc trap_Argc
+#define Cmd_ArgvBuffer trap_Argv
+#define Cmd_RemoveCommand(x) 
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+
+extern void	trap_SendConsoleCommand( int exec_when, const char *text );
+extern int  trap_Argc( void );
+extern void trap_Argv( int n, char *buffer, int bufferLength );
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+
+
 /*
 ===================
 Svcmd_EntityList_f

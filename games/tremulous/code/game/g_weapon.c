@@ -27,6 +27,10 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 static  vec3_t  forward, right, up;
 static  vec3_t  muzzle;
 
@@ -1454,6 +1458,8 @@ static void G_FindLev2ZapChainTargets( zap_t *zap )
     // don't chain to self; noclippers can be listed, don't chain to them either
     if( enemy == ent || ( enemy->client && enemy->client->noclip ) )
       continue;
+      
+    if(!(ent->r.contents & MASK_SHOT)) continue;
 
     distance = Distance( ent->r.currentOrigin, enemy->r.currentOrigin );
 

@@ -24,6 +24,24 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cmd_Argc trap_Argc
+#define Cmd_ArgvBuffer trap_Argv
+#define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_GetFileList trap_FS_GetFileList
+#define FS_Read2 trap_FS_Read
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern int  trap_Argc( void );
+extern void trap_Argv( int n, char *buffer, int bufferLength );
+extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern int  trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
+extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 /*
 ==================
 G_SanitiseString

@@ -24,6 +24,20 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_VariableIntegerValue trap_Cvar_VariableIntegerValue
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_Read2 trap_FS_Read
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 // g_client.c -- client functions that don't happen every frame
 
 static vec3_t playerMins = {-15, -15, -24};

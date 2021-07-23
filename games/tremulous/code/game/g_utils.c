@@ -26,6 +26,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_AdjustAreaPortalState trap_AdjustAreaPortalState
+#define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+
+extern void trap_AdjustAreaPortalState( gentity_t *ent, qboolean open );
+extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+
 typedef struct
 {
   char oldShader[ MAX_QPATH ];

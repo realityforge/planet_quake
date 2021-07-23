@@ -35,10 +35,33 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #define Cmd_Argc trap_Argc
 #define Cbuf_ExecuteText trap_SendConsoleCommand
+#define Cmd_AddCommand(x, y) 
+#define Cmd_ArgvBuffer trap_Argv
+#define Cmd_RemoveCommand(x) 
+#define Com_RealTime trap_RealTime
+#define Cvar_SetSafe trap_Cvar_Set
+#define Cvar_Update trap_Cvar_Update
+#define Cvar_VariableIntegerValue trap_Cvar_VariableIntegerValue
+#define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+#define FS_FCloseFile trap_FS_FCloseFile
+#define FS_FOpenFileByMode trap_FS_FOpenFile
+#define FS_GetFilteredFiles trap_FS_GetFilteredFiles
+#define FS_Read2 trap_FS_Read
+#define FS_Write trap_FS_Write
 
-extern int   trap_Argc( void );
+extern int  trap_Argc( void );
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
-
+extern void trap_Argv( int n, char *buffer, int bufferLength );
+extern int  trap_RealTime( qtime_t *qtime );
+extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern void trap_Cvar_Update( vmCvar_t *cvar );
+extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
+extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+extern void trap_FS_FCloseFile( fileHandle_t f );
+extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+extern int  trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize );
+extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
+extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
 
 // big ugly global buffer for use with buffered printing of long outputs
 static char g_bfb[ 32000 ];
