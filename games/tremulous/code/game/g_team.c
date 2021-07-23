@@ -24,6 +24,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_inPVS trap_InPVS
+
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern qboolean trap_InPVS( const vec3_t p1, const vec3_t p2 );
+
 /*
 ================
 G_TeamFromString

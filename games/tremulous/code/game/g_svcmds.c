@@ -33,12 +33,18 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define Cmd_RemoveCommand(x) 
 #define Cvar_SetSafe trap_Cvar_Set
 #define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+#define SV_GameDropClient trap_DropClient
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_GetUserinfo trap_GetUserinfo
 
+extern void trap_GetUserinfo( int num, char *buffer, int bufferSize );
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
 extern int  trap_Argc( void );
 extern void trap_Argv( int n, char *buffer, int bufferLength );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
 extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+extern void trap_DropClient( int clientNum, const char *reason );
+extern void trap_SendServerCommand( int clientNum, const char *text );
 
 
 /*

@@ -26,7 +26,16 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #define SV_AdjustAreaPortalState trap_AdjustAreaPortalState
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_LinkEntity trap_LinkEntity
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
+#define SV_SetBrushModel trap_SetBrushModel
 
+extern void trap_SetBrushModel( gentity_t *ent, const char *name );
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern void trap_LinkEntity( gentity_t *ent );
 extern void trap_AdjustAreaPortalState( gentity_t *ent, qboolean open );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
 

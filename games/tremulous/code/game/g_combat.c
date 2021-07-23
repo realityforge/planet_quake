@@ -30,6 +30,7 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_FOpenFileByMode trap_FS_FOpenFile
 #define FS_Read2 trap_FS_Read
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_LinkEntity trap_LinkEntity
 
 extern void trap_Cvar_Set( const char *var_name, const char *value );
 extern void trap_Cvar_Update( vmCvar_t *cvar );
@@ -37,6 +38,7 @@ extern void trap_FS_FCloseFile( fileHandle_t f );
 extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
 extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern void trap_LinkEntity( gentity_t *ent );
 
 damageRegion_t  g_damageRegions[ PCL_NUM_CLASSES ][ MAX_DAMAGE_REGIONS ];
 int             g_numDamageRegions[ PCL_NUM_CLASSES ];

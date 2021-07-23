@@ -25,8 +25,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #include "g_local.h"
 
 #define Cvar_SetSafe trap_Cvar_Set
+#define SV_GetEntityToken trap_GetEntityToken
+#define SV_SetConfigstring trap_SetConfigstring
 
+extern void trap_SetConfigstring( int num, const char *string );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
+extern qboolean trap_GetEntityToken( char *buffer, int bufferSize );
 
 qboolean G_SpawnString( const char *key, const char *defaultString, char **out )
 {

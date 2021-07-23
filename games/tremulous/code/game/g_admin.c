@@ -48,7 +48,18 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_GetFilteredFiles trap_FS_GetFilteredFiles
 #define FS_Read2 trap_FS_Read
 #define FS_Write trap_FS_Write
+#define SV_GameDropClient trap_DropClient
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_LinkEntity trap_LinkEntity
+#define SV_GetUserinfo trap_GetUserinfo
+#define SV_SetUserinfo trap_SetUserinfo
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
 
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_SetUserinfo( int num, const char *buffer );
+extern void trap_GetUserinfo( int num, char *buffer, int bufferSize );
 extern int  trap_Argc( void );
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
 extern void trap_Argv( int n, char *buffer, int bufferLength );
@@ -62,6 +73,10 @@ extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode
 extern int  trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize );
 extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
 extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
+extern void trap_DropClient( int clientNum, const char *reason );
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_LinkEntity( gentity_t *ent );
 
 // big ugly global buffer for use with buffered printing of long outputs
 static char g_bfb[ 32000 ];

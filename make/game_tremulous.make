@@ -168,7 +168,8 @@ QAOBJ_ += $(B)/$(MOD)/game/bg_alloc.o \
 					$(B)/$(MOD)/game/bg_game_modes.o \
 					$(B)/$(MOD)/game/bg_voice.o \
           $(B)/$(MOD)/game/q_math.o \
-          $(B)/$(MOD)/game/q_shared.o
+          $(B)/$(MOD)/game/q_shared.o \
+					$(B)/$(MOD)/game/snapvector.o
 
 QAOBJ   = $(QAOBJ_) # $(B)/$(MOD)/game/g_syscalls.o
 
@@ -261,6 +262,9 @@ $(B)/$(MOD)/cgame/q_%.o: $(QADIR)/q_%.c
 	$(DO_CGAME_CC)
 
 $(B)/$(MOD)/cgame/%.o: $(CGDIR)/%.c
+	$(DO_CGAME_CC)
+
+$(B)/$(MOD)/game/snapvector.o: $(QASMD)/snapvector.c
 	$(DO_CGAME_CC)
 
 $(B)/$(MOD)/game/%.o: $(QCOMM)/%.c

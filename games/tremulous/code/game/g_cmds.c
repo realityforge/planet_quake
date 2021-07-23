@@ -32,7 +32,14 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_GetFileList trap_FS_GetFileList
 #define FS_Read2 trap_FS_Read
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_LinkEntity trap_LinkEntity
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
 
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_SetConfigstring( int num, const char *string );
 extern int  trap_Argc( void );
 extern void trap_Argv( int n, char *buffer, int bufferLength );
 extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
@@ -41,6 +48,8 @@ extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode
 extern int  trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
 extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_LinkEntity( gentity_t *ent );
 
 /*
 ==================

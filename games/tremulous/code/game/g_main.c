@@ -36,7 +36,27 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_FOpenFileByMode trap_FS_FOpenFile
 #define FS_Write trap_FS_Write
 #define SV_AreaEntities trap_SV_AreaEntities
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_GetConfigstring trap_GetConfigstring
+#define SV_LinkEntity trap_LinkEntity
+#define SV_PointContents trap_PointContents
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_Trace trap_SV_Trace
+#define Sys_Milliseconds trap_Milliseconds
+#define SV_LocateGameData trap_LocateGameData
+#define SV_GetServerinfo trap_GetServerinfo
 
+extern void trap_GetServerinfo( char *buffer, int bufferSize );
+extern void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
+                          playerState_t *clients, int sizeofGClient );
+extern int  trap_Milliseconds( void );
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_SV_Trace( trace_t *results, const vec3_t start, vec3_t mins, 
+                vec3_t maxs, const vec3_t end, int passEntityNum, qboolean clip_against_missiles, const content_mask_t content_mask, traceType_t type );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern int  trap_PointContents( const vec3_t point, int passEntityNum );
 extern int  trap_Argc( void );
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
 extern int  trap_RealTime( qtime_t *qtime );
@@ -51,6 +71,10 @@ extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
 extern int  trap_SV_AreaEntities( const vec3_t mins, const vec3_t maxs, const content_mask_t *bs, int *list, int maxcount );
 #define trap_SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(z, y, w, v)
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_GetConfigstring( int num, char *buffer, int bufferSize );
+extern void trap_LinkEntity( gentity_t *ent );
 
 level_locals_t  level;
 

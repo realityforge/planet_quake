@@ -24,6 +24,15 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_LinkEntity trap_LinkEntity
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_SetBrushModel trap_SetBrushModel
+
+extern void trap_SetBrushModel( gentity_t *ent, const char *name );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern void trap_LinkEntity( gentity_t *ent );
+
+
 qboolean g_trigger_success;
 
 void InitTrigger( gentity_t *self )

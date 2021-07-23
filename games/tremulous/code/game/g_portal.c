@@ -23,6 +23,18 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_LinkEntity trap_LinkEntity
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
+
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_LinkEntity( gentity_t *ent );
+
+
 #define PORTAL_MINRANGE 20.0f
 #define PORTAL_MAXRANGE 100.0f
 #define PORTAL_OFFSET sqrt( (PORTALGUN_SIZE * PORTALGUN_SIZE) + (PORTALGUN_SIZE * PORTALGUN_SIZE) )

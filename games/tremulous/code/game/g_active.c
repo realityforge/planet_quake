@@ -26,9 +26,22 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #define Cvar_SetSafe trap_Cvar_Set
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_LinkEntity trap_LinkEntity
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
+#define SV_GetUsercmd trap_GetUsercmd
+#define SV_EntityContact(a, b, c, _) trap_EntityContact(a, b, c)
 
+extern qboolean trap_EntityContact( const vec3_t mins, const vec3_t maxs, const gentity_t *ent );
+extern void trap_GetUsercmd( int clientNum, usercmd_t *cmd );
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_UnlinkEntity( gentity_t *ent );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_LinkEntity( gentity_t *ent );
 
 /*
 ===============

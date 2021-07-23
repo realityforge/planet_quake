@@ -28,9 +28,25 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #define SV_AdjustAreaPortalState trap_AdjustAreaPortalState
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_GetConfigstring trap_GetConfigstring
+#define SV_LinkEntity trap_LinkEntity
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
+#define SV_LocateGameData trap_LocateGameData
 
+extern void trap_LocateGameData( gentity_t *gEnts, int numGEntities, int sizeofGEntity_t,
+                          playerState_t *clients, int sizeofGClient );
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern void trap_LinkEntity( gentity_t *ent );
 extern void trap_AdjustAreaPortalState( gentity_t *ent, qboolean open );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_GetConfigstring( int num, char *buffer, int bufferSize );
 
 typedef struct
 {

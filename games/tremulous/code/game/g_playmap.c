@@ -35,6 +35,7 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_FOpenFileByMode trap_FS_FOpenFile
 #define FS_Read2 trap_FS_Read
 #define FS_Write trap_FS_Write
+#define SV_GameSendServerCommand trap_SendServerCommand
 
 extern void	trap_SendConsoleCommand( int exec_when, const char *text );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
@@ -43,6 +44,7 @@ extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode
 extern int  trap_FS_GetFilteredFiles( const char *path, const char *extension, const char *filter, char *listbuf, int bufsize );
 extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
 extern void trap_FS_Write( const void *buffer, int len, fileHandle_t f );
+extern void trap_SendServerCommand( int clientNum, const char *text );
 
 #if 0
 /*

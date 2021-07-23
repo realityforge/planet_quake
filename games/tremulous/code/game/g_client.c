@@ -30,13 +30,31 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define FS_FOpenFileByMode trap_FS_FOpenFile
 #define FS_Read2 trap_FS_Read
 #define SV_AreaEntities(x, y, z, w, v) trap_EntitiesInBox(x, y, w, v)
+#define SV_GameDropClient trap_DropClient
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_LinkEntity trap_LinkEntity
+#define SV_GetUserinfo trap_GetUserinfo
+#define SV_SetConfigstring trap_SetConfigstring
+#define SV_PointContents trap_PointContents
+#define SV_UnlinkEntity trap_UnlinkEntity
+#define SV_SetUserinfo trap_SetUserinfo
+#define SV_GetUsercmd trap_GetUsercmd
 
+extern void trap_GetUsercmd( int clientNum, usercmd_t *cmd );
+extern void trap_SetUserinfo( int num, const char *buffer );
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern int  trap_PointContents( const vec3_t point, int passEntityNum );
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_GetUserinfo( int num, char *buffer, int bufferSize );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
 extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
 extern void trap_FS_FCloseFile( fileHandle_t f );
 extern int  trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
 extern void trap_FS_Read( void *buffer, int len, fileHandle_t f );
 extern int  trap_EntitiesInBox( const vec3_t mins, const vec3_t maxs, int *list, int maxcount );
+extern void trap_DropClient( int clientNum, const char *reason );
+extern void trap_SendServerCommand( int clientNum, const char *text );
+extern void trap_LinkEntity( gentity_t *ent );
 
 // g_client.c -- client functions that don't happen every frame
 

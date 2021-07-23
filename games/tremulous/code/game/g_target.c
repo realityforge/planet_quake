@@ -25,8 +25,14 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #include "g_local.h"
 
 #define Cvar_VariableIntegerValue trap_Cvar_VariableIntegerValue
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_LinkEntity trap_LinkEntity
+#define SV_SetConfigstring trap_SetConfigstring
 
+extern void trap_SetConfigstring( int num, const char *string );
+extern void trap_LinkEntity( gentity_t *ent );
 extern int  trap_Cvar_VariableIntegerValue( const char *var_name );
+extern void trap_SendServerCommand( int clientNum, const char *text );
 
 //==========================================================
 

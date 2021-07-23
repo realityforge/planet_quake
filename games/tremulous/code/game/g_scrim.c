@@ -27,10 +27,14 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 #define Cvar_SetSafe trap_Cvar_Set
 #define Cvar_Update trap_Cvar_Update
 #define Cvar_VariableStringBuffer trap_Cvar_VariableStringBuffer
+#define SV_GameSendServerCommand trap_SendServerCommand
+#define SV_SetConfigstring trap_SetConfigstring
 
+extern void trap_SetConfigstring( int num, const char *string );
 extern void trap_Cvar_Set( const char *var_name, const char *value );
 extern void trap_Cvar_Update( vmCvar_t *cvar );
 extern void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+extern void trap_SendServerCommand( int clientNum, const char *text );
 
 /*
 ============

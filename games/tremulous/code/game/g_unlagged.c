@@ -24,6 +24,13 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_LinkEntity trap_LinkEntity
+#define SV_UnlinkEntity trap_UnlinkEntity
+
+extern void trap_UnlinkEntity( gentity_t *ent );
+extern void trap_LinkEntity( gentity_t *ent );
+
+
 #define MAX_UNLAGGED_HISTORY_WHEEL_FRAMES 64
 
 /*

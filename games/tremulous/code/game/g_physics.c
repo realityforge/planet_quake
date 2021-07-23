@@ -24,6 +24,16 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define SV_LinkEntity trap_LinkEntity
+#define SV_PointContents trap_PointContents
+#define SV_Trace(a, b, c, w, x, y, z, _1, _2) trap_Trace(a, b, c, w, x, y, z)
+
+extern void trap_Trace( trace_t *results, const vec3_t start, const vec3_t mins,
+                 const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask );
+extern int  trap_PointContents( const vec3_t point, int passEntityNum );
+extern void trap_LinkEntity( gentity_t *ent );
+
+
 /*
 ================
 G_GroundEntIsValid
