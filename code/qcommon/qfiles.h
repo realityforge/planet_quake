@@ -313,6 +313,8 @@ typedef struct {
 #define BSP2_VERSION       38
 #define BSP1_VERSION		   29
 #define BSPHL_VERSION		   30
+#define Q3_BSP_VERSION          46
+#define WOLF_BSP_VERSION        47
 
 
 // there shouldn't be any problem with increasing these values at the
@@ -381,6 +383,7 @@ typedef struct {
 #define	LUMP_LIGHTMAPS		14
 #define	LUMP_LIGHTGRID		15
 #define	LUMP_VISIBILITY		16
+#define	LUMP_LIGHTARRAY		17
 #define	HEADER_LUMPS		17
 #define	HEADER_LUMPS_OPENJK		18
 
@@ -460,7 +463,7 @@ typedef struct {
 	float		st[2];
 	float		lightmap[2];
 	vec3_t		normal;
-	byte		color[4];
+	color4ub_t	color;
 } drawVert_t;
 
 #define drawVert_t_cleared(x) drawVert_t (x) = {{0, 0, 0}, {0, 0}, {0, 0}, {0, 0, 0}, {0, 0, 0, 0}}
@@ -470,7 +473,8 @@ typedef enum {
 	MST_PLANAR,
 	MST_PATCH,
 	MST_TRIANGLE_SOUP,
-	MST_FLARE
+	MST_FLARE,
+	MST_FOLIAGE
 } mapSurfaceType_t;
 
 typedef struct {

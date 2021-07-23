@@ -20,10 +20,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifdef USE_DEMO_CLIENTS
+
 // sv_demo_ext.c -- Server side demo recording (supplementary functions)
 
-#include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
+#include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h" // needed so that the public declarations in server.h can access these functions (because server.h links to qcommon.h, so that it does server.h->qcommon.h->sv_demo_ext.c -- in the end, no includes redundancy conflicts and every server files can access these functions!)
+#include "../game/g_local.h" // get both the definitions of gentity_t (to get gentity_t->health field) AND sharedEntity_t, so that we can convert a sharedEntity_t into a gentity_t (see more details in SV_GentityUpdateHealthField() notes)
 
 //#include "server.h" // DO NOT DO THAT! if you include server.h directly, you won't be able to include g_local.h, and you're stuck!
 
@@ -85,3 +88,5 @@ void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player )
 
     return;
 }
+
+#endif

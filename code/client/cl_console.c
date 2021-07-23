@@ -30,10 +30,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define  CON_TEXTSIZE   65536
 
-int bigchar_width;
-int bigchar_height;
-int smallchar_width;
-int smallchar_height;
+int bigchar_width = BIGCHAR_WIDTH;
+int bigchar_height = BIGCHAR_HEIGHT;
+int smallchar_width = SMALLCHAR_WIDTH;
+int smallchar_height = SMALLCHAR_HEIGHT;
+
+#ifndef USE_NO_CONSOLE
 
 typedef struct {
 	qboolean	initialized;
@@ -130,7 +132,7 @@ Con_MessageMode3_f
 ================
 */
 static void Con_MessageMode3_f( void ) {
-	chat_playerNum = VM_Call( cgvms[cgvm], 0, CG_CROSSHAIR_PLAYER );
+	chat_playerNum = VM_Call( cgvm, 0, CG_CROSSHAIR_PLAYER );
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -148,7 +150,7 @@ Con_MessageMode4_f
 ================
 */
 static void Con_MessageMode4_f( void ) {
-	chat_playerNum = VM_Call( cgvms[cgvm], 0, CG_LAST_ATTACKER );
+	chat_playerNum = VM_Call( cgvm, 0, CG_LAST_ATTACKER );
 	if ( chat_playerNum < 0 || chat_playerNum >= MAX_CLIENTS ) {
 		chat_playerNum = -1;
 		return;
@@ -325,6 +327,8 @@ void Con_CheckResize( void )
 		con.linewidth = width;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 		con.vispage = vispage;
+    if(oldtotallines <= 0) oldtotallines = 1;
+    if(con.totallines <= 0) con.totallines = 1;
 
 		old_vispage = vispage;
 		old_width = width;
@@ -383,9 +387,7 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
-	Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
-	Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
@@ -651,6 +653,9 @@ void Con_DrawNotify( void )
 	int		skip;
 	int		currentColorIndex;
 	int		colorIndex;
+#ifdef USE_MULTIVM_CLIENT
+  int igs = clientGames[cgvmi];
+#endif
 
 	currentColorIndex = ColorIndex( COLOR_WHITE );
 	re.SetColor( g_color_table[ currentColorIndex ] );
@@ -668,7 +673,7 @@ void Con_DrawNotify( void )
 			continue;
 		text = con.text + (i % con.totallines)*con.linewidth;
 
-		if (cl.snap[cgvm].ps.pm_type != PM_INTERMISSION && Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
+		if (cl.snap.ps.pm_type != PM_INTERMISSION && Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
 			continue;
 		}
 
@@ -910,7 +915,7 @@ void Con_RunConsole( void )
 		con.finalFrac = 0.5;	// half screen
 	else
 		con.finalFrac = 0.0;	// none visible
-	
+
 	// scroll towards the destination height
 	if ( con.finalFrac < con.displayFrac )
 	{
@@ -969,7 +974,7 @@ void Con_Bottom( void )
 
 void Con_Close( void )
 {
-	if ( !com_cl_running->integer )
+	if ( !com_cl_running || !com_cl_running->integer )
 		return;
 
 	Field_Clear( &g_consoleField );
@@ -978,3 +983,5 @@ void Con_Close( void )
 	con.finalFrac = 0.0;			// none visible
 	con.displayFrac = 0.0;
 }
+
+#endif

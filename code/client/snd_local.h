@@ -173,12 +173,13 @@ void	SNDDMA_Submit(void);
 //====================================================================
 
 #define	MAX_CHANNELS			96
-#define MAX_NUM_SNDS      10
+#define MAX_NUM_SNDS      MAX_NUM_VMS
 
-extern	channel_t   s_channels[MAX_NUM_SNDS][MAX_CHANNELS];
-extern	channel_t   loop_channels[MAX_NUM_SNDS][MAX_CHANNELS];
-extern	int		numLoopChannels[MAX_NUM_SNDS];
+extern	channel_t   s_channels[MAX_CHANNELS];
+extern	channel_t   loop_channels[MAX_CHANNELS];
+extern	int		numLoopChannels;
 
+extern	int		s_soundtime;
 extern	int		s_paintedtime;
 extern	int		s_rawend;
 extern	vec3_t	listener_forward;
@@ -187,8 +188,9 @@ extern	vec3_t	listener_up;
 extern	dma_t	dma;
 
 #define	MAX_RAW_SAMPLES	16384
-extern	portable_samplepair_t	s_rawsamples[MAX_NUM_SNDS][MAX_RAW_SAMPLES];
+extern	portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
 
+extern cvar_t *s_debug;
 extern cvar_t *s_volume;
 extern cvar_t *s_musicVolume;
 extern cvar_t *s_doppler;
@@ -205,8 +207,6 @@ void		SND_setup( void );
 void		SND_shutdown( void );
 
 void S_PaintChannels(int endtime);
-
-void S_memoryLoad(sfx_t *sfx);
 
 // spatializes a channel
 void S_Spatialize(channel_t *ch);

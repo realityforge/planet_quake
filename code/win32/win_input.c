@@ -1152,18 +1152,9 @@ void IN_Init( void ) {
 	// mouse variables
 	in_mouse = Cvar_Get ("in_mouse", "1", CVAR_ARCHIVE |CVAR_LATCH );
 	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
-	Cvar_SetDescription( in_mouse,
-		"Mouse data input source:\n" \
-		"  0 - disable mouse input\n" \
-		"  1 - di/raw mouse\n" \
-		" -1 - win32 mouse" );
 		
 	in_nograb = Cvar_Get( "in_nograb", "0", 0 );
 	in_lagged = Cvar_Get( "in_lagged", "0", 0 );
-	Cvar_SetDescription( in_lagged, 
-		"Mouse movement processing order:\n" \
-		" 0 - before rendering\n" \
-		" 1 - before framerate limiter" );
 
 	in_logitechbug = Cvar_Get( "in_logitechbug", "0", CVAR_ARCHIVE_ND );
 

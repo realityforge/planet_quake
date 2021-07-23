@@ -35,14 +35,24 @@ cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
 
-float clientWorlds[MAX_NUM_VMS][4] = {
-	{0,0,0,0},{-1,-1,-1,-1},
+float clientScreens[MAX_NUM_VMS][4] = {
+	{0,0,0,0}
+#ifdef USE_MULTIVM_CLIENT
+	,{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1},
 	{-1,-1,-1,-1},{-1,-1,-1,-1}
+#endif
 };
 
+#ifdef USE_MULTIVM_CLIENT
+refdef_t views[MAX_NUM_VMS];
+qboolean viewsUpdated[MAX_NUM_VMS] = {
+  qtrue, qtrue, qtrue, qtrue, qtrue,
+  qtrue, qtrue, qtrue, qtrue, qtrue
+};
+#endif
 /*
 ================
 SCR_DrawNamedPic
@@ -498,15 +508,10 @@ SCR_Init
 */
 void SCR_Init( void ) {
 	cl_timegraph = Cvar_Get ("timegraph", "0", CVAR_CHEAT);
-	Cvar_SetDescription(cl_timegraph, "Display the time graph\nDefault: 0");
 	cl_debuggraph = Cvar_Get ("debuggraph", "0", CVAR_CHEAT);
-	Cvar_SetDescription(cl_debuggraph, "Display the debug graph\nDefault: 0");
 	cl_graphheight = Cvar_Get ("graphheight", "32", CVAR_CHEAT);
-	Cvar_SetDescription(cl_graphheight, "Set the height of the graph\nDefault: 32");
 	cl_graphscale = Cvar_Get ("graphscale", "1", CVAR_CHEAT);
-	Cvar_SetDescription(cl_graphscale, "Set the scale of the size\nDefault: 1");
 	cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
-	Cvar_SetDescription(cl_graphshift, "Set the shift of the graph\nDefault: 0");
 
 	scr_initialized = qtrue;
 }
@@ -580,8 +585,8 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	re.BeginFrame( stereoFrame );
 
-	if(uivms[uivm]) {
-		uiFullscreen = (uivms[uivm] && VM_Call( uivms[uivm], 0, UI_IS_FULLSCREEN ));
+	if(uivm) {
+		uiFullscreen = (uivm && VM_Call( uivm, 0, UI_IS_FULLSCREEN ));
 	}
 
 	// wide aspect ratio screens need to have the sides cleared
@@ -607,26 +612,26 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 		case CA_DISCONNECTED:
 			// force menu up
 			S_StopAllSounds();
-			if( uivms[uivm] )
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			if( uivm )
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:
 		case CA_CONNECTED:
 			// connecting clients will only show the connection dialog
 			// refresh to update the time
-			if( uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qfalse );
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qfalse );
 			}
 			break;
 		case CA_LOADING:
 		case CA_PRIMED:
 			// draw the game information screen and loading progress
-			if(cgvms[cgvm]
-#ifdef EMSCRIPTEN
+			if(cgvm
+#ifdef USE_ASYNCHRONOUS
 				// skip drawing until VM is ready
-				&& !VM_IsSuspended(cgvms[cgvm])
+				&& !VM_IsSuspended( cgvm )
 #endif
 			) {
 				CL_CGameRendering( stereoFrame );
@@ -634,17 +639,17 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 			// also draw the connection information, so it doesn't
 			// flash away too briefly on local or lan games
 			// refresh to update the time
-			if( uivms[uivm] ) {
-				VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-				VM_Call( uivms[uivm], 1, UI_DRAW_CONNECT_SCREEN, qtrue );
+			if( uivm ) {
+				VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+				VM_Call( uivm, 1, UI_DRAW_CONNECT_SCREEN, qtrue );
 			}
 			break;
 		case CA_ACTIVE:
 			// always supply STEREO_CENTER as vieworg offset is now done by the engine.
-			if( cgvms[cgvm] 
-#ifdef EMSCRIPTEN
+			if( cgvm
+#ifdef USE_ASYNCHRONOUS
 				// skip drawing until VM is ready
-				&& !VM_IsSuspended(cgvms[cgvm])
+				&& !VM_IsSuspended( cgvm )
 #endif
 			) {
 				CL_CGameRendering( stereoFrame );
@@ -658,6 +663,30 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 	}
 
 }
+
+
+#ifdef USE_MULTIVM_CLIENT
+// draw a box around the current view where keypresses and mouse input is being sent
+void SCR_DrawCurrentView( void ) {
+	float	yf, wf;
+	float xadjust = 0;
+	wf = SCREEN_WIDTH;
+	yf = SCREEN_HEIGHT;
+	SCR_AdjustFrom640( &xadjust, &yf, &wf, NULL );
+	re.SetColor( g_color_table[ ColorIndex( COLOR_RED ) ] );
+	
+	// TODO: duh re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+	// TODO: draw a box around the edge of the screen but SetDvrFrame right before so its just the edge of the box
+  // top
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// right
+	re.DrawStretchPic( clientScreens[cgvmi][2] * wf - 2, 0, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader );
+	// bottom 
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][3] * yf - 2, clientScreens[cgvmi][2] * wf, 2, 0, 0, 1, 1, cls.whiteShader );
+	// left
+	re.DrawStretchPic( clientScreens[cgvmi][0] * wf, clientScreens[cgvmi][1] * yf, 2, clientScreens[cgvmi][3] * yf, 0, 0, 1, 1, cls.whiteShader);
+}
+#endif
 
 
 /*
@@ -677,8 +706,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	if ( !scr_initialized )
 		return; // not initialized yet
 
-	int ms = Sys_Milliseconds();
 	if ( framecount == cls.framecount ) {
+	int ms = Sys_Milliseconds();
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
 		} else {
@@ -699,7 +728,11 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 
 	if(fromVM) {
-		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
+#ifdef USE_LAZY_MEMORY
+#ifdef USE_MULTIVM_CLIENT
+		re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+#endif
+#endif
 
 		// don't switch renderer or clipmap when updated from VM
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -708,25 +741,40 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
-		
+
+#ifdef USE_RMLUI
+    if(cls.rmlStarted)
+      CL_UIContextRender();
+#endif
+
 		goto donewithupdate;
 	}
 
 	for(i = 0; i < MAX_NUM_VMS; i++) {
-		cgvm = i;
-		uivm = i;
+#ifdef USE_MULTIVM_CLIENT
+    cgvmi = i;
+		uivmi = i;
+#endif
 		
 		// if we just switched from a VM, skip it for a few frames so it never times out
 		// otherwise there is a time going backwards error
-		//if(cgvm != clc.currentView) { // && ms - cls.lastVidRestart <= 5) {
+		//if(ms - cls.lastVidRestart <= 5) {
 		//	continue;
 		//}
 		
-		if(!cgvms[cgvm] && !uivms[uivm]) continue;
+		if(!cgvm && !uivm) continue;
 
-		re.SetDvrFrame(clientWorlds[cgvm][0], clientWorlds[cgvm][1], clientWorlds[cgvm][2], clientWorlds[cgvm][3]);
-		CM_SwitchMap(clientMaps[cgvm]);
-		re.SwitchWorld(clientMaps[cgvm]);
+#ifdef USE_MULTIVM_CLIENT
+		CM_SwitchMap(clientMaps[cgvmi]);
+#ifdef USE_LAZY_MEMORY
+    if(!re.SwitchWorld) {
+      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
+    } else {
+  		re.SwitchWorld(clientMaps[cgvmi]);
+      re.SetDvrFrame(clientScreens[cgvmi][0], clientScreens[cgvmi][1], clientScreens[cgvmi][2], clientScreens[cgvmi][3]);
+    }
+#endif
+#endif
 
 		// if running in stereo, we need to draw the frame twice
 		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
@@ -735,35 +783,104 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 		} else {
 			SCR_DrawScreenField( STEREO_CENTER );
 		}
+		
+		// the menu draws next
+		if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
+			VM_Call( uivm, 1, UI_REFRESH, cls.realtime );
+		}
+
+#ifdef USE_RMLUI
+    if(cls.rmlStarted)
+      CL_UIContextRender();
+#endif
 	}
 
-	cgvm = 0;
-	uivm = 0;
+#ifdef USE_MULTIVM_CLIENT
+  cgvmi = 0;
+	uivmi = 0;
+  CM_SwitchMap(clientMaps[cgvmi]);
+#ifdef USE_LAZY_MEMORY
+  re.SwitchWorld(clientMaps[cgvmi]);
+  re.SetDvrFrame(0, 0, 1, 1);
+#endif
+#endif
 
-	re.SetDvrFrame(0, 0, 1, 1);
+#ifdef USE_MULTIVM_CLIENT
+#ifdef USE_LAZY_MEMORY
+  for(i = 0; i < MAX_NUM_VMS; i++) {
+    if(cgvmWorlds[i]) continue; // already drew, looking for worlds to draw, not games
+    if(clientWorlds[i] == -1) continue;
+    if(!re.SwitchWorld) {
+      Com_Error(ERR_FATAL, "WARNING: Renderer compiled without multiworld support!");
+    } else {
+      re.BeginFrame( STEREO_CENTER );
+  		re.SwitchWorld(clientMaps[i]);
+      //re.SetDvrFrame(clientScreens[i][0], clientScreens[i][1], clientScreens[i][2], clientScreens[i][3]);
+      /* q3dm0
+      views[i].vieworg[0] = -1148;
+      views[i].vieworg[1] = -974;
+      views[i].vieworg[2] = 50;
+      */
+      int prevLock = Cvar_VariableIntegerValue("r_lockpvs");
+      if(!viewsUpdated[i]) {
+        Cvar_Set("r_lockpvs", "1");
+      }
+      // 480 -352 88
+      views[i].vieworg[0] = 0;
+      views[i].vieworg[1] = 0;
+      views[i].vieworg[2] = 0;
+      /*
+      */
+      /*
+      views[i].vieworg[0] = 480;
+      views[i].vieworg[1] = -352;
+      views[i].vieworg[2] = 108;
+      */
+      views[i].viewaxis[0][1] = -1;
+      views[i].viewaxis[1][0] = 1;
+      views[i].viewaxis[2][2] = 1;
+      views[i].fov_x = 100;
+    	views[i].fov_y = 78;
+    	views[i].x = 0;
+    	views[i].y = 0;
+    	views[i].width = cls.glconfig.vidWidth;
+    	views[i].height = cls.glconfig.vidHeight;
+    	views[i].time = Sys_Milliseconds();
+      re.RenderScene(&views[i]);
+      if(viewsUpdated[i]) {
+        viewsUpdated[i] = qfalse;
+      }
+      Cvar_Set("r_lockpvs", va("%i", prevLock));
+    }
+  }
+#endif
+#endif
+
+donewithupdate:
 
 #ifdef USE_LNBITS
-	if((cl.snap[cgvm].ps.pm_type == PM_INTERMISSION
+	int igs = clientGames[cgvmi];
+	if((cl.snap.ps.pm_type == PM_INTERMISSION
 		|| (cls.state == CA_CONNECTING || cls.state == CA_CHALLENGING))
 		&& cl_lnInvoice->string[0]) {
 		SCR_DrawQRCode();
 	}
 #endif
-	
-	// the menu draws next
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
-		VM_Call( uivms[uivm], 1, UI_REFRESH, cls.realtime );
-	}
 
+#ifdef USE_MULTIVM_CLIENT
+	if(cl_mvHighlight && cl_mvHighlight->integer)
+	 SCR_DrawCurrentView();
+#endif
+
+#ifndef USE_NO_CONSOLE
 	// console draws next
 	Con_DrawConsole ();
+#endif
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
 		SCR_DrawDebugGraph ();
 	}
-
-donewithupdate:
 
 	if ( com_speeds->integer ) {
 		re.EndFrame( &time_frontend, &time_backend );

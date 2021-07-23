@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/45/trunk/base/botfiles
+END
+rnd.c
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/45/trunk/base/botfiles/rnd.c
+END
+chars.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/45/trunk/base/botfiles/chars.h
+END
+fuzw.c
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/45/trunk/base/botfiles/fuzw.c
+END
+match.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/45/trunk/base/botfiles/match.c
+END
+weapons.c
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/45/trunk/base/botfiles/weapons.c
+END
+fuzi.c
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/45/trunk/base/botfiles/fuzi.c
+END
+syn.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/45/trunk/base/botfiles/syn.h
+END
+teamplay.h
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/45/trunk/base/botfiles/teamplay.h
+END
+inv.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/45/trunk/base/botfiles/inv.h
+END
+rchat.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/45/trunk/base/botfiles/rchat.c
+END
+items.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/45/trunk/base/botfiles/items.c
+END
+match.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/45/trunk/base/botfiles/match.h
+END

@@ -45,12 +45,10 @@ A normal server packet will look like:
 =============================================================================
 */
 
-#ifdef USE_REFEREE_CMDS
+#ifdef USE_RECENT_EVENTS
 // probably will never have more than 1024 client connected?
-static int numConnected = 0;
-static byte numScored[128];
-static byte numDied[128];
-static int lastReset = 0; // debounce events
+byte numDied[128];
+static byte numWeapon[1024];
 #endif
 
 /*
@@ -104,7 +102,7 @@ static void SV_EmitPacketEntities( const clientSnapshot_t *from, const clientSna
 
 		if ( newnum < oldnum ) {
 			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &sv.svEntities[gvm][newnum].baseline, newent, qtrue );
+			MSG_WriteDeltaEntity (msg, &sv.svEntities[newnum].baseline, newent, qtrue );
 			newindex++;
 			continue;
 		}
@@ -126,17 +124,18 @@ static void SV_EmitPacketEntities( const clientSnapshot_t *from, const clientSna
 SV_WriteSnapshotToClient
 ==================
 */
-static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
-	clientSnapshot_t	*oldframe;
-	clientSnapshot_t	*frame;
+static void SV_WriteSnapshotToClient( const client_t *client, msg_t *msg ) {
+	const clientSnapshot_t	*oldframe;
+	const clientSnapshot_t	*frame;
 	int					lastframe;
 	int					i;
 	int					snapFlags;
 
 	// this is the snapshot we are creating
-	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
-#ifdef USE_MULTIVM
-	frame->world = gvm;
+#ifdef USE_MULTIVM_SERVER
+  frame = &client->frames[gvmi][ client->netchan.outgoingSequence & PACKET_MASK ];
+#else
+  frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
 #endif
 
 	// try to use a previous frame as the source for delta compressing the snapshot
@@ -152,21 +151,31 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		lastframe = 0;
 	} else {
 		// we have a valid snapshot to delta from
-		oldframe = &client->frames[gvm][ client->deltaMessage & PACKET_MASK ];
+#ifdef USE_MULTIVM_SERVER
+		oldframe = &client->frames[gvmi][ client->deltaMessage & PACKET_MASK ];
+#else
+    oldframe = &client->frames[ client->deltaMessage & PACKET_MASK ];
+#endif
 		lastframe = client->netchan.outgoingSequence - client->deltaMessage;
 		// we may refer on outdated frame
 		if ( svs.lastValidFrame > oldframe->frameNum ) {
+#ifdef USE_MULTIVM_SERVER
+      Com_DPrintf( "%s: Delta request from out of date frame. (%i)\n", client->name, gvmi );
+#else
 			Com_DPrintf( "%s: Delta request from out of date frame.\n", client->name );
+#endif
 			oldframe = NULL;
 			lastframe = 0;
-		}
 #ifdef USE_MV
-		else if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
+		} else if ( frame->multiview && oldframe->first_psf <= svs.nextSnapshotPSF - svs.numSnapshotPSF ) {
 			Com_DPrintf( "%s: Delta request from out of date playerstate.\n", client->name );
 			oldframe = NULL;
 			lastframe = 0;
-		}
+		} else if ( frame->multiview && oldframe->version != MV_PROTOCOL_VERSION ) {
+			oldframe = NULL;
+			lastframe = 0;
 #endif
+		}
 	}
 
 #ifdef USE_MV
@@ -209,11 +218,8 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 
 #ifdef USE_MV
 	if ( frame->multiview ) {
-		int newmask;
 		int oldmask;
 		int	oldversion;
-
-		frame->version = MV_PROTOCOL_VERSION;
 
 		if ( !oldframe || !oldframe->multiview ) {
 			oldversion = 0;
@@ -230,29 +236,25 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
-#ifdef USE_MULTIVM
-		MSG_WriteByte( msg, gvm );
+#ifdef USE_MULTIVM_SERVER
+		MSG_WriteByte( msg, gvmi );
 #endif
-		
-		newmask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
 
 		// emit skip-merge mask
-		if ( oldmask != newmask ) {
+		if ( oldmask != frame->mergeMask ) {
 			MSG_WriteBits( msg, 1, 1 );
-			MSG_WriteBits( msg, newmask, SM_BITS );
+			MSG_WriteBits( msg, frame->mergeMask, SM_BITS );
 		} else {
 			MSG_WriteBits( msg, 0, 1 );
 		}
 
-		frame->mergeMask = newmask;
-
-		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, newmask );
-		MSG_entMergeMask = newmask; // emit packet entities with skipmask
+		SV_EmitPlayerStates( client - svs.clients, oldframe, frame, msg, frame->mergeMask );
+		MSG_entMergeMask = frame->mergeMask; // emit packet entities with skipmask
 		SV_EmitPacketEntities( oldframe, frame, msg );
 		MSG_entMergeMask = 0; // don't forget to reset that! 
 	} else {
 #endif
-
+;
 	// send over the areabits
 	MSG_WriteByte (msg, frame->areabytes);
 	MSG_WriteData (msg, frame->areabits, frame->areabytes);
@@ -278,6 +280,11 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	SV_EmitPacketEntities( oldframe, frame, msg );
 #ifdef USE_MV
 	} // !client->MVProtocol
+#ifdef USE_MULTIVM_SERVER
+	gvmi = 0;
+	CM_SwitchMap(gameWorlds[gvmi]);
+	SV_SetAASgvm(gvmi);
+#endif
 #endif
 
 	// padding for rate debugging
@@ -287,6 +294,7 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 		}
 	}
 }
+
 
 
 /*
@@ -484,8 +492,8 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 
 	clientpvs = CM_ClusterPVS (clientcluster);
 
-	for ( e = 0 ; e < svs.currFrame[gvm]->count; e++ ) {
-		es = svs.currFrame[gvm]->ents[ e ];
+	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
+		es = svs.currFrame->ents[ e ];
 		ent = SV_GentityNum( es->number );
 
 		// entities can be flagged to be sent to only one client
@@ -508,7 +516,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientPVS_t *pv
 				continue;
 		}
 
-		svEnt = &sv.svEntities[gvm][ es->number ];
+		svEnt = &sv.svEntities[ es->number ];
 
 		// don't double add an entity through portals
 		if ( svEnt->snapshotCounter == sv.snapshotCounter ) {
@@ -604,7 +612,11 @@ void SV_InitSnapshotStorage( void )
 	svs.currentSnapshotFrame = 0;
 	svs.lastValidFrame = 0;
 
-	Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
+#ifdef USE_MULTIVM_SERVER
+  Com_Memset(svs.currFrameWorlds, 0, sizeof(svs.currFrameWorlds));
+#else
+  svs.currFrame = NULL;
+#endif
 
 	Com_Memset( client_pvs, 0, sizeof( client_pvs ) );
 }
@@ -619,7 +631,12 @@ This should be called before any new client snaphot built
 */
 void SV_IssueNewSnapshot( void ) 
 {
-	Com_Memset(svs.currFrame, 0, sizeof(svs.currFrame));
+#ifdef USE_MULTIVM_SERVER
+  // do the entire frame because this is called only once, then checked is its zero when updating
+  Com_Memset(svs.currFrameWorlds, 0, sizeof(svs.currFrameWorlds));
+#else
+  svs.currFrame = NULL;
+#endif
 	
 	// value that clients can use even for their empty frames
 	// as it will not increment on new snapshot built
@@ -651,7 +668,11 @@ static void SV_BuildCommonSnapshot( void )
 
 	// gather all linked entities
 	if ( sv.state != SS_DEAD ) {
-		for ( num = 0 ; num < sv.num_entities[gvm] ; num++ ) {
+#ifdef USE_MULTIVM_SERVER
+		for ( num = 0 ; num < sv.num_entitiesWorlds[gvmi] ; num++ ) {
+#else
+    for ( num = 0 ; num < sv.num_entities ; num++ ) {
+#endif
 			ent = SV_GentityNum( num );
 
 			// never send entities that aren't linked in
@@ -660,7 +681,10 @@ static void SV_BuildCommonSnapshot( void )
 			}
 	
 			if ( ent->s.number != num
-				&& !(sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK) ) {
+#ifdef USE_DEMO_SERVER
+				&& !(sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGPLAYBACK) 
+#endif
+      ) {
 				Com_DPrintf( "FIXING ENT->S.NUMBER %i => %i\n", ent->s.number, num );
 				ent->s.number = num;
 			}
@@ -669,38 +693,53 @@ static void SV_BuildCommonSnapshot( void )
 			if ( ent->r.svFlags & SVF_NOCLIENT ) {
 				continue;
 			}
-			
+
 #ifdef USE_RECENT_EVENTS
 			if(ent->s.clientNum < sv_maxclients->integer
 				&& svs.clients[ent->s.clientNum].state == CS_ACTIVE
 			//	&& svs.clients[ent->s.clientNum].netchan.remoteAddress.type != NA_BOT 
 			) {
-//if(ent->s.event > 0)
-//Com_Printf("event: %i\n", ent->s.event & ~EV_EVENT_BITS);
-				if(ent->s.eType == ET_PLAYER
-					&& (ent->s.event & ~EV_EVENT_BITS) == EV_DEATH1
-					&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))) {
-					char player[1024];
-					int playerLength;
-					client_t *c1 = &svs.clients[ent->s.clientNum];
-					playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
-					client_t *c2 = &svs.clients[ent->s.eventParm];
-					playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
-					playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
-						ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
-						ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
-					numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+
+				if(ent->s.eType == ET_PLAYER && ent->s.event & EV_EVENT_BITS) {
+					int event = (ent->s.event & ~EV_EVENT_BITS);
+
+//					if(event > 1) // footsteps and none
+//						Com_Printf("event: %i %i\n", event, ent->s.clientNum);
+					if(event >= EV_DEATH1 && event <= EV_DEATH3
+						&& !(numDied[ent->s.clientNum / 8] & (1 << (ent->s.clientNum % 8)))
+					) {
+						char player[1024];
+						int playerLength;
+						client_t *c1 = &svs.clients[ent->s.clientNum];
+						playerState_t *ps1 = SV_GameClientNum( ent->s.clientNum );
+						if(ent->s.eventParm == 1022) {
+							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"]]", 
+								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name);			
+						} else {
+							client_t *c2 = &svs.clients[ent->s.eventParm];
+							playerState_t *ps2 = SV_GameClientNum( ent->s.eventParm );
+							playerLength = Com_sprintf( player, sizeof( player ), "[[%i,%i,\"%s\"],[%i,%i,\"%s\"]]", 
+								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
+								ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
+						}
+						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+						numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
+					}
 				}
+
 				if(ent->s.eType == ET_PLAYER
 					&& (ent->s.event & ~EV_EVENT_BITS) == EV_CHANGE_WEAPON) {
 					char weapon[1024];
 					playerState_t *ps = SV_GameClientNum( ent->s.clientNum );
-					client_t *c = &svs.clients[ent->s.clientNum];
-					memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
+					// debounce weapon change event
+					if(numWeapon[ent->s.clientNum] != ps->weapon) {
+						numWeapon[ent->s.clientNum] = ps->weapon;
+						client_t *c = &svs.clients[ent->s.clientNum];
+						memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
+						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
+						if(recentI == 1024) recentI = 0;
+					}
 				}
 				if(ent->s.eType == ET_PLAYER
 					&& (ent->s.eType & (EF_AWARD_EXCELLENT | EF_AWARD_GAUNTLET
@@ -715,7 +754,7 @@ static void SV_BuildCommonSnapshot( void )
 #endif
 
 			list[ count++ ] = ent;
-			sv.svEntities[gvm][ num ].snapshotCounter = -1;
+			sv.svEntities[ num ].snapshotCounter = -1;
 		}
 	}
 
@@ -755,7 +794,7 @@ static void SV_BuildCommonSnapshot( void )
 	sf->frameNum = svs.snapshotFrame;
 	svs.snapshotFrame++;
 
-	svs.currFrame[gvm] = sf; // clients can refer to this
+	svs.currFrame = sf; // clients can refer to this
 
 	// setup start index
 	index = sf->start;
@@ -789,7 +828,7 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 
 		// never send client's own entity, because it can
 		// be regenerated from the playerstate
-		svEnt = &sv.svEntities[gvm][ ps->clientNum ];
+		svEnt = &sv.svEntities[ ps->clientNum ];
 		svEnt->snapshotCounter = sv.snapshotCounter;
 
 		// add all the entities directly visible to the eye, which
@@ -822,7 +861,7 @@ static clientPVS_t *SV_BuildClientPVS( int clientSlot, const playerState_t *ps, 
 		pvs->entMaskBuilt = qtrue;
 		memset( pvs->entMask, 0, sizeof ( pvs->entMask ) );
 		for ( i = 0; i < pvs->numbers.numSnapshotEntities ; i++ ) {
-			SET_ABIT( pvs->entMask, svs.currFrame[gvm]->ents[ pvs->numbers.snapshotEntities[ i ] ]->number );
+			SET_ABIT( pvs->entMask, svs.currFrame->ents[ pvs->numbers.snapshotEntities[ i ] ]->number );
 		}
 	}
 
@@ -851,7 +890,11 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	clientPVS_t					*pvs;
 
 	// this is the frame we are creating
-	frame = &client->frames[gvm][ client->netchan.outgoingSequence & PACKET_MASK ];
+#ifdef USE_MULTIVM_SERVER
+	frame = &client->frames[gvmi][ client->netchan.outgoingSequence & PACKET_MASK ];
+#else
+  frame = &client->frames[ client->netchan.outgoingSequence & PACKET_MASK ];
+#endif
 	cl = client - svs.clients;
 
 	// clear everything in this snapshot
@@ -865,18 +908,22 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 #ifdef USE_MV
 	if ( client->multiview.protocol > 0 ) {
 		frame->multiview = qtrue;
+		frame->version = MV_PROTOCOL_VERSION;
+		if(client->mvAck == 0)
+			client->mvAck = client->messageAcknowledge;
 		// select primary client slot
 		if ( client->multiview.recorder ) {
 			cl = sv_demoClientID;
 		}
 	} else {
 		frame->multiview = qfalse;
+		client->mvAck = 0;
 	}
 	Com_Memset( frame->psMask, 0, sizeof( frame->psMask ) );
 	frame->first_psf = svs.nextSnapshotPSF;
 	frame->num_psf = 0;
-#ifdef USE_MULTIVM
-	frame->world = gvm;
+#ifdef USE_MULTIVM_SERVER
+	frame->world = gvmi;
 #endif
 #endif
 	
@@ -903,12 +950,12 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		return;
 	}
 
-	if ( svs.currFrame[gvm] == NULL ) {
+	if ( svs.currFrame == NULL ) {
 		// this will always success and setup current frame
 		SV_BuildCommonSnapshot();
 	}
 
-	frame->frameNum = svs.currFrame[gvm]->frameNum;
+	frame->frameNum = svs.currFrame->frameNum;
 
 #ifdef USE_MV
 	if ( frame->multiview ) {
@@ -952,10 +999,11 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		}
 
 		// get ALL pointers from common snapshot
-		frame->num_entities = svs.currFrame[gvm]->count;
+		frame->num_entities = svs.currFrame->count;
 		for ( i = 0 ; i < frame->num_entities ; i++ ) {
-			frame->ents[ i ] = svs.currFrame[gvm]->ents[ i ];
+			frame->ents[ i ] = svs.currFrame->ents[ i ];
 		}
+		frame->mergeMask = SM_ALL & ~SV_GetMergeMaskEntities( frame );
 
 #ifdef USE_MV_ZCMD
 		// some extras
@@ -979,7 +1027,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		frame->num_entities = pvs->numbers.numSnapshotEntities;
 		// get pointers from common snapshot
 		for ( i = 0 ; i < pvs->numbers.numSnapshotEntities ; i++ )	{
-			frame->ents[ i ] = svs.currFrame[gvm]->ents[ pvs->numbers.snapshotEntities[ i ] ];
+			frame->ents[ i ] = svs.currFrame->ents[ pvs->numbers.snapshotEntities[ i ] ];
 		}
 	}
 }
@@ -1022,9 +1070,15 @@ void SV_SendMessageToClient( msg_t *msg, client_t *client )
 #endif // USE_MV
 
 	// record information about the message
-	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
-	client->frames[gvm][client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#ifdef USE_MULTIVM_SERVER
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+	client->frames[gvmi][client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#else
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.msgTime;
+  client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0;
+#endif
 
 	// send the datagram
 	SV_Netchan_Transmit( client, msg );
@@ -1043,26 +1097,39 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	byte		msg_buf[ MAX_MSGLEN_BUF ];
 	msg_t		msg;
 	int     headerBytes;
-	playerState_t	*ps;
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
+	int igvm;
 	sharedEntity_t *ent;
 	//entityState_t nullstate;
 	//const svEntity_t *svEnt;
 
-	for(gvm = 0; gvm < MAX_NUM_VMS; gvm++) {
-		if(!gvms[gvm]) continue;
-		CM_SwitchMap(gameWorlds[gvm]);
-		ps = SV_GameClientNum( client - svs.clients );
+	for(igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(!gvmWorlds[igvm]) continue;
+		gvmi = igvm; // TODO remove need for gvmi and pass igvm
+		CM_SwitchMap(gameWorlds[gvmi]);
+		SV_SetAASgvm(gvmi);
+		playerState_t	*ps = SV_GameClientNum( client - svs.clients );
 		ent = SV_GentityNum( ps->clientNum );
 		if(ent->s.eType == 0) continue; // skip worlds client hasn't entered yet
-		// TODO: remove this line when MULTIIVM is working
-		//if(gvm != client->newWorld) continue;
+		//Com_Printf("Sending snapshot %i %i >= %i\n", gvmi, client->mvAck, client->messageAcknowledge);
+		if(gvmi != 0 && (client->mvAck == 0 || client->mvAck >= client->messageAcknowledge)) continue;
+    // remove this line when MULTIIVM is working
+		//if(gvmi != 0) continue;
+		//if(gvmi != client->gameWorld) continue;
 #endif
 ;
 
 	// build the snapshot
 	SV_BuildClientSnapshot( client );
+
+#ifndef USE_MV // send bots to client
+	// bots need to have their snapshots build, but
+	// the query them directly without needing to be sent
+	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+		return;
+	}
+#endif
 
 	MSG_Init( &msg, msg_buf, MAX_MSGLEN );
 	msg.allowoverflow = qtrue;
@@ -1074,19 +1141,19 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 	// (re)send any reliable server commands
 	SV_UpdateServerCommandsToClient( client, &msg );
-	
+
 /*
 	if(includeBaselines) {
 		qboolean first = qtrue;
 		// write the baselines
 		Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 		for ( start = 0 ; start < MAX_GENTITIES; start++ ) {
-			if ( !sv.baselineUsed[gvm][ start ] ) {
+			if ( !sv.baselineUsed[ start ] ) {
 				continue;
 			}
-			svEnt = &sv.svEntities[gvm][ start ];
+			svEnt = &sv.svEntities[ start ];
 			MSG_WriteByte( &msg, svc_baseline );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 			if(first) {
 				MSG_WriteByte( &msg, client->newWorld );
 				first = qfalse;
@@ -1101,22 +1168,26 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 	// and the playerState_t
 	SV_WriteSnapshotToClient( client, &msg );
 
- 	if ( client->demorecording ) {
+#ifdef USE_DEMO_CLIENTS
+	if ( client->demorecording ) {
 		msg_t copyMsg;
 		Com_Memcpy(&copyMsg, &msg, sizeof(copyMsg));
  		SV_WriteDemoMessage( client, &copyMsg, headerBytes );
- 		ps = SV_GameClientNum( client - svs.clients);
+ 		playerState_t	*ps = SV_GameClientNum( client - svs.clients);
  		if (ps->pm_type == PM_INTERMISSION) {
  			SV_StopRecord( client );
  		}
  	}
+#endif
 
 	// bots need to have their snapshots build, but
 	// the query them directly without needing to be sent
 	if ( client->netchan.remoteAddress.type == NA_BOT ) {
-		gvm = 0;
-		CM_SwitchMap(gameWorlds[gvm]);
+#ifdef USE_MULTIVM_SERVER
+		continue;
+#else
 		return;
+#endif
 	}
 
 	// check for overflow
@@ -1127,10 +1198,12 @@ void SV_SendClientSnapshot( client_t *client, qboolean includeBaselines ) {
 
 	SV_SendMessageToClient( &msg, client );
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
+		sv.time++;
 	}
 #endif
 }
+
 
 /*
 =======================
@@ -1155,17 +1228,20 @@ void SV_SendClientMessages( void )
 		c->rateDelayed = qfalse;
 	}
 #endif // USE_MV
-#ifdef USE_RECENT_EVENTS
-	numConnected = 0;
-#endif
 
 	// send a message to each connected client
 	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
 		c = &svs.clients[ i ];
 		
-		if ( c->state == CS_FREE || c->demoClient ) // do not send a packet to a democlient, this will cause the engine to crash
+		if ( c->state == CS_FREE ) 
 			continue;		// not connected
+
+#ifdef USE_DEMO_SERVER
+    // do not send a packet to a democlient, this will cause the engine to crash
+    if(c->demoClient) // demo clients only exist in networking, not in qagame
+      continue;
+#endif
 
 		if ( *c->downloadName )
 			continue;		// Client is downloading, don't send snapshots
@@ -1193,70 +1269,5 @@ void SV_SendClientMessages( void )
 		SV_SendClientSnapshot( c, qfalse );
 		c->lastSnapshotTime = svs.time;
 		c->rateDelayed = qfalse;
-#ifdef USE_RECENT_EVENTS
-		{
-			playerState_t *ps;
-			ps = SV_GameClientNum( i );
-			if(c->netchan.remoteAddress.type != NA_BOT) {
-				numConnected++;
-				clientSnapshot_t	*frame;
-				frame = &c->frames[0][ c->netchan.outgoingSequence & PACKET_MASK ];
-				//ps = &frame->ps;
-	/*
-				for ( int j = ps->eventSequence - MAX_PS_EVENTS ; j < ps->eventSequence ; j++ ) {
-					int event = frame->ps.events[ j & (MAX_PS_EVENTS-1) ] & ~EV_EVENT_BITS;
-					//if(j >= ps.eventSequence) {
-	//if(event > 0)
-	//Com_Printf("event: %i\n", event);
-						if(event >= EV_DEATH1 && event <= EV_DEATH3) {
-	Com_Printf("event: Player died...\n");
-							char clientId[10];
-							memcpy(clientId, va("%i", i), sizeof(clientId));
-							memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, &clientId), MAX_INFO_STRING);
-							if(recentI == 1024) recentI = 0;
-							numDied[i / 8] |= 1 << (i % 8);
-						}
-					//}
-				}
-	*/
-			
-				if(ps->pm_flags & (PMF_RESPAWNED)) {
-					char clientId[10];
-					memcpy(clientId, va("%i", i), sizeof(clientId));
-					// TODO: add respawn location
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
-					numDied[i / 8] &= ~(1 << (i % 8));
-				}
-				if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {
-					numScored[i / 8] |= 1 << (i % 8);
-				} else {
-					numScored[i / 8] &= ~(1 << (i % 8));
-				}
-			}
-		}
 	}
-	// must send a snapshot to a client at least once every second
-	if(sv.time - lastReset > 1000) {
-		lastReset = sv.time;
-		numConnected = 0;
-		memset(&numScored, 0, sizeof(numScored));
-	} else if (lastReset < sv.time) {		
-		// check if scoreboard is being shown to all players, indicating game end
-		//   create a matchend event with all the player scores
-		int numScoredBits = 0;
-		for(int i = 0; i < ARRAY_LEN(numScored); i++) {
-			for(int j = 0; j < 8; j++) {
-				if(numScored[i] & (1 << j))
-					numScoredBits++;
-			}
-		}
-		if(numConnected > 0 && numConnected == numScoredBits) {
-			SV_RecentStatus(SV_EVENT_MATCHEND);
-			lastReset = sv.time + 10000; // don't make match event for another 10 seconds
-		}
-	}
-#else
-	}
-#endif
 }

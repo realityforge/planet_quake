@@ -48,6 +48,8 @@ typedef enum
 	IMGFLAG_LIGHTMAP       = 0x0100,
 	IMGFLAG_NOSCALE        = 0x0200,
 	IMGFLAG_CLAMPTOBORDER  = 0x0400,
+	IMGFLAG_PALETTE        = 0x0800,
+  IMGFLAG_FORCELAZY      = 0x1000,
 } imgFlags_t;
 
 typedef struct image_s {
@@ -70,6 +72,16 @@ typedef struct image_s {
 	imgType_t	type;
 	imgFlags_t	flags;
 } image_t;
+
+typedef struct palette_s {
+	char		*imgName;
+	struct palette_s *next;
+	int  a;
+	int  r;
+	int  g;
+	int  b;
+	struct image_s *image;
+} palette_t;
 
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
@@ -115,7 +127,7 @@ extern	cvar_t	*r_saveFontData;
 float R_NoiseGet4f( float x, float y, float z, double t );
 void  R_NoiseInit( void );
 
-void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips, qboolean checkOnly );
+void R_AddPalette(const char *name, int a, int r, int g, int b);
 image_t *R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags );
 image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgType_t type, imgFlags_t flags, GLint internalFormat );
 void R_UploadSubImage( unsigned *data, int x, int y, int width, int height, image_t *image );
@@ -123,6 +135,7 @@ void R_UploadSubImage( unsigned *data, int x, int y, int width, int height, imag
 void R_IssuePendingRenderCommands( void );
 qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex );
 qhandle_t RE_RegisterShader( const char *name );
+qhandle_t RE_RegisterImage( int *dimensions, const char *name );
 qhandle_t RE_RegisterShaderNoMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage);
 

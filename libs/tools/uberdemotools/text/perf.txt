@@ -1,0 +1,47 @@
+All tests on a Core i7 2600K CPU
+
+==================================
+After replacing id's Huffman codec
+==================================
+
+Cut by Chat test #1 (1901 files, 3.22 GB)
+max. threads: 4
+output: 482 files, 35.7 MB
+time: 3m 22s ==> ~16 MB/s
+
+=============================================
+After changing the memory allocation strategy
+All new tests on an Intel X25-M SSD drive
+=============================================
+
+Cut by Chat test #1 (1901 files, 3.22 GB)
+max. threads: 4
+output: 482 files, 35.7 MB
+time: 41s ==> ~80 MB/s
+
+Analyze test #1 (1901 files, 3.22 GB)
+max. threads: 4
+time: 35s ==> ~94 MB/s
+
+===========================================
+Slightly deeper analysis, move to udtString
+2015.02.07
+===========================================
+
+Cut by Chat test #1 (1901 files, 3.22 GB)
+max. threads: 4
+output: 482 files, 35.7 MB
+time: 38.8s, 37.6s, 37.8s
+
+Cut by Chat test #1 (1901 files, 3.22 GB)
+max. threads: 1
+output: 482 files, 35.7 MB
+time: 126s, 122s, 122s
+
+Analyze test #1 (1901 files, 3.22 GB)
+max. threads: 4
+time: 35.0s, 34.7s, 34.8s
+
+Analyze test #1 (1901 files, 3.22 GB)
+max. threads: 1
+time: 112s, 110s, 109s

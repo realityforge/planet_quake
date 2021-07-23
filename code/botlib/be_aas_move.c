@@ -43,7 +43,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern botlib_import_t botimport;
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+aas_settings_t aassettingsWorlds[MAX_NUM_VMS];
+#else
 aas_settings_t aassettings;
+#endif
 
 //#define AAS_MOVE_DEBUG
 
@@ -980,6 +984,8 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 	//
 	return qtrue;
 } //end of the function AAS_ClientMovementPrediction
+
+
 //===========================================================================
 //
 // Parameter:			-
@@ -994,12 +1000,15 @@ int AAS_PredictClientMovement(struct aas_clientmove_s *move,
 								int maxframes, float frametime,
 								int stopevent, int stopareanum, int visualize)
 {
-	vec3_t mins, maxs;
+	const vec3_t mins = { -4, -4, -4 };
+	const vec3_t maxs = { 4, 4, 4 };
 	return AAS_ClientMovementPrediction(move, entnum, origin, presencetype, onground,
 										velocity, cmdmove, cmdframes, maxframes,
 										frametime, stopevent, stopareanum,
 										mins, maxs, visualize);
 } //end of the function AAS_PredictClientMovement
+
+
 //===========================================================================
 //
 // Parameter:			-

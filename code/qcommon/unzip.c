@@ -7,6 +7,8 @@
  *
  *****************************************************************************/
 
+#ifndef USE_SYSTEM_ZLIB
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
 #include "unzip.h"
@@ -1178,6 +1180,7 @@ static int unzlocal_getLong (FILE *fin, uLong *pX)
 }
 
 
+#ifndef __WASM__
 static int unzlocal_getData( FILE *fin, byte *buf, int size )
 {
 	if ( fread( buf, size, 1, fin ) != 1 )
@@ -1187,6 +1190,7 @@ static int unzlocal_getData( FILE *fin, byte *buf, int size )
 
 	return UNZ_OK;
 }
+#endif
 
 
 /* My own strcmpi / strcasecmp */
@@ -1488,7 +1492,6 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	unz_file_info_internal file_info_internal;
 	byte buf[46];
 	int err=UNZ_OK;
-	uLong uMagic;
 	long lSeek=0;
 
 	if (file==NULL)
@@ -1497,13 +1500,15 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	if (fseek(s->file,s->pos_in_central_dir+s->byte_before_the_zipfile,SEEK_SET)!=0)
 		err=UNZ_ERRNO;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 //#if 1 // try ro reduce fread() overhead
 	if ( unzlocal_getData( s->file, buf, 46 ) != UNZ_OK )
 		return UNZ_ERRNO;
-	uMagic = LittleLong( *(int*)(buf+0) );
+	//uMagic = LittleLong( *(int*)(buf+0) );
 	/* we check the magic */
-	if ( uMagic != 0x02014b50 )
+	//if ( uMagic != 0x02014b50 )
+	//	return UNZ_BADZIPFILE;
+	if ( memcmp( buf, "\x50\x4b\x01\x02", 4 ) != 0 )
 		return UNZ_BADZIPFILE;
 	file_info.version = LittleShort( *(short*)(buf+4) );
 	file_info.version_needed  = LittleShort( *(short*)(buf+6) );
@@ -1522,7 +1527,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	file_info.external_fa = LittleLong( *(int*)(buf+38) );
 	file_info_internal.offset_curfile = LittleLong( *(int*)(buf+42) );
 #else
-
+  unsigned long uMagic;
 	/* we check the magic */
 	if (err==UNZ_OK) {
 		if (unzlocal_getLong(s->file,&uMagic) != UNZ_OK)
@@ -4345,3 +4350,4 @@ void  zcfree (voidp opaque, voidp ptr)
     Z_Free(ptr);
     if (opaque) return; /* make compiler happy */
 }
+#endif

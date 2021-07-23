@@ -20,6 +20,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifndef __CM_POLYLIB_H__
+#define __CM_POLYLIB_H__
+
+
 // this is only used for visualization tools in cm_ debug functions
 
 typedef struct
@@ -49,6 +53,8 @@ vec_t	WindingArea (winding_t *w);
 void	WindingCenter (winding_t *w, vec3_t center);
 void	ClipWindingEpsilon (winding_t *in, vec3_t normal, vec_t dist, 
 				vec_t epsilon, winding_t **front, winding_t **back);
+void	ClipWindingEpsilonStrict (winding_t *in, vec3_t normal, vec_t dist, 
+				vec_t epsilon, winding_t **front, winding_t **back);
 winding_t	*ChopWinding (winding_t *in, vec3_t normal, vec_t dist);
 winding_t	*CopyWinding (const winding_t *w);
 winding_t	*ReverseWinding (winding_t *w);
@@ -64,3 +70,5 @@ void	AddWindingToConvexHull( winding_t *w, winding_t **hull, vec3_t normal );
 
 void	ChopWindingInPlace( winding_t **w, const vec3_t normal, vec_t dist, vec_t epsilon );
 // frees the original if clipped
+
+#endif

@@ -33,7 +33,7 @@ qboolean	chat_team;
 
 int			chat_playerNum;
 
-//static void Field_CharEvent( field_t *edit, int ch );
+static void Field_CharEvent( field_t *edit, int ch );
 
 /*
 =============================================================================
@@ -99,7 +99,7 @@ static void Field_VariableSizeDraw( field_t *edit, int x, int y, int width, int 
 		for ( i = 0; i < prestep + 1; i++, s++ ) {
 			if ( Q_IsColorString( s ) ) {
 				curColor = *(s+1);
-				s++;						
+				s++;
 			}
 		}
 		// scroll marker
@@ -169,13 +169,13 @@ Field_Paste
 ================
 */
 static void Field_Paste( field_t *edit ) {
+#ifdef __WASM__
+  Sys_SetClipboardData(edit);
+  return;
+#else
 	char	*cbd;
 	int		pasteLen, i;
 
-#ifdef EMSCRIPTEN
-	Sys_SetClipboardData(edit);
-	return;
-#endif
 	cbd = Sys_GetClipboardData();
 
 	if ( !cbd ) {
@@ -189,6 +189,7 @@ static void Field_Paste( field_t *edit ) {
 	}
 
 	Z_Free( cbd );
+#endif
 }
 
 
@@ -243,7 +244,7 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 	switch ( key ) {
 		case K_DEL:
 			if ( edit->cursor < len ) {
-				memmove( edit->buffer + edit->cursor, 
+				memmove( edit->buffer + edit->cursor,
 					edit->buffer + edit->cursor + 1, len - edit->cursor );
 			}
 			break;
@@ -298,7 +299,7 @@ static void Field_KeyDownEvent( field_t *edit, int key ) {
 Field_CharEvent
 ==================
 */
-void Field_CharEvent( field_t *edit, int ch ) {
+static void Field_CharEvent( field_t *edit, int ch ) {
 	int		len;
 
 	if ( ch == 'v' - 'a' + 1 ) {	// ctrl-v is paste
@@ -315,7 +316,7 @@ void Field_CharEvent( field_t *edit, int ch ) {
 
 	if ( ch == 'h' - 'a' + 1 )	{	// ctrl-h is backspace
 		if ( edit->cursor > 0 ) {
-			memmove( edit->buffer + edit->cursor - 1, 
+			memmove( edit->buffer + edit->cursor - 1,
 				edit->buffer + edit->cursor, len + 1 - edit->cursor );
 			edit->cursor--;
 			if ( edit->cursor < edit->scroll )
@@ -345,7 +346,7 @@ void Field_CharEvent( field_t *edit, int ch ) {
 		return;
 	}
 
-	if ( key_overstrikeMode ) {	
+	if ( key_overstrikeMode ) {
 		// - 2 to leave room for the leading slash and trailing \0
 		if ( edit->cursor == MAX_EDIT_LINE - 2 )
 			return;
@@ -356,7 +357,7 @@ void Field_CharEvent( field_t *edit, int ch ) {
 		if ( len == MAX_EDIT_LINE - 2 ) {
 			return; // all full
 		}
-		memmove( edit->buffer + edit->cursor + 1, 
+		memmove( edit->buffer + edit->cursor + 1,
 			edit->buffer + edit->cursor, len + 1 - edit->cursor );
 		edit->buffer[edit->cursor] = ch;
 		edit->cursor++;
@@ -372,6 +373,12 @@ void Field_CharEvent( field_t *edit, int ch ) {
 	}
 }
 
+
+#ifdef __WASM__
+void JS_Field_CharEvent( field_t *edit, int ch ) {
+  Field_CharEvent(edit, ch);
+}
+#endif
 
 /*
 =============================================================================
@@ -398,7 +405,7 @@ static void Console_Key( int key ) {
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER ) {
 		// if not in the game explicitly prepend a slash if needed
-		if ( cls.state != CA_ACTIVE 
+		if ( cls.state != CA_ACTIVE
 			&& g_consoleField.buffer[0] != '\0'
 			&& g_consoleField.buffer[0] != '\\'
 			&& g_consoleField.buffer[0] != '/' ) {
@@ -426,11 +433,13 @@ static void Console_Key( int key ) {
 			}
 		}
 
+#ifndef USE_NO_CONSOLE
 		// copy line to history buffer
 		Con_SaveField( &g_consoleField );
 
 		Field_Clear( &g_consoleField );
 		g_consoleField.widthInChars = g_console_field_width;
+#endif
 
 		if ( cls.state == CA_DISCONNECTED ) {
 			SCR_UpdateScreen (qfalse);	// force an update, because the command
@@ -455,6 +464,7 @@ static void Console_Key( int key ) {
 		return;
 	}
 
+#ifndef USE_NO_CONSOLE
 	// command history (ctrl-p ctrl-n for unix style)
 
 	if ( (key == K_MWHEELUP && keys[K_SHIFT].down) || ( key == K_UPARROW ) || ( key == K_KP_UPARROW ) ||
@@ -504,6 +514,7 @@ static void Console_Key( int key ) {
 
 	// pass to the normal editline routine
 	Field_KeyDownEvent( &g_consoleField, key );
+#endif
 }
 
 //============================================================================
@@ -577,6 +588,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			}
 #endif
 
+#ifndef USE_NO_CONSOLE
 	// console key is hardcoded, so the user can never unbind it
 	if( key == K_CONSOLE || ( keys[K_SHIFT].down && key == K_ESCAPE ) )
 	{
@@ -584,6 +596,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		Key_ClearStates();
 		return;
 	}
+#endif
 
 	// hardcoded screenshot key
 	if ( key == K_PRINT ) {
@@ -596,7 +609,7 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	}
 
 	// keys can still be used for bound actions
-	if ( ( key < 128 || key == K_MOUSE1 ) 
+	if ( ( key < 128 || key == K_MOUSE1 )
 		&& cls.state == CA_CINEMATIC && Key_GetCatcher( ) == 0 ) {
 
 		if ( Cvar_VariableIntegerValue( "com_cameraMode" ) == 0 ) {
@@ -607,16 +620,31 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_MV
-	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap[cgvm].multiview ) {
+#ifdef USE_MULTIVM_CLIENT
+	int igs = clientGames[clc.currentView];
+#else
+	int igs = 0;
+#endif
+	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )
 			d = 1;
 		//else
 		//	d = -1;
-		for ( id = (clc.clientView + d + MAX_CLIENTS ) % MAX_CLIENTS, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
-			if ( cl.snap[cgvm].clps[ id ].valid ) {
-				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clc.clientView, id );
-				clc.clientView = id;
+#ifdef USE_MULTIVM_CLIENT
+		int from = (clientWorlds[clc.currentView] + d + MAX_CLIENTS ) % MAX_CLIENTS;
+#else
+		int from = (clientWorlds[0] + d + MAX_CLIENTS ) % MAX_CLIENTS;
+#endif
+		for ( id = from, n = 0; n < MAX_CLIENTS; n++, id = ( id + d + MAX_CLIENTS ) % MAX_CLIENTS ) {
+			if ( cl.snap.clps[ id ].valid ) {
+#ifdef USE_MULTIVM_CLIENT
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[clc.currentView], id );
+				clientWorlds[clc.currentView] = id;
+#else
+				Com_Printf( S_COLOR_CYAN "MultiView: switch POV %d => %d\n", clientWorlds[0], id );
+				clientWorlds[0] = id;
+#endif
 				break;
 			}
 		}
@@ -631,11 +659,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 			Com_DL_Cleanup( &download );
 		}
 #endif
+#ifndef USE_NO_CONSOLE
 		if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 			// escape always closes console
 			Con_ToggleConsole_f();
 			Key_ClearStates();
 		}
+#endif
 
 		if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 			// clear message mode
@@ -646,14 +676,20 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			if(cgvms[cgvm])
-				VM_Call( cgvms[cgvm], 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
+			if(cgvm)
+			VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
 		if ( !( Key_GetCatcher( ) & KEYCATCH_UI ) ) {
-			if ( cgvms[cgvm] && cls.state == CA_ACTIVE && !clc.demoplaying ) {
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+			if ( cls.state == CA_ACTIVE && !clc.demoplaying ) {
+        if(uivm)
+				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+        else {
+          cls.uiStarted = qtrue;
+      		CL_InitUI(qfalse);
+          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME );
+        }
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 #if 0
@@ -670,28 +706,30 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
 				}
 #endif
-#ifndef EMSCRIPTEN
-				VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-#else
-				if(!FS_Initialized()) {
-					Com_Frame_Callback(Sys_FS_Shutdown, Com_Frame_After_Shutdown);
-				} else {
-					VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-				}
+#ifdef USE_ASYNCHRONOUS
+        if(FS_Initialized())
 #endif
+        if(uivm)
+				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+        else {
+          cls.uiStarted = qtrue;
+      		CL_InitUI(qfalse);
+          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+        }
 			}
 			return;
 		}
-		else if(cls.postgame == qtrue && uivms[uivm]) {
-			VM_Call( uivms[uivm], 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
+		else if(cls.postgame == qtrue && uivm) {
+			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_POSTGAME );
 			return;
 		}
 
-		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
+    if(uivm)
+		  VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
 		return;
 	}
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// only process touch events for 3rd device which is hidden on screen
 	//   this simulates tapping on the menu screen
 	// TODO: use second finger as K_MOUSE2 for zooming on weapons?
@@ -704,13 +742,13 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 	if ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ) {
 		Console_Key( key );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if ( uivms[uivm] ) {
-			VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qtrue );
-		} 
+		if ( uivm ) {
+			VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
+		}
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvms[cgvm] ) {
-			VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qtrue );
-		} 
+		if ( cgvm ) {
+			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qtrue );
+		}
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		Message_Key( key );
 	} else if ( cls.state == CA_DISCONNECTED ) {
@@ -755,12 +793,114 @@ static void CL_KeyUpEvent( int key, unsigned time, int fingerId )
 	if( cls.state != CA_DISCONNECTED )
 		Key_ParseBinding( key, qfalse, time );
 
-	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivms[uivm] ) {
-		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key, qfalse );
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvms[cgvm] ) {
-		VM_Call( cgvms[cgvm], 2, CG_KEY_EVENT, key, qfalse );
+	if ( Key_GetCatcher( ) & KEYCATCH_UI && uivm ) {
+		VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
+	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME && cgvm ) {
+		VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
 	}
 }
+
+
+#ifdef USE_DRAGDROP
+static char command[MAX_OSPATH];
+static int demos = 0;
+static int maps = 0;
+static int images = 0;
+static int videos = 0;
+static int sounds = 0;
+static int pk3s = 0;
+static char *demoNames;
+static char *mapNames;
+static char *imageNames;
+static char *soundNames;
+static char *videoNames;
+static char *pk3Names;
+
+void CL_DropComplete( void ) {
+  if(demos) {
+    Com_Printf("Demos: %i\n", demos);
+  }
+  if(maps) {
+    Com_Printf("Maps: %i\n", maps);
+    // TODO: list images based on the percent they exist over other file types
+  }
+#ifndef USE_NO_CONSOLE
+  Con_ClearNotify();
+  if (cl_dropAction->integer == 1) {
+    g_consoleField.buffer[1] = '\\';
+    memcpy(&g_consoleField.buffer[1], &command, sizeof(g_consoleField.buffer) - 1);
+    Field_AutoComplete( &g_consoleField );
+    g_consoleField.cursor = strlen(g_consoleField.buffer);
+  } else 
+#endif
+  if (cl_dropAction->integer == 2) {
+    Cbuf_ExecuteText( EXEC_APPEND, command );
+  }
+  command[0] = '\0';
+}
+
+
+void CL_DropFile( char *file, int len ) {
+  // show the contents of the dropped file and offer to load something
+  const char *to = FS_DescribeGameFile(file, &demoNames, &demos, &mapNames, 
+    &maps, &imageNames, &images, &videoNames, &videos, &soundNames, &sounds, 
+    &pk3Names, &pk3s);
+
+  // TODO: make an autocomplete for drop files
+  if(command[0] == '\0') {
+    if(demos) {
+#ifdef USE_MULTIVM_CLIENT
+      if(clc.demoplaying) {
+        memcpy(command, va("load demo \"%s\"; tile 1 0 1; tile 0 0 0;", demoNames), sizeof(command));
+      }
+      else
+#endif
+      memcpy(command, va("demo \"%s\"", demoNames), sizeof(command));
+    } else if (maps) {
+#ifdef USE_MULTIVM_CLIENT
+      if(cls.state == CA_ACTIVE) {
+        memcpy(command, va("load game \"%s\"", mapNames), sizeof(command));
+      }
+      else
+#endif
+      memcpy(command, va("map %s", mapNames), sizeof(command));
+    } else if (images) {
+      memcpy(command, va("r_showImages %s", imageNames), sizeof(command));
+    }
+  }
+
+  if(to[0] != '\0') {
+    char *to_ospath = FS_BuildOSPath( Cvar_VariableString("fs_homepath"), to, NULL );
+    if(cl_dropAction->integer) {
+      FS_CopyFile( file, to_ospath );
+      // helper add the pak so we can run a map right away
+      FS_AddZipFile(to_ospath);
+    /*
+    } else if (cl_dropAction->integer == 2) {
+      if ( rename( file, to_ospath ) ) {
+        // Failed, try copying it and deleting the original
+        FS_CopyFile( file, to_ospath );
+        FS_Remove( file );
+      }
+      FS_AddZipFile(to_ospath);
+    */
+    } // else // do nothing
+  }
+}
+
+
+void CL_DropStart( void ) {
+  demos = 0;
+  maps = 0;
+  images = 0;
+  videos = 0;
+  sounds = 0;
+  pk3s = 0;
+  if(!(Key_GetCatcher() & KEYCATCH_CONSOLE))
+    Key_SetCatcher( Key_GetCatcher() | KEYCATCH_CONSOLE );
+  con.displayFrac = 1.0
+}
+#endif
 
 
 /*
@@ -772,12 +912,6 @@ Called by the system for both key up and key down events
 */
 void CL_KeyEvent( int key, qboolean down, unsigned time, int finger )
 {
-#ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
-#else
-	cgvm = 0;
-#endif
 	if ( down )
 		CL_KeyDownEvent( key, time, finger );
 	else
@@ -806,9 +940,9 @@ void CL_CharEvent( int key )
 	}
 	else if ( Key_GetCatcher( ) & KEYCATCH_UI )
 	{
-		VM_Call( uivms[uivm], 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
+		VM_Call( uivm, 2, UI_KEY_EVENT, key | K_CHAR_FLAG, qtrue );
 	}
-	else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) 
+	else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE )
 	{
 		Field_CharEvent( &chatField, key );
 	}
@@ -861,8 +995,6 @@ Key_SetCatcher
 */
 void Key_SetCatcher( int catcher )
 {
-	//if(uivms[uivm] && re.BeginRegistration)
-	//	re.ResetBannerSpy();
 	// If the catcher state is changing, clear all key states
 	if ( catcher != keyCatchers )
 		Key_ClearStates();

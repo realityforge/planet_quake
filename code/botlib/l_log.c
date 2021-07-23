@@ -45,7 +45,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 typedef struct logfile_s
 {
 	char filename[MAX_LOGFILENAMESIZE];
-	FILE *fp;
+	fileHandle_t fp;
 	int numwrites;
 } logfile_t;
 
@@ -59,8 +59,6 @@ static logfile_t logfile;
 //===========================================================================
 void Log_Open( const char *filename )
 {
-	const char *ospath;
-
 	if ( !LibVarValue( "log", "0" ) ) 
 		return;
 
@@ -76,8 +74,7 @@ void Log_Open( const char *filename )
 		return;
 	} //end if
 
-	ospath = FS_BuildOSPath( Cvar_VariableString( "fs_homepath" ), "", filename );
-	logfile.fp = Sys_FOpen( ospath, "wb" );
+	botimport.FS_FOpenFile( filename, &logfile.fp, FS_WRITE );
 	if ( !logfile.fp )
 	{
 		botimport.Print( PRT_ERROR, "can't open the log file %s\n", filename );
@@ -95,13 +92,7 @@ void Log_Open( const char *filename )
 //===========================================================================
 void Log_Close(void)
 {
-	if (!logfile.fp) return;
-	if (fclose(logfile.fp))
-	{
-		botimport.Print(PRT_ERROR, "can't close log file %s\n", logfile.filename);
-		return;
-	} //end if
-	logfile.fp = NULL;
+	botimport.FS_FCloseFile(logfile.fp);
 	botimport.Print(PRT_MESSAGE, "Closed log %s\n", logfile.filename);
 } //end of the function Log_Close
 //===========================================================================
@@ -126,10 +117,11 @@ void QDECL Log_Write(char *fmt, ...)
 
 	if (!logfile.fp) return;
 	va_start(ap, fmt);
-	vfprintf(logfile.fp, fmt, ap);
+	char maxLine[2048];
+	strcpy(maxLine, va(fmt, ap));
+	botimport.FS_Write(maxLine, strlen(maxLine), logfile.fp);
 	va_end(ap);
 	//fprintf(logfile.fp, "\r\n");
-	fflush(logfile.fp);
 } //end of the function Log_Write
 //===========================================================================
 //
@@ -141,20 +133,20 @@ void QDECL Log_WriteTimeStamped(char *fmt, ...)
 {
 	va_list ap;
 
-	if (!logfile.fp) return;
-	fprintf(logfile.fp, "%d   %02d:%02d:%02d:%02d   ",
+	char maxLine[2048];
+	strcpy(maxLine, va("%d   %02d:%02d:%02d:%02d   ",
 					logfile.numwrites,
 					(int) (botlibglobals.time / 60 / 60),
 					(int) (botlibglobals.time / 60),
 					(int) (botlibglobals.time),
 					(int) ((int) (botlibglobals.time * 100)) -
-							((int) botlibglobals.time) * 100);
+							((int) botlibglobals.time) * 100));
 	va_start(ap, fmt);
-	vfprintf(logfile.fp, fmt, ap);
+	strcpy(maxLine, va(fmt, ap));
 	va_end(ap);
-	fprintf(logfile.fp, "\r\n");
+	strcpy(maxLine, "\r\n");
+	botimport.FS_Write(maxLine, strlen(maxLine), logfile.fp);
 	logfile.numwrites++;
-	fflush(logfile.fp);
 } //end of the function Log_Write
 //===========================================================================
 //
@@ -162,7 +154,7 @@ void QDECL Log_WriteTimeStamped(char *fmt, ...)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-FILE *Log_FilePointer(void)
+fileHandle_t Log_FilePointer(void)
 {
 	return logfile.fp;
 } //end of the function Log_FilePointer
@@ -174,6 +166,6 @@ FILE *Log_FilePointer(void)
 //===========================================================================
 void Log_Flush(void)
 {
-	if (logfile.fp) fflush(logfile.fp);
+	//if (logfile.fp) 
+	//	fflush(logfile.fp);
 } //end of the function Log_Flush
-

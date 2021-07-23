@@ -158,8 +158,6 @@ static void SV_Map_f( void ) {
 	char		expanded[MAX_QPATH];
 	char		mapname[MAX_QPATH];
 	int			len;
-	int			i;
- 	client_t	*cl;
 
 	map = Cmd_Argv(1);
 	if ( !map || !*map || strlen(map) == 0 ) {
@@ -169,30 +167,35 @@ static void SV_Map_f( void ) {
 	// make sure the level exists before trying to change, so that
 	// a typo at the server console won't end the game
 	Com_sprintf( expanded, sizeof( expanded ), "maps/%s.bsp", map );
+
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
+#ifdef USE_MEMORY_MAPS
+  // TODO: make this asynchronous where the console and server waits for it to compile
+  SV_MakeMap(map); // make the BSP and then it will load normally
+  
+#endif
 	len = FS_FOpenFileRead( expanded, NULL, qfalse );
 	FS_RestorePure();
 	if(len == -1) {
 #ifdef USE_LOCAL_DED
 		if(FS_InMapIndex(expanded)) {
 			len = 1;
+		} else if ( Q_stricmp(map, "q3dm0") && map[0] != '*') {
+			Com_Printf("Error: Can't find map %s\n", expanded );
+			Cmd_Clear();
+			Cbuf_AddText("spmap q3dm0\n");
+			Cbuf_Execute();
+			return;
 		}
+		// check if com_errorMessage, display it onscreen with
+    if(com_errorMessage && com_errorMessage->string[0] != "\0")
+		  SV_SendServerCommand(cl, "cp \"%s\"", com_errorMessage->string);
 #else
-		return;
-#endif
-	}
-#ifdef USE_LOCAL_DED
-	if ( len == -1 && Q_stricmp(map, "q3dm0") ) {
 		Com_Printf("Error: Can't find map %s\n", expanded );
-		Cmd_Clear();
-		Cbuf_AddText("spmap q3dm0\n");
-		Cbuf_Execute();
 		return;
-	}
-	// TODO: check if com_errorMessage, display it onscreen with
-	//  SV_SendServerCommand(cl, "cp \"^3Can't join a team when a demo is replaying!\"");
 #endif
+	}
 
 	// force latched values to get set
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
@@ -214,7 +217,7 @@ static void SV_Map_f( void ) {
 	else {
 		if ( !Q_stricmp( cmd, "devmap" ) ) {
 			cheat = qtrue;
-			killBots = qtrue;
+			killBots = Cvar_VariableIntegerValue("bot_enable") > 2 ? qfalse : qtrue;
 		} else {
 			cheat = qfalse;
 			killBots = qfalse;
@@ -224,12 +227,17 @@ static void SV_Map_f( void ) {
 		}
 	}
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+#endif
 
+#ifdef USE_DEMO_CLIENTS
+  client_t	*cl;
+  int i;
 	if (sv_autoRecord->integer && svs.initialized) {
  		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
  			if (cl->state >= CS_CONNECTED && cl->demorecording) {
@@ -237,13 +245,14 @@ static void SV_Map_f( void ) {
  			}
  		}
  	}
+#endif
 
 	// save the map name here cause on a map restart we reload the q3config.cfg
 	// and thus nuke the arguments of the map command
 	Q_strncpyz(mapname, map, sizeof(mapname));
 
 	// start up the map
-	SV_SpawnServer( mapname, killBots ); // TODO: make bots on devmaps a Cvar bot_devmapEnable
+	SV_SpawnServer( mapname, killBots );
 
 	// set the cheat value
 	// if the level was started with "map <levelname>", then
@@ -299,11 +308,13 @@ static void SV_MapRestart_f( void ) {
 		return;
 	}
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
+#endif
 
 	// check for changes in variables that can't just be restarted
 	// check for maxclients change
@@ -358,7 +369,7 @@ static void SV_MapRestart_f( void ) {
 	for ( i = 0; i < 3; i++ )
 	{
 		sv.time += 100;
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 		SV_BotFrame( sv.time );
 	}
 
@@ -375,12 +386,14 @@ static void SV_MapRestart_f( void ) {
 		}
 
 		if ( client->netchan.remoteAddress.type == NA_BOT ) {
+#ifdef USE_LOCAL_DED
 			// drop bots on map restart because they will be re-added by arena config
 			// TODO: only drop bots on single-player mode?
 			if (Cvar_VariableIntegerValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
 				SV_DropClient( client, NULL );
 				continue;
 			}
+#endif
 			isBot = qtrue;
 		} else {
 			isBot = qfalse;
@@ -390,7 +403,11 @@ static void SV_MapRestart_f( void ) {
 		SV_AddServerCommand( client, "map_restart\n" );
 
 		// connect the client again, without the firstTime flag
-		denied = GVM_ArgPtr( VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
+#ifndef BUILD_GAME_STATIC
+		denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );
+#else
+    denied = (void *)VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot );
+#endif
 		if ( denied ) {
 			// this generally shouldn't happen, because the client
 			// was connected before the level change
@@ -411,14 +428,16 @@ static void SV_MapRestart_f( void ) {
 
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	svs.time += 100;
 	
 	
+#ifdef USE_DEMO_SERVER
 	// start recording a demo
   if ( sv_autoDemo->integer ) {
     SV_DemoAutoDemoRecord();
   }
+#endif
 }
 
 
@@ -1210,7 +1229,11 @@ static void SV_Status_f( void ) {
 	// first pass: save and determine max.legths of name/address fields
 	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ )
 	{
+#ifdef USE_DEMO_SERVER
 		if ( cl->state == CS_FREE && !cl->demoClient )
+#else
+    if ( cl->state == CS_FREE )
+#endif
 			continue;
 
 		l = strlen( cl->name ) + 1;
@@ -1514,7 +1537,7 @@ static void SV_CompleteMapName( char *args, int argNum ) {
 }
 
 
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 void SV_SwitchGame_f ( void ) {
 	client_t *client;
 	int game;
@@ -1547,7 +1570,7 @@ void SV_Teleport_f (void) {
 
 }
 
-void SV_LoadVM_f() {
+void SV_LoadVM_f(void) {
 	SV_LoadVM(NULL);
 }
 #endif
@@ -1651,8 +1674,10 @@ void  SV_Lock_f(void) {
 }
 
 void SV_CallAdmin_f( void ) {
+#ifdef USE_RECENT_EVENTS
 	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, Cmd_ArgsFrom(1)), MAX_INFO_STRING);
 	if(recentI == 1024) recentI = 0;
+#endif
 }
 #endif
 
@@ -1756,6 +1781,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );
 	Cmd_SetDescription( "filtercmd", "Run a command while filtering\nUsage: %s <filter format string>" );
 
+#ifdef USE_DEMO_SERVER
 	Cmd_AddCommand ("demo_record", SV_Demo_Record_f);
 	Cmd_SetDescription( "demo_record", "Record a server-side demo\nUsage: demo_record [filename]" );
 	Cmd_AddCommand ("demo_play", SV_Demo_Play_f);
@@ -1763,13 +1789,16 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_SetDescription( "demo_play", "Play a server-side demo\nUsage: demo_play <filename>" );
 	Cmd_AddCommand ("demo_stop", SV_Demo_Stop_f);
 	Cmd_SetDescription( "demo_stop", "Stop playing a server-side demo\nUsage: demo_stop" );
+#endif
 
+#ifdef USE_DEMO_CLIENTS
   Cmd_AddCommand ("cl_record", SV_Record_f);
 	Cmd_SetDescription( "cl_record", "Record a demo file for a client\nUsage: cl_record <client #>" );
   Cmd_AddCommand ("cl_stoprecord", SV_StopRecord_f);
 	Cmd_SetDescription( "cl_stoprecord", "Stop recording a client demo\nUsage: cl_stoprecord" );
   Cmd_AddCommand ("cl_saverecord", SV_SaveRecord_f);
 	Cmd_SetDescription( "cl_saverecord", "Save a client recording regardless of score\nUsage: cl_saverecord <filename>" );
+#endif
 
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
@@ -1779,7 +1808,7 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "mvstop", SV_MultiViewStopRecord_f );
 	Cmd_SetDescription( "mvstop", "Stop a multiview recording\nUsage: mvstop" );
 #endif
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_AddCommand ("switchgame", SV_SwitchGame_f);
 	Cmd_SetDescription( "switchgame", "Switch games in multiVM mode to another match\nUsage: game <client> [num]" );
 	Cmd_AddCommand ("teleport", SV_Teleport_f);
@@ -1829,7 +1858,7 @@ void SV_AddDedicatedCommands( void )
 #endif
 	Cmd_AddCommand( "locations", SV_Locations_f );
 	Cmd_SetDescription( "locations", "Display a list of client locations from their country setting\nUsage: locations" );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_AddCommand( "load", SV_LoadVM_f );
 	Cmd_SetDescription("load", "Load extra VMs for showing multiple players or maps\nUsage: load");
 #endif
@@ -1849,7 +1878,7 @@ void SV_RemoveDedicatedCommands( void )
 	Cmd_RemoveCommand( "svsay" );
 #endif
 	Cmd_RemoveCommand( "locations" );
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 	Cmd_RemoveCommand( "load" );
 #endif
 }

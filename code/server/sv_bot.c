@@ -24,6 +24,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "server.h"
 #include "../botlib/botlib.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf Bot_Printf
+#define Com_DPrintf Bot_DPrintf
+#endif
+
+#ifdef USE_BOTLIB_DLOPEN
+static void	*botLib;
+static char dllName[ MAX_OSPATH ];
+#endif
+
 typedef struct bot_debugpoly_s
 {
 	int inuse;
@@ -38,7 +50,7 @@ int bot_maxdebugpolys;
 extern botlib_export_t	*botlib_export;
 int	bot_enable;
 
-
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 SV_BotAllocateClient
@@ -58,6 +70,10 @@ int SV_BotAllocateClient( void ) {
 	if ( i == sv_maxclients->integer ) {
 		return -1;
 	}
+	
+#ifdef USE_MULTIVM_SERVER
+	cl->newWorld = cl->gameWorld = gvmi;
+#endif
 
 	cl->gentity = SV_GentityNum( i );
 	cl->gentity->s.number = i;
@@ -70,8 +86,14 @@ int SV_BotAllocateClient( void ) {
 	cl->tld[0] = '\0';
 	cl->country = "BOT";
 
+#ifdef USE_MULTIVM_SERVER
+	Com_Printf("Allocating: %i (%i)\n", i, gvmi);
+#else
+  Com_Printf("Allocating: %i\n", i);
+#endif
 	return i;
 }
+#endif
 
 
 /*
@@ -170,6 +192,10 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int ty
 			Com_Error(ERR_DROP, S_COLOR_RED "Exit: %s", str);
 			break;
 		}
+		case PRT_DEBUG: {
+			Com_Printf("%s", str);
+			break;
+		}
 		default: {
 			Com_Printf("unknown print type\n");
 			break;
@@ -177,6 +203,8 @@ static __attribute__ ((format (printf, 2, 3))) void QDECL BotImport_Print(int ty
 	}
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 BotImport_Trace
@@ -247,6 +275,8 @@ BotImport_inPVS
 static int BotImport_inPVS(vec3_t p1, vec3_t p2) {
 	return SV_inPVS (p1, p2);
 }
+#endif
+
 
 /*
 ==================
@@ -268,7 +298,11 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 	float max;
 	int	i;
 
-	h = CM_InlineModel(modelnum, 5, gvm);
+#ifdef USE_MULTIVM_SERVER
+	h = CM_InlineModel(modelnum, 5, gvmi);
+#else
+  h = CM_InlineModel(modelnum, 5, 0);
+#endif
 	CM_ModelBounds(h, mins, maxs);
 	//if the model is rotated
 	if ((angles[0] || angles[1] || angles[2])) {
@@ -312,9 +346,11 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
+#ifndef USE_MULTIVM_SERVER
 	if( Hunk_CheckMark() ) {
-	//	Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
+		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
 	}
+#endif
 	return Hunk_Alloc( size, h_high );
 }
 
@@ -424,6 +460,8 @@ static void BotImport_DebugLineShow(int line, vec3_t start, vec3_t end, int colo
 	BotImport_DebugPolygonShow(line, color, 4, points);
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 /*
 ==================
 SV_BotClientCommand
@@ -433,6 +471,15 @@ static void BotClientCommand( int client, const char *command ) {
 	SV_ExecuteClientCommand( &svs.clients[client], command );
 }
 
+
+#ifdef USE_MULTIVM_SERVER
+void SV_SetAASgvm(int gvmi) {
+	if(botlib_export && bot_enable && botlib_export->SetAASgvm)
+		botlib_export->SetAASgvm(gvmi);
+}
+#endif
+
+
 /*
 ==================
 SV_BotFrame
@@ -441,9 +488,11 @@ SV_BotFrame
 void SV_BotFrame( int time ) {
 	if (!bot_enable) return;
 	//NOTE: maybe the game is already shutdown
-	if (!gvms[gvm]) return;
-	VM_Call( gvms[gvm], 1, BOTAI_START_FRAME, time );
+	if (!gvm) return;
+	VM_Call( gvm, 1, BOTAI_START_FRAME, time );
 }
+#endif
+
 
 /*
 ===============
@@ -525,20 +574,48 @@ SV_BotInitBotLib
 ==================
 */
 void SV_BotInitBotLib(void) {
+#ifndef USE_BOTLIB_DLOPEN
 	botlib_import_t	botlib_import;
+#else
+	GetBotLibAPI_t		GetBotLibAPI;
+
+#if defined (__linux__) && defined(__i386__)
+#define REND_ARCH_STRING "x86"
+#else
+#define REND_ARCH_STRING ARCH_STRING
+#endif // __linux__
+
+  // TODO: make this a fancy list of botlibs we recognize
+	Com_sprintf( dllName, sizeof( dllName ), BOTLIB_PREFIX "_libbots_" REND_ARCH_STRING DLL_EXT );
+	botLib = FS_LoadLibrary( dllName );
+
+	if ( !botLib )
+	{
+		Com_Error( ERR_FATAL, "Failed to load botlib %s", dllName );
+	}
+
+	GetBotLibAPI = Sys_LoadFunction( botLib, "GetBotLibAPI" );
+	if( !GetBotLibAPI )
+	{
+		Com_Error( ERR_FATAL, "Can't load symbol GetBotLibAPI" );
+		return;
+	}
+#endif // USE_BOTLIB_DLOPEN
 
 	if (debugpolygons) Z_Free(debugpolygons);
 	bot_maxdebugpolys = Cvar_VariableIntegerValue("bot_maxdebugpolys");
 	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
 
 	botlib_import.Print = BotImport_Print;
+#ifndef BUILD_SLIM_CLIENT
 	botlib_import.Trace = BotImport_Trace;
 	botlib_import.EntityTrace = BotImport_EntityTrace;
 	botlib_import.PointContents = BotImport_PointContents;
 	botlib_import.inPVS = BotImport_inPVS;
+	botlib_import.BotClientCommand = BotClientCommand;
+#endif
 	botlib_import.BSPEntityData = BotImport_BSPEntityData;
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
-	botlib_import.BotClientCommand = BotClientCommand;
 
 	//memory management
 	botlib_import.GetMemory = BotImport_GetMemory;
@@ -563,7 +640,7 @@ void SV_BotInitBotLib(void) {
 	botlib_import.DebugPolygonDelete = BotImport_DebugPolygonDelete;
 
 	botlib_import.Sys_Milliseconds = Sys_Milliseconds;
-
+  
 	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
 }
@@ -614,10 +691,10 @@ int EntityInPVS( int client, int entityNum ) {
 	int					i;
 
 	cl = &svs.clients[client];
-#ifdef USE_MV
-	frame = &cl->frames[cl->gameWorld][cl->netchan.outgoingSequence & PACKET_MASK];
+#ifdef USE_MULTIVM_SERVER
+  frame = &cl->frames[gvmi][cl->netchan.outgoingSequence & PACKET_MASK];
 #else
-	frame = &cl->frames[0][cl->netchan.outgoingSequence & PACKET_MASK];
+	frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 #endif
 	for ( i = 0; i < frame->num_entities; i++ )	{
 		if ( svs.snapshotEntities[(frame->first_entity + i) % svs.numSnapshotEntities].number == entityNum ) {
@@ -638,10 +715,10 @@ int SV_BotGetSnapshotEntity( int client, int sequence ) {
 	clientSnapshot_t	*frame;
 
 	cl = &svs.clients[client];
-#ifdef USE_MV
-	frame = &cl->frames[cl->gameWorld][cl->netchan.outgoingSequence & PACKET_MASK];
+#ifdef USE_MULTIVM_SERVER
+	frame = &cl->frames[gvmi][cl->netchan.outgoingSequence & PACKET_MASK];
 #else
-	frame = &cl->frames[0][cl->netchan.outgoingSequence & PACKET_MASK];
+  frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
 #endif
 	if (sequence < 0 || sequence >= frame->num_entities) {
 		return -1;

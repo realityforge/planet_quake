@@ -43,18 +43,15 @@ void CMod_LoadShaders2( lump_t *l ) {
 	int			i, count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if (l->filelen % sizeof(*in)) {
-		Com_Error (ERR_DROP, "CMod_LoadShaders: funny lump size");
-	}
 	count = l->filelen / sizeof(*in);
 
 	if (count < 1) {
 		Com_Error (ERR_DROP, "Map with no shaders");
 	}
-	cms[cm].shaders = Hunk_Alloc( count * sizeof( *cms[cm].shaders ), h_high );
-	cms[cm].numShaders = count;
+	cm.shaders = Hunk_Alloc( count * sizeof( *cm.shaders ), h_high );
+	cm.numShaders = count;
 
-	out = cms[cm].shaders;
+	out = cm.shaders;
 	for ( i=0 ; i<count ; i++, in++, out++ ) {
 		memcpy(&out->shader, va("textures/%s", in->texture[0] == '.' || in->texture[0] == '/' ? &in->texture[1] : in->texture), sizeof(out->shader));
 		out->shader[sizeof(out->shader)-1] = '\0';
@@ -89,8 +86,8 @@ void CMod_LoadSubmodels2( lump_t *l ) {
 
 	if (count < 1)
 		Com_Error (ERR_DROP, "Map with no models");
-	cms[cm].cmodels = Hunk_Alloc( count * sizeof( *cms[cm].cmodels ), h_high );
-	cms[cm].numSubModels = count;
+	cm.cmodels = Hunk_Alloc( count * sizeof( *cm.cmodels ), h_high );
+	cm.numSubModels = count;
 
 	if ( count > MAX_SUBMODELS ) {
 		Com_Error( ERR_DROP, "MAX_SUBMODELS exceeded" );
@@ -98,7 +95,7 @@ void CMod_LoadSubmodels2( lump_t *l ) {
 
 	for ( i=0 ; i<count ; i++, in++)
 	{
-		out = &cms[cm].cmodels[i];
+		out = &cm.cmodels[i];
 		for (j=0 ; j<3 ; j++)
 		{	// spread the mins / maxs by a pixel
 			out->mins[j] = LittleFloat (in->mins[j]) - 1;
@@ -111,16 +108,16 @@ void CMod_LoadSubmodels2( lump_t *l ) {
 
 		int leafNum = in->headnode + 1;
 		// make a "leaf" just to hold the model's brushes and surfaces
-		out->leaf.numLeafBrushes = LittleLong( cms[cm].leafs[leafNum].numLeafBrushes );
+		out->leaf.numLeafBrushes = LittleLong( cm.leafs[leafNum].numLeafBrushes );
 		indexes = Hunk_Alloc( out->leaf.numLeafBrushes * 4, h_high );
-		out->leaf.firstLeafBrush = indexes - cms[cm].leafbrushes;
+		out->leaf.firstLeafBrush = indexes - cm.leafbrushes;
 		for ( j = 0 ; j < out->leaf.numLeafBrushes ; j++ ) {
 			indexes[j] = LittleLong( in->headnode ) + j;
 		}
 
 		out->leaf.numLeafSurfaces = LittleLong( in->numfaces );
 		indexes = Hunk_Alloc( out->leaf.numLeafSurfaces * 4, h_high );
-		out->leaf.firstLeafSurface = indexes - cms[cm].leafsurfaces;
+		out->leaf.firstLeafSurface = indexes - cm.leafsurfaces;
 		for ( j = 0 ; j < out->leaf.numLeafSurfaces ; j++ ) {
 			indexes[j] = LittleLong( in->firstface ) + j;
 		}
@@ -145,20 +142,20 @@ void CMod_LoadBrushes2( lump_t *l ) {
 	}
 	count = l->filelen / sizeof(*in);
 
-	cms[cm].brushes = Hunk_Alloc( ( BOX_BRUSHES + count ) * sizeof( *cms[cm].brushes ), h_high );
-	cms[cm].numBrushes = count;
+	cm.brushes = Hunk_Alloc( ( BOX_BRUSHES + count ) * sizeof( *cm.brushes ), h_high );
+	cm.numBrushes = count;
 
-	out = cms[cm].brushes;
+	out = cm.brushes;
 
 	for ( i = 0; i < count; i++, out++, in++ ) {
-		out->sides = cms[cm].brushsides + LittleLong( in->firstside );
+		out->sides = cm.brushsides + LittleLong( in->firstside );
 		out->numsides = LittleLong( in->numsides );
 		
 		out->shaderNum = (*out->sides).shaderNum;
-		if ( out->shaderNum < 0 || out->shaderNum >= cms[cm].numShaders ) {
+		if ( out->shaderNum < 0 || out->shaderNum >= cm.numShaders ) {
 			Com_Error( ERR_DROP, "CMod_LoadBrushes: bad shaderNum: %i", out->shaderNum );
 		}
-		out->contents = cms[cm].shaders[out->shaderNum].contentFlags;
+		out->contents = cm.shaders[out->shaderNum].contentFlags;
 
 		CM_BoundBrush( out );
 	}
@@ -179,22 +176,19 @@ void CMod_LoadLeafs2( lump_t *l )
 	int			count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
 	if ( count < 1 )
 		Com_Error( ERR_DROP, "Map with no leafs" );
 
-	cms[cm].leafs = Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cms[cm].leafs ), h_high );
-	cms[cm].numLeafs = count;
+	cm.leafs = Hunk_Alloc( ( BOX_LEAFS + count ) * sizeof( *cm.leafs ), h_high );
+	cm.numLeafs = count;
 
-	out = cms[cm].leafs;
+	out = cm.leafs;
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
 		out->cluster = LittleLong( in->cluster );
-		//out->area = LittleLong( in->area );
+		out->area = 0;
 		out->firstLeafBrush = LittleLong( in->firstleafbrush );
 		out->numLeafBrushes = LittleLong( in->numleafbrushes );
 		out->firstLeafSurface = LittleLong( in->firstleafface );
@@ -203,21 +197,46 @@ void CMod_LoadLeafs2( lump_t *l )
 /*
 
 	// get numClusters (have in dBsp2Vis_t, but Q2 recomputes this ...)
-	cms[cm].numClusters = 0;
-	for (i = 0; i < cms[cm].numLeafs; i++)
-		if (cms[cm].leafs2[i].cluster >= cms[cm].numClusters)
-			cms[cm].numClusters = cms[cm].leafs2[i].cluster + 1;
+	cm.numClusters = 0;
+	for (i = 0; i < cm.numLeafs; i++)
+		if (cm.leafs2[i].cluster >= cm.numClusters)
+			cm.numClusters = cm.leafs2[i].cluster + 1;
 
 */
-		if ( out->cluster >= cms[cm].numClusters )
-			cms[cm].numClusters = out->cluster + 1;
-		if ( out->area >= cms[cm].numAreas )
-			cms[cm].numAreas = out->area + 1;
+		if ( out->cluster >= cm.numClusters )
+			cm.numClusters = out->cluster + 1;
+		if ( out->area >= cm.numAreas )
+			cm.numAreas = out->area + 1;
 	}
-
-	cms[cm].areas = Hunk_Alloc( cms[cm].numAreas * sizeof( *cms[cm].areas ), h_high );
-	cms[cm].areaPortals = Hunk_Alloc( cms[cm].numAreas * cms[cm].numAreas * sizeof( *cms[cm].areaPortals ), h_high );
 }
+
+
+static void CMod_LoadAreas( lump_t *l )
+{
+	dZone_t 	*in;
+	int			count;
+
+	in = (void *)(cmod_base + l->fileofs);
+	count = l->filelen / sizeof(*in);
+// this code is for Quake3 from gildor2,
+// so if quake 3 has no zones and its recreated,
+// maybe its ok without it?
+
+//!!	LoadZones(bsp->zones, bsp->numZones);
+//!!	LoadZonePortals(bsp->zoneportals, bsp->numZonePortals);
+	// Q3 zones: simulate loading (create 1 zone)
+
+/*
+	map_zones = new (dataChain) czone_t;
+	numZones  = 1;
+	numzoneportals = 0;
+*/
+
+	cm.numAreas = 2;
+	cm.areas = Hunk_Alloc( cm.numAreas * sizeof( *cm.areas ), h_high );
+	cm.areaPortals = Hunk_Alloc( cm.numAreas * cm.numAreas * sizeof( *cm.areaPortals ), h_high );
+}
+
 
 
 /*
@@ -240,14 +259,14 @@ void CMod_LoadNodes2( lump_t *l ) {
 
 	if (count < 1)
 		Com_Error( ERR_DROP, "Map has no nodes" );
-	cms[cm].nodes = Hunk_Alloc( count * sizeof( *cms[cm].nodes ), h_high );
-	cms[cm].numNodes = count;
+	cm.nodes = Hunk_Alloc( count * sizeof( *cm.nodes ), h_high );
+	cm.numNodes = count;
 
-	out = cms[cm].nodes;
+	out = cm.nodes;
 
 	for ( i = 0; i < count; i++, out++, in++ )
 	{
-		out->plane = cms[cm].planes + LittleLong( in->planeNum );
+		out->plane = cm.planes + LittleLong( in->planeNum );
 		for ( j = 0; j < 2; j++ )
 		{
 			child = LittleLong( in->children[j] );
@@ -280,10 +299,10 @@ void CMod_LoadPlanes2( const lump_t *l )
 	if ( count < 1 )
 		Com_Error( ERR_DROP, "Map with no planes" );
 
-	cms[cm].planes = Hunk_Alloc( ( BOX_PLANES + count ) * sizeof( *cms[cm].planes ), h_high );
-	cms[cm].numPlanes = count;
+	cm.planes = Hunk_Alloc( ( BOX_PLANES + count ) * sizeof( *cm.planes ), h_high );
+	cm.numPlanes = count;
 
-	out = cms[cm].planes;
+	out = cm.planes;
 
 	for ( i = 0; i < count; i++, in++, out++ )
 	{
@@ -302,9 +321,9 @@ void CMod_LoadPlanes2( const lump_t *l )
 	/*
 	
 		// silly check for correct lightmaps
-		for (i = 0; i < cms[cm].numFaces; i++)
-			if (cms[cm].faces2[i].lightofs > cms[cm].lightDataSize)
-				cms[cm].faces2[i].lightofs = -1;
+		for (i = 0; i < cm.numFaces; i++)
+			if (cm.faces2[i].lightofs > cm.lightDataSize)
+				cm.faces2[i].lightofs = -1;
 
 */
 }
@@ -323,15 +342,12 @@ void CMod_LoadLeafBrushes2( const lump_t *l )
 	int count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
-	cms[cm].leafbrushes = Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cms[cm].leafbrushes ), h_high );
-	cms[cm].numLeafBrushes = count;
+	cm.leafbrushes = Hunk_Alloc( (count + BOX_BRUSHES) * sizeof( *cm.leafbrushes ), h_high );
+	cm.numLeafBrushes = count;
 
-	out = cms[cm].leafbrushes;
+	out = cm.leafbrushes;
 
 	for ( i = 0; i < count; i++, in++, out++ ) {
 		*out = LittleLong( *in );
@@ -352,15 +368,12 @@ void CMod_LoadLeafSurfaces2( const lump_t *l )
 	int count;
 
 	in = (void *)(cmod_base + l->fileofs);
-	if ( l->filelen % sizeof(*in) )
-		Com_Error( ERR_DROP, "MOD_LoadBmodel: funny lump size" );
-
 	count = l->filelen / sizeof(*in);
 
-	cms[cm].leafsurfaces = Hunk_Alloc( count * sizeof( *cms[cm].leafsurfaces ), h_high );
-	cms[cm].numLeafSurfaces = count;
+	cm.leafsurfaces = Hunk_Alloc( count * sizeof( *cm.leafsurfaces ), h_high );
+	cm.numLeafSurfaces = count;
 
-	out = cms[cm].leafsurfaces;
+	out = cm.leafsurfaces;
 
 	for ( i = 0; i < count; i++, in++, out++ ) {
 		*out = LittleLong( *in );
@@ -387,20 +400,20 @@ void CMod_LoadBrushSides2 (lump_t *l)
 	}
 	count = l->filelen / sizeof(*in);
 
-	cms[cm].brushsides = Hunk_Alloc( ( BOX_SIDES + count ) * sizeof( *cms[cm].brushsides ), h_high );
-	cms[cm].numBrushSides = count;
+	cm.brushsides = Hunk_Alloc( ( BOX_SIDES + count ) * sizeof( *cm.brushsides ), h_high );
+	cm.numBrushSides = count;
 
-	out = cms[cm].brushsides;
+	out = cm.brushsides;
 
 	for ( i= 0; i < count; i++, in++, out++ ) {
 		num = LittleLong( in->planenum );
-		out->plane = &cms[cm].planes[num];
+		out->plane = &cm.planes[num];
 		out->shaderNum = LittleLong( in->texinfo );
 		if ( out->shaderNum < 0 ) out->shaderNum = 0;
-		if ( out->shaderNum < 0 || out->shaderNum >= cms[cm].numShaders ) {
+		if ( out->shaderNum < 0 || out->shaderNum >= cm.numShaders ) {
 			Com_Error( ERR_DROP, "CMod_LoadBrushSides2: bad shaderNum: %i", out->shaderNum );
 		}
-		out->surfaceFlags = cms[cm].shaders[out->shaderNum].surfaceFlags;
+		out->surfaceFlags = cm.shaders[out->shaderNum].surfaceFlags;
 	}
 }
 
@@ -412,11 +425,11 @@ CMod_LoadEntityString
 */
 void CMod_LoadEntityString2( lump_t *l, const char *name ) {
 	CMod_LoadEntityString(l, name);
-	
+
 	// detect kingpin map entities
-	if (strstr(cms[cm].entityString, "\"classname\" \"junior\"") ||
-		strstr(cms[cm].entityString, "\"classname\" \"lightflare\"") ||
-		strstr(cms[cm].entityString, "\"fogdensity2\""))
+	if (strstr(cm.entityString, "\"classname\" \"junior\"") ||
+		strstr(cm.entityString, "\"classname\" \"lightflare\"") ||
+		strstr(cm.entityString, "\"fogdensity2\""))
 	{
 		//TODO: bspfile.type = map_kp;
 		Com_DPrintf("Kingpin map detected\n");
@@ -468,24 +481,24 @@ void CMod_LoadVisibility2( lump_t *l ) {
 	dBsp2Vis_t *in;
 	in = (void *)(cmod_base + l->fileofs);
 
-	len = l->filelen;
+	len = cm.numClusters;
 	if ( !len ) {
-		cms[cm].numClusters = 1;
-		cms[cm].clusterBytes = ( cms[cm].numClusters + 31 ) & ~31;
-		cms[cm].visibility = Hunk_Alloc( cms[cm].clusterBytes, h_high );
-		Com_Memset( cms[cm].visibility, 255, cms[cm].clusterBytes );
+		cm.numClusters = 1;
+		cm.clusterBytes = ( cm.numClusters + 31 ) & ~31;
+		cm.visibility = Hunk_Alloc( cm.clusterBytes, h_high );
+		Com_Memset( cm.visibility, 255, cm.clusterBytes );
 		return;
 	}
 	buf = cmod_base + l->fileofs;
 
-	rowSize = (in->numClusters + 7) >> 3;
+	cm.clusterBytes = rowSize = (cm.numClusters + 7) >> 3;
 
-	cms[cm].vised = qtrue;
-	cms[cm].visibility = Hunk_Alloc( len, h_high );
-	cms[cm].numClusters = LittleLong( ((int *)buf)[0] );
-	cms[cm].clusterBytes = LittleLong( ((int *)buf)[1] );
-	for (int i = 0; i < in->numClusters; i++, cms[cm].visibility += rowSize)
-		DecompressVis(cms[cm].visibility, in, in->bitOfs[i][PVS], rowSize);
+	cm.vised = qtrue;
+	cm.visibility = Hunk_Alloc( rowSize * cm.numClusters , h_high );
+	//cm.numClusters = LittleLong( ((int *)buf)[0] );
+	//cm.clusterBytes = LittleLong( ((int *)buf)[1] );
+	for (int i = 0; i < in->numClusters; i++, cm.visibility += rowSize)
+		DecompressVis(cm.visibility, in, in->bitOfs[i][PVS], rowSize);
 }
 
 //==================================================================
@@ -505,41 +518,24 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 	int			c;
 	cPatch_t	*patch;
 	vec3_t		points[MAX_PATCH_VERTS];
-	int			width, height;
 	int			shaderNum;
 
 	in = (void *)(cmod_base + surfs->fileofs);
-	if (surfs->filelen % sizeof(*in))
-		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
-	cms[cm].numSurfaces = count = surfs->filelen / sizeof(*in);
-	cms[cm].surfaces = Hunk_Alloc( cms[cm].numSurfaces * sizeof( cms[cm].surfaces[0] ), h_high );
+
+	cm.numSurfaces = count = surfs->filelen / sizeof(*in);
+	cm.surfaces = Hunk_Alloc( cm.numSurfaces * sizeof( cm.surfaces[0] ), h_high );
 
 	dv = (void *)(cmod_base + verts->fileofs);
-	if (verts->filelen % sizeof(*dv))
-		Com_Error (ERR_DROP, "CMod_LoadPatches2: funny lump size");
 
-	// scan through all the surfaces, but only load patches,
-	// not planar faces
+	// scan through all the surfaces, but only load the bsp plane
 	for ( i = 0 ; i < count ; i++, in++ ) {
-		// FIXME: check for non-colliding patches
-
-		cms[cm].surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
-		Com_Printf( "Loading map ------------------\n" );
+		cm.surfaces[ i ] = patch = Hunk_Alloc( sizeof( *patch ), h_high );
 
 		// load the full drawverts onto the stack
-		width = 5; //LittleLong( in->patchWidth );
-		height = 5; //LittleLong( in->patchHeight );
 		c = LittleLong( in->numedges );
-		if(c == 6) {
-			width = 3;
-			height = 3;
-		}
 		if ( c > MAX_PATCH_VERTS ) {
 			Com_Error( ERR_DROP, "ParseMesh: MAX_PATCH_VERTS" );
 		}
-		if(!c) continue;
-		//Com_Printf("CMod_LoadPatches2: %i, %f x %f x %f\n", c, 
-		//	points[j][0], points[j][1], points[j][2]);
 
 		dv_p = dv + LittleLong( in->firstedge );
 		for ( j = 0 ; j < c ; j++, dv_p++ ) {
@@ -549,12 +545,143 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 		}
 
 		shaderNum = LittleLong( in->texinfo );
-		patch->contents = cms[cm].shaders[shaderNum].contentFlags;
-		patch->surfaceFlags = cms[cm].shaders[shaderNum].surfaceFlags;
+		patch->contents = cm.shaders[shaderNum].contentFlags;
+		patch->surfaceFlags = cm.shaders[shaderNum].surfaceFlags;
 		
-		//if(patch->surfaceFlags & SURF_SKY) {
-		//	continue;
-		//}
+		if(patch->surfaceFlags & SURF_SKY) {
+			continue;
+		}
+
+/*
+
+		if (sflags & (SHADER_TRANS33|SHADER_TRANS66|SHADER_ALPHA|SHADER_TURB|SHADER_SKY))
+			numVerts = RemoveCollinearPoints(pverts, numVerts);
+
+		* numTriangles = numVerts - 2 (3 verts = 1 tri, 4 verts = 2 tri etc.)
+		 * numIndexes = numTriangles * 3
+		 * Indexes: (0 1 2) (0 2 3) (0 3 4) ... (here: 5 verts, 3 triangles, 9 indexes)
+		int numTris;
+		if (shader->tessSize)
+		{
+			numTris  = SubdividePlane(pverts, numVerts, shader->tessSize);
+			numVerts = subdivNumVerts;
+		}
+		else
+			numTris = numVerts - 2;
+
+		int numIndexes = numTris * 3;
+
+		----- Prepare for vertex generation ----------------
+		// alloc new surface
+		surfacePlanar_t *s = new (map.dataChain) surfacePlanar_t;
+		s->shader = shader;
+		map.faces[i] = s;
+		
+		
+		s->plane = bspfile.planes[surfs->planenum];
+		if (surfs->side)
+		{
+			// backface (needed for backface culling)
+			s->plane.normal.Negate();
+			s->plane.dist = -s->plane.dist;
+			s->plane.Setup();
+		}
+		s->numVerts   = numVerts;
+		s->verts      = new (map.dataChain) vertex_t [numVerts];
+		s->numIndexes = numIndexes;
+		s->indexes    = new (map.dataChain) int [numIndexes];
+
+		------------ Generate indexes ----------------------
+		if (shader->tessSize)
+			GetSubdivideIndexes(s->indexes);
+		else
+		{
+			int *pindex = s->indexes;
+			for (j = 0; j < numTris; j++)
+			{
+				*pindex++ = 0;
+				*pindex++ = j+1;
+				*pindex++ = j+2;
+			}
+		}
+
+		--------- Create surface vertexes ------------------
+		vertex_t *v = s->verts;
+		// ClearBounds2D(mins, maxs)
+		float mins[2], maxs[2];				// surface extents
+		mins[0] = mins[1] =  BIG_NUMBER;
+		maxs[0] = maxs[1] = -BIG_NUMBER;
+		// Enumerate vertexes, prepare data for lightmap
+		for (j = 0; j < numVerts; j++, v++)
+		{
+			v->xyz = *pverts[j];
+			if (sflags & SHADER_SKY) continue;
+
+			float v1 = dot(v->xyz, stex->vecs[0].vec) + stex->vecs[0].offset;
+			float v2 = dot(v->xyz, stex->vecs[1].vec) + stex->vecs[1].offset;
+			// Update bounds
+			EXPAND_BOUNDS(v1, mins[0], maxs[0]);
+			EXPAND_BOUNDS(v2, mins[1], maxs[1]);
+			// Texture coordinates
+			if (!(sflags & SHADER_TURB)) //?? (!shader->tessSize)
+			{
+				assert(shader->width > 0 && shader->height > 0);
+				v->st[0] = v1 / shader->width;
+				v->st[1] = v2 / shader->height;
+			}
+			else
+			{
+				v->st[0] = v1 - stex->vecs[0].offset;
+				v->st[1] = v2 - stex->vecs[1].offset;
+			}
+			// save intermediate data for lightmap texcoords
+			v->lm[0] = v1;
+			v->lm[1] = v2;
+			// Vertex color
+			v->c.rgba = RGBA(1,1,1,1);
+		}
+
+		--------------- Lightmap -------------------
+		s->lightmap = NULL;
+		if (needLightmap)
+			InitSurfaceLightmap2(surfs, s, mins, maxs);
+		// special case for q1/hl lightmap without data: dark lightmap
+		// (other map formats -- fullbright texture)
+		if (darkLightmap)
+		{
+			dynamicLightmap_t *lm = s->lightmap;
+			lm->w = 0;
+			lm->h = 0;
+			static byte dark[] = { 0, 0, 0 };
+			lm->source[0] = dark;		// hack: offset from lighting start
+			v = s->verts;
+			for (j = 0; j < numVerts; j++, v++)
+			{
+				v->lm[0] = v->lm[1] = 0.5f;
+				v->lm2[0] = v->lm2[1] = 0;
+			}
+			lm->externalSource = true;
+		}
+
+		BuildPlanarSurf(s);
+		if (stex->flags & SURF_LIGHT)		//!! + sky when ambient <> 0
+		{
+			static const color_t defColor = {96, 96, 96, 255};// {255, 255, 255, 255};
+
+			float area = GetSurfArea(s);
+			image_t *img = FindImage(va("textures/%s", stex->texture), IMAGE_MIPMAP);
+			BuildSurfLight(s, img ? &img->color : &defColor, area, stex->value, (stex->flags & SURF_SKY) != 0);
+			if (stex->flags & SURF_AUTOFLARE && !(stex->flags & SURF_SKY))
+				BuildSurfFlare(s, img ? &img->color : &defColor, area);
+		}
+
+		// free allocated poly
+		if (shader->tessSize)
+			FreeSubdividedPlane();
+	}
+*/
+
+
 
 		// create the internal facet structure
 		//patch->pc = CM_GeneratePatchCollide( width, height, points );
@@ -565,7 +692,7 @@ void CMod_LoadPatches2( lump_t *surfs, lump_t *verts ) {
 static int CheckLump(lump_t *l, char *lumpName, int size)
 {
 	if (l->filelen % size)
-		Com_Error(ERR_DROP, "LoadBSPFile: incorrect lump size (%s)", lumpName);
+		Com_Error(ERR_DROP, "%s: incorrect lump size (%s)", __func__, lumpName);
 
 	//*ptr = (void *)(cmod_base + l->fileofs);
 
@@ -576,6 +703,7 @@ static int CheckLump(lump_t *l, char *lumpName, int size)
 void LoadQ2Map(const char *name) {
 	dBsp2Hdr_t		header;
 
+	Com_DPrintf("CM_Load: Loading Quake 2 map.\n");
 	header = *(dBsp2Hdr_t *)cmod_base;
 
 #if !LITTLE_ENDIAN
@@ -616,7 +744,7 @@ void LoadQ2Map(const char *name) {
 	CMod_LoadEntityString2 (&header.lumps[LUMP_Q2_ENTITIES], name);
 	CMod_LoadVisibility2( &header.lumps[LUMP_Q2_VISIBILITY] );
 	// TODO: area portals and area mask stuff
-	//CMod_LoadAreas( &header.lumps[LUMP_Q2_ZONES] );
+	CMod_LoadAreas( &header.lumps[LUMP_Q2_ZONES] );
 	//CMod_LoadAreaPortals( &header.lumps[LUMP_Q2_ZONEPORTALS] );
 	//
 	//;

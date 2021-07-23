@@ -1,4 +1,4 @@
-build/
+/build/
 output/
 .vs/
 .vscode/
@@ -8,9 +8,8 @@ output/
 
 # emscripten
 ####################
-base
-code/xquakejs/lib/emsdk
-code/xquakejs/lib/emsdk/node_modules/
-node_modules
+code/wasm/node_modules/
+/node_modules/
 .resources
-data
+libs/tools/mbspc/build
+libs/omni-bot/GameInterfaces/ET-GPL/src/curl-7.12.2

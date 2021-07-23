@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifndef __CM_PUBLIC_H__
+#define __CM_PUBLIC_H__
+
 #include "qfiles.h"
 
 
@@ -34,6 +37,7 @@ void		CM_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
 int			CM_NumClusters (void);
 int			CM_NumInlineModels( void );
 char		*CM_EntityString (void);
+
 
 // returns an ORed contents mask
 int			CM_PointContents( const vec3_t p, clipHandle_t model );
@@ -66,3 +70,5 @@ int			CM_WriteAreaBits( byte *buffer, int area );
 
 // cm_patch.c
 void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, float *points) );
+
+#endif

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#include "../qcommon/q_shared.h"
 #include <setjmp.h>
 
+#if defined(USE_INTERNAL_JPEG) || defined(USE_SYSTEM_JPEG)
+
 /*
  * Include file for users of JPEG library.
  * You will need to have included system headers that define at least
@@ -475,3 +477,17 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 
 	Hunk_FreeTempMemory(out);
 }
+
+#else
+void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height )
+{
+}
+void CL_SaveJPG( const char *filename, int quality, int image_width, int image_height, byte *image_buffer, int padding )
+{
+}
+size_t CL_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
+    int image_width, int image_height, byte *image_buffer, int padding)
+{
+  return 0;
+}
+#endif

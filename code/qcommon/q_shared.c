@@ -2086,7 +2086,7 @@ qboolean Info_SetValueForKey_s( char *s, int slen, const char *key, const char *
 
 	if ( len1 + len2 >= slen )
 	{
-		Com_DPrintf( S_COLOR_YELLOW "Info string length exceeded for key '%s'\n", key );
+		Com_Printf( S_COLOR_YELLOW "Info string length exceeded for key '%s'\n", key );
 		return qfalse;
 	}
 
@@ -2164,3 +2164,196 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 	else
 		return s;
 }
+
+
+#ifdef BUILD_GAME_STATIC
+
+static	char	com_token[MAX_TOKEN_CHARS];
+static	char	com_parsename[MAX_TOKEN_CHARS];
+static	int		com_lines;
+static	int		com_tokenline;
+static	int		is_separator[ 256 ];
+
+
+
+void Com_InitSeparators( void )
+{
+	is_separator['\n']=1;
+	is_separator[';']=1;
+	is_separator['=']=1;
+	is_separator['{']=1;
+	is_separator['}']=1;
+}
+
+
+void SkipTillSeparators( char **data )
+{
+	char	*p;
+	int	c;
+
+	p = *data;
+
+	if ( !*p )
+		return;
+
+	while ( (c = *p) != '\0' ) 
+	{
+		p++;
+		if ( is_separator[ c ] )
+		{
+			if ( c == '\n' )
+			{
+				com_lines++;
+			}
+			break;
+		}
+	}
+
+	*data = p;
+}
+
+
+char *COM_ParseSep( char **data_p, qboolean allowLineBreaks )
+{
+	int c = 0, len;
+	qboolean hasNewLines = qfalse;
+	const char *data;
+
+	data = *data_p;
+	len = 0;
+	com_token[0] = '\0';
+	com_tokenline = 0;
+
+	// make sure incoming data is valid
+	if ( !data )
+	{
+		*data_p = NULL;
+		return com_token;
+	}
+
+	while ( 1 )
+	{
+		// skip whitespace
+		data = SkipWhitespace( data, &hasNewLines );
+		if ( !data )
+		{
+			*data_p = NULL;
+			return com_token;
+		}
+		if ( hasNewLines && !allowLineBreaks )
+		{
+			*data_p = (char *)data;
+			return com_token;
+		}
+
+		c = *data;
+
+		// skip double slash comments
+		if ( c == '/' && data[1] == '/' )
+		{
+			data += 2;
+			while (*data && *data != '\n') {
+				data++;
+			}
+		}
+		// skip /* */ comments
+		else if ( c == '/' && data[1] == '*' ) 
+		{
+			data += 2;
+			while ( *data && ( *data != '*' || data[1] != '/' ) ) 
+			{
+				if ( *data == '\n' )
+				{
+					com_lines++;
+				}
+				data++;
+			}
+			if ( *data ) 
+			{
+				data += 2;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	com_tokenline = com_lines;
+
+	// handle quoted strings
+	if ( c == '"' )
+	{
+		data++;
+		while ( 1 )
+		{
+			c = *data;
+			if ( c == '"' || c == '\0' )
+			{
+				if ( c == '"' )
+					data++;
+
+				com_token[ len ] = '\0';
+				*data_p = ( char * ) data;
+				return com_token;
+			}
+			data++;
+			if ( c == '\n' )
+			{
+				com_lines++;
+			}
+			if ( len < MAX_TOKEN_CHARS-1 )
+			{
+				com_token[ len ] = c;
+				len++;
+			}
+		}
+	}
+
+	// special case for separators
+ 	if ( is_separator[ c ]  )  
+	{
+		com_token[ len ] = c;
+		len++;
+		data++;
+	} 
+	else // parse a regular word
+	do
+	{
+		if ( len < MAX_TOKEN_CHARS - 1 )
+		{
+			com_token[ len ] = c;
+			len++;
+		}
+		data++;
+		c = *data;
+	} while ( c > ' ' && !is_separator[ c ] );
+
+	com_token[ len ] = '\0';
+
+	*data_p = ( char * ) data;
+	return com_token;
+}
+
+
+char* Q_strrchr( const char* string, int c )
+{
+	char cc = c;
+	char *s;
+	char *sp=(char *)0;
+
+	s = (char*)string;
+
+	while (*s)
+	{
+		if (*s == cc)
+			sp = s;
+		s++;
+	}
+	if (cc == 0)
+		sp = s;
+
+	return sp;
+}
+
+#endif

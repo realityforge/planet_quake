@@ -1,4 +1,6 @@
 
+#ifdef USE_DEMO_CLIENTS
+
 #include "server.h"
 
 
@@ -135,17 +137,19 @@ void SV_Record( client_t	*cl, char *s ) {
 
  	clientnum = cl - svs.clients;
 
+#ifdef USE_DEMO_SERVER
   if( sv.demoState == DS_PLAYBACK ) {
     Com_Printf ("DEMO: not recording playback during playback\n");
     return;
   }
+#endif
 
  	if ( cl->demorecording ) {
  		Com_Printf ("DEMO: Already recording client %i.\n", clientnum);
  		return;
  	}
 
-//	if ( cl->state != CA_ACTIVE ) {
+//	if ( cl->state != CS_ACTIVE ) {
 //		Com_Printf ("You must be in a level to record.\n");
 //		return;
 //	}
@@ -227,7 +231,7 @@ void SV_Record( client_t	*cl, char *s ) {
  	// write the baselines
  	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
  	for ( i = 0 ; i < MAX_GENTITIES; i++ ) {
- 		ent = &sv.svEntities[gvm][i].baseline;
+ 		ent = &sv.svEntities[i].baseline;
  		if ( !ent->number ) {
  			continue;
  		}
@@ -319,3 +323,5 @@ void SV_SaveRecord_f( void ) {
  	cl->savedemo = qtrue;
 	Com_Printf ("Saverecord: %li\n", cl - svs.clients);
 }
+
+#endif

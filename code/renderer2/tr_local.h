@@ -53,7 +53,7 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
-#define MAX_NUM_WORLDS 10
+#define MAX_NUM_WORLDS MAX_NUM_VMS
 
 #define	MAX_FBOS      64
 #define MAX_VISCOUNTS 5
@@ -799,7 +799,8 @@ typedef struct {
 	int			originalBrushNumber;
 	vec3_t		bounds[2];
 
-	unsigned	colorInt;				// in packed byte format
+	color4ub_t	colorInt;				// in packed byte format
+  vec4_t		color;
 	float		tcScale;				// texture coordinate vector scales
 	fogParms_t	parms;
 
@@ -851,7 +852,6 @@ SURFACES
 
 ==============================================================================
 */
-typedef byte color4ub_t[4];
 
 // any changes in surfaceType must be mirrored in rb_surfaceTable[]
 typedef enum {
@@ -879,7 +879,7 @@ typedef struct drawSurf_s {
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
-#define	MAX_FACE_POINTS		64
+#define	MAX_FACE_POINTS		256
 
 #define	MAX_PATCH_SIZE		32			// max dimensions of a patch mesh in map file
 #define	MAX_GRID_SIZE		65			// max dimensions of a grid mesh in memory
@@ -1143,6 +1143,7 @@ typedef struct {
 	int			numSurfaces;
 } bmodel_t;
 
+#define	MAX_MOD_KNOWN	1024
 
 /*
 ==============================================================================
@@ -1241,26 +1242,6 @@ typedef struct model_s {
 } model_t;
 
 
-#define	MAX_MOD_KNOWN	1024
-extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
-
-void		R_ModelInit (void);
-model_t		*R_GetModelByHandle( qhandle_t hModel );
-int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
-					 float frac, const char *tagName );
-void		R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs );
-
-void		R_Modellist_f (void);
-
-//====================================================
-
-#define	MAX_DRAWIMAGES			2048
-#define	MAX_SKINS				1024
-
-
-#define	MAX_DRAWSURFS			0x10000
-#define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
-
 typedef struct {
 	char		name[MAX_QPATH];		// ie: maps/tim_dm2.bsp
 	char		baseName[MAX_QPATH];	// ie: tim_dm2
@@ -1317,6 +1298,25 @@ typedef struct {
 	int						numModels;
 
 } world_t;
+
+extern model_t *worldModels[MAX_MOD_KNOWN*MAX_NUM_WORLDS];
+
+void		R_ModelInit (void);
+model_t		*R_GetModelByHandle( qhandle_t hModel );
+int			R_LerpTag( orientation_t *tag, qhandle_t handle, int startFrame, int endFrame, 
+					 float frac, const char *tagName );
+void		R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs );
+
+void		R_Modellist_f (void);
+
+//====================================================
+
+#define	MAX_DRAWIMAGES			2048
+#define	MAX_SKINS				1024
+
+
+#define	MAX_DRAWSURFS			0x10000
+#define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
 
 /*
 
@@ -1488,8 +1488,14 @@ typedef struct {
 	qboolean    depthFill;
 } backEndState_t;
 
-extern world_t s_worldData[MAX_NUM_WORLDS];
-extern int     rw;
+
+#ifdef USE_MULTIVM_CLIENT
+extern world_t s_worldDatas[MAX_NUM_WORLDS];
+extern int     rwi;
+#define s_worldData s_worldDatas[rwi]
+#else
+extern world_t s_worldData;
+#endif
 
 /*
 ** trGlobals_t 
@@ -1502,7 +1508,7 @@ extern int     rw;
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
 	int							lastRegistrationTime;
-	
+
 	int						visIndex;
 	int						visClusters[MAX_VISCOUNTS];
 	int						visCounts[MAX_VISCOUNTS];	// incremented every time a new vis cluster is entered
@@ -1694,7 +1700,6 @@ extern cvar_t	*r_railSegmentLength;
 extern cvar_t	*r_ignore;				// used for debugging anything
 
 extern cvar_t	*r_znear;				// near Z clip plane
-extern cvar_t	*r_zfar;				// far Z clip plane
 extern cvar_t	*r_zproj;				// z distance of projection plane
 extern cvar_t	*r_stereoSeparation;			// separation of cameras for stereo rendering
 
@@ -1702,10 +1707,6 @@ extern cvar_t	*r_measureOverdraw;		// enables stencil buffer overdraw measuremen
 
 extern cvar_t	*r_lodbias;				// push/pull LOD transitions
 extern cvar_t	*r_lodscale;
-
-#ifdef USE_LAZY_LOAD
-extern cvar_t	*r_lazyLoad;
-#endif
 
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
@@ -1724,7 +1725,6 @@ extern	cvar_t	*r_nocurves;
 extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
-extern cvar_t	*r_displayRefresh;		// optional display refresh option
 
 extern  cvar_t  *r_ext_framebuffer_object;
 extern  cvar_t  *r_ext_texture_float;
@@ -1842,10 +1842,20 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern cvar_t	*r_zfar;				// far Z clip plane
+#ifdef USE_LAZY_LOAD
+extern cvar_t	*r_lazyLoad;
+#endif
+extern  cvar_t  *r_paletteMode;
+extern  cvar_t  *r_seeThroughWalls;
+
 extern float dvrXScale;
 extern float dvrYScale;
 extern float dvrXOffset;
 extern float dvrYOffset;
+
+extern  cvar_t  *r_cursorShader;
+extern  cvar_t  *r_inputShader;
 
 //====================================================================
 
@@ -1908,7 +1918,7 @@ qboolean R_CalcTangentVectors(srfVert_t * dv[3]);
 void R_LocalNormalToWorld (const vec3_t local, vec3_t world);
 void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 int R_CullBox (vec3_t bounds[2]);
-int R_CullLocalBox (vec3_t bounds[2]);
+int R_CullLocalBox (const vec3_t bounds[2]);
 int R_CullPointAndRadiusEx( const vec3_t origin, float radius, const cplane_t* frustum, int numPlanes );
 int R_CullPointAndRadius( const vec3_t origin, float radius );
 int R_CullLocalPointAndRadius( const vec3_t origin, float radius );
@@ -1966,8 +1976,8 @@ void	GL_Cull( int cullType );
 
 #define GLS_DEFAULT			GLS_DEPTHMASK_TRUE
 
-void	RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
-void	RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty);
+void	RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty);
+void	RE_UploadCinematic (int w, int h, int cols, int rows, byte *data, int client, qboolean dirty);
 
 void		RE_BeginFrame( stereoFrame_t stereoFrame );
 void		RE_BeginRegistration( glconfig_t *glconfig );
@@ -2005,7 +2015,6 @@ skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 int R_ComputeLOD( trRefEntity_t *ent );
 
 const void *RB_TakeVideoFrameCmd( const void *data );
-void RE_ResetBannerSpy( void );
 
 //
 // tr_shader.c
@@ -2017,7 +2026,8 @@ shader_t *R_FindShaderByName( const char *name );
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void    R_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);
-qhandle_t RE_CreateShaderFromImageBytes(const char* name, byte *pic, int width, int height);
+qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height);
+qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height);
 #ifdef USE_LAZY_MEMORY
 void		RE_ReloadShaders( qboolean createNew );
 #endif
@@ -2053,6 +2063,7 @@ typedef struct stageVars
 
 typedef struct shaderCommands_s 
 {
+  #pragma pack(push,16)
 	glIndex_t	indexes[SHADER_MAX_INDEXES] QALIGN(16);
 	vec4_t		xyz[SHADER_MAX_VERTEXES] QALIGN(16);
 	int16_t		normal[SHADER_MAX_VERTEXES][4] QALIGN(16);
@@ -2068,9 +2079,11 @@ typedef struct shaderCommands_s
 	qboolean    useInternalVao;
 	qboolean    useCacheVao;
 
+  color4ub_t	vertexColors[SHADER_MAX_VERTEXES] QALIGN(16);
 	stageVars_t	svars QALIGN(16);
 
-	//color4ub_t	constantColor255[SHADER_MAX_VERTEXES] QALIGN(16);
+	color4ub_t	constantColor255[SHADER_MAX_VERTEXES] QALIGN(16);
+  #pragma pack(pop)
 
 	shader_t	*shader;
 	double		shaderTime;	// -EC- set to double for frameloss fix
@@ -2374,6 +2387,8 @@ RENDERER BACK END FUNCTIONS
 */
 
 void RB_ExecuteRenderCommands( const void *data );
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation);
 
 /*
 =============================================================
@@ -2442,7 +2457,7 @@ typedef struct {
 	int height;
 	char *fileName;
 	qboolean jpeg;
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	qboolean downloadAfter;
 #endif
 } screenshotCommand_t;
@@ -2544,9 +2559,9 @@ void RE_TakeVideoFrame( int width, int height,
 
 void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );
+#ifdef USE_MULTIVM_CLIENT
 void RE_SetDvrFrame( float x, float y, float width, float height );
-void RB_FastCapture(byte *data);
-void RB_FastCaptureOld(byte *captureBuffer, byte *encodeBuffer);
+#endif
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
 void RE_VertexLighting( qboolean allowed );

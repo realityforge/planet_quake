@@ -378,6 +378,14 @@ typedef enum {
 
 	EV_NOAMMO,
 	EV_CHANGE_WEAPON,
+/*
+  TODO: make a weapon mod with infinite classes using an event counter,
+  EV_WEAPON_RESET
+  EV_WEAPON_COUNT
+  EV_CLASS_RESET
+  EV_CLASS_COUNT
+  
+*/
 	EV_FIRE_WEAPON,
 
 	EV_USE_ITEM0,
@@ -450,8 +458,9 @@ typedef enum {
 	EV_TAUNT_FOLLOWME,
 	EV_TAUNT_GETFLAG,
 	EV_TAUNT_GUARDBASE,
-	EV_TAUNT_PATROL
+	EV_TAUNT_PATROL,
 
+	EV_MAX
 } entity_event_t;
 
 
@@ -704,7 +713,7 @@ typedef enum {
 void	BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result );
 void	BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t result );
 
-void	BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps );
+void	BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps, int entityNum );
 
 void	BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad );
 

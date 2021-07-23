@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<q3map_feedback><message level="1">threads: 8
+Q3Map         - v1.0r (c) 1999 Id Software Inc.
+Q3Map (ydnar) - v2.5.17n
+NetRadiant    - v1.5.0n Jun 24 2021 22:57:06
+Your map saw the pretty lights from q3map2's BFG
+./build/debug-darwin-x86_64/quake3e_q3map2
+--- InitPaths ---
+VFS Init: /Users/briancullinan/.q3a/baseq3/
+VFS Init: /Applications/ioquake3/baseq3/
+
+-bsp argument unnecessary
+--- BSP ---
+Creating meta surfaces from brush faces
+Creating meta surfaces from patches
+entering scripts/shaderlist.txt
+entering scripts/base_button.shader
+ente</message><message level="1">ring scripts/base_door.shader
+entering scripts/base_floor.shader
+entering scripts/base_light.shader
+entering scripts/base_object.shader
+entering scripts/base_support.shader
+entering scripts/base_trim.shader
+entering scripts/base_wall.shader
+entering scripts/common.shader
+entering scripts/ctf.shader
+entering scripts/gothic_block.shader
+entering scripts/gothic_button.shader
+entering scripts/gothic_door.shader
+entering scripts/gothic_floor.shader
+entering scripts/gothic_light.shader
+entering scripts/gothic_tr</message><message level="1">im.shader
+entering scripts/gothic_wall.shader
+entering scripts/liquids.shader
+entering scripts/models.shader
+entering scripts/organics.shader
+entering scripts/sfx.shader
+entering scripts/skin.shader
+entering scripts/skies.shader
+      889 shaderInfo
+--- LoadMapFile ---
+Loading /Users/briancullinan/f1yas2.map
+entering /Users/briancullinan/f1yas2.map
+detected brushType = QUAKE (Axial Projection)
+</message><message level="2">WARNING: Couldn't find image for shader textures/Groundcover_Sand_Smooth
+WARNING: Couldn't find image for shader textures/skip
+WARNING: Couldn't find image for shader textures/Vegetation_Grass_Artificial
+</message><message level="1">FloatPlane: bad normal
+FloatPlane: bad normal
+</message><select level="2">Entity 0, Brush 20: degenerate plane<brush>0 20</brush></select><select level="2">Entity 0, Brush 20: mirrored plane<brush>0 20</brush></select><message level="1">FloatPlane: bad normal
+FloatPlane: bad normal
+FloatPlane: bad normal
+FloatPlane: bad normal
+</message><select level="2">Entity 0, Brush 23: degenerate plane<brush>0 23</brush></select><select level="2">Entity 0, Brush 23: degenerate plane<brush>0 23</brush></select><select level="2">Entity 0, Brush 23: degenerate plane<brush>0 23</brush></select><message level="3">************ ERROR ************
+BaseWindingForPlaneAccu: no dominant axis found because normal is too short
+</message></q3map_feedback>

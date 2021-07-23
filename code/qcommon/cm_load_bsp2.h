@@ -112,7 +112,7 @@ struct dEdge_t
 };
 
 #define	MAXLIGHTMAPS	4
-typedef struct dBspFace_s
+typedef struct dBsp2Face_s
 {
 	unsigned short planenum;
 	short	side;
@@ -124,7 +124,7 @@ typedef struct dBspFace_s
 	// lighting info
 	byte	styles[MAXLIGHTMAPS];
 	int		lightofs;				// start of [numstyles*surfsize] samples
-} dBspFace_t;
+} dBsp2Face_t;
 
 typedef struct dBsp2Brush_s
 {

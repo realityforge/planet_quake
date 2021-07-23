@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include "snd_codec.h"
 
-static snd_codec_t *codecs;
+snd_codec_t *codecs;
 
 #ifdef USE_LAZY_LOAD
 qboolean updateSound = qfalse;
@@ -133,15 +133,15 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 		{
 			if( orgNameFailed )
 			{
-				//Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
-				//		filename, altName );
+				Com_DPrintf(S_COLOR_YELLOW "WARNING: %s not present, using %s instead\n",
+						filename, altName );
 			}
 
 			return rtn;
 		}
 	}
 
-	//Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
+	Com_Printf(S_COLOR_YELLOW "WARNING: Failed to %s sound %s!\n", info ? "load" : "open", filename);
 
 	return NULL;
 }
@@ -154,6 +154,7 @@ S_CodecInit
 void S_CodecInit()
 {
 	codecs = NULL;
+
 #ifdef USE_CODEC_OPUS
 	S_CodecRegister(&opus_codec);
 #endif
@@ -200,9 +201,13 @@ S_CodecLoad
 void *S_CodecLoad(const char *filename, snd_info_t *info)
 {
 	void *result;
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", filename );	
+#endif
 	result = S_CodecGetSound(filename, info);
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", "" );	
+#endif
 
 	return result;
 }
@@ -215,9 +220,13 @@ S_CodecOpenStream
 snd_stream_t *S_CodecOpenStream(const char *filename)
 {
 	snd_stream_t *result;
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", filename );	
+#endif
 	result = S_CodecGetSound(filename, NULL);
+#ifdef USE_LAZY_LOAD
 	Cvar_Set( "snd_loadingSound", "" );	
+#endif
 
 	return result;
 }
@@ -279,15 +288,4 @@ void S_CodecUtilClose(snd_stream_t **stream)
 	FS_FCloseFile((*stream)->file);
 	Z_Free(*stream);
 	*stream = NULL;
-}
-
-void S_CodecInfo(void) {
-	int count;
-	snd_codec_t *codec;
-	Com_Printf("Codecs: ");
-	for( count = 0, codec = codecs; codec; count++, codec = codec->next )
-	{		
-		Com_Printf("%s%s", count > 0 ? ", " : "", codec->ext);
-	}
-	Com_Printf("\n");
 }

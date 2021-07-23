@@ -28,6 +28,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  * $Archive: /source/code/game/botai.h $
  *
  *****************************************************************************/
+#ifndef __BOTLIB_H__
+#define __BOTLIB_H__
+
+#include "../qcommon/q_shared.h"
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+extern int   aasgvm;
+#endif
 
 #define	BOTLIB_API_VERSION		2
 
@@ -58,6 +66,7 @@ struct weaponinfo_s;
 #define PRT_ERROR				3
 #define PRT_FATAL				4
 #define PRT_EXIT				5
+#define PRT_DEBUG				6
 
 //console message types
 #define CMS_NORMAL				0
@@ -430,10 +439,17 @@ typedef struct botlib_export_s
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
 	//just for testing
 	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
+#ifdef USE_MULTIVM_SERVER
+	void (*SetAASgvm)(int gvmi);
+#endif
 } botlib_export_t;
 
 //linking of bot library
+#ifdef USE_BOTLIB_DLOPEN
+typedef	botlib_export_t* (QDECL *GetBotLibAPI_t) (int apiVersion, botlib_import_t *import);
+#else
 botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
+#endif
 
 /* Library variables:
 
@@ -517,3 +533,4 @@ name:						default:			module(s):			description:
 
 */
 
+#endif

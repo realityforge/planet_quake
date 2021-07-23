@@ -86,7 +86,6 @@ void SND_setup( void )
 
 	cv = Cvar_Get( "com_soundMegs", DEF_COMSOUNDMEGS, CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", "512", CV_INTEGER );
-	Cvar_SetDescription(cv, "The megabytes to allocate for sound can be adjusted to provide better performance on systems with more than 64mb of memory\nDefault: 8");
 
 	scs = ( cv->integer * /*1536*/ 12 * dma.speed ) / 22050;
 	scs *= 128;
@@ -287,7 +286,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 
 	samples = Hunk_AllocateTempMemory(info.samples * sizeof(short) * 2);
 
-	sfx->lastTimeUsed = Com_Milliseconds()+1;
+	sfx->lastTimeUsed = s_soundtime + 1; // Com_Milliseconds()+1
 
 	// each of these compression schemes works just fine
 	// but the 16bit quality is much nicer and with a local

@@ -89,7 +89,10 @@ static cvar_t *m_filter;
 static qboolean in_mlooking;
 
 static void IN_CenterView( void ) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap[cgvm].ps.delta_angles[PITCH]);
+#ifdef USE_MULTIVM_CLIENT
+	int igs = clientGames[clc.currentView];
+#endif
+	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
 }
 
 static void IN_MLookDown( void ) {
@@ -108,7 +111,7 @@ static void IN_MLookUp( void ) {
 static void IN_KeyDown( kbutton_t *b ) {
 	const char *c;
 	int	k;
-	
+
 	c = Cmd_Argv(1);
 	if ( c[0] ) {
 		k = atoi(c);
@@ -119,7 +122,7 @@ static void IN_KeyDown( kbutton_t *b ) {
 	if ( k == b->down[0] || k == b->down[1] ) {
 		return;		// repeating key
 	}
-	
+
 	if ( !b->down[0] ) {
 		b->down[0] = k;
 	} else if ( !b->down[1] ) {
@@ -128,7 +131,7 @@ static void IN_KeyDown( kbutton_t *b ) {
 		Com_Printf ("Three keys down for a button!\n");
 		return;
 	}
-	
+
 	if ( b->active ) {
 		return;		// still down
 	}
@@ -297,7 +300,7 @@ Moves the local angle positions
 */
 static void CL_AdjustAngles( void ) {
 	float	speed;
-	
+
 	if ( in_speed.active ) {
 		speed = 0.001 * cls.frametime * cl_anglespeedkey->value;
 	} else {
@@ -327,7 +330,7 @@ static void CL_KeyMove( usercmd_t *cmd ) {
 
 	//
 	// adjust for speed key / running
-	// the walking flag is to keep animations consistant
+	// the walking flag is to keep animations consistent
 	// even during acceleration and develeration
 	//
 	if ( in_speed.active ^ cl_run->integer ) {
@@ -362,16 +365,6 @@ static void CL_KeyMove( usercmd_t *cmd ) {
 }
 
 
-void Spy_CursorPosition(float x, float y) {
-	cls.cursorx = x;
-	cls.cursory = y;
-}
-
-void Spy_Banner(float x, float y) {
-#ifdef EMSCRIPTEN
-	Sys_EventMenuChanged(x, y);
-#endif
-}
 /*
 =================
 CL_MouseEvent
@@ -382,26 +375,28 @@ void CL_MouseEvent( int dx, int dy, int time ) {
 #else
 void CL_MouseEvent( int dx, int dy, int time, qboolean absolute ) {
 #endif
-#ifdef USE_MV
-	CM_SwitchMap(clc.currentView);
-	cgvm = clc.currentView;
-#else
-	cgvm = 0;
+;
+#ifdef USE_MULTIVM_CLIENT
+	cgvmi = 0;
+	CM_SwitchMap(clientMaps[cgvmi]);
 #endif
 #ifdef USE_ABS_MOUSE
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		if(absolute) {
-			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
+		if(absolute && in_mouseAbsolute && in_mouseAbsolute->integer > 1) {
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, (int)(dx - cls.cursorx), (int)(dy - cls.cursory) );
+		} else if (absolute && in_mouseAbsolute && in_mouseAbsolute->integer == 1) {
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, -10000, -10000 );
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 		} else {
-			VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
+			VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 		}
 		return;
 	}
 #endif
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
-		VM_Call( uivms[uivm], 2, UI_MOUSE_EVENT, dx, dy );
+		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		VM_Call( cgvms[cgvm], 2, CG_MOUSE_EVENT, dx, dy );
+		VM_Call( cgvm, 2, CG_MOUSE_EVENT, dx, dy );
 	} else {
 		cl.mouseDx[cl.mouseIndex] += dx;
 		cl.mouseDy[cl.mouseIndex] += dy;
@@ -482,27 +477,27 @@ static void CL_MouseMove( usercmd_t *cmd )
 		mx = cl.mouseDx[cl.mouseIndex];
 		my = cl.mouseDy[cl.mouseIndex];
 	}
-	
+
 	cl.mouseIndex ^= 1;
 	cl.mouseDx[cl.mouseIndex] = 0;
 	cl.mouseDy[cl.mouseIndex] = 0;
 
 	if (mx == 0.0f && my == 0.0f)
 		return;
-	
+
 	if (cl_mouseAccel->value != 0.0f)
 	{
 		if(cl_mouseAccelStyle->integer == 0)
 		{
 			float accelSensitivity;
 			float rate;
-			
+
 			rate = sqrt(mx * mx + my * my) / (float) frame_msec;
 
 			accelSensitivity = cl_sensitivity->value + rate * cl_mouseAccel->value;
 			mx *= accelSensitivity;
 			my *= accelSensitivity;
-			
+
 			if(cl_showMouseRate->integer)
 				Com_Printf("rate: %f, accelSensitivity: %f\n", rate, accelSensitivity);
 		}
@@ -570,7 +565,7 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	// figure button bits
 	// send a button bit even if the key was pressed and released in
 	// less than a frame
-	//	
+	//
 	for ( i = 0 ; i < ARRAY_LEN( in_buttons ); i++ ) {
 		if ( in_buttons[i].active || in_buttons[i].wasPressed ) {
 			cmd->buttons |= 1 << i;
@@ -595,7 +590,7 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 CL_FinishMove
 ==============
 */
-static void CL_FinishMove( usercmd_t *cmd ) {
+static void CL_FinishMove( usercmd_t *cmd, int igvm ) {
 	int		i;
 
 	// copy the state that the cgame is currently sending
@@ -603,7 +598,11 @@ static void CL_FinishMove( usercmd_t *cmd ) {
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
+#ifdef USE_MULTIVM_CLIENT
+  cmd->serverTime = cl.serverTimes[igvm];
+#else
 	cmd->serverTime = cl.serverTime;
+#endif
 
 	for (i=0 ; i<3 ; i++) {
 		cmd->angles[i] = ANGLE2SHORT(cl.viewangles[i]);
@@ -616,7 +615,7 @@ static void CL_FinishMove( usercmd_t *cmd ) {
 CL_CreateCmd
 =================
 */
-static usercmd_t CL_CreateCmd( void ) {
+static usercmd_t CL_CreateCmd( int igvm ) {
 	usercmd_t	cmd;
 	vec3_t		oldAngles;
 
@@ -624,7 +623,7 @@ static usercmd_t CL_CreateCmd( void ) {
 
 	// keyboard angle adjustment
 	CL_AdjustAngles ();
-	
+
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
 	CL_CmdButtons( &cmd );
@@ -643,10 +642,10 @@ static usercmd_t CL_CreateCmd( void ) {
 		cl.viewangles[PITCH] = oldAngles[PITCH] + 90;
 	} else if ( oldAngles[PITCH] - cl.viewangles[PITCH] > 90 ) {
 		cl.viewangles[PITCH] = oldAngles[PITCH] - 90;
-	} 
+	}
 
 	// store out the final values
-	CL_FinishMove( &cmd );
+	CL_FinishMove( &cmd, igvm );
 
 	// draw debug graphs of turning for mouse testing
 	if ( cl_debugMove->integer ) {
@@ -669,7 +668,7 @@ CL_CreateNewCommands
 Create a new usercmd_t structure for this frame
 =================
 */
-void CL_CreateNewCommands( void ) {
+static void CL_CreateNewCommands( int igvm ) {
 	int			cmdNum;
 
 	// no need to create usercmds until we have a gamestate
@@ -695,8 +694,11 @@ void CL_CreateNewCommands( void ) {
 
 	// generate a command for this frame
 	cl.cmdNumber++;
+#ifdef USE_MULTIVM_CLIENT
+	cl.clCmdNumbers[igvm] = cl.cmdNumber;
+#endif
 	cmdNum = cl.cmdNumber & CMD_MASK;
-	cl.cmds[cmdNum] = CL_CreateCmd();
+	cl.cmds[cmdNum] = CL_CreateCmd(igvm);
 }
 
 
@@ -727,8 +729,8 @@ static qboolean CL_ReadyToSendPacket( void ) {
 
 	// if we don't have a valid gamestate yet, only send
 	// one packet a second
-	if ( cls.state != CA_ACTIVE && 
-		cls.state != CA_PRIMED && 
+	if ( cls.state != CA_ACTIVE &&
+		cls.state != CA_PRIMED &&
 		!*clc.downloadTempName &&
 		cls.realtime - clc.lastPacketSentTime < 1000 ) {
 		return qfalse;
@@ -740,13 +742,13 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	}
 
 	// send every frame for LAN
-	if ( cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
+	if ( cl_lanForcePackets && cl_lanForcePackets->integer && clc.netchan.isLANAddress ) {
 		return qtrue;
 	}
 
 	oldPacketNum = (clc.netchan.outgoingSequence - 1) & PACKET_MASK;
 	delta = cls.realtime -  cl.outPackets[ oldPacketNum ].p_realtime;
-	if ( delta < 1000 / cl_maxpackets->integer ) {
+	if ( cl_maxpackets && delta < 1000 / cl_maxpackets->integer ) {
 		// the accumulated commands will go out in the next packet
 		return qfalse;
 	}
@@ -792,6 +794,31 @@ void CL_WritePacket( void ) {
 	}
 
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
+
+#ifdef USE_MULTIVM_CLIENT
+	// TODO: make optional based on game setup, multiple game controllers on one computer
+	//   e.g. clone world with multiple simultaneous game types, 
+	//     deathmatch players are unaware they are also participating in CTF
+	//   e.g. dead world versus living world, like respawn in WoW, 
+	//     different enemies in dead world for powerups like in Prey
+	for(int igvm = 0; igvm < MAX_NUM_VMS; igvm++) {
+		if(igvm > 0 && (!cgvmWorlds[igvm]
+			|| clientGames[igvm] == -1
+			|| clientWorlds[igvm] != clc.clientNum)) continue;
+		int igs = clientGames[igvm];
+		int oldCmdNum = cl.clCmdNumbers[igvm];
+		CL_CreateNewCommands(igvm);
+		if(igvm > 0) {
+      // TODO: choose which client to extract movement commands from, cl.currentView?
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].forwardmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].forwardmove;
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].rightmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].rightmove;
+			cl.cmds[cl.clCmdNumbers[igvm] & CMD_MASK].upmove = 
+				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
+		}
+#endif
+;
 	oldcmd = &nullcmd;
 
 	MSG_Init( &buf, data, MAX_MSGLEN );
@@ -808,10 +835,10 @@ void CL_WritePacket( void ) {
 
 	// write the last reliable message we received
 	MSG_WriteLong( &buf, clc.serverCommandSequence );
-	
-#ifdef USE_MULTIVM
-	if(cl.snap[cgvm].multiview) {
-		MSG_WriteByte( &buf, cgvm );
+
+#ifdef USE_MULTIVM_CLIENT
+	if(cl.snapWorlds[0].multiview || cl.snap.multiview) {
+		MSG_WriteByte( &buf, igs );
 	}
 #endif
 
@@ -826,24 +853,28 @@ void CL_WritePacket( void ) {
 	// few packet, so even if a couple packets are dropped in a row,
 	// all the cmds will make it to the server
 
-#ifdef USE_MULTIVM
-	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cgvm - cl_packetdup->integer) & PACKET_MASK;
+#ifdef USE_MULTIVM_CLIENT
+	oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
+	count = 2;
 #else
-	oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
-#endif
+  if(!cl_packetdup)
+    oldPacketNum = (clc.netchan.outgoingSequence - 2) & PACKET_MASK;
+  else
+	  oldPacketNum = (clc.netchan.outgoingSequence - 1 - cl_packetdup->integer) & PACKET_MASK;
 	count = cl.cmdNumber - cl.outPackets[ oldPacketNum ].p_cmdNumber;
+#endif
 	if ( count > MAX_PACKET_USERCMDS ) {
 		count = MAX_PACKET_USERCMDS;
 		Com_Printf("MAX_PACKET_USERCMDS\n");
 	}
 	if ( count >= 1 ) {
-		if ( cl_showSend->integer ) {
+		if ( cl_showSend && cl_showSend->integer ) {
 			Com_Printf( "(%i)", count );
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap[cgvm].valid || clc.demowaiting
-			|| clc.serverMessageSequence != cl.snap[cgvm].messageNum ) {
+		if ( !cl_nodelta || cl_nodelta->integer || !cl.snap.valid || clc.demowaiting
+			|| clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte (&buf, clc_moveNoDelta);
 		} else {
 			MSG_WriteByte (&buf, clc_move);
@@ -861,7 +892,11 @@ void CL_WritePacket( void ) {
 
 		// write all the commands, including the predicted command
 		for ( i = 0 ; i < count ; i++ ) {
+#ifdef USE_MULTIVM_CLIENT
+			j = (i == 0 ? oldCmdNum : cl.clCmdNumbers[igvm]) & CMD_MASK;
+#else
 			j = (cl.cmdNumber - count + i + 1) & CMD_MASK;
+#endif
 			cmd = &cl.cmds[j];
 			MSG_WriteDeltaUsercmdKey (&buf, key, oldcmd, cmd);
 			oldcmd = cmd;
@@ -874,14 +909,21 @@ void CL_WritePacket( void ) {
 	packetNum = clc.netchan.outgoingSequence & PACKET_MASK;
 	cl.outPackets[ packetNum ].p_realtime = cls.realtime;
 	cl.outPackets[ packetNum ].p_serverTime = oldcmd->serverTime;
+#ifdef USE_MULTIVM_CLIENT
+  cl.outPackets[ packetNum ].p_cmdNumber = cl.clCmdNumbers[igvm];
+#else
 	cl.outPackets[ packetNum ].p_cmdNumber = cl.cmdNumber;
+#endif
 	clc.lastPacketSentTime = cls.realtime;
 
-	if ( cl_showSend->integer ) {
+	if ( cl_showSend && cl_showSend->integer ) {
 		Com_Printf( "%i ", buf.cursize );
 	}
 
 	CL_Netchan_Transmit( &clc.netchan, &buf );
+#ifdef USE_MULTIVM_CLIENT
+	}
+#endif
 }
 
 
@@ -899,37 +941,25 @@ void CL_SendCmd( void ) {
 	}
 
 	// don't send commands if paused
-	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
+	if ( com_sv_running && com_sv_running->integer 
+    && sv_paused->integer && cl_paused->integer ) {
 		return;
 	}
 
 	// we create commands even if a demo is playing,
-	CL_CreateNewCommands();
+#ifndef USE_MULTIVM_CLIENT
+	CL_CreateNewCommands(0);
+#endif
 
 	// don't send a packet if the last packet was sent too recently
 	if ( !CL_ReadyToSendPacket() ) {
-		if ( cl_showSend->integer ) {
+		if ( cl_showSend && cl_showSend->integer ) {
 			Com_Printf( ". " );
 		}
 		return;
 	}
 
-#ifdef USE_MULTIVM
-	// TODO: make optional based on game setup, 
-	//   e.g. clone world with multiple simultaneous game types, 
-	//     deathmatch players are unaware they are also participating in CTF
-	//   e.g. dead world versus living world, like respawn in WoW, 
-	//     different enemies in dead world for powerups like in Prey
-	int i = 0;
-	do {
-		if(i > 0 && !cgvms[i]) continue;
-		//if(i != clc.currentView) continue;
-		cgvm = i;
-		CL_WritePacket();
-	} while(++i < MAX_NUM_VMS);
-#else
 	CL_WritePacket();
-#endif
 }
 
 
@@ -1029,64 +1059,43 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
-	Cvar_SetDescription( cl_nodelta, "Disable delta compression (slows net performance, not recommended)\nDefault: 0" );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
-	Cvar_SetDescription( cl_debugMove, "Used for debugging movement, shown in debug graph\nDefault: 0" );
 
 	cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
-	Cvar_SetDescription( cl_showSend, "Show network packets as they are sent\nDefault: 0" );
 
 	cl_yawspeed = Cvar_Get( "cl_yawspeed", "140", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_yawspeed, "Set the yaw rate when +left and/or +right are active\nDefault: 140" );
 	cl_pitchspeed = Cvar_Get( "cl_pitchspeed", "140", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_pitchspeed, "Set the pitch rate when +lookup and/or +lookdown are active\nDefault: 140" );
 	cl_anglespeedkey = Cvar_Get( "cl_anglespeedkey", "1.5", 0 );
-	Cvar_SetDescription( cl_anglespeedkey, "Set the speed that the direction keys (not mouse) change the view angle\nDefault: 1.5" );
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "60", CVAR_ARCHIVE );
 	Cvar_CheckRange( cl_maxpackets, "15", "125", CV_INTEGER );
-	Cvar_SetDescription(cl_maxpackets, "Set the transmission packet size or how many packets are sent to client\nDefault: 60");
 	cl_packetdup = Cvar_Get( "cl_packetdup", "1", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_packetdup, "0", "5", CV_INTEGER );
-	Cvar_SetDescription(cl_packetdup, "How many times should a packet try to resend to the server\nDefault: 1");
 
 	cl_run = Cvar_Get( "cl_run", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(cl_run, "Default to player running instead of walking\nDefault: 1");
 	cl_sensitivity = Cvar_Get( "sensitivity", "5", CVAR_ARCHIVE );
-	Cvar_SetDescription(cl_sensitivity, "Set how far your mouse moves in relation to travel on the mouse pad\nDefault: 5");
 	cl_mouseAccel = Cvar_Get( "cl_mouseAccel", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_mouseAccel, "Toggle the use of mouse acceleration\nDefault: 0");
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_freelook, "Toggle the use of freelook with the mouse, looking up or down\nDefault: 1");
 
 	// 0: legacy mouse acceleration
 	// 1: new implementation
 	cl_mouseAccelStyle = Cvar_Get( "cl_mouseAccelStyle", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( cl_mouseAccelStyle, "Change the style of mouse acceleration in a given direction\n1 - the mouse speeds up\n2 - becomes more sensitive as it continues in one direction\nDefault 0");
 	// offset for the power function (for style 1, ignored otherwise)
 	// this should be set to the max rate value
 	cl_mouseAccelOffset = Cvar_Get( "cl_mouseAccelOffset", "5", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_mouseAccelOffset, "0.001", "50000", CV_FLOAT );
-	Cvar_SetDescription(cl_mouseAccelOffset, "Mouse acceleration aplifier\nDefault: 0.001");
 
-	cl_showMouseRate = Cvar_Get ("cl_showmouserate", "0", 0);
-	Cvar_SetDescription(cl_showMouseRate, "Show the mouse rate of mouse samples per frame\nDefault: 0");
+	cl_showMouseRate = Cvar_Get( "cl_showmouserate", "0", 0 );
 
 	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_pitch, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.022");
 	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_yaw, "Set the speed at which the player's screen moves left and right while using the mouse\nDefault: 0.022");
 	m_forward = Cvar_Get( "m_forward", "0.25", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(m_forward, "Set the up and down movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 	m_side = Cvar_Get( "m_side", "0.25", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_side, "Set the strafe movement distance of the player in relation to how much the mouse moves\nDefault: 0.25");
 #ifdef MACOS_X
 	// Input is jittery on OS X w/o this
 	m_filter = Cvar_Get( "m_filter", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 1");
 #else
 	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( m_filter, "Toggle use of mouse smoothing\nDefault: 0");
 #endif
 }
 

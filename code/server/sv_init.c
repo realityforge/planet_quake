@@ -24,6 +24,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean svShuttingDown = qfalse;
 
+#ifndef BUILD_SLIM_CLIENT
+extern void Cvar_SetServerDescriptions( void );
+extern void Cvar_SetBotDescriptions( void );
+
 /*
 ===============
 SV_SendConfigstring
@@ -122,13 +126,23 @@ void SV_SetConfigstring (int index, const char *val) {
 	}
 
 	// change the string in sv
-	Z_Free( sv.configstrings[index] );
+  if(sv.configstrings[index])
+    Z_Free( sv.configstrings[index] );
 	sv.configstrings[index] = CopyString( val );
 
+#ifdef USE_DEMO_SERVER
 	// save config strings to demo
 	if (sv.demoState == DS_RECORDING) {
 		SV_DemoWriteConfigString( index, val );
 	}
+#endif
+
+#ifdef USE_MULTIVM_SERVER
+  if(sv.gentitySize[gvmi] == 0) {
+    // still starting up
+    return;
+  }
+#endif
 
 	// send it to all the clients if we aren't
 	// spawning a new server
@@ -188,10 +202,12 @@ void SV_SetUserinfo( int index, const char *val ) {
 		val = "";
 	}
 
+#ifdef USE_DEMO_SERVER
 	// Save userinfo changes to demo (also in SV_UpdateUserinfo_f() in sv_client.c)
 	if ( sv.demoState == DS_RECORDING ) {
 		SV_DemoWriteClientUserinfo( &svs.clients[index], val );
 	}
+#endif
 
 	Q_strncpyz( svs.clients[index].userinfo, val, sizeof( svs.clients[ index ].userinfo ) );
 	Q_strncpyz( svs.clients[index].name, Info_ValueForKey( val, "name" ), sizeof(svs.clients[index].name) );
@@ -229,7 +245,11 @@ void SV_CreateBaseline( void ) {
 	sharedEntity_t *ent;
 	int				entnum;	
 
-	for ( entnum = 0; entnum < sv.num_entities[gvm] ; entnum++ ) {
+#ifdef USE_MULTIVM_SERVER
+  for ( entnum = 0; entnum < sv.num_entitiesWorlds[gvmi] ; entnum++ ) {
+#else
+	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
+#endif
 		ent = SV_GentityNum( entnum );
 		if ( !ent->r.linked ) {
 			continue;
@@ -239,8 +259,8 @@ void SV_CreateBaseline( void ) {
 		//
 		// take current state as baseline
 		//
-		sv.svEntities[gvm][ entnum ].baseline = ent->s;
-		sv.baselineUsed[gvm][ entnum ] = 1;
+		sv.svEntities[ entnum ].baseline = ent->s;
+		sv.baselineUsed[ entnum ] = 1;
 	}
 }
 
@@ -430,10 +450,8 @@ clients along with it.
 This is NOT called for map_restart
 ================
 */
-qboolean killBots;
 static qboolean startingServer = qfalse;
-char map[MAX_CMD_LINE];
-void SV_SpawnServer( const char *mapname, qboolean kb ) {
+void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	int			i;
 	int			checksum;
 	qboolean	isBot;
@@ -443,7 +461,6 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 		return;
 	}
 	startingServer = qtrue;
-	killBots = kb;
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
@@ -490,15 +507,17 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 	} else {
 		// check for maxclients change
 #ifdef USE_MV
-		if ( sv_maxclients->modified || sv_mvClients->modified ) {
+		if ( sv_maxclients->modified || sv_mvClients->modified )
 #else
-		if ( sv_maxclients->modified ) {
+		if ( sv_maxclients->modified )
 #endif
-;
+    {
+#ifdef USE_DEMO_SERVER
 			// If we are playing/waiting to play/waiting to stop a demo, we use a specialized function that will move real clients slots (so that democlients will be put to their original slots they were affected at the time of the real game)
 			if (sv.demoState == DS_WAITINGPLAYBACK || sv.demoState == DS_PLAYBACK || sv.demoState == DS_WAITINGSTOP)
 				SV_DemoChangeMaxClients();
 			else
+#endif
 				SV_ChangeMaxClients();
 		}
 	}
@@ -530,8 +549,8 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 
 #ifdef USE_LNBITS
 	// reset invoice array so clients have to pay again in between matches
-	// TODO: make this a setting? make this a command?
-	Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
+  if(sv_lnPerMatch->integer)
+    Com_Memset( maxInvoices, 0, ( sv_maxclients->integer + 10 ) * sizeof(invoice_t) );
 #endif
 
 	// toggle the server bit so clients can detect that a
@@ -584,35 +603,23 @@ void SV_SpawnServer( const char *mapname, qboolean kb ) {
 
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
-	Cvar_Set( "mapname_0", mapname );
-
-#ifdef EMSCRIPTEN
-	memcpy(&map, mapname, sizeof(map));
-	Cvar_Set("sv_running", "0");
-	Com_Frame_Callback(Sys_FS_Shutdown, SV_SpawnServer_After_Shutdown);
-}
-
-void SV_SpawnServer_After_Shutdown( void ) {
-	FS_Startup();
-	Com_Frame_Callback(Sys_FS_Startup, SV_SpawnServer_After_Startup);
-}
-
-void SV_SpawnServer_After_Startup( void ) {
-	int			i;
-	int			checksum;
-	qboolean	isBot;
-	const char	*p;
-	const char *mapname;
-	mapname = map;
-	FS_Restart_After_Async();
-	Cvar_Set("sv_running", "1");
+#ifdef USE_MULTIVM_SERVER
+  Cvar_Get( va("mapname_%i", gvmi), mapname, CVAR_TAGGED_SPECIFIC );
+  Cvar_Set( va("mapname_%i", gvmi), mapname );
 #endif
-;
 
 	Sys_SetStatus( "Loading map %s", mapname );
-	gameWorlds[gvm] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#ifdef USE_MULTIVM_SERVER
+	gameWorlds[gvmi] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#else
+  gameWorlds[0] = CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+#endif
 
-	Cvar_Set( "sv_mapChecksum", va( "%i",checksum ) );
+	Cvar_Set( "sv_mapChecksum", va( "%i", checksum ) );
+#ifdef USE_MULTIVM_SERVER
+  Cvar_Set( va("sv_mapChecksum_%i", gvmi), va( "%i", checksum ) );
+  Cvar_Get( va("sv_mapChecksum_%i", gvmi), "", CVAR_TAGGED_SPECIFIC );
+#endif
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
@@ -643,7 +650,7 @@ void SV_SpawnServer_After_Startup( void ) {
 	for ( i = 0; i < 3; i++ )
 	{
 		sv.time += 100;
-		VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 		SV_BotFrame( sv.time );
 	}
 
@@ -675,7 +682,11 @@ void SV_SpawnServer_After_Startup( void ) {
 #endif
 
 			// connect the client again
-			denied = GVM_ArgPtr( VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
+#ifndef BUILD_GAME_STATIC
+			denied = GVM_ArgPtr( VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot ) );	// firstTime = qfalse
+#else
+      denied = (void *)VM_Call( gvm, 3, GAME_CLIENT_CONNECT, i, qfalse, isBot );	// firstTime = qfalse
+#endif
 			if ( denied ) {
 				// this generally shouldn't happen, because the client
 				// was connected before the level change
@@ -699,7 +710,7 @@ void SV_SpawnServer_After_Startup( void ) {
 					client->deltaMessage = -1;
 					client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
-					VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, i );
+					VM_Call( gvm, 1, GAME_CLIENT_BEGIN, i );
 				}
 			}
 		}
@@ -707,7 +718,7 @@ void SV_SpawnServer_After_Startup( void ) {
 
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 	svs.time += 100;
 
@@ -744,7 +755,11 @@ void SV_SpawnServer_After_Startup( void ) {
 
 		pakslen = strlen( p ) + 9; // + strlen( "\\sv_paks\\" )
 		freespace = SV_RemainingGameState();
+#ifdef USE_MULTIVM_SERVER
+    infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated, gvmi ) );
+#else
 		infolen = strlen( Cvar_InfoString_Big( CVAR_SYSTEMINFO, &infoTruncated ) );
+#endif
 
 		if ( infoTruncated ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: truncated systeminfo!\n" );
@@ -760,18 +775,25 @@ void SV_SpawnServer_After_Startup( void ) {
 			// load pk3s also loaded at the server
 			Cvar_Set( "sv_paks", p );
 			if ( *p == '\0' ) {
-				sv_pure->integer = 0;
 				Com_Printf( S_COLOR_YELLOW "WARNING: sv_pure set but no PK3 files loaded\n" );
 			}
 		}
 	}
 
 	// save systeminfo and serverinfo strings
-	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+#ifdef USE_MULTIVM_SERVER
+	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL, gvmi ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 
-	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+	SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ) );
 	cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#else
+  SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
+  cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
+
+  SV_SetConfigstring( CS_SERVERINFO, Cvar_InfoString( CVAR_SERVERINFO, NULL ) );
+  cvar_modifiedFlags &= ~CVAR_SERVERINFO;
+#endif
 
 	// any media configstring setting now should issue a warning
 	// and any configstring changes should be reliably transmitted
@@ -786,16 +808,21 @@ void SV_SpawnServer_After_Startup( void ) {
 #ifdef USE_LOCAL_DED
 	svShuttingDown = qfalse;
 #else
+  // Brian "megamind" Cullinan - if on the off chance there is a server error
+  //   preventing a connection for single player in SV_DirectConnect gamestate
+  //   will never be sent and won't restart client after shutdown above
 #ifndef DEDICATED
-	if ( com_dedicated->integer ) {
-		// restart renderer in order to show console for dedicated servers
-		// launched through the regular binary
-		CL_StartHunkUsers( );
-	}
+	//if ( com_dedicated->integer ) {
+	// restart renderer in order to show console for dedicated servers
+	// launched through the regular binary
+	CL_StartHunkUsers( );
+	//}
 #endif
 #endif
 
-	Com_Printf ("-----------------------------------\n");
+#ifdef USE_MULTIVM_SERVER
+	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvmi);
+#endif
 	
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
@@ -804,28 +831,70 @@ void SV_SpawnServer_After_Startup( void ) {
 	if(recentI == 1024) recentI = 0;
 #endif
 
+	if ( com_dedicated->integer && sv_activeAction->string[0] ) {
+		Cbuf_AddText( sv_activeAction->string );
+		Cbuf_AddText( "\n" );
+		Cvar_Set( "activeAction", "" );
+	}
+
+#ifdef USE_DEMO_SERVER
 	// start recording a demo
 	if ( sv_autoDemo->integer ) {
 		SV_DemoAutoDemoRecord();
 	}
-
+#endif
 }
 
 
 #ifdef USE_SERVER_ROLES
-// TODO: sv_roles->modified on every use connect? Need to run this loop again
 void SV_InitUserRoles (void) {
 	int roleCount = 0;
 	// force 3 roles to be available?
 	char *roles = Cmd_TokenizeAlphanumeric(va("referee moderator admin %s", sv_roles->string), &roleCount);
-	for(int i = 0; i < roleCount; i++) {
+  if(roleCount > MAX_CLIENT_ROLES) {
+    Com_Printf("WARNING: may have exceeded max role count (%i).", MAX_CLIENT_ROLES);
+  }
+  for(int i = 0; i < roleCount; i++) {
+    if(roles[0] == '\0') continue;
 		sv_role[i] = Cvar_Get(va("sv_%s", roles), "", CVAR_ARCHIVE);
 		sv_rolePassword[i] = Cvar_Get(va("%sPassword", roles), "", CVAR_TEMP);
 		roles = &roles[strlen(roles)+1];
 	}
+  sv_roles->modified = qfalse;
+}
+
+
+void SV_UserRolesModified(char *oldValue, char *newValue, cvar_t *cv) {
+  SV_InitUserRoles();
+}
+
+#endif
+
+
+#ifdef USE_CVAR_UNCHEAT
+void SV_InitBanCheats( void ) {
+  int cheatCount;
+  char *cheats = Cmd_TokenizeAlphanumeric(sv_banCheats->string, &cheatCount);
+  for(int i = 0; i < ARRAY_LEN(svUncheats); i++) {
+    // set userinfo on all the cheated values
+    if(svUncheats[i]) {
+      Z_Free(svUncheats[i]);
+      svUncheats[i] = NULL;
+    }
+    if(i >= cheatCount || cheats[0] == '\0') continue;
+    svUncheats[i] = CopyString(cheats);
+    cheats = &cheats[strlen(cheats)+1];
+  }
+  sv_banCheats->modified = qfalse;
+}
+
+void SV_BanCheatsModified(char *oldValue, char *newValue, cvar_t *cv) {
+  SV_InitBanCheats();
 }
 #endif
 
+
+#endif // BUILD_SLIM_CLIENT
 
 /*
 ===============
@@ -838,6 +907,7 @@ void SV_Init( void )
 {
 	int index;
 
+#ifndef BUILD_SLIM_CLIENT
 #if defined(USE_CMD_CONNECTOR) && defined(USE_LOCAL_DED)
 	// if using a local dedicated server and these commands are not present, 
 	//   then they will automatically be forwarded to the local dedicated server
@@ -852,87 +922,83 @@ void SV_Init( void )
 	if ( com_dedicated->integer )
 		SV_AddDedicatedCommands();
 #endif
+#endif
 
 	// serverinfo vars
 	Cvar_Get ("dmflags", "0", CVAR_SERVERINFO);
 	Cvar_Get ("fraglimit", "20", CVAR_SERVERINFO);
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
-	Cvar_SetDescription(sv_gametype, "Holds the game style for the current match included in server info\nDefault: 0");
-	Cvar_SetDescription(Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO),
-		"Holds the search string entered in the internet connection menu\nDefault: empty");
-	Cvar_SetDescription(Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM),
-		"Holds the network protocol version\nDefault: " XSTRING(PROTOCOL_VERSION));
+	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
+	//Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
 	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
-	Cvar_SetDescription(sv_mapname, "Holds the name of the current map\nDefault: nomap");
+#ifdef USE_MULTIVM_SERVER
+  sv_mapname->flags |= CVAR_TAGGED_ORIGINAL;
+#endif
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
 	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
-	Cvar_SetDescription(sv_privateClients, "The number of spots, out of sv_maxclients, reserved for players with the server password\nDefault: 0");
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
-	Cvar_SetDescription(sv_hostname, "Set the name of the server\nDefault: noname");
 	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
 	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
-	Cvar_SetDescription(sv_maxclients, "Maximum number of people allowed to join the server\nDefault: 8");
 
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
 	Cvar_CheckRange( sv_maxclientsPerIP, "1", NULL, CV_INTEGER );
-	Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address.\nDefault: 3" );
 
 	sv_clientTLD = Cvar_Get( "sv_clientTLD", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( sv_clientTLD, NULL, NULL, CV_INTEGER );
-	Cvar_SetDescription(sv_clientTLD, "Include client locations in status and demo recordings\nDefault: 0");
 
 #ifdef USE_MV
 	Cvar_Get( "mvproto", va( "%i", MV_PROTOCOL_VERSION ), CVAR_SERVERINFO | CVAR_ROM );
 	sv_mvAutoRecord = Cvar_Get( "sv_mvAutoRecord", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	Cvar_SetDescription(sv_mvAutoRecord, "Automatically record a multiview demo\nDefault: 0");
 	sv_demoFlags = Cvar_Get( "sv_mvFlags", "3", CVAR_ARCHIVE );
-	Cvar_SetDescription(sv_demoFlags, "Record scoring in the multiview demo\nDefault: 3");
 	sv_mvClients = Cvar_Get( "sv_mvClients", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_CheckRange( sv_mvClients, "0", NULL, CV_INTEGER );
-	Cvar_SetDescription(sv_mvClients, "Number of multiview clients allowed\nDefault: 8");
 	sv_mvPassword = Cvar_Get( "sv_mvPassword", "", CVAR_ARCHIVE );
-	Cvar_SetDescription(sv_mvPassword, "Set the password for multiview clients\nDefault: empty");
 
 	sv_mvFileCount = Cvar_Get( "sv_mvFileCount", "1024", CVAR_ARCHIVE );
 	Cvar_CheckRange( sv_mvFileCount, "0", XSTRING( MAX_MV_FILES ), CV_INTEGER );
-	Cvar_SetDescription(sv_mvFileCount, "Set the maximum number of multiview recordings before it reuses numeric names\nDefault: 1024");
 
 	sv_mvFolderSize = Cvar_Get( "sv_mvFolderSize", "768", CVAR_ARCHIVE );
 	Cvar_CheckRange( sv_mvFolderSize, "0", "2048", CV_INTEGER );
-	Cvar_SetDescription(sv_mvFolderSize, "Set the multiview folder size for automatic recordings, rotate when maxed out\nDefault: 768");
 
+#ifndef BUILD_SLIM_CLIENT
 	SV_LoadRecordCache();
+#endif
+#endif
+#ifdef USE_MULTIVM_SERVER
+	sv_mvWorld = Cvar_Get("sv_mvWorld", "1", CVAR_ARCHIVE | CVAR_SERVERINFO);
+	Cvar_CheckRange( sv_mvWorld, "0", "1", CV_INTEGER );
+	sv_mvSyncPS = Cvar_Get("sv_mvSyncPS", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncPS, "0", "1", CV_INTEGER );
+	sv_mvSyncXYZ = Cvar_Get("sv_mvSyncXYZ", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncXYZ, "0", "1", CV_INTEGER );
+	sv_mvSyncMove = Cvar_Get("sv_mvSyncMove", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvSyncMove, "0", "1", CV_INTEGER );
+	sv_mvOmnipresent = Cvar_Get("sv_mvOmnipresent", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_mvOmnipresent, "0", "1", CV_INTEGER );
 #endif
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
-	Cvar_SetDescription(sv_minRate, "Force clients to play with a minimum latency\nDefault: 0");
 	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
-	Cvar_SetDescription(sv_maxRate, "Force all clients to play with a max rate, limit an advantage for having a low latency\nDefault: 0");
 	sv_dlRate = Cvar_Get("sv_dlRate", "100", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	Cvar_SetDescription(sv_dlRate, "Set the maximum rate for server downloads\nDefault: 100");
 	sv_floodProtect = Cvar_Get ("sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	Cvar_SetDescription( sv_floodProtect, "Toggle server flood protection to keep players from bringing the server down\nDefault: 1" );
 
 	// systeminfo
 	Cvar_Get( "sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_SetDescription(sv_serverid, "Hold the server ID sent to clients");
 	sv_pure = Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
-	Cvar_SetDescription(sv_pure, "Make sure clients load the same pak files as the server, disallow native VMs\nDefault: 1");
 	Cvar_Get( "sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get( "sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get( "sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_SetDescription(sv_referencedPakNames, "Holds the names of paks referenced by the server for comparison client-side\nDefault: empty");
 
 #ifdef USE_SERVER_ROLES
 	sv_roles = Cvar_Get( "sv_roles", "referee moderator admin", CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_roles, "Space seperated list of roles to configure\nDefault: referee moderator admin");
 	for ( index = 0; index < MAX_CLIENT_ROLES; index++ )
 		sv_clientRoles[index] = Cvar_Get(va("sv_role%d", index + 1), "", CVAR_ARCHIVE);
 	sv_role[0] = Cvar_Get( "sv_referee", "ban kick restart map", CVAR_ARCHIVE);
 	sv_role[1] = Cvar_Get( "sv_moderator", "kick ban timelimit fraglimit capturelimit shuffle mute map nextmap map_restart", CVAR_ARCHIVE);
+  Cvar_SetModifiedFunc(sv_roles, SV_UserRolesModified);
 	SV_InitUserRoles();
 #endif
 
@@ -942,31 +1008,37 @@ void SV_Init( void )
 	sv_lock[1] = Cvar_Get("sv_lockBlue", "0", CVAR_TEMP);
 #endif
 
+#ifdef USE_PERSIST_CLIENT
+	sv_clSessions = Cvar_Get("sv_clSessions", "0", CVAR_ARCHIVE);
+	Cvar_CheckRange( sv_clSessions, "-1", NULL, CV_INTEGER );
+#endif
+
 #ifdef USE_RECENT_EVENTS
 	sv_recentPassword = Cvar_Get ("recentPassword", "", CVAR_TEMP );
-	Cvar_SetDescription(sv_recentPassword, "Set the required to get a response of key events that happened on the server since the last check\nDefault: empty");
 #endif
+
+	if(com_dedicated->integer) {
+		sv_activeAction = Cvar_Get( "activeAction", "", CVAR_TEMP );
+	}
 
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
-	Cvar_SetDescription(sv_rconPassword, "Set the rcon password required to send the server commands\nDefault: empty");
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
-	Cvar_SetDescription(sv_privatePassword, "Set password for private clients to login\nDefault: empty");
-	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP );
+  sv_gamedir = Cvar_Get("fs_game", "", 0);
+#ifdef USE_MULTIVM_SERVER
+	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_TEMP | CVAR_SYSTEMINFO );
+#else
+	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP | CVAR_SYSTEMINFO );
+#endif
 	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
-	Cvar_SetDescription(sv_fps, "Set the max frames per second the server sends the client\nDefault: 20");
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
-	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect" );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", CVAR_TEMP );
 	Cvar_CheckRange( sv_zombietime, "1", NULL, CV_INTEGER );
-	Cvar_SetDescription( sv_zombietime, "Seconds to sink messages after disconnect" );
 	Cvar_Get ("nextmap", "", CVAR_TEMP );
 
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
-	Cvar_SetDescription( sv_allowDownload, "Toggle the ability for clients to download files maps from server\nDefault: 1" );
-	Cvar_SetDescription(Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE), 
-		"Set the download URL for clients to download content\nDefault: empty");
+	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
 	// moved to Com_Init()
 	//sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT | CVAR_ARCHIVE_ND );
@@ -975,85 +1047,67 @@ void SV_Init( void )
 
 	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[ index ] = Cvar_Get( va( "sv_master%d", index + 1 ), "", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription(sv_master[0], "Set URL or address to master server\nDefault: empty");
 
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	Cvar_CheckRange( sv_reconnectlimit, "0", "12", CV_INTEGER );
-	Cvar_SetDescription(sv_reconnectlimit, "Number of times a disconnected client can come back and reconnect\nDefault: 12");
 
 	sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
-	Cvar_SetDescription( sv_padPackets, "Toggles the padding of network packets\nDefault: 0" );
 	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
-	Cvar_SetDescription(sv_killserver, "Set to a one the server goes down\nDefault: 0");
 	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
-	Cvar_SetDescription(sv_mapChecksum, "Allows clients to compare the map checksum\nDefault: empty");
+#ifdef USE_MULTIVM_SERVER
+  sv_mapChecksum->flags |= CVAR_TAGGED_ORIGINAL;
+#endif
 	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( sv_lanForceRate, "Force clients to use the same packet rate as the server\nDefault: 1" );
+
+#ifdef USE_CVAR_UNCHEAT
+  // TODO: set default to all client values with CVAR_CHEAT
+  sv_banCheats = Cvar_Get("sv_banCheats", "", CVAR_ARCHIVE | CVAR_USERINFO);
+  Cvar_SetModifiedFunc(sv_banCheats, SV_BanCheatsModified);
+  SV_InitBanCheats();
+#endif
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_banFile, "Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
 #endif
 
 #ifdef USE_LNBITS
+  sv_lnPerMatch = Cvar_Get("sv_lnPerMatch", "1", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE)
 	sv_lnMatchPrice = Cvar_Get("sv_lnMatchPrice", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnMatchPrice, "Set the LNBits price for the match, each player must pay this amount to enter\nDefault: 0 (free)");
 	sv_lnMatchCut = Cvar_Get("sv_lnMatchCut", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnMatchCut, "Set how much from each payment is withheld in the wallet, not included in the reward\nDefault: 0");
 	sv_lnMatchReward = Cvar_Get("sv_lnMatchReward", "0", CV_INTEGER | CVAR_SERVERINFO | CVAR_TEMP);
-	Cvar_SetDescription(sv_lnMatchReward, "Holds the match reward amount calculated during the match when all the players have paid and connected\nDefault: 0");
 	sv_lnWallet = Cvar_Get("sv_lnWallet", "", CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnWallet, "The LNBits wallet key for deposits/payment\nDefault: emtpy");
 	sv_lnKey = Cvar_Get("sv_lnKey", "", CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnKey, "The LNBits wallet key for withdrawals\nDefault: empty");
 	sv_lnAPI = Cvar_Get("sv_lnAPI", "https://lnbits.com/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnAPI, "The LNBits base API URL for other API calls\nDefault: https://lnbits.com/api/v1");
 	sv_lnWithdraw = Cvar_Get("sv_lnWithdraw", "https://lnbits.com/withdraw/api/v1", CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_SetDescription(sv_lnWithdraw, "The LNBits withdraw API URL\nDefault: https://lnbits.com/withdraw/api/v1");
 #endif
 
 #ifdef DEDICATED
 #ifdef USE_CURL
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
-	Cvar_SetDescription(cl_dlDirectory, "Save downloads initiated by \\dlmap and \\download commands\nDefault: 0");
 #endif
 #ifdef USE_CURL_DLOPEN
 	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
-	Cvar_SetDescription(cl_cURLLib, "Name of the cURL library to link\nDefault: libcurl");
 #endif
 #endif
 
 	sv_demoState = Cvar_Get ("sv_demoState", "0", CVAR_ROM );
-	Cvar_SetDescription( sv_demoState, "Hold the state of server-side demos\n"
-		"0 - none, no demo started\n"
-		"1 - await playback, playback is starting\n"
-		"2 - playing a demo\n"
-		"3 - waiting to stop\n"
-		"4 - recording a demo\n"
-		"Default: 0" );
 	sv_democlients = Cvar_Get ("sv_democlients", "0", CVAR_ROM );
-	Cvar_SetDescription( sv_democlients, "The number of demo clients allowed to connect while a demo is player\nDefault: 0" );
 	sv_autoDemo = Cvar_Get ("sv_autoDemo", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_autoDemo, "Automatically record a server-side demo for the match\nDefault: 0" );
 	sv_autoRecord = Cvar_Get ("sv_autoRecord", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_autoRecord, "Automatically record a client demo for every client in the match\nDefault: 0" );
 	sv_autoRecordThreshold = Cvar_Get("sv_autoRecordThreshold", "0.9", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_autoRecordThreshold, "Automatically save a client demo recording if this threshold is met for their score\n0 - Save all clients\n0.9 - Save only clients with 90% of the points\nDefault: 0.9" );
 	// port from client-side to freeze server-side demos
 	cl_freezeDemo = Cvar_Get("cl_freezeDemo", "0", CVAR_TEMP);
-	Cvar_SetDescription( cl_freezeDemo, "Freeze the playing demo using this variable, just like in client demo mode\nDefault: 0" );
 	sv_demoTolerant = Cvar_Get ("sv_demoTolerant", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_demoTolerant, "Tolerance mode for recorded serve-side demos, ignore when a message doesn't work\nDefault: 0" );
 
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( sv_levelTimeReset, "Reset the clock in between matches\nDefault: 0");
 
 	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
-	Cvar_SetDescription(sv_filter, "Set the ban filter file\nDefault: filter.txt");
+  Cvar_SetServerDescriptions();
 
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
+  Cvar_SetBotDescriptions();
 
 	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();
@@ -1069,12 +1123,24 @@ void SV_Init( void )
 	Cvar_SetGroup( sv_maxRate, CVG_SERVER );
 	Cvar_SetGroup( sv_fps, CVG_SERVER );
 
+#ifndef BUILD_SLIM_CLIENT
+#ifdef USE_LOCAL_DED
+	if(com_dedicated->integer)
+	{
+#endif
+;
 	// force initial check
 	SV_TrackCvarChanges();
 
 	SV_InitChallenger();
+#ifdef USE_LOCAL_DED
+	}
+#endif
+#endif
 }
 
+
+#ifndef BUILD_SLIM_CLIENT
 
 /*
 ==================
@@ -1094,10 +1160,12 @@ void SV_FinalMessage( const char *message ) {
 	for ( j = 0 ; j < 2 ; j++ ) {
 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
 			if (cl->state >= CS_CONNECTED ) {
+#ifdef USE_DEMO_SERVER
  				// serverside demo
   			if (cl->demorecording) {
   				SV_StopRecord( cl );
  				}
+#endif
 #ifdef USE_LOCAL_DED
 				if ( cl->netchan.remoteAddress.type == NA_LOOPBACK ) {
 					SV_SendServerCommand( cl, "reconnect\nprint \"%s\n\"\n", message );
@@ -1128,9 +1196,6 @@ before Sys_Quit or Sys_Error
 ================
 */
 void SV_Shutdown( const char *finalmsg ) {
-	int		i;
- 	client_t	*cl;
-
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
@@ -1143,17 +1208,23 @@ void SV_Shutdown( const char *finalmsg ) {
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
 
+#ifdef USE_DEMO_SERVER
 	// stop any demos
 	if (sv.demoState == DS_RECORDING)
 		SV_DemoStopRecord();
 	if (sv.demoState == DS_PLAYBACK)
 		SV_DemoStopPlayback();
-		
+#endif
+
+#ifdef USE_DEMO_CLIENTS
+  int		i;
+  client_t	*cl;
 	for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
 		if (cl->state >= CS_CONNECTED && cl->demorecording) {
 			SV_StopRecord( cl );
 		}
 	}
+#endif
 
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();
@@ -1249,3 +1320,5 @@ void SV_Shutdown( const char *finalmsg ) {
 	Cbuf_AddText(va("spmap q3dm0\n"));
 #endif
 }
+
+#endif

@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define SDL_GL_GetProcAddress( a ) ri.GL_GetProcAddress( a )
 
+#include <stdlib.h>
 #include "tr_local.h"
 #include "tr_dsa.h"
 
@@ -75,7 +76,7 @@ void GLimp_InitExtraExtensions( void )
 #undef GLE
 
 	// GL function loader, based on https://gist.github.com/rygorous/16796a0c876cf8a5f542caddb55bce8a
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	#define GLE( ret, name, ... ) qgl##name = (void *)gl##name;
 #else
 	#define GLE(ret, name, ...) qgl##name = (name##proc *) ri.GL_GetProcAddress( "gl" #name );
@@ -137,10 +138,8 @@ void GLimp_InitExtraExtensions( void )
 	glRefConfig.framebufferBlit = qfalse;
 	glRefConfig.framebufferMultisample = qfalse;
 
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.framebufferObject = !!r_ext_framebuffer_object->integer;
@@ -162,10 +161,8 @@ void GLimp_InitExtraExtensions( void )
 	// OpenGL 3.0 - GL_ARB_vertex_array_object
 	extension = "GL_ARB_vertex_array_object";
 	glRefConfig.vertexArrayObject = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		if (q_gl_version_at_least_3_0)
@@ -190,10 +187,8 @@ void GLimp_InitExtraExtensions( void )
 	// OpenGL 3.0 - GL_ARB_texture_float
 	extension = "GL_ARB_texture_float";
 	glRefConfig.textureFloat = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_0 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.textureFloat = !!r_ext_texture_float->integer;
@@ -208,10 +203,8 @@ void GLimp_InitExtraExtensions( void )
 	// OpenGL 3.2 - GL_ARB_depth_clamp
 	extension = "GL_ARB_depth_clamp";
 	glRefConfig.depthClamp = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.depthClamp = qtrue;
@@ -226,10 +219,8 @@ void GLimp_InitExtraExtensions( void )
 	// OpenGL 3.2 - GL_ARB_seamless_cube_map
 	extension = "GL_ARB_seamless_cube_map";
 	glRefConfig.seamlessCubeMap = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (q_gl_version_at_least_3_2 || GLimp_HaveExtension(extension))
-#else
-	if(1)
 #endif
 	{
 		glRefConfig.seamlessCubeMap = !!r_arb_seamless_cube_map->integer;
@@ -292,10 +283,8 @@ void GLimp_InitExtraExtensions( void )
 
 	// GL_ARB_texture_compression_rgtc
 	extension = "GL_ARB_texture_compression_rgtc";
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		qboolean useRgtc = r_ext_compressed_textures->integer >= 1;
@@ -314,10 +303,8 @@ void GLimp_InitExtraExtensions( void )
 
 	// GL_ARB_texture_compression_bptc
 	extension = "GL_ARB_texture_compression_bptc";
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		qboolean useBptc = r_ext_compressed_textures->integer >= 2;
@@ -335,10 +322,8 @@ void GLimp_InitExtraExtensions( void )
 	// GL_EXT_direct_state_access
 	extension = "GL_EXT_direct_state_access";
 	glRefConfig.directStateAccess = qfalse;
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 	if (GLimp_HaveExtension(extension))
-#else
-	if (1)
 #endif
 	{
 		glRefConfig.directStateAccess = !!r_ext_direct_state_access->integer;
@@ -346,7 +331,7 @@ void GLimp_InitExtraExtensions( void )
 		// QGL_*_PROCS becomes several functions, do not remove {}
 		if (glRefConfig.directStateAccess)
 		{
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 			#undef GLE
 			#define GLE( ret, name, ... ) qgl##name = (void *)GLDSA_##name;
 #endif

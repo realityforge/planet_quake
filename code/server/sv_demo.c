@@ -21,6 +21,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifdef USE_DEMO_SERVER
+
+
 // sv_demo.c -- Server side demo recording
 
 #include "server.h"
@@ -137,13 +140,16 @@ If onlyStore is true, it will only store the new cmd, without checking.
 */
 qboolean SV_CheckLastCmd( const char *cmd, qboolean onlyStore )
 {
+	static char tmp[MAX_STRING_CHARS];
 	static char prevcmddata[MAX_STRING_CHARS];
 	static char *prevcmd = prevcmddata;
     char *cleanedprevcmd = malloc ( MAX_STRING_CHARS * sizeof * cleanedprevcmd );
     char *cleanedcmd = malloc ( MAX_STRING_CHARS * sizeof * cleanedcmd );
 
-	Q_strncpyz(cleanedprevcmd, SV_CleanStrCmd(va("%s", (char *)prevcmd)), MAX_STRING_CHARS);
-	Q_strncpyz(cleanedcmd, SV_CleanStrCmd(va("%s", (char *)cmd)), MAX_STRING_CHARS);
+	Q_strncpyz(tmp, va("%s", (char *)prevcmd), MAX_STRING_CHARS);
+	Q_strncpyz(cleanedprevcmd, SV_CleanStrCmd(tmp), MAX_STRING_CHARS);
+	Q_strncpyz(tmp, va("%s", (char *)cmd), MAX_STRING_CHARS);
+	Q_strncpyz(cleanedcmd, SV_CleanStrCmd(tmp), MAX_STRING_CHARS);
 
 	if ( !onlyStore && // if we only want to store, we skip any checking
 	    strlen(prevcmd) > 0 && !Q_stricmp(cleanedprevcmd, cleanedcmd) ) { // check that the previous cmd was different from the current cmd.
@@ -192,7 +198,7 @@ SV_CheckConfigString
 Check that the configstring is OK (or if we relay to ClientConfigString)
 ====================
 */
-qboolean SV_CheckConfigString( int cs_index, const char *cs_string )
+static qboolean SV_CheckConfigString( int cs_index, const char *cs_string )
 {
 	if ( cs_index >= CS_PLAYERS && cs_index < CS_PLAYERS + sv_maxclients->integer ) { // if this is a player, we save the configstring as a clientconfigstring
 		SV_DemoWriteClientConfigString( cs_index - CS_PLAYERS, cs_string );
@@ -229,7 +235,7 @@ SV_CleanFilename
 Attempts to clean invalid characters from a filename that may prevent the demo to be stored on the filesystem
 ====================
 */
-char *SV_CleanFilename( char *string ) {
+const char *SV_CleanFilename( char *string ) {
 	char*	d;
 	char*	s;
 	int		c;
@@ -289,7 +295,7 @@ SV_GenerateDateTime
 Generate a full datetime (local and utc) from now
 ====================
 */
-char *SV_GenerateDateTime(void)
+const char *SV_GenerateDateTime(void)
 {
 	// Current local time
 	qtime_t now;
@@ -571,7 +577,11 @@ void SV_DemoWriteAllEntityState(void)
 
 	// Write entities (gentity_t->entityState_t or concretely sv.gentities[num].s, in gamecode level. instead of sv.)
 	MSG_WriteByte(&msg, demo_entityState);
-	for (i = 0; i < sv.num_entities[gvm]; i++)
+#ifdef USE_MULTIVM_SERVER
+  for (i = 0; i < sv.num_entitiesWorlds[gvmi]; i++)
+#else
+	for (i = 0; i < sv.num_entities; i++)
+#endif
 	{
 		if (i >= sv_maxclients->integer && i < MAX_CLIENTS)
 			continue;
@@ -606,7 +616,11 @@ void SV_DemoWriteAllEntityShared(void)
 
 	// Write entities (gentity_t->entityShared_t or concretely sv.gentities[num].r, in gamecode level. instead of sv.)
 	MSG_WriteByte(&msg, demo_entityShared);
-	for (i = 0; i < sv.num_entities[gvm]; i++)
+#ifdef USE_MULTIVM_SERVER
+  for (i = 0; i < sv.num_entitiesWorlds[gvmi]; i++)
+#else
+	for (i = 0; i < sv.num_entities; i++)
+#endif
 	{
 		if (i >= sv_maxclients->integer && i < MAX_CLIENTS)
 			continue;
@@ -679,7 +693,7 @@ Client command management (generally automatic, such as tinfo for HUD team overl
 */
 void SV_DemoReadClientCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 	int num;
 
 	Cmd_SaveCmdContext(); // Save the context (tokenized strings) so that the engine can continue its usual processing normally just after this function
@@ -701,7 +715,7 @@ Server command management - except print/cp (dropped at recording because alread
 */
 void SV_DemoReadServerCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 
 	Cmd_SaveCmdContext();
 	cmd = MSG_ReadString(msg);
@@ -719,7 +733,7 @@ Game command management - such as prints/centerprint (cp) scores command - excep
 */
 void SV_DemoReadGameCommand( msg_t *msg )
 {
-	char	*cmd;
+	const char	*cmd;
 
 	Cmd_SaveCmdContext();
 
@@ -742,7 +756,7 @@ Read a configstring from a message and load it into memory
 */
 void SV_DemoReadConfigString( msg_t *msg )
 {
-	char	*configstring;
+	const char	*configstring;
 	int num;
 
 	//num = MSG_ReadLong(msg, MAX_CONFIGSTRINGS); FIXME: doesn't work, dunno why, but it would be better than a string to store a long int!
@@ -765,7 +779,7 @@ This function also manages demo clientbegin at connections and teamchange (which
 void SV_DemoReadClientConfigString( msg_t *msg )
 {
 	client_t *client;
-	char	*configstring;
+	const char	*configstring;
 	int num;
 	qboolean denied;
 
@@ -792,10 +806,14 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 		Q_strncpyz( svs.clients[num].name, Info_ValueForKey( configstring, "n" ), MAX_NAME_LENGTH ); // set the name (useful for internal functions such as status_f). Anyway userinfo will automatically set both name (server-side) and netname (gamecode-side).
 
 		// get the game a chance to reject this connection or modify the userinfo
-		denied = VM_Call( gvms[gvm], 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
+		denied = VM_Call( gvm, 3, GAME_CLIENT_CONNECT, num, qtrue, qfalse ); // firstTime = qtrue
 		if ( denied ) {
 			// we can't just use VM_ArgPtr, because that is only valid inside a VM_Call
+#ifndef BUILD_GAME_STATIC
 			const char *str = GVM_ArgPtr( denied );
+#else
+      const char *str = (void *)denied;
+#endif
 			Com_DPrintf( "DEMO: Game rejected a connection: %s.\n", str );
 			return;
 		}
@@ -833,7 +851,7 @@ void SV_DemoReadClientConfigString( msg_t *msg )
 
 		// Make sure the gamecode consider the democlients (this will allow to show them on the scoreboard and make them spectatable with a standard follow) - does not use argv (directly fetch client infos from userinfo) so no need to tokenize with Cmd_TokenizeString()
 		// Note: this also triggers the gamecode refreshing of the client's userinfo
-		VM_Call( gvms[gvm], 1, GAME_CLIENT_BEGIN, num );
+		VM_Call( gvm, 1, GAME_CLIENT_BEGIN, num );
 	} else if ( Q_stricmp(sv.configstrings[CS_PLAYERS + num], configstring) && strlen(sv.configstrings[CS_PLAYERS + num]) && (!configstring || !strlen(configstring)) ) { // client disconnect: different configstrings and the new one is empty, so the client is not there anymore, we drop him (also we check that the old config was not empty, else we would be disconnecting a player who is already dropped)
 		client = &svs.clients[num];
 		SV_DropClient( client, "disconnected" ); // same as SV_Disconnect_f(client);
@@ -854,7 +872,7 @@ Note: this function also manage the initial team of democlients when demo record
 void SV_DemoReadClientUserinfo( msg_t *msg )
 {
 	client_t *client;
-	char	*userinfo; // = malloc( MAX_INFO_STRING * sizeof *userinfo);
+	const char	*userinfo; // = malloc( MAX_INFO_STRING * sizeof *userinfo);
 	int num;
 
 	// Save context
@@ -1035,8 +1053,13 @@ void SV_DemoReadAllEntityShared( msg_t *msg )
 
         // Save the new state in sv.demoEntities (ie, display current entity state)
 		sv.demoEntities[num].r = entity->r;
-		if (num > sv.num_entities[gvm])
-			sv.num_entities[gvm] = num;
+#ifdef USE_MULTIVM_SERVER
+    if (num > sv.num_entitiesWorlds[gvmi])
+      sv.num_entitiesWorlds[gvmi] = num;
+#else
+		if (num > sv.num_entities)
+      sv.num_entities = num;
+#endif
 	}
 }
 
@@ -1052,7 +1075,11 @@ void SV_DemoReadRefreshEntities( void )
 	int i;
 
 	// Overwrite anything the game may have changed
-	for (i = 0; i < sv.num_entities[gvm]; i++)
+#ifdef USE_MULTIVM_SERVER
+  for (i = 0; i < sv.num_entitiesWorlds[gvmi]; i++)
+#else
+	for (i = 0; i < sv.num_entities; i++)
+#endif
 	{
 		if (i >= sv_democlients->integer && i < MAX_CLIENTS) // FIXME? shouldn't MAX_CLIENTS be sv_maxclients->integer?
 			continue;
@@ -1234,23 +1261,25 @@ Note2: this function is called at MapRestart and SpawnServer (called in Map func
 */
 void SV_DemoAutoDemoRecord(void)
 {
+	char *tmp[MAX_QPATH];
 	qtime_t now;
 	Com_RealTime( &now );
     char *demoname = malloc ( MAX_QPATH * sizeof * demoname );
     
-
+	Q_strncpyz((char *)tmp, Cvar_VariableString( "mapname" ), MAX_QPATH);
+	Q_strncpyz(demoname, va("%s", sv_hostname->string), MAX_QPATH);
 	Q_strncpyz(demoname, va( "%s_%04d-%02d-%02d-%02d-%02d-%02d_%s",
-			SV_CleanFilename(va("%s", sv_hostname->string)),
+			SV_CleanFilename(demoname),
                         1900 + now.tm_year,
                         1 + now.tm_mon,
                         now.tm_mday,
                         now.tm_hour,
                         now.tm_min,
                         now.tm_sec,
-                        SV_CleanFilename(Cvar_VariableString( "mapname" )) ),
+                        SV_CleanFilename((char *)tmp) ),
                         MAX_QPATH);
 
-	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(Cvar_VariableString("fs_game")) ?  Cvar_VariableString("fs_game") : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
+	Com_Printf("DEMO: recording a server-side demo to: %s/svdemos/%s.%s%d\n",  strlen(sv_gamedir->string) ?  sv_gamedir->string : BASEGAME, demoname, SVDEMOEXT, PROTOCOL_VERSION);
 
 	Cbuf_AddText( va("demo_record %s\n", demoname ) );
 
@@ -1289,7 +1318,7 @@ void SV_DemoStartRecord(void)
 	MSG_WriteLong(&msg, sv_gametype->integer);
 	// Write fs_game (mod name)
 	MSG_WriteString(&msg, "fs_game");
-	MSG_WriteString(&msg, Cvar_VariableString("fs_game"));
+	MSG_WriteString(&msg, sv_gamedir->string);
 	// Write map name
 	MSG_WriteString(&msg, "map");
 	MSG_WriteString(&msg, sv_mapname->string);
@@ -1549,7 +1578,7 @@ void SV_DemoStartPlayback(void)
 	char *fs = malloc( MAX_QPATH * sizeof *fs );
 	char *hostname = malloc( MAX_NAME_LENGTH * sizeof *hostname );
 	char *datetime = malloc( 1024 * sizeof *datetime ); // there's no limit in the whole engine specifically designed for dates and time...
-	char *metadata; // = malloc( 1024 * sizeof * metadata ); // used to store the current metadata index
+	const char *metadata; // = malloc( 1024 * sizeof * metadata ); // used to store the current metadata index
 
 	// Init vars with empty values (to avoid compilation warnings)
 	r = i = clients = fps = gametype = timelimit = fraglimit = capturelimit = 0;
@@ -1733,7 +1762,7 @@ void SV_DemoStartPlayback(void)
 	// FIXME? why sv_cheats is needed? Just to be able to use cheats commands to pass through walls?
 
 	if ( !com_sv_running->integer || Q_stricmp(sv_mapname->string, map) ||
-	    Q_stricmp(Cvar_VariableString("fs_game"), fs) ||
+	    Q_stricmp(sv_gamedir->string, fs) ||
 	    !Cvar_VariableIntegerValue("sv_cheats") ||
 	    (time < sv.time && !keepSaved) || // if the demo initial time is below server time AND we didn't already restart for demo playback, then we must restart to reinit the server time (because else, it might happen that the server time is still above demo time if the demo was recorded during a warmup time, in this case we won't restart the demo playback but just iterate a few demo frames in the void to catch up the server time, see below the else statement)
 	    sv_maxclients->modified ||
@@ -1751,12 +1780,12 @@ void SV_DemoStartPlayback(void)
 		Cvar_SetValue("sv_autoDemo", 0); // disable sv_autoDemo else it will start a recording before we can replay a demo (since we restart the map)
 
 		// **** Automatic mod (fs_game) switching management ****
-		if ( ( Q_stricmp(Cvar_VariableString("fs_game"), fs) && strlen(fs) ) ||
-		    (!strlen(fs) && Q_stricmp(Cvar_VariableString("fs_game"), fs) && Q_stricmp(fs, BASEGAME) ) ) { // change the game mod only if necessary - if it's different from the current gamemod and the new is not empty, OR the new is empty but it's not BASEGAME and it's different (we're careful because it will restart the game engine and so probably every client will get disconnected)
+		if ( ( Q_stricmp(sv_gamedir->string, fs) && strlen(fs) ) ||
+		    (!strlen(fs) && Q_stricmp(sv_gamedir->string, fs) && Q_stricmp(fs, BASEGAME) ) ) { // change the game mod only if necessary - if it's different from the current gamemod and the new is not empty, OR the new is empty but it's not BASEGAME and it's different (we're careful because it will restart the game engine and so probably every client will get disconnected)
 
 			// Memorize the current mod (only if we are indeed switching mod, otherwise we will save basegame instead of empty strings and force a mod switching when stopping the demo when we haven't changed mod in the first place!)
-			if (strlen(Cvar_VariableString("fs_game"))) { // if fs_game is not "", we save it
-				Q_strncpyz(savedFsGame, (const char*)Cvar_VariableString("fs_game"), MAX_QPATH);
+			if (strlen(sv_gamedir->string)) { // if fs_game is not "", we save it
+				Q_strncpyz(savedFsGame, (const char*)sv_gamedir->string, MAX_QPATH);
 			} else { // else, it's equal to "", and this means that we were playing in the basegame mod, but we need to have a non-empty string, else we can't use game_restart!
 				Q_strncpyz(savedFsGame, BASEGAME, MAX_QPATH);
 			}
@@ -1788,7 +1817,7 @@ void SV_DemoStartPlayback(void)
 		//sv.time = time;
 		while (sv.time < timetoreach) {
 			SV_DemoReadFrame(); // run a few frames to settle things out
-			VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+			VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 			SV_BotFrame( sv.time );
 		}
 	}
@@ -1823,7 +1852,7 @@ void SV_DemoStartPlayback(void)
 	Cvar_SetValue("sv_demoState", DS_PLAYBACK);
 	keepSaved = qfalse; // Don't save values anymore: the next time we stop playback, we will restore previous values (because now we are really launching the playback, so anything that might happen now is either a big bug or the end of demo, in any case we want to restore the values)
 	SV_DemoReadFrame(); // reading the first frame, which should contain some initialization events (eg: initial confistrings/userinfo when demo recording started, initial entities states and placement, etc..)
-	VM_Call( gvms[gvm], 1, GAME_RUN_FRAME, sv.time );
+	VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	SV_BotFrame( sv.time );
 }
 
@@ -2077,3 +2106,5 @@ void SV_CompleteDemoName( char *args, int argNum )
 		Field_CompleteFilename( "svdemos", demoExt, qtrue, qtrue );
 	}
 }
+
+#endif

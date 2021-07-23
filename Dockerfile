@@ -13,24 +13,8 @@ RUN \
   cd /tmp && \
   git clone --recursive --progress https://github.com/briancullinan/planet_quake && \
   cd /tmp/planet_quake && \
-  git submodule add -f git://github.com/emscripten-core/emsdk.git code/xquakejs/lib/emsdk && \
+  git submodule add -f git://github.com/emscripten-core/emsdk.git libs/emsdk && \
   git submodule update --init --recursive --progress
-
-# copy the output from grabbing master and installing
-RUN \
-  echo "# INSTALL NODE AND EMSDK ######################################" && \
-  cd /tmp/planet_quake && \
-  npm install && \
-  npm run install:emsdk && \
-  echo "" > /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "BINARYEN_ROOT = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "LLVM_ROOT = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "NODE_JS = '/usr/bin/node'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "EM_CACHE = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  mkdir -p /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  export EM_CACHE=/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  export EMSCRIPTEN_CACHE=/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  npm run install:libs
 
 # update the copy from cache to latest from github
 FROM build-tools AS build-latest
@@ -41,23 +25,8 @@ RUN \
   cd /tmp/planet_quake && \
   git status && \
   git pull && \
-  cd /tmp/planet_quake/code/xquakejs/lib/emsdk && \
+  cd /tmp/planet_quake/libs/emsdk && \
   git pull
-
-RUN \
-  echo "# UPDATE BUILD DEPS ######################################" && \
-  cd /tmp/planet_quake && \
-  echo "" > /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "BINARYEN_ROOT = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "LLVM_ROOT = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/bin'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "NODE_JS = '/usr/bin/node'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  echo "EM_CACHE = '/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache'" >> /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/.emscripten && \
-  npm install && \
-  npm run install:emsdk && \
-  mkdir -p /tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  export EM_CACHE=/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  export EMSCRIPTEN_CACHE=/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache && \
-  npm run install:libs
 
 FROM build-latest AS build-ded
 
@@ -69,10 +38,25 @@ RUN \
 FROM build-latest AS build-js
 
 RUN \
+  echo "# INSTALL NODE AND EMSDK ######################################" && \
+  cd /tmp/planet_quake && \
+  echo "" > /tmp/planet_quake/libs/emsdk/upstream/emscripten/.emscripten && \
+  echo "BINARYEN_ROOT = '/tmp/planet_quake/libs/emsdk/upstream'" >> /tmp/planet_quake/libs/emsdk/upstream/emscripten/.emscripten && \
+  echo "LLVM_ROOT = '/tmp/planet_quake/libs/emsdk/upstream/bin'" >> /tmp/planet_quake/libs/emsdk/upstream/emscripten/.emscripten && \
+  echo "NODE_JS = '/usr/bin/node'" >> /tmp/planet_quake/libs/emsdk/upstream/emscripten/.emscripten && \
+  echo "EM_CACHE = '/tmp/planet_quake/libs/emsdk/upstream/emscripten/cache'" >> /tmp/planet_quake/libs/emsdk/upstream/emscripten/.emscripten && \
+  npm install && \
+  npm run install:emsdk && \
+  mkdir -p /tmp/planet_quake/libs/emsdk/upstream/emscripten/cache && \
+  export EM_CACHE=/tmp/planet_quake/libs/emsdk/upstream/emscripten/cache && \
+  export EMSCRIPTEN_CACHE=/tmp/planet_quake/libs/emsdk/upstream/emscripten/cache && \
+  npm run install:libs
+
+RUN \
   echo "# BUILD JS CLIENT ##########################################" && \
   cd /tmp/planet_quake && \
   export STANDALONE=1 && \
-  make clean release EMSCRIPTEN_CACHE=/tmp/planet_quake/code/xquakejs/lib/emsdk/upstream/emscripten/cache PLATFORM=js
+  make clean release EMSCRIPTEN_CACHE=/tmp/planet_quake/libs/emsdk/upstream/emscripten/cache PLATFORM=js
 
 FROM node:15.12-slim as serve-tools
 
@@ -90,14 +74,14 @@ RUN \
 
 FROM node:15.12-slim AS serve-content
 
-RUN mkdir -p /tmp/planet_quake/code/xquakejs/bin
-RUN mkdir -p /tmp/planet_quake/code/xquakejs/lib
+RUN mkdir -p /tmp/planet_quake/code/wasm/bin
+RUN mkdir -p /tmp/planet_quake/code/wasm/lib
 RUN mkdir -p /tmp/planet_quake/build/release-js-js
 RUN mkdir -p /tmp/planet_quake/build/release-linux-x86_64
 
 COPY --from=serve-tools /tmp/planet_quake/package.json /tmp/planet_quake/package.json
-COPY --from=serve-tools /tmp/planet_quake/code/xquakejs/bin /tmp/planet_quake/code/xquakejs/bin
-COPY --from=serve-tools /tmp/planet_quake/code/xquakejs/lib /tmp/planet_quake/code/xquakejs/lib
+COPY --from=serve-tools /tmp/planet_quake/code/wasm/bin /tmp/planet_quake/code/wasm/bin
+COPY --from=serve-tools /tmp/planet_quake/code/wasm/lib /tmp/planet_quake/code/wasm/lib
 COPY --from=build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
 COPY --from=build-ded /tmp/planet_quake/build/release-linux-x86_64/quake3e* /tmp/planet_quake/build/release-linux-x86_64/
 
@@ -112,7 +96,7 @@ ENV RCON=password123!
 ENV GAME=baseq3-cc
 ENV BASEGAME=baseq3-cc
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home
+CMD node /tmp/planet_quake/code/wasm/bin/web.js --temp /home
 
 FROM serve-content AS serve-quake3e
 
@@ -127,7 +111,7 @@ CMD /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
 FROM serve-content AS serve-both
 
 CMD \
-  (node /tmp/planet_quake/code/xquakejs/bin/web.js --temp /home &) && \
+  (node /tmp/planet_quake/code/wasm/bin/web.js --temp /home &) && \
   /tmp/planet_quake/build/release-linux-x86_64/quake3e.ded.x64 \
     +cvar_restart +set net_port 27960 +set fs_basepath /home \
     +set dedicated 2 +set fs_homepath /home \
@@ -136,7 +120,7 @@ CMD \
     +set logfile 2 +set com_hunkmegs 150 +set vm_rtChecks 0 \
     +set sv_maxclients 32 +set sv_pure 0 +exec server.cfg
 
-FROM serve-both AS repack
+FROM serve-tools AS repack
 
 RUN \
   echo "# INSTALL REPACK DEPENDENCIES ##########################################" && \
@@ -147,7 +131,7 @@ RUN \
 
 VOLUME [ "/home/baseq3" ]
 
-CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite --temp /home /home/baseq3
+CMD node /tmp/planet_quake/code/wasm/bin/repack.js --no-graph --no-overwrite --temp /home /home/baseq3
 
 ########### TODO REPACK DOCKER HERE ############
 # needs a data source for baseq3 content, Github with demo data maybe?
@@ -155,3 +139,24 @@ CMD node /tmp/planet_quake/code/xquakejs/bin/repack.js --no-graph --no-overwrite
 FROM serve-both AS full
 
 COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
+
+FROM quay.io/parkervcp/pterodactyl-images:debian_nodejs-14 AS serve-pterodactyl
+
+RUN mkdir -p /tmp/planet_quake/code/wasm/bin
+RUN mkdir -p /tmp/planet_quake/code/wasm/lib
+RUN mkdir -p /tmp/planet_quake/build/release-js-js
+RUN mkdir -p /tmp/planet_quake/build/release-linux-x86_64
+
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/package.json /tmp/planet_quake/package.json
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/code/wasm/bin /tmp/planet_quake/code/wasm/bin
+COPY --from=briancullinan/quake3e:serve-tools /tmp/planet_quake/code/wasm/lib /tmp/planet_quake/code/wasm/lib
+COPY --from=briancullinan/quake3e:build-js /tmp/planet_quake/build/release-js-js/quake3e* /tmp/planet_quake/build/release-js-js/
+COPY --from=briancullinan/quake3e:build-ded /tmp/planet_quake/build/release-linux-x86_64/quake3e* /tmp/planet_quake/build/release-linux-x86_64/
+COPY --from=briancullinan/quake3e:baseq3 /home/baseq3-cc /home/baseq3-cc
+
+# Run latest dockerhub image:
+# docker run -ti -p 8080:8080 -p 27960:27960/udp briancullinan/quake3e:full
+# Build an image to repack
+# docker build --target repack
+# Run repack image
+# docker run -ti -v /Applications/ioquake3/baseq3:/home/baseq3 --name quake3e briancullinan/quake3e:repack

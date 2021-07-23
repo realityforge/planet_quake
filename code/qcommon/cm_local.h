@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
+#ifndef __CM_LOCAL_H__
+#define __CM_LOCAL_H__
+
 #include "q_shared.h"
 #include "qcommon.h"
 #include "cm_polylib.h"
@@ -178,10 +181,16 @@ typedef struct {
 // keep 1/8 unit away to keep the position valid before network snapping
 // and to avoid various numeric issues
 #define	SURFACE_CLIP_EPSILON	(0.125)
-#define MAX_NUM_MAPS 10
+#define MAX_NUM_MAPS MAX_NUM_VMS
 
-extern	clipMap_t	cms[MAX_NUM_MAPS];
-extern  int       cm;
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define cm        cmWorlds[cmi]
+extern	clipMap_t	cmWorlds[MAX_NUM_MAPS];
+extern  int       cmi;
+#else
+extern	clipMap_t	cm;
+#endif
+
 extern	int			c_pointcontents;
 extern	int			c_traces, c_brush_traces, c_patch_traces;
 extern	cvar_t		*cm_noAreas;
@@ -189,9 +198,20 @@ extern	cvar_t		*cm_noCurves;
 extern	cvar_t		*cm_playerCurveClip;
 extern  cvar_t    *cm_saveEnts;
 extern  byte	  	*cmod_base;
-extern  cmodel_t	box_model[MAX_NUM_MAPS];
-extern  cplane_t	*box_planes[MAX_NUM_MAPS];
-extern  cbrush_t	*box_brush[MAX_NUM_MAPS];
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+extern  cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
+extern  cplane_t	*box_planesWorlds[MAX_NUM_MAPS];
+extern  cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
+#define box_model box_modelWorlds[cmi]
+#define box_planes box_planesWorlds[cmi]
+#define box_brush box_brushWorlds[cmi]
+#else
+extern  cmodel_t	box_model;
+extern  cplane_t	*box_planes;
+extern  cbrush_t	*box_brush;
+#endif
+
 
 
 // cm_test.c
@@ -250,3 +270,5 @@ struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, vec3_t *p
 void CM_TraceThroughPatchCollide( traceWork_t *tw, const struct patchCollide_s *pc );
 qboolean CM_PositionTestInPatchCollide( traceWork_t *tw, const struct patchCollide_s *pc );
 void CM_ClearLevelPatches( void );
+
+#endif

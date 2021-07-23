@@ -197,7 +197,7 @@ R_CullLocalBox
 Returns CULL_IN, CULL_CLIP, or CULL_OUT
 =================
 */
-int R_CullLocalBox(vec3_t localBounds[2]) {
+int R_CullLocalBox(const vec3_t localBounds[2]) {
 #if 0
 	int		i, j;
 	vec3_t	transformed[8];
@@ -619,7 +619,7 @@ static void R_SetFarClip( void )
 		tr.viewParms.zFar = 2048;
 		return;
 	}
-	
+
 	if(r_zfar->integer > 0) {
 		tr.viewParms.zFar = r_zfar->integer;
 		return;
@@ -1489,9 +1489,6 @@ void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader,
 					 int *fogNum, int *dlightMap, int *pshadowMap ) {
 	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
 	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
-	//if((*shader)->remappedShader) {
-	//	*shader = (*shader)->remappedShader;
-	//} 
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 	*pshadowMap = (sort >> QSORT_PSHADOW_SHIFT ) & 1;
 	*dlightMap = sort & 1;

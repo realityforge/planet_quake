@@ -38,6 +38,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // for some buggy mods
 #define	PROGRAM_STACK_EXTRA	(32*1024)
 
+// flags for vm_rtChecks cvar
+#define VM_RTCHECK_PSTACK  1
+#define VM_RTCHECK_OPSTACK 2
+#define VM_RTCHECK_JUMP    4
+#define VM_RTCHECK_DATA    8
+
 typedef enum {
 	OP_UNDEF,
 
@@ -128,14 +134,15 @@ typedef enum {
 } opcode_t;
 
 typedef struct {
-	int	value;	// 32
+	int32_t	value;     // 32
 	byte	op;		// 8
 	byte	opStack;	// 8
-	unsigned jused:1;
-	unsigned swtch:1;
-	unsigned safe:1;   // non-masked op_store
-	unsigned endp:1;
+	unsigned jused:1;  // this instruction is a jump target
+	unsigned swtch:1;  // indirect jump
+	unsigned safe:1;   // non-masked OP_STORE*
+	unsigned endp:1;   // for last OP_LEAVE instruction
 	unsigned fpu:1;    // load into FPU register
+	unsigned njump:1;  // near jump
 } instruction_t;
 
 typedef struct vmSymbol_s {
@@ -152,6 +159,7 @@ typedef union vmFunc_u {
 	void (*func)(void);
 } vmFunc_t;
 
+#ifndef BUILD_GAME_STATIC
 struct vm_s {
 
 	syscall_t	systemCall;
@@ -207,16 +215,38 @@ struct vm_s {
 
 	int			privateFlag;
 	recognizedVM_t knownVM;
+#ifdef USE_ASYNCHRONOUS
+  qboolean suspended;
+#endif
 };
+#else
+struct vm_s {
+  syscall_t	systemCall;
+  const char	*name;
+	vmIndex_t	index;
+	int       vmIndex;
+  qboolean	compiled;
+  int			callLevel;
+  int			privateFlag;
+};
+#endif
 
-extern  int       gvm;
-extern  int       cgvm;
-extern  int       uivm;
-#define MAX_NUM_VMS 10
-extern	vm_t			*cgvms[MAX_NUM_VMS];	// interface to cgame dll or vm
-extern  int             numCGames;
-extern	vm_t			*uivms[MAX_NUM_VMS];	// interface to ui dll or vm
-extern	vm_t			*gvms[MAX_NUM_VMS];				// game virtual machine
+
+#ifdef USE_MULTIVM_CLIENT
+extern	vm_t		 *uivmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
+extern  int       uivmi;
+#define uivm      uivmWorlds[uivmi]
+extern	vm_t		 *cgvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
+extern  int       cgvmi;
+#define cgvm      cgvmWorlds[cgvmi]
+extern	vm_t		 *gvmWorlds[MAX_NUM_VMS];	// interface to ui dll or vm
+extern  int       gvmi;
+#define gvm       gvmWorlds[gvmi]
+#else
+extern  vm_t     *uivm;
+extern  vm_t     *cgvm;
+extern  vm_t     *gvm;
+#endif
 
 qboolean VM_Compile( vm_t *vm, vmHeader_t *header );
 int	VM_CallCompiled( vm_t *vm, int nargs, int *args );
@@ -252,7 +282,7 @@ extern opcode_info_t ops[ OP_MAX ];
 
 #endif // VM_LOCAL_H
 
-#ifdef EMSCRIPTEN
+#ifdef USE_ASYNCHRONOUS
 extern qboolean VM_IsSuspendedCompiled(vm_t *vm);
 extern void VM_SuspendCompiled(vm_t *vm, unsigned pc, unsigned sp);
 extern int VM_ResumeCompiled(vm_t *vm);

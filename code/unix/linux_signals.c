@@ -30,9 +30,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
-#ifndef DEDICATED
-#include "../renderer/tr_local.h"
-#endif
 
 static qboolean signalcaught = qfalse;
 
@@ -65,7 +62,9 @@ static void signal_handler( int sig )
 #ifndef DEDICATED
 	CL_Shutdown( msg, qtrue );
 #endif
+#ifndef BUILD_SLIM_CLIENT
 	SV_Shutdown( msg );
+#endif
 	VM_Forced_Unload_Done();
 	Sys_Exit( 0 ); // send a 0 to avoid DOUBLE SIGNAL FAULT
 }

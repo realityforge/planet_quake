@@ -1,0 +1,12 @@
+To do:
+- Player position smoothing for "laggy" demos
+- DLL: Better mid-air detection heuristics?
+- DLL: Give plug-ins the ability to tell when their job is done so that parsing can be stopped early
+- Frag Sequence cut filter: add a "max. time after spawn" option to detect sequences of spawnfrags
+- Frag Sequence cut filter: add a "all kills vs the same player" option?
+- Auto-rename functionality (quicker but less correct version: read the first game-state message only)
+- Merger: Find a way to solve the "item problem"
+- Merger: Find a way to deal with the "player entities event sequence problem"
+- Time shifter: Finer granularity level? Give the offset in milliseconds or floating-point snapshot count?
+- Track overtime start/end times to be able to translate all match times to server times
+- More reliable overtime detection?

@@ -287,14 +287,20 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t1 = t1;
 	cmd->s2 = s2;
 	cmd->t2 = t2;
+#ifdef BUILD_EXPERIMENTAL
 	if(bannerResetTime < 100 && Q_stristr(cmd->shader->name, "font2_prop")) {
 		bannerResetTime++;
 		ri.Spy_Banner(s1, t1);
 	}
+  if(r_inputShader->string[0] && Q_stristr(r_inputShader->string, cmd->shader->name)) {
+		// TODO: use Sys_EventMenuChanged to find blinker character
+		ri.Spy_InputText();
+	}
 #ifdef USE_ABS_MOUSE
-	if(Q_stristr(cmd->shader->name, "cursor")) {
+	if(r_cursorShader->string[0] && Q_stristr(r_cursorShader->string, cmd->shader->name)) {
 		ri.Spy_CursorPosition(x, y);
 	}
+#endif
 #endif
 }
 
@@ -475,7 +481,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				}
 
 				{
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 					GLenum DrawBuffers[1] = {GL_NONE};
 #else
 					GLenum DrawBuffers[1] = {GL_FRONT};
@@ -542,7 +548,7 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			}
 
 			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 				cmd->buffer = (int)GL_NONE;
 #else
 				cmd->buffer = (int)GL_FRONT;

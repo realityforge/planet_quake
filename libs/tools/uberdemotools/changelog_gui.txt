@@ -1,0 +1,230 @@
+0.7.2 (22.07.2016)
+ADD: A new "Scores" info tab
+FIX: Player (dis)connection detection (players who reconnected had their time range wrongly starting at the previous disconnect time)
+FIX: A long-standing memory leak happening in all batch-processing operations
+FIX: All but the first demo in time-shift batches were broken
+
+0.7.1 (01.05.2016)
+FIX: Divide by 0 exception when no memory was committed or the total job duration is less than 1 ms
+
+0.7.0 (30.04.2016)
+ADD: Searching for patterns and displaying the results in a new tab: "Search Results"
+CHG: Many performance and memory usage improvements, parsing is now roughly 2x faster
+CHG: The flag captures analyzer now obtains its data in much more reliable ways (supporting QL, CPMA and OSP)
+CHG: The cut/search by pattern player tracking based on names is more robust (doesn't give up the search after a gamestate, handles disconnects)
+CHG: The default thread count is now 1 because we can't rely on all users having SSDs
+CHG: Improved the scroll to bottom implementation of the log list box
+FIX: Not reserving enough memory address space is no longer going to trigger a fatal error anywhere
+FIX: Exceptions thrown by UDT.dll can now be caught, regardless of the final thread count decided
+FIX: Flick rail false positives when teleporting before a rail frag
+FIX: The app will now check that demos selected for write operations have a compatible protocol
+FIX: Fixed a few errors in the way performance stats were collected and merged
+FIX: Unsuccessful calls to malloc will now invoke the fatal error handler instead of having the library crash later
+FIX: The "Copy to Clipboard" commands were keeping selection order instead of using display order
+FIX: In the "Steam Info" dialog, if the only item of a list view is not selected, the app uses it automatically instead of complaining about the lack of selection
+FIX: In the "Cut by Time" converter: in some cases, a match time exactly at the first or last second would be considered out of range
+
+0.6.0 (10.11.2015)
+ADD: An updater and the option to run it at start-up to look for new releases
+ADD: A Steam info dialog showing Steam users, Steam installation folders, game folders and demo folders
+ADD: dm_73 to dm_91 and dm_90 to dm_91 demo converters
+REM: dm_90 to dm_68 and dm_73 to dm_90 demo converters
+FIX: All modal dialogs are now sized to fit to the content instead of using fixed dimensions (thanks to Benroads for reporting on the issue)
+CHG: Updated the About dialog to improve formatting and credit Jaime Olivares for ZipStorer
+
+0.5.4 (01.11.2015)
+FIX: Multiple parsing errors occurring with dm_90 and dm_91 demos because of previous overflow handling changes
+FIX: When a job was large enough to get split into multiple batches, some demos ended up not being processed
+FIX: Forfeits being wrongly detected in dm_91 demos when the config string for the 2nd place player's name was cleared at match start
+
+0.5.3 (24.10.2015)
+ADD: A "Captures" tab under "Info" for listing flag captures
+ADD: Options to allow/disallow base/non-base flag pickups in the Flag Captures cut filter
+ADD: Showing the progress of the current job in the title bar so that you can see the progress when UDT is minimized
+CHG: Jobs split into multiple batches now track byte count for progress instead of file count for improved precision
+CHG: Now printing the linear allocator's name whenever there is a fatal error in one
+CHG: Improved error handling for demo message I/O (overflows and others)
+CHG: Demo message I/O errors can no longer be fatal (there were 10 instances of that), they will cancel parsing of the current demo instead
+CHG: Demo message I/O errors now always print the file's name
+FIX: Cut by Flag: Checking if a flag is taken in the playerstate by testing the end time against 0 instead of INT_MAX
+FIX: Cut by Flag: Got rid of false positives where pickups and captures get detected during the very first snapshot
+
+0.5.2 (01.10.2015)
+ADD: The "Matches" cut filter
+ADD: A match time to server time converter under the "Cut by Time" tab
+ADD: Stats analyzer: time/score/frag/capture/round limit
+ADD: Stats analyzer: game state index, match start/end time, count-down start time, intermission end time
+CHG: Improved match duration output
+FIX: The time-out server time ranges of CPMA demos were broken
+
+0.5.1 (21.09.2015)
+ADD: dm3 to dm_68 and dm_48 to dm_68 demo converters
+ADD: Tracking match start dates in QL demos
+ADD: "Cut by Time" context menu item in the "Commands" list view
+CHG: The "Value" column of the "Commands" list view will now display its content on multiple rows if one isn't enough to fit everything
+FIX: Config string commands that are too large get written as split bcs0/bcs1/bcs2 commands
+
+0.5.0 (17.09.2015)
+ADD: Analysis data export to JSON (can select the list of analyzers enabled for JSON export in the "Settings" tab)
+ADD: "Chat" now displays team messages too and has a "Scope" (global or team) column
+ADD: "Cut by Chat" can now be configured to search team chat messages
+ADD: "Reveal in File Explorer" context menu entry of the "Demo List" list view: opens the file explorer with the file pre-selected
+ADD: "Scores and Stats" tab for displaying the most detailed possible information per match
+ADD: "Commands" tab for displaying both commands and config strings (in gamestate messages and command messages)
+ADD: Unicode file and directory paths support
+CHG: All data analysis information tabs are now found under the "Info" tab
+CHG: Performance stats now get printed once per job instead of once per batch (jobs can be split into several batches)
+CHG: The printing of performance stats can be enabled/disabled individually in the "Settings" tab
+FIX: Colored log lines couldn't be copied to the clipboard or saved to a file
+FIX: Now handling string.Format failing in log functions
+FIX: Clicking any column of the "Chat" list view was crashing when the list was empty
+FIX: "Cut by Chat" now searches the messages themselves, not the raw commands
+
+0.4.7 (30.07.2015)
+ADD: The file and folder browsing dialogs now open the last used directory by default when it's valid
+ADD: Full parse/write support of demo protocols 66, 67 (Quake 3) and 91 (Quake Live)
+ADD: Full parse support of demo protocols 3 and 48 (Quake 3)
+FIX: Potential crash in the game state analyzer when a player index is out of bounds
+FIX: Now cleaning up the long OSP color codes (^X followed by 6 hex chars, case insensitive)
+
+0.4.6 (19.07.2015)
+FIX: When alt-tabbing out of UDT's own modal dialogs, you couldn't alt-tab back to them: they would steal the focus but not display!
+ADD: Demo time shifting (a sort of anti-lag so you can see something similar to what the player saw)
+ADD: Demo merging (creating an augmented demo from multiple input demos of the same match)
+
+0.4.5 (19.06.2015)
+ADD: Added an option to enable or disable the merging of overlapping cut sections matched by different pattern types
+
+0.4.4 (17.04.2015)
+ADD: Added the "Flick Rails" cut filter
+FIX: The player tracker could crash when it couldn't find the specified player name in a config string
+FIX: Formatting of negative times in FormatTimeForFileName
+
+0.4.3a (23.02.2015)
+FIX: Logging color-coded errors and warnings would crash when called from unmanaged threads (this happens when the final decided number of job threads is >1)
+
+0.4.3 (12.02.2015)
+ADD: Protocol 68 to 90 batch conversions with read-only config file ConversionRules90to68.xml
+ADD: Added the "Flag Captures" cut filter
+ADD: Added the "Color Log Messages" option
+ADD: Now displaying the elapsed time and estimated time remaining during threaded job progress
+CHG: Made some minor UI improvements/changes to labels, tab names, tool tips, help text, the "About" dialog, etc
+
+0.4.2 (22.01.2015)
+ADD: New data when analyzing a demo: generic information, player list, demo taker name and index
+ADD: The ability to batch convert dm_73 demos to the dm_90 format
+CHG: Slightly bumped up the amount of memory reserved for string data in the chat plug-in
+FIX: Now using the peak used byte count instead of the currently used byte count in memory allocatotion stats
+
+0.4.1 (17.01.2015)
+CHG: Removing all demos at once in the GUI happens fast
+ADD: Splitting up parsing operations by file count to reserve less memory address space (and commit less pages)
+ADD: An option ("Print Execution Time") for printing the time it took for the batch operation to complete
+ADD: An option ("Print Alloc Stats") for printing the memory allocation statistics of the batch operation
+CHG: The minimum required .NET version is now back to 4.0 Client Profile
+CHG: The "Demo List" ListView doesn't override the inactive selection highlight colors anymore as it created more confusion than it helped
+
+0.4.0b (09.01.2015)
+CHG: The log window now supports selecting multiple lines
+FIX: Log commands "Copy Selection" and "Copy Everything" now work again
+REM: Removed the "Clear Log" shortcut Ctrl+X
+
+0.4.0a (08.01.2015)
+FIX: The delete key shortcut wasn't working anymore for removing demos from the "Demo List" ListView
+
+0.4.0 (03.01.2015)
+ADD: Added a new unified "Cut by Pattern" system with gloabl player selection/tracking settings
+ADD: Added the "Mid-Air Frags" cut filter
+ADD: Added the "Multi-Frag Rails" cut filter
+ADD: Now adding a very small file name suffix specifying the type of pattern that was matched for the cut (if sections get merged, the first match's description is used)
+CHG: All cutting filter tabs are now found under the new "Patterns" tab
+CHG: Unified cut start and end offset config values shared by all filters in the "Settings" tab
+CHG: Bumped up the default max. thread count to 8
+CHG: The new minimum required .NET Framework version is now 4.5
+CHG: More detailed "Cut by Time" input checking and error formatting
+CHG: Improved the contextual menu of the "Demo List" list box
+CHG: Improved the list boxes' look for Windows users having a dark desktop theme
+CHG: Improved the help text in several tabs
+CHG: The "Log" list box will no longer color messages depending on severity to better integrate with the user's desktop UI theme
+FIX: Fixed the "Log" list box's highlighted line using the wrong foreground (text) color
+FIX: The "Cut by Time" feature will no longer crash with a non-0 gamestate index on non-analyzed demos
+FIX: The obituaries analyzer will now find some events that it didn't before; in the GUI this affects both the "Deaths" listing and the "Frag Sequence" cut filter
+REM: Removed "Cut by Awards"
+
+0.3.5a (22.12.2014)
+CHG: Player index selection is now handled by a combo box widget
+
+0.3.5 (21.12.2014)
+ADD: "Cut by Award" tab: to find and cut award sequences 
+ADD: Analyze on Load: new setting to decide if parsing demos should be done when demos are added to the list (default behavior: true)
+FIX: Cut by Frag: the start/end offsets were loaded from the Cut by Chat settings
+
+0.3.4 (15.12.2014)
+FIX: Properly set the rules group box heading in the "Cut by Frag" tab
+FIX: Always re-enabling the UI after threaded jobs
+ADD: Cut by Frag: allow self-kills/team-kills/any death options
+ADD: Cut by Frag: automatic or manual player index selection
+ADD: Cut by Frag: Means of Death filters
+
+0.3.3 (11.12.2014)
+ADD: "Frags" tab: displays all obituaries (all deaths, not just those caused by a player)
+ADD: "Cut by Frags" tab: to find and cut frag sequences
+
+0.3.2 (09.12.2014)
+CHG: If operations on one or more demos fail in a batch process, it won't stop/invalidate everything (see changelog_dll.txt)
+FIX: The recursive scan mode check box was initialized with the wrong option's value (because of that, the recursive scan mode option would be loaded wrong)
+FIX: Closing the window during a job will no longer freeze the application instead of quitting immediately
+
+0.3.1 (07.12.2014)
+CHG: All settings are always drawn and editable
+CHG: If a setting is currently inactive, it is grayed out (but still editable)
+ADD: Option: input folder
+ADD: Option: use input folder as default browsing location
+ADD: Option: open demos from input folder at start-up
+CHG: Improved error reporting when operations can't start
+FIX: Cut by Time now verifies that the GS index isn't negative
+CHG: In Cut by Time, if the GS index is wrong and there's only 1 possible value, UDT will correct the value and proceed
+ADD: Lots of explanations in help texts embedded in the UI itself
+
+0.3.0 (05.12.2014)
+CHG: Support for the DLL's new codebase and interface (see changelog_dll.txt)
+REM: Removed the following tabs: Obituaries, PU Runs, Stats
+ADD: An option for the maximum thread count UDT is allowed to use during batch processing
+FIX: The Cancel button now cancels jobs ASAP, not after processing of the current demo is done
+ADD: Demo splitting
+ADD: New quotes \o/
+
+0.2.0g (21.03.2013)
+CHG: The default text color of all ListView instances is opaque black
+ADD: Open button next to the browse button ("...") in the Output Folder row of the Settings tab
+
+0.2.0f (10.02.2012)
+FIX: The names of players connecting after the demo record start time are now recognized
+
+0.2.0e (09.02.2012)
+FIX: Now uses the correct config string indexes for Quake Live demos (Obituaries, PU Runs)
+
+0.2.0d (09.02.2012)
+ADD: Quake Live support!
+FIX: Now accepts file and folder links (for drag'n'drop and command-line)
+
+0.1.9h (04.02.2012)
+ADD: Can now cut by time from multiple chat events
+ADD: Can now cut by time from multiple obituary events
+ADD: Can now copy to the clipboard from chat events
+ADD: Can now copy to the clipboard from obituary events
+
+0.1.9g (03.02.2012)
+FIX: Clicking cancel while parsing now removes the demo from the list
+
+0.1.9f (02.02.2012)
+ADD: Power-up runs
+
+0.1.9e (01.02.2012)
+ADD: Obituary events
+
+0.1.9d (29.01.2012)
+ADD: Ability to clear, copy and save the log
+
+0.1.9c (27.01.2012)
+1st: First 'good enough for the public' release

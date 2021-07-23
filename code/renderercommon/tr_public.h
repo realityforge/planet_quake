@@ -121,21 +121,34 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
-	void  (*SetDvrFrame)( float x, float y, float height, float width );
-	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
-  void (*FastCapture)(byte *data);
-	void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
-	void (*UpdateMode)(glconfig_t *glconfigOut);
+
+	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
+  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
 #ifdef USE_LAZY_MEMORY
-	void	(*ReloadShaders)( qboolean createNew );
+#ifdef USE_MULTIVM_CLIENT
+	void  (*SetDvrFrame)( float x, float y, float height, float width );
+#endif
+	void (*ReloadShaders)( qboolean createNew );
+  void (*SwitchWorld)(int world);
 #endif
 #ifdef USE_LAZY_LOAD
 	void (*UpdateModel)(const char *name);
 	void (*UpdateShader)(char *shaderName, int lightmapIndex);
 #endif
+#ifdef USE_RMLUI
+  qhandle_t (*RegisterImage)( int *dimensions, const char *name );
+  void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
+                          int num_indices, qhandle_t texture, const vec2_t translation);
+  void  (*DrawElements)(int numIndexes, void *firstIndex);
+#endif
+#ifdef USE_VID_FAST
+  void (*UpdateMode)(glconfig_t *glconfigOut);
+#endif
+#ifdef BUILD_EXPERIMENTAL
+  void (*FastCapture)(byte *data);
+  void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*ResetBannerSpy)( void );
-	void (*SwitchWorld)(int world);
-
+#endif
 } refexport_t;
 
 //
@@ -185,7 +198,6 @@ typedef struct {
 
 	void	(*Cmd_AddCommand)( const char *name, void(*cmd)(void) );
 	void	(*Cmd_RemoveCommand)( const char *name );
-	void	(*Cmd_SetDescription)( const char *name, char *description );
 
 	int		(*Cmd_Argc) (void);
 	char	*(*Cmd_Argv) (int i);
@@ -229,7 +241,6 @@ typedef struct {
 	// platform-dependent functions
 	void	(*GLimp_Init)( glconfig_t *config );
 	void	(*GLimp_Shutdown)( qboolean unloadDLL );
-	void  (*GLimp_UpdateMode)( glconfig_t *config );
 	void	(*GLimp_EndFrame)( void );
 	void	(*GLimp_InitGamma)( glconfig_t *config );
 	void	(*GLimp_SetGamma)( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
@@ -242,12 +253,19 @@ typedef struct {
 	void*	(*VK_GetInstanceProcAddr)( VkInstance instance, const char *name );
 	qboolean (*VK_CreateSurface)( VkInstance instance, VkSurfaceKHR *pSurface );
 
+  void	(*Cmd_SetDescription)( const char *name, char *description );
+	void  (*GLimp_UpdateMode)( glconfig_t *config );
 #ifdef USE_LAZY_LOAD
 	int   (*FS_FOpenFileRead)( const char *filename, fileHandle_t *file, qboolean uniqueFILE );
 #endif
+#ifdef BUILD_EXPERIMENTAL
 	void (*Spy_CursorPosition)(float x, float y);
+	void (*Spy_InputText)( void );
 	void (*Spy_Banner)(float x, float y);
+#endif
+#ifdef __WASM__
 	void (*Sys_DownloadLocalFile)(char *fileName);
+#endif
 } refimport_t;
 
 extern	refimport_t	ri;

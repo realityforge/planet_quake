@@ -1,0 +1,93 @@
+{
+
+name        Ikunx
+
+model       ikunx
+
+aifile  bots/ikunx_c.c
+
+}
+
+
+
+{
+
+name        Crash
+
+model       crash
+
+aifile  bots/crash_c.c
+
+}
+
+
+
+{
+
+name        Xaero
+
+model       xaero
+
+aifile  bots/xaero_c.c
+
+}
+
+
+
+{
+
+name        Gargoyle
+
+model       gargoyle
+
+aifile  bots/gargoyle_c.c
+
+}
+
+
+
+{
+
+name        Grism
+
+model       grism
+
+aifile  bots/grism_c.c
+
+}
+
+
+
+{
+
+name        Kyonshi
+
+model       kyonshi
+
+aifile  bots/kyonshi_c.c
+
+}
+
+
+
+{
+
+name        Major
+
+model       major
+
+aifile  bots/major_c.c
+
+}
+
+
+
+{
+
+name        Default
+
+model       default
+
+aifile  bots/default_c.c
+
+}

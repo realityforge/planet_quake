@@ -43,7 +43,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #endif
 
 #if defined (_WIN32) || defined(__linux__)
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #define USE_AFFINITY_MASK
 #else
 #undef USE_AFFINITY_MASK
@@ -59,75 +59,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //============================================================================
 
-#ifdef EMSCRIPTEN
-#include <emscripten.h>
-void Com_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void Com_Frame_Proxy( void );
-
-void SOCKS_Frame_Callback(void (*cb)( void ), void (*af)( void ));
-void SOCKS_Frame_Proxy( void );
-static void (*SOCKS_Proxy)( void ) = NULL;
-static void (*SOCKS_After)( void ) = NULL;
-
-static void (*CB_Frame_Proxy)( void ) = NULL;
-static void (*CB_Frame_After)( void ) = NULL;
-
-void IN_Init (void);
-void IN_Frame (void);
-void IN_Shutdown (void);
-
-extern char **Sys_CmdArgs( void );
-extern int Sys_CmdArgsC( void );
-
-extern void	Sys_GLimpInit( void );
-extern void	Sys_GLContextCreated( void );
-
-extern void Sys_DownloadLocalFile( char *fileName );
-extern void Sys_FS_Offline( void );
-extern void Sys_FS_Startup( void );
-extern void Sys_FS_Shutdown( void );
-extern void Sys_BeginDownload( void );
-
-void FS_Startup( void );
-void FS_Startup_After_Async( void );
-void Com_Init_After_Filesystem( void );
-void FS_Restart_After_Async( void );
-void CL_ParseGamestate_After_Restart( void );
-void Com_GameRestart_After_Restart( void );
-void CL_Vid_Restart_After_Restart( void );
-void CL_Connect_After_Shutdown( void );
-void CL_Connect_After_Restart( void );
-void CL_Connect_After_Startup( void );
-
-void Com_Frame_After_Startup( void );
-void Com_Frame_After_Shutdown( void );
-void Com_GameRestart_User_After_Shutdown( void );
-void Com_GameRestart_User_After_Startup( void );
-void SV_SpawnServer_After_Shutdown( void );
-void SV_SpawnServer_After_Startup( void );
-void CL_ParseGamestate_Game_After_Shutdown( void );
-void CL_ParseGamestate_Game_After_Startup( void );
-void CL_ParseGamestate_After_Shutdown( void );
-void CL_ParseGamestate_After_Startup( void );
-void CL_Vid_Restart_After_Shutdown( void );
-void CL_Vid_Restart_After_Startup( void );
-
-void CL_DemoCompleted_After_Startup( void );
-void CL_DemoCompleted_After_Shutdown( void );
-
-#endif
 
 #ifdef USE_LAZY_LOAD
-#ifdef EMSCRIPTEN
-extern char *Sys_UpdateShader( void );
-extern char *Sys_UpdateSound( void );
-extern char *Sys_UpdateModel( void );
-#else
 char *Sys_UpdateShader( void );
 char *Sys_UpdateSound( void );
 char *Sys_UpdateModel( void );
-void Sys_FileReady(char *filename);
-#endif
+void Sys_FileReady(const char *filename);
 #endif
 
 //
@@ -286,7 +223,7 @@ NET
 
 ==============================================================
 */
-#ifndef EMSCRIPTEN
+#ifndef __WASM__
 #define USE_IPV6
 #else
 #ifdef USE_IPV6
@@ -308,7 +245,11 @@ NET
 
 #define	MAX_PACKET_USERCMDS		32		// max number of usercmd_t in a packet
 
+#ifdef USE_MV
+#define	MAX_SNAPSHOT_ENTITIES	MAX_GENTITIES
+#else
 #define	MAX_SNAPSHOT_ENTITIES	256
+#endif
 
 #define	PORT_ANY			-1
 
@@ -344,12 +285,17 @@ typedef struct {
 		byte	_6[16];
 #endif
 	} ipv;
-	unsigned short	port;
+	uint16_t	port;
 #ifdef USE_IPV6
 	unsigned long	scope_id;	// Needed for IPv6 link-local addresses
 #endif
 	char name[MAX_STRING_CHARS];
 	char protocol[10];
+#ifdef USE_MULTIVM_SERVER
+  // the socket the connection came in on, 
+  //   so we know which world to join based on port number
+  int  netWorld; 
+#endif
 } netadr_t;
 
 void		NET_Init( void );
@@ -526,8 +472,8 @@ VIRTUAL MACHINE
 ==============================================================
 */
 typedef enum {
-	VMR_UNKNOWN = -1,
-	VMR_BASEQ3A = 0,
+	VMR_UNKNOWN = 0,
+	VMR_BASEQ3A,
 	VMR_OSP,
 	VMR_DEFRAG,
 	VMR_URT,
@@ -559,26 +505,41 @@ typedef enum {
 typedef enum {
 	VM_BAD = -1,
 	VM_GAME = 0,
-#ifndef USE_DEDICATED
+#ifndef DEDICATED
 	VM_CGAME,
 	VM_UI,
 #endif
 	VM_COUNT
 } vmIndex_t;
 
-void	VM_Init( void );
+#ifdef BUILD_GAME_STATIC
+vm_t	*VM_Create2( vmIndex_t index, syscall_t systemCalls );
+#define VM_Create(x, y, z, deltaprime) VM_Create2(x, y)
+#define VM_CHECKBOUNDS(vm,a,b)
+#define VM_CHECKBOUNDS2(vm,a,b,c)
+#define VM_Forced_Unload_Done()
+#define VM_Debug(x)
+#define VM_Forced_Unload_Start()
+#define VM_Init()
+#define	VMA(x) (void *)(args[x])
+#else
 vm_t	*VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscalls, vmInterpret_t interpret );
+#endif
 
 // module should be bare: "cgame", not "cgame.dll" or "vm/cgame.qvm"
 
 void	VM_Free( vm_t *vm );
 void	VM_Clear(void);
+#ifndef BUILD_GAME_STATIC
+void	VM_Init( void );
 void	VM_Forced_Unload_Start(void);
 void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart( vm_t *vm );
+#endif
 
 intptr_t	QDECL VM_Call( vm_t *vm, int nargs, int callNum, ... );
 
+#ifndef BUILD_GAME_STATIC
 void	VM_Debug( int level );
 void	VM_CheckBounds( const vm_t *vm, unsigned int address, unsigned int length );
 void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, unsigned int length );
@@ -594,6 +555,8 @@ void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, un
 void	*GVM_ArgPtr( intptr_t intValue );
 
 #define	VMA(x) VM_ArgPtr(args[x])
+#endif
+
 static ID_INLINE float _vmf(intptr_t x)
 {
 	floatint_t v;
@@ -611,6 +574,9 @@ typedef struct {
 } ui_hack;
 
 byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker);
+#endif
+
+#ifdef USE_ASYNCHRONOUS
 qboolean VM_IsSuspended(vm_t *vm);
 void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp);
 int VM_Resume(vm_t *vm);
@@ -642,6 +608,7 @@ void Cbuf_Init( void );
 void Cbuf_AddText( const char *text );
 // Adds command text at the end of the buffer, does NOT add a final \n
 
+void Cbuf_ExecuteTagged( cbufExec_t exec_when, const char *text, int tag );
 void Cbuf_ExecuteText( cbufExec_t exec_when, const char *text );
 // this can be used in place of either Cbuf_AddText or Cbuf_InsertText
 
@@ -703,12 +670,12 @@ void	Cmd_TokenizeStringIgnoreQuotes( const char *text_in );
 // Takes a null terminated string.  Does not need to be /n terminated.
 // breaks the string up into arg tokens.
 
+char     *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 #ifdef USE_SERVER_ROLES
-char      *Cmd_TokenizeAlphanumeric(const char *text_in, int *count);
 qboolean	Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role );
 void      Cmd_FilterLimited(char *commandList);
 #endif
-qboolean	Cmd_ExecuteString( const char *text, qboolean noServer );
+qboolean	Cmd_ExecuteString( const char *text, qboolean noServer, int tag );
 // Parses a single line of text into arguments and tries to execute it
 // as if it was typed at the console
 
@@ -750,10 +717,10 @@ cvar_t *Cvar_Get( const char *var_name, const char *value, int flags );
 // that allows variables to be unarchived without needing bitflags
 // if value is "", the value will not override a previously set value.
 
-void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
+void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag );
 // basically a slightly modified Cvar_Get for the interpreted modules
 
-void	Cvar_Update( vmCvar_t *vmCvar );
+void	Cvar_Update( vmCvar_t *vmCvar, int privateFlag );
 // updates an interpreted modules' version of a cvar
 
 void 	Cvar_Set( const char *var_name, const char *value );
@@ -774,6 +741,7 @@ void	Cvar_SetValueSafe( const char *var_name, float value );
 // expands value to a string and calls Cvar_Set/Cvar_SetSafe
 
 qboolean Cvar_SetModified( const char *var_name, qboolean modified );
+void Cvar_SetModifiedFunc(cvar_t *var, modifiedFunc_t modified);
 
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
@@ -807,13 +775,20 @@ void 	Cvar_WriteVariables( fileHandle_t f );
 
 void	Cvar_Init( void );
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+const char *Cvar_InfoString      ( int bit, qboolean *truncated, int tagged );
+const char *Cvar_InfoString_Big  ( int bit, qboolean *truncated, int tagged );
+      void	Cvar_InfoStringBuffer( int bit, char *buff, int buffsize, int tagged );
+#else
 const char *Cvar_InfoString( int bit, qboolean *truncated );
 const char *Cvar_InfoString_Big( int bit, qboolean *truncated );
 // returns an info string containing all the cvars that have the given bit set
 // in their flags ( CVAR_USERINFO, CVAR_SERVERINFO, CVAR_SYSTEMINFO, etc )
 void	Cvar_InfoStringBuffer( int bit, char *buff, int buffsize );
+#endif
 void	Cvar_CheckRange( cvar_t *cv, const char *minVal, const char *maxVal, cvarValidator_t type );
 void	Cvar_SetDescription( cvar_t *var, const char *var_description );
+void	Cvar_SetDescriptionByName( const char *var, const char *var_description );
 
 void	Cvar_SetGroup( cvar_t *var, cvarGroup_t group );
 int		Cvar_CheckGroup( cvarGroup_t group );
@@ -890,13 +865,14 @@ qboolean	FS_InMapIndex ( const char *filename );
 void	FS_SetMapIndex ( const char *mapname );
 void	FS_Shutdown( qboolean closemfp );
 
-qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart );
+qboolean	FS_ConditionalRestart( int checksumFeed, qboolean clientRestart, int igvm );
 
 void	FS_Restart( int checksumFeed );
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
 
 void	FS_Reload( void );
 
+char	**FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags );
 char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles );
 // directory should not have either a leading or trailing /
 // if extension is "/", only subdirectories will be returned
@@ -908,6 +884,13 @@ qboolean FS_FileExists( const char *file );
 
 char   *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
+const char *FS_DescribeGameFile(const char *filename, char **demoNames, 
+  int *demos, char **mapNames, int *maps, char **imageNames, int *images, 
+  char **videoNames, int *videos, char **soundNames, int *sounds, 
+  char **pk3Names, int *pk3s);
+const char *FS_SimpleFilename(const char *filename);
+void FS_AddZipFile( const char *zipfile );
+void FS_CopyFile( const char *fromOSPath, const char *toOSPath );
 qboolean FS_CompareZipChecksum( const char *zipfile );
 int		FS_GetZipChecksum( const char *zipfile );
 
@@ -928,6 +911,7 @@ int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
 void Spy_CursorPosition(float x, float y);
+void Spy_InputText( void );
 void Spy_Banner(float x, float y);
 
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
@@ -1140,13 +1124,21 @@ void		Info_Print( const char *s );
 void		Com_BeginRedirect (char *buffer, int buffersize, void (*flush)(const char *));
 void		Com_EndRedirect( void );
 void Com_Outside_Error(int level, char *msg);
+#ifdef USE_PRINT_CONSOLE
+void 		QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... ) __attribute__ ((format (printf, 5, 6)));
+void 		QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... ) __attribute__ ((format (printf, 5, 6)));
+#else
 void 		QDECL Com_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
 void 		QDECL Com_DPrintf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
+#endif
 void 		QDECL Com_Error( errorParm_t code, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
 void 		Com_Quit_f( void );
 void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 
 int			Com_EventLoop( void );
+#ifdef USE_ASYNCHRONOUS
+void *Com_PreviousEventPtr( void );
+#endif
 int			Com_Milliseconds( void );	// will be journaled properly
 
 // MD4 functions
@@ -1209,6 +1201,7 @@ extern	cvar_t	*com_blood;
 extern	cvar_t	*com_buildScript;		// for building release pak files
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
+extern	cvar_t	*com_protocol;
 extern	cvar_t	*cl_execTimeout;
 extern	cvar_t	*cl_execOverflow;
 
@@ -1338,8 +1331,13 @@ qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped );
 void CL_ResetOldGame( void );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
-qboolean CL_GameCommand( void );
+qboolean CL_GameCommand( int igvm );
 void CL_KeyEvent (int key, qboolean down, unsigned time, int fingerId);
+#ifdef USE_DRAGDROP
+void CL_DropComplete(void);
+void CL_DropFile( char *file, int len );
+void CL_DropStart(void);
+#endif
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
@@ -1395,7 +1393,7 @@ void Key_WriteBindings( fileHandle_t f );
 void S_ClearSoundBuffer( void );
 // call before filesystem access
 
-void CL_SystemInfoChanged( qboolean onlyGame );
+void CL_SystemInfoChanged( qboolean onlyGame, int igs );
 qboolean CL_GameSwitch( void );
 
 // AVI files have the start of pixel lines 4 byte-aligned
@@ -1405,24 +1403,28 @@ qboolean CL_GameSwitch( void );
 // server interface
 //
 void SV_Init( void );
+#ifndef BUILD_SLIM_CLIENT
 void SV_BotInitCvars( void );
 void SV_BotInitBotLib( void );
 void SV_Shutdown( const char *finalmsg );
 void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );
 void SV_PacketEvent( const netadr_t *from, msg_t *msg );
+void SV_PersistClient(int c);
+void SV_RestoreClient(int c);
 int SV_FrameMsec( void );
-qboolean SV_GameCommand( void );
+qboolean SV_GameCommand( int igvm );
 int SV_SendQueuedPackets( void );
 
 void SV_AddDedicatedCommands( void );
 void SV_RemoveDedicatedCommands( void );
+#endif
 
 
 //
 // UI interface
 //
-qboolean UI_GameCommand( void );
+qboolean UI_GameCommand( int igvm );
 qboolean UI_usesUniqueCDKey(void);
 
 /*
@@ -1455,6 +1457,16 @@ typedef enum {
 	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
 	SE_MAX,
+#ifdef USE_DRAGDROP
+  SE_DROPBEGIN,
+  SE_DROPCOMPLETE,
+  SE_DROPFILE,
+  SE_DROPTEXT,
+#endif
+#ifdef USE_ASYNCHRONOUS
+  SE_ASYNC,
+  SE_ASYNCP,
+#endif
 } sysEventType_t;
 
 typedef struct {
@@ -1473,13 +1485,10 @@ char	*Sys_ConsoleInput( void );
 
 void	QDECL Sys_Error( const char *error, ...) __attribute__ ((noreturn, format (printf, 1, 2)));
 void	Sys_Quit (void) __attribute__ ((noreturn));
-#ifdef EMSCRIPTEN
-extern void Sys_Debug(void);
-extern float Math_rand(void);
-void Sys_SetClipboardData( void *field );
-void Sys_EventMenuChanged( float x, float y );
+
+#ifdef __WASM__
+void JS_Field_CharEvent( field_t *edit, int ch );
 #endif
-void Field_CharEvent( field_t *edit, int ch );
 char	*Sys_GetClipboardData( void );	// note that this isn't journaled...
 void	Sys_SetClipboardBitmap( const byte *bitmap, int length );
 
@@ -1497,9 +1506,14 @@ void	Sys_SetAffinityMask( int mask );
 int		Sys_Milliseconds( void );
 int64_t	Sys_Microseconds( void );
 
-void	Sys_SnapVector( float *v );
+void	Sys_SnapVector( float *vector );
 
 qboolean Sys_RandomBytes( byte *string, int len );
+
+#ifdef USE_ASYNCHRONOUS
+void Sys_Download(const char *downloadName);
+void Sys_Offline( void );
+#endif
 
 // the system console is shown when a dedicated server is running
 void	Sys_DisplaySystemConsole( qboolean show );
@@ -1507,7 +1521,11 @@ void	Sys_DisplaySystemConsole( qboolean show );
 void	Sys_ShowConsole( int level, qboolean quitOnClose );
 void	Sys_SetErrorText( const char *text );
 
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+void	Sys_SendPacket( int length, const void *data, const netadr_t *to, int igvm );
+#else
 void	Sys_SendPacket( int length, const void *data, const netadr_t *to );
+#endif
 
 qboolean	Sys_StringToAdr( const char *s, netadr_t *a, netadrtype_t family );
 //Does NOT parse port numbers, only base addresses.

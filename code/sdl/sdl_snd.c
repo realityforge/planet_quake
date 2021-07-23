@@ -30,6 +30,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/snd_local.h"
 #include "../client/client.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf S_Printf
+#define Com_DPrintf S_DPrintf
+#endif
+
 qboolean snd_inited = qfalse;
 
 extern cvar_t *s_khz;
@@ -199,17 +206,9 @@ qboolean SNDDMA_Init( void )
 	SDL_AudioSpec desired;
 	SDL_AudioSpec obtained;
 	int tmp;
-	SDL_AudioDeviceID tmpPlayback;
 
-#ifndef EMSCRIPTEN
 	if ( snd_inited )
 		return qtrue;
-#else
-	if(snd_inited) {
-		SNDDMA_Shutdown();
-	}
-#endif
-
 
 	//if ( !s_sdlBits )
 	{
@@ -268,24 +267,12 @@ qboolean SNDDMA_Init( void )
 	desired.channels = s_sdlChannels->integer;
 	desired.callback = SNDDMA_AudioCallback;
 
-	tmpPlayback = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
-	if ( tmpPlayback == 0 )
+	sdlPlaybackDevice = SDL_OpenAudioDevice( NULL, SDL_FALSE, &desired, &obtained, SDL_AUDIO_ALLOW_ANY_CHANGE );
+	if ( sdlPlaybackDevice == 0 )
 	{
-		const char *message = SDL_GetError();
-#ifndef EMSCRIPTEN
 		Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
 		SDL_QuitSubSystem( SDL_INIT_AUDIO );
 		return qfalse;
-#else
-		if(!Q_stristr(message, "already open")) {
-			Com_Printf( "SDL_OpenAudioDevice() failed: %s\n", SDL_GetError() );
-			return qfalse;
-		} else {
-			sdlPlaybackDevice = tmpPlayback;
-		}
-#endif
-	} else {
-		sdlPlaybackDevice = tmpPlayback;
 	}
 
 	SNDDMA_PrintAudiospec( "SDL_AudioSpec", &obtained );
@@ -398,10 +385,7 @@ void SNDDMA_Shutdown( void )
 	}
 #endif
 
-#ifndef EMSCRIPTEN
-	// audio can't restart in emscripten, so skip it here
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
-#endif
 	free(dma.buffer);
 	dma.buffer = NULL;
 	dmapos = dmasize = 0;

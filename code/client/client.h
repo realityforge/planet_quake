@@ -31,6 +31,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../cgame/cg_public.h"
 #include "../game/bg_public.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf CL_Printf
+#define Com_DPrintf CL_DPrintf
+#endif
+
 #ifdef USE_CURL
 #include "cl_curl.h"
 #endif /* USE_CURL */
@@ -38,7 +45,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef USE_CURL
 //#define	USE_LNBITS	1
 #else
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 //#define	USE_LNBITS	1
 #else
 #ifdef USE_LNBITS
@@ -88,7 +95,7 @@ typedef struct {
 	int			mergeMask;
 	byte		clientMask[MAX_CLIENTS/8];
 #endif // USE_MV
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_CLIENT
 	int     world;
 #endif
 
@@ -126,35 +133,69 @@ typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
 									// to disconnect, preventing debugging breaks from
 									// causing immediate disconnects on continue
-	clSnapshot_t	snap[MAX_NUM_VMS];			// latest received from server
-	snapshot_t    *updateSnap;
-
-	int			serverTime;			// may be paused during play
+#ifdef USE_MULTIVM_CLIENT
+  clSnapshot_t	snapWorlds[MAX_NUM_VMS];			// latest received from server
+#define snap snapWorlds[igs]
+int			serverTimes[MAX_NUM_VMS];
+// can't use pre-compile because serverTime also exists in cl.snap.serverTime
+int			oldServerTimes[MAX_NUM_VMS];
+#define oldServerTime oldServerTimes[igs]
+int			oldFrameServerTimes[MAX_NUM_VMS];
+#define oldFrameServerTime oldFrameServerTimes[igs]
+int			serverTimeDeltas[MAX_NUM_VMS];
+#define serverTimeDelta serverTimeDeltas[igs]
+#else
+	clSnapshot_t	snap;			// latest received from server
+  int			serverTime;			// may be paused during play
 	int			oldServerTime;		// to prevent time from flowing bakcwards
 	int			oldFrameServerTime;	// to check tournament restarts
 	int			serverTimeDelta;	// cl.serverTime = cls.realtime + cl.serverTimeDelta
 									// this value changes as net lag varies
+#endif
+
 	qboolean	extrapolatedSnapshot;	// set if any cgame frame has been forced to extrapolate
 									// cleared when CL_AdjustTimeDelta looks at it
 	qboolean	newSnapshots;		// set on parse of any valid packet
 
-	gameState_t	gameState;			// configstrings
+#ifdef USE_MULTIVM_CLIENT
+	gameState_t	gameStates[MAX_NUM_VMS];			// configstrings
+#define gameState gameStates[igs]
+#else
+  gameState_t	gameState;			// configstrings
+#endif
 	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
-	int			parseEntitiesNum[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
+#ifdef USE_MULTIVM_CLIENT
+	int			parseEntitiesNumWorlds[MAX_NUM_VMS];	// index (not anded off) into cl_parse_entities[]
+#else
+  int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
+#endif
 
 	int			mouseDx[2], mouseDy[2];	// added to by mouse events
 	int			mouseIndex;
 	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
 
 	// cgame communicates a few values to the client system
-	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+#ifdef USE_MULTIVM_CLIENT
+	int			cgameUserCmdValue[MAX_NUM_VMS];	// current weapon to add to usercmd_t
+#define cgameUserCmdValue cgameUserCmdValue[igvm]
+#else
+  int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+#endif
+
 	float		cgameSensitivity;
 
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
-	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
-	int			cmdNumber;			// incremented each frame, because multiple
+#ifdef USE_MULTIVM_CLIENT
+	usercmd_t	cmdWorlds[MAX_NUM_VMS][CMD_BACKUP];	// each mesage will send several old cmds
+#define cmds         cmdWorlds[igvm]  // `igvm` because it is based on number of client VMs, not server worlds
+  int			cmdNumber;			// incremented each frame, because multiple
+  int     clCmdNumbers[MAX_NUM_VMS];
+#else
+  usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
+  int			cmdNumber;			// incremented each frame, because multiple
+#endif
 									// frames may need to be packed into a single packet
 
 	outPacket_t	outPackets[PACKET_BACKUP];	// information about each packet we have sent out
@@ -169,13 +210,24 @@ typedef struct {
 	int			serverId;			// included in each client message so the server
 												// can tell if it is for a prior map_restart
 	// big stuff at end of structure so most offsets are 15 bits or less
-	clSnapshot_t	snapshots[MAX_NUM_VMS][PACKET_BACKUP];
-
+#ifdef USE_MULTIVM_CLIENT
+	clSnapshot_t	snapshotWorlds[MAX_NUM_VMS][PACKET_BACKUP];
+#define snapshots snapshotWorlds[igs] // `igs` because it is based on number of server worlds, not cgames
 	entityState_t	entityBaselines[MAX_NUM_VMS][MAX_GENTITIES];	// for delta compression when not in previous frame
-
+#define entityBaselines entityBaselines[igs]
 	entityState_t	parseEntities[MAX_NUM_VMS][MAX_PARSE_ENTITIES];
-
+#define parseEntities parseEntities[igs]
 	byte			baselineUsed[MAX_NUM_VMS][MAX_GENTITIES];
+#define baselineUsed baselineUsed[igs]
+#else
+  clSnapshot_t	snapshots[PACKET_BACKUP];
+
+  entityState_t	entityBaselines[MAX_GENTITIES];	// for delta compression when not in previous frame
+
+  entityState_t	parseEntities[MAX_PARSE_ENTITIES];
+
+  byte			baselineUsed[MAX_GENTITIES];
+#endif
 } clientActive_t;
 
 extern	clientActive_t		cl;
@@ -207,9 +259,10 @@ typedef struct {
 
 	int			clientNum;
 #ifdef USE_MV
-	int			clientView;
 	int			zexpectDeltaSeq;			// for compressed server commands
-	int     currentView;
+#endif
+#ifdef USE_MULTIVM_CLIENT
+	int     currentView; // force the client to load a new VM
 #endif
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
@@ -246,13 +299,16 @@ typedef struct {
 	char		downloadName[MAX_OSPATH];
 	char		downloadTempName[MAX_OSPATH + 4]; // downloadName + ".tmp"
 	int			sv_allowDownload;
+#ifdef USE_MULTIVM_CLIENT
+	char    *world;
+#endif
 	char		sv_dlURL[MAX_CVAR_VALUE_STRING];
 	int			downloadNumber;
 	int			downloadBlock;	// block we are waiting for
 	int			downloadCount;	// how many bytes we got
 	int			downloadSize;	// how many bytes we got
 	char		downloadList[BIG_INFO_STRING]; // list of paks we need to download
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	qboolean  dlDisconnect;
 #endif
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
@@ -277,10 +333,19 @@ typedef struct {
 	qboolean	demoplaying;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
+#ifdef USE_MULTIVM_CLIENT
+  fileHandle_t	demofiles[MAX_NUM_VMS];
+#define demofile demofiles[igs]
+  int			      numDemoIndexes[MAX_NUM_VMS];
+#define numDemoIndex numDemoIndexes[igs]
+  demoIndex_t  *demoIndexes[MAX_NUM_VMS];
+#define demoIndex demoIndexes[igs]
+#else
 	fileHandle_t	demofile;
+  int			      numDemoIndex;
+	demoIndex_t  *demoIndex;
+#endif
 	fileHandle_t	recordfile;
-	int			      numDemoIndex;
-	demoIndex_t   *demoIndex;
 
 	int		timeDemoFrames;		// counter of rendered frames
 	int		timeDemoStart;		// cls.realtime before first frame
@@ -288,6 +353,7 @@ typedef struct {
 
 	float	aviVideoFrameRemainder;
 	float	aviSoundFrameRemainder;
+  int		aviFrameEndTime;
 	char	videoName[MAX_QPATH];
 	int		videoIndex;
 
@@ -372,6 +438,7 @@ typedef struct {
 	qboolean  firstClick;
 	qboolean	soundRegistered;
 	qboolean	uiStarted;
+	qboolean	rmlStarted;
 	qboolean	cgameStarted;
 
 	int			framecount;
@@ -486,6 +553,15 @@ extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 
+#ifdef USE_DRAGDROP
+extern  cvar_t  *cl_dropAction;
+#endif
+#ifdef USE_ABS_MOUSE
+extern  cvar_t  *in_mouseAbsolute;
+#endif
+#ifdef USE_MULTIVM_CLIENT
+extern  cvar_t  *cl_mvHighlight;
+#endif
 #ifdef USE_LNBITS
 extern  cvar_t	*cl_lnInvoice;
 #endif
@@ -522,12 +598,16 @@ extern	cvar_t	*r_colorbits;
 extern	cvar_t	*cl_stencilbits;
 extern	cvar_t	*cl_depthbits;
 extern	cvar_t	*cl_drawBuffer;
+extern  cvar_t  *cl_snaps;
 
 //=================================================
 
 //
 // cl_main
 //
+#ifdef USE_MULTIVM_CLIENT
+void CL_World_f( void );
+#endif
 void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd );
 
 void CL_StartHunkUsers( void );
@@ -538,9 +618,6 @@ extern int serverShift;
 void CL_StopRecord_f( void );
 
 void CL_InitDownloads( void );
-#ifdef EMSCRIPTEN
-void CL_Outside_NextDownload( void );
-#endif
 void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );
@@ -582,6 +659,7 @@ void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor,
 extern int cl_connectedToPureServer;
 extern int cl_connectedToCheatServer;
 
+void CL_ParseServerInfo( int igs );
 void CL_ParseServerMessage( msg_t *msg );
 void CL_ParseSnapshot( msg_t *msg, qboolean multiview );
 
@@ -644,6 +722,7 @@ void SCR_StopCinematic (void);
 int CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);
 e_status CIN_StopCinematic(int handle);
 e_status CIN_RunCinematic (int handle);
+e_status CIN_RunCinematic_Fake (int handle);
 void CIN_DrawCinematic (int handle);
 void CIN_SetExtents (int handle, int x, int y, int w, int h);
 void CIN_UploadCinematic(int handle);
@@ -652,31 +731,33 @@ void CIN_CloseAllVideos(void);
 //
 // cl_cgame.c
 //
-//#ifdef USE_MULTIVM
 extern int clientMaps[MAX_NUM_VMS];
-extern float clientWorlds[MAX_NUM_VMS][4];
-//#endif
+extern float clientScreens[MAX_NUM_VMS][4];
+extern int clientWorlds[MAX_NUM_VMS];
+extern int clientGames[MAX_NUM_VMS];
+
 #ifdef USE_LAZY_LOAD
 // TODO: make these work on native, by checking files.c for rediness or something?
 void CL_UpdateShader( void );
 void CL_UpdateSound( void );
 void CL_UpdateModel( void );
 #endif
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 void CL_InitCGameFinished( void );
 #endif
-void CL_InitCGame( qboolean createNew );
+void CL_InitCGame( int igvm );
 void CL_ShutdownCGame( void );
-qboolean CL_GameCommand( void );
+qboolean CL_GameCommand( int igvm );
 void CL_CGameRendering( stereoFrame_t stereo );
 void CL_SetCGameTime( void );
-void CL_AdjustTimeDelta( void );
-qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
 
 //
 // cl_ui.c
 //
 void CL_InitUI( qboolean createNew );
+void CL_ShutdownRmlUi( void );
+void CL_InitRmlUi( void );
+void CL_UIContextRender(void);
 void CL_ShutdownUI( void );
 int Key_GetCatcher( void );
 void Key_SetCatcher( int catcher );
@@ -718,6 +799,7 @@ void	GLimp_EndFrame( void );
 void  GLimp_UpdateMode( glconfig_t *config );
 void	GLimp_InitGamma( glconfig_t *config );
 void	GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
+void IN_ShowKeyboard (void);
 
 void	*GL_GetProcAddress( const char *name );
 

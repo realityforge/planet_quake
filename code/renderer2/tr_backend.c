@@ -55,7 +55,7 @@ void GL_BindToTMU( image_t *image, int tmu )
 	}
 	else
 	{
-		ri.Printf(PRINT_DEVELOPER, "GL_BindToTMU: NULL image\n");
+		ri.Printf(PRINT_WARNING, "GL_BindToTMU: NULL image\n");
 	}
 
 	GL_BindMultiTexture(GL_TEXTURE0_ARB + tmu, target, texture);
@@ -671,7 +671,7 @@ Stretches a raw 32 bit power of 2 bitmap image over the given screen rectangle.
 Used for cinematics.
 =============
 */
-void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty) {
+void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty) {
 	int			i, j;
 	int			start, end;
 	vec4_t quadVerts[4];
@@ -737,7 +737,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	RB_InstantQuad2(quadVerts, texCoords);
 }
 
-void RE_UploadCinematic (int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty) {
+void RE_UploadCinematic (int w, int h, int cols, int rows, byte *data, int client, qboolean dirty) {
 	GLuint texture;
 
 	if (!tr.scratchImage[client])
@@ -1799,4 +1799,12 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		}
 	}
 
+}
+
+
+// TODO: add this to cmd buffer so it works with buffering
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+  int num_indices, qhandle_t texture, const vec2_t translation)
+{
+  
 }

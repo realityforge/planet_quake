@@ -1,0 +1,92 @@
+OpenGL error validation:
+- add error checking after texture uploading (at least for compressed formats)
+- add GL_ResetError before all places with GL_CheckError (glBindBufferEXT doesn't have one)
+- error logging for make.pl - use appNotify instead of printf
+
+Logging:
+- Notify.log:
+  ? add "-nolog" switch to disable it
+  ? place notify.log into directory of umodel.exe
+  - add current date/time, some umodel info (version) and cmdline in a case of crash
+
+Shaders: when trying to change/compile shader between glBegin/glEnd, GL will not do anything.
+Should check glGetError() and assert? (or make function GL_CheckError() - will appError(code)
+if code != 0)
+
+FONTGEN
+? add pseudographics chars (for material outline)
+
+! UE1 UTexture has AnimNext field
+! implement UMaterialSequence (check 2K4Menus package)
+
+?? (check, possibly fixed) TRIBES3:
+  * skeletal mesh LOD levels - has visual bugs on most LOD meshes
+    (LODs were disabled for Tribes)
+  * BUGS in Tribes3 (have in both umodel in TvEd): mesh ImperialLightJulia, anims 46,137
+  * bugs with U8V8 texture format
+
+? when cannot load some material type, or file is absent - should at least give ability to list these
+  mesh material in "show materials" or "dump" mode (create dummy material, and use default texture
+  in its Bind() - in this case, default material itself is not needed)
+
+
+UE2 NOTES:
+~~~~~~~~~~
+- check XGame/Classes/SpeciesType.uc + Species_*.uc -- setting many properties for
+  player model
+- system/*.upl: files, containing links between meshes/skins/voices/names/portraits etc
+  http://wiki.beyondunreal.com/wiki/UPL_File
+- 2K4_NvidiaIntro has animation+model to be the same names, different types only
+  * used from MOV-UT2004-Intro.ut2
+- q2 model axis: forward/left/up (?); q2 world axis: forward/right/up (?); ut model axis
+  is right/forward/up
+
+
+UE2 COMPLEX MATERIALS:
+~~~~~~~~~~~~~~~~~~~~~~
+- AW-2k4XP.Weapons.ShockShieldFinal
+                   ShockShieldShaftFallbackFinal
+- AW-ShieldShaders.Shaders.BlueShieldFinal - has nested Combiners
+- DeRez.Shaders.DeRezFinalHead
+- EpicParticles.Shaders.FireFinal
+- InterfaceContent.Logos.fbSymbolShader (UT menu logo)
+                   HUD.fbBombFocus
+                   SPMenu.SP_FinalButton (has combiner with const color)
+- MenuEffects.ScoreBoard.ScoreboardU_FB (alternative UT logo)
+- PickupSkins.Shaders.FinalHealthCore
+                      FinalDamShader
+- UT2004Weapons.Shaders.BlueShockFinal
+                        PurpleShockFinal (complex, nested Combiners)
+                        LinkGunYellowShader
+                        PowerPulseShaderYellow
+- WarEffectsTextures.Particles.N_energy01_S_JM (Shader uses FinalBlend; simple)
+- XEffectMat.goop.GoopFB (has Shader -> Modifier -> Combiner)
+- XGameTextures.SuperPickups.DOMMabRs
+                             DOMScreens
+                             HealthPackTexS
+
+UE2 SIMPLE MODIFIERS:
+~~~~~~~~~~~~~~~~~~~~~
+- check HUDContent package
+- PickupSkins.Shaders.ShieldFinal
+- ULogo.MainMenu.CornerMenuFinal (UT menu slideshow)
+- UT2004Weapons.Shaders.ShockHitShader
+                WeaponSpecMap2 (used as specular overlay for rocket launcher)
+- VMVehicle-TX.VehicleExplosions.GENERICshrapnelTEX
+               Environments.ReflectionEnv (envmap using single texture)
+- WeaponSkins.Skins.SniperScreen1C
+
+Notes:
+- it is possible, that Shader will have same object in Diffuse and SelfIllumination fields -
+  - can ignore Diffuse here? (really, such shaders require SelfIllumination only, but UE
+  requires non-null Diffuse, otherwise 'white' will be displayed)
+
+
+UE2 COMMON MATERIAL USE TREE:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FinalBlend
+  -> Shader
+     -> Combiner(s)
+       -> Modifier (any count)
+         -> Texture
+         -> Modifier (const color)

@@ -112,6 +112,26 @@ qboolean Sys_RandomBytes( byte *string, int len )
 
 //============================================
 
+#ifdef USE_ASYNCHRONOUS
+void Sys_Download(const char *downloadName)
+{
+#ifndef DEDICATED
+  if(!com_dedicated || !com_dedicated->integer) {
+    Cbuf_AddText( va("directdl %s\n", downloadName) );
+  }
+#endif
+// TODO: something else for server and dedicated, perhaps download from 
+//   list of CDN sources, repacking?
+}
+
+
+void Sys_Offline( void )
+{
+  // TODO: read q3cache and download all files
+}
+#endif
+
+
 
 // bk001129 - new in 1.26
 void Sys_ListFilteredFiles( const char *basedir, const char *subdirs, const char *filter, char **list, int *numfiles ) {

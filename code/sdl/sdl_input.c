@@ -66,6 +66,8 @@ static cvar_t *cl_consoleKeys;
 static int in_eventTime = 0;
 static qboolean mouse_focus;
 
+extern void  Cvar_SetInputDescriptions( void );
+
 #define CTRL(a) ((a)-'a'+1)
 
 /*
@@ -322,10 +324,20 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 		}
 	}
 
-	if( in_keyboardDebug->integer )
+	if ( in_keyboardDebug->integer )
 		IN_PrintKey( keysym, key, down );
 
-	if( IN_IsConsoleKey( key, 0 ) )
+	if ( keysym->scancode == SDL_SCANCODE_GRAVE )
+	{
+		//SDL_Keycode translated = SDL_GetKeyFromScancode( SDL_SCANCODE_GRAVE );
+
+		//if ( translated == SDLK_CARET )
+		{
+			// Console keys can't be bound or generate characters
+			key = K_CONSOLE;
+		}
+	}
+	else if ( IN_IsConsoleKey( key, 0 ) )
 	{
 		// Console keys can't be bound or generate characters
 		key = K_CONSOLE;
@@ -1232,6 +1244,28 @@ void HandleEvents( void )
 					case SDL_WINDOWEVENT_LEAVE: if ( glw_state.isFullscreen ) mouse_focus = qfalse; break;
 				}
 				break;
+#ifdef USE_DRAGDROP
+      case SDL_DROPBEGIN:
+        Com_QueueEvent( in_eventTime, SE_DROPBEGIN, 0, 0, 0, NULL );
+        break;
+      case SDL_DROPTEXT:
+        Com_DPrintf("%s: Dropping text \"%s\"\n", __func__, e.drop.file);          
+        char *text = CopyString(e.drop.file);
+        Com_QueueEvent( in_eventTime, SE_KEY, SE_DROPTEXT, 0, strlen(text)+1, text );
+        free(e.drop.file);
+        break;
+      case SDL_DROPFILE:
+        Com_DPrintf("%s: Dropping file \"%s\"\n", __func__, e.drop.file);          
+        char *file = CopyString(e.drop.file);
+        Com_QueueEvent( in_eventTime, SE_KEY, SE_DROPFILE, 0, strlen(file)+1, file );
+        free(e.drop.file);
+        break;
+      case SDL_DROPCOMPLETE:
+      {
+        Com_QueueEvent( in_eventTime, SE_DROPCOMPLETE, 0, 0, 0, NULL );
+				break;
+      }
+#endif
 			default:
 				break;
 		}
@@ -1351,6 +1385,8 @@ void IN_Init( void )
 
 	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
 
+  SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+  SDL_EventState(SDL_DROPTEXT, SDL_ENABLE);
 	SDL_StartTextInput();
 
 	//IN_DeactivateMouse();
@@ -1364,6 +1400,7 @@ void IN_Init( void )
 	Cmd_AddCommand( "in_restart", IN_Restart );
 	Cmd_SetDescription( "in_restart", "Restart all the input drivers, dinput, joystick, etc\nUsage: in_restart" );
 
+  Cvar_SetInputDescriptions();
 	Com_DPrintf( "------------------------------------\n" );
 }
 

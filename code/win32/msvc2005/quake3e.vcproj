@@ -516,10 +516,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\client\snd_codec_ogg.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\client\snd_codec_wav.c"
 				>
 			</File>
@@ -621,6 +617,10 @@
 			</File>
 			<File
 				RelativePath="..\..\qcommon\vm_x86.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\qcommon\vm_x86_ng.c"
 				>
 			</File>
 			<File

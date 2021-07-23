@@ -70,7 +70,7 @@ static qboolean Cvar_ValidateName( const char *name ) {
 	const char *s;
 	int c;
 	
-	if ( !name ) {
+	if ( !name || !name[0] ) {
 		return qfalse;
 	}
 
@@ -307,7 +307,22 @@ static const char *Cvar_Validate( cvar_t *var, const char *value, qboolean warn 
 			}
 		} // Q_isanumber
 	} // CV_INTEGER || CV_FLOAT
-	// TODO: stringlist
+  else if ( var->validator == CV_ENUM ) {
+    int count;
+    qboolean found = qfalse;
+    char *enums = Cmd_TokenizeAlphanumeric(var->mins, &count);
+    for(int i = 0; i < count; i++) {
+      // var->maxs as safety string length?
+      if(Q_stricmp(value, enums) == 0) {
+        found = qtrue;
+        break;
+      }
+      enums = &enums[strlen(enums)+1];
+    }
+    if(!found) {
+      Com_Printf( "WARNING: cvar '%s' must be one of (%s)", var->name, var->mins );
+    }
+  } // CV_ENUM
 	else if ( var->validator == CV_FSPATH ) {
 		// check for directory traversal patterns
 		if ( FS_InvalidGameDir( value ) ) {
@@ -355,7 +370,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *var_value, int flags ) {
 	}
 
 	if ( !Cvar_ValidateName( var_name ) ) {
-		Com_Printf( "invalid cvar name string: %s\n", var_name );
+		Com_Error( ERR_FATAL, "invalid cvar name string: %s\n", var_name );
 		var_name = "BADNAME";
 	}
 
@@ -615,6 +630,11 @@ static void Cvar_Print( const cvar_t *v ) {
 }
 
 
+#ifndef DEDICATED
+#ifdef USE_CVAR_UNCHEAT
+extern cvar_t *comUncheats[128];
+#endif
+#endif
 /*
 ============
 Cvar_Set2
@@ -625,7 +645,8 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 
 //	Com_DPrintf( "Cvar_Set2: %s %s\n", var_name, value );
 
-	if ( !Cvar_ValidateName( var_name ) ) {
+	if ( !Cvar_ValidateName( var_name ) )
+	{
 		Com_Printf( "invalid cvar name string: %s\n", var_name );
 		var_name = "BADNAME";
 	}
@@ -638,44 +659,34 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 #endif
 
 	var = Cvar_FindVar (var_name);
-	if (!var) {
-		if ( !value ) {
+	if ( !var )
+	{
+		if ( !value )
 			return NULL;
-		}
 		// create it
-		if ( !force ) {
+		if ( !force )
 			return Cvar_Get( var_name, value, CVAR_USER_CREATED );
-		} else {
+		else
 			return Cvar_Get (var_name, value, 0);
 		}
-	}
 
-	if (!value ) {
-		value = var->resetString;
-	}
+#ifndef DEDICATED
+#ifdef USE_CVAR_UNCHEAT
+  if(var->flags & CVAR_CHEAT) {
+    for(int i = 0; i < ARRAY_LEN(comUncheats); i++) {
+      if(comUncheats[i] == var) {
+        var->flags &= ~CVAR_CHEAT;
+        var->flags |= CVAR_USERINFO;
+        //var->flags |= CVAR_UNCHEATED;
+      }
+    }
+  }
+#endif
+#endif
 
-	value = Cvar_Validate(var, value, qtrue);
-
-	if((var->flags & CVAR_LATCH) && var->latchedString)
-	{
-		if(!strcmp(value, var->string))
-		{
-			Z_Free(var->latchedString);
-			var->latchedString = NULL;
-			return var;
-		}
-
-		if(!strcmp(value, var->latchedString))
-			return var;
-	}
-	else if(!strcmp(value, var->string))
-		return var;
-
-	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= var->flags;
-
-	if (!force)
-	{
+	if ( var->flags & (CVAR_ROM | CVAR_INIT | CVAR_CHEAT | CVAR_DEVELOPER) 
+    && !force && !var->modifiedFunc )
+	{    
 		if (var->flags & CVAR_ROM)
 		{
 			Com_Printf ("%s is read only.\n", var_name);
@@ -699,14 +710,42 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 			Com_Printf( "%s can be set only in developer mode.\n", var_name );
 			return var;
 		}
+	}
 
+	if ( !value )
+		value = var->resetString;
+
+	value = Cvar_Validate( var, value, qtrue );
+
+	if ( (var->flags & CVAR_LATCH) && var->latchedString )
+	{
+		if ( strcmp( value, var->string ) == 0 )
+		{
+			Z_Free( var->latchedString );
+			var->latchedString = NULL;
+			return var;
+		}
+
+		if ( strcmp( value, var->latchedString ) == 0 )
+			return var;
+	}
+	else if ( strcmp( value, var->string ) == 0 )
+		return var;
+
+	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
+	cvar_modifiedFlags |= var->flags;
+
+	if ( !force )
+	{
 		if (var->flags & CVAR_LATCH)
 		{
+      char *oldValue = NULL;
 			if (var->latchedString)
 			{
 				if (strcmp(value, var->latchedString) == 0)
 					return var;
-				Z_Free (var->latchedString);
+				//Z_Free (var->latchedString);
+        oldValue = var->latchedString;
 			}
 			else
 			{
@@ -714,11 +753,17 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 					return var;
 			}
 
-			Com_Printf ("%s will be changed upon restarting.\n", var_name);
+      if(!var->modifiedFunc)
+			   Com_Printf ("%s will be changed upon restarting.\n", var_name);
 			var->latchedString = CopyString(value);
 			var->modified = qtrue;
 			var->modificationCount++;
 			cvar_group[ var->group ] = 1;
+      if(var->modifiedFunc) {
+        var->modifiedFunc(oldValue ? oldValue : var->string, var->latchedString, var);
+      }
+      if(oldValue)
+        Z_Free (oldValue);
 			return var;
 		}
 	}
@@ -731,19 +776,24 @@ cvar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force ) {
 		}
 	}
 
-	if (!strcmp(value, var->string))
+	if ( strcmp( value, var->string ) == 0 )
 		return var;		// not changed
 
 	var->modified = qtrue;
 	var->modificationCount++;
 	cvar_group[ var->group ] = 1;
 	
-	Z_Free (var->string);	// free the old value string
+  char *oldValue = var->string;
+  //Z_Free (var->string);	// free the old value string
 	
 	var->string = CopyString(value);
 	var->value = Q_atof( var->string );
 	var->integer = atoi (var->string);
 
+  if(var->modifiedFunc) {
+    var->modifiedFunc(oldValue, var->string, var);
+  }
+  Z_Free (oldValue);
 	return var;
 }
 
@@ -906,6 +956,22 @@ void Cvar_SetCheatState(void)
 	{
 		if(var->flags & CVAR_CHEAT)
 		{
+#ifndef DEDICATED
+#ifdef USE_CVAR_UNCHEAT
+      qboolean found = qfalse;
+      for(int i = 0; i < ARRAY_LEN(comUncheats); i++) {
+        if(comUncheats[i] == var) {
+          var->flags &= ~CVAR_CHEAT;
+          var->flags |= CVAR_USERINFO;
+          //var->flags |= CVAR_UNCHEATED;
+          found = qtrue;
+          break;
+        }
+      }
+      if(found) continue;
+#endif
+#endif
+
 			// the CVAR_LATCHED|CVAR_CHEAT vars might escape the reset here 
 			// because of a different var->latchedString
 			if (var->latchedString)
@@ -1444,7 +1510,11 @@ static void Cvar_List_f( void ) {
 			Com_Printf(" ");
 		}
 
-		Com_Printf (" %s \"%s\"\n", var->name, var->string);
+    if(!var->description || var->description[0] == '\0') {
+    //  Com_Error(ERR_FATAL, "Cvar description not set: %s\n", var->name);
+    }
+
+		Com_Printf (" %s \"%s\" - %s\n", var->name, var->string, var->description);
 	}
 
 	Com_Printf ("\n%i total cvars\n", i);
@@ -1740,7 +1810,11 @@ static void Cvar_Trim_f( void )
 Cvar_InfoString
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+const char *Cvar_InfoString( int bit, qboolean *truncated, int tagged )
+#else
 const char *Cvar_InfoString( int bit, qboolean *truncated )
+#endif
 {
 	static char	info[ MAX_INFO_STRING ];
 	const cvar_t *user_vars[ MAX_CVARS ];
@@ -1767,6 +1841,18 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	{
 		if ( var->name && ( var->flags & bit ) )
 		{
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+      if(var->flags & CVAR_TAGGED_ORIGINAL) {
+        cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
+        // this check also prevents e.g. mapname_1_1
+        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) { // both names should be tagged because of this test
+          allSet &= Info_SetValueForKey( info, var->name, otherVar->string );
+          continue; // prefer the other vars value
+        }
+      }
+      if(var->flags & CVAR_TAGGED_SPECIFIC)
+        continue;
+#endif
 			// put vm/user-created cvars to the end
 			if ( var->flags & ( CVAR_USER_CREATED | CVAR_VM_CREATED ) )
 			{
@@ -1785,13 +1871,14 @@ const char *Cvar_InfoString( int bit, qboolean *truncated )
 	// add vm-created cvars
 	for ( i = 0; i < vm_count; i++ )
 	{
-		var = vm_vars[ i ];
+    var = vm_vars[ i ];
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
 
 	// add user-created cvars
 	for ( i = 0; i < user_count; i++ )
 	{
+// TODO: tagged vars for railgun color
 		var = user_vars[ i ];
 		allSet &= Info_SetValueForKey( info, var->name, var->string );
 	}
@@ -1812,7 +1899,11 @@ Cvar_InfoString_Big
   handles large info strings ( CS_SYSTEMINFO )
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+const char *Cvar_InfoString_Big( int bit, qboolean *truncated, int tagged )
+#else
 const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
+#endif
 {
 	static char	info[BIG_INFO_STRING];
 	const cvar_t *var;
@@ -1823,8 +1914,20 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 
 	for ( var = cvar_vars; var; var = var->next )
 	{
-		if ( var->name && (var->flags & bit) )
+		if ( var->name && (var->flags & bit) ) {
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+      if(var->flags & CVAR_TAGGED_ORIGINAL) {
+        cvar_t *otherVar = Cvar_FindVar(va("%s_%i", var->name, tagged));
+        if(otherVar && otherVar->flags & CVAR_TAGGED_SPECIFIC) { // both names should be tagged because of this test
+          allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, otherVar->string );
+          continue; // prefer the other vars value
+        }
+      }
+      if(var->flags & CVAR_TAGGED_SPECIFIC)
+        continue;
+#endif
 			allSet &= Info_SetValueForKey_s( info, sizeof( info ), var->name, var->string );
+    }
 	}
 
 	if ( truncated )
@@ -1841,9 +1944,15 @@ const char *Cvar_InfoString_Big( int bit, qboolean *truncated )
 Cvar_InfoStringBuffer
 =====================
 */
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+void Cvar_InfoStringBuffer( int bit, char* buff, int buffsize, int tagged ) {
+  Q_strncpyz( buff, Cvar_InfoString( bit, NULL, tagged ), buffsize );
+}
+#else
 void Cvar_InfoStringBuffer( int bit, char* buff, int buffsize ) {
 	Q_strncpyz( buff, Cvar_InfoString( bit, NULL ), buffsize );
 }
+#endif
 
 
 /*
@@ -1898,6 +2007,20 @@ void Cvar_SetDescription( cvar_t *var, const char *var_description )
 		}
 		var->description = CopyString( var_description );
 	}
+}
+
+
+void Cvar_SetDescriptionByName( const char *var, const char *var_description )
+{
+  cvar_t *cv = Cvar_FindVar(var);
+  if(!cv) return;
+  Cvar_SetDescription( cv, var_description );
+}
+
+
+void Cvar_SetModifiedFunc(cvar_t *var, modifiedFunc_t modified)
+{
+  var->modifiedFunc = modified;
 }
 
 
@@ -1957,7 +2080,7 @@ basically a slightly modified Cvar_Get for the interpreted modules
 =====================
 */
 #define INVALID_FLAGS ( CVAR_USER_CREATED | CVAR_SERVER_CREATED | CVAR_PROTECTED | CVAR_PRIVATE | CVAR_MODIFIED | CVAR_NONEXISTENT )
-void Cvar_Register(vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags)
+void Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags, int privateFlag )
 {
 	cvar_t	*cv;
 
@@ -1983,8 +2106,11 @@ void Cvar_Register(vmCvar_t *vmCvar, const char *varName, const char *defaultVal
 	if ( cv && ( cv->flags & ( CVAR_PROTECTED | CVAR_PRIVATE ) ) ) {
 		Com_DPrintf( S_COLOR_YELLOW "WARNING: VM tried to register protected cvar '%s' with value '%s'%s\n",
 			varName, defaultValue, ( flags & ~cv->flags ) != 0 ? " and new flags" : "" );
-		if ( cv->flags & CVAR_PRIVATE )
+		if ( cv->flags & CVAR_PRIVATE ) {
+			if ( privateFlag ) {
 			return;
+			}
+		}
 	} else {
 		cv = Cvar_Get(varName, defaultValue, flags | CVAR_VM_CREATED);
 	}
@@ -1994,7 +2120,8 @@ void Cvar_Register(vmCvar_t *vmCvar, const char *varName, const char *defaultVal
 
 	vmCvar->handle = cv - cvar_indexes;
 	vmCvar->modificationCount = -1;
-	Cvar_Update( vmCvar );
+
+	Cvar_Update( vmCvar, 0 );
 }
 
 
@@ -2005,7 +2132,7 @@ Cvar_Update
 updates an interpreted modules' version of a cvar
 =====================
 */
-void Cvar_Update( vmCvar_t *vmCvar ) {
+void Cvar_Update( vmCvar_t *vmCvar, int privateFlag ) {
 	size_t	len;
 	cvar_t	*cv = NULL;
 	assert(vmCvar);
@@ -2023,7 +2150,9 @@ void Cvar_Update( vmCvar_t *vmCvar ) {
 		return;		// variable might have been cleared by a cvar_restart
 	} 
 	if ( cv->flags & CVAR_PRIVATE ) {
+		if ( privateFlag ) {
 		return;
+	}
 	}
 	vmCvar->modificationCount = cv->modificationCount;
 

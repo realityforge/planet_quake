@@ -186,11 +186,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #endif // __APPLE__
 
-//===============================EMSCRIPTEN=================================
+//===============================__WASM__=================================
 
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 
-#define OS_STRING "emscripten"
+#define OS_STRING "webassembly"
 #define ID_INLINE inline
 #define PATH_SEP '/'
 #define PATH_SEP_FOREIGN '\\'

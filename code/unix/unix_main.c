@@ -62,6 +62,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "linux_local.h" // bk001204
 
+#ifdef USE_LOCAL_DED
+#include <pthread.h>
+pthread_t thread;
+#endif
+
 #ifndef DEDICATED
 #include "../client/client.h"
 #endif
@@ -273,10 +278,15 @@ void CON_SigTStp( int signum )
 // =============================================================
 
 // single exit point (regular exit or in case of signal fault)
+qboolean isAssertive = qfalse;
 void Sys_Exit( int code ) __attribute((noreturn));
 void Sys_Exit( int code )
 {
 	Sys_ConsoleInputShutdown();
+  
+#ifdef USE_LOCAL_DED
+//  pthread_join(thread, NULL);
+#endif
 
 #ifdef NDEBUG // regular behavior
 	// We can't do this
@@ -285,7 +295,10 @@ void Sys_Exit( int code )
 	_exit( code );
 #else
 	// Give me a backtrace on error exits.
-	assert( code == 0 );
+  if(!isAssertive) {
+    isAssertive = qtrue;    
+    assert( code == 0 );
+  }
 	exit( code );
 #endif
 }
@@ -454,8 +467,22 @@ char *Sys_ConsoleInput( void )
 				if (tty_con.cursor > 0)
 				{
 					tty_con.cursor--;
-					tty_con.buffer[tty_con.cursor] = '\0';
-					tty_Back();
+          int len = strlen(tty_con.buffer);
+          if(tty_con.cursor < len) {
+            memcpy(&tty_con.buffer[tty_con.cursor], &tty_con.buffer[tty_con.cursor+1], len - tty_con.cursor);
+            tty_con.buffer[len] = '\0';
+            tty_Back();
+            //write( STDOUT_FILENO, "\033[s", 3);
+            write( STDOUT_FILENO, &tty_con.buffer[tty_con.cursor], len - tty_con.cursor );
+            write( STDOUT_FILENO, " ", 1); // rewrite the difference
+            const char *diff = va("%i", len - tty_con.cursor);
+            //write( STDOUT_FILENO, "\033[u", 3);
+            // move back to where cursor was
+            write( STDOUT_FILENO, va("\033[%sD", diff), 3 + strlen(diff) );
+          } else {
+            tty_con.buffer[tty_con.cursor] = '\0';
+            tty_Back();
+          }
 				}
 				return NULL;
 			}
@@ -466,7 +493,10 @@ char *Sys_ConsoleInput( void )
 				if (key == '\n')
 				{
 					// push it in history
-					Con_SaveField( &tty_con );
+#ifdef USE_ASYNCHRONOUS
+          if(FS_Initialized())
+#endif
+          Con_SaveField( &tty_con );
 					s = tty_con.buffer;
 					while ( *s == '\\' || *s == '/' ) // skip leading slashes
 						s++;
@@ -496,6 +526,9 @@ char *Sys_ConsoleInput( void )
 							switch (key)
 							{
 							case 'A':
+#ifdef USE_ASYNCHRONOUS
+                if(FS_Initialized())
+#endif
 								if ( Con_HistoryGetPrev( &history ) )
 								{
 									tty_Hide();
@@ -506,6 +539,9 @@ char *Sys_ConsoleInput( void )
 								return NULL;
 								break;
 							case 'B':
+#ifdef USE_ASYNCHRONOUS
+                if(FS_Initialized())
+#endif
 								if ( Con_HistoryGetNext( &history ) )
 								{
 									tty_Hide();
@@ -516,9 +552,25 @@ char *Sys_ConsoleInput( void )
 								return NULL;
 								break;
 							case 'C': // right
+                if(tty_con.cursor < strlen(tty_con.buffer)) {
+                  write( STDOUT_FILENO, "\033[1C", 4 );
+                  tty_con.cursor++;
+                }
+                return NULL;
+                break;
 							case 'D': // left
+                if(tty_con.cursor > 0) {
+                  write( STDOUT_FILENO, "\033[1D", 4 );
+                  tty_con.cursor--;
+                }
+                return NULL;
+                break;
 							//case 'H': // home
-							//case 'F': // end
+              //  write( STDOUT_FILENO, "\033[a", 3 );
+              //  break;
+  						//case 'F': // end
+              //  write( STDOUT_FILENO, "\033[e", 3 );
+              //  break;
 								return NULL;
 							}
 						}
@@ -731,6 +783,9 @@ void Sys_Print( const char *msg )
 	{
 		tty_Hide();
 	}
+  
+  //if(com_dedicated && com_dedicated->integer)
+  //  fputs( "Dedicated: ", stderr );
 
 	if ( ttycon_on && ttycon_color_on )
 	{
@@ -862,6 +917,25 @@ int Sys_ParseArgs( int argc, const char* argv[] )
 }
 
 
+#ifdef USE_LOCAL_DED
+char *cmdline2;
+char *cmdline3;
+const char *argv0;
+void Sys_PlatformInit( void ) {
+  Com_Printf( "EXEC: %s\n", cmdline2 );
+  char *exec_argv[] = { (char *)argv0, cmdline2, " +set dedicated 2 +set rconpassword \"password123!\" ", 0 };
+  execv(argv0, exec_argv);
+}
+
+void Sys_PlatformInit2( void ) {
+  sleep(1);
+  Com_Printf( "EXEC: %s\n", cmdline3 );
+  char *exec_argv[] = { (char *)argv0, cmdline3, " +set dedicated 0 +set rconpassword \"password123!\" ", 0 };
+  execv(argv0, exec_argv);
+}
+#endif
+
+
 int main( int argc, const char* argv[] )
 {
 	char con_title[ MAX_CVAR_VALUE_STRING ];
@@ -885,13 +959,42 @@ int main( int argc, const char* argv[] )
 		len += strlen( argv[i] ) + 1;
 
 	cmdline = malloc( len );
-	*cmdline = '\0';
+  *cmdline = '\0';
+#ifdef USE_LOCAL_DED
+  cmdline2 = malloc(len);
+  cmdline3 = malloc(len);
+  *cmdline2 = '\0';
+  *cmdline3 = '\0';
+#endif
 	for ( i = 1; i < argc; i++ )
 	{
-		if ( i > 1 )
+		if ( i > 1 ) {
 			strcat( cmdline, " " );
+#ifdef USE_LOCAL_DED
+      strcat( cmdline2, " " );
+      strcat( cmdline3, " " );
+#endif
+    }
 		strcat( cmdline, argv[i] );
+#ifdef USE_LOCAL_DED
+    strcat( cmdline2, argv[i] );
+    strcat( cmdline3, argv[i] );
+#endif
 	}
+
+#ifndef DEDICATED
+#ifdef USE_LOCAL_DED
+  if(!Q_stristr(cmdline, "dedicated")) {
+    argv0 = argv[0];
+    if (0 == fork()) {
+      Sys_PlatformInit2();
+      return 0;
+    }
+    Sys_PlatformInit();
+    return 0;
+  }
+#endif
+#endif
 
 	/*useXYpos = */ Com_EarlyParseCmdLine( cmdline, con_title, sizeof( con_title ), &xpos, &ypos );
 
@@ -910,8 +1013,10 @@ int main( int argc, const char* argv[] )
 	// Sys_ConsoleInputInit() might be called in signal handler
 	// so modify/init any cvars here
 	ttycon = Cvar_Get( "ttycon", "1", 0 );
-  Cvar_SetDescription( ttycon, "Turn console interactiveness on or off\nDefault: 1" );
+  Cvar_SetDescriptionByName( "ttycon", "Turn console interactiveness on or off\nDefault: 1" );
 	ttycon_ansicolor = Cvar_Get( "ttycon_ansicolor", "0", CVAR_ARCHIVE );
+  Cvar_SetDescriptionByName( "ttycon_ansicolor", "Turn on console coloring\nDefault: 1" );
+
 
 	err = Sys_ConsoleInputInit();
 	if ( err == TTY_ENABLED )

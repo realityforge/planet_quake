@@ -23,6 +23,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "q_shared.h"
 #include "qcommon.h"
 
+#if defined(USE_MULTIVM_SERVER) || defined(USE_MULTIVM_CLIENT)
+#define USE_MULTI_PORT 1
+#endif
+
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf Net_Printf
+#define Com_DPrintf Net_DPrintf
+#endif
+
 /*
 
 packet header
@@ -59,7 +70,7 @@ static const char *netsrcString[2] = {
 	"server"
 };
 
-extern void Sys_NET_MulticastLocal( int sock, int length, int *data );
+extern void Sys_NET_MulticastLocal( int sock, int length, const int *data );
 
 /*
 ===============
@@ -70,11 +81,8 @@ Netchan_Init
 void Netchan_Init( int port ) {
 	port &= 0xffff;
 	showpackets = Cvar_Get ("showpackets", "0", CVAR_TEMP );
-	Cvar_SetDescription(showpackets, "Toggle display of all packets sent and received\nDefault: 0");
 	showdrop = Cvar_Get ("showdrop", "0", CVAR_TEMP );
-	Cvar_SetDescription(showdrop, "Toggle display of dropped packets\nDefault: 0");
 	qport = Cvar_Get ("net_qport", va("%i", port), CVAR_INIT );
-	Cvar_SetDescription(qport, "Set internal network port. Use different ports when playing on a NAT network\nDefault: varies, usually 27960");
 }
 
 
@@ -144,7 +152,7 @@ void Netchan_TransmitNextFragment( netchan_t *chan ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets->integer ) {
+	if ( showpackets && showpackets->integer ) {
 		Com_Printf ("%s send %4i : s=%i fragment=%i,%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize
@@ -216,7 +224,7 @@ void Netchan_Transmit( netchan_t *chan, int length, const byte *data ) {
 	chan->lastSentTime = Sys_Milliseconds();
 	chan->lastSentSize = send.cursize;
 
-	if ( showpackets->integer ) {
+	if ( showpackets && showpackets->integer ) {
 		Com_Printf( "%s send %4i : s=%i ack=%i\n"
 			, netsrcString[ chan->sock ]
 			, send.cursize
@@ -451,8 +459,9 @@ qboolean NET_GetLoopPacket( netsrc_t sock, netadr_t *net_from, msg_t *net_messag
 	Com_Memset (net_from, 0, sizeof(*net_from));
 	net_from->type = NA_LOOPBACK;
 /*
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	// TODO: server to server communication, multiple server
+  // replicate server states inside qagame
 	// also send queued messages to local client if running in dedicated thread
 	if(sock == NS_CLIENT && com_dedicated->integer) {
 		Sys_NET_MulticastLocal(sock, net_message->cursize, net_message->data);
@@ -477,7 +486,7 @@ void NET_SendLoopPacket( netsrc_t sock, int length, const void *data )
 	Com_Memcpy (loop->msgs[i].data, data, length);
 	loop->msgs[i].datalen = length;
 	
-#ifdef EMSCRIPTEN
+#ifdef USE_LOCAL_DED
 	Sys_NET_MulticastLocal(sock, length, data);
 #endif
 }
@@ -532,7 +541,11 @@ void NET_FlushPacketQueue( void )
 		now = Sys_Milliseconds();
 		if ( packetQueue->release - now >= 0 )
 			break;
-		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to );
+#ifdef USE_MULTI_PORT
+		Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to, packetQueue->to.netWorld );
+#else
+    Sys_SendPacket( packetQueue->length, packetQueue->data, &packetQueue->to );
+#endif
 		last = packetQueue;
 		packetQueue = packetQueue->next;
 		Z_Free( last->data );
@@ -544,9 +557,10 @@ void NET_FlushPacketQueue( void )
 void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t *to ) {
 
 	// sequenced packets are shown in netchan, so just show oob
-	if ( showpackets->integer && *(int *)data == -1 )	{
+	if ( showpackets && showpackets->integer && *(int *)data == -1 )	{
 		Com_Printf ("send packet %4i\n", length);
 	}
+
 
 	if ( to->type == NA_LOOPBACK ) {
 		NET_SendLoopPacket( sock, length, data );
@@ -567,7 +581,11 @@ void NET_SendPacket( netsrc_t sock, int length, const void *data, const netadr_t
 		NET_QueuePacket( length, data, to, sv_packetdelay->integer );
 	}
 	else {
-		Sys_SendPacket( length, data, to );
+#ifdef USE_MULTI_PORT
+		Sys_SendPacket( length, data, to, to->netWorld );
+#else
+    Sys_SendPacket( length, data, to );
+#endif
 	}
 }
 

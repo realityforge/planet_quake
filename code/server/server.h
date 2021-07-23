@@ -27,11 +27,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../game/g_public.h"
 #include "../game/bg_public.h"
 
+#ifdef USE_PRINT_CONSOLE
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf SV_Printf
+#define Com_DPrintf SV_DPrintf
+#endif
+
 #ifdef USE_CURL
 #include "../client/cl_curl.h"
 //#define	USE_LNBITS	1
 #else
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 //#define	USE_LNBITS	1
 #else
 #ifdef USE_LNBITS
@@ -68,7 +75,7 @@ typedef enum {
 
 // we might not use all MAX_GENTITIES every frame
 // so leave more room for slow-snaps clients etc.
-#ifdef USE_MULTIVM
+#ifdef USE_MULTIVM_SERVER
 #define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4*MAX_NUM_VMS)
 #else
 #define NUM_SNAPSHOT_FRAMES (PACKET_BACKUP*4)
@@ -93,24 +100,45 @@ typedef struct {
 	int				snapshotCounter;	// incremented for each snapshot built
 	int				timeResidual;		// <= 1000 / sv_frame->value
 	int				nextFrameTime;		// when time > nextFrameTime, process world
-	char			*configstrings[MAX_CONFIGSTRINGS];
+#ifdef USE_MULTIVM_SERVER
+  int       currentWorld;
+  char		 *configstrings[MAX_NUM_VMS][MAX_CONFIGSTRINGS];
+#define configstrings configstrings[gvmi]
 	svEntity_t		svEntities[MAX_NUM_VMS][MAX_GENTITIES];
-
-	const char		*entityParsePoint;	// used during game VM init
-
-	// the game virtual machine will update these on init and changes
-	sharedEntity_t	*gentities[MAX_NUM_VMS];
+#define svEntities svEntities[gvmi]
+	const char		*entityParsePoint; // TODO: need parse points in case loading 2 at the same time?
+	sharedEntity_t	*gentitiesWorlds[MAX_NUM_VMS];
 	int				gentitySize[MAX_NUM_VMS];
-	int				num_entities[MAX_NUM_VMS];		// current number, <= MAX_GENTITIES
-
+	int				num_entitiesWorlds[MAX_NUM_VMS];
 	playerState_t	*gameClients[MAX_NUM_VMS];
-	int				gameClientSize[MAX_NUM_VMS];		// will be > sizeof(playerState_t) due to game private data
-
+#define gameClients gameClients[gvmi] // these are all just pointers with players join so it's OK to duplicate
+	int				gameClientSize[MAX_NUM_VMS];
+#define gameClientSize gameClientSize[gvmi]
 	int				restartTime;
-	int				time;
-
+	int				time; // TODO: keep track of times seperately?
 	byte			baselineUsed[MAX_NUM_VMS][ MAX_GENTITIES ];
-	
+#define baselineUsed baselineUsed[gvmi]
+#else
+  char			*configstrings[MAX_CONFIGSTRINGS];
+  svEntity_t		svEntities[MAX_GENTITIES];
+
+  const char		*entityParsePoint;	// used during game VM init
+
+  // the game virtual machine will update these on init and changes
+  sharedEntity_t	*gentities;
+  int				gentitySize;
+  int				num_entities;		// current number, <= MAX_GENTITIES
+
+  playerState_t	*gameClients;
+  int				gameClientSize;		// will be > sizeof(playerState_t) due to game private data
+
+  int				restartTime;
+  int				time;
+
+  byte			baselineUsed[ MAX_GENTITIES ];
+#endif
+
+#ifdef USE_DEMO_SERVER
 	// serverside demo recording
 	fileHandle_t		demoFile;
 	demoState_t	demoState;
@@ -119,6 +147,7 @@ typedef struct {
 	// serverside demo recording - previous frame for delta compression
 	sharedEntity_t	demoEntities[MAX_GENTITIES];
 	playerState_t	demoPlayerStates[MAX_CLIENTS];
+#endif
 } server_t;
 
 typedef struct {
@@ -126,7 +155,11 @@ typedef struct {
 	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 	playerState_t	ps;
 	int				num_entities;
-	
+#if 0
+	int				first_entity;		// into the circular sv_packet_entities[]
+										// the entities MUST be in increasing state number
+										// order, otherwise the delta compression will fail
+#endif
 #ifdef USE_MV
 	qboolean		multiview;
 	int				version;
@@ -135,7 +168,7 @@ typedef struct {
 	int				num_psf;				// number of playerStates to send
 	byte			psMask[MAX_CLIENTS/8];	// playerState mask
 #endif
-#ifdef  USE_MULTIVM
+#ifdef  USE_MULTIVM_SERVER
 	int       world;
 #endif
 
@@ -222,21 +255,29 @@ typedef struct client_s {
 	int				gamestateMessageNum;	// netchan->outgoingSequence of gamestate
 	int				challenge;
 
-	usercmd_t		lastUsercmd;
+#ifdef USE_MULTIVM_SERVER
+	usercmd_t		lastUsercmd[MAX_NUM_VMS];
+#define lastUsercmd lastUsercmd[gvmi]
+#else
+  usercmd_t		lastUsercmd;
+#endif
 	int				lastMessageNum;		// for delta compression
 	int				lastClientCommand;	// reliable client message sequence
 	char			lastClientCommandString[MAX_STRING_CHARS];
 	sharedEntity_t	*gentity;			// SV_GentityNum(clientnum)
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
+#ifdef USE_DEMO_SERVER
 	// serverside demo information
 	qboolean  demoClient; // is this a demoClient?
  	char		  demoName[MAX_QPATH];
+#endif
+#ifdef USE_DEMO_CLIENTS
  	qboolean	demorecording;
  	qboolean	demowaiting;	// don't record until a non-delta message is received
  	fileHandle_t	demofile;
  	qboolean	savedemo; // qtrue iff the demo should be saved in any case (qfalse and sv_autorecord 1 --> the score decides)
-
+#endif
 
 	// downloading
 	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
@@ -258,7 +299,11 @@ typedef struct client_s {
 	int				lastSnapshotTime;	// svs.time of last sent snapshot
 	qboolean		rateDelayed;		// true if nextSnapshotTime was set based on rate instead of snapshotMsec
 	int				timeoutCount;		// must timeout a few frames in a row so debugging doesn't break
-	clientSnapshot_t	frames[MAX_NUM_VMS][PACKET_BACKUP];	// updates can be delta'd from here
+#ifdef USE_MULTIVM_SERVER
+  clientSnapshot_t	frames[MAX_NUM_VMS][PACKET_BACKUP];	// updates can be delta'd from here
+#else
+	clientSnapshot_t	frames[PACKET_BACKUP];	// updates can be delta'd from here
+#endif
 	int				ping;
 	int				rate;				// bytes / second, 0 - unlimited
 	int				snapshotMsec;		// requests a snapshot every snapshotMsec unless rate choked
@@ -311,6 +356,7 @@ typedef struct client_s {
 #ifdef USE_MV
 	int gameWorld;
 	int newWorld;
+	int mvAck;
 #endif
 #ifdef USE_SERVER_ROLES
 	int role;
@@ -318,6 +364,9 @@ typedef struct client_s {
 #ifdef USE_REFEREE_CMDS
 	qboolean muted;
 	qboolean nofire;
+#endif
+#ifdef USE_PERSIST_CLIENT
+	int persisted;
 #endif
 
 } client_t;
@@ -349,7 +398,12 @@ typedef struct {
 	int			currentSnapshotFrame;	// for initializing empty frames
 	int			lastValidFrame;			// updated with each snapshot built
 	snapshotFrame_t	snapFrames[ NUM_SNAPSHOT_FRAMES ];
-	snapshotFrame_t	*currFrame[MAX_NUM_VMS]; // current frame that clients can refer
+#ifdef USE_MULTIVM_SERVER
+  snapshotFrame_t	*currFrameWorlds[MAX_NUM_VMS]; // current frame that clients can refer
+#define currFrame  currFrameWorlds[gvmi]
+#else
+	snapshotFrame_t	*currFrame; // current frame that clients can refer
+#endif
 
 #ifdef USE_MV	
 	int			numSnapshotPSF;				// sv_democlients->integer*PACKET_BACKUP*MAX_CLIENTS
@@ -401,8 +455,10 @@ typedef enum {
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
 void SV_RecentStatus(recentEvent_t type);
+const char *SV_EscapeStr(const char *str, int len);
 #endif
 
+extern  cvar_t  *sv_gamedir;
 extern	cvar_t	*sv_fps;
 extern	cvar_t	*sv_timeout;
 extern	cvar_t	*sv_zombietime;
@@ -431,6 +487,13 @@ extern	cvar_t	*sv_mvFileCount;
 extern	cvar_t	*sv_mvFolderSize;
 
 #endif // USE_MV
+#ifdef USE_MULTIVM_SERVER
+extern  cvar_t  *sv_mvWorld;
+extern  cvar_t  *sv_mvSyncPS;
+extern  cvar_t  *sv_mvSyncXYZ;
+extern  cvar_t  *sv_mvSyncMove;
+extern  cvar_t  *sv_mvOmnipresent;
+#endif
 
 extern	cvar_t	*sv_privateClients;
 extern	cvar_t	*sv_hostname;
@@ -440,8 +503,8 @@ extern	cvar_t	*sv_roles;
 extern	cvar_t	*sv_clientRoles[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_role[MAX_CLIENT_ROLES];
 extern	cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
-
 #endif
+extern  cvar_t  *sv_activeAction;
 #ifdef USE_REFEREE_CMDS
 extern  cvar_t	*sv_lock[2];
 extern  cvar_t  *sv_frozen;
@@ -486,6 +549,17 @@ extern	cvar_t  *sv_lnWallet;
 extern	cvar_t  *sv_lnKey;
 extern	cvar_t  *sv_lnAPI;
 extern	cvar_t  *sv_lnWithdraw;
+#endif
+
+#ifdef USE_CVAR_UNCHEAT
+extern  cvar_t  *sv_banCheats;
+extern  char    *svUncheats[128];
+void SV_InitBanCheats( void );
+#endif
+
+
+#ifdef USE_PERSIST_CLIENT
+extern  cvar_t  *sv_clSessions;
 #endif
 
 
@@ -647,6 +721,7 @@ void SV_QueryClientScore( client_t *client );
 //
 // sv_snapshot.c
 //
+extern byte numDied[128];
 void SV_AddServerCommand( client_t *client, const char *cmd );
 void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg );
 void SV_WriteFrameToClient( client_t *client, msg_t *msg );
@@ -674,6 +749,7 @@ qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 void SV_GameSendServerCommand( int clientNum, const char *text );
 
 
+#ifdef USE_DEMO_CLIENTS
 //
 // sv_demo_client.c
 //
@@ -683,8 +759,10 @@ void SV_StopRecord( client_t	*cl );
 void SV_StopRecord_f( void );
 void SV_SaveRecord_f( void );
 void SV_WriteDemoMessage (client_t *cl, msg_t *msg, int headerBytes );
+#endif
 
 
+#ifdef USE_DEMO_SERVER
 //
 // sv_demo.c
 //
@@ -723,12 +801,11 @@ void SV_DemoWriteAllEntityShared(void);
 qboolean SV_CheckClientCommand( client_t *client, const char *cmd );
 qboolean SV_CheckServerCommand( const char *cmd );
 qboolean SV_CheckGameCommand( const char *cmd );
-qboolean SV_CheckConfigString( int cs_index, const char *cs_string );
 qboolean SV_CheckLastCmd( const char *cmd, qboolean onlyStore );
 void SV_DemoFilterClientUserinfo( const char *userinfo );
-char *SV_CleanFilename( char *str );
+const char *SV_CleanFilename( char *str );
 char *SV_CleanStrCmd( char *str );
-char *SV_GenerateDateTime(void);
+const char *SV_GenerateDateTime(void);
 
 void SV_DemoChangeMaxClients( void );
 void SV_CompleteDemoName( char *args, int argNum );
@@ -743,10 +820,15 @@ void SV_Demo_Record_f( void );
 int SV_GentityGetHealthField( sharedEntity_t * gent );
 void SV_GentitySetHealthField( sharedEntity_t * gent, int value );
 void SV_GentityUpdateHealthField( sharedEntity_t * gent, playerState_t *player );
+#endif
+
 
 //
 // sv_bot.c
 //
+#ifdef USE_MULTIVM_SERVER
+void    SV_SetAASgvm( int gvmi );
+#endif
 void		SV_BotFrame( int time );
 int			SV_BotAllocateClient(void);
 void		SV_BotFreeClient( int clientNum );
@@ -831,3 +913,11 @@ void SV_LoadFilters( const char *filename );
 const char *SV_RunFilters( const char *userinfo, const netadr_t *addr );
 void SV_AddFilter_f( void );
 void SV_AddFilterCmd_f( void );
+
+
+#ifdef USE_MEMORY_MAPS
+//
+// sv_bsp.c
+//
+int SV_MakeMap( char *memoryMap );
+#endif

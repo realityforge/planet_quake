@@ -103,6 +103,31 @@
 
 #endif
 
+// ================================ APPLE ===================================
+
+#ifdef __APPLE__
+
+#define stricmp strcasecmp
+
+#define ID_INLINE inline
+
+#define	PATH_SEP '/'
+
+#endif // __APPLE__
+
+//===============================__WASM__=================================
+
+#ifdef __WASM__
+
+#define stricmp strcasecmp
+
+#define ID_INLINE inline
+
+#define	PATH_SEP '/'
+
+#endif
+
+
 //======================= FreeBSD DEFINES =====================
 #ifdef __FreeBSD__ // rb010123
 
@@ -471,12 +496,6 @@ static ID_INLINE void VectorInverse( vec3_t v ){
 	v[2] = -v[2];
 }
 
-static ID_INLINE void CrossProduct( const vec3_t v1, const vec3_t v2, vec3_t cross ) {
-	cross[0] = v1[1]*v2[2] - v1[2]*v2[1];
-	cross[1] = v1[2]*v2[0] - v1[0]*v2[2];
-	cross[2] = v1[0]*v2[1] - v1[1]*v2[0];
-}
-
 #else
 int VectorCompare( const vec3_t v1, const vec3_t v2 );
 
@@ -591,9 +610,9 @@ void	COM_MatchToken( char**buf_p, char *match );
 void SkipBracedSection (char **program);
 void SkipRestOfLine ( char **data );
 
-void Parse1DMatrix (char **buf_p, int x, float *m);
-void Parse2DMatrix (char **buf_p, int y, int x, float *m);
-void Parse3DMatrix (char **buf_p, int z, int y, int x, float *m);
+void Parse1DMatrix (const char **buf_p, int x, float *m);
+void Parse2DMatrix (const char **buf_p, int y, int x, float *m);
+void Parse3DMatrix (const char **buf_p, int z, int y, int x, float *m);
 
 int QDECL Com_sprintf( char *dest, int size, const char *fmt, ... );
 
@@ -662,8 +681,13 @@ void Info_NextPair( const char **s, char *key, char *value );
 
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void	QDECL Com_Error( int level, const char *fmt, ... );
+#ifdef USE_PRINT_CONSOLE
+void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... );
+void	QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *fmt, ... );
+#else
 void	QDECL Com_Printf( const char *fmt, ... );
 void	QDECL Com_DPrintf( const char *fmt, ... );
+#endif
 
 /*
 ==========================================================
@@ -716,8 +740,6 @@ COLLISION DETECTION
 
 ==============================================================
 */
-
-#include "surfaceflags.h"			// shared with the q3map utility
 
 // plane types are used to speed some tests
 // 0-2 are axial planes

@@ -26,7 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define Q3_VERSION            "Q3 1.32e MV"
+#define Q3_VERSION            "Q3 1.32e"
 #ifndef SVN_VERSION
   #define SVN_VERSION Q3_VERSION
 #endif
@@ -48,53 +48,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"Quake3Arena"
 #define HEARTBEAT_FOR_MASTER	"QuakeArena-1"
 
+#ifdef BUILD_EXPERIMENTAL
+// referee commands include things like: 
+// server-side pause/freeze
+// disciplinary actions such as mute/nofire
+// lock and unlock for team joining
 #define USE_REFEREE_CMDS 1
-
-#define USE_SERVER_ROLES 1
-#ifdef USE_SERVER_ROLES
-#define MAX_CLIENT_ROLES 24
-#endif
-
-// recent event are for server status trackers to get previous match results
-//   it's also used for the Discord chat bot connector
-#define USE_RECENT_EVENTS 1
-
-#define MV_PROTOCOL_VERSION	1 // multiview protocol version
-#define USE_MV				  // multiview enabled
-//#define USE_MV_ZCMD		// command compression
-
-#ifdef USE_MV
-//#define USE_MULTIVM 1
-// enable loading multiple QVM images
-
-//#ifndef USE_CMD_CONNECTOR
-//#define USE_CMD_CONNECTOR 1
-//#endif
-// minimize the number of times the renderer restarts
-#define USE_LAZY_MEMORY 1
-
-#else // not USE_MV
-#undef USE_MULTIVM
-#undef USE_LAZY_MEMORY
-#undef USE_LAZY_LOAD
-#endif // USE_MV
-
-#ifdef USE_MULTIVM
-#undef MV_PROTOCOL_VERSION
-#define MV_MULTIWORLD_VERSION 2
-#define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
-
-// allow loading graphics after the BSP and world has been entered
-#define USE_LAZY_LOAD 1
-#endif
-
-#ifdef EMSCRIPTEN
-// TODO: convert local dedicated server to native using pthreads, possibly using `set dedicated 4 and 6` as flags
+// start a dedicated server even for single player mode, automatically join a match
 #define USE_LOCAL_DED 1
-// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
-#define USE_VID_FAST 1
-// allow touch events to set exact cursor position using "cursor spy"
-#define USE_ABS_MOUSE 1
 // allow loading graphics after the BSP and world has been entered
 #define USE_LAZY_LOAD 1
 // minimize the number of times the renderer restarts
@@ -103,8 +64,156 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //   as if masters were also used in LAN games instead of just broadcasting
 //   or to specific master servers that host games geographically nearby
 #define USE_MASTER_LAN 1
+// adds roles to rcon access, each role has it's own password
+// each role can execute specific commands
+#define USE_SERVER_ROLES 1
+// adds settings for saving and restoring client states, either giving clients
+//   30 seconds to reconnect and keep their score, or saving client states for
+//   days/weeks as a part of a long on going adventure game or campaign
+#define USE_PERSIST_CLIENT 1
+// recent event are for server status trackers to get previous match results
+//   it's also used for the Discord chat bot connector
+#define USE_RECENT_EVENTS 1
+// Cyrax's Multiview is what makes multiworld possible.
+#define USE_MV				  // multiview enabled
+//#define USE_MV_ZCMD		// command compression
+// RmlUi adds supplementary initerfaces written in HTML.
+#define USE_RMLUI 1
+// TheDoctors method of recording a demo file for every single client
+#define USE_DEMO_CLIENTS 1
+// lrq3000 method of server side demos, sending entity states to every client while spectating
+#define USE_DEMO_SERVER 1
+// allow files like pk3s to be dragged into the client for easy loading
+#define USE_DRAGDROP 1
+// use pre-compile templates to filter annoying debug messages
+#define USE_PRINT_CONSOLE 1
+// remove console drop down in game functionality altogether
+#define USE_NO_CONSOLE 1
+// persist console messages between games and also between launches
+#define USE_PERSIST_CONSOLE 1
+// dynamically build zip files to transer to clients using lazyLoading
+#define USE_DYNAMIC_ZIP 1
 // 
 #endif
+
+
+#ifdef USE_SERVER_ROLES
+#define MAX_CLIENT_ROLES 24
+#endif
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+// Cyrax's Multiview is what makes multiworld possible.
+#ifndef USE_MV
+#define USE_MV
+#endif
+#endif
+
+#ifdef USE_MV
+#define MV_PROTOCOL_VERSION	1 // multiview protocol version
+// enable loading multiple QVM images
+//#define USE_MULTIVM_CLIENT 1
+//#define USE_MULTIVM_SERVER 1
+#else // not USE_MV
+#undef USE_MULTIVM_CLIENT
+#undef USE_MULTIVM_SERVER
+#undef USE_LAZY_MEMORY
+#undef USE_LAZY_LOAD
+#endif // USE_MV
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#undef Q3_VERSION
+#undef MV_PROTOCOL_VERSION
+#define Q3_VERSION            "Q3 1.32e MV"
+#define MV_MULTIWORLD_VERSION 2
+#define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
+// TODO: make compatible with legacy clients by sending gamestate and 
+//   switching level like normal, I think another engine mod/ioq3? did this
+#define USE_LAZY_MEMORY
+//#define USE_LAZY_LOAD
+#endif
+
+
+#ifdef __WASM__
+// vid_restart fast hack scans memory to change ratio values cgame uses to position the HUD and game
+#define USE_VID_FAST 1
+// allow touch events to set exact cursor position using "cursor spy"
+#define USE_ABS_MOUSE 1
+// start a dedicated server even for single player mode, automatically join a match
+#define USE_LOCAL_DED 1
+// allow loading graphics after the BSP and world has been entered
+#define USE_LAZY_LOAD 1
+// minimize the number of times the renderer restarts
+#define USE_LAZY_MEMORY 1
+// set specific master servers to be used in the Local LAN game list, 
+//   as if masters were also used in LAN games instead of just broadcasting
+//   or to specific master servers that host games geographically nearby
+#define USE_MASTER_LAN 1
+// make the engine asynchronous, required by wasm build
+#define USE_ASYNCHRONOUS 1
+// 
+#endif // __WASM__
+
+
+#ifdef DEDICATED
+#undef USE_ASYNCHRONOUS
+#undef USE_LAZY_LOAD
+#endif
+
+
+// TODO: when asynchronous is working
+/*
+#if defined(USE_ASYNCHRONOUS) || defined(USE_LAZY_LOAD)
+#define USE_ASYNCHRONOUS 1
+#define USE_LAZY_LOAD 1
+#endif
+*/
+
+
+#ifdef USE_ASYNCHRONOUS
+
+#define ASYNCEP(x, y) \
+Sys_QueEvent(Sys_Milliseconds(), SE_ASYNCP, y, 0, sizeof(intptr_t), &x); \
+
+#define ASYNCE(x) \
+Sys_QueEvent(Sys_Milliseconds(), SE_ASYNC, 0, 0, sizeof(intptr_t), &x); \
+
+#define ASYNCVP(x, y) \
+ASYNCEP(x, y); \
+return; \
+
+#define ASYNCV(x) \
+ASYNCE(x); \
+return; \
+
+#define ASYNCP(x, y) \
+ASYNCVP(x, y); \
+x##_After_Async: \
+
+#define ASYNC(x) \
+ASYNCV(x); \
+x##_After_Async: \
+
+#define ASYNCR(x) \
+if(Com_PreviousEventPtr() == &x) { \
+  goto x##_After_Async; \
+} \
+
+#define ASYNCF(x, f) \
+Sys_Download(f); \
+x##_Requeue: \
+ASYNC(x); \
+if(!FS_FileExists(f)) \
+goto x##_Requeue; \
+
+#define ASYNCPF(x, y, f) \
+Sys_Download(f); \
+x##_Requeue: \
+ASYNCP(x, y); \
+if(!FS_FileExists(f)) \
+goto x##_Requeue; \
+
+#endif
+
 
 #ifdef USE_LAZY_LOAD
 // because of the nature of loading files lazily, spoofing checksums 
@@ -112,6 +221,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_SPOOF_CHECKSUM 1
 //
 #endif
+
 
 #ifdef USE_LOCAL_DED
 // allows server to run any client command from remote to client, opposite of /rcon
@@ -123,6 +233,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 #endif
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define MAX_NUM_VMS 10
+#else
+#define MAX_NUM_VMS 1
+#endif
 
 #define GET_ABIT( byteArray, bitIndex ) ((byteArray)[ (bitIndex) / 8 ] & ( 1 << ( (bitIndex) & 7 ) ))
 #define SET_ABIT( byteArray, bitIndex ) (byteArray)[ (bitIndex) / 8 ] |= ( 1 << ( (bitIndex) & 7 ) )
@@ -132,28 +247,32 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef _MSC_VER
 
-#pragma warning(disable : 4018)     // signed/unsigned mismatch
-#pragma warning(disable : 4032)
-#pragma warning(disable : 4051)
-#pragma warning(disable : 4057)		// slightly different base types
-#pragma warning(disable : 4100)		// unreferenced formal parameter
-#pragma warning(disable : 4115)
-#pragma warning(disable : 4125)		// decimal digit terminates octal escape sequence
-#pragma warning(disable : 4127)		// conditional expression is constant
-#pragma warning(disable : 4136)
-#pragma warning(disable : 4152)		// nonstandard extension, function/data pointer conversion in expression
+//#pragma warning(disable : 4018)     // signed/unsigned mismatch
+//#pragma warning(disable : 4032)
+//#pragma warning(disable : 4051)
+//#pragma warning(disable : 4057)		// slightly different base types
+//#pragma warning(disable : 4100)		// unreferenced formal parameter
+//#pragma warning(disable : 4115)
+//#pragma warning(disable : 4125)		// decimal digit terminates octal escape sequence
+//#pragma warning(disable : 4127)		// conditional expression is constant
+//#pragma warning(disable : 4136)
+//#pragma warning(disable : 4152)		// nonstandard extension, function/data pointer conversion in expression
+//#pragma warning(disable : 4200)		// nonstandard extension used: size-sided array in struct/union
 //#pragma warning(disable : 4201)
+//#pragma warning(disable : 4206)		// nonstandard extension used: translation unit is empty
 //#pragma warning(disable : 4214)
-#pragma warning(disable : 4267)		// conversion from 'size_t' to 'int', possible loss of data
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4142)		// benign redefinition
+//#pragma warning(disable : 4267)		// conversion from 'size_t' to 'int', possible loss of data
+//#pragma warning(disable : 4244)
+//#pragma warning(disable : 4142)		// benign redefinition
 //#pragma warning(disable : 4305)		// truncation from const double to float
 //#pragma warning(disable : 4310)		// cast truncates constant value
 //#pragma warning(disable:  4505) 	// unreferenced local function has been removed
-#pragma warning(disable : 4514)
-#pragma warning(disable : 4702)		// unreachable code
-#pragma warning(disable : 4711)		// selected for automatic inline expansion
-#pragma warning(disable : 4220)		// varargs matches remaining parameters
+//#pragma warning(disable : 4514)
+//#pragma warning(disable : 4702)		// unreachable code
+//#pragma warning(disable : 4711)		// selected for automatic inline expansion
+//#pragma warning(disable : 4220)		// varargs matches remaining parameters
+//#pragma warning(disable : 4324)		// 'q_jpeg_error_mgr_s' : structure was padded due to alignment specifier
+//#pragma warning(disable : 4091)		// 'typedef': ignored on lef of <..> when no variable is declared
 //#pragma intrinsic( memset, memcpy )
 #endif
 
@@ -203,15 +322,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #else
 
 #include <assert.h>
+#include <stddef.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <time.h>
 #include <ctype.h>
 #include <limits.h>
+
+#ifdef __WASM__
+#include <syscall_arch.h>
+#endif
 
 #endif
 
@@ -250,9 +373,158 @@ float FloatSwap( const float *f );
 	#endif
 #endif
 
+
+#ifdef USE_PRINT_CONSOLE
+// these define where the print message is coming from for broad filtering with
+//   cl_developer, sv_developer, com_developer, bot_developer, r_developer,
+//   s_developer, cg_developer, net_developer, ui_developer, g_developer
+// these are used in code to mark different sections, the variables below are
+// used in cvar configurations to filter out different sections
+#define PC_DEVELOPER      0x1
+#define PC_CLIENT         0x20
+#define PC_SERVER         0x30
+#define PC_COMMON         0x40
+#define PC_BOTLIB         0x50
+#define PC_RENDER         0x60
+#define PC_CGAME          0x70
+#define PC_UI             0x80
+#define PC_GAME           0x90
+#define PC_NET            0xA0
+#define PC_SOUND          0xB0
+#define PC_FILES          0xC0
+#define PC_INIT           0x400000
+#define PC_USER           0x80000000
+
+// this is the default mode, it shows console messages naturally
+#define PC_OFF            0x0
+// this is a special case, it shows only the messages you might expect an
+//   average player to understand, it is replaced with a combination of
+//   PC_NO_* and PC_* and also specific cases in the code, most like
+//   PC_USER_ONLY at the bottom of the list
+#define PC_RELEASE       -0x1
+// another special case, PC_DEVELOPER is most like `set developer 1`
+//   because of the other PC_NO_* and PC_* settings it is replaced with
+//   PC_DEVELOPER_ORIG at the bottom to simulate original developer mode
+//   there are also special cases inline using com_developer->integer
+#define PC_DEVELOPER      0x1
+// the first half of these will proactively silence specific messages from 
+//   specific components
+
+// disable specific console messages
+#define PC_NO_CLIENT      0x2000
+#define PC_NO_SERVER      0x3000
+#define PC_NO_COMMON      0x4000
+#define PC_NO_BOTLIB      0x5000
+#define PC_NO_REND        0x6000
+#define PC_NO_CGAME       0x7000
+#define PC_NO_UI          0x8000
+#define PC_NO_GAME        0x9000
+#define PC_NO_NET         0xA000
+#define PC_NO_SOUND       0xB000
+#define PC_NO_FILES       0xC000
+
+
+// now it gets a bit more specific, with allowing certain messages through
+//   but not others
+#define PC_SHOW_SOURCE    0x200000
+// turn off all engine init messages including VMs
+#define PC_NO_INIT        0x400000
+// this would be a good place to add more
+
+
+// the second half of these will allow specific messages from specific 
+//   components or specific combinations
+// disable all q3 console messages
+#define PC_QUIET          0x800000 | 0xFF000 | PC_NO_Q3LOG | PC_NO_CONSOLE
+// this is a flag for disabling all q3history output
+#define PC_NO_Q3LOG       0x4000000
+// this is a flag to disabling all console output
+#define PC_NO_CONSOLE     0x8000000
+// limit q3history to the same as selected messages
+#define PC_Q3LOG          0x10000000
+// limit console to the same as selected output
+#define PC_CONSOLE        0x20000000
+// print all selected messages for video markering
+#define PC_MARKERS        0x40000000
+// print developer
+#define PC_DEVELOPER_ORIG PC_Q3LOG | PC_CONSOLE
+#define PC_SHOW_USER_ONLY PC_USER | PC_Q3LOG | PC_NO_INIT | PC_SHOW_SOURCE
+
+
+
+// these are a few compiler templates to make including easy
+//#define PRINTF(flags, format, ...) Com_Printf(flags, format, __VA_ARGS__) 
+//#define DPRINTF(flags, format, ...) Com_ 
+extern uint32_t com_printFlags;
+void Com_PrintFlags(uint32_t flags);
+void Com_PrintClear(void);
+#ifdef _MSC_VER
+#define PC_Printf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS | com_printFlags, fmt, __VA_ARGS__) 
+#define PC_DPrintf(source, fmt, ...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS | com_printFlags, fmt, __VA_ARGS__) 
+#define CL_Printf(fmt, ...) PC_Printf(PC_CLIENT, fmt, __VA_ARGS__)
+#define CL_DPrintf(fmt, ...) PC_DPrintf(PC_CLIENT, fmt, __VA_ARGS__)
+#define SV_Printf(fmt, ...) PC_Printf(PC_SERVER, fmt, __VA_ARGS__)
+#define SV_DPrintf(fmt, ...) PC_DPrintf(PC_SERVER, fmt, __VA_ARGS__)
+#define COM_Printf(fmt, ...) PC_Printf(PC_COMMON, fmt, __VA_ARGS__)
+#define COM_DPrintf(fmt, ...) PC_DPrintf(PC_COMMON, fmt, __VA_ARGS__)
+#define Bot_Printf(fmt, ...) PC_Printf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define Bot_DPrintf(fmt, ...) PC_DPrintf(PC_BOTLIB, fmt, __VA_ARGS__)
+#define R_Printf(fmt, ...) PC_Printf(PC_RENDER, fmt, __VA_ARGS__)
+#define R_DPrintf(fmt, ...) PC_DPrintf(PC_RENDER, fmt, __VA_ARGS__)
+#define CG_Printf(fmt, ...) PC_Printf(PC_CGAME, fmt, __VA_ARGS__)
+#define CG_DPrintf(fmt, ...) PC_DPrintf(PC_CGAME, fmt, __VA_ARGS__)
+#define UI_Printf(fmt, ...) PC_Printf(PC_UI, fmt, __VA_ARGS__)
+#define UI_DPrintf(fmt, ...) PC_DPrintf(PC_UI, fmt, __VA_ARGS__)
+#define G_Printf(fmt, ...) PC_Printf(PC_GAME, fmt, __VA_ARGS__)
+#define G_DPrintf(fmt, ...) PC_DPrintf(PC_GAME, fmt, __VA_ARGS__)
+#define Net_Printf(fmt, ...) PC_Printf(PC_NET, fmt, __VA_ARGS__)
+#define Net_DPrintf(fmt, ...) PC_DPrintf(PC_NET, fmt, __VA_ARGS__)
+#define S_Printf(fmt, ...) PC_Printf(PC_SOUND, fmt, __VA_ARGS__)
+#define S_DPrintf(fmt, ...) PC_DPrintf(PC_SOUND, fmt, __VA_ARGS__)
+#define FS_Com_Printf(fmt, ...) PC_Printf(PC_FILES, fmt, __VA_ARGS__)
+#define FS_Com_DPrintf(fmt, ...) PC_DPrintf(PC_FILES, fmt, __VA_ARGS__)
+#else
+#define PC_Printf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source, PRINT_FLAGS | com_printFlags, fmt, ##args) 
+#define PC_DPrintf(source, fmt, args...) Com_PrintfReal(__FILE__, __LINE__, source | PC_DEVELOPER, PRINT_FLAGS | com_printFlags, fmt, ##args) 
+#define CL_Printf(fmt, args...) PC_Printf(PC_CLIENT, fmt, ##args)
+#define CL_DPrintf(fmt, args...) PC_DPrintf(PC_CLIENT, fmt, ##args)
+#define SV_Printf(fmt, args...) PC_Printf(PC_SERVER, fmt, ##args)
+#define SV_DPrintf(fmt, args...) PC_DPrintf(PC_SERVER, fmt, ##args)
+#define COM_Printf(fmt, args...) PC_Printf(PC_COMMON, fmt, ##args)
+#define COM_DPrintf(fmt, args...) PC_DPrintf(PC_COMMON, fmt, ##args)
+#define Bot_Printf(fmt, args...) PC_Printf(PC_BOTLIB, fmt, ##args)
+#define Bot_DPrintf(fmt, args...) PC_DPrintf(PC_BOTLIB, fmt, ##args)
+#define R_Printf(fmt, args...) PC_Printf(PC_RENDER, fmt, ##args)
+#define R_DPrintf(fmt, args...) PC_DPrintf(PC_RENDER, fmt, ##args)
+#define CG_Printf(fmt, args...) PC_Printf(PC_CGAME, fmt, ##args)
+#define CG_DPrintf(fmt, args...) PC_DPrintf(PC_CGAME, fmt, ##args)
+#define UI_Printf(fmt, args...) PC_Printf(PC_UI, fmt, ##args)
+#define UI_DPrintf(fmt, args...) PC_DPrintf(PC_UI, fmt, ##args)
+#define G_Printf(fmt, args...) PC_Printf(PC_GAME, fmt, ##args)
+#define G_DPrintf(fmt, args...) PC_DPrintf(PC_GAME, fmt, ##args)
+#define Net_Printf(fmt, args...) PC_Printf(PC_NET, fmt, ##args)
+#define Net_DPrintf(fmt, args...) PC_DPrintf(PC_NET, fmt, ##args)
+#define S_Printf(fmt, args...) PC_Printf(PC_SOUND, fmt, ##args)
+#define S_DPrintf(fmt, args...) PC_DPrintf(PC_SOUND, fmt, ##args)
+#define FS_Com_Printf(fmt, args...) PC_Printf(PC_FILES, fmt, ##args)
+#define FS_Com_DPrintf(fmt, args...) PC_DPrintf(PC_FILES, fmt, ##args)
+#endif
+#undef Com_Printf
+#undef Com_DPrintf
+#define Com_Printf COM_Printf
+#define Com_DPrintf COM_DPrintf
+#define PC_COMMON_FLAGS 0
+#define PRINT_FLAGS PC_COMMON_FLAGS
+#endif
+
+
+
 typedef unsigned char byte;
 
+#ifndef __BYTEBOOL__
 typedef enum { qfalse = 0, qtrue } qboolean;
+#define __BYTEBOOL__
+#endif
 
 typedef union floatint_u
 {
@@ -262,6 +534,12 @@ typedef union floatint_u
 	byte b[4];
 }
 floatint_t;
+
+typedef union {
+	byte rgba[4];
+	uint32_t u32;
+} color4ub_t;
+
 
 typedef int		qhandle_t;
 typedef int		sfxHandle_t;
@@ -512,6 +790,8 @@ extern	vec4_t		colorDkGrey;
 #define S_COLOR_CYAN	"^5"
 #define S_COLOR_MAGENTA	"^6"
 #define S_COLOR_WHITE	"^7"
+
+#define S_COLOR_STRIP	S_COLOR_WHITE
 
 extern const vec4_t	g_color_table[ 64 ];
 extern int ColorIndexFromChar( char ccode );
@@ -833,6 +1113,7 @@ char *Com_SkipCharset( char *s, char *sep );
 void Com_RandomBytes( byte *string, int len );
 
 void Com_SortFileList( char **list, int nfiles, int fastSort );
+long I_FloatTime( void );
 
 // mode parm for FS_FOpenFile
 typedef enum {
@@ -941,8 +1222,13 @@ int Info_RemoveKey( char *s, const char *key );
 // this is only here so the functions in q_shared.c and bg_*.c can link
 void Com_Outside_Error(int level, char *msg);
 void	QDECL Com_Error( errorParm_t level, const char *fmt, ... ) __attribute__ ((noreturn, format (printf, 2, 3)));
+#ifdef USE_PRINT_CONSOLE
+void	QDECL Com_PrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));
+void	QDECL Com_DPrintfReal( char *file, int line, const uint32_t source, const uint32_t flags, const char *msg, ... ) __attribute__ ((format (printf, 5, 6)));
+#else
 void	QDECL Com_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void	QDECL Com_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
+#endif
 
 
 /*
@@ -956,35 +1242,43 @@ default values.
 ==========================================================
 */
 
-#define	CVAR_ARCHIVE		0x0001	// set to cause it to be saved to vars.rc
+#define	CVAR_ARCHIVE           0x0001 // set to cause it to be saved to vars.rc
 					// used for system variables, not for player
 					// specific configurations
-#define	CVAR_USERINFO		0x0002	// sent to server on connect or change
-#define	CVAR_SERVERINFO		0x0004	// sent in response to front end requests
-#define	CVAR_SYSTEMINFO		0x0008	// these cvars will be duplicated on all clients
-#define	CVAR_INIT			0x0010	// don't allow change from console at all,
+#define	CVAR_USERINFO          0x0002	// sent to server on connect or change
+#define	CVAR_SERVERINFO        0x0004	// sent in response to front end requests
+#define	CVAR_SYSTEMINFO        0x0008	// these cvars will be duplicated on all clients
+#define	CVAR_INIT              0x0010	// don't allow change from console at all,
 					// but can be set from the command line
-#define	CVAR_LATCH			0x0020	// will only change when C code next does
+#define	CVAR_LATCH             0x0020	// will only change when C code next does
 					// a Cvar_Get(), so it can't be changed
 					// without proper initialization.  modified
 					// will be set, even though the value hasn't
 					// changed yet
-#define	CVAR_ROM			0x0040	// display only, cannot be set by user at all
-#define	CVAR_USER_CREATED	0x0080	// created by a set command
-#define	CVAR_TEMP			0x0100	// can be set even when cheats are disabled, but is not archived
-#define CVAR_CHEAT			0x0200	// can not be changed if cheats are disabled
-#define CVAR_NORESTART		0x0400	// do not clear when a cvar_restart is issued
+#define	CVAR_ROM               0x0040	// display only, cannot be set by user at all
+#define	CVAR_USER_CREATED      0x0080	// created by a set command
+#define	CVAR_TEMP              0x0100	// can be set even when cheats are disabled, but is not archived
+#define CVAR_CHEAT             0x0200	// can not be changed if cheats are disabled
+#define CVAR_NORESTART         0x0400	// do not clear when a cvar_restart is issued
 
-#define CVAR_SERVER_CREATED	0x0800	// cvar was created by a server the client connected to.
-#define CVAR_VM_CREATED		0x1000	// cvar was created exclusively in one of the VMs.
-#define CVAR_PROTECTED		0x2000	// prevent modifying this var from VMs or the server
+#define CVAR_SERVER_CREATED    0x0800	// cvar was created by a server the client connected to.
+#define CVAR_VM_CREATED        0x1000	// cvar was created exclusively in one of the VMs.
+#define CVAR_PROTECTED         0x2000	// prevent modifying this var from VMs or the server
 
-#define CVAR_NODEFAULT		0x4000	// do not write to config if matching with default value
+#define CVAR_NODEFAULT         0x4000	// do not write to config if matching with default value
 
-#define CVAR_PRIVATE		0x8000	// can't be read from VM
+#define CVAR_PRIVATE           0x8000	// can't be read from VM
 
-#define CVAR_DEVELOPER		0x10000 // can be set only in developer mode
-#define CVAR_NOTABCOMPLETE	0x20000 // no tab completion in console
+#define CVAR_DEVELOPER         0x10000 // can be set only in developer mode
+#define CVAR_NOTABCOMPLETE     0x20000 // no tab completion in console
+
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#define CVAR_TAGGED_SPECIFIC   0x40000
+#define CVAR_TAGGED_ORIGINAL   0x80000
+#endif
+#ifdef USE_CVAR_UNCHEAT
+//#define CVAR_UNCHEATED         0x100000
+#endif
 
 #define CVAR_ARCHIVE_ND		(CVAR_ARCHIVE | CVAR_NODEFAULT)
 
@@ -996,6 +1290,7 @@ typedef enum {
 	CV_NONE = 0,
 	CV_FLOAT,
 	CV_INTEGER,
+  CV_ENUM,
 	CV_FSPATH,
 	CV_MAX,
 } cvarValidator_t;
@@ -1009,6 +1304,7 @@ typedef enum {
 
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s cvar_t;
+typedef void (*modifiedFunc_t)( char *oldValue, char *newValue, cvar_t *cv );
 
 struct cvar_s {
 	char		*name;
@@ -1017,6 +1313,8 @@ struct cvar_s {
 	char		*latchedString;		// for CVAR_LATCH vars
 	int			flags;
 	qboolean	modified;			// set each time the cvar is changed
+  modifiedFunc_t modifiedFunc;
+  
 	int			modificationCount;	// incremented each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )
@@ -1031,6 +1329,9 @@ struct cvar_s {
 	cvar_t		*hashPrev;
 	int			hashIndex;
 	cvarGroup_t	group;				// to track changes
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+  int        tag;
+#endif
 };
 
 #define	MAX_CVAR_VALUE_STRING	256
@@ -1489,6 +1790,7 @@ typedef enum _flag_status {
 } flagStatus_t;
 
 
+#ifdef USE_DEMO_SERVER
 typedef enum {
 	DS_NONE,
 
@@ -1500,6 +1802,7 @@ typedef enum {
 
 	DS_NUM_DEMO_STATES
 } demoState_t;
+#endif
 
 
 #define	MAX_GLOBAL_SERVERS				4096

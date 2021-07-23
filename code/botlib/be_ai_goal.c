@@ -176,6 +176,28 @@ typedef struct bot_goalstate_s
 	float avoidgoaltimes[MAX_AVOIDGOALS];		//times to avoid the goals
 } bot_goalstate_t;
 
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+bot_goalstate_t *botgoalstatesWorlds[MAX_NUM_VMS][MAX_CLIENTS + 1]; // FIXME: init?
+#define botgoalstates botgoalstatesWorlds[aasgvm]
+itemconfig_t *itemconfigWorlds[MAX_NUM_VMS];
+#define itemconfig itemconfigWorlds[aasgvm]
+levelitem_t *levelitemheapWorlds[MAX_NUM_VMS];
+#define levelitemheap levelitemheapWorlds[aasgvm]
+levelitem_t *freelevelitemsWorlds[MAX_NUM_VMS];
+#define freelevelitems freelevelitemsWorlds[aasgvm]
+levelitem_t *levelitemsWorlds[MAX_NUM_VMS];
+#define levelitems levelitemsWorlds[aasgvm]
+int numlevelitemsWorlds[MAX_NUM_VMS];
+#define numlevelitems numlevelitemsWorlds[aasgvm]
+maplocation_t *maplocationsWorlds[MAX_NUM_VMS];
+#define maplocations maplocationsWorlds[aasgvm]
+campspot_t *campspotsWorlds[MAX_NUM_VMS];
+#define campspots campspotsWorlds[aasgvm]
+int g_gametypeWorlds[MAX_NUM_VMS];
+#define g_gametype g_gametypeWorlds[aasgvm]
+libvar_t *droppedweightWorlds[MAX_NUM_VMS];
+#define droppedweight droppedweightWorlds[aasgvm]
+#else
 bot_goalstate_t *botgoalstates[MAX_CLIENTS + 1]; // FIXME: init?
 //item configuration
 itemconfig_t *itemconfig = NULL;
@@ -189,9 +211,11 @@ maplocation_t *maplocations = NULL;
 //camp spots
 campspot_t *campspots = NULL;
 //the game type
+#define g_gametype bot_gametype
 int g_gametype = 0;
 //additional dropped item weight
 libvar_t *droppedweight = NULL;
+#endif
 
 //========================================================================
 //

@@ -31,6 +31,7 @@ cvar_t *s_musicVolume;
 cvar_t *s_doppler;
 cvar_t *s_muteWhenMinimized;
 cvar_t *s_muteWhenUnfocused;
+cvar_t *s_debug;
 
 static soundInterface_t si;
 
@@ -261,7 +262,13 @@ S_BeginRegistration
 void S_BeginRegistration( void )
 {
 	if( si.BeginRegistration ) {
+#ifdef USE_PRINT_CONSOLE
+    Com_PrintFlags(PC_INIT);
+#endif
 		si.BeginRegistration();
+#ifdef USE_PRINT_CONSOLE
+    Com_PrintClear();
+#endif
 	}
 }
 
@@ -304,13 +311,21 @@ void S_ClearSoundBuffer( void )
 S_SoundInfo
 =================
 */
+extern snd_codec_t *codecs;
 static void S_SoundInfo( void )
 {
 	if( si.SoundInfo ) {
 		si.SoundInfo();
 	}
-}
+  Com_Printf("Codecs: ");
+  snd_codec_t *codec = codecs;
+  for( int count = 0; codec; count++, codec = codec->next )
+  {		
+    Com_Printf("%s%s", count > 0 ? ", " : "", codec->ext);
+  }
+  Com_Printf("\n");
 
+}
 
 /*
 =================
@@ -408,17 +423,17 @@ void S_Init( void )
 {
 	cvar_t		*cv;
 	qboolean	started = qfalse;
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintFlags(PC_INIT);
+#endif
 
 	Com_Printf( "------ Initializing Sound ------\n" );
 
+  s_debug = Cvar_Get( "s_debug", com_developer->string, CVAR_ARCHIVE );
 	s_volume = Cvar_Get( "s_volume", "0.8", CVAR_ARCHIVE );
-	Cvar_SetDescription(s_volume, "Sound FX volume\nDefault: 0.8");
 	s_musicVolume = Cvar_Get( "s_musicvolume", "0.25", CVAR_ARCHIVE );
-	Cvar_SetDescription(s_musicVolume, "Music volume level\nDefault: 0.25");
 	s_doppler = Cvar_Get( "s_doppler", "1", CVAR_ARCHIVE_ND );
-	Cvar_SetDescription( s_doppler, "How much the sound changes based on the speed the source is moving\nDefault: 1");
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_muteWhenUnfocused, "Mute the sound when the window is in the background\nDefault: 1" );
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "1", CVAR_ARCHIVE );
 
 	Cvar_CheckRange( s_volume, "0", "1", CV_FLOAT );
@@ -426,10 +441,8 @@ void S_Init( void )
 	Cvar_CheckRange( s_doppler, "0", "1", CV_INTEGER );
 	Cvar_CheckRange( s_muteWhenUnfocused, "0", "1", CV_INTEGER );
 	Cvar_CheckRange( s_muteWhenMinimized, "0", "1", CV_INTEGER );
-	Cvar_SetDescription( s_muteWhenMinimized, "Mute the sound when the window is minimized\nDefault: 1");
 
 	cv = Cvar_Get( "s_initsound", "1", 0 );
-	Cvar_SetDescription(cv, "Use sounds, or disable them entirely\nDefault: 1");
 	if( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {
@@ -465,7 +478,6 @@ void S_Init( void )
 			}
 
 			S_SoundInfo();
-			S_CodecInfo();
 			Com_Printf( "Sound initialization successful.\n" );
 		} else {
 			Com_Printf( "Sound initialization failed.\n" );
@@ -473,6 +485,9 @@ void S_Init( void )
 	}
 
 	Com_Printf( "--------------------------------\n");
+#ifdef USE_PRINT_CONSOLE
+  Com_PrintClear();
+#endif
 }
 
 
@@ -483,7 +498,7 @@ S_Shutdown
 */
 void S_Shutdown( void )
 {
-#ifdef EMSCRIPTEN
+#ifdef __WASM__
 	cls.firstClick = qtrue;
 #endif
 

@@ -127,7 +127,7 @@ void FBO_CreateBuffer(FBO_t *fbo, int format, int index, int multisample)
 	{
 		case GL_RGB:
 		case GL_RGBA:
-#ifndef EMSCRIPTEN // because these are the same in EM
+#ifndef __WASM__ // because these are the same in EM
 		case GL_RGB8:
 		case GL_RGBA8:
 #endif
