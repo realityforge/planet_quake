@@ -24,6 +24,12 @@ along with Tremulous; if not, see <https://www.gnu.org/licenses/>
 
 #include "g_local.h"
 
+#define Cmd_Argc trap_Argc
+#define Cbuf_ExecuteText trap_SendConsoleCommand
+
+extern int   trap_Argc( void );
+extern void	trap_SendConsoleCommand( int exec_when, const char *text );
+
 level_locals_t  level;
 
 typedef struct

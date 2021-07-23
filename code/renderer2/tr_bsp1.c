@@ -54,7 +54,7 @@ void R_LoadShaders1( lump_t *l ) {
     }
 
     mt = (miptex_t *)((byte *)in + in->dataofs[i]);
-    memcpy(out[i].shader, mt->name, 16);
+    memcpy(out[i].shader, va("textures/%s", mt->name), MAX_QPATH);
 		out[i].surfaceFlags = 0;
 		//out[i].contentFlags = LittleLong( out[i].contentFlags );
     if (strstr(mt->name, "water") || strstr(mt->name, "mwat")) {
@@ -283,11 +283,12 @@ R_LoadNodesAndLeafs
 =================
 */
 void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
-	int			i, j, p;
+	int			i, j;
 	dBsp1Node_t		*in;
 	dBsp1Leaf_t		*inLeaf;
 	mnode_t 	*out;
 	int			numNodes, numLeafs;
+  int     numSolidLeafs;
 
 	in = (void *)(fileBase + nodeLump->fileofs);
 	if (nodeLump->filelen % sizeof(*in) ||
@@ -297,13 +298,23 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 	numNodes = nodeLump->filelen / sizeof(dnode_t);
 	numLeafs = leafLump->filelen / sizeof(dleaf_t);
 
-	out = ri.Hunk_Alloc ( (numNodes + numLeafs) * sizeof(*out), h_low);	
+  numSolidLeafs = 0;
+  for ( i=0 ; i<numNodes; i++, in++)
+	{
+    if(in->children[0] == -1
+      || in->children[1] == -1) {
+      numSolidLeafs++;
+    }
+  }
+
+	out = ri.Hunk_Alloc ( (numNodes + numLeafs + numSolidLeafs) * sizeof(*out), h_low);	
 
 	s_worldData.nodes = out;
-	s_worldData.numnodes = numNodes + numLeafs;
+	s_worldData.numnodes = numNodes + numLeafs + numSolidLeafs;
 	s_worldData.numDecisionNodes = numNodes;
 
 	// load nodes
+  in = (void *)(fileBase + nodeLump->fileofs);
 	for ( i=0 ; i<numNodes; i++, in++, out++)
 	{
 		for (j=0 ; j<3 ; j++)
@@ -312,18 +323,17 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 			out->maxs[j] = in->maxs[j];
 		}
 	
-		p = LittleLong(in->planenum);
-		out->plane = s_worldData.planes + p;
+		out->plane = s_worldData.planes + in->planenum;
 
 		out->contents = CONTENTS_NODE;	// differentiate from leafs
 
 		for (j=0 ; j<2 ; j++)
 		{
-			p = in->children[j];
-			if (p >= 0)
-				out->children[j] = s_worldData.nodes + p;
-			else
-				out->children[j] = s_worldData.nodes + numNodes + (-1 - p);
+			if (in->children[j] >= 0)
+				out->children[j] = s_worldData.nodes + in->children[j];
+			else {
+				out->children[j] = s_worldData.nodes + numNodes + (-1 - in->children[j]);
+      }
 		}
 	}
 	
@@ -337,7 +347,8 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 			out->maxs[j] = inLeaf->maxs[j];
 		}
 
-		out->cluster = -1; //LittleLong(inLeaf->contents);
+    out->contents = inLeaf->contents;
+		out->cluster = inLeaf->contents == CONTENTS_Q1_SOLID ? -1 : (i-1); //LittleLong(inLeaf->contents);
 		out->area = -1; //LittleLong(inLeaf->visofs);
 
 		if ( out->cluster >= s_worldData.numClusters ) {
@@ -346,7 +357,23 @@ void R_LoadNodesAndLeafs1 (lump_t *nodeLump, lump_t *leafLump) {
 
 		out->firstmarksurface = inLeaf->firstmarksurface;
 		out->nummarksurfaces = inLeaf->nummarksurfaces;
-	}	
+
+    if (out->contents && out->contents != CONTENTS_Q1_SOLID)
+			s_worldData.numDecisionNodes++;
+	}
+
+  in = (void *)(fileBase + nodeLump->fileofs);
+  for ( i=0 ; i<numNodes; i++, in++)
+	{
+    if(in->children[0] == -1
+      || in->children[1] == -1) {
+      out->cluster = -1;
+      out->area = 0;
+      out->firstmarksurface = in->firstface;
+  		out->nummarksurfaces = in->numfaces;
+      out++;
+    }
+  }
 
 	// chain descendants
 	R_SetParent (s_worldData.nodes, NULL);
@@ -404,6 +431,67 @@ void R_LoadSubmodels1( lump_t *l ) {
 }
 
 
+/*
+=================
+R_LoadVisibility
+=================
+*/
+
+static void DecompressVis(byte *dst, void *vis, int pos, int rowSize)
+{
+	if (pos == -1)
+	{
+		memset(dst, 0xFF, rowSize);	// all visible
+		dst += rowSize;
+		return;
+	}
+
+	byte *src = (byte*)vis + pos;
+	// decompress vis
+	for (int j = rowSize; j; /*empty*/)
+	{
+		byte c = *src++;
+		if (c)
+		{	// non-zero byte
+			*dst++ = c;
+			j--;
+		}
+		else
+		{	// zero byte -- decompress RLE data (with filler 0)
+			c = *src++;				// count
+			c = MIN(c, j);			// should not be, but ...
+			j -= c;
+			while (c--)
+				*dst++ = 0;
+		}
+	}
+}
+
+static	void R_LoadVisibility1( lump_t *l, lump_t *leafLump ) {
+	int		len;
+	byte	*buf;
+  dBsp1Leaf_t 	*in;
+
+	len = l->filelen;
+	if ( !len ) {
+		return;
+	}
+	buf = fileBase + l->fileofs;
+  in = (void *)(fileBase + leafLump->fileofs);
+
+  if ( tr.externalVisData ) {
+		s_worldData.vis = tr.externalVisData;
+	} else {
+    s_worldData.numClusters = s_worldData.numnodes - s_worldData.numDecisionNodes; // aka numLeafs
+  	s_worldData.clusterBytes = (s_worldData.numClusters + 7) >> 3; // rowSize
+    s_worldData.vis = Hunk_Alloc( s_worldData.numClusters * s_worldData.clusterBytes, h_high );
+    byte *dst = (void *)s_worldData.vis;
+    for (int i = 1; i < s_worldData.numClusters; i++, dst += s_worldData.clusterBytes)
+  		DecompressVis(dst, buf, in[i].visofs, s_worldData.clusterBytes);
+	}
+}
+
+
 void LoadBsp1(const char *name) {
 	int i;
 	dBsp1Hdr_t	*header;
@@ -445,7 +533,8 @@ void LoadBsp1(const char *name) {
   R_LoadMarksurfaces1 (&header->lumps[LUMP_Q1_MARKSURFACES]);
   R_LoadNodesAndLeafs1 (&header->lumps[LUMP_Q1_NODES], 
     &header->lumps[LUMP_Q1_LEAFS]);
-	R_LoadSubmodels1 (&header->lumps[LUMP_Q1_MODELS]);
+	R_LoadSubmodels1( &header->lumps[LUMP_Q1_MODELS] );
+  R_LoadVisibility1( &header->lumps[LUMP_Q1_VISIBILITY], &header->lumps[LUMP_Q1_LEAFS] );
 }
 
 #endif

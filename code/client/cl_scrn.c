@@ -826,14 +826,16 @@ void SCR_UpdateScreen( qboolean fromVM ) {
         Cvar_Set("r_lockpvs", "1");
       }
       // 480 -352 88
-      /*
       views[i].vieworg[0] = 0;
       views[i].vieworg[1] = 0;
       views[i].vieworg[2] = 0;
+      /*
       */
+      /*
       views[i].vieworg[0] = 480;
       views[i].vieworg[1] = -352;
       views[i].vieworg[2] = 108;
+      */
       views[i].viewaxis[0][1] = -1;
       views[i].viewaxis[1][0] = 1;
       views[i].viewaxis[2][2] = 1;

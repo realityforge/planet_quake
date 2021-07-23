@@ -330,11 +330,16 @@ void CMod_LoadNodes1( lump_t *l ) {
 		for ( j = 0; j < 2; j++ )
 		{
 			out->children[j] = in->children[j];
+      
+      // TODO: something like this from gildor2
+      /*
+      if (node->children[0] == -1)
+        node->children[0] = -1 - (size + numSolidLeafs++);
+      if (node->children[1] == -1)
+        node->children[1] = -1 - (size + numSolidLeafs++);
+      */
 		}
-    
-    
 	}
-
 }
 
 
@@ -365,7 +370,6 @@ void CMod_LoadPatches1( lump_t *surfs, lump_t *verts )
 CMod_LoadVisibility
 =================
 */
-
 
 static void DecompressVis(byte *dst, void *vis, int pos, int rowSize)
 {

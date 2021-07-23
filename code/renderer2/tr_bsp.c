@@ -2875,8 +2875,8 @@ void RE_LoadWorldMap( const char *name ) {
   		case BSP_VERSION_QLIVE:
   		case BSP_VERSION_OPENJK:
   		case BSP3_VERSION:
-  			LoadBsp3(name);
-        //LoadBspMin(name);
+  			//LoadBsp3(name);
+        LoadBspMin(name);
   			break;
   		default:
   		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 

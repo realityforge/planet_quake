@@ -139,6 +139,7 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_session.o \
           $(B)/$(MOD)/game/g_spawn.o \
           $(B)/$(MOD)/game/g_svcmds.o \
+					$(B)/$(MOD)/game/g_syscalls.o \
           $(B)/$(MOD)/game/g_target.o \
           $(B)/$(MOD)/game/g_team.o \
           $(B)/$(MOD)/game/g_trigger.o \
@@ -276,21 +277,20 @@ $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
 
 $(B)/$(MOD)/ui/%.o: $(UIDIR)/ui_%.c
 	$(DO_UI_CC)
+
+D_FILES := $(shell find $(B)/$(MOD)/game -name '*.d' 2>/dev/null) \
+					 $(shell find $(B)/$(MOD)/cgame -name '*.d' 2>/dev/null) \
+					 $(shell find $(B)/$(MOD)/ui -name '*.d' 2>/dev/null)
+ifneq ($(strip $(D_FILES)),)
+include $(D_FILES)
+endif
 endif
 
 #############################################################################
 # MISC
 #############################################################################
 
-clean: clean-debug clean-release
-
-clean-debug:
-	@$(MAKE) clean2 B=$(BD)
-
-clean-release:
-	@$(MAKE) clean2 B=$(BR)
-
-clean2:
+clean:
 	@echo "CLEAN $(B)"
 	@rm -rf ./$(BD)/$(MOD)/cgame
 	@rm -rf ./$(BR)/$(MOD)/cgame
@@ -300,6 +300,9 @@ clean2:
 	@rm -rf ./$(BR)/$(MOD)/ui
 	@rm -rf ./$(BD)/$(MOD)/vm
 	@rm -rf ./$(BR)/$(MOD)/vm
-	@rm -f ./$(B)/$(MOD)/cgame$(SHLIBNAME)
-	@rm -f ./$(B)/$(MOD)/qagame$(SHLIBNAME)
-	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/cgame$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BD)/$(MOD)/ui$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/cgame$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/qagame$(SHLIBNAME)
+	@rm -f ./$(BR)/$(MOD)/ui$(SHLIBNAME)
