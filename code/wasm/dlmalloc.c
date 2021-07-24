@@ -1,6 +1,6 @@
 
 /* XXX Emscripten XXX */
-#if __EMSCRIPTEN__
+#if __WASM__
 // When building for wasm we export `malloc` and `emscripten_builtin_malloc` as
 // weak alias of the internal `dlmalloc` which is static to this file.
 #define DLMALLOC_EXPORT static
@@ -15,8 +15,6 @@
 /* allow malloc stats only in debug builds, which brings in stdio code. */
 #define NO_MALLOC_STATS 1
 #endif
-/* XXX Emscripten Tracing API. This defines away the code if tracing is disabled. */
-#include <emscripten/trace.h>
 
 /* Make malloc() and free() threadsafe by securing the memory allocations with pthread mutexes. */
 #if __EMSCRIPTEN_PTHREADS__
@@ -855,7 +853,7 @@ extern "C" {
     
 #ifndef USE_DL_PREFIX
 // XXX Emscripten XXX
-#if defined(__EMSCRIPTEN__)
+#if defined(__WASM__)
 void* malloc(size_t) __attribute__((weak, alias("dlmalloc")));
 void  free(void*) __attribute__((weak, alias("dlfree")));
 void* calloc(size_t, size_t) __attribute__((weak, alias("dlcalloc")));
@@ -884,7 +882,7 @@ void malloc_inspect_all(void(*handler)(void*, void *, size_t, void*), void* arg)
 void** independent_calloc(size_t, size_t, void**) __attribute__((weak, alias("dlindependent_calloc")));
 void** independent_comalloc(size_t, size_t*, void**) __attribute__((weak, alias("dlindependent_comalloc")));
 size_t bulk_free(void**, size_t n_elements) __attribute__((weak, alias("dlbulk_free")));
-#endif /*__EMSCRIPTEN__*/
+#endif /*__WASM__*/
 #endif /* USE_DL_PREFIX */
     
     /*
@@ -1607,7 +1605,7 @@ extern "C" {
 #    endif
 #  endif
 #  ifdef _SC_PAGE_SIZE
-#    if defined(__EMSCRIPTEN__)
+#    if defined(__WASM__)
 #      define malloc_getpagesize (4096) /* avoid sysconf calls during startup */
 #    else
 #      define malloc_getpagesize sysconf(_SC_PAGE_SIZE)
@@ -3226,7 +3224,7 @@ static int init_mparams(void) {
 #endif /* USE_DEV_RANDOM */
 #ifdef WIN32
                 magic = (size_t)(GetTickCount() ^ (size_t)0x55555555U);
-#elif defined(LACKS_TIME_H) || defined(__EMSCRIPTEN__)
+#elif defined(LACKS_TIME_H) || defined(__WASM__)
             magic = (size_t)&magic ^ (size_t)0x55555555U;
 #else
             magic = (size_t)(time(0) ^ (size_t)0x55555555U);
@@ -4725,10 +4723,6 @@ void* dlmalloc(size_t bytes) {
         
     postaction:
         POSTACTION(gm);
-#if __EMSCRIPTEN__
-        /* XXX Emscripten Tracing API. */
-        emscripten_trace_record_allocation(mem, bytes);
-#endif
         return mem;
     }
     
@@ -4745,10 +4739,6 @@ void dlfree(void* mem) {
      */
     
     if (mem != 0) {
-#if __EMSCRIPTEN__
-        /* XXX Emscripten Tracing API. */
-        emscripten_trace_record_free(mem);
-#endif
         mchunkptr p  = mem2chunk(mem);
 #if FOOTERS
         mstate fm = get_mstate_for(p);
@@ -5275,10 +5265,6 @@ void* dlrealloc(void* oldmem, size_t bytes) {
             if (newp != 0) {
                 check_inuse_chunk(m, newp);
                 mem = chunk2mem(newp);
-#if __EMSCRIPTEN__
-                /* XXX Emscripten Tracing API. */
-                emscripten_trace_record_reallocation(oldmem, mem, bytes);
-#endif
             }
             else {
                 mem = internal_malloc(m, bytes);
@@ -5321,10 +5307,6 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
             }
         }
     }
-#if __EMSCRIPTEN__
-    /* XXX Emscripten Tracing API. */
-    emscripten_trace_record_reallocation(oldmem, mem, bytes);
-#endif
     return mem;
 }
 
@@ -6047,10 +6029,14 @@ int mspace_mallopt(int param_number, int value) {
 // in their code, and make those replacements refer to the original dlmalloc
 // and dlfree from this file.
 // This allows an easy mechanism for hooking into memory allocation.
-#if defined(__EMSCRIPTEN__) && !ONLY_MSPACES
-extern __typeof(malloc) emscripten_builtin_malloc __attribute__((alias("dlmalloc")));
-extern __typeof(free) emscripten_builtin_free __attribute__((alias("dlfree")));
-extern __typeof(memalign) emscripten_builtin_memalign __attribute__((alias("dlmemalign")));
+#ifdef __WASM__
+/*
+extern __typeof(dlmalloc) malloc __attribute__((alias("dlmalloc")));
+extern __typeof(dlfree) free __attribute__((alias("dlfree")));
+extern __typeof(dlmemalign) memalign __attribute__((alias("dlmemalign")));
+extern __typeof(dlcalloc) calloc __attribute__((alias("dlcalloc")));
+extern __typeof(realloc) realloc __attribute__((alias("dlrealloc")));
+*/
 #endif
 
 /* -------------------- Alternative MORECORE functions ------------------- */

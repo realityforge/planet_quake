@@ -59,11 +59,7 @@
 
 #define EMSCRIPTEN_KEEPALIVE __attribute__((used))
 
-#ifdef __wasm__
 #define EM_IMPORT(NAME) __attribute__((import_module("env"), import_name(#NAME)))
-#else
-#define EM_IMPORT(NAME)
-#endif
 
 #define EM_JS(ret, name, params, ...)                                                              \
   _EM_JS_CPP_BEGIN                                                                                 \

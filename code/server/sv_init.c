@@ -24,9 +24,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean svShuttingDown = qfalse;
 
-#ifndef BUILD_SLIM_CLIENT
 extern void Cvar_SetServerDescriptions( void );
 extern void Cvar_SetBotDescriptions( void );
+
+#ifndef BUILD_SLIM_CLIENT
 
 /*
 ===============

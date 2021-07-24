@@ -59,6 +59,20 @@ unsigned sys_frame_time;
 qboolean stdin_active = qfalse;
 int      stdin_flags = 0;
 
+extern void IN_Shutdown( void );
+extern void IN_Init( void );
+extern void IN_Frame( void );
+
+EM_JS(char **, SYS_CmdArgs, ( void ), 
+{ return Sys_Main_CmdArgs() });
+char **Sys_CmdArgs( void )
+{ return SYS_CmdArgs(); }
+
+EM_JS(int, SYS_CmdArgsC, ( void ), 
+{ return Sys_Main_CmdArgsC() });
+int Sys_CmdArgsC( void )
+{ return SYS_CmdArgsC(); }
+
 // =======================================================================
 // General routines
 // =======================================================================
@@ -83,6 +97,12 @@ qboolean Sys_LowPhysicalMemory( void )
 void Sys_BeginProfiling( void )
 {
 
+}
+
+const char *Sys_SteamPath( void )
+{
+	static char steamPath[ MAX_OSPATH ];
+  return steamPath;
 }
 
 
@@ -598,45 +618,20 @@ EM_JS(void *, SYS_LoadLibrary, ( const char *name ),
 void *Sys_LoadLibrary( const char *name )
 { return SYS_LoadLibrary(name); }
 
-EM_JS(char **, SYS_CmdArgs, ( void ), 
-{ return Sys_Main_CmdArgs() });
-char **Sys_CmdArgs( void )
-{ return SYS_CmdArgs(); }
-
-EM_JS(int, SYS_CmdArgsC, ( void ), 
-{ return Sys_Main_CmdArgsC() });
-int Sys_CmdArgsC( void )
-{ return SYS_CmdArgsC(); }
-
-EM_JS(void, SYS_FS_Offline, ( void ), 
+EM_JS(void, SYS_Offline, ( void ), 
 { Sys_FS_Offline() });
-void Sys_FS_Offline( void )
-{ SYS_FS_Offline(); }
+void Sys_Offline( void )
+{ SYS_Offline(); }
 
-EM_JS(void, SYS_Debug, ( void ), 
-{ return Sys_Debug() });
-void Sys_Debug( void )
-{ return SYS_Debug(); }
+EM_JS(__attribute((noreturn)) void, SYS_Exit, ( int code ), 
+{ Sys_Main_PlatformExit(code) });
+__attribute((noreturn)) void Sys_Exit( int code )
+{ SYS_Exit(code); }
 
 EM_JS(char *, SYS_GetClipboardData, ( void ), 
 { return Sys_GetClipboardData() });
 char *Sys_GetClipboardData( void )
 { return SYS_GetClipboardData(); }
-
-EM_JS(void, SYS_BeginDownload, ( void ), 
-{ Sys_BeginDownload() });
-void Sys_BeginDownload( void )
-{ SYS_BeginDownload(); }
-
-EM_JS(void, SYS_DownloadLocalFile, ( char *fileName ), 
-{ return Sys_Main_DownloadLocalFile(fileName) });
-void Sys_DownloadLocalFile( char *fileName )
-{ return SYS_DownloadLocalFile(fileName); }
-
-EM_JS(void, SYS_Main_PlatformExit, ( int code ), 
-{ Sys_PlatformExit(code) });
-void Sys_Exit( int code )
-{ SYS_Main_PlatformExit(code); exit(code); }
 
 EM_JS(qboolean, SYS_Main_RandomBytes, ( byte *string, int len ), 
 { return Sys_RandomBytes(string, len) });
@@ -666,9 +661,6 @@ void Sys_FS_Shutdown(void) { return SYS_FS_Shutdown(); }
 
 EM_JS(void, SYS_FS_Startup, (void), { Sys_FS_Startup() });
 void Sys_FS_Startup(void) { return SYS_FS_Startup(); }
-
-EM_JS(void, SYS_SetClipboardData, (void *field), { Sys_Input_SetClipboardData(field) });
-void Sys_SetClipboardData(void *field) { return SYS_SetClipboardData(field); }
 
 EM_JS(int, SYS_Milliseconds, (void), { return Sys_Main_Milliseconds() });
 int Sys_Milliseconds(void) { return SYS_Milliseconds(); }

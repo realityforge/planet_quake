@@ -256,7 +256,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(void, GetShaderSource, GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *source) \
 	GLE(GLint, GetUniformLocation, GLuint program, const GLchar *name) \
 	GLE(void, LinkProgram, GLuint program) \
-	GLE(void, ShaderSource, GLuint shader, GLsizei count, const GLchar* *string, const GLint *length) \
+	GLE(void, ShaderSource, GLuint shader, GLsizei count, const GLchar* const*string, const GLint *length) \
 	GLE(void, UseProgram, GLuint program) \
 	GLE(void, Uniform1f, GLint location, GLfloat v0) \
 	GLE(void, Uniform2f, GLint location, GLfloat v0, GLfloat v1) \
@@ -392,7 +392,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 	GLE(GLvoid, NamedFramebufferTexture2DEXT, GLuint framebuffer, GLenum attachment, GLenum textarget, GLuint texture, GLint level) \
 	GLE(GLvoid, NamedFramebufferRenderbufferEXT, GLuint framebuffer, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) \
 
+#ifdef __WASM__
+#define GLE(ret, name, ...) extern ret APIENTRY qgl##name(__VA_ARGS__);
+#else
 #define GLE(ret, name, ...) typedef ret APIENTRY name##proc(__VA_ARGS__); extern name##proc * qgl##name;
+#endif
 QGL_1_1_PROCS;
 QGL_DESKTOP_1_1_PROCS;
 QGL_ES_1_1_PROCS;

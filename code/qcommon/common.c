@@ -185,6 +185,13 @@ static void Com_Shutdown( void );
 static void Com_WriteConfig_f( void );
 void CIN_CloseAllVideos( void );
 
+#ifdef __WASM__
+EM_JS(void, SYS_Debug, ( void ), 
+{ return Sys_Debug() });
+void DebugBreak( void )
+{ return SYS_Debug(); }
+#endif
+
 //============================================================================
 
 static char	*rd_buffer;

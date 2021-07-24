@@ -121,6 +121,18 @@ cvar_t  *cl_lnInvoice;
 
 #ifdef __WASM__
 cvar_t  *cl_returnURL;
+
+EM_JS(void, SYS_BeginDownload, ( const char *remoteName ), 
+{ Sys_BeginDownload(remoteName) });
+void Sys_BeginDownload( const char *remoteName )
+{ SYS_BeginDownload(remoteName); }
+
+
+EM_JS(void, SYS_DownloadLocalFile, ( char *fileName ), 
+{ return Sys_Main_DownloadLocalFile(fileName) });
+void Sys_DownloadLocalFile( char *fileName )
+{ return SYS_DownloadLocalFile(fileName); }
+
 #endif
 
 #ifdef USE_LAZY_LOAD
@@ -2283,7 +2295,6 @@ CL_Vid_Restart_Fast
 */
 static void CL_Vid_Restart_Fast() {
 	const float MATCH_EPSILON = 0.001f;
-	const char *arg = Cmd_Argv(1);
 	// WARNING this is absolutely terrible
 	//
 	// we unfortunately can't update the the cgame / ui modules, so instead
@@ -2905,7 +2916,7 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	clc.downloadCount = 0;
 
 #ifdef __WASM__
-  Sys_BeginDownload();
+  Sys_BeginDownload(remoteName);
 #else
 	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
 #endif
@@ -6553,8 +6564,11 @@ void CL_Download_f( void )
   if ( !Q_stricmp( Cmd_Argv( 0 ), "directdl" ) )
   {
     Q_strcat( clc.downloadList, sizeof( clc.downloadList ), va("@%s@%s", downloadName, downloadName) );
-    if(!Com_DL_InProgress(&download)
-      && !(*clc.downloadName)
+    if(
+#ifdef USE_CURL
+      !Com_DL_InProgress(&download) && 
+#endif
+      !(*clc.downloadName)
       && cls.state > CA_PRIMED) {
       CL_NextDownload();
     }

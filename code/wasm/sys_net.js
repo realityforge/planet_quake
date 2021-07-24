@@ -315,7 +315,7 @@ function DownloadAsset (asset, onprogress, onload) {
       mode: opaque ? 'no-cors' : 'cors',
       dataType: 'arraybuffer',
       onprogress: onprogress,
-function       onload (err, data) {
+      onload: function (err, data) {
         if(err && !opaque) {
           doDownload(baseUrl, true)
           return

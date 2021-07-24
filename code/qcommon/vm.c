@@ -2291,6 +2291,7 @@ int GetIntFromByte(byte *offset) {
 }
 
 #ifdef USE_ABS_MOUSE
+/*
 byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMarker) {
 	int i, j;
 	int diff = realtimeMarker ^ 0x7FFFFFFF;
@@ -2316,6 +2317,7 @@ byte *VM_GetStaticAtoms(vm_t *vm, int refreshCmd, int mouseCmd, int realtimeMark
 	}
 	return ret;
 }
+*/
 #endif
 
 #ifdef USE_ASYNCHRONOUS

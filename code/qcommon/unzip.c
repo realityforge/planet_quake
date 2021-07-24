@@ -1490,7 +1490,6 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 	unz_s* s;
 	unz_file_info file_info;
 	unz_file_info_internal file_info_internal;
-	byte buf[46];
 	int err=UNZ_OK;
 	long lSeek=0;
 
@@ -1501,6 +1500,7 @@ static int unzlocal_GetCurrentFileInfoInternal (unzFile file,
 		err=UNZ_ERRNO;
 
 #ifndef __WASM__
+  byte buf[46];
 //#if 1 // try ro reduce fread() overhead
 	if ( unzlocal_getData( s->file, buf, 46 ) != UNZ_OK )
 		return UNZ_ERRNO;

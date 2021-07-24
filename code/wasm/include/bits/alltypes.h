@@ -93,7 +93,7 @@ typedef long suseconds_t;
 
 
 #if defined(__NEED_pthread_attr_t) && !defined(__DEFINED_pthread_attr_t)
-#ifdef __EMSCRIPTEN__
+#ifdef __WASM__
 // For canvas transfer implementation in Emscripten, use an extra 11th control field
 // to pass a pointer to a string denoting the WebGL canvases to transfer.
 typedef struct { union { int __i[11]; volatile int __vi[11]; unsigned __s[11]; } __u; } pthread_attr_t;

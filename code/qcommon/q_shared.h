@@ -199,14 +199,14 @@ if(Com_PreviousEventPtr() == &x) { \
 } \
 
 #define ASYNCF(x, f) \
-Sys_Download(f); \
+Sys_BeginDownload(f); \
 x##_Requeue: \
 ASYNC(x); \
 if(!FS_FileExists(f)) \
 goto x##_Requeue; \
 
 #define ASYNCPF(x, y, f) \
-Sys_Download(f); \
+Sys_BeginDownload(f); \
 x##_Requeue: \
 ASYNCP(x, y); \
 if(!FS_FileExists(f)) \

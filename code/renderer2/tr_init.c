@@ -1196,7 +1196,9 @@ void GfxInfo_f( void )
 	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
 	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
 	ri.Printf( PRINT_ALL, "GL_EXTENSIONS: " );
+#ifndef __WASM__
 	if ( qglGetStringi )
+#endif
 	{
 		GLint numExtensions;
 		int i;
@@ -1207,10 +1209,12 @@ void GfxInfo_f( void )
 			ri.Printf( PRINT_ALL, "%s ", qglGetStringi( GL_EXTENSIONS, i ) );
 		}
 	}
-	else
-	{
+#ifndef __WASM__
+  else
+  {
 		R_PrintLongString( glConfig.extensions_string );
 	}
+#endif
 	ri.Printf( PRINT_ALL, "\n" );
 	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_IMAGE_UNITS: %d\n", glConfig.numTextureUnits );

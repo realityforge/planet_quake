@@ -284,7 +284,7 @@
 #if defined(HEDLEY_EMSCRIPTEN_VERSION)
 #  undef HEDLEY_EMSCRIPTEN_VERSION
 #endif
-#if defined(__EMSCRIPTEN__)
+#if defined(__WASM__)
 #  define HEDLEY_EMSCRIPTEN_VERSION HEDLEY_VERSION_ENCODE(__EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__)
 #endif
 

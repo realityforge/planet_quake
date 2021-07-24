@@ -201,12 +201,8 @@ static SOCKET	ip_sockets[MAX_NUM_VMS] = {
 static SOCKET	ip_socket = INVALID_SOCKET;
 #endif
 #ifdef __WASM__
-static qboolean invokeSOCKSAfter = qfalse;
 extern void Sys_SocksMessage( void );
 extern void Sys_SocksConnect( void );
-void NET_OpenSocks_After_Connect( void );
-void NET_OpenSocks_After_Method( void );
-void NET_OpenSocks_After_Listen( void );
 static void NET_OpenIP( void );
 // maybe on desktop we have the luxury of maintaining separate connections
 //  but the web browser is limit to 3 per thread
@@ -1052,8 +1048,6 @@ NET_IPSocket
 static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	SOCKET				newsocket;
 	struct sockaddr_in	address;
-	ioctlarg_t			_true = 1;
-	int					i = 1;
 
 	*err = 0;
 
@@ -1071,6 +1065,8 @@ static SOCKET NET_IPSocket( const char *net_interface, int port, int *err ) {
 	}
 
 #ifndef __WASM__
+  ioctlarg_t _true = 1;
+  int i = 1;
 	// make it non-blocking
 	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
@@ -1322,7 +1318,6 @@ static void NET_OpenSocks( int port ) {
 	int					len;
 	unsigned char		buf[4 + 255 * 2];
 	socks5_request_t	cmd;
-  int i;
 
 	usingSocks = qfalse;
 #ifdef __WASM__
@@ -1330,10 +1325,8 @@ static void NET_OpenSocks( int port ) {
     && strcmp(Cmd_Argv(0), "net_restart")) {
     Cvar_Set("net_socksLoading", "0");
     Cvar_Set("net_socksLoading", "1");
-    SOCKS_Frame_Callback(NULL, NET_OpenIP);
     return;
   }
-  SOCKS_After = NULL;
 #endif
 
 	Com_Printf( "Opening connection to SOCKS server.\n" );
@@ -1344,6 +1337,7 @@ static void NET_OpenSocks( int port ) {
 	}
 
 #ifndef __WASM__
+  int i;
 	// set no delay
 	if( setsockopt( socks_socket, IPPROTO_TCP, TCP_NODELAY, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 		Com_Printf( "WARNING: NET_IPSocket: setsockopt TCP_NODELAY: %s\n", NET_ErrorString() );
@@ -1381,15 +1375,6 @@ static void NET_OpenSocks( int port ) {
     porto = port;
     Cvar_Set("net_socksLoading", "1");
     Sys_SocksConnect(); // don't wait until next frame to attach to websocket events
-    SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Connect);
-  }
-  WASM_ASYNC(NET_OpenSocks_After_Connect);
-  int					port;
-  int					len;
-	qboolean			rfc1929;
-	unsigned char		buf[64];
-  {
-    port = porto;
 #endif
 	}
 	buf[0] = 5;	// SOCKS version
@@ -1415,17 +1400,6 @@ static void NET_OpenSocks( int port ) {
 		Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
-
-#ifdef __WASM__
-  porto = port;
-  SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Method);
-  WASM_ASYNC(NET_OpenSocks_After_Method);
-  int 			  port;
-  int					len;
-  unsigned char		buf[64];
-  socks5_request_t	cmd;
-  port = porto;
-#endif
 
 	// get the response
 	len = recv( socks_socket, (void *)buf, 32, 0 );
@@ -1511,16 +1485,6 @@ static void NET_OpenSocks( int port ) {
 		Com_Printf( "%s: send: %s\n", __func__, NET_ErrorString() );
 		return;
 	}
-
-#ifdef __WASM__
-  SOCKS_Frame_Callback(NULL, NET_OpenSocks_After_Listen);
-  WASM_ASYNC(NET_OpenSocks_After_Listen);
-  int					len;
-  unsigned char		buf[64];
-  struct hostent		*h;
-  socks5_request_t	cmd;
-  // TODO: if socksRelayAddr != socksServer restart with NET_OpenSocks for load balancing
-#endif
 
 	// get the response
 	len = recv( socks_socket, (void *)&cmd, sizeof( cmd ), 0 );

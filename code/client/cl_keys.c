@@ -21,6 +21,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "client.h"
 
+#ifdef __WASM__
+EM_JS(void, SYS_SetClipboardData, (void *field), { Sys_Input_SetClipboardData(field) });
+void Sys_SetClipboardData(void *field) { return SYS_SetClipboardData(field); }
+#endif
+
 /*
 
 key up events are sent even if in console mode
@@ -706,15 +711,20 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 #endif
 				}
 #endif
+        if(
 #ifdef USE_ASYNCHRONOUS
-        if(FS_Initialized())
+          FS_Initialized()
+#else
+          qtrue
 #endif
-        if(uivm)
-				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-        else {
-          cls.uiStarted = qtrue;
-      		CL_InitUI(qfalse);
-          VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+          ) {
+          if(uivm) {
+  				  VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+          } else {
+            cls.uiStarted = qtrue;
+        		CL_InitUI(qfalse);
+            VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+          }
         }
 			}
 			return;

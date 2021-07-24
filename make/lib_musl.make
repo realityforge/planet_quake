@@ -18,7 +18,7 @@ WORKDIRS         += musl          musl/string musl/stdio  musl/stdlib    \
                     musl/internal musl/time   musl/locale musl/network   \
                     musl/select   musl/stat   musl/dirent musl/misc      \
                     musl/fcntl    musl/ctype  musl/exit   musl/env       \
-                    musl/thread   musl/mman   musl/multibyte
+                    musl/thread   musl/mman   musl/process musl/multibyte
 
 CLEANS           += musl $(CNAME)$(ARCHEXT).bc $(CNAME)$(ARCHEXT).o
 endif
@@ -33,7 +33,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     string/strcspn.o string/strpbrk.o string/strdup.o    \
                     \
                     internal/shgetc.o    internal/syscall_ret.o internal/intscan.o \
-                    internal/floatscan.o \
+                    internal/floatscan.o internal/procfdname.o \
                     \
                     stdio/sprintf.o  stdio/fprintf.o   stdio/vsnprintf.o \
                     stdio/vfprintf.o stdio/fwrite.o    stdio/sscanf.o    \
@@ -61,10 +61,15 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     ctype/isdigit.o ctype/iswdigit.o ctype/isupper.o \
 										ctype/isalpha.o \
                     \
-                    signal/signal.o      signal/sigaddset.o signal/sigemptyset.o \
-                    signal/sigprocmask.o signal/sigaction.o signal/block.o \
-										signal/raise.o \
+                    signal/signal.o      signal/sigaddset.o   signal/sigemptyset.o \
+                    signal/sigprocmask.o signal/sigaction.o   signal/block.o \
+										signal/raise.o       signal/sigismember.o signal/restore.o \
                     errno/strerror.o errno/__errno_location.o \
+										process/posix_spawn_file_actions_init.o \
+										process/posix_spawn_file_actions_adddup2.o \
+										process/posix_spawn_file_actions_destroy.o \
+										process/posix_spawn.o process/waitpid.o \
+										process/execve.o \
                     \
                     math/__signbit.o    math/__signbitf.o    math/__signbitl.o \
                     math/__fpclassify.o math/__fpclassifyf.o math/__fpclassifyl.o \
@@ -73,7 +78,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
                     unistd/read.o   unistd/write.o  unistd/close.o \
-                    unistd/lseek.o  unistd/pipe2.o \
+                    unistd/lseek.o  unistd/pipe2.o  unistd/_exit.o \
                     unistd/gethostname.o \
                     \
                     exit/assert.o exit/abort_lock.o exit/exit.o exit/_Exit.o \
@@ -117,7 +122,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     \
                     thread/__lock.o       thread/pthread_sigmask.o \
                     thread/__syscall_cp.o thread/pthread_setcancelstate.o \
-                    thread/pthread_cleanup_push.o \
+                    thread/pthread_cleanup_push.o thread/clone.o \
                     \
                     multibyte/mbrtowc.o   multibyte/mbstowcs.o multibyte/wctomb.o \
                     multibyte/mbsrtowcs.o multibyte/wcrtomb.o  multibyte/mbsinit.o \

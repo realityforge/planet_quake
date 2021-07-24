@@ -1,4 +1,4 @@
-BUILD_SLIM_CLIENT      = 0
+BUILD_SLIM_CLIENT      = 1
 BUILD_STANDALONE       = 1
 BUILD_FREETYPE         = 0
 BUILD_GAME_STATIC      = 0
@@ -15,24 +15,24 @@ CINEMATICS_LOGO        = 0
 CINEMATICS_INTRO       = 0
 
 USE_CODEC_VORBIS       = 0
-USE_CIN_OGM            = 1
-USE_VIDEO_THEORA       = 1
-USE_VIDEO_XVID         = 1
+USE_CIN_OGM            = 0
+USE_VIDEO_THEORA       = 0
+USE_VIDEO_XVID         = 0
 USE_CIN_VPX            = 0
 
-USE_BSP1               = 1
+USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0
 USE_DEMO_CLIENTS       = 0
 USE_DYNAMIC_ZIP        = 0
-USE_MEMORY_MAPS        = 1
+USE_MEMORY_MAPS        = 0
 USE_PERSIST_CONSOLE    = 0
 USE_NO_CONSOLE         = 0
 USE_PRINT_CONSOLE      = 0
 USE_RMLUI              = 0
 USE_RMLUI_DLOPEN       = 0
-USE_MULTIVM_SERVER     = 1
-USE_MULTIVM_CLIENT     = 1
+USE_MULTIVM_SERVER     = 0
+USE_MULTIVM_CLIENT     = 0
 USE_FREETYPE           = 0
 USE_VULKAN             = 0
 USE_OPENGL2            = 1

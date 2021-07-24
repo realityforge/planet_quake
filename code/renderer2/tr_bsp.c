@@ -2001,7 +2001,6 @@ void R_LoadShaders( lump_t *l ) {
 
 	for ( i=0 ; i<count ; i++ ) {
 		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );
-    printf("flags: %i\n", out[i].surfaceFlags);
 		out[i].contentFlags = LittleLong( out[i].contentFlags );
 	}
 }

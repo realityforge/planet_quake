@@ -113,7 +113,7 @@ qboolean Sys_RandomBytes( byte *string, int len )
 //============================================
 
 #ifdef USE_ASYNCHRONOUS
-void Sys_Download(const char *downloadName)
+void Sys_BeginDownload(const char *downloadName)
 {
 #ifndef DEDICATED
   if(!com_dedicated || !com_dedicated->integer) {

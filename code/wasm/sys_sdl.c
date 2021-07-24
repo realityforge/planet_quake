@@ -43,9 +43,11 @@ static SDL_AudioDeviceID sdlPlaybackDevice;
 // TODO: krunker.io supports VOIP
 //#define USE_SDL_AUDIO_CAPTURE
 
+#ifdef USE_SDL_AUDIO_CAPTURE
 static SDL_AudioDeviceID sdlCaptureDevice;
 static cvar_t *s_sdlCapture;
 static float sdlMasterGain = 1.0f;
+#endif
 
 
 typedef enum {
@@ -340,7 +342,6 @@ static int GLW_SetMode( int mode, const char *modeFS, qboolean fullscreen, qbool
   for ( i = 0; i < 16; i++ )
   {
     int testColorBits, testDepthBits, testStencilBits;
-    int realColorBits[3];
 
     // 0 - default
     // 1 - minus colorBits
