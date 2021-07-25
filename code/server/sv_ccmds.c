@@ -170,6 +170,7 @@ static void SV_Map_f( void ) {
 
 	// bypass pure check so we can open downloaded map
 	FS_BypassPure();
+
 #ifdef USE_MEMORY_MAPS
   // TODO: make this asynchronous where the console and server waits for it to compile
   SV_MakeMap(map); // make the BSP and then it will load normally
@@ -189,8 +190,8 @@ static void SV_Map_f( void ) {
 			return;
 		}
 		// check if com_errorMessage, display it onscreen with
-    if(com_errorMessage && com_errorMessage->string[0] != "\0")
-		  SV_SendServerCommand(cl, "cp \"%s\"", com_errorMessage->string);
+    if(*Cvar_VariableString("com_errorMessage") != "\0")
+		  SV_SendServerCommand(NULL, "cp \"%s\"", Cvar_VariableString("com_errorMessage"));
 #else
 		Com_Printf("Error: Can't find map %s\n", expanded );
 		return;

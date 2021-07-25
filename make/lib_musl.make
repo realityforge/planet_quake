@@ -79,7 +79,7 @@ MUSL_LOBJ        := string/stpcpy.o  string/memset.o  string/memcpy.o    \
                     unistd/getpid.o unistd/getcwd.o unistd/readlink.o \
                     unistd/read.o   unistd/write.o  unistd/close.o \
                     unistd/lseek.o  unistd/pipe2.o  unistd/_exit.o \
-                    unistd/gethostname.o \
+                    unistd/gethostname.o unistd/pipe.o \
                     \
                     exit/assert.o exit/abort_lock.o exit/exit.o exit/_Exit.o \
 										exit/abort.o \

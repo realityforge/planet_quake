@@ -1422,14 +1422,38 @@ static char *SV_MakePlatform(vec3_t p1, vec3_t p2, vec3_t p3, vec3_t p4) {
 }
 
 
+/* Edge of Oblivion clone
+It would be cool if distance was a thing for this map, but with the 
+shutes and ladders making the platforms faster to traverse to weapons
+2 pyramids on either end, a pyramid has top platform, middle entrace,
+and bottom floor with a hole to fall out or a sidways jump pad that 
+bounces player back up to lowest platform
+
+Shutes should be 6 sided, span vertically and horizontally with 
+trigger_push, a couple of mover platforms in between
+
+Possible fog for distance, furthest pyramic is just barely visible, maybe 
+dark enough to hide in.
+
+Platforms in between can be ranom arrangement, similar code to maze except
+walls don't span the whole length, and that length determines the floor
+of the platform, walls are short and can be jumped like Edge of Oblivion
+Spans 3 floors that are each 2x height of pyramid
+
+Platform easter egg, must go through teleporter when moving platform is underneath
+otherwise teleporter goes into void
+
+
+*/
 static int SV_MakeShutesAndLadders() {
 	vec3_t  vs[2];
-	int cellWidth = 200;
-	int cellHeight = 200;
-	int m = 0;
-	int spacing = 200;
-	int totalWidth = 1000;
-	int totalHeight = 1000;
+  int offset = 0;
+	int rampWidth = 200;
+	int cellHeight = 6000;
+	int totalWidth = 12000;
+	int totalHeight = 12000;
+  int pyramidSize = 800;
+  int pyramicHeight = 2000;
 
 	// TODO: ramps and wind tunnels like Edge of Oblivion with different shaped pyramids and stuff in space
 	vs[0][0] = -(totalWidth / 2);
@@ -1438,12 +1462,136 @@ static int SV_MakeShutesAndLadders() {
 	vs[0][1] = -(totalHeight / 2);
 	vs[1][1] = +(totalHeight / 2);
 
-	vs[0][2] = -(2 * (cellWidth + spacing)) + m * (cellWidth + spacing);
-	vs[1][2] = vs[0][2] + cellHeight;
+	vs[0][2] = -cellHeight;
+	vs[1][2] = +cellHeight;
 
-	SV_MakePlatform(vs[0], vs[1], vs[0], vs[1]);
+	brushC = 0;
+	output[0] = '\0';
+	strcpy(output, "// Game: Quake 3\n"
+		"// Format: Quake3 (legacy)\n"
+		"// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n"
+		"\"_color\" \"1 1 1\"\n"
+		"\"message\" \"Shutes And Ladders\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+  );
+	offset += strlen(output);
 
-	return 0;
+Com_Printf("fucking damnit\n");
+  SV_SetStroke("sky1");
+	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+	offset += strlen(&output[offset]);
+  
+  // make a pyramid with 3 levels on both sides of the map
+  for(int i = 0; i < 2; i++) {
+    // make 4 sides top and bottom
+    int center[2];
+    if(i == 0) {
+      center[0] = -5000;
+      center[1] = -5000;
+    } else {
+      center[0] = 5000;
+      center[1] = 5000;
+    }
+    int offsets[16][2] = {
+      {center[0] - pyramidSize - 16, center[1] - pyramidSize},
+      {center[0] - pyramidSize - 16, center[1] + pyramidSize},
+      {center[0] - pyramidSize,      center[1] + pyramidSize},
+      {center[0] - pyramidSize,      center[1] - pyramidSize},
+
+      {center[0] - pyramidSize,      center[1] + pyramidSize},
+      {center[0] - pyramidSize,      center[1] + pyramidSize + 16},
+      {center[0] + pyramidSize,      center[1] + pyramidSize + 16},
+      {center[0] + pyramidSize,      center[1] + pyramidSize},
+      
+      {center[0] + pyramidSize,      center[1] - pyramidSize},
+      {center[0] + pyramidSize,      center[1] + pyramidSize},
+      {center[0] + pyramidSize + 16, center[1] + pyramidSize},
+      {center[0] + pyramidSize + 16, center[1] - pyramidSize},
+      
+      {center[0] - pyramidSize,      center[1] - pyramidSize - 16},
+      {center[0] - pyramidSize,      center[1] - pyramidSize},
+      {center[0] + pyramidSize,      center[1] - pyramidSize},
+      {center[0] + pyramidSize,      center[1] - pyramidSize - 16}
+    };
+    int centers[16][2] = {
+      {center[0] - 16,  center[1]},
+      {center[0] - 16,  center[1] + 16},
+      {center[0],       center[1] + 16},
+      {center[0],       center[1]},
+      
+      {center[0],       center[1]},
+      {center[0],       center[1] + 16},
+      {center[0] + 16,  center[1] + 16},
+      {center[0] + 16,  center[1]},
+      
+      {center[0],       center[1] - 16},
+      {center[0],       center[1]},
+      {center[0] + 16,  center[1]},
+      {center[0] + 16,  center[1] - 16},
+      
+      {center[0] - 16,  center[1] - 16},
+      {center[0] - 16,  center[1]},
+      {center[0],       center[1]},
+      {center[0],       center[1] - 16}
+    };
+    for(int s = 0; s < 16; s+=4) {
+      SV_SetStroke("cube1");
+      char *top = SV_MakeCube(
+        (vec3_t){centers[s+0][0], centers[s+0][1], pyramicHeight}, 
+        (vec3_t){centers[s+1][0], centers[s+1][1], pyramicHeight}, 
+        (vec3_t){centers[s+2][0], centers[s+2][1], pyramicHeight}, 
+        (vec3_t){centers[s+3][0], centers[s+3][1], pyramicHeight},
+
+        (vec3_t){offsets[s+0][0], offsets[s+0][1], 100}, 
+        (vec3_t){offsets[s+1][0], offsets[s+1][1], 100}, 
+        (vec3_t){offsets[s+2][0], offsets[s+2][1], 100}, 
+        (vec3_t){offsets[s+3][0], offsets[s+3][1], 100}
+      );
+      strcpy(&output[offset], top);
+      offset += strlen(&output[offset]);
+
+      char *bottom = SV_MakeCube(
+        (vec3_t){offsets[s+0][0], offsets[s+0][1], 0}, 
+        (vec3_t){offsets[s+1][0], offsets[s+1][1], 0}, 
+        (vec3_t){offsets[s+2][0], offsets[s+2][1], 0}, 
+        (vec3_t){offsets[s+3][0], offsets[s+3][1], 0},
+
+        (vec3_t){centers[s+0][0], centers[s+0][1], -pyramicHeight}, 
+        (vec3_t){centers[s+1][0], centers[s+1][1], -pyramicHeight}, 
+        (vec3_t){centers[s+2][0], centers[s+2][1], -pyramicHeight}, 
+        (vec3_t){centers[s+3][0], centers[s+3][1], -pyramicHeight}
+      );
+      strcpy(&output[offset], bottom);
+      offset += strlen(&output[offset]);
+    }
+  }
+
+  strcpy(&output[offset], "}\n");
+  offset += 2;
+
+	strcpy(&output[offset], 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+ 	offset += strlen(&output[offset]);
+
+  strcpy(&output[offset], 
+    va("{\n"
+    "\"classname\" \"info_player_start\"\n"
+    "\"origin\" \"%i %i %i\"\n"
+    "\"angle\" \"180\"\n"
+    "}\n", 1050, 550, 200));
+  offset += strlen(&output[offset]);
+
+	return offset;
 }
 
 
@@ -1530,7 +1678,7 @@ float CIEDE2000(double l1, double a1, double b1, double l2, double a2, double b2
 	}
 	/* Equation 11 */
 	double deltaHPrime = 2.0 * sqrt(CPrimeProduct) *
-	    sin(deltahPrime / 2.0);
+    sin(deltahPrime / 2.0);
 	
 	/*
 	 * Step 3
@@ -1555,18 +1703,18 @@ float CIEDE2000(double l1, double a1, double b1, double l2, double a2, double b2
 	}
 	/* Equation 15 */
 	double T = 1.0 - (0.17 * cos(barhPrime - deg2Rad(30.0))) +
-	    (0.24 * cos(2.0 * barhPrime)) +
-	    (0.32 * cos((3.0 * barhPrime) + deg2Rad(6.0))) - 
-	    (0.20 * cos((4.0 * barhPrime) - deg2Rad(63.0)));
+    (0.24 * cos(2.0 * barhPrime)) +
+    (0.32 * cos((3.0 * barhPrime) + deg2Rad(6.0))) - 
+    (0.20 * cos((4.0 * barhPrime) - deg2Rad(63.0)));
 	/* Equation 16 */
 	double deltaTheta = deg2Rad(30.0) *
-	    exp(-pow((barhPrime - deg2Rad(275.0)) / deg2Rad(25.0), 2.0));
+    exp(-pow((barhPrime - deg2Rad(275.0)) / deg2Rad(25.0), 2.0));
 	/* Equation 17 */
 	double R_C = 2.0 * sqrt(pow(barCPrime, 7.0) /
-	    (pow(barCPrime, 7.0) + pow25To7));
+    (pow(barCPrime, 7.0) + pow25To7));
 	/* Equation 18 */
 	double S_L = 1 + ((0.015 * pow(barLPrime - 50.0, 2.0)) /
-	    sqrt(20 + pow(barLPrime - 50.0, 2.0)));
+    sqrt(20 + pow(barLPrime - 50.0, 2.0)));
 	/* Equation 19 */
 	double S_C = 1 + (0.045 * barCPrime);
 	/* Equation 20 */
@@ -1575,34 +1723,34 @@ float CIEDE2000(double l1, double a1, double b1, double l2, double a2, double b2
 	double R_T = (-sin(2.0 * deltaTheta)) * R_C;
 	
 	/* Equation 22 */
-	double deltaE = sqrt(
-	    pow(deltaLPrime / (k_L * S_L), 2.0) +
-	    pow(deltaCPrime / (k_C * S_C), 2.0) +
-	    pow(deltaHPrime / (k_H * S_H), 2.0) + 
-	    (R_T * (deltaCPrime / (k_C * S_C)) * (deltaHPrime / (k_H * S_H))));
-	
+  double deltaE = sqrt(
+    pow(deltaLPrime / (k_L * S_L), 2.0) +
+    pow(deltaCPrime / (k_C * S_C), 2.0) +
+    pow(deltaHPrime / (k_H * S_H), 2.0) + 
+    (R_T * (deltaCPrime / (k_C * S_C)) * (deltaHPrime / (k_H * S_H))));
+
 	return (deltaE);
 }
 
 
 double F(double input) // function f(...), which is used for defining L, a and b changes within [4/29,1]
 {
-    if (input > 0.008856)
-        return (pow(input, 0.333333333)); // maximum 1
-    else
-        return ((841/108)*input + 4/29);  //841/108 = 29*29/36*16
+  if (input > 0.008856)
+    return (pow(input, 0.333333333)); // maximum 1
+  else
+    return ((841/108)*input + 4/29);  //841/108 = 29*29/36*16
 }
 
 
 void XYZtoLab(double X, double Y, double Z, double *L, double *a, double *b)
 {
   // TODO: make sure these are correct
-    const double Xo = 244.66128; // reference white
-    const double Yo = 255.0;
-    const double Zo = 277.63227;
-    *L = 116 * F(Y / Yo) - 16; // maximum L = 100
-    *a = 500 * (F(X / Xo) - F(Y / Yo)); // maximum 
-    *b = 200 * (F(Y / Yo) - F(Z / Zo));
+  const double Xo = 244.66128; // reference white
+  const double Yo = 255.0;
+  const double Zo = 277.63227;
+  *L = 116 * F(Y / Yo) - 16; // maximum L = 100
+  *a = 500 * (F(X / Xo) - F(Y / Yo)); // maximum 
+  *b = 200 * (F(Y / Yo) - F(Z / Zo));
 }
 
 
@@ -1643,21 +1791,21 @@ void rgb2lab(int R, int G, int B, double *L, double *a, double *b){
 
 qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
 {
-    if (l1[0] == r1[0] || l1[1] == r1[1] || l2[0] == r2[0]
-        || l2[1] == r2[1]) {
-        // the line cannot have positive overlap
-        return qfalse;
-    }
- 
-    // If one rectangle is on left side of other
-    if (l1[0] >= r2[0] || l2[0] >= r1[0])
-        return qfalse;
- 
-    // If one rectangle is above other
-    if (l1[1] >= r2[1] || l2[1] >= r1[1])
-        return qfalse;
- 
-    return qtrue;
+  if (l1[0] == r1[0] || l1[1] == r1[1] || l2[0] == r2[0]
+    || l2[1] == r2[1]) {
+    // the line cannot have positive overlap
+    return qfalse;
+  }
+
+  // If one rectangle is on left side of other
+  if (l1[0] >= r2[0] || l2[0] >= r1[0])
+    return qfalse;
+
+  // If one rectangle is above other
+  if (l1[1] >= r2[1] || l2[1] >= r1[1])
+    return qfalse;
+
+  return qtrue;
 }
 
 
@@ -1992,7 +2140,7 @@ static int SV_MakeMonacoF1() {
   } // a1
   
   
-  // make some buildings and side roads and barriers and z-height
+  // make some buildings and side roads and TODO: barriers and z-height
   int b, bx, by, bw, bh;
   for(b = 0; b < blockCount; b++) {
     bx = blockStack[b*2][0] * SCALE;
@@ -2027,7 +2175,7 @@ static int SV_MakeMonacoF1() {
   char *road;
   int x1, x2, x3, x4, y1, y2, y3, y4;
   float radians, length;
-  float nearestLength = 0x7FFFFFFF;
+  float nearestLength = (float)0x7FFFFFFF;
   qboolean alreadyAdded = qfalse;
   int i, j, k, n;
   for(i = 0; i < roadCount; i++) {
@@ -2038,9 +2186,9 @@ static int SV_MakeMonacoF1() {
     closeStack[0][1] = roadStack[i][1];
     for(j = 1; j < POINTS_SEG; j++) {
 
-      // TODO: find the closest point to any point on the line, making a longer line
+      // TODO: find the closest point to any other point on the line, making a longer line
       //   then use the long line instead of PATH_WIDTH * SCALE * 2 below
-      nearestLength = 0x7FFFFFFF;
+      nearestLength = (float)0x7FFFFFFF;
       for(k = 0; k < roadCount; k++) {
         alreadyAdded = qfalse;
         for(n = 0; n < j; n++) {
@@ -2052,12 +2200,13 @@ static int SV_MakeMonacoF1() {
         if(alreadyAdded) continue;
         length = sqrt(pow(closeStack[j-1][0] - roadStack[k][0], 2)
           + pow(closeStack[j-1][1] - roadStack[k][1], 2));
+          // TODO: make this PATH_WIDTH * 4 or something
         if(fabsf(length) < nearestLength && fabsf(length) < AREA_BLOCK * 2) {
           nearestLength = fabsf(length);
           nearestStack[j] = k;
         }
       }
-      if(nearestLength == 0x7FFFFFFF) {
+      if(nearestLength == (float)0x7FFFFFFF) {
         Com_Error(ERR_FATAL, "nothing this close!");
       }
       closeStack[j][0] = roadStack[nearestStack[j]][0];
@@ -2275,7 +2424,7 @@ static int SV_MakeMonacoF1() {
 
 
 // slice up a BSP and resave it without recompiling.
-void SV_SpliceBSP() {
+void SV_SpliceBSP(void) {
   
 }
 
@@ -2301,7 +2450,7 @@ int SV_MakeMap( char *memoryMap ) {
 		length = SV_MakeMonacoF1();
 	} else if (Q_stricmp(memoryMap, "test") == 0) {
     goto skipgenerate;
-	} {
+	} else {
     return 0;
   }
   
