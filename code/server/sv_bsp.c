@@ -12,6 +12,7 @@ static char stroke[MAX_QPATH] = "";
 static char output[4096 * 512] = "";
 static int brushC = 0;
 
+static qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2);
 
 static void SV_SetStroke( const char *path ) {
 	memcpy(stroke, path, sizeof(stroke));
@@ -1448,7 +1449,7 @@ otherwise teleporter goes into void
 static int SV_MakeShutesAndLadders() {
 	vec3_t  vs[2];
   int offset = 0;
-	int rampWidth = 200;
+	int rampWidth = 50;
 	int cellHeight = 6000;
 	int totalWidth = 12000;
 	int totalHeight = 12000;
@@ -1480,7 +1481,6 @@ static int SV_MakeShutesAndLadders() {
   );
 	offset += strlen(output);
 
-Com_Printf("fucking damnit\n");
   SV_SetStroke("sky1");
 	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
 	offset += strlen(&output[offset]);
@@ -1518,25 +1518,25 @@ Com_Printf("fucking damnit\n");
       {center[0] + pyramidSize,      center[1] - pyramidSize - 16}
     };
     int centers[16][2] = {
-      {center[0] - 16,  center[1]},
-      {center[0] - 16,  center[1] + 16},
-      {center[0],       center[1] + 16},
-      {center[0],       center[1]},
+      {center[0] - (pyramidSize / 2) - 16, center[1] - (pyramidSize / 2)},
+      {center[0] - (pyramidSize / 2) - 16, center[1] + (pyramidSize / 2)},
+      {center[0] - (pyramidSize / 2),      center[1] + (pyramidSize / 2)},
+      {center[0] - (pyramidSize / 2),      center[1] - (pyramidSize / 2)},
+
+      {center[0] - (pyramidSize / 2),      center[1] + (pyramidSize / 2)},
+      {center[0] - (pyramidSize / 2),      center[1] + (pyramidSize / 2) + 16},
+      {center[0] + (pyramidSize / 2),      center[1] + (pyramidSize / 2) + 16},
+      {center[0] + (pyramidSize / 2),      center[1] + (pyramidSize / 2)},
       
-      {center[0],       center[1]},
-      {center[0],       center[1] + 16},
-      {center[0] + 16,  center[1] + 16},
-      {center[0] + 16,  center[1]},
+      {center[0] + (pyramidSize / 2),      center[1] - (pyramidSize / 2)},
+      {center[0] + (pyramidSize / 2),      center[1] + (pyramidSize / 2)},
+      {center[0] + (pyramidSize / 2) + 16, center[1] + (pyramidSize / 2)},
+      {center[0] + (pyramidSize / 2) + 16, center[1] - (pyramidSize / 2)},
       
-      {center[0],       center[1] - 16},
-      {center[0],       center[1]},
-      {center[0] + 16,  center[1]},
-      {center[0] + 16,  center[1] - 16},
-      
-      {center[0] - 16,  center[1] - 16},
-      {center[0] - 16,  center[1]},
-      {center[0],       center[1]},
-      {center[0],       center[1] - 16}
+      {center[0] - (pyramidSize / 2),      center[1] - (pyramidSize / 2) - 16},
+      {center[0] - (pyramidSize / 2),      center[1] - (pyramidSize / 2)},
+      {center[0] + (pyramidSize / 2),      center[1] - (pyramidSize / 2)},
+      {center[0] + (pyramidSize / 2),      center[1] - (pyramidSize / 2) - 16}
     };
     for(int s = 0; s < 16; s+=4) {
       SV_SetStroke("cube1");
@@ -1569,9 +1569,250 @@ Com_Printf("fucking damnit\n");
       offset += strlen(&output[offset]);
     }
   }
+  
+  // TODO: add a small maze inside 2 floors of the pyramid for extra fun 
+  //   spawning and collecting weapons
+  
+  
+  // there is basically 8,000 units between both pyramids,
+  //   8,000 / 4 = 2,000 / 5 = 400
+  // randomize 1 - 25 possible x/y positions, repeat 16 times for each quadrant
+  // connect platforms randomly, until every position has at least 1 connection
+  //   guaruntee that ramp to platforms on different heights do not exceed
+  //   a specific incline
+  /* too many platforms, too small
+  for(int qx = 0; qx < 4; qx++) { // x * 2000
+    for(int qy = 0; qy < 4; qy++) { // y * 2000
+      
+      for(int i = 0; i < 4; i++) {
+        int spotX = rand() % 5;
+        int spotY = rand() % 5;
+        int spotZ = rand() % 5;
+
+        // TODO: make platform
+        char *platform = SV_MakeCube(
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 - 100,      -3800 + qy * 2000 + spotY * 400 - 100,      -200 + spotZ * 100 + 64}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 - 100,      -3800 + qy * 2000 + spotY * 400 + 100,      -200 + spotZ * 100 + 64}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 + 100,      -3800 + qy * 2000 + spotY * 400 + 100,      -200 + spotZ * 100 + 64}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 + 100,      -3800 + qy * 2000 + spotY * 400 - 100,      -200 + spotZ * 100 + 64},
+
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 - 100 + 32, -3800 + qy * 2000 + spotY * 400 - 100 + 32, -200 + spotZ * 100}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 - 100 + 32, -3800 + qy * 2000 + spotY * 400 + 100 - 32, -200 + spotZ * 100}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 + 100 - 32, -3800 + qy * 2000 + spotY * 400 + 100 - 32, -200 + spotZ * 100}, 
+          (vec3_t){-3800 + qx * 2000 + spotX * 400 + 100 - 32, -3800 + qy * 2000 + spotY * 400 - 100 + 32, -200 + spotZ * 100}
+        );
+        strcpy(&output[offset], platform);
+        offset += strlen(&output[offset]);
+      }
+
+    }
+  }
+  */
+  
+  int numPlatforms = 10;
+  vec4_t *platStack = Z_Malloc(numPlatforms * sizeof(vec4_t));
+  vec3_t (*rampStack)[4] = Z_Malloc(numPlatforms * 3 * sizeof(vec3_t[4]));
+  int numRamps = 0;
+  qboolean (*platSides)[4] = Z_Malloc(numPlatforms * sizeof(qboolean[4]));
+  memset(platSides, qfalse, numPlatforms * sizeof(qboolean[4]));
+
+  for(int i = 0; i < numPlatforms; i++) {
+    int safety = 10;
+    int spotX;
+    int spotY;
+    int spotZ;
+    int size = rand() % 5;
+    qboolean found;
+    do {
+      spotX = rand() % 8;
+      spotY = rand() % 8;
+      spotZ = rand() % 8;
+      found = qfalse;
+      // prevent duplicate platforms
+      for(int j = 0; j < i; j++) {
+        if(platStack[j][0] == spotX
+          && platStack[j][1] == spotY
+          && platStack[j][2] == spotZ) {
+          found = qtrue;
+          break;
+        }
+      }
+    } while (--safety > 0 && !found);
+    if(found) { continue; }
+    platStack[i][0] = spotX;
+    platStack[i][1] = spotY;
+    platStack[i][2] = spotZ;
+    platStack[i][3] = size;
+
+    platSides[i][0] = qtrue;
+    platSides[i][1] = qtrue;
+    platSides[i][2] = qtrue;
+    platSides[i][3] = qtrue;
+
+    // TODO: make platform
+    SV_SetStroke("cube2");
+    char *platform = SV_MakeCube(
+      (vec3_t){-3800 + spotX * 1000 - size*150,      -3800 + spotY * 1000 - size*150,      -600 + spotZ * 200 + 64}, 
+      (vec3_t){-3800 + spotX * 1000 - size*150,      -3800 + spotY * 1000 + size*150,      -600 + spotZ * 200 + 64}, 
+      (vec3_t){-3800 + spotX * 1000 + size*150,      -3800 + spotY * 1000 + size*150,      -600 + spotZ * 200 + 64}, 
+      (vec3_t){-3800 + spotX * 1000 + size*150,      -3800 + spotY * 1000 - size*150,      -600 + spotZ * 200 + 64},
+
+      (vec3_t){-3800 + spotX * 1000 - size*150 + 32, -3800 + spotY * 1000 - size*150 + 32, -600 + spotZ * 200}, 
+      (vec3_t){-3800 + spotX * 1000 - size*150 + 32, -3800 + spotY * 1000 + size*150 - 32, -600 + spotZ * 200}, 
+      (vec3_t){-3800 + spotX * 1000 + size*150 - 32, -3800 + spotY * 1000 + size*150 - 32, -600 + spotZ * 200}, 
+      (vec3_t){-3800 + spotX * 1000 + size*150 - 32, -3800 + spotY * 1000 - size*150 + 32, -600 + spotZ * 200}
+    );
+    strcpy(&output[offset], platform);
+    offset += strlen(&output[offset]);
+  }
+
+  // top, right, bottom, left like CSS
+  int sideOffsets[4][2] = {
+    {0, 1},
+    {1, 0},
+    {0, -1},
+    {-1, 0}
+  };
+
+  for(int i = 0; i < numPlatforms; i++) {
+    // connect every platform to one other platform, 
+    //   provided the ramp does not exceed 30degree incline and the side
+    //   of the platform is facing and not connecting to another platform
+    // find closest instead?
+    // measure length between the centers of all 4 sides to find the closest
+    qboolean found = qfalse;
+    int safety = 10;
+    do {
+      int plat = rand() % numPlatforms;
+      float nearestLength = (float)0x7FFFFFFF;
+      int nearestSide1 = -1;
+      int nearestSide2 = -1;
+      float length;
+      for(int s1 = 0; s1 < 4; s1++) {
+        for(int s2 = 0; s2 < 4; s2++) {
+          length = sqrt(pow((platStack[plat][0] + sideOffsets[s2][0] * platStack[plat][3]) - (platStack[i][0] + sideOffsets[s1][0] * platStack[i][3]), 2)
+                      + pow((platStack[plat][1] + sideOffsets[s2][1] * platStack[plat][3]) - (platStack[i][1] + sideOffsets[s1][1] * platStack[i][3]), 2));
+          if(length < nearestLength) {
+            nearestSide1 = s1;
+            nearestSide2 = s2;
+            nearestLength = length;
+          }
+        }
+      }
+      if(nearestSide1 == -1 || nearestSide2 == -1
+        || platSides[plat][nearestSide2] == qfalse // side already used, not going to work
+        || platSides[i][nearestSide1] == qfalse
+        || fabsf(length) / fabsf(platStack[plat][2] - platStack[i][2]) > 1.75) {
+        continue;
+      }
+
+      // make 0/1/2 corners to connect the 2 platforms
+      // calculate which direction the ramps and corner need to be
+      //   from selected sides
+      /*
+            +---+
+            |   |---+
+            +---+   |
+                    |
+                    |
+                    |   +---+
+                    +---|   |
+                        +---+
+      */
+      int numSegments = 0;
+      if(nearestSide1 % 2 == nearestSide2 % 2) {
+        // are the platforms in line with each other in some direction?
+        if(platStack[plat][0] == platStack[i][0]
+          || platStack[plat][1] == platStack[i][1]) {
+          numSegments = 1;
+        } else {
+          numSegments = 3;
+        }
+      } else {
+        numSegments = 2;
+      }
+      
+      if(nearestSide1 % 2 == 0) {
+        // x's
+        rampStack[numRamps][0][0] =
+        rampStack[numRamps][1][0] = -rampWidth + platStack[i][0]; // always 0: + sideOffsets[s1][4] * platSides[s1][0];
+        rampStack[numRamps][2][0] =
+        rampStack[numRamps][3][0] = rampWidth + platStack[i][0]; // always 0:  + sideOffsets[s1][4] * platSides[s1][0];
+        // y's
+        rampStack[numRamps][0][1] = 
+        rampStack[numRamps][3][1] = platStack[i][1] + platStack[i][3] * sideOffsets[nearestSide1][1];
+        rampStack[numRamps][1][1] =
+        rampStack[numRamps][2][1] = platStack[plat][1] + platStack[plat][3] * sideOffsets[nearestSide2][1];
+        // z's
+      } else {
+      }
+
+      // add both lengths together to calculate slope, then take percent of
+      //   of length over entire delta-Z for height of corner
+
+      // make sure we don't accidentally run in to any other platforms
+      qboolean intereferes = qfalse;
+      for(int s = 0; s < numSegments; s++) {
+        for(int j = 0; j < numPlatforms; j++) {
+          if(j == i || j == plat) continue;
+          if(isOverlapping((vec2_t){rampStack[numRamps + s][0][0], rampStack[numRamps + s][0][1]},
+                           (vec2_t){rampStack[numRamps + s][2][0], rampStack[numRamps + s][2][1]},
+                           (vec2_t){platStack[j][0] - platStack[j][3], platStack[j][1] - platStack[j][3]},
+                           (vec2_t){platStack[j][0] + platStack[j][3], platStack[j][1] + platStack[j][3]})) {
+            intereferes = qtrue;
+            break;
+          }
+        }
+        if(intereferes) {
+          break;
+        }
+        // check if it interferes with other ramps
+        for(int j = 0; j < numRamps; j++) {
+          if(isOverlapping((vec2_t){rampStack[numRamps + s][0][0], rampStack[numRamps + s][0][1]},
+                           (vec2_t){rampStack[numRamps + s][2][0], rampStack[numRamps + s][2][1]},
+                           (vec2_t){rampStack[j][0][0], rampStack[j][0][1]},
+                           (vec2_t){rampStack[j][3][0], rampStack[j][3][1]})) {
+            intereferes = qtrue;
+            break;
+          }
+        }
+        if(intereferes) {
+          break;
+        }
+      }
+      if(intereferes) { continue; }
+
+      SV_SetStroke("cube3");
+      for(int s = numRamps; s < numRamps + numSegments; s++) {
+        char *platform = SV_MakeCube(
+          (vec3_t){rampStack[s][0][0], rampStack[s][0][1], rampStack[s][0][2] + 16},
+          (vec3_t){rampStack[s][1][0], rampStack[s][1][1], rampStack[s][1][2] + 16},
+          (vec3_t){rampStack[s][2][0], rampStack[s][2][1], rampStack[s][2][2] + 16},
+          (vec3_t){rampStack[s][3][0], rampStack[s][3][1], rampStack[s][3][2] + 16},
+
+          (vec3_t){rampStack[s][0][0], rampStack[s][0][1], rampStack[s][0][2]},
+          (vec3_t){rampStack[s][1][0], rampStack[s][1][1], rampStack[s][1][2]},
+          (vec3_t){rampStack[s][2][0], rampStack[s][2][1], rampStack[s][2][2]},
+          (vec3_t){rampStack[s][3][0], rampStack[s][3][1], rampStack[s][3][2]}
+        );
+        strcpy(&output[offset], platform);
+        offset += strlen(&output[offset]);
+      }
+
+      numRamps += numSegments;
+
+    } while (--safety > 0 && !found);
+    if(!found) { continue; }
+
+  }
+  
 
   strcpy(&output[offset], "}\n");
   offset += 2;
+
+  Z_Free(platStack);
+  Z_Free(platSides);
+  Z_Free(rampStack);
 
 	strcpy(&output[offset], 
 		va("{\n"
@@ -1789,7 +2030,7 @@ void rgb2lab(int R, int G, int B, double *L, double *a, double *b){
 
 
 
-qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
+static qboolean isOverlapping(vec2_t l1, vec2_t r1, vec2_t l2, vec2_t r2)
 {
   if (l1[0] == r1[0] || l1[1] == r1[1] || l2[0] == r2[0]
     || l2[1] == r2[1]) {
