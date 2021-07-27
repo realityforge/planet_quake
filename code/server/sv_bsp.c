@@ -261,7 +261,7 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 
 		
 		vec3_t  wallMap[48] = {
-			
+			// top 
 			{min[0] + x1, min[1] + y1, min[2]},
 			{min[0] + x2, min[1] + y2, min[2]},
 			{min[0] + x3, min[1] + y3, min[2]},
@@ -272,16 +272,18 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x3, min[1] + y3, min[2] + thickness}, 
 			{min[0] + x4, min[1] + y4, min[2] + thickness},
 
+      // west
 			{min[0] + thickness, min[1] + x4, min[2] + y4},
-			{min[0],      min[1] + x4, min[2] + y4},
-			{min[0],      min[1] + x3, min[2] + y3},
+			{min[0],             min[1] + x4, min[2] + y4},
+			{min[0],             min[1] + x3, min[2] + y3},
 			{min[0] + thickness, min[1] + x3, min[2] + y3},
 
 			{min[0] + thickness, min[1] + x1, min[2] + y1}, 
-			{min[0],      min[1] + x1, min[2] + y1}, 
-			{min[0],      min[1] + x2, min[2] + y2}, 
+			{min[0],             min[1] + x1, min[2] + y1}, 
+			{min[0],             min[1] + x2, min[2] + y2}, 
 			{min[0] + thickness, min[1] + x2, min[2] + y2},
 
+      // south
 			{min[0] + x1, min[1] + thickness, min[2] + y1}, 
 			{min[0] + x2, min[1] + thickness, min[2] + y2}, 
 			{min[0] + x3, min[1] + thickness, min[2] + y3}, 
@@ -292,7 +294,7 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x3, min[1], min[2] + y3}, 
 			{min[0] + x4, min[1], min[2] + y4},
 			
-			
+			// bottom 
 			{min[0] + x1, min[1] + y1, max[2] - thickness},
 			{min[0] + x2, min[1] + y2, max[2] - thickness},
 			{min[0] + x3, min[1] + y3, max[2] - thickness},
@@ -303,6 +305,7 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{min[0] + x3, min[1] + y3, max[2]}, 
 			{min[0] + x4, min[1] + y4, max[2]},
 
+      // east
 			{max[0] - thickness, min[1] + x1, min[2] + y1},
 			{max[0] - thickness, min[1] + x2, min[2] + y2},
 			{max[0] - thickness, min[1] + x3, min[2] + y3},
@@ -313,6 +316,7 @@ static char *SV_MakePortal( float radius, vec3_t min, vec3_t max, int minSegment
 			{max[0], min[1] + x3, min[2] + y3}, 
 			{max[0], min[1] + x4, min[2] + y4},
 
+      // north
 			{min[0] + x1, max[1], min[2] + y1}, 
 			{min[0] + x2, max[1], min[2] + y2}, 
 			{min[0] + x3, max[1], min[2] + y3}, 
@@ -1454,6 +1458,264 @@ static void SV_FlipVertical(vec3_t *flip) {
 }
 
 
+static int SV_MakeAtlantis() {
+  vec3_t  vs[2];
+  int offset = 0;
+  int cellHeight = 6000;
+	int totalWidth = 12000;
+	int totalHeight = 12000;
+
+	// TODO: ramps and wind tunnels like Edge of Oblivion with different shaped pyramids and stuff in space
+	vs[0][0] = -(totalWidth / 2);
+	vs[1][0] = +(totalWidth / 2);
+
+	vs[0][1] = -(totalHeight / 2);
+	vs[1][1] = +(totalHeight / 2);
+
+	vs[0][2] = -cellHeight;
+	vs[1][2] = +cellHeight;
+
+	brushC = 0;
+	output[0] = '\0';
+	strcpy(output, "// Game: Quake 3\n"
+		"// Format: Quake3 (legacy)\n"
+		"// entity 0\n"
+		"{\n"
+		"\"classname\" \"worldspawn\"\n"
+		"\"_color\" \"1 1 1\"\n"
+		"\"message\" \"Shutes And Ladders\"\n"
+		"\"_keepLights\" \"1\"\n"
+		"\"_ambient\" \"10\"\n"
+		"\"gridsize\" \"512.0 512.0 512.0\"\n"
+  );
+	offset += strlen(output);
+
+  SV_SetStroke("sky1");
+	strcpy(&output[offset], SV_MakeBox(vs[0], vs[1]));
+	offset += strlen(&output[offset]);
+  
+  // make water sphere
+  /*
+  SV_SetStroke("liquids/clear_calm1");
+  char *top = SV_MakeCube(
+    (vec3_t){-500, -500,  500}, 
+    (vec3_t){-500,  500,  500}, 
+    (vec3_t){ 500,  500,  500}, 
+    (vec3_t){ 500, -500,  500},
+
+    (vec3_t){-500, -500, -500}, 
+    (vec3_t){-500,  500, -500}, 
+    (vec3_t){ 500,  500, -500}, 
+    (vec3_t){ 500, -500, -500}
+  );
+  strcpy(&output[offset], top);
+  offset += strlen(&output[offset]);
+  */
+  int radius = 1000;
+  int thickness = 4000;
+  int splits = 16.0;
+  int roundOffset = floor(splits / 8.0);
+  float splitsPerSide = splits / 4.0; // sides
+  float angle = 360.0 / splits;
+  for(int i = -roundOffset; i < roundOffset /* ceil(splits - roundOffset) */; i++) {
+    for(int zi = -roundOffset; zi < roundOffset; zi++) {
+      float x1 = radius * sin(M_PI * 2.0 * (angle * i) / 360.0);
+      float y1 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * i) / 360.0)) + radius;
+      float x4 = radius * sin(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0);
+      float y4 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0)) + radius;
+      
+      float x2 = (thickness + radius) * sin(M_PI * 2.0 * (angle * i) / 360.0);
+      float y2 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * i) / 360.0)) + thickness + radius;
+      float x3 = (thickness + radius) * sin(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0);
+      float y3 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0)) + thickness + radius;
+
+      //float z1 = radius * sin(M_PI * 2.0 * (angle * zi) / 360.0);
+      //float z4 = radius * sin(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0);
+      //float z2 = (thickness + radius) * sin(M_PI * 2.0 * (angle * zi) / 360.0);
+      //float z3 = (thickness + radius) * sin(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0);
+      float z1 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * zi) / 360.0)) + radius;
+      float z4 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0)) + radius;
+      float z2 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * zi) / 360.0)) + thickness + radius;
+      float z3 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0)) + thickness + radius;
+
+      // swap some corners so the cube is always built the right way
+      /*
+      if(i >= (splitsPerSide * 3.0 - roundOffset)) {
+        x3 = x2;
+        y3 = y2;
+        x2 = x1;
+        y2 = y1;
+        x1 = 
+        y1 = 
+        x4 = 
+        y4 = 
+      } else if(i >= (splitsPerSide * 2.0 - roundOffset)) {
+        x3 = x1;
+        y3 = y1;
+        x4 = x2;
+        y4 = y2;
+        x1 = 
+        y1 = 
+        x2 = 
+        y2 = 
+      } else if(i >= (splitsPerSide - roundOffset)) {
+        x4 = x1;
+        y4 = y1;
+        x1 = x2;
+        y1 = y2;
+        x3 = 
+        y3 = 
+        x2 = 
+        y2 = 
+      }
+      */
+      
+
+      SV_SetStroke("liquids/clear_calm1");
+      char *bottomRight = SV_MakeCube(
+        (vec3_t){x1, y1, 100}, 
+        (vec3_t){x2, y2, 100}, 
+        (vec3_t){x3, y3, 100}, 
+        (vec3_t){x4, y4, 100},
+
+        (vec3_t){x1, y1, 0}, 
+        (vec3_t){x2, y2, 0}, 
+        (vec3_t){x3, y3, 0}, 
+        (vec3_t){x4, y4, 0}
+      );
+      strcpy(&output[offset], bottomRight);
+      offset += strlen(&output[offset]);
+
+      SV_SetStroke("liquids/clear_calm1");
+      char *horizontal = SV_MakeCube(
+        (vec3_t){x2, 0,   z2}, 
+        (vec3_t){x2, 100, z2}, 
+        (vec3_t){x3, 100, z3}, 
+        (vec3_t){x3, 0,   z3},
+
+        (vec3_t){x1, 0,   z1}, 
+        (vec3_t){x1, 100, z1}, 
+        (vec3_t){x4, 100, z4}, 
+        (vec3_t){x4, 0,   z4}
+      );
+      strcpy(&output[offset], horizontal);
+      offset += strlen(&output[offset]);
+
+      SV_SetStroke("liquids/clear_calm1");
+      char *verticle = SV_MakeCube(
+        (vec3_t){0,   x2, z2}, 
+        (vec3_t){0,   x3, z3}, 
+        (vec3_t){100, x3, z3}, 
+        (vec3_t){100, x2, z2},
+
+        (vec3_t){0,   x1, z1}, 
+        (vec3_t){0,   x4, z4}, 
+        (vec3_t){100, x4, z4}, 
+        (vec3_t){100, x1, z1}
+      );
+      strcpy(&output[offset], verticle);
+      offset += strlen(&output[offset]);
+
+#if 0
+      SV_SetStroke("cube1");
+      char *bottomRight = SV_MakeCube(
+        (vec3_t){x1,    y1,    100}, 
+        (vec3_t){x1,    y1+32, 100}, 
+        (vec3_t){x1+32, y1+32, 100}, 
+        (vec3_t){x1+32, y1,    100},
+
+        (vec3_t){x1,    y1,    0}, 
+        (vec3_t){x1,    y1+32, 0}, 
+        (vec3_t){x1+32, y1+32, 0}, 
+        (vec3_t){x1+32, y1,    0}
+      );
+      strcpy(&output[offset], bottomRight);
+      offset += strlen(&output[offset]);
+      SV_SetStroke("cube2");
+      char *topRight = SV_MakeCube(
+        (vec3_t){x2,    thickness + y2,    100}, 
+        (vec3_t){x2,    thickness + y2+32, 100}, 
+        (vec3_t){x2+32, thickness + y2+32, 100}, 
+        (vec3_t){x2+32, thickness + y2,    100},
+
+        (vec3_t){x2,    thickness + y2,    0}, 
+        (vec3_t){x2,    thickness + y2+32, 0}, 
+        (vec3_t){x2+32, thickness + y2+32, 0}, 
+        (vec3_t){x2+32, thickness + y2,    0}
+      );
+      strcpy(&output[offset], topRight);
+      offset += strlen(&output[offset]);
+      SV_SetStroke("cube3");
+      char *topLeft = SV_MakeCube(
+        (vec3_t){x3-32, thickness + y3-32, 100}, 
+        (vec3_t){x3-32, thickness + y3,    100}, 
+        (vec3_t){x3,    thickness + y3,    100}, 
+        (vec3_t){x3,    thickness + y3-32, 100},
+
+        (vec3_t){x3-32, thickness + y3-32, 0}, 
+        (vec3_t){x3-32, thickness + y3,    0}, 
+        (vec3_t){x3,    thickness + y3,    0}, 
+        (vec3_t){x3,    thickness + y3-32, 0}
+      );
+      strcpy(&output[offset], topLeft);
+      offset += strlen(&output[offset]);
+      SV_SetStroke("cube4");
+      char *bottomLeft = SV_MakeCube(
+        (vec3_t){x4-32, y4-32, 100}, 
+        (vec3_t){x4-32, y4,    100}, 
+        (vec3_t){x4,    y4,    100}, 
+        (vec3_t){x4,    y4-32, 100},
+
+        (vec3_t){x4-32, y4-32, 0}, 
+        (vec3_t){x4-32, y4,    0}, 
+        (vec3_t){x4,    y4,    0}, 
+        (vec3_t){x4,    y4-32, 0}
+      );
+      strcpy(&output[offset], bottomLeft);
+      offset += strlen(&output[offset]);
+#endif
+    }
+  }
+
+  SV_SetStroke("cube3");
+  char *centerPlat = SV_MakeCube(
+    (vec3_t){-100, -100, 16},
+    (vec3_t){-100,  100, 16},
+    (vec3_t){ 100,  100, 16},
+    (vec3_t){ 100, -100, 16},
+
+    (vec3_t){-100, -100, 0},
+    (vec3_t){-100,  100, 0},
+    (vec3_t){ 100,  100, 0},
+    (vec3_t){ 100, -100, 0}
+  );
+  strcpy(&output[offset], centerPlat);
+  offset += strlen(&output[offset]);
+
+  strcpy(&output[offset], "}\n");
+  offset += 2;
+
+	strcpy(&output[offset], 
+		va("{\n"
+		"\"classname\" \"misc_skybox\"\n"
+		"\"origin\" \"%i %i %i\"\n"
+		"}\n", 
+		 (int)(vs[1][0] - 64),
+		 (int)(vs[1][1] - 64),
+		 (int)(vs[1][2] - 64)));
+ 	offset += strlen(&output[offset]);
+
+  strcpy(&output[offset], 
+    va("{\n"
+    "\"classname\" \"info_player_start\"\n"
+    "\"origin\" \"%i %i %i\"\n"
+    "\"angle\" \"180\"\n"
+    "}\n", 0, 0, 100));
+  offset += strlen(&output[offset]);
+
+	return offset;
+}
+
 /* Edge of Oblivion clone
 It would be cool if distance was a thing for this map, but with the 
 shutes and ladders making the platforms faster to traverse to weapons
@@ -1640,28 +1902,37 @@ static int SV_MakeShutesAndLadders() {
   }
   */
   
-  int numPlatforms = 16;
-  vec4_t *platStack = Z_Malloc(numPlatforms * sizeof(vec4_t));
-  vec3_t *rampStack = Z_Malloc(numPlatforms * 12 * sizeof(vec3_t));
+  int totalPlatforms = 30;
+  vec4_t *platStack = Z_Malloc(totalPlatforms * sizeof(vec4_t));
+  int numPlatforms = 2;
+  platStack[0][0] = -5000;
+  platStack[0][1] = -5000;
+  platStack[0][2] = 0;
+  platStack[0][3] = pyramidSize;
+  platStack[1][0] = 5000;
+  platStack[1][1] = 5000;
+  platStack[1][2] = 0;
+  platStack[1][3] = pyramidSize;
+  vec3_t *rampStack = Z_Malloc(totalPlatforms * 12 * sizeof(vec3_t));
   int numRamps = 0;
-  qboolean *platSides = Z_Malloc(numPlatforms * 4 * sizeof(qboolean));
-  memset(platSides, qfalse, numPlatforms * sizeof(qboolean[4]));
+  qboolean *platSides = Z_Malloc(totalPlatforms * 4 * sizeof(qboolean));
+  memset(platSides, qfalse, totalPlatforms * sizeof(qboolean[4]));
 
-  for(int i = 0; i < numPlatforms; i++) {
+  for(int i = numPlatforms; i < totalPlatforms; i++) {
     int safety = 10;
     int spotX;
     int spotY;
     int spotZ;
-    int size = (rand() % 5 + 1) * 150;
+    int size = (rand() % 8 + 3) * 50;
     qboolean found = qfalse;
     do {
-      spotX = -4000 + (rand() % 15 + 1) * 500;
-      spotY = -4000 + (rand() % 15 + 1) * 500;
+      spotX = -6000 + (rand() % 7 + 1) * 1500;
+      spotY = -6000 + (rand() % 7 + 1) * 1500;
       spotZ = -500  + (rand() % 10) * 200;
       found = qfalse;
       // prevent duplicate platforms
-      for(int j = 0; j < i; j++) {
-        if( // platStack[j][2] == spotZ &&
+      for(int j = 0; j < numPlatforms; j++) {
+        if((j < 2 || platStack[j][2] == spotZ) &&
           isOverlapping((vec2_t){spotX - size, spotY - size},
                         (vec2_t){spotX + size, spotY + size},
                         (vec2_t){platStack[j][0] - platStack[j][3], platStack[j][1] - platStack[j][3]},
@@ -1700,6 +1971,8 @@ static int SV_MakeShutesAndLadders() {
     );
     strcpy(&output[offset], platform);
     offset += strlen(&output[offset]);
+    
+    numPlatforms++;
   }
 
   // top, right, bottom, left like CSS
@@ -1716,6 +1989,13 @@ static int SV_MakeShutesAndLadders() {
     //   of the platform is facing and not connecting to another platform
     // find closest instead?
     // measure length between the centers of all 4 sides to find the closest
+    
+    
+    
+    /*
+    // Doesn't work to choose random, need to be more exhaustive,
+    //   then optimize by least number of removals of cross-overs
+
     qboolean found = qfalse;
     int safety = 10;
     do {
@@ -1748,6 +2028,7 @@ static int SV_MakeShutesAndLadders() {
         Com_Printf("WARNING: skipping, ramp too steep rise: %f over run: %f.\n", fabsf(rise), fabsf(length));
         continue;
       }
+      */
 
       // make 0/1/2 corners to connect the 2 platforms
       // calculate which direction the ramps and corner need to be
@@ -1762,6 +2043,7 @@ static int SV_MakeShutesAndLadders() {
                     +---|   |
                         +---+
       */
+      /*
       int numSegments = 0;
       if(nearestSide1 % 2 == nearestSide2 % 2) {
         // are the platforms in line with each other in some direction?
@@ -1892,7 +2174,7 @@ static int SV_MakeShutesAndLadders() {
 
     } while (--safety > 0 && !found);
     if(!found) { continue; }
-
+    */
   }
   
 
@@ -2778,6 +3060,8 @@ int SV_MakeMap( char *memoryMap ) {
 		length = SV_MakeShutesAndLadders();
 	} else if (Q_stricmp(memoryMap, "megaf1") == 0) {
 		length = SV_MakeMonacoF1();
+	} else if (Q_stricmp(memoryMap, "megalantis") == 0) {
+		length = SV_MakeAtlantis();
 	} else if (Q_stricmp(memoryMap, "test") == 0) {
     goto skipgenerate;
 	} else {
