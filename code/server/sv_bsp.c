@@ -1511,15 +1511,26 @@ static int SV_MakeAtlantis() {
   strcpy(&output[offset], top);
   offset += strlen(&output[offset]);
   */
+  
   int radius = 1000;
   int thickness = 4000;
   int splits = 16.0;
   int roundOffset = floor(splits / 8.0);
   float splitsPerSide = splits / 4.0; // sides
   float angle = 360.0 / splits;
-  for(int i = -roundOffset; i < roundOffset /* ceil(splits - roundOffset) */; i++) {
-    for(int zi = -roundOffset; zi < roundOffset; zi++) {
-      float x1 = radius * sin(M_PI * 2.0 * (angle * i) / 360.0);
+  for(int i = -roundOffset; i < ceil(splits - roundOffset); i++) {
+    for(int zi = -roundOffset; zi < ceil(splits - roundOffset); zi++) {
+      float lat = M_PI * 2.0 * (angle * i) / 360.0;
+      float lon = M_PI * 2.0 * (angle * zi) / 360.0;
+      vec3_t v1 = {
+        radius * cos(lat) * sin(lon),
+        -radius * cos(lat) * cos(lon) + radius,
+        radius * sin(lat)
+      };
+
+      /*
+      close but not quite right
+      float x1 = radius * sin();
       float y1 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * i) / 360.0)) + radius;
       float x4 = radius * sin(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0);
       float y4 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * (i + 1.0)) / 360.0)) + radius;
@@ -1537,7 +1548,8 @@ static int SV_MakeAtlantis() {
       float z4 = -radius * (1.0 - cos(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0)) + radius;
       float z2 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * zi) / 360.0)) + thickness + radius;
       float z3 = (-thickness - radius) * (1.0 - cos(M_PI * 2.0 * (angle * (zi + 1.0)) / 360.0)) + thickness + radius;
-
+      */
+      
       // swap some corners so the cube is always built the right way
       /*
       if(i >= (splitsPerSide * 3.0 - roundOffset)) {
@@ -1571,6 +1583,7 @@ static int SV_MakeAtlantis() {
       */
       
 
+      /*
       SV_SetStroke("liquids/clear_calm1");
       char *bottomRight = SV_MakeCube(
         (vec3_t){x1, y1, 100}, 
@@ -1614,6 +1627,21 @@ static int SV_MakeAtlantis() {
         (vec3_t){100, x1, z1}
       );
       strcpy(&output[offset], verticle);
+      offset += strlen(&output[offset]);
+      */
+      SV_SetStroke("cube1");
+      char *bottomRight = SV_MakeCube(
+        (vec3_t){v1[0],    v1[1],    v1[2]+32},
+        (vec3_t){v1[0],    v1[1]+32, v1[2]+32},
+        (vec3_t){v1[0]+32, v1[1]+32, v1[2]+32},
+        (vec3_t){v1[0]+32, v1[1],    v1[2]+32},
+
+        (vec3_t){v1[0],    v1[1],    v1[2]}, 
+        (vec3_t){v1[0],    v1[1]+32, v1[2]}, 
+        (vec3_t){v1[0]+32, v1[1]+32, v1[2]}, 
+        (vec3_t){v1[0]+32, v1[1],    v1[2]}
+      );
+      strcpy(&output[offset], bottomRight);
       offset += strlen(&output[offset]);
 
 #if 0
