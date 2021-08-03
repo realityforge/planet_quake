@@ -1513,21 +1513,18 @@ static int SV_MakeAtlantis() {
   */
   
   int radius = 1000;
-  int thickness = 4000;
+  int thickness = 2000;
   int splits = 16.0;
   int roundOffset = floor(splits / 8.0);
   float splitsPerSide = splits / 4.0; // sides
   float angle = 360.0 / splits;
-  for(int i = -roundOffset; i < ceil(splits - roundOffset); i++) {
+  for(int i = -roundOffset; i < splitsPerSide + roundOffset; i++) {
     for(int zi = -roundOffset; zi < ceil(splits - roundOffset); zi++) {
+      // source: https://math.stackexchange.com/questions/989900/calculate-x-y-z-from-two-specific-degrees-on-a-sphere
       float lat = M_PI * 2.0 * (angle * i) / 360.0;
       float lon = M_PI * 2.0 * (angle * zi) / 360.0;
-      vec3_t v1 = {
-        radius * cos(lat) * sin(lon),
-        -radius * cos(lat) * cos(lon) + radius,
-        radius * sin(lat)
-      };
-
+      float lat2 = M_PI * 2.0 * (angle * (i + 1)) / 360.0;
+      float lon2 = M_PI * 2.0 * (angle * (zi + 1)) / 360.0;
       /*
       close but not quite right
       float x1 = radius * sin();
@@ -1581,54 +1578,8 @@ static int SV_MakeAtlantis() {
         y2 = 
       }
       */
-      
-
       /*
-      SV_SetStroke("liquids/clear_calm1");
-      char *bottomRight = SV_MakeCube(
-        (vec3_t){x1, y1, 100}, 
-        (vec3_t){x2, y2, 100}, 
-        (vec3_t){x3, y3, 100}, 
-        (vec3_t){x4, y4, 100},
-
-        (vec3_t){x1, y1, 0}, 
-        (vec3_t){x2, y2, 0}, 
-        (vec3_t){x3, y3, 0}, 
-        (vec3_t){x4, y4, 0}
-      );
-      strcpy(&output[offset], bottomRight);
-      offset += strlen(&output[offset]);
-
-      SV_SetStroke("liquids/clear_calm1");
-      char *horizontal = SV_MakeCube(
-        (vec3_t){x2, 0,   z2}, 
-        (vec3_t){x2, 100, z2}, 
-        (vec3_t){x3, 100, z3}, 
-        (vec3_t){x3, 0,   z3},
-
-        (vec3_t){x1, 0,   z1}, 
-        (vec3_t){x1, 100, z1}, 
-        (vec3_t){x4, 100, z4}, 
-        (vec3_t){x4, 0,   z4}
-      );
-      strcpy(&output[offset], horizontal);
-      offset += strlen(&output[offset]);
-
-      SV_SetStroke("liquids/clear_calm1");
-      char *verticle = SV_MakeCube(
-        (vec3_t){0,   x2, z2}, 
-        (vec3_t){0,   x3, z3}, 
-        (vec3_t){100, x3, z3}, 
-        (vec3_t){100, x2, z2},
-
-        (vec3_t){0,   x1, z1}, 
-        (vec3_t){0,   x4, z4}, 
-        (vec3_t){100, x4, z4}, 
-        (vec3_t){100, x1, z1}
-      );
-      strcpy(&output[offset], verticle);
-      offset += strlen(&output[offset]);
-      */
+      // test cubes
       SV_SetStroke("cube1");
       char *bottomRight = SV_MakeCube(
         (vec3_t){v1[0],    v1[1],    v1[2]+32},
@@ -1636,15 +1587,64 @@ static int SV_MakeAtlantis() {
         (vec3_t){v1[0]+32, v1[1]+32, v1[2]+32},
         (vec3_t){v1[0]+32, v1[1],    v1[2]+32},
 
-        (vec3_t){v1[0],    v1[1],    v1[2]}, 
-        (vec3_t){v1[0],    v1[1]+32, v1[2]}, 
-        (vec3_t){v1[0]+32, v1[1]+32, v1[2]}, 
+        (vec3_t){v1[0],    v1[1],    v1[2]},
+        (vec3_t){v1[0],    v1[1]+32, v1[2]},
+        (vec3_t){v1[0]+32, v1[1]+32, v1[2]},
         (vec3_t){v1[0]+32, v1[1],    v1[2]}
       );
       strcpy(&output[offset], bottomRight);
       offset += strlen(&output[offset]);
+      */
+      
+      SV_SetStroke("liquids/clear_calm1");
+      char *bottomRight = SV_MakeCube(
+        (vec3_t){
+          radius * cos(lat) * sin(lon2)+1,
+          -radius * cos(lat) * cos(lon2)+1,
+          radius * sin(lat)+1
+        },
+        (vec3_t){
+          (radius + thickness) * cos(lat) * sin(lon2)+1,
+          -(radius + thickness) * cos(lat) * cos(lon2)+1,
+          (radius + thickness) * sin(lat)+1
+        },
+        (vec3_t){
+          (radius + thickness) * cos(lat2) * sin(lon2)+1,
+          -(radius + thickness) * cos(lat2) * cos(lon2)+1,
+          (radius + thickness) * sin(lat2)+1
+        },
+        (vec3_t){
+          radius * cos(lat2) * sin(lon2)+1,
+          -radius * cos(lat2) * cos(lon2)+1,
+          radius * sin(lat2)+1
+        },
 
+        (vec3_t){
+          radius * cos(lat) * sin(lon),
+          -radius * cos(lat) * cos(lon) ,
+          radius * sin(lat)
+        },
+        (vec3_t){
+          (radius + thickness) * cos(lat) * sin(lon),
+          -(radius + thickness) * cos(lat) * cos(lon),
+          (radius + thickness) * sin(lat)
+        },
+        (vec3_t){
+          (radius + thickness) * cos(lat2) * sin(lon),
+          -(radius + thickness) * cos(lat2) * cos(lon),
+          (radius + thickness) * sin(lat2)
+        },
+        (vec3_t){
+          radius * cos(lat2) * sin(lon),
+          -radius * cos(lat2) * cos(lon),
+          radius * sin(lat2)
+        }
+      );
+      strcpy(&output[offset], bottomRight);
+      offset += strlen(&output[offset]);
+      
 #if 0
+      SV_SetStroke("liquids/clear_calm1");
       SV_SetStroke("cube1");
       char *bottomRight = SV_MakeCube(
         (vec3_t){x1,    y1,    100}, 
