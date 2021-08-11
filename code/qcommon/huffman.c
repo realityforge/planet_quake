@@ -23,9 +23,44 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 /* This is based on the Adaptive Huffman algorithm described in Sayood's Data
  * Compression book.  The ranks are not actually stored, but implicitly defined
  * by the location of a node within a doubly-linked list */
+#ifdef BUILD_HUFFMAN
+#include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
+#define	QDECL
+#define Q_EXPORT __attribute__((visibility("default")))
+
+typedef unsigned char 		byte;
+
+typedef enum {qfalse, qtrue}	qboolean;
+
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
+
+#define Com_Memset memset
+#define Com_Memcpy memcpy
+
+//
+// msg.c
+//
+typedef struct {
+	qboolean	allowoverflow;	// if false, do a Com_Error
+	qboolean	overflowed;		// set to true if the buffer size failed (with allowoverflow set)
+	qboolean	oob;			// set to true if the buffer size failed (with allowoverflow set)
+	byte	*data;
+	int		maxsize;
+	int		cursize;
+	int		readcount;
+	int		bit;				// for bitwise reads and writes
+} msg_t;
+#else
 #include "q_shared.h"
 #include "qcommon.h"
+#endif
 
 #define NYT HMAX					/* NYT = Not Yet Transmitted */
 #define INTERNAL_NODE (HMAX+1)
@@ -309,7 +344,7 @@ void Huff_transmit (huff_t *huff, int ch, byte *fout) {
 	}
 }
 
-void Huff_Decompress(msg_t *mbuf, int offset) {
+Q_EXPORT void Huff_Decompress(msg_t *mbuf, int offset) {
 	int			ch, cch, i, j, size;
 	byte		seq[65536];
 	byte*		buffer;
@@ -362,9 +397,9 @@ void Huff_Decompress(msg_t *mbuf, int offset) {
 }
 
 
-void Huff_Compress(msg_t *mbuf, int offset) {
+Q_EXPORT void Huff_Compress(msg_t *mbuf, int offset) {
 	int			i, ch, size;
-	byte		seq[65536];
+	byte		seq[2048];
 	byte*		buffer;
 	huff_t		huff;
 
@@ -400,7 +435,7 @@ void Huff_Compress(msg_t *mbuf, int offset) {
 	Com_Memcpy(mbuf->data+offset, seq, (bloc>>3));
 }
 
-void Huff_Init(huffman_t *huff) {
+Q_EXPORT void Huff_Init(huffman_t *huff) {
 
 	Com_Memset(&huff->compressor, 0, sizeof(huff_t));
 	Com_Memset(&huff->decompressor, 0, sizeof(huff_t));

@@ -630,6 +630,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 	// verify challenge in first place
 	info = Cmd_Argv( 1 );
+  printf("wtf? %s\n", info);
 	v = Info_ValueForKey( info, "challenge" );
 	if ( *v == '\0' )
 	{

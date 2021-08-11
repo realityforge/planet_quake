@@ -96,8 +96,8 @@ typedef struct {
 
 //typedef	void (QDECL *MSG_initHuffman) (void);
 
-void MSG_initHuffman( void );
-void	Huff_Compress(msg_t *buf, int offset);
+void  MSG_initHuffman( void );
+int	  Huff_Compress(msg_t *buf, int offset);
 void	Huff_Decompress(msg_t *buf, int offset);
 void	Huff_Init(huffman_t *huff);
 void	Huff_addRef(huff_t* huff, byte ch);
@@ -487,7 +487,7 @@ Q_EXPORT void Huff_Decompress(msg_t *mbuf, int offset) {
 
 extern 	int oldsize;
 
-Q_EXPORT void Huff_Compress(msg_t *mbuf, int offset) {
+Q_EXPORT int Huff_Compress(msg_t *mbuf, int offset) {
 	int			i, ch, size;
 	byte		seq[65536];
 	byte*		buffer;
@@ -496,12 +496,11 @@ Q_EXPORT void Huff_Compress(msg_t *mbuf, int offset) {
 	if (!msgInit) {
 		MSG_initHuffman();
 	}
-	
+
 	size = mbuf->cursize - offset;
 	buffer = mbuf->data + offset;
-
 	if (size<=0) {
-		return;
+		return 0;
 	}
 
 	Com_Memset(&huff, 0, sizeof(huff_t));
@@ -527,6 +526,7 @@ Q_EXPORT void Huff_Compress(msg_t *mbuf, int offset) {
 
 	mbuf->cursize = (bloc>>3) + offset;
 	Com_Memcpy(mbuf->data+offset, seq, (bloc>>3));
+  return 0;
 }
 
 void Huff_Init(huffman_t *huff) {

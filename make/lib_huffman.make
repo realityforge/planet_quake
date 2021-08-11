@@ -5,19 +5,26 @@ BUILD_HUFFMAN := 1
 include make/platform.make
 
 TARGET	      := huffman_$(SHLIBNAME)
-SOURCES       := $(MOUNT_DIR)/wasm/lib
+SOURCES       := $(MOUNT_DIR)/qcommon
+MUSL_SOURCE   := libs/musl-1.2.2
 INCLUDES      := 
 LIBS          := 
-Q3OBJ         := $(B)/$(WORKDIR)/huffman.o $(B)/musl/memset.o $(B)/musl/memcpy.o
+Q3OBJ         := $(B)/$(WORKDIR)/huffman.o $(B)/$(WORKDIR)/huffman_static.o $(B)/musl/memset.o $(B)/musl/memcpy.o
 
 export INCLUDE	:= $(foreach dir,$(INCLUDES),-I$(dir))
 
 CFLAGS        := $(INCLUDE) -fsigned-char -MMD \
+								 -DBUILD_HUFFMAN \
                  -O2 -ftree-vectorize -g -ffast-math -fno-short-enums
 
 define DO_HUFFMAN_CC
   $(echo_cmd) "HUFFMAN_CC $<"
   $(Q)$(CC) -o $@ $(SHLIBCFLAGS) $(CFLAGS) -c $<
+endef
+
+define DO_MUSL_CC
+	$(echo_cmd) "MUSL_CC $<"
+	$(Q)$(CC) -o $@ $(MUSL_INCLUDE) $(CFLAGS) $(MUSL_CFLAGS) -c $<
 endef
 
 debug:
@@ -39,6 +46,9 @@ clean:
 	@rm -rf ./$(BR)/musl ./$(BR)/$(TARGET)
 
 ifdef B
+$(B)/musl/%.o: $(MUSL_SOURCE)/src/string/%.c
+	$(DO_MUSL_CC)
+
 $(B)/$(WORKDIR)/%.o: $(SOURCES)/%.c
 	$(DO_HUFFMAN_CC)
 

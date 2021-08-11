@@ -31,7 +31,7 @@ LDFLAGS          := --import-memory -error-limit=0
 # --entry=_main
 CLIENT_LDFLAGS   := code/wasm/include/wasi/libclang_rt.builtins-wasm32.a \
 										--export-dynamic --no-entry
-SHLIBLDFLAGS     := --unresolved-symbols=ignore-all --export-dynamic --no-entry --strip-all
+SHLIBLDFLAGS     := $(LDFLAGS) --export-dynamic --no-entry --strip-all
 # -emit-llvm -c -S
 BASE_CFLAGS      += -Wall -Ofast --target=wasm32 \
                     -Wimplicit -fstrict-aliasing \

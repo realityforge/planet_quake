@@ -1062,7 +1062,7 @@ void SV_Init( void )
 
 #ifdef USE_CVAR_UNCHEAT
   // TODO: set default to all client values with CVAR_CHEAT
-  sv_banCheats = Cvar_Get("sv_banCheats", "", CVAR_ARCHIVE | CVAR_USERINFO);
+  sv_banCheats = Cvar_Get("sv_banCheats", "", CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO);
   Cvar_SetModifiedFunc(sv_banCheats, SV_BanCheatsModified);
   SV_InitBanCheats();
 #endif

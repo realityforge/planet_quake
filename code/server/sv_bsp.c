@@ -1483,7 +1483,7 @@ static int SV_MakeAtlantis() {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
-		"\"message\" \"Shutes And Ladders\"\n"
+		"\"message\" \"Atlantis Arena\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_ambient\" \"10\"\n"
 		"\"gridsize\" \"512.0 512.0 512.0\"\n"
@@ -1746,12 +1746,12 @@ static int SV_MakeAtlantis() {
 
 /* Edge of Oblivion clone
 It would be cool if distance was a thing for this map, but with the 
-shutes and ladders making the platforms faster to traverse to weapons
+chutes and ladders making the platforms faster to traverse to weapons
 2 pyramids on either end, a pyramid has top platform, middle entrace,
 and bottom floor with a hole to fall out or a sidways jump pad that 
 bounces player back up to lowest platform
 
-Shutes should be 6 sided, span vertically and horizontally with 
+chutes should be 6 sided, span vertically and horizontally with 
 trigger_push, a couple of mover platforms in between
 
 Possible fog for distance, furthest pyramic is just barely visible, maybe 
@@ -1767,7 +1767,7 @@ otherwise teleporter goes into void
 
 
 */
-static int SV_MakeShutesAndLadders() {
+static int SV_MakeChutesAndLadders() {
 	vec3_t  vs[2];
   int offset = 0;
 	int rampWidth = 150;
@@ -1795,7 +1795,7 @@ static int SV_MakeShutesAndLadders() {
 		"{\n"
 		"\"classname\" \"worldspawn\"\n"
 		"\"_color\" \"1 1 1\"\n"
-		"\"message\" \"Shutes And Ladders\"\n"
+		"\"message\" \"Chutes And Ladders\"\n"
 		"\"_keepLights\" \"1\"\n"
 		"\"_ambient\" \"10\"\n"
 		"\"gridsize\" \"512.0 512.0 512.0\"\n"
@@ -3084,8 +3084,8 @@ int SV_MakeMap( char *memoryMap ) {
 		length = SV_MakeMaze();
 	} else if (Q_stricmp(memoryMap, "megacube") == 0) {
 		length = SV_MakeHypercube();
-	} else if (Q_stricmp(memoryMap, "megashutes") == 0) {
-		length = SV_MakeShutesAndLadders();
+	} else if (Q_stricmp(memoryMap, "megachutes") == 0) {
+		length = SV_MakeChutesAndLadders();
 	} else if (Q_stricmp(memoryMap, "megaf1") == 0) {
 		length = SV_MakeMonacoF1();
 	} else if (Q_stricmp(memoryMap, "megalantis") == 0) {

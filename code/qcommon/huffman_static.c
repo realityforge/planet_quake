@@ -1,5 +1,24 @@
+#ifdef BUILD_HUFFMAN
+#include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+#define	QDECL
+#define Q_EXPORT __attribute__((visibility("default")))
+
+typedef unsigned char 		byte;
+
+typedef enum {qfalse, qtrue}	qboolean;
+
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
+#else
 #include "q_shared.h"
 #include "qcommon.h"
+#endif
 
 // alternative huffman encoder and decoder, backported from uberdemotools project
 // https://github.com/mightycow/uberdemotools/blob/develop/UDT_DLL/src/message.cpp
