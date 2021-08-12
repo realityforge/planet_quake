@@ -213,13 +213,13 @@ int HuffmanPutSymbol( byte* fout, uint32_t offset, int symbol )
 }
 
 
-int HuffmanGetBit( const byte* buffer, int bitIndex )
+Q_EXPORT int HuffmanGetBit( const byte* buffer, int bitIndex )
 {
 	return (buffer[(bitIndex >> 3)] >> (bitIndex & 7)) & 0x1;
 }
 
 
-int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex )
+Q_EXPORT int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex )
 {
 	//const uint16_t code = ((*(const uint32_t*)(buffer + (bitIndex >> 3))) >> ((uint32_t)bitIndex & 7)) & 0x7FF;
 	uint32_t left = 0;
