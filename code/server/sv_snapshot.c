@@ -1266,7 +1266,7 @@ void SV_SendClientMessages( void )
 #ifdef USE_RECENT_EVENTS
     if(c->isRecent) {
       for(int i = c->recentMessageNum; i < recentI; i++) {
-        NET_OutOfBandPrint( NS_SERVER, &c->netchan.remoteAddress, "%s", recentEvents[i % MAX_RECENT_EVENTS] );
+        NET_OutOfBandPrint( NS_SERVER, &c->netchan.remoteAddress, "recentEvent %s", recentEvents[i % MAX_RECENT_EVENTS] );
       }
       c->recentMessageNum = recentI;
     }

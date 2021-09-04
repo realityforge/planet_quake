@@ -2123,6 +2123,7 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 #ifdef USE_RECENT_EVENTS
   val = Info_ValueForKey( cl->userinfo, "cl_recentPassword" );
   if (( sv_recentPassword->string[0] && strcmp( val, sv_recentPassword->string ) == 0 )) {
+    Com_DPrintf("Recent events for client: %li\n", cl - svs.clients);
     cl->isRecent = qtrue;
   }
 #endif
