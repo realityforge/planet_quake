@@ -828,8 +828,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_MAPCHANGE, mapname), MAX_INFO_STRING);
-	if(recentI == 1024) recentI = 0;
+  SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_MAPCHANGE, mapname));
 #endif
 
 	if ( com_dedicated->integer && sv_activeAction->string[0] ) {

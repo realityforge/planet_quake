@@ -734,6 +734,10 @@ void SVC_RateDropAddress( const netadr_t *from, int burst, int period ) {
 
 
 #ifdef USE_RECENT_EVENTS
+void SV_RecentEvent(const char *json) {
+  memcpy(&recentEvents[(recentI++) % MAX_RECENT_EVENTS], json, MAX_INFO_STRING);
+}
+
 static char *escaped;
 const char *SV_EscapeStr(const char *str, int len) {
 	return str;
@@ -772,12 +776,11 @@ void SV_RecentStatus(recentEvent_t type) {
 	char *s;
 	i = 0;
 #ifdef USE_MULTIVM_SERVER
-  char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), MAX_INFO_STRING);
+  const char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL, gvmi ), MAX_INFO_STRING);
 #else
-  char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL ), MAX_INFO_STRING);
+  const char *info = SV_EscapeStr(Cvar_InfoString( CVAR_SERVERINFO, NULL ), MAX_INFO_STRING);
 #endif
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, info), MAX_INFO_STRING);
-	if(recentI == 1024) recentI = 0;
+  SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_SERVERINFO, info));
 makestatus:
 	s = &status[1];
 	status[0] = '[';
@@ -808,8 +811,7 @@ sendstatus:
 	status[statusLength-1] = ']';
 	// the polling service should callback at this time for a getstatus message?
 	// TODO: update match ended with player list
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, type, status), MAX_INFO_STRING);
-	if(recentI == 1024) recentI = 0;
+  SV_RecentEvent(va(RECENT_TEMPLATE, sv.time, type, status));
 	if(i < sv_maxclients->integer) {
 		goto makestatus;
 	}
@@ -1261,7 +1263,6 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg ) {
 	MSG_BeginReadingOOB( msg );
 	MSG_ReadLong( msg ); // sequence number
 	qport = MSG_ReadShort( msg ) & 0xffff;
-
 
 	// find which client the message is from
 	for (i=0, cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
@@ -1861,8 +1862,7 @@ void SV_Frame( int msec ) {
 					char clientId[10];
 					memcpy(clientId, va("%i", i), sizeof(clientId));
 					Com_Printf("Died: %s\n", clientId);
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, clientId), MAX_INFO_STRING);
-					if(recentI == 1024) recentI = 0;
+          SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTDIED, clientId));
 					numDied[i / 8] |= 1 << (i % 8);
 				}
 */
@@ -1874,8 +1874,7 @@ void SV_Frame( int msec ) {
 			char clientId[10];
 			memcpy(clientId, va("%i", i), sizeof(clientId));
 			// TODO: add respawn location
-			memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId), MAX_INFO_STRING);
-			if(recentI == 1024) recentI = 0;
+      SV_RecentEvent(va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTRESPAWN, clientId));
 			numDied[i / 8] &= ~(1 << (i % 8));
 		}
 		if ( ps->pm_flags & (PMF_RESPAWNED | PMF_TIME_KNOCKBACK) ) {

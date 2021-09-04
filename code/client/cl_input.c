@@ -818,7 +818,7 @@ void CL_WritePacket( void ) {
 				cl.cmdWorlds[0][cl.clCmdNumbers[0] & CMD_MASK].upmove;
 		}
 #endif
-;
+
 	oldcmd = &nullcmd;
 
 	MSG_Init( &buf, data, MAX_MSGLEN );

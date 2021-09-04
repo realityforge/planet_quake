@@ -630,7 +630,6 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 	// verify challenge in first place
 	info = Cmd_Argv( 1 );
-  printf("wtf? %s\n", info);
 	v = Info_ValueForKey( info, "challenge" );
 	if ( *v == '\0' )
 	{
@@ -1000,8 +999,7 @@ gotnewcl:
 	}
 	
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, SV_EscapeStr(newcl->userinfo, sizeof(newcl->userinfo))), MAX_INFO_STRING);
-	if(recentI == 1024) recentI = 0;
+  SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CONNECTED, SV_EscapeStr(newcl->userinfo, sizeof(newcl->userinfo))));
 #endif
 	
 #ifdef USE_MULTIVM_SERVER
@@ -1041,8 +1039,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	int		i;
 	
 #ifdef USE_RECENT_EVENTS
-	memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, SV_EscapeStr(drop->userinfo, sizeof(drop->userinfo))), MAX_INFO_STRING);
-	if(recentI == 1024) recentI = 0;
+  SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_DISCONNECT, SV_EscapeStr(drop->userinfo, sizeof(drop->userinfo))));
 #endif
 
 #ifdef USE_DEMO_CLIENTS
@@ -1117,7 +1114,7 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		// bots shouldn't go zombie, as there's no real net connection.
 		drop->state = CS_FREE;
 	} else {
-		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", name );
+		Com_DPrintf( "Going to CS_ZOMBIE for %s, %s\n", name, reason );
 		drop->state = CS_ZOMBIE;		// become free in a few seconds
 	}
 
@@ -1891,6 +1888,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 
 		// we run the game, so determine which cgame and ui the client "should" be running
 		bGood = FS_FileIsInPAK( "vm/cgame.qvm", &nChkSum1, url );
+    Com_Printf("Pure pak: %s\n", url);
 		bGood &= FS_FileIsInPAK( "vm/ui.qvm", &nChkSum2, NULL );
 
 		nClientPaks = Cmd_Argc();
@@ -2006,6 +2004,7 @@ Com_DPrintf("VerifyPaks: Number of checksums wrong: %i != %i\n", nChkSum1, nClie
 		cl->gotCP = qtrue;
 
 		if ( bGood ) {
+      Com_Printf("Client is authentic\n");
 			cl->pureAuthentic = qtrue;
 		} else {
 			cl->pureAuthentic = qfalse;
@@ -2120,6 +2119,13 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 			Info_SetValueForKey( cl->userinfo, "handicap", "100" );
 		}
 	}
+  
+#ifdef USE_RECENT_EVENTS
+  val = Info_ValueForKey( cl->userinfo, "cl_recentPassword" );
+  if (( sv_recentPassword->string[0] && strcmp( val, sv_recentPassword->string ) == 0 )) {
+    cl->isRecent = qtrue;
+  }
+#endif
 
 	// TTimo
 	// maintain the IP information
@@ -2753,8 +2759,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 				int playerLength;
 				char player[MAX_INFO_STRING];
 				playerLength = Com_sprintf( player, sizeof( player ), "%s: %s", cl->name, Cmd_ArgsFrom(1));
-				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, player), MAX_INFO_STRING);
-				if(recentI == 1024) recentI = 0;
+				SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CALLADMIN, player));
 #endif
 				Cmd_Clear();
 				return qtrue;
@@ -2765,8 +2770,7 @@ qboolean SV_ExecuteClientCommand( client_t *cl, const char *s ) {
 				int playerLength;
 				char player[MAX_INFO_STRING];
 				playerLength = Com_sprintf( player, sizeof( player ), "%s: %s", cl->name, Cmd_ArgsFrom(1));
-				memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTSAY, player), MAX_INFO_STRING);
-				if(recentI == 1024) recentI = 0;
+				SV_RecentEvent(va(RECENT_TEMPLATE_STR, sv.time, SV_EVENT_CLIENTSAY, player));
 			}
 #endif
 			VM_Call( gvm, 1, GAME_CLIENT_COMMAND, cl - svs.clients );

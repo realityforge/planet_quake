@@ -177,7 +177,7 @@ static const uint16_t HuffmanEncoderTable[ 256 ] =
 };
 
 
-void HuffmanPutBit( byte* fout, int32_t bitIndex, int bit )
+Q_EXPORT void HuffmanPutBit( byte* fout, int32_t bitIndex, int bit )
 {
 	const int byteIndex = bitIndex >> 3;
 	const int bitOffset = bitIndex & 7;
@@ -194,7 +194,7 @@ void HuffmanPutBit( byte* fout, int32_t bitIndex, int bit )
 }
 
 
-int HuffmanPutSymbol( byte* fout, uint32_t offset, int symbol )
+Q_EXPORT int HuffmanPutSymbol( byte* fout, uint32_t offset, int symbol )
 {
 	int32_t bits;
 	uint32_t i;

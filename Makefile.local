@@ -10,6 +10,7 @@ USE_SYSTEM_JPEG       ?= 1
 
 USE_RENDERER_DLOPEN    = 0
 USE_CURL_DLOPEN        = 0
+USE_BOTLIB_DLOPEN      = 0
 
 CINEMATICS_LOGO        = 0
 CINEMATICS_INTRO       = 0
@@ -20,6 +21,7 @@ USE_VIDEO_THEORA       = 0
 USE_VIDEO_XVID         = 0
 USE_CIN_VPX            = 0
 
+USE_RECENT_EVENTS      = 1
 USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0

@@ -1,6 +1,6 @@
-var Buffer = require('buffer').Buffer
-var inherits = require('util').inherits
-var EventEmitter = require('events').EventEmitter
+var {Buffer} = require('buffer')
+var {inherits} = require('util')
+var {EventEmitter} = require('events')
 
 var CMD = {
   CONNECT: 0x01,

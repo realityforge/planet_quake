@@ -346,7 +346,7 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
-#ifndef USE_MULTIVM_SERVER
+#ifndef USE_LAZY_MEMORY
 	if( Hunk_CheckMark() ) {
 		Com_Error( ERR_DROP, "SV_Bot_HunkAlloc: Alloc with marks already set" );
 	}

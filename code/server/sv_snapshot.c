@@ -722,8 +722,7 @@ static void SV_BuildCommonSnapshot( void )
 								ps1->persistant[ PERS_SCORE ], c1->ping, c1->name, 
 								ps2->persistant[ PERS_SCORE ], c2->ping, c2->name );
 						}
-						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player), MAX_INFO_STRING);
-						if(recentI == 1024) recentI = 0;
+            SV_RecentEvent(va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTDIED, player));
 						numDied[ent->s.clientNum / 8] |= 1 << (ent->s.clientNum % 8);
 					}
 				}
@@ -737,8 +736,7 @@ static void SV_BuildCommonSnapshot( void )
 						numWeapon[ent->s.clientNum] = ps->weapon;
 						client_t *c = &svs.clients[ent->s.clientNum];
 						memcpy(weapon, va("[%i,\"%s\"]", ps->weapon, c->name), sizeof(weapon));
-						memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon), MAX_INFO_STRING);
-						if(recentI == 1024) recentI = 0;
+            SV_RecentEvent(va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTWEAPON, weapon));
 					}
 				}
 				if(ent->s.eType == ET_PLAYER
@@ -748,7 +746,7 @@ static void SV_BuildCommonSnapshot( void )
 					char award[1024];
 					client_t *c = &svs.clients[ent->s.clientNum];
 					memcpy(award, va("[%i,\"%s\"]", ent->s.eType, c->name), sizeof(award));
-					memcpy(&recentEvents[recentI++], va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTAWARD, award), MAX_INFO_STRING);
+          SV_RecentEvent(va(RECENT_TEMPLATE, sv.time, SV_EVENT_CLIENTAWARD, award));
 				}
 			}
 #endif
@@ -1264,6 +1262,15 @@ void SV_SendClientMessages( void )
 			c->rateDelayed = qtrue;
 			continue;
 		}
+    
+#ifdef USE_RECENT_EVENTS
+    if(c->isRecent) {
+      for(int i = c->recentMessageNum; i < recentI; i++) {
+        NET_OutOfBandPrint( NS_SERVER, &c->netchan.remoteAddress, "%s", recentEvents[i % MAX_RECENT_EVENTS] );
+      }
+      c->recentMessageNum = recentI;
+    }
+#endif
 
 		// generate and send a new message
 		SV_SendClientSnapshot( c, qfalse );

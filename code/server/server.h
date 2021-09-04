@@ -368,7 +368,10 @@ typedef struct client_s {
 #ifdef USE_PERSIST_CLIENT
 	int persisted;
 #endif
-
+#ifdef USE_RECENT_EVENTS
+  qboolean isRecent;
+  int recentMessageNum;
+#endif
 } client_t;
 
 //=============================================================================
@@ -437,6 +440,7 @@ extern  int    gameWorlds[MAX_NUM_VMS];
 #ifdef USE_RECENT_EVENTS
 extern int  recentI;
 extern char recentEvents[1024][MAX_INFO_STRING+400];
+#define MAX_RECENT_EVENTS 1024
 extern	cvar_t	*sv_recentPassword;
 typedef enum {
 	SV_EVENT_MAPCHANGE,
@@ -454,6 +458,7 @@ typedef enum {
 } recentEvent_t;
 #define RECENT_TEMPLATE_STR "{\"timestamp\":%i,\"type\":%i,\"value\":\"%s\"}"
 #define RECENT_TEMPLATE "{\"timestamp\":%i,\"type\":%i,\"value\":%s}"
+void SV_RecentEvent(const char *json);
 void SV_RecentStatus(recentEvent_t type);
 const char *SV_EscapeStr(const char *str, int len);
 #endif

@@ -703,9 +703,9 @@ typedef struct {
 	const char	*name;
 	const int	offset;
 	const int	bits;	// 0 = float
-	#ifdef USE_MV
-		int			mergeMask;
-	#endif
+#ifdef USE_MV
+	int			mergeMask;
+#endif
 } netField_t;
 
 #ifdef USE_MV
