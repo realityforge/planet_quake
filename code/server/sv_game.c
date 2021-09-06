@@ -1183,20 +1183,22 @@ void SV_RestartGameProgs( void ) {
 	if ( !gvm ) {
 		return;
 	}
-	
-	SV_ShutdownGameProgs();
-	//VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
+#ifndef USE_MULTIVM_SERVER
+	VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
-	//gvm = VM_Restart( gvm );
-	//SV_InitGameProgs();
-	gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
+	gvm = VM_Restart( gvm );
 	if ( !gvm ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}
 
-	SV_InitGameVM( qfalse );
-
+	SV_InitGameVM( qtrue );
+#else
+  // shut down and reload because Hunk_ClearToMark isn't used
+  SV_ShutdownGameProgs();
+  gvm = VM_Create( VM_GAME, SV_GameSystemCalls, SV_DllSyscall, Cvar_VariableIntegerValue( "vm_game" ) );
+  SV_InitGameVM( qfalse );
+#endif
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );
 }
