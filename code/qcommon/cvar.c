@@ -1464,6 +1464,9 @@ static void Cvar_List_f( void ) {
 		if(!var->name || (match && !Com_Filter(match, var->name)))
 			continue;
 
+    if(!(var->flags & CVAR_USERINFO))
+      continue;
+
 		if (var->flags & CVAR_SERVERINFO) {
 			Com_Printf("S");
 		} else {

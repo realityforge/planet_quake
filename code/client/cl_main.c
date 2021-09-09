@@ -3130,7 +3130,7 @@ static void CL_CheckForResend( void ) {
 #ifndef STANDALONE
 		if (!Cvar_VariableIntegerValue("com_standalone") && clc.serverAddress.type == NA_IP && !Sys_IsLANAddress( &clc.serverAddress ) )
 			CL_RequestAuthorization();
-#endif
+#endif    
 		// The challenge request shall be followed by a client challenge so no malicious server can hijack this connection.
 		NET_OutOfBandPrint( NS_CLIENT, &clc.serverAddress, "getchallenge %d %s", clc.challenge, com_gamename->string );
 		break;
@@ -3181,6 +3181,7 @@ static void CL_CheckForResend( void ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: oversize userinfo, you might be not able to join remote server!\n" );
 		}
 
+    Com_Printf("connect: %s\n", info);
 		len = Com_sprintf( data, sizeof( data ), "connect \"%s\"", info );
 		// NOTE TTimo don't forget to set the right data length!
 		NET_OutOfBandCompress( NS_CLIENT, &clc.serverAddress, (byte *) &data[0], len );
