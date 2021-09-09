@@ -85,6 +85,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef Q3_VM
 
 #include "bg_lib.h"
+#define DLLEXPORT
 
 #else
 
@@ -97,6 +98,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <time.h>
 #include <ctype.h>
 #include <limits.h>
+
+
+#ifndef _WIN32
+#include <stdint.h>
+#define DLLEXPORT __attribute__((visibility ("default")))
+#else
+#define DLLEXPORT __declspec(dllexport)
+#endif // _WIN32
 
 #endif
 
@@ -227,7 +236,7 @@ static inline float LittleFloat (const float l) { return FloatSwap(&l); }
 
 //======================= MAC DEFINES =================================
 
-#ifdef __MACOS__
+#if defined(__MACOS__) || defined(__APPLE__)
 
 #include <MacTypes.h>
 #define	MAC_STATIC
@@ -885,6 +894,12 @@ void	Q_strcat( char *dest, int size, const char *src );
 int Q_PrintStrlen( const char *string );
 // removes color sequences from string
 char *Q_CleanStr( char *string );
+
+//=============================================
+
+typedef intptr_t (*syscall_t)( intptr_t *parms );
+typedef intptr_t (QDECL *dllSyscall_t)( intptr_t callNum, ... );
+typedef void (QDECL *dllEntry_t)( dllSyscall_t syscallptr );
 
 //=============================================
 
