@@ -121,16 +121,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define UNUSED_VAR
 #endif
 
-#if (defined _MSC_VER)
-#define Q_EXPORT __declspec(dllexport)
-#elif (defined __SUNPRO_C)
-#define Q_EXPORT __global
-#elif ((__GNUC__ >= 3) && (!__EMX__) && (!sun))
-#define Q_EXPORT __attribute__((visibility("default")))
-#else
-#define Q_EXPORT
-#endif
-
 /**********************************************************************
   VM Considerations
 
@@ -150,8 +140,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef Q3_VM
 
 #include "../game/bg_lib.h"
-
-typedef int intptr_t;
+#define DLLEXPORT
 
 #else
 
@@ -180,6 +169,13 @@ typedef int intptr_t;
 #else
   #include <stdint.h>
 #endif
+
+#ifndef _WIN32
+#include <stdint.h>
+#define DLLEXPORT __attribute__((visibility ("default")))
+#else
+#define DLLEXPORT __declspec(dllexport)
+#endif // _WIN32
 
 #ifdef _WIN32
   // vsnprintf is ISO/IEC 9899:1999
@@ -409,7 +405,7 @@ extern	vec4_t		colorMdGrey;
 extern	vec4_t		colorDkGrey;
 
 #define Q_COLOR_ESCAPE	'^'
-qboolean Q_IsColorString(const char *p);  // ^[0-9a-zA-Z]
+#define Q_IsColorString(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE )
 
 #define COLOR_BLACK	'0'
 #define COLOR_RED	'1'
@@ -531,8 +527,12 @@ float Q_fabs( float f );
 float Q_rsqrt( float f );		// reciprocal square root
 #endif
 
+#ifndef __LCC__
+#define SQRTFAST( x ) ( Q_rsqrt( x ) )
+#else
 float SquareRootFloat(float number);
 #define SQRTFAST( x ) ( SquareRootFloat( x ) )
+#endif
 #define sqrt(x) (((x!=0.0) && (x!=1)) ? SQRTFAST(x) : (x))
 
 signed char ClampChar( int i );
@@ -598,7 +598,7 @@ float RadiusFromBounds( const vec3_t mins, const vec3_t maxs );
 void ClearBounds( vec3_t mins, vec3_t maxs );
 void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs );
 
-#if !defined( Q3_VM ) || ( defined( Q3_VM ) && defined( __Q3_VM_MATH ) )
+#if !defined( Q3_VM )
 static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	if (v1[0] != v2[0] || v1[1] != v2[1] || v1[2] != v2[2]) {
 		return 0;
@@ -606,9 +606,13 @@ static ID_INLINE int VectorCompare( const vec3_t v1, const vec3_t v2 ) {
 	return 1;
 }
 
-vec_t VectorLength( const vec3_t v );
+static ID_INLINE vec_t VectorLength( const vec3_t v ) {
+	return (vec_t)sqrt (v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
 
-vec_t VectorLengthSquared( const vec3_t v );
+static ID_INLINE vec_t VectorLengthSquared( const vec3_t v ) {
+	return (v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
 
 static ID_INLINE vec_t Distance( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v;
@@ -621,12 +625,21 @@ static ID_INLINE vec_t DistanceSquared( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v;
 
 	VectorSubtract (p2, p1, v);
-	return VectorLengthSquared( v );
+	return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
 }
 
 // fast vector normalize routine that does not check to make sure
 // that length != 0, nor does it return length, uses rsqrt approximation
-void VectorNormalizeFast( vec3_t v );
+static ID_INLINE void VectorNormalizeFast( vec3_t v )
+{
+	float ilength;
+
+	ilength = Q_rsqrt( DotProduct( v, v ) );
+
+	v[0] *= ilength;
+	v[1] *= ilength;
+	v[2] *= ilength;
+}
 
 static ID_INLINE void VectorInverse( vec3_t v ){
 	v[0] = -v[0];
@@ -650,7 +663,7 @@ vec_t VectorLengthSquared( const vec3_t v );
 vec_t Distance( const vec3_t p1, const vec3_t p2 );
 
 vec_t DistanceSquared( const vec3_t p1, const vec3_t p2 );
-
+ 
 void VectorNormalizeFast( vec3_t v );
 
 void VectorInverse( vec3_t v );

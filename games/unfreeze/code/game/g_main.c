@@ -80,6 +80,7 @@ vmCvar_t	g_smoothClients;
 vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
 vmCvar_t	g_baseq3;
+qboolean  baseq3;
 vmCvar_t	g_ra3;
 vmCvar_t	g_rankings;
 vmCvar_t	g_listEntity;
@@ -204,7 +205,7 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .q3vm file
 ================
 */
-Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
+DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
 	switch ( command ) {
 	case GAME_INIT:
 		G_InitGame( arg0, arg1, arg2 );
@@ -344,6 +345,7 @@ void G_RegisterCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
 	qboolean remapped = qfalse;
+  char buff[1024];
 
 	for ( i = 0, cv = gameCvarTable ; i < gameCvarTableSize ; i++, cv++ ) {
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
@@ -359,6 +361,14 @@ void G_RegisterCvars( void ) {
 	if (remapped) {
 		G_RemapTeamShaders();
 	}
+
+  trap_Cvar_VariableStringBuffer("gamename", buff, sizeof(buff));
+  if(!strcmp(buff, "baseq3")) {
+    g_baseq3.integer = 1;
+  }
+  if(g_baseq3.integer) {
+    baseq3 = qtrue;
+  }
 
 	// check some things
 	if ( g_gametype.integer < 0 || g_gametype.integer >= GT_MAX_GAME_TYPE ) {
@@ -379,6 +389,7 @@ void G_UpdateCvars( void ) {
 	int			i;
 	cvarTable_t	*cv;
 	qboolean remapped = qfalse;
+  char buff[1024];
 
 	for ( i = 0, cv = gameCvarTable ; i < gameCvarTableSize ; i++, cv++ ) {
 		if ( cv->vmCvar ) {
@@ -398,6 +409,14 @@ void G_UpdateCvars( void ) {
 			}
 		}
 	}
+
+  trap_Cvar_VariableStringBuffer("gamename", buff, sizeof(buff));
+  if(!strcmp(buff, "baseq3")) {
+    g_baseq3.integer = 1;
+  }
+  if(g_baseq3.integer) {
+    baseq3 = qtrue;
+  }
 
 	if (remapped) {
 		G_RemapTeamShaders();

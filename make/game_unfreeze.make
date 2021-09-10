@@ -115,12 +115,14 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
+					$(B)/$(MOD)/cgame/cg_adminless.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \
           $(B)/$(MOD)/cgame/cg_draw.o \
           $(B)/$(MOD)/cgame/cg_drawtools.o \
           $(B)/$(MOD)/cgame/cg_effects.o \
           $(B)/$(MOD)/cgame/cg_ents.o \
           $(B)/$(MOD)/cgame/cg_event.o \
+					$(B)/$(MOD)/cgame/cg_freeze.o \
           $(B)/$(MOD)/cgame/cg_info.o \
           $(B)/$(MOD)/cgame/cg_localents.o \
           $(B)/$(MOD)/cgame/cg_marks.o \
@@ -130,6 +132,7 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_scoreboard.o \
           $(B)/$(MOD)/cgame/cg_servercmds.o \
           $(B)/$(MOD)/cgame/cg_snapshot.o \
+					$(B)/$(MOD)/cgame/cg_unlagged.o \
           $(B)/$(MOD)/cgame/cg_view.o \
           $(B)/$(MOD)/cgame/cg_weapons.o
 
@@ -164,7 +167,6 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_misc.o \
           $(B)/$(MOD)/game/g_missile.o \
           $(B)/$(MOD)/game/g_mover.o \
-          $(B)/$(MOD)/game/g_rotation.o \
           $(B)/$(MOD)/game/g_session.o \
           $(B)/$(MOD)/game/g_spawn.o \
           $(B)/$(MOD)/game/g_svcmds.o \
@@ -172,7 +174,6 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_team.o \
           $(B)/$(MOD)/game/g_trigger.o \
           $(B)/$(MOD)/game/g_utils.o \
-          $(B)/$(MOD)/game/g_unlagged.o \
           $(B)/$(MOD)/game/g_weapon.o
 
 ifneq ($(BUILD_CLIENT),1)

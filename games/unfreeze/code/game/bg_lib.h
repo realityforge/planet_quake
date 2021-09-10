@@ -37,6 +37,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define NULL ((void *)0)
 #endif
 
+typedef int intptr_t;
 typedef unsigned int size_t;
 
 typedef char *  va_list;
