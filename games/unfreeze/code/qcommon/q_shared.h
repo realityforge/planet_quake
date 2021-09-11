@@ -527,12 +527,7 @@ float Q_fabs( float f );
 float Q_rsqrt( float f );		// reciprocal square root
 #endif
 
-#ifndef __LCC__
 #define SQRTFAST( x ) ( Q_rsqrt( x ) )
-#else
-float SquareRootFloat(float number);
-#define SQRTFAST( x ) ( SquareRootFloat( x ) )
-#endif
 #define sqrt(x) (((x!=0.0) && (x!=1)) ? SQRTFAST(x) : (x))
 
 signed char ClampChar( int i );
