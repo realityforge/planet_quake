@@ -265,15 +265,15 @@ ifneq ($(BUILD_GAME_QVM),0)
 
 $(B)/$(MOD)/vm/cgame.qvm: $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(CGVMOBJ) $(GAMEDIR)/cgame/cg_syscalls.asm
 
 $(B)/$(MOD)/vm/qagame.qvm: $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(QAVMOBJ) $(GAMEDIR)/game/g_syscalls.asm
 
 $(B)/$(MOD)/vm/ui.qvm: $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
-	$(Q)$(Q3ASM) -o $@ $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm
+	$(Q)$(Q3ASM) -o $@ -m $(UIVMOBJ) $(GAMEDIR)/ui/ui_syscalls.asm
 
 endif
 
