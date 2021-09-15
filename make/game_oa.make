@@ -111,7 +111,7 @@ endif
 # $(B)/$(MOD)/cgame/cg_particles.o \
 
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
-          $(B)/$(MOD)/cgame/bg_lib.o \
+					$(B)/$(MOD)/cgame/bg_lib.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
@@ -124,8 +124,7 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_event.o \
           $(B)/$(MOD)/cgame/cg_info.o \
           $(B)/$(MOD)/cgame/cg_localents.o \
-					$(B)/$(MOD)/cgame/cg_main.o \
-          $(B)/$(MOD)/cgame/cg_marks.o \
+					$(B)/$(MOD)/cgame/cg_marks.o \
           $(B)/$(MOD)/cgame/cg_players.o \
           $(B)/$(MOD)/cgame/cg_playerstate.o \
           $(B)/$(MOD)/cgame/cg_predict.o \
@@ -177,7 +176,6 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_mover.o \
 					$(B)/$(MOD)/game/g_playerstore.o \
 					$(B)/$(MOD)/game/g_possession.o \
-					$(B)/$(MOD)/game/g_rankings.o \
           $(B)/$(MOD)/game/g_session.o \
           $(B)/$(MOD)/game/g_spawn.o \
           $(B)/$(MOD)/game/g_svcmds.o \
@@ -191,7 +189,8 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
           $(B)/$(MOD)/game/g_weapon.o
 
 ifneq ($(BUILD_CLIENT),1)
-QAOBJ_ += $(B)/$(MOD)/game/bg_lib.o \
+QAOBJ_ += $(B)/$(MOD)/game/bg_alloc.o \
+          $(B)/$(MOD)/game/bg_lib.o \
           $(B)/$(MOD)/game/bg_misc.o \
           $(B)/$(MOD)/game/bg_pmove.o \
           $(B)/$(MOD)/game/bg_slidemove.o \
@@ -222,9 +221,7 @@ UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_gameinfo.o \
           $(B)/$(MOD)/ui/ui_ingame.o \
           $(B)/$(MOD)/ui/ui_loadconfig.o \
-					$(B)/$(MOD)/ui/ui_login.o \
-					$(B)/$(MOD)/ui/ui_main.o \
-          $(B)/$(MOD)/ui/ui_menu.o \
+					$(B)/$(MOD)/ui/ui_menu.o \
           $(B)/$(MOD)/ui/ui_mfield.o \
           $(B)/$(MOD)/ui/ui_mods.o \
           $(B)/$(MOD)/ui/ui_network.o \
@@ -241,7 +238,6 @@ UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_setup.o \
           $(B)/$(MOD)/ui/ui_sound.o \
           $(B)/$(MOD)/ui/ui_sparena.o \
-					$(B)/$(MOD)/ui/ui_specifyleague.o \
           $(B)/$(MOD)/ui/ui_specifyserver.o \
           $(B)/$(MOD)/ui/ui_splevel.o \
           $(B)/$(MOD)/ui/ui_sppostgame.o \

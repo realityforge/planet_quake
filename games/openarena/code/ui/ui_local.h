@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __UI_LOCAL_H__
 #define __UI_LOCAL_H__
 
-#include "../qcommon/q_shared.h"
+#include "../game/q_shared.h"
 #include "../renderer/tr_types.h"
 #include "ui_public.h"
 #include "../client/keycodes.h"

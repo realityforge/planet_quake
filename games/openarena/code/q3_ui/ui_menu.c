@@ -30,7 +30,7 @@ MAIN MENU
 
 
 #include "ui_local.h"
-#include "../qcommon/oa_version.h"
+#include "../game/oa_version.h"
 
 
 #define ID_SINGLEPLAYER			10

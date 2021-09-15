@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define BASEOA
 
-#include "../qcommon/q_shared.h"
+#include "../game/q_shared.h"
 #include "../renderer/tr_types.h"
 //NOTE: include the ui_public.h from the new UI
 #include "../ui/ui_public.h" // bk001205 - yes, do have to use this
