@@ -77,6 +77,9 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	@$(MAKE) -f $(MKFILE) makegamedirs \
+		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
+		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
+		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 		$(BD)/$(MOD)/vm/cgame.qvm \
 	  $(BD)/$(MOD)/vm/qagame.qvm \
 	  $(BD)/$(MOD)/vm/ui.qvm \

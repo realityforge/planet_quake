@@ -79,10 +79,10 @@ ifneq ($(BUILD_GAME_STATIC),1)
 VM               += vm_interpreted.o
 ifeq ($(HAVE_VM_COMPILED),true)
 ifeq ($(ARCH),x86)
-VM               += vm_x86.o vm_x86_ng.o
+VM               += vm_x86.o
 endif
 ifeq ($(ARCH),x86_64)
-VM               += vm_x86.o vm_x86_ng.o
+VM               += vm_x86.o
 endif
 ifeq ($(ARCH),arm)
 VM               += vm_armv7l.o
