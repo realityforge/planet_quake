@@ -107,6 +107,13 @@ qhandle_t RE_RegisterShader( const char *name );
 qhandle_t RE_RegisterShaderNoMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage);
 
+#ifdef USE_RMLUI
+qhandle_t RE_RegisterImage( int *dimensions, const char *name );
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+                        int num_indices, qhandle_t texture, const vec2_t translation);
+qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height);
+#endif
+
 // font stuff
 void R_InitFreeType( void );
 void R_DoneFreeType( void );

@@ -1793,6 +1793,16 @@ typedef struct {
 
 typedef struct {
 	int		commandId;
+  shader_t	*shader;
+  int   numVerts;
+  polyVert_t *verts;
+  int   numIndexes;
+  int  *indexes;
+  vec2_t translation;
+} polyIndexedCommand_t;
+
+typedef struct {
+	int		commandId;
 	trRefdef_t	refdef;
 	viewParms_t	viewParms;
 	drawSurf_t *drawSurfs;
@@ -1822,6 +1832,7 @@ typedef struct
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
+  RC_POLY2D_INDEXED,
 	RC_STRETCH_PIC,
 	RC_DRAW_SURFS,
 	RC_DRAW_BUFFER,
@@ -1853,11 +1864,13 @@ typedef struct {
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
+  int	*indexes;//[MAX_POLYVERTS];
 	renderCommandList_t	commands;
 } backEndData_t;
 
 extern	int		max_polys;
 extern	int		max_polyverts;
+extern	int		max_indexes;
 
 extern	backEndData_t	*backEndData;
 

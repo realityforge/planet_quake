@@ -176,6 +176,7 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+int   max_indexes;
 
 static char gl_extensions[ 32768 ];
 
@@ -1725,11 +1726,13 @@ void R_Init( void ) {
 
 	max_polys = r_maxpolys->integer;
 	max_polyverts = r_maxpolyverts->integer;
+  max_indexes = r_maxpolyverts->integer;
 
 	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
 	backEndData = (backEndData_t *) ptr;
 	backEndData->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData ));
 	backEndData->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys);
+  backEndData->indexes = (int *) ((char *) ptr + sizeof( *backEndData ) + sizeof(int) * max_indexes);
 
 	R_InitNextFrame();
 
@@ -1890,6 +1893,12 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.GetConfig = RE_GetConfig;
 	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
+
+#ifdef USE_RMLUI
+  re.RegisterImage = RE_RegisterImage;
+  re.RenderGeometry = RE_RenderGeometry;
+  re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
+#endif
 
 	return &re;
 }

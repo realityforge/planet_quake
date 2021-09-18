@@ -1046,6 +1046,79 @@ static const void *RB_SetColor( const void *data ) {
 }
 
 
+#ifdef USE_RMLUI
+/*
+=============
+RB_StretchPic
+=============
+*/
+static const void *RB_Poly2DIndexed( const void *data ) {
+	const polyIndexedCommand_t	*cmd;
+	shader_t *shader;
+	int		numVerts, numIndexes;
+
+	cmd = (const polyIndexedCommand_t *)data;
+
+	shader = cmd->shader;
+	if ( shader != tess.shader ) {
+		if ( tess.numIndexes ) {
+			RB_EndSurface();
+		}
+		backEnd.currentEntity = &backEnd.entity2D;
+		RB_BeginSurface( shader, 0 );
+	}
+
+	VBO_UnBind();
+
+	if ( !backEnd.projection2D ) {
+		RB_SetGL2D();
+	}
+
+	//Check if it's time for BLOOM!
+	R_BloomScreen();
+
+	RB_CHECKOVERFLOW( 4, 6 );
+	numVerts = tess.numVertexes;
+	numIndexes = tess.numIndexes;
+
+	tess.numVertexes += cmd->numVerts;
+	tess.numIndexes += cmd->numIndexes;
+
+  for ( i = 0; i < cmd->numIndexes; i++ )
+	{
+		tess.indexes[ numIndexes + i ] = numVerts + cmd->indexes[ i ];
+	}
+
+  // TODO: scissor
+  /*
+  if ( tr.scissor.status )
+	{
+		GL_Scissor( tr.scissor.x, tr.scissor.y, tr.scissor.w, tr.scissor.h );
+	}
+  */
+
+	for ( i = 0; i < numverts; i++ )
+	{
+		tess.xyz[numVerts + i][0] = cmd->verts[ i ].xyz[0] + cmd->translation[0];
+		tess.xyz[numVerts + i][1] = cmd->verts[ i ].xyz[1] + cmd->translation[1];
+		tess.xyz[numVerts + i][2] = 0.0f;
+
+		tess.texCoords[0][numVerts + i][0] = cmd->verts[ i ].st[0];
+		tess.texCoords[0][numVerts + i][1] = cmd->verts[ i ].st[1];
+
+    tess.vertexColors[numVerts + i].rgba[0] = cmd->modulate[0];
+  	tess.vertexColors[numVerts + i].rgba[1] = cmd->modulate[1];
+  	tess.vertexColors[numVerts + i].rgba[2] = cmd->modulate[2];
+  	tess.vertexColors[numVerts + i].rgba[3] = cmd->modulate[3];
+	}
+
+	//tess.attribsSet |= ATTR_POSITION | ATTR_COLOR | ATTR_TEXCOORD;
+
+	return (const void *)(cmd + 1);
+}
+#endif
+
+
 /*
 =============
 RB_StretchPic
@@ -1591,6 +1664,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_SET_COLOR:
 			data = RB_SetColor( data );
 			break;
+#ifdef USE_RMLUI
+    case RC_POLY2D_INDEXED:
+			data = RB_Poly2DIndexed( data );
+			break;
+#endif
 		case RC_STRETCH_PIC:
 			data = RB_StretchPic( data );
 			break;

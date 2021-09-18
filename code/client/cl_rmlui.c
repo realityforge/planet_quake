@@ -104,52 +104,6 @@ static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices,
   int num_indices, qhandle_t texture, const vec2_t translation)
 {
   re.RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
-  /*
-  int *sourceVerts = (int *)vertices;
-  polyVert_t verts[num_vertices];
-  for(int  i = 0; i < num_vertices; i++) {
-    vec2_t pos;
-    memcpy(&pos, &sourceVerts[i*5+0], sizeof(vec2_t));
-    vec2_t size;
-    memcpy(&size, &sourceVerts[i*5+3], sizeof(vec2_t));
-    verts[i].xyz[0] = pos[0] + translation[0];
-    verts[i].xyz[2] = 1;
-    verts[i].xyz[1] = pos[1] + translation[1];
-    verts[i].st[0] = size[0];
-    verts[i].st[1] = size[1];
-    //Com_Printf("%f x %f <-> %f x %f\n", verts[i].xyz[0],
-    //  verts[i].xyz[1], verts[i].st[0], verts[i].st[1]);
-    verts[i].modulate[0] = //sourceVerts[i*5+2] >> 24 & 0xFF;
-    verts[i].modulate[1] = //sourceVerts[i*5+2] >> 16 & 0xFF;
-    verts[i].modulate[2] = //sourceVerts[i*5+2] >> 8 & 0xFF;
-    verts[i].modulate[3] = 255; //sourceVerts[i*5+2] & 0xFF;
-  }
-  
-  for(int  i = 0; i < num_vertices / 4; i++) {
-    vec2_t pos;
-    memcpy(&pos, &sourceVerts[(i*4)*5+0], sizeof(vec2_t));
-    vec2_t size;
-    memcpy(&size, &sourceVerts[(i*4)*5+3], sizeof(vec2_t));
-    vec2_t pos2;
-    memcpy(&pos2, &sourceVerts[(i*4+2)*5+0], sizeof(vec2_t));
-    vec2_t size2;
-    memcpy(&size2, &sourceVerts[(i*4+2)*5+3], sizeof(vec2_t));
-    pos[0] = pos[0] * (640.0 / cls.glconfig.vidWidth) + translation[0] * (640.0 / cls.glconfig.vidWidth);
-    pos[1] = pos[1] * (480.0 / cls.glconfig.vidHeight) + translation[1] * (480.0 / cls.glconfig.vidHeight);
-    //pos[0] = pos[0] * (640 / cls.glconfig.vidWidth) + translation[0];
-    //pos[1] = pos[1] * (480 / cls.glconfig.vidHeight) + translation[1];
-    pos2[0] = pos2[0] * (640.0 / cls.glconfig.vidWidth)  + translation[0] * (640.0 / cls.glconfig.vidWidth);
-    pos2[1] = pos2[1] * (480.0 / cls.glconfig.vidHeight)  + translation[1] * (480.0 / cls.glconfig.vidHeight);
-    size[0] = size[0] ;
-    size[1] = size[1] ;
-    size2[0] = size2[0] ;
-    size2[1] = size2[1] ;
-    re.DrawStretchPic( pos[0], pos[1], pos2[0], pos2[1], size[0], size[1], size2[0], size2[1], texture );
-  }
-  */
-
-  //re.AddPolyToScene(texture, num_vertices, verts, 1);
-  //re.DrawElements(num_indices, indices);
 }
 
 static qhandle_t CL_RmlCompileGeometry(void *vertices, int num_vertices, int* indices, 
@@ -247,7 +201,7 @@ void CL_InitRmlUi( void ) {
 	if (doc)
 	{
 		Rml_ShowDocument(doc);
-		Com_Printf("RMLUI: Document loaded\n");
+		Com_Printf("RMLUI: Document loaded: %i\n", ctx);
     cls.rmlStarted = qtrue;
 		
 		Rml_ContextRender(ctx);

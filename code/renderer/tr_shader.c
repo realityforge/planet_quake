@@ -2257,6 +2257,12 @@ static void FixRenderCommandList( int newShader ) {
 				curCmd = (const void *)(sc_cmd + 1);
 				break;
 				}
+      case RC_POLY2D_INDEXED:
+				{
+				const polyIndexedCommand_t *pi_cmd = (const polyIndexedCommand_t *)curCmd;
+				curCmd = (const void *)(pi_cmd + 1);
+				break;
+				}
 			case RC_STRETCH_PIC:
 				{
 				const stretchPicCommand_t *sp_cmd = (const stretchPicCommand_t *)curCmd;
@@ -3621,4 +3627,28 @@ void R_InitShaders( void ) {
 	ScanAndLoadShaderFiles();
 
 	CreateExternalShaders();
+}
+
+qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height) {
+  shader_t	*sh;
+  image_t *image = R_CreateImage(name, NULL, (byte *)pic, width, height, IMGFLAG_CLAMPTOEDGE );
+  InitShader( name, LIGHTMAP_2D );
+  stages[0].bundle[0].image[0] = image;
+  stages[0].active = qtrue;
+  stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
+                        GLS_SRCBLEND_SRC_ALPHA |
+                        GLS_DSTBLEND_SRC_ALPHA;
+  stages[0].bundle[0].image[0] = image;
+  stages[0].rgbGen = CGEN_VERTEX;
+  stages[0].alphaGen = AGEN_VERTEX;
+  sh = FinishShader();
+  return sh->index;
+}
+
+qhandle_t RE_RegisterImage( int *dimensions, const char *name ) {
+  shader_t *sh = R_FindShader(name, LIGHTMAP_2D, qtrue);
+  if(!sh) return 0;
+  dimensions[0] = sh->stages[0]->bundle[0].image[0]->width;
+  dimensions[0] = sh->stages[0]->bundle[0].image[0]->height;
+  return sh->index;
 }

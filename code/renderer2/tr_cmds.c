@@ -266,6 +266,61 @@ void RE_ResetBannerSpy( void ) {
 }
 
 
+#ifdef USE_RMLUI
+typedef struct {
+  vec2_t		xy;
+	struct {
+    byte red;
+    byte green;
+    byte blue;
+    byte alpha;
+  } colour;
+  vec2_t		tex_coord;
+} rocketVertex_t;
+
+void RE_RenderGeometry(void *vertices, int num_vertices, int* indices, 
+                        int num_indices, qhandle_t texture, const vec2_t translation) {
+  polyIndexedCommand_t	*cmd;
+  rocketVertex_t *rocketVs = (rocketVertex_t *)vertices;
+
+  if ( !tr.registered ) {
+    return;
+  }
+  if ( r_numpolyverts + num_vertices > max_polyverts || r_numindexes + num_indices > max_polyverts ) {
+    ri.Printf( PRINT_DEVELOPER, "WARNING: RE_AddPolyToScene: r_max_polyverts reached\n");
+    return;
+  }
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+  cmd->commandId = RC_POLY2D_INDEXED;
+  cmd->shader = R_GetShaderByHandle( texture );
+  cmd->numVerts = num_vertexes;
+  cmd->verts = &backEndData->polyVerts[ r_numpolyverts ];
+	for(int i = 0; i < num_vertexes; i++) {
+    cmd->verts[i].xyz[0] = rocketVs[i].position[0];
+    cmd->verts[i].xyz[1] = rocketVs[i].position[1];
+    cmd->verts[i].xyz[2] = 0;
+    cmd->verts[i].st[0] = rocketVs[i].tex_coord[0];
+    cmd->verts[i].st[1] = rocketVs[i].tex_coord[1];
+    cmd->verts[i].modulate[0] = rocketVs[i].colour.red;
+    cmd->verts[i].modulate[1] = rocketVs[i].colour.green;
+    cmd->verts[i].modulate[2] = rocketVs[i].colour.blue;
+    cmd->verts[i].modulate[3] = rocketVs[i].colour.alpha;
+  }
+  cmd->numIndexes = num_indices;
+  cmd->indexes = &backEndData->indexes[ r_numindexes ];
+	memcpy( cmd->indexes, indices, sizeof( int ) * num_indices );
+  cmd->translation[0] = translation[0];
+  cmd->translation[1] = translation[1];
+
+  r_numpolyverts += num_vertexes;
+	r_numindexes += num_indices;
+}
+#endif
+
+
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader ) {
 	stretchPicCommand_t	*cmd;

@@ -1826,11 +1826,14 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 #ifdef USE_RMLUI
   re.RegisterImage = RE_RegisterImage;
-  re.DrawElements = RE_DrawElements;
   re.RenderGeometry = RE_RenderGeometry;
-  re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
 #endif
+
+#ifdef USE_LNBITS
+  re.CreateShaderFromImageBytes = RE_CreateShaderFromImageBytes;
+#endif
+
 #ifdef USE_VID_FAST
 	re.UpdateMode = RE_UpdateMode;
 #endif

@@ -37,6 +37,7 @@ int			r_numpolys;
 int			r_firstScenePoly;
 
 int			r_numpolyverts;
+int     r_numindexes;
 
 
 /*
@@ -64,6 +65,7 @@ void R_InitNextFrame( void ) {
 	r_firstScenePoly = 0;
 
 	r_numpolyverts = 0;
+  r_numindexes = 0;
 }
 
 

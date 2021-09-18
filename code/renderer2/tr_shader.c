@@ -4393,6 +4393,7 @@ static void CreateInternalShaders( void ) {
 }
 
 
+#ifdef USE_LNBITS
 qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int width, int height) {
   shader_t	*sh;
   image_t *image;
@@ -4404,6 +4405,7 @@ qhandle_t RE_CreateShaderFromImageBytes(const char* name, const byte *pic, int w
   sh = FinishShader();
   return sh->index;
 }
+#endif
 
 qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, int height) {
   shader_t	*sh;
@@ -4412,8 +4414,8 @@ qhandle_t RE_CreateShaderFromRaw(const char* name, const byte *pic, int width, i
   stages[0].bundle[0].image[0] = image;
   stages[0].active = qtrue;
   stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-      GLS_SRCBLEND_SRC_ALPHA |
-      GLS_DSTBLEND_SRC_ALPHA;
+                        GLS_SRCBLEND_SRC_ALPHA |
+                        GLS_DSTBLEND_SRC_ALPHA;
   stages[0].bundle[0].image[0] = image;
   stages[0].rgbGen = CGEN_VERTEX;
   stages[0].alphaGen = AGEN_VERTEX;

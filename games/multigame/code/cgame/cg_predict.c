@@ -496,16 +496,12 @@ static void CG_TouchItem( centity_t *cent ) {
 
 	// Special case for flags.  
 	// We don't predict touching our own flag
-#ifdef MISSIONPACK
 	if( cgs.gametype == GT_1FCTF ) {
 		if( item->giTag != PW_NEUTRALFLAG ) {
 			return;
 		}
 	}
 	if( cgs.gametype == GT_CTF || cgs.gametype == GT_HARVESTER ) {
-#else
-	if( cgs.gametype == GT_CTF ) {
-#endif
 		if (cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_RED &&
 			item->giType == IT_TEAM && item->giTag == PW_REDFLAG)
 			return;

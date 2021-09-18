@@ -1954,9 +1954,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	trap_CM_LoadMap( cgs.mapname );
 
-#ifdef MISSIONPACK
 	String_Init();
-#endif
 
 	cg.loading = qtrue;		// force players to load instead of defer
 
@@ -1972,10 +1970,8 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_RegisterClients();		// if low on memory, some clients will be deferred
 
-#ifdef MISSIONPACK
 	CG_AssetCache();
 	CG_LoadHudMenu();      // load new hud stuff
-#endif
 
 	cg.loading = qfalse;	// future players will be deferred
 

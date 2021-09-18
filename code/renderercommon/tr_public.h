@@ -121,9 +121,9 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
-
+#ifdef USE_LNBITS
 	qhandle_t  (*CreateShaderFromImageBytes)(const char* name, const byte *pic, int width, int height);
-  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
+#endif
 #ifdef USE_LAZY_MEMORY
 #ifdef USE_MULTIVM_CLIENT
 	void  (*SetDvrFrame)( float x, float y, float height, float width );
@@ -139,7 +139,7 @@ typedef struct {
   qhandle_t (*RegisterImage)( int *dimensions, const char *name );
   void (*RenderGeometry)(void *vertices, int num_vertices, int* indices, 
                           int num_indices, qhandle_t texture, const vec2_t translation);
-  void  (*DrawElements)(int numIndexes, void *firstIndex);
+  qhandle_t  (*CreateShaderFromRaw)(const char* name, const byte *pic, int width, int height);
 #endif
 #ifdef USE_VID_FAST
   void (*UpdateMode)(glconfig_t *glconfigOut);
