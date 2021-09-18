@@ -74,6 +74,7 @@ New game features:
   * Configurable vote options based on roles.
   * Launch a program like opening a web page from a map trigger.
   * More configurable physics.
+  * TODO: fix drawing ammo regen persistent powerups
 
 Coming soon!
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?

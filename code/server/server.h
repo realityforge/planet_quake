@@ -363,6 +363,7 @@ typedef struct client_s {
 #endif
 #ifdef USE_REFEREE_CMDS
 	qboolean muted;
+  qboolean frozen;
 	qboolean nofire;
 #endif
 #ifdef USE_PERSIST_CLIENT

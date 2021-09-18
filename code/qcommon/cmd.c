@@ -40,6 +40,10 @@ byte   cmd_text_buf[32][MAX_CMD_BUFFER];
 int    insCmdI;
 int    execCmdI;
 
+#ifdef USE_SERVER_ROLES
+static qboolean limited;
+#endif
+
 static void Cmd_Help_f( void );
 
 //=============================================================================
@@ -1176,9 +1180,8 @@ char *Cmd_TokenizeAlphanumeric(const char *text_in, int *count) {
 	return props;
 }
 
-#ifdef USE_SERVER_ROLES
-static qboolean limited;
 
+#ifdef USE_SERVER_ROLES
 qboolean Cmd_ExecuteLimitedString( const char *text, qboolean noServer, int role ) {
 	limited = qtrue;
 	qboolean result = Cmd_ExecuteString(text, noServer, 0);
@@ -1205,7 +1208,6 @@ void Cmd_FilterLimited(char *commandList) {
 	}
 	
 }
-
 #endif
 
 

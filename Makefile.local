@@ -21,7 +21,10 @@ USE_VIDEO_THEORA       = 0
 USE_VIDEO_XVID         = 0
 USE_CIN_VPX            = 0
 
-USE_RECENT_EVENTS      = 0
+USE_SERVER_ROLES       = 1
+USE_RECENT_EVENTS      = 1
+USE_REFEREE_CMDS       = 1
+
 USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0
 USE_DEMO_SERVER        = 0
@@ -31,8 +34,8 @@ USE_MEMORY_MAPS        = 0
 USE_PERSIST_CONSOLE    = 0
 USE_NO_CONSOLE         = 0
 USE_PRINT_CONSOLE      = 0
-USE_RMLUI              = 1
-USE_RMLUI_DLOPEN       = 1
+USE_RMLUI              = 0
+USE_RMLUI_DLOPEN       = 0
 USE_MULTIVM_SERVER     = 0
 USE_MULTIVM_CLIENT     = 0
 USE_FREETYPE           = 0

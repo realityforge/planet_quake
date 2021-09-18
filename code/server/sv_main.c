@@ -1444,7 +1444,7 @@ SV_CheckPaused
 */
 static qboolean SV_CheckPaused( void ) {
 
-#if defined(DEDICATED) && !defined(USE_REFEREE_CMDS)
+#if defined(DEDICATED) && !defined(USE_REFEREE_CMDS) && !defined(USE_LOCAL_DED)
 	// can't pause on dedicated servers
 	return qfalse;
 #else
@@ -1776,6 +1776,11 @@ void SV_Frame( int msec ) {
 	while ( sv.timeResidual >= frameMsec ) {
 		sv.timeResidual -= frameMsec;
 		svs.time += frameMsec;
+#ifdef USE_REFEREE_CMDS
+    // TODO: run up an offset counter, then subtract in GAME_RUN_FRAME,
+    //   so that timelimit doesn't get hit while paused
+    if(!sv_paused->integer)
+#endif
 		sv.time += frameMsec;
 
 		// let everything in the world think and move

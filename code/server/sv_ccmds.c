@@ -1596,10 +1596,24 @@ void SV_Shout_f(void) {
 }
 
 void SV_Freeze_f(void) {
-	if(Cmd_Argc() > 1) {
-		Com_Printf ("Usage: %s", Cmd_Argv(0));
+  client_t *cl;
+	if(Cmd_Argc() > 2) {
+		Com_Printf ("Usage: %s <player>", Cmd_Argv(0));
 		return;
 	}
+  
+  if(Cmd_Argc() == 2) {
+    cl = SV_GetPlayerByHandle();
+    if ( !cl ) {
+      return;
+    }
+    if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
+      cl->frozen = qtrue;
+    } else {
+      cl->frozen = qfalse;
+    }
+    return;
+  }
 	
 	if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
 		Cvar_Set("sv_frozen", "1");
