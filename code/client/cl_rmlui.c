@@ -90,8 +90,7 @@ static double CL_RmlGetElapsedTime( void ) {
 
 static qhandle_t CL_RmlLoadTexture(int *dimensions, const char *source) {
   qhandle_t result = re.RegisterImage(dimensions, source);
-  //dimensions[0] = dimensions[0] * (640/480);
-	//dimensions[1] = dimensions[1] * (480/640);
+  //Com_Printf("RMLUI: LoadTexture: %ix%i\n", dimensions[0], dimensions[1]);
   return result;
 }
 
@@ -103,14 +102,17 @@ static qhandle_t CL_RmlGenerateTexture(const byte *source, const int *source_dim
 static void CL_RmlRenderGeometry(void *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture, const vec2_t translation)
 {
+  //Com_Printf("RMLUI: RenderGeometry: %i verts, %i indexes\n", num_vertices, num_indices);
   re.RenderGeometry(vertices, num_vertices, indices, num_indices, texture, translation);
 }
 
+/*
 static qhandle_t CL_RmlCompileGeometry(void *vertices, int num_vertices, int* indices, 
   int num_indices, qhandle_t texture)
 {
   return 0;
 }
+*/
 
 void CL_UIContextRender(void) {
   Rml_ContextRender(0);
@@ -152,7 +154,7 @@ void CL_InitRmlUi( void ) {
   Rml_ContextUpdate = Sys_LoadFunction( rmlLib, "Rml_ContextUpdate" );
   Rml_Shutdown = Sys_LoadFunction( rmlLib, "Rml_Shutdown" );
 #endif // USE_BOTLIB_DLOPEN
-;
+
 	static RmlFileInterface files;
 	files.Open = CL_RmlOpen;
 	files.Close = CL_RmlClose;
@@ -195,9 +197,9 @@ void CL_InitRmlUi( void ) {
 
   //qhandle_t ctx = Rml_CreateContext("default", 640, 480);
 	qhandle_t ctx = Rml_CreateContext("default", cls.glconfig.vidWidth, cls.glconfig.vidWidth);
+  Com_Printf("RMLUI: Context created: %i\n", ctx);
 	
 	qhandle_t doc = Rml_LoadDocument(ctx, "assets/demo.rml");
-
 	if (doc)
 	{
 		Rml_ShowDocument(doc);

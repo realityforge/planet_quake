@@ -1060,6 +1060,7 @@ static const void *RB_Poly2DIndexed( const void *data ) {
 	cmd = (const polyIndexedCommand_t *)data;
 
 	shader = cmd->shader;
+  shader->cullType = CT_TWO_SIDED;
 	if ( shader != tess.shader ) {
 		if ( tess.numIndexes ) {
 			RB_EndSurface();
@@ -1077,16 +1078,16 @@ static const void *RB_Poly2DIndexed( const void *data ) {
 	//Check if it's time for BLOOM!
 	R_BloomScreen();
 
-	RB_CHECKOVERFLOW( 4, 6 );
+	RB_CHECKOVERFLOW( cmd->numVerts, cmd->numIndexes );
 	numVerts = tess.numVertexes;
 	numIndexes = tess.numIndexes;
 
 	tess.numVertexes += cmd->numVerts;
 	tess.numIndexes += cmd->numIndexes;
 
-  for ( i = 0; i < cmd->numIndexes; i++ )
+  for ( int i = 0; i < cmd->numIndexes; i++ )
 	{
-		tess.indexes[ numIndexes + i ] = numVerts + cmd->indexes[ i ];
+		tess.indexes[ numIndexes + i ] = numVerts + cmd->indexes[i];
 	}
 
   // TODO: scissor
@@ -1097,19 +1098,18 @@ static const void *RB_Poly2DIndexed( const void *data ) {
 	}
   */
 
-	for ( i = 0; i < numverts; i++ )
+	for ( int i = 0; i < cmd->numVerts; i++ )
 	{
-		tess.xyz[numVerts + i][0] = cmd->verts[ i ].xyz[0] + cmd->translation[0];
-		tess.xyz[numVerts + i][1] = cmd->verts[ i ].xyz[1] + cmd->translation[1];
+    //ri.Printf(PRINT_ALL, "Rendering: %fx%f\n",
+    //  cmd->verts[i].xyz[0], cmd->verts[i].xyz[1]);
+		tess.xyz[numVerts + i][0] = cmd->verts[i].xyz[0] + cmd->translation[0];
+		tess.xyz[numVerts + i][1] = cmd->verts[i].xyz[1] + cmd->translation[1];
 		tess.xyz[numVerts + i][2] = 0.0f;
 
-		tess.texCoords[0][numVerts + i][0] = cmd->verts[ i ].st[0];
-		tess.texCoords[0][numVerts + i][1] = cmd->verts[ i ].st[1];
+		tess.texCoords[0][numVerts + i][0] = cmd->verts[i].st[0];
+		tess.texCoords[0][numVerts + i][1] = cmd->verts[i].st[1];
 
-    tess.vertexColors[numVerts + i].rgba[0] = cmd->modulate[0];
-  	tess.vertexColors[numVerts + i].rgba[1] = cmd->modulate[1];
-  	tess.vertexColors[numVerts + i].rgba[2] = cmd->modulate[2];
-  	tess.vertexColors[numVerts + i].rgba[3] = cmd->modulate[3];
+    tess.vertexColors[numVerts + i].u32 = cmd->verts[i].modulate.u32;
 	}
 
 	//tess.attribsSet |= ATTR_POSITION | ATTR_COLOR | ATTR_TEXCOORD;
@@ -1430,7 +1430,7 @@ void RB_ShowImages( void ) {
 	start = ri.Milliseconds();
 
 	for ( i = 0; i < tr.numImages; i++ ) {
-		image = tr.images[ i ];
+		image = tr.images[i];
 		w = glConfig.vidWidth / 20;
 		h = glConfig.vidHeight / 15;
 		x = i % 20 * w;

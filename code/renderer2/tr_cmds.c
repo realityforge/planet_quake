@@ -304,10 +304,10 @@ void RE_RenderGeometry(void *vertices, int num_vertices, int* indices,
     cmd->verts[i].xyz[2] = 0;
     cmd->verts[i].st[0] = rocketVs[i].tex_coord[0];
     cmd->verts[i].st[1] = rocketVs[i].tex_coord[1];
-    cmd->verts[i].modulate[0] = rocketVs[i].colour.red;
-    cmd->verts[i].modulate[1] = rocketVs[i].colour.green;
-    cmd->verts[i].modulate[2] = rocketVs[i].colour.blue;
-    cmd->verts[i].modulate[3] = rocketVs[i].colour.alpha;
+    cmd->verts[i].modulate.rgba[0] = rocketVs[i].colour.red;
+    cmd->verts[i].modulate.rgba[1] = rocketVs[i].colour.green;
+    cmd->verts[i].modulate.rgba[2] = rocketVs[i].colour.blue;
+    cmd->verts[i].modulate.rgba[3] = rocketVs[i].colour.alpha;
   }
   cmd->numIndexes = num_indices;
   cmd->indexes = &backEndData->indexes[ r_numindexes ];

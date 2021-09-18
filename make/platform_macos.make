@@ -2,7 +2,7 @@
 include make/configure.make
 
 CC               := gcc
-CXX              := /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
+CXX              := c++
 GXX              := g++
 
 BASE_CFLAGS      += -Wall -fno-strict-aliasing -Wimplicit \
@@ -11,7 +11,7 @@ BASE_CFLAGS      += -Wall -fno-strict-aliasing -Wimplicit \
 OPTIMIZE         := -O2 -fvisibility=hidden
 SHLIBEXT         := dylib
 SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
-LDFLAGS          :=
+LDFLAGS          := 
 SHLIBLDFLAGS     := -dynamiclib $(LDFLAGS)
 
 ifneq ($(SDL_CFLAGS),)
