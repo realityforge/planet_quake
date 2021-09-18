@@ -63,6 +63,7 @@ Some of the major features currently implemented are:
   * Procedurally generated game content and maps, sv_bsp procedurally generates a map of any size and transfers to the client. Use `+map \*memory0` to see a generated skybox, the source `.map` and generated bsp file are stored in the game home path. TODO: connect virtual fs for image loading, TODO: create voxelized model on server aka "destructible model" and stream to client, replace using z-index? TODO: add checksum to skip download, also minimize download screen. TODO: remove dependency on client side changes by building a temporary pk3 on the server with zlib (or whatever) and allowing legacy clients to download from that. TODO: fix multithreading so console can respond and cancel map generations like a process list/print queue, use this feature for faster map development.
   * Persistent client sessions, that is, saving and restoring client score/health/location after a full disconnect and reconnect, use `sv_clSession` to specify how many seconds a session is valid to be restored.
   * Slim client without extra file formats or server, only for connecting to games or rendering demos.
+  * RmlUi support for HTML/RCSS style menus.
   * Persistent console.
   * Many, many bug fixes
 
