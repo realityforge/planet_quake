@@ -281,6 +281,8 @@ typedef enum {
 	PW_AMMOREGEN,
 	PW_INVULNERABILITY,
 
+  PW_FROZEN,
+
 	PW_NUM_POWERUPS
 
 } powerup_t;
@@ -443,6 +445,10 @@ typedef enum {
 	EV_TAUNT_GETFLAG,
 	EV_TAUNT_GUARDBASE,
 	EV_TAUNT_PATROL,
+
+  EV_FROZEN,
+  EV_UNFROZEN,
+
 	EV_MAX
 
 } entity_event_t;

@@ -330,6 +330,8 @@ struct gclient_s {
 		int		enemy;
 		int		amount;
 	} damage;
+  
+  qboolean frozen;
 };
 
 

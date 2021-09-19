@@ -1176,6 +1176,19 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
 		break;
 
+  case EV_FROZEN:
+		DEBUGNAME("EV_FROZEN");
+		if ( es->number == cg.snap->ps.clientNum ) {
+			cg.powerupActive = PW_FROZEN;
+			cg.powerupTime = cg.time;
+		}
+		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
+		break;
+  case EV_UNFROZEN:
+    // TODO: play unfreeze sound
+    //trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
+    break;
+
 	case EV_GIB_PLAYER:
 		// don't play gib sound when using the kamikaze because it interferes
 		// with the kamikaze sound, downside is that the gib sound will also
