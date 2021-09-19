@@ -29,17 +29,17 @@ GAME_LDFLAGS  += $(SHLIBLDFLAGS)
 
 define DO_GAME_CC
   $(echo_cmd) "GAME_CC $<"
-  $(Q)$(CC) $(MOD_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+  $(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_CGAME_CC
   $(echo_cmd) "CGAME_CC $<"
-  $(Q)$(CC) $(MOD_CFLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+  $(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_UI_CC
   $(echo_cmd) "UI_CC $<"
-  $(Q)$(CC) $(MOD_CFLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+  $(Q)$(CC) -DUI $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 #############################################################################

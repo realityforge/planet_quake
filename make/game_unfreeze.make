@@ -40,17 +40,17 @@ endif
 
 define DO_GAME_CC
 	$(echo_cmd) "GAME_CC $<"
-	$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_CGAME_CC
 	$(echo_cmd) "CGAME_CC $<"
-	$(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_UI_CC
 	$(echo_cmd) "UI_CC $<"
-	$(Q)$(CC) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DUI $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_GAME_LCC

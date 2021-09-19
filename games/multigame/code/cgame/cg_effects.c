@@ -178,7 +178,9 @@ void CG_SpawnEffect( const vec3_t origin ) {
 	else
 		re->u.shaderTime = cg.time / 1000.0f;
 
+#ifndef MISSIONPACK
 	re->customShader = cgs.media.teleportEffectShader;
+#endif
 	re->hModel = cgs.media.teleportEffectModel;
 	AxisClear( re->axis );
 
@@ -192,6 +194,7 @@ void CG_SpawnEffect( const vec3_t origin ) {
 }
 
 
+#ifdef MISSIONPACK
 /*
 ===============
 CG_LightningBoltBeam
@@ -378,6 +381,7 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 
 	trap_S_StartSound (org, ENTITYNUM_NONE, CHAN_BODY, cgs.media.invulnerabilityJuicedSound );
 }
+#endif
 
 
 /*

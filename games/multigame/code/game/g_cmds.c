@@ -2,7 +2,9 @@
 //
 #include "g_local.h"
 
+#ifdef MISSIONPACK
 #include "../../ui/menudef.h"			// for the voice chats
+#endif
 
 /*
 ==================
@@ -1035,6 +1037,7 @@ static void Cmd_Tell_f( gentity_t *ent ) {
 	}
 }
 
+#ifdef MISSIONPACK
 
 static void G_VoiceTo( gentity_t *ent, gentity_t *other, int mode, const char *id, qboolean voiceonly ) {
 	int color;
@@ -1231,6 +1234,7 @@ static void Cmd_VoiceTaunt_f( gentity_t *ent ) {
 	// just say something
 	G_Voice( ent, NULL, SAY_ALL, VOICECHAT_TAUNT, qfalse );
 }
+#endif
 
 
 static char	*gc_orders[] = {
@@ -1292,6 +1296,7 @@ ban, , ,, shuffle, mute, , ,
 */
 
 #ifdef USE_SERVER_ROLES
+extern  vmCvar_t g_callvotable;
 static	char		props[BIG_INFO_STRING];
 char *TokenizeAlphanumeric(const char *text_in, int *count) {
 	int c = 0, r = 0, len = strlen(text_in);
@@ -1355,16 +1360,16 @@ static qboolean ValidVoteCommand( int clientNum, char *command )
 		command++;
 		
 #ifdef USE_SERVER_ROLES
-	if(g_callvotable && g_callvotable.string[0]) {
+	if(g_callvotable.string[0]) {
 		int len, voteI;
-		char *votables = TokenizeAlphanumeric(g_callvotable.string, &int);
-		for( int i = 0; i < len; i++) {
+		char *votables = TokenizeAlphanumeric(g_callvotable.string, &len);
+		for(voteI = 0; voteI < len; voteI++) {
 			if ( !Q_stricmp( buf, votables ) ) {
 				break;
 			}
 			votables = &votables[strlen(votables)+1];
 		}
-		if ( i == len ) {
+		if ( voteI == len ) {
 			trap_SendServerCommand( clientNum, "print \"Invalid vote command.\nVote commands are: \n" );
 			return qfalse;
 		}
@@ -1876,6 +1881,7 @@ void ClientCommand( int clientNum ) {
 		Cmd_Tell_f ( ent );
 		return;
 	}
+#ifdef MISSIONPACK
 	if (Q_stricmp (cmd, "vsay") == 0) {
 		Cmd_Voice_f (ent, SAY_ALL, qfalse, qfalse);
 		return;
@@ -1904,6 +1910,7 @@ void ClientCommand( int clientNum ) {
 		Cmd_VoiceTaunt_f ( ent );
 		return;
 	}
+#endif
 	if (Q_stricmp (cmd, "score") == 0) {
 		Cmd_Score_f (ent);
 		return;

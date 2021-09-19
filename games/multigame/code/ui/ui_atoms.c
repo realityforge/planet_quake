@@ -9,6 +9,33 @@
 
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
+// these are here so the functions in q_shared.c can link
+#ifndef UI_HARD_LINKED
+
+void QDECL Com_Error( int level, const char *error, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, error);
+	ED_vsprintf (text, error, argptr);
+	va_end (argptr);
+
+	trap_Error( va("%s", text) );
+}
+
+void QDECL Com_Printf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	ED_vsprintf (text, msg, argptr);
+	va_end (argptr);
+
+	trap_Print( va("%s", text) );
+}
+
+#endif
+
 qboolean newUI = qfalse;
 
 

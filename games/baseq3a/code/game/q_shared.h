@@ -212,6 +212,10 @@ typedef enum {
 //
 #define	MAX_MAP_AREA_BYTES		32		// bit vector of area visibility
 
+#ifdef USE_SERVER_ROLES
+#define MAX_CLIENT_ROLES 24
+#endif
+
 
 // print levels from renderer (FIXME: set up for game / cgame?)
 typedef enum {

@@ -1458,12 +1458,14 @@ static qboolean SV_CheckPaused( void ) {
 		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
 			count++;
 			if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))) {
-				Cvar_Set("cl_paused", "1");
+        Cvar_Set("sv_paused", "1");
 			}
 		}
 	}
 
-	if ( cl_paused && !cl_paused->integer ) {
+	if ( !com_dedicated->integer 
+    && cl_paused && !cl_paused->integer ) {
+    Cvar_Set("sv_paused", "0");
 		return qfalse;
 	}
 

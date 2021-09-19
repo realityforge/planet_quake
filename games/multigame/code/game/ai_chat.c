@@ -263,7 +263,11 @@ BotRandomWeaponName
 char *BotRandomWeaponName(void) {
 	int rnd;
 
+#ifdef MISSIONPACK
 	rnd = random() * 11.9;
+#else
+	rnd = random() * 8.9;
+#endif
 	switch(rnd) {
 		case 0: return "Gauntlet";
 		case 1: return "Shotgun";
@@ -273,9 +277,11 @@ char *BotRandomWeaponName(void) {
 		case 5: return "Plasmagun";
 		case 6: return "Railgun";
 		case 7: return "Lightning Gun";
+#ifdef MISSIONPACK
 		case 8: return "Nailgun";
 		case 9: return "Chaingun";
 		case 10: return "Proximity Launcher";
+#endif
 		default: return "BFG10K";
 	}
 }

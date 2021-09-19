@@ -9,6 +9,10 @@ MKFILE        := $(lastword $(MAKEFILE_LIST))
 include make/platform.make
 endif
 
+MOD_CFLAGS    :=
+ifeq ($(MISSIONPACK),1)
+MOD_CFLAGS    += -DMISSIONPACK
+endif
 
 ifndef Q3LCC
 include make/lib_q3lcc.make
@@ -21,7 +25,7 @@ CGDIR         := $(GAMEDIR)/cgame
 UIDIR         := $(GAMEDIR)/q3_ui
 SUIDIR        := $(GAMEDIR)/ui
 
-GAME_CFLAGS   := $(BASE_CFLAGS)
+GAME_CFLAGS   := $(BASE_CFLAGS) $(MOD_CFLAGS)
 ifeq ($(CC), $(findstring $(CC), "clang" "clang++"))
 GAME_CFLAGS   += -Wno-unused-arguments
 endif
@@ -40,32 +44,32 @@ endif
 
 define DO_GAME_CC
 	$(echo_cmd) "GAME_CC $<"
-	$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_CGAME_CC
 	$(echo_cmd) "CGAME_CC $<"
-	$(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_UI_CC
 	$(echo_cmd) "UI_CC $<"
-	$(Q)$(CC) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZE) -o $@ -c $<
+	$(Q)$(CC) -DUI $(SHLIBCFLAGS) $(GAME_CFLAGS) $(OPTIMIZE) -o $@ -c $<
 endef
 
 define DO_GAME_LCC
 	$(echo_cmd) "GAME_LCC $<"
-	$(Q)$(Q3LCC) -DQAGAME -o $@ -c $<
+	$(Q)$(Q3LCC) -DQAGAME $(MOD_CFLAGS) -o $@ -c $<
 endef
 
 define DO_CGAME_LCC
 	$(echo_cmd) "CGAME_LCC $<"
-	$(Q)$(Q3LCC) -DCGAME -o $@ -c $<
+	$(Q)$(Q3LCC) -DCGAME $(MOD_CFLAGS) -o $@ -c $<
 endef
 
 define DO_UI_LCC
 	$(echo_cmd) "UI_LCC $<"
-	$(Q)$(Q3LCC) -DUI -o $@ -c $<
+	$(Q)$(Q3LCC) -DUI $(MOD_CFLAGS) -o $@ -c $<
 endef
 
 #############################################################################
@@ -114,7 +118,6 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \
           $(B)/$(MOD)/cgame/cg_draw.o \
-					$(B)/$(MOD)/cgame/cg_newdraw.o \
           $(B)/$(MOD)/cgame/cg_drawtools.o \
           $(B)/$(MOD)/cgame/cg_effects.o \
           $(B)/$(MOD)/cgame/cg_ents.o \
@@ -131,6 +134,9 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_view.o \
           $(B)/$(MOD)/cgame/cg_weapons.o \
 					$(B)/$(MOD)/ui/ui_shared.o
+ifeq ($(MISSIONPACK),1)
+CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o
+endif
 
 ifneq ($(BUILD_CLIENT),1)
 CGOBJ_ += $(B)/$(MOD)/game/q_math.o \
