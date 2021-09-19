@@ -1451,28 +1451,34 @@ static qboolean SV_CheckPaused( void ) {
 	const client_t *cl;
 	int	count;
 	int	i;
+  qboolean clPaused = qfalse;
+
+  if ( !com_dedicated->integer && !cl_paused->integer ) {
+		return qfalse;
+	}
 
 	// only pause if there is just a single client connected
 	count = 0;
 	for (i=0,cl=svs.clients ; i < sv_maxclients->integer ; i++,cl++) {
 		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
 			count++;
-			if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))) {
-        Cvar_Set("sv_paused", "1");
-			}
+      if(atoi(Info_ValueForKey(cl->userinfo, "cl_paused"))
+        || (cl_paused && cl_paused->integer)) {
+        clPaused = qtrue;
+      }
 		}
-	}
-
-	if ( !com_dedicated->integer 
-    && cl_paused && !cl_paused->integer ) {
-    Cvar_Set("sv_paused", "0");
-		return qfalse;
-	}
+  }
 
   if ( count > 1 ) {
 		// don't pause
 		if (sv_paused->integer)
 			Cvar_Set("sv_paused", "0");
+		return qfalse;
+	}
+
+	if ( !clPaused ) {
+    if (sv_paused->integer)
+      Cvar_Set("sv_paused", "0");
 		return qfalse;
 	}
 
