@@ -1608,9 +1608,17 @@ void SV_Freeze_f(void) {
       return;
     }
     if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
-      cl->frozen = qtrue;
+      cl->frozen = sv.time;
+      if(sv.isMultiGame) {
+        playerState_t *ps = SV_GameClientNum( c );
+        ps->powerups[PW_FROZEN] = sv.time;
+      }
     } else {
-      cl->frozen = qfalse;
+      cl->frozen = 0;
+      if(sv.isMultiGame) {
+        playerState_t *ps = SV_GameClientNum( c );
+        ps->powerups[PW_FROZEN] = 0;
+      }
     }
     return;
   }

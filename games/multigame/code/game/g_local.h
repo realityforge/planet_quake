@@ -808,6 +808,9 @@ extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
+#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+extern  vmCvar_t  g_thawTime;
+#endif
 
 void	trap_Print( const char *text );
 void	trap_Error( const char *text );
@@ -1026,4 +1029,3 @@ extern int dll_com_trapGetValue;
 #endif
 
 extern	int svf_self_portal2;
-

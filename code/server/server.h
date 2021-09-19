@@ -148,6 +148,10 @@ typedef struct {
 	sharedEntity_t	demoEntities[MAX_GENTITIES];
 	playerState_t	demoPlayerStates[MAX_CLIENTS];
 #endif
+
+#ifdef USE_REFEREE_CMDS
+  qboolean isMultiGame;
+#endif
 } server_t;
 
 typedef struct {
@@ -363,8 +367,8 @@ typedef struct client_s {
 #endif
 #ifdef USE_REFEREE_CMDS
 	qboolean muted;
-  qboolean frozen;
 	qboolean nofire;
+  int frozen;
 #endif
 #ifdef USE_PERSIST_CLIENT
 	int persisted;

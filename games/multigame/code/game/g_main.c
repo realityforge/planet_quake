@@ -60,7 +60,6 @@ vmCvar_t	g_banIPs;
 vmCvar_t	g_filterBan;
 vmCvar_t	g_smoothClients;
 vmCvar_t	g_rotation;
-vmCvar_t	g_callvotable;
 vmCvar_t	g_unlagged;
 vmCvar_t	pmove_fixed;
 vmCvar_t	pmove_msec;
@@ -78,7 +77,12 @@ vmCvar_t	g_enableDust;
 vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
-
+#ifdef USE_REFEREE_CMDS
+vmCvar_t	g_callvotable;
+#endif
+#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+vmCvar_t	g_thawTime;
+#endif
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -90,6 +94,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_restarted, "g_restarted", "0", CVAR_ROM, 0, qfalse  },
 	{ &g_mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse  },
 	{ &sv_fps, "sv_fps", "30", CVAR_ARCHIVE, 0, qfalse  },
+  { NULL, "multigame", "1" , CVAR_SERVERINFO | CVAR_ROM, 0, qfalse  },
 
 	// latched vars
 	{ &g_gametype, "g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH, 0, qfalse  },
@@ -171,6 +176,10 @@ static cvarTable_t gameCvarTable[] = {
 	,{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "
 		"kick clientkick g_gametype g_unlagged g_warmup timelimit"
 		"fraglimit capturelimit", CVAR_ARCHIVE, 0, qfalse}
+#endif
+
+#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+  ,{ &g_thawTime, "sv_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

@@ -832,6 +832,21 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.speed *= 1.3;
 	}
 
+#ifdef USE_REFEREE_CMDS
+  if(client->ps.powerups[PW_FROZEN] && !client.frozen) {
+    G_AddEvent( player, EV_FROZEN, player->health );
+    client.frozen = qtrue;
+  } else if (!client->ps.powerups[PW_FROZEN] && client.frozen) {
+    G_AddEvent( player, EV_UNFROZEN, player->health );
+    client.frozen = qfalse;
+  }
+  if(g_thawTime.integer
+    && level.time - client->ps.powerups[PW_FROZEN] >= g_thawTime.integer * 1000) {
+    G_AddEvent( player, EV_UNFROZEN, player->health );
+    client.frozen = qfalse;
+  }
+#endif
+
 	// Let go of the hook if we aren't firing
 	if ( client->ps.weapon == WP_GRAPPLING_HOOK &&
 		client->hook && !( ucmd->buttons & BUTTON_ATTACK ) ) {

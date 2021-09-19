@@ -92,6 +92,7 @@ cvar_t	*sv_rolePassword[MAX_CLIENT_ROLES];
 #ifdef USE_REFEREE_CMDS
 cvar_t  *sv_lock[2];
 cvar_t  *sv_frozen;
+cvar_t  *sv_thawTime;
 #endif
 #ifdef USE_PERSIST_CLIENT
 cvar_t  *sv_clSessions;
@@ -1277,6 +1278,18 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg ) {
 		if (cl->netchan.qport != qport) {
 			continue;
 		}
+    
+#ifdef USE_REFEREE_CMDS
+    if(sv_thawTime->integer
+      && cl->frozen && sv.time - cl->frozen >= sv_thawTime->integer * 1000) {
+      cl->frozen = qfalse;
+      // game will do the unfreezing based on thawTime
+      //if(sv.isMultiGame) {
+      //  playerState_t *ps = SV_GameClientNum( c );
+      //  ps->powerups[PW_FROZEN] = 0;
+      //}
+    }
+#endif
 
 		// make sure it is a valid, in sequence packet
 		if (SV_Netchan_Process(cl, msg)) {

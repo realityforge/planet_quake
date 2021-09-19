@@ -1169,6 +1169,13 @@ static void SV_InitGameVM( qboolean restart ) {
 	// use the current msec count for a random seed
 	// init for this gamestate
 	VM_Call( gvm, 3, GAME_INIT, sv.time, Com_Milliseconds(), restart );
+#ifdef USE_REFEREE_CMDS
+  if(Cvar_VariableIntegerValue("multigame")) {
+    sv.isMultiGame = qtrue
+  } else {
+    sv.isMultiGame = qfalse
+  }
+#endif
 }
 
 
