@@ -1578,6 +1578,8 @@ void SV_LoadVM_f(void) {
 
 
 #ifdef USE_REFEREE_CMDS
+void SV_SetInternalPlayerState(int clientNum);
+
 void SV_Shout_f(void) {
 	client_t	*cl;
 	int i;
@@ -1612,12 +1614,14 @@ void SV_Freeze_f(void) {
       if(sv.isMultiGame) {
         playerState_t *ps = SV_GameClientNum( cl - svs.clients );
         ps->powerups[PW_FROZEN] = sv.time;
+        //SV_SetInternalPlayerState(cl - svs.clients);
       }
     } else {
       cl->frozen = 0;
       if(sv.isMultiGame) {
         playerState_t *ps = SV_GameClientNum( cl - svs.clients );
         ps->powerups[PW_FROZEN] = 0;
+        //SV_SetInternalPlayerState(cl - svs.clients);
       }
     }
     return;

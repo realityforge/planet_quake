@@ -1027,6 +1027,10 @@ typedef struct {
 	sfxHandle_t	wstbimpdSound;
 	sfxHandle_t	wstbactvSound;
 
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  sfxHandle_t frozenSound;
+  qhandle_t	frozenShader;
+#endif
 } cgMedia_t;
 
 

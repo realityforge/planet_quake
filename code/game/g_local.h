@@ -262,6 +262,15 @@ typedef struct {
 } clientPersistant_t;
 
 
+// unlagged
+#define NUM_CLIENT_HISTORY 18
+
+typedef struct {
+	vec3_t		mins, maxs;
+	vec3_t		currentOrigin;
+	int			leveltime;
+} clientHistory_t;
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s {
@@ -330,6 +339,25 @@ struct gclient_s {
 #endif
 
 	char		*areabits;
+  
+	// unlagged
+	clientHistory_t	history[ NUM_CLIENT_HISTORY ];
+	clientHistory_t	saved;
+
+	int			historyHead;
+	int			frameOffset;
+	int			lastUpdateFrame;
+
+	// hitsounds
+	struct {
+		int		team;
+		int		enemy;
+		int		amount;
+	} damage;
+  
+#ifdef USE_REFEREE_CMDS
+  qboolean frozen;
+#endif
 };
 
 

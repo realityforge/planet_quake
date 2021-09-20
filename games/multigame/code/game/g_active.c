@@ -833,17 +833,27 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 #ifdef USE_REFEREE_CMDS
-  if(client->ps.powerups[PW_FROZEN] && !client.frozen) {
-    G_AddEvent( player, EV_FROZEN, player->health );
-    client.frozen = qtrue;
-  } else if (!client->ps.powerups[PW_FROZEN] && client.frozen) {
-    G_AddEvent( player, EV_UNFROZEN, player->health );
-    client.frozen = qfalse;
+  if(client->ps.powerups[PW_FROZEN]) {
+    G_Printf("getting frozen %i\n", g_thawTime.integer);
+    G_Printf("frozen time %i\n", client->ps.powerups[PW_FROZEN]);
+    G_Printf("level time %i\n", level.time);
+  }
+  if(client->ps.powerups[PW_FROZEN] && !client->frozen) {
+    G_Printf("server frozen\n");
+    G_AddEvent( ent, EV_FROZEN, 0 );
+    client->frozen = qtrue;
+  } else if (!client->ps.powerups[PW_FROZEN] && client->frozen) {
+    G_Printf("server unfrozen\n");
+    G_AddEvent( ent, EV_UNFROZEN, 0 );
+    client->frozen = qfalse;
   }
   if(g_thawTime.integer
-    && level.time - client->ps.powerups[PW_FROZEN] >= g_thawTime.integer * 1000) {
-    G_AddEvent( player, EV_UNFROZEN, player->health );
-    client.frozen = qfalse;
+    && client->frozen
+    && level.time - client->ps.powerups[PW_FROZEN] >= g_thawTime.integer * 1000
+  ) {
+    G_Printf("server unfrozen\n");
+    G_AddEvent( ent, EV_UNFROZEN, 0 );
+    client->frozen = qfalse;
   }
 #endif
 

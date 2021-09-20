@@ -334,6 +334,10 @@ struct gclient_s {
 		int		enemy;
 		int		amount;
 	} damage;
+
+#ifdef USE_REFEREE_CMDS
+  qboolean frozen;
+#endif
 };
 
 

@@ -1204,9 +1204,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
 		break;
 
-#ifdef USE_GAME_FREEZETAG
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   case EV_FROZEN:
-		DEBUGNAME("EV_FROZEN");
+    CG_Printf( "frozen\n");
 		if ( es->number == cg.snap->ps.clientNum ) {
 			cg.powerupActive = PW_FROZEN;
 			cg.powerupTime = cg.time;
@@ -1214,6 +1214,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
 		break;
   case EV_UNFROZEN:
+    CG_Printf( "unfrozen\n");
     // TODO: play unfreeze sound
     //trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
     break;

@@ -13,6 +13,12 @@ MOD_CFLAGS    :=
 ifeq ($(MISSIONPACK),1)
 MOD_CFLAGS    += -DMISSIONPACK
 endif
+ifeq ($(USE_REFEREE_CMDS),1)
+MOD_CFLAGS    += -DUSE_REFEREE_CMDS
+endif
+ifeq ($(USE_GAME_FREEZETAG),1)
+MOD_CFLAGS    += -DUSE_GAME_FREEZETAG
+endif
 
 ifndef Q3LCC
 include make/lib_q3lcc.make

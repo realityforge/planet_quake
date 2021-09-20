@@ -1006,7 +1006,7 @@ void SV_Init( void )
 	sv_frozen = Cvar_Get("sv_frozen", "0", CVAR_ROM);
 	sv_lock[0] = Cvar_Get("sv_lockRed", "0", CVAR_TEMP);
 	sv_lock[1] = Cvar_Get("sv_lockBlue", "0", CVAR_TEMP);
-  sv_thawTime = Cvar_Get("sv_thatTime", "180", CVAR_ARCHIVE);
+  sv_thawTime = Cvar_Get("g_thawTime", "180", CVAR_ARCHIVE);
 #endif
 
 #ifdef USE_PERSIST_CLIENT

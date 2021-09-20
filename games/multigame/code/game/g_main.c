@@ -179,7 +179,7 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  ,{ &g_thawTime, "sv_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_thawTime, "g_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

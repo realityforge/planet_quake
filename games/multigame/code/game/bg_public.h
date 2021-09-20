@@ -95,6 +95,18 @@ typedef enum {
 	GT_OBELISK,
 	GT_HARVESTER,
 #endif
+
+
+//-- custom game types, there will be a variable in 
+#ifdef USE_GAME_OPENARENA
+  GT_ELIMINATION,			// team elimination (custom)
+  GT_CTF_ELIMINATION,		// ctf elimination
+  GT_LMS,				// Last man standing
+  GT_DOUBLE_D,			// Double Domination
+  GT_DOMINATION,			// Standard domination 12
+  GT_POSSESSION,
+#endif
+
 	GT_MAX_GAME_TYPE
 } gametype_t;
 
@@ -449,6 +461,12 @@ typedef enum {
 	EV_TAUNT_GETFLAG,
 	EV_TAUNT_GUARDBASE,
 	EV_TAUNT_PATROL,
+
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  EV_FROZEN,
+  EV_UNFROZEN,
+#endif
+
 	EV_MAX
 
 } entity_event_t;
