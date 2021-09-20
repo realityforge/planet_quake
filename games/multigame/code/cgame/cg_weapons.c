@@ -1220,6 +1220,14 @@ CG_AddWeaponWithPowerups
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 	// add powerup effects
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  if ( powerups & ( 1 << PW_FROZEN ) ) {
+    trap_R_AddRefEntityToScene( gun );
+    gun->customShader = cgs.media.frozenShader;
+    trap_R_AddRefEntityToScene( gun );
+    return;
+  }
+#endif
 	if ( powerups & ( 1 << PW_INVIS ) ) {
 		gun->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( gun );

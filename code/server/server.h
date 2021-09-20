@@ -561,6 +561,10 @@ extern	cvar_t  *sv_lnAPI;
 extern	cvar_t  *sv_lnWithdraw;
 #endif
 
+#ifdef USE_REFEREE_CMDS
+extern  cvar_t  *sv_thawTime;
+#endif
+
 #ifdef USE_CVAR_UNCHEAT
 extern  cvar_t  *sv_banCheats;
 extern  char    *svUncheats[128];

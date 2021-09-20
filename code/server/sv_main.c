@@ -1466,7 +1466,9 @@ static qboolean SV_CheckPaused( void ) {
 	int	i;
   qboolean clPaused = qfalse;
 
-  if ( !com_dedicated->integer && !cl_paused->integer ) {
+  if ( !cl_paused->integer ) {
+    //if (sv_paused->integer)
+	//		Cvar_Set("sv_paused", "0");
 		return qfalse;
 	}
 
@@ -1489,11 +1491,13 @@ static qboolean SV_CheckPaused( void ) {
 		return qfalse;
 	}
 
+/*
 	if ( !clPaused ) {
     if (sv_paused->integer)
       Cvar_Set("sv_paused", "0");
 		return qfalse;
 	}
+*/
 
 	if (!sv_paused->integer)
 		Cvar_Set("sv_paused", "1");
@@ -1800,7 +1804,7 @@ void SV_Frame( int msec ) {
 #ifdef USE_REFEREE_CMDS
     // TODO: run up an offset counter, then subtract in GAME_RUN_FRAME,
     //   so that timelimit doesn't get hit while paused
-    if(!sv_paused->integer)
+    //if(!sv_paused->integer)
 #endif
 		sv.time += frameMsec;
 

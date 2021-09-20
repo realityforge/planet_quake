@@ -767,6 +767,10 @@ static void CG_RegisterSounds( void ) {
 		cgs.gameSounds[i] = trap_S_RegisterSound( soundName, qfalse );
 	}
 
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  cgs.media.frozenSound = trap_S_RegisterSound("sound/teamplay/freezing.wav", qfalse);
+#endif
+
 	// FIXME: only needed with item
 	cgs.media.flightSound = trap_S_RegisterSound( "sound/items/flight.wav", qfalse );
 	cgs.media.medkitSound = trap_S_RegisterSound ("sound/items/use_medkit.wav", qfalse);
@@ -915,6 +919,10 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.backTileShader = trap_R_RegisterShader( "gfx/2d/backtile" );
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
+
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  cgs.media.frozenShader = trap_R_RegisterShader("freezeShader" );
+#endif
 
 	// powerup shaders
 	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );

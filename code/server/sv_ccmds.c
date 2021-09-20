@@ -1610,13 +1610,13 @@ void SV_Freeze_f(void) {
     if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
       cl->frozen = sv.time;
       if(sv.isMultiGame) {
-        playerState_t *ps = SV_GameClientNum( c );
+        playerState_t *ps = SV_GameClientNum( cl - svs.clients );
         ps->powerups[PW_FROZEN] = sv.time;
       }
     } else {
       cl->frozen = 0;
       if(sv.isMultiGame) {
-        playerState_t *ps = SV_GameClientNum( c );
+        playerState_t *ps = SV_GameClientNum( cl - svs.clients );
         ps->powerups[PW_FROZEN] = 0;
       }
     }

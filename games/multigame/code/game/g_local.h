@@ -808,7 +808,7 @@ extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
-#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 extern  vmCvar_t  g_thawTime;
 #endif
 

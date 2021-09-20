@@ -2924,10 +2924,10 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 		cmd = &cmds[i];
 		MSG_ReadDeltaUsercmdKey( msg, key, oldcmd, cmd );
 #ifdef USE_REFEREE_CMDS
-		if(sv_frozen->integer || cl->frozen || sv_paused->integer) {
+		if(sv_frozen->integer || cl->frozen /* || sv_paused->integer */) {
 			cmd->forwardmove = cmd->rightmove = cmd->upmove = cmd->buttons = 0;
 		}
-		if(sv_frozen->integer || cl->frozen || cl->nofire || sv_paused->integer) {
+		if(sv_frozen->integer || cl->frozen || cl->nofire /* || sv_paused->integer */) {
 			cmd->buttons = 0;
 		}
 #endif

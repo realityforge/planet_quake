@@ -287,7 +287,11 @@ typedef enum {
 	PW_AMMOREGEN,
 	PW_INVULNERABILITY,
 
-	PW_NUM_POWERUPS
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  PW_FROZEN,
+#endif
+
+  PW_NUM_POWERUPS
 
 } powerup_t;
 

@@ -80,7 +80,7 @@ vmCvar_t	g_proxMineTimeout;
 #ifdef USE_REFEREE_CMDS
 vmCvar_t	g_callvotable;
 #endif
-#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 vmCvar_t	g_thawTime;
 #endif
 
@@ -178,7 +178,7 @@ static cvarTable_t gameCvarTable[] = {
 		"fraglimit capturelimit", CVAR_ARCHIVE, 0, qfalse}
 #endif
 
-#if defined(USE_GAMES_FREEZE) || defined(USE_REFEREE_CMDS)
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   ,{ &g_thawTime, "sv_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };

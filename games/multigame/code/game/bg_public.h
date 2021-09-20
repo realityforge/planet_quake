@@ -279,7 +279,7 @@ typedef enum {
 	PW_AMMOREGEN,
 	PW_INVULNERABILITY,
 
-#ifdef USE_GAME_FREEZETAG
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   PW_FROZEN,
 #endif
 
