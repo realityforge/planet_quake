@@ -356,7 +356,7 @@ struct gclient_s {
 	} damage;
   
 #ifdef USE_REFEREE_CMDS
-  qboolean frozen;
+  int frozen;
 #endif
 };
 

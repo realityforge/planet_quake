@@ -335,8 +335,8 @@ struct gclient_s {
 		int		amount;
 	} damage;
 
-#ifdef USE_REFEREE_CMDS
-  qboolean frozen;
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  int frozen;
 #endif
 };
 
