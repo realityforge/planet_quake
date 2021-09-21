@@ -2942,6 +2942,7 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 #ifdef USE_REFEREE_CMDS
 		if(sv_frozen->integer || cl->frozen /* || sv_paused->integer */) {
 			cmd->forwardmove = cmd->rightmove = cmd->upmove = cmd->buttons = 0;
+      cmd->angles[0] = cmd->angles[1] = cmd->angles[2] = 0;
 		}
 		if(sv_frozen->integer || cl->frozen || cl->nofire /* || sv_paused->integer */) {
 			cmd->buttons = 0;

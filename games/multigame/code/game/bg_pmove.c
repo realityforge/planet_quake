@@ -1604,7 +1604,8 @@ static void PM_Weapon( void ) {
 	}
 
 	// check for fire
-	if ( ! (pm->cmd.buttons & BUTTON_ATTACK) ) {
+	if ( ! (pm->cmd.buttons & BUTTON_ATTACK)
+    || pm->ps->pm_type == PM_FREEZE) {
 		pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
@@ -1860,8 +1861,9 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 
 	// set the firing flag for continuous beam weapons
-	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION && pm->ps->pm_type != PM_NOCLIP
-		&& ( pm->cmd.buttons & BUTTON_ATTACK ) && pm->ps->ammo[ pm->ps->weapon ] ) {
+	if ( !(pm->ps->pm_flags & PMF_RESPAWNED) && pm->ps->pm_type != PM_INTERMISSION 
+    && pm->ps->pm_type != PM_NOCLIP && pm->ps->pm_type != PM_FREEZE
+		&& ( pm->cmd.buttons & BUTTON_ATTACK ) && pm->ps->ammo[ pm->ps->weapon ]) {
 		pm->ps->eFlags |= EF_FIRING;
 	} else {
 		pm->ps->eFlags &= ~EF_FIRING;
@@ -1906,7 +1908,8 @@ void PmoveSingle (pmove_t *pmove) {
 	pml.frametime = pml.msec * 0.001;
 
 	// update the viewangles
-	PM_UpdateViewAngles( pm->ps, &pm->cmd );
+  if(pm->ps->pm_type != PM_FREEZE)
+	 PM_UpdateViewAngles( pm->ps, &pm->cmd );
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -1922,7 +1925,8 @@ void PmoveSingle (pmove_t *pmove) {
 		pm->ps->pm_flags &= ~PMF_BACKWARDS_RUN;
 	}
 
-	if ( pm->ps->pm_type >= PM_DEAD ) {
+	if ( pm->ps->pm_type >= PM_DEAD
+    || pm->ps->pm_type == PM_FREEZE) {
 		pm->cmd.forwardmove = 0;
 		pm->cmd.rightmove = 0;
 		pm->cmd.upmove = 0;
@@ -1948,9 +1952,9 @@ void PmoveSingle (pmove_t *pmove) {
 		return;
 	}
 
-	if (pm->ps->pm_type == PM_FREEZE) {
-		return;		// no movement at all
-	}
+	//if (pm->ps->pm_type == PM_FREEZE) {
+	//	return;		// no movement at all
+	//}
 
 	if ( pm->ps->pm_type == PM_INTERMISSION || pm->ps->pm_type == PM_SPINTERMISSION) {
 		return;		// no movement at all

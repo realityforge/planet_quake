@@ -922,6 +922,11 @@ void CG_PredictPlayerState( void ) {
 	if ( cg_pmove.ps->pm_type == PM_DEAD ) {
 		cg_pmove.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;
 	}
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  else if ( cg_pmove.ps->pm_type == PM_FREEZE ) {
+
+  }
+#endif
 	else {
 		cg_pmove.tracemask = MASK_PLAYERSOLID;
 	}
