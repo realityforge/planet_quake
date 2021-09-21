@@ -1130,12 +1130,6 @@ void ClientEndFrame( gentity_t *ent ) {
 
 	// turn off any expired powerups
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-    if(i == PW_FROZEN && client->frozen) {
-      ent->client->ps.powerups[PW_FROZEN] = level.time;
-      continue;
-    }
-#endif
 		if ( client->ps.powerups[ i ] < client->pers.cmd.serverTime ) {
 			client->ps.powerups[ i ] = 0;
 		}
@@ -1158,6 +1152,12 @@ void ClientEndFrame( gentity_t *ent ) {
 	if ( ent->client->invulnerabilityTime > level.time ) {
 		ent->client->ps.powerups[PW_INVULNERABILITY] = level.time;
 	}
+#endif
+
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  if(ent->client->frozen) {
+    ent->client->ps.powerups[PW_FROZEN] = level.time;
+  }
 #endif
 
 	// save network bandwidth

@@ -1510,6 +1510,11 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->groundEntityNum = ps->groundEntityNum;
 
 	s->powerups = 0;
+#ifdef CGAME
+  if(ps->pm_type == PM_FREEZE && !ps->powerups[PW_FROZEN]) {
+    CG_Printf("not frozen\n");
+  }
+#endif
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( ps->powerups[ i ] ) {
 			s->powerups |= 1 << i;

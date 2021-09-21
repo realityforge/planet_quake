@@ -981,6 +981,8 @@ void UI_Load() {
 	UI_LoadArenas();
 #endif
 
+Com_Printf("Load menus: %s\n", menuSet);
+
 	UI_LoadMenus(menuSet, qtrue);
 	Menus_CloseAll();
 	Menus_ActivateByName(lastName);

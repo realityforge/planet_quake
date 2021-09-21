@@ -650,6 +650,11 @@ static void CG_CheckTimers( void ) {
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( !cg.predictedPlayerState.powerups[ i ] )
 			continue;
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+    if(i == PW_FROZEN) {
+      continue;      
+    }
+#endif
 		if ( cg.predictedPlayerState.powerups[ i ] < cg.predictedPlayerState.commandTime ) {
 			cg.predictedPlayerState.powerups[ i ] = 0;
 		}
