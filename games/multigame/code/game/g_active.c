@@ -815,7 +815,7 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.pm_type = PM_DEAD;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   } else if ( client->frozen ) {
-    client->ps.pm_type = PM_FREEZE;
+    client->ps.pm_type = PM_FROZEN;
 #endif
 	} else {
 		client->ps.pm_type = PM_NORMAL;
@@ -841,7 +841,7 @@ void ClientThink_real( gentity_t *ent ) {
     G_Printf("qagame frozen\n");
     G_AddEvent( ent, EV_FROZEN, 0 );
     client->frozen = client->ps.powerups[PW_FROZEN];
-    client->ps.pm_type = PM_FREEZE;
+    client->ps.pm_type = PM_FROZEN;
   } else if (!client->ps.powerups[PW_FROZEN] && client->frozen) {
     G_Printf("qagame unfrozen\n");
     G_AddEvent( ent, EV_UNFROZEN, 0 );
