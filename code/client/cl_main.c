@@ -4169,6 +4169,7 @@ static void CL_ShutdownRef( refShutdownCode_t code ) {
 }
 
 
+void X_DMG_Init( void );
 /*
 ============
 CL_InitRenderer
@@ -4205,6 +4206,8 @@ static void CL_InitRenderer( void ) {
 		cls.scale = cls.glconfig.vidWidth * (1.0/640.0);
 		cls.biasY = 0.5 * ( cls.glconfig.vidHeight - ( cls.glconfig.vidWidth * (480.0/640) ) );
 	}
+  
+  X_DMG_Init();
 }
 
 
