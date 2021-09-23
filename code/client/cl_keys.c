@@ -625,11 +625,6 @@ static void CL_KeyDownEvent( int key, unsigned time, int fingerId )
 
 
 #ifdef USE_MV
-#ifdef USE_MULTIVM_CLIENT
-	int igs = clientGames[clc.currentView];
-#else
-	int igs = 0;
-#endif
 	if ( (key == K_MOUSE1 || key == K_MOUSE2) && clc.demoplaying && cl.snap.multiview ) {
 		int id, n, d;
 		//if ( key == K_MOUSE1 )

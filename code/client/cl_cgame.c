@@ -180,8 +180,13 @@ CL_GetSnapshot
 static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	clSnapshot_t	*clSnap;
 	int				i, count;
+#ifdef USE_MV
 #ifdef USE_MULTIVM_CLIENT
 	int igs = clientGames[cgvmi];
+#else
+  int igs = 0;
+  int cgvmi = 0;
+#endif
 #endif
 
 	if ( snapshotNumber > cl.snap.messageNum ) {
@@ -200,7 +205,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 		for(int i = snapshotNumber+1; i <= cl.snap.messageNum; i++)  {
 			clSnap = &cl.snapshots[i & PACKET_MASK];
 			if(!clSnap->valid || clSnap->serverTime < cl.snapshots[snapshotNumber & PACKET_MASK].serverTime) {
-		return qfalse;
+        return qfalse;
 			} else {
 				break;
 			}
@@ -290,6 +295,9 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 			}
 		}
 		snapshot->numEntities = count;
+
+    X_DMG_ParseSnapshotDamage();
+
 		return qtrue;
 	}
 #endif // USE_MV

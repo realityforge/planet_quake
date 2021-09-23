@@ -84,39 +84,79 @@ void X_DMG_ParseSnapshotDamage( void )
 	if (!x_hck_dmg_draw->integer)
 		return;
 
-  clSnapshot_t	*newSnap = &cl.snapshots[(cl.snap.messageNum - 1) & PACKET_MASK];
-  clSnapshot_t	*oldSnap = &cl.snapshots[(cl.snap.messageNum - 2) & PACKET_MASK];
+  clSnapshot_t	*newSnap = &cl.snapshots[(cl.snap.messageNum) & PACKET_MASK];
+  clSnapshot_t	*oldSnap = &cl.snapshots[(cl.snap.messageNum - 4) & PACKET_MASK];
+
+#ifdef USE_MV
+  if(oldSnap->multiview && newSnap->multiview) {
+    if(oldSnap->clps[clc.clientNum].ps.persistant[PERS_HITS] 
+      >= newSnap->clps[clc.clientNum].ps.persistant[PERS_HITS]) {
+      return;
+    }
+  } else
+#endif
+  if(oldSnap->ps.persistant[PERS_HITS] >= newSnap->ps.persistant[PERS_HITS]) {
+    return;
+  }
 
 	if (newSnap->ps.persistant[PERS_HITS] % 3 == 0)
 		dmgIconDir = !dmgIconDir;
 
   for ( int i = 0 ; i < newSnap->numEntities ; i++ ) {
-    if(oldSnap->ps.persistant[PERS_HITS] >= newSnap->ps.persistant[PERS_HITS]) {
-      continue;
-    }
-
     entityState_t ent = cl.parseEntities[ ( newSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+    if(ent.clientNum != clc.clientNum)
+      continue;
+
     int event;
     if (ent.eType >= ET_EVENTS) {
 			event = ent.eType - ET_EVENTS;
-		} else {
-			if (!ent.event)
+		} else if (!ent.event) {
 				continue;
+    } else {
 			event = ent.event & ~EV_EVENT_BITS;
 		}
 
     if (event == EV_MISSILE_HIT || event == EV_BULLET_HIT_FLESH
       || event == EV_MISSILE_MISS || event == EV_RAILTRAIL 
       || event == EV_SHOTGUN || event == EV_BULLET) {
-      int eNum = (newSnap->parseEntitiesNum + ent.otherEntityNum) & (MAX_PARSE_ENTITIES-1);
-      int clientNum = cl.parseEntities[eNum].clientNum;
+      int eNum, clientNum;
+      if(event == EV_BULLET_HIT_FLESH) {
+        eNum = ent.number;
+        clientNum = ent.otherEntityNum;
+      } else {
+        eNum = (newSnap->parseEntitiesNum + ent.otherEntityNum) & (MAX_PARSE_ENTITIES-1);
+        clientNum = cl.parseEntities[eNum].clientNum;
+      }
       if(clientNum > MAX_CLIENTS)
         continue;
-      int damage = (newSnap->ps.persistant[PERS_ATTACKEE_ARMOR] & 0xFF)
-        + (newSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8);
+      int damage;
+#ifdef USE_MV
+      if(oldSnap->multiview && newSnap->multiview) {
+        int oldHealth = oldSnap->clps[clientNum].ps.stats[STAT_HEALTH];
+        int newHealth = newSnap->clps[clientNum].ps.stats[STAT_HEALTH];
+        if(newHealth < 0)
+          newHealth = 0;
+        if(event == EV_MISSILE_MISS || clientNum == clc.clientNum
+          || oldHealth - newHealth < 0) {
+          damage = 1;
+        } else {
+          damage = oldHealth - newHealth;
+        }
+      } else
+#endif
+      {
+        damage = 1;
+          // previous isn't always accurate
+          /* (oldSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8) - */
+          // adding armor is just okay
+          /* (newSnap->ps.persistant[PERS_ATTACKEE_ARMOR] & 0xFF) + */
+          // showing enemy health is regarded as cheating
+          /* (newSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8); */
+      }
       int index = (cls.realtime / x_hck_dmg_combine->integer) % dmgIconMax;
       dmgIcon_t *icon = &dmgIcons[clientNum * dmgIconMax + index];
-      icon->value += damage;
+      icon->value = damage;
+      //Com_Printf("Damage: %i, Hits: %i\n", icon->value, newSnap->ps.persistant[PERS_HITS]);
       icon->eNum = cl.parseEntities[eNum].number;
       if(!icon->start) {
         icon->start = cls.realtime;
@@ -124,10 +164,11 @@ void X_DMG_ParseSnapshotDamage( void )
         icon->params[0] = 10 + rand() % 10;
         icon->params[1] = ((rand() % 2) == 1 ? 1.0f : -1.0f);
         icon->params[2] = 0.1 * (1 + (rand() % 12));
-        icon->origin[0] = 31.875;
+        // TODO: some kind of entity target positioning either on player or where impact was
+        //icon->origin[0] = 31.875;
         //VectorCopy(cl.parseEntities[eNum].origin, icon->origin);
       }
-      ChooseDamageColor(damage, icon->color);
+      ChooseDamageColor(icon->value, icon->color);
     }
   }
 }

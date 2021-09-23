@@ -233,13 +233,11 @@ static void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 					passent = traceEnt->s.number;
 				}
 				continue;
-			}
-			else {
+			} else
 #endif
+      {
 				G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_MACHINEGUN );
-#ifdef MISSIONPACK
 			}
-#endif
 		}
 		break;
 	}
@@ -315,14 +313,15 @@ static qboolean ShotgunPellet( const vec3_t start, const vec3_t end, gentity_t *
 					passent = traceEnt->s.number;
 				}
 				continue;
-			}
-#else
-			if ( LogAccuracyHit( traceEnt, ent ) ) {
-				hitClient = qtrue;
-			}
-			G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_SHOTGUN );
-			return hitClient;
+			} else
 #endif
+      {
+  			if ( LogAccuracyHit( traceEnt, ent ) ) {
+  				hitClient = qtrue;
+  			}
+  			G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_SHOTGUN );
+  			return hitClient;
+      }
 		}
 		return qfalse;
 	}
@@ -690,14 +689,15 @@ void Weapon_LightningFire( gentity_t *ent ) {
 					passent = traceEnt->s.number;
 				}
 				continue;
-			}
-#else
-			if ( LogAccuracyHit( traceEnt, ent ) ) {
-				ent->client->accuracy_hits++;
-			}
-			G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_LIGHTNING );
+			} else
 #endif
-		}
+      {
+  			if ( LogAccuracyHit( traceEnt, ent ) ) {
+  				ent->client->accuracy_hits++;
+  			}
+  			G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_LIGHTNING );
+  		}
+    }
 
 		if ( traceEnt->takedamage && traceEnt->client ) {
 			tent = G_TempEntity( tr.endpos, EV_MISSILE_HIT );

@@ -1345,10 +1345,8 @@ static void SV_CalcPings( void ) {
 		total = 0;
 		count = 0;
 		for ( j = 0 ; j < PACKET_BACKUP ; j++ ) {
-#ifdef USE_MV
-      gvmi = cl->gameWorld;
-#endif
 #ifdef USE_MULTIVM_SERVER
+      gvmi = cl->gameWorld;
       if ( cl->frames[cl->gameWorld][j].messageAcked == 0 ) {
         continue;
       }

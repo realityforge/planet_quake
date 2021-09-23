@@ -232,6 +232,8 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 #ifdef USE_MV
 #ifdef USE_MULTIVM_CLIENT
   int     igs = clientGames[cgvmi];
+#else
+  int     igs = 0;
 #endif
 	int			clientNum;
 	entityState_t	*es;
