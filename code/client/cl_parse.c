@@ -743,6 +743,8 @@ void CL_ParseServerInfo( int igs )
 		Info_ValueForKey(serverInfo, "sv_dlURL"),
 		sizeof(clc.sv_dlURL));
 
+  clc.isMultiGame = strcmp(Info_ValueForKey(serverInfo, "gamename"), "multigame") == 0;
+
 #ifdef USE_MULTIVM_CLIENT
   if(clc.world) Z_Free(clc.world);
 	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));

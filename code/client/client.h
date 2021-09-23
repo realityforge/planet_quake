@@ -299,6 +299,9 @@ typedef struct {
 	char		downloadName[MAX_OSPATH];
 	char		downloadTempName[MAX_OSPATH + 4]; // downloadName + ".tmp"
 	int			sv_allowDownload;
+
+  qboolean isMultiGame;
+
 #ifdef USE_MULTIVM_CLIENT
 	char    *world;
 #endif

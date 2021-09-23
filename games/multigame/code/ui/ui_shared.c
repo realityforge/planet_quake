@@ -74,7 +74,7 @@ void *UI_Alloc( int size ) {
 	if ( allocPoint + size > MEM_POOL_SIZE ) {
 		outOfMemory = qtrue;
 		if (DC->Print) {
-			DC->Print("UI_Alloc: Failure. Out of memory!\n");
+			DC->Print("UI_Alloc: Failure. Out of memory! %i, %i > %i\n", allocPoint, size, MEM_POOL_SIZE);
 		}
     //DC->trap_Print(S_COLOR_YELLOW"WARNING: UI Out of Memory!\n");
 		return NULL;
@@ -224,6 +224,9 @@ void String_Init() {
 		Controls_GetConfig();
 	}
 }
+
+extern int ED_vsprintf( char *buffer, const char *fmt, va_list argptr );
+
 
 /*
 =================
@@ -1091,10 +1094,10 @@ void Menu_TransitionItemByName(menuDef_t *menu, const char *p, rectDef_t rectFro
       item->window.offsetTime = time;
 			memcpy(&item->window.rectClient, &rectFrom, sizeof(rectDef_t));
 			memcpy(&item->window.rectEffects, &rectTo, sizeof(rectDef_t));
-			item->window.rectEffects2.x = abs(rectTo.x - rectFrom.x) / amt;
-			item->window.rectEffects2.y = abs(rectTo.y - rectFrom.y) / amt;
-			item->window.rectEffects2.w = abs(rectTo.w - rectFrom.w) / amt;
-			item->window.rectEffects2.h = abs(rectTo.h - rectFrom.h) / amt;
+			item->window.rectEffects2.x = abs((int)(rectTo.x - rectFrom.x)) / amt;
+			item->window.rectEffects2.y = abs((int)(rectTo.y - rectFrom.y)) / amt;
+			item->window.rectEffects2.w = abs((int)(rectTo.w - rectFrom.w)) / amt;
+			item->window.rectEffects2.h = abs((int)(rectTo.h - rectFrom.h)) / amt;
       Item_UpdatePosition(item);
     }
   }
@@ -2516,7 +2519,7 @@ void  Menus_Activate(menuDef_t *menu) {
 
 }
 
-int Display_VisibleMenuCount() {
+int Display_VisibleMenuCount( void ) {
 	int i, count;
 	count = 0;
 	for (i = 0; i < menuCount; i++) {

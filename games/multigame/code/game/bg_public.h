@@ -769,11 +769,14 @@ qboolean	BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTim
 #define KAMI_SHOCKWAVE2_MAXRADIUS		704
 
 // custom functions
+#ifdef BUILD_GAME_STATIC
+intptr_t CG_Call( int command, int arg0, int arg1, int arg2 );
+intptr_t G_Call( int command, int arg0, int arg1, int arg2 );
+intptr_t UI_Call( int command, int arg0, int arg1, int arg2 );
+#endif
 
 int BG_sprintf( char *buf, const char *format, ... );
 int ED_vsprintf( char *buffer, const char *fmt, va_list argptr );
-
-char *Q_stristr( const char * str1, const char * str2 );
 
 char *strtok( char *strToken, const char *strDelimit );
 char *EncodedString( const char *str );

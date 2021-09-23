@@ -1,11 +1,12 @@
 ifndef MOD
-MOD           := multigame
+MOD             := multigame
 endif
 
-BUILD_GAME_QVM ?= 1
-BUILD_BASEQ3A := 1
+BUILD_GAME_QVM  ?= 1
+BUILD_BASEQ3A   := 1
+BUILD_MULTIGAME := 1
 ifneq ($(BUILD_CLIENT),1)
-MKFILE        := $(lastword $(MAKEFILE_LIST)) 
+MKFILE          := $(lastword $(MAKEFILE_LIST)) 
 include make/platform.make
 endif
 
@@ -85,6 +86,9 @@ endef
 ifneq ($(BUILD_CLIENT),1)
 debug:
 	@$(MAKE) -f $(MKFILE) makegamedirs \
+		$(BD)/$(MOD)/cgame$(SHLIBNAME) \
+		$(BD)/$(MOD)/qagame$(SHLIBNAME) \
+		$(BD)/$(MOD)/ui$(SHLIBNAME) \
 		$(BD)/$(MOD)/vm/cgame.qvm \
 	  $(BD)/$(MOD)/vm/qagame.qvm \
 	  $(BD)/$(MOD)/vm/ui.qvm \
@@ -138,15 +142,15 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_servercmds.o \
           $(B)/$(MOD)/cgame/cg_snapshot.o \
           $(B)/$(MOD)/cgame/cg_view.o \
-          $(B)/$(MOD)/cgame/cg_weapons.o \
-					$(B)/$(MOD)/ui/ui_shared.o
+          $(B)/$(MOD)/cgame/cg_weapons.o
 ifeq ($(MISSIONPACK),1)
-CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o
+CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o \
+					$(B)/$(MOD)/cgame/ui_shared.o
 endif
 
 ifneq ($(BUILD_CLIENT),1)
-CGOBJ_ += $(B)/$(MOD)/game/q_math.o \
-          $(B)/$(MOD)/game/q_shared.o
+CGOBJ_ += $(B)/$(MOD)/cgame/q_math.o \
+          $(B)/$(MOD)/cgame/q_shared.o
 endif
 
 CGOBJ   = $(CGOBJ_) $(B)/$(MOD)/cgame/cg_syscalls.o
@@ -201,7 +205,13 @@ QAVMOBJ = $(addprefix $(B)/$(MOD)/game/,$(notdir $(QAOBJ_:%.o=%.asm)))
 #############################################################################
 ## BASEQ3 UI
 #############################################################################
-
+ifeq ($(MISSIONPACK),1)
+UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
+          $(B)/$(MOD)/ui/ui_atoms.o \
+          $(B)/$(MOD)/ui/ui_gameinfo.o \
+          $(B)/$(MOD)/ui/ui_players.o \
+          $(B)/$(MOD)/ui/ui_shared.o
+else
 UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_addbots.o \
           $(B)/$(MOD)/ui/ui_atoms.o \
@@ -241,12 +251,13 @@ UIOBJ_  = $(B)/$(MOD)/ui/ui_main.o \
           $(B)/$(MOD)/ui/ui_team.o \
           $(B)/$(MOD)/ui/ui_teamorders.o \
           $(B)/$(MOD)/ui/ui_video.o
+endif
 
 ifneq ($(BUILD_CLIENT),1)
 UIOBJ_ += $(B)/$(MOD)/ui/bg_misc.o \
           $(B)/$(MOD)/ui/bg_lib.o \
-          $(B)/$(MOD)/game/q_math.o \
-          $(B)/$(MOD)/game/q_shared.o
+          $(B)/$(MOD)/ui/q_math.o \
+          $(B)/$(MOD)/ui/q_shared.o
 endif
 
 UIOBJ   = $(UIOBJ_) $(B)/$(MOD)/ui/ui_syscalls.o
@@ -300,14 +311,25 @@ $(B)/$(MOD)/cgame/q_%.o: $(QADIR)/q_%.c
 $(B)/$(MOD)/cgame/%.o: $(CGDIR)/%.c
 	$(DO_CGAME_CC)
 
+$(B)/$(MOD)/cgame/ui_%.o: $(SUIDIR)/ui_%.c
+	$(DO_CGAME_CC)
+
 $(B)/$(MOD)/game/%.o: $(QADIR)/%.c
 	$(DO_GAME_CC)
 
 $(B)/$(MOD)/ui/bg_%.o: $(QADIR)/bg_%.c
 	$(DO_UI_CC)
 
+$(B)/$(MOD)/ui/q_%.o: $(QADIR)/q_%.c
+	$(DO_CGAME_CC)
+
+ifeq ($(MISSIONPACK),1)
+$(B)/$(MOD)/ui/ui_%.o: $(SUIDIR)/ui_%.c
+	$(DO_UI_CC)
+else
 $(B)/$(MOD)/ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC)
+endif
 
 ifneq ($(BUILD_GAME_QVM),0)
 
@@ -330,10 +352,15 @@ $(B)/$(MOD)/ui/bg_%.asm: $(QADIR)/bg_%.c $(Q3LCC)
 	$(DO_UI_LCC)
 
 $(B)/$(MOD)/ui/q_%.asm: $(QADIR)/q_%.c $(Q3LCC)
-	$(DO_CGAME_LCC)
+	$(DO_UI_LCC)
 
+ifeq ($(MISSIONPACK),1)
+$(B)/$(MOD)/ui/ui_%.asm: $(SUIDIR)/ui_%.c $(Q3LCC)
+	$(DO_UI_LCC)
+else
 $(B)/$(MOD)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_LCC)
+endif # missionpack
 
 endif
 

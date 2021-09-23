@@ -1722,7 +1722,7 @@ CG_HideTeamMenus
 ==================
 
 */
-void CG_HideTeamMenu() {
+void CG_HideTeamMenu( void ) {
   Menus_CloseByName("teamMenu");
   Menus_CloseByName("getMenu");
 }
@@ -1733,7 +1733,7 @@ CG_ShowTeamMenus
 ==================
 
 */
-void CG_ShowTeamMenu() {
+void CG_ShowTeamMenu( void ) {
   Menus_OpenByName("teamMenu");
 }
 
@@ -1749,7 +1749,7 @@ CG_EventHandling
       2 - hud editor
 
 */
-void CG_EventHandling(int type) {
+void CG_EventHandling(cgame_event_t type) {
 	cgs.eventHandling = type;
   if (type == CGAME_EVENT_NONE) {
     CG_HideTeamMenu();
@@ -1803,7 +1803,7 @@ int CG_ClientNumFromName(const char *p) {
   return -1;
 }
 
-void CG_ShowResponseHead() {
+void CG_ShowResponseHead( void ) {
   Menus_OpenByName("voiceMenu");
 	trap_Cvar_Set("cl_conXOffset", "72");
 	cg.voiceTime = cg.time;
@@ -1828,4 +1828,3 @@ void CG_GetTeamColor(vec4_t *color) {
     (*color)[3] = 0.25f;
 	}
 }
-

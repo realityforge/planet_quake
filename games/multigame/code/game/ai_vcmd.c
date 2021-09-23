@@ -505,7 +505,8 @@ voiceCommand_t voiceCommands[] = {
 
 int BotVoiceChatCommand(bot_state_t *bs, int mode, char *voiceChat) {
 #ifdef MISSIONPACK
-	int i, voiceOnly, clientNum, color;
+  // int voiceOnly, color
+	int i, clientNum;
 	char *ptr, buf[MAX_MESSAGE_SIZE], *cmd;
 
 	if (!TeamPlayIsOn()) {

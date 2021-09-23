@@ -1090,6 +1090,9 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 SV_DllSyscall
 ====================
 */
+#ifndef BUILD_GAME_STATIC
+static
+#endif
 intptr_t QDECL SV_DllSyscall( intptr_t arg, ... ) {
 #if !id386 || defined __clang__
 	intptr_t	args[14]; // max.count for qagame
@@ -1194,7 +1197,9 @@ void SV_RestartGameProgs( void ) {
 	VM_Call( gvm, 1, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free
+#ifndef BUILD_GAME_STATIC
 	gvm = VM_Restart( gvm );
+#endif
 	if ( !gvm ) {
 		Com_Error( ERR_DROP, "VM_Restart on game failed" );
 	}

@@ -2338,7 +2338,7 @@ int VM_Resume(vm_t *vm) {
 #endif
 
 
-#else
+#else // BUILD_GAME_STATIC
 
 
 /*

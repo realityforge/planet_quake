@@ -16,7 +16,11 @@ INCLUDES         := $(MOUNT_DIR)/qcommon
 SOURCES          := $(MOUNT_DIR)/client
 
 ifeq ($(BUILD_GAME_STATIC),1)
+ifeq ($(BUILD_MULTIGAME),1)
+include make/game_multi.make
+else
 include make/game_baseq3a.make
+endif
 endif
 ifeq ($(USE_SYSTEM_LIBC),0)
 include make/lib_musl.make

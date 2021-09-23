@@ -211,7 +211,7 @@ typedef enum {
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int dx, int dy );
 	CG_EVENT_HANDLING
-//	void (*CG_EventHandling)(int type);
+//	void (*CG_EventHandling)(cgame_event_t type);
 } cgameExport_t;
 
 //----------------------------------------------

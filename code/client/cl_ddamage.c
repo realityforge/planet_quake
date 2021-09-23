@@ -51,6 +51,9 @@ static void ChooseDamageColor(int damage, byte* rgba);
 void X_DMG_Init( void )
 {
   char shader[32];
+  if(clc.isMultiGame) {
+    return;
+  }
 
   for (int i = 0; i < ARRAY_LEN(shaderNumbers); i++)
   {
@@ -72,6 +75,8 @@ void X_DMG_Init( void )
   Cvar_SetDescription(x_hck_dmg_combine, X_HELP_DMG_DRAW);
 
   dmgIconMax = x_hck_dmg_duration->integer / x_hck_dmg_combine->integer + 1;
+  if(dmgIcons)
+    Z_Free(dmgIcons);
   dmgIcons = Z_Malloc(MAX_CLIENTS * dmgIconMax * sizeof(dmgIcon_t));
 }
 
@@ -81,11 +86,15 @@ void X_DMG_Init( void )
 
 void X_DMG_ParseSnapshotDamage( void )
 {
+  if(clc.isMultiGame) {
+    return;
+  }
+
 	if (!x_hck_dmg_draw->integer)
 		return;
 
   clSnapshot_t	*newSnap = &cl.snapshots[(cl.snap.messageNum) & PACKET_MASK];
-  clSnapshot_t	*oldSnap = &cl.snapshots[(cl.snap.messageNum - 4) & PACKET_MASK];
+  clSnapshot_t	*oldSnap = &cl.snapshots[(cl.snap.messageNum - 3) & PACKET_MASK];
 
 #ifdef USE_MV
   if(oldSnap->multiview && newSnap->multiview) {
@@ -145,7 +154,14 @@ void X_DMG_ParseSnapshotDamage( void )
       } else
 #endif
       {
-        damage = 1;
+        int oldHealth = oldSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8;
+        int newHealth = newSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8;
+        if(event == EV_MISSILE_MISS || clientNum == clc.clientNum
+          || oldHealth - newHealth < 0) {
+          damage = 1;
+        } else {
+          damage = oldHealth - newHealth;
+        }
           // previous isn't always accurate
           /* (oldSnap->ps.persistant[PERS_ATTACKEE_ARMOR] >> 8) - */
           // adding armor is just okay

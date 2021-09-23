@@ -1346,7 +1346,11 @@ void CL_InitUI( qboolean loadNew ) {
 		VM_Call( uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 	}
 
+#ifdef BUILD_GAME_STATIC
+  Cvar_SetKnownDescriptions(VM_UI, VMR_BASEQ3A);
+#else
   Cvar_SetKnownDescriptions(VM_UI, uivm->knownVM);
+#endif
 
 #ifdef USE_PRINT_CONSOLE
   Com_PrintClear();
