@@ -21,9 +21,9 @@ USE_VIDEO_THEORA       = 0
 USE_VIDEO_XVID         = 0
 USE_CIN_VPX            = 0
 
-USE_SERVER_ROLES       = 1
-USE_RECENT_EVENTS      = 1
-USE_REFEREE_CMDS       = 1
+USE_SERVER_ROLES       = 0
+USE_RECENT_EVENTS      = 0
+USE_REFEREE_CMDS       = 0
 
 USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0

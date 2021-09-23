@@ -168,9 +168,10 @@ static int CL_GetParsedEntityIndexByID( const clSnapshot_t *clSnap, int entityID
 
 
 void X_DMG_DrawDamage(const refdef_t* fd);
-void X_DMG_PushDamageForDirectHit(int clientNum, vec3_t origin);
-void X_DMG_PushDamageForEntity(refEntity_t* ref);
-void X_DMG_ParseSnapshotDamage(snapshot_t *snapshot);
+//void X_DMG_PushDamageForDirectHit(int clientNum, vec3_t origin);
+//void X_DMG_UpdateClientOrigin(refEntity_t* ref);
+void X_DMG_ParseSnapshotDamage( void );
+
 /*
 ====================
 CL_GetSnapshot
@@ -324,7 +325,7 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	}
 
 	// FIXME: configstring changes and server commands!!!
-  X_DMG_ParseSnapshotDamage(snapshot);
+  X_DMG_ParseSnapshotDamage();
 
 	return qtrue;
 }
@@ -873,8 +874,8 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 	case CG_S_UPDATEENTITYPOSITION:
 		S_UpdateEntityPosition( args[1], VMA(2) );
-    if(args[1] >= 0 && args[1] < MAX_CLIENTS)
-      X_DMG_PushDamageForDirectHit( args[1], VMA(2) );
+    //if(args[1] >= 0 && args[1] < MAX_CLIENTS)
+    //  X_DMG_PushDamageForDirectHit( args[1], VMA(2) );
 		return 0;
 	case CG_S_RESPATIALIZE:
 		S_Respatialize( args[1], VMA(2), VMA(3), args[4] );
@@ -909,7 +910,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		if(clientScreens[cgvmi][0] > -1)
 #endif
 		re.AddRefEntityToScene( VMA(1), qfalse );
-    X_DMG_PushDamageForEntity((refEntity_t*)VMA(1));
+    //X_DMG_UpdateClientOrigin((refEntity_t*)VMA(1));
 		return 0;
 	case CG_R_ADDPOLYTOSCENE:
 #ifdef USE_MULTIVM_CLIENT
