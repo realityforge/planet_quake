@@ -144,8 +144,10 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_view.o \
           $(B)/$(MOD)/cgame/cg_weapons.o
 ifeq ($(MISSIONPACK),1)
-CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o \
-					$(B)/$(MOD)/cgame/ui_shared.o
+CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o
+ifneq ($(BUILD_CLIENT),1)
+CGOBJ_ += $(B)/$(MOD)/cgame/ui_shared.o
+endif
 endif
 
 ifneq ($(BUILD_CLIENT),1)
@@ -393,6 +395,7 @@ clean2:
 	@rm -f ./$(B)/$(MOD)/qagame$(SHLIBNAME)
 	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
 else
+GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
 WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
 endif

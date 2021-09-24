@@ -1247,6 +1247,7 @@ void SV_InitGameProgs( qboolean createNew ) {
 		VM_Call( gvm, 3, GAME_INIT, sv.time - 5 * 100, Com_Milliseconds() - 5 * 100, qfalse );
 		return;
 	}
+
 	SV_InitGameVM( qfalse );
 
 	// load userinfo filters

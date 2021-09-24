@@ -16,11 +16,9 @@ DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 }
 #else
 #define syscall SV_DllSyscall
-#endif
-
-#ifdef BUILD_GAME_STATIC
 #define PASSFLOAT GPASSFLOAT
 #endif
+
 int PASSFLOAT( float x ) {
 	float	floatTemp;
 	floatTemp = x;
@@ -782,8 +780,3 @@ int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 qboolean trap_GetValue( char *value, int valueSize, const char *key ) {
 	return syscall( dll_com_trapGetValue, value, valueSize, key );
 }
-
-#ifdef BUILD_GAME_STATIC
-#undef PASSFLOAT
-#undef syscall
-#endif

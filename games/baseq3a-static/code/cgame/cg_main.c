@@ -56,7 +56,6 @@ intptr_t CG_Call( int command, int arg0, int arg1, int arg2 )
 DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 #endif
 {
-
 	switch ( command ) {
 	case CG_INIT:
 		CG_Init( arg0, arg1, arg2 );

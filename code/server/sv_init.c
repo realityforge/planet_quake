@@ -805,7 +805,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
-	
+
 #ifdef USE_LOCAL_DED
 	svShuttingDown = qfalse;
 #else
@@ -823,8 +823,10 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 
 #ifdef USE_MULTIVM_SERVER
 	Com_Printf ("---------------- Finished Starting Map (%i) -------------------\n", gvmi);
+#else
+  Com_Printf ("---------------- Finished Starting Map -------------------\n");
 #endif
-	
+
 	Sys_SetStatus( "Running map %s", mapname );
 	startingServer = qfalse;
 #ifdef USE_RECENT_EVENTS

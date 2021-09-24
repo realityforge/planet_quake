@@ -2539,6 +2539,7 @@ static void InitShader( const char *name, int lightmapIndex ) {
 	Com_Memset( &stages, 0, sizeof( stages ) );
 
 	Q_strncpyz( shader.name, name, sizeof( shader.name ) );
+  shader.lastTimeUsed = tr.lastRegistrationTime;
 	shader.lightmapIndex = lightmapIndex;
 
 	// we need to know original (unmodified) lightmap index
@@ -3020,7 +3021,9 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) &&	!Q_stricmp(sh->name, strippedName)) {
+		if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader) 
+      && !Q_stricmp(sh->name, strippedName)
+      && sh->lastTimeUsed >= tr.lastRegistrationTime) {
 			// match found
 			return sh;
 		}
@@ -3610,6 +3613,39 @@ static void CreateExternalShaders( void ) {
 
 	tr.sunShader = R_FindShader( "sun", LIGHTMAP_NONE, qtrue );
 }
+
+
+#ifdef USE_LAZY_MEMORY
+void RE_ReloadShaders( qboolean createNew ) {
+  tr.lastRegistrationTime = ri.Milliseconds();
+
+  R_IssuePendingRenderCommands();
+
+  // remove lightmaps
+  if(!createNew) {
+    // Gets reassigned on subsequent loads
+    for(int i=0;i<tr.numLightmaps;i++) {
+      image_t *img = tr.lightmaps[i];
+      if(img->texnum)
+        qglDeleteTextures( 1, &img->texnum );
+      Com_Memset(img, 0, sizeof( *img ));
+    }
+    tr.lightmaps = NULL;
+    tr.numLightmaps = 0;
+  }
+  if ( qglActiveTextureARB ) {
+		for ( int i = glConfig.numTextureUnits - 1; i >= 0; i-- ) {
+			qglActiveTextureARB( GL_TEXTURE0_ARB + i );
+			qglBindTexture( GL_TEXTURE_2D, 0 );
+		}
+	} else {
+		qglBindTexture( GL_TEXTURE_2D, 0 );
+	}
+  Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
+
+  ScanAndLoadShaderFiles();
+}
+#endif
 
 
 /*

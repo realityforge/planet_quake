@@ -352,6 +352,7 @@ clean2:
 	@rm -f ./$(B)/$(MOD)/qagame$(SHLIBNAME)
 	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
 else
+GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
 WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
 endif

@@ -103,9 +103,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 // Cyrax's Multiview is what makes multiworld possible.
-#ifndef USE_MV
-#define USE_MV
-#endif
+#define USE_LAZY_MEMORY 1
+#define USE_LAZY_LOAD 1
+#define USE_MV 1
 #endif
 
 #ifdef USE_MV
@@ -114,10 +114,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define USE_MULTIVM_CLIENT 1
 //#define USE_MULTIVM_SERVER 1
 #else // not USE_MV
-#undef USE_MULTIVM_CLIENT
-#undef USE_MULTIVM_SERVER
-#undef USE_LAZY_MEMORY
-#undef USE_LAZY_LOAD
+#if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
+#error "USE_MV must be set in order to use MultiVM/MultiWorld"
+#endif
 #endif // USE_MV
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)

@@ -1692,6 +1692,7 @@ int replace_s( char * str1, char * str2, char * src, int max_len )
 }
 
 
+#ifndef BUILD_GAME_STATIC
 qboolean replace1( const char match, const char replace, char *str )
 {
 	qboolean	res = qfalse;
@@ -1709,6 +1710,7 @@ qboolean replace1( const char match, const char replace, char *str )
 
 	return res;
 }
+#endif
 
 
 char *strtok( char *strToken, const char *strDelimit ) {
@@ -1903,6 +1905,7 @@ int BG_stricmp( const char *s1, const char *s2 ) {
 }
 
 
+#ifndef BUILD_GAME_STATIC
 char *Q_stristr( const char * str1, const char * str2 )
 {
 	char *cp = (char *) str1;
@@ -1930,6 +1933,7 @@ char *Q_stristr( const char * str1, const char * str2 )
 
 	return( NULL );
 }
+#endif
 
 
 /*
@@ -2040,6 +2044,7 @@ void Q_strcpy( char *dst, const char *src )
 }
 
 
+#ifndef BUILD_GAME_STATIC
 char *Q_stradd( char *dst, const char *src ) 
 {
 	char c;
@@ -2052,6 +2057,8 @@ char *Q_stradd( char *dst, const char *src )
 	*dst = '\0';
 	return dst;
 }
+#endif
+
 
 int Q_strlen( const char *s ) 
 {

@@ -1900,5 +1900,9 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
   re.CreateShaderFromRaw = RE_CreateShaderFromRaw;
 #endif
 
+#ifdef USE_LAZY_MEMORY
+	re.ReloadShaders = RE_ReloadShaders;
+#endif
+
 	return &re;
 }

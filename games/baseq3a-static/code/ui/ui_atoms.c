@@ -9,8 +9,8 @@
 
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
-// these are here so the functions in q_shared.c can link
 #ifndef BUILD_GAME_STATIC
+// these are here so the functions in q_shared.c can link
 
 void QDECL Com_Error( int level, const char *error, ... ) {
 	va_list		argptr;

@@ -383,7 +383,3 @@ qboolean trap_VerifyCDKey( const char *key, const char *chksum) {
 void trap_SetPbClStatus( int status ) {
 	syscall( UI_SET_PBCLSTATUS, status );
 }
-
-#ifdef BUILD_GAME_STATIC
-#undef syscall
-#endif

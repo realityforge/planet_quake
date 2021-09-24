@@ -420,6 +420,14 @@ void Controls_GetConfig( void );
 void Controls_SetConfig(qboolean restart);
 void Controls_SetDefaults( void );
 
+#ifdef BUILD_GAME_STATIC
+#define trap_PC_AddGlobalDefine trapui_PC_AddGlobalDefine
+#define trap_PC_LoadSource trapui_PC_LoadSource
+#define trap_PC_FreeSource trapui_PC_FreeSource
+#define trap_PC_ReadToken trapui_PC_ReadToken
+#define trap_PC_SourceFileAndLine trapui_PC_SourceFileAndLine
+#endif
+
 int			trap_PC_AddGlobalDefine( char *define );
 int			trap_PC_LoadSource( const char *filename );
 int			trap_PC_FreeSource( int handle );

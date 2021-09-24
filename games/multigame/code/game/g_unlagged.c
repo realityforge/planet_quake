@@ -16,7 +16,7 @@ void G_ResetHistory( gentity_t *ent ) {
 	gclient_t	*client;
 
 	client = ent->client;
-	dt = 1000 / sv_fps.integer;
+	dt = 1000 / g_fps.integer;
 
 	// fill up the history with data (assume the current position)
 	client->historyHead = NUM_CLIENT_HISTORY - 1;

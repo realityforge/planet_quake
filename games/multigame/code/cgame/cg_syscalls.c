@@ -8,12 +8,17 @@
 
 #include "cg_local.h"
 
+#ifndef BUILD_GAME_STATIC
 static dllSyscall_t syscall = (dllSyscall_t)-1;
 
 DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 	syscall = syscallptr;
 }
 
+#else
+#define syscall CL_DllSyscall
+#define PASSFLOAT CGPASSFLOAT
+#endif
 
 int PASSFLOAT( float x ) {
 	float	floatTemp;
@@ -340,6 +345,7 @@ int trap_Key_GetKey( const char *binding ) {
 	return syscall( CG_KEY_GETKEY, binding );
 }
 
+#ifndef BUILD_GAME_STATIC
 int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
 }
@@ -359,6 +365,7 @@ int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( CG_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
+#endif
 
 void	trap_S_StopBackgroundTrack( void ) {
 	syscall( CG_S_STOPBACKGROUNDTRACK );

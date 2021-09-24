@@ -1464,11 +1464,13 @@ static qboolean SV_CheckPaused( void ) {
 	int	i;
   qboolean clPaused = qfalse;
 
-  if ( !cl_paused->integer ) {
+#ifndef DEDICATED
+  if ( cl_paused && !cl_paused->integer ) {
     //if (sv_paused->integer)
 	//		Cvar_Set("sv_paused", "0");
 		return qfalse;
 	}
+#endif
 
 	// only pause if there is just a single client connected
 	count = 0;
@@ -1660,8 +1662,8 @@ void SV_Frame( int msec ) {
 	}
 
 	// if it isn't time for the next frame, do nothing
-
 	frameMsec = 1000 / sv_fps->integer * com_timescale->value;
+
 	// don't let it scale below 1ms
 	if(frameMsec < 1)
 	{

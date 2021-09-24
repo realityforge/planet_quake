@@ -355,6 +355,7 @@ typedef struct {
 
 typedef struct shader_s {
 	char		name[MAX_QPATH];		// game path, including extension
+  int     lastTimeUsed;
 	int			lightmapSearchIndex;	// for a shader to match, both name and lightmapIndex must match
 	int			lightmapIndex;			// for rendering
 
@@ -1066,6 +1067,7 @@ typedef struct {
 */
 typedef struct {
 	qboolean				registered;		// cleared at shutdown, set at beginRegistration
+  int							lastRegistrationTime;
 
 	int						visCount;		// incremented every time a new vis cluster is entered
 	int						frameCount;		// incremented every frame
@@ -1429,6 +1431,9 @@ shader_t	*R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 shader_t	*R_GetShaderByHandle( qhandle_t hShader );
 shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t	*R_FindShaderByName( const char *name );
+#ifdef USE_LAZY_MEMORY
+void		RE_ReloadShaders( qboolean createNew );
+#endif
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );
 void		RE_RemapShader(const char *oldShader, const char *newShader, const char *timeOffset);

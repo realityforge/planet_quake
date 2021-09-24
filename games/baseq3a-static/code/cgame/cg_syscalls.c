@@ -16,12 +16,10 @@ DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 }
 #else
 #define syscall CL_DllSyscall
-#endif
-
-
-#ifdef BUILD_GAME_STATIC
 #define PASSFLOAT CGPASSFLOAT
 #endif
+
+
 int PASSFLOAT( float x ) {
 	float	floatTemp;
 	floatTemp = x;
@@ -447,8 +445,3 @@ void trap_R_AddRefEntityToScene2( const refEntity_t *re ) {
 void trap_R_AddLinearLightToScene( const vec3_t start, const vec3_t end, float intensity, float r, float g, float b ) {
 	syscall( dll_trap_R_AddLinearLightToScene, start, end, intensity, r, g, b );
 }
-
-#ifdef BUILD_GAME_STATIC
-#undef PASSFLOAT
-#undef syscall
-#endif

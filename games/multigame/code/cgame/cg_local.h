@@ -1585,6 +1585,99 @@ void CG_CheckChangedPredictableEvents( playerState_t *ps );
 // These functions are how the cgame communicates with the main game system
 //
 
+#ifdef BUILD_GAME_STATIC
+#define trap_Print trapcg_Print
+#define trap_Error trapcg_Error
+#define trap_Milliseconds trapcg_Milliseconds
+#define trap_Cvar_Register trapcg_Cvar_Register
+#define trap_Cvar_Update trapcg_Cvar_Update
+#define trap_Cvar_Set trapcg_Cvar_Set
+//#define trap_Cvar_VariableStringBuffer trapcg_Cvar_VariableStringBuffer
+#define trap_Argc trapcg_Argc
+#define trap_Argv trapcg_Argv
+#define trap_Args trapcg_Args
+#define trap_FS_FOpenFile trapcg_FS_FOpenFile
+#define trap_FS_Read trapcg_FS_Read
+#define trap_FS_Write trapcg_FS_Write
+#define trap_FS_FCloseFile trapcg_FS_FCloseFile
+#define trap_FS_Seek trapcg_FS_Seek
+#define trap_SendConsoleCommand trapcg_SendConsoleCommand
+#define trap_RealTime trapcg_RealTime
+#define trap_AddCommand trapcg_AddCommand
+#define trap_RemoveCommand trapcg_RemoveCommand
+#define trap_SendClientCommand trapcg_SendClientCommand
+#define trap_UpdateScreen trapcg_UpdateScreen
+#define trap_CM_LoadMap trapcg_CM_LoadMap
+#define trap_CM_NumInlineModels trapcg_CM_NumInlineModels
+#define trap_CM_InlineModel trapcg_CM_InlineModel
+#define trap_CM_TempBoxModel trapcg_CM_TempBoxModel
+#define trap_CM_PointContents trapcg_CM_PointContents
+#define trap_CM_TransformedPointContents trapcg_CM_TransformedPointContents
+#define trap_CM_BoxTrace trapcg_CM_BoxTrace
+#define trap_CM_CapsuleTrace trapcg_CM_CapsuleTrace
+#define trap_CM_TransformedBoxTrace trapcg_CM_TransformedBoxTrace
+#define trap_CM_TransformedCapsuleTrace trapcg_CM_TransformedCapsuleTrace
+#define trap_CM_MarkFragments trapcg_CM_MarkFragments
+#define trap_S_StartSound trapcg_S_StartSound
+#define trap_S_StopLoopingSound trapcg_S_StopLoopingSound
+#define trap_S_StartLocalSound trapcg_S_StartLocalSound
+#define trap_S_ClearLoopingSounds trapcg_S_ClearLoopingSounds
+#define trap_S_AddLoopingSound trapcg_S_AddLoopingSound
+#define trap_S_AddRealLoopingSound trapcg_S_AddRealLoopingSound
+#define trap_S_UpdateEntityPosition trapcg_S_UpdateEntityPosition
+#define trap_S_Respatialize trapcg_S_Respatialize
+#define trap_S_RegisterSound trapcg_S_RegisterSound
+#define trap_S_StartBackgroundTrack trapcg_S_StartBackgroundTrack
+#define trap_S_StopBackgroundTrack trapcg_S_StopBackgroundTrack
+#define trap_R_LoadWorldMap trapcg_R_LoadWorldMap
+#define trap_R_RegisterModel trapcg_R_RegisterModel
+#define trap_R_RegisterSkin trapcg_R_RegisterSkin
+#define trap_R_RegisterShader trapcg_R_RegisterShader
+#define trap_R_RegisterShaderNoMip trapcg_R_RegisterShaderNoMip
+#define trap_R_ClearScene trapcg_R_ClearScene
+#define trap_R_AddRefEntityToScene trapcg_R_AddRefEntityToScene
+#define trap_R_AddPolyToScene trapcg_R_AddPolyToScene
+#define trap_R_AddPolysToScene trapcg_R_AddPolysToScene
+#define trap_R_AddLightToScene trapcg_R_AddLightToScene
+#define trap_R_AddAdditiveLightToScene trapcg_R_AddAdditiveLightToScene
+#define trap_R_LightForPoint trapcg_R_LightForPoint
+#define trap_R_RenderScene trapcg_R_RenderScene
+#define trap_R_SetColor trapcg_R_SetColor
+#define trap_R_DrawStretchPic trapcg_R_DrawStretchPic
+#define trap_R_ModelBounds trapcg_R_ModelBounds
+#define trap_R_LerpTag trapcg_R_LerpTag
+#define trap_R_RemapShader trapcg_R_RemapShader
+#define trap_R_inPVS trapcg_R_inPVS
+#define trap_GetGlconfig trapcg_GetGlconfig
+#define trap_GetGameState trapcg_GetGameState
+#define trap_GetCurrentSnapshotNumber trapcg_GetCurrentSnapshotNumber
+#define trap_GetSnapshot trapcg_GetSnapshot
+#define trap_GetServerCommand trapcg_GetServerCommand
+#define trap_GetCurrentCmdNumber trapcg_GetCurrentCmdNumber
+#define trap_GetUserCmd trapcg_GetUserCmd
+#define trap_SetUserCmdValue trapcg_SetUserCmdValue
+#define trap_MemoryRemaining trapcg_MemoryRemaining
+#define trap_R_RegisterFont trapcg_R_RegisterFont
+#define trap_Key_IsDown trapcg_Key_IsDown
+#define trap_Key_GetCatcher trapcg_Key_GetCatcher
+#define trap_Key_SetCatcher trapcg_Key_SetCatcher
+#define trap_Key_GetKey trapcg_Key_GetKey
+#define trap_CIN_PlayCinematic trapcg_CIN_PlayCinematic
+#define trap_CIN_StopCinematic trapcg_CIN_StopCinematic
+#define trap_CIN_RunCinematic  trapcg_CIN_RunCinematic 
+#define trap_CIN_DrawCinematic  trapcg_CIN_DrawCinematic 
+#define trap_CIN_SetExtents  trapcg_CIN_SetExtents 
+//#define trap_SnapVector trapcg_SnapVector
+#define trap_loadCamera trapcg_loadCamera
+#define trap_startCamera trapcg_startCamera
+#define trap_getCameraInfo trapcg_getCameraInfo
+#define trap_GetEntityToken trapcg_GetEntityToken
+#define trap_GetValue trapcg_GetValue
+#define trap_R_AddRefEntityToScene2 trapcg_R_AddRefEntityToScene2
+#define trap_R_AddLinearLightToScene trapcg_R_AddLinearLightToScene
+#define dll_com_trapGetValue cg_trapGetValue
+#endif
+
 // print message on the local console
 void		trap_Print( const char *text );
 

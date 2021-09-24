@@ -10,8 +10,8 @@
 uiStatic_t		uis;
 qboolean		m_entersound;		// after a frame, so caching won't disrupt the sound
 
+#ifndef BUILD_GAME_STATIC
 // these are here so the functions in q_shared.c can link
-#ifndef UI_HARD_LINKED
 
 void QDECL Com_Error( int level, const char *fmt, ... ) {
 	va_list		argptr;

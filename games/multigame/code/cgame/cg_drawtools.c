@@ -944,7 +944,7 @@ void CG_ColorForHealth( vec4_t hcolor ) {
 }
 
 
-
+#if !defined(BUILD_GAME_STATIC) || defined(MISSIONPACK)
 // bk001205 - code below duplicated in q3_ui/ui-atoms.c
 // bk001205 - FIXME: does this belong in ui_shared.c?
 // bk001205 - FIXME: HARD_LINKED flags not visible here
@@ -1334,3 +1334,4 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 	UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
 }
 #endif // Q3STATIC
+#endif

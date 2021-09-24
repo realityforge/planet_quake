@@ -8,11 +8,16 @@
 #error "Do not use in VM build"
 #endif
 
+#ifndef BUILD_GAME_STATIC
 static dllSyscall_t syscall = (dllSyscall_t)-1;
 
 DLLEXPORT void dllEntry( dllSyscall_t syscallptr ) {
 	syscall = syscallptr;
 }
+#else
+#define syscall SV_DllSyscall
+#define PASSFLOAT GPASSFLOAT
+#endif
 
 int PASSFLOAT( float x ) {
 	float	floatTemp;
@@ -751,6 +756,7 @@ int trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent
 	return syscall( BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION, numranks, ranks, parent1, parent2, child );
 }
 
+#ifndef BUILD_GAME_STATIC
 int trap_PC_LoadSource( const char *filename ) {
 	return syscall( BOTLIB_PC_LOAD_SOURCE, filename );
 }
@@ -766,6 +772,7 @@ int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 	return syscall( BOTLIB_PC_SOURCE_FILE_AND_LINE, handle, filename, line );
 }
+#endif
 
 // extension interface
 

@@ -4492,7 +4492,7 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeEvents = 0;
 	timeBeforeClient = 0;
 	timeAfter = 0;
-  
+
 #ifdef USE_ASYNCHRONOUS
   if(!com_fullyInitialized) {
     Com_EventLoop();
@@ -4507,6 +4507,7 @@ void Com_Frame( qboolean noDelay ) {
     return;
   }
 #endif
+
 
 	// write config file if anything changed
 #ifndef DELAY_WRITECONFIG
@@ -4617,7 +4618,6 @@ void Com_Frame( qboolean noDelay ) {
 	msec = Com_ModifyMsec( realMsec );
 
 	//
-	// server side
 	//
 	if ( com_speeds->integer ) {
 		timeBeforeServer = Sys_Milliseconds();

@@ -11,7 +11,7 @@ BASE_CFLAGS      += -Wall -fno-strict-aliasing -Wimplicit \
 OPTIMIZE         := -O2 -fvisibility=hidden
 SHLIBEXT         := dylib
 SHLIBCFLAGS      := -fPIC -fvisibility=hidden -fno-common
-LDFLAGS          := 
+LDFLAGS          := -rdynamic
 SHLIBLDFLAGS     := -dynamiclib $(LDFLAGS)
 
 ifneq ($(SDL_CFLAGS),)

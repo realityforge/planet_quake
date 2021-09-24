@@ -32,6 +32,16 @@ int dll_trap_R_AddRefEntityToScene2;
 int dll_trap_R_AddLinearLightToScene;
 #endif
 
+#ifdef BUILD_GAME_STATIC
+void CG_ResetGlobals(void) {
+  static int instance = 0;
+  instance++;
+  
+  
+  
+}
+#endif
+
 /*
 ================
 vmMain
@@ -40,8 +50,12 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .q3vm file
 ================
 */
-DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 ) {
-
+#ifdef BUILD_GAME_STATIC
+intptr_t CG_Call( int command, int arg0, int arg1, int arg2 )
+#else
+DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
+#endif
+{
 	switch ( command ) {
 	case CG_INIT:
 		CG_Init( arg0, arg1, arg2 );
@@ -447,6 +461,7 @@ int CG_LastAttacker( void ) {
 	return cg.snap->ps.persistant[PERS_ATTACKER];
 }
 
+
 void QDECL CG_Printf( const char *msg, ... ) {
 	va_list		argptr;
 	char		text[1024];
@@ -469,7 +484,7 @@ void QDECL CG_Error( const char *msg, ... ) {
 	trap_Error( text );
 }
 
-#ifndef CGAME_HARD_LINKED
+#ifndef BUILD_GAME_STATIC
 // this is only here so the functions in q_shared.c and bg_*.c can link (FIXME)
 
 void QDECL Com_Error( int level, const char *error, ... ) {

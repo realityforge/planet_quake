@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 #include <limits.h>
+#ifdef _DEBUG
+#include <execinfo.h>
+#include <unistd.h>
+#endif
 
 #ifdef USE_VID_FAST
 #include "../ui/ui_shared.h"
@@ -4227,6 +4231,10 @@ void CL_StartHunkUsers( void ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
+
+  void *syms[20];
+  const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
+  backtrace_symbols_fd( syms, size, STDERR_FILENO );
 
 	// fixup renderer -EC-
 	if ( !re.BeginRegistration ) {

@@ -810,7 +810,6 @@ extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 
 #ifdef BUILD_GAME_STATIC
-
 #define trap_Print trapg_Print
 #define trap_Error trapg_Error
 #define trap_Milliseconds trapg_Milliseconds
