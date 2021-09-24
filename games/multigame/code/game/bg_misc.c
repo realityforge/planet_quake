@@ -1906,7 +1906,7 @@ int BG_stricmp( const char *s1, const char *s2 ) {
 
 
 #ifndef BUILD_GAME_STATIC
-char *Q_stristr( const char * str1, const char * str2 )
+const char *Q_stristr( const char * str1, const char * str2 )
 {
 	char *cp = (char *) str1;
 	char *s1, *s2;

@@ -619,7 +619,6 @@ void _UI_Refresh( int realtime )
 	}
 
 
-
 	UI_UpdateCvars();
 
 	if (Menu_Count() > 0) {
