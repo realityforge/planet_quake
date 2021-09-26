@@ -394,6 +394,7 @@ void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
   le->leType = LE_ITEMTIMER;
   le->startTime = cg.time;
   le->endTime = cg.time + respawnTime;
+  le->lifeRate = 1.0 / ( le->endTime - le->startTime );
   
   le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
   //le->radius = client; ?

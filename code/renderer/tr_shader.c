@@ -1924,6 +1924,16 @@ static qboolean ParseShader( const char **text )
 
 			continue;
 		}
+    else if ( !Q_stricmp( token, "novlcollapse" ) )
+    {
+      // new in quakelive
+      shader.noVertexLightingCollapse = qtrue;
+      continue;
+    }
+    else if ( !Q_stricmp( token, "nocompress" ) )   {
+      shader.allowCompress = qfalse;
+      continue;
+    }
 		else
 		{
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
@@ -2769,7 +2779,7 @@ static shader_t *FinishShader( void ) {
 	//
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
-	if ( stage > 1 && ( ( r_vertexLight->integer && tr.vertexLightingAllowed && !shader.noVLcollapse ) || glConfig.hardwareType == GLHW_PERMEDIA2 ) ) {
+	if ( stage > 1 && ( ( r_vertexLight->integer && tr.vertexLightingAllowed && !shader.noVLcollapse ) || glConfig.hardwareType == GLHW_PERMEDIA2 ) && !shader.noVertexLightingCollapse ) {
 		VertexLightingCollapse();
 		stage = 1;
 		hasLightmapStage = qfalse;
@@ -3337,7 +3347,7 @@ static int loadShaderBuffers( char **shaderFiles, const int numShaderFiles, char
 	for ( i = 0; i < numShaderFiles; i++ )
 	{
 		Com_sprintf( filename, sizeof( filename ), "scripts/%s", shaderFiles[i] );
-		//ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
+		ri.Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri.FS_ReadFile( filename, (void **)&buffers[i] );
 
 		if ( !buffers[i] )
