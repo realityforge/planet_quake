@@ -1008,6 +1008,48 @@ void CG_AddDamagePlum( localEntity_t *le ) {
 }
 
 
+void CG_AddItemTimer( localEntity_t *le ) {
+	refEntity_t	*re;
+	vec3_t		origin, delta, dir, vec;
+	float		c, len;
+
+	re = &le->refEntity;
+
+	c = le->endTime - cg.time;
+
+	re->radius = NUMBER_SIZE / 2;
+
+	VectorCopy(le->pos.trBase, origin);
+	//origin[2] += 110.0f - c * 100.0f;
+
+	VectorSubtract(cg.refdef.vieworg, origin, dir);
+	//CrossProduct(dir, up, vec);
+	VectorNormalize(vec);
+
+	//VectorMA(origin, -10.0f + 20 * sin(c * 2 * M_PI), vec, origin);
+
+	// if the view would be "inside" the sprite, kill the sprite
+	// so it doesn't add too much overdraw
+	VectorSubtract( origin, cg.refdef.vieworg, delta );
+	len = VectorLengthSquared( delta );
+	if ( len < 20*20 ) {
+		return;
+	} else if (len > 20*20 && len < 2000) {
+    re->shaderRGBA[3] = 0xff * (len / 2000);
+  } else {
+    return; // too far away, don't add to scene
+  }
+
+  // TODO: calculate segments
+
+	//for (i = 0; i < numdigits; i++) {
+		//VectorMA(origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
+		re->customShader = cgs.media.timerSlice;
+		trap_R_AddRefEntityToScene( re );
+	//}
+}
+
+
 
 //==============================================================================
 
@@ -1074,6 +1116,10 @@ void CG_AddLocalEntities( void ) {
 
     case LE_DAMAGEPLUM:
 			CG_AddDamagePlum( le );
+			break;
+
+    case LE_ITEMTIMER:
+			CG_AddItemTimer( le );
 			break;
 
 #ifdef MISSIONPACK

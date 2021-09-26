@@ -1286,6 +1286,7 @@ const char *eventnames[EV_MAX] = {
 
 	"EV_ITEM_PICKUP",			// normal item pickups are predictable
 	"EV_GLOBAL_ITEM_PICKUP",	// powerup / team sounds are broadcast to everyone
+  "EV_ITEM_TIMER",
 
 	"EV_NOAMMO",
 	"EV_CHANGE_WEAPON",

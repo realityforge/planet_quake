@@ -353,7 +353,7 @@ static void Cmd_Exec_f( void ) {
 		return;
 	}
 	if (!quiet)
-		Com_Printf ("execing %s\n", filename);
+		Com_Printf ("execing %s: %s\n", filename, f.c);
 
 	Cbuf_InsertText( f.c );
 

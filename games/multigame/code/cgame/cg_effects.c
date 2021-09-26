@@ -384,9 +384,36 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 #endif
 
 
+void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
+  localEntity_t	*le;
+  refEntity_t		*re;
+  vec3_t			angles;
+
+  le = CG_AllocLocalEntity();
+  le->leFlags = 0;
+  le->leType = LE_ITEMTIMER;
+  le->startTime = cg.time;
+  le->endTime = cg.time + respawnTime;
+  
+  le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+  //le->radius = client; ?
+  
+  VectorCopy( origin, le->pos.trBase );
+
+  re = &le->refEntity;
+
+  re->reType = RT_SPRITE;
+  re->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+  re->radius = 16;
+
+  VectorClear(angles);
+  AnglesToAxis( angles, re->axis );
+}
+
+
 /*
 ==================
-CG_ScorePlum
+CG_DamagePlum
 ==================
 */
 void CG_DamagePlum( int client, const vec3_t origin, int damage ) {
@@ -425,7 +452,7 @@ void CG_DamagePlum( int client, const vec3_t origin, int damage ) {
 	re = &le->refEntity;
 
 	re->reType = RT_SPRITE;
-  re->renderfx = RF_DEPTHHACK;
+  re->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
 	re->radius = 16;
 
 	VectorClear(angles);

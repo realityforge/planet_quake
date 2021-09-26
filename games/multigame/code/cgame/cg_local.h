@@ -231,6 +231,7 @@ typedef enum {
 	LE_SCALE_FADE,
 	LE_SCOREPLUM,
   LE_DAMAGEPLUM,
+  LE_ITEMTIMER,
 #ifdef MISSIONPACK
 	LE_KAMIKAZE,
 	LE_INVULIMPACT,
@@ -789,6 +790,7 @@ typedef struct {
 #endif
 
 	qhandle_t	numberShaders[11];
+  qhandle_t	timerSlice;
 
 	qhandle_t	shadowMarkShader;
 
@@ -1523,7 +1525,7 @@ void CG_LightningBoltBeam( vec3_t start, vec3_t end );
 #endif
 void CG_ScorePlum( int client, const vec3_t origin, int score );
 void CG_DamagePlum( int client, const vec3_t origin, int damage );
-void CG_DamagePlum( int client, const vec3_t origin, int damage );
+void CG_ItemTimer( int client, const vec3_t origin, int respawnTime );
 
 void CG_GibPlayer( const vec3_t playerOrigin );
 void CG_BigExplode( vec3_t playerOrigin );

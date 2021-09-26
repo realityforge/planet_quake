@@ -812,6 +812,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		}
 		break;
 
+  case EV_ITEM_TIMER:
+    CG_ItemTimer( cent->currentState.otherEntityNum, cent->lerpOrigin, cent->currentState.time );
+    break;
+
 	case EV_GLOBAL_ITEM_PICKUP:
 		{
 			gitem_t	*item;

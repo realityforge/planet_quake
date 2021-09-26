@@ -429,7 +429,7 @@ void player_pain(gentity_t *self, gentity_t *attacker, int damage) {
 
   plum = G_TempEntity( self->r.currentOrigin, EV_DAMAGEPLUM );
   // only send this temp entity to a single client
-  plum->r.svFlags |= SVF_SINGLECLIENT;
+  plum->r.svFlags |= SVF_SINGLECLIENT | SVF_BROADCAST;
   plum->r.singleClient = attacker->s.number;
   //
   plum->s.otherEntityNum = self->s.number;
