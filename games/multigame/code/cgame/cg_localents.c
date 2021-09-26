@@ -1008,31 +1008,22 @@ void CG_AddDamagePlum( localEntity_t *le ) {
 }
 
 
+#define TIMER_SIZE 24
 void CG_AddItemTimer( localEntity_t *le ) {
 	refEntity_t	*re;
-  vec3_t		origin, delta, dir, vec, up = {0, 0, 1};
-	float		c, len;
+  vec3_t		origin, delta, vec;
+	float		  c, len;
+  int       i, numsegs, totalsegs;
 
 	re = &le->refEntity;
 
   c = ( le->endTime - cg.time ) * le->lifeRate;
 
-	re->radius = 24 / 2;
+	re->radius = TIMER_SIZE / 2;
 
-  
-  	VectorCopy(le->pos.trBase, origin);
-  	//origin[2] += 110.0f - c * 100.0f;
-
-  	VectorSubtract(cg.refdef.vieworg, origin, re->origin);
-  	VectorNormalize(re->origin);
-
-  	//VectorMA(origin, -10.0f + 20 * sin(c * 2 * M_PI), vec, origin);
-
-  /*
 	VectorCopy(le->pos.trBase, origin);
 	VectorSubtract(cg.refdef.vieworg, origin, re->origin);
 	VectorNormalize(re->origin);
-  */
 
 	// if the view would be "inside" the sprite, kill the sprite
 	// so it doesn't add too much overdraw
@@ -1043,20 +1034,27 @@ void CG_AddItemTimer( localEntity_t *le ) {
 	} else if (len > 20*20 && len <= 30*1000) {
     re->shaderRGBA[3] = 0xff;
   } else if (len > 30*1000 && len <= 40*1000) {
-    re->shaderRGBA[3] = 0xff * (4.0f * (40*1000 - len)/40*1000);
-    Com_Printf("Item fade: %i\n", re->shaderRGBA[3]);
+    float scale = (40.0f*1000 - len)/(10.0f*1000);
+    re->shaderRGBA[3] = 0xff * scale;
   } else {
     return; // too far away, don't add to scene
   }
 
-  // TODO: calculate segments
-	//for (i = 0; i < numdigits; i++) {
-		re->customShader = cgs.media.timerSlice;
-		trap_R_AddRefEntityToScene( re );
-	//}
-  VectorMA(origin, (float) (((float) 1 / 2) - 1) * 24, vec, re->origin);
-  re->customShader = cgs.media.timerSlice;
-  trap_R_AddRefEntityToScene( re );
+  // calculate segments
+  totalsegs = 5;
+  numsegs = ceil((1.0f-c) * totalsegs);
+  for (i = 0; i < numsegs; i++) {
+    re->rotation = 180 - (360 / (totalsegs * 2)) - (360 / totalsegs) * i;
+    VectorMA(origin, (float) (((float) 1 / 2) - 1) * TIMER_SIZE, vec, re->origin);
+    re->customShader = cgs.media.timerSlice;
+    // fade the last segment in gradually
+    if(i == numsegs - 1) {
+      float fade = ((1.0f - c) - i * (1.0f / totalsegs) + 0.01f) / (1.0f / totalsegs);
+      if(fade > 1.0f) fade = 1.0f;
+      re->shaderRGBA[3] = (int)(fade * (float)re->shaderRGBA[3]);
+    }
+    trap_R_AddRefEntityToScene( re );
+  }
 }
 
 
