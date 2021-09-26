@@ -53,6 +53,7 @@ UI_PlayerInfo_SetWeapon
 static void UI_PlayerInfo_SetWeapon( playerInfo_t *pi, weapon_t weaponNum ) {
 	gitem_t *	item;
 	char		path[MAX_QPATH];
+  char		strippedPath[MAX_QPATH];
 
 	pi->currentWeapon = weaponNum;
 tryagain:
@@ -89,13 +90,13 @@ tryagain:
 
 	if ( weaponNum == WP_MACHINEGUN || weaponNum == WP_GAUNTLET || weaponNum == WP_BFG ) {
 		strcpy( path, item->world_model[0] );
-		COM_StripExtension( path, path, sizeof(path) );
+		COM_StripExtension( path, strippedPath, sizeof(path) );
 		strcat( path, "_barrel.md3" );
 		pi->barrelModel = trap_R_RegisterModel( path );
 	}
 
 	strcpy( path, item->world_model[0] );
-	COM_StripExtension( path, path, sizeof(path) );
+	COM_StripExtension( path, strippedPath, sizeof(path) );
 	strcat( path, "_flash.md3" );
 	pi->flashModel = trap_R_RegisterModel( path );
 

@@ -811,12 +811,14 @@ void ClientThink_real( gentity_t *ent ) {
 
 	if ( client->noclip ) {
 		client->ps.pm_type = PM_NOCLIP;
-	} else if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
-		client->ps.pm_type = PM_DEAD;
+  } else
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  } else if ( client->frozen ) {
+  if ( client->frozen ) {
     client->ps.pm_type = PM_FROZEN;
+  } else
 #endif
+  if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
+		client->ps.pm_type = PM_DEAD;
 	} else {
 		client->ps.pm_type = PM_NORMAL;
 	}

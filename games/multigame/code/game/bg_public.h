@@ -443,6 +443,7 @@ typedef enum {
 
 	EV_GIB_PLAYER,			// gib a previously living player
 	EV_SCOREPLUM,			// score plum
+  EV_DAMAGEPLUM,			// score plum
 
 //#ifdef MISSIONPACK
 	EV_PROXIMITY_MINE_STICK,

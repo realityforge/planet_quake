@@ -389,6 +389,55 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 CG_ScorePlum
 ==================
 */
+void CG_DamagePlum( int client, const vec3_t origin, int damage ) {
+	localEntity_t	*le;
+	refEntity_t		*re;
+	vec3_t			angles;
+	static vec3_t lastPos;
+
+	// only visualize for the client that scored
+	if (client == cg.predictedPlayerState.clientNum || cg_damagePlum.integer == 0) {
+		return;
+	}
+
+  // TODO: if they are close together in time and distance update the value
+  //   so they don't overlap
+
+	le = CG_AllocLocalEntity();
+	le->leFlags = 0;
+	le->leType = LE_DAMAGEPLUM;
+	le->startTime = cg.time;
+	le->endTime = cg.time + 1000;
+	le->lifeRate = 1.0 / ( le->endTime - le->startTime );
+
+	
+	le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
+	le->radius = damage;
+	
+	VectorCopy( origin, le->pos.trBase );
+	if ( origin[2] >= lastPos[2] - 20 && origin[2] <= lastPos[2] + 20 ) {
+		le->pos.trBase[2] -= 20;
+	}
+
+	//CG_Printf( "Plum origin %i %i %i -- %i\n", (int)org[0], (int)org[1], (int)org[2], (int)Distance(org, lastPos));
+	VectorCopy(origin, lastPos);
+
+	re = &le->refEntity;
+
+	re->reType = RT_SPRITE;
+  re->renderfx = RF_DEPTHHACK;
+	re->radius = 16;
+
+	VectorClear(angles);
+	AnglesToAxis( angles, re->axis );
+}
+
+
+/*
+==================
+CG_ScorePlum
+==================
+*/
 void CG_ScorePlum( int client, const vec3_t origin, int score ) {
 	localEntity_t	*le;
 	refEntity_t		*re;

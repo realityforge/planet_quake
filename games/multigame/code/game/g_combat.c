@@ -415,6 +415,28 @@ void CheckAlmostScored( gentity_t *self, gentity_t *attacker ) {
 	}
 }
 
+
+void player_pain(gentity_t *self, gentity_t *attacker, int damage) {
+  gentity_t *plum;
+
+  if ( self->client->ps.pm_type == PM_DEAD ) {
+		return;
+	}
+  
+  if ( !attacker || !attacker->client || self->client == attacker->client ) {
+    return;
+  }
+
+  plum = G_TempEntity( self->r.currentOrigin, EV_DAMAGEPLUM );
+  // only send this temp entity to a single client
+  plum->r.svFlags |= SVF_SINGLECLIENT;
+  plum->r.singleClient = attacker->s.number;
+  //
+  plum->s.otherEntityNum = self->s.number;
+  plum->s.time = damage;
+}
+
+
 /*
 ==================
 player_die

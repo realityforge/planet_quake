@@ -872,6 +872,142 @@ void CG_AddScorePlum( localEntity_t *le ) {
 
 
 
+static void ChooseDamageColor(int damage, byte* rgba)
+{
+	if (damage <= 25)
+	{
+		MAKERGBA(rgba, 80, 255, 10, 255);
+	}
+	else if (damage <= 50)
+	{
+		MAKERGBA(rgba, 250, 250, 10, 255);
+	}
+	else if (damage <= 75)
+	{
+		MAKERGBA(rgba, 250, 170, 10, 255);
+	}
+	else if (damage <= 100)
+	{
+		MAKERGBA(rgba, 250, 25, 10, 255);
+	}
+	else if (damage <= 150)
+	{
+		MAKERGBA(rgba, 250, 15, 150, 255);
+	}
+	else if (damage <= 200)
+	{
+		MAKERGBA(rgba, 200, 15, 254, 255);
+	}
+	else
+	{
+		MAKERGBA(rgba, 128, 128, 255, 255);
+	}
+}
+
+/*
+static void SetDamageIconPosition(dmgIcon_t* icon, vec3_t origin, vec3_t viewaxis, int delataMs)
+{
+	float step = 2.0f / x_hck_dmg_duration->integer;
+	float x = (delataMs * step);
+	float y = -(x * x) + (2 * x);
+
+	switch (x_hck_dmg_draw->integer)
+	{
+	case 1:
+		x /= (step * 15) * icon->dir;
+		y /= (step * 8);
+		break;
+	case 2:
+		x /= (step * 15) * icon->dir;
+		y /= (step * icon->params[0]);
+		break;
+	case 3:
+		step = (2.0f - icon->params[2]) / x_hck_dmg_duration->integer;
+		x = (delataMs * step);
+		y = -(x * x) + (2 * x);
+		x /= (step * 15) * icon->params[1];
+		y /= (step * icon->params[0]);
+		break;
+	case 4:
+		step = (2.0f - icon->params[2]) / x_hck_dmg_duration->integer;
+		x = (delataMs * step);
+		y = -(x * x) + (2 * x);
+		x /= (step * 40) * icon->params[1];
+		y /= (step * icon->params[0]);
+		break;
+	default:
+		x /= (step * 15) * icon->dir;
+		y /= (step * 20);
+		break;
+	}
+
+	VectorMA(origin, x, viewaxis, origin);
+	origin[2] += 50 + y;
+}
+*/
+
+void CG_AddDamagePlum( localEntity_t *le ) {
+	refEntity_t	*re;
+	vec3_t		origin, delta, dir, vec, up = {0, 0, 1};
+	float		c, len;
+	int			i, damage, digits[10], numdigits, negative;
+
+	re = &le->refEntity;
+
+	c = ( le->endTime - cg.time ) * le->lifeRate;
+
+	damage = le->radius;
+  ChooseDamageColor(damage, re->shaderRGBA);
+
+	if (c < 0.25f)
+		re->shaderRGBA[3] = 0xff * 4.0f * c;
+	else
+		re->shaderRGBA[3] = 0xff;
+
+	re->radius = NUMBER_SIZE / 2;
+
+	VectorCopy(le->pos.trBase, origin);
+	origin[2] += 110.0f - c * 100.0f;
+
+	VectorSubtract(cg.refdef.vieworg, origin, dir);
+	CrossProduct(dir, up, vec);
+	VectorNormalize(vec);
+
+	VectorMA(origin, -10.0f + 20 * sin(c * 2 * M_PI), vec, origin);
+
+	// if the view would be "inside" the sprite, kill the sprite
+	// so it doesn't add too much overdraw
+	VectorSubtract( origin, cg.refdef.vieworg, delta );
+	len = VectorLengthSquared( delta );
+	if ( len < 20*20 ) {
+		CG_FreeLocalEntity( le );
+		return;
+	}
+
+	negative = qfalse;
+	if (damage < 0) {
+		negative = qtrue;
+		damage = -damage;
+	}
+
+	for (numdigits = 0; !(numdigits && !damage); numdigits++) {
+		digits[numdigits] = damage % 10;
+		damage = damage / 10;
+	}
+
+	if (negative) {
+		digits[numdigits] = 10;
+		numdigits++;
+	}
+
+	for (i = 0; i < numdigits; i++) {
+		VectorMA(origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
+		re->customShader = cgs.media.numberShaders[digits[numdigits-1-i]];
+		trap_R_AddRefEntityToScene( re );
+	}
+}
+
+
 
 //==============================================================================
 
@@ -934,6 +1070,10 @@ void CG_AddLocalEntities( void ) {
 
 		case LE_SCOREPLUM:
 			CG_AddScorePlum( le );
+		    break;
+
+    case LE_DAMAGEPLUM:
+			CG_AddDamagePlum( le );
 			break;
 
 #ifdef MISSIONPACK
