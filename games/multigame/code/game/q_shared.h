@@ -141,6 +141,22 @@
 
 //=============================================================
 
+#define BUILD_EXPERIMENTAL 1
+
+#ifdef BUILD_EXPERIMENTAL
+// compile damage plums every time someone gets hit
+#define USE_DAMAGE_PLUMS 1
+// compile item timers, show how long until power-up respawns
+#define USE_ITEM_TIMERS 1
+// team variables modified
+#define USE_TEAM_VARS 1
+// 
+
+
+#endif
+
+
+
 typedef unsigned char 		byte;
 
 typedef enum { qfalse = 0, qtrue } qboolean;

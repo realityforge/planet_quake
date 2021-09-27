@@ -77,6 +77,9 @@ vmCvar_t	g_enableDust;
 vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
+#ifdef USE_TEAM_VARS
+vmCvar_t	g_flagReturn;
+#endif
 #ifdef USE_REFEREE_CMDS
 vmCvar_t	g_callvotable;
 #endif
@@ -171,6 +174,10 @@ static cvarTable_t gameCvarTable[] = {
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
 	{ &g_rotation, "g_rotation", "", CVAR_ARCHIVE, 0, qfalse }
+
+#ifdef USE_TEAM_VARS
+  ,{ &g_flagReturn, "g_flagReturn", "30000", CVAR_ARCHIVE, 0, qfalse }
+#endif
 
 #ifdef USE_SERVER_ROLES
 	,{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "

@@ -812,9 +812,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		}
 		break;
 
+#ifdef USE_ITEM_TIMERS
   case EV_ITEM_TIMER:
     CG_ItemTimer( cent->currentState.otherEntityNum, cent->lerpOrigin, cent->currentState.time );
     break;
+#endif
 
 	case EV_GLOBAL_ITEM_PICKUP:
 		{
@@ -967,9 +969,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		CG_ScorePlum( cent->currentState.otherEntityNum, cent->lerpOrigin, cent->currentState.time );
 		break;
 
+#ifdef USE_DAMAGE_PLUMS
 	case EV_DAMAGEPLUM:
 		CG_DamagePlum( cent->currentState.otherEntityNum, cent->lerpOrigin, cent->currentState.time );
 		break;
+#endif
 
 	//
 	// missile impacts

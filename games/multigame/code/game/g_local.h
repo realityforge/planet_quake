@@ -614,7 +614,9 @@ void BeginIntermission (void);
 void InitBodyQue (void);
 void ClientSpawn( gentity_t *ent );
 void player_die (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
+#ifdef USE_DAMAGE_PLUMS
 void player_pain (gentity_t *self, gentity_t *attacker, int damage);
+#endif
 void AddScore( gentity_t *ent, vec3_t origin, int score );
 void CalculateRanks( void );
 qboolean SpotWouldTelefrag( gentity_t *spot );
@@ -813,6 +815,9 @@ extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
+#ifdef USE_TEAM_VARS
+extern	vmCvar_t	g_flagReturn;
+#endif
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 extern  vmCvar_t  g_thawTime;
 #endif

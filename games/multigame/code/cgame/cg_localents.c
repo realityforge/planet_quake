@@ -871,7 +871,7 @@ void CG_AddScorePlum( localEntity_t *le ) {
 }
 
 
-
+#ifdef USE_DAMAGE_PLUMS
 static void ChooseDamageColor(int damage, byte* rgba)
 {
 	if (damage <= 25)
@@ -1006,8 +1006,10 @@ void CG_AddDamagePlum( localEntity_t *le ) {
 		trap_R_AddRefEntityToScene( re );
 	}
 }
+#endif
 
 
+#ifdef USE_ITEM_TIMERS
 #define TIMER_SIZE 24
 void CG_AddItemTimer( localEntity_t *le ) {
 	refEntity_t	*re;
@@ -1029,6 +1031,8 @@ void CG_AddItemTimer( localEntity_t *le ) {
 	// so it doesn't add too much overdraw
 	VectorSubtract( origin, cg.refdef.vieworg, delta );
 	len = VectorLengthSquared( delta );
+  // TODO: count up and count down
+  // TODO: modifiable distance
 	if ( len <= 20*20 ) {
 		return;
 	} else if (len > 20*20 && len <= 30*1000) {
@@ -1056,6 +1060,7 @@ void CG_AddItemTimer( localEntity_t *le ) {
     trap_R_AddRefEntityToScene( re );
   }
 }
+#endif
 
 
 
@@ -1122,13 +1127,17 @@ void CG_AddLocalEntities( void ) {
 			CG_AddScorePlum( le );
 		    break;
 
+#ifdef USE_DAMAGE_PLUMS
     case LE_DAMAGEPLUM:
 			CG_AddDamagePlum( le );
 			break;
+#endif
 
+#ifdef USE_ITEM_TIMERS
     case LE_ITEMTIMER:
 			CG_AddItemTimer( le );
 			break;
+#endif
 
 #ifdef MISSIONPACK
 		case LE_KAMIKAZE:

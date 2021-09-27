@@ -384,10 +384,20 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 #endif
 
 
+#ifdef USE_ITEM_TIMERS
+/*
+==================
+CG_ItemTimer
+==================
+*/
 void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
   localEntity_t	*le;
   refEntity_t		*re;
   vec3_t			angles;
+
+  if(!cg_itemTimer.integer) {
+    return;
+  }
 
   le = CG_AllocLocalEntity();
   le->leFlags = 0;
@@ -410,8 +420,10 @@ void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
   VectorClear(angles);
   AnglesToAxis( angles, re->axis );
 }
+#endif
 
 
+#ifdef USE_DAMAGE_PLUMS
 /*
 ==================
 CG_DamagePlum
@@ -459,6 +471,7 @@ void CG_DamagePlum( int client, const vec3_t origin, int damage ) {
 	VectorClear(angles);
 	AnglesToAxis( angles, re->axis );
 }
+#endif
 
 
 /*

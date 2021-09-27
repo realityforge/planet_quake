@@ -465,6 +465,7 @@ void RespawnItem( gentity_t *ent ) {
 }
 
 
+#ifdef USE_ITEM_TIMERS
 static void item_timer(gentity_t *ent, gentity_t *other, int respawnTime) {
   gentity_t *timer;
   timer = G_TempEntity( ent->r.currentOrigin, EV_ITEM_TIMER );
@@ -473,6 +474,7 @@ static void item_timer(gentity_t *ent, gentity_t *other, int respawnTime) {
   timer->s.otherEntityNum = other->s.number;
   timer->s.time = respawnTime;
 }
+#endif
 
 
 /*
@@ -600,7 +602,6 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// picked up items still stay around, they just don't
 	// draw anything.  This allows respawnable items
 	// to be placed on movers.
-	ent->r.svFlags |= SVF_NOCLIENT;
 	ent->s.eFlags |= EF_NODRAW;
 	ent->r.contents = 0;
 
@@ -609,12 +610,15 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// delete it).  This is used by items that are respawned by third party 
 	// events such as ctf flags
 	if ( respawn <= 0 ) {
+    ent->r.svFlags |= SVF_NOCLIENT;
 		ent->nextthink = 0;
 		ent->think = 0;
 	} else {
 		ent->nextthink = level.time + respawn;
 		ent->think = RespawnItem;
+#ifdef USE_ITEM_TIMERS
     item_timer(ent, other, respawn);
+#endif
 	}
 
 	trap_LinkEntity( ent );
@@ -657,16 +661,25 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 
 	dropped->s.eFlags |= EF_BOUNCE_HALF;
 #ifdef MISSIONPACK
-	if ((g_gametype.integer == GT_CTF || g_gametype.integer == GT_1FCTF) && item->giType == IT_TEAM) { // Special case for CTF flags
+	if ((g_gametype.integer == GT_CTF || g_gametype.integer == GT_1FCTF) && item->giType == IT_TEAM) // Special case for CTF flags
 #else
 	if (g_gametype.integer == GT_CTF && item->giType == IT_TEAM) { // Special case for CTF flags
 #endif
+  {
 		dropped->think = Team_DroppedFlagThink;
-		dropped->nextthink = level.time + 30000;
+#ifdef USE_TEAM_VARS
+    dropped->nextthink = level.time + g_flagReturn.integer;
+#else
+    dropped->nextthink = level.time + 30000;
+#endif
 		Team_CheckDroppedItem( dropped );
 	} else { // auto-remove after 30 seconds
 		dropped->think = G_FreeEntity;
-		dropped->nextthink = level.time + 30000;
+#ifdef USE_TEAM_VARS
+    dropped->nextthink = level.time + g_flagReturn.integer;
+#else
+    dropped->nextthink = level.time + 30000;
+#endif
 	}
 
 	dropped->flags = FL_DROPPED_ITEM;

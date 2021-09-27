@@ -388,7 +388,9 @@ typedef enum {
 
 	EV_ITEM_PICKUP,			// normal item pickups are predictable
 	EV_GLOBAL_ITEM_PICKUP,	// powerup / team sounds are broadcast to everyone
+#ifdef USE_ITEM_TIMERS
   EV_ITEM_TIMER,
+#endif
 
 	EV_NOAMMO,
 	EV_CHANGE_WEAPON,
@@ -444,7 +446,9 @@ typedef enum {
 
 	EV_GIB_PLAYER,			// gib a previously living player
 	EV_SCOREPLUM,			// score plum
-  EV_DAMAGEPLUM,			// score plum
+#ifdef USE_DAMAGE_PLUMS
+  EV_DAMAGEPLUM,			// damage plum
+#endif
 
 //#ifdef MISSIONPACK
 	EV_PROXIMITY_MINE_STICK,

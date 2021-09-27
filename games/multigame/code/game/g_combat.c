@@ -416,6 +416,7 @@ void CheckAlmostScored( gentity_t *self, gentity_t *attacker ) {
 }
 
 
+#ifdef USE_DAMAGE_PLUMS
 void player_pain(gentity_t *self, gentity_t *attacker, int damage) {
   gentity_t *plum;
 
@@ -435,6 +436,7 @@ void player_pain(gentity_t *self, gentity_t *attacker, int damage) {
   plum->s.otherEntityNum = self->s.number;
   plum->s.time = damage;
 }
+#endif
 
 
 /*
