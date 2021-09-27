@@ -54,9 +54,13 @@ extern	int		c_pmove;
 #ifdef USE_PHYSICS_VARS
 #ifdef CGAME
 extern vmCvar_t  cg_jumpVelocity;
+extern vmCvar_t  cg_gravity;
+extern vmCvar_t  cg_wallWalk;
 #else
 #ifdef QAGAME
 extern vmCvar_t  g_jumpVelocity;
+extern vmCvar_t  g_gravity;
+extern vmCvar_t  g_wallWalk;
 #endif
 #endif
 #endif

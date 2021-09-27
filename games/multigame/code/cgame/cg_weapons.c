@@ -1595,7 +1595,27 @@ void CG_DrawWeaponSelect( void ) {
 		CG_RegisterWeapon( i );
 
 		// draw weapon icon
-		CG_DrawPic( x, y, 32, 32, cg_weapons[i].weaponIcon );
+#ifdef USE_ADVANCED_HUD
+    if(cg_draw3dIcons.integer > 1) {
+      vec3_t		angles;
+    	vec3_t		origin;
+      float     rotation;
+      VectorClear( angles );
+      origin[0] = 60;
+    	origin[1] = 5;
+    	origin[2] = 5;
+      rotation = ( cg.time & 4095 ) * 40 / 4096.0;
+      if(rotation <= 20) {
+        angles[YAW] = 270 + rotation;
+      } else {
+        angles[YAW] = 270 + (40 - rotation);
+      }
+      CG_Draw3DModel( x, y, 48, 48, cg_weapons[i].weaponModel, 0, origin, angles );
+    } else
+#endif
+    {
+		  CG_DrawPic( x, y, 32, 32, cg_weapons[i].weaponIcon );
+    }
 
 		// draw selection marker
 		if ( i == cg.weaponSelect ) {

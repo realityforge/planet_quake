@@ -604,13 +604,15 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// to be placed on movers.
 	ent->s.eFlags |= EF_NODRAW;
 	ent->r.contents = 0;
+#ifndef USE_ITEM_TIMERS
+  ent->r.svFlags |= SVF_NOCLIENT;
+#endif
 
 	// ZOID
 	// A negative respawn times means to never respawn this item (but don't 
 	// delete it).  This is used by items that are respawned by third party 
 	// events such as ctf flags
 	if ( respawn <= 0 ) {
-    ent->r.svFlags |= SVF_NOCLIENT;
 		ent->nextthink = 0;
 		ent->think = 0;
 	} else {
@@ -670,7 +672,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 #ifdef USE_TEAM_VARS
     dropped->nextthink = level.time + g_flagReturn.integer;
 #else
-    dropped->nextthink = level.time + 30000;
+    dropped->nextthink = level.time + DROPPED_TIME;
 #endif
 		Team_CheckDroppedItem( dropped );
 	} else { // auto-remove after 30 seconds
@@ -678,7 +680,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 #ifdef USE_TEAM_VARS
     dropped->nextthink = level.time + g_flagReturn.integer;
 #else
-    dropped->nextthink = level.time + 30000;
+    dropped->nextthink = level.time + DROPPED_TIME;
 #endif
 	}
 

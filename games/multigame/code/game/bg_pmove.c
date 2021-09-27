@@ -1152,7 +1152,18 @@ static void PM_GroundTrace( void ) {
 	}
 	
 	// slopes that are too steep will not be considered onground
-	if ( trace.plane.normal[2] < MIN_WALK_NORMAL ) {
+#ifdef USE_PHYSICS_VARS
+#ifdef CGAME
+	if ( trace.plane.normal[2] < cg_wallWalk.value )
+#else
+#ifdef QAGAME
+  if ( trace.plane.normal[2] < g_wallWalk.value )
+#endif
+#endif
+#else
+  if ( trace.plane.normal[2] < MIN_WALK_NORMAL )
+#endif
+  {
 		if ( pm->debugLevel ) {
 			Com_Printf("%i:steep\n", c_pmove);
 		}

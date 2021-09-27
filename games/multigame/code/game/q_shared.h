@@ -158,6 +158,8 @@
 #define USE_REFEREE_CMDS 1
 // enable freeze tag as a game mode in addition to the chosen CTF/Overload
 #define USE_GAME_FREEZETAG 1
+// advanced hud features like player looking in the same direction, 3D guns, etc
+#define USE_ADVANCED_HUD 1
 // 
 
 #endif

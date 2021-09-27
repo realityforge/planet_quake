@@ -221,6 +221,8 @@ vmCvar_t	cg_fovAdjust;
 vmCvar_t	cg_followKiller;
 #ifdef USE_PHYSICS_VARS
 vmCvar_t	cg_jumpVelocity;
+vmCvar_t	cg_gravity;
+vmCvar_t	cg_wallWalk;
 #endif
 
 typedef struct {
@@ -339,6 +341,8 @@ static const cvarTable_t cvarTable[] = {
 #endif
 #ifdef USE_PHYSICS_VARS
   { &cg_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
+  { &cg_gravity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
+  { &cg_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO},
 #endif
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},

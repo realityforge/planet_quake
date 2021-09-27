@@ -4,6 +4,7 @@
 
 #include "q_shared.h"
 #include "bg_public.h"
+#include "bg_local.h"
 
 /*QUAKED item_***** ( 0 0 0 ) (-16 -16 -16) (16 16 16) suspended
 DO NOT USE THIS CLASS, IT JUST HOLDS GENERAL INFORMATION.
@@ -1206,7 +1207,17 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result ) 
 	case TR_GRAVITY:
 		deltaTime = ( atTime - tr->trTime ) * 0.001;	// milliseconds to seconds
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
-		result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;		// FIXME: local gravity...
+#ifdef USE_PHYSICS_VARS
+#ifdef CGAME
+    result[2] -= 0.5 * cg_gravity.integer * deltaTime * deltaTime;
+#else
+#ifdef QAGAME
+    result[2] -= 0.5 * g_gravity.integer * deltaTime * deltaTime;
+#endif
+#endif
+#else
+    result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;		// FIXME: local gravity...
+#endif
 		break;
 	default:
 		Com_Error( ERR_DROP, "BG_EvaluateTrajectory: unknown trType: %i", tr->trType );
@@ -1249,7 +1260,17 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 	case TR_GRAVITY:
 		deltaTime = ( atTime - tr->trTime ) * 0.001;	// milliseconds to seconds
 		VectorCopy( tr->trDelta, result );
-		result[2] -= DEFAULT_GRAVITY * deltaTime;		// FIXME: local gravity...
+#ifdef USE_PHYSICS_VARS
+#ifdef CGAME
+    result[2] -= cg_gravity.integer * deltaTime;
+#else
+#ifdef QAGAME
+    result[2] -= g_gravity.integer * deltaTime;
+#endif
+#endif
+#else
+    result[2] -= DEFAULT_GRAVITY * deltaTime;		// FIXME: local gravity...
+#endif
 		break;
 	default:
 		Com_Error( ERR_DROP, "BG_EvaluateTrajectoryDelta: unknown trType: %i", tr->trType );

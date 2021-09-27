@@ -1286,6 +1286,8 @@ extern	vmCvar_t		cg_fovAdjust;
 extern	vmCvar_t		cg_followKiller;
 #ifdef USE_PHYSICS_VARS
 extern	vmCvar_t	  cg_jumpVelocity;
+extern	vmCvar_t	  cg_gravity;
+extern	vmCvar_t	  cg_wallWalk;
 #endif
 
 extern const char		*eventnames[EV_MAX];

@@ -79,6 +79,7 @@ vmCvar_t	g_proxMineTimeout;
 #endif
 #ifdef USE_PHYSICS_VARS
 vmCvar_t  g_jumpVelocity;
+vmCvar_t  g_wallWalk;
 #endif
 #ifdef USE_TEAM_VARS
 vmCvar_t	g_flagReturn;
@@ -135,7 +136,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_dedicated, "dedicated", "0", 0, 0, qfalse  },
 
 	{ &g_speed, "g_speed", "320", 0, 0, qtrue  },
-	{ &g_gravity, "g_gravity", "800", 0, 0, qtrue  },
+	{ &g_gravity, "g_gravity", "800", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue  },
 	{ &g_knockback, "g_knockback", "1000", 0, 0, qtrue  },
 	{ &g_quadfactor, "g_quadfactor", "3", 0, 0, qtrue  },
 	{ &g_weaponRespawn, "g_weaponrespawn", "5", 0, 0, qtrue  },
@@ -180,6 +181,7 @@ static cvarTable_t gameCvarTable[] = {
 
 #ifdef USE_PHYSICS_VARS
   ,{ &g_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse }
+  ,{ &g_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse }
 #endif
 
 #ifdef USE_TEAM_VARS
