@@ -815,6 +815,9 @@ extern	vmCvar_t	g_enableDust;
 extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
+#ifdef USE_PHYSICS_VARS
+extern	vmCvar_t	g_jumpVelocity;
+#endif
 #ifdef USE_TEAM_VARS
 extern	vmCvar_t	g_flagReturn;
 #endif

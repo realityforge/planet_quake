@@ -219,6 +219,9 @@ vmCvar_t	cg_teamColors;
 vmCvar_t	cg_deadBodyDarken;
 vmCvar_t	cg_fovAdjust;
 vmCvar_t	cg_followKiller;
+#ifdef USE_PHYSICS_VARS
+vmCvar_t	cg_jumpVelocity;
+#endif
 
 typedef struct {
 	vmCvar_t	*vmCvar;
@@ -333,6 +336,9 @@ static const cvarTable_t cvarTable[] = {
 #endif
 #ifdef USE_ITEM_TIMERS
   { &cg_itemTimer, "cg_itemTimers", "1", CVAR_USERINFO | CVAR_ARCHIVE},
+#endif
+#ifdef USE_PHYSICS_VARS
+  { &cg_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
 #endif
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},

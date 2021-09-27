@@ -1284,6 +1284,9 @@ extern	vmCvar_t		cg_teamColors;
 extern	vmCvar_t		cg_deadBodyDarken;
 extern	vmCvar_t		cg_fovAdjust;
 extern	vmCvar_t		cg_followKiller;
+#ifdef USE_PHYSICS_VARS
+extern	vmCvar_t	  cg_jumpVelocity;
+#endif
 
 extern const char		*eventnames[EV_MAX];
 
