@@ -1529,6 +1529,74 @@ WEAPON SELECTION
 */
 
 
+#ifdef USE_ADVANCED_HUD
+void hud_weapons(float x, float y, weaponInfo_t *weapon) {
+  vec3_t		    angles;
+  vec3_t		    origin;
+  float         rotation;
+  refdef_t		  refdef;
+  //refEntity_t		hand;
+	refEntity_t		ent;
+  refEntity_t   barrel;
+  float         w = 64, h = 64;
+  VectorClear( angles );
+  origin[0] = 90;
+  origin[1] = 20;
+  origin[2] = 10;
+  rotation = ( cg.time & 4095 ) * 40 / 4096.0;
+  if(rotation <= 20) {
+    angles[YAW] = 270 + rotation;
+  } else {
+    angles[YAW] = 270 + (40 - rotation);
+  }
+	if ( !cg_draw3dIcons.integer || !cg_drawIcons.integer ) {
+		return;
+	}
+  //memset( &hand, 0, sizeof( hand ) );
+  //VectorCopy( origin, hand.origin );
+  //CG_PositionEntityOnTag( &gun, hand, hand->hModel, "tag_weapon");
+
+	memset( &ent, 0, sizeof( ent ) );
+	AnglesToAxis( angles, ent.axis );
+  VectorSubtract(origin, weapon->weaponMidpoint, ent.origin);
+	//VectorCopy( weapon->weaponMidpoint, ent.origin );
+	ent.hModel = weapon->weaponModel;
+	ent.customSkin = 0;
+	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
+
+	CG_AdjustFrom640( &x, &y, &w, &h );
+	memset( &refdef, 0, sizeof( refdef ) );
+	refdef.rdflags = RDF_NOWORLDMODEL;
+	AxisClear( refdef.viewaxis );
+	refdef.fov_x = 30;
+	refdef.fov_y = 30;
+	refdef.x = x;
+	refdef.y = y;
+	refdef.width = w;
+	refdef.height = h;
+	refdef.time = cg.time;
+
+	trap_R_ClearScene();
+	trap_R_AddRefEntityToScene( &ent );
+  if(weapon->barrelModel) {
+    memset( &barrel, 0, sizeof( barrel ) );
+    angles[YAW] = 0;
+		angles[PITCH] = 0;
+		angles[ROLL] = 0;
+    AnglesToAxis( angles, barrel.axis );
+  	VectorCopy( origin, barrel.origin );
+  	barrel.hModel = weapon->barrelModel;
+  	barrel.customSkin = 0;
+  	barrel.renderfx = RF_NOSHADOW;		// no stencil shadows
+    CG_PositionRotatedEntityOnTag( &barrel, &ent, weapon->weaponModel, "tag_barrel" );
+    AxisCopy( ent.axis, barrel.axis );
+    trap_R_AddRefEntityToScene( &barrel );
+  }
+	trap_R_RenderScene( &refdef );
+}
+#endif
+
+
 /*
 ===================
 CG_DrawWeaponSelect
@@ -1597,20 +1665,7 @@ void CG_DrawWeaponSelect( void ) {
 		// draw weapon icon
 #ifdef USE_ADVANCED_HUD
     if(cg_draw3dIcons.integer > 1) {
-      vec3_t		angles;
-    	vec3_t		origin;
-      float     rotation;
-      VectorClear( angles );
-      origin[0] = 60;
-    	origin[1] = 5;
-    	origin[2] = 5;
-      rotation = ( cg.time & 4095 ) * 40 / 4096.0;
-      if(rotation <= 20) {
-        angles[YAW] = 270 + rotation;
-      } else {
-        angles[YAW] = 270 + (40 - rotation);
-      }
-      CG_Draw3DModel( x, y, 48, 48, cg_weapons[i].weaponModel, 0, origin, angles );
+      hud_weapons(x, y, &cg_weapons[i]);
     } else
 #endif
     {

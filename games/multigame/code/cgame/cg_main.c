@@ -327,7 +327,7 @@ static const cvarTable_t cvarTable[] = {
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO},
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
 #endif
-	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
+	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", 0},
 	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
 	{ &cg_timescaleFadeEnd, "cg_timescaleFadeEnd", "1", 0},
 	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
