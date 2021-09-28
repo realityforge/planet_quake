@@ -361,6 +361,19 @@ static	int			fs_dirCount;			// total number of directories in searchpath
 
 static	int			fs_checksumFeed;
 
+#ifdef USE_LIVE_RELOAD
+cvar_t *fs_reloadQVM;
+cvar_t *fs_reloadEXE;
+int     qvmWd;
+int     exeWd;
+void Sys_DenotifyChange(int wd);
+int Sys_NotifyChange(const char *filepath, void (*cb)( void ));
+
+void FS_ReloadQVM( void ) {
+  Cbuf_AddText("vid_restart;");
+}
+#endif
+
 typedef union qfile_gus {
 	FILE*		o;
 	unzFile		z;
@@ -4906,6 +4919,13 @@ void FS_Shutdown( qboolean closemfp )
 		Z_Free( p );
 	}
 
+#ifdef USE_LIVE_RELOAD
+  if(qvmWd)
+    Sys_DenotifyChange(qvmWd);
+  if(exeWd)
+    Sys_DenotifyChange(exeWd);
+#endif
+
 	// any FS_ calls will now be an error until reinitialized
 	fs_searchpaths = NULL;
 	fs_packFiles = 0;
@@ -5113,7 +5133,6 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
 }
 
 
-
 /*
 ================
 FS_Startup
@@ -5131,11 +5150,18 @@ static void FS_Startup( void ) {
 
 	Com_Printf( "----- FS_Startup -----\n" );
 
+// TODO: add file checks for QVM change time and restart vid
+
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
 	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+
+#ifdef USE_LIVE_RELOAD
+  fs_reloadQVM = Cvar_Get( "fs_reloadQVM", "0", CVAR_INIT | CVAR_PROTECTED );
+  fs_reloadEXE = Cvar_Get( "fs_reloadEXE", "0", CVAR_INIT | CVAR_PROTECTED );
+#endif
 
 #ifndef USE_HANDLE_CACHE
 	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
@@ -5263,6 +5289,32 @@ static void FS_Startup( void ) {
 	Com_Printf( "%d files in %d pk3 files\n", fs_packFiles, fs_packCount );
 
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
+
+#ifdef USE_LIVE_RELOAD
+  if(!qvmWd && strlen(fs_reloadQVM->string) > 0) {
+    fileHandle_t file;
+    if(fs_reloadQVM->string[0] != '1' || fs_reloadQVM->string[1] != '\0') {
+      FS_FOpenFileRead(fs_reloadQVM->string, &file, qtrue);
+    } else {
+      FS_FOpenFileRead("vm/cgame.qvm", &file, qtrue);
+    }
+    if(fsh[file].zipFile) {
+      qvmWd = Sys_NotifyChange(fsh[file].pak->pakFilename, FS_ReloadQVM);
+    } else {
+      searchpath_t *search;
+      for ( search = fs_searchpaths ; search ; search = search->next ) {
+        if ( search->dir && search->policy != DIR_DENY ) {
+          FILE *temp;
+  				char *netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
+          if((temp = Sys_FOpen( netpath, "rb" ))) {
+            qvmWd = Sys_NotifyChange(netpath, FS_ReloadQVM);
+            break;
+          }
+        }
+      }
+    }
+  }
+#endif
 
 #ifndef STANDALONE
 	// check original q3a files

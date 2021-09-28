@@ -4456,6 +4456,13 @@ void Com_Outside_Error(int level, char *message)
 }
 
 #endif
+
+
+#ifdef USE_LIVE_RELOAD
+void FS_Frame(int msecs);
+#endif
+
+
 /*
 =================
 Com_Frame
@@ -4507,7 +4514,6 @@ void Com_Frame( qboolean noDelay ) {
     return;
   }
 #endif
-
 
 	// write config file if anything changed
 #ifndef DELAY_WRITECONFIG
@@ -4611,6 +4617,10 @@ void Com_Frame( qboolean noDelay ) {
 	lastTime = com_frameTime;
 	com_frameTime = Com_EventLoop();
 	realMsec = com_frameTime - lastTime;
+
+#ifdef USE_LIVE_RELOAD
+  FS_Frame(com_frameTime);
+#endif
 
 	Cbuf_Execute();
 
