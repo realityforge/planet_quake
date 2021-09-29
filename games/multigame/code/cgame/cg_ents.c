@@ -220,6 +220,19 @@ static void CG_Item( centity_t *cent ) {
 		CG_Error( "Bad item index %i on entity", es->modelindex );
 	}
 
+#ifdef USE_ITEM_TIMERS
+  if(cent->currentState.time2
+    && (cent->currentState.eFlags & EF_NODRAW)
+    && (cent->currentState.eFlags & EF_TIMER)) {
+    if(cent->trailTime != cent->currentState.time) {
+      cent->trailTime = cent->currentState.time;
+      CG_ItemTimer( cent - cg_entities, cent->lerpOrigin,
+        cent->currentState.time, cent->currentState.time2 );
+    } else {
+    }
+  }
+#endif
+
 	// if set to invisible, skip
 	if ( !es->modelindex || ( es->eFlags & EF_NODRAW ) || cent->delaySpawn > cg.time ) {
 		return;

@@ -6,6 +6,7 @@ BUILD_GAME_QVM  ?= 1
 BUILD_BASEQ3A   := 1
 BUILD_MULTIGAME := 1
 ifneq ($(BUILD_CLIENT),1)
+WORKDIR         := $(MOD)
 MKFILE          := $(lastword $(MAKEFILE_LIST)) 
 include make/platform.make
 endif
@@ -371,6 +372,7 @@ endif
 #############################################################################
 # MISC
 #############################################################################
+WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 
 ifneq ($(BUILD_CLIENT),1)
 clean: clean-debug clean-release
@@ -396,6 +398,5 @@ clean2:
 	@rm -f ./$(B)/$(MOD)/ui$(SHLIBNAME)
 else
 GAME_OBJ  = $(QAOBJ) $(CGOBJ) $(UIOBJ)
-WORKDIRS += $(MOD) $(MOD)/cgame $(MOD)/game $(MOD)/ui $(MOD)/vm
 CLEANS 	 += $(MOD)/cgame $(MOD)/qagame $(MOD)/ui $(MOD)
 endif

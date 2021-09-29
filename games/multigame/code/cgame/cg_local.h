@@ -1538,7 +1538,7 @@ void CG_ScorePlum( int client, const vec3_t origin, int score );
 void CG_DamagePlum( int client, const vec3_t origin, int damage );
 #endif
 #ifdef USE_ITEM_TIMERS
-void CG_ItemTimer( int client, const vec3_t origin, int respawnTime );
+void CG_ItemTimer( int client, const vec3_t origin, int startTime, int respawnTime );
 #endif
 
 void CG_GibPlayer( const vec3_t playerOrigin );

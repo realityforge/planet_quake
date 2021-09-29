@@ -390,7 +390,7 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 CG_ItemTimer
 ==================
 */
-void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
+void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTime) {
   localEntity_t	*le;
   refEntity_t		*re;
   vec3_t			angles;
@@ -402,8 +402,8 @@ void CG_ItemTimer(int client, const vec3_t origin, int respawnTime) {
   le = CG_AllocLocalEntity();
   le->leFlags = 0;
   le->leType = LE_ITEMTIMER;
-  le->startTime = cg.time;
-  le->endTime = cg.time + respawnTime;
+  le->startTime = startTime;
+  le->endTime = startTime + respawnTime;
   le->lifeRate = 1.0 / ( le->endTime - le->startTime );
   
   le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;

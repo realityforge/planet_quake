@@ -4924,6 +4924,8 @@ void FS_Shutdown( qboolean closemfp )
     Sys_DenotifyChange(qvmWd);
   if(exeWd)
     Sys_DenotifyChange(exeWd);
+  qvmWd = 0;
+  exeWd = 0;
 #endif
 
 	// any FS_ calls will now be an error until reinitialized

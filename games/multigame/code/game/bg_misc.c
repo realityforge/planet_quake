@@ -1027,6 +1027,10 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
 	}
 
+  if(ent->eFlags & EF_NODRAW) {
+    return qfalse;
+  }
+
 	item = &bg_itemlist[ent->modelindex];
 
 	switch( item->giType ) {

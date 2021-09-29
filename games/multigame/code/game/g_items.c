@@ -465,6 +465,7 @@ void RespawnItem( gentity_t *ent ) {
 }
 
 
+/*
 #ifdef USE_ITEM_TIMERS
 static void item_timer(gentity_t *ent, gentity_t *other, int respawnTime) {
   gentity_t *timer;
@@ -475,6 +476,7 @@ static void item_timer(gentity_t *ent, gentity_t *other, int respawnTime) {
   timer->s.time = respawnTime;
 }
 #endif
+*/
 
 
 /*
@@ -615,11 +617,17 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if ( respawn <= 0 ) {
 		ent->nextthink = 0;
 		ent->think = 0;
+#ifdef USE_ITEM_TIMERS
+    ent->s.eFlags &= ~EF_TIMER;
+#endif
 	} else {
 		ent->nextthink = level.time + respawn;
 		ent->think = RespawnItem;
 #ifdef USE_ITEM_TIMERS
-    item_timer(ent, other, respawn);
+    ent->s.eFlags |= EF_TIMER;
+    ent->s.time = level.time;
+    ent->s.time2 = respawn;
+    //item_timer(ent, other, respawn);
 #endif
 	}
 
