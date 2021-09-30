@@ -1159,10 +1159,12 @@ typedef struct {
 
 //==============================================================================
 
+#define MAX_CLASSES 2
+
 extern	cgs_t			cgs;
 extern	cg_t			cg;
 extern	centity_t		cg_entities[MAX_GENTITIES];
-extern	weaponInfo_t	cg_weapons[MAX_WEAPONS];
+extern	weaponInfo_t	cg_weapons[MAX_WEAPONS*MAX_CLASSES];
 extern	itemInfo_t		cg_items[MAX_ITEMS];
 extern	markPoly_t		cg_markPolys[MAX_MARK_POLYS];
 
@@ -1271,6 +1273,7 @@ extern	vmCvar_t		cg_singlePlayerActive;
 extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 extern	vmCvar_t		cg_obeliskRespawnDelay;
+extern  vmCvar_t    cg_hudFiles;
 #endif
 
 extern	vmCvar_t		cg_hitSounds;

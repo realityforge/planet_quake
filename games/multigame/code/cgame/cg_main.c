@@ -96,7 +96,7 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 cg_t				cg;
 cgs_t				cgs;
 centity_t			cg_entities[MAX_GENTITIES];
-weaponInfo_t		cg_weapons[MAX_WEAPONS];
+weaponInfo_t		cg_weapons[MAX_WEAPONS*MAX_CLASSES];
 itemInfo_t			cg_items[MAX_ITEMS];
 
 

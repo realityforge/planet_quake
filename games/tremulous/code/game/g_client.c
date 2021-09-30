@@ -1990,16 +1990,6 @@ Q_EXPORT void ClientDisconnect( int clientNum )
   G_LogPrintf( "ClientDisconnect: %i [%s] (%s) \"%s^7\"\n", clientNum,
    ent->client->pers.ip.str, ent->client->pers.guid, ent->client->pers.netname );
 
-  {
-    char cleanname[ MAX_NAME_LENGTH ];
-    G_SanitiseString( ent->client->pers.netname, cleanname, sizeof( cleanname ) );
-    sl_query( DB_SEEN_ADD, cleanname, NULL );
-    if( ent->client->pers.admin ) {
-      G_SanitiseString( ent->client->pers.admin->name, cleanname, sizeof( cleanname ) );
-      sl_query( DB_SEEN_ADD, cleanname, NULL );
-    }
-  }
-
   SV_UnlinkEntity( ent );
   ent->s.origin[0] = *((float *)(&zero)); // reset for UEIDs
   ent->client->ps.misc[MISC_ID] = 0;

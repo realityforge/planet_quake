@@ -116,20 +116,15 @@ extern menuDef_t *menuScoreboard;
 void Menu_Reset( void );			// FIXME: add to right include file
 
 static void CG_LoadHud_f( void) {
-  char buff[1024];
-	const char *hudSet;
   memset(buff, 0, sizeof(buff));
 
 	String_Init();
 	Menu_Reset();
 	
-	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));
-	hudSet = buff;
-	if (hudSet[0] == '\0') {
-		hudSet = "ui/hud.txt";
-	}
-
-	CG_LoadMenus(hudSet);
+  if(cg_hudFiles.string[0] == '\0')
+    CG_LoadMenus("ui/hud.txt");
+  else
+	  CG_LoadMenus(cg_hudFiles.string);
   menuScoreboard = NULL;
 }
 

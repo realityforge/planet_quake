@@ -1511,7 +1511,7 @@ PM_FinishWeaponChange
 static void PM_FinishWeaponChange( void ) {
 	int		weapon;
 
-	weapon = pm->cmd.weapon;
+	weapon = pm->cmd.weapon & 0xF;
 	if ( weapon < WP_NONE || weapon >= WP_NUM_WEAPONS ) {
 		weapon = WP_NONE;
 	}
@@ -1520,7 +1520,7 @@ static void PM_FinishWeaponChange( void ) {
 		weapon = WP_NONE;
 	}
 
-	pm->ps->weapon = weapon;
+	pm->ps->weapon = pm->cmd.weapon;
 	pm->ps->weaponstate = WEAPON_RAISING;
 	pm->ps->eFlags &= ~EF_FIRING;
 	pm->ps->weaponTime += 250;
@@ -1600,7 +1600,7 @@ static void PM_Weapon( void ) {
 	// again if lowering or raising
 	if ( pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING ) {
 		if ( pm->ps->weapon != pm->cmd.weapon ) {
-			PM_BeginWeaponChange( pm->cmd.weapon );
+			PM_BeginWeaponChange( pm->cmd.weapon & 0xF );
 		}
 	}
 

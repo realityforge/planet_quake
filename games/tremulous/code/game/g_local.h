@@ -1769,11 +1769,6 @@ void      SV_SendClientGameState2( int clientNum );
 void      SV_PlayMap_Save_Queue_Entry( playMap_t pm, int index );
 void      SV_PlayMap_Clear_Saved_Queue( int default_flags );
 playMap_t SV_PlayMap_Get_Queue_Entry( int index );
-void      SV_Scrim_Init(void);
-void      SV_Scrim_Save(pers_scrim_t *scrim_input);
-void      SV_Scrim_Load(pers_scrim_t *scrim_input);
-size_t    SV_Scrim_Get_New_Roster_ID(void);
-size_t    SV_Scrim_Get_Last_Roster_ID(void);
 void      SV_SetConfigstring( int num, const char *string );
 void      SV_GetConfigstring( int num, char *buffer, int bufferSize );
 void      SV_SetConfigstringRestrictions( int num, const clientList_t *clientList );
@@ -1813,5 +1808,3 @@ void      Q_SnapVector( float *v );
 typedef void (*xcommand_t) (void);
 void      Cmd_AddCommand( const char *cmdName, xcommand_t function );
 void      Cmd_RemoveCommand( const char *cmdName );
-
-int       sl_query( dbArray_t type, char *data, int *steps );

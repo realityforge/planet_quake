@@ -215,11 +215,6 @@ g_admin_cmd_t g_admin_cmds[ ] =
       "[^3a^6|^3h^7]"
     },
 
-    {"maplog", G_admin_maplog, qfalse, "maplog",
-      "retrieve the map log",
-      "[^3offset(optional)^7]"
-    },
-
     {"mute", G_admin_mute, qfalse, "mute",
       "mute a player",
       "[^3name^6|^3slot#^7]"
@@ -290,11 +285,6 @@ g_admin_cmd_t g_admin_cmds[ ] =
     {"scrim", G_admin_scrim, qfalse, "scrim",
       "sets up and manages scrims, to check the current scrim settings execute with no arguments",
       "[^3on^6|^3off^7^6|^3restore_defaults^6|^3start^6|^3timeout^6|^3win^6|^3timed_income^6|^3map^6|^3putteam^6|^3sd_mode^6|^3sd_time^6|^3time_limit^6|^3team_name^6|^3team_captain^6|^3max_rounds^6|^3roster^6|^3remove^6|^3warn^7]"
-    },
-
-    {"seen", G_admin_seen, qfalse, "seen",
-      "search for when the last time a player was on",
-      "[^3name^7] [^3offset(optional)^7]"
     },
 
     {"setdevmode", G_admin_setdevmode, qfalse, "setdevmode",
@@ -6322,60 +6312,4 @@ qboolean G_admin_scrim(gentity_t *ent) {
         admincmd->keyword, admincmd->keyword, admincmd->syntax));
     return qfalse;
   }
-}
-
-qboolean G_admin_seen( gentity_t *ent )
-{
-  int        offset = 0;
-  char       offsetstr[ 10 ];
-  char       name[ MAX_COLORFUL_NAME_LENGTH ];
-
-  if( Cmd_Argc() < 2 )
-  {
-    ADMP( "^3seen: ^7usage: seen [name] [offset(optional]\n" );
-    return qfalse;
-  }
-  Cmd_ArgvBuffer( 1, name, sizeof( name ) );
-  if( Cmd_Argc() == 3 )
-  {
-    Cmd_ArgvBuffer( 2, offsetstr, sizeof( offsetstr ) );
-    offset = atoi( offsetstr );
-  }
-  pack_start( level.database_data, DATABASE_DATA_MAX );
-  pack_int( ( ent ? ent - g_entities : -1 ) );
-  pack_text2( va( "%%%s%%", name ) );
-  pack_int( 10 );
-  pack_int( offset );
-  if( sl_query( DB_SEEN, level.database_data, NULL ) != 0 )
-  {
-    ADMP( "^3seen: ^7Query failed\n" );
-    return qfalse;
-  }
-  ADMP( "^3seen: ^7Done\n" );
-  return qtrue;
-}
-
-qboolean G_admin_maplog( gentity_t *ent )
-{
-  int        offset = 0;
-  char       offsetstr[ 10 ];
-
-  if( Cmd_Argc() == 2 )
-  {
-    Cmd_ArgvBuffer( 1, offsetstr, sizeof( offsetstr ) );
-    offset = atoi( offsetstr );
-  }
-
-  pack_start( level.database_data, DATABASE_DATA_MAX );
-  pack_int( ( ent ? ent - g_entities : -1 ) );
-  pack_int( -1 );
-  pack_int( 10 );
-  pack_int( offset );
-  if( sl_query( DB_LAST_MAPS, level.database_data, NULL ) != 0 )
-  {
-    ADMP( "^3maplog: ^7Query failed\n" );
-    return qfalse;
-  }
-  ADMP( "^3maplog: ^7Done\n" );
-  return qtrue;
 }

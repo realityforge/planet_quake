@@ -2,6 +2,9 @@
 // string allocation/managment
 
 #include "ui_shared.h"
+#ifdef CGAME
+#include "../cgame/cg_local.h"
+#endif
 
 #define SCROLL_TIME_START					500
 #define SCROLL_TIME_ADJUST				150
@@ -748,6 +751,10 @@ void Menu_UpdatePosition(menuDef_t *menu) {
   }
 }
 
+#ifdef CGAME
+extern cgs_t cgs;
+#endif
+
 void Menu_PostParse(menuDef_t *menu) {
 	if (menu == NULL) {
 		return;
@@ -755,8 +762,13 @@ void Menu_PostParse(menuDef_t *menu) {
 	if (menu->fullScreen) {
 		menu->window.rect.x = 0;
 		menu->window.rect.y = 0;
+#ifdef CGAME
+    menu->window.rect.w = cgs.screenXmax;
+    menu->window.rect.h = cgs.screenYmax;
+#else
 		menu->window.rect.w = 640;
 		menu->window.rect.h = 480;
+#endif
 	}
 	Menu_UpdatePosition(menu);
 }

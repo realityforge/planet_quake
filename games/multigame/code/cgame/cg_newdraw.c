@@ -1503,6 +1503,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 	//if (ownerDrawFlags != 0 && !CG_OwnerDrawVisible(ownerDrawFlags)) {
 	//	return;
 	//}
+  //CG_AdjustFrom640( &x, &y, &w, &h );
 
   rect.x = x;
   rect.y = y;

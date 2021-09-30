@@ -1798,8 +1798,6 @@ CG_LoadHudMenu();
 =================
 */
 void CG_LoadHudMenu( void ) {
-	char buff[1024];
-	const char *hudSet;
 
 	cgDC.registerShaderNoMip = &trap_R_RegisterShaderNoMip;
 	cgDC.setColor = &trap_R_SetColor;
@@ -1854,14 +1852,11 @@ void CG_LoadHudMenu( void ) {
 	Init_Display(&cgDC);
 
 	Menu_Reset();
-	
-	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));
-	hudSet = buff;
-	if (hudSet[0] == '\0') {
-		hudSet = "ui/hud.txt";
-	}
 
-	CG_LoadMenus(hudSet);
+  if(cg_hudFiles.string[0] == '\0')
+    CG_LoadMenus("ui/hud.txt");
+  else
+	  CG_LoadMenus(cg_hudFiles.string);
 }
 
 void CG_AssetCache( void ) {

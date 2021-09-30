@@ -125,6 +125,7 @@ endif
 CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/bg_lib.o \
           $(B)/$(MOD)/cgame/bg_misc.o \
+					$(B)/$(MOD)/cgame/bg_misc2.o \
           $(B)/$(MOD)/cgame/bg_pmove.o \
           $(B)/$(MOD)/cgame/bg_slidemove.o \
           $(B)/$(MOD)/cgame/cg_consolecmds.o \

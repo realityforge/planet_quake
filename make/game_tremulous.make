@@ -135,7 +135,6 @@ QAOBJ_  = $(B)/$(MOD)/game/g_main.o \
 					$(B)/$(MOD)/game/g_playmap.o \
 					$(B)/$(MOD)/game/g_playermodel.o \
 					$(B)/$(MOD)/game/g_portal.o \
-          $(B)/$(MOD)/game/g_scrim.o \
           $(B)/$(MOD)/game/g_session.o \
           $(B)/$(MOD)/game/g_spawn.o \
           $(B)/$(MOD)/game/g_svcmds.o \

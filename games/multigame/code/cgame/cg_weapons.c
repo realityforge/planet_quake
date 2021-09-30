@@ -600,6 +600,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 	char			path[MAX_QPATH];
 	vec3_t			mins, maxs;
 	int				i;
+  gitem_t *list;
 
 	weaponInfo = &cg_weapons[weaponNum];
 
@@ -614,8 +615,14 @@ void CG_RegisterWeapon( int weaponNum ) {
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
-	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
-		if ( item->giType == IT_WEAPON && item->giTag == weaponNum ) {
+  if(weaponNum >= MAX_WEAPONS) {
+    list = bg_itemlist2;
+  } else {
+    list = bg_itemlist;
+  }
+
+	for ( item = list + 1 ; item->classname ; item++ ) {
+		if ( item->giType == IT_WEAPON && item->giTag == (weaponNum & 0xF) ) {
 			weaponInfo->item = item;
 			break;
 		}
@@ -1810,11 +1817,13 @@ CG_Weapon_f
 */
 void CG_Weapon_f( void ) {
 	int		num;
+  qboolean isRecent;
 
 	if ( !cg.snap ) {
 		return;
 	}
 
+  isRecent = cg.time - cg.weaponSelectTime < 1000;
 	cg.weaponSelectTime = cg.time;
 
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW || cg.demoPlayback ) {
@@ -1831,7 +1840,13 @@ void CG_Weapon_f( void ) {
 		return;		// don't have the weapon
 	}
 
-	cg.weaponSelect = num;
+  if(num < 16 && num == cg.weaponSelect && isRecent) {
+    int class = cg.weaponSelect >> 4;
+    class = (class + 1) % MAX_CLASSES;
+    cg.weaponSelect = (class << 4) | (cg.weaponSelect & 0xF);
+    CG_Printf("weapon: %i\n", cg.weaponSelect);
+  } else
+	 cg.weaponSelect = num;
 }
 
 

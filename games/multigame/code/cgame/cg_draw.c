@@ -188,7 +188,6 @@ CG_DrawField
 Draws large numbers for status bar and powerups
 ==============
 */
-#ifndef MISSIONPACK
 static void CG_DrawField (int x, int y, int width, int value) {
 	char	num[16], *ptr;
 	int		l;
@@ -242,7 +241,6 @@ static void CG_DrawField (int x, int y, int width, int value) {
 		l--;
 	}
 }
-#endif // MISSIONPACK
 
 
 /*
@@ -455,8 +453,6 @@ CG_DrawStatusBarHead
 
 ================
 */
-#ifndef MISSIONPACK
-
 static void CG_DrawStatusBarHead( float x ) {
 	vec3_t		angles;
 	float		size, stretch;
@@ -506,7 +502,6 @@ static void CG_DrawStatusBarHead( float x ) {
 
 	CG_DrawHead( x, cgs.screenYmax + 1 - size, size, size, cg.snap->ps.clientNum, angles );
 }
-#endif // MISSIONPACK
 
 
 /*
@@ -515,11 +510,9 @@ CG_DrawStatusBarFlag
 
 ================
 */
-#ifndef MISSIONPACK
 static void CG_DrawStatusBarFlag( float x, int team ) {
 	CG_DrawFlagModel( x, cgs.screenYmax + 1 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
 }
-#endif // MISSIONPACK
 
 
 /*
@@ -555,7 +548,6 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 CG_DrawStatusBar
 ================
 */
-#ifndef MISSIONPACK
 #define STATUSBAR_HEIGHT 60
 static void CG_DrawStatusBar( void ) {
 	int			color;
@@ -631,7 +623,7 @@ static void CG_DrawStatusBar( void ) {
 		} else {
 			handle = cgs.media.blueCubeModel;
 		}
-		CG_Draw3DModel( 640 - (TEXT_ICON_SPACE + ICON_SIZE), 416, ICON_SIZE, ICON_SIZE, handle, 0, origin, angles );
+		CG_Draw3DModel( cgs.screenXmax - (TEXT_ICON_SPACE + ICON_SIZE), cgs.screenYmax - 64, ICON_SIZE, ICON_SIZE, handle, 0, origin, angles );
 	}
 #endif
 	//
@@ -730,7 +722,7 @@ static void CG_DrawStatusBar( void ) {
 			value = 99;
 		}
 		trap_R_SetColor( colors[0] );
-		CG_DrawField (640 - (CHAR_WIDTH*2 + TEXT_ICON_SPACE + ICON_SIZE), y, 2, value);
+		CG_DrawField (cgs.screenXmax - (CHAR_WIDTH*2 + TEXT_ICON_SPACE + ICON_SIZE), y, 2, value);
 		trap_R_SetColor( NULL );
 		// if we didn't draw a 3D icon, draw a 2D icon for armor
 		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
@@ -739,12 +731,12 @@ static void CG_DrawStatusBar( void ) {
 			} else {
 				handle = cgs.media.blueCubeIcon;
 			}
-			CG_DrawPic( 640 - (TEXT_ICON_SPACE + ICON_SIZE), y, ICON_SIZE, ICON_SIZE, handle );
+			CG_DrawPic( cgs.screenXmax - (TEXT_ICON_SPACE + ICON_SIZE), y, ICON_SIZE, ICON_SIZE, handle );
 		}
 	}
 #endif
 }
-#endif
+
 
 /*
 ===========================================================================================
@@ -2598,6 +2590,11 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
 		if ( !cg.showScores && cg.snap->ps.stats[STAT_HEALTH] > 0 ) {
 
 #ifdef MISSIONPACK
+#ifdef USE_ADVANCED_HUD
+      if(cg_hudFiles.string[0] == '\0') {
+        CG_DrawStatusBar();
+      } else
+#endif
 			if ( cg_drawStatus.integer ) {
 				Menu_PaintAll();
 				CG_DrawTimedMenus();
