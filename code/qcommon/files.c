@@ -46,8 +46,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #if defined(USE_MULTIVM_CLIENT) || defined(USE_MULTIVM_SERVER)
 #define USE_MULTIFS 1
-#else
-#undef USE_MULTIFS
 #endif
 
 /*
@@ -3680,6 +3678,7 @@ void FS_SetFilenameCallback( fnamecallback_f func )
 }
 
 
+#ifdef USE_DIDYOUMEAN
 /*
 ===============
 FS_ListNearestFiles
@@ -3785,6 +3784,7 @@ char **FS_ListNearestFiles( const char *pathFilter, const char *filter, int *num
 
 	return listCopy;
 }
+#endif
 
 
 /*

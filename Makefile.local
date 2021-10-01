@@ -27,6 +27,7 @@ USE_SERVER_ROLES       = 0
 USE_RECENT_EVENTS      = 0
 USE_REFEREE_CMDS       = 0
 
+USE_DIDYOUMEAN         = 1
 USE_LIVE_RELOAD        = 1
 USE_BSP1               = 0
 USE_ASYNCHRONOUS       = 0

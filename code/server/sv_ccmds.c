@@ -194,15 +194,25 @@ static void SV_Map_f( void ) {
 		  SV_SendServerCommand(NULL, "cp \"%s\"", Cvar_VariableString("com_errorMessage"));
 #else
 		Com_Printf("Error: Can't find map %s\n", expanded );
+#ifdef USE_DIDYOUMEAN
     char	**dirnames = NULL;
     int		ndirs = 0;
+    qboolean atLeast1Map = qfalse;
     dirnames = FS_ListNearestFiles( map, expanded, &ndirs, 0.1, FS_MATCH_STICK | FS_MATCH_EXTERN | FS_MATCH_PK3s | FS_MATCH_UNPURE | FS_MATCH_EITHER );
-    if(ndirs) {
-      Com_Printf( "Did you mean?\n" );
-      for ( int i = 0; i < ndirs; i++ ) {
-        Com_Printf( "%s\n", dirnames[i] );
+    for ( int i = 0; i < ndirs; i++ ) {
+      if(Q_stristr(dirnames[i], ".bsp")) {
+        atLeast1Map = qtrue;
+        break;
       }
     }
+    if(atLeast1Map) {
+      Com_Printf( "Did you mean?\n" );
+      for ( int i = 0; i < ndirs; i++ ) {
+        if(Q_stristr(dirnames[i], ".bsp"))
+          Com_Printf( "%s\n", dirnames[i] );
+      }
+    }
+#endif
 		return;
 #endif
 	}

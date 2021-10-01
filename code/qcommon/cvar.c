@@ -1038,8 +1038,26 @@ static void Cvar_Print_f( void )
 	
 	if(cv)
 		Cvar_Print(cv);
-	else
-		Com_Printf ("Cvar %s does not exist.\n", name);
+	else {
+    Com_Printf ("Cvar %s does not exist.\n", name);
+#ifdef USE_DIDYOUMEAN
+    int matchCount = 0;
+    qboolean cvarMatch;
+    for(int index = 0; index < MAX_CVARS; index++)
+  	{
+      if(!cvar_indexes[index].name) continue;
+      int length = strlen(cvar_indexes[index].name);
+      cvarMatch = (float)levenshtein( name, cvar_indexes[index].name ) / length < 0.2;
+      if(cvarMatch) {
+        if(matchCount == 0) {
+          Com_Printf("Did you mean?\n");
+        }
+        matchCount++;
+        Com_Printf( "%s\n", cvar_indexes[index].name );
+      }
+    }
+#endif
+  }
 }
 
 

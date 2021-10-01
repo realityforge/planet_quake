@@ -5455,6 +5455,7 @@ long I_FloatTime( void ){
 }
 
 
+#ifdef USE_DIDYOUMEAN
 // source: https://rosettacode.org/wiki/Levenshtein_distance#C
 int levenshtein(const char *s, const char *t)
 {
@@ -5495,3 +5496,4 @@ int levenshtein(const char *s, const char *t)
 
   return d[n][m];
 }
+#endif

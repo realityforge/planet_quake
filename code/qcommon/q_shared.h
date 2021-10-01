@@ -95,6 +95,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_DYNAMIC_ZIP 1
 // automatically reload game when the QVM changes from a new compile
 #define USE_LIVE_RELOAD 1
+// show did you mean? results for map names, cvars, command names, etc
+#define USE_DIDYOUMEAN 1
 // 
 #endif
 

@@ -1249,8 +1249,26 @@ static void Cmd_Help_f( void )
 	
 	if(cmd)
 		Cmd_Help(cmd);
-	else
+	else {
 		Com_Printf ("Command %s does not exist.\n", name);
+#ifdef USE_DIDYOUMEAN
+    int matchCount = 0;
+    qboolean cmdMatch;
+    for(cmd_function_t *cmd = cmd_functions; cmd; cmd = cmd->next)
+  	{
+      if(!cmd->name) continue;
+      int length = strlen(cmd->name);
+      cmdMatch = (float)levenshtein( name, cmd->name ) / length < 0.2;
+      if(cmdMatch) {
+        if(matchCount == 0) {
+          Com_Printf("Did you mean?\n");
+        }
+        matchCount++;
+        Com_Printf( "%s\n", cmd->name );
+      }
+    }
+#endif
+  }
 
 	Z_Free(name);
 }
