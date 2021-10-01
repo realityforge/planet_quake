@@ -183,7 +183,7 @@ typedef enum {
 	CG_TESTPRINTINT,
 	CG_TESTPRINTFLOAT,
 	CG_ACOS,
-	CG_R_LFX_PARTICLEEFFECT	// leilei - particle effects
+	CG_R_LFX_PARTICLEEFFECT	
 } cgameImport_t;
 
 

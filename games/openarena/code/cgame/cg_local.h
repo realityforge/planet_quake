@@ -85,7 +85,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define TEAM_OVERLAY_MAXNAME_WIDTH	12
 #define TEAM_OVERLAY_MAXLOCATION_WIDTH	16
-// leilei - change these to sorceress for baseoa3 as there is no sarge or sergei
+
 #define	DEFAULT_MODEL			"sarge"
 #ifdef MISSIONPACK
 #define	DEFAULT_TEAM_MODEL		"sergei"
@@ -208,7 +208,7 @@ typedef struct centity_s {
 	vec3_t			lerpOrigin;
 	vec3_t			lerpAngles;
 
-	int		newcamrunning;	// leilei - determines if we should look in a direction for running
+	int		newcamrunning;	
 	vec3_t			eyesOrigin;
 	vec3_t			eyesAngles;
 
@@ -216,10 +216,10 @@ typedef struct centity_s {
 	vec3_t			eyepos2;	// where our other eyes at
 	vec3_t			eyelookat;	// what we seein'
 
-	vec3_t			weapOrigin;	// leilei - for lazy bob
+	vec3_t			weapOrigin;	
 	vec3_t			weapAngles;
 
-	float			startroll; 	// leilei - muzzleflashes - starting roll so it's not constantly flickering a roll every other frame.
+	float			startroll; 	
 	int			muztime[5];	
 	int			muzslot;
 	float			muzroll[5];
@@ -306,7 +306,7 @@ typedef struct localEntity_s {
 	leBounceSoundType_t	leBounceSoundType;
 
 	refEntity_t		refEntity;		
-	trajectory_t		avelocity;		// leilei - angle velocity
+	trajectory_t		avelocity;		
 } localEntity_t;
 
 //======================================================================
@@ -404,8 +404,8 @@ typedef struct {
 	sfxHandle_t		sounds[MAX_CUSTOM_SOUNDS];
 
 	int		isDead;
-	vec3_t			eyepos;		// leilei - eye positions loaded from anim cfg
-	int		onepiece;		// leilei - g_enableFS meshes
+	vec3_t			eyepos;		
+	int		onepiece;		
 } clientInfo_t;
 
 
@@ -447,10 +447,10 @@ typedef struct weaponInfo_s {
 	sfxHandle_t		readySound;
 	sfxHandle_t		firingSound;
 	qboolean		loopFireSound;
-	int			lfx;	// leilei - for weapon muzzleflash particle effects
+	int			lfx;	
 	int			lfxdrawn;	// (note- i may/may not take this out. I don't know.)	
 
-	//		leilei  - different muzzleflash styles
+	
 	qhandle_t		flashModel_type1;		// Quake style			(gradient-textured oval sphere)
 	qhandle_t		flashModel_type2;		// u99 style			(additive-blended animated sprite)
 	qhandle_t		flashModel_type2a;		// 3rd person for U99 style	(sprite cloud)
@@ -705,7 +705,7 @@ typedef struct {
 	// temp working variables for player view
 	float		bobfracsin;
 	int			bobcycle;
-	float			bobcycle2; /* leilei - for more bobbing styles */
+	float			bobcycle2;
 	float		xyspeed;
 	int     nextOrbitTime;
 
@@ -730,7 +730,7 @@ typedef struct {
         int redObeliskHealth;
         int blueObeliskHealth;
 
-	// leilei
+	
 	float		bobfraccos;
 	float		bobfracsin2;
 
@@ -849,7 +849,7 @@ typedef struct {
 
 
 
-	// LEILEI shaders
+	
 
 	qhandle_t	lsmkShader1;
 	qhandle_t	lsmkShader2;
@@ -862,7 +862,7 @@ typedef struct {
 	qhandle_t	lspkShader2;
 	qhandle_t	lbldShader1;
 	qhandle_t	lbldShader2;
-	qhandle_t	grappleShader;	// leilei - grapple hook
+	qhandle_t	grappleShader;	
 	qhandle_t	lmarkmetal1;
 	qhandle_t	lmarkmetal2;
 	qhandle_t	lmarkmetal3;
@@ -1021,7 +1021,7 @@ typedef struct {
 	sfxHandle_t fallSound;
 	sfxHandle_t jumpPadSound;
 
-// LEILEI
+
 	sfxHandle_t	lspl1Sound;
 	sfxHandle_t	lspl2Sound; // Blood Splat Noises
 	sfxHandle_t	lspl3Sound;
@@ -1034,7 +1034,7 @@ typedef struct {
 	sfxHandle_t	lshl2Sound; // Shell Drop Noises
 	sfxHandle_t	lshl3Sound;
 
-// LEILEI END
+
 
 	sfxHandle_t oneMinuteSound;
 	sfxHandle_t fiveMinuteSound;
@@ -1290,7 +1290,7 @@ extern vmCvar_t cg_bob;
 extern vmCvar_t cg_bobup;
 extern vmCvar_t cg_bobpitch;
 extern vmCvar_t cg_bobroll;
-extern vmCvar_t cg_bobmodel;	// leilei
+extern vmCvar_t cg_bobmodel;	
 extern vmCvar_t cg_kickScale;
 extern vmCvar_t cg_swingSpeed;
 extern vmCvar_t cg_shadows;
@@ -1330,7 +1330,7 @@ extern vmCvar_t cg_gun_y;
 extern vmCvar_t cg_gun_z;
 extern vmCvar_t cg_drawGun;
 extern vmCvar_t cg_viewsize;
-extern vmCvar_t cg_viewnudge;	// leilei
+extern vmCvar_t cg_viewnudge;	
 extern vmCvar_t cg_tracerChance;
 extern vmCvar_t cg_tracerWidth;
 extern vmCvar_t cg_tracerLength;
@@ -1381,11 +1381,11 @@ extern vmCvar_t cg_noTaunt;
 extern vmCvar_t cg_noProjectileTrail;
 extern vmCvar_t cg_oldRail;
 extern vmCvar_t cg_oldRocket;
-extern vmCvar_t cg_leiEnhancement;			// LEILEI'S LINE!
-extern vmCvar_t cg_leiGoreNoise;			// LEILEI'S LINE!
-extern vmCvar_t cg_leiBrassNoise;			// LEILEI'S LINE!
-extern vmCvar_t cg_leiSuperGoreyAwesome;	// LEILEI'S LINE!
-extern vmCvar_t cg_muzzleflashStyle;		// Leilei
+extern vmCvar_t cg_leiEnhancement;			
+extern vmCvar_t cg_leiGoreNoise;			
+extern vmCvar_t cg_leiBrassNoise;			
+extern vmCvar_t cg_leiSuperGoreyAwesome;	
+extern vmCvar_t cg_muzzleflashStyle;		
 extern vmCvar_t cg_leiDebug;
 extern vmCvar_t cg_deathcam;
 extern vmCvar_t cg_cameramode;
@@ -1412,8 +1412,8 @@ extern vmCvar_t cg_recordSPDemoName;
 extern vmCvar_t cg_obeliskRespawnDelay;
 extern vmCvar_t cg_enableDust;
 extern vmCvar_t cg_enableBreath;
-extern vmCvar_t cg_enableQ;		// leilei
-extern vmCvar_t cg_enableFS;		// leilei
+extern vmCvar_t cg_enableQ;		
+extern vmCvar_t cg_enableFS;		
 //unlagged - client options
 extern vmCvar_t cg_delag;
 //extern vmCvar_t cg_debugDelag;
@@ -1992,7 +1992,7 @@ extern qboolean		initparticles;
 
 extern int wideAdjustX;
 
-void	trap_R_LFX_ParticleEffect( int effect, const vec3_t origin, const vec3_t velocity ); // leilei - particle effects. this allows to pick an effect, such as..
+void	trap_R_LFX_ParticleEffect( int effect, const vec3_t origin, const vec3_t velocity ); 
 
 #define	LFX_SMOKEPUFF		1;
 #define	LFX_BULLETHIT		2;
@@ -2036,7 +2036,7 @@ void	trap_R_LFX_ParticleEffect( int effect, const vec3_t origin, const vec3_t ve
 #define LFX_FLASHPROX		70;
 #define LFX_FLASHVULCAN		71;
 
-// LEILEI ENHANCEMENT
+
 
 /* Neon_Knight: Useful check in order to have code consistency. */
 qboolean CG_IsATeamGametype(int check);	/* Whether the gametype is team-based or not.*/

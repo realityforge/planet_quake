@@ -194,6 +194,15 @@ static void SV_Map_f( void ) {
 		  SV_SendServerCommand(NULL, "cp \"%s\"", Cvar_VariableString("com_errorMessage"));
 #else
 		Com_Printf("Error: Can't find map %s\n", expanded );
+    char	**dirnames = NULL;
+    int		ndirs = 0;
+    dirnames = FS_ListNearestFiles( map, expanded, &ndirs, 0.1, FS_MATCH_STICK | FS_MATCH_EXTERN | FS_MATCH_PK3s | FS_MATCH_UNPURE | FS_MATCH_EITHER );
+    if(ndirs) {
+      Com_Printf( "Did you mean?\n" );
+      for ( int i = 0; i < ndirs; i++ ) {
+        Com_Printf( "%s\n", dirnames[i] );
+      }
+    }
 		return;
 #endif
 	}

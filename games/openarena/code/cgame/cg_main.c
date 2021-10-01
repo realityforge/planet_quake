@@ -36,7 +36,7 @@ void CG_Shutdown(void);
 
 
 int realVidWidth;
-int realVidHeight; // leilei - global video hack
+int realVidHeight; 
 
 /*
 ================
@@ -101,7 +101,7 @@ vmCvar_t cg_bob;
 vmCvar_t cg_bobup;
 vmCvar_t cg_bobpitch;
 vmCvar_t cg_bobroll;
-vmCvar_t cg_bobmodel; // leilei
+vmCvar_t cg_bobmodel; 
 vmCvar_t cg_kickScale;
 vmCvar_t cg_swingSpeed;
 vmCvar_t cg_shadows;
@@ -133,7 +133,7 @@ vmCvar_t cg_footsteps;
 vmCvar_t cg_addMarks;
 vmCvar_t cg_brassTime;
 vmCvar_t cg_viewsize;
-vmCvar_t cg_viewnudge; // leilei
+vmCvar_t cg_viewnudge; 
 vmCvar_t cg_muzzleflashStyle;
 vmCvar_t cg_drawGun;
 vmCvar_t cg_gun_frame;
@@ -201,21 +201,21 @@ vmCvar_t cg_noTaunt;
 vmCvar_t cg_noProjectileTrail;
 vmCvar_t cg_oldRail;
 vmCvar_t cg_oldRocket;
-vmCvar_t cg_leiEnhancement; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_leiBrassNoise; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_leiGoreNoise; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_leiSuperGoreyAwesome; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_leiDebug; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_leiChibi; // ANOTHER LEILEI LINE!!!
+vmCvar_t cg_leiEnhancement;
+vmCvar_t cg_leiBrassNoise;
+vmCvar_t cg_leiGoreNoise;
+vmCvar_t cg_leiSuperGoreyAwesome;
+vmCvar_t cg_leiDebug;
+vmCvar_t cg_leiChibi;
 vmCvar_t cg_oldPlasma;
 vmCvar_t cg_trueLightning;
 vmCvar_t cg_music;
 vmCvar_t cg_weaponOrder;
 
-vmCvar_t cg_leiWidescreen; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_deathcam; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_cameramode; // ANOTHER LEILEI LINE!!!
-vmCvar_t cg_cameraEyes; // ANOTHER LEILEI LINE!!!
+vmCvar_t cg_leiWidescreen;
+vmCvar_t cg_deathcam;
+vmCvar_t cg_cameramode;
+vmCvar_t cg_cameraEyes;
 
 
 
@@ -354,7 +354,7 @@ static cvarTable_t cvarTable[] = {// bk001129
 	{ &cg_bobup, "cg_bobup", "0.005", CVAR_CHEAT},
 	{ &cg_bobpitch, "cg_bobpitch", "0.002", CVAR_ARCHIVE},
 	{ &cg_bobroll, "cg_bobroll", "0.002", CVAR_ARCHIVE},
-	{ &cg_bobmodel, "cg_bobmodel", "0", CVAR_ARCHIVE}, // leilei
+	{ &cg_bobmodel, "cg_bobmodel", "0", CVAR_ARCHIVE}, 
 	{ &cg_kickScale, "cg_kickScale", "1.0", CVAR_ARCHIVE},
 	{ &cg_swingSpeed, "cg_swingSpeed", "0.3", CVAR_CHEAT},
 	{ &cg_animSpeed, "cg_animspeed", "1", CVAR_CHEAT},
@@ -441,22 +441,22 @@ static cvarTable_t cvarTable[] = {// bk001129
 	{ &cg_bigFont, "ui_bigFont", "0.4", CVAR_ARCHIVE},
 	{ &cg_oldRail, "cg_oldRail", "0", CVAR_ARCHIVE},
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
-	{ &cg_leiEnhancement, "cg_leiEnhancement", "0", CVAR_ARCHIVE}, // LEILEI default off (in case of whiner)
-	{ &cg_leiGoreNoise, "cg_leiGoreNoise", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_leiBrassNoise, "cg_leiBrassNoise", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_leiSuperGoreyAwesome, "cg_leiSuperGoreyAwesome", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_leiDebug, "cg_leiDebug", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_leiChibi, "cg_leiChibi", "0", CVAR_CHEAT}, // LEILEI 
-	{ &cg_leiWidescreen, "cg_leiWidescreen", "1", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_deathcam, "cg_deathcam", "1", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_cameramode, "cg_cameramode", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_cameraEyes, "cg_cameraEyes", "0", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_cameraEyes_Fwd, "cg_cameraEyes_Fwd", "3", CVAR_CHEAT}, // LEILEI 
-	{ &cg_cameraEyes_Up, "cg_cameraEyes_Up", "3", CVAR_CHEAT}, // LEILEI 
+	{ &cg_leiEnhancement, "cg_leiEnhancement", "0", CVAR_ARCHIVE}, 
+	{ &cg_leiGoreNoise, "cg_leiGoreNoise", "0", CVAR_ARCHIVE}, 
+	{ &cg_leiBrassNoise, "cg_leiBrassNoise", "0", CVAR_ARCHIVE}, 
+	{ &cg_leiSuperGoreyAwesome, "cg_leiSuperGoreyAwesome", "0", CVAR_ARCHIVE}, 
+	{ &cg_leiDebug, "cg_leiDebug", "0", CVAR_ARCHIVE}, 
+	{ &cg_leiChibi, "cg_leiChibi", "0", CVAR_CHEAT}, 
+	{ &cg_leiWidescreen, "cg_leiWidescreen", "1", CVAR_ARCHIVE}, 
+	{ &cg_deathcam, "cg_deathcam", "1", CVAR_ARCHIVE}, 
+	{ &cg_cameramode, "cg_cameramode", "0", CVAR_ARCHIVE}, 
+	{ &cg_cameraEyes, "cg_cameraEyes", "0", CVAR_ARCHIVE}, 
+	{ &cg_cameraEyes_Fwd, "cg_cameraEyes_Fwd", "3", CVAR_CHEAT}, 
+	{ &cg_cameraEyes_Up, "cg_cameraEyes_Up", "3", CVAR_CHEAT}, 
 
-	{ &cg_modelEyes_Up, "cg_modelEyes_Up", "3", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_modelEyes_Right, "cg_modelEyes_Right", "3", CVAR_ARCHIVE}, // LEILEI 
-	{ &cg_modelEyes_Fwd, "cg_modelEyes_Fwd", "3", CVAR_ARCHIVE}, // LEILEI 
+	{ &cg_modelEyes_Up, "cg_modelEyes_Up", "3", CVAR_ARCHIVE}, 
+	{ &cg_modelEyes_Right, "cg_modelEyes_Right", "3", CVAR_ARCHIVE}, 
+	{ &cg_modelEyes_Fwd, "cg_modelEyes_Fwd", "3", CVAR_ARCHIVE}, 
 
 	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
 	//unlagged - client options
@@ -864,7 +864,7 @@ static void CG_RegisterSounds(void) {
 	cgs.media.gibBounce3Sound = trap_S_RegisterSound("sound/player/gibimp3.wav", qfalse);
 
 
-	// LEILEI
+	
 
 	cgs.media.lspl1Sound = trap_S_RegisterSound("sound/le/splat1.wav", qfalse);
 	cgs.media.lspl2Sound = trap_S_RegisterSound("sound/le/splat2.wav", qfalse);
@@ -1315,7 +1315,7 @@ static void CG_RegisterGraphics(void) {
 	cgs.media.medalAssist = trap_R_RegisterShaderNoMip("medal_assist");
 	cgs.media.medalCapture = trap_R_RegisterShaderNoMip("medal_capture");
 
-	// LEILEI SHADERS
+	
 	cgs.media.lsmkShader1 = trap_R_RegisterShader("leismoke1");
 	cgs.media.lsmkShader2 = trap_R_RegisterShader("leismoke2");
 	cgs.media.lsmkShader3 = trap_R_RegisterShader("leismoke3");
@@ -2369,7 +2369,7 @@ void CG_AssetCache(void) {
 }
 #endif
 
-int wideAdjustX; // leilei - dirty widescreen hack
+int wideAdjustX; 
 
 /*
 =================
@@ -2425,7 +2425,7 @@ void CG_Init(int serverMessageNum, int serverCommandSequence, int clientNum) {
 	realVidWidth = cgs.glconfig.vidWidth;
 	realVidHeight = cgs.glconfig.vidHeight;
 
-	// leilei - widescreen correction
+	
 
 	{
 		float resbias;

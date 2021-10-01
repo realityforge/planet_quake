@@ -1265,7 +1265,7 @@ void UI_DrawPlayerII( float x, float y, float w, float h, playerInfo_t *pi, int 
 	origin[1] -= 100;
 	origin[2] -= 100;
 	//trap_R_AddLightToScene( origin, 500, 0.8, 0.2, 0.1 );
-//	UI_ForceLegsAnim( pi, BOTH_POSE );	// leilei - pose hack
+//	UI_ForceLegsAnim( pi, BOTH_POSE );	
 //	UI_ForceTorsoAnim( pi, BOTH_POSE );
 
 	trap_R_RenderScene( &refdef );

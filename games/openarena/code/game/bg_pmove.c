@@ -50,7 +50,7 @@ float	pm_spectatorfriction = 5.0f;
 
 int		c_pmove = 0;
 
-extern	vmCvar_t	cg_enableQ;		// leilei - map changes player/weapons scale (for q1 adaptations)
+extern	vmCvar_t	cg_enableQ;		
 /*
 ===============
 PM_AddEvent
@@ -1397,7 +1397,7 @@ static void PM_Footsteps( void )
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
 				PM_ContinueLegsAnim( LEGS_BACK );
 			}
-			// leilei - new strafe animations for OA3
+			
 			else if ( pm->cmd.rightmove < 0 && pm->cmd.forwardmove == 0 )
 				PM_ContinueLegsAnim( LEGS_STRAFE_LEFT );
 			else if ( pm->cmd.rightmove > 0 && pm->cmd.forwardmove == 0 )
@@ -1575,7 +1575,7 @@ static void PM_TorsoAnimation( void ) {
 
 */
 
-// leilei - heavily improved version for OA3 player animations
+
 static void PM_TorsoAnimation( void )
 {
 	if ( pm->ps->weaponstate == WEAPON_READY ) {

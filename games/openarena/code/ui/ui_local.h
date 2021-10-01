@@ -177,7 +177,7 @@ extern vmCvar_t Save_Loading;
 extern vmCvar_t persid;
 extern vmCvar_t gameover; // ai script
 // end changed RD
-// leilei
+
 extern vmCvar_t ui_new;
 extern vmCvar_t ui_leidebug;
 extern vmCvar_t ui_debug;
@@ -590,7 +590,7 @@ typedef struct {
 } lerpFrame_t;
 
 
-// leilei - OC parts!
+
 typedef struct {
 
 	qhandle_t		m;			// model to use
@@ -651,7 +651,7 @@ typedef struct {
 	int				realWeapon;
 
 
-	// leilei - oc experiment
+	
 		// Head
 	ocpart_t		oc_hairBack;	// Hair etc
 	ocpart_t		oc_hairFront;	// Locks etc
@@ -687,7 +687,7 @@ typedef struct {
 	qhandle_t		skinSkin;	// for race skin
 	qhandle_t		eyeSkin;	// for head's eye skin
 	qhandle_t		underSkin;	// for undergarment/swimsuit alpha shell skin
-	// leilei - oc experiment
+	
 
 	vec3_t			eyepos;		// where our eyes at
 	vec3_t			eyelookat;	// what we seein'
@@ -754,7 +754,7 @@ typedef struct {
 #define MAX_HEADNAME  32
 #define MAX_TEAMS 64
 #define MAX_GAMETYPES 16
-#define MAX_MAPS 4096	// leilei - was 128
+#define MAX_MAPS 4096	
 #define MAX_SPMAPS 45
 #define PLAYERS_PER_TEAM 5
 #define MAX_PINGREQUESTS		32
@@ -1009,7 +1009,7 @@ typedef struct {
 	char			q3HeadNames[MAX_PLAYERMODELS][64];
 	qhandle_t	q3HeadIcons[MAX_PLAYERMODELS];
 	qhandle_t	q3HeadIcons2[MAX_PLAYERMODELS];
-	qhandle_t	q3Portraits[MAX_PLAYERMODELS];	// leilei - displaying portraits with deferred loading for some screens
+	qhandle_t	q3Portraits[MAX_PLAYERMODELS];	
 	int				q3SelectedHead;
 
 	int effectsColor;
@@ -1020,7 +1020,7 @@ typedef struct {
 // Changed RD
 	playerInfo_t info;
 // end changed RD
-	int				q3HeadCount2;		// leilei - a complete list for the text list. for saving vram
+	int				q3HeadCount2;		
 	char			q3HeadNames2[MAX_PLAYERMODELS][64];
 }	uiInfo_t;
 
@@ -1284,7 +1284,7 @@ void UI_SignupMenu( void );
 //
 void RankStatus_Cache( void );
 void UI_RankStatusMenu( void );
-// leilei - wide hack
+
 extern int wideAdjustX;
 
 // new ui 

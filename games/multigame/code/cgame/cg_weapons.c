@@ -8,7 +8,7 @@
 CG_MachineGunEjectBrass
 ==========================
 */
-static void CG_MachineGunEjectBrass( centity_t *cent ) {
+void CG_MachineGunEjectBrass( centity_t *cent ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	vec3_t			velocity, xvelocity;
@@ -80,7 +80,7 @@ static void CG_MachineGunEjectBrass( centity_t *cent ) {
 CG_ShotgunEjectBrass
 ==========================
 */
-static void CG_ShotgunEjectBrass( centity_t *cent ) {
+void CG_ShotgunEjectBrass( centity_t *cent ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	vec3_t			velocity, xvelocity;
@@ -159,7 +159,7 @@ static void CG_ShotgunEjectBrass( centity_t *cent ) {
 CG_NailgunEjectBrass
 ==========================
 */
-static void CG_NailgunEjectBrass( centity_t *cent ) {
+void CG_NailgunEjectBrass( centity_t *cent ) {
 	localEntity_t	*smoke;
 	vec3_t			origin;
 	vec3_t			v[3];
@@ -312,7 +312,7 @@ void CG_RailTrail( const clientInfo_t *ci, const vec3_t start, const vec3_t end 
 CG_RocketTrail
 ==========================
 */
-static void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi ) {
+void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	int		step;
 	vec3_t	origin, lastPos;
 	int		t;
@@ -380,7 +380,7 @@ static void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi ) {
 CG_NailTrail
 ==========================
 */
-static void CG_NailTrail( centity_t *ent, const weaponInfo_t *wi ) {
+void CG_NailTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	int		step;
 	vec3_t	origin, lastPos;
 	int		t;
@@ -448,7 +448,7 @@ static void CG_NailTrail( centity_t *ent, const weaponInfo_t *wi ) {
 CG_PlasmaTrail
 ==========================
 */
-static void CG_PlasmaTrail( centity_t *cent, const weaponInfo_t *wi ) {
+void CG_PlasmaTrail( centity_t *cent, const weaponInfo_t *wi ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	entityState_t	*es;
@@ -582,11 +582,12 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi ) {
 CG_GrenadeTrail
 ==========================
 */
-static void CG_GrenadeTrail( centity_t *ent, const weaponInfo_t *wi ) {
+void CG_GrenadeTrail( centity_t *ent, const weaponInfo_t *wi ) {
 	CG_RocketTrail( ent, wi );
 }
 
 
+void CG_RegisterWeapon2( int weaponNum );
 /*
 =================
 CG_RegisterWeapon
@@ -600,7 +601,6 @@ void CG_RegisterWeapon( int weaponNum ) {
 	char			path[MAX_QPATH];
 	vec3_t			mins, maxs;
 	int				i;
-  gitem_t *list;
 
 	weaponInfo = &cg_weapons[weaponNum];
 
@@ -612,16 +612,15 @@ void CG_RegisterWeapon( int weaponNum ) {
 		return;
 	}
 
+  if(weaponNum >= MAX_WEAPONS) {
+    CG_RegisterWeapon2(weaponNum);
+    return;
+  }
+
 	memset( weaponInfo, 0, sizeof( *weaponInfo ) );
 	weaponInfo->registered = qtrue;
 
-  if(weaponNum >= MAX_WEAPONS) {
-    list = bg_itemlist2;
-  } else {
-    list = bg_itemlist;
-  }
-
-	for ( item = list + 1 ; item->classname ; item++ ) {
+	for ( item = bg_itemlist + 1 ; item->classname ; item++ ) {
 		if ( item->giType == IT_WEAPON && item->giTag == (weaponNum & 0xF) ) {
 			weaponInfo->item = item;
 			break;
@@ -645,7 +644,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 	weaponInfo->ammoIcon = trap_R_RegisterShader( item->icon );
 
 	for ( ammo = bg_itemlist + 1 ; ammo->classname ; ammo++ ) {
-		if ( ammo->giType == IT_AMMO && ammo->giTag == weaponNum ) {
+		if ( ammo->giType == IT_AMMO && ammo->giTag == (weaponNum & 0xF) ) {
 			break;
 		}
 	}
@@ -671,7 +670,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 	weaponInfo->loopFireSound = qfalse;
 
-	switch ( weaponNum ) {
+	switch ( (weaponNum & 0xF) ) {
 	case WP_GAUNTLET:
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->firingSound = trap_S_RegisterSound( "sound/weapons/melee/fstrun.wav", qfalse );
@@ -1278,6 +1277,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
+  weaponNum = weaponNum & 0xF;
 
 	// add the weapon
 	memset( &gun, 0, sizeof( gun ) );
@@ -1306,6 +1306,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 
 	gun.hModel = weapon->weaponModel;
+
 	if (!gun.hModel) {
 		return;
 	}
@@ -1840,11 +1841,13 @@ void CG_Weapon_f( void ) {
 		return;		// don't have the weapon
 	}
 
-  if(num < 16 && num == cg.weaponSelect && isRecent) {
+  if(num < 16 && num == (cg.weaponSelect & 0xF) && isRecent) {
     int class = cg.weaponSelect >> 4;
     class = (class + 1) % MAX_CLASSES;
     cg.weaponSelect = (class << 4) | (cg.weaponSelect & 0xF);
     CG_Printf("weapon: %i\n", cg.weaponSelect);
+  } else if (num < 16 && (cg.weaponSelect & 0xF) == num) {
+    cg.weaponSelect = (cg.weaponSelect & 0xF0) | (cg.weaponSelect & 0xF);
   } else
 	 cg.weaponSelect = num;
 }

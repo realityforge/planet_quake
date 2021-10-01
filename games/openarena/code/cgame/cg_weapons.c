@@ -178,7 +178,7 @@ static void CG_ShotgunEjectBrass( centity_t *cent )
 		le->angles.trDelta[2] = 0;
 
 		le->leFlags = LEF_TUMBLE;
-		le->leBounceSoundType = LEBS_SHELL; // LEILEI shell noises
+		le->leBounceSoundType = LEBS_SHELL; 
 		le->leMarkType = LEMT_NONE;
 	}
 }
@@ -271,7 +271,7 @@ void CG_RailTrail (clientInfo_t *ci, vec3_t start, vec3_t end)
 		re->origin[2] -= 8;
 		re->oldorigin[2] -= 8;
 
-		// leilei - reimplementing the rail discs that were removed in 1.30
+		
 		if (cg_oldRail.integer > 1) {
 
 			le = CG_AllocLocalEntity();
@@ -761,7 +761,7 @@ void CG_GrappleTrail( centity_t *ent, const weaponInfo_t *wi )
 CG_GrenadeTrail
 ==========================
 */
-// LEILEI enhancment
+
 static void CG_RocketTrail( centity_t *ent, const weaponInfo_t *wi )
 {
 
@@ -865,7 +865,7 @@ void CG_RegisterWeapon( int weaponNum )
 		weaponInfo->flashModel = trap_R_RegisterModel( "models/weapons2/shotgun/shotgun_flash.md3" );	// default flash
 	}
 
-	// leilei - additional flash styles
+	
 
 	Q_strncpyz( path, item->world_model[0], MAX_QPATH );
 	COM_StripExtension(path, strippedPath, sizeof(path));
@@ -908,7 +908,7 @@ void CG_RegisterWeapon( int weaponNum )
 
 
 
-	// leilei - revert to default flash model if we really don't have a real one.
+	
 
 	if (!weaponInfo->flashModel_type1) weaponInfo->flashModel_type1 = trap_R_RegisterModel( "models/muzzle/flash1.md3" );
 	if (!weaponInfo->flashModel_type2) weaponInfo->flashModel_type2 = trap_R_RegisterModel( "models/muzzle/flash2.md3" ); 
@@ -976,7 +976,7 @@ void CG_RegisterWeapon( int weaponNum )
 		weaponInfo->firingSound = trap_S_RegisterSound( "sound/weapons/vulcan/wvulfire.wav", qfalse );
 		weaponInfo->loopFireSound = qtrue;
 		MAKERGB( weaponInfo->flashDlightColor, 1, 1, 0 );
-		// leilei -testing a looping firing sound instead of lots of flash sounds for performance reasons
+		
 		weaponInfo->flashSound[0] = trap_S_RegisterSound( "sound/weapons/vulcan/vulcanf1b.wav", qfalse );
 		weaponInfo->flashSound[1] = trap_S_RegisterSound( "sound/weapons/vulcan/vulcanf2b.wav", qfalse );
 		weaponInfo->flashSound[2] = trap_S_RegisterSound( "sound/weapons/vulcan/vulcanf3b.wav", qfalse );
@@ -1254,7 +1254,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles )
 		angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
 	}
 
-	// leilei - fudgeweapon ported directly from quake :D
+	
 
 	if (cg_viewnudge.integer) {
 
@@ -1280,7 +1280,7 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles )
 		             (LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta) / LAND_RETURN_TIME;
 	}
 
-#if 0			// leilei - this may be dead pre-q3 1.01 code
+#if 0			
 	// drop the weapon when stair climbing
 	delta = cg.time - cg.stepTime;
 	if ( delta < STEP_TIME/2 ) {
@@ -1633,13 +1633,13 @@ static void MuzzleFlashStyleQ1(refEntity_t *parent, playerState_t *ps, centity_t
 
 	CG_PositionRotatedEntityOnTag( &flash, gun, weapon->weaponModel, "tag_flash");
 
-	// leilei - allow the flash to go away 
+	
 	trap_R_AddRefEntityToScene( &flash );
 
 	if ( ps || cg.renderingThirdPerson ||
 			cent->currentState.number != cg.predictedPlayerState.clientNum ) {
 		// add lightning bolt
-		if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash )// leilei - don't prolong the lightning
+		if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash )
 		CG_LightningBolt( nonPredictedCent, flash.origin );
 
 		// add rail trail
@@ -1773,7 +1773,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	// add the flash
 
-	// leilei - split into 5 styles:
+	
 	// 1 - Q3 (default)
 	// 2 - q1
 	// 3 - fake99
@@ -1827,14 +1827,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 	
-		// leilei - allow the flash to go away 
+		
 		trap_R_AddRefEntityToScene( &flash );
 	
 		if ( ps || cg.renderingThirdPerson ||
 		        cent->currentState.number != cg.predictedPlayerState.clientNum ) {
 			// add lightning bolt
 			if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash ) {
-				// leilei - don't prolong the lightning
+				
 				CG_LightningBolt( nonPredictedCent, flash.origin );
 			}
 	
@@ -1887,7 +1887,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		if ( ps || cg.renderingThirdPerson ||
 		        cent->currentState.number != cg.predictedPlayerState.clientNum ) {
 			// add lightning bolt
-			if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash )// leilei - don't prolong the lightning
+			if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash )
 			CG_LightningBolt( nonPredictedCent, flash.origin );
 	
 			// add rail trail
@@ -1954,7 +1954,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			flash.shaderRGBA[1] = 255;
 			flash.shaderRGBA[2] = 255;
 
-			// leilei - scale hack, flip the flash 
+			
 			if (cent->startroll > 360)
 			VectorScale(flash.axis[1], -1, flash.axis[1]);
 
@@ -1976,14 +1976,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 
-		// leilei - allow the flash to go away 
+		
 		trap_R_AddRefEntityToScene( &flash );
 
 		if ( ps || cg.renderingThirdPerson ||
 				cent->currentState.number != cg.predictedPlayerState.clientNum ) {
 			// add lightning bolt
 			if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash ) {
-				// leilei - don't prolong the lightning
+				
 				CG_LightningBolt( nonPredictedCent, flash.origin );
 			}
 			// add rail trail
@@ -2073,14 +2073,14 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 
-		// leilei - allow the flash to go away 
+		
 		trap_R_AddRefEntityToScene( &flash );
 
 		if ( ps || cg.renderingThirdPerson ||
 				cent->currentState.number != cg.predictedPlayerState.clientNum ) {
 			// add lightning bolt
 			if ( cg.time - cent->muzzleFlashTime < 100 && !cent->pe.railgunFlash ) {
-				// leilei - don't prolong the lightning
+				
 				CG_LightningBolt( nonPredictedCent, flash.origin );
 			}
 
@@ -2133,7 +2133,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	}
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 
-	// leilei - allow the flash to go away 
+	
 	trap_R_AddRefEntityToScene( &flash );
 
 	if ( ps || cg.renderingThirdPerson ||
@@ -3429,7 +3429,7 @@ void CG_FireWeapon( centity_t *cent )
 	// append the flash to the weapon model
 	cent->muzzleFlashTime = cg.time;
 
-	// leilei - hack for multiple muzzleflashes
+	
 	cent->muztime[cent->muzslot] = cg.time;
 	cent->muzslot += 1;
 	if (cent->muzslot > 2)
@@ -3473,7 +3473,7 @@ void CG_FireWeapon( centity_t *cent )
 
 /*
 ==========================
-CG_Explosionia LEILEI
+CG_Explosionia
 ==========================
 
 static void CG_Explosionia ( centity_t *cent ) {
@@ -3632,7 +3632,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 			duration = 10;
 			trap_R_LFX_ParticleEffect(11, origin, dir); // that was easy.
 		}
-		// LEILEI END enhancement
+		
 
 		break;
 //#endif
@@ -3648,7 +3648,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 			duration = 10;
 			trap_R_LFX_ParticleEffect(4, origin, dir); // that was easy.
 		}
-		// LEILEI END enhancement
+		
 		break;
 	case WP_ROCKET_LAUNCHER:
 		mod = cgs.media.dishFlashModel;
@@ -3667,7 +3667,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 			duration = 10;
 			trap_R_LFX_ParticleEffect(5, origin, dir); // that was easy.
 		}
-		// LEILEI END enhancement
+		
 		break;
 	case WP_RAILGUN:
 		mod = cgs.media.ringFlashModel;
@@ -3718,7 +3718,7 @@ void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, im
 
 	case WP_CHAINGUN:
 		mod = cgs.media.bulletFlashModel;
-		if (cg_leiEnhancement.integer == 1996) {	// leilei - q effects
+		if (cg_leiEnhancement.integer == 1996) {	
 			light = 0;
 			radius = 1;
 			duration = 1;	// bit more instant
@@ -3823,7 +3823,7 @@ CG_MissileHitPlayer
 */
 void CG_MissileHitPlayer( int weapon, vec3_t origin, vec3_t dir, int entityNum )
 {
-// LEILEI ENHANCEMENT
+
 	if (cg_leiEnhancement.integer) {
 		trap_R_LFX_ParticleEffect(14, origin, dir); // that was easy.
 	}
@@ -3868,7 +3868,7 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum )
 	trace_t		tr;
 	int sourceContentType, destContentType;
 
-// LEILEI ENHACNEMENT
+
 	vec3_t  kapow;
 
 
@@ -3890,7 +3890,7 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum )
 		trap_CM_BoxTrace( &trace, end, start, NULL, NULL, 0, CONTENTS_WATER );
 		CG_BubbleTrail( start, trace.endpos, 32 );
 
-// LEILEI ENHANCEMENT
+
 		if (cg_leiEnhancement.integer) {
 			// Water Splash
 			VectorCopy( trace.plane.normal, kapow );
@@ -3904,7 +3904,7 @@ static void CG_ShotgunPellet( vec3_t start, vec3_t end, int skipNum )
 		trap_CM_BoxTrace( &trace, start, end, NULL, NULL, 0, CONTENTS_WATER );
 		CG_BubbleTrail( tr.endpos, trace.endpos, 32 );
 
-// LEILEI ENHANCEMENT
+
 		if (cg_leiEnhancement.integer) {
 			// Water Splash
 			VectorCopy( trace.plane.normal, kapow );
@@ -4145,7 +4145,7 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
 	trace_t trace;
 	int sourceContentType, destContentType;
 	vec3_t		start;
-// LEILEI ENHACNEMENT
+
 	vec3_t  kapow;
 
 
@@ -4168,7 +4168,7 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
 				CG_BubbleTrail( start, trace.endpos, 32 );
 
 
-// LEILEI ENHANCEMENT
+
 				if (cg_leiEnhancement.integer) {
 					// Water Splash
 					VectorCopy( trace.plane.normal, kapow );
@@ -4183,7 +4183,7 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
 				trap_CM_BoxTrace( &trace, start, end, NULL, NULL, 0, CONTENTS_WATER );
 				CG_BubbleTrail( trace.endpos, end, 32 );
 
-// LEILEI ENHANCEMENT
+
 				if (cg_leiEnhancement.integer) {
 					// Water Splash
 					VectorCopy( trace.plane.normal, kapow );
@@ -4201,7 +4201,7 @@ void CG_Bullet( vec3_t end, int sourceEntityNum, vec3_t normal, qboolean flesh, 
 
 	// impact splash and mark
 	if ( flesh ) {
-// LEILEI ENHANCEMENT
+
 		if (cg_leiEnhancement.integer) {
 
 			trap_R_LFX_ParticleEffect(14, end, normal); // that was easy.

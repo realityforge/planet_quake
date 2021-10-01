@@ -73,8 +73,9 @@ New game features:
   * Automatically skip to multiplayer menu TODO: and that connects to first available command server that we can request a map command. TODO: Remove the auto-connect code from javascript.
   * Configurable vote options based on roles.
   * Launch a program like opening a web page from a map trigger.
-  * More configurable physics.
-  * TODO: fix drawing ammo regen persistent powerups
+  * More configurable physics cvars.
+  * Power-up item timers.
+  * Damage plum for showing hit damage near players.
 
 Coming soon!
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?

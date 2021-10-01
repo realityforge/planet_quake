@@ -72,7 +72,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define WINDOW_FOCUSDISABLE   0x04000000
 // end changed RD
 
-// leilei - alterable colors
+
 #define WINDOW_HEXCOLORSET   0x08000000 // we're set from a scheme
 
 // CGAME cursor type bits
@@ -164,7 +164,7 @@ typedef struct {
 	vec4_t borderColor; // border color
 	vec4_t outlineColor; // border color
 	qhandle_t background; // background asset
-	vec4_t hexColor; // leilei - defined colors
+	vec4_t hexColor; 
 } windowDef_t;
 
 typedef windowDef_t Window;
@@ -311,11 +311,11 @@ typedef struct itemDef_s {
 	int nofocuscolor;
 	vec4_t fadeColor;
 	// end changed RD
-	int mapnum; // leilei - assigned map number for this button's behavior
-	int scralign; // leilei - alignment of ui element
-	float scralignfactor; // leilei - factor of adjustment
-	int viewsizemin; // leilei - hide this if viewsize 
-	int viewsizemax; // leilei - hide this if viewsize 
+	int mapnum; 
+	int scralign; 
+	float scralignfactor; 
+	int viewsizemin; 
+	int viewsizemax; 
 } itemDef_t;
 
 typedef struct {

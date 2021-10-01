@@ -999,7 +999,7 @@ void SP_func_door (gentity_t *ent)
 	if (!ent->speed)
 		ent->speed = 400;
 
-	// leilei - HACK HACK HACK - indefinitely open door (from triggers, etc)
+	
 	if (ent->wait == -1)
 		ent->wait = 99999999;
 

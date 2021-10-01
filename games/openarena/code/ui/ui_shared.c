@@ -714,7 +714,7 @@ void Window_Paint(Window *w, float fadeAmount, float fadeClamp, float fadeCycle)
 extern int realVidWidth;
 extern int realVidHeight;
 
-// leilei - widescreen adjust
+
 // no KM code was used in the end as that applied to renderer
 
 void Item_SetScreenCoords(itemDef_t *item, float x, float y) {
@@ -930,7 +930,7 @@ void Script_SetColor(itemDef_t *item, char **args) {
 		} else if (Q_stricmp(name, "forecolor") == 0) {
 			out = &item->window.foreColor;
 			item->window.flags |= WINDOW_FORECOLORSET;
-		} else if (Q_stricmp(name, "hexcolor") == 0) {	// leilei - schemes
+		} else if (Q_stricmp(name, "hexcolor") == 0) {	
 			out = &item->window.hexColor;
 			item->window.flags |= WINDOW_HEXCOLORSET;
 		} else if (Q_stricmp(name, "bordercolor") == 0) {
@@ -4908,7 +4908,7 @@ void Menu_ScrollFeeder(menuDef_t *menu, int feeder, qboolean down) {
 		for (i = 0; i < menu->itemCount; i++) {
 			if (menu->items[i]->special == feeder) {
 				Item_ListBox_HandleKey(menu->items[i], (down) ? K_DOWNARROW : K_UPARROW, qtrue, qtrue);
-				Item_ListBox_HandleKey(menu->items[i], (down) ? K_JOY31 : K_JOY29, qtrue, qtrue); // leilei - gamepad support
+				Item_ListBox_HandleKey(menu->items[i], (down) ? K_JOY31 : K_JOY29, qtrue, qtrue); 
 
 				return;
 			}
@@ -5289,7 +5289,7 @@ qboolean ItemParse_asset_model(itemDef_t *item, int handle) {
 	}
 	item->asset = DC->registerModel(temp);
 	//	modelPtr->angle = rand() % 360;
-	modelPtr->angle = 0; // leilei - don't do this because it makes menu changing inconsistent
+	modelPtr->angle = 0; 
 
 	return qtrue;
 }
@@ -5613,21 +5613,21 @@ qboolean ItemParse_textaligny(itemDef_t *item, int handle) {
 	return qtrue;
 }
 
-// leilei - adaptation of screen align
+
 
 qboolean ItemParse_scralign(itemDef_t *item, int handle) {
 	if (!PC_Int_Parse(handle, &item->scralign)) {
-		item->scralign = ALIGN_CENTER; // leilei - HACK
+		item->scralign = ALIGN_CENTER; 
 		return qfalse;
 	}
 	return qtrue;
 }
 
-// leilei - scaling of the adjustment
+
 
 qboolean ItemParse_scralignfactor(itemDef_t *item, int handle) {
 	if (!PC_Float_Parse(handle, &item->scralignfactor)) {
-		item->scralign = ALIGN_CENTER; // leilei - HACK
+		item->scralign = ALIGN_CENTER; 
 		return qfalse;
 	}
 	return qtrue;
@@ -5755,7 +5755,7 @@ qboolean ItemParse_forecolor(itemDef_t *item, int handle) {
 	return qtrue;
 }
 
-// leilei - color schemes
+
 
 
 // i am lazy
@@ -6315,8 +6315,8 @@ keywordHash_t itemParseKeywords[] = {
 	{"textalign", ItemParse_textalign, NULL},
 	{"textalignx", ItemParse_textalignx, NULL},
 	{"textaligny", ItemParse_textaligny, NULL},
-	{"scralign", ItemParse_scralign, NULL}, // leilei - scroll align adaptation
-	{"scralignfactor", ItemParse_scralignfactor, NULL}, // leilei - scroll align adaptation factor
+	{"scralign", ItemParse_scralign, NULL}, 
+	{"scralignfactor", ItemParse_scralignfactor, NULL}, 
 	{"textscale", ItemParse_textscale, NULL},
 	{"textstyle", ItemParse_textstyle, NULL},
 	{"backcolor", ItemParse_backcolor, NULL},
@@ -6397,8 +6397,8 @@ qboolean Item_Parse(int handle, itemDef_t *item) {
 		return qfalse;
 	}
 
-	item->scralign = ALIGN_CENTER; // leilei - HACK
-	item->scralignfactor = 1.0f; // leilei - HACK
+	item->scralign = ALIGN_CENTER; 
+	item->scralignfactor = 1.0f; 
 	while (1) {
 		if (!trap_PC_ReadToken(handle, &token)) {
 			PC_SourceError(handle, "end of file inside menu item\n");

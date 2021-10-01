@@ -197,7 +197,7 @@ static void CG_spWin_f(void) {
 	//trap_S_StartLocalSound(cgs.media.winnerSound, CHAN_ANNOUNCER);
 	CG_CenterPrint("YOU WIN!", SCREEN_HEIGHT * .30, 0);
 
-	// leilei - Unlock stuff!!! Trophies crap.
+	
 	{
 		char berf[4];
 		//const char	*info;
@@ -223,7 +223,7 @@ static void CG_spWin_f(void) {
 			trophyearn = 0;
 		}
 
-		// leilei - unlocking maps (for the SP UI) by setting a cvar
+		
 		if (trophyearn) {
 			if (trophyearn == 1) {
 				CG_CenterPrint("Here the player\nhave a gold trophy!", SCREEN_HEIGHT * .40, 0);
@@ -235,7 +235,7 @@ static void CG_spWin_f(void) {
 			trap_Cvar_Set(va("ui_sp_unlock_%s", berf), va("%i", trophyearn)); // YA YUO DID IT!!!1
 		}
 
-		// leilei - get all the total trophies. Should really be done in the single player ui scripts, but
+		
 		// 		doing it here could make a nice verifier for legitimacy :)
 		{
 			int tropees = 0;

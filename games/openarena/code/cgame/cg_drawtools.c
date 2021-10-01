@@ -41,7 +41,7 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 	// scale for screen sizes
 	//*x *= cgs.screenXScale;
-	*x = *x * cgs.screenXScale + cgs.screenXBias;	// leilei - widescreen adjust
+	*x = *x * cgs.screenXScale + cgs.screenXBias;	
 	*y *= cgs.screenYScale;
 	*w *= cgs.screenXScale;
 	*h *= cgs.screenYScale;

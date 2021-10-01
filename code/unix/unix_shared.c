@@ -188,11 +188,10 @@ void Sys_ListFilteredFiles( const char *basedir, const char *subdirs, const char
 
 // bk001129 - in 1.17 this used to be
 // char **Sys_ListFiles( const char *directory, const char *extension, int *numfiles, qboolean wantsubs )
-char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean wantsubs )
+char **Sys_ListFiles( const char *directory, const char *extension, const char *filter, int *numfiles, qboolean dironly )
 {
 	struct dirent *d;
 	DIR		*fdir;
-	qboolean dironly = wantsubs;
 	char		search[MAX_OSPATH*2+MAX_QPATH+1];
 	int			nfiles;
 	int			extLen;

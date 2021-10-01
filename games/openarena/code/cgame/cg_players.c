@@ -39,7 +39,7 @@ static char *cg_customSoundNames[MAX_CUSTOM_SOUNDS] = {
 	"*taunt.wav"
 };
 
-// leilei - eyes hack
+
 
 vec3_t headpos;
 vec3_t headang;
@@ -165,7 +165,7 @@ static qboolean CG_ParseAnimationFile(const char *filename, clientInfo_t *ci) {
 				ci->headOffset[i] = atof(token);
 			}
 			continue;
-		} else if (Q_strequal(token, "eyes")) { // leilei - EYES
+		} else if (Q_strequal(token, "eyes")) { 
 			for (i = 0; i < 3; i++) {
 				token = COM_Parse(&text_p);
 				if ( !token[0] ) {
@@ -214,7 +214,7 @@ static qboolean CG_ParseAnimationFile(const char *filename, clientInfo_t *ci) {
 				animations[i].flipflop = qfalse;
 				continue;
 			}
-			// LEILEI - run animation fallback.
+			
 			if (i == TORSO_RUN) {
 				animations[i] = animations[TORSO_STAND];
 				animations[i].reversed = qfalse;
@@ -426,7 +426,7 @@ static qboolean CG_ParseEyesFile(const char *filename, clientInfo_t *ci) {
 		}
 
 
-		if (!Q_stricmp(token, "eyes")) { // leilei - EYES
+		if (!Q_stricmp(token, "eyes")) { 
 			for (i = 0; i < 3; i++) {
 				token = COM_Parse(&text_p);
 				if ( !token[0] ) {
@@ -662,7 +662,7 @@ static qboolean CG_RegisterClientModelname(clientInfo_t *ci, const char *modelNa
 		headName = headModelName;
 	}
 
-	// leilei - onepiece model loading for certain maps or WIP animation debug
+	
 	ci->onepiece = 0;
 	if (cg_enableFS.integer) {
 		Com_sprintf(filename, sizeof ( filename), "models/playerfs/%s/tris.mdr", modelName);
@@ -772,7 +772,7 @@ static qboolean CG_RegisterClientModelname(clientInfo_t *ci, const char *modelNa
 	}
 
 	// load the animations
-	// leilei - load one piece animation
+	
 	if (ci->onepiece) {
 		Com_sprintf(filename, sizeof ( filename), "models/playerfs/%s/animation.cfg", modelName);
 		if (!CG_ParseAnimationFile(filename, ci)) {
@@ -792,7 +792,7 @@ static qboolean CG_RegisterClientModelname(clientInfo_t *ci, const char *modelNa
 
 
 
-	// leilei - load eyes
+	
 	Com_sprintf(filename, sizeof ( filename), "models/players/%s/eyes.cfg", modelName);
 	if (!CG_ParseEyesFile(filename, ci)) {
 		//	Com_Printf( "No eyes for %s\n", filename );
@@ -1610,7 +1610,7 @@ static void CG_PlayerAngles(centity_t *cent, vec3_t legs[3], vec3_t torso[3], ve
 		camereyes = 1; // it's me!
 	}
 
-	// leilei -- new third person camera prep
+	
 	cent->newcamrunning = 0;
 	if (cg_cameramode.integer == 1) {
 		if ((cent->currentState.torsoAnim & ~ANIM_TOGGLEBIT) != TORSO_ATTACK) {
@@ -1762,7 +1762,7 @@ static void CG_PlayerAngles(centity_t *cent, vec3_t legs[3], vec3_t torso[3], ve
 	CG_AddPainTwitch(cent, torsoAngles);
 	// TODO: make eyes erode on pain twitch
 
-	// leilei - eyes hack
+	
 
 	if (camereyes) {
 		cent->eyesAngles[YAW] = headAngles[YAW];
@@ -1786,7 +1786,7 @@ static void CG_PlayerAngles(centity_t *cent, vec3_t legs[3], vec3_t torso[3], ve
 		if (ci) {
 			VectorCopy(ci->eyepos, cent->pe.eyepos);
 		}
-		//VectorCopy(eyelookfrom, cent->pe.eyepos);			// leilei - copy eye poistion
+		//VectorCopy(eyelookfrom, cent->pe.eyepos);			
 	}
 
 }
@@ -2523,7 +2523,7 @@ void CG_Player(centity_t *cent) {
 	float angle;
 	vec3_t dir, angles;
 	int camereyes = 0;
-	// leilei - chibi hack
+	
 	float chibifactorbody = 0.0f;
 	float chibifactortorso = 0.0f;
 	float chibifactorhead = 0.0f;
@@ -2624,7 +2624,7 @@ void CG_Player(centity_t *cent) {
 
 	VectorCopy(cent->lerpOrigin, legs.lightingOrigin);
 
-	// leilei - chibi mode hack
+	
 	if (chibifactorbody) {
 		VectorScale(legs.axis[0], chibifactorbody, legs.axis[0]);
 		VectorScale(legs.axis[1], chibifactorbody, legs.axis[1]);
@@ -2632,7 +2632,7 @@ void CG_Player(centity_t *cent) {
 	}
 
 
-	// leilei - q scale hack
+	
 
 	if (cg_enableQ.integer) {
 		VectorScale(legs.axis[0], QUACK_SCALE, legs.axis[0]);
@@ -3032,7 +3032,7 @@ void CG_Player(centity_t *cent) {
 	head.renderfx = renderfx;
 
 
-	// leilei - chibi mode hack
+	
 	if (chibifactorhead) {
 		VectorScale(head.axis[0], chibifactorhead, head.axis[0]);
 		VectorScale(head.axis[1], chibifactorhead, head.axis[1]);

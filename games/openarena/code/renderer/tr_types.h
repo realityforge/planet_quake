@@ -112,7 +112,7 @@ typedef struct {
 	float		rotation;
 
 
-	// leilei - eyes
+	
 
 	vec3_t		eyepos[2];			// looking from
 	vec3_t		eyelook;			// looking from

@@ -197,7 +197,7 @@ static void CG_CalcVrect (void) {
 			trap_Cvar_Set ("cg_viewsize","30");
 			size = 30;
 		} else if (cg_viewsize.integer > 120) {
-			trap_Cvar_Set ("cg_viewsize","120");	// leilei - increased to 120 for retro sbar disabling
+			trap_Cvar_Set ("cg_viewsize","120");	
 			size = 120;
 		} else {
 			size = cg_viewsize.integer;
@@ -207,7 +207,7 @@ static void CG_CalcVrect (void) {
 
 	size2 = size;
 	if (size>100){
-		size = 100;	// leilei - size should actually be normal...
+		size = 100;	
 	}
 	cg.refdef.width = cgs.glconfig.vidWidth*size/100;
 	cg.refdef.width &= ~1;
@@ -218,7 +218,7 @@ static void CG_CalcVrect (void) {
 	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width)/2;
 	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height)/2;
 
-	// leilei - nudge
+	
 		if (cg_viewnudge.integer) {
 			int nudged = 0;
 
@@ -238,7 +238,7 @@ static void CG_CalcVrect (void) {
 
 //==============================================================================
 
-// leilei - eyes hack
+
 
 extern vec3_t headpos;
 extern vec3_t headang;
@@ -271,7 +271,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		cg.refdefViewAngles[YAW] = cg.predictedPlayerState.stats[STAT_DEAD_YAW];
 	}
 
-	if (cg_deathcam.integer == 2 && (cg.predictedPlayerState.stats[STAT_HEALTH] <= 0) ){	// leilei - deathcam
+	if (cg_deathcam.integer == 2 && (cg.predictedPlayerState.stats[STAT_HEALTH] <= 0) ){	
 
 		range = 100;
 		//origin = cg.refdef.vieworg;
@@ -279,7 +279,7 @@ static void CG_OffsetThirdPersonView( void ) {
 	//	focusAngles[PITCH] = cg.refdefViewAngles[PITCH];
 	}
 
-	if (cg_cameramode.integer && (cg.predictedPlayerState.stats[STAT_HEALTH] > 0))		// leilei this mode is off to the player's right
+	if (cg_cameramode.integer && (cg.predictedPlayerState.stats[STAT_HEALTH] > 0))		
 	{											
 		// and should look towards a 3d crosshair
 		AngleVectors( focusAngles, forward, NULL, NULL );
@@ -314,7 +314,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		}
 		cg.refdefViewAngles[PITCH] = -180 / M_PI * atan2( focusPoint[2], focusDist );
 
-		// leilei - make it look to a 3d cursor
+		
 
 		//cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle.value;	 // can't do this right now.
 
@@ -469,7 +469,7 @@ static void CG_OffsetFirstPersonView( void ) {
 
 	// add angles based on bob
 
-	if ( cg_bob.integer == 6 ) // leilei - sweeney bob
+	if ( cg_bob.integer == 6 ) 
 	{
 		vec3_t		forward, right, up;
 		speed = cg.xyspeed;
@@ -492,7 +492,7 @@ static void CG_OffsetFirstPersonView( void ) {
 		if (cg.predictedPlayerState.pm_flags & PMF_DUCKED) {
 			delta *= 3;		// crouching
 		}
-		// leilei - no pitch for 3 or 4
+		
 		if ( cg_bob.integer == 1 || cg_bob.integer == 2 ) {
 			angles[PITCH] += delta;
 		}
@@ -503,7 +503,7 @@ static void CG_OffsetFirstPersonView( void ) {
 		if (cg.bobcycle & 1) {
 			delta = -delta;
 		}
-		// leilei - no roll for 2 or 4
+		
 		if ( cg_bob.integer == 1 || cg_bob.integer == 3 || cg_bob.integer == 5 ) {
 			angles[ROLL] += delta;
 		}
@@ -787,7 +787,7 @@ static int CG_CalcViewValues( void ) {
 	cg.xyspeed = sqrt( ps->velocity[0] * ps->velocity[0] +
 		ps->velocity[1] * ps->velocity[1] );
 
-	cg.bobcycle2 = ps->bobCycle; // leilei - copy the bobcycle so we can use it directly elsewhere
+	cg.bobcycle2 = ps->bobCycle; 
 
 	VectorCopy( ps->origin, cg.refdef.vieworg );
 	VectorCopy( ps->viewangles, cg.refdefViewAngles );
@@ -820,7 +820,7 @@ static int CG_CalcViewValues( void ) {
 		CG_OffsetFirstPersonView();
 	}
 
-	// leilei - View-from-the-model-eyes feature, aka "fullbody awareness" lol
+	
 	if (cg_cameraEyes.integer && !cg.renderingThirdPerson){
 		vec3_t		forward, up;	
 		cg.refdefViewAngles[ROLL] = headang[ROLL];
@@ -977,7 +977,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// decide on third person view
 
 	if (!cg_deathcam.integer) {
-		// leilei - allow first person deathcam
+		
 		cg.renderingThirdPerson = cg_thirdPerson.integer;
 	}
 	else {

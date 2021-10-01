@@ -394,7 +394,7 @@ void trap_SnapVector( float *v ) {
 	syscall( CG_SNAPVECTOR, v );
 }
 
-// leilei - particles!
+
 void	trap_R_LFX_ParticleEffect( int effect, const vec3_t origin, const vec3_t velocity ) {
 	syscall( CG_R_LFX_PARTICLEEFFECT, effect, origin, velocity );
 }

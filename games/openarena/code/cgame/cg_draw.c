@@ -316,7 +316,7 @@ void CG_Draw3DModelEyes(float x, float y, float w, float h, qhandle_t model, qha
 	AnglesToAxis(angles, ent.axis);
 	VectorCopy(origin, ent.origin);
 
-	// leilei - deal with the eyes here
+	
 	VectorCopy(eyep, ent.eyepos[0]);
 
 	//	speed *= 0.05f;
@@ -2798,7 +2798,7 @@ static void CG_DrawCrosshair(void) {
 		}
 	}
 
-	x = cg_crosshairX.integer - wideAdjustX; // leilei - widescreen adjust
+	x = cg_crosshairX.integer - wideAdjustX; 
 	y = cg_crosshairY.integer;
 	CG_AdjustFrom640(&x, &y, &w, &h);
 
@@ -3187,7 +3187,7 @@ CG_DrawIntermission
 =================
  */
 
-void trap_Cmd_ExecuteText(int exec_when, const char *text); // leilei - for unlocks only...
+void trap_Cmd_ExecuteText(int exec_when, const char *text); 
 
 static void CG_DrawIntermission(void) {
 	//	int key;

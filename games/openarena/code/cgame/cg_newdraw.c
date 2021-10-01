@@ -1923,7 +1923,7 @@ static void CG_DrawHostname( rectDef_t *rect, float text_x, float text_y,
 //Sago: Is this supposed to be used for anything? 
 //Disabled 2016-11-27
 
-// leilei - additions that were missing from the loaing screen
+
 static void CG_DrawPureServer( rectDef_t *rect, float text_x, float text_y, vec4_t color, float scale, int align, int textStyle )
 {
 	char buffer[ 1024 ];
@@ -1940,7 +1940,7 @@ static void CG_DrawPureServer( rectDef_t *rect, float text_x, float text_y, vec4
 
 #endif
 
-// leilei - additions that were missing from the loaing screen
+
 static void CG_DrawTimeLimit( rectDef_t *rect, float text_x, float text_y, vec4_t color, float scale, int align, int textStyle )
 {
 	const char *info;
@@ -1970,7 +1970,7 @@ static void CG_DrawFragLimit( rectDef_t *rect, float text_x, float text_y, vec4_
 	}
 }
 
-// leilei - additions that were missing from the loaing screen
+
 static void CG_DrawCaptureLimit( rectDef_t *rect, float text_x, float text_y, vec4_t color, float scale, int align, int textStyle )
 {
 	const char *info;
@@ -2218,7 +2218,7 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
 	case CG_LOAD_GAMETYPE:
 		CG_DrawHostname( &rect, text_x, text_y, color, scale, align, textStyle );
 		break;
-// leilei - additions
+
 #endif
 // end loadingscreen
 	default:

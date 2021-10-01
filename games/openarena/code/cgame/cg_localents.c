@@ -148,7 +148,7 @@ void CG_BloodTrail( localEntity_t *le ) {
 }
 
 
-// LEILEI
+
 void CG_SmallBloodTrail( localEntity_t *le ) {
 	int		t;
 	int		t2;
@@ -273,7 +273,7 @@ void CG_FragmentBounceSound( localEntity_t *le, trace_t *trace ) {
 }
 
 
-// LEILEI 
+
 void CG_GoreMark( localEntity_t *le, trace_t *trace ) {
 	int			radius;
 
@@ -291,7 +291,7 @@ void CG_GoreMark( localEntity_t *le, trace_t *trace ) {
 
 /*
 ================
-CG_SplatSound LEILEI
+CG_SplatSound
 ================
 */
 void CG_SplatSound( localEntity_t *le, trace_t *trace ) {
@@ -433,7 +433,7 @@ void CG_AddFragment( localEntity_t *le ) {
 	trap_R_AddRefEntityToScene( &le->refEntity );
 }
 
-// LEILEI
+
 
 void CG_JustSplat( localEntity_t *le, trace_t *trace ) {
 	vec3_t	velocity;
@@ -619,7 +619,7 @@ static void CG_AddScaleFade( localEntity_t *le ) {
 	// so it doesn't add too much overdraw
 	VectorSubtract( re->origin, cg.refdef.vieworg, delta );
 	len = VectorLength( delta );
-	// LEILEI
+	
 	if (!cg_leiEnhancement.integer) {
 	if ( len < le->radius ) {
 		CG_FreeLocalEntity( le );
@@ -662,7 +662,7 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 	VectorSubtract( re->origin, cg.refdef.vieworg, delta );
 	len = VectorLength( delta );
 	
-	// LEILEI
+	
 if (!cg_leiEnhancement.integer) {
 	if ( len < le->radius ) {
 		CG_FreeLocalEntity( le );
@@ -1088,7 +1088,3 @@ void CG_AddLocalEntities( void ) {
 		}
 	}
 }
-
-
-
-

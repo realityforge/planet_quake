@@ -162,7 +162,7 @@ localEntity_t *CG_SmokePuff( const vec3_t p, const vec3_t vel,
 	return le;
 }
 
-// LEILEI same as above, but slows down.......
+
 localEntity_t *CG_SlowPuff( const vec3_t p, const vec3_t vel, 
 				   float radius,
 				   float r, float g, float b, float a,
@@ -585,7 +585,7 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 
 /*
 ==================
-CG_SpurtBlood (LEILEI)
+CG_SpurtBlood
 ==================
 */
 void CG_SpurtBlood( vec3_t origin, vec3_t velocity, int hard ) {
@@ -816,8 +816,3 @@ void CG_BigExplosion( vec3_t playerOrigin ) {
 	velocity[2] = EXP_JUMP + crandom()*EXP_VELOCITY;
 	CG_LaunchExplode( origin, velocity, cgs.media.smoke2 );
 }
-
-
-
-
-

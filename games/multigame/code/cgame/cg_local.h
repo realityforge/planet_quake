@@ -406,6 +406,14 @@ typedef struct weaponInfo_s {
 	qhandle_t		weaponModel;
 	qhandle_t		barrelModel;
 	qhandle_t		flashModel;
+  qhandle_t		flashModel_type1;
+  qhandle_t		flashModel_type2;
+  qhandle_t		flashModel_type2a;
+  qhandle_t		flashModel_type3;
+  qhandle_t		flashModel_type4;
+  qhandle_t		flashModel_type5;
+  qhandle_t		flashModel_type5a;
+  int			lfx;	// leilei - for weapon muzzleflash particle effects
 
 	vec3_t			weaponMidpoint;		// so it will rotate centered instead of by tag
 
@@ -836,6 +844,7 @@ typedef struct {
 	qhandle_t	grenadeExplosionShader;
 	qhandle_t	bfgExplosionShader;
 	qhandle_t	bloodExplosionShader;
+  qhandle_t	grappleShader;	
 
 	// special effects models
 	qhandle_t	teleportEffectModel;

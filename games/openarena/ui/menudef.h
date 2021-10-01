@@ -97,7 +97,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // rfactory change
 // Changed RD
 #define FEEDER_SAVE							0x10			// save games
-// leilei - there is no need for game saving code by the way. Save games are blanked out.
+
 
 // Bind Primary or Alternate
 #define BIND_BOTH							0x00
@@ -258,10 +258,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CG_LOAD_SOUND_LABEL       82
 #define CG_LOAD_GRAPHIC           83
 #define CG_LOAD_GRAPHIC_LABEL     84
-#define CG_LOAD_GAMETYPE          85	// leilei - gametype was missing. this is important.
-#define CG_LOAD_FRAGLIMIT         86	// leilei 
-#define CG_LOAD_TIMELIMIT         87	// leilei 
-#define CG_LOAD_CAPTURELIMIT      88	// leilei 
+#define CG_LOAD_GAMETYPE          85	
+#define CG_LOAD_FRAGLIMIT         86	
+#define CG_LOAD_TIMELIMIT         87	
+#define CG_LOAD_CAPTURELIMIT      88	
 // end HUD extensions
 
 // Hud groups
@@ -341,7 +341,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define UI_MAPS_SELECTION 256
 #define UI_PLAYERMODEL2 257
 #define UI_OPPONENTMODEL2 258
-#define UI_MENUMAPNAME 260		// leilei - sp ladder menus addition
+#define UI_MENUMAPNAME 260		
 #define UI_PLAYERPORTRAIT 261
 #define UI_PLAYERMODEL_OC 262
 

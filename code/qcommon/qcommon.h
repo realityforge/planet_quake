@@ -839,6 +839,8 @@ typedef enum {
 #define FS_MATCH_PURE   (1<<1)
 #define FS_MATCH_UNPURE (1<<2)
 #define FS_MATCH_STICK  (1<<3)
+#define FS_MATCH_EITHER (1<<4) // used by FS_ListNearestFiles to match either by filter or pakFilter
+// TODO: levenshtein match `path` also
 #define FS_MATCH_PK3s   (FS_MATCH_PURE | FS_MATCH_UNPURE)
 #define FS_MATCH_ANY    (FS_MATCH_EXTERN | FS_MATCH_PURE | FS_MATCH_UNPURE)
 
@@ -873,6 +875,7 @@ void	FS_Restart( int checksumFeed );
 void	FS_Reload( void );
 
 char	**FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags );
+char  **FS_ListNearestFiles( const char *pathFilter, const char *filter, int *numfiles, float matchDivisor, int flags );
 char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles );
 // directory should not have either a leading or trailing /
 // if extension is "/", only subdirectories will be returned

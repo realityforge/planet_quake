@@ -1123,6 +1123,7 @@ void Com_RandomBytes( byte *string, int len );
 
 void Com_SortFileList( char **list, int nfiles, int fastSort );
 long I_FloatTime( void );
+int levenshtein(const char *s, const char *t);
 
 // mode parm for FS_FOpenFile
 typedef enum {

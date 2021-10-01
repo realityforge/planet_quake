@@ -59,7 +59,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_DOMINATION_POINTS 6
 #define MAX_DOMINATION_POINTS_NAMES 20
 
-// leilei - q scale game cvar
+
 
 #define QUACK_SCALE		0.85
 #define	QUACK_VIEWHEIGHT	22
@@ -585,7 +585,7 @@ typedef enum {
 	LEGS_STRAFE_LEFT, // strafing to the player's left
 	LEGS_STRAFE_RIGHT, // strafing to the player's right
 
-//	BOTH_POSE,		// leilei - crappy ui posing code trying
+//	BOTH_POSE,		
 
 	MAX_ANIMATIONS,
 

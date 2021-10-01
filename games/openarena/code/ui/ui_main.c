@@ -1804,7 +1804,7 @@ static void UI_DrawPlayerModel2(rectDef_t *rect)
 
 
 
-// leilei - OC system
+
 
 static void UI_DrawOC(rectDef_t *rect)
 {
@@ -2796,7 +2796,7 @@ static void UI_OwnerDraw(float x, float y, float w, float h, float text_x, float
 	case UI_OPPONENTLOGO_NAME:
 		UI_DrawOpponentLogoName(&rect, color);
 		break;
-	case UI_MENUMAPNAME:			// leilei
+	case UI_MENUMAPNAME:			
 		UI_DrawMenuMapName(&rect, scale, color, textStyle);
 		break;
 	case UI_TIER_MAPNAME:
@@ -3838,7 +3838,7 @@ static void UI_StartSkirmish(qboolean next, char *name)
 		Com_sprintf( buff, sizeof(buff), "addbot %s %f "", %i \n", uiInfo.mapList[ui_currentMap.integer].opponentName, skill, delay);
 		trap_Cmd_ExecuteText( EXEC_APPEND, buff );
 	}
-	else if (!UI_IsATeamGametype(g) && g != GT_TOURNAMENT) { // leilei - parse the opponentname as a list of bots instead like q3_ui's arena parsing
+	else if (!UI_IsATeamGametype(g) && g != GT_TOURNAMENT) { 
 		char		*p;
 		char		*bot;
 		const char	*botInfo;
@@ -4079,7 +4079,7 @@ static void UI_Update(const char *name)
 // Changed RD
 qboolean SP_LoadGame(char *load_game, char *loadmap)
 {
-	return qfalse; // leilei - we do not need this
+	return qfalse; 
 }
 // end changed RD
 
@@ -6076,7 +6076,7 @@ static qboolean MapList_Parse(char **p)
 			//}
 			uiInfo.mapList[uiInfo.mapCount].cinematic = -1;
 			//uiInfo.mapList[uiInfo.mapCount].levelShot = trap_R_RegisterShaderNoMip(va("levelshots/%s_small", uiInfo.mapList[uiInfo.mapCount].mapLoadName));
-			// leilei - We don't have _small levelshots, memory reasons
+			
 			//if (!uiInfo.mapList[uiInfo.mapCount].levelShot)
 			uiInfo.mapList[uiInfo.mapCount].levelShot = trap_R_RegisterShaderNoMip(va("levelshots/%s", uiInfo.mapList[uiInfo.mapCount].mapLoadName));
 
@@ -6267,7 +6267,7 @@ static void UI_BuildQ3Model_List( void )
 
 			// look for icon_????
 			if (Q_stricmpn(skinname, "icon_", 5) == 0 && !(Q_stricmp(skinname,"icon_blue") == 0 || Q_stricmp(skinname,"icon_red") == 0))
-				//if (Q_stricmpn(skinname, "icon_", 5) == 0)	// leilei - show red blue anyway
+				//if (Q_stricmpn(skinname, "icon_", 5) == 0)	
 
 			{
 				if (Q_stricmp(skinname, "icon_default") == 0) {
@@ -6300,7 +6300,7 @@ static void UI_BuildQ3Model_List( void )
 
 			// look for icon_????
 			if (Q_stricmpn(skinname, "icon_", 5) == 0 && !(Q_stricmp(skinname,"icon_blue") == 0 || Q_stricmp(skinname,"icon_red") == 0))
-				//if (Q_stricmpn(skinname, "icon_", 5) == 0)	// leilei - show red blue anyway
+				//if (Q_stricmpn(skinname, "icon_", 5) == 0)	
 
 			{
 				if (Q_stricmp(skinname, "icon_default") == 0) {
@@ -6329,7 +6329,7 @@ static void UI_BuildQ3Model_List( void )
 
 int realVidWidth;
 int realVidHeight;
-int wideAdjustX; // leilei - dirty widescreen hack
+int wideAdjustX; 
 
 float realxscale, realyscale;
 
@@ -6370,7 +6370,7 @@ void _UI_Init( qboolean inGameLoad, int randomSeed )
 	realVidWidth = uiInfo.uiDC.glconfig.vidWidth;
 	realVidHeight = uiInfo.uiDC.glconfig.vidHeight;
 
-	// leilei - wide adjust calculation for things!!!
+	
 
 
 	{
@@ -6397,7 +6397,7 @@ void _UI_Init( qboolean inGameLoad, int randomSeed )
 	if ( uiInfo.uiDC.glconfig.vidWidth * 480 > uiInfo.uiDC.glconfig.vidHeight * 640 ) {
 		// wide screen
 		uiInfo.uiDC.bias = 0.5 * ( uiInfo.uiDC.glconfig.vidWidth - ( uiInfo.uiDC.glconfig.vidHeight * (640.0/480.0) ) );
-		uiInfo.uiDC.xscale = uiInfo.uiDC.yscale;	 // leilei - widescreen adjust
+		uiInfo.uiDC.xscale = uiInfo.uiDC.yscale;	 
 	}
 	else {
 		// no wide screen
@@ -7156,7 +7156,7 @@ vmCvar_t Save_Loading;
 vmCvar_t persid;
 vmCvar_t gameover; // ai script
 // end changed RD
-// leilei
+
 vmCvar_t ui_introPlayed;
 vmCvar_t ui_colors;
 vmCvar_t ui_humansonly;
@@ -7345,7 +7345,7 @@ static cvarTable_t		cvarTable[] = {
 // end changed RD
 	{ &ui_introPlayed, "ui_introPlayed", "0", CVAR_INIT },
 	{ &ui_missionpackChecks, "missionpackChecks", "1", CVAR_INIT },
-// leilei
+
 	{ &ui_colors, "ui_colors", "0x1e3072 0x7286d0 0x1fd1b2 0x606060", CVAR_ARCHIVE},
 	{ &ui_developer, "developer", "0", CVAR_CHEAT },
 	{ NULL, "ui_videomode", "", CVAR_ROM },
