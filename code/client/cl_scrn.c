@@ -693,6 +693,47 @@ void SCR_DrawCurrentView( void ) {
 #endif
 
 
+#define	FPS_FRAMES	4
+static void SCR_DrawFPS( int t ) {
+	const char	*s;
+	static int	previousTimes[FPS_FRAMES];
+	static int	index;
+	int		i, total;
+	int		fps;
+	static	int	previous;
+	int		frameTime;
+
+	// don't use serverTime, because that will be drifting to
+	// correct for internet lag changes, timescales, timedemos, etc
+	frameTime = t - previous;
+	previous = t;
+
+	previousTimes[index % FPS_FRAMES] = frameTime;
+	index++;
+	if ( index > FPS_FRAMES ) {
+		// average multiple frames together to smooth changes out a bit
+		total = 0;
+		for ( i = 0 ; i < FPS_FRAMES ; i++ ) {
+			total += previousTimes[i];
+		}
+		if ( !total ) {
+			total = 1;
+		}
+		fps = 1000 * FPS_FRAMES / total;
+
+		s = va( "%ifps", fps );
+		SCR_DrawStringExt( 
+      cls.screenXmax - 4 - strlen(s) * BIGCHAR_WIDTH, 
+      cls.screenYmin + 2,
+      BIGCHAR_WIDTH, 
+      s,
+      g_color_table[ ColorIndex( COLOR_WHITE ) ],
+      qtrue, qfalse );
+	}
+}
+
+
+
 /*
 ==================
 SCR_UpdateScreen
@@ -702,7 +743,7 @@ text to the screen.
 ==================
 */
 void SCR_UpdateScreen( qboolean fromVM ) {
-	int i;
+	int i, ms;
 	static int recursive;
 	static int framecount;
 	static int next_frametime;
@@ -710,8 +751,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 	if ( !scr_initialized )
 		return; // not initialized yet
 
-	if ( framecount == cls.framecount ) {
-	int ms = Sys_Milliseconds();
+  ms = Sys_Milliseconds();
+  if ( framecount == cls.framecount ) {
 		if ( next_frametime && ms - next_frametime < 0 ) {
 			re.ThrottleBackend();
 		} else {
@@ -880,6 +921,8 @@ donewithupdate:
 	// console draws next
 	Con_DrawConsole ();
 #endif
+
+  SCR_DrawFPS(ms);
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {
