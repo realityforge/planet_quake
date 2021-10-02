@@ -513,7 +513,11 @@ typedef struct {
 
 	patch_t cgamePatches[MAX_PATCHES];
 	unsigned numCgamePatches;
-#endif	
+#endif
+
+  qboolean synchronousClients;
+  int meanPing;
+
 } clientStatic_t;
 
 extern int bigchar_width;
@@ -609,6 +613,7 @@ extern	cvar_t	*cl_drawBuffer;
 extern  cvar_t  *cl_snaps;
 extern  cvar_t  *cl_drawFPS;
 extern  cvar_t  *cl_lagometer;
+extern  cvar_t  *cl_nopredict;
 
 //=================================================
 

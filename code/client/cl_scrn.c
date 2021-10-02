@@ -693,6 +693,51 @@ void SCR_DrawCurrentView( void ) {
 #endif
 
 
+#define	MAX_LAGOMETER_PING	900
+#define	MAX_LAGOMETER_RANGE	300
+#define	LAG_SAMPLES		128
+
+
+typedef struct {
+	int		frameSamples[LAG_SAMPLES];
+	int		frameCount;
+	int		snapshotFlags[LAG_SAMPLES];
+	int		snapshotSamples[LAG_SAMPLES];
+	int		snapshotCount;
+} lagometer_t;
+
+lagometer_t		lagometer;
+
+static void CL_CalculatePing( int ms ) {
+	int count, i, v;
+  int			offset;
+
+	cls.meanPing = 0;
+
+	for ( i = 0, count = 0; i < LAG_SAMPLES; i++ ) {
+
+		v = lagometer.snapshotSamples[i];
+		if ( v >= 0 ) {
+			cls.meanPing += v;
+			count++;
+		}
+
+	}
+
+	if ( count ) {
+		cls.meanPing /= count;
+	}
+
+	offset = ms - cl.snap.serverTime;
+	lagometer.frameSamples[ lagometer.frameCount & ( LAG_SAMPLES - 1) ] = offset;
+	lagometer.frameCount++;
+
+	// add this snapshot's info
+	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = cl.snap.ping;
+	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = cl.snap.snapFlags;
+	lagometer.snapshotCount++;
+}
+
 /*
 ==============
 CG_DrawLagometer
@@ -705,10 +750,10 @@ static void SCR_DrawLagometer( void ) {
 	int		color;
 	float	vscale;
 
-	if ( !cl_lagometer->integer || clc.serverAddress.type == NA_LOOPBACK ) {
-		CG_DrawDisconnect();
-		return;
-	}
+	//if ( !cl_lagometer->integer || clc.serverAddress.type == NA_LOOPBACK ) {
+		//CG_DrawDisconnect();
+	//	return;
+	//}
 
 	//
 	// draw the graph
@@ -728,7 +773,7 @@ static void SCR_DrawLagometer( void ) {
 	aw = 48 * cls.scale;
 	ah = 48 * cls.scale;
 
-  trap_R_DrawStretchPic( 
+  re.DrawStretchPic( 
     ax, 
     ay, 
     aw, 
@@ -804,15 +849,25 @@ static void SCR_DrawLagometer( void ) {
 
 	re.SetColor( NULL );
 
-	if ( cl_nopredict->integer || cgs.synchronousClients ) {
-		CG_DrawString( cls.screenXmax-1, y, "snc", colorWhite, 5, 10, 0, DS_PROPORTIONAL | DS_RIGHT );
+	if ( cl_nopredict->integer || cls.synchronousClients ) {
+    SCR_DrawSmallStringExt( 
+      cls.screenXmax-1 - 3 * BIGCHAR_WIDTH, 
+      ay,
+      "snc",
+      g_color_table[ ColorIndex( COLOR_WHITE ) ],
+      qtrue, qfalse );
 	}
 
-	if ( !cg.demoPlayback ) {
-		CG_DrawString( x+1, y, va( "%ims", cg.meanPing ), colorWhite, 5, 10, 0, DS_PROPORTIONAL );
+	if ( !clc.demoplaying ) {
+    SCR_DrawSmallStringExt( 
+      ax+1, 
+      ay,
+      va( "%ims", cls.meanPing ),
+      g_color_table[ ColorIndex( COLOR_WHITE ) ],
+      qtrue, qfalse );
 	}
 
-	CG_DrawDisconnect();
+	//CG_DrawDisconnect();
 }
 
 
@@ -921,6 +976,8 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 		goto donewithupdate;
 	}
+
+  CL_CalculatePing(ms);
 
 	for(i = 0; i < MAX_NUM_VMS; i++) {
 #ifdef USE_MULTIVM_CLIENT
@@ -1050,6 +1107,8 @@ donewithupdate:
 #endif
 
   SCR_DrawFPS(ms);
+  if(cls.state >= CA_CONNECTED)
+    SCR_DrawLagometer();
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {

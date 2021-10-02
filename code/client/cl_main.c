@@ -101,6 +101,7 @@ cvar_t *cl_stencilbits;
 cvar_t *cl_depthbits;
 cvar_t *cl_drawBuffer;
 
+cvar_t  *cl_nopredict;
 cvar_t  *cl_lagometer;
 cvar_t  *cl_drawFPS;
 cvar_t  *cl_snaps;
@@ -5272,6 +5273,7 @@ void CL_Init( void ) {
 	cl_reconnectArgs = Cvar_Get( "cl_reconnectArgs", "", CVAR_ARCHIVE_ND | CVAR_NOTABCOMPLETE );
   cl_drawFPS = Cvar_Get ("g_drawFPS", "1", CVAR_ARCHIVE );
   cl_lagometer = Cvar_Get ("cg_lagometer", "1", CVAR_ARCHIVE );
+  cl_nopredict = Cvar_Get ("cl_nopredict", "0", 0 );
 
 	// userinfo
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE_ND );

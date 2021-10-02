@@ -688,6 +688,10 @@ Com_Printf("Referenced: %s (%s)\n", s, t);
 		if ( !Q_stricmp( key, "fs_game" ) ) {
 			continue; // already processed
 		}
+    
+    if( !Q_stricmp( key, "g_synchronousClients" ) ) {
+      cls.synchronousClients = qtrue;
+    }
 
 		if((cvar_flags = Cvar_Flags(key)) == CVAR_NONEXISTENT)
 			Cvar_Get(key, value, CVAR_SERVER_CREATED | CVAR_ROM);
