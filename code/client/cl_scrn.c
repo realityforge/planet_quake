@@ -708,6 +708,19 @@ typedef struct {
 
 lagometer_t		lagometer;
 
+void CL_AddLagometerSnapshotInfo(clSnapshot_t *snap) {
+  if ( !snap ) {
+		lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = -1;
+		lagometer.snapshotCount++;
+		return;
+	}
+
+	// add this snapshot's info
+	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->ping;
+	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = snap->snapFlags;
+	lagometer.snapshotCount++;
+}
+
 static void CL_CalculatePing( int ms ) {
 	int count, i, v;
   int			offset;
@@ -731,17 +744,6 @@ static void CL_CalculatePing( int ms ) {
 	offset = cl.serverTime - cl.snap.serverTime;
 	lagometer.frameSamples[ lagometer.frameCount & ( LAG_SAMPLES - 1) ] = offset;
 	lagometer.frameCount++;
-
-  //if ( !cl.snap.valid ) {
-	//	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = -1;
-	//	lagometer.snapshotCount++;
-	//	return;
-	//}
-
-	// add this snapshot's info
-	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = cl.snap.ping;
-	lagometer.snapshotFlags[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = cl.snap.snapFlags;
-	lagometer.snapshotCount++;
 }
 
 /*
@@ -786,6 +788,7 @@ static void SCR_DrawLagometer( void ) {
     ah, 
     0, 0, 1, 1, 
     cls.lagometerShader );
+  Com_Printf("lago: %i\n", cls.lagometerShader);
 
 	color = -1;
 	range = ah / 3;

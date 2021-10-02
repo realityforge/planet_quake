@@ -212,7 +212,7 @@ static void CL_ParsePacketEntities( msg_t *msg, const clSnapshot_t *oldframe, cl
 	}
 }
 
-
+void CL_AddLagometerSnapshotInfo(clSnapshot_t *snap);
 /*
 ================
 CL_ParseSnapshot
@@ -519,7 +519,7 @@ void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	// if not valid, dump the entire thing now that it has
 	// been properly read
 	if ( !newSnap.valid ) {
-Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
+    CL_AddLagometerSnapshotInfo(NULL);
 		return;
 	}
 
@@ -560,6 +560,8 @@ Com_Printf("Dropped snapshot: %i\n", clc.serverMessageSequence);
 	cl.newSnapshots = qtrue;
 
 	clc.eventMask |= EM_SNAPSHOT;
+
+  CL_AddLagometerSnapshotInfo(&cl.snap);
 }
 
 

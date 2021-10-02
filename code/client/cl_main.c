@@ -2849,7 +2849,7 @@ static void CL_DownloadsComplete( void ) {
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	cls.whiteShader = re.RegisterShader( "white" );
 	cls.consoleShader = re.RegisterShader( "console" );
-  cls.lagometerShader = re.RegisterShader( "lagometer" )
+  cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
@@ -4196,6 +4196,7 @@ static void CL_InitRenderer( void ) {
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	cls.whiteShader = re.RegisterShader( "white" );
+  cls.lagometerShader = re.RegisterShader( "lagometer" );
 #ifndef USE_NO_CONSOLE
 	cls.consoleShader = re.RegisterShader( "console" );
 	g_console_field_width = cls.glconfig.vidWidth / smallchar_width - 2;
