@@ -101,6 +101,8 @@ cvar_t *cl_stencilbits;
 cvar_t *cl_depthbits;
 cvar_t *cl_drawBuffer;
 
+cvar_t  *cl_lagometer;
+cvar_t  *cl_drawFPS;
 cvar_t  *cl_snaps;
 
 #ifdef USE_DRAGDROP
@@ -2846,6 +2848,7 @@ static void CL_DownloadsComplete( void ) {
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
 	cls.whiteShader = re.RegisterShader( "white" );
 	cls.consoleShader = re.RegisterShader( "console" );
+  cls.lagometerShader = re.RegisterShader( "lagometer" )
 #ifndef __WASM__
 	cls.soundRegistered = qtrue;
 	S_BeginRegistration();
@@ -5267,6 +5270,8 @@ void CL_Init( void ) {
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
 
 	cl_reconnectArgs = Cvar_Get( "cl_reconnectArgs", "", CVAR_ARCHIVE_ND | CVAR_NOTABCOMPLETE );
+  cl_drawFPS = Cvar_Get ("g_drawFPS", "1", CVAR_ARCHIVE );
+  cl_lagometer = Cvar_Get ("cg_lagometer", "1", CVAR_ARCHIVE );
 
 	// userinfo
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE_ND );

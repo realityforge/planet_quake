@@ -476,6 +476,7 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+  qhandle_t	lagometerShader;
 #ifdef USE_LNBITS
 	qhandle_t qrCodeShader;
 #endif
@@ -606,6 +607,8 @@ extern	cvar_t	*cl_stencilbits;
 extern	cvar_t	*cl_depthbits;
 extern	cvar_t	*cl_drawBuffer;
 extern  cvar_t  *cl_snaps;
+extern  cvar_t  *cl_drawFPS;
+extern  cvar_t  *cl_lagometer;
 
 //=================================================
 

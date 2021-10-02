@@ -693,6 +693,129 @@ void SCR_DrawCurrentView( void ) {
 #endif
 
 
+/*
+==============
+CG_DrawLagometer
+==============
+*/
+static void SCR_DrawLagometer( void ) {
+	int		a, x, y, i;
+	float	v;
+	float	ax, ay, aw, ah, mid, range;
+	int		color;
+	float	vscale;
+
+	if ( !cl_lagometer->integer || clc.serverAddress.type == NA_LOOPBACK ) {
+		CG_DrawDisconnect();
+		return;
+	}
+
+	//
+	// draw the graph
+	//
+#ifdef MISSIONPACK
+	x = cls.screenXmax + 1 - 48;
+	y = cls.screenYmax + 1 - 144;
+#else
+	x = cls.screenXmax + 1 - 48;
+	y = cls.screenYmax + 1 - 48;
+#endif
+
+	re.SetColor( NULL );
+
+  ax = x * cls.scale + cls.biasX;
+	ay = y * cls.scale + cls.biasY;
+	aw = 48 * cls.scale;
+	ah = 48 * cls.scale;
+
+  trap_R_DrawStretchPic( 
+    ax, 
+    ay, 
+    aw, 
+    ah, 
+    0, 0, 1, 1, 
+    cls.lagometerShader );
+
+	color = -1;
+	range = ah / 3;
+	mid = ay + range;
+
+	vscale = range / MAX_LAGOMETER_RANGE;
+
+	// draw the frame interpoalte / extrapolate graph
+	for ( a = 0 ; a < aw ; a++ ) {
+		i = ( lagometer.frameCount - 1 - a ) & (LAG_SAMPLES - 1);
+		v = lagometer.frameSamples[i];
+		v *= vscale;
+		if ( v > 0 ) {
+			if ( color != 1 ) {
+				color = 1;
+				re.SetColor( g_color_table[ColorIndex(COLOR_YELLOW)] );
+			}
+			if ( v > range ) {
+				v = range;
+			}
+			re.DrawStretchPic ( ax + aw - a, mid - v, 1, v, 0, 0, 0, 0, cls.whiteShader );
+		} else if ( v < 0 ) {
+			if ( color != 2 ) {
+				color = 2;
+				re.SetColor( g_color_table[ColorIndex(COLOR_BLUE)] );
+			}
+			v = -v;
+			if ( v > range ) {
+				v = range;
+			}
+			re.DrawStretchPic( ax + aw - a, mid, 1, v, 0, 0, 0, 0, cls.whiteShader );
+		}
+	}
+
+	// draw the snapshot latency / drop graph
+	range = ah / 2;
+	vscale = range / MAX_LAGOMETER_PING;
+
+	for ( a = 0 ; a < aw ; a++ ) {
+		i = ( lagometer.snapshotCount - 1 - a ) & (LAG_SAMPLES - 1);
+		v = lagometer.snapshotSamples[i];
+		if ( v > 0 ) {
+			if ( lagometer.snapshotFlags[i] & SNAPFLAG_RATE_DELAYED ) {
+				if ( color != 5 ) {
+					color = 5;	// YELLOW for rate delay
+					re.SetColor( g_color_table[ColorIndex(COLOR_YELLOW)] );
+				}
+			} else {
+				if ( color != 3 ) {
+					color = 3;
+					re.SetColor( g_color_table[ColorIndex(COLOR_GREEN)] );
+				}
+			}
+			v = v * vscale;
+			if ( v > range ) {
+				v = range;
+			}
+			re.DrawStretchPic( ax + aw - a, ay + ah - v, 1, v, 0, 0, 0, 0, cls.whiteShader );
+		} else if ( v < 0 ) {
+			if ( color != 4 ) {
+				color = 4;		// RED for dropped snapshots
+				re.SetColor( g_color_table[ColorIndex(COLOR_RED)] );
+			}
+			re.DrawStretchPic( ax + aw - a, ay + ah - range, 1, range, 0, 0, 0, 0, cls.whiteShader );
+		}
+	}
+
+	re.SetColor( NULL );
+
+	if ( cl_nopredict->integer || cgs.synchronousClients ) {
+		CG_DrawString( cls.screenXmax-1, y, "snc", colorWhite, 5, 10, 0, DS_PROPORTIONAL | DS_RIGHT );
+	}
+
+	if ( !cg.demoPlayback ) {
+		CG_DrawString( x+1, y, va( "%ims", cg.meanPing ), colorWhite, 5, 10, 0, DS_PROPORTIONAL );
+	}
+
+	CG_DrawDisconnect();
+}
+
+
 #define	FPS_FRAMES	4
 static void SCR_DrawFPS( int t ) {
 	const char	*s;
@@ -702,6 +825,10 @@ static void SCR_DrawFPS( int t ) {
 	int		fps;
 	static	int	previous;
 	int		frameTime;
+
+  if(!cl_drawFPS->integer) {
+    return;
+  }
 
 	// don't use serverTime, because that will be drifting to
 	// correct for internet lag changes, timescales, timedemos, etc
@@ -724,7 +851,7 @@ static void SCR_DrawFPS( int t ) {
 		s = va( "%ifps", fps );
 		SCR_DrawStringExt( 
       cls.screenXmax - 4 - strlen(s) * BIGCHAR_WIDTH, 
-      cls.screenYmin + 2,
+      2,
       BIGCHAR_WIDTH, 
       s,
       g_color_table[ ColorIndex( COLOR_WHITE ) ],
