@@ -57,6 +57,14 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 	shader_t	*sh, *sh2;
 	qhandle_t	h;
 
+  // don't fuck with my console, e+ does this
+  if(newShaderName[0] != '\0' && Q_stristr(newShaderName, "empty")) {
+    if(shaderName[0] != '\0' && 
+      (Q_stristr(shaderName, "console") || Q_stristr(shaderName, "white"))) {
+      return;
+    }
+  }
+
 	sh = R_FindShaderByName( shaderName );
 	if (sh == NULL || sh == tr.defaultShader) {
 		h = RE_RegisterShaderLightMap(shaderName, 0);

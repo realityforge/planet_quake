@@ -728,9 +728,15 @@ static void CL_CalculatePing( int ms ) {
 		cls.meanPing /= count;
 	}
 
-	offset = ms - cl.snap.serverTime;
+	offset = cl.serverTime - cl.snap.serverTime;
 	lagometer.frameSamples[ lagometer.frameCount & ( LAG_SAMPLES - 1) ] = offset;
 	lagometer.frameCount++;
+
+  //if ( !cl.snap.valid ) {
+	//	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = -1;
+	//	lagometer.snapshotCount++;
+	//	return;
+	//}
 
 	// add this snapshot's info
 	lagometer.snapshotSamples[ lagometer.snapshotCount & ( LAG_SAMPLES - 1) ] = cl.snap.ping;
@@ -784,7 +790,6 @@ static void SCR_DrawLagometer( void ) {
 	color = -1;
 	range = ah / 3;
 	mid = ay + range;
-
 	vscale = range / MAX_LAGOMETER_RANGE;
 
 	// draw the frame interpoalte / extrapolate graph
@@ -850,12 +855,14 @@ static void SCR_DrawLagometer( void ) {
 	re.SetColor( NULL );
 
 	if ( cl_nopredict->integer || cls.synchronousClients ) {
+    /*
     SCR_DrawSmallStringExt( 
-      cls.screenXmax-1 - 3 * BIGCHAR_WIDTH, 
+      cls.screenXmax-1 - 3 * smallchar_width, 
       ay,
       "snc",
       g_color_table[ ColorIndex( COLOR_WHITE ) ],
       qtrue, qfalse );
+    */
 	}
 
 	if ( !clc.demoplaying ) {
@@ -1036,6 +1043,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
 
 #ifdef USE_MULTIVM_CLIENT
 #ifdef USE_LAZY_MEMORY
+#if 0
   for(i = 0; i < MAX_NUM_VMS; i++) {
     if(cgvmWorlds[i]) continue; // already drew, looking for worlds to draw, not games
     if(clientWorlds[i] == -1) continue;
@@ -1082,6 +1090,7 @@ void SCR_UpdateScreen( qboolean fromVM ) {
       Cvar_Set("r_lockpvs", va("%i", prevLock));
     }
   }
+#endif
 #endif
 #endif
 
