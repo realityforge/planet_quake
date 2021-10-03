@@ -1296,6 +1296,11 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+#ifdef USE_LAZY_LOAD
+extern cvar_t	*r_lazyLoad;
+#endif
+extern  cvar_t  *r_paletteMode;
+
 //====================================================================
 
 void R_SwapBuffers( int );
@@ -1435,6 +1440,11 @@ shader_t	*R_GetShaderByState( int index, long *cycleTime );
 shader_t	*R_FindShaderByName( const char *name );
 #ifdef USE_LAZY_MEMORY
 void		RE_ReloadShaders( qboolean createNew );
+#endif
+#ifdef USE_LAZY_LOAD
+shader_t *R_FindDefaultShaderByName( const char *name );
+void	  R_UpdateModel( const char *name );
+void 		RE_UpdateShader( char *shaderName, int lightmapIndex );
 #endif
 void		R_InitShaders( void );
 void		R_ShaderList_f( void );

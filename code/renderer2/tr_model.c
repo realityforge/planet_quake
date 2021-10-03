@@ -264,11 +264,11 @@ asked for again.
 ====================
 */
 #ifdef USE_LAZY_LOAD
-qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels ) {
+qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels )
 #else
-qhandle_t RE_RegisterModel( const char *name ) {
+qhandle_t RE_RegisterModel( const char *name )
 #endif
-;
+{
 	model_t		*mod = NULL;
 	qhandle_t	hModel = 0;
 	qboolean	orgNameFailed = qfalse, found = qfalse;
@@ -351,7 +351,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 				} else 
 #endif
 				{
-				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+  				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
 				}
 				break;
 			}
@@ -395,7 +395,7 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		} else 
 #endif
 		{
-		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+  		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
 		}
 
 		if( hModel )

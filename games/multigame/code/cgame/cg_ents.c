@@ -221,13 +221,13 @@ static void CG_Item( centity_t *cent ) {
 	}
 
 #ifdef USE_ITEM_TIMERS
-  if(cent->currentState.time2
-    && (cent->currentState.eFlags & EF_NODRAW)
-    && (cent->currentState.eFlags & EF_TIMER)) {
-    if(cent->trailTime != cent->currentState.time) {
-      cent->trailTime = cent->currentState.time;
+  if(es->time
+    && (es->eFlags & EF_NODRAW)
+    && (es->eFlags & EF_TIMER)) {
+    if(cent->trailTime != es->time) {
+      cent->trailTime = es->time;
       CG_ItemTimer( cent - cg_entities, cent->lerpOrigin,
-        cent->currentState.time, cent->currentState.time2 );
+        cg.time, es->time );
     } else {
     }
   }

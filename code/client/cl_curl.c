@@ -637,16 +637,21 @@ qboolean Com_DL_Perform( download_t *dl )
 
 		if ( !FS_SV_FileExists( name ) )
 		{
+      // copy name again because it is checked in CL_NextDownload
+      Q_strncpyz(clc.downloadName, name, sizeof(clc.downloadName));
 			FS_SV_Rename( dl->TempName, name );
 		}
 		else
 		{
+      Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->TempName );
 			n = FS_GetZipChecksum( name );
 			Com_sprintf( name, sizeof( name ), "%s%c%s.%08x.pk3", dl->gameDir, PATH_SEP, dl->Name, n );
 
 			if ( FS_SV_FileExists( name ) )
 				FS_Remove( name );
 
+      // copy name again because it is checked in CL_NextDownload
+      Q_strncpyz(clc.downloadName, name, sizeof(clc.downloadName));
 			FS_SV_Rename( dl->TempName, name );
 		}
 

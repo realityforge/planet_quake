@@ -261,7 +261,12 @@ optimization to prevent disk rescanning if they are
 asked for again.
 ====================
 */
-qhandle_t RE_RegisterModel( const char *name ) {
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel_Internal( const char *name, qboolean updateModels )
+#else
+qhandle_t RE_RegisterModel( const char *name )
+#endif
+{
 	model_t		*mod;
 	qhandle_t	hModel;
 	qboolean	orgNameFailed = qfalse;
@@ -324,7 +329,16 @@ qhandle_t RE_RegisterModel( const char *name ) {
 			if( !Q_stricmp( ext, modelLoaders[ i ].ext ) )
 			{
 				// Load
-				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+#ifdef USE_LAZY_LOAD
+				if ( !updateModels ) {
+					if(ri.FS_FOpenFileRead(localName, NULL, qfalse)) {
+						hModel = 0;
+					}
+				} else 
+#endif
+				{
+  				hModel = modelLoaders[ i ].ModelLoader( localName, mod );
+        }
 				break;
 			}
 		}
@@ -358,7 +372,16 @@ qhandle_t RE_RegisterModel( const char *name ) {
 		Com_sprintf( altName, sizeof (altName), "%s.%s", localName, modelLoaders[ i ].ext );
 
 		// Load
-		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+#ifdef USE_LAZY_LOAD
+		if ( !updateModels ) {
+			if(ri.FS_FOpenFileRead(altName, NULL, qfalse)) {
+				hModel = 0;
+			}
+		} else 
+#endif
+		{
+  		hModel = modelLoaders[ i ].ModelLoader( altName, mod );
+    }
 
 		if( hModel )
 		{
@@ -375,6 +398,16 @@ qhandle_t RE_RegisterModel( const char *name ) {
 	return hModel;
 }
 
+#ifdef USE_LAZY_LOAD
+qhandle_t RE_RegisterModel( const char *name ) {
+	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
+}
+
+void R_UpdateModel( const char *name )
+{
+	RE_RegisterModel_Internal( name, qtrue );
+}
+#endif
 
 /*
 =================

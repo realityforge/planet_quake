@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef USE_LAZY_LOAD
 #define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) | (!mapShaders && r_lazyLoad->integer == 2 ? IMGFLAG_FORCELAZY : 0))
+static qboolean mapShaders;
 #else
 #define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0))
 #endif
@@ -47,8 +48,6 @@ static	shader_t*		hashTable[FILE_HASH_SIZE];
 #define MAX_SHADERTEXT_HASH		2048
 static char **shaderTextHashTable[MAX_SHADERTEXT_HASH];
 
-static qboolean mapShaders;
-
 /*
 ================
 return a hash value for the filename
@@ -61,16 +60,18 @@ return a hash value for the filename
 #define generateHashValue Com_GenerateHashValue
 
 #ifdef USE_LAZY_LOAD
-void R_RemapShaderInternal(const char *shaderName, const char *newShaderName, const char *timeOffset, int index) {
+void RE_RemapShaderInternal(const char *shaderName, const char *newShaderName, const char *timeOffset, int index)
 #else
-void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset) {
+void RE_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 #endif
-;
+{
 	char		strippedName[MAX_QPATH];
 	int			hash;
 	shader_t	*sh, *sh2;
 	qhandle_t	h;
+#ifdef USE_LAZY_LOAD
   qboolean  wasMapping = mapShaders;
+#endif
 
   // don't fuck with my console, e+ does this
   if(newShaderName[0] != '\0' && Q_stristr(newShaderName, "empty")) {
@@ -80,13 +81,13 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
     }
   }
 
-  mapShaders = qfalse;
 #ifdef USE_LAZY_LOAD
+  mapShaders = qfalse;
   sh = R_FindDefaultShaderByName( shaderName );
   if (sh == NULL) 
 #endif
   {
-	sh = R_FindShaderByName( shaderName );
+  	sh = R_FindShaderByName( shaderName );
   }
 	if (sh == NULL || sh == tr.defaultShader) {
 #ifdef USE_LAZY_LOAD
@@ -97,23 +98,27 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 		sh = R_GetShaderByHandle(h);
 	}
 	if (sh == NULL || sh == tr.defaultShader) {
-		ri.Printf( PRINT_WARNING, "WARNING: R_RemapShader: shader %s not found\n", shaderName );
+		ri.Printf( PRINT_WARNING, "WARNING: RE_RemapShader: shader %s not found\n", shaderName );
 		return;
 	}
 
-  mapShaders = wasMapping;
-	sh2 = R_FindShaderByName( newShaderName );
-  if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
 #ifdef USE_LAZY_LOAD
-		h = RE_RegisterShaderLightMap(newShaderName, index);
+  mapShaders = wasMapping;
+  sh2 = R_FindShaderByName( newShaderName );
+  if (sh2 == NULL || sh2 == tr.defaultShader || mapShaders) {
+    h = RE_RegisterShaderLightMap(newShaderName, index);
+    sh2 = R_GetShaderByHandle(h);
+	}
 #else
+	sh2 = R_FindShaderByName( newShaderName );
+  if (sh2 == NULL || sh2 == tr.defaultShader) {
 		h = RE_RegisterShaderLightMap(newShaderName, 0);
-#endif
 		sh2 = R_GetShaderByHandle(h);
 	}
+#endif
 
 	if (sh2 == NULL || sh2 == tr.defaultShader) {
-		ri.Printf( PRINT_WARNING, "WARNING: R_RemapShader: new shader %s not found\n", newShaderName );
+		ri.Printf( PRINT_WARNING, "WARNING: RE_RemapShader: new shader %s not found\n", newShaderName );
 		return;
 	}
 
@@ -142,10 +147,10 @@ void R_RemapShader(const char *shaderName, const char *newShaderName, const char
 
 
 #ifdef USE_LAZY_LOAD
-void R_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
+void RE_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 {
   ri.Printf(PRINT_DEVELOPER, "Remapping shader: %s -> %s\n", shaderName, newShaderName);
-  R_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
+  RE_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }
 #endif
 
@@ -3639,7 +3644,12 @@ Will always return a valid shader, but it might be the
 default shader if the real one can't be found.
 ==================
 */
-shader_t *R_FindShaderByNameInternal( const char *name, qboolean isDefault ) {
+#ifdef USE_LAZY_LOAD
+shader_t *R_FindShaderByNameInternal( const char *name, qboolean isDefault )
+#else
+shader_t *R_FindShaderByName( const char *name )
+#endif
+{
 	char		strippedName[MAX_QPATH];
 	int			hash;
 	shader_t	*sh;
@@ -3660,7 +3670,11 @@ shader_t *R_FindShaderByNameInternal( const char *name, qboolean isDefault ) {
 		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
-		if (Q_stricmp(sh->name, strippedName) == 0 && sh->defaultShader == isDefault) {
+		if (Q_stricmp(sh->name, strippedName) == 0
+#ifdef USE_LAZY_LOAD
+      && sh->defaultShader == isDefault
+#endif
+    ) {
 			// match found
 			return sh;
 		}
@@ -3669,11 +3683,11 @@ shader_t *R_FindShaderByNameInternal( const char *name, qboolean isDefault ) {
 	return tr.defaultShader;
 }
 
+#ifdef USE_LAZY_LOAD
 shader_t *R_FindShaderByName( const char *name ) {
   return R_FindShaderByNameInternal(name, qfalse);
 }
 
-#ifdef USE_LAZY_LOAD
 shader_t *R_FindDefaultShaderByName( const char *name ) {
   return R_FindShaderByNameInternal(name, qtrue);
 }
@@ -3741,8 +3755,12 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		// have to check all default shaders otherwise for every call to R_FindShader
 		// with that same strippedName a new default shader is created.
     if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
-      &&	!Q_stricmp(sh->name, strippedName)
-      &&  !mapShaders && sh->lastTimeUsed >= tr.lastRegistrationTime ) {
+      && !Q_stricmp(sh->name, strippedName)
+#ifdef USE_LAZY_LOAD
+      && !mapShaders
+#endif
+      && sh->lastTimeUsed >= tr.lastRegistrationTime
+    ) {
 			// match found
 			return sh;
 		}
@@ -4495,7 +4513,7 @@ static void CreateExternalShaders( void ) {
 void RE_UpdateShader(char *shaderName, int lightmapIndex) {
   mapShaders = qtrue;
 
-  R_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex );
+  RE_RemapShaderInternal(shaderName, shaderName, "0", lightmapIndex );
   
   mapShaders = qfalse;
 }

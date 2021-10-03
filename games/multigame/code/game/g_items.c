@@ -466,20 +466,6 @@ void RespawnItem( gentity_t *ent ) {
 
 
 /*
-#ifdef USE_ITEM_TIMERS
-static void item_timer(gentity_t *ent, gentity_t *other, int respawnTime) {
-  gentity_t *timer;
-  timer = G_TempEntity( ent->r.currentOrigin, EV_ITEM_TIMER );
-  timer->r.svFlags |= SVF_BROADCAST; // create a timer in place of the item for everyone
-  timer->r.singleClient = ent->s.number;
-  timer->s.otherEntityNum = other->s.number;
-  timer->s.time = respawnTime;
-}
-#endif
-*/
-
-
-/*
 ===============
 Touch_Item
 ===============
@@ -625,8 +611,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 		ent->think = RespawnItem;
 #ifdef USE_ITEM_TIMERS
     ent->s.eFlags |= EF_TIMER;
-    ent->s.time = level.time;
-    ent->s.time2 = respawn;
+    ent->s.time = respawn;
     //item_timer(ent, other, respawn);
 #endif
 	}

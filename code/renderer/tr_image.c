@@ -914,7 +914,16 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 			if ( !Q_stricmp( ext, imageLoaders[ i ].ext ) )
 			{
 				// Load
-				imageLoaders[ i ].ImageLoader( localName, pic, width, height );
+#ifdef USE_LAZY_LOAD
+				if(checkOnly) {
+					if ( ri.FS_FOpenFileRead(localName, NULL, qfalse) > -1 ) {
+						return;
+					}
+				} else
+#endif
+				{
+  				imageLoaders[ i ].ImageLoader( localName, pic, width, height );
+        }
 				break;
 			}
 		}
@@ -948,7 +957,16 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 		altName = va( "%s.%s", localName, imageLoaders[ i ].ext );
 
 		// Load
-		imageLoaders[ i ].ImageLoader( altName, pic, width, height );
+#ifdef USE_LAZY_LOAD
+		if(checkOnly) {
+			if ( ri.FS_FOpenFileRead(altName, NULL, qfalse) > -1 ) {
+				return;
+			}
+		} else 
+#endif
+		{
+  		imageLoaders[ i ].ImageLoader( altName, pic, width, height );
+    }
 
 		if ( *pic )
 		{

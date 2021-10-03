@@ -178,6 +178,11 @@ cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 int   max_indexes;
 
+#ifdef USE_LAZY_LOAD
+cvar_t	*r_lazyLoad;
+#endif
+cvar_t  *r_paletteMode;
+
 static char gl_extensions[ 32768 ];
 
 #define GLE( ret, name, ... ) ret ( APIENTRY * q##name )( __VA_ARGS__ );
@@ -1573,6 +1578,7 @@ static void R_Register( void )
 	r_greyscale = ri.Cvar_Get( "r_greyscale", "0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_greyscale, "-1", "1", CV_FLOAT );
 	ri.Cvar_SetGroup( r_greyscale, CVG_RENDERER );
+  r_paletteMode = ri.Cvar_Get("r_paletteMode", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	//
 	// temporary variables that can change at any time
@@ -1662,6 +1668,13 @@ static void R_Register( void )
 		" 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
 		" 3 - linear filtering, stretch to full size\n"
 		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
+
+#ifdef USE_LAZY_LOAD
+	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "0", 0 );
+	ri.Cvar_Get("r_loadingModel", "", CVAR_TEMP);
+	ri.Cvar_Get("r_loadingShader", "", CVAR_TEMP);
+#endif
+
 }
 
 
@@ -1902,6 +1915,11 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 #ifdef USE_LAZY_MEMORY
 	re.ReloadShaders = RE_ReloadShaders;
+#endif
+
+#ifdef USE_LAZY_LOAD
+	re.UpdateShader = RE_UpdateShader;
+	re.UpdateModel = R_UpdateModel;
 #endif
 
 	return &re;

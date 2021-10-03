@@ -368,7 +368,7 @@ void Sys_DenotifyChange(int wd);
 int Sys_NotifyChange(const char *filepath, void (*cb)( void ));
 
 void FS_ReloadQVM( void ) {
-  Cbuf_AddText("vid_restart;");
+  Cbuf_AddText("wait; wait; wait; vid_restart;");
 }
 #endif
 
@@ -3408,6 +3408,9 @@ void FS_AddZipFile( const char *zipfile ) {
   search->next = fs_searchpaths;
   fs_searchpaths = search;
   FS_ReorderSearchPaths();
+#ifndef USE_PK3_CACHE
+	FS_FreePak( pak );
+#endif
   */
 }
 
