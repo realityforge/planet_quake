@@ -3689,6 +3689,7 @@ divisor strlen(x) / n differences < allowed percent
 ===============
 */
 char **FS_ListNearestFiles( const char *pathFilter, const char *filter, int *numfiles, float matchDivisor, int flags ) {
+  static char normalName[MAX_OSPATH];
 	int				nfiles;
 	char			**listCopy;
 	char			*list[MAX_FOUND_FILES];
@@ -3736,7 +3737,20 @@ char **FS_ListNearestFiles( const char *pathFilter, const char *filter, int *num
 
         if((!(flags & FS_MATCH_EITHER) && pathMatches && matches)
           || ((flags & FS_MATCH_EITHER) && (pathMatches || matches)))
-          nfiles = FS_AddFileToList( name, list, nfiles );
+          nfiles = FS_AddFileToList( buildBuffer[i].name, list, nfiles );
+        else if (flags & FS_MATCH_STRIP) {
+          name = FS_SimpleFilename(buildBuffer[i].name);
+          COM_StripExtension(name, normalName, MAX_QPATH);
+          length = strlen( normalName );
+
+          matches = filter && filter[0] != '\0' 
+            && matchDivisor > 0 
+            && (float)levenshtein( filter, normalName ) / length < matchDivisor;
+
+          if((!(flags & FS_MATCH_EITHER) && pathMatches && matches)
+            || ((flags & FS_MATCH_EITHER) && (pathMatches || matches)))
+            nfiles = FS_AddFileToList( buildBuffer[i].name, list, nfiles );
+        }
 			}
 		} else if ( search->dir && ( flags & FS_MATCH_EXTERN ) && search->policy != DIR_DENY ) { // scan for files in the filesystem
 			const char *netpath;
@@ -3764,7 +3778,20 @@ char **FS_ListNearestFiles( const char *pathFilter, const char *filter, int *num
 
         if((!(flags & FS_MATCH_EITHER) && pathMatches && matches)
           || ((flags & FS_MATCH_EITHER) && (pathMatches || matches)))
-  				nfiles = FS_AddFileToList( name, list, nfiles );
+  				nfiles = FS_AddFileToList( sysFiles[ i ], list, nfiles );
+        else if (flags & FS_MATCH_STRIP) {
+          name = FS_SimpleFilename(sysFiles[ i ]);
+          COM_StripExtension(name, normalName, MAX_QPATH);
+          length = strlen( normalName );
+          
+          matches = filter && filter[0] != '\0' 
+            && matchDivisor > 0 
+            && (float)levenshtein( filter, normalName ) / length < matchDivisor;
+
+          if((!(flags & FS_MATCH_EITHER) && pathMatches && matches)
+            || ((flags & FS_MATCH_EITHER) && (pathMatches || matches)))
+            nfiles = FS_AddFileToList( sysFiles[ i ], list, nfiles );
+        }
 			}
 			Sys_FreeFileList( sysFiles );
 		}		

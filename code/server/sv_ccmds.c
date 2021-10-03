@@ -198,7 +198,7 @@ static void SV_Map_f( void ) {
     char	**dirnames = NULL;
     int		ndirs = 0;
     qboolean atLeast1Map = qfalse;
-    dirnames = FS_ListNearestFiles( map, expanded, &ndirs, 0.1, FS_MATCH_STICK | FS_MATCH_EXTERN | FS_MATCH_PK3s | FS_MATCH_UNPURE | FS_MATCH_EITHER );
+    dirnames = FS_ListNearestFiles( map, map, &ndirs, 0.5, FS_MATCH_STRIP | FS_MATCH_STICK | FS_MATCH_EXTERN | FS_MATCH_PK3s | FS_MATCH_UNPURE | FS_MATCH_EITHER );
     for ( int i = 0; i < ndirs; i++ ) {
       if(Q_stristr(dirnames[i], ".bsp")) {
         atLeast1Map = qtrue;

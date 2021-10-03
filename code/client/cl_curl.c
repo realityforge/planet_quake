@@ -477,6 +477,21 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 	}
 
 	Com_Printf( "URL: %s\n", dl->URL );
+  Com_DPrintf("***** CL_cURL_BeginDownload *****\n"
+    "Localname: %s\n"
+    "RemoteURL: %s\n"
+    "****************************\n", localName, remoteURL);
+
+  Q_strncpyz(clc.downloadURL, remoteURL, sizeof(clc.downloadURL));
+	Q_strncpyz(clc.downloadName, localName, sizeof(clc.downloadName));
+	Com_sprintf(clc.downloadTempName, sizeof(clc.downloadTempName),
+		"%s.tmp", localName);
+
+	// Set so UI gets access to it
+	Cvar_Set( "cl_downloadName", localName );
+	Cvar_Set( "cl_downloadSize", "0" );
+	Cvar_Set( "cl_downloadCount", "0" );
+	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
 
 	if ( cl_dlDirectory->integer ) {
 		Q_strncpyz( dl->gameDir, FS_GetBaseGameDir(), sizeof( dl->gameDir ) );
@@ -619,7 +634,11 @@ qboolean Com_DL_Perform( download_t *dl )
 		{
 			if ( cls.state == CA_CONNECTED && !clc.demoplaying )
 			{
-				CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
+        if(dl->mapAutoDownload) {
+          CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
+        } else {
+          CL_NextDownload();
+        }
 			} 
 			else if ( clc.demoplaying )
 			{
@@ -632,19 +651,17 @@ qboolean Com_DL_Perform( download_t *dl )
 	}
 	else
 	{
-		qboolean autoDownload = dl->mapAutoDownload;
 		dl->func.easy_getinfo( msg->easy_handle, CURLINFO_RESPONSE_CODE, &code );
 		Com_Printf( S_COLOR_RED "Download Error: %s Code: %ld\n",
 			dl->func.easy_strerror( msg->data.result ), code );
 		strcpy( name, dl->TempName );
 		Com_DL_Cleanup( dl );
 		FS_Remove( name );
-		if ( autoDownload )
+		if ( cls.state == CA_CONNECTED )
 		{
-			if ( cls.state == CA_CONNECTED )
-			{
-				Com_Error( ERR_DROP, "%s\n", "download error" );
-			}
+      Com_Error(ERR_DROP, "Download Error: %s Code: %ld URL: %s",
+  			qcurl_easy_strerror(msg->data.result),
+  			code, clc.downloadURL);
 		}
 	}
 

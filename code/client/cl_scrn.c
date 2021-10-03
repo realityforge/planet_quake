@@ -767,19 +767,20 @@ static void SCR_DrawLagometer( void ) {
 	// draw the graph
 	//
 #ifdef MISSIONPACK
-	x = cls.screenXmax + 1 - 48;
-	y = cls.screenYmax + 1 - 144;
+	x = 640 + 1 - 48;
+	y = 480 + 1 - 144;
 #else
-	x = cls.screenXmax + 1 - 48;
-	y = cls.screenYmax + 1 - 48;
+	x = 640 + 1 - 48;
+	y = 480 + 1 - 48;
 #endif
 
 	re.SetColor( NULL );
+  ax = x;
+  ay = y;
+  aw = 48;
+  ah = 48;
 
-  ax = x * cls.scale + cls.biasX;
-	ay = y * cls.scale + cls.biasY;
-	aw = 48 * cls.scale;
-	ah = 48 * cls.scale;
+  SCR_AdjustFrom640(&ax, &ay, &aw, &ah);
 
   re.DrawStretchPic( 
     ax, 
@@ -788,7 +789,6 @@ static void SCR_DrawLagometer( void ) {
     ah, 
     0, 0, 1, 1, 
     cls.lagometerShader );
-  Com_Printf("lago: %i\n", cls.lagometerShader);
 
 	color = -1;
 	range = ah / 3;
@@ -858,14 +858,12 @@ static void SCR_DrawLagometer( void ) {
 	re.SetColor( NULL );
 
 	if ( cl_nopredict->integer || cls.synchronousClients ) {
-    /*
     SCR_DrawSmallStringExt( 
-      cls.screenXmax-1 - 3 * smallchar_width, 
+      cls.glconfig.vidWidth-1 - 3 * smallchar_width, 
       ay,
       "snc",
       g_color_table[ ColorIndex( COLOR_WHITE ) ],
       qtrue, qfalse );
-    */
 	}
 
 	if ( !clc.demoplaying ) {
@@ -915,7 +913,7 @@ static void SCR_DrawFPS( int t ) {
 
 		s = va( "%ifps", fps );
 		SCR_DrawStringExt( 
-      cls.screenXmax - 4 - strlen(s) * BIGCHAR_WIDTH, 
+      640 - 4 - strlen(s) * BIGCHAR_WIDTH, 
       2,
       BIGCHAR_WIDTH, 
       s,
@@ -1119,7 +1117,7 @@ donewithupdate:
 #endif
 
   SCR_DrawFPS(ms);
-  if(cls.state >= CA_CONNECTED)
+  if(cls.state == CA_ACTIVE)
     SCR_DrawLagometer();
 
 	// debug graph can be drawn on top of anything

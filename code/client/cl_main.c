@@ -2991,6 +2991,12 @@ void CL_NextDownload( void )
 				Com_Printf("WARNING: server allows "
 					"download redirection, but does not "
 					"have sv_dlURL set\n");
+        if (!Com_DL_Begin( &download, remoteName, cl_dlURL->string, qfalse )) {
+          Com_Printf("WARNING: could not load download with curl\n");
+  				useCURL = qfalse;
+  			} else {
+          useCURL = qtrue;
+        }
 			}
 			else if (!Com_DL_Begin( &download, remoteName, clc.sv_dlURL, qfalse )) {
         Com_Printf("WARNING: could not load download with curl\n");
@@ -4215,12 +4221,6 @@ static void CL_InitRenderer( void ) {
 		cls.scale = cls.glconfig.vidWidth * (1.0/640.0);
 		cls.biasY = 0.5 * ( cls.glconfig.vidHeight - ( cls.glconfig.vidWidth * (480.0/640) ) );
 	}
-
-  cls.screenXmin = 0.0 - (cls.biasX / cls.scale);
-  cls.screenXmax = 640.0 + (cls.biasX / cls.scale);
-
-  cls.screenYmin = 0.0 - (cls.biasY / cls.scale);
-  cls.screenYmax = 480.0 + (cls.biasY / cls.scale);
 
   X_DMG_Init();
 }

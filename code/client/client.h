@@ -492,10 +492,6 @@ typedef struct {
 	float		scale;
 	float		biasX;
 	float		biasY;
-  float   screenXmin;
-  float   screenXmax;
-  float   screenYmin;
-  float   screenYmax;
 
 	float		 cursorx;
 	float    cursory;
