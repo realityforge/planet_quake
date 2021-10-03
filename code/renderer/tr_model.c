@@ -269,7 +269,7 @@ qhandle_t RE_RegisterModel( const char *name )
 {
 	model_t		*mod;
 	qhandle_t	hModel;
-	qboolean	orgNameFailed = qfalse;
+	qboolean	orgNameFailed = qfalse, found = qfalse;
 	int			orgLoader = -1;
 	int			i;
 	char		localName[ MAX_QPATH ];
@@ -291,17 +291,26 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	for ( hModel = 1 ; hModel < tr.numModels; hModel++ ) {
 		mod = tr.models[hModel];
-		if ( !strcmp( mod->name, name ) ) {
-			if( mod->type == MOD_BAD ) {
-				return 0;
-			}
-			return hModel;
+		if ( mod && !strcmp( mod->name, name ) 
+      && (name[0] != '*' || tr.models[mod->index] == mod) ) {
+      found = qtrue;
+
+      if(tr.models[mod->index] != mod) {
+				mod->index = tr.numModels;
+				tr.models[tr.numModels] = mod;
+				tr.numModels++;
+			}      
+      if( mod->type == MOD_BAD ) {
+				return mod->index;
+			} else {
+        break;
+      }
 		}
 	}
 
 	// allocate a new model_t
 
-	if ( ( mod = R_AllocModel() ) == NULL ) {
+	if ( !found && ( mod = R_AllocModel() ) == NULL ) {
 		ri.Printf( PRINT_WARNING, "RE_RegisterModel: R_AllocModel() failed for '%s'\n", name);
 		return 0;
 	}
@@ -318,6 +327,10 @@ qhandle_t RE_RegisterModel( const char *name )
 	// load the files
 	//
 	Q_strncpyz( localName, name, MAX_QPATH );
+
+#ifdef USE_LAZY_LOAD
+	ri.Cvar_Set("r_loadingModel", name);
+#endif
 
 	ext = COM_GetExtension( localName );
 
@@ -356,6 +369,9 @@ qhandle_t RE_RegisterModel( const char *name )
 			}
 			else
 			{
+#ifdef USE_LAZY_LOAD
+				ri.Cvar_Set("r_loadingModel", "");
+#endif
 				// Something loaded
 				return mod->index;
 			}
@@ -395,7 +411,11 @@ qhandle_t RE_RegisterModel( const char *name )
 		}
 	}
 
-	return hModel;
+#ifdef USE_LAZY_LOAD
+	ri.Cvar_Set("r_loadingModel", "");
+#endif
+
+  return mod->index;
 }
 
 #ifdef USE_LAZY_LOAD

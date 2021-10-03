@@ -779,7 +779,9 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Printf( S_COLOR_YELLOW "%s has length 0", sfx->soundName );
+#ifndef USE_LAZY_LOAD
+		Com_DPrintf( S_COLOR_YELLOW "%s has length 0", sfx->soundName );
+#endif
     return;
 	}
 
@@ -844,7 +846,9 @@ void S_Base_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_
 	}
 
 	if ( !sfx->soundLength ) {
-		Com_Printf( S_COLOR_YELLOW "%s has length 0\n", sfx->soundName );
+#ifndef USE_LAZY_LOAD
+		Com_DPrintf( S_COLOR_YELLOW "%s has length 0\n", sfx->soundName );
+#endif
     return;
 	}
 	VectorCopy( origin, loopSounds[entityNum].origin );

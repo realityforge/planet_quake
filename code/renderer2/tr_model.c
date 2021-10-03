@@ -331,7 +331,9 @@ qhandle_t RE_RegisterModel( const char *name )
 	//
 	Q_strncpyz( localName, name, sizeof( localName ) );
 
+#ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", name);
+#endif
 
 	ext = COM_GetExtension( localName );
 
@@ -370,7 +372,9 @@ qhandle_t RE_RegisterModel( const char *name )
 			}
 			else
 			{
+#ifdef USE_LAZY_LOAD
 				ri.Cvar_Set("r_loadingModel", "");
+#endif
 				// Something loaded
 				return mod->index;
 			}
@@ -410,7 +414,9 @@ qhandle_t RE_RegisterModel( const char *name )
 		}
 	}
 
+#ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", "");
+#endif
 
 	return mod->index;
 }

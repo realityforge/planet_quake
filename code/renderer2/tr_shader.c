@@ -3965,6 +3965,7 @@ qhandle_t RE_RegisterShaderFromImage(const char *name, int lightmapIndex, image_
 	}
 
 	sh = FinishShader();
+
   return sh->index; 
 }
 
