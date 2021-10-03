@@ -268,15 +268,15 @@ static int Com_DL_CallbackProgress( void *data, double dltotal, double dlnow, do
 	dl->Size = (int)dltotal;
 	dl->Count = (int)dlnow;
 
-	if ( dl->mapAutoDownload && cls.state == CA_CONNECTED )
+	if ( cls.state == CA_CONNECTED )
 	{
 		if ( Key_IsDown( K_ESCAPE ) )
 		{
 			Com_Printf( "%s: aborted\n", dl->Name );
 			return -1;
 		}
-		Cvar_Set( "cl_downloadSize", va( "%i", dl->Size ) );
-		Cvar_Set( "cl_downloadCount", va( "%i", dl->Count ) );
+		Cvar_SetIntegerValue( "cl_downloadSize", dl->Size );
+		Cvar_SetIntegerValue( "cl_downloadCount", dl->Count );
 	}
 
 	if ( dl->Size ) {
@@ -451,33 +451,58 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		return qfalse;
 	}
 
-	{
-		char *escapedName = dl->func.easy_escape( dl->cURL, localName, 0 );
-		if ( !escapedName ) 
+  int len = strlen(localName);
+  int segmentCount = 0;
+  char segment[MAX_OSPATH];
+  memset(segment, 0, sizeof(segment));
+  for(int i = 0; i < len; i++) {
+    if(localName[i] == '/') {
+      segment[i] = '\0';
+      segmentCount++;
+    } else {
+      segment[i] = localName[i];
+    }
+  }
+  segmentCount++;
+  char escaped[MAX_OSPATH];
+  memset(escaped, 0, sizeof(escaped));
+  int escapedCount = 0;
+  for(int i = 0; i < segmentCount; i++) {
+    char *escapedName;
+    len = strlen(&segment[escapedCount]);
+    escapedName = dl->func.easy_escape( dl->cURL, &segment[escapedCount], len );
+    if ( !escapedName ) 
 		{
 			Com_Printf( S_COLOR_RED "Com_DL_Begin: easy_escape() failed\n" );
 			Com_DL_Cleanup( dl );
 			return qfalse;
 		}
+    if(i > 0) {
+      Q_strcat( escaped, sizeof( escaped ), "/" );
+    }
+    Q_strcat( escaped, sizeof( escaped ), escapedName );
+    dl->func.free( escapedName );
+    escapedCount += len + 1;
+  }
 
+	{
 		Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
 
-		if ( !Q_replace( "%1", escapedName, dl->URL, sizeof( dl->URL ) ) )
+		if ( !Q_replace( "%1", escaped, dl->URL, sizeof( dl->URL ) ) )
 		{
 			if ( dl->URL[strlen(dl->URL)] != '/' )
 				Q_strcat( dl->URL, sizeof( dl->URL ), "/" );
-			Q_strcat( dl->URL, sizeof( dl->URL ), escapedName );
+			Q_strcat( dl->URL, sizeof( dl->URL ), escaped );
 			dl->headerCheck = qfalse;
 		}
 		else
 		{
 			dl->headerCheck = qtrue;
 		}
-		dl->func.free( escapedName );
 	}
 
 	Com_Printf( "URL: %s\n", dl->URL );
-  Com_DPrintf("***** CL_cURL_BeginDownload *****\n"
+  Com_DPrintf("***** Com_DL_Begin *****\n"
     "Localname: %s\n"
     "RemoteURL: %s\n"
     "****************************\n", localName, remoteURL);
@@ -608,8 +633,6 @@ qboolean Com_DL_Perform( download_t *dl )
 
 	if ( msg->msg == CURLMSG_DONE && msg->data.result == CURLE_OK )
 	{
-		qboolean autoDownload = dl->mapAutoDownload;
-
 		Com_sprintf( name, sizeof( name ), "%s%c%s.pk3", dl->gameDir, PATH_SEP, dl->Name );
 
 		if ( !FS_SV_FileExists( name ) )
@@ -628,24 +651,22 @@ qboolean Com_DL_Perform( download_t *dl )
 		}
 
 		Com_DL_Cleanup( dl );
-		FS_Reload(); //clc.downloadRestart = qtrue;
-		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
-		if ( autoDownload )
+
+		if ( cls.state == CA_CONNECTED && !clc.demoplaying )
 		{
-			if ( cls.state == CA_CONNECTED && !clc.demoplaying )
-			{
-        if(dl->mapAutoDownload) {
-          CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
-        } else {
-          CL_NextDownload();
-        }
-			} 
-			else if ( clc.demoplaying )
-			{
-				// FIXME: there might be better solution than vid_restart
-				cls.startCgame = qtrue;
-				Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
-			}
+      if(dl->mapAutoDownload) {
+        FS_Reload(); //clc.downloadRestart = qtrue;
+    		Com_Printf( S_COLOR_GREEN "%s downloaded\n", name );
+        CL_AddReliableCommand( "donedl", qfalse ); // get new gamestate info from server
+      } else {
+        CL_NextDownload();
+      }
+		} 
+		else if ( clc.demoplaying )
+		{
+			// FIXME: there might be better solution than vid_restart
+			cls.startCgame = qtrue;
+			Cbuf_ExecuteText( EXEC_APPEND, "vid_restart\n" );
 		}
 		return qfalse;
 	}

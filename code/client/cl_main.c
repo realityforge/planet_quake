@@ -2991,14 +2991,18 @@ void CL_NextDownload( void )
 				Com_Printf("WARNING: server allows "
 					"download redirection, but does not "
 					"have sv_dlURL set\n");
-        if (!Com_DL_Begin( &download, remoteName, cl_dlURL->string, qfalse )) {
+        if (!Com_DL_Begin( &download,
+          remoteName, // local naming automatically handled by cl_curl
+          cl_dlURL->string, qfalse )) {
           Com_Printf("WARNING: could not load download with curl\n");
   				useCURL = qfalse;
   			} else {
           useCURL = qtrue;
         }
 			}
-			else if (!Com_DL_Begin( &download, remoteName, clc.sv_dlURL, qfalse )) {
+			else if (!Com_DL_Begin( &download,
+        remoteName, // local naming automatically handled by cl_curl
+        clc.sv_dlURL, qfalse )) {
         Com_Printf("WARNING: could not load download with curl\n");
 				useCURL = qfalse;
 			} else {
