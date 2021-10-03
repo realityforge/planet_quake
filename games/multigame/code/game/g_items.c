@@ -424,6 +424,9 @@ void RespawnItem( gentity_t *ent ) {
 
 	ent->r.contents = CONTENTS_TRIGGER;
 	ent->s.eFlags &= ~EF_NODRAW;
+#ifdef USE_ITEM_TIMERS
+  ent->s.eFlags &= ~EF_TIMER;
+#endif
 	ent->r.svFlags &= ~SVF_NOCLIENT;
 	trap_LinkEntity( ent );
 
@@ -611,8 +614,8 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 		ent->think = RespawnItem;
 #ifdef USE_ITEM_TIMERS
     ent->s.eFlags |= EF_TIMER;
-    ent->s.time = respawn;
-    //item_timer(ent, other, respawn);
+    ent->s.time = level.time;
+    ent->s.frame = respawn;
 #endif
 	}
 
