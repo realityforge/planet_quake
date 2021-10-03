@@ -891,7 +891,11 @@ Loads any of the supported image types into a cannonical
 32 bit format.
 =================
 */
+#ifdef USE_LAZY_LOAD
+static const char *R_LoadImage( const char *name, byte **pic, int *width, int *height, qboolean checkOnly )
+#else
 static const char *R_LoadImage( const char *name, byte **pic, int *width, int *height )
+#endif
 {
 	static char localName[ MAX_QPATH ];
 	const char *altName, *ext;
@@ -917,7 +921,7 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 #ifdef USE_LAZY_LOAD
 				if(checkOnly) {
 					if ( ri.FS_FOpenFileRead(localName, NULL, qfalse) > -1 ) {
-						return;
+						return NULL;
 					}
 				} else
 #endif
@@ -960,7 +964,7 @@ static const char *R_LoadImage( const char *name, byte **pic, int *width, int *h
 #ifdef USE_LAZY_LOAD
 		if(checkOnly) {
 			if ( ri.FS_FOpenFileRead(altName, NULL, qfalse) > -1 ) {
-				return;
+				return NULL;
 			}
 		} else 
 #endif
@@ -1003,9 +1007,20 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 	byte	*pic;
 	int		hash;
 
-	if ( !name ) {
+  if (!name || !name[0]) {
 		return NULL;
 	}
+
+#ifdef USE_LAZY_LOAD
+	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
+    R_LoadImage( name, &pic, &width, &height, qtrue );
+    /* if(pic == NULL && !(flags & IMGFLAG_PALETTE)) */ return NULL;
+		//return R_FindPalette(name); // try to use palette in lazy loading mode as backup
+  } /* else if ((flags & IMGFLAG_PALETTE) && r_paletteMode->integer 
+    && name[0] != '*') {
+    return R_FindPalette(name);
+	} */
+#endif
 
 	hash = generateHashValue( name );
 
@@ -1042,7 +1057,11 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
-	localName = R_LoadImage( name, &pic, &width, &height );
+#ifdef USE_LAZY_LOAD
+	localName = R_LoadImage( name, &pic, &width, &height, qfalse );
+#else
+  localName = R_LoadImage( name, &pic, &width, &height );
+#endif
 	if ( pic == NULL ) {
 		return NULL;
 	}

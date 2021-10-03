@@ -2379,7 +2379,11 @@ Loads any of the supported image types into a canonical
 32 bit format.
 =================
 */
+#ifdef USE_LAZY_LOAD
 void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips, qboolean checkOnly )
+#else
+void R_LoadImage( const char *name, byte **pic, int *width, int *height, GLenum *picFormat, int *numMips )
+#endif
 {
 	qboolean orgNameFailed = qfalse;
 	int orgLoader = -1;
@@ -2588,6 +2592,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	}
 
 
+#ifdef USE_LAZY_LOAD
 	if((flags & IMGFLAG_FORCELAZY) && name[0] != '*') {
 		R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qtrue );
     if(pic == NULL && !(flags & IMGFLAG_PALETTE)) return NULL;
@@ -2596,6 +2601,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
     && name[0] != '*') {
     return R_FindPalette(name);
 	}
+#endif
 
 	hash = generateHashValue(name);
 
@@ -2618,7 +2624,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 	//
 	// load the pic from disk
 	//
+#ifdef USE_LAZY_LOAD
 	R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips, qfalse );
+#else
+  R_LoadImage( name, &pic, &width, &height, &picFormat, &picNumMips );
+#endif
 	if ( pic == NULL ) {
 		return NULL;
 	}

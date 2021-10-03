@@ -400,6 +400,7 @@ qhandle_t RE_RegisterModel( const char *name )
 
 #ifdef USE_LAZY_LOAD
 qhandle_t RE_RegisterModel( const char *name ) {
+  //ri.Printf(PRINT_ALL, "lazy loading: %i\n", r_lazyLoad->integer);
 	return RE_RegisterModel_Internal( name, r_lazyLoad->integer < 2 );
 }
 
