@@ -300,7 +300,7 @@ qhandle_t RE_RegisterModel( const char *name )
 				tr.models[tr.numModels] = mod;
 				tr.numModels++;
 			}      
-      if( mod->type == MOD_BAD ) {
+      if( mod->type != MOD_BAD ) {
 				return mod->index;
 			} else {
         break;
@@ -613,7 +613,8 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 
 			sh = R_FindShader( shader->name, LIGHTMAP_NONE, qtrue );
 			if ( sh->defaultShader ) {
-				shader->shaderIndex = 0;
+        sh->remappedShader = tr.defaultShader;
+        shader->shaderIndex = sh->index;
 			} else {
 				shader->shaderIndex = sh->index;
 			}
@@ -876,7 +877,8 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			// register the shaders
 			sh = R_FindShader(surf->shader, LIGHTMAP_NONE, qtrue);
 			if ( sh->defaultShader ) {
-				surf->shaderIndex = 0;
+        sh->remappedShader = tr.defaultShader;
+				surf->shaderIndex = sh->index;
 			} else {
 				surf->shaderIndex = sh->index;
 			}

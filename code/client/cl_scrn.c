@@ -1116,9 +1116,9 @@ donewithupdate:
 	Con_DrawConsole ();
 #endif
 
-  SCR_DrawFPS(ms);
-  if(cls.state == CA_ACTIVE)
-    SCR_DrawLagometer();
+  //SCR_DrawFPS(ms);
+  //if(cls.state == CA_ACTIVE)
+  //  SCR_DrawLagometer();
 
 	// debug graph can be drawn on top of anything
 	if ( cl_debuggraph->integer || cl_timegraph->integer || cl_debugMove->integer ) {

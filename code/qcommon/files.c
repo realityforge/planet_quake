@@ -435,85 +435,104 @@ static void FS_CheckIdPaks( void );
 void FS_Reload( void );
 
 #ifdef USE_LAZY_LOAD
-char *modelCallback[1024*5]; // MAX_MOD_KNOWN
-int modelCallbacki = 0;
-char *soundCallback[1024*5]; // 
-int soundCallbacki = 0;
-char *shaderCallback[1024*5]; // MAX_SHADERS
-int shaderCallbacki = 0;
+#define PK3_HASH_SIZE 512
+static int FS_HashPK3( const char *name );
+// 
+static char tempReturnPath[MAX_QPATH];
+typedef struct downloadLazy_s {
+  char *name;
+  struct downloadLazy_s *next;
+} downloadLazy_t;
+
+static downloadLazy_t *modelCallback[PK3_HASH_SIZE]; // MAX_MOD_KNOWN
+static downloadLazy_t *soundCallback[PK3_HASH_SIZE]; // 
+static downloadLazy_t *shaderCallback[PK3_HASH_SIZE]; // MAX_SHADERS
 
 char *Sys_UpdateShader( void ) {
-	char *nextFile = shaderCallback[shaderCallbacki];
-	shaderCallback[shaderCallbacki] = NULL;
-	shaderCallbacki++;
-	if(shaderCallbacki == ARRAY_LEN(shaderCallback)) {
-		shaderCallbacki = 0;
-	}
-	if(!nextFile || !nextFile[0]) return NULL;
-	return nextFile;
+  for(int i = 0; i < ARRAY_LEN(shaderCallback); i++) {
+    if(shaderCallback[i] != NULL) {
+      char *result = shaderCallback[i]->name;
+      downloadLazy_t *next = shaderCallback[i]->next;
+      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
+      Z_Free(shaderCallback[i]);
+      shaderCallback[i] = next;
+      return tempReturnPath;
+    }
+  }
+  return NULL;
 }
 
 char *Sys_UpdateSound( void ) {
-	char *nextFile = soundCallback[soundCallbacki];
-	soundCallback[soundCallbacki] = NULL;
-	soundCallbacki++;
-	if(soundCallbacki == ARRAY_LEN(soundCallback)) {
-		soundCallbacki = 0;
-	}
-	if(!nextFile || !nextFile[0]) return NULL;
-	return nextFile;
+  for(int i = 0; i < ARRAY_LEN(soundCallback); i++) {
+    if(soundCallback[i] != NULL) {
+      char *result = soundCallback[i]->name;
+      downloadLazy_t *next = soundCallback[i]->next;
+      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
+      Z_Free(soundCallback[i]);
+      soundCallback[i] = next;
+      return tempReturnPath;
+    }
+  }
+  return NULL;
 }
 
 char *Sys_UpdateModel( void ) {
-	char *nextFile = modelCallback[modelCallbacki];
-	modelCallback[modelCallbacki] = NULL;
-	modelCallbacki++;
-	if(modelCallbacki == ARRAY_LEN(modelCallback)) {
-		modelCallbacki = 0;
-	}
-	if(!nextFile || !nextFile[0]) return NULL;
-	return nextFile;
+  for(int i = 0; i < ARRAY_LEN(modelCallback); i++) {
+    if(modelCallback[i] != NULL) {
+      char *result = modelCallback[i]->name;
+      downloadLazy_t *next = modelCallback[i]->next;
+      memcpy(tempReturnPath, result, sizeof(tempReturnPath));
+      Z_Free(modelCallback[i]);
+      modelCallback[i] = next;
+      return tempReturnPath;
+    }
+  }
+  return NULL;
 }
 
 void Sys_FileReady(const char *filename) {
-	const char *loading = Cvar_VariableString("r_loadingShader");
+  unsigned int hash;
+  int len;
+	const char *loading;
+  downloadLazy_t* *downloadTable;
+  downloadLazy_t *download;
+  qboolean found = qfalse;
+  loading = Cvar_VariableString("r_loadingShader");
 	if(!loading[0]) {
 		loading = Cvar_VariableString("snd_loadingSound");
 		if(!loading[0]) {
 			loading = Cvar_VariableString("r_loadingModel");
 			if(loading[0]) {
-				qboolean found = qfalse;
-				for(int i = 0; i < ARRAY_LEN(modelCallback); i++) {
-					if(modelCallback[i] && Q_stristr(modelCallback[i], loading)) {
-						found = qtrue;
-					}
-					if(modelCallback[i] == NULL) modelCallbacki = i;
-				}
-				if(!found)
-					modelCallback[modelCallbacki] = FS_CopyString(loading);
+				downloadTable = modelCallback;
 		 	}
 		} else {
-			qboolean found = qfalse;
-			for(int i = 0; i < ARRAY_LEN(soundCallback); i++) {
-				if(soundCallback[i] && Q_stristr(soundCallback[i], loading)) {
-					found = qtrue;
-				}
-				if(soundCallback[i] == NULL) soundCallbacki = i;
-			}
-			if(!found)
-				soundCallback[soundCallbacki] = FS_CopyString(loading);
+      downloadTable = soundCallback;
 		}
 	} else {
-		qboolean found = qfalse;
-		for(int i = 0; i < ARRAY_LEN(shaderCallback); i++) {
-			if(shaderCallback[i] && Q_stristr(shaderCallback[i], loading)) {
-				found = qtrue;
-			}
-			if(shaderCallback[i] == NULL) shaderCallbacki = i;
-		}
-		if(!found)
-			shaderCallback[shaderCallbacki] = FS_CopyString(loading);
+    downloadTable = shaderCallback;
 	}
+  if(loading[0]) {
+    hash = FS_HashPK3( loading );
+    download = downloadTable[hash];
+    while ( download )
+    {
+      if ( Q_stricmp( loading, download->name ) == 0 ) {
+        found = qtrue;
+        break;
+      } else {
+        download = download->next;
+      }
+    }
+    if(!found) {
+      len = strlen(loading) + 1;
+      download = (downloadLazy_t *)Z_Malloc(sizeof(downloadLazy_t) + len);
+      download->name = &((void *)download)[sizeof(downloadLazy_t)];
+      memcpy(download->name, loading, len);
+      download->name[len - 1] = '\0';
+      download->next = downloadTable[hash];
+      downloadTable[hash] = download;
+    }
+  }
 }
 #endif
 

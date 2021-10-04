@@ -675,6 +675,7 @@ static void R_MarkLeaves (void) {
 
 	// if the cluster is the same and the area visibility matrix
 	// hasn't changed, we don't need to mark everything again
+
 	for(i = 0; i < MAX_VISCOUNTS; i++)
 	{
 		// if the areamask or r_showcluster was modified, invalidate all visclusters

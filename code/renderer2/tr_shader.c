@@ -129,7 +129,7 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 	for (sh = hashTable[hash]; sh; sh = sh->next) {
 		if (Q_stricmp(sh->name, strippedName) == 0
 #ifdef USE_LAZY_LOAD
-      && (index == 0 || sh->lightmapIndex == index) 
+      && (index == 0 || sh->lightmapSearchIndex == index) 
 #endif
     ) {
 			if (sh != sh2) {
@@ -141,7 +141,11 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 	}
 
 	if ( timeOffset ) {
-		sh2->timeOffset = Q_atof( timeOffset );
+    if(sh) {
+      sh2->timeOffset = sh->timeOffset;
+    } else {
+  		sh2->timeOffset = Q_atof( timeOffset );
+    }
 	}
 }
 
@@ -149,7 +153,6 @@ void RE_RemapShader(const char *shaderName, const char *newShaderName, const cha
 #ifdef USE_LAZY_LOAD
 void RE_RemapShader(const char *shaderName, const char *newShaderName, const char *timeOffset)
 {
-  ri.Printf(PRINT_DEVELOPER, "Remapping shader: %s -> %s\n", shaderName, newShaderName);
   RE_RemapShaderInternal(shaderName, newShaderName, timeOffset, 0);
 }
 #endif
@@ -3757,7 +3760,7 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
     if ( (sh->lightmapSearchIndex == lightmapIndex || sh->defaultShader)
       && !Q_stricmp(sh->name, strippedName)
 #ifdef USE_LAZY_LOAD
-      && !mapShaders
+      && (!mapShaders && sh->lightmapSearchIndex == lightmapIndex)
 #endif
       && sh->lastTimeUsed >= tr.lastRegistrationTime
     ) {
@@ -3824,8 +3827,6 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 			ri.Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
 			shader.defaultShader = qtrue;
 			return FinishShader();
-		} else {
-      shader.defaultShader = qfalse;
 		}
 	}
 
@@ -3852,12 +3853,12 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		stages[0].rgbGen = CGEN_VERTEX;
 		stages[0].alphaGen = AGEN_VERTEX;
 		stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-			  GLS_SRCBLEND_SRC_ALPHA |
-			  GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+		  GLS_SRCBLEND_SRC_ALPHA |
+		  GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 	} else if ( shader.lightmapIndex == LIGHTMAP_WHITEIMAGE ) {
 		// fullbright level
+    stages[0].active = qtrue;
 		stages[0].bundle[0].image[0] = tr.whiteImage;
-		stages[0].active = qtrue;
 		stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
 		stages[0].stateBits = GLS_DEFAULT;
 
@@ -3992,7 +3993,7 @@ qhandle_t RE_RegisterShaderLightMap( const char *name, int lightmapIndex ) {
   if(lightmapIndex == LIGHTMAP_2D) {
     sh = R_FindShader( name, lightmapIndex, qfalse );
   } else {
-	sh = R_FindShader( name, lightmapIndex, qtrue );
+  	sh = R_FindShader( name, lightmapIndex, qtrue );
   }
 
 	// we want to return 0 if the shader failed to
@@ -4282,7 +4283,9 @@ static void ScanAndLoadShaderFiles( void )
 	const char *p, *oldp;
 	int shaderTextHashTableSizes[MAX_SHADERTEXT_HASH], hash, size;
 
+#ifdef USE_LAZY_LOAD
   mapShaders = qfalse;
+#endif
 	long sum = 0;
 
 	// scan for legacy shader files
