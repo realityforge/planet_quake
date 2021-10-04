@@ -98,7 +98,6 @@ typedef struct {
 #ifdef USE_MULTIVM_CLIENT
 	int     world;
 #endif
-
 } clSnapshot_t;
 
 
@@ -513,7 +512,9 @@ typedef struct {
 
   qboolean synchronousClients;
   int meanPing;
-
+#ifdef USE_LAZY_LOAD
+  qboolean lazyLoading;
+#endif
 } clientStatic_t;
 
 extern int bigchar_width;

@@ -302,6 +302,17 @@ static qboolean CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	}
 #endif // USE_MV
 
+#ifdef USE_LAZY_LOAD
+  if(clSnap->ps.pm_type == PM_SPECTATOR
+    || clSnap->ps.pm_type == PM_SPINTERMISSION
+    || clSnap->ps.pm_type == PM_INTERMISSION
+    || clSnap->ps.pm_type == PM_DEAD) {
+    cls.lazyLoading = qtrue;
+  } else {
+    cls.lazyLoading = qfalse;
+  }
+#endif
+
 	// check for a use_item event and don't print in renderer
 	// TODO: using game VM hack instead
 	for ( i = clSnap->ps.eventSequence - MAX_PS_EVENTS ; i < clSnap->ps.eventSequence ; i++ ) {

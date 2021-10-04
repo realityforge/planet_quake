@@ -1,6 +1,7 @@
 
 gfx/2d/timer/slice5
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -12,6 +13,7 @@ gfx/2d/timer/slice5
 
 gfx/2d/timer/slice5_current
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -24,6 +26,7 @@ gfx/2d/timer/slice5_current
 
 gfx/2d/timer/slice7
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -35,6 +38,7 @@ gfx/2d/timer/slice7
 
 gfx/2d/timer/slice7_current
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -47,6 +51,7 @@ gfx/2d/timer/slice7_current
 
 gfx/2d/timer/slice12
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -58,6 +63,7 @@ gfx/2d/timer/slice12
 
 gfx/2d/timer/slice12_current
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -70,6 +76,7 @@ gfx/2d/timer/slice12_current
 
 gfx/2d/timer/slice24
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{
@@ -81,6 +88,7 @@ gfx/2d/timer/slice24
 
 gfx/2d/timer/slice24_current
 {
+  sort nearest
 	nopicmip
 	novlcollapse
 	{

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_dsa.h"
 
 #ifdef USE_LAZY_LOAD
-#define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) | (!mapShaders && r_lazyLoad->integer == 2 ? IMGFLAG_FORCELAZY : 0))
+#define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0) | (!mapShaders && r_lazyLoad->integer >= 2 ? IMGFLAG_FORCELAZY : 0))
 static qboolean mapShaders;
 #else
 #define R_FindImageFile(x, y, z) R_FindImageFile( x, y, z | (r_paletteMode->integer && shader.lightmapIndex != LIGHTMAP_2D ? IMGFLAG_PALETTE : 0))

@@ -3956,10 +3956,9 @@ void CL_Frame( int msec, int realMsec ) {
 #endif
 
 #ifdef USE_LAZY_LOAD
-	// TODO: from WASP.sk, only load when a warmup or a dead state is detected
-	//   cl_lazyLoad 2 option is just like 1 except only during downtime, 
-	//   cl_lazyLoad 3 is force lazy loading everytime
-	if(cl_lazyLoad->integer > 0) {
+// TODO: lazy load only if the screen it out of view in multiworld
+	if(cl_lazyLoad->integer > 0 && (cl_lazyLoad->integer <= 2
+    || cls.lazyLoading)) {
 		if((uivm || cgvm) && secondTimer > 20) {
 			secondTimer = 0;
 			CL_UpdateShader();
