@@ -36,7 +36,7 @@ glstatic_t	gls;
 
 static void GfxInfo( void );
 static void VarInfo( void );
-static void GL_SetDefaultState( void );
+void GL_SetDefaultState( void );
 
 cvar_t	*r_flareSize;
 cvar_t	*r_flareFade;
@@ -177,6 +177,8 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 int   max_indexes;
+
+cvar_t	*r_developer;
 
 #ifdef USE_LAZY_LOAD
 cvar_t	*r_lazyLoad;
@@ -1232,7 +1234,7 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 /*
 ** GL_SetDefaultState
 */
-static void GL_SetDefaultState( void )
+void GL_SetDefaultState( void )
 {
 	int i;
 
@@ -1675,6 +1677,7 @@ static void R_Register( void )
 		" 3 - linear filtering, stretch to full size\n"
 		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
 
+  r_developer = ri.Cvar_Get( "developer", "0", 0 );
 #ifdef USE_LAZY_LOAD
 	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "0", 0 );
 	ri.Cvar_Get("r_loadingModel", "", CVAR_TEMP);

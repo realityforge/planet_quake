@@ -1885,7 +1885,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 	// see if we already have the VM
 	if ( vm->name ) {
 		if ( vm->index != index ) {
-			Com_Error( ERR_DROP, "VM_Create: bad allocated vm index %i", vm->index );
+			Com_Error( ERR_DROP, "VM_Create: bad allocated vm index %i != %i", vm->index, index );
 			return NULL;
 		}
 		return vm;
@@ -2334,6 +2334,7 @@ void VM_Suspend(vm_t *vm, unsigned pc, unsigned sp) {
 int VM_Resume(vm_t *vm) {
   vm->suspended = qfalse;
   // TODO: continue VM execution
+  return 0;
 }
 #endif
 

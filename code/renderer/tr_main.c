@@ -1612,7 +1612,8 @@ void R_AddEntitySurfaces( void ) {
 					if ( (ent->e.renderfx & RF_THIRD_PERSON) && (tr.viewParms.portalView == PV_NONE) ) {
 						break;
 					}
-					R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
+          if(r_developer->integer)
+					  R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
 					break;
 				default:
 					ri.Error( ERR_DROP, "R_AddEntitySurfaces: Bad modeltype" );

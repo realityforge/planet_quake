@@ -1296,6 +1296,8 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern cvar_t	*r_developer;
+
 #ifdef USE_LAZY_LOAD
 extern cvar_t	*r_lazyLoad;
 #endif

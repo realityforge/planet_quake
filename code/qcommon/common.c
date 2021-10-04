@@ -93,10 +93,10 @@ cvar_t  *cl_developer;
 cvar_t  *sv_developer;
 cvar_t  *developer;
 cvar_t  *bot_developer;
-cvar_t  *r_developer;
+cvar_t  *cl_r_developer;
 cvar_t  *cg_developer;
 cvar_t  *ui_developer;
-cvar_t  *g_developer;
+cvar_t  *sv_g_developer;
 cvar_t  *net_developer;
 cvar_t  *s_developer;
 cvar_t  *fs_developer;
@@ -2851,7 +2851,8 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
-void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr ) {
+void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr )
+{
 	sysEvent_t	*ev;
 
 #if 0
@@ -2907,9 +2908,12 @@ static sysEvent_t Com_GetSystemEvent( void )
 	const char	*s;
 	int			evTime;
 
+#ifndef USE_ASYNCHRONOUS
+  // TODO: not sure this is ever necessary
 	// return if we have data
 	if ( eventHead - eventTail > 0 )
 		return eventQue[ ( eventTail++ ) & MASK_QUED_EVENTS ];
+#endif
 
 	Sys_SendKeyEvents();
 
@@ -3108,7 +3112,15 @@ int Com_EventLoop( void ) {
 
 	MSG_Init( &buf, bufData, MAX_MSGLEN );
 
-	while ( 1 ) {
+#ifdef USE_ASYNCHRONOUS
+  int currentTail = eventHead;
+  // limit event sequences to the current event because otherwise it could
+  //   loop forever before the system fully starts, events trigger more events
+	while ( com_fullyInitialized || eventTail <= currentTail ) 
+#else
+  while ( 1 ) 
+#endif
+  {
 		ev = Com_GetEvent();
 
 		// if no more events are available
@@ -3190,11 +3202,19 @@ int Com_EventLoop( void ) {
 			break;
 #ifdef USE_ASYNCHRONOUS
     case SE_ASYNC:
-      ev.evPtr = NULL; // function pointer, no free
-      break;
+      {
+        void (*func)(void) = (void (*)(void))(intptr_t)ev.evPtr;
+        func();
+        ev.evPtr = NULL; // function pointer, no free
+        break;
+      }
     case SE_ASYNCP:
-      ev.evPtr = NULL; // function pointer, no free
-      break;
+      {
+        void (*func)(int p) = (void (*)(int))(intptr_t)ev.evPtr;
+        func(ev.evValue);
+        ev.evPtr = NULL; // function pointer, no free
+        break;
+      }
 #endif
 		default:
 			Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev.evType );
@@ -3976,10 +3996,10 @@ void Com_Init( char *commandLine ) {
   cl_developer = Cvar_Get( "cl_developer", com_developer->string, CVAR_ARCHIVE );
   sv_developer = Cvar_Get( "sv_developer", com_developer->string, CVAR_ARCHIVE );
   bot_developer = Cvar_Get( "bot_developer", com_developer->string, CVAR_ARCHIVE );
-  r_developer = Cvar_Get( "r_developer", com_developer->string, CVAR_ARCHIVE );
+  cl_r_developer = Cvar_Get( "r_developer", com_developer->string, CVAR_ARCHIVE );
   cg_developer = Cvar_Get( "cg_developer", com_developer->string, CVAR_ARCHIVE );
   ui_developer = Cvar_Get( "ui_developer", com_developer->string, CVAR_ARCHIVE );
-  g_developer = Cvar_Get( "g_developer", com_developer->string, CVAR_ARCHIVE );
+  sv_g_developer = Cvar_Get( "g_developer", com_developer->string, CVAR_ARCHIVE );
   net_developer = Cvar_Get( "net_developer", com_developer->string, CVAR_ARCHIVE );
   s_developer = Cvar_Get( "s_developer", com_developer->string, CVAR_ARCHIVE );
   fs_developer = Cvar_Get( "fs_developer", com_developer->string, CVAR_ARCHIVE );
@@ -4023,20 +4043,20 @@ void Com_Init( char *commandLine ) {
   com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
   cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
   cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM | CVAR_USERINFO);
+  Cmd_AddCommand( "directdl", CL_Download_f );
+  Cmd_AddCommand( "connect", CL_Connect_f );
+  Cmd_AddCommand( "quit", Com_Quit_f );
 #endif
 #endif
 
 	FS_InitFilesystem();
 
 #ifdef USE_ASYNCHRONOUS
-  Cmd_AddCommand( "directdl", CL_Download_f );
-  Cmd_AddCommand( "connect", CL_Connect_f );
-  Cmd_AddCommand( "quit", Com_Quit_f );
   if(!com_dedicated->integer) {
     if(com_earlyConnect[0] != '\0') {
       Cbuf_ExecuteText( EXEC_INSERT, va("connect %s\n", com_earlyConnect) );
     }
-    ASYNC(Com_Init);
+    ASYNCB(Com_Init, !FS_Initialized());
   }
 #endif
 #ifdef USE_PRINT_CONSOLE
@@ -4502,11 +4522,10 @@ void Com_Frame( qboolean noDelay ) {
 
 #ifdef USE_ASYNCHRONOUS
   if(!com_fullyInitialized) {
-    Com_EventLoop();
+    lastTime = com_frameTime;
+    com_frameTime = Com_EventLoop();
     NET_FlushPacketQueue();
     NET_Sleep( 500 ); // if we got here we're probably syncing file-system
-    lastTime = com_frameTime;
-  	com_frameTime = Com_EventLoop();
   	realMsec = com_frameTime - lastTime;
   	Cbuf_Execute();
   	msec = Com_ModifyMsec( realMsec );

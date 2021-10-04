@@ -1843,9 +1843,13 @@ extern	cvar_t	*r_printShaders;
 extern cvar_t	*r_marksOnTriangleMeshes;
 
 extern cvar_t	*r_zfar;				// far Z clip plane
+
+extern cvar_t	*r_developer;
+
 #ifdef USE_LAZY_LOAD
 extern cvar_t	*r_lazyLoad;
 #endif
+
 extern  cvar_t  *r_paletteMode;
 extern  cvar_t  *r_seeThroughWalls;
 
@@ -1930,7 +1934,6 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms, 
 ** GL wrapper/helper functions
 */
 void	GL_BindToTMU( image_t *image, int tmu );
-void	GL_SetDefaultState (void);
 void	GL_TextureMode( const char *string );
 void	GL_CheckErrs( char *file, int line );
 #define GL_CheckErrors(...) GL_CheckErrs(__FILE__, __LINE__)

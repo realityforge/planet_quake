@@ -212,6 +212,8 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
+cvar_t	*r_developer;
+
 #ifdef USE_LAZY_LOAD
 cvar_t	*r_lazyLoad;
 #endif
@@ -1481,11 +1483,6 @@ void R_Register( void )
 
 	r_measureOverdraw = ri.Cvar_Get( "r_measureOverdraw", "0", CVAR_CHEAT );
 	r_lodscale = ri.Cvar_Get( "r_lodscale", "5", CVAR_CHEAT );
-#ifdef USE_LAZY_LOAD
-	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "0", 0 );
-	ri.Cvar_Get("r_loadingModel", "", CVAR_TEMP);
-	ri.Cvar_Get("r_loadingShader", "", CVAR_TEMP);
-#endif
 	r_norefresh = ri.Cvar_Get ("r_norefresh", "0", CVAR_CHEAT);
 	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_ignore = ri.Cvar_Get( "r_ignore", "1", CVAR_CHEAT );
@@ -1513,6 +1510,13 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS), 0);
+
+  r_developer = ri.Cvar_Get( "developer", "0", 0 );
+#ifdef USE_LAZY_LOAD
+	r_lazyLoad = ri.Cvar_Get( "cl_lazyLoad", "0", 0 );
+	ri.Cvar_Get("r_loadingModel", "", CVAR_TEMP);
+	ri.Cvar_Get("r_loadingShader", "", CVAR_TEMP);
+#endif
 
 #ifdef USE_ABS_MOUSE
 	r_cursorShader = ri.Cvar_Get( "r_inputShader", "cursor", 0);

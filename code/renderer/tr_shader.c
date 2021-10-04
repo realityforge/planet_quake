@@ -3742,10 +3742,14 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 
 #ifdef USE_LAZY_MEMORY
+void GL_SetDefaultState( void );
+
 void RE_ReloadShaders( qboolean createNew ) {
   tr.lastRegistrationTime = ri.Milliseconds();
 
   R_IssuePendingRenderCommands();
+  tr.viewCluster = -1;
+  RE_ClearScene();
 
   // remove lightmaps
   if(!createNew) {
@@ -3770,6 +3774,8 @@ void RE_ReloadShaders( qboolean createNew ) {
   Com_Memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
 
   ScanAndLoadShaderFiles();
+  
+  GL_SetDefaultState();
 }
 #endif
 

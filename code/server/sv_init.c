@@ -1038,7 +1038,12 @@ void SV_Init( void )
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", CVAR_TEMP );
 	Cvar_CheckRange( sv_zombietime, "1", NULL, CV_INTEGER );
-	Cvar_Get ("nextmap", "", CVAR_TEMP );
+  // share with client for predictive loading
+#ifdef USE_MULTIVM_SERVER
+	Cvar_Get ("nextmap", "", CVAR_TEMP | CVAR_SERVERINFO );
+#else
+  Cvar_Get ("nextmap", "", CVAR_TEMP );
+#endif
 
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);

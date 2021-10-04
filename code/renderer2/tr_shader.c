@@ -4525,11 +4525,15 @@ void RE_UpdateShader(char *shaderName, int lightmapIndex) {
 
 
 #ifdef USE_LAZY_MEMORY
+void GL_SetDefaultState( void );
+
 void RE_ReloadShaders( qboolean createNew ) {
   int i;
   tr.lastRegistrationTime = ri.Milliseconds();
 
   R_IssuePendingRenderCommands();
+  tr.visIndex = 0;
+  RE_ClearScene();
   
   GLSL_InitGPUShaders();
 
@@ -4549,9 +4553,9 @@ void RE_ReloadShaders( qboolean createNew ) {
   // TODO: keep separate lists of images in case they have the same name
   //   but from different gamedir sources
 
-  GL_BindNullTextures();
-
   ScanAndLoadShaderFiles();
+
+  GL_SetDefaultState();
 }
 #endif
 

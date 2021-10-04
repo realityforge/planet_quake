@@ -1431,7 +1431,7 @@ void CL_ClearMemory( void ) {
 		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
-#ifdef USE_LAZY_MEMORY
+#ifdef USE_MULTIVM_CLIENT
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
 #else
@@ -5262,7 +5262,11 @@ void CL_Init( void ) {
 #endif
 
 #ifdef USE_LAZY_LOAD
-	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+#ifdef USE_ASYNCHRONOUS
+	cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "1", CVAR_ARCHIVE | CVAR_TEMP );
+#else
+  cl_lazyLoad = Cvar_Get( "cl_lazyLoad", "0", CVAR_ARCHIVE | CVAR_TEMP );
+#endif
 #endif
 
 #ifdef __WASM__
@@ -6598,7 +6602,9 @@ void CL_Download_f( void )
       !Com_DL_InProgress(&download) && 
 #endif
       !(*clc.downloadName)
-      && cls.state > CA_PRIMED) {
+      && cls.state > CA_PRIMED
+    ) {
+      // if not already downloading, call the next download now
       CL_NextDownload();
     }
     return;
