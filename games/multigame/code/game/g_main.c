@@ -90,6 +90,10 @@ vmCvar_t	g_callvotable;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 vmCvar_t	g_thawTime;
 #endif
+#ifdef USE_ADVANCED_WEAPONS
+vmCvar_t	g_railThruWalls;
+vmCvar_t	g_bounceRockets;
+#endif
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -196,6 +200,11 @@ static cvarTable_t gameCvarTable[] = {
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   ,{ &g_thawTime, "g_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
+#endif
+
+#ifdef USE_ADVANCED_WEAPONS
+  ,{ &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

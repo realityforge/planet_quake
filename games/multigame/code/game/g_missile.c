@@ -653,11 +653,22 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	bolt = G_Spawn();
 	bolt->classname = "rocket";
+#ifdef USE_ADVANCED_WEAPONS
+  if (self->flags & FL_ROCKETBOUNCE
+    || g_bounceRockets.integer)
+    bolt->nextthink = level.time + 2500;
+  else
+#endif
 	bolt->nextthink = level.time + 15000;
 	bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_ROCKET_LAUNCHER;
+#ifdef USE_ADVANCED_WEAPONS
+  if (self->flags & FL_ROCKETBOUNCE
+    || g_bounceRockets.integer)
+  	bolt->s.eFlags = EF_BOUNCE;
+#endif
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
 	bolt->damage = 100;

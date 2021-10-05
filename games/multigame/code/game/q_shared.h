@@ -160,6 +160,8 @@
 #define USE_GAME_FREEZETAG 1
 // advanced hud features like player looking in the same direction, 3D guns, etc
 #define USE_ADVANCED_HUD 1
+// weapon enhancements toggled by cvars
+#define USE_ADVANCED_WEAPONS 1
 // 
 
 #endif

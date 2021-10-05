@@ -979,7 +979,6 @@ void Sys_DenotifyChange(int wd) {
 
 int Sys_NotifyChange(const char *filepath, void (*cb)( void )) {
   notify_t *notify = &callbacks[(notifyCount++)%ARRAY_LEN(callbacks)];
-  Com_Printf("wtf 2? %s\n", filepath);
   memcpy(notify->name, filepath, sizeof(notify->name));
   notify->cb = cb;
 #ifndef __APPLE__
@@ -1011,7 +1010,6 @@ void FS_Frame(int msecs) {
     p += sizeof(struct inotify_event) + event->len;
   }
 #else
-/*
   if(msecs / 1000 > prevCheck) {
     prevCheck = msecs / 1000;
   } else {
@@ -1021,7 +1019,6 @@ void FS_Frame(int msecs) {
     off_t size;
     time_t mtime, ctime;
     if(!callbacks[i].wd) continue;
-    Com_Printf("wtf? %s\n", callbacks[i].name);
     Sys_GetFileStats( callbacks[i].name, &size, &mtime, &ctime );
     if(callbacks[i].mtime != mtime) {
       if(callbacks[i].mtime > 0) {
@@ -1030,7 +1027,6 @@ void FS_Frame(int msecs) {
       callbacks[i].mtime = mtime;
     }
   }
-*/
 #endif
 }
 #endif

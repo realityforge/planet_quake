@@ -467,10 +467,17 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	int			unlinked;
 	int			passent;
 	gentity_t	*unlinkedEntities[MAX_RAIL_HITS];
+#ifdef USE_ADVANCED_WEAPONS
+  vec3_t		tracefrom;	// SUM
+  vec3_t		lastend;	// SUM
+#endif
 
 	damage = 100 * s_quadFactor;
 
 	VectorMA( muzzle_origin, 8192.0, forward, end );
+#ifdef USE_ADVANCED_WEAPONS
+  VectorCopy (muzzle_origin, tracefrom);
+#endif
 
 	// unlagged
 	G_DoTimeShiftFor( ent );
@@ -480,8 +487,32 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	hits = 0;
 	passent = ent->s.number;
 	do {
+#ifdef USE_ADVANCED_WEAPONS
+    if(g_railThruWalls.integer)
+      trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
+    else
+#endif
 		trap_Trace( &trace, muzzle_origin, NULL, NULL, end, passent, MASK_SHOT );
 		if ( trace.entityNum >= ENTITYNUM_MAX_NORMAL ) {
+#ifdef USE_ADVANCED_WEAPONS
+      if(g_railThruWalls.integer) {
+        // SUM break if we hit the sky
+  			if (trace.surfaceFlags & SURF_SKY)
+  				break;
+
+  			// Hypo: break if we traversed length of vector tracefrom
+  			if (trace.fraction == 1.0)
+  				break;
+
+        // save last solid for explosion mark
+        if ( trace.contents & CONTENTS_SOLID ) {
+          VectorCopy (trace.endpos, lastend);
+        }
+        
+  			// otherwise continue tracing thru walls
+  			VectorMA (trace.endpos,1,forward,tracefrom);
+      } else
+#endif
 			break;
 		}
 		traceEnt = &g_entities[ trace.entityNum ];
@@ -515,6 +546,9 @@ void weapon_railgun_fire( gentity_t *ent ) {
 				G_Damage( traceEnt, ent, ent, forward, trace.endpos, damage, 0, MOD_RAILGUN );
 			}
 		}
+#ifdef USE_ADVANCED_WEAPONS
+    if(!g_railThruWalls.integer)
+#endif
 		if ( trace.contents & CONTENTS_SOLID ) {
 			break;		// we hit something solid enough to stop the beam
 		}
@@ -534,6 +568,10 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	}
 
 	// the final trace endpos will be the terminal point of the rail trail
+#ifdef USE_ADVANCED_WEAPONS
+  if(g_railThruWalls.integer)
+    VectorCopy (lastend, trace.endpos);
+#endif
 
 	// snap the endpos to integers to save net bandwidth, but nudged towards the line
 	SnapVectorTowards( trace.endpos, muzzle_origin );
@@ -558,6 +596,11 @@ void weapon_railgun_fire( gentity_t *ent ) {
 		tent->s.eventParm = DirToByte( trace.plane.normal );
 	}
 	tent->s.clientNum = ent->s.clientNum;
+
+#ifdef USE_ADVANCED_WEAPONS
+  //send the effect to everyone since it tunnels through walls
+  tent->r.svFlags |= SVF_BROADCAST;
+#endif
 
 	// give the shooter a reward sound if they have made two railgun hits in a row
 	if ( hits == 0 ) {

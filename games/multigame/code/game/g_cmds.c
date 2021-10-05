@@ -1821,6 +1821,27 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 }
 
 
+#ifdef USE_ADVANCED_WEAPONS
+/*
+=================
+Cmd_RBounce_f
+=================
+*/
+void Cmd_RBounce_f( gentity_t *ent ) {
+
+	char *msg; // message to player
+
+	ent->flags ^= FL_ROCKETBOUNCE;
+
+	if (!(ent->flags & FL_ROCKETBOUNCE))
+		msg = "Rocket Bounce OFF\n";
+	else
+		msg = "Rocket Bounce ON\n";
+	trap_SendServerCommand( ent-g_entities, va("print \"%s\"", msg));
+}
+#endif
+
+
 
 /*
 =================
@@ -1958,6 +1979,10 @@ void ClientCommand( int clientNum ) {
 		Cmd_GameCommand_f( ent );
 	else if (Q_stricmp (cmd, "setviewpos") == 0)
 		Cmd_SetViewpos_f( ent );
+#ifdef USE_ADVANCED_WEAPONS
+  else if (Q_stricmp (cmd, "rbounce") == 0)
+    Cmd_RBounce_f( ent );
+#endif
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
 	else
