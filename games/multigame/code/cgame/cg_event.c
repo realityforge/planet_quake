@@ -165,9 +165,26 @@ static void CG_Obituary( entityState_t *ent ) {
 			else
 				message = "melted himself";
 			break;
+#ifdef USE_ADVANCED_WEAPONS
+    // The SARACEN's Lightning Discharge - START
+    case MOD_LV_DISCHARGE:
+      if (gender == GENDER_FEMALE)
+        message = "discharged herself";
+      else if (gender == GENDER_NEUTER)
+        message = "discharged itself";
+      else
+        message = "discharged himself";
+      break;
+    // The SARACEN's Lightning Discharge - END
+#endif
 		case MOD_BFG_SPLASH:
 			message = "should have used a smaller gun";
 			break;
+#ifdef USE_ADVANCED_WEAPONS
+    case MOD_FLAME_THROWER:
+      message = "was fried by";
+      break;
+#endif
 #ifdef MISSIONPACK
 		case MOD_PROXIMITY_MINE:
 			if( gender == GENDER_FEMALE ) {
@@ -286,9 +303,21 @@ static void CG_Obituary( entityState_t *ent ) {
 		case MOD_RAILGUN:
 			message = "was railed by";
 			break;
+#ifdef USE_ADVANCED_WEAPONS
+// The SARACEN's Lightning Discharge - START
+    // Classic Quake style obituary - the original and the best!!!
+		case MOD_LIGHTNING:
+			message = "was shafted by";
+			break;
+		case MOD_LV_DISCHARGE:
+			message = "was discharged by";
+			break;
+// The SARACEN's Lightning Discharge - END
+#else
 		case MOD_LIGHTNING:
 			message = "was electrocuted by";
 			break;
+#endif
 		case MOD_BFG:
 		case MOD_BFG_SPLASH:
 			message = "was blasted by";
@@ -533,7 +562,9 @@ void CG_PainEvent( centity_t *cent, int health ) {
 	cent->pe.painDirection ^= 1;
 }
 
-
+#ifdef USE_ADVANCED_WEAPONS
+void CG_Lightning_Discharge (vec3_t origin, int msec);
+#endif
 
 /*
 ==============
@@ -1025,6 +1056,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		CG_ShotgunFire( es );
 		break;
 
+#ifdef USE_ADVANCED_WEAPONS
+// The SARACEN's Lightning Discharge - START
+	case EV_LV_DISCHARGE:
+		CG_Lightning_Discharge (position, es->eventParm);	// eventParm is duration/size
+		break;
+// The SARACEN's Lightning Discharge - END
+#endif
+
 	case EV_GENERAL_SOUND:
 		if ( cgs.gameSounds[ es->eventParm ] ) {
 			trap_S_StartSound (NULL, es->number, CHAN_VOICE, cgs.gameSounds[ es->eventParm ] );
@@ -1212,7 +1251,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   case EV_FROZEN:
-    CG_Printf( "frozen\n");
 		if ( es->number == cg.snap->ps.clientNum ) {
 			cg.powerupActive = PW_FROZEN;
 			cg.powerupTime = cg.time;
@@ -1220,7 +1258,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
 		break;
   case EV_UNFROZEN:
-    CG_Printf( "unfrozen\n");
     // TODO: play unfreeze sound
     //trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
     break;

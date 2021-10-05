@@ -542,6 +542,99 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 //=============================================================================
 
 
+#ifdef USE_ADVANCED_WEAPONS
+/*
+=================
+fire_flame
+=================
+*/
+gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir) {
+  gentity_t*bolt;
+
+  VectorNormalize (dir);
+
+  bolt = G_Spawn();
+  bolt->classname = "flame";
+  bolt->nextthink = level.time + 1500;
+  bolt->think = G_ExplodeMissile;
+  bolt->s.eType = ET_MISSILE;
+  bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+  bolt->s.weapon = WP_FLAME_THROWER;
+  bolt->r.ownerNum = self->s.number;
+  bolt->parent = self;
+  bolt->damage = 30;
+  bolt->splashDamage = 25;
+  bolt->splashRadius = 45;
+  bolt->methodOfDeath = MOD_FLAME_THROWER;
+  bolt->splashMethodOfDeath = MOD_PLASMA_SPLASH;
+  bolt->clipmask = MASK_SHOT;
+
+  bolt->s.pos.trType = TR_LINEAR;
+  bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;// move a bit on the very first frame
+  VectorCopy( start, bolt->s.pos.trBase );
+  VectorScale( dir, 300, bolt->s.pos.trDelta );
+  SnapVector( bolt->s.pos.trDelta );// save net bandwidth
+
+  VectorCopy (start, bolt->r.currentOrigin);
+
+  return bolt;
+}
+
+gentity_t *findradius (gentity_t *ent, vec3_t org, float rad); 
+
+/*
+=================
+G_Suck
+=================
+*/
+static void G_Suck( gentity_t *self ) {
+	gentity_t *target;
+	vec3_t start,dir,end;
+
+	target = NULL;
+
+  //check if there are any entity's within a radius of 500 units.
+	while ((target = findradius(target, self->r.currentOrigin, 500)) != NULL)
+	{
+    // target must not be vortex grenade
+  	if (target == self) 
+  		continue;
+
+    // target must be a client
+  	if (!target->client) 
+  		continue;
+
+    // target must not be the player who fired the vortex grenade 
+  	if (target == self->parent) 
+  		continue;
+
+    // target must be able to take damage
+  	if (!target->takedamage) 
+  		continue;
+
+    // put target position in start
+  	VectorCopy(target->r.currentOrigin, start); 
+    // put grenade position in end
+  	VectorCopy(self->r.currentOrigin, end); 
+    // subtract start from end to get directional vector
+  	VectorSubtract(end, start, dir); 
+  	VectorNormalize(dir); 
+    // scale directional vector by 200 and add to the targets velocity
+  	VectorScale(dir,200, target->client->ps.velocity);
+    // make targets move direction = to directional vector.
+  	VectorCopy(dir, target->movedir); 
+       
+	}
+
+	self->nextthink = level.time + 20; 
+
+  // check if vortext grenade is older than 20 seconds.
+	if (level.time > self->wait) 
+		G_ExplodeMissile( self);
+}
+#endif
+
+
 /*
 =================
 fire_grenade
@@ -554,8 +647,17 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	bolt = G_Spawn();
 	bolt->classname = "grenade";
-	bolt->nextthink = level.time + 2500;
-	bolt->think = G_ExplodeMissile;
+#ifdef USE_ADVANCED_WEAPONS
+  if(g_vortexGrenades.integer) {
+    bolt->nextthink = level.time + 1000; // call G_Suck in 1 second
+    bolt->think = G_Suck;
+    bolt->wait = level.time + 20000; // vortext grenade lifetime.
+  } else
+#endif
+  {
+  	bolt->nextthink = level.time + 2500;
+  	bolt->think = G_ExplodeMissile;
+  }
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_GRENADE_LAUNCHER;

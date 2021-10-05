@@ -897,6 +897,41 @@ Only in One Flag CTF games
 	},
 #endif
 
+#ifdef USE_ADVANCED_WEAPONS
+  /*QUAKED weapon_flamethrower (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"weapon_flamethrower",
+  	"sound/misc/w_pkup.wav",
+  	{ "models/weapons2/flamethrower/flamethrower.md3",
+  	0, 0, 0},
+  /* icon */	"icons/iconw_flame",
+  /* pickup */	"Flame Thrower",
+  	20,
+  	IT_WEAPON,
+  	WP_FLAME_THROWER,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+  /*QUAKED ammo_flame (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"ammo_flame",
+  	"sound/misc/am_pkup.wav",
+  	{ "models/powerups/ammo/bfgam.md3", 
+  	0, 0, 0},
+  /* icon */"	icons/icona_bfg",
+  /* pickup */	"Flame Ammo",
+  	50,
+  	IT_AMMO,
+  	WP_FLAME_THROWER,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+#endif
+
 	// end of list marker
 	{NULL}
 };

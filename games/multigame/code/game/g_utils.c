@@ -658,3 +658,35 @@ int DebugLine(vec3_t start, vec3_t end, int color) {
 
 	return trap_DebugPolygonCreate(color, 4, points);
 }
+
+#ifdef USE_ADVANCED_WEAPONS
+/*
+================
+findradius
+================
+*/
+gentity_t *findradius (gentity_t *ent, vec3_t org, float rad) {
+
+	vec3_t eorg;
+	int j;
+
+	if (!ent)
+		ent = g_entities;
+	else
+		ent++;
+
+	for (; ent < &g_entities[level.num_entities]; ent++)
+		{
+		if (!ent->inuse)
+			continue;
+
+		for (j=0; j<3; j++)
+			eorg[j] = org[j] - (ent->r.currentOrigin[j] + 
+			(ent->r.mins[j] + ent->r.maxs[j])*0.5);
+		if (VectorLength(eorg) > rad)
+			continue;
+		return ent;
+	}
+	return NULL;
+}
+#endif

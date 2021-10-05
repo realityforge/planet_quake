@@ -832,6 +832,7 @@ extern  vmCvar_t  g_thawTime;
 extern  vmCvar_t  g_railThruWalls;
 extern  vmCvar_t  g_bounceRockets;
 extern  vmCvar_t  g_enableCloak;
+extern  vmCvar_t  g_vortexGrenades;
 #endif
 
 #ifdef BUILD_GAME_STATIC

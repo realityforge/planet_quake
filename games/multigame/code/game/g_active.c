@@ -853,12 +853,10 @@ void ClientThink_real( gentity_t *ent ) {
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if(client->ps.powerups[PW_FROZEN] && !client->frozen) {
-    G_Printf("qagame frozen\n");
     G_AddEvent( ent, EV_FROZEN, 0 );
     client->frozen = client->ps.powerups[PW_FROZEN];
     client->ps.pm_type = PM_FROZEN;
   } else if (!client->ps.powerups[PW_FROZEN] && client->frozen) {
-    G_Printf("qagame unfrozen\n");
     G_AddEvent( ent, EV_UNFROZEN, 0 );
     client->frozen = 0;
   }

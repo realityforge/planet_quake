@@ -1720,6 +1720,11 @@ static void PM_Weapon( void ) {
 		addTime = 30;
 		break;
 #endif
+#ifdef USE_ADVANCED_WEAPONS
+  case WP_FLAME_THROWER:
+  	addTime = 40;
+    break;
+#endif
 	}
 
 #ifdef MISSIONPACK

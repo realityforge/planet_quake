@@ -1034,6 +1034,10 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.dustPuffShader = trap_R_RegisterShader("hasteSmokePuff" );
 #endif
 
+#ifdef USE_ADVANCED_WEAPONS
+  cgs.media.flameBallShader = trap_R_RegisterShader( "sprites/flameball" );
+#endif
+
 	if ( cgs.gametype >= GT_TEAM || cg_buildScript.integer ) {
 		cgs.media.friendShader = trap_R_RegisterShader( "sprites/foe" );
 		cgs.media.redQuadShader = trap_R_RegisterShader("powerups/blueflag" );

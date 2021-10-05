@@ -666,6 +666,12 @@ void Weapon_HookThink (gentity_t *ent)
 }
 
 
+#ifdef USE_ADVANCED_WEAPONS
+qboolean G_WaterRadiusDamage (vec3_t origin, gentity_t *attacker, float damage, float radius,
+					 gentity_t *ignore, int mod);
+#endif
+
+
 /*
 ======================================================================
 
@@ -686,6 +692,32 @@ void Weapon_LightningFire( gentity_t *ent ) {
 	damage = 8 * s_quadFactor;
 
 	passent = ent->s.number;
+
+#ifdef USE_ADVANCED_WEAPONS
+  VectorMA( muzzle_origin, LIGHTNING_RANGE, forward, end );
+  // The SARACEN's Lightning Discharge - START
+	if (trap_PointContents (muzzle_origin, -1) & MASK_WATER)
+	{
+		int zaps;
+		gentity_t *tent;
+
+		zaps = ent->client->ps.ammo[WP_LIGHTNING];	// determines size/power of discharge
+		if (!zaps) return;	// prevents any subsequent frames causing second discharge + error
+		zaps++;		// pmove does an ammo[gun]--, so we must compensate
+		SnapVectorTowards (muzzle_origin, ent->s.origin);	// save bandwidth
+
+		tent = G_TempEntity (muzzle_origin, EV_LV_DISCHARGE);
+		tent->s.eventParm = zaps;				// duration / size of explosion graphic
+
+		ent->client->ps.ammo[WP_LIGHTNING] = 0;		// drain ent's lightning count
+		if (G_WaterRadiusDamage (muzzle_origin, ent, damage * zaps,
+					(damage * zaps) + 16, NULL, MOD_LV_DISCHARGE))
+			g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		
+		return;
+	}
+  // The SARACEN's Lightning Discharge - END
+#endif
 
 	for (i = 0; i < 10; i++) {
 		VectorMA( muzzle_origin, LIGHTNING_RANGE, forward, end );
@@ -806,6 +838,25 @@ void weapon_proxlauncher_fire (gentity_t *ent) {
 //======================================================================
 
 
+#ifdef USE_ADVANCED_WEAPONS
+gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir);
+
+/*
+=======================================================================
+FLAME_THROWER
+=======================================================================
+*/
+void Weapon_fire_flame (gentity_t *ent ) {
+	gentity_t *m;
+
+	m = fire_flame(ent, muzzle, forward);
+	m->damage *= s_quadFactor;
+	m->splashDamage *= s_quadFactor;
+}
+
+#endif
+
+
 /*
 ===============
 LogAccuracyHit
@@ -911,6 +962,11 @@ void FireWeapon( gentity_t *ent ) {
 	case WP_GRAPPLING_HOOK:
 		Weapon_GrapplingHook_Fire( ent );
 		break;
+#ifdef USE_ADVANCED_WEAPONS
+  case WP_FLAME_THROWER :
+    Weapon_fire_flame( ent );
+    break;
+#endif
 #ifdef MISSIONPACK
 	case WP_NAILGUN:
 		Weapon_Nailgun_Fire( ent );

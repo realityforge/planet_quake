@@ -194,6 +194,33 @@ void CG_SpawnEffect( const vec3_t origin ) {
 }
 
 
+#ifdef USE_ADVANCED_WEAPONS
+/*
+====================
+CG_Lightning_Discharge by The SARACEN
+====================
+*/
+void CG_Lightning_Discharge (vec3_t origin, int msec)
+{
+	localEntity_t		*le;
+
+	if (msec <= 0) CG_Error ("CG_Lightning_Discharge: msec = %i", msec);
+
+	le = CG_SmokePuff (	origin,			// where
+				vec3_origin,			// where to
+				((48 + (msec * 10)) / 16),	// radius
+				1, 1, 1, 1,			// RGBA color shift
+				300 + msec,			// duration
+				cg.time,			// start when?
+				0,					// fade in time
+				0,				// flags (?)
+				trap_R_RegisterShader ("models/weaphits/electric.tga"));
+
+	le->leType = LE_SCALE_FADE;
+}
+#endif
+
+
 #ifdef MISSIONPACK
 /*
 ===============

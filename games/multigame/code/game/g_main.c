@@ -94,6 +94,7 @@ vmCvar_t	g_thawTime;
 vmCvar_t	g_railThruWalls;
 vmCvar_t	g_bounceRockets;
 vmCvar_t	g_enableCloak;
+vmCvar_t	g_vortexGrenades;
 #endif
 
 static cvarTable_t gameCvarTable[] = {
@@ -207,6 +208,7 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

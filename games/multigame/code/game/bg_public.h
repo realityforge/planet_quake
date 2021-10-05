@@ -328,13 +328,16 @@ typedef enum {
 	WP_RAILGUN,
 	WP_PLASMAGUN,
 	WP_BFG,
-	WP_GRAPPLING_HOOK,
 #ifdef MISSIONPACK
 	WP_NAILGUN,
 	WP_PROX_LAUNCHER,
 	WP_CHAINGUN,
 #endif
+#ifdef USE_ADVANCED_WEAPONS
+  WP_FLAME_THROWER,
+#endif
 
+  WP_GRAPPLING_HOOK,
 	WP_NUM_WEAPONS,
 	WP_PENDING = WP_NUM_WEAPONS, // used in ui_players.c
 	WP_MAX_WEAPONS = 16
@@ -434,6 +437,9 @@ typedef enum {
 	EV_RAILTRAIL,
 	EV_SHOTGUN,
 	EV_BULLET,				// otherEntity is the shooter
+#ifdef USE_ADVANCED_WEAPONS
+  EV_LV_DISCHARGE,
+#endif
 
 	EV_PAIN,
 	EV_DEATH1,
@@ -634,6 +640,10 @@ typedef enum {
 	MOD_PROXIMITY_MINE,
 	MOD_KAMIKAZE,
 	MOD_JUICED,
+#endif
+#ifdef USE_ADVANCED_WEAPONS
+  MOD_LV_DISCHARGE,
+  MOD_FLAME_THROWER,
 #endif
 	MOD_GRAPPLE
 } meansOfDeath_t;
