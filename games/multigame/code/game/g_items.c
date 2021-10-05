@@ -340,6 +340,23 @@ static int Pickup_Health( gentity_t *ent, gentity_t *other ) {
 
 	other->health += quantity;
 
+#ifdef USE_ADVANCED_DMG
+#ifdef USE_ADVANCED_MOVE
+  if(g_locDamage.integer) {
+    // return speed upon health pickup or more than maximum health, McBain
+  	other->client->ps.speed += quantity;
+  	if (other->client->ps.speed > g_speed.value) {
+  		other->client->ps.speed = g_speed.value;
+  	}
+
+  	if (other->health >= other->client->ps.stats[STAT_MAX_HEALTH]) {
+  		other->client->ps.speed = g_speed.value;
+  	}
+  	// end McBain
+  }
+#endif
+#endif
+
 	if (other->health > max ) {
 		other->health = max;
 	}
@@ -533,11 +550,24 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	}
 
 	// play the normal pickup sound
+#ifdef USE_ADVANCED_HUD
+  {
+    qboolean had = other->client->ps.stats[STAT_WEAPONS] & (1 << ent->item->giTag);
+    if ( predict ) {
+  		G_AddPredictableEvent( other, ent->item->giType == IT_WEAPON && had 
+        ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
+  	} else {
+  		G_AddEvent( other, ent->item->giType == IT_WEAPON && had 
+        ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
+  	}
+  }
+#else
 	if ( predict ) {
 		G_AddPredictableEvent( other, EV_ITEM_PICKUP, ent->s.modelindex );
 	} else {
 		G_AddEvent( other, EV_ITEM_PICKUP, ent->s.modelindex );
 	}
+#endif
 
 	// powerup pickups are global broadcasts
 	if ( ent->item->giType == IT_POWERUP || ent->item->giType == IT_TEAM) {

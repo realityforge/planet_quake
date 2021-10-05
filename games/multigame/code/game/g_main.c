@@ -96,6 +96,10 @@ vmCvar_t	g_bounceRockets;
 vmCvar_t	g_enableCloak;
 vmCvar_t	g_vortexGrenades;
 #endif
+#ifdef USE_ADVANCED_DMG
+vmCvar_t  g_locDamage;
+#endif
+
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -209,6 +213,13 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+
+#ifdef USE_ADVANCED_DMG
+  ,{ &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_ADVANCED_HUD
+  ,{ NULL, "g_supportsWeaponOrder", "1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse } //WarZone
 #endif
 };
 

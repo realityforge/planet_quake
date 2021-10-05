@@ -1111,6 +1111,12 @@ void ClientSpawn(gentity_t *ent) {
 
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
+#ifdef USE_ADVANCED_DMG
+#ifdef USE_ADVANCED_MOVE
+  // return to normal speed, McBain
+  client->ps.speed = g_speed.value;
+#endif
+#endif
 
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );

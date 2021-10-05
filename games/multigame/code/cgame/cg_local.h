@@ -1306,6 +1306,9 @@ extern	vmCvar_t	  cg_jumpVelocity;
 extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
 #endif
+#ifdef USE_ADVANCED_HUD
+extern  vmCvar_t    cg_weaponOrder;
+#endif
 
 extern const char		*eventnames[EV_MAX];
 

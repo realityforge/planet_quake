@@ -825,6 +825,139 @@ int G_InvulnerabilityEffect( gentity_t *targ, vec3_t dir, vec3_t point, vec3_t i
 	}
 }
 #endif
+
+
+#ifdef USE_ADVANCED_DMG
+/* 
+============
+G_LocationDamage
+============
+*/
+int G_LocationDamage(vec3_t point, gentity_t* targ, gentity_t* attacker, int take) {
+	vec3_t bulletPath;
+	vec3_t bulletAngle;
+
+	int clientHeight;
+	int clientFeetZ;
+	int clientRotation;
+	int bulletHeight;
+	int bulletRotation;	// Degrees rotation around client.
+				// used to check Back of head vs. Face
+	int impactRotation;
+
+
+	// First things first.  If we're not damaging them, why are we here? 
+	if (!take) 
+		return 0;
+
+	// Point[2] is the REAL world Z. We want Z relative to the clients feet
+	
+	// Where the feet are at [real Z]
+	clientFeetZ  = targ->r.currentOrigin[2] + targ->r.mins[2];	
+	// How tall the client is [Relative Z]
+	clientHeight = targ->r.maxs[2] - targ->r.mins[2];
+	// Where the bullet struck [Relative Z]
+	bulletHeight = point[2] - clientFeetZ;
+
+	// Get a vector aiming from the client to the bullet hit 
+	VectorSubtract(targ->r.currentOrigin, point, bulletPath); 
+	// Convert it into PITCH, ROLL, YAW
+	vectoangles(bulletPath, bulletAngle);
+
+	clientRotation = targ->client->ps.viewangles[YAW];
+	bulletRotation = bulletAngle[YAW];
+
+	impactRotation = abs(clientRotation-bulletRotation);
+	
+	impactRotation += 45; // just to make it easier to work with
+	impactRotation = impactRotation % 360; // Keep it in the 0-359 range
+
+	if (impactRotation < 90)
+		targ->client->lasthurt_location = LOCATION_BACK;
+	else if (impactRotation < 180)
+		targ->client->lasthurt_location = LOCATION_RIGHT;
+	else if (impactRotation < 270)
+		targ->client->lasthurt_location = LOCATION_FRONT;
+	else if (impactRotation < 360)
+		targ->client->lasthurt_location = LOCATION_LEFT;
+	else
+		targ->client->lasthurt_location = LOCATION_NONE;
+
+	// The upper body never changes height, just distance from the feet
+		if (bulletHeight > clientHeight - 2)
+			targ->client->lasthurt_location |= LOCATION_HEAD;
+		else if (bulletHeight > clientHeight - 8)
+			targ->client->lasthurt_location |= LOCATION_FACE;
+		else if (bulletHeight > clientHeight - 10)
+			targ->client->lasthurt_location |= LOCATION_SHOULDER;
+		else if (bulletHeight > clientHeight - 16)
+			targ->client->lasthurt_location |= LOCATION_CHEST;
+		else if (bulletHeight > clientHeight - 26)
+			targ->client->lasthurt_location |= LOCATION_STOMACH;
+		else if (bulletHeight > clientHeight - 29)
+			targ->client->lasthurt_location |= LOCATION_GROIN;
+		else if (bulletHeight < 4)
+			targ->client->lasthurt_location |= LOCATION_FOOT;
+		else
+			// The leg is the only thing that changes size when you duck,
+			// so we check for every other parts RELATIVE location, and
+			// whats left over must be the leg. 
+			targ->client->lasthurt_location |= LOCATION_LEG; 
+
+
+		
+		// Check the location ignoring the rotation info
+		switch ( targ->client->lasthurt_location & 
+				~(LOCATION_BACK | LOCATION_LEFT | LOCATION_RIGHT | LOCATION_FRONT) )
+		{
+		case LOCATION_HEAD:
+			take *= 1.8;
+			break;
+		case LOCATION_FACE:
+			if (targ->client->lasthurt_location & LOCATION_FRONT)
+				take *= 5.0; // Faceshots REALLY suck
+			else
+				take *= 1.8;
+			break;
+		case LOCATION_SHOULDER:
+			if (targ->client->lasthurt_location & (LOCATION_FRONT | LOCATION_BACK))
+				take *= 1.4; // Throat or nape of neck
+			else
+				take *= 1.1; // Shoulders
+			break;
+		case LOCATION_CHEST:
+			if (targ->client->lasthurt_location & (LOCATION_FRONT | LOCATION_BACK))
+				take *= 1.3; // Belly or back
+			else
+				take *= 0.8; // Arms
+			break;
+		case LOCATION_STOMACH:
+			take *= 1.2;
+			break;
+		case LOCATION_GROIN:
+			if (targ->client->lasthurt_location & LOCATION_FRONT)
+				take *= 1.3; // Groin shot
+			break;
+		case LOCATION_LEG:
+			take *= 0.7;
+#ifdef USE_ADVANCED_MOVE
+      targ->client->ps.speed -= take; // slowdown if shot in legs, McBain
+#endif
+			break;
+		case LOCATION_FOOT:
+			take *= 0.5;
+#ifdef USE_ADVANCED_MOVE
+      targ->client->ps.speed -= take; // slowdown if shot in foot, McBain
+#endif
+			break;
+
+		}
+	return take;
+
+}
+#endif
+
+
 /*
 ============
 G_Damage
@@ -1082,6 +1215,16 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		// set the last client who damaged the target
 		targ->client->lasthurt_client = attacker->s.number;
 		targ->client->lasthurt_mod = mod;
+
+#ifdef USE_ADVANCED_DMG
+    if(g_locDamage.integer) {
+  		// Modify the damage for location damage
+  		if (point && targ && targ->health > 0 && attacker && take)
+  			take = G_LocationDamage(point, targ, attacker, take);
+  		else
+  			targ->client->lasthurt_location = LOCATION_NONE;
+    }
+#endif
 	}
 
 	// do the damage

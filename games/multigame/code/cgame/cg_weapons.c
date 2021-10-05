@@ -1552,6 +1552,10 @@ WEAPON SELECTION
 
 
 #ifdef USE_ADVANCED_HUD
+int weaponOrder[MAX_WEAPONS]; 
+int weaponRawOrder[MAX_WEAPONS]; 
+int NextWeapon (int curr);
+
 void hud_weapons(float x, float y, weaponInfo_t *weapon) {
   vec3_t		    angles;
   vec3_t		    origin;
@@ -1627,6 +1631,9 @@ CG_DrawWeaponSelect
 #define AMMO_FONT_SIZE 12
 void CG_DrawWeaponSelect( void ) {
 	int		i;
+#ifdef USE_ADVANCED_HUD
+  int  weap; 
+#endif
 	int		bits;
 	int		count;
 	int		x, y;
@@ -1659,11 +1666,23 @@ void CG_DrawWeaponSelect( void ) {
 	// count the number of weapons owned
 	bits = cg.snap->ps.stats[ STAT_WEAPONS ];
 	count = 0;
+#ifdef USE_ADVANCED_HUD
+  for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
+    if(cg_autoswitch.integer == 2)
+      weap = NextWeapon( weaponRawOrder[MAX_WEAPONS - i - 1] );
+    else
+      weap = i;
+    if ( bits & ( 1 << weap ) ) {
+      count++;
+    }
+  }
+#else
 	for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
 		if ( bits & ( 1 << i ) ) {
 			count++;
 		}
 	}
+#endif
 
 	if ( weaponSelect < 3 ) {
 		x = 320 - count * 20;
@@ -1678,6 +1697,14 @@ void CG_DrawWeaponSelect( void ) {
 	}
 
 	for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
+#ifdef USE_ADVANCED_HUD
+    if(cg_autoswitch.integer == 2)
+      weap = NextWeapon( weaponRawOrder[MAX_WEAPONS - i - 1] );
+    else
+      weap = i;
+#define i weap
+#endif
+    
 		if ( !( bits & ( 1 << i ) ) ) {
 			continue;
 		}
@@ -1716,6 +1743,9 @@ void CG_DrawWeaponSelect( void ) {
 
 		x += dx;
 		y += dy;
+#ifdef USE_ADVANCED_HUD
+#undef i
+#endif
 	}
 
 	// draw the selected name
@@ -1747,6 +1777,50 @@ static qboolean CG_WeaponSelectable( int i ) {
 }
 
 
+#ifdef USE_ADVANCED_HUD
+//<WarZone> 
+int NextWeapon (int curr) 
+{ 
+  int i; 
+  int w = -1; 
+
+  for (i = 0; i < MAX_WEAPONS; i++) 
+  { 
+    if (weaponRawOrder[i] == curr) 
+    { 
+      w = i; 
+      break; 
+    } 
+  } 
+
+  if (w == -1) 
+    return curr; //shouldn't happen 
+
+  return weaponRawOrder[(w + 1) % MAX_WEAPONS]; 
+} 
+
+int PrevWeapon (int curr) 
+{ 
+  int i; 
+  int w = -1; 
+
+  for (i = 0; i < MAX_WEAPONS; i++) 
+  { 
+    if (weaponRawOrder[i] == curr) 
+    { 
+      w = i; 
+      break; 
+    } 
+  } 
+
+  if (w == -1) 
+    return curr; //shouldn't happen 
+
+  return weaponRawOrder[w - 1 >= 0 ? w - 1 : MAX_WEAPONS - 1]; 
+} 
+#endif
+
+
 /*
 ===============
 CG_NextWeapon_f
@@ -1769,6 +1843,11 @@ void CG_NextWeapon_f( void ) {
 	original = cg.weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
+#ifdef USE_ADVANCED_HUD
+    if(cg_autoswitch.integer == 2)
+      cg.weaponSelect = NextWeapon( cg.weaponSelect ); //WarZone 
+    else
+#endif
 		cg.weaponSelect++;
 		if ( cg.weaponSelect == MAX_WEAPONS ) {
 			cg.weaponSelect = 0;
@@ -1808,6 +1887,11 @@ void CG_PrevWeapon_f( void ) {
 	original = cg.weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
+#ifdef USE_ADVANCED_HUD
+    if(cg_autoswitch.integer == 2)
+      cg.weaponSelect = PrevWeapon( cg.weaponSelect ); //WarZone 
+    else
+#endif
 		cg.weaponSelect--;
 		if ( cg.weaponSelect == -1 ) {
 			cg.weaponSelect = MAX_WEAPONS - 1;
@@ -1876,8 +1960,15 @@ The current weapon has just run out of ammo
 */
 void CG_OutOfAmmoChange( void ) {
 	int		i;
+#ifdef USE_ADVANCED_HUD
+  int weap;
+#endif
 
 	cg.weaponSelectTime = cg.time;
+#ifdef USE_ADVANCED_HUD
+  if(cg_autoswitch.integer == 2)
+    weap = weaponRawOrder[MAX_WEAPONS - 1]; //WarZone -- pick the best weapon they have 
+#endif
 
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW || cg.demoPlayback ) {
 		return;

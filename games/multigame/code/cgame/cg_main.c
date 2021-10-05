@@ -224,6 +224,10 @@ vmCvar_t	cg_jumpVelocity;
 vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
 #endif
+#ifdef USE_ADVANCED_HUD
+vmCvar_t  cg_weaponOrder;
+int cg_weaponsCount = -1; //WarZone
+#endif
 
 typedef struct {
 	vmCvar_t	*vmCvar;
@@ -344,6 +348,9 @@ static const cvarTable_t cvarTable[] = {
   { &cg_gravity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
   { &cg_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO},
 #endif
+#ifdef USE_ADVANCED_HUD
+  { &cg_weaponOrder, "cg_weaponOrder", "1/2/3/4/6/8/5/7/9", CVAR_ARCHIVE }, //WarZone
+#endif
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
 	{ &cg_noTaunt, "cg_noTaunt", "0", CVAR_ARCHIVE},
@@ -417,6 +424,94 @@ void CG_ForceModelChange( void ) {
 }
 
 
+#ifdef USE_ADVANCED_HUD
+extern int weaponOrder[MAX_WEAPONS]; 
+extern int weaponRawOrder[MAX_WEAPONS]; 
+
+int contains(int *list, int size, int number) 
+{ 
+  int i; 
+
+  for (i = 0; i < size; i++) 
+    if (list[i] == number) return 1; 
+
+  return 0; 
+} 
+
+
+void UpdateWeaponOrder (void) 
+{ 
+  char *order = cg_weaponOrder.string; 
+  char weapon[3]; 
+  int i, start; 
+  int tempOrder[MAX_WEAPONS]; 
+  int weapUsed[MAX_WEAPONS]; 
+  int temp; 
+
+  weapon[1] = '\0'; 
+  memset(tempOrder, 0, sizeof(tempOrder)); 
+  memset(weapUsed, 0, sizeof(weapUsed)); 
+
+  i = 0; 
+  while (order != NULL && *order != '\0' && i < MAX_WEAPONS) 
+  { 
+    weapon[0] = *order; 
+    order++; 
+
+    if (*order != '\\' && *order != '/') 
+    { 
+      weapon[1] = *order; 
+      weapon[2] = '\0'; 
+      order++; 
+    } else { 
+      weapon[1] = '\0'; 
+    } 
+
+    if (*order != '\0') 
+      order++; 
+
+    temp = atoi( weapon ); 
+    if (temp < 1 || temp > MAX_WEAPONS) 
+    { 
+      CG_Printf( "Error: %i is out of range. Ignoring..\n", temp ); 
+    } 
+    else if ( contains( tempOrder, sizeof(tempOrder)/sizeof(tempOrder[0]), temp ) )
+
+    { 
+      CG_Printf( "Error: %s (%i) already in list. Ignoring..\n",
+        (BG_FindItemForWeapon( temp ))->pickup_name, temp );
+
+    } else { 
+      tempOrder[i] = temp; 
+      weapUsed[temp - 1] = 1; 
+      i++; 
+    } 
+  } 
+
+  //error checking.. 
+  start = 0; 
+  for (i = 0; i < MAX_WEAPONS; i++) 
+  { 
+    if (weapUsed[i]) 
+      continue; 
+    CG_Printf( "Error: %s (%i) not in list. Adding it to front of the list..\n",
+      (BG_FindItemForWeapon( i + 1 ))->pickup_name, i + 1 );
+
+    weaponRawOrder[start++] = i + 1; 
+  } 
+  //build the raw order list 
+  for (i = start; i < MAX_WEAPONS; i++) 
+    weaponRawOrder[i] = tempOrder[i - start]; 
+
+  //built the remaping table 
+  for (i = 0; i < MAX_WEAPONS; i++) 
+    weaponOrder[weaponRawOrder[i] - 1] = i + 1; 
+
+} 
+//</WarZone>
+#endif
+
+
 /*
 =================
 CG_UpdateCvars
@@ -446,6 +541,15 @@ void CG_UpdateCvars( void ) {
 		// FIXME E3 HACK
 		trap_Cvar_Set( "teamoverlay", "1" );
 	}
+
+#ifdef USE_ADVANCED_HUD
+  //WarZone 
+  if ( cg_weaponsCount != cg_weaponOrder.modificationCount ) 
+  { 
+    UpdateWeaponOrder(); 
+    cg_weaponsCount = cg_weaponOrder.modificationCount; 
+  } 
+#endif
 
 	// if model changed
 	if ( forceModelModificationCount != cg_forceModel.modificationCount 

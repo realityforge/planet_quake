@@ -295,6 +295,9 @@ struct gclient_s {
 	int			lastkilled_client;	// last client that this client killed
 	int			lasthurt_client;	// last client that damaged this client
 	int			lasthurt_mod;		// type of damage the client did
+#ifdef USE_ADVANCED_DMG
+  int		  lasthurt_location;	// Where the client was hit.
+#endif
 
 	// timers
 	int			respawnTime;		// can respawn when time > this, force after g_forcerespwan
@@ -833,6 +836,9 @@ extern  vmCvar_t  g_railThruWalls;
 extern  vmCvar_t  g_bounceRockets;
 extern  vmCvar_t  g_enableCloak;
 extern  vmCvar_t  g_vortexGrenades;
+#endif
+#ifdef USE_ADVANCED_DMG
+extern  vmCvar_t  g_locDamage;
 #endif
 
 #ifdef BUILD_GAME_STATIC

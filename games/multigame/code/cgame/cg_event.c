@@ -438,7 +438,24 @@ CG_ItemPickup
 A new item was picked up this frame
 ================
 */
-static void CG_ItemPickup( int itemNum ) {
+#ifdef USE_ADVANCED_HUD
+extern int weaponOrder[MAX_WEAPONS]; 
+
+int RateWeapon (int weapon) 
+{ 
+  weapon--; 
+
+  if (weapon > 8 || weapon < 0) 
+    return 0; //bad weapon 
+
+  return weaponOrder[weapon]; 
+} 
+
+static void CG_ItemPickup( int itemNum, qboolean isNewItem )
+#else
+static void CG_ItemPickup( int itemNum ) 
+#endif
+{
 	static int oldItem = -1;
 	
 	cg.itemPickup = itemNum;
@@ -456,6 +473,11 @@ static void CG_ItemPickup( int itemNum ) {
 	if ( bg_itemlist[itemNum].giType == IT_WEAPON ) {
 		// select it immediately
 		if ( cg_autoswitch.integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN ) {
+#ifdef USE_ADVANCED_HUD
+      if(cg_autoswitch.integer == 2 && !isNewItem
+        && RateWeapon( bg_itemlist[itemNum].giTag) < RateWeapon( cg.weaponSelect ))
+        return;
+#endif
 			cg.weaponSelectTime = cg.time;
 			cg.weaponSelect = bg_itemlist[itemNum].giTag;
 		}
@@ -784,6 +806,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*gasp.wav" ) );
 		break;
 
+#ifdef USE_ADVANCED_HUD
+  case EV_ITEM_PICKUP2: 
+#endif
+
 	case EV_ITEM_PICKUP:
 		{
 			gitem_t	*item;
@@ -834,7 +860,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
-				CG_ItemPickup( index );
+#ifdef USE_ADVANCED_HUD
+				CG_ItemPickup( index, event == EV_ITEM_PICKUP2 );
+#else
+        CG_ItemPickup( index );
+#endif
 			}
 
 			if ( ce ) {
@@ -872,7 +902,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
-				CG_ItemPickup( index );
+#ifdef USE_ADVANCED_HUD
+				CG_ItemPickup( index, qtrue );
+#else
+        CG_ItemPickup( index );
+#endif
 			}
 
 			if ( ce ) {

@@ -839,6 +839,11 @@ void ClientThink_real( gentity_t *ent ) {
 	client->ps.gravity = g_gravity.value;
 
 	// set speed
+#ifdef USE_ADVANCED_DMG
+#ifdef USE_ADVANCED_MOVE
+  if(!g_locDamage.integer)
+#endif
+#endif
 	client->ps.speed = g_speed.value;
 
 #ifdef MISSIONPACK

@@ -164,6 +164,8 @@
 #define USE_ADVANCED_WEAPONS 1
 // advanced movement includes things like ladders, and class based movement
 #define USE_ADVANCED_MOVE 1
+// advanged damage changes based on where the player is shot
+#define USE_ADVANCED_DMG 1
 // 
 
 #endif
