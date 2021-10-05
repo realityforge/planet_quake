@@ -1885,7 +1885,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls, dllSyscall_t dllSyscall
 	// see if we already have the VM
 	if ( vm->name ) {
 		if ( vm->index != index ) {
-			Com_Error( ERR_DROP, "VM_Create: bad allocated vm index %i != %i", vm->index, index );
+			Com_Error( ERR_DROP, "VM_Create: bad allocated vm index %i != %i != %i", vmIndex, vm->index, index );
 			return NULL;
 		}
 		return vm;
@@ -2004,15 +2004,15 @@ void VM_Free( vm_t *vm ) {
 	if ( vm->dllHandle )
 		Sys_UnloadLibrary( vm->dllHandle );
 
-#if 0	// now automatically freed by hunk
+#ifdef USE_LAZY_LOAD	// now automatically freed by hunk
 	if ( vm->codeBase.ptr ) {
-		Z_Free( vm->codeBase.ptr );
+    Com_Memset( vm->codeBase.ptr, 0, vm->codeLength );
 	}
 	if ( vm->dataBase ) {
-		Z_Free( vm->dataBase );
+    Com_Memset( vm->dataBase, 0, vm->dataAlloc );
 	}
 	if ( vm->instructionPointers ) {
-		Z_Free( vm->instructionPointers );
+    Com_Memset( vm->instructionPointers, 0, vm->instructionCount * sizeof(*vm->instructionPointers) );
 	}
 #endif
 	Com_Memset( vm, 0, sizeof( *vm ) );

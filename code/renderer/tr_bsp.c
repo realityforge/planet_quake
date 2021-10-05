@@ -33,7 +33,14 @@ void RE_LoadWorldMap( const char *name );
 
 */
 
-static	world_t		s_worldData;
+#ifdef USE_MULTIVM_CLIENT
+world_t		s_worldDatas[MAX_NUM_WORLDS];
+int       rwi = 0; // render world, should match number of loaded clip maps, 
+                   //   since they are reusable
+#else
+world_t		s_worldData;
+#endif
+
 static	byte		*fileBase;
 
 int			c_subdivisions;

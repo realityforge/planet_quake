@@ -1265,11 +1265,11 @@ R_ModelInit
 void R_ModelInit( void ) {
 	model_t		*mod = NULL;
 
-	// leave a space for NULL model
 #ifdef USE_MULTIVM_CLIENT
   // TODO: move this up?
   rwi = 0;
 #endif
+  // leave a space for NULL model
 	s_worldData.numModels = 0;
 	memset(worldModels, 0, sizeof(worldModels));
 

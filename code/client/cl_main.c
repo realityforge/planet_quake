@@ -2856,6 +2856,7 @@ static void CL_DownloadsComplete( void ) {
 #else
 	cls.firstClick = qtrue;
 #endif
+  CM_ClearMap();
 #else
 	CL_FlushMemory();
 #endif

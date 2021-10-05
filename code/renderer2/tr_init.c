@@ -34,6 +34,7 @@ glstate_t	glState;
 
 static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
+void GL_SetDefaultState( void );
 
 cvar_t	*r_flareSize;
 cvar_t	*r_flareFade;

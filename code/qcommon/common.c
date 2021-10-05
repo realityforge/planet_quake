@@ -4638,7 +4638,8 @@ void Com_Frame( qboolean noDelay ) {
 	realMsec = com_frameTime - lastTime;
 
 #ifdef USE_LIVE_RELOAD
-  FS_Frame(com_frameTime);
+  if(FS_Initialized())
+    FS_Frame(com_frameTime);
 #endif
 
 	Cbuf_Execute();

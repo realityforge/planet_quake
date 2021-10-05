@@ -1269,6 +1269,13 @@ void CL_InitCGame( int inVM ) {
 			interpret = VMI_COMPILED;
 	}
 
+#ifndef USE_MULTIVM_CLIENT
+#ifdef USE_LAZY_MEMORY
+  if(cgvm)
+    cgvm = VM_Restart(cgvm);
+  else
+#endif
+#endif
 	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );

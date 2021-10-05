@@ -762,9 +762,9 @@ int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	cmi = empty;
   Com_DPrintf( "%s( '%s', %i )\n", __func__, name, clientload );
 #else
-	//if ( cms[0].name[0] != '\0' ) {
-	//	Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", name, clientload );
-	//}
+	if ( cm.name[0] != '\0' ) {
+		Com_Error( ERR_DROP, "CM_LoadMap( %s, %i ) already loaded\n", name, clientload );
+  }
 	// free old stuff
 	CM_ClearMap();
 #endif

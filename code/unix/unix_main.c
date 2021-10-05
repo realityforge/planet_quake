@@ -941,18 +941,20 @@ void Sys_PlatformInit2( void ) {
 #ifdef USE_LIVE_RELOAD
 extern cvar_t *fs_reloadEXE;
 extern int     exeWd;
-int inotifyFd;
-int notifyCount;
-int prevCheck;
-const char *argv1;
-char *cmdline4;
+#ifndef __APPLE__
+static int inotifyFd;
+#endif
+static int notifyCount;
+static int prevCheck;
+static const char *argv1;
+static char *cmdline4;
 typedef struct {
   char name[MAX_QPATH];
   void (*cb)( void );
   int wd;
   time_t mtime;
 } notify_t;
-notify_t callbacks[10];
+static notify_t callbacks[10];
 
 void Sys_ReloadClient( void ) {
   if (0 == fork()) {
@@ -977,6 +979,7 @@ void Sys_DenotifyChange(int wd) {
 
 int Sys_NotifyChange(const char *filepath, void (*cb)( void )) {
   notify_t *notify = &callbacks[(notifyCount++)%ARRAY_LEN(callbacks)];
+  Com_Printf("wtf 2? %s\n", filepath);
   memcpy(notify->name, filepath, sizeof(notify->name));
   notify->cb = cb;
 #ifndef __APPLE__
@@ -1008,6 +1011,7 @@ void FS_Frame(int msecs) {
     p += sizeof(struct inotify_event) + event->len;
   }
 #else
+/*
   if(msecs / 1000 > prevCheck) {
     prevCheck = msecs / 1000;
   } else {
@@ -1017,6 +1021,7 @@ void FS_Frame(int msecs) {
     off_t size;
     time_t mtime, ctime;
     if(!callbacks[i].wd) continue;
+    Com_Printf("wtf? %s\n", callbacks[i].name);
     Sys_GetFileStats( callbacks[i].name, &size, &mtime, &ctime );
     if(callbacks[i].mtime != mtime) {
       if(callbacks[i].mtime > 0) {
@@ -1025,6 +1030,7 @@ void FS_Frame(int msecs) {
       callbacks[i].mtime = mtime;
     }
   }
+*/
 #endif
 }
 #endif
