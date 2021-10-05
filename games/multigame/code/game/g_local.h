@@ -33,6 +33,7 @@
 #define FL_FORCE_GESTURE	0x00008000	// force gesture on client
 #ifdef USE_ADVANCED_WEAPONS
 #define FL_ROCKETBOUNCE		0x00010000
+#define FL_CLOAK      		0x00020000
 #endif
 
 // movers are things like doors, plats, buttons, etc
@@ -830,6 +831,7 @@ extern  vmCvar_t  g_thawTime;
 #ifdef USE_ADVANCED_WEAPONS
 extern  vmCvar_t  g_railThruWalls;
 extern  vmCvar_t  g_bounceRockets;
+extern  vmCvar_t  g_enableCloak;
 #endif
 
 #ifdef BUILD_GAME_STATIC

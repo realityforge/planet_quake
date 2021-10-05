@@ -429,9 +429,22 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #endif
 		} else {
 			// count down health when over max
+#ifdef USE_ADVANCED_WEAPONS
+      if (!(ent->flags & FL_CLOAK))
+#endif
 			if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
 				ent->health--;
 			}
+#ifdef USE_ADVANCED_WEAPONS
+      if (ent->flags & FL_CLOAK) {
+        // count down health when cloaked.
+      	ent->health--;
+      	if ( ent->health < 11) {
+      		ent->flags ^= FL_CLOAK;
+      		ent->client->ps.powerups[PW_INVIS] = level.time;
+      	}
+      }
+#endif
 		}
 
 		// count down armor when over max

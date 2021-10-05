@@ -93,6 +93,7 @@ vmCvar_t	g_thawTime;
 #ifdef USE_ADVANCED_WEAPONS
 vmCvar_t	g_railThruWalls;
 vmCvar_t	g_bounceRockets;
+vmCvar_t	g_enableCloak;
 #endif
 
 static cvarTable_t gameCvarTable[] = {
@@ -205,6 +206,7 @@ static cvarTable_t gameCvarTable[] = {
 #ifdef USE_ADVANCED_WEAPONS
   ,{ &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

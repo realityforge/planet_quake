@@ -23,6 +23,9 @@ typedef struct {
 	qboolean	walking;
 	qboolean	groundPlane;
 	trace_t		groundTrace;
+#ifdef USE_ADVANCED_MOVE
+  qboolean  ladder;
+#endif
 
 	float		impactSpeed;
 

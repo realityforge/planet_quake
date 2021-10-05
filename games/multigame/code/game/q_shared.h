@@ -162,6 +162,8 @@
 #define USE_ADVANCED_HUD 1
 // weapon enhancements toggled by cvars
 #define USE_ADVANCED_WEAPONS 1
+// advanced movement includes things like ladders, and class based movement
+#define USE_ADVANCED_MOVE 1
 // 
 
 #endif

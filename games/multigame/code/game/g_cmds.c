@@ -1839,6 +1839,34 @@ void Cmd_RBounce_f( gentity_t *ent ) {
 		msg = "Rocket Bounce ON\n";
 	trap_SendServerCommand( ent-g_entities, va("print \"%s\"", msg));
 }
+
+
+/*
+=================
+Cmd_Cloak_f
+=================
+*/
+void Cmd_Cloak_f( gentity_t *ent ) {
+
+	char *msg; // message to player
+
+	ent->flags ^= FL_CLOAK;
+  
+  if(!g_enableCloak.integer) {
+    msg = "Cloaking not enabled\n";
+	} else if (!(ent->flags & FL_CLOAK)) {
+		msg = "Cloaking OFF\n";
+		ent->client->ps.powerups[PW_INVIS] = level.time;
+		// Removes the invisible powerup from the player
+	}        
+	else {
+		msg = "Cloaking ON\n";
+		ent->client->ps.powerups[PW_INVIS] = level.time + 1000000000;
+		// Gives the invisible powerup to the player
+	}
+
+	trap_SendServerCommand( ent-g_entities, va("print \"%s\"", msg));
+}
 #endif
 
 
@@ -1982,6 +2010,8 @@ void ClientCommand( int clientNum ) {
 #ifdef USE_ADVANCED_WEAPONS
   else if (Q_stricmp (cmd, "rbounce") == 0)
     Cmd_RBounce_f( ent );
+  else if (Q_stricmp (cmd, "cloak") == 0)
+  	Cmd_Cloak_f( ent );
 #endif
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
