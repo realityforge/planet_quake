@@ -106,6 +106,9 @@ cvar_t  *cl_lagometer;
 cvar_t  *cl_drawFPS;
 cvar_t  *cl_snaps;
 
+cvar_t  *cl_demoOverrideCS[100];
+cvar_t  *cl_demoOverrideGame;
+
 #ifdef USE_DRAGDROP
 cvar_t  *cl_dropAction;
 #endif
@@ -975,6 +978,7 @@ void CL_ReadDemoMessage( void ) {
 #endif
 
 	if ( clc.demofile == FS_INVALID_HANDLE ) {
+    Com_Printf("ERROR: no demo to read\n");
 		CL_DemoCompleted();
 		return;
 	}
@@ -1251,6 +1255,7 @@ static void CL_PlayDemo_f( void ) {
 		{
 			Com_sprintf(name, sizeof(name), "demos/%s", arg);
 			FS_BypassPure();
+      Com_Printf("opening demo: %s\n", name);
 			FS_FOpenFileRead( name, &hFile, qtrue );
 			FS_RestorePure();
 		}
@@ -1610,7 +1615,11 @@ This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 qboolean CL_Disconnect( qboolean showMainMenu, qboolean dropped ) {
 	static qboolean cl_disconnecting = qfalse;
 	qboolean cl_restarted = qfalse;
-	
+
+  void *syms[20];
+  const size_t size = backtrace( syms, ARRAY_LEN( syms ) );
+  backtrace_symbols_fd( syms, size, STDERR_FILENO );
+
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return cl_restarted;
 	}
@@ -5196,6 +5205,10 @@ void CL_Init( void ) {
 	Cvar_CheckRange( cl_aviFrameRate, "1", "1000", CV_INTEGER );
 	cl_aviMotionJpeg = Cvar_Get ("cl_aviMotionJpeg", "1", CVAR_ARCHIVE);
 	cl_forceavidemo = Cvar_Get ("cl_forceavidemo", "0", 0);
+  for(int cs = 0; cs < 100; cs++) {
+    cl_demoOverrideCS[cs] = Cvar_Get(va("cl_demoOverrideCS%d", cs + 1), "", CVAR_TEMP);
+  }
+  cl_demoOverrideGame = Cvar_Get("cl_demoOverrideGame", "", CVAR_TEMP);
 
 	cl_aviPipeFormat = Cvar_Get( "cl_aviPipeFormat",
 		"-preset medium -crf 23 -vcodec libx264 -flags +cgop -pix_fmt yuv420p "
@@ -5208,9 +5221,9 @@ void CL_Init( void ) {
 	cl_master[0] = Cvar_Get("cl_master1", va("127.0.0.1:%i", PORT_SERVER), CVAR_ARCHIVE);
 	cl_master[1] = Cvar_Get("cl_master2", "207.246.91.235:27950", CVAR_ARCHIVE);
 	cl_master[2] = Cvar_Get("cl_master3", "ws://master.quakejs.com:27950", CVAR_ARCHIVE);
-	
-	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ )
-		cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
+	for ( int index = 0; index < MAX_MASTER_SERVERS; index++ ) {
+    cl_master[index] = Cvar_Get(va("cl_master%d", index + 1), "", CVAR_ARCHIVE);
+  }
 #endif
 
 #ifdef USE_DRAGDROP

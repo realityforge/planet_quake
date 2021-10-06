@@ -5,6 +5,7 @@ output/
 *.user
 *tags
 *.tags*
+/code/libjpeg/
 
 # emscripten
 ####################

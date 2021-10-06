@@ -366,16 +366,6 @@ static void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
 
 /*
 =====================
-CL_AddCgameCommand
-=====================
-*/
-static void CL_AddCgameCommand( const char *cmdName ) {
-	Cmd_AddCommand( cmdName, NULL );
-}
-
-
-/*
-=====================
 CL_ConfigstringModified
 =====================
 */
@@ -824,7 +814,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 	case CG_ADDCOMMAND:
-		CL_AddCgameCommand( VMA(1) );
+		Cmd_AddCommandSafe( VMA(1) );
 		return 0;
 	case CG_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1) );

@@ -1716,9 +1716,9 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
   
 	if ( vmcmp(vm, VM_GAME, VMR_CPMA2) ) {
 		ip = buf + 0x38ea4;
-		if(ip[0].op == OP_CONST && ip[0].value == 0xdc97) {
-			VM_IgnoreInstructions( &ip[0], 8 );
-		}
+		//if(ip[0].op == OP_CONST && ip[0].value == 0xdc97) {
+		//	VM_IgnoreInstructions( &ip[0], 8 );
+		//}
 	}
 	//}
 #endif

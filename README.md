@@ -31,6 +31,8 @@ QuakeJS is a port of [ioquake3](https://github.com/ioquake/ioq3) to JavaScript w
 
 To see a live demo, check out https://quake.games or http://www.quakejs.com
 
+## New Features
+
 Some of the major features currently implemented are:
 
   * ...using OpenGL OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
@@ -68,11 +70,12 @@ Some of the major features currently implemented are:
   * Many, many bug fixes
 
 
-New game features:
+## Game Features:
 
   * Automatically skip to multiplayer menu TODO: and that connects to first available command server that we can request a map command. TODO: Remove the auto-connect code from javascript.
   * Configurable vote options based on roles.
-  * Launch a program like opening a web page from a map trigger.
+  * Opening a web page from a map trigger.
+  * Freezing a player like freeze tag. TODO: referee only, add freezing to game dynamics. TODO: camera angle changes while frozen, should revert and treat frozen player like spectator.
   * More configurable physics cvars.
   * Power-up item timers.
   * Damage plum for showing hit damage near players.
@@ -93,7 +96,16 @@ New game features:
   * Flashlight and laser commands. TODO: add visual for laser sight like battlefield when you are being targeted right in the eye.
   * TODO: infinite haste, how is this different than g_speed? Applies to only one player. TODO: boots that can climb steep slopes. TODO: jump velocity as a part of anti-gravity boots.
 
-Coming soon!
+## Coming soon!
+  
+  * Asynchronous lazy loading with zip file repackaging and coalescing.
+  * Multi-world file-system and networking for connecting to specific worlds.
+  * demoMap rendering that maps a .dm file to a surface in game.
+  * Advanced teleporting features like replacing Voids with teleporting back, addressable.
+  * Asynchronous rendering for portals, mirrors, demos, videos, etc
+
+## Future TODOs
+
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?
   * IN PROGRESS: removing Emscripten and compiling only to wasm with clang.
   * Move more features like EULA, file extension alternatives from ListFiles that comes from menu system, etc out of JS and in to C system.
@@ -117,7 +129,6 @@ Coming soon!
   * Socks5 based cUrl downloads for downloading over the proxy and avoid content access controls
   * LOD (level of detail) based compression, loading different levels of detail in models and shaders, distance based mipmaps
   * Brotli compression for game content from server UDP downloads
-  * Asynchronous rendering for portals, mirrors, demos, videos, etc
   * IN FAILURE: webm/VPX/vorbis video format, SVG
   * .Gif support with automatic frame binding in animMap
   * Event history with demo streaming as a service in the browser for splicing all those sweet frags, SQS/Message Queue

@@ -613,7 +613,7 @@ void CL_SystemInfoChanged( qboolean onlyGame, int igs ) {
 
 	if ( FS_InvalidGameDir( s ) ) {
 		Com_Printf( S_COLOR_YELLOW "WARNING: Server sent invalid fs_game value %s\n", s );
-	} else {
+	} else if(Q_stricmp(Cvar_VariableString("fs_basegame"), s)) {
 		Cvar_Set( "fs_game", s );
 	}
 
@@ -736,12 +736,82 @@ CL_ParseServerInfo
 */
 void CL_ParseServerInfo( int igs )
 {
+  gameState_t	oldGs;
 	const char *serverInfo;
 	size_t	len;
 
-	serverInfo = cl.gameState.stringData
+  serverInfo = cl.gameState.stringData
 		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	Com_Printf("Gamestate (%i): %.*s\n", igs, (int)strlen(serverInfo), serverInfo);
+
+  if(clc.demoplaying) {
+    qboolean serverOverride = qfalse;
+    char	infostring[MAX_INFO_STRING+160]; // add some space for challenge string
+    char	sysinfostring[BIG_INFO_STRING]; // add some space for challenge string
+    if(cl_demoOverrideGame->string[0] != '\0') {
+      Q_strncpyz( infostring, serverInfo, sizeof( infostring ) );
+      Info_SetValueForKey( infostring, "gamename", cl_demoOverrideGame->string );
+      Q_strncpyz( sysinfostring, cl.gameState.stringData
+    		+ cl.gameState.stringOffsets[ CS_SYSTEMINFO ], sizeof( sysinfostring ) );
+      Info_SetValueForKey_s( sysinfostring, BIG_INFO_STRING, "fs_game", cl_demoOverrideGame->string );
+    }
+    oldGs = cl.gameState;
+    // do the same thing CL_ConfigstringModified() in cl_cgame.c does
+    //   except check for negative numbers, that will give us the override index
+    // overrides should be in the same format and server command, 
+    //  e.g. `cs 20 "string"`
+    
+    // build the new gamestate
+    Com_Memset( &cl.gameState, 0, sizeof( cl.gameState ) );
+
+    for(int cs = 0; cs < 100; cs++) {
+      if(cl_demoOverrideCS[cs]->string[0] != '\0') {
+        int index;
+        Cmd_TokenizeString( cl_demoOverrideCS[cs]->string );
+        index = atoi( Cmd_Argv(1) );
+        if ( index < 0 || index >= MAX_CONFIGSTRINGS )
+          continue;
+        if(index == 0) serverOverride = qtrue;
+        if(index == 1) serverOverride = qtrue;
+        cl.gameState.stringOffsets[index] = -(cs + 1); // to compensate for zeros
+      }
+    }
+
+    //int max = atoi(Info_ValueForKey( serverInfo, "sv_maxclients" ));
+    for ( int i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
+      const char	*dup;
+      int len, index;
+
+      //if ( i > CS_PLAYERS && i < CS_PLAYERS + max ) {
+        // TODO: fix missing models before demo loads
+        // TODO: or demoPlayerCS0-100 to replace player settings
+        //Com_Printf("Config: %s\n", oldGs.stringData + oldGs.stringOffsets[ i ]);
+      //}
+
+      // override game separately if not already set
+      if(i < 2 && !serverOverride && cl_demoOverrideGame->string[0] != '\0') {
+        if(i == 0)
+          dup = infostring;
+        if(i == 1)
+          dup = sysinfostring;
+      } else if ( cl.gameState.stringOffsets[i] < 0 ) {
+        index = -(cl.gameState.stringOffsets[i] + 1);
+        Cmd_TokenizeString( cl_demoOverrideCS[index]->string );
+  			dup = Cmd_ArgsFrom(2);
+        Com_Printf("Config Modified: %i %s\n", i, dup);
+  		} else {
+  			dup = oldGs.stringData + oldGs.stringOffsets[ i ];
+  		}
+
+      len = strlen( dup );
+      // append it to the gameState string buffer
+  		cl.gameState.stringOffsets[ i ] = cl.gameState.dataCount;
+  		Com_Memcpy( cl.gameState.stringData + cl.gameState.dataCount, dup, len + 1 );
+  		cl.gameState.dataCount += len + 1;
+      
+      //Com_Printf("Config (%i): %s\n", i, cl.gameState.stringData + cl.gameState.stringOffsets[ i ]);
+    }
+  }
 
 	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
 		"sv_allowDownload"));
@@ -755,19 +825,6 @@ void CL_ParseServerInfo( int igs )
   if(clc.world) Z_Free(clc.world);
 	clc.world = CopyString(Info_ValueForKey( serverInfo, "sv_mvWorld" ));
 #endif
-
-  int max = atoi(Info_ValueForKey( serverInfo, "sv_maxclients" ));
-  for ( int i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		if ( i > CS_PLAYERS && i < CS_PLAYERS + max ) {
-      // TODO: fix missing models before demo loads
-      // TODO: generalized solution would be to use demoCS0-100 and replace values
-      // TODO: or demoPlayerCS0-100 to replace player settings
-      // TODO: or demoOverrideCS0-100 to override with scripts during playback
-      //   since this is for demo playback it's basically cosmetic
-      //   how does OSP do the thing with replacing models with ultrabrights?
-      Com_Printf("Config: %s\n", cl.gameState.stringData + cl.gameState.stringOffsets[ i ]);
-    }
-  }
 
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
@@ -887,7 +944,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	// parse useful values out of CS_SERVERINFO
 	CL_ParseServerInfo(igs);
-	
+
 #ifdef USE_LNBITS
 	Cvar_Set("cl_lnInvoice", "");
 	cls.qrCodeShader = 0;

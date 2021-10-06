@@ -1522,13 +1522,18 @@ static void S_Base_Shutdown( void ) {
         buffer = nbuffer;
       }
       hash = S_HashSFXName( s_knownSfx[i].soundName );
-      sfx = prevSfx = sfxHash[hash];
+      prevSfx = NULL;
+      sfx = sfxHash[hash];
       while (sfx) {
         if (!Q_stricmp(sfx->soundName, s_knownSfx[i].soundName) ) {
-          sfx->next = prevSfx->next; // take it out of the list
+          if(prevSfx == NULL)
+            sfxHash[hash] = sfx->next;
+          else
+            prevSfx->next = sfx->next; // take it out of the list
           break;
+        } else {
+          prevSfx = sfx;
         }
-        prevSfx = sfx;
         sfx = sfx->next;
       }
       s_knownSfx[i].inMemory = qfalse;

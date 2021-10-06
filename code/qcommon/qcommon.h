@@ -645,6 +645,7 @@ void	Cmd_RemoveCgameCommands( void );
 typedef void (*completionFunc_t)( char *args, int argNum );
 
 // don't allow VMs to remove system commands
+void	Cmd_AddCommandSafe( const char *cmd_name );
 void	Cmd_RemoveCommandSafe( const char *cmd_name );
 
 void	Cmd_CommandCompletion( void(*callback)(const char *s) );

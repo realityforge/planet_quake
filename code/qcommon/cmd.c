@@ -353,7 +353,7 @@ static void Cmd_Exec_f( void ) {
 		return;
 	}
 	if (!quiet)
-		Com_Printf ("execing %s: %s\n", filename, f.c);
+		Com_Printf( "execing %s\n", filename );
 
 	Cbuf_InsertText( f.c );
 
@@ -788,6 +788,29 @@ void Cmd_RemoveCommand( const char *cmd_name ) {
 		}
 		back = &cmd->next;
 	}
+}
+
+
+/*
+============
+Cmd_RemoveCommandSafe
+
+Only remove commands with no associated function
+============
+*/
+void Cmd_AddCommandSafe( const char *cmd_name )
+{
+	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
+
+	if( !cmd ) {
+  } else {
+    Com_Printf("WARNING: Game created a command \"%s\" with the same name as"
+      " an engine command. Renaming engine command to \"engine_%s\""
+      " so that it can be removed later without error.\n", cmd_name, cmd_name);
+    Z_Free(cmd->name);
+    cmd->name = CopyString(va("engine_%s", cmd_name));
+  }
+  Cmd_AddCommand(cmd_name, NULL);
 }
 
 

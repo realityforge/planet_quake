@@ -612,6 +612,9 @@ extern  cvar_t  *cl_drawFPS;
 extern  cvar_t  *cl_lagometer;
 extern  cvar_t  *cl_nopredict;
 
+extern cvar_t   *cl_demoOverrideCS[100];
+extern cvar_t   *cl_demoOverrideGame;
+
 //=================================================
 
 //
