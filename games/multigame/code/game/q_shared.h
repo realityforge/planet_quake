@@ -168,6 +168,8 @@
 #define USE_ADVANCED_DMG 1
 // advanced classes applies special properties to players based on model or selection
 #define USE_ADVANCED_CLASS 1
+// laser sight and flash light
+#define USE_LASER_SIGHT 1
 // 
 
 #endif

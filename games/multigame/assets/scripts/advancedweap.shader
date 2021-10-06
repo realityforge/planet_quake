@@ -7,3 +7,12 @@ sprites/flameball
 		tcMod rotate 931
 	}
 }
+
+sprites/laser
+{
+	cull disable
+	{
+		clampmap sprites/laser.jpg
+		blendfunc GL_ONE GL_ONE
+        }
+}

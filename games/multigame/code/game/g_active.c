@@ -837,6 +837,10 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	client->ps.gravity = g_gravity.value;
+#ifdef USE_ADVANCED_MOVE
+  if (g_enableBoots.integer && ent->flags & FL_BOOTS)    //  umm and this,
+     client->ps.gravity = g_gravity.value * 0.20;        //  yeah... this too
+#endif
 
 	// set speed
 	client->ps.speed = g_speed.value;

@@ -601,4 +601,11 @@ void CG_InitConsoleCommands( void ) {
   trap_AddCommand ("rbounce");
   trap_AddCommand ("cloak");
 #endif
+#ifdef USE_ADVANCED_MOVE
+  trap_AddCommand ("boots");
+#endif
+#ifdef USE_LASER_SIGHT
+  trap_AddCommand ("laser");
+  trap_AddCommand ("flashlight");
+#endif
 }

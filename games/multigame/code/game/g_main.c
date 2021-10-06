@@ -98,8 +98,14 @@ vmCvar_t	g_vortexGrenades;
 vmCvar_t  g_vulnRockets;
 vmCvar_t  g_dropWeapon;
 #endif
+#ifdef USE_ADVANCED_MOVE
+vmCvar_t  g_enableBoots;
+#endif
 #ifdef USE_ADVANCED_DMG
 vmCvar_t  g_locDamage;
+#endif
+#ifdef USE_LASER_SIGHT
+vmCvar_t  g_enableLaser;
 #endif
 
 
@@ -222,8 +228,13 @@ static cvarTable_t gameCvarTable[] = {
 #ifdef USE_ADVANCED_DMG
   ,{ &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
+
 #ifdef USE_ADVANCED_HUD
   ,{ NULL, "g_supportsWeaponOrder", "1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse } //WarZone
+#endif
+
+#ifdef USE_ADVANCED_MOVE
+  ,{ &g_enableBoots, "g_enableBoots", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };
 

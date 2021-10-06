@@ -876,6 +876,90 @@ void weapon_proxlauncher_fire (gentity_t *ent) {
 
 //======================================================================
 
+#ifdef USE_LASER_SIGHT
+/*
+============
+Laser Sight Stuff
+
+	Laser Sight / Flash Light Functions
+============
+*/
+
+void Laser_Think( gentity_t *self )	{
+	vec3_t		end, start, forward, up;
+	trace_t		tr;
+
+	//If Player Dies, You Die -> now thanks to Camouflage!
+	if (self->parent->client->ps.pm_type == PM_DEAD)  {
+		G_FreeEntity(self);
+		return;
+	}
+
+	//Set Aiming Directions
+	AngleVectors(self->parent->client->ps.viewangles, forward, right, up);
+	CalcMuzzlePointOrigin(self->parent, muzzle_origin, forward, right, up, start);
+	VectorMA (start, 8192, forward, end);
+
+	//Trace Position
+	trap_Trace (&tr, start, NULL, NULL, end, self->parent->s.number, MASK_SHOT );
+
+	//Did you not hit anything?
+	if (tr.surfaceFlags & SURF_NOIMPACT || tr.surfaceFlags & SURF_SKY)	{
+		self->nextthink = level.time + 50;
+		trap_UnlinkEntity(self);
+		return;
+	}
+
+	//Move you forward to keep you visible
+	if (tr.fraction != 1)	VectorMA(tr.endpos,-4,forward,tr.endpos);
+
+	//Set Your position
+	VectorCopy( tr.endpos, self->r.currentOrigin );
+	VectorCopy( tr.endpos, self->s.pos.trBase );
+
+	vectoangles(tr.plane.normal, self->s.angles);
+
+	trap_LinkEntity(self);
+
+	//Prep next move
+	self->nextthink = level.time + 50;
+}
+
+void Laser_Gen( gentity_t *ent, int type )	{
+	gentity_t	*las;
+	int oldtype;
+
+	//Get rid of you?
+	if ( ent->client->lasersight) {
+		  oldtype = ent->client->lasersight->s.eventParm;
+		  G_FreeEntity( ent->client->lasersight );
+		  ent->client->lasersight = NULL;
+		  if (oldtype == type)
+			  return;
+	}
+
+	las = G_Spawn();
+
+	las->nextthink = level.time + 50;
+	las->think = Laser_Think;
+	las->r.ownerNum = ent->s.number;
+	las->parent = ent;
+	las->s.eType = ET_LASER;
+
+	//Lets tell it if flashlight or laser
+	if (type == 2)	{
+		las->s.eventParm = 2; //tells CG that it is a flashlight
+		las->classname = "flashlight";
+	}
+	else {
+		las->s.eventParm = 1; //tells CG that it is a laser sight
+		las->classname = "lasersight";
+	}
+
+	ent->client->lasersight = las;
+}
+#endif
+
 
 #ifdef USE_ADVANCED_WEAPONS
 /*

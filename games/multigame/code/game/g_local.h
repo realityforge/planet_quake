@@ -36,6 +36,9 @@
 #define FL_CLOAK      		0x00020000
 #define FL_THROWN_ITEM		0x00040000  // XRAY FMJ weapon throwing
 #endif
+#ifdef USE_ADVANCED_MOVE
+#define FL_BOOTS          0x00080000  // Anti Gravity Boots
+#endif
 
 // movers are things like doors, plats, buttons, etc
 typedef enum {
@@ -316,6 +319,10 @@ struct gclient_s {
 
 	qboolean	fireHeld;			// used for hook
 	gentity_t	*hook;				// grapple hook if out
+
+#ifdef USE_LASER_SIGHT
+  gentity_t	*lasersight;			// lasersight OR flashlight if in use
+#endif
 
 	int			switchTeamTime;		// time the player switched teams
 
@@ -850,6 +857,12 @@ extern  vmCvar_t  g_dropWeapon;
 #endif
 #ifdef USE_ADVANCED_DMG
 extern  vmCvar_t  g_locDamage;
+#endif
+#ifdef USE_ADVANCED_MOVE
+extern  vmCvar_t  g_enableBoots;
+#endif
+#ifdef USE_LASER_SIGHT
+extern  vmCvar_t  g_enableLaser;
 #endif
 
 #ifdef BUILD_GAME_STATIC

@@ -377,6 +377,7 @@ static qboolean PM_CheckJump( void ) {
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
 #ifdef USE_PHYSICS_VARS
+  // TODO: make this a part of gravity boots
 #ifdef CGAME
   pm->ps->velocity[2] = cg_jumpVelocity.integer;
 #else

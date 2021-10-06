@@ -958,6 +958,41 @@ static void CG_TeamBase( centity_t *cent ) {
 #endif
 }
 
+
+#ifdef USE_LASER_SIGHT
+/*
+==================
+CG_LaserSight
+  Creates the laser
+==================
+*/
+
+static void CG_LaserSight( centity_t *cent )  {
+	refEntity_t			ent;
+
+
+	// create the render entity
+	memset (&ent, 0, sizeof(ent));
+	VectorCopy( cent->lerpOrigin, ent.origin);
+	VectorCopy( cent->lerpOrigin, ent.oldorigin);
+
+	if (cent->currentState.eventParm == 1)
+	{
+		ent.reType = RT_SPRITE;
+		ent.radius = 2;
+		ent.rotation = 0;
+		ent.customShader = cgs.media.laserShader;
+		trap_R_AddRefEntityToScene( &ent );
+	}
+	else	{
+		trap_R_AddLightToScene(ent.origin, 200, 1, 1, 1);
+	}
+
+	
+}
+#endif
+
+
 /*
 ===============
 CG_AddCEntity
@@ -1014,6 +1049,11 @@ static void CG_AddCEntity( centity_t *cent ) {
 	case ET_TEAM:
 		CG_TeamBase( cent );
 		break;
+#ifdef USE_LASER_SIGHT
+  case ET_LASER:
+		CG_LaserSight( cent );
+		break;
+#endif
 	}
 }
 
