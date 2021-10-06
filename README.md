@@ -76,6 +76,22 @@ New game features:
   * More configurable physics cvars.
   * Power-up item timers.
   * Damage plum for showing hit damage near players.
+  * Armor piercing rails
+  * Bouncing rockets
+  * Infinite invisibility cloak with \cloak command
+  * Ladders shader for mapping and loading UrT maps
+  * Flame thrower, TODO: add model from web like Elon Musks invention
+  * Vortex Grenades. TODO: add vortex visual like warping BFG from Quake 4
+  * Working Grappling Hook. TODO: add bot support. TODO: add to character class like Major only. Anyone can pick up if she drops it.
+  * Lightening discharge under water like Quake 1
+  * Location Damage, hitting a player on specific body parts. Also, slows and breaks legs if you fall too far like UrT.
+  * Advanced weapon switching order for clients to set which weapons upgrade when they pick up.
+  * Vulnerable missiles, rockets can be shot down mid air.
+  * Player classes, changing starting weapon based on character model. TODO: change speed, and how much ammo can be carried.
+  * Weapon dropping, using the \drop command will eject current weapon. TODO: eject picked-up items, eject ammo, eject active power-up, eject runes, eject persistent power-ups like guard and returns to podium.
+  * Anti-gravity boots with \boots command.
+  * Flashlight and laser commands. TODO: add visual for laser sight like battlefield when you are being targeted right in the eye.
+  * TODO: infinite haste, how is this different than g_speed? Applies to only one player. TODO: boots that can climb steep slopes. TODO: jump velocity as a part of anti-gravity boots.
 
 Coming soon!
   * Make a simple thread manager https://stackoverflow.com/questions/7269709/sending-information-with-a-signal-in-linux or use oneTBB as an alternative?
