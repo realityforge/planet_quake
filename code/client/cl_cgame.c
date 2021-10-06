@@ -1271,9 +1271,9 @@ void CL_InitCGame( int inVM ) {
 
 #ifndef USE_MULTIVM_CLIENT
 #ifdef USE_LAZY_MEMORY
-  if(cgvm)
+  if(cgvm) {
     cgvm = VM_Restart(cgvm);
-  else
+  } else
 #endif
 #endif
 	cgvm = VM_Create( VM_CGAME, CL_CgameSystemCalls, CL_DllSyscall, interpret );

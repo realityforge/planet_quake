@@ -1248,10 +1248,10 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result ) 
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 #ifdef USE_PHYSICS_VARS
 #ifdef CGAME
-    result[2] -= 0.5 * cg_gravity.integer * deltaTime * deltaTime;
+    result[2] -= 0.5 * cg_gravity.value * deltaTime * deltaTime;
 #else
 #ifdef QAGAME
-    result[2] -= 0.5 * g_gravity.integer * deltaTime * deltaTime;
+    result[2] -= 0.5 * g_gravity.value * deltaTime * deltaTime;
 #endif
 #endif
 #else
@@ -1301,10 +1301,10 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 		VectorCopy( tr->trDelta, result );
 #ifdef USE_PHYSICS_VARS
 #ifdef CGAME
-    result[2] -= cg_gravity.integer * deltaTime;
+    result[2] -= cg_gravity.value * deltaTime;
 #else
 #ifdef QAGAME
-    result[2] -= g_gravity.integer * deltaTime;
+    result[2] -= g_gravity.value * deltaTime;
 #endif
 #endif
 #else

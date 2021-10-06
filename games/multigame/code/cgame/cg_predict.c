@@ -470,6 +470,9 @@ CG_TouchItem
 */
 static void CG_TouchItem( centity_t *cent ) {
 	const gitem_t *item;
+#ifdef USE_ADVANCED_HUD
+  qboolean alreadyHad = qfalse;
+#endif
 
 	if ( cg.allowPickupPrediction && cg.allowPickupPrediction > cg.time ) {
 		return;
@@ -516,7 +519,14 @@ static void CG_TouchItem( centity_t *cent ) {
 	}
 
 	// grab it
+#ifdef USE_ADVANCED_HUD
+  if(item->giType == IT_WEAPON) {
+    alreadyHad = cg.snap->ps.stats[STAT_WEAPONS] & (1 << item->giTag);
+  }
+  BG_AddPredictableEventToPlayerstate( alreadyHad ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, cent->currentState.modelindex , &cg.predictedPlayerState, cent - cg_entities );
+#else
 	BG_AddPredictableEventToPlayerstate( EV_ITEM_PICKUP, cent->currentState.modelindex , &cg.predictedPlayerState, cent - cg_entities );
+#endif
 
 	// perform prediction
 	CG_PickupPrediction( cent, item );

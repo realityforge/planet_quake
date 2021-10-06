@@ -1434,6 +1434,7 @@ void CL_ClearMemory( void ) {
 #ifdef USE_MULTIVM_CLIENT
 		// clear to mark doesn't work in multivm mode because there are many marks
 		Hunk_Clear();
+    CM_ClearMap();
 #else
 		Hunk_ClearToMark();
 #endif
@@ -2856,7 +2857,6 @@ static void CL_DownloadsComplete( void ) {
 #else
 	cls.firstClick = qtrue;
 #endif
-  CM_ClearMap();
 #else
 	CL_FlushMemory();
 #endif

@@ -1552,8 +1552,8 @@ WEAPON SELECTION
 
 
 #ifdef USE_ADVANCED_HUD
-int weaponOrder[MAX_WEAPONS]; 
-int weaponRawOrder[MAX_WEAPONS]; 
+int weaponOrder[WP_NUM_WEAPONS]; 
+int weaponRawOrder[WP_NUM_WEAPONS]; 
 int NextWeapon (int curr);
 
 void hud_weapons(float x, float y, weaponInfo_t *weapon) {
@@ -1669,7 +1669,7 @@ void CG_DrawWeaponSelect( void ) {
 #ifdef USE_ADVANCED_HUD
   for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
     if(cg_autoswitch.integer == 2)
-      weap = NextWeapon( weaponRawOrder[MAX_WEAPONS - i - 1] );
+      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i - 1] );
     else
       weap = i;
     if ( bits & ( 1 << weap ) ) {
@@ -1699,7 +1699,7 @@ void CG_DrawWeaponSelect( void ) {
 	for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
 #ifdef USE_ADVANCED_HUD
     if(cg_autoswitch.integer == 2)
-      weap = NextWeapon( weaponRawOrder[MAX_WEAPONS - i - 1] );
+      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i - 1] );
     else
       weap = i;
 #define i weap
@@ -1784,7 +1784,7 @@ int NextWeapon (int curr)
   int i; 
   int w = -1; 
 
-  for (i = 0; i < MAX_WEAPONS; i++) 
+  for (i = 0; i < WP_NUM_WEAPONS; i++) 
   { 
     if (weaponRawOrder[i] == curr) 
     { 
@@ -1796,7 +1796,7 @@ int NextWeapon (int curr)
   if (w == -1) 
     return curr; //shouldn't happen 
 
-  return weaponRawOrder[(w + 1) % MAX_WEAPONS]; 
+  return weaponRawOrder[(w + 1) % WP_NUM_WEAPONS]; 
 } 
 
 int PrevWeapon (int curr) 
@@ -1804,7 +1804,7 @@ int PrevWeapon (int curr)
   int i; 
   int w = -1; 
 
-  for (i = 0; i < MAX_WEAPONS; i++) 
+  for (i = 0; i < WP_NUM_WEAPONS; i++) 
   { 
     if (weaponRawOrder[i] == curr) 
     { 
@@ -1816,7 +1816,7 @@ int PrevWeapon (int curr)
   if (w == -1) 
     return curr; //shouldn't happen 
 
-  return weaponRawOrder[w - 1 >= 0 ? w - 1 : MAX_WEAPONS - 1]; 
+  return weaponRawOrder[w - 1 >= 0 ? w - 1 : WP_NUM_WEAPONS - 1]; 
 } 
 #endif
 
@@ -1967,7 +1967,7 @@ void CG_OutOfAmmoChange( void ) {
 	cg.weaponSelectTime = cg.time;
 #ifdef USE_ADVANCED_HUD
   if(cg_autoswitch.integer == 2)
-    weap = weaponRawOrder[MAX_WEAPONS - 1]; //WarZone -- pick the best weapon they have 
+    weap = weaponRawOrder[WP_NUM_WEAPONS - 1]; //WarZone -- pick the best weapon they have 
 #endif
 
 	if ( cg.snap->ps.pm_flags & PMF_FOLLOW || cg.demoPlayback ) {

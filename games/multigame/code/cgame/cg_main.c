@@ -345,7 +345,7 @@ static const cvarTable_t cvarTable[] = {
 #endif
 #ifdef USE_PHYSICS_VARS
   { &cg_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
-  { &cg_gravity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
+  { &cg_gravity, "g_gravity", "800", CVAR_SERVERINFO},
   { &cg_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO},
 #endif
 #ifdef USE_ADVANCED_HUD
@@ -425,8 +425,8 @@ void CG_ForceModelChange( void ) {
 
 
 #ifdef USE_ADVANCED_HUD
-extern int weaponOrder[MAX_WEAPONS]; 
-extern int weaponRawOrder[MAX_WEAPONS]; 
+extern int weaponOrder[WP_NUM_WEAPONS]; 
+extern int weaponRawOrder[WP_NUM_WEAPONS]; 
 
 int contains(int *list, int size, int number) 
 { 
@@ -444,8 +444,8 @@ void UpdateWeaponOrder (void)
   char *order = cg_weaponOrder.string; 
   char weapon[3]; 
   int i, start; 
-  int tempOrder[MAX_WEAPONS]; 
-  int weapUsed[MAX_WEAPONS]; 
+  int tempOrder[WP_NUM_WEAPONS]; 
+  int weapUsed[WP_NUM_WEAPONS]; 
   int temp; 
 
   weapon[1] = '\0'; 
@@ -453,7 +453,7 @@ void UpdateWeaponOrder (void)
   memset(weapUsed, 0, sizeof(weapUsed)); 
 
   i = 0; 
-  while (order != NULL && *order != '\0' && i < MAX_WEAPONS) 
+  while (order != NULL && *order != '\0' && i < WP_NUM_WEAPONS) 
   { 
     weapon[0] = *order; 
     order++; 
@@ -471,7 +471,7 @@ void UpdateWeaponOrder (void)
       order++; 
 
     temp = atoi( weapon ); 
-    if (temp < 1 || temp > MAX_WEAPONS) 
+    if (temp < 1 || temp > WP_NUM_WEAPONS) 
     { 
       CG_Printf( "Error: %i is out of range. Ignoring..\n", temp ); 
     } 
@@ -490,7 +490,7 @@ void UpdateWeaponOrder (void)
 
   //error checking.. 
   start = 0; 
-  for (i = 0; i < MAX_WEAPONS; i++) 
+  for (i = 0; i < WP_NUM_WEAPONS - 1; i++) 
   { 
     if (weapUsed[i]) 
       continue; 
@@ -500,11 +500,11 @@ void UpdateWeaponOrder (void)
     weaponRawOrder[start++] = i + 1; 
   } 
   //build the raw order list 
-  for (i = start; i < MAX_WEAPONS; i++) 
+  for (i = start; i < WP_NUM_WEAPONS; i++) 
     weaponRawOrder[i] = tempOrder[i - start]; 
 
   //built the remaping table 
-  for (i = 0; i < MAX_WEAPONS; i++) 
+  for (i = 0; i < WP_NUM_WEAPONS; i++) 
     weaponOrder[weaponRawOrder[i] - 1] = i + 1; 
 
 } 

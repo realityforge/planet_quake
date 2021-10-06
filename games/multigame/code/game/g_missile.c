@@ -582,6 +582,11 @@ gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir) {
 
 gentity_t *findradius (gentity_t *ent, vec3_t org, float rad); 
 
+#define GSUCK_TIMING	  50			  // the think time interval of G_Suck
+#define GSUCK_VELOCITY	2000			// the amount of kick each second gets
+#define GSUCK_RADIUS    500
+#define GSUCK_TRIGGER	  32
+
 /*
 =================
 G_Suck
@@ -589,13 +594,26 @@ G_Suck
 */
 static void G_Suck( gentity_t *self ) {
 	gentity_t *target;
-	vec3_t start,dir,end;
+	vec3_t start,dir,end,kvel,mins,maxs;
+  int targNum[MAX_GENTITIES],num;
 
 	target = NULL;
 
   //check if there are any entity's within a radius of 500 units.
-	while ((target = findradius(target, self->r.currentOrigin, 500)) != NULL)
-	{
+  mins[0] = -GSUCK_RADIUS * 1.42;
+  mins[1] = -GSUCK_RADIUS * 1.42;
+  mins[2] = -GSUCK_RADIUS * 1.42;
+  maxs[0] = GSUCK_RADIUS * 1.42;
+  maxs[1] = GSUCK_RADIUS * 1.42;
+  maxs[2] = GSUCK_RADIUS * 1.42;
+
+  VectorAdd( self->r.currentOrigin, mins, mins );
+  VectorAdd( self->r.currentOrigin, maxs, maxs );
+
+  num = trap_EntitiesInBox(mins,maxs,targNum,MAX_GENTITIES);
+  for(num--; num > 0; num--) {    // count from num-1 down to 0
+  	target = &g_entities[targNum[num]];
+
     // target must not be vortex grenade
   	if (target == self) 
   		continue;
@@ -605,12 +623,16 @@ static void G_Suck( gentity_t *self ) {
   		continue;
 
     // target must not be the player who fired the vortex grenade 
-  	if (target == self->parent) 
-  		continue;
+  	//if (target == self->parent) 
+  	//	continue;
 
     // target must be able to take damage
   	if (!target->takedamage) 
   		continue;
+      
+    // target must actually be in GSUCK_RADIUS
+    if ( Distance(self->r.currentOrigin, target->r.currentOrigin) > GSUCK_RADIUS )
+    	continue;
 
     // put target position in start
   	VectorCopy(target->r.currentOrigin, start); 
@@ -620,21 +642,65 @@ static void G_Suck( gentity_t *self ) {
   	VectorSubtract(end, start, dir); 
   	VectorNormalize(dir); 
     // scale directional vector by 200 and add to the targets velocity
-  	VectorScale(dir,200, target->client->ps.velocity);
+  	VectorScale(dir, GSUCK_VELOCITY / GSUCK_TIMING, kvel);
     // make targets move direction = to directional vector.
-  	VectorCopy(dir, target->movedir); 
+  	//VectorCopy(dir, target->movedir); 
+    // add the kick velocity to the player's velocity
+    VectorAdd (target->client->ps.velocity,kvel, target->client->ps.velocity);
+
+    // set the timer so that the other client can't cancel
+    // out the movement immediately
+    if ( !target->client->ps.pm_time ) {
+    	target->client->ps.pm_time = GSUCK_TIMING - 1;
+
+    	/* the next G_Suck that works here will
+    	probably be the one that worked before */
+
+    	target->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+    }
        
 	}
 
-	self->nextthink = level.time + 20; 
+	self->nextthink = level.time + GSUCK_TIMING; 
 
   // check if vortext grenade is older than 20 seconds.
 	if (level.time > self->wait) 
 		G_ExplodeMissile( self);
+
+  mins[0] = -GSUCK_TRIGGER * 1.42;
+  mins[1] = -GSUCK_TRIGGER * 1.42;
+  mins[2] = -GSUCK_TRIGGER * 1.42;
+  maxs[0] = GSUCK_TRIGGER * 1.42;
+  maxs[1] = GSUCK_TRIGGER * 1.42;
+  maxs[2] = GSUCK_TRIGGER * 1.42;
+
+  VectorAdd( self->r.currentOrigin, mins, mins );
+  VectorAdd( self->r.currentOrigin, maxs, maxs );
+
+  num = trap_EntitiesInBox(mins,maxs,targNum,MAX_GENTITIES);
+  for(num--; num > 0; num--) {    // count from num-1 down to 0
+  	target = &g_entities[targNum[num]];
+
+  	// target must be a client
+  	if (!target->client) 
+  		continue;
+
+  	// target must not be the player who fired the vortex grenade 
+  	if (target == self->parent)		// makes sense here
+  		continue;
+
+  	// target must be able to take damage
+  	if (!target->takedamage)
+  		continue;
+
+  	G_ExplodeMissile( self);			// EXPLODE goes the weasel!
+  }
 }
 #endif
 
 
+#define GRENADE_DAMAGE	100		// bolt->damage for grenade
+#define GRENADE_RADIUS	150		// bolt->splashRadius for grenade
 /*
 =================
 fire_grenade
@@ -664,9 +730,9 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.eFlags = EF_BOUNCE_HALF;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 100;
-	bolt->splashDamage = 100;
-	bolt->splashRadius = 150;
+  bolt->damage = GRENADE_DAMAGE;
+  bolt->splashDamage = GRENADE_DAMAGE;
+  bolt->splashRadius = GRENADE_RADIUS;
 	bolt->methodOfDeath = MOD_GRENADE;
 	bolt->splashMethodOfDeath = MOD_GRENADE_SPLASH;
 	bolt->clipmask = MASK_SHOT;

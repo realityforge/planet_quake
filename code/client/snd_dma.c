@@ -366,25 +366,6 @@ static void S_Base_BeginRegistration( void ) {
 #ifndef __WASM__
 	if ( s_numSfx )
 		return;
-#else
-	//SND_shutdown();
-	{
-		sfx_t	*sfx;
-		sndBuffer	*buffer, *nbuffer;
-		for ( int i = 1 ; i < s_numSfx ; i++ ) {
-			sfx = &s_knownSfx[i];
-			if ( sfx->inMemory ) {
-				buffer = sfx->soundData;
-				while(buffer != NULL) {
-					nbuffer = buffer->next;
-					SND_free(buffer);
-					buffer = nbuffer;
-				}
-				sfx->inMemory = qfalse;
-				sfx->soundData = NULL;
-			}
-		}
-	}
 #endif
 
 	SND_setup();
@@ -1527,6 +1508,34 @@ static void S_Base_Shutdown( void ) {
 
 #ifndef USE_LAZY_MEMORY
 	s_numSfx = 0; // clean up sound cache -EC-
+#else
+  // free all the sounds not used
+  for ( int i = 1 ; i < s_numSfx ; i++ ) {
+    sfx_t	*sfx, *prevSfx;
+    int hash;
+    sndBuffer	*buffer, *nbuffer;
+    if ( !s_knownSfx[i].inMemory && s_knownSfx[i].soundName[0] ) {
+      buffer = s_knownSfx[i].soundData;
+      while(buffer != NULL) {
+        nbuffer = buffer->next;
+        SND_free(buffer);
+        buffer = nbuffer;
+      }
+      hash = S_HashSFXName( s_knownSfx[i].soundName );
+      sfx = prevSfx = sfxHash[hash];
+      while (sfx) {
+        if (!Q_stricmp(sfx->soundName, s_knownSfx[i].soundName) ) {
+          sfx->next = prevSfx->next; // take it out of the list
+          break;
+        }
+        prevSfx = sfx;
+        sfx = sfx->next;
+      }
+      s_knownSfx[i].inMemory = qfalse;
+      s_knownSfx[i].soundData = NULL;
+      s_knownSfx[i].soundName[0] = '\0';
+    }
+  }
 #endif
 
 	if ( dma_buffer2 != buffer2 )
@@ -1590,9 +1599,9 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
-//		s_numSfx = 0;
 
-#ifndef __WASM__
+#ifndef USE_LAZY_MEMORY
+    s_numSfx = 0;
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 #endif
 

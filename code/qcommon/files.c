@@ -360,15 +360,21 @@ static	int			fs_dirCount;			// total number of directories in searchpath
 static	int			fs_checksumFeed;
 
 #ifdef USE_LIVE_RELOAD
+cvar_t *fs_reloadGame;
 cvar_t *fs_reloadQVM;
 cvar_t *fs_reloadEXE;
 int     qvmWd;
 int     exeWd;
+int     gameWd;
 void Sys_DenotifyChange(int wd);
 int Sys_NotifyChange(const char *filepath, void (*cb)( void ));
 
 void FS_ReloadQVM( void ) {
   Cbuf_AddText("wait; wait; wait; vid_restart;");
+}
+
+void FS_ReloadGame( void ) {
+  Cbuf_AddText("wait; wait; wait; map_restart;");
 }
 #endif
 
@@ -5076,8 +5082,11 @@ void FS_Shutdown( qboolean closemfp )
 #ifdef USE_LIVE_RELOAD
   if(qvmWd)
     Sys_DenotifyChange(qvmWd);
+  if(gameWd)
+    Sys_DenotifyChange(gameWd);
   if(exeWd)
     Sys_DenotifyChange(exeWd);
+  gameWd = 0;
   qvmWd = 0;
   exeWd = 0;
 #endif
@@ -5289,6 +5298,34 @@ void Com_GamedirModified(char *oldValue, char *newValue, cvar_t *cv) {
 }
 
 
+#ifdef USE_LIVE_RELOAD
+int FS_NotifyChange(const char *localPath, void (*cb)( void )) {
+  fileHandle_t file;
+  int Wd = 0;
+  if(!localPath[0]) {
+    return 0;
+  }
+  FS_FOpenFileRead(localPath, &file, qtrue);
+  if(fsh[file].zipFile) {
+    qvmWd = Sys_NotifyChange(fsh[file].pak->pakFilename, cb);
+  } else {
+    searchpath_t *search;
+    for ( search = fs_searchpaths ; search ; search = search->next ) {
+      if ( search->dir && search->policy != DIR_DENY ) {
+        FILE *temp;
+        char *netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
+        if((temp = Sys_FOpen( netpath, "rb" ))) {
+          qvmWd = Sys_NotifyChange(netpath, cb);
+          break;
+        }
+      }
+    }
+  }
+  return Wd;
+}
+#endif
+
+
 /*
 ================
 FS_Startup
@@ -5315,6 +5352,7 @@ static void FS_Startup( void ) {
 	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 
 #ifdef USE_LIVE_RELOAD
+  fs_reloadGame = Cvar_Get( "fs_reloadGame", "0", CVAR_INIT | CVAR_PROTECTED );
   fs_reloadQVM = Cvar_Get( "fs_reloadQVM", "0", CVAR_INIT | CVAR_PROTECTED );
   fs_reloadEXE = Cvar_Get( "fs_reloadEXE", "0", CVAR_INIT | CVAR_PROTECTED );
 #endif
@@ -5447,27 +5485,18 @@ static void FS_Startup( void ) {
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
 #ifdef USE_LIVE_RELOAD
-  if(!qvmWd && strlen(fs_reloadQVM->string) > 0) {
-    fileHandle_t file;
+  if(!qvmWd) {
     if(fs_reloadQVM->string[0] != '1' || fs_reloadQVM->string[1] != '\0') {
-      FS_FOpenFileRead(fs_reloadQVM->string, &file, qtrue);
-    } else {
-      FS_FOpenFileRead("vm/cgame.qvm", &file, qtrue);
+      qvmWd = FS_NotifyChange(fs_reloadQVM->string, FS_ReloadQVM);
+    } else if(fs_reloadQVM->integer) {
+      qvmWd = FS_NotifyChange("vm/cgame.qvm", FS_ReloadQVM);
     }
-    if(fsh[file].zipFile) {
-      qvmWd = Sys_NotifyChange(fsh[file].pak->pakFilename, FS_ReloadQVM);
-    } else {
-      searchpath_t *search;
-      for ( search = fs_searchpaths ; search ; search = search->next ) {
-        if ( search->dir && search->policy != DIR_DENY ) {
-          FILE *temp;
-  				char *netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, fsh[file].name );
-          if((temp = Sys_FOpen( netpath, "rb" ))) {
-            qvmWd = Sys_NotifyChange(netpath, FS_ReloadQVM);
-            break;
-          }
-        }
-      }
+  }
+  if(!gameWd) {
+    if(fs_reloadGame->string[0] != '1' || fs_reloadGame->string[1] != '\0') {
+      gameWd = FS_NotifyChange(fs_reloadGame->string, FS_ReloadGame);
+    } else if(fs_reloadGame->integer) {
+      gameWd = FS_NotifyChange("vm/qagame.qvm", FS_ReloadGame);
     }
   }
 #endif
