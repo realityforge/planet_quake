@@ -839,11 +839,6 @@ void ClientThink_real( gentity_t *ent ) {
 	client->ps.gravity = g_gravity.value;
 
 	// set speed
-#ifdef USE_ADVANCED_DMG
-#ifdef USE_ADVANCED_MOVE
-  if(!g_locDamage.integer)
-#endif
-#endif
 	client->ps.speed = g_speed.value;
 
 #ifdef MISSIONPACK
@@ -854,7 +849,20 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 	if ( client->ps.powerups[PW_HASTE] ) {
 		client->ps.speed *= 1.3;
-	}
+  }
+
+#ifdef USE_ADVANCED_DMG
+#ifdef USE_ADVANCED_MOVE
+  if(g_locDamage.integer) {
+    if(client->lasthurt_location == LOCATION_LEG) {
+      client->ps.speed *= 0.7;
+    }
+    if(client->lasthurt_location == LOCATION_FOOT) {
+      client->ps.speed *= 0.5;
+    }
+  }
+#endif
+#endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if(client->ps.powerups[PW_FROZEN] && !client->frozen) {

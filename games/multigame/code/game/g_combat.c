@@ -849,7 +849,7 @@ int G_LocationDamage(vec3_t point, gentity_t* targ, gentity_t* attacker, int tak
 	// First things first.  If we're not damaging them, why are we here? 
 	if (!take) 
 		return 0;
-
+    
 	// Point[2] is the REAL world Z. We want Z relative to the clients feet
 	
 	// Where the feet are at [real Z]
@@ -940,15 +940,9 @@ int G_LocationDamage(vec3_t point, gentity_t* targ, gentity_t* attacker, int tak
 			break;
 		case LOCATION_LEG:
 			take *= 0.7;
-#ifdef USE_ADVANCED_MOVE
-      targ->client->ps.speed -= take; // slowdown if shot in legs, McBain
-#endif
 			break;
 		case LOCATION_FOOT:
 			take *= 0.5;
-#ifdef USE_ADVANCED_MOVE
-      targ->client->ps.speed -= take; // slowdown if shot in foot, McBain
-#endif
 			break;
 
 		}
@@ -1221,7 +1215,14 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   		// Modify the damage for location damage
   		if (point && targ && targ->health > 0 && attacker && take)
   			take = G_LocationDamage(point, targ, attacker, take);
-  		else
+  		else if (mod == MOD_FALLING) {
+        if(take >= 15)
+          targ->client->lasthurt_location = LOCATION_FOOT | LOCATION_LEG;
+        else if (take >= 10)
+          targ->client->lasthurt_location = LOCATION_FOOT;
+        else if (take >= 5)
+          targ->client->lasthurt_location = LOCATION_LEG;
+      } else
   			targ->client->lasthurt_location = LOCATION_NONE;
     }
 #endif

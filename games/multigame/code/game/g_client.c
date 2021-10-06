@@ -1115,6 +1115,7 @@ void ClientSpawn(gentity_t *ent) {
 #ifdef USE_ADVANCED_MOVE
   // return to normal speed, McBain
   client->ps.speed = g_speed.value;
+  client->lasthurt_location = LOCATION_NONE;
 #endif
 #endif
 
