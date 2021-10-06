@@ -596,4 +596,9 @@ void CG_InitConsoleCommands( void ) {
 	trap_AddCommand ("stats");
 	trap_AddCommand ("teamtask");
 	trap_AddCommand ("loaddefered");	// spelled wrong, but not changing for demo
+#ifdef USE_ADVANCED_WEAPONS
+  trap_AddCommand ("drop");
+  trap_AddCommand ("rbounce");
+  trap_AddCommand ("cloak");
+#endif
 }

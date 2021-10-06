@@ -34,6 +34,7 @@
 #ifdef USE_ADVANCED_WEAPONS
 #define FL_ROCKETBOUNCE		0x00010000
 #define FL_CLOAK      		0x00020000
+#define FL_THROWN_ITEM		0x00040000  // XRAY FMJ weapon throwing
 #endif
 
 // movers are things like doors, plats, buttons, etc
@@ -492,7 +493,11 @@ int SpawnTime( gentity_t *ent, qboolean firstSpawn );
 void UseHoldableItem( gentity_t *ent );
 void PrecacheItem (gitem_t *it);
 gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle );
+#ifdef USE_ADVANCED_WEAPONS
+gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int xr_flags );
+#else
 gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity );
+#endif
 void SetRespawn (gentity_t *ent, float delay);
 void G_SpawnItem (gentity_t *ent, gitem_t *item);
 void FinishSpawningItem( gentity_t *ent );
@@ -841,6 +846,7 @@ extern  vmCvar_t  g_bounceRockets;
 extern  vmCvar_t  g_enableCloak;
 extern  vmCvar_t  g_vortexGrenades;
 extern  vmCvar_t  g_vulnRockets;
+extern  vmCvar_t  g_dropWeapon;
 #endif
 #ifdef USE_ADVANCED_DMG
 extern  vmCvar_t  g_locDamage;

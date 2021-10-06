@@ -1822,6 +1822,18 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 
 
 #ifdef USE_ADVANCED_WEAPONS
+void ThrowWeapon( gentity_t *ent );
+/*
+=================
+Cmd_Drop_f XRAY FMJ
+=================
+*/
+void Cmd_Drop_f( gentity_t *ent ) {
+  if(g_dropWeapon.integer)
+    ThrowWeapon( ent );
+}
+
+
 /*
 =================
 Cmd_RBounce_f
@@ -2008,6 +2020,8 @@ void ClientCommand( int clientNum ) {
 	else if (Q_stricmp (cmd, "setviewpos") == 0)
 		Cmd_SetViewpos_f( ent );
 #ifdef USE_ADVANCED_WEAPONS
+  else if (Q_stricmp (cmd, "drop") == 0)  // XRAY FMJ
+    Cmd_Drop_f( ent );
   else if (Q_stricmp (cmd, "rbounce") == 0)
     Cmd_RBounce_f( ent );
   else if (Q_stricmp (cmd, "cloak") == 0)

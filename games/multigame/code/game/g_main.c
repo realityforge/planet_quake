@@ -96,6 +96,7 @@ vmCvar_t	g_bounceRockets;
 vmCvar_t	g_enableCloak;
 vmCvar_t	g_vortexGrenades;
 vmCvar_t  g_vulnRockets;
+vmCvar_t  g_dropWeapon;
 #endif
 #ifdef USE_ADVANCED_DMG
 vmCvar_t  g_locDamage;
@@ -215,6 +216,7 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse }
   ,{ &g_vulnRockets, "g_vulnRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
 #ifdef USE_ADVANCED_DMG

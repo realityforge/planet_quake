@@ -878,6 +878,80 @@ void weapon_proxlauncher_fire (gentity_t *ent) {
 
 
 #ifdef USE_ADVANCED_WEAPONS
+/*
+================
+dropWeapon XRAY FMJ
+================
+*/
+gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags ) { // XRAY FMJ
+	vec3_t	velocity;
+	vec3_t	origin;
+
+	VectorCopy( ent->s.pos.trBase, origin );
+
+	// set aiming directions
+	AngleVectors (ent->client->ps.viewangles, velocity, NULL, NULL);
+
+	origin[2] += ent->client->ps.viewheight;
+	VectorMA( origin, 34, velocity, origin ); // 14
+	// snap to integer coordinates for more efficient network bandwidth usage
+	SnapVector( origin);
+
+	// extra vertical velocity
+	velocity[2] += 0.3;
+	VectorNormalize( velocity );
+	return LaunchItem( item, origin, velocity, xr_flags );
+}
+
+
+/*
+=============
+ThrowWeapon
+
+XRAY FMJ
+=============
+*/
+
+void ThrowWeapon( gentity_t *ent ) {
+	gclient_t	*client;
+	usercmd_t	*ucmd;
+	gitem_t		*xr_item;
+	gentity_t	*xr_drop;
+	byte i;
+	int amount;
+
+	client = ent->client;
+	ucmd = &ent->client->pers.cmd;
+
+	if( client->ps.weapon == WP_GAUNTLET
+		|| client->ps.weapon == WP_MACHINEGUN
+		|| client->ps.weapon == WP_GRAPPLING_HOOK
+		|| ( ucmd->buttons & BUTTON_ATTACK ))
+		return;
+
+
+	xr_item = BG_FindItemForWeapon( client->ps.weapon );
+
+	amount= client->ps.ammo[ client->ps.weapon ]; // XRAY save amount
+	client->ps.ammo[ client->ps.weapon ] = 0;
+
+	client->ps.stats[STAT_WEAPONS] &= ~( 1 << client->ps.weapon );
+	client->ps.weapon = WP_MACHINEGUN;
+	for ( i = WP_NUM_WEAPONS - 1 ; i > 0 ; i-- ) {
+		if ( client->ps.stats[STAT_WEAPONS] & ( 1 << i ) ) {
+			client->ps.weapon = i;
+			break;
+		}
+	}
+
+	xr_drop= dropWeapon( ent, xr_item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+	if( amount != 0)
+		xr_drop->count= amount;
+	else
+		xr_drop->count= -1; // XRAY FMJ 0 is already taken, -1 means no ammo
+}
+
+
 gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir);
 
 /*

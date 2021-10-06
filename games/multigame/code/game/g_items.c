@@ -679,7 +679,12 @@ LaunchItem
 Spawns an item and tosses it forward
 ================
 */
-gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
+#ifdef USE_ADVANCED_WEAPONS
+gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int xr_flags )
+#else
+gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity )
+#endif
+{
 	gentity_t	*dropped;
 
 	dropped = G_Spawn();
@@ -727,12 +732,25 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 #endif
 	}
 
+#ifdef USE_ADVANCED_WEAPONS
+	dropped->flags = xr_flags; // FL_DROPPED_ITEM; // XRAY FMJ FL_THROWN_ITEM
+
+  if( xr_flags & FL_THROWN_ITEM) {
+    dropped->clipmask = MASK_SHOT; // XRAY FMJ
+    dropped->s.pos.trTime = level.time - 100;	// move a bit on the very first frame
+    VectorScale( velocity, 200, dropped->s.pos.trDelta ); // 700
+    SnapVector( dropped->s.pos.trDelta );		// save net bandwidth
+    dropped->physicsBounce = 0.5;
+  }
+#else
 	dropped->flags = FL_DROPPED_ITEM;
+#endif
 
 	trap_LinkEntity (dropped);
 
 	return dropped;
 }
+
 
 /*
 ================
@@ -752,8 +770,12 @@ gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
 	AngleVectors( angles, velocity, NULL, NULL );
 	VectorScale( velocity, 150, velocity );
 	velocity[2] += 200 + crandom() * 50;
-	
+
+#ifdef USE_ADVANCED_WEAPONS
+  return LaunchItem( item, ent->s.pos.trBase, velocity, FL_DROPPED_ITEM );
+#else
 	return LaunchItem( item, ent->s.pos.trBase, velocity );
+#endif
 }
 
 
