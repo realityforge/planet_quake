@@ -48,6 +48,9 @@ void G_ExplodeMissile( gentity_t *ent ) {
 	vec3_t		dir;
 	vec3_t		origin;
 
+  // Lancer
+  ent->takedamage = qfalse;
+
 	BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
 	SnapVector( origin );
 	G_SetOrigin( ent, origin );
@@ -71,6 +74,25 @@ void G_ExplodeMissile( gentity_t *ent ) {
 
 	trap_LinkEntity( ent );
 }
+
+
+#ifdef USE_ADVANCED_WEAPONS
+/*
+================
+G_MissileDie
+
+Lancer - Destroy a missile
+================
+*/
+void G_MissileDie( gentity_t *self, gentity_t *inflictor,
+  gentity_t *attacker, int damage, int mod ) {
+  if (inflictor == self)
+    return;
+  self->takedamage = qfalse;
+  self->think = G_ExplodeMissile;
+  self->nextthink = level.time + 10;
+}
+#endif
 
 
 #ifdef MISSIONPACK
@@ -263,6 +285,9 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		G_AddEvent( ent, EV_GRENADE_BOUNCE, 0 );
 		return;
 	}
+
+  // Lancer
+  ent->takedamage = qfalse;
 
 #ifdef MISSIONPACK
 	if ( other->takedamage ) {
@@ -833,6 +858,17 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_ROCKET_LAUNCHER;
 #ifdef USE_ADVANCED_WEAPONS
+  // Lancer
+  if(g_vulnRockets.integer) {
+    bolt->health = 5;
+    bolt->takedamage = qtrue;
+    bolt->die = G_MissileDie;
+    bolt->r.contents = CONTENTS_BODY;
+    VectorSet(bolt->r.mins, -10, -3, 0);
+    VectorCopy(bolt->r.mins, bolt->r.absmin);
+    VectorSet(bolt->r.maxs, 10, 3, 6);
+    VectorCopy(bolt->r.maxs, bolt->r.absmax);
+  }
   if (self->flags & FL_ROCKETBOUNCE
     || g_bounceRockets.integer)
   	bolt->s.eFlags = EF_BOUNCE;

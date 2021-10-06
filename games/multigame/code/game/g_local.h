@@ -836,6 +836,7 @@ extern  vmCvar_t  g_railThruWalls;
 extern  vmCvar_t  g_bounceRockets;
 extern  vmCvar_t  g_enableCloak;
 extern  vmCvar_t  g_vortexGrenades;
+extern  vmCvar_t  g_vulnRockets;
 #endif
 #ifdef USE_ADVANCED_DMG
 extern  vmCvar_t  g_locDamage;
