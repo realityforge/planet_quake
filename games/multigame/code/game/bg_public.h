@@ -589,6 +589,17 @@ typedef enum {
 	TEAM_NUM_TEAMS
 } team_t;
 
+
+#ifdef USE_ADVANCED_CLASS
+typedef enum {
+	PCLASS_BFG,
+	PCLASS_LIGHTNING,
+	PCLASS_RAILGUN,
+
+	PCLASS_NUM_CLASSES
+} pclass_t;
+#endif
+
 typedef enum {
 	TAG_NONE = 0,
 	TAG_DONTSPAWN,

@@ -244,6 +244,10 @@ typedef struct {
 	int			teamVoted;
 
 	qboolean	inGame;
+#ifdef USE_ADVANCED_CLASS
+  pclass_t	playerclass;	   // The players current class
+  pclass_t	newplayerclass;	   // The class the player will become when it respawns
+#endif
 } clientPersistant_t;
 
 // unlagged

@@ -166,6 +166,8 @@
 #define USE_ADVANCED_MOVE 1
 // advanged damage changes based on where the player is shot
 #define USE_ADVANCED_DMG 1
+// advanced classes applies special properties to players based on model or selection
+#define USE_ADVANCED_CLASS 1
 // 
 
 #endif
