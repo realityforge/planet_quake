@@ -170,6 +170,10 @@
 #define USE_ADVANCED_CLASS 1
 // laser sight and flash light
 #define USE_LASER_SIGHT 1
+// advanced zoom stops zooming when the key is up and returns to original
+#define USE_ADVANCED_ZOOM 1
+// adds rotating doors from maps, UrT uses them, so does Quake 2
+#define USE_ROTATING_DOOR 1
 // 
 
 #endif

@@ -1061,9 +1061,18 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			fovOffset = -0.2f * ( cgs.fov - 90.0f );
 
 			// 13.5, -5.5, -6.0
-			VectorMA( vec, cg_gun_x.value + 13.5f, cg.refdef.viewaxis[0], vec );
-			VectorMA( vec, cg_gun_y.value - 5.5f, cg.refdef.viewaxis[1], vec );
-			VectorMA( vec, cg_gun_z.value + fovOffset - 6.0f, cg.refdef.viewaxis[2], vec );
+#ifdef USE_ADVANCED_HUD
+      if(cg_gunCenter.integer) {
+        VectorMA( vec, cg_gun_x.value + 13.5f, cg.refdef.viewaxis[0], vec );
+  			VectorMA( vec, (cg_gun_y.value + 5*cg_gunCenter.value) - 5.5f, cg.refdef.viewaxis[1], vec );
+  			VectorMA( vec, cg_gun_z.value + fovOffset - 6.0f, cg.refdef.viewaxis[2], vec );
+      } else
+#endif
+      {
+        VectorMA( vec, cg_gun_x.value + 13.5f, cg.refdef.viewaxis[0], vec );
+  			VectorMA( vec, cg_gun_y.value - 5.5f, cg.refdef.viewaxis[1], vec );
+  			VectorMA( vec, cg_gun_z.value + fovOffset - 6.0f, cg.refdef.viewaxis[2], vec );
+      }
 		}
 		else
 			VectorCopy( es->origin2, vec );

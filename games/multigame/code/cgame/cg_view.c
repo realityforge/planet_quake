@@ -424,21 +424,38 @@ static void CG_OffsetFirstPersonView( void ) {
 //======================================================================
 
 void CG_ZoomDown_f( void ) { 
-	if ( cg.zoomed ) {
-		return;
-	}
-	cg.zoomed = qtrue;
-	cg.zoomTime = cg.time;
+#ifdef USE_ADVANCED_ZOOM
+  if ( cg.zoomed && !cg.zooming ) {
+    cg.zoomed = qfalse;
+    cg.zoomTime = cg.time;
+  } else
+#endif
+  {
+  	if ( cg.zoomed ) {
+  		return;
+  	}
+  	cg.zoomed = qtrue;
+#ifdef USE_ADVANCED_ZOOM
+    cg.zooming = qtrue;
+#endif
+  	cg.zoomTime = cg.time;
+  }
 }
 
-void CG_ZoomUp_f( void ) { 
+void CG_ZoomUp_f( void ) {
+#ifdef USE_ADVANCED_ZOOM
+  if(cg.zoomed) {
+    cg.zoomTime = 0;
+    cg.zooming = qfalse;
+  }
+#else
 	if ( !cg.zoomed ) {
 		return;
 	}
 	cg.zoomed = qfalse;
 	cg.zoomTime = cg.time;
+#endif
 }
-
 
 /*
 ====================
@@ -481,7 +498,32 @@ static int CG_CalcFov( void ) {
 
 		// account for zooms
 		zoomFov = cgs.zoomFov;
-
+#ifdef USE_ADVANCED_ZOOM
+    // TODO: use prediction for zooming and let the server know when it happens
+    if ( cg.zoomed ) {
+    	if (cg.zoomTime != 0)
+    		f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
+    	else
+    		f=-1;
+    	if ( f > 1.0 ) {
+    		fov_x = zoomFov;
+    		cg.setZoomFov = fov_x;
+    	} else {
+    		if(f!=-1){
+    			fov_x = fov_x + f * ( zoomFov - fov_x );
+    			cg.setZoomFov = fov_x;
+    		}
+    		else
+    			fov_x = cg.setZoomFov;
+    	}
+    } else {
+    	f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME_OUT;
+    	if ( f > 1.0 ) {
+    	} else {
+    		fov_x = cg.setZoomFov + f * ( fov_x - cg.setZoomFov );
+    	}
+    }
+#else
 		if ( cg.zoomed ) {
 			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
 			if ( f > 1.0 ) {
@@ -497,6 +539,7 @@ static int CG_CalcFov( void ) {
 				fov_x = zoomFov + f * ( fov_x - zoomFov );
 			}
 		}
+#endif
 	}
 
 	if ( cg_fovAdjust.integer ) {

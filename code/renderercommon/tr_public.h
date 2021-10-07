@@ -149,6 +149,9 @@ typedef struct {
   void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
 	void (*ResetBannerSpy)( void );
 #endif
+  
+  const cplane_t *(*GetFrustum)( void );
+
 } refexport_t;
 
 //

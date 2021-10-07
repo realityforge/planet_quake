@@ -1449,6 +1449,30 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 }
 
 
+#ifdef USE_ADVANCED_HUD
+void CG_CenterGun(float *gen_guny, playerState_t *ps) {
+  switch (ps->weapon)
+	{
+		case WP_MACHINEGUN:
+		case WP_SHOTGUN:
+		case WP_LIGHTNING:
+			*gen_guny = cg_gun_y.value + 3 * cg_gunCenter.value;
+			break;
+    case WP_GAUNTLET:
+		case WP_PLASMAGUN:
+			*gen_guny = cg_gun_y.value + 4 * cg_gunCenter.value;
+			break;
+    case WP_GRENADE_LAUNCHER:
+		case WP_ROCKET_LAUNCHER:
+		case WP_RAILGUN:
+		case WP_BFG:
+			*gen_guny = cg_gun_y.value + 5 * cg_gunCenter.value;
+			break;
+	}
+}
+#endif
+
+
 /*
 ==============
 CG_AddViewWeapon
@@ -1516,9 +1540,20 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// set up gun position
 	CG_CalculateWeaponPosition( hand.origin, angles );
 
-	VectorMA( hand.origin, (cg_gun_x.value+fovOffset[0]), cg.refdef.viewaxis[0], hand.origin );
-	VectorMA( hand.origin, cg_gun_y.value, cg.refdef.viewaxis[1], hand.origin );
-	VectorMA( hand.origin, (cg_gun_z.value+fovOffset[2]), cg.refdef.viewaxis[2], hand.origin );
+#ifdef USE_ADVANCED_HUD
+  if(cg_gunCenter.integer) {
+    float gen_guny;
+    CG_CenterGun(&gen_guny, ps);
+    VectorMA( hand.origin, (cg_gun_x.value+fovOffset[0]), cg.refdef.viewaxis[0], hand.origin );
+  	VectorMA( hand.origin, gen_guny, cg.refdef.viewaxis[1], hand.origin );
+  	VectorMA( hand.origin, (cg_gun_z.value+fovOffset[2]), cg.refdef.viewaxis[2], hand.origin );
+  } else
+#endif
+  {
+  	VectorMA( hand.origin, (cg_gun_x.value+fovOffset[0]), cg.refdef.viewaxis[0], hand.origin );
+  	VectorMA( hand.origin, cg_gun_y.value, cg.refdef.viewaxis[1], hand.origin );
+  	VectorMA( hand.origin, (cg_gun_z.value+fovOffset[2]), cg.refdef.viewaxis[2], hand.origin );
+  }
 
 	AnglesToAxis( angles, hand.axis );
 
@@ -1564,7 +1599,7 @@ void hud_weapons(float x, float y, weaponInfo_t *weapon) {
   //refEntity_t		hand;
 	refEntity_t		ent;
   refEntity_t   barrel;
-  float         w = 64, h = 64;
+  float         w = 48, h = 48;
   VectorClear( angles );
   origin[0] = 90;
   origin[1] = 20;
@@ -1578,6 +1613,12 @@ void hud_weapons(float x, float y, weaponInfo_t *weapon) {
 	if ( !cg_draw3dIcons.integer || !cg_drawIcons.integer ) {
 		return;
 	}
+  
+  // dont draw world if model is missing
+  if(!weapon->weaponModel) {
+    return;
+  }
+  
   //memset( &hand, 0, sizeof( hand ) );
   //VectorCopy( origin, hand.origin );
   //CG_PositionEntityOnTag( &gun, hand, hand->hModel, "tag_weapon");

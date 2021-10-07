@@ -96,6 +96,9 @@ const field_t fields[] = {
 	{"angle", FOFS(s.angles), F_ANGLEHACK},
 	{"targetShaderName", FOFS(targetShaderName), F_LSTRING},
 	{"targetShaderNewName", FOFS(targetShaderNewName), F_LSTRING},
+#ifdef USE_ROTATING_DOOR
+  {"distance", FOFS(distance), F_FLOAT},	// VALKYRIE: for rotating doors
+#endif
 
 	{NULL}
 };
@@ -173,6 +176,10 @@ void SP_team_neutralobelisk( gentity_t *ent );
 #endif
 void SP_item_botroam( gentity_t *ent ) {};
 
+#ifdef USE_ROTATING_DOOR
+void SP_func_door_rotating( gentity_t *ent );	// VALKYRIE: for rotating doors
+#endif
+
 spawn_t	spawns[] = {
 	// info entities don't do anything at all, but provide positional
 	// information for things controlled by other processes
@@ -245,6 +252,10 @@ spawn_t	spawns[] = {
 	{"team_neutralobelisk", SP_team_neutralobelisk},
 #endif
 	{"item_botroam", SP_item_botroam},
+
+#ifdef USE_ROTATING_DOOR
+  {"func_door_rotating", SP_func_door_rotating},	// VALKYRIE: for rotating doors
+#endif
 
 	{0, 0}
 };

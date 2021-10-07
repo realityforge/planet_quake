@@ -30,7 +30,12 @@
 #define	PAIN_TWITCH_TIME	200
 #define	WEAPON_SELECT_TIME	1400
 #define	ITEM_SCALEUP_TIME	1000
+#ifdef USE_ADVANCED_ZOOM
+#define	ZOOM_TIME			500
+#define	ZOOM_TIME_OUT	200
+#else
 #define	ZOOM_TIME			150
+#endif
 #define	ITEM_BLOB_TIME		200
 #define	MUZZLE_FLASH_TIME	20
 #define	SINK_TIME			1000		// time for fragments to sink into ground before going away
@@ -556,8 +561,12 @@ typedef struct {
 
 	// zoom key
 	qboolean	zoomed;
-	int			zoomTime;
-	float		zoomSensitivity;
+	int			  zoomTime;
+	float		  zoomSensitivity;
+#ifdef USE_ADVANCED_ZOOM
+  qboolean	zooming;
+  int		    setZoomFov;
+#endif
 
 	// information screen text during loading
 	char		infoScreenText[MAX_STRING_CHARS];
@@ -1311,6 +1320,7 @@ extern	vmCvar_t	  cg_wallWalk;
 #endif
 #ifdef USE_ADVANCED_HUD
 extern  vmCvar_t    cg_weaponOrder;
+extern  vmCvar_t    cg_gunCenter;
 #endif
 
 extern const char		*eventnames[EV_MAX];

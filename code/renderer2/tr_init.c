@@ -1758,6 +1758,13 @@ void RE_SetDvrFrame(float x, float y, float width, float height) {
 #endif
 
 
+static const cplane_t *RE_GetFrustum( void )
+{
+	return tr.viewParms.frustum;
+}
+
+
+
 /*
 @@@@@@@@@@@@@@@@@@@@@
 GetRefAPI
@@ -1861,6 +1868,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.UpdateShader = RE_UpdateShader;
 	re.UpdateModel = R_UpdateModel;
 #endif
+  
+  re.GetFrustum = RE_GetFrustum;
 
 	return &re;
 }

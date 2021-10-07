@@ -46,6 +46,14 @@ typedef enum {
 	MOVER_POS2,
 	MOVER_1TO2,
 	MOVER_2TO1
+
+#ifdef USE_ROTATING_DOOR
+  // VALKYRIE: angle movements
+  ,ROTATOR_POS1,
+  ROTATOR_POS2,
+  ROTATOR_1TO2,
+  ROTATOR_2TO1
+#endif
 } moverState_t;
 
 #define SP_PODIUM_MODEL		"models/mapobjects/podium/podium4.md3"
@@ -168,6 +176,10 @@ struct gentity_s {
 	team_t		fteam;
 
 	tag_t		tag;
+
+#ifdef USE_ROTATING_DOOR
+  float		distance;		// VALKYRIE: for rotating door
+#endif
 };
 
 

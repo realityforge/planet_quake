@@ -614,6 +614,9 @@ rescan:
 }
 
 
+void tc_vis_init(void);
+void tc_vis_render(void);
+
 /*
 ====================
 CL_CM_LoadMap
@@ -628,6 +631,7 @@ static void CL_CM_LoadMap( const char *mapname ) {
 #else
 	clientMaps[0] = CM_LoadMap( mapname, qtrue, &checksum );
 #endif
+  tc_vis_init();
 }
 
 
@@ -977,6 +981,7 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		if(clientScreens[cgvmi][0] > -1)
 #endif
     X_DMG_DrawDamage((refdef_t*)VMA(1));
+    tc_vis_render();
 		re.RenderScene( VMA(1) );
 		return 0;
 	case CG_R_SETCOLOR:

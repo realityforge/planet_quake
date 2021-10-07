@@ -416,9 +416,11 @@ qhandle_t RE_RegisterModel( const char *name )
 
 #ifdef USE_LAZY_LOAD
 	ri.Cvar_Set("r_loadingModel", "");
-#endif
-
+  // TODO: check for model existence on remote and return index
 	return mod->index;
+#else
+  return 0;
+#endif
 }
 
 #ifdef USE_LAZY_LOAD
