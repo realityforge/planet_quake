@@ -320,6 +320,9 @@ char	*modNames[] = {
   "MOD_LV_DISCHARGE",
   "MOD_FLAME_THROWER",
 #endif
+#ifdef USE_HEADSHOTS
+  "MOD_HEADSHOT",
+#endif
 	"MOD_GRAPPLE"
 };
 
@@ -666,7 +669,13 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 
 	// never gib in a nodrop
-	if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP) && g_blood.integer) || meansOfDeath == MOD_SUICIDE) {
+	if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP)
+    && g_blood.integer
+#ifdef USE_HEADSHOTS
+    && meansOfDeath != MOD_HEADSHOT
+#endif
+    ) || meansOfDeath == MOD_SUICIDE
+  ) {
 		// gib death
 		GibEntity( self, killer );
 	} else {
@@ -698,6 +707,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 			( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
 
 		G_AddEvent( self, EV_DEATH1 + i, killer );
+#ifdef USE_HEADSHOTS
+    if(meansOfDeath == MOD_HEADSHOT) {
+      G_AddEvent( self, EV_GIB_PLAYER_HEADSHOT, 0 );
+    }
+#endif
 
 		// the body can still be gibbed
 		self->die = body_die;
@@ -1223,15 +1237,51 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
   		// Modify the damage for location damage
   		if (point && targ && targ->health > 0 && attacker && take)
   			take = G_LocationDamage(point, targ, attacker, take);
-  		else if (mod == MOD_FALLING) {
+  		if (targ && targ->health > 0 && mod == MOD_FALLING && take) {
         if(take >= 15)
           targ->client->lasthurt_location = LOCATION_FOOT | LOCATION_LEG;
         else if (take >= 10)
           targ->client->lasthurt_location = LOCATION_FOOT;
         else if (take >= 5)
           targ->client->lasthurt_location = LOCATION_LEG;
-      } else
+      }
+      if(targ && (!point || !attacker || targ->health <= 0 || !take))
   			targ->client->lasthurt_location = LOCATION_NONE;
+    }
+#endif
+
+#ifdef USE_HEADSHOTS
+    if (attacker->client && targ && targ->health > 0
+      && inflictor && inflictor->s.weapon == WP_RAILGUN) {
+    	// let's say only railgun can do head shots
+    	if((targ->client->lasthurt_location & LOCATION_HEAD)
+        || (targ->client->lasthurt_location & LOCATION_FACE)) {
+        /*
+        float	z_ratio;
+        float	z_rel;
+        int	height;
+        float	targ_maxs2;
+        targ_maxs2 = targ->r.maxs[2];
+    	
+    		// handling crouching
+    		if(targ->client->ps.pm_flags & PMF_DUCKED){
+    			height = (abs(targ->r.mins[2]) + targ_maxs2)*(0.75);
+    		}
+    		else
+    			height = abs(targ->r.mins[2]) + targ_maxs2; 
+    			
+    		// project the z component of point 
+    		// onto the z component of the model's origin
+    		// this results in the z component from the origin at 0
+    		z_rel = point[2] - targ->r.currentOrigin[2] + abs(targ->r.mins[2]);
+    		z_ratio = z_rel / height;
+    	
+    		if (z_ratio > 0.90) {
+        */
+  			take = 9999; // head shot is a sure kill
+  			targ->client->lasthurt_mod = mod = MOD_HEADSHOT;
+        // }
+    	}
     }
 #endif
 	}

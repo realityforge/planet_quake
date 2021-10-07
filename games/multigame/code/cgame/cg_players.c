@@ -2858,32 +2858,37 @@ void CG_Player( centity_t *cent ) {
 	//
 	// add the head
 	//
-	head.hModel = ci->headModel;
-	if (!head.hModel) {
-		return;
-	}
-	head.customSkin = ci->headSkin;
+#ifdef USE_HEADSHOTS
+  if(!cent->pe.noHead)
+#endif
+  {
+  	head.hModel = ci->headModel;
+  	if (!head.hModel) {
+  		return;
+  	}
+  	head.customSkin = ci->headSkin;
 
-	VectorCopy( cent->lerpOrigin, head.lightingOrigin );
+  	VectorCopy( cent->lerpOrigin, head.lightingOrigin );
 
-	CG_PositionRotatedEntityOnTag( &head, &torso, ci->torsoModel, "tag_head");
+  	CG_PositionRotatedEntityOnTag( &head, &torso, ci->torsoModel, "tag_head");
 
-	head.shadowPlane = shadowPlane;
-	head.renderfx = renderfx;
+  	head.shadowPlane = shadowPlane;
+  	head.renderfx = renderfx;
 
-	// colored skin
-	if ( darken ) {
-		head.shaderRGBA[0] = 85;
-		head.shaderRGBA[1] = 85;
-		head.shaderRGBA[2] = 85;
-	} else {
-		head.shaderRGBA[0] = ci->headColor[0] * 255;
-		head.shaderRGBA[1] = ci->headColor[1] * 255;
-		head.shaderRGBA[2] = ci->headColor[2] * 255;
-	}
-	head.shaderRGBA[3] = 255;
-	
-	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+  	// colored skin
+  	if ( darken ) {
+  		head.shaderRGBA[0] = 85;
+  		head.shaderRGBA[1] = 85;
+  		head.shaderRGBA[2] = 85;
+  	} else {
+  		head.shaderRGBA[0] = ci->headColor[0] * 255;
+  		head.shaderRGBA[1] = ci->headColor[1] * 255;
+  		head.shaderRGBA[2] = ci->headColor[2] * 255;
+  	}
+  	head.shaderRGBA[3] = 255;
+  	
+  	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+  }
 
 #ifdef MISSIONPACK
 	CG_BreathPuffs(cent, &head);
@@ -2934,6 +2939,10 @@ void CG_ResetPlayerEntity( centity_t *cent ) {
 	cent->pe.torso.yawing = qfalse;
 	cent->pe.torso.pitchAngle = cent->rawAngles[PITCH];
 	cent->pe.torso.pitching = qfalse;
+  
+#ifdef USE_HEADSHOTS
+  cent->pe.noHead = qfalse;
+#endif
 
 	if ( cg_debugPosition.integer ) {
 		CG_Printf("%i ResetPlayerEntity yaw=%f\n", cent->currentState.number, cent->pe.torso.yawAngle );

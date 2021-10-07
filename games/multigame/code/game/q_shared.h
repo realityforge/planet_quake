@@ -174,6 +174,8 @@
 #define USE_ADVANCED_ZOOM 1
 // adds rotating doors from maps, UrT uses them, so does Quake 2
 #define USE_ROTATING_DOOR 1
+// show special messages and animation for headshots
+#define USE_HEADSHOTS 1
 // 
 
 #endif

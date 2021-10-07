@@ -196,6 +196,19 @@ static void CG_Obituary( entityState_t *ent ) {
 			}
 			break;
 #endif
+#ifdef USE_HEADSHOTS
+    case MOD_HEADSHOT:
+      gender = ci->gender;
+      if(gender==GENDER_FEMALE)
+      message = "got her head blown off by";
+      else{
+      if(gender==GENDER_NEUTER)
+        message = "got its head blown off by";
+      else
+        message = "got his head blown off by";
+      }
+      break;
+#endif
 		default:
 			if ( gender == GENDER_FEMALE )
 				message = "killed herself";
@@ -223,6 +236,17 @@ static void CG_Obituary( entityState_t *ent ) {
 	if ( attacker == cg.snap->ps.clientNum ) {
 		char	*s;
 
+#ifdef USE_HEADSHOTS
+    if(mod == MOD_HEADSHOT) {
+      if ( cgs.gametype < GT_TEAM ) {
+        s = va("Headshot!\n\nYou fragged %s\n%s place with %i", targetName, 
+		      CG_PlaceString( cg.snap->ps.persistant[PERS_RANK] + 1 ),
+		      cg.snap->ps.persistant[PERS_SCORE] );
+  		} else {
+  			s = va("Headshot!\n\nYou fragged %s", targetName );
+  		}
+    } else
+#endif
 		if ( cgs.gametype < GT_TEAM ) {
 			s = va("You fragged %s\n%s place with %i", targetName, 
 				CG_PlaceString( cg.snap->ps.persistant[PERS_RANK] + 1 ),
@@ -587,6 +611,9 @@ void CG_PainEvent( centity_t *cent, int health ) {
 
 #ifdef USE_ADVANCED_WEAPONS
 void CG_Lightning_Discharge (vec3_t origin, int msec);
+#endif
+#ifdef USE_HEADSHOTS
+void CG_GibPlayerHeadshot( vec3_t playerOrigin );
 #endif
 
 /*
@@ -1319,6 +1346,17 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 #endif
 		CG_GibPlayer( cent->lerpOrigin );
 		break;
+
+#ifdef USE_HEADSHOTS
+  case EV_GIB_PLAYER_HEADSHOT:
+    trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.gibSound );
+    cent->pe.noHead = qtrue;
+    CG_GibPlayerHeadshot( cent->lerpOrigin );
+    break;
+  case EV_BODY_NOHEAD:
+    cent->pe.noHead = qtrue;
+    break;
+#endif
 
 	case EV_STOPLOOPINGSOUND:
 		trap_S_StopLoopingSound( es->number );

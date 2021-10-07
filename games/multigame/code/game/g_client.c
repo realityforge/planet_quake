@@ -404,6 +404,12 @@ void CopyToBodyQue( gentity_t *ent ) {
 		body->takedamage = qtrue;
 	}
 
+#ifdef USE_HEADSHOTS
+  if(ent->client->lasthurt_mod == MOD_HEADSHOT)
+	  G_AddEvent( body, EV_BODY_NOHEAD, 0 );
+#endif
+
+
 	VectorCopy ( body->s.pos.trBase, body->r.currentOrigin );
 	trap_LinkEntity( body );
 }

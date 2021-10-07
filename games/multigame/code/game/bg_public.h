@@ -455,6 +455,10 @@ typedef enum {
 	EV_POWERUP_REGEN,
 
 	EV_GIB_PLAYER,			// gib a previously living player
+#ifdef USE_HEADSHOTS
+  EV_GIB_PLAYER_HEADSHOT,
+  EV_BODY_NOHEAD,
+#endif
 	EV_SCOREPLUM,			// score plum
 #ifdef USE_DAMAGE_PLUMS
   EV_DAMAGEPLUM,			// damage plum
@@ -678,6 +682,9 @@ typedef enum {
 #ifdef USE_ADVANCED_WEAPONS
   MOD_LV_DISCHARGE,
   MOD_FLAME_THROWER,
+#endif
+#ifdef USE_HEADSHOTS
+  MOD_HEADSHOT,
 #endif
 	MOD_GRAPPLE
 } meansOfDeath_t;

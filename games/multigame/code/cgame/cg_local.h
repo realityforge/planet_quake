@@ -165,6 +165,9 @@ typedef struct {
 	float			barrelAngle;
 	int				barrelTime;
 	qboolean		barrelSpinning;
+#ifdef USE_HEADSHOTS
+  qboolean	noHead;
+#endif
 } playerEntity_t;
 
 //=================================================
