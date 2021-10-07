@@ -706,12 +706,12 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		self->client->ps.torsoAnim = 
 			( ( self->client->ps.torsoAnim & ANIM_TOGGLEBIT ) ^ ANIM_TOGGLEBIT ) | anim;
 
-		G_AddEvent( self, EV_DEATH1 + i, killer );
 #ifdef USE_HEADSHOTS
     if(meansOfDeath == MOD_HEADSHOT) {
       G_AddEvent( self, EV_GIB_PLAYER_HEADSHOT, 0 );
-    }
+    } else
 #endif
+		G_AddEvent( self, EV_DEATH1 + i, killer );
 
 		// the body can still be gibbed
 		self->die = body_die;

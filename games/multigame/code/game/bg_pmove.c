@@ -1638,15 +1638,23 @@ static void PM_Weapon( void ) {
 	}
 
 	// check for fire
-	if ( ! (pm->cmd.buttons & BUTTON_ATTACK)
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-    || pm->ps->pm_type == PM_FROZEN
+	if( !(pm->cmd.buttons & BUTTON_ATTACK)
+#ifdef USE_ALT_FIRE
+    && !(pm->cmd.buttons & BUTTON_ALT_ATTACK)
 #endif
   ) {
 		pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
 	}
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  if(pm->ps->pm_type == PM_FROZEN) {
+    pm->ps->weaponTime = 0;
+		pm->ps->weaponstate = WEAPON_READY;
+		return;
+  }
+#endif
+
 
 	// start the animation even if out of ammo
 	if ( pm->ps->weapon == WP_GAUNTLET ) {
@@ -1676,6 +1684,11 @@ static void PM_Weapon( void ) {
 	}
 
 	// fire weapon
+#ifdef USE_ALT_FIRE
+  if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+  	PM_AddEvent( EV_ALTFIRE_WEAPON );
+  else
+#endif
 	PM_AddEvent( EV_FIRE_WEAPON );
 
 	switch( pm->ps->weapon ) {
@@ -1741,6 +1754,12 @@ static void PM_Weapon( void ) {
 	if ( pm->ps->powerups[PW_HASTE] ) {
 		addTime /= 1.3;
 	}
+#ifdef USE_ALT_FIRE
+  // Hypo: simple alt-fire example
+  if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
+  	addTime /= 2.0;
+  }
+#endif
 
 	pm->ps->weaponTime += addTime;
 }

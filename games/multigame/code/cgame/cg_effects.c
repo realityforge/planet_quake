@@ -781,27 +781,6 @@ void CG_GibPlayerHeadshot( vec3_t playerOrigin ) {
 	} else {
 		CG_LaunchGib( origin, velocity, cgs.media.gibBrain );
 	}
-
-	//delete from here
-	VectorCopy( playerOrigin, origin );
-	velocity[0] = crandom()*GIB_VELOCITY;
-	velocity[1] = crandom()*GIB_VELOCITY;
-	velocity[2] = GIB_JUMP + crandom()*GIB_VELOCITY;
-	CG_LaunchGib( origin, velocity, cgs.media.gibFist );
-	//to here to remove the gibFist, same apply for the others
-
-	VectorCopy( playerOrigin, origin );
-	velocity[0] = crandom()*GIB_VELOCITY;
-	velocity[1] = crandom()*GIB_VELOCITY;
-	velocity[2] = GIB_JUMP + crandom()*GIB_VELOCITY;
-	CG_LaunchGib( origin, velocity, cgs.media.gibFoot );
-
-	VectorCopy( playerOrigin, origin );
-	velocity[0] = crandom()*GIB_VELOCITY;
-	velocity[1] = crandom()*GIB_VELOCITY;
-	velocity[2] = GIB_JUMP + crandom()*GIB_VELOCITY;
-	CG_LaunchGib( origin, velocity, cgs.media.gibForearm );
-
 }
 #endif
 

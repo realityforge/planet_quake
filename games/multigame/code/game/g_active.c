@@ -557,6 +557,9 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			G_Damage (ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING);
 			break;
 
+#ifdef USE_ALT_FIRE
+    case EV_ALTFIRE_WEAPON:
+#endif
 		case EV_FIRE_WEAPON:
 			FireWeapon( ent );
 			break;
