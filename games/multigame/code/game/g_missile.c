@@ -4,6 +4,10 @@
 
 #define	MISSILE_PRESTEP_TIME	50
 
+#ifdef USE_CLUSTER_GRENADES
+gentity_t *fire_grenade2 (gentity_t *self, vec3_t start, vec3_t dir);
+#endif
+
 /*
 ================
 G_BounceMissile
@@ -48,8 +52,10 @@ void G_ExplodeMissile( gentity_t *ent ) {
 	vec3_t		dir;
 	vec3_t		origin;
 
+#ifdef USE_ADVANCED_WEAPONS
   // Lancer
   ent->takedamage = qfalse;
+#endif
 
 	BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
 	SnapVector( origin );
@@ -71,6 +77,21 @@ void G_ExplodeMissile( gentity_t *ent ) {
 			g_entities[ent->r.ownerNum].client->accuracy_hits++;
 		}
 	}
+
+#ifdef USE_CLUSTER_GRENADES
+  // CCH: For cluster grenades
+  if (!strcmp(ent->classname, "cgrenade")) {
+    vec3_t		dir;			// CCH
+  	VectorSet(dir, 20, 20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, -20, 20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, 20, -20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, -20, -20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  }
+#endif
 
 	trap_LinkEntity( ent );
 }
@@ -286,8 +307,10 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		return;
 	}
 
+#ifdef USE_ADVANCED_WEAPONS
   // Lancer
   ent->takedamage = qfalse;
+#endif
 
 #ifdef MISSIONPACK
 	if ( other->takedamage ) {
@@ -441,6 +464,22 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			}
 		}
 	}
+
+#ifdef USE_CLUSTER_GRENADES
+  // CCH: For cluster grenades
+  if (!strcmp(ent->classname, "cgrenade")) {
+    vec3_t		dir;			// CCH
+  	VectorSet(dir, 20, 20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, -20, 20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, 20, -20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  	VectorSet(dir, -20, -20, 50);
+  	fire_grenade2(ent->parent, ent->r.currentOrigin, dir);
+  }
+#endif
+
 
 	trap_LinkEntity( ent );
 }
@@ -724,6 +763,56 @@ static void G_Suck( gentity_t *self ) {
 #endif
 
 
+#ifdef USE_CLUSTER_GRENADES
+/*
+=================
+CCH: fire_grenade2
+
+38: 62. They will also say, `Our Lord, whosoever prepared this for us,
+do thou multiply manifold his punishment in the Fire.'
+--Holy Quran, translated by Maulvi Sher Ali  
+=================
+*/
+gentity_t *fire_grenade2 (gentity_t *self, vec3_t start, vec3_t dir) {
+	gentity_t	*bolt;
+
+	VectorNormalize (dir);
+
+	bolt = G_Spawn();
+	bolt->classname = "grenade";
+	bolt->nextthink = level.time + 2500;
+	bolt->think = G_ExplodeMissile;
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_GRENADE_LAUNCHER;
+	bolt->s.eFlags = EF_BOUNCE_HALF;
+	bolt->r.ownerNum = self->s.number;
+	bolt->parent = self;
+	bolt->damage = 100;
+	bolt->splashDamage = 100;
+	bolt->splashRadius = 150;
+	bolt->methodOfDeath = MOD_GRENADE;
+	bolt->splashMethodOfDeath = MOD_GRENADE_SPLASH;
+	bolt->clipmask = MASK_SHOT;
+
+	bolt->s.pos.trType = TR_GRAVITY;
+
+	// move a bit on the very first frame
+	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;
+
+	VectorCopy( start, bolt->s.pos.trBase );
+	VectorScale( dir, 400, bolt->s.pos.trDelta );
+	
+	// save net bandwidth
+	SnapVector( bolt->s.pos.trDelta );
+
+	VectorCopy (start, bolt->r.currentOrigin);
+
+	return bolt;
+}
+#endif
+
+
 #define GRENADE_DAMAGE	100		// bolt->damage for grenade
 #define GRENADE_RADIUS	150		// bolt->splashRadius for grenade
 /*
@@ -737,7 +826,11 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	VectorNormalize (dir);
 
 	bolt = G_Spawn();
+#ifdef USE_CLUSTER_GRENADES
+  bolt->classname = "cgrenade";
+#else
 	bolt->classname = "grenade";
+#endif
 #ifdef USE_ADVANCED_WEAPONS
   if(g_vortexGrenades.integer) {
     bolt->nextthink = level.time + 1000; // call G_Suck in 1 second
@@ -834,6 +927,77 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 //=============================================================================
 
 
+#ifdef USE_HOMING_MISSILE
+/*
+================
+CCH: rocket_think
+
+Fly like an eagle...
+--"Fly Like an Eagle", Steve Miller Band
+================
+*/
+#define ROCKET_SPEED	600
+
+void rocket_think( gentity_t *ent ) {
+	gentity_t	*target, *tent;
+	float		targetlength, tentlength;
+	int		i;
+	vec3_t		tentdir, targetdir, forward, midbody;
+	trace_t		tr;
+
+	target = NULL;
+	targetlength = LIGHTNING_RANGE;
+	// Best way to get forward vector for this rocket?
+	VectorCopy(ent->s.pos.trDelta, forward);
+	VectorNormalize(forward);
+	for (i = 0; i < level.maxclients; i++) {
+		// Here we use tent to point to potential targets
+		tent = &g_entities[i];
+
+		if (!tent->inuse) continue;
+		if (tent == ent->parent) continue;
+		if ( OnSameTeam( tent, ent->parent ) ) continue;
+
+		// Aim for the body, not the feet
+		midbody[0] = tent->r.currentOrigin[0] + 
+			(tent->r.mins[0] + tent->r.maxs[0]) * 0.5;
+		midbody[1] = tent->r.currentOrigin[1] + 
+			(tent->r.mins[1] + tent->r.maxs[1]) * 0.5;
+		midbody[2] = tent->r.currentOrigin[2] + 
+			(tent->r.mins[2] + tent->r.maxs[2]) * 0.5;
+
+		VectorSubtract(midbody, ent->r.currentOrigin, tentdir);
+		tentlength = VectorLength(tentdir);
+		if ( tentlength > targetlength ) continue;
+
+		// Quick normalization of tentdir since 
+		// we already have the length
+		tentdir[0] /= tentlength;
+		tentdir[1] /= tentlength;
+		tentdir[2] /= tentlength;
+		if ( DotProduct(forward, tentdir) < 0.95 ) continue;
+
+		trap_Trace( &tr, ent->r.currentOrigin, NULL, NULL, 
+			tent->r.currentOrigin, ENTITYNUM_NONE, MASK_SHOT );
+
+		if ( tent != &g_entities[tr.entityNum] ) continue;
+
+		target = tent;
+		targetlength = tentlength;
+		VectorCopy(tentdir, targetdir);
+	}
+
+	ent->nextthink += 20;
+
+	if (!target) return;
+
+	VectorMA(forward, 0.08, targetdir, targetdir);
+	VectorNormalize(targetdir);
+	VectorScale(targetdir, ROCKET_SPEED, ent->s.pos.trDelta);
+}
+#endif
+
+
 /*
 =================
 fire_rocket
@@ -852,8 +1016,13 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
     bolt->nextthink = level.time + 2500;
   else
 #endif
+#ifdef USE_HOMING_MISSILE
+  bolt->nextthink = level.time + 20;	// CCH
+  bolt->think = rocket_think;		// CCH
+#else
 	bolt->nextthink = level.time + 15000;
 	bolt->think = G_ExplodeMissile;
+#endif
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_ROCKET_LAUNCHER;
@@ -895,7 +1064,11 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	SnapVector( bolt->s.pos.trBase );			// save net bandwidth
+#ifdef USE_HOMING_MISSILE
+  VectorScale( dir, ROCKET_SPEED, bolt->s.pos.trDelta );	// CCH
+#else
 	VectorScale( dir, 900, bolt->s.pos.trDelta );
+#endif
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 

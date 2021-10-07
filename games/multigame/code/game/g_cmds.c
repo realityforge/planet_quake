@@ -1843,12 +1843,13 @@ void Cmd_RBounce_f( gentity_t *ent ) {
 
 	char *msg; // message to player
 
-	ent->flags ^= FL_ROCKETBOUNCE;
-
-	if (!(ent->flags & FL_ROCKETBOUNCE))
+	if (ent->flags & FL_ROCKETBOUNCE) {
 		msg = "Rocket Bounce OFF\n";
-	else
-		msg = "Rocket Bounce ON\n";
+    ent->flags &= ~FL_ROCKETBOUNCE;
+	} else {
+	  msg = "Rocket Bounce ON\n";
+    ent->flags |= FL_ROCKETBOUNCE;
+  }
 	trap_SendServerCommand( ent-g_entities, va("print \"%s\"", msg));
 }
 

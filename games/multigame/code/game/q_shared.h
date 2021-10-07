@@ -178,6 +178,10 @@
 #define USE_HEADSHOTS 1
 // use alternate fire buttons
 #define USE_ALT_FIRE 1
+// cluster grenades create offspring every time they hit something
+#define USE_CLUSTER_GRENADES 1
+// homing rockets look for other people to track and change direction
+#define USE_HOMING_MISSILE 1
 // 
 
 #endif

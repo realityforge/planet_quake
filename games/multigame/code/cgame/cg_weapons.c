@@ -1710,7 +1710,7 @@ void CG_DrawWeaponSelect( void ) {
 #ifdef USE_ADVANCED_HUD
   for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
     if(cg_autoswitch.integer == 2)
-      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i - 1] );
+      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i] );
     else
       weap = i;
     if ( bits & ( 1 << weap ) ) {
@@ -1740,7 +1740,7 @@ void CG_DrawWeaponSelect( void ) {
 	for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
 #ifdef USE_ADVANCED_HUD
     if(cg_autoswitch.integer == 2)
-      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i - 1] );
+      weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i] );
     else
       weap = i;
 #define i weap
