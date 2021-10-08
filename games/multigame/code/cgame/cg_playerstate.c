@@ -405,9 +405,9 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 
 	// check for flag pickup
 	if ( cgs.gametype >= GT_TEAM ) {
-		if ((ps->powerups[PW_REDFLAG] != ops->powerups[PW_REDFLAG] && ps->powerups[PW_REDFLAG]) ||
-			(ps->powerups[PW_BLUEFLAG] != ops->powerups[PW_BLUEFLAG] && ps->powerups[PW_BLUEFLAG]) ||
-			(ps->powerups[PW_NEUTRALFLAG] != ops->powerups[PW_NEUTRALFLAG] && ps->powerups[PW_NEUTRALFLAG]) )
+		if ((cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_REDFLAG] < 100)
+      || (cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BLUEFLAG] < 100)
+      || (cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_NEUTRALFLAG] < 100) )
 		{
 			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
 		}

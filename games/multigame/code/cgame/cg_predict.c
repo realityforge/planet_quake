@@ -381,7 +381,7 @@ static int CG_CheckArmor( int damage ) {
 {
 	int take, asave;
 
-	if ( cg.predictedPlayerState.powerups[ PW_BATTLESUIT ] )
+	if ( cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BATTLESUIT] )
 		return;
 
 	if ( cg.predictedPlayerState.clientNum != cg.snap->ps.clientNum || cg.snap->ps.pm_flags & PMF_FOLLOW ) {
@@ -446,14 +446,14 @@ static void CG_PickupPrediction( centity_t *cent, const gitem_t *item ) {
 	// powerups prediction
 	if ( item->giType == IT_POWERUP && item->giTag >= PW_QUAD && item->giTag <= PW_FLIGHT ) {
 		// round timing to seconds to make multiple powerup timers count in sync
-		if ( !cg.predictedPlayerState.powerups[ item->giTag ] ) {
-			cg.predictedPlayerState.powerups[ item->giTag ] = cg.predictedPlayerState.commandTime - ( cg.predictedPlayerState.commandTime % 1000 );
+		if ( !cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] ) {
+			cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] = cg.predictedPlayerState.commandTime - ( cg.predictedPlayerState.commandTime % 1000 );
 			// this assumption is correct only on transition and implies hardcoded 1.3 coefficient:
 			if ( item->giTag == PW_HASTE ) {
 				cg.predictedPlayerState.speed *= 1.3f;
 			}
 		}
-		cg.predictedPlayerState.powerups[ item->giTag ] += cent->currentState.time2 * 1000;
+		cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
 	}	
 
 	// holdable prediction
@@ -491,7 +491,7 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;
 	}
 
-	if ( !BG_CanItemBeGrabbed( cgs.gametype, &cent->currentState, &cg.predictedPlayerState ) ) {
+	if ( !BG_CanItemBeGrabbed( cgs.gametype, &cent->currentState, &cg.predictedPlayerState, cent->items ) ) {
 		return;	// can't hold it
 	}
 
@@ -605,6 +605,11 @@ static void CG_TouchTriggerPrediction( void ) {
 		if ( ent->eType == ET_TELEPORT_TRIGGER ) {
 			cg.hyperspace = qtrue;
 		} else if ( ent->eType == ET_PUSH_TRIGGER ) {
+      // moved from bg_misc
+      // flying characters don't hit bounce pads
+      if(cent->items[ITEM_PW_MIN + PW_HASTE])
+        continue;
+
 			BG_TouchJumpPad( &cg.predictedPlayerState, ent );
 		}
 	}
@@ -632,7 +637,7 @@ static void CG_CheckTimers( void ) {
 	// periodic tasks
 	if ( cg.timeResidual && cg.predictedPlayerState.commandTime >= cg.timeResidual && !cg.thisFrameTeleport ) {
 		cg.timeResidual += 1000;
-		if ( cg.predictedPlayerState.powerups[ PW_REGEN ] ) {
+		if ( cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + PW_REGEN ] ) {
 			int maxhealth = cg.predictedPlayerState.stats[ STAT_MAX_HEALTH ];
 			if ( cg.predictedPlayerState.stats[ STAT_HEALTH ] < maxhealth ) {
 				cg.predictedPlayerState.stats[ STAT_HEALTH ] += 15;
@@ -659,15 +664,15 @@ static void CG_CheckTimers( void ) {
 
 	// turn off any expired powerups
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( !cg.predictedPlayerState.powerups[ i ] )
+		if ( !cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] )
 			continue;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
     if(i == PW_FROZEN) {
       continue;      
     }
 #endif
-		if ( cg.predictedPlayerState.powerups[ i ] < cg.predictedPlayerState.commandTime ) {
-			cg.predictedPlayerState.powerups[ i ] = 0;
+		if ( cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] < cg.predictedPlayerState.commandTime ) {
+			cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] = 0;
 		}
 	}
 }
@@ -862,6 +867,7 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps, qboole
 		return 19;
 	}
 
+/*
 	for ( i = 0; i < MAX_POWERUPS; i++ ) {
 		if( pps->powerups[ i ] != ps->powerups[ i ] ) {
 			if ( cg_showmiss.integer > 1 )
@@ -869,6 +875,7 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps, qboole
 			return 20;
 		}
 	}
+*/
 
 	return 0;
 }
@@ -1159,12 +1166,12 @@ void CG_PredictPlayerState( void ) {
 		}
 #if 0
 		if ( !cg_optimizePrediction.integer ) {
-			Pmove (&cg_pmove);
+			Pmove (&cg_pmove, cg_entities[cg.snap->ps.clientNum].items);
 		} else 
 #endif
 		if ( /*cg_optimizePrediction.integer && */ ( cmdNum >= predictCmd || ( stateIndex + 1 ) % NUM_SAVED_STATES == cg.stateHead ) ) {
 
-			Pmove( &cg_pmove );
+			Pmove( &cg_pmove, cg_entities[cg.snap->ps.clientNum].items );
 
 			// add push trigger movement effects
 			CG_TouchTriggerPrediction();

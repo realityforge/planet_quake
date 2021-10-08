@@ -1018,7 +1018,7 @@ typedef struct playerState_s {
 
 	int			stats[MAX_STATS];
 	int			persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
-	int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
+	//int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
 	int			ammo[MAX_WEAPONS];
 
 	int			generic1;
@@ -1142,7 +1142,7 @@ typedef struct entityState_s {
 	int		eventParm;
 
 	// for players
-	int		powerups;		// bit flags
+	//int		powerups;		// bit flags
 	int		weapon;			// determines weapon and flash model, etc
 	int		legsAnim;		// mask off ANIM_TOGGLEBIT
 	int		torsoAnim;		// mask off ANIM_TOGGLEBIT

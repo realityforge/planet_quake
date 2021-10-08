@@ -316,7 +316,7 @@ void SpectatorThink( gentity_t *ent, usercmd_t *ucmd ) {
 		pm.pointcontents = trap_PointContents;
 
 		// perform a pmove
-		Pmove( &pm );
+		Pmove( &pm, &ent->items );
 		// save results of pmove
 		VectorCopy( client->ps.origin, ent->s.origin );
 
@@ -973,9 +973,9 @@ void ClientThink_real( gentity_t *ent ) {
 				ent->client->ps.pm_type = PM_SPINTERMISSION;
 			}
 		}
-		Pmove (&pm);
+		Pmove (&pm, &ent->items);
 #else
-		Pmove (&pm);
+		Pmove (&pm, &ent->items);
 #endif
 
 	// save results of pmove

@@ -8,6 +8,7 @@
 #include "bg_local.h"
 
 pmove_t		*pm;
+int       *items;
 pml_t		pml;
 
 // movement parameters
@@ -176,7 +177,7 @@ static void PM_Friction( void ) {
 		vel[0] = 0;
 		vel[1] = 0;		// allow sinking underwater
 		// FIXME: still have z friction underwater?
-		if ( pm->ps->pm_type == PM_SPECTATOR || pm->ps->powerups[ PW_FLIGHT ] )
+		if ( pm->ps->pm_type == PM_SPECTATOR || items[ITEM_PW_MIN + PW_FLIGHT] )
 			vel[2] = 0.0f; // no slow-sinking/raising movements
 		return;
 	}
@@ -200,7 +201,7 @@ static void PM_Friction( void ) {
 	}
 
 	// apply flying friction
-	if ( pm->ps->powerups[PW_FLIGHT]) {
+	if ( items[ITEM_PW_MIN + PW_FLIGHT]) {
 		drop += speed*pm_flightfriction*pml.frametime;
 	}
 
@@ -1276,7 +1277,7 @@ static void PM_CheckDuck (void)
 {
 	trace_t	trace;
 
-	if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
+	if ( items[ITEM_PW_MIN + PW_INVULNERABILITY] ) {
 		if ( pm->ps->pm_flags & PMF_INVULEXPAND ) {
 			// invulnerability sphere has a 42 units radius
 			VectorSet( pm->mins, -42, -42, -42 );
@@ -1360,7 +1361,7 @@ static void PM_Footsteps( void ) {
 
 	if ( pm->ps->groundEntityNum == ENTITYNUM_NONE ) {
 
-		if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
+		if ( items[ITEM_PW_MIN + PW_INVULNERABILITY] ) {
 			PM_ContinueLegsAnim( LEGS_IDLECR );
 		}
 		// airborne leaves position in cycle intact, but doesn't advance
@@ -1751,7 +1752,7 @@ static void PM_Weapon( void ) {
   }
   else
 #endif
-	if ( pm->ps->powerups[PW_HASTE] ) {
+	if ( items[ITEM_PW_MIN + PW_HASTE] ) {
 		addTime /= 1.3;
 	}
 #ifdef USE_ALT_FIRE
@@ -1949,7 +1950,7 @@ static void PM_LadderMove( void ) {
 CheckLadder [ ARTHUR TOMLIN ]
 =============
 */
-void CheckLadder( void )
+static void CheckLadder( void )
 {
 	vec3_t flatforward,spot;
 	trace_t trace;
@@ -1977,8 +1978,9 @@ PmoveSingle
 */
 void trap_SnapVector( float *v );
 
-void PmoveSingle (pmove_t *pmove) {
+static void PmoveSingle (pmove_t *pmove, int *itms) {
 	pm = pmove;
+  items = itms;
 
 	// this counter lets us debug movement problems with a journal
 	// by setting a conditional breakpoint fot the previous frame
@@ -2135,11 +2137,11 @@ void PmoveSingle (pmove_t *pmove) {
 #endif
 
 #ifdef MISSIONPACK
-	if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
+	if ( items[ITEM_PW_MIN + PW_INVULNERABILITY] ) {
 		PM_InvulnerabilityMove();
 	} else
 #endif
-	if ( pm->ps->powerups[PW_FLIGHT] ) {
+	if ( items[ITEM_PW_MIN + PW_FLIGHT] ) {
 		// flight powerup doesn't allow jump and has different friction
 		PM_FlyMove();
 	} else if (pm->ps->pm_flags & PMF_GRAPPLE_PULL) {
@@ -2181,7 +2183,7 @@ void PmoveSingle (pmove_t *pmove) {
 	// entering / leaving water splashes
 	PM_WaterEvents();
 
-	if ( pm->ps->powerups[PW_FLIGHT] && !pml.groundPlane ) {
+	if ( items[ITEM_PW_MIN + PW_FLIGHT] && !pml.groundPlane ) {
 		// don't snap velocity in free-fly or we will be not able to stop via flight friction
 		return;
 	}
@@ -2198,7 +2200,7 @@ Pmove
 Can be called by either the server or the client
 ================
 */
-void Pmove (pmove_t *pmove) {
+void Pmove (pmove_t *pmove, int *items) {
 	int			finalTime;
 
 	finalTime = pmove->cmd.serverTime;
@@ -2235,7 +2237,7 @@ void Pmove (pmove_t *pmove) {
 			}
 		}
 		pmove->cmd.serverTime = pmove->ps->commandTime + msec;
-		PmoveSingle( pmove );
+		PmoveSingle( pmove, items );
 
 		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
 			pmove->cmd.upmove = 20;

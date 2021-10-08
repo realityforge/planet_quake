@@ -662,7 +662,7 @@ static void CG_Portal( const centity_t *cent ) {
 
 	CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
 	ent.reType = RT_PORTALSURFACE;
-	ent.oldframe = cent->currentState.powerups;
+	//ent.oldframe = cent->currentState.powerups;
 	ent.frame = cent->currentState.frame;		// rotation speed
 	ent.skinNum = cent->currentState.clientNum/256.0 * 360;	// roll offset
 

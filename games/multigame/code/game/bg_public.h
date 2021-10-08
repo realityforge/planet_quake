@@ -14,7 +14,7 @@
 #define	HEALTH_SOFT_LIMIT	100
 #define	AMMO_HARD_LIMIT		200
 
-#define MAX_ITEMS         ITEM_HI_MAX
+#define MAX_ITEMS         256
 
 #define	RANK_TIED_FLAG		0x4000
 
@@ -196,7 +196,7 @@ typedef struct {
 
 // if a full pmove isn't done on the client, you can just update the angles
 void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd );
-void Pmove (pmove_t *pmove);
+void Pmove (pmove_t *pmove, int *items);
 
 //===================================================================================
 
@@ -757,7 +757,7 @@ gitem_t	*BG_FindItemForPowerup( powerup_t pw );
 gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #define	ITEM_INDEX(x) ((x)-bg_itemlist)
 
-qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps );
+qboolean	BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps, int *items );
 
 
 // g_dmflags->integer flags

@@ -1071,7 +1071,7 @@ Returns false if the item should not be picked up.
 This needs to be the same for client side prediction and server use.
 ================
 */
-qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps ) {
+qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps, int *items ) {
 	gitem_t	*item;
 #ifdef MISSIONPACK
 	int		upperBound;
@@ -1171,11 +1171,11 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 				return qtrue;
 			}
 			if (ps->persistant[PERS_TEAM] == TEAM_RED) {
-				if (item->giTag == PW_BLUEFLAG && ps->powerups[PW_NEUTRALFLAG] ) {
+				if (item->giTag == PW_BLUEFLAG && items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
 					return qtrue;
 				}
 			} else if (ps->persistant[PERS_TEAM] == TEAM_BLUE) {
-				if (item->giTag == PW_REDFLAG && ps->powerups[PW_NEUTRALFLAG] ) {
+				if (item->giTag == PW_REDFLAG && items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
 					return qtrue;
 				}
 			}
@@ -1188,12 +1188,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			if (ps->persistant[PERS_TEAM] == TEAM_RED) {
 				if (item->giTag == PW_BLUEFLAG ||
 					(item->giTag == PW_REDFLAG && ent->modelindex2) ||
-					(item->giTag == PW_REDFLAG && ps->powerups[PW_BLUEFLAG]) )
+					(item->giTag == PW_REDFLAG && items[ITEM_PW_MIN + PW_BLUEFLAG]) )
 					return qtrue;
 			} else if (ps->persistant[PERS_TEAM] == TEAM_BLUE) {
 				if (item->giTag == PW_REDFLAG ||
 					(item->giTag == PW_BLUEFLAG && ent->modelindex2) ||
-					(item->giTag == PW_BLUEFLAG && ps->powerups[PW_REDFLAG]) )
+					(item->giTag == PW_BLUEFLAG && items[ITEM_PW_MIN + PW_REDFLAG]) )
 					return qtrue;
 			}
 		}
@@ -1505,9 +1505,9 @@ void BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad ) {
 	}
 
 	// flying characters don't hit bounce pads
-	if ( ps->powerups[PW_FLIGHT] ) {
-		return;
-	}
+	//if ( ps->powerups[PW_FLIGHT] ) {
+	//	return;
+	//}
 
 	// if we didn't hit this same jumppad the previous frame
 	// then don't play the event sound again if we are in a fat trigger
@@ -1538,7 +1538,7 @@ and after local prediction on the client
 ========================
 */
 void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean snap ) {
-	int		i;
+//	int		i;
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 		s->eType = ET_INVISIBLE;
@@ -1594,12 +1594,14 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->weapon = ps->weapon;
 	s->groundEntityNum = ps->groundEntityNum;
 
+/*
 	s->powerups = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( ps->powerups[ i ] ) {
 			s->powerups |= 1 << i;
 		}
 	}
+*/
 
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
@@ -1614,7 +1616,7 @@ and after local prediction on the client
 ========================
 */
 void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s, int time, qboolean snap ) {
-	int		i;
+//	int		i;
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 		s->eType = ET_INVISIBLE;
@@ -1674,12 +1676,14 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->weapon = ps->weapon;
 	s->groundEntityNum = ps->groundEntityNum;
 
+/*
 	s->powerups = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( ps->powerups[ i ] ) {
 			s->powerups |= 1 << i;
 		}
 	}
+*/
 
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
