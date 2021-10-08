@@ -490,14 +490,16 @@ static void CG_DrawSelectedPlayerPowerup( rectDef_t *rect, qboolean draw2D ) {
 	clientInfo_t *ci;
   int j;
   float x, y;
+  int sp;
+  sp = sortedTeamPlayers[CG_GetSelectedPlayer()];
 
-  ci = cgs.clientinfo + sortedTeamPlayers[CG_GetSelectedPlayer()];
+  ci = cgs.clientinfo + sp;
   if (ci) {
     x = rect->x;
     y = rect->y;
 
 		for (j = 0; j < PW_NUM_POWERUPS; j++) {
-			if (ci->powerups & (1 << j)) {
+			if (cg_entities[sp].items[ITEM_PW_MIN + j]) {
 				gitem_t	*item;
 				item = BG_FindItemForPowerup( j );
 				if (item) {
@@ -622,7 +624,7 @@ static void CG_DrawBlueName(rectDef_t *rect, float scale, vec4_t color, int text
 static void CG_DrawBlueFlagName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
   int i;
   for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cgs.clientinfo[i].powerups & ( 1<< PW_BLUEFLAG )) {
+	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cg_entities[i].items[ITEM_PW_MIN + PW_BLUEFLAG]) {
       CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cgs.clientinfo[i].name, 0, 0, textStyle);
       return;
     }
@@ -659,7 +661,7 @@ static void CG_DrawBlueFlagStatus(rectDef_t *rect, qhandle_t shader) {
 static void CG_DrawBlueFlagHead(rectDef_t *rect) {
   int i;
   for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cgs.clientinfo[i].powerups & ( 1<< PW_BLUEFLAG )) {
+	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_RED  && cg_entities[i].items[ITEM_PW_MIN + PW_BLUEFLAG]) {
       vec3_t angles;
       VectorClear( angles );
  		  angles[YAW] = 180 + 20 * sin( cg.time / 650.0 );;
@@ -672,7 +674,7 @@ static void CG_DrawBlueFlagHead(rectDef_t *rect) {
 static void CG_DrawRedFlagName(rectDef_t *rect, float scale, vec4_t color, int textStyle ) {
   int i;
   for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_BLUE  && cgs.clientinfo[i].powerups & ( 1<< PW_REDFLAG )) {
+	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_BLUE  && cg_entities[i].items[ITEM_PW_MIN + PW_REDFLAG]) {
       CG_Text_Paint(rect->x, rect->y + rect->h, scale, color, cgs.clientinfo[i].name, 0, 0, textStyle);
       return;
     }
@@ -709,7 +711,7 @@ static void CG_DrawRedFlagStatus(rectDef_t *rect, qhandle_t shader) {
 static void CG_DrawRedFlagHead(rectDef_t *rect) {
   int i;
   for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_BLUE  && cgs.clientinfo[i].powerups & ( 1<< PW_REDFLAG )) {
+	  if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_BLUE  && cg_entities[i].items[ITEM_PW_MIN + PW_REDFLAG]) {
       vec3_t angles;
       VectorClear( angles );
  		  angles[YAW] = 180 + 20 * sin( cg.time / 650.0 );;
@@ -834,10 +836,10 @@ static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float 
 	// sort the list by time remaining
 	active = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( !cg_entities[cg.clientNum].items[ITEM_PW_MIN + i] ) {
+		if ( !cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + i] ) {
 			continue;
 		}
-		t = cg_entities[cg.clientNum].items[ITEM_PW_MIN + i] - cg.time;
+		t = cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + i] - cg.time;
 		// ZOID--don't draw if the power up has unlimited time (999 seconds)
 		// This is true of the CTF flags
 		if ( t <= 0 || t >= 999000) {
@@ -1078,7 +1080,9 @@ qboolean CG_OwnerDrawVisible(int flags) {
 	}
 
 	if (flags & CG_SHOW_IF_PLAYER_HAS_FLAG) {
-		if (cg.snap->ps.powerups[PW_REDFLAG] || cg.snap->ps.powerups[PW_BLUEFLAG] || cg.snap->ps.powerups[PW_NEUTRALFLAG]) {
+		if (cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_REDFLAG] 
+      || cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BLUEFLAG] 
+      || cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_NEUTRALFLAG]) {
 			return qtrue;
 		}
 	}
@@ -1089,11 +1093,11 @@ qboolean CG_OwnerDrawVisible(int flags) {
 
 static void CG_DrawPlayerHasFlag(rectDef_t *rect, qboolean force2D) {
 	int adj = (force2D) ? 0 : 2;
-	if( cg.predictedPlayerState.powerups[PW_REDFLAG] ) {
+	if( cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_REDFLAG] ) {
   	CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_RED, force2D);
-	} else if( cg.predictedPlayerState.powerups[PW_BLUEFLAG] ) {
+	} else if( cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BLUEFLAG] ) {
   	CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_BLUE, force2D);
-	} else if( cg.predictedPlayerState.powerups[PW_NEUTRALFLAG] ) {
+	} else if( cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
   	CG_DrawFlagModel( rect->x + adj, rect->y + adj, rect->w - adj, rect->h - adj, TEAM_FREE, force2D);
 	}
 }
@@ -1259,6 +1263,7 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 	clientInfo_t *ci;
 	gitem_t	*item;
 	qhandle_t h;
+  int sp;
 
 	// max player name width
 	pwidth = 0;
@@ -1286,12 +1291,13 @@ void CG_DrawNewTeamInfo(rectDef_t *rect, float text_x, float text_y, float scale
 	y = rect->y;
 
 	for (i = 0; i < count; i++) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
+    sp = sortedTeamPlayers[i];
+		ci = cgs.clientinfo + sp;
 		if ( ci->infoValid && ci->team == cg.snap->ps.persistant[PERS_TEAM]) {
 
 			xx = rect->x + 1;
 			for (j = 0; j <= PW_NUM_POWERUPS; j++) {
-				if (ci->powerups & (1 << j)) {
+				if (cg_entities[sp].items[ITEM_PW_MIN + j]) {
 
 					item = BG_FindItemForPowerup( j );
 

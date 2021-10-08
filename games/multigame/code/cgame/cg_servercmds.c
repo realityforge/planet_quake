@@ -78,7 +78,7 @@ static void CG_ParseScores( void ) {
 			cg.scores[i].client = 0;
 		}
 		cgs.clientinfo[ cg.scores[i].client ].score = cg.scores[i].score;
-		cgs.clientinfo[ cg.scores[i].client ].powerups = powerups;
+		//cgs.clientinfo[ cg.scores[i].client ].powerups = powerups;
 
 		cg.scores[i].team = cgs.clientinfo[cg.scores[i].client].team;
 	}
@@ -112,7 +112,7 @@ static void CG_ParseTeamInfo( void ) {
 		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 6 + 4 ) );
 		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * 6 + 5 ) );
 		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 6 ) );
-		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 7 ) );
+		//cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 7 ) );
 	}
 }
 

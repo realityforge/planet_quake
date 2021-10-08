@@ -80,21 +80,21 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	trap_R_SetColor( NULL );
 
 	// draw the handicap or bot skill marker (unless player has flag)
-	if ( ci->powerups & ( 1 << PW_NEUTRALFLAG ) ) {
+	if ( cg_entities[score->client].items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
 		if( largeFormat ) {
 			CG_DrawFlagModel( iconx, y - ( 32 - BIGCHAR_HEIGHT ) / 2, 32, 32, TEAM_FREE, qfalse );
 		}
 		else {
 			CG_DrawFlagModel( iconx, y, 16, 16, TEAM_FREE, qfalse );
 		}
-	} else if ( ci->powerups & ( 1 << PW_REDFLAG ) ) {
+	} else if ( cg_entities[score->client].items[ITEM_PW_MIN + PW_REDFLAG] ) {
 		if( largeFormat ) {
 			CG_DrawFlagModel( iconx, y - ( 32 - BIGCHAR_HEIGHT ) / 2, 32, 32, TEAM_RED, qfalse );
 		}
 		else {
 			CG_DrawFlagModel( iconx, y, 16, 16, TEAM_RED, qfalse );
 		}
-	} else if ( ci->powerups & ( 1 << PW_BLUEFLAG ) ) {
+	} else if ( cg_entities[score->client].items[ITEM_PW_MIN + PW_BLUEFLAG] ) {
 		if( largeFormat ) {
 			CG_DrawFlagModel( iconx, y - ( 32 - BIGCHAR_HEIGHT ) / 2, 32, 32, TEAM_BLUE, qfalse );
 		}

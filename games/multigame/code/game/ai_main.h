@@ -13,7 +13,7 @@
 //#define DEBUG
 #define CTF
 
-#define MAX_ITEMS         ITEM_HI_MAX
+#define MAX_ITEMS         256
 //bot flags
 #define BFL_STRAFERIGHT				1	//strafe to the right
 #define BFL_ATTACKED				2	//bot has attacked last ai frame
