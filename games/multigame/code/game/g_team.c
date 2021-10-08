@@ -309,7 +309,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		tokens = targ->client->ps.generic1;
 	}
 #endif
-	if (targ->client->ps.powerups[enemy_flag_pw]) {
+	if (targ->items[ITEM_PW_MIN + enemy_flag_pw]) {
 		attacker->client->pers.teamState.lastfraggedcarrier = level.time;
 		AddScore(attacker, targ->r.currentOrigin, CTF_FRAG_CARRIER_BONUS);
 		attacker->client->pers.teamState.fragcarrier++;
@@ -346,7 +346,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 
 	if (targ->client->pers.teamState.lasthurtcarrier &&
 		level.time - targ->client->pers.teamState.lasthurtcarrier < CTF_CARRIER_DANGER_PROTECT_TIMEOUT &&
-		!attacker->client->ps.powerups[flag_pw]) {
+		!attacker->items[ITEM_PW_MIN + flag_pw]) {
 		// attacker is on the same team as the flag carrier and
 		// fragged a guy who hurt our flag carrier
 		AddScore(attacker, targ->r.currentOrigin, CTF_CARRIER_DANGER_PROTECT_BONUS);
@@ -419,7 +419,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 	// find attacker's team's flag carrier
 	for (i = 0; i < level.maxclients; i++) {
 		carrier = g_entities + i;
-		if (carrier->inuse && carrier->client->ps.powerups[flag_pw])
+		if (carrier->inuse && carrier->items[ITEM_PW_MIN + flag_pw])
 			break;
 		carrier = NULL;
 	}
@@ -505,7 +505,7 @@ void Team_CheckHurtCarrier(gentity_t *targ, gentity_t *attacker)
 		flag_pw = PW_REDFLAG;
 
 	// flags
-	if (targ->client->ps.powerups[flag_pw] &&
+	if (targ->items[ITEM_PW_MIN + flag_pw] &&
 		targ->client->sess.sessionTeam != attacker->client->sess.sessionTeam)
 		attacker->client->pers.teamState.lasthurtcarrier = level.time;
 
@@ -734,7 +734,7 @@ static int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, team_t team ) {
 
 	// the flag is at home base.  if the player has the enemy
 	// flag, he's just won!
-	if (!cl->ps.powerups[enemy_flag])
+	if (!other->items[ITEM_PW_MIN + enemy_flag])
 		return 0; // We don't have the flag
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_1FCTF ) {
@@ -747,7 +747,7 @@ static int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, team_t team ) {
 	}
 #endif
 
-	cl->ps.powerups[enemy_flag] = 0;
+	other->items[ITEM_PW_MIN + enemy_flag] = 0;
 
 	teamgame.last_flag_capture = level.time;
 	teamgame.last_capture_team = team;
@@ -821,7 +821,7 @@ static int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, team_t team ) 
 	if( g_gametype.integer == GT_1FCTF ) {
 		PrintMsg (NULL, "%s" S_COLOR_WHITE " got the flag!\n", other->client->pers.netname );
 
-		cl->ps.powerups[PW_NEUTRALFLAG] = INT_MAX; // flags never expire
+		other->items[ITEM_PW_MIN + PW_NEUTRALFLAG] = INT_MAX; // flags never expire
 
 		if( team == TEAM_RED ) {
 			Team_SetFlagStatus( TEAM_FREE, FLAG_TAKEN_RED );
@@ -836,9 +836,9 @@ static int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, team_t team ) 
 			other->client->pers.netname, TeamName(team));
 
 		if (team == TEAM_RED)
-			cl->ps.powerups[PW_REDFLAG] = INT_MAX; // flags never expire
+			other->items[ITEM_PW_MIN + PW_REDFLAG] = INT_MAX; // flags never expire
 		else
-			cl->ps.powerups[PW_BLUEFLAG] = INT_MAX; // flags never expire
+			other->items[ITEM_PW_MIN + PW_BLUEFLAG] = INT_MAX; // flags never expire
 
 		Team_SetFlagStatus( team, FLAG_TAKEN );
 #ifdef MISSIONPACK

@@ -936,7 +936,10 @@ Fly like an eagle...
 --"Fly Like an Eagle", Steve Miller Band
 ================
 */
-#define ROCKET_SPEED	600
+#define ROCKET_SPEED	   600
+#define ROCKET_VIS_CONE  0.95
+#define ROCKET_TURNING   0.08
+// 
 
 void rocket_think( gentity_t *ent ) {
 	gentity_t	*target, *tent;
@@ -975,7 +978,9 @@ void rocket_think( gentity_t *ent ) {
 		tentdir[0] /= tentlength;
 		tentdir[1] /= tentlength;
 		tentdir[2] /= tentlength;
-		if ( DotProduct(forward, tentdir) < 0.95 ) continue;
+    // this value determines how wide from it's direction it can search for 
+    //   players to target
+		if ( DotProduct(forward, tentdir) < ROCKET_VIS_CONE ) continue;
 
 		trap_Trace( &tr, ent->r.currentOrigin, NULL, NULL, 
 			tent->r.currentOrigin, ENTITYNUM_NONE, MASK_SHOT );
@@ -991,7 +996,8 @@ void rocket_think( gentity_t *ent ) {
 
 	if (!target) return;
 
-	VectorMA(forward, 0.08, targetdir, targetdir);
+  // this variable determines how quickly it can change direction
+	VectorMA(forward, ROCKET_TURNING, targetdir, targetdir);
 	VectorNormalize(targetdir);
 	VectorScale(targetdir, ROCKET_SPEED, ent->s.pos.trDelta);
 }

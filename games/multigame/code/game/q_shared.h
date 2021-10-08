@@ -182,6 +182,8 @@
 #define USE_CLUSTER_GRENADES 1
 // homing rockets look for other people to track and change direction
 #define USE_HOMING_MISSILE 1
+// spreadfire weapon and powerup mod, sends lots of fire everywhere
+#define USE_WEAPON_SPREAD 1
 // 
 
 #endif

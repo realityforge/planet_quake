@@ -87,7 +87,7 @@ void P_WorldEffects( gentity_t *ent ) {
 
 	waterlevel = ent->waterlevel;
 
-	envirosuit = ent->client->ps.powerups[PW_BATTLESUIT] > level.time;
+	envirosuit = ent->items[ITEM_PW_MIN + PW_BATTLESUIT] > level.time;
 
 	//
 	// check for drowning
@@ -391,7 +391,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
 			maxHealth = client->ps.stats[STAT_MAX_HEALTH] / 2;
 		}
-		else if ( client->ps.powerups[PW_REGEN] ) {
+		else if ( ent->items[ITEM_PW_MIN + PW_REGEN] ) {
 			maxHealth = client->ps.stats[STAT_MAX_HEALTH];
 		}
 		else {
@@ -412,7 +412,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
 			}
 #else
-		if ( client->ps.powerups[PW_REGEN] ) {
+		if ( ent->items[ITEM_PW_MIN + PW_REGEN] ) {
 			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
 				ent->health += 15;
 				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
@@ -441,7 +441,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
       	ent->health--;
       	if ( ent->health < 11) {
       		ent->flags ^= FL_CLOAK;
-      		ent->client->ps.powerups[PW_INVIS] = level.time;
+      		ent->items[ITEM_PW_MIN + PW_INVIS] = level.time;
       	}
       }
 #endif
@@ -569,13 +569,13 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			item = NULL;
 			j = 0;
 
-			if ( ent->client->ps.powerups[ PW_REDFLAG ] ) {
+			if ( ent->items[ ITEM_PW_MIN + PW_REDFLAG ] ) {
 				item = BG_FindItemForPowerup( PW_REDFLAG );
 				j = PW_REDFLAG;
-			} else if ( ent->client->ps.powerups[ PW_BLUEFLAG ] ) {
+			} else if ( ent->items[ ITEM_PW_MIN + PW_BLUEFLAG ] ) {
 				item = BG_FindItemForPowerup( PW_BLUEFLAG );
 				j = PW_BLUEFLAG;
-			} else if ( ent->client->ps.powerups[ PW_NEUTRALFLAG ] ) {
+			} else if ( ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG ] ) {
 				item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
 				j = PW_NEUTRALFLAG;
 			}
@@ -583,14 +583,14 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			if ( item ) {
 				drop = Drop_Item( ent, item, 0 );
 				// decide how many seconds it has left
-				drop->count = ( ent->client->ps.powerups[ j ] - level.time ) / 1000;
+				drop->count = ( ent->items[ ITEM_PW_MIN + j ] - level.time ) / 1000;
 				if ( drop->count < 1 ) {
 					drop->count = 1;
 				}
 				// for pickup prediction
 				drop->s.time2 = drop->count;
 
-				ent->client->ps.powerups[ j ] = 0;
+				ent->items[ ITEM_PW_MIN + j ] = 0;
 			}
 
 #ifdef MISSIONPACK
@@ -854,7 +854,7 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 	else
 #endif
-	if ( client->ps.powerups[PW_HASTE] ) {
+	if ( ent->items[ITEM_PW_MIN + PW_HASTE] ) {
 		client->ps.speed *= 1.3;
   }
 
@@ -872,11 +872,11 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if(client->ps.powerups[PW_FROZEN] && !client->frozen) {
+  if(ent->items[ITEM_PW_MIN + PW_FROZEN] && !client->frozen) {
     G_AddEvent( ent, EV_FROZEN, 0 );
-    client->frozen = client->ps.powerups[PW_FROZEN];
+    client->frozen = ent->items[ITEM_PW_MIN + PW_FROZEN];
     client->ps.pm_type = PM_FROZEN;
-  } else if (!client->ps.powerups[PW_FROZEN] && client->frozen) {
+  } else if (!ent->items[ITEM_PW_MIN + PW_FROZEN] && client->frozen) {
     G_AddEvent( ent, EV_UNFROZEN, 0 );
     client->frozen = 0;
   }
@@ -884,7 +884,7 @@ void ClientThink_real( gentity_t *ent ) {
     && client->frozen
     && level.time - client->frozen >= g_thawTime.integer * 1000
   ) {
-    client->ps.powerups[PW_FROZEN] = 0;
+    ent->items[ITEM_PW_MIN + PW_FROZEN] = 0;
     G_AddEvent( ent, EV_UNFROZEN, 0 );
     client->frozen = 0;
   }
@@ -915,7 +915,7 @@ void ClientThink_real( gentity_t *ent ) {
 
 #ifdef MISSIONPACK
 	// check for invulnerability expansion before doing the Pmove
-	if (client->ps.powerups[PW_INVULNERABILITY] ) {
+	if (ent->items[ITEM_PW_MIN + PW_INVULNERABILITY] ) {
 		if ( !(client->ps.pm_flags & PMF_INVULEXPAND) ) {
 			vec3_t mins = { -42, -42, -42 };
 			vec3_t maxs = { 42, 42, 42 };
@@ -1163,33 +1163,33 @@ void ClientEndFrame( gentity_t *ent ) {
 
 	// turn off any expired powerups
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( client->ps.powerups[ i ] < client->pers.cmd.serverTime ) {
-			client->ps.powerups[ i ] = 0;
+		if ( ent->items[ ITEM_PW_MIN + i ] < client->pers.cmd.serverTime ) {
+			ent->items[ ITEM_PW_MIN + i ] = 0;
 		}
 	}
 
 #ifdef MISSIONPACK
 	// set powerup for player animation
 	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
-		ent->client->ps.powerups[PW_GUARD] = level.time;
+		ent->items[ITEM_PW_MIN + PW_GUARD] = level.time;
 	}
 	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
-		ent->client->ps.powerups[PW_SCOUT] = level.time;
+		ent->items[ITEM_PW_MIN + PW_SCOUT] = level.time;
 	}
 	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_DOUBLER ) {
-		ent->client->ps.powerups[PW_DOUBLER] = level.time;
+		ent->items[ITEM_PW_MIN + PW_DOUBLER] = level.time;
 	}
 	if( bg_itemlist[ent->client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
-		ent->client->ps.powerups[PW_AMMOREGEN] = level.time;
+		ent->items[ITEM_PW_MIN + PW_AMMOREGEN] = level.time;
 	}
 	if ( ent->client->invulnerabilityTime > level.time ) {
-		ent->client->ps.powerups[PW_INVULNERABILITY] = level.time;
+		ent->items[ITEM_PW_MIN + PW_INVULNERABILITY] = level.time;
 	}
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if(ent->client->frozen) {
-    ent->client->ps.powerups[PW_FROZEN] = level.time;
+    ent->items[ITEM_PW_MIN + PW_FROZEN] = level.time;
   }
 #endif
 

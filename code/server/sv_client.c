@@ -443,22 +443,6 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-/*
-#ifdef USE_REFEREE_CMDS
-void SV_SetInternalPlayerState(int clientNum) {
-  Com_Printf("size of gentity: %i != %i\n", sv.gentitySize, sizeof(gentity_t));
-  playerState_t *ps = SV_GameClientNum( clientNum );
-  int restoreOffset = sizeof(entityShared_t) - sizeof(entityState_t) + 4; // 4 for the ptr
-  Com_Printf("getting player state\n");
-  byte *clientEnt = (void *)SV_GentityNum( clientNum );
-  gentity_t *ent = (void *)&clientEnt[-restoreOffset]; //->r.s;
-  Com_Printf("setting powerups\n");
-  ent->client->ps.powerups[PW_FROZEN] = ps->powerups[PW_FROZEN];
-}
-#endif
-*/
-
-
 #if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER)
 /*
 ==================

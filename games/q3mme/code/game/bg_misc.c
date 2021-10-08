@@ -1,4 +1,24 @@
-// Copyright (C) 1999-2000 Id Software, Inc.
+/*
+===========================================================================
+Copyright (C) 1999-2005 Id Software, Inc.
+
+This file is part of Quake III Arena source code.
+
+Quake III Arena source code is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+Quake III Arena source code is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Foobar; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+===========================================================================
+*/
 //
 // bg_misc.c -- both games misc functions, all completely stateless
 
@@ -21,14 +41,14 @@ An item fires all of its targets when it is picked up.  If the toucher can't car
 "count" override quantity or duration on most items.
 */
 
-gitem_t	bg_itemlist[] = 
+gitem_t	bg_itemlist[64] = 
 {
 	{
 		NULL,
 		NULL,
 		{ NULL,
 		NULL,
-		0, 0} ,
+		NULL, NULL} ,
 /* icon */		NULL,
 /* pickup */	NULL,
 		0,
@@ -49,7 +69,7 @@ gitem_t	bg_itemlist[] =
 		"sound/misc/ar1_pkup.wav",
 		{ "models/powerups/armor/shard.md3", 
 		"models/powerups/armor/shard_sphere.md3",
-		0, 0} ,
+		NULL, NULL} ,
 /* icon */		"icons/iconr_shard",
 /* pickup */	"Armor Shard",
 		5,
@@ -65,7 +85,7 @@ gitem_t	bg_itemlist[] =
 		"item_armor_combat", 
 		"sound/misc/ar2_pkup.wav",
         { "models/powerups/armor/armor_yel.md3",
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconr_yellow",
 /* pickup */	"Armor",
 		50,
@@ -81,7 +101,7 @@ gitem_t	bg_itemlist[] =
 		"item_armor_body", 
 		"sound/misc/ar2_pkup.wav",
         { "models/powerups/armor/armor_red.md3",
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconr_red",
 /* pickup */	"Heavy Armor",
 		100,
@@ -101,7 +121,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/s_health.wav",
         { "models/powerups/health/small_cross.md3", 
 		"models/powerups/health/small_sphere.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/iconh_green",
 /* pickup */	"5 Health",
 		5,
@@ -118,7 +138,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/n_health.wav",
         { "models/powerups/health/medium_cross.md3", 
 		"models/powerups/health/medium_sphere.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/iconh_yellow",
 /* pickup */	"25 Health",
 		25,
@@ -135,7 +155,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/l_health.wav",
         { "models/powerups/health/large_cross.md3", 
 		"models/powerups/health/large_sphere.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/iconh_red",
 /* pickup */	"50 Health",
 		50,
@@ -152,7 +172,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/m_health.wav",
         { "models/powerups/health/mega_cross.md3", 
 		"models/powerups/health/mega_sphere.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/iconh_mega",
 /* pickup */	"Mega Health",
 		100,
@@ -173,7 +193,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_gauntlet", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/gauntlet/gauntlet.md3",
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_gauntlet",
 /* pickup */	"Gauntlet",
 		0,
@@ -189,7 +209,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_shotgun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/shotgun/shotgun.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_shotgun",
 /* pickup */	"Shotgun",
 		10,
@@ -205,7 +225,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_machinegun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/machinegun/machinegun.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_machinegun",
 /* pickup */	"Machinegun",
 		40,
@@ -221,7 +241,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_grenadelauncher",
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/grenadel/grenadel.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_grenade",
 /* pickup */	"Grenade Launcher",
 		10,
@@ -237,7 +257,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_rocketlauncher",
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/rocketl/rocketl.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_rocket",
 /* pickup */	"Rocket Launcher",
 		10,
@@ -253,7 +273,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_lightning", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/lightning/lightning.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_lightning",
 /* pickup */	"Lightning Gun",
 		100,
@@ -269,7 +289,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_railgun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/railgun/railgun.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_railgun",
 /* pickup */	"Railgun",
 		10,
@@ -285,7 +305,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_plasmagun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/plasma/plasma.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_plasma",
 /* pickup */	"Plasma Gun",
 		50,
@@ -301,7 +321,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_bfg",
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/bfg/bfg.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_bfg",
 /* pickup */	"BFG10K",
 		20,
@@ -317,7 +337,7 @@ gitem_t	bg_itemlist[] =
 		"weapon_grapplinghook",
 		"sound/misc/w_pkup.wav",
         { "models/weapons2/grapple/grapple.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_grapple",
 /* pickup */	"Grappling Hook",
 		0,
@@ -337,7 +357,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_shells",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/shotgunam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_shotgun",
 /* pickup */	"Shells",
 		10,
@@ -353,7 +373,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_bullets",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/machinegunam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_machinegun",
 /* pickup */	"Bullets",
 		50,
@@ -369,7 +389,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_grenades",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/grenadeam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_grenade",
 /* pickup */	"Grenades",
 		5,
@@ -385,7 +405,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_cells",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/plasmaam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_plasma",
 /* pickup */	"Cells",
 		30,
@@ -401,7 +421,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_lightning",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/lightningam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_lightning",
 /* pickup */	"Lightning",
 		60,
@@ -417,7 +437,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_rockets",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/rocketam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_rocket",
 /* pickup */	"Rockets",
 		5,
@@ -433,7 +453,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_slugs",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/railgunam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_railgun",
 /* pickup */	"Slugs",
 		10,
@@ -449,7 +469,7 @@ gitem_t	bg_itemlist[] =
 		"ammo_bfg",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/bfgam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_bfg",
 /* pickup */	"Bfg Ammo",
 		15,
@@ -468,7 +488,7 @@ gitem_t	bg_itemlist[] =
 		"holdable_teleporter", 
 		"sound/items/holdable.wav",
         { "models/powerups/holdable/teleporter.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/teleporter",
 /* pickup */	"Personal Teleporter",
 		60,
@@ -485,7 +505,7 @@ gitem_t	bg_itemlist[] =
         { 
 		"models/powerups/holdable/medkit.md3", 
 		"models/powerups/holdable/medkit_sphere.md3",
-		0, 0},
+		NULL, NULL},
 /* icon */		"icons/medkit",
 /* pickup */	"Medkit",
 		60,
@@ -505,7 +525,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/quaddamage.wav",
         { "models/powerups/instant/quad.md3", 
         "models/powerups/instant/quad_ring.md3",
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/quad",
 /* pickup */	"Quad Damage",
 		30,
@@ -522,7 +542,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/protect.wav",
         { "models/powerups/instant/enviro.md3", 
 		"models/powerups/instant/enviro_ring.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/envirosuit",
 /* pickup */	"Battle Suit",
 		30,
@@ -539,7 +559,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/haste.wav",
         { "models/powerups/instant/haste.md3", 
 		"models/powerups/instant/haste_ring.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/haste",
 /* pickup */	"Speed",
 		30,
@@ -556,7 +576,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/invisibility.wav",
         { "models/powerups/instant/invis.md3", 
 		"models/powerups/instant/invis_ring.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/invis",
 /* pickup */	"Invisibility",
 		30,
@@ -573,7 +593,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/regeneration.wav",
         { "models/powerups/instant/regen.md3", 
 		"models/powerups/instant/regen_ring.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/regen",
 /* pickup */	"Regeneration",
 		30,
@@ -590,7 +610,7 @@ gitem_t	bg_itemlist[] =
 		"sound/items/flight.wav",
         { "models/powerups/instant/flight.md3", 
 		"models/powerups/instant/flight_ring.md3", 
-		0, 0 },
+		NULL, NULL },
 /* icon */		"icons/flight",
 /* pickup */	"Flight",
 		60,
@@ -607,7 +627,7 @@ Only in CTF games
 		"team_CTF_redflag",
 		NULL,
         { "models/flags/r_flag.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/iconf_red1",
 /* pickup */	"Red Flag",
 		0,
@@ -624,7 +644,7 @@ Only in CTF games
 		"team_CTF_blueflag",
 		NULL,
         { "models/flags/b_flag.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/iconf_blu1",
 /* pickup */	"Blue Flag",
 		0,
@@ -641,7 +661,7 @@ Only in CTF games
 		"holdable_kamikaze", 
 		"sound/items/holdable.wav",
         { "models/powerups/kamikazi.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/kamikaze",
 /* pickup */	"Kamikaze",
 		60,
@@ -657,7 +677,7 @@ Only in CTF games
 		"holdable_portal", 
 		"sound/items/holdable.wav",
         { "models/powerups/holdable/porter.md3",
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/portal",
 /* pickup */	"Portal",
 		60,
@@ -673,7 +693,7 @@ Only in CTF games
 		"holdable_invulnerability", 
 		"sound/items/holdable.wav",
         { "models/powerups/holdable/invulnerability.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/invulnerability",
 /* pickup */	"Invulnerability",
 		60,
@@ -689,7 +709,7 @@ Only in CTF games
 		"ammo_nails",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/nailgunam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_nailgun",
 /* pickup */	"Nails",
 		20,
@@ -705,7 +725,7 @@ Only in CTF games
 		"ammo_mines",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/proxmineam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_proxlauncher",
 /* pickup */	"Proximity Mines",
 		10,
@@ -721,7 +741,7 @@ Only in CTF games
 		"ammo_belt",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/ammo/chaingunam.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/icona_chaingun",
 /* pickup */	"Chaingun Belt",
 		100,
@@ -740,7 +760,7 @@ Only in CTF games
 		"item_scout",
 		"sound/items/scout.wav",
         { "models/powerups/scout.md3", 
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/scout",
 /* pickup */	"Scout",
 		30,
@@ -756,7 +776,7 @@ Only in CTF games
 		"item_guard",
 		"sound/items/guard.wav",
         { "models/powerups/guard.md3", 
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/guard",
 /* pickup */	"Guard",
 		30,
@@ -772,7 +792,7 @@ Only in CTF games
 		"item_doubler",
 		"sound/items/doubler.wav",
         { "models/powerups/doubler.md3", 
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/doubler",
 /* pickup */	"Doubler",
 		30,
@@ -788,7 +808,7 @@ Only in CTF games
 		"item_ammoregen",
 		"sound/items/ammoregen.wav",
         { "models/powerups/ammo.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/ammo_regen",
 /* pickup */	"Ammo Regen",
 		30,
@@ -805,7 +825,7 @@ Only in One Flag CTF games
 		"team_CTF_neutralflag",
 		NULL,
         { "models/flags/n_flag.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/iconf_neutral1",
 /* pickup */	"Neutral Flag",
 		0,
@@ -819,7 +839,7 @@ Only in One Flag CTF games
 		"item_redcube",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/orb/r_orb.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/iconh_rorb",
 /* pickup */	"Red Cube",
 		0,
@@ -833,7 +853,7 @@ Only in One Flag CTF games
 		"item_bluecube",
 		"sound/misc/am_pkup.wav",
         { "models/powerups/orb/b_orb.md3",
-		0, 0, 0 },
+		NULL, NULL, NULL },
 /* icon */		"icons/iconh_borb",
 /* pickup */	"Blue Cube",
 		0,
@@ -848,7 +868,7 @@ Only in One Flag CTF games
 		"weapon_nailgun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons/nailgun/nailgun.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_nailgun",
 /* pickup */	"Nailgun",
 		10,
@@ -864,7 +884,7 @@ Only in One Flag CTF games
 		"weapon_prox_launcher", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons/proxmine/proxmine.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_proxlauncher",
 /* pickup */	"Prox Launcher",
 		5,
@@ -885,7 +905,7 @@ Only in One Flag CTF games
 		"weapon_chaingun", 
 		"sound/misc/w_pkup.wav",
         { "models/weapons/vulcan/vulcan.md3", 
-		0, 0, 0},
+		NULL, NULL, NULL},
 /* icon */		"icons/iconw_chaingun",
 /* pickup */	"Chaingun",
 		80,
@@ -900,8 +920,51 @@ Only in One Flag CTF games
 	{NULL}
 };
 
-int		bg_numItems = ARRAY_LEN( bg_itemlist ) - 1;
 
+int		bg_numItems = sizeof(bg_itemlist) / sizeof(bg_itemlist[0]) - 1;
+
+void BG_InitItems( bgItemMode_t mode ) {
+	gitem_t *item;
+	switch ( mode ) {
+	case bgItemBase:
+		bg_numItems = 36;
+		break;
+	case bgItemCPMA:
+		item = bg_itemlist + 36;
+
+		item->classname = "item_armor_jacket";
+		item->pickup_sound = "sound/misc/ar2_pkup.wav";
+		item->world_model[0] = "models/powerups/armor/armor_gre.md3";
+		item->icon = "icons/iconr_green";
+		item->pickup_name = "Green Armor";
+		item->quantity = 25;
+		item->giType = 3;
+		item->precaches = item->sounds = "";
+
+		item ++;
+		item->classname = "item_backpack";
+		item->pickup_sound = "sound/misc/ar2_pkup.wav";
+		item->world_model[0] = "models/backpack.md3";
+		item->icon = "icons/icon_backpack";
+		item->pickup_name = "Backpack";
+		item->quantity = 50;
+		item->giType = 3;
+		item->precaches = item->sounds = "";
+
+		item ++;
+		item->classname = "team_CTF_neutralflag";
+		item->world_model[0] = "models/flags/n_flag.md3";
+		item->icon = "icons/iconf_neutral1";
+		item->pickup_name = "Neutral Flag";
+		item->giType = 8;
+		item->giTag = 9;
+		item->precaches = item->sounds = "";
+		item ++;
+
+		bg_numItems = 39;
+		break;
+	}
+}
 
 /*
 ==============
@@ -1018,9 +1081,6 @@ This needs to be the same for client side prediction and server use.
 */
 qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const playerState_t *ps ) {
 	gitem_t	*item;
-#ifdef MISSIONPACK
-	int		upperBound;
-#endif
 
 	if ( ent->modelindex < 1 || ent->modelindex >= bg_numItems ) {
 		Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: index out of range" );
@@ -1039,38 +1099,15 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		return qtrue;
 
 	case IT_ARMOR:
-#ifdef MISSIONPACK
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
-			return qfalse;
-		}
-
-		// we also clamp armor to the maxhealth for handicapping
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
-			upperBound = ps->stats[STAT_MAX_HEALTH];
-		}
-		else {
-			upperBound = ps->stats[STAT_MAX_HEALTH] * 2;
-		}
-
-		if ( ps->stats[STAT_ARMOR] >= upperBound ) {
-			return qfalse;
-		}
-#else
 		if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
 			return qfalse;
 		}
-#endif
 		return qtrue;
 
 	case IT_HEALTH:
 		// small and mega healths will go over the max, otherwise
 		// don't pick up if already at max
-#ifdef MISSIONPACK
-		if( bg_itemlist[ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_GUARD ) {
-			upperBound = ps->stats[STAT_MAX_HEALTH];
-		}
-		else
-#endif
+
 		if ( item->quantity == 5 || item->quantity == 100 ) {
 			if ( ps->stats[STAT_HEALTH] >= ps->stats[STAT_MAX_HEALTH] * 2 ) {
 				return qfalse;
@@ -1086,42 +1123,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 	case IT_POWERUP:
 		return qtrue;	// powerups are always picked up
 
-#ifdef MISSIONPACK
-	case IT_PERSISTANT_POWERUP:
-		// can only hold one item at a time
-		if ( ps->stats[STAT_PERSISTANT_POWERUP] ) {
-			return qfalse;
-		}
-
-		// check team only
-		if( ( ent->generic1 & 2 ) && ( ps->persistant[PERS_TEAM] != TEAM_RED ) ) {
-			return qfalse;
-		}
-		if( ( ent->generic1 & 4 ) && ( ps->persistant[PERS_TEAM] != TEAM_BLUE ) ) {
-			return qfalse;
-		}
-
-		return qtrue;
-#endif
-
 	case IT_TEAM: // team items, such as flags
-#ifdef MISSIONPACK		
-		if( gametype == GT_1FCTF ) {
-			// neutral flag can always be picked up
-			if( item->giTag == PW_NEUTRALFLAG ) {
-				return qtrue;
-			}
-			if (ps->persistant[PERS_TEAM] == TEAM_RED) {
-				if (item->giTag == PW_BLUEFLAG  && ps->powerups[PW_NEUTRALFLAG] ) {
-					return qtrue;
-				}
-			} else if (ps->persistant[PERS_TEAM] == TEAM_BLUE) {
-				if (item->giTag == PW_REDFLAG  && ps->powerups[PW_NEUTRALFLAG] ) {
-					return qtrue;
-				}
-			}
-		}
-#endif
 		if( gametype == GT_CTF ) {
 			// ent->modelindex2 is non-zero on items if they are dropped
 			// we need to know this because we can pick up our dropped flag (and return it)
@@ -1138,12 +1140,6 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 					return qtrue;
 			}
 		}
-
-#ifdef MISSIONPACK
-		if( gametype == GT_HARVESTER ) {
-			return qtrue;
-		}
-#endif
 		return qfalse;
 
 	case IT_HOLDABLE:
@@ -1157,7 +1153,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
             Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: IT_BAD" );
         default:
 #ifndef Q3_VM
-#ifndef NDEBUG
+#ifndef NDEBUG // bk0001204
           Com_Printf("BG_CanItemBeGrabbed: unknown enum %d\n", item->giType );
 #endif
 #endif
@@ -1189,7 +1185,7 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result ) 
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
 		break;
 	case TR_SINE:
-		deltaTime = ( ( atTime - tr->trTime ) % tr->trDuration ) / (float) tr->trDuration;
+		deltaTime = ( atTime - tr->trTime ) / (float) tr->trDuration;
 		phase = sin( deltaTime * M_PI * 2 );
 		VectorMA( tr->trBase, phase, tr->trDelta, result );
 		break;
@@ -1209,7 +1205,7 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result ) 
 		result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;		// FIXME: local gravity...
 		break;
 	default:
-		Com_Error( ERR_DROP, "BG_EvaluateTrajectory: unknown trType: %i", tr->trType );
+		Com_Error( ERR_DROP, "BG_EvaluateTrajectory: unknown trType: %i", tr->trTime );
 		break;
 	}
 }
@@ -1252,13 +1248,12 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 		result[2] -= DEFAULT_GRAVITY * deltaTime;		// FIXME: local gravity...
 		break;
 	default:
-		Com_Error( ERR_DROP, "BG_EvaluateTrajectoryDelta: unknown trType: %i", tr->trType );
+		Com_Error( ERR_DROP, "BG_EvaluateTrajectoryDelta: unknown trType: %i", tr->trTime );
 		break;
 	}
 }
 
-
-const char *eventnames[EV_MAX] = {
+char *eventnames[] = {
 	"EV_NONE",
 
 	"EV_FOOTSTEP",
@@ -1286,9 +1281,6 @@ const char *eventnames[EV_MAX] = {
 
 	"EV_ITEM_PICKUP",			// normal item pickups are predictable
 	"EV_GLOBAL_ITEM_PICKUP",	// powerup / team sounds are broadcast to everyone
-#ifdef USE_ITEM_TIMERS
-  "EV_ITEM_TIMER",
-#endif
 
 	"EV_NOAMMO",
 	"EV_CHANGE_WEAPON",
@@ -1344,16 +1336,12 @@ const char *eventnames[EV_MAX] = {
 
 	"EV_GIB_PLAYER",			// gib a previously living player
 	"EV_SCOREPLUM",			// score plum
-#ifdef USE_DAMAGE_PLUMS
-  "EV_DAMAGEPLUM",			// damage plum
-#endif
 
 //#ifdef MISSIONPACK
 	"EV_PROXIMITY_MINE_STICK",
 	"EV_PROXIMITY_MINE_TRIGGER",
 	"EV_KAMIKAZE",			// kamikaze explodes
 	"EV_OBELISKEXPLODE",		// obelisk explodes
-	"EV_OBELISKPAIN",			// obelisk is in pain
 	"EV_INVUL_IMPACT",		// invulnerability sphere impact
 	"EV_JUICED",				// invulnerability juiced effect
 	"EV_LIGHTNINGBOLT",		// lightning bolt bounced of invulnerability sphere
@@ -1361,13 +1349,7 @@ const char *eventnames[EV_MAX] = {
 
 	"EV_DEBUG_LINE",
 	"EV_STOPLOOPINGSOUND",
-	"EV_TAUNT",
-	"EV_TAUNT_YES",
-	"EV_TAUNT_NO",
-	"EV_TAUNT_FOLLOWME",
-	"EV_TAUNT_GETFLAG",
-	"EV_TAUNT_GUARDBASE",
-	"EV_TAUNT_PATROL"
+	"EV_TAUNT"
 
 };
 
@@ -1378,18 +1360,15 @@ BG_AddPredictableEventToPlayerstate
 Handles the sequence numbers
 ===============
 */
-#ifdef CGAME
-void CG_StoreEvent( entity_event_t ev, int eventParm, int entityNum );
-#endif
 
-void	Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 
-void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps, int entityNum ) {
+void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerState_t *ps ) {
 
 #ifdef _DEBUG
 	{
 		char buf[256];
-		Cvar_VariableStringBuffer("showevents", buf, sizeof(buf));
+		trap_Cvar_VariableStringBuffer("showevents", buf, sizeof(buf));
 		if ( atof(buf) != 0 ) {
 #ifdef QAGAME
 			Com_Printf(" game event svt %5d -> %5d: num = %20s parm %d\n", ps->pmove_framecount/*ps->commandTime*/, ps->eventSequence, eventnames[newEvent], eventParm);
@@ -1399,16 +1378,10 @@ void BG_AddPredictableEventToPlayerstate( int newEvent, int eventParm, playerSta
 		}
 	}
 #endif
-
-#ifdef CGAME
-	CG_StoreEvent( newEvent, eventParm, entityNum );
-#endif
-	
 	ps->events[ps->eventSequence & (MAX_PS_EVENTS-1)] = newEvent;
 	ps->eventParms[ps->eventSequence & (MAX_PS_EVENTS-1)] = eventParm;
 	ps->eventSequence++;
 }
-
 
 /*
 ========================
@@ -1441,7 +1414,7 @@ void BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad ) {
 		} else {
 			effectNum = 1;
 		}
-		BG_AddPredictableEventToPlayerstate( EV_JUMP_PAD, effectNum, ps, -1 );
+		BG_AddPredictableEventToPlayerstate( EV_JUMP_PAD, effectNum, ps );
 	}
 	// remember hitting this jumppad this frame
 	ps->jumppad_ent = jumppad->number;
@@ -1604,646 +1577,4 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
-}
-
-
-int replace_s( char * str1, char * str2, char * src, int max_len ) 
-{
-	int count = 0; // replace count
-	int len1, len2, d;
-	char *match, *s0, *s1, *s2, *max;
-
-	match = strstr( src, str1 );
-
-	if ( !match )
-		return count;
-
-	len1 = (int)strlen( str1 );
-	len2 = (int)strlen( str2 );
-	d = len2-len1;
-
-	if ( d > 0 ) // expand and replace mode
-	{
-		max = src + max_len;
-		src += strlen( src );
-
-		do  
-		{
-			// expand source string
-			s1 = src;
-			src += d;
-			if ( src >= max )
-				return count;
-			s2 = src;
-
-			s0 = match + len1;
-
-			while ( s1 >= s0 ) {
-				*s2-- = *s1--;
-			}
-
-			// replace match
-			s2 = str2;
-			while ( *s2 ) {
-				*match = *s2; match++; s2++;
-			}
-			match = strstr ( match, str1 );
-
-			count++;
-		}
-		while ( match );
-
-		return count;
-	} 
-	else
-	if ( d < 0 ) // shrink and replace mode
-	{
-		do 
-		{
-			// shrink source string
-			s1 = match + len1;
-			s2 = match + len2;
-			while ( (*s2++ = *s1++) != 0 );
-
-			//replace match
-			s2 = str2;
-			while ( *s2 ) {
-				*match = *s2;
-				match++; s2++;
-			}
-
-			match = strstr ( match, str1 );
-
-			count++;
-		} 
-		while ( match );
-
-		return count;
-	}
-	else
-	do  // just replace match
-	{
-		s2 = str2;
-		while ( *s2 ) {
-			*match = *s2;
-			match++; s2++;
-		}
-
-		match = strstr ( match, str1 );
-		count++;
-	} 
-	while ( match );
-
-	return count;
-}
-
-
-
-char *strtok( char *strToken, const char *strDelimit ) {
-	static char		*lastStr = NULL;
-
-	const char		*delimit = strDelimit;
-	int				loop = 1;
-
-	// check some state
-	if( !strToken )
-		strToken = lastStr; // use the last string given then
-
-	// if there are no delimiters or no string to work with, bail
-	if( !strToken /*|| !strDelimit */ )
-		return NULL;
-
-	// first up we want to skip all delimiters at the start
-	// and mark our place to return
-	while( *strToken && loop )
-	{
-		loop = 0;
-
-		// check all delimiters, we must find _one_ to continue the outside loop
-		for( delimit = strDelimit ; *delimit ; delimit++ )
-		{
-			if( *strToken == *delimit )
-			{
-				strToken++;
-				loop = 1;
-				break;
-			}
-		}
-	}
-
-	// strToken now points to the first non-delimiter found
-	// now we want to find the next delimiter to terminate on
-	for( loop=1, lastStr=strToken ; *lastStr && loop ; lastStr++ )
-	{
-		// check all delimiters
-		for( delimit=strDelimit ; *delimit ; delimit++ )
-		{
-			if( *delimit == *lastStr )
-			{
-				loop = 0;
-				break;
-			}
-		}
-	}
-
-	// if the loop aborted then the token needs termination
-	if( !loop )
-	{
-		*(lastStr-1) = '\0';
-
-		if ( '\0' == *lastStr )
-			lastStr = NULL;
-	}
-	else
-	{
-		lastStr = NULL; // clean up for the next call
-	}
-
-	return strToken;
-}
-
-
-char *BG_StripColor( char *string ) {
-	char	*d;
-	char	*s;
-	int		c;
-
-	s = string;
-	d = string;
-	while ((c = *s) != 0 ) 
-	{
-		if ( Q_IsColorString( s ) )
-			s++;
-		else {
-			*d = c; d++;
-		}
-		s++;
-	}
-	*d = '\0';
-	return string;
-}
-
-
-char *EncodedString( const char *in ) 
-{
-	static const char hextab[16] = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
-	static char	buf[16384];
-	unsigned	int		 c;
-	char		*out;
-	
-	if ( !in ) {
-		buf[0] = '\0';
-		return buf;
-	}
-
-	out = buf;
-
-	while ( ( c = *in++ ) != '\0' ) {
-		if ( c == '#' ) {
-			*out++ = '#';
-			*out++ = '#';
-		} else 
-		if ( c > 127 || c == '%' ) {
-			*out++ = '#';
-			*out++ = hextab [ (c & 0xF0) >> 4 ];
-			*out++ = hextab [ (c & 0x0F) ];
-		} else {
-			*out++ = c;
-		}
-	}
-	*out = '\0';
-	return (char *)buf;
-}
-
-
-static int hex2dec ( char chr ) {
-	switch ( chr ) {
-		case '0':  return 0;
-		case '1':  return 1;
-		case '2':  return 2;
-		case '3':  return 3;
-		case '4':  return 4;
-		case '5':  return 5;
-		case '6':  return 6;
-		case '7':  return 7;
-		case '8':  return 8;
-		case '9':  return 9;
-		case 'a':  return 10;
-		case 'A':  return 10;
-		case 'b':  return 11;
-		case 'B':  return 11;
-		case 'c':  return 12;
-		case 'C':  return 12;
-		case 'd':  return 13;
-		case 'D':  return 13;
-		case 'e':  return 14;
-		case 'E':  return 14;
-		case 'f':  return 15;
-		case 'F':  return 15;
-	}
-	return 0;
-}
-
-
-char *DecodedString( const char *in ) 
-{
-	static char	buf[16384];
-	char		*out, c1, c2;
-
-	if ( !in ) {
-		buf[0] = '\0';
-		return (char *)buf;
-	}
-
-	out = buf;
-
-	while ( *in ) {
-		// new encoding
-		if ( *in == '#' && (c1 = *(in+1)) != 0 && (c2 = *(in+2)) != 0 &&
-		    (( c1 >= '0' && c1 <= '9' ) || ( c1 >= 'a' && c1 <= 'f' )) &&
-		    (( c2 >= '0' && c2 <= '9' ) || ( c2 >= 'a' && c2 <= 'f' ))) {
-			*out++ = hex2dec( c1 ) * 16 + hex2dec( c2 );
-			in += 3;
-		} else if ( *in == '#' && *(in+1) == '#' )  {
-			*out++ = '#';
-			in += 2;
-		} else {
-			*out++ = *in++;
-		}
-	}
-
-	*out = '\0';
-
-	return (char *)buf;
-}
-
-
-// a bit faster string compare function
-int BG_stricmp( const char *s1, const char *s2 ) {
-	int	c1, c2;
-	do {
-		c1 = locase[(unsigned char)*s1]; s1++;
-		c2 = locase[(unsigned char)*s2]; s2++;
-		if (c1 != c2) 
-			return ((c1 < c2) ? -1 : 1);
-	}  while ( c1 );
-	return 0;		// strings are equal
-}
-
-
-
-/*
-===========
-BG_CleanName
-============
-*/
-void BG_CleanName( const char *in, char *out, int outSize, const char *blankString ) {
-	int		len, colorlessLen;
-	char	ch;
-	char	*p;
-	int		spaces;
-
-	//save room for trailing null byte
-	outSize--;
-
-	len = 0;
-	colorlessLen = 0;
-	p = out;
-	*p = '\0';
-	spaces = 0;
-
-	while( 1 ) {
-		ch = *in++;
-		if( !ch ) {
-			break;
-		}
-
-		// don't allow leading spaces
-		if( *p == '\0' && ch <= ' ' ) {
-			continue;
-		}
-
-		// check colors
-		if( ch == Q_COLOR_ESCAPE ) {
-			// solo trailing carat is not a color prefix
-			if( !*in ) {
-				break;
-			}
-
-			// don't allow black in a name, period
-			if( ColorIndex(*in) == 0 ) {
-				in++;
-				continue;
-			}
-
-			// make sure room in dest for both chars
-			if( len > outSize - 2 ) {
-				break;
-			}
-
-			*out++ = ch;
-			*out++ = *in++;
-			len += 2;
-			continue;
-		}
-
-		// let's keep it in printable range
-		if ( ch < ' ' || ch > 126 ) {
-			continue;
-		}
-
-		// don't allow too many consecutive spaces
-		if( ch == ' ' ) {
-			spaces++;
-			if( spaces > 2 ) {
-				continue;
-			}
-		}
-		else {
-			spaces = 0;
-		}
-
-		if( len > outSize - 1 ) {
-			break;
-		}
-
-		*out++ = ch;
-		colorlessLen++;
-		len++;
-	}
-	*out = '\0';
-
-	if ( blankString ) {
-		// don't allow empty names
-		if( *p == '\0' || colorlessLen == 0 ) {
-			Q_strncpyz( p, blankString, outSize );
-		}
-	}
-}
-
-
-/*
-===================
-Q_strcpy
-
-string copy, without any checks
-===================
-*/
-
-
-
-//=========================================================
-
-
-#define ALT			0x00000001		/* alternate form */
-#define HEXPREFIX	0x00000002		/* add 0x or 0X prefix */
-#define LADJUST		0x00000004		/* left adjustment */
-#define LONGDBL		0x00000008		/* long double */
-#define LONGINT		0x00000010		/* long integer */
-#define QUADINT		0x00000020		/* quad integer */
-#define SHORTINT	0x00000040		/* short integer */
-#define ZEROPAD		0x00000080		/* zero (as opposed to blank) pad */
-#define FPT			0x00000100		/* floating point number */
-#define REDUCE		0x00000200		/* extension: do not emit anything if value is zero */
-
-#define to_digit(c)		((c) - '0')
-#define is_digit(c)		((unsigned)to_digit(c) <= 9)
-#define to_char(n)		((n) + '0')
-
-
-
-static int _atoi( const char **stringPtr ) 
-{
-	int		sign;
-	int		value;
-	int		c;
-	const char	*string;
-
-	string = *stringPtr;
-
-	if ( !*string )
-		return 0;
-
-	// check sign
-	switch ( *string ) 
-	{
-	case '+':
-		string++;
-		sign = 1;
-		break;
-	case '-':
-		string++;
-		sign = -1;
-		break;
-	default:
-		sign = 1;
-		break;
-	}
-
-	// read digits
-	value = 0;
-	do 
-	{
-		c = *string;
-		if ( c < '0' || c > '9' ) 
-		{
-			break;
-		}
-		c -= '0';
-		value = value * 10 + c;
-		string++;
-	} 
-	while ( 1 );
-
-	// not handling 10e10 notation...
-
-	*stringPtr = string;
-
-	return value * sign;
-}
-
-
-static float _atof( const char **stringPtr ) 
-{
-	const char	*string;
-	float sign;
-	float value;
-	float fraction;
-	int	  c = '0'; // uninitialized use possible
-
-	string = *stringPtr;
-
-	if ( !*string )
-		return 0;
-
-	// check sign
-	switch ( *string ) 
-	{
-	case '+':
-		string++;
-		sign = 1;
-		break;
-	case '-':
-		string++;
-		sign = -1;
-		break;
-	default:
-		sign = 1;
-		break;
-	}
-
-	// read digits
-	value = 0;
-	if ( *string != '.' ) 
-	{
-		do 
-		{
-			c = *string;
-			if ( c < '0' || c > '9' ) 
-			{
-				break;
-			}
-			c -= '0';
-			value = value * 10 + c;
-			string++;
-		} 
-		while ( 1 );
-	}
-
-	// check for decimal point
-	if ( *string == '.' ) 
-	{
-		fraction = 0.1f;
-		string++;
-		do 
-		{
-			c = *string;
-			if ( c < '0' || c > '9' ) 
-			{
-				break;
-			}
-			c -= '0';
-			value += c * fraction;
-			fraction *= 0.1f;
-			string++;
-		}
-		while ( 1 );
-	}
-
-	// not handling 10e10 notation...
-	*stringPtr = string;
-
-	return value * sign;
-}
-
-
-static void _atos( const char **stringPtr, char *buffer, int delimiter, int width ) 
-{
-	const char	*string;
-
-	string = *stringPtr;
-
-	if ( !delimiter ) 
-	{
-		// skip whitespace
-		while ( *string && *string != ' ' && *string != '\t' && width-- > 0 ) 
-		{
-			*buffer = *string;
-			buffer++;
-			string++;
-		}
-	} 
-	else while ( *string && *string != delimiter && width-- > 0 ) 
-	{
-		*buffer = *string;
-		buffer++;
-		string++;
-	}
-
-	*stringPtr = string;
-
-	*buffer = '\0';
-}
-
-
-int Q_sscanf( const char *buffer, const char *fmt, ... ) 
-{
-	va_list ap;
-	int count;
-	int width;
-	int cmd;
-	const char *p;
-
-	va_start( ap, fmt );
-	count = 0;
-
-	while ( *fmt ) 
-	{
-		// single whitespace char validates any quantity of whitespace characters 
-		// extracted from the stream (including none)
-		if ( *fmt == ' ' || *fmt == '\t' || *fmt == '\n' ) 
-		{
-			while ( *buffer == ' ' || *buffer == '\t' || *buffer == '\n' )
-				buffer++;
-			fmt++;
-		}
-
-		if ( *fmt != '%' ) 
-		{
-			if ( *fmt != *buffer ) 
-				break;
-
-			buffer++;
-			fmt++;
-			continue;
-		}
-
-		width = fmt[1];
-		fmt++; // %
-		if ( width >= '0' && width <= '9' ) 
-		{
-			width -= '0'; // valid width;
-			fmt++;	// ['0'..'9']
-			cmd = *fmt;
-		}
-		else 
-		{
-			cmd = width;
-			width = 1024; // some assumption
-		}
-
-		p = buffer;
-
-		fmt++; // switch to delimiter?
-
-		//printf( "cmd=%c buffer=%s width=%i delim='%c'\n", cmd, buffer, width, *fmt );
-
-		switch ( cmd ) 
-		{
-		case 'i':
-		case 'd':
-		case 'u':
-			*(va_arg(ap, int *)) = _atoi( &buffer );
-			break;
-		case 'f':
-			*(va_arg(ap, float *)) = _atof( &buffer );
-			break;
-		case 'c':
-			*(va_arg(ap, char *)) = *buffer; buffer++;
-			break;
-		case 's':
-			_atos( &buffer, va_arg(ap, char *), *fmt, width );
-			break;
-		default:
-			return count;
-		}
-
-		if ( p != buffer )
-			count++;
-		else
-			break;
-	}
-	va_end( ap );
-
-	return count;
 }

@@ -14,7 +14,7 @@
 #define	HEALTH_SOFT_LIMIT	100
 #define	AMMO_HARD_LIMIT		200
 
-#define	MAX_ITEMS			256
+#define MAX_ITEMS         ITEM_HI_MAX
 
 #define	RANK_TIED_FLAG		0x4000
 
@@ -297,6 +297,9 @@ typedef enum {
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   PW_FROZEN,
+#endif
+#ifdef USE_WEAPON_SPREAD
+  PW_SPREAD,  //Hal9000 spreadfire
 #endif
 
 	PW_NUM_POWERUPS
@@ -709,6 +712,19 @@ typedef enum {
 	IT_PERSISTANT_POWERUP,
 	IT_TEAM
 } itemType_t;
+
+#define ITEM_WP_MIN IT_WEAPON
+#define ITEM_WP_MAX WP_NUM_WEAPONS
+#define ITEM_AM_MIN ITEM_WP_MAX
+#define ITEM_AM_MAX (ITEM_AM_MIN + WP_NUM_WEAPONS)
+#define ITEM_ARM_MIN ITEM_AM_MAX
+#define ITEM_ARM_MAX (ITEM_ARM_MIN + 3)
+#define ITEM_HTH_MIN ITEM_ARM_MAX
+#define ITEM_HTH_MAX (ITEM_HTH_MIN + 4)
+#define ITEM_PW_MIN ITEM_HTH_MAX
+#define ITEM_PW_MAX (ITEM_PW_MIN + PW_NUM_POWERUPS)
+#define ITEM_HI_MIN ITEM_PW_MAX
+#define ITEM_HI_MAX (ITEM_HI_MIN + HI_NUM_HOLDABLE)
 
 #define MAX_ITEM_MODELS 4
 

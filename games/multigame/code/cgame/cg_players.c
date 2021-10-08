@@ -1504,7 +1504,7 @@ static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float 
 		return;
 	}
 
-	if ( cent->currentState.powerups & ( 1 << PW_HASTE ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_HASTE] ) {
 		speedScale = 1.5;
 	} else {
 		speedScale = 1;
@@ -2094,16 +2094,10 @@ CG_PlayerPowerups
 ===============
 */
 static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
-	int		powerups;
 	clientInfo_t	*ci;
 
-	powerups = cent->currentState.powerups;
-	if ( !powerups ) {
-		return;
-	}
-
 	// quad gives a dlight
-	if ( powerups & ( 1 << PW_QUAD ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		if ( cgs.clientinfo[ cent->currentState.clientNum ].team == TEAM_RED ) {
 			trap_R_AddLightToScene( cent->lerpOrigin, ( POWERUP_GLOW_RADIUS + (rand() & POWERUP_GLOW_RADIUS_MOD) ), 1.0f, 0.2f, 0.2f );
 		} else {
@@ -2112,13 +2106,13 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	}
 
 	// flight plays a looped sound
-	if ( powerups & ( 1 << PW_FLIGHT ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_FLIGHT] ) {
 		trap_S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, cgs.media.flightSound );
 	}
 
 	ci = &cgs.clientinfo[ cent->currentState.clientNum ];
 	// redflag
-	if ( powerups & ( 1 << PW_REDFLAG ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_REDFLAG] ) {
 		if (ci->newAnims) {
 			CG_PlayerFlag( cent, cgs.media.redFlagFlapSkin, torso );
 		}
@@ -2129,7 +2123,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	}
 
 	// blueflag
-	if ( powerups & ( 1 << PW_BLUEFLAG ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_BLUEFLAG] ) {
 		if (ci->newAnims){
 			CG_PlayerFlag( cent, cgs.media.blueFlagFlapSkin, torso );
 		}
@@ -2140,7 +2134,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	}
 
 	// neutralflag
-	if ( powerups & ( 1 << PW_NEUTRALFLAG ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
 		if (ci->newAnims) {
 			CG_PlayerFlag( cent, cgs.media.neutralFlagFlapSkin, torso );
 		}
@@ -2151,7 +2145,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	}
 
 	// haste leaves smoke trails
-	if ( powerups & ( 1 << PW_HASTE ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_HASTE] ) {
 		CG_HasteTrail( cent );
 	}
 }
@@ -2273,7 +2267,7 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 	}
 
 	// no shadows when invisible
-	if ( cent->currentState.powerups & ( 1 << PW_INVIS ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_INVIS] ) {
 		return qfalse;
 	}
 
@@ -2405,9 +2399,9 @@ Adds a piece with modifications or duplications for powerups
 Also called by CG_Missile for quad rockets, but nobody can tell...
 ===============
 */
-void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int team ) {
+void CG_AddRefEntityWithPowerups( refEntity_t *ent, centity_t *cent, int team ) {
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-    if ( state->powerups & ( 1 << PW_FROZEN ) )
+    if ( cent->items[ITEM_PW_MIN + PW_FROZEN] )
     {
       trap_R_AddRefEntityToScene( ent );
       ent->customShader = cgs.media.frozenShader;
@@ -2417,12 +2411,13 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 #endif
 
 
-	if ( state->powerups & ( 1 << PW_INVIS ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_INVIS]
+    && cent->currentState.eType != ET_MISSILE) {
 		ent->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( ent );
 	} else {
 		/*
-		if ( state->eFlags & EF_KAMIKAZE ) {
+		if ( eFlags & EF_KAMIKAZE ) {
 			if (team == TEAM_BLUE)
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
@@ -2433,7 +2428,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 			trap_R_AddRefEntityToScene( ent );
 		//}
 
-		if ( state->powerups & ( 1 << PW_QUAD ) )
+		if ( cent->items[ITEM_PW_MIN + PW_QUAD] )
 		{
 			if (team == TEAM_RED)
 				ent->customShader = cgs.media.redQuadShader;
@@ -2441,13 +2436,14 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 				ent->customShader = cgs.media.quadShader;
 			trap_R_AddRefEntityToScene( ent );
 		}
-		if ( state->powerups & ( 1 << PW_REGEN ) ) {
+		if ( cent->items[ITEM_PW_MIN + PW_REGEN] 
+      && cent->currentState.eType != ET_MISSILE) {
 			if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {
 				ent->customShader = cgs.media.regenShader;
 				trap_R_AddRefEntityToScene( ent );
 			}
 		}
-		if ( state->powerups & ( 1 << PW_BATTLESUIT ) ) {
+		if ( cent->items[ITEM_PW_MIN + PW_BATTLESUIT] ) {
 			ent->customShader = cgs.media.battleSuitShader;
 			trap_R_AddRefEntityToScene( ent );
 		}
@@ -2613,7 +2609,7 @@ void CG_Player( centity_t *cent ) {
 	}
 	legs.shaderRGBA[3] = 255;
 
-	CG_AddRefEntityWithPowerups( &legs, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &legs, cent, ci->team );
 
 	// if the model failed, allow the default nullmodel to be displayed
 	if (!legs.hModel) {
@@ -2649,7 +2645,7 @@ void CG_Player( centity_t *cent ) {
 	}
 	torso.shaderRGBA[3] = 255;
 
-	CG_AddRefEntityWithPowerups( &torso, &cent->currentState, ci->team );
+	CG_AddRefEntityWithPowerups( &torso, cent, ci->team );
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.eFlags & EF_KAMIKAZE ) {
@@ -2761,7 +2757,7 @@ void CG_Player( centity_t *cent ) {
 		}
 	}
 
-	if ( cent->currentState.powerups & ( 1 << PW_GUARD ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_GUARD] ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.guardPowerupModel;
 		powerup.frame = 0;
@@ -2769,7 +2765,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.customSkin = 0;
 		trap_R_AddRefEntityToScene( &powerup );
 	}
-	if ( cent->currentState.powerups & ( 1 << PW_SCOUT ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_SCOUT] ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.scoutPowerupModel;
 		powerup.frame = 0;
@@ -2777,7 +2773,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.customSkin = 0;
 		trap_R_AddRefEntityToScene( &powerup );
 	}
-	if ( cent->currentState.powerups & ( 1 << PW_DOUBLER ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_DOUBLER] ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.doublerPowerupModel;
 		powerup.frame = 0;
@@ -2785,7 +2781,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.customSkin = 0;
 		trap_R_AddRefEntityToScene( &powerup );
 	}
-	if ( cent->currentState.powerups & ( 1 << PW_AMMOREGEN ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_AMMOREGEN] ) {
 		memcpy(&powerup, &torso, sizeof(torso));
 		powerup.hModel = cgs.media.ammoRegenPowerupModel;
 		powerup.frame = 0;
@@ -2793,7 +2789,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.customSkin = 0;
 		trap_R_AddRefEntityToScene( &powerup );
 	}
-	if ( cent->currentState.powerups & ( 1 << PW_INVULNERABILITY ) ) {
+	if ( cent->items[ITEM_PW_MIN +  PW_INVULNERABILITY] ) {
 		if ( !ci->invulnerabilityStartTime ) {
 			ci->invulnerabilityStartTime = cg.time;
 		}
@@ -2802,7 +2798,7 @@ void CG_Player( centity_t *cent ) {
 	else {
 		ci->invulnerabilityStartTime = 0;
 	}
-	if ( (cent->currentState.powerups & ( 1 << PW_INVULNERABILITY ) ) ||
+	if ( (cent->items[ITEM_PW_MIN +  PW_INVULNERABILITY] ) ||
 		cg.time - ci->invulnerabilityStopTime < 250 ) {
 
 		memcpy(&powerup, &torso, sizeof(torso));
@@ -2887,7 +2883,7 @@ void CG_Player( centity_t *cent ) {
   	}
   	head.shaderRGBA[3] = 255;
   	
-  	CG_AddRefEntityWithPowerups( &head, &cent->currentState, ci->team );
+  	CG_AddRefEntityWithPowerups( &head, cent, ci->team );
   }
 
 #ifdef MISSIONPACK

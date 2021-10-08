@@ -109,7 +109,7 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 		return qfalse;
 	}
 
-	if (ent->client->ps.powerups[PW_QUAD] ) {
+	if (ent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		G_AddEvent( ent, EV_POWERUP_QUAD, 0 );
 		s_quadFactor = g_quadfactor.value;
 	} else {
@@ -399,6 +399,54 @@ static void weapon_supershotgun_fire( gentity_t *ent ) {
 }
 
 
+#ifdef USE_WEAPON_SPREAD
+typedef gentity_t* (*weaponLaunch)(gentity_t*, vec3_t, vec3_t);
+
+/*
+===============
+SpreadFire_Powerup
+
+HypoThermia: fan bolts at any view pitch
+===============
+*/
+static void SpreadFire_Powerup(gentity_t* ent, weaponLaunch fireFunc)
+{
+	gentity_t	*m;
+	gclient_t	*client;
+	vec3_t		newforward;
+	vec3_t		angles;
+
+	client = ent->client; 
+
+	//First shot, slightly to the right
+	AngleVectors( client->ps.viewangles, forward, right, 0);
+	VectorMA(forward, 0.1, right, newforward);
+	VectorNormalize(newforward);
+	vectoangles(newforward, angles);
+
+	AngleVectors( angles, forward, right, up );
+	CalcMuzzlePointOrigin( ent, muzzle_origin, forward, right, up, muzzle );
+
+	m = fireFunc (ent, muzzle, forward);
+	m->damage *= s_quadFactor;
+	m->splashDamage *= s_quadFactor;
+
+	//Second shot, slightly to the left
+	AngleVectors( client->ps.viewangles, forward, right, 0);
+	VectorMA(forward, -0.1, right, newforward);
+	VectorNormalize(newforward);
+	vectoangles(newforward, angles);
+
+	AngleVectors( angles, forward, right, up );
+	CalcMuzzlePointOrigin( ent, muzzle_origin, forward, right, up, muzzle );
+
+	m = fireFunc(ent, muzzle, forward);
+	m->damage *= s_quadFactor;
+	m->splashDamage *= s_quadFactor;
+}
+#endif
+
+
 /*
 ======================================================================
 
@@ -418,6 +466,11 @@ void weapon_grenadelauncher_fire (gentity_t *ent) {
 	m->damage *= s_quadFactor;
 	m->splashDamage *= s_quadFactor;
 
+#ifdef USE_WEAPON_SPREAD
+  //Hal9000 spreadfire
+  if ( ent->items[ITEM_PW_MIN + PW_SPREAD] )
+		SpreadFire_Powerup(ent, fire_grenade);
+#endif
 //	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
 }
 
@@ -1094,7 +1147,7 @@ FireWeapon
 ===============
 */
 void FireWeapon( gentity_t *ent ) {
-	if ( ent->client->ps.powerups[PW_QUAD] ) {
+	if ( ent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1.0;

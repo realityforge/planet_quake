@@ -86,9 +86,9 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	int			i;
 	gclient_t	*client;
 
-	if ( !other->client->ps.powerups[ent->item->giTag] ) {
+	if ( !other->items[ITEM_PW_MIN + ent->item->giTag] ) {
 		// round timing to seconds to make multiple powerup timers count in sync
-		other->client->ps.powerups[ent->item->giTag] = level.time - ( level.time % 1000 );
+		other->items[ITEM_PW_MIN + ent->item->giTag] = level.time - ( level.time % 1000 );
 	}
 
 	if ( ent->count ) {
@@ -97,7 +97,7 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 		quantity = ent->item->quantity;
 	}
 
-	other->client->ps.powerups[ent->item->giTag] += quantity * 1000;
+	other->items[ITEM_PW_MIN + ent->item->giTag] += quantity * 1000;
 
 	// give any nearby players a "denied" anti-reward
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
@@ -360,7 +360,7 @@ static int Pickup_Health( gentity_t *ent, gentity_t *other ) {
   	}
   	else
 #endif
-    if ( other->client->ps.powerups[PW_HASTE] ) {
+    if ( other->items[ITEM_PW_MIN + PW_HASTE] ) {
       other->client->ps.speed *= 1.3;
     }
 

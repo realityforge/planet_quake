@@ -142,12 +142,9 @@ CG_General
 */
 static void CG_General( const centity_t *cent ) {
 	refEntity_t			ent;
-	const entityState_t	*s1;
-
-	s1 = &cent->currentState;
 
 	// if set to invisible, skip
-	if (!s1->modelindex) {
+	if (!cent->currentState.modelindex) {
 		return;
 	}
 
@@ -155,17 +152,17 @@ static void CG_General( const centity_t *cent ) {
 
 	// set frame
 
-	ent.frame = s1->frame;
+	ent.frame = cent->currentState.frame;
 	ent.oldframe = ent.frame;
 	ent.backlerp = 0;
 
 	VectorCopy( cent->lerpOrigin, ent.origin);
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 
-	ent.hModel = cgs.gameModels[s1->modelindex];
+	ent.hModel = cgs.gameModels[cent->currentState.modelindex];
 
 	// player model
-	if (s1->number == cg.snap->ps.clientNum) {
+	if (cent->currentState.number == cg.snap->ps.clientNum) {
 		ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
 	}
 
@@ -416,19 +413,17 @@ CG_Missile
 */
 static void CG_Missile( centity_t *cent ) {
 	refEntity_t			ent;
-	entityState_t		*s1;
 	const weaponInfo_t	*weapon;
 	const clientInfo_t	*ci;
 //	int	col;
 
-	s1 = &cent->currentState;
-	if ( s1->weapon >= WP_NUM_WEAPONS ) {
-		s1->weapon = WP_NONE;
+	if ( cent->currentState.weapon >= WP_NUM_WEAPONS ) {
+		cent->currentState.weapon = WP_NONE;
 	}
-	weapon = &cg_weapons[s1->weapon];
+	weapon = &cg_weapons[cent->currentState.weapon];
 
 	// calculate the axis
-	VectorCopy( s1->angles, cent->lerpAngles);
+	VectorCopy( cent->currentState.angles, cent->lerpAngles);
 
 	// add trails
 	if ( weapon->missileTrailFunc ) 
@@ -499,40 +494,39 @@ static void CG_Missile( centity_t *cent ) {
 
 #ifdef MISSIONPACK
 	if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
-		if (s1->generic1 == TEAM_BLUE) {
+		if (cent->currentState.generic1 == TEAM_BLUE) {
 			ent.hModel = cgs.media.blueProxMine;
 		}
 	}
 #endif
 
 	// convert direction of travel into axis
-	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
+	if ( VectorNormalize2( cent->currentState.pos.trDelta, ent.axis[0] ) == 0 ) {
 		ent.axis[0][2] = 1;
 	}
 
 	// spin as it moves
-	if ( s1->pos.trType != TR_STATIONARY ) {
+	if ( cent->currentState.pos.trType != TR_STATIONARY ) {
 		RotateAroundDirection( ent.axis, ( cg.time % TMOD_004 ) / 4.0 );
 	} else {
 #ifdef MISSIONPACK
-		if ( s1->weapon == WP_PROX_LAUNCHER ) {
+		if ( cent->currentState.weapon == WP_PROX_LAUNCHER ) {
 			AnglesToAxis( cent->lerpAngles, ent.axis );
 		}
 		else
 #endif
 		{
-			RotateAroundDirection( ent.axis, s1->time );
+			RotateAroundDirection( ent.axis, cent->currentState.time );
 		}
 	}
 
 	// add to refresh list, possibly with quad glow
 
-	s1->powerups &= ~( (1 << PW_INVIS) | (1 << PW_REGEN) );
-	ci = &cgs.clientinfo[ s1->clientNum & MAX_CLIENTS ];
+	ci = &cgs.clientinfo[ cent->currentState.clientNum & MAX_CLIENTS ];
 	if ( ci->infoValid ) {
-		CG_AddRefEntityWithPowerups( &ent, s1, ci->team );
+		CG_AddRefEntityWithPowerups( &ent, cent, ci->team );
 	} else {
-		CG_AddRefEntityWithPowerups( &ent, s1, TEAM_FREE );
+		CG_AddRefEntityWithPowerups( &ent, cent, TEAM_FREE );
 	}
 
 }
@@ -546,17 +540,15 @@ This is called when the grapple is sitting up against the wall
 */
 static void CG_Grapple( centity_t *cent ) {
 	refEntity_t			ent;
-	entityState_t		*s1;
 	const weaponInfo_t		*weapon;
 
-	s1 = &cent->currentState;
-	if ( s1->weapon >= WP_NUM_WEAPONS ) {
-		s1->weapon = WP_NONE;
+	if ( cent->currentState.weapon >= WP_NUM_WEAPONS ) {
+		cent->currentState.weapon = WP_NONE;
 	}
-	weapon = &cg_weapons[s1->weapon];
+	weapon = &cg_weapons[cent->currentState.weapon];
 
 	// calculate the axis
-	VectorCopy( s1->angles, cent->lerpAngles);
+	VectorCopy( cent->currentState.angles, cent->lerpAngles);
 
 #if 0 // FIXME add grapple pull sound here..?
 	// add missile sound
@@ -579,7 +571,7 @@ static void CG_Grapple( centity_t *cent ) {
 	ent.renderfx = weapon->missileRenderfx | RF_NOSHADOW;
 
 	// convert direction of travel into axis
-	if ( VectorNormalize2( s1->pos.trDelta, ent.axis[0] ) == 0 ) {
+	if ( VectorNormalize2( cent->currentState.pos.trDelta, ent.axis[0] ) == 0 ) {
 		ent.axis[0][2] = 1;
 	}
 
@@ -593,9 +585,6 @@ CG_Mover
 */
 static void CG_Mover( const centity_t *cent ) {
 	refEntity_t			ent;
-	const entityState_t	*s1;
-
-	s1 = &cent->currentState;
 
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
@@ -609,19 +598,19 @@ static void CG_Mover( const centity_t *cent ) {
 	ent.skinNum = ( cg.time >> 6 ) & 1;
 
 	// get the model, either as a bmodel or a modelindex
-	if ( s1->solid == SOLID_BMODEL ) {
-		ent.hModel = cgs.inlineDrawModel[s1->modelindex];
+	if ( cent->currentState.solid == SOLID_BMODEL ) {
+		ent.hModel = cgs.inlineDrawModel[cent->currentState.modelindex];
 	} else {
-		ent.hModel = cgs.gameModels[s1->modelindex];
+		ent.hModel = cgs.gameModels[cent->currentState.modelindex];
 	}
 
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);
 
 	// add the secondary model
-	if ( s1->modelindex2 ) {
+	if ( cent->currentState.modelindex2 ) {
 		ent.skinNum = 0;
-		ent.hModel = cgs.gameModels[ s1->modelindex2 % MAX_MODELS ];
+		ent.hModel = cgs.gameModels[ cent->currentState.modelindex2 % MAX_MODELS ];
 		trap_R_AddRefEntityToScene(&ent);
 	}
 
@@ -636,14 +625,11 @@ Also called as an event
 */
 void CG_Beam( const centity_t *cent ) {
 	refEntity_t			ent;
-	const entityState_t	*s1;
-
-	s1 = &cent->currentState;
 
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
-	VectorCopy( s1->pos.trBase, ent.origin );
-	VectorCopy( s1->origin2, ent.oldorigin );
+	VectorCopy( cent->currentState.pos.trBase, ent.origin );
+	VectorCopy( cent->currentState.origin2, ent.oldorigin );
 	AxisClear( ent.axis );
 	ent.reType = RT_BEAM;
 
@@ -662,15 +648,12 @@ CG_Portal
 */
 static void CG_Portal( const centity_t *cent ) {
 	refEntity_t			ent;
-	const entityState_t *s1;
-
-	s1 = &cent->currentState;
 
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin );
-	VectorCopy( s1->origin2, ent.oldorigin );
-	ByteToDir( s1->eventParm, ent.axis[0] );
+	VectorCopy( cent->currentState.origin2, ent.oldorigin );
+	ByteToDir( cent->currentState.eventParm, ent.axis[0] );
 	PerpendicularVector( ent.axis[1], ent.axis[0] );
 
 	// negating this tends to get the directions like they want
@@ -679,9 +662,9 @@ static void CG_Portal( const centity_t *cent ) {
 
 	CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
 	ent.reType = RT_PORTALSURFACE;
-	ent.oldframe = s1->powerups;
-	ent.frame = s1->frame;		// rotation speed
-	ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
+	ent.oldframe = cent->currentState.powerups;
+	ent.frame = cent->currentState.frame;		// rotation speed
+	ent.skinNum = cent->currentState.clientNum/256.0 * 360;	// roll offset
 
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);

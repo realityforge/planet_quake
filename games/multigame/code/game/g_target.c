@@ -50,15 +50,15 @@ void Use_target_remove_powerups( gentity_t *ent, gentity_t *other, gentity_t *ac
 		return;
 	}
 
-	if( activator->client->ps.powerups[PW_REDFLAG] ) {
+	if( activator->items[ITEM_PW_MIN + PW_REDFLAG] ) {
 		Team_ReturnFlag( TEAM_RED );
-	} else if( activator->client->ps.powerups[PW_BLUEFLAG] ) {
+	} else if( activator->items[ITEM_PW_MIN + PW_BLUEFLAG] ) {
 		Team_ReturnFlag( TEAM_BLUE );
-	} else if( activator->client->ps.powerups[PW_NEUTRALFLAG] ) {
+	} else if( activator->items[ITEM_PW_MIN + PW_NEUTRALFLAG] ) {
 		Team_ReturnFlag( TEAM_FREE );
 	}
 
-	memset( activator->client->ps.powerups, 0, sizeof( activator->client->ps.powerups ) );
+	memset( activator->items, 0, sizeof( activator->items ) );
 }
 
 void SP_target_remove_powerups( gentity_t *ent ) {
@@ -451,4 +451,3 @@ void SP_target_location( gentity_t *self ){
 
 	G_SetOrigin( self, self->s.origin );
 }
-

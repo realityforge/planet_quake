@@ -1319,10 +1319,10 @@ static float CG_DrawPowerups( float y ) {
 	// sort the list by time remaining
 	active = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( !ps->powerups[ i ] ) {
+		if ( !cg_entities[cg.clientNum].items[ITEM_PW_MIN + i] ) {
 			continue;
 		}
-		t = ps->powerups[ i ] - cg.time;
+		t = cg_entities[cg.clientNum].items[ITEM_PW_MIN + i] - cg.time;
 		// ZOID--don't draw if the power up has unlimited time (999 seconds)
 		// This is true of the CTF flags
 		if ( t < 0 || t > 999000) {
@@ -1358,7 +1358,7 @@ static float CG_DrawPowerups( float y ) {
 			trap_R_SetColor( colors[color] );
 			CG_DrawField( x, y, 2, sortedTime[ i ] / 1000 );
 
-			t = ps->powerups[ sorted[i] ];
+			t = cg_entities[cg.clientNum].items[ITEM_PW_MIN + sorted[i]];
 			if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
 				trap_R_SetColor( NULL );
 			} else {
@@ -2077,7 +2077,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 	}
 
 	// if the player is invisible, don't show it
-	if ( cg_entities[ trace.entityNum ].currentState.powerups & ( 1 << PW_INVIS ) ) {
+	if ( cg_entities[ trace.entityNum ].items[ITEM_PW_MIN + PW_INVIS] ) {
 		return;
 	}
 

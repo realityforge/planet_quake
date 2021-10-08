@@ -177,6 +177,8 @@ struct gentity_s {
 
 	tag_t		tag;
 
+  int     items[MAX_ITEMS]; // times of items attached to the entities
+
 #ifdef USE_ROTATING_DOOR
   float		distance;		// VALKYRIE: for rotating door
 #endif

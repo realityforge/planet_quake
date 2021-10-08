@@ -1127,7 +1127,7 @@ void MoveClientToIntermission( gentity_t *ent ) {
 	client->ps.pm_type = PM_INTERMISSION;
 
 	// clean up powerup info
-	memset( client->ps.powerups, 0, sizeof( client->ps.powerups ) );
+	memset( ent->items, 0, sizeof( ent->items ) );
 
 	client->ps.eFlags = ( client->ps.eFlags & ~EF_PERSISTANT ) | ( client->ps.eFlags & EF_PERSISTANT );
 
@@ -1680,7 +1680,7 @@ static void G_WarmupEnd( void )
 		client->ps.stats[STAT_CLIENTS_READY] = 0;
 		client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
 
-		memset( &client->ps.powerups, 0, sizeof( client->ps.powerups ) );
+		memset( &level.gentities[i].items, 0, sizeof( level.gentities[i].items ) );
 
 		ClientUserinfoChanged( i ); // set max.health etc.
 

@@ -649,7 +649,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 	// set max health
 #ifdef MISSIONPACK
-	if (client->ps.powerups[PW_GUARD]) {
+	if (ent->items[ITEM_PW_MIN + PW_GUARD]) {
 		client->pers.maxHealth = HEALTH_SOFT_LIMIT*2;
 	} else {
 		health = atoi( Info_ValueForKey( userinfo, "handicap" ) );

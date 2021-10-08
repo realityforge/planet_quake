@@ -201,7 +201,7 @@ void Use_target_push( gentity_t *self, gentity_t *other, gentity_t *activator ) 
 	if ( activator->client->ps.pm_type != PM_NORMAL ) {
 		return;
 	}
-	if ( activator->client->ps.powerups[PW_FLIGHT] ) {
+	if ( activator->items[ITEM_PW_MIN + PW_FLIGHT] ) {
 		return;
 	}
 
@@ -441,5 +441,3 @@ void SP_func_timer( gentity_t *self ) {
 
 	self->r.svFlags = SVF_NOCLIENT;
 }
-
-

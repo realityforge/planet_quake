@@ -1238,27 +1238,27 @@ static float	CG_MachinegunSpinAngle( centity_t *cent ) {
 CG_AddWeaponWithPowerups
 ========================
 */
-static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
+static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cent ) {
 	// add powerup effects
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if ( powerups & ( 1 << PW_FROZEN ) ) {
+  if ( cent->items[ITEM_PW_MIN + PW_FROZEN] ) {
     trap_R_AddRefEntityToScene( gun );
     gun->customShader = cgs.media.frozenShader;
     trap_R_AddRefEntityToScene( gun );
     return;
   }
 #endif
-	if ( powerups & ( 1 << PW_INVIS ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_INVIS] ) {
 		gun->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( gun );
 	} else {
 		trap_R_AddRefEntityToScene( gun );
 
-		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
+		if ( cent->items[ITEM_PW_MIN + PW_BATTLESUIT] ) {
 			gun->customShader = cgs.media.battleWeaponShader;
 			trap_R_AddRefEntityToScene( gun );
 		}
-		if ( powerups & ( 1 << PW_QUAD ) ) {
+		if ( cent->items[ITEM_PW_MIN + PW_QUAD] ) {
 			gun->customShader = cgs.media.quadWeaponShader;
 			trap_R_AddRefEntityToScene( gun );
 		}
@@ -1339,7 +1339,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon");
 
-	CG_AddWeaponWithPowerups( &gun, cent->currentState.powerups );
+	CG_AddWeaponWithPowerups( &gun, cent );
 
 	// add the spinning barrel
 	if ( weapon->barrelModel ) {
@@ -1356,7 +1356,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 		CG_PositionRotatedEntityOnTag( &barrel, &gun, weapon->weaponModel, "tag_barrel" );
 
-		CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
+		CG_AddWeaponWithPowerups( &barrel, cent );
 	}
 
 	// make sure we aren't looking at cg.predictedPlayerEntity for LG
@@ -2071,7 +2071,7 @@ void CG_FireWeapon( centity_t *cent ) {
 	}
 
 	// play quad sound if needed
-	if ( cent->currentState.powerups & ( 1 << PW_QUAD ) ) {
+	if ( cent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		trap_S_StartSound (NULL, cent->currentState.number, CHAN_ITEM, cgs.media.quadSound );
 	}
 

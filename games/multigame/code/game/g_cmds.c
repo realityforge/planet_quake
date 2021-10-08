@@ -715,7 +715,7 @@ void StopFollowing( gentity_t *ent, qboolean release ) {
 	client->sess.sessionTeam = TEAM_SPECTATOR;	
 	if ( release ) {
 		client->ps.stats[STAT_HEALTH] = ent->health = 1;
-		memset( client->ps.powerups, 0, sizeof ( client->ps.powerups ) );
+		memset( ent->items, 0, sizeof ( ent->items ) );
 	}
 	SetClientViewAngle( ent, client->ps.viewangles );
 
@@ -1869,13 +1869,13 @@ void Cmd_Cloak_f( gentity_t *ent ) {
 	} else if (ent->flags & FL_CLOAK) {
 		msg = "Cloaking OFF\n";
     ent->flags &= ~FL_CLOAK;
-		ent->client->ps.powerups[PW_INVIS] = level.time;
+		ent->items[ITEM_PW_MIN + PW_INVIS] = level.time;
 		// Removes the invisible powerup from the player
 	}        
 	else {
 		msg = "Cloaking ON\n";
     ent->flags |= FL_CLOAK;
-		ent->client->ps.powerups[PW_INVIS] = level.time + 1000000000;
+		ent->items[ITEM_PW_MIN + PW_INVIS] = level.time + 1000000000;
 		// Gives the invisible powerup to the player
 	}
 
