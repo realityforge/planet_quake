@@ -969,12 +969,14 @@ BotAI
 */
 int BotAI(int client, float thinktime) {
 	bot_state_t *bs;
+  int *items;
 	char buf[1024], *args;
 	int j;
 
 	trap_EA_ResetInput(client);
 	//
 	bs = botstates[client];
+  items = g_entities[client].items;
 	if (!bs || !bs->inuse) {
 		BotAI_Print(PRT_FATAL, "BotAI: client %d is not setup\n", client);
 		return qfalse;
@@ -1047,7 +1049,7 @@ int BotAI(int client, float thinktime) {
 	//get the area the bot is in
 	bs->areanum = BotPointAreaNum(bs->origin);
 	//the real AI
-	BotDeathmatchAI(bs, thinktime);
+	BotDeathmatchAI(bs, items, thinktime);
 	//set the weapon selection every AI frame
 	trap_EA_SelectWeapon(bs->client, bs->weaponnum);
 	//subtract the delta angles
@@ -1532,7 +1534,7 @@ int BotAIStartFrame(int time) {
 			state.frame = ent->s.frame;
 			state.event = ent->s.event;
 			state.eventParm = ent->s.eventParm;
-			state.powerups = ent->s.powerups;
+			//state.powerups = ent->s.powerups;
 			state.legsAnim = ent->s.legsAnim;
 			state.torsoAnim = ent->s.torsoAnim;
 			state.weapon = ent->s.weapon;
@@ -1743,4 +1745,3 @@ int BotAIShutdown( int restart ) {
 	}
 	return qtrue;
 }
-

@@ -54,7 +54,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			ping,
 			(level.time - cl->pers.enterTime)/60000,
 			scoreFlags,
-			g_entities[level.sortedClients[i]].s.powerups,
+			0 /* g_entities[level.sortedClients[i]].s.powerups */,
 			accuracy, 
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],

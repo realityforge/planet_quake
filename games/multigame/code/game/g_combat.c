@@ -648,7 +648,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	self->takedamage = qtrue;	// can still be gibbed
 
 	self->s.weapon = WP_NONE;
-	self->s.powerups = 0;
+	//self->s.powerups = 0;
 	self->r.contents = CONTENTS_CORPSE;
 
 	self->s.angles[0] = 0;

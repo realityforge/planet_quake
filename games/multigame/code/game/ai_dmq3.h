@@ -15,7 +15,7 @@ void BotSetupDeathmatchAI(void);
 //shutdown the deathmatch AI
 void BotShutdownDeathmatchAI(void);
 //let the bot live within it's deathmatch AI net
-void BotDeathmatchAI(bot_state_t *bs, float thinktime);
+void BotDeathmatchAI(bot_state_t *bs, int *items, float thinktime);
 //free waypoints
 void BotFreeWaypoints(bot_waypoint_t *wp);
 //choose a weapon
@@ -23,7 +23,7 @@ void BotChooseWeapon(bot_state_t *bs);
 //setup movement stuff
 void BotSetupForMovement(bot_state_t *bs);
 //update the inventory
-void BotUpdateInventory(bot_state_t *bs);
+void BotUpdateInventory(bot_state_t *bs, int *items);
 //update the inventory during battle
 void BotUpdateBattleInventory(bot_state_t *bs, int enemy);
 //use holdable items during battle

@@ -357,7 +357,7 @@ typedef struct {
 	int				teamTask;		// task in teamplay (offence/defence)
 	qboolean		teamLeader;		// true when this is a team leader
 
-	//int				powerups;		// so can display quad/flag status
+	int				powerups;		// so can display quad/flag status
 
 	int				medkitUsageTime;
 	int				invulnerabilityStartTime;

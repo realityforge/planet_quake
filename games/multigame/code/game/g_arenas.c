@@ -131,7 +131,7 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 	body->s = ent->s;
 	body->s.eType = ET_PLAYER;		// could be ET_INVISIBLE
 	body->s.eFlags = 0;				// clear EF_TALK, etc
-	body->s.powerups = 0;			// clear powerups
+	//body->s.powerups = 0;			// clear powerups
 	body->s.loopSound = 0;			// clear lava burning
 	body->s.number = body - g_entities;
 	body->timestamp = level.time;

@@ -1727,7 +1727,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 BotUpdateInventory
 ==================
 */
-void BotUpdateInventory(bot_state_t *bs) {
+void BotUpdateInventory(bot_state_t *bs, int *items) {
 	int oldinventory[MAX_ITEMS];
 
 	memcpy(oldinventory, bs->inventory, sizeof(oldinventory));
@@ -1772,22 +1772,22 @@ void BotUpdateInventory(bot_state_t *bs) {
 	bs->inventory[INVENTORY_PORTAL] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_PORTAL;
 	bs->inventory[INVENTORY_INVULNERABILITY] = bs->cur_ps.stats[STAT_HOLDABLE_ITEM] == MODELINDEX_INVULNERABILITY;
 #endif
-	bs->inventory[INVENTORY_QUAD] = bs->cur_ps.powerups[PW_QUAD] != 0;
-	bs->inventory[INVENTORY_ENVIRONMENTSUIT] = bs->cur_ps.powerups[PW_BATTLESUIT] != 0;
-	bs->inventory[INVENTORY_HASTE] = bs->cur_ps.powerups[PW_HASTE] != 0;
-	bs->inventory[INVENTORY_INVISIBILITY] = bs->cur_ps.powerups[PW_INVIS] != 0;
-	bs->inventory[INVENTORY_REGEN] = bs->cur_ps.powerups[PW_REGEN] != 0;
-	bs->inventory[INVENTORY_FLIGHT] = bs->cur_ps.powerups[PW_FLIGHT] != 0;
+	bs->inventory[INVENTORY_QUAD] = items[ITEM_PW_MIN + PW_QUAD] != 0;
+	bs->inventory[INVENTORY_ENVIRONMENTSUIT] = items[ITEM_PW_MIN + PW_BATTLESUIT] != 0;
+	bs->inventory[INVENTORY_HASTE] = items[ITEM_PW_MIN + PW_HASTE] != 0;
+	bs->inventory[INVENTORY_INVISIBILITY] = items[ITEM_PW_MIN + PW_INVIS] != 0;
+	bs->inventory[INVENTORY_REGEN] = items[ITEM_PW_MIN + PW_REGEN] != 0;
+	bs->inventory[INVENTORY_FLIGHT] = items[ITEM_PW_MIN + PW_FLIGHT] != 0;
 #ifdef MISSIONPACK
 	bs->inventory[INVENTORY_SCOUT] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_SCOUT;
 	bs->inventory[INVENTORY_GUARD] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_GUARD;
 	bs->inventory[INVENTORY_DOUBLER] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_DOUBLER;
 	bs->inventory[INVENTORY_AMMOREGEN] = bs->cur_ps.stats[STAT_PERSISTANT_POWERUP] == MODELINDEX_AMMOREGEN;
 #endif
-	bs->inventory[INVENTORY_REDFLAG] = bs->cur_ps.powerups[PW_REDFLAG] != 0;
-	bs->inventory[INVENTORY_BLUEFLAG] = bs->cur_ps.powerups[PW_BLUEFLAG] != 0;
+	bs->inventory[INVENTORY_REDFLAG] = items[ITEM_PW_MIN + PW_REDFLAG] != 0;
+	bs->inventory[INVENTORY_BLUEFLAG] = items[ITEM_PW_MIN + PW_BLUEFLAG] != 0;
 #ifdef MISSIONPACK
-	bs->inventory[INVENTORY_NEUTRALFLAG] = bs->cur_ps.powerups[PW_NEUTRALFLAG] != 0;
+	bs->inventory[INVENTORY_NEUTRALFLAG] = items[ITEM_PW_MIN + PW_NEUTRALFLAG] != 0;
 	if (BotTeam(bs) == TEAM_RED) {
 		bs->inventory[INVENTORY_REDCUBE] = bs->cur_ps.generic1;
 		bs->inventory[INVENTORY_BLUECUBE] = 0;
@@ -5224,7 +5224,7 @@ void BotSetupAlternativeRouteGoals(void) {
 BotDeathmatchAI
 ==================
 */
-void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
+void BotDeathmatchAI(bot_state_t *bs, int *items, float thinktime) {
 	char gender[144], name[144], buf[144];
 	char userinfo[MAX_INFO_STRING];
 	int i;
@@ -5266,7 +5266,7 @@ void BotDeathmatchAI(bot_state_t *bs, float thinktime) {
 		//set the teleport time
 		BotSetTeleportTime(bs);
 		//update some inventory values
-		BotUpdateInventory(bs);
+		BotUpdateInventory(bs, items);
 		//check out the snapshot
 		BotCheckSnapshot(bs);
 		//check for air
