@@ -188,8 +188,9 @@
 #define USE_INSTAGIB 1
 // enable the grappling hook
 #define USE_GRAPPLE 1
+// rpg accellerating missiles start slow and then speed up as they fly
+#define USE_ACCEL_RPG 1
 // 
-
 
 #endif
 
@@ -1094,6 +1095,9 @@ typedef enum {
 	TR_LINEAR_STOP,
 	TR_SINE,					// value = base + sin( time / duration ) * delta
 	TR_GRAVITY
+#ifdef USE_ACCEL_RPG
+  ,TR_ACCEL
+#endif
 } trType_t;
 
 typedef struct {

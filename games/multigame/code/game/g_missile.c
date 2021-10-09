@@ -1066,7 +1066,12 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	// unlagged
 	bolt->s.otherEntityNum = self->s.number;
 
+#ifdef USE_ACCEL_RPG
+  bolt->s.pos.trType = TR_ACCEL;
+	bolt->s.pos.trDuration = 500;
+#else
 	bolt->s.pos.trType = TR_LINEAR;
+#endif
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	SnapVector( bolt->s.pos.trBase );			// save net bandwidth
@@ -1074,6 +1079,9 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
   VectorScale( dir, ROCKET_SPEED, bolt->s.pos.trDelta );	// CCH
 #else
 	VectorScale( dir, 900, bolt->s.pos.trDelta );
+#endif
+#ifdef USE_ACCEL_RPG
+  VectorScale( dir, 50, bolt->s.pos.trDelta );
 #endif
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
