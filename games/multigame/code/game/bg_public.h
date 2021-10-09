@@ -339,8 +339,9 @@ typedef enum {
 #ifdef USE_ADVANCED_WEAPONS
   WP_FLAME_THROWER,
 #endif
-
+#ifdef USE_GRAPPLE
   WP_GRAPPLING_HOOK,
+#endif
 	WP_NUM_WEAPONS,
 	WP_PENDING = WP_NUM_WEAPONS, // used in ui_players.c
 	WP_MAX_WEAPONS = 16

@@ -1323,6 +1323,9 @@ extern	vmCvar_t	  cg_jumpVelocity;
 extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
 #endif
+#ifdef USE_GRAPPLE
+extern  vmCvar_t    cg_enableGrapple;
+#endif
 #ifdef USE_ADVANCED_HUD
 extern  vmCvar_t    cg_weaponOrder;
 extern  vmCvar_t    cg_gunCenter;

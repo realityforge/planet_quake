@@ -224,6 +224,10 @@ vmCvar_t	cg_jumpVelocity;
 vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
 #endif
+#ifdef USE_GRAPPLE
+vmCvar_t  cg_enableGrapple;
+vmCvar_t  cg_grappleSpeed;
+#endif
 #ifdef USE_ADVANCED_HUD
 vmCvar_t  cg_gunCenter;
 vmCvar_t  cg_weaponOrder;
@@ -352,6 +356,10 @@ static const cvarTable_t cvarTable[] = {
 #ifdef USE_ADVANCED_HUD
   { &cg_weaponOrder, "cg_weaponOrder", "1/2/3/4/6/8/5/7/9", CVAR_ARCHIVE }, //WarZone
   { &cg_gunCenter, "cg_gunCenter", "1", CVAR_ARCHIVE },
+#endif
+#ifdef USE_GRAPPLE
+  { &cg_enableGrapple, "g_enableGrapple", "1", CVAR_SERVERINFO },
+  { &cg_grappleSpeed,  "g_grappleSpeed", "700", CVAR_SERVERINFO },
 #endif
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},

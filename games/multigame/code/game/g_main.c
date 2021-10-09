@@ -77,6 +77,10 @@ vmCvar_t	g_enableDust;
 vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
+#ifdef USE_GRAPPLE
+vmCvar_t  g_enableGrapple;
+vmCvar_t  g_grappleSpeed;
+#endif
 #ifdef USE_PHYSICS_VARS
 vmCvar_t  g_jumpVelocity;
 vmCvar_t  g_wallWalk;
@@ -106,6 +110,9 @@ vmCvar_t  g_locDamage;
 #endif
 #ifdef USE_LASER_SIGHT
 vmCvar_t  g_enableLaser;
+#endif
+#ifdef USE_INSTAGIB
+vmCvar_t  g_instagib;
 #endif
 
 
@@ -225,8 +232,17 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
+#ifdef USE_GRAPPLE
+  ,{ &g_enableGrapple, "g_enableGrapple", "1", CVAR_ARCHIVE, 0, qfalse }
+  ,{ &g_grappleSpeed, "g_grappleSpeed", "700", CVAR_ARCHIVE, 0, qfalse }
+#endif
+
 #ifdef USE_ADVANCED_DMG
   ,{ &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+
+#ifdef USE_ADVANCED_DMG
+  ,{ &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
 #ifdef USE_ADVANCED_HUD

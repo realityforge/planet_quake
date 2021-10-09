@@ -869,6 +869,10 @@ extern  vmCvar_t  g_vortexGrenades;
 extern  vmCvar_t  g_vulnRockets;
 extern  vmCvar_t  g_dropWeapon;
 #endif
+#ifdef USE_GRAPPLE
+extern  vmCvar_t  g_enableGrapple;
+extern  vmCvar_t  g_grappleSpeed;
+#endif
 #ifdef USE_ADVANCED_DMG
 extern  vmCvar_t  g_locDamage;
 #endif
@@ -877,6 +881,9 @@ extern  vmCvar_t  g_enableBoots;
 #endif
 #ifdef USE_LASER_SIGHT
 extern  vmCvar_t  g_enableLaser;
+#endif
+#ifdef USE_INSTAGIB
+extern  vmCvar_t  g_instagib;
 #endif
 
 #ifdef BUILD_GAME_STATIC

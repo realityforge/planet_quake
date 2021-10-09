@@ -609,6 +609,12 @@ static void CG_TouchTriggerPrediction( void ) {
       // flying characters don't hit bounce pads
       if(cent->items[ITEM_PW_MIN + PW_HASTE])
         continue;
+        
+#ifdef USE_GRAPPLE
+      if(cg.predictedPlayerState.weapon == WP_GRAPPLING_HOOK
+        && ent->eFlags & EF_FIRING)
+        continue;
+#endif
 
 			BG_TouchJumpPad( &cg.predictedPlayerState, ent );
 		}

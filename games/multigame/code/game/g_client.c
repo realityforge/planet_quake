@@ -1140,16 +1140,27 @@ void ClientSpawn(gentity_t *ent) {
 #endif
 
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
-#ifdef USE_ADVANCED_WEAPONS
-  client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
+#ifdef USE_GRAPPLE
+  if(g_enableGrapple.integer) {
+    client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
+    client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+  }
 #endif
 	client->ps.ammo[WP_GAUNTLET] = -1;
-	client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
 
 #ifdef USE_ADVANCED_WEAPONS
   //Spawn player with flame thrower
   client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_FLAME_THROWER );
   client->ps.ammo[WP_FLAME_THROWER] = 999;
+#endif
+
+#ifdef USE_INSTAGIB
+  if(g_instagib.integer) {
+    client->ps.stats[STAT_WEAPONS] = (1 << WP_RAILGUN );
+    // TODO: bots don't seem to like -1 as ammo amount, maybe this can be fixed
+    //   during advanced grapple hook tutorial.
+    client->ps.ammo[WP_RAILGUN] = INFINITE;  
+  }
 #endif
 
 	// health will count down towards max_health

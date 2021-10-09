@@ -691,7 +691,9 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 		break;
 
+#ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
+    cgs.media.lightningShader = trap_R_RegisterShader( "lightningBolt");
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/rocket/rocket.md3" );
 		weaponInfo->missileTrailFunc = CG_GrappleTrail;
@@ -702,6 +704,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->readySound = trap_S_RegisterSound( "sound/weapons/melee/fsthum.wav", qfalse );
 		weaponInfo->firingSound = trap_S_RegisterSound( "sound/weapons/melee/fstrun.wav", qfalse );
 		break;
+#endif
 
 #ifdef MISSIONPACK
 	case WP_CHAINGUN:
@@ -1238,8 +1241,10 @@ static float	CG_MachinegunSpinAngle( centity_t *cent ) {
 CG_AddWeaponWithPowerups
 ========================
 */
-static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cent ) {
+static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *ent ) {
 	// add powerup effects
+  centity_t *cent;
+  cent = &cg_entities[ent->currentState.clientNum];
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if ( cent->items[ITEM_PW_MIN + PW_FROZEN] ) {
     trap_R_AddRefEntityToScene( gun );

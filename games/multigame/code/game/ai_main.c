@@ -1488,7 +1488,11 @@ int BotAIStartFrame(int time) {
 				continue;
 			}
 			// do not update missiles
-			if ( ent->s.eType == ET_MISSILE && ent->s.weapon != WP_GRAPPLING_HOOK ) {
+			if ( ent->s.eType == ET_MISSILE 
+#ifdef USE_GRAPPLE
+        && ent->s.weapon != WP_GRAPPLING_HOOK 
+#endif
+      ) {
 				if ( *s == qfalse ) {
 					*s = qtrue;
 					trap_BotLibUpdateEntity( i, NULL );

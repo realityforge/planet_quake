@@ -1575,7 +1575,11 @@ void BotChooseWeapon(bot_state_t *bs) {
 		trap_EA_SelectWeapon(bs->client, bs->weaponnum);
 	}
 	else {
-		newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
+#ifdef USE_INSTAGIB
+		newweaponnum = WP_RAILGUN;
+#else
+    newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
+#endif
 		if (bs->weaponnum != newweaponnum) bs->weaponchange_time = FloatTime();
 		bs->weaponnum = newweaponnum;
 		//BotAI_Print(PRT_MESSAGE, "bs->weaponnum = %d\n", bs->weaponnum);
@@ -1595,6 +1599,14 @@ void BotSetupForMovement(bot_state_t *bs) {
 	VectorCopy(bs->cur_ps.origin, initmove.origin);
 	VectorCopy(bs->cur_ps.velocity, initmove.velocity);
 	VectorClear(initmove.viewoffset);
+  
+#ifdef USE_GRAPPLE
+	// KILDEREAN : changed by Mr E to fix bot grapple
+	// VectorCopy(bs->cur_ps.origin, initmove.viewoffset);
+	VectorClear(initmove.viewoffset);
+	// END KILDEREAN
+#endif
+
 	initmove.viewoffset[2] += bs->cur_ps.viewheight;
 	initmove.entitynum = bs->entitynum;
 	initmove.client = bs->client;
@@ -2209,6 +2221,11 @@ BotAggression
 ==================
 */
 float BotAggression(bot_state_t *bs) {
+#ifdef USE_INSTAGIB
+  //if the enemy is located way higher than the bot
+  if (bs->inventory[ENEMY_HEIGHT] > 200) return 0;
+  return 100;
+#else
 	//if the bot has quad
 	if (bs->inventory[INVENTORY_QUAD]) {
 		//if the bot is not holding the gauntlet or the enemy is really nearby
@@ -2249,6 +2266,7 @@ float BotAggression(bot_state_t *bs) {
 			bs->inventory[INVENTORY_SHELLS] > 10) return 50;
 	//otherwise the bot is not feeling too good
 	return 0;
+#endif
 }
 
 /*

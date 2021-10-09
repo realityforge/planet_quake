@@ -667,6 +667,8 @@ static void PM_AirMove( void ) {
 	PM_StepSlideMove ( qtrue );
 }
 
+
+#ifdef USE_GRAPPLE
 /*
 ===================
 PM_GrappleMove
@@ -686,12 +688,20 @@ static void PM_GrappleMove( void ) {
 	if (vlen <= 100)
 		VectorScale(vel, 10 * vlen, vel);
 	else
-		VectorScale(vel, 800, vel);
+#ifdef CGAME
+    VectorScale(vel, cg_grappleSpeed.value, vel);
+#else
+#ifdef QAGAME
+    VectorScale(vel, g_grappleSpeed.value, vel);
+#endif
+#endif
 
 	VectorCopy(vel, pm->ps->velocity);
 
 	pml.groundPlane = qfalse;
 }
+#endif
+
 
 /*
 ===================

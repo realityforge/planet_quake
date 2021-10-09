@@ -1292,6 +1292,9 @@ BotSelectActivateWeapon
 ==================
 */
 int BotSelectActivateWeapon(bot_state_t *bs) {
+#ifdef USE_INSTAGIB
+  return WEAPONINDEX_RAILGUN;
+#else
 	//
 	if (bs->inventory[INVENTORY_MACHINEGUN] > 0 && bs->inventory[INVENTORY_BULLETS] > 0)
 		return WEAPONINDEX_MACHINEGUN;
@@ -1320,6 +1323,7 @@ int BotSelectActivateWeapon(bot_state_t *bs) {
 	else {
 		return -1;
 	}
+#endif
 }
 
 /*
@@ -2621,4 +2625,3 @@ int AINode_Battle_NBG(bot_state_t *bs) {
 	//
 	return qtrue;
 }
-

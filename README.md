@@ -94,7 +94,17 @@ Some of the major features currently implemented are:
   * Weapon dropping, using the \drop command will eject current weapon. TODO: eject picked-up items, eject ammo, eject active power-up, eject runes, eject persistent power-ups like guard and returns to podium.
   * Anti-gravity boots with \boots command.
   * Flashlight and laser commands. TODO: add visual for laser sight like battlefield when you are being targeted right in the eye.
-  * TODO: infinite haste, how is this different than g_speed? Applies to only one player. TODO: boots that can climb steep slopes. TODO: jump velocity as a part of anti-gravity boots.
+  * Centered weapon positioning option.
+  * Progressive zooming, can stop at any zoom level.
+  * Rotating doors in maps for UrT support.
+  * Beheading with headshot detection for Railgun only.
+  * Alt weapon fire, twice as fast POC.
+  * Cluster grenades. TODO: fix when shooting near a wall.
+  * Homing rockets.
+  * Spread-fire power-up.
+  * Server-side instagib gameplay.
+  
+  * TODO: infinite haste, how is this different than g_speed? Applies to only one player. TODO: boots that can climb steep slopes. TODO: jump velocity as a part of anti-gravity boots. TODO: power-ups cover entire body or just the gun setting from server and client setting. TODO: fix botlib to use spawn points as objectives to kill people when spawning, maybe OSP does this?
 
 ## Coming soon!
   

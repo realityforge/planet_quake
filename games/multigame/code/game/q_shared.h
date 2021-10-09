@@ -184,7 +184,12 @@
 #define USE_HOMING_MISSILE 1
 // spreadfire weapon and powerup mod, sends lots of fire everywhere
 #define USE_WEAPON_SPREAD 1
+// instagib mode
+#define USE_INSTAGIB 1
+// enable the grappling hook
+#define USE_GRAPPLE 1
 // 
+
 
 #endif
 

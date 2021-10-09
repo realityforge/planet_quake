@@ -126,6 +126,11 @@ void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
 		return;
 	}
   
+#ifdef USE_GRAPPLE
+  if (other->client && other->client->hook)
+    return;
+#endif
+  
   // moved from bg_misc
   // flying characters don't hit bounce pads
   if(other->items[ITEM_PW_MIN + PW_HASTE])

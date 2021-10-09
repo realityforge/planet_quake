@@ -88,7 +88,12 @@ void TossClientItems( gentity_t *self ) {
 		}
 	}
 
+// TODO: change to if !g_instagib
 	if ( weapon > WP_MACHINEGUN && weapon != WP_GRAPPLING_HOOK 
+#ifdef USE_INSTAGIB
+    // don't drop anything in instagib mode
+    && !g_instagib.integer
+#endif
 #ifdef USE_ADVANCED_WEAPONS
     && weapon != WP_FLAME_THROWER
 #endif
