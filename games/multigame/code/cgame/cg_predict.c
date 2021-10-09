@@ -470,7 +470,7 @@ CG_TouchItem
 */
 static void CG_TouchItem( centity_t *cent ) {
 	const gitem_t *item;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   qboolean alreadyHad = qfalse;
 #endif
 
@@ -519,7 +519,7 @@ static void CG_TouchItem( centity_t *cent ) {
 	}
 
 	// grab it
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   if(item->giType == IT_WEAPON) {
     alreadyHad = cg.snap->ps.stats[STAT_WEAPONS] & (1 << item->giTag);
   }

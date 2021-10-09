@@ -31,12 +31,16 @@
 #define FL_NO_BOTS				0x00002000	// spawn point not for bot use
 #define FL_NO_HUMANS			0x00004000	// spawn point just for bots
 #define FL_FORCE_GESTURE	0x00008000	// force gesture on client
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_BOUNCE_RPG
 #define FL_ROCKETBOUNCE		0x00010000
+#endif
+#ifdef USE_CLOAK_CMD
 #define FL_CLOAK      		0x00020000
+#endif
+#ifdef USE_WEAPON_DROP
 #define FL_THROWN_ITEM		0x00040000  // XRAY FMJ weapon throwing
 #endif
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
 #define FL_BOOTS          0x00080000  // Anti Gravity Boots
 #endif
 
@@ -317,7 +321,7 @@ struct gclient_s {
 	int			lastkilled_client;	// last client that this client killed
 	int			lasthurt_client;	// last client that damaged this client
 	int			lasthurt_mod;		// type of damage the client did
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
   int		  lasthurt_location;	// Where the client was hit.
 #endif
 
@@ -514,7 +518,7 @@ int SpawnTime( gentity_t *ent, qboolean firstSpawn );
 void UseHoldableItem( gentity_t *ent );
 void PrecacheItem (gitem_t *it);
 gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle );
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
 gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int xr_flags );
 #else
 gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity );
@@ -861,22 +865,32 @@ extern	vmCvar_t	g_flagReturn;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 extern  vmCvar_t  g_thawTime;
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
 extern  vmCvar_t  g_railThruWalls;
+#endif
+#ifdef USE_BOUNCE_RPG
 extern  vmCvar_t  g_bounceRockets;
+#endif
+#ifdef USE_CLOAK_CMD
 extern  vmCvar_t  g_enableCloak;
+#endif
+#ifdef USE_VORTEX_GRENADES
 extern  vmCvar_t  g_vortexGrenades;
+#endif
+#ifdef USE_VULN_RPG
 extern  vmCvar_t  g_vulnRockets;
+#endif
+#ifdef USE_WEAPON_DROP
 extern  vmCvar_t  g_dropWeapon;
 #endif
 #ifdef USE_GRAPPLE
 extern  vmCvar_t  g_enableGrapple;
 extern  vmCvar_t  g_grappleSpeed;
 #endif
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
 extern  vmCvar_t  g_locDamage;
 #endif
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
 extern  vmCvar_t  g_enableBoots;
 #endif
 #ifdef USE_LASER_SIGHT

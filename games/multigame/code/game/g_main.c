@@ -94,18 +94,28 @@ vmCvar_t	g_callvotable;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
 vmCvar_t	g_thawTime;
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
 vmCvar_t	g_railThruWalls;
+#endif
+#ifdef USE_BOUNCE_RPG
 vmCvar_t	g_bounceRockets;
+#endif
+#ifdef USE_CLOAK_CMD
 vmCvar_t	g_enableCloak;
+#endif
+#ifdef USE_VORTEX_GRENADES
 vmCvar_t	g_vortexGrenades;
+#endif
+#ifdef USE_VULN_RPG
 vmCvar_t  g_vulnRockets;
+#endif
+#ifdef USE_WEAPON_DROP
 vmCvar_t  g_dropWeapon;
 #endif
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
 vmCvar_t  g_enableBoots;
 #endif
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
 vmCvar_t  g_locDamage;
 #endif
 #ifdef USE_LASER_SIGHT
@@ -223,12 +233,22 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_thawTime, "g_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
   ,{ &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_BOUNCE_RPG
   ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_CLOAK_CMD
   ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_VORTEX_GRENADES
   ,{ &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_VULN_RPG
   ,{ &g_vulnRockets, "g_vulnRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+#endif
+#ifdef USE_WEAPON_DROP
   ,{ &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
@@ -237,19 +257,19 @@ static cvarTable_t gameCvarTable[] = {
   ,{ &g_grappleSpeed, "g_grappleSpeed", "700", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
   ,{ &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_INSTAGIB
   ,{ &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   ,{ NULL, "g_supportsWeaponOrder", "1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse } //WarZone
 #endif
 
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
   ,{ &g_enableBoots, "g_enableBoots", "1", CVAR_ARCHIVE, 0, qfalse }
 #endif
 };

@@ -659,7 +659,7 @@ int DebugLine(vec3_t start, vec3_t end, int color) {
 	return trap_DebugPolygonCreate(color, 4, points);
 }
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VORTEX_GRENADES
 /*
 ================
 findradius

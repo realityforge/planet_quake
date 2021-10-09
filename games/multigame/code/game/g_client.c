@@ -1148,7 +1148,7 @@ void ClientSpawn(gentity_t *ent) {
 #endif
 	client->ps.ammo[WP_GAUNTLET] = -1;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   //Spawn player with flame thrower
   client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_FLAME_THROWER );
   client->ps.ammo[WP_FLAME_THROWER] = 999;
@@ -1165,12 +1165,11 @@ void ClientSpawn(gentity_t *ent) {
 
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
-#ifdef USE_ADVANCED_DMG
-#ifdef USE_ADVANCED_MOVE
+
+#ifdef USE_LOCAL_DMG
   // return to normal speed, McBain
   client->ps.speed = g_speed.value;
   client->lasthurt_location = LOCATION_NONE;
-#endif
 #endif
 
 	G_SetOrigin( ent, spawn_origin );

@@ -228,8 +228,10 @@ vmCvar_t	cg_wallWalk;
 vmCvar_t  cg_enableGrapple;
 vmCvar_t  cg_grappleSpeed;
 #endif
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_CENTER
 vmCvar_t  cg_gunCenter;
+#endif
+#ifdef USE_WEAPON_ORDER
 vmCvar_t  cg_weaponOrder;
 int cg_weaponsCount = -1; //WarZone
 #endif
@@ -353,8 +355,10 @@ static const cvarTable_t cvarTable[] = {
   { &cg_gravity, "g_gravity", "800", CVAR_SERVERINFO},
   { &cg_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO},
 #endif
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   { &cg_weaponOrder, "cg_weaponOrder", "1/2/3/4/6/8/5/7/9", CVAR_ARCHIVE }, //WarZone
+#endif
+#ifdef USE_WEAPON_CENTER
   { &cg_gunCenter, "cg_gunCenter", "1", CVAR_ARCHIVE },
 #endif
 #ifdef USE_GRAPPLE
@@ -434,7 +438,7 @@ void CG_ForceModelChange( void ) {
 }
 
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 extern int weaponOrder[WP_NUM_WEAPONS]; 
 extern int weaponRawOrder[WP_NUM_WEAPONS]; 
 
@@ -552,7 +556,7 @@ void CG_UpdateCvars( void ) {
 		trap_Cvar_Set( "teamoverlay", "1" );
 	}
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   //WarZone 
   if ( cg_weaponsCount != cg_weaponOrder.modificationCount ) 
   { 
@@ -1151,7 +1155,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.dustPuffShader = trap_R_RegisterShader("hasteSmokePuff" );
 #endif
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   cgs.media.flameBallShader = trap_R_RegisterShader( "sprites/flameball" );
 #endif
 

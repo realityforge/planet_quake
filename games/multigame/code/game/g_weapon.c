@@ -12,14 +12,14 @@ static	vec3_t	muzzle_origin; // for hitscan weapon trace
 
 #define NUM_NAILSHOTS 15
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
 #define IsSelf(x, y) i == 0 \
   && !(x.surfaceFlags & SURF_NOIMPACT) \
   && x.entityNum == ent->s.number
-
-qboolean G_WaterRadiusDamage (vec3_t origin, gentity_t *attacker, float damage, float radius,
-					 gentity_t *ignore, int mod);
-
+#endif
+#ifdef USE_LV_DISCHARGE
+qboolean G_WaterRadiusDamage (vec3_t origin, gentity_t *attacker, 
+  float damage, float radius, gentity_t *ignore, int mod);
 #endif
 
 
@@ -199,7 +199,7 @@ static void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 		// unlagged
 		G_DoTimeShiftFor( ent );
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
     if(g_vulnRockets.integer) {
       trap_Trace( &tr, muzzle_origin, NULL, NULL, end, ENTITYNUM_NONE, MASK_SHOT );
       // double check we aren't hitting ourselves on the first pass
@@ -540,7 +540,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	int			unlinked;
 	int			passent;
 	gentity_t	*unlinkedEntities[MAX_RAIL_HITS];
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
   vec3_t		tracefrom;	// SUM
   vec3_t		lastend;	// SUM
 #endif
@@ -553,7 +553,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	damage = 100 * s_quadFactor;
 
 	VectorMA( muzzle_origin, 8192.0, forward, end );
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
   VectorCopy (muzzle_origin, tracefrom);
 #endif
 
@@ -566,18 +566,18 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	passent = ent->s.number;
   i = 0;
 	do {
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
     if(g_vulnRockets.integer) {
       passent = ENTITYNUM_NONE;
     }
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
     if(g_railThruWalls.integer)
       trap_Trace (&trace, tracefrom, NULL, NULL, end, passent, MASK_SHOT );
     else
 #endif
 		trap_Trace( &trace, muzzle_origin, NULL, NULL, end, passent, MASK_SHOT );
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
     // double check we aren't hitting ourselves on the first pass
     if(IsSelf(trace, ent)) {
       // do another trace that skips ourselves
@@ -587,7 +587,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 #endif
 
 		if ( trace.entityNum >= ENTITYNUM_MAX_NORMAL ) {
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
       if(g_railThruWalls.integer) {
         // SUM break if we hit the sky
   			if (trace.surfaceFlags & SURF_SKY)
@@ -639,7 +639,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 				G_Damage( traceEnt, ent, ent, forward, trace.endpos, damage, 0, MOD_RAILGUN );
 			}
 		}
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
     if(!g_railThruWalls.integer)
 #endif
 		if ( trace.contents & CONTENTS_SOLID ) {
@@ -661,7 +661,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	}
 
 	// the final trace endpos will be the terminal point of the rail trail
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
   if(g_railThruWalls.integer)
     VectorCopy (lastend, trace.endpos);
 #endif
@@ -690,7 +690,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	}
 	tent->s.clientNum = ent->s.clientNum;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_INVULN_RAILS
   //send the effect to everyone since it tunnels through walls
   tent->r.svFlags |= SVF_BROADCAST;
 #endif
@@ -780,7 +780,7 @@ void Weapon_LightningFire( gentity_t *ent ) {
 
 	passent = ent->s.number;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
   VectorMA( muzzle_origin, LIGHTNING_RANGE, forward, end );
   // The SARACEN's Lightning Discharge - START
 	if (trap_PointContents (muzzle_origin, -1) & MASK_WATER)
@@ -812,7 +812,7 @@ void Weapon_LightningFire( gentity_t *ent ) {
 		// unlagged
 		G_DoTimeShiftFor( ent );
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
     if(g_vulnRockets.integer) {
       trap_Trace( &tr, muzzle_origin, NULL, NULL, end, ENTITYNUM_NONE, MASK_SHOT );
       // double check we aren't hitting ourselves on the first pass
@@ -1019,7 +1019,7 @@ void Laser_Gen( gentity_t *ent, int type )	{
 #endif
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
 /*
 ================
 dropWeapon XRAY FMJ
@@ -1217,7 +1217,7 @@ void FireWeapon( gentity_t *ent ) {
 	case WP_GRAPPLING_HOOK:
 		Weapon_GrapplingHook_Fire( ent );
 		break;
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   case WP_FLAME_THROWER :
     Weapon_fire_flame( ent );
     break;

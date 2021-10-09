@@ -1821,7 +1821,7 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 }
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
 void ThrowWeapon( gentity_t *ent );
 /*
 =================
@@ -1832,8 +1832,10 @@ void Cmd_Drop_f( gentity_t *ent ) {
   if(g_dropWeapon.integer)
     ThrowWeapon( ent );
 }
+#endif
 
 
+#ifdef USE_BOUNCE_CMD
 /*
 =================
 Cmd_RBounce_f
@@ -1852,8 +1854,10 @@ void Cmd_RBounce_f( gentity_t *ent ) {
   }
 	trap_SendServerCommand( ent-g_entities, va("print \"%s\"", msg));
 }
+#endif
 
 
+#ifdef USE_CLOAK_CMD
 /*
 =================
 Cmd_Cloak_f
@@ -1884,7 +1888,7 @@ void Cmd_Cloak_f( gentity_t *ent ) {
 #endif
 
 
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
 /*
 =================
 Cmd_Boots_f          function for turning boots on/off
@@ -2050,15 +2054,19 @@ void ClientCommand( int clientNum ) {
 		Cmd_GameCommand_f( ent );
 	else if (Q_stricmp (cmd, "setviewpos") == 0)
 		Cmd_SetViewpos_f( ent );
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
   else if (Q_stricmp (cmd, "drop") == 0)  // XRAY FMJ
     Cmd_Drop_f( ent );
+#endif
+#ifdef USE_BOUNCE_CMD
   else if (Q_stricmp (cmd, "rbounce") == 0)
     Cmd_RBounce_f( ent );
+#endif
+#ifdef USE_CLOAK_CMD
   else if (Q_stricmp (cmd, "cloak") == 0)
   	Cmd_Cloak_f( ent );
 #endif
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
   else if (Q_stricmp (cmd, "boots") == 0)
      Cmd_Boots_f( ent );
 #endif

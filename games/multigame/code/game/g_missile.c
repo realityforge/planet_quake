@@ -52,7 +52,7 @@ void G_ExplodeMissile( gentity_t *ent ) {
 	vec3_t		dir;
 	vec3_t		origin;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
   // Lancer
   ent->takedamage = qfalse;
 #endif
@@ -97,7 +97,7 @@ void G_ExplodeMissile( gentity_t *ent ) {
 }
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
 /*
 ================
 G_MissileDie
@@ -307,7 +307,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 		return;
 	}
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
   // Lancer
   ent->takedamage = qfalse;
 #endif
@@ -606,7 +606,7 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 //=============================================================================
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
 /*
 =================
 fire_flame
@@ -643,7 +643,10 @@ gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir) {
 
   return bolt;
 }
+#endif
 
+
+#ifdef USE_VORTEX_GRENADES
 gentity_t *findradius (gentity_t *ent, vec3_t org, float rad); 
 
 #define GSUCK_TIMING	  50			  // the think time interval of G_Suck
@@ -831,7 +834,7 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 #else
 	bolt->classname = "grenade";
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VORTEX_GRENADES
   if(g_vortexGrenades.integer) {
     bolt->nextthink = level.time + 1000; // call G_Suck in 1 second
     bolt->think = G_Suck;
@@ -1016,9 +1019,8 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	bolt = G_Spawn();
 	bolt->classname = "rocket";
-#ifdef USE_ADVANCED_WEAPONS
-  if (self->flags & FL_ROCKETBOUNCE
-    || g_bounceRockets.integer)
+#ifdef USE_BOUNCE_RPG
+  if (self->flags & FL_ROCKETBOUNCE || g_bounceRockets.integer)
     bolt->nextthink = level.time + 2500;
   else
 #endif
@@ -1032,7 +1034,7 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_ROCKET_LAUNCHER;
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_VULN_RPG
   // Lancer
   if(g_vulnRockets.integer) {
     bolt->health = 5;
@@ -1044,8 +1046,7 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
     VectorSet(bolt->r.maxs, 10, 3, 6);
     VectorCopy(bolt->r.maxs, bolt->r.absmax);
   }
-  if (self->flags & FL_ROCKETBOUNCE
-    || g_bounceRockets.integer)
+  if (self->flags & FL_ROCKETBOUNCE || g_bounceRockets.integer)
   	bolt->s.eFlags = EF_BOUNCE;
 #endif
 	bolt->r.ownerNum = self->s.number;

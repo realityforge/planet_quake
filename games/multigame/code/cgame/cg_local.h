@@ -762,7 +762,7 @@ typedef struct {
 	qhandle_t	harvesterNeutralModel;
 #endif
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   qhandle_t flameBallShader;
   qhandle_t flameExplosionShader;
 #endif
@@ -1326,8 +1326,10 @@ extern	vmCvar_t	  cg_wallWalk;
 #ifdef USE_GRAPPLE
 extern  vmCvar_t    cg_enableGrapple;
 #endif
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 extern  vmCvar_t    cg_weaponOrder;
+#endif
+#ifdef USE_WEAPON_CENTER
 extern  vmCvar_t    cg_gunCenter;
 #endif
 

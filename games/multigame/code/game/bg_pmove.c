@@ -16,7 +16,7 @@ float	pm_stopspeed = 100.0f;
 float	pm_duckScale = 0.25f;
 float	pm_swimScale = 0.50f;
 float	pm_wadeScale = 0.70f;
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LADDERS
 float  pm_ladderScale = 0.50;
 float  pm_ladderfriction = 3000;
 float  pm_ladderAccelerate = 3000;
@@ -205,7 +205,7 @@ static void PM_Friction( void ) {
 		drop += speed*pm_flightfriction*pml.frametime;
 	}
 
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LADDERS
   if ( pml.ladder ) // If they're on a ladder... 
   {
     drop += speed*pm_ladderfriction*pml.frametime;  // Add ladder friction! 
@@ -1731,9 +1731,11 @@ static void PM_Weapon( void ) {
 	case WP_BFG:
 		addTime = 200;
 		break;
+#ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
 		addTime = 400;
 		break;
+#endif
 #ifdef MISSIONPACK
 	case WP_NAILGUN:
 		addTime = 1000;
@@ -1745,7 +1747,7 @@ static void PM_Weapon( void ) {
 		addTime = 30;
 		break;
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   case WP_FLAME_THROWER:
   	addTime = 40;
     break;
@@ -1895,7 +1897,7 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 }
 
 
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LADDERS
 /*
 ===================
 PM_LadderMove()
@@ -2142,7 +2144,7 @@ static void PmoveSingle (pmove_t *pmove, int *itms) {
 	}
 
 	PM_DropTimers();
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LADDERS
   CheckLadder();  // ARTHUR TOMLIN check and see if they're on a ladder
 #endif
 
@@ -2163,7 +2165,7 @@ static void PmoveSingle (pmove_t *pmove, int *itms) {
 	} else if ( pm->waterlevel > 1 ) {
 		// swimming
 		PM_WaterMove();
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LADDERS
   } else if (pml.ladder) {	
 		PM_LadderMove();
 #endif

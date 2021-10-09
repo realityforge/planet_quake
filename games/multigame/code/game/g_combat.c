@@ -64,7 +64,7 @@ void TossClientItems( gentity_t *self ) {
 	// drop the weapon if not a gauntlet or machinegun
 	weapon = self->s.weapon;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_CLOAK_CMD
   if (self->flags & FL_CLOAK) {
   	// remove the invisible powerup if the player is cloaked.
   	self->items[ITEM_PW_MIN + PW_INVIS] = level.time;
@@ -76,7 +76,7 @@ void TossClientItems( gentity_t *self ) {
 	// can pick up a weapon, be killed, and not drop the weapon because
 	// their weapon change hasn't completed yet and they are still holding the MG.
 	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
     || weapon == WP_FLAME_THROWER
 #endif
   ) {
@@ -94,7 +94,7 @@ void TossClientItems( gentity_t *self ) {
     // don't drop anything in instagib mode
     && !g_instagib.integer
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
     && weapon != WP_FLAME_THROWER
 #endif
     && self->client->ps.ammo[ weapon ] ) {
@@ -177,7 +177,7 @@ void TossClientCubes( gentity_t *self ) {
 		VectorClear( origin ) ;
 	}
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
   drop = LaunchItem( item, origin, velocity, FL_DROPPED_ITEM );
 #else
 	drop = LaunchItem( item, origin, velocity );
@@ -321,7 +321,7 @@ char	*modNames[] = {
 	"MOD_KAMIKAZE",
 	"MOD_JUICED",
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
   "MOD_LV_DISCHARGE",
   "MOD_FLAME_THROWER",
 #endif
@@ -850,7 +850,7 @@ int G_InvulnerabilityEffect( gentity_t *targ, vec3_t dir, vec3_t point, vec3_t i
 #endif
 
 
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
 /* 
 ============
 G_LocationDamage
@@ -1237,7 +1237,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		targ->client->lasthurt_client = attacker->s.number;
 		targ->client->lasthurt_mod = mod;
 
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
     if(g_locDamage.integer) {
   		// Modify the damage for location damage
   		if (point && targ && targ->health > 0 && attacker && take)
@@ -1476,7 +1476,7 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 }
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
 /*
 ============
 G_WaterRadiusDamage for The SARACEN's Lightning Discharge

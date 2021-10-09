@@ -429,13 +429,13 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #endif
 		} else {
 			// count down health when over max
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_CLOAK_CMD
       if (!(ent->flags & FL_CLOAK))
 #endif
 			if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
 				ent->health--;
 			}
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_CLOAK_CMD
       if (ent->flags & FL_CLOAK) {
         // count down health when cloaked.
       	ent->health--;
@@ -840,7 +840,7 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	client->ps.gravity = g_gravity.value;
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_GRAVITY_BOOTS
   if (g_enableBoots.integer && ent->flags & FL_BOOTS)    //  umm and this,
      client->ps.gravity = g_gravity.value * 0.20;        //  yeah... this too
 #endif
@@ -858,8 +858,7 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.speed *= 1.3;
   }
 
-#ifdef USE_ADVANCED_DMG
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LOCAL_DMG
   if(g_locDamage.integer) {
     if(client->lasthurt_location == LOCATION_LEG) {
       client->ps.speed *= 0.7;
@@ -868,7 +867,6 @@ void ClientThink_real( gentity_t *ent ) {
       client->ps.speed *= 0.5;
     }
   }
-#endif
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)

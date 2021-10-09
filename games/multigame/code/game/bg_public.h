@@ -336,7 +336,7 @@ typedef enum {
 	WP_PROX_LAUNCHER,
 	WP_CHAINGUN,
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   WP_FLAME_THROWER,
 #endif
 #ifdef USE_GRAPPLE
@@ -395,7 +395,7 @@ typedef enum {
 	EV_WATER_CLEAR,	// head leaves
 
 	EV_ITEM_PICKUP,			// normal item pickups are predictable
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   EV_ITEM_PICKUP2,			// had items
 #endif
 	EV_GLOBAL_ITEM_PICKUP,	// powerup / team sounds are broadcast to everyone
@@ -447,7 +447,7 @@ typedef enum {
 	EV_RAILTRAIL,
 	EV_SHOTGUN,
 	EV_BULLET,				// otherEntity is the shooter
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
   EV_LV_DISCHARGE,
 #endif
 
@@ -634,7 +634,7 @@ typedef enum {
 	TEAMTASK_CAMP
 } teamtask_t;
 
-#ifdef USE_ADVANCED_DMG
+#ifdef USE_LOCAL_DMG
 #define LOCATION_NONE		0x00000000
 
 // Height layers
@@ -686,8 +686,10 @@ typedef enum {
 	MOD_KAMIKAZE,
 	MOD_JUICED,
 #endif
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
   MOD_LV_DISCHARGE,
+#endif
+#ifdef USE_FLAME_THROWER
   MOD_FLAME_THROWER,
 #endif
 #ifdef USE_HEADSHOTS

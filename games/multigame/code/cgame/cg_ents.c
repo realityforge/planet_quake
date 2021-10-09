@@ -476,7 +476,7 @@ static void CG_Missile( centity_t *cent ) {
 		return;
 	}
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   if (cent->currentState.weapon == WP_FLAME_THROWER ) {
   	ent.reType = RT_SPRITE;
   	ent.radius = 32;

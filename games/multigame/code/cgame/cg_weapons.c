@@ -824,7 +824,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->missileSound = trap_S_RegisterSound( "sound/weapons/rocket/rockfly.wav", qfalse );
 		break;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   case WP_FLAME_THROWER:
   	weaponInfo->missileSound = trap_S_RegisterSound( "sound/weapons/plasma/lasfly.wav", qfalse );
   	MAKERGB( weaponInfo->flashDlightColor, 0.6, 0.6, 1 );
@@ -1066,7 +1066,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	VectorMA( muzzlePoint, 14, forward, muzzlePoint );
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
   // The SARACEN's Lightning Discharge
 	if (trap_CM_PointContents (muzzlePoint, 0) & MASK_WATER) return;
 #endif
@@ -1454,7 +1454,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 }
 
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_CENTER
 void CG_CenterGun(float *gen_guny, playerState_t *ps) {
   switch (ps->weapon)
 	{
@@ -1545,7 +1545,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// set up gun position
 	CG_CalculateWeaponPosition( hand.origin, angles );
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_CENTER
   if(cg_gunCenter.integer) {
     float gen_guny;
     CG_CenterGun(&gen_guny, ps);
@@ -1591,7 +1591,7 @@ WEAPON SELECTION
 */
 
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 int weaponOrder[WP_NUM_WEAPONS]; 
 int weaponRawOrder[WP_NUM_WEAPONS]; 
 int NextWeapon (int curr);
@@ -1677,7 +1677,7 @@ CG_DrawWeaponSelect
 #define AMMO_FONT_SIZE 12
 void CG_DrawWeaponSelect( void ) {
 	int		i;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   int  weap; 
 #endif
 	int		bits;
@@ -1712,7 +1712,7 @@ void CG_DrawWeaponSelect( void ) {
 	// count the number of weapons owned
 	bits = cg.snap->ps.stats[ STAT_WEAPONS ];
 	count = 0;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
     if(cg_autoswitch.integer == 2)
       weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i] );
@@ -1743,7 +1743,7 @@ void CG_DrawWeaponSelect( void ) {
 	}
 
 	for ( i = WP_GAUNTLET ; i < MAX_WEAPONS ; i++ ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
     if(cg_autoswitch.integer == 2)
       weap = NextWeapon( weaponRawOrder[WP_NUM_WEAPONS - i] );
     else
@@ -1758,7 +1758,7 @@ void CG_DrawWeaponSelect( void ) {
 		CG_RegisterWeapon( i );
 
 		// draw weapon icon
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_3D_WEAPONS
     if(cg_draw3dIcons.integer > 1) {
       hud_weapons(x, y, &cg_weapons[i]);
     } else
@@ -1789,7 +1789,7 @@ void CG_DrawWeaponSelect( void ) {
 
 		x += dx;
 		y += dy;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 #undef i
 #endif
 	}
@@ -1823,7 +1823,7 @@ static qboolean CG_WeaponSelectable( int i ) {
 }
 
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 //<WarZone> 
 int NextWeapon (int curr) 
 { 
@@ -1889,7 +1889,7 @@ void CG_NextWeapon_f( void ) {
 	original = cg.weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
     if(cg_autoswitch.integer == 2)
       cg.weaponSelect = NextWeapon( cg.weaponSelect ); //WarZone 
     else
@@ -1933,7 +1933,7 @@ void CG_PrevWeapon_f( void ) {
 	original = cg.weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
     if(cg_autoswitch.integer == 2)
       cg.weaponSelect = PrevWeapon( cg.weaponSelect ); //WarZone 
     else
@@ -2006,12 +2006,12 @@ The current weapon has just run out of ammo
 */
 void CG_OutOfAmmoChange( void ) {
 	int		i;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   int weap;
 #endif
 
 	cg.weaponSelectTime = cg.time;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   if(cg_autoswitch.integer == 2)
     weap = weaponRawOrder[WP_NUM_WEAPONS - 1]; //WarZone -- pick the best weapon they have 
 #endif
@@ -2282,7 +2282,7 @@ void CG_MissileHitWall( weapon_t weapon, int clientNum, vec3_t origin, vec3_t di
 		radius = 8;
 		break;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   case WP_FLAME_THROWER:
   	mod = cgs.media.dishFlashModel;
   	shader = cgs.media.flameExplosionShader;

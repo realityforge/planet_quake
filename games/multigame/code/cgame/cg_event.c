@@ -165,7 +165,21 @@ static void CG_Obituary( entityState_t *ent ) {
 			else
 				message = "melted himself";
 			break;
-#ifdef USE_ADVANCED_WEAPONS
+		case MOD_BFG_SPLASH:
+			message = "should have used a smaller gun";
+			break;
+#ifdef MISSIONPACK
+		case MOD_PROXIMITY_MINE:
+			if( gender == GENDER_FEMALE ) {
+				message = "found her prox mine";
+			} else if ( gender == GENDER_NEUTER ) {
+				message = "found its prox mine";
+			} else {
+				message = "found his prox mine";
+			}
+			break;
+#endif
+#ifdef USE_LV_DISCHARGE
     // The SARACEN's Lightning Discharge - START
     case MOD_LV_DISCHARGE:
       if (gender == GENDER_FEMALE)
@@ -177,24 +191,10 @@ static void CG_Obituary( entityState_t *ent ) {
       break;
     // The SARACEN's Lightning Discharge - END
 #endif
-		case MOD_BFG_SPLASH:
-			message = "should have used a smaller gun";
-			break;
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
     case MOD_FLAME_THROWER:
       message = "was fried by";
       break;
-#endif
-#ifdef MISSIONPACK
-		case MOD_PROXIMITY_MINE:
-			if( gender == GENDER_FEMALE ) {
-				message = "found her prox mine";
-			} else if ( gender == GENDER_NEUTER ) {
-				message = "found its prox mine";
-			} else {
-				message = "found his prox mine";
-			}
-			break;
 #endif
 #ifdef USE_HEADSHOTS
     case MOD_HEADSHOT:
@@ -327,7 +327,7 @@ static void CG_Obituary( entityState_t *ent ) {
 		case MOD_RAILGUN:
 			message = "was railed by";
 			break;
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
 // The SARACEN's Lightning Discharge - START
     // Classic Quake style obituary - the original and the best!!!
 		case MOD_LIGHTNING:
@@ -462,7 +462,7 @@ CG_ItemPickup
 A new item was picked up this frame
 ================
 */
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 extern int weaponOrder[MAX_WEAPONS]; 
 
 int RateWeapon (int weapon) 
@@ -497,7 +497,7 @@ static void CG_ItemPickup( int itemNum )
 	if ( bg_itemlist[itemNum].giType == IT_WEAPON ) {
 		// select it immediately
 		if ( cg_autoswitch.integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
       if(cg_autoswitch.integer == 2 && alreadyHad) {
         if(RateWeapon( bg_itemlist[itemNum].giTag) < RateWeapon( cg.weaponSelect ))
           return;
@@ -609,7 +609,7 @@ void CG_PainEvent( centity_t *cent, int health ) {
 	cent->pe.painDirection ^= 1;
 }
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
 void CG_Lightning_Discharge (vec3_t origin, int msec);
 #endif
 #ifdef USE_HEADSHOTS
@@ -834,7 +834,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		trap_S_StartSound (NULL, es->number, CHAN_AUTO, CG_CustomSound( es->number, "*gasp.wav" ) );
 		break;
 
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   case EV_ITEM_PICKUP2:
 #endif
 	case EV_ITEM_PICKUP:
@@ -887,7 +887,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 				CG_ItemPickup( index, event == EV_ITEM_PICKUP2 );
 #else
         CG_ItemPickup( index );
@@ -929,7 +929,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
 				CG_ItemPickup( index, qfalse );
 #else
         CG_ItemPickup( index );
@@ -1091,7 +1091,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			fovOffset = -0.2f * ( cgs.fov - 90.0f );
 
 			// 13.5, -5.5, -6.0
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_CENTER
       if(cg_gunCenter.integer) {
         VectorMA( vec, cg_gun_x.value + 13.5f, cg.refdef.viewaxis[0], vec );
   			VectorMA( vec, (cg_gun_y.value + 5*cg_gunCenter.value) - 5.5f, cg.refdef.viewaxis[1], vec );
@@ -1129,7 +1129,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		CG_ShotgunFire( es );
 		break;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
 // The SARACEN's Lightning Discharge - START
 	case EV_LV_DISCHARGE:
 		CG_Lightning_Discharge (position, es->eventParm);	// eventParm is duration/size

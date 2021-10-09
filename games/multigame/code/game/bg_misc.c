@@ -916,7 +916,7 @@ Only in One Flag CTF games
 	},
 #endif
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   /*QUAKED weapon_flamethrower (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
   */
   {

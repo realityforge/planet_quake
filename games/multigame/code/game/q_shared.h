@@ -160,12 +160,18 @@
 #define USE_GAME_FREEZETAG 1
 // advanced hud features like player looking in the same direction, 3D guns, etc
 #define USE_ADVANCED_HUD 1
-// weapon enhancements toggled by cvars
-#define USE_ADVANCED_WEAPONS 1
-// advanced movement includes things like ladders, and class based movement
-#define USE_ADVANCED_MOVE 1
+// draw 3D weapons that rotate slightly
+#define USE_3D_WEAPONS 1
+// client side weapon order
+#define USE_WEAPON_ORDER 1
+// allow clients to center the weapons above the hud
+#define USE_WEAPON_CENTER 1
 // advanged damage changes based on where the player is shot
-#define USE_ADVANCED_DMG 1
+#define USE_LOCAL_DMG 1
+// allow anti gravity boots commands to be used by clients
+#define USE_GRAVITY_BOOTS 1
+// enable ladders in map
+#define USE_LADDERS 1
 // advanced classes applies special properties to players based on model or selection
 #define USE_ADVANCED_CLASS 1
 // laser sight and flash light
@@ -190,6 +196,28 @@
 #define USE_GRAPPLE 1
 // rpg accellerating missiles start slow and then speed up as they fly
 #define USE_ACCEL_RPG 1
+// allow clients to drop weapons, items, and powerups
+#define USE_WEAPON_DROP 1
+#define USE_ITEM_DROP 1
+#define USE_POWERUP_DROP 1
+#define USE_FLAG_DROP 1
+#define USE_AMMO_DROP 1
+// allow clients to specific bouncing rockets
+#define USE_BOUNCE_CMD 1
+// enable bouncing rpgs from map items or server enabled
+#define USE_BOUNCE_RPG 1
+// enable cloaking command for clients to turn on infinite invisibility
+#define USE_CLOAK_CMD 1
+// enable lightening discharge that kills players in radius when used in water
+#define USE_LV_DISCHARGE 1
+// enable the flame thrower
+#define USE_FLAME_THROWER 1
+// enable vortex grenades that suck players in when they are tossed
+#define USE_VORTEX_GRENADES 1
+// enable vulnerable rockets that can be shot down
+#define USE_VULN_RPG 1
+// enable rails that go through walls
+#define USE_INVULN_RAILS 1
 // 
 
 #endif

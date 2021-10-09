@@ -194,7 +194,7 @@ void CG_SpawnEffect( const vec3_t origin ) {
 }
 
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_LV_DISCHARGE
 /*
 ====================
 CG_Lightning_Discharge by The SARACEN

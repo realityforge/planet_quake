@@ -342,8 +342,7 @@ static int Pickup_Health( gentity_t *ent, gentity_t *other ) {
 
 	other->health += quantity;
 
-#ifdef USE_ADVANCED_DMG
-#ifdef USE_ADVANCED_MOVE
+#ifdef USE_LOCAL_DMG
   if(g_locDamage.integer) {
     // return speed upon health pickup or more than maximum health, McBain
     other->client->lasthurt_location = LOCATION_NONE;
@@ -368,7 +367,6 @@ static int Pickup_Health( gentity_t *ent, gentity_t *other ) {
 
   	// end McBain
   }
-#endif
 #endif
 
 	if (other->health > max ) {
@@ -507,7 +505,7 @@ Touch_Item
 void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	int			respawn;
 	qboolean	predict;
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   qboolean alreadyHad = qfalse;
 #endif
 
@@ -534,7 +532,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// call the item-specific pickup function
 	switch( ent->item->giType ) {
 	case IT_WEAPON:
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
     alreadyHad = other->client->ps.stats[STAT_WEAPONS] & (1 << ent->item->giTag);
 #endif
 		respawn = Pickup_Weapon(ent, other);
@@ -576,7 +574,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	}
 
 	// play the normal pickup sound
-#ifdef USE_ADVANCED_HUD
+#ifdef USE_WEAPON_ORDER
   {
     if ( predict ) {
   		G_AddPredictableEvent( other, alreadyHad 
@@ -687,7 +685,7 @@ LaunchItem
 Spawns an item and tosses it forward
 ================
 */
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
 gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity, int xr_flags )
 #else
 gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity )
@@ -740,7 +738,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity )
 #endif
 	}
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
 	dropped->flags = xr_flags; // FL_DROPPED_ITEM; // XRAY FMJ FL_THROWN_ITEM
 
   if( xr_flags & FL_THROWN_ITEM) {
@@ -779,7 +777,7 @@ gentity_t *Drop_Item( gentity_t *ent, gitem_t *item, float angle ) {
 	VectorScale( velocity, 150, velocity );
 	velocity[2] += 200 + crandom() * 50;
 
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_WEAPON_DROP
   return LaunchItem( item, ent->s.pos.trBase, velocity, FL_DROPPED_ITEM );
 #else
 	return LaunchItem( item, ent->s.pos.trBase, velocity );
@@ -958,7 +956,7 @@ void ClearRegisteredItems( void ) {
 	// players always start with the base weapon
 	RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
 	RegisterItem( BG_FindItemForWeapon( WP_GAUNTLET ) );
-#ifdef USE_ADVANCED_WEAPONS
+#ifdef USE_FLAME_THROWER
   RegisterItem( BG_FindItemForWeapon( WP_FLAME_THROWER) );
 #endif
 #ifdef USE_GRAPPLE
