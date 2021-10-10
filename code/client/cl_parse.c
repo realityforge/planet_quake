@@ -783,7 +783,7 @@ void CL_ParseServerInfo( int igs )
       int len, index;
 
       //if ( i > CS_PLAYERS && i < CS_PLAYERS + max ) {
-        // TODO: fix missing models before demo loads
+        // TODO: fix missing models before demo loads automatically
         // TODO: or demoPlayerCS0-100 to replace player settings
         //Com_Printf("Config: %s\n", oldGs.stringData + oldGs.stringOffsets[ i ]);
       //}

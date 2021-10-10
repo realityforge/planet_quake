@@ -72,6 +72,9 @@ fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are writte
 
 cvar_t	*com_viewlog;
 cvar_t	*com_speeds;
+#ifndef DEDICATED
+extern cvar_t  *con_preserve;
+#endif
 
 #ifdef USE_PRINT_CONSOLE
 // set developer to a string or number to match the combination you seek
@@ -809,6 +812,8 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
     if( !strcmp(Cmd_Argv(0), "connect") ) {
       com_consoleLines[i][0] = '\0';
       Q_strncpyz( com_earlyConnect, Cmd_Argv( 1 ), sizeof( com_earlyConnect ) );
+    } else {
+      Com_Printf("WARNING: Using asynchronous build without an early \\connect <address> command.")
     }
 #endif
 	}
@@ -3373,9 +3378,11 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #endif
 
 #ifndef USE_NO_CONSOLE
-		// Reset console command history
-		// TODO: make this an option
-		Con_ResetHistory();
+#ifndef DEDICATED
+    // Reset console command history
+    if(!con_preserve->integer)
+#endif
+  		Con_ResetHistory();
 #endif
 
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars

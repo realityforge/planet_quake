@@ -752,7 +752,6 @@ extern int clientWorlds[MAX_NUM_VMS];
 extern int clientGames[MAX_NUM_VMS];
 
 #ifdef USE_LAZY_LOAD
-// TODO: make these work on native, by checking files.c for rediness or something?
 void CL_UpdateShader( void );
 void CL_UpdateSound( void );
 void CL_UpdateModel( void );

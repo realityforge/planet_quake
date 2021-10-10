@@ -73,6 +73,7 @@ console_t	con;
 
 cvar_t		*con_conspeed;
 cvar_t		*con_notifytime;
+cvar_t    *con_preserve;
 
 int         g_console_field_width = DEFAULT_CONSOLE_WIDTH;
 
@@ -388,6 +389,7 @@ void Con_Init( void )
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+  con_preserve = Cvar_Get("con_preserve", "1", CVAR_ARCHIVE);
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;

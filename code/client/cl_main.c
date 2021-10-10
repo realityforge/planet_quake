@@ -933,20 +933,21 @@ void CL_ReadDemoIndex( void ) {
 
 		} else if (s == svc_snapshot) {
 			CL_ParseSnapshot( &buf, qfalse );
-			int newcount = (cl.snap.serverTime - demoStart) / 1000;
+			int newcount = floor((cl.snap.serverTime - demoStart) / 1000);
 			if(newcount > count) {
 				count = newcount;
 				clc.demoIndex[count].serverTime = cl.snap.serverTime;
 				clc.demoIndex[count].offset = FS_FTell(clc.demofile) - buf.cursize - 8;
-				// TODO: merge entity with baseline, the same way ParseSnapshot does
-				memcpy(clc.demoIndex[count].entities, cl.entityBaselines, MAX_GENTITIES * sizeof(entityState_t));
+        clSnapshot_t *clSnap = &cl.snapshots[cl.snap.messageNum & PACKET_MASK];
+        for ( i = 0 ; i < clSnap->numEntities ; i++ ) {
+          entityState_t *ent = &cl.parseEntities[ ( clSnap->parseEntitiesNum + i ) & (MAX_PARSE_ENTITIES-1) ];
+          memcpy(clc.demoIndex[ent->number].entities, ent, sizeof(entityState_t));
+        }
 			} else {
 			}
 		}
 		offset = 8 + buf.cursize;
 	}
-	
-	// TODO: generate a baseline network message for saving in a side-cache
 
 	Com_Printf( "DEMO: Read %i key frames\n", count );
 	if(demoEnd - demoStart > 120000)
@@ -3966,8 +3967,8 @@ void CL_Frame( int msec, int realMsec ) {
 #endif
 
 #ifdef USE_LAZY_LOAD
-// TODO: lazy load only if the screen it out of view in multiworld
 	if(cl_lazyLoad->integer > 0 && (cl_lazyLoad->integer <= 2
+    // lazy load only if the screen it out of view in multiworld
     || cls.lazyLoading)) {
 		if((uivm || cgvm) && secondTimer > 20) {
 			secondTimer = 0;
