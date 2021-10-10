@@ -97,6 +97,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define USE_LIVE_RELOAD 1
 // show did you mean? results for map names, cvars, command names, etc
 #define USE_DIDYOUMEAN 1
+// engine side teleporting option can convert voids to teleporters or
+//   allow players to teleport with key bindings, in any mod. You can also
+//   set your starting position using sv_teleStartPos, it can be named or xyz
+#define USE_ENGINE_TELE 1
 // 
 #endif
 
@@ -131,7 +135,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MV_PROTOCOL_VERSION MV_MULTIWORLD_VERSION
 // TODO: make compatible with legacy clients by sending gamestate and 
 //   switching level like normal, I think another engine mod/ioq3? did this
-#define USE_LAZY_MEMORY
+#define USE_LAZY_MEMORY 1
+#define USE_ENGINE_TELE 1
 //#define USE_LAZY_LOAD
 #endif
 

@@ -443,7 +443,7 @@ static const char *SV_FindCountry( const char *tld ) {
 }
 
 
-#if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER)
+#if defined(USE_PERSIST_CLIENT) || defined(USE_MULTIVM_SERVER) || defined(USE_ENGINE_TELE)
 /*
 ==================
 SetClientViewAngle
@@ -2334,7 +2334,10 @@ void SV_LoadVM( client_t *cl ) {
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
 }
+#endif
 
+
+#if defined(USE_MULTIVM_SERVER) || defined(USE_ENGINE_TELE)
 typedef enum {
 	SPAWNORIGIN,
 	SAMEORIGIN,
@@ -2351,15 +2354,17 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//gentity_t *gent, oldEnt;
 	
 	client->state = CS_ACTIVE;
-
+  clientNum = client - svs.clients;
+#ifdef USE_MULTIVM_SERVER
+  gvmi = client->gameWorld;
 	// set up the entity for the client
-	clientNum = client - svs.clients;
-	gvmi = client->gameWorld;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
+#endif
 	ps = SV_GameClientNum( clientNum );
 	memcpy(&oldps, ps, sizeof(playerState_t));
 
+#ifdef USE_MULTIVM_SERVER
 	// move to same position in new world, or save position in both worlds?
 	if(client->gameWorld != newWorld) {
 		if(changeOrigin == COPYORIGIN) {
@@ -2370,13 +2375,16 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 		}
 		// not possible, but if it was, copy delta from new world
 		// if(changeOrigin == MOVEORIGIN) {
-	} else {
+	} else 
+#endif
+  {
 		if(changeOrigin == MOVEORIGIN) {
 			memcpy(oldDelta, ps->delta_angles, sizeof(int[3]));
 			// TODO: move in the direction of the view
 		}
 	}
 
+#ifdef USE_MULTIVM_SERVER
 	if(client->gameWorld != newWorld) {
 		gvmi = newWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
@@ -2433,6 +2441,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 			}
 		}
 	}
+#endif
 
 	//SV_UpdateConfigstrings( client );
 	ent = SV_GentityNum( clientNum );
@@ -2463,7 +2472,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 	//memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));
 
 	// Move Teleporter Res entity to follow player anywhere
-	for(i = 0; i < sv.num_entitiesWorlds[gvmi]; i++) {
+	for(i = 0; i < sv.num_entities; i++) {
 		ent = SV_GentityNum(i);
 		if(ent->s.clientNum == clientNum 
 			&& i != clientNum
@@ -2497,9 +2506,11 @@ void SV_Tele_f( client_t *client ) {
 	  || userOrigin[2][0] != '\0') {
 
 		clientNum = client - svs.clients;
+#ifdef USE_MULTIVM_SERVER
 		gvmi = client->gameWorld;
 		CM_SwitchMap(gameWorlds[gvmi]);
 		SV_SetAASgvm(gvmi);
+#endif
 		ps = SV_GameClientNum( clientNum );
 
 		for(i = 0; i < 3; i++) {
@@ -2515,17 +2526,30 @@ void SV_Tele_f( client_t *client ) {
 				newOrigin[i] = ps->origin[i];
 			}
 		}
+#ifdef USE_MULTIVM_SERVER
 		SV_Teleport(client, client->gameWorld, MOVEORIGIN, &newOrigin);
+#else
+    SV_Teleport(client, 0, MOVEORIGIN, &newOrigin);
+#endif
 	} else {
 		// accept new position
+#ifdef USE_MULTIVM_SERVER
 		SV_Teleport(client, client->gameWorld, SPAWNORIGIN, &newOrigin);
+#else
+    SV_Teleport(client, 0, SPAWNORIGIN, &newOrigin);
+#endif
 	}	
 
+#ifdef USE_MULTIVM_SERVER
 	gvmi = 0;
 	CM_SwitchMap(gameWorlds[gvmi]);
 	SV_SetAASgvm(gvmi);
+#endif
 }
+#endif
 
+
+#ifdef USE_MULTIVM_SERVER
 void SV_Game_f( client_t *client ) {
 	int worldC, count = 0, i;
 	char *world, *userOrigin;
@@ -2600,9 +2624,11 @@ static const ucmd_t ucmds[] = {
 	{"donedl", SV_DoneDownload_f},
 	{"locations", SV_PrintLocations_f},
 
+#if defined(USE_MULTIVM_SERVER) || defined (USE_ENGINE_TELE)
+  {"tele", SV_Tele_f},
+#endif
 #ifdef USE_MULTIVM_SERVER
 	{"load", SV_LoadVM},
-	{"tele", SV_Tele_f},
 	{"game", SV_Game_f},
 #endif
 #ifdef USE_MV
