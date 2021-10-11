@@ -1159,7 +1159,7 @@ void ClientSpawn(gentity_t *ent) {
     client->ps.stats[STAT_WEAPONS] = (1 << WP_RAILGUN );
     // TODO: bots don't seem to like -1 as ammo amount, maybe this can be fixed
     //   during advanced grapple hook tutorial.
-    client->ps.ammo[WP_RAILGUN] = INFINITE;  
+    client->ps.ammo[WP_RAILGUN] = -1;  
   }
 #endif
 

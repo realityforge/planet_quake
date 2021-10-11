@@ -2491,9 +2491,11 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
 
 void SV_Tele_f( client_t *client ) {
 	int i, clientNum;
-	vec3_t newOrigin = {0.0, 0.0, 0.0};
+  float scale, speed;
+	vec3_t newOrigin = {0.0, 0.0, 0.0}, wishvel, forward, right, up;
 	char *userOrigin[3];
 	playerState_t	*ps;
+  qboolean anyRelative;
 
 	if(!client) return;
 
@@ -2513,19 +2515,54 @@ void SV_Tele_f( client_t *client ) {
 #endif
 		ps = SV_GameClientNum( clientNum );
 
-		for(i = 0; i < 3; i++) {
+    anyRelative = qfalse;
+    for(i = 0; i < 3; i++) {
 			if(userOrigin[i][0] != '\0') {
-				if(userOrigin[i][0] == '-') {
-					newOrigin[i] = ps->origin[i] - atoi(&userOrigin[i][1]);
-				} else if (userOrigin[i][0] == '+') {
-					newOrigin[i] = ps->origin[i] + atoi(&userOrigin[i][1]);
-				} else {
-					newOrigin[i] = atoi(userOrigin[i]);
-				}
-			} else {
-				newOrigin[i] = ps->origin[i];
-			}
-		}
+				if(userOrigin[i][0] == '-' || userOrigin[i][0] == '+') {
+          anyRelative = qtrue;
+        }
+      }
+    }
+    
+    if(anyRelative) {
+      for(i = 0; i < 3; i++) {
+  			if(userOrigin[i][0] != '\0') {
+  				if(userOrigin[i][0] == '-') {
+  					newOrigin[i] = -atoi(&userOrigin[i][1]);
+  				} else if (userOrigin[i][0] == '+') {
+  					newOrigin[i] = atoi(&userOrigin[i][1]);
+  				} else {
+  					newOrigin[i] = 0;
+  				}
+  			}
+      }
+
+      // move in the direction the player is facing
+      speed = VectorLength(newOrigin);
+      scale = speed / sqrt( newOrigin[0] * newOrigin[0]
+    		+ newOrigin[1] * newOrigin[1] 
+        + newOrigin[2] * newOrigin[2] );
+
+      AngleVectors (ps->viewangles, forward, right, up);
+
+      for ( i = 0 ; i < 3 ; i++ ) {
+    		wishvel[i] = forward[i]*newOrigin[0] + right[i]*newOrigin[1];
+    	}
+      wishvel[2] += newOrigin[2];
+      
+      speed = VectorNormalize(wishvel) * scale;
+      VectorMA( ps->origin, speed, wishvel, newOrigin );
+    } else {
+      for(i = 0; i < 3; i++) {
+  			if(userOrigin[i][0] != '\0') {
+          newOrigin[i] = atoi(userOrigin[i]);
+        } else {
+          newOrigin[i] = ps->origin[i];
+        }
+      }
+    }
+
+
 #ifdef USE_MULTIVM_SERVER
 		SV_Teleport(client, client->gameWorld, MOVEORIGIN, &newOrigin);
 #else
