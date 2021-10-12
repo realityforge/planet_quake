@@ -583,6 +583,10 @@ rescan:
 	}
 #endif
 
+  if ( !strcmp( cmd, "postgame" ) ) {
+    Com_Printf("postgame hit!\n");
+  }
+
 #ifdef USE_LOCAL_DED
 	if ( !strcmp( cmd, "postgame" ) ) {
 		cls.postgame = qtrue;

@@ -2046,13 +2046,13 @@ int AAS_RandomGoalArea(int areanum, int travelflags, int *goalareanum, vec3_t go
 				trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
 				if (!trace.startsolid && trace.fraction < 1 && AAS_PointAreaNum(trace.endpos) == n)
 				{
-					if (AAS_AreaGroundFaceArea(n) > 300)
-					{
+					//if (AAS_AreaGroundFaceArea(n) > 300)
+					//{
 						*goalareanum = n;
 						VectorCopy(trace.endpos, goalorigin);
 						//botimport.Print(PRT_MESSAGE, "found random goal area %d\n", *goalareanum);
 						return qtrue;
-					} //end if
+					//} //end if
 				} //end if
 			} //end if
 		} //end if

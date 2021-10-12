@@ -2466,7 +2466,7 @@ void SV_Teleport( client_t *client, int newWorld, origin_enum_t changeOrigin, ve
     SV_SetClientViewAngle(clientNum, ((playerState_t*)ps)->viewangles);
 	}
 
-	// restore player stats
+	// TODO: restore player stats
 	//memcpy(&ps->stats, &oldps.stats, sizeof(ps->stats));
 	//memcpy(&ps->ammo, &oldps.ammo, sizeof(ps->ammo));
 	//memcpy(&ps->persistant, &oldps.persistant, sizeof(ps->persistant));

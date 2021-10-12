@@ -1140,13 +1140,14 @@ void ClientSpawn(gentity_t *ent) {
 #endif
 
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
+  client->ps.ammo[WP_GAUNTLET] = -1;
+
 #ifdef USE_GRAPPLE
   if(g_enableGrapple.integer) {
     client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
-    client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+    client->ps.ammo[WP_GRAPPLING_HOOK] = INFINITE;
   }
 #endif
-	client->ps.ammo[WP_GAUNTLET] = -1;
 
 #ifdef USE_FLAME_THROWER
   //Spawn player with flame thrower
@@ -1159,7 +1160,7 @@ void ClientSpawn(gentity_t *ent) {
     client->ps.stats[STAT_WEAPONS] = (1 << WP_RAILGUN );
     // TODO: bots don't seem to like -1 as ammo amount, maybe this can be fixed
     //   during advanced grapple hook tutorial.
-    client->ps.ammo[WP_RAILGUN] = -1;  
+    client->ps.ammo[WP_RAILGUN] = INFINITE;  
   }
 #endif
 

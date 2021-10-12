@@ -189,6 +189,14 @@ levelitem_t *levelitemsWorlds[MAX_NUM_VMS];
 #define levelitems levelitemsWorlds[aasgvm]
 int numlevelitemsWorlds[MAX_NUM_VMS];
 #define numlevelitems numlevelitemsWorlds[aasgvm]
+levelitem_t *spawnheapWorlds[MAX_NUM_VMS];
+#define spawnheap spawnheapWorlds[aasgvm]
+levelitem_t *freespawnsWorlds[MAX_NUM_VMS];
+#define freespawns freespawnsWorlds[aasgvm]
+levelitem_t *spawnsWorlds[MAX_NUM_VMS];
+#define aispawns spawnsWorlds[aasgvm]
+int numspawnsWorlds[MAX_NUM_VMS];
+#define numspawns numspawnsWorlds[aasgvm]
 maplocation_t *maplocationsWorlds[MAX_NUM_VMS];
 #define maplocations maplocationsWorlds[aasgvm]
 campspot_t *campspotsWorlds[MAX_NUM_VMS];
@@ -206,6 +214,11 @@ levelitem_t *levelitemheap = NULL;
 levelitem_t *freelevelitems = NULL;
 levelitem_t *levelitems = NULL;
 int numlevelitems = 0;
+//spawn locations, same as level items, gives bots something extra to chase
+levelitem_t *spawnheap = NULL;
+levelitem_t *freespawns = NULL;
+levelitem_t *aispawns = NULL;
+int numspawns = 0;
 //map locations
 maplocation_t *maplocations = NULL;
 //camp spots
@@ -414,6 +427,23 @@ void InitLevelItemHeap(void)
 	//
 	freelevelitems = levelitemheap;
 } //end of the function InitLevelItemHeap
+void InitSpawnHeap(void)
+{
+	int i, max_spawns;
+
+	if (spawnheap) FreeMemory(spawnheap);
+
+	max_spawns = (int) LibVarValue("max_spawns", "128");
+	spawnheap = (levelitem_t *) GetClearedMemory(max_spawns * sizeof(levelitem_t));
+
+	for (i = 0; i < max_spawns-1; i++)
+	{
+		spawnheap[i].next = &spawnheap[i + 1];
+	} //end for
+	spawnheap[max_spawns-1].next = NULL;
+	//
+	freespawns = spawnheap;
+}
 //===========================================================================
 //
 // Parameter:				-
@@ -435,6 +465,21 @@ levelitem_t *AllocLevelItem(void)
 	Com_Memset(li, 0, sizeof(levelitem_t));
 	return li;
 } //end of the function AllocLevelItem
+levelitem_t *AllocSpawn(void)
+{
+	levelitem_t *li;
+
+	li = freespawns;
+	if (!li)
+	{
+		botimport.Print(PRT_FATAL, "out of level items\n");
+		return NULL;
+	} //end if
+	//
+	freespawns = freespawns->next;
+	Com_Memset(li, 0, sizeof(levelitem_t));
+	return li;
+}
 //===========================================================================
 //
 // Parameter:				-
@@ -446,6 +491,11 @@ void FreeLevelItem(levelitem_t *li)
 	li->next = freelevelitems;
 	freelevelitems = li;
 } //end of the function FreeLevelItem
+void FreeSpawn(levelitem_t *li)
+{
+	li->next = freespawns;
+	freespawns = li;
+}
 //===========================================================================
 //
 // Parameter:				-
@@ -459,6 +509,13 @@ void AddLevelItemToList(levelitem_t *li)
 	li->next = levelitems;
 	levelitems = li;
 } //end of the function AddLevelItemToList
+void AddSpawnToList(levelitem_t *li)
+{
+	if (aispawns) aispawns->prev = li;
+	li->prev = NULL;
+	li->next = aispawns;
+	aispawns = li;
+}
 //===========================================================================
 //
 // Parameter:				-
@@ -471,6 +528,12 @@ void RemoveLevelItemFromList(levelitem_t *li)
 	else levelitems = li->next;
 	if (li->next) li->next->prev = li->prev;
 } //end of the function RemoveLevelItemFromList
+void RemoveSpawnFromList(levelitem_t *li)
+{
+	if (li->prev) li->prev->next = li->next;
+	else aispawns = li->next;
+	if (li->next) li->next->prev = li->prev;
+}
 //===========================================================================
 //
 // Parameter:			-
@@ -558,6 +621,113 @@ void BotInitInfoEntities(void)
 	} //end if
 } //end of the function BotInitInfoEntities
 //===========================================================================
+void BotInitSpawns(void)
+{
+	int spawnflags, value;
+	char classname[MAX_EPAIRKEY];
+	vec3_t origin, end;
+	int ent, goalareanum;
+	itemconfig_t *ic;
+	levelitem_t *li;
+	bsp_trace_t trace;
+
+	//initialize the level item heap
+	InitSpawnHeap();
+	aispawns = NULL;
+	numspawns = 0;
+	//
+	ic = itemconfig;
+	if (!ic) return;
+
+	//if there's no AAS file loaded
+	if (!AAS_Loaded()) return;
+
+	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
+	{
+		if (!AAS_ValueForBSPEpairKey(ent, "classname", classname, MAX_EPAIRKEY)) continue;
+    if(strcmp(classname, "info_player_deathmatch")) continue;
+		//
+		spawnflags = 0;
+		AAS_IntForBSPEpairKey(ent, "spawnflags", &spawnflags);
+		//get the origin of the item
+		if (!AAS_VectorForBSPEpairKey(ent, "origin", origin))
+		{
+			botimport.Print(PRT_ERROR, "item %s without origin\n", classname);
+			continue;
+		} //end else
+		//
+		goalareanum = 0;
+		//if the item is not floating in water
+		if (!(AAS_PointContents(origin) & CONTENTS_WATER))
+		{
+			VectorCopy(origin, end);
+			end[2] -= 32;
+			trace = AAS_Trace(origin, 0, 0, end, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
+			//if the item not near the ground
+			if (trace.fraction >= 1)
+			{
+				//if the item is not reachable from a jumppad
+				goalareanum = AAS_BestReachableFromJumpPadArea(origin, 0, 0);
+				Log_Write("item %s reachable from jumppad area %d\r\n", classname, goalareanum);
+				if (!goalareanum) continue;
+			} //end if
+		} //end if
+
+		li = AllocSpawn();
+		if (!li) return;
+    //origin of the item
+		VectorCopy(origin, li->origin);
+		//
+		if (goalareanum)
+		{
+			li->goalareanum = goalareanum;
+			VectorCopy(origin, li->goalorigin);
+		} //end if
+		else
+		{
+			//get the item goal area and goal origin
+			li->goalareanum = AAS_BestReachableArea(origin, (vec3_t){-15,-15,-15}, (vec3_t){15,15,15}, li->goalorigin);
+			if (!li->goalareanum)
+			{
+				botimport.Print(PRT_MESSAGE, "%s not reachable for bots at (%1.1f %1.1f %1.1f)\n",
+												classname, origin[0], origin[1], origin[2]);
+			} //end if
+		} //end else
+		//
+    if(!li->goalareanum)
+      return;
+		//
+		li->number = ++numspawns;
+		li->timeout = 0;
+		li->entitynum = 0;
+		//
+		li->flags = 0;
+		AAS_IntForBSPEpairKey(ent, "notfree", &value);
+		if (value) li->flags |= IFL_NOTFREE;
+		AAS_IntForBSPEpairKey(ent, "notteam", &value);
+		if (value) li->flags |= IFL_NOTTEAM;
+		AAS_IntForBSPEpairKey(ent, "notsingle", &value);
+		if (value) li->flags |= IFL_NOTSINGLE;
+		AAS_IntForBSPEpairKey(ent, "notbot", &value);
+		if (value) li->flags |= IFL_NOTBOT;
+		if (!strcmp(classname, "item_botroam"))
+		{
+			li->flags |= IFL_ROAM;
+			AAS_FloatForBSPEpairKey(ent, "weight", &li->weight);
+		} //end if
+		//if not a stationary item
+		if (!(spawnflags & 1))
+		{
+			if (!AAS_DropToFloor(origin, 0, 0))
+			{
+				botimport.Print(PRT_MESSAGE, "%s in solid at (%1.1f %1.1f %1.1f)\n",
+												classname, origin[0], origin[1], origin[2]);
+			} //end if
+		} //end if
+		AddSpawnToList(li);
+	} //end for
+	botimport.Print(PRT_MESSAGE, "found %d spawns\n", numspawns);
+}
 //
 // Parameter:			-
 // Returns:				-
@@ -697,7 +867,9 @@ void BotInitLevelItems(void)
 		AddLevelItemToList(li);
 	} //end for
 	botimport.Print(PRT_MESSAGE, "found %d level items\n", numlevelitems);
+  BotInitSpawns();
 } //end of the function BotInitLevelItems
+
 //===========================================================================
 //
 // Parameter:				-
@@ -1417,7 +1589,46 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 	//if no goal item found
 	if (!bestitem)
 	{
-		/*
+    int spawnpoint = random() * numspawns;
+    int passSpawns = 0;
+    // use random spawn points as goals
+    for (li = aispawns; li; li = li->next)
+  	{
+      if(passSpawns < spawnpoint) {
+        passSpawns++;
+        continue;
+      }
+      
+      //if the item is not in a possible goal area
+  		if (!li->goalareanum)
+  			continue;
+      
+      // TODO: need this?
+      //if (!li->entitynum && !(li->flags & IFL_ROAM))
+  		//	continue;
+
+      //get the travel time towards the goal area
+			t = AAS_AreaTravelTimeToGoalArea(areanum, origin, li->goalareanum, travelflags);
+			//if the goal is reachable
+			if (t > 0)
+			{
+        VectorCopy(li->goalorigin, goal.origin);
+        VectorSet(goal.mins, -15, -15, -15);
+				VectorSet(goal.maxs, 15, 15, 15);
+        goal.areanum = li->goalareanum;
+				goal.entitynum = 0;
+				goal.number = 0;
+				goal.flags = GFL_ROAM;
+				goal.iteminfo = 0;
+				//push the goal on the stack
+				BotPushGoal(goalstate, &goal);
+#ifdef DEBUG
+			  botimport.Print(PRT_MESSAGE, "chosen spawn %d - %i\n", goal.areanum, spawnpoint);
+#endif //DEBUG
+				return qtrue;
+      }
+    }
+/*
 		//if not in lava or slime
 		if (!AAS_AreaLava(areanum) && !AAS_AreaSlime(areanum))
 		{
@@ -1433,12 +1644,12 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 				BotPushGoal(goalstate, &goal);
 				//
 #ifdef DEBUG
-				botimport.Print(PRT_MESSAGE, "chosen roam goal area %d\n", goal.areanum);
+			  botimport.Print(PRT_MESSAGE, "chosen roam goal area %d\n", goal.areanum);
 #endif //DEBUG
 				return qtrue;
 			} //end if
 		} //end if
-		*/
+*/
 		return qfalse;
 	} //end if
 	//create a bot goal for this item

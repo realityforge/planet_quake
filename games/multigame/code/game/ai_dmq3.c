@@ -2223,8 +2223,8 @@ BotAggression
 float BotAggression(bot_state_t *bs) {
 #ifdef USE_INSTAGIB
   //if the enemy is located way higher than the bot
-  if (bs->inventory[ENEMY_HEIGHT] > 200) return 0;
-  return 100;
+  if (bs->inventory[ENEMY_HEIGHT] > 200) return 15;
+  return 95;
 #else
 	//if the bot has quad
 	if (bs->inventory[INVENTORY_QUAD]) {
@@ -4216,6 +4216,10 @@ int BotGetActivateGoal(bot_state_t *bs, int entitynum, bot_activategoal_t *activ
 		BotAI_Print(PRT_ERROR, "BotGetActivateGoal: entity with model %s has no classname\n", model);
 		return 0;
 	}
+  // if it is a spawn point
+  if(!(strcmp(classname, "info_player_deathmatch"))) {
+    Com_Printf("spawn point\n");
+  }
 	//if it is a door
 	if (!strcmp(classname, "func_door")) {
 		if (trap_AAS_FloatForBSPEpairKey(ent, "health", &health)) {

@@ -5192,7 +5192,7 @@ void CL_Init( void ) {
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_autoNudge, "0", "1", CV_FLOAT );
-	cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_TEMP );
+  cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_timeNudge, "-30", "30", CV_INTEGER );
 
 	cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );

@@ -1049,9 +1049,9 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 
 #ifdef USE_INSTAGIB
   if(g_instagib.integer && item->giType != IT_TEAM) {
-		//Ahh what does this do then
+		// don't send items to clients
 		ent->r.svFlags = SVF_NOCLIENT;
-		//setting this flag makes the item invisible.
+		// don't draw items on client
 		ent->s.eFlags |= EF_NODRAW;
 	} else
 #endif
