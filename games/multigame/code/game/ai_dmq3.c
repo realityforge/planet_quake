@@ -63,7 +63,8 @@ vmCvar_t bot_nochat;
 vmCvar_t bot_testrchat;
 vmCvar_t bot_challenge;
 vmCvar_t bot_predictobstacles;
-vmCvar_t g_spSkill;
+vmCvar_t bot_spSkill;
+vmCvar_t bot_instagib;
 
 extern vmCvar_t bot_developer;
 
@@ -1576,10 +1577,11 @@ void BotChooseWeapon(bot_state_t *bs) {
 	}
 	else {
 #ifdef USE_INSTAGIB
-		newweaponnum = WP_RAILGUN;
-#else
-    newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
+    if(bot_instagib.integer)
+		  newweaponnum = WP_RAILGUN;
+    else
 #endif
+    newweaponnum = trap_BotChooseBestFightWeapon(bs->ws, bs->inventory);
 		if (bs->weaponnum != newweaponnum) bs->weaponchange_time = FloatTime();
 		bs->weaponnum = newweaponnum;
 		//BotAI_Print(PRT_MESSAGE, "bs->weaponnum = %d\n", bs->weaponnum);
@@ -1681,7 +1683,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					//BotAI_BotInitialChat(bs, "wantoffence", NULL);
 					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
-				else if (g_spSkill.integer <= 3) {
+				else if (bot_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_GETFLAG &&
 						 bs->ltgtype != LTG_ATTACKENEMYBASE &&
 						 bs->ltgtype != LTG_HARVEST ) {
@@ -1712,7 +1714,7 @@ void BotCheckItemPickup(bot_state_t *bs, int *oldinventory) {
 					//BotAI_BotInitialChat(bs, "wantdefence", NULL);
 					//trap_BotEnterChat(bs->cs, leader, CHAT_TELL);
 				}
-				else if (g_spSkill.integer <= 3) {
+				else if (bot_spSkill.integer <= 3) {
 					if ( bs->ltgtype != LTG_DEFENDKEYAREA ) {
 						//
 						if ((gametype != GT_CTF || (bs->redflagstatus == 0 && bs->blueflagstatus == 0)) &&
@@ -2222,10 +2224,12 @@ BotAggression
 */
 float BotAggression(bot_state_t *bs) {
 #ifdef USE_INSTAGIB
-  //if the enemy is located way higher than the bot
-  if (bs->inventory[ENEMY_HEIGHT] > 200) return 15;
-  return 95;
-#else
+  if(bot_instagib.integer) {
+    //if the enemy is located way higher than the bot
+    if (bs->inventory[ENEMY_HEIGHT] > 200) return 0;
+    return 95;
+  }
+#endif
 	//if the bot has quad
 	if (bs->inventory[INVENTORY_QUAD]) {
 		//if the bot is not holding the gauntlet or the enemy is really nearby
@@ -2266,7 +2270,6 @@ float BotAggression(bot_state_t *bs) {
 			bs->inventory[INVENTORY_SHELLS] > 10) return 50;
 	//otherwise the bot is not feeling too good
 	return 0;
-#endif
 }
 
 /*
@@ -5440,7 +5443,8 @@ void BotSetupDeathmatchAI(void) {
 	trap_Cvar_Register(&bot_testrchat, "bot_testrchat", "0", 0);
 	trap_Cvar_Register(&bot_challenge, "bot_challenge", "0", 0);
 	trap_Cvar_Register(&bot_predictobstacles, "bot_predictobstacles", "1", 0);
-	trap_Cvar_Register(&g_spSkill, "g_spSkill", "2", 0);
+	trap_Cvar_Register(&bot_spSkill, "g_spSkill", "2", 0);
+  trap_Cvar_Register(&bot_instagib, "g_instagib", "0", 0);
 	//
 	if (gametype == GT_CTF) {
 		if (trap_BotGetLevelItemGoal(-1, "Red Flag", &ctf_redflag) < 0)

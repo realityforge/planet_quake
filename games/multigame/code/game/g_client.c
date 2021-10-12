@@ -1145,7 +1145,7 @@ void ClientSpawn(gentity_t *ent) {
 #ifdef USE_GRAPPLE
   if(g_enableGrapple.integer) {
     client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
-    client->ps.ammo[WP_GRAPPLING_HOOK] = INFINITE;
+    client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
   }
 #endif
 

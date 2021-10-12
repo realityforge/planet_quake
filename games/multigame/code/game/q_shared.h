@@ -242,6 +242,7 @@ typedef int		clipHandle_t;
 #define FS_INVALID_HANDLE 0
 #endif
 
+#define INFINITE			0x7FFF
 #define	MAX_QINT			0x7fffffff
 #define	MIN_QINT			(-MAX_QINT-1)
 

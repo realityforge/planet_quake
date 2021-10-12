@@ -302,7 +302,7 @@ static int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 
 #ifdef USE_GRAPPLE
 	if (ent->item->giTag == WP_GRAPPLING_HOOK)
-		other->client->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
+		other->client->ps.ammo[ent->item->giTag] = INFINITE; // unlimited ammo
 #endif
 
 	// team deathmatch has slow weapon respawns
@@ -1053,6 +1053,7 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 		ent->r.svFlags = SVF_NOCLIENT;
 		// don't draw items on client
 		ent->s.eFlags |= EF_NODRAW;
+    ent->tag = TAG_DONTSPAWN;
 	} else
 #endif
   {

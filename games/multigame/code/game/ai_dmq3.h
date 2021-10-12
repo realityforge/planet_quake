@@ -167,6 +167,7 @@ void BotMapScripts(bot_state_t *bs);
 extern int gametype;		//game type
 extern char mapname[ MAX_QPATH ];
 
+extern vmCvar_t bot_instagib;
 extern vmCvar_t bot_grapple;
 extern vmCvar_t bot_rocketjump;
 extern vmCvar_t bot_fastchat;

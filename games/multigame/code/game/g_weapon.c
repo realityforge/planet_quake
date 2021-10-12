@@ -1074,7 +1074,7 @@ void ThrowWeapon( gentity_t *ent ) {
 
 	xr_item = BG_FindItemForWeapon( client->ps.weapon );
 
-	amount= client->ps.ammo[ client->ps.weapon ]; // XRAY save amount
+	amount = client->ps.ammo[ client->ps.weapon ]; // XRAY save amount
 	client->ps.ammo[ client->ps.weapon ] = 0;
 
 	client->ps.stats[STAT_WEAPONS] &= ~( 1 << client->ps.weapon );

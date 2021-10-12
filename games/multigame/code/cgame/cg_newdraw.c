@@ -236,7 +236,7 @@ static void CG_DrawPlayerAmmoValue(rectDef_t *rect, float scale, vec4_t color, q
 
 	if ( cent->currentState.weapon ) {
 		value = ps->ammo[cent->currentState.weapon];
-		if ( value > -1 ) {
+		if ( value > -1 && value != INFINITE ) {
 			if (shader) {
 		    trap_R_SetColor( color );
 				CG_DrawPic(rect->x, rect->y, rect->w, rect->h, shader);
