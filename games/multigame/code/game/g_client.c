@@ -1157,11 +1157,20 @@ void ClientSpawn(gentity_t *ent) {
 
 #ifdef USE_INSTAGIB
   if(g_instagib.integer) {
-    client->ps.stats[STAT_WEAPONS] = (1 << WP_RAILGUN );
-    // TODO: bots don't seem to like -1 as ammo amount, maybe this can be fixed
+    client->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN );
+    // bots don't seem to like -1 as ammo amount, maybe this can be fixed
     //   during advanced grapple hook tutorial.
     client->ps.ammo[WP_RAILGUN] = INFINITE;  
   }
+#endif
+
+#ifdef USE_TRINITY
+if(g_unholyTrinity.integer) {
+  client->ps.stats[STAT_WEAPONS] = ( 1 << WP_RAILGUN ) | ( 1 << WP_LIGHTNING ) | ( 1 << WP_ROCKET_LAUNCHER );
+  client->ps.ammo[WP_RAILGUN] = INFINITE;  
+  client->ps.ammo[WP_LIGHTNING] = INFINITE;  
+  client->ps.ammo[WP_ROCKET_LAUNCHER] = INFINITE;  
+}
 #endif
 
 	// health will count down towards max_health

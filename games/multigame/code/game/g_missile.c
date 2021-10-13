@@ -580,11 +580,13 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->parent = self;
 #ifdef USE_WEAPON_VARS
 	bolt->damage = wp_plasmaDamage.integer;
+  bolt->splashDamage = wp_plasmaSplash.integer;
+	bolt->splashRadius = wp_plasmaRadius.integer;
 #else
   bolt->damage = 20;
-#endif
-	bolt->splashDamage = 15;
+  bolt->splashDamage = 15;
 	bolt->splashRadius = 20;
+#endif
 	bolt->methodOfDeath = MOD_PLASMA;
 	bolt->splashMethodOfDeath = MOD_PLASMA_SPLASH;
 	bolt->clipmask = MASK_SHOT;
@@ -801,9 +803,15 @@ gentity_t *fire_grenade2 (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.eFlags = EF_BOUNCE_HALF;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 100;
-	bolt->splashDamage = 100;
-	bolt->splashRadius = 150;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_grenadeDamage.integer;
+  bolt->splashDamage = wp_grenadeSplash.integer;
+  bolt->splashRadius = wp_grenadeRadius.integer;
+#else
+  bolt->damage = GRENADE_DAMAGE;
+  bolt->splashDamage = GRENADE_DAMAGE;
+  bolt->splashRadius = GRENADE_RADIUS;
+#endif
 	bolt->methodOfDeath = MOD_GRENADE;
 	bolt->splashMethodOfDeath = MOD_GRENADE_SPLASH;
 	bolt->clipmask = MASK_SHOT;
@@ -863,11 +871,13 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->parent = self;
 #ifdef USE_WEAPON_VARS
   bolt->damage = wp_grenadeDamage.integer;
+  bolt->splashDamage = wp_grenadeSplash.integer;
+  bolt->splashRadius = wp_grenadeRadius.integer;
 #else
   bolt->damage = GRENADE_DAMAGE;
-#endif
   bolt->splashDamage = GRENADE_DAMAGE;
   bolt->splashRadius = GRENADE_RADIUS;
+#endif
 	bolt->methodOfDeath = MOD_GRENADE;
 	bolt->splashMethodOfDeath = MOD_GRENADE_SPLASH;
 	bolt->clipmask = MASK_SHOT;
@@ -916,11 +926,13 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->parent = self;
 #ifdef USE_WEAPON_VARS
   bolt->damage = wp_bfgDamage.integer;
+  bolt->splashDamage = wp_bfgSplash.integer;
+	bolt->splashRadius = wp_bfgRadius.integer;
 #else
 	bolt->damage = 100;
-#endif
-	bolt->splashDamage = 100;
+  bolt->splashDamage = 100;
 	bolt->splashRadius = 120;
+#endif
 	bolt->methodOfDeath = MOD_BFG;
 	bolt->splashMethodOfDeath = MOD_BFG_SPLASH;
 	bolt->clipmask = MASK_SHOT;
@@ -1038,23 +1050,28 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt = G_Spawn();
 	bolt->classname = "rocket";
 #ifdef USE_BOUNCE_RPG
-  if (self->flags & FL_ROCKETBOUNCE || g_bounceRockets.integer)
+  if (self->flags & FL_ROCKETBOUNCE || wp_rocketBounce.integer)
     bolt->nextthink = level.time + 2500;
   else
 #endif
 #ifdef USE_HOMING_MISSILE
-  bolt->nextthink = level.time + 20;	// CCH
-  bolt->think = rocket_think;		// CCH
-#else
-	bolt->nextthink = level.time + 15000;
-	bolt->think = G_ExplodeMissile;
+  if(wp_rocketHoming.integer)
+    bolt->nextthink = level.time + 20;	// CCH
+  else
 #endif
+  bolt->nextthink = level.time + 15000;
+#ifdef USE_HOMING_MISSILE
+  if(wp_rocketHoming.integer) {
+    bolt->think = rocket_think;		// CCH
+  } else
+#endif
+  bolt->think = G_ExplodeMissile;
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_ROCKET_LAUNCHER;
 #ifdef USE_VULN_RPG
   // Lancer
-  if(g_vulnRockets.integer) {
+  if(wp_rocketVuln.integer) {
     bolt->health = 5;
     bolt->takedamage = qtrue;
     bolt->die = G_MissileDie;
@@ -1064,18 +1081,20 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
     VectorSet(bolt->r.maxs, 10, 3, 6);
     VectorCopy(bolt->r.maxs, bolt->r.absmax);
   }
-  if (self->flags & FL_ROCKETBOUNCE || g_bounceRockets.integer)
+  if (self->flags & FL_ROCKETBOUNCE || wp_rocketBounce.integer)
   	bolt->s.eFlags = EF_BOUNCE;
 #endif
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
 #ifdef USE_WEAPON_VARS
   bolt->damage = wp_rocketDamage.integer;
+  bolt->splashDamage = wp_rocketSplash.integer;
+	bolt->splashRadius = wp_rocketRadius.integer;
 #else
 	bolt->damage = 100;
-#endif
-	bolt->splashDamage = 100;
+  bolt->splashDamage = 100;
 	bolt->splashRadius = 120;
+#endif
 	bolt->methodOfDeath = MOD_ROCKET;
 	bolt->splashMethodOfDeath = MOD_ROCKET_SPLASH;
 	bolt->clipmask = MASK_SHOT;
@@ -1090,22 +1109,26 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.otherEntityNum = self->s.number;
 
 #ifdef USE_ACCEL_RPG
-  bolt->s.pos.trType = TR_ACCEL;
-	bolt->s.pos.trDuration = 500;
-#else
-	bolt->s.pos.trType = TR_LINEAR;
+  if(wp_rocketAccel.integer) {
+    bolt->s.pos.trType = TR_ACCEL;
+  	bolt->s.pos.trDuration = 500;
+  } else
 #endif
+	bolt->s.pos.trType = TR_LINEAR;
 	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;		// move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	SnapVector( bolt->s.pos.trBase );			// save net bandwidth
 #ifdef USE_HOMING_MISSILE
-  VectorScale( dir, ROCKET_SPEED, bolt->s.pos.trDelta );	// CCH
-#else
-	VectorScale( dir, 900, bolt->s.pos.trDelta );
+  if(wp_rocketHoming.integer)
+    VectorScale( dir, ROCKET_SPEED, bolt->s.pos.trDelta );	// CCH
+  else
 #endif
 #ifdef USE_ACCEL_RPG
-  VectorScale( dir, 50, bolt->s.pos.trDelta );
+  if(wp_rocketAccel.integer)
+    VectorScale( dir, 50, bolt->s.pos.trDelta );
+  else
 #endif
+	VectorScale( dir, 900, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, bolt->r.currentOrigin);
 
@@ -1240,9 +1263,15 @@ gentity_t *fire_prox( gentity_t *self, vec3_t start, vec3_t dir ) {
 	bolt->s.eFlags = 0;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 0;
-	bolt->splashDamage = 100;
-	bolt->splashRadius = 150;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_proxDamage.integer;
+  bolt->splashDamage = wp_proxSplash.integer;
+  bolt->splashRadius = wp_proxRadius.integer;
+#else
+  bolt->damage = 0;
+  bolt->splashDamage = 100;
+  bolt->splashRadius = 150;
+#endif
 	bolt->methodOfDeath = MOD_PROXIMITY_MINE;
 	bolt->splashMethodOfDeath = MOD_PROXIMITY_MINE;
 	bolt->clipmask = MASK_SHOT;

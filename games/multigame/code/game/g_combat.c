@@ -94,6 +94,10 @@ void TossClientItems( gentity_t *self ) {
     // don't drop anything in instagib mode
     && !g_instagib.integer
 #endif
+#ifdef USE_TRINITY
+    // don't drop anything in instagib mode
+    && !g_unholyTrinity.integer
+#endif
 #ifdef USE_FLAME_THROWER
     && weapon != WP_FLAME_THROWER
 #endif
@@ -1161,6 +1165,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// calculated after knockback, so rocket jumping works
 	if ( targ == attacker) {
 		damage *= 0.5;
+#ifdef USE_TRINITY
+    if(g_unholyTrinity.integer) {
+      damage = 0;
+    }
+#endif
 	}
 
 	if ( damage < 1 ) {

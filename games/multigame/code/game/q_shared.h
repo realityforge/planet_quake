@@ -192,6 +192,8 @@
 #define USE_HOMING_MISSILE 1
 // spreadfire weapon and powerup mod, sends lots of fire everywhere
 #define USE_WEAPON_SPREAD 1
+// unholy trinity mode, start with rocket, rails, lightning
+#define USE_TRINITY 1
 // instagib mode
 #define USE_INSTAGIB 1
 // enable the grappling hook

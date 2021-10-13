@@ -204,7 +204,7 @@ static void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 		G_DoTimeShiftFor( ent );
 
 #ifdef USE_VULN_RPG
-    if(g_vulnRockets.integer) {
+    if(wp_rocketVuln.integer) {
       trap_Trace( &tr, muzzle_origin, NULL, NULL, end, ENTITYNUM_NONE, MASK_SHOT );
       // double check we aren't hitting ourselves on the first pass
       if(IsSelf(tr, ent)) {
@@ -579,7 +579,7 @@ void weapon_railgun_fire( gentity_t *ent ) {
   i = 0;
 	do {
 #ifdef USE_VULN_RPG
-    if(g_vulnRockets.integer) {
+    if(wp_rocketVuln.integer) {
       passent = ENTITYNUM_NONE;
     }
 #endif
@@ -829,7 +829,7 @@ void Weapon_LightningFire( gentity_t *ent ) {
 		G_DoTimeShiftFor( ent );
 
 #ifdef USE_VULN_RPG
-    if(g_vulnRockets.integer) {
+    if(wp_rocketVuln.integer) {
       trap_Trace( &tr, muzzle_origin, NULL, NULL, end, ENTITYNUM_NONE, MASK_SHOT );
       // double check we aren't hitting ourselves on the first pass
       if(IsSelf(tr, ent)) {

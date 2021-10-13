@@ -864,19 +864,37 @@ extern	vmCvar_t	g_jumpVelocity;
 extern vmCvar_t  wp_gauntDamage;
 extern vmCvar_t  wp_lightDamage;
 extern vmCvar_t  wp_shotgunDamage;
+
 extern vmCvar_t  wp_machineDamage;
 extern vmCvar_t  wp_machineDamageTeam;
+
 extern vmCvar_t  wp_grenadeDamage;
+extern vmCvar_t  wp_grenadeSplash;
+extern vmCvar_t  wp_grenadeRadius;
+
 extern vmCvar_t  wp_rocketDamage;
+extern vmCvar_t  wp_rocketSplash;
+extern vmCvar_t  wp_rocketRadius;
+
 extern vmCvar_t  wp_plasmaDamage;
+extern vmCvar_t  wp_plasmaSplash;
+extern vmCvar_t  wp_plasmaRadius;
+
 extern vmCvar_t  wp_railDamage;
+
 extern vmCvar_t  wp_bfgDamage;
+extern vmCvar_t  wp_bfgSplash;
+extern vmCvar_t  wp_bfgRadius;
 #ifdef USE_GRAPPLE
 extern vmCvar_t  wp_grappleDamage;
 #endif
 #ifdef MISSIONPACK
 extern vmCvar_t  wp_nailDamage;
+
 extern vmCvar_t  wp_proxDamage;
+extern vmCvar_t  wp_proxSplash;
+extern vmCvar_t  wp_proxRadius;
+
 extern vmCvar_t  wp_chainDamage;
 #endif
 #ifdef USE_FLAME_THROWER
@@ -896,17 +914,23 @@ extern  vmCvar_t  g_thawTime;
 #ifdef USE_INVULN_RAILS
 extern  vmCvar_t  g_railThruWalls;
 #endif
+#ifdef USE_HOMING_MISSILE
+extern  vmCvar_t  wp_rocketHoming;
+#endif
 #ifdef USE_BOUNCE_RPG
-extern  vmCvar_t  g_bounceRockets;
+extern  vmCvar_t  wp_rocketBounce;
+#endif
+#ifdef USE_VULN_RPG
+extern  vmCvar_t  wp_rocketVuln;
+#endif
+#ifdef USE_ACCEL_RPG
+extern  vmCvar_t  wp_rocketAccel;
 #endif
 #ifdef USE_CLOAK_CMD
 extern  vmCvar_t  g_enableCloak;
 #endif
 #ifdef USE_VORTEX_GRENADES
 extern  vmCvar_t  g_vortexGrenades;
-#endif
-#ifdef USE_VULN_RPG
-extern  vmCvar_t  g_vulnRockets;
 #endif
 #ifdef USE_WEAPON_DROP
 extern  vmCvar_t  g_dropWeapon;
@@ -924,6 +948,9 @@ extern  vmCvar_t  g_enableBoots;
 #endif
 #ifdef USE_LASER_SIGHT
 extern  vmCvar_t  g_enableLaser;
+#endif
+#ifdef USE_TRINITY
+extern  vmCvar_t  g_unholyTrinity;
 #endif
 #ifdef USE_INSTAGIB
 extern  vmCvar_t  g_instagib;

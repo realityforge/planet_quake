@@ -509,6 +509,11 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
   qboolean alreadyHad = qfalse;
 #endif
 
+#ifdef USE_TRINITY
+	//SCO if ent-item is some sort of team item.
+	if (g_unholyTrinity.integer && ent->item->giType != IT_TEAM)
+		return;
+#endif
 #ifdef USE_INSTAGIB
 	//SCO if ent-item is some sort of team item.
 	if (g_instagib.integer && ent->item->giType != IT_TEAM)
@@ -974,6 +979,13 @@ void ClearRegisteredItems( void ) {
   //register that rail gun
 	  RegisterItem( BG_FindItemForWeapon( WP_RAILGUN ) );
 #endif
+#ifdef USE_TRINITY
+  if(g_unholyTrinity.integer) {
+	  RegisterItem( BG_FindItemForWeapon( WP_RAILGUN ) );
+    RegisterItem( BG_FindItemForWeapon( WP_LIGHTNING ) );
+    RegisterItem( BG_FindItemForWeapon( WP_ROCKET_LAUNCHER ) );
+  }
+#endif
 }
 
 /*
@@ -1047,6 +1059,13 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 	G_SpawnFloat( "random", "0", &ent->random );
 	G_SpawnFloat( "wait", "0", &ent->wait );
 
+#ifdef USE_TRINITY
+  if(g_unholyTrinity.integer && item->giType != IT_TEAM) {
+		ent->r.svFlags = SVF_NOCLIENT;
+		ent->s.eFlags |= EF_NODRAW;
+    ent->tag = TAG_DONTSPAWN;
+	} else
+#endif
 #ifdef USE_INSTAGIB
   if(g_instagib.integer && item->giType != IT_TEAM) {
 		// don't send items to clients
