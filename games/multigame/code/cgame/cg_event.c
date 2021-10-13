@@ -930,8 +930,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 				trap_S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
+      if(	item->giType == IT_POWERUP ) {
+        cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
+  		  cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
+      }
+
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
+        if(item->giTag == PW_HASTE) {
+          cg.predictedPlayerState.speed *= 1.3f;
+        }
 #ifdef USE_WEAPON_ORDER
 				CG_ItemPickup( index, qfalse );
 #else

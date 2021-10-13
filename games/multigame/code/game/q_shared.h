@@ -222,6 +222,8 @@
 #define USE_VULN_RPG 1
 // enable rails that go through walls
 #define USE_INVULN_RAILS 1
+// runes enable little popup powerups in random places on the map, over 60 different effects
+#define USE_RUNES 1
 // 
 
 #endif

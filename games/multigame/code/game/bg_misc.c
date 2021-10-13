@@ -635,25 +635,6 @@ Only in CTF games
 /* sounds */ ""
 	},
 
-#ifdef USE_WEAPON_SPREAD
-//Hal9000 spreadfire powerup
-/*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-  {
-  	"item_spread", 
-  	"sound/items/spread.wav",
-  	{ 	"models/powerups/threeway/threeway.md3", 
-  		0, 0, 0 },
-  /* icon */	"icons/spread",  
-  /* pickup */	"Spreadfire",
-  		30,
-  		IT_POWERUP,
-  		PW_SPREAD,
-  /* precache */ "",
-  /* sounds */ ""
-  },
-#endif
-
 #ifdef MISSIONPACK
 /*QUAKED holdable_kamikaze (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -949,6 +930,42 @@ Only in One Flag CTF games
   /* precache */ "",
   /* sounds */ ""
   },
+#endif
+
+#ifdef USE_WEAPON_SPREAD
+//Hal9000 spreadfire powerup
+/*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+  {
+  	"item_spread", 
+  	"sound/items/spread.wav",
+    {"models/powerups/instant/sight.md3", 0, 0, 0 },
+  /* icon */	"icons/spread",  
+  /* pickup */	"Spreadfire",
+  		30,
+  		IT_POWERUP,
+  		PW_SPREAD,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+#endif
+
+#ifdef USE_RUNES
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_strength", 
+  	"sound/items/spread.wav",
+  	{"models/runes/magic.md3", 0, 0, 0 },
+  /* icon */	"icons/strength",  
+  /* pickup */	"Strength",
+  		30,
+  		IT_POWERUP,
+  		RUNE_STRENGTH,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
 #endif
 
 	// end of list marker

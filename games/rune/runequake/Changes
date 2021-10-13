@@ -1,0 +1,801 @@
+
+Version 1.4  Mon Sep 08 17:24:21 EST 2014
+
+    - Bug Fixes
+
+        - I stopped using the saved[3,4] cvars for game mode and options because they don't get reset
+          each time they're used like levels and console commands.
+
+        - Fixed a potential crash with the houngan rune.
+
+        - Provided a workaround for a bug that prevented you from respawning while holding the phoenix rune.
+          Thanks to Mr. Happy (qw) and Cobalt (poq) for reporting the bug.
+
+        - Fixed the trace damage of the lightning gun so that it starts at the gun and not at the waist.
+
+        - Drop hook during intermission fix for Cobalt.
+
+        - Logic fix for 'setafk' console command.
+
+        - BFG warm-up during intermission fix from Cobalt.
+
+    - Changes
+
+        - I halved the weight of a 'no' vote so that it now takes 2 'no' votes to cancel a 'yes' vote.
+
+        - Pet zombies can no longer be frozen.
+
+        - Prevent a shambler or zombie from burning, freezing, etc., when its owner drops the rune
+          or leaves the server.
+
+        - Removed the temp1 bit setting to prevent vote-hook. Use votehookon/votehookoff instead
+          from the console or startlevel.cfg.
+
+        - You can no longer change hook type with temp1 bit setting. Instead, use hookon, lithhookon,
+          or hookoff from the console or in startlevel.cfg.
+
+        - Added gib to head in head hunters mode when head has timed out. Also randomized
+          its timeout at the altar.
+
+        - Added a new vote option: vote-powerup-hats.
+
+        - Prevent voting for shootable buttons on levels without them.
+
+        - Replaced reflective rockets with guided missile.  [requires manquake]
+
+        - Prevent exiting level until round is over and next opponent selected in rocket arena mode.
+
+Version 1.3.79  Tue May 07 15:15:08 EST 2013
+
+    - Rune Quake Source Code
+
+        - Rune Quake source code is now on github: https://github.com/slotzero/runequake
+
+    - ManQuake Source Code
+
+        - ManQuake Dedicated Server, a modified version of ProQuake that I use for my server, is now available
+          on github: https://github.com/slotzero/manquake
+
+    - Changes
+
+        - The show-riders command tells you the status number of the ridee whichs helps
+          detect imposters.
+
+        - All admin actions are logged to console.
+
+        - Allow queued observers to vote in arena mode.
+
+        - Implemnted engine side banning. [requires manquake]
+
+Version 1.3.72  Tue Feb 08 04:18:16 EST 2011
+
+    - Bug Fixes
+
+        - Fixed some rune oddities in modes where runes generally aren't used.
+
+        - Tweaked the vampire rune to prevent excessive frag build-ups.
+
+        - Noticable specifically on DM5, when you jump up to the pent you would get stuck if you
+          tried to jump up too close to the opening in the wall.  [FIXED]
+
+        - Fixed depreacted usage of the tail command in Makefile.
+
+    - Changes
+
+        - Added 'setafk' as console command using 'skill' to set minutes.
+
+        - Added 'maxrunes' to the list of console commands. Works just like setafk except the value
+          is between 1-63. The temp1 bits are still the same and work in conjunction with this.
+
+        - If you explicitly deny custom or standard maps you will not be allowed to vote
+          for them without using the NOEXIT_VOTE_ALL_MAPS.
+
+        - Added new command vote-shoot-buttons to toggle shootable buttons.
+
+        - Map names length changed from 8 to 12.
+
+        - You can now vote for options while in the queue in match mode, except during a match.
+
+Version 1.3.61  Sun May 03 00:46:44 EST 2009
+
+    - Bug Fixes
+
+        - When riding a player who disconnects during intermission and you are
+          in fast/high track mode, you lose your ridee. [FIXED]
+
+        - Joining the game as observer while in lava or slime would cause damage
+          when you joined the game. [FIXED]
+
+        - The custom maps code sends the aliases for small, medium, and large at
+          different intervals to prevent both client crashing and console
+          overflow. This now increases the total number of maps to 197 for normal
+          Quake/ProQuake servers, and 297 for my modified engine.
+
+        - Prevented vote-team in match mode.
+
+        - WEAPON_CHARGED_OFFSET in settings.qc wasn't referenced to anything but
+          works now. Use VEC_ORIGIN ('0 0 0') for no weapons up.]
+
+        - Fixed a rare bug with weirdness rune and shamblers that caused
+          the server to crash.
+
+        - All teams are removed when match is aborted in match mode.
+
+        - Mode switch voting wasn't working properly in Quakeworld.
+
+        - Vote commands now work in Dark Places.
+
+    - Changes
+
+        - Added head hunters mode (vote-heads).  This mode is based off of the mod
+          Head Hunters.  It's still in the development stage because I need more
+          people to play it and give me feedback.
+
+        - Type help-"deathmatch, teamplay, noexit, temp1, or scratch1" in the server
+          console to get a list of the various options available and whether they're on or off.
+
+        - Typing "commands" in the server console displays every available server command.
+
+        - Mod officially supports in-game banning without any server-side modifications.
+
+        - Improved the tornado rune trajectory.
+
+        - Added the command 'never' to always vote no. Use the command again
+          to toggle this feature when a vote is not in progress.
+
+        - Recently played levels require a greater vote percentage.
+
+        - Players are prevented from voting too ofen.
+
+     	- Added new player commands: vote-rune-drop, vote-lg-discharge,
+          vote-classic-mega, vote-random-spawn.
+
+        - Added new server commands: mode, modelock, modeunlock.
+
+Version 1.3  Tue Jan 01 00:56:52 EST 2008
+
+    - Bug Fixes
+
+        - A shambler seeking retribution is no longer invincible while its owner has
+          spawn shield.
+
+        - The /O2 command line option is no longer required to compile.
+
+        - The gas grenade wasn't hurting your opponent when the gas and the
+          player were in the same room.
+
+        - Added extra spawn spots for rocket arena maps with only one spawn.
+
+    - Changes
+
+        - Match will timeout with more than 2 players in rocket arena or
+          midair mode.
+
+        - The mod no longer adjusts your field of view (FOV).
+
+        - Added new commands: faststart, help-options, killstats, lock, midair, stats,
+          unlock, vote-backpacks, vote-midair, vote-powerup-drop.
+
+        - Added a new mode called midair.  The physics of the game are exactly like
+          the original, however, instead of having a timed match where only two players
+          fight, the mode switches opponents after each death, just like rocket arena.
+
+        - Server aim is disabled regardless of what sv_aim is set at.
+
+        - You can no longer bind the default keys via the menu; use bind-keys or
+          bind-default-keys instead.
+
+        - The letters AFK are appended to your name in +showscores and GLQuake HUD
+          when you are idle for more than 5 minutes.
+
+        - Let players who disconnect during a match rejoin the game by pressing 2
+          or typing 'ready'.
+
+Version 1.2  Sun Jul 02 17:15:27 EST 2006
+
+    - Bug Fixes
+
+        - The haste rune had no effect on lavagun.  The flames now shoot straight
+          instead of fall to ground when yielding the haste rune.
+
+        - If you killed a player who activated divine wind during the last 0.5 seconds
+          of the countdown, he wouldn't explode.
+
+        - The cloak rune's sonar feature was detecting environmental protection
+          suit/rune holders.
+
+        - If you tried to fire a rocket and toss a fire trap at the same time,
+          your rocket would explode when it made contact with the flame projectile.
+
+        - Picking up armor with requiem rune didn't extinguish you if you were on fire.
+
+        - Spawn shields are now protected from gravity wells.
+
+    - Changes
+
+        - Added new commands: vote-armor-drop, help-match,
+
+        - Level restarts itself after 6 hours.
+
+        - Added autostats command to dump the output of the efficiency command every time
+          the level is over.
+
+        - Added pq_smoothcam support for proquake and compatible clients.
+
+        - ProQuake users scoreboard pings are now updated every second instead of every
+          five seconds.
+
+        - Added CRMod style match mode.  Related commands: help-match, vote-match, ready,
+          notready, observer, and timeset.
+
+        - Athlete rune holder now runs 10% faster than everyone else.
+
+Version 1.1  Mon Jul 25 08:51:26 EST 2005
+
+    - Bug Fixes
+
+        - The anti-pack rune wasn't switching to your best weapon when your current
+          weapon was an alternate weapon and had been removed.
+
+        - The switch rune bug which causes your head to permanently tilt has been fixed.
+
+        - I finally tracked down the bug that would cause players to stick together when
+          one of them was caught in ice/glue.
+
+        - Fixed vote-team yet again in Quakeworld.
+
+        - A hooking monk is now vulnerable to attacks as if he was walking.
+
+        - When I added a wider BFG Zap radius to Thor and Electric rune, I made a
+          a typo which prevented zapping under normal circumstances.  This is fixed.
+
+        - In Quakeworld, when the level changes and team mode is on, you are no longer
+          killed for switching teams.
+
+        - When a player disconnects during intermission, the player entity now gets
+          reset properly.
+
+        - Vampire no longer rots twice as fast when picked up after rotting health.
+
+        - Potentially hazardous bug fixed with the hunk allocation code.
+
+        - All of the hunk specific commands (ex: last, level-time), now check to make sure
+          HUNK_CONTEXT_MAX exists before proceeding.  This prevents massive dprint() messages
+          from appearing before it is set.
+
+        - Dropped clients no longer leave quad/pent hat behind.
+
+        - Practice mode wasn't displaying your attacker's health when killed.
+
+        - A major bug that originated in id's code was fixed pertaining to the lightning
+          gun.  The bug allowed multiple shafts, which where invisible, to be present
+          on the level.
+
+        - Ice traps/blizzard no longer make jumping noises when frozen.
+
+        - Level voting no longer returns invalid impulse when enter key is bound.
+
+        - Using rcon <map> while infokey_maps is set will no longer crash the server.
+
+        - The cvars skill and crosshair are no longer used to store information about the
+          server's new console commands.  These commands were conflicting with valid commands
+          only used when the server is run in listen mode.
+
+    - Changes
+
+        - If a player is lagged out, you'll see a broadcast message indication
+          such.
+
+        - The server console can now check player pings using 'sping'.
+
+        - There's a new rocket arena mode (vote-arena).  The mode is compatible with arena
+          maps but they are not required to play.
+
+        - Damage and hook now activate buttons.
+
+        - The team scores are now visible in the engine HUD when the server is in team
+          mode.  This is a proquake feature, so you'll need to use proquake or compatible
+          engine to see this.
+
+        - There is a new team releated command called +teamscores.  You use this command
+          as you would +showscores and it will display the team colors and the total
+          fraglimit.
+
+        - The following runes were made team friendly; glue, blizzard, anti-pack, and
+          tornado.  The anti-pack and tornado particle color will be replaced with the
+          owner's team color.
+
+        - Team mode now ends when the total frags of the team reaches the fraglimit and
+          not when the first person to hit the fraglimit does.
+
+        - Pets no longer trip your teammates traps.
+
+        - The +sattack-best command will fire LG under water when holding thor rune.
+
+        - Sonar rune has merged with cloaking.
+
+        - A fire walker can walk in low levels of lava without damage.
+
+        - You can't activate rune when caught in glue.
+
+        - Shootphobia (weirdness rune) prevents hook usage.
+
+        - You can only get caught in one ice trap or glue spot at a time.
+
+        - The remove-frags command will remove negative frags in you are an observer.
+
+        - Shamblers and zombies feel the effects of weirdness.
+
+        - The mortar (alt-7) has been replaced with reflecting rockets.
+
+        - The vote system had a complete overhaul and created dozens of new player and
+          server commands.  See files Playing and Configuring for more details.
+
+        - CRMod style intermisson_pos when level change is done by admin or by server
+          console.
+
+        - Punchangle is no longer used in weapons attacks eliminating weapon jitter.
+
+        - Genuine QSmack clients don't receive entity updates from the engine.
+
+        - Quakeworld particles for death spots are now smaller (normal).
+
+        - Added requiem rune.
+
+        - Telefrag deflect limit removed.
+
+        - The tornado and betty runes are now ammo dependent instead of having a preset limit.
+
+Version 1.0  Fri Apr 30 23:19:17 EST 2004
+
+    - Bug Fixes
+
+        - The switch rune no longer switches your keys.
+
+        - The blizzard and ice trap code was adding an extra 0.5 second firing delay after
+          the release of a frozen victim.
+
+        - The vote-hook command doesn't reset the hook when update_cvars() is called (QW).
+
+        - Shamblers no longer attack you while they are frozen.
+
+	- The ascii character for the right pointing arrow was not being displayed in some QW
+          servers.
+
+    - Changes
+
+        - Type 'level-time' in the server console to see how much time has elapsed
+          on the level.
+
+        - Added the option to rotate armors.   You can turn this option on by adding the
+          bit DM_ROTATING_ARMORS to the deathmatch cvar.  You can control the length of
+          the rotation as well as the order in settings.qc.
+
+        - Players wear a quad and/or pent hat if they pick up the corresponding power-up.
+
+        - The hook no longer attaches to the spawn shields.
+
+        - Admins can change to practice mode.
+
+        - The mode now supports the 'localinfo <mapname> <next_map>', for custom map rotation
+          in Quakeworld.  Type 'localinfo infokey_maps 1' in the server console to enable.
+
+        - The Thor rune can fire under water/slime/lava and has a wider BFG zap radius.
+
+        - The electric rune does half damage from the lightning gun.  The damage is actually
+          converted into cells.
+
+        - All of the exit walls, even in custom maps, are removed automatically when
+          the server is configured to do so.
+
+        - Sonar uses my interpretation of feet instead of the default unit of measure.  I
+          use the tiles in e1m2 (by quad) to judge what 1 foot is.
+
+        - Athletics rune carries an extra 25 health.  You also get a bonus of 25 health when
+          you pick up the rune.
+
+        - Admins can type exit-level in the middle of a vote to force the voted level instead
+          of a random one.
+
+        - Betty launches on death.
+
+        - Added a new option to prevent lingering on the ceiling with hook.  See settings.qc.
+
+        - Weakened the magic shotgun, it is still slightly higher damage w/ direct shot
+          than shotgun.
+
+        - I added "(menu off)" on the main menu to make it easier for new players.
+
+        - Increased the default hook speed from 1000 to 2500 in settings.qc.
+
+        - There are two new weapons: Magic Shotgun (ALT-2) and the Gas Grenades (ALT-6).
+
+        - There are 9 new runes: anti-pack, telefrag deflect, bouncin' betty, tornado,
+          super blue stuff, blizzard, thor, sniper, and sonar.
+
+        - All votes expire instead of cycling a message every two minutes.  The life
+          expectancy of a vote is between 30 - 45 seconds.
+
+        - To vote for a specific level, type its name in the console.  To acknowledge a vote
+          you can type the voted level name or 'vote-exit'.  For a list of standard levels,
+          type 'levels'.  For custom maps, type 'custom'.
+
+        - The mod now supports custom levels!  To view what levels are available on the server,
+          type 'custom' in the console.
+
+        - All of the levels that have exits teleport you to either a fixed location or a random
+          location throughout the level.  The levels start, e1m1, e1m7, and e2m6 have fixed
+          locations.
+
+        - Many of the client commands (show-settings, show-players, etc.) work from the server
+          console.
+
+        - You can set the admin passcode in Quakeworld by using localinfo gamecfg <passcode> (QW).
+
+        - The mod detects if a proquake client (or client based on the proquake source) has connected
+          to the server.  Only admins will see this message.  This is by no means an accurate way
+          to determine a legit client.  I was just curious to see how many people are using proquake.
+
+        - Typing 'last' in the console will report the last 10 players to disconnect and the length
+          of time they've been disconnected.  The log size can be controlled in settings.qc.
+
+        - I've reversed the default cycle-alternates toggle from off to on.
+
+Version 0.9  Wed Jul 16 23:06:07 EST 2003
+
+    - Bug Fixes
+
+        - Gold key no longer appears when you join the game if it was visible in
+          free look observer.
+
+    - CVAR Changes
+
+        - teamplay
+
+            - TEAM_SELF_HEALTH_PROT and TEAM_SELF_ARMOR_PROT no longer require their
+	      respective TEAM_HEALTH_PROT/TEAM_ARMOR_PROT bit settings to be set in
+	      order for them to work.
+
+        - scratch1
+
+            - You can limit the maximum number of traps (per rune) that a player
+              can leave on a level by adding the S1_MAX_TRAPS_FOR_LEVEL bit.
+
+            - If you're just looking for a taste of runes, add S1_BASIC_RUNES
+              to scratch1 and only the four basic runes will be permitted.  These
+              are; strength, regeneration, resistance, and haste.
+
+    - Notable Internal Changes
+
+        - Repulsion and gravity well no longer use sys_ticrate as their nextthink.  This
+          eliminates the need to change SUCK_FORCE/PUSH_FORCE with every tick change.
+
+        - I switched RN_HEALTH with RN_STRENGTH to accomodate the S1_BASIC_RUNES
+          mode.
+
+Version 0.8.2  Fri Apr 25 00:44:32 EST 2003
+
+    - CVAR Changes
+
+        - scratch1
+
+            - You can limit the maximum number of traps (per rune) that a player
+              can leave on a level by adding the S1_MAX_TRAPS_FOR_LEVEL bit.
+
+            - If you're just looking for a taste of runes, add S1_BASIC_RUNES
+              to scratch1 and only the four basic runes will be permitted.  These
+              are; strength, regeneration, resistance, and haste.
+
+    - Notable Internal Changes
+
+        - I switched RN_HEALTH with RN_STRENGTH to accomodate the S1_BASIC_RUNES
+          mode.
+
+    - Team Changes
+
+        - Death traps are team distinguisable.
+
+        - Ice traps are team distinguishable
+
+        - Prevent shirt color from being changed when enforced teams
+
+Version 0.8  Sun Apr 13 20:54:23 EST 2003
+
+    Support for Quakeworld is back!  Version 0.7.5 is the only release that
+    doesn't contain the merged sources for Quake and Quakeworld.
+
+    - Bug Fixes
+
+        - Recall was reporting the wrong set value for riders
+
+    - Notable Internal Changes
+
+        - I made use of parm14 for another field, rqflags.
+
+    - Other Changes
+
+        - By default, alternate weapons no longer cycle with impulse 10
+          or impulse 12.  Use cycle-alternates to permit them.
+
+        - Set FORWARD_MAX_PLAYERS to less than zero and it will forward all
+          players and append [forward server] to the teamplay value.
+
+Version 0.7.5  Sun Mar 16 01:07:11 EST 2003  [POQ ONLY RELEASE]
+
+    - Bug Fixes
+
+        - You will recloak if you continue to fire the nail or lightning gun [fixed]
+
+    - Admin Changes
+
+        - The admin menu is a bit more organized in that commands that are related
+          have been grouped together in a sub-menu.
+
+    - CVAR Changes
+
+        - temp1
+
+            - I added T1_HOOK_MODE_DEFAULT_ON, which turns on the default
+              hook mode (in settings.qc).
+
+            - Use T1_HOOK_NO_VOTE to disable vote-hook on the server.
+
+    - Notable Internal Changes
+
+        - The mod will detect a QSmack client determined by the ProQuake engine.
+
+        - I've swapped out all non-standard ascii characters (fun names) to their
+          ascii character number. [qccx related]
+
+        - Many global strings have been initializaed instead of being declared
+          and then set. [qccx related]
+
+        - The mod now compiles with no warnings on any warning level when
+          using frikqcc 2.5.  I've also changed the Makefile so that it
+          won't ignore warnings by default.
+
+        - I'm made considerable progress with the internal.qc project but
+          I haven't had the chance to document it yet or its implementation
+          into the mod.
+
+    - Other Changes
+
+        - Feature request for PK:  Disable hook when a weapon is fired.  See
+          settings.qc (HOOK_CAMP_PROT).
+
+        - You can now vote-hook to change mode of hook to free or lithium
+          (this is determined in settings.qc (VOTE_HOOK_MODE) or turn it
+          off (hook is a rune).  You can also set the default hook mode
+          using VOTE_HOOK_MODE_DEFAULT.
+
+        - I've added a new option in settings.qc that can set the default teamplay
+          mode of the server when the server is empty (VOTE_TEAM_MODE_DEFAULT).
+
+Version 0.6  Mon Oct 14 13:46:02 EST 2002
+
+    The purpose of this release is to mark the seperation (and support) of
+    the Quakeworld version of this mod.  This version will be the last
+    version where the Quake and Quakeworld sources are merged.
+
+Version 0.5.3  Sat Sep 07 09:18:36 EST 2002
+
+    - Bug Fixes
+
+        - [QUAKEWORLD] "The electric rune would occasionally crash the server
+          when killing an opponent." [fixed]
+
+        - I added misc_touch() which checks players, monsters, and radioactive
+          containers for players on its surface.  This allows players to stand
+          on or jump instead of sliding with no ability to move.
+
+        - There are times when a zombie can't get up.  If this occurs for
+          longer than 30 seconds, I force zombie_die().
+
+        - "Fire traps can sometimes live under water, spray them into the
+          water from near the top of the lift by pentagram in e2m5 and
+          you'll occasionally get one which isn't extinguished." [fixed]
+
+        - If you die with the phoenix rune just before the level changes,
+          you no longer lose the rune.
+
+        - The infamous
+
+              > CALL0      637(???)
+              >             : Killed
+              >             : T_Damage
+              >             : tdeath_touch
+              > <NO FUNCTION>
+              > NULL function
+              > Host_Error: Program error
+
+	  bug has been squashed!  Killed() was calling self.th_die() which
+	  when is NULL, crashes the server.
+
+    - Level Changes
+
+        - I replaced the nail gun with a super nail gun on E3M2.  I also
+          added a red armor.
+
+    - CVAR Changes
+
+        - scratch1
+
+            - You can prevent the levels from having additional items added or
+              replaced.  This setting doesn't revert the changes that will
+              allow the map to crash.
+
+            - Some engines don't print the death messages (bprints) to the server
+              console (specifically with dedicated servers).  This option
+              will force these messages to the console.
+
+    - Notable Internal Changes
+
+        - I commented some code that will force a player to drop his armor
+          when armor of a greater type is picked up.  See armor_touch() for
+          more details.
+
+        - You can control the intensity of either the gravity well or
+          the repulsion rune from settings.qc.
+
+    - Other Changes
+
+        - The spawn shields no longer deactivate when picking up all items
+          except power-ups.  You're also prohibited from firing for 1-2 seconds
+          immediately after you respawn to prevent you from inadvertently
+          losing your shields.
+
+        - Flash grenades report "blindy by" messages to its victim.
+
+Version 0.5  Sat Jun 29 16:42:54 EST 2002
+
+    - Bug Fixes
+
+        - You can no longer cripple (healthy) doors by freezing them.
+
+	- Your radiation no longer heals you without the rune.
+
+	- You are protected from your own death spots when you have the
+	  self preservation rune.
+
+    - Rune Changes
+
+        - Environmental protection suit/rune protects against death spot
+	  explosions, fire trap explosions, and repulsion.
+
+    - Admin Changes
+
+        - The admin-forward command was removed.
+
+    - CVAR Changes
+
+        - deathmatch
+
+            - I added a new bit setting, DM_RANDOM_POWERUP_RESPAWN, which works
+              the same way as when it was in settings.qc.  The number of minutes
+              added is based on the value of SLOW_POWERUP_RESPAWN_TIME which is
+              located in settings.qc.
+
+        - gamecfg
+
+            - You can set/change/disable the admin passcode by using this
+              console variable.  The passcode has the same restrictions set
+              forth in settings.qc.  A value of zero will force the game to
+              use the passcode in settings.qc.  A negative value will disable
+              admin.
+
+        - scratch1
+
+            - I removed the ability to make the levels completely bright or
+              dark.  See example.cfg for the new bit settings.
+
+            - When S1_AMBIENT_SOUNDS_OFF is set, you will disable ambient
+              sounds from the client as well.  This is not yet reversible.
+
+    - Notable Internal Changes
+
+        - The mod will only compile with qccx and compatible compilers.
+
+        - I worked on some more warnings produced by the frikqcc compiler.
+
+        - I finally synchronized TICK with sys_ticrate.
+
+Version 0.2.8  Mon May 13 17:02:51 EST 2002
+
+    - Bug Fixes
+
+	Oops!  Some of the special characters (right pointing arrow, etc)
+	were changed by my incorrectly configured text editor.  [fixed]
+
+Version 0.2.7  Sun May 12 16:11:55 EST 2002
+
+    - Bug Fixes
+
+	- Dead bodies can no longer trigger buttons.
+
+	- > If you ride a player, enter admin, change level, and then
+	  > join the game, you join with the player your riding.  You can
+	  > see through his eyes, yet you're in the game.  The server
+	  > occasionally crashes too. [fixed]
+
+    	- > Bombs placed under a lift while the lift is down causes the
+	  > explosion to be felt on a good portion of the level. [fixed]
+
+    	- > When a frozen shambler has exhausted its health, Freeze_Frozen()
+	  > forces her origin back to the freeze trap. [fixed]
+
+        - The hook releases from either the target or attacker when the Recall,
+          Teleport, Phased, or Dual Recall rune is used or when attached to a
+	  cowardly Shambler.
+
+    - Rune Changes
+
+	- The EP suit/rune is protected against hooks.
+
+    - Other Changes
+
+    	- Dropped powerups, armor, and backpacks blink before they expire.
+
+Version 0.2.1  Tue Mar 12 21:33:50 EST 2002
+
+    - Bug Fixes
+
+        - Oops!  My recent changes to the environmental protection suit allowed
+	  players to regenerate their health.  Since Rune_Enviro() uses .runetime,
+	  this created problems for other rune types and would crash the server!
+	  For now, I've disabled this feature.
+
+Version 0.2  Tue Mar 05 15:44:01 EST 2002
+
+    - Bug Fixes
+
+        - Firing the lightning gun and super nail gun in safe water levels at
+          certain angles will result in your ammo going straight ahead instead of
+          following your player's angle.  This is fixed and should also correct the
+          berserker rune/shaft oddity which caused the shaft to bob up and down.
+
+    - Level Changes
+
+        - I increased the default intensity for the "normal" lightstyle().
+
+        - There are now two rocket launchers on E1M2; the original one has been
+          replaced with red armor.
+
+        - I added a grenade launcher and green armor to E2M4.
+
+    - Sound Changes
+
+        - I changed the sound heard when players first connect (shalrath/sight.wav).
+
+        - Players in queue that enter the game will hear a loud popping
+          sound (boss2/pop2.wav) to let them know they are in the game.
+
+    - CVAR Changes
+
+        - added scratch1 to control (see example.cfg)
+
+            - lightstyle() intensity for all lights
+            - turn off ambient_sound.
+            - remove static light models
+
+    - Notable Internal Changes
+
+        - I'm using frikqcc to compile the distributions so you'll see a
+          change in the Makefile.  You can download Frikqcc and a variety
+          of other compilers at,
+
+          ftp://ftp.runequake.com/quake/quakec/compilers/
+
+        - I cleaned up most of the code in misc.qc; any light related function
+          was moved to light.qc.
+
+        - All unused (by me) test functions were placed in a new file called
+          test.qc.
+
+    - Other Changes
+
+        - The environmental protection suit has all of the features that the
+          rune has.
+
+Version 0.1  Tue Jan 15 23:42:10 EST 2002
+
+    - Initial release.

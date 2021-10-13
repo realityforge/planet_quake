@@ -302,6 +302,82 @@ typedef enum {
   PW_SPREAD,  //Hal9000 spreadfire
 #endif
 
+#ifdef USE_RUNES
+  RUNE_STRENGTH,     // black
+  RUNE_REGEN,        // hell
+  RUNE_RESIST,       // elder
+  RUNE_HASTE,        // earth
+  
+  RUNE_ENVIRO,       // black
+  RUNE_FLIGHT,       // hell
+  RUNE_BERSERK,      // elder
+  RUNE_RECALL,       // earth
+  
+  RUNE_ELECTRIC,     // black
+  RUNE_CLOAK,        // hell
+  RUNE_DIVINE,       // elder
+  RUNE_DEATH,        // earth
+  
+  RUNE_HOLO,         // black
+  RUNE_ORB,          // hell
+  RUNE_BLINK,        // elder
+  RUNE_CAMO,         // earth
+  
+  RUNE_JUMP,         // black
+  RUNE_ACTION,       // hell
+  RUNE_VAMPIRE,      // elder
+  RUNE_SHIELD,       // earth
+  
+  RUNE_HEALTH,       // black
+  RUNE_RADIO,        // hell
+  RUNE_SWITCH,       // elder
+  RUNE_ICETRAP,      // earth
+  
+  RUNE_GRAVITY,      // black
+  RUNE_TELE,         // hell
+  RUNE_IMPACT,       // elder
+  RUNE_VENGEANCE,    // earth
+  
+  RUNE_SHUBHAT,      // black
+  RUNE_REPULSION,    // hell
+  RUNE_PHASING,      // elder
+  RUNE_SHAMBLER,     // earth
+  
+  RUNE_DUALRECALL,   // black
+  RUNE_WEIRDNESS,    // hell
+  RUNE_PHOENIX,      // elder
+  RUNE_SPIKECLOUD,   // earth
+  
+  RUNE_FIREWALK,     // black
+  RUNE_GRAPPLE,      // hell
+  RUNE_ATHLETIC,     // elder
+  RUNE_LUMBERJACK,   // earth
+  
+  RUNE_HOUNGAN,      // black
+  RUNE_PIERCING,     // hell
+  RUNE_PRESERVE,     // elder
+  RUNE_ZENMONK,      // earth
+  
+  RUNE_TORCH,        // black
+  RUNE_PACKRAT,      // hell
+  RUNE_ARMOR,        // elder
+  RUNE_QUAD,         // earth
+  
+  RUNE_JACK,         // black
+  RUNE_BLUEGOO,      // hell
+  RUNE_BLIZZARD,     // elder
+  RUNE_THOR,         // earth
+  
+  RUNE_SNIPER,       // black
+  RUNE_ANTIPACK,     // hell
+  RUNE_ANTITELE,     // elder
+  RUNE_CLUSTER,      // earth
+  
+  RUNE_TORNADO,      // black 
+  RUNE_REQUIEM,      // hell
+  RUNE_LITHIUM,      // elder
+#endif
+
 	PW_NUM_POWERUPS
 
 } powerup_t;

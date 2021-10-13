@@ -604,12 +604,14 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			gentity_t	*te;
 
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
+      te->s.time2 = (other->items[ITEM_PW_MIN + ent->item->giTag] - level.time) / 1000;
 			te->s.eventParm = ent->s.modelindex;
 			te->r.svFlags |= SVF_BROADCAST;
 		} else {
 			gentity_t	*te;
 
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
+      te->s.time2 = (other->items[ITEM_PW_MIN + ent->item->giTag] - level.time) / 1000;
 			te->s.eventParm = ent->s.modelindex;
 			// only send this temp entity to a single client
 			te->r.svFlags |= SVF_SINGLECLIENT;

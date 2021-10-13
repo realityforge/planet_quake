@@ -88,13 +88,13 @@ void G_ExplodeMissile( gentity_t *ent ) {
     //   that it must hit the floor, and when the grenade lands in a corner
     //   there is no where for it to bounce to and it wobbles around
     origin[2] += 4;
-  	VectorSet(dir, .5, .5, 1.0);
+  	VectorSet(dir, .5, .5, 2.0);
   	fire_grenade2(ent->parent, origin, dir);
-  	VectorSet(dir, -.5, .5, 1.0);
+  	VectorSet(dir, -.5, .5, 2.0);
   	fire_grenade2(ent->parent, origin, dir);
-  	VectorSet(dir, .5, -.5, 1.0);
+  	VectorSet(dir, .5, -.5, 2.0);
   	fire_grenade2(ent->parent, origin, dir);
-  	VectorSet(dir, -.5, -.5, 1.0);
+  	VectorSet(dir, -.5, -.5, 2.0);
   	fire_grenade2(ent->parent, origin, dir);
   }
 #endif

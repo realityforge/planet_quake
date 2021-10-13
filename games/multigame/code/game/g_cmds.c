@@ -1941,6 +1941,61 @@ static void Cmd_Stats_f( gentity_t *ent ) {
 }
 
 
+#ifdef USE_RUNES
+static void Cmd_Rune_f( gentity_t *ent ) {
+  char		buffer[MAX_TOKEN_CHARS];
+  vec3_t		dir, delta;
+  int i, r;
+  int v = random() * 4;
+  gentity_t	*e;
+  gitem_t *item;
+  float nearestDist = 100000;
+  float dist;
+  vec3_t nearest;
+
+  // select the item location nearest the player
+  for (i = 0; i < level.num_entities; i++) {
+    e = &g_entities[i];
+    if(!e->inuse || e->client || !e->item) {
+      continue;
+    }
+    VectorSubtract( e->s.origin, ent->s.pos.trBase, delta );
+    dist = VectorLength( delta );
+    if(dist < nearestDist && dist > 0) {
+      Com_Printf("nearest item: %i - %i\n", e->item->giType, e->item->giTag);
+      VectorCopy(e->s.origin, nearest);
+      nearestDist = dist;
+    }
+  }
+  if(nearestDist == 100000) {
+    Com_Printf("Error: couldn't find good spawn location\n");
+  } else {
+    Com_Printf("Launching rune: %f: %f, %f, %f\n", 
+      nearestDist, nearest[0], nearest[1], nearest[2]);
+  }
+  nearest[2] += 4;
+  if(v == 0)
+    VectorSet(dir, .5, .5, 2.0);
+  else if(v == 1)
+    VectorSet(dir, -.5, .5, 2.0);
+  else if(v == 2)
+    VectorSet(dir, .5, -.5, 2.0);
+  else
+    VectorSet(dir, -.5, -.5, 2.0);
+  VectorMA( nearest, 10, dir, nearest );
+  VectorNormalize( dir );
+
+  trap_Argv( 1, buffer, sizeof( buffer ) );
+	r = atof( buffer );
+  item = BG_FindItemForPowerup( r );
+
+  // pop the rune out of that location
+  RegisterItem( item );
+  LaunchItem( item, nearest, dir, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+}
+#endif
+
+
 /*
 =================
 ClientCommand
@@ -2075,6 +2130,10 @@ void ClientCommand( int clientNum ) {
 		Laser_Gen( ent, 1 );//1=Laser, 2=Flashlight
 	else if (Q_stricmp (cmd, "flashlight") == 0)
 		Laser_Gen( ent, 2 );
+#endif
+#ifdef USE_RUNES
+  else if (Q_stricmp (cmd, "rune") == 0)
+    Cmd_Rune_f( ent );
 #endif
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
