@@ -682,13 +682,7 @@ static void PM_GrappleMove( void ) {
 	if (vlen <= 100)
 		VectorScale(vel, 10 * vlen, vel);
 	else
-#ifdef CGAME
-    VectorScale(vel, cg_grappleSpeed.value, vel);
-#else
-#ifdef QAGAME
-    VectorScale(vel, g_grappleSpeed.value, vel);
-#endif
-#endif
+    VectorScale(vel, wp_grapplePull.value, vel);
 
 	VectorCopy(vel, pm->ps->velocity);
 
@@ -1742,7 +1736,8 @@ static void PM_Weapon( void ) {
     break;
 #endif
   }
-#else
+
+#else // USE_WEAPON_VARS
 	switch( pm->ps->weapon ) {
 	default:
 	case WP_GAUNTLET:

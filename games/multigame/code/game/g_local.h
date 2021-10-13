@@ -859,6 +859,34 @@ extern	vmCvar_t	g_proxMineTimeout;
 #ifdef USE_PHYSICS_VARS
 extern	vmCvar_t	g_jumpVelocity;
 #endif
+
+#ifdef USE_WEAPON_VARS
+extern vmCvar_t  wp_gauntDamage;
+extern vmCvar_t  wp_lightDamage;
+extern vmCvar_t  wp_shotgunDamage;
+extern vmCvar_t  wp_machineDamage;
+extern vmCvar_t  wp_machineDamageTeam;
+extern vmCvar_t  wp_grenadeDamage;
+extern vmCvar_t  wp_rocketDamage;
+extern vmCvar_t  wp_plasmaDamage;
+extern vmCvar_t  wp_railDamage;
+extern vmCvar_t  wp_bfgDamage;
+#ifdef USE_GRAPPLE
+extern vmCvar_t  wp_grappleDamage;
+#endif
+#ifdef MISSIONPACK
+extern vmCvar_t  wp_nailDamage;
+extern vmCvar_t  wp_proxDamage;
+extern vmCvar_t  wp_chainDamage;
+#endif
+#ifdef USE_FLAME_THROWER
+extern vmCvar_t  wp_flameDamage;
+extern vmCvar_t  wp_flameSplash;
+extern vmCvar_t  wp_flameRadius;
+#endif
+#endif
+
+
 #ifdef USE_TEAM_VARS
 extern	vmCvar_t	g_flagReturn;
 #endif
@@ -884,8 +912,9 @@ extern  vmCvar_t  g_vulnRockets;
 extern  vmCvar_t  g_dropWeapon;
 #endif
 #ifdef USE_GRAPPLE
-extern  vmCvar_t  g_enableGrapple;
-extern  vmCvar_t  g_grappleSpeed;
+extern  vmCvar_t  wp_grappleEnable;
+extern  vmCvar_t  wp_grapplePull;
+extern  vmCvar_t  wp_grappleSpeed;
 #endif
 #ifdef USE_LOCAL_DMG
 extern  vmCvar_t  g_locDamage;

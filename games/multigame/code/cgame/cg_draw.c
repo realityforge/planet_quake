@@ -2350,11 +2350,6 @@ static void CG_DrawAmmoWarning( void ) {
 		return;
 	}
   
-#ifdef USE_GRAPPLE
-  if(cg_enableGrapple.integer && cg.weaponSelect == WP_GRAPPLING_HOOK)
-    return;
-#endif
-
 	if ( !cg.lowAmmoWarning ) {
 		return;
 	}

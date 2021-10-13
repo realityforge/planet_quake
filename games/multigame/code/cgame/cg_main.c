@@ -249,8 +249,8 @@ vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
 #endif
 #ifdef USE_GRAPPLE
-vmCvar_t  cg_enableGrapple;
-vmCvar_t  cg_grappleSpeed;
+vmCvar_t  cgwp_grappleEnable;
+vmCvar_t  cgwp_grapplePull;
 #endif
 #ifdef USE_WEAPON_CENTER
 vmCvar_t  cg_gunCenter;
@@ -386,8 +386,8 @@ static const cvarTable_t cvarTable[] = {
   { &cg_gunCenter, "cg_gunCenter", "1", CVAR_ARCHIVE },
 #endif
 #ifdef USE_GRAPPLE
-  { &cg_enableGrapple, "g_enableGrapple", "1", CVAR_SERVERINFO },
-  { &cg_grappleSpeed,  "g_grappleSpeed", "700", CVAR_SERVERINFO },
+  { &cgwp_grappleEnable, "wp_grappleEnable", "1", CVAR_SERVERINFO },
+  { &cgwp_grapplePull,  "wp_grapplePull", "700", CVAR_SERVERINFO },
 #endif
 #ifdef USE_WEAPON_VARS
   { &cgwp_gauntCycle, "wp_gauntCycle", "400", CVAR_SERVERINFO },

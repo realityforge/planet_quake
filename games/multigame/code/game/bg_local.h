@@ -62,7 +62,7 @@ extern	int		c_pmove;
 #endif
 
 #ifdef USE_GRAPPLE
-#define g_grappleSpeed cg_grappleSpeed
+#define wp_grapplePull cgwp_grapplePull
 #endif
 #endif
 
@@ -109,7 +109,7 @@ extern vmCvar_t  g_wallWalk;
 #endif
 
 #ifdef USE_GRAPPLE
-extern vmCvar_t  g_grappleSpeed;
+extern vmCvar_t  wp_grapplePull;
 #endif
 
 void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce );

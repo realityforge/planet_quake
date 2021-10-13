@@ -960,7 +960,7 @@ void ClearRegisteredItems( void ) {
   RegisterItem( BG_FindItemForWeapon( WP_FLAME_THROWER) );
 #endif
 #ifdef USE_GRAPPLE
-  if(g_enableGrapple.integer)
+  if(wp_grappleEnable.integer)
     RegisterItem( BG_FindItemForWeapon( WP_GRAPPLING_HOOK ) );
 #endif
 #ifdef MISSIONPACK

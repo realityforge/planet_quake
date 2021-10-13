@@ -78,8 +78,9 @@ vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
 #ifdef USE_GRAPPLE
-vmCvar_t  g_enableGrapple;
-vmCvar_t  g_grappleSpeed;
+vmCvar_t  wp_grappleEnable;
+vmCvar_t  wp_grapplePull;
+vmCvar_t  wp_grappleSpeed;
 #endif
 #ifdef USE_PHYSICS_VARS
 vmCvar_t  g_jumpVelocity;
@@ -97,16 +98,34 @@ vmCvar_t  wp_rocketCycle;
 vmCvar_t  wp_plasmaCycle;
 vmCvar_t  wp_railCycle;
 vmCvar_t  wp_bfgCycle;
+
+vmCvar_t  wp_gauntDamage;
+vmCvar_t  wp_lightDamage;
+vmCvar_t  wp_shotgunDamage;
+vmCvar_t  wp_machineDamage;
+vmCvar_t  wp_machineDamageTeam;
+vmCvar_t  wp_grenadeDamage;
+vmCvar_t  wp_rocketDamage;
+vmCvar_t  wp_plasmaDamage;
+vmCvar_t  wp_railDamage;
+vmCvar_t  wp_bfgDamage;
 #ifdef USE_GRAPPLE
 vmCvar_t  wp_grappleCycle;
+vmCvar_t  wp_grappleDamage;
 #endif
 #ifdef MISSIONPACK
 vmCvar_t  wp_nailCycle;
 vmCvar_t  wp_proxCycle;
 vmCvar_t  wp_chainCycle;
+vmCvar_t  wp_nailDamage;
+vmCvar_t  wp_proxDamage;
+vmCvar_t  wp_chainDamage;
 #endif
 #ifdef USE_FLAME_THROWER
 vmCvar_t  wp_flameCycle;
+vmCvar_t  wp_flameDamage;
+vmCvar_t  wp_flameSplash;
+vmCvar_t  wp_flameRadius;
 #endif
 #endif // USE_WEAPON_VARS
 
@@ -248,16 +267,36 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_plasmaCycle, "wp_plasmaCycle", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_railCycle, "wp_railCycle", "1500", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_bfgCycle, "wp_bfgCycle", "200", CVAR_ARCHIVE | CVAR_SERVERINFO },
+
+  { &wp_gauntDamage, "wp_gauntDamage", "50", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_lightDamage, "wp_lightDamage", "8", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_shotgunDamage, "wp_shotgunDamage", "10", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_machineDamage, "wp_machineDamage", "7", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_machineDamageTeam, "wp_machineDamage", "5", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_grenadeDamage, "wp_grenadeDamage", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_rocketDamage, "wp_rocketDamage", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_plasmaDamage, "wp_plasmaDamage", "20", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_railDamage, "wp_railDamage", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_bfgDamage, "wp_bfgDamage", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
 #ifdef USE_GRAPPLE
   { &wp_grappleCycle, "wp_grappleCycle", "400", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_grappleDamage, "wp_grappleDamage", "300", CVAR_ARCHIVE | CVAR_SERVERINFO },
 #endif
 #ifdef MISSIONPACK
   { &wp_nailCycle, "wp_nailCycle", "1000", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_proxCycle, "wp_proxCycle", "800", CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_chainCycle, "wp_chainCycle", "30", CVAR_ARCHIVE | CVAR_SERVERINFO },
+
+  { &wp_nailDamage, "wp_nailDamage", "20", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  // doesn't have a hit damage, only sticks and splashes
+  // { &wp_proxDamage, "wp_proxDamage", "800", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_chainDamage, "wp_chainDamage", "7", CVAR_ARCHIVE | CVAR_SERVERINFO },
 #endif
 #ifdef USE_FLAME_THROWER
   { &wp_flameCycle, "wp_flameCycle", "40", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_flameDamage, "wp_flameDamage", "30", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_flameSplash, "wp_flameSplash", "25", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_flameRadius, "wp_flameRadius", "45", CVAR_ARCHIVE | CVAR_SERVERINFO },
 #endif
 #endif
 
@@ -300,8 +339,9 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 
 #ifdef USE_GRAPPLE
-  { &g_enableGrapple, "g_enableGrapple", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &g_grappleSpeed, "g_grappleSpeed", "700", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grappleEnable, "wp_grappleEnable", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grapplePull, "wp_grapplePull", "700", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grappleSpeed, "wp_grappleSpeed", "2000", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_LOCAL_DMG

@@ -578,7 +578,11 @@ gentity_t *fire_plasma (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.weapon = WP_PLASMAGUN;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
-	bolt->damage = 20;
+#ifdef USE_WEAPON_VARS
+	bolt->damage = wp_plasmaDamage.integer;
+#else
+  bolt->damage = 20;
+#endif
 	bolt->splashDamage = 15;
 	bolt->splashRadius = 20;
 	bolt->methodOfDeath = MOD_PLASMA;
@@ -626,9 +630,15 @@ gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir) {
   bolt->s.weapon = WP_FLAME_THROWER;
   bolt->r.ownerNum = self->s.number;
   bolt->parent = self;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_flameDamage.integer;
+  bolt->splashDamage = wp_flameSplash.integer;
+  bolt->splashRadius = wp_flameRadius.integer;
+#else
   bolt->damage = 30;
   bolt->splashDamage = 25;
   bolt->splashRadius = 45;
+#endif
   bolt->methodOfDeath = MOD_FLAME_THROWER;
   bolt->splashMethodOfDeath = MOD_PLASMA_SPLASH;
   bolt->clipmask = MASK_SHOT;
@@ -851,7 +861,11 @@ gentity_t *fire_grenade (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.eFlags = EF_BOUNCE_HALF;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_grenadeDamage.integer;
+#else
   bolt->damage = GRENADE_DAMAGE;
+#endif
   bolt->splashDamage = GRENADE_DAMAGE;
   bolt->splashRadius = GRENADE_RADIUS;
 	bolt->methodOfDeath = MOD_GRENADE;
@@ -900,7 +914,11 @@ gentity_t *fire_bfg (gentity_t *self, vec3_t start, vec3_t dir) {
 	bolt->s.weapon = WP_BFG;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_bfgDamage.integer;
+#else
 	bolt->damage = 100;
+#endif
 	bolt->splashDamage = 100;
 	bolt->splashRadius = 120;
 	bolt->methodOfDeath = MOD_BFG;
@@ -1051,7 +1069,11 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 #endif
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_rocketDamage.integer;
+#else
 	bolt->damage = 100;
+#endif
 	bolt->splashDamage = 100;
 	bolt->splashRadius = 120;
 	bolt->methodOfDeath = MOD_ROCKET;
@@ -1091,6 +1113,7 @@ gentity_t *fire_rocket (gentity_t *self, vec3_t start, vec3_t dir) {
 }
 
 
+#ifdef USE_GRAPPLE
 /*
 =================
 fire_grapple
@@ -1131,7 +1154,7 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	hook->s.pos.trTime = hooktime;
 	VectorCopy( start, hook->s.pos.trBase );
 	SnapVector( hook->s.pos.trBase );			// save net bandwidth
-	VectorScale( dir, 800, hook->s.pos.trDelta );
+	VectorScale( dir, wp_grappleSpeed.integer, hook->s.pos.trDelta );
 	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, hook->r.currentOrigin);
 
@@ -1139,6 +1162,7 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 
 	return hook;
 }
+#endif
 
 
 #ifdef MISSIONPACK
@@ -1164,7 +1188,11 @@ gentity_t *fire_nail( gentity_t *self, vec3_t start, vec3_t forward, vec3_t righ
 	bolt->s.weapon = WP_NAILGUN;
 	bolt->r.ownerNum = self->s.number;
 	bolt->parent = self;
+#ifdef USE_WEAPON_VARS
+  bolt->damage = wp_nailDamage.integer;
+#else
 	bolt->damage = 20;
+#endif
 	bolt->methodOfDeath = MOD_NAIL;
 	bolt->clipmask = MASK_SHOT;
 	bolt->target_ent = NULL;

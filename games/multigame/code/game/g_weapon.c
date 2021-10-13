@@ -121,7 +121,11 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 	}
 #endif
 
-	damage = 50 * s_quadFactor;
+#ifdef USE_WEAPON_VARS
+	damage = wp_gauntDamage.integer * s_quadFactor;
+#else
+  damage = 50 * s_quadFactor;
+#endif
 	G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_GAUNTLET );
 
 	return qtrue;
@@ -319,7 +323,11 @@ static qboolean ShotgunPellet( const vec3_t start, const vec3_t end, gentity_t *
 		}
 
 		if ( traceEnt->takedamage ) {
+#ifdef USE_WEAPON_VARS
+      damage = wp_shotgunDamage.integer * s_quadFactor;
+#else
 			damage = DEFAULT_SHOTGUN_DAMAGE * s_quadFactor;
+#endif
 #ifdef MISSIONPACK
 			if ( traceEnt->client && traceEnt->client->invulnerabilityTime > level.time ) {
 				if (G_InvulnerabilityEffect( traceEnt, forward, tr.endpos, impactpoint, bouncedir )) {
@@ -550,7 +558,11 @@ void weapon_railgun_fire( gentity_t *ent ) {
     damage = 500 * s_quadFactor;
   else
 #endif
+#ifdef USE_WEAPON_VARS
+    damage = wp_railDamage.integer * s_quadFactor;
+#else
 	damage = 100 * s_quadFactor;
+#endif
 
 	VectorMA( muzzle_origin, 8192.0, forward, end );
 #ifdef USE_INVULN_RAILS
@@ -776,7 +788,11 @@ void Weapon_LightningFire( gentity_t *ent ) {
 	gentity_t	*traceEnt, *tent;
 	int			damage, i, passent;
 
+#ifdef USE_WEAPON_VARS
+  damage = wp_lightDamage.integer * s_quadFactor;
+#else
 	damage = 8 * s_quadFactor;
+#endif
 
 	passent = ent->s.number;
 
@@ -1193,11 +1209,19 @@ void FireWeapon( gentity_t *ent ) {
 		weapon_supershotgun_fire( ent );
 		break;
 	case WP_MACHINEGUN:
+#ifdef USE_WEAPON_VARS
+    if ( g_gametype.integer != GT_TEAM ) {
+      Bullet_Fire( ent, MACHINEGUN_SPREAD, wp_machineDamage.integer );
+    } else {
+      Bullet_Fire( ent, MACHINEGUN_SPREAD, wp_machineDamageTeam.integer );
+    }
+#else
 		if ( g_gametype.integer != GT_TEAM ) {
 			Bullet_Fire( ent, MACHINEGUN_SPREAD, MACHINEGUN_DAMAGE );
 		} else {
 			Bullet_Fire( ent, MACHINEGUN_SPREAD, MACHINEGUN_TEAM_DAMAGE );
 		}
+#endif
 		break;
 	case WP_GRENADE_LAUNCHER:
 		weapon_grenadelauncher_fire( ent );
@@ -1230,7 +1254,11 @@ void FireWeapon( gentity_t *ent ) {
 		weapon_proxlauncher_fire( ent );
 		break;
 	case WP_CHAINGUN:
-		Bullet_Fire( ent, CHAINGUN_SPREAD, MACHINEGUN_DAMAGE );
+#ifdef USE_WEAPON_VARS
+		Bullet_Fire( ent, CHAINGUN_SPREAD, wp_chainDamage.integer );
+#else
+    Bullet_Fire( ent, CHAINGUN_SPREAD, MACHINEGUN_DAMAGE );
+#endif
 		break;
 #endif
 	default:
