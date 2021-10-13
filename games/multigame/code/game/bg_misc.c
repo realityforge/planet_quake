@@ -1265,14 +1265,8 @@ void BG_EvaluateTrajectory( const trajectory_t *tr, int atTime, vec3_t result ) 
 	case TR_GRAVITY:
 		deltaTime = ( atTime - tr->trTime ) * 0.001;	// milliseconds to seconds
 		VectorMA( tr->trBase, deltaTime, tr->trDelta, result );
-#ifdef USE_PHYSICS_VARS
-#ifdef CGAME
-    result[2] -= 0.5 * cg_gravity.value * deltaTime * deltaTime;
-#else
-#ifdef QAGAME
+#if defined(USE_PHYSICS_VARS) && (defined(CGAME) || defined(QAGAME))
     result[2] -= 0.5 * g_gravity.value * deltaTime * deltaTime;
-#endif
-#endif
 #else
     result[2] -= 0.5 * DEFAULT_GRAVITY * deltaTime * deltaTime;		// FIXME: local gravity...
 #endif
@@ -1346,14 +1340,8 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 	case TR_GRAVITY:
 		deltaTime = ( atTime - tr->trTime ) * 0.001;	// milliseconds to seconds
 		VectorCopy( tr->trDelta, result );
-#ifdef USE_PHYSICS_VARS
-#ifdef CGAME
-    result[2] -= cg_gravity.value * deltaTime;
-#else
-#ifdef QAGAME
+#if defined(USE_PHYSICS_VARS) && (defined(CGAME) || defined(QAGAME))
     result[2] -= g_gravity.value * deltaTime;
-#endif
-#endif
 #else
     result[2] -= DEFAULT_GRAVITY * deltaTime;		// FIXME: local gravity...
 #endif

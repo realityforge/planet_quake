@@ -379,13 +379,7 @@ static qboolean PM_CheckJump( void ) {
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
 #ifdef USE_PHYSICS_VARS
   // TODO: make this a part of gravity boots
-#ifdef CGAME
-  pm->ps->velocity[2] = cg_jumpVelocity.integer;
-#else
-#ifdef QAGAME
   pm->ps->velocity[2] = g_jumpVelocity.integer;
-#endif
-#endif
 #else
 	pm->ps->velocity[2] = JUMP_VELOCITY;
 #endif
@@ -1177,13 +1171,7 @@ static void PM_GroundTrace( void ) {
 	
 	// slopes that are too steep will not be considered onground
 #ifdef USE_PHYSICS_VARS
-#ifdef CGAME
-	if ( trace.plane.normal[2] < cg_wallWalk.value )
-#else
-#ifdef QAGAME
   if ( trace.plane.normal[2] < g_wallWalk.value )
-#endif
-#endif
 #else
   if ( trace.plane.normal[2] < MIN_WALK_NORMAL )
 #endif
@@ -1702,6 +1690,59 @@ static void PM_Weapon( void ) {
 #endif
 	PM_AddEvent( EV_FIRE_WEAPON );
 
+#ifdef USE_WEAPON_VARS
+  switch( pm->ps->weapon ) {
+  default:
+  case WP_GAUNTLET:
+    addTime = wp_gauntCycle.integer;
+    break;
+  case WP_LIGHTNING:
+    addTime = wp_lightCycle.integer;
+    break;
+  case WP_SHOTGUN:
+    addTime = wp_shotgunCycle.integer;
+    break;
+  case WP_MACHINEGUN:
+    addTime = wp_machineCycle.integer;
+    break;
+  case WP_GRENADE_LAUNCHER:
+    addTime = wp_grenadeCycle.integer;
+    break;
+  case WP_ROCKET_LAUNCHER:
+    addTime = wp_rocketCycle.integer;
+    break;
+  case WP_PLASMAGUN:
+    addTime = wp_plasmaCycle.integer;
+    break;
+  case WP_RAILGUN:
+    addTime = wp_railCycle.integer;
+    break;
+  case WP_BFG:
+    addTime = wp_bfgCycle.integer;
+    break;
+#ifdef USE_GRAPPLE
+  case WP_GRAPPLING_HOOK:
+    addTime = wp_grappleCycle.integer;
+    break;
+#endif
+#ifdef MISSIONPACK
+  case WP_NAILGUN:
+    addTime = wp_nailCycle.integer;
+    break;
+  case WP_PROX_LAUNCHER:
+    addTime = wp_proxCycle.integer;
+    break;
+  case WP_CHAINGUN:
+    addTime = wp_chainCycle.integer;
+    break;
+#endif
+#ifdef USE_FLAME_THROWER
+  case WP_FLAME_THROWER:
+    addTime = wp_flameCycle.integer;
+    break;
+#endif
+  }
+#else
 	switch( pm->ps->weapon ) {
 	default:
 	case WP_GAUNTLET:
@@ -1753,6 +1794,7 @@ static void PM_Weapon( void ) {
     break;
 #endif
 	}
+#endif
 
 #ifdef MISSIONPACK
 	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {

@@ -119,7 +119,7 @@ void TossClientItems( gentity_t *self ) {
 				}
 				drop = Drop_Item( self, item, angle );
 				// decide how many seconds it has left
-				drop->count = ( self->items[ITEM_PW_MIN + i ] - level.time ) / 1000;
+				drop->count = ( self->items[ITEM_PW_MIN + i] - level.time ) / 1000;
 				if ( drop->count < 1 ) {
 					drop->count = 1;
 				}

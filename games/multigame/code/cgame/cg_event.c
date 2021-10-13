@@ -98,6 +98,9 @@ static void CG_Obituary( entityState_t *ent ) {
 	strcat( targetName, S_COLOR_WHITE );
 
 	following = cg.snap->ps.pm_flags & PMF_FOLLOW;
+  
+  // reset client display of powerups
+  memset(cg_entities[target].items, 0, sizeof(int[MAX_ITEMS]));
 
 	message2 = "";
 

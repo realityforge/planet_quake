@@ -1623,7 +1623,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 				//push the goal on the stack
 				BotPushGoal(goalstate, &goal);
 #ifdef DEBUG
-			  botimport.Print(PRT_MESSAGE, "chosen spawn %d - %i\n", goal.areanum, spawnpoint);
+			  //botimport.Print(PRT_MESSAGE, "chosen spawn %d - %i\n", goal.areanum, spawnpoint);
 #endif //DEBUG
 				return qtrue;
       }

@@ -85,6 +85,32 @@ vmCvar_t  g_grappleSpeed;
 vmCvar_t  g_jumpVelocity;
 vmCvar_t  g_wallWalk;
 #endif
+
+
+#ifdef USE_WEAPON_VARS
+vmCvar_t  wp_gauntCycle;
+vmCvar_t  wp_lightCycle;
+vmCvar_t  wp_shotgunCycle;
+vmCvar_t  wp_machineCycle;
+vmCvar_t  wp_grenadeCycle;
+vmCvar_t  wp_rocketCycle;
+vmCvar_t  wp_plasmaCycle;
+vmCvar_t  wp_railCycle;
+vmCvar_t  wp_bfgCycle;
+#ifdef USE_GRAPPLE
+vmCvar_t  wp_grappleCycle;
+#endif
+#ifdef MISSIONPACK
+vmCvar_t  wp_nailCycle;
+vmCvar_t  wp_proxCycle;
+vmCvar_t  wp_chainCycle;
+#endif
+#ifdef USE_FLAME_THROWER
+vmCvar_t  wp_flameCycle;
+#endif
+#endif // USE_WEAPON_VARS
+
+
 #ifdef USE_TEAM_VARS
 vmCvar_t	g_flagReturn;
 #endif
@@ -212,66 +238,90 @@ static cvarTable_t gameCvarTable[] = {
 	{ &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 
-	{ &g_rotation, "g_rotation", "", CVAR_ARCHIVE, 0, qfalse }
+#ifdef USE_WEAPON_VARS
+  { &wp_gauntCycle, "wp_gauntCycle", "400", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_lightCycle, "wp_lightCycle", "50", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_shotgunCycle, "wp_shotgunCycle", "1000", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_machineCycle, "wp_machineCycle", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_grenadeCycle, "wp_grenadeCycle", "800", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_rocketCycle, "wp_rocketCycle", "800", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_plasmaCycle, "wp_plasmaCycle", "100", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_railCycle, "wp_railCycle", "1500", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_bfgCycle, "wp_bfgCycle", "200", CVAR_ARCHIVE | CVAR_SERVERINFO },
+#ifdef USE_GRAPPLE
+  { &wp_grappleCycle, "wp_grappleCycle", "400", CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
+#ifdef MISSIONPACK
+  { &wp_nailCycle, "wp_nailCycle", "1000", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_proxCycle, "wp_proxCycle", "800", CVAR_ARCHIVE | CVAR_SERVERINFO },
+  { &wp_chainCycle, "wp_chainCycle", "30", CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
+#ifdef USE_FLAME_THROWER
+  { &wp_flameCycle, "wp_flameCycle", "40", CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
+#endif
 
 #ifdef USE_PHYSICS_VARS
-  ,{ &g_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse }
-  ,{ &g_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse }
+  { &g_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
+  { &g_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
 #endif
 
 #ifdef USE_TEAM_VARS
-  ,{ &g_flagReturn, "g_flagReturn", "30000", CVAR_ARCHIVE, 0, qfalse }
+  { &g_flagReturn, "g_flagReturn", "30000", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_SERVER_ROLES
-	,{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "
+	{ &g_callvotable, "g_callvotable", "map_restart map rotate nextmap "
 		"kick clientkick g_gametype g_unlagged g_warmup timelimit"
-		"fraglimit capturelimit", CVAR_ARCHIVE, 0, qfalse}
+		"fraglimit capturelimit", CVAR_ARCHIVE, 0, qfalse},
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  ,{ &g_thawTime, "g_thawTime", "180", CVAR_ARCHIVE, 0, qfalse }
+  { &g_thawTime, "g_thawTime", "180", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_INVULN_RAILS
-  ,{ &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_railThruWalls, "g_railThruWalls", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_BOUNCE_RPG
-  ,{ &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_bounceRockets, "g_bounceRockets", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_CLOAK_CMD
-  ,{ &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_VORTEX_GRENADES
-  ,{ &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_vortexGrenades, "g_vortexGrenades", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_VULN_RPG
-  ,{ &g_vulnRockets, "g_vulnRockets", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_vulnRockets, "g_vulnRockets", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_WEAPON_DROP
-  ,{ &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_GRAPPLE
-  ,{ &g_enableGrapple, "g_enableGrapple", "1", CVAR_ARCHIVE, 0, qfalse }
-  ,{ &g_grappleSpeed, "g_grappleSpeed", "700", CVAR_ARCHIVE, 0, qfalse }
+  { &g_enableGrapple, "g_enableGrapple", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_grappleSpeed, "g_grappleSpeed", "700", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_LOCAL_DMG
-  ,{ &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_locDamage, "g_locDamage", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_INSTAGIB
-  ,{ &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_WEAPON_ORDER
-  ,{ NULL, "g_supportsWeaponOrder", "1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse } //WarZone
+  { NULL, "g_supportsWeaponOrder", "1", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse }, //WarZone
 #endif
 
 #ifdef USE_GRAVITY_BOOTS
-  ,{ &g_enableBoots, "g_enableBoots", "1", CVAR_ARCHIVE, 0, qfalse }
+  { &g_enableBoots, "g_enableBoots", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
+
+	{ &g_rotation, "g_rotation", "", CVAR_ARCHIVE, 0, qfalse }
+
 };
 
 

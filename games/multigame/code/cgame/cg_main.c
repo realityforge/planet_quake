@@ -219,6 +219,30 @@ vmCvar_t	cg_teamColors;
 vmCvar_t	cg_deadBodyDarken;
 vmCvar_t	cg_fovAdjust;
 vmCvar_t	cg_followKiller;
+
+#ifdef USE_WEAPON_VARS
+vmCvar_t  cgwp_gauntCycle;
+vmCvar_t  cgwp_lightCycle;
+vmCvar_t  cgwp_shotgunCycle;
+vmCvar_t  cgwp_machineCycle;
+vmCvar_t  cgwp_grenadeCycle;
+vmCvar_t  cgwp_rocketCycle;
+vmCvar_t  cgwp_plasmaCycle;
+vmCvar_t  cgwp_railCycle;
+vmCvar_t  cgwp_bfgCycle;
+#ifdef USE_GRAPPLE
+vmCvar_t  cgwp_grappleCycle;
+#endif
+#ifdef MISSIONPACK
+vmCvar_t  cgwp_nailCycle;
+vmCvar_t  cgwp_proxCycle;
+vmCvar_t  cgwp_chainCycle;
+#endif
+#ifdef USE_FLAME_THROWER
+vmCvar_t  cgwp_flameCycle;
+#endif
+#endif // USE_WEAPON_VARS
+
 #ifdef USE_PHYSICS_VARS
 vmCvar_t	cg_jumpVelocity;
 vmCvar_t	cg_gravity;
@@ -364,6 +388,28 @@ static const cvarTable_t cvarTable[] = {
 #ifdef USE_GRAPPLE
   { &cg_enableGrapple, "g_enableGrapple", "1", CVAR_SERVERINFO },
   { &cg_grappleSpeed,  "g_grappleSpeed", "700", CVAR_SERVERINFO },
+#endif
+#ifdef USE_WEAPON_VARS
+  { &cgwp_gauntCycle, "wp_gauntCycle", "400", CVAR_SERVERINFO },
+  { &cgwp_lightCycle, "wp_lightCycle", "50", CVAR_SERVERINFO },
+  { &cgwp_shotgunCycle, "wp_shotgunCycle", "1000", CVAR_SERVERINFO },
+  { &cgwp_machineCycle, "wp_machineCycle", "100", CVAR_SERVERINFO },
+  { &cgwp_grenadeCycle, "wp_grenadeCycle", "800", CVAR_SERVERINFO },
+  { &cgwp_rocketCycle, "wp_rocketCycle", "800", CVAR_SERVERINFO },
+  { &cgwp_plasmaCycle, "wp_plasmaCycle", "100", CVAR_SERVERINFO },
+  { &cgwp_railCycle, "wp_railCycle", "1500", CVAR_SERVERINFO },
+  { &cgwp_bfgCycle, "wp_bfgCycle", "200", CVAR_SERVERINFO },
+#ifdef USE_GRAPPLE
+  { &cgwp_grappleCycle, "wp_grappleCycle", "400", CVAR_SERVERINFO },
+#endif
+#ifdef MISSIONPACK
+  { &cgwp_nailCycle, "wp_nailCycle", "1000", CVAR_SERVERINFO },
+  { &cgwp_proxCycle, "wp_proxCycle", "800", CVAR_SERVERINFO },
+  { &cgwp_chainCycle, "wp_chainCycle", "30", CVAR_SERVERINFO },
+#endif
+#ifdef USE_FLAME_THROWER
+  { &cgwp_flameCycle, "wp_flameCycle", "40", CVAR_SERVERINFO },
+#endif
 #endif
 	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
