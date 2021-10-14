@@ -956,7 +956,7 @@ Only in One Flag CTF games
   {
   	"rune_strength", 
   	"sound/items/spread.wav",
-  	{"models/runes/magic.md3", 0, 0, 0 },
+  	{"models/runes/strength.md3", 0, 0, 0 },
   /* icon */	"icons/strength",  
   /* pickup */	"Strength",
   		30,

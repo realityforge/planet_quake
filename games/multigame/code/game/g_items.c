@@ -655,7 +655,9 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// to be placed on movers.
 	ent->s.eFlags |= EF_NODRAW;
 	ent->r.contents = 0;
-#ifndef USE_ITEM_TIMERS
+#ifdef USE_ITEM_TIMERS
+  ent->r.svFlags |= SVF_BROADCAST;
+#else
   ent->r.svFlags |= SVF_NOCLIENT;
 #endif
 
