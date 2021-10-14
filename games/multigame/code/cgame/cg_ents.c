@@ -354,6 +354,14 @@ static void CG_Item( centity_t *cent ) {
 	}
 #endif
 
+#ifdef USE_RUNES
+  if ( item->giType == IT_POWERUP && item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM ) {
+    ent.customShader = itemInfo->altShader1;
+    trap_R_AddRefEntityToScene(&ent);
+    return;
+  }
+#endif
+
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);
 

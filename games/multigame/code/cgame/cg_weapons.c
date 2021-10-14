@@ -891,6 +891,17 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		CG_RegisterWeapon( item->giTag );
 	}
 
+  
+#ifdef USE_RUNES
+  // runes have a shader based on system name so the same model can be reused
+  if ( item->giType == IT_POWERUP && item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM ) {
+    itemInfo->altShader1 = trap_R_RegisterShader(va( "models/runes/%s", &item->classname[5] ));
+    if ( item->world_model[1] ) {
+      itemInfo->altShader2 = trap_R_RegisterShader(va( "models/runes/%s_2", &item->classname[5] ));
+    }
+  }
+#endif
+
 	//
 	// powerups have an accompanying ring or sphere
 	//

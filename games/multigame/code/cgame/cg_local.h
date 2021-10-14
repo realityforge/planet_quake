@@ -462,6 +462,10 @@ typedef struct {
 	qhandle_t		models[MAX_ITEM_MODELS];
 	qhandle_t		icon;
 	qhandle_t		icon_df;
+#ifdef USE_RUNES
+  qhandle_t		altShader1;
+  qhandle_t		altShader2;
+#endif
 } itemInfo_t;
 
 

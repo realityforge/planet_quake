@@ -965,6 +965,65 @@ Only in One Flag CTF games
   /* precache */ "",
   /* sounds */ ""
   },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_regen", 
+  	"sound/items/regeneration.wav",
+  	{"models/breakables/magic.md3", 0, 0, 0 },
+  /* icon */	"icons/regen",  
+  /* pickup */	"Regeneration",
+  		30,
+  		IT_POWERUP,
+  		RUNE_REGEN,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_resist", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", 0, 0, 0 },
+  /* icon */	"icons/resistance",  
+  /* pickup */	"Resistance",
+  		30,
+  		IT_POWERUP,
+  		RUNE_RESIST,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_haste", 
+  	"sound/items/haste.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/haste",  
+  /* pickup */	"Haste",
+  		30,
+  		IT_POWERUP,
+  		RUNE_HASTE,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_enviro", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", 0, 0, 0 },
+  /* icon */	"icons/strength",  
+  /* pickup */	"Environmental Protection",
+  		30,
+  		IT_POWERUP,
+  		RUNE_ENVIRO,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
 
 #endif
 

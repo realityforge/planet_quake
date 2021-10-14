@@ -15,8 +15,9 @@ function disassembleQVM(inputQVM, output) {
   // TODO: try to make sense of the jump list that is defined by bg_misc.c
   //   by tracing the addresses from the strings back to the entity array
   try {
-    var disassembler = path.join(__dirname, '../lib/q3vm')
+    var disassembler = path.join(__dirname, '../../../libs/q3vm')
     var type = inputQVM.match(/cgame/) ? 'cgame' : inputQVM.match(/qagame/) ? 'game' : inputQVM.match(/ui/) ? 'ui' : ''
+    console.log('Disassembling\n', `python2 ./qvmdis "${inputQVM}" ${type} > "${output}"`)
     execSync(`python2 ./qvmdis "${inputQVM}" ${type} > "${output}"`, {cwd: disassembler, stdio: 'pipe'})
   } catch (e) {
     console.error(e.message, (e.output || '').toString('utf-8').substr(0, 1000))

@@ -1992,6 +1992,7 @@ static void Cmd_Rune_f( gentity_t *ent ) {
   item = BG_FindItemForRune( r );
   if(!r || !item) {
     Com_Printf("Unknown rune: \"%s\"\n", buffer);
+    return;
   }
 
   // pop the rune out of that location
