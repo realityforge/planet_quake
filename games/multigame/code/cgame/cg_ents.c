@@ -230,8 +230,7 @@ static void CG_Item( centity_t *cent ) {
 #endif
 
 	// if set to invisible, skip
-	if ( !es->modelindex || ( es->eFlags & EF_NODRAW ) || cent->delaySpawn > cg.time
-    || !cg_items[es->modelindex].models[0]) {
+	if ( !es->modelindex || ( es->eFlags & EF_NODRAW ) || cent->delaySpawn > cg.time) {
 		return;
 	}
 
@@ -295,6 +294,11 @@ static void CG_Item( centity_t *cent ) {
 
 		cent->lerpOrigin[2] += 8;	// an extra height boost
 	}
+
+  // if model is still 0 don't render the world in it's place
+  if(!cg_items[es->modelindex].models[0]) {
+    return;
+  }
 
 	ent.hModel = cg_items[es->modelindex].models[0];
 
