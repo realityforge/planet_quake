@@ -421,6 +421,43 @@ void	Svcmd_ForceTeam_f( void ) {
 }
 
 
+#ifdef USE_REFEREE_CMDS
+void  Svcmd_Freeze_f( void ) {
+  gclient_t	*cl;
+  char		str[MAX_TOKEN_CHARS];
+  qboolean freeze = qfalse;
+  gentity_t *ent;
+
+  trap_Argv( 0, str, sizeof( str ) );
+  
+  if ( trap_Argc() > 2 ) {
+    G_Printf("Usage: %s <player>\n", str);
+    return;
+  }
+  
+  if(Q_stricmp(str, "freeze") == 0) {
+    freeze = qtrue;
+  }
+
+  trap_Argv( 1, str, sizeof( str ) );
+  cl = ClientForString( str );
+	if ( !cl ) {
+		return;
+	}
+  ent = &g_entities[cl - level.clients];
+  
+  if(freeze && !ent->items[ITEM_PW_MIN + PW_FROZEN]) {
+    G_AddEvent( ent, EV_FROZEN, 0 );
+    ent->items[ITEM_PW_MIN + PW_FROZEN] = level.time + g_thawTime.integer * 1000;
+    cl->ps.pm_type = PM_FROZEN;
+  } else if (!freeze && ent->items[ITEM_PW_MIN + PW_FROZEN]) {
+    G_AddEvent( ent, EV_UNFROZEN, 0 );
+    ent->items[ITEM_PW_MIN + PW_FROZEN] = 0;
+  }
+}
+#endif
+
+
 void Svcmd_Rotate_f( void ) {
 	char	str[MAX_TOKEN_CHARS];
 
@@ -507,6 +544,11 @@ qboolean	ConsoleCommand( void ) {
 		return qtrue;
 	}
 
+	if (Q_stricmp (cmd, "freeze") == 0 || Q_stricmp (cmd, "unfreeze") == 0) {
+		Svcmd_Freeze_f();
+		return qtrue;
+	}
+
 	if (g_dedicated.integer) {
 		if (Q_stricmp (cmd, "say") == 0) {
 			G_BroadcastServerCommand( -1, va("print \"server: %s\"", ConcatArgs(1) ) );
@@ -519,4 +561,3 @@ qboolean	ConsoleCommand( void ) {
 
 	return qfalse;
 }
-

@@ -207,7 +207,6 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 
 		cmdNum = trap_GetCurrentCmdNumber();
 		trap_GetUserCmd( cmdNum, &cmd );
-
 		PM_UpdateViewAngles( out, &cmd );
 	}
 

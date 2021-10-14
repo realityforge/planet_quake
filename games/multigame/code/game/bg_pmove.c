@@ -1911,6 +1911,12 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 		return;		// no view changes at all
 	}
 
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  if(ps->pm_type == PM_FROZEN) {
+    return; // also no changes at all
+  }
+#endif
+
 	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 ) {
 		return;		// no view changes at all
 	}
@@ -2109,9 +2115,6 @@ static void PmoveSingle (pmove_t *pmove, int *itms) {
 	pml.frametime = pml.msec * 0.001;
 
 	// update the viewangles
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if(pm->ps->pm_type != PM_FROZEN)
-#endif
   PM_UpdateViewAngles( pm->ps, &pm->cmd );
 
 	AngleVectors (pm->ps->viewangles, pml.forward, pml.right, pml.up);

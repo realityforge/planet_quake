@@ -829,7 +829,7 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.pm_type = PM_NOCLIP;
   } else
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if ( client->frozen ) {
+  if ( ent->items[ITEM_PW_MIN + PW_FROZEN] ) {
     client->ps.pm_type = PM_FROZEN;
   } else
 #endif
@@ -870,21 +870,12 @@ void ClientThink_real( gentity_t *ent ) {
 #endif
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if(ent->items[ITEM_PW_MIN + PW_FROZEN] && !client->frozen) {
-    G_AddEvent( ent, EV_FROZEN, 0 );
-    client->frozen = ent->items[ITEM_PW_MIN + PW_FROZEN];
-    client->ps.pm_type = PM_FROZEN;
-  } else if (!ent->items[ITEM_PW_MIN + PW_FROZEN] && client->frozen) {
-    G_AddEvent( ent, EV_UNFROZEN, 0 );
-    client->frozen = 0;
-  }
   if(g_thawTime.integer
-    && client->frozen
-    && level.time - client->frozen >= g_thawTime.integer * 1000
+    && ent->items[ITEM_PW_MIN + PW_FROZEN]
+    && level.time >= ent->items[ITEM_PW_MIN + PW_FROZEN]
   ) {
-    ent->items[ITEM_PW_MIN + PW_FROZEN] = 0;
     G_AddEvent( ent, EV_UNFROZEN, 0 );
-    client->frozen = 0;
+    ent->items[ITEM_PW_MIN + PW_FROZEN] = 0;
   }
 #endif
 
@@ -1183,12 +1174,6 @@ void ClientEndFrame( gentity_t *ent ) {
 	if ( ent->client->invulnerabilityTime > level.time ) {
 		ent->items[ITEM_PW_MIN + PW_INVULNERABILITY] = level.time;
 	}
-#endif
-
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-  if(ent->client->frozen) {
-    ent->items[ITEM_PW_MIN + PW_FROZEN] = level.time;
-  }
 #endif
 
 	// save network bandwidth

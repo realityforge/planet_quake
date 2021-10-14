@@ -1630,18 +1630,8 @@ void SV_Freeze_f(void) {
     }
     if(Q_stricmp(Cmd_Argv(0), "freeze") == 0) {
       cl->frozen = sv.time;
-      if(sv.isMultiGame) {
-        playerState_t *ps = SV_GameClientNum( cl - svs.clients );
-        ps->powerups[PW_FROZEN] = sv.time;
-        //SV_SetInternalPlayerState(cl - svs.clients);
-      }
     } else {
       cl->frozen = 0;
-      if(sv.isMultiGame) {
-        playerState_t *ps = SV_GameClientNum( cl - svs.clients );
-        ps->powerups[PW_FROZEN] = 0;
-        //SV_SetInternalPlayerState(cl - svs.clients);
-      }
     }
     return;
   }
@@ -1757,11 +1747,11 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_SetDescription( "unmute", "Mute a player from using \"say\" and \"tell\" commands.\nUsage: unmute <player>");
 	Cmd_AddCommand ("shout", SV_Shout_f);
 	Cmd_SetDescription( "shout", "Send a message printed big and center screen to all connected players.\nUsage: shout <message>");
-	Cmd_AddCommand ("freeze", SV_Freeze_f);
-	Cmd_SetDescription( "freeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+	//Cmd_AddCommand ("freeze", SV_Freeze_f);
+	//Cmd_SetDescription( "freeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
 	// TODO: Cmd_AddAlias, for here an map, spmap, etc
-	Cmd_AddCommand ("unfreeze", SV_Freeze_f);
-	Cmd_SetDescription( "unfreeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
+	//Cmd_AddCommand ("unfreeze", SV_Freeze_f);
+	//Cmd_SetDescription( "unfreeze", "Server-side pause, still sends client messages and chat, but doesn't process player movement.\nUsage: freeze/unfreeze");
 #endif
 	
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);

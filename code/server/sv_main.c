@@ -1283,11 +1283,6 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg ) {
     if(sv_thawTime->integer
       && cl->frozen && sv.time - cl->frozen >= sv_thawTime->integer * 1000) {
       cl->frozen = qfalse;
-      // game will do the unfreezing based on thawTime
-      //if(sv.isMultiGame) {
-      //  playerState_t *ps = SV_GameClientNum( c );
-      //  ps->powerups[PW_FROZEN] = 0;
-      //}
     }
 #endif
 

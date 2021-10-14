@@ -1341,10 +1341,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			cg.powerupActive = PW_FROZEN;
 			cg.powerupTime = cg.time;
 		}
+    cg_entities[es->number].items[ITEM_PW_MIN + PW_FROZEN] = 1;
 		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
 		break;
   case EV_UNFROZEN:
     // TODO: play unfreeze sound
+    cg_entities[es->number].items[ITEM_PW_MIN + PW_FROZEN] = 0;
     //trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.frozenSound );
     break;
 #endif
