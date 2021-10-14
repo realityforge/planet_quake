@@ -1942,6 +1942,8 @@ static void Cmd_Stats_f( gentity_t *ent ) {
 
 
 #ifdef USE_RUNES
+gitem_t	*BG_FindItemForRune( int r );
+
 static void Cmd_Rune_f( gentity_t *ent ) {
   char		buffer[MAX_TOKEN_CHARS];
   vec3_t		dir, delta;
@@ -1987,7 +1989,10 @@ static void Cmd_Rune_f( gentity_t *ent ) {
 
   trap_Argv( 1, buffer, sizeof( buffer ) );
 	r = atof( buffer );
-  item = BG_FindItemForPowerup( r );
+  item = BG_FindItemForRune( r );
+  if(!r || !item) {
+    Com_Printf("Unknown rune: \"%s\"\n", buffer);
+  }
 
   // pop the rune out of that location
   RegisterItem( item );

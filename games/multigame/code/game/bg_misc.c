@@ -975,6 +975,27 @@ Only in One Flag CTF games
 int		bg_numItems = ARRAY_LEN( bg_itemlist ) - 1;
 
 
+#ifdef USE_RUNES
+/*
+==============
+BG_FindItemForPowerup
+==============
+*/
+gitem_t	*BG_FindItemForRune( int r ) {
+	int		i;
+
+	for ( i = 0 ; i < bg_numItems ; i++ ) {
+		if ( bg_itemlist[i].giType == IT_POWERUP
+			&& bg_itemlist[i].giTag == (RUNE_STRENGTH + (r - 1)) ) {
+			return &bg_itemlist[i];
+		}
+	}
+
+	return NULL;
+}
+#endif
+
+
 /*
 ==============
 BG_FindItemForPowerup
