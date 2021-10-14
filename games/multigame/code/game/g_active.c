@@ -876,6 +876,7 @@ void ClientThink_real( gentity_t *ent ) {
   ) {
     G_AddEvent( ent, EV_UNFROZEN, 0 );
     ent->items[ITEM_PW_MIN + PW_FROZEN] = 0;
+    SetClientViewAngle(ent, client->frozen_angles);
   }
 #endif
 

@@ -371,6 +371,10 @@ struct gclient_s {
 		int		enemy;
 		int		amount;
 	} damage;
+
+#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+  vec3_t		frozen_angles;
+#endif
 };
 
 
