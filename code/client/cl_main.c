@@ -5294,8 +5294,8 @@ void CL_Init( void ) {
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
 
 	cl_reconnectArgs = Cvar_Get( "cl_reconnectArgs", "", CVAR_ARCHIVE_ND | CVAR_NOTABCOMPLETE );
-  cl_drawFPS = Cvar_Get ("g_drawFPS", "1", CVAR_ARCHIVE );
-  cl_lagometer = Cvar_Get ("cg_lagometer", "1", CVAR_ARCHIVE );
+  cl_drawFPS = Cvar_Get ("cl_drawFPS", "1", CVAR_ARCHIVE );
+  cl_lagometer = Cvar_Get ("cl_lagometer", "1", CVAR_ARCHIVE );
   cl_nopredict = Cvar_Get ("cl_nopredict", "0", 0 );
 
 	// userinfo

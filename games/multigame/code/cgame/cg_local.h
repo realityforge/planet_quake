@@ -589,6 +589,11 @@ typedef struct {
 	qboolean	showScores;
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
+#ifdef USE_RUNES
+  qboolean	showRunes;
+  qboolean  runesBoardShowing
+  int			runesFadeTime;
+#endif
 	char		killerName[MAX_NAME_LENGTH+32];
 	int			killerTime;
 	char			spectatorList[MAX_STRING_CHARS];		// list of names

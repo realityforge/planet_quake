@@ -2221,6 +2221,110 @@ static void CG_DrawTeamVote(void) {
 }
 
 
+#ifdef USE_RUNES
+void hud_runes(float x, float y, weaponInfo_t *weapon) {
+  vec3_t		    angles;
+  vec3_t		    origin;
+  float         rotation;
+  refdef_t		  refdef;
+  //refEntity_t		hand;
+	refEntity_t		ent;
+  refEntity_t   barrel;
+  float         w = 48, h = 48;
+  VectorClear( angles );
+  origin[0] = 90;
+  origin[1] = 20;
+  origin[2] = 10;
+  rotation = ( cg.time & 4095 ) * 40 / 4096.0;
+  if(rotation <= 20) {
+    angles[YAW] = 270 + rotation;
+  } else {
+    angles[YAW] = 270 + (40 - rotation);
+  }
+  
+  // dont draw world if model is missing
+  if(!weapon->weaponModel) {
+    return;
+  }
+
+	memset( &ent, 0, sizeof( ent ) );
+	AnglesToAxis( angles, ent.axis );
+  VectorSubtract(origin, weapon->weaponMidpoint, ent.origin);
+	//VectorCopy( weapon->weaponMidpoint, ent.origin );
+	ent.hModel = weapon->weaponModel;
+	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
+
+	CG_AdjustFrom640( &x, &y, &w, &h );
+	memset( &refdef, 0, sizeof( refdef ) );
+	refdef.rdflags = RDF_NOWORLDMODEL;
+	AxisClear( refdef.viewaxis );
+	refdef.fov_x = 30;
+	refdef.fov_y = 30;
+	refdef.x = x;
+	refdef.y = y;
+	refdef.width = w;
+	refdef.height = h;
+	refdef.time = cg.time;
+
+	trap_R_ClearScene();
+  ent.customSkin = 0;
+	trap_R_AddRefEntityToScene( &ent );
+  if(weapon->barrelModel) {
+    ent.customSkin = 0;
+    trap_R_AddRefEntityToScene( &barrel );
+  }
+	trap_R_RenderScene( &refdef );
+}
+
+static qboolean CG_DrawRunesboard( void ) {
+  float fade, *fadeColor;
+  int		x, y;
+	int		dx, dy;
+
+  if ( cg.showRunes ) {
+		fade = 1.0;
+		fadeColor = colorWhite;
+	} else {
+		fadeColor = CG_FadeColor( cg.runesFadeTime, FADE_TIME );
+		if ( !fadeColor ) {
+			return qfalse;
+		}
+		fade = *fadeColor;
+	}																					  
+
+  trap_R_SetColor( fadeColor );
+
+	x = 320 - 8 * 20;
+	y = cgs.screenYmax + 1 - 100; // - STATUSBAR_HEIGHT - 40
+	dx = 40;
+	dy = 0;
+
+  for ( ix = 0 ; ix < 8 ; ix++ ) {
+    for ( iy = 0 ; iy < 8 ; iy++ ) {
+      n = iy * 8 + ix;
+      if(n >= RUNE_LITHIUM) {
+        continue;
+      }
+
+      CG_RegisterWeapon( i );
+
+      hud_runes(x, y, &cg_weapons[i]);
+
+  		// draw selection marker
+  		if ( i == cg.weaponSelect ) {
+  			CG_DrawPic( x-4, y-4, 32+8, 32+8, cgs.media.selectShader );
+  		}
+      
+      x += dx;
+  		y += dy;
+    }
+  }
+
+  trap_R_SetColor( NULL );
+}
+#endif
+
+
 static qboolean CG_DrawScoreboard( void ) {
 #ifdef MISSIONPACK
 	static qboolean firstTime = qtrue;
@@ -2650,10 +2754,16 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
 	}
 
 	// don't draw center string if scoreboard is up
-	cg.scoreBoardShowing = CG_DrawScoreboard();
-	if ( !cg.scoreBoardShowing ) {
-		CG_DrawCenterString();
-	}
+#ifdef USE_RUNES
+  cg.runesBoardShowing = CG_DrawRunesboard();
+  if(!cg.runesBoardShowing)
+#endif
+  {
+  	cg.scoreBoardShowing = CG_DrawScoreboard();
+  	if ( !cg.scoreBoardShowing ) {
+  		CG_DrawCenterString();
+  	}
+  }
 
 	if ( cgs.score_catched ) {
 		float x, y, w, h;

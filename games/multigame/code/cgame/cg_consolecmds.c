@@ -111,6 +111,32 @@ static void CG_ScoresUp_f( void ) {
 }
 
 
+#ifdef USE_RUNES
+static void CG_RunesDown_f( void ) {
+	cg.showRunes = qtrue;
+
+	//CG_SetScoreCatcher( cg.showScores );
+}
+
+
+static void CG_RunesUp_f( void ) {
+
+	if ( cgs.filterKeyUpEvent ) {
+		cgs.filterKeyUpEvent = qfalse;
+		return;
+	}
+
+	if ( cg.showRunes ) {
+		cg.showRunes = qfalse;
+		cg.runesFadeTime = cg.time;
+	}
+
+	//CG_SetScoreCatcher( cg.showScores );
+}
+#endif
+
+
+
 #ifdef MISSIONPACK
 extern menuDef_t *menuScoreboard;
 void Menu_Reset( void );			// FIXME: add to right include file
@@ -479,6 +505,10 @@ static consoleCommand_t	commands[] = {
 	{ "viewpos", CG_Viewpos_f },
 	{ "+scores", CG_ScoresDown_f },
 	{ "-scores", CG_ScoresUp_f },
+#ifdef USE_RUNES
+  { "+runes", CG_RunesDown_f },
+  { "-runes", CG_RunesUp_f },
+#endif
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
 	{ "sizeup", CG_SizeUp_f },
