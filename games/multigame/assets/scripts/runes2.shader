@@ -438,7 +438,7 @@ models/runes/switch_2
     tcMod scroll 0.5 0.5
     tcMod scale 4 4
     blendFunc GL_ONE GL_ONE
-    rgbgen const ( 1.0 1.0 1.0 )
+    rgbgen const ( 1.0 1.0 0.0 )
   }
 }
 
@@ -452,7 +452,59 @@ models/runes/icetrap
   }
 }
 
+models/runes/gravity
+{
+  {
+    map textures/effects/envmaproc.tga
+    blendfunc GL_ONE GL_ONE
+    rgbGen identity
+    tcmod Scroll 1 1
+  }
+}
 
+models/runes/vengeance
+{
+  {
+    map textures/effects/envmapred.tga
+    blendfunc GL_ONE GL_ZERO
+    rgbGen identity
+    tcmod Scroll 1 1
+  }
+}
+
+models/runes/impact
+{
+  {
+    map textures/effects/envmapred.tga
+    blendfunc GL_ONE GL_ONE
+    rgbGen identity
+    tcmod Scroll 1 1
+  }
+}
+
+models/runes/tele
+{
+  deformVertexes move -2 -2 0  sin 0 2 0 0.5
+  {
+    map textures/effects/envmapyel.tga
+    tcGen environment
+    blendfunc GL_ONE GL_ONE
+    rgbGen identity
+    tcmod Scroll 1 1
+  }
+}
+
+models/runes/tele_2
+{
+  deformVertexes move 2 2 0  sin 0 2 0 0.5
+  {
+    map textures/effects/tinfx2c.tga
+    tcGen environment
+    blendfunc GL_ONE GL_ONE
+    rgbgen const ( 1.0 1.0 0.0 )
+    tcmod Scroll 1 1
+  }
+}
 
 models/runes/recall
 {
