@@ -591,7 +591,7 @@ typedef struct {
 	int			scoreFadeTime;
 #ifdef USE_RUNES
   qboolean	showRunes;
-  qboolean  runesBoardShowing
+  qboolean  runesBoardShowing;
   int			runesFadeTime;
 #endif
 	char		killerName[MAX_NAME_LENGTH+32];

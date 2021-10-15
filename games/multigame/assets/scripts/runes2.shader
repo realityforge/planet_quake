@@ -31,7 +31,7 @@ models/runes/reflection
   }   
 }
 
-powerups/regen
+models/runes/regen
 {
   deformVertexes wave 100 sin 3 0 0 0
   {

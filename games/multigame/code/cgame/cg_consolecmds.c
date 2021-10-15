@@ -120,7 +120,6 @@ static void CG_RunesDown_f( void ) {
 
 
 static void CG_RunesUp_f( void ) {
-
 	if ( cgs.filterKeyUpEvent ) {
 		cgs.filterKeyUpEvent = qfalse;
 		return;

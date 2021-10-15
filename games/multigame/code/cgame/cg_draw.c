@@ -2222,19 +2222,21 @@ static void CG_DrawTeamVote(void) {
 
 
 #ifdef USE_RUNES
-void hud_runes(float x, float y, weaponInfo_t *weapon) {
+void hud_runes(float x, float y, gitem_t *rune) {
   vec3_t		    angles;
   vec3_t		    origin;
   float         rotation;
   refdef_t		  refdef;
   //refEntity_t		hand;
 	refEntity_t		ent;
-  refEntity_t   barrel;
-  float         w = 48, h = 48;
+  float         dx = x, dy = y, w = 64, h = 64;
+  itemInfo_t		*itemInfo;
+  itemInfo = &cg_items[ ITEM_INDEX(rune) ];
+
   VectorClear( angles );
   origin[0] = 90;
-  origin[1] = 20;
-  origin[2] = 10;
+  origin[1] = 0;
+  origin[2] = -10;
   rotation = ( cg.time & 4095 ) * 40 / 4096.0;
   if(rotation <= 20) {
     angles[YAW] = 270 + rotation;
@@ -2243,43 +2245,48 @@ void hud_runes(float x, float y, weaponInfo_t *weapon) {
   }
   
   // dont draw world if model is missing
-  if(!weapon->weaponModel) {
+  if(!itemInfo->models[0]) {
     return;
   }
 
 	memset( &ent, 0, sizeof( ent ) );
 	AnglesToAxis( angles, ent.axis );
-  VectorSubtract(origin, weapon->weaponMidpoint, ent.origin);
-	//VectorCopy( weapon->weaponMidpoint, ent.origin );
-	ent.hModel = weapon->weaponModel;
+  //VectorSubtract(origin, weapon->weaponMidpoint, ent.origin);
+	VectorCopy( origin, ent.origin );
+	ent.hModel = itemInfo->models[0];
+  ent.customSkin = 0;
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	CG_AdjustFrom640( &dx, &dy, &w, &h );
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.rdflags = RDF_NOWORLDMODEL;
 	AxisClear( refdef.viewaxis );
 	refdef.fov_x = 30;
 	refdef.fov_y = 30;
-	refdef.x = x;
-	refdef.y = y;
+	refdef.x = dx;
+	refdef.y = dy;
 	refdef.width = w;
 	refdef.height = h;
 	refdef.time = cg.time;
 
 	trap_R_ClearScene();
-  ent.customSkin = 0;
+  ent.customShader = itemInfo->altShader1;
 	trap_R_AddRefEntityToScene( &ent );
-  if(weapon->barrelModel) {
-    ent.customSkin = 0;
-    trap_R_AddRefEntityToScene( &barrel );
+  if(itemInfo->altShader2) {
+    ent.customShader = itemInfo->altShader2;
+    trap_R_AddRefEntityToScene( &ent );
   }
+  // draw icon just below and next to the rune
+  CG_DrawPic( x + 30, y + 30, 16, 16, itemInfo->icon );
+
 	trap_R_RenderScene( &refdef );
 }
 
 static qboolean CG_DrawRunesboard( void ) {
+  gitem_t *item;
   float fade, *fadeColor;
-  int		x, y;
-	int		dx, dy;
+  int		x, y, w, h, ix, iy;
+  int   n;
 
   if ( cg.showRunes ) {
 		fade = 1.0;
@@ -2294,33 +2301,36 @@ static qboolean CG_DrawRunesboard( void ) {
 
   trap_R_SetColor( fadeColor );
 
-	x = 320 - 8 * 20;
-	y = cgs.screenYmax + 1 - 100; // - STATUSBAR_HEIGHT - 40
-	dx = 40;
-	dy = 0;
+  w = cgs.screenXmax / 9;
+	h = cgs.screenYmax / 9;
+  y = (cgs.screenYmax / 2) - 4 * h - 10;
 
-  for ( ix = 0 ; ix < 8 ; ix++ ) {
-    for ( iy = 0 ; iy < 8 ; iy++ ) {
+  for ( iy = 0 ; iy < 8 ; iy++ ) {
+    x = (cgs.screenXmax / 2) - 4 * w;
+    for ( ix = 0 ; ix < 8 ; ix++ ) {
+
       n = iy * 8 + ix;
-      if(n >= RUNE_LITHIUM) {
+      if(n >= RUNE_LITHIUM - RUNE_STRENGTH) {
         continue;
       }
 
-      CG_RegisterWeapon( i );
+      item = BG_FindItemForRune(n + 1);
+      CG_RegisterItemVisuals( ITEM_INDEX(item) );
 
-      hud_runes(x, y, &cg_weapons[i]);
+      hud_runes(x, y, item);
 
-  		// draw selection marker
-  		if ( i == cg.weaponSelect ) {
-  			CG_DrawPic( x-4, y-4, 32+8, 32+8, cgs.media.selectShader );
-  		}
+  		// TODO: draw selection marker
+  		//if ( i == cg.weaponSelect ) {
+  		//CG_DrawPic( x-4, y-4, w+8, h+8, cgs.media.selectShader );
+  		//}
       
-      x += dx;
-  		y += dy;
+      x += w;
     }
+    y += h;
   }
 
   trap_R_SetColor( NULL );
+  return qtrue;
 }
 #endif
 
@@ -2691,7 +2701,11 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
 		CG_DrawCrosshairNames();
 	} else {
 		// don't draw any status if dead or the scoreboard is being explicitly shown
-		if ( !cg.showScores && cg.snap->ps.stats[STAT_HEALTH] > 0 ) {
+		if ( !cg.showScores && cg.snap->ps.stats[STAT_HEALTH] > 0 
+#ifdef USE_RUNES
+      && !cg.showRunes
+#endif
+    ) {
 
 #ifdef MISSIONPACK
 #ifdef USE_ADVANCED_HUD

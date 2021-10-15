@@ -848,6 +848,9 @@ extern	int		bg_numItems2;
 gitem_t	*BG_FindItem( const char *pickupName );
 gitem_t	*BG_FindItemForWeapon( weapon_t weapon );
 gitem_t	*BG_FindItemForPowerup( powerup_t pw );
+#ifdef USE_RUNES
+gitem_t	*BG_FindItemForRune( int r );
+#endif
 gitem_t	*BG_FindItemForHoldable( holdable_t pw );
 #define	ITEM_INDEX(x) ((x)-bg_itemlist)
 

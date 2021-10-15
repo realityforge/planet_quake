@@ -3143,6 +3143,9 @@ static bind_t g_bindings[] =
 	{"+mlook", 			 '/',					-1,		-1, -1},
 	{"centerview", 	 K_END,				-1,		-1, -1},
 	{"+zoom", 			 -1,						-1,		-1, -1},
+#ifdef USE_RUNES
+  {"+runes", 			 -1,						-1,		-1, -1},
+#endif
 	{"weapon 1",		 '1',					-1,		-1, -1},
 	{"weapon 2",		 '2',					-1,		-1, -1},
 	{"weapon 3",		 '3',					-1,		-1, -1},
