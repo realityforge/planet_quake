@@ -1964,7 +1964,6 @@ static void Cmd_Rune_f( gentity_t *ent ) {
     VectorSubtract( e->s.origin, ent->s.pos.trBase, delta );
     dist = VectorLength( delta );
     if(dist < nearestDist && dist > 0) {
-      Com_Printf("nearest item: %i - %i\n", e->item->giType, e->item->giTag);
       VectorCopy(e->s.origin, nearest);
       nearestDist = dist;
     }
@@ -1997,7 +1996,8 @@ static void Cmd_Rune_f( gentity_t *ent ) {
 
   // pop the rune out of that location
   RegisterItem( item );
-  LaunchItem( item, nearest, dir, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  e = LaunchItem( item, nearest, dir, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  G_AddEvent( e, EV_ITEM_RESPAWN, 0 );
 }
 #endif
 

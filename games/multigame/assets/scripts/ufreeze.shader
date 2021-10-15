@@ -85,14 +85,12 @@ freezeShader
 {
 	nopicmip
 	deformvertexes wave 100 sin 0.5 0 0 0
-
 	{
 		map textures/effects/envmap.tga
 		blendfunc gl_one gl_one
 		rgbgen const ( 0.15 0.15 0.15 )
 		tcgen environment
 	}
-
 	{
 		map gfx/ice/icechunks.tga
 		blendfunc gl_one gl_one

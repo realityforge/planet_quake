@@ -905,7 +905,7 @@ Only in One Flag CTF games
   	"sound/misc/w_pkup.wav",
   	{ "models/weapons2/flamethrower/flamethrower.md3",
   	0, 0, 0},
-  /* icon */	"icons/iconw_flame",
+  /* icon */	"icons/iconw_flamethrower",
   /* pickup */	"Flame Thrower",
   	20,
   	IT_WEAPON,
@@ -920,9 +920,9 @@ Only in One Flag CTF games
   {
   	"ammo_flame",
   	"sound/misc/am_pkup.wav",
-  	{ "models/powerups/ammo/bfgam.md3", 
+  	{ "models/powerups/ammo/flameaam.md3", 
   	0, 0, 0},
-  /* icon */"	icons/icona_bfg",
+  /* icon */"	icons/icona_flamethrower",
   /* pickup */	"Flame Ammo",
   	50,
   	IT_AMMO,
@@ -970,7 +970,7 @@ Only in One Flag CTF games
   {
   	"rune_regen", 
   	"sound/items/regeneration.wav",
-  	{"models/breakables/magic.md3", 0, 0, 0 },
+  	{"models/runes/haste.md3", 0, 0, 0 },
   /* icon */	"icons/regen",  
   /* pickup */	"Regeneration",
   		30,
@@ -1020,6 +1020,340 @@ Only in One Flag CTF games
   		30,
   		IT_POWERUP,
   		RUNE_ENVIRO,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_flight", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/flight",  
+  /* pickup */	"Flight",
+  		30,
+  		IT_POWERUP,
+  		RUNE_FLIGHT,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_berserk", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/berserk",  
+  /* pickup */	"Berserker",
+  		30,
+  		IT_POWERUP,
+  		RUNE_BERSERK,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_recall", 
+  	"sound/items/holdable.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/recall",  
+  /* pickup */	"Recall",
+  		30,
+  		IT_POWERUP,
+  		RUNE_RECALL,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_electric", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", "models/runes/strength.md3", 0, 0 },
+  /* icon */	"icons/emp",  
+  /* pickup */	"Electric",
+  		30,
+  		IT_POWERUP,
+  		RUNE_ELECTRIC,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_cloak", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/cloak",  
+  /* pickup */	"Cloak",
+  		30,
+  		IT_POWERUP,
+  		RUNE_CLOAK,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_divine", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/divine",  
+  /* pickup */	"Divine Wind",
+  		30,
+  		IT_POWERUP,
+  		RUNE_DIVINE,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_death", 
+  	"sound/items/kamikazerespawn.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/death_spots",  
+  /* pickup */	"Death Spots",
+  		30,
+  		IT_POWERUP,
+  		RUNE_DEATH,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_holo", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", "models/runes/strength.md3", 0, 0 },
+  /* icon */	"icons/hologram",  
+  /* pickup */	"Holorune",
+  		30,
+  		IT_POWERUP,
+  		RUNE_HOLO,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_orb", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/orb",  
+  /* pickup */	"Orb of Death",
+  		30,
+  		IT_POWERUP,
+  		RUNE_ORB,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_blink", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/blink",  
+  /* pickup */	"Blink",
+  		30,
+  		IT_POWERUP,
+  		RUNE_BLINK,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_camo", 
+  	"sound/items/kamikazerespawn.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/illusion",  
+  /* pickup */	"Camouflage",
+  		30,
+  		IT_POWERUP,
+  		RUNE_CAMO,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_jump", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", 0, 0, 0 },
+  /* icon */	"icons/jump",  
+  /* pickup */	"Uncontrollable Jumping",
+  		30,
+  		IT_POWERUP,
+  		RUNE_JUMP,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_action", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/overkill",  
+  /* pickup */	"Action Movie Arsenal",
+  		30,
+  		IT_POWERUP,
+  		RUNE_ACTION,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_vampire", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/vamp",  
+  /* pickup */	"Vampiric",
+  		30,
+  		IT_POWERUP,
+  		RUNE_VAMPIRE,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_shield", 
+  	"sound/items/protect.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/shield",  
+  /* pickup */	"Shielding",
+  		30,
+  		IT_POWERUP,
+  		RUNE_SHIELD,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_health", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", "models/runes/strength.md3", 0, 0 },
+  /* icon */	"icons/goodhealth",  
+  /* pickup */	"Good Health",
+  		30,
+  		IT_POWERUP,
+  		RUNE_HEALTH,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_radio", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/radioactivity",  
+  /* pickup */	"Radioactivity",
+  		30,
+  		IT_POWERUP,
+  		RUNE_RADIO,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_switch", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/switch",  
+  /* pickup */	"Switch",
+  		30,
+  		IT_POWERUP,
+  		RUNE_SWITCH,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_icetrap", 
+  	"sound/items/protect.wav",
+  	{"models/runes/icetrap.md3", 0, 0, 0 },
+  /* icon */	"icons/ice_trap",  
+  /* pickup */	"Ice Traps",
+  		30,
+  		IT_POWERUP,
+  		RUNE_ICETRAP,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+
+
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_gravity", 
+  	"sound/items/protect.wav",
+  	{"models/runes/strength.md3", 0, 0, 0 },
+  /* icon */	"icons/gravity",  
+  /* pickup */	"Gravity",
+  		30,
+  		IT_POWERUP,
+  		RUNE_GRAVITY,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_tele", 
+  	"sound/items/flight.wav",
+  	{"models/runes/haste.md3", 0, 0, 0 },
+  /* icon */	"icons/transference",  
+  /* pickup */	"Teleport Shuffle",
+  		30,
+  		IT_POWERUP,
+  		RUNE_TELE,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_impact", 
+  	"sound/items/regeneration.wav",
+  	{"models/runes/regen.md3", "models/runes/regen.md3", 0, 0 },
+  /* icon */	"icons/impact",  
+  /* pickup */	"Impact",
+  		30,
+  		IT_POWERUP,
+  		RUNE_IMPACT,
+  /* precache */ "",
+  /* sounds */ ""
+  },
+  /*QUAKED item_spread (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+  */
+  {
+  	"rune_vengeance", 
+  	"sound/items/protect.wav",
+  	{"models/runes/resist.md3", 0, 0, 0 },
+  /* icon */	"icons/vengeance",  
+  /* pickup */	"Vengeance",
+  		30,
+  		IT_POWERUP,
+  		RUNE_VENGEANCE,
   /* precache */ "",
   /* sounds */ ""
   },
