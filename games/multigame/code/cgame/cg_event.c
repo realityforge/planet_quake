@@ -373,6 +373,10 @@ static void CG_Obituary( entityState_t *ent ) {
 			message = "was juiced by";
 			break;
 #endif
+    case MOD_FROM_GRAVE:
+      message = "was killed by";
+      message2 = " from the grave";
+      break;
     case MOD_RING_OUT:
       message = "was forced out of the ring by";
       break;

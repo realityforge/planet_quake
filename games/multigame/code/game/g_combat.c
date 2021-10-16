@@ -319,6 +319,7 @@ char	*modNames[] = {
 	"MOD_TARGET_LASER",
   "MOD_VOID",
   "MOD_RING_OUT",
+  "MOD_FROM_GRAVE",
 	"MOD_TRIGGER_HURT",
 #ifdef MISSIONPACK
 	"MOD_NAIL",
@@ -527,6 +528,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		killer = ENTITYNUM_WORLD;
 		killerName = "<world>";
 	}
+  if (attacker && attacker->health < 0 ) {
+    meansOfDeath = MOD_FROM_GRAVE;
+  }
   if (level.time - self->splashTime < 4000
     && meansOfDeath == MOD_VOID) {
     attacker = self->splashAttacker;
