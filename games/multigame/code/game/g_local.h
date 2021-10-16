@@ -151,6 +151,8 @@ struct gentity_s {
 	int			splashRadius;
 	int			methodOfDeath;
 	int			splashMethodOfDeath;
+  int     splashTime; // for calculating if the last attacker caused ring out
+  gentity_t *splashAttacker;
 
 	int			count;
 
@@ -182,7 +184,9 @@ struct gentity_s {
 	tag_t		tag;
 
   int     items[MAX_ITEMS]; // times of items attached to the entities
-
+#ifdef USE_RUNES
+  int     rune;
+#endif
 #ifdef USE_ROTATING_DOOR
   float		distance;		// VALKYRIE: for rotating door
 #endif
@@ -857,6 +861,10 @@ extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+extern	vmCvar_t	g_scoutFactor;
+#endif
+extern	vmCvar_t	g_hasteFactor;
 extern	vmCvar_t	g_jumpVelocity;
 #endif
 

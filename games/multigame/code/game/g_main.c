@@ -83,6 +83,10 @@ vmCvar_t  wp_grapplePull;
 vmCvar_t  wp_grappleSpeed;
 #endif
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+vmCvar_t  g_scoutFactor;
+#endif
+vmCvar_t  g_hasteFactor;
 vmCvar_t  g_jumpVelocity;
 vmCvar_t  g_wallWalk;
 #endif
@@ -346,6 +350,10 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+  { &g_scoutFactor, "g_scoutFactor", "1.5", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
+#endif
+  { &g_hasteFactor, "g_hasteFactor", "1.3", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
   { &g_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
   { &g_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
 #endif

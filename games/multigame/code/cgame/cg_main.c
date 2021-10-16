@@ -244,6 +244,10 @@ vmCvar_t  cgwp_flameCycle;
 #endif // USE_WEAPON_VARS
 
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+vmCvar_t  cg_scoutFactor;
+#endif
+vmCvar_t  cg_hasteFactor;
 vmCvar_t	cg_jumpVelocity;
 vmCvar_t	cg_gravity;
 vmCvar_t	cg_wallWalk;
@@ -375,6 +379,10 @@ static const cvarTable_t cvarTable[] = {
   { &cg_itemTimer, "cg_itemTimers", "1", CVAR_USERINFO | CVAR_ARCHIVE},
 #endif
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+  { &cg_scoutFactor, "cg_scoutFactor", "1.5", CVAR_SERVERINFO},
+#endif
+  { &cg_hasteFactor, "g_hasteFactor", "1.3", CVAR_SERVERINFO},
   { &cg_jumpVelocity, "g_jumpVelocity", "270", CVAR_SERVERINFO},
   { &cg_gravity, "g_gravity", "800", CVAR_SERVERINFO},
   { &cg_wallWalk, "g_wallWalk", "0.7", CVAR_SERVERINFO},

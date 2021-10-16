@@ -1344,6 +1344,11 @@ static float CG_DrawPowerups( float y ) {
 		active++;
 	}
 
+#ifdef USE_RUNES
+  // always draw rune first if there is one
+  
+#endif
+
 	// draw the icons and timers
 	x = cgs.screenXmax + 1 - ICON_SIZE - CHAR_WIDTH * 2;
 	for ( i = 0 ; i < active ; i++ ) {
@@ -2222,26 +2227,31 @@ static void CG_DrawTeamVote(void) {
 
 
 #ifdef USE_RUNES
-void hud_runes(float x, float y, gitem_t *rune) {
+void hud_runes(float x, float y, float w, float h, gitem_t *rune) {
   vec3_t		    angles;
   vec3_t		    origin;
   float         rotation;
   refdef_t		  refdef;
   //refEntity_t		hand;
 	refEntity_t		ent;
-  float         dx = x, dy = y, w = 64, h = 64;
+  float         dx = x, dy = y, dw = w, dh = h;
+  float         *color;
   itemInfo_t		*itemInfo;
+  int           len;
+  char          firstPart[256];
+  int           s;
+  char          *split;
   itemInfo = &cg_items[ ITEM_INDEX(rune) ];
 
   VectorClear( angles );
   origin[0] = 90;
   origin[1] = 0;
   origin[2] = -10;
-  rotation = ( cg.time & 4095 ) * 40 / 4096.0;
-  if(rotation <= 20) {
+  rotation = ( cg.time & 4095 ) * 120 / 4096.0;
+  if(rotation <= 60) {
     angles[YAW] = 270 + rotation;
   } else {
-    angles[YAW] = 270 + (40 - rotation);
+    angles[YAW] = 270 + (120 - rotation);
   }
   
   // dont draw world if model is missing
@@ -2257,7 +2267,7 @@ void hud_runes(float x, float y, gitem_t *rune) {
   ent.customSkin = 0;
 	ent.renderfx = RF_NOSHADOW;		// no stencil shadows
 
-	CG_AdjustFrom640( &dx, &dy, &w, &h );
+	CG_AdjustFrom640( &dx, &dy, &dw, &dh );
 	memset( &refdef, 0, sizeof( refdef ) );
 	refdef.rdflags = RDF_NOWORLDMODEL;
 	AxisClear( refdef.viewaxis );
@@ -2265,11 +2275,18 @@ void hud_runes(float x, float y, gitem_t *rune) {
 	refdef.fov_y = 30;
 	refdef.x = dx;
 	refdef.y = dy;
-	refdef.width = w;
-	refdef.height = h;
+	refdef.width = dw;
+	refdef.height = dh;
 	refdef.time = cg.time;
 
 	trap_R_ClearScene();
+  
+  if(cg.showRunes)
+    color = colorWhite;
+  else
+    color = CG_FadeColor( cg.runesFadeTime, FADE_TIME );
+  trap_R_SetColor( color );
+  
   ent.customShader = itemInfo->altShader1;
 	trap_R_AddRefEntityToScene( &ent );
   if(itemInfo->altShader2) {
@@ -2277,7 +2294,25 @@ void hud_runes(float x, float y, gitem_t *rune) {
     trap_R_AddRefEntityToScene( &ent );
   }
   // draw icon just below and next to the rune
-  CG_DrawPic( x + 30, y + 30, 16, 16, itemInfo->icon );
+  CG_DrawString( x + 4, y + 4, va("%i", rune->giTag - RUNE_STRENGTH + 1), color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
+  len = strlen(rune->pickup_name);
+  if(len >= 12) {
+    split = Q_strrchr( rune->pickup_name, ' ' );
+    s = len - strlen(split) + 1;
+    if(s > 12) {
+      s = 11;
+      Q_strncpyz(firstPart, rune->pickup_name, s + 1);
+      firstPart[s + 1] = '\0';
+    } else {
+      Q_strncpyz(firstPart, rune->pickup_name, s);
+      firstPart[s] = '\0';
+    }
+    CG_DrawString( x + 4, y + h - 20, firstPart, color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
+    CG_DrawString( x + 4, y + h - 12, &rune->pickup_name[s], color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
+  } else {
+    CG_DrawString( x + 4, y + h - 12, rune->pickup_name, color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
+  }
+  CG_DrawPic( x + w - 20, y + h - 20, 16, 16, itemInfo->icon );
 
 	trap_R_RenderScene( &refdef );
 }
@@ -2310,14 +2345,14 @@ static qboolean CG_DrawRunesboard( void ) {
     for ( ix = 0 ; ix < 8 ; ix++ ) {
 
       n = iy * 8 + ix;
-      if(n >= RUNE_LITHIUM - RUNE_STRENGTH) {
+      if(n > RUNE_LITHIUM - RUNE_STRENGTH) {
         continue;
       }
 
       item = BG_FindItemForRune(n + 1);
       CG_RegisterItemVisuals( ITEM_INDEX(item) );
 
-      hud_runes(x, y, item);
+      hud_runes(x, y, w, h, item);
 
   		// TODO: draw selection marker
   		//if ( i == cg.weaponSelect ) {

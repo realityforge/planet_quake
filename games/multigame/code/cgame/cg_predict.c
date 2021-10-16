@@ -443,16 +443,27 @@ static void CG_PickupPrediction( centity_t *cent, const gitem_t *item ) {
 	}
 
 	// powerups prediction
-	if ( item->giType == IT_POWERUP && item->giTag >= PW_QUAD && item->giTag <= PW_FLIGHT ) {
+	if ( item->giType == IT_POWERUP && ((item->giTag >= PW_QUAD && item->giTag <= PW_FLIGHT) 
+#ifdef USE_RUNES
+    || (item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM)
+#endif
+  )) {
 		// round timing to seconds to make multiple powerup timers count in sync
 		if ( !cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] ) {
 			cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] = cg.predictedPlayerState.commandTime - ( cg.predictedPlayerState.commandTime % 1000 );
 			// this assumption is correct only on transition and implies hardcoded 1.3 coefficient:
 			if ( item->giTag == PW_HASTE ) {
+#ifdef USE_PHYSICS_VARS
+        cg.predictedPlayerState.speed *= cg_hasteFactor.value;
+#else
 				cg.predictedPlayerState.speed *= 1.3f;
+#endif
 			}
 		}
 		cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
+#ifdef USE_RUNES
+    cg_entities[cg.snap->ps.clientNum].rune = ITEM_PW_MIN + item->giTag;
+#endif
 	}	
 
 	// holdable prediction
@@ -516,6 +527,15 @@ static void CG_TouchItem( centity_t *cent ) {
 			item->giType == IT_TEAM && item->giTag == PW_BLUEFLAG)
 			return;
 	}
+
+#ifdef USE_RUNES
+  // can only pick up one rune at a time
+  if(cg_entities[cg.snap->ps.clientNum].rune
+    && item->giType == IT_POWERUP
+    && item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
+    return;
+  }
+#endif
 
 	// grab it
 #ifdef USE_WEAPON_ORDER
@@ -606,7 +626,7 @@ static void CG_TouchTriggerPrediction( void ) {
 		} else if ( ent->eType == ET_PUSH_TRIGGER ) {
       // moved from bg_misc
       // flying characters don't hit bounce pads
-      if(cent->items[ITEM_PW_MIN + PW_HASTE])
+      if(cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_HASTE])
         continue;
         
 #ifdef USE_GRAPPLE

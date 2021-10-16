@@ -163,7 +163,7 @@
 // draw 3D weapons that rotate slightly
 #define USE_3D_WEAPONS 1
 // weapon vars allow customizing all weapon behavior
-#define USE_WEAPON_VARS 1
+//#define USE_WEAPON_VARS 1
 // client side weapon order
 #define USE_WEAPON_ORDER 1
 // allow clients to center the weapons above the hud

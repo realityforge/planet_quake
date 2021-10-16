@@ -56,6 +56,10 @@ extern	int		c_pmove;
 
 #ifdef CGAME
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+#define g_scoutFactor  cg_scoutFactor
+#endif
+#define g_hasteFactor  cg_hasteFactor
 #define g_jumpVelocity cg_jumpVelocity
 #define g_gravity      cg_gravity
 #define g_wallWalk     cg_wallWalk
@@ -103,6 +107,10 @@ extern vmCvar_t  wp_flameCycle;
 #endif
 
 #ifdef USE_PHYSICS_VARS
+#ifdef MISSIONPACK
+extern vmCvar_t  g_scoutFactor;
+#endif
+extern vmCvar_t  g_hasteFactor;
 extern vmCvar_t  g_jumpVelocity;
 extern vmCvar_t  g_gravity;
 extern vmCvar_t  g_wallWalk;

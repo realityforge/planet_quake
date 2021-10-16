@@ -128,6 +128,9 @@ static void CG_Obituary( entityState_t *ent ) {
 	case MOD_TARGET_LASER:
 		message = "saw the light";
 		break;
+  case MOD_VOID:
+    message = "fell into the void";
+    break;
 	case MOD_TRIGGER_HURT:
 		message = "was in the wrong place";
 		break;
@@ -370,6 +373,9 @@ static void CG_Obituary( entityState_t *ent ) {
 			message = "was juiced by";
 			break;
 #endif
+    case MOD_RING_OUT:
+      message = "was forced out of the ring by";
+      break;
 		case MOD_TELEFRAG:
 			message = "tried to invade";
 			message2 = "'s personal space";
@@ -933,6 +939,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
       if(	item->giType == IT_POWERUP ) {
         cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
   		  cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
+#ifdef USE_RUNES
+        if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM)
+          cg_entities[cg.snap->ps.clientNum].rune = ITEM_PW_MIN + item->giTag;
+#endif
       }
 
 			// show icon and name on status bar

@@ -850,12 +850,20 @@ void ClientThink_real( gentity_t *ent ) {
 
 #ifdef MISSIONPACK
 	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
+#ifdef USE_PHYSICS_VARS
+    client->ps.speed *= g_scoutFactor.value;
+#else
 		client->ps.speed *= 1.5;
+#endif
 	}
 	else
 #endif
 	if ( ent->items[ITEM_PW_MIN + PW_HASTE] ) {
+#ifdef USE_PHYSICS_VARS
+    client->ps.speed *= g_hasteFactor.value;
+#else
 		client->ps.speed *= 1.3;
+#endif
   }
 
 #ifdef USE_LOCAL_DMG

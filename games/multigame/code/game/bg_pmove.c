@@ -1791,9 +1791,19 @@ static void PM_Weapon( void ) {
 	}
 #endif
 
+#ifdef USE_ALT_FIRE
+  // Hypo: simple alt-fire example
+  if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
+  	addTime /= 2.0;
+  } else
+#endif
 #ifdef MISSIONPACK
 	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
+#ifdef USE_PHYSICS_VARS
+    addTime /= g_scoutFactor.value;
+#else
 		addTime /= 1.5;
+#endif
 	}
 	else
 	if( bg_itemlist[pm->ps->stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
@@ -1802,14 +1812,12 @@ static void PM_Weapon( void ) {
   else
 #endif
 	if ( items[ITEM_PW_MIN + PW_HASTE] ) {
+#ifdef USE_PHYSICS_VARS
+    addTime /= g_hasteFactor.value;
+#else
 		addTime /= 1.3;
-	}
-#ifdef USE_ALT_FIRE
-  // Hypo: simple alt-fire example
-  if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
-  	addTime /= 2.0;
-  }
 #endif
+	}
 
 	pm->ps->weaponTime += addTime;
 }

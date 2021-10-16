@@ -98,6 +98,11 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	}
 
 	other->items[ITEM_PW_MIN + ent->item->giTag] += quantity * 1000;
+  
+#ifdef USE_RUNES
+  if(ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM)
+    other->rune = ITEM_PW_MIN + ent->item->giTag;
+#endif
 
 	// give any nearby players a "denied" anti-reward
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
@@ -532,6 +537,14 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 	G_LogPrintf( "Item: %i %s\n", other->s.number, ent->item->classname );
 
+#ifdef USE_RUNES
+  // can only pickup one rune at a time
+  if(other->rune && ent->item->giType == IT_POWERUP
+    && ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM) {
+    return;
+  }
+#endif
+
 	predict = other->client->pers.predictItemPickup;
 
 	// call the item-specific pickup function
@@ -558,6 +571,10 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			predict = qtrue;
 		else
 			predict = qfalse;
+#ifdef USE_RUNES
+    if(ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM)
+      predict = qtrue;
+#endif
 		break;
 #ifdef MISSIONPACK
 	case IT_PERSISTANT_POWERUP:

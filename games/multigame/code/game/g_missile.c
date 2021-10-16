@@ -786,6 +786,9 @@ static void G_Suck( gentity_t *self ) {
 #endif
 
 
+#define GRENADE_DAMAGE	100		// bolt->damage for grenade
+#define GRENADE_RADIUS	150		// bolt->splashRadius for grenade
+
 #ifdef USE_CLUSTER_GRENADES
 /*
 =================
@@ -835,9 +838,6 @@ gentity_t *fire_grenade2 (gentity_t *self, vec3_t start, vec3_t dir) {
 }
 #endif
 
-
-#define GRENADE_DAMAGE	100		// bolt->damage for grenade
-#define GRENADE_RADIUS	150		// bolt->splashRadius for grenade
 /*
 =================
 fire_grenade

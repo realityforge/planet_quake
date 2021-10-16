@@ -1829,6 +1829,19 @@ Cmd_Drop_f XRAY FMJ
 =================
 */
 void Cmd_Drop_f( gentity_t *ent ) {
+  if(g_dropWeapon.integer > 1) {
+    // if there are persistant power-ups drop those
+#ifdef MISSIONPACK
+    if(ent->client->persistantPowerup) {
+      TossClientPersistantPowerups(ent);
+      return;
+    }
+#endif
+    // check if there are some holdable items to toss
+    if(g_dropWeapon.integer > 2) {
+      
+    }
+  }
   if(g_dropWeapon.integer)
     ThrowWeapon( ent );
 }

@@ -211,6 +211,9 @@ typedef struct centity_s {
 	vec3_t			lerpAngles;
 
   int       items[MAX_ITEMS]; // times of items attached to the entities
+#ifdef USE_RUNES
+  int       rune;
+#endif
 } centity_t;
 
 
@@ -1328,6 +1331,7 @@ extern	vmCvar_t		cg_deadBodyDarken;
 extern	vmCvar_t		cg_fovAdjust;
 extern	vmCvar_t		cg_followKiller;
 #ifdef USE_PHYSICS_VARS
+extern	vmCvar_t	  cg_hasteFactor;
 extern	vmCvar_t	  cg_jumpVelocity;
 extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
