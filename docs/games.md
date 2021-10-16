@@ -39,7 +39,7 @@ The following features I've added to baseq3a without affecting the networking pr
   * Server-side instagib gameplay.
   * Bots can spawn-camp, where they use spawn points as objectives for moving around. This was necessary for instagib because items are removed from the map.
   * More modes of death - ring out takes a point away from the person who falls into the void and gives a point to the last person that did knock-back damage to the player that died. Void death detection if someone fall a distance and then was killed by a world trigger. And from-the-grave death when a grenade goes off an kills another player after the person was already killed.
-  * 60 different runes with colors, icons, and abilities from the original Rune Quake.
+  * 60 different runes with colors, icons, and abilities from the original Rune Quake. TODO: implement runes.
 
 ## TODO
 

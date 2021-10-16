@@ -1,0 +1,230 @@
+  ____      ____     ___              __         __    
+ / ___\    | __ \   | __ \           /  |       /  |   Now Includes
+| /   _    |  __/   |  __/   ____     | |        | |  Challenge ProMode Physics!
+| |__| |   | |      | |     |____|   _| |_   _  _| |_   (Comes with a table to compile
+ \____/    |_|      |_|             |_____| (_)|_____|  other game physics for simulation^)
+         _      ____    ____   __    _      _      "Smarter" (than P-Bot) Bots!
+        / \    | __ \  |  __| |  \  | |    / \     Vote-able Vampire mode!
+       / ^ \   |'--'/  |  \   |   \ | |   / ^ \     Teamkill/FreeForAll mode!
+      / /=\ \  | |\ \  |  /_  | |\ \| |  / /=\ \    (And Other Stuff =D)
+     /_/   \_\ |_| \_\ |____| |_| \___| /_/   \_\
+^Not exactly perfect, but I did educated guestimates. See src/game/bg_promode.c for more info.
+Note: This qvm is "sort of" in active developement. If you have requests, feel free to do so here or email me at my youtube channel
+youtube.com/user/zdrytchx
+NOTE: The modder of this qvm does NOT know "proper" programming, so do NOT refer to me or my source for learning coding.
+Occasionally, this qvm gets a few unstable builds, bugs or other problems. I may need help at these times.
+*****************
+INSTALLATION
+*****************
+1. Get vms from https://github.com/ZdrytchX/GPP-1-1/tree/master/build/release-linux-x86/base/vm
+  and put them in "<your trem directory>/gpp-1-1/vm" - you might need to create some folders yourself.
+2. Download the folders/files listed, and place them in your "<your trem directory>/gpp-1-1" directory:
+  https://github.com/ZdrytchX/GPP-1-1/tree/master/class
+  https://github.com/ZdrytchX/GPP-1-1/tree/master/paths
+  For these, put them directly into the /gpp-1-1 folder, don't create the /config folder! (my bad :/)
+  https://github.com/ZdrytchX/GPP-1-1/blob/master/configs
+  The Admin.dat comes with a few examples. The flag definitions are in g_admin.c in (https://github.com/ZdrytchX/GPP-1-1/tree/master/src/game/g_admin.c)
+3. Open a port, such as 30715. Do some googling, I've never been able to acomplish this because my ISP (iinet.net.au) disallows private server hosting as it seems. You need a static IP to host a server.
+4. Get a 1.1 tremded to start with:
+  tremded.exe +set dedicated 2 +exec server.cfg +set net_port 30715
+  The port number can be anything, but preferably not 30720 (tremulous default, your client uses this) or some crazy number like 33333 since other applications might use it.
+5. Connect, have fun. Do !bot add <name> <a/h> <skill level, 1-100> for some single-player fun. 
+
+CoW Tremulous QVM v2.0 [incomplete] merge with GPP-1.1/Lolards v0.7 mod
+
+Credits for bots:
+The original works of vcxzet (lamebot3) were used a guide to create TremBot.
+The works of Amine Haddad (TremBot) and Sex (PBot) where used/modified to create COW Bot
+
+From CoW bot code by Fuma (not up-to-date):
+{
+ Current Features (Over Lakitu QVM 5.5):
+ Advanced bots with route finding capabilities and waypoint support. Entirely customisable!
+ !loadlayout allows loading of a new layout without a restart
+ !loadrotation allows the changing of rotations on demand
+ !strip and associated commands allow admins to control a player's access to weapons/armor/classes. 
+ 
+ Bot Specific Features:
+ !botcfg allows loading/saving of bot configuration files
+ !botset allows the changing of bot abilities
+ !botcmd changes the bots behavior
+ !bot adds bots with a specified skill level
+ !drawnodes shows the waypoints
+ /node allows the making of waypoints for the bots  
+
+ Bots can:
+ Go to a medistat to heal
+ Go to an armoury to buy weapons and armor
+ Evolve
+ Use secondary abilities like lighting, pounce, snipe, charge
+ Wallcrawl
+ Use waypoints to navigate the map and go to a location
+ Dodge.
+ Will not keep human players in a long spawn queue
+ Anti-Hax-type aiming using recoil system depending on skill level
+}
+Great thanks to Fuma for helping me with setting up a github account and helping me with the code
+See his source code @ https://github.com/cmf028/CoW-Tremulous
+FYI his version number needs to increment to 3.0. Don't get the wrong idea that i've upgraded to the new one.
+
+Also, thanks /dev/humancontroller for debugging, Volt for helping me start modding in the early days with his tutorial pack, and Fuma for helping me occasionally when I'm in trouble.
+
+==Bot configuration edits by me==
+-Goon pounces TO human, not ABOVE human.
+-Bot Lcannon charges 2.5s rather than original 2
+-Bots now don't sit in the same spot when killing a structure when using a painsaw
+-Human Bots jump and crouch dodge (FUGEEEEH! They're really good!)
+-Alien dretches don't wallwalk permanently anymore, and jump depending on their skill level (1-2 bunnyhop 3-4 nothing 5+ both, including wallwalk)
+-Bots now are more interactive (uses /teamstatus, /donate, tells you if he drops or buys a grenade)
+-Bots' fake ping is now adjustable by g_bot_ping
+-Bots now buy and drop nades if they have enough funds to do so, with their probability defined by cvars
+-Teamkill Mode makes bots teamkill as well (g_mode_teamkill) (to be changed for g_mode_tk)
+-Bots sprint if they have enough stamina in combat, and walk to regen stamina
+-PoisonCloud (basilisk gas) disorientates human bot's aim a little, depending on their skill level
+-bots classified as AUTO (default) spawn both rifle and ckit, and for aliens, dretches and grangers (if g_bot_granger is on)
+-Bots can buy bsuits with the g_bot_bsuit cvar (currently the model isn't being displayed)
+-Bots talk occasionally, such as complaining about being drugged by basi gas, taunting, when lost etc.
+-Reaction time dependant on cvars, ping and skill level
+-Bots chase the same guy for about 3 seconds even if another enemy is blocking the view
+
+GPP-1.1 Arena "Features":
+-Lil' Gwangie has his cutie tusks available in combat
+-Smooth Regeneration
+-Regen speeds depend upon creeps and basis
+-Degeneration
+-Rant can "lawn mow" but has beenn nerfed by lots, and does 20% damage to buildables only
+-Pounce whoring possible, but has been balanced with chomps
+-Re-gassing as a basilisk resets the victim's disorientation timer rather than doing nothing and waiting for it to finish before becomming effective
+-Gas goes through armour
+-Gas deals a mere 1 damage per second (code-wise it deals 0 damage though, dunno whats wrong here)
+-Lcannon is a 1.1-Unvanquished mix (Dynamic luci ball speed from Lolards, 2.5 second primary charge time, gpp "MDK"-like secondary or finish-off combos, full charge takes 1.1 style)
+-Most buildables take gpp values
+-Turrets are a mix - Crappy at close range againts a fast alien, but great in damage dealing and fires inaccurately (misses dretches a lot long range, read Lolards features)
+-DCC simply boosts turret aiming speeds and distribute defences (like 1.1 ) but aren't required for tesla generators
+-No dcc required, but human buildables regenerate slowly (~2hp/s for most) rather than gpp's 4hp/s/dcc_in_range
+-Painsaw range 60, not 40, not 80 so it is able to reach under feet without being overpowered, uses 1.1 damage/s
+-GPP Pulse rifle projectile speed, 1.1 clip system
+-Unvanquished-like stamina system, but still slows down below 50% to reduce the benifit of strafe jumping
+-Battlesuits regen more stamina, Light armour takes more stamina so bsuits are more useful
+-Mara zap more useful againts buildables
+-Marazap chain count 3 -> 5 (may be overpowered)
+-Zap sustains even after victim's death unless a new victim is found or out of range
+-Zap sustains after one's death (Try getting a kill while you're dead!)
+-Dretche bites 48 -> 36 (bites faster though to keep damage rate)
+-Goon barb explosians (75% damage only because it's overpowered)
+-Increased barb reload timer to 20
+-GPP shotgun (11 pellets, each doing 5 damage, where 1.1 has 14 pellets, each 4 dmg) to help againts dretches
+-Auto-Bunnyhop
+-Ramp Jumps
+-Challenge ProMode Physics (and some customisation options via bg_promode.c)
+-Bunnyhop gains a bit of speed with a limit of 1000 (works somewhat similar to xonotic's and warsow's)
+-g_mode_teamkill enables teamkill/FreeForAll mode
+-[80%]Options (currently requires recompiling) to modify pmove system to mimick certain game modes
+-Air Control varies in 3 types for aliens
+-Custom MessageOfDeaths for some causes
+-Added callvotes for teamkill/freeforall and vampire modes. Teamkill votes need a class/normal.cfg and class/tk.cfg to work properly. (I don't want to hardcode dretchpunt, friendlyfiremovementattacks and stuff, safer to keep them external)
+-Added anti-spawn camping measures for teamkill/FreeForAll mode (Make a layout with a trapper and turret pointing at the spawns, keeps the player dancing at least)
+-Marauder speed limit isn't instantaneous; it slows you down by a portion
+-Hitsounds! Read on:
++cg_hitsounds gives a hitsound dependant on the value.
+Take note that Vanilla tremulous ONLY has monotone and server owners using this mod can disable hitsounds.
+  3 = Dependant on Damage, g_hitsounds MUST have monotone DISABLED. Idea came from Quake 3 Challenge ProMode mod.
+  2 = Dependant on number of hits, g_hitsounds MUST have monotone ENABLED.
+  1 = Monotone, no matter what. Works when both monotone is enabled and disabled. This is the Quake 3 Arena default.
+  0 = off
+  Default = 3
++g_hitsounds enables/disables hitsounds. Server owners who prefer to have their game not effected by 'spray to find dretch' tactics should set this off. As a fast-paced gamer, I prefer this to be on as it helps in 1-on-1 combat, and determins your accuracy without monotone mode.
++g_hitsounds_type is an 'enum' type variable from 0-7.
+  8 = No teammates, 4 = no buildables, 2 = monotone, 0 = off, default 4
+  i.e. 5 = monotone, server will return a '1'  value whenever anyone except buildables are hit.
+  Please note that 'monotone' effects the hitsounds, see above at cg_hitsounds
+-Other shit
+
+"Imported" and "Invented" Gameplay from Lolards/Misc mods of mine:
+-Modified Turret aiming code - they aim slower when firing, and aim even slower when they're aiming directly at you
+-Humans regenerate slowly
+-Basi Gas effects un-helmeted people (not un-armoured people, where helmets can get gassed before)
+-Blaster/Flamer jumping/climbing is possible now (blaster splash isnt supposed to deal damage, but its damage is a mere 1, dunno what happened here, look at basi gas above)
+-Dynamic luci ball speed (applied before unvanquished did theirs actually)
+-Smoother flamer firing speed (10 damage per missile instead of 20, fires twice as fast, twice the ammo)
+-Chaingun has a more inaccurate secondary which splits the bullets into three, but fires a tad slower
+-Chaingun has an extra clip with a painfully long reload
+-Lasgun isn't 100% accurate, although spread is very little (anti camping reasons, it's the best survival weapon afterall)
+-Non-crappy JETPACK
+-Extreme High falls now can insta-kill all armoured humans
+-Mara zap has a "sustain" range seperate from the "initialising" range
+-Mara zap does not lose as much damage per victim added to the chain
+-Zap initialising range 300 -> 200
+-Zap "Sustaining" range 300 -> 400
+-Blaster Combos available to use, but blaster has recharge time if spammed
+-Blaster Combos actually do more damage per second if done properly with a shotgun or mass driver
+-Cvars for *some* vars
+-A short time is given where the player can attack quickly, such as the rifle can do 3-shot bursts by tapping the mouse button, this applies to all weapons, including aliens
+-Mass driver rails falls to gravity, and isn't hitscan
+-Blaster knockback has been nerfed if an event of basilisk grabbing has taken place for balance reasons
+-Other shit
+
+Irregular Features added that are actually 'bugs' but plan on keeping:
+[nil]
+
+Imported from Sixthly's Aussie Assault 1.1:
+
+-By default, level-1s cannot decon (g_minDeconLevel = 0)
+-Black names are allowed (g_allowBlackInNames)
+-/Teamstatus (g_teamStatus) i.e. RC:[465/930(50)] Telenodes: 2 Builders: 1 Armoury: 1 Medistation: 2
+-Aliens can evolve near overminds even with enemies nearby
+
+
+Potential Side Effects/bugs from features:
+-Some clients on rare occasions can be "bot infected" (not literally, just a term where his client takes over a bot's and the bot tries to control him when he's lagging) although this bug has not been seen for over a year (did I fix it accidentally?)
+>>>Potential Cause: Adding bots while clients connect [TODO: Refer to CoW QVM]
+-With alien's smooth regeneration system, the server MAY take more CPU (not confirmed)(A fix has been made to heal up to 4 hp per server frame)
+
+TODO list:
+-[35%]Find out how to get cvars to access pmove and related files (bunnyhop, rampjump option, knockback cvars etc.)
+-Fix missing flag for buying/selling with bots -> is armoury spawned?
+-Disallow !revert-ing hovels, they make grangers disappear and stuck in a non-existant hovel
+-Adminlogs, server owners can find out who over-uses admin powers (which I don't like)
+-Add lag compensation for projectiles (needed for mass driver especially, only GPP has this code)
+-Find a non-hacky way of fixing marauder's occasional "walljump" on the ground without removing walljump repeat rate
+-Add pmove cvars (g_mode_cpm, g_mode_cpm_aircontrol, g_mode_bunnyhop, g_mode_autojump etc.)
+-Replace g_mode_cpm with g_mode_physics
+-Fix TF2's "Anti Circle Strafe' fix (currently doesn't apply the speed change once, rather it makes you either fly or stop completely)
+-Fix g_mode_cpm callvote
+-Fix Bunnyhop Acceleration (unknown cause at the moment, it used to work)
+-Solid slick somewhat doubles your speed momentarily, caused by CPM physics
+-Add "ground accel" qboolean var for WarSow solid slick acceleration settings
+-Add "ramp sliding" (if upward vel on ramp > jump vel, then slide) for the Team Fortress series and WarSow settings
+-Fix bot kicking (callvote, !kick) where the server freezes while finding an invalid IP
+-Allow bots to bypass the invalid IP filter (hence currently is disabled)
+-Add teamstatus flags for the teams, one per team. Only the bots with the team's teamstatus flag are allowed to exec Cmd_TeamStatus_f(self)
+-Allow bots to donate funds properly
+-Bot disconnect messages appear in the server console each time you !restart. Could possibly contribute to a problem involving teamstatus flags for bots in the future.
+-Make cg_hitsounds change from 2/3 if the server has/not monotone
+
+Wishlist (I currently have no knowledge how to add these):
+-Add a g_mode_race, referring to bob's oc mod
+  +Unlimited stamina, however sprint and mods (like back peddling) will be taken off
+  TODO: Get a g_mode_race cvar just to allow humans to do q3 defrag ported strafe maps using unlimited stamina and no side/backpedal consequences :)
+-Make bots do circle jumps something like how CPM does theirs - With bunnyhop mode, we don't need them to strafe jump
+-Add Air Control turning penalty
+-Add Double Jumps (Actually, just a jump that can be stacked, really)
+-Un-hard code the ProTrem physics, so we can vote them in (requires clients to download my cgame client). This also would allow space for voteable physics that simulate from the following games:
+  +Vanilla Quake3/Vanilla Tremulous (1.1 Default)
+  +Tremulous 1.2 Gameplay Preview (GPP)/Unvanquished [Alpha] (Bob calls it 'MG' ramp jumps)
+  +Challenge ProMode Arena (Old CPM 2003 from http://games.linuxdude.com/tamaps/archive/cpm1_dev_docs.zip)
+  +ProTrem (My personal settings, it's a mix of CPM and bunnyhop, a bit like WarSow's old/new movement mix)
+  +WarSow 1.2 (Xonotic Configs)
+  +Xonotic 0.6/0.7 (Xonotic Configs)
+  +Quake 1/QuakeWorld/(Quake TeamFortress uses QW) (Xonotic Configs)
+  +Team Fortress Classic (GoldSrc) (Values from Wiki + Guesstimates)
+  +Team Fortress 2 (as of 2013, it has modified over the years) (Values from Wiki + cl_drawpos 1 Estimates)
+  +Newbie Physics (Disallows strafe jumping, bunnyhopping enabled, velocity goes in direction of keys and camera angle)
+I already have the data somewhat ready for the games, but the qvm needs recompiling each time to change the settings.
+
+-Use stamina level to determine cmdscale/jump magnitude for dynamic jump heights [Problem: Jump function is a boolean. Double jump can be easily fixed with "if stamina < min then don't doublejump"]
+-Have missiles/projectiles be able to be 'shot down' by attacks (i.e. make them explode mid-air, prevent a few barbs from hitting you or forcefully make a grenade explode by biting them)
+
+Other features I want to add, but restraining self from doing so:
+-Should I re-add my lovely acid gun? (Fuck yeah!... oh wait, I gotta keep gameplay as vanilla as possible... :/)
+-Should I add the Xael gun? (Requires clients to own my cgame.qvm)

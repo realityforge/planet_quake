@@ -224,6 +224,8 @@
 #define USE_INVULN_RAILS 1
 // runes enable little popup powerups in random places on the map, over 60 different effects
 #define USE_RUNES 1
+// extra modes of death like MOD_VOID, MOD_RING_OUT and MOD_FROM_GRAVE
+#define USE_MODES_DEATH 1
 // 
 
 #endif

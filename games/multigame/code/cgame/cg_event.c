@@ -128,9 +128,11 @@ static void CG_Obituary( entityState_t *ent ) {
 	case MOD_TARGET_LASER:
 		message = "saw the light";
 		break;
+#ifdef USE_MODES_DEATH
   case MOD_VOID:
     message = "fell into the void";
     break;
+#endif
 	case MOD_TRIGGER_HURT:
 		message = "was in the wrong place";
 		break;
@@ -373,6 +375,7 @@ static void CG_Obituary( entityState_t *ent ) {
 			message = "was juiced by";
 			break;
 #endif
+#ifdef USE_MODES_DEATH
     case MOD_FROM_GRAVE:
       message = "was killed by";
       message2 = " from the grave";
@@ -380,6 +383,7 @@ static void CG_Obituary( entityState_t *ent ) {
     case MOD_RING_OUT:
       message = "was forced out of the ring by";
       break;
+#endif
 		case MOD_TELEFRAG:
 			message = "tried to invade";
 			message2 = "'s personal space";

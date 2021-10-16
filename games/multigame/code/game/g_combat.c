@@ -317,9 +317,11 @@ char	*modNames[] = {
 	"MOD_FALLING",
 	"MOD_SUICIDE",
 	"MOD_TARGET_LASER",
+#ifdef USE_MODES_DEATH
   "MOD_VOID",
   "MOD_RING_OUT",
   "MOD_FROM_GRAVE",
+#endif
 	"MOD_TRIGGER_HURT",
 #ifdef MISSIONPACK
 	"MOD_NAIL",
@@ -528,6 +530,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		killer = ENTITYNUM_WORLD;
 		killerName = "<world>";
 	}
+#ifdef USE_MODES_DEATH
   if (attacker && attacker->health < 0 ) {
     meansOfDeath = MOD_FROM_GRAVE;
   }
@@ -538,6 +541,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
     killerName = self->splashAttacker->client->pers.netname;
     meansOfDeath = MOD_RING_OUT;
 	}
+#endif
 
 	if ( killer < 0 || killer >= MAX_CLIENTS ) {
 		killer = ENTITYNUM_WORLD;
@@ -571,9 +575,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		if ( attacker == self || OnSameTeam (self, attacker ) ) {
 			AddScore( attacker, self->r.currentOrigin, -1 );
 		} else {
+#ifdef USE_MODES_DEATH
       if(meansOfDeath == MOD_RING_OUT) {
         AddScore( self, self->r.currentOrigin, -1 );
       }
+#endif
 			AddScore( attacker, self->r.currentOrigin, 1 );
 
 			if( meansOfDeath == MOD_GAUNTLET ) {
@@ -1119,8 +1125,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		VectorScale (dir, g_knockback.value * (float)knockback / mass, kvel);
 		VectorAdd (targ->client->ps.velocity, kvel, targ->client->ps.velocity);
 
+#ifdef USE_MODES_DEATH
     targ->splashAttacker = attacker;
     targ->splashTime = level.time;
+#endif
 
 		// set the timer so that the other client can't cancel
 		// out the movement immediately
