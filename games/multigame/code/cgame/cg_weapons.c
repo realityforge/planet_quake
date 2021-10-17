@@ -1252,10 +1252,11 @@ static float	CG_MachinegunSpinAngle( centity_t *cent ) {
 CG_AddWeaponWithPowerups
 ========================
 */
-static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *ent ) {
+static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 	// add powerup effects
   centity_t *cent;
-  cent = &cg_entities[ent->currentState.clientNum];
+  cent = &cg_entities[cl->currentState.number];
+
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if ( cent->items[ITEM_PW_MIN + PW_FROZEN] ) {
     trap_R_AddRefEntityToScene( gun );
@@ -1469,6 +1470,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 void CG_CenterGun(float *gen_guny, playerState_t *ps) {
   switch (ps->weapon)
 	{
+    default:
 		case WP_MACHINEGUN:
 		case WP_SHOTGUN:
 		case WP_LIGHTNING:
@@ -1476,6 +1478,12 @@ void CG_CenterGun(float *gen_guny, playerState_t *ps) {
 			break;
     case WP_GAUNTLET:
 		case WP_PLASMAGUN:
+#ifdef USE_FLAME_THROWER
+    case WP_FLAME_THROWER:
+#endif
+#ifdef USE_GRAPPLE
+    case WP_GRAPPLING_HOOK:
+#endif
 			*gen_guny = cg_gun_y.value + 4 * cg_gunCenter.value;
 			break;
     case WP_GRENADE_LAUNCHER:

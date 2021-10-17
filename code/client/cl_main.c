@@ -5192,7 +5192,11 @@ void CL_Init( void ) {
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_autoNudge, "0", "1", CV_FLOAT );
+#ifdef BUILD_GAME_STATIC
+  cl_timeNudge = Cvar_Get( "cl_timeNudge", "-30", CVAR_TEMP );
+#else
   cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_TEMP );
+#endif
 	Cvar_CheckRange( cl_timeNudge, "-30", "30", CV_INTEGER );
 
 	cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
@@ -5301,7 +5305,11 @@ void CL_Init( void ) {
 	// userinfo
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE_ND );
 	Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
+#ifdef BUILD_GAME_STATIC
+  cl_snaps = Cvar_Get ("snaps", "100", CVAR_USERINFO | CVAR_ARCHIVE );
+#else
 	cl_snaps = Cvar_Get ("snaps", "40", CVAR_USERINFO | CVAR_ARCHIVE );
+#endif
 	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
 	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
  	Cvar_Get ("team_model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );

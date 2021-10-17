@@ -6,7 +6,7 @@ BUILD_GAME_QVM  ?= 1
 BUILD_BASEQ3A   := 1
 BUILD_MULTIGAME := 1
 ifneq ($(BUILD_CLIENT),1)
-unexport BUILD_GAME_STATIC
+BUILD_GAME_STATIC = 0
 WORKDIR         := $(MOD)
 MKFILE          := $(lastword $(MAKEFILE_LIST)) 
 include make/platform.make

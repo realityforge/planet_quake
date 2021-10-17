@@ -2401,7 +2401,7 @@ Also called by CG_Missile for quad rockets, but nobody can tell...
 */
 void CG_AddRefEntityWithPowerups( refEntity_t *ent, centity_t *cl, int team ) {
   centity_t *cent;
-  cent = &cg_entities[cl->currentState.clientNum];
+  cent = &cg_entities[cl->currentState.number];
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
     if ( cent->items[ITEM_PW_MIN + PW_FROZEN] )

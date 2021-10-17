@@ -4100,7 +4100,11 @@ void Com_Init( char *commandLine ) {
 	// init commands and vars
 	//
 #ifndef DEDICATED
-	com_maxfps = Cvar_Get( "com_maxfps", "125", 0 ); // try to force that in some light way
+#ifdef BUILD_GAME_STATIC
+	com_maxfps = Cvar_Get( "com_maxfps", "1000", 0 ); // try to force that in some light way
+#else
+  com_maxfps = Cvar_Get( "com_maxfps", "125", 0 ); // try to force that in some light way
+#endif
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( com_maxfps, "0", "1000", CV_INTEGER );
 	Cvar_CheckRange( com_maxfpsUnfocused, "0", "1000", CV_INTEGER );

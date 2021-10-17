@@ -945,18 +945,22 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			}
 
       if(	item->giType == IT_POWERUP ) {
-        cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
-  		  cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
+        cg_entities[cent->currentState.otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
+  		  cg_entities[cent->currentState.otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
 #ifdef USE_RUNES
         if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM)
-          cg_entities[cg.snap->ps.clientNum].rune = ITEM_PW_MIN + item->giTag;
+          cg_entities[cent->currentState.otherEntityNum].rune = ITEM_PW_MIN + item->giTag;
 #endif
       }
 
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
         if(item->giTag == PW_HASTE) {
+#ifdef USE_PHYSICS_VARS
+          cg.predictedPlayerState.speed *= cg_hasteFactor.value;
+#else
           cg.predictedPlayerState.speed *= 1.3f;
+#endif
         }
 #ifdef USE_WEAPON_ORDER
 				CG_ItemPickup( index, qfalse );

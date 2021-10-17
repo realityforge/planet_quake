@@ -427,6 +427,7 @@ void InitLevelItemHeap(void)
 	//
 	freelevelitems = levelitemheap;
 } //end of the function InitLevelItemHeap
+
 void InitSpawnHeap(void)
 {
 	int i, max_spawns;
@@ -625,11 +626,10 @@ void BotInitSpawns(void)
 {
 	int spawnflags, value;
 	char classname[MAX_EPAIRKEY];
-	vec3_t origin, end;
+	vec3_t origin;
 	int ent, goalareanum;
 	itemconfig_t *ic;
 	levelitem_t *li;
-	bsp_trace_t trace;
 
 	//initialize the level item heap
 	InitSpawnHeap();
@@ -645,6 +645,7 @@ void BotInitSpawns(void)
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
 	{
 		if (!AAS_ValueForBSPEpairKey(ent, "classname", classname, MAX_EPAIRKEY)) continue;
+    if(classname[0] == '\0') continue;
     if(strcmp(classname, "info_player_deathmatch")) continue;
 		//
 		spawnflags = 0;
@@ -658,20 +659,6 @@ void BotInitSpawns(void)
 		//
 		goalareanum = 0;
 		//if the item is not floating in water
-		if (!(AAS_PointContents(origin) & CONTENTS_WATER))
-		{
-			VectorCopy(origin, end);
-			end[2] -= 32;
-			trace = AAS_Trace(origin, 0, 0, end, -1, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
-			//if the item not near the ground
-			if (trace.fraction >= 1)
-			{
-				//if the item is not reachable from a jumppad
-				goalareanum = AAS_BestReachableFromJumpPadArea(origin, 0, 0);
-				Log_Write("item %s reachable from jumppad area %d\r\n", classname, goalareanum);
-				if (!goalareanum) continue;
-			} //end if
-		} //end if
 
 		li = AllocSpawn();
 		if (!li) return;

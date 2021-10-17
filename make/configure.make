@@ -221,6 +221,8 @@ endif
 
 ifeq ($(BUILD_GAME_STATIC),1)
   BASE_CFLAGS += -DBUILD_GAME_STATIC
+else
+unexport BUILD_GAME_STATIC
 endif
 
 ifeq ($(USE_ASYNCHRONOUS),1)
