@@ -4,7 +4,7 @@
 #include "cg_local.h"
 
 #ifdef MISSIONPACK
-#include "../ui/ui_shared.h"
+#include "cg_shared.h"
 // display context for new ui stuff
 displayContextDef_t cgDC;
 #endif
@@ -66,6 +66,9 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 	case CG_CONSOLE_COMMAND:
 		return CG_ConsoleCommand();
 	case CG_DRAW_ACTIVE_FRAME:
+#ifdef BUILD_GAME_STATIC
+    //Init_Display(&cgDC);
+#endif
 		CG_DrawActiveFrame( arg0, arg1, arg2 );
 		return 0;
 	case CG_CROSSHAIR_PLAYER:
@@ -1508,7 +1511,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.textFont);
+			trap_R_RegisterFont(tempStr, pointSize, &cgDC.Assets.textFont);
 			continue;
 		}
 
@@ -1518,7 +1521,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.smallFont);
+			trap_R_RegisterFont(tempStr, pointSize, &cgDC.Assets.smallFont);
 			continue;
 		}
 
@@ -1528,7 +1531,7 @@ qboolean CG_Asset_Parse(int handle) {
 			if (!PC_String_Parse(handle, &tempStr) || !PC_Int_Parse(handle, &pointSize)) {
 				return qfalse;
 			}
-			cgDC.registerFont(tempStr, pointSize, &cgDC.Assets.bigFont);
+			trap_R_RegisterFont(tempStr, pointSize, &cgDC.Assets.bigFont);
 			continue;
 		}
 
@@ -1634,6 +1637,8 @@ qboolean CG_Asset_Parse(int handle) {
 void CG_ParseMenu(const char *menuFile) {
 	pc_token_t token;
 	int handle;
+  
+  Com_Printf("Parsing menu file:%s\n", menuFile);
 
 	handle = trap_PC_LoadSource(menuFile);
 	if (!handle)
@@ -1671,7 +1676,7 @@ void CG_ParseMenu(const char *menuFile) {
 
 		if (Q_stricmp(token.string, "menudef") == 0) {
 			// start a new menu
-			Menu_New(handle);
+			CG_Menu_New(handle);
 		}
 	}
 	trap_PC_FreeSource(handle);
@@ -1735,7 +1740,9 @@ void CG_LoadMenus(const char *menuFile) {
 	
 	COM_Compress(buf);
 
-	Menu_Reset();
+//#ifndef BUILD_GAME_STATIC
+	CG_Menu_Reset();
+//#endif
 
 	p = buf;
 
@@ -1829,9 +1836,9 @@ void CG_SetScoreSelection(void *p) {
 			feeder = FEEDER_BLUETEAM_LIST;
 			i = blue;
 		}
-		Menu_SetFeederSelection(menu, feeder, i, NULL);
+		CG_Menu_SetFeederSelection(menu, feeder, i, NULL);
 	} else {
-		Menu_SetFeederSelection(menu, FEEDER_SCOREBOARD, cg.selectedScore, NULL);
+		CG_Menu_SetFeederSelection(menu, FEEDER_SCOREBOARD, cg.selectedScore, NULL);
 	}
 }
 
@@ -2014,6 +2021,7 @@ static void CG_RunCinematicFrame(int handle) {
   trap_CIN_RunCinematic(handle);
 }
 
+
 /*
 =================
 CG_LoadHudMenu();
@@ -2073,10 +2081,8 @@ void CG_LoadHudMenu( void ) {
 	cgDC.stopCinematic = &CG_StopCinematic;
 	cgDC.drawCinematic = &CG_DrawCinematic;
 	cgDC.runCinematicFrame = &CG_RunCinematicFrame;
-	
-	Init_Display(&cgDC);
 
-	Menu_Reset();
+	CG_Menu_Reset();
 	
 	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));
 	hudSet = buff;
@@ -2084,7 +2090,7 @@ void CG_LoadHudMenu( void ) {
 		hudSet = "ui/hud.txt";
 	}
 
-	CG_LoadMenus(hudSet);
+  CG_LoadMenus(hudSet);
 }
 
 void CG_AssetCache( void ) {
@@ -2234,9 +2240,11 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	trap_CM_LoadMap( cgs.mapname );
 
+//#ifndef BUILD_GAME_STATIC
 #ifdef MISSIONPACK
-	String_Init();
+	CG_String_Init();
 #endif
+//#endif
 
 	cg.loading = qtrue;		// force players to load instead of defer
 

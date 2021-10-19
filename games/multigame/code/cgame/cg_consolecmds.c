@@ -5,7 +5,7 @@
 
 #include "cg_local.h"
 #ifdef MISSIONPACK
-#include "../ui/ui_shared.h"
+#include "cg_shared.h"
 extern menuDef_t *menuScoreboard;
 #endif
 
@@ -138,15 +138,17 @@ static void CG_RunesUp_f( void ) {
 
 #ifdef MISSIONPACK
 extern menuDef_t *menuScoreboard;
-void Menu_Reset( void );			// FIXME: add to right include file
+void CG_Menu_Reset( void );			// FIXME: add to right include file
 
 static void CG_LoadHud_f( void) {
   char buff[1024];
 	const char *hudSet;
   memset(buff, 0, sizeof(buff));
 
-	String_Init();
-	Menu_Reset();
+#ifndef BUILD_GAME_STATIC
+	CG_String_Init();
+	CG_Menu_Reset();
+#endif
 	
 	trap_Cvar_VariableStringBuffer("cg_hudFiles", buff, sizeof(buff));
 	hudSet = buff;
@@ -161,18 +163,18 @@ static void CG_LoadHud_f( void) {
 
 static void CG_scrollScoresDown_f( void) {
 	if (menuScoreboard && cg.scoreBoardShowing) {
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qtrue);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qtrue);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qtrue);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qtrue);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qtrue);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qtrue);
 	}
 }
 
 
 static void CG_scrollScoresUp_f( void) {
 	if (menuScoreboard && cg.scoreBoardShowing) {
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qfalse);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qfalse);
-		Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qfalse);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_SCOREBOARD, qfalse);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_REDTEAM_LIST, qfalse);
+		CG_Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qfalse);
 	}
 }
 

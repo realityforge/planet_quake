@@ -4,7 +4,7 @@
 #endif
 
 #include "cg_local.h"
-#include "../ui/ui_shared.h"
+#include "cg_shared.h"
 
 extern displayContextDef_t cgDC;
 
@@ -1707,7 +1707,7 @@ void CG_MouseEvent(int x, int y) {
 	else if (cgs.cursorY > 480)
 		cgs.cursorY = 480;
 
-	n = Display_CursorType(cgs.cursorX, cgs.cursorY);
+	n = CG_Display_CursorType(cgs.cursorX, cgs.cursorY);
 	cgs.activeCursor = 0;
 	if (n == CURSOR_ARROW) {
 		cgs.activeCursor = cgs.media.selectCursor;
@@ -1716,9 +1716,9 @@ void CG_MouseEvent(int x, int y) {
 	}
 
   if (cgs.capturedItem) {
-	  Display_MouseMove(cgs.capturedItem, x, y);
+	  CG_Display_MouseMove(cgs.capturedItem, x, y);
   } else {
-	  Display_MouseMove(NULL, cgs.cursorX, cgs.cursorY);
+	  CG_Display_MouseMove(NULL, cgs.cursorX, cgs.cursorY);
   }
 
 }
@@ -1730,8 +1730,8 @@ CG_HideTeamMenus
 
 */
 void CG_HideTeamMenu( void ) {
-  Menus_CloseByName("teamMenu");
-  Menus_CloseByName("getMenu");
+  CG_Menus_CloseByName("teamMenu");
+  CG_Menus_CloseByName("getMenu");
 }
 
 /*
@@ -1741,7 +1741,7 @@ CG_ShowTeamMenus
 
 */
 void CG_ShowTeamMenu( void ) {
-  Menus_OpenByName("teamMenu");
+  CG_Menus_OpenByName("teamMenu");
 }
 
 
@@ -1781,7 +1781,7 @@ void CG_KeyEvent(int key, qboolean down) {
 		return;
 	}
 
-  //if (key == trap_Key_GetKey("teamMenu") || !Display_CaptureItem(cgs.cursorX, cgs.cursorY)) {
+  //if (key == trap_Key_GetKey("teamMenu") || !CG_Display_CaptureItem(cgs.cursorX, cgs.cursorY)) {
     // if we see this then we should always be visible
   //  CG_EventHandling(CGAME_EVENT_NONE);
   //  trap_Key_SetCatcher(0);
@@ -1789,13 +1789,13 @@ void CG_KeyEvent(int key, qboolean down) {
 
 
 
-  Display_HandleKey(key, down, cgs.cursorX, cgs.cursorY);
+  CG_Display_HandleKey(key, down, cgs.cursorX, cgs.cursorY);
 
 	if (cgs.capturedItem) {
 		cgs.capturedItem = NULL;
 	}	else {
 		if (key == K_MOUSE2 && down) {
-			cgs.capturedItem = Display_CaptureItem(cgs.cursorX, cgs.cursorY);
+			cgs.capturedItem = CG_Display_CaptureItem(cgs.cursorX, cgs.cursorY);
 		}
 	}
 }
@@ -1811,7 +1811,7 @@ int CG_ClientNumFromName(const char *p) {
 }
 
 void CG_ShowResponseHead( void ) {
-  Menus_OpenByName("voiceMenu");
+  CG_Menus_OpenByName("voiceMenu");
 	trap_Cvar_Set("cl_conXOffset", "72");
 	cg.voiceTime = cg.time;
 }

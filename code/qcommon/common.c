@@ -802,12 +802,15 @@ qboolean Com_EarlyParseCmdLine( char *commandLine, char *con_title, int title_si
 			Q_strncpyz( rconPassword2, Cmd_Argv( 2 ), sizeof( rconPassword2 ) );
 			continue;
 		}
+#ifndef BUILD_GAME_STATIC
     if( !strcmp(Cmd_Argv(0), "map")
       || !strcmp(Cmd_Argv(0), "devmap")
       || !strcmp(Cmd_Argv(0), "spmap")
       || !strcmp(Cmd_Argv(0), "spdevmap") ) {
       com_skipLoadUI = qtrue;
+      continue;
     }
+#endif
 #ifdef USE_ASYNCHRONOUS
     if( !strcmp(Cmd_Argv(0), "connect") ) {
       com_consoleLines[i][0] = '\0';
@@ -4103,7 +4106,7 @@ void Com_Init( char *commandLine ) {
 #ifdef BUILD_GAME_STATIC
 	com_maxfps = Cvar_Get( "com_maxfps", "1000", 0 ); // try to force that in some light way
 #else
-  com_maxfps = Cvar_Get( "com_maxfps", "125", 0 ); // try to force that in some light way
+  com_maxfps = Cvar_Get( "com_maxfps", "300", 0 ); // try to force that in some light way
 #endif
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( com_maxfps, "0", "1000", CV_INTEGER );

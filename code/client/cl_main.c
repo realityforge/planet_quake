@@ -3210,7 +3210,6 @@ static void CL_CheckForResend( void ) {
 			Com_Printf( S_COLOR_YELLOW "WARNING: oversize userinfo, you might be not able to join remote server!\n" );
 		}
 
-    Com_Printf("connect: %s\n", info);
 		len = Com_sprintf( data, sizeof( data ), "connect \"%s\"", info );
 		// NOTE TTimo don't forget to set the right data length!
 		NET_OutOfBandCompress( NS_CLIENT, &clc.serverAddress, (byte *) &data[0], len );
@@ -4284,7 +4283,10 @@ void CL_StartHunkUsers( void ) {
 	}
 
 	if ( re.BeginRegistration && !cls.uiStarted
-    && !Cvar_VariableIntegerValue("skipLoadUI")) {
+#ifdef BUILD_GAME_STATIC
+    && !Cvar_VariableIntegerValue("skipLoadUI")
+#endif
+  ) {
 		cls.uiStarted = qtrue;
 		CL_InitUI(qfalse);
 	}

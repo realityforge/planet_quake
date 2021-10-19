@@ -618,6 +618,9 @@ void _UI_Refresh( int realtime )
 		uiInfo.uiDC.FPS = 1000 * UI_FPS_FRAMES / total;
 	}
 
+#ifdef BUILD_GAME_STATIC
+  Init_Display(&uiInfo.uiDC);
+#endif
 
 	UI_UpdateCvars();
 
@@ -942,9 +945,11 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 
 	ui_new.integer = 1;
 
+#ifndef BUILD_GAME_STATIC
 	if (reset) {
 		Menu_Reset();
 	}
+#endif
 
 	while ( 1 ) {
 		if (!trap_PC_ReadToken(handle, &token))
@@ -990,8 +995,6 @@ void UI_Load( void ) {
 	UI_ParseGameInfo("gameinfo.txt");
 	UI_LoadArenas();
 #endif
-
-Com_Printf("Load menus: %s\n", menuSet);
 
 	UI_LoadMenus(menuSet, qtrue);
 	Menus_CloseAll();
@@ -4879,10 +4882,12 @@ static void UI_ParseGameInfo(const char *teamFile) {
 
 static void UI_Pause(qboolean b) {
 	if (b) {
+    Com_Printf("paused: \n");
 		// pause the game and set the ui keycatcher
 	  trap_Cvar_Set( "cl_paused", "1" );
 		trap_Key_SetCatcher( KEYCATCH_UI );
 	} else {
+    Com_Printf("paused: \n");
 		// unpause the game and clear the ui keycatcher
 		trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
 		trap_Key_ClearStates();
@@ -5128,7 +5133,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	}
 #else 
 	UI_LoadMenus(menuSet, qtrue);
-	UI_LoadMenus("ui/ingame.txt", qfalse);
+	UI_LoadMenus("ui/ingame.txt", qtrue);
 #endif
 	
 	Menus_CloseAll();

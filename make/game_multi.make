@@ -145,12 +145,10 @@ CGOBJ_  = $(B)/$(MOD)/cgame/cg_main.o \
           $(B)/$(MOD)/cgame/cg_servercmds.o \
           $(B)/$(MOD)/cgame/cg_snapshot.o \
           $(B)/$(MOD)/cgame/cg_view.o \
-          $(B)/$(MOD)/cgame/cg_weapons.o
+          $(B)/$(MOD)/cgame/cg_weapons.o \
+          $(B)/$(MOD)/cgame/cg_shared.o
 ifeq ($(MISSIONPACK),1)
 CGOBJ_ += $(B)/$(MOD)/cgame/cg_newdraw.o
-ifneq ($(BUILD_CLIENT),1)
-CGOBJ_ += $(B)/$(MOD)/cgame/ui_shared.o
-endif
 endif
 
 ifneq ($(BUILD_CLIENT),1)

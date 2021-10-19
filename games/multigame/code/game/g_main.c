@@ -288,7 +288,7 @@ static cvarTable_t gameCvarTable[] = {
 #ifdef BUILD_GAME_STATIC
   { &pmove_fixed, "pmove_fixed", "1", CVAR_SYSTEMINFO, 0, qfalse},
 #else
-  { &pmove_fixed, "pmove_fixed", "0", CVAR_SYSTEMINFO, 0, qfalse},
+  { &pmove_fixed, "pmove_fixed", "1", CVAR_SYSTEMINFO, 0, qfalse},
 #endif
 	{ &pmove_msec, "pmove_msec", "8", CVAR_SYSTEMINFO, 0, qfalse},
 

@@ -6,7 +6,7 @@
 #include "cg_local.h"
 
 #ifdef MISSIONPACK
-#include "../ui/ui_shared.h"
+#include "cg_shared.h"
 
 // used for scoreboard
 extern displayContextDef_t cgDC;
@@ -2241,6 +2241,7 @@ void hud_runes(float x, float y, float w, float h, gitem_t *rune) {
   char          firstPart[256];
   int           s;
   char          *split;
+
   itemInfo = &cg_items[ ITEM_INDEX(rune) ];
 
   VectorClear( angles );
@@ -2289,16 +2290,25 @@ void hud_runes(float x, float y, float w, float h, gitem_t *rune) {
   
   ent.customShader = itemInfo->altShader1;
 	trap_R_AddRefEntityToScene( &ent );
-  if(itemInfo->altShader2) {
+  if(itemInfo->models[1]) {
     ent.customShader = itemInfo->altShader2;
     trap_R_AddRefEntityToScene( &ent );
   }
+  trap_R_RenderScene( &refdef );
+
   // draw icon just below and next to the rune
   CG_DrawString( x + 4, y + 4, va("%i", rune->giTag - RUNE_STRENGTH + 1), color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
+  
+  CG_DrawPic( x + w - 20, y + h - 20, 16, 16, itemInfo->icon );
+  
   len = strlen(rune->pickup_name);
   if(len >= 12) {
     split = Q_strrchr( rune->pickup_name, ' ' );
-    s = len - strlen(split) + 1;
+    if(!split) {
+      s = len;
+    } else {
+      s = len - strlen(split) + 1;
+    }
     if(s > 12) {
       s = 11;
       Q_strncpyz(firstPart, rune->pickup_name, s + 1);
@@ -2312,9 +2322,6 @@ void hud_runes(float x, float y, float w, float h, gitem_t *rune) {
   } else {
     CG_DrawString( x + 4, y + h - 12, rune->pickup_name, color, SMALLCHAR_WIDTH / 2, SMALLCHAR_HEIGHT / 2, 0, DS_SHADOW );
   }
-  CG_DrawPic( x + w - 20, y + h - 20, 16, 16, itemInfo->icon );
-
-	trap_R_RenderScene( &refdef );
 }
 
 static qboolean CG_DrawRunesboard( void ) {
@@ -2414,9 +2421,9 @@ static qboolean CG_DrawScoreboard( void ) {
 
 	if (menuScoreboard == NULL) {
 		if ( cgs.gametype >= GT_TEAM ) {
-			menuScoreboard = Menus_FindByName("teamscore_menu");
+			menuScoreboard = CG_Menus_FindByName("teamscore_menu");
 		} else {
-			menuScoreboard = Menus_FindByName("score_menu");
+			menuScoreboard = CG_Menus_FindByName("score_menu");
 		}
 	}
 
@@ -2425,7 +2432,7 @@ static qboolean CG_DrawScoreboard( void ) {
 			CG_SetScoreSelection(menuScoreboard);
 			firstTime = qfalse;
 		}
-		Menu_Paint(menuScoreboard, qtrue);
+		CG_Menu_Paint(menuScoreboard, qtrue);
 	}
 
 	// load any models that have been deferred
@@ -2690,7 +2697,7 @@ void CG_DrawTimedMenus( void ) {
 	if (cg.voiceTime) {
 		int t = cg.time - cg.voiceTime;
 		if ( t > 2500 ) {
-			Menus_CloseByName("voiceMenu");
+			CG_Menus_CloseByName("voiceMenu");
 			trap_Cvar_Set("cl_conXOffset", "0");
 			cg.voiceTime = 0;
 		}
@@ -2749,7 +2756,7 @@ static void CG_Draw2D( stereoFrame_t stereoFrame )
       } else
 #endif
 			if ( cg_drawStatus.integer ) {
-				Menu_PaintAll();
+				CG_Menu_PaintAll();
 				CG_DrawTimedMenus();
 			}
 #else
