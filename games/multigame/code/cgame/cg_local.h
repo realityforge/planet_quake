@@ -836,7 +836,7 @@ typedef struct {
 #endif
 
 	qhandle_t	numberShaders[11];
-  qhandle_t	timerSlice;
+  qhandle_t	timerSlices[4];
 
 	qhandle_t	shadowMarkShader;
 

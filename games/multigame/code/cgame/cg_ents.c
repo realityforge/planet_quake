@@ -223,7 +223,7 @@ static void CG_Item( centity_t *cent ) {
     && (es->eFlags & EF_TIMER)) {
     if(cg_entities[es->number].miscTime != es->time) {
       cg_entities[es->number].miscTime = es->time;
-      CG_ItemTimer( es->number, cent->lerpOrigin, es->time, es->frame );
+      CG_ItemTimer( es->number, cent->lerpOrigin, es->time, es->frame * 1000 ); // save bandwidth
     } else {
     }
   }

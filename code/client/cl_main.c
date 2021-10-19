@@ -1395,7 +1395,7 @@ void CL_ShutdownAll( void ) {
 #endif
   clc.downloadList[0] = '\0';
 
-	// clear sounds
+	// clear and mute all sounds until next registration
 	S_DisableSounds();
 
 	// shutdown VMs
@@ -1404,17 +1404,12 @@ void CL_ShutdownAll( void ) {
 	// shutdown the renderer
 	if ( re.Shutdown ) {
 		if ( CL_GameSwitch() ) {
-			// shutdown sound system before renderer
-			S_Shutdown();
-			cls.soundStarted = qfalse;
 			CL_ShutdownRef( REF_DESTROY_WINDOW ); // shutdown renderer & GLimp
 		} else {
 			re.Shutdown( REF_KEEP_CONTEXT ); // don't destroy window or context
 		}
 	}
 
-	cls.uiStarted = qfalse;
-	cls.cgameStarted = qfalse;
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
 #ifdef __WASM__
@@ -1452,8 +1447,7 @@ void CL_ClearMemory( void ) {
 =================
 CL_FlushMemory
 
-Called by CL_MapLoading, CL_Connect_f, CL_PlayDemo_f, and CL_ParseGamestate the only
-ways a client gets into a game
+Called by CL_Disconnect_f, CL_DownloadsComplete
 Also called by Com_Error
 =================
 */
@@ -2554,12 +2548,12 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	if ( clc.demorecording )
 		CL_StopRecord_f();
 
-	// don't let them loop during the restart
-	S_StopAllSounds();
+	// clear and mute all sounds until next registration
+	S_DisableSounds();
+
 	// shutdown VMs
 	CL_ShutdownVMs();
-	// shutdown sound system
-	S_Shutdown();
+
 	// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( keepWindow ? REF_KEEP_WINDOW : REF_DESTROY_WINDOW );
 	// client is no longer pure until new checksums are sent
@@ -2570,11 +2564,7 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	if ( !clc.demoplaying ) // -EC-
 		FS_ConditionalRestart( clc.checksumFeed, qfalse, 0 );
 
-	cls.rendererStarted = qfalse;
-	cls.uiStarted = qfalse;
-	cls.cgameStarted = qfalse;
 	cls.soundRegistered = qfalse;
-	cls.soundStarted = qfalse;
 
 	// unpause so the cgame definitely gets a snapshot and renders a frame
 	Cvar_Set( "cl_paused", "0" );
@@ -2587,8 +2577,6 @@ static void CL_Vid_Restart( qboolean keepWindow ) {
 	}
 #endif
 
-	// initialize the renderer interface
-	CL_InitRef();
 
 	// startup all the client stuff
 	CL_StartHunkUsers();
@@ -2634,13 +2622,6 @@ CL_Snd_Restart
 Restart the sound subsystem
 =================
 */
-static void CL_Snd_Shutdown( void )
-{
-	S_StopAllSounds();
-	S_Shutdown();
-	cls.soundStarted = qfalse;
-}
-
 
 /*
 =================
@@ -2653,7 +2634,7 @@ handles will be invalid
 */
 static void CL_Snd_Restart_f( void )
 {
-	CL_Snd_Shutdown();
+	S_Shutdown();
 
 	// sound will be reinitialized by vid_restart
 	S_Init();
@@ -3737,7 +3718,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 		return;
 	}
 
-	if ( cls.state < CA_CONNECTED || clc.demoplaying ) {
+	if ( cls.state < CA_CONNECTED ) {
 		return;		// can't be a valid sequenced packet
 	}
 
@@ -4180,7 +4161,17 @@ static void CL_ShutdownRef( refShutdownCode_t code ) {
 		code = REF_UNLOAD_DLL;
 	}
 #endif
-	
+	// clear and mute all sounds until next registration
+	// S_DisableSounds();
+
+	if ( code >= REF_DESTROY_WINDOW ) { // +REF_UNLOAD_DLL
+		// shutdown sound system before renderer
+		// because it may depend from window handle
+		S_Shutdown();
+	}
+
+	SCR_Done();
+
 	if ( re.Shutdown ) {
 		re.Shutdown( code );
 	}
@@ -4193,10 +4184,11 @@ static void CL_ShutdownRef( refShutdownCode_t code ) {
 #endif
 
 	Com_Memset( &re, 0, sizeof( re ) );
+
+	cls.rendererStarted = qfalse;
 }
 
 
-void X_DMG_Init( void );
 /*
 ============
 CL_InitRenderer
@@ -4235,7 +4227,7 @@ static void CL_InitRenderer( void ) {
 		cls.biasY = 0.5 * ( cls.glconfig.vidHeight - ( cls.glconfig.vidWidth * (480.0/640) ) );
 	}
 
-  X_DMG_Init();
+	SCR_Init();
 }
 
 
@@ -4454,9 +4446,6 @@ static void CL_InitRef( void ) {
 	rimp.FS_ListFiles = FS_ListFiles;
 	//rimp.FS_FileIsInPAK = FS_FileIsInPAK;
 	rimp.FS_FileExists = FS_FileExists;
-#ifdef USE_LAZY_LOAD
-	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
-#endif
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;
@@ -4491,9 +4480,6 @@ static void CL_InitRef( void ) {
 
 	// OpenGL API
 	rimp.GLimp_Init = GLimp_Init;
-#ifdef USE_VID_FAST
-	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
-#endif
 	rimp.GLimp_Shutdown = GLimp_Shutdown;
 	rimp.GL_GetProcAddress = GL_GetProcAddress;
 
@@ -4509,6 +4495,9 @@ static void CL_InitRef( void ) {
 	rimp.VK_CreateSurface = VK_CreateSurface;
 #endif
 
+#ifdef USE_LAZY_LOAD
+	rimp.FS_FOpenFileRead = FS_FOpenFileRead;
+#endif
 #ifdef USE_VID_FAST
 	rimp.GLimp_UpdateMode = GLimp_UpdateMode;
 #endif
@@ -4823,6 +4812,7 @@ static void CL_InitGLimp_Cvars( void )
 	
 	r_displayRefresh = Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
 	Cvar_CheckRange( r_displayRefresh, "0", "360", CV_INTEGER );
+	Cvar_SetDescription( r_displayRefresh, "Override monitor refresh rate in fullscreen mode:\n  0 - use current monitor refresh rate\n >0 - use custom refresh rate" );
 
 	vid_xpos = Cvar_Get( "vid_xpos", "3", CVAR_ARCHIVE );
 	vid_ypos = Cvar_Get( "vid_ypos", "22", CVAR_ARCHIVE );
@@ -4835,6 +4825,8 @@ static void CL_InitGLimp_Cvars( void )
 	r_mode = Cvar_Get( "r_mode", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_modeFullscreen = Cvar_Get( "r_modeFullscreen", "-2", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_CheckRange( r_mode, "-2", va( "%i", s_numVidModes-1 ), CV_INTEGER );
+	Cvar_SetDescription( r_mode, "Set video mode:\n -2 - use current desktop resolution\n -1 - use \\r_customWidth and \\r_customHeight\n  0..N - enter \\modelist for details" );
+	Cvar_SetDescription( r_modeFullscreen, "Dedicated fullscreen mode, set to \"\" to use \\r_mode in all cases" );
 
 	r_fullscreen = Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customPixelAspect = Cvar_Get( "r_customPixelAspect", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -4842,6 +4834,8 @@ static void CL_InitGLimp_Cvars( void )
 	r_customheight = Cvar_Get( "r_customHeight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_CheckRange( r_customwidth, "4", NULL, CV_INTEGER );
 	Cvar_CheckRange( r_customheight, "4", NULL, CV_INTEGER );
+	Cvar_SetDescription( r_customwidth, "Custom width to use with \\r_mode -1" );
+	Cvar_SetDescription( r_customheight, "Custom height to use with \\r_mode -1" );
 
 	r_colorbits = Cvar_Get( "r_colorbits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_CheckRange( r_colorbits, "0", "32", CV_INTEGER );
@@ -5164,6 +5158,7 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
+	const char *s;
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
@@ -5298,6 +5293,10 @@ void CL_Init( void ) {
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
+	s = va( "Save downloads initiated by \\dlmap and \\download commands in:\n"
+		" 0 - current game directory\n"
+		" 1 - fs_basegame (%s) directory\n", FS_GetBaseGameDir() );
+	Cvar_SetDescription( cl_dlDirectory, s );
 
 	cl_reconnectArgs = Cvar_Get( "cl_reconnectArgs", "", CVAR_ARCHIVE_ND | CVAR_NOTABCOMPLETE );
   cl_drawFPS = Cvar_Get ("cl_drawFPS", "1", CVAR_ARCHIVE );
@@ -5308,7 +5307,7 @@ void CL_Init( void ) {
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE_ND );
 	Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
 #ifdef BUILD_GAME_STATIC
-  cl_snaps = Cvar_Get ("snaps", "100", CVAR_USERINFO | CVAR_ARCHIVE );
+  cl_snaps = Cvar_Get ("snaps", "100", CVAR_USERINFO | CVAR_TEMP );
 #else
 	cl_snaps = Cvar_Get ("snaps", "40", CVAR_USERINFO | CVAR_ARCHIVE );
 #endif
@@ -5414,7 +5413,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
 	Cmd_SetDescription("modelist", "List of accessible screen resolutions\nUsage: modelist");
 
-	CL_InitRef();
 #ifdef USE_PRINT_CONSOLE
   Com_PrintFlags(PC_INIT);
 #endif
@@ -5443,10 +5441,6 @@ void CL_Init( void ) {
 	Cmd_SetDescription( "dvr", "Change where the screen output is drawn using percentages\nUsage: dvr [clientnum] x y w h" );
 #endif
 
-	SCR_Init();
-
-	//Cbuf_Execute ();
-
 	Cvar_Set( "cl_running", "1" );
 #ifdef USE_MD5
 	CL_GenerateQKey();
@@ -5470,6 +5464,8 @@ void CL_Init( void ) {
 /*
 ===============
 CL_Shutdown
+
+Called on fatal error, quit and dedicated mode switch
 ===============
 */
 void CL_Shutdown( const char *finalmsg, qboolean quit ) {
@@ -5490,9 +5486,9 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	noGameRestart = quit;
 	CL_Disconnect( qfalse, qtrue );
 
+	S_DisableSounds();
 	CL_ShutdownVMs();
 
-	S_Shutdown();
 
 	CL_ShutdownRef( quit ? REF_UNLOAD_DLL : REF_DESTROY_WINDOW );
 

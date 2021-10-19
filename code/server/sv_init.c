@@ -1028,10 +1028,14 @@ void SV_Init( void )
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
   sv_gamedir = Cvar_Get("fs_game", "", 0);
+#ifdef BUILD_GAME_STATIC
+  sv_fps = Cvar_Get ("sv_fps", "100", CVAR_TEMP | CVAR_SYSTEMINFO );
+#else
 #ifdef USE_MULTIVM_SERVER
 	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_TEMP | CVAR_SYSTEMINFO );
 #else
 	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP | CVAR_SYSTEMINFO );
+#endif
 #endif
 	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );

@@ -1676,7 +1676,7 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	if ( vmcmp(vm, VM_CGAME, VMR_URT) ) {
 		ip = buf + 235;
 		if ( ip->value == 70943 ) {
-			VM_IgnoreInstructions( ip, 8 );
+		//	VM_IgnoreInstructions( ip, 8 );
 		}
 	} else
 	// hack baseq3a to not display USE MEDKIT
@@ -1748,13 +1748,13 @@ void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf ) {
 	// skip auth check in urban terror, TODO: skip name check
 	if ( vmcmp(vm, VM_UI, VMR_URT) ) {
 		ip = buf + 0x149b - 2;
-			VM_IgnoreInstructions( &ip[2], 3 );
+		//	VM_IgnoreInstructions( &ip[2], 3 );
 		ip = buf + 0xb27 - 2;
 		//Com_Printf("op: %i, value: 0x%08x\n", ip[0].op, ip[0].value);
 		//Com_Printf("op: %i, value: 0x%08x\n", ip[1].op, ip[1].value);
 		//Com_Printf("op: %i, value: 0x%08x\n", ip[2].op, ip[2].value);
 		//Com_Printf("op: %i, value: 0x%08x\n", ip[3].op, ip[3].value);
-		ip[2].op = OP_JUMP;
+		//ip[2].op = OP_JUMP;
 		//VM_IgnoreInstructions( &ip[2], 1 );
 	}
 	//}

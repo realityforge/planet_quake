@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 
 snd_codec_t *codecs;
+static void S_CodecRegister(snd_codec_t *codec);
 
 #ifdef USE_LAZY_LOAD
 qboolean updateSound = qfalse;
@@ -151,7 +152,7 @@ static void *S_CodecGetSound(const char *filename, snd_info_t *info)
 S_CodecInit
 =================
 */
-void S_CodecInit()
+void S_CodecInit( void )
 {
 	codecs = NULL;
 
@@ -177,7 +178,7 @@ void S_CodecInit()
 S_CodecShutdown
 =================
 */
-void S_CodecShutdown()
+void S_CodecShutdown( void )
 {
 	codecs = NULL;
 }
@@ -187,7 +188,7 @@ void S_CodecShutdown()
 S_CodecRegister
 =================
 */
-void S_CodecRegister(snd_codec_t *codec)
+static void S_CodecRegister(snd_codec_t *codec)
 {
 	codec->next = codecs;
 	codecs = codec;

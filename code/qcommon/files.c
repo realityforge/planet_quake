@@ -2780,7 +2780,7 @@ static void FS_FreeUnusedCache( void )
 
 #ifdef USE_PK3_CACHE_FILE
 
-void FS_WriteCacheHeader( FILE *f )
+static void FS_WriteCacheHeader( FILE *f )
 {
 	fwrite( cache_header, sizeof( cache_header ), 1, f );
 }

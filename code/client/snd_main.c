@@ -35,6 +35,9 @@ cvar_t *s_debug;
 
 static soundInterface_t si;
 
+extern void Cvar_SetSoundDescriptions( void );
+extern void Cmd_SetSoundDescriptions( void );
+
 /*
 =================
 S_ValidateInterface
@@ -450,27 +453,18 @@ void S_Init( void )
 		S_CodecInit();
 
 		Cmd_AddCommand( "play", S_Play_f );
-		Cmd_SetDescription("play", "Play a sound file\nUsage: play <filename>");
 		Cmd_AddCommand( "music", S_Music_f );
-		Cmd_SetDescription("music", "Play a specific music file\nUsage: music <filename>");
 		Cmd_AddCommand( "stopmusic", S_StopMusic_f );
-		Cmd_SetDescription("stopmusic", "Stop playing music\nUsage: stopmusic");
 		Cmd_AddCommand( "s_list", S_SoundList );
-		Cmd_SetDescription("s_list", "Display paths and filenames of all sound files as they are played\nUsage: s_list");
-		Cmd_AddCommand( "soundlist", S_SoundList );
-		Cmd_SetDescription("soundlist", "Display paths and filenames of all sound files as they are played\nUsage: soundlist");
 		Cmd_AddCommand( "s_stop", S_StopAllSounds );
-		Cmd_SetDescription("s_stop", "Stop whatever sound that is currently playing from playing\nUsage: s_stop");
-		Cmd_AddCommand( "stopsound", S_StopAllSounds );
-		Cmd_SetDescription("stopsound", "Stop whatever sound that is currently playing from playing\nUsage: stopsound");
 		Cmd_AddCommand( "s_info", S_SoundInfo );
-		Cmd_SetDescription("s_info", "Display information about sound system\nUsage: s_info");
-		Cmd_AddCommand( "soundinfo", S_SoundInfo );
-		Cmd_SetDescription("soundinfo", "Display information about sound system\nUsage: soundinfo");
 
-		if( !started ) {
+		if ( !started ) {
 			started = S_Base_Init( &si );
 		}
+
+    Cvar_SetSoundDescriptions();
+    Cmd_SetSoundDescriptions();
 
 		if( started ) {
 			if( !S_ValidSoundInterface( &si ) ) {
@@ -520,4 +514,6 @@ void S_Shutdown( void )
 	Cmd_RemoveCommand( "s_info" );
 
 	S_CodecShutdown();
+
+	cls.soundStarted = qfalse;
 }

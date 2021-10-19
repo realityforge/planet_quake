@@ -224,7 +224,9 @@ maplocation_t *maplocations = NULL;
 //camp spots
 campspot_t *campspots = NULL;
 //the game type
+#ifdef BUILD_GAME_STATIC
 #define g_gametype bot_gametype
+#endif
 int g_gametype = 0;
 //additional dropped item weight
 libvar_t *droppedweight = NULL;
@@ -327,7 +329,7 @@ itemconfig_t *LoadItemConfig( const char *filename )
 	PC_SetBaseFolder(BOTFILESBASEFOLDER);
 	source = LoadSourceFile( path );
 	if( !source ) {
-		botimport.Print( PRT_ERROR, "counldn't load %s\n", path );
+		botimport.Print( PRT_ERROR, "couldn't load %s\n", path );
 		return NULL;
 	} //end if
 	//initialize item config
@@ -1610,7 +1612,7 @@ int BotChooseLTGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 				//push the goal on the stack
 				BotPushGoal(goalstate, &goal);
 #ifdef DEBUG
-			  //botimport.Print(PRT_MESSAGE, "chosen spawn %d - %i\n", goal.areanum, spawnpoint);
+			  botimport.Print(PRT_MESSAGE, "chosen spawn %d - %i\n", goal.areanum, spawnpoint);
 #endif //DEBUG
 				return qtrue;
       }

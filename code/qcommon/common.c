@@ -61,7 +61,7 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 #define DEF_COMZONEMEGS		25
 #endif
 
-jmp_buf abortframe;		// an ERR_DROP occurred, exit the entire frame
+static jmp_buf abortframe;	// an ERR_DROP occurred, exit the entire frame
 
 int		CPU_Flags = 0;
 
@@ -108,7 +108,7 @@ cvar_t  *fs_developer;
 cvar_t	*com_developer;
 cvar_t	*com_dedicated;
 cvar_t	*com_timescale;
-cvar_t	*com_fixedtime;
+static cvar_t *com_fixedtime;
 cvar_t	*com_journal;
 cvar_t	*com_protocol;
 #ifndef DEDICATED
@@ -120,8 +120,8 @@ cvar_t	*com_timedemo;
 #ifdef USE_AFFINITY_MASK
 cvar_t	*com_affinityMask;
 #endif
-cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
-cvar_t	*com_showtrace;
+static cvar_t *com_logfile;		// 1 = buffer log, 2 = flush after each print
+static cvar_t *com_showtrace;
 cvar_t	*com_version;
 cvar_t	*com_buildScript;	// for automated data building scripts
 cvar_t	*com_blood;
@@ -162,8 +162,7 @@ int		time_backend;		// renderer backend time
 
 static int	lastTime;
 int			com_frameTime;
-int			com_frameMsec;
-int			com_frameNumber;
+static int	com_frameNumber;
 
 qboolean  com_skipLoadUI = qfalse;
 qboolean	com_errorEntered = qfalse;
@@ -177,7 +176,6 @@ qboolean	gw_minimized = qfalse; // this will be always true for dedicated server
 #ifndef DEDICATED
 qboolean	gw_active = qtrue;
 #endif
-
 
 static char com_errorMessage[ MAXPRINTMSG ];
 
@@ -574,7 +572,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, 1 );
+		Q_longjmp( abortframe, 1 );
 	} else if ( code == ERR_DROP ) {
 		Com_Printf( "********************\nERROR: %s\n********************\n", 
 			com_errorMessage );
@@ -595,7 +593,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, 1 );
+		Q_longjmp( abortframe, 1 );
 	} else if ( code == ERR_NEED_CD ) {
 #ifndef BUILD_SLIM_CLIENT
 #ifdef USE_LOCAL_DED
@@ -618,7 +616,7 @@ void QDECL Com_Error( errorParm_t code, const char *fmt, ... ) {
 		FS_PureServerSetLoadedPaks( "", "" );
 		com_errorEntered = qfalse;
 
-		longjmp( abortframe, 1 );
+		Q_longjmp( abortframe, 1 );
 	} else {
 		VM_Forced_Unload_Start();
 #ifndef DEDICATED
@@ -1276,14 +1274,14 @@ typedef struct memzone_s {
 #endif
 } memzone_t;
 
-int minfragment = MINFRAGMENT; // may be adjusted at runtime
+static int minfragment = MINFRAGMENT; // may be adjusted at runtime
 
 // main zone for all "dynamic" memory allocation
-memzone_t	*mainzone;
+static memzone_t *mainzone;
 
 // we also have a small zone for small allocations that would only
 // fragment the main zone (think of cvar and cmd strings)
-memzone_t	*smallzone;
+static memzone_t *smallzone;
 
 
 #ifdef USE_MULTI_SEGMENT
@@ -2179,7 +2177,7 @@ static void Zone_Stats( const char *name, const memzone_t *z, qboolean printDeta
 Com_Meminfo_f
 =================
 */
-void Com_Meminfo_f( void ) {
+static void Com_Meminfo_f( void ) {
 	zone_stats_t st;
 	int		unused;
 
@@ -2288,7 +2286,7 @@ void Com_TouchMemory( void ) {
 Com_InitSmallZoneMemory
 =================
 */
-void Com_InitSmallZoneMemory( void ) {
+static void Com_InitSmallZoneMemory( void ) {
 	static byte s_buf[ 512 * 1024 ];
 	int smallZoneSize;
 
@@ -2343,7 +2341,7 @@ void Hunk_Log( void ) {
 	char		buf[4096];
 	int size, numBlocks;
 
-	if (!logfile || !FS_Initialized())
+	if ( logfile == FS_INVALID_HANDLE || !FS_Initialized() )
 		return;
 	size = 0;
 	numBlocks = 0;
@@ -2374,7 +2372,7 @@ void Hunk_SmallLog( void ) {
 	char		buf[4096];
 	int size, locsize, numBlocks;
 
-	if (!logfile || !FS_Initialized())
+	if ( logfile == FS_INVALID_HANDLE || !FS_Initialized() )
 		return;
 	for (block = hunkblocks ; block; block = block->next) {
 		block->printed = qfalse;
@@ -2859,8 +2857,7 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
-void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr )
-{
+void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr ) {
 	sysEvent_t	*ev;
 
 #if 0
@@ -3389,7 +3386,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 #endif
 
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
-		FS_Shutdown( qfalse );
+		FS_Shutdown( qtrue );
 
 		// Clean out any user and VM created cvars
 		Cvar_Restart( qtrue );
@@ -3649,7 +3646,7 @@ static void Sys_GetProcessorId( char *vendor )
 #include <intrin.h>
 static void CPUID( int func, unsigned int *regs )
 {
-	__cpuid( regs, func );
+	__cpuid( (int*)regs, func );
 }
 
 #else // clang/gcc/mingw
@@ -3947,7 +3944,7 @@ void Com_Init( char *commandLine ) {
 
 	Com_Printf( "%s %s %s\n", SVN_VERSION, PLATFORM_STRING, __DATE__ );
 
-	if ( setjmp (abortframe) ) {
+	if ( Q_setjmp( abortframe ) ) {
 		Sys_Error ("Error during initialization");
 	}
 
@@ -4104,7 +4101,7 @@ void Com_Init( char *commandLine ) {
 	//
 #ifndef DEDICATED
 #ifdef BUILD_GAME_STATIC
-	com_maxfps = Cvar_Get( "com_maxfps", "1000", 0 ); // try to force that in some light way
+	com_maxfps = Cvar_Get( "com_maxfps", "300", 0 ); // try to force that in some light way
 #else
   com_maxfps = Cvar_Get( "com_maxfps", "300", 0 ); // try to force that in some light way
 #endif
@@ -4520,7 +4517,7 @@ void Com_Frame( qboolean noDelay ) {
 	int	timeBeforeClient;
 	int	timeAfter;
 
-	if ( setjmp( abortframe ) ) {
+	if ( Q_setjmp( abortframe ) ) {
 		return;			// an ERR_DROP was thrown
 	}
 

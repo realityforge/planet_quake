@@ -1013,9 +1013,10 @@ void CG_AddDamagePlum( localEntity_t *le ) {
 #define TIMER_SIZE 24
 void CG_AddItemTimer( localEntity_t *le ) {
 	refEntity_t	*re;
-  vec3_t		origin, delta, vec;
-	float		  c, len;
-  int       i, numsegs, totalsegs;
+  vec3_t		  origin, delta, vec;
+	float		    c, len;
+  int         i, numsegs, totalsegs;
+  qhandle_t   lengthShader;
 
 	re = &le->refEntity;
 
@@ -1034,6 +1035,7 @@ void CG_AddItemTimer( localEntity_t *le ) {
   // TODO: count up and count down
   // TODO: modifiable distance
 	if ( len <= 20*20 ) {
+    //Com_Printf("Too close:\n");
 		return;
 	} else if (len > 20*20 && len <= 30*1000) {
     re->shaderRGBA[3] = 0xff;
@@ -1041,16 +1043,32 @@ void CG_AddItemTimer( localEntity_t *le ) {
     float scale = (40.0f*1000 - len)/(10.0f*1000);
     re->shaderRGBA[3] = 0xff * scale;
   } else {
+    //Com_Printf("Too far away:\n");
     return; // too far away, don't add to scene
   }
+  
+  numsegs = (le->endTime - le->startTime) / 5000;
+  if(numsegs < 7) {
+    lengthShader = cgs.media.timerSlices[0];
+    totalsegs = 5;
+  } else if (numsegs < 12) {
+    lengthShader = cgs.media.timerSlices[1];
+    totalsegs = 7;
+  } else if (numsegs < 24) {
+    lengthShader = cgs.media.timerSlices[2];
+    totalsegs = 12;
+  } else {
+    lengthShader = cgs.media.timerSlices[3];
+    totalsegs = 24;
+  }
+  
 
   // calculate segments
-  totalsegs = 5;
   numsegs = ceil((1.0f-c) * totalsegs);
   for (i = 0; i < numsegs; i++) {
     re->rotation = 180 - (360 / (totalsegs * 2)) - (360 / totalsegs) * i;
     VectorMA(origin, (float) (((float) 1 / 2) - 1) * TIMER_SIZE, vec, re->origin);
-    re->customShader = cgs.media.timerSlice;
+    re->customShader = lengthShader;
     // fade the last segment in gradually
     if(i == numsegs - 1) {
       float fade = ((1.0f - c) - i * (1.0f / totalsegs) + 0.01f) / (1.0f / totalsegs);

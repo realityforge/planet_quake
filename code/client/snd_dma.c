@@ -30,10 +30,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 #include "snd_local.h"
-#include "client.h"
 #include "snd_codec.h"
-
-extern void Cvar_SetSoundDescriptions( void );
+#include "client.h"
 
 static void S_Update_( int msec );
 static void S_UpdateBackgroundTrack( void );
@@ -41,7 +39,7 @@ static void S_Base_StopAllSounds( void );
 static void S_Base_StopBackgroundTrack( void );
 static void S_memoryLoad( sfx_t *sfx );
 
-snd_stream_t	*s_backgroundStream = NULL;
+static snd_stream_t *s_backgroundStream = NULL;
 static char		s_backgroundLoop[MAX_QPATH];
 //static char		s_backgroundMusic[MAX_QPATH]; //TTimo: unused
 
@@ -80,8 +78,8 @@ int   		s_paintedtime; 		// sample PAIRS
 // MAX_SFX may be larger than MAX_SOUNDS because
 // of custom player sounds
 #define		MAX_SFX			4096
-sfx_t		s_knownSfx[MAX_SFX];
-int			s_numSfx = 0;
+static sfx_t s_knownSfx[MAX_SFX];
+static int s_numSfx = 0;
 
 #define		LOOP_HASH		128
 static sfx_t *sfxHash[LOOP_HASH];
@@ -1056,23 +1054,14 @@ S_Respatialize
 Change the volumes of all the playing sounds for changes in their positions
 ============
 */
-extern int				CL_ScaledMilliseconds( void );
-int prevTime;
 void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
 	int			i;
 	channel_t	*ch;
 	vec3_t		origin;
-	int 		newTime = CL_ScaledMilliseconds();
-  
+
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
-
-  if(newTime - prevTime < 13) { // limit to 30 frames per second
-    S_AddLoopSounds ();
-		return;
-  }
-  prevTime = newTime;
 
 	listener_number = entityNum;
 	VectorCopy(head, listener_origin);
@@ -1548,6 +1537,7 @@ static void S_Base_Shutdown( void ) {
 	dma_buffer2 = NULL;
 
 	Cmd_RemoveCommand( "s_info" );
+	cls.soundRegistered = qfalse;
 }
 
 
@@ -1604,11 +1594,9 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
+//		s_numSfx = 0;
 
-#ifndef USE_LAZY_MEMORY
-    s_numSfx = 0;
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
-#endif
 
 		s_soundtime = 0;
 		s_paintedtime = 0;
@@ -1649,9 +1637,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->SoundInfo = S_Base_SoundInfo;
 	si->SoundList = S_Base_SoundList;
 
-  Cvar_SetSoundDescriptions();
 	return qtrue;
 }
 
-#undef Com_Printf
-#undef Com_DPrintf

@@ -52,7 +52,7 @@ endif
 QCOMMON          := cmd.o common.o cvar.o files.o history.o keys.o md4.o \
                     md5.o msg.o net_chan.o net_ip.o qrcodegen.o huffman.o \
                     huffman_static.o q_math.o q_shared.o puff.o \
-										cvar_descriptions.o
+										cvar_descriptions.o cmd_descriptions.o
 ifeq ($(USE_SYSTEM_ZLIB),0)
 QCOMMON          += unzip.o
 endif

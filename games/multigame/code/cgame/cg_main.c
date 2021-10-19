@@ -1090,7 +1090,10 @@ static void CG_RegisterGraphics( void ) {
 	}
 
   //cgs.media.timerSlices[i] = trap_R_RegisterShader( sb_nums[i] );
-  cgs.media.timerSlice = trap_R_RegisterShader( "gfx/2d/timer/slice5" );
+  cgs.media.timerSlices[0] = trap_R_RegisterShader( "gfx/2d/timer/slice5" );
+  cgs.media.timerSlices[1] = trap_R_RegisterShader( "gfx/2d/timer/slice7" );
+  cgs.media.timerSlices[2] = trap_R_RegisterShader( "gfx/2d/timer/slice12" );
+  cgs.media.timerSlices[3] = trap_R_RegisterShader( "gfx/2d/timer/slice24" );
 
 	cgs.media.botSkillShaders[0] = trap_R_RegisterShader( "menu/art/skill1.tga" );
 	cgs.media.botSkillShaders[1] = trap_R_RegisterShader( "menu/art/skill2.tga" );

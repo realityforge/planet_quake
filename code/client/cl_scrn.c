@@ -500,6 +500,7 @@ void SCR_DrawDebugGraph (void)
 }
 
 //=============================================================================
+void X_DMG_Init( void );
 
 /*
 ==================
@@ -514,6 +515,7 @@ void SCR_Init( void ) {
 	cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
 
 	scr_initialized = qtrue;
+  X_DMG_Init();
 }
 
 
@@ -570,6 +572,15 @@ void SCR_DrawQRCode( void ) {
 }
 #endif
 
+
+/*
+==================
+SCR_Done
+==================
+*/
+void SCR_Done( void ) {
+	scr_initialized = qfalse;
+}
 
 //=======================================================
 

@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "snd_local.h"
-#include "snd_codec.h"
 
 #define C0 0.4829629131445341
 #define C1 0.8365163037378079

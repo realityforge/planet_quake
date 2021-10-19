@@ -34,9 +34,9 @@ typedef struct {
 	int tag;
 } cmd_t;
 
-int    cmd_wait;
-cmd_t  cmd_text[32];
-byte   cmd_text_buf[32][MAX_CMD_BUFFER];
+static int    cmd_wait;
+static cmd_t  cmd_text[32];
+static byte   cmd_text_buf[32][MAX_CMD_BUFFER];
 int    insCmdI;
 int    execCmdI;
 
@@ -45,6 +45,7 @@ static qboolean limited;
 #endif
 
 static void Cmd_Help_f( void );
+void Cmd_SetCommandDescriptions( void );
 
 //=============================================================================
 
@@ -121,7 +122,7 @@ Adds command text immediately after the current command
 Adds a \n to the text
 ============
 */
-void Cbuf_InsertText( const char *text ) {
+static void Cbuf_InsertText( const char *text ) {
 	int		len;
 	int		i;
 
@@ -1046,22 +1047,17 @@ Cmd_Init
 */
 void Cmd_Init( void ) {
 	Cmd_AddCommand ("cmdlist",Cmd_List_f);
-	Cmd_SetDescription("cmdlist", "List all available console commands\nUsage: cmdlist");
 	Cmd_AddCommand ("exec",Cmd_Exec_f);
+	Cmd_AddCommand ("execq",Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
-	Cmd_SetDescription("exec", "Execute a config file or script\nUsage: exec <configfile>");
-	Cmd_AddCommand ("execq", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc( "execq", Cmd_CompleteCfgName );
-	Cmd_SetDescription("execq", "Quietly execute a config file or script\nUsage: execq <configfile>");
 	Cmd_AddCommand ("vstr",Cmd_Vstr_f);
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
-	Cmd_SetDescription("vstr", "Identifies the attached command as a variable string\nUsage: vstr <variable>");
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
-	Cmd_SetDescription( "echo", "Echo a string to the message display to your console only\nUsage: echo <message>");
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
-	Cmd_SetDescription( "wait", "Stop execution and wait one game tick\nUsage: wait (<# ticks> optional)" );
 	Cmd_AddCommand ("help", Cmd_Help_f);
-	Cmd_SetDescription("help", "Display helpful description for any console command\nUsage: help <command>");
+
+  Cmd_SetCommandDescriptions();
 
 	cl_execTimeout = Cvar_Get("cl_execTimeout", "2000", CVAR_ARCHIVE | CV_INTEGER);
 	cl_execOverflow = Cvar_Get("cl_execOverflow", "200", CVAR_ARCHIVE | CV_INTEGER);

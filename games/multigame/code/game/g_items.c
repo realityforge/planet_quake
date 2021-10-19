@@ -696,7 +696,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 #ifdef USE_ITEM_TIMERS
     ent->s.eFlags |= EF_TIMER;
     ent->s.time = level.time;
-    ent->s.frame = respawn;
+    ent->s.frame = respawn / 1000; // save bandwidth
 #endif
 	}
 
