@@ -411,44 +411,6 @@ void CG_InvulnerabilityJuiced( vec3_t org ) {
 #endif
 
 
-#ifdef USE_ITEM_TIMERS
-/*
-==================
-CG_ItemTimer
-==================
-*/
-void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTime) {
-  localEntity_t	*le;
-  refEntity_t		*re;
-  vec3_t			angles;
-
-  if(!cg_itemTimer.integer) {
-    return;
-  }
-
-  le = CG_AllocLocalEntity();
-  le->leFlags = 0;
-  le->leType = LE_ITEMTIMER;
-  le->startTime = startTime;
-  le->endTime = startTime + respawnTime;
-  le->lifeRate = 1.0 / ( le->endTime - le->startTime );
-  
-  le->color[0] = le->color[1] = le->color[2] = le->color[3] = 1.0;
-  //le->radius = client; ?
-  
-  VectorCopy( origin, le->pos.trBase );
-
-  re = &le->refEntity;
-
-  re->reType = RT_SPRITE;
-  re->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
-  re->radius = 16;
-
-  VectorClear(angles);
-  AnglesToAxis( angles, re->axis );
-}
-#endif
-
 
 #ifdef USE_DAMAGE_PLUMS
 /*
