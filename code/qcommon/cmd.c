@@ -804,7 +804,7 @@ void Cmd_AddCommandSafe( const char *cmd_name )
 	cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
 
 	if( !cmd ) {
-  } else {
+  } else if(cmd->function != NULL) {
     Com_Printf("WARNING: Game created a command \"%s\" with the same name as"
       " an engine command. Renaming engine command to \"engine_%s\""
       " so that it can be removed later without error.\n", cmd_name, cmd_name);

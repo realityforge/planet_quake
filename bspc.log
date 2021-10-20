@@ -1,0 +1,367 @@
+BSPC version 2.2, Oct 19 2021 19:36:12
+bsp2aas: /Applications/UrbanTerror/utmaps/ut4_kingdom_b4/maps/ut4_kingdom_b4.bsp to /Applications/UrbanTerror/utmaps/ut4_kingdom_b4/maps/ut4_kingdom_b4.aas
+-- Q3_LoadMapFromBSP --
+Loading map from /Applications/UrbanTerror/utmaps/ut4_kingdom_b4/maps/ut4_kingdom_b4.bsp...
+ 45256 triangles
+  3186 patch tris
+creating planar surface planes...
+searching visible brush sides...
+     0 brush sides4440 brush sides textured out of 29622
+    24 models           960
+   106 shaders         7632
+  4286 brushes        51432
+ 29622 brushsides    236976
+     0 fogs               0
+ 14236 planes        227776
+   232 entdata        21352
+
+  4821 nodes         173556
+  4846 leafs         232608
+ 23642 leafsurfaces   94568
+ 11957 leafbrushes    47828
+ 67644 drawverts    2976336
+ 45168 drawindexes   180672
+  8048 drawsurfaces  836992
+    32 lightmaps    1572864
+       visibility    611808
+Entity 0, Brush 1616: duplicate plane
+Entity 0, Brush 1618: duplicate plane
+Entity 0, Brush 1618: duplicate plane
+Entity 0, Brush 2168: duplicate plane
+Entity 0, Brush 2170: duplicate plane
+Entity 0, Brush 2182: duplicate plane
+Entity 0, Brush 2182: duplicate plane
+Entity 0, Brush 2184: duplicate plane
+Entity 0, Brush 2188: duplicate plane
+Entity 0, Brush 2188: duplicate plane
+Entity 0, Brush 2188: duplicate plane
+Entity 0, Brush 2188: duplicate plane
+Entity 0, Brush 2188: duplicate plane
+Entity 0, Brush 2190: duplicate plane
+Entity 0, Brush 2190: duplicate plane
+Entity 0, Brush 2716: duplicate plane
+Entity 0, Brush 2718: duplicate plane
+Entity 0, Brush 2732: duplicate plane
+Entity 0, Brush 2732: duplicate plane
+Entity 0, Brush 2732: duplicate plane
+Entity 0, Brush 2734: duplicate plane
+Entity 0, Brush 2912: duplicate plane
+Entity 0, Brush 4444: duplicate plane
+Entity 0, Brush 4446: duplicate plane
+Entity 0, Brush 5130: duplicate plane
+Entity 0, Brush 5132: duplicate plane
+Entity 0, Brush 6376: duplicate plane
+Entity 0, Brush 6628: duplicate plane
+Entity 0, Brush 6630: duplicate plane
+Entity 0, Brush 7066: duplicate plane
+Entity 0, Brush 7068: duplicate plane
+Entity 0, Brush 7070: duplicate plane
+Entity 0, Brush 7072: duplicate plane
+Entity 0, Brush 7074: duplicate plane
+Entity 0, Brush 7736: duplicate plane
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: AAS_CreateCurveBrushes: no winding
+WARNING: AAS_CreateCurveBrushes: no winding
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+-------- Brush CSG ---------
+  9443 original brushes
+split not on both sides
+split not on both sides
+split not on both sides
+split not on both sides
+  8252 output brushes
+-------- Brush BSP ---------
+  8252 brushes
+ 24705 visible faces
+     0 nonvisible faces
+ 54677 total sides
+no multi-threading
+     1 threads max
+depth first bsp building
+two tiny brushes
+two tiny brushes
+two tiny brushes
+split not on both sides
+split not on both sides
+split not on both sides
+split not on both sides
+split not on both sides
+two tiny brushes
+two tiny brushes
+two tiny brushes
+two tiny brushes
+two tiny brushes
+111979 splits
+     0 KB of peak total bsp memory
+BSP tree created in    20 seconds
+------- Prune Nodes --------
+66006 pruned nodes
+---- Node Portalization ----
+ 45973 nodes portalized
+   327 tiny portals
+     0 KB of portal memory
+     0 KB of winding memory
+------ FloodEntities -------
+------- FillOutside --------
+11768 solid leaves
+ 9771 leaves filled
+ 1448 inside leaves
+AAS_CreateAreas
+  1448 areas created
+AAS_MergeAreaFaces
+  1026 face merges
+AAS_GravitationalSubdivision
+found 1 epsilon faces trying to split area 1498
+found 1 epsilon faces trying to split area 1499
+found 1 epsilon faces trying to split area 303
+found 4 epsilon faces trying to split area 371
+found 1 epsilon faces trying to split area 372
+found 1 epsilon faces trying to split area 381
+found 1 epsilon faces trying to split area 1686
+found 5 epsilon faces trying to split area 629
+found 1 epsilon faces trying to split area 1798
+found 4 epsilon faces trying to split area 1857
+found 2 epsilon faces trying to split area 1881
+found 1 epsilon faces trying to split area 1879
+   278 gravitational subdivisions
+AAS_MergeAreaFaces
+    26 face merges
+AAS_MergeAreas
+   745 areas merged
+AAS_PruneNodes
+ 19149 nodes pruned
+   981 areas checked for shared face flipping
+AAS_MergeAreaFaces
+  1951 face merges
+AAS_MergePlaneFaces
+    22 plane face merges
+AAS_LadderSubdivision
+     0 ladder subdivisions
+AAS_MeltAreaFaceWindings
+  3414 edges melted
+AAS_RemoveTinyFaces
+5 tiny faces removed
+AAS_CreateAreaSettings
+allocated 1 MB and 925 KB and 12 bytes of AAS memory
+AAS_StoreFile
+AAS_GetFace: face 287 had degenerate edge 2-3
+AAS_GetFace: face 462 had degenerate edge 1-2
+AAS_GetFace: face 463 had degenerate edge 0-1
+AAS_GetFace: face 587 had degenerate edge 7-0
+AAS_GetFace: face 612 had degenerate edge 5-6
+AAS_GetFace: face 966 had degenerate edge 2-3
+AAS_GetFace: face 969 had degenerate edge 1-2
+AAS_GetFace: face 1719 had degenerate edge 1-2
+AAS_GetFace: face 2403 had degenerate edge 1-2
+AAS_GetFace: face 2851 had degenerate edge 4-0
+AAS_GetFace: face 2862 had degenerate edge 3-4
+AAS_GetFace: face 3832 had degenerate edge 0-1
+AAS_GetFace: face 3834 had degenerate edge 1-2
+AAS_GetFace: face 4901 had degenerate edge 4-0
+AAS_GetFace: face 5153 had degenerate edge 1-2
+AAS_GetFace: face 5161 had degenerate edge 0-1
+AAS_GetFace: face 5164 had degenerate edge 2-3
+AAS_GetFace: face 5166 had degenerate edge 1-2
+AAS_GetFace: face 5169 had degenerate edge 0-1
+AAS_GetFace: face 5181 had degenerate edge 3-0
+   982 areas stored
+
+AAS created in    21 seconds
+loading collision map...
+CM_LoadMap( /Applications/UrbanTerror/utmaps/ut4_kingdom_b4/maps/ut4_kingdom_b4.bsp, 0 )
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+WARNING: CM_AddFacetBevels... invalid bevel
+0 weapon jump areas
+calculating reachability...
+
+please wait while storing reachability...
+     0 reach swim
+  1114 reach equal floor
+   127 reach step
+    15 reach barrier
+     0 reach waterjump
+   641 reach walkoffledge
+    81 reach jump
+     0 reach ladder
+   120 reach walk
+     0 reach teleport
+     0 reach funcbob
+     0 reach elevator
+     0 reach grapple
+     0 reach rocketjump
+     0 reach jumppad
+calculating clusters...
+     0 forced portal areas
+possible portal: 18
+possible portal: 77
+possible portal: 81
+possible portal: 113
+possible portal: 202
+possible portal: 251
+possible portal: 300
+possible portal: 377
+possible portal: 463
+possible portal: 521
+possible portal: 544
+possible portal: 670
+possible portal: 705
+possible portal: 773
+possible portal: 777
+possible portal: 864
+possible portal: 885
+possible portal: 888
+possible portal: 892
+possible portal: 907
+possible portal: 918
+possible portal: 920
+portal area 18 has no front cluster
+portal area 77 has no back cluster
+portal area 81 has no back cluster
+portal area 113 has no back cluster
+portal area 251 has no back cluster
+portal area 300 has no back cluster
+portal area 377 has no back cluster
+portal area 463 has no back cluster
+portal area 521 has no front cluster
+portal area 544 has no back cluster
+portal area 670 has no back cluster
+portal area 705 has no back cluster
+portal area 773 has no back cluster
+portal area 777 has no back cluster
+portal area 864 has no back cluster
+portal area 885 has no back cluster
+portal area 888 has no back cluster
+portal area 918 has no back cluster
+portal area 920 is seperating more than two clusters
+
+portal 1: area 202
+portal 2: area 892
+portal 3: area 907
+     4 portals created
+     7 clusters created
+cluster 1 has 496 reachability areas
+cluster 2 has 2 reachability areas
+cluster 3 has 25 reachability areas
+cluster 4 has 8 reachability areas
+cluster 5 has 70 reachability areas
+cluster 6 has 22 reachability areas
+   623 total reachability areas
+763755 AAS memory/CPU usage (the lower the better)
+writing /Applications/UrbanTerror/utmaps/ut4_kingdom_b4/maps/ut4_kingdom_b4.aas
+numvertexes = 5259
+numplanes = 3074
+numedges = 10394
+edgeindexsize = 27211
+numfaces = 5961
+faceindexsize = 8305
+numareas = 982
+numareasettings = 982
+reachabilitysize = 2099
+numnodes = 4116
+numportals = 4
+portalindexsize = 6
+numclusters = 7
+  1361 walk
+     0 crouch
+    15 barrier jump
+    81 jump
+     0 ladder
+   641 walk off ledge
+     0 swim
+     0 water jump
+     0 teleport
+     0 elevator
+     0 rocket jump
+     0 bfg jump
+     0 grapple hook
+     0 double jump
+     0 ramp jump
+     0 strafe jump
+     0 jump pad
+     0 func bob
+freed 1 MB and 925 KB and 12 bytes of AAS memory
+BSPC run time is    23 seconds

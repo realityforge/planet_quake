@@ -114,13 +114,13 @@ clean:
 
 ifdef B
 $(B)/$(WORKDIR)/%.o: $(MBSPCDIR)/qcommon/%.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(DO_MBSPC_CC)
 
 $(B)/$(WORKDIR)/%.o: $(MBSPCDIR)/mbspc/%.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(DO_MBSPC_CC)
 
 $(B)/$(WORKDIR)/%.o: $(MBSPCDIR)/botlib/%.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(DO_MBSPC_CC)
 
 $(B)/$(MBSPC_TARGET): $(MBSPC_OBJ) 
 	$(echo_cmd) "LD $@"

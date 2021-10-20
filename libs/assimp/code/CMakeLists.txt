@@ -919,8 +919,8 @@ ENDIF()
 
 # minizip/unzip
 IF(ASSIMP_HUNTER_ENABLED)
-  hunter_add_package(minizip)
-  find_package(minizip CONFIG REQUIRED)
+#  hunter_add_package(minizip)
+#  find_package(minizip CONFIG REQUIRED)
 ELSE()
   SET( unzip_SRCS
     ../contrib/unzip/crypt.c
