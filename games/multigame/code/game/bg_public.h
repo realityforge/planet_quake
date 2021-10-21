@@ -501,7 +501,9 @@ typedef enum {
   EV_ALTFIRE_WEAPON,
 #endif
 
-	EV_USE_ITEM0,
+	EV_USE_ITEM,
+  /*
+  EV_USE_ITEM0,
 	EV_USE_ITEM1,
 	EV_USE_ITEM2,
 	EV_USE_ITEM3,
@@ -517,6 +519,7 @@ typedef enum {
 	EV_USE_ITEM13,
 	EV_USE_ITEM14,
 	EV_USE_ITEM15,
+  */
 
 	EV_ITEM_RESPAWN,
 	EV_ITEM_POP,

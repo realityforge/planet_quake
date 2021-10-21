@@ -349,7 +349,7 @@ void CopyToBodyQue( gentity_t *ent ) {
 		}
 	}
 #endif
-	//body->s.powerups = 0;	// clear powerups
+	body->s.powerups = 0;	// clear powerups
 	body->s.loopSound = 0;	// clear lava burning
 	body->s.number = body - g_entities;
 	body->timestamp = level.time;

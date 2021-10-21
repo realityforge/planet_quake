@@ -113,6 +113,7 @@ void TossClientItems( gentity_t *self ) {
 	}
 
 	// drop all the powerups if not in teamplay
+  // TODO: change this to a cvar 
 	if ( g_gametype.integer != GT_TEAM ) {
 		angle = 45;
 		for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
@@ -679,7 +680,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	self->takedamage = qtrue;	// can still be gibbed
 
 	self->s.weapon = WP_NONE;
-	//self->s.powerups = 0;
+	self->s.powerups = 0;
 	self->r.contents = CONTENTS_CORPSE;
 
 	self->s.angles[0] = 0;
@@ -697,6 +698,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	self->client->respawnTime = level.time + 1700;
 
 	// remove powerups
+	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 	memset( self->items, 0, sizeof(self->items) );
 
 	// never gib in a nodrop

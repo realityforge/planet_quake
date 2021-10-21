@@ -1586,7 +1586,8 @@ static void PM_Weapon( void ) {
 				// don't use medkit if at max health
 			} else {
 				pm->ps->pm_flags |= PMF_USE_ITEM_HELD;
-				PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
+        BG_AddPredictableEventToPlayerstate( EV_USE_ITEM, bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag, pm->ps, -1 );
+				//PM_AddEvent( EV_USE_ITEM0 + bg_itemlist[pm->ps->stats[STAT_HOLDABLE_ITEM]].giTag );
 				pm->ps->stats[STAT_HOLDABLE_ITEM] = 0;
 			}
 			return;

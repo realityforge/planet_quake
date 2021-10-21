@@ -455,12 +455,18 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
     // update powerups
     {
       int p;
+      int slot = 0;
       for(p = 0; p < PW_NUM_POWERUPS; p++) {
         if(!ent->items[ITEM_PW_MIN + p]) continue;
         if(ent->items[ITEM_PW_MIN + p] < level.time - 1000) {
           ent->items[ITEM_PW_MIN + p] = 0;
         }
+        client->ps.powerups[slot] = ent->items[ITEM_PW_MIN + p];
+        if(client->ps.powerups[slot] < 0) {
+          client->ps.powerups[slot] = 0;
+        }
         G_AddEvent( ent, EV_POWERUP, p );
+        slot++;
       }
     }
 	}
@@ -535,7 +541,7 @@ but any server game effects are handled here
 */
 void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 	int		i, j;
-	int		event;
+	int		event, eventParm;
 	gclient_t *client;
 	int		damage;
 	vec3_t	origin, angles;
@@ -550,6 +556,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 	}
 	for ( i = oldEventSequence ; i < client->ps.eventSequence ; i++ ) {
 		event = client->ps.events[ i & (MAX_PS_EVENTS-1) ];
+    eventParm = client->ps.eventParms[ i & (MAX_PS_EVENTS-1) ];
 
 		switch ( event ) {
 		case EV_FALL_MEDIUM:
@@ -576,90 +583,94 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			FireWeapon( ent );
 			break;
 
-		case EV_USE_ITEM1:		// teleporter
-			// drop flags in CTF
-			item = NULL;
-			j = 0;
+    case EV_USE_ITEM:
+      switch(eventParm) {
+  		case HI_TELEPORTER:		// teleporter
+  			// drop flags in CTF
+  			item = NULL;
+  			j = 0;
 
-			if ( ent->items[ ITEM_PW_MIN + PW_REDFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_REDFLAG );
-				j = PW_REDFLAG;
-			} else if ( ent->items[ ITEM_PW_MIN + PW_BLUEFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_BLUEFLAG );
-				j = PW_BLUEFLAG;
-			} else if ( ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG ] ) {
-				item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
-				j = PW_NEUTRALFLAG;
-			}
+  			if ( ent->items[ ITEM_PW_MIN + PW_REDFLAG ] ) {
+  				item = BG_FindItemForPowerup( PW_REDFLAG );
+  				j = PW_REDFLAG;
+  			} else if ( ent->items[ ITEM_PW_MIN + PW_BLUEFLAG ] ) {
+  				item = BG_FindItemForPowerup( PW_BLUEFLAG );
+  				j = PW_BLUEFLAG;
+  			} else if ( ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG ] ) {
+  				item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
+  				j = PW_NEUTRALFLAG;
+  			}
 
-			if ( item ) {
-				drop = Drop_Item( ent, item, 0 );
-				// decide how many seconds it has left
-				drop->count = ( ent->items[ ITEM_PW_MIN + j ] - level.time ) / 1000;
-				if ( drop->count < 1 ) {
-					drop->count = 1;
-				}
-				// for pickup prediction
-				drop->s.time2 = drop->count;
+  			if ( item ) {
+  				drop = Drop_Item( ent, item, 0 );
+  				// decide how many seconds it has left
+  				drop->count = ( ent->items[ ITEM_PW_MIN + j ] - level.time ) / 1000;
+  				if ( drop->count < 1 ) {
+  					drop->count = 1;
+  				}
+  				// for pickup prediction
+  				drop->s.time2 = drop->count;
 
-				ent->items[ ITEM_PW_MIN + j ] = 0;
-			}
+  				ent->items[ ITEM_PW_MIN + j ] = 0;
+  			}
+
+  #ifdef MISSIONPACK
+  			if ( g_gametype.integer == GT_HARVESTER ) {
+  				if ( ent->client->ps.generic1 > 0 ) {
+  					if ( ent->client->sess.sessionTeam == TEAM_RED ) {
+  						item = BG_FindItem( "Blue Cube" );
+  					} else {
+  						item = BG_FindItem( "Red Cube" );
+  					}
+  					if ( item ) {
+  						for ( j = 0; j < ent->client->ps.generic1; j++ ) {
+  							drop = Drop_Item( ent, item, 0 );
+  							if ( ent->client->sess.sessionTeam == TEAM_RED ) {
+  								drop->spawnflags = TEAM_BLUE;
+  							} else {
+  								drop->spawnflags = TEAM_RED;
+  							}
+  						}
+  					}
+  					ent->client->ps.generic1 = 0;
+  				}
+  			}
+  #endif
+  			SelectSpawnPoint( ent, ent->client->ps.origin, origin, angles );
+  			TeleportPlayer( ent, origin, angles );
+  			break;
+
+  		case HI_MEDKIT:		// medkit
+  			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] + 25;
+
+  			break;
 
 #ifdef MISSIONPACK
-			if ( g_gametype.integer == GT_HARVESTER ) {
-				if ( ent->client->ps.generic1 > 0 ) {
-					if ( ent->client->sess.sessionTeam == TEAM_RED ) {
-						item = BG_FindItem( "Blue Cube" );
-					} else {
-						item = BG_FindItem( "Red Cube" );
-					}
-					if ( item ) {
-						for ( j = 0; j < ent->client->ps.generic1; j++ ) {
-							drop = Drop_Item( ent, item, 0 );
-							if ( ent->client->sess.sessionTeam == TEAM_RED ) {
-								drop->spawnflags = TEAM_BLUE;
-							} else {
-								drop->spawnflags = TEAM_RED;
-							}
-						}
-					}
-					ent->client->ps.generic1 = 0;
-				}
-			}
-#endif
-			SelectSpawnPoint( ent, ent->client->ps.origin, origin, angles );
-			TeleportPlayer( ent, origin, angles );
-			break;
+  		case HI_KAMIKAZE:		// kamikaze
+  			// make sure the invulnerability is off
+  			ent->client->invulnerabilityTime = 0;
+  			// start the kamikze
+  			G_StartKamikaze( ent );
+  			break;
 
-		case EV_USE_ITEM2:		// medkit
-			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] + 25;
+  		case HI_PORTAL:		// portal
+  			if( ent->client->portalID ) {
+  				DropPortalSource( ent );
+  			}
+  			else {
+  				DropPortalDestination( ent );
+  			}
+  			break;
+  		case HI_INVULNERABILITY:		// invulnerability
+  			ent->client->invulnerabilityTime = level.time + 10000;
+  			break;
+  #endif
 
-			break;
-
-#ifdef MISSIONPACK
-		case EV_USE_ITEM3:		// kamikaze
-			// make sure the invulnerability is off
-			ent->client->invulnerabilityTime = 0;
-			// start the kamikze
-			G_StartKamikaze( ent );
-			break;
-
-		case EV_USE_ITEM4:		// portal
-			if( ent->client->portalID ) {
-				DropPortalSource( ent );
-			}
-			else {
-				DropPortalDestination( ent );
-			}
-			break;
-		case EV_USE_ITEM5:		// invulnerability
-			ent->client->invulnerabilityTime = level.time + 10000;
-			break;
-#endif
-
-		default:
-			break;
-		}
+  		default:
+  			break;
+  		}
+    }
+    break;
 	}
 
 }
@@ -1181,7 +1192,7 @@ void ClientEndFrame( gentity_t *ent ) {
 #ifdef USE_RUNES
   // keep rune switch on?
   if(ent->items[ent->rune]) {
-    ent->items[ent->rune] = level.time + 2000;
+    ent->items[ent->rune] = level.time + 999000;
   }
 #endif
 

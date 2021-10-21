@@ -417,18 +417,18 @@ static void CG_Obituary( entityState_t *ent ) {
 CG_UseItem
 ===============
 */
-static void CG_UseItem( centity_t *cent ) {
+static void CG_UseItem( centity_t *cent, int itemNum ) {
 	clientInfo_t *ci;
-	int			itemNum, clientNum;
+	int			clientNum;
 	gitem_t		*item;
 	entityState_t *es;
 
 	es = &cent->currentState;
 	
-	itemNum = (es->event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
-	if ( itemNum < 0 || itemNum > HI_NUM_HOLDABLE ) {
-		itemNum = 0;
-	}
+	//itemNum = (es->event & ~EV_EVENT_BITS) - EV_USE_ITEM0;
+	//if ( itemNum < 0 || itemNum > HI_NUM_HOLDABLE ) {
+	//	itemNum = 0;
+	//}
 
 	// print a message if the local player
 	if ( es->number == cg.snap->ps.clientNum ) {
@@ -997,6 +997,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		CG_FireWeapon( cent );
 		break;
 
+  case EV_USE_ITEM:
+  /*
 	case EV_USE_ITEM0:
 	case EV_USE_ITEM1:
 	case EV_USE_ITEM2:
@@ -1013,7 +1015,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 	case EV_USE_ITEM13:
 	case EV_USE_ITEM14:
 	case EV_USE_ITEM15:
-		CG_UseItem( cent );
+  */
+		CG_UseItem( cent, es->eventParm );
 		break;
 
 	//=================================================================
@@ -1336,18 +1339,24 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 	//
 	case EV_POWERUP:
     if ( es->number == cg.snap->ps.clientNum ) {
-      int index = cg.snap->ps.powerups[MAX_POWERUPS - 1] % (MAX_POWERUPS-1);
+      static int lastPWUpdate;
+      static int lastPWCount;
+      if(cg.time - lastPWUpdate >= 1000) {
+        lastPWCount = 0;
+      }
       cg.powerupActive = es->eventParm;
       cg.powerupTime = cg.time;
-      if(cg.snap->ps.powerups[index] == 0) {
-      //  cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = 0;
+      if(cg.snap->ps.powerups[lastPWCount] == 0) {
+        cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = 0;
       } else {
-      //  cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = cg.snap->ps.powerups[index];
+        cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = cg.snap->ps.powerups[lastPWCount];
       }
 #ifdef USE_RUNES
+Com_Printf("powerup: %i\n", cg.snap->ps.powerups[lastPWCount]);
       if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM) {
-        Com_Printf("rune: %i\n", cg.snap->ps.powerups[index]);
       }
+      lastPWCount++;
+      lastPWUpdate = cg.time;
       /*
         if(cg.snap->ps.powerups[index] == 0) {
           cg_entities[cent->currentState.otherEntityNum].rune = 0

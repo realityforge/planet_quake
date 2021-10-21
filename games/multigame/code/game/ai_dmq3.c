@@ -5029,6 +5029,8 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 		case EV_FIRE_WEAPON:
 			//FIXME: either add to sound queue or mark player as someone making noise
 			break;
+    case EV_USE_ITEM:
+/*
 		case EV_USE_ITEM0:
 		case EV_USE_ITEM1:
 		case EV_USE_ITEM2:
@@ -5045,6 +5047,7 @@ void BotCheckEvents(bot_state_t *bs, entityState_t *state) {
 		case EV_USE_ITEM13:
 		case EV_USE_ITEM14:
 		case EV_USE_ITEM15:
+*/
 			break;
 	}
 }
