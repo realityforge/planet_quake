@@ -700,6 +700,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	// remove powerups
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 	memset( self->items, 0, sizeof(self->items) );
+#ifdef USE_RUNES
+  self->rune = 0;
+#endif
 
 	// never gib in a nodrop
 	if ( (self->health <= GIB_HEALTH && !(contents & CONTENTS_NODROP)

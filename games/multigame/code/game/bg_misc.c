@@ -2406,6 +2406,8 @@ const char *eventnames[EV_MAX] = {
 	"EV_OBITUARY",
 
   "EV_POWERUP",
+  "EV_POWERUP1", // duplexing powerup status
+  "EV_POWERUP2",
 	//"EV_POWERUP_QUAD",
 	//"EV_POWERUP_BATTLESUIT",
 	//"EV_POWERUP_REGEN",
@@ -2494,9 +2496,9 @@ void BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad ) {
 	}
 
 	// flying characters don't hit bounce pads
-	//if ( ps->powerups[PW_FLIGHT] ) {
-	//	return;
-	//}
+	if ( ps->powerups[PW_FLIGHT] ) {
+		return;
+	}
 
 	// if we didn't hit this same jumppad the previous frame
 	// then don't play the event sound again if we are in a fat trigger
@@ -2527,7 +2529,7 @@ and after local prediction on the client
 ========================
 */
 void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean snap ) {
-//	int		i;
+	int		i;
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 		s->eType = ET_INVISIBLE;
@@ -2583,14 +2585,12 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->weapon = ps->weapon;
 	s->groundEntityNum = ps->groundEntityNum;
 
-/*
 	s->powerups = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( ps->powerups[ i ] ) {
 			s->powerups |= 1 << i;
 		}
 	}
-*/
 
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
@@ -2605,7 +2605,7 @@ and after local prediction on the client
 ========================
 */
 void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s, int time, qboolean snap ) {
-//	int		i;
+	int		i;
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPECTATOR ) {
 		s->eType = ET_INVISIBLE;
@@ -2665,14 +2665,12 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->weapon = ps->weapon;
 	s->groundEntityNum = ps->groundEntityNum;
 
-/*
 	s->powerups = 0;
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
 		if ( ps->powerups[ i ] ) {
 			s->powerups |= 1 << i;
 		}
 	}
-*/
 
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;

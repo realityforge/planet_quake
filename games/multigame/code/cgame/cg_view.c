@@ -740,7 +740,7 @@ static void CG_PowerupTimerSounds( void ) {
 	int		t;
 
 	// powerup timers going away
-	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
+	for ( i = 0 ; i < PW_NUM_POWERUPS ; i++ ) {
 		t = cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + i];
 		if ( t <= cg.time ) {
 			continue;

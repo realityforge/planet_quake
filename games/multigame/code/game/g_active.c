@@ -452,23 +452,6 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 			client->ps.stats[STAT_ARMOR]--;
 		}
 
-    // update powerups
-    {
-      int p;
-      int slot = 0;
-      for(p = 0; p < PW_NUM_POWERUPS; p++) {
-        if(!ent->items[ITEM_PW_MIN + p]) continue;
-        if(ent->items[ITEM_PW_MIN + p] < level.time - 1000) {
-          ent->items[ITEM_PW_MIN + p] = 0;
-        }
-        client->ps.powerups[slot] = ent->items[ITEM_PW_MIN + p];
-        if(client->ps.powerups[slot] < 0) {
-          client->ps.powerups[slot] = 0;
-        }
-        G_AddEvent( ent, EV_POWERUP, p );
-        slot++;
-      }
-    }
 	}
 #ifdef MISSIONPACK
 	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
@@ -1181,18 +1164,12 @@ void ClientEndFrame( gentity_t *ent ) {
 	}
 
 	client = ent->client;
-
-	// turn off any expired powerups
-	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		if ( ent->items[ ITEM_PW_MIN + i ] < client->pers.cmd.serverTime ) {
-			ent->items[ ITEM_PW_MIN + i ] = 0;
-		}
-	}
   
+
 #ifdef USE_RUNES
   // keep rune switch on?
   if(ent->items[ent->rune]) {
-    ent->items[ent->rune] = level.time + 999000;
+    ent->items[ent->rune] = level.time + 100000;
   }
 #endif
 
@@ -1214,6 +1191,47 @@ void ClientEndFrame( gentity_t *ent ) {
 		ent->items[ITEM_PW_MIN + PW_INVULNERABILITY] = level.time;
 	}
 #endif
+
+  /*
+  // turn off any expired powerups
+  for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
+    if ( client->ps.powerups[ i ] < client->pers.cmd.serverTime ) {
+      client->ps.powerups[ i ] = 0;
+    }
+  }
+
+  for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
+    if ( ent->items[ ITEM_PW_MIN + i ] < client->pers.cmd.serverTime ) {
+      ent->items[ ITEM_PW_MIN + i ] = 0;
+    }
+  }
+  */
+  {
+    static int p;
+    static int slot;
+    slot = (slot + 1) % 4;
+    for(; p < PW_NUM_POWERUPS; p++) {
+      if(!ent->items[ITEM_PW_MIN + p]) continue;
+      // turn off any expired powerups
+      if(ent->items[ITEM_PW_MIN + p] < client->pers.cmd.serverTime - 1000) {
+        ent->items[ITEM_PW_MIN + p] = 0;
+      }
+      // only send 1 powerup per cycle
+      if(/* client->ps.powerups[slot] != ent->items[ITEM_PW_MIN + p] */
+        ent->items[ITEM_PW_MIN + p]) {
+        client->ps.powerups[(slot % 2) + 1] = ent->items[ITEM_PW_MIN + p];
+        ent->s.powerups |= 1 << ((slot % 2) + 1);
+        if(slot == 3)
+          p++;
+        else if (slot == 2 || slot == 3)
+          G_AddEvent( ent, (slot % 2) ? EV_POWERUP1 : EV_POWERUP2, p );
+        break;
+      }
+    }
+    if(p == PW_NUM_POWERUPS) {
+      p = 0;
+    }
+  }
 
 	// save network bandwidth
 #if 0

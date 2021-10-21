@@ -690,7 +690,7 @@ static void CG_CheckTimers( void ) {
 	}
 
 	// turn off any expired powerups
-	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
+	for ( i = 0 ; i < PW_NUM_POWERUPS ; i++ ) {
 		if ( !cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] )
 			continue;
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
@@ -894,7 +894,6 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps, qboole
 		return 19;
 	}
 
-/*
 	for ( i = 0; i < MAX_POWERUPS; i++ ) {
 		if( pps->powerups[ i ] != ps->powerups[ i ] ) {
 			if ( cg_showmiss.integer > 1 )
@@ -902,7 +901,6 @@ static int CG_IsUnacceptableError( playerState_t *ps, playerState_t *pps, qboole
 			return 20;
 		}
 	}
-*/
 
 	return 0;
 }

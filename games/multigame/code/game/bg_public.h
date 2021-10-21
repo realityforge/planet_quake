@@ -552,6 +552,8 @@ typedef enum {
 	EV_OBITUARY,
 
   EV_POWERUP,
+  EV_POWERUP1,  // duplexing powerup status
+  EV_POWERUP2,
 	//EV_POWERUP_QUAD,
 	//EV_POWERUP_BATTLESUIT,
 	//EV_POWERUP_REGEN,
