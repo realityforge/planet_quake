@@ -945,11 +945,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			}
 
       if(	item->giType == IT_POWERUP ) {
-        cg_entities[cent->currentState.otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
-  		  cg_entities[cent->currentState.otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
+        cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
+  		  cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] += es->time2 * 1000;
 #ifdef USE_RUNES
-        if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM)
+        if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
           cg_entities[cent->currentState.otherEntityNum].rune = ITEM_PW_MIN + item->giTag;
+        }
 #endif
       }
 
@@ -1333,28 +1334,44 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 	//
 	// powerup events
 	//
-	case EV_POWERUP_QUAD:
-		if ( es->number == cg.snap->ps.clientNum ) {
-			cg.powerupActive = PW_QUAD;
-			cg.powerupTime = cg.time;
-		}
-		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.quadSound );
-		break;
+	case EV_POWERUP:
+    if ( es->number == cg.snap->ps.clientNum ) {
+      int index = cg.snap->ps.powerups[MAX_POWERUPS - 1] % (MAX_POWERUPS-1);
+      cg.powerupActive = es->eventParm;
+      cg.powerupTime = cg.time;
+      if(cg.snap->ps.powerups[index] == 0) {
+      //  cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = 0;
+      } else {
+      //  cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = cg.snap->ps.powerups[index];
+      }
+#ifdef USE_RUNES
+      if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM) {
+        Com_Printf("rune: %i\n", cg.snap->ps.powerups[index]);
+      }
+      /*
+        if(cg.snap->ps.powerups[index] == 0) {
+          cg_entities[cent->currentState.otherEntityNum].rune = 0
+        } else {
+          
+        }
+        cg_entities[cent->currentState.otherEntityNum].rune = ITEM_PW_MIN + item->giTag;
+      }
+      */
+#endif
+    }
+    switch(es->eventParm & 0xFF) {
+    case PW_QUAD:
+  		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.quadSound );
+  		break;
 
-	case EV_POWERUP_BATTLESUIT:
-		if ( es->number == cg.snap->ps.clientNum ) {
-			cg.powerupActive = PW_BATTLESUIT;
-			cg.powerupTime = cg.time;
-		}
-		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.protectSound );
-		break;
+  	case PW_BATTLESUIT:
+  		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.protectSound );
+  		break;
 
-	case EV_POWERUP_REGEN:
-		if ( es->number == cg.snap->ps.clientNum ) {
-			cg.powerupActive = PW_REGEN;
-			cg.powerupTime = cg.time;
-		}
-		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
+  	case PW_REGEN:
+  		trap_S_StartSound (NULL, es->number, CHAN_ITEM, cgs.media.regenSound );
+      break;
+    }
 		break;
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)

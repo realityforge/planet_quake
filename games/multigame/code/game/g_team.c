@@ -1216,7 +1216,7 @@ static void ObeliskRegen( gentity_t *self ) {
 		return;
 	}
 
-	G_AddEvent( self, EV_POWERUP_REGEN, 0 );
+	G_AddEvent( self, EV_POWERUP, PW_REGEN );
 	self->health += g_obeliskRegenAmount.integer;
 	if ( self->health > g_obeliskHealth.integer ) {
 		self->health = g_obeliskHealth.integer;

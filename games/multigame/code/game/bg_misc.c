@@ -2402,9 +2402,10 @@ const char *eventnames[EV_MAX] = {
 	"EV_DEATH3",
 	"EV_OBITUARY",
 
-	"EV_POWERUP_QUAD",
-	"EV_POWERUP_BATTLESUIT",
-	"EV_POWERUP_REGEN",
+  "EV_POWERUP",
+	//"EV_POWERUP_QUAD",
+	//"EV_POWERUP_BATTLESUIT",
+	//"EV_POWERUP_REGEN",
 
 	"EV_GIB_PLAYER",			// gib a previously living player
 	"EV_SCOREPLUM",			// score plum

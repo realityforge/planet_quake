@@ -867,13 +867,13 @@ void CG_RegisterItemVisuals( int itemNum ) {
 
 	itemInfo->models[0] = trap_R_RegisterModel( item->world_model[0] );
 
-	itemInfo->icon = trap_R_RegisterShader( item->icon );
+	itemInfo->icon = trap_R_RegisterShaderNoMip( item->icon );
 
 	// try to register depth-fragment shaders
 	if ( cg.clientFrame == 0 && cg.skipDFshaders ) {
 		itemInfo->icon_df = 0;
 	} else {
-		itemInfo->icon_df = trap_R_RegisterShader( va( "%s_df", item->icon ) );
+		itemInfo->icon_df = trap_R_RegisterShaderNoMip( va( "%s_df", item->icon ) );
 	}
 
 	if ( !itemInfo->icon_df ) {
@@ -899,6 +899,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
     if ( item->world_model[1] ) {
       itemInfo->altShader2 = trap_R_RegisterShader(va( "models/runes/%s_2", &item->classname[5] ));
     }
+    itemInfo->altShader3 = trap_R_RegisterShader(va( "powerups/runes/%s", &item->classname[5] ));
   }
 #endif
 
@@ -1254,7 +1255,9 @@ CG_AddWeaponWithPowerups
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 	// add powerup effects
-  centity_t *cent;
+  itemInfo_t		*itemInfo;
+  centity_t     *cent;
+  gitem_t       *item;
   cent = &cg_entities[cl->currentState.number];
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
@@ -1279,6 +1282,15 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 			gun->customShader = cgs.media.quadWeaponShader;
 			trap_R_AddRefEntityToScene( gun );
 		}
+#ifdef USE_RUNES
+    if( cent->rune - ITEM_PW_MIN == RUNE_STRENGTH 
+      && cent->items[cent->rune] ) {
+      item = BG_FindItemForRune((cent->rune - ITEM_PW_MIN - RUNE_STRENGTH) + 1);
+      itemInfo = &cg_items[ ITEM_INDEX(item) ];
+      gun->customShader = itemInfo->altShader3;
+			trap_R_AddRefEntityToScene( gun );
+    }
+#endif
 	}
 }
 

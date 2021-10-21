@@ -110,7 +110,7 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 	}
 
 	if (ent->items[ITEM_PW_MIN + PW_QUAD] ) {
-		G_AddEvent( ent, EV_POWERUP_QUAD, 0 );
+		G_AddEvent( ent, EV_POWERUP, PW_QUAD );
 		s_quadFactor = g_quadfactor.value;
 	} else {
 		s_quadFactor = 1.0;

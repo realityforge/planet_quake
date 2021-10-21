@@ -861,6 +861,31 @@ static void CG_DrawAreaPowerUp(rectDef_t *rect, int align, float special, float 
 		active++;
 	}
 
+#ifdef USE_RUNES
+  // always draw rune first if there is one
+  if( cg_entities[cg.clientNum].items[cg_entities[cg.clientNum].rune] ) {
+    item = BG_FindItemForRune((cg_entities[cg.clientNum].rune - ITEM_PW_MIN - RUNE_STRENGTH) + 1);
+
+    if (item) {
+      t = cg_entities[cg.clientNum].items[cg_entities[cg.clientNum].rune];
+      if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
+        trap_R_SetColor( NULL );
+      } else {
+        vec4_t	modulate;
+
+        f = (float)( t - cg.time ) / POWERUP_BLINK_TIME;
+        f -= (int)f;
+        modulate[0] = modulate[1] = modulate[2] = modulate[3] = f;
+        trap_R_SetColor( modulate );
+      }
+
+      CG_DrawPic( r2.x, r2.y, r2.w * .75, r2.h, trap_R_RegisterShader( item->icon ) );
+
+      *inc += r2.w + special;
+    }
+  }
+#endif
+
 	// draw the icons and timers
 	for ( i = 0 ; i < active ; i++ ) {
 		item = BG_FindItemForPowerup( sorted[i] );

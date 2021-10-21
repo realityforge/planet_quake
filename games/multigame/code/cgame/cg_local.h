@@ -468,6 +468,7 @@ typedef struct {
 #ifdef USE_RUNES
   qhandle_t		altShader1;
   qhandle_t		altShader2;
+  qhandle_t		altShader3;
 #endif
 } itemInfo_t;
 

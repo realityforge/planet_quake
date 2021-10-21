@@ -1346,7 +1346,40 @@ static float CG_DrawPowerups( float y ) {
 
 #ifdef USE_RUNES
   // always draw rune first if there is one
-  
+  if( cg_entities[cg.clientNum].items[cg_entities[cg.clientNum].rune] ) {
+    item = BG_FindItemForRune((cg_entities[cg.clientNum].rune - ITEM_PW_MIN - RUNE_STRENGTH) + 1);
+    if ( item ) {
+      color = 1;
+
+      y -= ICON_SIZE;
+
+      trap_R_SetColor( colors[color] );
+      CG_DrawField( x, y, 2, sortedTime[ i ] / 1000 );
+
+      t = cg_entities[cg.clientNum].items[cg_entities[cg.clientNum].rune];
+      if ( t - cg.time >= POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
+        trap_R_SetColor( NULL );
+      } else {
+        vec4_t	modulate;
+
+        f = (float)( t - cg.time ) / POWERUP_BLINK_TIME;
+        f -= (int)f;
+        modulate[0] = modulate[1] = modulate[2] = modulate[3] = f;
+        trap_R_SetColor( modulate );
+      }
+
+      if ( cg.powerupActive == cg_entities[cg.clientNum].rune && 
+        cg.time - cg.powerupTime < PULSE_TIME ) {
+        f = 1.0 - ( (float)( cg.time - cg.powerupTime ) / PULSE_TIME );
+        size = ICON_SIZE * ( 1.0 + ( PULSE_SCALE - 1.0 ) * f );
+      } else {
+        size = ICON_SIZE;
+      }
+
+      CG_DrawPic( cgs.screenXmax + 1 - size, y + ICON_SIZE / 2 - size / 2, 
+        size, size, trap_R_RegisterShader( item->icon ) );
+    }
+  }
 #endif
 
 	// draw the icons and timers

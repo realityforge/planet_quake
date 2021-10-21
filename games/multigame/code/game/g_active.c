@@ -129,7 +129,7 @@ void P_WorldEffects( gentity_t *ent ) {
 			&& ent->pain_debounce_time <= level.time	) {
 
 			if ( envirosuit ) {
-				G_AddEvent( ent, EV_POWERUP_BATTLESUIT, 0 );
+				G_AddEvent( ent, EV_POWERUP, PW_BATTLESUIT );
 			} else {
 				if (ent->watertype & CONTENTS_LAVA) {
 					G_Damage (ent, NULL, NULL, NULL, NULL, 
@@ -403,13 +403,13 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				if ( ent->health > maxHealth * 1.1 ) {
 					ent->health = maxHealth * 1.1;
 				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+				G_AddEvent( ent, EV_POWERUP, PW_REGEN );
 			} else if ( ent->health < maxHealth * 2) {
 				ent->health += 5;
 				if ( ent->health > maxHealth * 2 ) {
 					ent->health = maxHealth * 2;
 				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+				G_AddEvent( ent, EV_POWERUP, PW_REGEN );
 			}
 #else
 		if ( ent->items[ITEM_PW_MIN + PW_REGEN] ) {
@@ -418,13 +418,13 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
 					ent->health = client->ps.stats[STAT_MAX_HEALTH] * 1.1;
 				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+				G_AddEvent( ent, EV_POWERUP, PW_REGEN );
 			} else if ( ent->health < client->ps.stats[STAT_MAX_HEALTH] * 2) {
 				ent->health += 5;
 				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 2 ) {
 					ent->health = client->ps.stats[STAT_MAX_HEALTH] * 2;
 				}
-				G_AddEvent( ent, EV_POWERUP_REGEN, 0 );
+				G_AddEvent( ent, EV_POWERUP, PW_REGEN );
 			}
 #endif
 		} else {
@@ -451,6 +451,18 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		if ( client->ps.stats[STAT_ARMOR] > client->ps.stats[STAT_MAX_HEALTH] ) {
 			client->ps.stats[STAT_ARMOR]--;
 		}
+
+    // update powerups
+    {
+      int p;
+      for(p = 0; p < PW_NUM_POWERUPS; p++) {
+        if(!ent->items[ITEM_PW_MIN + p]) continue;
+        if(ent->items[ITEM_PW_MIN + p] < level.time - 1000) {
+          ent->items[ITEM_PW_MIN + p] = 0;
+        }
+        G_AddEvent( ent, EV_POWERUP, p );
+      }
+    }
 	}
 #ifdef MISSIONPACK
 	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
@@ -1165,6 +1177,13 @@ void ClientEndFrame( gentity_t *ent ) {
 			ent->items[ ITEM_PW_MIN + i ] = 0;
 		}
 	}
+  
+#ifdef USE_RUNES
+  // keep rune switch on?
+  if(ent->items[ent->rune]) {
+    ent->items[ent->rune] = level.time + 2000;
+  }
+#endif
 
 #ifdef MISSIONPACK
 	// set powerup for player animation

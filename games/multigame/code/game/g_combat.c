@@ -739,7 +739,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 #ifdef USE_HEADSHOTS
     if(meansOfDeath == MOD_HEADSHOT) {
-      G_AddEvent( self, EV_GIB_PLAYER_HEADSHOT, 0 );
+      G_AddEvent( self, EV_GIB_PLAYER_HEADSHOT, killer );
     } else
 #endif
 		G_AddEvent( self, EV_DEATH1 + i, killer );
@@ -1181,7 +1181,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// battlesuit protects from all radius damage (but takes knockback)
 	// and protects 50% against all damage
 	if ( client && targ->items[ITEM_PW_MIN + PW_BATTLESUIT] ) {
-		G_AddEvent( targ, EV_POWERUP_BATTLESUIT, 0 );
+		G_AddEvent( targ, EV_POWERUP, PW_BATTLESUIT );
 		if ( ( dflags & DAMAGE_RADIUS ) || ( mod == MOD_FALLING ) ) {
 			return;
 		}

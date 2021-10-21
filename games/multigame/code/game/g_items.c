@@ -100,8 +100,10 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	other->items[ITEM_PW_MIN + ent->item->giTag] += quantity * 1000;
   
 #ifdef USE_RUNES
-  if(ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM)
+  if(ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM) {
     other->rune = ITEM_PW_MIN + ent->item->giTag;
+    return -1;
+  }
 #endif
 
 	// give any nearby players a "denied" anti-reward

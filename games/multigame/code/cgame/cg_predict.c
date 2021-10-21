@@ -462,7 +462,9 @@ static void CG_PickupPrediction( centity_t *cent, const gitem_t *item ) {
 		}
 		cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + item->giTag ] += cent->currentState.time2 * 1000;
 #ifdef USE_RUNES
-    cg_entities[cg.snap->ps.clientNum].rune = ITEM_PW_MIN + item->giTag;
+    if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
+      cg_entities[cg.snap->ps.clientNum].rune = ITEM_PW_MIN + item->giTag;
+    }
 #endif
 	}	
 
