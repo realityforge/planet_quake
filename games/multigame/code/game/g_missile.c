@@ -395,7 +395,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	}
 #endif
 
-	if (!strcmp(ent->classname, "hook")) {
+  if( ent->s.weapon == WP_GRAPPLING_HOOK ) {
 		gentity_t *nent;
 		vec3_t v;
 
@@ -1169,8 +1169,14 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	// unlagged
 	hook->s.otherEntityNum = self->s.number;
 
+  // for some reason this causes the hook to start backwards and explode 
+  //   on the wall it's already attacked to, so the player can't fire from
+  //   the position they are currently grappled to.
 	if ( self->client ) {
-		hooktime = self->client->pers.cmd.serverTime + MISSILE_PRESTEP_TIME;
+    // comment this out
+		//hooktime = self->client->pers.cmd.serverTime + MISSILE_PRESTEP_TIME;
+    // and use this instead
+    hooktime = self->client->pers.cmd.serverTime;
 	} else {
 		hooktime = level.time - MISSILE_PRESTEP_TIME; // // move a bit on the very first frame
 	}
@@ -1184,9 +1190,10 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 #else
   VectorScale( dir, 2000.0f, hook->s.pos.trDelta );
 #endif
-  SnapVectorTowards( hook->s.pos.trDelta, hook->s.pos.trBase );
-	//SnapVector( hook->s.pos.trDelta );			// save net bandwidth
-	VectorCopy (start, hook->r.currentOrigin);
+  //SnapVectorTowards( hook->s.pos.trDelta, hook->s.pos.trBase );
+	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
+	//VectorCopy (start, hook->r.currentOrigin);
+  VectorAdd(start, dir, hook->r.currentOrigin);
   VectorCopy( hook->r.currentOrigin, hook->parent->client->ps.grapplePoint);
 
 	self->client->hook = hook;
