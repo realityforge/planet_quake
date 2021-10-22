@@ -98,6 +98,10 @@ void TossClientItems( gentity_t *self ) {
     // don't drop anything in instagib mode
     && !g_unholyTrinity.integer
 #endif
+#ifdef USE_HOTRPG
+    // don't drop anything in hot-rockets mode
+    && !g_hotRockets.integer
+#endif
 #ifdef USE_FLAME_THROWER
     && weapon != WP_FLAME_THROWER
 #endif
@@ -695,7 +699,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	// don't allow respawn until the death anim is done
 	// g_forcerespawn may force spawning at some later time
-	self->client->respawnTime = level.time + 1700;
+	self->client->respawnTime = level.time + (g_forcerespawn.value < 1.700 ? g_forcerespawn.value : 1.700);
 
 	// remove powerups
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
@@ -1199,7 +1203,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		damage *= 0.5;
 #ifdef USE_TRINITY
     if(g_unholyTrinity.integer && targ == attacker) {
-      damage = 0;
+      return;
+    }
+#endif
+#ifdef USE_HOTRPG
+    if(g_hotRockets.integer && targ == attacker) {
+      return;
     }
 #endif
 	}

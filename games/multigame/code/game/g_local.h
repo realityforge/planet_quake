@@ -379,6 +379,8 @@ struct gclient_s {
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   vec3_t		frozen_angles;
 #endif
+  int       pwCounter;
+  int       pwIndex;
 };
 
 
@@ -962,6 +964,9 @@ extern  vmCvar_t  g_unholyTrinity;
 #endif
 #ifdef USE_INSTAGIB
 extern  vmCvar_t  g_instagib;
+#endif
+#ifdef USE_HOTRPG
+extern  vmCvar_t  g_hotRockets;
 #endif
 
 #ifdef BUILD_GAME_STATIC

@@ -1173,6 +1173,13 @@ if(g_unholyTrinity.integer) {
 }
 #endif
 
+#ifdef USE_HOTRPG
+if(g_hotRockets.integer) {
+  client->ps.stats[STAT_WEAPONS] = ( 1 << WP_ROCKET_LAUNCHER );
+  client->ps.ammo[WP_ROCKET_LAUNCHER] = INFINITE;  
+}
+#endif
+
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
 

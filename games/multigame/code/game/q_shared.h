@@ -226,6 +226,8 @@
 #define USE_RUNES 1
 // extra modes of death like MOD_VOID, MOD_RING_OUT and MOD_FROM_GRAVE
 #define USE_MODES_DEATH 1
+// hot rockets do no self-splash damage, infinite rockets, intagib on direct hits
+#define USE_HOTRPG 1
 // 
 
 #endif

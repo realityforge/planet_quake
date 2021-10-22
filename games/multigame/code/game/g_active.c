@@ -1037,8 +1037,8 @@ void ClientThink_real( gentity_t *ent ) {
 		// wait for the attack button to be pressed
 		if ( level.time > client->respawnTime ) {
 			// forcerespawn is to prevent users from waiting out powerups
-			if ( g_forcerespawn.integer > 0 && 
-				( level.time - client->respawnTime ) > g_forcerespawn.integer * 1000 ) {
+			if ( g_forcerespawn.value > 0 && 
+				( level.time - client->respawnTime ) > g_forcerespawn.value * 1000 ) {
 				respawn( ent );
 				return;
 			}
@@ -1207,29 +1207,29 @@ void ClientEndFrame( gentity_t *ent ) {
   }
   */
   {
-    static int p;
-    static int slot;
-    slot = (slot + 1) % 4;
-    for(; p < PW_NUM_POWERUPS; p++) {
-      if(!ent->items[ITEM_PW_MIN + p]) continue;
+    int *p = &client->pwIndex;
+    int slot = (client->pwCounter + 1) % 4;
+    for(; *p < PW_NUM_POWERUPS; (*p)++) {
+      if(!ent->items[ITEM_PW_MIN + *p]) continue;
       // turn off any expired powerups
-      if(ent->items[ITEM_PW_MIN + p] < client->pers.cmd.serverTime - 1000) {
-        ent->items[ITEM_PW_MIN + p] = 0;
+      if(ent->items[ITEM_PW_MIN + *p] < client->pers.cmd.serverTime - 1000) {
+        ent->items[ITEM_PW_MIN + *p] = 0;
       }
       // only send 1 powerup per cycle
       if(/* client->ps.powerups[slot] != ent->items[ITEM_PW_MIN + p] */
-        ent->items[ITEM_PW_MIN + p]) {
-        client->ps.powerups[(slot % 2) + 1] = ent->items[ITEM_PW_MIN + p];
+        ent->items[ITEM_PW_MIN + *p]) {
+        client->ps.powerups[(slot % 2) + 1] = ent->items[ITEM_PW_MIN + *p];
         ent->s.powerups |= 1 << ((slot % 2) + 1);
         if(slot == 3)
-          p++;
+          (*p)++;
         else if (slot == 2 || slot == 3)
-          G_AddEvent( ent, (slot % 2) ? EV_POWERUP1 : EV_POWERUP2, p );
+          G_AddEvent( ent, (slot % 2) ? EV_POWERUP1 : EV_POWERUP2, *p );
         break;
       }
     }
-    if(p == PW_NUM_POWERUPS) {
-      p = 0;
+    client->pwCounter = slot;
+    if(*p == PW_NUM_POWERUPS) {
+      *p = 0;
     }
   }
 

@@ -494,9 +494,22 @@ void Weapon_RocketLauncher_Fire (gentity_t *ent) {
 	gentity_t	*m;
 
 	m = fire_rocket (ent, muzzle, forward);
-	m->damage *= s_quadFactor;
-	m->splashDamage *= s_quadFactor;
-
+#ifdef USE_HOTRPG
+  if(g_hotRockets.integer) {
+    m->damage *= g_quadfactor.value;
+  	m->splashDamage *= g_quadfactor.value;
+  } else 
+#endif
+#ifdef USE_TRINITY
+  if(g_unholyTrinity.integer) {
+    m->damage *= g_quadfactor.value;
+  	m->splashDamage *= g_quadfactor.value;
+  } else 
+#endif
+  {
+  	m->damage *= s_quadFactor;
+  	m->splashDamage *= s_quadFactor;
+  }
 //	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
 }
 
@@ -554,9 +567,14 @@ void weapon_railgun_fire( gentity_t *ent ) {
 #endif
 
 #ifdef USE_INSTAGIB
-  if(g_instagib.integer)
+  if(g_instagib.integer) {
     damage = 500 * s_quadFactor;
-  else
+  } else
+#endif
+#ifdef USE_TRINITY
+  if(g_unholyTrinity.integer) {
+    damage = 500 * s_quadFactor;
+  } else 
 #endif
 #ifdef USE_WEAPON_VARS
     damage = wp_railDamage.integer * s_quadFactor;
@@ -789,10 +807,16 @@ void Weapon_LightningFire( gentity_t *ent ) {
 	int			damage, i, passent;
 
 #ifdef USE_WEAPON_VARS
-  damage = wp_lightDamage.integer * s_quadFactor;
+  damage = wp_lightDamage.integer;
 #else
-	damage = 8 * s_quadFactor;
+	damage = 8;
 #endif
+#ifdef USE_TRINITY
+  if(g_unholyTrinity.integer) {
+    damage *= g_quadfactor.value;
+  } else 
+#endif
+  damage *= s_quadFactor;
 
 	passent = ent->s.number;
 

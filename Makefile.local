@@ -1,7 +1,7 @@
 BUILD_SLIM_CLIENT      = 0
 BUILD_STANDALONE       = 1
 BUILD_FREETYPE         = 0
-BUILD_GAME_STATIC      = 0
+BUILD_GAME_STATIC      = 1
 BUILD_MULTIGAME        = 1
 MISSIONPACK           ?= 1
 
@@ -50,5 +50,5 @@ USE_OPENGL2            = 0
 USE_CURL              ?= 1
 USE_CVAR_UNCHEAT       = 0
 USE_DRAGDROP           = 0
-USE_LAZY_MEMORY        = 0
+USE_LAZY_MEMORY        = 1
 USE_LAZY_LOAD          = 0

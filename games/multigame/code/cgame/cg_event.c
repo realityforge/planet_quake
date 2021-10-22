@@ -948,8 +948,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			}
 
       if(	item->giType == IT_POWERUP ) {
-        cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = cg.snap->ps.commandTime - ( cg.snap->ps.commandTime % 1000 );
-  		  cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] += es->time2 * 1000;
+        cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = 1;
 #ifdef USE_RUNES
         if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
           cg_entities[cent->currentState.otherEntityNum].rune = ITEM_PW_MIN + item->giTag;

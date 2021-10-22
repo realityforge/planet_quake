@@ -521,6 +521,11 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if (g_unholyTrinity.integer && ent->item->giType != IT_TEAM)
 		return;
 #endif
+#ifdef USE_HOTRPG
+	//SCO if ent-item is some sort of team item.
+	if (g_hotRockets.integer && ent->item->giType != IT_TEAM)
+		return;
+#endif
 #ifdef USE_INSTAGIB
 	//SCO if ent-item is some sort of team item.
 	if (g_instagib.integer && ent->item->giType != IT_TEAM)
@@ -623,16 +628,12 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			gentity_t	*te;
 
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
-      te->s.otherEntityNum = other->s.number;
-      te->s.time2 = (other->items[ITEM_PW_MIN + ent->item->giTag] - level.time) / 1000;
 			te->s.eventParm = ent->s.modelindex;
 			te->r.svFlags |= SVF_BROADCAST;
 		} else {
 			gentity_t	*te;
 
 			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
-      te->s.otherEntityNum = other->s.number;
-      te->s.time2 = (other->items[ITEM_PW_MIN + ent->item->giTag] - level.time) / 1000;
 			te->s.eventParm = ent->s.modelindex;
 			// only send this temp entity to a single client
 			te->r.svFlags |= SVF_SINGLECLIENT;
@@ -1011,6 +1012,12 @@ void ClearRegisteredItems( void ) {
     RegisterItem( BG_FindItemForWeapon( WP_ROCKET_LAUNCHER ) );
   }
 #endif
+#ifdef USE_ROTRPG
+  if(g_hotRockets.integer) {
+    RegisterItem( BG_FindItemForWeapon( WP_ROCKET_LAUNCHER ) );
+  }
+#endif
+
 }
 
 /*
@@ -1084,6 +1091,13 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 	G_SpawnFloat( "random", "0", &ent->random );
 	G_SpawnFloat( "wait", "0", &ent->wait );
 
+#ifdef USE_HOTRPG
+  if(g_hotRockets.integer && item->giType != IT_TEAM) {
+		ent->r.svFlags = SVF_NOCLIENT;
+		ent->s.eFlags |= EF_NODRAW;
+    ent->tag = TAG_DONTSPAWN;
+	} else
+#endif
 #ifdef USE_TRINITY
   if(g_unholyTrinity.integer && item->giType != IT_TEAM) {
 		ent->r.svFlags = SVF_NOCLIENT;

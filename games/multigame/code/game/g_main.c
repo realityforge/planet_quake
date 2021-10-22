@@ -201,6 +201,9 @@ vmCvar_t  g_unholyTrinity;
 #ifdef USE_INSTAGIB
 vmCvar_t  g_instagib;
 #endif
+#ifdef USE_HOTRPG
+vmCvar_t  g_hotRockets;
+#endif
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -416,6 +419,9 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 #ifdef USE_INSTAGIB
   { &g_instagib, "g_instagib", "1", CVAR_ARCHIVE, 0, qfalse },
+#endif
+#ifdef USE_HOTRPG
+  { &g_hotRockets, "g_hotRockets", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_WEAPON_ORDER
