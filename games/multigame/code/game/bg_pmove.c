@@ -1632,22 +1632,37 @@ static void PM_Weapon( void ) {
 	}
 
 	// check for fire
-	if( !(pm->cmd.buttons & BUTTON_ATTACK)
 #ifdef USE_ALT_FIRE
-    && !(pm->cmd.buttons & BUTTON_ALT_ATTACK)
+#ifdef USE_GRAPPLE
+  if(!(pm->cmd.buttons & BUTTON_ATTACK)
+    && g_altGrapple.integer
+    && (pm->cmd.buttons & BUTTON_ALT_ATTACK)) {
+    pm->ps->weaponTime = 0;
+		pm->ps->weaponstate = WEAPON_READY;
+  	PM_AddEvent( EV_ALTFIRE_WEAPON );
+    return;
+  } else
 #endif
+  if( !(pm->cmd.buttons & BUTTON_ATTACK)
+    && !(pm->cmd.buttons & BUTTON_ALT_ATTACK)
   ) {
 		pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
-	}
+	} else 
+#endif
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
   if(pm->ps->pm_type == PM_FROZEN) {
     pm->ps->weaponTime = 0;
 		pm->ps->weaponstate = WEAPON_READY;
 		return;
-  }
+  } else
 #endif
+	if( !(pm->cmd.buttons & BUTTON_ATTACK) ) {
+		pm->ps->weaponTime = 0;
+		pm->ps->weaponstate = WEAPON_READY;
+		return;
+	}
 
 
 	// start the animation even if out of ammo
@@ -1681,7 +1696,7 @@ static void PM_Weapon( void ) {
 #ifdef USE_ALT_FIRE
   if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
   	PM_AddEvent( EV_ALTFIRE_WEAPON );
-  else
+  if (pm->cmd.buttons & BUTTON_ATTACK)
 #endif
 	PM_AddEvent( EV_FIRE_WEAPON );
 
@@ -1795,6 +1810,11 @@ static void PM_Weapon( void ) {
 #ifdef USE_ALT_FIRE
   // Hypo: simple alt-fire example
   if (pm->cmd.buttons & BUTTON_ALT_ATTACK) {
+#ifdef USE_GRAPPLE
+    if(g_altGrapple.integer) {
+      
+    } else
+#endif
   	addTime /= 2.0;
   } else
 #endif
@@ -2205,11 +2225,15 @@ static void PmoveSingle (pmove_t *pmove, int *itms) {
 	if ( items[ITEM_PW_MIN + PW_FLIGHT] ) {
 		// flight powerup doesn't allow jump and has different friction
 		PM_FlyMove();
-	} else if (pm->ps->pm_flags & PMF_GRAPPLE_PULL) {
+	} else 
+#ifdef USE_GRAPPLE
+  if (pm->ps->pm_flags & PMF_GRAPPLE_PULL) {
 		PM_GrappleMove();
 		// We can wiggle a bit
 		PM_AirMove();
-	} else if (pm->ps->pm_flags & PMF_TIME_WATERJUMP) {
+	} else 
+#endif
+  if (pm->ps->pm_flags & PMF_TIME_WATERJUMP) {
 		PM_WaterJumpMove();
 	} else if ( pm->waterlevel > 1 ) {
 		// swimming

@@ -905,6 +905,15 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
+      if(	item->giType == IT_POWERUP ) {
+        cg_entities[es->number].items[ ITEM_PW_MIN + item->giTag ] = 1;
+#ifdef USE_RUNES
+        if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
+          cg_entities[es->number].rune = ITEM_PW_MIN + item->giTag;
+        }
+#endif
+      }
+
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
 #ifdef USE_WEAPON_ORDER
@@ -947,15 +956,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 				trap_S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
-      if(	item->giType == IT_POWERUP ) {
-        cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + item->giTag ] = 1;
-#ifdef USE_RUNES
-        if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
-          cg_entities[cent->currentState.otherEntityNum].rune = ITEM_PW_MIN + item->giTag;
-        }
-#endif
-      }
-
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
         if(item->giTag == PW_HASTE) {
@@ -994,6 +994,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 
 #ifdef USE_ALT_FIRE
   case EV_ALTFIRE_WEAPON:
+#ifdef USE_GRAPPLE
+    if(cg_altGrapple.integer) {
+      break;
+    }
+#endif
 #endif
 	case EV_FIRE_WEAPON:
 		CG_FireWeapon( cent );

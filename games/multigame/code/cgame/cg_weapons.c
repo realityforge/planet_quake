@@ -693,7 +693,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 
 #ifdef USE_GRAPPLE
 	case WP_GRAPPLING_HOOK:
-    cgs.media.lightningShader = trap_R_RegisterShader( "lightningBolt");
+    cgs.media.lightningShader = trap_R_RegisterShader( "lightningBoltNew");
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/rocket/rocket.md3" );
 		weaponInfo->missileTrailFunc = CG_GrappleTrail;
@@ -1319,6 +1319,10 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weaponNum = cent->currentState.weapon;
 
 	CG_RegisterWeapon( weaponNum );
+#if defined(USE_GRAPPLE) && defined(USE_ALT_FIRE)
+  if(cg_altGrapple.integer)
+    CG_RegisterWeapon( WP_GRAPPLING_HOOK );
+#endif
 	weapon = &cg_weapons[weaponNum];
   weaponNum = weaponNum & 0xF;
 

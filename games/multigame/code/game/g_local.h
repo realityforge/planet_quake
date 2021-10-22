@@ -339,8 +339,10 @@ struct gclient_s {
 
 	int			lastKillTime;		// for multiple kill rewards
 
+#ifdef USE_GRAPPLE
 	qboolean	fireHeld;			// used for hook
 	gentity_t	*hook;				// grapple hook if out
+#endif
 
 #ifdef USE_LASER_SIGHT
   gentity_t	*lasersight;			// lasersight OR flashlight if in use
@@ -896,6 +898,9 @@ extern vmCvar_t  wp_bfgDamage;
 extern vmCvar_t  wp_bfgSplash;
 extern vmCvar_t  wp_bfgRadius;
 #ifdef USE_GRAPPLE
+extern vmCvar_t  wp_grappleEnable;
+extern vmCvar_t  wp_grapplePull;
+extern vmCvar_t  wp_grappleSpeed;
 extern vmCvar_t  wp_grappleDamage;
 #endif
 #ifdef MISSIONPACK
@@ -914,6 +919,9 @@ extern vmCvar_t  wp_flameRadius;
 #endif
 #endif
 
+#if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
+extern vmCvar_t  g_altGrapple;
+#endif
 
 #ifdef USE_TEAM_VARS
 extern	vmCvar_t	g_flagReturn;
@@ -944,11 +952,6 @@ extern  vmCvar_t  g_vortexGrenades;
 #endif
 #ifdef USE_WEAPON_DROP
 extern  vmCvar_t  g_dropWeapon;
-#endif
-#ifdef USE_GRAPPLE
-extern  vmCvar_t  wp_grappleEnable;
-extern  vmCvar_t  wp_grapplePull;
-extern  vmCvar_t  wp_grappleSpeed;
 #endif
 #ifdef USE_LOCAL_DMG
 extern  vmCvar_t  g_locDamage;

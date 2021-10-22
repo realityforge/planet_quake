@@ -561,6 +561,15 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 
 #ifdef USE_ALT_FIRE
     case EV_ALTFIRE_WEAPON:
+#ifdef USE_GRAPPLE
+      if(g_altGrapple.integer) {
+        int oldWeapon = ent->s.weapon;
+        ent->s.weapon = WP_GRAPPLING_HOOK;
+        FireWeapon( ent );
+        ent->s.weapon = oldWeapon;
+  			break;        
+      }
+#endif
 #endif
 		case EV_FIRE_WEAPON:
 			FireWeapon( ent );
@@ -894,11 +903,19 @@ void ClientThink_real( gentity_t *ent ) {
   }
 #endif
 
+#ifdef USE_GRAPPLE
 	// Let go of the hook if we aren't firing
+#ifdef USE_ALT_FIRE
+  if ( g_altGrapple.integer 
+    && client->hook && !( ucmd->buttons & BUTTON_ALT_ATTACK ) ) {
+    Weapon_HookFree(client->hook);
+  } else
+#endif
 	if ( client->ps.weapon == WP_GRAPPLING_HOOK &&
 		client->hook && !( ucmd->buttons & BUTTON_ATTACK ) ) {
 		Weapon_HookFree(client->hook);
 	}
+#endif
 
 	// set up for pmove
 	oldEventSequence = client->ps.eventSequence;
@@ -991,9 +1008,15 @@ void ClientThink_real( gentity_t *ent ) {
 
 	SendPendingPredictableEvents( &ent->client->ps );
 
-	if ( !( ent->client->ps.eFlags & EF_FIRING ) ) {
+#ifdef USE_GRAPPLE
+	if ( !( ent->client->ps.eFlags & EF_FIRING ) 
+#ifdef USE_ALT_FIRE
+    || (g_altGrapple.integer && !(pm.cmd.buttons & BUTTON_ALT_ATTACK))
+#endif
+  ) {
 		client->fireHeld = qfalse;		// for grapple
 	}
+#endif
 
 	// use the snapped origin for linking so it matches client predicted versions
 	VectorCopy( ent->s.pos.trBase, ent->r.currentOrigin );

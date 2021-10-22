@@ -1338,6 +1338,7 @@ extern	vmCvar_t	  cg_gravity;
 extern	vmCvar_t	  cg_wallWalk;
 #endif
 #ifdef USE_GRAPPLE
+extern  vmCvar_t    cg_altGrapple;
 extern  vmCvar_t    cg_enableGrapple;
 #endif
 #ifdef USE_WEAPON_ORDER

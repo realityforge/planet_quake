@@ -77,11 +77,6 @@ vmCvar_t	g_enableDust;
 vmCvar_t	g_enableBreath;
 vmCvar_t	g_proxMineTimeout;
 #endif
-#ifdef USE_GRAPPLE
-vmCvar_t  wp_grappleEnable;
-vmCvar_t  wp_grapplePull;
-vmCvar_t  wp_grappleSpeed;
-#endif
 #ifdef USE_PHYSICS_VARS
 #ifdef MISSIONPACK
 vmCvar_t  g_scoutFactor;
@@ -129,6 +124,9 @@ vmCvar_t  wp_bfgDamage;
 vmCvar_t  wp_bfgSplash;
 vmCvar_t  wp_bfgRadius;
 #ifdef USE_GRAPPLE
+vmCvar_t  wp_grappleEnable;
+vmCvar_t  wp_grapplePull;
+vmCvar_t  wp_grappleSpeed;
 vmCvar_t  wp_grappleCycle;
 vmCvar_t  wp_grappleDamage;
 #endif
@@ -152,7 +150,9 @@ vmCvar_t  wp_flameRadius;
 #endif
 #endif // USE_WEAPON_VARS
 
-
+#if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
+vmCvar_t  g_altGrapple;
+#endif
 #ifdef USE_TEAM_VARS
 vmCvar_t	g_flagReturn;
 #endif
@@ -335,6 +335,9 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_bfgSplash,         "wp_bfgSplash",         "100",  CVAR_ARCHIVE },
   { &wp_bfgRadius,         "wp_bfgRadius",         "120",  CVAR_ARCHIVE },
 #ifdef USE_GRAPPLE
+  { &wp_grappleEnable,     "wp_grappleEnable", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &wp_grapplePull,       "wp_grapplePull", "700", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+  { &wp_grappleSpeed,      "wp_grappleSpeed", "2000", CVAR_ARCHIVE, 0, qfalse },
   { &wp_grappleCycle,      "wp_grappleCycle",      "400",  CVAR_ARCHIVE | CVAR_SERVERINFO },
   { &wp_grappleDamage,     "wp_grappleDamage",     "300",  CVAR_ARCHIVE },
 #endif
@@ -359,6 +362,9 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 #endif
 
+#if defined(USE_ALT_FIRE) && defined(USE_GRAPPLE)
+  { &g_altGrapple,         "g_altGrapple",     "1",  CVAR_ARCHIVE | CVAR_SERVERINFO },
+#endif
 #ifdef USE_PHYSICS_VARS
 #ifdef MISSIONPACK
   { &g_scoutFactor, "g_scoutFactor", "1.5", CVAR_SERVERINFO | CVAR_ARCHIVE, 0, qtrue, qfalse },
@@ -405,12 +411,6 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 #ifdef USE_WEAPON_DROP
   { &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse },
-#endif
-
-#ifdef USE_GRAPPLE
-  { &wp_grappleEnable, "wp_grappleEnable", "1", CVAR_ARCHIVE, 0, qfalse },
-  { &wp_grapplePull, "wp_grapplePull", "700", CVAR_ARCHIVE, 0, qfalse },
-  { &wp_grappleSpeed, "wp_grappleSpeed", "2000", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_LOCAL_DMG

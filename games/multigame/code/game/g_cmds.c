@@ -2009,7 +2009,7 @@ static void Cmd_Rune_f( gentity_t *ent ) {
 
   // pop the rune out of that location
   RegisterItem( item );
-  e = LaunchItem( item, nearest, dir, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  e = LaunchItem( item, nearest, dir, FL_THROWN_ITEM );
   G_AddEvent( e, EV_ITEM_RESPAWN, 0 );
 }
 #endif

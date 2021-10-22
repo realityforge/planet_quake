@@ -1143,7 +1143,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
   client->ps.ammo[WP_GAUNTLET] = -1;
 
-#ifdef USE_GRAPPLE
+#if defined(USE_GRAPPLE) && defined(USE_WEAPON_VARS)
   if(wp_grappleEnable.integer) {
     client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK );
     client->ps.ammo[WP_GRAPPLING_HOOK] = -1;

@@ -66,6 +66,7 @@ extern	int		c_pmove;
 #endif
 
 #ifdef USE_GRAPPLE
+#define g_altGrapple cg_altGrapple
 #define wp_grapplePull cgwp_grapplePull
 #endif
 #endif
@@ -117,6 +118,7 @@ extern vmCvar_t  g_wallWalk;
 #endif
 
 #ifdef USE_GRAPPLE
+extern vmCvar_t  g_altGrapple;
 extern vmCvar_t  wp_grapplePull;
 #endif
 

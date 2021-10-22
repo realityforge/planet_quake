@@ -772,6 +772,12 @@ void Weapon_GrapplingHook_Fire (gentity_t *ent)
 
 void Weapon_HookFree (gentity_t *ent)
 {
+  /*
+  Com_Printf("hook freed\n");
+  ent->parent->client->ps.velocity[0] =
+  ent->parent->client->ps.velocity[1] =
+  ent->parent->client->ps.velocity[2] = 0;
+  */
 	ent->parent->client->hook = NULL;
 	ent->parent->client->ps.pm_flags &= ~PMF_GRAPPLE_PULL;
 	G_FreeEntity( ent );

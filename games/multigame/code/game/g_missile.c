@@ -410,8 +410,6 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			v[0] = other->r.currentOrigin[0] + (other->r.mins[0] + other->r.maxs[0]) * 0.5;
 			v[1] = other->r.currentOrigin[1] + (other->r.mins[1] + other->r.maxs[1]) * 0.5;
 			v[2] = other->r.currentOrigin[2] + (other->r.mins[2] + other->r.maxs[2]) * 0.5;
-
-			SnapVectorTowards( v, ent->s.pos.trBase );	// save net bandwidth
 		} else {
 			VectorCopy(trace->endpos, v);
 			G_AddEvent( nent, EV_MISSILE_MISS, DirToByte( trace->plane.normal ) );
@@ -537,10 +535,12 @@ void G_RunMissile( gentity_t *ent ) {
 	if ( tr.fraction != 1 ) {
 		// never explode or bounce on sky
 		if ( tr.surfaceFlags & SURF_NOIMPACT ) {
+#ifdef USE_GRAPPLE
 			// If grapple, reset owner
 			if (ent->parent && ent->parent->client && ent->parent->client->hook == ent) {
 				ent->parent->client->hook = NULL;
 			}
+#endif
 			G_FreeEntity( ent );
 			return;
 		}
@@ -1179,9 +1179,15 @@ gentity_t *fire_grapple (gentity_t *self, vec3_t start, vec3_t dir) {
 	hook->s.pos.trTime = hooktime;
 	VectorCopy( start, hook->s.pos.trBase );
 	SnapVector( hook->s.pos.trBase );			// save net bandwidth
-	VectorScale( dir, wp_grappleSpeed.integer, hook->s.pos.trDelta );
-	SnapVector( hook->s.pos.trDelta );			// save net bandwidth
+#ifdef USE_WEAPON_VARS
+	VectorScale( dir, wp_grappleSpeed.value, hook->s.pos.trDelta );
+#else
+  VectorScale( dir, 2000.0f, hook->s.pos.trDelta );
+#endif
+  SnapVectorTowards( hook->s.pos.trDelta, hook->s.pos.trBase );
+	//SnapVector( hook->s.pos.trDelta );			// save net bandwidth
 	VectorCopy (start, hook->r.currentOrigin);
+  VectorCopy( hook->r.currentOrigin, hook->parent->client->ps.grapplePoint);
 
 	self->client->hook = hook;
 
