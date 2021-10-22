@@ -531,6 +531,11 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if (g_instagib.integer && ent->item->giType != IT_TEAM)
 		return;
 #endif
+#ifdef USE_HOTBFG
+	//SCO if ent-item is some sort of team item.
+	if (g_hotBFG.integer && ent->item->giType != IT_TEAM)
+		return;
+#endif
 
 	if (!other->client)
 		return;
@@ -1093,6 +1098,13 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 
 #ifdef USE_HOTRPG
   if(g_hotRockets.integer && item->giType != IT_TEAM) {
+		ent->r.svFlags = SVF_NOCLIENT;
+		ent->s.eFlags |= EF_NODRAW;
+    ent->tag = TAG_DONTSPAWN;
+	} else
+#endif
+#ifdef USE_HOTBFG
+  if(g_hotBFG.integer && item->giType != IT_TEAM) {
 		ent->r.svFlags = SVF_NOCLIENT;
 		ent->s.eFlags |= EF_NODRAW;
     ent->tag = TAG_DONTSPAWN;

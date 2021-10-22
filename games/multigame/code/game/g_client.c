@@ -850,6 +850,7 @@ const char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		ent->r.svFlags |= SVF_BOT;
 		client->sess.spectatorClient = clientNum;
 	}
+  ent->r.svFlags |= SVF_BROADCAST;
 	ent->inuse = qtrue;
 
 	// get and distribute relevant paramters
@@ -1172,13 +1173,29 @@ if(g_unholyTrinity.integer) {
   client->ps.ammo[WP_ROCKET_LAUNCHER] = INFINITE;  
 }
 #endif
-
 #ifdef USE_HOTRPG
 if(g_hotRockets.integer) {
   client->ps.stats[STAT_WEAPONS] = ( 1 << WP_ROCKET_LAUNCHER );
   client->ps.ammo[WP_ROCKET_LAUNCHER] = INFINITE;  
 }
 #endif
+#ifdef USE_HOTBFG
+if(g_hotBFG.integer) {
+  int handicap, max;
+  client->ps.stats[STAT_WEAPONS] = ( 1 << WP_BFG );
+  client->ps.ammo[WP_BFG] = INFINITE;  
+  trap_GetUserinfo( client - level.clients, userinfo, sizeof(userinfo) );
+  handicap = atof( Info_ValueForKey( userinfo, "handicap" ) );
+  if( handicap<=0.0f || handicap>100.0f) {
+    handicap = 100.0f;
+  }
+  max = (int)(2 *  handicap);
+  ent->health = max;
+  client->ps.stats[STAT_HEALTH] = max;
+  client->ps.stats[STAT_MAX_HEALTH] = max;
+}
+#endif
+
 
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;

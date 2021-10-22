@@ -204,6 +204,9 @@ vmCvar_t  g_instagib;
 #ifdef USE_HOTRPG
 vmCvar_t  g_hotRockets;
 #endif
+#ifdef USE_HOTBFG
+vmCvar_t  g_hotBFG;
+#endif
 
 static cvarTable_t gameCvarTable[] = {
 	// don't override the cheat state set by the system
@@ -422,6 +425,9 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 #ifdef USE_HOTRPG
   { &g_hotRockets, "g_hotRockets", "1", CVAR_ARCHIVE, 0, qfalse },
+#endif
+#ifdef USE_HOTBFG
+  { &g_hotBFG, "g_hotBFG", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_WEAPON_ORDER

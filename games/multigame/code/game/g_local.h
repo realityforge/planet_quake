@@ -968,6 +968,9 @@ extern  vmCvar_t  g_instagib;
 #ifdef USE_HOTRPG
 extern  vmCvar_t  g_hotRockets;
 #endif
+#ifdef USE_HOTBFG
+extern  vmCvar_t  g_hotBFG;
+#endif
 
 #ifdef BUILD_GAME_STATIC
 #define trap_Print trapg_Print

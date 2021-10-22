@@ -228,6 +228,8 @@
 #define USE_MODES_DEATH 1
 // hot rockets do no self-splash damage, infinite rockets, intagib on direct hits
 #define USE_HOTRPG 1
+// hot BFG better balance, infinite ammo
+#define USE_HOTBFG 1
 // 
 
 #endif

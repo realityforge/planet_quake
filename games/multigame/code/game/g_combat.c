@@ -102,6 +102,10 @@ void TossClientItems( gentity_t *self ) {
     // don't drop anything in hot-rockets mode
     && !g_hotRockets.integer
 #endif
+#ifdef USE_HOTBFG
+    // don't drop anything in hot-rockets mode
+    && !g_hotBFG.integer
+#endif
 #ifdef USE_FLAME_THROWER
     && weapon != WP_FLAME_THROWER
 #endif
@@ -1208,6 +1212,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 #endif
 #ifdef USE_HOTRPG
     if(g_hotRockets.integer && targ == attacker) {
+      return;
+    }
+#endif
+#ifdef USE_HOTBFG
+    if(g_hotBFG.integer && targ == attacker) {
       return;
     }
 #endif

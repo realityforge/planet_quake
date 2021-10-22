@@ -280,9 +280,16 @@ void BFG_Fire( gentity_t *ent ) {
 	gentity_t *m;
 
 	m = fire_bfg( ent, muzzle, forward );
-	m->damage *= s_quadFactor;
-	m->splashDamage *= s_quadFactor;
-
+#ifdef USE_HOTBFG
+  if(g_hotBFG.integer) {
+    m->damage *= 1.5;
+  	m->splashRadius *= 2;
+  } else 
+#endif
+  {
+  	m->damage *= s_quadFactor;
+  	m->splashDamage *= s_quadFactor;
+  }
 //	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
 }
 
