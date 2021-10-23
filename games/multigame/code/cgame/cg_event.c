@@ -862,6 +862,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 			gitem_t	*item;
 			int		index;
 
+Com_Printf("item pickup\n");
+
 			index = es->eventParm;		// player predicted
 
 			if ( index < 1 || index >= bg_numItems ) {
@@ -929,10 +931,15 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		}
 		break;
 
+  case EV_SINGLE_ITEM_PICKUP:
+    if(cent->currentState.otherEntityNum != cg.snap->ps.clientNum)
+      break;
 	case EV_GLOBAL_ITEM_PICKUP:
 		{
 			gitem_t	*item;
 			int		index;
+      
+Com_Printf("global item pickup\n");
 
 			index = es->eventParm;		// player predicted
 
@@ -1365,13 +1372,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
     break;
   case EV_POWERUP2:
 	case EV_POWERUP1:
-    if(cg.snap->ps.powerups[EV_POWERUP1 ? 1 : 2] == 0) {
-      cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = 0;
+    if(event == EV_POWERUP2) {
+      cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + es->eventParm ] = es->time2;
     } else {
-      cg_entities[es->number].items[ ITEM_PW_MIN + es->eventParm ] = cg.snap->ps.powerups[event == EV_POWERUP1 ? 1 : 2];
+      cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + es->eventParm ] = es->time;
     }
 #ifdef USE_RUNES
-//Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, event == EV_POWERUP1 ? 1 : 2, cg.snap->ps.powerups[event == EV_POWERUP1 ? 1 : 2]);
+//Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, es->otherEntityNum, es->time);
     if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM) {
     }
     /*

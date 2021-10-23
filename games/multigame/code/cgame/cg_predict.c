@@ -650,7 +650,7 @@ static void CG_TouchTriggerPrediction( void ) {
 
 
 static void CG_CheckTimers( void ) {
-	int i;
+	int i, c;
 
 	// no prediction for spectators
 	if ( cg.predictedPlayerState.pm_type == PM_SPECTATOR ) {
@@ -690,18 +690,24 @@ static void CG_CheckTimers( void ) {
 	}
 
 	// turn off any expired powerups
-	for ( i = 0 ; i < PW_NUM_POWERUPS ; i++ ) {
-		if ( !cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] )
-			continue;
-#if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
-    if(i == PW_FROZEN) {
-      continue;      
+  for ( c = 0; c < MAX_CLIENTS; c++ ) {
+    if ( !cgs.clientinfo[c].infoValid ) {
+      continue;
     }
-#endif
-		if ( cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] < cg.predictedPlayerState.commandTime ) {
-			cg_entities[cg.snap->ps.clientNum].items[ ITEM_PW_MIN + i ] = 0;
-		}
-	}
+    
+  	for ( i = 0 ; i < PW_NUM_POWERUPS ; i++ ) {
+  		if ( !cg_entities[c].items[ ITEM_PW_MIN + i ] )
+  			continue;
+  #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
+      if(i == PW_FROZEN) {
+        continue;      
+      }
+  #endif
+  		if ( cg_entities[c].items[ ITEM_PW_MIN + i ] < cg.predictedPlayerState.commandTime - 1000 ) {
+  			cg_entities[c].items[ ITEM_PW_MIN + i ] = 0;
+  		}
+  	}
+  }
 }
 
 

@@ -1502,7 +1502,6 @@ G_StartKamikaze
 */
 void G_StartKamikaze( gentity_t *ent ) {
 	gentity_t	*explosion;
-	gentity_t	*te;
 	vec3_t		snapped;
 
 	// start up the explosion logic
@@ -1550,8 +1549,6 @@ void G_StartKamikaze( gentity_t *ent ) {
 	}
 
 	// play global sound at all clients
-	te = G_TempEntity(snapped, EV_GLOBAL_TEAM_SOUND );
-	te->r.svFlags |= SVF_BROADCAST;
-	te->s.eventParm = GTS_KAMIKAZE;
+  G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_KAMIKAZE);
 }
 #endif

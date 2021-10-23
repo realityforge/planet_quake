@@ -1231,26 +1231,35 @@ void ClientEndFrame( gentity_t *ent ) {
   */
   {
     int *p = &client->pwIndex;
-    int slot = (client->pwCounter + 1) % 4;
+    if(!client->pwEnt) {
+      client->pwEnt = G_TempEntity(ent->r.currentOrigin, 0);
+      client->pwEnt->s.otherEntityNum = ent->s.number;
+      client->pwEnt->r.svFlags |= SVF_BROADCAST;
+    }
+    G_SetOrigin( client->pwEnt, ent->r.currentOrigin );
     for(; *p < PW_NUM_POWERUPS; (*p)++) {
       if(!ent->items[ITEM_PW_MIN + *p]) continue;
       // turn off any expired powerups
       if(ent->items[ITEM_PW_MIN + *p] < client->pers.cmd.serverTime - 1000) {
         ent->items[ITEM_PW_MIN + *p] = 0;
       }
-      // only send 1 powerup per cycle
       if(/* client->ps.powerups[slot] != ent->items[ITEM_PW_MIN + p] */
         ent->items[ITEM_PW_MIN + *p]) {
-        client->ps.powerups[(slot % 2) + 1] = ent->items[ITEM_PW_MIN + *p];
-        ent->s.powerups |= 1 << ((slot % 2) + 1);
-        if(slot == 3)
+        
+        if (client->pwCounter == 1) {
+          client->pwEnt->s.time = ent->items[ITEM_PW_MIN + *p];
+          G_AddEvent( client->pwEnt, EV_POWERUP1, *p );
+        } else if (client->pwCounter == 3) {
+          client->pwEnt->s.time2 = ent->items[ITEM_PW_MIN + *p];
+          G_AddEvent( client->pwEnt, EV_POWERUP2, *p );
+        }
+        if(client->pwCounter == 2)
           (*p)++;
-        else if (slot == 2 || slot == 3)
-          G_AddEvent( ent, (slot % 2) ? EV_POWERUP1 : EV_POWERUP2, *p );
+        // only send 1 powerup per cycle
         break;
       }
     }
-    client->pwCounter = slot;
+    client->pwCounter = (client->pwCounter + 1) % 4;
     if(*p == PW_NUM_POWERUPS) {
       *p = 0;
     }

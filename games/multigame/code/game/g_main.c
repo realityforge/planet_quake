@@ -1401,7 +1401,7 @@ void BeginIntermission( void ) {
 		AdjustTournamentScores();
 	}
 
-	level.intermissiontime = level.time;
+	level.intermissiontime = level.time;  
 	FindIntermissionPoint();
 
 	// move all clients to the intermission point
@@ -1414,6 +1414,10 @@ void BeginIntermission( void ) {
 		if ( client->health <= 0 ) {
 			respawn( client );
 		}
+    
+    // optimize bandwidth
+    client->r.svFlags |= SVF_SINGLECLIENT;
+    client->r.svFlags &= ~SVF_BROADCAST;
 
 		MoveClientToIntermission( client );
 	}

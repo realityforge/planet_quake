@@ -102,7 +102,6 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 #ifdef USE_RUNES
   if(ent->item->giTag >= RUNE_STRENGTH && ent->item->giTag <= RUNE_LITHIUM) {
     other->rune = ITEM_PW_MIN + ent->item->giTag;
-    return -1;
   }
 #endif
 
@@ -468,32 +467,21 @@ void RespawnItem( gentity_t *ent ) {
 
 	if ( ent->item->giType == IT_POWERUP ) {
 		// play powerup spawn sound to all clients
-		gentity_t	*te;
-
-		// if the powerup respawn sound should Not be global
-		if ( ent->speed ) {
-			te = G_TempEntity( ent->s.pos.trBase, EV_GENERAL_SOUND );
-		} else {
-			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
-		}
-		te->s.eventParm = G_SoundIndex( "sound/items/poweruprespawn.wav" );
-		te->r.svFlags |= SVF_BROADCAST;
+    if ( ent->speed ) {
+      G_AddEvent(ent, EV_GENERAL_SOUND, G_SoundIndex( "sound/items/poweruprespawn.wav" ));
+    } else {
+      G_AddEvent(ent, EV_GLOBAL_SOUND, G_SoundIndex( "sound/items/poweruprespawn.wav" ));
+    }
 	}
 
 #ifdef MISSIONPACK
 	if ( ent->item->giType == IT_HOLDABLE && ent->item->giTag == HI_KAMIKAZE ) {
 		// play powerup spawn sound to all clients
-		gentity_t	*te;
-
-		// if the powerup respawn sound should Not be global
-		if (ent->speed) {
-			te = G_TempEntity( ent->s.pos.trBase, EV_GENERAL_SOUND );
-		}
-		else {
-			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_SOUND );
-		}
-		te->s.eventParm = G_SoundIndex( "sound/items/kamikazerespawn.wav" );
-		te->r.svFlags |= SVF_BROADCAST;
+    if ( ent->speed ) {
+      G_AddEvent(ent, EV_GENERAL_SOUND, G_SoundIndex( "sound/items/kamikazerespawn.wav" ));
+		} else {
+      G_AddEvent(ent, EV_GLOBAL_SOUND, G_SoundIndex( "sound/items/kamikazerespawn.wav" ));
+    }
 	}
 #endif
 
@@ -609,15 +597,13 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 
 	// play the normal pickup sound
 #ifdef USE_WEAPON_ORDER
-  {
-    if ( predict ) {
-  		G_AddPredictableEvent( other, alreadyHad 
-        ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
-  	} else {
-  		G_AddEvent( other, alreadyHad 
-        ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
-  	}
-  }
+  if ( predict ) {
+		G_AddPredictableEvent( other, alreadyHad 
+      ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
+	} else {
+		G_AddEvent( other, alreadyHad 
+      ? EV_ITEM_PICKUP2 : EV_ITEM_PICKUP, ent->s.modelindex );
+	}
 #else
 	if ( predict ) {
 		G_AddPredictableEvent( other, EV_ITEM_PICKUP, ent->s.modelindex );
@@ -630,19 +616,10 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if ( ent->item->giType == IT_POWERUP || ent->item->giType == IT_TEAM) {
 		// if we want the global sound to play
 		if (!ent->speed) {
-			gentity_t	*te;
-
-			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
-			te->s.eventParm = ent->s.modelindex;
-			te->r.svFlags |= SVF_BROADCAST;
+      G_AddEvent( ent, EV_GLOBAL_ITEM_PICKUP, ent->s.modelindex );
 		} else {
-			gentity_t	*te;
-
-			te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_ITEM_PICKUP );
-			te->s.eventParm = ent->s.modelindex;
-			// only send this temp entity to a single client
-			te->r.svFlags |= SVF_SINGLECLIENT;
-			te->r.singleClient = other->s.number;
+      G_AddEvent( ent, EV_SINGLE_ITEM_PICKUP, ent->s.modelindex );
+      ent->s.otherEntityNum = other->s.number;
 		}
 	}
 

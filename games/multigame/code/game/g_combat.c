@@ -478,7 +478,7 @@ void player_pain(gentity_t *self, gentity_t *attacker, int damage) {
 
   plum = G_TempEntity( self->r.currentOrigin, EV_DAMAGEPLUM );
   // only send this temp entity to a single client
-  plum->r.svFlags |= SVF_SINGLECLIENT | SVF_BROADCAST;
+  plum->r.svFlags |= SVF_SINGLECLIENT;
   plum->r.singleClient = attacker->s.number;
   //
   plum->s.otherEntityNum = self->s.number;
@@ -493,7 +493,6 @@ player_die
 ==================
 */
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
-	gentity_t	*ent;
 	int			anim;
 	int			contents;
 	int			killer;
@@ -568,11 +567,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		self->client->pers.netname, obit );
 
 	// broadcast the death event to everyone
-	ent = G_TempEntity( self->r.currentOrigin, EV_OBITUARY );
-	ent->s.eventParm = meansOfDeath;
-	ent->s.otherEntityNum = self - g_entities;
-	ent->s.otherEntityNum2 = killer;
-	ent->r.svFlags = SVF_BROADCAST;	// send to everyone
+  G_AddEvent(self, EV_OBITUARY, meansOfDeath);
+	self->s.otherEntityNum = self - g_entities;
+	self->s.otherEntityNum2 = killer;
 
 	self->enemy = attacker;
 

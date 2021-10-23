@@ -5039,7 +5039,6 @@ static qboolean Item_Parse(int handle, itemDef_t *item) {
 		}
 
 		key = KeywordHash_Find(itemParseKeywordHash, token.string);
-    Com_Printf("Key: %s\n", token.string);
 		if (!key) {
 			PC_SourceError(handle, "unknown menu item keyword %s", token.string);
 			continue;

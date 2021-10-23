@@ -444,8 +444,6 @@ respawn
 ================
 */
 void respawn( gentity_t *ent ) {
-	gentity_t	*tent;
-
 	if ( ent->health <= 0 )
 		CopyToBodyQue( ent );
 
@@ -456,14 +454,7 @@ void respawn( gentity_t *ent ) {
 		return;
 
 	// add a teleportation effect
-	tent = G_TempEntity( ent->client->ps.origin, EV_PLAYER_TELEPORT_IN );
-	tent->s.clientNum = ent->s.clientNum;
-
-	// optimize bandwidth
-	if ( level.intermissiontime ) {
-		tent->r.svFlags = SVF_SINGLECLIENT;
-		tent->r.singleClient = ent->s.clientNum;
-	}
+  G_AddEvent(ent, EV_PLAYER_TELEPORT_IN, 0);
 }
 
 
@@ -851,6 +842,7 @@ const char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		client->sess.spectatorClient = clientNum;
 	}
   ent->r.svFlags |= SVF_BROADCAST;
+  ent->r.svFlags &= ~SVF_SINGLECLIENT;
 	ent->inuse = qtrue;
 
 	// get and distribute relevant paramters
@@ -894,7 +886,6 @@ and on transition between teams, but doesn't happen on respawns
 void ClientBegin( int clientNum ) {
 	gentity_t	*ent;
 	gclient_t	*client;
-	gentity_t	*tent;
 	int			flags;
 	int			spawns;
 
@@ -940,8 +931,7 @@ void ClientBegin( int clientNum ) {
 
 	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		// send event
-		tent = G_TempEntity( client->ps.origin, EV_PLAYER_TELEPORT_IN );
-		tent->s.clientNum = ent->s.clientNum;
+    G_AddEvent(ent, EV_PLAYER_TELEPORT_IN, 0);
 
 		client->sess.spectatorTime = 0;
 
@@ -1337,6 +1327,7 @@ void ClientDisconnect( int clientNum ) {
 	}
 
 	trap_UnlinkEntity( ent );
+  ent->r.svFlags &= ~SVF_BROADCAST;
 	ent->s.modelindex = 0;
 	ent->inuse = qfalse;
 	ent->classname = "disconnected";

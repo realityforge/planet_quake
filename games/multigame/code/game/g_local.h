@@ -383,6 +383,7 @@ struct gclient_s {
 #endif
   int       pwCounter;
   int       pwIndex;
+  gentity_t *pwEnt;
 };
 
 

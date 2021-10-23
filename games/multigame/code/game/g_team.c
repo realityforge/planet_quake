@@ -564,27 +564,21 @@ void Team_ResetFlags( void ) {
 
 
 static void Team_ReturnFlagSound( gentity_t *ent, team_t team ) {
-	gentity_t	*te;
-
 	if (ent == NULL) {
 		G_Printf ("Warning:  NULL passed to Team_ReturnFlagSound\n");
 		return;
 	}
 
-	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
 	if( team == TEAM_BLUE ) {
-		te->s.eventParm = GTS_RED_RETURN;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_RED_RETURN);
 	}
 	else {
-		te->s.eventParm = GTS_BLUE_RETURN;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_BLUE_RETURN);
 	}
-	te->r.svFlags |= SVF_BROADCAST;
 }
 
 
 static void Team_TakeFlagSound( gentity_t *ent, team_t team ) {
-	gentity_t	*te;
-
 	if ( ent == NULL ) {
 		G_Printf( "Warning:  NULL passed to Team_TakeFlagSound\n" );
 		return;
@@ -613,33 +607,27 @@ static void Team_TakeFlagSound( gentity_t *ent, team_t team ) {
 			return;
 	}
 
-	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
 	if( team == TEAM_BLUE ) {
-		te->s.eventParm = GTS_RED_TAKEN;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_RED_TAKEN);
 	}
 	else {
-		te->s.eventParm = GTS_BLUE_TAKEN;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_BLUE_TAKEN);
 	}
-	te->r.svFlags |= SVF_BROADCAST;
 }
 
 
 static void Team_CaptureFlagSound( gentity_t *ent, team_t team ) {
-	gentity_t	*te;
-
 	if (ent == NULL) {
 		G_Printf ("Warning:  NULL passed to Team_CaptureFlagSound\n");
 		return;
 	}
 
-	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
 	if( team == TEAM_BLUE ) {
-		te->s.eventParm = GTS_BLUE_CAPTURE;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_BLUE_CAPTURE);
 	}
 	else {
-		te->s.eventParm = GTS_RED_CAPTURE;
+    G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_RED_CAPTURE);
 	}
-	te->r.svFlags |= SVF_BROADCAST;
 }
 
 
@@ -1454,8 +1442,6 @@ CheckObeliskAttack
 ================
 */
 qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker ) {
-	gentity_t	*te;
-
 	// if this really is an obelisk
 	if( obelisk->die != ObeliskDie ) {
 		return qfalse;
@@ -1480,16 +1466,14 @@ qboolean CheckObeliskAttack( gentity_t *obelisk, gentity_t *attacker ) {
 		teamgame.blueObeliskAttackedTime < level.time - OVERLOAD_ATTACK_BASE_SOUND_TIME) ) {
 
 		// tell which obelisk is under attack
-		te = G_TempEntity( obelisk->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
 		if( obelisk->spawnflags == TEAM_RED ) {
-			te->s.eventParm = GTS_REDOBELISK_ATTACKED;
+      G_AddEvent(obelisk, EV_GLOBAL_TEAM_SOUND, GTS_REDOBELISK_ATTACKED);
 			teamgame.redObeliskAttackedTime = level.time;
 		}
 		else {
-			te->s.eventParm = GTS_BLUEOBELISK_ATTACKED;
+      G_AddEvent(obelisk, EV_GLOBAL_TEAM_SOUND, GTS_BLUEOBELISK_ATTACKED);
 			teamgame.blueObeliskAttackedTime = level.time;
 		}
-		te->r.svFlags |= SVF_BROADCAST;
 	}
 
 	return qfalse;
