@@ -512,7 +512,7 @@ static void CG_ItemPickup( int itemNum )
 		cg.itemPickupCount++;
 
 	oldItem = itemNum;
-	
+
 	// see if it should be the grabbed weapon
 	if ( bg_itemlist[itemNum].giType == IT_WEAPON ) {
 		// select it immediately
@@ -861,7 +861,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position, int entityNum ) {
 		{
 			gitem_t	*item;
 			int		index;
-
 Com_Printf("item pickup\n");
 
 			index = es->eventParm;		// player predicted
@@ -907,7 +906,7 @@ Com_Printf("item pickup\n");
 				trap_S_StartSound (NULL, es->number, CHAN_AUTO,	trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
-      if(	item->giType == IT_POWERUP ) {
+      if(	item->giType == IT_POWERUP || item->giType == IT_TEAM ) {
         cg_entities[es->number].items[ ITEM_PW_MIN + item->giTag ] = 1;
 #ifdef USE_RUNES
         if(item->giTag >= RUNE_STRENGTH && item->giTag <= RUNE_LITHIUM) {
@@ -938,9 +937,8 @@ Com_Printf("item pickup\n");
 		{
 			gitem_t	*item;
 			int		index;
-      
-Com_Printf("global item pickup\n");
 
+Com_Printf("global item pickup\n");
 			index = es->eventParm;		// player predicted
 
 			if ( index < 1 || index >= bg_numItems ) {
@@ -963,8 +961,17 @@ Com_Printf("global item pickup\n");
 				trap_S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, trap_S_RegisterSound( item->pickup_sound, qfalse ) );
 			}
 
+      // check for flag pickup
+      if ( cgs.gametype >= GT_TEAM 
+        && (item->giTag == PW_REDFLAG || item->giTag == PW_BLUEFLAG || item->giTag == PW_NEUTRALFLAG) 
+        && es->otherEntityNum == cg.snap->ps.clientNum
+      ) {
+        trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
+      }
+
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
+
         if(item->giTag == PW_HASTE) {
 #ifdef USE_PHYSICS_VARS
           cg.predictedPlayerState.speed *= cg_hasteFactor.value;
@@ -1208,6 +1215,10 @@ Com_Printf("global item pickup\n");
 
 	case EV_GLOBAL_TEAM_SOUND:	// play from the player's head so it never diminishes
 		{
+      cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BLUEFLAG]
+        = cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_REDFLAG]
+        = cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_NEUTRALFLAG]
+        = 0;
 			switch( es->eventParm ) {
 				case GTS_RED_CAPTURE: // CTF: red team captured the blue flag, 1FCTF: red team captured the neutral flag
 					if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED )

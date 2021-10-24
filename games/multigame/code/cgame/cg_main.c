@@ -88,6 +88,8 @@ DLLEXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2 )
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
+  case CG_EXPORT_LAST:
+    return 0;
 	default:
 		CG_Error( "vmMain: unknown command %i", command );
 		break;
@@ -1642,8 +1644,6 @@ qboolean CG_Asset_Parse(int handle) {
 void CG_ParseMenu(const char *menuFile) {
 	pc_token_t token;
 	int handle;
-  
-  Com_Printf("Parsing menu file:%s\n", menuFile);
 
 	handle = trap_PC_LoadSource(menuFile);
 	if (!handle)

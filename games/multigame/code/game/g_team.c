@@ -624,8 +624,7 @@ static void Team_CaptureFlagSound( gentity_t *ent, team_t team ) {
 
 	if( team == TEAM_BLUE ) {
     G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_BLUE_CAPTURE);
-	}
-	else {
+	} else {
     G_AddEvent(ent, EV_GLOBAL_TEAM_SOUND, GTS_RED_CAPTURE);
 	}
 }
@@ -845,6 +844,7 @@ int Pickup_Team( gentity_t *ent, gentity_t *other ) {
 	int team;
 	gclient_t *cl = other->client;
 
+  ent->r.svFlags |= SVF_BROADCAST;
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_OBELISK ) {
 		// there are no team items that can be picked up in obelisk

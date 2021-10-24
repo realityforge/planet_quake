@@ -4345,9 +4345,7 @@ static qboolean ItemParse_background( itemDef_t *item, int handle ) {
 	if (!PC_String_Parse(handle, &temp)) {
 		return qfalse;
 	}
-  Com_Printf("background: %i\n", cgDC.registerShaderNoMip);
 	item->window.background = cgDC.registerShaderNoMip(temp);
-  Com_Printf("background end: %s\n", temp);
 	return qtrue;
 }
 

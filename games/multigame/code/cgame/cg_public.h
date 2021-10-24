@@ -210,8 +210,11 @@ typedef enum {
 
 	CG_MOUSE_EVENT,
 //	void	(*CG_MouseEvent)( int dx, int dy );
-	CG_EVENT_HANDLING
+
+	CG_EVENT_HANDLING,
 //	void (*CG_EventHandling)(cgame_event_t type);
+
+	CG_EXPORT_LAST
 } cgameExport_t;
 
 //----------------------------------------------

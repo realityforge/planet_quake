@@ -493,6 +493,7 @@ player_die
 ==================
 */
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
+	gentity_t	*ent;
 	int			anim;
 	int			contents;
 	int			killer;
@@ -567,9 +568,11 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		self->client->pers.netname, obit );
 
 	// broadcast the death event to everyone
-  G_AddEvent(self, EV_OBITUARY, meansOfDeath);
-	self->s.otherEntityNum = self - g_entities;
-	self->s.otherEntityNum2 = killer;
+	ent = G_TempEntity( self->r.currentOrigin, EV_OBITUARY );
+	ent->s.eventParm = meansOfDeath;
+	ent->s.otherEntityNum = self - g_entities;
+	ent->s.otherEntityNum2 = killer;
+	ent->r.svFlags = SVF_BROADCAST;	// send to everyone
 
 	self->enemy = attacker;
 

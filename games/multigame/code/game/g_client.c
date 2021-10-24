@@ -444,6 +444,8 @@ respawn
 ================
 */
 void respawn( gentity_t *ent ) {
+	gentity_t	*tent;
+
 	if ( ent->health <= 0 )
 		CopyToBodyQue( ent );
 
@@ -454,7 +456,14 @@ void respawn( gentity_t *ent ) {
 		return;
 
 	// add a teleportation effect
-  G_AddEvent(ent, EV_PLAYER_TELEPORT_IN, 0);
+	tent = G_TempEntity( ent->client->ps.origin, EV_PLAYER_TELEPORT_IN );
+	tent->s.clientNum = ent->s.clientNum;
+
+	// optimize bandwidth
+	if ( level.intermissiontime ) {
+		tent->r.svFlags = SVF_SINGLECLIENT;
+		tent->r.singleClient = ent->s.clientNum;
+	}
 }
 
 

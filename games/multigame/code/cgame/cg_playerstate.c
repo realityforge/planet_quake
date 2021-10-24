@@ -403,16 +403,6 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 		reward = qtrue;
 	}
 
-	// check for flag pickup
-	if ( cgs.gametype >= GT_TEAM ) {
-		if ((cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_REDFLAG] < 100)
-      || (cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_BLUEFLAG] < 100)
-      || (cg.time - cg_entities[cg.snap->ps.clientNum].items[ITEM_PW_MIN + PW_NEUTRALFLAG] < 100) )
-		{
-			trap_S_StartLocalSound( cgs.media.youHaveFlagSound, CHAN_ANNOUNCER );
-		}
-	}
-
 	// lead changes
 	if (!reward) {
 		//
