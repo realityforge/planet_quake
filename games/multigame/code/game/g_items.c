@@ -743,11 +743,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity )
 		Team_CheckDroppedItem( dropped );
 	} else { // auto-remove after 30 seconds
 		dropped->think = G_FreeEntity;
-#ifdef USE_TEAM_VARS
-    dropped->nextthink = level.time + g_flagReturn.integer;
-#else
     dropped->nextthink = level.time + DROPPED_TIME;
-#endif
 	}
 
 #ifdef USE_WEAPON_DROP

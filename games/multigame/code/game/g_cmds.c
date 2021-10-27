@@ -1840,9 +1840,6 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 #ifdef USE_WEAPON_DROP
 gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags );
 void ThrowWeapon( gentity_t *ent );
-#ifdef USE_POWERUP_DROP
-qboolean TossPowerup(gentity_t *self);
-#endif
 
 /*
 =================
@@ -1855,42 +1852,79 @@ void Cmd_Drop_f( gentity_t *ent ) {
 	if (contents & CONTENTS_NODROP)
     return;
 
+  if(!g_dropWeapon.integer)
+    return;
+
   if(g_dropWeapon.integer == 1)
     ThrowWeapon( ent );
-  if(g_dropWeapon.integer & 2) {
-    // if there are persistant power-ups drop those
+
+#ifdef USE_FLAG_DROP
+  if((g_dropWeapon.integer & 2)
+    && (ent->items[ITEM_PW_MIN + PW_REDFLAG]
+      || ent->items[ITEM_PW_MIN + PW_BLUEFLAG]
+      || ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG])) {
+    if(ent->items[ITEM_PW_MIN + PW_REDFLAG]) {
+      dropWeapon( ent, BG_FindItemForPowerup(PW_REDFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    } else if (ent->items[ITEM_PW_MIN + PW_BLUEFLAG]) {
+      dropWeapon( ent, BG_FindItemForPowerup(PW_BLUEFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    } else if (ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG]) {
+      dropWeapon( ent, BG_FindItemForPowerup(PW_NEUTRALFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    }
+    ent->items[ITEM_PW_MIN + PW_REDFLAG] =
+    ent->items[ITEM_PW_MIN + PW_BLUEFLAG] =
+    ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG] = 0;
+    return;
+  }
+#endif
 #ifdef USE_RUNES
-    if(ent->rune && 
-      ent->items[ent->rune]) {
-      dropWeapon( ent, BG_FindItemForRune(ent->rune - ITEM_PW_MIN - RUNE_STRENGTH + 1), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
-      ent->items[ent->rune] = 0;
-      ent->rune = 0;
-      return;
-    } else
+  if((g_dropWeapon.integer & 8)
+    && ent->rune && ent->items[ent->rune]) {
+    dropWeapon( ent, BG_FindItemForRune(ent->rune - ITEM_PW_MIN - RUNE_STRENGTH + 1), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    ent->items[ent->rune] = 0;
+    ent->rune = 0;
+    return;
+  }
 #endif
 #ifdef USE_POWERUP_DROP
+  if(g_dropWeapon.integer & 4) {
 #ifdef MISSIONPACK
+    // if there are persistant power-ups drop those
     if(ent->client->persistantPowerup) {
       TossClientPersistantPowerups(ent);
       return;
     } else
 #endif
-    if(TossPowerup(ent)) {
-      return;
+    {
+      gentity_t	*drop;
+      int i;
+      for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
+        if ( ent->items[ITEM_PW_MIN + i ] > level.time ) {
+          drop = dropWeapon( ent, BG_FindItemForPowerup( i ), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+          // decide how many seconds it has left
+          drop->count = ( ent->items[ITEM_PW_MIN + i] - level.time ) / 1000;
+          if ( drop->count < 1 ) {
+            drop->count = 1;
+          }
+          // for pickup prediction
+          drop->s.time2 = drop->count;
+          return;
+        }
+      }
     }
-#endif
   }
+#endif
 #ifdef USE_ITEM_DROP
   // check if there are some holdable items to toss
-  if(g_dropWeapon.integer & 4) {
+  if(g_dropWeapon.integer & 16) {
     
   }
 #endif
-#ifdef USE_FLAG_DROP
-  if(g_dropWeapon.integer & 8) {
+#ifdef USE_AMMO_DROP
+  if(g_dropWeapon.integer & 32) {
     
   }
 #endif
+  ThrowWeapon( ent );
 }
 #endif
 
