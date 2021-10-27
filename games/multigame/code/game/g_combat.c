@@ -47,6 +47,40 @@ void AddScore( gentity_t *ent, vec3_t origin, int score ) {
 	CalculateRanks();
 }
 
+
+#ifdef USE_POWERUP_DROP
+qboolean TossPowerup(gentity_t *self) {
+  float		angle;
+  gitem_t		*item;
+  gentity_t	*drop;
+  int			i;
+  // drop all the powerups if not in teamplay
+  //if ( g_gametype.integer == GT_TEAM )
+  //  return qfalse;
+	angle = 45;
+	for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
+		if ( self->items[ITEM_PW_MIN + i ] > level.time ) {
+			item = BG_FindItemForPowerup( i );
+			if ( !item ) {
+				continue;
+			}
+			drop = Drop_Item( self, item, angle );
+			// decide how many seconds it has left
+			drop->count = ( self->items[ITEM_PW_MIN + i] - level.time ) / 1000;
+			if ( drop->count < 1 ) {
+				drop->count = 1;
+			}
+			// for pickup prediction
+			drop->s.time2 = drop->count;
+			angle += 45;
+      return qtrue;
+		}
+	}
+  return qfalse;
+}
+#endif
+
+
 /*
 =================
 TossClientItems
@@ -88,7 +122,6 @@ void TossClientItems( gentity_t *self ) {
 		}
 	}
 
-// TODO: change to if !g_instagib
 	if ( weapon > WP_MACHINEGUN && weapon != WP_GRAPPLING_HOOK 
 #ifdef USE_INSTAGIB
     // don't drop anything in instagib mode

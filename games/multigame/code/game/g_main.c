@@ -171,6 +171,9 @@ vmCvar_t	wp_rocketHoming;
 #ifdef USE_BOUNCE_RPG
 vmCvar_t	wp_rocketBounce;
 #endif
+#ifdef USE_BOUNCE_RAIL
+vmCvar_t  wp_railBounce;
+#endif
 #ifdef USE_VULN_RPG
 vmCvar_t  wp_rocketVuln;
 #endif
@@ -396,6 +399,9 @@ static cvarTable_t gameCvarTable[] = {
 #endif
 #ifdef USE_BOUNCE_RPG
   { &wp_rocketBounce, "wp_rocketBounce", "1", CVAR_ARCHIVE, 0, qfalse },
+#endif
+#ifdef USE_BOUNCE_RAIL
+  { &wp_railBounce, "wp_railBounce", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_CLOAK_CMD
   { &g_enableCloak, "g_enableCloak", "1", CVAR_ARCHIVE, 0, qfalse },

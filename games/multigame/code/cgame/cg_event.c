@@ -1389,8 +1389,13 @@ Com_Printf("global item pickup\n");
       cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + es->eventParm ] = es->time;
     }
 #ifdef USE_RUNES
-//Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, es->otherEntityNum, es->time);
-    if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM) {
+Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, es->otherEntityNum, es->time);
+    if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM
+      && cg_entities[es->otherEntityNum].rune != ITEM_PW_MIN + es->eventParm) {
+      gitem_t *item;
+      item = BG_FindItemForRune(es->eventParm - RUNE_STRENGTH + 1);
+      CG_RegisterItemVisuals( ITEM_INDEX(item) );
+      cg_entities[es->otherEntityNum].rune = ITEM_PW_MIN + es->eventParm;
     }
     /*
       if(cg.snap->ps.powerups[index] == 0) {

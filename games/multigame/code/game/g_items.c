@@ -729,12 +729,11 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity )
 	VectorCopy( velocity, dropped->s.pos.trDelta );
 
 	dropped->s.eFlags |= EF_BOUNCE_HALF;
+	if ((g_gametype.integer == GT_CTF 
 #ifdef MISSIONPACK
-	if ((g_gametype.integer == GT_CTF || g_gametype.integer == GT_1FCTF) && item->giType == IT_TEAM) // Special case for CTF flags
-#else
-	if (g_gametype.integer == GT_CTF && item->giType == IT_TEAM) { // Special case for CTF flags
+    || g_gametype.integer == GT_1FCTF
 #endif
-  {
+  ) && item->giType == IT_TEAM) {// Special case for CTF flags
 		dropped->think = Team_DroppedFlagThink;
 #ifdef USE_TEAM_VARS
     dropped->nextthink = level.time + g_flagReturn.integer;

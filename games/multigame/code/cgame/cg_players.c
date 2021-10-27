@@ -2419,17 +2419,19 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, centity_t *cl, int team ) {
 		ent->customShader = cgs.media.invisShader;
 		trap_R_AddRefEntityToScene( ent );
 	} else {
-		/*
-		if ( eFlags & EF_KAMIKAZE ) {
+#ifdef MISSIONPACK
+		if ( cent->currentState.eFlags & EF_KAMIKAZE ) {
 			if (team == TEAM_BLUE)
 				ent->customShader = cgs.media.blueKamikazeShader;
 			else
 				ent->customShader = cgs.media.redKamikazeShader;
 			trap_R_AddRefEntityToScene( ent );
 		}
-		else {*/
+		else 
+#endif
+    {
 			trap_R_AddRefEntityToScene( ent );
-		//}
+		}
 
 		if ( cent->items[ITEM_PW_MIN + PW_QUAD] )
 		{
@@ -2450,6 +2452,15 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, centity_t *cl, int team ) {
 			ent->customShader = cgs.media.battleSuitShader;
 			trap_R_AddRefEntityToScene( ent );
 		}
+#ifdef USE_RUNES
+    if( cent->items[ITEM_PW_MIN + RUNE_REGEN] 
+      && cent->currentState.eType != ET_MISSILE ) {
+      if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {
+        ent->customShader = cg_items[ ITEM_INDEX(BG_FindItemForRune(2)) ].altShader3;
+				trap_R_AddRefEntityToScene( ent );
+			}
+    }
+#endif
 	}
 }
 

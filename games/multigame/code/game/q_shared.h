@@ -163,7 +163,7 @@
 // draw 3D weapons that rotate slightly
 #define USE_3D_WEAPONS 1
 // weapon vars allow customizing all weapon behavior
-//#define USE_WEAPON_VARS 1
+#define USE_WEAPON_VARS 1
 // client side weapon order
 #define USE_WEAPON_ORDER 1
 // allow clients to center the weapons above the hud
@@ -206,22 +206,26 @@
 #define USE_POWERUP_DROP 1
 #define USE_FLAG_DROP 1
 #define USE_AMMO_DROP 1
+#define USE_ARMOR_DROP 1
+#define USE_HEALTH_DROP 1
 // allow clients to specific bouncing rockets
 #define USE_BOUNCE_CMD 1
 // enable bouncing rpgs from map items or server enabled
 #define USE_BOUNCE_RPG 1
+// enable bouncing rail guns
+#define USE_BOUNCE_RAIL 1
 // enable cloaking command for clients to turn on infinite invisibility
 #define USE_CLOAK_CMD 1
 // enable lightening discharge that kills players in radius when used in water
 #define USE_LV_DISCHARGE 1
 // enable the flame thrower
-#define USE_FLAME_THROWER 1
+//#define USE_FLAME_THROWER 1
 // enable vortex grenades that suck players in when they are tossed
 #define USE_VORTEX_GRENADES 1
 // enable vulnerable rockets that can be shot down
 #define USE_VULN_RPG 1
 // enable rails that go through walls
-#define USE_INVULN_RAILS 1
+//#define USE_INVULN_RAILS 1
 // runes enable little popup powerups in random places on the map, over 60 different effects
 #define USE_RUNES 1
 // extra modes of death like MOD_VOID, MOD_RING_OUT and MOD_FROM_GRAVE

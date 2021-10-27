@@ -1255,9 +1255,7 @@ CG_AddWeaponWithPowerups
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 	// add powerup effects
-  itemInfo_t		*itemInfo;
   centity_t     *cent;
-  gitem_t       *item;
   cent = &cg_entities[cl->currentState.number];
 
 #if defined(USE_GAME_FREEZETAG) || defined(USE_REFEREE_CMDS)
@@ -1285,9 +1283,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 #ifdef USE_RUNES
     if( cent->rune - ITEM_PW_MIN == RUNE_STRENGTH 
       && cent->items[cent->rune] ) {
-      item = BG_FindItemForRune((cent->rune - ITEM_PW_MIN - RUNE_STRENGTH) + 1);
-      itemInfo = &cg_items[ ITEM_INDEX(item) ];
-      gun->customShader = itemInfo->altShader3;
+      gun->customShader = cg_items[ ITEM_INDEX(BG_FindItemForRune(1)) ].altShader3;
 			trap_R_AddRefEntityToScene( gun );
     }
 #endif

@@ -394,6 +394,11 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		else if ( ent->items[ITEM_PW_MIN + PW_REGEN] ) {
 			maxHealth = client->ps.stats[STAT_MAX_HEALTH];
 		}
+#ifdef USE_RUNES
+    else if ( ent->items[ITEM_PW_MIN + RUNE_REGEN] ) {
+      maxHealth = client->ps.stats[STAT_MAX_HEALTH];
+    }
+#endif
 		else {
 			maxHealth = 0;
 		}
@@ -412,7 +417,11 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				G_AddEvent( ent, EV_POWERUP, PW_REGEN );
 			}
 #else
-		if ( ent->items[ITEM_PW_MIN + PW_REGEN] ) {
+		if ( ent->items[ITEM_PW_MIN + PW_REGEN] 
+#ifdef USE_RUNES
+      || ent->items[ITEM_PW_MIN + RUNE_REGEN]
+#endif
+    ) {
 			if ( ent->health < client->ps.stats[STAT_MAX_HEALTH]) {
 				ent->health += 15;
 				if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] * 1.1 ) {
@@ -430,12 +439,6 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		} else {
 			// count down health when over max
 #ifdef USE_CLOAK_CMD
-      if (!(ent->flags & FL_CLOAK))
-#endif
-			if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
-				ent->health--;
-			}
-#ifdef USE_CLOAK_CMD
       if (ent->flags & FL_CLOAK) {
         // count down health when cloaked.
       	ent->health--;
@@ -443,8 +446,11 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
       		ent->flags ^= FL_CLOAK;
       		ent->items[ITEM_PW_MIN + PW_INVIS] = level.time;
       	}
-      }
+      } else
 #endif
+			if ( ent->health > client->ps.stats[STAT_MAX_HEALTH] ) {
+				ent->health--;
+			}
 		}
 
 		// count down armor when over max
@@ -799,8 +805,8 @@ void ClientThink_real( gentity_t *ent ) {
 		msec = 200;
 	}
 
-	if ( pmove_msec.integer < 8 ) {
-		trap_Cvar_Set( "pmove_msec", "8" );
+	if ( pmove_msec.integer < 1 ) {
+		trap_Cvar_Set( "pmove_msec", "1" );
 		trap_Cvar_Update( &pmove_msec );
 	} else if ( pmove_msec.integer > 33 ) {
 		trap_Cvar_Set( "pmove_msec", "33" );

@@ -295,6 +295,21 @@ void Cmd_Give_f( gentity_t *ent )
 
 	// spawn a specific item right on the player
 	if ( !give_all ) {
+#ifdef USE_RUNES
+    char	arg[MAX_TOKEN_CHARS];
+    trap_Argv( 1, arg, sizeof( arg ) );
+    if(	Q_stricmp(arg, "rune") == 0) {
+      name = ConcatArgs(2);
+      it = BG_FindItemForRune(atoi(name));
+      if(!it) {
+        Com_Printf("Unknown rune: %s\n", name);
+        return;
+      }
+      if(ent->rune)
+        ent->items[ent->rune] = 0;
+      ent->rune = 0;
+    } else
+#endif
 		it = BG_FindItem (name);
 		if (!it) {
 			return;
@@ -307,9 +322,10 @@ void Cmd_Give_f( gentity_t *ent )
 		FinishSpawningItem(it_ent );
 		memset( &trace, 0, sizeof( trace ) );
 		Touch_Item (it_ent, ent, &trace);
-		if (it_ent->inuse) {
-			G_FreeEntity( it_ent );
-		}
+    it_ent->freeAfterEvent = qtrue;
+		//if (it_ent->inuse) {
+		//	G_FreeEntity( it_ent );
+		//}
 	}
 }
 
@@ -1822,28 +1838,59 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 
 
 #ifdef USE_WEAPON_DROP
+gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags );
 void ThrowWeapon( gentity_t *ent );
+#ifdef USE_POWERUP_DROP
+qboolean TossPowerup(gentity_t *self);
+#endif
+
 /*
 =================
 Cmd_Drop_f XRAY FMJ
 =================
 */
 void Cmd_Drop_f( gentity_t *ent ) {
-  if(g_dropWeapon.integer > 1) {
+  int contents;
+  contents = trap_PointContents( ent->r.currentOrigin, -1 );
+	if (contents & CONTENTS_NODROP)
+    return;
+
+  if(g_dropWeapon.integer == 1)
+    ThrowWeapon( ent );
+  if(g_dropWeapon.integer & 2) {
     // if there are persistant power-ups drop those
+#ifdef USE_RUNES
+    if(ent->rune && 
+      ent->items[ent->rune]) {
+      dropWeapon( ent, BG_FindItemForRune(ent->rune - ITEM_PW_MIN - RUNE_STRENGTH + 1), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+      ent->items[ent->rune] = 0;
+      ent->rune = 0;
+      return;
+    } else
+#endif
+#ifdef USE_POWERUP_DROP
 #ifdef MISSIONPACK
     if(ent->client->persistantPowerup) {
       TossClientPersistantPowerups(ent);
       return;
+    } else
+#endif
+    if(TossPowerup(ent)) {
+      return;
     }
 #endif
-    // check if there are some holdable items to toss
-    if(g_dropWeapon.integer > 2) {
-      
-    }
   }
-  if(g_dropWeapon.integer)
-    ThrowWeapon( ent );
+#ifdef USE_ITEM_DROP
+  // check if there are some holdable items to toss
+  if(g_dropWeapon.integer & 4) {
+    
+  }
+#endif
+#ifdef USE_FLAG_DROP
+  if(g_dropWeapon.integer & 8) {
+    
+  }
+#endif
 }
 #endif
 
@@ -2009,7 +2056,7 @@ static void Cmd_Rune_f( gentity_t *ent ) {
 
   // pop the rune out of that location
   RegisterItem( item );
-  e = LaunchItem( item, nearest, dir, FL_THROWN_ITEM );
+  e = LaunchItem( item, nearest, dir, FL_DROPPED_ITEM | FL_THROWN_ITEM );
   G_AddEvent( e, EV_ITEM_RESPAWN, 0 );
 }
 #endif

@@ -109,6 +109,11 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 		return qfalse;
 	}
 
+#ifdef USE_RUNES
+  if(ent->items[ent->rune] && ent->rune == ITEM_PW_MIN + RUNE_STRENGTH) {
+    s_quadFactor = 2.0;
+  } else
+#endif
 	if (ent->items[ITEM_PW_MIN + PW_QUAD] ) {
 		G_AddEvent( ent, EV_POWERUP, PW_QUAD );
 		s_quadFactor = g_quadfactor.value;
@@ -548,6 +553,10 @@ RAILGUN
 */
 
 
+#ifdef USE_BOUNCE_RAIL
+#define MAX_RAIL_BOUNCE 4 //Luc: Defines the maximum number of bounces
+#endif
+
 /*
 =================
 weapon_railgun_fire
@@ -567,6 +576,9 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	int			hits;
 	int			unlinked;
 	int			passent;
+#ifdef USE_BOUNCE_RAIL
+  int bounce; //Luc: Bounce count
+#endif
 	gentity_t	*unlinkedEntities[MAX_RAIL_HITS];
 #ifdef USE_INVULN_RAILS
   vec3_t		tracefrom;	// SUM
@@ -598,10 +610,22 @@ void weapon_railgun_fire( gentity_t *ent ) {
 	G_DoTimeShiftFor( ent );
 
 	// trace only against the solids, so the railgun will go through people
+#ifdef USE_BOUNCE_RAIL
+  bounce = 0; //Luc: start off with no bounces
+#endif
 	unlinked = 0;
 	hits = 0;
 	passent = ent->s.number;
   i = 0;
+
+#ifdef USE_BOUNCE_RAIL
+  //Luc:
+  do {
+    if (bounce) {
+      G_BounceProjectile( muzzle , trace.endpos , trace.plane.normal, end); //This sets the new angles for the bounce
+      VectorCopy (trace.endpos , muzzle); //copy the end position as the new muzzle
+    }
+#endif
 	do {
 #ifdef USE_VULN_RPG
     if(wp_rocketVuln.integer) {
@@ -721,6 +745,9 @@ void weapon_railgun_fire( gentity_t *ent ) {
 
 	// no explosion at end if SURF_NOIMPACT, but still make the trail
 	if ( trace.surfaceFlags & SURF_NOIMPACT ) {
+#ifdef USE_BOUNCE_RAIL
+    bounce = MAX_RAIL_BOUNCE; //Luc: If hit sky, max out bounces so wont bounce again
+#endif
 		tent->s.eventParm = 255;	// don't make the explosion at the end
 	} else {
 		tent->s.eventParm = DirToByte( trace.plane.normal );
@@ -749,7 +776,10 @@ void weapon_railgun_fire( gentity_t *ent ) {
 		}
 		ent->client->accuracy_hits++;
 	}
-
+#ifdef USE_BOUNCE_RAIL//Luc: Add a bounce, so it'll bounce only 4 times
+bounce++;
+} while (bounce <= MAX_RAIL_BOUNCE);
+#endif
 }
 
 
@@ -1145,8 +1175,10 @@ void ThrowWeapon( gentity_t *ent ) {
 	else
 		xr_drop->count= -1; // XRAY FMJ 0 is already taken, -1 means no ammo
 }
+#endif
 
 
+#ifdef USE_FLAME_THROWER
 gentity_t *fire_flame (gentity_t *self, vec3_t start, vec3_t dir);
 
 /*
@@ -1161,7 +1193,6 @@ void Weapon_fire_flame (gentity_t *ent ) {
 	m->damage *= s_quadFactor;
 	m->splashDamage *= s_quadFactor;
 }
-
 #endif
 
 
