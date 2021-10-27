@@ -1838,6 +1838,7 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 
 
 #ifdef USE_WEAPON_DROP
+gitem_t	*BG_FindItemForAmmo( weapon_t weapon );
 gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags );
 void ThrowWeapon( gentity_t *ent );
 
@@ -1907,6 +1908,7 @@ void Cmd_Drop_f( gentity_t *ent ) {
           }
           // for pickup prediction
           drop->s.time2 = drop->count;
+          ent->items[ITEM_PW_MIN + i] = 0;
           return;
         }
       }
@@ -1923,8 +1925,16 @@ void Cmd_Drop_f( gentity_t *ent ) {
   }
 #endif
 #ifdef USE_AMMO_DROP
+  // drop ammo for current weapon, total / pack size
   if(g_dropWeapon.integer & 32) {
-    // TODO: ammo for current weapon, total / pack size
+    gitem_t *item;
+    int i = ent->s.weapon;
+    item = BG_FindItemForAmmo(i);
+    if(floor(ent->client->ps.ammo[i] / item->quantity) > 1) {
+      dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+      ent->client->ps.ammo[i] -= item->quantity;
+      return;
+    }
   }
 #endif
   // TODO: fix weapon switch animation
