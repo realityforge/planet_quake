@@ -1915,15 +1915,19 @@ void Cmd_Drop_f( gentity_t *ent ) {
 #endif
 #ifdef USE_ITEM_DROP
   // check if there are some holdable items to toss
-  if(g_dropWeapon.integer & 16) {
-    
+  if(g_dropWeapon.integer & 16
+    && ent->client->ps.stats[STAT_HOLDABLE_ITEM]) {
+    dropWeapon( ent, &bg_itemlist[ent->client->ps.stats[STAT_HOLDABLE_ITEM]], 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    ent->client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
+    return;
   }
 #endif
 #ifdef USE_AMMO_DROP
   if(g_dropWeapon.integer & 32) {
-    
+    // TODO: ammo for current weapon, total / pack size
   }
 #endif
+  // TODO: fix weapon switch animation
   ThrowWeapon( ent );
 }
 #endif

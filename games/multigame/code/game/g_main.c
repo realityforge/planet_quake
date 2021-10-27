@@ -416,7 +416,7 @@ static cvarTable_t gameCvarTable[] = {
   { &wp_rocketAccel, "wp_rocketAccel", "1", CVAR_ARCHIVE, 0, qfalse },
 #endif
 #ifdef USE_WEAPON_DROP
-  { &g_dropWeapon, "g_dropWeapon", "1", CVAR_ARCHIVE, 0, qfalse },
+  { &g_dropWeapon, "g_dropWeapon", "65535", CVAR_ARCHIVE, 0, qfalse },
 #endif
 
 #ifdef USE_LOCAL_DMG
