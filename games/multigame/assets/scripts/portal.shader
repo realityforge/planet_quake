@@ -1,5 +1,19 @@
 textures/portal/portal_sfx_blue
 {
+  qer_editorimage textures/common/qer_mirror.tga
+  surfaceparm nolightmap
+  portal
+
+  {
+    map textures/common/mirror1.tga
+    blendfunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
+    depthWrite
+    alphagen portal 1024
+  }
+}
+
+textures/portal/portal_sfx_blue2
+{
 	portal
 	surfaceparm nolightmap
 	deformVertexes wave 100 sin 0 2 0 .5
@@ -37,7 +51,6 @@ textures/portal/portal_sfx_ring_blue
 {
 	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
-	cull front
 
 	{
 		map textures/portal/blue/portal_sfx_ring_blue1.tga 
@@ -106,7 +119,6 @@ textures/portal/portal_sfx_ring_red
 {
 	deformVertexes wave 100 sin 0 2 0 .5
 	surfaceparm nolightmap
-	cull front
 	
 	{
 		map textures/portal/red/portal_sfx_ring_blue1.tga 

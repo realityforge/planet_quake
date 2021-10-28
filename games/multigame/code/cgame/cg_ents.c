@@ -160,6 +160,9 @@ static void CG_General( const centity_t *cent ) {
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
 
 	ent.hModel = cgs.gameModels[cent->currentState.modelindex];
+  if(!ent.hModel) {
+    return;
+  }
 
 	// player model
 	if (cent->currentState.number == cg.snap->ps.clientNum) {
@@ -207,7 +210,7 @@ CG_ItemTimer
 void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTime) {
   refEntity_t		re;
   vec3_t			angles;
-  vec3_t		  delta, vec = {0, 0, 1};
+  vec3_t		  vec = {0, 0, 1};
 	float		    c, len;
   int         i, numsegs, totalsegs;
   qhandle_t   lengthShader;
@@ -228,12 +231,11 @@ void CG_ItemTimer(int client, const vec3_t origin, int startTime, int respawnTim
 	re.radius = TIMER_SIZE / 2;
 
   VectorSubtract( cg.refdef.vieworg, origin, re.origin );
+  len = VectorLengthSquared( re.origin );
 	VectorNormalize(re.origin);
 
 	// if the view would be "inside" the sprite, kill the sprite
 	// so it doesn't add too much overdraw
-	VectorSubtract( origin, cg.refdef.vieworg, delta );
-	len = VectorLengthSquared( delta );
   // TODO: count up and count down
   // TODO: modifiable distance
 	if ( len <= 20*20 ) {
@@ -752,22 +754,57 @@ static void CG_Portal( const centity_t *cent ) {
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin );
-	VectorCopy( cent->currentState.origin2, ent.oldorigin );
-	ByteToDir( cent->currentState.eventParm, ent.axis[0] );
-	PerpendicularVector( ent.axis[1], ent.axis[0] );
+  VectorCopy( cent->lerpOrigin, ent.oldorigin );
+  ent.origin[2] += 100;
+  ent.oldorigin[2] += 100;
+  ent.origin[1] += 16;
+  ent.oldorigin[1] += 16;
+  //Com_Printf("portal origin: %f %f\n", cent->lerpOrigin[0], cent->lerpOrigin[1]);
+	//VectorCopy( cent->currentState.origin2, ent.oldorigin );
+	//ByteToDir( cent->currentState.eventParm, ent.axis[0] );
+	//PerpendicularVector( ent.axis[1], ent.axis[0] );
 
 	// negating this tends to get the directions like they want
 	// we really should have a camera roll value
-	VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
+	//VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
 
-	CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
+	//CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
 	ent.reType = RT_PORTALSURFACE;
 	//ent.oldframe = cent->currentState.powerups;
 	ent.frame = cent->currentState.frame;		// rotation speed
-	ent.skinNum = cent->currentState.clientNum/256.0 * 360;	// roll offset
+	//ent.skinNum = cent->currentState.clientNum/256.0 * 360;	// roll offset
 
 	// add to refresh list
 	trap_R_AddRefEntityToScene(&ent);
+  
+  if(cent->currentState.modelindex) {
+    vec3_t angles, vec;
+    memset (&ent, 0, sizeof(ent));
+    ent.frame = cent->currentState.frame;
+    ent.oldframe = ent.frame;
+    ent.backlerp = 0;
+
+    VectorCopy( cent->lerpOrigin, ent.origin);
+    VectorCopy( cent->lerpOrigin, ent.oldorigin);
+
+    ent.hModel = cgs.gameModels[cent->currentState.modelindex];
+    if(!ent.hModel) {
+      return;
+    }
+    //ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
+    VectorClear(angles);
+    VectorSubtract( cg.refdef.vieworg, ent.origin, vec );
+    VectorNormalize( vec );
+    if(cg.refdef.viewaxis[1][1] >= 0) {
+      angles[1] = vec[1] * -90 + 180;
+    } else {
+      angles[1] = vec[1] * 90;
+    }
+    AnglesToAxis( angles, ent.axis );
+    ent.reType = RT_MODEL;
+    ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+    trap_R_AddRefEntityToScene (&ent);
+  }
 }
 
 
@@ -862,6 +899,12 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 			cent->nextState.pos.trType = TR_INTERPOLATE;
 		}
 	}
+  
+  //if(cent->currentState.pos.trType == TR_AUTOSPRITE) {
+  //  VectorCopy( cent->currentState.angles, cent->lerpAngles );
+  //  VectorSubtract( vec3_origin, cent->lerpAngles, cent->lerpAngles );
+  //  return;
+  //}
 
 	if ( cent->interpolate && cent->currentState.pos.trType == TR_INTERPOLATE ) {
 		CG_InterpolateEntityPosition( cent );

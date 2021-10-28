@@ -333,6 +333,11 @@ void DropPortalDestination( gentity_t *player ) {
 	gentity_t	*ent;
 	vec3_t		snapped;
 
+  if(player->client->portal) {
+    G_FreeEntity( player->client->portal );
+    player->client->portal = NULL;
+  }
+
 	// create the portal destination
 	ent = G_Spawn();
 	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
@@ -345,7 +350,8 @@ void DropPortalDestination( gentity_t *player ) {
 
 	ent->classname = "hi_portal destination";
 	ent->s.pos.trType = TR_STATIONARY;
-
+  ent->s.eType = ET_PORTAL;
+  ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
 	ent->r.contents = CONTENTS_CORPSE;
 	ent->takedamage = qtrue;
 	ent->health = 200;
@@ -422,6 +428,8 @@ static void PortalEnable( gentity_t *self ) {
 
 
 void DropPortalSource( gentity_t *player ) {
+  vec3_t		dir;
+	gentity_t	*target;
 	gentity_t	*ent;
 	gentity_t	*destination;
 	vec3_t		snapped;
@@ -438,11 +446,25 @@ void DropPortalSource( gentity_t *player ) {
 
 	ent->classname = "hi_portal source";
 	ent->s.pos.trType = TR_STATIONARY;
-
+  ent->s.eType = ET_PORTAL;
+  ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
 	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
 	ent->health = 200;
 	ent->die = PortalDie;
+
+  // copied from misc_portal
+  ent->r.ownerNum = player->s.number;
+	ent->s.clientNum = 0;
+
+	// see if the portal_camera has a target
+	target = player->client->portal;
+	if ( target ) {
+		VectorSubtract( target->s.origin, ent->s.origin, dir );
+		VectorNormalize( dir );
+	}
+	ent->s.eventParm = DirToByte( dir );
+  // end misc_portal
 
 	trap_LinkEntity( ent );
 
@@ -451,7 +473,7 @@ void DropPortalSource( gentity_t *player ) {
 
 //	ent->spawnflags = player->client->ps.persistant[PERS_TEAM];
 
-	ent->nextthink = level.time + 1000;
+	ent->nextthink = level.time + 100;
 	ent->think = PortalEnable;
 
 	// find the destination

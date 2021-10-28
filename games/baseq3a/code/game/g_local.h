@@ -1026,4 +1026,3 @@ extern int dll_com_trapGetValue;
 #endif
 
 extern	int svf_self_portal2;
-

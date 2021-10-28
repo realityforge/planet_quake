@@ -43,6 +43,7 @@ The following features I've added to baseq3a without affecting the networking pr
 
 ## TODO
 
+  * Fix grapple hook shooting while up against a wall, velocity is pulling projectiles into the other side and it's exploding instantly.
   * Infinite haste, how is this different than g_speed? Applies to only one player.
   * Boots that can climb steep slopes. 
   * Jump velocity as a part of anti-gravity boots. 

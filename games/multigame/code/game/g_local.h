@@ -357,6 +357,7 @@ struct gclient_s {
 #ifdef MISSIONPACK
 	gentity_t	*persistantPowerup;
 	int			portalID;
+  gentity_t *portal;
 	int			ammoTimes[WP_NUM_WEAPONS];
 	int			invulnerabilityTime;
 #endif
