@@ -1837,10 +1837,106 @@ static void Cmd_SetViewpos_f( gentity_t *ent ) {
 }
 
 
-#ifdef USE_WEAPON_DROP
-gitem_t	*BG_FindItemForAmmo( weapon_t weapon );
 gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags );
-void ThrowWeapon( gentity_t *ent );
+gitem_t	*BG_FindItemForHealth( int amount );
+gitem_t	*BG_FindItemForAmmo( weapon_t weapon );
+gentity_t *ThrowWeapon( gentity_t *ent );
+
+
+#ifdef USE_FLAG_DROP
+void Cmd_DropFlag_f(gentity_t *ent) {
+  if(ent->items[ITEM_PW_MIN + PW_REDFLAG]) {
+    dropWeapon( ent, BG_FindItemForPowerup(PW_REDFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  } else if (ent->items[ITEM_PW_MIN + PW_BLUEFLAG]) {
+    dropWeapon( ent, BG_FindItemForPowerup(PW_BLUEFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  } else if (ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG]) {
+    dropWeapon( ent, BG_FindItemForPowerup(PW_NEUTRALFLAG), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+  }
+  ent->items[ITEM_PW_MIN + PW_REDFLAG] =
+  ent->items[ITEM_PW_MIN + PW_BLUEFLAG] =
+  ent->items[ITEM_PW_MIN + PW_NEUTRALFLAG] = 0;
+}
+#endif
+
+
+
+#ifdef USE_RUNES
+void Cmd_DropRune_f(gentity_t *ent) {
+  int contents;
+  contents = trap_PointContents( ent->r.currentOrigin, -1 );
+  if (contents & CONTENTS_NODROP)
+    return;
+
+  if(ent->rune && ent->items[ent->rune]) {
+    dropWeapon( ent, BG_FindItemForRune(ent->rune - ITEM_PW_MIN - RUNE_STRENGTH + 1), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    ent->items[ent->rune] = 0;
+    ent->rune = 0;
+  }
+}
+#endif
+
+
+#ifdef USE_POWERUP_DROP
+void Cmd_DropPowerup_f(gentity_t *ent) {
+#ifdef MISSIONPACK
+  // if there are persistant power-ups drop those
+  if(ent->client->persistantPowerup) {
+    TossClientPersistantPowerups(ent);
+    return;
+  } else
+#endif
+  {
+    gentity_t	*drop;
+    int i;
+    for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
+      if ( ent->items[ITEM_PW_MIN + i ] > level.time ) {
+        drop = dropWeapon( ent, BG_FindItemForPowerup( i ), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+        // decide how many seconds it has left
+        drop->count = ( ent->items[ITEM_PW_MIN + i] - level.time ) / 1000;
+        if ( drop->count < 1 ) {
+          drop->count = 1;
+        }
+        // for pickup prediction
+        drop->s.time2 = drop->count;
+        ent->items[ITEM_PW_MIN + i] = 0;
+        return;
+      }
+    }
+  }
+}
+#endif
+
+
+
+#ifdef USE_ITEM_DROP
+void Cmd_DropItem_f(gentity_t *ent) {
+  // check if there are some holdable items to toss
+  if(ent->client->ps.stats[STAT_HOLDABLE_ITEM]) {
+    dropWeapon( ent, &bg_itemlist[ent->client->ps.stats[STAT_HOLDABLE_ITEM]], 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    ent->client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
+    return;
+  }
+}
+#endif
+
+
+#ifdef USE_AMMO_DROP
+void Cmd_DropAmmo_f(gentity_t *ent) {
+  // drop ammo for current weapon, total / default pack size
+  gitem_t *item;
+  int i = ent->s.weapon;
+  item = BG_FindItemForAmmo(i);
+  if(floor(ent->client->ps.ammo[i] / item->quantity) > 1) {
+    dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    ent->client->ps.ammo[i] -= item->quantity;
+    return;
+  }
+}
+#endif
+
+
+
+#ifdef USE_WEAPON_DROP
 
 /*
 =================
@@ -1848,6 +1944,7 @@ Cmd_Drop_f XRAY FMJ
 =================
 */
 void Cmd_Drop_f( gentity_t *ent ) {
+  gentity_t	*drop;
   int contents;
   contents = trap_PointContents( ent->r.currentOrigin, -1 );
 	if (contents & CONTENTS_NODROP)
@@ -1896,7 +1993,6 @@ void Cmd_Drop_f( gentity_t *ent ) {
     } else
 #endif
     {
-      gentity_t	*drop;
       int i;
       for ( i = 1 ; i < PW_NUM_POWERUPS ; i++ ) {
         if ( ent->items[ITEM_PW_MIN + i ] > level.time ) {
@@ -1925,7 +2021,7 @@ void Cmd_Drop_f( gentity_t *ent ) {
   }
 #endif
 #ifdef USE_AMMO_DROP
-  // drop ammo for current weapon, total / pack size
+  // drop ammo for current weapon, total / default pack size
   if(g_dropWeapon.integer & 32) {
     gitem_t *item;
     int i = ent->s.weapon;
@@ -1938,7 +2034,16 @@ void Cmd_Drop_f( gentity_t *ent ) {
   }
 #endif
   // TODO: fix weapon switch animation
-  ThrowWeapon( ent );
+  drop = ThrowWeapon( ent );
+  if(!drop && g_dropWeapon.integer & 64) {
+    gitem_t *item;
+    item = BG_FindItemForHealth(25);
+    if(floor(ent->health / item->quantity) > 1) {
+      dropWeapon( ent, item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+      ent->health -= item->quantity;
+      return;
+    }
+  }
 }
 #endif
 
@@ -2227,6 +2332,22 @@ void ClientCommand( int clientNum ) {
   else if (Q_stricmp (cmd, "drop") == 0)  // XRAY FMJ
     Cmd_Drop_f( ent );
 #endif
+#ifdef USE_POWERUP_DROP
+  else if (Q_stricmp (cmd, "droppowerup") == 0)
+    Cmd_DropPowerup_f( ent );
+#endif
+#ifdef USE_FLAG_DROP
+  else if (Q_stricmp (cmd, "dropflag") == 0)
+    Cmd_DropFlag_f( ent );
+#endif
+#ifdef USE_ITEM_DROP
+  else if (Q_stricmp (cmd, "dropitem") == 0)
+    Cmd_DropItem_f( ent );
+#endif
+#ifdef USE_AMMO_DROP
+  else if (Q_stricmp (cmd, "dropammo") == 0)
+    Cmd_DropAmmo_f( ent );
+#endif
 #ifdef USE_BOUNCE_CMD
   else if (Q_stricmp (cmd, "rbounce") == 0)
     Cmd_RBounce_f( ent );
@@ -2248,6 +2369,8 @@ void ClientCommand( int clientNum ) {
 #ifdef USE_RUNES
   else if (Q_stricmp (cmd, "rune") == 0)
     Cmd_Rune_f( ent );
+  else if (Q_stricmp (cmd, "droprune") == 0)
+    Cmd_DropRune_f( ent );
 #endif
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );

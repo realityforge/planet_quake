@@ -48,6 +48,9 @@ void AddScore( gentity_t *ent, vec3_t origin, int score ) {
 }
 
 
+gentity_t *dropWeapon( gentity_t *ent, gitem_t *item, float angle, int xr_flags );
+
+
 /*
 =================
 TossClientItems
@@ -119,6 +122,14 @@ void TossClientItems( gentity_t *self ) {
 		// for pickup prediction
 		drop->s.time2 = item->quantity;
 	}
+  
+#ifdef USE_RUNES
+  if(self->rune && self->items[self->rune]) {
+    dropWeapon( self, BG_FindItemForRune(self->rune - ITEM_PW_MIN - RUNE_STRENGTH + 1), 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+    self->items[self->rune] = 0;
+    self->rune = 0;
+  }
+#endif
 
 	// drop all the powerups if not in teamplay
   // TODO: change this to a cvar 
@@ -1193,7 +1204,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 
 	// battlesuit protects from all radius damage (but takes knockback)
 	// and protects 50% against all damage
-	if ( client && targ->items[ITEM_PW_MIN + PW_BATTLESUIT] ) {
+	if ( client && (targ->items[ITEM_PW_MIN + PW_BATTLESUIT]
+#ifdef USE_RUNES
+    || targ->items[ITEM_PW_MIN + RUNE_RESIST]
+#endif
+  )) {
 		G_AddEvent( targ, EV_POWERUP, PW_BATTLESUIT );
 		if ( ( dflags & DAMAGE_RADIUS ) || ( mod == MOD_FALLING ) ) {
 			return;

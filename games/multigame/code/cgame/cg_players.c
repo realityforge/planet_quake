@@ -1504,7 +1504,11 @@ static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float 
 		return;
 	}
 
-	if ( cent->items[ITEM_PW_MIN + PW_HASTE] ) {
+	if ( cent->items[ITEM_PW_MIN + PW_HASTE] 
+#ifdef USE_RUNES
+    || cent->items[ITEM_PW_MIN + RUNE_HASTE]
+#endif
+  ) {
 		speedScale = 1.5;
 	} else {
 		speedScale = 1;
@@ -2145,7 +2149,11 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	}
 
 	// haste leaves smoke trails
-	if ( cent->items[ITEM_PW_MIN + PW_HASTE] ) {
+	if ( cent->items[ITEM_PW_MIN + PW_HASTE] 
+#ifdef USE_RUNES
+    || cent->items[ITEM_PW_MIN + RUNE_HASTE]
+#endif
+  ) {
 		CG_HasteTrail( cent );
 	}
 }
@@ -2453,6 +2461,10 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, centity_t *cl, int team ) {
 			trap_R_AddRefEntityToScene( ent );
 		}
 #ifdef USE_RUNES
+    if( cent->items[ITEM_PW_MIN + RUNE_RESIST] ) {
+      ent->customShader = cg_items[ ITEM_INDEX(BG_FindItemForRune(3)) ].altShader3;
+      trap_R_AddRefEntityToScene( ent );
+    }
     if( cent->items[ITEM_PW_MIN + RUNE_REGEN] 
       && cent->currentState.eType != ET_MISSILE ) {
       if ( ( ( cg.time / 100 ) % 10 ) == 1 ) {

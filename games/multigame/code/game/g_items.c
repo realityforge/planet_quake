@@ -367,7 +367,11 @@ static int Pickup_Health( gentity_t *ent, gentity_t *other ) {
   	}
   	else
 #endif
-    if ( other->items[ITEM_PW_MIN + PW_HASTE] ) {
+    if ( other->items[ITEM_PW_MIN + PW_HASTE] 
+#ifdef USE_RUNES
+      || other->items[ITEM_PW_MIN + RUNE_HASTE]
+#endif
+    ) {
       other->client->ps.speed *= 1.3;
     }
 

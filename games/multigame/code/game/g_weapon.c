@@ -110,6 +110,9 @@ qboolean CheckGauntletAttack( gentity_t *ent ) {
 	}
 
 #ifdef USE_RUNES
+  if(ent->items[ent->rune] && ent->rune == ITEM_PW_MIN + RUNE_BERSERK) {
+    s_quadFactor = 6.0;
+  } else
   if(ent->items[ent->rune] && ent->rune == ITEM_PW_MIN + RUNE_STRENGTH) {
     s_quadFactor = 2.0;
   } else
@@ -1137,7 +1140,7 @@ XRAY FMJ
 =============
 */
 
-void ThrowWeapon( gentity_t *ent ) {
+gentity_t *ThrowWeapon( gentity_t *ent ) {
 	gclient_t	*client;
 	usercmd_t	*ucmd;
 	gitem_t		*xr_item;
@@ -1152,7 +1155,7 @@ void ThrowWeapon( gentity_t *ent ) {
 		|| client->ps.weapon == WP_MACHINEGUN
 		|| client->ps.weapon == WP_GRAPPLING_HOOK
 		|| ( ucmd->buttons & BUTTON_ATTACK ))
-		return;
+		return NULL;
 
 
 	xr_item = BG_FindItemForWeapon( client->ps.weapon );
@@ -1169,11 +1172,12 @@ void ThrowWeapon( gentity_t *ent ) {
 		}
 	}
 
-	xr_drop= dropWeapon( ent, xr_item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
+	xr_drop = dropWeapon( ent, xr_item, 0, FL_DROPPED_ITEM | FL_THROWN_ITEM );
 	if( amount != 0)
 		xr_drop->count= amount;
 	else
 		xr_drop->count= -1; // XRAY FMJ 0 is already taken, -1 means no ammo
+  return xr_drop;
 }
 #endif
 

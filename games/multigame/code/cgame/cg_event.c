@@ -972,7 +972,11 @@ Com_Printf("global item pickup\n");
 			// show icon and name on status bar
 			if ( es->number == cg.snap->ps.clientNum ) {
 
-        if(item->giTag == PW_HASTE) {
+        if(item->giTag == PW_HASTE
+#ifdef USE_RUNES
+          || item->giTag == RUNE_HASTE
+#endif
+        ) {
 #ifdef USE_PHYSICS_VARS
           cg.predictedPlayerState.speed *= cg_hasteFactor.value;
 #else
@@ -1389,7 +1393,7 @@ Com_Printf("global item pickup\n");
       cg_entities[es->otherEntityNum].items[ ITEM_PW_MIN + es->eventParm ] = es->time;
     }
 #ifdef USE_RUNES
-Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, es->otherEntityNum, es->time);
+//Com_Printf("powerup: %i -> %i -> %i\n", es->eventParm, es->otherEntityNum, es->time);
     if(es->eventParm >= RUNE_STRENGTH && es->eventParm <= RUNE_LITHIUM
       && cg_entities[es->otherEntityNum].rune != ITEM_PW_MIN + es->eventParm) {
       gitem_t *item;

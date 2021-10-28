@@ -1956,6 +1956,25 @@ BG_FindItemForWeapon
 
 ===============
 */
+gitem_t	*BG_FindItemForHealth( int amount ) {
+	gitem_t	*it;
+	
+	for ( it = bg_itemlist + 1 ; it->classname ; it++) {
+		if ( it->giType == IT_HEALTH && it->quantity == amount ) {
+			return it;
+		}
+	}
+
+	Com_Error( ERR_DROP, "Couldn't find item for health %i", amount);
+	return NULL;
+}
+
+/*
+===============
+BG_FindItemForWeapon
+
+===============
+*/
 gitem_t	*BG_FindItemForAmmo( weapon_t weapon ) {
 	gitem_t	*it;
 	
@@ -1965,7 +1984,7 @@ gitem_t	*BG_FindItemForAmmo( weapon_t weapon ) {
 		}
 	}
 
-	Com_Error( ERR_DROP, "Couldn't find item for weapon %i", weapon);
+	Com_Error( ERR_DROP, "Couldn't find ammo for weapon %i", weapon);
 	return NULL;
 }
 
@@ -2511,11 +2530,6 @@ void BG_TouchJumpPad( playerState_t *ps, entityState_t *jumppad ) {
 
 	// spectators don't use jump pads
 	if ( ps->pm_type != PM_NORMAL ) {
-		return;
-	}
-
-	// flying characters don't hit bounce pads
-	if ( ps->powerups[PW_FLIGHT] ) {
 		return;
 	}
 

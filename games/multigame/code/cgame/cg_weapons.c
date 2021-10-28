@@ -1281,6 +1281,10 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, centity_t *cl ) {
 			trap_R_AddRefEntityToScene( gun );
 		}
 #ifdef USE_RUNES
+    if( cent->items[ITEM_PW_MIN + RUNE_RESIST] ) {
+      gun->customShader = cg_items[ ITEM_INDEX(BG_FindItemForRune(3)) ].altShader3;
+      trap_R_AddRefEntityToScene( gun );
+    }
     if( cent->rune - ITEM_PW_MIN == RUNE_STRENGTH 
       && cent->items[cent->rune] ) {
       gun->customShader = cg_items[ ITEM_INDEX(BG_FindItemForRune(1)) ].altShader3;

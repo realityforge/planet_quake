@@ -217,7 +217,6 @@ String_Init
 */
 void String_Init() {
 	int i;
-  Com_Printf("string reset\n ");
 	for (i = 0; i < HASH_TABLE_SIZE; i++) {
 		strHandle[i] = 0;
 	}

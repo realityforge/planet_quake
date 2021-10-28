@@ -335,7 +335,7 @@ void DropPortalDestination( gentity_t *player ) {
 
 	// create the portal destination
 	ent = G_Spawn();
-	ent->s.modelindex = G_ModelIndex( "models/powerups/teleporter/tele_exit.md3" );
+	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
 
 	VectorCopy( player->s.pos.trBase, snapped );
 	SnapVector( snapped );
@@ -428,7 +428,7 @@ void DropPortalSource( gentity_t *player ) {
 
 	// create the portal source
 	ent = G_Spawn();
-	ent->s.modelindex = G_ModelIndex( "models/powerups/teleporter/tele_enter.md3" );
+	ent->s.modelindex = G_ModelIndex( "models/portal/portal_red.md3" );
 
 	VectorCopy( player->s.pos.trBase, snapped );
 	SnapVector( snapped );

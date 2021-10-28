@@ -88,6 +88,10 @@ void P_WorldEffects( gentity_t *ent ) {
 	waterlevel = ent->waterlevel;
 
 	envirosuit = ent->items[ITEM_PW_MIN + PW_BATTLESUIT] > level.time;
+#ifdef USE_RUNES
+  envirosuit |= ent->items[ITEM_PW_MIN + RUNE_RESIST] > level.time;
+#endif
+
 
 	//
 	// check for drowning
@@ -879,7 +883,11 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 	else
 #endif
-	if ( ent->items[ITEM_PW_MIN + PW_HASTE] ) {
+	if ( ent->items[ITEM_PW_MIN + PW_HASTE] 
+#ifdef USE_RUNES
+    || ent->items[ITEM_PW_MIN + RUNE_HASTE]
+#endif
+  ) {
 #ifdef USE_PHYSICS_VARS
     client->ps.speed *= g_hasteFactor.value;
 #else

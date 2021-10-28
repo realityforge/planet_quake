@@ -133,8 +133,12 @@ void trigger_push_touch (gentity_t *self, gentity_t *other, trace_t *trace ) {
   
   // moved from bg_misc
   // flying characters don't hit bounce pads
-  if(other->items[ITEM_PW_MIN + PW_HASTE])
+  if(other->items[ITEM_PW_MIN + PW_FLIGHT])
     return;
+#ifdef USE_RUNES
+  if(other->items[ITEM_PW_MIN + RUNE_FLIGHT])
+    return;
+#endif
 
 	BG_TouchJumpPad( &other->client->ps, &self->s );
 }
