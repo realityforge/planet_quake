@@ -345,7 +345,10 @@ static void PortalDie (gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 
 
 static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
+  vec3_t		vec;
+  int       len;
 	gentity_t	*destination;
+  gclient_t *client = &level.clients[self->r.ownerNum];
 
 	// see if we will even let other try to use it
 	if( other->health <= 0 ) {
@@ -354,6 +357,14 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	if( !other->client ) {
 		return;
 	}
+  
+  VectorSubtract(self->r.currentOrigin, other->r.currentOrigin, vec);
+  len = VectorNormalize(vec);
+  if(level.time - client->lastPortal < 1 * 1000) {
+    return;
+  }
+  client->lastPortal = level.time;
+
 //	if( other->client->ps.persistant[PERS_TEAM] != self->spawnflags ) {
 //		return;
 //	}
@@ -372,12 +383,11 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	}
 
 	// find the destination
-	destination = NULL;
-	while( (destination = G_Find(destination, FOFS(classname), "hi_portal destination")) != NULL ) {
-		if( destination->count == self->count ) {
-			break;
-		}
-	}
+  if(self == client->portalSource) {
+    destination = client->portalDestination;
+  } else {
+    destination = client->portalSource;
+  }
 
 	// if there is not one, die!
 	if( !destination ) {
@@ -420,6 +430,7 @@ void DropPortalDestination( gentity_t *player ) {
 	VectorCopy( player->s.pos.trBase, snapped );
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
+  VectorCopy( ent->r.currentOrigin, ent->s.origin2 );
 	VectorCopy( player->r.mins, ent->r.mins );
 	VectorCopy( player->r.maxs, ent->r.maxs );
 
@@ -449,7 +460,6 @@ void DropPortalDestination( gentity_t *player ) {
 
 	// give the item back so they can drop the source now
 	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
-  VectorCopy( ent->s.origin, ent->s.origin2 );
 }
 
 void DropPortalSource( gentity_t *player ) {
@@ -483,10 +493,14 @@ void DropPortalSource( gentity_t *player ) {
 	// see if the portal_camera has a target
 	target = player->client->portalDestination;
 	if ( target ) {
-    VectorCopy( target->s.pos.trBase, ent->pos1 );
-    VectorCopy( target->s.origin,     ent->s.origin2 );
-    VectorCopy( ent->s.pos.trBase,    target->pos1 );
-    VectorCopy( ent->s.origin,        target->s.origin2 );
+    vec3_t dir;
+    VectorCopy( target->s.pos.trBase,   ent->pos1 );
+    VectorCopy( target->r.currentOrigin,ent->s.origin2 );
+    VectorCopy( ent->s.pos.trBase,      target->pos1 );
+    VectorCopy( ent->r.currentOrigin,   target->s.origin2 );
+    VectorSubtract( target->s.origin, ent->s.origin, dir );
+		VectorNormalize( dir );
+  	ent->s.eventParm = DirToByte( dir );
 	}
   // end misc_portal
 
