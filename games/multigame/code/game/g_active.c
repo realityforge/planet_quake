@@ -570,6 +570,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			break;
 
 #ifdef USE_ALT_FIRE
+    case EV_ALTFIRE_BOTH:
     case EV_ALTFIRE_WEAPON:
 #ifdef USE_GRAPPLE
       if(g_altGrapple.integer) {
@@ -577,9 +578,10 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
         ent->s.weapon = WP_GRAPPLING_HOOK;
         FireWeapon( ent );
         ent->s.weapon = oldWeapon;
-  			break;        
       }
 #endif
+      if(event != EV_ALTFIRE_BOTH)
+      break;        
 #endif
 		case EV_FIRE_WEAPON:
 			FireWeapon( ent );

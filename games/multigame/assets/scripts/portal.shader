@@ -1,4 +1,4 @@
-textures/portal/portal_sfx_blue
+textures/portal/portal_sfx_blue2
 {
   qer_editorimage textures/common/qer_mirror.tga
   surfaceparm nolightmap
@@ -12,27 +12,25 @@ textures/portal/portal_sfx_blue
   }
 }
 
-textures/portal/portal_sfx_blue2
+textures/portal/portal_sfx_blue
 {
 	portal
 	surfaceparm nolightmap
 	deformVertexes wave 100 sin 0 2 0 .5
 
 	{
-		map textures/portal/blue/portalfog.jpg
-		blendfunc gl_src_alpha gl_one_minus_src_alpha
-		alphagen portal 1024
-		rgbGen identityLighting	
-		tcmod rotate .1 //.1
-		tcmod scroll .01 .03
-	}
-
-	{
 		map textures/portal/blue/portal_sfx3.tga
+    alphagen portal 1024
 		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
 		depthWrite
 	}
 
+	{
+		map textures/portal/blue/portalfog.jpg
+		blendfunc GL_SRC_ALPHA GL_ONE
+		tcmod rotate .1 //.1
+		tcmod scroll .01 .03
+	}
 
 	{
 		map textures/portal/blue/portal_sfx1.tga
@@ -87,20 +85,18 @@ textures/portal/portal_sfx_red
 	deformVertexes wave 100 sin 0 2 0 .5
 
 	{
-		map textures/portal/red/portalfog.jpg
-		blendfunc gl_src_alpha gl_one_minus_src_alpha
-		alphagen portal 1024
-		rgbGen identityLighting	
-		tcmod rotate .1 //.1
-		tcmod scroll .01 .03
-	}
-
-	{
 		map textures/portal/red/portal_sfx3.tga
+    alphagen portal 1024
 		blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
 		depthWrite
 	}
 
+  {
+		map textures/portal/red/portalfog.jpg
+    blendfunc GL_SRC_ALPHA GL_ONE
+		tcmod rotate .1 //.1
+		tcmod scroll .01 .03
+	}
 
 	{
 		map textures/portal/red/portal_sfx1.tga

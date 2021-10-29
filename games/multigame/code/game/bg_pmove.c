@@ -1702,11 +1702,14 @@ static void PM_Weapon( void ) {
 
 	// fire weapon
 #ifdef USE_ALT_FIRE
-  if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+  if ((pm->cmd.buttons & BUTTON_ALT_ATTACK)
+    && (pm->cmd.buttons & BUTTON_ATTACK))
+    PM_AddEvent( EV_ALTFIRE_BOTH );
+  else if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
   	PM_AddEvent( EV_ALTFIRE_WEAPON );
-  if (pm->cmd.buttons & BUTTON_ATTACK)
+  else if (pm->cmd.buttons & BUTTON_ATTACK)
 #endif
-	PM_AddEvent( EV_FIRE_WEAPON );
+  PM_AddEvent( EV_FIRE_WEAPON );
 
 #ifdef USE_WEAPON_VARS
   switch( pm->ps->weapon ) {

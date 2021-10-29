@@ -500,6 +500,7 @@ typedef enum {
 	EV_FIRE_WEAPON,
 #ifdef USE_ALT_FIRE
   EV_ALTFIRE_WEAPON,
+  EV_ALTFIRE_BOTH,
 #endif
 
 	EV_USE_ITEM,

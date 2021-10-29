@@ -343,53 +343,6 @@ static void PortalDie (gentity_t *self, gentity_t *inflictor, gentity_t *attacke
 }
 
 
-void DropPortalDestination( gentity_t *player ) {
-	gentity_t	*ent;
-	vec3_t		snapped;
-
-  if(player->client->portalDestination) {
-    PortalDestroy(player->client->portalDestination);
-  }
-
-	// create the portal destination
-	ent = G_Spawn();
-	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
-
-	VectorCopy( player->s.pos.trBase, snapped );
-	SnapVector( snapped );
-	G_SetOrigin( ent, snapped );
-	VectorCopy( player->r.mins, ent->r.mins );
-	VectorCopy( player->r.maxs, ent->r.maxs );
-
-	ent->classname = "hi_portal destination";
-	ent->s.pos.trType = TR_STATIONARY;
-  ent->s.eType = ET_PORTAL;
-  ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
-	ent->r.contents = CONTENTS_CORPSE;
-	ent->takedamage = qtrue;
-	ent->health = 200;
-	ent->die = PortalDie;
-
-  // copied from misc_portal
-  ent->r.ownerNum = player->s.number;
-	ent->s.clientNum = 0;
-
-	VectorCopy( player->s.apos.trBase, ent->s.angles );
-
-	ent->think = PortalDestroy;
-	ent->nextthink = level.time + 2 * 60 * 1000;
-
-	trap_LinkEntity( ent );
-
-  player->client->portalDestination = ent;
-	player->client->portalID = ++level.portalSequence;
-	ent->count = player->client->portalID;
-
-	// give the item back so they can drop the source now
-	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
-  VectorCopy( ent->s.origin, ent->s.origin2 );
-}
-
 
 static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	gentity_t	*destination;
@@ -440,11 +393,64 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 
 
 static void PortalEnable( gentity_t *self ) {
+  gclient_t *client = &level.clients[self->r.ownerNum];
 	self->touch = PortalTouch;
 	self->think = PortalDestroy;
 	self->nextthink = level.time + 2 * 60 * 1000;
+  if(client->portalDestination) {
+    client->portalDestination->touch = PortalTouch;
+  	client->portalDestination->think = PortalDestroy;
+  	client->portalDestination->nextthink = level.time + 2 * 60 * 1000;
+  }
 }
 
+
+void DropPortalDestination( gentity_t *player ) {
+	gentity_t	*ent;
+	vec3_t		snapped;
+
+  if(player->client->portalDestination) {
+    PortalDestroy(player->client->portalDestination);
+  }
+
+	// create the portal destination
+	ent = G_Spawn();
+	ent->s.modelindex = G_ModelIndex( "models/portal/portal_blue.md3" );
+
+	VectorCopy( player->s.pos.trBase, snapped );
+	SnapVector( snapped );
+	G_SetOrigin( ent, snapped );
+	VectorCopy( player->r.mins, ent->r.mins );
+	VectorCopy( player->r.maxs, ent->r.maxs );
+
+	ent->classname = "hi_portal destination";
+	ent->s.pos.trType = TR_STATIONARY;
+  ent->s.eType = ET_TELEPORT_TRIGGER;
+  ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
+	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
+	ent->takedamage = qtrue;
+	ent->health = 200;
+	ent->die = PortalDie;
+
+  // copied from misc_portal
+  ent->r.ownerNum = player->s.number;
+	ent->s.clientNum = 0;
+
+	VectorCopy( player->s.apos.trBase, ent->s.angles );
+
+	ent->nextthink = level.time + 2 * 60 * 1000;
+  ent->think = PortalDestroy;
+
+	trap_LinkEntity( ent );
+
+  player->client->portalDestination = ent;
+	player->client->portalID = ++level.portalSequence;
+	ent->count = player->client->portalID;
+
+	// give the item back so they can drop the source now
+	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
+  VectorCopy( ent->s.origin, ent->s.origin2 );
+}
 
 void DropPortalSource( gentity_t *player ) {
 	gentity_t	*target;
@@ -463,7 +469,7 @@ void DropPortalSource( gentity_t *player ) {
 
 	ent->classname = "hi_portal source";
 	ent->s.pos.trType = TR_STATIONARY;
-  ent->s.eType = ET_PORTAL;
+  ent->s.eType = ET_TELEPORT_TRIGGER;
   ent->r.svFlags = SVF_PORTAL | SVF_BROADCAST;
 	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;

@@ -757,7 +757,7 @@ static void CG_PersonalPortal(const centity_t *cent) {
     || (cent->lerpOrigin[1] < cg.refdef.vieworg[1] && vec[1] / vec[0] < 0)){
     angles[1] = 270 + (angles[1] - 90);
   }
-  Com_Printf("angles: %f - %f\n", angles[1], vec[1] / vec[0]);
+  //Com_Printf("angles: %f - %f\n", angles[1], vec[1] / vec[0]);
 
   // add portal model
   memset (&ent, 0, sizeof(ent));
@@ -1158,7 +1158,10 @@ static void CG_AddCEntity( centity_t *cent ) {
 		break;
 	case ET_INVISIBLE:
 	case ET_PUSH_TRIGGER:
+    break;
 	case ET_TELEPORT_TRIGGER:
+    if(cent->currentState.modelindex)
+      CG_PersonalPortal( cent );
 		break;
 	case ET_GENERAL:
 		CG_General( cent );
@@ -1179,11 +1182,7 @@ static void CG_AddCEntity( centity_t *cent ) {
 		CG_Beam( cent );
 		break;
 	case ET_PORTAL:
-    if(cent->currentState.modelindex) {
-      CG_PersonalPortal( cent );
-    } else {
-      CG_Portal( cent );
-    }
+    CG_Portal( cent );
 		break;
 	case ET_SPEAKER:
 		CG_Speaker( cent );
