@@ -1128,7 +1128,8 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 
 	// trivially reject portal/mirror
 	if ( SurfIsOffscreen( drawSurf, &isMirror ) ) {
-		return qfalse;
+    //Com_Printf("offscreen\n");
+		//return qfalse;
 	}
 
 	if ( !isMirror && r_noportals->integer ) {

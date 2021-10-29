@@ -743,68 +743,83 @@ void CG_Beam( const centity_t *cent ) {
 }
 
 
+static void CG_PersonalPortal(const centity_t *cent) {
+  vec3_t          angles, vec;
+  refEntity_t			ent;
+  float             len;
+
+  // always face portal towards player
+  VectorClear(angles);
+  VectorSubtract( cg.refdef.vieworg, cent->lerpOrigin, vec );
+  len = VectorNormalize( vec );
+  angles[1] = atan2(vec[1] / vec[0], 1) * 180.0f / M_PI;
+  if((cent->lerpOrigin[0] > cg.refdef.vieworg[0] && vec[1] / vec[0] > 0)
+    || (cent->lerpOrigin[1] < cg.refdef.vieworg[1] && vec[1] / vec[0] < 0)){
+    angles[1] = 270 + (angles[1] - 90);
+  }
+  Com_Printf("angles: %f - %f\n", angles[1], vec[1] / vec[0]);
+
+  // add portal model
+  memset (&ent, 0, sizeof(ent));
+  VectorCopy( cent->lerpOrigin, ent.origin);
+  VectorCopy( cent->lerpOrigin, ent.oldorigin);
+  ent.hModel = cgs.gameModels[cent->currentState.modelindex];
+  if(!ent.hModel) {
+    return;
+  }
+  //ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
+  AnglesToAxis( angles, ent.axis );
+  ent.reType = RT_MODEL;
+  //ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+  trap_R_AddRefEntityToScene (&ent);
+
+
+  // add portal camera view
+  memset (&ent, 0, sizeof(ent));
+  VectorCopy( cent->lerpOrigin, ent.origin );
+  VectorCopy( ent.origin, ent.oldorigin );
+  VectorCopy( vec, ent.axis[0] );
+  PerpendicularVector( ent.axis[1], ent.axis[0] );
+  VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
+  CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
+  ent.reType = RT_PORTALSURFACE;
+  //ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+  //ent.oldframe = cent->currentState.powerups;
+  trap_R_AddRefEntityToScene(&ent);
+}
+
+
+
 /*
 ===============
 CG_Portal
 ===============
 */
 static void CG_Portal( const centity_t *cent ) {
-	refEntity_t			ent;
+  refEntity_t			ent;
+  const entityState_t *s1;
 
-	// create the render entity
-	memset (&ent, 0, sizeof(ent));
-	VectorCopy( cent->lerpOrigin, ent.origin );
-  VectorCopy( cent->lerpOrigin, ent.oldorigin );
-  ent.origin[2] += 100;
-  ent.oldorigin[2] += 100;
-  ent.origin[1] += 16;
-  ent.oldorigin[1] += 16;
-  //Com_Printf("portal origin: %f %f\n", cent->lerpOrigin[0], cent->lerpOrigin[1]);
-	//VectorCopy( cent->currentState.origin2, ent.oldorigin );
-	//ByteToDir( cent->currentState.eventParm, ent.axis[0] );
-	//PerpendicularVector( ent.axis[1], ent.axis[0] );
+  s1 = &cent->currentState;
 
-	// negating this tends to get the directions like they want
-	// we really should have a camera roll value
-	//VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
+  // create the render entity
+  memset (&ent, 0, sizeof(ent));
+  VectorCopy( cent->lerpOrigin, ent.origin );
+  VectorCopy( s1->origin2, ent.oldorigin );
+  ByteToDir( s1->eventParm, ent.axis[0] );
+  PerpendicularVector( ent.axis[1], ent.axis[0] );
 
-	//CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
-	ent.reType = RT_PORTALSURFACE;
-	//ent.oldframe = cent->currentState.powerups;
-	ent.frame = cent->currentState.frame;		// rotation speed
-	//ent.skinNum = cent->currentState.clientNum/256.0 * 360;	// roll offset
+  // negating this tends to get the directions like they want
+  // we really should have a camera roll value
+  VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
 
-	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
-  
-  if(cent->currentState.modelindex) {
-    vec3_t angles, vec;
-    memset (&ent, 0, sizeof(ent));
-    ent.frame = cent->currentState.frame;
-    ent.oldframe = ent.frame;
-    ent.backlerp = 0;
+  CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
+  ent.reType = RT_PORTALSURFACE;
+  ent.oldframe = s1->powerups;
+  ent.frame = s1->frame;		// rotation speed
+  ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
 
-    VectorCopy( cent->lerpOrigin, ent.origin);
-    VectorCopy( cent->lerpOrigin, ent.oldorigin);
-
-    ent.hModel = cgs.gameModels[cent->currentState.modelindex];
-    if(!ent.hModel) {
-      return;
-    }
-    //ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
-    VectorClear(angles);
-    VectorSubtract( cg.refdef.vieworg, ent.origin, vec );
-    VectorNormalize( vec );
-    if(cg.refdef.viewaxis[1][1] >= 0) {
-      angles[1] = vec[1] * -90 + 180;
-    } else {
-      angles[1] = vec[1] * 90;
-    }
-    AnglesToAxis( angles, ent.axis );
-    ent.reType = RT_MODEL;
-    ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
-    trap_R_AddRefEntityToScene (&ent);
-  }
+  // add to refresh list
+  trap_R_AddRefEntityToScene(&ent);
 }
 
 
@@ -1164,7 +1179,11 @@ static void CG_AddCEntity( centity_t *cent ) {
 		CG_Beam( cent );
 		break;
 	case ET_PORTAL:
-		CG_Portal( cent );
+    if(cent->currentState.modelindex) {
+      CG_PersonalPortal( cent );
+    } else {
+      CG_Portal( cent );
+    }
 		break;
 	case ET_SPEAKER:
 		CG_Speaker( cent );

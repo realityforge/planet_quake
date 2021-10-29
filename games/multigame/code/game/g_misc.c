@@ -323,9 +323,23 @@ void SP_shooter_grenade( gentity_t *ent ) {
 
 
 #ifdef MISSIONPACK
+static void PortalDestroy( gentity_t *self ) {
+  gclient_t *client;
+  client = &level.clients[self->r.ownerNum];
+  client->portalID = 0;
+  if(client->portalDestination) {
+    G_FreeEntity(client->portalDestination);
+    client->portalDestination = NULL;
+  }
+  if(client->portalSource) {
+    G_FreeEntity(client->portalSource);
+    client->portalSource = NULL;
+  }
+}
+
+
 static void PortalDie (gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod) {
-	G_FreeEntity( self );
-	//FIXME do something more interesting
+	PortalDestroy( self );
 }
 
 
@@ -333,9 +347,8 @@ void DropPortalDestination( gentity_t *player ) {
 	gentity_t	*ent;
 	vec3_t		snapped;
 
-  if(player->client->portal) {
-    G_FreeEntity( player->client->portal );
-    player->client->portal = NULL;
+  if(player->client->portalDestination) {
+    PortalDestroy(player->client->portalDestination);
   }
 
 	// create the portal destination
@@ -357,18 +370,24 @@ void DropPortalDestination( gentity_t *player ) {
 	ent->health = 200;
 	ent->die = PortalDie;
 
+  // copied from misc_portal
+  ent->r.ownerNum = player->s.number;
+	ent->s.clientNum = 0;
+
 	VectorCopy( player->s.apos.trBase, ent->s.angles );
 
-	ent->think = G_FreeEntity;
+	ent->think = PortalDestroy;
 	ent->nextthink = level.time + 2 * 60 * 1000;
 
 	trap_LinkEntity( ent );
 
+  player->client->portalDestination = ent;
 	player->client->portalID = ++level.portalSequence;
 	ent->count = player->client->portalID;
 
 	// give the item back so they can drop the source now
 	player->client->ps.stats[STAT_HOLDABLE_ITEM] = BG_FindItem( "Portal" ) - bg_itemlist;
+  VectorCopy( ent->s.origin, ent->s.origin2 );
 }
 
 
@@ -422,16 +441,14 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 
 static void PortalEnable( gentity_t *self ) {
 	self->touch = PortalTouch;
-	self->think = G_FreeEntity;
+	self->think = PortalDestroy;
 	self->nextthink = level.time + 2 * 60 * 1000;
 }
 
 
 void DropPortalSource( gentity_t *player ) {
-  vec3_t		dir;
 	gentity_t	*target;
 	gentity_t	*ent;
-	gentity_t	*destination;
 	vec3_t		snapped;
 
 	// create the portal source
@@ -458,16 +475,18 @@ void DropPortalSource( gentity_t *player ) {
 	ent->s.clientNum = 0;
 
 	// see if the portal_camera has a target
-	target = player->client->portal;
+	target = player->client->portalDestination;
 	if ( target ) {
-		VectorSubtract( target->s.origin, ent->s.origin, dir );
-		VectorNormalize( dir );
+    VectorCopy( target->s.pos.trBase, ent->pos1 );
+    VectorCopy( target->s.origin,     ent->s.origin2 );
+    VectorCopy( ent->s.pos.trBase,    target->pos1 );
+    VectorCopy( ent->s.origin,        target->s.origin2 );
 	}
-	ent->s.eventParm = DirToByte( dir );
   // end misc_portal
 
 	trap_LinkEntity( ent );
 
+  player->client->portalSource = ent;
 	ent->count = player->client->portalID;
 	player->client->portalID = 0;
 
@@ -475,15 +494,5 @@ void DropPortalSource( gentity_t *player ) {
 
 	ent->nextthink = level.time + 100;
 	ent->think = PortalEnable;
-
-	// find the destination
-	destination = NULL;
-	while( (destination = G_Find(destination, FOFS(classname), "hi_portal destination")) != NULL ) {
-		if( destination->count == ent->count ) {
-			VectorCopy( destination->s.pos.trBase, ent->pos1 );
-			break;
-		}
-	}
-
 }
 #endif
