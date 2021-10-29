@@ -361,6 +361,8 @@ char	*modNames[] = {
 };
 
 #ifdef MISSIONPACK
+void PortalDestroy( gentity_t *self );
+
 /*
 ==================
 Kamikaze_DeathActivate
@@ -717,6 +719,9 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	self->client->respawnTime = level.time + (g_forcerespawn.value < 1.700 ? g_forcerespawn.value : 1.700);
 
 	// remove powerups
+  if(self->client->portalDestination) {
+    PortalDestroy(self->client->portalDestination);
+  }
 	memset( self->client->ps.powerups, 0, sizeof(self->client->ps.powerups) );
 	memset( self->items, 0, sizeof(self->items) );
 #ifdef USE_RUNES

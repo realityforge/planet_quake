@@ -766,34 +766,20 @@ static void CG_PersonalPortal(const centity_t *cent) {
   if(!ent.hModel) {
     return;
   }
-  //ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
-  //ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
-  //ent.renderfx = RF_FIRST_PERSON;
   AnglesToAxis( angles, ent.axis );
   ent.reType = RT_MODEL;
+  ent.frame = cent->currentState.number;
+  ent.oldframe = cent->currentState.otherEntityNum;
   trap_R_AddRefEntityToScene (&ent);
 
 
   // add portal camera view
   memset (&ent, 0, sizeof(ent));
-  //VectorCopy( cent->lerpOrigin, ent.origin );
   VectorCopy( cent->lerpOrigin, ent.origin );
-  VectorAdd(ent.origin, vec, ent.origin);
   VectorCopy( cent->currentState.origin2, ent.oldorigin );
-  VectorAdd(ent.oldorigin, vec, ent.oldorigin);
-  //VectorCopy( ent.origin, ent.oldorigin);
-  //Com_Printf("origins: %f, %f, %f - %f, %f, %f\n", 
-  //  ent.origin[0], ent.origin[1], ent.origin[2],
-  //  ent.oldorigin[0], ent.oldorigin[1], ent.oldorigin[2]);
+  angles[1] += 180;
   angles[2] = -90;
   AnglesToAxis( angles, ent.axis );
-  //ByteToDir( cent->currentState.eventParm, ent.axis[0] );
-  //VectorCopy( vec, ent.axis[0] );
-  //PerpendicularVector( ent.axis[1], ent.axis[0] );
-  //VectorSubtract( vec3_origin, ent.axis[1], ent.axis[1] );
-  //CrossProduct( ent.axis[0], ent.axis[1], ent.axis[2] );
-  //ent.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
-  //ent.oldframe = cent->currentState.powerups;
   ent.reType = RT_PORTALSURFACE;
   trap_R_AddRefEntityToScene(&ent);
 }

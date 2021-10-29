@@ -323,7 +323,7 @@ void SP_shooter_grenade( gentity_t *ent ) {
 
 
 #ifdef MISSIONPACK
-static void PortalDestroy( gentity_t *self ) {
+void PortalDestroy( gentity_t *self ) {
   gclient_t *client;
   client = &level.clients[self->r.ownerNum];
   client->portalID = 0;
@@ -392,13 +392,13 @@ static void PortalTouch( gentity_t *self, gentity_t *other, trace_t *trace) {
 	// if there is not one, die!
 	if( !destination ) {
 		if( self->pos1[0] || self->pos1[1] || self->pos1[2] ) {
-			TeleportPlayer( other, self->pos1, self->s.angles );
+			TeleportPlayer( other, self->pos1, other->client->ps.viewangles );
 		}
 		G_Damage( other, other, other, NULL, NULL, 100000, DAMAGE_NO_PROTECTION, MOD_TELEFRAG );
 		return;
 	}
 
-	TeleportPlayer( other, destination->s.pos.trBase, destination->s.angles );
+	TeleportPlayer( other, destination->s.pos.trBase, other->client->ps.viewangles );
 }
 
 
@@ -500,6 +500,8 @@ void DropPortalSource( gentity_t *player ) {
     VectorCopy( ent->r.currentOrigin,   target->s.origin2 );
     VectorSubtract( target->s.origin, ent->s.origin, dir );
 		VectorNormalize( dir );
+    ent->s.otherEntityNum = target->s.number;
+    target->s.otherEntityNum = ent->s.number;
   	ent->s.eventParm = DirToByte( dir );
 	}
   // end misc_portal

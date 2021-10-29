@@ -830,10 +830,10 @@ static qboolean R_GetPortalOrientations( const drawSurf_t *drawSurf, int entityN
 			// if a speed is specified
 			if ( e->e.frame ) {
 				// continuous rotate
-				d = (tr.refdef.time/1000.0f) * e->e.frame;
-				VectorCopy( camera->axis[1], transformed );
-				RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
-				CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
+				//d = (tr.refdef.time/1000.0f) * e->e.frame;
+				//VectorCopy( camera->axis[1], transformed );
+				//RotatePointAroundVector( camera->axis[1], camera->axis[0], transformed, d );
+				//CrossProduct( camera->axis[0], camera->axis[1], camera->axis[2] );
 			} else {
 				// bobbing rotate, with skinNum being the rotation offset
 				d = sin( tr.refdef.time * 0.003f );
@@ -1146,6 +1146,7 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		newParms.pvsOrigin, &newParms.portalView ) ) {
 		return qfalse;		// bad portal, no portalentity
 	}
+  newParms.portalEntity = tr.refdef.entities[entityNum].e.frame;
 
 #ifdef USE_PMLIGHT
 	// create dedicated set for each view
@@ -1559,6 +1560,13 @@ void R_AddEntitySurfaces( void ) {
 #endif
 		// preshift the value we are going to OR into the drawsurf sort
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
+
+    if(tr.viewParms.portalView != PV_NONE
+    //  && ent->e.oldframe
+    //  && ent->e.oldframe == tr.viewParms.portalEntity
+    ) {
+      continue;
+    }
 
 		//
 		// the weapon model must be handled special --
